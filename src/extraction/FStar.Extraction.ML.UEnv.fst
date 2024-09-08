@@ -167,11 +167,10 @@ let try_lookup_fv (r:Range.range) (g:uenv) (fv:fv) : option exp_binding =
   | Inl true ->
     (* Log an error/warning and return None *)
     let open FStar.Errors.Msg in
-    Errors.log_issue_doc r
-      (Errors.Error_CallToErased, [
+    Errors.log_issue r Errors.Error_CallToErased [
        text <| BU.format1 "Will not extract reference to variable `%s` since it has the `noextract` qualifier." (show fv);
        text <| "Either remove its qualifier or add it to this definition.";
-       text <| BU.format1 "This error can be ignored with `--warn_error -%s`." (string_of_int Errors.call_to_erased_errno)]);
+       text <| BU.format1 "This error can be ignored with `--warn_error -%s`." (string_of_int Errors.call_to_erased_errno)];
     None
   | Inl false ->
     None

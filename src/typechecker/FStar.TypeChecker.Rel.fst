@@ -2075,8 +2075,7 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
            bs |> List.splitAt (List.length bs - 1)
               |> (fun (l1, l2) -> l1, List.hd l2) in
          a_b, rest_bs, f_b
-    else raise_error (Errors.Fatal_UnexpectedExpressionType,
-                      stronger_t_shape_error "not an arrow or not enough binders") r1 in
+    else raise_error r1 Errors.Fatal_UnexpectedExpressionType (stronger_t_shape_error "not an arrow or not enough binders") in
 
   let rest_bs_uvars, g_uvars =
     Env.uvars_for_binders env rest_bs
@@ -4392,9 +4391,9 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
 
       | Tm_let _, _
       | _, Tm_let _ ->
-         raise_error (Errors.Fatal_UnificationNotWellFormed, BU.format4 "Internal error: unexpected flex-flex of %s and %s\n>>> (%s) -- (%s)"
-                            (tag_of t1) (tag_of t2)
-                            (show t1) (show t2)) t1.pos
+         raise_error t1 Errors.Fatal_UnificationNotWellFormed
+           (BU.format4 "Internal error: unexpected flex-flex of %s and %s\n>>> (%s) -- (%s)"
+                            (tag_of t1) (tag_of t2) (show t1) (show t2))
 
       | Tm_lazy li1, Tm_lazy li2 when li1.lkind =? li2.lkind
                                    && lazy_complete_repr li1.lkind ->
@@ -4542,11 +4541,11 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
                Env.is_erasable_effect env c1.effect_name &&
                not (Env.is_erasable_effect env c2.effect_name) &&
                not (N.non_info_norm env c1.result_typ)
-            then Errors.raise_error (Errors.Error_TypeError,
-                                     BU.format3 "Cannot lift erasable expression from %s ~> %s since its type %s is informative"
+            then Errors.raise_error r Errors.Error_TypeError
+                                     (BU.format3 "Cannot lift erasable expression from %s ~> %s since its type %s is informative"
                                        (string_of_lid c1.effect_name)
                                        (string_of_lid c2.effect_name)
-                                       (show c1.result_typ)) r;
+                                       (show c1.result_typ));
 
             (*
              * AR: 04/08: Suppose we have a subcomp problem of the form:
@@ -4632,9 +4631,9 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
              |> edge.mlift.mlift_wp env
              |> (fun (c, g) ->
                  if not (Env.is_trivial g)
-                 then raise_error (Errors.Fatal_UnexpectedEffect,
-                   BU.format2 "Lift between wp-effects (%s~>%s) should not have returned a non-trivial guard"
-                     (Ident.string_of_lid c1.effect_name) (Ident.string_of_lid c2.effect_name)) r
+                 then raise_error r Errors.Fatal_UnexpectedEffect
+                        (BU.format2 "Lift between wp-effects (%s~>%s) should not have returned a non-trivial guard"
+                          (show c1.effect_name) (show c2.effect_name))
                  else Env.comp_to_comp_typ env c)
         in
         if should_fail_since_repr_subcomp_not_allowed
@@ -4649,9 +4648,8 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
              let wpc1, wpc2 = match c1.effect_args, c2.effect_args with
               | (wp1, _)::_, (wp2, _)::_ -> wp1, wp2
               | _ ->
-                raise_error (Errors.Fatal_ExpectNormalizedEffect, (BU.format2 "Got effects %s and %s, expected normalized effects"
-                                          (show c1.effect_name)
-                                          (show c2.effect_name))) env.range
+                raise_error env Errors.Fatal_ExpectNormalizedEffect
+                  (BU.format2 "Got effects %s and %s, expected normalized effects" (show c1.effect_name) (show c2.effect_name))
              in
 
              if BU.physical_equality wpc1 wpc2
@@ -4887,10 +4885,8 @@ let try_teq smt_ok env t1 t2 : option guard_t =
 let teq env t1 t2 : guard_t =
     match try_teq true env t1 t2 with
     | None ->
-        FStar.Errors.log_issue_doc
-            (Env.get_range env)
-            (Err.basic_type_error env None t2 t1);
-        trivial_guard
+      Err.basic_type_error env env.range None t2 t1;
+      trivial_guard
     | Some g ->
         if !dbg_Rel || !dbg_RelTop then
           BU.print3 "teq of %s and %s succeeded with guard %s\n"
@@ -4915,8 +4911,8 @@ let get_teq_predicate env t1 t2 =
     | None -> None
     | Some g -> Some (abstract_guard (S.mk_binder x) g)
 
-let subtype_fail env e t1 t2 =
-    Errors.log_issue_doc (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
+let subtype_fail env e t1 t2 : unit =
+  Err.basic_type_error env (Env.get_range env) (Some e) t2 t1
 
 let sub_or_eq_comp env (use_eq:bool) c1 c2 =
   Profiling.profile (fun () ->
@@ -4959,10 +4955,9 @@ let solve_universe_inequalities' tx env (variables, ineqs) : unit =
    //Then, we make a pass over all the inequalities again and check that they are all satisfied
    //This ensures, e.g., that we don't needlessly generalize types, avoid issues lik #806
    let fail u1 u2 =
-        UF.rollback tx;
-        raise_error (Errors.Fatal_IncompatibleUniverse, (BU.format2 "Universe %s and %s are incompatible"
-                                (show u1)
-                                (show u2))) (Env.get_range env)
+     UF.rollback tx;
+     raise_error env Errors.Fatal_IncompatibleUniverse
+       (BU.format2 "Universe %s and %s are incompatible" (show u1) (show u2))
    in
    let equiv v v' =
        match SS.compress_univ v, SS.compress_univ v' with
@@ -5017,11 +5012,14 @@ let solve_universe_inequalities' tx env (variables, ineqs) : unit =
               then BU.print2 "%s </= %s" (show u) (show v);
               false))
    then ()
-   else (if !dbg_GenUniverses
-         then (BU.print1 "Partially solved inequality constraints are: %s\n" (ineqs_to_string (variables, ineqs));
-               UF.rollback tx;
-               BU.print1 "Original solved inequality constraints are: %s\n" (ineqs_to_string (variables, ineqs)));
-         raise_error (Errors.Fatal_FailToSolveUniverseInEquality, ("Failed to solve universe inequalities for inductives")) (Env.get_range env))
+   else (
+    if !dbg_GenUniverses then (
+       BU.print1 "Partially solved inequality constraints are: %s\n" (ineqs_to_string (variables, ineqs));
+       UF.rollback tx; // GM 2024/09/07: It can't be right to rollback on a debug toggle... can it?
+       BU.print1 "Original solved inequality constraints are: %s\n" (ineqs_to_string (variables, ineqs))
+     );
+     raise_error env Errors.Fatal_FailToSolveUniverseInEquality "Failed to solve universe inequalities for inductives"
+   )
 
 let solve_universe_inequalities env ineqs : unit =
     let tx = UF.new_transaction () in
@@ -5053,7 +5051,7 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
                                            ; typeclass_variables } in
    let fail (d,s) =
       let msg = explain wl d s in
-      raise_error (Errors.Fatal_ErrorInSolveDeferredConstraints, msg) (p_loc d)
+      raise_error (p_loc d) Errors.Fatal_ErrorInSolveDeferredConstraints msg
    in
    if !dbg_Rel then
      BU.print4 "Trying to solve carried problems (defer_ok=%s) (deferred_to_tac_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
@@ -5254,9 +5252,9 @@ let discharge_guard_no_smt env g =
   match discharge_guard' None env g false with
   | Some g -> g
   | None ->
-    raise_error_doc
-      (Errors.Fatal_ExpectTrivialPreCondition, [text "Expected a trivial pre-condition"])
-      (Env.get_range env)
+    raise_error env Errors.Fatal_ExpectTrivialPreCondition [
+      text "Expected a trivial pre-condition"
+    ]
 
 let teq_nosmt (env:env) (t1:typ) (t2:typ) : option guard_t =
   match try_teq false env t1 t2 with
@@ -5451,7 +5449,7 @@ let check_implicit_solution_and_discharge_guard env
                   imp_tm must_tot in
 
               match get_subtyping_predicate env k' uvar_ty with
-              | None -> raise_error_doc (Err.expected_expression_of_type env uvar_ty imp_tm k') imp_tm.pos
+              | None -> Err.expected_expression_of_type env imp_tm.pos uvar_ty imp_tm k'
               | Some f ->
                 {Env.conj_guard (Env.apply_guard f imp_tm) g with guard_f=Trivial}
             end
@@ -5460,13 +5458,9 @@ let check_implicit_solution_and_discharge_guard env
          | Inl None -> trivial_guard
          | Inl (Some g) -> { trivial_guard with guard_f = NonTrivial g }
          | Inr print_err ->
-           raise_error (Errors.Fatal_FailToResolveImplicitArgument,
-                        BU.format5 "Core checking failed for implicit %s (is_tac: %s) (reason: %s) (%s <: %s)"
-                          (show imp_uvar)
-                          (string_of_bool is_tac)
-                          imp_reason
-                          (show imp_tm)
-                          (show uvar_ty)) imp_range
+           raise_error imp_range Errors.Fatal_FailToResolveImplicitArgument
+             (BU.format5 "Core checking failed for implicit %s (is_tac: %s) (reason: %s) (%s <: %s)"
+                  (show imp_uvar) (show is_tac) imp_reason (show imp_tm) (show uvar_ty))
        end) in
 
   if (not force_univ_constraints) &&
@@ -5751,14 +5745,14 @@ let force_trivial_guard env g =
     | [] -> ignore <| discharge_guard env g
     | imp::_ ->
       let open FStar.Pprint in
-      raise_error_doc (Errors.Fatal_FailToResolveImplicitArgument, [
+      raise_error imp.imp_range Errors.Fatal_FailToResolveImplicitArgument [
         prefix 4 1 (text "Failed to resolve implicit argument")
                 (arbitrary_string (show imp.imp_uvar.ctx_uvar_head)) ^/^
         prefix 4 1 (text "of type")
                 (N.term_to_doc env (U.ctx_uvar_typ imp.imp_uvar)) ^/^
         prefix 4 1 (text "introduced for")
                 (text imp.imp_reason)
-        ]) imp.imp_range
+      ]
 
 let subtype_nosmt_force env t1 t2 =
     match subtype_nosmt env t1 t2 with

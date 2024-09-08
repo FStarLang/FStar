@@ -26,6 +26,7 @@ open FStar.Const
 open FStar.BaseTypes
 open FStar.Extraction.ML.Syntax
 open FStar.Class.Setlike
+open FStar.Class.Show
 
 (**
   This module implements a transformation on the FStar.Extraction.ML.Syntax
@@ -211,11 +212,8 @@ let elim_tydef (env:env_t) name metadata parameters mlty
              then begin
                if must_eliminate i
                then begin
-                 FStar.Errors.log_issue range_of_tydef
-                   (FStar.Errors.Error_RemoveUnusedTypeParameter,
-                    BU.format2
-                    "Expected parameter %s of %s to be unused in its definition and eliminated"
-                      p name)
+                 FStar.Errors.log_issue range_of_tydef Errors.Error_RemoveUnusedTypeParameter
+                     (BU.format2 "Expected parameter %s of %s to be unused in its definition and eliminated" p name)
                end;
                i+1, param::params, Retain::entry
              end
@@ -231,16 +229,11 @@ let elim_tydef (env:env_t) name metadata parameters mlty
                       | Some r -> r
                       | _ -> range_of_tydef
                     in
-                    FStar.Errors.log_issue
-                      range
-                      (FStar.Errors.Error_RemoveUnusedTypeParameter,
-                        BU.format3
+                    FStar.Errors.log_issue range FStar.Errors.Error_RemoveUnusedTypeParameter
+                      (BU.format3
                         "Parameter %s of %s is unused and must be eliminated for F#; \
                          add `[@@ remove_unused_type_parameters [%s; ...]]` to the interface signature; \n\
-                         This type definition is being dropped"
-                        (string_of_int i)
-                        name
-                        (string_of_int i));
+                         This type definition is being dropped" (show i) name (show i));
                     raise Drop_tydef
                else i+1, param::params, Retain::entry
              end)

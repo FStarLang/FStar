@@ -89,18 +89,18 @@ let initialize_hints_db src_filename format_filename : unit =
 
           | MalformedJson ->
             if use_hints () then
-              Err.log_issue_text Range.dummyRange
-                            (Err.Warning_CouldNotReadHints,
-                             BU.format1 "Malformed JSON hints file: %s; ran without hints"
-                                       val_filename);
+              Err.log_issue0 Err.Warning_CouldNotReadHints [
+                Errors.Msg.text <| BU.format1 "Malformed JSON hints file: %s; ran without hints"
+                                       val_filename
+              ];
             ()
 
           | UnableToOpen ->
-            if  use_hints () then
-              Err.log_issue_text Range.dummyRange
-                            (Err.Warning_CouldNotReadHints,
-                             BU.format1 "Unable to open hints file: %s; ran without hints"
-                                       val_filename);
+            if use_hints () then
+              Err.log_issue0 Err.Warning_CouldNotReadHints [
+                Errors.Msg.text <| BU.format1 "Unable to open hints file: %s; ran without hints"
+                                       val_filename
+              ];
             ()
     end
 
@@ -338,10 +338,10 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : list 
             in
             (* If we notice the z3 overflow bug, add a separate error to warn the user. *)
             if z3_overflow_bug_count > 0 then
-              Errors.log_issue_doc settings.query_range (Errors.Warning_UnexpectedZ3Stderr, [
+              Errors.log_issue settings.query_range Errors.Warning_UnexpectedZ3Stderr [
                 text "Z3 ran into an internal overflow while trying to prove this query.";
                 text "Try breaking it down, or using --split_queries."
-              ]);
+              ];
             let base =
               match incomplete_count, canceled_count, unknown_count with
               | _, 0, 0 when incomplete_count > 0 -> [text "The SMT solver could not prove the query. Use --query_stats for more details."]
@@ -603,7 +603,7 @@ let query_info settings z3result =
         if Options.print_z3_statistics () then process_unsat_core core;
         errs |> List.iter (fun (_, msg, range) ->
             let msg = if used_hint settings then Pprint.doc_of_string "Hint-replay failed" :: msg else msg in
-            FStar.Errors.log_issue_doc range (FStar.Errors.Warning_HitReplayFailed, msg))
+            FStar.Errors.log_issue range FStar.Errors.Warning_HitReplayFailed msg)
     end
     else if Options.Ext.get "profile_context" <> ""
     then match z3result.z3result_status with
@@ -1039,11 +1039,11 @@ let ask_solver_recover
         | h::hs ->
           let r = try_hammer h in
           if r.ok then (
-            Errors.log_issue_doc cfg.query_range (Errors.Warning_ProofRecovery, [
+            Errors.log_issue cfg.query_range Errors.Warning_ProofRecovery [
                text "This query succeeded after " ^/^ pp_hammer h;
                text "Increase the rlimit in the file or simplify the proof. \
                      This is only succeeding due to --proof_recovery being given."
-               ]);
+               ];
             r
           ) else
             aux hs

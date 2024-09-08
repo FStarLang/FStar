@@ -27,6 +27,26 @@ open FStar.Ident
 open FStar.Class.Show
 module C = FStar.Parser.Const
 
+instance hasRange_term : hasRange term = {
+  pos = (fun t -> t.range);
+  setPos = (fun r t -> { t with range = r });
+}
+
+instance hasRange_pattern : hasRange pattern = {
+  pos = (fun p -> p.prange);
+  setPos = (fun r p -> { p with prange = r });
+}
+
+instance hasRange_binder : hasRange binder = {
+  pos = (fun b -> b.brange);
+  setPos = (fun r b -> { b with brange = r });
+}
+
+instance hasRange_decl : hasRange decl = {
+  pos = (fun d -> d.drange);
+  setPos = (fun r d -> { d with drange = r });
+}
+
 let lid_of_modul (m:modul) : lid =
   match m with
   | Module(lid, _) -> lid
@@ -34,14 +54,16 @@ let lid_of_modul (m:modul) : lid =
 
 let check_id id =
     let first_char = String.substring (string_of_id id) 0 1 in
-    if String.lowercase first_char = first_char
-    then ()
-    else raise_error (Fatal_InvalidIdentifier, Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" (string_of_id id))  (range_of_id id)
+    if not (String.lowercase first_char = first_char) then
+      raise_error id Fatal_InvalidIdentifier
+        (Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" (show id))
 
-let at_most_one s r l = match l with
+let at_most_one s (r:range) l = match l with
   | [ x ] -> Some x
   | [] -> None
-  | _ -> raise_error (Fatal_MoreThanOneDeclaration, (Util.format1 "At most one %s is allowed on declarations" s)) r
+  | _ ->
+    raise_error r Fatal_MoreThanOneDeclaration
+      (Util.format1 "At most one %s is allowed on declarations" s)
 
 let mk_binder_with_attrs b r l i attrs = {b=b; brange=r; blevel=l; aqual=i; battributes=attrs}
 let mk_binder b r l i = mk_binder_with_attrs b r l i []
@@ -128,16 +150,18 @@ let mkWildAdmitMagic r = (mk_pattern (PatWild (None, [])) r, None, mkAdmitMagic 
 let focusBranches branches r =
     let should_filter = Util.for_some fst branches in
         if should_filter
-        then let _ = Errors.log_issue r (Errors.Warning_Filtered, "Focusing on only some cases") in
-         let focussed = List.filter fst branches |> List.map snd in
+        then
+          let _ = Errors.log_issue r Errors.Warning_Filtered "Focusing on only some cases" in
+          let focussed = List.filter fst branches |> List.map snd in
                  focussed@[mkWildAdmitMagic r]
         else branches |> List.map snd
 
 let focusLetBindings lbs r =
     let should_filter = Util.for_some fst lbs in
         if should_filter
-        then let _ = Errors.log_issue r (Errors.Warning_Filtered, "Focusing on only some cases in this (mutually) recursive definition") in
-         List.map (fun (f, lb) ->
+        then 
+          let _ = Errors.log_issue r Errors.Warning_Filtered "Focusing on only some cases in this (mutually) recursive definition" in
+          List.map (fun (f, lb) ->
               if f then lb
               else (fst lb, mkAdmitMagic r)) lbs
         else lbs |> List.map snd
@@ -145,8 +169,9 @@ let focusLetBindings lbs r =
 let focusAttrLetBindings lbs r =
     let should_filter = Util.for_some (fun (attr, (focus, _)) -> focus) lbs in
     if should_filter
-    then let _ = Errors.log_issue r (Errors.Warning_Filtered, "Focusing on only some cases in this (mutually) recursive definition") in
-        List.map (fun (attr, (f, lb)) ->
+    then
+      let _ = Errors.log_issue r Errors.Warning_Filtered "Focusing on only some cases in this (mutually) recursive definition" in
+      List.map (fun (attr, (f, lb)) ->
             if f then attr, lb
             else (attr, (fst lb, mkAdmitMagic r))) lbs
     else lbs |> List.map (fun (attr, (_, lb)) -> (attr, lb))
@@ -234,7 +259,7 @@ let rec as_mlist (cur: (lid & decl) & list decl) (ds:list decl) : modul =
     | d :: ds ->
         begin match d.d with
         | TopLevelModule m' ->
-            raise_error (Fatal_UnexpectedModuleDeclaration, "Unexpected module declaration") d.drange
+            raise_error d Fatal_UnexpectedModuleDeclaration "Unexpected module declaration"
         | _ ->
             as_mlist ((m_name, m_decl), d::cur) ds
         end
@@ -251,7 +276,7 @@ let as_frag (ds:list decl) : inputFragment =
   | _ ->
       let ds = d::ds in
       List.iter (function
-        | {d=TopLevelModule _; drange=r} -> raise_error (Fatal_UnexpectedModuleDeclaration, "Unexpected module declaration") r
+        | {d=TopLevelModule _; drange=r} -> raise_error r Fatal_UnexpectedModuleDeclaration "Unexpected module declaration"
         | _ -> ()
       ) ds;
       Inr ds
@@ -436,7 +461,7 @@ let rec term_to_string (x:term) = match x.tm with
         (tm|> term_to_string)
         (body|> term_to_string)
   | Let (_, _, _) ->
-    raise_error (Fatal_EmptySurfaceLet, "Internal error: found an invalid surface Let") x.range
+    raise_error x Fatal_EmptySurfaceLet "Internal error: found an invalid surface Let"
 
   | LetOpen (lid, t) ->
     Util.format2 "let open %s in %s" (string_of_lid lid) (term_to_string t)
@@ -796,8 +821,7 @@ let ident_of_binder r b =
   | Annotated (i, _)
   | TAnnotated (i, _) -> i
   | NoName _ ->
-    raise_error (Fatal_MissingQuantifierBinder,
-                 "Wildcard binders in quantifiers are not allowed") r
+    raise_error r Fatal_MissingQuantifierBinder "Wildcard binders in quantifiers are not allowed"
 
 let idents_of_binders bs r = bs |> List.map (ident_of_binder r)
 
@@ -818,13 +842,11 @@ let add_decorations d decorations =
       | [DeclAttributes a], attrs -> [DeclAttributes (a @ attrs)]
       | [], attrs -> [DeclAttributes attrs]
       | _ ->
-        raise_error
-          (Fatal_MoreThanOneDeclaration, 
-           format2
+        raise_error d Fatal_MoreThanOneDeclaration
+          (format2
             "At most one attribute set is allowed on declarations\n got %s;\n and %s"
             (String.concat ", " (List.map (function DeclAttributes a -> show a | _ -> "") attrs))
-            (String.concat ", " (List.map show d.attrs))
-            ) d.drange
+            (String.concat ", " (List.map show d.attrs)))
     in
     List.map Qualifier d.quals @
     quals @

@@ -304,6 +304,9 @@ val rollback : solver_t -> string -> option tcenv_depth_t -> env
 val current_module : env -> lident
 val set_range      : env -> Range.range -> env
 val get_range      : env -> Range.range
+
+instance val hasRange_env : hasRange env
+
 val insert_bv_info : env -> bv -> typ -> unit
 val insert_fv_info : env -> fv -> typ -> unit
 val toggle_id_info : env -> bool -> unit

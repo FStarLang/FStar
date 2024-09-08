@@ -548,6 +548,21 @@ instance has_range_sigelt : hasRange sigelt = {
   setPos = (fun r t -> { t with sigrng = r });
 }
 
+instance hasRange_fv : hasRange fv = {
+  pos = range_of_fv;
+  setPos = (fun r f -> set_range_of_fv f r);
+}
+
+instance hasRange_bv : hasRange bv = {
+  pos = range_of_bv;
+  setPos = (fun r f -> set_range_of_bv f r);
+}
+
+instance hasRange_binder : hasRange binder = {
+  pos = (fun b -> pos b.binder_bv);
+  setPos = (fun r b -> { b with binder_bv = setPos r b.binder_bv });
+}
+
 instance showable_lazy_kind = {
   show = (function
           | BadLazy -> "BadLazy"

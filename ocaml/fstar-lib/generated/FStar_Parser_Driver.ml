@@ -44,7 +44,9 @@ let (parse_fragment :
       | FStar_Parser_ParseIt.IncrementalFragment (decls, uu___1, uu___2) ->
           DeclsWithContent decls
       | FStar_Parser_ParseIt.ParseError (e, msg, r) ->
-          FStar_Errors.raise_error_doc (e, msg) r
+          FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range r e ()
+            (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+            (Obj.magic msg)
       | FStar_Parser_ParseIt.Term uu___1 ->
           FStar_Compiler_Effect.failwith
             "Impossible: parsing a Toplevel always results in an ASTFragment"
@@ -95,10 +97,14 @@ let (parse_file :
         ->
         let msg = FStar_Compiler_Util.format1 "%s: expected a module\n" fn in
         let r = FStar_Compiler_Range_Type.dummyRange in
-        FStar_Errors.raise_error
-          (FStar_Errors_Codes.Fatal_ModuleExpected, msg) r
+        FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range r
+          FStar_Errors_Codes.Fatal_ModuleExpected ()
+          (Obj.magic FStar_Errors_Msg.is_error_message_string)
+          (Obj.magic msg)
     | FStar_Parser_ParseIt.ParseError (e, msg, r) ->
-        FStar_Errors.raise_error_doc (e, msg) r
+        FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range r e ()
+          (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+          (Obj.magic msg)
     | FStar_Parser_ParseIt.Term uu___1 ->
         FStar_Compiler_Effect.failwith
           "Impossible: parsing a Filename always results in an ASTFragment"

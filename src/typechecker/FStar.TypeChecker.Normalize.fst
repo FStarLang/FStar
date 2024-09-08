@@ -348,7 +348,7 @@ let unembed_binder (t : term) : option S.binder =
     match !unembed_binder_knot with
     | Some e -> EMB.try_unembed #_ #e t EMB.id_norm_cb
     | None ->
-        Errors.log_issue t.pos (Errors.Warning_UnembedBinderKnot, "unembed_binder_knot is unset!");
+        Errors.log_issue t Errors.Warning_UnembedBinderKnot "unembed_binder_knot is unset!";
         None
 
 let mk_psc_subst cfg (env:env) =
@@ -1668,11 +1668,12 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                       |> fst
                       |> List.map (fun _ -> S.as_arg S.unit_const)
                     | _ ->
-                      raise_error (Errors.Fatal_UnexpectedEffect,
-                        BU.format3 "bind_wp for layered effect %s is not an arrow with >= %s arguments (%s)"
-                          (Ident.string_of_lid ed.mname)
-                          (string_of_int num_fixed_binders)
-                          (ed |> U.get_bind_vc_combinator |> fst |> snd |> show)) rng in
+                      raise_error rng Errors.Fatal_UnexpectedEffect
+                        (BU.format3 "bind_wp for layered effect %s is not an arrow with >= %s arguments (%s)"
+                          (show ed.mname)
+                          (show num_fixed_binders)
+                          (ed |> U.get_bind_vc_combinator |> fst |> snd |> show))
+                  in
 
                   let range_args =
                     if bind_has_range_args
@@ -1764,9 +1765,9 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
             | _ -> false
           in
           if BU.for_some is_arg_impure ((as_arg head)::args) then
-            Errors.log_issue top.pos
-                             (Errors.Warning_Defensive,
-                              BU.format1 "Incompatibility between typechecker and normalizer; \
+            Errors.log_issue top
+                             Errors.Warning_Defensive
+                              (BU.format1 "Incompatibility between typechecker and normalizer; \
                                           this monadic application contains impure terms %s\n"
                                           (show top))
         end;
@@ -2382,9 +2383,9 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           // If the effect is an indexed effect, that is non-extractable
           //
           let S.Extract_none msg = get_extraction_mode cfg.tcenv m in
-          raise_error (Errors.Fatal_UnexpectedEffect,
-                       BU.format2 "Normalizer cannot reify effect %s for extraction since %s"
-                          (Ident.string_of_lid m) msg) t.pos
+          raise_error t Errors.Fatal_UnexpectedEffect
+                       (BU.format2 "Normalizer cannot reify effect %s for extraction since %s"
+                          (Ident.string_of_lid m) msg)
 
         | Tm_meta {meta=Meta_monadic (m, _)}
           when is_non_tac_layered_effect m &&
@@ -2411,10 +2412,10 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 (is_non_tac_layered_effect mtgt &&
                  S.Extract_none? (get_extraction_mode cfg.tcenv mtgt))) ->
 
-          raise_error (Errors.Fatal_UnexpectedEffect,
-                       BU.format2 "Normalizer cannot reify %s ~> %s for extraction"
+          raise_error t Errors.Fatal_UnexpectedEffect
+                       (BU.format2 "Normalizer cannot reify %s ~> %s for extraction"
                           (Ident.string_of_lid msrc)
-                          (Ident.string_of_lid mtgt)) t.pos
+                          (Ident.string_of_lid mtgt))
 
         | Tm_meta {tm=t; meta=Meta_monadic (m, ty)} ->
            do_reify_monadic (fallback " (1)") cfg env stack t m ty
@@ -2883,31 +2884,42 @@ let ghost_to_pure_lcomp2 env (lc1, lc2) =
        then ghost_to_pure_lcomp env lc1, lc2
        else lc1, lc2
 
+let warn_norm_failure (r:Range.range) (e:exn) : unit =
+  Errors.log_issue r Errors.Warning_NormalizationFailure (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))
+
 let term_to_doc env t =
   let t =
     try normalize [AllowUnboundUniverses] env t
-    with e -> Errors.log_issue t.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; t
+    with e ->
+      warn_norm_failure t.pos e;
+      t
   in
   FStar.Syntax.Print.term_to_doc' (DsEnv.set_current_module env.dsenv env.curmodule) t
 
 let term_to_string env t = GenSym.with_frozen_gensym (fun () ->
   let t =
     try normalize [AllowUnboundUniverses] env t
-    with e -> Errors.log_issue t.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; t
+    with e ->
+      warn_norm_failure t.pos e;
+      t
   in
   Print.term_to_string' (DsEnv.set_current_module env.dsenv env.curmodule) t)
 
 let comp_to_string env c = GenSym.with_frozen_gensym (fun () ->
   let c =
     try norm_comp (config [AllowUnboundUniverses] env) [] c
-    with e -> Errors.log_issue c.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; c
+    with e ->
+      warn_norm_failure c.pos e;
+      c
   in
   Print.comp_to_string' (DsEnv.set_current_module env.dsenv env.curmodule) c)
 
 let comp_to_doc env c = GenSym.with_frozen_gensym (fun () ->
   let c =
     try norm_comp (config [AllowUnboundUniverses] env) [] c
-    with e -> Errors.log_issue c.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; c
+    with e ->
+      warn_norm_failure c.pos e;
+      c
   in
   Print.comp_to_doc' (DsEnv.set_current_module env.dsenv env.curmodule) c)
 

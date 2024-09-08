@@ -772,9 +772,11 @@ let (should_unfold :
                   FStar_Class_Show.show FStar_Syntax_Print.showable_fv fv in
                 FStar_Compiler_Util.format1
                   "Unfolding name which is marked as a plugin: %s" uu___3 in
-              (FStar_Errors.log_issue
+              (FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range
                  (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.p
-                 (FStar_Errors_Codes.Warning_UnfoldPlugin, msg);
+                 FStar_Errors_Codes.Warning_UnfoldPlugin ()
+                 (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                 (Obj.magic msg);
                (let uu___4 =
                   let uu___5 =
                     FStar_Compiler_Effect.op_Bang plugin_unfold_warn_ctr in

@@ -56,9 +56,6 @@ let main argv =
         then BU.print_string (Errors.rendermsg msg)
         else BU.print2 "%s: %s\n" (FStar.Compiler.Range.string_of_range r) (Errors.rendermsg msg);
         exit 1
-      | Err (raw_error, s, ls) when not <| O.trace_error() ->
-        BU.print2 "%s : [%s]\n" (Errors.rendermsg s) (String.concat "; " ls);
-        exit 1
       | e ->
         BU.print2_error "Error\n%s\n%s\n" (BU.message_of_exn e) (BU.trace_of_exn e);
         exit 1

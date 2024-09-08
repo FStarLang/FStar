@@ -182,7 +182,7 @@ let z3_cmd_and_args () =
 let warn_handler (suf:Errors.error_message) (s:string) : unit =
   let open FStar.Errors.Msg in
   let open FStar.Pprint in
-  Errors.log_issue_doc Range.dummyRange (Errors.Warning_UnexpectedZ3Output, [
+  Errors.log_issue0 Errors.Warning_UnexpectedZ3Output ([
     text "Unexpected output from Z3:" ^^ hardline ^^
      blank 2 ^^ align (dquotes (arbitrary_string s));
     ] @ suf)
@@ -200,18 +200,17 @@ let check_z3version (p:proc) : unit =
       List.nth ss 1
     else (
       warn_handler [] s;
-      Errors.raise_err (Errors.Error_Z3InvocationError, BU.format1 "Could not run Z3 from `%s'" (proc_prog p))
+      Errors.raise_error0 Errors.Error_Z3InvocationError (BU.format1 "Could not run Z3 from `%s'" (proc_prog p))
     )
   in
   let name = getinfo "name" in
   if name <> "Z3" && not (!_already_warned_solver_mismatch) then (
-    Errors.log_issue Range.dummyRange (Errors.Warning_SolverMismatch,
-      BU.format3 "Unexpected SMT solver: expected to be talking to Z3, got %s.\n\
+    Errors.log_issue0 Errors.Warning_SolverMismatch
+      (BU.format3 "Unexpected SMT solver: expected to be talking to Z3, got %s.\n\
                   Please download the correct version of Z3 from %s\n\
                   and install it into your $PATH as `%s'."
         name
-        z3url (Platform.exe ("z3-" ^ Options.z3_version  ()))
-        );
+        z3url (Platform.exe ("z3-" ^ Options.z3_version  ())));
     _already_warned_solver_mismatch := true
   );
   let ver_found : string = BU.trim_string (List.hd (BU.split (getinfo "version") "-")) in
@@ -219,14 +218,14 @@ let check_z3version (p:proc) : unit =
   if ver_conf <> ver_found && not (!_already_warned_version_mismatch) then (
     let open FStar.Errors in
     let open FStar.Pprint in
-    Errors.log_issue_doc Range.dummyRange (Errors.Warning_SolverMismatch, [
+    Errors.log_issue0 Errors.Warning_SolverMismatch [
       text (BU.format3 "Unexpected Z3 version for '%s': expected '%s', got '%s'."
                   (proc_prog p) ver_conf ver_found);
       prefix 4 1 (text "Please download the correct version of Z3 from")
                  (url z3url) ^/^
         group (text "and install it into your $PATH as" ^/^ squotes
           (doc_of_string (Platform.exe ("z3-" ^ Options.z3_version  ()))) ^^ dot);
-    ]);
+    ];
     Errors.stop_if_err(); (* stop now if this was a hard error *)
     _already_warned_version_mismatch := true
   );

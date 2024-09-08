@@ -5,6 +5,14 @@ open FStar.Compiler.Effect
 open FStar.Compiler.Util
 open FStar.Pprint
 
+instance is_error_message_string   : is_error_message string = {
+  to_doc_list = (fun s -> [arbitrary_string s]);
+}
+
+instance is_error_message_list_doc : is_error_message (list Pprint.document) = {
+  to_doc_list = id;
+}
+
 let vconcat (ds:list document) : document =
   match ds with
   | h::t ->

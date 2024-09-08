@@ -22,6 +22,8 @@ open FStar.Compiler.Range
 open FStar.Const
 open FStar.Ident
 open FStar.Class.Show
+open FStar.Class.HasRange
+
 module S = FStar.Syntax.Syntax
 (* AST produced by the parser, before desugaring
    It is not stratified: a single type called "term" containing
@@ -155,6 +157,10 @@ and imp =
     | Infix
     | Nothing
 
+instance val hasRange_term    : hasRange term
+instance val hasRange_pattern : hasRange pattern
+instance val hasRange_binder  : hasRange binder
+
 type knd = term
 type typ = term
 type expr = term
@@ -279,6 +285,8 @@ and effect_decl =
   (* KM : Is there really need of the generality of decl here instead of e.g. lid * term ? *)
   | DefineEffect   of ident & list binder & term & list decl
   | RedefineEffect of ident & list binder & term
+
+instance val hasRange_decl : hasRange decl
 
 type modul =
   | Module of lid & list decl

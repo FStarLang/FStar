@@ -57,7 +57,7 @@ let with_captured_errors' env sigint_handler f =
               "minimized version of the program that triggered the error." in
     // Make sure the user sees the error, even if it happened transiently while
     // running an automatic syntax checker like FlyCheck.
-    Errors.log_issue (TcEnv.get_range env) (Errors.Error_IDEAssertionFailure, msg);
+    Errors.log_issue env Errors.Error_IDEAssertionFailure msg;
     None
 
   | Util.SigInt ->
@@ -65,10 +65,6 @@ let with_captured_errors' env sigint_handler f =
 
   | Error (e, msg, r, ctx) ->
     TcErr.add_errors env [(e, msg, r, ctx)];
-    None
-
-  | Err (e, msg, ctx) ->
-    TcErr.add_errors env [(e, msg, TcEnv.get_range env, ctx)];
     None
 
   | Stop ->
@@ -1274,7 +1270,7 @@ let interactive_mode (filename:string): unit =
   Util.set_sigint_handler Util.sigint_ignore;
 
   if Option.isSome (Options.codegen ()) then
-    Errors.log_issue Range.dummyRange (Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen");
+    Errors.log_issue0 Errors.Warning_IDEIgnoreCodeGen "--ide: ignoring --codegen";
 
   let init = build_initial_repl_state filename in
   if Options.trace_error () then

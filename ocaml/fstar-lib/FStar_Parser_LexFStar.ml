@@ -229,7 +229,7 @@ let current_range lexbuf =
 
 let fail lexbuf (e, msg) =
      let m = current_range lexbuf in
-     E.raise_error (e, msg) m
+     E.raise_error_text m e msg
 
 type delimiters = { angle:int ref; paren:int ref; }
 let n_typ_apps = ref 0
@@ -548,10 +548,8 @@ match%sedlex lexbuf with
 
  | ident -> let id = L.lexeme lexbuf in
    if FStar_Compiler_Util.starts_with id FStar_Ident.reserved_prefix
-   then FStar_Errors.raise_error
-                    (Codes.Fatal_ReservedPrefix,
-                     FStar_Ident.reserved_prefix  ^ " is a reserved prefix for an identifier")
-                    (current_range lexbuf);
+   then FStar_Errors.raise_error_text (current_range lexbuf) Codes.Fatal_ReservedPrefix
+                     (FStar_Ident.reserved_prefix  ^ " is a reserved prefix for an identifier");
    Hashtbl.find_option keywords id |> Option.default (IDENT id)
  | constructor -> let id = L.lexeme lexbuf in
    Hashtbl.find_option constructors id |> Option.default (NAME id)
@@ -687,8 +685,8 @@ match %sedlex lexbuf with
  | "```" ->
    BLOB(name, Buffer.contents buffer, pos, snap)
  | eof ->
-   E.raise_error (Codes.Fatal_SyntaxError, "Syntax error: unterminated extension syntax")
-                 (current_range lexbuf)
+   E.raise_error_text (current_range lexbuf) Codes.Fatal_SyntaxError
+    "Syntax error: unterminated extension syntax"
  | newline ->
    L.new_line lexbuf;
    Buffer.add_string buffer (L.lexeme lexbuf);

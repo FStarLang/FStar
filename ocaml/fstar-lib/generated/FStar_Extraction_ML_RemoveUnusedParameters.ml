@@ -353,13 +353,17 @@ let (elim_tydef :
                            (if must_eliminate i
                             then
                               (let uu___4 =
-                                 let uu___5 =
-                                   FStar_Compiler_Util.format2
-                                     "Expected parameter %s of %s to be unused in its definition and eliminated"
-                                     p name in
-                                 (FStar_Errors_Codes.Error_RemoveUnusedTypeParameter,
-                                   uu___5) in
-                               FStar_Errors.log_issue range_of_tydef uu___4)
+                                 FStar_Compiler_Util.format2
+                                   "Expected parameter %s of %s to be unused in its definition and eliminated"
+                                   p name in
+                               FStar_Errors.log_issue
+                                 FStar_Class_HasRange.hasRange_range
+                                 range_of_tydef
+                                 FStar_Errors_Codes.Error_RemoveUnusedTypeParameter
+                                 ()
+                                 (Obj.magic
+                                    FStar_Errors_Msg.is_error_message_string)
+                                 (Obj.magic uu___4))
                             else ();
                             ((i + Prims.int_one), (param :: params), (Retain
                               :: entry1)))
@@ -381,16 +385,25 @@ let (elim_tydef :
                                   | uu___6 -> range_of_tydef in
                                 ((let uu___7 =
                                     let uu___8 =
-                                      let uu___9 =
-                                        FStar_Compiler_Util.string_of_int i in
-                                      let uu___10 =
-                                        FStar_Compiler_Util.string_of_int i in
-                                      FStar_Compiler_Util.format3
-                                        "Parameter %s of %s is unused and must be eliminated for F#; add `[@@ remove_unused_type_parameters [%s; ...]]` to the interface signature; \nThis type definition is being dropped"
-                                        uu___9 name uu___10 in
-                                    (FStar_Errors_Codes.Error_RemoveUnusedTypeParameter,
-                                      uu___8) in
-                                  FStar_Errors.log_issue range uu___7);
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_int)
+                                        i in
+                                    let uu___9 =
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_int)
+                                        i in
+                                    FStar_Compiler_Util.format3
+                                      "Parameter %s of %s is unused and must be eliminated for F#; add `[@@ remove_unused_type_parameters [%s; ...]]` to the interface signature; \nThis type definition is being dropped"
+                                      uu___8 name uu___9 in
+                                  FStar_Errors.log_issue
+                                    FStar_Class_HasRange.hasRange_range range
+                                    FStar_Errors_Codes.Error_RemoveUnusedTypeParameter
+                                    ()
+                                    (Obj.magic
+                                       FStar_Errors_Msg.is_error_message_string)
+                                    (Obj.magic uu___7));
                                  FStar_Compiler_Effect.raise Drop_tydef)
                               else
                                 ((i + Prims.int_one), (param :: params),

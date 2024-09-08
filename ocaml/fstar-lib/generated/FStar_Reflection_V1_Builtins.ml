@@ -319,15 +319,15 @@ let rec (inspect_ln :
     | uu___ ->
         ((let uu___2 =
             let uu___3 =
-              let uu___4 =
-                FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term t1 in
-              let uu___5 =
-                FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
-              FStar_Compiler_Util.format2
-                "inspect_ln: outside of expected syntax (%s, %s)" uu___4
-                uu___5 in
-            (FStar_Errors_Codes.Warning_CantInspect, uu___3) in
-          FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu___2);
+              FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term t1 in
+            let uu___4 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
+            FStar_Compiler_Util.format2
+              "inspect_ln: outside of expected syntax (%s, %s)" uu___3 uu___4 in
+          FStar_Errors.log_issue (FStar_Syntax_Syntax.has_range_syntax ()) t1
+            FStar_Errors_Codes.Warning_CantInspect ()
+            (Obj.magic FStar_Errors_Msg.is_error_message_string)
+            (Obj.magic uu___2));
          FStar_Reflection_V1_Data.Tv_Unsupp)
 let (inspect_comp :
   FStar_Syntax_Syntax.comp -> FStar_Reflection_V1_Data.comp_view) =
@@ -347,13 +347,14 @@ let (inspect_comp :
           (FStar_Syntax_Syntax.Decreases_wf uu___1)) ->
           ((let uu___3 =
               let uu___4 =
-                let uu___5 =
-                  FStar_Class_Show.show FStar_Syntax_Print.showable_comp c in
-                FStar_Compiler_Util.format1
-                  "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s skipping the decreases clause"
-                  uu___5 in
-              (FStar_Errors_Codes.Warning_CantInspect, uu___4) in
-            FStar_Errors.log_issue c.FStar_Syntax_Syntax.pos uu___3);
+                FStar_Class_Show.show FStar_Syntax_Print.showable_comp c in
+              FStar_Compiler_Util.format1
+                "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s skipping the decreases clause"
+                uu___4 in
+            FStar_Errors.log_issue (FStar_Syntax_Syntax.has_range_syntax ())
+              c FStar_Errors_Codes.Warning_CantInspect ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___3));
            [])
       | uu___1 -> FStar_Compiler_Effect.failwith "Impossible!" in
     match c.FStar_Syntax_Syntax.n with
@@ -613,9 +614,9 @@ let (pack_ln :
         FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown
           FStar_Compiler_Range_Type.dummyRange
     | FStar_Reflection_V1_Data.Tv_Unsupp ->
-        (FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
-           (FStar_Errors_Codes.Warning_CantInspect,
-             "packing a Tv_Unsupp into Tm_unknown");
+        (FStar_Errors.log_issue0 FStar_Errors_Codes.Warning_CantInspect ()
+           (Obj.magic FStar_Errors_Msg.is_error_message_string)
+           (Obj.magic "packing a Tv_Unsupp into Tm_unknown");
          FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown
            FStar_Compiler_Range_Type.dummyRange)
 let (compare_bv :
@@ -1174,17 +1175,21 @@ let (inspect_bv : FStar_Syntax_Syntax.bv -> FStar_Reflection_V1_Data.bv_view)
     if bv.FStar_Syntax_Syntax.index < Prims.int_zero
     then
       (let uu___1 =
-         let uu___2 =
-           let uu___3 =
-             FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
-           let uu___4 =
-             FStar_Class_Show.show FStar_Syntax_Print.showable_term
-               bv.FStar_Syntax_Syntax.sort in
-           FStar_Compiler_Util.format3
-             "inspect_bv: index is negative (%s : %s), index = %s" uu___3
-             uu___4 (Prims.string_of_int bv.FStar_Syntax_Syntax.index) in
-         (FStar_Errors_Codes.Warning_CantInspect, uu___2) in
-       FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange uu___1)
+         let uu___2 = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
+         let uu___3 =
+           FStar_Class_Show.show FStar_Syntax_Print.showable_term
+             bv.FStar_Syntax_Syntax.sort in
+         let uu___4 =
+           FStar_Class_Show.show
+             (FStar_Class_Show.printableshow
+                FStar_Class_Printable.printable_int)
+             bv.FStar_Syntax_Syntax.index in
+         FStar_Compiler_Util.format3
+           "inspect_bv: index is negative (%s : %s), index = %s" uu___2
+           uu___3 uu___4 in
+       FStar_Errors.log_issue0 FStar_Errors_Codes.Warning_CantInspect ()
+         (Obj.magic FStar_Errors_Msg.is_error_message_string)
+         (Obj.magic uu___1))
     else ();
     (let uu___1 =
        let uu___2 = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
@@ -1205,15 +1210,17 @@ let (pack_bv : FStar_Reflection_V1_Data.bv_view -> FStar_Syntax_Syntax.bv) =
        let uu___2 =
          let uu___3 =
            let uu___4 =
-             let uu___5 =
-               FStar_BigInt.to_int_fs bvv.FStar_Reflection_V1_Data.bv_index in
-             Prims.string_of_int uu___5 in
-           FStar_Compiler_Util.format2
-             "pack_bv: index is negative (%s), index = %s"
-             (FStar_Compiler_Sealed.unseal
-                bvv.FStar_Reflection_V1_Data.bv_ppname) uu___4 in
-         (FStar_Errors_Codes.Warning_CantInspect, uu___3) in
-       FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange uu___2
+             FStar_BigInt.to_int_fs bvv.FStar_Reflection_V1_Data.bv_index in
+           FStar_Class_Show.show
+             (FStar_Class_Show.printableshow
+                FStar_Class_Printable.printable_int) uu___4 in
+         FStar_Compiler_Util.format2
+           "pack_bv: index is negative (%s), index = %s"
+           (FStar_Compiler_Sealed.unseal
+              bvv.FStar_Reflection_V1_Data.bv_ppname) uu___3 in
+       FStar_Errors.log_issue0 FStar_Errors_Codes.Warning_CantInspect ()
+         (Obj.magic FStar_Errors_Msg.is_error_message_string)
+         (Obj.magic uu___2)
      else ());
     (let uu___1 =
        FStar_Ident.mk_ident

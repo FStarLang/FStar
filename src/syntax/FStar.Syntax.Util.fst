@@ -40,12 +40,18 @@ open FStar.Class.Setlike
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
 
-(* A hook into FStar.Syntax.Print, only for debugging.
+(* A hook into FStar.Syntax.Print, only for debugging and error messages.
  * The reference is set in FStar.Main *)
 let tts_f : ref (option (term -> string)) = U.mk_ref None
 let tts t : string =
     match !tts_f with
     | None -> "<<hook unset>>"
+    | Some f -> f t
+
+let ttd_f : ref (option (term -> Pprint.document)) = U.mk_ref None
+let ttd t : Pprint.document =
+    match !ttd_f with
+    | None -> Pprint.doc_of_string "<<hook unset>>"
     | Some f -> f t
 
 let mk_discriminator lid =
@@ -265,7 +271,7 @@ let comp_eff_name_res_and_args (c:comp) : lident & typ & args =
  *)
 let effect_indices_from_repr (repr:term) (is_layered:bool) (r:Range.range) (err:string)
 : list term =
-  let err () = Errors.raise_error (Errors.Fatal_UnexpectedEffect, err) r in
+  let err () = Errors.raise_error r Errors.Fatal_UnexpectedEffect err in
   let repr = compress repr in
   if is_layered
   then match repr.n with
@@ -1581,13 +1587,11 @@ let process_pragma p r =
       match Options.set_options s with
       | Getopt.Success -> ()
       | Getopt.Help  ->
-        Errors.raise_error
-                (Errors.Fatal_FailToProcessPragma,
-                 "Failed to process pragma: use 'fstar --help' to see which options are available")
-                r
+        Errors.raise_error r Errors.Fatal_FailToProcessPragma
+          "Failed to process pragma: use 'fstar --help' to see which options are available"
       | Getopt.Error s ->
-        Errors.raise_error
-                (Errors.Fatal_FailToProcessPragma, "Failed to process pragma: " ^ s) r
+        Errors.raise_error r Errors.Fatal_FailToProcessPragma
+          ("Failed to process pragma: " ^ s)
     in
     match p with
     | SetOptions o ->
@@ -1611,9 +1615,9 @@ let process_pragma p r =
       ()
 
     | PopOptions ->
-      if Options.internal_pop ()
-      then ()
-      else Errors.raise_error (Errors.Fatal_FailToProcessPragma, "Cannot #pop-options, stack would become empty") r
+      if not (Options.internal_pop ()) then
+        Errors.raise_error r Errors.Fatal_FailToProcessPragma
+          "Cannot #pop-options, stack would become empty"
 
     | PrintEffectsGraph -> ()  //Typechecker handles it
 
@@ -1799,20 +1803,23 @@ let destruct_lemma_with_smt_patterns (t:term)
       | Tm_fvar fv, [(_, _); arg] when fv_eq_lid fv PC.smtpat_lid ->
         arg
       | _ ->
-          Errors.raise_error (Errors.Error_IllSMTPat,
-                              U.format1 "Not an atomic SMT pattern: %s; \
-                                          patterns on lemmas must be a list of simple SMTPat's \
-                                          or a single SMTPatOr containing a list \
-                                          of lists of patterns" (tts p))
-                              p.pos
+        let open FStar.Class.PP in
+        let open FStar.Errors.Msg in
+        let open FStar.Pprint in
+        Errors.raise_error p Errors.Error_IllSMTPat [
+            prefix 2 1 (text "Not an atomic SMT pattern:")
+              (ttd p);
+            text "Patterns on lemmas must be a list of simple SMTPat's;\
+                  or a single SMTPatOr containing a list;\
+                  of lists of patterns."
+          ]
     in
     let list_literal_elements (e:term) : list term =
       match list_elements e with
       | Some l -> l
       | None ->
-        Errors.log_issue e.pos
-          (Errors.Warning_NonListLiteralSMTPattern,
-            "SMT pattern is not a list literal; ignoring the pattern");
+        Errors.log_issue e Errors.Warning_NonListLiteralSMTPattern
+          "SMT pattern is not a list literal; ignoring the pattern";
         []
     in
     let elts = list_literal_elements p in
@@ -2058,10 +2065,8 @@ let check_mutual_universes (lbs:list letbinding)
         (fun lb ->
           if List.length lb.lbunivs <> expected_len
           ||  not (List.forall2 Ident.ident_equals lb.lbunivs expected)
-          then FStar.Errors.raise_error
-                  (Errors.Fatal_IncompatibleUniverse,
-                   "Mutually recursive definitions do not abstract over the same universes")
-                  lb.lbpos)
+          then FStar.Errors.raise_error lb.lbpos Errors.Fatal_IncompatibleUniverse
+                 "Mutually recursive definitions do not abstract over the same universes")
         lbs
 
 let ctx_uvar_should_check (u:ctx_uvar) = 

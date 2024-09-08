@@ -37,6 +37,7 @@ open FStar.Tactics.CtrlRewrite
 open FStar.Tactics.Native
 open FStar.Tactics.Common
 open FStar.Class.Show
+open FStar.Class.PP
 open FStar.Class.Monad
 
 module BU      = FStar.Compiler.Util
@@ -176,10 +177,11 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
           then doc_of_string "The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?"
           else empty
         in
-        FStar.Errors.Raise.(error_doc (Fatal_TacticGotStuck,
-          [str "Tactic got stuck!";
-           str "Reduction stopped at: " ^^ ttd h_result;
-           maybe_admit_tip]) proof_state.main_context.range)
+        Errors.raise_error proof_state.main_context Errors.Fatal_TacticGotStuck [
+          doc_of_string "Tactic got stuck!";
+          doc_of_string "Reduction stopped at: " ^^ pp h_result;
+          maybe_admit_tip
+        ]
 
 let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac 'b =
     let! proof_state = get in
@@ -198,12 +200,12 @@ let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_
       traise e
 
     | None ->
-        FStar.Errors.Raise.(
-          error_doc (Fatal_TacticGotStuck,
-            [str "Tactic got stuck (in NBE)!";
-             text "Please file a bug report with a minimal reproduction of this issue.";
-             str "Result = " ^^ str (NBET.t_to_string result)]) proof_state.main_context.range
-        )
+        let open FStar.Pprint in
+        Errors.raise_error proof_state.main_context Errors.Fatal_TacticGotStuck [
+          doc_of_string "Tactic got stuck (in NBE)!";
+          Errors.Msg.text "Please file a bug report with a minimal reproduction of this issue.";
+          doc_of_string "Result = " ^^ arbitrary_string (NBET.t_to_string result)
+        ]
 
 let unembed_tactic_1 (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : 'a -> tac 'r =
     fun x ->
@@ -271,20 +273,18 @@ let report_implicits rng (is : TcRel.tagged_implicits) : unit =
       match tag with
       | TcRel.Implicit_unresolved
       | TcRel.Implicit_checking_defers_univ_constraint ->
-        Errors.log_issue_doc rng
-                (Err.Error_UninstantiatedUnificationVarInTactic, [
-                  text "Tactic left uninstantiated unification variable:" ^/^ pp (imp.imp_uvar.ctx_uvar_head);
-                  text "Type:" ^/^ pp (U.ctx_uvar_typ imp.imp_uvar);
-                  text "Reason:" ^/^ dquotes (doc_of_string imp.imp_reason);
-                ])
+        Errors.log_issue rng Err.Error_UninstantiatedUnificationVarInTactic [
+          text "Tactic left uninstantiated unification variable:" ^/^ pp (imp.imp_uvar.ctx_uvar_head);
+          text "Type:" ^/^ pp (U.ctx_uvar_typ imp.imp_uvar);
+          text "Reason:" ^/^ dquotes (doc_of_string imp.imp_reason);
+        ]
       | TcRel.Implicit_has_typing_guard (tm, ty) ->
-        Errors.log_issue_doc rng
-                (Err.Error_UninstantiatedUnificationVarInTactic, [
-                  text "Tactic solved goal:" ^/^ pp (imp.imp_uvar.ctx_uvar_head);
-                  text "Type:" ^/^ pp (U.ctx_uvar_typ imp.imp_uvar);
-                  text "To the term:" ^/^ pp tm;
-                  text "But it has a non-trivial typing guard. Use gather_or_solve_explicit_guards_for_resolved_goals to inspect and prove these goals";
-                ])
+        Errors.log_issue rng Err.Error_UninstantiatedUnificationVarInTactic [
+          text "Tactic solved goal:" ^/^ pp (imp.imp_uvar.ctx_uvar_head);
+          text "Type:" ^/^ pp (U.ctx_uvar_typ imp.imp_uvar);
+          text "To the term:" ^/^ pp tm;
+          text "But it has a non-trivial typing guard. Use gather_or_solve_explicit_guards_for_resolved_goals to inspect and prove these goals";
+        ]
     );
   Err.stop_if_err ()
 
@@ -361,10 +361,6 @@ let run_unembedded_tactic_on_ps
       let msg = FStar.Pprint.doc_of_string "Tactic failed" :: msg in
       raise (Errors.Error (code, msg, rng, ctx))
 
-    | Failed (Errors.Err (code, msg, ctx), ps) ->
-      let msg = FStar.Pprint.doc_of_string "Tactic failed" :: msg in
-      raise (Errors.Err (code, msg, ctx))
-
     (* Any other error, including exceptions being raised by the metaprograms. *)
     | Failed (e, ps) ->
         if ps.dump_on_failure then
@@ -391,11 +387,8 @@ let run_unembedded_tactic_on_ps
               | _ -> ps.entry_range
         in
         let open FStar.Pprint in
-        Err.raise_error_doc (Err.Fatal_UserTacticFailure, (
-                              (if ps.dump_on_failure then [doc_of_string "Tactic failed"] else [])
-                              @ doc)
-                            )
-                          rng
+        Err.raise_error rng Err.Fatal_UserTacticFailure
+          ((if ps.dump_on_failure then [doc_of_string "Tactic failed"] else []) @ doc)
 
 let run_tactic_on_ps'
   (rng_call : Range.range)

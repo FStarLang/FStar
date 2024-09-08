@@ -37,13 +37,13 @@ let __def_check_scoped rng msg env thing =
   let free = freeNames thing in
   let scope = boundNames env in
   if not (subset free scope) then
-    Errors.log_issue_doc rng (Errors.Warning_Defensive, [
+    Errors.log_issue rng Errors.Warning_Defensive [
          text "Internal: term is not well-scoped " ^/^ parens (doc_of_string msg);
          text "t =" ^/^ pp thing;
          text "FVs =" ^/^ pp free;
          text "Scope =" ^/^ pp scope;
          text "Diff =" ^/^ pp (diff free scope);
-       ])
+       ]
 
 let def_check_scoped rng msg env thing =
   if Options.defensive () then

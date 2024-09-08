@@ -46,9 +46,9 @@ let (parse_mod :
           (FStar_Pervasives.Inr uu___1, uu___2) ->
           let msg =
             FStar_Compiler_Util.format1 "%s: expected a module\n" mod_name in
-          FStar_Errors.raise_error
-            (FStar_Errors_Codes.Fatal_ModuleExpected, msg)
-            FStar_Compiler_Range_Type.dummyRange
+          FStar_Errors.raise_error0 FStar_Errors_Codes.Fatal_ModuleExpected
+            () (Obj.magic FStar_Errors_Msg.is_error_message_string)
+            (Obj.magic msg)
       | FStar_Parser_ParseIt.Term uu___1 ->
           FStar_Compiler_Effect.failwith
             "Impossible: parsing a Filename always results in an ASTFragment"
@@ -342,7 +342,10 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
                   FStar_ToSyntax_ToSyntax.desugar_term
                     tcenv.FStar_TypeChecker_Env.dsenv t
               | FStar_Parser_ParseIt.ParseError (e, msg, r) ->
-                  FStar_Errors.raise_error_doc (e, msg) r
+                  FStar_Errors.raise_error
+                    FStar_Class_HasRange.hasRange_range r e ()
+                    (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                    (Obj.magic msg)
               | FStar_Parser_ParseIt.ASTFragment uu___2 ->
                   FStar_Compiler_Effect.failwith
                     "Impossible: parsing a Fragment always results in a Term"))
@@ -600,20 +603,24 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
                                  (report ();
                                   (let uu___8 =
                                      let uu___9 =
-                                       let uu___10 =
-                                         FStar_Compiler_Util.string_of_int n in
-                                       FStar_Compiler_Util.format1
-                                         "%s errors were reported" uu___10 in
-                                     (FStar_Errors_Codes.Fatal_ErrorsReported,
-                                       uu___9) in
-                                   FStar_Errors.raise_err uu___8))
+                                       FStar_Compiler_Util.string_of_int n in
+                                     FStar_Compiler_Util.format1
+                                       "%s errors were reported" uu___9 in
+                                   FStar_Errors.raise_error0
+                                     FStar_Errors_Codes.Fatal_ErrorsReported
+                                     ()
+                                     (Obj.magic
+                                        FStar_Errors_Msg.is_error_message_string)
+                                     (Obj.magic uu___8)))
                                else ())))) ()
                with
                | uu___2 ->
                    (report ();
-                    FStar_Errors.raise_err
-                      (FStar_Errors_Codes.Fatal_TcOneFragmentFailed,
-                        (Prims.strcat "tc_one_fragment failed: " s))))) ()
+                    FStar_Errors.raise_error0
+                      FStar_Errors_Codes.Fatal_TcOneFragmentFailed ()
+                      (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                      (Obj.magic (Prims.strcat "tc_one_fragment failed: " s)))))
+         ()
      with
      | uu___1 ->
          ((fun uu___1 ->

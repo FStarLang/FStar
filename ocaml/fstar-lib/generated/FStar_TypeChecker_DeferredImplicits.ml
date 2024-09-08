@@ -208,14 +208,14 @@ let (find_user_tac_for_uvar :
                let attr =
                  FStar_Class_Show.show FStar_Syntax_Print.showable_term a in
                ((let uu___2 =
-                   let uu___3 =
-                     FStar_Compiler_Util.format2
-                       "Multiple resolve_implicits hooks are eligible for attribute %s; \nplease resolve the ambiguity by using the `override_resolve_implicits_handler` attribute to choose among these candidates {%s}"
-                       attr candidates3 in
-                   (FStar_Errors_Codes.Warning_AmbiguousResolveImplicitsHook,
-                     uu___3) in
-                 FStar_Errors.log_issue u.FStar_Syntax_Syntax.ctx_uvar_range
-                   uu___2);
+                   FStar_Compiler_Util.format2
+                     "Multiple resolve_implicits hooks are eligible for attribute %s; \nplease resolve the ambiguity by using the `override_resolve_implicits_handler` attribute to choose among these candidates {%s}"
+                     attr candidates3 in
+                 FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range
+                   u.FStar_Syntax_Syntax.ctx_uvar_range
+                   FStar_Errors_Codes.Warning_AmbiguousResolveImplicitsHook
+                   () (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                   (Obj.magic uu___2));
                 FStar_Pervasives_Native.None))
       | uu___ -> FStar_Pervasives_Native.None
 let (should_defer_uvar_to_user_tac :

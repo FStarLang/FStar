@@ -609,18 +609,20 @@ let (preprocess :
                                      let uu___6 =
                                        let uu___7 =
                                          let uu___8 =
-                                           let uu___9 =
-                                             FStar_Tactics_Types.goal_type g in
-                                           FStar_Class_Show.show
-                                             FStar_Syntax_Print.showable_term
-                                             uu___9 in
-                                         FStar_Compiler_Util.format1
-                                           "Tactic returned proof-relevant goal: %s"
+                                           FStar_Tactics_Types.goal_type g in
+                                         FStar_Class_Show.show
+                                           FStar_Syntax_Print.showable_term
                                            uu___8 in
-                                       (FStar_Errors_Codes.Fatal_TacticProofRelevantGoal,
-                                         uu___7) in
-                                     FStar_Errors.raise_error uu___6
-                                       env.FStar_TypeChecker_Env.range
+                                       FStar_Compiler_Util.format1
+                                         "Tactic returned proof-relevant goal: %s"
+                                         uu___7 in
+                                     FStar_Errors.raise_error
+                                       FStar_TypeChecker_Env.hasRange_env env
+                                       FStar_Errors_Codes.Fatal_TacticProofRelevantGoal
+                                       ()
+                                       (Obj.magic
+                                          FStar_Errors_Msg.is_error_message_string)
+                                       (Obj.magic uu___6)
                                  | FStar_Pervasives_Native.Some phi1 -> phi1 in
                                ((let uu___6 =
                                    FStar_Compiler_Effect.op_Bang dbg_Tac in
@@ -1572,9 +1574,12 @@ let (synthesize :
                                   uu___6 guard))
                           | FStar_Pervasives_Native.None ->
                               FStar_Errors.raise_error
-                                (FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis,
-                                  "synthesis left open goals")
-                                typ.FStar_Syntax_Syntax.pos) gs;
+                                (FStar_Syntax_Syntax.has_range_syntax ()) typ
+                                FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis
+                                ()
+                                (Obj.magic
+                                   FStar_Errors_Msg.is_error_message_string)
+                                (Obj.magic "synthesis left open goals")) gs;
                      w)))
 let (solve_implicits :
   FStar_TypeChecker_Env.env ->
@@ -1655,11 +1660,13 @@ let (solve_implicits :
                                      "FStar.TypeChecker.Hooks.force_trivial_guard")
                                 else ())
                            | FStar_Pervasives_Native.None ->
-                               let uu___7 =
-                                 FStar_TypeChecker_Env.get_range env in
                                FStar_Errors.raise_error
-                                 (FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis,
-                                   "synthesis left open goals") uu___7)) gs)))
+                                 FStar_TypeChecker_Env.hasRange_env env
+                                 FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis
+                                 ()
+                                 (Obj.magic
+                                    FStar_Errors_Msg.is_error_message_string)
+                                 (Obj.magic "synthesis left open goals"))) gs)))
 let (find_user_tac_for_attr :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -1742,12 +1749,15 @@ let (handle_smt_goal :
                                        FStar_Tactics_Types.goal_env g in
                                      (uu___7, vc)))
                                | FStar_Pervasives_Native.None ->
-                                   let uu___6 =
-                                     FStar_TypeChecker_Env.get_range env in
                                    FStar_Errors.raise_error
-                                     (FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis,
-                                       "Handling an SMT goal by tactic left non-prop open goals")
-                                     uu___6) gs1) in
+                                     FStar_TypeChecker_Env.hasRange_env env
+                                     FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis
+                                     ()
+                                     (Obj.magic
+                                        FStar_Errors_Msg.is_error_message_string)
+                                     (Obj.magic
+                                        "Handling an SMT goal by tactic left non-prop open goals"))
+                            gs1) in
                gs
            | FStar_Pervasives_Native.None -> [(env, goal1)])
 let (uu___842 :
@@ -1803,16 +1813,18 @@ let (splice :
                                then
                                  let uu___6 =
                                    let uu___7 =
-                                     let uu___8 =
-                                       FStar_Class_Show.show
-                                         (FStar_Class_Show.show_list
-                                            FStar_Ident.showable_lident) lids in
-                                     FStar_Compiler_Util.format1
-                                       "Typed splice: unexpected lids length (> 1) (%s)"
-                                       uu___8 in
-                                   (FStar_Errors_Codes.Error_BadSplice,
-                                     uu___7) in
-                                 FStar_Errors.raise_error uu___6 rng
+                                     FStar_Class_Show.show
+                                       (FStar_Class_Show.show_list
+                                          FStar_Ident.showable_lident) lids in
+                                   FStar_Compiler_Util.format1
+                                     "Typed splice: unexpected lids length (> 1) (%s)"
+                                     uu___7 in
+                                 FStar_Errors.raise_error
+                                   FStar_Class_HasRange.hasRange_range rng
+                                   FStar_Errors_Codes.Error_BadSplice ()
+                                   (Obj.magic
+                                      FStar_Errors_Msg.is_error_message_string)
+                                   (Obj.magic uu___6)
                                else
                                  (let val_t =
                                     if
@@ -1836,17 +1848,22 @@ let (splice :
                                            then
                                              let uu___10 =
                                                let uu___11 =
-                                                 let uu___12 =
-                                                   FStar_Compiler_Util.string_of_int
-                                                     (FStar_Compiler_List.length
-                                                        uvs) in
-                                                 FStar_Compiler_Util.format1
-                                                   "Typed splice: val declaration for %s is universe polymorphic in %s universes, expected 0"
-                                                   uu___12 in
-                                               (FStar_Errors_Codes.Error_BadSplice,
-                                                 uu___11) in
-                                             FStar_Errors.raise_error uu___10
+                                                 FStar_Class_Show.show
+                                                   (FStar_Class_Show.printableshow
+                                                      FStar_Class_Printable.printable_nat)
+                                                   (FStar_Compiler_List.length
+                                                      uvs) in
+                                               FStar_Compiler_Util.format1
+                                                 "Typed splice: val declaration for %s is universe polymorphic in %s universes, expected 0"
+                                                 uu___11 in
+                                             FStar_Errors.raise_error
+                                               FStar_Class_HasRange.hasRange_range
                                                rng
+                                               FStar_Errors_Codes.Error_BadSplice
+                                               ()
+                                               (Obj.magic
+                                                  FStar_Errors_Msg.is_error_message_string)
+                                               (Obj.magic uu___10)
                                            else
                                              FStar_Pervasives_Native.Some
                                                tval) in
@@ -2203,9 +2220,15 @@ let (splice :
                                                   uu___11 guard))
                                           | FStar_Pervasives_Native.None ->
                                               FStar_Errors.raise_error
-                                                (FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis,
-                                                  "splice left open goals")
-                                                rng)) gs);
+                                                FStar_Class_HasRange.hasRange_range
+                                                rng
+                                                FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis
+                                                ()
+                                                (Obj.magic
+                                                   FStar_Errors_Msg.is_error_message_string)
+                                                (Obj.magic
+                                                   "splice left open goals")))
+                                      gs);
                                (let lids' =
                                   FStar_Compiler_List.collect
                                     FStar_Syntax_Util.lids_of_sigelt sigelts1 in
@@ -2221,21 +2244,25 @@ let (splice :
                                          ->
                                          let uu___9 =
                                            let uu___10 =
-                                             let uu___11 =
-                                               FStar_Class_Show.show
-                                                 FStar_Ident.showable_lident
-                                                 lid in
-                                             let uu___12 =
-                                               FStar_Class_Show.show
-                                                 (FStar_Class_Show.show_list
-                                                    FStar_Ident.showable_lident)
-                                                 lids' in
-                                             FStar_Compiler_Util.format2
-                                               "Splice declared the name %s but it was not defined.\nThose defined were: %s"
-                                               uu___11 uu___12 in
-                                           (FStar_Errors_Codes.Fatal_SplicedUndef,
-                                             uu___10) in
-                                         FStar_Errors.raise_error uu___9 rng
+                                             FStar_Class_Show.show
+                                               FStar_Ident.showable_lident
+                                               lid in
+                                           let uu___11 =
+                                             FStar_Class_Show.show
+                                               (FStar_Class_Show.show_list
+                                                  FStar_Ident.showable_lident)
+                                               lids' in
+                                           FStar_Compiler_Util.format2
+                                             "Splice declared the name %s but it was not defined.\nThose defined were: %s"
+                                             uu___10 uu___11 in
+                                         FStar_Errors.raise_error
+                                           FStar_Class_HasRange.hasRange_range
+                                           rng
+                                           FStar_Errors_Codes.Fatal_SplicedUndef
+                                           ()
+                                           (Obj.magic
+                                              FStar_Errors_Msg.is_error_message_string)
+                                           (Obj.magic uu___9)
                                      | uu___9 -> ()) lids;
                                 (let uu___9 =
                                    FStar_Compiler_Effect.op_Bang dbg_Tac in
@@ -2260,29 +2287,59 @@ let (splice :
                                              let uu___11 =
                                                let uu___12 =
                                                  let uu___13 =
-                                                   FStar_Syntax_Print.sigelt_to_string_short
-                                                     se in
-                                                 FStar_Compiler_Util.format1
-                                                   "Tactic returned bad sigelt: %s\nIf you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt."
-                                                   uu___13 in
-                                               (FStar_Errors_Codes.Error_BadSplice,
-                                                 uu___12) in
-                                             FStar_Errors.raise_error uu___11
+                                                   FStar_Errors_Msg.text
+                                                     "Tactic returned bad sigelt:" in
+                                                 let uu___14 =
+                                                   let uu___15 =
+                                                     FStar_Syntax_Print.sigelt_to_string_short
+                                                       se in
+                                                   FStar_Pprint.doc_of_string
+                                                     uu___15 in
+                                                 FStar_Pprint.op_Hat_Slash_Hat
+                                                   uu___13 uu___14 in
+                                               let uu___13 =
+                                                 let uu___14 =
+                                                   FStar_Errors_Msg.text
+                                                     "If you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt." in
+                                                 [uu___14] in
+                                               uu___12 :: uu___13 in
+                                             FStar_Errors.raise_error
+                                               FStar_Class_HasRange.hasRange_range
                                                rng
+                                               FStar_Errors_Codes.Error_BadSplice
+                                               ()
+                                               (Obj.magic
+                                                  FStar_Errors_Msg.is_error_message_list_doc)
+                                               (Obj.magic uu___11)
                                          | FStar_Syntax_Syntax.Sig_inductive_typ
                                              uu___10 ->
                                              let uu___11 =
                                                let uu___12 =
                                                  let uu___13 =
-                                                   FStar_Syntax_Print.sigelt_to_string_short
-                                                     se in
-                                                 FStar_Compiler_Util.format1
-                                                   "Tactic returned bad sigelt: %s\nIf you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt."
-                                                   uu___13 in
-                                               (FStar_Errors_Codes.Error_BadSplice,
-                                                 uu___12) in
-                                             FStar_Errors.raise_error uu___11
+                                                   FStar_Errors_Msg.text
+                                                     "Tactic returned bad sigelt:" in
+                                                 let uu___14 =
+                                                   let uu___15 =
+                                                     FStar_Syntax_Print.sigelt_to_string_short
+                                                       se in
+                                                   FStar_Pprint.doc_of_string
+                                                     uu___15 in
+                                                 FStar_Pprint.op_Hat_Slash_Hat
+                                                   uu___13 uu___14 in
+                                               let uu___13 =
+                                                 let uu___14 =
+                                                   FStar_Errors_Msg.text
+                                                     "If you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt." in
+                                                 [uu___14] in
+                                               uu___12 :: uu___13 in
+                                             FStar_Errors.raise_error
+                                               FStar_Class_HasRange.hasRange_range
                                                rng
+                                               FStar_Errors_Codes.Error_BadSplice
+                                               ()
+                                               (Obj.magic
+                                                  FStar_Errors_Msg.is_error_message_list_doc)
+                                               (Obj.magic uu___11)
                                          | uu___10 -> ());
                                         {
                                           FStar_Syntax_Syntax.sigel =
@@ -2314,20 +2371,23 @@ let (splice :
                                              then
                                                let uu___12 =
                                                  let uu___13 =
-                                                   let uu___14 =
-                                                     FStar_Class_Show.show
-                                                       FStar_Syntax_Print.showable_qualifier
-                                                       q in
-                                                   let uu___15 =
-                                                     FStar_Syntax_Print.sigelt_to_string_short
-                                                       se in
-                                                   FStar_Compiler_Util.format2
-                                                     "The qualifier %s is internal, it cannot be attached to spliced sigelt `%s`."
-                                                     uu___14 uu___15 in
-                                                 (FStar_Errors_Codes.Error_InternalQualifier,
-                                                   uu___13) in
+                                                   FStar_Class_Show.show
+                                                     FStar_Syntax_Print.showable_qualifier
+                                                     q in
+                                                 let uu___14 =
+                                                   FStar_Syntax_Print.sigelt_to_string_short
+                                                     se in
+                                                 FStar_Compiler_Util.format2
+                                                   "The qualifier %s is internal, it cannot be attached to spliced sigelt `%s`."
+                                                   uu___13 uu___14 in
                                                FStar_Errors.raise_error
-                                                 uu___12 rng
+                                                 FStar_Class_HasRange.hasRange_range
+                                                 rng
+                                                 FStar_Errors_Codes.Error_InternalQualifier
+                                                 ()
+                                                 (Obj.magic
+                                                    FStar_Errors_Msg.is_error_message_string)
+                                                 (Obj.magic uu___12)
                                              else ())
                                           se.FStar_Syntax_Syntax.sigquals)
                                      sigelts2;
@@ -2433,9 +2493,15 @@ let (postprocess :
                                          uu___8 guard))
                                  | FStar_Pervasives_Native.None ->
                                      FStar_Errors.raise_error
-                                       (FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis,
-                                         "postprocessing left open goals")
-                                       typ.FStar_Syntax_Syntax.pos) gs;
+                                       (FStar_Syntax_Syntax.has_range_syntax
+                                          ()) typ
+                                       FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis
+                                       ()
+                                       (Obj.magic
+                                          FStar_Errors_Msg.is_error_message_string)
+                                       (Obj.magic
+                                          "postprocessing left open goals"))
+                              gs;
                             (let tagged_imps =
                                FStar_TypeChecker_Rel.resolve_implicits_tac
                                  env g_imp in

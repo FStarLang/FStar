@@ -104,7 +104,7 @@ let parse (env:uenv) (pre_fn: option string) (fn:string)
           in
           with_dsenv_of_env env (FStar.ToSyntax.Interleave.interleave_module ast true)
         | _ ->
-            Errors.raise_err (Errors.Fatal_PreModuleMismatch, "mismatch between pre-module and module\n")
+            Errors.raise_error0 Errors.Fatal_PreModuleMismatch "mismatch between pre-module and module"
   in
   with_dsenv_of_env env (Desugar.ast_modul_to_modul ast)
 
@@ -201,8 +201,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
             BU.format1 "Interactive mode only supports a single module at the top-level. Expected module %s"
                                     (Parser.Dep.module_name_of_file (fname env))
         in
-        Errors.raise_error (Errors.Fatal_NonSingletonTopLevelModule, msg)
-                                                                     (range_of_first_mod_decl ast_modul)
+        Errors.raise_error (range_of_first_mod_decl ast_modul) Errors.Fatal_NonSingletonTopLevelModule msg
       end;
       let modul, env =
           if DsEnv.syntax_only env.dsenv then modul, env
@@ -224,7 +223,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
     match curmod with
     | None ->
       let { Parser.AST.drange = rng } = List.hd ast_decls in
-      Errors.raise_error (Errors.Fatal_ModuleFirstStatement, "First statement must be a module declaration") rng
+      Errors.raise_error rng Errors.Fatal_ModuleFirstStatement "First statement must be a module declaration"
     | Some modul ->
       let env, ast_decls_l =
         BU.fold_map
@@ -276,8 +275,8 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
   | Pars.ASTFragment (Inl (FStar.Parser.AST.Interface(l, decls, _)), _) ->
     snd (with_dsenv_of_tcenv env <| FStar.ToSyntax.Interleave.initialize_interface l decls)
   | Pars.ASTFragment _ ->
-    Errors.raise_err (FStar.Errors.Fatal_ParseErrors, (BU.format1 "Unexpected result from parsing %s; expected a single interface"
-                             interface_file_name))
+    Errors.raise_error0 FStar.Errors.Fatal_ParseErrors
+      (BU.format1 "Unexpected result from parsing %s; expected a single interface" interface_file_name)
   | Pars.ParseError (err, msg, rng) ->
     raise (FStar.Errors.Error(err, msg, rng, []))
   | Pars.Term _ ->
@@ -451,17 +450,17 @@ let tc_one_file
       | None ->
         if Options.should_be_already_cached (FStar.Parser.Dep.module_name_of_file fn)
         && not (Options.force ())
-        then FStar.Errors.raise_err_doc (FStar.Errors.Error_AlreadyCachedAssertionFailure, [
+        then FStar.Errors.raise_error0 FStar.Errors.Error_AlreadyCachedAssertionFailure [
                  text <| BU.format1 "Expected %s to already be checked." fn
-               ]);
+               ];
 
         if (Option.isSome (Options.codegen())
         && Options.cmi())
         && not (Options.force ())
-        then FStar.Errors.raise_err_doc (FStar.Errors.Error_AlreadyCachedAssertionFailure, [
+        then FStar.Errors.raise_error0 FStar.Errors.Error_AlreadyCachedAssertionFailure [
                  text "Cross-module inlining expects all modules to be checked first.";
                  text <| BU.format1 "Module %s was not checked." fn;
-               ]);
+               ];
 
         let tc_result, mllib, env = tc_source_file () in
 

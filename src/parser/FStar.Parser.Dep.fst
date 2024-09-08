@@ -127,7 +127,7 @@ let module_name_of_file f =
     | Some longname ->
       longname
     | None ->
-      raise_err (Errors.Fatal_NotValidFStarFile, (Util.format1 "Not a valid FStar file: '%s'" f))
+      raise_error0 Errors.Fatal_NotValidFStarFile (Util.format1 "Not a valid FStar file: '%s'" f)
 
 (* In public interface *)
 let lowercase_module_name f = String.lowercase (module_name_of_file f)
@@ -307,13 +307,13 @@ let cache_file_name =
         then (
           let open FStar.Pprint in
           let open FStar.Errors.Msg in
-          FStar.Errors.log_issue_doc Range.dummyRange (FStar.Errors.Warning_UnexpectedCheckedFile, [
+          log_issue0 FStar.Errors.Warning_UnexpectedCheckedFile [
               text "Did not expect module" ^/^ doc_of_string mname ^/^ text "to be already checked.";
               prefix 2 1 (text "Found it in an unexpected location:")
                 (doc_of_string path) ^/^
               prefix 2 1 (text "instead of")
                 (doc_of_string expected_cache_file);
-            ])
+            ]
         );
 
         (* This expression morally just returns [path], but prefers
@@ -328,9 +328,9 @@ let cache_file_name =
         if !dbg_CheckedFiles then
           BU.print1 "find_file(%s) returned None\n" (cache_fn |> Util.basename);
         if mname |> Options.should_be_already_cached then
-          FStar.Errors.raise_err_doc (FStar.Errors.Error_AlreadyCachedAssertionFailure, [
+          raise_error0 FStar.Errors.Error_AlreadyCachedAssertionFailure [
              text (BU.format1 "Expected %s to be already checked but could not find it." mname)
-           ]);
+           ];
         FStar.Options.prepend_cache_dir cache_fn
     in
     let memo = Util.smap_create 100 in
@@ -367,7 +367,7 @@ let file_of_dep_aux
       (match interface_of_internal file_system_map key with
        | None ->
          assert false; //should be unreachable; see the only use of UseInterface in discover_one
-         raise_err (Errors.Fatal_MissingInterface, BU.format1 "Expected an interface for module %s, but couldn't find one" key)
+         raise_error0 Errors.Fatal_MissingInterface (BU.format1 "Expected an interface for module %s, but couldn't find one" key)
        | Some f ->
          f)
 
@@ -377,15 +377,15 @@ let file_of_dep_aux
       && Option.isNone (Options.dep()) //and we're not just doing a dependency scan using `--dep _`
       then if Options.expose_interfaces()
            then maybe_use_cache_of (Option.get (implementation_of_internal file_system_map key))
-           else raise_err_doc (Errors.Fatal_MissingExposeInterfacesOption, [
-                               text <|
-                               BU.format3 "You may have a cyclic dependence on module %s: use --dep full to confirm. \
-                                           Alternatively, invoking fstar with %s on the command line breaks \
-                                           the abstraction imposed by its interface %s."
-                                           key
-                                           (Option.get (implementation_of_internal file_system_map key))
-                                           (Option.get (interface_of_internal file_system_map key));
-                               text "If you really want this behavior add the option '--expose_interfaces'.";])
+           else raise_error0 Errors.Fatal_MissingExposeInterfacesOption [
+                    text <| BU.format3 "You may have a cyclic dependence on module %s: use --dep full to confirm. \
+                                Alternatively, invoking fstar with %s on the command line breaks \
+                                the abstraction imposed by its interface %s."
+                                key
+                                (Option.get (implementation_of_internal file_system_map key))
+                                (Option.get (interface_of_internal file_system_map key));
+                    text "If you really want this behavior add the option '--expose_interfaces'.";
+                  ]
       else maybe_use_cache_of (Option.get (interface_of_internal file_system_map key))   //we prefer to use 'a.fsti'
 
     | PreferInterface key
@@ -397,8 +397,8 @@ let file_of_dep_aux
           //then d is only present if either an interface or an implementation exist
           //the previous case already established that the interface doesn't exist
           //     since if the implementation was on the command line, it must exist because of option validation
-          raise_err (Errors.Fatal_MissingImplementation,
-                     BU.format1 "Expected an implementation of module %s, but couldn't find one" key)
+          raise_error0 Errors.Fatal_MissingImplementation
+            (BU.format1 "Expected an implementation of module %s, but couldn't find one" key)
         | Some f -> maybe_use_cache_of f
 
 let file_of_dep = file_of_dep_aux false
@@ -459,10 +459,10 @@ let build_inclusion_candidates_list (): list (string & string) =
       ) files
     else (
       let open FStar.Pprint in
-      log_issue_doc Range.dummyRange (Errors.Fatal_NotValidIncludeDirectory, [
+      log_issue0 Errors.Fatal_NotValidIncludeDirectory [
           prefix 2 1 (text "Not a valid include directory:")
             (doc_of_string d);
-        ]);
+        ];
       []
     )
   )
@@ -514,10 +514,11 @@ let namespace_of_lid l =
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = lowercase_join_longident lid true in
   if String.lowercase (must (check_and_strip_suffix (basename filename))) <> k' then
-    FStar.Errors.log_issue_doc (range_of_lid lid)
-      (Errors.Error_ModuleFileNameMismatch, [Errors.Msg.text (Util.format2 "The module declaration \"module %s\" \
-         found in file %s does not match its filename. Dependencies will be \
-         incorrect and the module will not be verified." (string_of_lid lid true) filename)])
+    log_issue lid Errors.Error_ModuleFileNameMismatch [
+        Errors.Msg.text (Util.format2 "The module declaration \"module %s\" \
+          found in file %s does not match its filename. Dependencies will be \
+          incorrect and the module will not be verified." (string_of_lid lid true) filename)
+      ]
 
 exception Exit
 
@@ -586,8 +587,7 @@ let enter_namespace
            suffix_exists suffix_filename
         then let str = suffix_filename |> must |> intf_and_impl_to_string in
              let open FStar.Pprint in
-             log_issue_doc Range.dummyRange
-               (Errors.Warning_UnexpectedFile, [
+             log_issue0 Errors.Warning_UnexpectedFile [
                 flow (break_ 1) [
                   text "Implicitly opening namespace";
                   squotes (doc_of_string sprefix);
@@ -597,7 +597,7 @@ let enter_namespace
                   dquotes (doc_of_string str) ^^ dot;
                 ];
                 text "Rename" ^/^ dquotes (doc_of_string str) ^/^ text "to avoid conflicts.";
-             ])
+             ]
       end;
 
       let filename = must (smap_try_find original_map k) in
@@ -695,8 +695,8 @@ let collect_one
          then true
          else begin
            if let_open then
-             FStar.Errors.log_issue (range_of_lid lid)
-               (Errors.Warning_ModuleOrFileNotFoundWarning, (Util.format1 "Module not found: %s" (string_of_lid lid true)));
+             log_issue lid Errors.Warning_ModuleOrFileNotFoundWarning
+               (Util.format1 "Module not found: %s" (string_of_lid lid true));
            false
          end
        in
@@ -705,9 +705,8 @@ let collect_one
          let key = lowercase_join_longident lid true in
          let r = enter_namespace original_map working_map key implicit_open in
          if not r && not implicit_open then  //suppress the warning for implicit opens
-           FStar.Errors.log_issue (range_of_lid lid)
-             (Errors.Warning_ModuleOrFileNotFoundWarning, (Util.format1 "No modules in namespace %s and no file with \
-             that name either" (string_of_lid lid true)))
+           log_issue lid Errors.Warning_ModuleOrFileNotFoundWarning
+             (Util.format1 "No modules in namespace %s and no file with that name either" (string_of_lid lid true))
        in
 
        let record_open let_open lid =
@@ -733,8 +732,8 @@ let collect_one
            add_dep deps (dep_edge (lowercase_join_longident lid true) false);
            true
          | None ->
-           FStar.Errors.log_issue (range_of_lid lid)
-             (Errors.Warning_ModuleOrFileNotFoundWarning,  (Util.format1 "module not found in search path: %s" alias));
+           log_issue lid Errors.Warning_ModuleOrFileNotFoundWarning
+             (Util.format1 "module not found in search path: %s" alias);
            false
        in
 
@@ -742,9 +741,8 @@ let collect_one
          if add_dependence_edge working_map module_name is_friend
          then ()
          else if !dbg then
-           FStar.Errors.log_issue (range_of_lid module_name)
-             (Errors.Warning_UnboundModuleReference, (BU.format1 "Unbound module reference %s"
-              (Ident.string_of_lid module_name)))
+           log_issue module_name Errors.Warning_UnboundModuleReference
+             (BU.format1 "Unbound module reference %s" (show module_name))
        in
 
        let record_lid lid =
@@ -875,8 +873,8 @@ let collect_one
         | TopLevelModule lid ->
             incr num_of_toplevelmods;
             if (!num_of_toplevelmods > 1) then
-                raise_error (Errors.Fatal_OneModulePerFile, Util.format1 "Automatic dependency analysis demands one \
-                  module per file (module %s not supported)" (string_of_lid lid true)) (range_of_lid lid)
+              raise_error lid Errors.Fatal_OneModulePerFile
+                (Util.format1 "Automatic dependency analysis demands one module per file (module %s not supported)" (string_of_lid lid true)) 
       and collect_tycon = function
         | TyconAbstract (_, binders, k) ->
             collect_binders binders;
@@ -1458,8 +1456,8 @@ let collect (all_cmd_line_files: list file_name)
       all_cmd_line_files |> List.map (fun fn ->
         match FStar.Options.find_file fn with
         | None ->
-          Errors.raise_err (Errors.Fatal_ModuleOrFileNotFound,
-                            Util.format1 "File %s could not be found" fn)
+          raise_error0 Errors.Fatal_ModuleOrFileNotFound
+            (Util.format1 "File %s could not be found" fn)
         | Some fn -> fn) in
   (* The dependency graph; keys are lowercased module names, values = list of
    * lowercased module names this file depends on. *)
@@ -1521,8 +1519,8 @@ let collect (all_cmd_line_files: list file_name)
       with_file_outchannel fn (fun outc -> print_graph outc fn dep_graph);
 
       print_string "\n";
-      Errors.raise_err (Errors.Fatal_CyclicDependence,
-                        BU.format1 "Recursive dependency on module %s\n" filename)
+      raise_error0 Errors.Fatal_CyclicDependence
+        (BU.format1 "Recursive dependency on module %s\n" filename)
   in
   (* full_cycle_detection finds cycles across interface
      boundaries that can otherwise be exploited to
@@ -2006,12 +2004,9 @@ let print_full (outc : out_channel) (deps:deps) : unit =
            let r = Range.set_file_of_range Range.dummyRange fsti in
            Range.set_use_range r (Range.def_range r)
          in
-         if not (has_implementation deps.file_system_map mn)
-         then (FStar.Errors.log_issue
-                    (range_of_file fsti)
-                    (Warning_WarnOnUse,
-                     BU.format1 "Interface %s is admitted without an implementation"
-                       (module_name_of_file fsti))));
+         if not (has_implementation deps.file_system_map mn) then
+           log_issue (range_of_file fsti) Warning_WarnOnUse
+             (BU.format1 "Interface %s is admitted without an implementation" (module_name_of_file fsti)));
     print_all "ALL_FST_FILES" all_fst_files;
     print_all "ALL_FSTI_FILES" all_fsti_files;
     print_all "ALL_CHECKED_FILES" all_checked_files;
@@ -2032,7 +2027,7 @@ let do_print (outc : out_channel) (fn : string) deps : unit =
   | Some "raw" ->
       print_raw outc deps
   | Some _ ->
-      raise_err (Errors.Fatal_UnknownToolForDep, "unknown tool for --dep\n")
+      raise_error0 Errors.Fatal_UnknownToolForDep "unknown tool for --dep\n"
   | None ->
       assert false
 

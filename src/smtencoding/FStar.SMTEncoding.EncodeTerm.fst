@@ -154,12 +154,11 @@ let mk_Apply e (vars:fvs) =
               mk_ApplyTT out (mkFreeV var)) e
 let mk_Apply_args e args = args |> List.fold_left mk_ApplyTT e
 let raise_arity_mismatch head arity n_args rng =
-    Errors.raise_error (Errors.Fatal_SMTEncodingArityMismatch,
-                                 BU.format3 "Head symbol %s expects at least %s arguments; got only %s"
-                                        head
-                                        (BU.string_of_int arity)
-                                        (BU.string_of_int n_args))
-                                rng
+    Errors.raise_error rng Errors.Fatal_SMTEncodingArityMismatch
+      (BU.format3 "Head symbol %s expects at least %s arguments; got only %s"
+              head
+              (show arity)
+              (show n_args))
 
 //See issue #1750 and tests/bug-reports/Bug1750.fst
 let isTotFun_axioms pos head vars guards is_pure =
@@ -234,9 +233,8 @@ let check_pattern_vars env vars pats =
         | None -> ()
         | Some ({binder_bv=x}) ->
         let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
-        Errors.log_issue pos (Errors.Warning_SMTPatternIllFormed,
-                              BU.format1 "SMT pattern misses at least one bound variable: %s"
-                                         (show x))
+        Errors.log_issue pos Errors.Warning_SMTPatternIllFormed
+          (BU.format1 "SMT pattern misses at least one bound variable: %s" (show x))
 
 (*  </Utilities> *)
 
@@ -596,9 +594,8 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term & decls_t =
     let tkey_hash = hash_of_term key in
     match tm.tm with
     | App(_, [{tm=FreeV _}; {tm=FreeV _}]) ->
-      FStar.Errors.log_issue t.pos
-                            (Errors.Warning_QuantifierWithoutPattern,
-                             "Not encoding deeply embedded, unguarded quantifier to SMT");
+      FStar.Errors.log_issue t Errors.Warning_QuantifierWithoutPattern
+        "Not encoding deeply embedded, unguarded quantifier to SMT";
       tm, decls
 
     | _ ->
@@ -1125,11 +1122,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                         else if Term.fvs_subset_of cvars (Term.free_variables has_type_conclusion)
                         then [has_type_conclusion], cvars
                         else begin
-                          Errors.log_issue
-                            t0.pos
-                            (Errors.Warning_SMTPatternIllFormed,
-                             BU.format1 "No SMT pattern for partial application %s"
-                               (show t0));
+                          Errors.log_issue t0 Errors.Warning_SMTPatternIllFormed
+                             (BU.format1 "No SMT pattern for partial application %s" (show t0));
                           [], cvars //no pattern!
                         end
                       in
@@ -1271,11 +1265,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               let open FStar.Pprint in
               let open FStar.Errors.Msg in
               //we don't even know if this is a pure function, so give up
-              Errors.log_issue_doc t0.pos (Errors.Warning_FunctionLiteralPrecisionLoss, [
+              Errors.log_issue t0 Errors.Warning_FunctionLiteralPrecisionLoss [
                 prefix 2 1 (text "Losing precision when encoding a function literal:")
                   (pp t0);
                 text "Unannotated abstraction in the compiler?"
-              ]);
+              ];
               fallback ()
 
             | Some rc ->
@@ -1488,12 +1482,10 @@ and encode_smt_patterns (pats_l:list (list S.arg)) env : list (list term) & decl
                     | None ->
                       t::pats, d@decls
                     | Some illegal_subterm ->
-                      Errors.log_issue
-                            p.pos
-                            (Errors.Warning_SMTPatternIllFormed,
-                             BU.format2 "Pattern %s contains illegal sub-term (%s); dropping it"
+                      Errors.log_issue p Errors.Warning_SMTPatternIllFormed
+                        (BU.format2 "Pattern %s contains illegal sub-term (%s); dropping it"
                                         (show p)
-                                        (Term.print_smt_term illegal_subterm));
+                                        (show illegal_subterm));
                          pats, d@decls)
                 pats ([], decls)
         in

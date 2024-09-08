@@ -14,13 +14,12 @@ let dynlink (fname:string) : unit =
     perr ("Attempting to load " ^ fname ^ "\n");
     Dynlink.loadfile fname
   with Dynlink.Error e ->
-    E.log_issue_doc FStar_Compiler_Range.dummyRange
-        (EC.Error_PluginDynlink,
-         [EM.text (U.format1 "Failed to load plugin file %s" fname);
+    E.log_issue_doc FStar_Compiler_Range.dummyRange EC.Error_PluginDynlink [
+      EM.text (U.format1 "Failed to load plugin file %s" fname);
           FStar_Pprint.prefix (Z.of_int 2) (Z.of_int 1) (EM.text "Reason:")
             (FStar_Pprint.arbitrary_string (Dynlink.error_message e));
           EM.text (U.format1 "Remove the `--load` option or use `--warn_error -%s` to ignore and continue."
-                    (string_of_int (Z.to_int (E.errno EC.Error_PluginDynlink))))]);
+                    (string_of_int (Z.to_int (E.errno EC.Error_PluginDynlink))))];
     (* If we weren't ignoring this error, just stop now *)
     E.stop_if_err ()
 
@@ -64,8 +63,11 @@ let compile_modules dir ms =
      let cmd = String.concat " " (env_setter :: "ocamlfind" :: args) in
      let rc = Sys.command cmd in
      if rc <> 0
-     then E.raise_err (Fatal_FailToCompileNativeTactic, (U.format2 "Failed to compile native tactic. Command\n`%s`\nreturned with exit code %s"
-                                  cmd (string_of_int rc)))
+     then E.raise_error_doc FStar_Compiler_Range.dummyRange Fatal_FailToCompileNativeTactic [
+            EM.text "Failed to compile native tactic.";
+            EM.text (U.format2 "Command\n`%s`\nreturned with exit code %s"
+                                  cmd (string_of_int rc))
+          ]
      else ()
    in
    try

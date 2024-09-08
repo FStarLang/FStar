@@ -86,8 +86,8 @@ let check_universe_generalization
   match explicit_univ_names, generalized_univ_names with
   | [], _ -> generalized_univ_names
   | _, [] -> explicit_univ_names
-  | _ -> raise_error (Errors.Fatal_UnexpectedGeneralizedUniverse, ("Generalized universe in a term containing explicit universe annotation : "
-                      ^ show t)) t.pos
+  | _ -> raise_error t Errors.Fatal_UnexpectedGeneralizedUniverse
+           ("Generalized universe in a term containing explicit universe annotation : " ^ show t)
 
 let generalize_universes (env:env) (t0:term) : tscheme =
   Errors.with_ctx "While generalizing universes" (fun () ->
@@ -151,7 +151,7 @@ let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : option (list (lbn
                                    requires an incompatible set of universes for %s and %s"
                             (show lb1)
                             (show lb2) in
-             raise_error (Errors.Fatal_IncompatibleSetOfUniverse, msg) (Env.get_range env)
+             raise_error env Errors.Fatal_IncompatibleSetOfUniverse msg
      in
      let force_uvars_eq lec2 (u1:list ctx_uvar) (u2:list ctx_uvar) =
         let uvars_subseteq u1 u2 =
@@ -167,7 +167,7 @@ let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : option (list (lbn
                                    requires an incompatible number of types for %s and %s"
                             (show lb1)
                             (show lb2) in
-             raise_error (Errors.Fatal_IncompatibleNumberOfTypes, msg) (Env.get_range env)
+             raise_error env Errors.Fatal_IncompatibleNumberOfTypes msg
      in
 
      let lecs =

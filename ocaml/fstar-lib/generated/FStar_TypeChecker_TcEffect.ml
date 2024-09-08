@@ -79,8 +79,13 @@ let (check_and_gen :
                                            "Expected %s:%s to be universe-polymorphic in %s universes, but found %s (tscheme: %s)"
                                            eff_name comb uu___6 uu___7 uu___8 in
                                        FStar_Errors.raise_error
-                                         (FStar_Errors_Codes.Fatal_MismatchUniversePolymorphic,
-                                           error) t3.FStar_Syntax_Syntax.pos;
+                                         (FStar_Syntax_Syntax.has_range_syntax
+                                            ()) t3
+                                         FStar_Errors_Codes.Fatal_MismatchUniversePolymorphic
+                                         ()
+                                         (Obj.magic
+                                            FStar_Errors_Msg.is_error_message_string)
+                                         (Obj.magic error);
                                        (match us1 with
                                         | [] -> ()
                                         | uu___7 ->
@@ -105,25 +110,27 @@ let (check_and_gen :
                                             else
                                               (let uu___10 =
                                                  let uu___11 =
-                                                   let uu___12 =
-                                                     FStar_Class_Show.show
-                                                       (FStar_Class_Show.show_list
-                                                          FStar_Ident.showable_ident)
-                                                       us1 in
-                                                   let uu___13 =
-                                                     FStar_Class_Show.show
-                                                       (FStar_Class_Show.show_list
-                                                          FStar_Ident.showable_ident)
-                                                       g_us in
-                                                   FStar_Compiler_Util.format4
-                                                     "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
-                                                     eff_name comb uu___12
-                                                     uu___13 in
-                                                 (FStar_Errors_Codes.Fatal_UnexpectedNumberOfUniverse,
-                                                   uu___11) in
+                                                   FStar_Class_Show.show
+                                                     (FStar_Class_Show.show_list
+                                                        FStar_Ident.showable_ident)
+                                                     us1 in
+                                                 let uu___12 =
+                                                   FStar_Class_Show.show
+                                                     (FStar_Class_Show.show_list
+                                                        FStar_Ident.showable_ident)
+                                                     g_us in
+                                                 FStar_Compiler_Util.format4
+                                                   "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
+                                                   eff_name comb uu___11
+                                                   uu___12 in
                                                FStar_Errors.raise_error
-                                                 uu___10
-                                                 t3.FStar_Syntax_Syntax.pos)))
+                                                 (FStar_Syntax_Syntax.has_range_syntax
+                                                    ()) t3
+                                                 FStar_Errors_Codes.Fatal_UnexpectedNumberOfUniverse
+                                                 ()
+                                                 (Obj.magic
+                                                    FStar_Errors_Msg.is_error_message_string)
+                                                 (Obj.magic uu___10))))
                                     else ();
                                     (g_us, t3, ty1)))))
 let (pure_wp_uvar :
@@ -230,14 +237,15 @@ let (log_ad_hoc_combinator_warning :
       let uu___ =
         let uu___1 =
           let uu___2 =
-            let uu___3 =
-              FStar_Compiler_Util.format1
-                "Combinator %s is not a substitutive indexed effect combinator, it is better to make it one if possible for better performance and ease of use"
-                comb_name in
-            FStar_Errors_Msg.text uu___3 in
-          [uu___2] in
-        (FStar_Errors_Codes.Warning_Adhoc_IndexedEffect_Combinator, uu___1) in
-      FStar_Errors.log_issue_doc r uu___
+            FStar_Compiler_Util.format1
+              "Combinator %s is not a substitutive indexed effect combinator, it is better to make it one if possible for better performance and ease of use"
+              comb_name in
+          FStar_Errors_Msg.text uu___2 in
+        [uu___1] in
+      FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range r
+        FStar_Errors_Codes.Warning_Adhoc_IndexedEffect_Combinator ()
+        (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+        (Obj.magic uu___)
 let (bind_combinator_kind :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
@@ -1385,16 +1393,20 @@ let (validate_indexed_effect_bind_shape :
                                       | uu___2 ->
                                           let uu___3 =
                                             let uu___4 =
-                                              let uu___5 =
-                                                FStar_Class_Show.show
-                                                  FStar_Syntax_Print.showable_term
-                                                  bind_t in
-                                              FStar_Compiler_Util.format2
-                                                "Type of %s is not an arrow with >= 4 binders (%s)"
-                                                bind_name uu___5 in
-                                            (FStar_Errors_Codes.Fatal_UnexpectedEffect,
-                                              uu___4) in
-                                          FStar_Errors.raise_error uu___3 r in
+                                              FStar_Class_Show.show
+                                                FStar_Syntax_Print.showable_term
+                                                bind_t in
+                                            FStar_Compiler_Util.format2
+                                              "Type of %s is not an arrow with >= 4 binders (%s)"
+                                              bind_name uu___4 in
+                                          FStar_Errors.raise_error
+                                            FStar_Class_HasRange.hasRange_range
+                                            r
+                                            FStar_Errors_Codes.Fatal_UnexpectedEffect
+                                            ()
+                                            (Obj.magic
+                                               FStar_Errors_Msg.is_error_message_string)
+                                            (Obj.magic uu___3) in
                                     let uu___1 =
                                       if has_range_binders
                                       then
@@ -1410,16 +1422,20 @@ let (validate_indexed_effect_bind_shape :
                                          else
                                            (let uu___3 =
                                               let uu___4 =
-                                                let uu___5 =
-                                                  FStar_Class_Show.show
-                                                    FStar_Syntax_Print.showable_term
-                                                    bind_t in
-                                                FStar_Compiler_Util.format2
-                                                  "Type of %s is not an arrow with >= 6 binders (%s)"
-                                                  bind_name uu___5 in
-                                              (FStar_Errors_Codes.Fatal_UnexpectedEffect,
-                                                uu___4) in
-                                            FStar_Errors.raise_error uu___3 r))
+                                                FStar_Class_Show.show
+                                                  FStar_Syntax_Print.showable_term
+                                                  bind_t in
+                                              FStar_Compiler_Util.format2
+                                                "Type of %s is not an arrow with >= 6 binders (%s)"
+                                                bind_name uu___4 in
+                                            FStar_Errors.raise_error
+                                              FStar_Class_HasRange.hasRange_range
+                                              r
+                                              FStar_Errors_Codes.Fatal_UnexpectedEffect
+                                              ()
+                                              (Obj.magic
+                                                 FStar_Errors_Msg.is_error_message_string)
+                                              (Obj.magic uu___3)))
                                       else (rest_bs, []) in
                                     (match uu___1 with
                                      | (rest_bs1, range_bs) ->
@@ -1583,19 +1599,22 @@ let (validate_indexed_effect_bind_shape :
                                                                     =
                                                                     let uu___8
                                                                     =
-                                                                    let uu___9
-                                                                    =
                                                                     FStar_Class_Show.show
                                                                     FStar_Syntax_Print.showable_term
                                                                     bind_t in
                                                                     FStar_Compiler_Util.format2
                                                                     "Unexpected type of %s (%s)\n"
                                                                     bind_name
-                                                                    uu___9 in
-                                                                    (FStar_Errors_Codes.Fatal_UnexpectedEffect,
-                                                                    uu___8) in
+                                                                    uu___8 in
                                                                    FStar_Errors.raise_error
-                                                                    uu___7 r
+                                                                    FStar_Class_HasRange.hasRange_range
+                                                                    r
+                                                                    FStar_Errors_Codes.Fatal_UnexpectedEffect
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    FStar_Errors_Msg.is_error_message_string)
+                                                                    (Obj.magic
+                                                                    uu___7)
                                                                | FStar_Pervasives_Native.Some
                                                                    g1 -> g1 in
                                                              ((let uu___7 =
@@ -2336,16 +2355,18 @@ let (validate_indexed_effect_subcomp_shape :
                           | uu___1 ->
                               let uu___2 =
                                 let uu___3 =
-                                  let uu___4 =
-                                    FStar_Class_Show.show
-                                      FStar_Syntax_Print.showable_term
-                                      subcomp_t in
-                                  FStar_Compiler_Util.format2
-                                    "Type of %s is not an arrow with >= 2 binders (%s)"
-                                    subcomp_name uu___4 in
-                                (FStar_Errors_Codes.Fatal_UnexpectedEffect,
-                                  uu___3) in
-                              FStar_Errors.raise_error uu___2 r in
+                                  FStar_Class_Show.show
+                                    FStar_Syntax_Print.showable_term
+                                    subcomp_t in
+                                FStar_Compiler_Util.format2
+                                  "Type of %s is not an arrow with >= 2 binders (%s)"
+                                  subcomp_name uu___3 in
+                              FStar_Errors.raise_error
+                                FStar_Class_HasRange.hasRange_range r
+                                FStar_Errors_Codes.Fatal_UnexpectedEffect ()
+                                (Obj.magic
+                                   FStar_Errors_Msg.is_error_message_string)
+                                (Obj.magic uu___2) in
                         let uu___ =
                           let uu___1 =
                             let uu___2 =
@@ -2440,17 +2461,20 @@ let (validate_indexed_effect_subcomp_shape :
                                           | FStar_Pervasives_Native.None ->
                                               let uu___5 =
                                                 let uu___6 =
-                                                  let uu___7 =
-                                                    FStar_Class_Show.show
-                                                      FStar_Syntax_Print.showable_term
-                                                      subcomp_t in
-                                                  FStar_Compiler_Util.format2
-                                                    "Unexpected type of %s (%s)\n"
-                                                    subcomp_name uu___7 in
-                                                (FStar_Errors_Codes.Fatal_UnexpectedEffect,
-                                                  uu___6) in
-                                              FStar_Errors.raise_error uu___5
+                                                  FStar_Class_Show.show
+                                                    FStar_Syntax_Print.showable_term
+                                                    subcomp_t in
+                                                FStar_Compiler_Util.format2
+                                                  "Unexpected type of %s (%s)\n"
+                                                  subcomp_name uu___6 in
+                                              FStar_Errors.raise_error
+                                                FStar_Class_HasRange.hasRange_range
                                                 r
+                                                FStar_Errors_Codes.Fatal_UnexpectedEffect
+                                                ()
+                                                (Obj.magic
+                                                   FStar_Errors_Msg.is_error_message_string)
+                                                (Obj.magic uu___5)
                                           | FStar_Pervasives_Native.Some g ->
                                               g in
                                         (let uu___5 =
@@ -3003,15 +3027,17 @@ let (validate_indexed_effect_ite_shape :
                       | uu___1 ->
                           let uu___2 =
                             let uu___3 =
-                              let uu___4 =
-                                FStar_Class_Show.show
-                                  FStar_Syntax_Print.showable_term ite_ty in
-                              FStar_Compiler_Util.format2
-                                "Type of %s is not an arrow with >= 4 binders (%s)"
-                                ite_name uu___4 in
-                            (FStar_Errors_Codes.Fatal_UnexpectedEffect,
-                              uu___3) in
-                          FStar_Errors.raise_error uu___2 r in
+                              FStar_Class_Show.show
+                                FStar_Syntax_Print.showable_term ite_ty in
+                            FStar_Compiler_Util.format2
+                              "Type of %s is not an arrow with >= 4 binders (%s)"
+                              ite_name uu___3 in
+                          FStar_Errors.raise_error
+                            FStar_Class_HasRange.hasRange_range r
+                            FStar_Errors_Codes.Fatal_UnexpectedEffect ()
+                            (Obj.magic
+                               FStar_Errors_Msg.is_error_message_string)
+                            (Obj.magic uu___2) in
                     let uu___ =
                       let uu___1 =
                         let uu___2 =
@@ -3089,16 +3115,20 @@ let (validate_indexed_effect_ite_shape :
                                     | FStar_Pervasives_Native.None ->
                                         let uu___4 =
                                           let uu___5 =
-                                            let uu___6 =
-                                              FStar_Class_Show.show
-                                                FStar_Syntax_Print.showable_term
-                                                ite_tm in
-                                            FStar_Compiler_Util.format2
-                                              "Unexpected term for %s (%s)\n"
-                                              ite_name uu___6 in
-                                          (FStar_Errors_Codes.Fatal_UnexpectedEffect,
-                                            uu___5) in
-                                        FStar_Errors.raise_error uu___4 r
+                                            FStar_Class_Show.show
+                                              FStar_Syntax_Print.showable_term
+                                              ite_tm in
+                                          FStar_Compiler_Util.format2
+                                            "Unexpected term for %s (%s)\n"
+                                            ite_name uu___5 in
+                                        FStar_Errors.raise_error
+                                          FStar_Class_HasRange.hasRange_range
+                                          r
+                                          FStar_Errors_Codes.Fatal_UnexpectedEffect
+                                          ()
+                                          (Obj.magic
+                                             FStar_Errors_Msg.is_error_message_string)
+                                          (Obj.magic uu___4)
                                     | FStar_Pervasives_Native.Some g1 -> g1 in
                                   ((let uu___4 =
                                       FStar_TypeChecker_Env.conj_guards
@@ -3312,16 +3342,20 @@ let (validate_indexed_effect_close_shape :
                                     | FStar_Pervasives_Native.None ->
                                         let uu___4 =
                                           let uu___5 =
-                                            let uu___6 =
-                                              FStar_Class_Show.show
-                                                FStar_Syntax_Print.showable_term
-                                                close_tm in
-                                            FStar_Compiler_Util.format2
-                                              "Unexpected term for %s (%s)\n"
-                                              close_name uu___6 in
-                                          (FStar_Errors_Codes.Fatal_UnexpectedEffect,
-                                            uu___5) in
-                                        FStar_Errors.raise_error uu___4 r
+                                            FStar_Class_Show.show
+                                              FStar_Syntax_Print.showable_term
+                                              close_tm in
+                                          FStar_Compiler_Util.format2
+                                            "Unexpected term for %s (%s)\n"
+                                            close_name uu___5 in
+                                        FStar_Errors.raise_error
+                                          FStar_Class_HasRange.hasRange_range
+                                          r
+                                          FStar_Errors_Codes.Fatal_UnexpectedEffect
+                                          ()
+                                          (Obj.magic
+                                             FStar_Errors_Msg.is_error_message_string)
+                                          (Obj.magic uu___4)
                                     | FStar_Pervasives_Native.Some g -> g in
                                   ((let uu___4 =
                                       FStar_TypeChecker_Env.conj_guard g_body
@@ -3599,12 +3633,14 @@ let (validate_indexed_effect_lift_shape :
                              (uu___7, uu___8))
                     | uu___3 ->
                         let uu___4 =
-                          let uu___5 =
-                            lift_t_shape_error
-                              "either not an arrow, or not enough binders" in
-                          (FStar_Errors_Codes.Fatal_UnexpectedExpressionType,
-                            uu___5) in
-                        FStar_Errors.raise_error uu___4 r in
+                          lift_t_shape_error
+                            "either not an arrow, or not enough binders" in
+                        FStar_Errors.raise_error
+                          FStar_Class_HasRange.hasRange_range r
+                          FStar_Errors_Codes.Fatal_UnexpectedExpressionType
+                          ()
+                          (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                          (Obj.magic uu___4) in
                   (match uu___1 with
                    | (rest_bs, lift_eff) ->
                        ((let uu___3 =
@@ -3621,12 +3657,15 @@ let (validate_indexed_effect_lift_shape :
                          if uu___3
                          then
                            let uu___4 =
-                             let uu___5 =
-                               lift_t_shape_error
-                                 "the lift combinator has an unexpected effect: it must either be PURE or if the source effect is erasable then may be GHOST" in
-                             (FStar_Errors_Codes.Fatal_UnexpectedExpressionType,
-                               uu___5) in
-                           FStar_Errors.raise_error uu___4 r
+                             lift_t_shape_error
+                               "the lift combinator has an unexpected effect: it must either be PURE or if the source effect is erasable then may be GHOST" in
+                           FStar_Errors.raise_error
+                             FStar_Class_HasRange.hasRange_range r
+                             FStar_Errors_Codes.Fatal_UnexpectedExpressionType
+                             ()
+                             (Obj.magic
+                                FStar_Errors_Msg.is_error_message_string)
+                             (Obj.magic uu___4)
                          else ());
                         (let uu___3 =
                            let uu___4 =
@@ -3717,17 +3756,20 @@ let (validate_indexed_effect_lift_shape :
                                          | FStar_Pervasives_Native.None ->
                                              let uu___7 =
                                                let uu___8 =
-                                                 let uu___9 =
-                                                   FStar_Class_Show.show
-                                                     FStar_Syntax_Print.showable_term
-                                                     lift_t in
-                                                 FStar_Compiler_Util.format2
-                                                   "Unexpected type of %s (%s)\n"
-                                                   lift_name uu___9 in
-                                               (FStar_Errors_Codes.Fatal_UnexpectedEffect,
-                                                 uu___8) in
-                                             FStar_Errors.raise_error uu___7
+                                                 FStar_Class_Show.show
+                                                   FStar_Syntax_Print.showable_term
+                                                   lift_t in
+                                               FStar_Compiler_Util.format2
+                                                 "Unexpected type of %s (%s)\n"
+                                                 lift_name uu___8 in
+                                             FStar_Errors.raise_error
+                                               FStar_Class_HasRange.hasRange_range
                                                r
+                                               FStar_Errors_Codes.Fatal_UnexpectedEffect
+                                               ()
+                                               (Obj.magic
+                                                  FStar_Errors_Msg.is_error_message_string)
+                                               (Obj.magic uu___7)
                                          | FStar_Pervasives_Native.Some g ->
                                              g in
                                        ((let uu___7 =
@@ -3817,17 +3859,17 @@ let (tc_layered_eff_decl :
                  (let uu___4 =
                     let uu___5 =
                       let uu___6 =
-                        let uu___7 =
-                          FStar_Ident.string_of_lid
-                            ed.FStar_Syntax_Syntax.mname in
-                        Prims.strcat uu___7 ")" in
-                      Prims.strcat
-                        "Binders are not supported for layered effects ("
-                        uu___6 in
-                    (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___5) in
-                  let uu___5 =
-                    FStar_Ident.range_of_lid ed.FStar_Syntax_Syntax.mname in
-                  FStar_Errors.raise_error uu___4 uu___5)
+                        FStar_Ident.string_of_lid
+                          ed.FStar_Syntax_Syntax.mname in
+                      Prims.strcat uu___6 ")" in
+                    Prims.strcat
+                      "Binders are not supported for layered effects ("
+                      uu___5 in
+                  FStar_Errors.raise_error FStar_Ident.hasrange_lident
+                    ed.FStar_Syntax_Syntax.mname
+                    FStar_Errors_Codes.Fatal_UnexpectedEffect ()
+                    (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                    (Obj.magic uu___4))
                else ();
                (let log_combinator s uu___4 =
                   match uu___4 with
@@ -4002,23 +4044,27 @@ let (tc_layered_eff_decl :
                        let not_an_arrow_error comb n t r =
                          let uu___7 =
                            let uu___8 =
-                             let uu___9 =
-                               FStar_Ident.string_of_lid
-                                 ed.FStar_Syntax_Syntax.mname in
-                             let uu___10 =
-                               FStar_Compiler_Util.string_of_int n in
-                             let uu___11 =
-                               FStar_Class_Tagged.tag_of
-                                 FStar_Syntax_Syntax.tagged_term t in
-                             let uu___12 =
-                               FStar_Class_Show.show
-                                 FStar_Syntax_Print.showable_term t in
-                             FStar_Compiler_Util.format5
-                               "Type of %s:%s is not an arrow with >= %s binders (%s::%s)"
-                               uu___9 comb uu___10 uu___11 uu___12 in
-                           (FStar_Errors_Codes.Fatal_UnexpectedEffect,
-                             uu___8) in
-                         FStar_Errors.raise_error uu___7 r in
+                             FStar_Ident.string_of_lid
+                               ed.FStar_Syntax_Syntax.mname in
+                           let uu___9 =
+                             FStar_Class_Show.show
+                               (FStar_Class_Show.printableshow
+                                  FStar_Class_Printable.printable_int) n in
+                           let uu___10 =
+                             FStar_Class_Tagged.tag_of
+                               FStar_Syntax_Syntax.tagged_term t in
+                           let uu___11 =
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_term t in
+                           FStar_Compiler_Util.format5
+                             "Type of %s:%s is not an arrow with >= %s binders (%s::%s)"
+                             uu___8 comb uu___9 uu___10 uu___11 in
+                         FStar_Errors.raise_error
+                           FStar_Class_HasRange.hasRange_range r
+                           FStar_Errors_Codes.Fatal_UnexpectedEffect ()
+                           (Obj.magic
+                              FStar_Errors_Msg.is_error_message_string)
+                           (Obj.magic uu___7) in
                        let return_repr =
                          FStar_Errors.with_ctx
                            "While checking the return combinator"
@@ -5202,9 +5248,14 @@ let (tc_layered_eff_decl :
                                                               supported_subcomp
                                                           then
                                                             FStar_Errors.raise_error
-                                                              (FStar_Errors_Codes.Fatal_UnexpectedEffect,
-                                                                "close combinator is only allowed for effects with substitutive subcomp")
+                                                              FStar_Class_HasRange.hasRange_range
                                                               r
+                                                              FStar_Errors_Codes.Fatal_UnexpectedEffect
+                                                              ()
+                                                              (Obj.magic
+                                                                 FStar_Errors_Msg.is_error_message_string)
+                                                              (Obj.magic
+                                                                 "close combinator is only allowed for effects with substitutive subcomp")
                                                           else ());
                                                          (let uu___18 =
                                                             FStar_Syntax_Subst.open_univ_vars
@@ -5302,9 +5353,14 @@ let (tc_layered_eff_decl :
                                                                     uu___25
                                                                     ->
                                                                     FStar_Errors.raise_error
-                                                                    (FStar_Errors_Codes.Fatal_UnexpectedEffect,
-                                                                    "close combinator body not a repr")
-                                                                    r in
+                                                                    FStar_Class_HasRange.hasRange_range
+                                                                    r
+                                                                    FStar_Errors_Codes.Fatal_UnexpectedEffect
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    FStar_Errors_Msg.is_error_message_string)
+                                                                    (Obj.magic
+                                                                    "close combinator body not a repr") in
                                                                     let env =
                                                                     let uu___24
                                                                     =
@@ -5485,24 +5541,27 @@ let (tc_layered_eff_decl :
                                              then
                                                (let uu___15 =
                                                   let uu___16 =
-                                                    let uu___17 =
-                                                      FStar_Ident.string_of_lid
-                                                        ed.FStar_Syntax_Syntax.mname in
-                                                    let uu___18 =
-                                                      FStar_Ident.string_of_lid
-                                                        act.FStar_Syntax_Syntax.action_name in
-                                                    let uu___19 =
-                                                      FStar_Class_Show.show
-                                                        (FStar_Class_Show.show_list
-                                                           FStar_Syntax_Print.showable_binder)
-                                                        act.FStar_Syntax_Syntax.action_params in
-                                                    FStar_Compiler_Util.format3
-                                                      "Action %s:%s has non-empty action params (%s)"
-                                                      uu___17 uu___18 uu___19 in
-                                                  (FStar_Errors_Codes.Fatal_MalformedActionDeclaration,
-                                                    uu___16) in
+                                                    FStar_Ident.string_of_lid
+                                                      ed.FStar_Syntax_Syntax.mname in
+                                                  let uu___17 =
+                                                    FStar_Ident.string_of_lid
+                                                      act.FStar_Syntax_Syntax.action_name in
+                                                  let uu___18 =
+                                                    FStar_Class_Show.show
+                                                      (FStar_Class_Show.show_list
+                                                         FStar_Syntax_Print.showable_binder)
+                                                      act.FStar_Syntax_Syntax.action_params in
+                                                  FStar_Compiler_Util.format3
+                                                    "Action %s:%s has non-empty action params (%s)"
+                                                    uu___16 uu___17 uu___18 in
                                                 FStar_Errors.raise_error
-                                                  uu___15 r)
+                                                  FStar_Class_HasRange.hasRange_range
+                                                  r
+                                                  FStar_Errors_Codes.Fatal_MalformedActionDeclaration
+                                                  ()
+                                                  (Obj.magic
+                                                     FStar_Errors_Msg.is_error_message_string)
+                                                  (Obj.magic uu___15))
                                              else ();
                                              (let uu___15 =
                                                 let uu___16 =
@@ -5886,28 +5945,33 @@ let (tc_layered_eff_decl :
                                                                     =
                                                                     let uu___25
                                                                     =
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Ident.showable_lident
+                                                                    ed.FStar_Syntax_Syntax.mname in
                                                                     let uu___26
                                                                     =
-                                                                    FStar_Ident.string_of_lid
-                                                                    ed.FStar_Syntax_Syntax.mname in
-                                                                    let uu___27
-                                                                    =
-                                                                    FStar_Ident.string_of_lid
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Ident.showable_lident
                                                                     act1.FStar_Syntax_Syntax.action_name in
-                                                                    let uu___28
+                                                                    let uu___27
                                                                     =
                                                                     FStar_Class_Show.show
                                                                     FStar_Syntax_Print.showable_term
                                                                     act_typ2 in
                                                                     FStar_Compiler_Util.format3
                                                                     "Unexpected non-function type for action %s:%s (%s)"
+                                                                    uu___25
                                                                     uu___26
-                                                                    uu___27
-                                                                    uu___28 in
-                                                                    (FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType,
-                                                                    uu___25) in
+                                                                    uu___27 in
                                                                     FStar_Errors.raise_error
-                                                                    uu___24 r in
+                                                                    FStar_Class_HasRange.hasRange_range
+                                                                    r
+                                                                    FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    FStar_Errors_Msg.is_error_message_string)
+                                                                    (Obj.magic
+                                                                    uu___24) in
                                                               match uu___21
                                                               with
                                                               | (k, g_k) ->
@@ -6023,25 +6087,31 @@ let (tc_layered_eff_decl :
                                                                     ->
                                                                     let uu___28
                                                                     =
-                                                                    let uu___29
-                                                                    =
                                                                     err_msg t in
-                                                                    (FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType,
-                                                                    uu___29) in
                                                                     FStar_Errors.raise_error
-                                                                    uu___28 r)
+                                                                    FStar_Class_HasRange.hasRange_range
+                                                                    r
+                                                                    FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    FStar_Errors_Msg.is_error_message_string)
+                                                                    (Obj.magic
+                                                                    uu___28))
                                                                     | 
                                                                     uu___26
                                                                     ->
                                                                     let uu___27
                                                                     =
-                                                                    let uu___28
-                                                                    =
                                                                     err_msg t in
-                                                                    (FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType,
-                                                                    uu___28) in
                                                                     FStar_Errors.raise_error
-                                                                    uu___27 r in
+                                                                    FStar_Class_HasRange.hasRange_range
+                                                                    r
+                                                                    FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    FStar_Errors_Msg.is_error_message_string)
+                                                                    (Obj.magic
+                                                                    uu___27) in
                                                                     let k1 =
                                                                     FStar_TypeChecker_Normalize.normalize
                                                                     [FStar_TypeChecker_Env.Beta]
@@ -6107,14 +6177,17 @@ let (tc_layered_eff_decl :
                                                                     ->
                                                                     let uu___27
                                                                     =
-                                                                    let uu___28
-                                                                    =
                                                                     err_msg
                                                                     k1 in
-                                                                    (FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType,
-                                                                    uu___28) in
                                                                     FStar_Errors.raise_error
-                                                                    uu___27 r in
+                                                                    FStar_Class_HasRange.hasRange_range
+                                                                    r
+                                                                    FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    FStar_Errors_Msg.is_error_message_string)
+                                                                    (Obj.magic
+                                                                    uu___27) in
                                                                     (
                                                                     let uu___26
                                                                     =
@@ -6227,21 +6300,19 @@ let (tc_layered_eff_decl :
                                                                     =
                                                                     let uu___31
                                                                     =
+                                                                    FStar_Ident.string_of_lid
+                                                                    ed.FStar_Syntax_Syntax.mname in
                                                                     let uu___32
                                                                     =
                                                                     FStar_Ident.string_of_lid
-                                                                    ed.FStar_Syntax_Syntax.mname in
-                                                                    let uu___33
-                                                                    =
-                                                                    FStar_Ident.string_of_lid
                                                                     act1.FStar_Syntax_Syntax.action_name in
-                                                                    let uu___34
+                                                                    let uu___33
                                                                     =
                                                                     FStar_Class_Show.show
                                                                     (FStar_Class_Show.show_list
                                                                     FStar_Ident.showable_ident)
                                                                     us in
-                                                                    let uu___35
+                                                                    let uu___34
                                                                     =
                                                                     FStar_Class_Show.show
                                                                     (FStar_Class_Show.show_list
@@ -6249,14 +6320,19 @@ let (tc_layered_eff_decl :
                                                                     act1.FStar_Syntax_Syntax.action_univs in
                                                                     FStar_Compiler_Util.format4
                                                                     "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
+                                                                    uu___31
                                                                     uu___32
                                                                     uu___33
-                                                                    uu___34
-                                                                    uu___35 in
-                                                                    (FStar_Errors_Codes.Fatal_UnexpectedNumberOfUniverse,
-                                                                    uu___31) in
+                                                                    uu___34 in
                                                                     FStar_Errors.raise_error
-                                                                    uu___30 r)) in
+                                                                    FStar_Class_HasRange.hasRange_range
+                                                                    r
+                                                                    FStar_Errors_Codes.Fatal_UnexpectedNumberOfUniverse
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    FStar_Errors_Msg.is_error_message_string)
+                                                                    (Obj.magic
+                                                                    uu___30))) in
                                                                     act2))))))))) in
                                            let tc_action_with_ctx env act =
                                              let uu___14 =
@@ -6284,19 +6360,20 @@ let (tc_layered_eff_decl :
                                              then
                                                let uu___14 =
                                                  let uu___15 =
-                                                   let uu___16 =
-                                                     FStar_Ident.string_of_lid
-                                                       ed.FStar_Syntax_Syntax.mname in
-                                                   FStar_Compiler_Util.format1
-                                                     "Effect %s is declared to be both primitive extraction and reifiable"
-                                                     uu___16 in
-                                                 (FStar_Errors_Codes.Fatal_UnexpectedEffect,
-                                                   uu___15) in
-                                               let uu___15 =
-                                                 FStar_Ident.range_of_lid
-                                                   ed.FStar_Syntax_Syntax.mname in
+                                                   FStar_Class_Show.show
+                                                     FStar_Ident.showable_lident
+                                                     ed.FStar_Syntax_Syntax.mname in
+                                                 FStar_Compiler_Util.format1
+                                                   "Effect %s is declared to be both primitive extraction and reifiable"
+                                                   uu___15 in
                                                FStar_Errors.raise_error
-                                                 uu___14 uu___15
+                                                 FStar_Ident.hasrange_lident
+                                                 ed.FStar_Syntax_Syntax.mname
+                                                 FStar_Errors_Codes.Fatal_UnexpectedEffect
+                                                 ()
+                                                 (Obj.magic
+                                                    FStar_Errors_Msg.is_error_message_string)
+                                                 (Obj.magic uu___14)
                                              else
                                                if has_primitive_extraction
                                                then
@@ -6573,58 +6650,58 @@ let (tc_non_layered_eff_decl :
                                        (let uu___12 =
                                           let uu___13 =
                                             let uu___14 =
-                                              let uu___15 =
-                                                FStar_Errors_Msg.text
-                                                  "Expected and generalized universes in effect declaration for" in
-                                              let uu___16 =
-                                                let uu___17 =
-                                                  let uu___18 =
-                                                    FStar_Ident.string_of_lid
-                                                      ed.FStar_Syntax_Syntax.mname in
-                                                  FStar_Pprint.doc_of_string
-                                                    uu___18 in
-                                                let uu___18 =
-                                                  FStar_Errors_Msg.text
-                                                    "are different" in
-                                                FStar_Pprint.op_Hat_Slash_Hat
-                                                  uu___17 uu___18 in
-                                              FStar_Pprint.op_Hat_Slash_Hat
-                                                uu___15 uu___16 in
+                                              FStar_Errors_Msg.text
+                                                "Expected and generalized universes in effect declaration for" in
                                             let uu___15 =
                                               let uu___16 =
                                                 let uu___17 =
-                                                  FStar_Errors_Msg.text
-                                                    "Expected" in
+                                                  FStar_Ident.string_of_lid
+                                                    ed.FStar_Syntax_Syntax.mname in
+                                                FStar_Pprint.doc_of_string
+                                                  uu___17 in
+                                              let uu___17 =
+                                                FStar_Errors_Msg.text
+                                                  "are different" in
+                                              FStar_Pprint.op_Hat_Slash_Hat
+                                                uu___16 uu___17 in
+                                            FStar_Pprint.op_Hat_Slash_Hat
+                                              uu___14 uu___15 in
+                                          let uu___14 =
+                                            let uu___15 =
+                                              let uu___16 =
+                                                FStar_Errors_Msg.text
+                                                  "Expected" in
+                                              let uu___17 =
                                                 let uu___18 =
-                                                  let uu___19 =
+                                                  FStar_Class_PP.pp
+                                                    FStar_Class_PP.pp_int
+                                                    (FStar_Compiler_List.length
+                                                       ed_univs) in
+                                                let uu___19 =
+                                                  let uu___20 =
+                                                    FStar_Errors_Msg.text
+                                                      "but found" in
+                                                  let uu___21 =
                                                     FStar_Class_PP.pp
                                                       FStar_Class_PP.pp_int
                                                       (FStar_Compiler_List.length
-                                                         ed_univs) in
-                                                  let uu___20 =
-                                                    let uu___21 =
-                                                      FStar_Errors_Msg.text
-                                                        "but found" in
-                                                    let uu___22 =
-                                                      FStar_Class_PP.pp
-                                                        FStar_Class_PP.pp_int
-                                                        (FStar_Compiler_List.length
-                                                           us) in
-                                                    FStar_Pprint.op_Hat_Slash_Hat
-                                                      uu___21 uu___22 in
+                                                         us) in
                                                   FStar_Pprint.op_Hat_Slash_Hat
-                                                    uu___19 uu___20 in
+                                                    uu___20 uu___21 in
                                                 FStar_Pprint.op_Hat_Slash_Hat
-                                                  uu___17 uu___18 in
-                                              [uu___16] in
-                                            uu___14 :: uu___15 in
-                                          (FStar_Errors_Codes.Fatal_UnexpectedNumberOfUniverse,
-                                            uu___13) in
-                                        let uu___13 =
-                                          FStar_Ident.range_of_lid
-                                            ed.FStar_Syntax_Syntax.mname in
-                                        FStar_Errors.raise_error_doc uu___12
-                                          uu___13)))) in
+                                                  uu___18 uu___19 in
+                                              FStar_Pprint.op_Hat_Slash_Hat
+                                                uu___16 uu___17 in
+                                            [uu___15] in
+                                          uu___13 :: uu___14 in
+                                        FStar_Errors.raise_error
+                                          FStar_Ident.hasrange_lident
+                                          ed.FStar_Syntax_Syntax.mname
+                                          FStar_Errors_Codes.Fatal_UnexpectedNumberOfUniverse
+                                          ()
+                                          (Obj.magic
+                                             FStar_Errors_Msg.is_error_message_list_doc)
+                                          (Obj.magic uu___12))))) in
                 match uu___3 with
                 | (us, bs) ->
                     let ed1 =
@@ -6808,9 +6885,13 @@ let (tc_non_layered_eff_decl :
                                                         uu___11 comb uu___12
                                                         uu___13 in
                                                     FStar_Errors.raise_error
-                                                      (FStar_Errors_Codes.Fatal_MismatchUniversePolymorphic,
-                                                        error)
-                                                      t3.FStar_Syntax_Syntax.pos)
+                                                      (FStar_Syntax_Syntax.has_range_syntax
+                                                         ()) t3
+                                                      FStar_Errors_Codes.Fatal_MismatchUniversePolymorphic
+                                                      ()
+                                                      (Obj.magic
+                                                         FStar_Errors_Msg.is_error_message_string)
+                                                      (Obj.magic error))
                                                  else ();
                                                  (match us2 with
                                                   | [] -> (g_us, t3)
@@ -6837,27 +6918,28 @@ let (tc_non_layered_eff_decl :
                                                       else
                                                         (let uu___14 =
                                                            let uu___15 =
-                                                             let uu___16 =
-                                                               FStar_Ident.string_of_lid
-                                                                 ed2.FStar_Syntax_Syntax.mname in
-                                                             let uu___17 =
-                                                               FStar_Compiler_Util.string_of_int
-                                                                 (FStar_Compiler_List.length
-                                                                    us2) in
-                                                             let uu___18 =
-                                                               FStar_Compiler_Util.string_of_int
-                                                                 (FStar_Compiler_List.length
-                                                                    g_us) in
-                                                             FStar_Compiler_Util.format4
-                                                               "Expected and generalized universes in the declaration for %s:%s are different, expected: %s, but found %s"
-                                                               uu___16 comb
-                                                               uu___17
-                                                               uu___18 in
-                                                           (FStar_Errors_Codes.Fatal_UnexpectedNumberOfUniverse,
-                                                             uu___15) in
+                                                             FStar_Ident.string_of_lid
+                                                               ed2.FStar_Syntax_Syntax.mname in
+                                                           let uu___16 =
+                                                             FStar_Compiler_Util.string_of_int
+                                                               (FStar_Compiler_List.length
+                                                                  us2) in
+                                                           let uu___17 =
+                                                             FStar_Compiler_Util.string_of_int
+                                                               (FStar_Compiler_List.length
+                                                                  g_us) in
+                                                           FStar_Compiler_Util.format4
+                                                             "Expected and generalized universes in the declaration for %s:%s are different, expected: %s, but found %s"
+                                                             uu___15 comb
+                                                             uu___16 uu___17 in
                                                          FStar_Errors.raise_error
-                                                           uu___14
-                                                           t3.FStar_Syntax_Syntax.pos))))) in
+                                                           (FStar_Syntax_Syntax.has_range_syntax
+                                                              ()) t3
+                                                           FStar_Errors_Codes.Fatal_UnexpectedNumberOfUniverse
+                                                           ()
+                                                           (Obj.magic
+                                                              FStar_Errors_Msg.is_error_message_string)
+                                                           (Obj.magic uu___14)))))) in
                                 let signature =
                                   let uu___7 =
                                     FStar_Syntax_Util.effect_sig_ts
@@ -6878,16 +6960,15 @@ let (tc_non_layered_eff_decl :
                                 (let fresh_a_and_wp uu___8 =
                                    let fail t =
                                      let uu___9 =
-                                       FStar_TypeChecker_Err.unexpected_signature_for_monad
-                                         env ed2.FStar_Syntax_Syntax.mname t in
-                                     let uu___10 =
-                                       let uu___11 =
-                                         let uu___12 =
+                                       let uu___10 =
+                                         let uu___11 =
                                            FStar_Syntax_Util.effect_sig_ts
                                              ed2.FStar_Syntax_Syntax.signature in
-                                         FStar_Pervasives_Native.snd uu___12 in
-                                       uu___11.FStar_Syntax_Syntax.pos in
-                                     FStar_Errors.raise_error uu___9 uu___10 in
+                                         FStar_Pervasives_Native.snd uu___11 in
+                                       uu___10.FStar_Syntax_Syntax.pos in
+                                     FStar_TypeChecker_Err.unexpected_signature_for_monad
+                                       env uu___9
+                                       ed2.FStar_Syntax_Syntax.mname t in
                                    let uu___9 =
                                      FStar_TypeChecker_Env.inst_tscheme
                                        signature in
@@ -8264,25 +8345,28 @@ let (tc_non_layered_eff_decl :
                                                                     =
                                                                     let uu___31
                                                                     =
-                                                                    let uu___32
-                                                                    =
                                                                     FStar_Class_Show.show
                                                                     FStar_Syntax_Print.showable_term
                                                                     act_typ3 in
-                                                                    let uu___33
+                                                                    let uu___32
                                                                     =
                                                                     FStar_Class_Tagged.tag_of
                                                                     FStar_Syntax_Syntax.tagged_term
                                                                     act_typ3 in
                                                                     FStar_Compiler_Util.format2
                                                                     "Actions must have function types (not: %s, a.k.a. %s)"
-                                                                    uu___32
-                                                                    uu___33 in
-                                                                    (FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType,
-                                                                    uu___31) in
+                                                                    uu___31
+                                                                    uu___32 in
                                                                     FStar_Errors.raise_error
-                                                                    uu___30
-                                                                    act_defn1.FStar_Syntax_Syntax.pos in
+                                                                    (FStar_Syntax_Syntax.has_range_syntax
+                                                                    ())
+                                                                    act_defn1
+                                                                    FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    FStar_Errors_Msg.is_error_message_string)
+                                                                    (Obj.magic
+                                                                    uu___30) in
                                                                     match uu___28
                                                                     with
                                                                     | 
@@ -8308,19 +8392,22 @@ let (tc_non_layered_eff_decl :
                                                                     =
                                                                     let uu___32
                                                                     =
-                                                                    let uu___33
-                                                                    =
                                                                     FStar_Class_Show.show
                                                                     FStar_Syntax_Print.showable_term
                                                                     act_typ2 in
                                                                     FStar_Compiler_Util.format1
                                                                     "Unexpected non trivial guard formula when checking action type shape (%s)"
-                                                                    uu___33 in
-                                                                    (FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType,
-                                                                    uu___32) in
+                                                                    uu___32 in
                                                                     FStar_Errors.raise_error
-                                                                    uu___31
-                                                                    act_defn1.FStar_Syntax_Syntax.pos
+                                                                    (FStar_Syntax_Syntax.has_range_syntax
+                                                                    ())
+                                                                    act_defn1
+                                                                    FStar_Errors_Codes.Fatal_ActionMustHaveFunctionType
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    FStar_Errors_Msg.is_error_message_string)
+                                                                    (Obj.magic
+                                                                    uu___31)
                                                                     | 
                                                                     FStar_TypeChecker_Common.Trivial
                                                                     ->
@@ -8788,10 +8875,8 @@ let (monad_signature :
     fun m ->
       fun s ->
         let fail uu___ =
-          let uu___1 =
-            FStar_TypeChecker_Err.unexpected_signature_for_monad env m s in
-          let uu___2 = FStar_Ident.range_of_lid m in
-          FStar_Errors.raise_error uu___1 uu___2 in
+          let uu___1 = FStar_Ident.range_of_lid m in
+          FStar_TypeChecker_Err.unexpected_signature_for_monad env uu___1 m s in
         let s1 = FStar_Syntax_Subst.compress s in
         match s1.FStar_Syntax_Syntax.n with
         | FStar_Syntax_Syntax.Tm_arrow
@@ -8892,14 +8977,15 @@ let (check_lift_for_erasable_effects :
         fun r ->
           let err reason =
             let uu___ =
-              let uu___1 =
-                let uu___2 = FStar_Ident.string_of_lid m1 in
-                let uu___3 = FStar_Ident.string_of_lid m2 in
-                FStar_Compiler_Util.format3
-                  "Error defining a lift/subcomp %s ~> %s: %s" uu___2 uu___3
-                  reason in
-              (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___1) in
-            FStar_Errors.raise_error uu___ r in
+              let uu___1 = FStar_Ident.string_of_lid m1 in
+              let uu___2 = FStar_Ident.string_of_lid m2 in
+              FStar_Compiler_Util.format3
+                "Error defining a lift/subcomp %s ~> %s: %s" uu___1 uu___2
+                reason in
+            FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range r
+              FStar_Errors_Codes.Fatal_UnexpectedEffect ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___) in
           let m11 = FStar_TypeChecker_Env.norm_eff_name env m1 in
           let uu___ =
             FStar_Ident.lid_equals m11 FStar_Parser_Const.effect_GHOST_lid in
@@ -8936,13 +9022,14 @@ let (tc_lift :
          then
            let uu___2 =
              let uu___3 =
-               let uu___4 =
-                 FStar_Ident.string_of_lid sub.FStar_Syntax_Syntax.source in
-               FStar_Compiler_Util.format1
-                 "Cannot define a lift with same source and target (%s)"
-                 uu___4 in
-             (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___3) in
-           FStar_Errors.raise_error uu___2 r
+               FStar_Class_Show.show FStar_Ident.showable_lident
+                 sub.FStar_Syntax_Syntax.source in
+             FStar_Compiler_Util.format1
+               "Cannot define a lift with same source and target (%s)" uu___3 in
+           FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range r
+             FStar_Errors_Codes.Fatal_UnexpectedEffect ()
+             (Obj.magic FStar_Errors_Msg.is_error_message_string)
+             (Obj.magic uu___2)
          else ());
         (let check_and_gen1 env1 t k =
            let uu___1 =
@@ -9006,15 +9093,16 @@ let (tc_lift :
                          if uu___7
                          then
                            let uu___8 =
-                             let uu___9 =
-                               let uu___10 =
-                                 FStar_Ident.string_of_lid eff_name in
-                               FStar_Compiler_Util.format1
-                                 "Effect %s cannot be reified" uu___10 in
-                             (FStar_Errors_Codes.Fatal_EffectCannotBeReified,
-                               uu___9) in
-                           let uu___9 = FStar_TypeChecker_Env.get_range env in
-                           FStar_Errors.raise_error uu___8 uu___9
+                             let uu___9 = FStar_Ident.string_of_lid eff_name in
+                             FStar_Compiler_Util.format1
+                               "Effect %s cannot be reified" uu___9 in
+                           FStar_Errors.raise_error
+                             FStar_TypeChecker_Env.hasRange_env env
+                             FStar_Errors_Codes.Fatal_EffectCannotBeReified
+                             ()
+                             (Obj.magic
+                                FStar_Errors_Msg.is_error_message_string)
+                             (Obj.magic uu___8)
                          else ());
                         (let uu___7 =
                            FStar_TypeChecker_Env.effect_decl_opt env eff_name in
@@ -9416,25 +9504,26 @@ let (tc_lift :
                             then
                               (let uu___8 =
                                  let uu___9 =
-                                   let uu___10 =
-                                     FStar_Class_Show.show
-                                       FStar_Ident.showable_lident
-                                       sub.FStar_Syntax_Syntax.source in
-                                   let uu___11 =
-                                     FStar_Class_Show.show
-                                       FStar_Ident.showable_lident
-                                       sub.FStar_Syntax_Syntax.target in
-                                   let uu___12 =
-                                     FStar_Compiler_Util.string_of_int
-                                       (FStar_Compiler_List.length
-                                          (FStar_Pervasives_Native.fst
-                                             lift_wp)) in
-                                   FStar_Compiler_Util.format3
-                                     "Sub effect wp must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
-                                     uu___10 uu___11 uu___12 in
-                                 (FStar_Errors_Codes.Fatal_TooManyUniverse,
-                                   uu___9) in
-                               FStar_Errors.raise_error uu___8 r)
+                                   FStar_Class_Show.show
+                                     FStar_Ident.showable_lident
+                                     sub.FStar_Syntax_Syntax.source in
+                                 let uu___10 =
+                                   FStar_Class_Show.show
+                                     FStar_Ident.showable_lident
+                                     sub.FStar_Syntax_Syntax.target in
+                                 let uu___11 =
+                                   FStar_Compiler_Util.string_of_int
+                                     (FStar_Compiler_List.length
+                                        (FStar_Pervasives_Native.fst lift_wp)) in
+                                 FStar_Compiler_Util.format3
+                                   "Sub effect wp must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
+                                   uu___9 uu___10 uu___11 in
+                               FStar_Errors.raise_error
+                                 FStar_Class_HasRange.hasRange_range r
+                                 FStar_Errors_Codes.Fatal_TooManyUniverse ()
+                                 (Obj.magic
+                                    FStar_Errors_Msg.is_error_message_string)
+                                 (Obj.magic uu___8))
                             else ();
                             (let uu___9 =
                                (FStar_Compiler_Util.is_some lift1) &&
@@ -9449,29 +9538,30 @@ let (tc_lift :
                              then
                                let uu___10 =
                                  let uu___11 =
-                                   let uu___12 =
-                                     FStar_Class_Show.show
-                                       FStar_Ident.showable_lident
-                                       sub.FStar_Syntax_Syntax.source in
-                                   let uu___13 =
-                                     FStar_Class_Show.show
-                                       FStar_Ident.showable_lident
-                                       sub.FStar_Syntax_Syntax.target in
+                                   FStar_Class_Show.show
+                                     FStar_Ident.showable_lident
+                                     sub.FStar_Syntax_Syntax.source in
+                                 let uu___12 =
+                                   FStar_Class_Show.show
+                                     FStar_Ident.showable_lident
+                                     sub.FStar_Syntax_Syntax.target in
+                                 let uu___13 =
                                    let uu___14 =
                                      let uu___15 =
                                        let uu___16 =
-                                         let uu___17 =
-                                           FStar_Compiler_Util.must lift1 in
-                                         FStar_Pervasives_Native.fst uu___17 in
-                                       FStar_Compiler_List.length uu___16 in
-                                     FStar_Compiler_Util.string_of_int
-                                       uu___15 in
-                                   FStar_Compiler_Util.format3
-                                     "Sub effect lift must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
-                                     uu___12 uu___13 uu___14 in
-                                 (FStar_Errors_Codes.Fatal_TooManyUniverse,
-                                   uu___11) in
-                               FStar_Errors.raise_error uu___10 r
+                                         FStar_Compiler_Util.must lift1 in
+                                       FStar_Pervasives_Native.fst uu___16 in
+                                     FStar_Compiler_List.length uu___15 in
+                                   FStar_Compiler_Util.string_of_int uu___14 in
+                                 FStar_Compiler_Util.format3
+                                   "Sub effect lift must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
+                                   uu___11 uu___12 uu___13 in
+                               FStar_Errors.raise_error
+                                 FStar_Class_HasRange.hasRange_range r
+                                 FStar_Errors_Codes.Fatal_TooManyUniverse ()
+                                 (Obj.magic
+                                    FStar_Errors_Msg.is_error_message_string)
+                                 (Obj.magic uu___10)
                              else ());
                             {
                               FStar_Syntax_Syntax.source =
@@ -9555,27 +9645,34 @@ let (tc_effect_abbrev :
                                          then
                                            (let uu___11 =
                                               let uu___12 =
-                                                let uu___13 =
-                                                  FStar_Ident.string_of_lid
-                                                    lid in
-                                                let uu___14 =
-                                                  FStar_Ident.string_of_lid
-                                                    (FStar_Syntax_Util.comp_effect_name
-                                                       c3) in
-                                                FStar_Compiler_Util.format2
-                                                  "Effect %s is marked as a default effect for %s, but it has more than one arguments"
-                                                  uu___13 uu___14 in
-                                              (FStar_Errors_Codes.Fatal_UnexpectedEffect,
-                                                uu___12) in
-                                            FStar_Errors.raise_error uu___11
-                                              r)
+                                                FStar_Ident.string_of_lid lid in
+                                              let uu___13 =
+                                                FStar_Ident.string_of_lid
+                                                  (FStar_Syntax_Util.comp_effect_name
+                                                     c3) in
+                                              FStar_Compiler_Util.format2
+                                                "Effect %s is marked as a default effect for %s, but it has more than one arguments"
+                                                uu___12 uu___13 in
+                                            FStar_Errors.raise_error
+                                              FStar_Class_HasRange.hasRange_range
+                                              r
+                                              FStar_Errors_Codes.Fatal_UnexpectedEffect
+                                              ()
+                                              (Obj.magic
+                                                 FStar_Errors_Msg.is_error_message_string)
+                                              (Obj.magic uu___11))
                                          else ();
                                          FStar_Syntax_Syntax.bv_to_name x)
                                     | uu___7 ->
                                         FStar_Errors.raise_error
-                                          (FStar_Errors_Codes.Fatal_NotEnoughArgumentsForEffect,
-                                            "Effect abbreviations must bind at least the result type")
-                                          r in
+                                          FStar_Class_HasRange.hasRange_range
+                                          r
+                                          FStar_Errors_Codes.Fatal_NotEnoughArgumentsForEffect
+                                          ()
+                                          (Obj.magic
+                                             FStar_Errors_Msg.is_error_message_string)
+                                          (Obj.magic
+                                             "Effect abbreviations must bind at least the result type") in
                                   let def_result_typ =
                                     FStar_Syntax_Util.comp_result c3 in
                                   let uu___7 =
@@ -9588,20 +9685,23 @@ let (tc_effect_abbrev :
                                   then
                                     let uu___8 =
                                       let uu___9 =
-                                        let uu___10 =
-                                          FStar_Class_Show.show
-                                            FStar_Syntax_Print.showable_term
-                                            expected_result_typ in
-                                        let uu___11 =
-                                          FStar_Class_Show.show
-                                            FStar_Syntax_Print.showable_term
-                                            def_result_typ in
-                                        FStar_Compiler_Util.format2
-                                          "Result type of effect abbreviation `%s` does not match the result type of its definition `%s`"
-                                          uu___10 uu___11 in
-                                      (FStar_Errors_Codes.Fatal_EffectAbbreviationResultTypeMismatch,
-                                        uu___9) in
-                                    FStar_Errors.raise_error uu___8 r
+                                        FStar_Class_Show.show
+                                          FStar_Syntax_Print.showable_term
+                                          expected_result_typ in
+                                      let uu___10 =
+                                        FStar_Class_Show.show
+                                          FStar_Syntax_Print.showable_term
+                                          def_result_typ in
+                                      FStar_Compiler_Util.format2
+                                        "Result type of effect abbreviation `%s` does not match the result type of its definition `%s`"
+                                        uu___9 uu___10 in
+                                    FStar_Errors.raise_error
+                                      FStar_Class_HasRange.hasRange_range r
+                                      FStar_Errors_Codes.Fatal_EffectAbbreviationResultTypeMismatch
+                                      ()
+                                      (Obj.magic
+                                         FStar_Errors_Msg.is_error_message_string)
+                                      (Obj.magic uu___8)
                                   else ());
                                  (let tps4 =
                                     FStar_Syntax_Subst.close_binders tps3 in
@@ -9655,26 +9755,31 @@ let (tc_effect_abbrev :
                                                | (uu___11, t1) ->
                                                    let uu___12 =
                                                      let uu___13 =
-                                                       let uu___14 =
-                                                         FStar_Class_Show.show
-                                                           FStar_Ident.showable_lident
-                                                           lid in
-                                                       let uu___15 =
-                                                         FStar_Compiler_Util.string_of_int
-                                                           (FStar_Compiler_List.length
-                                                              uvs2) in
-                                                       let uu___16 =
-                                                         FStar_Class_Show.show
-                                                           FStar_Syntax_Print.showable_term
-                                                           t1 in
-                                                       FStar_Compiler_Util.format3
-                                                         "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
-                                                         uu___14 uu___15
-                                                         uu___16 in
-                                                     (FStar_Errors_Codes.Fatal_TooManyUniverse,
-                                                       uu___13) in
+                                                       FStar_Class_Show.show
+                                                         FStar_Ident.showable_lident
+                                                         lid in
+                                                     let uu___14 =
+                                                       FStar_Class_Show.show
+                                                         (FStar_Class_Show.printableshow
+                                                            FStar_Class_Printable.printable_nat)
+                                                         (FStar_Compiler_List.length
+                                                            uvs2) in
+                                                     let uu___15 =
+                                                       FStar_Class_Show.show
+                                                         FStar_Syntax_Print.showable_term
+                                                         t1 in
+                                                     FStar_Compiler_Util.format3
+                                                       "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
+                                                       uu___13 uu___14
+                                                       uu___15 in
                                                    FStar_Errors.raise_error
-                                                     uu___12 r)
+                                                     FStar_Class_HasRange.hasRange_range
+                                                     r
+                                                     FStar_Errors_Codes.Fatal_TooManyUniverse
+                                                     ()
+                                                     (Obj.magic
+                                                        FStar_Errors_Msg.is_error_message_string)
+                                                     (Obj.magic uu___12))
                                             else ();
                                             (lid, uvs2, tps5, c5)))))))))
 let (check_polymonadic_bind_for_erasable_effects :
@@ -9691,14 +9796,18 @@ let (check_polymonadic_bind_for_erasable_effects :
             let err reason =
               let uu___ =
                 let uu___1 =
-                  let uu___2 = FStar_Ident.string_of_lid m in
-                  let uu___3 = FStar_Ident.string_of_lid n in
-                  let uu___4 = FStar_Ident.string_of_lid p in
-                  FStar_Compiler_Util.format4
-                    "Error definition polymonadic bind (%s, %s) |> %s: %s"
-                    uu___2 uu___3 uu___4 reason in
-                (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___1) in
-              FStar_Errors.raise_error uu___ r in
+                  FStar_Class_Show.show FStar_Ident.showable_lident m in
+                let uu___2 =
+                  FStar_Class_Show.show FStar_Ident.showable_lident n in
+                let uu___3 =
+                  FStar_Class_Show.show FStar_Ident.showable_lident p in
+                FStar_Compiler_Util.format4
+                  "Error definition polymonadic bind (%s, %s) |> %s: %s"
+                  uu___1 uu___2 uu___3 reason in
+              FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range r
+                FStar_Errors_Codes.Fatal_UnexpectedEffect ()
+                (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                (Obj.magic uu___) in
             let m1 = FStar_TypeChecker_Env.norm_eff_name env m in
             let n1 = FStar_TypeChecker_Env.norm_eff_name env n in
             let uu___ =
@@ -9835,15 +9944,18 @@ let (tc_polymonadic_bind :
                                  (let uu___7 =
                                     let uu___8 =
                                       let uu___9 =
-                                        let uu___10 =
-                                          FStar_Compiler_Util.format1
-                                            "Polymonadic binds (%s in this case) is an experimental feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
-                                            eff_name in
-                                        FStar_Errors_Msg.text uu___10 in
-                                      [uu___9] in
-                                    (FStar_Errors_Codes.Warning_BleedingEdge_Feature,
-                                      uu___8) in
-                                  FStar_Errors.log_issue_doc r uu___7);
+                                        FStar_Compiler_Util.format1
+                                          "Polymonadic binds (%s in this case) is an experimental feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
+                                          eff_name in
+                                      FStar_Errors_Msg.text uu___9 in
+                                    [uu___8] in
+                                  FStar_Errors.log_issue
+                                    FStar_Class_HasRange.hasRange_range r
+                                    FStar_Errors_Codes.Warning_BleedingEdge_Feature
+                                    ()
+                                    (Obj.magic
+                                       FStar_Errors_Msg.is_error_message_list_doc)
+                                    (Obj.magic uu___7));
                                  (let uu___7 =
                                     let uu___8 =
                                       FStar_Syntax_Subst.close_univ_vars us1
@@ -9923,15 +10035,18 @@ let (tc_polymonadic_subcomp :
                                (let uu___7 =
                                   let uu___8 =
                                     let uu___9 =
-                                      let uu___10 =
-                                        FStar_Compiler_Util.format1
-                                          "Polymonadic subcomp (%s in this case) is an experimental feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
-                                          combinator_name in
-                                      FStar_Errors_Msg.text uu___10 in
-                                    [uu___9] in
-                                  (FStar_Errors_Codes.Warning_BleedingEdge_Feature,
-                                    uu___8) in
-                                FStar_Errors.log_issue_doc r uu___7);
+                                      FStar_Compiler_Util.format1
+                                        "Polymonadic subcomp (%s in this case) is an experimental feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
+                                        combinator_name in
+                                    FStar_Errors_Msg.text uu___9 in
+                                  [uu___8] in
+                                FStar_Errors.log_issue
+                                  FStar_Class_HasRange.hasRange_range r
+                                  FStar_Errors_Codes.Warning_BleedingEdge_Feature
+                                  ()
+                                  (Obj.magic
+                                     FStar_Errors_Msg.is_error_message_list_doc)
+                                  (Obj.magic uu___7));
                                (let uu___7 =
                                   let uu___8 =
                                     FStar_Syntax_Subst.close_univ_vars us1 k in

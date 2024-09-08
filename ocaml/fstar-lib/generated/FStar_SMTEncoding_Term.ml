@@ -1227,14 +1227,15 @@ let (mkQuant :
                  | FStar_Pervasives_Native.None -> pats1
                  | FStar_Pervasives_Native.Some p ->
                      ((let uu___4 =
-                         let uu___5 =
-                           let uu___6 = print_smt_term p in
-                           FStar_Compiler_Util.format1
-                             "Pattern (%s) contains illegal symbols; dropping it"
-                             uu___6 in
-                         (FStar_Errors_Codes.Warning_SMTPatternIllFormed,
-                           uu___5) in
-                       FStar_Errors.log_issue r uu___4);
+                         let uu___5 = print_smt_term p in
+                         FStar_Compiler_Util.format1
+                           "Pattern (%s) contains illegal symbols; dropping it"
+                           uu___5 in
+                       FStar_Errors.log_issue
+                         FStar_Class_HasRange.hasRange_range r
+                         FStar_Errors_Codes.Warning_SMTPatternIllFormed ()
+                         (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                         (Obj.magic uu___4));
                       [])) in
             if (FStar_Compiler_List.length vars) = Prims.int_zero
             then body

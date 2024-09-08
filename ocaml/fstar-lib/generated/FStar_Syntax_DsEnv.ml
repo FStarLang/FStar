@@ -2424,12 +2424,12 @@ let (push_top_level_rec_binding :
           used_marker1)
       else
         (let uu___2 =
-           let uu___3 =
-             let uu___4 = FStar_Ident.string_of_lid l in
-             Prims.strcat "Duplicate top-level names " uu___4 in
-           (FStar_Errors_Codes.Fatal_DuplicateTopLevelNames, uu___3) in
-         let uu___3 = FStar_Ident.range_of_lid l in
-         FStar_Errors.raise_error uu___2 uu___3)
+           let uu___3 = FStar_Ident.string_of_lid l in
+           Prims.strcat "Duplicate top-level names " uu___3 in
+         FStar_Errors.raise_error FStar_Ident.hasrange_lident l
+           FStar_Errors_Codes.Fatal_DuplicateTopLevelNames ()
+           (Obj.magic FStar_Errors_Msg.is_error_message_string)
+           (Obj.magic uu___2))
 let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
   fun fail_on_dup ->
     fun env1 ->
@@ -2453,21 +2453,21 @@ let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
           let uu___ =
             let uu___1 =
               let uu___2 =
-                let uu___3 =
-                  let uu___4 = FStar_Ident.string_of_lid l in
-                  FStar_Compiler_Util.format1
-                    "Duplicate top-level names [%s]" uu___4 in
-                FStar_Errors_Msg.text uu___3 in
+                let uu___3 = FStar_Ident.string_of_lid l in
+                FStar_Compiler_Util.format1 "Duplicate top-level names [%s]"
+                  uu___3 in
+              FStar_Errors_Msg.text uu___2 in
+            let uu___2 =
               let uu___3 =
                 let uu___4 =
-                  let uu___5 =
-                    FStar_Compiler_Util.format1 "Previously declared at %s" r in
-                  FStar_Errors_Msg.text uu___5 in
-                [uu___4] in
-              uu___2 :: uu___3 in
-            (FStar_Errors_Codes.Fatal_DuplicateTopLevelNames, uu___1) in
-          let uu___1 = FStar_Ident.range_of_lid l in
-          FStar_Errors.raise_error_doc uu___ uu___1 in
+                  FStar_Compiler_Util.format1 "Previously declared at %s" r in
+                FStar_Errors_Msg.text uu___4 in
+              [uu___3] in
+            uu___1 :: uu___2 in
+          FStar_Errors.raise_error FStar_Ident.hasrange_lident l
+            FStar_Errors_Codes.Fatal_DuplicateTopLevelNames ()
+            (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+            (Obj.magic uu___) in
         let globals = FStar_Compiler_Util.mk_ref env1.scope_mods in
         let env2 =
           let uu___ =
@@ -3096,20 +3096,19 @@ let elab_restriction :
                         let uu___3 =
                           let uu___4 =
                             let uu___5 =
-                              let uu___6 =
-                                FStar_Class_Show.show
-                                  (FStar_Class_Show.printableshow
-                                     FStar_Class_Printable.printable_int)
-                                  ((FStar_Compiler_List.length others) +
-                                     Prims.int_one) in
-                              Prims.strcat uu___6 " times" in
-                            Prims.strcat "The name %s was imported " uu___5 in
-                          let uu___5 = FStar_Ident.string_of_id id in
-                          FStar_Compiler_Util.format1 uu___4 uu___5 in
-                        (FStar_Errors_Codes.Fatal_DuplicateTopLevelNames,
-                          uu___3) in
-                      let uu___3 = FStar_Ident.range_of_id id in
-                      FStar_Errors.raise_error uu___2 uu___3))
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.printableshow
+                                   FStar_Class_Printable.printable_int)
+                                ((FStar_Compiler_List.length others) +
+                                   Prims.int_one) in
+                            Prims.strcat uu___5 " times" in
+                          Prims.strcat "The name %s was imported " uu___4 in
+                        let uu___4 = FStar_Ident.string_of_id id in
+                        FStar_Compiler_Util.format1 uu___3 uu___4 in
+                      FStar_Errors.raise_error FStar_Ident.hasrange_ident id
+                        FStar_Errors_Codes.Fatal_DuplicateTopLevelNames ()
+                        (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                        (Obj.magic uu___2)))
                 | FStar_Pervasives_Native.None -> ());
                FStar_Compiler_List.iter
                  (fun uu___1 ->
@@ -3122,14 +3121,15 @@ let elab_restriction :
                         then
                           let uu___3 =
                             let uu___4 =
-                              let uu___5 =
-                                let uu___6 = mk_lid id in
-                                FStar_Ident.string_of_lid uu___6 in
-                              FStar_Compiler_Util.format1
-                                "Definition %s cannot be found" uu___5 in
-                            (FStar_Errors_Codes.Fatal_NameNotFound, uu___4) in
-                          let uu___4 = FStar_Ident.range_of_id id in
-                          FStar_Errors.raise_error uu___3 uu___4
+                              let uu___5 = mk_lid id in
+                              FStar_Ident.string_of_lid uu___5 in
+                            FStar_Compiler_Util.format1
+                              "Definition %s cannot be found" uu___4 in
+                          FStar_Errors.raise_error FStar_Ident.hasrange_ident
+                            id FStar_Errors_Codes.Fatal_NameNotFound ()
+                            (Obj.magic
+                               FStar_Errors_Msg.is_error_message_string)
+                            (Obj.magic uu___3)
                         else ()) l3;
                f env1 ns (FStar_Syntax_Syntax.AllowList l3))
 let (push_namespace' :
@@ -3163,13 +3163,13 @@ let (push_namespace' :
               then (ns, FStar_Syntax_Syntax.Open_namespace)
               else
                 (let uu___4 =
-                   let uu___5 =
-                     let uu___6 = FStar_Ident.string_of_lid ns in
-                     FStar_Compiler_Util.format1
-                       "Namespace %s cannot be found" uu___6 in
-                   (FStar_Errors_Codes.Fatal_NameSpaceNotFound, uu___5) in
-                 let uu___5 = FStar_Ident.range_of_lid ns in
-                 FStar_Errors.raise_error uu___4 uu___5)
+                   let uu___5 = FStar_Ident.string_of_lid ns in
+                   FStar_Compiler_Util.format1 "Namespace %s cannot be found"
+                     uu___5 in
+                 FStar_Errors.raise_error FStar_Ident.hasrange_lident ns
+                   FStar_Errors_Codes.Fatal_NameSpaceNotFound ()
+                   (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                   (Obj.magic uu___4))
           | FStar_Pervasives_Native.Some ns' ->
               (ns', FStar_Syntax_Syntax.Open_module) in
         match uu___ with
@@ -3257,23 +3257,24 @@ let (push_include' :
                          (match () with | () -> env2))
                     | FStar_Pervasives_Native.None ->
                         let uu___4 =
-                          let uu___5 =
-                            let uu___6 = FStar_Ident.string_of_lid ns1 in
-                            FStar_Compiler_Util.format1
-                              "include: Module %s was not prepared" uu___6 in
-                          (FStar_Errors_Codes.Fatal_IncludeModuleNotPrepared,
-                            uu___5) in
-                        let uu___5 = FStar_Ident.range_of_lid ns1 in
-                        FStar_Errors.raise_error uu___4 uu___5))))
+                          let uu___5 = FStar_Ident.string_of_lid ns1 in
+                          FStar_Compiler_Util.format1
+                            "include: Module %s was not prepared" uu___5 in
+                        FStar_Errors.raise_error FStar_Ident.hasrange_lident
+                          ns1
+                          FStar_Errors_Codes.Fatal_IncludeModuleNotPrepared
+                          ()
+                          (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                          (Obj.magic uu___4)))))
         | uu___1 ->
             let uu___2 =
-              let uu___3 =
-                let uu___4 = FStar_Ident.string_of_lid ns in
-                FStar_Compiler_Util.format1
-                  "include: Module %s cannot be found" uu___4 in
-              (FStar_Errors_Codes.Fatal_ModuleNotFound, uu___3) in
-            let uu___3 = FStar_Ident.range_of_lid ns in
-            FStar_Errors.raise_error uu___2 uu___3
+              let uu___3 = FStar_Ident.string_of_lid ns in
+              FStar_Compiler_Util.format1
+                "include: Module %s cannot be found" uu___3 in
+            FStar_Errors.raise_error FStar_Ident.hasrange_lident ns
+              FStar_Errors_Codes.Fatal_ModuleNotFound ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___2)
 let (push_namespace :
   env -> FStar_Ident.lident -> FStar_Syntax_Syntax.restriction -> env) =
   elab_restriction push_namespace'
@@ -3292,12 +3293,12 @@ let (push_module_abbrev :
            push_scope_mod env1 (Module_abbrev (x, l)))
         else
           (let uu___2 =
-             let uu___3 =
-               let uu___4 = FStar_Ident.string_of_lid l in
-               FStar_Compiler_Util.format1 "Module %s cannot be found" uu___4 in
-             (FStar_Errors_Codes.Fatal_ModuleNotFound, uu___3) in
-           let uu___3 = FStar_Ident.range_of_lid l in
-           FStar_Errors.raise_error uu___2 uu___3)
+             let uu___3 = FStar_Ident.string_of_lid l in
+             FStar_Compiler_Util.format1 "Module %s cannot be found" uu___3 in
+           FStar_Errors.raise_error FStar_Ident.hasrange_lident l
+             FStar_Errors_Codes.Fatal_ModuleNotFound ()
+             (Obj.magic FStar_Errors_Msg.is_error_message_string)
+             (Obj.magic uu___2))
 let (check_admits :
   env -> FStar_Syntax_Syntax.modul -> FStar_Syntax_Syntax.modul) =
   fun env1 ->
@@ -3363,28 +3364,30 @@ let (check_admits :
                             Prims.op_Negation uu___4 in
                           if uu___3
                           then
-                            let uu___4 = FStar_Ident.range_of_lid l in
-                            let uu___5 =
+                            let uu___4 =
+                              let uu___5 =
+                                let uu___6 =
+                                  let uu___7 =
+                                    FStar_Class_Show.show
+                                      FStar_Ident.showable_lident l in
+                                  FStar_Pprint.doc_of_string uu___7 in
+                                let uu___7 =
+                                  FStar_Errors_Msg.text
+                                    "is declared but no definition was found" in
+                                FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                               let uu___6 =
                                 let uu___7 =
-                                  let uu___8 =
-                                    let uu___9 =
-                                      FStar_Class_Show.show
-                                        FStar_Ident.showable_lident l in
-                                    FStar_Pprint.doc_of_string uu___9 in
-                                  let uu___9 =
-                                    FStar_Errors_Msg.text
-                                      "is declared but no definition was found" in
-                                  FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-                                let uu___8 =
-                                  let uu___9 =
-                                    FStar_Errors_Msg.text
-                                      "Add an 'assume' if this is intentional" in
-                                  [uu___9] in
-                                uu___7 :: uu___8 in
-                              (FStar_Errors_Codes.Error_AdmitWithoutDefinition,
-                                uu___6) in
-                            FStar_Errors.log_issue_doc uu___4 uu___5
+                                  FStar_Errors_Msg.text
+                                    "Add an 'assume' if this is intentional" in
+                                [uu___7] in
+                              uu___5 :: uu___6 in
+                            FStar_Errors.log_issue
+                              FStar_Ident.hasrange_lident l
+                              FStar_Errors_Codes.Error_AdmitWithoutDefinition
+                              ()
+                              (Obj.magic
+                                 FStar_Errors_Msg.is_error_message_list_doc)
+                              (Obj.magic uu___4)
                           else ());
                          (let quals = FStar_Syntax_Syntax.Assumption ::
                             (se.FStar_Syntax_Syntax.sigquals) in
@@ -3909,14 +3912,14 @@ let (prepare_module_or_interface :
                   if uu___3
                   then
                     let uu___4 =
-                      let uu___5 =
-                        let uu___6 = FStar_Ident.string_of_lid mname in
-                        FStar_Compiler_Util.format1
-                          "Duplicate module or interface name: %s" uu___6 in
-                      (FStar_Errors_Codes.Fatal_DuplicateModuleOrInterface,
-                        uu___5) in
-                    let uu___5 = FStar_Ident.range_of_lid mname in
-                    FStar_Errors.raise_error uu___4 uu___5
+                      let uu___5 = FStar_Ident.string_of_lid mname in
+                      FStar_Compiler_Util.format1
+                        "Duplicate module or interface name: %s" uu___5 in
+                    FStar_Errors.raise_error FStar_Ident.hasrange_lident
+                      mname
+                      FStar_Errors_Codes.Fatal_DuplicateModuleOrInterface ()
+                      (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                      (Obj.magic uu___4)
                   else ());
                  (let uu___3 = let uu___4 = push env1 in prep uu___4 in
                   (uu___3, true)))
@@ -3928,15 +3931,17 @@ let (enter_monad_scope : env -> FStar_Ident.ident -> env) =
           let uu___ =
             let uu___1 =
               let uu___2 =
-                let uu___3 = FStar_Ident.string_of_id mname in
+                FStar_Class_Show.show FStar_Ident.showable_ident mname in
+              let uu___3 =
                 let uu___4 =
-                  let uu___5 = FStar_Ident.string_of_id mname' in
-                  Prims.strcat ", but already in monad scope " uu___5 in
-                Prims.strcat uu___3 uu___4 in
-              Prims.strcat "Trying to define monad " uu___2 in
-            (FStar_Errors_Codes.Fatal_MonadAlreadyDefined, uu___1) in
-          let uu___1 = FStar_Ident.range_of_id mname in
-          FStar_Errors.raise_error uu___ uu___1
+                  FStar_Class_Show.show FStar_Ident.showable_ident mname' in
+                Prims.strcat ", but already in monad scope " uu___4 in
+              Prims.strcat uu___2 uu___3 in
+            Prims.strcat "Trying to define monad " uu___1 in
+          FStar_Errors.raise_error FStar_Ident.hasrange_ident mname
+            FStar_Errors_Codes.Fatal_MonadAlreadyDefined ()
+            (Obj.magic FStar_Errors_Msg.is_error_message_string)
+            (Obj.magic uu___)
       | FStar_Pervasives_Native.None ->
           {
             curmodule = (env1.curmodule);
@@ -4059,9 +4064,10 @@ let fail_or :
                          FStar_Errors_Msg.text uu___6 in
                        [uu___5] in
                      FStar_Compiler_List.op_At msg uu___4) in
-            let uu___1 = FStar_Ident.range_of_lid lid in
-            FStar_Errors.raise_error_doc
-              (FStar_Errors_Codes.Fatal_IdentifierNotFound, msg1) uu___1
+            FStar_Errors.raise_error FStar_Ident.hasrange_lident lid
+              FStar_Errors_Codes.Fatal_IdentifierNotFound ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+              (Obj.magic msg1)
 let fail_or2 :
   'a .
     (FStar_Ident.ident -> 'a FStar_Pervasives_Native.option) ->
@@ -4074,13 +4080,13 @@ let fail_or2 :
       | FStar_Pervasives_Native.None ->
           let uu___1 =
             let uu___2 =
-              let uu___3 =
-                let uu___4 = FStar_Ident.string_of_id id in
-                Prims.strcat uu___4 "]" in
-              Prims.strcat "Identifier not found [" uu___3 in
-            (FStar_Errors_Codes.Fatal_IdentifierNotFound, uu___2) in
-          let uu___2 = FStar_Ident.range_of_id id in
-          FStar_Errors.raise_error uu___1 uu___2
+              let uu___3 = FStar_Ident.string_of_id id in
+              Prims.strcat uu___3 "]" in
+            Prims.strcat "Identifier not found [" uu___2 in
+          FStar_Errors.raise_error FStar_Ident.hasrange_ident id
+            FStar_Errors_Codes.Fatal_IdentifierNotFound ()
+            (Obj.magic FStar_Errors_Msg.is_error_message_string)
+            (Obj.magic uu___1)
       | FStar_Pervasives_Native.Some r -> r
 let (resolve_name :
   env ->

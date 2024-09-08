@@ -3153,6 +3153,31 @@ let (has_range_sigelt : sigelt FStar_Class_HasRange.hasRange) =
              sigopts = (t.sigopts)
            })
   }
+let (hasRange_fv : fv FStar_Class_HasRange.hasRange) =
+  {
+    FStar_Class_HasRange.pos = range_of_fv;
+    FStar_Class_HasRange.setPos = (fun r -> fun f -> set_range_of_fv f r)
+  }
+let (hasRange_bv : bv FStar_Class_HasRange.hasRange) =
+  {
+    FStar_Class_HasRange.pos = range_of_bv;
+    FStar_Class_HasRange.setPos = (fun r -> fun f -> set_range_of_bv f r)
+  }
+let (hasRange_binder : binder FStar_Class_HasRange.hasRange) =
+  {
+    FStar_Class_HasRange.pos =
+      (fun b -> FStar_Class_HasRange.pos hasRange_bv b.binder_bv);
+    FStar_Class_HasRange.setPos =
+      (fun r ->
+         fun b ->
+           let uu___ = FStar_Class_HasRange.setPos hasRange_bv r b.binder_bv in
+           {
+             binder_bv = uu___;
+             binder_qual = (b.binder_qual);
+             binder_positivity = (b.binder_positivity);
+             binder_attrs = (b.binder_attrs)
+           })
+  }
 let (showable_lazy_kind : lazy_kind FStar_Class_Show.showable) =
   {
     FStar_Class_Show.show =

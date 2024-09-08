@@ -142,10 +142,10 @@ let (module_name_of_file : Prims.string -> Prims.string) =
     | FStar_Pervasives_Native.Some longname -> longname
     | FStar_Pervasives_Native.None ->
         let uu___1 =
-          let uu___2 =
-            FStar_Compiler_Util.format1 "Not a valid FStar file: '%s'" f in
-          (FStar_Errors_Codes.Fatal_NotValidFStarFile, uu___2) in
-        FStar_Errors.raise_err uu___1
+          FStar_Compiler_Util.format1 "Not a valid FStar file: '%s'" f in
+        FStar_Errors.raise_error0 FStar_Errors_Codes.Fatal_NotValidFStarFile
+          () (Obj.magic FStar_Errors_Msg.is_error_message_string)
+          (Obj.magic uu___1)
 let (lowercase_module_name : Prims.string -> Prims.string) =
   fun f ->
     let uu___ = module_name_of_file f in
@@ -544,35 +544,34 @@ let (cache_file_name : Prims.string -> Prims.string) =
           then
             let uu___3 =
               let uu___4 =
-                let uu___5 =
-                  let uu___6 = FStar_Errors_Msg.text "Did not expect module" in
-                  let uu___7 =
-                    let uu___8 = FStar_Pprint.doc_of_string mname in
-                    let uu___9 =
-                      FStar_Errors_Msg.text "to be already checked." in
-                    FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-                  FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                let uu___5 = FStar_Errors_Msg.text "Did not expect module" in
+                let uu___6 =
+                  let uu___7 = FStar_Pprint.doc_of_string mname in
+                  let uu___8 = FStar_Errors_Msg.text "to be already checked." in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+              let uu___5 =
                 let uu___6 =
                   let uu___7 =
                     let uu___8 =
-                      let uu___9 =
-                        FStar_Errors_Msg.text
-                          "Found it in an unexpected location:" in
-                      let uu___10 = FStar_Pprint.doc_of_string path in
-                      FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
-                        uu___9 uu___10 in
-                    let uu___9 =
-                      let uu___10 = FStar_Errors_Msg.text "instead of" in
-                      let uu___11 =
-                        FStar_Pprint.doc_of_string expected_cache_file in
-                      FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
-                        uu___10 uu___11 in
-                    FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-                  [uu___7] in
-                uu___5 :: uu___6 in
-              (FStar_Errors_Codes.Warning_UnexpectedCheckedFile, uu___4) in
-            FStar_Errors.log_issue_doc FStar_Compiler_Range_Type.dummyRange
-              uu___3
+                      FStar_Errors_Msg.text
+                        "Found it in an unexpected location:" in
+                    let uu___9 = FStar_Pprint.doc_of_string path in
+                    FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                      uu___8 uu___9 in
+                  let uu___8 =
+                    let uu___9 = FStar_Errors_Msg.text "instead of" in
+                    let uu___10 =
+                      FStar_Pprint.doc_of_string expected_cache_file in
+                    FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                      uu___9 uu___10 in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                [uu___6] in
+              uu___4 :: uu___5 in
+            FStar_Errors.log_issue0
+              FStar_Errors_Codes.Warning_UnexpectedCheckedFile ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+              (Obj.magic uu___3)
           else ());
          (let uu___2 =
             (FStar_Compiler_Util.file_exists expected_cache_file) &&
@@ -592,15 +591,15 @@ let (cache_file_name : Prims.string -> Prims.string) =
             let uu___4 =
               let uu___5 =
                 let uu___6 =
-                  let uu___7 =
-                    FStar_Compiler_Util.format1
-                      "Expected %s to be already checked but could not find it."
-                      mname in
-                  FStar_Errors_Msg.text uu___7 in
-                [uu___6] in
-              (FStar_Errors_Codes.Error_AlreadyCachedAssertionFailure,
-                uu___5) in
-            FStar_Errors.raise_err_doc uu___4
+                  FStar_Compiler_Util.format1
+                    "Expected %s to be already checked but could not find it."
+                    mname in
+                FStar_Errors_Msg.text uu___6 in
+              [uu___5] in
+            FStar_Errors.raise_error0
+              FStar_Errors_Codes.Error_AlreadyCachedAssertionFailure ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+              (Obj.magic uu___4)
           else ());
          FStar_Options.prepend_cache_dir cache_fn) in
   let memo = FStar_Compiler_Util.smap_create (Prims.of_int (100)) in
@@ -638,12 +637,13 @@ let (file_of_dep_aux :
               (match uu___ with
                | FStar_Pervasives_Native.None ->
                    let uu___1 =
-                     let uu___2 =
-                       FStar_Compiler_Util.format1
-                         "Expected an interface for module %s, but couldn't find one"
-                         key in
-                     (FStar_Errors_Codes.Fatal_MissingInterface, uu___2) in
-                   FStar_Errors.raise_err uu___1
+                     FStar_Compiler_Util.format1
+                       "Expected an interface for module %s, but couldn't find one"
+                       key in
+                   FStar_Errors.raise_error0
+                     FStar_Errors_Codes.Fatal_MissingInterface ()
+                     (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                     (Obj.magic uu___1)
                | FStar_Pervasives_Native.Some f -> f)
           | PreferInterface key when has_interface file_system_map key ->
               let uu___ =
@@ -666,27 +666,27 @@ let (file_of_dep_aux :
                         let uu___5 =
                           let uu___6 =
                             let uu___7 =
-                              let uu___8 =
-                                implementation_of_internal file_system_map
-                                  key in
-                              FStar_Compiler_Option.get uu___8 in
-                            let uu___8 =
-                              let uu___9 =
-                                interface_of_internal file_system_map key in
-                              FStar_Compiler_Option.get uu___9 in
-                            FStar_Compiler_Util.format3
-                              "You may have a cyclic dependence on module %s: use --dep full to confirm. Alternatively, invoking fstar with %s on the command line breaks the abstraction imposed by its interface %s."
-                              key uu___7 uu___8 in
-                          FStar_Errors_Msg.text uu___6 in
-                        let uu___6 =
+                              implementation_of_internal file_system_map key in
+                            FStar_Compiler_Option.get uu___7 in
                           let uu___7 =
-                            FStar_Errors_Msg.text
-                              "If you really want this behavior add the option '--expose_interfaces'." in
-                          [uu___7] in
-                        uu___5 :: uu___6 in
-                      (FStar_Errors_Codes.Fatal_MissingExposeInterfacesOption,
-                        uu___4) in
-                    FStar_Errors.raise_err_doc uu___3))
+                            let uu___8 =
+                              interface_of_internal file_system_map key in
+                            FStar_Compiler_Option.get uu___8 in
+                          FStar_Compiler_Util.format3
+                            "You may have a cyclic dependence on module %s: use --dep full to confirm. Alternatively, invoking fstar with %s on the command line breaks the abstraction imposed by its interface %s."
+                            key uu___6 uu___7 in
+                        FStar_Errors_Msg.text uu___5 in
+                      let uu___5 =
+                        let uu___6 =
+                          FStar_Errors_Msg.text
+                            "If you really want this behavior add the option '--expose_interfaces'." in
+                        [uu___6] in
+                      uu___4 :: uu___5 in
+                    FStar_Errors.raise_error0
+                      FStar_Errors_Codes.Fatal_MissingExposeInterfacesOption
+                      ()
+                      (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                      (Obj.magic uu___3)))
               else
                 (let uu___2 =
                    let uu___3 = interface_of_internal file_system_map key in
@@ -697,36 +697,39 @@ let (file_of_dep_aux :
               (match uu___ with
                | FStar_Pervasives_Native.None ->
                    let uu___1 =
-                     let uu___2 =
-                       FStar_Compiler_Util.format1
-                         "Expected an implementation of module %s, but couldn't find one"
-                         key in
-                     (FStar_Errors_Codes.Fatal_MissingImplementation, uu___2) in
-                   FStar_Errors.raise_err uu___1
+                     FStar_Compiler_Util.format1
+                       "Expected an implementation of module %s, but couldn't find one"
+                       key in
+                   FStar_Errors.raise_error0
+                     FStar_Errors_Codes.Fatal_MissingImplementation ()
+                     (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                     (Obj.magic uu___1)
                | FStar_Pervasives_Native.Some f -> maybe_use_cache_of f)
           | UseImplementation key ->
               let uu___ = implementation_of_internal file_system_map key in
               (match uu___ with
                | FStar_Pervasives_Native.None ->
                    let uu___1 =
-                     let uu___2 =
-                       FStar_Compiler_Util.format1
-                         "Expected an implementation of module %s, but couldn't find one"
-                         key in
-                     (FStar_Errors_Codes.Fatal_MissingImplementation, uu___2) in
-                   FStar_Errors.raise_err uu___1
+                     FStar_Compiler_Util.format1
+                       "Expected an implementation of module %s, but couldn't find one"
+                       key in
+                   FStar_Errors.raise_error0
+                     FStar_Errors_Codes.Fatal_MissingImplementation ()
+                     (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                     (Obj.magic uu___1)
                | FStar_Pervasives_Native.Some f -> maybe_use_cache_of f)
           | FriendImplementation key ->
               let uu___ = implementation_of_internal file_system_map key in
               (match uu___ with
                | FStar_Pervasives_Native.None ->
                    let uu___1 =
-                     let uu___2 =
-                       FStar_Compiler_Util.format1
-                         "Expected an implementation of module %s, but couldn't find one"
-                         key in
-                     (FStar_Errors_Codes.Fatal_MissingImplementation, uu___2) in
-                   FStar_Errors.raise_err uu___1
+                     FStar_Compiler_Util.format1
+                       "Expected an implementation of module %s, but couldn't find one"
+                       key in
+                   FStar_Errors.raise_error0
+                     FStar_Errors_Codes.Fatal_MissingImplementation ()
+                     (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                     (Obj.magic uu___1)
                | FStar_Pervasives_Native.Some f -> maybe_use_cache_of f)
 let (file_of_dep :
   files_for_module_name -> file_name Prims.list -> dependence -> file_name) =
@@ -824,15 +827,15 @@ let (build_inclusion_candidates_list :
            ((let uu___3 =
                let uu___4 =
                  let uu___5 =
-                   let uu___6 =
-                     FStar_Errors_Msg.text "Not a valid include directory:" in
-                   let uu___7 = FStar_Pprint.doc_of_string d in
-                   FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
-                     uu___6 uu___7 in
-                 [uu___5] in
-               (FStar_Errors_Codes.Fatal_NotValidIncludeDirectory, uu___4) in
-             FStar_Errors.log_issue_doc FStar_Compiler_Range_Type.dummyRange
-               uu___3);
+                   FStar_Errors_Msg.text "Not a valid include directory:" in
+                 let uu___6 = FStar_Pprint.doc_of_string d in
+                 FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___5
+                   uu___6 in
+               [uu___4] in
+             FStar_Errors.log_issue0
+               FStar_Errors_Codes.Fatal_NotValidIncludeDirectory ()
+               (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+               (Obj.magic uu___3));
             [])) include_directories2
 let (build_map : Prims.string Prims.list -> files_for_module_name) =
   fun filenames ->
@@ -917,19 +920,19 @@ let (check_module_declaration_against_filename :
         uu___1 <> k' in
       if uu___
       then
-        let uu___1 = FStar_Ident.range_of_lid lid in
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 =
-                let uu___6 = string_of_lid lid true in
-                FStar_Compiler_Util.format2
-                  "The module declaration \"module %s\" found in file %s does not match its filename. Dependencies will be incorrect and the module will not be verified."
-                  uu___6 filename in
-              FStar_Errors_Msg.text uu___5 in
-            [uu___4] in
-          (FStar_Errors_Codes.Error_ModuleFileNameMismatch, uu___3) in
-        FStar_Errors.log_issue_doc uu___1 uu___2
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = string_of_lid lid true in
+              FStar_Compiler_Util.format2
+                "The module declaration \"module %s\" found in file %s does not match its filename. Dependencies will be incorrect and the module will not be verified."
+                uu___4 filename in
+            FStar_Errors_Msg.text uu___3 in
+          [uu___2] in
+        FStar_Errors.log_issue FStar_Ident.hasrange_lident lid
+          FStar_Errors_Codes.Error_ModuleFileNameMismatch ()
+          (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+          (Obj.magic uu___1)
       else ()
 exception Exit 
 let (uu___is_Exit : Prims.exn -> Prims.bool) =
@@ -1017,62 +1020,60 @@ let (enter_namespace :
                          intf_and_impl_to_string uu___3 in
                        let uu___3 =
                          let uu___4 =
-                           let uu___5 =
-                             let uu___6 = FStar_Pprint.break_ Prims.int_one in
+                           let uu___5 = FStar_Pprint.break_ Prims.int_one in
+                           let uu___6 =
                              let uu___7 =
-                               let uu___8 =
-                                 FStar_Errors_Msg.text
-                                   "Implicitly opening namespace" in
+                               FStar_Errors_Msg.text
+                                 "Implicitly opening namespace" in
+                             let uu___8 =
                                let uu___9 =
                                  let uu___10 =
-                                   let uu___11 =
-                                     FStar_Pprint.doc_of_string sprefix1 in
-                                   FStar_Pprint.squotes uu___11 in
+                                   FStar_Pprint.doc_of_string sprefix1 in
+                                 FStar_Pprint.squotes uu___10 in
+                               let uu___10 =
                                  let uu___11 =
-                                   let uu___12 =
-                                     FStar_Errors_Msg.text "shadows module" in
+                                   FStar_Errors_Msg.text "shadows module" in
+                                 let uu___12 =
                                    let uu___13 =
                                      let uu___14 =
-                                       let uu___15 =
-                                         FStar_Pprint.doc_of_string suffix in
-                                       FStar_Pprint.squotes uu___15 in
+                                       FStar_Pprint.doc_of_string suffix in
+                                     FStar_Pprint.squotes uu___14 in
+                                   let uu___14 =
                                      let uu___15 =
-                                       let uu___16 =
-                                         FStar_Errors_Msg.text "in file" in
+                                       FStar_Errors_Msg.text "in file" in
+                                     let uu___16 =
                                        let uu___17 =
                                          let uu___18 =
                                            let uu___19 =
-                                             let uu___20 =
-                                               FStar_Pprint.doc_of_string str in
-                                             FStar_Pprint.dquotes uu___20 in
-                                           FStar_Pprint.op_Hat_Hat uu___19
-                                             FStar_Pprint.dot in
-                                         [uu___18] in
-                                       uu___16 :: uu___17 in
-                                     uu___14 :: uu___15 in
-                                   uu___12 :: uu___13 in
-                                 uu___10 :: uu___11 in
-                               uu___8 :: uu___9 in
-                             FStar_Pprint.flow uu___6 uu___7 in
+                                             FStar_Pprint.doc_of_string str in
+                                           FStar_Pprint.dquotes uu___19 in
+                                         FStar_Pprint.op_Hat_Hat uu___18
+                                           FStar_Pprint.dot in
+                                       [uu___17] in
+                                     uu___15 :: uu___16 in
+                                   uu___13 :: uu___14 in
+                                 uu___11 :: uu___12 in
+                               uu___9 :: uu___10 in
+                             uu___7 :: uu___8 in
+                           FStar_Pprint.flow uu___5 uu___6 in
+                         let uu___5 =
                            let uu___6 =
-                             let uu___7 =
-                               let uu___8 = FStar_Errors_Msg.text "Rename" in
+                             let uu___7 = FStar_Errors_Msg.text "Rename" in
+                             let uu___8 =
                                let uu___9 =
-                                 let uu___10 =
-                                   let uu___11 =
-                                     FStar_Pprint.doc_of_string str in
-                                   FStar_Pprint.dquotes uu___11 in
-                                 let uu___11 =
-                                   FStar_Errors_Msg.text
-                                     "to avoid conflicts." in
-                                 FStar_Pprint.op_Hat_Slash_Hat uu___10
-                                   uu___11 in
-                               FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-                             [uu___7] in
-                           uu___5 :: uu___6 in
-                         (FStar_Errors_Codes.Warning_UnexpectedFile, uu___4) in
-                       FStar_Errors.log_issue_doc
-                         FStar_Compiler_Range_Type.dummyRange uu___3
+                                 let uu___10 = FStar_Pprint.doc_of_string str in
+                                 FStar_Pprint.dquotes uu___10 in
+                               let uu___10 =
+                                 FStar_Errors_Msg.text "to avoid conflicts." in
+                               FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                             FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                           [uu___6] in
+                         uu___4 :: uu___5 in
+                       FStar_Errors.log_issue0
+                         FStar_Errors_Codes.Warning_UnexpectedFile ()
+                         (Obj.magic
+                            FStar_Errors_Msg.is_error_message_list_doc)
+                         (Obj.magic uu___3)
                      else ());
                     (let filename =
                        let uu___3 =
@@ -1150,15 +1151,13 @@ let (collect_one :
             else
               (if let_open
                then
-                 (let uu___3 = FStar_Ident.range_of_lid lid in
-                  let uu___4 =
-                    let uu___5 =
-                      let uu___6 = string_of_lid lid true in
-                      FStar_Compiler_Util.format1 "Module not found: %s"
-                        uu___6 in
-                    (FStar_Errors_Codes.Warning_ModuleOrFileNotFoundWarning,
-                      uu___5) in
-                  FStar_Errors.log_issue uu___3 uu___4)
+                 (let uu___3 =
+                    let uu___4 = string_of_lid lid true in
+                    FStar_Compiler_Util.format1 "Module not found: %s" uu___4 in
+                  FStar_Errors.log_issue FStar_Ident.hasrange_lident lid
+                    FStar_Errors_Codes.Warning_ModuleOrFileNotFoundWarning ()
+                    (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                    (Obj.magic uu___3))
                else ();
                false) in
           let record_open_namespace lid implicit_open =
@@ -1167,16 +1166,15 @@ let (collect_one :
               enter_namespace original_map1 working_map key implicit_open in
             if (Prims.op_Negation r) && (Prims.op_Negation implicit_open)
             then
-              let uu___ = FStar_Ident.range_of_lid lid in
-              let uu___1 =
-                let uu___2 =
-                  let uu___3 = string_of_lid lid true in
-                  FStar_Compiler_Util.format1
-                    "No modules in namespace %s and no file with that name either"
-                    uu___3 in
-                (FStar_Errors_Codes.Warning_ModuleOrFileNotFoundWarning,
-                  uu___2) in
-              FStar_Errors.log_issue uu___ uu___1
+              let uu___ =
+                let uu___1 = string_of_lid lid true in
+                FStar_Compiler_Util.format1
+                  "No modules in namespace %s and no file with that name either"
+                  uu___1 in
+              FStar_Errors.log_issue FStar_Ident.hasrange_lident lid
+                FStar_Errors_Codes.Warning_ModuleOrFileNotFoundWarning ()
+                (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                (Obj.magic uu___)
             else () in
           let record_open let_open lid =
             let uu___ = record_open_module let_open lid in
@@ -1209,14 +1207,13 @@ let (collect_one :
                   add_dep deps1 uu___3);
                  true)
             | FStar_Pervasives_Native.None ->
-                ((let uu___2 = FStar_Ident.range_of_lid lid in
-                  let uu___3 =
-                    let uu___4 =
-                      FStar_Compiler_Util.format1
-                        "module not found in search path: %s" alias in
-                    (FStar_Errors_Codes.Warning_ModuleOrFileNotFoundWarning,
-                      uu___4) in
-                  FStar_Errors.log_issue uu___2 uu___3);
+                ((let uu___2 =
+                    FStar_Compiler_Util.format1
+                      "module not found in search path: %s" alias in
+                  FStar_Errors.log_issue FStar_Ident.hasrange_lident lid
+                    FStar_Errors_Codes.Warning_ModuleOrFileNotFoundWarning ()
+                    (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                    (Obj.magic uu___2));
                  false) in
           let add_dep_on_module module_name1 is_friend =
             let uu___ =
@@ -1227,15 +1224,17 @@ let (collect_one :
               (let uu___2 = FStar_Compiler_Effect.op_Bang dbg in
                if uu___2
                then
-                 let uu___3 = FStar_Ident.range_of_lid module_name1 in
-                 let uu___4 =
-                   let uu___5 =
-                     let uu___6 = FStar_Ident.string_of_lid module_name1 in
-                     FStar_Compiler_Util.format1
-                       "Unbound module reference %s" uu___6 in
-                   (FStar_Errors_Codes.Warning_UnboundModuleReference,
-                     uu___5) in
-                 FStar_Errors.log_issue uu___3 uu___4
+                 let uu___3 =
+                   let uu___4 =
+                     FStar_Class_Show.show FStar_Ident.showable_lident
+                       module_name1 in
+                   FStar_Compiler_Util.format1 "Unbound module reference %s"
+                     uu___4 in
+                 FStar_Errors.log_issue FStar_Ident.hasrange_lident
+                   module_name1
+                   FStar_Errors_Codes.Warning_UnboundModuleReference ()
+                   (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                   (Obj.magic uu___3)
                else ()) in
           let record_lid lid =
             let uu___ = FStar_Ident.ns_of_lid lid in
@@ -1421,14 +1420,14 @@ let (collect_one :
                    if uu___2
                    then
                      let uu___3 =
-                       let uu___4 =
-                         let uu___5 = string_of_lid lid true in
-                         FStar_Compiler_Util.format1
-                           "Automatic dependency analysis demands one module per file (module %s not supported)"
-                           uu___5 in
-                       (FStar_Errors_Codes.Fatal_OneModulePerFile, uu___4) in
-                     let uu___4 = FStar_Ident.range_of_lid lid in
-                     FStar_Errors.raise_error uu___3 uu___4
+                       let uu___4 = string_of_lid lid true in
+                       FStar_Compiler_Util.format1
+                         "Automatic dependency analysis demands one module per file (module %s not supported)"
+                         uu___4 in
+                     FStar_Errors.raise_error FStar_Ident.hasrange_lident lid
+                       FStar_Errors_Codes.Fatal_OneModulePerFile ()
+                       (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                       (Obj.magic uu___3)
                    else ()))
            and collect_tycon uu___1 =
              match uu___1 with
@@ -2161,11 +2160,12 @@ let (collect :
              match uu___ with
              | FStar_Pervasives_Native.None ->
                  let uu___1 =
-                   let uu___2 =
-                     FStar_Compiler_Util.format1 "File %s could not be found"
-                       fn in
-                   (FStar_Errors_Codes.Fatal_ModuleOrFileNotFound, uu___2) in
-                 FStar_Errors.raise_err uu___1
+                   FStar_Compiler_Util.format1 "File %s could not be found"
+                     fn in
+                 FStar_Errors.raise_error0
+                   FStar_Errors_Codes.Fatal_ModuleOrFileNotFound ()
+                   (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                   (Obj.magic uu___1)
              | FStar_Pervasives_Native.Some fn1 -> fn1) all_cmd_line_files1 in
       let dep_graph = deps_empty () in
       let file_system_map = build_map all_cmd_line_files2 in
@@ -2240,11 +2240,12 @@ let (collect :
             (fun outc -> print_graph outc fn dep_graph1);
           FStar_Compiler_Util.print_string "\n";
           (let uu___4 =
-             let uu___5 =
-               FStar_Compiler_Util.format1
-                 "Recursive dependency on module %s\n" filename in
-             (FStar_Errors_Codes.Fatal_CyclicDependence, uu___5) in
-           FStar_Errors.raise_err uu___4)) in
+             FStar_Compiler_Util.format1
+               "Recursive dependency on module %s\n" filename in
+           FStar_Errors.raise_error0
+             FStar_Errors_Codes.Fatal_CyclicDependence ()
+             (Obj.magic FStar_Errors_Msg.is_error_message_string)
+             (Obj.magic uu___4))) in
        let full_cycle_detection all_command_line_files file_system_map1 =
          let dep_graph1 = dep_graph_copy dep_graph in
          let mo_files = FStar_Compiler_Util.mk_ref [] in
@@ -2862,13 +2863,14 @@ let (print_full : FStar_Compiler_Util.out_channel -> deps -> unit) =
                 then
                   let uu___3 = range_of_file fsti in
                   let uu___4 =
-                    let uu___5 =
-                      let uu___6 = module_name_of_file fsti in
-                      FStar_Compiler_Util.format1
-                        "Interface %s is admitted without an implementation"
-                        uu___6 in
-                    (FStar_Errors_Codes.Warning_WarnOnUse, uu___5) in
-                  FStar_Errors.log_issue uu___3 uu___4
+                    let uu___5 = module_name_of_file fsti in
+                    FStar_Compiler_Util.format1
+                      "Interface %s is admitted without an implementation"
+                      uu___5 in
+                  FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range
+                    uu___3 FStar_Errors_Codes.Warning_WarnOnUse ()
+                    (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                    (Obj.magic uu___4)
                 else ()) all_fsti_files;
            print_all "ALL_FST_FILES" all_fst_files;
            print_all "ALL_FSTI_FILES" all_fsti_files;
@@ -2892,9 +2894,10 @@ let (do_print :
             print_graph outc fn deps1.dep_graph
         | FStar_Pervasives_Native.Some "raw" -> print_raw outc deps1
         | FStar_Pervasives_Native.Some uu___1 ->
-            FStar_Errors.raise_err
-              (FStar_Errors_Codes.Fatal_UnknownToolForDep,
-                "unknown tool for --dep\n")
+            FStar_Errors.raise_error0
+              FStar_Errors_Codes.Fatal_UnknownToolForDep ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic "unknown tool for --dep\n")
         | FStar_Pervasives_Native.None -> ()
 let (do_print_stdout : deps -> unit) =
   fun deps1 -> do_print FStar_Compiler_Util.stdout "<stdout>" deps1

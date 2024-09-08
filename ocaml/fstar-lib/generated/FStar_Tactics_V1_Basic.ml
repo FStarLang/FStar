@@ -527,17 +527,19 @@ let (proc_guard' :
                                            | FStar_Tactics_Types.Drop ->
                                                ((let uu___5 =
                                                    let uu___6 =
-                                                     let uu___7 =
-                                                       FStar_TypeChecker_Rel.guard_to_string
-                                                         e g in
-                                                     FStar_Compiler_Util.format1
-                                                       "Tactics admitted guard <%s>\n\n"
-                                                       uu___7 in
-                                                   (FStar_Errors_Codes.Warning_TacAdmit,
-                                                     uu___6) in
+                                                     FStar_TypeChecker_Rel.guard_to_string
+                                                       e g in
+                                                   FStar_Compiler_Util.format1
+                                                     "Tactics admitted guard <%s>\n\n"
+                                                     uu___6 in
                                                  FStar_Errors.log_issue
-                                                   e.FStar_TypeChecker_Env.range
-                                                   uu___5);
+                                                   FStar_TypeChecker_Env.hasRange_env
+                                                   e
+                                                   FStar_Errors_Codes.Warning_TacAdmit
+                                                   ()
+                                                   (Obj.magic
+                                                      FStar_Errors_Msg.is_error_message_string)
+                                                   (Obj.magic uu___5));
                                                 Obj.magic (ret ()))
                                            | FStar_Tactics_Types.Goal ->
                                                Obj.magic
@@ -1078,19 +1080,6 @@ let (__do_unify_wflags :
                                                                     uu___8))))))
                                                 uu___5) ()
                                          with
-                                         | FStar_Errors.Err
-                                             (uu___6, msg, uu___7) ->
-                                             FStar_Tactics_Monad.mlog
-                                               (fun uu___8 ->
-                                                  let uu___9 =
-                                                    FStar_Errors_Msg.rendermsg
-                                                      msg in
-                                                  FStar_Compiler_Util.print1
-                                                    ">> do_unify error, (%s)\n"
-                                                    uu___9)
-                                               (fun uu___8 ->
-                                                  ret
-                                                    FStar_Pervasives_Native.None)
                                          | FStar_Errors.Error
                                              (uu___6, msg, r, uu___7) ->
                                              FStar_Tactics_Monad.mlog
@@ -1419,18 +1408,18 @@ let (tadmit_t : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
            let uu___2 = bind () in
            uu___2 FStar_Tactics_Monad.cur_goal
              (fun g ->
-                (let uu___4 =
-                   let uu___5 = FStar_Tactics_Types.goal_type g in
-                   uu___5.FStar_Syntax_Syntax.pos in
+                (let uu___4 = FStar_Tactics_Types.goal_type g in
                  let uu___5 =
                    let uu___6 =
-                     let uu___7 =
-                       FStar_Tactics_Printing.goal_to_string ""
-                         FStar_Pervasives_Native.None ps g in
-                     FStar_Compiler_Util.format1
-                       "Tactics admitted goal <%s>\n\n" uu___7 in
-                   (FStar_Errors_Codes.Warning_TacAdmit, uu___6) in
-                 FStar_Errors.log_issue uu___4 uu___5);
+                     FStar_Tactics_Printing.goal_to_string ""
+                       FStar_Pervasives_Native.None ps g in
+                   FStar_Compiler_Util.format1
+                     "Tactics admitted goal <%s>\n\n" uu___6 in
+                 FStar_Errors.log_issue
+                   (FStar_Syntax_Syntax.has_range_syntax ()) uu___4
+                   FStar_Errors_Codes.Warning_TacAdmit ()
+                   (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                   (Obj.magic uu___5));
                 solve' g t)) in
     FStar_Tactics_Monad.wrap_err "tadmit_t" uu___
 let (fresh : unit -> FStar_BigInt.t FStar_Tactics_Monad.tac) =
@@ -1606,16 +1595,6 @@ let (__tc :
                              e1 t true in
                          ret uu___3) ()
                 with
-                | FStar_Errors.Err (uu___3, msg, uu___4) ->
-                    let uu___5 = tts e1 t in
-                    let uu___6 =
-                      let uu___7 = FStar_TypeChecker_Env.all_binders e1 in
-                      FStar_Class_Show.show
-                        (FStar_Class_Show.show_list
-                           FStar_Syntax_Print.showable_binder) uu___7 in
-                    let uu___7 = FStar_Errors_Msg.rendermsg msg in
-                    fail3 "Cannot type (1) %s in context (%s). Error = (%s)"
-                      uu___5 uu___6 uu___7
                 | FStar_Errors.Error (uu___3, msg, uu___4, uu___5) ->
                     let uu___6 = tts e1 t in
                     let uu___7 =
@@ -1868,16 +1847,6 @@ let (__tc_ghost :
                                 (t1, (lc.FStar_TypeChecker_Common.res_typ),
                                   g))) ()
                 with
-                | FStar_Errors.Err (uu___3, msg, uu___4) ->
-                    let uu___5 = tts e2 t in
-                    let uu___6 =
-                      let uu___7 = FStar_TypeChecker_Env.all_binders e2 in
-                      FStar_Class_Show.show
-                        (FStar_Class_Show.show_list
-                           FStar_Syntax_Print.showable_binder) uu___7 in
-                    let uu___7 = FStar_Errors_Msg.rendermsg msg in
-                    fail3 "Cannot type (2) %s in context (%s). Error = (%s)"
-                      uu___5 uu___6 uu___7
                 | FStar_Errors.Error (uu___3, msg, uu___4, uu___5) ->
                     let uu___6 = tts e2 t in
                     let uu___7 =
@@ -2238,16 +2207,6 @@ let (__tc_lax :
                          let uu___3 = FStar_TypeChecker_TcTerm.tc_term e3 t in
                          ret uu___3) ()
                 with
-                | FStar_Errors.Err (uu___3, msg, uu___4) ->
-                    let uu___5 = tts e3 t in
-                    let uu___6 =
-                      let uu___7 = FStar_TypeChecker_Env.all_binders e3 in
-                      FStar_Class_Show.show
-                        (FStar_Class_Show.show_list
-                           FStar_Syntax_Print.showable_binder) uu___7 in
-                    let uu___7 = FStar_Errors_Msg.rendermsg msg in
-                    fail3 "Cannot type (3) %s in context (%s). Error = (%s)"
-                      uu___5 uu___6 uu___7
                 | FStar_Errors.Error (uu___3, msg, uu___4, uu___5) ->
                     let uu___6 = tts e3 t in
                     let uu___7 =
@@ -8657,18 +8616,19 @@ let rec (inspect :
                  | uu___2 ->
                      ((let uu___4 =
                          let uu___5 =
-                           let uu___6 =
-                             FStar_Class_Tagged.tag_of
-                               FStar_Syntax_Syntax.tagged_term t2 in
-                           let uu___7 =
-                             FStar_Class_Show.show
-                               FStar_Syntax_Print.showable_term t2 in
-                           FStar_Compiler_Util.format2
-                             "inspect: outside of expected syntax (%s, %s)\n"
-                             uu___6 uu___7 in
-                         (FStar_Errors_Codes.Warning_CantInspect, uu___5) in
-                       FStar_Errors.log_issue t2.FStar_Syntax_Syntax.pos
-                         uu___4);
+                           FStar_Class_Tagged.tag_of
+                             FStar_Syntax_Syntax.tagged_term t2 in
+                         let uu___6 =
+                           FStar_Class_Show.show
+                             FStar_Syntax_Print.showable_term t2 in
+                         FStar_Compiler_Util.format2
+                           "inspect: outside of expected syntax (%s, %s)\n"
+                           uu___5 uu___6 in
+                       FStar_Errors.log_issue
+                         (FStar_Syntax_Syntax.has_range_syntax ()) t2
+                         FStar_Errors_Codes.Warning_CantInspect ()
+                         (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                         (Obj.magic uu___4));
                       Obj.magic (ret FStar_Reflection_V1_Data.Tv_Unsupp)))
                 uu___2)) in
     FStar_Tactics_Monad.wrap_err "inspect" uu___

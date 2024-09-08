@@ -23,23 +23,16 @@ let with_captured_errors' :
               Prims.strcat "ASSERTION FAILURE: "
                 (Prims.strcat msg
                    "\nF* may be in an inconsistent state.\nPlease file a bug report, ideally with a minimized version of the program that triggered the error.") in
-            ((let uu___2 = FStar_TypeChecker_Env.get_range env in
-              FStar_Errors.log_issue uu___2
-                (FStar_Errors_Codes.Error_IDEAssertionFailure, msg1));
+            (FStar_Errors.log_issue FStar_TypeChecker_Env.hasRange_env env
+               FStar_Errors_Codes.Error_IDEAssertionFailure ()
+               (Obj.magic FStar_Errors_Msg.is_error_message_string)
+               (Obj.magic msg1);
              FStar_Pervasives_Native.None)
         | FStar_Compiler_Util.SigInt ->
             (FStar_Compiler_Util.print_string "Interrupted";
              FStar_Pervasives_Native.None)
         | FStar_Errors.Error (e, msg, r, ctx) ->
             (FStar_TypeChecker_Err.add_errors env [(e, msg, r, ctx)];
-             FStar_Pervasives_Native.None)
-        | FStar_Errors.Err (e, msg, ctx) ->
-            ((let uu___2 =
-                let uu___3 =
-                  let uu___4 = FStar_TypeChecker_Env.get_range env in
-                  (e, msg, uu___4, ctx) in
-                [uu___3] in
-              FStar_TypeChecker_Err.add_errors env uu___2);
              FStar_Pervasives_Native.None)
         | FStar_Errors.Stop -> FStar_Pervasives_Native.None
 let with_captured_errors :
@@ -3104,9 +3097,9 @@ let (interactive_mode : Prims.string -> unit) =
        FStar_Compiler_Option.isSome uu___4 in
      if uu___3
      then
-       FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
-         (FStar_Errors_Codes.Warning_IDEIgnoreCodeGen,
-           "--ide: ignoring --codegen")
+       FStar_Errors.log_issue0 FStar_Errors_Codes.Warning_IDEIgnoreCodeGen ()
+         (Obj.magic FStar_Errors_Msg.is_error_message_string)
+         (Obj.magic "--ide: ignoring --codegen")
      else ());
     (let init = build_initial_repl_state filename in
      let uu___3 = FStar_Options.trace_error () in

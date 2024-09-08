@@ -6,11 +6,11 @@ let (always : Prims.int -> Prims.bool -> unit) =
       then ()
       else
         (let uu___1 =
-           let uu___2 =
-             let uu___3 = FStar_Compiler_Util.string_of_int id in
-             FStar_Compiler_Util.format1 "Assertion failed: test %s" uu___3 in
-           (FStar_Errors_Codes.Fatal_AssertionFailure, uu___2) in
-         FStar_Errors.raise_error uu___1 FStar_Compiler_Range_Type.dummyRange)
+           let uu___2 = FStar_Compiler_Util.string_of_int id in
+           FStar_Compiler_Util.format1 "Assertion failed: test %s" uu___2 in
+         FStar_Errors.raise_error0 FStar_Errors_Codes.Fatal_AssertionFailure
+           () (Obj.magic FStar_Errors_Msg.is_error_message_string)
+           (Obj.magic uu___1))
 let (x : FStar_Syntax_Syntax.bv) =
   FStar_Syntax_Syntax.gen_bv "x" FStar_Pervasives_Native.None
     FStar_Syntax_Syntax.tun

@@ -170,7 +170,7 @@ let tc_inductive' env ses quals attrs lids =
              | Sig_inductive_typ {lid} -> lid, ty.sigrng
              | _                                         -> failwith "Impossible!"
            in
-           Errors.log_issue r (Errors.Error_InductiveTypeNotSatisfyPositivityCondition, ("Inductive type " ^ (string_of_lid lid) ^ " does not satisfy the strict positivity condition"))
+           Errors.log_issue r Errors.Error_InductiveTypeNotSatisfyPositivityCondition ("Inductive type " ^ (string_of_lid lid) ^ " does not satisfy the strict positivity condition")
          else ()
        ) tcs;
 
@@ -186,8 +186,8 @@ let tc_inductive' env ses quals attrs lids =
             not (Positivity.check_exn_strict_positivity env2 data_lid)
          then
             Errors.log_issue d.sigrng
-              (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-               ("Exception " ^ (string_of_lid data_lid) ^ " does not satisfy the positivity condition"))
+              Errors.Error_InductiveTypeNotSatisfyPositivityCondition
+               ("Exception " ^ (string_of_lid data_lid) ^ " does not satisfy the positivity condition")
        ) datas
     end;
 
@@ -261,10 +261,8 @@ let handle_postprocess_with_attr (env:Env.env) (ats:list attribute)
     | Some (ats, [tau, None]) ->
         ats, Some tau
     | Some (ats, args) ->
-        Errors.log_issue (Env.get_range env)
-                         (Errors.Warning_UnrecognizedAttribute,
-                            BU.format1 "Ill-formed application of `%s`"
-                                       (string_of_lid PC.postprocess_with));
+        Errors.log_issue env Errors.Warning_UnrecognizedAttribute
+          (BU.format1 "Ill-formed application of `%s`" (show PC.postprocess_with));
         ats, None
 
 let store_sigopts (se:sigelt) : sigelt =
@@ -299,11 +297,11 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
         then Some q'  //but retain it in the returned list of qualifiers, some code may still add type annotations of Type0, which will hinder `logical` inference
         else
           let open FStar.Pprint in
-          raise_error_doc (Errors.Fatal_InconsistentQualifierAnnotation, [
+          raise_error r Errors.Fatal_InconsistentQualifierAnnotation [
               text "Inconsistent qualifier annotations on" ^/^ doc_of_string (show l);
               prefix 4 1 (text "Expected") (squotes (arbitrary_string (show val_q))) ^/^
               prefix 4 1 (text "got") (squotes (arbitrary_string (show q')))
-            ]) r
+            ]
     in
 
     let rename_parameters lb =
@@ -354,7 +352,7 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
                   mk (Tm_ascribed {tm=lb.lbdef; asc=(Inl lb.lbtyp, None, false); eff_opt=None}) lb.lbdef.pos
               in
               if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
-              then raise_error (Errors.Fatal_IncoherentInlineUniverse, ("Inline universes are incoherent with annotation from val declaration")) r;
+              then raise_error r Errors.Fatal_IncoherentInlineUniverse "Inline universes are incoherent with annotation from val declaration";
               false, //explicit annotation provided; do not generalize
               mk_lb (Inr lbname, uvs, PC.effect_Tot_lid, tval, def, lb.lbattrs, lb.lbpos),
               quals_opt
@@ -382,8 +380,7 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
         | None -> se.sigattrs, None
         | Some (ats, [tau, None]) -> ats, Some tau
         | Some (ats, args) ->
-            Errors.log_issue r (Errors.Warning_UnrecognizedAttribute,
-                                   ("Ill-formed application of `preprocess_with`"));
+            Errors.log_issue r Errors.Warning_UnrecognizedAttribute "Ill-formed application of `preprocess_with`";
             se.sigattrs, None
     in
     let se = { se with sigattrs = attrs } in (* to remove the preprocess_with *)
@@ -507,7 +504,7 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
     if U.has_attribute se.sigattrs PC.no_subtping_attr_lid
     then begin
       let env' = {env' with use_eq_strict=true} in
-      let err s pos = raise_error (Errors.Fatal_InconsistentQualifierAnnotation, s) pos in
+      let err s pos = raise_error pos Errors.Fatal_InconsistentQualifierAnnotation s in
       snd lbs |> List.iter (fun lb ->
         if not (U.is_lemma lb.lbtyp)
         then err ("no_subtype annotation on a non-lemma") lb.lbpos
@@ -607,9 +604,9 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
     begin match errs with
     | [] ->
         List.iter Errors.print_issue errs;
-        Errors.log_issue_doc se.sigrng (Errors.Error_DidNotFail, [
+        Errors.log_issue se.sigrng Errors.Error_DidNotFail [
             text "This top-level definition was expected to fail, but it succeeded";
-          ])
+          ]
     | _ ->
         if expected_errors <> [] then
           match Errors.find_multiset_discrepancy expected_errors actual_errors with
@@ -618,7 +615,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
             let open FStar.Pprint in
             let open FStar.Errors.Msg in
             List.iter Errors.print_issue errs;
-            Errors.log_issue_doc se.sigrng (Errors.Error_DidNotFail, [
+            Errors.log_issue se.sigrng Errors.Error_DidNotFail [
                 prefix 2 1
                   (text "This top-level definition was expected to raise error codes")
                   (pp expected_errors) ^/^
@@ -627,7 +624,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
                 dot;
                 text (BU.format3 "Error #%s was raised %s times, instead of %s."
                                       (show e) (show n2) (show n1));
-              ])
+              ]
     end;
     [], [], env
 
@@ -730,10 +727,10 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
   | Sig_declare_typ {lid; us=uvs; t} -> //NS: No checks on the qualifiers?
 
     if lid_exists env lid then
-      raise_error_doc (Errors.Fatal_AlreadyDefinedTopLevelDeclaration, [
+      raise_error r Errors.Fatal_AlreadyDefinedTopLevelDeclaration [
         text (BU.format1 "Top-level declaration %s for a name that is already used in this module." (show lid));
         text "Top-level declarations must be unique in their module."
-      ]) r;
+      ];
 
     let env = Env.set_range env r in
     let uvs, t =
@@ -749,9 +746,8 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
 
   | Sig_assume {lid; us=uvs; phi=t} ->
     if not (List.contains S.InternalAssumption se.sigquals) then
-      FStar.Errors.log_issue r
-                   (Warning_WarnOnUse,
-                    BU.format1 "Admitting a top-level assumption %s" (show lid));
+      FStar.Errors.log_issue r Warning_WarnOnUse 
+        (BU.format1 "Admitting a top-level assumption %s" (show lid));
     let env = Env.set_range env r in
 
     let uvs, t =
@@ -930,8 +926,8 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
   match se.sigel with
   | Sig_inductive_typ _
   | Sig_datacon _ ->
-    raise_error (Errors.Fatal_UnexpectedInductivetype, BU.format1
-      "add_sigelt_to_env: unexpected bare type/data constructor: %s" (show se)) se.sigrng
+    raise_error se.sigrng Errors.Fatal_UnexpectedInductivetype
+      (BU.format1 "add_sigelt_to_env: unexpected bare type/data constructor: %s" (show se))
 
   | Sig_declare_typ _
   | Sig_let _ when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) -> env
@@ -1148,10 +1144,10 @@ let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
   if not loading_from_cache then (
     let missing = missing_definition_list env in
     if Cons? missing then
-      log_issue_doc env.range (Errors.Error_AdmitWithoutDefinition, [
+      log_issue env Errors.Error_AdmitWithoutDefinition [
           Pprint.prefix 2 1 (text <| BU.format1 "Missing definitions in module %s:" (string_of_lid m.name))
             (Pprint.separate_map Pprint.hardline (fun l -> pp (ident_of_lid l)) missing)
-        ])
+        ]
   );
 
   //we can clear the lid to query index table

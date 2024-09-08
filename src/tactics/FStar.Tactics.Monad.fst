@@ -100,8 +100,7 @@ let register_goal (g:goal) =
                      (show (U.ctx_uvar_typ uv))
                      (FStar.TypeChecker.Core.print_error_short err)
       in
-      Errors.log_issue uv.ctx_uvar_range
-                       (Err.Warning_FailedToCheckInitialTacticGoal, msg)
+      Errors.log_issue uv.ctx_uvar_range Err.Warning_FailedToCheckInitialTacticGoal msg
   )
 
 (*
@@ -198,8 +197,7 @@ let trytac (t : tac 'a) : tac (option 'a) =
 let trytac_exn (t : tac 'a) : tac (option 'a) =
     mk_tac (fun ps ->
     try run (trytac t) ps
-    with | Errors.Err (_, msg, _)
-         | Errors.Error (_, msg, _, _) ->
+    with | Errors.Error (_, msg, _, _) ->
            do_log ps (fun () -> BU.print1 "trytac_exn error: (%s)" (Errors.rendermsg msg));
            Success (None, ps))
 
@@ -232,10 +230,9 @@ let check_valid_goal g =
     with
      | Bad culprit ->
        if !nwarn < 5 then begin
-         Err.log_issue (goal_type g).pos
-          (Errors.Warning_IllFormedGoal, BU.format2 "The following goal is ill-formed (%s). Keeping calm and carrying on...\n<%s>\n\n"
-                            culprit
-                            (goal_to_string_verbose g));
+         Err.log_issue (goal_type g)
+           Errors.Warning_IllFormedGoal
+           (BU.format2 "The following goal is ill-formed (%s). Keeping calm and carrying on...\n<%s>\n\n" culprit (goal_to_string_verbose g));
          nwarn := !nwarn + 1
        end
   end

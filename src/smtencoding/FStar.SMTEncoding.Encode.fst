@@ -1296,11 +1296,10 @@ let encode_datacon (env:env_t) (se:sigelt)
                             t                
           in
           let warn_compat () =
-            FStar.Errors.log_issue
-              (S.range_of_fv fv)
-              (FStar.Errors.Warning_DeprecatedGeneric,
-              "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor.\n\
-                This is deprecated and will be removed in a future version of F*.")
+            FStar.Errors.log_issue fv FStar.Errors.Warning_DeprecatedGeneric [
+              Errors.Msg.text "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor.";
+              Errors.Msg.text "This is deprecated and will be removed in a future version of F*."
+            ]
           in
           let codomain_prec_l, cod_decls =
             List.fold_left2
@@ -1395,10 +1394,8 @@ let encode_datacon (env:env_t) (se:sigelt)
         [typing_inversion; subterm_ordering] @ codomain_ordering
 
       | _ ->
-        Errors.log_issue se.sigrng
-            (Errors.Warning_ConstructorBuildsUnexpectedType,
-              BU.format2 "Constructor %s builds an unexpected type %s\n"
-                        (show d) (show head));
+        Errors.log_issue se.sigrng Errors.Warning_ConstructorBuildsUnexpectedType
+          (BU.format2 "Constructor %s builds an unexpected type %s" (show d) (show head));
         [], []
   in
   let decls2, elim = encode_elim () in

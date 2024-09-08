@@ -1,5 +1,21 @@
 open Prims
 type error_message = FStar_Pprint.document Prims.list
+type 't is_error_message = {
+  to_doc_list: 't -> error_message }
+let __proj__Mkis_error_message__item__to_doc_list :
+  't . 't is_error_message -> 't -> error_message =
+  fun projectee -> match projectee with | { to_doc_list;_} -> to_doc_list
+let to_doc_list : 't . 't is_error_message -> 't -> error_message =
+  fun projectee ->
+    match projectee with | { to_doc_list = to_doc_list1;_} -> to_doc_list1
+let (is_error_message_string : Prims.string is_error_message) =
+  {
+    to_doc_list =
+      (fun s -> let uu___ = FStar_Pprint.arbitrary_string s in [uu___])
+  }
+let (is_error_message_list_doc :
+  FStar_Pprint.document Prims.list is_error_message) =
+  { to_doc_list = (fun x -> x) }
 let (vconcat : FStar_Pprint.document Prims.list -> FStar_Pprint.document) =
   fun ds ->
     match ds with

@@ -158,13 +158,14 @@ let (check_sigelt_quals_pre :
         then
           let uu___1 =
             let uu___2 =
-              let uu___3 =
-                FStar_Errors_Msg.text
-                  "Illegal attribute: the `no_subtyping` attribute is allowed only on let-bindings." in
-              [uu___3] in
-            (FStar_Errors_Codes.Fatal_InconsistentQualifierAnnotation,
-              uu___2) in
-          FStar_Errors.raise_error_doc uu___1 se1.FStar_Syntax_Syntax.sigrng
+              FStar_Errors_Msg.text
+                "Illegal attribute: the `no_subtyping` attribute is allowed only on let-bindings." in
+            [uu___2] in
+          FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range
+            se1.FStar_Syntax_Syntax.sigrng
+            FStar_Errors_Codes.Fatal_InconsistentQualifierAnnotation ()
+            (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+            (Obj.magic uu___1)
         else () in
       check_no_subtyping_attribute se;
       (let quals =
@@ -188,24 +189,25 @@ let (check_sigelt_quals_pre :
            let uu___2 =
              let uu___3 =
                let uu___4 =
-                 let uu___5 =
-                   let uu___6 = FStar_Errors_Msg.text "The qualifier list" in
+                 let uu___5 = FStar_Errors_Msg.text "The qualifier list" in
+                 let uu___6 =
                    let uu___7 =
                      let uu___8 =
-                       let uu___9 =
-                         FStar_Class_Show.show
-                           (FStar_Class_Show.show_list
-                              FStar_Syntax_Print.showable_qualifier) quals in
-                       FStar_Pprint.doc_of_string uu___9 in
-                     let uu___9 =
-                       FStar_Errors_Msg.text
-                         "is not permissible for this element" in
-                     FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-                   FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
-                 [uu___5] in
-               FStar_List_Tot_Base.append uu___4 msg in
-             (FStar_Errors_Codes.Fatal_QulifierListNotPermitted, uu___3) in
-           FStar_Errors.raise_error_doc uu___2 r in
+                       FStar_Class_Show.show
+                         (FStar_Class_Show.show_list
+                            FStar_Syntax_Print.showable_qualifier) quals in
+                     FStar_Pprint.doc_of_string uu___8 in
+                   let uu___8 =
+                     FStar_Errors_Msg.text
+                       "is not permissible for this element" in
+                   FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                 FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+               [uu___4] in
+             FStar_List_Tot_Base.append uu___3 msg in
+           FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range r
+             FStar_Errors_Codes.Fatal_QulifierListNotPermitted ()
+             (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+             (Obj.magic uu___2) in
          (if
             (FStar_Compiler_List.length quals) <>
               (FStar_Compiler_List.length no_dup_quals)
@@ -354,17 +356,18 @@ let (check_erasable :
           then
             (let uu___1 =
                let uu___2 =
-                 let uu___3 =
-                   FStar_Errors_Msg.text
-                     "Mismatch of attributes between declaration and definition." in
+                 FStar_Errors_Msg.text
+                   "Mismatch of attributes between declaration and definition." in
+               let uu___3 =
                  let uu___4 =
-                   let uu___5 =
-                     FStar_Errors_Msg.text
-                       "Declaration is marked `erasable` but the definition is not." in
-                   [uu___5] in
-                 uu___3 :: uu___4 in
-               (FStar_Errors_Codes.Fatal_QulifierListNotPermitted, uu___2) in
-             FStar_Errors.raise_error_doc uu___1 r)
+                   FStar_Errors_Msg.text
+                     "Declaration is marked `erasable` but the definition is not." in
+                 [uu___4] in
+               uu___2 :: uu___3 in
+             FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range r
+               FStar_Errors_Codes.Fatal_QulifierListNotPermitted ()
+               (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+               (Obj.magic uu___1))
           else ();
           if
             (val_exists && (Prims.op_Negation val_has_erasable_attr)) &&
@@ -372,17 +375,18 @@ let (check_erasable :
           then
             (let uu___2 =
                let uu___3 =
-                 let uu___4 =
-                   FStar_Errors_Msg.text
-                     "Mismatch of attributes between declaration and definition." in
+                 FStar_Errors_Msg.text
+                   "Mismatch of attributes between declaration and definition." in
+               let uu___4 =
                  let uu___5 =
-                   let uu___6 =
-                     FStar_Errors_Msg.text
-                       "Definition is marked `erasable` but the declaration is not." in
-                   [uu___6] in
-                 uu___4 :: uu___5 in
-               (FStar_Errors_Codes.Fatal_QulifierListNotPermitted, uu___3) in
-             FStar_Errors.raise_error_doc uu___2 r)
+                   FStar_Errors_Msg.text
+                     "Definition is marked `erasable` but the declaration is not." in
+                 [uu___5] in
+               uu___3 :: uu___4 in
+             FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range r
+               FStar_Errors_Codes.Fatal_QulifierListNotPermitted ()
+               (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+               (Obj.magic uu___2))
           else ();
           if se_has_erasable_attr
           then
@@ -400,13 +404,14 @@ let (check_erasable :
                  then
                    let uu___4 =
                      let uu___5 =
-                       let uu___6 =
-                         FStar_Errors_Msg.text
-                           "Incompatible attributes and qualifiers: erasable types do not support decidable equality and must be marked `noeq`." in
-                       [uu___6] in
-                     (FStar_Errors_Codes.Fatal_QulifierListNotPermitted,
-                       uu___5) in
-                   FStar_Errors.raise_error_doc uu___4 r
+                       FStar_Errors_Msg.text
+                         "Incompatible attributes and qualifiers: erasable types do not support decidable equality and must be marked `noeq`." in
+                     [uu___5] in
+                   FStar_Errors.raise_error
+                     FStar_Class_HasRange.hasRange_range r
+                     FStar_Errors_Codes.Fatal_QulifierListNotPermitted ()
+                     (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                     (Obj.magic uu___4)
                  else ()
              | FStar_Syntax_Syntax.Sig_declare_typ uu___2 -> ()
              | FStar_Syntax_Syntax.Sig_fail uu___2 -> ()
@@ -426,29 +431,29 @@ let (check_erasable :
                       then
                         let uu___7 =
                           let uu___8 =
-                            let uu___9 =
-                              FStar_Errors_Msg.text
-                                "Illegal attribute: the `erasable` attribute is only permitted on inductive type definitions and abbreviations for non-informative types." in
+                            FStar_Errors_Msg.text
+                              "Illegal attribute: the `erasable` attribute is only permitted on inductive type definitions and abbreviations for non-informative types." in
+                          let uu___9 =
                             let uu___10 =
-                              let uu___11 =
-                                let uu___12 =
-                                  FStar_Errors_Msg.text "The term" in
+                              let uu___11 = FStar_Errors_Msg.text "The term" in
+                              let uu___12 =
                                 let uu___13 =
-                                  let uu___14 =
-                                    FStar_Class_PP.pp
-                                      FStar_Syntax_Print.pretty_term body in
-                                  let uu___15 =
-                                    FStar_Errors_Msg.text
-                                      "is considered informative." in
-                                  FStar_Pprint.op_Hat_Slash_Hat uu___14
-                                    uu___15 in
-                                FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
-                              [uu___11] in
-                            uu___9 :: uu___10 in
-                          (FStar_Errors_Codes.Fatal_QulifierListNotPermitted,
-                            uu___8) in
-                        FStar_Errors.raise_error_doc uu___7
-                          body.FStar_Syntax_Syntax.pos
+                                  FStar_Class_PP.pp
+                                    FStar_Syntax_Print.pretty_term body in
+                                let uu___14 =
+                                  FStar_Errors_Msg.text
+                                    "is considered informative." in
+                                FStar_Pprint.op_Hat_Slash_Hat uu___13 uu___14 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
+                            [uu___10] in
+                          uu___8 :: uu___9 in
+                        FStar_Errors.raise_error
+                          (FStar_Syntax_Syntax.has_range_syntax ()) body
+                          FStar_Errors_Codes.Fatal_QulifierListNotPermitted
+                          ()
+                          (Obj.magic
+                             FStar_Errors_Msg.is_error_message_list_doc)
+                          (Obj.magic uu___7)
                       else ())
              | FStar_Syntax_Syntax.Sig_new_effect
                  { FStar_Syntax_Syntax.mname = eff_name;
@@ -468,32 +473,33 @@ let (check_erasable :
                  then
                    let uu___10 =
                      let uu___11 =
-                       let uu___12 =
-                         let uu___13 = FStar_Errors_Msg.text "Effect" in
+                       let uu___12 = FStar_Errors_Msg.text "Effect" in
+                       let uu___13 =
                          let uu___14 =
-                           let uu___15 =
-                             FStar_Class_PP.pp FStar_Ident.pretty_lident
-                               eff_name in
-                           let uu___16 =
-                             FStar_Errors_Msg.text
-                               "is marked erasable but only total effects are allowed to be erasable." in
-                           FStar_Pprint.op_Hat_Slash_Hat uu___15 uu___16 in
-                         FStar_Pprint.op_Hat_Slash_Hat uu___13 uu___14 in
-                       [uu___12] in
-                     (FStar_Errors_Codes.Fatal_QulifierListNotPermitted,
-                       uu___11) in
-                   FStar_Errors.raise_error_doc uu___10 r
+                           FStar_Class_PP.pp FStar_Ident.pretty_lident
+                             eff_name in
+                         let uu___15 =
+                           FStar_Errors_Msg.text
+                             "is marked erasable but only total effects are allowed to be erasable." in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
+                     [uu___11] in
+                   FStar_Errors.raise_error
+                     FStar_Class_HasRange.hasRange_range r
+                     FStar_Errors_Codes.Fatal_QulifierListNotPermitted ()
+                     (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                     (Obj.magic uu___10)
                  else ()
              | uu___2 ->
                  let uu___3 =
                    let uu___4 =
-                     let uu___5 =
-                       FStar_Errors_Msg.text
-                         "Illegal attribute: the `erasable` attribute is only permitted on inductive type definitions and abbreviations for non-informative types." in
-                     [uu___5] in
-                   (FStar_Errors_Codes.Fatal_QulifierListNotPermitted,
-                     uu___4) in
-                 FStar_Errors.raise_error_doc uu___3 r)
+                     FStar_Errors_Msg.text
+                       "Illegal attribute: the `erasable` attribute is only permitted on inductive type definitions and abbreviations for non-informative types." in
+                   [uu___4] in
+                 FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range
+                   r FStar_Errors_Codes.Fatal_QulifierListNotPermitted ()
+                   (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                   (Obj.magic uu___3))
           else ()
 let (check_must_erase_attribute :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.sigelt -> unit) =
@@ -538,46 +544,46 @@ let (check_must_erase_attribute :
                          (if must_erase && (Prims.op_Negation has_attr)
                           then
                             let uu___3 =
-                              FStar_Syntax_Syntax.range_of_fv lbname in
-                            let uu___4 =
-                              let uu___5 =
-                                let uu___6 =
+                              let uu___4 =
+                                let uu___5 =
+                                  let uu___6 =
+                                    FStar_Class_Show.show
+                                      FStar_Syntax_Print.showable_fv lbname in
                                   let uu___7 =
-                                    let uu___8 =
-                                      FStar_Class_Show.show
-                                        FStar_Syntax_Print.showable_fv lbname in
-                                    let uu___9 =
-                                      FStar_Class_Show.show
-                                        FStar_Syntax_Print.showable_fv lbname in
-                                    FStar_Compiler_Util.format2
-                                      "Values of type `%s` will be erased during extraction, but its interface hides this fact. Add the `must_erase_for_extraction` attribute to the `val %s` declaration for this symbol in the interface"
-                                      uu___8 uu___9 in
-                                  FStar_Errors_Msg.text uu___7 in
-                                [uu___6] in
-                              (FStar_Errors_Codes.Error_MustEraseMissing,
-                                uu___5) in
-                            FStar_Errors.log_issue_doc uu___3 uu___4
+                                    FStar_Class_Show.show
+                                      FStar_Syntax_Print.showable_fv lbname in
+                                  FStar_Compiler_Util.format2
+                                    "Values of type `%s` will be erased during extraction, but its interface hides this fact. Add the `must_erase_for_extraction` attribute to the `val %s` declaration for this symbol in the interface"
+                                    uu___6 uu___7 in
+                                FStar_Errors_Msg.text uu___5 in
+                              [uu___4] in
+                            FStar_Errors.log_issue
+                              FStar_Syntax_Syntax.hasRange_fv lbname
+                              FStar_Errors_Codes.Error_MustEraseMissing ()
+                              (Obj.magic
+                                 FStar_Errors_Msg.is_error_message_list_doc)
+                              (Obj.magic uu___3)
                           else
                             if has_attr && (Prims.op_Negation must_erase)
                             then
                               (let uu___4 =
-                                 FStar_Syntax_Syntax.range_of_fv lbname in
-                               let uu___5 =
-                                 let uu___6 =
-                                   let uu___7 =
-                                     let uu___8 =
-                                       let uu___9 =
-                                         FStar_Class_Show.show
-                                           FStar_Syntax_Print.showable_fv
-                                           lbname in
-                                       FStar_Compiler_Util.format1
-                                         "Values of type `%s` cannot be erased during extraction, but the `must_erase_for_extraction` attribute claims that it can. Please remove the attribute."
-                                         uu___9 in
-                                     FStar_Errors_Msg.text uu___8 in
-                                   [uu___7] in
-                                 (FStar_Errors_Codes.Error_MustEraseMissing,
-                                   uu___6) in
-                               FStar_Errors.log_issue_doc uu___4 uu___5)
+                                 let uu___5 =
+                                   let uu___6 =
+                                     let uu___7 =
+                                       FStar_Class_Show.show
+                                         FStar_Syntax_Print.showable_fv
+                                         lbname in
+                                     FStar_Compiler_Util.format1
+                                       "Values of type `%s` cannot be erased during extraction, but the `must_erase_for_extraction` attribute claims that it can. Please remove the attribute."
+                                       uu___7 in
+                                   FStar_Errors_Msg.text uu___6 in
+                                 [uu___5] in
+                               FStar_Errors.log_issue
+                                 FStar_Syntax_Syntax.hasRange_fv lbname
+                                 FStar_Errors_Codes.Error_MustEraseMissing ()
+                                 (Obj.magic
+                                    FStar_Errors_Msg.is_error_message_list_doc)
+                                 (Obj.magic uu___4))
                             else ())
                        else ()) (FStar_Pervasives_Native.snd lbs))
          | uu___2 -> ())
@@ -607,22 +613,22 @@ let (check_typeclass_instance_attribute :
                 then
                   let uu___4 =
                     let uu___5 =
-                      let uu___6 =
-                        FStar_Errors_Msg.text
-                          "Instances are expected to be total." in
+                      FStar_Errors_Msg.text
+                        "Instances are expected to be total." in
+                    let uu___6 =
                       let uu___7 =
                         let uu___8 =
-                          let uu___9 =
-                            FStar_Errors_Msg.text "This instance has effect" in
-                          let uu___10 =
-                            FStar_Class_PP.pp FStar_Ident.pretty_lident
-                              (FStar_Syntax_Util.comp_effect_name res) in
-                          FStar_Pprint.op_Hat_Hat uu___9 uu___10 in
-                        [uu___8] in
-                      uu___6 :: uu___7 in
-                    (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
-                      uu___5) in
-                  FStar_Errors.log_issue_doc rng uu___4
+                          FStar_Errors_Msg.text "This instance has effect" in
+                        let uu___9 =
+                          FStar_Class_PP.pp FStar_Ident.pretty_lident
+                            (FStar_Syntax_Util.comp_effect_name res) in
+                        FStar_Pprint.op_Hat_Hat uu___8 uu___9 in
+                      [uu___7] in
+                    uu___5 :: uu___6 in
+                  FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range
+                    rng FStar_Errors_Codes.Error_UnexpectedTypeclassInstance
+                    () (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                    (Obj.magic uu___4)
                 else ());
                (let t = FStar_Syntax_Util.comp_result res in
                 let uu___3 = FStar_Syntax_Util.head_and_args t in
@@ -631,25 +637,27 @@ let (check_typeclass_instance_attribute :
                     let err uu___5 =
                       let uu___6 =
                         let uu___7 =
-                          let uu___8 =
-                            FStar_Errors_Msg.text
-                              "Instances must define instances of `class` types." in
+                          FStar_Errors_Msg.text
+                            "Instances must define instances of `class` types." in
+                        let uu___8 =
                           let uu___9 =
-                            let uu___10 =
-                              let uu___11 = FStar_Errors_Msg.text "Type" in
+                            let uu___10 = FStar_Errors_Msg.text "Type" in
+                            let uu___11 =
                               let uu___12 =
-                                let uu___13 =
-                                  FStar_Class_PP.pp
-                                    FStar_Syntax_Print.pretty_term t in
-                                let uu___14 =
-                                  FStar_Errors_Msg.text "is not a class." in
-                                FStar_Pprint.op_Hat_Slash_Hat uu___13 uu___14 in
-                              FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
-                            [uu___10] in
-                          uu___8 :: uu___9 in
-                        (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
-                          uu___7) in
-                      FStar_Errors.log_issue_doc rng uu___6 in
+                                FStar_Class_PP.pp
+                                  FStar_Syntax_Print.pretty_term t in
+                              let uu___13 =
+                                FStar_Errors_Msg.text "is not a class." in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
+                            FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
+                          [uu___9] in
+                        uu___7 :: uu___8 in
+                      FStar_Errors.log_issue
+                        FStar_Class_HasRange.hasRange_range rng
+                        FStar_Errors_Codes.Error_UnexpectedTypeclassInstance
+                        ()
+                        (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                        (Obj.magic uu___6) in
                     let uu___5 =
                       let uu___6 = FStar_Syntax_Util.un_uinst head in
                       uu___6.FStar_Syntax_Syntax.n in
@@ -672,13 +680,13 @@ let (check_typeclass_instance_attribute :
           | FStar_Syntax_Syntax.Sig_let uu___ ->
               let uu___1 =
                 let uu___2 =
-                  let uu___3 =
-                    FStar_Errors_Msg.text
-                      "An `instance` definition is expected to be non-recursive and of a type that is a `class`." in
-                  [uu___3] in
-                (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
-                  uu___2) in
-              FStar_Errors.log_issue_doc rng uu___1
+                  FStar_Errors_Msg.text
+                    "An `instance` definition is expected to be non-recursive and of a type that is a `class`." in
+                [uu___2] in
+              FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range rng
+                FStar_Errors_Codes.Error_UnexpectedTypeclassInstance ()
+                (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                (Obj.magic uu___1)
           | FStar_Syntax_Syntax.Sig_declare_typ
               { FStar_Syntax_Syntax.lid2 = uu___;
                 FStar_Syntax_Syntax.us2 = uu___1;
@@ -687,25 +695,25 @@ let (check_typeclass_instance_attribute :
           | uu___ ->
               let uu___1 =
                 let uu___2 =
-                  let uu___3 =
-                    FStar_Errors_Msg.text
-                      "The `instance` attribute is only allowed on `let` and `val` declarations." in
+                  FStar_Errors_Msg.text
+                    "The `instance` attribute is only allowed on `let` and `val` declarations." in
+                let uu___3 =
                   let uu___4 =
                     let uu___5 =
-                      let uu___6 =
-                        FStar_Errors_Msg.text "It is not allowed for" in
+                      FStar_Errors_Msg.text "It is not allowed for" in
+                    let uu___6 =
                       let uu___7 =
                         let uu___8 =
-                          let uu___9 =
-                            FStar_Syntax_Print.sigelt_to_string_short se in
-                          FStar_Pprint.arbitrary_string uu___9 in
-                        FStar_Pprint.squotes uu___8 in
-                      FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
-                    [uu___5] in
-                  uu___3 :: uu___4 in
-                (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
-                  uu___2) in
-              FStar_Errors.log_issue_doc rng uu___1
+                          FStar_Syntax_Print.sigelt_to_string_short se in
+                        FStar_Pprint.arbitrary_string uu___8 in
+                      FStar_Pprint.squotes uu___7 in
+                    FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                  [uu___4] in
+                uu___2 :: uu___3 in
+              FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range rng
+                FStar_Errors_Codes.Error_UnexpectedTypeclassInstance ()
+                (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                (Obj.magic uu___1)
         else ()
 let (check_sigelt_quals_post :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.sigelt -> unit) =

@@ -214,33 +214,34 @@ let unembed :
           (let uu___1 =
              let uu___2 =
                let uu___3 =
-                 let uu___4 =
-                   FStar_Errors_Msg.text "Unembedding failed for type" in
-                 let uu___5 =
-                   let uu___6 = type_of e in
-                   FStar_Class_PP.pp FStar_Syntax_Print.pretty_term uu___6 in
-                 FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                 FStar_Errors_Msg.text "Unembedding failed for type" in
                let uu___4 =
-                 let uu___5 =
-                   let uu___6 = FStar_Errors_Msg.text "emb_typ = " in
-                   let uu___7 =
-                     let uu___8 =
-                       let uu___9 = emb_typ_of e () in
-                       FStar_Class_Show.show
-                         FStar_Syntax_Syntax.showable_emb_typ uu___9 in
-                     FStar_Pprint.doc_of_string uu___8 in
-                   FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                 let uu___5 = type_of e in
+                 FStar_Class_PP.pp FStar_Syntax_Print.pretty_term uu___5 in
+               FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
+             let uu___3 =
+               let uu___4 =
+                 let uu___5 = FStar_Errors_Msg.text "emb_typ = " in
                  let uu___6 =
                    let uu___7 =
-                     let uu___8 = FStar_Errors_Msg.text "Term =" in
-                     let uu___9 =
-                       FStar_Class_PP.pp FStar_Syntax_Print.pretty_term t in
-                     FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-                   [uu___7] in
-                 uu___5 :: uu___6 in
-               uu___3 :: uu___4 in
-             (FStar_Errors_Codes.Warning_NotEmbedded, uu___2) in
-           FStar_Errors.log_issue_doc t.FStar_Syntax_Syntax.pos uu___1)
+                     let uu___8 = emb_typ_of e () in
+                     FStar_Class_Show.show
+                       FStar_Syntax_Syntax.showable_emb_typ uu___8 in
+                   FStar_Pprint.doc_of_string uu___7 in
+                 FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+               let uu___5 =
+                 let uu___6 =
+                   let uu___7 = FStar_Errors_Msg.text "Term =" in
+                   let uu___8 =
+                     FStar_Class_PP.pp FStar_Syntax_Print.pretty_term t in
+                   FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                 [uu___6] in
+               uu___4 :: uu___5 in
+             uu___2 :: uu___3 in
+           FStar_Errors.log_issue (FStar_Syntax_Syntax.has_range_syntax ()) t
+             FStar_Errors_Codes.Warning_NotEmbedded ()
+             (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+             (Obj.magic uu___1))
         else ();
         r
 let embed_as :
@@ -299,19 +300,21 @@ let e_lazy :
             ->
             ((let uu___4 =
                 let uu___5 =
-                  let uu___6 =
-                    FStar_Class_Show.show
-                      FStar_Syntax_Syntax.showable_lazy_kind k in
-                  let uu___7 =
-                    FStar_Class_Show.show
-                      FStar_Syntax_Syntax.showable_lazy_kind lkind in
-                  let uu___8 =
-                    FStar_Class_Show.show FStar_Syntax_Print.showable_term t0 in
-                  FStar_Compiler_Util.format3
-                    "Warning, lazy unembedding failed, tag mismatch.\n\tExpected %s, got %s\n\tt = %s."
-                    uu___6 uu___7 uu___8 in
-                (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
-              FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu___4);
+                  FStar_Class_Show.show
+                    FStar_Syntax_Syntax.showable_lazy_kind k in
+                let uu___6 =
+                  FStar_Class_Show.show
+                    FStar_Syntax_Syntax.showable_lazy_kind lkind in
+                let uu___7 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term t0 in
+                FStar_Compiler_Util.format3
+                  "Warning, lazy unembedding failed, tag mismatch.\n\tExpected %s, got %s\n\tt = %s."
+                  uu___5 uu___6 uu___7 in
+              FStar_Errors.log_issue
+                (FStar_Syntax_Syntax.has_range_syntax ()) t0
+                FStar_Errors_Codes.Warning_NotEmbedded ()
+                (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                (Obj.magic uu___4));
              FStar_Pervasives_Native.None)
         | uu___1 -> FStar_Pervasives_Native.None in
       let uu___ = term_as_fv ty in mk_emb ee uu uu___

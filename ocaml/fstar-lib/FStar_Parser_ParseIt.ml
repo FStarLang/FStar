@@ -37,7 +37,7 @@ let find_file filename =
     | Some s ->
       s
     | None ->
-      raise_err (Fatal_ModuleOrFileNotFound, U.format1 "Unable to find file: %s\n" filename)
+      raise_error_text FStar_Compiler_Range.dummyRange Fatal_ModuleOrFileNotFound (U.format1 "Unable to find file: %s\n" filename)
 
 let vfs_entries : (U.time * string) U.smap = U.smap_create (Z.of_int 1)
 
@@ -62,7 +62,7 @@ let read_physical_file (filename: string) =
       (fun channel -> really_input_string channel (in_channel_length channel))
       channel
   with e ->
-    raise_err (Fatal_UnableToReadFile, U.format1 "Unable to read file %s\n" filename)
+    raise_error_text FStar_Compiler_Range.dummyRange Fatal_UnableToReadFile (U.format1 "Unable to read file %s\n" filename)
 
 let read_file (filename:string) =
   let debug = FStar_Compiler_Debug.any () in
@@ -88,9 +88,10 @@ let has_extension file extensions =
 let check_extension fn =
   if (not (has_extension fn (valid_extensions ()))) then
     let message = U.format1 "Unrecognized extension '%s'" fn in
-    raise_err (Fatal_UnrecognizedExtension, if has_extension fn fs_extensions then
-                  message ^ " (pass --MLish to process .fs and .fsi files)"
-                else message)
+    raise_error_text FStar_Compiler_Range.dummyRange Fatal_UnrecognizedExtension
+      (if has_extension fn fs_extensions
+       then message ^ " (pass --MLish to process .fs and .fsi files)"
+       else message)
 
 type parse_frag =
     | Filename of filename
@@ -98,7 +99,7 @@ type parse_frag =
     | Incremental of input_frag
     | Fragment of input_frag
 
-type parse_error = (Codes.raw_error * Msg.error_message * FStar_Compiler_Range.range)
+type parse_error = (Codes.error_code * Msg.error_message * FStar_Compiler_Range.range)
 
 
 type code_fragment = {
@@ -168,9 +169,6 @@ let parse_incremental_decls
       with 
       | FStar_Errors.Error(e, msg, r, ctx) ->
         Inr (e, msg, r)
-
-      | FStar_Errors.Err(e, msg, ctx) ->
-        Inr (err_of_parse_error (Some ("FStar.Errors.Err: " ^ FStar_Errors_Msg.rendermsg msg)))
 
       | e -> 
         Inr (err_of_parse_error None)
@@ -380,7 +378,7 @@ let parse (lang_opt:lang_opts) fn =
           check_extension f;
           let f', contents = read_file f in
           (try create contents f' 1 0, f', contents
-          with _ -> raise_err (Fatal_InvalidUTF8Encoding, U.format1 "File %s has invalid UTF-8 encoding.\n" f'))
+          with _ -> raise_error_text FStar_Compiler_Range.dummyRange Fatal_InvalidUTF8Encoding (U.format1 "File %s has invalid UTF-8 encoding." f'))
       | Incremental s
       | Toplevel s
       | Fragment s ->
@@ -431,9 +429,6 @@ let parse (lang_opt:lang_opts) fn =
       | FStar_Errors.Error(e, msg, r, _ctx) ->
         ParseError (e, msg, r)
 
-      | FStar_Errors.Err(e, msg, _ctx) ->
-        ParseError (err_of_parse_error filename lexbuf (Some ("FStar.Errors.Err: " ^ FStar_Errors_Msg.rendermsg msg)))
-    
       | e ->
   (*
       | Parsing.Parse_error as _e

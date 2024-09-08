@@ -19,6 +19,13 @@ in order.
 *)
 type error_message = list document
 
+class is_error_message (t:Type) = {
+  to_doc_list : t -> error_message;
+}
+
+instance val is_error_message_string   : is_error_message string
+instance val is_error_message_list_doc : is_error_message (list Pprint.document)
+
 (* A helper for creating errors from strings, only to be used for text.
 This will split the string into words and format is a paragraph.
 

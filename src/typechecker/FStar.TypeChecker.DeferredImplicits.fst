@@ -171,8 +171,8 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
         let candidates = candidate_names candidates in
         let attr = show a in
         FStar.Errors.log_issue u.ctx_uvar_range
-                               (FStar.Errors.Warning_AmbiguousResolveImplicitsHook,
-                                BU.format2
+                               FStar.Errors.Warning_AmbiguousResolveImplicitsHook
+                               (BU.format2
                                   "Multiple resolve_implicits hooks are eligible for attribute %s; \n\
                                    please resolve the ambiguity by using the `override_resolve_implicits_handler` attribute \
                                    to choose among these candidates {%s}"

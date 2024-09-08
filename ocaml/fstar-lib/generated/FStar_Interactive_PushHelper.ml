@@ -197,11 +197,12 @@ let (deps_and_repl_ld_tasks_of_our_file :
                      if uu___3
                      then
                        let uu___4 =
-                         let uu___5 =
-                           FStar_Compiler_Util.format1
-                             "Expecting an interface, got %s" intf in
-                         (FStar_Errors_Codes.Fatal_MissingInterface, uu___5) in
-                       FStar_Errors.raise_err uu___4
+                         FStar_Compiler_Util.format1
+                           "Expecting an interface, got %s" intf in
+                       FStar_Errors.raise_error0
+                         FStar_Errors_Codes.Fatal_MissingInterface ()
+                         (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                         (Obj.magic uu___4)
                      else ());
                     (let uu___4 =
                        let uu___5 = FStar_Parser_Dep.is_implementation impl in
@@ -209,12 +210,12 @@ let (deps_and_repl_ld_tasks_of_our_file :
                      if uu___4
                      then
                        let uu___5 =
-                         let uu___6 =
-                           FStar_Compiler_Util.format1
-                             "Expecting an implementation, got %s" impl in
-                         (FStar_Errors_Codes.Fatal_MissingImplementation,
-                           uu___6) in
-                       FStar_Errors.raise_err uu___5
+                         FStar_Compiler_Util.format1
+                           "Expecting an implementation, got %s" impl in
+                       FStar_Errors.raise_error0
+                         FStar_Errors_Codes.Fatal_MissingImplementation ()
+                         (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                         (Obj.magic uu___5)
                      else ());
                     (let uu___4 =
                        let uu___5 =
@@ -231,12 +232,12 @@ let (deps_and_repl_ld_tasks_of_our_file :
                    let mods_str = FStar_Compiler_String.concat " " same_name in
                    let message = "Too many or too few files matching %s: %s" in
                    ((let uu___4 =
-                       let uu___5 =
-                         FStar_Compiler_Util.format message
-                           [our_mod_name; mods_str] in
-                       (FStar_Errors_Codes.Fatal_TooManyOrTooFewFileMatch,
-                         uu___5) in
-                     FStar_Errors.raise_err uu___4);
+                       FStar_Compiler_Util.format message
+                         [our_mod_name; mods_str] in
+                     FStar_Errors.raise_error0
+                       FStar_Errors_Codes.Fatal_TooManyOrTooFewFileMatch ()
+                       (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                       (Obj.magic uu___4));
                     []) in
              let tasks = repl_ld_tasks_of_deps real_deps intf_tasks in
              (real_deps, tasks, dep_graph))
@@ -674,15 +675,6 @@ let (repl_tx :
                   (FStar_Pervasives_Native.Some r) in
               FStar_Pervasives_Native.Some uu___2 in
             (uu___1, st)
-        | FStar_Errors.Err (e, msg, _ctx) ->
-            let uu___1 =
-              let uu___2 =
-                let uu___3 = FStar_Errors_Msg.rendermsg msg in
-                FStar_Interactive_JsonHelper.js_diag
-                  st.FStar_Interactive_Ide_Types.repl_fname uu___3
-                  FStar_Pervasives_Native.None in
-              FStar_Pervasives_Native.Some uu___2 in
-            (uu___1, st)
         | FStar_Errors.Stop ->
             (FStar_Compiler_Util.print_error "[E] Stop";
              (FStar_Pervasives_Native.None, st))
@@ -848,7 +840,7 @@ let (ld_deps :
                    | FStar_Pervasives.Inl st2 ->
                        FStar_Pervasives.Inl (st2, deps)))) ()
     with
-    | FStar_Errors.Err (e, msg, ctx) ->
+    | FStar_Errors.Error (e, msg, _rng, ctx) ->
         ((let uu___2 = FStar_Errors_Msg.rendermsg msg in
           FStar_Compiler_Util.print1_error "[E] Failed to load deps. %s"
             uu___2);

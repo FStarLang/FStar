@@ -284,7 +284,7 @@ let rec inspect_ln (t:term) : term_view =
         i |> U.unfold_lazy |> inspect_ln
 
     | _ ->
-        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect_ln: outside of expected syntax (%s, %s)" (tag_of t) (show t));
+        Err.log_issue t Err.Warning_CantInspect (BU.format2 "inspect_ln: outside of expected syntax (%s, %s)" (tag_of t) (show t));
         Tv_Unsupp
 
 let inspect_comp (c : comp) : comp_view =
@@ -293,8 +293,8 @@ let inspect_comp (c : comp) : comp_view =
         | None -> []
         | Some (DECREASES (Decreases_lex ts)) -> ts
         | Some (DECREASES (Decreases_wf _)) ->
-          Err.log_issue c.pos (Err.Warning_CantInspect,
-            BU.format1 "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s \
+          Err.log_issue c Err.Warning_CantInspect
+            (BU.format1 "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s \
               skipping the decreases clause"
               (show c));
           []
@@ -435,8 +435,7 @@ let pack_ln (tv:term_view) : term =
         S.mk Tm_unknown Range.dummyRange
 
     | Tv_Unsupp ->
-        Err.log_issue Range.dummyRange
-            (Err.Warning_CantInspect, "packing a Tv_Unsupp into Tm_unknown");
+        Err.log_issue0 Err.Warning_CantInspect "packing a Tv_Unsupp into Tm_unknown";
         S.mk Tm_unknown Range.dummyRange
 
 let compare_bv (x:bv) (y:bv) : order =
@@ -652,11 +651,9 @@ let pack_lb (lbv:lb_view) : letbinding =
 
 let inspect_namedv (v:bv) : namedv_view =
     if v.index < 0 then (
-        Err.log_issue Range.dummyRange
-            (Err.Warning_CantInspect, BU.format3 "inspect_namedv: uniq is negative (%s : %s), uniq = %s"
-                                         (Ident.string_of_id v.ppname)
-                                         (show v.sort)
-                                         (string_of_int v.index))
+        Err.log_issue0 Err.Warning_CantInspect
+          (BU.format3 "inspect_namedv: uniq is negative (%s : %s), uniq = %s"
+                (Ident.string_of_id v.ppname) (show v.sort) (string_of_int v.index))
     );
     {
       uniq   = Z.of_int_fs v.index;
@@ -666,10 +663,9 @@ let inspect_namedv (v:bv) : namedv_view =
 
 let pack_namedv (vv:namedv_view) : namedv =
     if Z.to_int_fs vv.uniq < 0 then (
-        Err.log_issue Range.dummyRange
-            (Err.Warning_CantInspect, BU.format2 "pack_namedv: uniq is negative (%s), uniq = %s"
-                                         (Sealed.unseal vv.ppname)
-                                         (string_of_int (Z.to_int_fs vv.uniq)))
+        Err.log_issue0 Err.Warning_CantInspect 
+          (BU.format2 "pack_namedv: uniq is negative (%s), uniq = %s"
+                (Sealed.unseal vv.ppname) (show (Z.to_int_fs vv.uniq)))
     );
     {
       index  = Z.to_int_fs vv.uniq;
@@ -679,11 +675,9 @@ let pack_namedv (vv:namedv_view) : namedv =
 
 let inspect_bv (bv:bv) : bv_view =
     if bv.index < 0 then (
-        Err.log_issue Range.dummyRange
-            (Err.Warning_CantInspect, BU.format3 "inspect_bv: index is negative (%s : %s), index = %s"
-                                         (Ident.string_of_id bv.ppname)
-                                         (show bv.sort)
-                                         (string_of_int bv.index))
+        Err.log_issue0 Err.Warning_CantInspect
+          (BU.format3 "inspect_bv: index is negative (%s : %s), index = %s"
+                (Ident.string_of_id bv.ppname) (show bv.sort) (string_of_int bv.index))
     );
     {
       index  = Z.of_int_fs bv.index;
@@ -693,10 +687,9 @@ let inspect_bv (bv:bv) : bv_view =
 
 let pack_bv (bvv:bv_view) : bv =
     if Z.to_int_fs bvv.index < 0 then (
-        Err.log_issue Range.dummyRange
-            (Err.Warning_CantInspect, BU.format2 "pack_bv: index is negative (%s), index = %s"
-                                         (Sealed.unseal bvv.ppname)
-                                         (string_of_int (Z.to_int_fs bvv.index)))
+        Err.log_issue0 Err.Warning_CantInspect
+          (BU.format2 "pack_bv: index is negative (%s), index = %s"
+                (Sealed.unseal bvv.ppname) (show (Z.to_int_fs bvv.index)))
     );
     {
       index = Z.to_int_fs bvv.index;

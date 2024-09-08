@@ -64,13 +64,6 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
              let uu___5 = FStar_Errors_Msg.rendermsg msg in
              FStar_Compiler_Util.print2 "%s: %s\n" uu___4 uu___5);
           FStar_Compiler_Effect.exit Prims.int_one)
-     | FStar_Errors.Err (raw_error, s, ls) when
-         let uu___2 = FStar_Options.trace_error () in
-         Prims.op_Negation uu___2 ->
-         ((let uu___3 = FStar_Errors_Msg.rendermsg s in
-           FStar_Compiler_Util.print2 "%s : [%s]\n" uu___3
-             (FStar_String.concat "; " ls));
-          FStar_Compiler_Effect.exit Prims.int_one)
      | e ->
          ((let uu___3 = FStar_Compiler_Util.message_of_exn e in
            let uu___4 = FStar_Compiler_Util.trace_of_exn e in

@@ -400,12 +400,11 @@ let load_module_from_cache =
         let suppress_warning = Options.should_check_file fn || !already_failed in
         if not suppress_warning then begin
           already_failed := true;
-          FStar.Errors.log_issue_doc
-            (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
-            (Errors.Warning_CachedFile,
-             [Errors.text (BU.format3
+          FStar.Errors.log_issue (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
+            Errors.Warning_CachedFile [Errors.text (BU.format3
                "Unable to load %s since %s; will recheck %s (suppressing this warning for further modules)"
-               cache_file msg fn)])
+               cache_file msg fn)
+          ]
         end
       in
       match load_checked_file_with_tc_result
@@ -478,12 +477,12 @@ let store_module_to_cache env fn parsing_data tc_result =
       let open FStar.Errors in
       let open FStar.Errors.Msg in
       let open FStar.Pprint in
-      log_issue_doc
-        (FStar.Compiler.Range.mk_range fn (FStar.Compiler.Range.mk_pos 0 0)
+      log_issue (FStar.Compiler.Range.mk_range fn (FStar.Compiler.Range.mk_pos 0 0)
                                  (FStar.Compiler.Range.mk_pos 0 0))
-        (Errors.Warning_FileNotWritten, [
+        Errors.Warning_FileNotWritten [
           text <| BU.format1 "Checked file %s was not written." cache_file;
-          prefix 2 1 (doc_of_string "Reason:") (text msg)])
+          prefix 2 1 (doc_of_string "Reason:") (text msg)
+      ]
   end
 
 let unsafe_raw_load_checked_file (checked_fn:string)

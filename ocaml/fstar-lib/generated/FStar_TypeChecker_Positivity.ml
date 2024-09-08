@@ -71,20 +71,21 @@ let (apply_constr_arrow :
                             (FStar_Pervasives_Native.fst a))] tail1 in
                    aux tail2 args1)
           | uu___1 ->
-              let uu___2 =
-                let uu___3 =
-                  let uu___4 = FStar_Syntax_Print.args_to_string all_params in
-                  let uu___5 =
-                    FStar_Class_Show.show FStar_Ident.showable_lident dlid in
-                  let uu___6 =
-                    FStar_Class_Show.show FStar_Syntax_Print.showable_term dt in
-                  FStar_Compiler_Util.format3
-                    "Unexpected application of type parameters %s to a data constructor %s : %s"
-                    uu___4 uu___5 uu___6 in
-                (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
-                  uu___3) in
-              let uu___3 = FStar_Ident.range_of_lid dlid in
-              FStar_Errors.raise_error uu___2 uu___3 in
+              let uu___2 = FStar_Ident.range_of_lid dlid in
+              let uu___3 =
+                let uu___4 = FStar_Syntax_Print.args_to_string all_params in
+                let uu___5 =
+                  FStar_Class_Show.show FStar_Ident.showable_lident dlid in
+                let uu___6 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term dt in
+                FStar_Compiler_Util.format3
+                  "Unexpected application of type parameters %s to a data constructor %s : %s"
+                  uu___4 uu___5 uu___6 in
+              FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range
+                uu___2
+                FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
+                () (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                (Obj.magic uu___3) in
         aux dt all_params
 let (ty_occurs_in :
   FStar_Ident.lident -> FStar_Syntax_Syntax.term -> Prims.bool) =
@@ -460,20 +461,24 @@ let (mark_uniform_type_parameters :
                                           FStar_Syntax_Syntax.BinderStrictlyPositive)
                                    then
                                      let uu___8 =
-                                       let uu___9 =
-                                         let uu___10 =
-                                           FStar_Class_Show.show
-                                             FStar_Syntax_Print.showable_binder
-                                             param in
-                                         FStar_Compiler_Util.format1
-                                           "Binder %s is marked strictly positive, but it is not uniformly recursive"
-                                           uu___10 in
-                                       (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
-                                         uu___9) in
-                                     let uu___9 =
                                        FStar_Syntax_Syntax.range_of_bv
                                          param.FStar_Syntax_Syntax.binder_bv in
-                                     FStar_Errors.raise_error uu___8 uu___9
+                                     let uu___9 =
+                                       let uu___10 =
+                                         FStar_Class_Show.show
+                                           FStar_Syntax_Print.showable_binder
+                                           param in
+                                       FStar_Compiler_Util.format1
+                                         "Binder %s is marked strictly positive, but it is not uniformly recursive"
+                                         uu___10 in
+                                     FStar_Errors.raise_error
+                                       FStar_Class_HasRange.hasRange_range
+                                       uu___8
+                                       FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
+                                       ()
+                                       (Obj.magic
+                                          FStar_Errors_Msg.is_error_message_string)
+                                       (Obj.magic uu___9)
                                    else ()) non_uniform_params)
                        else ();
                        (let sigel =
@@ -701,19 +706,20 @@ let (check_no_index_occurrences_in_arities :
                     if uu___3
                     then
                       let uu___4 =
-                        let uu___5 =
-                          let uu___6 = FStar_Ident.string_of_lid mutual in
-                          let uu___7 =
-                            FStar_Class_Show.show
-                              FStar_Syntax_Print.showable_term index1 in
-                          let uu___8 = FStar_Ident.string_of_lid fv in
-                          FStar_Compiler_Util.format3
-                            "Type %s is not strictly positive since it instantiates a non-uniformly recursive parameter or index %s of %s"
-                            uu___6 uu___7 uu___8 in
-                        (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
-                          uu___5) in
-                      FStar_Errors.raise_error uu___4
-                        index1.FStar_Syntax_Syntax.pos
+                        let uu___5 = FStar_Ident.string_of_lid mutual in
+                        let uu___6 =
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_term index1 in
+                        let uu___7 = FStar_Ident.string_of_lid fv in
+                        FStar_Compiler_Util.format3
+                          "Type %s is not strictly positive since it instantiates a non-uniformly recursive parameter or index %s of %s"
+                          uu___5 uu___6 uu___7 in
+                      FStar_Errors.raise_error
+                        (FStar_Syntax_Syntax.has_range_syntax ()) index1
+                        FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
+                        ()
+                        (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                        (Obj.magic uu___4)
                     else ()) mutuals1 in
          let no_occurrence_in_indexes fv mutuals1 indexes =
            FStar_Compiler_List.iter (no_occurrence_in_index fv mutuals1)
@@ -1364,15 +1370,17 @@ and (ty_strictly_positive_in_arguments_to_fvar :
                           ((uu___4, fv_ty1), uu___5) -> fv_ty1
                       | uu___4 ->
                           let uu___5 =
-                            let uu___6 =
-                              let uu___7 = FStar_Ident.string_of_lid fv in
-                              FStar_Compiler_Util.format1
-                                "Type of %s not found when checking positivity"
-                                uu___7 in
-                            (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
-                              uu___6) in
-                          let uu___6 = FStar_Ident.range_of_lid fv in
-                          FStar_Errors.raise_error uu___5 uu___6 in
+                            let uu___6 = FStar_Ident.string_of_lid fv in
+                            FStar_Compiler_Util.format1
+                              "Type of %s not found when checking positivity"
+                              uu___6 in
+                          FStar_Errors.raise_error
+                            FStar_Ident.hasrange_lident fv
+                            FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
+                            ()
+                            (Obj.magic
+                               FStar_Errors_Msg.is_error_message_string)
+                            (Obj.magic uu___5) in
                     let uu___3 = FStar_TypeChecker_Env.datacons_of_typ env fv in
                     match uu___3 with
                     | (b, idatas) ->
@@ -1464,16 +1472,19 @@ and (ty_strictly_positive_in_datacon_of_applied_inductive :
                      match uu___1 with
                      | FStar_Pervasives_Native.Some (t, uu___2) -> t
                      | FStar_Pervasives_Native.None ->
-                         let uu___2 =
-                           let uu___3 =
-                             let uu___4 = FStar_Ident.string_of_lid dlid in
-                             FStar_Compiler_Util.format1
-                               "Data constructor %s not found when checking positivity"
-                               uu___4 in
-                           (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
-                             uu___3) in
-                         let uu___3 = FStar_Ident.range_of_lid dlid in
-                         FStar_Errors.raise_error uu___2 uu___3 in
+                         let uu___2 = FStar_Ident.range_of_lid dlid in
+                         let uu___3 =
+                           let uu___4 = FStar_Ident.string_of_lid dlid in
+                           FStar_Compiler_Util.format1
+                             "Data constructor %s not found when checking positivity"
+                             uu___4 in
+                         FStar_Errors.raise_error
+                           FStar_Class_HasRange.hasRange_range uu___2
+                           FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
+                           ()
+                           (Obj.magic
+                              FStar_Errors_Msg.is_error_message_string)
+                           (Obj.magic uu___3) in
                    debug_positivity env
                      (fun uu___2 ->
                         let uu___3 =
@@ -1585,15 +1596,14 @@ let (ty_strictly_positive_in_datacon_decl :
                 | FStar_Pervasives_Native.Some (t, uu___1) -> t
                 | FStar_Pervasives_Native.None ->
                     let uu___1 =
-                      let uu___2 =
-                        let uu___3 = FStar_Ident.string_of_lid dlid in
-                        FStar_Compiler_Util.format1
-                          "Error looking up data constructor %s when checking positivity"
-                          uu___3 in
-                      (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
-                        uu___2) in
-                    let uu___2 = FStar_Ident.range_of_lid dlid in
-                    FStar_Errors.raise_error uu___1 uu___2 in
+                      let uu___2 = FStar_Ident.string_of_lid dlid in
+                      FStar_Compiler_Util.format1
+                        "Error looking up data constructor %s when checking positivity"
+                        uu___2 in
+                    FStar_Errors.raise_error FStar_Ident.hasrange_lident dlid
+                      FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
+                      () (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                      (Obj.magic uu___1) in
               debug_positivity env
                 (fun uu___1 ->
                    let uu___2 =
@@ -1634,23 +1644,23 @@ let (ty_strictly_positive_in_datacon_decl :
                             | FStar_Pervasives_Native.Some b ->
                                 let uu___4 =
                                   let uu___5 =
-                                    let uu___6 =
-                                      FStar_Class_Show.show
-                                        FStar_Syntax_Print.showable_binder b in
-                                    FStar_Compiler_Util.format2
-                                      "Binder %s is marked %s, but its use in the definition is not"
-                                      uu___6
-                                      (if
-                                         FStar_Syntax_Util.is_binder_strictly_positive
-                                           b
-                                       then "strictly_positive"
-                                       else "unused") in
-                                  (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
-                                    uu___5) in
-                                let uu___5 =
-                                  FStar_Syntax_Syntax.range_of_bv
-                                    b.FStar_Syntax_Syntax.binder_bv in
-                                FStar_Errors.raise_error uu___4 uu___5 in
+                                    FStar_Class_Show.show
+                                      FStar_Syntax_Print.showable_binder b in
+                                  FStar_Compiler_Util.format2
+                                    "Binder %s is marked %s, but its use in the definition is not"
+                                    uu___5
+                                    (if
+                                       FStar_Syntax_Util.is_binder_strictly_positive
+                                         b
+                                     then "strictly_positive"
+                                     else "unused") in
+                                FStar_Errors.raise_error
+                                  FStar_Syntax_Syntax.hasRange_binder b
+                                  FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
+                                  ()
+                                  (Obj.magic
+                                     FStar_Errors_Msg.is_error_message_string)
+                                  (Obj.magic uu___4) in
                           let rec check_all_fields env1 fields1 =
                             match fields1 with
                             | [] -> true

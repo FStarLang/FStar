@@ -38,11 +38,6 @@ let (eraseTypeDeep :
     fun t ->
       FStar_Extraction_ML_Util.eraseTypeDeep
         (FStar_Extraction_ML_Util.udelta_unfold g) t
-let fail :
-  'uuuuu .
-    FStar_Compiler_Range_Type.range ->
-      (FStar_Errors_Codes.raw_error * Prims.string) -> 'uuuuu
-  = fun r -> fun err -> FStar_Errors.raise_error err r
 let err_ill_typed_application :
   'uuuuu .
     FStar_Extraction_ML_UEnv.uenv ->
@@ -58,27 +53,29 @@ let err_ill_typed_application :
           fun ty ->
             let uu___ =
               let uu___1 =
-                let uu___2 =
-                  FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
+              let uu___2 =
                 let uu___3 =
-                  let uu___4 =
-                    FStar_Extraction_ML_UEnv.current_module_of_uenv env in
-                  FStar_Extraction_ML_Code.string_of_mlexpr uu___4 mlhead in
+                  FStar_Extraction_ML_UEnv.current_module_of_uenv env in
+                FStar_Extraction_ML_Code.string_of_mlexpr uu___3 mlhead in
+              let uu___3 =
                 let uu___4 =
-                  let uu___5 =
-                    FStar_Extraction_ML_UEnv.current_module_of_uenv env in
-                  FStar_Extraction_ML_Code.string_of_mlty uu___5 ty in
-                let uu___5 =
-                  FStar_Class_Show.show
-                    (FStar_Class_Show.show_list
-                       (FStar_Class_Show.show_tuple2
-                          FStar_Syntax_Print.showable_term
-                          FStar_Syntax_Print.showable_aqual)) args in
-                FStar_Compiler_Util.format4
-                  "Ill-typed application: source application is %s \n translated prefix to %s at type %s\n remaining args are %s\n"
-                  uu___2 uu___3 uu___4 uu___5 in
-              (FStar_Errors_Codes.Fatal_IllTyped, uu___1) in
-            fail t.FStar_Syntax_Syntax.pos uu___
+                  FStar_Extraction_ML_UEnv.current_module_of_uenv env in
+                FStar_Extraction_ML_Code.string_of_mlty uu___4 ty in
+              let uu___4 =
+                FStar_Class_Show.show
+                  (FStar_Class_Show.show_list
+                     (FStar_Class_Show.show_tuple2
+                        FStar_Syntax_Print.showable_term
+                        FStar_Syntax_Print.showable_aqual)) args in
+              FStar_Compiler_Util.format4
+                "Ill-typed application: source application is %s \n translated prefix to %s at type %s\n remaining args are %s\n"
+                uu___1 uu___2 uu___3 uu___4 in
+            FStar_Errors.raise_error
+              (FStar_Syntax_Syntax.has_range_syntax ()) t
+              FStar_Errors_Codes.Fatal_IllTyped ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___)
 let err_ill_typed_erasure :
   'uuuuu .
     FStar_Extraction_ML_UEnv.uenv ->
@@ -90,27 +87,26 @@ let err_ill_typed_erasure :
       fun ty ->
         let uu___ =
           let uu___1 =
-            let uu___2 =
-              let uu___3 =
-                FStar_Extraction_ML_UEnv.current_module_of_uenv env in
-              FStar_Extraction_ML_Code.string_of_mlty uu___3 ty in
-            FStar_Compiler_Util.format1
-              "Erased value found where a value of type %s was expected"
-              uu___2 in
-          (FStar_Errors_Codes.Fatal_IllTyped, uu___1) in
-        fail pos uu___
+            let uu___2 = FStar_Extraction_ML_UEnv.current_module_of_uenv env in
+            FStar_Extraction_ML_Code.string_of_mlty uu___2 ty in
+          FStar_Compiler_Util.format1
+            "Erased value found where a value of type %s was expected" uu___1 in
+        FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range pos
+          FStar_Errors_Codes.Fatal_IllTyped ()
+          (Obj.magic FStar_Errors_Msg.is_error_message_string)
+          (Obj.magic uu___)
 let err_value_restriction : 'uuuuu . FStar_Syntax_Syntax.term -> 'uuuuu =
   fun t ->
     let uu___ =
       let uu___1 =
-        let uu___2 =
-          FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term t in
-        let uu___3 = FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
-        FStar_Compiler_Util.format2
-          "Refusing to generalize because of the value restriction: (%s) %s"
-          uu___2 uu___3 in
-      (FStar_Errors_Codes.Fatal_ValueRestriction, uu___1) in
-    fail t.FStar_Syntax_Syntax.pos uu___
+        FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term t in
+      let uu___2 = FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
+      FStar_Compiler_Util.format2
+        "Refusing to generalize because of the value restriction: (%s) %s"
+        uu___1 uu___2 in
+    FStar_Errors.raise_error (FStar_Syntax_Syntax.has_range_syntax ()) t
+      FStar_Errors_Codes.Fatal_ValueRestriction ()
+      (Obj.magic FStar_Errors_Msg.is_error_message_string) (Obj.magic uu___)
 let (err_unexpected_eff :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.term ->
@@ -126,46 +122,45 @@ let (err_unexpected_eff :
             let uu___ =
               let uu___1 =
                 let uu___2 =
-                  let uu___3 =
-                    let uu___4 = FStar_Errors_Msg.text "For expression" in
-                    let uu___5 =
-                      FStar_Class_PP.pp FStar_Syntax_Print.pretty_term t in
-                    FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
-                      uu___4 uu___5 in
+                  let uu___3 = FStar_Errors_Msg.text "For expression" in
                   let uu___4 =
-                    let uu___5 = FStar_Errors_Msg.text "of type" in
+                    FStar_Class_PP.pp FStar_Syntax_Print.pretty_term t in
+                  FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___3
+                    uu___4 in
+                let uu___3 =
+                  let uu___4 = FStar_Errors_Msg.text "of type" in
+                  let uu___5 =
                     let uu___6 =
                       let uu___7 =
-                        let uu___8 =
-                          FStar_Extraction_ML_UEnv.current_module_of_uenv env in
-                        FStar_Extraction_ML_Code.string_of_mlty uu___8 ty in
+                        FStar_Extraction_ML_UEnv.current_module_of_uenv env in
+                      FStar_Extraction_ML_Code.string_of_mlty uu___7 ty in
+                    FStar_Pprint.arbitrary_string uu___6 in
+                  FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___4
+                    uu___5 in
+                FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 =
+                    let uu___5 = FStar_Errors_Msg.text "Expected effect" in
+                    let uu___6 =
+                      let uu___7 = FStar_Extraction_ML_Util.eff_to_string f0 in
                       FStar_Pprint.arbitrary_string uu___7 in
                     FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
                       uu___5 uu___6 in
-                  FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
-                let uu___3 =
-                  let uu___4 =
-                    let uu___5 =
-                      let uu___6 = FStar_Errors_Msg.text "Expected effect" in
-                      let uu___7 =
-                        let uu___8 =
-                          FStar_Extraction_ML_Util.eff_to_string f0 in
-                        FStar_Pprint.arbitrary_string uu___8 in
-                      FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
-                        uu___6 uu___7 in
-                    let uu___6 =
-                      let uu___7 = FStar_Errors_Msg.text "got effect" in
-                      let uu___8 =
-                        let uu___9 =
-                          FStar_Extraction_ML_Util.eff_to_string f1 in
-                        FStar_Pprint.arbitrary_string uu___9 in
-                      FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
-                        uu___7 uu___8 in
-                    FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
-                  [uu___4] in
-                uu___2 :: uu___3 in
-              (FStar_Errors_Codes.Warning_ExtractionUnexpectedEffect, uu___1) in
-            FStar_Errors.log_issue_doc t.FStar_Syntax_Syntax.pos uu___
+                  let uu___5 =
+                    let uu___6 = FStar_Errors_Msg.text "got effect" in
+                    let uu___7 =
+                      let uu___8 = FStar_Extraction_ML_Util.eff_to_string f1 in
+                      FStar_Pprint.arbitrary_string uu___8 in
+                    FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                      uu___6 uu___7 in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                [uu___3] in
+              uu___1 :: uu___2 in
+            FStar_Errors.log_issue (FStar_Syntax_Syntax.has_range_syntax ())
+              t FStar_Errors_Codes.Warning_ExtractionUnexpectedEffect ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+              (Obj.magic uu___)
 let err_cannot_extract_effect :
   'uuuuu .
     FStar_Ident.lident ->
@@ -179,15 +174,16 @@ let err_cannot_extract_effect :
           let uu___ =
             let uu___1 =
               let uu___2 =
-                let uu___3 =
-                  let uu___4 = FStar_Ident.string_of_lid l in
-                  FStar_Compiler_Util.format3
-                    "Cannot extract effect %s because %s (when extracting %s)"
-                    uu___4 reason ctxt in
-                FStar_Errors_Msg.text uu___3 in
-              [uu___2] in
-            (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___1) in
-          FStar_Errors.raise_error_doc uu___ r
+                let uu___3 = FStar_Ident.string_of_lid l in
+                FStar_Compiler_Util.format3
+                  "Cannot extract effect %s because %s (when extracting %s)"
+                  uu___3 reason ctxt in
+              FStar_Errors_Msg.text uu___2 in
+            [uu___1] in
+          FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range r
+            FStar_Errors_Codes.Fatal_UnexpectedEffect ()
+            (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+            (Obj.magic uu___)
 let (effect_as_etag :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Ident.lident -> FStar_Extraction_ML_Syntax.e_tag)
@@ -897,18 +893,19 @@ let (apply_coercion :
                let uu___2 =
                  let uu___3 =
                    let uu___4 =
-                     let uu___5 =
-                       FStar_Extraction_ML_UEnv.current_module_of_uenv g in
-                     FStar_Extraction_ML_Code.string_of_mlty uu___5 ty in
+                     FStar_Extraction_ML_UEnv.current_module_of_uenv g in
+                   FStar_Extraction_ML_Code.string_of_mlty uu___4 ty in
+                 let uu___4 =
                    let uu___5 =
-                     let uu___6 =
-                       FStar_Extraction_ML_UEnv.current_module_of_uenv g in
-                     FStar_Extraction_ML_Code.string_of_mlty uu___6 expect in
-                   FStar_Compiler_Util.format2
-                     "Inserted an unsafe type coercion in generated code from %s to %s; this may be unsound in F#"
-                     uu___4 uu___5 in
-                 (FStar_Errors_Codes.Warning_NoMagicInFSharp, uu___3) in
-               FStar_Errors.log_issue_text pos uu___2
+                     FStar_Extraction_ML_UEnv.current_module_of_uenv g in
+                   FStar_Extraction_ML_Code.string_of_mlty uu___5 expect in
+                 FStar_Compiler_Util.format2
+                   "Inserted an unsafe type coercion in generated code from %s to %s; this may be unsound in F#"
+                   uu___3 uu___4 in
+               FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range pos
+                 FStar_Errors_Codes.Warning_NoMagicInFSharp ()
+                 (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                 (Obj.magic uu___2)
              else ());
             (let mk_fun binder body =
                match body.FStar_Extraction_ML_Syntax.expr with
@@ -1730,15 +1727,17 @@ let rec (extract_one_pat :
                   | FStar_Pervasives_Native.None ->
                       let uu___3 =
                         let uu___4 =
-                          let uu___5 =
-                            FStar_Class_Show.show
-                              FStar_Syntax_Print.showable_fv f in
-                          FStar_Compiler_Util.format1
-                            "Cannot extract this pattern, the %s constructor was erased"
-                            uu___5 in
-                        (FStar_Errors_Codes.Error_ErasedCtor, uu___4) in
-                      FStar_Errors.raise_error uu___3
-                        (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.p in
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_fv f in
+                        FStar_Compiler_Util.format1
+                          "Cannot extract this pattern, the %s constructor was erased"
+                          uu___4 in
+                      FStar_Errors.raise_error
+                        FStar_Class_HasRange.hasRange_range
+                        (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.p
+                        FStar_Errors_Codes.Error_ErasedCtor ()
+                        (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                        (Obj.magic uu___3) in
                 (match uu___1 with
                  | (d, tys) ->
                      let nTyVars =
@@ -3324,16 +3323,15 @@ and (term_as_mlexpr' :
                  | FStar_Pervasives_Native.None ->
                      let uu___2 =
                        let uu___3 =
-                         let uu___4 =
-                           FStar_Class_Show.show
-                             FStar_Syntax_Print.showable_term top1 in
-                         FStar_Compiler_Util.format1
-                           "Cannot extract %s (reify effect is not set)"
-                           uu___4 in
-                       (FStar_Errors_Codes.Fatal_ExtractionUnsupported,
-                         uu___3) in
-                     FStar_Errors.raise_error uu___2
-                       top1.FStar_Syntax_Syntax.pos)
+                         FStar_Class_Show.show
+                           FStar_Syntax_Print.showable_term top1 in
+                       FStar_Compiler_Util.format1
+                         "Cannot extract %s (reify effect is not set)" uu___3 in
+                     FStar_Errors.raise_error
+                       (FStar_Syntax_Syntax.has_range_syntax ()) top1
+                       FStar_Errors_Codes.Fatal_ExtractionUnsupported ()
+                       (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                       (Obj.magic uu___2))
             | uu___2 ->
                 let rec extract_app is_data uu___3 uu___4 restArgs =
                   match (uu___3, uu___4) with
@@ -3857,14 +3855,21 @@ and (term_as_mlexpr' :
                            FStar_Pervasives_Native.Some bv1
                        | uu___7 ->
                            (FStar_Errors.log_issue
-                              top1.FStar_Syntax_Syntax.pos
-                              (FStar_Errors_Codes.Warning_UnrecognizedAttribute,
-                                "Ignoring ill-formed application of `rename_let`");
+                              (FStar_Syntax_Syntax.has_range_syntax ()) top1
+                              FStar_Errors_Codes.Warning_UnrecognizedAttribute
+                              ()
+                              (Obj.magic
+                                 FStar_Errors_Msg.is_error_message_string)
+                              (Obj.magic
+                                 "Ignoring ill-formed application of `rename_let`");
                             FStar_Pervasives_Native.None))
                   | FStar_Pervasives_Native.Some uu___5 ->
-                      (FStar_Errors.log_issue top1.FStar_Syntax_Syntax.pos
-                         (FStar_Errors_Codes.Warning_UnrecognizedAttribute,
-                           "Ignoring ill-formed application of `rename_let`");
+                      (FStar_Errors.log_issue
+                         (FStar_Syntax_Syntax.has_range_syntax ()) top1
+                         FStar_Errors_Codes.Warning_UnrecognizedAttribute ()
+                         (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                         (Obj.magic
+                            "Ignoring ill-formed application of `rename_let`");
                        FStar_Pervasives_Native.None)
                   | FStar_Pervasives_Native.None ->
                       FStar_Pervasives_Native.None in

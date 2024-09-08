@@ -20,13 +20,13 @@ let compress1_t (allow_uvars: bool) (allow_names: bool) : term -> term =
     let mk x = Syntax.mk x t.pos in
     match t.n with
     | Tm_uvar (uv, s) when not allow_uvars ->
-      Err.raise_err (Err.Error_UnexpectedUnresolvedUvar,
-                     format1 "Internal error: unexpected unresolved uvar in deep_compress: %s" (show uv))
+      Err.raise_error0 Err.Error_UnexpectedUnresolvedUvar
+        (format1 "Internal error: unexpected unresolved uvar in deep_compress: %s" (show uv))
 
     | Tm_name bv when not allow_names ->
       (* This currently happens, and often, but it should not! *)
       if Debug.any () then
-        Errors.log_issue t.pos (Err.Warning_NameEscape, format1 "Tm_name %s in deep compress" (show bv));
+        Errors.log_issue t Err.Warning_NameEscape (format1 "Tm_name %s in deep compress" (show bv));
       mk (Tm_name ({bv with sort = mk Tm_unknown}))
 
     (* The sorts are not needed. Delete them. *)
@@ -40,12 +40,12 @@ let compress1_u (allow_uvars:bool) (allow_names:bool) : universe -> universe =
     match u with
     | U_name bv when not allow_names ->
       if Debug.any () then
-        Errors.log_issue Range.dummyRange (Err.Warning_NameEscape, format1 "U_name %s in deep compress" (show bv));
+        Errors.log_issue0 Err.Warning_NameEscape (format1 "U_name %s in deep compress" (show bv));
       u
 
     | U_unif uv when not allow_uvars ->
-      Err.raise_err (Err.Error_UnexpectedUnresolvedUvar,
-                     format1 "Internal error: unexpected unresolved (universe) uvar in deep_compress: %s" (show (Unionfind.univ_uvar_id uv)))
+      Err.raise_error0 Err.Error_UnexpectedUnresolvedUvar
+        (format1 "Internal error: unexpected unresolved (universe) uvar in deep_compress: %s" (show (Unionfind.univ_uvar_id uv)))
     | _ -> u
 
 (* deep_compress_*: eliminating all unification variables and delayed
@@ -88,7 +88,7 @@ let deep_compress_if_no_uvars (tm : term) : option term =
               (compress1_u false true)
               tm)
     with
-    | FStar.Errors.Err (Err.Error_UnexpectedUnresolvedUvar, _, _) -> None
+    | Errors.Error (Err.Error_UnexpectedUnresolvedUvar, _, _, _) -> None
   )
 
 let deep_compress_se (allow_uvars:bool) (allow_names:bool) (se : sigelt) : sigelt =

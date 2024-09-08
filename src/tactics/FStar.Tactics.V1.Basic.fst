@@ -274,9 +274,8 @@ let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:
       match ps.guard_policy with
       | Drop ->
         // should somehow taint the state instead of just printing a warning
-        Err.log_issue e.range
-            (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted guard <%s>\n\n"
-                        (Rel.guard_to_string e g));
+        Err.log_issue e Errors.Warning_TacAdmit
+          (BU.format1 "Tactics admitted guard <%s>\n\n" (Rel.guard_to_string e g));
         ret ()
 
       | Goal ->
@@ -417,11 +416,7 @@ let __do_unify_wflags
             add_implicits g.implicits;!
             ret (Some g)
 
-        with | Errors.Err (_, msg, _) -> begin
-                          mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" (Errors.rendermsg msg) ) (fun _ ->
-                          ret None)
-               end
-             | Errors.Error (_, msg, r, _) -> begin
+        with | Errors.Error (_, msg, r, _) -> begin
                             mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
                             (Errors.rendermsg msg) (show r)) (fun _ ->
                             ret None)
@@ -587,9 +582,8 @@ let tadmit_t (t:term) : tac unit = wrap_err "tadmit_t" <|
     bind get (fun ps ->
     bind cur_goal (fun g ->
     // should somehow taint the state instead of just printing a warning
-    Err.log_issue (goal_type g).pos
-        (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted goal <%s>\n\n"
-                    (goal_to_string "" None ps g));
+    Err.log_issue (goal_type g) Errors.Warning_TacAdmit
+      (BU.format1 "Tactics admitted goal <%s>\n\n" (goal_to_string "" None ps g));
     solve' g t))
 
 let fresh () : tac Z.t =
@@ -608,8 +602,7 @@ let __tc (e : env) (t : term) : tac (term & typ & guard_t) =
     mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (show t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
     try ret (TcTerm.typeof_tot_or_gtot_term e t true)
-    with | Errors.Err (_, msg, _)
-         | Errors.Error (_, msg, _, _) -> begin
+    with | Errors.Error (_, msg, _, _) -> begin
            fail3 "Cannot type (1) %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> show)
                                                   (Errors.rendermsg msg) // FIXME
@@ -622,8 +615,7 @@ let __tc_ghost (e : env) (t : term) : tac (term & typ & guard_t) =
     let e = {e with letrecs=[]} in
     try let t, lc, g = TcTerm.tc_tot_or_gtot_term e t in
         ret (t, lc.res_typ, g)
-    with | Errors.Err (_, msg ,_)
-         | Errors.Error (_, msg, _ ,_) -> begin
+    with | Errors.Error (_, msg, _ ,_) -> begin
            fail3 "Cannot type (2) %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> show)
                                                   (Errors.rendermsg msg) // FIXME
@@ -638,8 +630,7 @@ let __tc_lax (e : env) (t : term) : tac (term & lcomp & guard_t) =
     let e = {e with admit = true} in
     let e = {e with letrecs=[]} in
     try ret (TcTerm.tc_term e t)
-    with | Errors.Err (_, msg, _)
-         | Errors.Error (_, msg, _, _) -> begin
+    with | Errors.Error (_, msg, _, _) -> begin
            fail3 "Cannot type (3) %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> show)
                                                   (Errors.rendermsg msg) // FIXME
@@ -2064,8 +2055,9 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         ret <| Tv_Unknown
 
     | _ ->
-        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (tag_of t) (show t));
-        ret <| Tv_Unsupp
+      Err.log_issue t Err.Warning_CantInspect
+        (BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (tag_of t) (show t));
+      ret <| Tv_Unsupp
     )
 
 (* This function could actually be pure, it doesn't need freshness

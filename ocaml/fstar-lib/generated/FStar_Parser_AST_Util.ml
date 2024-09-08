@@ -1205,16 +1205,18 @@ let (parse_extension_lang :
         match extension_parser1 with
         | FStar_Pervasives_Native.None ->
             let uu___ =
-              let uu___1 =
-                FStar_Compiler_Util.format1 "Unknown language extension %s"
-                  lang_name in
-              (FStar_Errors_Codes.Fatal_SyntaxError, uu___1) in
-            FStar_Errors.raise_error uu___ raw_text_pos
+              FStar_Compiler_Util.format1 "Unknown language extension %s"
+                lang_name in
+            FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range
+              raw_text_pos FStar_Errors_Codes.Fatal_SyntaxError ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___)
         | FStar_Pervasives_Native.Some parser ->
             let uu___ = parser.parse_decls raw_text raw_text_pos in
             (match uu___ with
              | FStar_Pervasives.Inl error ->
-                 FStar_Errors.raise_error
-                   (FStar_Errors_Codes.Fatal_SyntaxError, (error.message))
-                   error.range
+                 FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range
+                   error.range FStar_Errors_Codes.Fatal_SyntaxError ()
+                   (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                   (Obj.magic error.message)
              | FStar_Pervasives.Inr ds -> ds)

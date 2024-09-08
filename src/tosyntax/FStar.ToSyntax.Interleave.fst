@@ -65,16 +65,12 @@ let definition_lids d =
       let ext_parser = FStar.Parser.AST.Util.lookup_extension_parser extension_name in
       match ext_parser with
       | None ->
-        raise_error
-          (Errors.Fatal_SyntaxError,
-           BU.format1 "Unknown syntax extension %s" extension_name)
-          d.drange
+        raise_error d Errors.Fatal_SyntaxError
+           (BU.format1 "Unknown syntax extension %s" extension_name)
        | Some parser ->
          match parser.parse_decl_name code range with
          | Inl error ->
-           raise_error
-             (Errors.Fatal_SyntaxError, error.message)
-             error.range
+           raise_error error.range Errors.Fatal_SyntaxError error.message
          | Inr id ->
            [Ident.lid_of_ids [id]]
       end
@@ -171,9 +167,9 @@ let rec prefix_with_iface_decls
    | iface_hd::iface_tl -> begin
      match iface_hd.d with
      | Tycon(_, _, tys) when (tys |> Util.for_some (function (TyconAbstract _)  -> true | _ -> false)) ->
-        raise_error_doc (Errors.Fatal_AbstractTypeDeclarationInInterface, [
-            text "Interface contains an abstract 'type' declaration; use 'val' instead."
-          ]) impl.drange
+        raise_error impl Errors.Fatal_AbstractTypeDeclarationInInterface [
+          text "Interface contains an abstract 'type' declaration; use 'val' instead."
+        ]
 
      | Splice (_, [x], _)
      | Val(x, _) ->
@@ -189,10 +185,10 @@ let rec prefix_with_iface_decls
          if def_ids |> Util.for_some (fun y ->
                iface_tl |> Util.for_some (is_val (ident_of_lid y)))
          then
-           raise_error_doc (Errors.Fatal_WrongDefinitionOrder, [
+           raise_error impl Errors.Fatal_WrongDefinitionOrder [
                text "Expected the definition of" ^/^ pp x ^/^ text "to precede"
                ^/^ (pp def_ids)
-             ]) impl.drange;
+             ];
          iface, [qualify_karamel_private impl]
        ) else (
          let mutually_defined_with_x = def_ids |> List.filter (fun y -> not (id_eq_lid x y)) in
@@ -205,11 +201,11 @@ let rec prefix_with_iface_decls
              iface_hd::val_ys, iface
 
            | y::ys, iface_hd::iface_tl when Option.isSome <| List.tryFind (is_val (ident_of_lid y)) iface_tl ->
-             raise_error_doc (Errors.Fatal_WrongDefinitionOrder, [
+             raise_error iface_hd Errors.Fatal_WrongDefinitionOrder [
                  text (Util.format2 "%s is out of order with the definition of %s"
                                          (show iface_hd)
                                          (Ident.string_of_lid y))
-               ]) iface_hd.drange
+               ]
            | y::ys, iface_hd::iface_tl ->
              aux ys iface //no val given for 'y'; ok
          in
@@ -233,13 +229,16 @@ let check_initial_interface (iface:list decl) =
         | hd::tl -> begin
             match hd.d with
             | Tycon(_, _, tys) when (tys |> Util.for_some (function (TyconAbstract _)  -> true | _ -> false)) ->
-              raise_error (Errors.Fatal_AbstractTypeDeclarationInInterface, "Interface contains an abstract 'type' declaration; use 'val' instead") hd.drange
+              raise_error hd Errors.Fatal_AbstractTypeDeclarationInInterface
+                "Interface contains an abstract 'type' declaration; use 'val' instead"
 
             | Val(x, t) ->  //we have a 'val x' in the interface
               if Util.for_some (is_definition_of x) tl
-              then raise_error (Errors.Fatal_BothValAndLetInInterface, (Util.format2 "'val %s' and 'let %s' cannot both be provided in an interface" (string_of_id x) (string_of_id x))) hd.drange
+              then raise_error hd Errors.Fatal_BothValAndLetInInterface 
+                     (Util.format2 "'val %s' and 'let %s' cannot both be provided in an interface" (string_of_id x) (string_of_id x))
               else if hd.quals |> List.contains Assumption
-              then raise_error (Errors.Fatal_AssumeValInInterface, "Interfaces cannot use `assume val x : t`; just write `val x : t` instead") hd.drange
+              then raise_error hd Errors.Fatal_AssumeValInInterface
+                     "Interfaces cannot use `assume val x : t`; just write `val x : t` instead"
               else ()
 
             | _ -> ()
@@ -308,9 +307,8 @@ let ml_mode_check_initial_interface mname (iface:list decl) =
     match d.d with
     | Tycon(_, _, tys)
       when (tys |> Util.for_some (function (TyconAbstract _)  -> true | _ -> false)) ->
-      raise_error (Errors.Fatal_AbstractTypeDeclarationInInterface,
-                   "Interface contains an abstract 'type' declaration; \
-                    use 'val' instead") d.drange
+      raise_error d Errors.Fatal_AbstractTypeDeclarationInInterface
+        "Interface contains an abstract 'type' declaration; use 'val' instead"
     | Tycon _
     | Val _
     | Open _
@@ -376,10 +374,8 @@ let initialize_interface (mname:Ident.lid) (l:list decl) : E.withenv unit =
         else check_initial_interface l in
     match E.iface_decls env mname with
     | Some _ ->
-      raise_error (Errors.Fatal_InterfaceAlreadyProcessed,
-                   Util.format1 "Interface %s has already been processed"
-                                (Ident.string_of_lid mname))
-                  (Ident.range_of_lid mname)
+      raise_error mname Errors.Fatal_InterfaceAlreadyProcessed
+        (Util.format1 "Interface %s has already been processed" (show mname))
     | None ->
       (), E.set_iface_decls env mname decls
 
@@ -442,10 +438,11 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
         let a = Module(l, impls) in
         match remaining_iface_vals with
         | _::_ when expect_complete_modul ->
-          FStar.Pprint.(log_issue_doc (Ident.range_of_lid l)
-            (Errors.Fatal_InterfaceNotImplementedByModule,
-              [text (Util.format1 "Some interface elements were not implemented by module %s:" (Ident.string_of_lid l))
-                ^^ sublist empty (List.map (fun d -> doc_of_string (show d)) remaining_iface_vals)]) );
+          let open FStar.Pprint in
+          log_issue l Errors.Fatal_InterfaceNotImplementedByModule [
+            text (Util.format1 "Some interface elements were not implemented by module %s:" (show l))
+                ^^ sublist empty (List.map (fun d -> doc_of_string (show d)) remaining_iface_vals)
+          ];
           a, env
         | _ ->
           if Options.dump_module (string_of_lid l)

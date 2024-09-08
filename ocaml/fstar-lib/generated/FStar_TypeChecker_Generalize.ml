@@ -104,14 +104,15 @@ let (check_universe_generalization :
         | uu___ ->
             let uu___1 =
               let uu___2 =
-                let uu___3 =
-                  FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
-                Prims.strcat
-                  "Generalized universe in a term containing explicit universe annotation : "
-                  uu___3 in
-              (FStar_Errors_Codes.Fatal_UnexpectedGeneralizedUniverse,
-                uu___2) in
-            FStar_Errors.raise_error uu___1 t.FStar_Syntax_Syntax.pos
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
+              Prims.strcat
+                "Generalized universe in a term containing explicit universe annotation : "
+                uu___2 in
+            FStar_Errors.raise_error
+              (FStar_Syntax_Syntax.has_range_syntax ()) t
+              FStar_Errors_Codes.Fatal_UnexpectedGeneralizedUniverse ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___1)
 let (generalize_universes :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.tscheme)
@@ -333,11 +334,13 @@ let (gen :
                                FStar_Compiler_Util.format2
                                  "Generalizing the types of these mutually recursive definitions requires an incompatible set of universes for %s and %s"
                                  uu___11 uu___12 in
-                             let uu___11 =
-                               FStar_TypeChecker_Env.get_range env in
                              FStar_Errors.raise_error
-                               (FStar_Errors_Codes.Fatal_IncompatibleSetOfUniverse,
-                                 msg) uu___11)) in
+                               FStar_TypeChecker_Env.hasRange_env env
+                               FStar_Errors_Codes.Fatal_IncompatibleSetOfUniverse
+                               ()
+                               (Obj.magic
+                                  FStar_Errors_Msg.is_error_message_string)
+                               (Obj.magic msg))) in
                let force_uvars_eq lec2 u1 u2 =
                  let uvars_subseteq u11 u21 =
                    FStar_Compiler_Util.for_all
@@ -372,11 +375,13 @@ let (gen :
                                FStar_Compiler_Util.format2
                                  "Generalizing the types of these mutually recursive definitions requires an incompatible number of types for %s and %s"
                                  uu___11 uu___12 in
-                             let uu___11 =
-                               FStar_TypeChecker_Env.get_range env in
                              FStar_Errors.raise_error
-                               (FStar_Errors_Codes.Fatal_IncompatibleNumberOfTypes,
-                                 msg) uu___11)) in
+                               FStar_TypeChecker_Env.hasRange_env env
+                               FStar_Errors_Codes.Fatal_IncompatibleNumberOfTypes
+                               ()
+                               (Obj.magic
+                                  FStar_Errors_Msg.is_error_message_string)
+                               (Obj.magic msg))) in
                let lecs1 =
                  let uu___3 = FStar_Compiler_List.tl lecs in
                  FStar_Compiler_List.fold_right

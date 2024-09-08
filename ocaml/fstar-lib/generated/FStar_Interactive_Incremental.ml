@@ -366,7 +366,7 @@ let (parse_code :
         FStar_Parser_ParseIt.Incremental uu___1 in
       FStar_Parser_ParseIt.parse lang uu___
 let (syntax_issue :
-  (FStar_Errors_Codes.raw_error * FStar_Errors_Msg.error_message *
+  (FStar_Errors_Codes.error_code * FStar_Errors_Msg.error_message *
     FStar_Compiler_Range_Type.range) -> FStar_Errors.issue)
   =
   fun uu___ ->

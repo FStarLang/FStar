@@ -3771,14 +3771,14 @@ let (translate_type_decl' :
           ((let uu___6 =
               let uu___7 =
                 let uu___8 =
-                  let uu___9 =
-                    FStar_Compiler_Util.format1
-                      "Error extracting type definition %s to KaRaMeL." name1 in
-                  FStar_Errors_Msg.text uu___9 in
-                [uu___8] in
-              (FStar_Errors_Codes.Warning_DefinitionNotTranslated, uu___7) in
-            FStar_Errors.log_issue_doc FStar_Compiler_Range_Type.dummyRange
-              uu___6);
+                  FStar_Compiler_Util.format1
+                    "Error extracting type definition %s to KaRaMeL." name1 in
+                FStar_Errors_Msg.text uu___8 in
+              [uu___7] in
+            FStar_Errors.log_issue0
+              FStar_Errors_Codes.Warning_DefinitionNotTranslated ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+              (Obj.magic uu___6));
            FStar_Pervasives_Native.None)
 let (translate_let' :
   env ->
@@ -3911,22 +3911,23 @@ let (translate_let' :
                              let uu___11 =
                                let uu___12 =
                                  let uu___13 =
-                                   let uu___14 =
-                                     FStar_Extraction_ML_Syntax.string_of_mlpath
-                                       name2 in
-                                   FStar_Compiler_Util.format1
-                                     "Error while extracting %s to KaRaMeL."
-                                     uu___14 in
-                                 FStar_Errors_Msg.text uu___13 in
+                                   FStar_Extraction_ML_Syntax.string_of_mlpath
+                                     name2 in
+                                 FStar_Compiler_Util.format1
+                                   "Error while extracting %s to KaRaMeL."
+                                   uu___13 in
+                               FStar_Errors_Msg.text uu___12 in
+                             let uu___12 =
                                let uu___13 =
-                                 let uu___14 =
-                                   FStar_Pprint.arbitrary_string msg in
-                                 [uu___14] in
-                               uu___12 :: uu___13 in
-                             (FStar_Errors_Codes.Warning_FunctionNotExtacted,
-                               uu___11) in
-                           FStar_Errors.log_issue_doc
-                             FStar_Compiler_Range_Type.dummyRange uu___10);
+                                 FStar_Pprint.arbitrary_string msg in
+                               [uu___13] in
+                             uu___11 :: uu___12 in
+                           FStar_Errors.log_issue0
+                             FStar_Errors_Codes.Warning_FunctionNotExtacted
+                             ()
+                             (Obj.magic
+                                FStar_Errors_Msg.is_error_message_list_doc)
+                             (Obj.magic uu___10));
                           (let msg1 =
                              Prims.strcat
                                "This function was not extracted:\n" msg in
@@ -3971,23 +3972,21 @@ let (translate_let' :
                        let uu___7 =
                          let uu___8 =
                            let uu___9 =
-                             let uu___10 =
-                               FStar_Extraction_ML_Syntax.string_of_mlpath
-                                 name2 in
-                             FStar_Compiler_Util.format1
-                               "Error extracting %s to KaRaMeL." uu___10 in
-                           FStar_Errors_Msg.text uu___9 in
+                             FStar_Extraction_ML_Syntax.string_of_mlpath
+                               name2 in
+                           FStar_Compiler_Util.format1
+                             "Error extracting %s to KaRaMeL." uu___9 in
+                         FStar_Errors_Msg.text uu___8 in
+                       let uu___8 =
                          let uu___9 =
-                           let uu___10 =
-                             let uu___11 =
-                               FStar_Compiler_Util.print_exn uu___4 in
-                             FStar_Pprint.arbitrary_string uu___11 in
-                           [uu___10] in
-                         uu___8 :: uu___9 in
-                       (FStar_Errors_Codes.Warning_DefinitionNotTranslated,
-                         uu___7) in
-                     FStar_Errors.log_issue_doc
-                       FStar_Compiler_Range_Type.dummyRange uu___6);
+                           let uu___10 = FStar_Compiler_Util.print_exn uu___4 in
+                           FStar_Pprint.arbitrary_string uu___10 in
+                         [uu___9] in
+                       uu___7 :: uu___8 in
+                     FStar_Errors.log_issue0
+                       FStar_Errors_Codes.Warning_DefinitionNotTranslated ()
+                       (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                       (Obj.magic uu___6));
                     FStar_Pervasives_Native.Some
                       (DGlobal
                          (meta1, name2, (FStar_Compiler_List.length tvars),
@@ -4000,12 +3999,12 @@ let (translate_let' :
             FStar_Extraction_ML_Syntax.mllb_meta = uu___3;
             FStar_Extraction_ML_Syntax.print_typ = uu___4;_} ->
             ((let uu___6 =
-                let uu___7 =
-                  FStar_Compiler_Util.format1
-                    "Not extracting %s to KaRaMeL\n" name1 in
-                (FStar_Errors_Codes.Warning_DefinitionNotTranslated, uu___7) in
-              FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
-                uu___6);
+                FStar_Compiler_Util.format1 "Not extracting %s to KaRaMeL\n"
+                  name1 in
+              FStar_Errors.log_issue0
+                FStar_Errors_Codes.Warning_DefinitionNotTranslated ()
+                (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                (Obj.magic uu___6));
              (match ts with
               | FStar_Pervasives_Native.Some (tps, t) ->
                   let uu___7 =

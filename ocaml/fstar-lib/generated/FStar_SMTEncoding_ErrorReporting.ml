@@ -797,30 +797,32 @@ let (detail_errors :
                   then
                     (let uu___3 =
                        let uu___4 =
-                         let uu___5 =
-                           FStar_Errors_Msg.text
-                             "Hint failed to replay this sub-proof" in
-                         uu___5 :: msg1 in
-                       (FStar_Errors_Codes.Warning_HintFailedToReplayProof,
-                         uu___4) in
-                     FStar_Errors.log_issue_doc r uu___3)
+                         FStar_Errors_Msg.text
+                           "Hint failed to replay this sub-proof" in
+                       uu___4 :: msg1 in
+                     FStar_Errors.log_issue
+                       FStar_Class_HasRange.hasRange_range r
+                       FStar_Errors_Codes.Warning_HintFailedToReplayProof ()
+                       (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                       (Obj.magic uu___3))
                   else
                     (let uu___4 =
                        let uu___5 =
                          let uu___6 =
                            let uu___7 =
                              let uu___8 =
-                               let uu___9 =
-                                 FStar_Class_Show.show
-                                   FStar_Compiler_Range_Ops.showable_range r in
-                               FStar_Compiler_Util.format1
-                                 "XX: proof obligation at %s failed." uu___9 in
-                             FStar_Errors_Msg.text uu___8 in
-                           [uu___7] in
-                         FStar_Compiler_List.op_At uu___6 msg1 in
-                       (FStar_Errors_Codes.Error_ProofObligationFailed,
-                         uu___5) in
-                     FStar_Errors.log_issue_doc r uu___4) in
+                               FStar_Class_Show.show
+                                 FStar_Compiler_Range_Ops.showable_range r in
+                             FStar_Compiler_Util.format1
+                               "XX: proof obligation at %s failed." uu___8 in
+                           FStar_Errors_Msg.text uu___7 in
+                         [uu___6] in
+                       FStar_Compiler_List.op_At uu___5 msg1 in
+                     FStar_Errors.log_issue
+                       FStar_Class_HasRange.hasRange_range r
+                       FStar_Errors_Codes.Error_ProofObligationFailed ()
+                       (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                       (Obj.magic uu___4)) in
           let elim labs =
             FStar_Compiler_List.map
               (fun uu___ ->

@@ -122,17 +122,15 @@ let gen_wps_for_free
         // TODO: dubious, assert no nested arrows
         let rest = match comp.n with
           | Total t -> t
-          | _ -> raise_error (Error_UnexpectedDM4FType,
-                               BU.format1 "wp_a contains non-Tot arrow: %s" (show comp))
-                    comp.pos
+          | _ -> raise_error comp Error_UnexpectedDM4FType
+                               (BU.format1 "wp_a contains non-Tot arrow: %s" (show comp))
         in
         bs @ (collect_binders rest)
     | Tm_type _ ->
         []
     | _ ->
-        raise_error (Error_UnexpectedDM4FType,
-                     BU.format1 "wp_a doesn't end in Type0, but rather in %s" (show t))
-                    t.pos
+        raise_error t Error_UnexpectedDM4FType
+                     (BU.format1 "wp_a doesn't end in Type0, but rather in %s" (show t))
   in
   let mk_lid name : lident = U.dm4f_lid ed name in
 
@@ -528,8 +526,8 @@ let nm_of_comp c = match c.n with
                 //lid_equals c.effect_name PC.monadic_lid ->
       M c.result_typ
   | _ ->
-      raise_error (Error_UnexpectedDM4FType,
-                     BU.format1 "[nm_of_comp]: unexpected computation type %s" (show c)) c.pos
+      raise_error c Error_UnexpectedDM4FType
+                   (BU.format1 "[nm_of_comp]: unexpected computation type %s" (show c))
 
 let string_of_nm = function
   | N t -> BU.format1 "N[%s]" (show t)
@@ -598,7 +596,7 @@ and star_type' env t =
       // Sums and products. TODO: re-use the cache in [env] to not recompute
       // (st a)* every time.
       let debug (t : term) (s : FlatSet.t bv) =
-        Errors.log_issue t.pos (Errors.Warning_DependencyFound, (BU.format2 "Dependency found in term %s : %s" (show t) (show s)))
+        Errors.log_issue t Errors.Warning_DependencyFound (BU.format2 "Dependency found in term %s : %s" (show t) (show s))
       in
       let rec is_non_dependent_arrow ty n =
         match (SS.compress ty).n with
@@ -624,7 +622,7 @@ and star_type' env t =
                     with Not_found -> false
             end
         | _ ->
-            Errors.log_issue ty.pos (Errors.Warning_NotDependentArrow, (BU.format1 "Not a dependent arrow : %s" (show ty))) ;
+            Errors.log_issue ty Errors.Warning_NotDependentArrow (BU.format1 "Not a dependent arrow : %s" (show ty));
             false
       in
       let rec is_valid_application head =
@@ -646,7 +644,7 @@ and star_type' env t =
                 begin match (SS.compress res).n with
                   | Tm_app _ -> true
                   | _ ->
-                    Errors.log_issue head.pos (Errors.Warning_NondependentUserDefinedDataType, (BU.format1 "Got a term which might be a non-dependent user-defined data-type %s\n" (show head))) ;
+                    Errors.log_issue head Errors.Warning_NondependentUserDefinedDataType (BU.format1 "Got a term which might be a non-dependent user-defined data-type %s\n" (show head));
                     false
                 end
              else false
@@ -661,9 +659,9 @@ and star_type' env t =
       if is_valid_application head then
         mk (Tm_app {hd=head; args=List.map (fun (t, qual) -> star_type' env t, qual) args})
       else
-        raise_err (Errors.Fatal_WrongTerm, (BU.format1 "For now, only [either], [option] and [eq2] are \
-          supported in the definition language (got: %s)"
-            (show t)))
+        raise_error0 Errors.Fatal_WrongTerm
+          (BU.format1 "For now, only [either], [option] and [eq2] are supported in the definition language (got: %s)"
+            (show t))
 
   | Tm_bvar _
   | Tm_name _
@@ -699,38 +697,23 @@ and star_type' env t =
       mk (Tm_ascribed {tm=star_type' env e;
                        asc=(Inl (star_type' env (U.comp_result c)), None, use_eq);
                        eff_opt=something})  //AR: this should effectively be the same, the effect checking for c should have done someplace else?
-      (*raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_ascribed is outside of the definition language: %s"
+      (*raise_error0 (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_ascribed is outside of the definition language: %s"
               (show t)))*)
 
  | Tm_ascribed {asc=(_, Some _, _)} ->
-      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Ascriptions with tactics are outside of the definition language: %s"
-        (show t)))
-
-  | Tm_refine _ ->
-      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_refine is outside of the definition language: %s"
-        (show t)))
-
-  | Tm_uinst _ ->
-      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_uinst is outside of the definition language: %s"
-        (show t)))
-  | Tm_quoted _ ->
-      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_quoted is outside of the definition language: %s"
-        (show t)))
-  | Tm_constant _ ->
-      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_constant is outside of the definition language: %s"
-        (show t)))
-  | Tm_match _ ->
-      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_match is outside of the definition language: %s"
-        (show t)))
-  | Tm_let _ ->
-      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_let is outside of the definition language: %s"
-        (show t)))
-  | Tm_uvar _ ->
-      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_uvar is outside of the definition language: %s"
-        (show t)))
+      raise_error0 Errors.Fatal_TermOutsideOfDefLanguage
+        (BU.format1 "Ascriptions with tactics are outside of the definition language: %s" (show t))
+  | Tm_refine _
+  | Tm_uinst _
+  | Tm_quoted _
+  | Tm_constant _
+  | Tm_match _
+  | Tm_let _
+  | Tm_uvar _
   | Tm_unknown ->
-      raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_unknown is outside of the definition language: %s"
-        (show t)))
+    let open FStar.Class.Tagged in
+    raise_error0 Errors.Fatal_TermOutsideOfDefLanguage
+      (BU.format2 "%s is outside of the definition language: %s" (tag_of t) (show t))
 
   | Tm_lazy i -> star_type' env (U.unfold_lazy i)
 
@@ -756,24 +739,21 @@ let rec is_C (t: typ): bool =
       let r = is_C (fst (List.hd args)) in
       if r then begin
         if not (List.for_all (fun (h, _) -> is_C h) args) then
-          raise_error (Error_UnexpectedDM4FType,
-                         BU.format1 "Not a C-type (A * C): %s" (show t))
-                      t.pos;
+          raise_error t Error_UnexpectedDM4FType
+                        (BU.format1 "Not a C-type (A * C): %s" (show t));
         true
       end else begin
         if not (List.for_all (fun (h, _) -> not (is_C h)) args) then
-          raise_error (Error_UnexpectedDM4FType,
-                         BU.format1 "Not a C-type (C * A): %s" (show t))
-                      t.pos;
+          raise_error t Error_UnexpectedDM4FType
+                         (BU.format1 "Not a C-type (C * A): %s" (show t));
         false
       end
   | Tm_arrow {bs=binders; comp} ->
       begin match nm_of_comp comp with
       | M t ->
           if (is_C t) then
-            raise_error (Error_UnexpectedDM4FType,
-                           BU.format1 "Not a C-type (C -> C): %s" (show t))
-                        t.pos;
+            raise_error t Error_UnexpectedDM4FType
+                           (BU.format1 "Not a C-type (C -> C): %s" (show t));
           true
       | N t ->
           // assert (List.exists is_C binders) ==> is_C comp
@@ -814,8 +794,8 @@ let rec check (env: env) (e: term) (context_nm: nm): nm & term & term =
   let return_if (rec_nm, s_e, u_e) =
     let check t1 t2 =
       if not (is_unknown t2.n) && not (Env.is_trivial (Rel.teq env.tcenv t1 t2)) then
-        raise_err (Errors.Fatal_TypeMismatch, (BU.format3 "[check]: the expression [%s] has type [%s] but should have type [%s]"
-          (show e) (show t1) (show t2)))
+        raise_error0 Errors.Fatal_TypeMismatch
+          (BU.format3 "[check]: the expression [%s] has type [%s] but should have type [%s]" (show e) (show t1) (show t2))
     in
     match rec_nm, context_nm with
     | N t1, N t2
@@ -827,11 +807,8 @@ let rec check (env: env) (e: term) (context_nm: nm): nm & term & term =
         // no need to wrap [u_e] in an explicit [return]; F* will infer it later on
         M t1, mk_return env t1 s_e, u_e
     | M t1,  N t2 ->
-        raise_err (Errors.Fatal_EffectfulAndPureComputationMismatch, (BU.format3
-          "[check %s]: got an effectful computation [%s] in lieu of a pure computation [%s]"
-          (show e)
-          (show t1)
-          (show t2)))
+        raise_error0 Errors.Fatal_EffectfulAndPureComputationMismatch
+          (BU.format3 "[check %s]: got an effectful computation [%s] in lieu of a pure computation [%s]" (show e) (show t1) (show t2))
 
   in
 
@@ -841,8 +818,8 @@ let rec check (env: env) (e: term) (context_nm: nm): nm & term & term =
       | _ -> failwith "impossible"
     in
     match context_nm with
-    | N t -> raise_error (Errors.Fatal_LetBoundMonadicMismatch, "let-bound monadic body has a non-monadic continuation \
-        or a branch of a match is monadic and the others aren't : "  ^ show t) e2.pos
+    | N t -> raise_error e2 Errors.Fatal_LetBoundMonadicMismatch
+               ("let-bound monadic body has a non-monadic continuation or a branch of a match is monadic and the others aren't : "  ^ show t)
     | M _ -> strip_m (check env e2 context_nm)
   in
 
@@ -1041,7 +1018,7 @@ and infer (env: env) (e: term): nm & term & term =
 
   | Tm_app {hd={n=Tm_constant Const_range_of}}
   | Tm_app {hd={n=Tm_constant Const_set_range_of}} ->
-    raise_error (Errors.Fatal_IllAppliedConstant, BU.format1 "DMFF: Ill-applied constant %s" (show e)) e.pos
+    raise_error e Errors.Fatal_IllAppliedConstant (BU.format1 "DMFF: Ill-applied constant %s" (show e))
 
   | Tm_app {hd=head; args} ->
       let t_head, s_head, u_head = check_n env head in
@@ -1056,7 +1033,7 @@ and infer (env: env) (e: term): nm & term & term =
         | Tm_ascribed {tm=e} ->
             flatten e
         | _ ->
-            raise_err (Errors.Fatal_NotFunctionType, (BU.format1 "%s: not a function type" (show t_head)))
+            raise_error0 Errors.Fatal_NotFunctionType (BU.format1 "%s: not a function type" (show t_head))
       in
       let binders, comp = flatten t_head in
       // BU.print1 "[debug] type of [head] is %s\n" (show t_head);
@@ -1066,10 +1043,10 @@ and infer (env: env) (e: term): nm & term & term =
       let n = List.length binders in
       let n' = List.length args in
       if List.length binders < List.length args then
-        raise_err (Errors.Fatal_BinderAndArgsLengthMismatch, (BU.format3 "The head of this application, after being applied to %s \
+        raise_error0 Errors.Fatal_BinderAndArgsLengthMismatch (BU.format3 "The head of this application, after being applied to %s \
           arguments, is an effectful computation (leaving %s arguments to be \
           applied). Please let-bind the head applied to the %s first \
-          arguments." (string_of_int n) (string_of_int (n' - n)) (string_of_int n)));
+          arguments." (string_of_int n) (string_of_int (n' - n)) (show n));
       // BU.print2 "[debug] length binders=%s, length args=%s\n"
       //  (string_of_int n) (string_of_int n');
 
@@ -1157,7 +1134,7 @@ and mk_match env e0 branches f =
         let nm, s_body, u_body = f env body in
         nm, (pat, None, (s_body, u_body, body))
     | _ ->
-        raise_err (Errors.Fatal_WhenClauseNotSupported, ("No when clauses in the definition language"))
+        raise_error0 Errors.Fatal_WhenClauseNotSupported "No when clauses in the definition language"
   ) branches) in
   let t1 = match List.hd nms with | M t1 | N t1 -> t1 in
   let has_m = List.existsb (function | M _ -> true | _ -> false) nms in
@@ -1287,7 +1264,7 @@ and type_of_comp t = U.comp_result t
 // This function expects its argument [c] to be normalized and to satisfy [is_C c]
 and trans_F_ (env: env_) (c: typ) (wp: term): term =
   if not (is_C c) then
-    raise_error (Error_UnexpectedDM4FType, BU.format1 "Not a DM4F C-type: %s" (show c)) c.pos;
+    raise_error c Error_UnexpectedDM4FType (BU.format1 "Not a DM4F C-type: %s" (show c));
   let mk x = mk x c.pos in
   match (SS.compress c).n with
   | Tm_app {hd=head; args} ->
@@ -1301,10 +1278,10 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
         if not (eq_aqual q q')
         then Errors.log_issue
                     head.pos
-                    (Errors.Warning_IncoherentImplicitQualifier,
-                     BU.format2 "Incoherent implicit qualifiers %s %s\n"
+                    Errors.Warning_IncoherentImplicitQualifier
+                    (BU.format2 "Incoherent implicit qualifiers %s %s\n"
                                 (print_implicit q)
-                                (print_implicit q')) ;
+                                (print_implicit q'));
         trans_F_ env arg wp_arg, q)
       args wp_args})
   | Tm_arrow {bs=binders; comp} ->
@@ -1382,9 +1359,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   let signature, _ = TcTerm.tc_trivial_guard env signature_un in
   // We will open binders through [open_and_check]
 
-  let raise_error : (Errors.raw_error & string) -> 'a = fun (e, err_msg) ->
-    Errors.raise_error (e, err_msg) signature.pos
-  in
+  let raise_error #a code msg : a = Errors.raise_error signature.pos code msg in
 
   let effect_binders = List.map (fun b ->
     {b with binder_bv={b.binder_bv with sort = N.normalize [ Env.EraseUniverses ] env b.binder_bv.sort }}
@@ -1399,7 +1374,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     | Tm_arrow {bs=[({binder_bv=a})]; comp=effect_marker} ->
         a, effect_marker
     | _ ->
-        raise_error (Errors.Fatal_BadSignatureShape, "bad shape for effect-for-free signature")
+        raise_error Errors.Fatal_BadSignatureShape "bad shape for effect-for-free signature"
   in
 
   (* TODO : having "_" as a variable name can create a really strange shadowing
@@ -1450,7 +1425,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     // TODO: assert no universe polymorphism
     let item, item_comp = open_and_check env other_binders item in
     if not (TcComm.is_total_lcomp item_comp) then
-      raise_err (Errors.Fatal_ComputationNotTotal, (BU.format2 "Computation for [%s] is not total : %s !" (show item) (TcComm.lcomp_to_string item_comp)));
+      raise_error0 Errors.Fatal_ComputationNotTotal (BU.format2 "Computation for [%s] is not total : %s !" (show item) (TcComm.lcomp_to_string item_comp));
     let item_t, item_wp, item_elab = star_expr dmff_env item in
     let _ = recheck_debug "*" env item_wp in
     let _ = recheck_debug "_" env item_elab in
@@ -1494,7 +1469,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
               (match what' with
                | None -> "None"
                | Some rc -> FStar.Ident.string_of_lid rc.residual_effect)
-          in raise_error (Errors.Fatal_WrongBodyTypeForReturnWP, error_msg)
+          in raise_error Errors.Fatal_WrongBodyTypeForReturnWP error_msg
         in
         begin match what' with
         | None -> fail ()
@@ -1520,7 +1495,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
               (Some rc_gtot)
 
       | _ ->
-          raise_error (Errors.Fatal_UnexpectedReturnShape, "unexpected shape for return")
+          raise_error Errors.Fatal_UnexpectedReturnShape "unexpected shape for return"
   in
 
   let return_wp =
@@ -1529,7 +1504,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     | Tm_abs {bs=b1 :: b2 :: bs; body; rc_opt=what} ->
         U.abs ([ b1; b2 ]) (U.abs bs body what) (Some rc_gtot)
     | _ ->
-        raise_error (Errors.Fatal_UnexpectedReturnShape, "unexpected shape for return")
+        raise_error Errors.Fatal_UnexpectedReturnShape "unexpected shape for return"
   in
   let bind_wp =
     match (SS.compress bind_wp).n with
@@ -1538,7 +1513,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
         //let r = S.lid_and_dd_as_fv PC.range_lid None in
         U.abs binders body what
     | _ ->
-        raise_error (Errors.Fatal_UnexpectedBindShape, "unexpected shape for bind")
+        raise_error Errors.Fatal_UnexpectedBindShape "unexpected shape for bind"
   in
 
   let apply_close t =
@@ -1663,22 +1638,22 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
                     BU.format1 "Impossible to generate DM effect: no post candidate %s (Type variable does not appear)"
                       (show arrow)
                   in
-                  raise_err (Errors.Fatal_ImpossibleToGenerateDMEffect, err_msg)
+                  raise_error0 Errors.Fatal_ImpossibleToGenerateDMEffect err_msg
                 | _ ->
                   let err_msg =
                       BU.format1 "Impossible to generate DM effect: multiple post candidates %s" (show arrow)
                   in
-                  raise_err (Errors.Fatal_ImpossibleToGenerateDMEffect, err_msg)
+                  raise_error0 Errors.Fatal_ImpossibleToGenerateDMEffect err_msg
             in
             // Pre-condition does not mention the return type; don't close over it
             U.arrow pre_args c,
             // Post-condition does, however!
             U.abs (type_param :: effect_param) post.binder_bv.sort None
         | _ ->
-            raise_error (Errors.Fatal_ImpossiblePrePostArrow, (BU.format1 "Impossible: pre/post arrow %s" (show arrow)))
+            raise_error Errors.Fatal_ImpossiblePrePostArrow (BU.format1 "Impossible: pre/post arrow %s" (show arrow))
         end
     | _ ->
-        raise_error (Errors.Fatal_ImpossiblePrePostAbs, (BU.format1 "Impossible: pre/post abs %s" (show wp_type)))
+        raise_error Errors.Fatal_ImpossiblePrePostAbs (BU.format1 "Impossible: pre/post abs %s" (show wp_type))
   in
   // Desugaring is aware of these names and generates references to them when
   // the user writes something such as [STINT.repr]
