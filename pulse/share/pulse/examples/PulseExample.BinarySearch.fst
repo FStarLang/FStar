@@ -33,8 +33,9 @@ fn binary_search
       (key:t)
       (len:SZ.t)
       (#s:erased (Seq.seq t) { Seq.length s == SZ.v len })
+      (#p:perm)
 requires
-  A.pts_to a s **
+  A.pts_to a #p s **
   pure ((forall (i j: SZ.t).
           i <= j /\
           j < len ==>
@@ -44,7 +45,7 @@ requires
           Seq.index s (SZ.v k) == key))
 returns k:SZ.t
 ensures
-  A.pts_to a s **
+  A.pts_to a #p s **
   pure (k < len /\ Seq.index s (SZ.v k) == key)
 {
   let mut i1 : SZ.t = 0sz;
@@ -58,11 +59,11 @@ ensures
     exists* v1 v2.
       pts_to i1 v1 **
       pts_to i2 v2 **
-      A.pts_to a s **
+      A.pts_to a #p s **
       pure (
         (b == (v1 <> v2)) /\
         v2 < len /\
-        (exists (i:SZ.t). {:pattern (Seq.index s (SZ.v i))} v1 <= i /\ i <= v2 /\ Seq.index s (SZ.v i) == key) /\
+        (exists (i:SZ.t). v1 <= i /\ i <= v2 /\ Seq.index s (SZ.v i) == key) /\
         (forall (i j: SZ.t). {:pattern Seq.index s (SZ.v i); Seq.index s (SZ.v j)}
           i <= j /\
           j < len ==>
@@ -95,8 +96,9 @@ fn binary_search_int
       (key:int)
       (len:SZ.t)
       (#s:erased (Seq.seq int) { Seq.length s == SZ.v len })
+      (#p:perm)
 requires
-  A.pts_to a s **
+  A.pts_to a #p s **
   pure ((forall (i j: SZ.t).
           i <= j /\
           j < len ==>
@@ -106,7 +108,7 @@ requires
           Seq.index s (SZ.v k) == key))
 returns k:SZ.t
 ensures
-  A.pts_to a s **
+  A.pts_to a #p s **
   pure (k < len /\ Seq.index s (SZ.v k) == key)
 { 
   binary_search a key len
