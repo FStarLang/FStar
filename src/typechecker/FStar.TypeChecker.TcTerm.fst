@@ -3867,8 +3867,11 @@ and check_top_level_let env e =
            let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
            if ok
            then e2, c1
-           else (Errors.log_issue (Env.get_range env) Err.top_level_effect;
-                 mk (Tm_meta {tm=e2; meta=Meta_desugared Masked_effect}) e2.pos, c1) //and tag it as masking an effect
+           else (
+             if not (Options.ml_ish ()) then
+               Errors.log_issue (Env.get_range env) Err.top_level_effect; // maybe warn
+             mk (Tm_meta {tm=e2; meta=Meta_desugared Masked_effect}) e2.pos, c1 //and tag it as masking an effect
+           )
          in
 
          (* Unfold all @tcnorm subterms in the binding *)
