@@ -361,6 +361,11 @@ let incr_query_index env =
 let set_range e r = if r=dummyRange then e else {e with range=r}
 let get_range e = e.range
 
+instance hasRange_env : hasRange env = {
+  pos = get_range;
+  setPos = (fun r e -> set_range e r);
+}
+
 let toggle_id_info env enabled =
   env.identifier_info :=
     FStar.TypeChecker.Common.id_info_toggle !env.identifier_info enabled
