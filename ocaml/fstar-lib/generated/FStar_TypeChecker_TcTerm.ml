@@ -10700,9 +10700,15 @@ and (check_top_level_let :
                           then (e2, c12)
                           else
                             ((let uu___6 =
-                                FStar_TypeChecker_Env.get_range env1 in
-                              FStar_Errors.log_issue uu___6
-                                FStar_TypeChecker_Err.top_level_effect);
+                                let uu___7 = FStar_Options.ml_ish () in
+                                Prims.op_Negation uu___7 in
+                              if uu___6
+                              then
+                                let uu___7 =
+                                  FStar_TypeChecker_Env.get_range env1 in
+                                FStar_Errors.log_issue uu___7
+                                  FStar_TypeChecker_Err.top_level_effect
+                              else ());
                              (let uu___6 =
                                 FStar_Syntax_Syntax.mk
                                   (FStar_Syntax_Syntax.Tm_meta

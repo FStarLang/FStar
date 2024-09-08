@@ -545,13 +545,31 @@ let (cache_file_name : Prims.string -> Prims.string) =
             let uu___3 =
               let uu___4 =
                 let uu___5 =
-                  let uu___6 =
-                    let uu___7 = FStar_Options.prepend_cache_dir cache_fn in
-                    FStar_Compiler_Util.format3
-                      "Did not expect %s to be already checked, but found it in an unexpected location %s instead of %s"
-                      mname path uu___7 in
-                  FStar_Errors_Msg.text uu___6 in
-                [uu___5] in
+                  let uu___6 = FStar_Errors_Msg.text "Did not expect module" in
+                  let uu___7 =
+                    let uu___8 = FStar_Pprint.doc_of_string mname in
+                    let uu___9 =
+                      FStar_Errors_Msg.text "to be already checked." in
+                    FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                let uu___6 =
+                  let uu___7 =
+                    let uu___8 =
+                      let uu___9 =
+                        FStar_Errors_Msg.text
+                          "Found it in an unexpected location:" in
+                      let uu___10 = FStar_Pprint.doc_of_string path in
+                      FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                        uu___9 uu___10 in
+                    let uu___9 =
+                      let uu___10 = FStar_Errors_Msg.text "instead of" in
+                      let uu___11 =
+                        FStar_Pprint.doc_of_string expected_cache_file in
+                      FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                        uu___10 uu___11 in
+                    FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                  [uu___7] in
+                uu___5 :: uu___6 in
               (FStar_Errors_Codes.Warning_UnexpectedCheckedFile, uu___4) in
             FStar_Errors.log_issue_doc FStar_Compiler_Range_Type.dummyRange
               uu___3
