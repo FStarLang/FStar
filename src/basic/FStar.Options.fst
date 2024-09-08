@@ -2219,6 +2219,8 @@ let extract_settings
 
 let should_extract m tgt =
     let m = String.lowercase m in
+    if m = "prims" then false
+    else
     match extract_settings() with
     | Some pes -> //new option, using --extract 'OCaml:* -FStar' etc.
       let _ =

@@ -551,6 +551,7 @@ let needs_interleaving intf impl =
 
 let tc_one_file_from_remaining (remaining:list string) (env:uenv)
                                (deps:FStar.Parser.Dep.deps)  //used to query parsing data
+  : list string & tc_result & option MLSyntax.mllib & uenv
   =
   let remaining, (nmods, mllib, env) =
     match remaining with
