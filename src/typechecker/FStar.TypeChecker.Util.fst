@@ -314,7 +314,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                 //    since we don't yet support equality in lbtyp
                 //
                 if use_eq
-                then raise_error t.pos Errors.Fatal_NotSupported [
+                then raise_error t Errors.Fatal_NotSupported [
                          text "Equality ascription in this case" ^/^ parens (pp t) ^/^ text "is not yet supported.";
                          text "Please use subtyping instead";
                        ];
@@ -355,7 +355,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
             lbtyp, U.abs bs body rcopt, recheck
             
           | _ ->
-            raise_error e.pos Errors.Fatal_UnexpectedComputationTypeForLetRec [
+            raise_error e Errors.Fatal_UnexpectedComputationTypeForLetRec [
                 text "The definition of a 'let rec' must be a function literal";
                 text "Got" ^/^ pp e ^/^ text "instead";
             ]
@@ -576,7 +576,7 @@ let join_effects env l1_in l2_in =
     match Env.exists_polymonadic_bind env l1 l2 with
     | Some (m, _) -> m
     | None ->
-      raise_error env.range Errors.Fatal_EffectsCannotBeComposed [
+      raise_error env Errors.Fatal_EffectsCannotBeComposed [
           text "Effects" ^/^ pp l1_in ^/^ text "and" ^/^ pp l2_in ^/^ text "cannot be composed"
       ]
 
@@ -621,7 +621,7 @@ let lift_comps_sep_guards env c1 c2 (b:option bv) (for_bind:bool)
         c2, Env.close_guard env [x_a] g2 in
     m, c1, c2, g1, g2
   | None ->
-    raise_error env.range Errors.Fatal_EffectsCannotBeComposed [
+    raise_error env Errors.Fatal_EffectsCannotBeComposed [
       text "Effects" ^/^ pp c1.effect_name ^/^ text "and" ^/^ pp c2.effect_name ^/^ text "cannot be composed"
     ]
 
@@ -1760,7 +1760,7 @@ let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp
   in
 
   if should_not_inline_lc lc
-  then raise_error e.pos Errors.Fatal_UnexpectedTerm  [
+  then raise_error e Errors.Fatal_UnexpectedTerm  [
          text "assume_result_eq_pure_term cannot inline an non-inlineable lc : " ^^ pp e;
        ]
 
@@ -2278,7 +2278,7 @@ let universe_of_comp env u_res c =
     if not is_total then S.U_zero  //if it is a non-total effect then u0
     else match Env.effect_repr env c u_res with
          | None ->
-           raise_error c.pos Errors.Fatal_EffectCannotBeReified
+           raise_error c Errors.Fatal_EffectCannotBeReified
                         (BU.format1 "Effect %s is marked total but does not have a repr" (show c_lid))
          | Some tm -> env.universe_of env tm
 
@@ -2345,7 +2345,7 @@ let coerce_with (env:Env.env)
                maybe_monadic env e lc_res.eff_name lc_res.res_typ in
         e, lc_res
     | None ->
-        Errors.log_issue e.pos Errors.Warning_CoercionNotFound
+        Errors.log_issue e Errors.Warning_CoercionNotFound
                                 (BU.format1 "Coercion %s was not found in the environment, not coercing."
                                             (string_of_lid f));
         e, lc
@@ -2768,7 +2768,7 @@ let pure_or_ghost_pre_and_post env comp =
                       | (req, _)::(ens, _)::_ ->
                          Some (norm req), (norm <| mk_post_type ct.result_typ ens)
                       | _ ->
-                        raise_error comp.pos Errors.Fatal_EffectConstructorNotFullyApplied
+                        raise_error comp Errors.Fatal_EffectConstructorNotFullyApplied
                           (BU.format1 "Effect constructor is not fully applied; got %s" (show comp))
                    end
               else let ct = Env.unfold_effect_abbrev env comp in
@@ -2900,7 +2900,7 @@ let maybe_instantiate (env:Env.env) (e:term) (t:typ) : term & typ & guard_t =
              let n_expected = number_of_implicits expected_t in
              let n_available = number_of_implicits t in
              if n_available < n_expected
-             then raise_error (Env.get_range env) Errors.Fatal_MissingImplicitArguments [
+             then raise_error env Errors.Fatal_MissingImplicitArguments [
                     text "Expected a term with " ^/^ pp #int n_expected ^/^ text " implicit arguments, but " ^/^
                       pp e ^/^ text " has only " ^/^ pp #int n_available ^^ text "."]
              else Some (n_available - n_expected)
@@ -3038,7 +3038,7 @@ let check_top_level env g lc : (bool & comp) =
              let bc_opt = Env.lookup_effect_abbrev env us top_level_eff in
              match bc_opt with
              | None -> 
-               raise_error (Env.get_range env) Errors.Fatal_UnexpectedEffect
+               raise_error env Errors.Fatal_UnexpectedEffect
                   (BU.format2 "Could not find top-level effect abbreviation %s for %s"
                     (Ident.string_of_lid top_level_eff)
                     (c_eff |> Ident.string_of_lid))
@@ -3072,7 +3072,7 @@ let check_top_level env g lc : (bool & comp) =
                let gopt = Rel.eq_comp env top_level_comp c in
                match gopt with
                | None -> 
-                 raise_error (Env.get_range env) Errors.Fatal_UnexpectedEffect
+                 raise_error env Errors.Fatal_UnexpectedEffect
                     (BU.format2 "Could not unify %s and %s when checking top-level effect"
                       (show top_level_comp)
                       (show c))
@@ -3456,7 +3456,7 @@ let lift_tf_layered_effect_term env (sub:sub_eff)
     | Tm_arrow {bs=_::bs} when List.length bs >= 1 ->
       bs |> List.splitAt (List.length bs - 1) |> fst
     | _ ->
-      raise_error (snd lift_t).pos Errors.Fatal_UnexpectedEffect
+      raise_error (snd lift_t) Errors.Fatal_UnexpectedEffect
         (BU.format1 "lift_t tscheme %s is not an arrow with enough binders"
           (Print.tscheme_to_string lift_t))
   in
@@ -3467,7 +3467,7 @@ let lift_tf_layered_effect_term env (sub:sub_eff)
 let get_field_projector_name env datacon index =
   let _, t = Env.lookup_datacon env datacon in
   let err n =
-    raise_error (Env.get_range env) Errors.Fatal_UnexpectedDataConstructor
+    raise_error env Errors.Fatal_UnexpectedDataConstructor
       (BU.format3 "Data constructor %s does not have enough binders (has %s, tried %s)"
         (show datacon) (show n) (show index))  in
   match (SS.compress t).n with
@@ -3611,7 +3611,7 @@ let find_record_or_dc_from_typ env (t:option typ) (uc:unresolved_constructor) rn
 
       | None, f::_ ->
         let f = List.hd uc.uc_fields in
-        raise_error (range_of_lid f) Errors.Error_CannotResolveRecord [
+        raise_error f Errors.Error_CannotResolveRecord [
             text <| BU.format1 "Field name %s could not be resolved." (string_of_lid f);
         ]
 
@@ -3619,7 +3619,7 @@ let find_record_or_dc_from_typ env (t:option typ) (uc:unresolved_constructor) rn
         match try_lookup_record_type env tn with
         | Some rdc -> rdc
         | None ->
-          raise_error (range_of_lid tn) Errors.Fatal_NameNotFound 
+          raise_error tn Errors.Fatal_NameNotFound 
             (BU.format1 "Record name %s not found." (string_of_lid tn))
     in
     let rdc : DsEnv.record_or_dc =
@@ -3746,7 +3746,7 @@ let make_record_fields_in_order env uc topt
       | [], [] -> ()
       | (f, _)::_, _ ->
 //        debug();
-        raise_error (range_of_lid f) Errors.Fatal_MissingFieldInRecord [
+        raise_error f Errors.Fatal_MissingFieldInRecord [
             Errors.Msg.text <| BU.format2 "Field '%s' is redundant for type %s" (show f) (show rdc.typename);
             if Cons? missing then
               prefix 2 1 (text "Missing fields:")

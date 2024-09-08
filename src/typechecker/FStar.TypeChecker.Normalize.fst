@@ -348,7 +348,7 @@ let unembed_binder (t : term) : option S.binder =
     match !unembed_binder_knot with
     | Some e -> EMB.try_unembed #_ #e t EMB.id_norm_cb
     | None ->
-        Errors.log_issue t.pos Errors.Warning_UnembedBinderKnot "unembed_binder_knot is unset!";
+        Errors.log_issue t Errors.Warning_UnembedBinderKnot "unembed_binder_knot is unset!";
         None
 
 let mk_psc_subst cfg (env:env) =
@@ -1765,7 +1765,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
             | _ -> false
           in
           if BU.for_some is_arg_impure ((as_arg head)::args) then
-            Errors.log_issue top.pos
+            Errors.log_issue top
                              Errors.Warning_Defensive
                               (BU.format1 "Incompatibility between typechecker and normalizer; \
                                           this monadic application contains impure terms %s\n"
@@ -2383,7 +2383,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           // If the effect is an indexed effect, that is non-extractable
           //
           let S.Extract_none msg = get_extraction_mode cfg.tcenv m in
-          raise_error t.pos Errors.Fatal_UnexpectedEffect
+          raise_error t Errors.Fatal_UnexpectedEffect
                        (BU.format2 "Normalizer cannot reify effect %s for extraction since %s"
                           (Ident.string_of_lid m) msg)
 
@@ -2412,7 +2412,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 (is_non_tac_layered_effect mtgt &&
                  S.Extract_none? (get_extraction_mode cfg.tcenv mtgt))) ->
 
-          raise_error t.pos Errors.Fatal_UnexpectedEffect
+          raise_error t Errors.Fatal_UnexpectedEffect
                        (BU.format2 "Normalizer cannot reify %s ~> %s for extraction"
                           (Ident.string_of_lid msrc)
                           (Ident.string_of_lid mtgt))

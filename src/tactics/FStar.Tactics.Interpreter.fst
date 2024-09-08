@@ -177,7 +177,7 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
           then doc_of_string "The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?"
           else empty
         in
-        Errors.raise_error proof_state.main_context.range Errors.Fatal_TacticGotStuck [
+        Errors.raise_error proof_state.main_context Errors.Fatal_TacticGotStuck [
           doc_of_string "Tactic got stuck!";
           doc_of_string "Reduction stopped at: " ^^ pp h_result;
           maybe_admit_tip
@@ -201,7 +201,7 @@ let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_
 
     | None ->
         let open FStar.Pprint in
-        Errors.raise_error proof_state.main_context.range Errors.Fatal_TacticGotStuck [
+        Errors.raise_error proof_state.main_context Errors.Fatal_TacticGotStuck [
           doc_of_string "Tactic got stuck (in NBE)!";
           Errors.Msg.text "Please file a bug report with a minimal reproduction of this issue.";
           doc_of_string "Result = " ^^ arbitrary_string (NBET.t_to_string result)

@@ -1806,7 +1806,7 @@ let destruct_lemma_with_smt_patterns (t:term)
         let open FStar.Class.PP in
         let open FStar.Errors.Msg in
         let open FStar.Pprint in
-        Errors.raise_error p.pos Errors.Error_IllSMTPat [
+        Errors.raise_error p Errors.Error_IllSMTPat [
             prefix 2 1 (text "Not an atomic SMT pattern:")
               (ttd p);
             text "Patterns on lemmas must be a list of simple SMTPat's;\
@@ -1818,7 +1818,7 @@ let destruct_lemma_with_smt_patterns (t:term)
       match list_elements e with
       | Some l -> l
       | None ->
-        Errors.log_issue e.pos Errors.Warning_NonListLiteralSMTPattern
+        Errors.log_issue e Errors.Warning_NonListLiteralSMTPattern
           "SMT pattern is not a list literal; ignoring the pattern";
         []
     in

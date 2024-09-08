@@ -528,7 +528,7 @@ let try_add_sigelt force env se l =
       (* anything else is an error *)
       let open FStar.Errors.Msg in
       let open FStar.Pprint in
-      raise_error (range_of_lid l) Errors.Fatal_DuplicateTopLevelNames [
+      raise_error l Errors.Fatal_DuplicateTopLevelNames [
         text "Duplicate top-level names" ^/^ arbitrary_string s;
         text "Previously declared at" ^/^ arbitrary_string (Range.string_of_range (range_of_lid l));
         // text "New decl = " ^/^ Print.sigelt_to_doc se;
@@ -712,7 +712,7 @@ let try_lookup_and_inst_lid env us l =
       Some (Subst.set_use_range use_range t, r)
 
 let name_not_found (#a:Type) (l:lid) : a =
-  raise_error (range_of_lid l) Errors.Fatal_NameNotFound
+  raise_error l Errors.Fatal_NameNotFound
     (format1 "Name \"%s\" not found" (string_of_lid l))
 
 let lookup_lid env l =
@@ -1168,7 +1168,7 @@ let num_inductive_uniform_ty_params env lid =
     (
       match num_uniform with
       | None ->
-        raise_error (range_of_lid lid) Errors.Fatal_UnexpectedInductivetype
+        raise_error lid Errors.Fatal_UnexpectedInductivetype
           (BU.format1 "Internal error: Inductive %s is not decorated with its uniform type parameters"
                                 (show lid))
       | Some n -> Some n
@@ -1207,7 +1207,7 @@ let get_lid_valued_effect_attr env
               match (SS.compress t).n with
               | Tm_constant (FStar.Const.Const_string (s, _)) -> s |> Ident.lid_of_str |> Some
               | _ ->
-                raise_error t.pos Errors.Fatal_UnexpectedEffect
+                raise_error t Errors.Fatal_UnexpectedEffect
                    (BU.format2 "The argument for the effect attribute for %s is not a constant string, it is %s\n"
                      (show eff_lid)
                      (show t)))
@@ -1238,7 +1238,7 @@ let join_opt env (l1:lident) (l2:lident) : option (lident & mlift & mlift) =
 let join env l1 l2 : (lident & mlift & mlift) =
   match join_opt env l1 l2 with
   | None ->
-    raise_error env.range Errors.Fatal_EffectsCannotBeComposed
+    raise_error env Errors.Fatal_EffectsCannotBeComposed
       (BU.format2 "Effects %s and %s cannot be composed" (show l1) (show l2))
   | Some t -> t
 
@@ -1329,7 +1329,7 @@ let rec unfold_effect_abbrev env comp =
     | Some (binders, cdef) ->
       let binders, cdef = Subst.open_comp binders cdef in
       if List.length binders <> List.length c.effect_args + 1 then
-        raise_error comp.pos Errors.Fatal_ConstructorArgLengthMismatch
+        raise_error comp Errors.Fatal_ConstructorArgLengthMismatch
           (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
                          (show (List.length binders)) (show (List.length c.effect_args + 1))
                          (show (S.mk_Comp c)));
@@ -1409,7 +1409,7 @@ let is_reifiable_function (env:env) (t:S.term) : bool =
 let reify_comp env c u_c : term =
     let l = U.comp_effect_name c in
     if not (is_reifiable_effect env l) then
-      raise_error (get_range env) Errors.Fatal_EffectCannotBeReified
+      raise_error env Errors.Fatal_EffectCannotBeReified
         (BU.format1 "Effect %s cannot be reified" (Ident.string_of_lid l));
     match effect_repr_aux true env c u_c with
     | None -> failwith "internal error: reifiable effect has no repr?"
@@ -1630,7 +1630,7 @@ let update_effect_lattice env src tgt st_mlift =
 
   let check_cycle src tgt =
     if lid_equals src tgt
-    then raise_error env.range Errors.Fatal_Effects_Ordering_Coherence
+    then raise_error env Errors.Fatal_Effects_Ordering_Coherence
            (BU.format3 "Adding an edge %s~>%s induces a cycle %s"
              (show edge.msource) (show edge.mtarget) (show src))
   in
@@ -1666,7 +1666,7 @@ let update_effect_lattice env src tgt st_mlift =
     if Ident.lid_equals edge.msource Const.effect_DIV_lid
     && lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
     then
-      raise_error (get_range env) Errors.Fatal_DivergentComputationCannotBeIncludedInTotal
+      raise_error env Errors.Fatal_DivergentComputationCannotBeIncludedInTotal
         (BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'"
                         (show edge.mtarget)));
 
@@ -1714,7 +1714,7 @@ let update_effect_lattice env src tgt st_mlift =
       //Make sure there is only one such entry
       if List.length lubs <> 1
       then
-        raise_error env.range Errors.Fatal_Effects_Ordering_Coherence
+        raise_error env Errors.Fatal_Effects_Ordering_Coherence
           (BU.format1 "Effects %s have incomparable upper bounds" s)
       else lubs@joins) [] in
 

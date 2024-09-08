@@ -1296,7 +1296,7 @@ let encode_datacon (env:env_t) (se:sigelt)
                             t                
           in
           let warn_compat () =
-            FStar.Errors.log_issue (S.range_of_fv fv) FStar.Errors.Warning_DeprecatedGeneric [
+            FStar.Errors.log_issue fv FStar.Errors.Warning_DeprecatedGeneric [
               Errors.Msg.text "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor.";
               Errors.Msg.text "This is deprecated and will be removed in a future version of F*."
             ]

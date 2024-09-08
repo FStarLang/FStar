@@ -274,7 +274,7 @@ let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:
       match ps.guard_policy with
       | Drop ->
         // should somehow taint the state instead of just printing a warning
-        Err.log_issue e.range Errors.Warning_TacAdmit
+        Err.log_issue e Errors.Warning_TacAdmit
           (BU.format1 "Tactics admitted guard <%s>\n\n" (Rel.guard_to_string e g));
         ret ()
 
@@ -582,7 +582,7 @@ let tadmit_t (t:term) : tac unit = wrap_err "tadmit_t" <|
     bind get (fun ps ->
     bind cur_goal (fun g ->
     // should somehow taint the state instead of just printing a warning
-    Err.log_issue (goal_type g).pos Errors.Warning_TacAdmit
+    Err.log_issue (goal_type g) Errors.Warning_TacAdmit
       (BU.format1 "Tactics admitted goal <%s>\n\n" (goal_to_string "" None ps g));
     solve' g t))
 
@@ -2055,7 +2055,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         ret <| Tv_Unknown
 
     | _ ->
-      Err.log_issue t.pos Err.Warning_CantInspect
+      Err.log_issue t Err.Warning_CantInspect
         (BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (tag_of t) (show t));
       ret <| Tv_Unsupp
     )

@@ -251,7 +251,7 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
                    * (unless --MLish, which will mark all of them with ML effect) *)
                   if Options.ml_ish () || is_total_comp c
                   then bs, comp_result c
-                  else raise_error (range_of_lid (U.comp_effect_name c)) Errors.Fatal_UnexpectedConstructorType
+                  else raise_error (U.comp_effect_name c) Errors.Fatal_UnexpectedConstructorType
                          "Constructors cannot have effects"
 
                 | _ -> [], t
@@ -305,7 +305,7 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
             match (SS.compress t).n with
             | Tm_name bv' when S.bv_eq bv bv' -> ()
             | _ ->
-               raise_error t.pos Errors.Error_BadInductiveParam
+               raise_error t Errors.Error_BadInductiveParam
                  (BU.format2 "This parameter is not constant: expected %s, got %s" (show bv) (show t))
          ) tps p_args;
 
@@ -831,7 +831,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
     *)
   let tys, datas = ses |> List.partition (function { sigel = Sig_inductive_typ _ } -> true | _ -> false) in
   if datas |> BU.for_some (function { sigel = Sig_datacon _ } -> false | _ -> true)
-  then raise_error (Env.get_range env) Errors.Fatal_NonInductiveInMutuallyDefinedType "Mutually defined type contains a non-inductive element";
+  then raise_error env Errors.Fatal_NonInductiveInMutuallyDefinedType "Mutually defined type contains a non-inductive element";
 
   //AR: adding this code for the second phase
   //    univs need not be empty
@@ -920,7 +920,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
                             (show expected))
         else List.map2 (fun (ex_attrs, pqual) b ->
                if not (Common.check_positivity_qual true pqual b.binder_positivity)
-               then raise_error (range_of_bv b.binder_bv) Errors.Fatal_UnexpectedInductivetype "Incompatible positivity annotation";
+               then raise_error b Errors.Fatal_UnexpectedInductivetype "Incompatible positivity annotation";
                {b with binder_attrs = b.binder_attrs@ex_attrs; binder_positivity=pqual}
              ) expected_attrs binders
       in

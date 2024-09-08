@@ -27,6 +27,26 @@ open FStar.Ident
 open FStar.Class.Show
 module C = FStar.Parser.Const
 
+instance hasRange_term : hasRange term = {
+  pos = (fun t -> t.range);
+  setPos = (fun r t -> { t with range = r });
+}
+
+instance hasRange_pattern : hasRange pattern = {
+  pos = (fun p -> p.prange);
+  setPos = (fun r p -> { p with prange = r });
+}
+
+instance hasRange_binder : hasRange binder = {
+  pos = (fun b -> b.brange);
+  setPos = (fun r b -> { b with brange = r });
+}
+
+instance hasRange_decl : hasRange decl = {
+  pos = (fun d -> d.drange);
+  setPos = (fun r d -> { d with drange = r });
+}
+
 let lid_of_modul (m:modul) : lid =
   match m with
   | Module(lid, _) -> lid
@@ -35,7 +55,7 @@ let lid_of_modul (m:modul) : lid =
 let check_id id =
     let first_char = String.substring (string_of_id id) 0 1 in
     if not (String.lowercase first_char = first_char) then
-      raise_error (range_of_id id) Fatal_InvalidIdentifier
+      raise_error id Fatal_InvalidIdentifier
         (Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" (show id))
 
 let at_most_one s (r:range) l = match l with
@@ -239,7 +259,7 @@ let rec as_mlist (cur: (lid & decl) & list decl) (ds:list decl) : modul =
     | d :: ds ->
         begin match d.d with
         | TopLevelModule m' ->
-            raise_error d.drange Fatal_UnexpectedModuleDeclaration "Unexpected module declaration"
+            raise_error d Fatal_UnexpectedModuleDeclaration "Unexpected module declaration"
         | _ ->
             as_mlist ((m_name, m_decl), d::cur) ds
         end
@@ -441,7 +461,7 @@ let rec term_to_string (x:term) = match x.tm with
         (tm|> term_to_string)
         (body|> term_to_string)
   | Let (_, _, _) ->
-    raise_error x.range Fatal_EmptySurfaceLet "Internal error: found an invalid surface Let"
+    raise_error x Fatal_EmptySurfaceLet "Internal error: found an invalid surface Let"
 
   | LetOpen (lid, t) ->
     Util.format2 "let open %s in %s" (string_of_lid lid) (term_to_string t)
@@ -822,7 +842,7 @@ let add_decorations d decorations =
       | [DeclAttributes a], attrs -> [DeclAttributes (a @ attrs)]
       | [], attrs -> [DeclAttributes attrs]
       | _ ->
-        raise_error d.drange Fatal_MoreThanOneDeclaration
+        raise_error d Fatal_MoreThanOneDeclaration
           (format2
             "At most one attribute set is allowed on declarations\n got %s;\n and %s"
             (String.concat ", " (List.map (function DeclAttributes a -> show a | _ -> "") attrs))

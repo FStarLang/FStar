@@ -290,7 +290,7 @@ let rec inspect_ln (t:term) : term_view =
         i |> U.unfold_lazy |> inspect_ln
 
     | _ ->
-        Err.log_issue t.pos Err.Warning_CantInspect 
+        Err.log_issue t Err.Warning_CantInspect 
           (BU.format2 "inspect_ln: outside of expected syntax (%s, %s)" (tag_of t) (show t));
         Tv_Unsupp
 
@@ -300,7 +300,7 @@ let inspect_comp (c : comp) : comp_view =
         | None -> []
         | Some (DECREASES (Decreases_lex ts)) -> ts
         | Some (DECREASES (Decreases_wf _)) ->
-          Err.log_issue c.pos Err.Warning_CantInspect
+          Err.log_issue c Err.Warning_CantInspect
             (BU.format1 "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s \
               skipping the decreases clause"
               (show c));

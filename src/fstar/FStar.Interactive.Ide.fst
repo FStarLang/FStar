@@ -57,7 +57,7 @@ let with_captured_errors' env sigint_handler f =
               "minimized version of the program that triggered the error." in
     // Make sure the user sees the error, even if it happened transiently while
     // running an automatic syntax checker like FlyCheck.
-    Errors.log_issue (TcEnv.get_range env) Errors.Error_IDEAssertionFailure msg;
+    Errors.log_issue env Errors.Error_IDEAssertionFailure msg;
     None
 
   | Util.SigInt ->

@@ -122,14 +122,14 @@ let gen_wps_for_free
         // TODO: dubious, assert no nested arrows
         let rest = match comp.n with
           | Total t -> t
-          | _ -> raise_error comp.pos Error_UnexpectedDM4FType
+          | _ -> raise_error comp Error_UnexpectedDM4FType
                                (BU.format1 "wp_a contains non-Tot arrow: %s" (show comp))
         in
         bs @ (collect_binders rest)
     | Tm_type _ ->
         []
     | _ ->
-        raise_error t.pos Error_UnexpectedDM4FType
+        raise_error t Error_UnexpectedDM4FType
                      (BU.format1 "wp_a doesn't end in Type0, but rather in %s" (show t))
   in
   let mk_lid name : lident = U.dm4f_lid ed name in
@@ -526,7 +526,7 @@ let nm_of_comp c = match c.n with
                 //lid_equals c.effect_name PC.monadic_lid ->
       M c.result_typ
   | _ ->
-      raise_error c.pos Error_UnexpectedDM4FType
+      raise_error c Error_UnexpectedDM4FType
                    (BU.format1 "[nm_of_comp]: unexpected computation type %s" (show c))
 
 let string_of_nm = function
@@ -596,7 +596,7 @@ and star_type' env t =
       // Sums and products. TODO: re-use the cache in [env] to not recompute
       // (st a)* every time.
       let debug (t : term) (s : FlatSet.t bv) =
-        Errors.log_issue t.pos Errors.Warning_DependencyFound (BU.format2 "Dependency found in term %s : %s" (show t) (show s))
+        Errors.log_issue t Errors.Warning_DependencyFound (BU.format2 "Dependency found in term %s : %s" (show t) (show s))
       in
       let rec is_non_dependent_arrow ty n =
         match (SS.compress ty).n with
@@ -622,7 +622,7 @@ and star_type' env t =
                     with Not_found -> false
             end
         | _ ->
-            Errors.log_issue ty.pos Errors.Warning_NotDependentArrow (BU.format1 "Not a dependent arrow : %s" (show ty));
+            Errors.log_issue ty Errors.Warning_NotDependentArrow (BU.format1 "Not a dependent arrow : %s" (show ty));
             false
       in
       let rec is_valid_application head =
@@ -644,7 +644,7 @@ and star_type' env t =
                 begin match (SS.compress res).n with
                   | Tm_app _ -> true
                   | _ ->
-                    Errors.log_issue head.pos Errors.Warning_NondependentUserDefinedDataType (BU.format1 "Got a term which might be a non-dependent user-defined data-type %s\n" (show head));
+                    Errors.log_issue head Errors.Warning_NondependentUserDefinedDataType (BU.format1 "Got a term which might be a non-dependent user-defined data-type %s\n" (show head));
                     false
                 end
              else false
@@ -739,12 +739,12 @@ let rec is_C (t: typ): bool =
       let r = is_C (fst (List.hd args)) in
       if r then begin
         if not (List.for_all (fun (h, _) -> is_C h) args) then
-          raise_error t.pos Error_UnexpectedDM4FType
+          raise_error t Error_UnexpectedDM4FType
                         (BU.format1 "Not a C-type (A * C): %s" (show t));
         true
       end else begin
         if not (List.for_all (fun (h, _) -> not (is_C h)) args) then
-          raise_error t.pos Error_UnexpectedDM4FType
+          raise_error t Error_UnexpectedDM4FType
                          (BU.format1 "Not a C-type (C * A): %s" (show t));
         false
       end
@@ -752,7 +752,7 @@ let rec is_C (t: typ): bool =
       begin match nm_of_comp comp with
       | M t ->
           if (is_C t) then
-            raise_error t.pos Error_UnexpectedDM4FType
+            raise_error t Error_UnexpectedDM4FType
                            (BU.format1 "Not a C-type (C -> C): %s" (show t));
           true
       | N t ->
@@ -818,7 +818,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm & term & term =
       | _ -> failwith "impossible"
     in
     match context_nm with
-    | N t -> raise_error e2.pos Errors.Fatal_LetBoundMonadicMismatch 
+    | N t -> raise_error e2 Errors.Fatal_LetBoundMonadicMismatch
                ("let-bound monadic body has a non-monadic continuation or a branch of a match is monadic and the others aren't : "  ^ show t)
     | M _ -> strip_m (check env e2 context_nm)
   in
@@ -1018,7 +1018,7 @@ and infer (env: env) (e: term): nm & term & term =
 
   | Tm_app {hd={n=Tm_constant Const_range_of}}
   | Tm_app {hd={n=Tm_constant Const_set_range_of}} ->
-    raise_error e.pos Errors.Fatal_IllAppliedConstant (BU.format1 "DMFF: Ill-applied constant %s" (show e))
+    raise_error e Errors.Fatal_IllAppliedConstant (BU.format1 "DMFF: Ill-applied constant %s" (show e))
 
   | Tm_app {hd=head; args} ->
       let t_head, s_head, u_head = check_n env head in
@@ -1264,7 +1264,7 @@ and type_of_comp t = U.comp_result t
 // This function expects its argument [c] to be normalized and to satisfy [is_C c]
 and trans_F_ (env: env_) (c: typ) (wp: term): term =
   if not (is_C c) then
-    raise_error c.pos Error_UnexpectedDM4FType (BU.format1 "Not a DM4F C-type: %s" (show c));
+    raise_error c Error_UnexpectedDM4FType (BU.format1 "Not a DM4F C-type: %s" (show c));
   let mk x = mk x c.pos in
   match (SS.compress c).n with
   | Tm_app {hd=head; args} ->

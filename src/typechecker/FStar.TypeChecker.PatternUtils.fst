@@ -65,7 +65,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
             match formals, pats with
             | [], [] -> []
             | [], _::_ ->
-                raise_error (range_of_lid fv.fv_name.v) Errors.Fatal_TooManyPatternArguments "Too many pattern arguments"
+                raise_error fv.fv_name.v Errors.Fatal_TooManyPatternArguments "Too many pattern arguments"
             | _::_, [] -> //fill the rest with dot patterns, if all the remaining formals are implicit
             formals |>
             List.map
@@ -78,7 +78,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
                     maybe_dot inaccessible a r, true
 
                     | _ ->
-                    raise_error (range_of_lid fv.fv_name.v) Errors.Fatal_InsufficientPatternArguments
+                    raise_error fv.fv_name.v Errors.Fatal_InsufficientPatternArguments
                                 (BU.format1 "Insufficient pattern arguments (%s)"
                                             (show p)))
 

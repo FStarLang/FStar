@@ -514,7 +514,7 @@ let namespace_of_lid l =
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = lowercase_join_longident lid true in
   if String.lowercase (must (check_and_strip_suffix (basename filename))) <> k' then
-    log_issue (range_of_lid lid) Errors.Error_ModuleFileNameMismatch [
+    log_issue lid Errors.Error_ModuleFileNameMismatch [
         Errors.Msg.text (Util.format2 "The module declaration \"module %s\" \
           found in file %s does not match its filename. Dependencies will be \
           incorrect and the module will not be verified." (string_of_lid lid true) filename)
@@ -695,7 +695,7 @@ let collect_one
          then true
          else begin
            if let_open then
-             log_issue (range_of_lid lid) Errors.Warning_ModuleOrFileNotFoundWarning
+             log_issue lid Errors.Warning_ModuleOrFileNotFoundWarning
                (Util.format1 "Module not found: %s" (string_of_lid lid true));
            false
          end
@@ -705,7 +705,7 @@ let collect_one
          let key = lowercase_join_longident lid true in
          let r = enter_namespace original_map working_map key implicit_open in
          if not r && not implicit_open then  //suppress the warning for implicit opens
-           log_issue (range_of_lid lid) Errors.Warning_ModuleOrFileNotFoundWarning
+           log_issue lid Errors.Warning_ModuleOrFileNotFoundWarning
              (Util.format1 "No modules in namespace %s and no file with that name either" (string_of_lid lid true))
        in
 
@@ -732,7 +732,7 @@ let collect_one
            add_dep deps (dep_edge (lowercase_join_longident lid true) false);
            true
          | None ->
-           log_issue (range_of_lid lid) Errors.Warning_ModuleOrFileNotFoundWarning
+           log_issue lid Errors.Warning_ModuleOrFileNotFoundWarning
              (Util.format1 "module not found in search path: %s" alias);
            false
        in
@@ -741,7 +741,7 @@ let collect_one
          if add_dependence_edge working_map module_name is_friend
          then ()
          else if !dbg then
-           log_issue (range_of_lid module_name) Errors.Warning_UnboundModuleReference
+           log_issue module_name Errors.Warning_UnboundModuleReference
              (BU.format1 "Unbound module reference %s" (show module_name))
        in
 
@@ -873,7 +873,7 @@ let collect_one
         | TopLevelModule lid ->
             incr num_of_toplevelmods;
             if (!num_of_toplevelmods > 1) then
-              raise_error (range_of_lid lid) Errors.Fatal_OneModulePerFile
+              raise_error lid Errors.Fatal_OneModulePerFile
                 (Util.format1 "Automatic dependency analysis demands one module per file (module %s not supported)" (string_of_lid lid true)) 
       and collect_tycon = function
         | TyconAbstract (_, binders, k) ->

@@ -403,7 +403,7 @@ let config' psteps s e =
         debug_nbe = !dbg_NBE;
         erase_erasable_args = (
          if !dbg_UNSOUND_EraseErasableArgs then
-           Errors.log_issue (Env.get_range e) Errors.Warning_WarnOnUse
+           Errors.log_issue e Errors.Warning_WarnOnUse
              "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound";
          !dbg_UNSOUND_EraseErasableArgs);
       };

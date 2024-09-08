@@ -26,7 +26,7 @@ let compress1_t (allow_uvars: bool) (allow_names: bool) : term -> term =
     | Tm_name bv when not allow_names ->
       (* This currently happens, and often, but it should not! *)
       if Debug.any () then
-        Errors.log_issue t.pos Err.Warning_NameEscape (format1 "Tm_name %s in deep compress" (show bv));
+        Errors.log_issue t Err.Warning_NameEscape (format1 "Tm_name %s in deep compress" (show bv));
       mk (Tm_name ({bv with sort = mk Tm_unknown}))
 
     (* The sorts are not needed. Delete them. *)

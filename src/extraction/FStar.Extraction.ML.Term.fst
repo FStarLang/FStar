@@ -80,8 +80,7 @@ module Print = FStar.Syntax.Print
 (* Some basic error reporting; all are fatal errors at this stage                           *)
 (********************************************************************************************)
 let err_ill_typed_application env (t : term) mlhead (args : args) (ty : mlty) =
-    Errors.raise_error t.pos
-      Fatal_IllTyped
+    Errors.raise_error t Fatal_IllTyped
        (BU.format4 "Ill-typed application: source application is %s \n translated prefix to %s at type %s\n remaining args are %s\n"
                 (show t)
                 (Code.string_of_mlexpr (current_module_of_uenv env) mlhead)
@@ -94,14 +93,14 @@ let err_ill_typed_erasure env (pos:Range.range) (ty : mlty) =
                   (Code.string_of_mlty (current_module_of_uenv env) ty))
 
 let err_value_restriction (t:term) =
-    Errors.raise_error t.pos Fatal_ValueRestriction
+    Errors.raise_error t Fatal_ValueRestriction
        (BU.format2 "Refusing to generalize because of the value restriction: (%s) %s"
                     (tag_of t) (show t))
 
 let err_unexpected_eff env (t:term) ty f0 f1 =
     let open FStar.Errors.Msg in
     let open FStar.Pprint in
-    Errors.log_issue t.pos Warning_ExtractionUnexpectedEffect [
+    Errors.log_issue t Warning_ExtractionUnexpectedEffect [
         prefix 4 1 (text "For expression") (pp t) ^/^
         prefix 4 1 (text "of type") (arbitrary_string (Code.string_of_mlty (current_module_of_uenv env) ty));
         prefix 4 1 (text "Expected effect") (arbitrary_string (eff_to_string f0)) ^/^
@@ -1535,7 +1534,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
           begin
                match try_lookup_fv t.pos g fv with
                | None -> //it's been erased
-                 // Errors.log_issue t.pos (Errors.Error_CallToErased,
+                 // Errors.log_issue t (Errors.Error_CallToErased,
                  //                         BU.format1 "Attempting to extract a call into erased function %s" (show fv));
                  ml_unit, E_PURE, MLTY_Erased
 
@@ -1625,7 +1624,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                  let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos in
                  term_as_mlexpr g tm
                | None ->
-                 raise_error top.pos Errors.Fatal_ExtractionUnsupported
+                 raise_error top Errors.Fatal_ExtractionUnsupported
                    (BU.format1 "Cannot extract %s (reify effect is not set)" (show top))
               )
 
@@ -1796,7 +1795,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                    | Tm_fvar fv ->
                      (match try_lookup_fv t.pos g fv with
                       | None -> //erased head
-                        // Errors.log_issue t.pos
+                        // Errors.log_issue t
                         //   (Errors.Error_CallToErased,
                         //    BU.format1 "Attempting to extract a call into erased function %s" (show fv));
                         ml_unit, E_PURE, MLTY_Erased
@@ -1837,13 +1836,13 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                   let bv = freshen_bv bv in
                   Some bv
                 | _ ->
-                  Errors.log_issue top.pos Errors.Warning_UnrecognizedAttribute
+                  Errors.log_issue top Errors.Warning_UnrecognizedAttribute
                     "Ignoring ill-formed application of `rename_let`";
                   None
                 end
 
               | Some _ ->
-                  Errors.log_issue top.pos Errors.Warning_UnrecognizedAttribute
+                  Errors.log_issue top Errors.Warning_UnrecognizedAttribute
                     "Ignoring ill-formed application of `rename_let`";
                 None
 

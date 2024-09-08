@@ -4391,7 +4391,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
 
       | Tm_let _, _
       | _, Tm_let _ ->
-         raise_error t1.pos Errors.Fatal_UnificationNotWellFormed
+         raise_error t1 Errors.Fatal_UnificationNotWellFormed
            (BU.format4 "Internal error: unexpected flex-flex of %s and %s\n>>> (%s) -- (%s)"
                             (tag_of t1) (tag_of t2) (show t1) (show t2))
 
@@ -4648,7 +4648,7 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
              let wpc1, wpc2 = match c1.effect_args, c2.effect_args with
               | (wp1, _)::_, (wp2, _)::_ -> wp1, wp2
               | _ ->
-                raise_error env.range Errors.Fatal_ExpectNormalizedEffect
+                raise_error env Errors.Fatal_ExpectNormalizedEffect
                   (BU.format2 "Got effects %s and %s, expected normalized effects" (show c1.effect_name) (show c2.effect_name))
              in
 
@@ -4956,7 +4956,7 @@ let solve_universe_inequalities' tx env (variables, ineqs) : unit =
    //This ensures, e.g., that we don't needlessly generalize types, avoid issues lik #806
    let fail u1 u2 =
      UF.rollback tx;
-     raise_error (Env.get_range env) Errors.Fatal_IncompatibleUniverse
+     raise_error env Errors.Fatal_IncompatibleUniverse
        (BU.format2 "Universe %s and %s are incompatible" (show u1) (show u2))
    in
    let equiv v v' =
@@ -5018,7 +5018,7 @@ let solve_universe_inequalities' tx env (variables, ineqs) : unit =
        UF.rollback tx; // GM 2024/09/07: It can't be right to rollback on a debug toggle... can it?
        BU.print1 "Original solved inequality constraints are: %s\n" (ineqs_to_string (variables, ineqs))
      );
-     raise_error (Env.get_range env) Errors.Fatal_FailToSolveUniverseInEquality "Failed to solve universe inequalities for inductives"
+     raise_error env Errors.Fatal_FailToSolveUniverseInEquality "Failed to solve universe inequalities for inductives"
    )
 
 let solve_universe_inequalities env ineqs : unit =
@@ -5252,7 +5252,7 @@ let discharge_guard_no_smt env g =
   match discharge_guard' None env g false with
   | Some g -> g
   | None ->
-    raise_error (Env.get_range env) Errors.Fatal_ExpectTrivialPreCondition [
+    raise_error env Errors.Fatal_ExpectTrivialPreCondition [
       text "Expected a trivial pre-condition"
     ]
 

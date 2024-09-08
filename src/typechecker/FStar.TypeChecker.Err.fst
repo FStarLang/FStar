@@ -316,7 +316,7 @@ let computed_computation_type_does_not_match_annotation_eq #a env (r:Range.range
   ]
 
 let unexpected_non_trivial_precondition_on_term #a env f : a =
-  Errors.raise_error (Env.get_range env) Errors.Fatal_UnExpectedPreCondition
+  Errors.raise_error env Errors.Fatal_UnExpectedPreCondition
     (format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f))
 
 let __expected_eff_expression (effname:string) (rng:Range.range) (e:term) (c:comp) (reason:option string) =

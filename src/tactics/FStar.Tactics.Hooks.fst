@@ -328,7 +328,7 @@ let preprocess (env:Env.env) (goal:term)
     let s = List.fold_left (fun (n,gs) g ->
                  let phi = match getprop (goal_env g) (goal_type g) with
                            | None ->
-                                Err.raise_error env.range Err.Fatal_TacticProofRelevantGoal
+                                Err.raise_error env Err.Fatal_TacticProofRelevantGoal
                                   (BU.format1 "Tactic returned proof-relevant goal: %s" (show (goal_type g)))
                            | Some phi -> phi
                  in
@@ -724,7 +724,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
             TcRel.force_trivial_guard (goal_env g) guard
             end
         | None ->
-            Err.raise_error typ.pos Err.Fatal_OpenGoalsInSynthesis "synthesis left open goals");
+            Err.raise_error typ Err.Fatal_OpenGoalsInSynthesis "synthesis left open goals");
     w
     end
   )
@@ -764,7 +764,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
             )
           end
         | None ->
-            Err.raise_error (Env.get_range env) Err.Fatal_OpenGoalsInSynthesis "synthesis left open goals"
+            Err.raise_error env Err.Fatal_OpenGoalsInSynthesis "synthesis left open goals"
       ))
     end
   )
@@ -810,7 +810,7 @@ let handle_smt_goal env goal =
                   BU.print1 "handle_smt_goals left a goal: %s\n" (show vc);
                 (goal_env g), vc
             | None ->
-                Err.raise_error (Env.get_range env) Err.Fatal_OpenGoalsInSynthesis "Handling an SMT goal by tactic left non-prop open goals")
+                Err.raise_error env Err.Fatal_OpenGoalsInSynthesis "Handling an SMT goal by tactic left non-prop open goals")
       ) in
 
       gs
@@ -1031,7 +1031,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
             TcRel.force_trivial_guard (goal_env g) guard
             end
         | None ->
-            Err.raise_error typ.pos Err.Fatal_OpenGoalsInSynthesis "postprocessing left open goals") gs;
+            Err.raise_error typ Err.Fatal_OpenGoalsInSynthesis "postprocessing left open goals") gs;
     (* abort if the uvar was not solved *)
     let tagged_imps = TcRel.resolve_implicits_tac env g_imp in
     report_implicits tm.pos tagged_imps;

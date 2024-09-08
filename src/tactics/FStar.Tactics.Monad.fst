@@ -230,7 +230,7 @@ let check_valid_goal g =
     with
      | Bad culprit ->
        if !nwarn < 5 then begin
-         Err.log_issue (goal_type g).pos
+         Err.log_issue (goal_type g)
            Errors.Warning_IllFormedGoal
            (BU.format2 "The following goal is ill-formed (%s). Keeping calm and carrying on...\n<%s>\n\n" culprit (goal_to_string_verbose g));
          nwarn := !nwarn + 1

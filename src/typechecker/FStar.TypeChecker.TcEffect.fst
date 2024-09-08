@@ -77,14 +77,14 @@ let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_na
         "Expected %s:%s to be universe-polymorphic in %s universes, but found %s (tscheme: %s)"
         eff_name comb (string_of_int n) (g_us |> List.length |> string_of_int)
         (Print.tscheme_to_string (g_us, t)) in
-      raise_error t.pos Errors.Fatal_MismatchUniversePolymorphic error;
+      raise_error t Errors.Fatal_MismatchUniversePolymorphic error;
     match us with
     | [] -> ()
     | _ ->
      if List.length us = List.length g_us &&
       List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
      then ()
-     else raise_error t.pos Errors.Fatal_UnexpectedNumberOfUniverse
+     else raise_error t Errors.Fatal_UnexpectedNumberOfUniverse
             (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
                eff_name comb (show us) (show g_us))
   in
@@ -1214,7 +1214,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
 
   //we don't support effect binders in layered effects yet
   if List.length ed.univs <> 0 || List.length ed.binders <> 0 then
-    raise_error (range_of_lid ed.mname) Errors.Fatal_UnexpectedEffect 
+    raise_error ed.mname Errors.Fatal_UnexpectedEffect 
       ("Binders are not supported for layered effects (" ^ (string_of_lid ed.mname) ^")");
 
   let log_combinator s (us, t, ty) =
@@ -1910,7 +1910,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let is_reifiable = List.contains Reifiable quals in
 
     if has_primitive_extraction && is_reifiable
-    then raise_error (Ident.range_of_lid ed.mname) Errors.Fatal_UnexpectedEffect
+    then raise_error ed.mname Errors.Fatal_UnexpectedEffect
                       (BU.format1 "Effect %s is declared to be both primitive extraction and reifiable"
                         (show ed.mname)) 
     else begin
@@ -1999,7 +1999,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
       if (List.length ed_univs = List.length us &&
          List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) ed_univs us)
       then us, bs
-      else raise_error (range_of_lid ed.mname) Errors.Fatal_UnexpectedNumberOfUniverse [
+      else raise_error ed.mname Errors.Fatal_UnexpectedNumberOfUniverse [
              text "Expected and generalized universes in effect declaration for"
                 ^/^ doc_of_string (string_of_lid ed.mname) ^/^ text "are different";
              text "Expected" ^/^ pp #int (List.length ed_univs) ^/^
@@ -2058,7 +2058,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
         let error = BU.format4
           "Expected %s:%s to be universe-polymorphic in %s universes, found %s"
           (string_of_lid ed.mname) comb (string_of_int n) (g_us |> List.length |> string_of_int) in
-        raise_error t.pos Errors.Fatal_MismatchUniversePolymorphic error
+        raise_error t Errors.Fatal_MismatchUniversePolymorphic error
     end;
     match us with
     | [] -> g_us, t
@@ -2066,7 +2066,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
      if List.length us = List.length g_us &&
         List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
      then g_us, t
-     else raise_error t.pos Errors.Fatal_UnexpectedNumberOfUniverse
+     else raise_error t Errors.Fatal_UnexpectedNumberOfUniverse
             (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, expected: %s, but found %s"
                (string_of_lid ed.mname) comb (BU.string_of_int (List.length us)) (BU.string_of_int (List.length g_us)))
   in
@@ -2304,7 +2304,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
               let k = U.arrow bs (S.mk_Total res) in
               let k, _, g = tc_tot_or_gtot_term env k in
               k, g
-            | _ -> raise_error act_defn.pos Errors.Fatal_ActionMustHaveFunctionType
+            | _ -> raise_error act_defn Errors.Fatal_ActionMustHaveFunctionType
                      (BU.format2 "Actions must have function types (not: %s, a.k.a. %s)" (show act_typ) (tag_of act_typ))
           in
 
@@ -2314,7 +2314,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
            let g = Env.conj_guard g g_k in
            match g.guard_f with
            | NonTrivial _ ->
-             raise_error act_defn.pos Errors.Fatal_ActionMustHaveFunctionType
+             raise_error act_defn Errors.Fatal_ActionMustHaveFunctionType
                           (BU.format1 "Unexpected non trivial guard formula when checking action type shape (%s)"
                             (show act_typ))
            | Trivial ->
@@ -2491,7 +2491,7 @@ let tc_lift env sub r =
     let expected_k  = U.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
     let repr_type eff_name a wp =
       if not (is_reifiable_effect env eff_name)
-      then raise_error (Env.get_range env) Errors.Fatal_EffectCannotBeReified (BU.format1 "Effect %s cannot be reified" (string_of_lid eff_name));
+      then raise_error env Errors.Fatal_EffectCannotBeReified (BU.format1 "Effect %s cannot be reified" (string_of_lid eff_name));
       match Env.effect_decl_opt env eff_name with
       | None -> failwith "internal error: reifiable effect has no decl?"
       | Some (ed, qualifiers) ->

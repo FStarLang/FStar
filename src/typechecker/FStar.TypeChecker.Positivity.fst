@@ -538,8 +538,7 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) =
    let index, _ = index in
    L.iter (fun mutual -> 
              if ty_occurs_in mutual (fext_on_domain_index_sub_term index)
-             then raise_error index.pos
-                           Errors.Error_InductiveTypeNotSatisfyPositivityCondition
+             then raise_error index Errors.Error_InductiveTypeNotSatisfyPositivityCondition
                             (BU.format3 "Type %s is not strictly positive since it instantiates \
                                         a non-uniformly recursive parameter or index %s of %s"
                               (string_of_lid mutual)
@@ -1075,8 +1074,7 @@ and ty_strictly_positive_in_arguments_to_fvar
         match Env.try_lookup_lid env fv with
         | Some ((_, fv_ty), _) -> fv_ty
         | _ ->
-          raise_error  (range_of_lid fv)
-            Errors.Error_InductiveTypeNotSatisfyPositivityCondition
+          raise_error fv Errors.Error_InductiveTypeNotSatisfyPositivityCondition
             (BU.format1 "Type of %s not found when checking positivity"
                        (string_of_lid fv))
       in
@@ -1243,7 +1241,7 @@ let ty_strictly_positive_in_datacon_decl (env:env_t)
   = let dt =
       match Env.try_lookup_and_inst_lid env us dlid with
       | Some (t, _) -> t
-      | None -> raise_error (range_of_lid dlid)
+      | None -> raise_error dlid
                             Errors.Error_InductiveTypeNotSatisfyPositivityCondition
                             (BU.format1 "Error looking up data constructor %s when checking positivity"
                                        (string_of_lid dlid))
@@ -1266,8 +1264,7 @@ let ty_strictly_positive_in_datacon_decl (env:env_t)
         match incorrectly_annotated_binder with
         | None -> ()
         | Some b ->
-          raise_error (range_of_bv b.binder_bv)
-                      Error_InductiveTypeNotSatisfyPositivityCondition
+          raise_error b Error_InductiveTypeNotSatisfyPositivityCondition
                       (BU.format2 "Binder %s is marked %s, \
                                    but its use in the definition is not"
                                   (show b)

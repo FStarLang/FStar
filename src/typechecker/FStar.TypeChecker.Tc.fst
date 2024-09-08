@@ -261,7 +261,7 @@ let handle_postprocess_with_attr (env:Env.env) (ats:list attribute)
     | Some (ats, [tau, None]) ->
         ats, Some tau
     | Some (ats, args) ->
-        Errors.log_issue (Env.get_range env) Errors.Warning_UnrecognizedAttribute
+        Errors.log_issue env Errors.Warning_UnrecognizedAttribute
           (BU.format1 "Ill-formed application of `%s`" (show PC.postprocess_with));
         ats, None
 
@@ -1144,7 +1144,7 @@ let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
   if not loading_from_cache then (
     let missing = missing_definition_list env in
     if Cons? missing then
-      log_issue env.range Errors.Error_AdmitWithoutDefinition [
+      log_issue env Errors.Error_AdmitWithoutDefinition [
           Pprint.prefix 2 1 (text <| BU.format1 "Missing definitions in module %s:" (string_of_lid m.name))
             (Pprint.separate_map Pprint.hardline (fun l -> pp (ident_of_lid l)) missing)
         ]

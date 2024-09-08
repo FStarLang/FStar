@@ -238,7 +238,7 @@ let proc_guard_formula
   match ps.guard_policy with
   | Drop ->
     // should somehow taint the state instead of just printing a warning
-    Err.log_issue e.range Errors.Warning_TacAdmit
+    Err.log_issue e Errors.Warning_TacAdmit
       (BU.format1 "Tactics admitted guard <%s>\n\n" (show f));
     return ()
 
@@ -2288,7 +2288,7 @@ let refl_is_non_informative (g:env) (t:typ) : tac (option unit & issues) =
          dbg_refl g (fun _ -> BU.format1 "refl_is_non_informative: returned %s"
                                 (show b));
          if b then ((), [])
-         else Errors.raise_error (Env.get_range g) Errors.Fatal_UnexpectedTerm
+         else Errors.raise_error g Errors.Fatal_UnexpectedTerm
                 "is_non_informative returned false"
   ) else (
     return (None, [unexpected_uvars_issue (Env.get_range g)])
@@ -2320,7 +2320,7 @@ let refl_check_relation (rel:relation) (smt_ok:bool) (unfolding_ok:bool) (g:env)
            ((), [(g, guard_f)])
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_check_relation failed: %s\n" (Core.print_error err));
-           Errors.raise_error (Env.get_range g) Errors.Fatal_IllTyped
+           Errors.raise_error g Errors.Fatal_IllTyped
              ("check_relation failed: " ^ (Core.print_error err)))
   else (
     return (None, [unexpected_uvars_issue (Env.get_range g)])
@@ -2367,7 +2367,7 @@ let refl_core_compute_term_type (g:env) (e:term) : tac (option (Core.tot_or_ghos
            ((eff, t), !guards)
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_core_compute_term_type: %s\n" (Core.print_error err));
-           Errors.raise_error (Env.get_range g) Errors.Fatal_IllTyped 
+           Errors.raise_error g Errors.Fatal_IllTyped 
              ("core_compute_term_type failed: " ^ (Core.print_error err)))
   else return (None, [unexpected_uvars_issue (Env.get_range g)])
 
@@ -2393,7 +2393,7 @@ let refl_core_check_term (g:env) (e:term) (t:typ) (eff:Core.tot_or_ghost)
            ((), [(g, guard)])
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_core_check_term failed: %s\n" (Core.print_error err));
-           Errors.raise_error (Env.get_range g) Errors.Fatal_IllTyped 
+           Errors.raise_error g Errors.Fatal_IllTyped 
              ("refl_core_check_term failed: " ^ (Core.print_error err)))
   else return (None, [unexpected_uvars_issue (Env.get_range g)])
 
@@ -2421,7 +2421,7 @@ let refl_core_check_term_at_type (g:env) (e:term) (t:typ)
            (eff, [(g, guard)])
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_core_check_term_at_type failed: %s\n" (Core.print_error err));
-           Errors.raise_error (Env.get_range g) Errors.Fatal_IllTyped
+           Errors.raise_error g Errors.Fatal_IllTyped
              ("refl_core_check_term failed: " ^ (Core.print_error err)))
   else return (None, [unexpected_uvars_issue (Env.get_range g)])
 
@@ -2459,7 +2459,7 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
      begin
      if not (no_uvars_in_term e)
      then (
-        Errors.raise_error e.pos Errors.Error_UnexpectedUnresolvedUvar
+        Errors.raise_error e Errors.Error_UnexpectedUnresolvedUvar
           (BU.format1 "Elaborated term has unresolved implicits: %s" (show e))
      )
      else ( 
@@ -2493,19 +2493,19 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
           ((e, (eff, t)), !guards)
       | Inr err ->
         dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
-        Errors.raise_error e.pos Errors.Fatal_IllTyped ("tc_term callback failed: " ^ Core.print_error err)
+        Errors.raise_error e Errors.Fatal_IllTyped ("tc_term callback failed: " ^ Core.print_error err)
      )
     end
     with
     | Errors.Error (Errors.Error_UnexpectedUnresolvedUvar, _, _, _) ->
-      Errors.raise_error e.pos Errors.Fatal_IllTyped "UVars remaing in term after tc_term callback")
+      Errors.raise_error e Errors.Fatal_IllTyped "UVars remaing in term after tc_term callback")
   else
     return (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_universe_of (g:env) (e:term) : tac (option universe & issues) =
   let check_univ_var_resolved g u =
     match SS.compress_univ u with
-    | S.U_unif _ -> Errors.raise_error (Env.get_range g) Errors.Fatal_IllTyped "Unresolved variable in universe_of callback"
+    | S.U_unif _ -> Errors.raise_error g Errors.Fatal_IllTyped "Unresolved variable in universe_of callback"
     | u -> u in
 
   if no_uvars_in_g g &&
@@ -2520,7 +2520,7 @@ let refl_universe_of (g:env) (e:term) : tac (option universe & issues) =
            (check_univ_var_resolved g u, [(g, guard)])
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_universe_of failed: %s\n" (Core.print_error err));
-           Errors.raise_error (Env.get_range g) Errors.Fatal_IllTyped ("universe_of failed: " ^ Core.print_error err))
+           Errors.raise_error g Errors.Fatal_IllTyped ("universe_of failed: " ^ Core.print_error err))
   else return (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_check_prop_validity (g:env) (e:term) : tac (option unit & issues) =
@@ -2541,7 +2541,7 @@ let refl_check_prop_validity (g:env) (e:term) : tac (option unit & issues) =
              let msg = BU.format1 "refl_check_prop_validity failed (not a prop): %s\n"
                                   (Core.print_error err) in
              dbg_refl g (fun _ -> msg);
-             Errors.raise_error (Env.get_range g) Errors.Fatal_IllTyped msg
+             Errors.raise_error g Errors.Fatal_IllTyped msg
          in
          ((), [(g, e)])
        )
@@ -2628,14 +2628,14 @@ let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
     dbg_refl g (fun _ -> BU.format2 "refl_instantiate_implicits: inferred %s : %s" (show e) (show t));
 
     if not (no_univ_uvars_in_term e)
-    then Errors.raise_error e.pos Errors.Error_UnexpectedUnresolvedUvar
+    then Errors.raise_error e Errors.Error_UnexpectedUnresolvedUvar
            (BU.format1 "Elaborated term has unresolved univ uvars: %s" (show e));
     if not (no_univ_uvars_in_term t)
-    then Errors.raise_error e.pos Errors.Error_UnexpectedUnresolvedUvar
+    then Errors.raise_error e Errors.Error_UnexpectedUnresolvedUvar
            (BU.format1 "Inferred type has unresolved univ uvars: %s" (show t));
     bvs_and_ts |> List.iter (fun (x, t) ->
       if not (no_univ_uvars_in_term t)
-      then Errors.raise_error e.pos Errors.Error_UnexpectedUnresolvedUvar
+      then Errors.raise_error e Errors.Error_UnexpectedUnresolvedUvar
              (BU.format2 "Inferred type has unresolved univ uvars:  %s:%s" (show x) (show t)));
     let g = Env.push_bvs g (List.map (fun (bv, t) -> {bv with sort=t}) bvs_and_ts) in
     let allow_uvars = false in
@@ -2757,7 +2757,7 @@ let refl_maybe_unfold_head (g:env) (e:term) : tac (option term & issues) =
          | None -> "none"
          | Some e -> show e));
     if eopt = None
-    then Errors.raise_error e.pos Errors.Fatal_UnexpectedTerm
+    then Errors.raise_error e Errors.Fatal_UnexpectedTerm
            (BU.format1 "Could not unfold head: %s\n" (show e))
     else (eopt |> must, []))
   else return (None, [unexpected_uvars_issue (Env.get_range g)])

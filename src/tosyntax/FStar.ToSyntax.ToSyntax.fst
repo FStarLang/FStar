@@ -120,7 +120,7 @@ let qualify_field_names record_or_dc_lid field_names =
             match ns_opt with
             | Some ns' ->
               if ns <> ns'
-              then raise_error (range_of_lid l) Errors.Fatal_MissingFieldInRecord
+              then raise_error l Errors.Fatal_MissingFieldInRecord
                      (BU.format2 "Field %s of record type was expected to be scoped to namespace %s" (show l) ns')
               else (
                 ns_opt, qualify_to_record l :: out
@@ -255,7 +255,7 @@ let op_as_term env arity op : option S.term =
     | "/" -> r C.op_Division
     | "%" -> r C.op_Modulus
     | "@" ->
-      FStar.Errors.log_issue (range_of_id op) FStar.Errors.Warning_DeprecatedGeneric [
+      FStar.Errors.log_issue op FStar.Errors.Warning_DeprecatedGeneric [
           Errors.Msg.text "The operator '@' has been resolved to FStar.List.Tot.append even though \
                            FStar.List.Tot is not in scope. Please add an 'open FStar.List.Tot' to \
                            stop relying on this deprecated, special treatment of '@'."];
@@ -712,7 +712,7 @@ let rec desugar_maybe_non_constant_universe t
       (* TODO : That might be a little dangerous... *)
       let n = int_of_string repr in
       if n < 0
-      then raise_error t.range Errors.Fatal_NegativeUniverseConstFatal_NotSupported
+      then raise_error t Errors.Fatal_NegativeUniverseConstFatal_NotSupported
              ("Negative universe constant  are not supported : " ^ repr);
       Inl n
   | Op (op_plus, [t1 ; t2]) ->
@@ -724,7 +724,7 @@ let rec desugar_maybe_non_constant_universe t
           | Inl n, Inr u
           | Inr u, Inl n -> Inr (sum_to_universe u n)
           | Inr u1, Inr u2 ->
-            raise_error t.range Errors.Fatal_UniverseMightContainSumOfTwoUnivVars
+            raise_error t Errors.Fatal_UniverseMightContainSumOfTwoUnivVars
               ("This universe might contain a sum of two universe variables " ^ show t)
       end
   | App _ ->
@@ -741,9 +741,9 @@ let rec desugar_maybe_non_constant_universe t
               let nargs = List.map (function Inl n -> n | Inr _ -> failwith "impossible") univargs in
               Inl (List.fold_left (fun m n -> if m > n then m else n) 0 nargs)
         (* TODO : Might not be the best place to raise the error... *)
-        | _ -> raise_error t.range  Errors.Fatal_UnexpectedTermInUniverse ("Unexpected term " ^ term_to_string t ^ " in universe context")
+        | _ -> raise_error t Errors.Fatal_UnexpectedTermInUniverse ("Unexpected term " ^ term_to_string t ^ " in universe context")
       in aux t []
-  | _ -> raise_error t.range Errors.Fatal_UnexpectedTermInUniverse ("Unexpected term " ^ term_to_string t ^ " in universe context")
+  | _ -> raise_error t Errors.Fatal_UnexpectedTermInUniverse ("Unexpected term " ^ term_to_string t ^ " in universe context")
 
 let desugar_universe t : Syntax.universe =
     let u = desugar_maybe_non_constant_universe t in
@@ -755,10 +755,10 @@ let check_no_aq (aq : antiquotations_temp) : unit =
     match aq with
     | [] -> ()
     | (bv, { n = Tm_quoted (e, { qkind = Quote_dynamic })})::_ ->
-        raise_error e.pos Errors.Fatal_UnexpectedAntiquotation
+        raise_error e Errors.Fatal_UnexpectedAntiquotation
           (BU.format1 "Unexpected antiquotation: `@(%s)" (show e))
     | (bv, e)::_ ->
-        raise_error e.pos Errors.Fatal_UnexpectedAntiquotation
+        raise_error e Errors.Fatal_UnexpectedAntiquotation
           (BU.format1 "Unexpected antiquotation: `#(%s)" (show e))
 
 let check_linear_pattern_variables pats (r:Range.range) =
@@ -887,7 +887,7 @@ let rec desugar_data_pat
         begin match tacopt with
           | None -> ()
           | Some _ ->
-            raise_error orig.prange Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly
+            raise_error orig Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly
               "Type ascriptions within patterns cannot be associated with a tactic"
         end;
         let loc, aqs, env', binder, p, annots = aux loc aqs env p in
@@ -903,7 +903,7 @@ let rec desugar_data_pat
           | Pat_var _ -> ()
           | _ when top && top_level_ascr_allowed -> ()
           | _ ->
-            raise_error orig.prange Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly
+            raise_error orig Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly
               "Type ascriptions within patterns are only allowed on variables"
         end;
         loc, aqs, env', binder, p, annots'@annots
@@ -946,7 +946,7 @@ let rec desugar_data_pat
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
         loc, aqs, env, LocalBinder(x, None, []), pos <| Pat_cons(l, None, args), annots
 
-      | PatApp _ -> raise_error p.prange Errors.Fatal_UnexpectedPattern "Unexpected pattern"
+      | PatApp _ -> raise_error p Errors.Fatal_UnexpectedPattern "Unexpected pattern"
 
       | PatList pats ->
         let loc, aqs, env, annots, pats = List.fold_right (fun pat (loc, aqs, env, annots, pats) ->
@@ -1061,7 +1061,7 @@ and desugar_binding_pat_maybe_top top env p
         let t, aq = desugar_term_aq env t in
         mklet x t tacopt, aq
     | _ ->
-        raise_error p.prange Errors.Fatal_UnexpectedPattern "Unexpected pattern at the top-level"
+        raise_error p Errors.Fatal_UnexpectedPattern "Unexpected pattern at the top-level"
   else
     let (env, binder, p), aq = desugar_data_pat true env p in
     let p = match p with
@@ -1155,7 +1155,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       match b with
       | {binder_bv=x; binder_qual=None; binder_attrs=[]} -> x
       | _ ->
-        raise_error (range_of_bv b.binder_bv) Fatal_UnexpectedTerm "Unexpected qualified binder in ELIM_EXISTS"
+        raise_error b Fatal_UnexpectedTerm "Unexpected qualified binder in ELIM_EXISTS"
   in
   if !dbg_ToSyntax then
     BU.print1 "desugaring (%s)\n\n" (show top);
@@ -1208,8 +1208,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       setpos <| (fail_or2 (try_lookup_id env) a), noaqs
 
     | Uvar u ->
-      raise_error top.range
-          Errors.Fatal_UnexpectedUniverseVariable
+      raise_error top Errors.Fatal_UnexpectedUniverseVariable
           ("Unexpected universe variable " ^
             string_of_id u ^
             " in non-universe context")
@@ -1224,8 +1223,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       begin
       match op_as_term env (List.length args) s with
       | None ->
-        raise_error (range_of_id s)
-                    Errors.Fatal_UnepxectedOrUnboundOperator
+        raise_error s Errors.Fatal_UnepxectedOrUnboundOperator
                     ("Unexpected or unbound operator: " ^
                      Ident.string_of_id s)
       | Some op ->
@@ -1242,7 +1240,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
           ({top with tm = App ({top with tm = Var (smt_pat_lid top.range)}, a, Nothing)})
 
     | Construct (n, [(a, _)]) when (string_of_lid n) = "SMTPatT" ->
-        Errors.log_issue top.range Errors.Warning_SMTPatTDeprecated "SMTPatT is deprecated; please just use SMTPat";
+        Errors.log_issue top Errors.Warning_SMTPatTDeprecated "SMTPatT is deprecated; please just use SMTPat";
         desugar_term_maybe_top top_level env
           ({top with tm = App ({top with tm = Var (smt_pat_lid top.range) }, a, Nothing)})
 
@@ -1297,13 +1295,13 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       | Some (resolve, new_name) ->
         desugar_name mk setpos env resolve (mk_field_projector_name_from_ident new_name i), noaqs
       | _ ->
-        raise_error top.range Errors.Fatal_EffectNotFound (BU.format1 "Data constructor or effect %s not found" (string_of_lid l))
+        raise_error top Errors.Fatal_EffectNotFound (BU.format1 "Data constructor or effect %s not found" (string_of_lid l))
       end
 
     | Discrim lid ->
       begin match Env.try_lookup_datacon env lid with
       | None ->
-        raise_error top.range Errors.Fatal_DataContructorNotFound (BU.format1 "Data constructor %s not found" (string_of_lid lid))
+        raise_error top Errors.Fatal_DataContructorNotFound (BU.format1 "Data constructor %s not found" (string_of_lid lid))
       | _ ->
         let lid' = U.mk_discriminator lid in
         desugar_name mk setpos env true lid', noaqs
@@ -1331,10 +1329,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
         | None ->
           match Env.try_lookup_effect_name env l with
           | None ->
-            raise_error (range_of_lid l) Errors.Fatal_ConstructorNotFound
+            raise_error l Errors.Fatal_ConstructorNotFound
               ("Constructor " ^ (string_of_lid l) ^ " not found")
           | Some _ ->
-            raise_error (range_of_lid l) Errors.Fatal_UnexpectedEffect
+            raise_error l Errors.Fatal_UnexpectedEffect
               ("Effect " ^ (string_of_lid l) ^ " used at an unexpected position")
         end
 
@@ -1425,7 +1423,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       | Some id ->
           let open FStar.Pprint in
           let open FStar.Class.PP in
-          raise_error (range_of_id id) Errors.Fatal_NonLinearPatternNotPermitted [
+          raise_error id Errors.Fatal_NonLinearPatternNotPermitted [
             text "Non-linear patterns are not permitted.";
             text "The variable " ^/^ squotes (pp id) ^/^ text " appears more than once in this function definition."
           ]
@@ -1470,7 +1468,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
                 | [] -> None
                 | [p, _] -> Some p // NB: We ignore the type annotation here, the typechecker catches that anyway in tc_abs
                 | _ ->
-                  raise_error p.prange Errors.Fatal_UnsupportedDisjuctivePatterns "Disjunctive patterns are not supported in abstractions"
+                  raise_error p Errors.Fatal_UnsupportedDisjuctivePatterns "Disjunctive patterns are not supported in abstractions"
             in
             let b, sc_pat_opt =
                 match b with
@@ -1561,14 +1559,14 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
         match tycon.tm with
         | Var l -> l
         | _ ->
-          raise_error rty.range Errors.Error_BadLetOpenRecord
+          raise_error rty Errors.Error_BadLetOpenRecord
             (BU.format1 "This type must be a (possibly applied) record name" (term_to_string rty))
       in
       let record =
         match Env.try_lookup_record_type env tycon_name with
         | Some r -> r
         | None ->
-          raise_error rty.range Errors.Error_BadLetOpenRecord
+          raise_error rty Errors.Error_BadLetOpenRecord
             (BU.format1 "Not a record type: `%s`" (term_to_string rty))
       in
       let constrname = lid_of_ns_and_id (ns_of_lid record.typename) record.constrname in
@@ -1621,7 +1619,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
                             if top_level
                             then attr_opt, (Inr (qualify env id), [], None), def
                             else attr_opt, (Inl id, [], None), def
-                        | _ -> raise_error p.prange Errors.Fatal_UnexpectedLetBinding "Unexpected let binding"
+                        | _ -> raise_error p Errors.Fatal_UnexpectedLetBinding "Unexpected let binding"
                       end)
         in
 
@@ -1676,7 +1674,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
                             match args |> List.tryFind (fun x -> not (is_var_pattern x)) with
                             | None -> ()
                             | Some p ->
-                              raise_error p.prange Errors.Fatal_ComputationTypeNotAllowed
+                              raise_error p Errors.Fatal_ComputationTypeNotAllowed
                                 ("Computation type annotations are only permitted on let-bindings \
                                              without inlined patterns; \
                                              replace this pattern with a variable") in
@@ -1742,7 +1740,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
          match binder with
          | LetBinder(l, (t, tacopt)) ->
            if tacopt |> is_some
-           then Errors.log_issue (tacopt |> must).pos Errors.Warning_DefinitionNotTranslated
+           then Errors.log_issue (tacopt |> must) Errors.Warning_DefinitionNotTranslated
                   "Tactic annotation with a value type is not supported yet, \
                     try annotating with a computation type; this tactic annotation will be ignored";
            let body, aq = desugar_term_aq env t2 in
@@ -1838,7 +1836,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       mk <| Tm_ascribed {tm=e; asc; eff_opt=None}, aq0@aq
 
     | Record(_, []) ->
-      raise_error top.range Errors.Fatal_UnexpectedEmptyRecord "Unexpected empty record"
+      raise_error top Errors.Fatal_UnexpectedEmptyRecord "Unexpected empty record"
 
     | Record(eopt, fields) ->
       (* Record literals have to wait for type information to be fully resolved *)
@@ -1930,7 +1928,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
 
     | NamedTyp(n, e) ->
       (* See issue #1905 *)
-      log_issue (range_of_id n) Warning_IgnoredBinding "This name is being ignored";
+      log_issue n Warning_IgnoredBinding "This name is being ignored";
       desugar_term_aq env e
 
     | Paren e -> failwith "impossible"
@@ -1946,7 +1944,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       let () =
         let fvs = Free.names tm in
         if not (is_empty fvs) then
-          raise_error e.range Errors.Fatal_MissingFieldInRecord
+          raise_error e Errors.Fatal_MissingFieldInRecord
                      (BU.format1 "Static quotation refers to external variables: %s" (show fvs))
       in
 
@@ -2117,7 +2115,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
           in
           token
         | _ ->
-          raise_error top.range Fatal_UnexpectedTerm "Unexpected number of instantiations in _intro_ exists"
+          raise_error top Fatal_UnexpectedTerm "Unexpected number of instantiations in _intro_ exists"
        in
        aux bs vs [] e, noaqs
 
@@ -2193,7 +2191,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
           let sub = NT(x, v)::sub in
           aux (SS.subst_binders sub bs) vs sub token
         | _ ->
-          raise_error top.range Fatal_UnexpectedTerm "Unexpected number of instantiations in _elim_forall_"
+          raise_error top Fatal_UnexpectedTerm "Unexpected number of instantiations in _elim_forall_"
       in
       let range = List.fold_right (fun bs r -> Range.union_ranges (S.range_of_bv bs.binder_bv) r) bs p.pos in
       aux bs vs [] { U.exp_unit with pos = range }, noaqs
@@ -2228,7 +2226,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       in
       let rec aux binders squash_token =
         match binders with
-        | [] -> raise_error top.range Fatal_UnexpectedTerm "Empty binders in ELIM_EXISTS"
+        | [] -> raise_error top Fatal_UnexpectedTerm "Empty binders in ELIM_EXISTS"
         | [b] ->
           let x = unqual_bv_of_binder b in
           (*
@@ -2329,7 +2327,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
     | _ when (top.level=Formula) -> desugar_formula env top, noaqs
 
     | _ ->
-      raise_error top.range Fatal_UnexpectedTerm ("Unexpected term: " ^ term_to_string top)
+      raise_error top Fatal_UnexpectedTerm ("Unexpected term: " ^ term_to_string top)
   end
 
 and desugar_match_returns env scrutinee asc_opt =
@@ -2361,7 +2359,7 @@ and desugar_ascription env t tac_opt use_eq : S.ascription & antiquotations_temp
   let annot, aq0 =
     if is_comp_type env t
     then if use_eq
-         then raise_error t.range Errors.Fatal_NotSupported "Equality ascription with computation types is not supported yet"
+         then raise_error t Errors.Fatal_NotSupported "Equality ascription with computation types is not supported yet"
          else let comp = desugar_comp t.range true env t in
               (Inr comp, [])
     else let tm, aq = desugar_term_aq env t in
@@ -2433,7 +2431,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
                                     "Lemma (requires pre) (ensures post) (decreases d)";
                                     "Lemma (requires pre) (ensures post) [SMTPat ...]";
                                     "Lemma (requires pre) (ensures post) (decreases d) [SMTPat ...]"] in
-             raise_error t.range Errors.Fatal_InvalidLemmaArgument [
+             raise_error t Errors.Fatal_InvalidLemmaArgument [
                 text "Invalid arguments to 'Lemma'; expected one of the following"
                   ^^ sublist empty (List.map doc_of_string expected_one_of)
              ]
@@ -2534,12 +2532,12 @@ and desugar_comp r (allow_type_promotion:bool) env t =
           if Options.ml_ish ()
           then Const.effect_ML_lid()
           else (if Options.warn_default_effects()
-                then FStar.Errors.log_issue head.range Errors.Warning_UseDefaultEffect "Using default effect Tot";
+                then FStar.Errors.log_issue head Errors.Warning_UseDefaultEffect "Using default effect Tot";
                 Const.effect_Tot_lid) in
         (Ident.set_lid_range default_effect head.range, []), [t, Nothing]
 
       | _ ->
-        raise_error t.range Errors.Fatal_EffectNotFound "Expected an effect constructor"
+        raise_error t Errors.Fatal_EffectNotFound "Expected an effect constructor"
     in
     let (eff, cattributes), args = pre_process_comp_typ t in
     if List.length args = 0 then
@@ -2703,7 +2701,7 @@ and desugar_formula env (f:term) : S.term =
       let q_head =
         match op_as_term env 0 i with
         | None -> 
-          raise_error (Ident.range_of_id i) Errors.Fatal_VariableNotFound
+          raise_error i Errors.Fatal_VariableNotFound
                       (BU.format1 "quantifier operator %s not found" (Ident.string_of_id i))
         | Some t -> t
       in
@@ -2768,7 +2766,7 @@ let typars_of_binders env bs : _ & binders =
                 let env, a = push_bv env a in
                 let a = {a with sort=k} in
                 env, (mk_binder_with_attrs a (trans_bqual env b.aqual) attrs)::out
-            | _ -> raise_error b.brange Errors.Fatal_UnexpectedBinder "Unexpected binder") (env, []) bs in
+            | _ -> raise_error b Errors.Fatal_UnexpectedBinder "Unexpected binder") (env, []) bs in
     env, List.rev tpars
 
 
@@ -2776,7 +2774,7 @@ let desugar_attributes (env:env_t) (cattributes:list term) : list cflag =
     let desugar_attribute t =
         match (unparen t).tm with
             | Var lid when string_of_lid lid = "cps" -> CPS
-            | _ -> raise_error t.range Errors.Fatal_UnknownAttribute ("Unknown attribute " ^ term_to_string t)
+            | _ -> raise_error t Errors.Fatal_UnknownAttribute ("Unknown attribute " ^ term_to_string t)
     in List.map desugar_attribute cattributes
 
 let binder_ident (b:binder) : option ident =
@@ -2986,7 +2984,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
       let names = id :: binder_idents parms in
       List.iter (fun (f, _, _, _) ->
           if BU.for_some (fun i -> ident_equals f i) names then
-              raise_error (range_of_id f) Errors.Error_FieldShadow
+              raise_error f Errors.Error_FieldShadow
                 (BU.format1 "Field %s shadows the record's name or a parameter of it, please rename it" (string_of_id f)))
           fields;
 
@@ -3250,7 +3248,7 @@ let desugar_binders env binders =
         let binder, env = as_binder env b.aqual (Some a, k, attrs) in
         env, binder::binders
 
-      | _ -> raise_error b.brange Errors.Fatal_MissingNameInBinder "Missing name in binder") (env, []) binders in
+      | _ -> raise_error b Errors.Fatal_MissingNameInBinder "Missing name in binder") (env, []) binders in
     env, List.rev binders
 
 let push_reflect_effect env quals (effect_name:Ident.lid) range =
@@ -3272,7 +3270,7 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
 let parse_attr_with_list warn (at:S.term) (head:lident) : option (list int) & bool =
   let warn () =
     if warn then
-      Errors.log_issue at.pos Errors.Warning_UnappliedFail
+      Errors.log_issue at Errors.Warning_UnappliedFail
         (BU.format1 "Found ill-applied '%s', argument should be a non-empty list of integer literals" (string_of_lid head))
   in
   let hd, args = U.head_and_args at in
@@ -3345,7 +3343,7 @@ let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layer
     (* An effect for free has a type of the shape "a:Type -> Effect" *)
     let for_free = num_indices = 1 && not is_layered in
     if for_free
-    then Errors.log_issue d.drange Errors.Warning_DeprecatedGeneric
+    then Errors.log_issue d Errors.Warning_DeprecatedGeneric
             (BU.format1 "DM4Free feature is deprecated and will be removed soon, \
               use layered effects to define %s" (Ident.string_of_id eff_name));
 
@@ -3415,7 +3413,7 @@ let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layer
               action_typ=S.tun
             }
         | _ ->
-            raise_error d.drange Errors.Fatal_MalformedActionDeclaration
+            raise_error d Errors.Fatal_MalformedActionDeclaration
               ("Malformed action declaration; if this is an \"effect \
               for free\", just provide the direct-style declaration. If this is \
               not an \"effect for free\", please provide a pair of the definition \
@@ -3471,7 +3469,7 @@ let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layer
               let b_attrs = b.binder_attrs in
               let is_param = U.has_attribute b_attrs C.effect_parameter_attr in
               if is_param && not allow_param
-              then raise_error d.drange Errors.Fatal_UnexpectedEffect "Effect parameters must all be upfront";
+              then raise_error d Errors.Fatal_UnexpectedEffect "Effect parameters must all be upfront";
               let b_attrs = U.remove_attr C.effect_parameter_attr b_attrs in
               (if is_param then n+1 else n),
               allow_param && is_param,
@@ -3565,7 +3563,7 @@ and desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders 
         let head, args = head_and_args defn in
         let lid = match head.tm with
           | Name l -> l
-          | _ -> raise_error d.drange Errors.Fatal_EffectNotFound ("Effect " ^AST.term_to_string head^ " not found")
+          | _ -> raise_error d Errors.Fatal_EffectNotFound ("Effect " ^AST.term_to_string head^ " not found")
         in
         let ed = fail_or env (Env.try_lookup_effect_defn env) lid in
         let cattributes, args =
@@ -3581,7 +3579,7 @@ and desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders 
 //    printfn "ToSyntax got eff_decl: %s\n" (Print.eff_decl_to_string false ed);
     let binders = Subst.close_binders binders in
     if List.length args <> List.length ed.binders
-    then raise_error defn.range Errors.Fatal_ArgumentLengthMismatch "Unexpected number of arguments to effect constructor";
+    then raise_error defn Errors.Fatal_ArgumentLengthMismatch "Unexpected number of arguments to effect constructor";
     let ed_binders, _, ed_binders_opening = Subst.open_term' ed.binders S.t_unit in
     let sub' shift_n (us, x) =
         let x = Subst.subst (Subst.shift_subst (shift_n + List.length us) ed_binders_opening) x in
@@ -3702,7 +3700,7 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t & sigelts) =
             let open FStar.Class.PP in
             let open FStar.Pprint in
             List.iter Errors.print_issue errs;
-            Errors.log_issue d.drange Errors.Error_DidNotFail [
+            Errors.log_issue d Errors.Error_DidNotFail [
                 prefix 2 1
                   (text "This top-level definition was expected to raise error codes")
                   (pp expected_errs) ^/^
@@ -3747,16 +3745,16 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
 
   | Friend lid ->
     if Env.iface env
-    then raise_error d.drange Errors.Fatal_FriendInterface
+    then raise_error d Errors.Fatal_FriendInterface
                       "'friend' declarations are not allowed in interfaces"
     else if not (FStar.Parser.Dep.module_has_interface (Env.dep_graph env) (Env.current_module env))
-    then raise_error d.drange Errors.Fatal_FriendInterface
+    then raise_error d Errors.Fatal_FriendInterface
                       "'friend' declarations are not allowed in modules that lack interfaces"
     else if not (FStar.Parser.Dep.module_has_interface (Env.dep_graph env) lid)
-    then raise_error d.drange Errors.Fatal_FriendInterface
+    then raise_error d Errors.Fatal_FriendInterface
                       "'friend' declarations cannot refer to modules that lack interfaces"
     else if not (FStar.Parser.Dep.deps_has_implementation (Env.dep_graph env) lid)
-    then raise_error d.drange Errors.Fatal_FriendInterface
+    then raise_error d Errors.Fatal_FriendInterface
                       "'friend' module has not been loaded; recompute dependences (C-c C-r) if in interactive mode"
     else env, []
 
@@ -3774,7 +3772,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
         if typeclass then
             match tcs with
             | [(TyconRecord _)] -> Noeq :: quals
-            | _ -> raise_error d.drange Errors.Error_BadClassDecl "Ill-formed `class` declaration: definition must be a record type"
+            | _ -> raise_error d Errors.Error_BadClassDecl "Ill-formed `class` declaration: definition must be a record type"
         else quals
     in
     let env, ses = desugar_tycon env d d_attrs (List.map (trans_qual None) quals) tcs in
@@ -4224,7 +4222,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
     env, []
 
   | Unparseable ->
-    raise_error d.drange Errors.Fatal_SyntaxError "Syntax error"
+    raise_error d Errors.Fatal_SyntaxError "Syntax error"
 
   | DeclSyntaxExtension (extension_name, code, _, range) -> (
     let extension_parser = FStar.Parser.AST.Util.lookup_extension_parser extension_name in
@@ -4250,7 +4248,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
   | DeclToBeDesugared tbs -> (
     match lookup_extension_tosyntax tbs.lang_name with
     | None -> 
-      raise_error d.drange Errors.Fatal_SyntaxError
+      raise_error d Errors.Fatal_SyntaxError
         (BU.format1 "Could not find desugaring callback for extension %s" tbs.lang_name)
     | Some desugar ->
       let mk_sig sigel = 

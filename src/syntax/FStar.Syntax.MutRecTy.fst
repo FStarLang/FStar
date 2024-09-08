@@ -133,7 +133,7 @@ let disentangle_abbrevs_from_bundle
                       | Some se ->
                           if FStar.Compiler.List.existsb (fun x -> lid_equals x fv.fv_name.v) !in_progress
                           then let msg = U.format1 "Cycle on %s in mutually recursive type abbreviations" (string_of_lid fv.fv_name.v) in
-                               raise_error (range_of_lid fv.fv_name.v) Errors.Fatal_CycleInRecTypeAbbreviation msg
+                               raise_error fv.fv_name.v Errors.Fatal_CycleInRecTypeAbbreviation msg
                           else unfold_abbrev se
                       | _ -> t
                   end

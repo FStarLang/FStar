@@ -934,6 +934,9 @@ val is_ident_allowed_by_restriction: ident -> restriction -> option ident
 instance val has_range_syntax #a : unit -> Tot (hasRange (syntax a))
 instance val has_range_withinfo #a : unit -> Tot (hasRange (withinfo_t a))
 instance val has_range_sigelt : hasRange sigelt
+instance val hasRange_fv : hasRange fv
+instance val hasRange_bv     : hasRange bv
+instance val hasRange_binder : hasRange binder
 
 instance val showable_emb_typ : showable emb_typ
 instance val showable_delta_depth : showable delta_depth

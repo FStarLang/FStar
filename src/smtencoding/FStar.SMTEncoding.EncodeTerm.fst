@@ -594,7 +594,7 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term & decls_t =
     let tkey_hash = hash_of_term key in
     match tm.tm with
     | App(_, [{tm=FreeV _}; {tm=FreeV _}]) ->
-      FStar.Errors.log_issue t.pos Errors.Warning_QuantifierWithoutPattern
+      FStar.Errors.log_issue t Errors.Warning_QuantifierWithoutPattern
         "Not encoding deeply embedded, unguarded quantifier to SMT";
       tm, decls
 
@@ -1122,7 +1122,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                         else if Term.fvs_subset_of cvars (Term.free_variables has_type_conclusion)
                         then [has_type_conclusion], cvars
                         else begin
-                          Errors.log_issue t0.pos Errors.Warning_SMTPatternIllFormed
+                          Errors.log_issue t0 Errors.Warning_SMTPatternIllFormed
                              (BU.format1 "No SMT pattern for partial application %s" (show t0));
                           [], cvars //no pattern!
                         end
@@ -1265,7 +1265,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               let open FStar.Pprint in
               let open FStar.Errors.Msg in
               //we don't even know if this is a pure function, so give up
-              Errors.log_issue t0.pos Errors.Warning_FunctionLiteralPrecisionLoss [
+              Errors.log_issue t0 Errors.Warning_FunctionLiteralPrecisionLoss [
                 prefix 2 1 (text "Losing precision when encoding a function literal:")
                   (pp t0);
                 text "Unannotated abstraction in the compiler?"
@@ -1482,7 +1482,7 @@ and encode_smt_patterns (pats_l:list (list S.arg)) env : list (list term) & decl
                     | None ->
                       t::pats, d@decls
                     | Some illegal_subterm ->
-                      Errors.log_issue p.pos Errors.Warning_SMTPatternIllFormed
+                      Errors.log_issue p Errors.Warning_SMTPatternIllFormed
                         (BU.format2 "Pattern %s contains illegal sub-term (%s); dropping it"
                                         (show p)
                                         (show illegal_subterm));

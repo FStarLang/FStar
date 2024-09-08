@@ -205,7 +205,7 @@ let unembed #a {| e:embedding a |} t n =
   let open FStar.Errors.Msg in
   let open FStar.Pprint in
   if None? r then
-    Err.log_issue t.pos Err.Warning_NotEmbedded [
+    Err.log_issue t Err.Warning_NotEmbedded [
       text "Unembedding failed for type" ^/^ pp (type_of e);
       text "emb_typ = " ^/^ doc_of_string (show (emb_typ_of a ()));
       text "Term =" ^/^ pp t;
@@ -229,7 +229,7 @@ let e_lazy #a (k:lazy_kind) (ty : S.typ) : embedding a =
     | Tm_lazy {blob=b; lkind=lkind} when lkind =? k -> Some (Dyn.undyn b)
     | Tm_lazy {blob=b; lkind=lkind} ->
       (* This is very likely a bug, warn! *)
-      Err.log_issue t0.pos Err.Warning_NotEmbedded
+      Err.log_issue t0 Err.Warning_NotEmbedded
                 (BU.format3 "Warning, lazy unembedding failed, tag mismatch.\n\t\
                             Expected %s, got %s\n\t\
                             t = %s."
