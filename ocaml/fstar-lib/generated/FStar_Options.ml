@@ -4597,53 +4597,58 @@ let (should_extract : Prims.string -> codegen_t -> Prims.bool) =
   fun m ->
     fun tgt ->
       let m1 = FStar_Compiler_String.lowercase m in
-      let uu___ = extract_settings () in
-      match uu___ with
-      | FStar_Pervasives_Native.Some pes ->
-          ((let uu___2 =
-              let uu___3 = get_no_extract () in
-              let uu___4 = get_extract_namespace () in
-              let uu___5 = get_extract_module () in (uu___3, uu___4, uu___5) in
-            match uu___2 with
-            | ([], [], []) -> ()
-            | uu___3 ->
-                FStar_Compiler_Effect.failwith
-                  "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module");
-           (let tsetting =
-              let uu___2 =
-                find_setting_for_target tgt pes.target_specific_settings in
-              match uu___2 with
-              | FStar_Pervasives_Native.Some s -> s
-              | FStar_Pervasives_Native.None ->
-                  (match pes.default_settings with
-                   | FStar_Pervasives_Native.Some s -> s
-                   | FStar_Pervasives_Native.None -> "*") in
-            module_matches_namespace_filter m1 [tsetting]))
-      | FStar_Pervasives_Native.None ->
-          let should_extract_namespace m2 =
-            let uu___1 = get_extract_namespace () in
-            match uu___1 with
-            | [] -> false
-            | ns ->
-                FStar_Compiler_Util.for_some
-                  (fun n ->
-                     FStar_Compiler_Util.starts_with m2
-                       (FStar_Compiler_String.lowercase n)) ns in
-          let should_extract_module m2 =
-            let uu___1 = get_extract_module () in
-            match uu___1 with
-            | [] -> false
-            | l ->
-                FStar_Compiler_Util.for_some
-                  (fun n -> (FStar_Compiler_String.lowercase n) = m2) l in
-          (let uu___1 = no_extract m1 in Prims.op_Negation uu___1) &&
-            (let uu___1 =
+      if m1 = "prims"
+      then false
+      else
+        (let uu___1 = extract_settings () in
+         match uu___1 with
+         | FStar_Pervasives_Native.Some pes ->
+             ((let uu___3 =
+                 let uu___4 = get_no_extract () in
+                 let uu___5 = get_extract_namespace () in
+                 let uu___6 = get_extract_module () in
+                 (uu___4, uu___5, uu___6) in
+               match uu___3 with
+               | ([], [], []) -> ()
+               | uu___4 ->
+                   FStar_Compiler_Effect.failwith
+                     "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module");
+              (let tsetting =
+                 let uu___3 =
+                   find_setting_for_target tgt pes.target_specific_settings in
+                 match uu___3 with
+                 | FStar_Pervasives_Native.Some s -> s
+                 | FStar_Pervasives_Native.None ->
+                     (match pes.default_settings with
+                      | FStar_Pervasives_Native.Some s -> s
+                      | FStar_Pervasives_Native.None -> "*") in
+               module_matches_namespace_filter m1 [tsetting]))
+         | FStar_Pervasives_Native.None ->
+             let should_extract_namespace m2 =
                let uu___2 = get_extract_namespace () in
-               let uu___3 = get_extract_module () in (uu___2, uu___3) in
-             (match uu___1 with
-              | ([], []) -> true
-              | uu___2 ->
-                  (should_extract_namespace m1) || (should_extract_module m1)))
+               match uu___2 with
+               | [] -> false
+               | ns ->
+                   FStar_Compiler_Util.for_some
+                     (fun n ->
+                        FStar_Compiler_Util.starts_with m2
+                          (FStar_Compiler_String.lowercase n)) ns in
+             let should_extract_module m2 =
+               let uu___2 = get_extract_module () in
+               match uu___2 with
+               | [] -> false
+               | l ->
+                   FStar_Compiler_Util.for_some
+                     (fun n -> (FStar_Compiler_String.lowercase n) = m2) l in
+             (let uu___2 = no_extract m1 in Prims.op_Negation uu___2) &&
+               (let uu___2 =
+                  let uu___3 = get_extract_namespace () in
+                  let uu___4 = get_extract_module () in (uu___3, uu___4) in
+                (match uu___2 with
+                 | ([], []) -> true
+                 | uu___3 ->
+                     (should_extract_namespace m1) ||
+                       (should_extract_module m1))))
 let (should_be_already_cached : Prims.string -> Prims.bool) =
   fun m ->
     let uu___ = get_already_cached () in

@@ -2085,7 +2085,7 @@ let (default_settings : error_setting Prims.list) =
   (Fatal_NotSupported, CFatal, (Prims.of_int (149)));
   (Fatal_NotTopLevelModule, CFatal, (Prims.of_int (150)));
   (Fatal_NotValidFStarFile, CFatal, (Prims.of_int (151)));
-  (Fatal_NotValidIncludeDirectory, CFatal, (Prims.of_int (152)));
+  (Fatal_NotValidIncludeDirectory, CWarning, (Prims.of_int (152)));
   (Fatal_OneModulePerFile, CFatal, (Prims.of_int (153)));
   (Fatal_OpenGoalsInSynthesis, CFatal, (Prims.of_int (154)));
   (Fatal_OptionsNotCompatible, CFatal, (Prims.of_int (155)));

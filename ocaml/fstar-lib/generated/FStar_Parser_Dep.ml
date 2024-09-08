@@ -821,12 +821,19 @@ let (build_inclusion_candidates_list :
                        else FStar_Compiler_Util.join_paths d f1 in
                      (longname, full_path)) uu___1) files
          else
-           (let uu___2 =
-              let uu___3 =
-                FStar_Compiler_Util.format1
-                  "not a valid include directory: %s\n" d in
-              (FStar_Errors_Codes.Fatal_NotValidIncludeDirectory, uu___3) in
-            FStar_Errors.raise_err uu___2)) include_directories2
+           ((let uu___3 =
+               let uu___4 =
+                 let uu___5 =
+                   let uu___6 =
+                     FStar_Errors_Msg.text "Not a valid include directory:" in
+                   let uu___7 = FStar_Pprint.doc_of_string d in
+                   FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                     uu___6 uu___7 in
+                 [uu___5] in
+               (FStar_Errors_Codes.Fatal_NotValidIncludeDirectory, uu___4) in
+             FStar_Errors.log_issue_doc FStar_Compiler_Range_Type.dummyRange
+               uu___3);
+            [])) include_directories2
 let (build_map : Prims.string Prims.list -> files_for_module_name) =
   fun filenames ->
     let map = FStar_Compiler_Util.smap_create (Prims.of_int (41)) in
