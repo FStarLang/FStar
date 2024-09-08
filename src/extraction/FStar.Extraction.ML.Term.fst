@@ -79,46 +79,40 @@ module Print = FStar.Syntax.Print
 (********************************************************************************************)
 (* Some basic error reporting; all are fatal errors at this stage                           *)
 (********************************************************************************************)
-let fail r err =
-    Errors.raise_error err r
-
 let err_ill_typed_application env (t : term) mlhead (args : args) (ty : mlty) =
-    fail t.pos
-      (Fatal_IllTyped,
-       BU.format4 "Ill-typed application: source application is %s \n translated prefix to %s at type %s\n remaining args are %s\n"
+    Errors.raise_error t.pos
+      Fatal_IllTyped
+       (BU.format4 "Ill-typed application: source application is %s \n translated prefix to %s at type %s\n remaining args are %s\n"
                 (show t)
                 (Code.string_of_mlexpr (current_module_of_uenv env) mlhead)
                 (Code.string_of_mlty (current_module_of_uenv env) ty)
                 (show args))
 
 let err_ill_typed_erasure env pos (ty : mlty) =
-    fail pos
-      (Fatal_IllTyped,
-       BU.format1 "Erased value found where a value of type %s was expected"
+    Errors.raise_error pos Fatal_IllTyped
+       (BU.format1 "Erased value found where a value of type %s was expected"
                   (Code.string_of_mlty (current_module_of_uenv env) ty))
 
 let err_value_restriction (t:term) =
-    fail t.pos
-      (Fatal_ValueRestriction,
-       BU.format2 "Refusing to generalize because of the value restriction: (%s) %s"
+    Errors.raise_error t.pos Fatal_ValueRestriction
+       (BU.format2 "Refusing to generalize because of the value restriction: (%s) %s"
                     (tag_of t) (show t))
 
 let err_unexpected_eff env (t:term) ty f0 f1 =
     let open FStar.Errors.Msg in
     let open FStar.Pprint in
-    Errors.log_issue_doc t.pos
-      (Warning_ExtractionUnexpectedEffect, [
+    Errors.log_issue t.pos Warning_ExtractionUnexpectedEffect [
         prefix 4 1 (text "For expression") (pp t) ^/^
         prefix 4 1 (text "of type") (arbitrary_string (Code.string_of_mlty (current_module_of_uenv env) ty));
         prefix 4 1 (text "Expected effect") (arbitrary_string (eff_to_string f0)) ^/^
-        prefix 4 1 (text "got effect") (arbitrary_string (eff_to_string f1))])
+        prefix 4 1 (text "got effect") (arbitrary_string (eff_to_string f1))]
 
 let err_cannot_extract_effect (l:lident) (r:Range.range) (reason:string) (ctxt:string) =
-  Errors.raise_error_doc
-    (Errors.Fatal_UnexpectedEffect,
-     [Errors.text <|
+  Errors.raise_error r Errors.Fatal_UnexpectedEffect [
+    Errors.text <|
      BU.format3 "Cannot extract effect %s because %s (when extracting %s)"
-       (string_of_lid l) reason ctxt]) r
+       (string_of_lid l) reason ctxt
+  ]
 
 (***********************************************************************)
 (* Translating an effect lid to an e_tag = {E_PURE, E_ERASABLE, E_IMPURE} *)
@@ -555,9 +549,9 @@ let maybe_eta_expand_coercion g expect e =
 let apply_coercion pos (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
     if Util.codegen_fsharp()
     then //magics are not always sound in F#; warn
-        FStar.Errors.log_issue_text pos
-          (Errors.Warning_NoMagicInFSharp,
-           BU.format2
+        FStar.Errors.log_issue pos
+          Errors.Warning_NoMagicInFSharp
+           (BU.format2
              "Inserted an unsafe type coercion in generated code from %s to %s; this may be unsound in F#"
                (Code.string_of_mlty (current_module_of_uenv g) ty)
                (Code.string_of_mlty (current_module_of_uenv g) expect));
@@ -1023,10 +1017,8 @@ let rec extract_one_pat (imp : bool)
           | Some ({exp_b_expr={expr=MLE_Name n}; exp_b_tscheme=ttys}) -> n, ttys
           | Some _ -> failwith "Expected a constructor"
           | None ->
-            Errors.raise_error (Errors.Error_ErasedCtor,
-                                BU.format1 "Cannot extract this pattern, the %s constructor was erased"
-                                            (show f))
-                               f.fv_name.p
+            Errors.raise_error f.fv_name.p  Errors.Error_ErasedCtor
+              (BU.format1 "Cannot extract this pattern, the %s constructor was erased" (show f))
         in
         // The prefix of the pattern are dot patterns matching the type parameters
         let nTyVars = List.length (fst tys) in
@@ -1633,9 +1625,9 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                  let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos in
                  term_as_mlexpr g tm
                | None ->
-                 raise_error (Errors.Fatal_ExtractionUnsupported,
-                              BU.format1 "Cannot extract %s (reify effect is not set)"
-                                (show top)) top.pos)
+                 raise_error top.pos Errors.Fatal_ExtractionUnsupported
+                   (BU.format1 "Cannot extract %s (reify effect is not set)" (show top))
+              )
 
             | _ ->
 
@@ -1845,14 +1837,14 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                   let bv = freshen_bv bv in
                   Some bv
                 | _ ->
-                  Errors.log_issue top.pos (Errors.Warning_UnrecognizedAttribute,
-                                         ("Ignoring ill-formed application of `rename_let`"));
+                  Errors.log_issue top.pos Errors.Warning_UnrecognizedAttribute
+                    "Ignoring ill-formed application of `rename_let`";
                   None
                 end
 
               | Some _ ->
-                Errors.log_issue top.pos (Errors.Warning_UnrecognizedAttribute,
-                                         ("Ignoring ill-formed application of `rename_let`"));
+                  Errors.log_issue top.pos Errors.Warning_UnrecognizedAttribute
+                    "Ignoring ill-formed application of `rename_let`";
                 None
 
               | None ->

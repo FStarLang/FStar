@@ -108,20 +108,19 @@ let check_sigelt_quals_pre (env:FStar.TypeChecker.Env.env) se =
          (match se.sigel with
           | Sig_let _ -> false
           | _ -> true)
-      then raise_error_doc
-             (Errors.Fatal_InconsistentQualifierAnnotation, [
-              text "Illegal attribute: the `no_subtyping` attribute is allowed only on let-bindings."])
-             se.sigrng in
+      then raise_error se.sigrng
+             Errors.Fatal_InconsistentQualifierAnnotation [
+              text "Illegal attribute: the `no_subtyping` attribute is allowed only on let-bindings."]
+    in
     check_no_subtyping_attribute se;
     let quals = U.quals_of_sigelt se |> List.filter (fun x -> not (x = Logic)) in  //drop logic since it is deprecated
     if quals |> BU.for_some (function OnlyName -> true | _ -> false) |> not
     then
       let r = U.range_of_sigelt se in
       let no_dup_quals = BU.remove_dups (fun x y -> x=y) quals in
-      let err msg =
-        raise_error_doc (Errors.Fatal_QulifierListNotPermitted,
-          [text "The qualifier list" ^/^ doc_of_string (show quals) ^/^ text "is not permissible for this element"]
-          @ msg) r
+      let err msg = raise_error r Errors.Fatal_QulifierListNotPermitted ([
+                      text "The qualifier list" ^/^ doc_of_string (show quals) ^/^ text "is not permissible for this element"
+                    ] @ msg)
       in
       if List.length quals <> List.length no_dup_quals
       then err [text "Duplicate qualifiers."];
@@ -175,24 +174,24 @@ let check_erasable env quals r se =
   in
   let se_has_erasable_attr = U.has_attribute se.sigattrs FStar.Parser.Const.erasable_attr in
   if ((val_exists && val_has_erasable_attr) && not se_has_erasable_attr)
-  then raise_error_doc (Errors.Fatal_QulifierListNotPermitted, [
+  then raise_error r Errors.Fatal_QulifierListNotPermitted [
            text "Mismatch of attributes between declaration and definition.";
            text "Declaration is marked `erasable` but the definition is not.";
-         ]) r;
+         ];
   if ((val_exists && not val_has_erasable_attr) && se_has_erasable_attr)
-  then raise_error_doc (Errors.Fatal_QulifierListNotPermitted, [
+  then raise_error r Errors.Fatal_QulifierListNotPermitted [
            text "Mismatch of attributes between declaration and definition.";
            text "Definition is marked `erasable` but the declaration is not.";
-         ]) r;
+         ];
   if se_has_erasable_attr
   then begin
     match se.sigel with
     | Sig_bundle _ ->
       if not (quals |> BU.for_some (function Noeq -> true | _ -> false))
-      then raise_error_doc (Errors.Fatal_QulifierListNotPermitted, [
+      then raise_error r Errors.Fatal_QulifierListNotPermitted [
               text "Incompatible attributes and qualifiers: \
                erasable types do not support decidable equality and must be marked `noeq`."
-             ]) r
+             ]
     | Sig_declare_typ _ ->
       ()
     | Sig_fail _ ->
@@ -201,26 +200,25 @@ let check_erasable env quals r se =
     | Sig_let {lbs=(false, [lb])} ->
       let _, body, _ = U.abs_formals lb.lbdef in
       if not (N.non_info_norm env body)
-      then raise_error_doc
-             (Errors.Fatal_QulifierListNotPermitted, [
+      then raise_error body.pos Errors.Fatal_QulifierListNotPermitted [
                   text "Illegal attribute: \
                    the `erasable` attribute is only permitted on inductive type definitions \
                    and abbreviations for non-informative types.";
                   text "The term" ^/^ pp body ^/^ text "is considered informative.";
-             ]) body.pos
+             ]
 
     | Sig_new_effect ({mname=eff_name}) ->  //AR: allow erasable on total effects
       if not (List.contains TotalEffect quals)
-      then raise_error_doc (Errors.Fatal_QulifierListNotPermitted, [
+      then raise_error r Errors.Fatal_QulifierListNotPermitted [
                text "Effect" ^/^ pp eff_name ^/^ text "is marked erasable but only total effects are allowed to be erasable."
-             ]) r
+             ]
 
     | _ ->
-      raise_error_doc (Errors.Fatal_QulifierListNotPermitted, [
+      raise_error r Errors.Fatal_QulifierListNotPermitted [
           text "Illegal attribute: \
           the `erasable` attribute is only permitted on inductive type definitions \
           and abbreviations for non-informative types.";
-        ]) r
+        ]
   end
 
 (*
@@ -248,19 +246,19 @@ let check_must_erase_attribute env se =
                let must_erase = TcUtil.must_erase_for_extraction env lb.lbdef in
                let has_attr = Env.fv_has_attr env lbname C.must_erase_for_extraction_attr in
                if must_erase && not has_attr
-               then log_issue_doc (range_of_fv lbname) (Error_MustEraseMissing, [
+               then log_issue (range_of_fv lbname) Error_MustEraseMissing [
                         text (BU.format2 "Values of type `%s` will be erased during extraction, \
                                but its interface hides this fact. Add the `must_erase_for_extraction` \
                                attribute to the `val %s` declaration for this symbol in the interface"
                                (show lbname) (show lbname));
-                      ])
+                      ]
                else if has_attr && not must_erase
-               then log_issue_doc (range_of_fv lbname) (Error_MustEraseMissing, [
+               then log_issue (range_of_fv lbname) Error_MustEraseMissing [
                         text (BU.format1 "Values of type `%s` cannot be erased during extraction, \
                                but the `must_erase_for_extraction` attribute claims that it can. \
                                Please remove the attribute."
                                (show lbname));
-                      ]))
+                      ])
   end
   | _ -> ()
 
@@ -275,18 +273,18 @@ let check_typeclass_instance_attribute env rng se =
   let check_instance_typ (ty:typ) : unit =
     let _, res = U.arrow_formals_comp ty in
     if not (U.is_total_comp res) then
-      log_issue_doc rng (FStar.Errors.Error_UnexpectedTypeclassInstance, [
+      log_issue rng FStar.Errors.Error_UnexpectedTypeclassInstance [
           text "Instances are expected to be total.";
           text "This instance has effect" ^^ pp (U.comp_effect_name res);
-      ]);
+      ];
 
     let t = U.comp_result res in
     let head, _ = U.head_and_args t in
     let err () =
-      FStar.Errors.log_issue_doc rng (FStar.Errors.Error_UnexpectedTypeclassInstance, [
+      FStar.Errors.log_issue rng FStar.Errors.Error_UnexpectedTypeclassInstance [
           text "Instances must define instances of `class` types.";
           text "Type" ^/^ pp t ^/^ text "is not a class.";
-        ])
+        ]
     in
     match (U.un_uinst head).n with
     | Tm_fvar fv ->
@@ -301,18 +299,18 @@ let check_typeclass_instance_attribute env rng se =
       check_instance_typ lb.lbtyp
 
     | Sig_let _ ->
-      FStar.Errors.log_issue_doc rng (FStar.Errors.Error_UnexpectedTypeclassInstance, [
+      FStar.Errors.log_issue rng FStar.Errors.Error_UnexpectedTypeclassInstance [
           text "An `instance` definition is expected to be non-recursive and of a type that is a `class`."
-        ])
+        ]
 
     | Sig_declare_typ {t} ->
       check_instance_typ t
 
     | _ ->
-      FStar.Errors.log_issue_doc rng (FStar.Errors.Error_UnexpectedTypeclassInstance, [
+      FStar.Errors.log_issue rng FStar.Errors.Error_UnexpectedTypeclassInstance [
           text "The `instance` attribute is only allowed on `let` and `val` declarations.";	
           text "It is not allowed for" ^/^ squotes (arbitrary_string <| Print.sigelt_to_string_short se);
-        ])
+        ]
 
 let check_sigelt_quals_post env se =
   let quals = se.sigquals in

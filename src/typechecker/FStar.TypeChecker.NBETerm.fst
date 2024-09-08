@@ -759,7 +759,8 @@ let e_norm_step =
             BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
             Some <| Pervasives.UnfoldNamespace ss)
         | _ ->
-            Errors.log_issue Range.dummyRange (Errors.Warning_NotEmbedded, (BU.format1 "Not an embedded norm_step: %s" (t_to_string t0)));
+            Errors.log_issue0 Errors.Warning_NotEmbedded
+              (BU.format1 "Not an embedded norm_step: %s" (t_to_string t0));
             None
     in
     mk_emb em un (fun () -> mkFV (lid_as_fv PC.norm_step_lid None) [] [])

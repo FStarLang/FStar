@@ -27,7 +27,7 @@ type error_flag =
   | CSilent         //CSilent: never the default for any issue, but warnings can be silenced
 
 (* The list of all available error codes *)
-type raw_error =
+type error_code =
   | Error_DependencyAnalysisFailed
   | Error_IDETooManyPops
   | Error_IDEUnrecognized
@@ -389,6 +389,6 @@ type raw_error =
   | Warning_ProofRecovery
   | Error_CannotResolveRecord
 
-type error_setting = raw_error & error_flag & int
+type error_setting = error_code & error_flag & int
 
 val default_settings : list error_setting

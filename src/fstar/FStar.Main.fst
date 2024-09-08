@@ -82,20 +82,19 @@ let load_native_tactics () =
         | Some f -> f
         | None ->
           if List.contains m cmxs_to_load  //if this module comes from the cmxs list, fail hard
-          then E.raise_err (E.Fatal_FailToCompileNativeTactic,
-                            Util.format1 "Could not find %s to load" cmxs)
+          then E.raise_error0 E.Fatal_FailToCompileNativeTactic (Util.format1 "Could not find %s to load" cmxs)
           else  //else try to find and compile the ml file
             match FStar.Options.find_file (ml_file m) with
             | None ->
-              E.raise_err (E.Fatal_FailToCompileNativeTactic,
-                           Util.format1 "Failed to compile native tactic; extracted module %s not found" (ml_file m))
+              E.raise_error0 E.Fatal_FailToCompileNativeTactic
+                (Util.format1 "Failed to compile native tactic; extracted module %s not found" (ml_file m))
             | Some ml ->
               let dir = Util.dirname ml in
               FStar.Tactics.Load.compile_modules dir [ml_module_name m];
               begin match FStar.Options.find_file cmxs with
                 | None ->
-                  E.raise_err (E.Fatal_FailToCompileNativeTactic,
-                               Util.format1 "Failed to compile native tactic; compiled object %s not found" cmxs)
+                  E.raise_error0 E.Fatal_FailToCompileNativeTactic
+                    (Util.format1 "Failed to compile native tactic; compiled object %s not found" cmxs)
                 | Some f -> f
               end
     in
@@ -188,9 +187,9 @@ let go _ =
           match res with
           | None ->
             let open FStar.Pprint in
-            Errors.raise_err_doc (Errors.Fatal_ModuleOrFileNotFound, [
+            Errors.raise_error0 Errors.Fatal_ModuleOrFileNotFound [
                 Errors.Msg.text "Could not read checked file:" ^/^ doc_of_string path
-              ])
+              ]
 
           | Some (_, tcr) ->
             print1 "%s\n" (show tcr.checked_module)
@@ -200,9 +199,9 @@ let go _ =
           match load_value_from_file path <: option FStar.Extraction.Krml.binary_format with
           | None ->
             let open FStar.Pprint in
-            Errors.raise_err_doc (Errors.Fatal_ModuleOrFileNotFound, [
+            Errors.raise_error0 Errors.Fatal_ModuleOrFileNotFound [
                 Errors.Msg.text "Could not read krml file:" ^/^ doc_of_string path
-              ])
+              ]
           | Some (version, files) ->
             print1 "Karamel format version: %s\n" (show version);
             (* Just "show decls" would print it, we just format this a bit *)
@@ -223,16 +222,12 @@ let go _ =
           UF.set_rw ();
           match filenames with
           | [] -> (* input validation: move to process args? *)
-            Errors.log_issue
-              Range.dummyRange
-              (Errors.Error_MissingFileName,
-                "--ide: Name of current file missing in command line invocation\n");
+            Errors.log_issue0 Errors.Error_MissingFileName
+              "--ide: Name of current file missing in command line invocation\n";
             exit 1
           | _ :: _ :: _ -> (* input validation: move to process args? *)
-            Errors.log_issue
-              Range.dummyRange
-              (Errors.Error_TooManyFiles,
-                "--ide: Too many files in command line invocation\n");
+            Errors.log_issue0 Errors.Error_TooManyFiles
+              "--ide: Too many files in command line invocation\n";
             exit 1
           | [filename] ->
             if Options.legacy_interactive () then
@@ -256,7 +251,7 @@ let go _ =
         end //end batch mode
 
         else
-          Errors.raise_error (Errors.Error_MissingFileName, "No file provided") Range.dummyRange
+          Errors.raise_error0 Errors.Error_MissingFileName "No file provided"
         end
 
 (* This is pretty awful. Now that we have Lazy_embedding, we can get rid of this table. *)
@@ -295,6 +290,7 @@ let setup_hooks () =
     FStar.Errors.set_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some show;
+    FStar.Syntax.Util.ttd_f := Some Class.PP.pp;
     FStar.TypeChecker.Normalize.unembed_binder_knot := Some RE.e_binder;
     List.iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V1.Primops.ops;
     List.iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V2.Primops.ops;

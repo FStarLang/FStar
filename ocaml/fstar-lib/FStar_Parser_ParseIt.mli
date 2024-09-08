@@ -25,7 +25,7 @@ type parse_frag =
     | Incremental of input_frag
     | Fragment of input_frag
 
-type parse_error = (Codes.raw_error * Msg.error_message * FStar_Compiler_Range.range)
+type parse_error = (Codes.error_code * Msg.error_message * FStar_Compiler_Range.range)
 
 type code_fragment = {
    range : FStar_Compiler_Range.range;

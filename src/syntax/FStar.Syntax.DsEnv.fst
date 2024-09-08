@@ -991,7 +991,8 @@ let push_top_level_rec_binding env0 (x:ident) : env & ref bool =
   then
     let used_marker = BU.mk_ref false in
     (push_scope_mod env0 (Rec_binding (x,l,used_marker)), used_marker)
-  else raise_error (Errors.Fatal_DuplicateTopLevelNames, ("Duplicate top-level names " ^ (string_of_lid l))) (range_of_lid l)
+  else raise_error (range_of_lid l) Errors.Fatal_DuplicateTopLevelNames
+         ("Duplicate top-level names " ^ (string_of_lid l))
 
 let push_sigelt' fail_on_dup env s =
   let err l =
@@ -1003,9 +1004,10 @@ let push_sigelt' fail_on_dup env s =
           | None -> "<unknown>"
         end
       | None -> "<unknown>" in
-    raise_error_doc (Errors.Fatal_DuplicateTopLevelNames,
-                     [Errors.text (BU.format1 "Duplicate top-level names [%s]" (string_of_lid l));
-                      Errors.text (BU.format1 "Previously declared at %s" r)]) (range_of_lid l)
+    raise_error (range_of_lid l) Errors.Fatal_DuplicateTopLevelNames [
+      Errors.text (BU.format1 "Duplicate top-level names [%s]" (string_of_lid l));
+      Errors.text (BU.format1 "Previously declared at %s" r)
+    ]
   in
   let globals = BU.mk_ref env.scope_mods in
   let env =
@@ -1153,16 +1155,14 @@ let elab_restriction f env ns restriction =
             issue_ctx = [];
           }
         ) others |> add_issues;
-        raise_error (Errors.Fatal_DuplicateTopLevelNames,
-                     BU.format1 ("The name %s was imported " ^ show (List.length others + 1) ^ " times") (string_of_id id))
-                    (Ident.range_of_id id)
+        raise_error (Ident.range_of_id id) Errors.Fatal_DuplicateTopLevelNames
+          (BU.format1 ("The name %s was imported " ^ show (List.length others + 1) ^ " times") (string_of_id id))
       | None -> ()
     in
-    List.iter (fun (id, _renamed) ->
+    l |> List.iter (fun (id, _renamed) ->
         if name_exists id |> not
-        then raise_error (Errors.Fatal_NameNotFound,
-                          BU.format1 "Definition %s cannot be found" (mk_lid id |> string_of_lid))
-                         (Ident.range_of_id id)) l;
+        then raise_error (Ident.range_of_id id) Errors.Fatal_NameNotFound
+               (BU.format1 "Definition %s cannot be found" (mk_lid id |> string_of_lid)));
     f env ns (AllowList l)
 
 let push_namespace' env ns restriction =
@@ -1183,9 +1183,8 @@ let push_namespace' env ns restriction =
              BU.starts_with (Ident.string_of_lid m ^ ".")
                             (Ident.string_of_lid ns ^ "."))
       then (ns, Open_namespace)
-      else raise_error (Errors.Fatal_NameSpaceNotFound, 
-                        BU.format1 "Namespace %s cannot be found" (Ident.string_of_lid ns))
-                        (Ident.range_of_lid ns)
+      else raise_error (Ident.range_of_lid ns) Errors.Fatal_NameSpaceNotFound
+             (BU.format1 "Namespace %s cannot be found" (Ident.string_of_lid ns))
     )
     | Some ns' ->
       (ns', Open_module)
@@ -1228,10 +1227,12 @@ let push_include' env ns restriction =
         env
       | None ->
         (* module to be included was not prepared, so forbid the 'include'. It may be the case for modules such as FStar.Compiler.Effect, etc. *)
-        raise_error (Errors.Fatal_IncludeModuleNotPrepared, (BU.format1 "include: Module %s was not prepared" (string_of_lid ns))) (Ident.range_of_lid ns)
+        raise_error (Ident.range_of_lid ns) Errors.Fatal_IncludeModuleNotPrepared
+          (BU.format1 "include: Module %s was not prepared" (string_of_lid ns))
       end
     | _ ->
-      raise_error (Errors.Fatal_ModuleNotFound, (BU.format1 "include: Module %s cannot be found" (string_of_lid ns))) (Ident.range_of_lid ns)
+      raise_error (Ident.range_of_lid ns) Errors.Fatal_ModuleNotFound
+        (BU.format1 "include: Module %s cannot be found" (string_of_lid ns))
 
 let push_namespace = elab_restriction push_namespace'
 let push_include   = elab_restriction push_include'
@@ -1243,7 +1244,8 @@ let push_module_abbrev env x l =
   then begin
        env.ds_hooks.ds_push_module_abbrev_hook env x l;
        push_scope_mod env (Module_abbrev (x,l))
-  end else raise_error (Errors.Fatal_ModuleNotFound, (BU.format1 "Module %s cannot be found" (Ident.string_of_lid l))) (Ident.range_of_lid l)
+  end else raise_error (Ident.range_of_lid l) Errors.Fatal_ModuleNotFound
+             (BU.format1 "Module %s cannot be found" (Ident.string_of_lid l))
 
 let check_admits env m =
   let admitted_sig_lids =
@@ -1261,10 +1263,10 @@ let check_admits env m =
             if not (Options.interactive ()) then begin
               let open FStar.Pprint in
               let open FStar.Class.PP in
-              FStar.Errors.log_issue_doc (range_of_lid l) (Errors.Error_AdmitWithoutDefinition, [
+              FStar.Errors.log_issue (range_of_lid l) Errors.Error_AdmitWithoutDefinition [
                  doc_of_string (show l) ^/^ text "is declared but no definition was found";
                  text "Add an 'assume' if this is intentional"
-              ])
+              ]
             end;
             let quals = Assumption :: se.sigquals in
             BU.smap_add (sigmap env) (string_of_lid l) ({ se with sigquals = quals }, false);
@@ -1458,13 +1460,16 @@ let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_in
         prep env, false
     | Some (_, m) ->
         if not (Options.interactive ()) && (not m.is_interface || intf)
-        then raise_error (Errors.Fatal_DuplicateModuleOrInterface, (BU.format1 "Duplicate module or interface name: %s" (string_of_lid mname))) (range_of_lid mname);
+        then raise_error (range_of_lid mname) Errors.Fatal_DuplicateModuleOrInterface
+               (BU.format1 "Duplicate module or interface name: %s" (string_of_lid mname));
         //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
         prep (push env), true //push a context so that we can pop it when we're done // FIXME PUSH POP
 
 let enter_monad_scope env mname =
   match env.curmonad with
-  | Some mname' -> raise_error (Errors.Fatal_MonadAlreadyDefined, ("Trying to define monad " ^ (string_of_id mname) ^ ", but already in monad scope " ^ (string_of_id mname'))) (range_of_id mname)
+  | Some mname' ->
+    raise_error (range_of_id mname) Errors.Fatal_MonadAlreadyDefined
+      ("Trying to define monad " ^ (show mname) ^ ", but already in monad scope " ^ (show mname')) 
   | None -> {env with curmonad = Some mname}
 
 let fail_or env lookup lid =
@@ -1501,10 +1506,10 @@ let fail_or env lookup lid =
                                (string_of_lid modul')
                                (string_of_id (ident_of_lid lid)))]
     in
-    raise_error_doc (Errors.Fatal_IdentifierNotFound, msg) (range_of_lid lid)
+    raise_error (range_of_lid lid) Errors.Fatal_IdentifierNotFound msg
 
 let fail_or2 lookup id = match lookup id with
-  | None -> raise_error (Errors.Fatal_IdentifierNotFound, ("Identifier not found [" ^(string_of_id id)^"]")) (range_of_id id)
+  | None -> raise_error (range_of_id id) Errors.Fatal_IdentifierNotFound ("Identifier not found [" ^(string_of_id id)^"]")
   | Some r -> r
 
 let resolve_name (e:env) (name:lident)

@@ -192,36 +192,38 @@ let subtyping_failed : env -> typ -> typ -> unit -> error_message =
 
 let ill_kinded_type = Errors.mkmsg "Ill-kinded type"
 
-let unexpected_signature_for_monad env m k =
-  (Errors.Fatal_UnexpectedSignatureForMonad, (format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type -> WP a -> Effect); got %s"
-    (string_of_lid m) (N.term_to_string env k)))
+let unexpected_signature_for_monad #a env rng (m:lident) k : a =
+  Errors.raise_error rng Errors.Fatal_UnexpectedSignatureForMonad
+    (format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type -> WP a -> Effect); got %s"
+    (show m) (N.term_to_string env k))
 
-let expected_a_term_of_type_t_got_a_function env msg (t:typ) (e:term) =
-  (Errors.Fatal_ExpectTermGotFunction, (format3 "Expected a term of type \"%s\"; got a function \"%s\" (%s)"
-    (N.term_to_string env t) (show e) msg))
+let expected_a_term_of_type_t_got_a_function env rng msg (t:typ) (e:term) =
+  Errors.raise_error rng Errors.Fatal_ExpectTermGotFunction
+    (format3 "Expected a term of type \"%s\"; got a function \"%s\" (%s)"
+    (N.term_to_string env t) (show e) msg)
 
 let unexpected_implicit_argument =
   (Errors.Fatal_UnexpectedImplicitArgument, ("Unexpected instantiation of an implicit argument to a function that only expects explicit arguments"))
 
-let expected_expression_of_type env t1 e t2 =
+let expected_expression_of_type #a env rng t1 e t2 : a =
   // let s1, s2 = err_msg_type_strings env t1 t2 in
   // MISSING: print discrepancy!
   let d1 = N.term_to_doc env t1 in
   let d2 = N.term_to_doc env t2 in
   let ed = N.term_to_doc env e in
   let open FStar.Errors.Msg in
-  (Errors.Fatal_UnexpectedExpressionType, [
+  Errors.raise_error rng Errors.Fatal_UnexpectedExpressionType [
     prefix 4 1 (text "Expected expression of type") d1 ^/^
     prefix 4 1 (text "got expression") ed ^/^
     prefix 4 1 (text "of type") d2
-  ])
+  ]
 
 let expected_pattern_of_type env (t1 e t2 : term) =
   let s1, s2 = err_msg_type_strings env t1 t2 in
   (Errors.Fatal_UnexpectedPattern, (format3 "Expected pattern of type \"%s\"; got pattern \"%s\" of type \"%s\""
     s1 (show e) s2))
 
-let basic_type_error env eopt t1 t2 =
+let basic_type_error env rng eopt t1 t2 =
   let s1, s2 = err_msg_type_strings env t1 t2 in
   let open FStar.Errors.Msg in
   let msg = match eopt with
@@ -235,7 +237,25 @@ let basic_type_error env eopt t1 t2 =
       prefix 4 1 (text "has type") (N.term_to_doc env t2);
     ]
   in
-  (Errors.Error_TypeError, msg)
+  Errors.log_issue rng Errors.Error_TypeError msg
+
+(* It does not make sense to use the same code for a catcheable and uncatcheable
+error, but that's what this was doing. *)
+let raise_basic_type_error #a env rng eopt t1 t2 : a =
+  let s1, s2 = err_msg_type_strings env t1 t2 in
+  let open FStar.Errors.Msg in
+  let msg = match eopt with
+    | None -> [
+      prefix 4 1 (text "Expected type") (N.term_to_doc env t1) ^/^
+      prefix 4 1 (text "got type") (N.term_to_doc env t2);
+    ]
+    | Some e -> [
+      prefix 4 1 (text "Expected type") (N.term_to_doc env t1) ^/^
+      prefix 4 1 (text "but") (N.term_to_doc env e) ^/^
+      prefix 4 1 (text "has type") (N.term_to_doc env t2);
+    ]
+  in
+  Errors.raise_error rng Errors.Error_TypeError msg
 
 let occurs_check =
   (Errors.Fatal_PossibleInfiniteTyp, "Possibly infinite typ (occurs check failed)")
@@ -252,12 +272,12 @@ let inferred_type_causes_variable_to_escape env t (x:bv) =
   (Errors.Fatal_InferredTypeCauseVarEscape, (format2 "Inferred type \"%s\" causes variable \"%s\" to escape its scope"
     (N.term_to_string env t) (show x)))
 
-let expected_function_typ env t =
-  (Errors.Fatal_FunctionTypeExpected, [
+let expected_function_typ #a env rng t : a =
+  Errors.raise_error rng Errors.Fatal_FunctionTypeExpected [
       text "Expected a function.";
       prefix 2 1 (text "Got an expression of type:")
         (N.term_to_doc env t);
-    ])
+    ]
 
 let expected_poly_typ env (f:term) t targ =
   (Errors.Fatal_PolyTypeExpected, (format3 "Expected a polymorphic function; got an expression \"%s\" of type \"%s\" applied to a type \"%s\""
@@ -276,45 +296,46 @@ let name_and_result c = match c.n with
   | Comp ct -> show ct.effect_name, ct.result_typ
   // TODO: ^ Use the resugaring environment to possibly shorten the effect name
 
-let computed_computation_type_does_not_match_annotation env e c c' =
+let computed_computation_type_does_not_match_annotation #a env r e c c' : a =
   let ppt = N.term_to_doc env in
   let f1, r1 = name_and_result c in
   let f2, r2 = name_and_result c' in
-  (Errors.Fatal_ComputedTypeNotMatchAnnotation, [
+  Errors.raise_error r Errors.Fatal_ComputedTypeNotMatchAnnotation [
     prefix 2 1 (text "Computed type") (ppt r1) ^/^
     prefix 2 1 (text "and effect") (text f1) ^/^
     prefix 2 1 (text "is not compatible with the annotated type") (ppt r2) ^/^
     prefix 2 1 (text "and effect") (text f2)
-  ])
+  ]
 
-let computed_computation_type_does_not_match_annotation_eq env e c c' =
+let computed_computation_type_does_not_match_annotation_eq #a env r e c c' : a =
   let ppc = N.comp_to_doc env in
-  (Errors.Fatal_ComputedTypeNotMatchAnnotation, ([
+  Errors.raise_error r Errors.Fatal_ComputedTypeNotMatchAnnotation [
     prefix 2 1 (text "Computed type") (ppc c) ^/^
     prefix 2 1 (text "does not match annotated type") (ppc c') ^/^
     text "and no subtyping was allowed";
-  ]))
+  ]
 
-let unexpected_non_trivial_precondition_on_term env f =
- (Errors.Fatal_UnExpectedPreCondition, (format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f)))
+let unexpected_non_trivial_precondition_on_term #a env f : a =
+  Errors.raise_error (Env.get_range env) Errors.Fatal_UnExpectedPreCondition
+    (format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f))
 
-let __expected_eff_expression (effname:string) (e:term) (c:comp) (reason:option string) =
+let __expected_eff_expression (effname:string) (rng:Range.range) (e:term) (c:comp) (reason:option string) =
   let open FStar.Class.PP in
   let open FStar.Pprint in
-  (Errors.Fatal_ExpectedGhostExpression, [
+  Errors.raise_error rng Errors.Fatal_ExpectedGhostExpression [
     text ("Expected a " ^ effname ^ " expression.");
     (match reason with
      | None -> empty
      | Some msg -> flow (break_ 1) (doc_of_string "Because:" :: words (msg ^ ".")));
     prefix 2 1 (text "Got an expression") (pp e) ^/^
     prefix 2 1 (text "with effect") (squotes (doc_of_string (fst <| name_and_result c))) ^^ dot;
-  ])
+  ]
 
-let expected_pure_expression (e:term) (c:comp) (reason:option string) =
-  __expected_eff_expression "pure" e c reason
+let expected_pure_expression (rng:Range.range) (e:term) (c:comp) (reason:option string) =
+  __expected_eff_expression "pure" rng e c reason
 
-let expected_ghost_expression (e:term) (c:comp) (reason:option string) =
-  __expected_eff_expression "ghost" e c reason
+let expected_ghost_expression (rng:Range.range)(e:term) (c:comp) (reason:option string) =
+  __expected_eff_expression "ghost" rng e c reason
 
 let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
   (Errors.Fatal_UnexpectedEffect, (format2 "Expected a computation with effect %s; but it has effect %s" (show c1) (show c2)))
@@ -322,10 +343,7 @@ let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
 let failed_to_prove_specification_of (l : lbname) (lbls : list string) =
   (Errors.Error_TypeCheckerFailToProve, (format2 "Failed to prove specification of %s; assertions at [%s] may fail" (show l) (lbls |> String.concat ", ")))
 
-let failed_to_prove_specification lbls =
-  let msg = match lbls with
-    | [] -> "An unknown assertion in the term at this location was not provable"
-    | _ ->  format1 "The following problems were found:\n\t%s" (lbls |> String.concat "\n\t") in
-  (Errors.Error_TypeCheckerFailToProve, msg)
-
-let top_level_effect = (Errors.Warning_TopLevelEffect, "Top-level let-bindings must be total; this term may have effects")
+let warn_top_level_effect rng : unit =
+  Errors.log_issue rng
+    Errors.Warning_TopLevelEffect
+    "Top-level let-bindings must be total; this term may have effects"

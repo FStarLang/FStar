@@ -332,9 +332,9 @@ let detail_errors hint_replay
         if success
         then BU.print1 "OK: proof obligation at %s was proven in isolation\n" (Range.string_of_range r)
         else if hint_replay
-        then FStar.Errors.log_issue_doc r (Errors.Warning_HintFailedToReplayProof,
-               (text "Hint failed to replay this sub-proof" :: msg))
-        else FStar.Errors.log_issue_doc r (Errors.Error_ProofObligationFailed, [
+        then FStar.Errors.log_issue r Errors.Warning_HintFailedToReplayProof
+               (text "Hint failed to replay this sub-proof" :: msg)
+        else FStar.Errors.log_issue r Errors.Error_ProofObligationFailed ([
                  text <| BU.format1 "XX: proof obligation at %s failed." (Class.Show.show r);
                ] @ msg)
     in

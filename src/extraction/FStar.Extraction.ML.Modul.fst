@@ -827,10 +827,8 @@ let rec extract_sigelt_iface (g:uenv) (se:sigelt) : uenv & iface =
         match res with
         | Inl res -> res
         | Inr err ->
-          Errors.raise_error
-            (Errors.Fatal_ExtractionUnsupported,
-             BU.format2 "Extension %s failed to extract iface: %s" ext err)
-            se.sigrng
+          Errors.raise_error se.sigrng Errors.Fatal_ExtractionUnsupported
+            (BU.format2 "Extension %s failed to extract iface: %s" ext err)
 
     )
 
@@ -1089,10 +1087,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t & list mlmodule1 =
               failwith (BU.format1 "Unexpected ML decl returned by the extension: %s" (show d))
           ) (g, []) decls
         | Inr err ->
-          Errors.raise_error
-            (Errors.Fatal_ExtractionUnsupported,
-             BU.format2 "Extension %s failed to extract term: %s" ext err)
-               se.sigrng
+          Errors.raise_error se.sigrng Errors.Fatal_ExtractionUnsupported
+            (BU.format2 "Extension %s failed to extract term: %s" ext err)
       )
 
     | Sig_let _ -> extract_sig_let g se
@@ -1145,10 +1141,8 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
         | None -> None
         | Some (_, (tau, None)::_) -> Some tau
         | Some _ ->
-            Errors.log_issue
-                se.sigrng
-                (Errors.Warning_UnrecognizedAttribute,
-                  "Ill-formed application of 'postprocess_for_extraction_with'");
+            Errors.log_issue se.sigrng Errors.Warning_UnrecognizedAttribute
+              "Ill-formed application of 'postprocess_for_extraction_with'";
             None
       in
       let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
@@ -1183,19 +1177,15 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
           | Some steps -> 
             Some (Cfg.translate_norm_steps steps)
           | _ -> 
-            Errors.log_issue 
-                se.sigrng
-                (Errors.Warning_UnrecognizedAttribute,
-                  BU.format1
-                    "Ill-formed application of 'normalize_for_extraction': normalization steps '%s' could not be interpreted"
-                    (show steps));
+            Errors.log_issue se.sigrng Errors.Warning_UnrecognizedAttribute
+              (BU.format1
+                "Ill-formed application of 'normalize_for_extraction': normalization steps '%s' could not be interpreted"
+                (show steps));
             None
           end
         | Some _ ->
-            Errors.log_issue 
-                se.sigrng
-                (Errors.Warning_UnrecognizedAttribute,
-                  "Ill-formed application of 'normalize_for_extraction'");
+            Errors.log_issue se.sigrng Errors.Warning_UnrecognizedAttribute
+              "Ill-formed application of 'normalize_for_extraction'";
             None
       in
       let norm_one_lb steps lb =

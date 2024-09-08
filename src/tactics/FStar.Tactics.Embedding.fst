@@ -172,9 +172,9 @@ let e_proofstate_nbe =
             Some <| FStar.Dyn.undyn b
         | _ ->
           if !Options.debug_embedding then
-            Err.log_issue Range.dummyRange
-              (Err.Warning_NotEmbedded,
-               BU.format1 "Not an embedded NBE proofstate: %s\n"
+            Err.log_issue0
+              Err.Warning_NotEmbedded
+              (BU.format1 "Not an embedded NBE proofstate: %s\n"
                  (NBETerm.t_to_string t));
             None
     in
@@ -200,7 +200,7 @@ let e_goal_nbe =
             Some <| FStar.Dyn.undyn b
         | _ ->
             if !Options.debug_embedding then
-              Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded NBE goal: %s" (NBETerm.t_to_string t)));
+              Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded NBE goal: %s" (NBETerm.t_to_string t));
             None
     in
     { NBETerm.em = embed_goal
@@ -385,7 +385,7 @@ let e_direction_nbe  =
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_bottomup.lid -> Some BottomUp
         | _ ->
           if !Options.debug_embedding then
-            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded direction: %s" (NBETerm.t_to_string t)));
+            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded direction: %s" (NBETerm.t_to_string t));
           None
     in
     { NBETerm.em = embed_direction
@@ -423,7 +423,7 @@ let e_ctrl_flag_nbe  =
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Abort.lid -> Some Abort
         | _ ->
           if !Options.debug_embedding then
-            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded ctrl_flag: %s" (NBETerm.t_to_string t)));
+            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded ctrl_flag: %s" (NBETerm.t_to_string t));
           None
     in
     { NBETerm.em = embed_ctrl_flag
@@ -472,8 +472,7 @@ let e_unfold_side_nbe  =
       Some Neither
     | _ ->
       if !Options.debug_embedding then
-        Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded,
-                                        BU.format1 "Not an embedded unfold_side: %s" (NBETerm.t_to_string t));
+        Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded unfold_side: %s" (NBETerm.t_to_string t));
       None
   in
   { NBETerm.em = embed_unfold_side
@@ -513,8 +512,7 @@ let e_tot_or_ghost_nbe  =
       Some E_Ghost
     | _ ->
       if !Options.debug_embedding then
-        Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded,
-                                        BU.format1 "Not an embedded tot_or_ghost: %s" (NBETerm.t_to_string t));
+        Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded tot_or_ghost: %s" (NBETerm.t_to_string t));
       None
   in
   { NBETerm.em = embed_tot_or_ghost
@@ -559,9 +557,9 @@ let e_tref_nbe #a =
       Some <| FStar.Dyn.undyn b
     | _ ->
       if !Options.debug_embedding then
-        Err.log_issue Range.dummyRange
-          (Err.Warning_NotEmbedded,
-           BU.format1 "Not an embedded NBE tref: %s\n"
+        Err.log_issue0
+          Err.Warning_NotEmbedded
+          (BU.format1 "Not an embedded NBE tref: %s\n"
              (NBETerm.t_to_string t));
       None
   in

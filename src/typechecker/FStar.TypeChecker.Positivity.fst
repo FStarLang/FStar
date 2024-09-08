@@ -175,12 +175,12 @@ let apply_constr_arrow (dlid:lident) (dt:term) (all_params:list arg)
           aux tail args
         | _ ->
           raise_error 
-             (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-              BU.format3 "Unexpected application of type parameters %s to a data constructor %s : %s"
+             (Ident.range_of_lid dlid)
+             Errors.Error_InductiveTypeNotSatisfyPositivityCondition
+             (BU.format3 "Unexpected application of type parameters %s to a data constructor %s : %s"
                          (Print.args_to_string all_params)
                          (show dlid)
                          (show dt))
-             (Ident.range_of_lid dlid)
     in
     aux dt all_params
 
@@ -406,11 +406,12 @@ let mark_uniform_type_parameters (env:env_t)
             (fun param ->
                  if param.binder_positivity = Some BinderStrictlyPositive
                  then ( //if marked strictly positive, it must be uniform
-                   raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
-                                BU.format1 "Binder %s is marked strictly positive, \
-                                           but it is not uniformly recursive"
-                                           (show param))
+                   raise_error 
                                (range_of_bv param.binder_bv)
+                     Error_InductiveTypeNotSatisfyPositivityCondition
+                     (BU.format1 "Binder %s is marked strictly positive, \
+                                 but it is not uniformly recursive"
+                                 (show param))
                  ))
             non_uniform_params
         );            
@@ -537,14 +538,13 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) =
    let index, _ = index in
    L.iter (fun mutual -> 
              if ty_occurs_in mutual (fext_on_domain_index_sub_term index)
-             then raise_error
-                           (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-                             BU.format3 "Type %s is not strictly positive since it instantiates \
+             then raise_error index.pos
+                           Errors.Error_InductiveTypeNotSatisfyPositivityCondition
+                            (BU.format3 "Type %s is not strictly positive since it instantiates \
                                         a non-uniformly recursive parameter or index %s of %s"
                               (string_of_lid mutual)
                               (show index)
-                              (string_of_lid fv))
-                           index.pos)
+                              (string_of_lid fv)))
           mutuals
   in
   let no_occurrence_in_indexes fv mutuals (indexes:list arg) =
@@ -1075,11 +1075,10 @@ and ty_strictly_positive_in_arguments_to_fvar
         match Env.try_lookup_lid env fv with
         | Some ((_, fv_ty), _) -> fv_ty
         | _ ->
-          raise_error 
-            (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-            BU.format1 "Type of %s not found when checking positivity"
+          raise_error  (range_of_lid fv)
+            Errors.Error_InductiveTypeNotSatisfyPositivityCondition
+            (BU.format1 "Type of %s not found when checking positivity"
                        (string_of_lid fv))
-            (range_of_lid fv)
       in
       let b, idatas = datacons_of_typ env fv in
       if not b
@@ -1161,10 +1160,10 @@ and ty_strictly_positive_in_datacon_of_applied_inductive (env:env_t)
       | Some (t, _) -> t
       | None -> 
         raise_error 
-          (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-           BU.format1 "Data constructor %s not found when checking positivity"
-                      (string_of_lid dlid))
           (range_of_lid dlid)
+          Errors.Error_InductiveTypeNotSatisfyPositivityCondition
+          (BU.format1 "Data constructor %s not found when checking positivity"
+                      (string_of_lid dlid))
     in
 
     debug_positivity env (fun _ ->
@@ -1244,10 +1243,10 @@ let ty_strictly_positive_in_datacon_decl (env:env_t)
   = let dt =
       match Env.try_lookup_and_inst_lid env us dlid with
       | Some (t, _) -> t
-      | None -> raise_error (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-                            BU.format1 "Error looking up data constructor %s when checking positivity"
+      | None -> raise_error (range_of_lid dlid)
+                            Errors.Error_InductiveTypeNotSatisfyPositivityCondition
+                            (BU.format1 "Error looking up data constructor %s when checking positivity"
                                        (string_of_lid dlid))
-                            (range_of_lid dlid)
     in
     debug_positivity env (fun () -> "Checking data constructor type: " ^ (show dt));
     let ty_bs, args = U.args_of_binders ty_bs in
@@ -1267,14 +1266,14 @@ let ty_strictly_positive_in_datacon_decl (env:env_t)
         match incorrectly_annotated_binder with
         | None -> ()
         | Some b ->
-          raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
-                       BU.format2 "Binder %s is marked %s, \
+          raise_error (range_of_bv b.binder_bv)
+                      Error_InductiveTypeNotSatisfyPositivityCondition
+                      (BU.format2 "Binder %s is marked %s, \
                                    but its use in the definition is not"
                                   (show b)
                                   (if U.is_binder_strictly_positive b
                                    then "strictly_positive"
                                    else "unused"))
-                       (range_of_bv b.binder_bv)
     in
     let rec check_all_fields env fields =
         match fields with

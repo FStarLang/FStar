@@ -129,13 +129,13 @@ let not_implemented_warning (r: Range.range) (t: string) (msg: string) =
   let open FStar.Pprint in
   let open FStar.Errors.Msg in
   let open FStar.Class.PP in
-  Errors.log_issue_doc r (Errors.Warning_PluginNotImplemented, [
+  Errors.log_issue r Errors.Warning_PluginNotImplemented [
     prefix 2 1 (text (BU.format1 "Plugin `%s' can not run natively because:" t))
       (text msg);
     text "Use --warn_error -"
       ^^ pp (Errors.error_number (Errors.lookup Errors.Warning_PluginNotImplemented))
       ^/^ text "to carry on."
-  ])
+  ]
 
 type embedding_data = {
   arity : int;
@@ -788,8 +788,8 @@ let do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlmod
   try __do_handle_plugin g arity_opt se with
   | Unsupported msg ->
     // Change error code?
-    Errors.log_issue se.sigrng (Errors.Warning_PluginNotImplemented,
-        BU.format2 "Could not generate a plugin for %s, reason = %s" (Print.sigelt_to_string_short se) msg);
+    Errors.log_issue se.sigrng Errors.Warning_PluginNotImplemented
+      (BU.format2 "Could not generate a plugin for %s, reason = %s" (Print.sigelt_to_string_short se) msg);
     []
   | NoEmbedding msg ->
     not_implemented_warning se.sigrng

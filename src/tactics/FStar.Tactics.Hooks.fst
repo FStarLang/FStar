@@ -328,8 +328,8 @@ let preprocess (env:Env.env) (goal:term)
     let s = List.fold_left (fun (n,gs) g ->
                  let phi = match getprop (goal_env g) (goal_type g) with
                            | None ->
-                                Err.raise_error (Err.Fatal_TacticProofRelevantGoal,
-                                    (BU.format1 "Tactic returned proof-relevant goal: %s" (show (goal_type g)))) env.range
+                                Err.raise_error env.range Err.Fatal_TacticProofRelevantGoal
+                                  (BU.format1 "Tactic returned proof-relevant goal: %s" (show (goal_type g)))
                            | Some phi -> phi
                  in
                  if !dbg_Tac then
@@ -710,7 +710,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
     // Check that all goals left are irrelevant and provable
     // TODO: It would be nicer to combine all of these into a guard and return
     // that to TcTerm, but the varying environments make it awkward.
-    List.iter (fun g ->
+    gs |> List.iter (fun g ->
         match getprop (goal_env g) (goal_type g) with
         | Some vc ->
             begin
@@ -724,7 +724,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
             TcRel.force_trivial_guard (goal_env g) guard
             end
         | None ->
-            Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals") typ.pos) gs;
+            Err.raise_error typ.pos Err.Fatal_OpenGoalsInSynthesis "synthesis left open goals");
     w
     end
   )
@@ -764,8 +764,8 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
             )
           end
         | None ->
-            Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals")
-                            (Env.get_range env)))
+            Err.raise_error (Env.get_range env) Err.Fatal_OpenGoalsInSynthesis "synthesis left open goals"
+      ))
     end
   )
 
@@ -810,8 +810,7 @@ let handle_smt_goal env goal =
                   BU.print1 "handle_smt_goals left a goal: %s\n" (show vc);
                 (goal_env g), vc
             | None ->
-                Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "Handling an SMT goal by tactic left non-prop open goals")
-                                (Env.get_range env))
+                Err.raise_error (Env.get_range env) Err.Fatal_OpenGoalsInSynthesis "Handling an SMT goal by tactic left non-prop open goals")
       ) in
 
       gs
@@ -856,10 +855,8 @@ let splice
         // See if there is a val for the lid
         //
         if List.length lids > 1
-        then Err.raise_error
-              (Errors.Error_BadSplice,
-               BU.format1 "Typed splice: unexpected lids length (> 1) (%s)" (show lids))
-              rng
+        then Err.raise_error rng Errors.Error_BadSplice
+               (BU.format1 "Typed splice: unexpected lids length (> 1) (%s)" (show lids))
         else begin
           let val_t : option typ =  // val type, if any, for the lid
             //
@@ -877,11 +874,9 @@ let splice
                 //
                 if List.length uvs <> 0
                 then
-                  Err.raise_error
-                    (Errors.Error_BadSplice,
-                     BU.format1 "Typed splice: val declaration for %s is universe polymorphic in %s universes, expected 0"
-                       (string_of_int (List.length uvs)))
-                    rng
+                  Err.raise_error rng Errors.Error_BadSplice 
+                    (BU.format1 "Typed splice: val declaration for %s is universe polymorphic in %s universes, expected 0"
+                       (show (List.length uvs)))
                 else Some tval in
 
           //
@@ -947,7 +942,7 @@ let splice
               TcRel.force_trivial_guard (goal_env g) guard
             end
         | None ->
-            Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "splice left open goals") rng) gs);
+            Err.raise_error rng Err.Fatal_OpenGoalsInSynthesis "splice left open goals") gs);
 
     let lids' = List.collect U.lids_of_sigelt sigelts in
     List.iter (fun lid ->
@@ -955,10 +950,9 @@ let splice
       (* If env.flychecking is on, nothing will be generated, so don't raise an error
        * so flycheck does spuriously not mark the line red *)
       | None when not env.flychecking ->
-        Err.raise_error
-          (Errors.Fatal_SplicedUndef,
-           BU.format2 "Splice declared the name %s but it was not defined.\nThose defined were: %s"
-             (show lid) (show lids')) rng
+        Err.raise_error rng Errors.Fatal_SplicedUndef
+          (BU.format2 "Splice declared the name %s but it was not defined.\nThose defined were: %s"
+             (show lid) (show lids'))
       | _ -> ()
     ) lids;
 
@@ -970,8 +964,12 @@ let splice
         begin match se.sigel with
         | Sig_datacon _
         | Sig_inductive_typ _ ->
-          Err.raise_error (Err.Error_BadSplice,
-                           (BU.format1 "Tactic returned bad sigelt: %s\nIf you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt." (Print.sigelt_to_string_short se))) rng
+          let open FStar.Pprint in
+          let open FStar.Errors.Msg in
+          Err.raise_error rng Err.Error_BadSplice [
+            text "Tactic returned bad sigelt:" ^/^ doc_of_string (Print.sigelt_to_string_short se);
+            text "If you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt."
+          ]
         | _ -> ()
         end;
         { se with sigrng = rng })
@@ -986,9 +984,10 @@ let splice
           (* NOTE: Assumption is OK, a tactic can generate an axiom, but
            * it will be reported with --report_assumes. *)
           if is_internal_qualifier q then
-            Err.raise_error (Err.Error_InternalQualifier, BU.format2 "The qualifier %s is internal, it cannot be attached to spliced sigelt `%s`."
+            Err.raise_error rng Err.Error_InternalQualifier
+              (BU.format2 "The qualifier %s is internal, it cannot be attached to spliced sigelt `%s`."
                              (show q)
-                             (Print.sigelt_to_string_short se)) rng
+                             (Print.sigelt_to_string_short se))
          ))
     in
     sigelts
@@ -1032,7 +1031,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
             TcRel.force_trivial_guard (goal_env g) guard
             end
         | None ->
-            Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "postprocessing left open goals") typ.pos) gs;
+            Err.raise_error typ.pos Err.Fatal_OpenGoalsInSynthesis "postprocessing left open goals") gs;
     (* abort if the uvar was not solved *)
     let tagged_imps = TcRel.resolve_implicits_tac env g_imp in
     report_implicits tm.pos tagged_imps;

@@ -77,17 +77,17 @@ let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_na
         "Expected %s:%s to be universe-polymorphic in %s universes, but found %s (tscheme: %s)"
         eff_name comb (string_of_int n) (g_us |> List.length |> string_of_int)
         (Print.tscheme_to_string (g_us, t)) in
-      raise_error (Errors.Fatal_MismatchUniversePolymorphic, error) t.pos;
+      raise_error t.pos Errors.Fatal_MismatchUniversePolymorphic error;
     match us with
     | [] -> ()
     | _ ->
      if List.length us = List.length g_us &&
       List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
      then ()
-     else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
+     else raise_error t.pos Errors.Fatal_UnexpectedNumberOfUniverse
             (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
-               eff_name comb (show us) (show g_us)))
-            t.pos in
+               eff_name comb (show us) (show g_us))
+  in
   g_us, t, ty
   )
 
@@ -133,10 +133,10 @@ let eq_binders env (bs1 bs2:binders) : option (list S.indexed_effect_binder_kind
   else None
 
 let log_ad_hoc_combinator_warning (comb_name:string) (r:Range.range) =
-  log_issue_doc r
-    (Errors.Warning_Adhoc_IndexedEffect_Combinator,
-     [Errors.text (BU.format1 "Combinator %s is not a substitutive indexed effect combinator, \
-                   it is better to make it one if possible for better performance and ease of use" comb_name)])
+  log_issue r Errors.Warning_Adhoc_IndexedEffect_Combinator [
+    Errors.text (BU.format1 "Combinator %s is not a substitutive indexed effect combinator, \
+                   it is better to make it one if possible for better performance and ease of use" comb_name)
+  ]
 
 //
 // Check bind combinator kind for an indexed effect or polymonadic bind
@@ -402,10 +402,10 @@ let validate_indexed_effect_bind_shape (env:env)
          |> SS.subst_binders [NT (a, a_b.binder_bv |> S.bv_to_name);
                              NT (b, b_b.binder_bv |> S.bv_to_name)]
     | _ ->
-     raise_error (Errors.Fatal_UnexpectedEffect,
-                  BU.format2 "Type of %s is not an arrow with >= 4 binders (%s)"
+     raise_error r Errors.Fatal_UnexpectedEffect
+                  (BU.format2 "Type of %s is not an arrow with >= 4 binders (%s)"
                     bind_name
-                    (show bind_t)) r in
+                    (show bind_t)) in
       
 
   // peel off range binders from the end, if any
@@ -413,10 +413,10 @@ let validate_indexed_effect_bind_shape (env:env)
     if has_range_binders
     then if List.length rest_bs >= 2
          then List.splitAt (List.length rest_bs - 2) rest_bs
-         else raise_error (Errors.Fatal_UnexpectedEffect,
-                           BU.format2 "Type of %s is not an arrow with >= 6 binders (%s)"
+         else raise_error r Errors.Fatal_UnexpectedEffect
+                           (BU.format2 "Type of %s is not an arrow with >= 6 binders (%s)"
                              bind_name
-                             (show bind_t)) r
+                             (show bind_t))
     else rest_bs, [] in
 
   // f binder with sort m_repr ?us
@@ -471,10 +471,10 @@ let validate_indexed_effect_bind_shape (env:env)
   let guard_eq =
     match Rel.teq_nosmt env k bind_t with
     | None ->
-      raise_error (Errors.Fatal_UnexpectedEffect,
-                   BU.format2 "Unexpected type of %s (%s)\n"
+      raise_error r Errors.Fatal_UnexpectedEffect
+                   (BU.format2 "Unexpected type of %s (%s)\n"
                      bind_name
-                     (show bind_t)) r
+                     (show bind_t))
     | Some g -> g in
 
   Rel.force_trivial_guard env (Env.conj_guards [
@@ -674,10 +674,10 @@ let validate_indexed_effect_subcomp_shape (env:env)
       bs |> List.splitAt (List.length bs - 1) |> fst
          |> SS.subst_binders [NT (a, bv_to_name a_b.binder_bv)]
     | _ ->
-      raise_error (Errors.Fatal_UnexpectedEffect,
-        BU.format2 "Type of %s is not an arrow with >= 2 binders (%s)"
+      raise_error r Errors.Fatal_UnexpectedEffect
+        (BU.format2 "Type of %s is not an arrow with >= 2 binders (%s)"
           subcomp_name
-          (show subcomp_t)) r in
+          (show subcomp_t)) in
 
   let f, guard_f =
     let repr, g = TcUtil.fresh_effect_repr
@@ -721,10 +721,10 @@ let validate_indexed_effect_subcomp_shape (env:env)
   let guard_eq =
     match Rel.teq_nosmt env subcomp_t k with
     | None ->
-      raise_error (Errors.Fatal_UnexpectedEffect,
-                   BU.format2 "Unexpected type of %s (%s)\n"
+      raise_error r Errors.Fatal_UnexpectedEffect
+                   (BU.format2 "Unexpected type of %s (%s)\n"
                      subcomp_name
-                     (show subcomp_t)) r
+                     (show subcomp_t))
     | Some g -> g in
 
 
@@ -894,10 +894,10 @@ let validate_indexed_effect_ite_shape (env:env)
       bs |> List.splitAt (List.length bs - 3) |> fst
          |> SS.subst_binders [NT (a, a_b.binder_bv |> S.bv_to_name)]
     | _ ->
-      raise_error (Errors.Fatal_UnexpectedEffect,
-        BU.format2 "Type of %s is not an arrow with >= 4 binders (%s)"
+      raise_error r Errors.Fatal_UnexpectedEffect
+        (BU.format2 "Type of %s is not an arrow with >= 4 binders (%s)"
           ite_name
-          (show ite_ty)) r in
+          (show ite_ty)) in
 
   let f, guard_f =
     let repr, g = TcUtil.fresh_effect_repr
@@ -937,10 +937,10 @@ let validate_indexed_effect_ite_shape (env:env)
   let guard_eq =
     match Rel.teq_nosmt env ite_tm k with
     | None ->
-      raise_error (Errors.Fatal_UnexpectedEffect,
-                   BU.format2 "Unexpected term for %s (%s)\n"
+      raise_error r Errors.Fatal_UnexpectedEffect
+                   (BU.format2 "Unexpected term for %s (%s)\n"
                      ite_name
-                     (show ite_tm)) r
+                     (show ite_tm))
     | Some g -> g in
 
   Rel.force_trivial_guard env (Env.conj_guards [
@@ -1018,10 +1018,10 @@ let validate_indexed_effect_close_shape (env:env)
   let g_eq =
     match Rel.teq_nosmt env close_tm k with
     | None ->
-      raise_error (Errors.Fatal_UnexpectedEffect,
-                   BU.format2 "Unexpected term for %s (%s)\n"
+      raise_error r Errors.Fatal_UnexpectedEffect
+                   (BU.format2 "Unexpected term for %s (%s)\n"
                      close_name
-                     (show close_tm)) r
+                     (show close_tm))
     | Some g -> g in
   
   Rel.force_trivial_guard env (Env.conj_guard g_body g_eq);
@@ -1125,14 +1125,14 @@ let validate_indexed_effect_lift_shape (env:env)
          |> SS.subst_binders [NT (a, bv_to_name a_b.binder_bv)],
       U.comp_effect_name c |> Env.norm_eff_name env
     | _ ->
-      raise_error (Errors.Fatal_UnexpectedExpressionType,
-                   lift_t_shape_error "either not an arrow, or not enough binders") r in
+      raise_error r Errors.Fatal_UnexpectedExpressionType
+                   (lift_t_shape_error "either not an arrow, or not enough binders") in
 
   if (not ((lid_equals lift_eff PC.effect_PURE_lid) ||
            (lid_equals lift_eff PC.effect_GHOST_lid && Env.is_erasable_effect env m_eff_name)))
-  then raise_error (Errors.Fatal_UnexpectedExpressionType,
-                    lift_t_shape_error "the lift combinator has an unexpected effect: \
-                      it must either be PURE or if the source effect is erasable then may be GHOST") r;
+  then raise_error r Errors.Fatal_UnexpectedExpressionType
+                    (lift_t_shape_error "the lift combinator has an unexpected effect: \
+                      it must either be PURE or if the source effect is erasable then may be GHOST");
 
   let f, guard_f =
     let repr, g = TcUtil.fresh_effect_repr
@@ -1170,10 +1170,10 @@ let validate_indexed_effect_lift_shape (env:env)
   let guard_eq =
     match Rel.teq_nosmt env lift_t k with
     | None ->
-      raise_error (Errors.Fatal_UnexpectedEffect,
-                   BU.format2 "Unexpected type of %s (%s)\n"
+      raise_error r Errors.Fatal_UnexpectedEffect
+                   (BU.format2 "Unexpected type of %s (%s)\n"
                      lift_name
-                     (show lift_t)) r
+                     (show lift_t))
     | Some g -> g in
 
   Rel.force_trivial_guard env (Env.conj_guards [
@@ -1214,9 +1214,8 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
 
   //we don't support effect binders in layered effects yet
   if List.length ed.univs <> 0 || List.length ed.binders <> 0 then
-    raise_error
-      (Errors.Fatal_UnexpectedEffect, "Binders are not supported for layered effects (" ^ (string_of_lid ed.mname) ^")")
-      (range_of_lid ed.mname);
+    raise_error (range_of_lid ed.mname) Errors.Fatal_UnexpectedEffect 
+      ("Binders are not supported for layered effects (" ^ (string_of_lid ed.mname) ^")");
 
   let log_combinator s (us, t, ty) =
     if !dbg_LayeredEffectsTc then
@@ -1310,10 +1309,10 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     TcUtil.fresh_effect_repr env r ed.mname signature_ts (Some repr_ts) u a_tm in
 
   let not_an_arrow_error comb n t r =
-    raise_error (Errors.Fatal_UnexpectedEffect,
-      BU.format5 "Type of %s:%s is not an arrow with >= %s binders (%s::%s)" (string_of_lid ed.mname) comb
-        (string_of_int n) (tag_of t) (show t)
-    ) r in
+    raise_error r Errors.Fatal_UnexpectedEffect
+      (BU.format5 "Type of %s:%s is not an arrow with >= %s binders (%s::%s)" (string_of_lid ed.mname) comb
+        (show n) (tag_of t) (show t))
+  in
 
   (*
    * return_repr
@@ -1732,9 +1731,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           | _ -> false in
         
         if not supported_subcomp
-        then raise_error (Errors.Fatal_UnexpectedEffect,
-                         "close combinator is only allowed for effects with substitutive subcomp")
-                         r
+        then raise_error r Errors.Fatal_UnexpectedEffect "close combinator is only allowed for effects with substitutive subcomp"
       in
       let us, close_tm = SS.open_univ_vars us close_tm in
       let close_bs, close_body, _ = U.abs_formals close_tm in
@@ -1747,7 +1744,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
       let args2 =
         match (SS.compress close_body).n with
         | Tm_app {args=a::args} -> args |> List.map fst
-        | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "close combinator body not a repr") r in
+        | _ -> raise_error r Errors.Fatal_UnexpectedEffect "close combinator body not a repr" in
 
       let env = Env.push_binders env0 ((a_b::b_b::is_bs)@[x_bv |> S.mk_binder]) in
       let subcomp_ts =
@@ -1789,9 +1786,9 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let env0 = env in
     let r = act.action_defn.pos in
     if List.length act.action_params <> 0
-    then raise_error (Errors.Fatal_MalformedActionDeclaration,
-      BU.format3 "Action %s:%s has non-empty action params (%s)"
-        (string_of_lid ed.mname) (string_of_lid act.action_name) (show act.action_params)) r;
+    then raise_error r Errors.Fatal_MalformedActionDeclaration
+      (BU.format3 "Action %s:%s has non-empty action params (%s)"
+        (string_of_lid ed.mname) (string_of_lid act.action_name) (show act.action_params));
 
     let env, act =
       let usubst, us = SS.univ_var_opening act.action_univs in
@@ -1839,9 +1836,9 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         let a_tm, _, g_tm = TcUtil.new_implicit_var reason r env t false in
         let repr, g = fresh_repr r env u a_tm in
         U.arrow bs (S.mk_Total repr), Env.conj_guard g g_tm
-      | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType,
-        BU.format3 "Unexpected non-function type for action %s:%s (%s)"
-          (string_of_lid ed.mname) (string_of_lid act.action_name) (show act_typ)) r in
+      | _ -> raise_error r Errors.Fatal_ActionMustHaveFunctionType
+               (BU.format3 "Unexpected non-function type for action %s:%s (%s)"
+                 (show ed.mname) (show act.action_name) (show act_typ)) in
 
     if Debug.medium () || !dbg_LayeredEffectsTc then
       BU.print1 "Expected action type: %s\n" (show k);
@@ -1861,8 +1858,8 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         | Tm_app {hd=head;args=a::is} ->
           (match (SS.compress head).n with
            | Tm_uinst (_, us) -> us, fst a, is
-           | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType, err_msg t) r)
-        | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType, err_msg t) r in
+           | _ -> raise_error r Errors.Fatal_ActionMustHaveFunctionType (err_msg t))
+        | _ -> raise_error r Errors.Fatal_ActionMustHaveFunctionType (err_msg t) in
 
       let k = N.normalize [Beta] env k in
       match (SS.compress k).n with
@@ -1876,7 +1873,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           effect_args = is;
           flags = [] } in
         U.arrow bs (S.mk_Comp ct)
-      | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType, err_msg k) r in
+      | _ -> raise_error r Errors.Fatal_ActionMustHaveFunctionType (err_msg k) in
 
     if Debug.medium () || !dbg_LayeredEffectsTc then
       BU.print1 "Action type after injecting it into the monad: %s\n" (show act_typ);
@@ -1895,10 +1892,10 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         then { act with
           action_defn = act_defn;
           action_typ = SS.close_univ_vars act.action_univs act_typ }
-        else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
+        else raise_error r Errors.Fatal_UnexpectedNumberOfUniverse
                (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
-                 (string_of_lid ed.mname) (string_of_lid act.action_name) (show us) (show act.action_univs)))
-             r in
+                 (string_of_lid ed.mname) (string_of_lid act.action_name) (show us) (show act.action_univs))
+    in
 
     act in
 
@@ -1913,9 +1910,9 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let is_reifiable = List.contains Reifiable quals in
 
     if has_primitive_extraction && is_reifiable
-    then raise_error (Errors.Fatal_UnexpectedEffect,
-                      BU.format1 "Effect %s is declared to be both primitive extraction and reifiable"
-                        (string_of_lid ed.mname)) (Ident.range_of_lid ed.mname)
+    then raise_error (Ident.range_of_lid ed.mname) Errors.Fatal_UnexpectedEffect
+                      (BU.format1 "Effect %s is declared to be both primitive extraction and reifiable"
+                        (show ed.mname)) 
     else begin
       if has_primitive_extraction
       then S.Extract_primitive
@@ -2002,12 +1999,12 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
       if (List.length ed_univs = List.length us &&
          List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) ed_univs us)
       then us, bs
-      else raise_error_doc (Errors.Fatal_UnexpectedNumberOfUniverse, [
+      else raise_error (range_of_lid ed.mname) Errors.Fatal_UnexpectedNumberOfUniverse [
              text "Expected and generalized universes in effect declaration for"
                 ^/^ doc_of_string (string_of_lid ed.mname) ^/^ text "are different";
              text "Expected" ^/^ pp #int (List.length ed_univs) ^/^
              text "but found" ^/^ pp #int (List.length us)
-           ]) (range_of_lid ed.mname)
+           ]
   in
 
   //at this points, bs are closed and closed with us also
@@ -2061,7 +2058,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
         let error = BU.format4
           "Expected %s:%s to be universe-polymorphic in %s universes, found %s"
           (string_of_lid ed.mname) comb (string_of_int n) (g_us |> List.length |> string_of_int) in
-        raise_error (Errors.Fatal_MismatchUniversePolymorphic, error) t.pos
+        raise_error t.pos Errors.Fatal_MismatchUniversePolymorphic error
     end;
     match us with
     | [] -> g_us, t
@@ -2069,10 +2066,9 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
      if List.length us = List.length g_us &&
         List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
      then g_us, t
-     else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
+     else raise_error t.pos Errors.Fatal_UnexpectedNumberOfUniverse
             (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, expected: %s, but found %s"
-               (string_of_lid ed.mname) comb (BU.string_of_int (List.length us)) (BU.string_of_int (List.length g_us))))
-            t.pos
+               (string_of_lid ed.mname) comb (BU.string_of_int (List.length us)) (BU.string_of_int (List.length g_us)))
   in
 
   let signature = check_and_gen' "signature" 1 None (U.effect_sig_ts ed.signature) None in
@@ -2084,7 +2080,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
    * AR: return a fresh (in the sense of fresh universe) instance of a:Type and wp sort (closed with the returned a) 
    *)
   let fresh_a_and_wp () =
-    let fail t = raise_error (Err.unexpected_signature_for_monad env ed.mname t) (ed.signature |> U.effect_sig_ts |> snd).pos in
+    let fail t = Err.unexpected_signature_for_monad env (ed.signature |> U.effect_sig_ts |> snd).pos ed.mname t in
     //instantiate with fresh universes
     let _, signature = Env.inst_tscheme signature in
     match (SS.compress signature).n with
@@ -2308,9 +2304,8 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
               let k = U.arrow bs (S.mk_Total res) in
               let k, _, g = tc_tot_or_gtot_term env k in
               k, g
-            | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType, (BU.format2
-              "Actions must have function types (not: %s, a.k.a. %s)"
-                (show act_typ) (tag_of act_typ))) act_defn.pos
+            | _ -> raise_error act_defn.pos Errors.Fatal_ActionMustHaveFunctionType
+                     (BU.format2 "Actions must have function types (not: %s, a.k.a. %s)" (show act_typ) (tag_of act_typ))
           in
 
           // The following Rel query is only to check that act_typ has
@@ -2319,9 +2314,9 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
            let g = Env.conj_guard g g_k in
            match g.guard_f with
            | NonTrivial _ ->
-             raise_error (Errors.Fatal_ActionMustHaveFunctionType,
-                          BU.format1 "Unexpected non trivial guard formula when checking action type shape (%s)"
-                            (show act_typ)) act_defn.pos
+             raise_error act_defn.pos Errors.Fatal_ActionMustHaveFunctionType
+                          (BU.format1 "Unexpected non trivial guard formula when checking action type shape (%s)"
+                            (show act_typ))
            | Trivial ->
              Rel.force_trivial_guard {env with admit=true} (Env.conj_guards [g_k; g]));
 
@@ -2412,7 +2407,7 @@ let tc_eff_decl env ed quals attrs =
   else tc_non_layered_eff_decl env ed quals attrs
 
 let monad_signature env m s =
- let fail () = raise_error (Err.unexpected_signature_for_monad env m s) (range_of_lid m) in
+ let fail () = Err.unexpected_signature_for_monad env (range_of_lid m) m s in
  let s = SS.compress s in
  match s.n with
   | Tm_arrow {bs; comp=c} ->
@@ -2456,9 +2451,9 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   sub
 
 let check_lift_for_erasable_effects env (m1:lident) (m2:lident) r : unit =
-  let err reason = raise_error (Errors.Fatal_UnexpectedEffect,
-                                BU.format3 "Error defining a lift/subcomp %s ~> %s: %s"
-                                  (string_of_lid m1) (string_of_lid m2) reason) r in
+  let err reason = raise_error r Errors.Fatal_UnexpectedEffect
+                                (BU.format3 "Error defining a lift/subcomp %s ~> %s: %s"
+                                  (string_of_lid m1) (string_of_lid m2) reason) in
 
   let m1 = Env.norm_eff_name env m1 in
   if lid_equals m1 PC.effect_GHOST_lid
@@ -2473,11 +2468,10 @@ let check_lift_for_erasable_effects env (m1:lident) (m2:lident) r : unit =
 
 let tc_lift env sub r =
   if lid_equals sub.source sub.target
-  then raise_error (Fatal_UnexpectedEffect,
-                    BU.format1
+  then raise_error r Fatal_UnexpectedEffect
+                    (BU.format1
                       "Cannot define a lift with same source and target (%s)"
-                      (string_of_lid sub.source))
-                   r;
+                      (show sub.source));
 
   let check_and_gen env t k =
     // BU.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (show t);
@@ -2497,7 +2491,7 @@ let tc_lift env sub r =
     let expected_k  = U.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
     let repr_type eff_name a wp =
       if not (is_reifiable_effect env eff_name)
-      then raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" (string_of_lid eff_name))) (Env.get_range env);
+      then raise_error (Env.get_range env) Errors.Fatal_EffectCannotBeReified (BU.format1 "Effect %s cannot be reified" (string_of_lid eff_name));
       match Env.effect_decl_opt env eff_name with
       | None -> failwith "internal error: reifiable effect has no decl?"
       | Some (ed, qualifiers) ->
@@ -2574,13 +2568,15 @@ let tc_lift env sub r =
     in
     //check that sub effecting is universe polymorphic in exactly one universe
     if lift_wp |> fst |> List.length <> 1 then
-    raise_error (Errors.Fatal_TooManyUniverse, (BU.format3 "Sub effect wp must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
-                                                           (show sub.source) (show sub.target)
-                                                           (lift_wp |> fst |> List.length |> string_of_int))) r;
+      raise_error r Errors.Fatal_TooManyUniverse
+        (BU.format3 "Sub effect wp must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
+                    (show sub.source) (show sub.target)
+                    (lift_wp |> fst |> List.length |> string_of_int));
     if is_some lift && lift |> must |> fst |> List.length <> 1 then
-      raise_error (Errors.Fatal_TooManyUniverse, (BU.format3 "Sub effect lift must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
-                                                             (show sub.source) (show sub.target)
-                                                             (lift |> must |> fst |> List.length |> string_of_int))) r;
+      raise_error r Errors.Fatal_TooManyUniverse
+        (BU.format3 "Sub effect lift must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
+                    (show sub.source) (show sub.target)
+                    (lift |> must |> fst |> List.length |> string_of_int));
     ({ sub with lift_wp=Some lift_wp; lift=lift })
 
 let tc_effect_abbrev env (lid, uvs, tps, c) r =
@@ -2615,23 +2611,21 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
       match tps with
       | ({binder_bv=x})::tl ->
         if is_default_effect && not (tl = [])
-        then raise_error (Errors.Fatal_UnexpectedEffect,
-                          BU.format2 "Effect %s is marked as a default effect for %s, but it has more than one arguments"
+        then raise_error r Errors.Fatal_UnexpectedEffect
+                          (BU.format2 "Effect %s is marked as a default effect for %s, but it has more than one arguments"
                             (string_of_lid lid)
-                            (c |> U.comp_effect_name |> string_of_lid)) r;
+                            (c |> U.comp_effect_name |> string_of_lid));
         S.bv_to_name x
-      | _ -> raise_error (Errors.Fatal_NotEnoughArgumentsForEffect,
-                         "Effect abbreviations must bind at least the result type")
-                        r
+      | _ -> raise_error r Errors.Fatal_NotEnoughArgumentsForEffect
+                         "Effect abbreviations must bind at least the result type"
     in
     let def_result_typ = FStar.Syntax.Util.comp_result c in
     if not (Rel.teq_nosmt_force env expected_result_typ def_result_typ)
-    then raise_error (Errors.Fatal_EffectAbbreviationResultTypeMismatch,
-                      BU.format2 "Result type of effect abbreviation `%s` \
+    then raise_error r Errors.Fatal_EffectAbbreviationResultTypeMismatch
+                      (BU.format2 "Result type of effect abbreviation `%s` \
                                   does not match the result type of its definition `%s`"
                                   (show expected_result_typ)
                                   (show def_result_typ))
-                     r
   in
   let tps = SS.close_binders tps in
   let c = SS.close_comp tps c in
@@ -2643,19 +2637,19 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
   if List.length uvs <> 1
   then begin
     let _, t = Subst.open_univ_vars uvs t in
-    raise_error (Errors.Fatal_TooManyUniverse,
-                 BU.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
+    raise_error r Errors.Fatal_TooManyUniverse
+                 (BU.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
                                   (show lid)
-                                  (List.length uvs |> BU.string_of_int)
-                                  (show t)) r
+                                  (show (List.length uvs))
+                                  (show t))
   end;
   (lid, uvs, tps, c)
 
 
 let check_polymonadic_bind_for_erasable_effects env (m:lident) (n:lident) (p:lident) r =
-  let err reason = raise_error (Errors.Fatal_UnexpectedEffect,
-                                BU.format4 "Error definition polymonadic bind (%s, %s) |> %s: %s"
-                                  (string_of_lid m) (string_of_lid n) (string_of_lid p) reason) r in
+  let err reason = raise_error r Errors.Fatal_UnexpectedEffect
+                                (BU.format4 "Error definition polymonadic bind (%s, %s) |> %s: %s"
+                                  (show m) (show n) (show p) reason) in
 
   let m = Env.norm_eff_name env m in
   let n = Env.norm_eff_name env n in
@@ -2724,11 +2718,11 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme)
          eff_name (Print.tscheme_to_string (us, t))
                   (Print.tscheme_to_string (us, k));
 
-  log_issue_doc r (Errors.Warning_BleedingEdge_Feature,
-    [Errors.text <|
+  log_issue r Errors.Warning_BleedingEdge_Feature [Errors.text <|
       BU.format1 "Polymonadic binds (%s in this case) is an experimental feature;\
         it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
-        eff_name]);
+        eff_name
+  ];
 
   (us, t), (us, k |> SS.close_univ_vars us), kind
 
@@ -2766,11 +2760,11 @@ let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) =
          (Print.tscheme_to_string (us, t))
          (Print.tscheme_to_string (us, k));
 
-  log_issue_doc r (Errors.Warning_BleedingEdge_Feature,
-    [Errors.text <|
+  log_issue r Errors.Warning_BleedingEdge_Feature [
+    Errors.text <|
       BU.format1 "Polymonadic subcomp (%s in this case) is an experimental feature;\
         it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
-        combinator_name]);
-
+        combinator_name
+  ];
 
   (us, t), (us, k |> SS.close_univ_vars us), kind

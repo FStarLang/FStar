@@ -57,7 +57,7 @@ let lookup_error_range settings (l, h) =
   matches
 
 let error_number (_, _, i) = i
-let errno (e:raw_error) : int = error_number (lookup_error default_settings e)
+let errno (e:error_code) : int = error_number (lookup_error default_settings e)
 
 (* Exported *)
 let warn_on_use_errno    = errno Warning_WarnOnUse
@@ -108,7 +108,6 @@ let update_flags (l:list (error_flag & string))
   @ default_settings
 
 exception Error   of error
-exception Err     of raw_error & error_message & list string
 exception Warning of error
 exception Stop
 exception Empty_frag
@@ -493,12 +492,17 @@ let log_issue_ctx r (e, msg) ctx =
     then add_one i
     else failwith ("don't use log_issue to report fatal error, should use raise_error: " ^ format_issue i)
 
-let log_issue_doc r (e, msg) =
+let raise_error r e msg =
+  let msg = to_doc_list msg in
+  raise (Error (e, maybe_add_backtrace msg, r, error_context.get ()))
+
+let log_issue r e msg =
+  let msg = to_doc_list msg in
   let ctx = error_context.get () in
   log_issue_ctx r (e, msg) ctx
 
-let log_issue r (e, msg) =
-  log_issue_doc r (e, mkmsg msg)
+let raise_error0 e msg = raise_error dummyRange e msg
+let log_issue0 e msg = log_issue dummyRange e msg
 
 let add_errors (errs : list error) : unit =
     atomically (fun () -> List.iter (fun (e, msg, r, ctx) -> log_issue_ctx r (e, msg) ctx) errs)
@@ -508,9 +512,6 @@ let issue_of_exn (e:exn) : option issue =
   | Error(e, msg, r, ctx) ->
     let errno = error_number (lookup e) in
     Some (mk_issue EError (Some r) msg (Some errno) ctx)
-  | Err (e, msg, ctx) ->
-    let errno = error_number (lookup e) in
-    Some (mk_issue EError None msg (Some errno) ctx)
   | _ -> None
 
 let err_exn exn =
@@ -522,34 +523,12 @@ let err_exn exn =
 
 let handleable = function
   | Error _
-  | Stop
-  | Err _ -> true
+  | Stop -> true
   | _ -> false
 
 let stop_if_err () =
     if get_err_count () > 0
     then raise Stop
-
-let raise_error_doc (e, msg) r =
-  raise (Error (e, maybe_add_backtrace msg, r, error_context.get ()))
-
-let raise_err_doc (e, msg) =
-  raise (Err (e, maybe_add_backtrace msg, error_context.get ()))
-
-let raise_error (e, msg) r =
-  raise_error_doc (e, mkmsg msg) r
-
-let raise_err (e, msg) =
-  raise_err_doc (e, mkmsg msg)
-
-let log_issue_text r (e, msg) =
-  log_issue_doc r (e, [text msg])
-
-let raise_error_text (e, msg) r =
-  raise_error_doc (e, [text msg]) r
-
-let raise_err_text (e, msg) =
-  raise_err_doc (e, [text msg])
 
 let with_ctx (s:string) (f : unit -> 'a) : 'a =
   error_context.push s;
@@ -668,3 +647,8 @@ let find_multiset_discrepancy (l1 : list int) (l2 : list int) : option (int & in
             else aux tl1 tl2
     in
     aux l1 l2
+
+let raise_error_doc rng code msg = raise_error rng code msg
+let log_issue_doc rng code msg = log_issue rng code msg
+let raise_error_text rng code msg = raise_error rng code msg
+let log_issue_text rng code msg = log_issue rng code msg

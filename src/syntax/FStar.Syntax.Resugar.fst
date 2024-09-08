@@ -1200,7 +1200,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
     | Pat_cons(fv, _, args) when (lid_equals fv.fv_name.v C.nil_lid
                                && may_drop_implicits args) ->
       if not (List.isEmpty (filter_pattern_imp args)) then
-        E.log_issue p.p (E.Warning_NilGivenExplicitArgs, "Prims.Nil given explicit arguments");
+        E.log_issue p.p E.Warning_NilGivenExplicitArgs "Prims.Nil given explicit arguments";
       mk (A.PatList [])
 
     | Pat_cons(fv, _, args) when (lid_equals fv.fv_name.v C.cons_lid
@@ -1212,9 +1212,9 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
           | { pat = A.PatList tl'; prange = p } -> A.mk_pattern (A.PatList (hd' :: tl')) p
           | tl' -> resugar_plain_pat_cons' fv [hd'; tl'])
        | args' ->
-         E.log_issue p.p (E.Warning_ConsAppliedExplicitArgs,
+         E.log_issue p.p E.Warning_ConsAppliedExplicitArgs
            (Util.format1 "Prims.Cons applied to %s explicit arguments"
-             (string_of_int <| List.length args')));
+             (string_of_int <| List.length args'));
          resugar_plain_pat_cons fv args)
 
     | Pat_cons(fv, _, args) when (is_tuple_constructor_lid fv.fv_name.v

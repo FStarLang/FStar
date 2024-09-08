@@ -383,12 +383,6 @@ let set_current_module env lid = {env with curmodule=lid}
 let has_interface env l = env.modules |> BU.for_some (fun m -> m.is_interface && lid_equals m.name l)
 let find_in_sigtab env lid = BU.smap_try_find (sigtab env) (string_of_lid lid)
 
-let name_not_found (l:lid) =
-  (Errors.Fatal_NameNotFound, (format1 "Name \"%s\" not found" (string_of_lid l)))
-
-let variable_not_found (v:bv) =
-  (Errors.Fatal_VariableNotFound, (format1 "Variable \"%s\" not found" (show v)))
-
 //Construct a new universe unification variable
 let new_u_univ () = U_unif (UF.univ_fresh Range.dummyRange)
 
@@ -423,7 +417,7 @@ let check_effect_is_not_a_template (ed:eff_decl) rng : unit =
       "Effect template %s should be applied to arguments for its binders (%s) before it can be used at an effect position"
       (show ed.mname)
       (String.concat "," <| List.map Print.binder_to_string_with_type ed.binders) in
-    raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, msg) rng
+    raise_error rng Errors.Fatal_NotEnoughArgumentsForEffect msg
 
 let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
   check_effect_is_not_a_template ed env.range;
@@ -529,13 +523,13 @@ let try_add_sigelt force env se l =
       (* anything else is an error *)
       let open FStar.Errors.Msg in
       let open FStar.Pprint in
-      raise_error_doc (Errors.Fatal_DuplicateTopLevelNames, [
+      raise_error (range_of_lid l) Errors.Fatal_DuplicateTopLevelNames [
         text "Duplicate top-level names" ^/^ arbitrary_string s;
         text "Previously declared at" ^/^ arbitrary_string (Range.string_of_range (range_of_lid l));
         // text "New decl = " ^/^ Print.sigelt_to_doc se;
         // text "Old decl = " ^/^ Print.sigelt_to_doc old_se;
         // backtrace_doc ();
-      ]) (range_of_lid l)
+      ]
     )
   );
   BU.smap_add (sigtab env) s se
@@ -691,7 +685,8 @@ let lid_exists env l =
 let lookup_bv env bv =
     let bvr = range_of_bv bv in
     match try_lookup_bv env bv with
-    | None -> raise_error (variable_not_found bv) bvr
+    | None -> raise_error bvr Errors.Fatal_VariableNotFound
+                (format1 "Variable \"%s\" not found" (show bv))
     | Some (t, r) -> Subst.set_use_range bvr t,
                      Range.set_use_range r (Range.use_range bvr)
 
@@ -711,10 +706,14 @@ let try_lookup_and_inst_lid env us l =
       let r = Range.set_use_range r (Range.use_range use_range) in
       Some (Subst.set_use_range use_range t, r)
 
+let name_not_found (#a:Type) (l:lid) : a =
+  raise_error (range_of_lid l) Errors.Fatal_NameNotFound
+    (format1 "Name \"%s\" not found" (string_of_lid l))
+
 let lookup_lid env l =
     match try_lookup_lid env l with
-    | None -> raise_error (name_not_found l) (range_of_lid l)
     | Some v -> v
+    | None -> name_not_found l
 
 let lookup_univ env x =
     List.find (function
@@ -731,21 +730,21 @@ let try_lookup_val_decl env lid =
 
 let lookup_val_decl env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_declare_typ {us=uvs; t} }, None), _) ->
-      inst_tscheme_with_range (range_of_lid lid) (uvs, t)
-    | _ -> raise_error (name_not_found lid) (range_of_lid lid)
+  | Some (Inr ({ sigel = Sig_declare_typ {us=uvs; t} }, None), _) ->
+    inst_tscheme_with_range (range_of_lid lid) (uvs, t)
+  | _ -> name_not_found lid
 
 let lookup_datacon env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_datacon {us=uvs; t} }, None), _) ->
-      inst_tscheme_with_range (range_of_lid lid) (uvs, t)
-    | _ -> raise_error (name_not_found lid) (range_of_lid lid)
+  | Some (Inr ({ sigel = Sig_datacon {us=uvs; t} }, None), _) ->
+    inst_tscheme_with_range (range_of_lid lid) (uvs, t)
+  | _ -> name_not_found lid
 
 let lookup_and_inst_datacon env us lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_datacon {us=uvs; t} }, None), _) ->
-      inst_tscheme_with (uvs, t) us |> snd
-    | _ -> raise_error (name_not_found lid) (range_of_lid lid)
+  | Some (Inr ({ sigel = Sig_datacon {us=uvs; t} }, None), _) ->
+    inst_tscheme_with (uvs, t) us |> snd
+  | _ -> name_not_found lid
 
 let datacons_of_typ env lid =
   match lookup_qname env lid with
@@ -978,7 +977,7 @@ let try_lookup_effect_lid env (ftv:lident) : option typ =
 
 let lookup_effect_lid env (ftv:lident) : typ =
   match try_lookup_effect_lid env ftv with
-    | None -> raise_error (name_not_found ftv) (range_of_lid ftv)
+    | None -> name_not_found ftv
     | Some k -> k
 
 let lookup_effect_abbrev env (univ_insts:universes) lid0 =
@@ -1055,10 +1054,8 @@ let num_effect_indices env name r =
   match sig_t.n with
   | Tm_arrow {bs=_a::bs} -> List.length bs
   | _ ->
-    raise_error (Errors.Fatal_UnexpectedSignatureForMonad,
-      BU.format2 "Signature for %s not an arrow (%s)" (Ident.string_of_lid name)
-      (show sig_t)) r
-
+    raise_error r Errors.Fatal_UnexpectedSignatureForMonad
+      (BU.format2 "Signature for %s not an arrow (%s)" (show name) (show sig_t))
 
 let lookup_effect_quals env l =
     let l = norm_eff_name env l in
@@ -1166,10 +1163,9 @@ let num_inductive_uniform_ty_params env lid =
     (
       match num_uniform with
       | None ->
-        raise_error (Errors.Fatal_UnexpectedInductivetype,
-                     BU.format1 "Internal error: Inductive %s is not decorated with its uniform type parameters"
-                                (string_of_lid lid))
-                    (range_of_lid lid)
+        raise_error (range_of_lid lid) Errors.Fatal_UnexpectedInductivetype
+          (BU.format1 "Internal error: Inductive %s is not decorated with its uniform type parameters"
+                                (show lid))
       | Some n -> Some n
     )
   | _ ->
@@ -1183,7 +1179,7 @@ let effect_decl_opt env l =
 
 let get_effect_decl env l =
   match effect_decl_opt env l with
-    | None -> raise_error (name_not_found l) (range_of_lid l)
+    | None -> name_not_found l
     | Some md -> fst md
 
 let get_lid_valued_effect_attr env
@@ -1206,11 +1202,10 @@ let get_lid_valued_effect_attr env
               match (SS.compress t).n with
               | Tm_constant (FStar.Const.Const_string (s, _)) -> s |> Ident.lid_of_str |> Some
               | _ ->
-                raise_error
-                  (Errors.Fatal_UnexpectedEffect,
-                   BU.format2 "The argument for the effect attribute for %s is not a constant string, it is %s\n"
-                     (string_of_lid eff_lid)
-                     (show t)) t.pos)
+                raise_error t.pos Errors.Fatal_UnexpectedEffect
+                   (BU.format2 "The argument for the effect attribute for %s is not a constant string, it is %s\n"
+                     (show eff_lid)
+                     (show t)))
 
 let get_default_effect env lid =
   get_lid_valued_effect_attr env lid Const.default_effect_attr None
@@ -1238,9 +1233,8 @@ let join_opt env (l1:lident) (l2:lident) : option (lident & mlift & mlift) =
 let join env l1 l2 : (lident & mlift & mlift) =
   match join_opt env l1 l2 with
   | None ->
-    raise_error (Errors.Fatal_EffectsCannotBeComposed,
-      (BU.format2 "Effects %s and %s cannot be composed"
-        (show l1) (show l2))) env.range
+    raise_error env.range Errors.Fatal_EffectsCannotBeComposed
+      (BU.format2 "Effects %s and %s cannot be composed" (show l1) (show l2))
   | Some t -> t
 
 let monad_leq env l1 l2 : option edge =
@@ -1329,11 +1323,11 @@ let rec unfold_effect_abbrev env comp =
     | None -> c
     | Some (binders, cdef) ->
       let binders, cdef = Subst.open_comp binders cdef in
-      if List.length binders <> List.length c.effect_args + 1
-      then raise_error (Errors.Fatal_ConstructorArgLengthMismatch, (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
-                                (BU.string_of_int (List.length binders))
-                                (BU.string_of_int (List.length c.effect_args + 1))
-                                (show (S.mk_Comp c)))) comp.pos;
+      if List.length binders <> List.length c.effect_args + 1 then
+        raise_error comp.pos Errors.Fatal_ConstructorArgLengthMismatch
+          (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
+                         (show (List.length binders)) (show (List.length c.effect_args + 1))
+                         (show (S.mk_Comp c)));
       let inst = List.map2 (fun b (t, _) -> NT(b.binder_bv, t)) binders (as_arg c.result_typ::c.effect_args) in
       let c1 = Subst.subst_comp inst cdef in
       let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
@@ -1349,7 +1343,8 @@ let effect_repr_aux only_reifiable env c u_res =
         This usually happens when you use a partially applied DM4F effect, \
         like [TAC int] instead of [Tac int] (given:%s, expected:%s)."
         (Ident.string_of_lid eff_name) (string_of_int given) (string_of_int expected) in
-      raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, message) r in
+      raise_error r Errors.Fatal_NotEnoughArgumentsForEffect message
+  in
 
   let effect_name = norm_eff_name env (U.comp_effect_name c) in
   match effect_decl_opt env effect_name with
@@ -1409,7 +1404,8 @@ let is_reifiable_function (env:env) (t:S.term) : bool =
 let reify_comp env c u_c : term =
     let l = U.comp_effect_name c in
     if not (is_reifiable_effect env l) then
-        raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" (Ident.string_of_lid l))) (get_range env);
+      raise_error (get_range env) Errors.Fatal_EffectCannotBeReified
+        (BU.format1 "Effect %s cannot be reified" (Ident.string_of_lid l));
     match effect_repr_aux true env c u_c with
     | None -> failwith "internal error: reifiable effect has no repr?"
     | Some tm -> tm
@@ -1629,11 +1625,10 @@ let update_effect_lattice env src tgt st_mlift =
 
   let check_cycle src tgt =
     if lid_equals src tgt
-    then raise_error (Errors.Fatal_Effects_Ordering_Coherence,
-           BU.format3 "Adding an edge %s~>%s induces a cycle %s"
-             (Ident.string_of_lid edge.msource)
-             (Ident.string_of_lid edge.mtarget)
-             (Ident.string_of_lid src)) env.range in
+    then raise_error env.range Errors.Fatal_Effects_Ordering_Coherence
+           (BU.format3 "Adding an edge %s~>%s induces a cycle %s"
+             (show edge.msource) (show edge.mtarget) (show src))
+  in
 
   //
   //There are three types of new edges now:
@@ -1665,9 +1660,10 @@ let update_effect_lattice env src tgt st_mlift =
   order |> List.iter (fun edge ->
     if Ident.lid_equals edge.msource Const.effect_DIV_lid
     && lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
-    then raise_error (Errors.Fatal_DivergentComputationCannotBeIncludedInTotal,
-                      (BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'"
-                        (string_of_lid edge.mtarget))) (get_range env));
+    then
+      raise_error (get_range env) Errors.Fatal_DivergentComputationCannotBeIncludedInTotal
+        (BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'"
+                        (show edge.mtarget)));
 
   //
   //Compute upper bounds
@@ -1712,9 +1708,9 @@ let update_effect_lattice env src tgt st_mlift =
           find_edge order (k, k') |> is_some) l) l in
       //Make sure there is only one such entry
       if List.length lubs <> 1
-      then raise_error (Errors.Fatal_Effects_Ordering_Coherence,
-                        BU.format1 "Effects %s have incomparable upper bounds" s)
-                       env.range
+      then
+        raise_error env.range Errors.Fatal_Effects_Ordering_Coherence
+          (BU.format1 "Effects %s have incomparable upper bounds" s)
       else lubs@joins) [] in
 
   let effects = {env.effects with order=order; joins=joins} in

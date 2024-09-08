@@ -1320,9 +1320,9 @@ let translate_type_decl' env ty: option decl =
         ) branches))
     | {tydecl_name=name} ->
         // JP: TODO: figure out why and how this happens
-        Errors.log_issue_doc Range.dummyRange (Errors.Warning_DefinitionNotTranslated, [
+        Errors.log_issue0 Errors.Warning_DefinitionNotTranslated [
             Errors.Msg.text <| BU.format1 "Error extracting type definition %s to KaRaMeL." name;
-          ]);
+          ];
         None
 
 let translate_let' env flavor lb: option decl =
@@ -1386,10 +1386,10 @@ let translate_let' env flavor lb: option decl =
         with e ->
           // JP: TODO: figure out what are the remaining things we don't extract
           let msg = BU.print_exn e in
-          Errors.log_issue_doc Range.dummyRange (Errors.Warning_FunctionNotExtacted, [
+          Errors.log_issue0 Errors.Warning_FunctionNotExtacted [
             Errors.Msg.text <| BU.format1 "Error while extracting %s to KaRaMeL." (Syntax.string_of_mlpath name);
             Pprint.arbitrary_string msg;
-          ]);
+          ];
           let msg = "This function was not extracted:\n" ^ msg in
           Some (DFunction (cc, meta, List.length tvars, t, name, binders, EAbortS msg))
         end
@@ -1412,16 +1412,17 @@ let translate_let' env flavor lb: option decl =
           let expr = translate_expr env expr in
           Some (DGlobal (meta, name, List.length tvars, t, expr))
         with e ->
-          Errors.log_issue_doc Range.dummyRange (Errors.Warning_DefinitionNotTranslated, [
+          Errors.log_issue0 Errors.Warning_DefinitionNotTranslated [
               Errors.Msg.text <| BU.format1 "Error extracting %s to KaRaMeL." (Syntax.string_of_mlpath name);
               Pprint.arbitrary_string (BU.print_exn e);
-            ]);
+            ];
           Some (DGlobal (meta, name, List.length tvars, t, EAny))
         end
 
   | { mllb_name = name; mllb_tysc = ts } ->
       // TODO JP: figure out what exactly we're hitting here...?
-      Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Not extracting %s to KaRaMeL\n" name));
+      Errors.log_issue0 Errors.Warning_DefinitionNotTranslated
+        (BU.format1 "Not extracting %s to KaRaMeL\n" name);
       begin match ts with
       | Some (tps, t) ->
           BU.print2 "Type scheme is: forall %s. %s\n"

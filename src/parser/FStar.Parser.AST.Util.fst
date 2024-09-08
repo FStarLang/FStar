@@ -772,15 +772,11 @@ let parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:rang
 = let extension_parser = lookup_extension_lang_parser lang_name in
   match extension_parser with
   | None ->
-    raise_error 
-        (Errors.Fatal_SyntaxError,
-         BU.format1 "Unknown language extension %s" lang_name)
-        raw_text_pos
+    raise_error raw_text_pos Errors.Fatal_SyntaxError
+      (BU.format1 "Unknown language extension %s" lang_name)
   | Some parser ->
     match parser.parse_decls raw_text raw_text_pos with
     | Inl error ->
-      raise_error
-          (Errors.Fatal_SyntaxError, error.message)
-          error.range
+      raise_error error.range Errors.Fatal_SyntaxError error.message
     | Inr ds ->
       ds

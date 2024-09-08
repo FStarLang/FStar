@@ -39,7 +39,7 @@ open FStar.Syntax.Print {}
 let always id b =
     if b
     then ()
-    else raise_error (Errors.Fatal_AssertionFailure, BU.format1 "Assertion failed: test %s" (BU.string_of_int id)) Range.dummyRange
+    else raise_error0 Errors.Fatal_AssertionFailure (BU.format1 "Assertion failed: test %s" (BU.string_of_int id))
 
 let x = gen_bv "x" None S.tun
 let y = gen_bv "y" None S.tun

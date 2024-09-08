@@ -65,9 +65,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
             match formals, pats with
             | [], [] -> []
             | [], _::_ ->
-                raise_error (Errors.Fatal_TooManyPatternArguments,
-                            "Too many pattern arguments")
-                            (range_of_lid fv.fv_name.v)
+                raise_error (range_of_lid fv.fv_name.v) Errors.Fatal_TooManyPatternArguments "Too many pattern arguments"
             | _::_, [] -> //fill the rest with dot patterns, if all the remaining formals are implicit
             formals |>
             List.map
@@ -80,10 +78,9 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
                     maybe_dot inaccessible a r, true
 
                     | _ ->
-                    raise_error (Errors.Fatal_InsufficientPatternArguments,
-                                BU.format1 "Insufficient pattern arguments (%s)"
-                                            (show p))
-                                (range_of_lid fv.fv_name.v))
+                    raise_error (range_of_lid fv.fv_name.v) Errors.Fatal_InsufficientPatternArguments
+                                (BU.format1 "Insufficient pattern arguments (%s)"
+                                            (show p)))
 
             | f::formals', (p, p_imp)::pats' ->
             begin
@@ -102,10 +99,9 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
                 (p, true)::aux formals' pats'
 
               | _ ->
-                raise_error (Errors.Fatal_InsufficientPatternArguments,
-                             BU.format1 "This pattern (%s) binds an inaccesible argument; use a wildcard ('_') pattern"
+                raise_error p.p Errors.Fatal_InsufficientPatternArguments
+                             (BU.format1 "This pattern (%s) binds an inaccesible argument; use a wildcard ('_') pattern"
                                          (show p))
-                             p.p
               end
 
             | (_, Some (Implicit _)) when p_imp ->
@@ -269,8 +265,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
         match b |> BU.find_dup bv_eq with
             | Some x ->
               let m = show x in
-              let err = (Errors.Fatal_NonLinearPatternVars, (format1 "The pattern variable \"%s\" was used more than once" m)) in
-              raise_error err p.p
+              raise_error p.p Errors.Fatal_NonLinearPatternVars (format1 "The pattern variable \"%s\" was used more than once" m)
             | _ -> b, a, w, arg, guard, p
     in
     let b, _, _, tm, guard, p = one_pat env p in

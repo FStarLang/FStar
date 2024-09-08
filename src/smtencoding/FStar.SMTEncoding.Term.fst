@@ -468,10 +468,8 @@ let mkQuant r check_pats (qop, pats, wopt, vars, body) =
         | None -> pats
         | Some p ->
           begin
-            Errors.log_issue
-                    r
-                    (Errors.Warning_SMTPatternIllFormed,
-                     BU.format1 "Pattern (%s) contains illegal symbols; dropping it" (print_smt_term p));
+            Errors.log_issue r Errors.Warning_SMTPatternIllFormed
+              (BU.format1 "Pattern (%s) contains illegal symbols; dropping it" (print_smt_term p));
             []
            end
     in

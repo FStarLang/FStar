@@ -30,7 +30,7 @@ open FStar.TypeChecker.Common
 type lcomp_with_binder = option bv & lcomp
 
 //error report
-val report: env -> list string -> unit
+// val report: env -> list string -> unit
 
 //unification variables
 val new_implicit_var : string -> Range.range -> env -> typ -> unrefine:bool -> term & (ctx_uvar & Range.range) & guard_t
