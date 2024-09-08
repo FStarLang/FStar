@@ -204,9 +204,12 @@ let (parse :
                                      ast true in
                                  with_dsenv_of_env env1 uu___8)
                         | uu___5 ->
-                            FStar_Errors.raise_err
-                              (FStar_Errors_Codes.Fatal_PreModuleMismatch,
-                                "mismatch between pre-module and module\n"))) in
+                            FStar_Errors.raise_error0
+                              FStar_Errors_Codes.Fatal_PreModuleMismatch ()
+                              (Obj.magic
+                                 FStar_Errors_Msg.is_error_message_string)
+                              (Obj.magic
+                                 "mismatch between pre-module and module"))) in
             (match uu___2 with
              | (ast1, env1) ->
                  let uu___3 = FStar_ToSyntax_ToSyntax.ast_modul_to_modul ast1 in
@@ -820,8 +823,12 @@ let (tc_one_fragment :
                            "Interactive mode only supports a single module at the top-level. Expected module %s"
                            uu___4 in
                        FStar_Errors.raise_error
-                         (FStar_Errors_Codes.Fatal_NonSingletonTopLevelModule,
-                           msg) (range_of_first_mod_decl ast_modul1)
+                         FStar_Class_HasRange.hasRange_range
+                         (range_of_first_mod_decl ast_modul1)
+                         FStar_Errors_Codes.Fatal_NonSingletonTopLevelModule
+                         ()
+                         (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                         (Obj.magic msg)
                      else ());
                     (let uu___3 =
                        let uu___4 =
@@ -853,8 +860,11 @@ let (tc_one_fragment :
                    FStar_Parser_AST.attrs = uu___3;
                    FStar_Parser_AST.interleaved = uu___4;_} ->
                    FStar_Errors.raise_error
-                     (FStar_Errors_Codes.Fatal_ModuleFirstStatement,
-                       "First statement must be a module declaration") rng)
+                     FStar_Class_HasRange.hasRange_range rng
+                     FStar_Errors_Codes.Fatal_ModuleFirstStatement ()
+                     (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                     (Obj.magic
+                        "First statement must be a module declaration"))
           | FStar_Pervasives_Native.Some modul ->
               let uu___ =
                 FStar_Compiler_Util.fold_map
@@ -941,12 +951,12 @@ let (load_interface_decls :
           FStar_Pervasives_Native.snd uu___2
       | FStar_Parser_ParseIt.ASTFragment uu___ ->
           let uu___1 =
-            let uu___2 =
-              FStar_Compiler_Util.format1
-                "Unexpected result from parsing %s; expected a single interface"
-                interface_file_name in
-            (FStar_Errors_Codes.Fatal_ParseErrors, uu___2) in
-          FStar_Errors.raise_err uu___1
+            FStar_Compiler_Util.format1
+              "Unexpected result from parsing %s; expected a single interface"
+              interface_file_name in
+          FStar_Errors.raise_error0 FStar_Errors_Codes.Fatal_ParseErrors ()
+            (Obj.magic FStar_Errors_Msg.is_error_message_string)
+            (Obj.magic uu___1)
       | FStar_Parser_ParseIt.ParseError (err, msg, rng) ->
           FStar_Compiler_Effect.raise
             (FStar_Errors.Error (err, msg, rng, []))
@@ -1213,14 +1223,15 @@ let (tc_one_file :
                      let uu___4 =
                        let uu___5 =
                          let uu___6 =
-                           let uu___7 =
-                             FStar_Compiler_Util.format1
-                               "Expected %s to already be checked." fn in
-                           FStar_Errors_Msg.text uu___7 in
-                         [uu___6] in
-                       (FStar_Errors_Codes.Error_AlreadyCachedAssertionFailure,
-                         uu___5) in
-                     FStar_Errors.raise_err_doc uu___4
+                           FStar_Compiler_Util.format1
+                             "Expected %s to already be checked." fn in
+                         FStar_Errors_Msg.text uu___6 in
+                       [uu___5] in
+                     FStar_Errors.raise_error0
+                       FStar_Errors_Codes.Error_AlreadyCachedAssertionFailure
+                       ()
+                       (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                       (Obj.magic uu___4)
                    else ());
                   (let uu___4 =
                      ((let uu___5 = FStar_Options.codegen () in
@@ -1233,20 +1244,21 @@ let (tc_one_file :
                    then
                      let uu___5 =
                        let uu___6 =
-                         let uu___7 =
-                           FStar_Errors_Msg.text
-                             "Cross-module inlining expects all modules to be checked first." in
+                         FStar_Errors_Msg.text
+                           "Cross-module inlining expects all modules to be checked first." in
+                       let uu___7 =
                          let uu___8 =
                            let uu___9 =
-                             let uu___10 =
-                               FStar_Compiler_Util.format1
-                                 "Module %s was not checked." fn in
-                             FStar_Errors_Msg.text uu___10 in
-                           [uu___9] in
-                         uu___7 :: uu___8 in
-                       (FStar_Errors_Codes.Error_AlreadyCachedAssertionFailure,
-                         uu___6) in
-                     FStar_Errors.raise_err_doc uu___5
+                             FStar_Compiler_Util.format1
+                               "Module %s was not checked." fn in
+                           FStar_Errors_Msg.text uu___9 in
+                         [uu___8] in
+                       uu___6 :: uu___7 in
+                     FStar_Errors.raise_error0
+                       FStar_Errors_Codes.Error_AlreadyCachedAssertionFailure
+                       ()
+                       (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                       (Obj.magic uu___5)
                    else ());
                   (let uu___4 = tc_source_file () in
                    match uu___4 with

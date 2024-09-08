@@ -292,23 +292,23 @@ let (warn_handler : FStar_Errors_Msg.error_message -> Prims.string -> unit) =
       let uu___ =
         let uu___1 =
           let uu___2 =
-            let uu___3 =
-              let uu___4 = FStar_Errors_Msg.text "Unexpected output from Z3:" in
+            let uu___3 = FStar_Errors_Msg.text "Unexpected output from Z3:" in
+            let uu___4 =
               let uu___5 =
-                let uu___6 =
-                  let uu___7 = FStar_Pprint.blank (Prims.of_int (2)) in
+                let uu___6 = FStar_Pprint.blank (Prims.of_int (2)) in
+                let uu___7 =
                   let uu___8 =
-                    let uu___9 =
-                      let uu___10 = FStar_Pprint.arbitrary_string s in
-                      FStar_Pprint.dquotes uu___10 in
-                    FStar_Pprint.align uu___9 in
-                  FStar_Pprint.op_Hat_Hat uu___7 uu___8 in
-                FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___6 in
-              FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
-            [uu___3] in
-          FStar_Compiler_List.op_At uu___2 suf in
-        (FStar_Errors_Codes.Warning_UnexpectedZ3Output, uu___1) in
-      FStar_Errors.log_issue_doc FStar_Compiler_Range_Type.dummyRange uu___
+                    let uu___9 = FStar_Pprint.arbitrary_string s in
+                    FStar_Pprint.dquotes uu___9 in
+                  FStar_Pprint.align uu___8 in
+                FStar_Pprint.op_Hat_Hat uu___6 uu___7 in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___5 in
+            FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
+          [uu___2] in
+        FStar_Compiler_List.op_At uu___1 suf in
+      FStar_Errors.log_issue0 FStar_Errors_Codes.Warning_UnexpectedZ3Output
+        () (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+        (Obj.magic uu___)
 let (check_z3version : FStar_Compiler_Util.proc -> unit) =
   fun p ->
     let getinfo arg =
@@ -325,11 +325,12 @@ let (check_z3version : FStar_Compiler_Util.proc -> unit) =
       else
         (warn_handler [] s;
          (let uu___2 =
-            let uu___3 =
-              let uu___4 = FStar_Compiler_Util.proc_prog p in
-              FStar_Compiler_Util.format1 "Could not run Z3 from `%s'" uu___4 in
-            (FStar_Errors_Codes.Error_Z3InvocationError, uu___3) in
-          FStar_Errors.raise_err uu___2)) in
+            let uu___3 = FStar_Compiler_Util.proc_prog p in
+            FStar_Compiler_Util.format1 "Could not run Z3 from `%s'" uu___3 in
+          FStar_Errors.raise_error0
+            FStar_Errors_Codes.Error_Z3InvocationError ()
+            (Obj.magic FStar_Errors_Msg.is_error_message_string)
+            (Obj.magic uu___2))) in
     let name = getinfo "name" in
     (let uu___1 =
        (name <> "Z3") &&
@@ -341,15 +342,15 @@ let (check_z3version : FStar_Compiler_Util.proc -> unit) =
        ((let uu___3 =
            let uu___4 =
              let uu___5 =
-               let uu___6 =
-                 let uu___7 = FStar_Options.z3_version () in
-                 Prims.strcat "z3-" uu___7 in
-               FStar_Platform.exe uu___6 in
-             FStar_Compiler_Util.format3
-               "Unexpected SMT solver: expected to be talking to Z3, got %s.\nPlease download the correct version of Z3 from %s\nand install it into your $PATH as `%s'."
-               name z3url uu___5 in
-           (FStar_Errors_Codes.Warning_SolverMismatch, uu___4) in
-         FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange uu___3);
+               let uu___6 = FStar_Options.z3_version () in
+               Prims.strcat "z3-" uu___6 in
+             FStar_Platform.exe uu___5 in
+           FStar_Compiler_Util.format3
+             "Unexpected SMT solver: expected to be talking to Z3, got %s.\nPlease download the correct version of Z3 from %s\nand install it into your $PATH as `%s'."
+             name z3url uu___4 in
+         FStar_Errors.log_issue0 FStar_Errors_Codes.Warning_SolverMismatch ()
+           (Obj.magic FStar_Errors_Msg.is_error_message_string)
+           (Obj.magic uu___3));
         FStar_Compiler_Effect.op_Colon_Equals _already_warned_solver_mismatch
           true)
      else ());
@@ -373,45 +374,44 @@ let (check_z3version : FStar_Compiler_Util.proc -> unit) =
        ((let uu___4 =
            let uu___5 =
              let uu___6 =
-               let uu___7 =
-                 let uu___8 = FStar_Compiler_Util.proc_prog p in
-                 FStar_Compiler_Util.format3
-                   "Unexpected Z3 version for '%s': expected '%s', got '%s'."
-                   uu___8 ver_conf ver_found in
-               FStar_Errors_Msg.text uu___7 in
+               let uu___7 = FStar_Compiler_Util.proc_prog p in
+               FStar_Compiler_Util.format3
+                 "Unexpected Z3 version for '%s': expected '%s', got '%s'."
+                 uu___7 ver_conf ver_found in
+             FStar_Errors_Msg.text uu___6 in
+           let uu___6 =
              let uu___7 =
                let uu___8 =
                  let uu___9 =
-                   let uu___10 =
-                     FStar_Errors_Msg.text
-                       "Please download the correct version of Z3 from" in
-                   let uu___11 = FStar_Pprint.url z3url in
-                   FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
-                     uu___10 uu___11 in
+                   FStar_Errors_Msg.text
+                     "Please download the correct version of Z3 from" in
+                 let uu___10 = FStar_Pprint.url z3url in
+                 FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___9
+                   uu___10 in
+               let uu___9 =
                  let uu___10 =
                    let uu___11 =
-                     let uu___12 =
-                       FStar_Errors_Msg.text
-                         "and install it into your $PATH as" in
+                     FStar_Errors_Msg.text
+                       "and install it into your $PATH as" in
+                   let uu___12 =
                      let uu___13 =
                        let uu___14 =
                          let uu___15 =
                            let uu___16 =
-                             let uu___17 =
-                               let uu___18 = FStar_Options.z3_version () in
-                               Prims.strcat "z3-" uu___18 in
-                             FStar_Platform.exe uu___17 in
-                           FStar_Pprint.doc_of_string uu___16 in
-                         FStar_Pprint.squotes uu___15 in
-                       FStar_Pprint.op_Hat_Hat uu___14 FStar_Pprint.dot in
-                     FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
-                   FStar_Pprint.group uu___11 in
-                 FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
-               [uu___8] in
-             uu___6 :: uu___7 in
-           (FStar_Errors_Codes.Warning_SolverMismatch, uu___5) in
-         FStar_Errors.log_issue_doc FStar_Compiler_Range_Type.dummyRange
-           uu___4);
+                             let uu___17 = FStar_Options.z3_version () in
+                             Prims.strcat "z3-" uu___17 in
+                           FStar_Platform.exe uu___16 in
+                         FStar_Pprint.doc_of_string uu___15 in
+                       FStar_Pprint.squotes uu___14 in
+                     FStar_Pprint.op_Hat_Hat uu___13 FStar_Pprint.dot in
+                   FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
+                 FStar_Pprint.group uu___10 in
+               FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+             [uu___7] in
+           uu___5 :: uu___6 in
+         FStar_Errors.log_issue0 FStar_Errors_Codes.Warning_SolverMismatch ()
+           (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+           (Obj.magic uu___4));
         FStar_Errors.stop_if_err ();
         FStar_Compiler_Effect.op_Colon_Equals
           _already_warned_version_mismatch true)

@@ -2214,12 +2214,12 @@ let (e_norm_step : FStar_Pervasives.norm_step embedding) =
                (FStar_Pervasives.UnfoldNamespace ss))
     | uu___ ->
         ((let uu___2 =
-            let uu___3 =
-              let uu___4 = t_to_string t0 in
-              FStar_Compiler_Util.format1 "Not an embedded norm_step: %s"
-                uu___4 in
-            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
-          FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange uu___2);
+            let uu___3 = t_to_string t0 in
+            FStar_Compiler_Util.format1 "Not an embedded norm_step: %s"
+              uu___3 in
+          FStar_Errors.log_issue0 FStar_Errors_Codes.Warning_NotEmbedded ()
+            (Obj.magic FStar_Errors_Msg.is_error_message_string)
+            (Obj.magic uu___2));
          FStar_Pervasives_Native.None) in
   mk_emb em1 un1
     (fun uu___ ->

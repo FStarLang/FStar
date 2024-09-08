@@ -197,12 +197,14 @@ let (disentangle_abbrevs_from_bundle :
                                FStar_Compiler_Util.format1
                                  "Cycle on %s in mutually recursive type abbreviations"
                                  uu___4 in
-                             let uu___4 =
-                               FStar_Ident.range_of_lid
-                                 (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
                              FStar_Errors.raise_error
-                               (FStar_Errors_Codes.Fatal_CycleInRecTypeAbbreviation,
-                                 msg) uu___4
+                               FStar_Ident.hasrange_lident
+                               (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                               FStar_Errors_Codes.Fatal_CycleInRecTypeAbbreviation
+                               ()
+                               (Obj.magic
+                                  FStar_Errors_Msg.is_error_message_string)
+                               (Obj.magic msg)
                            else unfold_abbrev se
                        | uu___3 -> t)
                 and unfold_abbrev x =

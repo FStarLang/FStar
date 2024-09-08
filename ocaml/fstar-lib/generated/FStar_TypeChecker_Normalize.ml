@@ -609,9 +609,10 @@ let (unembed_binder :
         FStar_Syntax_Embeddings_Base.try_unembed e t
           FStar_Syntax_Embeddings_Base.id_norm_cb
     | FStar_Pervasives_Native.None ->
-        (FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos
-           (FStar_Errors_Codes.Warning_UnembedBinderKnot,
-             "unembed_binder_knot is unset!");
+        (FStar_Errors.log_issue (FStar_Syntax_Syntax.has_range_syntax ()) t
+           FStar_Errors_Codes.Warning_UnembedBinderKnot ()
+           (Obj.magic FStar_Errors_Msg.is_error_message_string)
+           (Obj.magic "unembed_binder_knot is unset!");
          FStar_Pervasives_Native.None)
 let (mk_psc_subst :
   FStar_TypeChecker_Cfg.cfg ->
@@ -4246,34 +4247,39 @@ and (do_reify_monadic :
                                                    | uu___12 ->
                                                        let uu___13 =
                                                          let uu___14 =
-                                                           let uu___15 =
-                                                             FStar_Ident.string_of_lid
-                                                               ed.FStar_Syntax_Syntax.mname in
-                                                           let uu___16 =
-                                                             FStar_Compiler_Util.string_of_int
-                                                               num_fixed_binders in
+                                                           FStar_Class_Show.show
+                                                             FStar_Ident.showable_lident
+                                                             ed.FStar_Syntax_Syntax.mname in
+                                                         let uu___15 =
+                                                           FStar_Class_Show.show
+                                                             (FStar_Class_Show.printableshow
+                                                                FStar_Class_Printable.printable_int)
+                                                             num_fixed_binders in
+                                                         let uu___16 =
                                                            let uu___17 =
                                                              let uu___18 =
                                                                let uu___19 =
-                                                                 let uu___20
-                                                                   =
-                                                                   FStar_Syntax_Util.get_bind_vc_combinator
-                                                                    ed in
-                                                                 FStar_Pervasives_Native.fst
-                                                                   uu___20 in
-                                                               FStar_Pervasives_Native.snd
+                                                                 FStar_Syntax_Util.get_bind_vc_combinator
+                                                                   ed in
+                                                               FStar_Pervasives_Native.fst
                                                                  uu___19 in
-                                                             FStar_Class_Show.show
-                                                               FStar_Syntax_Print.showable_term
+                                                             FStar_Pervasives_Native.snd
                                                                uu___18 in
-                                                           FStar_Compiler_Util.format3
-                                                             "bind_wp for layered effect %s is not an arrow with >= %s arguments (%s)"
-                                                             uu___15 uu___16
+                                                           FStar_Class_Show.show
+                                                             FStar_Syntax_Print.showable_term
                                                              uu___17 in
-                                                         (FStar_Errors_Codes.Fatal_UnexpectedEffect,
-                                                           uu___14) in
+                                                         FStar_Compiler_Util.format3
+                                                           "bind_wp for layered effect %s is not an arrow with >= %s arguments (%s)"
+                                                           uu___14 uu___15
+                                                           uu___16 in
                                                        FStar_Errors.raise_error
-                                                         uu___13 rng in
+                                                         FStar_Class_HasRange.hasRange_range
+                                                         rng
+                                                         FStar_Errors_Codes.Fatal_UnexpectedEffect
+                                                         ()
+                                                         (Obj.magic
+                                                            FStar_Errors_Msg.is_error_message_string)
+                                                         (Obj.magic uu___13) in
                                                  let range_args =
                                                    if bind_has_range_args
                                                    then
@@ -4543,15 +4549,17 @@ and (do_reify_monadic :
                            then
                              let uu___6 =
                                let uu___7 =
-                                 let uu___8 =
-                                   FStar_Class_Show.show
-                                     FStar_Syntax_Print.showable_term top2 in
-                                 FStar_Compiler_Util.format1
-                                   "Incompatibility between typechecker and normalizer; this monadic application contains impure terms %s\n"
-                                   uu___8 in
-                               (FStar_Errors_Codes.Warning_Defensive, uu___7) in
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_term top2 in
+                               FStar_Compiler_Util.format1
+                                 "Incompatibility between typechecker and normalizer; this monadic application contains impure terms %s\n"
+                                 uu___7 in
                              FStar_Errors.log_issue
-                               top2.FStar_Syntax_Syntax.pos uu___6
+                               (FStar_Syntax_Syntax.has_range_syntax ()) top2
+                               FStar_Errors_Codes.Warning_Defensive ()
+                               (Obj.magic
+                                  FStar_Errors_Msg.is_error_message_string)
+                               (Obj.magic uu___6)
                            else ())
                         else ());
                        (let fallback1 uu___4 =
@@ -6693,14 +6701,15 @@ and (do_rebuild :
                    (match uu___3 with
                     | FStar_Syntax_Syntax.Extract_none msg ->
                         let uu___4 =
-                          let uu___5 =
-                            let uu___6 = FStar_Ident.string_of_lid m in
-                            FStar_Compiler_Util.format2
-                              "Normalizer cannot reify effect %s for extraction since %s"
-                              uu___6 msg in
-                          (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___5) in
-                        FStar_Errors.raise_error uu___4
-                          t.FStar_Syntax_Syntax.pos)
+                          let uu___5 = FStar_Ident.string_of_lid m in
+                          FStar_Compiler_Util.format2
+                            "Normalizer cannot reify effect %s for extraction since %s"
+                            uu___5 msg in
+                        FStar_Errors.raise_error
+                          (FStar_Syntax_Syntax.has_range_syntax ()) t
+                          FStar_Errors_Codes.Fatal_UnexpectedEffect ()
+                          (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                          (Obj.magic uu___4))
                | FStar_Syntax_Syntax.Tm_meta
                    { FStar_Syntax_Syntax.tm2 = uu___1;
                      FStar_Syntax_Syntax.meta =
@@ -6759,14 +6768,16 @@ and (do_rebuild :
                             FStar_Syntax_Syntax.uu___is_Extract_none uu___3)))
                    ->
                    let uu___3 =
-                     let uu___4 =
-                       let uu___5 = FStar_Ident.string_of_lid msrc in
-                       let uu___6 = FStar_Ident.string_of_lid mtgt in
-                       FStar_Compiler_Util.format2
-                         "Normalizer cannot reify %s ~> %s for extraction"
-                         uu___5 uu___6 in
-                     (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___4) in
-                   FStar_Errors.raise_error uu___3 t.FStar_Syntax_Syntax.pos
+                     let uu___4 = FStar_Ident.string_of_lid msrc in
+                     let uu___5 = FStar_Ident.string_of_lid mtgt in
+                     FStar_Compiler_Util.format2
+                       "Normalizer cannot reify %s ~> %s for extraction"
+                       uu___4 uu___5 in
+                   FStar_Errors.raise_error
+                     (FStar_Syntax_Syntax.has_range_syntax ()) t
+                     FStar_Errors_Codes.Fatal_UnexpectedEffect ()
+                     (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                     (Obj.magic uu___3)
                | FStar_Syntax_Syntax.Tm_meta
                    { FStar_Syntax_Syntax.tm2 = t1;
                      FStar_Syntax_Syntax.meta =
@@ -7890,6 +7901,18 @@ let (ghost_to_pure_lcomp2 :
                        let uu___7 = ghost_to_pure_lcomp env1 lc11 in
                        (uu___7, lc21)
                      else (lc11, lc21))))
+let (warn_norm_failure :
+  FStar_Compiler_Range_Type.range -> Prims.exn -> unit) =
+  fun r ->
+    fun e ->
+      let uu___ =
+        let uu___1 = FStar_Compiler_Util.message_of_exn e in
+        FStar_Compiler_Util.format1 "Normalization failed with error %s\n"
+          uu___1 in
+      FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range r
+        FStar_Errors_Codes.Warning_NormalizationFailure ()
+        (Obj.magic FStar_Errors_Msg.is_error_message_string)
+        (Obj.magic uu___)
 let (term_to_doc :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Pprint.document)
@@ -7904,15 +7927,7 @@ let (term_to_doc :
                  normalize [FStar_TypeChecker_Env.AllowUnboundUniverses] env1
                    t) ()
         with
-        | uu___ ->
-            ((let uu___2 =
-                let uu___3 =
-                  let uu___4 = FStar_Compiler_Util.message_of_exn uu___ in
-                  FStar_Compiler_Util.format1
-                    "Normalization failed with error %s\n" uu___4 in
-                (FStar_Errors_Codes.Warning_NormalizationFailure, uu___3) in
-              FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___2);
-             t) in
+        | uu___ -> (warn_norm_failure t.FStar_Syntax_Syntax.pos uu___; t) in
       let uu___ =
         FStar_Syntax_DsEnv.set_current_module
           env1.FStar_TypeChecker_Env.dsenv
@@ -7933,15 +7948,7 @@ let (term_to_string :
                         env1 t) ()
              with
              | uu___1 ->
-                 ((let uu___3 =
-                     let uu___4 =
-                       let uu___5 = FStar_Compiler_Util.message_of_exn uu___1 in
-                       FStar_Compiler_Util.format1
-                         "Normalization failed with error %s\n" uu___5 in
-                     (FStar_Errors_Codes.Warning_NormalizationFailure,
-                       uu___4) in
-                   FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3);
-                  t) in
+                 (warn_norm_failure t.FStar_Syntax_Syntax.pos uu___1; t) in
            let uu___1 =
              FStar_Syntax_DsEnv.set_current_module
                env1.FStar_TypeChecker_Env.dsenv
@@ -7964,15 +7971,7 @@ let (comp_to_string :
                       norm_comp uu___2 [] c) ()
              with
              | uu___1 ->
-                 ((let uu___3 =
-                     let uu___4 =
-                       let uu___5 = FStar_Compiler_Util.message_of_exn uu___1 in
-                       FStar_Compiler_Util.format1
-                         "Normalization failed with error %s\n" uu___5 in
-                     (FStar_Errors_Codes.Warning_NormalizationFailure,
-                       uu___4) in
-                   FStar_Errors.log_issue c.FStar_Syntax_Syntax.pos uu___3);
-                  c) in
+                 (warn_norm_failure c.FStar_Syntax_Syntax.pos uu___1; c) in
            let uu___1 =
              FStar_Syntax_DsEnv.set_current_module
                env1.FStar_TypeChecker_Env.dsenv
@@ -7997,15 +7996,7 @@ let (comp_to_doc :
                       norm_comp uu___2 [] c) ()
              with
              | uu___1 ->
-                 ((let uu___3 =
-                     let uu___4 =
-                       let uu___5 = FStar_Compiler_Util.message_of_exn uu___1 in
-                       FStar_Compiler_Util.format1
-                         "Normalization failed with error %s\n" uu___5 in
-                     (FStar_Errors_Codes.Warning_NormalizationFailure,
-                       uu___4) in
-                   FStar_Errors.log_issue c.FStar_Syntax_Syntax.pos uu___3);
-                  c) in
+                 (warn_norm_failure c.FStar_Syntax_Syntax.pos uu___1; c) in
            let uu___1 =
              FStar_Syntax_DsEnv.set_current_module
                env1.FStar_TypeChecker_Env.dsenv
@@ -9145,7 +9136,7 @@ let (get_n_binders :
       FStar_Syntax_Syntax.term ->
         (FStar_Syntax_Syntax.binder Prims.list * FStar_Syntax_Syntax.comp))
   = fun env1 -> fun n -> fun t -> get_n_binders' env1 [] n t
-let (uu___3453 : unit) =
+let (uu___3455 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals __get_n_binders get_n_binders'
 let (maybe_unfold_head_fv :
   FStar_TypeChecker_Env.env ->

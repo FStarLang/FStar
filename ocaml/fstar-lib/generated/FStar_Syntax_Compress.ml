@@ -12,13 +12,14 @@ let (compress1_t :
             Prims.op_Negation allow_uvars ->
             let uu___ =
               let uu___1 =
-                let uu___2 =
-                  FStar_Class_Show.show FStar_Syntax_Print.showable_ctxu uv in
-                FStar_Compiler_Util.format1
-                  "Internal error: unexpected unresolved uvar in deep_compress: %s"
-                  uu___2 in
-              (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar, uu___1) in
-            FStar_Errors.raise_err uu___
+                FStar_Class_Show.show FStar_Syntax_Print.showable_ctxu uv in
+              FStar_Compiler_Util.format1
+                "Internal error: unexpected unresolved uvar in deep_compress: %s"
+                uu___1 in
+            FStar_Errors.raise_error0
+              FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___)
         | FStar_Syntax_Syntax.Tm_name bv when Prims.op_Negation allow_names
             ->
             ((let uu___1 = FStar_Compiler_Debug.any () in
@@ -26,12 +27,14 @@ let (compress1_t :
               then
                 let uu___2 =
                   let uu___3 =
-                    let uu___4 =
-                      FStar_Class_Show.show FStar_Syntax_Print.showable_bv bv in
-                    FStar_Compiler_Util.format1 "Tm_name %s in deep compress"
-                      uu___4 in
-                  (FStar_Errors_Codes.Warning_NameEscape, uu___3) in
-                FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___2
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_bv bv in
+                  FStar_Compiler_Util.format1 "Tm_name %s in deep compress"
+                    uu___3 in
+                FStar_Errors.log_issue
+                  (FStar_Syntax_Syntax.has_range_syntax ()) t
+                  FStar_Errors_Codes.Warning_NameEscape ()
+                  (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                  (Obj.magic uu___2)
               else ());
              (let uu___1 =
                 let uu___2 =
@@ -85,28 +88,28 @@ let (compress1_u :
               then
                 let uu___2 =
                   let uu___3 =
-                    let uu___4 =
-                      FStar_Class_Show.show FStar_Ident.showable_ident bv in
-                    FStar_Compiler_Util.format1 "U_name %s in deep compress"
-                      uu___4 in
-                  (FStar_Errors_Codes.Warning_NameEscape, uu___3) in
-                FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
-                  uu___2
+                    FStar_Class_Show.show FStar_Ident.showable_ident bv in
+                  FStar_Compiler_Util.format1 "U_name %s in deep compress"
+                    uu___3 in
+                FStar_Errors.log_issue0 FStar_Errors_Codes.Warning_NameEscape
+                  () (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                  (Obj.magic uu___2)
               else ());
              u)
         | FStar_Syntax_Syntax.U_unif uv when Prims.op_Negation allow_uvars ->
             let uu___ =
               let uu___1 =
-                let uu___2 =
-                  let uu___3 = FStar_Syntax_Unionfind.univ_uvar_id uv in
-                  FStar_Class_Show.show
-                    (FStar_Class_Show.printableshow
-                       FStar_Class_Printable.printable_int) uu___3 in
-                FStar_Compiler_Util.format1
-                  "Internal error: unexpected unresolved (universe) uvar in deep_compress: %s"
-                  uu___2 in
-              (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar, uu___1) in
-            FStar_Errors.raise_err uu___
+                let uu___2 = FStar_Syntax_Unionfind.univ_uvar_id uv in
+                FStar_Class_Show.show
+                  (FStar_Class_Show.printableshow
+                     FStar_Class_Printable.printable_int) uu___2 in
+              FStar_Compiler_Util.format1
+                "Internal error: unexpected unresolved (universe) uvar in deep_compress: %s"
+                uu___1 in
+            FStar_Errors.raise_error0
+              FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___)
         | uu___ -> u
 let (deep_compress :
   Prims.bool ->
@@ -140,9 +143,9 @@ let (deep_compress_if_no_uvars :
                     FStar_Syntax_Visit.visit_term_univs true uu___3 uu___4 tm in
                   FStar_Pervasives_Native.Some uu___2) ()
          with
-         | FStar_Errors.Err
+         | FStar_Errors.Error
              (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar, uu___2,
-              uu___3)
+              uu___3, uu___4)
              -> FStar_Pervasives_Native.None)
 let (deep_compress_se :
   Prims.bool ->

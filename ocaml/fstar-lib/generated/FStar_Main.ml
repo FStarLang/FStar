@@ -78,24 +78,25 @@ let (load_native_tactics : unit -> unit) =
           if FStar_Compiler_List.contains m cmxs_to_load
           then
             let uu___2 =
-              let uu___3 =
-                FStar_Compiler_Util.format1 "Could not find %s to load" cmxs in
-              (FStar_Errors_Codes.Fatal_FailToCompileNativeTactic, uu___3) in
-            FStar_Errors.raise_err uu___2
+              FStar_Compiler_Util.format1 "Could not find %s to load" cmxs in
+            FStar_Errors.raise_error0
+              FStar_Errors_Codes.Fatal_FailToCompileNativeTactic ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___2)
           else
             (let uu___3 =
                let uu___4 = ml_file m in FStar_Options.find_file uu___4 in
              match uu___3 with
              | FStar_Pervasives_Native.None ->
                  let uu___4 =
-                   let uu___5 =
-                     let uu___6 = ml_file m in
-                     FStar_Compiler_Util.format1
-                       "Failed to compile native tactic; extracted module %s not found"
-                       uu___6 in
-                   (FStar_Errors_Codes.Fatal_FailToCompileNativeTactic,
-                     uu___5) in
-                 FStar_Errors.raise_err uu___4
+                   let uu___5 = ml_file m in
+                   FStar_Compiler_Util.format1
+                     "Failed to compile native tactic; extracted module %s not found"
+                     uu___5 in
+                 FStar_Errors.raise_error0
+                   FStar_Errors_Codes.Fatal_FailToCompileNativeTactic ()
+                   (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                   (Obj.magic uu___4)
              | FStar_Pervasives_Native.Some ml ->
                  let dir = FStar_Compiler_Util.dirname ml in
                  ((let uu___5 = let uu___6 = ml_module_name m in [uu___6] in
@@ -104,13 +105,14 @@ let (load_native_tactics : unit -> unit) =
                    match uu___5 with
                    | FStar_Pervasives_Native.None ->
                        let uu___6 =
-                         let uu___7 =
-                           FStar_Compiler_Util.format1
-                             "Failed to compile native tactic; compiled object %s not found"
-                             cmxs in
-                         (FStar_Errors_Codes.Fatal_FailToCompileNativeTactic,
-                           uu___7) in
-                       FStar_Errors.raise_err uu___6
+                         FStar_Compiler_Util.format1
+                           "Failed to compile native tactic; compiled object %s not found"
+                           cmxs in
+                       FStar_Errors.raise_error0
+                         FStar_Errors_Codes.Fatal_FailToCompileNativeTactic
+                         ()
+                         (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                         (Obj.magic uu___6)
                    | FStar_Pervasives_Native.Some f -> f))) in
     let cmxs_files =
       FStar_Compiler_List.map cmxs_file
@@ -231,17 +233,17 @@ let go : 'uuuuu . 'uuuuu -> unit =
                             let uu___12 =
                               let uu___13 =
                                 let uu___14 =
-                                  let uu___15 =
-                                    FStar_Errors_Msg.text
-                                      "Could not read checked file:" in
-                                  let uu___16 =
-                                    FStar_Pprint.doc_of_string path in
-                                  FStar_Pprint.op_Hat_Slash_Hat uu___15
-                                    uu___16 in
-                                [uu___14] in
-                              (FStar_Errors_Codes.Fatal_ModuleOrFileNotFound,
-                                uu___13) in
-                            FStar_Errors.raise_err_doc uu___12
+                                  FStar_Errors_Msg.text
+                                    "Could not read checked file:" in
+                                let uu___15 = FStar_Pprint.doc_of_string path in
+                                FStar_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
+                              [uu___13] in
+                            FStar_Errors.raise_error0
+                              FStar_Errors_Codes.Fatal_ModuleOrFileNotFound
+                              ()
+                              (Obj.magic
+                                 FStar_Errors_Msg.is_error_message_list_doc)
+                              (Obj.magic uu___12)
                         | FStar_Pervasives_Native.Some (uu___12, tcr) ->
                             let uu___13 =
                               FStar_Class_Show.show
@@ -265,17 +267,19 @@ let go : 'uuuuu . 'uuuuu -> unit =
                                let uu___15 =
                                  let uu___16 =
                                    let uu___17 =
-                                     let uu___18 =
-                                       FStar_Errors_Msg.text
-                                         "Could not read krml file:" in
-                                     let uu___19 =
-                                       FStar_Pprint.doc_of_string path in
-                                     FStar_Pprint.op_Hat_Slash_Hat uu___18
-                                       uu___19 in
-                                   [uu___17] in
-                                 (FStar_Errors_Codes.Fatal_ModuleOrFileNotFound,
-                                   uu___16) in
-                               FStar_Errors.raise_err_doc uu___15
+                                     FStar_Errors_Msg.text
+                                       "Could not read krml file:" in
+                                   let uu___18 =
+                                     FStar_Pprint.doc_of_string path in
+                                   FStar_Pprint.op_Hat_Slash_Hat uu___17
+                                     uu___18 in
+                                 [uu___16] in
+                               FStar_Errors.raise_error0
+                                 FStar_Errors_Codes.Fatal_ModuleOrFileNotFound
+                                 ()
+                                 (Obj.magic
+                                    FStar_Errors_Msg.is_error_message_list_doc)
+                                 (Obj.magic uu___15)
                            | FStar_Pervasives_Native.Some (version, files) ->
                                ((let uu___16 =
                                    FStar_Class_Show.show
@@ -310,17 +314,23 @@ let go : 'uuuuu . 'uuuuu -> unit =
                                  (FStar_Syntax_Unionfind.set_rw ();
                                   (match filenames with
                                    | [] ->
-                                       (FStar_Errors.log_issue
-                                          FStar_Compiler_Range_Type.dummyRange
-                                          (FStar_Errors_Codes.Error_MissingFileName,
-                                            "--ide: Name of current file missing in command line invocation\n");
+                                       (FStar_Errors.log_issue0
+                                          FStar_Errors_Codes.Error_MissingFileName
+                                          ()
+                                          (Obj.magic
+                                             FStar_Errors_Msg.is_error_message_string)
+                                          (Obj.magic
+                                             "--ide: Name of current file missing in command line invocation\n");
                                         FStar_Compiler_Effect.exit
                                           Prims.int_one)
                                    | uu___19::uu___20::uu___21 ->
-                                       (FStar_Errors.log_issue
-                                          FStar_Compiler_Range_Type.dummyRange
-                                          (FStar_Errors_Codes.Error_TooManyFiles,
-                                            "--ide: Too many files in command line invocation\n");
+                                       (FStar_Errors.log_issue0
+                                          FStar_Errors_Codes.Error_TooManyFiles
+                                          ()
+                                          (Obj.magic
+                                             FStar_Errors_Msg.is_error_message_string)
+                                          (Obj.magic
+                                             "--ide: Too many files in command line invocation\n");
                                         FStar_Compiler_Effect.exit
                                           Prims.int_one)
                                    | filename::[] ->
@@ -361,10 +371,12 @@ let go : 'uuuuu . 'uuuuu -> unit =
                                                finished_message module_names
                                                  Prims.int_zero))))
                                  else
-                                   FStar_Errors.raise_error
-                                     (FStar_Errors_Codes.Error_MissingFileName,
-                                       "No file provided")
-                                     FStar_Compiler_Range_Type.dummyRange)))))))))
+                                   FStar_Errors.raise_error0
+                                     FStar_Errors_Codes.Error_MissingFileName
+                                     ()
+                                     (Obj.magic
+                                        FStar_Errors_Msg.is_error_message_string)
+                                     (Obj.magic "No file provided"))))))))))
 let (lazy_chooser :
   FStar_Syntax_Syntax.lazy_kind ->
     FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term)
@@ -425,6 +437,9 @@ let (setup_hooks : unit -> unit) =
     FStar_Compiler_Effect.op_Colon_Equals FStar_Syntax_Util.tts_f
       (FStar_Pervasives_Native.Some
          (FStar_Class_Show.show FStar_Syntax_Print.showable_term));
+    FStar_Compiler_Effect.op_Colon_Equals FStar_Syntax_Util.ttd_f
+      (FStar_Pervasives_Native.Some
+         (FStar_Class_PP.pp FStar_Syntax_Print.pretty_term));
     FStar_Compiler_Effect.op_Colon_Equals
       FStar_TypeChecker_Normalize.unembed_binder_knot
       (FStar_Pervasives_Native.Some FStar_Reflection_V2_Embeddings.e_binder);

@@ -2477,10 +2477,11 @@ let (config' :
                FStar_Compiler_Effect.op_Bang dbg_UNSOUND_EraseErasableArgs in
              if uu___13
              then
-               let uu___14 = FStar_TypeChecker_Env.get_range e in
-               FStar_Errors.log_issue uu___14
-                 (FStar_Errors_Codes.Warning_WarnOnUse,
-                   "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound")
+               FStar_Errors.log_issue FStar_TypeChecker_Env.hasRange_env e
+                 FStar_Errors_Codes.Warning_WarnOnUse ()
+                 (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                 (Obj.magic
+                    "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound")
              else ());
             FStar_Compiler_Effect.op_Bang dbg_UNSOUND_EraseErasableArgs in
           {

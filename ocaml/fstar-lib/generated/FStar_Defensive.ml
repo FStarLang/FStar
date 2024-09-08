@@ -63,56 +63,56 @@ let __def_check_scoped :
                   let uu___4 =
                     let uu___5 =
                       let uu___6 =
-                        let uu___7 =
-                          FStar_Errors_Msg.text
-                            "Internal: term is not well-scoped " in
-                        let uu___8 =
-                          let uu___9 = FStar_Pprint.doc_of_string msg in
-                          FStar_Pprint.parens uu___9 in
-                        FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                        FStar_Errors_Msg.text
+                          "Internal: term is not well-scoped " in
                       let uu___7 =
-                        let uu___8 =
-                          let uu___9 = FStar_Errors_Msg.text "t =" in
-                          let uu___10 = FStar_Class_PP.pp uu___2 thing in
-                          FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                        let uu___8 = FStar_Pprint.doc_of_string msg in
+                        FStar_Pprint.parens uu___8 in
+                      FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                    let uu___6 =
+                      let uu___7 =
+                        let uu___8 = FStar_Errors_Msg.text "t =" in
+                        let uu___9 = FStar_Class_PP.pp uu___2 thing in
+                        FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                      let uu___8 =
                         let uu___9 =
-                          let uu___10 =
-                            let uu___11 = FStar_Errors_Msg.text "FVs =" in
-                            let uu___12 =
+                          let uu___10 = FStar_Errors_Msg.text "FVs =" in
+                          let uu___11 =
+                            FStar_Class_PP.pp
+                              (pp_set FStar_Syntax_Syntax.ord_bv pp_bv) free in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
+                        let uu___10 =
+                          let uu___11 =
+                            let uu___12 = FStar_Errors_Msg.text "Scope =" in
+                            let uu___13 =
                               FStar_Class_PP.pp
                                 (pp_set FStar_Syntax_Syntax.ord_bv pp_bv)
-                                free in
-                            FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
-                          let uu___11 =
-                            let uu___12 =
-                              let uu___13 = FStar_Errors_Msg.text "Scope =" in
-                              let uu___14 =
+                                scope in
+                            FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
+                          let uu___12 =
+                            let uu___13 =
+                              let uu___14 = FStar_Errors_Msg.text "Diff =" in
+                              let uu___15 =
+                                let uu___16 =
+                                  Obj.magic
+                                    (FStar_Class_Setlike.diff ()
+                                       (Obj.magic
+                                          (FStar_Compiler_FlatSet.setlike_flat_set
+                                             FStar_Syntax_Syntax.ord_bv))
+                                       (Obj.magic free) (Obj.magic scope)) in
                                 FStar_Class_PP.pp
                                   (pp_set FStar_Syntax_Syntax.ord_bv pp_bv)
-                                  scope in
-                              FStar_Pprint.op_Hat_Slash_Hat uu___13 uu___14 in
-                            let uu___13 =
-                              let uu___14 =
-                                let uu___15 = FStar_Errors_Msg.text "Diff =" in
-                                let uu___16 =
-                                  let uu___17 =
-                                    Obj.magic
-                                      (FStar_Class_Setlike.diff ()
-                                         (Obj.magic
-                                            (FStar_Compiler_FlatSet.setlike_flat_set
-                                               FStar_Syntax_Syntax.ord_bv))
-                                         (Obj.magic free) (Obj.magic scope)) in
-                                  FStar_Class_PP.pp
-                                    (pp_set FStar_Syntax_Syntax.ord_bv pp_bv)
-                                    uu___17 in
-                                FStar_Pprint.op_Hat_Slash_Hat uu___15 uu___16 in
-                              [uu___14] in
-                            uu___12 :: uu___13 in
-                          uu___10 :: uu___11 in
-                        uu___8 :: uu___9 in
-                      uu___6 :: uu___7 in
-                    (FStar_Errors_Codes.Warning_Defensive, uu___5) in
-                  FStar_Errors.log_issue_doc rng uu___4
+                                  uu___16 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
+                            [uu___13] in
+                          uu___11 :: uu___12 in
+                        uu___9 :: uu___10 in
+                      uu___7 :: uu___8 in
+                    uu___5 :: uu___6 in
+                  FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range
+                    rng FStar_Errors_Codes.Warning_Defensive ()
+                    (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                    (Obj.magic uu___4)
                 else ()
 let def_check_scoped :
   'envut 'thingut .

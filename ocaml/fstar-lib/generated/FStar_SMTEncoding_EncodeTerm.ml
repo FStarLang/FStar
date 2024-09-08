@@ -257,13 +257,20 @@ let raise_arity_mismatch :
         fun rng ->
           let uu___ =
             let uu___1 =
-              let uu___2 = FStar_Compiler_Util.string_of_int arity in
-              let uu___3 = FStar_Compiler_Util.string_of_int n_args in
-              FStar_Compiler_Util.format3
-                "Head symbol %s expects at least %s arguments; got only %s"
-                head uu___2 uu___3 in
-            (FStar_Errors_Codes.Fatal_SMTEncodingArityMismatch, uu___1) in
-          FStar_Errors.raise_error uu___ rng
+              FStar_Class_Show.show
+                (FStar_Class_Show.printableshow
+                   FStar_Class_Printable.printable_int) arity in
+            let uu___2 =
+              FStar_Class_Show.show
+                (FStar_Class_Show.printableshow
+                   FStar_Class_Printable.printable_int) n_args in
+            FStar_Compiler_Util.format3
+              "Head symbol %s expects at least %s arguments; got only %s"
+              head uu___1 uu___2 in
+          FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range rng
+            FStar_Errors_Codes.Fatal_SMTEncodingArityMismatch ()
+            (Obj.magic FStar_Errors_Msg.is_error_message_string)
+            (Obj.magic uu___)
 let (isTotFun_axioms :
   FStar_Compiler_Range_Type.range ->
     FStar_SMTEncoding_Term.term ->
@@ -435,13 +442,14 @@ let check_pattern_vars :
                      hd.FStar_Syntax_Syntax.pos tl in
                  let uu___4 =
                    let uu___5 =
-                     let uu___6 =
-                       FStar_Class_Show.show FStar_Syntax_Print.showable_bv x in
-                     FStar_Compiler_Util.format1
-                       "SMT pattern misses at least one bound variable: %s"
-                       uu___6 in
-                   (FStar_Errors_Codes.Warning_SMTPatternIllFormed, uu___5) in
-                 FStar_Errors.log_issue pos uu___4)
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_bv x in
+                   FStar_Compiler_Util.format1
+                     "SMT pattern misses at least one bound variable: %s"
+                     uu___5 in
+                 FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range
+                   pos FStar_Errors_Codes.Warning_SMTPatternIllFormed ()
+                   (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                   (Obj.magic uu___4))
 type label =
   (FStar_SMTEncoding_Term.fv * Prims.string *
     FStar_Compiler_Range_Type.range)
@@ -1229,9 +1237,12 @@ and (encode_deeply_embedded_quantifier :
                                                             FStar_SMTEncoding_Term.rng
                                                               = uu___7;_}::[])
                ->
-               (FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos
-                  (FStar_Errors_Codes.Warning_QuantifierWithoutPattern,
-                    "Not encoding deeply embedded, unguarded quantifier to SMT");
+               (FStar_Errors.log_issue
+                  (FStar_Syntax_Syntax.has_range_syntax ()) t
+                  FStar_Errors_Codes.Warning_QuantifierWithoutPattern ()
+                  (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                  (Obj.magic
+                     "Not encoding deeply embedded, unguarded quantifier to SMT");
                 (tm, decls))
            | uu___1 ->
                let uu___2 = encode_formula t env1 in
@@ -2760,24 +2771,26 @@ and (encode_term :
                       ((let uu___4 =
                           let uu___5 =
                             let uu___6 =
-                              let uu___7 =
-                                FStar_Errors_Msg.text
-                                  "Losing precision when encoding a function literal:" in
-                              let uu___8 =
-                                FStar_Class_PP.pp
-                                  FStar_Syntax_Print.pretty_term t0 in
-                              FStar_Pprint.prefix (Prims.of_int (2))
-                                Prims.int_one uu___7 uu___8 in
+                              FStar_Errors_Msg.text
+                                "Losing precision when encoding a function literal:" in
                             let uu___7 =
-                              let uu___8 =
-                                FStar_Errors_Msg.text
-                                  "Unannotated abstraction in the compiler?" in
-                              [uu___8] in
-                            uu___6 :: uu___7 in
-                          (FStar_Errors_Codes.Warning_FunctionLiteralPrecisionLoss,
-                            uu___5) in
-                        FStar_Errors.log_issue_doc t0.FStar_Syntax_Syntax.pos
-                          uu___4);
+                              FStar_Class_PP.pp
+                                FStar_Syntax_Print.pretty_term t0 in
+                            FStar_Pprint.prefix (Prims.of_int (2))
+                              Prims.int_one uu___6 uu___7 in
+                          let uu___6 =
+                            let uu___7 =
+                              FStar_Errors_Msg.text
+                                "Unannotated abstraction in the compiler?" in
+                            [uu___7] in
+                          uu___5 :: uu___6 in
+                        FStar_Errors.log_issue
+                          (FStar_Syntax_Syntax.has_range_syntax ()) t0
+                          FStar_Errors_Codes.Warning_FunctionLiteralPrecisionLoss
+                          ()
+                          (Obj.magic
+                             FStar_Errors_Msg.is_error_message_list_doc)
+                          (Obj.magic uu___4));
                        fallback ())
                   | FStar_Pervasives_Native.Some rc ->
                       let uu___3 =
@@ -3436,20 +3449,24 @@ and (encode_smt_patterns :
                                         illegal_subterm ->
                                         ((let uu___8 =
                                             let uu___9 =
-                                              let uu___10 =
-                                                FStar_Class_Show.show
-                                                  FStar_Syntax_Print.showable_term
-                                                  p in
-                                              let uu___11 =
-                                                FStar_SMTEncoding_Term.print_smt_term
-                                                  illegal_subterm in
-                                              FStar_Compiler_Util.format2
-                                                "Pattern %s contains illegal sub-term (%s); dropping it"
-                                                uu___10 uu___11 in
-                                            (FStar_Errors_Codes.Warning_SMTPatternIllFormed,
-                                              uu___9) in
+                                              FStar_Class_Show.show
+                                                FStar_Syntax_Print.showable_term
+                                                p in
+                                            let uu___10 =
+                                              FStar_Class_Show.show
+                                                FStar_SMTEncoding_Term.showable_smt_term
+                                                illegal_subterm in
+                                            FStar_Compiler_Util.format2
+                                              "Pattern %s contains illegal sub-term (%s); dropping it"
+                                              uu___9 uu___10 in
                                           FStar_Errors.log_issue
-                                            p.FStar_Syntax_Syntax.pos uu___8);
+                                            (FStar_Syntax_Syntax.has_range_syntax
+                                               ()) p
+                                            FStar_Errors_Codes.Warning_SMTPatternIllFormed
+                                            ()
+                                            (Obj.magic
+                                               FStar_Errors_Msg.is_error_message_string)
+                                            (Obj.magic uu___8));
                                          (pats1,
                                            (FStar_Compiler_List.op_At d
                                               decls1)))))) pats ([], decls) in

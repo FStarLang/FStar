@@ -114,15 +114,9 @@ let (fail_if_ro : unit -> unit) =
     let uu___1 = let uu___2 = get () in uu___2.ro in
     if uu___1
     then
-      let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            FStar_Errors_Msg.text
-              "Internal error: UF graph was in read-only mode" in
-          [uu___4] in
-        (FStar_Errors_Codes.Fatal_BadUvar, uu___3) in
-      FStar_Errors.raise_error_doc uu___2
-        FStar_Compiler_Range_Type.dummyRange
+      FStar_Errors.raise_error0 FStar_Errors_Codes.Fatal_BadUvar ()
+        (Obj.magic FStar_Errors_Msg.is_error_message_string)
+        (Obj.magic "Internal error: UF graph was in read-only mode")
     else ()
 let (set : uf -> unit) =
   fun u -> fail_if_ro (); FStar_Compiler_Effect.op_Colon_Equals state u
@@ -199,32 +193,33 @@ let (chk_v_t :
           (let uu___2 =
              let uu___3 =
                let uu___4 =
-                 let uu___5 =
-                   FStar_Errors_Msg.text
-                     "Internal error: incompatible version for term unification variable" in
-                 let uu___6 =
-                   let uu___7 = uvar_to_string u in
-                   FStar_Pprint.doc_of_string uu___7 in
-                 FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                 FStar_Errors_Msg.text
+                   "Internal error: incompatible version for term unification variable" in
                let uu___5 =
-                 let uu___6 =
-                   let uu___7 = FStar_Errors_Msg.text "Current version: " in
-                   let uu___8 =
-                     let uu___9 = version_to_string expected in
-                     FStar_Pprint.doc_of_string uu___9 in
-                   FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                 let uu___6 = uvar_to_string u in
+                 FStar_Pprint.doc_of_string uu___6 in
+               FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+             let uu___4 =
+               let uu___5 =
+                 let uu___6 = FStar_Errors_Msg.text "Current version: " in
                  let uu___7 =
-                   let uu___8 =
-                     let uu___9 = FStar_Errors_Msg.text "Got version: " in
-                     let uu___10 =
-                       let uu___11 = version_to_string v in
-                       FStar_Pprint.doc_of_string uu___11 in
-                     FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
-                   [uu___8] in
-                 uu___6 :: uu___7 in
-               uu___4 :: uu___5 in
-             (FStar_Errors_Codes.Fatal_BadUvar, uu___3) in
-           FStar_Errors.raise_error_doc uu___2 rng)
+                   let uu___8 = version_to_string expected in
+                   FStar_Pprint.doc_of_string uu___8 in
+                 FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+               let uu___6 =
+                 let uu___7 =
+                   let uu___8 = FStar_Errors_Msg.text "Got version: " in
+                   let uu___9 =
+                     let uu___10 = version_to_string v in
+                     FStar_Pprint.doc_of_string uu___10 in
+                   FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                 [uu___7] in
+               uu___5 :: uu___6 in
+             uu___3 :: uu___4 in
+           FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range rng
+             FStar_Errors_Codes.Fatal_BadUvar ()
+             (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+             (Obj.magic uu___2))
 let (uvar_id : FStar_Syntax_Syntax.uvar -> Prims.int) =
   fun u ->
     let uu___ = get_term_graph () in
@@ -325,32 +320,33 @@ let chk_v_u :
           (let uu___2 =
              let uu___3 =
                let uu___4 =
-                 let uu___5 =
-                   FStar_Errors_Msg.text
-                     "Internal error: incompatible version for universe unification variable" in
-                 let uu___6 =
-                   let uu___7 = uvar_to_string u in
-                   FStar_Pprint.doc_of_string uu___7 in
-                 FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                 FStar_Errors_Msg.text
+                   "Internal error: incompatible version for universe unification variable" in
                let uu___5 =
-                 let uu___6 =
-                   let uu___7 = FStar_Errors_Msg.text "Current version: " in
-                   let uu___8 =
-                     let uu___9 = version_to_string expected in
-                     FStar_Pprint.doc_of_string uu___9 in
-                   FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                 let uu___6 = uvar_to_string u in
+                 FStar_Pprint.doc_of_string uu___6 in
+               FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+             let uu___4 =
+               let uu___5 =
+                 let uu___6 = FStar_Errors_Msg.text "Current version: " in
                  let uu___7 =
-                   let uu___8 =
-                     let uu___9 = FStar_Errors_Msg.text "Got version: " in
-                     let uu___10 =
-                       let uu___11 = version_to_string v in
-                       FStar_Pprint.doc_of_string uu___11 in
-                     FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
-                   [uu___8] in
-                 uu___6 :: uu___7 in
-               uu___4 :: uu___5 in
-             (FStar_Errors_Codes.Fatal_BadUvar, uu___3) in
-           FStar_Errors.raise_error_doc uu___2 rng)
+                   let uu___8 = version_to_string expected in
+                   FStar_Pprint.doc_of_string uu___8 in
+                 FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+               let uu___6 =
+                 let uu___7 =
+                   let uu___8 = FStar_Errors_Msg.text "Got version: " in
+                   let uu___9 =
+                     let uu___10 = version_to_string v in
+                     FStar_Pprint.doc_of_string uu___10 in
+                   FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                 [uu___7] in
+               uu___5 :: uu___6 in
+             uu___3 :: uu___4 in
+           FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range rng
+             FStar_Errors_Codes.Fatal_BadUvar ()
+             (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+             (Obj.magic uu___2))
 let (set_univ_graph : ugraph -> unit) =
   fun ug ->
     let uu___ =

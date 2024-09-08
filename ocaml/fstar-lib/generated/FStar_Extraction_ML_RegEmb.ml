@@ -173,31 +173,32 @@ let (not_implemented_warning :
           let uu___1 =
             let uu___2 =
               let uu___3 =
-                let uu___4 =
-                  FStar_Compiler_Util.format1
-                    "Plugin `%s' can not run natively because:" t in
-                FStar_Errors_Msg.text uu___4 in
-              let uu___4 = FStar_Errors_Msg.text msg in
-              FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___3
-                uu___4 in
+                FStar_Compiler_Util.format1
+                  "Plugin `%s' can not run natively because:" t in
+              FStar_Errors_Msg.text uu___3 in
+            let uu___3 = FStar_Errors_Msg.text msg in
+            FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___2
+              uu___3 in
+          let uu___2 =
             let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Errors_Msg.text "Use --warn_error -" in
+              let uu___4 = FStar_Errors_Msg.text "Use --warn_error -" in
+              let uu___5 =
                 let uu___6 =
                   let uu___7 =
                     let uu___8 =
-                      let uu___9 =
-                        FStar_Errors.lookup
-                          FStar_Errors_Codes.Warning_PluginNotImplemented in
-                      FStar_Errors.error_number uu___9 in
-                    FStar_Class_PP.pp FStar_Class_PP.pp_int uu___8 in
-                  let uu___8 = FStar_Errors_Msg.text "to carry on." in
-                  FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
-                FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
-              [uu___4] in
-            uu___2 :: uu___3 in
-          (FStar_Errors_Codes.Warning_PluginNotImplemented, uu___1) in
-        FStar_Errors.log_issue_doc r uu___
+                      FStar_Errors.lookup
+                        FStar_Errors_Codes.Warning_PluginNotImplemented in
+                    FStar_Errors.error_number uu___8 in
+                  FStar_Class_PP.pp FStar_Class_PP.pp_int uu___7 in
+                let uu___7 = FStar_Errors_Msg.text "to carry on." in
+                FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+              FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
+            [uu___3] in
+          uu___1 :: uu___2 in
+        FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range r
+          FStar_Errors_Codes.Warning_PluginNotImplemented ()
+          (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+          (Obj.magic uu___)
 type embedding_data =
   {
   arity: Prims.int ;
@@ -2313,13 +2314,15 @@ let (do_handle_plugin :
         with
         | Unsupported msg ->
             ((let uu___2 =
-                let uu___3 =
-                  let uu___4 = FStar_Syntax_Print.sigelt_to_string_short se in
-                  FStar_Compiler_Util.format2
-                    "Could not generate a plugin for %s, reason = %s" uu___4
-                    msg in
-                (FStar_Errors_Codes.Warning_PluginNotImplemented, uu___3) in
-              FStar_Errors.log_issue se.FStar_Syntax_Syntax.sigrng uu___2);
+                let uu___3 = FStar_Syntax_Print.sigelt_to_string_short se in
+                FStar_Compiler_Util.format2
+                  "Could not generate a plugin for %s, reason = %s" uu___3
+                  msg in
+              FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range
+                se.FStar_Syntax_Syntax.sigrng
+                FStar_Errors_Codes.Warning_PluginNotImplemented ()
+                (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                (Obj.magic uu___2));
              [])
         | NoEmbedding msg ->
             ((let uu___2 = FStar_Syntax_Print.sigelt_to_string_short se in

@@ -2634,6 +2634,11 @@ let (set_range : env -> FStar_Compiler_Range_Type.range -> env) =
           missing_decl = (e.missing_decl)
         }
 let (get_range : env -> FStar_Compiler_Range_Type.range) = fun e -> e.range
+let (hasRange_env : env FStar_Class_HasRange.hasRange) =
+  {
+    FStar_Class_HasRange.pos = get_range;
+    FStar_Class_HasRange.setPos = (fun r -> fun e -> set_range e r)
+  }
 let (toggle_id_info : env -> Prims.bool -> unit) =
   fun env1 ->
     fun enabled ->
@@ -2749,20 +2754,6 @@ let (find_in_sigtab :
     fun lid ->
       let uu___ = FStar_Ident.string_of_lid lid in
       FStar_Compiler_Util.smap_try_find (sigtab env1) uu___
-let (name_not_found :
-  FStar_Ident.lid -> (FStar_Errors_Codes.raw_error * Prims.string)) =
-  fun l ->
-    let uu___ =
-      let uu___1 = FStar_Ident.string_of_lid l in
-      FStar_Compiler_Util.format1 "Name \"%s\" not found" uu___1 in
-    (FStar_Errors_Codes.Fatal_NameNotFound, uu___)
-let (variable_not_found :
-  FStar_Syntax_Syntax.bv -> (FStar_Errors_Codes.raw_error * Prims.string)) =
-  fun v ->
-    let uu___ =
-      let uu___1 = FStar_Class_Show.show FStar_Syntax_Print.showable_bv v in
-      FStar_Compiler_Util.format1 "Variable \"%s\" not found" uu___1 in
-    (FStar_Errors_Codes.Fatal_VariableNotFound, uu___)
 let (new_u_univ : unit -> FStar_Syntax_Syntax.universe) =
   fun uu___ ->
     let uu___1 =
@@ -2834,8 +2825,10 @@ let (check_effect_is_not_a_template :
           FStar_Compiler_Util.format2
             "Effect template %s should be applied to arguments for its binders (%s) before it can be used at an effect position"
             uu___ uu___1 in
-        FStar_Errors.raise_error
-          (FStar_Errors_Codes.Fatal_NotEnoughArgumentsForEffect, msg) rng
+        FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range rng
+          FStar_Errors_Codes.Fatal_NotEnoughArgumentsForEffect ()
+          (Obj.magic FStar_Errors_Msg.is_error_message_string)
+          (Obj.magic msg)
       else ()
 let (inst_effect_fun_with :
   FStar_Syntax_Syntax.universes ->
@@ -3093,25 +3086,25 @@ let (try_add_sigelt :
                 (let uu___3 =
                    let uu___4 =
                      let uu___5 =
-                       let uu___6 =
-                         FStar_Errors_Msg.text "Duplicate top-level names" in
-                       let uu___7 = FStar_Pprint.arbitrary_string s in
-                       FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                       FStar_Errors_Msg.text "Duplicate top-level names" in
+                     let uu___6 = FStar_Pprint.arbitrary_string s in
+                     FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                   let uu___5 =
                      let uu___6 =
                        let uu___7 =
-                         let uu___8 =
-                           FStar_Errors_Msg.text "Previously declared at" in
+                         FStar_Errors_Msg.text "Previously declared at" in
+                       let uu___8 =
                          let uu___9 =
-                           let uu___10 =
-                             let uu___11 = FStar_Ident.range_of_lid l in
-                             FStar_Compiler_Range_Ops.string_of_range uu___11 in
-                           FStar_Pprint.arbitrary_string uu___10 in
-                         FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-                       [uu___7] in
-                     uu___5 :: uu___6 in
-                   (FStar_Errors_Codes.Fatal_DuplicateTopLevelNames, uu___4) in
-                 let uu___4 = FStar_Ident.range_of_lid l in
-                 FStar_Errors.raise_error_doc uu___3 uu___4))
+                           let uu___10 = FStar_Ident.range_of_lid l in
+                           FStar_Compiler_Range_Ops.string_of_range uu___10 in
+                         FStar_Pprint.arbitrary_string uu___9 in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                     [uu___6] in
+                   uu___4 :: uu___5 in
+                 FStar_Errors.raise_error FStar_Ident.hasrange_lident l
+                   FStar_Errors_Codes.Fatal_DuplicateTopLevelNames ()
+                   (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                   (Obj.magic uu___3)))
            else ());
           FStar_Compiler_Util.smap_add (sigtab env1) s se
 let rec (add_sigelt :
@@ -3488,8 +3481,14 @@ let (lookup_bv :
       let uu___ = try_lookup_bv env1 bv in
       match uu___ with
       | FStar_Pervasives_Native.None ->
-          let uu___1 = variable_not_found bv in
-          FStar_Errors.raise_error uu___1 bvr
+          let uu___1 =
+            let uu___2 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_bv bv in
+            FStar_Compiler_Util.format1 "Variable \"%s\" not found" uu___2 in
+          FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range bvr
+            FStar_Errors_Codes.Fatal_VariableNotFound ()
+            (Obj.magic FStar_Errors_Msg.is_error_message_string)
+            (Obj.magic uu___1)
       | FStar_Pervasives_Native.Some (t, r) ->
           let uu___1 = FStar_Syntax_Subst.set_use_range bvr t in
           let uu___2 =
@@ -3541,6 +3540,14 @@ let (try_lookup_and_inst_lid :
               let uu___3 = FStar_Syntax_Subst.set_use_range use_range t in
               (uu___3, r1) in
             FStar_Pervasives_Native.Some uu___2
+let name_not_found : 'a . FStar_Ident.lid -> 'a =
+  fun l ->
+    let uu___ =
+      let uu___1 = FStar_Ident.string_of_lid l in
+      FStar_Compiler_Util.format1 "Name \"%s\" not found" uu___1 in
+    FStar_Errors.raise_error FStar_Ident.hasrange_lident l
+      FStar_Errors_Codes.Fatal_NameNotFound ()
+      (Obj.magic FStar_Errors_Msg.is_error_message_string) (Obj.magic uu___)
 let (lookup_lid :
   env ->
     FStar_Ident.lident ->
@@ -3551,11 +3558,8 @@ let (lookup_lid :
     fun l ->
       let uu___ = try_lookup_lid env1 l in
       match uu___ with
-      | FStar_Pervasives_Native.None ->
-          let uu___1 = name_not_found l in
-          let uu___2 = FStar_Ident.range_of_lid l in
-          FStar_Errors.raise_error uu___1 uu___2
       | FStar_Pervasives_Native.Some v -> v
+      | FStar_Pervasives_Native.None -> name_not_found l
 let (lookup_univ : env -> FStar_Syntax_Syntax.univ_name -> Prims.bool) =
   fun env1 ->
     fun x ->
@@ -3630,10 +3634,7 @@ let (lookup_val_decl :
           ->
           let uu___9 = FStar_Ident.range_of_lid lid in
           inst_tscheme_with_range uu___9 (uvs, t)
-      | uu___1 ->
-          let uu___2 = name_not_found lid in
-          let uu___3 = FStar_Ident.range_of_lid lid in
-          FStar_Errors.raise_error uu___2 uu___3
+      | uu___1 -> name_not_found lid
 let (lookup_datacon :
   env ->
     FStar_Ident.lident ->
@@ -3664,10 +3665,7 @@ let (lookup_datacon :
           ->
           let uu___13 = FStar_Ident.range_of_lid lid in
           inst_tscheme_with_range uu___13 (uvs, t)
-      | uu___1 ->
-          let uu___2 = name_not_found lid in
-          let uu___3 = FStar_Ident.range_of_lid lid in
-          FStar_Errors.raise_error uu___2 uu___3
+      | uu___1 -> name_not_found lid
 let (lookup_and_inst_datacon :
   env ->
     FStar_Syntax_Syntax.universes ->
@@ -3700,10 +3698,7 @@ let (lookup_and_inst_datacon :
             ->
             let uu___13 = inst_tscheme_with (uvs, t) us in
             FStar_Pervasives_Native.snd uu___13
-        | uu___1 ->
-            let uu___2 = name_not_found lid in
-            let uu___3 = FStar_Ident.range_of_lid lid in
-            FStar_Errors.raise_error uu___2 uu___3
+        | uu___1 -> name_not_found lid
 let (datacons_of_typ :
   env -> FStar_Ident.lident -> (Prims.bool * FStar_Ident.lident Prims.list))
   =
@@ -4200,10 +4195,7 @@ let (lookup_effect_lid :
     fun ftv ->
       let uu___ = try_lookup_effect_lid env1 ftv in
       match uu___ with
-      | FStar_Pervasives_Native.None ->
-          let uu___1 = name_not_found ftv in
-          let uu___2 = FStar_Ident.range_of_lid ftv in
-          FStar_Errors.raise_error uu___1 uu___2
+      | FStar_Pervasives_Native.None -> name_not_found ftv
       | FStar_Pervasives_Native.Some k -> k
 let (lookup_effect_abbrev :
   env ->
@@ -4395,14 +4387,15 @@ let (num_effect_indices :
         | uu___ ->
             let uu___1 =
               let uu___2 =
-                let uu___3 = FStar_Ident.string_of_lid name in
-                let uu___4 =
-                  FStar_Class_Show.show FStar_Syntax_Print.showable_term
-                    sig_t in
-                FStar_Compiler_Util.format2
-                  "Signature for %s not an arrow (%s)" uu___3 uu___4 in
-              (FStar_Errors_Codes.Fatal_UnexpectedSignatureForMonad, uu___2) in
-            FStar_Errors.raise_error uu___1 r
+                FStar_Class_Show.show FStar_Ident.showable_lident name in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term sig_t in
+              FStar_Compiler_Util.format2
+                "Signature for %s not an arrow (%s)" uu___2 uu___3 in
+            FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range r
+              FStar_Errors_Codes.Fatal_UnexpectedSignatureForMonad ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___1)
 let (lookup_effect_quals :
   env -> FStar_Ident.lident -> FStar_Syntax_Syntax.qualifier Prims.list) =
   fun env1 ->
@@ -4683,13 +4676,14 @@ let (num_inductive_uniform_ty_params :
            | FStar_Pervasives_Native.None ->
                let uu___16 =
                  let uu___17 =
-                   let uu___18 = FStar_Ident.string_of_lid lid in
-                   FStar_Compiler_Util.format1
-                     "Internal error: Inductive %s is not decorated with its uniform type parameters"
-                     uu___18 in
-                 (FStar_Errors_Codes.Fatal_UnexpectedInductivetype, uu___17) in
-               let uu___17 = FStar_Ident.range_of_lid lid in
-               FStar_Errors.raise_error uu___16 uu___17
+                   FStar_Class_Show.show FStar_Ident.showable_lident lid in
+                 FStar_Compiler_Util.format1
+                   "Internal error: Inductive %s is not decorated with its uniform type parameters"
+                   uu___17 in
+               FStar_Errors.raise_error FStar_Ident.hasrange_lident lid
+                 FStar_Errors_Codes.Fatal_UnexpectedInductivetype ()
+                 (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                 (Obj.magic uu___16)
            | FStar_Pervasives_Native.Some n -> FStar_Pervasives_Native.Some n)
       | uu___1 -> FStar_Pervasives_Native.None
 let (effect_decl_opt :
@@ -4712,10 +4706,7 @@ let (get_effect_decl :
     fun l ->
       let uu___ = effect_decl_opt env1 l in
       match uu___ with
-      | FStar_Pervasives_Native.None ->
-          let uu___1 = name_not_found l in
-          let uu___2 = FStar_Ident.range_of_lid l in
-          FStar_Errors.raise_error uu___1 uu___2
+      | FStar_Pervasives_Native.None -> name_not_found l
       | FStar_Pervasives_Native.Some md -> FStar_Pervasives_Native.fst md
 let (get_lid_valued_effect_attr :
   env ->
@@ -4755,17 +4746,20 @@ let (get_lid_valued_effect_attr :
                       | uu___4 ->
                           let uu___5 =
                             let uu___6 =
-                              let uu___7 = FStar_Ident.string_of_lid eff_lid in
-                              let uu___8 =
-                                FStar_Class_Show.show
-                                  FStar_Syntax_Print.showable_term t in
-                              FStar_Compiler_Util.format2
-                                "The argument for the effect attribute for %s is not a constant string, it is %s\n"
-                                uu___7 uu___8 in
-                            (FStar_Errors_Codes.Fatal_UnexpectedEffect,
-                              uu___6) in
-                          FStar_Errors.raise_error uu___5
-                            t.FStar_Syntax_Syntax.pos))
+                              FStar_Class_Show.show
+                                FStar_Ident.showable_lident eff_lid in
+                            let uu___7 =
+                              FStar_Class_Show.show
+                                FStar_Syntax_Print.showable_term t in
+                            FStar_Compiler_Util.format2
+                              "The argument for the effect attribute for %s is not a constant string, it is %s\n"
+                              uu___6 uu___7 in
+                          FStar_Errors.raise_error
+                            (FStar_Syntax_Syntax.has_range_syntax ()) t
+                            FStar_Errors_Codes.Fatal_UnexpectedEffect ()
+                            (Obj.magic
+                               FStar_Errors_Msg.is_error_message_string)
+                            (Obj.magic uu___5)))
 let (get_default_effect :
   env ->
     FStar_Ident.lident -> FStar_Ident.lident FStar_Pervasives_Native.option)
@@ -4851,14 +4845,15 @@ let (join :
         | FStar_Pervasives_Native.None ->
             let uu___1 =
               let uu___2 =
-                let uu___3 =
-                  FStar_Class_Show.show FStar_Ident.showable_lident l1 in
-                let uu___4 =
-                  FStar_Class_Show.show FStar_Ident.showable_lident l2 in
-                FStar_Compiler_Util.format2
-                  "Effects %s and %s cannot be composed" uu___3 uu___4 in
-              (FStar_Errors_Codes.Fatal_EffectsCannotBeComposed, uu___2) in
-            FStar_Errors.raise_error uu___1 env1.range
+                FStar_Class_Show.show FStar_Ident.showable_lident l1 in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Ident.showable_lident l2 in
+              FStar_Compiler_Util.format2
+                "Effects %s and %s cannot be composed" uu___2 uu___3 in
+            FStar_Errors.raise_error hasRange_env env1
+              FStar_Errors_Codes.Fatal_EffectsCannotBeComposed ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___1)
         | FStar_Pervasives_Native.Some t -> t
 let (monad_leq :
   env ->
@@ -5098,25 +5093,29 @@ let rec (unfold_effect_abbrev :
                  then
                    (let uu___4 =
                       let uu___5 =
-                        let uu___6 =
-                          FStar_Compiler_Util.string_of_int
-                            (FStar_Compiler_List.length binders1) in
-                        let uu___7 =
-                          FStar_Compiler_Util.string_of_int
-                            ((FStar_Compiler_List.length
-                                c.FStar_Syntax_Syntax.effect_args)
-                               + Prims.int_one) in
-                        let uu___8 =
-                          let uu___9 = FStar_Syntax_Syntax.mk_Comp c in
-                          FStar_Class_Show.show
-                            FStar_Syntax_Print.showable_comp uu___9 in
-                        FStar_Compiler_Util.format3
-                          "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
-                          uu___6 uu___7 uu___8 in
-                      (FStar_Errors_Codes.Fatal_ConstructorArgLengthMismatch,
-                        uu___5) in
-                    FStar_Errors.raise_error uu___4
-                      comp.FStar_Syntax_Syntax.pos)
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.printableshow
+                             FStar_Class_Printable.printable_nat)
+                          (FStar_Compiler_List.length binders1) in
+                      let uu___6 =
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.printableshow
+                             FStar_Class_Printable.printable_int)
+                          ((FStar_Compiler_List.length
+                              c.FStar_Syntax_Syntax.effect_args)
+                             + Prims.int_one) in
+                      let uu___7 =
+                        let uu___8 = FStar_Syntax_Syntax.mk_Comp c in
+                        FStar_Class_Show.show
+                          FStar_Syntax_Print.showable_comp uu___8 in
+                      FStar_Compiler_Util.format3
+                        "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
+                        uu___5 uu___6 uu___7 in
+                    FStar_Errors.raise_error
+                      (FStar_Syntax_Syntax.has_range_syntax ()) comp
+                      FStar_Errors_Codes.Fatal_ConstructorArgLengthMismatch
+                      () (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                      (Obj.magic uu___4))
                  else ();
                  (let inst =
                     let uu___4 =
@@ -5181,8 +5180,10 @@ let effect_repr_aux :
                        "Not enough arguments for effect %s, This usually happens when you use a partially applied DM4F effect, like [TAC int] instead of [Tac int] (given:%s, expected:%s)."
                        uu___2 uu___3 uu___4 in
                    FStar_Errors.raise_error
-                     (FStar_Errors_Codes.Fatal_NotEnoughArgumentsForEffect,
-                       message) r) in
+                     FStar_Class_HasRange.hasRange_range r
+                     FStar_Errors_Codes.Fatal_NotEnoughArgumentsForEffect ()
+                     (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                     (Obj.magic message)) in
           let effect_name =
             norm_eff_name env1 (FStar_Syntax_Util.comp_effect_name c) in
           let uu___ = effect_decl_opt env1 effect_name in
@@ -5283,13 +5284,12 @@ let (reify_comp :
          if uu___1
          then
            let uu___2 =
-             let uu___3 =
-               let uu___4 = FStar_Ident.string_of_lid l in
-               FStar_Compiler_Util.format1 "Effect %s cannot be reified"
-                 uu___4 in
-             (FStar_Errors_Codes.Fatal_EffectCannotBeReified, uu___3) in
-           let uu___3 = get_range env1 in
-           FStar_Errors.raise_error uu___2 uu___3
+             let uu___3 = FStar_Ident.string_of_lid l in
+             FStar_Compiler_Util.format1 "Effect %s cannot be reified" uu___3 in
+           FStar_Errors.raise_error hasRange_env env1
+             FStar_Errors_Codes.Fatal_EffectCannotBeReified ()
+             (Obj.magic FStar_Errors_Msg.is_error_message_string)
+             (Obj.magic uu___2)
          else ());
         (let uu___1 = effect_repr_aux true env1 c u_c in
          match uu___1 with
@@ -5728,14 +5728,20 @@ let (update_effect_lattice :
             then
               let uu___1 =
                 let uu___2 =
-                  let uu___3 = FStar_Ident.string_of_lid edge1.msource in
-                  let uu___4 = FStar_Ident.string_of_lid edge1.mtarget in
-                  let uu___5 = FStar_Ident.string_of_lid src1 in
-                  FStar_Compiler_Util.format3
-                    "Adding an edge %s~>%s induces a cycle %s" uu___3 uu___4
-                    uu___5 in
-                (FStar_Errors_Codes.Fatal_Effects_Ordering_Coherence, uu___2) in
-              FStar_Errors.raise_error uu___1 env1.range
+                  FStar_Class_Show.show FStar_Ident.showable_lident
+                    edge1.msource in
+                let uu___3 =
+                  FStar_Class_Show.show FStar_Ident.showable_lident
+                    edge1.mtarget in
+                let uu___4 =
+                  FStar_Class_Show.show FStar_Ident.showable_lident src1 in
+                FStar_Compiler_Util.format3
+                  "Adding an edge %s~>%s induces a cycle %s" uu___2 uu___3
+                  uu___4 in
+              FStar_Errors.raise_error hasRange_env env1
+                FStar_Errors_Codes.Fatal_Effects_Ordering_Coherence ()
+                (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                (Obj.magic uu___1)
             else () in
           let new_i_edge_target =
             FStar_Compiler_List.fold_left
@@ -5781,14 +5787,15 @@ let (update_effect_lattice :
                then
                  let uu___2 =
                    let uu___3 =
-                     let uu___4 = FStar_Ident.string_of_lid edge2.mtarget in
-                     FStar_Compiler_Util.format1
-                       "Divergent computations cannot be included in an effect %s marked 'total'"
-                       uu___4 in
-                   (FStar_Errors_Codes.Fatal_DivergentComputationCannotBeIncludedInTotal,
-                     uu___3) in
-                 let uu___3 = get_range env1 in
-                 FStar_Errors.raise_error uu___2 uu___3
+                     FStar_Class_Show.show FStar_Ident.showable_lident
+                       edge2.mtarget in
+                   FStar_Compiler_Util.format1
+                     "Divergent computations cannot be included in an effect %s marked 'total'"
+                     uu___3 in
+                 FStar_Errors.raise_error hasRange_env env1
+                   FStar_Errors_Codes.Fatal_DivergentComputationCannotBeIncludedInTotal
+                   () (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                   (Obj.magic uu___2)
                else ()) order;
           (let joins =
              let ubs = FStar_Compiler_Util.smap_create (Prims.of_int (10)) in
@@ -5846,12 +5853,13 @@ let (update_effect_lattice :
                       if (FStar_Compiler_List.length lubs) <> Prims.int_one
                       then
                         let uu___2 =
-                          let uu___3 =
-                            FStar_Compiler_Util.format1
-                              "Effects %s have incomparable upper bounds" s in
-                          (FStar_Errors_Codes.Fatal_Effects_Ordering_Coherence,
-                            uu___3) in
-                        FStar_Errors.raise_error uu___2 env1.range
+                          FStar_Compiler_Util.format1
+                            "Effects %s have incomparable upper bounds" s in
+                        FStar_Errors.raise_error hasRange_env env1
+                          FStar_Errors_Codes.Fatal_Effects_Ordering_Coherence
+                          ()
+                          (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                          (Obj.magic uu___2)
                       else FStar_Compiler_List.op_At lubs joins1) [] in
            let effects1 =
              let uu___1 = env1.effects in

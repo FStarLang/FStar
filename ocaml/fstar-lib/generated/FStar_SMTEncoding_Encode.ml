@@ -4872,12 +4872,29 @@ let (encode_datacon :
                                                                     uu___28 =
                                                                     let uu___29
                                                                     =
-                                                                    FStar_Syntax_Syntax.range_of_fv
-                                                                    fv in
+                                                                    let uu___30
+                                                                    =
+                                                                    FStar_Errors_Msg.text
+                                                                    "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor." in
+                                                                    let uu___31
+                                                                    =
+                                                                    let uu___32
+                                                                    =
+                                                                    FStar_Errors_Msg.text
+                                                                    "This is deprecated and will be removed in a future version of F*." in
+                                                                    [uu___32] in
+                                                                    uu___30
+                                                                    ::
+                                                                    uu___31 in
                                                                     FStar_Errors.log_issue
-                                                                    uu___29
-                                                                    (FStar_Errors_Codes.Warning_DeprecatedGeneric,
-                                                                    "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor.\nThis is deprecated and will be removed in a future version of F*.") in
+                                                                    FStar_Syntax_Syntax.hasRange_fv
+                                                                    fv
+                                                                    FStar_Errors_Codes.Warning_DeprecatedGeneric
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    FStar_Errors_Msg.is_error_message_list_doc)
+                                                                    (Obj.magic
+                                                                    uu___29) in
                                                                     let uu___28
                                                                     =
                                                                     FStar_Compiler_List.fold_left2
@@ -5612,12 +5629,29 @@ let (encode_datacon :
                                                                     uu___24 =
                                                                     let uu___25
                                                                     =
-                                                                    FStar_Syntax_Syntax.range_of_fv
-                                                                    fv in
+                                                                    let uu___26
+                                                                    =
+                                                                    FStar_Errors_Msg.text
+                                                                    "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor." in
+                                                                    let uu___27
+                                                                    =
+                                                                    let uu___28
+                                                                    =
+                                                                    FStar_Errors_Msg.text
+                                                                    "This is deprecated and will be removed in a future version of F*." in
+                                                                    [uu___28] in
+                                                                    uu___26
+                                                                    ::
+                                                                    uu___27 in
                                                                     FStar_Errors.log_issue
-                                                                    uu___25
-                                                                    (FStar_Errors_Codes.Warning_DeprecatedGeneric,
-                                                                    "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor.\nThis is deprecated and will be removed in a future version of F*.") in
+                                                                    FStar_Syntax_Syntax.hasRange_fv
+                                                                    fv
+                                                                    FStar_Errors_Codes.Warning_DeprecatedGeneric
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    FStar_Errors_Msg.is_error_message_list_doc)
+                                                                    (Obj.magic
+                                                                    uu___25) in
                                                                     let uu___24
                                                                     =
                                                                     FStar_Compiler_List.fold_left2
@@ -6034,22 +6068,24 @@ let (encode_datacon :
                                                | uu___11 ->
                                                    ((let uu___13 =
                                                        let uu___14 =
-                                                         let uu___15 =
-                                                           FStar_Class_Show.show
-                                                             FStar_Ident.showable_lident
-                                                             d in
-                                                         let uu___16 =
-                                                           FStar_Class_Show.show
-                                                             FStar_Syntax_Print.showable_term
-                                                             head in
-                                                         FStar_Compiler_Util.format2
-                                                           "Constructor %s builds an unexpected type %s\n"
-                                                           uu___15 uu___16 in
-                                                       (FStar_Errors_Codes.Warning_ConstructorBuildsUnexpectedType,
-                                                         uu___14) in
+                                                         FStar_Class_Show.show
+                                                           FStar_Ident.showable_lident
+                                                           d in
+                                                       let uu___15 =
+                                                         FStar_Class_Show.show
+                                                           FStar_Syntax_Print.showable_term
+                                                           head in
+                                                       FStar_Compiler_Util.format2
+                                                         "Constructor %s builds an unexpected type %s"
+                                                         uu___14 uu___15 in
                                                      FStar_Errors.log_issue
+                                                       FStar_Class_HasRange.hasRange_range
                                                        se.FStar_Syntax_Syntax.sigrng
-                                                       uu___13);
+                                                       FStar_Errors_Codes.Warning_ConstructorBuildsUnexpectedType
+                                                       ()
+                                                       (Obj.magic
+                                                          FStar_Errors_Msg.is_error_message_string)
+                                                       (Obj.magic uu___13));
                                                     ([], []))) in
                                         let uu___8 = encode_elim () in
                                         (match uu___8 with

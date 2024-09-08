@@ -1780,14 +1780,14 @@ let rec (extract_sigelt_iface :
                    | FStar_Pervasives.Inl res1 -> res1
                    | FStar_Pervasives.Inr err ->
                        let uu___4 =
-                         let uu___5 =
-                           FStar_Compiler_Util.format2
-                             "Extension %s failed to extract iface: %s" ext
-                             err in
-                         (FStar_Errors_Codes.Fatal_ExtractionUnsupported,
-                           uu___5) in
-                       FStar_Errors.raise_error uu___4
-                         se1.FStar_Syntax_Syntax.sigrng))
+                         FStar_Compiler_Util.format2
+                           "Extension %s failed to extract iface: %s" ext err in
+                       FStar_Errors.raise_error
+                         FStar_Class_HasRange.hasRange_range
+                         se1.FStar_Syntax_Syntax.sigrng
+                         FStar_Errors_Codes.Fatal_ExtractionUnsupported ()
+                         (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                         (Obj.magic uu___4)))
          | FStar_Syntax_Syntax.Sig_let
              { FStar_Syntax_Syntax.lbs1 = lbs;
                FStar_Syntax_Syntax.lids1 = uu___2;_}
@@ -2366,14 +2366,17 @@ let rec (extract_sig :
                                                uu___10)) (g, []) decls
                          | FStar_Pervasives.Inr err ->
                              let uu___8 =
-                               let uu___9 =
-                                 FStar_Compiler_Util.format2
-                                   "Extension %s failed to extract term: %s"
-                                   ext err in
-                               (FStar_Errors_Codes.Fatal_ExtractionUnsupported,
-                                 uu___9) in
-                             FStar_Errors.raise_error uu___8
-                               se1.FStar_Syntax_Syntax.sigrng))
+                               FStar_Compiler_Util.format2
+                                 "Extension %s failed to extract term: %s"
+                                 ext err in
+                             FStar_Errors.raise_error
+                               FStar_Class_HasRange.hasRange_range
+                               se1.FStar_Syntax_Syntax.sigrng
+                               FStar_Errors_Codes.Fatal_ExtractionUnsupported
+                               ()
+                               (Obj.magic
+                                  FStar_Errors_Msg.is_error_message_string)
+                               (Obj.magic uu___8)))
                | FStar_Syntax_Syntax.Sig_let uu___5 -> extract_sig_let g se1
                | FStar_Syntax_Syntax.Sig_declare_typ
                    { FStar_Syntax_Syntax.lid2 = lid;
@@ -2509,9 +2512,13 @@ and (extract_sig_let :
                      (uu___4, (tau, FStar_Pervasives_Native.None)::uu___5) ->
                      FStar_Pervasives_Native.Some tau
                  | FStar_Pervasives_Native.Some uu___4 ->
-                     (FStar_Errors.log_issue se.FStar_Syntax_Syntax.sigrng
-                        (FStar_Errors_Codes.Warning_UnrecognizedAttribute,
-                          "Ill-formed application of 'postprocess_for_extraction_with'");
+                     (FStar_Errors.log_issue
+                        FStar_Class_HasRange.hasRange_range
+                        se.FStar_Syntax_Syntax.sigrng
+                        FStar_Errors_Codes.Warning_UnrecognizedAttribute ()
+                        (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                        (Obj.magic
+                           "Ill-formed application of 'postprocess_for_extraction_with'");
                       FStar_Pervasives_Native.None) in
                let postprocess_lb tau lb =
                  let env = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
@@ -2577,21 +2584,28 @@ and (extract_sig_let :
                       | uu___7 ->
                           ((let uu___9 =
                               let uu___10 =
-                                let uu___11 =
-                                  FStar_Class_Show.show
-                                    FStar_Syntax_Print.showable_term steps1 in
-                                FStar_Compiler_Util.format1
-                                  "Ill-formed application of 'normalize_for_extraction': normalization steps '%s' could not be interpreted"
-                                  uu___11 in
-                              (FStar_Errors_Codes.Warning_UnrecognizedAttribute,
-                                uu___10) in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term steps1 in
+                              FStar_Compiler_Util.format1
+                                "Ill-formed application of 'normalize_for_extraction': normalization steps '%s' could not be interpreted"
+                                uu___10 in
                             FStar_Errors.log_issue
-                              se.FStar_Syntax_Syntax.sigrng uu___9);
+                              FStar_Class_HasRange.hasRange_range
+                              se.FStar_Syntax_Syntax.sigrng
+                              FStar_Errors_Codes.Warning_UnrecognizedAttribute
+                              ()
+                              (Obj.magic
+                                 FStar_Errors_Msg.is_error_message_string)
+                              (Obj.magic uu___9));
                            FStar_Pervasives_Native.None))
                  | FStar_Pervasives_Native.Some uu___4 ->
-                     (FStar_Errors.log_issue se.FStar_Syntax_Syntax.sigrng
-                        (FStar_Errors_Codes.Warning_UnrecognizedAttribute,
-                          "Ill-formed application of 'normalize_for_extraction'");
+                     (FStar_Errors.log_issue
+                        FStar_Class_HasRange.hasRange_range
+                        se.FStar_Syntax_Syntax.sigrng
+                        FStar_Errors_Codes.Warning_UnrecognizedAttribute ()
+                        (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                        (Obj.magic
+                           "Ill-formed application of 'normalize_for_extraction'");
                       FStar_Pervasives_Native.None) in
                let norm_one_lb steps lb =
                  let env = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in

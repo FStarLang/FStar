@@ -462,14 +462,17 @@ let (tc_inductive' :
                                  let uu___7 =
                                    let uu___8 =
                                      let uu___9 =
-                                       let uu___10 =
-                                         FStar_Ident.string_of_lid lid in
-                                       Prims.strcat uu___10
-                                         " does not satisfy the strict positivity condition" in
-                                     Prims.strcat "Inductive type " uu___9 in
-                                   (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
-                                     uu___8) in
-                                 FStar_Errors.log_issue r uu___7
+                                       FStar_Ident.string_of_lid lid in
+                                     Prims.strcat uu___9
+                                       " does not satisfy the strict positivity condition" in
+                                   Prims.strcat "Inductive type " uu___8 in
+                                 FStar_Errors.log_issue
+                                   FStar_Class_HasRange.hasRange_range r
+                                   FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
+                                   ()
+                                   (Obj.magic
+                                      FStar_Errors_Msg.is_error_message_string)
+                                   (Obj.magic uu___7)
                            else ()) tcs;
                       FStar_Compiler_List.iter
                         (fun d ->
@@ -502,15 +505,18 @@ let (tc_inductive' :
                                  let uu___8 =
                                    let uu___9 =
                                      let uu___10 =
-                                       let uu___11 =
-                                         FStar_Ident.string_of_lid data_lid in
-                                       Prims.strcat uu___11
-                                         " does not satisfy the positivity condition" in
-                                     Prims.strcat "Exception " uu___10 in
-                                   (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
-                                     uu___9) in
+                                       FStar_Ident.string_of_lid data_lid in
+                                     Prims.strcat uu___10
+                                       " does not satisfy the positivity condition" in
+                                   Prims.strcat "Exception " uu___9 in
                                  FStar_Errors.log_issue
-                                   d.FStar_Syntax_Syntax.sigrng uu___8
+                                   FStar_Class_HasRange.hasRange_range
+                                   d.FStar_Syntax_Syntax.sigrng
+                                   FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
+                                   ()
+                                   (Obj.magic
+                                      FStar_Errors_Msg.is_error_message_string)
+                                   (Obj.magic uu___8)
                                else ()) datas));
                   (let skip_haseq =
                      let skip_prims_type uu___3 =
@@ -642,16 +648,16 @@ let (handle_postprocess_with_attr :
           (ats1, (tau, FStar_Pervasives_Native.None)::[]) ->
           (ats1, (FStar_Pervasives_Native.Some tau))
       | FStar_Pervasives_Native.Some (ats1, args) ->
-          ((let uu___2 = FStar_TypeChecker_Env.get_range env in
-            let uu___3 =
-              let uu___4 =
-                let uu___5 =
-                  FStar_Ident.string_of_lid
-                    FStar_Parser_Const.postprocess_with in
-                FStar_Compiler_Util.format1 "Ill-formed application of `%s`"
-                  uu___5 in
-              (FStar_Errors_Codes.Warning_UnrecognizedAttribute, uu___4) in
-            FStar_Errors.log_issue uu___2 uu___3);
+          ((let uu___2 =
+              let uu___3 =
+                FStar_Class_Show.show FStar_Ident.showable_lident
+                  FStar_Parser_Const.postprocess_with in
+              FStar_Compiler_Util.format1 "Ill-formed application of `%s`"
+                uu___3 in
+            FStar_Errors.log_issue FStar_TypeChecker_Env.hasRange_env env
+              FStar_Errors_Codes.Warning_UnrecognizedAttribute ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___2));
            (ats1, FStar_Pervasives_Native.None))
 let (store_sigopts :
   FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt) =
@@ -727,49 +733,51 @@ let (tc_sig_let :
                     (let uu___2 =
                        let uu___3 =
                          let uu___4 =
-                           let uu___5 =
-                             FStar_Errors_Msg.text
-                               "Inconsistent qualifier annotations on" in
-                           let uu___6 =
-                             let uu___7 =
-                               FStar_Class_Show.show
-                                 FStar_Ident.showable_lident l in
-                             FStar_Pprint.doc_of_string uu___7 in
-                           FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                           FStar_Errors_Msg.text
+                             "Inconsistent qualifier annotations on" in
                          let uu___5 =
                            let uu___6 =
-                             let uu___7 =
-                               let uu___8 = FStar_Errors_Msg.text "Expected" in
+                             FStar_Class_Show.show
+                               FStar_Ident.showable_lident l in
+                           FStar_Pprint.doc_of_string uu___6 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                       let uu___4 =
+                         let uu___5 =
+                           let uu___6 =
+                             let uu___7 = FStar_Errors_Msg.text "Expected" in
+                             let uu___8 =
                                let uu___9 =
                                  let uu___10 =
-                                   let uu___11 =
-                                     FStar_Class_Show.show
-                                       (FStar_Class_Show.show_list
-                                          FStar_Syntax_Print.showable_qualifier)
-                                       val_q in
-                                   FStar_Pprint.arbitrary_string uu___11 in
-                                 FStar_Pprint.squotes uu___10 in
-                               FStar_Pprint.prefix (Prims.of_int (4))
-                                 Prims.int_one uu___8 uu___9 in
-                             let uu___8 =
-                               let uu___9 = FStar_Errors_Msg.text "got" in
+                                   FStar_Class_Show.show
+                                     (FStar_Class_Show.show_list
+                                        FStar_Syntax_Print.showable_qualifier)
+                                     val_q in
+                                 FStar_Pprint.arbitrary_string uu___10 in
+                               FStar_Pprint.squotes uu___9 in
+                             FStar_Pprint.prefix (Prims.of_int (4))
+                               Prims.int_one uu___7 uu___8 in
+                           let uu___7 =
+                             let uu___8 = FStar_Errors_Msg.text "got" in
+                             let uu___9 =
                                let uu___10 =
                                  let uu___11 =
-                                   let uu___12 =
-                                     FStar_Class_Show.show
-                                       (FStar_Class_Show.show_list
-                                          FStar_Syntax_Print.showable_qualifier)
-                                       q' in
-                                   FStar_Pprint.arbitrary_string uu___12 in
-                                 FStar_Pprint.squotes uu___11 in
-                               FStar_Pprint.prefix (Prims.of_int (4))
-                                 Prims.int_one uu___9 uu___10 in
-                             FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
-                           [uu___6] in
-                         uu___4 :: uu___5 in
-                       (FStar_Errors_Codes.Fatal_InconsistentQualifierAnnotation,
-                         uu___3) in
-                     FStar_Errors.raise_error_doc uu___2 r) in
+                                   FStar_Class_Show.show
+                                     (FStar_Class_Show.show_list
+                                        FStar_Syntax_Print.showable_qualifier)
+                                     q' in
+                                 FStar_Pprint.arbitrary_string uu___11 in
+                               FStar_Pprint.squotes uu___10 in
+                             FStar_Pprint.prefix (Prims.of_int (4))
+                               Prims.int_one uu___8 uu___9 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                         [uu___5] in
+                       uu___3 :: uu___4 in
+                     FStar_Errors.raise_error
+                       FStar_Class_HasRange.hasRange_range r
+                       FStar_Errors_Codes.Fatal_InconsistentQualifierAnnotation
+                       ()
+                       (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                       (Obj.magic uu___2)) in
             let rename_parameters lb =
               let rename_in_typ def typ =
                 let typ1 = FStar_Syntax_Subst.compress typ in
@@ -922,9 +930,13 @@ let (tc_sig_let :
                                        <> (FStar_Compiler_List.length uvs))
                                 then
                                   FStar_Errors.raise_error
-                                    (FStar_Errors_Codes.Fatal_IncoherentInlineUniverse,
-                                      "Inline universes are incoherent with annotation from val declaration")
-                                    r
+                                    FStar_Class_HasRange.hasRange_range r
+                                    FStar_Errors_Codes.Fatal_IncoherentInlineUniverse
+                                    ()
+                                    (Obj.magic
+                                       FStar_Errors_Msg.is_error_message_string)
+                                    (Obj.magic
+                                       "Inline universes are incoherent with annotation from val declaration")
                                 else ();
                                 (let uu___5 =
                                    FStar_Syntax_Syntax.mk_lb
@@ -978,9 +990,14 @@ let (tc_sig_let :
                         (ats, (tau, FStar_Pervasives_Native.None)::[]) ->
                         (ats, (FStar_Pervasives_Native.Some tau))
                     | FStar_Pervasives_Native.Some (ats, args) ->
-                        (FStar_Errors.log_issue r
-                           (FStar_Errors_Codes.Warning_UnrecognizedAttribute,
-                             "Ill-formed application of `preprocess_with`");
+                        (FStar_Errors.log_issue
+                           FStar_Class_HasRange.hasRange_range r
+                           FStar_Errors_Codes.Warning_UnrecognizedAttribute
+                           ()
+                           (Obj.magic
+                              FStar_Errors_Msg.is_error_message_string)
+                           (Obj.magic
+                              "Ill-formed application of `preprocess_with`");
                          ((se.FStar_Syntax_Syntax.sigattrs),
                            FStar_Pervasives_Native.None)) in
                   match uu___2 with
@@ -1869,8 +1886,13 @@ let (tc_sig_let :
                                        } in
                                      let err s pos =
                                        FStar_Errors.raise_error
-                                         (FStar_Errors_Codes.Fatal_InconsistentQualifierAnnotation,
-                                           s) pos in
+                                         FStar_Class_HasRange.hasRange_range
+                                         pos
+                                         FStar_Errors_Codes.Fatal_InconsistentQualifierAnnotation
+                                         ()
+                                         (Obj.magic
+                                            FStar_Errors_Msg.is_error_message_string)
+                                         (Obj.magic s) in
                                      FStar_Compiler_List.iter
                                        (fun lb ->
                                           let uu___8 =
@@ -2208,14 +2230,16 @@ let (tc_decl' :
                                FStar_Errors.print_issue errs;
                              (let uu___9 =
                                 let uu___10 =
-                                  let uu___11 =
-                                    FStar_Errors_Msg.text
-                                      "This top-level definition was expected to fail, but it succeeded" in
-                                  [uu___11] in
-                                (FStar_Errors_Codes.Error_DidNotFail,
-                                  uu___10) in
-                              FStar_Errors.log_issue_doc
-                                se2.FStar_Syntax_Syntax.sigrng uu___9))
+                                  FStar_Errors_Msg.text
+                                    "This top-level definition was expected to fail, but it succeeded" in
+                                [uu___10] in
+                              FStar_Errors.log_issue
+                                FStar_Class_HasRange.hasRange_range
+                                se2.FStar_Syntax_Syntax.sigrng
+                                FStar_Errors_Codes.Error_DidNotFail ()
+                                (Obj.magic
+                                   FStar_Errors_Msg.is_error_message_list_doc)
+                                (Obj.magic uu___9)))
                         | uu___8 ->
                             if expected_errors <> []
                             then
@@ -2231,63 +2255,64 @@ let (tc_decl' :
                                        let uu___12 =
                                          let uu___13 =
                                            let uu___14 =
-                                             let uu___15 =
-                                               FStar_Errors_Msg.text
-                                                 "This top-level definition was expected to raise error codes" in
-                                             let uu___16 =
-                                               FStar_Class_PP.pp
-                                                 (FStar_Class_PP.pp_list
-                                                    FStar_Class_PP.pp_int)
-                                                 expected_errors in
-                                             FStar_Pprint.prefix
-                                               (Prims.of_int (2))
-                                               Prims.int_one uu___15 uu___16 in
+                                             FStar_Errors_Msg.text
+                                               "This top-level definition was expected to raise error codes" in
                                            let uu___15 =
-                                             let uu___16 =
-                                               let uu___17 =
-                                                 FStar_Errors_Msg.text
-                                                   "but it raised" in
-                                               let uu___18 =
-                                                 FStar_Class_PP.pp
-                                                   (FStar_Class_PP.pp_list
-                                                      FStar_Class_PP.pp_int)
-                                                   actual_errors in
-                                               FStar_Pprint.prefix
-                                                 (Prims.of_int (2))
-                                                 Prims.int_one uu___17
-                                                 uu___18 in
-                                             FStar_Pprint.op_Hat_Hat uu___16
-                                               FStar_Pprint.dot in
-                                           FStar_Pprint.op_Hat_Slash_Hat
+                                             FStar_Class_PP.pp
+                                               (FStar_Class_PP.pp_list
+                                                  FStar_Class_PP.pp_int)
+                                               expected_errors in
+                                           FStar_Pprint.prefix
+                                             (Prims.of_int (2)) Prims.int_one
                                              uu___14 uu___15 in
                                          let uu___14 =
                                            let uu___15 =
                                              let uu___16 =
-                                               let uu___17 =
-                                                 FStar_Class_Show.show
-                                                   (FStar_Class_Show.printableshow
-                                                      FStar_Class_Printable.printable_int)
-                                                   e in
-                                               let uu___18 =
-                                                 FStar_Class_Show.show
-                                                   (FStar_Class_Show.printableshow
-                                                      FStar_Class_Printable.printable_int)
-                                                   n2 in
-                                               let uu___19 =
-                                                 FStar_Class_Show.show
-                                                   (FStar_Class_Show.printableshow
-                                                      FStar_Class_Printable.printable_int)
-                                                   n1 in
-                                               FStar_Compiler_Util.format3
-                                                 "Error #%s was raised %s times, instead of %s."
-                                                 uu___17 uu___18 uu___19 in
-                                             FStar_Errors_Msg.text uu___16 in
-                                           [uu___15] in
-                                         uu___13 :: uu___14 in
-                                       (FStar_Errors_Codes.Error_DidNotFail,
-                                         uu___12) in
-                                     FStar_Errors.log_issue_doc
-                                       se2.FStar_Syntax_Syntax.sigrng uu___11)))
+                                               FStar_Errors_Msg.text
+                                                 "but it raised" in
+                                             let uu___17 =
+                                               FStar_Class_PP.pp
+                                                 (FStar_Class_PP.pp_list
+                                                    FStar_Class_PP.pp_int)
+                                                 actual_errors in
+                                             FStar_Pprint.prefix
+                                               (Prims.of_int (2))
+                                               Prims.int_one uu___16 uu___17 in
+                                           FStar_Pprint.op_Hat_Hat uu___15
+                                             FStar_Pprint.dot in
+                                         FStar_Pprint.op_Hat_Slash_Hat
+                                           uu___13 uu___14 in
+                                       let uu___13 =
+                                         let uu___14 =
+                                           let uu___15 =
+                                             let uu___16 =
+                                               FStar_Class_Show.show
+                                                 (FStar_Class_Show.printableshow
+                                                    FStar_Class_Printable.printable_int)
+                                                 e in
+                                             let uu___17 =
+                                               FStar_Class_Show.show
+                                                 (FStar_Class_Show.printableshow
+                                                    FStar_Class_Printable.printable_int)
+                                                 n2 in
+                                             let uu___18 =
+                                               FStar_Class_Show.show
+                                                 (FStar_Class_Show.printableshow
+                                                    FStar_Class_Printable.printable_int)
+                                                 n1 in
+                                             FStar_Compiler_Util.format3
+                                               "Error #%s was raised %s times, instead of %s."
+                                               uu___16 uu___17 uu___18 in
+                                           FStar_Errors_Msg.text uu___15 in
+                                         [uu___14] in
+                                       uu___12 :: uu___13 in
+                                     FStar_Errors.log_issue
+                                       FStar_Class_HasRange.hasRange_range
+                                       se2.FStar_Syntax_Syntax.sigrng
+                                       FStar_Errors_Codes.Error_DidNotFail ()
+                                       (Obj.magic
+                                          FStar_Errors_Msg.is_error_message_list_doc)
+                                       (Obj.magic uu___11))))
                             else ());
                        ([], [], env)))))
            | FStar_Syntax_Syntax.Sig_bundle
@@ -3027,22 +3052,24 @@ let (tc_decl' :
                      let uu___5 =
                        let uu___6 =
                          let uu___7 =
-                           let uu___8 =
-                             FStar_Class_Show.show
-                               FStar_Ident.showable_lident lid in
-                           FStar_Compiler_Util.format1
-                             "Top-level declaration %s for a name that is already used in this module."
-                             uu___8 in
-                         FStar_Errors_Msg.text uu___7 in
+                           FStar_Class_Show.show FStar_Ident.showable_lident
+                             lid in
+                         FStar_Compiler_Util.format1
+                           "Top-level declaration %s for a name that is already used in this module."
+                           uu___7 in
+                       FStar_Errors_Msg.text uu___6 in
+                     let uu___6 =
                        let uu___7 =
-                         let uu___8 =
-                           FStar_Errors_Msg.text
-                             "Top-level declarations must be unique in their module." in
-                         [uu___8] in
-                       uu___6 :: uu___7 in
-                     (FStar_Errors_Codes.Fatal_AlreadyDefinedTopLevelDeclaration,
-                       uu___5) in
-                   FStar_Errors.raise_error_doc uu___4 r
+                         FStar_Errors_Msg.text
+                           "Top-level declarations must be unique in their module." in
+                       [uu___7] in
+                     uu___5 :: uu___6 in
+                   FStar_Errors.raise_error
+                     FStar_Class_HasRange.hasRange_range r
+                     FStar_Errors_Codes.Fatal_AlreadyDefinedTopLevelDeclaration
+                     ()
+                     (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                     (Obj.magic uu___4)
                  else ());
                 (let env1 = FStar_TypeChecker_Env.set_range env r in
                  let uu___3 =
@@ -3222,13 +3249,13 @@ let (tc_decl' :
                 then
                   (let uu___3 =
                      let uu___4 =
-                       let uu___5 =
-                         FStar_Class_Show.show FStar_Ident.showable_lident
-                           lid in
-                       FStar_Compiler_Util.format1
-                         "Admitting a top-level assumption %s" uu___5 in
-                     (FStar_Errors_Codes.Warning_WarnOnUse, uu___4) in
-                   FStar_Errors.log_issue r uu___3)
+                       FStar_Class_Show.show FStar_Ident.showable_lident lid in
+                     FStar_Compiler_Util.format1
+                       "Admitting a top-level assumption %s" uu___4 in
+                   FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range
+                     r FStar_Errors_Codes.Warning_WarnOnUse ()
+                     (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                     (Obj.magic uu___3))
                 else ();
                 (let env1 = FStar_TypeChecker_Env.set_range env r in
                  let uu___3 =
@@ -4530,25 +4557,27 @@ let (add_sigelt_to_env :
          | FStar_Syntax_Syntax.Sig_inductive_typ uu___1 ->
              let uu___2 =
                let uu___3 =
-                 let uu___4 =
-                   FStar_Class_Show.show FStar_Syntax_Print.showable_sigelt
-                     se in
-                 FStar_Compiler_Util.format1
-                   "add_sigelt_to_env: unexpected bare type/data constructor: %s"
-                   uu___4 in
-               (FStar_Errors_Codes.Fatal_UnexpectedInductivetype, uu___3) in
-             FStar_Errors.raise_error uu___2 se.FStar_Syntax_Syntax.sigrng
+                 FStar_Class_Show.show FStar_Syntax_Print.showable_sigelt se in
+               FStar_Compiler_Util.format1
+                 "add_sigelt_to_env: unexpected bare type/data constructor: %s"
+                 uu___3 in
+             FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range
+               se.FStar_Syntax_Syntax.sigrng
+               FStar_Errors_Codes.Fatal_UnexpectedInductivetype ()
+               (Obj.magic FStar_Errors_Msg.is_error_message_string)
+               (Obj.magic uu___2)
          | FStar_Syntax_Syntax.Sig_datacon uu___1 ->
              let uu___2 =
                let uu___3 =
-                 let uu___4 =
-                   FStar_Class_Show.show FStar_Syntax_Print.showable_sigelt
-                     se in
-                 FStar_Compiler_Util.format1
-                   "add_sigelt_to_env: unexpected bare type/data constructor: %s"
-                   uu___4 in
-               (FStar_Errors_Codes.Fatal_UnexpectedInductivetype, uu___3) in
-             FStar_Errors.raise_error uu___2 se.FStar_Syntax_Syntax.sigrng
+                 FStar_Class_Show.show FStar_Syntax_Print.showable_sigelt se in
+               FStar_Compiler_Util.format1
+                 "add_sigelt_to_env: unexpected bare type/data constructor: %s"
+                 uu___3 in
+             FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range
+               se.FStar_Syntax_Syntax.sigrng
+               FStar_Errors_Codes.Fatal_UnexpectedInductivetype ()
+               (Obj.magic FStar_Errors_Msg.is_error_message_string)
+               (Obj.magic uu___2)
          | FStar_Syntax_Syntax.Sig_declare_typ uu___1 when
              FStar_Compiler_Util.for_some
                (fun uu___2 ->
@@ -5497,24 +5526,23 @@ let (finish_partial_modul :
                    let uu___3 =
                      let uu___4 =
                        let uu___5 =
-                         let uu___6 =
-                           FStar_Ident.string_of_lid
-                             m.FStar_Syntax_Syntax.name in
-                         FStar_Compiler_Util.format1
-                           "Missing definitions in module %s:" uu___6 in
-                       FStar_Errors_Msg.text uu___5 in
-                     let uu___5 =
-                       FStar_Pprint.separate_map FStar_Pprint.hardline
-                         (fun l ->
-                            let uu___6 = FStar_Ident.ident_of_lid l in
-                            FStar_Class_PP.pp FStar_Ident.pretty_ident uu___6)
-                         missing in
-                     FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
-                       uu___4 uu___5 in
-                   [uu___3] in
-                 (FStar_Errors_Codes.Error_AdmitWithoutDefinition, uu___2) in
-               FStar_Errors.log_issue_doc env.FStar_TypeChecker_Env.range
-                 uu___1
+                         FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
+                       FStar_Compiler_Util.format1
+                         "Missing definitions in module %s:" uu___5 in
+                     FStar_Errors_Msg.text uu___4 in
+                   let uu___4 =
+                     FStar_Pprint.separate_map FStar_Pprint.hardline
+                       (fun l ->
+                          let uu___5 = FStar_Ident.ident_of_lid l in
+                          FStar_Class_PP.pp FStar_Ident.pretty_ident uu___5)
+                       missing in
+                   FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                     uu___3 uu___4 in
+                 [uu___2] in
+               FStar_Errors.log_issue FStar_TypeChecker_Env.hasRange_env env
+                 FStar_Errors_Codes.Error_AdmitWithoutDefinition ()
+                 (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                 (Obj.magic uu___1)
              else ())
           else ();
           FStar_Compiler_Util.smap_clear

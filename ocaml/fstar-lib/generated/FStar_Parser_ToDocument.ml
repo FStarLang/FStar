@@ -4568,9 +4568,11 @@ and (p_argTerm :
     match arg_imp with
     | (u, FStar_Parser_AST.UnivApp) -> p_universe u
     | (e, FStar_Parser_AST.FsTypApp) ->
-        (FStar_Errors.log_issue e.FStar_Parser_AST.range
-           (FStar_Errors_Codes.Warning_UnexpectedFsTypApp,
-             "Unexpected FsTypApp, output might not be formatted correctly.");
+        (FStar_Errors.log_issue FStar_Parser_AST.hasRange_term e
+           FStar_Errors_Codes.Warning_UnexpectedFsTypApp ()
+           (Obj.magic FStar_Errors_Msg.is_error_message_string)
+           (Obj.magic
+              "Unexpected FsTypApp, output might not be formatted correctly.");
          (let uu___1 = p_indexingTerm e in
           FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one
             FStar_Pprint.langle uu___1 FStar_Pprint.rangle))

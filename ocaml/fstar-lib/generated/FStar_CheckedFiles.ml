@@ -474,14 +474,15 @@ let (load_module_from_cache :
                    let uu___4 =
                      let uu___5 =
                        let uu___6 =
-                         let uu___7 =
-                           FStar_Compiler_Util.format3
-                             "Unable to load %s since %s; will recheck %s (suppressing this warning for further modules)"
-                             cache_file1 msg fn1 in
-                         FStar_Errors_Msg.text uu___7 in
-                       [uu___6] in
-                     (FStar_Errors_Codes.Warning_CachedFile, uu___5) in
-                   FStar_Errors.log_issue_doc uu___3 uu___4))
+                         FStar_Compiler_Util.format3
+                           "Unable to load %s since %s; will recheck %s (suppressing this warning for further modules)"
+                           cache_file1 msg fn1 in
+                       FStar_Errors_Msg.text uu___6 in
+                     [uu___5] in
+                   FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range
+                     uu___3 FStar_Errors_Codes.Warning_CachedFile ()
+                     (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                     (Obj.magic uu___4)))
                else () in
              let uu___2 =
                let uu___3 = FStar_TypeChecker_Env.dep_graph env in
@@ -577,20 +578,21 @@ let (store_module_to_cache :
                 let uu___2 =
                   let uu___3 =
                     let uu___4 =
-                      let uu___5 =
-                        FStar_Compiler_Util.format1
-                          "Checked file %s was not written." cache_file in
-                      FStar_Errors_Msg.text uu___5 in
+                      FStar_Compiler_Util.format1
+                        "Checked file %s was not written." cache_file in
+                    FStar_Errors_Msg.text uu___4 in
+                  let uu___4 =
                     let uu___5 =
-                      let uu___6 =
-                        let uu___7 = FStar_Pprint.doc_of_string "Reason:" in
-                        let uu___8 = FStar_Errors_Msg.text msg in
-                        FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
-                          uu___7 uu___8 in
-                      [uu___6] in
-                    uu___4 :: uu___5 in
-                  (FStar_Errors_Codes.Warning_FileNotWritten, uu___3) in
-                FStar_Errors.log_issue_doc uu___1 uu___2
+                      let uu___6 = FStar_Pprint.doc_of_string "Reason:" in
+                      let uu___7 = FStar_Errors_Msg.text msg in
+                      FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                        uu___6 uu___7 in
+                    [uu___5] in
+                  uu___3 :: uu___4 in
+                FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range
+                  uu___1 FStar_Errors_Codes.Warning_FileNotWritten ()
+                  (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                  (Obj.magic uu___2)
           else ()
 let (unsafe_raw_load_checked_file :
   Prims.string ->

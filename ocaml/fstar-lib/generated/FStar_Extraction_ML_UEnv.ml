@@ -310,32 +310,32 @@ let (try_lookup_fv :
                 let uu___3 =
                   let uu___4 =
                     let uu___5 =
-                      let uu___6 =
-                        FStar_Class_Show.show FStar_Syntax_Print.showable_fv
-                          fv in
-                      FStar_Compiler_Util.format1
-                        "Will not extract reference to variable `%s` since it has the `noextract` qualifier."
-                        uu___6 in
-                    FStar_Errors_Msg.text uu___5 in
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_fv fv in
+                    FStar_Compiler_Util.format1
+                      "Will not extract reference to variable `%s` since it has the `noextract` qualifier."
+                      uu___5 in
+                  FStar_Errors_Msg.text uu___4 in
+                let uu___4 =
                   let uu___5 =
-                    let uu___6 =
-                      FStar_Errors_Msg.text
-                        "Either remove its qualifier or add it to this definition." in
+                    FStar_Errors_Msg.text
+                      "Either remove its qualifier or add it to this definition." in
+                  let uu___6 =
                     let uu___7 =
                       let uu___8 =
                         let uu___9 =
-                          let uu___10 =
-                            FStar_Compiler_Util.string_of_int
-                              FStar_Errors.call_to_erased_errno in
-                          FStar_Compiler_Util.format1
-                            "This error can be ignored with `--warn_error -%s`."
-                            uu___10 in
-                        FStar_Errors_Msg.text uu___9 in
-                      [uu___8] in
-                    uu___6 :: uu___7 in
-                  uu___4 :: uu___5 in
-                (FStar_Errors_Codes.Error_CallToErased, uu___3) in
-              FStar_Errors.log_issue_doc r uu___2);
+                          FStar_Compiler_Util.string_of_int
+                            FStar_Errors.call_to_erased_errno in
+                        FStar_Compiler_Util.format1
+                          "This error can be ignored with `--warn_error -%s`."
+                          uu___9 in
+                      FStar_Errors_Msg.text uu___8 in
+                    [uu___7] in
+                  uu___5 :: uu___6 in
+                uu___3 :: uu___4 in
+              FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range r
+                FStar_Errors_Codes.Error_CallToErased ()
+                (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                (Obj.magic uu___2));
              FStar_Pervasives_Native.None)
         | FStar_Pervasives.Inl (false) -> FStar_Pervasives_Native.None
 let (lookup_fv :

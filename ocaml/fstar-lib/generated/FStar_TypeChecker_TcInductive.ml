@@ -398,20 +398,27 @@ let (tc_tycon :
                                            (let uu___8 =
                                               let uu___9 =
                                                 let uu___10 =
-                                                  FStar_Class_Show.show
-                                                    FStar_Syntax_Print.showable_term
-                                                    t in
-                                                let uu___11 =
-                                                  FStar_Ident.string_of_lid
-                                                    tc in
-                                                FStar_Compiler_Util.format2
-                                                  "Type annotation %s for inductive %s is not Type or eqtype, or it is eqtype but contains noeq/unopteq qualifiers"
-                                                  uu___10 uu___11 in
-                                              (FStar_Errors_Codes.Error_InductiveAnnotNotAType,
-                                                uu___9) in
-                                            FStar_Errors.raise_error_text
-                                              uu___8
-                                              s.FStar_Syntax_Syntax.sigrng)
+                                                  let uu___11 =
+                                                    FStar_Class_Show.show
+                                                      FStar_Syntax_Print.showable_term
+                                                      t in
+                                                  let uu___12 =
+                                                    FStar_Class_Show.show
+                                                      FStar_Ident.showable_lident
+                                                      tc in
+                                                  FStar_Compiler_Util.format2
+                                                    "Type annotation %s for inductive %s is not Type or eqtype, or it is eqtype but contains noeq/unopteq qualifiers"
+                                                    uu___11 uu___12 in
+                                                FStar_Errors_Msg.text uu___10 in
+                                              [uu___9] in
+                                            FStar_Errors.raise_error
+                                              FStar_Class_HasRange.hasRange_range
+                                              s.FStar_Syntax_Syntax.sigrng
+                                              FStar_Errors_Codes.Error_InductiveAnnotNotAType
+                                              ()
+                                              (Obj.magic
+                                                 FStar_Errors_Msg.is_error_message_list_doc)
+                                              (Obj.magic uu___8))
                                          else ();
                                          (let usubst1 =
                                             FStar_Syntax_Subst.univ_var_closing
@@ -634,9 +641,13 @@ let (tc_data :
                             then (env1, [], FStar_Syntax_Syntax.U_zero)
                             else
                               FStar_Errors.raise_error
-                                (FStar_Errors_Codes.Fatal_UnexpectedDataConstructor,
-                                  "Unexpected data constructor")
-                                se.FStar_Syntax_Syntax.sigrng in
+                                FStar_Class_HasRange.hasRange_range
+                                se.FStar_Syntax_Syntax.sigrng
+                                FStar_Errors_Codes.Fatal_UnexpectedDataConstructor
+                                ()
+                                (Obj.magic
+                                   FStar_Errors_Msg.is_error_message_string)
+                                (Obj.magic "Unexpected data constructor") in
                       (match uu___3 with
                        | (env2, tps, u_tc) ->
                            let uu___4 =
@@ -702,14 +713,16 @@ let (tc_data :
                                                (FStar_Syntax_Util.comp_result
                                                   c1))
                                            else
-                                             (let uu___11 =
-                                                FStar_Ident.range_of_lid
-                                                  (FStar_Syntax_Util.comp_effect_name
-                                                     c1) in
-                                              FStar_Errors.raise_error
-                                                (FStar_Errors_Codes.Fatal_UnexpectedConstructorType,
-                                                  "Constructors cannot have effects")
-                                                uu___11)))
+                                             FStar_Errors.raise_error
+                                               FStar_Ident.hasrange_lident
+                                               (FStar_Syntax_Util.comp_effect_name
+                                                  c1)
+                                               FStar_Errors_Codes.Fatal_UnexpectedConstructorType
+                                               ()
+                                               (Obj.magic
+                                                  FStar_Errors_Msg.is_error_message_string)
+                                               (Obj.magic
+                                                  "Constructors cannot have effects")))
                              | uu___6 -> ([], t3) in
                            (match uu___4 with
                             | (arguments, result) ->
@@ -814,9 +827,14 @@ let (tc_data :
                                                           tuvs _uvs1
                                                       else
                                                         FStar_Errors.raise_error
-                                                          (FStar_Errors_Codes.Fatal_UnexpectedConstructorType,
-                                                            "Length of annotated universes does not match inferred universes")
+                                                          FStar_Class_HasRange.hasRange_range
                                                           se.FStar_Syntax_Syntax.sigrng
+                                                          FStar_Errors_Codes.Fatal_UnexpectedConstructorType
+                                                          ()
+                                                          (Obj.magic
+                                                             FStar_Errors_Msg.is_error_message_string)
+                                                          (Obj.magic
+                                                             "Length of annotated universes does not match inferred universes")
                                                   | FStar_Syntax_Syntax.Tm_fvar
                                                       fv when
                                                       FStar_Syntax_Syntax.fv_eq_lid
@@ -826,22 +844,24 @@ let (tc_data :
                                                   | uu___10 ->
                                                       let uu___11 =
                                                         let uu___12 =
-                                                          let uu___13 =
-                                                            FStar_Class_Show.show
-                                                              FStar_Ident.showable_lident
-                                                              tc_lid in
-                                                          let uu___14 =
-                                                            FStar_Class_Show.show
-                                                              FStar_Syntax_Print.showable_term
-                                                              head in
-                                                          FStar_Compiler_Util.format2
-                                                            "Expected a constructor of type %s; got %s"
-                                                            uu___13 uu___14 in
-                                                        (FStar_Errors_Codes.Fatal_UnexpectedConstructorType,
-                                                          uu___12) in
+                                                          FStar_Class_Show.show
+                                                            FStar_Ident.showable_lident
+                                                            tc_lid in
+                                                        let uu___13 =
+                                                          FStar_Class_Show.show
+                                                            FStar_Syntax_Print.showable_term
+                                                            head in
+                                                        FStar_Compiler_Util.format2
+                                                          "Expected a constructor of type %s; got %s"
+                                                          uu___12 uu___13 in
                                                       FStar_Errors.raise_error
-                                                        uu___11
-                                                        se.FStar_Syntax_Syntax.sigrng in
+                                                        FStar_Class_HasRange.hasRange_range
+                                                        se.FStar_Syntax_Syntax.sigrng
+                                                        FStar_Errors_Codes.Fatal_UnexpectedConstructorType
+                                                        ()
+                                                        (Obj.magic
+                                                           FStar_Errors_Msg.is_error_message_string)
+                                                        (Obj.magic uu___11) in
                                                 let g =
                                                   FStar_Compiler_List.fold_left2
                                                     (fun g1 ->
@@ -905,25 +925,30 @@ let (tc_data :
                                                                     =
                                                                     let uu___20
                                                                     =
-                                                                    let uu___21
-                                                                    =
                                                                     FStar_Class_Show.show
                                                                     FStar_Syntax_Print.showable_bv
                                                                     bv in
-                                                                    let uu___22
+                                                                    let uu___21
                                                                     =
                                                                     FStar_Class_Show.show
                                                                     FStar_Syntax_Print.showable_term
                                                                     t2 in
                                                                     FStar_Compiler_Util.format2
                                                                     "This parameter is not constant: expected %s, got %s"
-                                                                    uu___21
-                                                                    uu___22 in
-                                                                    (FStar_Errors_Codes.Error_BadInductiveParam,
-                                                                    uu___20) in
+                                                                    uu___20
+                                                                    uu___21 in
                                                                   FStar_Errors.raise_error
-                                                                    uu___19
-                                                                    t2.FStar_Syntax_Syntax.pos))
+                                                                    (
+                                                                    FStar_Syntax_Syntax.has_range_syntax
+                                                                    ()) t2
+                                                                    FStar_Errors_Codes.Error_BadInductiveParam
+                                                                    ()
+                                                                    (
+                                                                    Obj.magic
+                                                                    FStar_Errors_Msg.is_error_message_string)
+                                                                    (
+                                                                    Obj.magic
+                                                                    uu___19)))
                                                     tps p_args;
                                                   (let ty =
                                                      let uu___11 =
@@ -942,22 +967,24 @@ let (tc_data :
                                                     | uu___13 ->
                                                         let uu___14 =
                                                           let uu___15 =
-                                                            let uu___16 =
-                                                              FStar_Class_Show.show
-                                                                FStar_Syntax_Print.showable_term
-                                                                result1 in
-                                                            let uu___17 =
-                                                              FStar_Class_Show.show
-                                                                FStar_Syntax_Print.showable_term
-                                                                ty in
-                                                            FStar_Compiler_Util.format2
-                                                              "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
-                                                              uu___16 uu___17 in
-                                                          (FStar_Errors_Codes.Fatal_WrongResultTypeAfterConstrutor,
-                                                            uu___15) in
+                                                            FStar_Class_Show.show
+                                                              FStar_Syntax_Print.showable_term
+                                                              result1 in
+                                                          let uu___16 =
+                                                            FStar_Class_Show.show
+                                                              FStar_Syntax_Print.showable_term
+                                                              ty in
+                                                          FStar_Compiler_Util.format2
+                                                            "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
+                                                            uu___15 uu___16 in
                                                         FStar_Errors.raise_error
-                                                          uu___14
-                                                          se.FStar_Syntax_Syntax.sigrng);
+                                                          FStar_Class_HasRange.hasRange_range
+                                                          se.FStar_Syntax_Syntax.sigrng
+                                                          FStar_Errors_Codes.Fatal_WrongResultTypeAfterConstrutor
+                                                          ()
+                                                          (Obj.magic
+                                                             FStar_Errors_Msg.is_error_message_string)
+                                                          (Obj.magic uu___14));
                                                    (let t2 =
                                                       let uu___12 =
                                                         let uu___13 =
@@ -2264,11 +2291,12 @@ let (check_inductive_well_typedness :
                        | uu___4 -> true) datas in
                 if uu___2
                 then
-                  let uu___3 = FStar_TypeChecker_Env.get_range env in
-                  FStar_Errors.raise_error
-                    (FStar_Errors_Codes.Fatal_NonInductiveInMutuallyDefinedType,
-                      "Mutually defined type contains a non-inductive element")
-                    uu___3
+                  FStar_Errors.raise_error FStar_TypeChecker_Env.hasRange_env
+                    env
+                    FStar_Errors_Codes.Fatal_NonInductiveInMutuallyDefinedType
+                    () (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                    (Obj.magic
+                       "Mutually defined type contains a non-inductive element")
                 else ());
                (let univs =
                   if (FStar_Compiler_List.length tys) = Prims.int_zero
@@ -2404,19 +2432,22 @@ let (check_inductive_well_typedness :
                                          let fail expected inferred =
                                            let uu___6 =
                                              let uu___7 =
-                                               let uu___8 =
-                                                 FStar_Syntax_Print.tscheme_to_string
-                                                   expected in
-                                               let uu___9 =
-                                                 FStar_Syntax_Print.tscheme_to_string
-                                                   inferred in
-                                               FStar_Compiler_Util.format2
-                                                 "Expected an inductive with type %s; got %s"
-                                                 uu___8 uu___9 in
-                                             (FStar_Errors_Codes.Fatal_UnexpectedInductivetype,
-                                               uu___7) in
-                                           FStar_Errors.raise_error uu___6
-                                             se.FStar_Syntax_Syntax.sigrng in
+                                               FStar_Syntax_Print.tscheme_to_string
+                                                 expected in
+                                             let uu___8 =
+                                               FStar_Syntax_Print.tscheme_to_string
+                                                 inferred in
+                                             FStar_Compiler_Util.format2
+                                               "Expected an inductive with type %s; got %s"
+                                               uu___7 uu___8 in
+                                           FStar_Errors.raise_error
+                                             FStar_Class_HasRange.hasRange_range
+                                             se.FStar_Syntax_Syntax.sigrng
+                                             FStar_Errors_Codes.Fatal_UnexpectedInductivetype
+                                             ()
+                                             (Obj.magic
+                                                FStar_Errors_Msg.is_error_message_string)
+                                             (Obj.magic uu___6) in
                                          let copy_binder_attrs_from_val
                                            binders1 expected =
                                            let expected_attrs =
@@ -2451,21 +2482,24 @@ let (check_inductive_well_typedness :
                                            then
                                              let uu___6 =
                                                let uu___7 =
-                                                 let uu___8 =
-                                                   FStar_Compiler_Util.string_of_int
-                                                     (FStar_Compiler_List.length
-                                                        binders1) in
-                                                 let uu___9 =
-                                                   FStar_Class_Show.show
-                                                     FStar_Syntax_Print.showable_term
-                                                     expected in
-                                                 FStar_Compiler_Util.format2
-                                                   "Could not get %s type parameters from val type %s"
-                                                   uu___8 uu___9 in
-                                               (FStar_Errors_Codes.Fatal_UnexpectedInductivetype,
-                                                 uu___7) in
-                                             FStar_Errors.raise_error uu___6
+                                                 FStar_Compiler_Util.string_of_int
+                                                   (FStar_Compiler_List.length
+                                                      binders1) in
+                                               let uu___8 =
+                                                 FStar_Class_Show.show
+                                                   FStar_Syntax_Print.showable_term
+                                                   expected in
+                                               FStar_Compiler_Util.format2
+                                                 "Could not get %s type parameters from val type %s"
+                                                 uu___7 uu___8 in
+                                             FStar_Errors.raise_error
+                                               FStar_Class_HasRange.hasRange_range
                                                se.FStar_Syntax_Syntax.sigrng
+                                               FStar_Errors_Codes.Fatal_UnexpectedInductivetype
+                                               ()
+                                               (Obj.magic
+                                                  FStar_Errors_Msg.is_error_message_string)
+                                               (Obj.magic uu___6)
                                            else
                                              FStar_Compiler_List.map2
                                                (fun uu___7 ->
@@ -2481,13 +2515,15 @@ let (check_inductive_well_typedness :
                                                               uu___10 in
                                                           if uu___9
                                                           then
-                                                            let uu___10 =
-                                                              FStar_Syntax_Syntax.range_of_bv
-                                                                b.FStar_Syntax_Syntax.binder_bv in
                                                             FStar_Errors.raise_error
-                                                              (FStar_Errors_Codes.Fatal_UnexpectedInductivetype,
-                                                                "Incompatible positivity annotation")
-                                                              uu___10
+                                                              FStar_Syntax_Syntax.hasRange_binder
+                                                              b
+                                                              FStar_Errors_Codes.Fatal_UnexpectedInductivetype
+                                                              ()
+                                                              (Obj.magic
+                                                                 FStar_Errors_Msg.is_error_message_string)
+                                                              (Obj.magic
+                                                                 "Incompatible positivity annotation")
                                                           else ());
                                                          {
                                                            FStar_Syntax_Syntax.binder_bv
@@ -3650,9 +3686,13 @@ let (mk_data_operations :
                                 then ([], FStar_Syntax_Util.ktype0, true)
                                 else
                                   FStar_Errors.raise_error
-                                    (FStar_Errors_Codes.Fatal_UnexpectedDataConstructor,
-                                      "Unexpected data constructor")
-                                    se.FStar_Syntax_Syntax.sigrng in
+                                    FStar_Class_HasRange.hasRange_range
+                                    se.FStar_Syntax_Syntax.sigrng
+                                    FStar_Errors_Codes.Fatal_UnexpectedDataConstructor
+                                    ()
+                                    (Obj.magic
+                                       FStar_Errors_Msg.is_error_message_string)
+                                    (Obj.magic "Unexpected data constructor") in
                           (match uu___5 with
                            | (inductive_tps, typ0, should_refine) ->
                                let inductive_tps1 =

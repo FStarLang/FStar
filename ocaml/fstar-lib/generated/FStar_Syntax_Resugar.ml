@@ -2634,9 +2634,11 @@ and (resugar_pat' :
                   Prims.op_Negation uu___3 in
                 if uu___2
                 then
-                  FStar_Errors.log_issue p1.FStar_Syntax_Syntax.p
-                    (FStar_Errors_Codes.Warning_NilGivenExplicitArgs,
-                      "Prims.Nil given explicit arguments")
+                  FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range
+                    p1.FStar_Syntax_Syntax.p
+                    FStar_Errors_Codes.Warning_NilGivenExplicitArgs ()
+                    (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                    (Obj.magic "Prims.Nil given explicit arguments")
                 else ());
                mk (FStar_Parser_AST.PatList []))
           | FStar_Syntax_Syntax.Pat_cons (fv, uu___, args) when
@@ -2659,15 +2661,16 @@ and (resugar_pat' :
                | args' ->
                    ((let uu___3 =
                        let uu___4 =
-                         let uu___5 =
-                           FStar_Compiler_Util.string_of_int
-                             (FStar_Compiler_List.length args') in
-                         FStar_Compiler_Util.format1
-                           "Prims.Cons applied to %s explicit arguments"
-                           uu___5 in
-                       (FStar_Errors_Codes.Warning_ConsAppliedExplicitArgs,
-                         uu___4) in
-                     FStar_Errors.log_issue p1.FStar_Syntax_Syntax.p uu___3);
+                         FStar_Compiler_Util.string_of_int
+                           (FStar_Compiler_List.length args') in
+                       FStar_Compiler_Util.format1
+                         "Prims.Cons applied to %s explicit arguments" uu___4 in
+                     FStar_Errors.log_issue
+                       FStar_Class_HasRange.hasRange_range
+                       p1.FStar_Syntax_Syntax.p
+                       FStar_Errors_Codes.Warning_ConsAppliedExplicitArgs ()
+                       (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                       (Obj.magic uu___3));
                     resugar_plain_pat_cons fv args))
           | FStar_Syntax_Syntax.Pat_cons (fv, uu___, args) when
               (is_tuple_constructor_lid

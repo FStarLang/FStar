@@ -59,20 +59,23 @@ let (definition_lids :
         (match ext_parser with
          | FStar_Pervasives_Native.None ->
              let uu___1 =
-               let uu___2 =
-                 FStar_Compiler_Util.format1 "Unknown syntax extension %s"
-                   extension_name in
-               (FStar_Errors_Codes.Fatal_SyntaxError, uu___2) in
-             FStar_Errors.raise_error uu___1 d.FStar_Parser_AST.drange
+               FStar_Compiler_Util.format1 "Unknown syntax extension %s"
+                 extension_name in
+             FStar_Errors.raise_error FStar_Parser_AST.hasRange_decl d
+               FStar_Errors_Codes.Fatal_SyntaxError ()
+               (Obj.magic FStar_Errors_Msg.is_error_message_string)
+               (Obj.magic uu___1)
          | FStar_Pervasives_Native.Some parser ->
              let uu___1 =
                parser.FStar_Parser_AST_Util.parse_decl_name code range in
              (match uu___1 with
               | FStar_Pervasives.Inl error ->
                   FStar_Errors.raise_error
-                    (FStar_Errors_Codes.Fatal_SyntaxError,
-                      (error.FStar_Parser_AST_Util.message))
+                    FStar_Class_HasRange.hasRange_range
                     error.FStar_Parser_AST_Util.range
+                    FStar_Errors_Codes.Fatal_SyntaxError ()
+                    (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                    (Obj.magic error.FStar_Parser_AST_Util.message)
               | FStar_Pervasives.Inr id ->
                   let uu___2 = FStar_Ident.lid_of_ids [id] in [uu___2]))
     | uu___ -> []
@@ -119,14 +122,13 @@ let rec (prefix_with_iface_decls :
                ->
                let uu___2 =
                  let uu___3 =
-                   let uu___4 =
-                     FStar_Errors_Msg.text
-                       "Interface contains an abstract 'type' declaration; use 'val' instead." in
-                   [uu___4] in
-                 (FStar_Errors_Codes.Fatal_AbstractTypeDeclarationInInterface,
-                   uu___3) in
-               FStar_Errors.raise_error_doc uu___2
-                 impl.FStar_Parser_AST.drange
+                   FStar_Errors_Msg.text
+                     "Interface contains an abstract 'type' declaration; use 'val' instead." in
+                 [uu___3] in
+               FStar_Errors.raise_error FStar_Parser_AST.hasRange_decl impl
+                 FStar_Errors_Codes.Fatal_AbstractTypeDeclarationInInterface
+                 () (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                 (Obj.magic uu___2)
            | FStar_Parser_AST.Splice (uu___, x::[], uu___1) ->
                let def_ids = definition_lids impl in
                let defines_x =
@@ -146,27 +148,24 @@ let rec (prefix_with_iface_decls :
                      let uu___4 =
                        let uu___5 =
                          let uu___6 =
-                           let uu___7 =
-                             FStar_Errors_Msg.text
-                               "Expected the definition of" in
+                           FStar_Errors_Msg.text "Expected the definition of" in
+                         let uu___7 =
                            let uu___8 =
-                             let uu___9 =
-                               FStar_Class_PP.pp FStar_Ident.pretty_ident x in
-                             let uu___10 =
-                               let uu___11 =
-                                 FStar_Errors_Msg.text "to precede" in
-                               let uu___12 =
-                                 FStar_Class_PP.pp
-                                   (FStar_Class_PP.pp_list
-                                      FStar_Ident.pretty_lident) def_ids in
-                               FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
-                             FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
-                           FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
-                         [uu___6] in
-                       (FStar_Errors_Codes.Fatal_WrongDefinitionOrder,
-                         uu___5) in
-                     FStar_Errors.raise_error_doc uu___4
-                       impl.FStar_Parser_AST.drange
+                             FStar_Class_PP.pp FStar_Ident.pretty_ident x in
+                           let uu___9 =
+                             let uu___10 = FStar_Errors_Msg.text "to precede" in
+                             let uu___11 =
+                               FStar_Class_PP.pp
+                                 (FStar_Class_PP.pp_list
+                                    FStar_Ident.pretty_lident) def_ids in
+                             FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                       [uu___5] in
+                     FStar_Errors.raise_error FStar_Parser_AST.hasRange_decl
+                       impl FStar_Errors_Codes.Fatal_WrongDefinitionOrder ()
+                       (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                       (Obj.magic uu___4)
                    else ());
                   (let uu___3 =
                      let uu___4 = qualify_karamel_private impl in [uu___4] in
@@ -199,19 +198,20 @@ let rec (prefix_with_iface_decls :
                           let uu___4 =
                             let uu___5 =
                               let uu___6 =
-                                let uu___7 =
-                                  FStar_Class_Show.show
-                                    FStar_Parser_AST.showable_decl iface_hd1 in
-                                let uu___8 = FStar_Ident.string_of_lid y in
-                                FStar_Compiler_Util.format2
-                                  "%s is out of order with the definition of %s"
-                                  uu___7 uu___8 in
-                              FStar_Errors_Msg.text uu___6 in
-                            [uu___5] in
-                          (FStar_Errors_Codes.Fatal_WrongDefinitionOrder,
-                            uu___4) in
-                        FStar_Errors.raise_error_doc uu___3
-                          iface_hd1.FStar_Parser_AST.drange
+                                FStar_Class_Show.show
+                                  FStar_Parser_AST.showable_decl iface_hd1 in
+                              let uu___7 = FStar_Ident.string_of_lid y in
+                              FStar_Compiler_Util.format2
+                                "%s is out of order with the definition of %s"
+                                uu___6 uu___7 in
+                            FStar_Errors_Msg.text uu___5 in
+                          [uu___4] in
+                        FStar_Errors.raise_error
+                          FStar_Parser_AST.hasRange_decl iface_hd1
+                          FStar_Errors_Codes.Fatal_WrongDefinitionOrder ()
+                          (Obj.magic
+                             FStar_Errors_Msg.is_error_message_list_doc)
+                          (Obj.magic uu___3)
                     | (y::ys, iface_hd1::iface_tl1) -> aux ys iface1 in
                   let uu___3 = aux mutually_defined_with_x iface_tl in
                   match uu___3 with
@@ -238,27 +238,24 @@ let rec (prefix_with_iface_decls :
                      let uu___3 =
                        let uu___4 =
                          let uu___5 =
-                           let uu___6 =
-                             FStar_Errors_Msg.text
-                               "Expected the definition of" in
+                           FStar_Errors_Msg.text "Expected the definition of" in
+                         let uu___6 =
                            let uu___7 =
-                             let uu___8 =
-                               FStar_Class_PP.pp FStar_Ident.pretty_ident x in
-                             let uu___9 =
-                               let uu___10 =
-                                 FStar_Errors_Msg.text "to precede" in
-                               let uu___11 =
-                                 FStar_Class_PP.pp
-                                   (FStar_Class_PP.pp_list
-                                      FStar_Ident.pretty_lident) def_ids in
-                               FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
-                             FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-                           FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
-                         [uu___5] in
-                       (FStar_Errors_Codes.Fatal_WrongDefinitionOrder,
-                         uu___4) in
-                     FStar_Errors.raise_error_doc uu___3
-                       impl.FStar_Parser_AST.drange
+                             FStar_Class_PP.pp FStar_Ident.pretty_ident x in
+                           let uu___8 =
+                             let uu___9 = FStar_Errors_Msg.text "to precede" in
+                             let uu___10 =
+                               FStar_Class_PP.pp
+                                 (FStar_Class_PP.pp_list
+                                    FStar_Ident.pretty_lident) def_ids in
+                             FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                       [uu___4] in
+                     FStar_Errors.raise_error FStar_Parser_AST.hasRange_decl
+                       impl FStar_Errors_Codes.Fatal_WrongDefinitionOrder ()
+                       (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                       (Obj.magic uu___3)
                    else ());
                   (let uu___2 =
                      let uu___3 = qualify_karamel_private impl in [uu___3] in
@@ -291,19 +288,20 @@ let rec (prefix_with_iface_decls :
                           let uu___3 =
                             let uu___4 =
                               let uu___5 =
-                                let uu___6 =
-                                  FStar_Class_Show.show
-                                    FStar_Parser_AST.showable_decl iface_hd1 in
-                                let uu___7 = FStar_Ident.string_of_lid y in
-                                FStar_Compiler_Util.format2
-                                  "%s is out of order with the definition of %s"
-                                  uu___6 uu___7 in
-                              FStar_Errors_Msg.text uu___5 in
-                            [uu___4] in
-                          (FStar_Errors_Codes.Fatal_WrongDefinitionOrder,
-                            uu___3) in
-                        FStar_Errors.raise_error_doc uu___2
-                          iface_hd1.FStar_Parser_AST.drange
+                                FStar_Class_Show.show
+                                  FStar_Parser_AST.showable_decl iface_hd1 in
+                              let uu___6 = FStar_Ident.string_of_lid y in
+                              FStar_Compiler_Util.format2
+                                "%s is out of order with the definition of %s"
+                                uu___5 uu___6 in
+                            FStar_Errors_Msg.text uu___4 in
+                          [uu___3] in
+                        FStar_Errors.raise_error
+                          FStar_Parser_AST.hasRange_decl iface_hd1
+                          FStar_Errors_Codes.Fatal_WrongDefinitionOrder ()
+                          (Obj.magic
+                             FStar_Errors_Msg.is_error_message_list_doc)
+                          (Obj.magic uu___2)
                     | (y::ys, iface_hd1::iface_tl1) -> aux ys iface1 in
                   let uu___2 = aux mutually_defined_with_x iface_tl in
                   match uu___2 with
@@ -332,34 +330,36 @@ let (check_initial_interface :
                     | FStar_Parser_AST.TyconAbstract uu___3 -> true
                     | uu___3 -> false) tys
                ->
-               FStar_Errors.raise_error
-                 (FStar_Errors_Codes.Fatal_AbstractTypeDeclarationInInterface,
-                   "Interface contains an abstract 'type' declaration; use 'val' instead")
-                 hd.FStar_Parser_AST.drange
+               FStar_Errors.raise_error FStar_Parser_AST.hasRange_decl hd
+                 FStar_Errors_Codes.Fatal_AbstractTypeDeclarationInInterface
+                 () (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                 (Obj.magic
+                    "Interface contains an abstract 'type' declaration; use 'val' instead")
            | FStar_Parser_AST.Val (x, t) ->
                let uu___ =
                  FStar_Compiler_Util.for_some (is_definition_of x) tl in
                if uu___
                then
                  let uu___1 =
-                   let uu___2 =
-                     let uu___3 = FStar_Ident.string_of_id x in
-                     let uu___4 = FStar_Ident.string_of_id x in
-                     FStar_Compiler_Util.format2
-                       "'val %s' and 'let %s' cannot both be provided in an interface"
-                       uu___3 uu___4 in
-                   (FStar_Errors_Codes.Fatal_BothValAndLetInInterface,
-                     uu___2) in
-                 FStar_Errors.raise_error uu___1 hd.FStar_Parser_AST.drange
+                   let uu___2 = FStar_Ident.string_of_id x in
+                   let uu___3 = FStar_Ident.string_of_id x in
+                   FStar_Compiler_Util.format2
+                     "'val %s' and 'let %s' cannot both be provided in an interface"
+                     uu___2 uu___3 in
+                 FStar_Errors.raise_error FStar_Parser_AST.hasRange_decl hd
+                   FStar_Errors_Codes.Fatal_BothValAndLetInInterface ()
+                   (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                   (Obj.magic uu___1)
                else
                  if
                    FStar_Compiler_List.contains FStar_Parser_AST.Assumption
                      hd.FStar_Parser_AST.quals
                  then
-                   FStar_Errors.raise_error
-                     (FStar_Errors_Codes.Fatal_AssumeValInInterface,
-                       "Interfaces cannot use `assume val x : t`; just write `val x : t` instead")
-                     hd.FStar_Parser_AST.drange
+                   FStar_Errors.raise_error FStar_Parser_AST.hasRange_decl hd
+                     FStar_Errors_Codes.Fatal_AssumeValInInterface ()
+                     (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                     (Obj.magic
+                        "Interfaces cannot use `assume val x : t`; just write `val x : t` instead")
                  else ()
            | uu___ -> ()) in
     aux iface;
@@ -524,10 +524,11 @@ let ml_mode_check_initial_interface :
                     | FStar_Parser_AST.TyconAbstract uu___3 -> true
                     | uu___3 -> false) tys
                ->
-               FStar_Errors.raise_error
-                 (FStar_Errors_Codes.Fatal_AbstractTypeDeclarationInInterface,
-                   "Interface contains an abstract 'type' declaration; use 'val' instead")
-                 d.FStar_Parser_AST.drange
+               FStar_Errors.raise_error FStar_Parser_AST.hasRange_decl d
+                 FStar_Errors_Codes.Fatal_AbstractTypeDeclarationInInterface
+                 () (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                 (Obj.magic
+                    "Interface contains an abstract 'type' declaration; use 'val' instead")
            | FStar_Parser_AST.Tycon uu___ -> true
            | FStar_Parser_AST.Val uu___ -> true
            | FStar_Parser_AST.Open uu___ -> true
@@ -594,12 +595,13 @@ let (initialize_interface :
         | FStar_Pervasives_Native.Some uu___1 ->
             let uu___2 =
               let uu___3 =
-                let uu___4 = FStar_Ident.string_of_lid mname in
-                FStar_Compiler_Util.format1
-                  "Interface %s has already been processed" uu___4 in
-              (FStar_Errors_Codes.Fatal_InterfaceAlreadyProcessed, uu___3) in
-            let uu___3 = FStar_Ident.range_of_lid mname in
-            FStar_Errors.raise_error uu___2 uu___3
+                FStar_Class_Show.show FStar_Ident.showable_lident mname in
+              FStar_Compiler_Util.format1
+                "Interface %s has already been processed" uu___3 in
+            FStar_Errors.raise_error FStar_Ident.hasrange_lident mname
+              FStar_Errors_Codes.Fatal_InterfaceAlreadyProcessed ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___2)
         | FStar_Pervasives_Native.None ->
             let uu___1 = FStar_Syntax_DsEnv.set_iface_decls env mname decls in
             ((), uu___1)
@@ -723,37 +725,39 @@ let (interleave_module :
                            let a1 = FStar_Parser_AST.Module (l, impls2) in
                            (match remaining_iface_vals with
                             | uu___3::uu___4 when expect_complete_modul ->
-                                ((let uu___6 = FStar_Ident.range_of_lid l in
-                                  let uu___7 =
-                                    let uu___8 =
+                                ((let uu___6 =
+                                    let uu___7 =
+                                      let uu___8 =
+                                        let uu___9 =
+                                          let uu___10 =
+                                            FStar_Class_Show.show
+                                              FStar_Ident.showable_lident l in
+                                          FStar_Compiler_Util.format1
+                                            "Some interface elements were not implemented by module %s:"
+                                            uu___10 in
+                                        FStar_Errors_Msg.text uu___9 in
                                       let uu___9 =
                                         let uu___10 =
-                                          let uu___11 =
-                                            let uu___12 =
-                                              FStar_Ident.string_of_lid l in
-                                            FStar_Compiler_Util.format1
-                                              "Some interface elements were not implemented by module %s:"
-                                              uu___12 in
-                                          FStar_Errors_Msg.text uu___11 in
-                                        let uu___11 =
-                                          let uu___12 =
-                                            FStar_Compiler_List.map
-                                              (fun d ->
-                                                 let uu___13 =
-                                                   FStar_Class_Show.show
-                                                     FStar_Parser_AST.showable_decl
-                                                     d in
-                                                 FStar_Pprint.doc_of_string
-                                                   uu___13)
-                                              remaining_iface_vals in
-                                          FStar_Errors_Msg.sublist
-                                            FStar_Pprint.empty uu___12 in
-                                        FStar_Pprint.op_Hat_Hat uu___10
-                                          uu___11 in
-                                      [uu___9] in
-                                    (FStar_Errors_Codes.Fatal_InterfaceNotImplementedByModule,
-                                      uu___8) in
-                                  FStar_Errors.log_issue_doc uu___6 uu___7);
+                                          FStar_Compiler_List.map
+                                            (fun d ->
+                                               let uu___11 =
+                                                 FStar_Class_Show.show
+                                                   FStar_Parser_AST.showable_decl
+                                                   d in
+                                               FStar_Pprint.doc_of_string
+                                                 uu___11)
+                                            remaining_iface_vals in
+                                        FStar_Errors_Msg.sublist
+                                          FStar_Pprint.empty uu___10 in
+                                      FStar_Pprint.op_Hat_Hat uu___8 uu___9 in
+                                    [uu___7] in
+                                  FStar_Errors.log_issue
+                                    FStar_Ident.hasrange_lident l
+                                    FStar_Errors_Codes.Fatal_InterfaceNotImplementedByModule
+                                    ()
+                                    (Obj.magic
+                                       FStar_Errors_Msg.is_error_message_list_doc)
+                                    (Obj.magic uu___6));
                                  (a1, env1))
                             | uu___3 ->
                                 ((let uu___5 =

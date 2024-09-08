@@ -12,8 +12,10 @@ let (find_deps_if_needed :
       | (all_files, deps) ->
           (match all_files with
            | [] ->
-               (FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
-                  (FStar_Errors_Codes.Error_DependencyAnalysisFailed,
-                    "Dependency analysis failed; reverting to using only the files provided\n");
+               (FStar_Errors.log_issue0
+                  FStar_Errors_Codes.Error_DependencyAnalysisFailed ()
+                  (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                  (Obj.magic
+                     "Dependency analysis failed; reverting to using only the files provided");
                 (files, deps))
            | uu___1 -> ((FStar_Compiler_List.rev all_files), deps))

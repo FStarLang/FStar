@@ -42,12 +42,14 @@ let rec (elaborate_pat :
                       match (formals, pats2) with
                       | ([], []) -> []
                       | ([], uu___4::uu___5) ->
-                          let uu___6 =
-                            FStar_Ident.range_of_lid
-                              (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
                           FStar_Errors.raise_error
-                            (FStar_Errors_Codes.Fatal_TooManyPatternArguments,
-                              "Too many pattern arguments") uu___6
+                            FStar_Ident.hasrange_lident
+                            (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                            FStar_Errors_Codes.Fatal_TooManyPatternArguments
+                            ()
+                            (Obj.magic
+                               FStar_Errors_Msg.is_error_message_string)
+                            (Obj.magic "Too many pattern arguments")
                       | (uu___4::uu___5, []) ->
                           FStar_Compiler_List.map
                             (fun fml ->
@@ -78,20 +80,20 @@ let rec (elaborate_pat :
                                     | uu___7 ->
                                         let uu___8 =
                                           let uu___9 =
-                                            let uu___10 =
-                                              FStar_Class_Show.show
-                                                FStar_Syntax_Print.showable_pat
-                                                p in
-                                            FStar_Compiler_Util.format1
-                                              "Insufficient pattern arguments (%s)"
-                                              uu___10 in
-                                          (FStar_Errors_Codes.Fatal_InsufficientPatternArguments,
-                                            uu___9) in
-                                        let uu___9 =
-                                          FStar_Ident.range_of_lid
-                                            (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                                        FStar_Errors.raise_error uu___8
-                                          uu___9)) formals
+                                            FStar_Class_Show.show
+                                              FStar_Syntax_Print.showable_pat
+                                              p in
+                                          FStar_Compiler_Util.format1
+                                            "Insufficient pattern arguments (%s)"
+                                            uu___9 in
+                                        FStar_Errors.raise_error
+                                          FStar_Ident.hasrange_lident
+                                          (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                          FStar_Errors_Codes.Fatal_InsufficientPatternArguments
+                                          ()
+                                          (Obj.magic
+                                             FStar_Errors_Msg.is_error_message_string)
+                                          (Obj.magic uu___8))) formals
                       | (f1::formals', (p1, p_imp)::pats') ->
                           (match ((f1.FStar_Syntax_Syntax.binder_bv),
                                    (f1.FStar_Syntax_Syntax.binder_qual))
@@ -123,17 +125,19 @@ let rec (elaborate_pat :
                                 | uu___5 ->
                                     let uu___6 =
                                       let uu___7 =
-                                        let uu___8 =
-                                          FStar_Class_Show.show
-                                            FStar_Syntax_Print.showable_pat
-                                            p1 in
-                                        FStar_Compiler_Util.format1
-                                          "This pattern (%s) binds an inaccesible argument; use a wildcard ('_') pattern"
-                                          uu___8 in
-                                      (FStar_Errors_Codes.Fatal_InsufficientPatternArguments,
-                                        uu___7) in
-                                    FStar_Errors.raise_error uu___6
-                                      p1.FStar_Syntax_Syntax.p)
+                                        FStar_Class_Show.show
+                                          FStar_Syntax_Print.showable_pat p1 in
+                                      FStar_Compiler_Util.format1
+                                        "This pattern (%s) binds an inaccesible argument; use a wildcard ('_') pattern"
+                                        uu___7 in
+                                    FStar_Errors.raise_error
+                                      FStar_Class_HasRange.hasRange_range
+                                      p1.FStar_Syntax_Syntax.p
+                                      FStar_Errors_Codes.Fatal_InsufficientPatternArguments
+                                      ()
+                                      (Obj.magic
+                                         FStar_Errors_Msg.is_error_message_string)
+                                      (Obj.magic uu___6))
                            | (uu___4, FStar_Pervasives_Native.Some
                               (FStar_Syntax_Syntax.Implicit uu___5)) when
                                p_imp ->
@@ -448,14 +452,16 @@ let (pat_as_exp :
                  | FStar_Pervasives_Native.Some x ->
                      let m =
                        FStar_Class_Show.show FStar_Syntax_Print.showable_bv x in
-                     let err =
-                       let uu___2 =
-                         FStar_Compiler_Util.format1
-                           "The pattern variable \"%s\" was used more than once"
-                           m in
-                       (FStar_Errors_Codes.Fatal_NonLinearPatternVars,
-                         uu___2) in
-                     FStar_Errors.raise_error err p3.FStar_Syntax_Syntax.p
+                     let uu___2 =
+                       FStar_Compiler_Util.format1
+                         "The pattern variable \"%s\" was used more than once"
+                         m in
+                     FStar_Errors.raise_error
+                       FStar_Class_HasRange.hasRange_range
+                       p3.FStar_Syntax_Syntax.p
+                       FStar_Errors_Codes.Fatal_NonLinearPatternVars ()
+                       (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                       (Obj.magic uu___2)
                  | uu___2 -> (b, a, w, arg, guard, p3)) in
           let uu___ = one_pat env p in
           match uu___ with

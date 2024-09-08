@@ -247,13 +247,12 @@ let (e_proofstate_nbe :
           if uu___3
           then
             let uu___4 =
-              let uu___5 =
-                let uu___6 = FStar_TypeChecker_NBETerm.t_to_string t in
-                FStar_Compiler_Util.format1
-                  "Not an embedded NBE proofstate: %s\n" uu___6 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
-            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
-              uu___4
+              let uu___5 = FStar_TypeChecker_NBETerm.t_to_string t in
+              FStar_Compiler_Util.format1
+                "Not an embedded NBE proofstate: %s\n" uu___5 in
+            FStar_Errors.log_issue0 FStar_Errors_Codes.Warning_NotEmbedded ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___4)
           else ());
          FStar_Pervasives_Native.None) in
   {
@@ -300,13 +299,12 @@ let (e_goal_nbe :
           if uu___3
           then
             let uu___4 =
-              let uu___5 =
-                let uu___6 = FStar_TypeChecker_NBETerm.t_to_string t in
-                FStar_Compiler_Util.format1 "Not an embedded NBE goal: %s"
-                  uu___6 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
-            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
-              uu___4
+              let uu___5 = FStar_TypeChecker_NBETerm.t_to_string t in
+              FStar_Compiler_Util.format1 "Not an embedded NBE goal: %s"
+                uu___5 in
+            FStar_Errors.log_issue0 FStar_Errors_Codes.Warning_NotEmbedded ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___4)
           else ());
          FStar_Pervasives_Native.None) in
   {
@@ -661,13 +659,12 @@ let (e_direction_nbe :
           if uu___3
           then
             let uu___4 =
-              let uu___5 =
-                let uu___6 = FStar_TypeChecker_NBETerm.t_to_string t in
-                FStar_Compiler_Util.format1 "Not an embedded direction: %s"
-                  uu___6 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
-            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
-              uu___4
+              let uu___5 = FStar_TypeChecker_NBETerm.t_to_string t in
+              FStar_Compiler_Util.format1 "Not an embedded direction: %s"
+                uu___5 in
+            FStar_Errors.log_issue0 FStar_Errors_Codes.Warning_NotEmbedded ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___4)
           else ());
          FStar_Pervasives_Native.None) in
   {
@@ -727,13 +724,12 @@ let (e_ctrl_flag_nbe :
           if uu___3
           then
             let uu___4 =
-              let uu___5 =
-                let uu___6 = FStar_TypeChecker_NBETerm.t_to_string t in
-                FStar_Compiler_Util.format1 "Not an embedded ctrl_flag: %s"
-                  uu___6 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
-            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
-              uu___4
+              let uu___5 = FStar_TypeChecker_NBETerm.t_to_string t in
+              FStar_Compiler_Util.format1 "Not an embedded ctrl_flag: %s"
+                uu___5 in
+            FStar_Errors.log_issue0 FStar_Errors_Codes.Warning_NotEmbedded ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___4)
           else ());
          FStar_Pervasives_Native.None) in
   {
@@ -806,13 +802,12 @@ let (e_unfold_side_nbe :
           if uu___3
           then
             let uu___4 =
-              let uu___5 =
-                let uu___6 = FStar_TypeChecker_NBETerm.t_to_string t in
-                FStar_Compiler_Util.format1 "Not an embedded unfold_side: %s"
-                  uu___6 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
-            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
-              uu___4
+              let uu___5 = FStar_TypeChecker_NBETerm.t_to_string t in
+              FStar_Compiler_Util.format1 "Not an embedded unfold_side: %s"
+                uu___5 in
+            FStar_Errors.log_issue0 FStar_Errors_Codes.Warning_NotEmbedded ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___4)
           else ());
          FStar_Pervasives_Native.None) in
   {
@@ -870,13 +865,12 @@ let (e_tot_or_ghost_nbe :
           if uu___3
           then
             let uu___4 =
-              let uu___5 =
-                let uu___6 = FStar_TypeChecker_NBETerm.t_to_string t in
-                FStar_Compiler_Util.format1
-                  "Not an embedded tot_or_ghost: %s" uu___6 in
-              (FStar_Errors_Codes.Warning_NotEmbedded, uu___5) in
-            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
-              uu___4
+              let uu___5 = FStar_TypeChecker_NBETerm.t_to_string t in
+              FStar_Compiler_Util.format1 "Not an embedded tot_or_ghost: %s"
+                uu___5 in
+            FStar_Errors.log_issue0 FStar_Errors_Codes.Warning_NotEmbedded ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___4)
           else ());
          FStar_Pervasives_Native.None) in
   {
@@ -967,13 +961,12 @@ let e_tref_nbe :
             if uu___4
             then
               let uu___5 =
-                let uu___6 =
-                  let uu___7 = FStar_TypeChecker_NBETerm.t_to_string t in
-                  FStar_Compiler_Util.format1
-                    "Not an embedded NBE tref: %s\n" uu___7 in
-                (FStar_Errors_Codes.Warning_NotEmbedded, uu___6) in
-              FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
-                uu___5
+                let uu___6 = FStar_TypeChecker_NBETerm.t_to_string t in
+                FStar_Compiler_Util.format1 "Not an embedded NBE tref: %s\n"
+                  uu___6 in
+              FStar_Errors.log_issue0 FStar_Errors_Codes.Warning_NotEmbedded
+                () (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                (Obj.magic uu___5)
             else ());
            FStar_Pervasives_Native.None) in
     {

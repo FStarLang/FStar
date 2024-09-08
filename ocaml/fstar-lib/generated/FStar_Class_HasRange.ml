@@ -15,3 +15,5 @@ let setPos : 'a . 'a hasRange -> FStar_Compiler_Range_Type.range -> 'a -> 'a
   =
   fun projectee ->
     match projectee with | { pos = pos1; setPos = setPos1;_} -> setPos1
+let (hasRange_range : FStar_Compiler_Range_Type.range hasRange) =
+  { pos = (fun x -> x); setPos = (fun r -> fun uu___ -> r) }

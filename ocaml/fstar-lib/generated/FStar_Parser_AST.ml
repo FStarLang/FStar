@@ -601,6 +601,32 @@ type patterns = (FStar_Ident.ident Prims.list * term Prims.list Prims.list)
 type attributes_ = term Prims.list
 type branch = (pattern * term FStar_Pervasives_Native.option * term)
 type aqual = arg_qualifier FStar_Pervasives_Native.option
+let (hasRange_term : term FStar_Class_HasRange.hasRange) =
+  {
+    FStar_Class_HasRange.pos = (fun t -> t.range);
+    FStar_Class_HasRange.setPos =
+      (fun r -> fun t -> { tm = (t.tm); range = r; level = (t.level) })
+  }
+let (hasRange_pattern : pattern FStar_Class_HasRange.hasRange) =
+  {
+    FStar_Class_HasRange.pos = (fun p -> p.prange);
+    FStar_Class_HasRange.setPos =
+      (fun r -> fun p -> { pat = (p.pat); prange = r })
+  }
+let (hasRange_binder : binder FStar_Class_HasRange.hasRange) =
+  {
+    FStar_Class_HasRange.pos = (fun b -> b.brange);
+    FStar_Class_HasRange.setPos =
+      (fun r ->
+         fun b ->
+           {
+             b = (b.b);
+             brange = r;
+             blevel = (b.blevel);
+             aqual = (b.aqual);
+             battributes = (b.battributes)
+           })
+  }
 type knd = term
 type typ = term
 type expr = term
@@ -1069,6 +1095,20 @@ let (uu___is_RedefineEffect : effect_decl -> Prims.bool) =
 let (__proj__RedefineEffect__item___0 :
   effect_decl -> (FStar_Ident.ident * binder Prims.list * term)) =
   fun projectee -> match projectee with | RedefineEffect _0 -> _0
+let (hasRange_decl : decl FStar_Class_HasRange.hasRange) =
+  {
+    FStar_Class_HasRange.pos = (fun d -> d.drange);
+    FStar_Class_HasRange.setPos =
+      (fun r ->
+         fun d ->
+           {
+             d = (d.d);
+             drange = r;
+             quals = (d.quals);
+             attrs = (d.attrs);
+             interleaved = (d.interleaved)
+           })
+  }
 type modul =
   | Module of (FStar_Ident.lid * decl Prims.list) 
   | Interface of (FStar_Ident.lid * decl Prims.list * Prims.bool) 
@@ -1094,18 +1134,20 @@ let (check_id : FStar_Ident.ident -> unit) =
     let first_char =
       let uu___ = FStar_Ident.string_of_id id in
       FStar_Compiler_String.substring uu___ Prims.int_zero Prims.int_one in
-    if (FStar_Compiler_String.lowercase first_char) = first_char
-    then ()
-    else
-      (let uu___1 =
-         let uu___2 =
-           let uu___3 = FStar_Ident.string_of_id id in
-           FStar_Compiler_Util.format1
-             "Invalid identifer '%s'; expected a symbol that begins with a lower-case character"
-             uu___3 in
-         (FStar_Errors_Codes.Fatal_InvalidIdentifier, uu___2) in
-       let uu___2 = FStar_Ident.range_of_id id in
-       FStar_Errors.raise_error uu___1 uu___2)
+    if
+      Prims.op_Negation
+        ((FStar_Compiler_String.lowercase first_char) = first_char)
+    then
+      let uu___ =
+        let uu___1 = FStar_Class_Show.show FStar_Ident.showable_ident id in
+        FStar_Compiler_Util.format1
+          "Invalid identifer '%s'; expected a symbol that begins with a lower-case character"
+          uu___1 in
+      FStar_Errors.raise_error FStar_Ident.hasrange_ident id
+        FStar_Errors_Codes.Fatal_InvalidIdentifier ()
+        (Obj.magic FStar_Errors_Msg.is_error_message_string)
+        (Obj.magic uu___)
+    else ()
 let at_most_one :
   'uuuuu .
     Prims.string ->
@@ -1120,11 +1162,12 @@ let at_most_one :
         | [] -> FStar_Pervasives_Native.None
         | uu___ ->
             let uu___1 =
-              let uu___2 =
-                FStar_Compiler_Util.format1
-                  "At most one %s is allowed on declarations" s in
-              (FStar_Errors_Codes.Fatal_MoreThanOneDeclaration, uu___2) in
-            FStar_Errors.raise_error uu___1 r
+              FStar_Compiler_Util.format1
+                "At most one %s is allowed on declarations" s in
+            FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range r
+              FStar_Errors_Codes.Fatal_MoreThanOneDeclaration ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___1)
 let (mk_binder_with_attrs :
   binder' ->
     FStar_Compiler_Range_Type.range ->
@@ -1341,9 +1384,10 @@ let focusBranches :
         FStar_Compiler_Util.for_some FStar_Pervasives_Native.fst branches in
       if should_filter
       then
-        (FStar_Errors.log_issue r
-           (FStar_Errors_Codes.Warning_Filtered,
-             "Focusing on only some cases");
+        (FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range r
+           FStar_Errors_Codes.Warning_Filtered ()
+           (Obj.magic FStar_Errors_Msg.is_error_message_string)
+           (Obj.magic "Focusing on only some cases");
          (let focussed =
             let uu___1 =
               FStar_Compiler_List.filter FStar_Pervasives_Native.fst branches in
@@ -1361,9 +1405,11 @@ let (focusLetBindings :
         FStar_Compiler_Util.for_some FStar_Pervasives_Native.fst lbs in
       if should_filter
       then
-        (FStar_Errors.log_issue r
-           (FStar_Errors_Codes.Warning_Filtered,
-             "Focusing on only some cases in this (mutually) recursive definition");
+        (FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range r
+           FStar_Errors_Codes.Warning_Filtered ()
+           (Obj.magic FStar_Errors_Msg.is_error_message_string)
+           (Obj.magic
+              "Focusing on only some cases in this (mutually) recursive definition");
          FStar_Compiler_List.map
            (fun uu___1 ->
               match uu___1 with
@@ -1389,9 +1435,11 @@ let (focusAttrLetBindings :
           lbs in
       if should_filter
       then
-        (FStar_Errors.log_issue r
-           (FStar_Errors_Codes.Warning_Filtered,
-             "Focusing on only some cases in this (mutually) recursive definition");
+        (FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range r
+           FStar_Errors_Codes.Warning_Filtered ()
+           (Obj.magic FStar_Errors_Msg.is_error_message_string)
+           (Obj.magic
+              "Focusing on only some cases in this (mutually) recursive definition");
          FStar_Compiler_List.map
            (fun uu___1 ->
               match uu___1 with
@@ -1589,9 +1637,10 @@ let rec (as_mlist :
            | d::ds1 ->
                (match d.d with
                 | TopLevelModule m' ->
-                    FStar_Errors.raise_error
-                      (FStar_Errors_Codes.Fatal_UnexpectedModuleDeclaration,
-                        "Unexpected module declaration") d.drange
+                    FStar_Errors.raise_error hasRange_decl d
+                      FStar_Errors_Codes.Fatal_UnexpectedModuleDeclaration ()
+                      (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                      (Obj.magic "Unexpected module declaration")
                 | uu___1 -> as_mlist ((m_name, m_decl), (d :: cur1)) ds1))
 let (as_frag : decl Prims.list -> inputFragment) =
   fun ds ->
@@ -1612,8 +1661,11 @@ let (as_frag : decl Prims.list -> inputFragment) =
                    | { d = TopLevelModule uu___4; drange = r; quals = uu___5;
                        attrs = uu___6; interleaved = uu___7;_} ->
                        FStar_Errors.raise_error
-                         (FStar_Errors_Codes.Fatal_UnexpectedModuleDeclaration,
-                           "Unexpected module declaration") r
+                         FStar_Class_HasRange.hasRange_range r
+                         FStar_Errors_Codes.Fatal_UnexpectedModuleDeclaration
+                         ()
+                         (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                         (Obj.magic "Unexpected module declaration")
                    | uu___4 -> ()) ds2;
               FStar_Pervasives.Inr ds2))
 let (strip_prefix :
@@ -1971,9 +2023,10 @@ let rec (term_to_string : term -> Prims.string) =
         FStar_Compiler_Util.format5 "%slet %s %s = %s in %s" uu___ uu___1
           uu___2 uu___3 uu___4
     | Let (uu___, uu___1, uu___2) ->
-        FStar_Errors.raise_error
-          (FStar_Errors_Codes.Fatal_EmptySurfaceLet,
-            "Internal error: found an invalid surface Let") x.range
+        FStar_Errors.raise_error hasRange_term x
+          FStar_Errors_Codes.Fatal_EmptySurfaceLet ()
+          (Obj.magic FStar_Errors_Msg.is_error_message_string)
+          (Obj.magic "Internal error: found an invalid surface Let")
     | LetOpen (lid, t) ->
         let uu___ = FStar_Ident.string_of_lid lid in
         let uu___1 = term_to_string t in
@@ -2624,9 +2677,10 @@ let (ident_of_binder :
       | Annotated (i, uu___) -> i
       | TAnnotated (i, uu___) -> i
       | NoName uu___ ->
-          FStar_Errors.raise_error
-            (FStar_Errors_Codes.Fatal_MissingQuantifierBinder,
-              "Wildcard binders in quantifiers are not allowed") r
+          FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range r
+            FStar_Errors_Codes.Fatal_MissingQuantifierBinder ()
+            (Obj.magic FStar_Errors_Msg.is_error_message_string)
+            (Obj.magic "Wildcard binders in quantifiers are not allowed")
 let (idents_of_binders :
   binder Prims.list ->
     FStar_Compiler_Range_Type.range -> FStar_Ident.ident Prims.list)
@@ -2653,26 +2707,27 @@ let (add_decorations : decl -> decoration Prims.list -> decl) =
                   let uu___2 =
                     let uu___3 =
                       let uu___4 =
-                        let uu___5 =
-                          FStar_Compiler_List.map
-                            (fun uu___6 ->
-                               match uu___6 with
-                               | DeclAttributes a ->
-                                   FStar_Class_Show.show
-                                     (FStar_Class_Show.show_list
-                                        showable_term) a
-                               | uu___7 -> "") attrs in
-                        FStar_Compiler_String.concat ", " uu___5 in
+                        FStar_Compiler_List.map
+                          (fun uu___5 ->
+                             match uu___5 with
+                             | DeclAttributes a ->
+                                 FStar_Class_Show.show
+                                   (FStar_Class_Show.show_list showable_term)
+                                   a
+                             | uu___6 -> "") attrs in
+                      FStar_Compiler_String.concat ", " uu___4 in
+                    let uu___4 =
                       let uu___5 =
-                        let uu___6 =
-                          FStar_Compiler_List.map
-                            (FStar_Class_Show.show showable_term) d.attrs in
-                        FStar_Compiler_String.concat ", " uu___6 in
-                      FStar_Compiler_Util.format2
-                        "At most one attribute set is allowed on declarations\n got %s;\n and %s"
-                        uu___4 uu___5 in
-                    (FStar_Errors_Codes.Fatal_MoreThanOneDeclaration, uu___3) in
-                  FStar_Errors.raise_error uu___2 d.drange in
+                        FStar_Compiler_List.map
+                          (FStar_Class_Show.show showable_term) d.attrs in
+                      FStar_Compiler_String.concat ", " uu___5 in
+                    FStar_Compiler_Util.format2
+                      "At most one attribute set is allowed on declarations\n got %s;\n and %s"
+                      uu___3 uu___4 in
+                  FStar_Errors.raise_error hasRange_decl d
+                    FStar_Errors_Codes.Fatal_MoreThanOneDeclaration ()
+                    (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                    (Obj.magic uu___2) in
             let uu___1 =
               FStar_Compiler_List.map (fun uu___2 -> Qualifier uu___2)
                 d.quals in

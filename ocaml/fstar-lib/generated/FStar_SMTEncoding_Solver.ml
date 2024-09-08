@@ -66,12 +66,16 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
            then
              let uu___4 =
                let uu___5 =
-                 FStar_Compiler_Util.format1
-                   "Malformed JSON hints file: %s; ran without hints"
-                   val_filename in
-               (FStar_Errors_Codes.Warning_CouldNotReadHints, uu___5) in
-             FStar_Errors.log_issue_text FStar_Compiler_Range_Type.dummyRange
-               uu___4
+                 let uu___6 =
+                   FStar_Compiler_Util.format1
+                     "Malformed JSON hints file: %s; ran without hints"
+                     val_filename in
+                 FStar_Errors_Msg.text uu___6 in
+               [uu___5] in
+             FStar_Errors.log_issue0
+               FStar_Errors_Codes.Warning_CouldNotReadHints ()
+               (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+               (Obj.magic uu___4)
            else ()
        | FStar_Compiler_Hints.UnableToOpen ->
            let uu___3 = use_hints () in
@@ -79,12 +83,16 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
            then
              let uu___4 =
                let uu___5 =
-                 FStar_Compiler_Util.format1
-                   "Unable to open hints file: %s; ran without hints"
-                   val_filename in
-               (FStar_Errors_Codes.Warning_CouldNotReadHints, uu___5) in
-             FStar_Errors.log_issue_text FStar_Compiler_Range_Type.dummyRange
-               uu___4
+                 let uu___6 =
+                   FStar_Compiler_Util.format1
+                     "Unable to open hints file: %s; ran without hints"
+                     val_filename in
+                 FStar_Errors_Msg.text uu___6 in
+               [uu___5] in
+             FStar_Errors.log_issue0
+               FStar_Errors_Codes.Warning_CouldNotReadHints ()
+               (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+               (Obj.magic uu___4)
            else ())
 let (finalize_hints_db : Prims.string -> unit) =
   fun src_filename ->
@@ -594,18 +602,20 @@ let (errors_to_report :
                   then
                     (let uu___4 =
                        let uu___5 =
-                         let uu___6 =
-                           FStar_Errors_Msg.text
-                             "Z3 ran into an internal overflow while trying to prove this query." in
+                         FStar_Errors_Msg.text
+                           "Z3 ran into an internal overflow while trying to prove this query." in
+                       let uu___6 =
                          let uu___7 =
-                           let uu___8 =
-                             FStar_Errors_Msg.text
-                               "Try breaking it down, or using --split_queries." in
-                           [uu___8] in
-                         uu___6 :: uu___7 in
-                       (FStar_Errors_Codes.Warning_UnexpectedZ3Stderr,
-                         uu___5) in
-                     FStar_Errors.log_issue_doc settings.query_range uu___4)
+                           FStar_Errors_Msg.text
+                             "Try breaking it down, or using --split_queries." in
+                         [uu___7] in
+                       uu___5 :: uu___6 in
+                     FStar_Errors.log_issue
+                       FStar_Class_HasRange.hasRange_range
+                       settings.query_range
+                       FStar_Errors_Codes.Warning_UnexpectedZ3Stderr ()
+                       (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                       (Obj.magic uu___4))
                   else ();
                   (let base =
                      match (incomplete_count, canceled_count, unknown_count)
@@ -1009,9 +1019,12 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                                    "Hint-replay failed" in
                                uu___7 :: msg
                              else msg in
-                           FStar_Errors.log_issue_doc range1
-                             (FStar_Errors_Codes.Warning_HitReplayFailed,
-                               msg1)) errs))
+                           FStar_Errors.log_issue
+                             FStar_Class_HasRange.hasRange_range range1
+                             FStar_Errors_Codes.Warning_HitReplayFailed ()
+                             (Obj.magic
+                                FStar_Errors_Msg.is_error_message_list_doc)
+                             (Obj.magic msg1)) errs))
       else
         (let uu___2 =
            let uu___3 = FStar_Options_Ext.get "profile_context" in
@@ -1726,19 +1739,21 @@ let (ask_solver_recover : query_settings Prims.list -> answer) =
                    ((let uu___4 =
                        let uu___5 =
                          let uu___6 =
-                           let uu___7 =
-                             FStar_Errors_Msg.text
-                               "This query succeeded after " in
-                           let uu___8 = pp_hammer h in
-                           FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                           FStar_Errors_Msg.text
+                             "This query succeeded after " in
+                         let uu___7 = pp_hammer h in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                       let uu___6 =
                          let uu___7 =
-                           let uu___8 =
-                             FStar_Errors_Msg.text
-                               "Increase the rlimit in the file or simplify the proof. This is only succeeding due to --proof_recovery being given." in
-                           [uu___8] in
-                         uu___6 :: uu___7 in
-                       (FStar_Errors_Codes.Warning_ProofRecovery, uu___5) in
-                     FStar_Errors.log_issue_doc cfg.query_range uu___4);
+                           FStar_Errors_Msg.text
+                             "Increase the rlimit in the file or simplify the proof. This is only succeeding due to --proof_recovery being given." in
+                         [uu___7] in
+                       uu___5 :: uu___6 in
+                     FStar_Errors.log_issue
+                       FStar_Class_HasRange.hasRange_range cfg.query_range
+                       FStar_Errors_Codes.Warning_ProofRecovery ()
+                       (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                       (Obj.magic uu___4));
                     r1)
                  else aux hs in
            aux

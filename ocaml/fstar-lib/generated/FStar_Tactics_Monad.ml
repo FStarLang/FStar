@@ -223,9 +223,12 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                           "Failed to check initial tactic goal %s because %s"
                           uu___10 uu___11 in
                       FStar_Errors.log_issue
+                        FStar_Class_HasRange.hasRange_range
                         uv.FStar_Syntax_Syntax.ctx_uvar_range
-                        (FStar_Errors_Codes.Warning_FailedToCheckInitialTacticGoal,
-                          msg)))))))
+                        FStar_Errors_Codes.Warning_FailedToCheckInitialTacticGoal
+                        ()
+                        (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                        (Obj.magic msg)))))))
 type 'a tac =
   {
   tac_f: FStar_Tactics_Types.proofstate -> 'a FStar_Tactics_Result.__result }
@@ -388,12 +391,6 @@ let trytac_exn : 'a . 'a tac -> 'a FStar_Pervasives_Native.option tac =
               match () with | () -> let uu___1 = trytac t in run uu___1 ps)
              ()
          with
-         | FStar_Errors.Err (uu___1, msg, uu___2) ->
-             (do_log ps
-                (fun uu___4 ->
-                   let uu___5 = FStar_Errors_Msg.rendermsg msg in
-                   FStar_Compiler_Util.print1 "trytac_exn error: (%s)" uu___5);
-              FStar_Tactics_Result.Success (FStar_Pervasives_Native.None, ps))
          | FStar_Errors.Error (uu___1, msg, uu___2, uu___3) ->
              (do_log ps
                 (fun uu___5 ->
@@ -475,18 +472,17 @@ let (check_valid_goal : FStar_Tactics_Types.goal -> unit) =
             uu___3 < (Prims.of_int (5)) in
           (if uu___2
            then
-             ((let uu___4 =
-                 let uu___5 = FStar_Tactics_Types.goal_type g in
-                 uu___5.FStar_Syntax_Syntax.pos in
+             ((let uu___4 = FStar_Tactics_Types.goal_type g in
                let uu___5 =
-                 let uu___6 =
-                   let uu___7 =
-                     FStar_Tactics_Printing.goal_to_string_verbose g in
-                   FStar_Compiler_Util.format2
-                     "The following goal is ill-formed (%s). Keeping calm and carrying on...\n<%s>\n\n"
-                     culprit uu___7 in
-                 (FStar_Errors_Codes.Warning_IllFormedGoal, uu___6) in
-               FStar_Errors.log_issue uu___4 uu___5);
+                 let uu___6 = FStar_Tactics_Printing.goal_to_string_verbose g in
+                 FStar_Compiler_Util.format2
+                   "The following goal is ill-formed (%s). Keeping calm and carrying on...\n<%s>\n\n"
+                   culprit uu___6 in
+               FStar_Errors.log_issue
+                 (FStar_Syntax_Syntax.has_range_syntax ()) uu___4
+                 FStar_Errors_Codes.Warning_IllFormedGoal ()
+                 (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                 (Obj.magic uu___5));
               (let uu___4 =
                  let uu___5 = FStar_Compiler_Effect.op_Bang nwarn in
                  uu___5 + Prims.int_one in
