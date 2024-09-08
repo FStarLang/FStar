@@ -2450,7 +2450,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
   sub
 
-let check_lift_for_erasable_effects env (m1:lident) (m2:lident) r : unit =
+let check_lift_for_erasable_effects env (m1:lident) (m2:lident) (r:Range.range) : unit =
   let err reason = raise_error r Errors.Fatal_UnexpectedEffect
                                 (BU.format3 "Error defining a lift/subcomp %s ~> %s: %s"
                                   (string_of_lid m1) (string_of_lid m2) reason) in
@@ -2646,7 +2646,7 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
   (lid, uvs, tps, c)
 
 
-let check_polymonadic_bind_for_erasable_effects env (m:lident) (n:lident) (p:lident) r =
+let check_polymonadic_bind_for_erasable_effects env (m:lident) (n:lident) (p:lident) (r:Range.range) =
   let err reason = raise_error r Errors.Fatal_UnexpectedEffect
                                 (BU.format4 "Error definition polymonadic bind (%s, %s) |> %s: %s"
                                   (show m) (show n) (show p) reason) in

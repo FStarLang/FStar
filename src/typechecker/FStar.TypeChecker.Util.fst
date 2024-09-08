@@ -3288,7 +3288,7 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
   | _ -> fail sig_tm
 
 
-let check_non_informative_type_for_lift env m1 m2 t r : unit =
+let check_non_informative_type_for_lift env m1 m2 t (r:Range.range) : unit =
   //raise an error if m1 is erasable, m2 is not erasable, and t is informative
   if Env.is_erasable_effect env m1       &&
      not (Env.is_erasable_effect env m2) &&

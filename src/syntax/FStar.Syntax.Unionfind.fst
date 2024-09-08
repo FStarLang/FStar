@@ -189,7 +189,7 @@ let chk_v_u (u, v, rng) =
     then u
     else
       let open FStar.Pprint in
-      raise_error rng Fatal_BadUvar [
+      raise_error (rng <: Range.range) Fatal_BadUvar [
         text "Internal error: incompatible version for universe unification variable"
           ^/^ doc_of_string (uvar_to_string u);
         text "Current version: " ^/^ doc_of_string (version_to_string expected);

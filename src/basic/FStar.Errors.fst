@@ -493,13 +493,17 @@ let log_issue_ctx r (e, msg) ctx =
     else failwith ("don't use log_issue to report fatal error, should use raise_error: " ^ format_issue i)
 
 let raise_error r e msg =
+  let open FStar.Class.HasRange in
+  let rng = pos r in
   let msg = to_doc_list msg in
-  raise (Error (e, maybe_add_backtrace msg, r, error_context.get ()))
+  raise (Error (e, maybe_add_backtrace msg, rng, error_context.get ()))
 
 let log_issue r e msg =
+  let open FStar.Class.HasRange in
+  let rng = pos r in
   let msg = to_doc_list msg in
   let ctx = error_context.get () in
-  log_issue_ctx r (e, msg) ctx
+  log_issue_ctx rng (e, msg) ctx
 
 let raise_error0 e msg = raise_error dummyRange e msg
 let log_issue0 e msg = log_issue dummyRange e msg

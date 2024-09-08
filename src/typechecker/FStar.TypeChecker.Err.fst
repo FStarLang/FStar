@@ -192,12 +192,12 @@ let subtyping_failed : env -> typ -> typ -> unit -> error_message =
 
 let ill_kinded_type = Errors.mkmsg "Ill-kinded type"
 
-let unexpected_signature_for_monad #a env rng (m:lident) k : a =
+let unexpected_signature_for_monad #a env (rng:Range.range) (m:lident) k : a =
   Errors.raise_error rng Errors.Fatal_UnexpectedSignatureForMonad
     (format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type -> WP a -> Effect); got %s"
     (show m) (N.term_to_string env k))
 
-let expected_a_term_of_type_t_got_a_function env rng msg (t:typ) (e:term) =
+let expected_a_term_of_type_t_got_a_function env (rng:Range.range) msg (t:typ) (e:term) =
   Errors.raise_error rng Errors.Fatal_ExpectTermGotFunction
     (format3 "Expected a term of type \"%s\"; got a function \"%s\" (%s)"
     (N.term_to_string env t) (show e) msg)
@@ -205,7 +205,7 @@ let expected_a_term_of_type_t_got_a_function env rng msg (t:typ) (e:term) =
 let unexpected_implicit_argument =
   (Errors.Fatal_UnexpectedImplicitArgument, ("Unexpected instantiation of an implicit argument to a function that only expects explicit arguments"))
 
-let expected_expression_of_type #a env rng t1 e t2 : a =
+let expected_expression_of_type #a env (rng:Range.range) t1 e t2 : a =
   // let s1, s2 = err_msg_type_strings env t1 t2 in
   // MISSING: print discrepancy!
   let d1 = N.term_to_doc env t1 in
@@ -223,7 +223,7 @@ let expected_pattern_of_type env (t1 e t2 : term) =
   (Errors.Fatal_UnexpectedPattern, (format3 "Expected pattern of type \"%s\"; got pattern \"%s\" of type \"%s\""
     s1 (show e) s2))
 
-let basic_type_error env rng eopt t1 t2 =
+let basic_type_error env (rng:Range.range) eopt t1 t2 =
   let s1, s2 = err_msg_type_strings env t1 t2 in
   let open FStar.Errors.Msg in
   let msg = match eopt with
@@ -241,7 +241,7 @@ let basic_type_error env rng eopt t1 t2 =
 
 (* It does not make sense to use the same code for a catcheable and uncatcheable
 error, but that's what this was doing. *)
-let raise_basic_type_error #a env rng eopt t1 t2 : a =
+let raise_basic_type_error #a env (rng:Range.range) eopt t1 t2 : a =
   let s1, s2 = err_msg_type_strings env t1 t2 in
   let open FStar.Errors.Msg in
   let msg = match eopt with
@@ -272,7 +272,7 @@ let inferred_type_causes_variable_to_escape env t (x:bv) =
   (Errors.Fatal_InferredTypeCauseVarEscape, (format2 "Inferred type \"%s\" causes variable \"%s\" to escape its scope"
     (N.term_to_string env t) (show x)))
 
-let expected_function_typ #a env rng t : a =
+let expected_function_typ #a env (rng:Range.range) t : a =
   Errors.raise_error rng Errors.Fatal_FunctionTypeExpected [
       text "Expected a function.";
       prefix 2 1 (text "Got an expression of type:")
@@ -296,7 +296,7 @@ let name_and_result c = match c.n with
   | Comp ct -> show ct.effect_name, ct.result_typ
   // TODO: ^ Use the resugaring environment to possibly shorten the effect name
 
-let computed_computation_type_does_not_match_annotation #a env r e c c' : a =
+let computed_computation_type_does_not_match_annotation #a env (r:Range.range) e c c' : a =
   let ppt = N.term_to_doc env in
   let f1, r1 = name_and_result c in
   let f2, r2 = name_and_result c' in
@@ -307,7 +307,7 @@ let computed_computation_type_does_not_match_annotation #a env r e c c' : a =
     prefix 2 1 (text "and effect") (text f2)
   ]
 
-let computed_computation_type_does_not_match_annotation_eq #a env r e c c' : a =
+let computed_computation_type_does_not_match_annotation_eq #a env (r:Range.range) e c c' : a =
   let ppc = N.comp_to_doc env in
   Errors.raise_error r Errors.Fatal_ComputedTypeNotMatchAnnotation [
     prefix 2 1 (text "Computed type") (ppc c) ^/^
@@ -343,7 +343,7 @@ let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
 let failed_to_prove_specification_of (l : lbname) (lbls : list string) =
   (Errors.Error_TypeCheckerFailToProve, (format2 "Failed to prove specification of %s; assertions at [%s] may fail" (show l) (lbls |> String.concat ", ")))
 
-let warn_top_level_effect rng : unit =
+let warn_top_level_effect (rng:Range.range) : unit =
   Errors.log_issue rng
     Errors.Warning_TopLevelEffect
     "Top-level let-bindings must be total; this term may have effects"

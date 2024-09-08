@@ -21,6 +21,7 @@ module Range = FStar.Compiler.Range
 include FStar.Errors.Codes
 include FStar.Errors.Msg
 open FStar.Errors.Msg
+open FStar.Class.HasRange
 
 (* This is a fallback to be used if an error is raised/logged
 with a dummy range. It is set by TypeChecker.Tc.process_one_decl to
@@ -119,8 +120,17 @@ use this for any CFatal error. *)
    This does not raise an exception. Do not use this for any CFatal error. *)
 val add_issues : list issue -> unit
 
-val raise_error  : Range.range -> error_code -> #t:_ -> {| is_error_message t |} -> t -> 'a
-val log_issue    : Range.range -> error_code -> #t:_ -> {| is_error_message t |} -> t -> unit
+val raise_error
+  (#pos_t:Type) {| hasRange pos_t |} (pos : pos_t) // A "position", of any type with a range
+  (code : error_code) // An error code
+  (#msg_t:_) {| is_error_message msg_t |} (msg : msg_t) // A "message", currently can be a 'string' or 'list document'
+  : 'a
+
+val log_issue
+  (#pos_t:Type) {| hasRange pos_t |} (pos : pos_t) // A "position", of any type with a range
+  (code : error_code) // An error code
+  (#msg_t:_) {| is_error_message msg_t |} (msg : msg_t) // A "message", currently can be a 'string' or 'list document'
+  : unit
 
 val raise_error0 : error_code -> #t:_ -> {| is_error_message t |} -> t -> 'a
 val log_issue0   : error_code -> #t:_ -> {| is_error_message t |} -> t -> unit

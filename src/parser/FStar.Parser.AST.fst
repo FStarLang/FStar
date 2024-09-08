@@ -38,7 +38,7 @@ let check_id id =
       raise_error (range_of_id id) Fatal_InvalidIdentifier
         (Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" (show id))
 
-let at_most_one s r l = match l with
+let at_most_one s (r:range) l = match l with
   | [ x ] -> Some x
   | [] -> None
   | _ ->

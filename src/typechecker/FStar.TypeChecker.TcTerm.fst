@@ -431,7 +431,7 @@ let rec get_pat_vars' all (andlist : bool) (pats:term) : FlatSet.t bv =
 
 let get_pat_vars all pats = get_pat_vars' all false pats
 
-let check_pat_fvs rng env pats bs =
+let check_pat_fvs (rng:Range.range) env pats bs =
     let pat_vars = get_pat_vars (List.map (fun b -> b.binder_bv) bs) (N.normalize [Env.Beta] env pats) in
     begin match bs |> BU.find_opt (fun ({binder_bv=b}) -> not (mem b pat_vars)) with
         | None -> ()

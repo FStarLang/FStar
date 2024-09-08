@@ -88,7 +88,7 @@ let err_ill_typed_application env (t : term) mlhead (args : args) (ty : mlty) =
                 (Code.string_of_mlty (current_module_of_uenv env) ty)
                 (show args))
 
-let err_ill_typed_erasure env pos (ty : mlty) =
+let err_ill_typed_erasure env (pos:Range.range) (ty : mlty) =
     Errors.raise_error pos Fatal_IllTyped
        (BU.format1 "Erased value found where a value of type %s was expected"
                   (Code.string_of_mlty (current_module_of_uenv env) ty))
@@ -546,7 +546,7 @@ let maybe_eta_expand_coercion g expect e =
   Otherwise, we often end up with coercions like (Obj.magic (fun x -> e) : a -> b) : a -> c
   Whereas with this optimization we produce (fun x -> Obj.magic (e : b) : c)  : a -> c
 *)
-let apply_coercion pos (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
+let apply_coercion (pos:Range.range) (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
     if Util.codegen_fsharp()
     then //magics are not always sound in F#; warn
         FStar.Errors.log_issue pos

@@ -142,7 +142,7 @@ let desugar_disjunctive_pattern annotated_pats when_opt branch =
         U.branch(pat, when_opt, branch)
     )
 
-let trans_qual r maybe_effect_id = function
+let trans_qual (r:Range.range) maybe_effect_id = function
   | AST.Private ->       S.Private
   | AST.Assumption ->    S.Assumption
   | AST.Unfold_for_unification_and_vcgen -> S.Unfold_for_unification_and_vcgen
@@ -761,7 +761,7 @@ let check_no_aq (aq : antiquotations_temp) : unit =
         raise_error e.pos Errors.Fatal_UnexpectedAntiquotation
           (BU.format1 "Unexpected antiquotation: `#(%s)" (show e))
 
-let check_linear_pattern_variables pats r =
+let check_linear_pattern_variables pats (r:Range.range) =
   // returns the set of pattern variables
   let rec pat_vars p : RBSet.t bv =
     match p.v with
@@ -3326,7 +3326,7 @@ let get_fail_attr warn (ats : list S.term) : option (list int & bool) =
     in
     List.fold_right (fun at acc -> comb (get_fail_attr1 warn at) acc) ats None
 
-let lookup_effect_lid env (l:lident) r : S.eff_decl =
+let lookup_effect_lid env (l:lident) (r:Range.range) : S.eff_decl =
   match Env.try_lookup_effect_defn env l with
   | None ->
     raise_error r Errors.Fatal_EffectNotFound

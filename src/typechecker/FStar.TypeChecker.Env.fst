@@ -410,7 +410,7 @@ let inst_tscheme_with_range (r:range) (t:tscheme) =
     let us, t = inst_tscheme t in
     us, Subst.set_use_range r t
 
-let check_effect_is_not_a_template (ed:eff_decl) rng : unit =
+let check_effect_is_not_a_template (ed:eff_decl) (rng:Range.range) : unit =
   if List.length ed.univs <> 0 || List.length ed.binders <> 0
   then
     let msg = BU.format2
