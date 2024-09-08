@@ -136,7 +136,7 @@ pulseDecl:
         PulseSyntaxExtension_Sugar.FnDefn (mk_fn_defn q lid isRec bs body decors (rr $loc))
 
       | Inr (typ, None) ->
-        raise_error (Fatal_SyntaxError, "Ascriptions of lambdas without bodies are not yet supported") (rr $loc)
+        raise_error_text (rr $loc) Fatal_SyntaxError "Ascriptions of lambdas without bodies are not yet supported"
     }
  
 (* defining this as two tokens, option(qual) FN, seems to cause menhir to report an
@@ -230,7 +230,7 @@ pulseStmtNoSeq:
           PulseSyntaxExtension_Sugar.mk_array_assignment arr ix arr_elt
 
         | _ ->
-          raise_error (Fatal_SyntaxError, "Expected an array assignment of the form x.(i) <- v") (rr $loc)
+          raise_error_text (rr $loc) Fatal_SyntaxError "Expected an array assignment of the form x.(i) <- v"
     }
   | lhs=appTermNoRecordExp COLON_EQUALS a=noSeqTerm
     { PulseSyntaxExtension_Sugar.mk_assignment lhs a }
@@ -358,7 +358,7 @@ typX(X,Y):
       {
         match bs with
         | [] ->
-          raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rr2 $loc(q) $loc($3))
+          raise_error_text (rr2 $loc(q) $loc($3)) Fatal_MissingQuantifierBinder "Missing binders for a quantifier"
         | _ ->
           let idents = idents_of_binders bs (rr2 $loc(q) $loc($3)) in
           mk_term (q (bs, (idents, trigger), e)) (rr2 $loc(q) $loc(e)) Formula

@@ -229,9 +229,9 @@ let desugar_pulse_decl_callback
     //Raise one final error at the start of the decl to stop further processing
     let start = FStar.Compiler.Range.start_of_range rng in
     let rng = FStar.Compiler.Range.mk_range (FStar.Compiler.Range.file_of_range rng) start start in
-    FStar.Errors.raise_error (FStar.Errors.Fatal_SyntaxError, "Failed to desugar pulse declaration") rng
+    FStar.Errors.raise_error rng FStar.Errors.Fatal_SyntaxError "Failed to desugar pulse declaration"
   | Inr (Some (msg, rng)) ->
-    FStar.Errors.raise_error (FStar.Errors.Fatal_SyntaxError, msg) rng
+    FStar.Errors.raise_error rng FStar.Errors.Fatal_SyntaxError msg
   | Inl d ->
     let blob = FStar.Syntax.Util.mk_lazy d S.t_bool (S.Lazy_extension "pulse_decl") (Some rng) in
     let splicer =
