@@ -169,7 +169,7 @@ let default_settings : list error_setting =
     Fatal_NotSupported                                , CFatal, 149;
     Fatal_NotTopLevelModule                           , CFatal, 150;
     Fatal_NotValidFStarFile                           , CFatal, 151;
-    Fatal_NotValidIncludeDirectory                    , CFatal, 152;
+    Fatal_NotValidIncludeDirectory                    , CWarning, 152;
     Fatal_OneModulePerFile                            , CFatal, 153;
     Fatal_OpenGoalsInSynthesis                        , CFatal, 154;
     Fatal_OptionsNotCompatible                        , CFatal, 155;

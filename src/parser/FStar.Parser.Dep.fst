@@ -447,7 +447,7 @@ let build_inclusion_candidates_list (): list (string & string) =
    * always override the precedence order. *)
   let include_directories = List.unique include_directories in
   let cwd = normalize_file_path (getcwd ()) in
-  List.concatMap (fun d ->
+  include_directories |> List.concatMap (fun d ->
     if is_directory d then
       let files = readdir d in
       List.filter_map (fun f ->
@@ -457,9 +457,15 @@ let build_inclusion_candidates_list (): list (string & string) =
               let full_path = if d = cwd then f else join_paths d f in
               (longname, full_path))
       ) files
-    else
-      raise_err (Errors.Fatal_NotValidIncludeDirectory, (Util.format1 "not a valid include directory: %s\n" d))
-  ) include_directories
+    else (
+      let open FStar.Pprint in
+      log_issue_doc Range.dummyRange (Errors.Fatal_NotValidIncludeDirectory, [
+          prefix 2 1 (text "Not a valid include directory:")
+            (doc_of_string d);
+        ]);
+      []
+    )
+  )
 
 (** List the contents of all include directories, then build a map from long
     names (e.g. a.b) to pairs of filenames (/path/to/A.B.fst). Long names are
