@@ -878,12 +878,12 @@ let __exact_now set_expected_typ (t:term) : tac unit =
       solve goal t
     )
     else
-      let typ, goalt = TypeChecker.Err.print_discrepancy (tts (goal_env goal)) typ (goal_type goal) in
-      fail4 "%s : %s does not exactly solve the goal %s (witness = %s)"
-                    (tts (goal_env goal) t)
-                    typ
-                    goalt
-                    (tts (goal_env goal) (goal_witness goal))
+      let typ, goalt = TypeChecker.Err.print_discrepancy (ttd (goal_env goal)) typ (goal_type goal) in
+      fail_doc [
+        prefix 2 1 (text "Term") (ttd (goal_env goal) t) ^/^
+        prefix 2 1 (text "of type") typ ^/^
+        prefix 2 1 (text "does not exactly solve the goal") goalt;
+      ]
 
 let t_exact try_refine set_expected_typ tm : tac unit = wrap_err "exact" <| (
     if_verbose (fun () -> BU.print1 "t_exact: tm = %s\n" (show tm)) ;!
