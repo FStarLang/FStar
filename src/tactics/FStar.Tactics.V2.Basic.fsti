@@ -65,6 +65,7 @@ val var_retype             : RD.binding -> tac unit
 val clear_top              : unit -> tac unit
 val clear                  : RD.binding -> tac unit
 val rewrite                : RD.binding -> tac unit
+val grewrite               : term -> term -> tac unit
 val t_exact                : bool -> bool -> term -> tac unit
 val t_apply                : bool -> bool -> bool -> term -> tac unit
 val t_apply_lemma          : bool -> bool -> term -> tac unit

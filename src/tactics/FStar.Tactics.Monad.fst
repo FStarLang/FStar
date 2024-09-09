@@ -380,7 +380,7 @@ let wrap_err_doc (pref:error_message) (t : tac 'a) : tac 'a =
            )
 
 let wrap_err (pref:string) (t : tac 'a) : tac 'a =
-  wrap_err_doc [text (pref ^ " failed")] t
+  wrap_err_doc [text ("'" ^ pref ^ "' failed")] t
 
 let mlog f (cont : unit -> tac 'a) : tac 'a =
   log f;!

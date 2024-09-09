@@ -610,7 +610,6 @@ let curms () : tac Z.t =
 let __tc (e : env) (t : term) : tac (term & typ & guard_t) =
     let! ps = get in
     log (fun () -> BU.print1 "Tac> __tc(%s)\n" (show t));!
-    let e = {e with uvar_subtyping=false} in
     try return (TcTerm.typeof_tot_or_gtot_term e t true)
     with | Errors.Error (_, msg, _, _) ->
            fail_doc ([
@@ -621,7 +620,6 @@ let __tc (e : env) (t : term) : tac (term & typ & guard_t) =
 let __tc_ghost (e : env) (t : term) : tac (term & typ & guard_t) =
     let! ps = get in
     log (fun () -> BU.print1 "Tac> __tc_ghost(%s)\n" (show t));!
-    let e = {e with uvar_subtyping=false} in
     let e = {e with letrecs=[]} in
     try let t, lc, g = TcTerm.tc_tot_or_gtot_term e t in
         return (t, lc.res_typ, g)
@@ -636,7 +634,6 @@ let __tc_lax (e : env) (t : term) : tac (term & lcomp & guard_t) =
     log (fun () -> BU.print2 "Tac> __tc_lax(%s)(Context:%s)\n"
                            (show t)
                            (Env.all_binders e |> show));!
-    let e = {e with uvar_subtyping=false} in
     let e = {e with admit = true} in
     let e = {e with letrecs=[]} in
     try return (TcTerm.tc_term e t)
@@ -866,6 +863,7 @@ let __exact_now set_expected_typ (t:term) : tac unit =
               then Env.set_expected_typ (goal_env goal) (goal_type goal)
               else (goal_env goal)
     in
+    let env = {env with uvar_subtyping=false} in
     let! t, typ, guard = __tc env t in
     if_verbose (fun () -> BU.print2 "__exact_now: got type %s\n__exact_now: and guard %s\n"
                                                      (show typ)
@@ -880,12 +878,12 @@ let __exact_now set_expected_typ (t:term) : tac unit =
       solve goal t
     )
     else
-      let typ, goalt = TypeChecker.Err.print_discrepancy (tts (goal_env goal)) typ (goal_type goal) in
-      fail4 "%s : %s does not exactly solve the goal %s (witness = %s)"
-                    (tts (goal_env goal) t)
-                    typ
-                    goalt
-                    (tts (goal_env goal) (goal_witness goal))
+      let typ, goalt = TypeChecker.Err.print_discrepancy (ttd (goal_env goal)) typ (goal_type goal) in
+      fail_doc [
+        prefix 2 1 (text "Term") (ttd (goal_env goal) t) ^/^
+        prefix 2 1 (text "of type") typ ^/^
+        prefix 2 1 (text "does not exactly solve the goal") goalt;
+      ]
 
 let t_exact try_refine set_expected_typ tm : tac unit = wrap_err "exact" <| (
     if_verbose (fun () -> BU.print1 "t_exact: tm = %s\n" (show tm)) ;!
@@ -1071,7 +1069,10 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
     let! goal = cur_goal in
     let env = goal_env goal in
     Tactics.Monad.register_goal goal;
-    let! tm, t, guard = __tc env tm in
+    let! tm, t, guard =
+      let env = {env with uvar_subtyping=false} in
+      __tc env tm
+    in
     let bs, comp = U.arrow_formals_comp t in
     match lemma_or_sq comp with
     | None -> fail "not a lemma or squashed function"
@@ -1259,6 +1260,47 @@ let rewrite (hh:RD.binding) : tac unit = wrap_err "rewrite" <| (
       | _ -> fail "Not an equality hypothesis"
       end
     )
+
+let replace (t1 t2 : term) (s : term) : term =
+  Syntax.Visit.visit_term false (fun t ->
+    if U.term_eq t t1
+    then t2
+    else t) s
+
+let grewrite (t1 t2 : term) : tac unit = wrap_err "grewrite" <| (focus (
+    let! goal = cur_goal in
+    let goal_t = goal_type goal in
+    let env = goal_env goal in
+    let! t1, typ1, g1  = __tc env t1 in
+    let! t2, typ2, g2  = __tc env t2 in
+
+    (* Remove top level refinements. We just need to create an equality between t1 and t2,,
+    one of them could have a refined type and that should not matter. *)
+    let typ1' = N.unfold_whnf' [Env.Unrefine] env typ1 in
+    let typ2' = N.unfold_whnf' [Env.Unrefine] env typ2 in
+    if! do_unify false env typ1' typ2' then
+      return ()
+    else (
+      fail_doc [
+        text "Types do not match for grewrite";
+        text "Type of" ^/^ parens (pp t1) ^/^ equals ^/^ pp typ1;
+        text "Type of" ^/^ parens (pp t2) ^/^ equals ^/^ pp typ2;
+      ]
+    );!
+    let u = env.universe_of env typ1 in
+    let goal_t' = replace t1 t2 goal_t in
+
+    let! g_eq =
+      (* However, retain the original, possibly refined, of t1 for this equality. *)
+      mk_irrelevant_goal "grewrite.eq" env (U.mk_eq2 u typ1 t1 t2) None
+        goal.goal_ctx_uvar.ctx_uvar_range goal.opts goal.label
+    in
+
+    replace_cur (goal_with_type goal goal_t');!
+    push_goals [g_eq];!
+
+    return ()
+))
 
 let rename_to (b : RD.binding) (s : string) : tac RD.binding = wrap_err "rename_to" <| (
     let! goal = cur_goal in
@@ -2877,7 +2919,6 @@ let run_unembedded_tactic_on_ps_and_solve_remaining
           Err.raise_error g_range Err.Fatal_OpenGoalsInSynthesis "tactic left a computationally-relevant goal unsolved");
   r
 
-(* One last primitive in this file *)
 let call_subtac (g:env) (f : tac unit) (_u:universe) (goal_ty : typ) : tac (option term & issues) =
   return ();! // thunk
   let rng = Env.get_range g in
@@ -2915,7 +2956,6 @@ let run_tactic_on_ps_and_solve_remaining
           Err.raise_error g_range Err.Fatal_OpenGoalsInSynthesis "tactic left a computationally-relevant goal unsolved");
   r
 
-(* One last primitive in this file *)
 let call_subtac_tm (g:env) (f_tm : term) (_u:universe) (goal_ty : typ) : tac (option term & issues) =
   return ();! // thunk
   let rng = Env.get_range g in

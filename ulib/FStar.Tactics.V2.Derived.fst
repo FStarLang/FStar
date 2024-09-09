@@ -680,23 +680,27 @@ let mk_sq_eq (t1 t2 : term) : Tot term =
     mk_squash (mk_e_app eq [t1; t2])
 
 (** Rewrites all appearances of a term [t1] in the goal into [t2].
-Creates a new goal for [t1 == t2]. *)
-let grewrite (t1 t2 : term) : Tac unit =
+Creates a new goal for [t1 == t2]. Note: there is a primitive grewrite
+which is likely a better choice. This in case it's useful for backwards
+compatibility. *)
+let __grewrite_derived (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
     let e = pack (Tv_Var e) in
     pointwise (fun () ->
-      (* If the LHS is a uvar, do nothing, so we do not instantiate it. *)
-      let is_uvar =
+      let (lhs, rhs) : term & term =
         match term_as_formula (cur_goal()) with
         | Comp (Eq _) lhs rhs ->
-          (match inspect lhs with
-           | Tv_Uvar _ _ -> true
-           | _ -> false)
-        | _ -> false
+          lhs, rhs
+        | _ ->
+          raise SKIP
       in
-      if is_uvar
-      then trefl ()
-      else try exact e with | _ -> trefl ())
+      if Tv_Uvar? lhs then
+        trefl () (* If the LHS is a uvar, do nothing, so we do not instantiate it. *)
+      else if not (term_eq lhs t1) then
+        raise SKIP
+      else
+        try exact e with | _ -> trefl ()
+    )
 
 private
 let __un_sq_eq (#a:Type) (x y : a) (_ : (x == y)) : Lemma (x == y) = ()

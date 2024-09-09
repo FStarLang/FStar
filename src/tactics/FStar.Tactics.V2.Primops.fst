@@ -127,6 +127,7 @@ let ops = [
   mk_tac_step_1 0 "clear_top" clear_top clear_top;
   mk_tac_step_1 0 "clear" clear clear;
   mk_tac_step_1 0 "rewrite" rewrite rewrite;
+  mk_tac_step_2 0 "grewrite" grewrite grewrite;
   mk_tac_step_1 0 "refine_intro" refine_intro refine_intro;
   mk_tac_step_3 0 "t_exact"  t_exact t_exact;
   mk_tac_step_4 0 "t_apply"  t_apply t_apply;
