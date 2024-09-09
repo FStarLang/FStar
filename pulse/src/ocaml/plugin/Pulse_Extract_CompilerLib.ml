@@ -257,6 +257,7 @@ let mk_arrow (bs:binder list) (t:term) : term =
       (S.Comp {comp_univs=[]; effect_name=C.effect_DIV_lid; result_typ=t; effect_args=[]; flags=[]})
       FStar_Compiler_Range.dummyRange in
   S.mk (S.Tm_arrow {bs1=bs;comp=c}) FStar_Compiler_Range.dummyRange
+let unk_tm : term = S.mk (S.Tm_unknown) FStar_Compiler_Range.dummyRange
 type sigelt = S.sigelt
 let mk_non_rec_siglet (nm:string) (t:term) (ty:term) : sigelt =
   let lbname = FStar_Pervasives.Inr

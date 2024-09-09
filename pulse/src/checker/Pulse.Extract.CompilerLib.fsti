@@ -145,6 +145,7 @@ val branch : Type0
 val mk_branch (pat:pattern) (body:term) : Dv branch
 val mk_match (scrutinee:term) (brs:list branch) : Dv term
 val mk_arrow (bs:list binder) (t:term) : Dv term
+val unk_tm : term
 val sigelt : Type0
 val mk_non_rec_siglet (nm:string) (t:term) (ty:term) : sigelt
 

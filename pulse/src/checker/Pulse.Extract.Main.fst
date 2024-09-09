@@ -847,6 +847,22 @@ let rec extract_dv_pattern (p:Pulse.Syntax.Base.pattern) : T.Tac ECL.pattern =
 // let unit_binder (ppname:string) : Dv binder =
 //   mk_binder unit_ty ppname None []
 
+let get_type_of_ref (p: term) : T.Tac ECL.term =
+  let fail () = T.fail (Printf.sprintf "expected term (Pulse.Lib.Reference.ref ...), got %s" (term_to_string p)) in
+  match R.inspect_ln p with
+  | R.Tv_App hd (arg, _) ->
+    (* TODO: check that hd is ref *)
+    ECL.rt_term_to_term arg
+  | _ -> fail ()
+
+let get_type_of_array (p: term) : T.Tac ECL.term =
+  let fail () = T.fail (Printf.sprintf "expected term (Pulse.Lib.Array.Core.array ...), got %s" (term_to_string p)) in
+  match R.inspect_ln p with
+  | R.Tv_App hd (arg, _) ->
+    (* TODO: check that hd is array *)
+    ECL.rt_term_to_term arg
+  | _ -> fail ()
+
 let rec extract_dv (p:st_term) : T.Tac ECL.term =
   if is_erasable p then ECL.mk_return ECL.unit_tm
   else begin
@@ -918,8 +934,24 @@ let rec extract_dv (p:st_term) : T.Tac ECL.term =
         None
         (ECL.mk_abs (unit_binder "par_b2") body2)
 
-    | Tm_WithLocal _ -> T.fail "Pulse extraction to dv : WithLocal not yet supported"
-    | Tm_WithLocalArray _ -> T.fail "Pulse extraction to dv : WithLocalArray not yet supported"
+    | Tm_WithLocal { binder; initializer; body } ->
+      let b = extract_dv_binder binder None in
+      let body = extract_dv body in
+      let allocator = ECL.mk_app (ECL.mk_app (ECL.mk_fv_tm (ECL.mk_fv ["Pulse"; "Lib"; "Reference"; "alloc"]))
+        (Some ECL.implicit_arg_qual) (get_type_of_ref binder.binder_ty)) None (ECL.rt_term_to_term initializer) in
+      ECL.mk_let b allocator body
+
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      let b = extract_dv_binder binder None in
+      let body = extract_dv body in
+      //
+      // Slice library doesn't have an alloc
+      //
+      // This is parsed by Pulse2Rust
+      //
+      let allocator = ECL.mk_app (ECL.mk_app (ECL.mk_app (ECL.mk_fv_tm (ECL.mk_fv ["Pulse"; "Lib"; "Array"; "Core"; "alloc"]))
+        (Some ECL.implicit_arg_qual) (get_type_of_array binder.binder_ty)) None (ECL.rt_term_to_term initializer)) None (ECL.rt_term_to_term length) in
+      ECL.mk_let b allocator body
 
     | Tm_Admit _ ->
       T.print "Admit in dv extraction is currently ignored";
