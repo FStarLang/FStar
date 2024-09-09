@@ -85,6 +85,11 @@ let (uu___is_MUT : mut_or_ref -> Prims.bool) =
   fun projectee -> match projectee with | MUT -> true | uu___ -> false
 let (uu___is_REF : mut_or_ref -> Prims.bool) =
   fun projectee -> match projectee with | REF -> true | uu___ -> false
+let (showable_mut_or_ref : mut_or_ref FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun i -> match i with | MUT -> "MUT" | REF -> "REF")
+  }
 type hint_type =
   | ASSERT of slprop 
   | UNFOLD of (FStar_Ident.lident Prims.list FStar_Pervasives_Native.option *
@@ -135,6 +140,88 @@ let (uu___is_SHOW_PROOF_STATE : hint_type -> Prims.bool) =
     match projectee with | SHOW_PROOF_STATE _0 -> true | uu___ -> false
 let (__proj__SHOW_PROOF_STATE__item___0 : hint_type -> rng) =
   fun projectee -> match projectee with | SHOW_PROOF_STATE _0 -> _0
+let (showable_slprop : slprop FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun s ->
+         match s.v with
+         | SLPropTerm t ->
+             FStar_Class_Show.show FStar_Parser_AST.showable_term t)
+  }
+let (showable_hint_type : hint_type FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun i ->
+         match i with
+         | ASSERT s ->
+             let uu___ = FStar_Class_Show.show showable_slprop s in
+             Prims.strcat "ASSERT " uu___
+         | UNFOLD (ns, s) ->
+             let uu___ =
+               let uu___1 =
+                 FStar_Class_Show.show
+                   (FStar_Class_Show.show_option
+                      (FStar_Class_Show.show_list FStar_Ident.showable_lident))
+                   ns in
+               let uu___2 =
+                 let uu___3 = FStar_Class_Show.show showable_slprop s in
+                 Prims.strcat " " uu___3 in
+               Prims.strcat uu___1 uu___2 in
+             Prims.strcat "UNFOLD " uu___
+         | FOLD (ns, s) ->
+             let uu___ =
+               let uu___1 =
+                 FStar_Class_Show.show
+                   (FStar_Class_Show.show_option
+                      (FStar_Class_Show.show_list FStar_Ident.showable_lident))
+                   ns in
+               let uu___2 =
+                 let uu___3 = FStar_Class_Show.show showable_slprop s in
+                 Prims.strcat " " uu___3 in
+               Prims.strcat uu___1 uu___2 in
+             Prims.strcat "FOLD " uu___
+         | RENAME (ts, g, t) ->
+             let uu___ =
+               let uu___1 =
+                 FStar_Class_Show.show
+                   (FStar_Class_Show.show_list
+                      (FStar_Class_Show.show_tuple2
+                         FStar_Parser_AST.showable_term
+                         FStar_Parser_AST.showable_term)) ts in
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 =
+                     FStar_Class_Show.show
+                       (FStar_Class_Show.show_option showable_slprop) g in
+                   let uu___5 =
+                     let uu___6 =
+                       FStar_Class_Show.show
+                         (FStar_Class_Show.show_option
+                            FStar_Parser_AST.showable_term) t in
+                     Prims.strcat " " uu___6 in
+                   Prims.strcat uu___4 uu___5 in
+                 Prims.strcat " " uu___3 in
+               Prims.strcat uu___1 uu___2 in
+             Prims.strcat "RENAME " uu___
+         | REWRITE (s1, s2, t) ->
+             let uu___ =
+               let uu___1 = FStar_Class_Show.show showable_slprop s1 in
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 = FStar_Class_Show.show showable_slprop s2 in
+                   let uu___5 =
+                     let uu___6 =
+                       FStar_Class_Show.show
+                         (FStar_Class_Show.show_option
+                            FStar_Parser_AST.showable_term) t in
+                     Prims.strcat " " uu___6 in
+                   Prims.strcat uu___4 uu___5 in
+                 Prims.strcat " " uu___3 in
+               Prims.strcat uu___1 uu___2 in
+             Prims.strcat "REWRITE " uu___
+         | WILD -> "WILD"
+         | SHOW_PROOF_STATE r -> "SHOW_PROOF_STATE ...")
+  }
 type array_init = {
   init: FStar_Parser_AST.term ;
   len: FStar_Parser_AST.term }
@@ -550,6 +637,16 @@ let (uu___is_Stmt_initializer : let_init -> Prims.bool) =
     match projectee with | Stmt_initializer _0 -> true | uu___ -> false
 let (__proj__Stmt_initializer__item___0 : let_init -> stmt) =
   fun projectee -> match projectee with | Stmt_initializer _0 -> _0
+let (showable_let_init : let_init FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun i ->
+         match i with
+         | Array_initializer a -> "Array_initializer ..."
+         | Default_initializer t -> "Default_initializer ..."
+         | Lambda_initializer l -> "Lambda_initializer ..."
+         | Stmt_initializer s -> "Stmt_initializer ...")
+  }
 type fn_decl =
   {
   id2: FStar_Ident.ident ;
@@ -621,6 +718,303 @@ let (tag_of_stmt : stmt -> Prims.string) =
         "ProofHintWithBinders"
     | WithInvariants { names = uu___; body1 = uu___1; returns_ = uu___2;_} ->
         "WithInvariants"
+let (tagged_stmt : stmt FStar_Class_Tagged.tagged) =
+  { FStar_Class_Tagged.tag_of = tag_of_stmt }
+let (record_string :
+  (Prims.string * Prims.string) Prims.list -> Prims.string) =
+  fun fs ->
+    Prims.strcat "{"
+      (Prims.strcat
+         (FStar_String.concat "; "
+            (FStar_List_Tot_Base.map
+               (fun uu___ ->
+                  match uu___ with
+                  | (f, s) -> Prims.strcat f (Prims.strcat " = " s)) fs)) "}")
+let (showable_pattern : FStar_Parser_AST.pattern FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = FStar_Parser_AST.pat_to_string }
+let (showable_a_term : FStar_Parser_AST.term FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = FStar_Parser_AST.term_to_string }
+let (showable_a_binder : FStar_Parser_AST.binder FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = FStar_Parser_AST.binder_to_string }
+let rec (stmt_to_string : stmt -> Prims.string) =
+  fun s ->
+    match s.s with
+    | Open l ->
+        let uu___ = FStar_Class_Show.show FStar_Ident.showable_lident l in
+        Prims.strcat "Open " uu___
+    | Expr { e;_} ->
+        let uu___ = FStar_Class_Show.show showable_a_term e in
+        Prims.strcat "Expr " uu___
+    | Assignment { lhs; value;_} ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStar_Class_Show.show showable_a_term lhs in
+              ("lhs", uu___3) in
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStar_Class_Show.show showable_a_term value in
+                ("value", uu___5) in
+              [uu___4] in
+            uu___2 :: uu___3 in
+          record_string uu___1 in
+        Prims.strcat "Assignment " uu___
+    | ArrayAssignment { arr; index; value1 = value;_} ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStar_Class_Show.show showable_a_term arr in
+              ("arr", uu___3) in
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStar_Class_Show.show showable_a_term index in
+                ("index", uu___5) in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 = FStar_Class_Show.show showable_a_term value in
+                  ("value", uu___7) in
+                [uu___6] in
+              uu___4 :: uu___5 in
+            uu___2 :: uu___3 in
+          record_string uu___1 in
+        Prims.strcat "ArrayAssignment " uu___
+    | LetBinding { qualifier; pat; typ; init1 = init;_} ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              let uu___3 =
+                FStar_Class_Show.show
+                  (FStar_Class_Show.show_option showable_mut_or_ref)
+                  qualifier in
+              ("qualifier", uu___3) in
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStar_Class_Show.show showable_pattern pat in
+                ("pat", uu___5) in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.show_option showable_a_term) typ in
+                  ("typ", uu___7) in
+                let uu___7 =
+                  let uu___8 =
+                    let uu___9 =
+                      FStar_Class_Show.show
+                        (FStar_Class_Show.show_option showable_let_init) init in
+                    ("init", uu___9) in
+                  [uu___8] in
+                uu___6 :: uu___7 in
+              uu___4 :: uu___5 in
+            uu___2 :: uu___3 in
+          record_string uu___1 in
+        Prims.strcat "LetBinding " uu___
+    | Block { stmt = stmt1;_} ->
+        let uu___ =
+          let uu___1 = stmt_to_string stmt1 in Prims.strcat uu___1 "}" in
+        Prims.strcat "Block {" uu___
+    | If { head; join_slprop; then_; else_opt;_} ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStar_Class_Show.show showable_a_term head in
+              ("head", uu___3) in
+            let uu___3 =
+              let uu___4 =
+                let uu___5 =
+                  FStar_Class_Show.show
+                    (FStar_Class_Show.show_option
+                       (FStar_Class_Show.show_tuple3
+                          (FStar_Class_Show.show_option
+                             (FStar_Class_Show.show_tuple2
+                                FStar_Ident.showable_ident showable_a_term))
+                          showable_slprop
+                          (FStar_Class_Show.show_option showable_a_term)))
+                    join_slprop in
+                ("join_slprop", uu___5) in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 = stmt_to_string then_ in ("then_", uu___7) in
+                let uu___7 =
+                  let uu___8 =
+                    let uu___9 =
+                      FStar_Common.string_of_option stmt_to_string else_opt in
+                    ("else_opt", uu___9) in
+                  [uu___8] in
+                uu___6 :: uu___7 in
+              uu___4 :: uu___5 in
+            uu___2 :: uu___3 in
+          record_string uu___1 in
+        Prims.strcat "If " uu___
+    | Match { head1 = head; returns_annot; branches;_} ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStar_Class_Show.show showable_a_term head in
+              ("head", uu___3) in
+            let uu___3 =
+              let uu___4 =
+                let uu___5 =
+                  FStar_Class_Show.show
+                    (FStar_Class_Show.show_option
+                       (FStar_Class_Show.show_tuple3
+                          (FStar_Class_Show.show_option
+                             (FStar_Class_Show.show_tuple2
+                                FStar_Ident.showable_ident showable_a_term))
+                          showable_slprop
+                          (FStar_Class_Show.show_option showable_a_term)))
+                    returns_annot in
+                ("returns_annot", uu___5) in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    (FStar_Common.string_of_list ()) branch_to_string
+                      branches in
+                  ("branches", uu___7) in
+                [uu___6] in
+              uu___4 :: uu___5 in
+            uu___2 :: uu___3 in
+          record_string uu___1 in
+        Prims.strcat "Match " uu___
+    | While { guard; id; invariant; body;_} ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = stmt_to_string guard in ("guard", uu___3) in
+            let uu___3 =
+              let uu___4 =
+                let uu___5 =
+                  FStar_Class_Show.show FStar_Ident.showable_ident id in
+                ("id", uu___5) in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    FStar_Class_Show.show showable_slprop invariant in
+                  ("invariant", uu___7) in
+                let uu___7 =
+                  let uu___8 =
+                    let uu___9 = stmt_to_string body in ("body", uu___9) in
+                  [uu___8] in
+                uu___6 :: uu___7 in
+              uu___4 :: uu___5 in
+            uu___2 :: uu___3 in
+          record_string uu___1 in
+        Prims.strcat "While " uu___
+    | Introduce { slprop = slprop1; witnesses;_} ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStar_Class_Show.show showable_slprop slprop1 in
+              ("slprop", uu___3) in
+            let uu___3 =
+              let uu___4 =
+                let uu___5 =
+                  (FStar_Common.string_of_list ())
+                    (FStar_Class_Show.show showable_a_term) witnesses in
+                ("witnesses", uu___5) in
+              [uu___4] in
+            uu___2 :: uu___3 in
+          record_string uu___1 in
+        Prims.strcat "Introduce " uu___
+    | Sequence { s1; s2;_} ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 = let uu___3 = stmt_to_string s1 in ("s1", uu___3) in
+            let uu___3 =
+              let uu___4 = let uu___5 = stmt_to_string s2 in ("s2", uu___5) in
+              [uu___4] in
+            uu___2 :: uu___3 in
+          record_string uu___1 in
+        Prims.strcat "Sequence " uu___
+    | Parallel { p1; p2; q1; q2; b1; b2;_} ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStar_Class_Show.show showable_slprop p1 in
+              ("p1", uu___3) in
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStar_Class_Show.show showable_slprop p2 in
+                ("p2", uu___5) in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 = FStar_Class_Show.show showable_slprop q1 in
+                  ("q1", uu___7) in
+                let uu___7 =
+                  let uu___8 =
+                    let uu___9 = FStar_Class_Show.show showable_slprop q2 in
+                    ("q2", uu___9) in
+                  let uu___9 =
+                    let uu___10 =
+                      let uu___11 = stmt_to_string b1 in ("b1", uu___11) in
+                    let uu___11 =
+                      let uu___12 =
+                        let uu___13 = stmt_to_string b2 in ("b2", uu___13) in
+                      [uu___12] in
+                    uu___10 :: uu___11 in
+                  uu___8 :: uu___9 in
+                uu___6 :: uu___7 in
+              uu___4 :: uu___5 in
+            uu___2 :: uu___3 in
+          record_string uu___1 in
+        Prims.strcat "Parallel " uu___
+    | ProofHintWithBinders { hint_type = hint_type1; binders = binders1;_} ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              let uu___3 =
+                FStar_Class_Show.show showable_hint_type hint_type1 in
+              ("hint_type", uu___3) in
+            let uu___3 =
+              let uu___4 =
+                let uu___5 =
+                  FStar_Class_Show.show
+                    (FStar_Class_Show.show_list showable_a_binder) binders1 in
+                ("binders", uu___5) in
+              [uu___4] in
+            uu___2 :: uu___3 in
+          record_string uu___1 in
+        Prims.strcat "ProofHintWithBinders " uu___
+    | WithInvariants { names; body1 = body; returns_;_} ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              let uu___3 =
+                (FStar_Common.string_of_list ())
+                  (FStar_Class_Show.show showable_a_term) names in
+              ("names", uu___3) in
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = stmt_to_string body in ("body", uu___5) in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    FStar_Common.string_of_option
+                      (FStar_Class_Show.show
+                         (FStar_Class_Show.show_tuple3
+                            (FStar_Class_Show.show_option
+                               (FStar_Class_Show.show_tuple2
+                                  FStar_Ident.showable_ident showable_a_term))
+                            showable_slprop
+                            (FStar_Class_Show.show_option showable_a_term)))
+                      returns_ in
+                  ("returns_", uu___7) in
+                [uu___6] in
+              uu___4 :: uu___5 in
+            uu___2 :: uu___3 in
+          record_string uu___1 in
+        Prims.strcat "WithInvariants " uu___
+and (branch_to_string : (FStar_Parser_AST.pattern * stmt) -> Prims.string) =
+  fun b ->
+    let uu___ = b in
+    match uu___ with
+    | (p, s) ->
+        let uu___1 = FStar_Class_Show.show showable_pattern p in
+        let uu___2 =
+          let uu___3 = stmt_to_string s in Prims.strcat " -> " uu___3 in
+        Prims.strcat uu___1 uu___2
+let (showable_stmt : stmt FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = stmt_to_string }
 type decl =
   | FnDefn of fn_defn 
   | FnDecl of fn_decl 
