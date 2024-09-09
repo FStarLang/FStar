@@ -82,6 +82,7 @@ let var_retype              = from_tac_1 "B.var_retype" B.var_retype
 let clear_top               = from_tac_1 "B.clear_top" B.clear_top
 let clear                   = from_tac_1 "B.clear" B.clear
 let rewrite                 = from_tac_1 "B.rewrite" B.rewrite
+let grewrite                = from_tac_2 "B.grewrite" B.grewrite
 let t_exact                 = from_tac_3 "B.t_exact" B.t_exact
 let t_apply                 = from_tac_4 "B.t_apply" B.t_apply
 let t_apply_lemma           = from_tac_3 "B.t_apply_lemma" B.t_apply_lemma

@@ -1261,6 +1261,47 @@ let rewrite (hh:RD.binding) : tac unit = wrap_err "rewrite" <| (
       end
     )
 
+let replace (t1 t2 : term) (s : term) : term =
+  Syntax.Visit.visit_term false (fun t ->
+    if U.term_eq t t1
+    then t2
+    else t) s
+
+let grewrite (t1 t2 : term) : tac unit = wrap_err "grewrite" <| (focus (
+    let! goal = cur_goal in
+    let goal_t = goal_type goal in
+    let env = goal_env goal in
+    let! t1, typ1, g1  = __tc env t1 in
+    let! t2, typ2, g2  = __tc env t2 in
+
+    (* Remove top level refinements. We just need to create an equality between t1 and t2,,
+    one of them could have a refined type and that should not matter. *)
+    let typ1' = N.unfold_whnf' [Env.Unrefine] env typ1 in
+    let typ2' = N.unfold_whnf' [Env.Unrefine] env typ2 in
+    if! do_unify false env typ1' typ2' then
+      return ()
+    else (
+      fail_doc [
+        text "Types do not match for grewrite";
+        text "Type of" ^/^ parens (pp t1) ^/^ equals ^/^ pp typ1;
+        text "Type of" ^/^ parens (pp t2) ^/^ equals ^/^ pp typ2;
+      ]
+    );!
+    let u = env.universe_of env typ1 in
+    let goal_t' = replace t1 t2 goal_t in
+
+    let! g_eq =
+      (* However, retain the original, possibly refined, of t1 for this equality. *)
+      mk_irrelevant_goal "grewrite.eq" env (U.mk_eq2 u typ1 t1 t2) None
+        goal.goal_ctx_uvar.ctx_uvar_range goal.opts goal.label
+    in
+
+    replace_cur (goal_with_type goal goal_t');!
+    push_goals [g_eq];!
+
+    return ()
+))
+
 let rename_to (b : RD.binding) (s : string) : tac RD.binding = wrap_err "rename_to" <| (
     let! goal = cur_goal in
     let bv = binding_to_bv b in
@@ -2878,7 +2919,6 @@ let run_unembedded_tactic_on_ps_and_solve_remaining
           Err.raise_error g_range Err.Fatal_OpenGoalsInSynthesis "tactic left a computationally-relevant goal unsolved");
   r
 
-(* One last primitive in this file *)
 let call_subtac (g:env) (f : tac unit) (_u:universe) (goal_ty : typ) : tac (option term & issues) =
   return ();! // thunk
   let rng = Env.get_range g in
@@ -2916,7 +2956,6 @@ let run_tactic_on_ps_and_solve_remaining
           Err.raise_error g_range Err.Fatal_OpenGoalsInSynthesis "tactic left a computationally-relevant goal unsolved");
   r
 
-(* One last primitive in this file *)
 let call_subtac_tm (g:env) (f_tm : term) (_u:universe) (goal_ty : typ) : tac (option term & issues) =
   return ();! // thunk
   let rng = Env.get_range g in

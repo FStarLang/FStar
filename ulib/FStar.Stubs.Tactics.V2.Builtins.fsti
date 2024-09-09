@@ -142,6 +142,10 @@ val clear : binding -> Tac unit
 variable [v] for [r] everywhere in the current goal type and witness. *)
 val rewrite : binding -> Tac unit
 
+(** [grewrite t1 t2] will rewrite [t1] anywhere it appears in the goal
+for [t2]. It will add a goal (after the current one) for [t1 == t2]. *)
+val grewrite (t1 t2 : term) : Tac unit
+
 (** First boolean is whether to attempt to introduce a refinement
 before solving. In that case, a goal for the refinement formula will be
 added. Second boolean is whether to set the expected type internally.
