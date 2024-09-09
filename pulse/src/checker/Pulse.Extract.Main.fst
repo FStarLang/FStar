@@ -992,22 +992,6 @@ let extract_pulse (uenv:ECL.uenv) (selt:R.sigelt) (p:st_term)
           if Nil? fv_name
           then T.raise (Extraction_failure "Unexpected empty name");
           
-          begin
-            if RU.debug_at_level_no_module "extract_div"
-            then begin
-              let t = extract_pulse_dv uenv p in
-              let ty = extract_dv_typ lb_typ in
-              //
-              // TODO: where do we get sigqual from? Support in reflection?
-              //
-              let sg = ECL.mk_non_rec_siglet
-                (L.last fv_name)
-                t
-                ty in
-              T.print (FStar.Printf.sprintf "Sigelt: %s" (ECL.sigelt_to_string sg))
-            end
-          end;
-          
           let g, tys, lb_typ, Some p = generalize g lb_typ (Some p) in
           let mlty = ECL.term_as_mlty g.uenv_inner lb_typ in
           let tm, tag = extract g p in

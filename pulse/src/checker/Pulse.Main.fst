@@ -106,6 +106,20 @@ let check_fndefn
     (refl_t:typ)
     (_:squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) refl_t)) =
     let nm = fst (inspect_ident id) in
+    begin
+      let open Pulse.Extract.Main in
+      if RU.debug_at_level_no_module "extract_div"
+      then begin
+        let uenv = Extract.CompilerLib.new_uenv (fstar_env g) in
+        let t = extract_pulse_dv uenv body in
+        let ty = extract_dv_typ refl_t in
+        //
+        // TODO: where do we get sigqual from? Support in reflection?
+        //
+        let sg = Extract.CompilerLib.mk_non_rec_siglet nm_aux t ty in
+        T.print (FStar.Printf.sprintf "Sigelt: %s" (Extract.CompilerLib.sigelt_to_string sg))
+      end
+    end;
     if elab_derivation
     then RT.mk_checked_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
     else Pulse.Reflection.Util.mk_opaque_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t

@@ -90,6 +90,7 @@ val term_as_mlty (g:uenv) (t:T.term) : Dv mlty
 module PSB = Pulse.Syntax.Base
 val extend_bv (g:uenv) (np:PSB.ppname) (uniq:nat) (ty:mlty) : Dv (uenv & mlident)
 val initial_core_env (g:uenv) : Pulse.Typing.Env.env
+val new_uenv (e:T.env) : uenv
 val set_tcenv (g:uenv) (e:T.env) :  uenv
 val mlty_to_string (t:mlty) : Dv string
 val mlexpr_to_string (e:mlexpr) : Dv string
@@ -149,4 +150,3 @@ val mk_non_rec_siglet (nm:string) (t:term) (ty:term) : sigelt
 
 val term_to_string (t:term) : Dv string
 val sigelt_to_string (s:sigelt) : Dv string
-

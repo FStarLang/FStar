@@ -160,6 +160,8 @@ let extend_bv (g:uenv) (np:PSB.ppname) (uniq:_) (ty:mlty) : (uenv * mlident) =
 let initial_core_env (g:uenv) : Pulse_Typing_Env.env =
   Pulse_Typing_Env.mk_env (UEnv.tcenv_of_uenv g)
 
+let new_uenv (e: Env.env) : uenv = UEnv.new_uenv e
+
 let set_tcenv g e = UEnv.set_tcenv g e
 
 let mlty_to_string (t:mlty) = FStar_Extraction_ML_Syntax.mlty_to_string t
