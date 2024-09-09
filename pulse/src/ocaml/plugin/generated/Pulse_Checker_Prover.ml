@@ -336,9 +336,9 @@ let rec (prove_pures :
                                  (FStar_Sealed.seal
                                     (Obj.magic
                                        (FStar_Range.mk_range "prims.fst"
-                                          (Prims.of_int (590))
+                                          (Prims.of_int (611))
                                           (Prims.of_int (19))
-                                          (Prims.of_int (590))
+                                          (Prims.of_int (611))
                                           (Prims.of_int (31)))))
                                  (Obj.magic
                                     (Pulse_Syntax_Printer.term_to_string
@@ -1112,9 +1112,9 @@ let rec (prover_iteration_loop :
                                                       (Obj.magic
                                                          (FStar_Range.mk_range
                                                             "prims.fst"
-                                                            (Prims.of_int (590))
+                                                            (Prims.of_int (611))
                                                             (Prims.of_int (19))
-                                                            (Prims.of_int (590))
+                                                            (Prims.of_int (611))
                                                             (Prims.of_int (31)))))
                                                    (Obj.magic
                                                       (Pulse_Show.show

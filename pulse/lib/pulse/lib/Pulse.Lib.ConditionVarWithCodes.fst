@@ -23,7 +23,7 @@ module PF = Pulse.Lib.PCM.Fraction
 module U32 = FStar.UInt32
 module GR = Pulse.Lib.GhostReference
 module OR = Pulse.Lib.OnRange
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 0 --ifuel 2"
+#push-options "--fuel 0 --ifuel 2"
 let small_slprop_map (#c:code) = PM.pointwise nat (PF.pcm_frac #c.t)
 let carrier (c:code) = PM.map nat (PF.fractional c.t)
 

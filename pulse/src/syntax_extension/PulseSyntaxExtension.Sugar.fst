@@ -18,6 +18,9 @@ module PulseSyntaxExtension.Sugar
 open FStar.Ident
 module A = FStar.Parser.AST
 module AU = FStar.Parser.AST.Util
+open FStar.Class.Show
+open FStar.Class.Tagged
+
 let rng = FStar.Compiler.Range.range
 let dummyRange = FStar.Compiler.Range.dummyRange
 
@@ -53,12 +56,11 @@ type computation_type = {
 type mut_or_ref =
   | MUT | REF
 
-type pat = 
-  | PatVar of ident
-  | PatConstructor {
-      head:lident;
-      args:list pat
-    }
+instance showable_mut_or_ref : showable mut_or_ref = {
+  show = (fun i -> match i with
+    | MUT -> "MUT"
+    | REF -> "REF")
+}
 
 type hint_type =
   | ASSERT of slprop
@@ -74,6 +76,22 @@ type hint_type =
       option A.term (* optional tactic *)
   | WILD
   | SHOW_PROOF_STATE of rng
+
+instance showable_slprop : showable slprop = {
+  show = (fun s -> match s.v with
+    | SLPropTerm t -> show t);
+}
+
+instance showable_hint_type : showable hint_type = {
+  show = (fun i -> match i with
+    | ASSERT s -> "ASSERT " ^ show s
+    | UNFOLD (ns, s) -> "UNFOLD " ^ show ns ^ " " ^ show s
+    | FOLD (ns, s) -> "FOLD " ^ show ns ^ " " ^ show s
+    | RENAME (ts, g, t) -> "RENAME " ^ show ts ^ " " ^ show g ^ " " ^ show t
+    | REWRITE (s1, s2, t) -> "REWRITE " ^ show s1 ^ " " ^ show s2 ^ " " ^ show t
+    | WILD -> "WILD"
+    | SHOW_PROOF_STATE r -> "SHOW_PROOF_STATE ...")
+}
 
 type array_init = {
   init : A.term;
@@ -102,7 +120,7 @@ type stmt' =
 
   | LetBinding {
       qualifier: option mut_or_ref;
-      id:ident;
+      pat:A.pattern;
       typ:option A.term;
       init:option let_init
     }
@@ -190,6 +208,14 @@ and let_init =
   | Lambda_initializer of fn_defn
   | Stmt_initializer of stmt
 
+instance showable_let_init : showable let_init = {
+  show = (fun i -> match i with
+    | Array_initializer a -> "Array_initializer ..."
+    | Default_initializer t -> "Default_initializer ..."
+    | Lambda_initializer l -> "Lambda_initializer ..."
+    | Stmt_initializer s -> "Stmt_initializer ...")
+}
+
 type fn_decl = {
   id:ident;
   binders:binders;
@@ -214,6 +240,109 @@ let tag_of_stmt (s:stmt) : string =
   | Parallel {} -> "Parallel"
   | ProofHintWithBinders {} -> "ProofHintWithBinders"
   | WithInvariants {} -> "WithInvariants"
+
+instance tagged_stmt : Class.Tagged.tagged stmt = {
+  tag_of = tag_of_stmt
+}
+
+let record_string (fs : list (string & string)) : string =
+  "{" ^
+  (String.concat "; " <| List.Tot.map (fun (f, s) -> f ^ " = " ^ s) fs) ^
+  "}"
+
+instance showable_pattern : showable A.pattern = {
+  show = A.pat_to_string;
+}
+
+instance showable_a_term : showable A.term = {
+  show = A.term_to_string;
+}
+instance showable_a_binder : showable A.binder = {
+  show = A.binder_to_string;
+}
+
+let rec stmt_to_string (s:stmt) : string =
+  match s.s with
+  | Open l -> "Open " ^ show l
+  | Expr {e} -> "Expr " ^ show e
+  | Assignment { lhs; value } ->
+    "Assignment " ^ record_string [
+      "lhs", show lhs;
+      "value", show value;
+    ]
+  | ArrayAssignment { arr; index; value } ->
+    "ArrayAssignment " ^ record_string [
+      "arr", show arr;
+      "index", show index;
+      "value", show value;
+    ]
+  | LetBinding { qualifier; pat; typ; init } ->
+    "LetBinding " ^ record_string [
+      "qualifier", show qualifier;
+      "pat", show pat;
+      "typ", show typ;
+      "init", show init;
+    ]
+  | Block { stmt } ->
+    "Block {" ^ stmt_to_string stmt ^ "}"
+  | If { head; join_slprop; then_; else_opt } ->
+    "If " ^ record_string [
+      "head", show head;
+      "join_slprop", show join_slprop;
+      "then_", stmt_to_string then_;
+      "else_opt", FStar.Common.string_of_option stmt_to_string else_opt;
+    ]
+  | Match { head; returns_annot; branches } ->
+    "Match " ^ record_string [
+      "head", show head;
+      "returns_annot", show returns_annot;
+      "branches", FStar.Common.string_of_list branch_to_string branches;
+    ]
+  | While { guard; id; invariant; body } ->
+    "While " ^ record_string [
+      "guard", stmt_to_string guard;
+      "id", show id;
+      "invariant", show invariant;
+      "body", stmt_to_string body;
+    ]
+  | Introduce { slprop; witnesses } ->
+    "Introduce " ^ record_string [
+      "slprop", show slprop;
+      "witnesses", FStar.Common.string_of_list show witnesses
+    ]
+  | Sequence { s1; s2 } ->
+    "Sequence " ^ record_string [
+      "s1", stmt_to_string s1;
+      "s2", stmt_to_string s2;
+    ]
+  | Parallel { p1; p2; q1; q2; b1; b2 } ->
+    "Parallel " ^ record_string [
+      "p1", show p1;
+      "p2", show p2;
+      "q1", show q1;
+      "q2", show q2;
+      "b1", stmt_to_string b1;
+      "b2", stmt_to_string b2;
+    ]
+  | ProofHintWithBinders { hint_type; binders } ->
+    "ProofHintWithBinders " ^ record_string [
+      "hint_type", show hint_type;
+      "binders", show binders;
+    ]
+  | WithInvariants { names; body; returns_ } ->
+    "WithInvariants " ^ record_string [
+      "names", FStar.Common.string_of_list show names;
+      "body", stmt_to_string body;
+      "returns_", FStar.Common.string_of_option show returns_;
+    ]
+
+and branch_to_string (b:A.pattern & stmt) : string =
+  let (p, s) = b in
+  show p ^ " -> " ^ stmt_to_string s
+
+instance showable_stmt : showable stmt = {
+  show = stmt_to_string
+}
 
 type decl =
   | FnDefn of fn_defn
@@ -279,9 +408,9 @@ and eq_stmt' (s1 s2:stmt') =
     AU.eq_term l1 l2 && AU.eq_term v1 v2
   | ArrayAssignment { arr=a1; index=i1; value=v1 }, ArrayAssignment { arr=a2; index=i2; value=v2 } ->
     AU.eq_term a1 a2 && AU.eq_term i1 i2 && AU.eq_term v1 v2
-  | LetBinding { qualifier=q1; id=i1; typ=t1; init=init1 }, LetBinding { qualifier=q2; id=i2; typ=t2; init=init2 } ->
+  | LetBinding { qualifier=q1; pat=pat1; typ=t1; init=init1 }, LetBinding { qualifier=q2; pat=pat2; typ=t2; init=init2 } ->
     eq_opt eq_mut_or_ref q1 q2 &&
-    eq_ident i1 i2 &&
+    AU.eq_pattern pat1 pat2 &&
     eq_opt AU.eq_term t1 t2 &&
     eq_opt eq_let_init init1 init2
   | Block { stmt=s1 }, Block { stmt=s2 } -> eq_stmt s1 s2
@@ -363,12 +492,6 @@ and eq_mut_or_ref (m1 m2:mut_or_ref) =
   | MUT, MUT -> true
   | REF, REF -> true
   | _, _ -> false
-and eq_pat (p1 p2:pat) =
-  match p1, p2 with
-  | PatVar i1, PatVar i2 -> eq_ident i1 i2
-  | PatConstructor { head=h1; args=a1 }, PatConstructor { head=h2; args=a2 } ->
-    eq_lident h1 h2 && forall2 eq_pat a1 a2
-  | _, _ -> false
 
 let rec iter (f:'a -> unit) (l:list 'a) =
   match l with
@@ -382,7 +505,7 @@ let ieither (f:'a -> unit) (g:'b -> unit) (e:either 'a 'b) =
   match e with
   | Inl x -> f x
   | Inr x -> g x
-let rec scan_decl (cbs:A.dep_scan_callbacks) (d:decl) =
+let rec scan_decl (cbs:A.dep_scan_callbacks) (d:decl) : unit =
   match d with
   | FnDefn f -> scan_fn_defn cbs f
   | FnDecl d -> scan_fn_decl cbs d
@@ -416,8 +539,9 @@ and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) =
   | Expr e -> cbs.scan_term e.e
   | Assignment { lhs=l; value=v } -> cbs.scan_term l; cbs.scan_term v
   | ArrayAssignment { arr=a; index=i; value=v } -> cbs.scan_term a; cbs.scan_term i; cbs.scan_term v
-  | LetBinding { qualifier=q; id=i; typ=t; init=init } ->
+  | LetBinding { qualifier=q; pat=p; typ=t; init=init } ->
     iopt (scan_let_init cbs) init;
+    cbs.scan_pattern p;
     iopt cbs.scan_term t
   | Block { stmt=s } -> scan_stmt cbs s
   | If { head=h; join_slprop=j; then_=t; else_opt=e } ->
@@ -496,7 +620,7 @@ let add_decorations d ds =
 let mk_expr e = Expr { e }
 let mk_assignment id value = Assignment { lhs=id; value }
 let mk_array_assignment arr index value = ArrayAssignment { arr; index; value }
-let mk_let_binding qualifier id typ init = LetBinding { qualifier; id; typ; init }
+let mk_let_binding qualifier pat typ init = LetBinding { qualifier; pat; typ; init }
 let mk_block stmt = Block { stmt }
 let mk_if head join_slprop then_ else_opt = If { head; join_slprop; then_; else_opt }
 let mk_match head returns_annot branches = Match { head; returns_annot; branches }

@@ -16,7 +16,6 @@
 
 module Pulse.Lib.CancellableInvariant
 #lang-pulse
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 open Pulse.Lib.Pervasives
 
 module GR = Pulse.Lib.GhostReference

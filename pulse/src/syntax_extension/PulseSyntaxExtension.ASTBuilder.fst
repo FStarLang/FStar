@@ -58,9 +58,9 @@ let encode_open_namespaces_and_abbreviations
 = let tm t = tm t r in
   let str s = str s r in
   let lid_as_term ns = lid_as_term ns r in
-  let namespaces = mkConsList r (List.map lid_as_term ctx.open_namespaces) in
+  let namespaces = tm <| ListLiteral (List.map lid_as_term ctx.open_namespaces) in
   let abbrevs =
-      mkConsList r (
+      tm <| ListLiteral (
         List.map 
             (fun (a, m) ->
               let a = str (Ident.string_of_id a) in
@@ -229,9 +229,9 @@ let desugar_pulse_decl_callback
     //Raise one final error at the start of the decl to stop further processing
     let start = FStar.Compiler.Range.start_of_range rng in
     let rng = FStar.Compiler.Range.mk_range (FStar.Compiler.Range.file_of_range rng) start start in
-    FStar.Errors.raise_error (FStar.Errors.Fatal_SyntaxError, "Failed to desugar pulse declaration") rng
+    FStar.Errors.raise_error rng FStar.Errors.Fatal_SyntaxError "Failed to desugar pulse declaration"
   | Inr (Some (msg, rng)) ->
-    FStar.Errors.raise_error (FStar.Errors.Fatal_SyntaxError, msg) rng
+    FStar.Errors.raise_error rng FStar.Errors.Fatal_SyntaxError msg
   | Inl d ->
     let blob = FStar.Syntax.Util.mk_lazy d S.t_bool (S.Lazy_extension "pulse_decl") (Some rng) in
     let splicer =

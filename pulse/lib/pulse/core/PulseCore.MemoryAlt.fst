@@ -281,13 +281,12 @@ let slprop2_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
   slprop3_exists_congruence #a p;
   assert (is_slprop3 (h_exists p));
   down_exists_alt #a p;
-  assert (forall x. H.is_boxable #sig_1 (sig_1.non_info_slprop (down3 (p x))))
-      by (let _ = T.forall_intro () in
-          T.mapply (`split_small));
+  introduce forall x. H.is_boxable #sig_1 (sig_1.non_info_slprop (down3 (p x)))
+    with split_small (p x);
   assert (H.is_boxable #sig_1
            (H.exists_ #sig_1 (fun x -> sig_1.non_info_slprop <| down3 (p x))))
      by (T.mapply (`E.exists_congruence))
-     
+
 let h_exists_equiv (#a:Type) (p q : a -> slprop)
 : Lemma
     (requires (forall x. p x `equiv` q x))
@@ -426,9 +425,8 @@ let slprop1_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
   slprop2_exists_congruence #a p;
   assert (is_slprop2 (h_exists p));
   down_exists_alt2 #a p;
-  assert (forall x. H.is_boxable #sig_2 (sig_2.non_info_slprop (down2 (p x))))
-      by (let _ = T.forall_intro () in
-          T.mapply (`split_small1));
+  introduce forall x. H.is_boxable #sig_2 (sig_2.non_info_slprop (down2 (p x)))
+    with split_small1 (p x);
   assert (H.is_boxable #sig_2
            (H.exists_ #sig_2 (fun x -> sig_2.non_info_slprop <| down2 (p x))))
      by (T.mapply (`E.exists_congruence))

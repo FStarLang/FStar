@@ -164,6 +164,7 @@ let rewrite_token (tok:FP.token)
     | RETURNS -> PP.RETURNS 
     | RETURNS_EQ -> PP.RETURNS_EQ 
     | RPAREN -> PP.RPAREN 
+    | SEQ_BANG_LBRACK -> PP.SEQ_BANG_LBRACK
     | SEMICOLON -> PP.SEMICOLON 
     | SEMICOLON_OP s -> PP.SEMICOLON_OP s
     | SET_RANGE_OF -> PP.SET_RANGE_OF 

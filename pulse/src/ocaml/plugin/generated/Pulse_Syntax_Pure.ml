@@ -264,7 +264,7 @@ let (leftmost_head :
     Pulse_Syntax_Base.term FStar_Pervasives_Native.option)
   =
   fun t ->
-    let uu___ = FStar_Reflection_V2_Derived.collect_app_ln t in
+    let uu___ = FStar_Reflection_V2_Collect.collect_app_ln t in
     match uu___ with | (hd, uu___1) -> FStar_Pervasives_Native.Some hd
 let (is_fvar_app :
   Pulse_Syntax_Base.term ->
@@ -294,7 +294,7 @@ let (is_arrow :
       FStar_Pervasives_Native.option)
   =
   fun t ->
-    match FStar_Reflection_V2_Derived.inspect_ln_unascribe t with
+    match FStar_Reflection_V2_Collect.inspect_ln_unascribe t with
     | FStar_Reflection_V2_Data.Tv_Arrow (b, c) ->
         let uu___ = FStar_Reflection_V2_Builtins.inspect_binder b in
         (match uu___ with
@@ -600,7 +600,7 @@ let rec (inspect_term : FStar_Reflection_Types.term -> term_view) =
               then Tm_EmpInames
               else default_view
     | FStar_Reflection_V2_Data.Tv_App (hd, (a, q)) ->
-        let uu___ = FStar_Reflection_V2_Derived.collect_app_ln t in
+        let uu___ = FStar_Reflection_V2_Collect.collect_app_ln t in
         (match uu___ with
          | (head, args) ->
              (match ((FStar_Reflection_V2_Builtins.inspect_ln head), args)

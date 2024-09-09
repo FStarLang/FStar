@@ -124,6 +124,7 @@ let parse_use_lang_blob (extension_name:string)
 %token EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT LBRACK_AT_AT_AT DOT_LBRACK
 %token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK BAR_RBRACE UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
+%token SEQ_BANG_LBRACK
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN
 %token PIPE_LEFT PIPE_RIGHT
@@ -143,6 +144,11 @@ let parse_use_lang_blob (extension_name:string)
 
 %nonassoc THEN
 %nonassoc ELSE
+
+%nonassoc ASSERT
+%nonassoc EQUALTYPE
+%nonassoc SUBTYPE
+%nonassoc BY
 
 %right COLON_COLON
 %right AMP
@@ -252,8 +258,7 @@ attribute:
         let _ =
             match x with
             | _::_::_ ->
-                  log_issue_text (rr $loc) (Warning_DeprecatedAttributeSyntax,
-                                              old_attribute_syntax_warning)
+                  log_issue_text (rr $loc) Warning_DeprecatedAttributeSyntax old_attribute_syntax_warning
             | _ -> () in
          x
       }
@@ -381,7 +386,7 @@ rawDecl:
   | MODULE uid1=uident EQUALS uid2=quident
       { ModuleAbbrev(uid1, uid2) }
   | MODULE q=qlident
-      { raise_error (Fatal_SyntaxError, "Syntax error: expected a module name") (rr $loc(q)) }
+      { raise_error_text (rr $loc(q)) Fatal_SyntaxError "Syntax error: expected a module name" }
   | MODULE uid=quident
       {  TopLevelModule uid }
   | TYPE tcdefs=separated_nonempty_list(AND,typeDecl)
@@ -393,13 +398,13 @@ rawDecl:
         let r = rr $loc in
         let lbs = focusLetBindings lbs r in
         if q <> Rec && List.length lbs <> 1
-        then raise_error (Fatal_MultipleLetBinding, "Unexpected multiple let-binding (Did you forget some rec qualifier ?)") r;
+        then raise_error_text r Fatal_MultipleLetBinding "Unexpected multiple let-binding (Did you forget some rec qualifier ?)";
         TopLevelLet(q, lbs)
       }
   | VAL c=constant
       {
         (* This is just to provide a better error than "syntax error" *)
-        raise_error (Fatal_SyntaxError, "Syntax error: constants are not allowed in val declarations") (rr $loc)
+        raise_error_text (rr $loc) Fatal_SyntaxError "Syntax error: constants are not allowed in val declarations"
       }
   | VAL lid=lidentOrOperator bs=binders COLON t=typ
       {
@@ -502,7 +507,7 @@ letoperatorbinding:
         | PatVar (v, _, _), None    ->
           let v = lid_of_ns_and_id [] v in
           h (mk_term (Var v) (rr $loc(pat)) Expr)
-        | _ -> raise_error (Fatal_SyntaxError, "Syntax error: let-punning expects a name, not a pattern") (rr $loc(ascr_opt))
+        | _ -> raise_error_text (rr $loc(ascr_opt)) Fatal_SyntaxError "Syntax error: let-punning expects a name, not a pattern"
     }
 
 letbinding:
@@ -546,9 +551,8 @@ layeredEffectDefinition:
         let first_b, last_b =
           match bs with
           | [] ->
-             raise_error (Fatal_SyntaxError,
-                          "Syntax error: unexpected empty binders list in the layered effect definition")
-                         (range_of_id lid)
+             raise_error_text (range_of_id lid) Fatal_SyntaxError
+                          "Syntax error: unexpected empty binders list in the layered effect definition"
           | _ -> hd bs, last bs in
         let r = union_ranges first_b.brange last_b.brange in
         mk_term (Product (bs, mk_term (Name (lid_of_str "Effect")) r Type_level)) r Type_level in
@@ -562,9 +566,9 @@ layeredEffectDefinition:
                                               [TyconAbbrev (ident_of_lid lid, [], None, t)]))
                                       t.range [])
         | _ ->
-           raise_error (Fatal_SyntaxError,
-                        "Syntax error: layered effect combinators should be declared as a record")
-                       r.range in
+           raise_error_text r.range Fatal_SyntaxError
+                        "Syntax error: layered effect combinators should be declared as a record"
+      in
       DefineEffect (lid, [], typ, decls r) }
 
 effectDecl:
@@ -589,14 +593,14 @@ subEffect:
           | ("lift_wp", lift_wp) ->
              { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift_wp; braced=true }
           | _ ->
-             raise_error (Fatal_UnexpectedIdentifier, "Unexpected identifier; expected {'lift', and possibly 'lift_wp'}") (rr $loc)
+             raise_error_text (rr $loc) Fatal_UnexpectedIdentifier "Unexpected identifier; expected {'lift', and possibly 'lift_wp'}"
           end
        | Some (id2, tm2) ->
           let (id1, tm1) = lift1 in
           let lift, lift_wp = match (id1, id2) with
                   | "lift_wp", "lift" -> tm1, tm2
                   | "lift", "lift_wp" -> tm2, tm1
-                  | _ -> raise_error (Fatal_UnexpectedIdentifier, "Unexpected identifier; expected {'lift', 'lift_wp'}") (rr $loc)
+                  | _ -> raise_error_text (rr $loc) Fatal_UnexpectedIdentifier "Unexpected identifier; expected {'lift', 'lift_wp'}"
           in
           { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp); braced=true }
      }
@@ -617,11 +621,13 @@ polymonadic_subcomp:
 qualifier:
   | ASSUME        { Assumption }
   | INLINE        {
-    raise_error (Fatal_InlineRenamedAsUnfold, "The 'inline' qualifier has been renamed to 'unfold'") (rr $loc)
-   }
+    raise_error_text (rr $loc) Fatal_InlineRenamedAsUnfold
+      "The 'inline' qualifier has been renamed to 'unfold'"
+  }
   | UNFOLDABLE    {
-              raise_error (Fatal_UnfoldableDeprecated, "The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it") (rr $loc)
-   }
+    raise_error_text (rr $loc) Fatal_UnfoldableDeprecated
+      "The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it"
+  }
   | INLINE_FOR_EXTRACTION {
      Inline_for_extraction
   }
@@ -637,8 +643,7 @@ qualifier:
   | NOEQUALITY    { Noeq }
   | UNOPTEQUALITY { Unopteq }
   | NEW           { New }
-  | LOGIC         { log_issue_text (rr $loc) (Warning_logicqualifier,
-                                                logic_qualifier_deprecation_warning);
+  | LOGIC         { log_issue_text (rr $loc) Warning_logicqualifier logic_qualifier_deprecation_warning;
                     Logic }
   | OPAQUE        { Opaque }
   | REIFIABLE     { Reifiable }
@@ -657,7 +662,7 @@ letqualifier:
  *     note that in the [@@ case, we choose the Implicit aqual
  *)
 aqual:
-  | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t }
+  | HASH LBRACK t=thunk(term) RBRACK { mk_meta_tac t }
   | HASH      { Implicit }
   | DOLLAR    { Equality }
 
@@ -719,8 +724,8 @@ atomicPattern:
             (match swopt with
              | None
              | Some (Signed, _) -> Const_int ("-" ^ s, swopt)
-             | _ -> raise_error (Fatal_SyntaxError, "Syntax_error: negative integer constant with unsigned width") r)
-          | _ -> raise_error (Fatal_SyntaxError, "Syntax_error: negative constant that is not an integer") r
+             | _ -> raise_error_text r Fatal_SyntaxError "Syntax_error: negative integer constant with unsigned width")
+          | _ -> raise_error_text r Fatal_SyntaxError "Syntax_error: negative constant that is not an integer"
         in
         mk_pattern (PatConst c) r }
   | BACKTICK_PERC q=atomicTerm
@@ -804,6 +809,7 @@ multiBinder:
 
   | b=binder { [b] }
 
+%public
 binders: bss=list(bs=multiBinder {bs}) { flatten bss }
 
 aqualifiedWithAttrs(X):
@@ -879,7 +885,7 @@ thunk2(X):
        mk_term (Abs ([mk_pattern (PatWild (None, [])) (rr $loc)], t)) (rr $loc) Expr }
 
 ascribeTyp:
-  | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=thunk(atomicTerm) {tactic}) { t, tacopt }
+  | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=thunk(trailingTerm) {tactic}) { t, tacopt }
 
 (* Remove for stratify *)
 ascribeKind:
@@ -906,12 +912,12 @@ term:
 	     let pat = mk_pattern (PatWild(None, [])) (rr $loc(op)) in
 	     LetOperator ([(op, pat, e1)], e2)
 	  | None   ->
-             log_issue_text (rr $loc) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
+             log_issue_text (rr $loc) Warning_DeprecatedLightDoNotation do_notation_deprecation_warning;
 	     Bind(gen (rr $loc(op)), e1, e2)
         in mk_term t (rr2 $loc(e1) $loc(e2)) Expr
       }
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
-    { log_issue_text (rr $loc) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
+    { log_issue_text (rr $loc) Warning_DeprecatedLightDoNotation do_notation_deprecation_warning;
       mk_term (Bind(x, e1, e2)) (rr2 $loc(x) $loc(e2)) Expr }
 
 match_returning:
@@ -921,14 +927,21 @@ match_returning:
 %public
 noSeqTerm:
   | t=typ  { t }
-  | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
-      { mk_term (Ascribed(e,{t with level=Expr},tactic_opt,false)) (rr2 $loc(e) $loc(tactic_opt)) Expr }
-  | e=tmIff EQUALTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
+  | e=tmIff SUBTYPE t=tmIff
+      { mk_term (Ascribed(e,{t with level=Expr},None,false)) (rr $loc(e)) Expr }
+  | e=tmIff SUBTYPE t=tmIff BY tactic=thunk(typ)
+      { mk_term (Ascribed(e,{t with level=Expr},Some tactic,false)) (rr2 $loc(e) $loc(tactic)) Expr }
+  | e=tmIff EQUALTYPE t=tmIff
       {
-        log_issue_text (rr $loc)
-	          (Warning_BleedingEdge_Feature,
-		   "Equality type ascriptions is an experimental feature subject to redesign in the future");
-        mk_term (Ascribed(e,{t with level=Expr},tactic_opt,true)) (rr2 $loc(e) $loc(tactic_opt)) Expr
+        log_issue_text (rr $loc) Warning_BleedingEdge_Feature
+		      "Equality type ascriptions is an experimental feature subject to redesign in the future";
+        mk_term (Ascribed(e,{t with level=Expr},None,true)) (rr $loc(e)) Expr
+      }
+  | e=tmIff EQUALTYPE t=tmIff BY tactic=thunk(typ)
+      {
+        log_issue_text (rr $loc) Warning_BleedingEdge_Feature
+		      "Equality type ascriptions is an experimental feature subject to redesign in the future";
+        mk_term (Ascribed(e,{t with level=Expr},Some tactic,true)) (rr2 $loc(e) $loc(tactic)) Expr
       }
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
@@ -951,11 +964,12 @@ noSeqTerm:
        *)
       { match t.tm with
         | App (t1, t2, _) ->
-	  let ot = mk_term (WFOrder (t1, t2)) (rr2 $loc(t) $loc(t)) Type_level in
-	  mk_term (Decreases (ot, None)) (rr2 $loc($1) $loc($4)) Type_level
-	| _ ->
-	  raise_error (Fatal_SyntaxError,
-	    "Syntax error: To use well-founded relations, write e1 e2") (rr $loc(t)) }
+          let ot = mk_term (WFOrder (t1, t2)) (rr2 $loc(t) $loc(t)) Type_level in
+          mk_term (Decreases (ot, None)) (rr2 $loc($1) $loc($4)) Type_level
+        | _ ->
+          raise_error_text (rr $loc(t)) Fatal_SyntaxError
+            "Syntax error: To use well-founded relations, write e1 e2"
+      }
 
   | ATTRIBUTES es=nonempty_list(atomicTerm)
       { mk_term (Attributes es) (rr2 $loc($1) $loc(es)) Type_level }
@@ -986,10 +1000,10 @@ noSeqTerm:
               mk_term (LetOpen(uid, e)) (rr2 $loc($1) $loc(e)) Expr
 
             | _ ->
-              raise_error (Fatal_SyntaxError, "Syntax error: local opens expects either opening\n\
-                                               a module or namespace using `let open T in e`\n\
-                                               or, a record type with `let open e <: t in e'`")
-                          (rr $loc(t))
+              raise_error_text (rr $loc(t)) Fatal_SyntaxError
+                "Syntax error: local opens expects either opening\n\
+                 a module or namespace using `let open T in e`\n\
+                 or, a record type with `let open e <: t in e'`"
       }
 
   | attrs=ioption(attribute)
@@ -1009,20 +1023,21 @@ noSeqTerm:
         let branches = focusBranches pbs (rr2 $loc($1) $loc(pbs)) in
         mk_function branches (rr $loc) (rr2 $loc($1) $loc(pbs))
       }
-  | a=ASSUME e=atomicTerm
+  | a=ASSUME e=noSeqTerm
       { let a = set_lid_range assume_lid (rr $loc(a)) in
         mkExplicitApp (mk_term (Var a) (rr $loc(a)) Expr) [e] (rr $loc)
       }
 
-  | a=ASSERT e=atomicTerm tactic_opt=option(BY tactic=thunk2(typ) {tactic})
+  | a=ASSERT e=noSeqTerm
       {
-        match tactic_opt with
-        | None ->
-          let a = set_lid_range assert_lid (rr $loc(a)) in
-          mkExplicitApp (mk_term (Var a) (rr $loc(a)) Expr) [e] (rr $loc)
-        | Some tac ->
-          let a = set_lid_range assert_by_tactic_lid (rr $loc(a)) in
-          mkExplicitApp (mk_term (Var a) (rr $loc(a)) Expr) [e; tac] (rr $loc)
+        let a = set_lid_range assert_lid (rr $loc(a)) in
+        mkExplicitApp (mk_term (Var a) (rr $loc(a)) Expr) [e] (rr $loc)
+      }
+
+  | a=ASSERT e=noSeqTerm BY tactic=thunk2(typ)
+      {
+        let a = set_lid_range assert_by_tactic_lid (rr $loc(a)) in
+        mkExplicitApp (mk_term (Var a) (rr $loc(a)) Expr) [e; tactic] (rr $loc)
       }
 
    | u=UNDERSCORE BY tactic=thunk(atomicTerm)
@@ -1050,7 +1065,7 @@ noSeqTerm:
    | INTRO EXISTS bs=binders DOT p=noSeqTerm WITH vs=list(atomicTerm) AND e=noSeqTerm
      {
         if List.length bs <> List.length vs
-        then raise_error (Fatal_SyntaxError, "Syntax error: expected instantiations for all binders") (rr $loc(vs))
+        then raise_error_text (rr $loc(vs)) Fatal_SyntaxError "Syntax error: expected instantiations for all binders"
         else mk_term (IntroExists(bs, p, vs, e)) (rr2 $loc($1) $loc(e)) Expr
      }
 
@@ -1064,7 +1079,7 @@ noSeqTerm:
         let b =
             if lr = "Left" then true
             else if lr = "Right" then false
-            else raise_error (Fatal_SyntaxError, "Syntax error: _intro_ \\/ expects either 'Left' or 'Right'") (rr $loc(lr))
+            else raise_error_text (rr $loc(lr)) Fatal_SyntaxError "Syntax error: _intro_ \\/ expects either 'Left' or 'Right'"
         in
         mk_term (IntroOr(b, p, q, e))  (rr2 $loc($1) $loc(e)) Expr
      }
@@ -1105,7 +1120,7 @@ singleBinder:
     {
        match bs with
        | [b] -> b
-       | _ -> raise_error (Fatal_SyntaxError, "Syntax error: expected a single binder") (rr $loc(bs))
+       | _ -> raise_error_text (rr $loc(bs)) Fatal_SyntaxError "Syntax error: expected a single binder"
     }
 
 calcRel:
@@ -1124,23 +1139,11 @@ calcStep:
          CalcStep (rel, justif, next)
      }
 
-%public
-typX(X,Y):
-  | t=Y { t }
-
-  | q=quantifier bs=binders DOT trigger=trigger e=X
-      {
-        match bs with
-        | [] ->
-          raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rr2 $loc(q) $loc($3))
-        | _ ->
-          let idents = idents_of_binders bs (rr2 $loc(q) $loc($3)) in
-          mk_term (q (bs, (idents, trigger), e)) (rr2 $loc(q) $loc(e)) Formula
-      }
-
+%inline
 typ:
-  | t=typX(noSeqTerm,simpleTerm) { t }
+  | t=simpleTerm { t }
 
+%public
 %inline quantifier:
   | FORALL { fun x -> QForall x }
   | EXISTS { fun x -> QExists x}
@@ -1155,6 +1158,7 @@ typ:
       fun (x,y,z) -> QuantOp (op, x, y, z)
     }
 
+%public
 trigger:
   |   { [] }
   | LBRACE_COLON_PATTERN pats=disjunctivePats RBRACE { pats }
@@ -1165,10 +1169,8 @@ disjunctivePats:
 conjunctivePat:
   | pats=separated_nonempty_list(SEMICOLON, appTerm)          { pats }
 
-simpleTerm:
+%inline simpleTerm:
   | e=tmIff { e }
-  | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=term
-      { mk_term (Abs(flatten pats, e)) (rr2 $loc($1) $loc(e)) Un }
 
 maybeFocusArrow:
   | RARROW          { false }
@@ -1291,6 +1293,9 @@ tmEqWith(X):
   | e=tmNoEqWith(X)
       { e }
 
+%inline recordTerm:
+  | LBRACE e=recordExp RBRACE { e }
+
 tmNoEqWith(X):
   | e1=tmNoEqWith(X) COLON_COLON e2=tmNoEqWith(X)
       { consTerm (rr $loc) e1 e2 }
@@ -1318,7 +1323,7 @@ tmNoEqWith(X):
       { mkApp op [ e1, Infix; e2, Nothing ] (rr $loc) }
  | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rr $loc(op)), [e1; e2])) (rr $loc) Un}
-  | LBRACE e=recordExp RBRACE { e }
+  | e=recordTerm { e }
   | BACKTICK_PERC e=atomicTerm
       { mk_term (VQuote e) (rr $loc) Un }
   | op=TILDE e=atomicTerm
@@ -1380,22 +1385,30 @@ simpleDef:
   | e=separated_pair(qlidentOrOperator, EQUALS, noSeqTerm) { e }
   | lid=qlidentOrOperator { lid, mk_term (Name (lid_of_ids [ ident_of_lid lid ])) (rr $loc(lid)) Un }
 
-%inline appTermCommon(argTerm):
-  | head=indexingTerm args=list(argTerm)
+appTermArgs:
+  | h=maybeHash a=onlyTrailingTerm { [h, a] }
+  | h=maybeHash a=indexingTerm rest=appTermArgs { (h, a) :: rest }
+  | h=maybeHash a=recordTerm rest=appTermArgs { (h, a) :: rest }
+  | a=universe rest=appTermArgs { a :: rest }
+  | { [] }
+
+appTermCommon(args):
+  | head=indexingTerm args=args
       { mkApp head (map (fun (x,y) -> (y,x)) args) (rr2 $loc(head) $loc(args)) }
 
 %public
 appTerm:
-  | t=appTermCommon(t=argTerm {t} | h=maybeHash LBRACE t=recordExp RBRACE {h, t}) {t}
+  | t=onlyTrailingTerm { t }
+  | t=appTermCommon(appTermArgs) { t }
+
+appTermArgsNoRecordExp:
+  | h=maybeHash a=indexingTerm rest=appTermArgsNoRecordExp { (h, a) :: rest }
+  | a=universe rest=appTermArgsNoRecordExp { a :: rest }
+  | { [] }
 
 %public
 appTermNoRecordExp:
-  | t=appTermCommon(argTerm) {t}
-
-%public
-argTerm:
-  | x=pair(maybeHash, indexingTerm) { x }
-  | u=universe { u }
+  | t=appTermCommon(appTermArgsNoRecordExp) {t}
 
 %inline maybeHash:
   |      { Nothing }
@@ -1420,6 +1433,25 @@ atomicTerm:
     { x }
   | x=opPrefixTerm(atomicTermQUident)
     { x }
+
+trailingTerm:
+  | x=atomicTerm
+    { x }
+  | x=onlyTrailingTerm
+    { x }
+
+onlyTrailingTerm:
+  | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=term
+      { mk_term (Abs(flatten pats, e)) (rr2 $loc($1) $loc(e)) Un }
+  | q=quantifier bs=binders DOT trigger=trigger e=term
+      {
+        match bs with
+        | [] ->
+          raise_error_text (rr2 $loc(q) $loc($3)) Fatal_MissingQuantifierBinder "Missing binders for a quantifier"
+        | _ ->
+          let idents = idents_of_binders bs (rr2 $loc(q) $loc($3)) in
+          mk_term (q (bs, (idents, trigger), e)) (rr2 $loc(q) $loc(e)) Formula
+      }
 
 atomicTermQUident:
   | id=quident
@@ -1474,7 +1506,9 @@ projectionLHS:
         in mk_term (Paren e1) (rr2 $loc($1) $loc($4)) (e.level)
       }
   | LBRACK es=semiColonTermList RBRACK
-      { mkConsList (rr2 $loc($1) $loc($3)) es }
+      { mkListLit (rr2 $loc($1) $loc($3)) es }
+  | SEQ_BANG_LBRACK es=semiColonTermList RBRACK
+      { mkSeqLit (rr2 $loc($1) $loc($3)) es }
   | PERCENT_LBRACK es=semiColonTermList RBRACK
       { mk_term (LexList es) (rr2 $loc($1) $loc($3)) Type_level }
   | BANG_LBRACE es=separated_list(COMMA, appTerm) RBRACE
@@ -1513,7 +1547,7 @@ constant:
   | n=INT
      {
         if snd n then
-          log_issue_text (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
+          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for representable integer constants";
         Const_int (fst n, None)
      }
   | c=CHAR { Const_char c }
@@ -1525,28 +1559,28 @@ constant:
   | n=INT8
       {
         if snd n then
-          log_issue_text (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for 8-bit signed integers");
+          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for 8-bit signed integers";
         Const_int (fst n, Some (Signed, Int8))
       }
   | n=UINT16 { Const_int (n, Some (Unsigned, Int16)) }
   | n=INT16
       {
         if snd n then
-          log_issue_text (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for 16-bit signed integers");
+          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for 16-bit signed integers";
         Const_int (fst n, Some (Signed, Int16))
       }
   | n=UINT32 { Const_int (n, Some (Unsigned, Int32)) }
   | n=INT32
       {
         if snd n then
-          log_issue_text (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for 32-bit signed integers");
+          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for 32-bit signed integers";
         Const_int (fst n, Some (Signed, Int32))
       }
   | n=UINT64 { Const_int (n, Some (Unsigned, Int64)) }
   | n=INT64
       {
         if snd n then
-          log_issue_text (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for 64-bit signed integers");
+          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for 64-bit signed integers";
         Const_int (fst n, Some (Signed, Int64))
       }
   | n=SIZET { Const_int (n, Some (Unsigned, Sizet)) }
@@ -1564,14 +1598,14 @@ universeFrom:
   | u1=universeFrom op_plus=OPINFIX2 u2=universeFrom
        {
          if op_plus <> "+"
-         then log_issue_text (rr $loc(u1)) (Error_OpPlusInUniverse, "The operator " ^ op_plus ^ " was found in universe context."
+         then log_issue_text (rr $loc(u1)) Error_OpPlusInUniverse ("The operator " ^ op_plus ^ " was found in universe context."
                            ^ "The only allowed operator in that context is +.");
          mk_term (Op(mk_ident (op_plus, rr $loc(op_plus)), [u1 ; u2])) (rr2 $loc(u1) $loc(u2)) Expr
        }
   | max=ident us=nonempty_list(atomicUniverse)
       {
         if string_of_id max <> string_of_lid max_lid
-        then log_issue_text (rr $loc(max)) (Error_InvalidUniverseVar, "A lower case ident " ^ string_of_id max ^
+        then log_issue_text (rr $loc(max)) Error_InvalidUniverseVar ("A lower case ident " ^ string_of_id max ^
                           " was found in a universe context. " ^
                           "It should be either max or a universe variable 'usomething.");
         let max = mk_term (Var (lid_of_ids [max])) (rr $loc(max)) Expr in
@@ -1584,7 +1618,7 @@ atomicUniverse:
   | n=INT
       {
         if snd n then
-          log_issue_text (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
+          log_issue_text (rr $loc) Error_OutOfRange ("This number is outside the allowable range for representable integer constants");
         mk_term (Const (Const_int (fst n, None))) (rr $loc(n)) Expr
       }
   | u=lident { mk_term (Uvar u) (range_of_id u) Expr }

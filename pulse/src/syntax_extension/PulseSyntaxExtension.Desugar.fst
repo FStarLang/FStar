@@ -444,7 +444,36 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       desugar_stmt env s2
 
     | Sequence { s1={s=LetBinding lb}; s2 } ->
-      desugar_bind env lb s2 s.range
+      begin match lb.pat.pat with
+      | A.PatVar _
+      | A.PatWild _ ->
+        desugar_bind env lb s2 s.range
+      | _ ->
+        let id = Ident.id_of_text "_letpattern" in
+        let pat = lb.pat in
+        if Some? lb.qualifier then
+          fail "Qualifiers are not allowed for pattern bindings" lb.pat.prange
+        else return ();!
+        let lb' =
+          { qualifier = lb.qualifier;
+            pat = A.mk_pattern (A.PatVar (id, None, [])) lb.pat.prange;
+            typ = lb.typ;
+            init = lb.init }
+        in
+        let t_let =
+          mk_stmt (LetBinding lb') s.range
+        in
+        let t_match =
+          mk_stmt (Match { head = A.(mk_term (Tvar id) lb.pat.prange Expr);
+                          returns_annot = None;
+                          branches = [(pat, s2)] }) s.range
+        in
+        let s'' =
+          mk_stmt (Sequence { s1 = t_let ; s2=t_match }) s.range
+        in
+        // BU.print2 "GG Rewrote \n(%s)\n to \n(%s)\n\n" (show s) (show s'');
+        desugar_stmt env s''
+      end
 
     | ProofHintWithBinders _ ->
       desugar_proof_hint_with_binders env s None s.range
@@ -593,12 +622,17 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
   : err SW.st_term
   = let open Sugar in
     let! annot = desugar_term_opt env lb.typ in
-    let b = SW.mk_binder lb.id annot in
-    let! s2 = 
-      let env, bv = push_bv env lb.id in        
+    let id = 
+      match lb.pat.pat with
+      | A.PatWild _ -> Ident.mk_ident ("_", r)
+      | A.PatVar (id, _, _) -> id
+    in
+    let b = SW.mk_binder id annot in
+    let! s2 =
+      let env, bv = push_bv env id in
       let! s2 = desugar_stmt env s2 in
-      return (SW.close_st_term s2  bv.index)
-    in        
+      return (SW.close_st_term s2 bv.index)
+    in
     match lb.init with
     | None ->
       fail "Uninitialized variables are not yet handled" r
@@ -609,7 +643,7 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
         match e1 with
         | Sugar.Array_initializer _ ->
           fail "immutable local arrays are not yet supported" r
-        | Sugar.Lambda_initializer { 
+        | Sugar.Lambda_initializer {
             id; is_rec=false;
             binders;
             ascription=Inl c;
@@ -627,7 +661,7 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
           let! lam = desugar_lambda env lam in
           return <| mk_bind b lam s2 r
 
-        | Sugar.Lambda_initializer _ -> 
+        | Sugar.Lambda_initializer _ ->
           fail "Nested functions are not yet fully supported" r
 
         | Default_initializer e1 ->
@@ -640,21 +674,21 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
               mk_totbind b (as_term s1) s2 r
           in
           return t
-        
+
         | Stmt_initializer e ->
           let! s = desugar_stmt env e in
           return (mk_bind b s s2 r)
       )
       | Some MUT //these are handled the same for now
       | Some REF ->
-        let b = SW.mk_binder lb.id annot in
+        let b = SW.mk_binder id annot in
         match e1 with
         | Sugar.Array_initializer {init; len} ->
           let! init = desugar_term env init in
           let! len = desugar_term env len in
           return (SW.tm_let_mut_array b init len s2 r)
         | Sugar.Default_initializer e1 ->
-          let! e1 = desugar_term env e1 in 
+          let! e1 = desugar_term env e1 in
           return (SW.tm_let_mut b e1 s2 r)
     )
 
@@ -719,7 +753,7 @@ and desugar_lambda (env:env_t) (l:Sugar.lambda)
         return (env, bs, bvs, Some comp)
     in
     let! body = 
-      if FStar.Options.ext_getv "pulse:rvalues" <> ""
+      if FStar.Options.Ext.get "pulse:rvalues" <> ""
       then LR.transform env body
       else return body
     in
@@ -773,7 +807,7 @@ and desugar_decl (env:env_t)
     let bvs = bvs@bvs' in
     let! comp = desugar_computation_type env ascription in
     let! body = 
-      if FStar.Options.ext_getv "pulse:rvalues" <> ""
+      if FStar.Options.Ext.get "pulse:rvalues" <> ""
       then LR.transform env body
       else return body
     in

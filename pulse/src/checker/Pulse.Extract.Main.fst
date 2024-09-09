@@ -20,6 +20,7 @@ open Pulse.Syntax.Base
 open Pulse.Syntax.Pure
 open Pulse.Syntax.Printer
 open FStar.List.Tot
+open Pulse.Show
 
 module L = FStar.List.Tot
 module R = FStar.Reflection
@@ -574,15 +575,24 @@ let rec extract (g:env) (p:st_term)
       )
 
       | Tm_Bind { binder; head; body } ->
-        if is_erasable head
+        let eh = is_erasable head in
+        let et = erase_type_for_extraction g binder.binder_ty in
+        //debug g (fun _ ->
+        //  Printf.sprintf "Extracting bind %s\neh=%s, et=%s\nBody.tag = %s\n"
+        //    (show p) (show eh) (show et) (tag_of_st_term body)
+        //);
+        // eh: head is erasable, delete it
+        // et: the type returned by the head is erasable, and it is a literal
+        //     function. Erase it. This happens often with locally-defined ghost
+        //     functions.
+        if eh || (Tm_Abs? head.term && et)
         then (
           let body = LN.subst_st_term body [RT.DT 0 unit_val] in
           debug g (fun _ -> Printf.sprintf "Erasing head of bind %s\nopened body to %s"
-                              (st_term_to_string head)
-                              (st_term_to_string body));
+                              (show head)
+                              (show body));
           extract g body
-        )
-        else (
+        ) else (
           let head, _ = extract g head in
           let g, mlident, mlty, name = extend_env g binder in
           let body = LN.open_st_term_nv body name in

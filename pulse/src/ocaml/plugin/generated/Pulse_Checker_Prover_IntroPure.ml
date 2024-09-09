@@ -389,8 +389,8 @@ let (is_uvar_implication : pure_uv_heuristic_t) =
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "prims.fst"
-                            (Prims.of_int (590)) (Prims.of_int (19))
-                            (Prims.of_int (590)) (Prims.of_int (31)))))
+                            (Prims.of_int (611)) (Prims.of_int (19))
+                            (Prims.of_int (611)) (Prims.of_int (31)))))
                    (Obj.magic (Pulse_Syntax_Printer.term_to_string t))
                    (fun uu___1 ->
                       FStar_Tactics_Effect.lift_div_tac
@@ -482,9 +482,9 @@ let (is_uvar_implication : pure_uv_heuristic_t) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (611))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (611))
                                                                     (Prims.of_int (31)))))
                                                                   (Obj.magic
                                                                     (FStar_Tactics_V2_Builtins.term_to_string
@@ -751,8 +751,8 @@ let (pure_uvar_heursitics : pure_uv_heuristic_t) =
                           (Obj.magic
                              (FStar_Range.mk_range
                                 "Pulse.Checker.Prover.IntroPure.fst"
-                                (Prims.of_int (179)) (Prims.of_int (16))
-                                (Prims.of_int (179)) (Prims.of_int (23)))))
+                                (Prims.of_int (179)) (Prims.of_int (10))
+                                (Prims.of_int (181)) (Prims.of_int (48)))))
                        (Obj.magic (h2 uvs t))
                        (fun uu___ ->
                           (fun uu___ ->

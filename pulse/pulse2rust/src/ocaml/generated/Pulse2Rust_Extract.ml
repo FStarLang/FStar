@@ -1427,11 +1427,10 @@ and (extract_mlexpr :
           Pulse2Rust_Rust_Syntax.mk_expr_tuple uu___1
       | FStar_Extraction_ML_Syntax.MLE_CTor (p, args) ->
           let is_native =
-            ((FStar_Extraction_ML_Syntax.mlpath_to_string p) =
-               "FStar.Pervasives.Native.Some")
-              ||
-              ((FStar_Extraction_ML_Syntax.mlpath_to_string p) =
-                 "FStar.Pervasives.Native.None") in
+            (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___ = "FStar.Pervasives.Native.Some") ||
+              (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___ = "FStar.Pervasives.Native.None") in
           let ty_name =
             match e.FStar_Extraction_ML_Syntax.mlty with
             | FStar_Extraction_ML_Syntax.MLTY_Named (uu___, p1) ->
