@@ -289,7 +289,7 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
 
 
 #restart-solver
-#push-options "--retry 5"
+#push-options "--retry 10"
 let transfer_larger_slice
   (s : Seq.seq int)
   (shift : nat)
