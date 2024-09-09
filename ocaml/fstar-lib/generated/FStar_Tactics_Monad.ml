@@ -962,7 +962,9 @@ let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =
   fun pref ->
     fun t ->
       let uu___ =
-        let uu___1 = FStar_Errors_Msg.text (Prims.strcat pref " failed") in
+        let uu___1 =
+          FStar_Errors_Msg.text
+            (Prims.strcat "'" (Prims.strcat pref "' failed")) in
         [uu___1] in
       wrap_err_doc uu___ t
 let mlog : 'a . (unit -> unit) -> (unit -> 'a tac) -> 'a tac =
