@@ -32,6 +32,8 @@ extract_c: $(OUTPUT_DIRECTORY)/ExtractionTest.c
 
 extract_pulse_c: $(OUTPUT_DIRECTORY)/PulsePointStruct.c
 
+extract_c_bug166: $(OUTPUT_DIRECTORY)/Bug166.c
+
 else
 test-dpe-c:
 
@@ -41,15 +43,16 @@ extract_c:
 
 extract_pulse_c:
 
+extract_c_bug166: 
 endif
 
-test: test-cbor extract extract_pulse_c extract_c test-dpe-c test-error-messages
+test: test-cbor extract extract_pulse_c extract_c extract_c_bug166 test-dpe-c test-error-messages
 
 test-error-messages:
 	+$(MAKE) -C bug-reports/error-messages
 
 .PHONY: test-dpe-c test-error-messages
 
-.PHONY: extract_pulse_c extract_c
+.PHONY: extract_pulse_c extract_c extract_c_bug166
 
 .PHONY: test test-cbor test-cbor-raw
