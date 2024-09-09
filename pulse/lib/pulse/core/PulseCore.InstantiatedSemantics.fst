@@ -155,21 +155,14 @@ let slprop_equiv_exists
                         (F.on_dom a p)
                         (F.on_dom a q)) = ()
   in
+  let pf' : squash (eq2 #(F.arrow a (fun _ -> MemoryAlt.slprop))
+                        (F.on_dom a p)
+                        (F.on_dom a q)) = pf
+  in
   let x : squash (op_exists_Star p == op_exists_Star q) = _ by (
-      T.norm [delta_only [`%op_exists_Star; `%F.on_dom]; unascribe];
-      let bindings = T.cur_vars() in
-      let bindings = List.Tot.rev bindings in
-      match bindings with
-      | hd::_ -> (
-        match T.term_as_formula hd.sort with
-        | T.Comp (T.Eq _) lhs rhs ->
-          T.grewrite lhs rhs;
-          T.trefl();
-          T.exact (T.binding_to_term hd)
-        | _ -> T.fail "Unexpected type of hd"
-      )
-      | _ ->
-        T.fail "empty bindings"
+      T.norm [delta_only [`%op_exists_Star; `%F.on_dom; `%slprop]; unascribe];
+      let bnd = T.nth_var (-1) in
+      T.grewrite_eq bnd
   ) in
   unsquash x
 

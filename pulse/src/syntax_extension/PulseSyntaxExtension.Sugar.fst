@@ -56,6 +56,12 @@ type computation_type = {
 type mut_or_ref =
   | MUT | REF
 
+instance showable_mut_or_ref : showable mut_or_ref = {
+  show = (fun i -> match i with
+    | MUT -> "MUT"
+    | REF -> "REF")
+}
+
 type hint_type =
   | ASSERT of slprop
   | UNFOLD of option (list lident) & slprop
@@ -70,6 +76,22 @@ type hint_type =
       option A.term (* optional tactic *)
   | WILD
   | SHOW_PROOF_STATE of rng
+
+instance showable_slprop : showable slprop = {
+  show = (fun s -> match s.v with
+    | SLPropTerm t -> show t);
+}
+
+instance showable_hint_type : showable hint_type = {
+  show = (fun i -> match i with
+    | ASSERT s -> "ASSERT " ^ show s
+    | UNFOLD (ns, s) -> "UNFOLD " ^ show ns ^ " " ^ show s
+    | FOLD (ns, s) -> "FOLD " ^ show ns ^ " " ^ show s
+    | RENAME (ts, g, t) -> "RENAME " ^ show ts ^ " " ^ show g ^ " " ^ show t
+    | REWRITE (s1, s2, t) -> "REWRITE " ^ show s1 ^ " " ^ show s2 ^ " " ^ show t
+    | WILD -> "WILD"
+    | SHOW_PROOF_STATE r -> "SHOW_PROOF_STATE ...")
+}
 
 type array_init = {
   init : A.term;
@@ -186,6 +208,14 @@ and let_init =
   | Lambda_initializer of fn_defn
   | Stmt_initializer of stmt
 
+instance showable_let_init : showable let_init = {
+  show = (fun i -> match i with
+    | Array_initializer a -> "Array_initializer ..."
+    | Default_initializer t -> "Default_initializer ..."
+    | Lambda_initializer l -> "Lambda_initializer ..."
+    | Stmt_initializer s -> "Stmt_initializer ...")
+}
+
 type fn_decl = {
   id:ident;
   binders:binders;
@@ -210,6 +240,109 @@ let tag_of_stmt (s:stmt) : string =
   | Parallel {} -> "Parallel"
   | ProofHintWithBinders {} -> "ProofHintWithBinders"
   | WithInvariants {} -> "WithInvariants"
+
+instance tagged_stmt : Class.Tagged.tagged stmt = {
+  tag_of = tag_of_stmt
+}
+
+let record_string (fs : list (string & string)) : string =
+  "{" ^
+  (String.concat "; " <| List.Tot.map (fun (f, s) -> f ^ " = " ^ s) fs) ^
+  "}"
+
+instance showable_pattern : showable A.pattern = {
+  show = A.pat_to_string;
+}
+
+instance showable_a_term : showable A.term = {
+  show = A.term_to_string;
+}
+instance showable_a_binder : showable A.binder = {
+  show = A.binder_to_string;
+}
+
+let rec stmt_to_string (s:stmt) : string =
+  match s.s with
+  | Open l -> "Open " ^ show l
+  | Expr {e} -> "Expr " ^ show e
+  | Assignment { lhs; value } ->
+    "Assignment " ^ record_string [
+      "lhs", show lhs;
+      "value", show value;
+    ]
+  | ArrayAssignment { arr; index; value } ->
+    "ArrayAssignment " ^ record_string [
+      "arr", show arr;
+      "index", show index;
+      "value", show value;
+    ]
+  | LetBinding { qualifier; pat; typ; init } ->
+    "LetBinding " ^ record_string [
+      "qualifier", show qualifier;
+      "pat", show pat;
+      "typ", show typ;
+      "init", show init;
+    ]
+  | Block { stmt } ->
+    "Block {" ^ stmt_to_string stmt ^ "}"
+  | If { head; join_slprop; then_; else_opt } ->
+    "If " ^ record_string [
+      "head", show head;
+      "join_slprop", show join_slprop;
+      "then_", stmt_to_string then_;
+      "else_opt", FStar.Common.string_of_option stmt_to_string else_opt;
+    ]
+  | Match { head; returns_annot; branches } ->
+    "Match " ^ record_string [
+      "head", show head;
+      "returns_annot", show returns_annot;
+      "branches", FStar.Common.string_of_list branch_to_string branches;
+    ]
+  | While { guard; id; invariant; body } ->
+    "While " ^ record_string [
+      "guard", stmt_to_string guard;
+      "id", show id;
+      "invariant", show invariant;
+      "body", stmt_to_string body;
+    ]
+  | Introduce { slprop; witnesses } ->
+    "Introduce " ^ record_string [
+      "slprop", show slprop;
+      "witnesses", FStar.Common.string_of_list show witnesses
+    ]
+  | Sequence { s1; s2 } ->
+    "Sequence " ^ record_string [
+      "s1", stmt_to_string s1;
+      "s2", stmt_to_string s2;
+    ]
+  | Parallel { p1; p2; q1; q2; b1; b2 } ->
+    "Parallel " ^ record_string [
+      "p1", show p1;
+      "p2", show p2;
+      "q1", show q1;
+      "q2", show q2;
+      "b1", stmt_to_string b1;
+      "b2", stmt_to_string b2;
+    ]
+  | ProofHintWithBinders { hint_type; binders } ->
+    "ProofHintWithBinders " ^ record_string [
+      "hint_type", show hint_type;
+      "binders", show binders;
+    ]
+  | WithInvariants { names; body; returns_ } ->
+    "WithInvariants " ^ record_string [
+      "names", FStar.Common.string_of_list show names;
+      "body", stmt_to_string body;
+      "returns_", FStar.Common.string_of_option show returns_;
+    ]
+
+and branch_to_string (b:A.pattern & stmt) : string =
+  let (p, s) = b in
+  show p ^ " -> " ^ stmt_to_string s
+
+instance showable_stmt : showable stmt = {
+  show = stmt_to_string
+}
 
 type decl =
   | FnDefn of fn_defn
