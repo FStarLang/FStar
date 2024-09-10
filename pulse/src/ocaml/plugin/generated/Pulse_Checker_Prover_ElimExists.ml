@@ -101,6 +101,9 @@ let (elim_exists :
   fun g ->
     fun ctxt ->
       fun ctxt_typing ->
+        let uu___ =
+          elim_exists_frame g ctxt Pulse_Syntax_Pure.tm_emp ()
+            (Pulse_Typing_Env.mk_env (Pulse_Typing_Env.fstar_env g)) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
              (Obj.magic
@@ -112,13 +115,11 @@ let (elim_exists :
                 (FStar_Range.mk_range "Pulse.Checker.Prover.ElimExists.fst"
                    (Prims.of_int (67)) (Prims.of_int (85))
                    (Prims.of_int (72)) (Prims.of_int (62)))))
-          (Obj.magic
-             (elim_exists_frame g ctxt Pulse_Syntax_Pure.tm_emp ()
-                (Pulse_Typing_Env.mk_env (Pulse_Typing_Env.fstar_env g))))
-          (fun uu___ ->
+          (Obj.magic uu___)
+          (fun uu___1 ->
              FStar_Tactics_Effect.lift_div_tac
-               (fun uu___1 ->
-                  match uu___ with
+               (fun uu___2 ->
+                  match uu___1 with
                   | FStar_Pervasives.Mkdtuple4
                       (g', ctxt', ctxt'_emp_typing, k) ->
                       FStar_Pervasives.Mkdtuple4
@@ -136,6 +137,15 @@ let (elim_exists_pst :
   =
   fun preamble ->
     fun pst ->
+      let uu___ =
+        Obj.magic
+          (FStar_Tactics_Effect.lift_div_tac
+             (fun uu___1 ->
+                FStar_List_Tot_Base.existsb
+                  (fun t ->
+                     Pulse_Syntax_Pure.uu___is_Tm_ExistsSL
+                       (Pulse_Syntax_Pure.inspect_term t))
+                  pst.Pulse_Checker_Prover_Base.remaining_ctxt)) in
       FStar_Tactics_Effect.tac_bind
         (FStar_Sealed.seal
            (Obj.magic
@@ -146,16 +156,19 @@ let (elim_exists_pst :
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Checker.Prover.ElimExists.fst"
                  (Prims.of_int (80)) (Prims.of_int (92)) (Prims.of_int (120))
-                 (Prims.of_int (3)))))
-        (FStar_Tactics_Effect.lift_div_tac
-           (fun uu___ ->
-              FStar_List_Tot_Base.existsb
-                (fun t ->
-                   Pulse_Syntax_Pure.uu___is_Tm_ExistsSL
-                     (Pulse_Syntax_Pure.inspect_term t))
-                pst.Pulse_Checker_Prover_Base.remaining_ctxt))
-        (fun uu___ ->
+                 (Prims.of_int (3))))) (Obj.magic uu___)
+        (fun uu___1 ->
            (fun prog ->
+              let uu___1 =
+                elim_exists_frame pst.Pulse_Checker_Prover_Base.pg
+                  (Pulse_Syntax_Pure.list_as_slprop
+                     pst.Pulse_Checker_Prover_Base.remaining_ctxt)
+                  (Pulse_Checker_Prover_Base.op_Star
+                     preamble.Pulse_Checker_Prover_Base.frame
+                     (Pulse_Checker_Prover_Base.op_Array_Access
+                        pst.Pulse_Checker_Prover_Base.ss
+                        pst.Pulse_Checker_Prover_Base.solved)) ()
+                  pst.Pulse_Checker_Prover_Base.uvs in
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Sealed.seal
@@ -170,20 +183,11 @@ let (elim_exists_pst :
                             "Pulse.Checker.Prover.ElimExists.fst"
                             (Prims.of_int (80)) (Prims.of_int (92))
                             (Prims.of_int (120)) (Prims.of_int (3)))))
-                   (Obj.magic
-                      (elim_exists_frame pst.Pulse_Checker_Prover_Base.pg
-                         (Pulse_Syntax_Pure.list_as_slprop
-                            pst.Pulse_Checker_Prover_Base.remaining_ctxt)
-                         (Pulse_Checker_Prover_Base.op_Star
-                            preamble.Pulse_Checker_Prover_Base.frame
-                            (Pulse_Checker_Prover_Base.op_Array_Access
-                               pst.Pulse_Checker_Prover_Base.ss
-                               pst.Pulse_Checker_Prover_Base.solved)) ()
-                         pst.Pulse_Checker_Prover_Base.uvs))
-                   (fun uu___ ->
+                   (Obj.magic uu___1)
+                   (fun uu___2 ->
                       FStar_Tactics_Effect.lift_div_tac
-                        (fun uu___1 ->
-                           match uu___ with
+                        (fun uu___3 ->
+                           match uu___2 with
                            | FStar_Pervasives.Mkdtuple4
                                (g', remaining_ctxt', ty, k) ->
                                {
@@ -268,4 +272,4 @@ let (elim_exists_pst :
                                  Pulse_Checker_Prover_Base.progress = prog;
                                  Pulse_Checker_Prover_Base.allow_ambiguous =
                                    (pst.Pulse_Checker_Prover_Base.allow_ambiguous)
-                               })))) uu___)
+                               })))) uu___1)
