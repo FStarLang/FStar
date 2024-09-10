@@ -481,32 +481,6 @@ and extract_dv_branch g (b:Pulse.Syntax.Base.branch) : T.Tac ECL.branch =
   let g, pat, bs = extract_dv_pattern g pat in
   ECL.mk_branch pat (RT.close_term_bs bs (extract_dv g (Pulse.Checker.Match.open_st_term_bs body bs)))
 
-let extract_dv_typ (t:R.typ) : T.Tac ECL.term =
-  let bs, c = R.collect_arr_ln_bs t in
-  let bs = T.map (fun b ->
-    let bview = R.inspect_binder b in
-    ECL.mk_binder
-      (ECL.rt_term_to_term bview.sort)
-      (T.unseal bview.ppname)
-      (match bview.qual with
-       | R.Q_Implicit -> Some ECL.implicit_qual
-       | _ -> None)
-      []) bs in
-  match (R.inspect_comp c) with
-  | R.C_Total t -> begin
-    let hd, args = R.collect_app_ln t in
-    //
-    // TODO: (sanity?) check hd for the effect
-    //
-    if L.length args = 0
-    then T.fail (Printf.sprintf "Unexpected return type in extract_dv_typ: %s" (T.term_to_string t))
-    else let ret_typ = args |> L.hd |> fst |> ECL.rt_term_to_term in
-         ECL.mk_arrow bs ret_typ
-    end
-  | _ ->
-    T.fail
-      (Printf.sprintf "Unexpected arrow comp in extract_dv_typ: %s" (T.term_to_string t))
-
 let extract_pulse_dv (g: env) (p:st_term) : T.Tac ECL.term =
   let p = erase_ghost_subterms g p in
   let p = simplify_st_term g p in
