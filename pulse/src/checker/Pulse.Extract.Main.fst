@@ -56,83 +56,40 @@ let debug (g:env) (f: unit -> T.Tac string)
   = if RU.debug_at_level (E.fstar_env g.coreenv) "pulse_extraction"
     then T.print (f())
 
+let extend_env' (g:env) ppname ty
+  : T.Tac (env & nvar)
+  = let x = E.fresh g.coreenv in
+    let coreenv = E.push_binding g.coreenv x ppname ty in
+    { g with coreenv }, (ppname, x)
 
-let term_as_mlexpr (g:env) (t:term)
-  : T.Tac ECL.mlexpr
-  = let uenv = uenv_of_env g in
-    let t = ECL.normalize_for_extraction uenv t in
-    let mlt, _, _ = ECL.term_as_mlexpr uenv t in
-    mlt
-
-let term_as_mlty (g:env) (t:term)
-  : T.Tac ECL.mlty
-  = ECL.term_as_mlty (uenv_of_env g) t
-
-let extend_env (g:env) (b:binder)
-  : T.Tac (env & ECL.mlident & ECL.mlty & name)
-  = let mlty = term_as_mlty g b.binder_ty in
-    let x = E.fresh g.coreenv in
-    let coreenv = E.push_binding g.coreenv x b.binder_ppname b.binder_ty in
-    debug g (fun _ -> Printf.sprintf "Extending environment with %s : %s\n"
-                                      (binder_to_string b)
-                                      (term_to_string b.binder_ty));
-    let uenv_inner, mlident = ECL.extend_bv g.uenv_inner b.binder_ppname x mlty in
-    { uenv_inner; coreenv }, mlident, mlty, (b.binder_ppname, x)
-
-let rec name_as_mlpath (x:T.name) 
-  : T.Tac ECL.mlpath 
-  = match x with
-    | [] -> T.fail "Unexpected empty name"
-    | [x] -> [], x
-    | x :: xs ->
-      let xs, x = name_as_mlpath xs in
-      x :: xs, x
+let extend_env'_binder (g:env) (b: binder) =
+  extend_env' g b.binder_ppname b.binder_ty
 
 module R = FStar.Reflection.V2
-let extract_constant (g:env) (c:T.vconst)
-  : T.Tac ECL.mlconstant
-  = let e = T.pack_ln (R.Tv_Const c) in
-    let mle, _, _ = ECL.term_as_mlexpr (uenv_of_env g) e in
-    match ECL.mlconstant_of_mlexpr mle with
-    | None -> T.raise (Extraction_failure "Failed to extract constant")
-    | Some c -> c
 
-let rec extend_env_pat_core (g:env) (p:pattern)
-  : T.Tac (env & list ECL.mlpattern & list Pulse.Typing.Env.binding)
-  = match p with
-    | Pat_Dot_Term _ -> g, [], []
-    | Pat_Var pp sort -> 
-      let x = E.fresh g.coreenv in
-      let pp = mk_ppname pp FStar.Range.range_0 in
-      let ty = T.unseal sort in
-      let ty = wr ty (T.range_of_term ty) in
-      debug g (fun _ -> Printf.sprintf "Pushing pat_var %s : %s\n" (T.unseal pp.name) (term_to_string ty));
-      let coreenv = E.push_binding g.coreenv x pp ty in
-      let uenv_inner, mlident = ECL.extend_bv g.uenv_inner pp x ECL.mlty_top in
-      { uenv_inner; coreenv },
-      [ ECL.mlp_var mlident ],
-      [ (x, tm_unknown) ]
+let rec extend_env'_pattern g (p:Pulse.Syntax.Base.pattern) :
+    T.Tac (env & list Pulse.Typing.Env.binding) =
+  match p with
+  | Pat_Cons fv pats ->
+    let g, bs = extend_env'_patterns g (List.Tot.map fst pats) in
+    g, bs
+  | Pat_Constant c ->
+    g, []
+  | Pat_Var ppname sort ->
+    let ty = T.unseal sort in
+    let g, (_, x) = extend_env' g (mk_ppname ppname Range.range_0) ty in
+    g, [x, ty]
+  | Pat_Dot_Term t ->
+    g, []
+and extend_env'_patterns g (ps:list Pulse.Syntax.Base.pattern) :
+    T.Tac (env & list Pulse.Typing.Env.binding) =
+  match ps with
+  | [] -> g, []
+  | p::ps ->
+    let g, bs = extend_env'_pattern g p in
+    let g, bs' = extend_env'_patterns g ps in
+    g, bs@bs'
 
-    | Pat_Cons f pats ->
-      let g, pats, bindings = 
-        T.fold_left
-          (fun (g, pats, bindings) (p, _) ->
-            let g, pats', bindings' = extend_env_pat_core g p in
-            g, pats @ pats', bindings@bindings')
-          (g, [], [])
-          pats
-      in
-      g, [ECL.mlp_constructor (name_as_mlpath f.fv_name) pats], bindings
-    | Pat_Constant c ->
-      let c = extract_constant g c in
-      g, [ECL.mlp_const c], []
-let extend_env_pat g p = 
-  let g, pats, bs = extend_env_pat_core g p in
-  match pats with
-  | [p] -> g, p, bs
-  | _ -> T.raise (Extraction_failure "Unexpected extraction of pattern")
-
-let unit_val : term = wr Pulse.Reflection.Util.unit_tm Range.range_0
 let is_erasable (p:st_term) : T.Tac bool = 
   let tag = T.unseal p.effect_tag in
   match tag with
@@ -147,160 +104,6 @@ let term_eq_string (s:string) (t:R.term) : bool =
   | R.Tv_Const (R.C_String s') -> s=s'
   | _ -> false
 
-let maybe_unfold_head (g:env) (head:R.term) 
-  : T.Tac (option (either st_term R.term))
-  = debug g (fun _ -> Printf.sprintf "Maybe unfolding head %s\n" (T.term_to_string head));
-    match R.inspect_ln head with
-    | R.Tv_FVar f -> (
-      let name = R.inspect_fv f in
-      match R.lookup_typ (topenv_of_env g) name with
-      | None -> None
-      | Some se ->
-        let attrs = R.sigelt_attrs se in
-        let quals = R.sigelt_quals se in
-        if List.Tot.existsb (term_eq_string "inline") attrs
-        || List.Tot.existsb (function | R.Inline_for_extraction -> true | _ -> false) quals
-        then match ECL.sigelt_extension_data se with
-             | Some se ->
-               debug g (fun _ -> Printf.sprintf "Unfolded head %s\n"  (T.term_to_string head));
-               debug g (fun _ -> Printf.sprintf "to %s\n"  (st_term_to_string se));
-               Some (Inl se)
-             | None -> (
-                match T.inspect_sigelt se with
-                | T.Sg_Let { isrec=false; lbs = [ { lb_us=[]; lb_def }] } ->
-                  Some (Inr lb_def)
-                | _ -> None
-             )
-        else None
-    )
-    | R.Tv_UInst f _ ->
-      //No universe-polymorphic inlining ... yet
-      None
-    | _ -> None
-
-let rec st_term_abs_take_n_args (n_args:nat) (t:st_term)
-  : res:(st_term & nat){snd res <= n_args}
-  = if n_args = 0 then t, 0
-    else (
-      match t.term with 
-      | Tm_Abs { body } -> st_term_abs_take_n_args (n_args - 1) body
-      | _ -> (t, n_args)
-    )
-
-let rec term_abs_take_n_args (n_args:nat) (t:R.term)
-  : res:(R.term & nat){snd res <= n_args}
-  = if n_args = 0 then t, 0
-    else (
-      match R.inspect_ln t with 
-      | R.Tv_Abs _ body -> term_abs_take_n_args (n_args - 1) body
-      | _ -> (t, n_args)
-    )
-
-let abs_take_n_args (n_args:nat) (t:either st_term R.term)
-  : T.Tac (res:(either st_term R.term & nat){snd res <= n_args}) 
-  = match t with
-    | Inl t -> 
-      let t, n_args = st_term_abs_take_n_args n_args t in
-      Inl t, n_args
-    | Inr t ->
-      let t, n_args = term_abs_take_n_args n_args t in
-      Inr t, n_args
-
-let rec unascribe (t:R.term) : T.Tac R.term =
-  match R.inspect_ln t with
-  | R.Tv_AscribedT e _ _ _ -> unascribe e
-  | R.Tv_AscribedC e _ _ _ -> unascribe e
-  | _ -> t
-
-let maybe_inline (g:env) (head:term) (arg:term) :T.Tac (option st_term) =
-  debug g (fun _ -> Printf.sprintf "Considering inlining %s\n"
-                      (term_to_string head));
-  match head_and_args head with
-  | None -> None
-  | Some (head, args) ->
-    debug g (fun _ -> Printf.sprintf "head=%s with %d args\n"
-                      (T.term_to_string head)
-                      (List.length args));
-    match maybe_unfold_head g head with
-    | None ->
-      debug g (fun _ -> Printf.sprintf "No unfolding of %s\n"
-                            (T.term_to_string head));
-      None
-
-    | Some def ->
-      // debug g (fun _ -> Printf.sprintf "Unfolded %s to body %s\n"
-      //                       (T.term_to_string head)
-      //                       (st_term_to_string body));
-      let as_term (a:R.term) =
-        wr a Range.range_0 in
-      let all_args : list (term & option qualifier) =
-        L.map #R.argv
-              (fun (t, q) -> 
-                let t = as_term t in
-                let qual = if R.Q_Implicit? q then Some Implicit else None in
-                t, qual)
-              args
-        @ [arg, None]
-      in
-      let n_args = L.length all_args in
-      let body, remaining_args = abs_take_n_args n_args def in
-      let args, rest = L.splitAt (n_args - remaining_args) all_args in
-      let _, subst =
-          L.fold_right
-            (fun arg (i, subst) ->
-              i + 1,
-              RT.DT i (fst arg)::subst)
-            args
-            (0, [])
-      in
-      match body with
-      | Inl body -> (
-        let applied_body = LN.subst_st_term body subst in
-        match rest with
-        | [] -> 
-          Some applied_body
-        | _ ->
-          T.fail (Printf.sprintf 
-            "Partial or over application of inlined Pulse definition is not yet supported\n\
-            %s has %d arguments, but %s were left unapplied"
-            (T.term_to_string head)
-            (L.length args)
-            (String.concat ", " (T.map (fun x -> term_to_string (fst x)) rest))
-          )
-      )
-      | Inr body ->
-        let applied_body = unascribe (LN.subst_host_term body subst) in
-        let mk_st_app (head:R.term) (arg:term) (arg_qual:option qualifier) =
-          let head = wr head (T.range_of_term head) in
-          let tm = Tm_STApp { head; arg_qual; arg } in 
-          Some { term = tm; range=FStar.Range.range_0; effect_tag=default_effect_hint }
-        in
-        match rest with
-        | [] -> (
-          match R.inspect_ln applied_body with
-          | R.Tv_App head (arg, aqual) ->
-            let arg = wr arg (T.range_of_term arg) in
-            let arg_qual = if R.Q_Implicit? aqual then Some Implicit else None in
-            mk_st_app head arg arg_qual
-          | _ ->
-            T.fail 
-              (Printf.sprintf "Cannot inline F* definitions of stt terms whose body is not an application; got %s"
-                (T.term_to_string applied_body))
-        )
-        | rest ->
-          FStar.List.Tot.lemma_splitAt_snd_length (L.length rest - 1) rest;
-          let rest, [last] = L.splitAt (L.length rest - 1) rest in
-          let head = 
-            L.fold_left 
-              (fun head (tm, qual) ->
-                R.pack_ln (
-                  R.Tv_App head (tm, (if Some? qual then R.Q_Implicit else R.Q_Explicit))
-                ))
-              applied_body
-              rest
-          in
-          mk_st_app head (fst last) (snd last)
-
 let fresh (g:env) = Pulse.Typing.fresh g.coreenv
 
 let push_binding (g:env) (x:var { ~ (x `Set.mem` E.dom g.coreenv )}) (b:binder) =
@@ -312,7 +115,6 @@ let with_open (g:env) (b:binder) (e:st_term) (f:env -> st_term -> T.Tac st_term)
   let e = open_st_term' e (tm_var { nm_index = x; nm_ppname = b.binder_ppname }) 0 in
   let e = f (push_binding g x b) e in
   close_st_term' e x 0
-
 
 let is_internal_binder (b:binder) : T.Tac bool =
   let s = T.unseal b.binder_ppname.name in
@@ -429,7 +231,7 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
 
 and simplify_branch (g:env) (b:branch) : T.Tac branch =
   let pat, body = b in
-  let g, _, bs = extend_env_pat g pat in
+  let g, bs = extend_env'_pattern g pat in
   let body = Pulse.Checker.Match.open_st_term_bs body bs in
   let body = simplify_st_term g body in
   pat, Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs)
@@ -451,7 +253,7 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
     close_st_term' e x 0 in
 
   let unit_tm =
-    { p with term = Tm_Return { expected_type=tm_unknown; insert_eq = false; term = unit_val } }
+    { p with term = Tm_Return { expected_type=tm_unknown; insert_eq = false; term = ECL.unit_tm } }
   in
   let ret (t:st_term') = { p with term = t } in
   if is_erasable p
@@ -473,7 +275,7 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
 
     | Tm_Bind { binder; head; body } ->
       if is_erasable head
-      then let body = LN.subst_st_term body [RT.DT 0 unit_val] in
+      then let body = LN.subst_st_term body [RT.DT 0 ECL.unit_tm] in
            erase_ghost_subterms g body
       else let head = erase_ghost_subterms g head in
            let body = open_erase_close g binder body in
@@ -481,7 +283,7 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
 
     | Tm_TotBind { binder; head; body } ->
       if erase_type_for_extraction g binder.binder_ty
-      then let body = LN.subst_st_term body [RT.DT 0 unit_val] in
+      then let body = LN.subst_st_term body [RT.DT 0 ECL.unit_tm] in
            erase_ghost_subterms g body
       else let body = open_erase_close g binder body in
            ret (Tm_TotBind { binder; head; body })
@@ -527,7 +329,7 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
 
 and erase_ghost_subterms_branch (g:env) (b:branch) : T.Tac branch =
   let pat, body = b in
-  let g, _, bs = extend_env_pat g pat in
+  let g, bs = extend_env'_pattern g pat in
   let body = Pulse.Checker.Match.open_st_term_bs body bs in
   let body = erase_ghost_subterms g body in
   pat, Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs)
@@ -543,15 +345,6 @@ let extract_dv_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.q
     (T.unseal b.binder_ppname.name)
     q
     (T.map (fun t -> ECL.rt_term_to_term t) (T.unseal b.binder_attrs))
-
-let extend_env' (g:env) ppname ty
-  : T.Tac (env & nvar)
-  = let x = E.fresh g.coreenv in
-    let coreenv = E.push_binding g.coreenv x ppname ty in
-    { g with coreenv }, (ppname, x)
-
-let extend_env'_binder (g:env) (b: binder) =
-  extend_env' g b.binder_ppname b.binder_ty
 
 let rec extract_dv_pattern g (p:Pulse.Syntax.Base.pattern) :
     T.Tac (env & ECL.pattern & list Pulse.Typing.Env.binding) =
