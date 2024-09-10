@@ -2661,13 +2661,46 @@ and (desugar_proof_hint_with_binders :
                                (fun uu___1 ->
                                   (fun p1 ->
                                      let p1 = Obj.magic p1 in
-                                     let uu___1 =
+                                     let s11 =
                                        PulseSyntaxExtension_SyntaxWrapper.tm_st_app
                                          assume_ FStar_Pervasives_Native.None
                                          p1 r in
+                                     let uu___1 =
+                                       match k with
+                                       | FStar_Pervasives_Native.None ->
+                                           let uu___2 =
+                                             let uu___3 =
+                                               PulseSyntaxExtension_SyntaxWrapper.tm_expr
+                                                 FStar_Syntax_Syntax.unit_const
+                                                 r in
+                                             PulseSyntaxExtension_SyntaxWrapper.tm_ghost_return
+                                               uu___3 r in
+                                           PulseSyntaxExtension_Err.return
+                                             uu___2
+                                       | FStar_Pervasives_Native.Some s2 ->
+                                           desugar_stmt env s2 in
                                      Obj.magic
-                                       (PulseSyntaxExtension_Err.return
-                                          uu___1)) uu___1)))
+                                       (FStar_Class_Monad.op_let_Bang
+                                          PulseSyntaxExtension_Err.err_monad
+                                          () () (Obj.magic uu___1)
+                                          (fun uu___2 ->
+                                             (fun s2 ->
+                                                let s2 = Obj.magic s2 in
+                                                let annot =
+                                                  let uu___2 =
+                                                    FStar_Ident.id_of_text
+                                                      "_" in
+                                                  let uu___3 =
+                                                    PulseSyntaxExtension_SyntaxWrapper.tm_unknown
+                                                      r in
+                                                  PulseSyntaxExtension_SyntaxWrapper.mk_binder
+                                                    uu___2 uu___3 in
+                                                let uu___2 =
+                                                  mk_bind annot s11 s2 r in
+                                                Obj.magic
+                                                  (PulseSyntaxExtension_Err.return
+                                                     uu___2)) uu___2)))
+                                    uu___1)))
                    | PulseSyntaxExtension_Sugar.ProofHintWithBinders
                        {
                          PulseSyntaxExtension_Sugar.hint_type =
