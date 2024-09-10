@@ -2,7 +2,7 @@ FSTAR_EXAMPLES=$(realpath ../../examples)
 include $(FSTAR_EXAMPLES)/Makefile.include
 include $(FSTAR_ULIB)/ml/Makefile.include
 
-all: inline_let all_cmi Eta_expand.test
+all: inline_let all_cmi Eta_expand.test Div.test
 
 %.exe: %.fst | out
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml $<
@@ -11,6 +11,13 @@ all: inline_let all_cmi Eta_expand.test
 %.test: %.exe
 	$(call msg,RUN,$<)
 	$(Q)./$<
+	$(Q)touch $@
+
+Div.test: Div.exe
+	$(call msg,TIMEOUT,$<)
+	$(Q)timeout 1 ./Div.exe ; \
+	  RC=$$? ;\
+	  if ! [ $$RC -eq 124 ]; then echo "ERROR: Div.exe terminated!?!?!"; false; fi
 	$(Q)touch $@
 
 inline_let: InlineLet.fst
