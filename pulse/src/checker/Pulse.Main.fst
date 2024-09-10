@@ -54,6 +54,18 @@ let rec mk_abs (g:env) (qbs:list (option qualifier & binder & bv)) (body:st_term
     let body = close_st_term body bv.bv_index in
     with_range (Pulse.Syntax.Builder.tm_abs b q empty_ascription body) body.range
 
+let mk_opaque_let_with_impl (g:R.env) (cur_module:R.name) (nm:string) (tm:Ghost.erased R.term) (ty:R.typ{RT.typing g tm (T.E_Total, ty)})
+  (impl: R.term)
+  : T.Tac (RT.sigelt_for g (Some ty)) =
+  let open FStar.List.Tot in
+  let fv = R.pack_fv (cur_module @ [nm]) in
+  let lb = R.pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty;
+    lb_def = R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Dv"; "with_impl"])))
+      [ty, Q_Implicit; `(_), Q_Explicit; ty, Q_Implicit; impl, Q_Explicit] }) in
+  let se = R.pack_sigelt (R.Sg_Let false [lb]) in
+  let pf : RT.sigelt_typing g se = admit () in // TODO: hack
+  (true, se, None)
+
 #push-options "--z3rlimit_factor 4"
 let check_fndefn
     (d : decl{FnDefn? d.d})
@@ -106,23 +118,20 @@ let check_fndefn
     (refl_t:typ)
     (_:squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) refl_t)) =
     let nm = fst (inspect_ident id) in
-    begin
-      let open Pulse.Extract.Main in
-      if RU.debug_at_level_no_module "extract_div"
-      then begin
-        let uenv = Extract.CompilerLib.new_uenv (fstar_env g) in
-        let t = extract_pulse_dv uenv body in
-        let ty = extract_dv_typ refl_t in
-        //
-        // TODO: where do we get sigqual from? Support in reflection?
-        //
-        let sg = Extract.CompilerLib.mk_non_rec_siglet nm_aux t ty in
-        T.print (FStar.Printf.sprintf "Sigelt: %s" (Extract.CompilerLib.sigelt_to_string sg))
-      end
-    end;
+    let impl = let open Pulse.Extract.Main in begin
+      let uenv = Extract.CompilerLib.new_uenv (fstar_env g) in
+      let t = extract_pulse_dv uenv body in
+      // let ty = extract_dv_typ refl_t in
+      //
+      // TODO: where do we get sigqual from? Support in reflection?
+      //
+      // let sg = Extract.CompilerLib.mk_non_rec_siglet nm_aux t ty in
+      // T.print (FStar.Printf.sprintf "Sigelt: %s" (Extract.CompilerLib.sigelt_to_string sg));
+      t
+    end in
     if elab_derivation
     then RT.mk_checked_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
-    else Pulse.Reflection.Util.mk_opaque_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
+    else mk_opaque_let_with_impl (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t impl
   in
 
   if fn_d.isrec
