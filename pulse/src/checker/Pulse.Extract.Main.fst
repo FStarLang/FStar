@@ -26,8 +26,6 @@ module L = FStar.List.Tot
 module R = FStar.Reflection
 module RT = FStar.Reflection.Typing
 module T = FStar.Tactics.V2
-module RB = Pulse.Readback
-module Elab = Pulse.Elaborate.Pure
 module E = Pulse.Typing.Env
 module LN = Pulse.Syntax.Naming
 module RU = Pulse.RuntimeUtils
@@ -39,28 +37,20 @@ module ECL = Pulse.Extract.CompilerLib
 
 exception Extraction_failure of string
 
-noeq
-type env = { 
-  uenv_inner: ECL.uenv;
-  coreenv: Pulse.Typing.Env.env
-}
+type env = Pulse.Typing.Env.env
 
 let name = ppname & nat
 
-let topenv_of_env (g:env) = E.fstar_env g.coreenv
-let tcenv_of_env (g:env) = Pulse.Typing.elab_env g.coreenv
-let uenv_of_env (g:env) = ECL.set_tcenv g.uenv_inner (tcenv_of_env g)
-
 let debug (g:env) (f: unit -> T.Tac string)
   : T.Tac unit
-  = if RU.debug_at_level (E.fstar_env g.coreenv) "pulse_extraction"
+  = if RU.debug_at_level (E.fstar_env g) "pulse_extraction"
     then T.print (f())
 
 let extend_env' (g:env) ppname ty
   : T.Tac (env & nvar)
-  = let x = E.fresh g.coreenv in
-    let coreenv = E.push_binding g.coreenv x ppname ty in
-    { g with coreenv }, (ppname, x)
+  = let x = E.fresh g in
+    let g = E.push_binding g x ppname ty in
+    g, (ppname, x)
 
 let extend_env'_binder (g:env) (b: binder) =
   extend_env' g b.binder_ppname b.binder_ty
@@ -104,10 +94,10 @@ let term_eq_string (s:string) (t:R.term) : bool =
   | R.Tv_Const (R.C_String s') -> s=s'
   | _ -> false
 
-let fresh (g:env) = Pulse.Typing.fresh g.coreenv
+let fresh (g:env) = Pulse.Typing.fresh g
 
-let push_binding (g:env) (x:var { ~ (x `Set.mem` E.dom g.coreenv )}) (b:binder) =
-  { g with coreenv = E.push_binding g.coreenv x b.binder_ppname b.binder_ty }
+let push_binding (g:env) (x:var { ~ (x `Set.mem` E.dom g )}) (b:binder) =
+  E.push_binding g x b.binder_ppname b.binder_ty
 
 let with_open (g:env) (b:binder) (e:st_term) (f:env -> st_term -> T.Tac st_term) : T.Tac st_term =
   let open Pulse.Syntax.Naming in
@@ -237,14 +227,14 @@ and simplify_branch (g:env) (b:branch) : T.Tac branch =
   pat, Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs)
 
 let erase_type_for_extraction (g:env) (t:term) : T.Tac bool =
-  RU.must_erase_for_extraction (tcenv_of_env g) t
+  RU.must_erase_for_extraction (E.fstar_env g) t
 
 let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
   let open Pulse.Syntax.Naming in
 
-  let fresh (g:env) = Pulse.Typing.fresh g.coreenv in
+  let fresh (g:env) = Pulse.Typing.fresh g in
   let push_binding g x b =
-    { g with coreenv = E.push_binding g.coreenv x b.binder_ppname b.binder_ty } in
+    E.push_binding g x b.binder_ppname b.binder_ty in
 
   let open_erase_close (g:env) (b:binder) (e:st_term) : T.Tac st_term =
     let x = fresh g in
@@ -521,11 +511,9 @@ let extract_dv_typ (t:R.typ) : T.Tac ECL.term =
     T.fail
       (Printf.sprintf "Unexpected arrow comp in extract_dv_typ: %s" (T.term_to_string t))
 
-let extract_pulse_dv (uenv:ECL.uenv) (p:st_term) : T.Tac ECL.term =
-  let g = { uenv_inner=uenv; coreenv=ECL.initial_core_env uenv } in
+let extract_pulse_dv (g: env) (p:st_term) : T.Tac ECL.term =
   let p = erase_ghost_subterms g p in
   let p = simplify_st_term g p in
-
   extract_dv g p
 
 let rec extract_dv_recursive g (p:st_term) (rec_name:R.fv)
@@ -540,9 +528,7 @@ let rec extract_dv_recursive g (p:st_term) (rec_name:R.fv)
         ECL.mk_abs (extract_dv_binder b q) (close_term body x._2)
       | _ -> //last binder used for knot; replace it with the recursively bound name
         let body = LN.subst_st_term body [RT.DT 0 (wr R.(pack_ln (Tv_FVar rec_name)) Range.range_0)] in
-        let p = erase_ghost_subterms g p in
-        let p = simplify_st_term g p in
-        extract_dv g body
+        extract_pulse_dv g body
     )
 
     | _ -> T.fail "Unexpected recursive definition of non-function"
