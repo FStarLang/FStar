@@ -807,7 +807,7 @@ let is_stateful_application (g:env) (e:term)
         | _ -> None
       in
       let st_app = Tm_STApp { head; arg=last_arg; arg_qual=qual} in
-      let st_app = { term = st_app; range=RU.range_of_term e; effect_tag=default_effect_hint } in
+      let st_app = { term = st_app; range=RU.range_of_term e; effect_tag=default_effect_hint; source=Sealed.seal false } in
       Some st_app
     | _ -> None
 

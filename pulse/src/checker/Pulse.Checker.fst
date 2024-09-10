@@ -96,7 +96,7 @@ let instantiate_unknown_witnesses (g:env) (t:st_term { Tm_IntroExists? t.term })
     let e1 =
       let hint_type = ASSERT { p = opened_p } in
       let binders = [] in
-      {term=Tm_ProofHintWithBinders { hint_type;binders;t=e2 }; range=t.range; effect_tag=as_effect_hint STT_Ghost } in
+      {term=Tm_ProofHintWithBinders { hint_type;binders;t=e2 }; range=t.range; effect_tag=as_effect_hint STT_Ghost; source = Sealed.seal false } in
     
     let t = 
       L.fold_right
@@ -138,6 +138,8 @@ let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
     | _ -> fail g (Some t_rng) "intro exists with non-existential"
 
 let trace (t:st_term) (g:env) (pre:term) (rng:range) : T.Tac unit =
+  (* If we're running interactively, print out the context
+  and environment. *)
   let open FStar.Stubs.Pprint in
   let open Pulse.PP in
   let pre = T.norm_well_typed_term (elab_env g) [Pervasives.unascribe; primops; iota] pre in
