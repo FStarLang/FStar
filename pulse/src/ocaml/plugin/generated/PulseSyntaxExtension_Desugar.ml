@@ -2641,6 +2641,45 @@ and (desugar_proof_hint_with_binders :
                  fun r ->
                    match s1.PulseSyntaxExtension_Sugar.s with
                    | PulseSyntaxExtension_Sugar.ProofHintWithBinders
+                       {
+                         PulseSyntaxExtension_Sugar.hint_type =
+                           PulseSyntaxExtension_Sugar.ASSUME p;
+                         PulseSyntaxExtension_Sugar.binders = [];_}
+                       ->
+                       Obj.magic
+                         (Obj.repr
+                            (let assume_fv =
+                               PulseSyntaxExtension_SyntaxWrapper.mk_fv
+                                 PulseSyntaxExtension_Env.assume_lid r in
+                             let assume_ =
+                               PulseSyntaxExtension_SyntaxWrapper.tm_fvar
+                                 assume_fv in
+                             let uu___ = desugar_slprop env p in
+                             FStar_Class_Monad.op_let_Bang
+                               PulseSyntaxExtension_Err.err_monad () ()
+                               (Obj.magic uu___)
+                               (fun uu___1 ->
+                                  (fun p1 ->
+                                     let p1 = Obj.magic p1 in
+                                     let uu___1 =
+                                       PulseSyntaxExtension_SyntaxWrapper.tm_st_app
+                                         assume_ FStar_Pervasives_Native.None
+                                         p1 r in
+                                     Obj.magic
+                                       (PulseSyntaxExtension_Err.return
+                                          uu___1)) uu___1)))
+                   | PulseSyntaxExtension_Sugar.ProofHintWithBinders
+                       {
+                         PulseSyntaxExtension_Sugar.hint_type =
+                           PulseSyntaxExtension_Sugar.ASSUME uu___;
+                         PulseSyntaxExtension_Sugar.binders = b1::uu___1;_}
+                       ->
+                       Obj.magic
+                         (Obj.repr
+                            (PulseSyntaxExtension_Err.fail
+                               "'assume' cannot have binders"
+                               b1.FStar_Parser_AST.brange))
+                   | PulseSyntaxExtension_Sugar.ProofHintWithBinders
                        { PulseSyntaxExtension_Sugar.hint_type = hint_type;
                          PulseSyntaxExtension_Sugar.binders = bs;_}
                        ->
