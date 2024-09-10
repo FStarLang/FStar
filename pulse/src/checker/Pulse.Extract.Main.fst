@@ -833,24 +833,39 @@ let extract_dv_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.q
     q
     (T.map (fun t -> ECL.rt_term_to_term t) (T.unseal b.binder_attrs))
 
-// TODO: add bindings to env
-// TODO: telescope?!??
+let extend_env' (g:env) ppname ty
+  : T.Tac (env & nvar)
+  = let x = E.fresh g.coreenv in
+    let coreenv = E.push_binding g.coreenv x ppname ty in
+    { g with coreenv }, (ppname, x)
+
+let extend_env'_binder (g:env) (b: binder) =
+  extend_env' g b.binder_ppname b.binder_ty
+
 let rec extract_dv_pattern g (p:Pulse.Syntax.Base.pattern) :
-    T.Tac (ECL.pattern & list Pulse.Typing.Env.binding) =
+    T.Tac (env & ECL.pattern & list Pulse.Typing.Env.binding) =
   match p with
   | Pat_Cons fv pats ->
     let fv = ECL.mk_fv fv.fv_name in
-    let pats = T.map (extract_dv_pattern g) (List.Tot.map fst pats) in
-    ECL.mk_pat_cons fv (List.Tot.map fst pats), List.Tot.flatten (List.Tot.map snd pats)
+    let g, pats, bs = extract_dv_patterns g (List.Tot.map fst pats) in
+    g, ECL.mk_pat_cons fv pats, bs
   | Pat_Constant c ->
-    c |> ECL.mk_const |> ECL.mk_pat_constant, []
+    g, c |> ECL.mk_const |> ECL.mk_pat_constant, []
   | Pat_Var ppname sort ->
     let pp = T.unseal ppname in
     let ty = T.unseal sort in
-    ECL.mk_pat_var pp ty, [fresh g, ty]
+    let g, (_, x) = extend_env' g (mk_ppname ppname Range.range_0) ty in
+    g, ECL.mk_pat_var pp ty, [x, ty]
   | Pat_Dot_Term t ->
-    ECL.mk_dot_pat t, []
-
+    g, ECL.mk_dot_pat t, []
+and extract_dv_patterns g (ps:list Pulse.Syntax.Base.pattern) :
+    T.Tac (env & list ECL.pattern & list Pulse.Typing.Env.binding) =
+  match ps with
+  | [] -> g, [], []
+  | p::ps ->
+    let g, p, bs = extract_dv_pattern g p in
+    let g, ps, bs' = extract_dv_patterns g ps in
+    g, p::ps, bs@bs'
 
 // let unit_binder (ppname:string) : Dv binder =
 //   mk_binder unit_ty ppname None []
@@ -883,10 +898,10 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
     | Tm_ProofHintWithBinders _ -> ECL.mk_return ECL.unit_tm
 
     | Tm_Abs { b; q; body } ->
-      let px = fresh g in
-      let body = extract_dv g (open_st_term_nv body (b.binder_ppname, px)) in
-      let b = extract_dv_binder b q in
-      ECL.mk_abs b (close_term body px)
+      let b' = extract_dv_binder b q in
+      let g, x = extend_env'_binder g b in
+      let body = extract_dv g (open_st_term_nv body x) in
+      ECL.mk_abs b' (close_term body x._2)
 
     | Tm_Return { term } -> ECL.mk_return (ECL.rt_term_to_term term)
 
@@ -899,20 +914,18 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
       ECL.mk_app (ECL.rt_term_to_term head) q (ECL.rt_term_to_term arg)
 
     | Tm_Bind { binder; head; body } ->
-      let px = fresh g in
-      let body = extract_dv g (open_st_term_nv body (binder.binder_ppname, px)) in
-      let b = extract_dv_binder binder None in
+      let b' = extract_dv_binder binder None in
       let e1 = extract_dv g head in
-      //
-      // TODO: type is same as the sort in b?
-      //
-      ECL.mk_let b e1 (close_term body px)
+      let g, x = extend_env'_binder g binder in
+      let body = extract_dv g (open_st_term_nv body x) in
+      ECL.mk_let b' e1 (close_term body x._2)
     
     | Tm_TotBind { binder; head; body } ->
-      let b = extract_dv_binder binder None in
+      let b' = extract_dv_binder binder None in
       let e1 = ECL.mk_return (ECL.rt_term_to_term head) in
-      let e2 = extract_dv g body in
-      ECL.mk_let b e1 e2
+      let g, x = extend_env'_binder g binder in
+      let e2 = extract_dv g (open_st_term_nv body x) in
+      ECL.mk_let b' e1 (close_term e2 x._2)
     
     | Tm_If { b; then_; else_ } ->
       let b = ECL.rt_term_to_term b in
@@ -946,17 +959,15 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
         (ECL.mk_abs (unit_binder "par_b2") body2)
 
     | Tm_WithLocal { binder; initializer; body } ->
-      let px = fresh g in
-      let body = extract_dv g (open_st_term_nv body (binder.binder_ppname, px)) in
-      let b = extract_dv_binder binder None in
+      let b' = extract_dv_binder binder None in
       let allocator = ECL.mk_app (ECL.mk_app (ECL.mk_fv_tm (ECL.mk_fv ["Pulse"; "Lib"; "Reference"; "alloc"]))
         (Some ECL.implicit_arg_qual) (get_type_of_ref binder.binder_ty)) None (ECL.rt_term_to_term initializer) in
-      ECL.mk_let b allocator (close_term body px)
+      let g, x = extend_env'_binder g binder in
+      let body = extract_dv g (open_st_term_nv body x) in
+      ECL.mk_let b' allocator (close_term body x._2)
 
     | Tm_WithLocalArray { binder; initializer; length; body } ->
-      let px = fresh g in
-      let body = extract_dv g (open_st_term_nv body (binder.binder_ppname, px)) in
-      let b = extract_dv_binder binder None in
+      let b' = extract_dv_binder binder None in
       //
       // Slice library doesn't have an alloc
       //
@@ -964,7 +975,9 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
       //
       let allocator = ECL.mk_app (ECL.mk_app (ECL.mk_app (ECL.mk_fv_tm (ECL.mk_fv ["Pulse"; "Lib"; "Array"; "Core"; "alloc"]))
         (Some ECL.implicit_arg_qual) (get_type_of_array binder.binder_ty)) None (ECL.rt_term_to_term initializer)) None (ECL.rt_term_to_term length) in
-      ECL.mk_let b allocator (close_term body px)
+      let g, x = extend_env'_binder g binder in
+      let body = extract_dv g (open_st_term_nv body x) in
+      ECL.mk_let b' allocator (close_term body x._2)
 
     | Tm_Admit _ ->
       T.print "Admit in dv extraction is currently ignored";
@@ -978,7 +991,7 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
 
 and extract_dv_branch g (b:Pulse.Syntax.Base.branch) : T.Tac ECL.branch =
   let pat, body = b in
-  let pat, bs = extract_dv_pattern g pat in
+  let g, pat, bs = extract_dv_pattern g pat in
   ECL.mk_branch pat (RT.close_term_bs bs (extract_dv g (Pulse.Checker.Match.open_st_term_bs body bs)))
 
 let extract_dv_typ (t:R.typ) : T.Tac ECL.term =
@@ -1020,14 +1033,14 @@ let rec extract_dv_recursive g (p:st_term) (rec_name:R.fv)
     | Tm_Abs { b; q; body } -> (
       match body.term with
       | Tm_Abs _ ->
-        let px = fresh g in
-        let body = open_st_term_nv body (b.binder_ppname, px) in
+        let g, x = extend_env'_binder g b in
+        let body = open_st_term_nv body x in
         let body = extract_dv_recursive g body rec_name in
         let attrs =
           b.binder_attrs
           |> T.unseal
           |> T.map (term_as_mlexpr g) in
-        ECL.mk_abs (extract_dv_binder b q) (close_term body px)
+        ECL.mk_abs (extract_dv_binder b q) (close_term body x._2)
       | _ -> //last binder used for knot; replace it with the recursively bound name
         let body = LN.subst_st_term body [RT.DT 0 (wr R.(pack_ln (Tv_FVar rec_name)) Range.range_0)] in
         extract_dv g body
