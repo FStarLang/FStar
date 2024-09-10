@@ -1014,6 +1014,27 @@ let extract_pulse_dv (uenv:ECL.uenv) (p:st_term) : T.Tac ECL.term =
 
   extract_dv g p
 
+let rec extract_dv_recursive g (p:st_term) (rec_name:R.fv)
+  : T.Tac ECL.term
+  = match p.term with
+    | Tm_Abs { b; q; body } -> (
+      match body.term with
+      | Tm_Abs _ ->
+        let px = fresh g in
+        let body = open_st_term_nv body (b.binder_ppname, px) in
+        let body = extract_dv_recursive g body rec_name in
+        let attrs =
+          b.binder_attrs
+          |> T.unseal
+          |> T.map (term_as_mlexpr g) in
+        ECL.mk_abs (extract_dv_binder b q) (close_term body px)
+      | _ -> //last binder used for knot; replace it with the recursively bound name
+        let body = LN.subst_st_term body [RT.DT 0 (wr R.(pack_ln (Tv_FVar rec_name)) Range.range_0)] in
+        extract_dv g body
+    )
+
+    | _ -> T.fail "Unexpected recursive definition of non-function"
+
 let extract_pulse (uenv:ECL.uenv) (selt:R.sigelt) (p:st_term)
   : T.Tac (either ECL.mlmodule string) =
   

@@ -65,6 +65,13 @@ let mk_opaque_let_with_impl (g:R.env) (cur_module:R.name) (nm:string) (tm:Ghost.
   let pf : RT.sigelt_typing g se = admit () in // hack
   (true, se, None)
 
+let set_impl #g #t (se: RT.sigelt_for g t) (r: bool) (impl: R.term) : Dv (RT.sigelt_for g t) =
+  admit ();
+  let R.Sg_Let false [lb] = R.inspect_sigelt se._2 in
+  let lb = R.inspect_lb lb in
+  let lb = { lb with lb_def = impl } in // super hack
+  true, R.pack_sigelt (R.Sg_Let r [R.pack_lb lb]), se._3
+
 #push-options "--z3rlimit_factor 4"
 let check_fndefn
     (d : decl{FnDefn? d.d})
@@ -113,24 +120,24 @@ let check_fndefn
   let elab_derivation = T.ext_getv "pulse:elab_derivation" <> "" in
   let cur_module = T.cur_module () in
 
+  let maybe_add_impl t (se: RT.sigelt_for (fstar_env g) t) =
+    if C_STGhost? comp then se else
+    let open Pulse.Extract.Main in begin
+    let uenv = Extract.CompilerLib.new_uenv (fstar_env g) in
+    if fn_d.isrec then
+      let impl = extract_dv_recursive { uenv_inner = uenv; coreenv = Extract.CompilerLib.initial_core_env uenv } body (R.pack_fv (cur_module @ [nm_orig])) in
+      set_impl se true impl
+    else
+      set_impl se false (extract_pulse_dv uenv body)
+    end in
+
   let mk_main_decl
     (refl_t:typ)
     (_:squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) refl_t)) =
     let nm = fst (inspect_ident id) in
-    let impl = let open Pulse.Extract.Main in begin
-      let uenv = Extract.CompilerLib.new_uenv (fstar_env g) in
-      let t = extract_pulse_dv uenv body in
-      // let ty = extract_dv_typ refl_t in
-      //
-      // TODO: where do we get sigqual from? Support in reflection?
-      //
-      // let sg = Extract.CompilerLib.mk_non_rec_siglet nm_aux t ty in
-      // T.print (FStar.Printf.sprintf "Sigelt: %s" (Extract.CompilerLib.sigelt_to_string sg));
-      t
-    end in
     if elab_derivation
     then RT.mk_checked_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
-    else mk_opaque_let_with_impl (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t impl
+    else Reflection.Util.mk_opaque_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
   in
 
   if fn_d.isrec
@@ -153,7 +160,7 @@ let check_fndefn
     let main_decl = chk, se, Some blob in
     let recursive_decl : RT.sigelt_for (elab_env g) expected_t =
       Rec.tie_knot g rng nm_orig nm_aux refl_t blob in
-    [main_decl], recursive_decl, []
+    [main_decl], maybe_add_impl _ recursive_decl, []
   end
   else begin
     //
@@ -185,7 +192,7 @@ let check_fndefn
     let main_decl = mk_main_decl refl_t () in
     let chk, se, _ = main_decl in
     let main_decl = chk, se, Some blob in
-    [], main_decl, []
+    [], maybe_add_impl _ main_decl, []
   end
 
 let check_fndecl
