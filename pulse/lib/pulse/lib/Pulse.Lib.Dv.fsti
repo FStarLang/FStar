@@ -18,8 +18,3 @@ module Pulse.Lib.Dv
 
 val while_ (cond: unit -> Dv bool) (body: unit -> Dv unit) : Dv unit
 val par (f1: unit -> Dv unit) (f2: unit -> Dv unit) : Dv unit
-
-irreducible [@@"opaque_to_smt"] inline_for_extraction
-let with_impl (#a: Type0) (reference_impl: a)
-    (#b: Type0) (optimized_impl: b) : a =
-  admit (); optimized_impl

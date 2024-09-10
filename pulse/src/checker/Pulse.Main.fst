@@ -59,11 +59,10 @@ let mk_opaque_let_with_impl (g:R.env) (cur_module:R.name) (nm:string) (tm:Ghost.
   : T.Tac (RT.sigelt_for g (Some ty)) =
   let open FStar.List.Tot in
   let fv = R.pack_fv (cur_module @ [nm]) in
-  let lb = R.pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty;
-    lb_def = R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Dv"; "with_impl"])))
-      [ty, Q_Implicit; `(_), Q_Explicit; ty, Q_Implicit; impl, Q_Explicit] }) in
+  let lb_def = impl in // super hack
+  let lb = R.pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def }) in
   let se = R.pack_sigelt (R.Sg_Let false [lb]) in
-  let pf : RT.sigelt_typing g se = admit () in // TODO: hack
+  let pf : RT.sigelt_typing g se = admit () in // hack
   (true, se, None)
 
 #push-options "--z3rlimit_factor 4"
