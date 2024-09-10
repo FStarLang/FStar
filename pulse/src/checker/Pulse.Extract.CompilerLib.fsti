@@ -117,7 +117,7 @@ val extend_fv : uenv -> R.fv -> mltyscheme -> Dv (uenv & mlident & exp_binding)
 
 val const : Type0
 val fv : Type0
-val term : Type0
+type term = R.term
 val binder : Type0
 val unit_tm : term
 val unit_ty : term
