@@ -121,10 +121,11 @@ let check_fndefn
   let cur_module = T.cur_module () in
 
   let maybe_add_impl t (se: RT.sigelt_for (fstar_env g) t) =
-    if C_STGhost? comp then se else
     let open Pulse.Extract.Main in begin
     let uenv = Extract.CompilerLib.new_uenv (fstar_env g) in
-    if fn_d.isrec then
+    if C_STGhost? comp then
+      set_impl se false (extract_dv_ghost { uenv_inner = uenv; coreenv = Extract.CompilerLib.initial_core_env uenv } body)
+    else if fn_d.isrec then
       let impl = extract_dv_recursive { uenv_inner = uenv; coreenv = Extract.CompilerLib.initial_core_env uenv } body (R.pack_fv (cur_module @ [nm_orig])) in
       set_impl se true impl
     else

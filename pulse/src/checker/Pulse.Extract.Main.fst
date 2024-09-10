@@ -744,10 +744,6 @@ let rec extract_dv_recursive g (p:st_term) (rec_name:R.fv)
         let g, x = extend_env'_binder g b in
         let body = open_st_term_nv body x in
         let body = extract_dv_recursive g body rec_name in
-        let attrs =
-          b.binder_attrs
-          |> T.unseal
-          |> T.map (term_as_mlexpr g) in
         ECL.mk_abs (extract_dv_binder b q) (close_term body x._2)
       | _ -> //last binder used for knot; replace it with the recursively bound name
         let body = LN.subst_st_term body [RT.DT 0 (wr R.(pack_ln (Tv_FVar rec_name)) Range.range_0)] in
@@ -755,4 +751,16 @@ let rec extract_dv_recursive g (p:st_term) (rec_name:R.fv)
     )
 
     | _ -> T.fail "Unexpected recursive definition of non-function"
+
+let rec extract_dv_ghost g (p:st_term)
+  : T.Tac ECL.term
+  = match p.term with
+    | Tm_Abs { b; q; body } -> (
+        let g, x = extend_env'_binder g b in
+        let body = open_st_term_nv body x in
+        let body = extract_dv_ghost g body in
+        ECL.mk_abs (extract_dv_binder b q) (close_term body x._2)
+    )
+
+    | _ -> ECL.unit_tm
 
