@@ -266,7 +266,8 @@ let (e_env :
           FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_env;
           FStar_Syntax_Syntax.ltyp = uu___1;
           FStar_Syntax_Syntax.rng = uu___2;_}
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
+        ->
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___1 -> FStar_Pervasives_Native.None in
   mk_emb embed_env unembed_env FStar_Reflection_V1_Constants.fstar_refl_env
 let (e_const :
@@ -1448,7 +1449,8 @@ let (e_sigelt :
           FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_sigelt;
           FStar_Syntax_Syntax.ltyp = uu___1;
           FStar_Syntax_Syntax.rng = uu___2;_}
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
+        ->
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___1 -> FStar_Pervasives_Native.None in
   mk_emb embed_sigelt unembed_sigelt
     FStar_Reflection_V1_Constants.fstar_refl_sigelt
@@ -1544,7 +1546,9 @@ let (e_letbinding :
           FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_letbinding;
           FStar_Syntax_Syntax.ltyp = uu___1;
           FStar_Syntax_Syntax.rng = uu___2;_}
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn lb)
+        ->
+        let uu___3 = FStar_Dyn.undyn lb in
+        FStar_Pervasives_Native.Some uu___3
     | uu___1 -> FStar_Pervasives_Native.None in
   mk_emb embed_letbinding unembed_letbinding
     FStar_Reflection_V1_Constants.fstar_refl_letbinding

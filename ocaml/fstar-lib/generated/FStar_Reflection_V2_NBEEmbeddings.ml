@@ -84,7 +84,8 @@ let (e_bv : FStar_Syntax_Syntax.bv FStar_TypeChecker_NBETerm.embedding) =
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
+        ->
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStar_TypeChecker_NBETerm.t_to_string t in
@@ -108,7 +109,8 @@ let (e_namedv :
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
+        ->
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStar_TypeChecker_NBETerm.t_to_string t in
@@ -133,7 +135,8 @@ let (e_binder :
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
+        ->
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStar_TypeChecker_NBETerm.t_to_string t in
@@ -274,7 +277,8 @@ let (e_fv : FStar_Syntax_Syntax.fv FStar_TypeChecker_NBETerm.embedding) =
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
+        ->
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStar_TypeChecker_NBETerm.t_to_string t in
@@ -297,7 +301,8 @@ let (e_comp : FStar_Syntax_Syntax.comp FStar_TypeChecker_NBETerm.embedding) =
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
+        ->
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStar_TypeChecker_NBETerm.t_to_string t in
@@ -321,7 +326,8 @@ let (e_env : FStar_TypeChecker_Env.env FStar_TypeChecker_NBETerm.embedding) =
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
+        ->
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStar_TypeChecker_NBETerm.t_to_string t in
@@ -482,7 +488,8 @@ let (e_universe :
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
+        ->
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStar_TypeChecker_NBETerm.t_to_string t in
@@ -709,7 +716,8 @@ let (e_ident : FStar_Ident.ident FStar_TypeChecker_NBETerm.embedding) =
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
+        ->
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStar_TypeChecker_NBETerm.t_to_string t in
@@ -2026,7 +2034,8 @@ let (e_sigelt :
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
+        ->
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStar_TypeChecker_NBETerm.t_to_string t in
@@ -2147,7 +2156,9 @@ let (e_letbinding :
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn lb)
+        ->
+        let uu___3 = FStar_Dyn.undyn lb in
+        FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStar_TypeChecker_NBETerm.t_to_string t in
