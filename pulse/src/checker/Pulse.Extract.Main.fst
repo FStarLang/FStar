@@ -35,10 +35,6 @@ module RU = Pulse.RuntimeUtils
 //
 module ECL = Pulse.Extract.CompilerLib
 
-exception Extraction_failure of string
-
-type env = Pulse.Typing.Env.env
-
 let name = ppname & nat
 
 let debug (g:env) (f: unit -> T.Tac string)
