@@ -60,7 +60,7 @@ let mk_hide (u:universe) (t:term) (e:term) : term =
 
 let mk_eq2 (u:universe)
            (t:term)
-           (e0 e1:term) 
+           (e0 e1:term)
   : term
   = tm_pureapp
          (tm_pureapp (tm_pureapp (tm_uinst (as_fv R.eq2_qn) [u]) (Some Implicit) t)
@@ -426,7 +426,7 @@ let comp_withlocal_body_pre (pre:slprop) (init_t:term) (r:term) (init:term) : sl
   tm_star pre (mk_pts_to init_t r init)
 
 let comp_withlocal_body_post (post:term) (init_t:term) (r:term) : term =
-  tm_star post (tm_exists_sl u0 (as_binder init_t) (mk_pts_to init_t r (null_bvar 0)))  
+  tm_star post (tm_exists_sl u0 (as_binder init_t) (mk_pts_to init_t r (null_bvar 0)))
 
 let comp_withlocal_body (r:var) (init_t:term) (init:term) (c:comp{C_ST? c}) : comp =
   let r = null_var r in

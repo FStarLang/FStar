@@ -30,3 +30,18 @@ ensures emp
 {
     id x y
 }
+
+fn f (x: nat)
+requires emp
+ensures emp
+{
+  ()
+}
+
+[@@expect_failure]
+fn test4 ()
+requires emp
+ensures emp
+{
+  f true
+}

@@ -92,6 +92,7 @@ let (showable_mut_or_ref : mut_or_ref FStar_Class_Show.showable) =
   }
 type hint_type =
   | ASSERT of slprop 
+  | ASSUME of slprop 
   | UNFOLD of (FStar_Ident.lident Prims.list FStar_Pervasives_Native.option *
   slprop) 
   | FOLD of (FStar_Ident.lident Prims.list FStar_Pervasives_Native.option *
@@ -107,6 +108,10 @@ let (uu___is_ASSERT : hint_type -> Prims.bool) =
   fun projectee -> match projectee with | ASSERT _0 -> true | uu___ -> false
 let (__proj__ASSERT__item___0 : hint_type -> slprop) =
   fun projectee -> match projectee with | ASSERT _0 -> _0
+let (uu___is_ASSUME : hint_type -> Prims.bool) =
+  fun projectee -> match projectee with | ASSUME _0 -> true | uu___ -> false
+let (__proj__ASSUME__item___0 : hint_type -> slprop) =
+  fun projectee -> match projectee with | ASSUME _0 -> _0
 let (uu___is_UNFOLD : hint_type -> Prims.bool) =
   fun projectee -> match projectee with | UNFOLD _0 -> true | uu___ -> false
 let (__proj__UNFOLD__item___0 :
@@ -156,6 +161,9 @@ let (showable_hint_type : hint_type FStar_Class_Show.showable) =
          | ASSERT s ->
              let uu___ = FStar_Class_Show.show showable_slprop s in
              Prims.strcat "ASSERT " uu___
+         | ASSUME s ->
+             let uu___ = FStar_Class_Show.show showable_slprop s in
+             Prims.strcat "ASSUME " uu___
          | UNFOLD (ns, s) ->
              let uu___ =
                let uu___1 =
@@ -1210,6 +1218,7 @@ and (eq_hint_type : hint_type -> hint_type -> Prims.bool) =
     fun h2 ->
       match (h1, h2) with
       | (ASSERT s1, ASSERT s2) -> eq_slprop s1 s2
+      | (ASSUME s1, ASSUME s2) -> eq_slprop s1 s2
       | (UNFOLD (ns1, s1), UNFOLD (ns2, s2)) ->
           (eq_opt (forall2 eq_lident) ns1 ns2) && (eq_slprop s1 s2)
       | (FOLD (ns1, s1), FOLD (ns2, s2)) ->
@@ -1406,6 +1415,7 @@ and (scan_hint_type :
     fun h ->
       match h with
       | ASSERT s -> scan_slprop cbs s
+      | ASSUME s -> scan_slprop cbs s
       | UNFOLD (ns, s) -> scan_slprop cbs s
       | FOLD (ns, s) -> scan_slprop cbs s
       | RENAME (ts, g, t) ->
