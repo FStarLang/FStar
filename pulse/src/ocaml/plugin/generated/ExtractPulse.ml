@@ -425,7 +425,7 @@ let (pulse_translate_expr : FStar_Extraction_Krml.translate_expr_t) =
                                                               = uu___8;_}::[])
            when
            let uu___9 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___9 = "Pulse.Lib.Core.while_" ->
+           uu___9 = "Pulse.Lib.Dv.while_" ->
            let uu___9 =
              let uu___10 = cb test in
              let uu___11 = cb body in (uu___10, uu___11) in
