@@ -71,7 +71,7 @@ let mk_sq_eq2 (u:universe)
               (e0 e1:term) 
   : term
   = let eq = mk_eq2 u t e0 e1 in
-    (tm_pureapp (tm_uinst (as_fv R.squash_qn) [u]) None eq)
+    (tm_pureapp (tm_uinst (as_fv R.squash_qn) [u_zero]) None eq)
 
 let mk_slprop_eq (e0 e1:term) : term =
   mk_eq2 u2 tm_slprop e0 e1

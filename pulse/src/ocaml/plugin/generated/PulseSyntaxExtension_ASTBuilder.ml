@@ -398,13 +398,16 @@ let (desugar_pulse_decl_callback :
               let rng1 =
                 let uu___ = FStar_Compiler_Range_Ops.file_of_range rng in
                 FStar_Compiler_Range_Type.mk_range uu___ start start in
-              FStar_Errors.raise_error
-                (FStar_Errors_Codes.Fatal_SyntaxError,
-                  "Failed to desugar pulse declaration") rng1
+              FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range
+                rng1 FStar_Errors_Codes.Fatal_SyntaxError ()
+                (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                (Obj.magic "Failed to desugar pulse declaration")
           | FStar_Pervasives.Inr (FStar_Pervasives_Native.Some (msg, rng1))
               ->
-              FStar_Errors.raise_error
-                (FStar_Errors_Codes.Fatal_SyntaxError, msg) rng1
+              FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range
+                rng1 FStar_Errors_Codes.Fatal_SyntaxError ()
+                (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                (Obj.magic msg)
           | FStar_Pervasives.Inl d1 ->
               let blob1 =
                 FStar_Syntax_Util.mk_lazy d1 FStar_Syntax_Syntax.t_bool

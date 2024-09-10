@@ -1,6 +1,6 @@
 # This Dockerfile should be run from the root Pulse directory
 
-ARG ocaml_version=4.12
+ARG ocaml_version=4.14
 FROM ocaml/opam:ubuntu-22.04-ocaml-$ocaml_version
 
 ARG opamthreads=24

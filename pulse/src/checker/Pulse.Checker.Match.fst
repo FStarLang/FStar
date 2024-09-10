@@ -254,7 +254,9 @@ let check_branch
       term =
         Tm_ProofHintWithBinders {
           binders = [];
-          hint_type = RENAME { pairs = [(sc, elab_p_tm)]; goal=None; tac_opt=None; };
+          hint_type = RENAME { pairs = [(sc, elab_p_tm)];
+                               goal = None;
+                               tac_opt = Some Pulse.Reflection.Util.match_rewrite_tac_tm; };
           t = e;
         };
       range = e.range;

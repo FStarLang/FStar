@@ -15,7 +15,7 @@
 *)
 
 module Pulse.Checker.Abs
-
+#set-options "--z3refresh" //stabilize some flaky proofs
 module T = FStar.Tactics.V2
 
 open Pulse.Syntax

@@ -18,7 +18,7 @@ module Fibo32
 #lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 2 --ifuel 2"
+#push-options "--fuel 2 --ifuel 2"
 
 
 let rec fib (n:nat) : nat =

@@ -155,8 +155,8 @@ let (mk_sq_eq2 :
           let eq = mk_eq2 u t e0 e1 in
           Pulse_Syntax_Pure.tm_pureapp
             (Pulse_Syntax_Pure.tm_uinst
-               (Pulse_Syntax_Base.as_fv FStar_Reflection_Const.squash_qn) 
-               [u]) FStar_Pervasives_Native.None eq
+               (Pulse_Syntax_Base.as_fv FStar_Reflection_Const.squash_qn)
+               [Pulse_Syntax_Pure.u_zero]) FStar_Pervasives_Native.None eq
 let (mk_slprop_eq :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
   =

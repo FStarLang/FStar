@@ -62,6 +62,7 @@ let seq_create_lid = ["FStar"; "Seq"; "Base"; "create"]
 let tot_lid = ["Prims"; "Tot"]
 
 let slprop_equiv_norm_tm = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "slprop_equiv_norm")))
+let match_rewrite_tac_tm = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "match_rewrite_tac")))
 
 (* The "plicities" *)
 let ex t : R.argv = (t, R.Q_Explicit)
