@@ -159,11 +159,13 @@ let trace (t:st_term) (g:env) (pre:term) (rng:range) : T.Tac unit =
   info_doc g (Some rng) msg
 
 let maybe_trace (t:st_term) (g:env) (pre:term) (rng:range) : T.Tac unit =
-  (* pulse:trace turns on tracing, but not for sequencing (binds).
+  (* pulse:trace turns on tracing, but not for sequencing (binds),
+                  and not for terms injected by the checker
      pulse:trace_full turns it on for absolutely everything. *)
   let trace_opt = T.ext_getv "pulse:trace" = "1" in
   let trace_full_opt = T.ext_getv "pulse:trace_full" = "1" in
-  if (trace_opt && not (Tm_Bind? t.term || Tm_TotBind? t.term))
+  let is_source = T.unseal t.source in
+  if (trace_opt && is_source && not (Tm_Bind? t.term || Tm_TotBind? t.term))
      || trace_full_opt
   then
     trace t g pre rng
