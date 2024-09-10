@@ -25,5 +25,14 @@
   - Raised within Tactics.refl_instantiate_implicits
 
 >>]
+>> Got issues: [
+* Error 228 at Bug.DesugaringError.fst(46,2-46,2):
+  - Could not check term: Bug.DesugaringError.f true
+
+* Error 189 at Bug.DesugaringError.fst(46,4-46,8):
+  - Expected expression of type Prims.nat got expression true of type Prims.bool
+  - Raised within Tactics.refl_instantiate_implicits
+
+>>]
 Verified module: Bug.DesugaringError
 All verification conditions discharged successfully
