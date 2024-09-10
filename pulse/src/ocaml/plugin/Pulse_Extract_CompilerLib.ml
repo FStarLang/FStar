@@ -221,7 +221,7 @@ let mk_app (head:term) (aqual:arg_qualifier option) (arg:term) : term =
     FStar_Compiler_Range.dummyRange
 let mk_let (b:binder) (head:term) (body:term) : term =
   let lb = U.mk_letbinding
-    (Inl b.binder_bv) [] S.tun C.effect_DIV_lid head [] FStar_Compiler_Range.dummyRange in
+    (Inl b.binder_bv) [] b.binder_bv.sort C.effect_DIV_lid head [] FStar_Compiler_Range.dummyRange in
   let tm_let =
     S.mk (S.Tm_let {lbs=(false, [lb]); body1=body}) FStar_Compiler_Range.dummyRange in
   S.mk (S.Tm_meta {tm2=tm_let; meta=S.Meta_monadic (C.effect_DIV_lid, S.tun)}) FStar_Compiler_Range.dummyRange
