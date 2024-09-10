@@ -747,6 +747,8 @@ let rec extract_dv_recursive g (p:st_term) (rec_name:R.fv)
         ECL.mk_abs (extract_dv_binder b q) (close_term body x._2)
       | _ -> //last binder used for knot; replace it with the recursively bound name
         let body = LN.subst_st_term body [RT.DT 0 (wr R.(pack_ln (Tv_FVar rec_name)) Range.range_0)] in
+        let p = erase_ghost_subterms g p in
+        let p = simplify_st_term g p in
         extract_dv g body
     )
 
