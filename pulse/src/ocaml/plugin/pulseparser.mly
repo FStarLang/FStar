@@ -255,6 +255,8 @@ pulseStmtNoSeq:
     }
   | bs=withBindersOpt ASSERT p=pulseSLProp
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (ASSERT p) bs }
+  | bs=withBindersOpt ASSUME p=pulseSLProp
+    { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (ASSUME p) bs }
   | bs=withBindersOpt UNFOLD ns=option(names) p=pulseSLProp
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (UNFOLD (ns,p)) bs }
   | bs=withBindersOpt FOLD ns=option(names) p=pulseSLProp

@@ -64,6 +64,7 @@ instance showable_mut_or_ref : showable mut_or_ref = {
 
 type hint_type =
   | ASSERT of slprop
+  | ASSUME of slprop
   | UNFOLD of option (list lident) & slprop
   | FOLD of option (list lident) & slprop
   | RENAME of
@@ -85,6 +86,7 @@ instance showable_slprop : showable slprop = {
 instance showable_hint_type : showable hint_type = {
   show = (fun i -> match i with
     | ASSERT s -> "ASSERT " ^ show s
+    | ASSUME s -> "ASSUME " ^ show s
     | UNFOLD (ns, s) -> "UNFOLD " ^ show ns ^ " " ^ show s
     | FOLD (ns, s) -> "FOLD " ^ show ns ^ " " ^ show s
     | RENAME (ts, g, t) -> "RENAME " ^ show ts ^ " " ^ show g ^ " " ^ show t
@@ -460,6 +462,7 @@ and eq_array_init (a1 a2:array_init) =
 and eq_hint_type (h1 h2:hint_type) =
   match h1, h2 with
   | ASSERT s1, ASSERT s2 -> eq_slprop s1 s2
+  | ASSUME s1, ASSUME s2 -> eq_slprop s1 s2
   | UNFOLD (ns1, s1), UNFOLD (ns2, s2) ->
     eq_opt (forall2 eq_lident) ns1 ns2 &&
     eq_slprop s1 s2
@@ -589,6 +592,7 @@ and scan_ensures_slprop (cbs:A.dep_scan_callbacks) (e:ensures_slprop) =
 and scan_hint_type (cbs:A.dep_scan_callbacks) (h:hint_type) =
   match h with
   | ASSERT s -> scan_slprop cbs s
+  | ASSUME s -> scan_slprop cbs s
   | UNFOLD (ns, s) -> scan_slprop cbs s
   | FOLD (ns, s) -> scan_slprop cbs s
   | RENAME (ts, g, t) -> iter (fun (t1, t2) -> cbs.scan_term t1; cbs.scan_term t2) ts; iopt (scan_slprop cbs) g; iopt cbs.scan_term t

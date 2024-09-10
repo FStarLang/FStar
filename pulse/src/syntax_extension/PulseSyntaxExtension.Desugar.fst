@@ -702,6 +702,15 @@ and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt) r
 and desugar_proof_hint_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.stmt) r
   : err SW.st_term
   = match s1.s with
+    | Sugar.ProofHintWithBinders { hint_type = Sugar.ASSUME p; binders=[] } ->
+      let assume_fv = SW.(mk_fv assume_lid r) in
+      let assume_ : SW.term = SW.(tm_fvar assume_fv) in
+      let! p = desugar_slprop env p in
+      return (SW.tm_st_app assume_ None p r)
+
+    | Sugar.ProofHintWithBinders { hint_type = Sugar.ASSUME _; binders=b1::_ } ->
+      fail "'assume' cannot have binders" b1.brange
+
     | Sugar.ProofHintWithBinders { hint_type; binders=bs } -> //; slprop=v } ->
       let! env, binders, bvs = desugar_binders env bs in
       let vars = L.map #_ #nat (fun bv -> bv.S.index) bvs in
