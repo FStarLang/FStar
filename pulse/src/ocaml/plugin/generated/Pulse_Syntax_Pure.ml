@@ -723,7 +723,8 @@ let rec (insert1 :
                             (fun uu___ -> t :: ts))
                      else
                        Obj.repr
-                         (FStar_Tactics_Effect.tac_bind
+                         (let uu___1 = insert1 t ts' in
+                          FStar_Tactics_Effect.tac_bind
                             (FStar_Sealed.seal
                                (Obj.magic
                                   (FStar_Range.mk_range
@@ -736,10 +737,10 @@ let rec (insert1 :
                                      "Pulse.Syntax.Pure.fst"
                                      (Prims.of_int (482)) (Prims.of_int (9))
                                      (Prims.of_int (482)) (Prims.of_int (26)))))
-                            (Obj.magic (insert1 t ts'))
-                            (fun uu___1 ->
+                            (Obj.magic uu___1)
+                            (fun uu___2 ->
                                FStar_Tactics_Effect.lift_div_tac
-                                 (fun uu___2 -> t' :: uu___1)))))) uu___1
+                                 (fun uu___3 -> t' :: uu___2)))))) uu___1
         uu___
 let (sort_terms :
   Pulse_Syntax_Base.term Prims.list ->
@@ -750,6 +751,7 @@ let (canon_slprop_list_print :
     (Pulse_Syntax_Base.term, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun vs ->
+    let uu___ = sort_terms vs in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -760,10 +762,10 @@ let (canon_slprop_list_print :
          (Obj.magic
             (FStar_Range.mk_range "Pulse.Syntax.Pure.fst"
                (Prims.of_int (491)) (Prims.of_int (4)) (Prims.of_int (491))
-               (Prims.of_int (35))))) (Obj.magic (sort_terms vs))
-      (fun uu___ ->
+               (Prims.of_int (35))))) (Obj.magic uu___)
+      (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac
-           (fun uu___1 -> list_as_slprop uu___))
+           (fun uu___2 -> list_as_slprop uu___1))
 let (canon_slprop_print :
   Pulse_Syntax_Base.term ->
     (Pulse_Syntax_Base.term, unit) FStar_Tactics_Effect.tac_repr)

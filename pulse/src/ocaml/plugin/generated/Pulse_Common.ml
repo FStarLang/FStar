@@ -41,7 +41,8 @@ let rec zipWith :
                | (x::xs, y::ys) ->
                    Obj.magic
                      (Obj.repr
-                        (FStar_Tactics_Effect.tac_bind
+                        (let uu___ = f x y in
+                         FStar_Tactics_Effect.tac_bind
                            (FStar_Sealed.seal
                               (Obj.magic
                                  (FStar_Range.mk_range "Pulse.Common.fst"
@@ -52,9 +53,10 @@ let rec zipWith :
                                  (FStar_Range.mk_range "Pulse.Common.fst"
                                     (Prims.of_int (54)) (Prims.of_int (20))
                                     (Prims.of_int (54)) (Prims.of_int (44)))))
-                           (Obj.magic (f x y))
-                           (fun uu___ ->
-                              (fun uu___ ->
+                           (Obj.magic uu___)
+                           (fun uu___1 ->
+                              (fun uu___1 ->
+                                 let uu___2 = zipWith f xs ys in
                                  Obj.magic
                                    (FStar_Tactics_Effect.tac_bind
                                       (FStar_Sealed.seal
@@ -73,11 +75,11 @@ let rec zipWith :
                                                (Prims.of_int (20))
                                                (Prims.of_int (54))
                                                (Prims.of_int (44)))))
-                                      (Obj.magic (zipWith f xs ys))
-                                      (fun uu___1 ->
+                                      (Obj.magic uu___2)
+                                      (fun uu___3 ->
                                          FStar_Tactics_Effect.lift_div_tac
-                                           (fun uu___2 -> uu___ :: uu___1))))
-                                uu___)))
+                                           (fun uu___4 -> uu___1 :: uu___3))))
+                                uu___1)))
                | uu___ ->
                    Obj.magic
                      (Obj.repr

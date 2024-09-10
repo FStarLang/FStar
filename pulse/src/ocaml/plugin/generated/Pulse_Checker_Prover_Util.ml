@@ -14,7 +14,8 @@ let (debug_prover :
            then
              Obj.magic
                (Obj.repr
-                  (FStar_Tactics_Effect.tac_bind
+                  (let uu___ = s () in
+                   FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range
@@ -27,11 +28,11 @@ let (debug_prover :
                               "Pulse.Checker.Prover.Util.fst"
                               (Prims.of_int (23)) (Prims.of_int (7))
                               (Prims.of_int (23)) (Prims.of_int (21)))))
-                     (Obj.magic (s ()))
-                     (fun uu___ ->
-                        (fun uu___ ->
-                           Obj.magic (FStar_Tactics_V2_Builtins.print uu___))
-                          uu___)))
+                     (Obj.magic uu___)
+                     (fun uu___1 ->
+                        (fun uu___1 ->
+                           Obj.magic (FStar_Tactics_V2_Builtins.print uu___1))
+                          uu___1)))
            else
              Obj.magic
                (Obj.repr
