@@ -14,7 +14,7 @@
     process
     sedlex
  )
- (modes native byte)
+ (modes native)
  (wrapped false)
  (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
 )
