@@ -51,7 +51,10 @@ let lid_to_string (l:lid) = sli l
 
 // let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
 let fv_to_string fv = lid_to_string fv.fv_name.v //^ "(@@" ^ showfv.fv_delta ^ ")"
-let bv_to_string bv = (string_of_id bv.ppname) ^ "#" ^ (string_of_int bv.index)
+let bv_to_string bv =
+  if Options.print_real_names ()
+  then show bv.ppname ^ "#" ^ show bv.index
+  else show bv.ppname
 
 let nm_to_string bv =
     if Options.print_real_names()
