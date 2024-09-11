@@ -66,6 +66,9 @@ val remove_uvar_solutions: Env.env -> term -> term
 val unfold_head_once: Env.env -> term -> option term
 val unembed_binder_knot : ref (option (FStar.Syntax.Embeddings.embedding binder))
 
+val is_extract_as_attr : attribute -> option term
+val has_extract_as_attr : Env.env -> Ident.lid -> option term
+
 val reflection_env_hook : ref (option Env.env)
 
 (* Destructs the term as an arrow type and returns its binders and
