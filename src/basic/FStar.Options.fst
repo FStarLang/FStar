@@ -204,6 +204,7 @@ let defaults =
       ("eager_subtyping"              , Bool false);
       ("error_contexts"               , Bool false);
       ("expose_interfaces"            , Bool false);
+      ("message_format"               , String "human");
       ("ext"                          , Unset);
       ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
@@ -470,6 +471,7 @@ let get_dump_module             ()      = lookup_opt "dump_module"              
 let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
 let get_error_contexts          ()      = lookup_opt "error_contexts"           as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
+let get_message_format          ()      = lookup_opt "message_format"           as_string
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
@@ -963,6 +965,11 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     "expose_interfaces",
     Const (Bool true),
     text "Explicitly break the abstraction imposed by the interface of any implementation file that appears on the command line (use with care!)");
+
+  ( noshort,
+    "message_format",
+    EnumStr ["human"; "json"],
+    text "Format of the messages emitted by F* (default `human`)");
 
   ( noshort,
     "hide_uvar_nums",
@@ -1998,6 +2005,11 @@ let dump_module                  s  = get_dump_module() |> List.existsb (module_
 let eager_subtyping              () = get_eager_subtyping()
 let error_contexts               () = get_error_contexts              ()
 let expose_interfaces            () = get_expose_interfaces          ()
+let message_format               () =
+  match get_message_format () with
+  | "human" -> Human
+  | "json" -> Json
+  | illegal -> failwith ("print_issue: option `message_format` was expected to be `human` or `json`, not `" ^ illegal ^ "`. This should be impossible: `message_format` was supposed to be validated.")
 let force                        () = get_force                       ()
 let full_context_dependency      () = true
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
