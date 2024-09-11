@@ -36,6 +36,7 @@ open FStar.Dyn
 open FStar.TypeChecker.Rel
 
 open FStar.Class.Show
+open FStar.Class.PP
 open FStar.Class.Tagged
 open FStar.Class.Setlike
 open FStar.Class.Monoid
@@ -88,12 +89,12 @@ let check_no_escape (head_opt : option term)
       let msg =
         match head_opt with
         | None -> [
-           text "Bound variable" ^/^ squotes (doc_of_string (show x))
+           text "Bound variable" ^/^ squotes (pp x)
              ^/^ text "would escape in the type of this letbinding";
            text "Add a type annotation that does not mention it";
         ]
         | Some head -> [
-            text "Bound variable" ^/^ squotes (doc_of_string (show x))
+            text "Bound variable" ^/^ squotes (pp x)
               ^/^ text "escapes because of impure applications in the type of"
               ^/^ squotes (N.term_to_doc env head);
             text "Add explicit let-bindings to avoid this";
