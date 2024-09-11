@@ -802,7 +802,9 @@ and translate_expr' env e: ML expr =
       mllb_meta = flags;
       print_typ = print // ?
     }]), continuation) ->
-      let binder = { name = name; typ = translate_type env typ; mut = false; meta = translate_flags flags; } in
+      let meta = translate_flags flags in
+      let meta = if Options.Ext.get "krml_inline_all" <> "" then CInline :: meta else meta in
+      let binder = { name = name; typ = translate_type env typ; mut = false; meta; } in
       let body = translate_expr env body in
       let env = extend env name in
       let continuation = translate_expr env continuation in
