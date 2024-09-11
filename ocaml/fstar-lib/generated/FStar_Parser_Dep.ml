@@ -795,6 +795,24 @@ let (print_graph :
              Prims.strcat uu___2 "\n}\n" in
            Prims.strcat "digraph {\n" uu___1 in
          FStar_Compiler_Util.fprint outc "%s" [s])
+let (safe_readdir_for_include : Prims.string -> Prims.string Prims.list) =
+  fun d ->
+    try (fun uu___ -> match () with | () -> FStar_Compiler_Util.readdir d) ()
+    with
+    | uu___ ->
+        ((let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                FStar_Errors_Msg.text "Not a valid include directory:" in
+              let uu___5 = FStar_Pprint.doc_of_string d in
+              FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___4
+                uu___5 in
+            [uu___3] in
+          FStar_Errors.log_issue0
+            FStar_Errors_Codes.Fatal_NotValidIncludeDirectory ()
+            (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+            (Obj.magic uu___2));
+         [])
 let (build_inclusion_candidates_list :
   unit -> (Prims.string * Prims.string) Prims.list) =
   fun uu___ ->
@@ -809,34 +827,18 @@ let (build_inclusion_candidates_list :
       FStar_Compiler_Util.normalize_file_path uu___1 in
     FStar_Compiler_List.concatMap
       (fun d ->
-         if FStar_Compiler_Util.is_directory d
-         then
-           let files = FStar_Compiler_Util.readdir d in
-           FStar_Compiler_List.filter_map
-             (fun f ->
-                let f1 = FStar_Compiler_Util.basename f in
-                let uu___1 = check_and_strip_suffix f1 in
-                FStar_Compiler_Util.map_option
-                  (fun longname ->
-                     let full_path =
-                       if d = cwd
-                       then f1
-                       else FStar_Compiler_Util.join_paths d f1 in
-                     (longname, full_path)) uu___1) files
-         else
-           ((let uu___3 =
-               let uu___4 =
-                 let uu___5 =
-                   FStar_Errors_Msg.text "Not a valid include directory:" in
-                 let uu___6 = FStar_Pprint.doc_of_string d in
-                 FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___5
-                   uu___6 in
-               [uu___4] in
-             FStar_Errors.log_issue0
-               FStar_Errors_Codes.Fatal_NotValidIncludeDirectory ()
-               (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
-               (Obj.magic uu___3));
-            [])) include_directories2
+         let files = safe_readdir_for_include d in
+         FStar_Compiler_List.filter_map
+           (fun f ->
+              let f1 = FStar_Compiler_Util.basename f in
+              let uu___1 = check_and_strip_suffix f1 in
+              FStar_Compiler_Util.map_option
+                (fun longname ->
+                   let full_path =
+                     if d = cwd
+                     then f1
+                     else FStar_Compiler_Util.join_paths d f1 in
+                   (longname, full_path)) uu___1) files) include_directories2
 let (build_map : Prims.string Prims.list -> files_for_module_name) =
   fun filenames ->
     let map = FStar_Compiler_Util.smap_create (Prims.of_int (41)) in
@@ -2133,7 +2135,7 @@ let (all_files_in_include_paths : unit -> Prims.string Prims.list) =
     let paths = FStar_Options.include_path () in
     FStar_Compiler_List.collect
       (fun path ->
-         let files = FStar_Compiler_Util.readdir path in
+         let files = safe_readdir_for_include path in
          let files1 =
            FStar_Compiler_List.filter
              (fun f ->
