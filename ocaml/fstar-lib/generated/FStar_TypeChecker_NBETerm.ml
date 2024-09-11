@@ -1011,8 +1011,8 @@ let lazy_unembed_lazy_kind :
       | Lazy (FStar_Pervasives.Inl li, uu___) ->
           if li.FStar_Syntax_Syntax.lkind = k
           then
-            FStar_Pervasives_Native.Some
-              (FStar_Dyn.undyn li.FStar_Syntax_Syntax.blob)
+            let uu___1 = FStar_Dyn.undyn li.FStar_Syntax_Syntax.blob in
+            FStar_Pervasives_Native.Some uu___1
           else FStar_Pervasives_Native.None
       | uu___ -> FStar_Pervasives_Native.None
 type abstract_nbe_term =
@@ -1850,7 +1850,9 @@ let (e_issue : FStar_Errors.issue embedding) =
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn blob)
+        ->
+        let uu___3 = FStar_Dyn.undyn blob in
+        FStar_Pervasives_Native.Some uu___3
     | uu___ -> FStar_Pervasives_Native.None in
   mk_emb' em1 un1
     (fun uu___ -> lid_as_typ FStar_Parser_Const.issue_lid [] [])
@@ -1883,7 +1885,9 @@ let (e_document : FStar_Pprint.document embedding) =
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn blob)
+        ->
+        let uu___3 = FStar_Dyn.undyn blob in
+        FStar_Pervasives_Native.Some uu___3
     | uu___ -> FStar_Pervasives_Native.None in
   mk_emb' em1 un1
     (fun uu___ -> lid_as_typ FStar_Parser_Const.document_lid [] [])

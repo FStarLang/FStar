@@ -136,7 +136,8 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
     let steps = [Env.Weak;
                  Env.Reify;
                  Env.UnfoldUntil delta_constant; Env.DontUnfoldAttr [PC.tac_opaque_attr];
-                 Env.Primops; Env.Unascribe] in
+                 Env.Primops; Env.Unascribe;
+                 Env.Tactics] in
 
     // Maybe use NBE if the user asked for it
     let norm_f = if Options.tactics_nbe ()

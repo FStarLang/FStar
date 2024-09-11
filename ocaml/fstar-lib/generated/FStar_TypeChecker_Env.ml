@@ -33,6 +33,7 @@ type step =
   | Unrefine 
   | NormDebug 
   | DefaultUnivsToZero 
+  | Tactics 
 let (uu___is_Beta : step -> Prims.bool) =
   fun projectee -> match projectee with | Beta -> true | uu___ -> false
 let (uu___is_Iota : step -> Prims.bool) =
@@ -133,6 +134,8 @@ let (uu___is_NormDebug : step -> Prims.bool) =
 let (uu___is_DefaultUnivsToZero : step -> Prims.bool) =
   fun projectee ->
     match projectee with | DefaultUnivsToZero -> true | uu___ -> false
+let (uu___is_Tactics : step -> Prims.bool) =
+  fun projectee -> match projectee with | Tactics -> true | uu___ -> false
 type steps = step Prims.list
 let (dbg_ImplicitTrace : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Debug.get_toggle "ImplicitTrace"
@@ -268,6 +271,7 @@ let rec (step_to_string : step -> Prims.string) =
     | Unrefine -> "Unrefine"
     | NormDebug -> "NormDebug"
     | DefaultUnivsToZero -> "DefaultUnivsToZero"
+    | Tactics -> "Tactics"
 let (showable_step : step FStar_Class_Show.showable) =
   { FStar_Class_Show.show = step_to_string }
 type sig_binding =

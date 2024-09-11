@@ -66,6 +66,7 @@ let steps_to_string f =
     for_extraction = %s;\n\
     unrefine = %s;\n\
     default_univs_to_zero = %s;\n\
+    tactics = %s;\n\
   }"
   [ f.beta |> show;
     f.iota |> show;
@@ -97,6 +98,7 @@ let steps_to_string f =
     f.for_extraction |> show;
     f.unrefine |> show;
     f.default_univs_to_zero |> show;
+    f.tactics |> show;
    ]
 
 instance deq_fsteps : deq fsteps = {
@@ -131,7 +133,9 @@ instance deq_fsteps : deq fsteps = {
             f1.nbe_step =? f2.nbe_step &&
             f1.for_extraction =? f2.for_extraction &&
             f1.unrefine =? f2.unrefine &&
-            f1.default_univs_to_zero =? f2.default_univs_to_zero);
+            f1.default_univs_to_zero =? f2.default_univs_to_zero &&
+            f1.tactics =? f2.tactics
+            );
 }
 
 let default_steps : fsteps = {
@@ -166,6 +170,7 @@ let default_steps : fsteps = {
     for_extraction = false;
     unrefine = false;
     default_univs_to_zero = false;
+    tactics = false;
 }
 
 let fstep_add_one s fs =
@@ -212,6 +217,7 @@ let fstep_add_one s fs =
     | Unrefine -> {fs with unrefine = true }
     | NormDebug -> fs // handled above, affects only dbg flags
     | DefaultUnivsToZero -> {fs with default_univs_to_zero = true}
+    | Tactics -> { fs with tactics = true }
 
 let to_fsteps (s : list step) : fsteps =
     List.fold_right fstep_add_one s default_steps

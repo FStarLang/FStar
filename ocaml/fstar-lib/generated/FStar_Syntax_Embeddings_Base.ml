@@ -291,7 +291,9 @@ let e_lazy :
             when
             FStar_Class_Deq.op_Equals_Question
               FStar_Syntax_Syntax.deq_lazy_kind lkind k
-            -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
+            ->
+            let uu___3 = FStar_Dyn.undyn b in
+            FStar_Pervasives_Native.Some uu___3
         | FStar_Syntax_Syntax.Tm_lazy
             { FStar_Syntax_Syntax.blob = b;
               FStar_Syntax_Syntax.lkind = lkind;

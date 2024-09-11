@@ -1322,7 +1322,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
             (* If we are reifying, we reduce Div lets faithfully, i.e. in CBV *)
             (* This is important for tactics, see issue #1594 *)
-            else if cfg.steps.reify_
+            else if cfg.steps.tactics
                     && U.is_div_effect (Env.norm_eff_name cfg.tcenv lb.lbeff)
             then let ffun = S.mk (Tm_abs {bs=[S.mk_binder (lb.lbname |> BU.left)]; body; rc_opt=None}) t.pos in
                  let stack = (CBVApp (env, ffun, None, t.pos)) :: stack in

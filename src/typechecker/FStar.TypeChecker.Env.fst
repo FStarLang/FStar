@@ -119,6 +119,7 @@ let rec step_to_string (s:step) : string =
   | Unrefine -> "Unrefine"
   | NormDebug -> "NormDebug"
   | DefaultUnivsToZero -> "DefaultUnivsToZero"
+  | Tactics -> "Tactics"
 
 instance showable_step : showable step = {
   show = step_to_string;

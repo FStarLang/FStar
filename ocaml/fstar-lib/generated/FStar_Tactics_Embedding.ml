@@ -240,7 +240,8 @@ let (e_proofstate_nbe :
            FStar_Syntax_Syntax.ltyp = uu___1;
            FStar_Syntax_Syntax.rng = uu___2;_},
          uu___3)
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
+        ->
+        let uu___4 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___4
     | uu___1 ->
         ((let uu___3 =
             FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
@@ -292,7 +293,8 @@ let (e_goal_nbe :
            FStar_Syntax_Syntax.ltyp = uu___1;
            FStar_Syntax_Syntax.rng = uu___2;_},
          uu___3)
-        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
+        ->
+        let uu___4 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___4
     | uu___1 ->
         ((let uu___3 =
             FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
@@ -913,7 +915,9 @@ let e_tref :
             FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_tref;
             FStar_Syntax_Syntax.ltyp = uu___3;
             FStar_Syntax_Syntax.rng = uu___4;_}
-          -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn blob)
+          ->
+          let uu___5 = FStar_Dyn.undyn blob in
+          FStar_Pervasives_Native.Some uu___5
       | uu___3 -> FStar_Pervasives_Native.None in
     FStar_Syntax_Embeddings_Base.mk_emb_full em un (fun uu___1 -> t_tref)
       (fun i -> "tref")
@@ -954,7 +958,9 @@ let e_tref_nbe :
              FStar_Syntax_Syntax.ltyp = uu___2;
              FStar_Syntax_Syntax.rng = uu___3;_},
            uu___4)
-          -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
+          ->
+          let uu___5 = FStar_Dyn.undyn b in
+          FStar_Pervasives_Native.Some uu___5
       | uu___2 ->
           ((let uu___4 =
               FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
