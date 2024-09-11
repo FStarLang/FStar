@@ -62,3 +62,5 @@ val backtrace_doc : unit -> document
 
 (* Render an error message as a string. *)
 val rendermsg : error_message -> string
+
+val json_of_error_message: list document -> FStar.Json.json

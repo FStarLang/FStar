@@ -79,3 +79,21 @@ let mk_rng file_name start_pos end_pos = {
 }
 
 let mk_range f b e = let r = mk_rng f b e in range_of_rng r r
+
+open FStar.Json
+let json_of_pos (r: pos): json
+  = JsonAssoc [
+      "line", JsonInt r.line;
+      "col", JsonInt r.col;
+    ]
+let json_of_rng (r: rng): json
+  = JsonAssoc [
+      "file_name", JsonStr r.file_name;
+      "start_pos", json_of_pos r.start_pos;
+      "end_pos", json_of_pos r.end_pos;
+    ]
+let json_of_range (r: range): json
+  = JsonAssoc [
+      "def", json_of_rng r.def_range;
+      "use", json_of_rng r.use_range;
+    ]

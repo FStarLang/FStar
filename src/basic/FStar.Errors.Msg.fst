@@ -56,3 +56,8 @@ let subdoc d = subdoc' true d
 
 let rendermsg (ds : list document) : string =
   renderdoc (concat (List.map (fun d -> subdoc (group d)) ds))
+
+let json_of_error_message (err_msg: list document): FStar.Json.json
+  = FStar.Compiler.List.map
+      (fun doc -> FStar.Json.JsonStr (renderdoc doc)) err_msg
+    |> FStar.Json.JsonList

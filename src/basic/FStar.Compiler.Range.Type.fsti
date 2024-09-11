@@ -37,3 +37,7 @@ val set_use_range: range -> rng -> range
 val set_def_range: range -> rng -> range
 val mk_pos: int -> int -> pos
 val mk_range: string -> pos -> pos -> range
+
+val json_of_pos: pos -> FStar.Json.json
+val json_of_rng: rng -> FStar.Json.json
+val json_of_range: range -> FStar.Json.json
