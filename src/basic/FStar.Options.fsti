@@ -28,6 +28,8 @@ type codegen_t =
 
 type split_queries_t = | No | OnFailure | Always
 
+type message_format_t = | Json | Human
+
 type option_val =
   | Bool of bool
   | String of string
@@ -129,6 +131,7 @@ val dump_module                 : string  -> bool
 val eager_subtyping             : unit    -> bool
 val error_contexts              : unit    -> bool
 val expose_interfaces           : unit    -> bool
+val message_format              : unit    -> message_format_t
 val file_list                   : unit    -> list string
 val find_file                   : (string  -> option string)
 val force                       : unit    -> bool

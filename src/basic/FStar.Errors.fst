@@ -22,6 +22,7 @@ open FStar.Compiler.Effect
 open FStar.Compiler.List
 open FStar.Compiler.Util
 open FStar.Compiler.Range
+open FStar.Class.Monad
 open FStar.Options
 module List = FStar.Compiler.List
 module BU = FStar.Compiler.Util
@@ -226,7 +227,10 @@ let format_issue' (print_hdr:bool) (issue:issue) : string =
 
 let format_issue issue : string = format_issue' true issue
 
-let print_issue issue =
+let print_issue_json issue =
+    json_of_issue issue |> string_of_json |> BU.print1_error "%s\n"
+
+let print_issue_rendered issue =
     let printer =
         match issue.issue_level with
         | EInfo -> (fun s -> BU.print_string (colorize_cyan s))
@@ -234,6 +238,11 @@ let print_issue issue =
         | EError -> BU.print_error
         | ENotImplemented -> BU.print_error in
     printer (format_issue issue ^ "\n")
+
+let print_issue issue =
+    match FStar.Options.message_format () with
+    | Human -> print_issue_rendered issue
+    | Json -> print_issue_json issue
 
 let compare_issues i1 i2 =
     match i1.issue_range, i2.issue_range with
