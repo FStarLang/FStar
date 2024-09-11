@@ -22,6 +22,7 @@ include FStar.Errors.Codes
 include FStar.Errors.Msg
 open FStar.Errors.Msg
 open FStar.Class.HasRange
+open FStar.Json {json}
 
 (* This is a fallback to be used if an error is raised/logged
 with a dummy range. It is set by TypeChecker.Tc.process_one_decl to
@@ -61,6 +62,8 @@ type issue_level =
   | EWarning
   | EError
 
+val json_of_issue_level: issue_level -> json
+
 type issue = {
     issue_msg: error_message;
     issue_level: issue_level;
@@ -68,6 +71,8 @@ type issue = {
     issue_number: option int;
     issue_ctx: list string;
 }
+
+val json_of_issue: issue -> json
 
 type error_handler = {
     eh_name: string; (* just for debugging purposes *)

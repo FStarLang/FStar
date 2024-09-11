@@ -29,6 +29,7 @@ module PP = FStar.Pprint
 
 open FStar.Errors.Codes
 open FStar.Errors.Msg
+open FStar.Json
 
 let fallback_range : ref (option range) = BU.mk_ref None
 
@@ -120,6 +121,23 @@ exception Error   of error
 exception Warning of error
 exception Stop
 exception Empty_frag
+
+let json_of_issue_level level
+  = JsonStr ( match level with
+            | ENotImplemented -> "NotImplemented"
+            | EInfo           -> "Info"
+            | EWarning        -> "Warning"
+            | EError          -> "Error")
+
+let json_of_issue issue =
+    JsonAssoc [
+        "msg",    json_of_error_message issue.issue_msg;
+        "level",  json_of_issue_level issue.issue_level;
+        "range",  dflt JsonNull (json_of_range <$> issue.issue_range);
+        "number", dflt JsonNull (JsonInt <$> issue.issue_number);
+        "ctx",    JsonList (JsonStr <$> issue.issue_ctx);
+    ]
+
 
 let ctx_doc (ctx : list string) : PP.document =
   let open FStar.Pprint in
