@@ -1,6 +1,6 @@
 >> Got issues: [
 * Error 91 at AQualMismatch.fst(6,7-6,8):
-  - Inconsistent implicit argument annotation on argument x#24
+  - Inconsistent implicit argument annotation on argument x
   - Got: '#'
   - Expected: ''
 

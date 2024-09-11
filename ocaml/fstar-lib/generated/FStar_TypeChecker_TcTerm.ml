@@ -233,10 +233,8 @@ let (check_no_escape :
                          let uu___3 =
                            let uu___4 =
                              let uu___5 =
-                               let uu___6 =
-                                 FStar_Class_Show.show
-                                   FStar_Syntax_Print.showable_bv x in
-                               FStar_Pprint.doc_of_string uu___6 in
+                               FStar_Class_PP.pp FStar_Syntax_Print.pretty_bv
+                                 x in
                              FStar_Pprint.squotes uu___5 in
                            let uu___5 =
                              FStar_Errors_Msg.text
@@ -255,10 +253,8 @@ let (check_no_escape :
                          let uu___3 =
                            let uu___4 =
                              let uu___5 =
-                               let uu___6 =
-                                 FStar_Class_Show.show
-                                   FStar_Syntax_Print.showable_bv x in
-                               FStar_Pprint.doc_of_string uu___6 in
+                               FStar_Class_PP.pp FStar_Syntax_Print.pretty_bv
+                                 x in
                              FStar_Pprint.squotes uu___5 in
                            let uu___5 =
                              let uu___6 =

@@ -1,6 +1,6 @@
 >> Got issues: [
 * Error 91 at ArgsAndQuals.fst(25,16-25,18):
-  - Inconsistent implicit argument annotation on argument uu___#74
+  - Inconsistent implicit argument annotation on argument uu___
   - Got: '#'
   - Expected: '$'
 
