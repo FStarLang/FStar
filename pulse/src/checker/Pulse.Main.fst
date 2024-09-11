@@ -54,23 +54,10 @@ let rec mk_abs (g:env) (qbs:list (option qualifier & binder & bv)) (body:st_term
     let body = close_st_term body bv.bv_index in
     with_range (Pulse.Syntax.Builder.tm_abs b q empty_ascription body) body.range
 
-let mk_opaque_let_with_impl (g:R.env) (cur_module:R.name) (nm:string) (tm:Ghost.erased R.term) (ty:R.typ{RT.typing g tm (T.E_Total, ty)})
-  (impl: R.term)
-  : T.Tac (RT.sigelt_for g (Some ty)) =
-  let open FStar.List.Tot in
-  let fv = R.pack_fv (cur_module @ [nm]) in
-  let lb_def = impl in // super hack
-  let lb = R.pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def }) in
-  let se = R.pack_sigelt (R.Sg_Let false [lb]) in
-  let pf : RT.sigelt_typing g se = admit () in // hack
-  (true, se, None)
-
 let set_impl #g #t (se: RT.sigelt_for g t) (r: bool) (impl: R.term) : Dv (RT.sigelt_for g t) =
-  admit ();
-  let R.Sg_Let false [lb] = R.inspect_sigelt se._2 in
-  let lb = R.inspect_lb lb in
-  let lb = { lb with lb_def = impl } in // super hack
-  true, R.pack_sigelt (R.Sg_Let r [R.pack_lb lb]), se._3
+  let checked, se, blob = se in
+  let se = RU.add_attribute se (Extract.CompilerLib.mk_extracted_as_attr impl) in
+  checked, se, blob
 
 #push-options "--z3rlimit_factor 4"
 let check_fndefn

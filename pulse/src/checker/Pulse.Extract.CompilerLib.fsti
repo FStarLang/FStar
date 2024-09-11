@@ -151,3 +151,5 @@ val mk_non_rec_siglet (nm:string) (t:term) (ty:term) : sigelt
 
 val term_to_string (t:term) : Dv string
 val sigelt_to_string (s:sigelt) : Dv string
+
+val mk_extracted_as_attr (impl: term) : Dv term

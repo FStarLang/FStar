@@ -268,3 +268,8 @@ let mk_non_rec_siglet (nm:string) (t:term) (ty:term) : sigelt =
     sigrng=FStar_Compiler_Range.dummyRange
   }
 let sigelt_to_string (s:sigelt) : string = FStar_Syntax_Print.sigelt_to_string s
+
+let mk_extracted_as_attr (impl: term) : term =
+  S.mk_Tm_app (S.tconst FStar_Parser_Const.extract_as_lid)
+    [S.mk (S.Tm_quoted (impl, {qkind=S.Quote_static; antiquotations=(Prims.int_zero,[])})) FStar_Compiler_Range.dummyRange, None]
+    FStar_Compiler_Range.dummyRange

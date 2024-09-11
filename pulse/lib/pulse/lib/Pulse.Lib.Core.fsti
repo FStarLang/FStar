@@ -23,6 +23,7 @@ module G = FStar.Ghost
 module Set = FStar.Set
 module T = FStar.Tactics.V2
 open Pulse.Lib.Dv {}
+open FStar.ExtractAs {}
 
 (* This attribute can be used on the indexes of a slprop
    to instruct the checker to call the SMT solver to relate
