@@ -21,6 +21,7 @@ open Pulse.Syntax.Pure
 open Pulse.Syntax.Printer
 open FStar.List.Tot
 open Pulse.Show
+open Pulse.Reflection.Util
 
 module L = FStar.List.Tot
 module R = FStar.Reflection
@@ -327,10 +328,10 @@ let extract_dv_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.q
     | Some Implicit -> Some ECL.implicit_qual
     | _ -> None in
   ECL.mk_binder
-    (ECL.rt_term_to_term b.binder_ty)
+    (b.binder_ty)
     (T.unseal b.binder_ppname.name)
     q
-    (T.map (fun t -> ECL.rt_term_to_term t) (T.unseal b.binder_attrs))
+    (T.unseal b.binder_attrs)
 
 let rec extract_dv_pattern g (p:Pulse.Syntax.Base.pattern) :
     T.Tac (env & ECL.pattern & list Pulse.Typing.Env.binding) =
@@ -362,7 +363,7 @@ let get_type_of_ref (p: term) : T.Tac ECL.term =
   match R.inspect_ln p with
   | R.Tv_App hd (arg, _) ->
     (* TODO: check that hd is ref *)
-    ECL.rt_term_to_term arg
+    arg
   | _ -> fail ()
 
 let get_type_of_array (p: term) : T.Tac ECL.term =
@@ -370,7 +371,7 @@ let get_type_of_array (p: term) : T.Tac ECL.term =
   match R.inspect_ln p with
   | R.Tv_App hd (arg, _) ->
     (* TODO: check that hd is array *)
-    ECL.rt_term_to_term arg
+    arg
   | _ -> fail ()
 
 open Pulse.Syntax.Naming
@@ -390,15 +391,10 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
       let body = extract_dv g (open_st_term_nv body x) in
       ECL.mk_abs b' (close_term body x._2)
 
-    | Tm_Return { term } -> ECL.mk_return (ECL.rt_term_to_term term)
+    | Tm_Return { term } -> ECL.mk_return term
 
     | Tm_STApp { head; arg_qual; arg } ->
-      let q =
-        match arg_qual with
-        | Some Implicit -> Some ECL.implicit_arg_qual
-        | _ -> None in
-
-      ECL.mk_app (ECL.rt_term_to_term head) q (ECL.rt_term_to_term arg)
+      ECL.mk_meta_monadic (R.mk_app head [arg, Pulse.Elaborate.Pure.elab_qual arg_qual])
 
     | Tm_Bind { binder; head; body } ->
       let b' = extract_dv_binder binder None in
@@ -409,46 +405,41 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
     
     | Tm_TotBind { binder; head; body } ->
       let b' = extract_dv_binder binder None in
-      let e1 = ECL.mk_return (ECL.rt_term_to_term head) in
+      let e1 = ECL.mk_return head in
       let g, x = extend_env'_binder g binder in
       let e2 = extract_dv g (open_st_term_nv body x) in
       ECL.mk_let b' e1 (close_term e2 x._2)
     
     | Tm_If { b; then_; else_ } ->
-      let b = ECL.rt_term_to_term b in
       let then_ = extract_dv g then_ in
       let else_ = extract_dv g else_ in
       ECL.mk_if b then_ else_
 
     | Tm_Match { sc; brs } ->
-      ECL.mk_match (ECL.rt_term_to_term sc) (T.map (extract_dv_branch g) brs)
+      ECL.mk_match sc (T.map (extract_dv_branch g) brs)
 
     | Tm_While { condition; body } ->
       let condition = extract_dv g condition in
       let body = extract_dv g body in
       let unit_binder ppname = ECL.mk_binder ECL.unit_ty ppname None [] in
-      ECL.mk_app
-        (ECL.mk_app (ECL.mk_fv_tm (ECL.mk_fv ["Pulse"; "Lib"; "Dv"; "while_"]))
-                    None
-                    (ECL.mk_abs (unit_binder "while_cond") condition))
-        None
-        (ECL.mk_abs (unit_binder "while_body") body)
+      ECL.mk_meta_monadic
+        (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Dv"; "while_"])))
+          [ECL.mk_abs (unit_binder "while_cond") condition, R.Q_Explicit;
+           ECL.mk_abs (unit_binder "while_body") body, R.Q_Explicit])
 
     | Tm_Par { body1; body2 } ->
       let body1 = extract_dv g body1 in
       let body2 = extract_dv g body2 in
       let unit_binder ppname = ECL.mk_binder ECL.unit_ty ppname None [] in
-      ECL.mk_app
-        (ECL.mk_app (ECL.mk_fv_tm (ECL.mk_fv ["Pulse"; "Lib"; "Dv"; "par"]))
-                    None
-                    (ECL.mk_abs (unit_binder "par_b1") body1))
-        None
-        (ECL.mk_abs (unit_binder "par_b2") body2)
+      ECL.mk_meta_monadic
+        (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Dv"; "par"])))
+          [ECL.mk_abs (unit_binder "par_b1") body1, R.Q_Explicit;
+           ECL.mk_abs (unit_binder "par_b2") body2, R.Q_Explicit])
 
     | Tm_WithLocal { binder; initializer; body } ->
       let b' = extract_dv_binder binder None in
-      let allocator = ECL.mk_app (ECL.mk_app (ECL.mk_fv_tm (ECL.mk_fv ["Pulse"; "Lib"; "Reference"; "alloc"]))
-        (Some ECL.implicit_arg_qual) (get_type_of_ref binder.binder_ty)) None (ECL.rt_term_to_term initializer) in
+      let allocator = R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Reference"; "alloc"])))
+        [get_type_of_ref binder.binder_ty, R.Q_Implicit; initializer, R.Q_Explicit] in
       let g, x = extend_env'_binder g binder in
       let body = extract_dv g (open_st_term_nv body x) in
       ECL.mk_let b' allocator (close_term body x._2)
@@ -460,8 +451,8 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
       //
       // This is parsed by Pulse2Rust
       //
-      let allocator = ECL.mk_app (ECL.mk_app (ECL.mk_app (ECL.mk_fv_tm (ECL.mk_fv ["Pulse"; "Lib"; "Array"; "Core"; "alloc"]))
-        (Some ECL.implicit_arg_qual) (get_type_of_array binder.binder_ty)) None (ECL.rt_term_to_term initializer)) None (ECL.rt_term_to_term length) in
+      let allocator = R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Array"; "Core"; "alloc"])))
+        [get_type_of_array binder.binder_ty, R.Q_Implicit; initializer, R.Q_Explicit; length, R.Q_Explicit] in
       let g, x = extend_env'_binder g binder in
       let body = extract_dv g (open_st_term_nv body x) in
       ECL.mk_let b' allocator (close_term body x._2)
