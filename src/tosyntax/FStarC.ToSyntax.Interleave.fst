@@ -153,6 +153,9 @@ let rec prefix_with_iface_decls
    : ML (list decl  //remaining iface decls
     & list decl) =  //d prefixed with relevant bits from iface
    let qualify_karamel_private impl =
+     if Options.Ext.get "no_krml_private" <> "" then
+       impl
+     else
        let karamel_private =
            FStarC.Parser.AST.mk_term
                  (Const (FStarC.Const.Const_string ("KrmlPrivate", impl.drange)))
