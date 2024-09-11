@@ -437,6 +437,17 @@ let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph) =
   in
   fprint outc "%s" [s]
 
+let safe_readdir_for_include (d:string) : list string =
+  try readdir d
+  with
+  | _ ->
+    let open FStar.Pprint in
+    log_issue0 Errors.Fatal_NotValidIncludeDirectory [
+        prefix 2 1 (text "Not a valid include directory:")
+          (doc_of_string d);
+      ];
+    []
+
 (** Enumerate all F* files in include directories.
     Return a list of pairs of long names and full paths. *)
 (* In public interface *)
@@ -448,22 +459,13 @@ let build_inclusion_candidates_list (): list (string & string) =
   let include_directories = List.unique include_directories in
   let cwd = normalize_file_path (getcwd ()) in
   include_directories |> List.concatMap (fun d ->
-    if is_directory d then
-      let files = readdir d in
-      List.filter_map (fun f ->
-        let f = basename f in
-        check_and_strip_suffix f
-        |> Util.map_option (fun longname ->
-              let full_path = if d = cwd then f else join_paths d f in
-              (longname, full_path))
-      ) files
-    else (
-      let open FStar.Pprint in
-      log_issue0 Errors.Fatal_NotValidIncludeDirectory [
-          prefix 2 1 (text "Not a valid include directory:")
-            (doc_of_string d);
-        ];
-      []
+    let files = safe_readdir_for_include d in
+    files |> List.filter_map (fun f ->
+      let f = basename f in
+      check_and_strip_suffix f
+      |> Util.map_option (fun longname ->
+            let full_path = if d = cwd then f else join_paths d f in
+            (longname, full_path))
     )
   )
 
@@ -1430,7 +1432,7 @@ let all_files_in_include_paths () =
   let paths = Options.include_path () in
   List.collect
     (fun path -> 
-      let files = FStar.Compiler.Util.readdir path in
+      let files = safe_readdir_for_include path in
       let files = List.filter (fun f -> Util.ends_with f ".fst" || Util.ends_with f ".fsti") files in
       List.map (fun file -> Util.join_paths path file) files)
     paths
