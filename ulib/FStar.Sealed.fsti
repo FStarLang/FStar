@@ -44,6 +44,7 @@ val sealed_singl (#a:Type) (x y : sealed a)
   : Lemma (x == y)
 
 (* Sealing a value hides it from the logical fragment of F* *)
+[@@coercion]
 val seal (#a : Type u#aa) (x:a) : Tot (sealed a)
 
 val map_seal (#a : Type u#aa) (#b : Type u#bb) (s : sealed a) (f : a -> Tot b) : Tot (sealed b)
