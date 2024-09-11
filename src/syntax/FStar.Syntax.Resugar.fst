@@ -1389,8 +1389,7 @@ let mk_decl r q d' =
     d = d' ;
     drange = r ;
     quals = List.choose resugar_qualifier q ;
-    (* TODO : are these stocked up somewhere ? *)
-    attrs = [] ;
+    attrs = [] ; // We fill in the attrs in resugar_sigelt'
     interleaved = false;
   }
 
@@ -1481,7 +1480,7 @@ let resugar_eff_decl' env ed =
   mk_decl r q (A.NewEffect(DefineEffect(eff_name, eff_binders, eff_typ, decls)))
 
 let resugar_sigelt' env se : option A.decl =
-  match se.sigel with
+  let d = (match se.sigel with
   | Sig_bundle {ses} ->
     let decl_typ_ses, datacon_ses = ses |> List.partition
       (fun se -> match se.sigel with
@@ -1601,7 +1600,11 @@ let resugar_sigelt' env se : option A.decl =
     Some (decl'_to_decl se (A.Polymonadic_bind (m, n, p, resugar_term' env t)))
 
   | Sig_polymonadic_subcomp {m_lid=m; n_lid=n; tm=(_, t)} ->
-    Some (decl'_to_decl se (A.Polymonadic_subcomp (m, n, resugar_term' env t)))
+    Some (decl'_to_decl se (A.Polymonadic_subcomp (m, n, resugar_term' env t)))) in
+
+  match d with
+  | Some d -> Some { d with attrs = List.map (resugar_term' env) se.sigattrs }
+  | None -> None
 
 (* Old interface: no envs *)
 
