@@ -293,14 +293,16 @@ let (parse_extension_lang :
                            FStar_Parser_AST.eq =
                              (fun d11 ->
                                 fun d2 ->
-                                  PulseSyntaxExtension_Sugar.eq_decl
-                                    (FStar_Dyn.undyn d11)
-                                    (FStar_Dyn.undyn d2));
+                                  let uu___3 = FStar_Dyn.undyn d11 in
+                                  let uu___4 = FStar_Dyn.undyn d2 in
+                                  PulseSyntaxExtension_Sugar.eq_decl uu___3
+                                    uu___4);
                            FStar_Parser_AST.dep_scan =
                              (fun cbs ->
                                 fun d2 ->
+                                  let uu___3 = FStar_Dyn.undyn d2 in
                                   PulseSyntaxExtension_Sugar.scan_decl cbs
-                                    (FStar_Dyn.undyn d2))
+                                    uu___3)
                          } in
                      let d2 =
                        let uu___3 =
@@ -389,8 +391,8 @@ let (desugar_pulse_decl_callback :
           let d =
             let uu___ =
               let uu___1 = PulseSyntaxExtension_Desugar.mk_env env in
-              PulseSyntaxExtension_Desugar.desugar_decl uu___1
-                (FStar_Dyn.undyn blob) in
+              let uu___2 = FStar_Dyn.undyn blob in
+              PulseSyntaxExtension_Desugar.desugar_decl uu___1 uu___2 in
             uu___ Prims.int_zero in
           match FStar_Pervasives_Native.fst d with
           | FStar_Pervasives.Inr (FStar_Pervasives_Native.None) ->
