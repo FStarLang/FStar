@@ -321,7 +321,19 @@ instance pretty_cc = { pp = function
   | FastCall -> doc_of_string "FastCall"
 }
 
- let rec decl_to_doc (d:decl) : document =
+let rec pattern_to_doc (p:pattern) : document =
+  match p with
+  | PUnit -> doc_of_string "PUnit"
+  | PBool b -> ctor "PBool" [pp b]
+  | PVar b -> ctor "PVar" [pp b]
+  | PCons (x, ps) -> ctor "PCons" [pp x; pp_list' pattern_to_doc ps]
+  | PTuple ps -> ctor "PTuple" [pp_list' pattern_to_doc ps]
+  | PRecord fs -> ctor "PRecord" [record (List.map (fun (s, p) -> fld s (pattern_to_doc p)) fs)]
+  | PConstant c -> ctor "PConstant" [pp c]
+
+instance pretty_pattern = { pp = pattern_to_doc }
+
+let rec decl_to_doc (d:decl) : document =
   match d with
   | DGlobal (fs, x, i, t, e) -> ctor "DGlobal" [pp fs; pp x; pp i; pp t; expr_to_doc e]
   | DFunction (cc, fs, i, t, x, bs, e) -> ctor "DFunction" [pp cc; pp fs; pp i; pp t; pp x; pp bs; expr_to_doc e]
@@ -359,7 +371,7 @@ and expr_to_doc (e:expr) : document =
   | EAny -> doc_of_string "EAny"
   | EAbort -> doc_of_string "EAbort"
   | EReturn x -> ctor "EReturn" [expr_to_doc x]
-  | EFlat (x, xs) -> ctor "EFlat" [pp x; pp_list' (fun (s,e) -> parens (pp s ^^ comma ^/^ expr_to_doc e)) xs] // probably better as a record
+  | EFlat (x, xs) -> ctor "EFlat" [pp x; record (List.map (fun (s, e) -> fld s (expr_to_doc e)) xs)]
   | EField (x, y, z) -> ctor "EField" [pp x; expr_to_doc y; pp z]
   | EWhile (x, y) -> ctor "EWhile" [expr_to_doc x; expr_to_doc y]
   | EBufCreateL (x, xs) -> ctor "EBufCreateL" [pp x; pp_list' expr_to_doc xs]
@@ -379,7 +391,8 @@ and expr_to_doc (e:expr) : document =
   | EBufDiff (x, y) -> ctor "EBufDiff" [expr_to_doc x; expr_to_doc y]
   
 and pp_branch (b:branch) : document =
-  doc_of_string "iou:branch"
+  let (p, e) = b in
+  parens (pp p ^^ comma ^/^ expr_to_doc e)
 
 instance pretty_decl : pretty decl = { pp = decl_to_doc; }
 instance showable_decl : showable decl = showable_from_pretty

@@ -917,6 +917,48 @@ let (pretty_cc : cc FStar_Class_PP.pretty) =
          | CDecl -> FStar_Pprint.doc_of_string "CDecl"
          | FastCall -> FStar_Pprint.doc_of_string "FastCall")
   }
+let rec (pattern_to_doc : pattern -> FStar_Pprint.document) =
+  fun p ->
+    match p with
+    | PUnit -> FStar_Pprint.doc_of_string "PUnit"
+    | PBool b ->
+        let uu___ =
+          let uu___1 = FStar_Class_PP.pp FStar_Class_PP.pp_bool b in [uu___1] in
+        ctor "PBool" uu___
+    | PVar b ->
+        let uu___ =
+          let uu___1 = FStar_Class_PP.pp pretty_binder b in [uu___1] in
+        ctor "PVar" uu___
+    | PCons (x, ps) ->
+        let uu___ =
+          let uu___1 = FStar_Class_PP.pp pretty_string x in
+          let uu___2 = let uu___3 = pp_list' pattern_to_doc ps in [uu___3] in
+          uu___1 :: uu___2 in
+        ctor "PCons" uu___
+    | PTuple ps ->
+        let uu___ = let uu___1 = pp_list' pattern_to_doc ps in [uu___1] in
+        ctor "PTuple" uu___
+    | PRecord fs ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              FStar_Compiler_List.map
+                (fun uu___3 ->
+                   match uu___3 with
+                   | (s, p1) ->
+                       let uu___4 = pattern_to_doc p1 in fld s uu___4) fs in
+            record uu___2 in
+          [uu___1] in
+        ctor "PRecord" uu___
+    | PConstant c ->
+        let uu___ =
+          let uu___1 =
+            FStar_Class_PP.pp
+              (FStar_Class_PP.pp_tuple2 pretty_width pretty_string) c in
+          [uu___1] in
+        ctor "PConstant" uu___
+let (pretty_pattern : pattern FStar_Class_PP.pretty) =
+  { FStar_Class_PP.pp = pattern_to_doc }
 let rec (decl_to_doc : decl -> FStar_Pprint.document) =
   fun d ->
     match d with
@@ -1251,18 +1293,13 @@ and (expr_to_doc : expr -> FStar_Pprint.document) =
           let uu___1 = FStar_Class_PP.pp pretty_typ x in
           let uu___2 =
             let uu___3 =
-              pp_list'
-                (fun uu___4 ->
-                   match uu___4 with
-                   | (s, e1) ->
-                       let uu___5 =
-                         let uu___6 = FStar_Class_PP.pp pretty_string s in
-                         let uu___7 =
-                           let uu___8 = expr_to_doc e1 in
-                           FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.comma
-                             uu___8 in
-                         FStar_Pprint.op_Hat_Hat uu___6 uu___7 in
-                       FStar_Pprint.parens uu___5) xs in
+              let uu___4 =
+                FStar_Compiler_List.map
+                  (fun uu___5 ->
+                     match uu___5 with
+                     | (s, e1) -> let uu___6 = expr_to_doc e1 in fld s uu___6)
+                  xs in
+              record uu___4 in
             [uu___3] in
           uu___1 :: uu___2 in
         ctor "EFlat" uu___
@@ -1370,7 +1407,17 @@ and (expr_to_doc : expr -> FStar_Pprint.document) =
             uu___2 in
         ctor "EBufDiff" uu___
 and (pp_branch : branch -> FStar_Pprint.document) =
-  fun b -> FStar_Pprint.doc_of_string "iou:branch"
+  fun b ->
+    let uu___ = b in
+    match uu___ with
+    | (p, e) ->
+        let uu___1 =
+          let uu___2 = FStar_Class_PP.pp pretty_pattern p in
+          let uu___3 =
+            let uu___4 = expr_to_doc e in
+            FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.comma uu___4 in
+          FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
+        FStar_Pprint.parens uu___1
 let (pretty_decl : decl FStar_Class_PP.pretty) =
   { FStar_Class_PP.pp = decl_to_doc }
 let (showable_decl : decl FStar_Class_Show.showable) =
@@ -3943,7 +3990,7 @@ let (translate :
                        "Unable to translate module: %s because:\n  %s\n"
                        m_name uu___3);
                     FStar_Pervasives_Native.None)) modules
-let (uu___2031 : unit) =
+let (uu___2053 : unit) =
   register_post_translate_type_without_decay translate_type_without_decay';
   register_post_translate_type translate_type';
   register_post_translate_type_decl translate_type_decl';
