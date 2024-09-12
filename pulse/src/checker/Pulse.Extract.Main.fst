@@ -458,7 +458,6 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
       ECL.mk_let b' allocator (close_term body x._2)
 
     | Tm_Admit _ ->
-      T.print "Admit in dv extraction is currently ignored";
       ECL.mk_return ECL.unit_tm
 
     | Tm_Unreachable { c } ->
