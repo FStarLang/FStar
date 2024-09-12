@@ -472,7 +472,8 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
 and extract_dv_branch g (b:Pulse.Syntax.Base.branch) : T.Tac ECL.branch =
   let pat, body = b in
   let g, pat, bs = extract_dv_pattern g pat in
-  ECL.mk_branch pat (RT.close_term_bs bs (extract_dv g (Pulse.Checker.Match.open_st_term_bs body bs)))
+  ECL.mk_branch pat (RT.close_term_bs (List.rev bs) // FIXME: why is the variable order reversed?!??!
+    (extract_dv g (Pulse.Checker.Match.open_st_term_bs body bs)))
 
 let extract_pulse_dv (g: env) (p:st_term) : T.Tac ECL.term =
   let p = erase_ghost_subterms g p in
