@@ -27,4 +27,3 @@ open Pulse.Typing.Env { env }
 
 val extract_pulse_dv (g: env) (p:st_term) : T.Tac R.term
 val extract_dv_recursive (g: env) (p:st_term) (rec_name:R.fv) : T.Tac R.term
-val extract_dv_ghost (g: env) (p:st_term) : T.Tac R.term

@@ -107,10 +107,10 @@ let check_fndefn
   let elab_derivation = T.ext_getv "pulse:elab_derivation" <> "" in
   let cur_module = T.cur_module () in
 
-  let maybe_add_impl t (se: RT.sigelt_for (fstar_env g) t) =
+  let maybe_add_impl t (se: RT.sigelt_for (fstar_env g) t) : Tac (RT.sigelt_for (fstar_env g) t) =
     let open Pulse.Extract.Main in begin
     if C_STGhost? comp then
-      set_impl se false (extract_dv_ghost g body)
+      se
     else if fn_d.isrec then
       let impl = extract_dv_recursive g body (R.pack_fv (cur_module @ [nm_orig])) in
       set_impl se true impl

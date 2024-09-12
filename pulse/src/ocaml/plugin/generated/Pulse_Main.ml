@@ -990,6 +990,15 @@ let (check_fndefn :
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
+                                                                    uu___27
+                                                                    ->
+                                                                    fun
+                                                                    uu___26
+                                                                    ->
+                                                                    fun
+                                                                    uu___25
+                                                                    ->
+                                                                    (fun
                                                                     uu___25
                                                                     ->
                                                                     fun t ->
@@ -998,46 +1007,19 @@ let (check_fndefn :
                                                                     Pulse_Syntax_Base.uu___is_C_STGhost
                                                                     comp
                                                                     then
-                                                                    let uu___26
-                                                                    =
-                                                                    Pulse_Extract_Main.extract_dv_ghost
-                                                                    g body2 in
-                                                                    FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Main.fst"
-                                                                    (Prims.of_int (113))
-                                                                    (Prims.of_int (24))
-                                                                    (Prims.of_int (113))
-                                                                    (Prims.of_int (49)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Main.fst"
-                                                                    (Prims.of_int (113))
-                                                                    (Prims.of_int (6))
-                                                                    (Prims.of_int (113))
-                                                                    (Prims.of_int (49)))))
-                                                                    (Obj.magic
-                                                                    uu___26)
+                                                                    Obj.magic
+                                                                    (Obj.repr
+                                                                    (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___27
-                                                                    ->
-                                                                    FStar_Tactics_Effect.lift_div_tac
-                                                                    (fun
-                                                                    uu___28
-                                                                    ->
-                                                                    set_impl
-                                                                    (Pulse_Typing_Env.fstar_env
-                                                                    g) t se
-                                                                    false
-                                                                    uu___27))
+                                                                    uu___26
+                                                                    -> se)))
                                                                     else
-                                                                    if
+                                                                    Obj.magic
+                                                                    (Obj.repr
+                                                                    (if
                                                                     fn_d.Pulse_Syntax_Base.isrec
                                                                     then
-                                                                    (let uu___27
+                                                                    let uu___27
                                                                     =
                                                                     Pulse_Extract_Main.extract_dv_recursive
                                                                     g body2
@@ -1073,7 +1055,7 @@ let (check_fndefn :
                                                                     set_impl
                                                                     (Pulse_Typing_Env.fstar_env
                                                                     g) t se
-                                                                    true impl)))
+                                                                    true impl))
                                                                     else
                                                                     (let uu___28
                                                                     =
@@ -1109,7 +1091,10 @@ let (check_fndefn :
                                                                     (Pulse_Typing_Env.fstar_env
                                                                     g) t se
                                                                     false
-                                                                    uu___29))))) in
+                                                                    uu___29))))))
+                                                                    uu___27
+                                                                    uu___26
+                                                                    uu___25)) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
