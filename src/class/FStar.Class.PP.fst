@@ -81,6 +81,10 @@ instance pp_tuple6
             parens (separate comma [pp x1; pp x2; pp x3; pp x4; pp x5; pp x6]));
 }
 
-let from_showable (a:Type) {| _ : Class.Show.showable a |} : Tot (pretty a) = {
+let pretty_from_showable (#a:Type) {| _ : Class.Show.showable a |} : Tot (pretty a) = {
    pp = (fun x -> arbitrary_string (Class.Show.show x));
+}
+
+let showable_from_pretty (#a:Type) {| _ : pretty a |} : Tot (Class.Show.showable a) = {
+   show = (fun x -> render (pp x));
 }
