@@ -18,20 +18,13 @@ module Pulse.Extract.CompilerLib
 
 module R = FStar.Reflection.V2
 
-val const : Type0
 type term = R.term
-val binder : Type0
+type binder = R.binder
 val unit_tm : term
 val unit_ty : term
-val binder_qualifier : Type0
-val implicit_qual : binder_qualifier
-val mk_binder (sort:term) (ppname:string) (q:option binder_qualifier) (attrs:list term)
-  : Dv binder
-val mk_abs (b:binder) (body:term) : Dv term
 val mk_return (t:term) : Dv term
 val mk_meta_monadic : term -> Dv term
 val mk_let (b:binder) (head body:term) : Dv term
 val mk_if (b then_ else_:term) : Dv term
-val mk_const (c:R.vconst) : Dv const
 
 val mk_extracted_as_attr (impl: term) : Dv term

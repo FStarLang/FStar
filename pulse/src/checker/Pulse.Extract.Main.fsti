@@ -18,10 +18,8 @@ module Pulse.Extract.Main
 
 open Pulse.Syntax.Base
 
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
-
-exception Extraction_failure of string
 
 open Pulse.Typing.Env { env }
 

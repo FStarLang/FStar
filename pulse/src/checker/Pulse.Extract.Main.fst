@@ -91,7 +91,7 @@ let term_eq_string (s:string) (t:R.term) : bool =
   | R.Tv_Const (R.C_String s') -> s=s'
   | _ -> false
 
-let fresh (g:env) = Pulse.Typing.fresh g
+open Pulse.Typing { fresh }
 
 let push_binding (g:env) (x:var { ~ (x `Set.mem` E.dom g )}) (b:binder) =
   E.push_binding g x b.binder_ppname b.binder_ty
@@ -229,7 +229,6 @@ let erase_type_for_extraction (g:env) (t:term) : T.Tac bool =
 let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
   let open Pulse.Syntax.Naming in
 
-  let fresh (g:env) = Pulse.Typing.fresh g in
   let push_binding g x b =
     E.push_binding g x b.binder_ppname b.binder_ty in
 
@@ -322,16 +321,16 @@ and erase_ghost_subterms_branch (g:env) (b:branch) : T.Tac branch =
   pat, Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs)
 
 let extract_dv_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.qualifier)
-  : T.Tac ECL.binder =
-  let q =
-    match q with
-    | Some Implicit -> Some ECL.implicit_qual
-    | _ -> None in
-  ECL.mk_binder
-    (b.binder_ty)
-    (T.unseal b.binder_ppname.name)
-    q
-    (T.unseal b.binder_attrs)
+  : T.Tac R.binder =
+  R.pack_binder {
+    sort = b.binder_ty;
+    ppname = b.binder_ppname.name;
+    attrs = T.unseal b.binder_attrs;
+    qual = (match q with
+      | Some Implicit -> R.Q_Implicit
+      | Some TcArg -> R.Q_Explicit // ??
+      | None -> R.Q_Explicit);
+  }
 
 let rec extract_dv_pattern g (p:Pulse.Syntax.Base.pattern) :
     T.Tac (env & R.pattern & list Pulse.Typing.Env.binding) =
@@ -357,7 +356,7 @@ and extract_dv_patterns g (ps:list Pulse.Syntax.Base.pattern) :
     let g, ps, bs' = extract_dv_patterns g ps in
     g, p::ps, bs@bs'
 
-let get_type_of_ref (p: term) : T.Tac ECL.term =
+let get_type_of_ref (p: term) : T.Tac R.term =
   let fail () = T.fail (Printf.sprintf "expected term (Pulse.Lib.Reference.ref ...), got %s" (term_to_string p)) in
   match R.inspect_ln p with
   | R.Tv_App hd (arg, _) ->
@@ -365,7 +364,7 @@ let get_type_of_ref (p: term) : T.Tac ECL.term =
     arg
   | _ -> fail ()
 
-let get_type_of_array (p: term) : T.Tac ECL.term =
+let get_type_of_array (p: term) : T.Tac R.term =
   let fail () = T.fail (Printf.sprintf "expected term (Pulse.Lib.Array.Core.array ...), got %s" (term_to_string p)) in
   match R.inspect_ln p with
   | R.Tv_App hd (arg, _) ->
@@ -373,8 +372,18 @@ let get_type_of_array (p: term) : T.Tac ECL.term =
     arg
   | _ -> fail ()
 
+let mk_abs b e = R.pack_ln <| R.Tv_Abs b e
+
+let unit_binder (ppname: string) =
+  R.pack_binder {
+    sort = ECL.unit_ty;
+    ppname = Sealed.seal ppname;
+    attrs = [];
+    qual = R.Q_Explicit;
+  }
+
 open Pulse.Syntax.Naming
-let rec extract_dv g (p:st_term) : T.Tac ECL.term =
+let rec extract_dv g (p:st_term) : T.Tac R.term =
   if is_erasable p then ECL.mk_return ECL.unit_tm
   else begin
     match p.term with
@@ -388,7 +397,7 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
       let b' = extract_dv_binder b q in
       let g, x = extend_env'_binder g b in
       let body = extract_dv g (open_st_term_nv body x) in
-      ECL.mk_abs b' (close_term body x._2)
+      mk_abs b' (close_term body x._2)
 
     | Tm_Return { term } -> ECL.mk_return term
 
@@ -401,14 +410,14 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
       let g, x = extend_env'_binder g binder in
       let body = extract_dv g (open_st_term_nv body x) in
       ECL.mk_let b' e1 (close_term body x._2)
-    
+
     | Tm_TotBind { binder; head; body } ->
       let b' = extract_dv_binder binder None in
       let e1 = ECL.mk_return head in
       let g, x = extend_env'_binder g binder in
       let e2 = extract_dv g (open_st_term_nv body x) in
       ECL.mk_let b' e1 (close_term e2 x._2)
-    
+
     | Tm_If { b; then_; else_ } ->
       let then_ = extract_dv g then_ in
       let else_ = extract_dv g else_ in
@@ -420,20 +429,18 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
     | Tm_While { condition; body } ->
       let condition = extract_dv g condition in
       let body = extract_dv g body in
-      let unit_binder ppname = ECL.mk_binder ECL.unit_ty ppname None [] in
       ECL.mk_meta_monadic
         (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Dv"; "while_"])))
-          [ECL.mk_abs (unit_binder "while_cond") condition, R.Q_Explicit;
-           ECL.mk_abs (unit_binder "while_body") body, R.Q_Explicit])
+          [mk_abs (unit_binder "while_cond") condition, R.Q_Explicit;
+           mk_abs (unit_binder "while_body") body, R.Q_Explicit])
 
     | Tm_Par { body1; body2 } ->
       let body1 = extract_dv g body1 in
       let body2 = extract_dv g body2 in
-      let unit_binder ppname = ECL.mk_binder ECL.unit_ty ppname None [] in
       ECL.mk_meta_monadic
         (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Dv"; "par"])))
-          [ECL.mk_abs (unit_binder "par_b1") body1, R.Q_Explicit;
-           ECL.mk_abs (unit_binder "par_b2") body2, R.Q_Explicit])
+          [mk_abs (unit_binder "par_b1") body1, R.Q_Explicit;
+           mk_abs (unit_binder "par_b2") body2, R.Q_Explicit])
 
     | Tm_WithLocal { binder; initializer; body } ->
       let b' = extract_dv_binder binder None in
@@ -488,7 +495,7 @@ let rec extract_dv_recursive g (p:st_term) (rec_name:R.fv)
         let g, x = extend_env'_binder g b in
         let body = open_st_term_nv body x in
         let body = extract_dv_recursive g body rec_name in
-        ECL.mk_abs (extract_dv_binder b q) (close_term body x._2)
+        mk_abs (extract_dv_binder b q) (close_term body x._2)
       | _ -> //last binder used for knot; replace it with the recursively bound name
         let body = LN.subst_st_term body [RT.DT 0 (wr R.(pack_ln (Tv_FVar rec_name)) Range.range_0)] in
         extract_pulse_dv g body
