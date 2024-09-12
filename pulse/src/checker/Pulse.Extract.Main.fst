@@ -214,7 +214,7 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   | Tm_WithInv {body} ->
     simplify_st_term g body
 
-  | Tm_Unreachable -> e
+  | Tm_Unreachable _ -> e
 
 and simplify_branch (g:env) (b:branch) : T.Tac branch =
   let pat, body = b in
@@ -302,7 +302,7 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
       let body = open_erase_close g binder body in
       ret (Tm_WithLocalArray { binder; initializer; length; body })
 
-    | Tm_Unreachable -> p
+    | Tm_Unreachable _ -> p
 
     | Tm_Admit _ -> p
 
@@ -461,7 +461,9 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
       T.print "Admit in dv extraction is currently ignored";
       ECL.mk_return ECL.unit_tm
 
-    | Tm_Unreachable -> ECL.mk_return ECL.unit_tm
+    | Tm_Unreachable { c } ->
+      ECL.mk_meta_monadic (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Dv"; "unreachable"])))
+        [comp_res c, R.Q_Explicit])
 
     | Tm_WithInv { body } -> extract_dv g body
 

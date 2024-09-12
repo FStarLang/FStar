@@ -452,6 +452,8 @@ and st_term'__Tm_Admit__payload =
   u1: universe ;
   typ: term ;
   post3: term FStar_Pervasives_Native.option }
+and st_term'__Tm_Unreachable__payload = {
+  c: comp }
 and st_term'__Tm_ProofHintWithBinders__payload =
   {
   hint_type: proof_hint_type ;
@@ -479,7 +481,7 @@ and st_term' =
   | Tm_WithLocalArray of st_term'__Tm_WithLocalArray__payload 
   | Tm_Rewrite of st_term'__Tm_Rewrite__payload 
   | Tm_Admit of st_term'__Tm_Admit__payload 
-  | Tm_Unreachable 
+  | Tm_Unreachable of st_term'__Tm_Unreachable__payload 
   | Tm_ProofHintWithBinders of st_term'__Tm_ProofHintWithBinders__payload 
   | Tm_WithInv of st_term'__Tm_WithInv__payload 
 and st_term = {
@@ -825,7 +827,8 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
          { ctag = c2; u1 = u2; typ = t21; post3 = post2;_}) ->
           (((c1 = c2) && (eq_univ u1 u2)) && (eq_tm t11 t21)) &&
             (eq_tm_opt post1 post2)
-      | (Tm_Unreachable, Tm_Unreachable) -> true
+      | (Tm_Unreachable { c = c1;_}, Tm_Unreachable { c = c2;_}) ->
+          eq_comp c1 c2
       | (Tm_ProofHintWithBinders
          { hint_type = ht1; binders = bs1; t = t11;_},
          Tm_ProofHintWithBinders
@@ -903,8 +906,8 @@ let (ppname_for_uvar :
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-                   (Prims.of_int (416)) (Prims.of_int (32))
-                   (Prims.of_int (416)) (Prims.of_int (47)))))
+                   (Prims.of_int (418)) (Prims.of_int (32))
+                   (Prims.of_int (418)) (Prims.of_int (47)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "prims.fst" (Prims.of_int (611))
@@ -917,13 +920,13 @@ let (ppname_for_uvar :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-                 (Prims.of_int (416)) (Prims.of_int (25))
-                 (Prims.of_int (416)) (Prims.of_int (48)))))
+                 (Prims.of_int (418)) (Prims.of_int (25))
+                 (Prims.of_int (418)) (Prims.of_int (48)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-                 (Prims.of_int (416)) (Prims.of_int (18))
-                 (Prims.of_int (416)) (Prims.of_int (48)))))
+                 (Prims.of_int (418)) (Prims.of_int (18))
+                 (Prims.of_int (418)) (Prims.of_int (48)))))
         (Obj.magic uu___1)
         (fun uu___2 ->
            FStar_Tactics_Effect.lift_div_tac
@@ -932,12 +935,12 @@ let (ppname_for_uvar :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-               (Prims.of_int (416)) (Prims.of_int (18)) (Prims.of_int (416))
+               (Prims.of_int (418)) (Prims.of_int (18)) (Prims.of_int (418))
                (Prims.of_int (48)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-               (Prims.of_int (416)) (Prims.of_int (4)) (Prims.of_int (416))
+               (Prims.of_int (418)) (Prims.of_int (4)) (Prims.of_int (418))
                (Prims.of_int (49))))) (Obj.magic uu___)
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac

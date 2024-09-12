@@ -248,8 +248,12 @@ let (check :
                                                                     (FStar_Pervasives_Native.Some
                                                                     (Pulse_Syntax_Base.ctag_of_comp_st
                                                                     c))
-                                                                    Pulse_Syntax_Base.Tm_Unreachable),
-                                                                    c, d))
+                                                                    (Pulse_Syntax_Base.Tm_Unreachable
+                                                                    {
+                                                                    Pulse_Syntax_Base.c
+                                                                    = c
+                                                                    })), c,
+                                                                    d))
                                                                     res_ppname))
                                                                     uu___10)))
                                                                     uu___8)))

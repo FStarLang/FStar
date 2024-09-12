@@ -1032,7 +1032,7 @@ type st_typing : env -> st_term -> comp -> Type =
       c:comp_st ->
       comp_typing g c (universe_of_comp c) ->
       prop_validity g (S.wr (`False) FStar.Range.range_0) -> 
-      st_typing g (wtag (Some (ctag_of_comp_st c)) Tm_Unreachable) c
+      st_typing g (wtag (Some (ctag_of_comp_st c)) (Tm_Unreachable {c})) c
 
   | T_WithInv:
       g:env ->

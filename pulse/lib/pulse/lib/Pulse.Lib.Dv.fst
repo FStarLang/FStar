@@ -18,3 +18,4 @@ module Pulse.Lib.Dv
 
 let while_ cond body = ()
 let par f1 f2 = ()
+let rec unreachable t = unreachable t

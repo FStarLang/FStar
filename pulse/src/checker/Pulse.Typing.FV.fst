@@ -206,7 +206,8 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' typ x i;
       freevars_close_term_opt' post x (i + 1)
     
-    | Tm_Unreachable -> ()
+    | Tm_Unreachable {c} ->
+      freevars_close_comp c x i
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
