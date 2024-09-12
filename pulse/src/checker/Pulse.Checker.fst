@@ -138,27 +138,33 @@ let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
     | _ -> fail g (Some t_rng) "intro exists with non-existential"
 
 let trace (t:st_term) (g:env) (pre:term) (rng:range) : T.Tac unit =
+  let open FStar.Stubs.Pprint in
+  let open Pulse.PP in
+  let pre = T.norm_well_typed_term (elab_env g) [Pervasives.unascribe; primops; iota] pre in
+  let msg = [
+    text "TRACE. Current context:" ^^
+      indent (pp <| canon_slprop_print pre);
+    text "Typing environment (units elided): " ^^
+      indent (env_to_doc' true g);
+    prefix 2 1 (text "Just before checking:")
+      (pp t);
+  ] in
+  (* This tweaks the range to go to the beginning of the line. *)
+  let rng =
+    let (f, l1, c1, l2, c2) = FStar.Range.explode (T.unseal rng) in
+    FStar.Range.mk_range f l1 0 l1 2
+  in
+  info_doc g (Some rng) msg
+
+let maybe_trace (t:st_term) (g:env) (pre:term) (rng:range) : T.Tac unit =
+  (* pulse:trace turns on tracing, but not for sequencing (binds).
+     pulse:trace_full turns it on for absolutely everything. *)
   let trace_opt = T.ext_getv "pulse:trace" = "1" in
-  if trace_opt then begin
-    (* If we're running interactively, print out the context
-    and environment. *)
-    let open FStar.Stubs.Pprint in
-    let open Pulse.PP in
-    let pre = T.norm_well_typed_term (elab_env g) [Pervasives.unascribe; primops; iota] pre in
-    let msg = [
-      text "Trace";
-      prefix 2 1 (text "Just before checking:")
-        (pp t);
-      text "Current context:" ^^
-        indent (pp <| canon_slprop_print pre)
-    ] in
-    (* This tweaks the range to go to the beginning of the line. *)
-    let rng =
-      let (f, l1, c1, l2, c2) = FStar.Range.explode (T.unseal rng) in
-      FStar.Range.mk_range f l1 0 l1 2
-    in
-    info_doc_env g (Some rng) msg
-  end
+  let trace_full_opt = T.ext_getv "pulse:trace_full" = "1" in
+  if (trace_opt && not (Tm_Bind? t.term || Tm_TotBind? t.term))
+     || trace_full_opt
+  then
+    trace t g pre rng
 
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
 let rec check
@@ -176,7 +182,7 @@ let rec check
       Pulse.Checker.Prover.elim_exists_and_pure pre0_typing 
     in
 
-    trace t g pre t.range;
+    maybe_trace t g pre t.range;
   
     if RU.debug_at_level (fstar_env g) "pulse.checker" then
       T.print (Printf.sprintf "At %s{\nerr context:\n>%s\n\n{\n\tenv=%s\ncontext:\n%s,\n\nst_term: %s}}\n"

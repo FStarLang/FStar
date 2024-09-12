@@ -2432,7 +2432,7 @@ let rec (st_term_to_string' :
                FStar_Tactics_Effect.lift_div_tac
                  (fun uu___3 ->
                     Prims.strcat
-                      (Prims.strcat "return_"
+                      (Prims.strcat "return"
                          (Prims.strcat (if insert_eq then "" else "_noeq")
                             " ")) (Prims.strcat uu___2 "")))
       | Pulse_Syntax_Base.Tm_STApp
@@ -3984,7 +3984,7 @@ let rec (st_term_to_string' :
                               fun x ->
                                 Prims.strcat
                                   (Prims.strcat "rewrite "
-                                     (Prims.strcat uu___5 " "))
+                                     (Prims.strcat uu___5 " as "))
                                   (Prims.strcat x ""))) in
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind

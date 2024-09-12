@@ -263,7 +263,7 @@ let rec st_term_to_string' (level:string) (t:st_term)
   : T.Tac string
   = match t.term with
     | Tm_Return { insert_eq; term } ->
-      sprintf "return_%s %s"
+      sprintf "return%s %s"
         (if insert_eq then "" else "_noeq")
         (term_to_string term)
       
@@ -358,7 +358,7 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (term_to_string post2)
 
     | Tm_Rewrite { t1; t2 } ->
-       sprintf "rewrite %s %s"
+       sprintf "rewrite %s as %s"
         (term_to_string t1)
         (term_to_string t2)
 
