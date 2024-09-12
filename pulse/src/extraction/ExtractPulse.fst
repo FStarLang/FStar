@@ -123,7 +123,7 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     when (string_of_mlpath p = "Pulse.Lib.Dv.while_") ->
     EWhile(cb test, cb body)
 
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _; _ ])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ ])
     when (string_of_mlpath p = "Pulse.Lib.Dv.unreachable") ->
     EAbortS (string_of_mlpath p)
 
