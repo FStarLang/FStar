@@ -4415,7 +4415,9 @@ let rec (extract_dv :
                                                 "Dv";
                                                 "unreachable"])))
                                        [((Pulse_Syntax_Base.comp_res c),
-                                          FStar_Reflection_V2_Data.Q_Explicit)])))
+                                          FStar_Reflection_V2_Data.Q_Explicit);
+                                       (Pulse_Reflection_Util.unit_tm,
+                                         FStar_Reflection_V2_Data.Q_Explicit)])))
                       | Pulse_Syntax_Base.Tm_WithInv
                           { Pulse_Syntax_Base.name1 = uu___3;
                             Pulse_Syntax_Base.body6 = body;

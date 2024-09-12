@@ -442,12 +442,12 @@ let (pulse_translate_expr : FStar_Extraction_Krml.translate_expr_t) =
                  uu___3);
               FStar_Extraction_ML_Syntax.mlty = uu___4;
               FStar_Extraction_ML_Syntax.loc = uu___5;_},
-            uu___6::[])
+            uu___6::uu___7::[])
            when
-           let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___7 = "Pulse.Lib.Dv.unreachable" ->
-           let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           FStar_Extraction_Krml.EAbortS uu___7
+           let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___8 = "Pulse.Lib.Dv.unreachable" ->
+           let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           FStar_Extraction_Krml.EAbortS uu___8
        | FStar_Extraction_ML_Syntax.MLE_App
            ({
               FStar_Extraction_ML_Syntax.expr =
@@ -483,7 +483,7 @@ let (pulse_translate_expr : FStar_Extraction_Krml.translate_expr_t) =
        | uu___1 ->
            FStar_Compiler_Effect.raise
              FStar_Extraction_Krml.NotSupportedByKrmlExtension)
-let (uu___277 : unit) =
+let (uu___278 : unit) =
   FStar_Extraction_Krml.register_pre_translate_type_without_decay
     pulse_translate_type_without_decay;
   FStar_Extraction_Krml.register_pre_translate_expr pulse_translate_expr

@@ -462,7 +462,7 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
 
     | Tm_Unreachable { c } ->
       ECL.mk_meta_monadic (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Dv"; "unreachable"])))
-        [comp_res c, R.Q_Explicit])
+        [comp_res c, R.Q_Explicit; unit_tm, R.Q_Explicit])
 
     | Tm_WithInv { body } -> extract_dv g body
 

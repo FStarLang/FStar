@@ -18,4 +18,4 @@ module Pulse.Lib.Dv
 
 val while_ (cond: unit -> Dv bool) (body: unit -> Dv unit) : Dv unit
 val par (f1: unit -> Dv unit) (f2: unit -> Dv unit) : Dv unit
-val unreachable (t: Type0) : Dv t
+val unreachable (t: Type0) : unit -> Dv t
