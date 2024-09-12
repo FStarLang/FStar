@@ -80,8 +80,8 @@ instance showable_ident = {
 instance showable_lident = {
   show = string_of_lid;
 }
-let pretty_ident = from_showable ident
-let pretty_lident = from_showable lident
+let pretty_ident = pretty_from_showable
+let pretty_lident = pretty_from_showable
 instance hasrange_ident = {
   pos = range_of_id;
   setPos = (fun rng id -> { id with idRange = rng });

@@ -133,9 +133,9 @@ let (showable_ident : ident FStar_Class_Show.showable) =
 let (showable_lident : lident FStar_Class_Show.showable) =
   { FStar_Class_Show.show = string_of_lid }
 let (pretty_ident : ident FStar_Class_PP.pretty) =
-  FStar_Class_PP.from_showable showable_ident
+  FStar_Class_PP.pretty_from_showable showable_ident
 let (pretty_lident : lident FStar_Class_PP.pretty) =
-  FStar_Class_PP.from_showable showable_lident
+  FStar_Class_PP.pretty_from_showable showable_lident
 let (hasrange_ident : ident FStar_Class_HasRange.hasRange) =
   {
     FStar_Class_HasRange.pos = range_of_id;
