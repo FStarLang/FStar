@@ -24,7 +24,7 @@ open Pulse.Show
 open Pulse.Reflection.Util
 
 module L = FStar.List.Tot
-module R = FStar.Reflection
+module R = FStar.Reflection.V2
 module RT = FStar.Reflection.Typing
 module T = FStar.Tactics.V2
 module E = Pulse.Typing.Env
@@ -334,23 +334,22 @@ let extract_dv_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.q
     (T.unseal b.binder_attrs)
 
 let rec extract_dv_pattern g (p:Pulse.Syntax.Base.pattern) :
-    T.Tac (env & ECL.pattern & list Pulse.Typing.Env.binding) =
+    T.Tac (env & R.pattern & list Pulse.Typing.Env.binding) =
   match p with
   | Pat_Cons fv pats ->
-    let fv = ECL.mk_fv fv.fv_name in
+    let fv = R.pack_fv fv.fv_name in
     let g, pats, bs = extract_dv_patterns g (List.Tot.map fst pats) in
-    g, ECL.mk_pat_cons fv pats, bs
+    g, R.Pat_Cons fv None (L.map (fun p -> (p, false)) pats), bs
   | Pat_Constant c ->
-    g, c |> ECL.mk_const |> ECL.mk_pat_constant, []
+    g, R.Pat_Constant c, []
   | Pat_Var ppname sort ->
-    let pp = T.unseal ppname in
     let ty = T.unseal sort in
     let g, (_, x) = extend_env' g (mk_ppname ppname Range.range_0) ty in
-    g, ECL.mk_pat_var pp ty, [x, ty]
+    g, R.Pat_Var sort ppname, [x, ty]
   | Pat_Dot_Term t ->
-    g, ECL.mk_dot_pat t, []
+    g, R.Pat_Dot_Term t, []
 and extract_dv_patterns g (ps:list Pulse.Syntax.Base.pattern) :
-    T.Tac (env & list ECL.pattern & list Pulse.Typing.Env.binding) =
+    T.Tac (env & list R.pattern & list Pulse.Typing.Env.binding) =
   match ps with
   | [] -> g, [], []
   | p::ps ->
@@ -416,7 +415,7 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
       ECL.mk_if b then_ else_
 
     | Tm_Match { sc; brs } ->
-      ECL.mk_match sc (T.map (extract_dv_branch g) brs)
+      R.pack_ln (R.Tv_Match sc None (T.map (extract_dv_branch g) brs))
 
     | Tm_While { condition; body } ->
       let condition = extract_dv g condition in
@@ -468,12 +467,12 @@ let rec extract_dv g (p:st_term) : T.Tac ECL.term =
 
   end
 
-and extract_dv_branch g (b:Pulse.Syntax.Base.branch) : T.Tac ECL.branch =
+and extract_dv_branch g (b:Pulse.Syntax.Base.branch) : T.Tac R.branch =
   let pat, body = b in
   let g, pat, bs = extract_dv_pattern g pat in
-  ECL.mk_branch pat (LN.close_term_n
+  pat, LN.close_term_n
     (extract_dv g (Pulse.Checker.Match.open_st_term_bs body bs))
-    (L.map fst bs))
+    (L.map fst bs)
 
 let extract_pulse_dv (g: env) (p:st_term) : T.Tac ECL.term =
   let p = erase_ghost_subterms g p in
