@@ -37,6 +37,7 @@ type st_comp_tag =
   | STGhost
 
 type computation_annot' =
+  | Preserves of slprop
   | Requires of slprop
   | Ensures of slprop
   | Returns of option ident & A.term
@@ -392,6 +393,7 @@ and eq_computation_type (c1 c2:computation_type) =
   forall2 eq_annot c1.annots c2.annots
 and eq_annot (a1 a2:computation_annot) =
   match fst a1, fst a2 with
+  | Preserves s1, Preserves s2 -> eq_slprop s1 s2
   | Requires s1, Requires s2 -> eq_slprop s1 s2
   | Ensures s1, Ensures s2 -> eq_slprop s1 s2
   | Returns (i1, t1), Returns (i2, t2) -> eq_opt eq_ident i1 i2 && AD.eq_term t1 t2
@@ -533,6 +535,7 @@ and scan_computation_type (cbs:A.dep_scan_callbacks) (c:computation_type) =
   iter (scan_annot cbs) c.annots
 and scan_annot cbs (a : computation_annot) =
   match fst a with
+  | Preserves s -> scan_slprop cbs s
   | Requires s -> scan_slprop cbs s
   | Ensures s -> scan_slprop cbs s
   | Returns (i, t) -> cbs.scan_term t
