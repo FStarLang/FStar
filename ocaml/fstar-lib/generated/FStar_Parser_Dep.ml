@@ -910,16 +910,18 @@ let (check_module_declaration_against_filename :
   FStar_Ident.lident -> Prims.string -> unit) =
   fun lid ->
     fun filename ->
-      let k' = lowercase_join_longident lid true in
+      let k' = string_of_lid lid true in
       let uu___ =
-        let uu___1 =
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = FStar_Compiler_Util.basename filename in
-              check_and_strip_suffix uu___4 in
-            FStar_Compiler_Util.must uu___3 in
-          FStar_Compiler_String.lowercase uu___2 in
-        uu___1 <> k' in
+        (let uu___1 =
+           let uu___2 =
+             let uu___3 = FStar_Compiler_Util.basename filename in
+             check_and_strip_suffix uu___3 in
+           FStar_Compiler_Util.must uu___2 in
+         uu___1 <> k') &&
+          (let uu___1 =
+             let uu___2 = FStar_Compiler_Util.basename filename in
+             uu___2 = "prims.fst" in
+           Prims.op_Negation uu___1) in
       if uu___
       then
         let uu___1 =
@@ -927,10 +929,15 @@ let (check_module_declaration_against_filename :
             let uu___3 =
               let uu___4 = string_of_lid lid true in
               FStar_Compiler_Util.format2
-                "The module declaration \"module %s\" found in file %s does not match its filename. Dependencies will be incorrect and the module will not be verified."
+                "The module declaration \"module %s\" found in file %s does not match its filename."
                 uu___4 filename in
             FStar_Errors_Msg.text uu___3 in
-          [uu___2] in
+          let uu___3 =
+            let uu___4 =
+              FStar_Errors_Msg.text
+                "Dependencies will be incorrect and the module will not be verified." in
+            [uu___4] in
+          uu___2 :: uu___3 in
         FStar_Errors.log_issue FStar_Ident.hasrange_lident lid
           FStar_Errors_Codes.Error_ModuleFileNameMismatch ()
           (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
