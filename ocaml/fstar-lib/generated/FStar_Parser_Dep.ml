@@ -912,16 +912,12 @@ let (check_module_declaration_against_filename :
     fun filename ->
       let k' = string_of_lid lid true in
       let uu___ =
-        (let uu___1 =
-           let uu___2 =
-             let uu___3 = FStar_Compiler_Util.basename filename in
-             check_and_strip_suffix uu___3 in
-           FStar_Compiler_Util.must uu___2 in
-         uu___1 <> k') &&
-          (let uu___1 =
-             let uu___2 = FStar_Compiler_Util.basename filename in
-             uu___2 = "prims.fst" in
-           Prims.op_Negation uu___1) in
+        let uu___1 =
+          let uu___2 =
+            let uu___3 = FStar_Compiler_Util.basename filename in
+            check_and_strip_suffix uu___3 in
+          FStar_Compiler_Util.must uu___2 in
+        uu___1 <> k' in
       if uu___
       then
         let uu___1 =

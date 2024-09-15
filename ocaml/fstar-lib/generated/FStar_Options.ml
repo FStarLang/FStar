@@ -1990,7 +1990,7 @@ let rec (specs_with_types :
                                                                     let uu___127
                                                                     =
                                                                     text
-                                                                    "Use a custom prims.fst file. Do not use if you do not know exactly what you're doing." in
+                                                                    "Use a custom Prims.fst file. Do not use if you do not know exactly what you're doing." in
                                                                     (FStar_Getopt.noshort,
                                                                     "prims",
                                                                     (PathStr
@@ -3944,7 +3944,7 @@ let (prims : unit -> Prims.string) =
     let uu___1 = get_prims () in
     match uu___1 with
     | FStar_Pervasives_Native.None ->
-        let filename = "prims.fst" in
+        let filename = "Prims.fst" in
         let uu___2 = find_file filename in
         (match uu___2 with
          | FStar_Pervasives_Native.Some result -> result

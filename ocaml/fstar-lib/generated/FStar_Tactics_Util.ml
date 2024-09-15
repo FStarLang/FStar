@@ -698,7 +698,7 @@ let rec string_of_list :
                                           (Prims.of_int (44)))))
                                  (FStar_Sealed.seal
                                     (Obj.magic
-                                       (FStar_Range.mk_range "prims.fst"
+                                       (FStar_Range.mk_range "Prims.fst"
                                           (Prims.of_int (611))
                                           (Prims.of_int (19))
                                           (Prims.of_int (611))
@@ -719,7 +719,7 @@ let rec string_of_list :
                                            (Prims.of_int (44)))))
                                   (FStar_Sealed.seal
                                      (Obj.magic
-                                        (FStar_Range.mk_range "prims.fst"
+                                        (FStar_Range.mk_range "Prims.fst"
                                            (Prims.of_int (611))
                                            (Prims.of_int (19))
                                            (Prims.of_int (611))
@@ -753,7 +753,7 @@ let string_of_option :
                                 (Prims.of_int (126)) (Prims.of_int (27)))))
                        (FStar_Sealed.seal
                           (Obj.magic
-                             (FStar_Range.mk_range "prims.fst"
+                             (FStar_Range.mk_range "Prims.fst"
                                 (Prims.of_int (611)) (Prims.of_int (19))
                                 (Prims.of_int (611)) (Prims.of_int (31)))))
                        (Obj.magic uu___)
