@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Indind
+module IndInd
 
 /// Induction-induction can be encoded in F* at least up to simple
 /// elimination (see Forsberg ...)

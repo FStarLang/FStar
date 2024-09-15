@@ -203,13 +203,22 @@ let (parse :
                                    FStar_ToSyntax_Interleave.interleave_module
                                      ast true in
                                  with_dsenv_of_env env1 uu___8)
+                        | (FStar_Parser_AST.Interface (lid1, uu___5, uu___6),
+                           FStar_Parser_AST.Module (lid2, uu___7)) ->
+                            FStar_Errors.raise_error
+                              FStar_Ident.hasrange_lident lid1
+                              FStar_Errors_Codes.Fatal_PreModuleMismatch ()
+                              (Obj.magic
+                                 FStar_Errors_Msg.is_error_message_string)
+                              (Obj.magic
+                                 "Module name in implementation does not match that of interface.")
                         | uu___5 ->
                             FStar_Errors.raise_error0
                               FStar_Errors_Codes.Fatal_PreModuleMismatch ()
                               (Obj.magic
                                  FStar_Errors_Msg.is_error_message_string)
                               (Obj.magic
-                                 "mismatch between pre-module and module"))) in
+                                 "Module name in implementation does not match that of interface."))) in
             (match uu___2 with
              | (ast1, env1) ->
                  let uu___3 = FStar_ToSyntax_ToSyntax.ast_modul_to_modul ast1 in

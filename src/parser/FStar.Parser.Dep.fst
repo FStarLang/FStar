@@ -514,12 +514,14 @@ let namespace_of_lid l =
   String.concat "_" (List.map string_of_id (ns_of_lid l))
 
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
-  let k' = lowercase_join_longident lid true in
-  if String.lowercase (must (check_and_strip_suffix (basename filename))) <> k' then
+  let k' = string_of_lid lid true in
+  if must (check_and_strip_suffix (basename filename)) <> k'
+     && (not (basename filename = "prims.fst")) (* Exception for module Prims = prims.fst until we switch *)
+  then
     log_issue lid Errors.Error_ModuleFileNameMismatch [
         Errors.Msg.text (Util.format2 "The module declaration \"module %s\" \
-          found in file %s does not match its filename. Dependencies will be \
-          incorrect and the module will not be verified." (string_of_lid lid true) filename)
+          found in file %s does not match its filename." (string_of_lid lid true) filename);
+        Errors.Msg.text "Dependencies will be incorrect and the module will not be verified.";
       ]
 
 exception Exit
