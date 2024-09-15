@@ -1310,6 +1310,7 @@ let resugar_qualifier : S.qualifier -> option A.qualifier = function
 
 
 let resugar_pragma = function
+  | S.ShowOptions -> A.ShowOptions
   | S.SetOptions s -> A.SetOptions s
   | S.ResetOptions s -> A.ResetOptions s
   | S.PushOptions s -> A.PushOptions s

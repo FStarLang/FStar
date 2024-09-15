@@ -823,6 +823,7 @@ and p_rawDecl d = match d.d with
     arbitrary_string <| tbs.to_string tbs.blob
 
 and p_pragma = function
+  | ShowOptions -> str "#show-options"
   | SetOptions s -> str "#set-options" ^^ space ^^ dquotes (str s)
   | ResetOptions s_opt -> str "#reset-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt
   | PushOptions s_opt -> str "#push-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt

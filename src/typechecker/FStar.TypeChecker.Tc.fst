@@ -936,6 +936,13 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
     let env = Env.push_sigelt env se in
     //match again to perform postprocessing
     match se.sigel with
+    | Sig_pragma ShowOptions ->
+      Errors.info se [
+        text "Option state:";
+        Pprint.arbitrary_string (Options.show_options ());
+      ];
+      env
+
     | Sig_pragma (PushOptions _)
     | Sig_pragma PopOptions
     | Sig_pragma (SetOptions _)

@@ -39,6 +39,7 @@ module FlatSet  = FStar.Compiler.FlatSet
 
 let pragma_to_string (p:pragma) : string =
   match p with
+  | ShowOptions           -> "#show-options"
   | ResetOptions None     -> "#reset-options"
   | ResetOptions (Some s) -> format1 "#reset-options \"%s\"" s
   | SetOptions s          -> format1 "#set-options \"%s\"" s

@@ -1594,6 +1594,9 @@ let process_pragma p r =
           ("Failed to process pragma: " ^ s)
     in
     match p with
+    | ShowOptions ->
+      ()
+
     | SetOptions o ->
       set_options o
 

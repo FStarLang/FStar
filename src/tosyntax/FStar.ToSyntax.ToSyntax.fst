@@ -173,6 +173,7 @@ let trans_qual (r:Range.range) maybe_effect_id = function
     raise_error r Errors.Fatal_UnsupportedQualifier "Unsupported qualifier"
 
 let trans_pragma = function
+  | AST.ShowOptions -> S.ShowOptions
   | AST.SetOptions s -> S.SetOptions s
   | AST.ResetOptions sopt -> S.ResetOptions sopt
   | AST.PushOptions sopt -> S.PushOptions sopt
