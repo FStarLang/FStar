@@ -3,7 +3,8 @@ module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
 module L = FStar.List.Tot
 open FStar.List.Tot
-#push-options "--z3cliopt 'smt.qi.eager_threshold=100' --z3cliopt 'smt.arith.nl=false'"
+
+#set-options "--z3cliopt 'smt.qi.eager_threshold=100' --z3cliopt 'smt.arith.nl=false'"
 
 let var = nat
 let index = nat
@@ -1143,7 +1144,8 @@ let rec src_typing_freevars #f (sg:src_env) (e:src_exp) (t:s_ty) (d:src_typing f
       src_typing_freevars _ _ _ d2      
     | T_Lam _ _ _ _ x dt dbody ->
       src_typing_freevars _ _ _ dbody
-  
+#pop-options
+
 #push-options "--z3rlimit_factor 4"
 let rec src_typing_renaming (#f:RT.fstar_top_env)
                             (sg sg':src_env)
@@ -1320,6 +1322,7 @@ let sub_typing_weakening #f (sg sg':src_env)
         S_ELab _ _ _ d
 
       | _ -> admit ())
+#pop-options
 
 let rec src_typing_weakening #f (sg sg':src_env) 
                              (x:var { None? (lookup sg x) && None? (lookup sg' x) })

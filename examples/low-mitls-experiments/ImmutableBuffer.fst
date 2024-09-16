@@ -198,3 +198,5 @@ let test_witnessed_functoriality () =
 //     B.recall_p bb (cpred s);
 //     let h = HST.get () in
 //     assert (B.as_seq h bb == s)
+
+#pop-options

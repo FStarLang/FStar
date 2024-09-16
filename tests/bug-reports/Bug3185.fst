@@ -14,3 +14,5 @@ let test_normalise (): unit =
       FT.dump "";
       // trying to intro the forall will typecheck the expression, so tactic fails
       ignore (FT.forall_intro ()))
+
+#pop-options

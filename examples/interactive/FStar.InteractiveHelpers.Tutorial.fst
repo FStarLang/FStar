@@ -20,7 +20,7 @@ module FI = FStar.InteractiveHelpers
 /// alternatively if you're not afraid of shadowing:
 /// open FStar.InteractiveHelpers
 
-#push-options "--z3rlimit 50 --fuel 0 --ifuel 0"
+#set-options "--z3rlimit 50 --fuel 0 --ifuel 0"
 
 (*** Basic commands *)
 (**** Rolling admit (C-S-r) *)

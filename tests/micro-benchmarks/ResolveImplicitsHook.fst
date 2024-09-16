@@ -165,3 +165,5 @@ let test3 (b:bool)
   frame2 f3 >>
   frame2 f4 >>
   frame2 f5
+
+#pop-options

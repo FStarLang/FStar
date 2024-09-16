@@ -26,3 +26,5 @@ let test (t1 t2 : dtuple2 a b)
     : squash trivial
     = bind_squash #(pair (dfst t1 == dfst t2) (r_b (dfst t1) (dsnd t1) (dsnd t2))) #trivial p (fun p -> 
         let Pair l r = p in return_squash T)
+
+#pop-options

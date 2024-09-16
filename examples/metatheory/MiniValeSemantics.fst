@@ -1003,3 +1003,4 @@ let lemma_Triple_opt (s0:state)
     inst_Triple
     (fun sM -> sM Rbx == 3 * s0 Rax /\ state_eq sM (update_state Rax sM (update_state Rbx sM s0)))
     s0
+#pop-options

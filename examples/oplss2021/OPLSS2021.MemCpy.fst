@@ -18,7 +18,8 @@ open FStar.HyperStack.ST
 open LowStar.Buffer
 open OPLSS2021.MemCpy.Deps
 module B = LowStar.Buffer
-#push-options "--fuel 0 --ifuel 0"
+
+#set-options "--fuel 0 --ifuel 0"
 
 /// Copy bytes from src to dest
 let rec memcpy

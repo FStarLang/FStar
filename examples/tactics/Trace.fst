@@ -21,7 +21,7 @@ open FStar.List.Tot
 (* Do not warn about recursive functions not used in their bodies:
 since we metaprogram them, the desugaring phase wrongly concludes
 they do not have to be recursive, but they do. *)
-#push-options "--warn_error -328"
+#set-options "--warn_error -328"
 
 (* We take a function such as
  *
