@@ -76,6 +76,7 @@ val push                        : unit -> unit
 val pop                         : unit -> unit
 val internal_push               : unit -> unit
 val internal_pop                : unit -> bool (* returns whether it worked or not, false should be taken as a hard error *)
+val depth                       : unit -> int (* number of elements in internal option stack, besides current. If >0, internal_pop should succeed. *)
 val snapshot                    : unit -> (int & unit)
 val rollback                    : option int -> unit
 val peek                        : unit -> optionstate
