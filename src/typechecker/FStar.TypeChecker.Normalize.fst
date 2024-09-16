@@ -987,7 +987,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               let open FStar.Errors.Msg in
               let open FStar.Pprint in
               if cfg.debug.print_normalized then
-                Errors.diag_doc tm.pos [
+                Errors.diag tm.pos [
                   text <| BU.format1 "Starting norm request on `%s`." (show tm);
                   text "Steps =" ^/^ text (show s);
                   ];

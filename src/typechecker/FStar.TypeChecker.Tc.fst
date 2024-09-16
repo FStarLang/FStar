@@ -185,7 +185,7 @@ let tc_inductive' env ses quals attrs lids =
          if lid_equals ty_lid PC.exn_lid &&
             not (Positivity.check_exn_strict_positivity env2 data_lid)
          then
-            Errors.log_issue d.sigrng
+            Errors.log_issue d
               Errors.Error_InductiveTypeNotSatisfyPositivityCondition
                ("Exception " ^ (string_of_lid data_lid) ^ " does not satisfy the positivity condition")
        ) datas
@@ -604,7 +604,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
     begin match errs with
     | [] ->
         List.iter Errors.print_issue errs;
-        Errors.log_issue se.sigrng Errors.Error_DidNotFail [
+        Errors.log_issue se Errors.Error_DidNotFail [
             text "This top-level definition was expected to fail, but it succeeded";
           ]
     | _ ->
@@ -615,7 +615,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
             let open FStar.Pprint in
             let open FStar.Errors.Msg in
             List.iter Errors.print_issue errs;
-            Errors.log_issue se.sigrng Errors.Error_DidNotFail [
+            Errors.log_issue se Errors.Error_DidNotFail [
                 prefix 2 1
                   (text "This top-level definition was expected to raise error codes")
                   (pp expected_errors) ^/^
@@ -926,7 +926,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
   match se.sigel with
   | Sig_inductive_typ _
   | Sig_datacon _ ->
-    raise_error se.sigrng Errors.Fatal_UnexpectedInductivetype
+    raise_error se Errors.Fatal_UnexpectedInductivetype
       (BU.format1 "add_sigelt_to_env: unexpected bare type/data constructor: %s" (show se))
 
   | Sig_declare_typ _

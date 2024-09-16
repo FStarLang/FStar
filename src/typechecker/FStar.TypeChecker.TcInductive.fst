@@ -173,7 +173,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let valid_type = (U.is_eqtype_no_unrefine t && not (s.sigquals |> List.contains Noeq) && not (s.sigquals |> List.contains Unopteq)) ||
                           (teq_nosmt_force env t t_type) in
          if not valid_type then
-             raise_error s.sigrng Errors.Error_InductiveAnnotNotAType [
+             raise_error s Errors.Error_InductiveAnnotNotAType [
                  text (BU.format2 "Type annotation %s for inductive %s is not Type or eqtype, \
                                    or it is eqtype but contains noeq/unopteq qualifiers"
                                    (show t) (show tc))
@@ -233,7 +233,7 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
              | None ->
                if lid_equals tc_lid FStar.Parser.Const.exn_lid
                then env, [], U_zero
-               else raise_error se.sigrng Errors.Fatal_UnexpectedDataConstructor "Unexpected data constructor"
+               else raise_error se Errors.Fatal_UnexpectedDataConstructor "Unexpected data constructor"
          in
 
          let arguments, result =
@@ -280,10 +280,10 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
                   //unify the two
                   Env.conj_guard g (Rel.teq env' (mk (Tm_type u1) Range.dummyRange) (mk (Tm_type (U_name u2)) Range.dummyRange))
                 ) Env.trivial_guard tuvs _uvs
-              else Errors.raise_error se.sigrng Errors.Fatal_UnexpectedConstructorType
+              else Errors.raise_error se Errors.Fatal_UnexpectedConstructorType
                      "Length of annotated universes does not match inferred universes"
             | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> Env.trivial_guard
-            | _ -> raise_error se.sigrng Errors.Fatal_UnexpectedConstructorType
+            | _ -> raise_error se Errors.Fatal_UnexpectedConstructorType
                      (BU.format2 "Expected a constructor of type %s; got %s" (show tc_lid) (show head))
          in
          let g =List.fold_left2 (fun g ({binder_bv=x}) u_x ->
@@ -312,7 +312,7 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
          let ty = unfold_whnf env res_lcomp.res_typ |> U.unrefine in
          begin match (SS.compress ty).n with
                | Tm_type _ -> ()
-               | _ -> raise_error se.sigrng Errors.Fatal_WrongResultTypeAfterConstrutor
+               | _ -> raise_error se Errors.Fatal_WrongResultTypeAfterConstrutor
                         (BU.format2 "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
                                                 (show result)
                                                 (show ty))
@@ -889,7 +889,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
     | Sig_inductive_typ {lid=l;us=univs;params=binders;num_uniform_params=num_uniform;t=typ;
                          mutuals=ts;ds} ->
       let fail expected inferred =
-          raise_error se.sigrng Errors.Fatal_UnexpectedInductivetype
+          raise_error se Errors.Fatal_UnexpectedInductivetype
                        (BU.format2 "Expected an inductive with type %s; got %s"
                                    (Print.tscheme_to_string expected)
                                    (Print.tscheme_to_string inferred))
@@ -913,7 +913,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
           |> fst
           |> List.map (fun {binder_attrs=attrs; binder_positivity=pqual} -> attrs, pqual) in
         if List.length expected_attrs <> List.length binders
-        then raise_error se.sigrng
+        then raise_error se
                Errors.Fatal_UnexpectedInductivetype
                 (BU.format2 "Could not get %s type parameters from val type %s"
                             (binders |> List.length |> string_of_int)
@@ -1272,7 +1272,7 @@ let mk_data_operations iquals attrs env tcs se =
             | None ->
                 if lid_equals typ_lid C.exn_lid
                 then [], U.ktype0, true
-                else raise_error se.sigrng Errors.Fatal_UnexpectedDataConstructor "Unexpected data constructor"
+                else raise_error se Errors.Fatal_UnexpectedDataConstructor "Unexpected data constructor"
     in
 
     let inductive_tps = SS.subst_binders univ_opening inductive_tps in

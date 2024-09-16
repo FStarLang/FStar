@@ -124,7 +124,7 @@ let go _ =
       Debug.enable (); (* make sure diag is printed *)
       Options.set_option "error_contexts" (Options.Bool true);
       (* ^ Print context. Stack trace will be added since we have trace_error. *)
-      Errors.diag_doc Range.dummyRange [
+      Errors.diag Range.dummyRange [
         text "GOT SIGINT! Exiting";
       ];
       exit 1

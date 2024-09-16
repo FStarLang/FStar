@@ -3037,7 +3037,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
              let quals = if List.contains S.Assumption quals
                          then quals
                          else (if not (Options.ml_ish ()) then
-                                 log_issue se.sigrng Errors.Warning_AddImplicitAssumeNewQualifier
+                                 log_issue se Errors.Warning_AddImplicitAssumeNewQualifier
                                    (BU.format1 "Adding an implicit 'assume new' qualifier on %s" (show l));
                                  S.Assumption :: S.New :: quals) in
              let t = match typars with
