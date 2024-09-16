@@ -71,7 +71,7 @@ let tac_showable_option :
                                    (Prims.of_int (43)) (Prims.of_int (45)))))
                           (FStar_Sealed.seal
                              (Obj.magic
-                                (FStar_Range.mk_range "prims.fst"
+                                (FStar_Range.mk_range "Prims.fst"
                                    (Prims.of_int (611)) (Prims.of_int (19))
                                    (Prims.of_int (611)) (Prims.of_int (31)))))
                           (Obj.magic uu___1)
@@ -238,7 +238,7 @@ let (tac_showable_post_hint_t : Pulse_Typing.post_hint_t tac_showable) =
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -267,7 +267,7 @@ let (tac_showable_post_hint_t : Pulse_Typing.post_hint_t tac_showable) =
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -296,7 +296,7 @@ let (tac_showable_post_hint_t : Pulse_Typing.post_hint_t tac_showable) =
                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -328,7 +328,7 @@ let (tac_showable_post_hint_t : Pulse_Typing.post_hint_t tac_showable) =
                                                                     FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -360,7 +360,7 @@ let (tac_showable_post_hint_t : Pulse_Typing.post_hint_t tac_showable) =
                                                        (FStar_Sealed.seal
                                                           (Obj.magic
                                                              (FStar_Range.mk_range
-                                                                "prims.fst"
+                                                                "Prims.fst"
                                                                 (Prims.of_int (611))
                                                                 (Prims.of_int (19))
                                                                 (Prims.of_int (611))
@@ -384,7 +384,7 @@ let (tac_showable_post_hint_t : Pulse_Typing.post_hint_t tac_showable) =
                                                      (FStar_Sealed.seal
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
-                                                              "prims.fst"
+                                                              "Prims.fst"
                                                               (Prims.of_int (611))
                                                               (Prims.of_int (19))
                                                               (Prims.of_int (611))
@@ -408,7 +408,7 @@ let (tac_showable_post_hint_t : Pulse_Typing.post_hint_t tac_showable) =
                                                       (FStar_Sealed.seal
                                                          (Obj.magic
                                                             (FStar_Range.mk_range
-                                                               "prims.fst"
+                                                               "Prims.fst"
                                                                (Prims.of_int (611))
                                                                (Prims.of_int (19))
                                                                (Prims.of_int (611))
@@ -433,7 +433,7 @@ let (tac_showable_post_hint_t : Pulse_Typing.post_hint_t tac_showable) =
                                          (FStar_Sealed.seal
                                             (Obj.magic
                                                (FStar_Range.mk_range
-                                                  "prims.fst"
+                                                  "Prims.fst"
                                                   (Prims.of_int (611))
                                                   (Prims.of_int (19))
                                                   (Prims.of_int (611))
@@ -456,7 +456,7 @@ let (tac_showable_post_hint_t : Pulse_Typing.post_hint_t tac_showable) =
                                        (FStar_Sealed.seal
                                           (Obj.magic
                                              (FStar_Range.mk_range
-                                                "prims.fst"
+                                                "Prims.fst"
                                                 (Prims.of_int (611))
                                                 (Prims.of_int (19))
                                                 (Prims.of_int (611))
@@ -479,7 +479,7 @@ let (tac_showable_post_hint_t : Pulse_Typing.post_hint_t tac_showable) =
                                         (FStar_Sealed.seal
                                            (Obj.magic
                                               (FStar_Range.mk_range
-                                                 "prims.fst"
+                                                 "Prims.fst"
                                                  (Prims.of_int (611))
                                                  (Prims.of_int (19))
                                                  (Prims.of_int (611))
@@ -498,7 +498,7 @@ let (tac_showable_post_hint_t : Pulse_Typing.post_hint_t tac_showable) =
                                     (Prims.of_int (84)) (Prims.of_int (7)))))
                            (FStar_Sealed.seal
                               (Obj.magic
-                                 (FStar_Range.mk_range "prims.fst"
+                                 (FStar_Range.mk_range "Prims.fst"
                                     (Prims.of_int (611)) (Prims.of_int (19))
                                     (Prims.of_int (611)) (Prims.of_int (31)))))
                            (Obj.magic uu___6)
@@ -514,7 +514,7 @@ let (tac_showable_post_hint_t : Pulse_Typing.post_hint_t tac_showable) =
                                   (Prims.of_int (84)) (Prims.of_int (7)))))
                          (FStar_Sealed.seal
                             (Obj.magic
-                               (FStar_Range.mk_range "prims.fst"
+                               (FStar_Range.mk_range "Prims.fst"
                                   (Prims.of_int (611)) (Prims.of_int (19))
                                   (Prims.of_int (611)) (Prims.of_int (31)))))
                          (Obj.magic uu___5)
@@ -530,7 +530,7 @@ let (tac_showable_post_hint_t : Pulse_Typing.post_hint_t tac_showable) =
                                    (Prims.of_int (84)) (Prims.of_int (7)))))
                           (FStar_Sealed.seal
                              (Obj.magic
-                                (FStar_Range.mk_range "prims.fst"
+                                (FStar_Range.mk_range "Prims.fst"
                                    (Prims.of_int (611)) (Prims.of_int (19))
                                    (Prims.of_int (611)) (Prims.of_int (31)))))
                           (Obj.magic uu___4)
@@ -546,7 +546,7 @@ let (tac_showable_post_hint_t : Pulse_Typing.post_hint_t tac_showable) =
                       (Prims.of_int (7)))))
              (FStar_Sealed.seal
                 (Obj.magic
-                   (FStar_Range.mk_range "prims.fst" (Prims.of_int (611))
+                   (FStar_Range.mk_range "Prims.fst" (Prims.of_int (611))
                       (Prims.of_int (19)) (Prims.of_int (611))
                       (Prims.of_int (31))))) (Obj.magic uu___1)
              (fun uu___2 ->
@@ -559,7 +559,7 @@ let (tac_showable_post_hint_t : Pulse_Typing.post_hint_t tac_showable) =
                     (Prims.of_int (6)) (Prims.of_int (84)) (Prims.of_int (7)))))
            (FStar_Sealed.seal
               (Obj.magic
-                 (FStar_Range.mk_range "prims.fst" (Prims.of_int (611))
+                 (FStar_Range.mk_range "Prims.fst" (Prims.of_int (611))
                     (Prims.of_int (19)) (Prims.of_int (611))
                     (Prims.of_int (31))))) (Obj.magic uu___)
            (fun uu___1 ->
@@ -608,7 +608,7 @@ let tac_showable_tuple2 :
                                           (Prims.of_int (52)))))
                                  (FStar_Sealed.seal
                                     (Obj.magic
-                                       (FStar_Range.mk_range "prims.fst"
+                                       (FStar_Range.mk_range "Prims.fst"
                                           (Prims.of_int (611))
                                           (Prims.of_int (19))
                                           (Prims.of_int (611))
@@ -627,7 +627,7 @@ let tac_showable_tuple2 :
                                         (Prims.of_int (58)))))
                                (FStar_Sealed.seal
                                   (Obj.magic
-                                     (FStar_Range.mk_range "prims.fst"
+                                     (FStar_Range.mk_range "Prims.fst"
                                         (Prims.of_int (611))
                                         (Prims.of_int (19))
                                         (Prims.of_int (611))
@@ -647,7 +647,7 @@ let tac_showable_tuple2 :
                                          (Prims.of_int (58)))))
                                 (FStar_Sealed.seal
                                    (Obj.magic
-                                      (FStar_Range.mk_range "prims.fst"
+                                      (FStar_Range.mk_range "Prims.fst"
                                          (Prims.of_int (611))
                                          (Prims.of_int (19))
                                          (Prims.of_int (611))
@@ -665,7 +665,7 @@ let tac_showable_tuple2 :
                             (Prims.of_int (96)) (Prims.of_int (58)))))
                    (FStar_Sealed.seal
                       (Obj.magic
-                         (FStar_Range.mk_range "prims.fst"
+                         (FStar_Range.mk_range "Prims.fst"
                             (Prims.of_int (611)) (Prims.of_int (19))
                             (Prims.of_int (611)) (Prims.of_int (31)))))
                    (Obj.magic uu___3)
@@ -740,7 +740,7 @@ let tac_showable_tuple3 :
                                                (FStar_Sealed.seal
                                                   (Obj.magic
                                                      (FStar_Range.mk_range
-                                                        "prims.fst"
+                                                        "Prims.fst"
                                                         (Prims.of_int (611))
                                                         (Prims.of_int (19))
                                                         (Prims.of_int (611))
@@ -763,7 +763,7 @@ let tac_showable_tuple3 :
                                              (FStar_Sealed.seal
                                                 (Obj.magic
                                                    (FStar_Range.mk_range
-                                                      "prims.fst"
+                                                      "Prims.fst"
                                                       (Prims.of_int (611))
                                                       (Prims.of_int (19))
                                                       (Prims.of_int (611))
@@ -787,7 +787,7 @@ let tac_showable_tuple3 :
                                               (FStar_Sealed.seal
                                                  (Obj.magic
                                                     (FStar_Range.mk_range
-                                                       "prims.fst"
+                                                       "Prims.fst"
                                                        (Prims.of_int (611))
                                                        (Prims.of_int (19))
                                                        (Prims.of_int (611))
@@ -808,7 +808,7 @@ let tac_showable_tuple3 :
                                           (Prims.of_int (77)))))
                                  (FStar_Sealed.seal
                                     (Obj.magic
-                                       (FStar_Range.mk_range "prims.fst"
+                                       (FStar_Range.mk_range "Prims.fst"
                                           (Prims.of_int (611))
                                           (Prims.of_int (19))
                                           (Prims.of_int (611))
@@ -830,7 +830,7 @@ let tac_showable_tuple3 :
                                            (Prims.of_int (77)))))
                                   (FStar_Sealed.seal
                                      (Obj.magic
-                                        (FStar_Range.mk_range "prims.fst"
+                                        (FStar_Range.mk_range "Prims.fst"
                                            (Prims.of_int (611))
                                            (Prims.of_int (19))
                                            (Prims.of_int (611))
@@ -849,7 +849,7 @@ let tac_showable_tuple3 :
                               (Prims.of_int (100)) (Prims.of_int (77)))))
                      (FStar_Sealed.seal
                         (Obj.magic
-                           (FStar_Range.mk_range "prims.fst"
+                           (FStar_Range.mk_range "Prims.fst"
                               (Prims.of_int (611)) (Prims.of_int (19))
                               (Prims.of_int (611)) (Prims.of_int (31)))))
                      (Obj.magic uu___4)
@@ -951,7 +951,7 @@ let tac_showable_tuple4 :
                                                              (FStar_Sealed.seal
                                                                 (Obj.magic
                                                                    (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -978,7 +978,7 @@ let tac_showable_tuple4 :
                                                            (FStar_Sealed.seal
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1004,7 +1004,7 @@ let tac_showable_tuple4 :
                                                             (FStar_Sealed.seal
                                                                (Obj.magic
                                                                   (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1031,7 +1031,7 @@ let tac_showable_tuple4 :
                                                (FStar_Sealed.seal
                                                   (Obj.magic
                                                      (FStar_Range.mk_range
-                                                        "prims.fst"
+                                                        "Prims.fst"
                                                         (Prims.of_int (611))
                                                         (Prims.of_int (19))
                                                         (Prims.of_int (611))
@@ -1055,7 +1055,7 @@ let tac_showable_tuple4 :
                                                 (FStar_Sealed.seal
                                                    (Obj.magic
                                                       (FStar_Range.mk_range
-                                                         "prims.fst"
+                                                         "Prims.fst"
                                                          (Prims.of_int (611))
                                                          (Prims.of_int (19))
                                                          (Prims.of_int (611))
@@ -1077,7 +1077,7 @@ let tac_showable_tuple4 :
                                             (Prims.of_int (96)))))
                                    (FStar_Sealed.seal
                                       (Obj.magic
-                                         (FStar_Range.mk_range "prims.fst"
+                                         (FStar_Range.mk_range "Prims.fst"
                                             (Prims.of_int (611))
                                             (Prims.of_int (19))
                                             (Prims.of_int (611))
@@ -1099,7 +1099,7 @@ let tac_showable_tuple4 :
                                              (Prims.of_int (96)))))
                                     (FStar_Sealed.seal
                                        (Obj.magic
-                                          (FStar_Range.mk_range "prims.fst"
+                                          (FStar_Range.mk_range "Prims.fst"
                                              (Prims.of_int (611))
                                              (Prims.of_int (19))
                                              (Prims.of_int (611))
@@ -1118,7 +1118,7 @@ let tac_showable_tuple4 :
                                 (Prims.of_int (104)) (Prims.of_int (96)))))
                        (FStar_Sealed.seal
                           (Obj.magic
-                             (FStar_Range.mk_range "prims.fst"
+                             (FStar_Range.mk_range "Prims.fst"
                                 (Prims.of_int (611)) (Prims.of_int (19))
                                 (Prims.of_int (611)) (Prims.of_int (31)))))
                        (Obj.magic uu___5)
@@ -1254,7 +1254,7 @@ let tac_showable_tuple5 :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1283,7 +1283,7 @@ let tac_showable_tuple5 :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1313,7 +1313,7 @@ let tac_showable_tuple5 :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1343,7 +1343,7 @@ let tac_showable_tuple5 :
                                                              (FStar_Sealed.seal
                                                                 (Obj.magic
                                                                    (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1373,7 +1373,7 @@ let tac_showable_tuple5 :
                                                                  (Obj.magic
                                                                     (
                                                                     FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1401,7 +1401,7 @@ let tac_showable_tuple5 :
                                                  (FStar_Sealed.seal
                                                     (Obj.magic
                                                        (FStar_Range.mk_range
-                                                          "prims.fst"
+                                                          "Prims.fst"
                                                           (Prims.of_int (611))
                                                           (Prims.of_int (19))
                                                           (Prims.of_int (611))
@@ -1425,7 +1425,7 @@ let tac_showable_tuple5 :
                                                   (FStar_Sealed.seal
                                                      (Obj.magic
                                                         (FStar_Range.mk_range
-                                                           "prims.fst"
+                                                           "Prims.fst"
                                                            (Prims.of_int (611))
                                                            (Prims.of_int (19))
                                                            (Prims.of_int (611))
@@ -1448,7 +1448,7 @@ let tac_showable_tuple5 :
                                               (Prims.of_int (115)))))
                                      (FStar_Sealed.seal
                                         (Obj.magic
-                                           (FStar_Range.mk_range "prims.fst"
+                                           (FStar_Range.mk_range "Prims.fst"
                                               (Prims.of_int (611))
                                               (Prims.of_int (19))
                                               (Prims.of_int (611))
@@ -1470,7 +1470,7 @@ let tac_showable_tuple5 :
                                                (Prims.of_int (115)))))
                                       (FStar_Sealed.seal
                                          (Obj.magic
-                                            (FStar_Range.mk_range "prims.fst"
+                                            (FStar_Range.mk_range "Prims.fst"
                                                (Prims.of_int (611))
                                                (Prims.of_int (19))
                                                (Prims.of_int (611))
@@ -1489,7 +1489,7 @@ let tac_showable_tuple5 :
                                   (Prims.of_int (108)) (Prims.of_int (115)))))
                          (FStar_Sealed.seal
                             (Obj.magic
-                               (FStar_Range.mk_range "prims.fst"
+                               (FStar_Range.mk_range "Prims.fst"
                                   (Prims.of_int (611)) (Prims.of_int (19))
                                   (Prims.of_int (611)) (Prims.of_int (31)))))
                          (Obj.magic uu___6)
@@ -1668,7 +1668,7 @@ let tac_showable_tuple6 :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1697,7 +1697,7 @@ let tac_showable_tuple6 :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1727,7 +1727,7 @@ let tac_showable_tuple6 :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1757,7 +1757,7 @@ let tac_showable_tuple6 :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1787,7 +1787,7 @@ let tac_showable_tuple6 :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1817,7 +1817,7 @@ let tac_showable_tuple6 :
                                                                (FStar_Sealed.seal
                                                                   (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1847,7 +1847,7 @@ let tac_showable_tuple6 :
                                                                 (FStar_Sealed.seal
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1876,7 +1876,7 @@ let tac_showable_tuple6 :
                                                    (FStar_Sealed.seal
                                                       (Obj.magic
                                                          (FStar_Range.mk_range
-                                                            "prims.fst"
+                                                            "Prims.fst"
                                                             (Prims.of_int (611))
                                                             (Prims.of_int (19))
                                                             (Prims.of_int (611))
@@ -1900,7 +1900,7 @@ let tac_showable_tuple6 :
                                                     (FStar_Sealed.seal
                                                        (Obj.magic
                                                           (FStar_Range.mk_range
-                                                             "prims.fst"
+                                                             "Prims.fst"
                                                              (Prims.of_int (611))
                                                              (Prims.of_int (19))
                                                              (Prims.of_int (611))
@@ -1924,7 +1924,7 @@ let tac_showable_tuple6 :
                                        (FStar_Sealed.seal
                                           (Obj.magic
                                              (FStar_Range.mk_range
-                                                "prims.fst"
+                                                "Prims.fst"
                                                 (Prims.of_int (611))
                                                 (Prims.of_int (19))
                                                 (Prims.of_int (611))
@@ -1947,7 +1947,7 @@ let tac_showable_tuple6 :
                                         (FStar_Sealed.seal
                                            (Obj.magic
                                               (FStar_Range.mk_range
-                                                 "prims.fst"
+                                                 "Prims.fst"
                                                  (Prims.of_int (611))
                                                  (Prims.of_int (19))
                                                  (Prims.of_int (611))
@@ -1966,7 +1966,7 @@ let tac_showable_tuple6 :
                                     (Prims.of_int (112)) (Prims.of_int (134)))))
                            (FStar_Sealed.seal
                               (Obj.magic
-                                 (FStar_Range.mk_range "prims.fst"
+                                 (FStar_Range.mk_range "Prims.fst"
                                     (Prims.of_int (611)) (Prims.of_int (19))
                                     (Prims.of_int (611)) (Prims.of_int (31)))))
                            (Obj.magic uu___7)
@@ -2181,7 +2181,7 @@ let tac_showable_tuple7 :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -2210,7 +2210,7 @@ let tac_showable_tuple7 :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -2240,7 +2240,7 @@ let tac_showable_tuple7 :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -2270,7 +2270,7 @@ let tac_showable_tuple7 :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -2300,7 +2300,7 @@ let tac_showable_tuple7 :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -2330,7 +2330,7 @@ let tac_showable_tuple7 :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -2360,7 +2360,7 @@ let tac_showable_tuple7 :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -2392,7 +2392,7 @@ let tac_showable_tuple7 :
                                                                     (
                                                                     Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -2421,7 +2421,7 @@ let tac_showable_tuple7 :
                                                                   (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -2451,7 +2451,7 @@ let tac_showable_tuple7 :
                                                      (FStar_Sealed.seal
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
-                                                              "prims.fst"
+                                                              "Prims.fst"
                                                               (Prims.of_int (611))
                                                               (Prims.of_int (19))
                                                               (Prims.of_int (611))
@@ -2475,7 +2475,7 @@ let tac_showable_tuple7 :
                                                       (FStar_Sealed.seal
                                                          (Obj.magic
                                                             (FStar_Range.mk_range
-                                                               "prims.fst"
+                                                               "Prims.fst"
                                                                (Prims.of_int (611))
                                                                (Prims.of_int (19))
                                                                (Prims.of_int (611))
@@ -2500,7 +2500,7 @@ let tac_showable_tuple7 :
                                          (FStar_Sealed.seal
                                             (Obj.magic
                                                (FStar_Range.mk_range
-                                                  "prims.fst"
+                                                  "Prims.fst"
                                                   (Prims.of_int (611))
                                                   (Prims.of_int (19))
                                                   (Prims.of_int (611))
@@ -2523,7 +2523,7 @@ let tac_showable_tuple7 :
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
-                                                   "prims.fst"
+                                                   "Prims.fst"
                                                    (Prims.of_int (611))
                                                    (Prims.of_int (19))
                                                    (Prims.of_int (611))
@@ -2544,7 +2544,7 @@ let tac_showable_tuple7 :
                                       (Prims.of_int (153)))))
                              (FStar_Sealed.seal
                                 (Obj.magic
-                                   (FStar_Range.mk_range "prims.fst"
+                                   (FStar_Range.mk_range "Prims.fst"
                                       (Prims.of_int (611))
                                       (Prims.of_int (19))
                                       (Prims.of_int (611))
