@@ -1091,21 +1091,28 @@ and (mllb_to_doc : mllb -> FStar_Pprint.document) =
         fld "mllb_name" uu___2 in
       let uu___2 =
         let uu___3 =
-          let uu___4 =
-            option_to_doc lb.mllb_tysc
-              (fun uu___5 -> match uu___5 with | (uu___6, t) -> mlty_to_doc t) in
-          fld "mllb_tysc" uu___4 in
+          let uu___4 = list_to_doc lb.mllb_attrs mlexpr_to_doc in
+          fld "mllb_attrs" uu___4 in
         let uu___4 =
           let uu___5 =
             let uu___6 =
-              let uu___7 =
-                FStar_Compiler_Util.string_of_bool lb.mllb_add_unit in
-              FStar_Pprint.doc_of_string uu___7 in
-            fld "mllb_add_unit" uu___6 in
+              option_to_doc lb.mllb_tysc
+                (fun uu___7 ->
+                   match uu___7 with | (uu___8, t) -> mlty_to_doc t) in
+            fld "mllb_tysc" uu___6 in
           let uu___6 =
             let uu___7 =
-              let uu___8 = mlexpr_to_doc lb.mllb_def in fld "mllb_def" uu___8 in
-            [uu___7] in
+              let uu___8 =
+                let uu___9 =
+                  FStar_Compiler_Util.string_of_bool lb.mllb_add_unit in
+                FStar_Pprint.doc_of_string uu___9 in
+              fld "mllb_add_unit" uu___8 in
+            let uu___8 =
+              let uu___9 =
+                let uu___10 = mlexpr_to_doc lb.mllb_def in
+                fld "mllb_def" uu___10 in
+              [uu___9] in
+            uu___7 :: uu___8 in
           uu___5 :: uu___6 in
         uu___3 :: uu___4 in
       uu___1 :: uu___2 in
