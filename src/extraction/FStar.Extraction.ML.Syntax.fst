@@ -202,6 +202,7 @@ and mlletbinding_to_doc (lbs) =
 and mllb_to_doc (lb) =
   record [
     fld "mllb_name" (doc_of_string lb.mllb_name);
+    fld "mllb_attrs" (list_to_doc lb.mllb_attrs mlexpr_to_doc);
     fld "mllb_tysc" (option_to_doc lb.mllb_tysc (fun (_, t) -> mlty_to_doc t));
     fld "mllb_add_unit" (doc_of_string (string_of_bool lb.mllb_add_unit));
     fld "mllb_def" (mlexpr_to_doc lb.mllb_def);
