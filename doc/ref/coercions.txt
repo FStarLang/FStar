@@ -36,6 +36,16 @@ works by inserting the coercion around `t`. Using `Tot` instead of `Tac`
 will raise an error (which could likely be more helpful by letting the
 user know there's a coercion involved).
 
+They will also trigger on the scrutinee of a match if the patterns imply
+an expected type, so:
+
+	let f (t:term) : Tac bool =
+	  match f with
+	  | Tv_FVar _ -> true
+	  | _ -> false
+
+will also work.
+
 Coercions can also have arguments and the types can be indexed. E.g.
 (from tests/coercions/IntBV.fst):
 
