@@ -408,7 +408,7 @@ let rec (intro_uvars_for_logical_implicits :
                                    (Prims.of_int (90)) (Prims.of_int (30)))))
                           (FStar_Sealed.seal
                              (Obj.magic
-                                (FStar_Range.mk_range "prims.fst"
+                                (FStar_Range.mk_range "Prims.fst"
                                    (Prims.of_int (611)) (Prims.of_int (19))
                                    (Prims.of_int (611)) (Prims.of_int (31)))))
                           (Obj.magic uu___3)
@@ -618,7 +618,7 @@ let (instantiate_implicits :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1226,7 +1226,7 @@ let (apply_impure_function :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1859,7 +1859,7 @@ let (apply_impure_function :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
