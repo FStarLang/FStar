@@ -510,8 +510,7 @@ let (tc_inductive' :
                                        " does not satisfy the positivity condition" in
                                    Prims.strcat "Exception " uu___9 in
                                  FStar_Errors.log_issue
-                                   FStar_Class_HasRange.hasRange_range
-                                   d.FStar_Syntax_Syntax.sigrng
+                                   FStar_Syntax_Syntax.has_range_sigelt d
                                    FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
                                    ()
                                    (Obj.magic
@@ -2234,8 +2233,7 @@ let (tc_decl' :
                                     "This top-level definition was expected to fail, but it succeeded" in
                                 [uu___10] in
                               FStar_Errors.log_issue
-                                FStar_Class_HasRange.hasRange_range
-                                se2.FStar_Syntax_Syntax.sigrng
+                                FStar_Syntax_Syntax.has_range_sigelt se2
                                 FStar_Errors_Codes.Error_DidNotFail ()
                                 (Obj.magic
                                    FStar_Errors_Msg.is_error_message_list_doc)
@@ -2307,8 +2305,8 @@ let (tc_decl' :
                                          [uu___14] in
                                        uu___12 :: uu___13 in
                                      FStar_Errors.log_issue
-                                       FStar_Class_HasRange.hasRange_range
-                                       se2.FStar_Syntax_Syntax.sigrng
+                                       FStar_Syntax_Syntax.has_range_sigelt
+                                       se2
                                        FStar_Errors_Codes.Error_DidNotFail ()
                                        (Obj.magic
                                           FStar_Errors_Msg.is_error_message_list_doc)
@@ -4561,8 +4559,7 @@ let (add_sigelt_to_env :
                FStar_Compiler_Util.format1
                  "add_sigelt_to_env: unexpected bare type/data constructor: %s"
                  uu___3 in
-             FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range
-               se.FStar_Syntax_Syntax.sigrng
+             FStar_Errors.raise_error FStar_Syntax_Syntax.has_range_sigelt se
                FStar_Errors_Codes.Fatal_UnexpectedInductivetype ()
                (Obj.magic FStar_Errors_Msg.is_error_message_string)
                (Obj.magic uu___2)
@@ -4573,8 +4570,7 @@ let (add_sigelt_to_env :
                FStar_Compiler_Util.format1
                  "add_sigelt_to_env: unexpected bare type/data constructor: %s"
                  uu___3 in
-             FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range
-               se.FStar_Syntax_Syntax.sigrng
+             FStar_Errors.raise_error FStar_Syntax_Syntax.has_range_sigelt se
                FStar_Errors_Codes.Fatal_UnexpectedInductivetype ()
                (Obj.magic FStar_Errors_Msg.is_error_message_string)
                (Obj.magic uu___2)
@@ -4595,6 +4591,21 @@ let (add_sigelt_to_env :
          | uu___1 ->
              let env1 = FStar_TypeChecker_Env.push_sigelt env se in
              (match se.FStar_Syntax_Syntax.sigel with
+              | FStar_Syntax_Syntax.Sig_pragma
+                  (FStar_Syntax_Syntax.ShowOptions) ->
+                  ((let uu___3 =
+                      let uu___4 = FStar_Errors_Msg.text "Option state:" in
+                      let uu___5 =
+                        let uu___6 =
+                          let uu___7 = FStar_Options.show_options () in
+                          FStar_Pprint.arbitrary_string uu___7 in
+                        [uu___6] in
+                      uu___4 :: uu___5 in
+                    FStar_Errors.info FStar_Syntax_Syntax.has_range_sigelt se
+                      ()
+                      (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                      (Obj.magic uu___3));
+                   env1)
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.PushOptions uu___2) ->
                   if from_cache
@@ -5278,7 +5289,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___880 : unit) =
+let (uu___883 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

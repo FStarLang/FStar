@@ -1394,7 +1394,7 @@ let encode_datacon (env:env_t) (se:sigelt)
         [typing_inversion; subterm_ordering] @ codomain_ordering
 
       | _ ->
-        Errors.log_issue se.sigrng Errors.Warning_ConstructorBuildsUnexpectedType
+        Errors.log_issue se Errors.Warning_ConstructorBuildsUnexpectedType
           (BU.format2 "Constructor %s builds an unexpected type %s" (show d) (show head));
         [], []
   in

@@ -788,7 +788,7 @@ let do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlmod
   try __do_handle_plugin g arity_opt se with
   | Unsupported msg ->
     // Change error code?
-    Errors.log_issue se.sigrng Errors.Warning_PluginNotImplemented
+    Errors.log_issue se Errors.Warning_PluginNotImplemented
       (BU.format2 "Could not generate a plugin for %s, reason = %s" (Print.sigelt_to_string_short se) msg);
     []
   | NoEmbedding msg ->

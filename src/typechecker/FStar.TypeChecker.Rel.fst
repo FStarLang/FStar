@@ -5110,9 +5110,9 @@ let do_discharge_vc use_env_range_msg env vc : unit =
   let open FStar.Errors.Msg in
   let open FStar.Class.PP in
   let debug : bool = !dbg_Rel || !dbg_SMTQuery || !dbg_Discharge in
-  let diag_doc = Errors.diag_doc (Env.get_range env) in
+  let diag = Errors.diag (Env.get_range env) #(list document) in // FIXME: without the implicit, batch mode fails during generalization
   if debug then
-    diag_doc [text "Checking VC:" ^/^ pp vc];
+    diag [text "Checking VC:" ^/^ pp vc];
 
   (* Tactic preprocessing *)
   let vcs : list (env_t & typ & Options.optionstate) = (
@@ -5121,7 +5121,7 @@ let do_discharge_vc use_env_range_msg env vc : unit =
         ignore <| Options.set_options "--no_tactics";
         let did_anything, vcs = env.solver.preprocess env vc in
         if debug && did_anything then
-          diag_doc [text "Tactic preprocessing produced" ^/^ pp (List.length vcs <: int) ^/^ text "goals"];
+          diag [text "Tactic preprocessing produced" ^/^ pp (List.length vcs <: int) ^/^ text "goals"];
         let vcs = vcs |> List.map (fun (env, goal, opts) ->
                             // NB: No Eager_unfolding. Why?
                             env,
@@ -5143,7 +5143,7 @@ let do_discharge_vc use_env_range_msg env vc : unit =
           match check_trivial goal with
           | Trivial ->
             if debug then
-              diag_doc [text "Goal completely solved by tactic\n"];
+              diag [text "Goal completely solved by tactic\n"];
             []
 
           | NonTrivial goal ->
@@ -5177,7 +5177,7 @@ let do_discharge_vc use_env_range_msg env vc : unit =
       (* diag (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n" *)
       (*                   (show goal) (Env.string_of_proof_ns env)); *)
       if debug then
-        diag_doc [text "Before calling solver, VC =" ^/^ pp goal];
+        diag [text "Before calling solver, VC =" ^/^ pp goal];
       env.solver.solve use_env_range_msg env goal
     )
   )
@@ -5217,12 +5217,12 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
   let open FStar.Errors.Msg in
   let open FStar.Class.PP in
   let debug : bool = !dbg_Rel || !dbg_SMTQuery || !dbg_Discharge in
-  let diag_doc = Errors.diag_doc (Env.get_range env) in
+  let diag = Errors.diag (Env.get_range env) #(list document) in
   let ret_g = {g with guard_f = Trivial} in
   if env.admit then (
     let open FStar.Class.PP in
     if debug && not (Trivial? g.guard_f) && not env.phase1 then
-      diag_doc [
+      diag [
         text "Skipping VC because verification is disabled.";
         text "VC =" ^/^ pp g;
       ];
@@ -5235,7 +5235,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
 
     | NonTrivial vc when not use_smt ->
       if debug then
-        diag_doc [text "Cannot solve without SMT:" ^/^ pp vc];
+        diag [text "Cannot solve without SMT:" ^/^ pp vc];
       None
 
     | NonTrivial vc ->

@@ -50,6 +50,7 @@ type sconst = FStar.Const.sconst
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type pragma =
+  | ShowOptions
   | SetOptions of string
   | ResetOptions of option string
   | PushOptions of option string

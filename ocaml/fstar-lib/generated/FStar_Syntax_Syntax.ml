@@ -10,12 +10,16 @@ let __proj__Mkwithinfo_t__item__p :
 type var = FStar_Ident.lident withinfo_t[@@deriving yojson,show]
 type sconst = FStar_Const.sconst[@@deriving yojson,show]
 type pragma =
+  | ShowOptions 
   | SetOptions of Prims.string 
   | ResetOptions of Prims.string FStar_Pervasives_Native.option 
   | PushOptions of Prims.string FStar_Pervasives_Native.option 
   | PopOptions 
   | RestartSolver 
   | PrintEffectsGraph [@@deriving yojson,show]
+let (uu___is_ShowOptions : pragma -> Prims.bool) =
+  fun projectee ->
+    match projectee with | ShowOptions -> true | uu___ -> false
 let (uu___is_SetOptions : pragma -> Prims.bool) =
   fun projectee ->
     match projectee with | SetOptions _0 -> true | uu___ -> false
@@ -44,6 +48,7 @@ let (uu___is_PrintEffectsGraph : pragma -> Prims.bool) =
 let (pragma_to_string : pragma -> Prims.string) =
   fun p ->
     match p with
+    | ShowOptions -> "#show-options"
     | ResetOptions (FStar_Pervasives_Native.None) -> "#reset-options"
     | ResetOptions (FStar_Pervasives_Native.Some s) ->
         FStar_Compiler_Util.format1 "#reset-options \"%s\"" s

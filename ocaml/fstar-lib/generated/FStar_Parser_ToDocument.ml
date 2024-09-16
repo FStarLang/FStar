@@ -1411,6 +1411,7 @@ and (p_rawDecl : FStar_Parser_AST.decl -> FStar_Pprint.document) =
 and (p_pragma : FStar_Parser_AST.pragma -> FStar_Pprint.document) =
   fun uu___ ->
     match uu___ with
+    | FStar_Parser_AST.ShowOptions -> str "#show-options"
     | FStar_Parser_AST.SetOptions s ->
         let uu___1 = str "#set-options" in
         let uu___2 =

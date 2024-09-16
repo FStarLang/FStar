@@ -1070,7 +1070,11 @@ let rec (traverse_for_spinoff :
                               FStar_Compiler_Util.format2
                                 "Failed to split match term because %s (%s)"
                                 msg uu___5 in
-                            FStar_Errors.diag uu___3 uu___4)
+                            FStar_Errors.diag
+                              FStar_Class_HasRange.hasRange_range uu___3 ()
+                              (Obj.magic
+                                 FStar_Errors_Msg.is_error_message_string)
+                              (Obj.magic uu___4))
                          else ();
                          FStar_Pervasives_Native.None)
                     | FStar_Pervasives.Inr res1 ->
@@ -1087,7 +1091,11 @@ let rec (traverse_for_spinoff :
                               FStar_Compiler_Util.format2
                                 "Rewrote match term\n%s\ninto %s\n" uu___5
                                 uu___6 in
-                            FStar_Errors.diag uu___3 uu___4)
+                            FStar_Errors.diag
+                              FStar_Class_HasRange.hasRange_range uu___3 ()
+                              (Obj.magic
+                                 FStar_Errors_Msg.is_error_message_string)
+                              (Obj.magic uu___4))
                          else ();
                          FStar_Pervasives_Native.Some res1))
                | uu___2 -> FStar_Pervasives_Native.None) in
@@ -1451,7 +1459,11 @@ let (spinoff_strictly_positive_goals :
                            FStar_Compiler_Util.format1
                              "Verification condition was to be split into several atomic sub-goals, but this query had some sub-goals that couldn't be split---the error report, if any, may be inaccurate.\n%s\n"
                              msg in
-                         FStar_Errors.diag uu___5 uu___6
+                         FStar_Errors.diag
+                           FStar_Class_HasRange.hasRange_range uu___5 ()
+                           (Obj.magic
+                              FStar_Errors_Msg.is_error_message_string)
+                           (Obj.magic uu___6)
                        else ());
                       [(env, t1)]) in
                let s = initial in
@@ -1511,7 +1523,10 @@ let (spinoff_strictly_positive_goals :
                             (FStar_Compiler_List.length gs3) in
                         FStar_Compiler_Util.format1
                           "Split query into %s sub-goals" uu___8 in
-                      FStar_Errors.diag uu___6 uu___7);
+                      FStar_Errors.diag FStar_Class_HasRange.hasRange_range
+                        uu___6 ()
+                        (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                        (Obj.magic uu___7));
                      FStar_Compiler_List.op_At main_goal gs3)))
 let (synthesize :
   FStar_TypeChecker_Env.env ->

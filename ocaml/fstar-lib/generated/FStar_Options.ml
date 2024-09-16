@@ -410,7 +410,7 @@ let (init : unit -> unit) =
     FStar_Compiler_List.iter set_option' defaults
 let (clear : unit -> unit) =
   fun uu___ -> FStar_Compiler_Effect.op_Colon_Equals history [[]]; init ()
-let (uu___150 : unit) = clear ()
+let (uu___151 : unit) = clear ()
 let (get_option : Prims.string -> option_val) =
   fun s ->
     let uu___ =
@@ -422,6 +422,134 @@ let (get_option : Prims.string -> option_val) =
           FStar_Compiler_String.op_Hat "Impossible: option " uu___2 in
         FStar_Compiler_Effect.failwith uu___1
     | FStar_Pervasives_Native.Some s1 -> s1
+let psmap_keys :
+  'uuuuu . 'uuuuu FStar_Compiler_Util.psmap -> Prims.string Prims.list =
+  fun m ->
+    FStar_Compiler_Util.psmap_fold m (fun k -> fun v -> fun a -> k :: a) []
+let rec (option_val_to_string : option_val -> Prims.string) =
+  fun v ->
+    match v with
+    | Bool b ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_bool) b in
+        FStar_Compiler_String.op_Hat "Bool " uu___
+    | String s ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_string) s in
+        FStar_Compiler_String.op_Hat "String " uu___
+    | Path s ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_string) s in
+        FStar_Compiler_String.op_Hat "Path " uu___
+    | Int i ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_int) i in
+        FStar_Compiler_String.op_Hat "Int " uu___
+    | List vs ->
+        let uu___ = (FStar_Common.string_of_list ()) option_val_to_string vs in
+        FStar_Compiler_String.op_Hat "List " uu___
+    | Unset -> "Unset"
+let (showable_option_val : option_val FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = option_val_to_string }
+let rec (eq_option_val : option_val -> option_val -> Prims.bool) =
+  fun v1 ->
+    fun v2 ->
+      match (v1, v2) with
+      | (Bool x1, Bool x2) ->
+          FStar_Class_Deq.op_Equals_Question FStar_Class_Deq.deq_bool x1 x2
+      | (String x1, String x2) ->
+          FStar_Class_Deq.op_Equals_Question FStar_Class_Deq.deq_string x1 x2
+      | (Path x1, Path x2) ->
+          FStar_Class_Deq.op_Equals_Question FStar_Class_Deq.deq_string x1 x2
+      | (Int x1, Int x2) ->
+          FStar_Class_Deq.op_Equals_Question FStar_Class_Deq.deq_int x1 x2
+      | (Unset, Unset) -> true
+      | (List x1, List x2) -> FStar_Common.eq_list eq_option_val x1 x2
+      | (uu___, uu___1) -> false
+let (deq_option_val : option_val FStar_Class_Deq.deq) =
+  { FStar_Class_Deq.op_Equals_Question = eq_option_val }
+let rec list_try_find :
+  'a 'b .
+    'a FStar_Class_Deq.deq ->
+      'a -> ('a * 'b) Prims.list -> 'b FStar_Pervasives_Native.option
+  =
+  fun uu___ ->
+    fun k ->
+      fun l ->
+        match l with
+        | [] -> FStar_Pervasives_Native.None
+        | (k', v')::l' ->
+            let uu___1 = FStar_Class_Deq.op_Equals_Question uu___ k k' in
+            if uu___1
+            then FStar_Pervasives_Native.Some v'
+            else list_try_find uu___ k l'
+let (show_options : unit -> Prims.string) =
+  fun uu___ ->
+    let s = peek () in
+    let kvs =
+      let uu___1 = psmap_keys s in
+      Obj.magic
+        (FStar_Class_Monad.op_let_Bang FStar_Class_Monad.monad_list () ()
+           (Obj.magic uu___1)
+           (fun uu___2 ->
+              (fun k ->
+                 let k = Obj.magic k in
+                 if k = "verify_module"
+                 then Obj.magic (Obj.repr [])
+                 else
+                   Obj.magic
+                     (Obj.repr
+                        (let v =
+                           let uu___3 =
+                             FStar_Compiler_Util.psmap_try_find s k in
+                           FStar_Compiler_Util.must uu___3 in
+                         let v0 =
+                           list_try_find FStar_Class_Deq.deq_string k
+                             defaults in
+                         let uu___3 =
+                           FStar_Class_Deq.op_Equals_Question
+                             (FStar_Class_Deq.deq_option deq_option_val) v0
+                             (FStar_Pervasives_Native.Some v) in
+                         if uu___3
+                         then Obj.repr []
+                         else
+                           Obj.repr
+                             (FStar_Class_Monad.return
+                                FStar_Class_Monad.monad_list ()
+                                (Obj.magic (k, v)))))) uu___2)) in
+    let rec show_optionval v =
+      match v with
+      | String s1 ->
+          let uu___1 = FStar_Compiler_String.op_Hat s1 "\"" in
+          FStar_Compiler_String.op_Hat "\"" uu___1
+      | Bool b ->
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_bool) b
+      | Int i ->
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_int) i
+      | Path s1 -> s1
+      | List s1 ->
+          let uu___1 = FStar_Compiler_List.map show_optionval s1 in
+          FStar_Compiler_String.concat "," uu___1
+      | Unset -> "<unset>" in
+    let show1 uu___1 =
+      match uu___1 with
+      | (k, v) ->
+          let uu___2 = show_optionval v in
+          FStar_Compiler_Util.format2 "--%s %s" k uu___2 in
+    let uu___1 = FStar_Compiler_List.map show1 kvs in
+    FStar_Compiler_String.concat "\n" uu___1
 let (set_verification_options : optionstate -> unit) =
   fun o ->
     let verifopts =
@@ -999,7 +1127,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else FStar_Compiler_Effect.failwith "unexpected value for --quake"
     | uu___ -> FStar_Compiler_Effect.failwith "unexpected value for --quake"
-let (uu___446 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___528 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -1011,11 +1139,11 @@ let (uu___446 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___446 with
+  match uu___528 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___446 with
+  match uu___528 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -2138,7 +2266,7 @@ let rec (specs_with_types :
                                                                     "Repeats SMT queries to check for robustness" in
                                                                     let uu___149
                                                                     =
-                                                                    let uu___151
+                                                                    let uu___150
                                                                     =
                                                                     let uu___152
                                                                     =
@@ -2181,7 +2309,7 @@ let rec (specs_with_types :
                                                                     text
                                                                     "Using --quake disables --retry. When quake testing, queries are not splitted for error reporting unless '--split_queries always' is given. Queries from the smt_sync tactic are not quake-tested." in
                                                                     FStar_Pprint.op_Hat_Hat
-                                                                    uu___151
+                                                                    uu___150
                                                                     uu___152 in
                                                                     FStar_Pprint.op_Hat_Hat
                                                                     uu___148
@@ -2245,7 +2373,7 @@ let rec (specs_with_types :
                                                                     uu___149) in
                                                                     let uu___149
                                                                     =
-                                                                    let uu___151
+                                                                    let uu___150
                                                                     =
                                                                     let uu___152
                                                                     =
@@ -3420,7 +3548,7 @@ let rec (specs_with_types :
                                                                     uu___153
                                                                     ::
                                                                     uu___154 in
-                                                                    uu___151
+                                                                    uu___150
                                                                     ::
                                                                     uu___152 in
                                                                     uu___148
@@ -3710,7 +3838,7 @@ let (settable_specs :
     (fun uu___ ->
        match uu___ with | ((uu___1, x, uu___2), uu___3) -> settable x)
     all_specs
-let (uu___673 :
+let (uu___755 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -3727,11 +3855,11 @@ let (uu___673 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___673 with
+  match uu___755 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___673 with
+  match uu___755 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =

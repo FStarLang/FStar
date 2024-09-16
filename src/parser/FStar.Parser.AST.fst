@@ -751,6 +751,7 @@ let id_of_tycon = function
   | TyconVariant(i, _, _, _) -> (string_of_id i)
 
 let string_of_pragma = function
+  | ShowOptions  ->   "show-options"
   | SetOptions s ->   Util.format1 "set-options \"%s\""   s
   | ResetOptions s -> Util.format1 "reset-options \"%s\"" (Util.dflt "" s)
   | PushOptions s ->  Util.format1 "push-options \"%s\""  (Util.dflt "" s)

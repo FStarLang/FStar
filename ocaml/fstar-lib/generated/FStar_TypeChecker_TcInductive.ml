@@ -412,8 +412,8 @@ let (tc_tycon :
                                                 FStar_Errors_Msg.text uu___10 in
                                               [uu___9] in
                                             FStar_Errors.raise_error
-                                              FStar_Class_HasRange.hasRange_range
-                                              s.FStar_Syntax_Syntax.sigrng
+                                              FStar_Syntax_Syntax.has_range_sigelt
+                                              s
                                               FStar_Errors_Codes.Error_InductiveAnnotNotAType
                                               ()
                                               (Obj.magic
@@ -641,8 +641,7 @@ let (tc_data :
                             then (env1, [], FStar_Syntax_Syntax.U_zero)
                             else
                               FStar_Errors.raise_error
-                                FStar_Class_HasRange.hasRange_range
-                                se.FStar_Syntax_Syntax.sigrng
+                                FStar_Syntax_Syntax.has_range_sigelt se
                                 FStar_Errors_Codes.Fatal_UnexpectedDataConstructor
                                 ()
                                 (Obj.magic
@@ -827,8 +826,8 @@ let (tc_data :
                                                           tuvs _uvs1
                                                       else
                                                         FStar_Errors.raise_error
-                                                          FStar_Class_HasRange.hasRange_range
-                                                          se.FStar_Syntax_Syntax.sigrng
+                                                          FStar_Syntax_Syntax.has_range_sigelt
+                                                          se
                                                           FStar_Errors_Codes.Fatal_UnexpectedConstructorType
                                                           ()
                                                           (Obj.magic
@@ -855,8 +854,8 @@ let (tc_data :
                                                           "Expected a constructor of type %s; got %s"
                                                           uu___12 uu___13 in
                                                       FStar_Errors.raise_error
-                                                        FStar_Class_HasRange.hasRange_range
-                                                        se.FStar_Syntax_Syntax.sigrng
+                                                        FStar_Syntax_Syntax.has_range_sigelt
+                                                        se
                                                         FStar_Errors_Codes.Fatal_UnexpectedConstructorType
                                                         ()
                                                         (Obj.magic
@@ -978,8 +977,8 @@ let (tc_data :
                                                             "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
                                                             uu___15 uu___16 in
                                                         FStar_Errors.raise_error
-                                                          FStar_Class_HasRange.hasRange_range
-                                                          se.FStar_Syntax_Syntax.sigrng
+                                                          FStar_Syntax_Syntax.has_range_sigelt
+                                                          se
                                                           FStar_Errors_Codes.Fatal_WrongResultTypeAfterConstrutor
                                                           ()
                                                           (Obj.magic
@@ -2441,8 +2440,8 @@ let (check_inductive_well_typedness :
                                                "Expected an inductive with type %s; got %s"
                                                uu___7 uu___8 in
                                            FStar_Errors.raise_error
-                                             FStar_Class_HasRange.hasRange_range
-                                             se.FStar_Syntax_Syntax.sigrng
+                                             FStar_Syntax_Syntax.has_range_sigelt
+                                             se
                                              FStar_Errors_Codes.Fatal_UnexpectedInductivetype
                                              ()
                                              (Obj.magic
@@ -2493,8 +2492,8 @@ let (check_inductive_well_typedness :
                                                  "Could not get %s type parameters from val type %s"
                                                  uu___7 uu___8 in
                                              FStar_Errors.raise_error
-                                               FStar_Class_HasRange.hasRange_range
-                                               se.FStar_Syntax_Syntax.sigrng
+                                               FStar_Syntax_Syntax.has_range_sigelt
+                                               se
                                                FStar_Errors_Codes.Fatal_UnexpectedInductivetype
                                                ()
                                                (Obj.magic
@@ -3686,8 +3685,7 @@ let (mk_data_operations :
                                 then ([], FStar_Syntax_Util.ktype0, true)
                                 else
                                   FStar_Errors.raise_error
-                                    FStar_Class_HasRange.hasRange_range
-                                    se.FStar_Syntax_Syntax.sigrng
+                                    FStar_Syntax_Syntax.has_range_sigelt se
                                     FStar_Errors_Codes.Fatal_UnexpectedDataConstructor
                                     ()
                                     (Obj.magic

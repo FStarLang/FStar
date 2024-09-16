@@ -1783,8 +1783,7 @@ let rec (extract_sigelt_iface :
                          FStar_Compiler_Util.format2
                            "Extension %s failed to extract iface: %s" ext err in
                        FStar_Errors.raise_error
-                         FStar_Class_HasRange.hasRange_range
-                         se1.FStar_Syntax_Syntax.sigrng
+                         FStar_Syntax_Syntax.has_range_sigelt se1
                          FStar_Errors_Codes.Fatal_ExtractionUnsupported ()
                          (Obj.magic FStar_Errors_Msg.is_error_message_string)
                          (Obj.magic uu___4)))
@@ -2370,8 +2369,7 @@ let rec (extract_sig :
                                  "Extension %s failed to extract term: %s"
                                  ext err in
                              FStar_Errors.raise_error
-                               FStar_Class_HasRange.hasRange_range
-                               se1.FStar_Syntax_Syntax.sigrng
+                               FStar_Syntax_Syntax.has_range_sigelt se1
                                FStar_Errors_Codes.Fatal_ExtractionUnsupported
                                ()
                                (Obj.magic
@@ -2513,8 +2511,7 @@ and (extract_sig_let :
                      FStar_Pervasives_Native.Some tau
                  | FStar_Pervasives_Native.Some uu___4 ->
                      (FStar_Errors.log_issue
-                        FStar_Class_HasRange.hasRange_range
-                        se.FStar_Syntax_Syntax.sigrng
+                        FStar_Syntax_Syntax.has_range_sigelt se
                         FStar_Errors_Codes.Warning_UnrecognizedAttribute ()
                         (Obj.magic FStar_Errors_Msg.is_error_message_string)
                         (Obj.magic
@@ -2590,8 +2587,7 @@ and (extract_sig_let :
                                 "Ill-formed application of 'normalize_for_extraction': normalization steps '%s' could not be interpreted"
                                 uu___10 in
                             FStar_Errors.log_issue
-                              FStar_Class_HasRange.hasRange_range
-                              se.FStar_Syntax_Syntax.sigrng
+                              FStar_Syntax_Syntax.has_range_sigelt se
                               FStar_Errors_Codes.Warning_UnrecognizedAttribute
                               ()
                               (Obj.magic
@@ -2600,8 +2596,7 @@ and (extract_sig_let :
                            FStar_Pervasives_Native.None))
                  | FStar_Pervasives_Native.Some uu___4 ->
                      (FStar_Errors.log_issue
-                        FStar_Class_HasRange.hasRange_range
-                        se.FStar_Syntax_Syntax.sigrng
+                        FStar_Syntax_Syntax.has_range_sigelt se
                         FStar_Errors_Codes.Warning_UnrecognizedAttribute ()
                         (Obj.magic FStar_Errors_Msg.is_error_message_string)
                         (Obj.magic

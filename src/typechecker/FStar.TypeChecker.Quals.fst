@@ -108,7 +108,7 @@ let check_sigelt_quals_pre (env:FStar.TypeChecker.Env.env) se =
          (match se.sigel with
           | Sig_let _ -> false
           | _ -> true)
-      then raise_error se.sigrng
+      then raise_error se
              Errors.Fatal_InconsistentQualifierAnnotation [
               text "Illegal attribute: the `no_subtyping` attribute is allowed only on let-bindings."]
     in

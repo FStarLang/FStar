@@ -83,6 +83,10 @@ val peek                        : unit -> optionstate
 val set                         : optionstate -> unit
 val set_verification_options    : optionstate -> unit
 
+(* Print the current optionstate as a string that could be passed to fstar.exe, e.g.
+"--z3rlimit 25 --include /some/path" *)
+val show_options                : unit -> string
+
 val __unit_tests                : unit    -> bool
 val __set_unit_tests            : unit    -> unit
 val __clear_unit_tests          : unit    -> unit
