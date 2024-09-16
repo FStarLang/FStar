@@ -23,3 +23,4 @@ let t12_1 (b:bool) = pure (b2t b)
 let t13 (a:Type) = pure (hasEq a)
 let t14 (a:Type) (x y:a) = pure (x << y)
 
+#pop-options

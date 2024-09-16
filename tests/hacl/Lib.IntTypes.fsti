@@ -2,7 +2,7 @@ module Lib.IntTypes
 
 open FStar.Mul
 
-#push-options "--max_fuel 0 --max_ifuel 1 --z3rlimit 20"
+#set-options "--max_fuel 0 --max_ifuel 1 --z3rlimit 20"
 
 // Other instances frollow from `FStar.UInt.pow2_values` which is in
 // scope of every module depending on Lib.IntTypes

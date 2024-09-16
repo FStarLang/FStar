@@ -2,7 +2,7 @@ module RevealHide
 open FStar.Ghost
 open FStar.Tactics.V2
 
-#push-options "--no_smt"
+#set-options "--no_smt"
 
 let test1 (a:Type) (x:a) =
   assert (reveal (hide x) == x)

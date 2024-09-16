@@ -154,6 +154,10 @@ let pop () = // already signal-atomic
 let set o =
   fstar_options := o
 
+let depth () =
+  let lev::_ = !history in
+  List.length lev
+
 let snapshot ()    = Common.snapshot push history ()
 let rollback depth = Common.rollback pop  history depth
 

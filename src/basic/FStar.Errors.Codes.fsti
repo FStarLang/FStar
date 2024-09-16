@@ -388,6 +388,7 @@ type error_code =
   | Warning_SolverVersionMismatch
   | Warning_ProofRecovery
   | Error_CannotResolveRecord
+  | Error_MissingPopOptions
 
 type error_setting = error_code & error_flag & int
 

@@ -376,4 +376,5 @@ let default_settings : list error_setting =
     Warning_SolverVersionMismatch                     , CError, 358;
     Warning_ProofRecovery                             , CWarning, 359;
     Error_CannotResolveRecord                         , CAlwaysError, 360;
+    Error_MissingPopOptions                           , CWarning, 361;
     ]

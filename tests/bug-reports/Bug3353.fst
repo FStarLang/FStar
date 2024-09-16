@@ -28,4 +28,4 @@ let test () =
 
 assume val p : Type0
 let test2 (x : squash (p /\ True)) : squash p = ()
-
+#pop-options
