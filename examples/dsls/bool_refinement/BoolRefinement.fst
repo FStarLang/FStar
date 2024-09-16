@@ -1322,7 +1322,6 @@ let sub_typing_weakening #f (sg sg':src_env)
         S_ELab _ _ _ d
 
       | _ -> admit ())
-#pop-options
 
 let rec src_typing_weakening #f (sg sg':src_env) 
                              (x:var { None? (lookup sg x) && None? (lookup sg' x) })
@@ -1403,7 +1402,9 @@ let rec src_typing_weakening #f (sg sg':src_env)
       in
       let dt = src_ty_ok_weakening _ _ _ _ _ dt in
       T_If _ _ _ _ _ _ _ hyp' db d1 d2 s1 s2 dt
-                         
+
+#pop-options
+
 let rec src_typing_weakening_l #f (sg:src_env) 
                                (sg':src_env { 
                                  (src_env_ok sg') /\
