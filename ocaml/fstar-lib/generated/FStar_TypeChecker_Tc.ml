@@ -5555,6 +5555,26 @@ let (finish_partial_modul :
                Prims.strcat "Ending modul " uu___5 in
              pop_context env uu___4 in
            ());
+          (let uu___4 =
+             let uu___5 = FStar_Options.depth () in uu___5 > Prims.int_zero in
+           if uu___4
+           then
+             let uu___5 =
+               let uu___6 =
+                 let uu___7 =
+                   let uu___8 = FStar_Options.depth () in
+                   FStar_Class_Show.show
+                     (FStar_Class_Show.printableshow
+                        FStar_Class_Printable.printable_int) uu___8 in
+                 Prims.strcat uu___7 "." in
+               Prims.strcat
+                 "Some #push-options have not been popped. Current depth is "
+                 uu___6 in
+             FStar_Errors.log_issue FStar_TypeChecker_Env.hasRange_env env
+               FStar_Errors_Codes.Error_MissingPopOptions ()
+               (Obj.magic FStar_Errors_Msg.is_error_message_string)
+               (Obj.magic uu___5)
+           else ());
           (m, env)
 let (deep_compress_modul :
   FStar_Syntax_Syntax.modul -> FStar_Syntax_Syntax.modul) =
