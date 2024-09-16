@@ -1674,7 +1674,10 @@ let (ask_solver_recover : query_settings Prims.list -> answer) =
                FStar_Errors_Msg.text
                  "This query failed to be solved. Will now retry with higher rlimits due to --proof_recovery." in
              [uu___4] in
-           FStar_Errors.diag_doc cfg.query_range uu___3);
+           FStar_Errors.diag FStar_Class_HasRange.hasRange_range
+             cfg.query_range ()
+             (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+             (Obj.magic uu___3));
           (let try_factor n =
              (let uu___4 =
                 let uu___5 =
@@ -1683,7 +1686,10 @@ let (ask_solver_recover : query_settings Prims.list -> answer) =
                   let uu___7 = FStar_Class_PP.pp FStar_Class_PP.pp_int n in
                   FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                 [uu___5] in
-              FStar_Errors.diag_doc cfg.query_range uu___4);
+              FStar_Errors.diag FStar_Class_HasRange.hasRange_range
+                cfg.query_range ()
+                (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                (Obj.magic uu___4));
              (let cfg1 =
                 {
                   query_env = (cfg.query_env);
@@ -1712,7 +1718,10 @@ let (ask_solver_recover : query_settings Prims.list -> answer) =
                      let uu___5 =
                        FStar_Errors_Msg.text "Trying a solver restart" in
                      [uu___5] in
-                   FStar_Errors.diag_doc cfg.query_range uu___4);
+                   FStar_Errors.diag FStar_Class_HasRange.hasRange_range
+                     cfg.query_range ()
+                     (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                     (Obj.magic uu___4));
                   (((cfg.query_env).FStar_SMTEncoding_Env.tcenv).FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
                     (FStar_Pervasives_Native.Some
                        (((cfg.query_env).FStar_SMTEncoding_Env.tcenv).FStar_TypeChecker_Env.proof_ns));
@@ -1807,7 +1816,9 @@ let (maybe_save_failing_query :
                FStar_Class_PP.pp FStar_Syntax_Print.pretty_term qs.query_term in
              [uu___6] in
            uu___4 :: uu___5 in
-         FStar_Errors.diag_doc qs.query_range uu___3
+         FStar_Errors.diag FStar_Class_HasRange.hasRange_range qs.query_range
+           () (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+           (Obj.magic uu___3)
        else ())
 let (ask_solver :
   FStar_SMTEncoding_Env.env_t ->
@@ -2160,7 +2171,12 @@ let (encode_and_ask :
                                         FStar_Compiler_Util.format3
                                           "Encoded split query %s\nto %s\nwith %s labels"
                                           uu___11 uu___12 uu___13 in
-                                      FStar_Errors.diag uu___9 uu___10
+                                      FStar_Errors.diag
+                                        FStar_Class_HasRange.hasRange_range
+                                        uu___9 ()
+                                        (Obj.magic
+                                           FStar_Errors_Msg.is_error_message_string)
+                                        (Obj.magic uu___10)
                                     else ())
                                  else ());
                                 (let env =
@@ -2399,7 +2415,10 @@ let (solve_sync :
                     FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
                       uu___7 uu___8 in
                   [uu___6] in
-                FStar_Errors.diag_doc q.FStar_Syntax_Syntax.pos uu___5
+                FStar_Errors.diag FStar_Class_HasRange.hasRange_range
+                  q.FStar_Syntax_Syntax.pos ()
+                  (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                  (Obj.magic uu___5)
               else ());
              (let uu___4 =
                 disable_quake_for

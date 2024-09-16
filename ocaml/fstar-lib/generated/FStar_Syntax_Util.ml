@@ -3628,6 +3628,7 @@ let (process_pragma :
                (Obj.magic FStar_Errors_Msg.is_error_message_string)
                (Obj.magic (Prims.strcat "Failed to process pragma: " s1)) in
        match p with
+       | FStar_Syntax_Syntax.ShowOptions -> ()
        | FStar_Syntax_Syntax.SetOptions o -> set_options o
        | FStar_Syntax_Syntax.ResetOptions sopt ->
            ((let uu___2 = FStar_Options.restore_cmd_line_options false in ());

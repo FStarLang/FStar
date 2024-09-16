@@ -650,71 +650,6 @@ let (maybe_add_backtrace :
       let uu___1 = let uu___2 = FStar_Errors_Msg.backtrace_doc () in [uu___2] in
       FStar_Compiler_List.op_At msg uu___1
     else msg
-let (diag_doc :
-  FStar_Compiler_Range_Type.range -> FStar_Errors_Msg.error_message -> unit)
-  =
-  fun r ->
-    fun msg ->
-      let uu___ = FStar_Compiler_Debug.any () in
-      if uu___
-      then
-        let msg1 = maybe_add_backtrace msg in
-        let ctx = get_ctx () in
-        add_one
-          (mk_issue EInfo (FStar_Pervasives_Native.Some r) msg1
-             FStar_Pervasives_Native.None ctx)
-      else ()
-let (diag : FStar_Compiler_Range_Type.range -> Prims.string -> unit) =
-  fun r ->
-    fun msg -> let uu___ = FStar_Errors_Msg.mkmsg msg in diag_doc r uu___
-let (diag0 : Prims.string -> unit) =
-  fun msg ->
-    let uu___ = FStar_Compiler_Debug.any () in
-    if uu___
-    then
-      let uu___1 =
-        let uu___2 = FStar_Errors_Msg.mkmsg msg in
-        mk_issue EInfo FStar_Pervasives_Native.None uu___2
-          FStar_Pervasives_Native.None [] in
-      add_one uu___1
-    else ()
-let (diag1 : Prims.string -> Prims.string -> unit) =
-  fun f ->
-    fun a -> let uu___ = FStar_Compiler_Util.format1 f a in diag0 uu___
-let (diag2 : Prims.string -> Prims.string -> Prims.string -> unit) =
-  fun f ->
-    fun a ->
-      fun b -> let uu___ = FStar_Compiler_Util.format2 f a b in diag0 uu___
-let (diag3 :
-  Prims.string -> Prims.string -> Prims.string -> Prims.string -> unit) =
-  fun f ->
-    fun a ->
-      fun b ->
-        fun c ->
-          let uu___ = FStar_Compiler_Util.format3 f a b c in diag0 uu___
-let (diag4 :
-  Prims.string ->
-    Prims.string -> Prims.string -> Prims.string -> Prims.string -> unit)
-  =
-  fun f ->
-    fun a ->
-      fun b ->
-        fun c ->
-          fun d ->
-            let uu___ = FStar_Compiler_Util.format4 f a b c d in diag0 uu___
-let (diag5 :
-  Prims.string ->
-    Prims.string ->
-      Prims.string -> Prims.string -> Prims.string -> Prims.string -> unit)
-  =
-  fun f ->
-    fun a ->
-      fun b ->
-        fun c ->
-          fun d ->
-            fun e ->
-              let uu___ = FStar_Compiler_Util.format5 f a b c d e in
-              diag0 uu___
 let (warn_unsafe_options :
   FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option ->
     Prims.string -> unit)
@@ -746,7 +681,7 @@ let (set_option_warning_callback_range :
   FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
-let (uu___391 :
+let (uu___341 :
   (((Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) *
     (unit -> FStar_Errors_Codes.error_setting Prims.list)))
   =
@@ -792,10 +727,10 @@ let (uu___391 :
   (set_callbacks, get_error_flags)
 let (t_set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
-  match uu___391 with
+  match uu___341 with
   | (t_set_parse_warn_error1, error_flags) -> t_set_parse_warn_error1
 let (error_flags : unit -> FStar_Errors_Codes.error_setting Prims.list) =
-  match uu___391 with
+  match uu___341 with
   | (t_set_parse_warn_error1, error_flags1) -> error_flags1
 let (set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
@@ -872,6 +807,37 @@ let (log_issue_ctx :
                         "don't use log_issue to report fatal error, should use raise_error: "
                         uu___6 in
                     FStar_Compiler_Effect.failwith uu___5))
+let info :
+  'posut .
+    'posut FStar_Class_HasRange.hasRange ->
+      'posut ->
+        unit -> Obj.t FStar_Errors_Msg.is_error_message -> Obj.t -> unit
+  =
+  fun uu___ ->
+    fun r ->
+      fun uu___1 ->
+        fun uu___2 ->
+          fun msg ->
+            let rng = FStar_Class_HasRange.pos uu___ r in
+            let msg1 = FStar_Errors_Msg.to_doc_list uu___2 msg in
+            let msg2 = maybe_add_backtrace msg1 in
+            let ctx = get_ctx () in
+            add_one
+              (mk_issue EInfo (FStar_Pervasives_Native.Some rng) msg2
+                 FStar_Pervasives_Native.None ctx)
+let diag :
+  'posut .
+    'posut FStar_Class_HasRange.hasRange ->
+      'posut ->
+        unit -> Obj.t FStar_Errors_Msg.is_error_message -> Obj.t -> unit
+  =
+  fun uu___ ->
+    fun r ->
+      fun uu___1 ->
+        fun uu___2 ->
+          fun msg ->
+            let uu___3 = FStar_Compiler_Debug.any () in
+            if uu___3 then info uu___ r () uu___2 msg else ()
 let raise_error :
   'a 'posut .
     'posut FStar_Class_HasRange.hasRange ->
@@ -932,6 +898,12 @@ let (log_issue0 :
         fun msg ->
           log_issue FStar_Class_HasRange.hasRange_range
             FStar_Compiler_Range_Type.dummyRange e () uu___1 msg
+let diag0 : 't . 't FStar_Errors_Msg.is_error_message -> 't -> unit =
+  fun uu___ ->
+    fun msg ->
+      diag FStar_Class_HasRange.hasRange_range
+        FStar_Compiler_Range_Type.dummyRange () (Obj.magic uu___)
+        (Obj.magic msg)
 let (add_errors : error Prims.list -> unit) =
   fun errs ->
     FStar_Compiler_Util.atomically

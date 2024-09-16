@@ -2417,8 +2417,12 @@ let rec (norm :
                                FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
                              [uu___8] in
                            uu___6 :: uu___7 in
-                         FStar_Errors.diag_doc tm.FStar_Syntax_Syntax.pos
-                           uu___5)
+                         FStar_Errors.diag
+                           FStar_Class_HasRange.hasRange_range
+                           tm.FStar_Syntax_Syntax.pos ()
+                           (Obj.magic
+                              FStar_Errors_Msg.is_error_message_list_doc)
+                           (Obj.magic uu___5))
                       else ();
                       (let delta_level =
                          let uu___5 =

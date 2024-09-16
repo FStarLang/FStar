@@ -161,8 +161,7 @@ let (check_sigelt_quals_pre :
               FStar_Errors_Msg.text
                 "Illegal attribute: the `no_subtyping` attribute is allowed only on let-bindings." in
             [uu___2] in
-          FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range
-            se1.FStar_Syntax_Syntax.sigrng
+          FStar_Errors.raise_error FStar_Syntax_Syntax.has_range_sigelt se1
             FStar_Errors_Codes.Fatal_InconsistentQualifierAnnotation ()
             (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
             (Obj.magic uu___1)

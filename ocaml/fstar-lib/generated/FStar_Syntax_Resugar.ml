@@ -2851,6 +2851,7 @@ let (resugar_pragma : FStar_Syntax_Syntax.pragma -> FStar_Parser_AST.pragma)
   =
   fun uu___ ->
     match uu___ with
+    | FStar_Syntax_Syntax.ShowOptions -> FStar_Parser_AST.ShowOptions
     | FStar_Syntax_Syntax.SetOptions s -> FStar_Parser_AST.SetOptions s
     | FStar_Syntax_Syntax.ResetOptions s -> FStar_Parser_AST.ResetOptions s
     | FStar_Syntax_Syntax.PushOptions s -> FStar_Parser_AST.PushOptions s
