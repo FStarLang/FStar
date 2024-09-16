@@ -20,7 +20,8 @@ depend: .depend
 	touch -c $@
 
 wc:
-	wc -l prims.fst $(ALL)
+	# Prims.fst seems to be missing here?
+	wc -l Prims.fst $(ALL)
 
 
 extract:

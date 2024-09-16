@@ -1091,7 +1091,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
   ( noshort,
     "prims",
     PathStr "file",
-    text "Use a custom prims.fst file. Do not use if you do not know exactly what you're doing.");
+    text "Use a custom Prims.fst file. Do not use if you do not know exactly what you're doing.");
 
   ( noshort,
     "print_bound_var_types",
@@ -1791,7 +1791,7 @@ let find_file =
 let prims () =
   match get_prims() with
   | None ->
-    let filename = "prims.fst" in
+    let filename = "Prims.fst" in
     begin match find_file filename with
       | Some result ->
         result

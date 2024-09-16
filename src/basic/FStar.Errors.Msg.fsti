@@ -10,7 +10,7 @@ these:
 * Error 19 at tests/error-messages/Bug1997.fst(92,19-92,49):
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more details.
-  - Also see: prims.fst(96,32-96,42)
+  - Also see: Prims.fst(96,32-96,42)
 
 The header is taken from the code and range, and then the documents are rendered
 in order.

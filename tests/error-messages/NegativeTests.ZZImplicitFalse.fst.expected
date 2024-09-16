@@ -4,7 +4,7 @@
   - Expected type Prims.l_False got type Prims.unit
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also prims.fst(159,29-159,34)
+  - See also Prims.fst(159,29-159,34)
 
 >>]
 * Warning 240 at NegativeTests.ZZImplicitFalse.fst(18,4-18,8):
