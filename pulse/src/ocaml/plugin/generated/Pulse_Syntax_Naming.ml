@@ -963,7 +963,8 @@ let rec (subst_st_term :
       {
         Pulse_Syntax_Base.term1 = t';
         Pulse_Syntax_Base.range1 = (t.Pulse_Syntax_Base.range1);
-        Pulse_Syntax_Base.effect_tag = (t.Pulse_Syntax_Base.effect_tag)
+        Pulse_Syntax_Base.effect_tag = (t.Pulse_Syntax_Base.effect_tag);
+        Pulse_Syntax_Base.source = (t.Pulse_Syntax_Base.source)
       }
 and (subst_branches :
   Pulse_Syntax_Base.st_term ->

@@ -318,7 +318,10 @@ let rec (arrow_of_abs :
                                                                     (prog.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
-                                                                    (prog.Pulse_Syntax_Base.effect_tag)
+                                                                    (prog.Pulse_Syntax_Base.effect_tag);
+                                                                    Pulse_Syntax_Base.source
+                                                                    =
+                                                                    (prog.Pulse_Syntax_Base.source)
                                                                     })))
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
@@ -408,7 +411,10 @@ let rec (arrow_of_abs :
                                                                     (prog.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
-                                                                    (prog.Pulse_Syntax_Base.effect_tag)
+                                                                    (prog.Pulse_Syntax_Base.effect_tag);
+                                                                    Pulse_Syntax_Base.source
+                                                                    =
+                                                                    (prog.Pulse_Syntax_Base.source)
                                                                     }))))
                                                                     | 
                                                                     uu___10
@@ -531,7 +537,10 @@ let rec (arrow_of_abs :
                                                                     (prog.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
-                                                                    (prog.Pulse_Syntax_Base.effect_tag)
+                                                                    (prog.Pulse_Syntax_Base.effect_tag);
+                                                                    Pulse_Syntax_Base.source
+                                                                    =
+                                                                    (prog.Pulse_Syntax_Base.source)
                                                                     }))))))
                                                                     uu___8)))
                                                                     uu___7)))
@@ -876,7 +885,10 @@ let rec (rebuild_abs :
                                                                     (t.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
-                                                                    (t.Pulse_Syntax_Base.effect_tag)
+                                                                    (t.Pulse_Syntax_Base.effect_tag);
+                                                                    Pulse_Syntax_Base.source
+                                                                    =
+                                                                    (t.Pulse_Syntax_Base.source)
                                                                     }))))
                                                                     uu___8))
                                                                     else
@@ -1180,7 +1192,10 @@ let rec (rebuild_abs :
                                                                     (t.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
-                                                                    (t.Pulse_Syntax_Base.effect_tag)
+                                                                    (t.Pulse_Syntax_Base.effect_tag);
+                                                                    Pulse_Syntax_Base.source
+                                                                    =
+                                                                    (t.Pulse_Syntax_Base.source)
                                                                     })))))
                                                                 | uu___7 ->
                                                                     Obj.magic
