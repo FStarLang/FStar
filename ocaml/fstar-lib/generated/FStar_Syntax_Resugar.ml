@@ -437,7 +437,7 @@ let (parse_machine_integer_desc :
                let uu___3 = FStar_Syntax_Syntax.lid_of_fv fv in
                FStar_Ident.string_of_lid uu___3 in
              d = uu___2) descs
-let (can_resugar_machine_integer : FStar_Syntax_Syntax.fv -> Prims.bool) =
+let (can_resugar_machine_integer_fv : FStar_Syntax_Syntax.fv -> Prims.bool) =
   fun fv ->
     let uu___ = parse_machine_integer_desc fv in
     FStar_Compiler_Option.isSome uu___
@@ -519,6 +519,31 @@ let (is_seq_literal :
   =
   __is_list_literal FStar_Parser_Const.seq_cons_lid
     FStar_Parser_Const.seq_empty_lid
+let (can_resugar_machine_integer :
+  FStar_Syntax_Syntax.term ->
+    FStar_Syntax_Syntax.args ->
+      (FStar_Syntax_Syntax.fv * Prims.string) FStar_Pervasives_Native.option)
+  =
+  fun hd ->
+    fun args ->
+      let uu___ =
+        let uu___1 = FStar_Syntax_Subst.compress hd in
+        uu___1.FStar_Syntax_Syntax.n in
+      match uu___ with
+      | FStar_Syntax_Syntax.Tm_fvar fv when can_resugar_machine_integer_fv fv
+          ->
+          (match args with
+           | (a, FStar_Pervasives_Native.None)::[] ->
+               let uu___1 =
+                 let uu___2 = FStar_Syntax_Subst.compress a in
+                 uu___2.FStar_Syntax_Syntax.n in
+               (match uu___1 with
+                | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_int
+                    (i, FStar_Pervasives_Native.None)) ->
+                    FStar_Pervasives_Native.Some (fv, i)
+                | uu___2 -> FStar_Pervasives_Native.None)
+           | uu___1 -> FStar_Pervasives_Native.None)
+      | uu___1 -> FStar_Pervasives_Native.None
 let rec (resugar_term' :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.term -> FStar_Parser_AST.term)
   =
@@ -800,22 +825,14 @@ let rec (resugar_term' :
             (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.b2t_lid)
           -> resugar_term' env e
       | FStar_Syntax_Syntax.Tm_app
-          {
-            FStar_Syntax_Syntax.hd =
-              { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
-                FStar_Syntax_Syntax.pos = uu___1;
-                FStar_Syntax_Syntax.vars = uu___2;
-                FStar_Syntax_Syntax.hash_code = uu___3;_};
-            FStar_Syntax_Syntax.args =
-              ({
-                 FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
-                   (FStar_Const.Const_int (i, FStar_Pervasives_Native.None));
-                 FStar_Syntax_Syntax.pos = uu___4;
-                 FStar_Syntax_Syntax.vars = uu___5;
-                 FStar_Syntax_Syntax.hash_code = uu___6;_},
-               uu___7)::[];_}
-          when can_resugar_machine_integer fv ->
-          resugar_machine_integer fv i t.FStar_Syntax_Syntax.pos
+          { FStar_Syntax_Syntax.hd = hd; FStar_Syntax_Syntax.args = args;_}
+          when
+          let uu___1 = can_resugar_machine_integer hd args in
+          FStar_Pervasives_Native.uu___is_Some uu___1 ->
+          let uu___1 = can_resugar_machine_integer hd args in
+          (match uu___1 with
+           | FStar_Pervasives_Native.Some (fv, i) ->
+               resugar_machine_integer fv i t.FStar_Syntax_Syntax.pos)
       | FStar_Syntax_Syntax.Tm_app uu___1 ->
           let t1 = FStar_Syntax_Util.canon_app t in
           let uu___2 = t1.FStar_Syntax_Syntax.n in
