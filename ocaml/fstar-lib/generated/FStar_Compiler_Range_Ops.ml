@@ -255,6 +255,53 @@ let (json_of_def_range : FStar_Compiler_Range_Type.range -> FStar_Json.json)
     let uu___ = file_of_range r in
     let uu___1 = start_of_range r in
     let uu___2 = end_of_range r in json_of_range_fields uu___ uu___1 uu___2
+let (intersect_rng :
+  FStar_Compiler_Range_Type.rng ->
+    FStar_Compiler_Range_Type.rng -> FStar_Compiler_Range_Type.rng)
+  =
+  fun r1 ->
+    fun r2 ->
+      if
+        r1.FStar_Compiler_Range_Type.file_name <>
+          r2.FStar_Compiler_Range_Type.file_name
+      then r2
+      else
+        (let start_pos =
+           if
+             FStar_Compiler_Range_Type.pos_geq
+               r1.FStar_Compiler_Range_Type.start_pos
+               r2.FStar_Compiler_Range_Type.start_pos
+           then r1.FStar_Compiler_Range_Type.start_pos
+           else r2.FStar_Compiler_Range_Type.start_pos in
+         let end_pos =
+           if
+             FStar_Compiler_Range_Type.pos_geq
+               r1.FStar_Compiler_Range_Type.end_pos
+               r2.FStar_Compiler_Range_Type.end_pos
+           then r2.FStar_Compiler_Range_Type.end_pos
+           else r1.FStar_Compiler_Range_Type.end_pos in
+         FStar_Compiler_Range_Type.mk_rng
+           r1.FStar_Compiler_Range_Type.file_name start_pos end_pos)
+let (intersect_ranges :
+  FStar_Compiler_Range_Type.range ->
+    FStar_Compiler_Range_Type.range -> FStar_Compiler_Range_Type.range)
+  =
+  fun r1 ->
+    fun r2 ->
+      let uu___ =
+        intersect_rng r1.FStar_Compiler_Range_Type.def_range
+          r2.FStar_Compiler_Range_Type.def_range in
+      let uu___1 =
+        intersect_rng r1.FStar_Compiler_Range_Type.use_range
+          r2.FStar_Compiler_Range_Type.use_range in
+      {
+        FStar_Compiler_Range_Type.def_range = uu___;
+        FStar_Compiler_Range_Type.use_range = uu___1
+      }
+let (bound_range :
+  FStar_Compiler_Range_Type.range ->
+    FStar_Compiler_Range_Type.range -> FStar_Compiler_Range_Type.range)
+  = fun r -> fun bound -> intersect_ranges r bound
 let (showable_range :
   FStar_Compiler_Range_Type.range FStar_Class_Show.showable) =
   { FStar_Class_Show.show = string_of_range }

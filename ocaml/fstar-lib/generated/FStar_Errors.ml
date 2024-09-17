@@ -3,6 +3,19 @@ let (fallback_range :
   FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option
     FStar_Compiler_Effect.ref)
   = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
+let (error_range_bound :
+  FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option
+    FStar_Compiler_Effect.ref)
+  = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
+let with_error_bound :
+  'a . FStar_Compiler_Range_Type.range -> (unit -> 'a) -> 'a =
+  fun r ->
+    fun f ->
+      let old = FStar_Compiler_Effect.op_Bang error_range_bound in
+      FStar_Compiler_Effect.op_Colon_Equals error_range_bound
+        (FStar_Pervasives_Native.Some r);
+      (let res = f () in
+       FStar_Compiler_Effect.op_Colon_Equals error_range_bound old; res)
 exception Invalid_warn_error_setting of Prims.string 
 let (uu___is_Invalid_warn_error_setting : Prims.exn -> Prims.bool) =
   fun projectee ->
@@ -436,6 +449,14 @@ let (dummy_ide_rng : FStar_Compiler_Range_Type.rng) =
   let uu___ = FStar_Compiler_Range_Type.mk_pos Prims.int_one Prims.int_zero in
   let uu___1 = FStar_Compiler_Range_Type.mk_pos Prims.int_one Prims.int_zero in
   FStar_Compiler_Range_Type.mk_rng "<input>" uu___ uu___1
+let (maybe_bound_rng :
+  FStar_Compiler_Range_Type.range -> FStar_Compiler_Range_Type.range) =
+  fun r ->
+    let uu___ = FStar_Compiler_Effect.op_Bang error_range_bound in
+    match uu___ with
+    | FStar_Pervasives_Native.Some r' ->
+        FStar_Compiler_Range_Ops.bound_range r r'
+    | FStar_Pervasives_Native.None -> r
 let (fixup_issue_range : issue -> issue) =
   fun i ->
     let rng =
@@ -462,10 +483,11 @@ let (fixup_issue_range : issue -> issue) =
                else use_rng) in
           let uu___ = FStar_Compiler_Range_Type.set_use_range range use_rng' in
           FStar_Pervasives_Native.Some uu___ in
+    let uu___ = FStar_Compiler_Util.map_opt rng maybe_bound_rng in
     {
       issue_msg = (i.issue_msg);
       issue_level = (i.issue_level);
-      issue_range = rng;
+      issue_range = uu___;
       issue_number = (i.issue_number);
       issue_ctx = (i.issue_ctx)
     }
@@ -681,7 +703,7 @@ let (set_option_warning_callback_range :
   FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
-let (uu___341 :
+let (uu___357 :
   (((Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) *
     (unit -> FStar_Errors_Codes.error_setting Prims.list)))
   =
@@ -727,10 +749,10 @@ let (uu___341 :
   (set_callbacks, get_error_flags)
 let (t_set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
-  match uu___341 with
+  match uu___357 with
   | (t_set_parse_warn_error1, error_flags) -> t_set_parse_warn_error1
 let (error_flags : unit -> FStar_Errors_Codes.error_setting Prims.list) =
-  match uu___341 with
+  match uu___357 with
   | (t_set_parse_warn_error1, error_flags1) -> error_flags1
 let (set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
