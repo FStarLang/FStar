@@ -28,6 +28,14 @@ with a dummy range. It is set by TypeChecker.Tc.process_one_decl to
 the range of the sigelt being checked. *)
 val fallback_range : FStar.Compiler.Effect.ref (option Range.range)
 
+(* This range, if set, will be used to limit the range of every
+issue that is logged/raised. This is set, e.g. when checking a top-level
+definition, to the range of the definition, so no error can be reported
+outside of it. *)
+val error_range_bound : FStar.Compiler.Effect.ref (option Range.range)
+
+val with_error_bound (r:Range.range) (f : unit -> 'a) : 'a
+
 (* Get the error number for a particular code. Useful for creating error
 messages mentioning --warn_error. *)
 val errno : error_code -> int

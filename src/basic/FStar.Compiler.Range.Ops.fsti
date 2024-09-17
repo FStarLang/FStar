@@ -48,5 +48,10 @@ val json_of_pos : pos -> Json.json
 val json_of_use_range : range -> Json.json
 val json_of_def_range : range -> Json.json
 
+(** Bounds the range [r] by [bound]. Essentially, this is an intersection,
+making sure that whatever we report is within the bound. If the ranges
+are from different files, or there is no overlap, we return [bound]. *)
+val bound_range (r : range) (bound : range) : range
+
 instance val showable_range : showable range
 instance val pretty_range : pretty range
