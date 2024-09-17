@@ -32,6 +32,15 @@ open FStar.Errors.Msg
 
 let fallback_range : ref (option range) = BU.mk_ref None
 
+let error_range_bound : ref (option range) = BU.mk_ref None
+
+let with_error_bound (r:range) (f : unit -> 'a) : 'a =
+  let old = !error_range_bound in
+  error_range_bound := Some r;
+  let res = f () in
+  error_range_bound := old;
+  res
+
 (** This exception is raised in FStar.Error
     when a warn_error string could not be processed;
     The exception is handled in FStar.Options as part of
@@ -218,6 +227,11 @@ let compare_issues i1 i2 =
 let dummy_ide_rng : Range.rng =
   mk_rng "<input>" (mk_pos 1 0) (mk_pos 1 0)
 
+let maybe_bound_rng (r : Range.range) : Range.range =
+  match !error_range_bound with
+  | Some r' -> Range.bound_range r r'
+  | None -> r
+
 (* Attempts to set a decent range (no dummy, no dummy ide) relying
 on the fallback_range reference. *)
 let fixup_issue_range (i:issue) : issue =
@@ -242,7 +256,7 @@ let fixup_issue_range (i:issue) : issue =
       in
       Some (set_use_range range use_rng')
   in
-  { i with issue_range = rng }
+  { i with issue_range = map_opt rng maybe_bound_rng }
 
 let mk_default_handler print =
     let issues : ref (list issue) = BU.mk_ref [] in
