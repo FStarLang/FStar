@@ -20,6 +20,7 @@ module T = FStar.Tactics
 type context = FStar.Sealed.Inhabited.sealed #(list (string & option range)) []
 val extend_context (tag:string) (r:option range) (ctx:context) : context
 val with_context (c:context) (f:unit -> T.Tac 'a) : T.Tac 'a
+val with_error_bound (r:Range.range) (f:unit -> T.Tac 'a) : T.Tac 'a
 val with_extv (k v : string) (f:unit -> T.Tac 'a) : T.Tac 'a
 val disable_admit_smt_queries (f:unit -> T.Tac 'a) : T.Tac 'a
 val print_context (c:context) : T.Tac string

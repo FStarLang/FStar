@@ -175,7 +175,8 @@ let rec check
   (res_ppname:ppname)
   (t:st_term)
 : T.Tac (checker_result_t g0 pre0 post_hint)
-= if Pulse.Checker.AssertWithBinders.handle_head_immediately t
+= RU.with_error_bound #(checker_result_t g0 pre0 post_hint) t.range <| fun () ->
+  if Pulse.Checker.AssertWithBinders.handle_head_immediately t
   then Pulse.Checker.AssertWithBinders.check g0 pre0 pre0_typing post_hint res_ppname t check
   else (
     let (| g, pre, pre_typing, k_elim_pure |) = 

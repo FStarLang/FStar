@@ -21,6 +21,9 @@ let rec with_context (c:context) (f: unit -> 'a utac) : 'a utac =
     | sr::tl ->
       with_context tl (fun _ ps ->
       FStar_Errors.with_ctx (ctxt_elt_as_string sr) (fun _ -> f () ps)) ps
+let with_error_bound (r:FStar_Range.range) (f: unit -> 'a utac) : 'a utac =
+  fun ps ->
+    FStar_Errors.with_error_bound r (fun _ -> f () ps)
 let disable_admit_smt_queries (f: unit -> 'a utac) : 'a utac =
   fun ps ->
     FStar_Options.with_saved_options (fun _ ->
