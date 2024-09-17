@@ -23,6 +23,7 @@
 * Error 189 at Bug.DesugaringError.fst(31,9-31,10):
   - Expected expression of type Prims.nat got expression y of type Prims.bool
   - Raised within Tactics.refl_instantiate_implicits
+  - See also Bug.DesugaringError.fst(31,4-31,10)
 
 >>]
 >> Got issues: [
