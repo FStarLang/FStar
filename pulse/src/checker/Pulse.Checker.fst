@@ -96,7 +96,7 @@ let instantiate_unknown_witnesses (g:env) (t:st_term { Tm_IntroExists? t.term })
     let e1 =
       let hint_type = ASSERT { p = opened_p } in
       let binders = [] in
-      {term=Tm_ProofHintWithBinders { hint_type;binders;t=e2 }; range=t.range; effect_tag=as_effect_hint STT_Ghost } in
+      {term=Tm_ProofHintWithBinders { hint_type;binders;t=e2 }; range=t.range; effect_tag=as_effect_hint STT_Ghost; source = Sealed.seal false } in
     
     let t = 
       L.fold_right
@@ -138,6 +138,8 @@ let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
     | _ -> fail g (Some t_rng) "intro exists with non-existential"
 
 let trace (t:st_term) (g:env) (pre:term) (rng:range) : T.Tac unit =
+  (* If we're running interactively, print out the context
+  and environment. *)
   let open FStar.Stubs.Pprint in
   let open Pulse.PP in
   let pre = T.norm_well_typed_term (elab_env g) [Pervasives.unascribe; primops; iota] pre in
@@ -157,11 +159,13 @@ let trace (t:st_term) (g:env) (pre:term) (rng:range) : T.Tac unit =
   info_doc g (Some rng) msg
 
 let maybe_trace (t:st_term) (g:env) (pre:term) (rng:range) : T.Tac unit =
-  (* pulse:trace turns on tracing, but not for sequencing (binds).
+  (* pulse:trace turns on tracing, but not for sequencing (binds),
+                  and not for terms injected by the checker
      pulse:trace_full turns it on for absolutely everything. *)
   let trace_opt = T.ext_getv "pulse:trace" = "1" in
   let trace_full_opt = T.ext_getv "pulse:trace_full" = "1" in
-  if (trace_opt && not (Tm_Bind? t.term || Tm_TotBind? t.term))
+  let is_source = T.unseal t.source in
+  if (trace_opt && is_source && not (Tm_Bind? t.term || Tm_TotBind? t.term))
      || trace_full_opt
   then
     trace t g pre rng

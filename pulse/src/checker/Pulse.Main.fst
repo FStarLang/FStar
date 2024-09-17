@@ -41,7 +41,7 @@ let rec mk_abs (g:env) (qbs:list (option qualifier & binder & bv)) (body:st_term
                (fun _ r -> match r with FStar.Tactics.Result.Success v _ -> Tm_Abs? v.term | _ -> False)
 =
   let with_range (s:st_term') (r:range) : st_term =
-    { term = s; range = r; effect_tag = default_effect_hint }
+    { term = s; range = r; effect_tag = default_effect_hint; source=Sealed.seal false }
   in
   match qbs with
   | [(q, last, last_bv)] -> 
@@ -189,6 +189,7 @@ let check_fndecl
     };
     range = d.range;
     effect_tag = seal None;
+    source = seal false;
   }
   in
   let body = mk_abs g bs body comp in

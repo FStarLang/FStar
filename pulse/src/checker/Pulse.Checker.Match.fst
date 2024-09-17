@@ -261,6 +261,7 @@ let check_branch
         };
       range = e.range;
       effect_tag = e.effect_tag;
+      source = Sealed.seal false;
     }
   in
   let pre_typing = tot_typing_weakening_n pulse_bs pre_typing in // weaken w/ binders

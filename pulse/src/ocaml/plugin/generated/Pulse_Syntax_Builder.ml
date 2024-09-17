@@ -271,7 +271,8 @@ let (with_range :
       {
         Pulse_Syntax_Base.term1 = t;
         Pulse_Syntax_Base.range1 = r;
-        Pulse_Syntax_Base.effect_tag = Pulse_Syntax_Base.default_effect_hint
+        Pulse_Syntax_Base.effect_tag = Pulse_Syntax_Base.default_effect_hint;
+        Pulse_Syntax_Base.source = (FStar_Sealed.seal true)
       }
 let (tm_assert_with_binders :
   Pulse_Syntax_Base.binder Prims.list ->

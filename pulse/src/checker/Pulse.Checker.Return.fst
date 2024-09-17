@@ -150,6 +150,7 @@ let check
   = let Tm_Return f = st.term in
     match Pulse.Checker.Base.is_stateful_application g f.term with
     | Some st_app ->
+      let st_app = { st_app with source = st.source } in
       check g ctxt ctxt_typing post_hint res_ppname st_app
     
     | None -> (
