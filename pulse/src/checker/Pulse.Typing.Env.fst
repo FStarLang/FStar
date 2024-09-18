@@ -406,7 +406,7 @@ let fail_doc_env (#a:Type) (with_env:bool) (g:env) (r:option range) (msg:list Pp
   in
   let issue = FStar.Issue.mk_issue_doc "Error" msg (Some r) None (ctxt_to_list g) in
   T.log_issues [issue];
-  T.fail_at "Pulse checker failed" (Some r)
+  T.fail_at "Pulse checker failed." (Some r)
 
 let warn_doc (g:env) (r:option range) (msg:list Pprint.document) : T.Tac unit =
   let r = get_range g r in
