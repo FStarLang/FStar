@@ -1413,7 +1413,7 @@ and do_check (g:env) (e:term)
       )
     )
     else (
-      fail "Let binding is effectful"
+      fail (format1 "Let binding is effectful (lbeff = %s)" (show lb.lbeff))
     )
 
   | Tm_match {scrutinee=sc; ret_opt=None; brs=branches; rc_opt} ->
