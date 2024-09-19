@@ -3159,7 +3159,7 @@ let (intros :
   unit ->
     (FStar_Tactics_NamedView.binding Prims.list, unit)
       FStar_Tactics_Effect.tac_repr)
-  = fun uu___ -> repeat FStar_Tactics_V2_Builtins.intro
+  = fun uu___ -> FStar_Tactics_V2_Builtins.intros (Prims.of_int (-1))
 let (intros' : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     let uu___1 = intros () in

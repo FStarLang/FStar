@@ -35,7 +35,7 @@ let mk_one_projector (unf:list string) (np:nat) (i:nat) : Tac unit =
       fail "proj: bad index in mk_one_projector";
     let _      = repeatn i intro in
     let the_b  = intro () in
-    let _      = repeatn (arity-i-1) intro in
+    let _      = Stubs.Tactics.V2.Builtins.intros (arity-i-1) in
     let eq_b   : binding = intro () in
     rewrite eq_b;
     norm [iota; delta_only unf; zeta_full];
@@ -93,6 +93,11 @@ let embed_int (i:int) : term =
 let embed_string (s:string) : term =
   let open FStar.Reflection.V2 in
   pack_ln (Tv_Const (C_String s))
+
+(* For compatibility: the typechecker sets this attribute for all
+projectors. Karamel relies on it to do inlining. *)
+let substitute_attr : term =
+  `Pervasives.Substitute
 
 let mk_proj_decl (is_method:bool)
                  (tyqn:name) ctorname
@@ -163,18 +168,20 @@ let mk_proj_decl (is_method:bool)
     in
     (* dump ("returning se with name " ^ unseal field.ppname); *)
     (* dump ("def = " ^ term_to_string lb_def); *)
-    [pack_sigelt <| Sg_Let {
+    let se = pack_sigelt <| Sg_Let {
       isrec = false;
       lbs = [{
               lb_fv  = meth_fv;
               lb_us  = univs;
               lb_typ = projty;
               lb_def = lb_def;
-    }]}]
+      }]}
+    in
+    [se]
   in
   (* Propagate binder attributes, i.e. attributes in the field
   decl, to the method itself. *)
-  let se_proj = set_sigelt_attrs (field.attrs @ sigelt_attrs se_proj) se_proj in
+  let se_proj = set_sigelt_attrs (substitute_attr :: field.attrs @ sigelt_attrs se_proj) se_proj in
 
   (* Do we need to set the sigelt's Projector qual? If so,
   here is how to do it, but F* currently rejects tactics

@@ -57,18 +57,33 @@ let (collect_arr_bs :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
-               (Prims.of_int (26)) (Prims.of_int (18)) (Prims.of_int (26))
+               (Prims.of_int (25)) (Prims.of_int (18)) (Prims.of_int (25))
                (Prims.of_int (45)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
-               (Prims.of_int (25)) (Prims.of_int (22)) (Prims.of_int (27))
+               (Prims.of_int (24)) (Prims.of_int (22)) (Prims.of_int (26))
                (Prims.of_int (29))))) (Obj.magic uu___)
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___2 ->
               match uu___1 with
               | (bs, c) -> ((FStar_List_Tot_Base.rev bs), c)))
+let _ =
+  FStar_Tactics_Native.register_tactic
+    "FStar.Tactics.V2.SyntaxHelpers.collect_arr_bs" (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.V2.SyntaxHelpers.collect_arr_bs (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 collect_arr_bs)
+               FStar_Reflection_V2_Embeddings.e_term
+               (FStar_Syntax_Embeddings.e_tuple2
+                  (FStar_Syntax_Embeddings.e_list
+                     FStar_Tactics_NamedView.e_binder)
+                  FStar_Reflection_V2_Embeddings.e_comp_view) psc ncb us args)
 let (collect_arr :
   FStar_Reflection_Types.typ ->
     ((FStar_Reflection_Types.typ Prims.list * FStar_Tactics_NamedView.comp),
@@ -80,12 +95,12 @@ let (collect_arr :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
-               (Prims.of_int (31)) (Prims.of_int (18)) (Prims.of_int (31))
+               (Prims.of_int (29)) (Prims.of_int (18)) (Prims.of_int (29))
                (Prims.of_int (45)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
-               (Prims.of_int (30)) (Prims.of_int (19)) (Prims.of_int (33))
+               (Prims.of_int (28)) (Prims.of_int (19)) (Prims.of_int (31))
                (Prims.of_int (29))))) (Obj.magic uu___)
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac
@@ -95,6 +110,21 @@ let (collect_arr :
                   ((FStar_List_Tot_Base.rev
                       (FStar_List_Tot_Base.map
                          (fun b -> b.FStar_Tactics_NamedView.sort) bs)), c)))
+let _ =
+  FStar_Tactics_Native.register_tactic
+    "FStar.Tactics.V2.SyntaxHelpers.collect_arr" (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.V2.SyntaxHelpers.collect_arr (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 collect_arr)
+               FStar_Reflection_V2_Embeddings.e_term
+               (FStar_Syntax_Embeddings.e_tuple2
+                  (FStar_Syntax_Embeddings.e_list
+                     FStar_Reflection_V2_Embeddings.e_term)
+                  FStar_Reflection_V2_Embeddings.e_comp_view) psc ncb us args)
 let rec (collect_abs' :
   FStar_Tactics_NamedView.binder Prims.list ->
     FStar_Tactics_NamedView.term ->
@@ -109,12 +139,12 @@ let rec (collect_abs' :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
-                 (Prims.of_int (37)) (Prims.of_int (10)) (Prims.of_int (37))
+                 (Prims.of_int (35)) (Prims.of_int (10)) (Prims.of_int (35))
                  (Prims.of_int (19)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
-                 (Prims.of_int (37)) (Prims.of_int (4)) (Prims.of_int (40))
+                 (Prims.of_int (35)) (Prims.of_int (4)) (Prims.of_int (38))
                  (Prims.of_int (18))))) (Obj.magic uu___)
         (fun uu___1 ->
            (fun uu___1 ->
@@ -138,18 +168,33 @@ let (collect_abs :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
-               (Prims.of_int (44)) (Prims.of_int (19)) (Prims.of_int (44))
+               (Prims.of_int (41)) (Prims.of_int (19)) (Prims.of_int (41))
                (Prims.of_int (36)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
-               (Prims.of_int (43)) (Prims.of_int (19)) (Prims.of_int (45))
+               (Prims.of_int (40)) (Prims.of_int (19)) (Prims.of_int (42))
                (Prims.of_int (30))))) (Obj.magic uu___)
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___2 ->
               match uu___1 with
               | (bs, t') -> ((FStar_List_Tot_Base.rev bs), t')))
+let _ =
+  FStar_Tactics_Native.register_tactic
+    "FStar.Tactics.V2.SyntaxHelpers.collect_abs" (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.V2.SyntaxHelpers.collect_abs (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 collect_abs)
+               FStar_Reflection_V2_Embeddings.e_term
+               (FStar_Syntax_Embeddings.e_tuple2
+                  (FStar_Syntax_Embeddings.e_list
+                     FStar_Tactics_NamedView.e_binder)
+                  FStar_Reflection_V2_Embeddings.e_term) psc ncb us args)
 let fail : 'a . Prims.string -> ('a, unit) FStar_Tactics_Effect.tac_repr =
   fun uu___ ->
     (fun m ->
@@ -187,14 +232,14 @@ let rec (mk_arr :
                               (Obj.magic
                                  (FStar_Range.mk_range
                                     "FStar.Tactics.V2.SyntaxHelpers.fst"
-                                    (Prims.of_int (56)) (Prims.of_int (32))
-                                    (Prims.of_int (56)) (Prims.of_int (47)))))
+                                    (Prims.of_int (53)) (Prims.of_int (32))
+                                    (Prims.of_int (53)) (Prims.of_int (47)))))
                            (FStar_Sealed.seal
                               (Obj.magic
                                  (FStar_Range.mk_range
                                     "FStar.Tactics.V2.SyntaxHelpers.fst"
-                                    (Prims.of_int (56)) (Prims.of_int (23))
-                                    (Prims.of_int (56)) (Prims.of_int (48)))))
+                                    (Prims.of_int (53)) (Prims.of_int (23))
+                                    (Prims.of_int (53)) (Prims.of_int (48)))))
                            (Obj.magic uu___2)
                            (fun uu___3 ->
                               FStar_Tactics_Effect.lift_div_tac
@@ -205,14 +250,14 @@ let rec (mk_arr :
                             (Obj.magic
                                (FStar_Range.mk_range
                                   "FStar.Tactics.V2.SyntaxHelpers.fst"
-                                  (Prims.of_int (56)) (Prims.of_int (23))
-                                  (Prims.of_int (56)) (Prims.of_int (48)))))
+                                  (Prims.of_int (53)) (Prims.of_int (23))
+                                  (Prims.of_int (53)) (Prims.of_int (48)))))
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range
                                   "FStar.Tactics.V2.SyntaxHelpers.fst"
-                                  (Prims.of_int (56)) (Prims.of_int (11))
-                                  (Prims.of_int (56)) (Prims.of_int (49)))))
+                                  (Prims.of_int (53)) (Prims.of_int (11))
+                                  (Prims.of_int (53)) (Prims.of_int (49)))))
                          (Obj.magic uu___1)
                          (fun uu___2 ->
                             FStar_Tactics_Effect.lift_div_tac
@@ -223,8 +268,8 @@ let rec (mk_arr :
                           (Obj.magic
                              (FStar_Range.mk_range
                                 "FStar.Tactics.V2.SyntaxHelpers.fst"
-                                (Prims.of_int (56)) (Prims.of_int (11))
-                                (Prims.of_int (56)) (Prims.of_int (49)))))
+                                (Prims.of_int (53)) (Prims.of_int (11))
+                                (Prims.of_int (53)) (Prims.of_int (49)))))
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range "dummy" Prims.int_zero
@@ -235,6 +280,20 @@ let rec (mk_arr :
                             (fun uu___2 ->
                                FStar_Tactics_NamedView.pack uu___1)))))
         uu___1 uu___
+let _ =
+  FStar_Tactics_Native.register_tactic
+    "FStar.Tactics.V2.SyntaxHelpers.mk_arr" (Prims.of_int (3))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_2
+               "FStar.Tactics.V2.SyntaxHelpers.mk_arr (plugin)"
+               (FStar_Tactics_Native.from_tactic_2 mk_arr)
+               (FStar_Syntax_Embeddings.e_list
+                  FStar_Tactics_NamedView.e_binder)
+               FStar_Reflection_V2_Embeddings.e_comp_view
+               FStar_Reflection_V2_Embeddings.e_term psc ncb us args)
 let rec (mk_tot_arr :
   FStar_Tactics_NamedView.binder Prims.list ->
     FStar_Tactics_NamedView.term ->
@@ -260,14 +319,14 @@ let rec (mk_tot_arr :
                               (Obj.magic
                                  (FStar_Range.mk_range
                                     "FStar.Tactics.V2.SyntaxHelpers.fst"
-                                    (Prims.of_int (62)) (Prims.of_int (32))
-                                    (Prims.of_int (62)) (Prims.of_int (51)))))
+                                    (Prims.of_int (59)) (Prims.of_int (32))
+                                    (Prims.of_int (59)) (Prims.of_int (51)))))
                            (FStar_Sealed.seal
                               (Obj.magic
                                  (FStar_Range.mk_range
                                     "FStar.Tactics.V2.SyntaxHelpers.fst"
-                                    (Prims.of_int (62)) (Prims.of_int (23))
-                                    (Prims.of_int (62)) (Prims.of_int (52)))))
+                                    (Prims.of_int (59)) (Prims.of_int (23))
+                                    (Prims.of_int (59)) (Prims.of_int (52)))))
                            (Obj.magic uu___2)
                            (fun uu___3 ->
                               FStar_Tactics_Effect.lift_div_tac
@@ -278,14 +337,14 @@ let rec (mk_tot_arr :
                             (Obj.magic
                                (FStar_Range.mk_range
                                   "FStar.Tactics.V2.SyntaxHelpers.fst"
-                                  (Prims.of_int (62)) (Prims.of_int (23))
-                                  (Prims.of_int (62)) (Prims.of_int (52)))))
+                                  (Prims.of_int (59)) (Prims.of_int (23))
+                                  (Prims.of_int (59)) (Prims.of_int (52)))))
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range
                                   "FStar.Tactics.V2.SyntaxHelpers.fst"
-                                  (Prims.of_int (62)) (Prims.of_int (11))
-                                  (Prims.of_int (62)) (Prims.of_int (53)))))
+                                  (Prims.of_int (59)) (Prims.of_int (11))
+                                  (Prims.of_int (59)) (Prims.of_int (53)))))
                          (Obj.magic uu___1)
                          (fun uu___2 ->
                             FStar_Tactics_Effect.lift_div_tac
@@ -296,8 +355,8 @@ let rec (mk_tot_arr :
                           (Obj.magic
                              (FStar_Range.mk_range
                                 "FStar.Tactics.V2.SyntaxHelpers.fst"
-                                (Prims.of_int (62)) (Prims.of_int (11))
-                                (Prims.of_int (62)) (Prims.of_int (53)))))
+                                (Prims.of_int (59)) (Prims.of_int (11))
+                                (Prims.of_int (59)) (Prims.of_int (53)))))
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range "dummy" Prims.int_zero
@@ -308,6 +367,20 @@ let rec (mk_tot_arr :
                             (fun uu___2 ->
                                FStar_Tactics_NamedView.pack uu___1)))))
         uu___1 uu___
+let _ =
+  FStar_Tactics_Native.register_tactic
+    "FStar.Tactics.V2.SyntaxHelpers.mk_tot_arr" (Prims.of_int (3))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_2
+               "FStar.Tactics.V2.SyntaxHelpers.mk_tot_arr (plugin)"
+               (FStar_Tactics_Native.from_tactic_2 mk_tot_arr)
+               (FStar_Syntax_Embeddings.e_list
+                  FStar_Tactics_NamedView.e_binder)
+               FStar_Reflection_V2_Embeddings.e_term
+               FStar_Reflection_V2_Embeddings.e_term psc ncb us args)
 let (lookup_lb :
   FStar_Tactics_NamedView.letbinding Prims.list ->
     FStar_Reflection_Types.name ->
@@ -329,12 +402,12 @@ let (lookup_lb :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
-                 (Prims.of_int (65)) (Prims.of_int (10)) (Prims.of_int (67))
+                 (Prims.of_int (62)) (Prims.of_int (10)) (Prims.of_int (64))
                  (Prims.of_int (16)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
-                 (Prims.of_int (69)) (Prims.of_int (2)) (Prims.of_int (71))
+                 (Prims.of_int (66)) (Prims.of_int (2)) (Prims.of_int (68))
                  (Prims.of_int (59))))) (Obj.magic uu___)
         (fun uu___1 ->
            (fun o ->
@@ -348,6 +421,21 @@ let (lookup_lb :
                     (Obj.repr
                        (fail "lookup_letbinding: Name not in let group")))
              uu___1)
+let _ =
+  FStar_Tactics_Native.register_tactic
+    "FStar.Tactics.V2.SyntaxHelpers.lookup_lb" (Prims.of_int (3))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_2
+               "FStar.Tactics.V2.SyntaxHelpers.lookup_lb (plugin)"
+               (FStar_Tactics_Native.from_tactic_2 lookup_lb)
+               (FStar_Syntax_Embeddings.e_list
+                  FStar_Tactics_NamedView.e_letbinding)
+               (FStar_Syntax_Embeddings.e_list
+                  FStar_Syntax_Embeddings.e_string)
+               FStar_Tactics_NamedView.e_letbinding psc ncb us args)
 let rec (inspect_unascribe :
   FStar_Tactics_NamedView.term ->
     (FStar_Tactics_NamedView.term_view, unit) FStar_Tactics_Effect.tac_repr)
@@ -358,12 +446,12 @@ let rec (inspect_unascribe :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
-               (Prims.of_int (74)) (Prims.of_int (8)) (Prims.of_int (74))
+               (Prims.of_int (71)) (Prims.of_int (8)) (Prims.of_int (71))
                (Prims.of_int (17)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
-               (Prims.of_int (74)) (Prims.of_int (2)) (Prims.of_int (78))
+               (Prims.of_int (71)) (Prims.of_int (2)) (Prims.of_int (75))
                (Prims.of_int (12))))) (Obj.magic uu___)
       (fun uu___1 ->
          (fun uu___1 ->
@@ -379,6 +467,18 @@ let rec (inspect_unascribe :
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac (fun uu___2 -> tv))))
            uu___1)
+let _ =
+  FStar_Tactics_Native.register_tactic
+    "FStar.Tactics.V2.SyntaxHelpers.inspect_unascribe" (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.V2.SyntaxHelpers.inspect_unascribe (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 inspect_unascribe)
+               FStar_Reflection_V2_Embeddings.e_term
+               FStar_Tactics_NamedView.e_named_term_view psc ncb us args)
 let rec (collect_app' :
   FStar_Reflection_V2_Data.argv Prims.list ->
     FStar_Tactics_NamedView.term ->
@@ -393,12 +493,12 @@ let rec (collect_app' :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
-                 (Prims.of_int (83)) (Prims.of_int (10)) (Prims.of_int (83))
+                 (Prims.of_int (80)) (Prims.of_int (10)) (Prims.of_int (80))
                  (Prims.of_int (29)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
-                 (Prims.of_int (83)) (Prims.of_int (4)) (Prims.of_int (86))
+                 (Prims.of_int (80)) (Prims.of_int (4)) (Prims.of_int (83))
                  (Prims.of_int (20))))) (Obj.magic uu___)
         (fun uu___1 ->
            (fun uu___1 ->
@@ -416,6 +516,24 @@ let (collect_app :
        Prims.list),
       unit) FStar_Tactics_Effect.tac_repr)
   = collect_app' []
+let _ =
+  FStar_Tactics_Native.register_tactic
+    "FStar.Tactics.V2.SyntaxHelpers.collect_app" (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.V2.SyntaxHelpers.collect_app (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 collect_app)
+               FStar_Reflection_V2_Embeddings.e_term
+               (FStar_Syntax_Embeddings.e_tuple2
+                  FStar_Reflection_V2_Embeddings.e_term
+                  (FStar_Syntax_Embeddings.e_list
+                     (FStar_Syntax_Embeddings.e_tuple2
+                        FStar_Reflection_V2_Embeddings.e_term
+                        FStar_Reflection_V2_Embeddings.e_aqualv))) psc ncb us
+               args)
 let (hua :
   FStar_Tactics_NamedView.term ->
     ((FStar_Reflection_Types.fv * FStar_Reflection_V2_Data.universes *
@@ -429,12 +547,12 @@ let (hua :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
-               (Prims.of_int (92)) (Prims.of_int (17)) (Prims.of_int (92))
+               (Prims.of_int (89)) (Prims.of_int (17)) (Prims.of_int (89))
                (Prims.of_int (30)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
-               (Prims.of_int (91)) (Prims.of_int (62)) (Prims.of_int (96))
+               (Prims.of_int (88)) (Prims.of_int (62)) (Prims.of_int (93))
                (Prims.of_int (13))))) (Obj.magic uu___)
       (fun uu___1 ->
          (fun uu___1 ->
@@ -447,14 +565,14 @@ let (hua :
                         (Obj.magic
                            (FStar_Range.mk_range
                               "FStar.Tactics.V2.SyntaxHelpers.fst"
-                              (Prims.of_int (93)) (Prims.of_int (8))
-                              (Prims.of_int (93)) (Prims.of_int (18)))))
+                              (Prims.of_int (90)) (Prims.of_int (8))
+                              (Prims.of_int (90)) (Prims.of_int (18)))))
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range
                               "FStar.Tactics.V2.SyntaxHelpers.fst"
-                              (Prims.of_int (93)) (Prims.of_int (2))
-                              (Prims.of_int (96)) (Prims.of_int (13)))))
+                              (Prims.of_int (90)) (Prims.of_int (2))
+                              (Prims.of_int (93)) (Prims.of_int (13)))))
                      (Obj.magic uu___2)
                      (fun uu___3 ->
                         FStar_Tactics_Effect.lift_div_tac
@@ -466,3 +584,24 @@ let (hua :
                                  FStar_Pervasives_Native.Some (fv, us, args)
                              | uu___5 -> FStar_Pervasives_Native.None))))
            uu___1)
+let _ =
+  FStar_Tactics_Native.register_tactic "FStar.Tactics.V2.SyntaxHelpers.hua"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.V2.SyntaxHelpers.hua (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 hua)
+               FStar_Reflection_V2_Embeddings.e_term
+               (FStar_Syntax_Embeddings.e_option
+                  (FStar_Syntax_Embeddings.e_tuple3
+                     FStar_Reflection_V2_Embeddings.e_fv
+                     (FStar_Syntax_Embeddings.e_list
+                        FStar_Reflection_V2_Embeddings.e_universe)
+                     (FStar_Syntax_Embeddings.e_list
+                        (FStar_Syntax_Embeddings.e_tuple2
+                           FStar_Reflection_V2_Embeddings.e_term
+                           FStar_Reflection_V2_Embeddings.e_aqualv)))) psc
+               ncb us args)

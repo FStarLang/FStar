@@ -5553,8 +5553,7 @@ and (desugar_comp :
   FStar_Compiler_Range_Type.range ->
     Prims.bool ->
       FStar_Syntax_DsEnv.env ->
-        FStar_Parser_AST.term ->
-          FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
+        FStar_Parser_AST.term -> FStar_Syntax_Syntax.comp)
   =
   fun r ->
     fun allow_type_promotion ->
@@ -6739,7 +6738,7 @@ let (mk_typ_abbrev :
     FStar_Parser_AST.decl ->
       FStar_Ident.lident ->
         FStar_Syntax_Syntax.univ_name Prims.list ->
-          FStar_Syntax_Syntax.binder Prims.list ->
+          FStar_Syntax_Syntax.binders ->
             FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option ->
               FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
                 FStar_Ident.lident Prims.list ->

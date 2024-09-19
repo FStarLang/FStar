@@ -21,12 +21,10 @@ let rec collect_arr' (bs : list binder) (c : comp) : Tac (list binder & comp) =
     | _ -> (bs, c)
     end
 
-val collect_arr_bs : typ -> Tac (list binder & comp)
 let collect_arr_bs t =
     let (bs, c) = collect_arr' [] (C_Total t) in
     (List.Tot.Base.rev bs, c)
 
-val collect_arr : typ -> Tac (list typ & comp)
 let collect_arr t =
     let (bs, c) = collect_arr' [] (C_Total t) in
     let ts = List.Tot.Base.map (fun (b:binder) -> b.sort) bs in
@@ -39,7 +37,6 @@ let rec collect_abs' (bs : list binder) (t : term) : Tac (list binder & term) (d
         collect_abs' (b::bs) t'
     | _ -> (bs, t)
 
-val collect_abs : term -> Tac (list binder & term)
 let collect_abs t =
     let (bs, t') = collect_abs' [] t in
     (List.Tot.Base.rev bs, t')
