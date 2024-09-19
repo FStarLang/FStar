@@ -2,13 +2,23 @@ FSTAR_EXAMPLES=$(realpath ../../examples)
 include $(FSTAR_EXAMPLES)/Makefile.include
 include $(FSTAR_ULIB)/ml/Makefile.include
 
-all: eta_expand inline_let all_cmi
+all: inline_let all_cmi Eta_expand.test Div.test
 
-eta_expand: out Eta_expand.fst
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Eta_expand.fst
-	$(OCAMLOPT) out/Eta_expand.ml -o Eta_expand.exe
-	./Eta_expand.exe
-	@touch $@
+%.exe: %.fst | out
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml $<
+	$(OCAMLOPT) out/$(patsubst %.fst,%.ml,$<) -o $@
+
+%.test: %.exe
+	$(call msg,RUN,$<)
+	$(Q)./$<
+	$(Q)touch $@
+
+Div.test: Div.exe
+	$(call msg,TIMEOUT,$<)
+	$(Q)timeout 1 ./Div.exe ; \
+	  RC=$$? ;\
+	  if ! [ $$RC -eq 124 ]; then echo "ERROR: Div.exe terminated!?!?!"; false; fi
+	$(Q)touch $@
 
 inline_let: InlineLet.fst
 	$(FSTAR) --codegen OCaml InlineLet.fst
@@ -25,6 +35,6 @@ clean:
 	rm -rf out
 	rm -f *.exe
 	rm -f *~
-	rm -f eta_expand
+	rm -f *.exe *.test
 	rm -f inline_let
 

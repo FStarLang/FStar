@@ -3,7 +3,8 @@ module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
 open FStar.List.Tot
 module L = FStar.List.Tot
-#push-options "--z3cliopt 'smt.qi.eager_threshold=100' --z3cliopt 'smt.arith.nl=false'"
+
+#set-options "--z3cliopt 'smt.qi.eager_threshold=100' --z3cliopt 'smt.arith.nl=false'"
 
 let var = nat
 let index = nat
@@ -645,6 +646,8 @@ let subtyping_soundness #f (#sg:src_env) (#t0 #t1:src_ty) (ds:sub_typing f sg t0
   = match ds with
     | S_Refl _ _ -> RT.Rel_equiv _ _ _ _ (RT.Rel_refl _ _ _)
     | S_ELab _ _ _ d -> d
+
+#pop-options
 
 #push-options "--fuel 8 --ifuel 2 --z3rlimit_factor 4"
 let rec elab_close_commute' (n:nat) (e:src_exp) (x:var)

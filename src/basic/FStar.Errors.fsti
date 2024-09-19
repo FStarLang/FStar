@@ -28,6 +28,14 @@ with a dummy range. It is set by TypeChecker.Tc.process_one_decl to
 the range of the sigelt being checked. *)
 val fallback_range : FStar.Compiler.Effect.ref (option Range.range)
 
+(* This range, if set, will be used to limit the range of every
+issue that is logged/raised. This is set, e.g. when checking a top-level
+definition, to the range of the definition, so no error can be reported
+outside of it. *)
+val error_range_bound : FStar.Compiler.Effect.ref (option Range.range)
+
+val with_error_bound (r:Range.range) (f : unit -> 'a) : 'a
+
 (* Get the error number for a particular code. Useful for creating error
 messages mentioning --warn_error. *)
 val errno : error_code -> int
@@ -89,16 +97,6 @@ val clear : unit -> unit
 val set_handler : error_handler -> unit
 val get_ctx : unit -> list string
 
-val diag_doc : Range.range -> error_message -> unit
-val diag : Range.range -> string -> unit
-
-val diag0 : string -> unit
-val diag1 : string -> string -> unit
-val diag2 : string -> string -> string -> unit
-val diag3 : string -> string -> string -> string -> unit
-val diag4 : string -> string -> string -> string -> string -> unit
-val diag5 : string -> string -> string -> string -> string -> string -> unit
-
 val set_option_warning_callback_range : ropt:option FStar.Compiler.Range.range -> unit
 val set_parse_warn_error : (string -> list error_setting) -> unit
 
@@ -120,6 +118,18 @@ use this for any CFatal error. *)
    This does not raise an exception. Do not use this for any CFatal error. *)
 val add_issues : list issue -> unit
 
+(* An info message. Calling this function triggers the printing immediately. *)
+val info
+  (#pos_t:Type) {| hasRange pos_t |} (pos : pos_t) // A "position", of any type with a range
+  (#msg_t:_) {| is_error_message msg_t |} (msg : msg_t) // A "message", currently can be a 'string' or 'list document'
+  : unit
+
+(* A "diagnostic" message. It is the same as info, but only printed some kind of debugging is enabled. *)
+val diag
+  (#pos_t:Type) {| hasRange pos_t |} (pos : pos_t) // A "position", of any type with a range
+  (#msg_t:_) {| is_error_message msg_t |} (msg : msg_t) // A "message", currently can be a 'string' or 'list document'
+  : unit
+
 val raise_error
   (#pos_t:Type) {| hasRange pos_t |} (pos : pos_t) // A "position", of any type with a range
   (code : error_code) // An error code
@@ -134,6 +144,8 @@ val log_issue
 
 val raise_error0 : error_code -> #t:_ -> {| is_error_message t |} -> t -> 'a
 val log_issue0   : error_code -> #t:_ -> {| is_error_message t |} -> t -> unit
+val diag0        : #t:_ -> {| is_error_message t |} -> t -> unit
+
 
 (* Run a function f inside an extended "error context", so its errors
 are prefixed by the messages of each enclosing with_ctx. Only visible

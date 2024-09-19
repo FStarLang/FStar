@@ -264,11 +264,6 @@ let rec tcresolve' (st:st_t) : Tac unit =
        local st g tcresolve' <|>
        global st g tcresolve') ()
 
-let rec concatMap (f : 'a -> Tac (list 'b)) (l : list 'a) : Tac (list 'b) =
-  match l with
-  | [] -> []
-  | x::xs -> f x @ concatMap f xs
-
 [@@plugin]
 let tcresolve () : Tac unit =
     let open FStar.Stubs.Pprint in
@@ -284,8 +279,8 @@ let tcresolve () : Tac unit =
     // TODO: turn this into a hash map per class, ideally one that can be
     // persisted across calss.
     let glb = lookup_attr_ses (`tcinstance) (cur_env ()) in
-    let glb = glb |> concatMap (fun se ->
-              sigelt_name se |> concatMap (fun fv -> [(se, fv)])
+    let glb = glb |> Tactics.Util.concatMap (fun se ->
+              sigelt_name se |> Tactics.Util.concatMap (fun fv -> [(se, fv)])
     )
     in
     let st0 = {

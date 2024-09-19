@@ -701,10 +701,15 @@ let abs bs t lopt =
         | _ ->
           mk (Tm_abs {bs=close_binders bs; body; rc_opt=close_lopt lopt}) t.pos
 
-let arrow bs c = match bs with
+let arrow_ln bs c = match bs with
   | [] -> comp_result c
-  | _ -> mk (Tm_arrow {bs=close_binders bs; comp=Subst.close_comp bs c})
+  | _ -> mk (Tm_arrow {bs; comp=c})
             (List.fold_left (fun a b -> Range.union_ranges a b.binder_bv.sort.pos) c.pos bs)
+
+let arrow bs c =
+  let c = Subst.close_comp bs c in
+  let bs = close_binders bs in
+  arrow_ln bs c
 
 let flat_arrow bs c =
   let t = arrow bs c in
@@ -1594,6 +1599,9 @@ let process_pragma p r =
           ("Failed to process pragma: " ^ s)
     in
     match p with
+    | ShowOptions ->
+      ()
+
     | SetOptions o ->
       set_options o
 

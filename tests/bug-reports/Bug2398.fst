@@ -1,6 +1,7 @@
 module Bug2398
 
-#push-options "--fuel 0 --ifuel 0 --warn_error -328"
+#set-options "--fuel 0 --ifuel 0 --warn_error -328"
+
 assume
 val seq : Type0 -> Type0
 

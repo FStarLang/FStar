@@ -55,3 +55,5 @@ let ff (x:int) : False = admit()
 type t = | T of nat
 
 #pop-options
+
+#pop-options

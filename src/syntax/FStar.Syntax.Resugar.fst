@@ -257,7 +257,7 @@ let parse_machine_integer_desc =
   fun (fv:fv) ->
     List.tryFind (fun (_, d) -> d = Ident.string_of_lid (lid_of_fv fv)) descs
 
-let can_resugar_machine_integer fv =
+let can_resugar_machine_integer_fv fv =
   Option.isSome (parse_machine_integer_desc fv)
 
 let resugar_machine_integer fv (i:string) pos =
@@ -285,6 +285,20 @@ let rec __is_list_literal cons_lid nil_lid (t:S.term) : option (list S.term) =
 
 let is_list_literal = __is_list_literal C.cons_lid C.nil_lid
 let is_seq_literal  = __is_list_literal C.seq_cons_lid C.seq_empty_lid
+
+let can_resugar_machine_integer (hd : S.term) (args : S.args) : option (fv & string) =
+  match (SS.compress hd).n with
+  | Tm_fvar fv when can_resugar_machine_integer_fv fv -> (
+    match args with
+    | [(a, None)] -> (
+      match (SS.compress a).n with
+      | Tm_constant (Const_int (i, None)) ->
+        Some (fv, i)
+      | _ -> None
+    )
+    | _ -> None
+  )
+  | _ -> None
 
 let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
     (* Cannot resugar term back to NamedTyp or Paren *)
@@ -429,8 +443,9 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
            && S.fv_eq_lid fv C.b2t_lid ->
       resugar_term' env e
 
-    | Tm_app {hd={n=Tm_fvar fv}; args=[({n=Tm_constant (Const_int (i, None))}, _)]}
-      when can_resugar_machine_integer fv ->
+    | Tm_app {hd; args}
+      when Some? (can_resugar_machine_integer hd args) ->
+      let Some (fv, i) = can_resugar_machine_integer hd args in
       resugar_machine_integer fv i t.pos
 
     | Tm_app _ ->
@@ -1310,6 +1325,7 @@ let resugar_qualifier : S.qualifier -> option A.qualifier = function
 
 
 let resugar_pragma = function
+  | S.ShowOptions -> A.ShowOptions
   | S.SetOptions s -> A.SetOptions s
   | S.ResetOptions s -> A.ResetOptions s
   | S.PushOptions s -> A.PushOptions s

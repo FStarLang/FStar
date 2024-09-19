@@ -464,6 +464,7 @@ match%sedlex lexbuf with
 
  | "seq![" -> SEQ_BANG_LBRACK
 
+ | "#show-options" -> PRAGMA_SHOW_OPTIONS
  | "#set-options" -> PRAGMA_SET_OPTIONS
  | "#reset-options" -> PRAGMA_RESET_OPTIONS
  | "#push-options" -> PRAGMA_PUSH_OPTIONS

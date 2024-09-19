@@ -376,6 +376,7 @@ type error_code =
   | Warning_SolverVersionMismatch 
   | Warning_ProofRecovery 
   | Error_CannotResolveRecord 
+  | Error_MissingPopOptions 
 let (uu___is_Error_DependencyAnalysisFailed : error_code -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -1943,6 +1944,9 @@ let (uu___is_Warning_ProofRecovery : error_code -> Prims.bool) =
 let (uu___is_Error_CannotResolveRecord : error_code -> Prims.bool) =
   fun projectee ->
     match projectee with | Error_CannotResolveRecord -> true | uu___ -> false
+let (uu___is_Error_MissingPopOptions : error_code -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Error_MissingPopOptions -> true | uu___ -> false
 type error_setting = (error_code * error_flag * Prims.int)
 let (default_settings : error_setting Prims.list) =
   [(Error_DependencyAnalysisFailed, CAlwaysError, Prims.int_zero);
@@ -2310,4 +2314,5 @@ let (default_settings : error_setting Prims.list) =
   (Warning_SolverMismatch, CError, (Prims.of_int (357)));
   (Warning_SolverVersionMismatch, CError, (Prims.of_int (358)));
   (Warning_ProofRecovery, CWarning, (Prims.of_int (359)));
-  (Error_CannotResolveRecord, CAlwaysError, (Prims.of_int (360)))]
+  (Error_CannotResolveRecord, CAlwaysError, (Prims.of_int (360)));
+  (Error_MissingPopOptions, CWarning, (Prims.of_int (361)))]

@@ -25,6 +25,8 @@ open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Pervasives
 open FStar.VConfig
+open FStar.Class.Show
+open FStar.Class.Deq
 
 module Option = FStar.Compiler.Option
 module FC = FStar.Common
@@ -153,6 +155,10 @@ let pop () = // already signal-atomic
 
 let set o =
   fstar_options := o
+
+let depth () =
+  let lev::_ = !history in
+  List.length lev
 
 let snapshot ()    = Common.snapshot push history ()
 let rollback depth = Common.rollback pop  history depth
@@ -330,6 +336,75 @@ let get_option s =
   match Util.psmap_try_find (peek ()) s with
   | None -> failwith ("Impossible: option " ^s^ " not found")
   | Some s -> s
+
+let psmap_keys m =
+  psmap_fold m (fun k v a -> k::a) []
+
+let rec option_val_to_string (v:option_val) : string =
+  match v with
+  | Bool b -> "Bool " ^ show b
+  | String s -> "String " ^ show s
+  | Path s -> "Path " ^ show s
+  | Int i -> "Int " ^ show i
+  | List vs -> "List " ^ Common.string_of_list option_val_to_string vs
+  | Unset -> "Unset"
+
+instance showable_option_val : showable option_val = {
+  show = option_val_to_string;
+}
+
+let rec eq_option_val (v1 v2 : option_val) : bool =
+  match v1, v2 with
+  | Bool x1, Bool x2
+  | String x1, String x2
+  | Path x1, Path x2
+  | Int x1, Int x2 -> x1 =? x2
+  | Unset, Unset -> true
+  | List x1, List x2 ->
+    Common.eq_list eq_option_val x1 x2
+  | _, _ -> false
+
+instance deq_option_val : deq option_val = {
+  (=?) = eq_option_val;
+}
+
+let rec list_try_find #a #b {| deq a |} (k : a) (l : list (a & b))
+: option b
+=
+  match l with
+  | [] -> None
+  | (k', v') :: l' ->
+    if k =? k'
+    then Some v'
+    else list_try_find k l'
+
+let show_options () =
+  let s = peek () in
+  let kvs : list (string & option_val) =
+    let open FStar.Class.Monad in
+    let! k = psmap_keys s in
+    (* verify_module is only set internally. *)
+    if k = "verify_module" then [] else
+    let v = must <| psmap_try_find s k in
+    let v0 = list_try_find k defaults in
+    if v0 =? Some v then
+      []
+    else
+      return (k, v)
+  in
+  let rec show_optionval v =
+    match v with
+    | String s -> "\"" ^ s ^ "\"" // FIXME: proper escape
+    | Bool b -> show b
+    | Int i -> show i
+    | Path s -> s
+    | List s -> List.map show_optionval s |> String.concat ","
+    | Unset -> "<unset>"
+  in
+  let show1 (k, v) =
+    Util.format2 "--%s %s" k (show_optionval v)
+  in
+  kvs |> List.map show1 |> String.concat "\n"
 
 let set_verification_options o =
   (* This are all the options restored when processing a check_with
@@ -1091,7 +1166,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
   ( noshort,
     "prims",
     PathStr "file",
-    text "Use a custom prims.fst file. Do not use if you do not know exactly what you're doing.");
+    text "Use a custom Prims.fst file. Do not use if you do not know exactly what you're doing.");
 
   ( noshort,
     "print_bound_var_types",
@@ -1791,7 +1866,7 @@ let find_file =
 let prims () =
   match get_prims() with
   | None ->
-    let filename = "prims.fst" in
+    let filename = "Prims.fst" in
     begin match find_file filename with
       | Some result ->
         result

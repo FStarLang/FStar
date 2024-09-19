@@ -2318,8 +2318,7 @@ let (do_handle_plugin :
                 FStar_Compiler_Util.format2
                   "Could not generate a plugin for %s, reason = %s" uu___3
                   msg in
-              FStar_Errors.log_issue FStar_Class_HasRange.hasRange_range
-                se.FStar_Syntax_Syntax.sigrng
+              FStar_Errors.log_issue FStar_Syntax_Syntax.has_range_sigelt se
                 FStar_Errors_Codes.Warning_PluginNotImplemented ()
                 (Obj.magic FStar_Errors_Msg.is_error_message_string)
                 (Obj.magic uu___2));

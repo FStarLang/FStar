@@ -117,6 +117,7 @@ let ops = [
     (fun _ -> recover);
 
   mk_tac_step_1 0 "intro" intro intro;
+  mk_tac_step_1 0 "intros" intros intros;
   mk_tac_step_1 0 "intro_rec" intro_rec intro_rec;
   mk_tac_step_1 0 "norm" norm norm;
   mk_tac_step_3 0 "norm_term_env" norm_term_env norm_term_env;

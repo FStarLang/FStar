@@ -953,7 +953,9 @@ let (reduce_equality :
                 FStar_TypeChecker_Cfg.unrefine =
                   (FStar_TypeChecker_Cfg.default_steps.FStar_TypeChecker_Cfg.unrefine);
                 FStar_TypeChecker_Cfg.default_univs_to_zero =
-                  (FStar_TypeChecker_Cfg.default_steps.FStar_TypeChecker_Cfg.default_univs_to_zero)
+                  (FStar_TypeChecker_Cfg.default_steps.FStar_TypeChecker_Cfg.default_univs_to_zero);
+                FStar_TypeChecker_Cfg.tactics =
+                  (FStar_TypeChecker_Cfg.default_steps.FStar_TypeChecker_Cfg.tactics)
               };
             FStar_TypeChecker_Cfg.tcenv = (cfg.FStar_TypeChecker_Cfg.tcenv);
             FStar_TypeChecker_Cfg.debug = (cfg.FStar_TypeChecker_Cfg.debug);
@@ -1380,7 +1382,9 @@ let (decide_unfolding :
                        FStar_TypeChecker_Cfg.unrefine =
                          (uu___.FStar_TypeChecker_Cfg.unrefine);
                        FStar_TypeChecker_Cfg.default_univs_to_zero =
-                         (uu___.FStar_TypeChecker_Cfg.default_univs_to_zero)
+                         (uu___.FStar_TypeChecker_Cfg.default_univs_to_zero);
+                       FStar_TypeChecker_Cfg.tactics =
+                         (uu___.FStar_TypeChecker_Cfg.tactics)
                      });
                   FStar_TypeChecker_Cfg.tcenv =
                     (cfg.FStar_TypeChecker_Cfg.tcenv);
@@ -2296,7 +2300,9 @@ let rec (norm :
                           FStar_TypeChecker_Cfg.unrefine =
                             (uu___3.FStar_TypeChecker_Cfg.unrefine);
                           FStar_TypeChecker_Cfg.default_univs_to_zero =
-                            (uu___3.FStar_TypeChecker_Cfg.default_univs_to_zero)
+                            (uu___3.FStar_TypeChecker_Cfg.default_univs_to_zero);
+                          FStar_TypeChecker_Cfg.tactics =
+                            (uu___3.FStar_TypeChecker_Cfg.tactics)
                         });
                      FStar_TypeChecker_Cfg.tcenv =
                        (cfg.FStar_TypeChecker_Cfg.tcenv);
@@ -2411,8 +2417,12 @@ let rec (norm :
                                FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
                              [uu___8] in
                            uu___6 :: uu___7 in
-                         FStar_Errors.diag_doc tm.FStar_Syntax_Syntax.pos
-                           uu___5)
+                         FStar_Errors.diag
+                           FStar_Class_HasRange.hasRange_range
+                           tm.FStar_Syntax_Syntax.pos ()
+                           (Obj.magic
+                              FStar_Errors_Msg.is_error_message_list_doc)
+                           (Obj.magic uu___5))
                       else ();
                       (let delta_level =
                          let uu___5 =
@@ -2503,7 +2513,9 @@ let rec (norm :
                              FStar_TypeChecker_Cfg.unrefine =
                                (uu___6.FStar_TypeChecker_Cfg.unrefine);
                              FStar_TypeChecker_Cfg.default_univs_to_zero =
-                               (uu___6.FStar_TypeChecker_Cfg.default_univs_to_zero)
+                               (uu___6.FStar_TypeChecker_Cfg.default_univs_to_zero);
+                             FStar_TypeChecker_Cfg.tactics =
+                               (uu___6.FStar_TypeChecker_Cfg.tactics)
                            } in
                          {
                            FStar_TypeChecker_Cfg.steps = uu___5;
@@ -3167,7 +3179,9 @@ let rec (norm :
                           FStar_TypeChecker_Cfg.unrefine =
                             (uu___2.FStar_TypeChecker_Cfg.unrefine);
                           FStar_TypeChecker_Cfg.default_univs_to_zero =
-                            (uu___2.FStar_TypeChecker_Cfg.default_univs_to_zero)
+                            (uu___2.FStar_TypeChecker_Cfg.default_univs_to_zero);
+                          FStar_TypeChecker_Cfg.tactics =
+                            (uu___2.FStar_TypeChecker_Cfg.tactics)
                         });
                      FStar_TypeChecker_Cfg.tcenv =
                        (cfg.FStar_TypeChecker_Cfg.tcenv);
@@ -3306,7 +3320,7 @@ let rec (norm :
                   norm cfg env2 stack2 body)
                else
                  (let uu___4 =
-                    (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.reify_
+                    (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.tactics
                       &&
                       (let uu___5 =
                          FStar_TypeChecker_Env.norm_eff_name
@@ -6983,7 +6997,9 @@ and (do_rebuild :
                             FStar_TypeChecker_Cfg.unrefine =
                               (uu___4.FStar_TypeChecker_Cfg.unrefine);
                             FStar_TypeChecker_Cfg.default_univs_to_zero =
-                              (uu___4.FStar_TypeChecker_Cfg.default_univs_to_zero)
+                              (uu___4.FStar_TypeChecker_Cfg.default_univs_to_zero);
+                            FStar_TypeChecker_Cfg.tactics =
+                              (uu___4.FStar_TypeChecker_Cfg.tactics)
                           } in
                         {
                           FStar_TypeChecker_Cfg.steps = steps;
@@ -7240,7 +7256,9 @@ and (do_rebuild :
                                         (uu___7.FStar_TypeChecker_Cfg.unrefine);
                                       FStar_TypeChecker_Cfg.default_univs_to_zero
                                         =
-                                        (uu___7.FStar_TypeChecker_Cfg.default_univs_to_zero)
+                                        (uu___7.FStar_TypeChecker_Cfg.default_univs_to_zero);
+                                      FStar_TypeChecker_Cfg.tactics =
+                                        (uu___7.FStar_TypeChecker_Cfg.tactics)
                                     });
                                  FStar_TypeChecker_Cfg.tcenv =
                                    (cfg1.FStar_TypeChecker_Cfg.tcenv);

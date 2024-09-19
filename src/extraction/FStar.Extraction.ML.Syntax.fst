@@ -27,6 +27,7 @@ open FStar.Const
 open FStar.BaseTypes
 
 open FStar.Class.Show
+open FStar.Pprint
 
 (* -------------------------------------------------------------------- *)
 let krml_keywords = []
@@ -111,140 +112,172 @@ let pop_unit (ts : mltyscheme) : mltyscheme =
         failwith "unexpected: pop_unit: not a function type"
 module BU = FStar.Compiler.Util
 
-let rec mlty_to_string (t:mlty) =
+let ctor' (n: string) (args: list document) =
+  nest 2 (group (parens (flow (break_ 1) (doc_of_string n :: args))))
+let ctor (n: string) (arg: document) =
+  nest 2 (group (parens (doc_of_string n ^/^ arg)))
+
+let rec mlty_to_doc (t:mlty) =
   match t with
-  | MLTY_Var v -> v
+  | MLTY_Var v -> doc_of_string v
   | MLTY_Fun (t1, _, t2) ->
-    BU.format2 "(<MLTY_Fun> %s -> %s)" (mlty_to_string t1) (mlty_to_string t2)
+    ctor' "<MLTY_Fun>" [mlty_to_doc t1; doc_of_string "->"; mlty_to_doc t2]
   | MLTY_Named (ts, p) ->
-    BU.format2 "(<MLTY_Named> %s %s)" (String.concat " " (List.map mlty_to_string ts)) (string_of_mlpath p)
+    ctor' "<MLTY_Named>" (List.map mlty_to_doc ts @ [doc_of_string (string_of_mlpath p)])
   | MLTY_Tuple ts ->
-    BU.format1 "(<MLTY_Tuple> %s)" (String.concat " * " (List.map mlty_to_string ts))
-  | MLTY_Top -> "MLTY_Top"
-  | MLTY_Erased -> "MLTY_Erased"
+    ctor "<MLTY_Tuple>" <| flow_map (doc_of_string " *" ^^ break_ 1) mlty_to_doc ts
+  | MLTY_Top -> doc_of_string "MLTY_Top"
+  | MLTY_Erased -> doc_of_string "MLTY_Erased"
+let mlty_to_string (t:mlty) = render (mlty_to_doc t)
 
-let mltyscheme_to_string (tsc:mltyscheme) =
-  BU.format2 "(<MLTY_Scheme> [%s], %s)"
-    (String.concat ", " (tsc |> fst |> ty_param_names))
-    (mlty_to_string (snd tsc))
+let mltyscheme_to_doc (tsc:mltyscheme) =
+  ctor "<MLTY_Scheme>"
+    (brackets (flow_map (comma ^^ break_ 1) doc_of_string (ty_param_names (fst tsc)))
+      ^^ doc_of_string "," ^/^ mlty_to_doc (snd tsc))
+let mltyscheme_to_string (tsc:mltyscheme) = render (mltyscheme_to_doc tsc)
 
-let rec mlexpr_to_string (e:mlexpr) =
+let pair a b = group (parens (a ^^ comma ^/^ b))
+let triple a b c = group (parens (a ^^ comma ^/^ b ^^ comma ^/^ c))
+let ctor2 n a b = ctor n (pair a b)
+let list_to_doc #t (xs: list t) (f: t -> document) : document =
+  nest 2 (group (brackets (flow_map (semi ^^ break_ 1) f xs)))
+let option_to_doc #t (x: option t) (f: t -> document) : document =
+  match x with
+  | Some x -> group (doc_of_string "Some" ^/^ f x)
+  | None -> doc_of_string "None"
+let spaced a = break_ 1 ^^ a ^^ break_ 1
+let record fs =
+  group <| nest 2 <| braces <| spaced <| separate (semi ^^ break_ 1) fs
+let fld n v = group <| nest 2 <| doc_of_string (n ^ " =") ^/^ v
+
+let rec mlexpr_to_doc (e:mlexpr) =
   match e.expr with
   | MLE_Const c ->
-    BU.format1 "(MLE_Const %s)" (mlconstant_to_string c)
+    ctor "MLE_Const" (mlconstant_to_doc c)
   | MLE_Var x ->
-    BU.format1 "(MLE_Var %s)" x
+    ctor "MLE_Var" (doc_of_string x)
   | MLE_Name (p, x) ->
-    BU.format2 "(MLE_Name (%s, %s))" (String.concat "." p) x
+    ctor2 "MLE_Name" (doc_of_string (String.concat "." p)) (doc_of_string x)
   | MLE_Let (lbs, e) ->
-    BU.format2 "(MLE_Let (%s, %s))" (mlletbinding_to_string lbs) (mlexpr_to_string e)
+    ctor2 "MLE_Let" (mlletbinding_to_doc lbs) (mlexpr_to_doc e)
   | MLE_App (e, es) ->
-    BU.format2 "(MLE_App (%s, [%s]))" (mlexpr_to_string e) (String.concat "; " (List.map mlexpr_to_string es))
+    ctor2 "MLE_App" (mlexpr_to_doc e) (list_to_doc es mlexpr_to_doc)
   | MLE_TApp (e, ts) ->
-    BU.format2 "(MLE_TApp (%s, [%s]))" (mlexpr_to_string e) (String.concat "; " (List.map mlty_to_string ts))
+    ctor2 "MLE_TApp" (mlexpr_to_doc e) (list_to_doc ts mlty_to_doc)
   | MLE_Fun (bs, e) ->
-    BU.format2 "(MLE_Fun ([%s], %s))"
-      (String.concat "; " (List.map (fun b -> BU.format2 "(%s, %s)" b.mlbinder_name (mlty_to_string b.mlbinder_ty)) bs))
-      (mlexpr_to_string e)
+    ctor2 "MLE_Fun"
+      (list_to_doc bs (fun b -> pair (doc_of_string b.mlbinder_name) (mlty_to_doc b.mlbinder_ty)))
+      (mlexpr_to_doc e)
   | MLE_Match (e, bs) ->
-    BU.format2 "(MLE_Match (%s, [%s]))" (mlexpr_to_string e) (String.concat "; " (List.map mlbranch_to_string bs))
+    ctor2 "MLE_Match" (mlexpr_to_doc e) (list_to_doc bs mlbranch_to_doc)
   | MLE_Coerce (e, t1, t2) ->
-    BU.format3 "(MLE_Coerce (%s, %s, %s))" (mlexpr_to_string e) (mlty_to_string t1) (mlty_to_string t2)
+    ctor "MLE_Coerce" <| triple (mlexpr_to_doc e) (mlty_to_doc t1) (mlty_to_doc t2)
   | MLE_CTor (p, es) ->
-    BU.format2 "(MLE_CTor (%s, [%s]))" (string_of_mlpath p) (String.concat "; " (List.map mlexpr_to_string es))
+    ctor2 "MLE_CTor" (doc_of_string (string_of_mlpath p)) (list_to_doc es mlexpr_to_doc)
   | MLE_Seq es ->
-    BU.format1 "(MLE_Seq [%s])" (String.concat "; " (List.map mlexpr_to_string es))
+    ctor "MLE_Seq" (list_to_doc es mlexpr_to_doc)
   | MLE_Tuple es ->
-    BU.format1 "(MLE_Tuple [%s])" (String.concat "; " (List.map mlexpr_to_string es))
+    ctor "MLE_Tuple" (list_to_doc es mlexpr_to_doc)
   | MLE_Record (p, n, es) ->
-    BU.format2 "(MLE_Record (%s, [%s]))" (String.concat "; " (p@[n])) (String.concat "; " (List.map (fun (x, e) -> BU.format2 "(%s, %s)" x (mlexpr_to_string e)) es))
+    ctor2 "MLE_Record" (list_to_doc (p@[n]) doc_of_string)
+      (list_to_doc es (fun (x, e) -> pair (doc_of_string x) (mlexpr_to_doc e)))
   | MLE_Proj (e, p) ->
-    BU.format2 "(MLE_Proj (%s, %s))" (mlexpr_to_string e) (string_of_mlpath p)
-  | MLE_If (e1, e2, None) ->
-    BU.format2 "(MLE_If (%s, %s, None))" (mlexpr_to_string e1) (mlexpr_to_string e2)
-  | MLE_If (e1, e2, Some e3) ->
-    BU.format3 "(MLE_If (%s, %s, %s))" (mlexpr_to_string e1) (mlexpr_to_string e2) (mlexpr_to_string e3)
+    ctor2 "MLE_Proj" (mlexpr_to_doc e) (doc_of_string (string_of_mlpath p))
+  | MLE_If (e1, e2, e3) ->
+    ctor "MLE_If" <| triple (mlexpr_to_doc e1) (mlexpr_to_doc e2) (option_to_doc e3 mlexpr_to_doc)
   | MLE_Raise (p, es) ->
-    BU.format2 "(MLE_Raise (%s, [%s]))" (string_of_mlpath p) (String.concat "; " (List.map mlexpr_to_string es))
+    ctor2 "MLE_Raise" (doc_of_string (string_of_mlpath p)) (list_to_doc es mlexpr_to_doc)
   | MLE_Try (e, bs) ->
-    BU.format2 "(MLE_Try (%s, [%s]))" (mlexpr_to_string e) (String.concat "; " (List.map mlbranch_to_string bs))
+    ctor2 "MLE_Try" (mlexpr_to_doc e) (list_to_doc bs mlbranch_to_doc)
 
-and mlbranch_to_string (p, e1, e2) =
-  match e1 with
-  | None -> BU.format2 "(%s, None, %s)" (mlpattern_to_string p) (mlexpr_to_string e2)
-  | Some e1 -> BU.format3 "(%s, Some %s, %s)" (mlpattern_to_string p) (mlexpr_to_string e1) (mlexpr_to_string e2)
+and mlbranch_to_doc (p, e1, e2) =
+  triple (mlpattern_to_doc p) (option_to_doc e1 mlexpr_to_doc) (mlexpr_to_doc e2)
 
-and mlletbinding_to_string (lbs) =
-  match lbs with
-  | (Rec, lbs) -> BU.format1 "(Rec, [%s])" (String.concat "; " (List.map mllb_to_string lbs))
-  | (NonRec, lbs) -> BU.format1 "(NonRec, [%s])" (String.concat "; " (List.map mllb_to_string lbs))
+and mlletbinding_to_doc (lbs) =
+  parens <|
+    doc_of_string (match lbs._1 with | Rec -> "Rec" | NonRec -> "NonRec")
+    ^^ doc_of_string ", " ^^
+    list_to_doc lbs._2 mllb_to_doc
 
-and mllb_to_string (lb) =
-  BU.format4 "{mllb_name = %s; mllb_tysc = %s; mllb_add_unit = %s; mllb_def = %s}"
-    lb.mllb_name
-    (match lb.mllb_tysc with
-     | None -> "None"
-     | Some (_, t) -> BU.format1 "Some %s" (mlty_to_string t))
-    (string_of_bool lb.mllb_add_unit)
-    (mlexpr_to_string lb.mllb_def)
+and mllb_to_doc (lb) =
+  record [
+    fld "mllb_name" (doc_of_string lb.mllb_name);
+    fld "mllb_attrs" (list_to_doc lb.mllb_attrs mlexpr_to_doc);
+    fld "mllb_tysc" (option_to_doc lb.mllb_tysc (fun (_, t) -> mlty_to_doc t));
+    fld "mllb_add_unit" (doc_of_string (string_of_bool lb.mllb_add_unit));
+    fld "mllb_def" (mlexpr_to_doc lb.mllb_def);
+  ]
 
-and mlconstant_to_string mlc =
+and mlconstant_to_doc mlc =
   match mlc with
-  | MLC_Unit -> "MLC_Unit"
-  | MLC_Bool b -> BU.format1 "(MLC_Bool %s)" (string_of_bool b)
-  | MLC_Int (s, None) -> BU.format1 "(MLC_Int %s)" s
-  | MLC_Int (s, Some (s1, s2)) -> BU.format1 "(MLC_Int (%s, _, _))" s
-  | MLC_Float f -> "(MLC_Float _)"
-  | MLC_Char c -> "(MLC_Char _)"
-  | MLC_String s -> BU.format1 "(MLC_String %s)" s
-  | MLC_Bytes b -> "(MLC_Bytes _)" 
+  | MLC_Unit -> doc_of_string "MLC_Unit"
+  | MLC_Bool b -> ctor "MLC_Bool" (doc_of_string (string_of_bool b))
+  | MLC_Int (s, None) -> ctor "MLC_Int" (doc_of_string s)
+  | MLC_Int (s, Some (s1, s2)) ->
+    ctor "MLC_Int" <| triple (doc_of_string s) underscore underscore
+  | MLC_Float f -> ctor "MLC_Float" underscore
+  | MLC_Char c -> ctor "MLC_Char" underscore
+  | MLC_String s -> ctor "MLC_String" (doc_of_string s)
+  | MLC_Bytes b -> ctor "MLC_Bytes" underscore
 
-and mlpattern_to_string mlp =
+and mlpattern_to_doc mlp =
   match mlp with
-  | MLP_Wild -> "MLP_Wild"
-  | MLP_Const c -> BU.format1 "(MLP_Const %s)" (mlconstant_to_string c)
-  | MLP_Var x -> BU.format1 "(MLP_Var %s)" x
-  | MLP_CTor (p, ps) -> BU.format2 "(MLP_CTor (%s, [%s]))" (string_of_mlpath p) (String.concat "; " (List.map mlpattern_to_string ps))
-  | MLP_Branch ps -> BU.format1 "(MLP_Branch [%s])" (String.concat "; " (List.map mlpattern_to_string ps))
+  | MLP_Wild -> doc_of_string "MLP_Wild"
+  | MLP_Const c -> ctor "MLP_Const" (mlconstant_to_doc c)
+  | MLP_Var x -> ctor "MLP_Var" (doc_of_string x)
+  | MLP_CTor (p, ps) -> ctor2 "MLP_CTor" (doc_of_string (string_of_mlpath p)) (list_to_doc ps mlpattern_to_doc)
+  | MLP_Branch ps -> ctor "MLP_Branch" (list_to_doc ps mlpattern_to_doc)
 
   | MLP_Record (path, fields) ->
-    BU.format2 "(MLP_Record (%s, [%s]))" (String.concat "." path) (String.concat "; " (List.map (fun (x, p) -> BU.format2 "(%s, %s)" x (mlpattern_to_string p)) fields))
-  | MLP_Tuple ps -> BU.format1 "(MLP_Tuple [%s])" (String.concat "; " (List.map mlpattern_to_string ps))
+    ctor2 "MLP_Record"
+      (doc_of_string (String.concat "." path))
+      (list_to_doc fields (fun (x, p) ->
+        pair (doc_of_string x) (mlpattern_to_doc p)))
+  | MLP_Tuple ps ->
+    ctor "MLP_Tuple" (list_to_doc ps mlpattern_to_doc)
 
-let mltybody_to_string (d:mltybody) : string =
+let mlbranch_to_string b = render (mlbranch_to_doc b)
+let mlletbinding_to_string lb = render (mlletbinding_to_doc lb)
+let mllb_to_string lb = render (mllb_to_doc lb)
+let mlpattern_to_string p = render (mlpattern_to_doc p)
+let mlconstant_to_string c = render (mlconstant_to_doc c)
+let mlexpr_to_string e = render (mlexpr_to_doc e)
+
+let mltybody_to_doc (d:mltybody) : document =
   match d with
-  | MLTD_Abbrev mlty -> BU.format1 "(MLTD_Abbrev %s)" (mlty_to_string mlty)
+  | MLTD_Abbrev mlty -> ctor "MLTD_Abbrev" (mlty_to_doc mlty)
   | MLTD_Record l ->
-    BU.format1 "(MLTD_Record { %s })"
-      (String.concat "; " (List.map (fun (x, t) -> BU.format2 "(%s, %s)" x (mlty_to_string t)) l))
+    ctor "MLTD_Record" <| group <| nest 2 <| braces <| spaced <|
+      flow_map (semi ^^ break_ 1) (fun (x, t) -> pair (doc_of_string x) (mlty_to_doc t)) l
   | MLTD_DType l ->
-    BU.format1 "(MLTD_DType [ %s ])"
-      (String.concat "; " (List.map (fun (x, l) -> BU.format2 "(%s, [%s])" x
-                                                     (String.concat "; " (List.map (fun (x, t) -> BU.format2 "(%s, %s)"
-                                                                                                    x
-                                                                                                    (mlty_to_string t)) l))) l))
+    ctor "MLTD_DType" <| group <| nest 2 <| brackets <| spaced <|
+      flow_map (semi ^^ break_ 1) (fun (x, l) -> pair (doc_of_string x)
+        (list_to_doc l fun (x, t) -> pair (doc_of_string x) (mlty_to_doc t))) l
+let mltybody_to_string (d:mltybody) : string = render (mltybody_to_doc d)
 
-let one_mltydecl_to_string (d:one_mltydecl) : string =
-  BU.format3 "{tydecl_name = %s; tydecl_parameters = %s; tydecl_defn = %s}"
-    d.tydecl_name
-    (String.concat "," (d.tydecl_parameters |> ty_param_names))
-    (match d.tydecl_defn with
-     | None -> "<none>"
-     | Some d -> mltybody_to_string d)
+let one_mltydecl_to_doc (d:one_mltydecl) : document =
+  record [
+    fld "tydecl_name" (doc_of_string d.tydecl_name);
+    fld "tydecl_parameters" (doc_of_string (String.concat "," (d.tydecl_parameters |> ty_param_names)));
+    fld "tydecl_defn" (option_to_doc d.tydecl_defn mltybody_to_doc);
+  ]
+let one_mltydecl_to_string (d:one_mltydecl) : string = render (one_mltydecl_to_doc d)
 
-let mlmodule1_to_string (m:mlmodule1) : string =
-  match m.mlmodule1_m with
-  | MLM_Ty d -> BU.format1 "MLM_Ty [%s]" (List.map one_mltydecl_to_string d |> String.concat "; ")
-  | MLM_Let l -> BU.format1 "MLM_Let %s" (mlletbinding_to_string l)
+let mlmodule1_to_doc (m:mlmodule1) : document =
+  group (match m.mlmodule1_m with
+  | MLM_Ty d -> doc_of_string "MLM_Ty " ^^ list_to_doc d one_mltydecl_to_doc
+  | MLM_Let l -> doc_of_string "MLM_Let " ^^ mlletbinding_to_doc l
   | MLM_Exn (s, l) ->
-    BU.format2 "MLM_Exn (%s, [%s])"
-      s
-      (String.concat "; " (List.map (fun (x, t) -> BU.format2 "(%s, %s)" x (mlty_to_string t)) l))
-  | MLM_Top e -> BU.format1 "MLM_Top %s" (mlexpr_to_string e)
-  | MLM_Loc _mlloc -> "MLM_Loc"
-  
-let mlmodule_to_string (m:mlmodule) : string =
-  BU.format1 "[ %s ]" (List.map mlmodule1_to_string m |> String.concat ";\n")
+    doc_of_string "MLM_Exn" ^/^
+      pair (doc_of_string s)
+      (list_to_doc l (fun (x, t) -> pair (doc_of_string x) (mlty_to_doc t)))
+  | MLM_Top e -> doc_of_string "MLM_Top" ^/^ mlexpr_to_doc e
+  | MLM_Loc _mlloc -> doc_of_string "MLM_Loc")
+let mlmodule1_to_string (m:mlmodule1) : string = render (mlmodule1_to_doc m)
+
+let mlmodule_to_doc (m:mlmodule) : document =
+  group <| brackets <| spaced <| separate_map (semi ^^ break_ 1) mlmodule1_to_doc m
+let mlmodule_to_string (m:mlmodule) : string = render (mlmodule_to_doc m)
 
 instance showable_mlty : showable mlty = { show = mlty_to_string }
 instance showable_mlconstant : showable mlconstant = { show = mlconstant_to_string }  

@@ -13,12 +13,23 @@ let (fv_to_string : FStar_Syntax_Syntax.fv -> Prims.string) =
     lid_to_string (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
 let (bv_to_string : FStar_Syntax_Syntax.bv -> Prims.string) =
   fun bv ->
-    let uu___ = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
-    let uu___1 =
+    let uu___ = FStar_Options.print_real_names () in
+    if uu___
+    then
+      let uu___1 =
+        FStar_Class_Show.show FStar_Ident.showable_ident
+          bv.FStar_Syntax_Syntax.ppname in
       let uu___2 =
-        FStar_Compiler_Util.string_of_int bv.FStar_Syntax_Syntax.index in
-      Prims.strcat "#" uu___2 in
-    Prims.strcat uu___ uu___1
+        let uu___3 =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_int)
+            bv.FStar_Syntax_Syntax.index in
+        Prims.strcat "#" uu___3 in
+      Prims.strcat uu___1 uu___2
+    else
+      FStar_Class_Show.show FStar_Ident.showable_ident
+        bv.FStar_Syntax_Syntax.ppname
 let (nm_to_string : FStar_Syntax_Syntax.bv -> Prims.string) =
   fun bv ->
     let uu___ = FStar_Options.print_real_names () in

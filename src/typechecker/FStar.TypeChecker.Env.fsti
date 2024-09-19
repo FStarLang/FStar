@@ -64,6 +64,7 @@ type step =
   | Unrefine
   | NormDebug       //force debugging
   | DefaultUnivsToZero // default al unresolved universe uvars to zero
+  | Tactics
 and steps = list step
 
 instance val deq_step : deq step

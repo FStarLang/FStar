@@ -103,8 +103,17 @@ let parse (env:uenv) (pre_fn: option string) (fn:string)
             with_dsenv_of_env env (FStar.ToSyntax.Interleave.initialize_interface lid1 decls1)
           in
           with_dsenv_of_env env (FStar.ToSyntax.Interleave.interleave_module ast true)
+
+        | Parser.AST.Interface (lid1, _, _), Parser.AST.Module (lid2, _) ->
+          (* Names do not match *)
+          Errors.raise_error lid1
+            Errors.Fatal_PreModuleMismatch
+            "Module name in implementation does not match that of interface."
+
         | _ ->
-            Errors.raise_error0 Errors.Fatal_PreModuleMismatch "mismatch between pre-module and module"
+          Errors.raise_error0
+            Errors.Fatal_PreModuleMismatch
+            "Module name in implementation does not match that of interface."
   in
   with_dsenv_of_env env (Desugar.ast_modul_to_modul ast)
 

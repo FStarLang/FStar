@@ -32,6 +32,15 @@ open FStar.Errors.Msg
 
 let fallback_range : ref (option range) = BU.mk_ref None
 
+let error_range_bound : ref (option range) = BU.mk_ref None
+
+let with_error_bound (r:range) (f : unit -> 'a) : 'a =
+  let old = !error_range_bound in
+  error_range_bound := Some r;
+  let res = f () in
+  error_range_bound := old;
+  res
+
 (** This exception is raised in FStar.Error
     when a warn_error string could not be processed;
     The exception is handled in FStar.Options as part of
@@ -218,6 +227,11 @@ let compare_issues i1 i2 =
 let dummy_ide_rng : Range.rng =
   mk_rng "<input>" (mk_pos 1 0) (mk_pos 1 0)
 
+let maybe_bound_rng (r : Range.range) : Range.range =
+  match !error_range_bound with
+  | Some r' -> Range.bound_range r r'
+  | None -> r
+
 (* Attempts to set a decent range (no dummy, no dummy ide) relying
 on the fallback_range reference. *)
 let fixup_issue_range (i:issue) : issue =
@@ -242,7 +256,7 @@ let fixup_issue_range (i:issue) : issue =
       in
       Some (set_use_range range use_rng')
   in
-  { i with issue_range = rng }
+  { i with issue_range = map_opt rng maybe_bound_rng }
 
 let mk_default_handler print =
     let issues : ref (list issue) = BU.mk_ref [] in
@@ -354,25 +368,6 @@ let maybe_add_backtrace (msg : error_message) : error_message =
     msg @ [backtrace_doc ()]
   else
     msg
-
-let diag_doc r msg =
-  if Debug.any() then
-    let msg = maybe_add_backtrace msg in
-    let ctx = get_ctx () in
-    add_one (mk_issue EInfo (Some r) msg None ctx)
-
-let diag r msg =
-  diag_doc r (mkmsg msg)
-
-let diag0 msg =
-  if Debug.any()
-  then add_one (mk_issue EInfo None (mkmsg msg) None [])
-
-let diag1 f a         = diag0 (BU.format1 f a)
-let diag2 f a b       = diag0 (BU.format2 f a b)
-let diag3 f a b c     = diag0 (BU.format3 f a b c)
-let diag4 f a b c d   = diag0 (BU.format4 f a b c d)
-let diag5 f a b c d e = diag0 (BU.format5 f a b c d e)
 
 let warn_unsafe_options rng_opt msg =
   match Options.report_assumes () with
@@ -492,6 +487,18 @@ let log_issue_ctx r (e, msg) ctx =
     then add_one i
     else failwith ("don't use log_issue to report fatal error, should use raise_error: " ^ format_issue i)
 
+let info r msg =
+  let open FStar.Class.HasRange in
+  let rng = pos r in
+  let msg = to_doc_list msg in
+  let msg = maybe_add_backtrace msg in
+  let ctx = get_ctx () in
+  add_one (mk_issue EInfo (Some rng) msg None ctx)
+
+let diag r msg =
+  if Debug.any() then
+    info r msg
+
 let raise_error r e msg =
   let open FStar.Class.HasRange in
   let rng = pos r in
@@ -507,6 +514,7 @@ let log_issue r e msg =
 
 let raise_error0 e msg = raise_error dummyRange e msg
 let log_issue0 e msg = log_issue dummyRange e msg
+let diag0 msg = diag dummyRange msg
 
 let add_errors (errs : list error) : unit =
     atomically (fun () -> List.iter (fun (e, msg, r, ctx) -> log_issue_ctx r (e, msg) ctx) errs)

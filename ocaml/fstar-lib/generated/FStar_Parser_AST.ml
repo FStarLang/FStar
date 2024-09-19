@@ -816,12 +816,16 @@ let (__proj__Mklift__item__braced : lift -> Prims.bool) =
     match projectee with
     | { msource; mdest; lift_op = lift_op1; braced;_} -> braced
 type pragma =
+  | ShowOptions 
   | SetOptions of Prims.string 
   | ResetOptions of Prims.string FStar_Pervasives_Native.option 
   | PushOptions of Prims.string FStar_Pervasives_Native.option 
   | PopOptions 
   | RestartSolver 
   | PrintEffectsGraph 
+let (uu___is_ShowOptions : pragma -> Prims.bool) =
+  fun projectee ->
+    match projectee with | ShowOptions -> true | uu___ -> false
 let (uu___is_SetOptions : pragma -> Prims.bool) =
   fun projectee ->
     match projectee with | SetOptions _0 -> true | uu___ -> false
@@ -2515,6 +2519,7 @@ let (id_of_tycon : tycon -> Prims.string) =
 let (string_of_pragma : pragma -> Prims.string) =
   fun uu___ ->
     match uu___ with
+    | ShowOptions -> "show-options"
     | SetOptions s -> FStar_Compiler_Util.format1 "set-options \"%s\"" s
     | ResetOptions s ->
         FStar_Compiler_Util.format1 "reset-options \"%s\""

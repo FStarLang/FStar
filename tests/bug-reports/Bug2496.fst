@@ -40,5 +40,4 @@ let singleton_includes_argument_lemma_bad ()
 : Lemma (forall (ty: eqtype) (r: ty). includes (singleton r) r) 
 = introduce forall (ty: eqtype) (r: ty). includes (singleton r) r
   with ()
-
-
+#pop-options

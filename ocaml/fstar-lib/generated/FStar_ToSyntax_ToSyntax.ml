@@ -229,6 +229,7 @@ let (trans_qual :
 let (trans_pragma : FStar_Parser_AST.pragma -> FStar_Syntax_Syntax.pragma) =
   fun uu___ ->
     match uu___ with
+    | FStar_Parser_AST.ShowOptions -> FStar_Syntax_Syntax.ShowOptions
     | FStar_Parser_AST.SetOptions s -> FStar_Syntax_Syntax.SetOptions s
     | FStar_Parser_AST.ResetOptions sopt ->
         FStar_Syntax_Syntax.ResetOptions sopt
@@ -5552,8 +5553,7 @@ and (desugar_comp :
   FStar_Compiler_Range_Type.range ->
     Prims.bool ->
       FStar_Syntax_DsEnv.env ->
-        FStar_Parser_AST.term ->
-          FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
+        FStar_Parser_AST.term -> FStar_Syntax_Syntax.comp)
   =
   fun r ->
     fun allow_type_promotion ->
@@ -6738,7 +6738,7 @@ let (mk_typ_abbrev :
     FStar_Parser_AST.decl ->
       FStar_Ident.lident ->
         FStar_Syntax_Syntax.univ_name Prims.list ->
-          FStar_Syntax_Syntax.binder Prims.list ->
+          FStar_Syntax_Syntax.binders ->
             FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option ->
               FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
                 FStar_Ident.lident Prims.list ->
@@ -7245,8 +7245,7 @@ let rec (desugar_tycon :
                                        "Adding an implicit 'assume new' qualifier on %s"
                                        uu___11 in
                                    FStar_Errors.log_issue
-                                     FStar_Class_HasRange.hasRange_range
-                                     se.FStar_Syntax_Syntax.sigrng
+                                     FStar_Syntax_Syntax.has_range_sigelt se
                                      FStar_Errors_Codes.Warning_AddImplicitAssumeNewQualifier
                                      ()
                                      (Obj.magic

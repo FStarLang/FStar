@@ -143,7 +143,8 @@ let unembed_tactic_0 :
                             FStar_TypeChecker_Env.DontUnfoldAttr
                               [FStar_Parser_Const.tac_opaque_attr];
                             FStar_TypeChecker_Env.Primops;
-                            FStar_TypeChecker_Env.Unascribe] in
+                            FStar_TypeChecker_Env.Unascribe;
+                            FStar_TypeChecker_Env.Tactics] in
                           let norm_f =
                             let uu___ = FStar_Options.tactics_nbe () in
                             if uu___

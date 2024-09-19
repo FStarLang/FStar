@@ -24,7 +24,7 @@ pushd ulib
 FST_FILES=(FStar.*.fst FStar.*.fsti)
 
 # In case some files needs to be removed use this:
-# FST_FILES=( ${FST_FILES[@]/"prims.fst"} )
+# FST_FILES=( ${FST_FILES[@]/"Prims.fst"} )
 
 ../bin/fstar-any.sh --odir "../$FSDOC_ODIR" --doc ${FST_FILES[*]} 
 popd

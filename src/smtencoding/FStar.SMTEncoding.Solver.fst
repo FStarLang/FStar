@@ -1013,13 +1013,13 @@ let ask_solver_recover
       let restarted = BU.mk_ref false in
       let cfg = List.last configs in
 
-      Errors.diag_doc cfg.query_range [
+      Errors.diag cfg.query_range [
         text "This query failed to be solved. Will now retry with higher rlimits due to --proof_recovery.";
       ];
 
       let try_factor (n:int) : answer =
         let open FStar.Mul in
-        Errors.diag_doc cfg.query_range [text "Retrying query with rlimit factor" ^/^ pp n];
+        Errors.diag cfg.query_range [text "Retrying query with rlimit factor" ^/^ pp n];
         let cfg = { cfg with query_rlimit = n * cfg.query_rlimit } in
         ask_solver_quake [cfg]
       in
@@ -1028,7 +1028,7 @@ let ask_solver_recover
         match h with
         | IncreaseRLimit factor -> try_factor factor
         | RestartAnd h ->
-          Errors.diag_doc cfg.query_range [text "Trying a solver restart"];
+          Errors.diag cfg.query_range [text "Trying a solver restart"];
           cfg.query_env.tcenv.solver.refresh (Some cfg.query_env.tcenv.proof_ns);
           try_hammer h
       in
@@ -1083,7 +1083,7 @@ let maybe_save_failing_query (env:env_t) (qs:query_settings) : unit =
     let open FStar.Pprint in
     let open FStar.Class.PP in
     let open FStar.Errors.Msg in
-    Errors.diag_doc qs.query_range [
+    Errors.diag qs.query_range [
       text "This query failed:";
       pp qs.query_term;
     ]
@@ -1420,7 +1420,7 @@ let solve_sync use_env_msg tcenv (q:Syntax.term) : answer =
       if !dbg_SMTQuery then (
         let open FStar.Errors.Msg in
         let open FStar.Pprint in
-        Errors.diag_doc q.pos [
+        Errors.diag q.pos [
           prefix 2 1 (text "Running synchronous SMT query. Q =") (pp q);
         ]
       );

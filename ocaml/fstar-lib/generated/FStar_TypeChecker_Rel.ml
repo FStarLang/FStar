@@ -14887,9 +14887,11 @@ let (do_discharge_vc :
           ((FStar_Compiler_Effect.op_Bang dbg_Rel) ||
              (FStar_Compiler_Effect.op_Bang dbg_SMTQuery))
             || (FStar_Compiler_Effect.op_Bang dbg_Discharge) in
-        let diag_doc =
-          let uu___ = FStar_TypeChecker_Env.get_range env in
-          FStar_Errors.diag_doc uu___ in
+        let diag uu___1 uu___ =
+          (let uu___ = FStar_TypeChecker_Env.get_range env in
+           Obj.magic
+             (FStar_Errors.diag FStar_Class_HasRange.hasRange_range uu___ ()))
+            uu___1 uu___ in
         if debug
         then
           (let uu___1 =
@@ -14899,7 +14901,7 @@ let (do_discharge_vc :
                  FStar_Class_PP.pp FStar_Syntax_Print.pretty_term vc in
                FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
              [uu___2] in
-           diag_doc uu___1)
+           diag FStar_Errors_Msg.is_error_message_list_doc uu___1)
         else ();
         (let vcs =
            let uu___1 = FStar_Options.use_tactics () in
@@ -14930,7 +14932,8 @@ let (do_discharge_vc :
                                    uu___11 in
                                FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
                              [uu___7] in
-                           diag_doc uu___6)
+                           diag FStar_Errors_Msg.is_error_message_list_doc
+                             uu___6)
                         else ();
                         (let vcs2 =
                            FStar_Compiler_List.map
@@ -14977,7 +14980,9 @@ let (do_discharge_vc :
                                                  FStar_Errors_Msg.text
                                                    "Goal completely solved by tactic\n" in
                                                [uu___10] in
-                                             diag_doc uu___9)
+                                             diag
+                                               FStar_Errors_Msg.is_error_message_list_doc
+                                               uu___9)
                                           else ();
                                           [])
                                      | FStar_TypeChecker_Common.NonTrivial
@@ -15028,7 +15033,8 @@ let (do_discharge_vc :
                                   FStar_Syntax_Print.pretty_term goal in
                               FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
                             [uu___6] in
-                          diag_doc uu___5)
+                          diag FStar_Errors_Msg.is_error_message_list_doc
+                            uu___5)
                        else ();
                        (env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.solve
                          use_env_range_msg env1 goal)) vcs1)
@@ -15064,9 +15070,11 @@ let (discharge_guard' :
              ((FStar_Compiler_Effect.op_Bang dbg_Rel) ||
                 (FStar_Compiler_Effect.op_Bang dbg_SMTQuery))
                || (FStar_Compiler_Effect.op_Bang dbg_Discharge) in
-           let diag_doc =
-             let uu___1 = FStar_TypeChecker_Env.get_range env in
-             FStar_Errors.diag_doc uu___1 in
+           let diag uu___2 uu___1 =
+             (let uu___1 = FStar_TypeChecker_Env.get_range env in
+              Obj.magic
+                (FStar_Errors.diag FStar_Class_HasRange.hasRange_range uu___1
+                   ())) uu___2 uu___1 in
            let ret_g =
              {
                FStar_TypeChecker_Common.guard_f =
@@ -15102,7 +15110,7 @@ let (discharge_guard' :
                        FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                      [uu___5] in
                    uu___3 :: uu___4 in
-                 diag_doc uu___2)
+                 diag FStar_Errors_Msg.is_error_message_list_doc uu___2)
               else ();
               FStar_Pervasives_Native.Some ret_g)
            else
@@ -15123,7 +15131,7 @@ let (discharge_guard' :
                               vc in
                           FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                         [uu___4] in
-                      diag_doc uu___3)
+                      diag FStar_Errors_Msg.is_error_message_list_doc uu___3)
                    else ();
                    FStar_Pervasives_Native.None)
               | FStar_TypeChecker_Common.NonTrivial vc ->

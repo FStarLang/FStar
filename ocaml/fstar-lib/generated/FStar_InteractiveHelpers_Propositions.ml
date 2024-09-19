@@ -105,6 +105,7 @@ let (simp_filter_proposition :
   fun e ->
     fun steps ->
       fun p ->
+        let uu___ = FStar_Tactics_V1_Builtins.norm_term_env e steps p in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
              (Obj.magic
@@ -117,11 +118,10 @@ let (simp_filter_proposition :
                 (FStar_Range.mk_range
                    "FStar.InteractiveHelpers.Propositions.fst"
                    (Prims.of_int (33)) (Prims.of_int (2)) (Prims.of_int (34))
-                   (Prims.of_int (14)))))
-          (Obj.magic (FStar_Tactics_V1_Builtins.norm_term_env e steps p))
+                   (Prims.of_int (14))))) (Obj.magic uu___)
           (fun prop1 ->
              FStar_Tactics_Effect.lift_div_tac
-               (fun uu___ ->
+               (fun uu___1 ->
                   if
                     term_eq
                       (FStar_Reflection_V2_Builtins.pack_ln
@@ -156,6 +156,8 @@ let (simp_filter_propositions :
   fun e ->
     fun steps ->
       fun pl ->
+        let uu___ =
+          FStar_Tactics_Util.map (simp_filter_proposition e steps) pl in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
              (Obj.magic
@@ -168,12 +170,10 @@ let (simp_filter_propositions :
                 (FStar_Range.mk_range
                    "FStar.InteractiveHelpers.Propositions.fst"
                    (Prims.of_int (38)) (Prims.of_int (2)) (Prims.of_int (38))
-                   (Prims.of_int (61)))))
-          (Obj.magic
-             (FStar_Tactics_Util.map (simp_filter_proposition e steps) pl))
-          (fun uu___ ->
+                   (Prims.of_int (61))))) (Obj.magic uu___)
+          (fun uu___1 ->
              FStar_Tactics_Effect.lift_div_tac
-               (fun uu___1 -> FStar_List_Tot_Base.flatten uu___))
+               (fun uu___2 -> FStar_List_Tot_Base.flatten uu___1))
 let _ =
   FStar_Tactics_Native.register_tactic
     "FStar.InteractiveHelpers.Propositions.simp_filter_propositions"
@@ -200,6 +200,7 @@ let (simp_filter_assertions :
   fun e ->
     fun steps ->
       fun a ->
+        let uu___ = simp_filter_propositions e steps a.pres in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
              (Obj.magic
@@ -213,9 +214,10 @@ let (simp_filter_assertions :
                    "FStar.InteractiveHelpers.Propositions.fst"
                    (Prims.of_int (42)) (Prims.of_int (55))
                    (Prims.of_int (44)) (Prims.of_int (26)))))
-          (Obj.magic (simp_filter_propositions e steps a.pres))
-          (fun uu___ ->
+          (Obj.magic uu___)
+          (fun uu___1 ->
              (fun pres ->
+                let uu___1 = simp_filter_propositions e steps a.posts in
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
@@ -230,10 +232,10 @@ let (simp_filter_assertions :
                               "FStar.InteractiveHelpers.Propositions.fst"
                               (Prims.of_int (44)) (Prims.of_int (2))
                               (Prims.of_int (44)) (Prims.of_int (26)))))
-                     (Obj.magic (simp_filter_propositions e steps a.posts))
+                     (Obj.magic uu___1)
                      (fun posts ->
                         FStar_Tactics_Effect.lift_div_tac
-                          (fun uu___ -> mk_assertions pres posts)))) uu___)
+                          (fun uu___2 -> mk_assertions pres posts)))) uu___1)
 let _ =
   FStar_Tactics_Native.register_tactic
     "FStar.InteractiveHelpers.Propositions.simp_filter_assertions"

@@ -170,5 +170,4 @@ let lemma_gcm_core (s0:state) (x:int) : Lemma True =
 
   assert (normal (k s0))
 
-
-
+#pop-options

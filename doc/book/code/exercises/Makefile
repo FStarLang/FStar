@@ -17,7 +17,7 @@ depend: .depend
 	touch -c $@
 
 wc:
-	wc -l prims.fst $(ALL)
+	wc -l Prims.fst $(ALL)
 
 
 extract:

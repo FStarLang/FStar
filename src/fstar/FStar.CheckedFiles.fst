@@ -34,9 +34,9 @@ let dbg = Debug.get_toggle "CheckedFiles"
 (*
  * We write this version number to the cache files, and
  * detect when loading the cache that the version number is same
- * It needs to be kept in sync with prims.fst
+ * It needs to be kept in sync with Prims.fst
  *)
-let cache_version_number = 70
+let cache_version_number = 71
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
@@ -282,7 +282,7 @@ let load_checked_file_with_tc_result
          * if there exists an interface for it, mark that too as valid
          * this is specially needed for extraction invocations of F* with --cmi flag
          * for example, consider a scenario:
-         * A.fst -> B.fsti -> prims.fst
+         * A.fst -> B.fsti -> Prims.fst
          *            ^      ^
          *            |     /
          *             B.fst
@@ -350,7 +350,7 @@ let load_parsing_data_from_cache file_name =
    * following is the reason for it:
    *
    * consider a scenario:
-   * A.fst -> B.fsti -> prims.fst
+   * A.fst -> B.fsti -> Prims.fst
    *            ^      ^
    *            |     /
    *             B.fst

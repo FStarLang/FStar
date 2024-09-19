@@ -146,8 +146,10 @@ let go : 'uuuuu . 'uuuuu -> unit =
               (let uu___7 =
                  let uu___8 = FStar_Errors_Msg.text "GOT SIGINT! Exiting" in
                  [uu___8] in
-               FStar_Errors.diag_doc FStar_Compiler_Range_Type.dummyRange
-                 uu___7);
+               FStar_Errors.diag FStar_Class_HasRange.hasRange_range
+                 FStar_Compiler_Range_Type.dummyRange ()
+                 (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+                 (Obj.magic uu___7));
               FStar_Compiler_Effect.exit Prims.int_one in
             let uu___4 = FStar_Compiler_Util.sigint_handler_f h' in
             FStar_Compiler_Util.set_sigint_handler uu___4

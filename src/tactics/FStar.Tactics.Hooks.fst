@@ -984,10 +984,13 @@ let splice
           (* NOTE: Assumption is OK, a tactic can generate an axiom, but
            * it will be reported with --report_assumes. *)
           if is_internal_qualifier q then
-            Err.raise_error rng Err.Error_InternalQualifier
-              (BU.format2 "The qualifier %s is internal, it cannot be attached to spliced sigelt `%s`."
-                             (show q)
-                             (Print.sigelt_to_string_short se))
+            let open FStar.Errors.Msg in
+            let open FStar.Pprint in
+            Err.raise_error rng Err.Error_InternalQualifier [
+              text <| BU.format1 "The qualifier %s is internal." (show q);
+              prefix 2 1 (text "It cannot be attached to spliced declaration:")
+                (arbitrary_string (Print.sigelt_to_string_short se));
+            ]
          ))
     in
     sigelts

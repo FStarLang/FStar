@@ -298,7 +298,9 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
       FStar_TypeChecker_Primops_Base.embed_simple
         FStar_Syntax_Embeddings.e_int r i in
     let run_op blob =
-      let uu___ = FStar_Compiler_Util.array_length (FStar_Dyn.undyn blob) in
+      let uu___ =
+        let uu___1 = FStar_Dyn.undyn blob in
+        FStar_Compiler_Util.array_length uu___1 in
       FStar_Pervasives_Native.Some uu___ in
     (FStar_Parser_Const.immutable_array_length_lid, (Prims.of_int (2)),
       Prims.int_one,
@@ -324,8 +326,8 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                 fun blob ->
                   fun i ->
                     let uu___ =
-                      FStar_Compiler_Util.array_index (FStar_Dyn.undyn blob)
-                        i in
+                      let uu___1 = FStar_Dyn.undyn blob in
+                      FStar_Compiler_Util.array_index uu___1 i in
                     FStar_Pervasives_Native.Some uu___)),
       (FStar_TypeChecker_NBETerm.mixed_ternary_op
          (fun uu___ ->
@@ -337,7 +339,8 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
               fun blob ->
                 fun i ->
                   let uu___ =
-                    FStar_Compiler_Util.array_index (FStar_Dyn.undyn blob) i in
+                    let uu___1 = FStar_Dyn.undyn blob in
+                    FStar_Compiler_Util.array_index uu___1 i in
                   FStar_Pervasives_Native.Some uu___))) in
   FStar_Compiler_List.map (as_primitive_step true)
     [of_list_op; length_op; index_op]

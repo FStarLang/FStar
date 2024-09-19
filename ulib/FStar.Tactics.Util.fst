@@ -24,6 +24,11 @@ let rec map f x = match x with
   | [] -> []
   | a::tl -> f a::map f tl
 
+let rec concatMap (f : 'a -> Tac (list 'b)) (l : list 'a) : Tac (list 'b) =
+  match l with
+  | [] -> []
+  | x::xs -> f x @ concatMap f xs
+
 val __mapi: nat -> (nat -> 'a -> Tac 'b) -> list 'a -> Tac (list 'b)
 let rec __mapi i f x = match x with
   | [] -> []

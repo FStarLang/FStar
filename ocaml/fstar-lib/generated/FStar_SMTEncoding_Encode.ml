@@ -6079,8 +6079,8 @@ let (encode_datacon :
                                                          "Constructor %s builds an unexpected type %s"
                                                          uu___14 uu___15 in
                                                      FStar_Errors.log_issue
-                                                       FStar_Class_HasRange.hasRange_range
-                                                       se.FStar_Syntax_Syntax.sigrng
+                                                       FStar_Syntax_Syntax.has_range_sigelt
+                                                       se
                                                        FStar_Errors_Codes.Warning_ConstructorBuildsUnexpectedType
                                                        ()
                                                        (Obj.magic

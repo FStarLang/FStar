@@ -19,7 +19,7 @@ module OPLSS2021.Vale
 open FStar.FunctionalExtensionality
 open FStar.Mul
 //suppress a benign warning in this program
-#push-options "--warn_error -290"
+#set-options "--warn_error -290"
 
 (*
   This is a highly-simplified model of Vale/F*, based on Section

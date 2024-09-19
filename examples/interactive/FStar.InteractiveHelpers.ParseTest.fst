@@ -14,7 +14,7 @@ open FStar.InteractiveHelpers.Tutorial.Definitions
 /// This file contains some functions "interesting to parse", to test the parser
 /// for the F* extended mode. It is for development/debugging purpose only.
 
-#push-options "--z3rlimit 50 --fuel 0 --ifuel 0"
+#set-options "--z3rlimit 50 --fuel 0 --ifuel 0"
 
 (*** Tests *)
 let a'_ = 3

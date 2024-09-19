@@ -223,6 +223,7 @@ type lift = {
 }
 
 type pragma =
+  | ShowOptions
   | SetOptions of string
   | ResetOptions of option string
   | PushOptions of option string
