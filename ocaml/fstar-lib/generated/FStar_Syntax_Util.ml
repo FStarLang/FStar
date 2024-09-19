@@ -1394,7 +1394,7 @@ let (abs :
                      } in
                    FStar_Syntax_Syntax.Tm_abs uu___3 in
                  FStar_Syntax_Syntax.mk uu___2 t.FStar_Syntax_Syntax.pos)
-let (arrow :
+let (arrow_ln :
   FStar_Syntax_Syntax.binder Prims.list ->
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
@@ -1405,25 +1405,28 @@ let (arrow :
       | [] -> comp_result c
       | uu___ ->
           let uu___1 =
-            let uu___2 =
-              let uu___3 = FStar_Syntax_Subst.close_binders bs in
-              let uu___4 = FStar_Syntax_Subst.close_comp bs c in
-              {
-                FStar_Syntax_Syntax.bs1 = uu___3;
-                FStar_Syntax_Syntax.comp = uu___4
-              } in
-            FStar_Syntax_Syntax.Tm_arrow uu___2 in
-          let uu___2 =
             FStar_Compiler_List.fold_left
               (fun a ->
                  fun b ->
                    FStar_Compiler_Range_Ops.union_ranges a
                      ((b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort).FStar_Syntax_Syntax.pos)
               c.FStar_Syntax_Syntax.pos bs in
-          FStar_Syntax_Syntax.mk uu___1 uu___2
+          FStar_Syntax_Syntax.mk
+            (FStar_Syntax_Syntax.Tm_arrow
+               { FStar_Syntax_Syntax.bs1 = bs; FStar_Syntax_Syntax.comp = c })
+            uu___1
+let (arrow :
+  FStar_Syntax_Syntax.binders ->
+    FStar_Syntax_Syntax.comp ->
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+  =
+  fun bs ->
+    fun c ->
+      let c1 = FStar_Syntax_Subst.close_comp bs c in
+      let bs1 = FStar_Syntax_Subst.close_binders bs in arrow_ln bs1 c1
 let (flat_arrow :
-  FStar_Syntax_Syntax.binder Prims.list ->
-    FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
+  FStar_Syntax_Syntax.binders ->
+    FStar_Syntax_Syntax.comp ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun bs ->
@@ -1834,7 +1837,7 @@ let (close_univs_and_mk_letbinding :
 let (open_univ_vars_binders_and_comp :
   FStar_Syntax_Syntax.univ_names ->
     FStar_Syntax_Syntax.binder Prims.list ->
-      FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
+      FStar_Syntax_Syntax.comp ->
         (FStar_Syntax_Syntax.univ_names * FStar_Syntax_Syntax.binder
           Prims.list * FStar_Syntax_Syntax.comp))
   =

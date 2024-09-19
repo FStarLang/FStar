@@ -2386,22 +2386,40 @@ let (splice :
                                              then
                                                let uu___12 =
                                                  let uu___13 =
-                                                   FStar_Class_Show.show
-                                                     FStar_Syntax_Print.showable_qualifier
-                                                     q in
+                                                   let uu___14 =
+                                                     let uu___15 =
+                                                       FStar_Class_Show.show
+                                                         FStar_Syntax_Print.showable_qualifier
+                                                         q in
+                                                     FStar_Compiler_Util.format1
+                                                       "The qualifier %s is internal."
+                                                       uu___15 in
+                                                   FStar_Errors_Msg.text
+                                                     uu___14 in
                                                  let uu___14 =
-                                                   FStar_Syntax_Print.sigelt_to_string_short
-                                                     se in
-                                                 FStar_Compiler_Util.format2
-                                                   "The qualifier %s is internal, it cannot be attached to spliced sigelt `%s`."
-                                                   uu___13 uu___14 in
+                                                   let uu___15 =
+                                                     let uu___16 =
+                                                       FStar_Errors_Msg.text
+                                                         "It cannot be attached to spliced declaration:" in
+                                                     let uu___17 =
+                                                       let uu___18 =
+                                                         FStar_Syntax_Print.sigelt_to_string_short
+                                                           se in
+                                                       FStar_Pprint.arbitrary_string
+                                                         uu___18 in
+                                                     FStar_Pprint.prefix
+                                                       (Prims.of_int (2))
+                                                       Prims.int_one uu___16
+                                                       uu___17 in
+                                                   [uu___15] in
+                                                 uu___13 :: uu___14 in
                                                FStar_Errors.raise_error
                                                  FStar_Class_HasRange.hasRange_range
                                                  rng
                                                  FStar_Errors_Codes.Error_InternalQualifier
                                                  ()
                                                  (Obj.magic
-                                                    FStar_Errors_Msg.is_error_message_string)
+                                                    FStar_Errors_Msg.is_error_message_list_doc)
                                                  (Obj.magic uu___12)
                                              else ())
                                           se.FStar_Syntax_Syntax.sigquals)
