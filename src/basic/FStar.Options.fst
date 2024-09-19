@@ -2393,10 +2393,15 @@ let should_extract m tgt =
         | _ -> should_extract_namespace m || should_extract_module m)
 
 let should_be_already_cached m =
-  match get_already_cached() with
-  | None -> false
-  | Some already_cached_setting ->
-    module_matches_namespace_filter m already_cached_setting
+  (* should_check is true for files in the command line,
+  we exclude those from this check since they were explicitly
+  requested. *)
+  not (should_check m) && (
+    match get_already_cached() with
+    | None -> false
+    | Some already_cached_setting ->
+      module_matches_namespace_filter m already_cached_setting
+  )
 
 
 let profile_enabled modul_opt phase =
