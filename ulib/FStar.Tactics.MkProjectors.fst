@@ -35,7 +35,7 @@ let mk_one_projector (unf:list string) (np:nat) (i:nat) : Tac unit =
       fail "proj: bad index in mk_one_projector";
     let _      = repeatn i intro in
     let the_b  = intro () in
-    let _      = repeatn (arity-i-1) intro in
+    let _      = Stubs.Tactics.V2.Builtins.intros (arity-i-1) in
     let eq_b   : binding = intro () in
     rewrite eq_b;
     norm [iota; delta_only unf; zeta_full];
