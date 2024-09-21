@@ -67,3 +67,30 @@ let (mk_rng : Prims.string -> pos -> pos -> rng) =
       fun end_pos -> { file_name = file_name1; start_pos; end_pos }
 let (mk_range : Prims.string -> pos -> pos -> range) =
   fun f -> fun b -> fun e -> let r = mk_rng f b e in range_of_rng r r
+let (json_of_pos : pos -> FStar_Json.json) =
+  fun r ->
+    FStar_Json.JsonAssoc
+      [("line", (FStar_Json.JsonInt (r.line)));
+      ("col", (FStar_Json.JsonInt (r.col)))]
+let (json_of_rng : rng -> FStar_Json.json) =
+  fun r ->
+    let uu___ =
+      let uu___1 =
+        let uu___2 =
+          let uu___3 = json_of_pos r.start_pos in ("start_pos", uu___3) in
+        let uu___3 =
+          let uu___4 =
+            let uu___5 = json_of_pos r.end_pos in ("end_pos", uu___5) in
+          [uu___4] in
+        uu___2 :: uu___3 in
+      ("file_name", (FStar_Json.JsonStr (r.file_name))) :: uu___1 in
+    FStar_Json.JsonAssoc uu___
+let (json_of_range : range -> FStar_Json.json) =
+  fun r ->
+    let uu___ =
+      let uu___1 = let uu___2 = json_of_rng r.def_range in ("def", uu___2) in
+      let uu___2 =
+        let uu___3 = let uu___4 = json_of_rng r.use_range in ("use", uu___4) in
+        [uu___3] in
+      uu___1 :: uu___2 in
+    FStar_Json.JsonAssoc uu___

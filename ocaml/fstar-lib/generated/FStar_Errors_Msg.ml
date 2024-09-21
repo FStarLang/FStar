@@ -92,3 +92,11 @@ let (rendermsg : error_message -> Prims.string) =
           (fun d -> let uu___2 = FStar_Pprint.group d in subdoc uu___2) ds in
       FStar_Pprint.concat uu___1 in
     renderdoc uu___
+let (json_of_error_message :
+  FStar_Pprint.document Prims.list -> FStar_Json.json) =
+  fun err_msg ->
+    let uu___ =
+      FStar_Compiler_List.map
+        (fun doc -> let uu___1 = renderdoc doc in FStar_Json.JsonStr uu___1)
+        err_msg in
+    FStar_Json.JsonList uu___
