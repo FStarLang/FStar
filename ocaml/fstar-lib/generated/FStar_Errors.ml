@@ -176,6 +176,32 @@ let (uu___is_EWarning : issue_level -> Prims.bool) =
   fun projectee -> match projectee with | EWarning -> true | uu___ -> false
 let (uu___is_EError : issue_level -> Prims.bool) =
   fun projectee -> match projectee with | EError -> true | uu___ -> false
+exception Error of error 
+let (uu___is_Error : Prims.exn -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Error uu___ -> true | uu___ -> false
+let (__proj__Error__item__uu___ : Prims.exn -> error) =
+  fun projectee -> match projectee with | Error uu___ -> uu___
+exception Warning of error 
+let (uu___is_Warning : Prims.exn -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Warning uu___ -> true | uu___ -> false
+let (__proj__Warning__item__uu___ : Prims.exn -> error) =
+  fun projectee -> match projectee with | Warning uu___ -> uu___
+exception Stop 
+let (uu___is_Stop : Prims.exn -> Prims.bool) =
+  fun projectee -> match projectee with | Stop -> true | uu___ -> false
+exception Empty_frag 
+let (uu___is_Empty_frag : Prims.exn -> Prims.bool) =
+  fun projectee -> match projectee with | Empty_frag -> true | uu___ -> false
+let (json_of_issue_level : issue_level -> FStar_Json.json) =
+  fun level ->
+    FStar_Json.JsonStr
+      (match level with
+       | ENotImplemented -> "NotImplemented"
+       | EInfo -> "Info"
+       | EWarning -> "Warning"
+       | EError -> "Error")
 type issue =
   {
   issue_msg: FStar_Errors_Msg.error_message ;
@@ -211,6 +237,62 @@ let (__proj__Mkissue__item__issue_ctx : issue -> Prims.string Prims.list) =
     match projectee with
     | { issue_msg; issue_level = issue_level1; issue_range; issue_number;
         issue_ctx;_} -> issue_ctx
+let (json_of_issue : issue -> FStar_Json.json) =
+  fun issue1 ->
+    let uu___ =
+      let uu___1 =
+        let uu___2 = FStar_Errors_Msg.json_of_error_message issue1.issue_msg in
+        ("msg", uu___2) in
+      let uu___2 =
+        let uu___3 =
+          let uu___4 = json_of_issue_level issue1.issue_level in
+          ("level", uu___4) in
+        let uu___4 =
+          let uu___5 =
+            let uu___6 =
+              let uu___7 =
+                Obj.magic
+                  (FStar_Class_Monad.op_Less_Dollar_Greater
+                     FStar_Class_Monad.monad_option () ()
+                     (fun uu___8 ->
+                        (Obj.magic FStar_Compiler_Range_Type.json_of_range)
+                          uu___8) (Obj.magic issue1.issue_range)) in
+              FStar_Compiler_Util.dflt FStar_Json.JsonNull uu___7 in
+            ("range", uu___6) in
+          let uu___6 =
+            let uu___7 =
+              let uu___8 =
+                let uu___9 =
+                  Obj.magic
+                    (FStar_Class_Monad.op_Less_Dollar_Greater
+                       FStar_Class_Monad.monad_option () ()
+                       (fun uu___10 ->
+                          (fun uu___10 ->
+                             let uu___10 = Obj.magic uu___10 in
+                             Obj.magic (FStar_Json.JsonInt uu___10)) uu___10)
+                       (Obj.magic issue1.issue_number)) in
+                FStar_Compiler_Util.dflt FStar_Json.JsonNull uu___9 in
+              ("number", uu___8) in
+            let uu___8 =
+              let uu___9 =
+                let uu___10 =
+                  let uu___11 =
+                    Obj.magic
+                      (FStar_Class_Monad.op_Less_Dollar_Greater
+                         FStar_Class_Monad.monad_list () ()
+                         (fun uu___12 ->
+                            (fun uu___12 ->
+                               let uu___12 = Obj.magic uu___12 in
+                               Obj.magic (FStar_Json.JsonStr uu___12))
+                              uu___12) (Obj.magic issue1.issue_ctx)) in
+                  FStar_Json.JsonList uu___11 in
+                ("ctx", uu___10) in
+              [uu___9] in
+            uu___7 :: uu___8 in
+          uu___5 :: uu___6 in
+        uu___3 :: uu___4 in
+      uu___1 :: uu___2 in
+    FStar_Json.JsonAssoc uu___
 type error_handler =
   {
   eh_name: Prims.string ;
@@ -248,24 +330,6 @@ let (__proj__Mkerror_handler__item__eh_clear : error_handler -> unit -> unit)
     match projectee with
     | { eh_name; eh_add_one; eh_count_errors; eh_report; eh_clear;_} ->
         eh_clear
-exception Error of error 
-let (uu___is_Error : Prims.exn -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Error uu___ -> true | uu___ -> false
-let (__proj__Error__item__uu___ : Prims.exn -> error) =
-  fun projectee -> match projectee with | Error uu___ -> uu___
-exception Warning of error 
-let (uu___is_Warning : Prims.exn -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Warning uu___ -> true | uu___ -> false
-let (__proj__Warning__item__uu___ : Prims.exn -> error) =
-  fun projectee -> match projectee with | Warning uu___ -> uu___
-exception Stop 
-let (uu___is_Stop : Prims.exn -> Prims.bool) =
-  fun projectee -> match projectee with | Stop -> true | uu___ -> false
-exception Empty_frag 
-let (uu___is_Empty_frag : Prims.exn -> Prims.bool) =
-  fun projectee -> match projectee with | Empty_frag -> true | uu___ -> false
 let (ctx_doc : Prims.string Prims.list -> FStar_Pprint.document) =
   fun ctx ->
     let uu___ = FStar_Options.error_contexts () in
@@ -420,7 +484,12 @@ let (format_issue' : Prims.bool -> issue -> Prims.string) =
       FStar_Errors_Msg.renderdoc doc
 let (format_issue : issue -> Prims.string) =
   fun issue1 -> format_issue' true issue1
-let (print_issue : issue -> unit) =
+let (print_issue_json : issue -> unit) =
+  fun issue1 ->
+    let uu___ =
+      let uu___1 = json_of_issue issue1 in FStar_Json.string_of_json uu___1 in
+    FStar_Compiler_Util.print1_error "%s\n" uu___
+let (print_issue_rendered : issue -> unit) =
   fun issue1 ->
     let printer =
       match issue1.issue_level with
@@ -433,6 +502,12 @@ let (print_issue : issue -> unit) =
       | ENotImplemented -> FStar_Compiler_Util.print_error in
     let uu___ = let uu___1 = format_issue issue1 in Prims.strcat uu___1 "\n" in
     printer uu___
+let (print_issue : issue -> unit) =
+  fun issue1 ->
+    let uu___ = FStar_Options.message_format () in
+    match uu___ with
+    | FStar_Options.Human -> print_issue_rendered issue1
+    | FStar_Options.Json -> print_issue_json issue1
 let (compare_issues : issue -> issue -> Prims.int) =
   fun i1 ->
     fun i2 ->
@@ -703,7 +778,7 @@ let (set_option_warning_callback_range :
   FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
-let (uu___357 :
+let (uu___369 :
   (((Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) *
     (unit -> FStar_Errors_Codes.error_setting Prims.list)))
   =
@@ -749,10 +824,10 @@ let (uu___357 :
   (set_callbacks, get_error_flags)
 let (t_set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
-  match uu___357 with
+  match uu___369 with
   | (t_set_parse_warn_error1, error_flags) -> t_set_parse_warn_error1
 let (error_flags : unit -> FStar_Errors_Codes.error_setting Prims.list) =
-  match uu___357 with
+  match uu___369 with
   | (t_set_parse_warn_error1, error_flags1) -> error_flags1
 let (set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =

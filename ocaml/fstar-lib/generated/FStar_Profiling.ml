@@ -23,6 +23,32 @@ let (__proj__Mkcounter__item__undercount :
   fun projectee ->
     match projectee with
     | { cid; total_time; running; undercount;_} -> undercount
+let (json_of_counter : counter -> FStar_Json.json) =
+  fun c ->
+    let uu___ =
+      let uu___1 =
+        let uu___2 =
+          let uu___3 =
+            let uu___4 = FStar_Compiler_Effect.op_Bang c.total_time in
+            FStar_Json.JsonInt uu___4 in
+          ("total_time", uu___3) in
+        let uu___3 =
+          let uu___4 =
+            let uu___5 =
+              let uu___6 = FStar_Compiler_Effect.op_Bang c.running in
+              FStar_Json.JsonBool uu___6 in
+            ("running", uu___5) in
+          let uu___5 =
+            let uu___6 =
+              let uu___7 =
+                let uu___8 = FStar_Compiler_Effect.op_Bang c.undercount in
+                FStar_Json.JsonBool uu___8 in
+              ("undercount", uu___7) in
+            [uu___6] in
+          uu___4 :: uu___5 in
+        uu___2 :: uu___3 in
+      ("id", (FStar_Json.JsonStr (c.cid))) :: uu___1 in
+    FStar_Json.JsonAssoc uu___
 let (new_counter : Prims.string -> counter) =
   fun cid ->
     let uu___ = FStar_Compiler_Util.mk_ref Prims.int_zero in
@@ -78,6 +104,40 @@ let profile :
                    FStar_Compiler_Effect.op_Colon_Equals c.undercount true;
                    FStar_Compiler_Effect.raise uu___3)))
         else f ()
+let (report_json : Prims.string -> counter -> unit) =
+  fun tag ->
+    fun c ->
+      let counter1 = json_of_counter c in
+      let uu___ =
+        FStar_Json.string_of_json
+          (FStar_Json.JsonAssoc
+             [("tag", (FStar_Json.JsonStr tag)); ("counter", counter1)]) in
+      FStar_Compiler_Util.print1_error "%s\n" uu___
+let (report_human : Prims.string -> counter -> unit) =
+  fun tag ->
+    fun c ->
+      let warn =
+        let uu___ = FStar_Compiler_Effect.op_Bang c.running in
+        if uu___
+        then " (Warning, this counter is still running)"
+        else
+          (let uu___2 = FStar_Compiler_Effect.op_Bang c.undercount in
+           if uu___2
+           then
+             " (Warning, some operations raised exceptions and we not accounted for)"
+           else "") in
+      let uu___ =
+        let uu___1 = FStar_Compiler_Effect.op_Bang c.total_time in
+        FStar_Compiler_Util.string_of_int uu___1 in
+      FStar_Compiler_Util.print4 "%s, profiled %s:\t %s ms%s\n" tag c.cid
+        uu___ warn
+let (report : Prims.string -> counter -> unit) =
+  fun tag ->
+    fun c ->
+      let uu___ = FStar_Options.message_format () in
+      match uu___ with
+      | FStar_Options.Human -> report_human tag c
+      | FStar_Options.Json -> report_json tag c
 let (report_and_clear : Prims.string -> unit) =
   fun tag ->
     let ctrs =
@@ -91,20 +151,4 @@ let (report_and_clear : Prims.string -> unit) =
               let uu___1 = FStar_Compiler_Effect.op_Bang c2.total_time in
               let uu___2 = FStar_Compiler_Effect.op_Bang c1.total_time in
               uu___1 - uu___2) ctrs in
-     FStar_Compiler_List.iter
-       (fun c ->
-          let warn =
-            let uu___1 = FStar_Compiler_Effect.op_Bang c.running in
-            if uu___1
-            then " (Warning, this counter is still running)"
-            else
-              (let uu___3 = FStar_Compiler_Effect.op_Bang c.undercount in
-               if uu___3
-               then
-                 " (Warning, some operations raised exceptions and we not accounted for)"
-               else "") in
-          let uu___1 =
-            let uu___2 = FStar_Compiler_Effect.op_Bang c.total_time in
-            FStar_Compiler_Util.string_of_int uu___2 in
-          FStar_Compiler_Util.print4 "%s, profiled %s:\t %s ms%s\n" tag 
-            c.cid uu___1 warn) ctrs1)
+     FStar_Compiler_List.iter (report tag) ctrs1)
