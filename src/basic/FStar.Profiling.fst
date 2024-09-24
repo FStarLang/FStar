@@ -21,6 +21,7 @@ open FStar.Compiler.Effect
 module List = FStar.Compiler.List
 open FStar.Options
 module BU = FStar.Compiler.Util
+open FStar.Json
 
 (*
    A counter id is the name of a profiling phase;
@@ -35,6 +36,14 @@ type counter = {
   running:ref bool;
   undercount:ref bool;
 }
+
+let json_of_counter (c: counter) =
+  JsonAssoc [
+    "id", JsonStr c.cid;
+    "total_time", JsonInt !c.total_time;
+    "running", JsonBool !c.running;
+    "undercount", JsonBool !c.undercount;
+  ]
 
 (* Creating a new counter *)
 let new_counter cid = {
@@ -78,6 +87,32 @@ let profile  (f: unit -> 'a) (module_name:option string) (cid:string) : 'a =
       end
   else f()
 
+let report_json tag c =
+    let counter = json_of_counter c in
+    JsonAssoc [
+      "tag", JsonStr tag;
+      "counter", counter;
+    ] |> string_of_json |> BU.print1_error "%s\n"
+
+let report_human tag c =
+    let warn = if !c.running
+               then " (Warning, this counter is still running)"
+               else if !c.undercount
+               then " (Warning, some operations raised exceptions and we not accounted for)"
+               else ""
+    in
+    //print each counter's profile
+    BU.print4 "%s, profiled %s:\t %s ms%s\n"
+                  tag
+                  c.cid
+                  (BU.string_of_int (!c.total_time))
+                  warn
+
+let report tag c =
+  match FStar.Options.message_format () with
+  | Human -> report_human tag c
+  | Json -> report_json tag c
+
 (* Report all profiles and clear all counters *)
 let report_and_clear tag =
     let ctrs = //all the counters as a list
@@ -87,17 +122,4 @@ let report_and_clear tag =
     let ctrs = //sort counters in descending order by elapsed time
       BU.sort_with (fun c1 c2 -> !c2.total_time - !c1.total_time) ctrs
     in
-    ctrs |> List.iter
-      (fun c ->
-        let warn = if !c.running
-                   then " (Warning, this counter is still running)"
-                   else if !c.undercount
-                   then " (Warning, some operations raised exceptions and we not accounted for)"
-                   else ""
-        in
-        //print each counter's profile
-        BU.print4 "%s, profiled %s:\t %s ms%s\n"
-                      tag
-                      c.cid
-                      (BU.string_of_int (!c.total_time))
-                      warn)
+    List.iter (report tag) ctrs
