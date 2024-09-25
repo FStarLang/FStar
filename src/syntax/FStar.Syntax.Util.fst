@@ -1226,7 +1226,10 @@ let arrow_one_ln (t:typ) : option (binder & comp) =
     | Tm_arrow {bs=[b]; comp=c} ->
         Some (b, c)
     | Tm_arrow {bs=b::bs; comp=c} ->
-        Some (b, mk_Total (arrow bs c))
+        (* NB: bs are closed, so we just repackage the node *)
+        let rng' = List.fold_left (fun a b -> Range.union_ranges a b.binder_bv.sort.pos) c.pos bs in
+        let c' = mk_Total (mk (Tm_arrow {bs; comp=c}) rng') in
+        Some (b, c')
     | _ ->
         None
 
