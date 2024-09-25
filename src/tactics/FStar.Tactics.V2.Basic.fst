@@ -202,14 +202,14 @@ let destruct_eq' (typ : typ) : option (term & term) =
 
 let destruct_eq (env : Env.env) (typ : typ) : option (term & term) =
 // TODO: unascribe?
-    let typ = whnf env typ in
+    (* let typ = whnf env typ in *)
     match destruct_eq' typ with
     | Some t -> Some t
     | None ->
         // Retry for a squashed one
         begin match U.un_squash typ with
         | Some typ ->
-          let typ = whnf env typ in
+          (* let typ = whnf env typ in *)
           destruct_eq' typ
         | None -> None
         end
