@@ -26,14 +26,14 @@ let debug (f : unit -> Tac string) : Tac unit =
 [@@plugin]
 let mk_one_projector (unf:list string) (np:nat) (i:nat) : Tac unit =
   debug (fun () -> dump "ENTRY mk_one_projector"; "");
-  let _params = repeatn np intro in
+  let _params = Stubs.Tactics.V2.Builtins.intros np in
   let thing : binding = intro () in
   let r = t_destruct thing in
   match r with
   | [(cons, arity)] -> begin
     if (i >= arity) then
       fail "proj: bad index in mk_one_projector";
-    let _      = repeatn i intro in
+    let _      = Stubs.Tactics.V2.Builtins.intros i in
     let the_b  = intro () in
     let _      = Stubs.Tactics.V2.Builtins.intros (arity-i-1) in
     let eq_b   : binding = intro () in
@@ -216,13 +216,13 @@ let mk_projs (is_class:bool) (tyname:string) : Tac decls =
       (* dump ("ityp = " ^ term_to_string typ); *)
       (* dump ("ctor_t = " ^ term_to_string ctor_t); *)
       let (fields, _) = collect_arr_bs ctor_t in
-      let unfold_names_tm = `(Nil #string) in
+      let unfold_names_tm = `(Nil u#0 #string) in
       let (decls, _, _, _) =
         fold_left (fun (decls, smap, unfold_names_tm, idx) (field : binder) ->
           let (ds, fv) = mk_proj_decl is_class tyqn ctorname univs params idx field unfold_names_tm smap in
           (decls @ ds,
            (binder_to_namedv field, fv)::smap,
-           (`(Cons #string (`#(embed_string (implode_qn (inspect_fv fv)))) (`#unfold_names_tm))),
+           (`(Cons u#0 #string (`#(embed_string (implode_qn (inspect_fv fv)))) (`#unfold_names_tm))),
            idx+1))
         ([], [], unfold_names_tm, 0)
         fields
