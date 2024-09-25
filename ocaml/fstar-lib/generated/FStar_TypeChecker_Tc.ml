@@ -4280,7 +4280,7 @@ let (tc_decl :
          let uu___2 = FStar_Syntax_Print.sigelt_to_string_short se in
          FStar_Compiler_Util.print1 "Processing %s\n" uu___2
        else ());
-      (let uu___2 = FStar_Compiler_Debug.low () in
+      (let uu___2 = FStar_Compiler_Debug.medium () in
        if uu___2
        then
          let uu___3 =

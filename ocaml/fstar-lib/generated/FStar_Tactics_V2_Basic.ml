@@ -364,15 +364,13 @@ let (destruct_eq :
   =
   fun env1 ->
     fun typ ->
-      let typ1 = whnf env1 typ in
-      let uu___ = destruct_eq' typ1 in
+      let uu___ = destruct_eq' typ in
       match uu___ with
       | FStar_Pervasives_Native.Some t -> FStar_Pervasives_Native.Some t
       | FStar_Pervasives_Native.None ->
-          let uu___1 = FStar_Syntax_Util.un_squash typ1 in
+          let uu___1 = FStar_Syntax_Util.un_squash typ in
           (match uu___1 with
-           | FStar_Pervasives_Native.Some typ2 ->
-               let typ3 = whnf env1 typ2 in destruct_eq' typ3
+           | FStar_Pervasives_Native.Some typ1 -> destruct_eq' typ1
            | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None)
 let (get_guard_policy :
   unit -> FStar_Tactics_Types.guard_policy FStar_Tactics_Monad.tac) =
@@ -2800,7 +2798,8 @@ let (intro :
                                                       goal.FStar_Tactics_Types.is_guard
                                                       goal.FStar_Tactics_Types.label in
                                                   let uu___7 =
-                                                    bnorm_and_replace g in
+                                                    FStar_Tactics_Monad.replace_cur
+                                                      g in
                                                   Obj.magic
                                                     (FStar_Class_Monad.op_let_Bang
                                                        FStar_Tactics_Monad.monad_tac
@@ -2948,7 +2947,7 @@ let (intros :
                                                                     goal.FStar_Tactics_Types.label in
                                                                     let uu___10
                                                                     =
-                                                                    bnorm_and_replace
+                                                                    FStar_Tactics_Monad.replace_cur
                                                                     g in
                                                                     Obj.magic
                                                                     (FStar_Class_Monad.op_let_Bang
