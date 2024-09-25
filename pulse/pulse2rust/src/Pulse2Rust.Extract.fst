@@ -544,8 +544,9 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     mk_call (mk_expr_path (["std"; "boxed"; "Box"; "new"])) [e]
 
 
-  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; i; _; _])
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e::i::_)
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Access" ||
+         S.string_of_mlpath p = "Pulse.Lib.Array.Core.pts_to_range_index" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Access" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.read_ref" ->
 
@@ -553,6 +554,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e1::e2::e3::_)
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Assignment" ||
+         S.string_of_mlpath p = "Pulse.Lib.Array.Core.pts_to_range_upd" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Assignment" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.write_ref" ->
 

@@ -953,19 +953,22 @@ and (extract_mlexpr :
                 uu___2::[]);
              FStar_Extraction_ML_Syntax.mlty = uu___3;
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
-           e1::i::uu___5::uu___6::[])
+           e1::i::uu___5)
           when
-          ((let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___7 = "Pulse.Lib.Array.Core.op_Array_Access") ||
-             (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-              uu___7 = "Pulse.Lib.Vec.op_Array_Access"))
+          (((let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___6 = "Pulse.Lib.Array.Core.op_Array_Access") ||
+              (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___6 = "Pulse.Lib.Array.Core.pts_to_range_index"))
+             ||
+             (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___6 = "Pulse.Lib.Vec.op_Array_Access"))
             ||
-            (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___7 = "Pulse.Lib.Vec.read_ref")
+            (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___6 = "Pulse.Lib.Vec.read_ref")
           ->
-          let uu___7 = extract_mlexpr g e1 in
-          let uu___8 = extract_mlexpr g i in
-          Pulse2Rust_Rust_Syntax.mk_expr_index uu___7 uu___8
+          let uu___6 = extract_mlexpr g e1 in
+          let uu___7 = extract_mlexpr g i in
+          Pulse2Rust_Rust_Syntax.mk_expr_index uu___6 uu___7
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -980,8 +983,11 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::e2::e3::uu___5)
           when
-          ((let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___6 = "Pulse.Lib.Array.Core.op_Array_Assignment") ||
+          (((let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___6 = "Pulse.Lib.Array.Core.op_Array_Assignment") ||
+              (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___6 = "Pulse.Lib.Array.Core.pts_to_range_upd"))
+             ||
              (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
               uu___6 = "Pulse.Lib.Vec.op_Array_Assignment"))
             ||
