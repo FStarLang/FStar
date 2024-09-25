@@ -2823,11 +2823,21 @@ let (arrow_one_ln :
         FStar_Pervasives_Native.Some (b, c)
     | FStar_Syntax_Syntax.Tm_arrow
         { FStar_Syntax_Syntax.bs1 = b::bs; FStar_Syntax_Syntax.comp = c;_} ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = arrow bs c in FStar_Syntax_Syntax.mk_Total uu___3 in
-          (b, uu___2) in
-        FStar_Pervasives_Native.Some uu___1
+        let rng' =
+          FStar_Compiler_List.fold_left
+            (fun a ->
+               fun b1 ->
+                 FStar_Compiler_Range_Ops.union_ranges a
+                   ((b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort).FStar_Syntax_Syntax.pos)
+            c.FStar_Syntax_Syntax.pos bs in
+        let c' =
+          let uu___1 =
+            FStar_Syntax_Syntax.mk
+              (FStar_Syntax_Syntax.Tm_arrow
+                 { FStar_Syntax_Syntax.bs1 = bs; FStar_Syntax_Syntax.comp = c
+                 }) rng' in
+          FStar_Syntax_Syntax.mk_Total uu___1 in
+        FStar_Pervasives_Native.Some (b, c')
     | uu___1 -> FStar_Pervasives_Native.None
 let (arrow_one :
   FStar_Syntax_Syntax.typ ->
