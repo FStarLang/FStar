@@ -773,7 +773,8 @@ and (extract_mlexpr :
           let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___2 = "FStar.SizeT.uint16_to_sizet" ->
           let uu___2 = extract_mlexpr g e1 in
-          Pulse2Rust_Rust_Syntax.mk_method_call uu___2 "into" []
+          let uu___3 = Pulse2Rust_Rust_Syntax.mk_scalar_typ "usize" in
+          Pulse2Rust_Rust_Syntax.mk_cast uu___2 uu___3
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =

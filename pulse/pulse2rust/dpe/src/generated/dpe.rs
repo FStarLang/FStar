@@ -29,7 +29,7 @@ pub fn run_stt<A>(post: (), f: A) -> A {
     panic!()
 }
 pub fn sid_hash(s: super::dpe::sid_t) -> usize {
-    s.into()
+    s as usize
 }
 pub const fn initialize_global_state(
     uu___: (),

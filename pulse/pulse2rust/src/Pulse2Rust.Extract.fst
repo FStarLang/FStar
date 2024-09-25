@@ -504,7 +504,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     extract_mlexpr g e
   | S.MLE_App ({expr=S.MLE_Name p}, [e])
     when S.string_of_mlpath p = "FStar.SizeT.uint16_to_sizet" ->
-    mk_method_call (extract_mlexpr g e) "into" []
+    mk_cast (extract_mlexpr g e) (mk_scalar_typ "usize")
 
   | S.MLE_App ({expr=S.MLE_Name p}, [e])
     when S.string_of_mlpath p = "FStar.Int.Cast.uint16_to_uint8" ||
