@@ -327,8 +327,14 @@ jobs:
         run: make -C pulse -skj$(nproc) test
 
   build-hacl:
-    runs-on: [self-hosted, linux, big] # using a faster runner
-    # runs-on: ubuntu-latest
+    # runs-on: [self-hosted, linux, big] # using a faster runner
+    # NOTE: To use a self-hosted runner, we must make sure that
+    # the runner is executing as UID 1001 (which is the one the
+    # docker container uses) or it will be unable to write to its
+    # workspace. This is simply a terrible design by github actions.
+    # Somehow the cloud runners work regardless of the uid in
+    # the container.
+    runs-on: ubuntu-latest
     container: mtzguido/fstar-base-testing
     needs:
       - build-fstar
