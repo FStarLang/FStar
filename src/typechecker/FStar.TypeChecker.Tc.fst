@@ -892,7 +892,7 @@ let tc_decl env se: list sigelt & list sigelt & Env.env =
   in
   if Debug.any () then
     BU.print1 "Processing %s\n" (Print.sigelt_to_string_short se);
-  if Debug.low () then
+  if Debug.medium () then
     BU.print2 ">>>>>>>>>>>>>>tc_decl admit=%s %s\n" (show env.admit) (show se);
   let result =
     if se.sigmeta.sigmeta_already_checked then
