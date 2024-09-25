@@ -273,56 +273,96 @@ let extract_top_level_sig
 //
 let is_binop (s:string) : option binop =
   if s = "Prims.op_Addition" ||
+     s = "FStar.UInt8.add" ||
      s = "FStar.UInt16.add" ||
      s = "FStar.UInt32.add" ||
+     s = "FStar.UInt64.add" ||
      s = "FStar.SizeT.add"
   then Some Add
   else if s = "Prims.op_Subtraction" ||
           s = "FStar.SizeT.sub" ||
+          s = "FStar.UInt8.sub" ||
           s = "FStar.UInt16.sub" ||
-          s = "FStar.UInt32.sub"
+          s = "FStar.UInt32.sub" ||
+          s = "FStar.UInt64.sub"
   then Some Sub
   else if s = "Prims.op_Multiply" ||
           s = "FStar.Mul.op_Star" ||
+          s = "FStar.UInt8.mul" ||
           s = "FStar.UInt16.mul" ||
           s = "FStar.UInt32.mul" ||
           s = "FStar.UInt32.op_Star_Hat" ||
+          s = "FStar.UInt64.mul" ||
           s = "FStar.SizeT.mul" ||
           s = "FStar.SizeT.op_Star_Hat"
   then Some Mul
   else if s = "Prims.op_disEquality"
   then Some Ne
   else if s = "Prims.op_LessThanOrEqual" ||
+          s = "FStar.UInt8.lte" ||
           s = "FStar.UInt16.lte" ||
           s = "FStar.UInt32.lte" ||
+          s = "FStar.UInt64.lte" ||
           s = "FStar.SizeT.lte"
   then Some Le
   else if s = "Prims.op_LessThan" ||
+          s = "FStar.UInt8.lt" ||
           s = "FStar.UInt16.lt" ||
           s = "FStar.UInt32.lt" ||
+          s = "FStar.UInt64.lt" ||
           s = "FStar.SizeT.lt"
   then Some Lt
   else if s = "Prims.op_GreaterThanOrEqual" ||
+          s = "FStar.UInt8.gte" ||
           s = "FStar.UInt16.gte" ||
           s = "FStar.UInt32.gte" ||
+          s = "FStar.UInt64.gte" ||
           s = "FStar.SizeT.gte"
   then Some Ge
   else if s = "Prims.op_GreaterThan" ||
+          s = "FStar.UInt8.gt" ||
           s = "FStar.UInt16.gt" ||
           s = "FStar.UInt32.gt" ||
+          s = "FStar.UInt64.gt" ||
           s = "FStar.SizeT.gt"
   then Some Gt
   else if s = "Prims.op_Equality"
   then Some Eq
   else if s = "Prims.rem" ||
+          s = "FStar.UInt8.rem" ||
           s = "FStar.UInt16.rem" ||
           s = "FStar.UInt32.rem" ||
+          s = "FStar.UInt64.rem" ||
           s = "FStar.SizeT.rem"
   then Some Rem
   else if s = "Prims.op_AmpAmp"
   then Some And
   else if s = "Prims.op_BarBar"
   then Some Or
+  else if
+    s = "FStar.UInt8.shift_left" ||
+    s = "FStar.UInt16.shift_left" ||
+    s = "FStar.UInt32.shift_left" ||
+    s = "FStar.UInt64.shift_left"
+  then Some Shl
+  else if
+    s = "FStar.UInt8.shift_right" ||
+    s = "FStar.UInt16.shift_right" ||
+    s = "FStar.UInt32.shift_right" ||
+    s = "FStar.UInt64.shift_right"
+  then Some Shr
+  else if
+    s = "FStar.UInt8.logor" ||
+    s = "FStar.UInt16.logor" ||
+    s = "FStar.UInt32.logor" ||
+    s = "FStar.UInt64.logor"
+  then Some BitOr
+  else if
+    s = "FStar.UInt8.logand" ||
+    s = "FStar.UInt16.logand" ||
+    s = "FStar.UInt32.logand" ||
+    s = "FStar.UInt64.logand"
+  then Some BitAnd
   else None
 
 let extract_mlconstant_to_lit (c:S.mlconstant) : lit =

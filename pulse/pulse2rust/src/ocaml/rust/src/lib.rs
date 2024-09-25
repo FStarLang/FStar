@@ -47,6 +47,10 @@ enum BinOp {
     And,
     Or,
     Mul,
+    Shr,
+    Shl,
+    BitAnd,
+    BitOr,
 }
 
 enum UnOp {
@@ -356,7 +360,11 @@ impl_from_ocaml_variant! {
       BinOp::Rem,
       BinOp::And,
       BinOp::Or,
-      BinOp::Mul
+      BinOp::Mul,
+      BinOp::Shr,
+      BinOp::Shl,
+      BinOp::BitAnd,
+      BinOp::BitOr,
   }
 }
 
@@ -789,6 +797,18 @@ fn to_syn_binop(op: &BinOp) -> syn::BinOp {
             spans: [Span::call_site(), Span::call_site()],
         }),
         BinOp::Mul => syn::BinOp::Mul(syn::token::Star {
+            spans: [Span::call_site()],
+        }),
+        BinOp::Shr => syn::BinOp::Shr(syn::token::Shr {
+            spans: [Span::call_site(), Span::call_site()],
+        }),
+        BinOp::Shl => syn::BinOp::Shl(syn::token::Shl {
+            spans: [Span::call_site(), Span::call_site()],
+        }),
+        BinOp::BitAnd => syn::BinOp::BitAnd(syn::token::And {
+            spans: [Span::call_site()],
+        }),
+        BinOp::BitOr => syn::BinOp::BitOr(syn::token::Or {
             spans: [Span::call_site()],
         }),
     }
@@ -1849,6 +1869,10 @@ impl fmt::Display for BinOp {
             BinOp::And => "&&",
             BinOp::Or => "||",
             BinOp::Mul => "*",
+            BinOp::Shr => ">>",
+            BinOp::Shl => "<<",
+            BinOp::BitAnd => "&",
+            BinOp::BitOr => "|",
         };
         write!(f, "{}", s)
     }

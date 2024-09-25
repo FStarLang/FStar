@@ -49,6 +49,10 @@ type binop =
   | And
   | Or
   | Mul
+  | Shr
+  | Shl
+  | BitAnd
+  | BitOr
 
 type unop =
   | Deref
