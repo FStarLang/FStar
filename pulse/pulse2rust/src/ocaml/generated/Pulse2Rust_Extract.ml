@@ -889,8 +889,11 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::[])
           when
-          ((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___5 = "Pulse.Lib.Pervasives.tfst") ||
+          (((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___5 = "Pulse.Lib.Pervasives.tfst") ||
+              (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___5 = "FStar.Pervasives.Native.__proj__Mktuple2__item___1"))
+             ||
              (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
               uu___5 = "FStar.Pervasives.Native.fst"))
             ||
@@ -913,8 +916,11 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::[])
           when
-          ((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___5 = "Pulse.Lib.Pervasives.tsnd") ||
+          (((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___5 = "Pulse.Lib.Pervasives.tsnd") ||
+              (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___5 = "FStar.Pervasives.Native.__proj__Mktuple2__item___2"))
+             ||
              (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
               uu___5 = "FStar.Pervasives.Native.snd"))
             ||
