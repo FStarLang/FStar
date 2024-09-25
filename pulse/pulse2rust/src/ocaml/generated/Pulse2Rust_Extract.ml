@@ -561,6 +561,13 @@ let rec (extract_mlpattern_to_pat :
                    FStar_Compiler_List.zip uu___4 ps in
                  Pulse2Rust_Rust_Syntax.mk_pat_struct uu___2 uu___3 in
                (g1, uu___1))
+      | FStar_Extraction_ML_Syntax.MLP_Tuple ps ->
+          let uu___ =
+            FStar_Compiler_List.fold_left_map extract_mlpattern_to_pat g ps in
+          (match uu___ with
+           | (g1, ps1) ->
+               let uu___1 = Pulse2Rust_Rust_Syntax.mk_pat_tuple ps1 in
+               (g1, uu___1))
       | uu___ ->
           let uu___1 =
             let uu___2 = FStar_Extraction_ML_Syntax.mlpattern_to_string p in

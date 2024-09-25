@@ -378,6 +378,9 @@ let rec extract_mlpattern_to_pat (g:env) (p:S.mlpattern) : env & pat =
     let g, ps = fold_left_map extract_mlpattern_to_pat g (List.map snd fs) in
     g,
     mk_pat_struct (List.last p) (zip (List.map fst fs) ps)
+  | S.MLP_Tuple ps ->
+    let g, ps = fold_left_map extract_mlpattern_to_pat g ps in
+    g, mk_pat_tuple ps
   | _ -> fail_nyi (format1 "mlpattern_to_pat %s" (S.mlpattern_to_string p))
 
 //
