@@ -162,6 +162,7 @@ and expr =
   | Expr_struct of expr_struct 
   | Expr_tuple of expr Prims.list 
   | Expr_method_call of expr_method_call 
+  | Expr_cast of expr_cast 
 and expr_bin =
   {
   expr_bin_left: expr ;
@@ -217,6 +218,9 @@ and expr_method_call =
   expr_method_call_receiver: expr ;
   expr_method_call_name: Prims.string ;
   expr_method_call_args: expr Prims.list }
+and expr_cast = {
+  expr_cast_expr: expr ;
+  expr_cast_type: typ }
 and local_stmt =
   {
   local_stmt_pat: pat FStar_Pervasives_Native.option ;
@@ -397,6 +401,11 @@ let (uu___is_Expr_method_call : expr -> Prims.bool) =
     match projectee with | Expr_method_call _0 -> true | uu___ -> false
 let (__proj__Expr_method_call__item___0 : expr -> expr_method_call) =
   fun projectee -> match projectee with | Expr_method_call _0 -> _0
+let (uu___is_Expr_cast : expr -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Expr_cast _0 -> true | uu___ -> false
+let (__proj__Expr_cast__item___0 : expr -> expr_cast) =
+  fun projectee -> match projectee with | Expr_cast _0 -> _0
 let (__proj__Mkexpr_bin__item__expr_bin_left : expr_bin -> expr) =
   fun projectee ->
     match projectee with
@@ -550,6 +559,14 @@ let (__proj__Mkexpr_method_call__item__expr_method_call_args :
     match projectee with
     | { expr_method_call_receiver; expr_method_call_name;
         expr_method_call_args;_} -> expr_method_call_args
+let (__proj__Mkexpr_cast__item__expr_cast_expr : expr_cast -> expr) =
+  fun projectee ->
+    match projectee with
+    | { expr_cast_expr; expr_cast_type;_} -> expr_cast_expr
+let (__proj__Mkexpr_cast__item__expr_cast_type : expr_cast -> typ) =
+  fun projectee ->
+    match projectee with
+    | { expr_cast_expr; expr_cast_type;_} -> expr_cast_type
 let (__proj__Mklocal_stmt__item__local_stmt_pat :
   local_stmt -> pat FStar_Pervasives_Native.option) =
   fun projectee ->
@@ -1069,6 +1086,8 @@ let (mk_method_call : expr -> Prims.string -> expr Prims.list -> expr) =
             expr_method_call_name = name;
             expr_method_call_args = args
           }
+let (mk_cast : expr -> typ -> expr) =
+  fun e -> fun ty -> Expr_cast { expr_cast_expr = e; expr_cast_type = ty }
 let (mk_new_mutex : expr -> expr) =
   fun e ->
     let uu___ = mk_expr_path ["std"; "sync"; "Mutex"; "new"] in

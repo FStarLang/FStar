@@ -774,6 +774,82 @@ and (extract_mlexpr :
           uu___2 = "FStar.SizeT.uint16_to_sizet" ->
           let uu___2 = extract_mlexpr g e1 in
           Pulse2Rust_Rust_Syntax.mk_method_call uu___2 "into" []
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_Name p;
+             FStar_Extraction_ML_Syntax.mlty = uu___;
+             FStar_Extraction_ML_Syntax.loc = uu___1;_},
+           e1::[])
+          when
+          ((let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___2 = "FStar.Int.Cast.uint16_to_uint8") ||
+             (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___2 = "FStar.Int.Cast.uint32_to_uint8"))
+            ||
+            (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___2 = "FStar.Int.Cast.uint64_to_uint8")
+          ->
+          let uu___2 = extract_mlexpr g e1 in
+          let uu___3 = Pulse2Rust_Rust_Syntax.mk_scalar_typ "u8" in
+          Pulse2Rust_Rust_Syntax.mk_cast uu___2 uu___3
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_Name p;
+             FStar_Extraction_ML_Syntax.mlty = uu___;
+             FStar_Extraction_ML_Syntax.loc = uu___1;_},
+           e1::[])
+          when
+          ((let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___2 = "FStar.Int.Cast.uint8_to_uint16") ||
+             (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___2 = "FStar.Int.Cast.uint32_to_uint16"))
+            ||
+            (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___2 = "FStar.Int.Cast.uint64_to_uint16")
+          ->
+          let uu___2 = extract_mlexpr g e1 in
+          let uu___3 = Pulse2Rust_Rust_Syntax.mk_scalar_typ "u16" in
+          Pulse2Rust_Rust_Syntax.mk_cast uu___2 uu___3
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_Name p;
+             FStar_Extraction_ML_Syntax.mlty = uu___;
+             FStar_Extraction_ML_Syntax.loc = uu___1;_},
+           e1::[])
+          when
+          ((let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___2 = "FStar.Int.Cast.uint8_to_uint32") ||
+             (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___2 = "FStar.Int.Cast.uint16_to_uint32"))
+            ||
+            (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___2 = "FStar.Int.Cast.uint64_to_uint32")
+          ->
+          let uu___2 = extract_mlexpr g e1 in
+          let uu___3 = Pulse2Rust_Rust_Syntax.mk_scalar_typ "u32" in
+          Pulse2Rust_Rust_Syntax.mk_cast uu___2 uu___3
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_Name p;
+             FStar_Extraction_ML_Syntax.mlty = uu___;
+             FStar_Extraction_ML_Syntax.loc = uu___1;_},
+           e1::[])
+          when
+          ((let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___2 = "FStar.Int.Cast.uint8_to_uint64") ||
+             (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___2 = "FStar.Int.Cast.uint16_to_uint64"))
+            ||
+            (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___2 = "FStar.Int.Cast.uint32_to_uint64")
+          ->
+          let uu___2 = extract_mlexpr g e1 in
+          let uu___3 = Pulse2Rust_Rust_Syntax.mk_scalar_typ "u64" in
+          Pulse2Rust_Rust_Syntax.mk_cast uu___2 uu___3
       | FStar_Extraction_ML_Syntax.MLE_Var x ->
           let uu___ = varname x in
           Pulse2Rust_Rust_Syntax.mk_expr_path_singl uu___

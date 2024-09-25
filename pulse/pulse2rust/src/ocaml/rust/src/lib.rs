@@ -136,6 +136,11 @@ struct ExprMethodCall {
     expr_method_call_args: Vec<Expr>,
 }
 
+struct ExprCast {
+    expr_cast_expr: Box<Expr>,
+    expr_cast_type: Box<Typ>,
+}
+
 enum Expr {
     EBinOp(ExprBin),
     EPath(Vec<PathSegment>),
@@ -154,6 +159,7 @@ enum Expr {
     EStruct(ExprStruct),
     ETuple(Vec<Expr>),
     EMethodCall(ExprMethodCall),
+    ECast(ExprCast),
 }
 
 struct TypeReference {
@@ -393,6 +399,7 @@ impl_from_ocaml_variant! {
     Expr::EStruct (payload:ExprStruct),
     Expr::ETuple (payload:OCamlList<Expr>),
     Expr::EMethodCall (payload:ExprMethodCall),
+    Expr::ECast (payload:ExprCast),
   }
 }
 
@@ -502,6 +509,13 @@ impl_from_ocaml_record! {
     expr_method_call_receiver: Expr,
     expr_method_call_name: String,
     expr_method_call_args: OCamlList<Expr>,
+  }
+}
+
+impl_from_ocaml_record! {
+  ExprCast {
+    expr_cast_expr: Expr,
+    expr_cast_type: Typ,
   }
 }
 
@@ -1179,7 +1193,15 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
                 paren_token: Paren::default(),
                 args,
             })
-        }
+        },
+        Expr::ECast(ExprCast { expr_cast_expr, expr_cast_type }) => {
+            syn::Expr::Cast(syn::ExprCast {
+                attrs: vec![],
+                expr: Box::new(to_syn_expr(expr_cast_expr)),
+                as_token: syn::token::As { span: Span::call_site() },
+                ty: Box::new(to_syn_typ(expr_cast_type)),
+            })
+        },
     }
 }
 
@@ -2108,6 +2130,15 @@ impl fmt::Display for Expr {
                     .map(|e| e.to_string())
                     .collect::<Vec<_>>()
                     .join(",")
+            ),
+            Expr::ECast(ExprCast {
+                expr_cast_expr,
+                expr_cast_type,
+            }) => write!(
+                f,
+                "{} as {}",
+                expr_cast_expr,
+                expr_cast_type,
             ),
         }
     }

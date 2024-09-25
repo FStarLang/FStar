@@ -506,6 +506,27 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     when S.string_of_mlpath p = "FStar.SizeT.uint16_to_sizet" ->
     mk_method_call (extract_mlexpr g e) "into" []
 
+  | S.MLE_App ({expr=S.MLE_Name p}, [e])
+    when S.string_of_mlpath p = "FStar.Int.Cast.uint16_to_uint8" ||
+         S.string_of_mlpath p = "FStar.Int.Cast.uint32_to_uint8" ||
+         S.string_of_mlpath p = "FStar.Int.Cast.uint64_to_uint8" ->
+    mk_cast (extract_mlexpr g e) (mk_scalar_typ "u8")
+  | S.MLE_App ({expr=S.MLE_Name p}, [e])
+    when S.string_of_mlpath p = "FStar.Int.Cast.uint8_to_uint16" ||
+         S.string_of_mlpath p = "FStar.Int.Cast.uint32_to_uint16" ||
+         S.string_of_mlpath p = "FStar.Int.Cast.uint64_to_uint16" ->
+    mk_cast (extract_mlexpr g e) (mk_scalar_typ "u16")
+  | S.MLE_App ({expr=S.MLE_Name p}, [e])
+    when S.string_of_mlpath p = "FStar.Int.Cast.uint8_to_uint32" ||
+         S.string_of_mlpath p = "FStar.Int.Cast.uint16_to_uint32" ||
+         S.string_of_mlpath p = "FStar.Int.Cast.uint64_to_uint32" ->
+    mk_cast (extract_mlexpr g e) (mk_scalar_typ "u32")
+  | S.MLE_App ({expr=S.MLE_Name p}, [e])
+    when S.string_of_mlpath p = "FStar.Int.Cast.uint8_to_uint64" ||
+         S.string_of_mlpath p = "FStar.Int.Cast.uint16_to_uint64" ||
+         S.string_of_mlpath p = "FStar.Int.Cast.uint32_to_uint64" ->
+    mk_cast (extract_mlexpr g e) (mk_scalar_typ "u64")
+
   | S.MLE_Var x -> mk_expr_path_singl (varname x)
   | S.MLE_Name p ->
     if should_extract_mlpath_with_symbol g (fst p)
