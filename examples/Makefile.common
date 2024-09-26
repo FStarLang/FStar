@@ -102,6 +102,14 @@ include .depend
 	$(call msg, "OUTPUT", $(basename $(notdir $@)))
 	$(Q)$(VERBOSE_FSTAR) -f --print_expected_failures $< >$@ 2>&1
 
+%.fst.json_output: %.fst
+	$(call msg, "JSONOUT", $(basename $(notdir $@)))
+	$(Q)$(VERBOSE_FSTAR) --message_format json -f --print_expected_failures $< >$@ 2>&1
+
+%.fsti.json_output: %.fsti
+	$(call msg, "JSONOUT", $(basename $(notdir $@)))
+	$(Q)$(VERBOSE_FSTAR) --message_format json -f --print_expected_failures $< >$@ 2>&1
+
 clean:
 	rm -rf $(CACHE_DIR)
 
