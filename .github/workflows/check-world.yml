@@ -1,4 +1,67 @@
 name: Check world (build F* and all projects)
+
+# This workflow builds/checks F* and a selection of subprojects
+# depending on it.
+#
+# It is meant to test if an F* patch impacts other projects heavily or
+# not. Jobs can (and will) run in parallel if the dependencies allow,
+# using (mostly) Github hosted runners which are small-ish 4 core VMs.
+#
+# The steps are containerized and running on a docker container
+# 'mtzguido/fstar-base-testing` built from .docker/nu_base.Dockerfile
+# (FIXME: it needs a big cleanup and should go into an FStarLang
+# namespace)
+#
+# Self-hosted runners *can* be used, and it's desirable to do it for
+# things like HACL* or everparse that take really long on Github VMs
+# (build-hacl takes ~1h50m on github runners, ~20m on a new-ish 16-core
+# 32-thread desktop). HOWEVER, Github actions seems to be incredibly
+# stupid in bind mounting the workspace for the job from the current
+# directory of the runner, which means the workspace has the UID of the
+# user that started the runner, but the steps of the job run inside the
+# runner with the UID of the docker user. If these UIDs differ, the job
+# will quickly fail to do anything and break. I'm not sure what the
+# canonical fix is here, I think this is insane. FIXME
+#
+# We also use some custom actions. They are all not very well documented
+# and not robust, so think twice (or ask) before using elsewhere!
+# - mtzguido/set-opam-env:
+#   this sets up the opam environment for the following steps
+#   (`eval $(opam env)` will not cut it, nor will `opam env >> $GITHUB_ENV`)
+#
+# - mtzguido/gci-upload:
+#   this uploads an artifact, much like github/upload-artifact, but first
+#   packages it up into a tarball to preserve permissions (like exec bits).
+#   Again it's insane that github does not do this by default. The tarball
+#   will anyways be zipped afterwards since all github artifacts are zipped,
+#   and will show up in the workflow run page.
+#   It takes an optional 'extra' for argments to tar, that we use to ignore
+#   some directories. It also ignores .git by default.
+#   The 'hometag' is a way to set home variables when downloading the artifacts.
+#
+# - mtzguido/gci-download:
+#   The companion to gci-upload. It will download the zipped tarball, unzip,
+#   and extract into a directory named like the artifact. If the gci-upload had
+#   a 'hometag: FOO', then the client downloading the artifact will get FOO_HOME
+#   set in the environment, equal to the directory where the artifact was extracted.
+#   This means most jobs do
+#
+#     - uses: mtzguido/gci-download@master
+#       with:
+#         name: FStar
+#
+#   And get a working F* with FSTAR_HOME set in the FStar directory.
+#
+#
+# Adding new jobs should be relatively easy. Just state dependencies in
+# the 'needs', and start the job by fetching the required dependencies
+# with gci-download, and then build. The examples below should serve
+# as a guide. If possible, separate the building from the testing,
+# since future jobs may need the built resource, but all tests are
+# independent. (However note that there is an overhead to start a job,
+# it's ~40s alone to start a container, so don't overdo it by splitting
+# up too much).
+
 on:
   # push:
   workflow_dispatch:
