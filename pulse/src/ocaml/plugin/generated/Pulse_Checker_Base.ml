@@ -3596,7 +3596,11 @@ let (is_stateful_application :
                                                                e);
                                                           Pulse_Syntax_Base.effect_tag
                                                             =
-                                                            Pulse_Syntax_Base.default_effect_hint
+                                                            Pulse_Syntax_Base.default_effect_hint;
+                                                          Pulse_Syntax_Base.source
+                                                            =
+                                                            (FStar_Sealed.seal
+                                                               false)
                                                         }
                                                   | uu___6 ->
                                                       FStar_Pervasives_Native.None))))

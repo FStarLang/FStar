@@ -318,7 +318,10 @@ let rec (arrow_of_abs :
                                                                     (prog.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
-                                                                    (prog.Pulse_Syntax_Base.effect_tag)
+                                                                    (prog.Pulse_Syntax_Base.effect_tag);
+                                                                    Pulse_Syntax_Base.source
+                                                                    =
+                                                                    (prog.Pulse_Syntax_Base.source)
                                                                     })))
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
@@ -408,7 +411,10 @@ let rec (arrow_of_abs :
                                                                     (prog.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
-                                                                    (prog.Pulse_Syntax_Base.effect_tag)
+                                                                    (prog.Pulse_Syntax_Base.effect_tag);
+                                                                    Pulse_Syntax_Base.source
+                                                                    =
+                                                                    (prog.Pulse_Syntax_Base.source)
                                                                     }))))
                                                                     | 
                                                                     uu___10
@@ -433,7 +439,7 @@ let rec (arrow_of_abs :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -531,7 +537,10 @@ let rec (arrow_of_abs :
                                                                     (prog.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
-                                                                    (prog.Pulse_Syntax_Base.effect_tag)
+                                                                    (prog.Pulse_Syntax_Base.effect_tag);
+                                                                    Pulse_Syntax_Base.source
+                                                                    =
+                                                                    (prog.Pulse_Syntax_Base.source)
                                                                     }))))))
                                                                     uu___8)))
                                                                     uu___7)))
@@ -876,7 +885,10 @@ let rec (rebuild_abs :
                                                                     (t.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
-                                                                    (t.Pulse_Syntax_Base.effect_tag)
+                                                                    (t.Pulse_Syntax_Base.effect_tag);
+                                                                    Pulse_Syntax_Base.source
+                                                                    =
+                                                                    (t.Pulse_Syntax_Base.source)
                                                                     }))))
                                                                     uu___8))
                                                                     else
@@ -907,7 +919,7 @@ let rec (rebuild_abs :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1014,7 +1026,7 @@ let rec (rebuild_abs :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1088,7 +1100,7 @@ let rec (rebuild_abs :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1180,7 +1192,10 @@ let rec (rebuild_abs :
                                                                     (t.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
-                                                                    (t.Pulse_Syntax_Base.effect_tag)
+                                                                    (t.Pulse_Syntax_Base.effect_tag);
+                                                                    Pulse_Syntax_Base.source
+                                                                    =
+                                                                    (t.Pulse_Syntax_Base.source)
                                                                     })))))
                                                                 | uu___7 ->
                                                                     Obj.magic
@@ -1203,7 +1218,7 @@ let rec (rebuild_abs :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -1267,7 +1282,7 @@ let rec (rebuild_abs :
                                  (Prims.of_int (166)) (Prims.of_int (46)))))
                         (FStar_Sealed.seal
                            (Obj.magic
-                              (FStar_Range.mk_range "prims.fst"
+                              (FStar_Range.mk_range "Prims.fst"
                                  (Prims.of_int (611)) (Prims.of_int (19))
                                  (Prims.of_int (611)) (Prims.of_int (31)))))
                         (Obj.magic uu___4)
@@ -1334,7 +1349,7 @@ let (preprocess_abs :
                                     (Prims.of_int (173)) (Prims.of_int (87)))))
                            (FStar_Sealed.seal
                               (Obj.magic
-                                 (FStar_Range.mk_range "prims.fst"
+                                 (FStar_Range.mk_range "Prims.fst"
                                     (Prims.of_int (611)) (Prims.of_int (19))
                                     (Prims.of_int (611)) (Prims.of_int (31)))))
                            (Obj.magic uu___4)
@@ -1425,7 +1440,7 @@ let (preprocess_abs :
                                                                 (FStar_Sealed.seal
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))
@@ -3799,7 +3814,7 @@ let rec (check_abs_core :
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
-                                                                    "prims.fst"
+                                                                    "Prims.fst"
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (611))

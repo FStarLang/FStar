@@ -130,7 +130,7 @@ let is_return_bv0 (e:st_term) : bool =
 let simplify_nested_let (e:st_term) (b_x:binder) (head:st_term) (e3:st_term)
   : option st_term =
 
-  let mk t : st_term = { range = e.range; effect_tag = default_effect_hint; term = t } in
+  let mk t : st_term = { range = e.range; effect_tag = default_effect_hint; term = t; source=Sealed.seal false } in
   let body e2 = mk (Tm_Bind { binder = b_x; head = e2; body = e3 }) in
   match head.term with
   | Tm_TotBind { binder = b_y; head = e1; body = e2 } ->

@@ -414,7 +414,8 @@ let (simplify_nested_let :
               Pulse_Syntax_Base.term1 = t;
               Pulse_Syntax_Base.range1 = (e.Pulse_Syntax_Base.range1);
               Pulse_Syntax_Base.effect_tag =
-                Pulse_Syntax_Base.default_effect_hint
+                Pulse_Syntax_Base.default_effect_hint;
+              Pulse_Syntax_Base.source = (FStar_Sealed.seal false)
             } in
           let body e2 =
             mk
@@ -494,7 +495,8 @@ let rec (simplify_st_term :
                     Pulse_Syntax_Base.term1 = t;
                     Pulse_Syntax_Base.range1 = (e.Pulse_Syntax_Base.range1);
                     Pulse_Syntax_Base.effect_tag =
-                      (e.Pulse_Syntax_Base.effect_tag)
+                      (e.Pulse_Syntax_Base.effect_tag);
+                    Pulse_Syntax_Base.source = (e.Pulse_Syntax_Base.source)
                   })) in
       FStar_Tactics_Effect.tac_bind
         (FStar_Sealed.seal
@@ -1165,7 +1167,10 @@ let rec (simplify_st_term :
                                                             (e.Pulse_Syntax_Base.range1);
                                                           Pulse_Syntax_Base.effect_tag
                                                             =
-                                                            (e.Pulse_Syntax_Base.effect_tag)
+                                                            (e.Pulse_Syntax_Base.effect_tag);
+                                                          Pulse_Syntax_Base.source
+                                                            =
+                                                            (e.Pulse_Syntax_Base.source)
                                                         })))) uu___3)))
                          | Pulse_Syntax_Base.Tm_Par
                              { Pulse_Syntax_Base.pre1 = pre1;
@@ -1245,7 +1250,10 @@ let rec (simplify_st_term :
                                                             (e.Pulse_Syntax_Base.range1);
                                                           Pulse_Syntax_Base.effect_tag
                                                             =
-                                                            (e.Pulse_Syntax_Base.effect_tag)
+                                                            (e.Pulse_Syntax_Base.effect_tag);
+                                                          Pulse_Syntax_Base.source
+                                                            =
+                                                            (e.Pulse_Syntax_Base.source)
                                                         })))) uu___3)))
                          | Pulse_Syntax_Base.Tm_WithLocal
                              { Pulse_Syntax_Base.binder2 = binder;
@@ -1701,7 +1709,9 @@ let rec (erase_ghost_subterms :
                                      Pulse_Syntax_Base.range1 =
                                        (p.Pulse_Syntax_Base.range1);
                                      Pulse_Syntax_Base.effect_tag =
-                                       (p.Pulse_Syntax_Base.effect_tag)
+                                       (p.Pulse_Syntax_Base.effect_tag);
+                                     Pulse_Syntax_Base.source =
+                                       (p.Pulse_Syntax_Base.source)
                                    })) in
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
@@ -1735,7 +1745,9 @@ let rec (erase_ghost_subterms :
                                                     (p.Pulse_Syntax_Base.range1);
                                                   Pulse_Syntax_Base.effect_tag
                                                     =
-                                                    (p.Pulse_Syntax_Base.effect_tag)
+                                                    (p.Pulse_Syntax_Base.effect_tag);
+                                                  Pulse_Syntax_Base.source =
+                                                    (p.Pulse_Syntax_Base.source)
                                                 })) in
                                     Obj.magic
                                       (FStar_Tactics_Effect.tac_bind
@@ -3091,7 +3103,7 @@ let (get_type_of_ref :
                              (Prims.of_int (360)) (Prims.of_int (111)))))
                     (FStar_Sealed.seal
                        (Obj.magic
-                          (FStar_Range.mk_range "prims.fst"
+                          (FStar_Range.mk_range "Prims.fst"
                              (Prims.of_int (611)) (Prims.of_int (19))
                              (Prims.of_int (611)) (Prims.of_int (31)))))
                     (Obj.magic uu___4)
@@ -3153,7 +3165,7 @@ let (get_type_of_array :
                              (Prims.of_int (368)) (Prims.of_int (114)))))
                     (FStar_Sealed.seal
                        (Obj.magic
-                          (FStar_Range.mk_range "prims.fst"
+                          (FStar_Range.mk_range "Prims.fst"
                              (Prims.of_int (611)) (Prims.of_int (19))
                              (Prims.of_int (611)) (Prims.of_int (31)))))
                     (Obj.magic uu___4)

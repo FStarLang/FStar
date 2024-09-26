@@ -27,7 +27,7 @@ let (debug_log :
                                     (Prims.of_int (35)) (Prims.of_int (63)))))
                            (FStar_Sealed.seal
                               (Obj.magic
-                                 (FStar_Range.mk_range "prims.fst"
+                                 (FStar_Range.mk_range "Prims.fst"
                                     (Prims.of_int (611)) (Prims.of_int (19))
                                     (Prims.of_int (611)) (Prims.of_int (31)))))
                            (Obj.magic uu___1)
@@ -941,7 +941,8 @@ let (wrst :
         Pulse_Syntax_Base.range1 = FStar_Range.range_0;
         Pulse_Syntax_Base.effect_tag =
           (Pulse_Syntax_Base.as_effect_hint
-             (Pulse_Syntax_Base.ctag_of_comp_st ct))
+             (Pulse_Syntax_Base.ctag_of_comp_st ct));
+        Pulse_Syntax_Base.source = (FStar_Sealed.seal false)
       }
 let (wtag :
   Pulse_Syntax_Base.ctag FStar_Pervasives_Native.option ->
@@ -952,7 +953,8 @@ let (wtag :
       {
         Pulse_Syntax_Base.term1 = t;
         Pulse_Syntax_Base.range1 = FStar_Range.range_0;
-        Pulse_Syntax_Base.effect_tag = (FStar_Sealed.seal ct)
+        Pulse_Syntax_Base.effect_tag = (FStar_Sealed.seal ct);
+        Pulse_Syntax_Base.source = (FStar_Sealed.seal false)
       }
 type ('dummyV0, 'dummyV1) st_comp_typing =
   | STC of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp *
