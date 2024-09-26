@@ -1,2 +1,5 @@
 *.output
+*.json_output
 *.check
+*.human_check
+*.json_check
