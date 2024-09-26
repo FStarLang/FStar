@@ -3795,6 +3795,15 @@ let (num_datacon_non_injective_ty_params :
           then FStar_Pervasives_Native.Some Prims.int_zero
           else FStar_Pervasives_Native.Some num_ty_params
       | uu___1 -> FStar_Pervasives_Native.None
+let (visible_with :
+  delta_level Prims.list ->
+    FStar_Syntax_Syntax.qualifier Prims.list -> Prims.bool)
+  =
+  fun delta_levels ->
+    fun quals ->
+      FStar_Compiler_Util.for_some
+        (fun dl -> FStar_Compiler_Util.for_some (visible_at dl) quals)
+        delta_levels
 let (lookup_definition_qninfo_aux :
   Prims.bool ->
     delta_level Prims.list ->
@@ -3808,10 +3817,6 @@ let (lookup_definition_qninfo_aux :
     fun delta_levels ->
       fun lid ->
         fun qninfo1 ->
-          let visible quals =
-            FStar_Compiler_Util.for_some
-              (fun dl -> FStar_Compiler_Util.for_some (visible_at dl) quals)
-              delta_levels in
           match qninfo1 with
           | FStar_Pervasives_Native.Some
               (FStar_Pervasives.Inr (se, FStar_Pervasives_Native.None),
@@ -3822,8 +3827,8 @@ let (lookup_definition_qninfo_aux :
                    { FStar_Syntax_Syntax.lbs1 = (is_rec, lbs);
                      FStar_Syntax_Syntax.lids1 = uu___1;_}
                    when
-                   (visible se.FStar_Syntax_Syntax.sigquals) &&
-                     ((Prims.op_Negation is_rec) || rec_ok)
+                   (visible_with delta_levels se.FStar_Syntax_Syntax.sigquals)
+                     && ((Prims.op_Negation is_rec) || rec_ok)
                    ->
                    FStar_Compiler_Util.find_map lbs
                      (fun lb ->

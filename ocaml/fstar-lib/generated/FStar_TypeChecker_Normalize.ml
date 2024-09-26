@@ -2063,6 +2063,44 @@ let (is_forall_const :
                              uu___4))))
            | uu___1 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None))
         uu___1 uu___
+let (is_extract_as_attr :
+  FStar_Syntax_Syntax.attribute ->
+    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+  =
+  fun attr ->
+    let uu___ = FStar_Syntax_Util.head_and_args attr in
+    match uu___ with
+    | (head, args) ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 = FStar_Syntax_Subst.compress head in
+            uu___3.FStar_Syntax_Syntax.n in
+          (uu___2, args) in
+        (match uu___1 with
+         | (FStar_Syntax_Syntax.Tm_fvar fv, (t, uu___2)::[]) when
+             FStar_Syntax_Syntax.fv_eq_lid fv
+               FStar_Parser_Const.extract_as_lid
+             ->
+             let uu___3 =
+               let uu___4 = FStar_Syntax_Subst.compress t in
+               uu___4.FStar_Syntax_Syntax.n in
+             (match uu___3 with
+              | FStar_Syntax_Syntax.Tm_quoted (impl, uu___4) ->
+                  FStar_Pervasives_Native.Some impl
+              | uu___4 -> FStar_Pervasives_Native.None)
+         | uu___2 -> FStar_Pervasives_Native.None)
+let (has_extract_as_attr :
+  FStar_TypeChecker_Env.env ->
+    FStar_Ident.lid ->
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+  =
+  fun g ->
+    fun lid ->
+      let uu___ = FStar_TypeChecker_Env.lookup_attrs_of_lid g lid in
+      match uu___ with
+      | FStar_Pervasives_Native.Some attrs ->
+          FStar_Compiler_Util.find_map attrs is_extract_as_attr
+      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
 let rec (norm :
   FStar_TypeChecker_Cfg.cfg ->
     env -> stack -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
@@ -3826,10 +3864,33 @@ and (do_unfold_fv :
       fun t0 ->
         fun qninfo ->
           fun f ->
-            let uu___ =
+            let defn uu___ =
               FStar_TypeChecker_Env.lookup_definition_qninfo
                 cfg.FStar_TypeChecker_Cfg.delta_level
                 (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v qninfo in
+            let defn1 uu___ =
+              if
+                (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+              then
+                match qninfo with
+                | FStar_Pervasives_Native.Some
+                    (FStar_Pervasives.Inr (se, FStar_Pervasives_Native.None),
+                     uu___1)
+                    when
+                    FStar_TypeChecker_Env.visible_with
+                      cfg.FStar_TypeChecker_Cfg.delta_level
+                      se.FStar_Syntax_Syntax.sigquals
+                    ->
+                    let uu___2 =
+                      FStar_Compiler_Util.find_map
+                        se.FStar_Syntax_Syntax.sigattrs is_extract_as_attr in
+                    (match uu___2 with
+                     | FStar_Pervasives_Native.Some impl ->
+                         FStar_Pervasives_Native.Some ([], impl)
+                     | FStar_Pervasives_Native.None -> defn ())
+                | uu___1 -> defn ()
+              else defn () in
+            let uu___ = defn1 () in
             match uu___ with
             | FStar_Pervasives_Native.None ->
                 (FStar_TypeChecker_Cfg.log_unfolding cfg
@@ -9154,7 +9215,7 @@ let (get_n_binders :
       FStar_Syntax_Syntax.term ->
         (FStar_Syntax_Syntax.binder Prims.list * FStar_Syntax_Syntax.comp))
   = fun env1 -> fun n -> fun t -> get_n_binders' env1 [] n t
-let (uu___3455 : unit) =
+let (uu___3496 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals __get_n_binders get_n_binders'
 let (maybe_unfold_head_fv :
   FStar_TypeChecker_Env.env ->

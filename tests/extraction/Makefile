@@ -2,7 +2,7 @@ FSTAR_EXAMPLES=$(realpath ../../examples)
 include $(FSTAR_EXAMPLES)/Makefile.include
 include $(FSTAR_ULIB)/ml/Makefile.include
 
-all: inline_let all_cmi Eta_expand.test Div.test
+all: inline_let all_cmi Eta_expand.test Div.test ExtractAs.test
 
 %.exe: %.fst | out
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml $<

@@ -330,6 +330,7 @@ val lookup_and_inst_datacon: env -> universes -> lident -> typ
 (* the boolean tells if the lident was actually a inductive *)
 val datacons_of_typ        : env -> lident -> (bool & list lident)
 val typ_of_datacon         : env -> lident -> lident
+val visible_with           : list delta_level -> list qualifier -> bool
 val lookup_definition_qninfo : list delta_level -> lident -> qninfo -> option (univ_names & term)
 val lookup_definition      : list delta_level -> env -> lident -> option (univ_names & term)
 val lookup_nonrec_definition: list delta_level -> env -> lident -> option (univ_names & term)

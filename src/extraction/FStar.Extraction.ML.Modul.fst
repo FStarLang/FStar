@@ -751,6 +751,16 @@ let mark_sigelt_erased (se:sigelt) (g:uenv) : uenv =
   List.fold_right (fun lid g -> extend_erased_fv g (S.lid_as_fv lid None))
                   (U.lids_of_sigelt se) g
 
+// If the definition has an [@@extract_as impl] attribute,
+// replace the lbdef with the specified impl:
+let fixup_sigelt_extract_as se =
+  match se.sigel, find_map se.sigattrs N.is_extract_as_attr with
+  | Sig_let {lids; lbs=(_, [lb])}, Some impl ->
+    // The specified implementation can be recursive,
+    // to be on the safe side we always mark the replaced sigelt as recursive.
+    {se with sigel = Sig_let {lids; lbs=(true, [{lb with lbdef = impl}])}}
+  | _ -> se
+
 (*  The top-level extraction of a sigelt to an interface *)
 let rec extract_sigelt_iface (g:uenv) (se:sigelt) : uenv & iface =
     if sigelt_has_noextract se then
@@ -758,6 +768,7 @@ let rec extract_sigelt_iface (g:uenv) (se:sigelt) : uenv & iface =
       g, empty_iface
     else
     let se = karamel_fixup_qual se in
+    let se = fixup_sigelt_extract_as se in
 
     match se.sigel with
     | Sig_bundle _
@@ -997,6 +1008,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t & list mlmodule1 =
     g, []
   else begin
     let se = karamel_fixup_qual se in
+    let se = fixup_sigelt_extract_as se in
 
     match se.sigel with
     | Sig_bundle _

@@ -768,15 +768,15 @@ let num_datacon_non_injective_ty_params env lid =
       if injective_type_params then Some 0 else Some num_ty_params
     | _ -> None
 
+let visible_with delta_levels quals =
+  delta_levels |> BU.for_some (fun dl -> quals |> BU.for_some (visible_at dl))
+
 let lookup_definition_qninfo_aux rec_ok delta_levels lid (qninfo : qninfo) =
-  let visible quals =
-      delta_levels |> BU.for_some (fun dl -> quals |> BU.for_some (visible_at dl))
-  in
   match qninfo with
   | Some (Inr (se, None), _) ->
     begin match se.sigel with
       | Sig_let {lbs=(is_rec, lbs)}
-        when visible se.sigquals
+        when visible_with delta_levels se.sigquals
           && (not is_rec || rec_ok) ->
           BU.find_map lbs (fun lb ->
               let fv = right lb.lbname in
