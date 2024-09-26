@@ -10,7 +10,7 @@ depends: [
   "zarith"
   "stdint"
   "yojson"
-  "dune" {build & >= "3.2.0"}
+  "dune" {build & >= "3.8.0"}
   "memtrace"
   "menhirLib"
   "menhir" {build & >= "2.1"}
