@@ -31,5 +31,7 @@ open FStar.Stubs.Reflection.Types
     and most likely cause the extracted program to crash.
 
     Note that the argument needs to be a literal quotation.
+    The implementation can be recursive,
+    but then you need to construct the attribute via a tactic.
  *)
 let extract_as (impl: term) = ()

@@ -756,6 +756,8 @@ let mark_sigelt_erased (se:sigelt) (g:uenv) : uenv =
 let fixup_sigelt_extract_as se =
   match se.sigel, find_map se.sigattrs N.is_extract_as_attr with
   | Sig_let {lids; lbs=(_, [lb])}, Some impl ->
+    // The specified implementation can be recursive,
+    // to be on the safe side we always mark the replaced sigelt as recursive.
     {se with sigel = Sig_let {lids; lbs=(true, [{lb with lbdef = impl}])}}
   | _ -> se
 
