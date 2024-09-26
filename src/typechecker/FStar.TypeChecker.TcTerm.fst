@@ -3167,7 +3167,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
         & guard_t
         & bool =
         if !dbg_Patterns
-        then BU.print2 "Checking pattern %s at type %s\n" (show p) (show t);
+        then BU.print2 "Checking nested pattern %s at type %s\n" (show p) (show t);
 
         let id t = mk_Tm_app
           (S.fvar Const.id_lid None)

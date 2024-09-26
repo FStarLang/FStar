@@ -362,18 +362,17 @@ let head_and_args t =
     | Tm_app {hd=head; args} -> head, args
     | _ -> t, []
 
-let rec __head_and_args_full unmeta t =
+let rec __head_and_args_full acc unmeta t =
     let t = compress t in
     match t.n with
     | Tm_app {hd=head; args} ->
-      let (head, args') = __head_and_args_full unmeta head
-      in (head, args'@args)
+      __head_and_args_full (args@acc) unmeta head
     | Tm_meta {tm} when unmeta ->
-      __head_and_args_full unmeta tm
-    | _ -> t, []
+      __head_and_args_full acc unmeta tm
+    | _ -> t, acc
 
-let head_and_args_full        t = __head_and_args_full false t
-let head_and_args_full_unmeta t = __head_and_args_full true t
+let head_and_args_full        t = __head_and_args_full [] false t
+let head_and_args_full_unmeta t = __head_and_args_full [] true t
 
 let rec leftmost_head t =
     let t = compress t in

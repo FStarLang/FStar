@@ -202,14 +202,14 @@ let destruct_eq' (typ : typ) : option (term & term) =
 
 let destruct_eq (env : Env.env) (typ : typ) : option (term & term) =
 // TODO: unascribe?
-    let typ = whnf env typ in
+    (* let typ = whnf env typ in *)
     match destruct_eq' typ with
     | Some t -> Some t
     | None ->
         // Retry for a squashed one
         begin match U.un_squash typ with
         | Some typ ->
-          let typ = whnf env typ in
+          (* let typ = whnf env typ in *)
           destruct_eq' typ
         | None -> None
         end
@@ -773,7 +773,7 @@ let intro () : tac RD.binding = wrap_err "intro" <| (
         *)
         set_solution goal sol ;!
         let g = mk_goal env' ctx_uvar goal.opts goal.is_guard goal.label in
-        bnorm_and_replace g ;!
+        replace_cur g ;!
         return (binder_to_binding b)
     | None ->
         fail1 "goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
@@ -807,7 +807,7 @@ let intros (max:Z.t) : tac (list RD.binding) = wrap_err "intros" <| (
     let sol = U.abs bs body (Some (U.residual_comp_of_comp c)) in
     set_solution goal sol ;!
     let g = mk_goal env' ctx_uvar goal.opts goal.is_guard goal.label in
-    bnorm_and_replace g ;!
+    replace_cur g ;!
     return (List.map binder_to_binding bs)
 )
 

@@ -8994,8 +8994,8 @@ and (tc_pat :
                FStar_Class_Show.show FStar_Syntax_Print.showable_pat p in
              let uu___3 =
                FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
-             FStar_Compiler_Util.print2 "Checking pattern %s at type %s\n"
-               uu___2 uu___3
+             FStar_Compiler_Util.print2
+               "Checking nested pattern %s at type %s\n" uu___2 uu___3
            else ());
           (let id t1 =
              let uu___1 =

@@ -26,14 +26,14 @@ let debug (f : unit -> Tac string) : Tac unit =
 [@@plugin]
 let mk_one_projector (unf:list string) (np:nat) (i:nat) : Tac unit =
   debug (fun () -> dump "ENTRY mk_one_projector"; "");
-  let _params = repeatn np intro in
+  let _params = Stubs.Tactics.V2.Builtins.intros np in
   let thing : binding = intro () in
   let r = t_destruct thing in
   match r with
   | [(cons, arity)] -> begin
     if (i >= arity) then
       fail "proj: bad index in mk_one_projector";
-    let _      = repeatn i intro in
+    let _      = Stubs.Tactics.V2.Builtins.intros i in
     let the_b  = intro () in
     let _      = Stubs.Tactics.V2.Builtins.intros (arity-i-1) in
     let eq_b   : binding = intro () in
@@ -152,19 +152,20 @@ let mk_proj_decl (is_method:bool)
     in
     (* The method is just defined based on the projector. *)
     let lb_def =
-      (`(_ by (mk_one_method
-                 (`#(embed_string (implode_qn nm)))
-                 (`#(embed_int np)))))
-      (* NB: if we wanted a 'direct' definition of the method,
-      using a match instead of calling the projector, the following
-      will do. The same mk_one_projector tactic should handle it
-      well.
-
-      (`(_ by (mk_one_projector
-                 (`#unfold_names_tm)
-                 (`#(embed_int np))
-                 (`#(embed_int idx)))))
-      *)
+      if true
+      then
+        (* This generates a method defined to be equal to the projector
+             i.e.  method {| c |} = c.method *)
+        (`(_ by (mk_one_method
+                   (`#(embed_string (implode_qn nm)))
+                   (`#(embed_int np)))))
+      else
+        (* This defines the method in the same way as the projector
+             i.e.  method {| c |} = match c with | Mk ... method ... -> method *)
+        (`(_ by (mk_one_projector
+                   (`#unfold_names_tm)
+                   (`#(embed_int np))
+                   (`#(embed_int idx)))))
     in
     (* dump ("returning se with name " ^ unseal field.ppname); *)
     (* dump ("def = " ^ term_to_string lb_def); *)
@@ -198,7 +199,7 @@ let mk_proj_decl (is_method:bool)
 
 [@@plugin]
 let mk_projs (is_class:bool) (tyname:string) : Tac decls =
-  print ("!! mk_projs tactic called on: " ^ tyname);
+  debug (fun () -> "!! mk_projs tactic called on: " ^ tyname);
   let tyqn = explode_qn tyname in
   match lookup_typ (top_env ()) tyqn with
   | None ->
@@ -215,13 +216,13 @@ let mk_projs (is_class:bool) (tyname:string) : Tac decls =
       (* dump ("ityp = " ^ term_to_string typ); *)
       (* dump ("ctor_t = " ^ term_to_string ctor_t); *)
       let (fields, _) = collect_arr_bs ctor_t in
-      let unfold_names_tm = `(Nil #string) in
+      let unfold_names_tm = `(Nil u#0 #string) in
       let (decls, _, _, _) =
         fold_left (fun (decls, smap, unfold_names_tm, idx) (field : binder) ->
           let (ds, fv) = mk_proj_decl is_class tyqn ctorname univs params idx field unfold_names_tm smap in
           (decls @ ds,
            (binder_to_namedv field, fv)::smap,
-           (`(Cons #string (`#(embed_string (implode_qn (inspect_fv fv)))) (`#unfold_names_tm))),
+           (`(Cons u#0 #string (`#(embed_string (implode_qn (inspect_fv fv)))) (`#unfold_names_tm))),
            idx+1))
         ([], [], unfold_names_tm, 0)
         fields
