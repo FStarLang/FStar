@@ -2173,6 +2173,7 @@ let rec (check : Pulse_Checker_Base.check_t) =
                                                                     res_ppname
                                                                     t))
                                                                   | Pulse_Syntax_Base.Tm_Unreachable
+                                                                    uu___10
                                                                     ->
                                                                     Obj.magic
                                                                     (Obj.repr

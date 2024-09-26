@@ -1,5 +1,5 @@
 (*
-   Copyright 2023 Microsoft Research
+   Copyright 2024 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,17 +14,14 @@
    limitations under the License.
 *)
 
-module Pulse.Extract.CompilerLib
+module Pulse.Extract.Main
+
+open Pulse.Syntax.Base
 
 module R = FStar.Reflection.V2
+module T = FStar.Tactics.V2
 
-type term = R.term
-type binder = R.binder
-val unit_tm : term
-val unit_ty : term
-val mk_return (t:term) : Dv term
-val mk_meta_monadic : term -> Dv term
-val mk_let (b:binder) (head body:term) : Dv term
-val mk_if (b then_ else_:term) : Dv term
+open Pulse.Typing.Env { env }
 
-val mk_extracted_as_attr (impl: term) : Dv term
+val extract_pulse_dv (g: env) (p:st_term) : T.Tac R.term
+val extract_dv_recursive (g: env) (p:st_term) (rec_name:R.fv) : T.Tac R.term

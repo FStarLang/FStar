@@ -266,7 +266,9 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm t1 t2 &&
       eq_tm_opt post1 post2
       
-    | Tm_Unreachable, Tm_Unreachable -> true
+    | Tm_Unreachable {c=c1},
+      Tm_Unreachable {c=c2} ->
+      eq_comp c1 c2
     
     | Tm_ProofHintWithBinders { hint_type=ht1; binders=bs1; t=t1 },
       Tm_ProofHintWithBinders { hint_type=ht2; binders=bs2; t=t2 } ->

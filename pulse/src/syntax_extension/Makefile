@@ -37,6 +37,7 @@ include .depend
 %.checked.lax:
 	$(call msg, "CHECK", $(notdir $@))
 	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $< --already_cached 'Prims,FStar'
+	$(Q)touch $@
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file

@@ -278,7 +278,8 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' typ x i;
       open_term_ln_opt' post x (i + 1)
 
-    | Tm_Unreachable -> ()
+    | Tm_Unreachable { c } ->
+      open_comp_ln' c x i
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
@@ -497,7 +498,8 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening typ i j;
       ln_weakening_opt post (i + 1) (j + 1)
     
-    | Tm_Unreachable -> ()
+    | Tm_Unreachable { c } ->
+      ln_weakening_comp c i j
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
@@ -687,7 +689,8 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv' typ x i;
       open_term_ln_inv_opt' post x (i + 1)
 
-    | Tm_Unreachable -> ()
+    | Tm_Unreachable { c } ->
+      open_comp_ln_inv' c x i
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
@@ -875,7 +878,8 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln' typ x i;
       close_term_ln_opt' post x (i + 1)
 
-    | Tm_Unreachable -> ()
+    | Tm_Unreachable { c } ->
+      close_comp_ln' c x i
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in

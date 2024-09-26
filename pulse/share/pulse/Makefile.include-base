@@ -98,8 +98,7 @@ $(ALL_ML_FILES): %.ml:
 	touch -c $@
 
 $(ALL_KRML_FILES): %.krml:
-	$(FSTAR) $(notdir $(subst .checked,,$<)) --codegen krml \
-	  --extract_module $(basename $(notdir $(subst .checked,,$<)))
+	$(FSTAR) $(notdir $(subst .checked,,$<)) --codegen krml --extract_module $(basename $(notdir $(subst .checked,,$<)))
 	touch -c $@
 
 .PHONY: all verify %.fst-in %.fsti-in

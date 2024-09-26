@@ -150,8 +150,8 @@ let rec freevars_st (t:st_term)
       Set.union (freevars typ)
                 (freevars_term_opt post)
 
-    | Tm_Unreachable ->
-      Set.empty
+    | Tm_Unreachable {c} ->
+      freevars_comp c
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       Set.union (freevars_proof_hint hint_type) (freevars_st t)
@@ -338,8 +338,8 @@ let rec ln_st' (t:st_term) (i:int)
       ln' typ i &&
       ln_opt' ln' post (i + 1)
 
-    | Tm_Unreachable ->
-      true
+    | Tm_Unreachable {c} ->
+      ln_c' c i
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
@@ -596,8 +596,8 @@ let rec subst_st_term (t:st_term) (ss:subst)
                  typ=subst_term typ ss;
                  post=subst_term_opt post (shift_subst ss) }
 
-    | Tm_Unreachable -> Tm_Unreachable
-    
+    | Tm_Unreachable {c} -> Tm_Unreachable {c=subst_comp c ss}
+
     | Tm_ProofHintWithBinders { hint_type; binders; t} ->
       let n = L.length binders in
       let ss = shift_subst_n n ss in
