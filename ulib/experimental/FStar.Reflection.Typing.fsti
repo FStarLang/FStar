@@ -56,6 +56,7 @@ let rec map_dec #a #b
   | [] -> []
   | x::xs -> f x :: map_dec xs f
 
+[@@ must_erase_for_extraction]
 let rec zip2prop #a #b (f : a -> b -> Type0) (xs : list a) (ys : list b) : Type0 =
   match xs, ys with
   | [], [] -> True
@@ -349,7 +350,7 @@ and binder_offset_pattern (p:pattern)
       binder_offset_patterns subpats
 
 let rec subst_term (t:term) (ss:subst)
-  : Tot term (decreases t)
+  : GTot term (decreases t)
   = match inspect_ln t with
     | Tv_UInst _ _
     | Tv_FVar _
@@ -412,7 +413,7 @@ let rec subst_term (t:term) (ss:subst)
                              b)
 
 and subst_binder (b:binder) (ss:subst)
-  : Tot (b':binder{binder_is_simple b ==> binder_is_simple b'}) (decreases b)
+  : GTot (b':binder{binder_is_simple b ==> binder_is_simple b'}) (decreases b)
   = let bndr  = inspect_binder b in
     pack_binder {
       ppname = bndr.ppname;
@@ -422,7 +423,7 @@ and subst_binder (b:binder) (ss:subst)
     }
 
 and subst_comp (c:comp) (ss:subst)
-  : Tot comp (decreases c)
+  : GTot comp (decreases c)
   = match inspect_comp c with
     | C_Total t ->
       pack_comp (C_Total (subst_term t ss))
@@ -442,20 +443,20 @@ and subst_comp (c:comp) (ss:subst)
                        (subst_terms decrs ss))
 
 and subst_terms (ts:list term) (ss:subst)
-  : Tot (ts':list term{Nil? ts ==> Nil? ts'}) // property useful for subst_binder
+  : GTot (ts':list term{Nil? ts ==> Nil? ts'}) // property useful for subst_binder
         (decreases ts)
   = match ts with
     | [] -> []
     | t::ts -> subst_term t ss :: subst_terms ts ss
 
 and subst_args (ts:list argv) (ss:subst)
-  : Tot (list argv) (decreases ts)
+  : GTot (list argv) (decreases ts)
   = match ts with
     | [] -> []
     | (t,q)::ts -> (subst_term t ss,q) :: subst_args ts ss
 
 and subst_patterns (ps:list (pattern & bool)) (ss:subst) 
-  : Tot (list (pattern & bool))
+  : GTot (list (pattern & bool))
          (decreases ps)
   = match ps with
     | [] -> ps
@@ -466,7 +467,7 @@ and subst_patterns (ps:list (pattern & bool)) (ss:subst)
       (p,b)::ps
 
 and subst_pattern (p:pattern) (ss:subst) 
-  : Tot pattern
+  : GTot pattern
          (decreases p)
   = match p with
     | Pat_Constant _ -> p
@@ -485,7 +486,7 @@ and subst_pattern (p:pattern) (ss:subst)
 
     
 and subst_branch (br:branch) (ss:subst)
-  : Tot branch (decreases br)
+  : GTot branch (decreases br)
   = let p, t = br in
     let p = subst_pattern p ss in
     let j = binder_offset_pattern p in
@@ -493,13 +494,13 @@ and subst_branch (br:branch) (ss:subst)
     p, t
   
 and subst_branches (brs:list branch) (ss:subst)
-  : Tot (list branch) (decreases brs)
+  : GTot (list branch) (decreases brs)
   = match brs with
     | [] -> []
     | br::brs -> subst_branch br ss :: subst_branches brs ss
   
 and subst_match_returns (m:match_returns_ascription) (ss:subst)
-  : Tot match_returns_ascription (decreases m)
+  : GTot match_returns_ascription (decreases m)
   = let b, (ret, as_, eq) = m in
     let b = subst_binder b ss in
     let ret =
@@ -584,7 +585,7 @@ let b2t_ty : R.term = R.pack_ln (R.Tv_Arrow (mk_binder (seal "x") bool_ty Q_Expl
 
 
 let rec freevars (e:term)
-  : FStar.Set.set var
+  : GTot (FStar.Set.set var)
   = match inspect_ln e with
     | Tv_Uvar _ _ -> Set.complement Set.empty
     
@@ -632,14 +633,14 @@ let rec freevars (e:term)
       freevars_comp c `Set.union`
       freevars_opt tac freevars
 
-and freevars_opt (#a:Type0) (o:option a) (f: (x:a { x << o } -> FStar.Set.set var))
-  : FStar.Set.set var
+and freevars_opt (#a:Type0) (o:option a) (f: (x:a { x << o } -> GTot (FStar.Set.set var)))
+  : GTot (FStar.Set.set var)
   = match o with
     | None -> Set.empty
     | Some x -> f x
 
 and freevars_comp (c:comp)
-  : FStar.Set.set var
+  : GTot (FStar.Set.set var)
   = match inspect_comp c with
     | C_Total t
     | C_GTotal t ->
@@ -656,7 +657,7 @@ and freevars_comp (c:comp)
       freevars_terms decrs
 
 and freevars_args (ts:list argv)
-  : FStar.Set.set var
+  : GTot (FStar.Set.set var)
   = match ts with
     | [] -> Set.empty
     | (t,q)::ts ->
@@ -664,7 +665,7 @@ and freevars_args (ts:list argv)
       freevars_args ts
 
 and freevars_terms (ts:list term)
-  : FStar.Set.set var
+  : GTot (FStar.Set.set var)
   = match ts with
     | [] -> Set.empty
     | t::ts ->
@@ -672,13 +673,13 @@ and freevars_terms (ts:list term)
       freevars_terms ts
     
 and freevars_binder (b:binder)
-  : Tot (Set.set var) (decreases b)
+  : GTot (Set.set var) (decreases b)
   = let bndr  = inspect_binder b in
     freevars bndr.sort `Set.union`
     freevars_terms bndr.attrs 
 
 and freevars_pattern (p:pattern) 
-  : Tot (Set.set var) (decreases p)
+  : GTot (Set.set var) (decreases p)
   = match p with
     | Pat_Constant _ ->
       Set.empty
@@ -692,7 +693,7 @@ and freevars_pattern (p:pattern)
       freevars_opt topt freevars
 
 and freevars_patterns (ps:list (pattern & bool))
-  : Tot (Set.set var) (decreases ps)
+  : GTot (Set.set var) (decreases ps)
   = match ps with
     | [] -> Set.empty
     | (p, b)::ps ->
@@ -700,19 +701,19 @@ and freevars_patterns (ps:list (pattern & bool))
       freevars_patterns ps
 
 and freevars_branch (br:branch)
-  : Tot (Set.set var) (decreases br)
+  : GTot (Set.set var) (decreases br)
   = let p, t = br in
     freevars_pattern p `Set.union`
     freevars t
 
 and freevars_branches (brs:list branch)
-  : Tot (Set.set var) (decreases brs)
+  : GTot (Set.set var) (decreases brs)
   = match brs with
     | [] -> Set.empty
     | hd::tl -> freevars_branch hd `Set.union` freevars_branches tl
   
 and freevars_match_returns (m:match_returns_ascription)
-  : Tot (Set.set var) (decreases m)
+  : GTot (Set.set var) (decreases m)
   = let b, (ret, as_, eq) = m in
     let b = freevars_binder b in
     let ret =
@@ -725,7 +726,7 @@ and freevars_match_returns (m:match_returns_ascription)
 
 
 let rec ln' (e:term) (n:int)
-  : Tot bool (decreases e)
+  : GTot bool (decreases e)
   = match inspect_ln e with
     | Tv_UInst _ _
     | Tv_FVar _
@@ -779,7 +780,7 @@ let rec ln' (e:term) (n:int)
        | Some tac -> ln' tac n)
                             
 and ln'_comp (c:comp) (i:int)
-  : Tot bool (decreases c)
+  : GTot bool (decreases c)
   = match inspect_comp c with
     | C_Total t
     | C_GTotal t -> ln' t i
@@ -795,7 +796,7 @@ and ln'_comp (c:comp) (i:int)
       ln'_terms decrs i
 
 and ln'_args (ts:list argv) (i:int)
-  : Tot bool (decreases ts)
+  : GTot bool (decreases ts)
   = match ts with
     | [] -> true
     | (t,q)::ts -> 
@@ -803,19 +804,19 @@ and ln'_args (ts:list argv) (i:int)
       ln'_args ts i
 
 and ln'_binder (b:binder) (n:int)
-  : Tot bool (decreases b)
+  : GTot bool (decreases b)
   = let bndr  = inspect_binder b in
     ln' bndr.sort n &&
     ln'_terms bndr.attrs n
 
 and ln'_terms (ts:list term) (n:int)
-  : Tot bool (decreases ts)
+  : GTot bool (decreases ts)
   = match ts with
     | [] -> true
     | t::ts -> ln' t n && ln'_terms ts n
 
 and ln'_patterns (ps:list (pattern & bool)) (i:int)
-  : Tot bool
+  : GTot bool
     (decreases ps)
   = match ps with
     | [] -> true
@@ -826,7 +827,7 @@ and ln'_patterns (ps:list (pattern & bool)) (i:int)
       b0 && b1
 
 and ln'_pattern (p:pattern) (i:int) 
-  : Tot bool
+  : GTot bool
         (decreases p)
   = match p with
     | Pat_Constant _ -> true
@@ -842,7 +843,7 @@ and ln'_pattern (p:pattern) (i:int)
        | Some t -> ln' t i)
     
 and ln'_branch (br:branch) (i:int)
-  : Tot bool (decreases br)
+  : GTot bool (decreases br)
   = let p, t = br in
     let b = ln'_pattern p i in
     let j = binder_offset_pattern p in
@@ -850,7 +851,7 @@ and ln'_branch (br:branch) (i:int)
     b&&b'
   
 and ln'_branches (brs:list branch) (i:int)
-  : Tot bool (decreases brs)
+  : GTot bool (decreases brs)
   = match brs with
     | [] -> true
     | br::brs -> 
@@ -858,7 +859,7 @@ and ln'_branches (brs:list branch) (i:int)
       ln'_branches brs i
   
 and ln'_match_returns (m:match_returns_ascription) (i:int)
-  : Tot bool (decreases m)
+  : GTot bool (decreases m)
   = let b, (ret, as_, eq) = m in
     let b = ln'_binder b i in
     let ret =
@@ -945,13 +946,14 @@ let rec apply_term_ctxt (e:term_ctxt) (t:term) : Tot term (decreases e) =
 //   | Ctxt_total e -> pack_comp (C_Total (apply_term_ctxt e t))
 //   | Ctxt_gtotal e -> pack_comp (C_GTotal (apply_term_ctxt e t))
 
+[@@ erasable]
 noeq
 type constant_typing: vconst -> term -> Type0 = 
   | CT_Unit: constant_typing C_Unit unit_ty
   | CT_True: constant_typing C_True bool_ty
   | CT_False: constant_typing C_False bool_ty
 
-[@@ no_auto_projectors]
+[@@ erasable; no_auto_projectors]
 noeq
 type univ_eq : universe -> universe -> Type0 = 
   | UN_Refl : 
@@ -1054,16 +1056,16 @@ let is_non_informative_name (l:name) : bool =
 let is_non_informative_fv (f:fv) : bool =
   is_non_informative_name (inspect_fv f)
 
-let rec __close_term_vs (i:nat) (vs : list var) (t : term) : Tot term (decreases vs) =
+let rec __close_term_vs (i:nat) (vs : list var) (t : term) : GTot term (decreases vs) =
   match vs with
   | [] -> t
   | v::vs ->
     subst_term (__close_term_vs (i+1) vs t) [ND v i]
 
-let close_term_vs (vs : list var) (t : term) : term =
+let close_term_vs (vs : list var) (t : term) : GTot term =
   __close_term_vs 0 vs t
 
-let close_term_bs (bs : list binding) (t : term) : term =
+let close_term_bs (bs : list binding) (t : term) : GTot term =
   close_term_vs (List.Tot.map fst bs) t
 
 let bindings_to_refl_bindings (bs : list binding) : list R.binding =
@@ -1072,7 +1074,7 @@ let bindings_to_refl_bindings (bs : list binding) : list R.binding =
 let refl_bindings_to_bindings (bs : list R.binding) : list binding =
   L.map (fun b -> b.uniq, b.sort) bs
 
-[@@ no_auto_projectors]
+[@@ no_auto_projectors; erasable]
 noeq
 type non_informative : env -> term -> Type0 =
   | Non_informative_type:
@@ -1119,6 +1121,7 @@ type non_informative : env -> term -> Type0 =
     squash (non_informative_token g t) ->
     non_informative g t
 
+[@@ erasable]
 val bindings_ok_for_pat : env -> list R.binding -> pattern -> Type0
 
 val bindings_ok_pat_constant :
@@ -1166,7 +1169,7 @@ let rec elaborate_pat (p : pattern) (bs : list R.binding) : Tot (option (term & 
   | Pat_Dot_Term None, _ -> None
   | _ -> None
 
-[@@ no_auto_projectors]
+[@@ no_auto_projectors; erasable]
 noeq
 type typing : env -> term -> comp_typ -> Type0 =
   | T_Token :
@@ -1772,6 +1775,7 @@ type fstar_top_env = g:fstar_env {
 //
 // No universe polymorphism yet
 //
+[@@ erasable]
 noeq
 type sigelt_typing : env -> sigelt -> Type0 =
   | ST_Let :

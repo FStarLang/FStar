@@ -5532,8 +5532,7 @@ let (check_equiv :
   FStar_Reflection_Types.env ->
     FStar_Reflection_Types.typ ->
       FStar_Reflection_Types.typ ->
-        (((unit, unit, unit) FStar_Tactics_Types.equiv_token
-           FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
+        ((unit FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -5543,8 +5542,7 @@ let (check_equiv_nosmt :
   FStar_Reflection_Types.env ->
     FStar_Reflection_Types.typ ->
       FStar_Reflection_Types.typ ->
-        (((unit, unit, unit) FStar_Tactics_Types.equiv_token
-           FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
+        ((unit FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->

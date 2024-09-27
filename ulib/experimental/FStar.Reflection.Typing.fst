@@ -91,7 +91,7 @@ let rename_spec (t:term) (x y:var) = admit ()
 let bv_index_of_make_bv (n:nat) = ()
 let namedv_uniq_of_make_namedv (n:nat) = ()
 
-let bindings_ok_for_pat bnds pat = magic ()
+let bindings_ok_for_pat env bnds pat = squash (admit ())
 let bindings_ok_pat_constant c = admit ()
 
 let subtyping_token_renaming (g:env)
