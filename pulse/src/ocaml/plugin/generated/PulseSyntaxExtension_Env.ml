@@ -11,6 +11,7 @@ let (pulse_lib_ref_lid : Prims.string -> FStar_Ident.lident) =
   fun l ->
     FStar_Ident.lid_of_path
       (FStar_List_Tot_Base.op_At ["Pulse"; "Lib"; "Reference"] [l]) r_
+let (assume_lid : FStar_Ident.lident) = pulse_lib_core_lid "assume_"
 let (prims_exists_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Prims"; "l_Exists"] r_
 let (prims_forall_lid : FStar_Ident.lident) =

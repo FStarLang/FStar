@@ -74,6 +74,11 @@ let (slprop_equiv_norm_tm : FStar_Reflection_Types.term) =
     (FStar_Reflection_V2_Data.Tv_FVar
        (FStar_Reflection_V2_Builtins.pack_fv
           (mk_pulse_lib_core_lid "slprop_equiv_norm")))
+let (match_rewrite_tac_tm : FStar_Reflection_Types.term) =
+  FStar_Reflection_V2_Builtins.pack_ln
+    (FStar_Reflection_V2_Data.Tv_FVar
+       (FStar_Reflection_V2_Builtins.pack_fv
+          (mk_pulse_lib_core_lid "match_rewrite_tac")))
 let (ex : FStar_Reflection_Types.term -> FStar_Reflection_V2_Data.argv) =
   fun t -> (t, FStar_Reflection_V2_Data.Q_Explicit)
 let (im : FStar_Reflection_Types.term -> FStar_Reflection_V2_Data.argv) =

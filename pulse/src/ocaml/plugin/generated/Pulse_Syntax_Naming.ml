@@ -183,7 +183,8 @@ let rec (freevars_st :
         { Pulse_Syntax_Base.ctag = uu___; Pulse_Syntax_Base.u1 = uu___1;
           Pulse_Syntax_Base.typ = typ; Pulse_Syntax_Base.post3 = post;_}
         -> FStar_Set.union (freevars typ) (freevars_term_opt post)
-    | Pulse_Syntax_Base.Tm_Unreachable -> FStar_Set.empty ()
+    | Pulse_Syntax_Base.Tm_Unreachable { Pulse_Syntax_Base.c = c;_} ->
+        freevars_comp c
     | Pulse_Syntax_Base.Tm_ProofHintWithBinders
         { Pulse_Syntax_Base.hint_type = hint_type;
           Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.t = t1;_}
@@ -412,7 +413,8 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
           { Pulse_Syntax_Base.ctag = uu___; Pulse_Syntax_Base.u1 = uu___1;
             Pulse_Syntax_Base.typ = typ; Pulse_Syntax_Base.post3 = post;_}
           -> (ln' typ i) && (ln_opt' ln' post (i + Prims.int_one))
-      | Pulse_Syntax_Base.Tm_Unreachable -> true
+      | Pulse_Syntax_Base.Tm_Unreachable { Pulse_Syntax_Base.c = c;_} ->
+          ln_c' c i
       | Pulse_Syntax_Base.Tm_ProofHintWithBinders
           { Pulse_Syntax_Base.hint_type = hint_type;
             Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.t = t1;_}
@@ -925,8 +927,9 @@ let rec (subst_st_term :
                 Pulse_Syntax_Base.post3 =
                   (subst_term_opt post (shift_subst ss))
               }
-        | Pulse_Syntax_Base.Tm_Unreachable ->
+        | Pulse_Syntax_Base.Tm_Unreachable { Pulse_Syntax_Base.c = c;_} ->
             Pulse_Syntax_Base.Tm_Unreachable
+              { Pulse_Syntax_Base.c = (subst_comp c ss) }
         | Pulse_Syntax_Base.Tm_ProofHintWithBinders
             { Pulse_Syntax_Base.hint_type = hint_type;
               Pulse_Syntax_Base.binders = binders;
@@ -963,7 +966,8 @@ let rec (subst_st_term :
       {
         Pulse_Syntax_Base.term1 = t';
         Pulse_Syntax_Base.range1 = (t.Pulse_Syntax_Base.range1);
-        Pulse_Syntax_Base.effect_tag = (t.Pulse_Syntax_Base.effect_tag)
+        Pulse_Syntax_Base.effect_tag = (t.Pulse_Syntax_Base.effect_tag);
+        Pulse_Syntax_Base.source = (t.Pulse_Syntax_Base.source)
       }
 and (subst_branches :
   Pulse_Syntax_Base.st_term ->

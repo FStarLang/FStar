@@ -120,11 +120,11 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
 
   (* Pulse control, while etc *)
   | MLE_App ({expr=MLE_Name p}, [{expr=MLE_Fun (_, test)}; {expr=MLE_Fun(_, body)}])
-    when (string_of_mlpath p = "Pulse.Lib.Core.while_") ->
+    when (string_of_mlpath p = "Pulse.Lib.Dv.while_") ->
     EWhile(cb test, cb body)
 
-  | MLE_App ({expr=MLE_Name p}, _)
-    when (string_of_mlpath p = "Pulse.Lib.Core.unreachable") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ ])
+    when (string_of_mlpath p = "Pulse.Lib.Dv.unreachable") ->
     EAbortS (string_of_mlpath p)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ b ])

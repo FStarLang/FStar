@@ -24,7 +24,7 @@ pub fn hacl_hash0(
         (),
         (),
         crate::fstar_sizet::sizet_to_uint32(src_len),
-    );
+    )
 }
 pub static hacl_hash: fn(
     super::hacl::alg_t,
@@ -59,7 +59,7 @@ pub fn hacl_hmac0(
         (),
         (),
         crate::fstar_sizet::sizet_to_uint32(msg_len),
-    );
+    )
 }
 pub static hacl_hmac: fn(
     super::hacl::alg_t,
@@ -131,7 +131,7 @@ pub fn ed25519_sign0(
         (),
         (),
         msg,
-    );
+    )
 }
 pub static ed25519_sign: fn(
     &mut [u8],

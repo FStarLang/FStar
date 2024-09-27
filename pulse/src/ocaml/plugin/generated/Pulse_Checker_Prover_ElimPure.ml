@@ -132,6 +132,9 @@ let (elim_pure :
   fun g ->
     fun ctxt ->
       fun ctxt_typing ->
+        let uu___ =
+          elim_pure_frame g ctxt Pulse_Syntax_Pure.tm_emp ()
+            (Pulse_Typing_Env.mk_env (Pulse_Typing_Env.fstar_env g)) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
              (Obj.magic
@@ -143,13 +146,11 @@ let (elim_pure :
                 (FStar_Range.mk_range "Pulse.Checker.Prover.ElimPure.fst"
                    (Prims.of_int (121)) (Prims.of_int (85))
                    (Prims.of_int (126)) (Prims.of_int (62)))))
-          (Obj.magic
-             (elim_pure_frame g ctxt Pulse_Syntax_Pure.tm_emp ()
-                (Pulse_Typing_Env.mk_env (Pulse_Typing_Env.fstar_env g))))
-          (fun uu___ ->
+          (Obj.magic uu___)
+          (fun uu___1 ->
              FStar_Tactics_Effect.lift_div_tac
-               (fun uu___1 ->
-                  match uu___ with
+               (fun uu___2 ->
+                  match uu___1 with
                   | FStar_Pervasives.Mkdtuple4
                       (g', ctxt', ctxt'_emp_typing, k) ->
                       FStar_Pervasives.Mkdtuple4
@@ -167,6 +168,16 @@ let (elim_pure_pst :
   =
   fun preamble ->
     fun pst ->
+      let uu___ =
+        elim_pure_frame pst.Pulse_Checker_Prover_Base.pg
+          (Pulse_Syntax_Pure.list_as_slprop
+             pst.Pulse_Checker_Prover_Base.remaining_ctxt)
+          (Pulse_Checker_Prover_Base.op_Star
+             preamble.Pulse_Checker_Prover_Base.frame
+             (Pulse_Checker_Prover_Base.op_Array_Access
+                pst.Pulse_Checker_Prover_Base.ss
+                pst.Pulse_Checker_Prover_Base.solved)) ()
+          pst.Pulse_Checker_Prover_Base.uvs in
       FStar_Tactics_Effect.tac_bind
         (FStar_Sealed.seal
            (Obj.magic
@@ -177,21 +188,11 @@ let (elim_pure_pst :
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Checker.Prover.ElimPure.fst"
                  (Prims.of_int (132)) (Prims.of_int (74))
-                 (Prims.of_int (171)) (Prims.of_int (3)))))
-        (Obj.magic
-           (elim_pure_frame pst.Pulse_Checker_Prover_Base.pg
-              (Pulse_Syntax_Pure.list_as_slprop
-                 pst.Pulse_Checker_Prover_Base.remaining_ctxt)
-              (Pulse_Checker_Prover_Base.op_Star
-                 preamble.Pulse_Checker_Prover_Base.frame
-                 (Pulse_Checker_Prover_Base.op_Array_Access
-                    pst.Pulse_Checker_Prover_Base.ss
-                    pst.Pulse_Checker_Prover_Base.solved)) ()
-              pst.Pulse_Checker_Prover_Base.uvs))
-        (fun uu___ ->
+                 (Prims.of_int (171)) (Prims.of_int (3))))) (Obj.magic uu___)
+        (fun uu___1 ->
            FStar_Tactics_Effect.lift_div_tac
-             (fun uu___1 ->
-                match uu___ with
+             (fun uu___2 ->
+                match uu___1 with
                 | FStar_Pervasives.Mkdtuple4 (g', remaining_ctxt', ty, k) ->
                     {
                       Pulse_Checker_Prover_Base.pg = g';

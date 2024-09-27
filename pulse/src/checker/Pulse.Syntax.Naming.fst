@@ -223,7 +223,8 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' typ x i;
       close_open_inverse_opt' post x (i + 1)
 
-    | Tm_Unreachable -> ()
+    | Tm_Unreachable {c} ->
+      close_open_inverse_comp' c x i
     
     | Tm_ProofHintWithBinders { binders; hint_type; t} ->
       let n = L.length binders in

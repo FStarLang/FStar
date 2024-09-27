@@ -95,10 +95,10 @@ verify: $(ALL_CHECKED_FILES)
 
 $(ALL_ML_FILES): %.ml:
 	$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(FSTAR_ML_CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
+	touch -c $@
 
 $(ALL_KRML_FILES): %.krml:
-	$(FSTAR) $(notdir $(subst .checked,,$<)) --codegen krml \
-	  --extract_module $(basename $(notdir $(subst .checked,,$<)))
+	$(FSTAR) $(notdir $(subst .checked,,$<)) --codegen krml --extract_module $(basename $(notdir $(subst .checked,,$<)))
 	touch -c $@
 
 .PHONY: all verify %.fst-in %.fsti-in

@@ -74,6 +74,7 @@ let check
           };
         range = br.range;
         effect_tag = br.effect_tag;
+        source = Sealed.seal false;
       }
     in
     

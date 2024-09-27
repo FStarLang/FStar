@@ -143,6 +143,7 @@ let elab_lift #g #c1 #c2 (d:lift_comp g c1 c2) (e:R.term)
 
 let intro_pure_tm (p:term) =
   let open Pulse.Reflection.Util in
+  let rng = R.range_of_term p in
   wtag (Some STT_Ghost) 
        (Tm_STApp
         { head =
@@ -150,7 +151,7 @@ let intro_pure_tm (p:term) =
                        None
                        p;
           arg_qual = None;
-          arg = S.wr (`()) Range.range_0 })
+          arg = S.wr (`()) rng })
 
 let simple_arr (t1 t2 : R.term) : R.term =
   let b = R.pack_binder {

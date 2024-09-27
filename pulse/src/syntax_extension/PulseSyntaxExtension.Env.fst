@@ -40,6 +40,7 @@ let r_ = FStar.Compiler.Range.dummyRange
 let admit_lid = Ident.lid_of_path ["Prims"; "admit"] r_
 let pulse_lib_core_lid l = Ident.lid_of_path (["Pulse"; "Lib"; "Core"]@[l]) r_
 let pulse_lib_ref_lid l = Ident.lid_of_path (["Pulse"; "Lib"; "Reference"]@[l]) r_
+let assume_lid = pulse_lib_core_lid "assume_"
 let prims_exists_lid = Ident.lid_of_path ["Prims"; "l_Exists"] r_
 let prims_forall_lid = Ident.lid_of_path ["Prims"; "l_Forall"] r_
 let unreachable_lid = pulse_lib_core_lid "unreachable"

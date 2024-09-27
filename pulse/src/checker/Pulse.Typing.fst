@@ -60,7 +60,7 @@ let mk_hide (u:universe) (t:term) (e:term) : term =
 
 let mk_eq2 (u:universe)
            (t:term)
-           (e0 e1:term) 
+           (e0 e1:term)
   : term
   = tm_pureapp
          (tm_pureapp (tm_pureapp (tm_uinst (as_fv R.eq2_qn) [u]) (Some Implicit) t)
@@ -426,7 +426,7 @@ let comp_withlocal_body_pre (pre:slprop) (init_t:term) (r:term) (init:term) : sl
   tm_star pre (mk_pts_to init_t r init)
 
 let comp_withlocal_body_post (post:term) (init_t:term) (r:term) : term =
-  tm_star post (tm_exists_sl u0 (as_binder init_t) (mk_pts_to init_t r (null_bvar 0)))  
+  tm_star post (tm_exists_sl u0 (as_binder init_t) (mk_pts_to init_t r (null_bvar 0)))
 
 let comp_withlocal_body (r:var) (init_t:term) (init:term) (c:comp{C_ST? c}) : comp =
   let r = null_var r in
@@ -647,9 +647,9 @@ type lift_comp : env -> comp -> comp -> Type =
       lift_comp g c (C_STGhost (comp_inames c) (st_comp_of_comp c))
 
 let wrst (ct:comp_st) (t:st_term') : st_term =
-  { term = t; range = FStar.Range.range_0; effect_tag = as_effect_hint (ctag_of_comp_st ct) }
+  { term = t; range = FStar.Range.range_0; effect_tag = as_effect_hint (ctag_of_comp_st ct); source = Sealed.seal false }
 let wtag (ct:option ctag)  (t:st_term') : st_term =
-  { term = t; range = FStar.Range.range_0; effect_tag = FStar.Sealed.seal ct }
+  { term = t; range = FStar.Range.range_0; effect_tag = FStar.Sealed.seal ct; source = Sealed.seal false }
 
 [@@ no_auto_projectors]
 noeq
@@ -1032,7 +1032,7 @@ type st_typing : env -> st_term -> comp -> Type =
       c:comp_st ->
       comp_typing g c (universe_of_comp c) ->
       prop_validity g (S.wr (`False) FStar.Range.range_0) -> 
-      st_typing g (wtag (Some (ctag_of_comp_st c)) Tm_Unreachable) c
+      st_typing g (wtag (Some (ctag_of_comp_st c)) (Tm_Unreachable {c})) c
 
   | T_WithInv:
       g:env ->

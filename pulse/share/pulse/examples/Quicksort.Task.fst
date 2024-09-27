@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module QuickSort.Task
+module Quicksort.Task
 #lang-pulse
 
 open Pulse.Lib.Pervasives
