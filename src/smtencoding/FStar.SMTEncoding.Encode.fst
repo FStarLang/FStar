@@ -798,6 +798,7 @@ let encode_top_level_let :
                     let fv = FStar.Compiler.Util.right lbn in
                     Env.fv_has_attr env.tcenv fv FStar.Parser.Const.smt_theory_symbol_attr_lid
                 in
+                let is_sub_singleton = U.is_sub_singleton body in
                 let should_encode_logical =
                     not is_smt_theory_symbol
                     && (quals |> List.contains Logic || is_logical)
@@ -817,13 +818,27 @@ let encode_top_level_let :
                     else "equation"
                   in
                   let basic_eqn, decls =
-                    let body, decls = encode_term body env' in
-                    let pat =
-                      if should_encode_logical
-                      then Term.mk_subtype_of_unit app
-                      else app
-                    in
-                    make_eqn basic_eqn_name pat app body, decls
+                    let app_is_prop = Term.mk_subtype_of_unit app in
+                    if should_encode_logical
+                    then (
+                      if is_sub_singleton
+                      then (
+                        Util.mkAssume(mkForall (S.range_of_lbname lbn)
+                                            ([[app_is_prop]], vars, mk_Valid <| app_is_prop),
+                                      Some (BU.format1 "Prop-typing for %s" (string_of_lid flid)),
+                                    (basic_eqn_name ^ "_" ^ fvb.smt_id)),
+                        []
+                      )
+                      else (
+                        let body, decls = encode_term body env' in
+                        make_eqn basic_eqn_name app_is_prop app body,
+                        decls
+                      )
+                    )
+                    else (
+                      let body, decls = encode_term body env' in
+                      make_eqn basic_eqn_name app app body, decls
+                    )
                   in
                   if should_encode_logical
                   then let pat, app, (body, decls2) =
