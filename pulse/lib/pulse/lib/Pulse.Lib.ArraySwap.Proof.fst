@@ -648,9 +648,10 @@ let array_swap_outer_invariant // hoisting necessary because "Let binding is eff
   (forall (i': nat_up_to bz.d) . // this is always true, but I need it here for the pattern
     Seq.index s i' == Seq.index s (iter_fun #(nat_up_to (n)) (jump (n) (l)) 0 i')
   ) /\ 
-  (forall (i': nat_up_to bz.d) (j: nat_up_to bz.q_n) .
+  (forall (i': nat_up_to bz.d). 
+    (forall (j: nat_up_to bz.q_n) .
         let idx = iter_fun #(nat_up_to (n)) (jump (n) (l)) j i' in
-        Seq.index s idx == Seq.index s0 (if i' < i then jump (n) (l) idx else idx)
+        Seq.index s idx == Seq.index s0 (if i' < i then jump (n) (l) idx else idx))
   )
 
 let array_swap_inner_invariant
