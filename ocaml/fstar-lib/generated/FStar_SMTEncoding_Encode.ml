@@ -2967,74 +2967,82 @@ let (encode_top_level_let :
                                                             if
                                                               should_encode_logical
                                                             then
-                                                              (if
-                                                                 is_sub_singleton
-                                                               then
-                                                                 let uu___17
-                                                                   =
-                                                                   let uu___18
+                                                              let uu___17 =
+                                                                is_sub_singleton
+                                                                  &&
+                                                                  (let uu___18
                                                                     =
-                                                                    let uu___19
+                                                                    FStar_Options_Ext.get
+                                                                    "retain_old_prop_typing" in
+                                                                   uu___18 =
+                                                                    "") in
+                                                              (if uu___17
+                                                               then
+                                                                 let uu___18
+                                                                   =
+                                                                   let uu___19
                                                                     =
                                                                     let uu___20
                                                                     =
-                                                                    FStar_Syntax_Syntax.range_of_lbname
-                                                                    lbn in
                                                                     let uu___21
                                                                     =
+                                                                    FStar_Syntax_Syntax.range_of_lbname
+                                                                    lbn in
                                                                     let uu___22
+                                                                    =
+                                                                    let uu___23
                                                                     =
                                                                     FStar_SMTEncoding_Term.mk_Valid
                                                                     app_is_prop in
                                                                     ([
                                                                     [app_is_prop]],
                                                                     vars1,
-                                                                    uu___22) in
+                                                                    uu___23) in
                                                                     FStar_SMTEncoding_Term.mkForall
-                                                                    uu___20
-                                                                    uu___21 in
-                                                                    let uu___20
-                                                                    =
+                                                                    uu___21
+                                                                    uu___22 in
                                                                     let uu___21
                                                                     =
                                                                     let uu___22
+                                                                    =
+                                                                    let uu___23
                                                                     =
                                                                     FStar_Ident.string_of_lid
                                                                     flid in
                                                                     FStar_Compiler_Util.format1
                                                                     "Prop-typing for %s"
-                                                                    uu___22 in
+                                                                    uu___23 in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___21 in
-                                                                    (uu___19,
-                                                                    uu___20,
+                                                                    uu___22 in
+                                                                    (uu___20,
+                                                                    uu___21,
                                                                     (Prims.strcat
                                                                     basic_eqn_name
                                                                     (Prims.strcat
                                                                     "_"
                                                                     fvb.FStar_SMTEncoding_Env.smt_id))) in
                                                                    FStar_SMTEncoding_Util.mkAssume
-                                                                    uu___18 in
-                                                                 (uu___17,
+                                                                    uu___19 in
+                                                                 (uu___18,
                                                                    [])
                                                                else
-                                                                 (let uu___18
+                                                                 (let uu___19
                                                                     =
                                                                     FStar_SMTEncoding_EncodeTerm.encode_term
                                                                     body
                                                                     env'1 in
-                                                                  match uu___18
+                                                                  match uu___19
                                                                   with
                                                                   | (body1,
                                                                     decls2)
                                                                     ->
-                                                                    let uu___19
+                                                                    let uu___20
                                                                     =
                                                                     make_eqn
                                                                     basic_eqn_name
                                                                     app_is_prop
                                                                     app body1 in
-                                                                    (uu___19,
+                                                                    (uu___20,
                                                                     decls2)))
                                                             else
                                                               (let uu___18 =

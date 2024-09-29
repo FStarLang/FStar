@@ -461,4 +461,8 @@ let prune (p:pruning_state) (roots:list decl)
         | Some a -> [a]) 
       (reached_names@p.ambients)
   in
+  // if Options.Ext.get "debug_context_pruning" <> ""
+  // then (
+  //   BU.print1 "Retained %s assumptions\n" (show (List.length reached_assumptions))
+  // );
   reached_assumptions

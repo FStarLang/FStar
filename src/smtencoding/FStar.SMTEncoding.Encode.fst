@@ -821,7 +821,7 @@ let encode_top_level_let :
                     let app_is_prop = Term.mk_subtype_of_unit app in
                     if should_encode_logical
                     then (
-                      if is_sub_singleton
+                      if is_sub_singleton && Options.Ext.get "retain_old_prop_typing" = ""
                       then (
                         Util.mkAssume(mkForall (S.range_of_lbname lbn)
                                             ([[app_is_prop]], vars, mk_Valid <| app_is_prop),
