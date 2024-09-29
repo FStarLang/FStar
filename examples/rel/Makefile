@@ -26,7 +26,6 @@ all:\
   IfcTypechecker.uver\
   Loops.uver\
   Memo.uver\
-  NetKat.uver\
   OneTimePad.uver\
   Point.uver\
   ProgramEquivalence.uver\
