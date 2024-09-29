@@ -780,7 +780,7 @@ let encode_top_level_let :
                                 (show binders)
                                 (show body);
                 (* Encode binders *)
-                let vars, _guards, env', binder_decls, _ = encode_binders None binders env' in
+                let vars, binder_guards, env', binder_decls, _ = encode_binders None binders env' in
                 let vars, app =
                     if fvb.fvb_thunked && vars = []
                     then let dummy_var = mk_fv ("@dummy", dummy_sort) in
@@ -824,7 +824,7 @@ let encode_top_level_let :
                       if is_sub_singleton && Options.Ext.get "retain_old_prop_typing" = ""
                       then (
                         Util.mkAssume(mkForall (S.range_of_lbname lbn)
-                                            ([[app_is_prop]], vars, mk_Valid <| app_is_prop),
+                                            ([[app_is_prop]], vars, mkImp(mk_and_l binder_guards, mk_Valid <| app_is_prop)),
                                       Some (BU.format1 "Prop-typing for %s" (string_of_lid flid)),
                                     (basic_eqn_name ^ "_" ^ fvb.smt_id)),
                         []

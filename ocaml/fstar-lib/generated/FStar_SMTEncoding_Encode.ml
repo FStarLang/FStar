@@ -2840,7 +2840,7 @@ let (encode_top_level_let :
                                                    FStar_Pervasives_Native.None
                                                    binders env' in
                                                match uu___12 with
-                                               | (vars, _guards, env'1,
+                                               | (vars, binder_guards, env'1,
                                                   binder_decls, uu___13) ->
                                                    let uu___14 =
                                                      if
@@ -2992,8 +2992,20 @@ let (encode_top_level_let :
                                                                     =
                                                                     let uu___23
                                                                     =
+                                                                    let uu___24
+                                                                    =
+                                                                    let uu___25
+                                                                    =
+                                                                    FStar_SMTEncoding_Util.mk_and_l
+                                                                    binder_guards in
+                                                                    let uu___26
+                                                                    =
                                                                     FStar_SMTEncoding_Term.mk_Valid
                                                                     app_is_prop in
+                                                                    (uu___25,
+                                                                    uu___26) in
+                                                                    FStar_SMTEncoding_Util.mkImp
+                                                                    uu___24 in
                                                                     ([
                                                                     [app_is_prop]],
                                                                     vars1,
