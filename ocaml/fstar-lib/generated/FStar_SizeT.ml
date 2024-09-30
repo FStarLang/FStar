@@ -17,6 +17,7 @@ let (uint64_to_sizet : FStar_UInt64.t -> t) =
   fun x -> uint_to_t (FStar_UInt64.v x)
 let (sizet_to_uint32 : t -> FStar_UInt32.t) =
   fun x -> FStar_Int_Cast.uint64_to_uint32 (__proj__Sz__item__x x)
+let (sizet_to_uint64 : t -> FStar_UInt64.t) = fun x -> __proj__Sz__item__x x
 let (add : t -> t -> t) =
   fun x ->
     fun y ->
