@@ -338,9 +338,6 @@ let get_option s =
   | None -> failwith ("Impossible: option " ^s^ " not found")
   | Some s -> s
 
-let psmap_keys m =
-  psmap_fold m (fun k v a -> k::a) []
-
 let rec option_val_to_string (v:option_val) : string =
   match v with
   | Bool b -> "Bool " ^ show b
@@ -383,7 +380,7 @@ let show_options () =
   let s = peek () in
   let kvs : list (string & option_val) =
     let open FStar.Class.Monad in
-    let! k = psmap_keys s in
+    let! k = Common.psmap_keys s in
     (* verify_module is only set internally. *)
     if k = "verify_module" then [] else
     let v = must <| psmap_try_find s k in
