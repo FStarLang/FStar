@@ -6,6 +6,12 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <GenerateDocumentation>True</GenerateDocumentation>
     <GenerateDependencyFile>false</GenerateDependencyFile>
+    <VersionPrefix>0.0.3</VersionPrefix>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>fstar-new.png</PackageIcon>
+    <PackageProjectUrl>https://fstar-lang.org/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/FStarLang/FStar</RepositoryUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
   <ItemGroup>
     <!-- Note, for now we just ignore some modules and or comment out some code in them. -->
@@ -88,5 +94,11 @@
    </ItemGroup>
   <ItemGroup>
     <PackageReference Update="FSharp.Core" Version="4.3.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="VS\README.md" Pack="true" PackagePath="\"/>
+    <None Include="VS\fstar-new.png" Pack="true" PackagePath="\"/>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\"/>
+    <None Include="..\..\LICENSE-fsharp.txt" Pack="true" PackagePath="\"/>
   </ItemGroup>
 </Project>
