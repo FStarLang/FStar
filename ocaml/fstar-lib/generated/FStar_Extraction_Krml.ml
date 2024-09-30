@@ -3249,6 +3249,19 @@ and (translate_expr' : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
           let uu___2 =
             let uu___3 = translate_expr env1 arg in (uu___3, (TInt UInt32)) in
           ECast uu___2
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_Name p;
+             FStar_Extraction_ML_Syntax.mlty = uu___;
+             FStar_Extraction_ML_Syntax.loc = uu___1;_},
+           arg::[])
+          when
+          let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___2 = "FStar.SizeT.sizet_to_uint64" ->
+          let uu___2 =
+            let uu___3 = translate_expr env1 arg in (uu___3, (TInt UInt64)) in
+          ECast uu___2
       | FStar_Extraction_ML_Syntax.MLE_App (head, args) ->
           let uu___ =
             let uu___1 = translate_expr env1 head in
@@ -3990,7 +4003,7 @@ let (translate :
                        "Unable to translate module: %s because:\n  %s\n"
                        m_name uu___3);
                     FStar_Pervasives_Native.None)) modules
-let (uu___2053 : unit) =
+let (uu___2060 : unit) =
   register_post_translate_type_without_decay translate_type_without_decay';
   register_post_translate_type translate_type';
   register_post_translate_type_decl translate_type_decl';
