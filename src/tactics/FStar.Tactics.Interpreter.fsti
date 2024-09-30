@@ -45,6 +45,10 @@ val run_tactic_on_ps :
     proofstate ->  (* proofstate *)
     list goal & 'b (* goals and return value *)
 
+(* Only plugins *)
+val native_tactics_steps : unit -> list FStar.TypeChecker.Primops.primitive_step
+
+(* Plugins + primitives. *)
 val primitive_steps : unit -> list FStar.TypeChecker.Primops.primitive_step
 
 val report_implicits : range -> FStar.TypeChecker.Rel.tagged_implicits -> unit

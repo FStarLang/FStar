@@ -268,6 +268,7 @@ let defaults =
       ("query_cache"                  , Bool false);
       ("query_stats"                  , Bool false);
       ("read_checked_file"            , Unset);
+      ("list_plugins"                 , Bool false);
       ("read_krml_file"               , Unset);
       ("record_hints"                 , Bool false);
       ("record_options"               , Bool false);
@@ -338,9 +339,6 @@ let get_option s =
   | None -> failwith ("Impossible: option " ^s^ " not found")
   | Some s -> s
 
-let psmap_keys m =
-  psmap_fold m (fun k v a -> k::a) []
-
 let rec option_val_to_string (v:option_val) : string =
   match v with
   | Bool b -> "Bool " ^ show b
@@ -383,7 +381,7 @@ let show_options () =
   let s = peek () in
   let kvs : list (string & option_val) =
     let open FStar.Class.Monad in
-    let! k = psmap_keys s in
+    let! k = Common.psmap_keys s in
     (* verify_module is only set internally. *)
     if k = "verify_module" then [] else
     let v = must <| psmap_try_find s k in
@@ -527,6 +525,7 @@ let get_query_cache             ()      = lookup_opt "query_cache"              
 let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_read_checked_file       ()      = lookup_opt "read_checked_file"        (as_option as_string)
 let get_read_krml_file          ()      = lookup_opt "read_krml_file"           (as_option as_string)
+let get_list_plugins            ()      = lookup_opt "list_plugins"             as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
 let get_retry                   ()      = lookup_opt "retry"                    as_bool
@@ -1593,6 +1592,12 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
      WithSideEffect ((fun _ -> display_debug_keys(); exit 0),
                      (Const (Bool true))),
     text "List all debug keys and exit");
+
+  (* FIXME: all of these should really be modes, not a boolean option *)
+  ( noshort,
+    "list_plugins",
+     Const (Bool true),
+    text "List all registered plugins and exit");
   ]
 
 and specs (warn_unsafe:bool) : list (FStar.Getopt.opt & Pprint.document) =
@@ -2086,6 +2091,7 @@ let quake_keep                   () = get_quake_keep                  ()
 let query_cache                  () = get_query_cache                 ()
 let query_stats                  () = get_query_stats                 ()
 let read_checked_file            () = get_read_checked_file           ()
+let list_plugins                 () = get_list_plugins                ()
 let read_krml_file               () = get_read_krml_file              ()
 let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()

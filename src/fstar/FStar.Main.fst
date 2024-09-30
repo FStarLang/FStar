@@ -194,6 +194,13 @@ let go _ =
           | Some (_, tcr) ->
             print1 "%s\n" (show tcr.checked_module)
 
+        else if Options.list_plugins () then
+          let ps = FStar.TypeChecker.Cfg.list_plugins () in
+          let ts = FStar.Tactics.Interpreter.native_tactics_steps () in
+          Util.print1 "Registered plugins:\n%s\n" (String.concat "\n" (List.map (fun p -> "  " ^ show p.FStar.TypeChecker.Primops.Base.name) ps));
+          Util.print1 "Registered tactic plugins:\n%s\n" (String.concat "\n" (List.map (fun p -> "  " ^ show p.FStar.TypeChecker.Primops.Base.name) ts));
+          ()
+
         else if Some? (Options.read_krml_file ()) then
           let path = Some?.v <| Options.read_krml_file () in
           match load_value_from_file path <: option FStar.Extraction.Krml.binary_format with

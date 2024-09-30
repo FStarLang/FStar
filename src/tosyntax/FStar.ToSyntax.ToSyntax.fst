@@ -3192,9 +3192,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
           if !dbg_attrs
           then (
             BU.print3 "Adding attributes to type %s: val_attrs=[@@%s] attrs=[@@%s]\n" 
-              (string_of_lid tname)
-              (String.concat ", " (List.map show val_attrs))
-              (String.concat ", " (List.map show d_attrs))
+              (show tname) (show val_attrs) (show d_attrs)
           );
           ([], { sigel = Sig_inductive_typ {lid=tname;
                                             us=univs;
@@ -3218,7 +3216,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
       if !dbg_attrs
       then (
         BU.print1 "After disentangling: %s\n" (show bundle)
-      );      
+      );
       let env = push_sigelt env0 bundle in
       let env = List.fold_left push_sigelt env abbrevs in
       (* NOTE: derived operators such as projectors and discriminators are using the type names before unfolding. *)

@@ -140,8 +140,12 @@ val find_prim_step: cfg -> fv -> option primitive_step
 val built_in_primitive_steps : BU.psmap primitive_step
 val simplification_steps (env:Env.env_t): BU.psmap primitive_step
 
-val register_plugin: primitive_step -> unit
-val register_extra_step: primitive_step -> unit
+val register_plugin : primitive_step -> unit
+val register_extra_step : primitive_step -> unit
+
+(* for debugging *)
+val list_plugins : unit -> list primitive_step
+val list_extra_steps : unit -> list primitive_step
 
 val config': list primitive_step -> list step -> Env.env -> cfg
 val config: list step -> Env.env -> cfg

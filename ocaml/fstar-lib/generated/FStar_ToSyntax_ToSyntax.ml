@@ -7800,24 +7800,19 @@ let rec (desugar_tycon :
                                                  if uu___13
                                                  then
                                                    let uu___14 =
-                                                     FStar_Ident.string_of_lid
+                                                     FStar_Class_Show.show
+                                                       FStar_Ident.showable_lident
                                                        tname in
                                                    let uu___15 =
-                                                     let uu___16 =
-                                                       FStar_Compiler_List.map
-                                                         (FStar_Class_Show.show
-                                                            FStar_Syntax_Print.showable_term)
-                                                         val_attrs in
-                                                     FStar_Compiler_String.concat
-                                                       ", " uu___16 in
+                                                     FStar_Class_Show.show
+                                                       (FStar_Class_Show.show_list
+                                                          FStar_Syntax_Print.showable_term)
+                                                       val_attrs in
                                                    let uu___16 =
-                                                     let uu___17 =
-                                                       FStar_Compiler_List.map
-                                                         (FStar_Class_Show.show
-                                                            FStar_Syntax_Print.showable_term)
-                                                         d_attrs in
-                                                     FStar_Compiler_String.concat
-                                                       ", " uu___17 in
+                                                     FStar_Class_Show.show
+                                                       (FStar_Class_Show.show_list
+                                                          FStar_Syntax_Print.showable_term)
+                                                       d_attrs in
                                                    FStar_Compiler_Util.print3
                                                      "Adding attributes to type %s: val_attrs=[@@%s] attrs=[@@%s]\n"
                                                      uu___14 uu___15 uu___16
