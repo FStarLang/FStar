@@ -2443,6 +2443,14 @@ let (register_extra_step :
   fun p -> FStar_Pervasives_Native.fst extra_steps p
 let (retrieve_extra_steps : unit -> prim_step_set) =
   fun uu___ -> FStar_Pervasives_Native.snd extra_steps ()
+let (list_plugins :
+  unit -> FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
+  fun uu___ ->
+    let uu___1 = retrieve_plugins () in FStar_Common.psmap_values uu___1
+let (list_extra_steps :
+  unit -> FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
+  fun uu___ ->
+    let uu___1 = retrieve_extra_steps () in FStar_Common.psmap_values uu___1
 let (cached_steps : unit -> prim_step_set) =
   let memo =
     let uu___ = empty_prim_steps () in FStar_Compiler_Util.mk_ref uu___ in

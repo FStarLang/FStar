@@ -361,6 +361,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("query_cache", (Bool false));
   ("query_stats", (Bool false));
   ("read_checked_file", Unset);
+  ("list_plugins", (Bool false));
   ("read_krml_file", Unset);
   ("record_hints", (Bool false));
   ("record_options", (Bool false));
@@ -430,10 +431,6 @@ let (get_option : Prims.string -> option_val) =
           FStar_Compiler_String.op_Hat "Impossible: option " uu___2 in
         FStar_Compiler_Effect.failwith uu___1
     | FStar_Pervasives_Native.Some s1 -> s1
-let psmap_keys :
-  'uuuuu . 'uuuuu FStar_Compiler_Util.psmap -> Prims.string Prims.list =
-  fun m ->
-    FStar_Compiler_Util.psmap_fold m (fun k -> fun v -> fun a -> k :: a) []
 let rec (option_val_to_string : option_val -> Prims.string) =
   fun v ->
     match v with
@@ -503,7 +500,7 @@ let (show_options : unit -> Prims.string) =
   fun uu___ ->
     let s = peek () in
     let kvs =
-      let uu___1 = psmap_keys s in
+      let uu___1 = FStar_Common.psmap_keys s in
       Obj.magic
         (FStar_Class_Monad.op_let_Bang FStar_Class_Monad.monad_list () ()
            (Obj.magic uu___1)
@@ -746,6 +743,8 @@ let (get_read_checked_file :
 let (get_read_krml_file :
   unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> lookup_opt "read_krml_file" (as_option as_string)
+let (get_list_plugins : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "list_plugins" as_bool
 let (get_record_hints : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "record_hints" as_bool
 let (get_record_options : unit -> Prims.bool) =
@@ -1137,7 +1136,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else FStar_Compiler_Effect.failwith "unexpected value for --quake"
     | uu___ -> FStar_Compiler_Effect.failwith "unexpected value for --quake"
-let (uu___529 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___526 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -1149,11 +1148,11 @@ let (uu___529 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___529 with
+  match uu___526 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___529 with
+  match uu___526 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -3406,7 +3405,24 @@ let rec (specs_with_types :
                                                                     (Bool
                                                                     true)))),
                                                                     uu___266) in
-                                                                    [uu___265] in
+                                                                    let uu___266
+                                                                    =
+                                                                    let uu___267
+                                                                    =
+                                                                    let uu___268
+                                                                    =
+                                                                    text
+                                                                    "List all registered plugins and exit" in
+                                                                    (FStar_Getopt.noshort,
+                                                                    "list_plugins",
+                                                                    (Const
+                                                                    (Bool
+                                                                    true)),
+                                                                    uu___268) in
+                                                                    [uu___267] in
+                                                                    uu___265
+                                                                    ::
+                                                                    uu___266 in
                                                                     uu___263
                                                                     ::
                                                                     uu___264 in
@@ -3865,7 +3881,7 @@ let (settable_specs :
     (fun uu___ ->
        match uu___ with | ((uu___1, x, uu___2), uu___3) -> settable x)
     all_specs
-let (uu___756 :
+let (uu___753 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -3882,11 +3898,11 @@ let (uu___756 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___756 with
+  match uu___753 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___756 with
+  match uu___753 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -4433,6 +4449,7 @@ let (query_cache : unit -> Prims.bool) = fun uu___ -> get_query_cache ()
 let (query_stats : unit -> Prims.bool) = fun uu___ -> get_query_stats ()
 let (read_checked_file : unit -> Prims.string FStar_Pervasives_Native.option)
   = fun uu___ -> get_read_checked_file ()
+let (list_plugins : unit -> Prims.bool) = fun uu___ -> get_list_plugins ()
 let (read_krml_file : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> get_read_krml_file ()
 let (record_hints : unit -> Prims.bool) = fun uu___ -> get_record_hints ()
