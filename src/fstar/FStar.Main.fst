@@ -149,8 +149,14 @@ let go _ =
     | Success ->
         fstar_files := Some filenames;
 
-        if Debug.any () then
-          Util.print1 "Full include path = %s\n" (show (Options.include_path ()));
+        if Debug.any () then (
+          Util.print1 "- F* executable: %s\n" (Util.exec_name);
+          Util.print1 "- F* exec dir: %s\n" (Options.fstar_bin_directory);
+          Util.print1 "- Library root: %s\n" ((Util.dflt "<none>" (Options.lib_root ())));
+          Util.print1 "- Full include path: %s\n" (show (Options.include_path ()));
+          Util.print_string "\n";
+          ()
+        );
 
         load_native_tactics ();
 

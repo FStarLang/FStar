@@ -1832,6 +1832,8 @@ let rec expand_include_d (dirname : string) : list string =
 let expand_include_ds (dirnames : list string) : list string =
   List.collect expand_include_d dirnames
 
+(* TODO: normalize these paths. This will probably affect makefiles since
+make does not normalize the paths itself. *)
 let lib_root () : option string =
   if get_no_default_includes() then
     None
