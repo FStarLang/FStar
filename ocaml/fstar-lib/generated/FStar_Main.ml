@@ -177,14 +177,24 @@ let go : 'uuuuu . 'uuuuu -> unit =
                (let uu___5 = FStar_Compiler_Debug.any () in
                 if uu___5
                 then
-                  let uu___6 =
-                    let uu___7 = FStar_Options.include_path () in
-                    FStar_Class_Show.show
-                      (FStar_Class_Show.show_list
-                         (FStar_Class_Show.printableshow
-                            FStar_Class_Printable.printable_string)) uu___7 in
-                  FStar_Compiler_Util.print1 "Full include path = %s\n"
-                    uu___6
+                  (FStar_Compiler_Util.print1 "- F* executable: %s\n"
+                     FStar_Compiler_Util.exec_name;
+                   FStar_Compiler_Util.print1 "- F* exec dir: %s\n"
+                     FStar_Options.fstar_bin_directory;
+                   (let uu___9 =
+                      let uu___10 = FStar_Options.lib_root () in
+                      FStar_Compiler_Util.dflt "<none>" uu___10 in
+                    FStar_Compiler_Util.print1 "- Library root: %s\n" uu___9);
+                   (let uu___10 =
+                      let uu___11 = FStar_Options.include_path () in
+                      FStar_Class_Show.show
+                        (FStar_Class_Show.show_list
+                           (FStar_Class_Show.printableshow
+                              FStar_Class_Printable.printable_string))
+                        uu___11 in
+                    FStar_Compiler_Util.print1 "- Full include path: %s\n"
+                      uu___10);
+                   FStar_Compiler_Util.print_string "\n")
                 else ());
                load_native_tactics ();
                FStar_Syntax_Unionfind.set_ro ();
