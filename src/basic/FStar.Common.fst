@@ -150,3 +150,7 @@ let psmap_keys m =
   BU.psmap_fold m (fun k v a -> k::a) []
 let psmap_values m =
   BU.psmap_fold m (fun k v a -> v::a) []
+
+let option_to_list = function
+  | None -> []
+  | Some x -> [x]

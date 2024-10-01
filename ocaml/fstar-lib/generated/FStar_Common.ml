@@ -176,3 +176,9 @@ let psmap_values :
   'uuuuu . 'uuuuu FStar_Compiler_Util.psmap -> 'uuuuu Prims.list =
   fun m ->
     FStar_Compiler_Util.psmap_fold m (fun k -> fun v -> fun a -> v :: a) []
+let option_to_list :
+  'uuuuu . 'uuuuu FStar_Pervasives_Native.option -> 'uuuuu Prims.list =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Pervasives_Native.None -> []
+    | FStar_Pervasives_Native.Some x -> [x]
