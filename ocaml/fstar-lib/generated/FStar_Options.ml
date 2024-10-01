@@ -362,6 +362,9 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("query_stats", (Bool false));
   ("read_checked_file", Unset);
   ("list_plugins", (Bool false));
+  ("locate", (Bool false));
+  ("locate_lib", (Bool false));
+  ("locate_ocaml", (Bool false));
   ("read_krml_file", Unset);
   ("record_hints", (Bool false));
   ("record_options", (Bool false));
@@ -745,6 +748,12 @@ let (get_read_krml_file :
   fun uu___ -> lookup_opt "read_krml_file" (as_option as_string)
 let (get_list_plugins : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "list_plugins" as_bool
+let (get_locate : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "locate" as_bool
+let (get_locate_lib : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "locate_lib" as_bool
+let (get_locate_ocaml : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "locate_ocaml" as_bool
 let (get_record_hints : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "record_hints" as_bool
 let (get_record_options : unit -> Prims.bool) =
@@ -847,16 +856,6 @@ let (get_profile_group_by_decl : unit -> Prims.bool) =
 let (get_profile_component :
   unit -> Prims.string Prims.list FStar_Pervasives_Native.option) =
   fun uu___ -> lookup_opt "profile_component" (as_option (as_list as_string))
-let (universe_include_path_base_dirs : Prims.string Prims.list) =
-  let sub_dirs = ["legacy"; "experimental"; ".cache"] in
-  FStar_Compiler_List.collect
-    (fun d ->
-       let uu___ =
-         FStar_Compiler_List.map
-           (fun s ->
-              let uu___1 = FStar_Compiler_String.op_Hat "/" s in
-              FStar_Compiler_String.op_Hat d uu___1) sub_dirs in
-       d :: uu___) ["/ulib"; "/lib/fstar"]
 let (_version : Prims.string FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref ""
 let (_platform : Prims.string FStar_Compiler_Effect.ref) =
@@ -3419,7 +3418,58 @@ let rec (specs_with_types :
                                                                     (Bool
                                                                     true)),
                                                                     uu___268) in
-                                                                    [uu___267] in
+                                                                    let uu___268
+                                                                    =
+                                                                    let uu___269
+                                                                    =
+                                                                    let uu___270
+                                                                    =
+                                                                    text
+                                                                    "Print the root of the F* installation and exit" in
+                                                                    (FStar_Getopt.noshort,
+                                                                    "locate",
+                                                                    (Const
+                                                                    (Bool
+                                                                    true)),
+                                                                    uu___270) in
+                                                                    let uu___270
+                                                                    =
+                                                                    let uu___271
+                                                                    =
+                                                                    let uu___272
+                                                                    =
+                                                                    text
+                                                                    "Print the root of the F* library and exit" in
+                                                                    (FStar_Getopt.noshort,
+                                                                    "locate_lib",
+                                                                    (Const
+                                                                    (Bool
+                                                                    true)),
+                                                                    uu___272) in
+                                                                    let uu___272
+                                                                    =
+                                                                    let uu___273
+                                                                    =
+                                                                    let uu___274
+                                                                    =
+                                                                    text
+                                                                    "Print the root of the built OCaml F* library and exit" in
+                                                                    (FStar_Getopt.noshort,
+                                                                    "locate_ocaml",
+                                                                    (Const
+                                                                    (Bool
+                                                                    true)),
+                                                                    uu___274) in
+                                                                    [uu___273] in
+                                                                    uu___271
+                                                                    ::
+                                                                    uu___272 in
+                                                                    uu___269
+                                                                    ::
+                                                                    uu___270 in
+                                                                    uu___267
+                                                                    ::
+                                                                    uu___268 in
                                                                     uu___265
                                                                     ::
                                                                     uu___266 in
@@ -4042,6 +4092,25 @@ let rec (expand_include_d : Prims.string -> Prims.string Prims.list) =
     else [dirname]
 let (expand_include_ds : Prims.string Prims.list -> Prims.string Prims.list)
   = fun dirnames -> FStar_Compiler_List.collect expand_include_d dirnames
+let (lib_root : unit -> Prims.string FStar_Pervasives_Native.option) =
+  fun uu___ ->
+    let uu___1 = get_no_default_includes () in
+    if uu___1
+    then FStar_Pervasives_Native.None
+    else
+      (let uu___3 =
+         FStar_Compiler_Util.expand_environment_variable "FSTAR_LIB" in
+       match uu___3 with
+       | FStar_Pervasives_Native.Some s -> FStar_Pervasives_Native.Some s
+       | FStar_Pervasives_Native.None ->
+           let uu___4 =
+             FStar_Compiler_String.op_Hat fstar_bin_directory "/../ulib" in
+           FStar_Pervasives_Native.Some uu___4)
+let (lib_paths : unit -> Prims.string Prims.list) =
+  fun uu___ ->
+    let uu___1 =
+      let uu___2 = lib_root () in FStar_Common.option_to_list uu___2 in
+    expand_include_ds uu___1
 let (include_path : unit -> Prims.string Prims.list) =
   fun uu___ ->
     let cache_dir =
@@ -4049,33 +4118,14 @@ let (include_path : unit -> Prims.string Prims.list) =
       match uu___1 with
       | FStar_Pervasives_Native.None -> []
       | FStar_Pervasives_Native.Some c -> [c] in
-    let lib_paths =
-      let uu___1 = get_no_default_includes () in
-      if uu___1
-      then []
-      else
-        (let uu___3 =
-           FStar_Compiler_Util.expand_environment_variable "FSTAR_LIB" in
-         match uu___3 with
-         | FStar_Pervasives_Native.None ->
-             let fstar_home =
-               FStar_Compiler_String.op_Hat fstar_bin_directory "/.." in
-             let defs = universe_include_path_base_dirs in
-             let uu___4 =
-               let uu___5 =
-                 FStar_Compiler_List.map
-                   (fun x -> FStar_Compiler_String.op_Hat fstar_home x) defs in
-               FStar_Compiler_List.filter FStar_Compiler_Util.file_exists
-                 uu___5 in
-             expand_include_ds uu___4
-         | FStar_Pervasives_Native.Some s -> [s]) in
     let include_paths =
       let uu___1 = get_include () in expand_include_ds uu___1 in
     let uu___1 =
-      let uu___2 =
-        let uu___3 = expand_include_d "." in
-        FStar_Compiler_List.op_At include_paths uu___3 in
-      FStar_Compiler_List.op_At lib_paths uu___2 in
+      let uu___2 = lib_paths () in
+      let uu___3 =
+        let uu___4 = expand_include_d "." in
+        FStar_Compiler_List.op_At include_paths uu___4 in
+      FStar_Compiler_List.op_At uu___2 uu___3 in
     FStar_Compiler_List.op_At cache_dir uu___1
 let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
   =
@@ -4450,6 +4500,9 @@ let (query_stats : unit -> Prims.bool) = fun uu___ -> get_query_stats ()
 let (read_checked_file : unit -> Prims.string FStar_Pervasives_Native.option)
   = fun uu___ -> get_read_checked_file ()
 let (list_plugins : unit -> Prims.bool) = fun uu___ -> get_list_plugins ()
+let (locate : unit -> Prims.bool) = fun uu___ -> get_locate ()
+let (locate_lib : unit -> Prims.bool) = fun uu___ -> get_locate_lib ()
+let (locate_ocaml : unit -> Prims.bool) = fun uu___ -> get_locate_ocaml ()
 let (read_krml_file : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> get_read_krml_file ()
 let (record_hints : unit -> Prims.bool) = fun uu___ -> get_record_hints ()

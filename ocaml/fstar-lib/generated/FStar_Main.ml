@@ -285,135 +285,197 @@ let go : 'uuuuu . 'uuuuu -> unit =
                              FStar_Compiler_Util.print1
                                "Registered tactic plugins:\n%s\n" uu___16))
                          else
-                           (let uu___15 =
-                              let uu___16 = FStar_Options.read_krml_file () in
-                              FStar_Pervasives_Native.uu___is_Some uu___16 in
+                           (let uu___15 = FStar_Options.locate () in
                             if uu___15
                             then
-                              let path =
-                                let uu___16 = FStar_Options.read_krml_file () in
-                                FStar_Pervasives_Native.__proj__Some__item__v
-                                  uu___16 in
-                              let uu___16 =
-                                FStar_Compiler_Util.load_value_from_file path in
-                              match uu___16 with
-                              | FStar_Pervasives_Native.None ->
-                                  let uu___17 =
-                                    let uu___18 =
-                                      let uu___19 =
-                                        FStar_Errors_Msg.text
-                                          "Could not read krml file:" in
-                                      let uu___20 =
-                                        FStar_Pprint.doc_of_string path in
-                                      FStar_Pprint.op_Hat_Slash_Hat uu___19
-                                        uu___20 in
-                                    [uu___18] in
-                                  FStar_Errors.raise_error0
-                                    FStar_Errors_Codes.Fatal_ModuleOrFileNotFound
-                                    ()
-                                    (Obj.magic
-                                       FStar_Errors_Msg.is_error_message_list_doc)
-                                    (Obj.magic uu___17)
-                              | FStar_Pervasives_Native.Some (version, files)
-                                  ->
-                                  ((let uu___18 =
-                                      FStar_Class_Show.show
-                                        (FStar_Class_Show.printableshow
-                                           FStar_Class_Printable.printable_int)
-                                        version in
-                                    FStar_Compiler_Util.print1
-                                      "Karamel format version: %s\n" uu___18);
-                                   FStar_Compiler_List.iter
-                                     (fun uu___18 ->
-                                        match uu___18 with
-                                        | (name, decls) ->
-                                            (FStar_Compiler_Util.print1
-                                               "%s:\n" name;
-                                             FStar_Compiler_List.iter
-                                               (fun d ->
-                                                  let uu___20 =
-                                                    FStar_Class_Show.show
-                                                      FStar_Extraction_Krml.showable_decl
-                                                      d in
-                                                  FStar_Compiler_Util.print1
-                                                    "  %s\n" uu___20) decls))
-                                     files)
+                              ((let uu___17 =
+                                  let uu___18 =
+                                    FStar_Compiler_Util.get_exec_dir () in
+                                  FStar_Compiler_Util.normalize_file_path
+                                    uu___18 in
+                                FStar_Compiler_Util.print1 "%s\n" uu___17);
+                               FStar_Compiler_Effect.exit Prims.int_zero)
                             else
-                              (let uu___17 = FStar_Options.lsp_server () in
+                              (let uu___17 = FStar_Options.locate_lib () in
                                if uu___17
-                               then FStar_Interactive_Lsp.start_server ()
+                               then
+                                 let uu___18 = FStar_Options.lib_root () in
+                                 match uu___18 with
+                                 | FStar_Pervasives_Native.None ->
+                                     (FStar_Compiler_Util.print_error
+                                        "No library found (is --no_default_includes set?)\n";
+                                      FStar_Compiler_Effect.exit
+                                        Prims.int_one)
+                                 | FStar_Pervasives_Native.Some s ->
+                                     ((let uu___20 =
+                                         FStar_Compiler_Util.normalize_file_path
+                                           s in
+                                       FStar_Compiler_Util.print1 "%s\n"
+                                         uu___20);
+                                      FStar_Compiler_Effect.exit
+                                        Prims.int_zero)
                                else
-                                 (let uu___19 = FStar_Options.interactive () in
+                                 (let uu___19 = FStar_Options.locate_ocaml () in
                                   if uu___19
                                   then
-                                    (FStar_Syntax_Unionfind.set_rw ();
-                                     (match filenames with
-                                      | [] ->
-                                          (FStar_Errors.log_issue0
-                                             FStar_Errors_Codes.Error_MissingFileName
-                                             ()
-                                             (Obj.magic
-                                                FStar_Errors_Msg.is_error_message_string)
-                                             (Obj.magic
-                                                "--ide: Name of current file missing in command line invocation\n");
-                                           FStar_Compiler_Effect.exit
-                                             Prims.int_one)
-                                      | uu___21::uu___22::uu___23 ->
-                                          (FStar_Errors.log_issue0
-                                             FStar_Errors_Codes.Error_TooManyFiles
-                                             ()
-                                             (Obj.magic
-                                                FStar_Errors_Msg.is_error_message_string)
-                                             (Obj.magic
-                                                "--ide: Too many files in command line invocation\n");
-                                           FStar_Compiler_Effect.exit
-                                             Prims.int_one)
-                                      | filename::[] ->
-                                          let uu___21 =
-                                            FStar_Options.legacy_interactive
+                                    ((let uu___21 =
+                                        let uu___22 =
+                                          let uu___23 =
+                                            FStar_Compiler_Util.get_exec_dir
                                               () in
-                                          if uu___21
-                                          then
-                                            FStar_Interactive_Legacy.interactive_mode
-                                              filename
-                                          else
-                                            FStar_Interactive_Ide.interactive_mode
-                                              filename))
+                                          Prims.strcat uu___23 "/../lib" in
+                                        FStar_Compiler_Util.normalize_file_path
+                                          uu___22 in
+                                      FStar_Compiler_Util.print1 "%s\n"
+                                        uu___21);
+                                     FStar_Compiler_Effect.exit
+                                       Prims.int_zero)
                                   else
-                                    if
-                                      (FStar_Compiler_List.length filenames)
-                                        >= Prims.int_one
-                                    then
-                                      (let uu___21 =
-                                         FStar_Dependencies.find_deps_if_needed
-                                           filenames
-                                           FStar_CheckedFiles.load_parsing_data_from_cache in
-                                       match uu___21 with
-                                       | (filenames1, dep_graph) ->
-                                           let uu___22 =
-                                             FStar_Universal.batch_mode_tc
-                                               filenames1 dep_graph in
-                                           (match uu___22 with
-                                            | (tcrs, env, cleanup1) ->
-                                                ((let uu___24 = cleanup1 env in
-                                                  ());
-                                                 (let module_names =
-                                                    FStar_Compiler_List.map
-                                                      (fun tcr ->
-                                                         FStar_Universal.module_or_interface_name
-                                                           tcr.FStar_CheckedFiles.checked_module)
-                                                      tcrs in
-                                                  report_errors module_names;
-                                                  finished_message
-                                                    module_names
-                                                    Prims.int_zero))))
-                                    else
-                                      FStar_Errors.raise_error0
-                                        FStar_Errors_Codes.Error_MissingFileName
-                                        ()
-                                        (Obj.magic
-                                           FStar_Errors_Msg.is_error_message_string)
-                                        (Obj.magic "No file provided")))))))))))
+                                    (let uu___21 =
+                                       let uu___22 =
+                                         FStar_Options.read_krml_file () in
+                                       FStar_Pervasives_Native.uu___is_Some
+                                         uu___22 in
+                                     if uu___21
+                                     then
+                                       let path =
+                                         let uu___22 =
+                                           FStar_Options.read_krml_file () in
+                                         FStar_Pervasives_Native.__proj__Some__item__v
+                                           uu___22 in
+                                       let uu___22 =
+                                         FStar_Compiler_Util.load_value_from_file
+                                           path in
+                                       match uu___22 with
+                                       | FStar_Pervasives_Native.None ->
+                                           let uu___23 =
+                                             let uu___24 =
+                                               let uu___25 =
+                                                 FStar_Errors_Msg.text
+                                                   "Could not read krml file:" in
+                                               let uu___26 =
+                                                 FStar_Pprint.doc_of_string
+                                                   path in
+                                               FStar_Pprint.op_Hat_Slash_Hat
+                                                 uu___25 uu___26 in
+                                             [uu___24] in
+                                           FStar_Errors.raise_error0
+                                             FStar_Errors_Codes.Fatal_ModuleOrFileNotFound
+                                             ()
+                                             (Obj.magic
+                                                FStar_Errors_Msg.is_error_message_list_doc)
+                                             (Obj.magic uu___23)
+                                       | FStar_Pervasives_Native.Some
+                                           (version, files) ->
+                                           ((let uu___24 =
+                                               FStar_Class_Show.show
+                                                 (FStar_Class_Show.printableshow
+                                                    FStar_Class_Printable.printable_int)
+                                                 version in
+                                             FStar_Compiler_Util.print1
+                                               "Karamel format version: %s\n"
+                                               uu___24);
+                                            FStar_Compiler_List.iter
+                                              (fun uu___24 ->
+                                                 match uu___24 with
+                                                 | (name, decls) ->
+                                                     (FStar_Compiler_Util.print1
+                                                        "%s:\n" name;
+                                                      FStar_Compiler_List.iter
+                                                        (fun d ->
+                                                           let uu___26 =
+                                                             FStar_Class_Show.show
+                                                               FStar_Extraction_Krml.showable_decl
+                                                               d in
+                                                           FStar_Compiler_Util.print1
+                                                             "  %s\n" uu___26)
+                                                        decls)) files)
+                                     else
+                                       (let uu___23 =
+                                          FStar_Options.lsp_server () in
+                                        if uu___23
+                                        then
+                                          FStar_Interactive_Lsp.start_server
+                                            ()
+                                        else
+                                          (let uu___25 =
+                                             FStar_Options.interactive () in
+                                           if uu___25
+                                           then
+                                             (FStar_Syntax_Unionfind.set_rw
+                                                ();
+                                              (match filenames with
+                                               | [] ->
+                                                   (FStar_Errors.log_issue0
+                                                      FStar_Errors_Codes.Error_MissingFileName
+                                                      ()
+                                                      (Obj.magic
+                                                         FStar_Errors_Msg.is_error_message_string)
+                                                      (Obj.magic
+                                                         "--ide: Name of current file missing in command line invocation\n");
+                                                    FStar_Compiler_Effect.exit
+                                                      Prims.int_one)
+                                               | uu___27::uu___28::uu___29 ->
+                                                   (FStar_Errors.log_issue0
+                                                      FStar_Errors_Codes.Error_TooManyFiles
+                                                      ()
+                                                      (Obj.magic
+                                                         FStar_Errors_Msg.is_error_message_string)
+                                                      (Obj.magic
+                                                         "--ide: Too many files in command line invocation\n");
+                                                    FStar_Compiler_Effect.exit
+                                                      Prims.int_one)
+                                               | filename::[] ->
+                                                   let uu___27 =
+                                                     FStar_Options.legacy_interactive
+                                                       () in
+                                                   if uu___27
+                                                   then
+                                                     FStar_Interactive_Legacy.interactive_mode
+                                                       filename
+                                                   else
+                                                     FStar_Interactive_Ide.interactive_mode
+                                                       filename))
+                                           else
+                                             if
+                                               (FStar_Compiler_List.length
+                                                  filenames)
+                                                 >= Prims.int_one
+                                             then
+                                               (let uu___27 =
+                                                  FStar_Dependencies.find_deps_if_needed
+                                                    filenames
+                                                    FStar_CheckedFiles.load_parsing_data_from_cache in
+                                                match uu___27 with
+                                                | (filenames1, dep_graph) ->
+                                                    let uu___28 =
+                                                      FStar_Universal.batch_mode_tc
+                                                        filenames1 dep_graph in
+                                                    (match uu___28 with
+                                                     | (tcrs, env, cleanup1)
+                                                         ->
+                                                         ((let uu___30 =
+                                                             cleanup1 env in
+                                                           ());
+                                                          (let module_names =
+                                                             FStar_Compiler_List.map
+                                                               (fun tcr ->
+                                                                  FStar_Universal.module_or_interface_name
+                                                                    tcr.FStar_CheckedFiles.checked_module)
+                                                               tcrs in
+                                                           report_errors
+                                                             module_names;
+                                                           finished_message
+                                                             module_names
+                                                             Prims.int_zero))))
+                                             else
+                                               FStar_Errors.raise_error0
+                                                 FStar_Errors_Codes.Error_MissingFileName
+                                                 ()
+                                                 (Obj.magic
+                                                    FStar_Errors_Msg.is_error_message_string)
+                                                 (Obj.magic
+                                                    "No file provided"))))))))))))))
 let (lazy_chooser :
   FStar_Syntax_Syntax.lazy_kind ->
     FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term)
