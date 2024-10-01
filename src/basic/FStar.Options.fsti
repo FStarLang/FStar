@@ -175,6 +175,9 @@ val normalize_pure_terms_for_extraction
                                 : unit    -> bool
 val krmloutput                  : unit    -> option string
 val list_plugins                : unit    -> bool
+val locate                      : unit    -> bool
+val locate_lib                  : unit    -> bool
+val locate_ocaml                : unit    -> bool
 val output_deps_to              : unit    -> option string
 val output_dir                  : unit    -> option string
 val prepend_cache_dir           : string  -> string
