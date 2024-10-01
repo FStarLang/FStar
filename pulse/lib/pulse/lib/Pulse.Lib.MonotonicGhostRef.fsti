@@ -36,6 +36,16 @@ returns r:mref p
 ensures pts_to r #1.0R v
 
 ghost
+fn share (#t:Type0) (#p:preorder t) (r:mref p) (#v:t) (#q #f #g:perm)
+requires pts_to r #q v ** pure (q == f +. g) 
+ensures pts_to r #f v ** pts_to r #g v
+
+ghost
+fn gather (#t:Type0) (#p:preorder t) (r:mref p) (#v:t) (#f #g:perm)
+requires pts_to r #f v ** pts_to r #g v
+ensures pts_to r #(f +. g) v
+
+ghost
 fn take_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (v:t)
 requires pts_to r #f v
 ensures pts_to r #f v ** snapshot r v

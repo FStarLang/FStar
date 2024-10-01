@@ -19,13 +19,17 @@ let pts_to (#t:Type)
            (r:mref p)
            (#f:perm)
            (v:t)
-= exists* h. GR.pts_to r (Some f, h) ** pure (Cons? h /\ PulseCore.Preorder.curval h == v)
+= exists* h. 
+    GR.pts_to r (Some f, h) **
+    pure (f <=. 1.0R /\ Cons? h /\ PulseCore.Preorder.curval h == v)
 
 let snapshot (#t:Type)
              (#p:preorder t) 
              (r:mref p)
              (v:t)
-= exists* h. GR.pts_to r (None, h) ** pure (Cons? h /\ PulseCore.Preorder.curval h == v)
+= exists* h.
+    GR.pts_to r (None, h) **
+    pure (Cons? h /\ PulseCore.Preorder.curval h == v)
   
 let full (#t:Type) (#p:preorder t) (v:t) : FP.pcm_carrier p = 
   (Some 1.0R, [v])
@@ -39,6 +43,37 @@ ensures pts_to r #1.0R v
   let r = alloc #_ #(FP.fp_pcm p) (full v);
   fold (pts_to r #1.0R v);
   r
+}
+
+ghost
+fn share (#t:Type0) (#p:preorder t) (r:mref p) (#v:t) (#q #f #g:perm)
+requires pts_to r #q v ** pure (q == f +. g)
+ensures pts_to r #f v ** pts_to r #g v
+{
+  unfold pts_to;
+  with h. assert (GR.pts_to r (Some q, h));
+  rewrite (GR.pts_to r (Some q, h)) as 
+          (GR.pts_to r ((Some f, h) `(FP.fp_pcm p).p.op` (Some g, h)));
+  GR.share r (Some f, h) (Some g, h);
+  fold (pts_to r #f v);
+  fold (pts_to r #g v);
+}
+
+
+ghost
+fn gather (#t:Type0) (#p:preorder t) (r:mref p) (#v:t) (#f #g:perm)
+requires pts_to r #f v ** pts_to r #g v
+ensures pts_to r #(f +. g) v
+{ 
+  unfold (pts_to r #f v);
+  with hf. assert (GR.pts_to r (Some f, hf));
+  unfold pts_to;
+  with hg. assert (GR.pts_to r (Some g, hg));
+  GR.gather r (Some f, hf) (Some g, hg);
+  let q : perm = f +. g; //annoying; can't write (f +. g) inline below
+  rewrite (GR.pts_to r ((Some f, hf) `(FP.fp_pcm p).p.op` (Some g, hf)))
+       as (GR.pts_to r (Some q, hf));
+  fold (pts_to r #(f +. g) v);
 }
 
 ghost
