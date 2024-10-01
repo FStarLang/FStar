@@ -576,15 +576,6 @@ let get_profile                 ()      = lookup_opt "profile"                  
 let get_profile_group_by_decl   ()      = lookup_opt "profile_group_by_decl"    as_bool
 let get_profile_component       ()      = lookup_opt "profile_component"        (as_option (as_list as_string))
 
-// Note: the "ulib/fstar" is for the case where package is installed in the
-// standard "unix" way (e.g. opam) and the lib directory is $PREFIX/lib/fstar
-let universe_include_path_base_dirs =
-  let sub_dirs = ["legacy"; "experimental"; ".cache"] in
-  ["/ulib"; "/lib/fstar"]
-  |> List.collect (fun d -> d :: (sub_dirs |> List.map (fun s -> d ^ "/" ^ s)))
-
-
-
 // See comment in the interface file
 let _version = Util.mk_ref ""
 let _platform = Util.mk_ref ""
@@ -1823,27 +1814,27 @@ let rec expand_include_d (dirname : string) : list string =
 let expand_include_ds (dirnames : list string) : list string =
   List.collect expand_include_d dirnames
 
+let lib_root () : option string =
+  if get_no_default_includes() then
+    None
+  else
+    match Util.expand_environment_variable "FSTAR_LIB" with
+    | Some s -> Some s
+    | None -> Some (fstar_bin_directory ^ "/../ulib")
+
+let lib_paths () =
+  Common.option_to_list (lib_root()) |> expand_include_ds
+
 let include_path () =
   let cache_dir =
     match get_cache_dir() with
     | None -> []
     | Some c -> [c]
   in
-  let lib_paths =
-    if get_no_default_includes() then
-      []
-    else
-      match Util.expand_environment_variable "FSTAR_LIB" with
-      | None ->
-        let fstar_home = fstar_bin_directory ^ "/.."  in
-        let defs = universe_include_path_base_dirs in
-        defs |> List.map (fun x -> fstar_home ^ x) |> List.filter file_exists |> expand_include_ds
-      | Some s -> [s]
-  in
   let include_paths =
     get_include () |> expand_include_ds
   in
-  cache_dir @ lib_paths @ include_paths @ expand_include_d "."
+  cache_dir @ lib_paths () @ include_paths @ expand_include_d "."
 
 let find_file =
   let file_map = Util.smap_create 100 in

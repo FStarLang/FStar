@@ -145,6 +145,8 @@ val ide                         : unit    -> bool
 val ide_id_info_off             : unit    -> bool
 val set_ide_filename            : string -> unit
 val ide_filename                : unit -> option string
+val lib_root                    : unit    -> option string
+val lib_paths                   : unit    -> list string
 val include_path                : unit    -> list string
 val print                       : unit    -> bool
 val print_in_place              : unit    -> bool
