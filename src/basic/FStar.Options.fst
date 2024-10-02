@@ -1833,17 +1833,27 @@ let expand_include_ds (dirnames : list string) : list string =
   List.collect expand_include_d dirnames
 
 (* TODO: normalize these paths. This will probably affect makefiles since
-make does not normalize the paths itself. *)
+make does not normalize the paths itself. Also, move this whole logic away
+from this module. *)
 let lib_root () : option string =
+  (* No default includes means we don't try to find a library on our own. *)
   if get_no_default_includes() then
     None
   else
+    (* FSTAR_LIB can be set in the environment to override the library *)
     match Util.expand_environment_variable "FSTAR_LIB" with
     | Some s -> Some s
-    | None -> Some (fstar_bin_directory ^ "/../ulib")
+    | None ->
+      (* Otherwise, try to find the library in the default locations. It's ulib/
+      in the repository, and lib/fstar/ in the binary package. *)
+      if Util.file_exists (fstar_bin_directory ^ "/../ulib")
+      then Some (fstar_bin_directory ^ "/../ulib")
+      else if Util.file_exists (fstar_bin_directory ^ "/../lib/fstar")
+      then Some (fstar_bin_directory ^ "/../lib/fstar")
+      else None
 
 let lib_paths () =
-  Common.option_to_list (lib_root()) |> expand_include_ds
+  Common.option_to_list (lib_root ()) |> expand_include_ds
 
 let include_path () =
   let cache_dir =
