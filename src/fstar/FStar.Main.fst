@@ -149,8 +149,14 @@ let go _ =
     | Success ->
         fstar_files := Some filenames;
 
-        if Debug.any () then
-          Util.print1 "Full include path = %s\n" (show (Options.include_path ()));
+        if Debug.any () then (
+          Util.print1 "- F* executable: %s\n" (Util.exec_name);
+          Util.print1 "- F* exec dir: %s\n" (Options.fstar_bin_directory);
+          Util.print1 "- Library root: %s\n" ((Util.dflt "<none>" (Options.lib_root ())));
+          Util.print1 "- Full include path: %s\n" (show (Options.include_path ()));
+          Util.print_string "\n";
+          ()
+        );
 
         load_native_tactics ();
 
@@ -194,7 +200,32 @@ let go _ =
           | Some (_, tcr) ->
             print1 "%s\n" (show tcr.checked_module)
 
-        else if Some? (Options.read_krml_file ()) then
+        else if Options.list_plugins () then
+          let ps = FStar.TypeChecker.Cfg.list_plugins () in
+          let ts = FStar.Tactics.Interpreter.native_tactics_steps () in
+          Util.print1 "Registered plugins:\n%s\n" (String.concat "\n" (List.map (fun p -> "  " ^ show p.FStar.TypeChecker.Primops.Base.name) ps));
+          Util.print1 "Registered tactic plugins:\n%s\n" (String.concat "\n" (List.map (fun p -> "  " ^ show p.FStar.TypeChecker.Primops.Base.name) ts));
+          ()
+
+        else if Options.locate () then (
+          Util.print1 "%s\n" (Util.get_exec_dir () |> Util.normalize_file_path);
+          exit 0
+
+        ) else if Options.locate_lib () then (
+          match Options.lib_root () with
+          | None ->
+            Util.print_error "No library found (is --no_default_includes set?)\n";
+            exit 1
+          | Some s ->
+            Util.print1 "%s\n" (Util.normalize_file_path s);
+            exit 0
+
+        ) else if Options.locate_ocaml () then (
+          // This is correct right now, but probably should change.
+          Util.print1 "%s\n" (Util.get_exec_dir () ^ "/../lib" |> Util.normalize_file_path);
+          exit 0
+
+        ) else if Some? (Options.read_krml_file ()) then
           let path = Some?.v <| Options.read_krml_file () in
           match load_value_from_file path <: option FStar.Extraction.Krml.binary_format with
           | None ->

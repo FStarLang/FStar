@@ -1,12 +1,14 @@
 
-ifdef FSTAR_HOME
-  ifeq ($(OS),Windows_NT)
-    OCAMLPATH := $(shell cygpath -m $(FSTAR_HOME)/lib);$(OCAMLPATH)
-  else
-    OCAMLPATH := $(FSTAR_HOME)/lib:$(OCAMLPATH)
-  endif
-endif
+# ifdef FSTAR_HOME
+#   ifeq ($(OS),Windows_NT)
+#     OCAMLPATH := $(shell cygpath -m $(FSTAR_HOME)/lib);$(OCAMLPATH)
+#   else
+#     OCAMLPATH := $(FSTAR_HOME)/stage2/lib:$(OCAMLPATH)
+#   endif
+# endif
 
+FSTAR_OCAML := $(shell $(FSTAR_HOME)/bin/fstar.exe --locate_ocaml)
+OCAMLPATH := $(FSTAR_OCAML):$(OCAMLPATH)
 # with dune
 Main.exe: $(wildcard *.ml)
 	OCAMLPATH="$(OCAMLPATH)" dune build

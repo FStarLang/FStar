@@ -345,6 +345,12 @@ let retrieve_plugins () =
 let register_extra_step  p  = fst extra_steps p
 let retrieve_extra_steps () = snd extra_steps ()
 
+let list_plugins () : list primitive_step =
+    FStar.Common.psmap_values (retrieve_plugins ())
+
+let list_extra_steps () : list primitive_step =
+    FStar.Common.psmap_values (retrieve_extra_steps ())
+
 let cached_steps : unit -> prim_step_set =
     let memo : ref prim_step_set = BU.mk_ref (empty_prim_steps ()) in
     fun () ->

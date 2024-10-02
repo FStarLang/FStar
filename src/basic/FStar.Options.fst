@@ -268,6 +268,10 @@ let defaults =
       ("query_cache"                  , Bool false);
       ("query_stats"                  , Bool false);
       ("read_checked_file"            , Unset);
+      ("list_plugins"                 , Bool false);
+      ("locate"                       , Bool false);
+      ("locate_lib"                   , Bool false);
+      ("locate_ocaml"                 , Bool false);
       ("read_krml_file"               , Unset);
       ("record_hints"                 , Bool false);
       ("record_options"               , Bool false);
@@ -338,9 +342,6 @@ let get_option s =
   | None -> failwith ("Impossible: option " ^s^ " not found")
   | Some s -> s
 
-let psmap_keys m =
-  psmap_fold m (fun k v a -> k::a) []
-
 let rec option_val_to_string (v:option_val) : string =
   match v with
   | Bool b -> "Bool " ^ show b
@@ -383,7 +384,7 @@ let show_options () =
   let s = peek () in
   let kvs : list (string & option_val) =
     let open FStar.Class.Monad in
-    let! k = psmap_keys s in
+    let! k = Common.psmap_keys s in
     (* verify_module is only set internally. *)
     if k = "verify_module" then [] else
     let v = must <| psmap_try_find s k in
@@ -527,6 +528,10 @@ let get_query_cache             ()      = lookup_opt "query_cache"              
 let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_read_checked_file       ()      = lookup_opt "read_checked_file"        (as_option as_string)
 let get_read_krml_file          ()      = lookup_opt "read_krml_file"           (as_option as_string)
+let get_list_plugins            ()      = lookup_opt "list_plugins"             as_bool
+let get_locate                  ()      = lookup_opt "locate"                   as_bool
+let get_locate_lib              ()      = lookup_opt "locate_lib"               as_bool
+let get_locate_ocaml            ()      = lookup_opt "locate_ocaml"             as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
 let get_retry                   ()      = lookup_opt "retry"                    as_bool
@@ -576,15 +581,6 @@ let get_trivial_pre_for_unannotated_effectful_fns
 let get_profile                 ()      = lookup_opt "profile"                  (as_option (as_list as_string))
 let get_profile_group_by_decl   ()      = lookup_opt "profile_group_by_decl"    as_bool
 let get_profile_component       ()      = lookup_opt "profile_component"        (as_option (as_list as_string))
-
-// Note: the "ulib/fstar" is for the case where package is installed in the
-// standard "unix" way (e.g. opam) and the lib directory is $PREFIX/lib/fstar
-let universe_include_path_base_dirs =
-  let sub_dirs = ["legacy"; "experimental"; ".cache"] in
-  ["/ulib"; "/lib/fstar"]
-  |> List.collect (fun d -> d :: (sub_dirs |> List.map (fun s -> d ^ "/" ^ s)))
-
-
 
 // See comment in the interface file
 let _version = Util.mk_ref ""
@@ -1593,6 +1589,24 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
      WithSideEffect ((fun _ -> display_debug_keys(); exit 0),
                      (Const (Bool true))),
     text "List all debug keys and exit");
+
+  (* FIXME: all of these should really be modes, not a boolean option *)
+  ( noshort,
+    "list_plugins",
+     Const (Bool true),
+    text "List all registered plugins and exit");
+  ( noshort,
+    "locate",
+     Const (Bool true),
+    text "Print the root of the F* installation and exit");
+  ( noshort,
+    "locate_lib",
+    Const (Bool true),
+    text "Print the root of the F* library and exit");
+  ( noshort,
+    "locate_ocaml",
+    Const (Bool true),
+    text "Print the root of the built OCaml F* library and exit");
   ]
 
 and specs (warn_unsafe:bool) : list (FStar.Getopt.opt & Pprint.document) =
@@ -1818,27 +1832,29 @@ let rec expand_include_d (dirname : string) : list string =
 let expand_include_ds (dirnames : list string) : list string =
   List.collect expand_include_d dirnames
 
+(* TODO: normalize these paths. This will probably affect makefiles since
+make does not normalize the paths itself. *)
+let lib_root () : option string =
+  if get_no_default_includes() then
+    None
+  else
+    match Util.expand_environment_variable "FSTAR_LIB" with
+    | Some s -> Some s
+    | None -> Some (fstar_bin_directory ^ "/../ulib")
+
+let lib_paths () =
+  Common.option_to_list (lib_root()) |> expand_include_ds
+
 let include_path () =
   let cache_dir =
     match get_cache_dir() with
     | None -> []
     | Some c -> [c]
   in
-  let lib_paths =
-    if get_no_default_includes() then
-      []
-    else
-      match Util.expand_environment_variable "FSTAR_LIB" with
-      | None ->
-        let fstar_home = fstar_bin_directory ^ "/.."  in
-        let defs = universe_include_path_base_dirs in
-        defs |> List.map (fun x -> fstar_home ^ x) |> List.filter file_exists |> expand_include_ds
-      | Some s -> [s]
-  in
   let include_paths =
     get_include () |> expand_include_ds
   in
-  cache_dir @ lib_paths @ include_paths @ expand_include_d "."
+  cache_dir @ lib_paths () @ include_paths @ expand_include_d "."
 
 let find_file =
   let file_map = Util.smap_create 100 in
@@ -2086,6 +2102,10 @@ let quake_keep                   () = get_quake_keep                  ()
 let query_cache                  () = get_query_cache                 ()
 let query_stats                  () = get_query_stats                 ()
 let read_checked_file            () = get_read_checked_file           ()
+let list_plugins                 () = get_list_plugins                ()
+let locate                       () = get_locate                      ()
+let locate_lib                   () = get_locate_lib                  ()
+let locate_ocaml                 () = get_locate_ocaml                ()
 let read_krml_file               () = get_read_krml_file              ()
 let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()

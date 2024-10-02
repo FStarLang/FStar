@@ -901,6 +901,7 @@ let incr r = FStar_ST.(Z.(write r (read r + one)))
 let decr r = FStar_ST.(Z.(write r (read r - one)))
 let geq (i:int) (j:int) = i >= j
 
+let exec_name = Sys.executable_name
 let get_exec_dir () = Filename.dirname (Sys.executable_name)
 let expand_environment_variable x = try Some (Sys.getenv x) with Not_found -> None
 

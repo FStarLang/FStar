@@ -97,6 +97,10 @@ val sizet_to_uint32 (x:t) : Pure U32.t
   (requires True)
   (ensures fun y -> U32.v y == v x % pow2 32)
 
+val sizet_to_uint64 (x:t) : Pure U64.t
+  (requires True)
+  (ensures fun y -> U64.v y == v x % pow2 64)
+
 val fits_lte (x y: nat) : Lemma
   (requires (x <= y /\ fits y))
   (ensures (fits x))

@@ -161,3 +161,24 @@ let rec eq_list :
         | ([], uu___) -> false
         | (uu___, []) -> false
         | (x1::t1, x2::t2) -> (f x1 x2) && (eq_list f t1 t2)
+let psmap_to_list :
+  'uuuuu .
+    'uuuuu FStar_Compiler_Util.psmap -> (Prims.string * 'uuuuu) Prims.list
+  =
+  fun m ->
+    FStar_Compiler_Util.psmap_fold m (fun k -> fun v -> fun a -> (k, v) :: a)
+      []
+let psmap_keys :
+  'uuuuu . 'uuuuu FStar_Compiler_Util.psmap -> Prims.string Prims.list =
+  fun m ->
+    FStar_Compiler_Util.psmap_fold m (fun k -> fun v -> fun a -> k :: a) []
+let psmap_values :
+  'uuuuu . 'uuuuu FStar_Compiler_Util.psmap -> 'uuuuu Prims.list =
+  fun m ->
+    FStar_Compiler_Util.psmap_fold m (fun k -> fun v -> fun a -> v :: a) []
+let option_to_list :
+  'uuuuu . 'uuuuu FStar_Pervasives_Native.option -> 'uuuuu Prims.list =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Pervasives_Native.None -> []
+    | FStar_Pervasives_Native.Some x -> [x]

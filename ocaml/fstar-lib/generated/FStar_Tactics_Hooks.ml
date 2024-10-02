@@ -1775,7 +1775,7 @@ let (handle_smt_goal :
                             gs1) in
                gs
            | FStar_Pervasives_Native.None -> [(env, goal1)])
-let (uu___842 :
+let (uu___0 :
   FStar_Syntax_Syntax.term FStar_Syntax_Embeddings_Base.embedding) =
   FStar_Reflection_V2_Embeddings.e_term
 type blob_t =
@@ -1889,7 +1889,7 @@ let (splice :
                                       (FStar_Syntax_Embeddings.e_tuple2
                                          FStar_Reflection_V2_Embeddings.e_env
                                          (FStar_Syntax_Embeddings.e_option
-                                            uu___842))
+                                            uu___0))
                                       ({
                                          FStar_TypeChecker_Env.solver =
                                            (env.FStar_TypeChecker_Env.solver);
@@ -2020,14 +2020,14 @@ let (splice :
                                                (FStar_Syntax_Embeddings.e_option
                                                   (FStar_Syntax_Embeddings.e_tuple2
                                                      FStar_Syntax_Embeddings.e_string
-                                                     uu___842))))
+                                                     uu___0))))
                                          (FStar_Syntax_Embeddings.e_tuple3
                                             FStar_Syntax_Embeddings.e_bool
                                             FStar_Reflection_V2_Embeddings.e_sigelt
                                             (FStar_Syntax_Embeddings.e_option
                                                (FStar_Syntax_Embeddings.e_tuple2
                                                   FStar_Syntax_Embeddings.e_string
-                                                  uu___842)))
+                                                  uu___0)))
                                          (FStar_Syntax_Embeddings.e_list
                                             (FStar_Syntax_Embeddings.e_tuple3
                                                FStar_Syntax_Embeddings.e_bool
@@ -2035,7 +2035,7 @@ let (splice :
                                                (FStar_Syntax_Embeddings.e_option
                                                   (FStar_Syntax_Embeddings.e_tuple2
                                                      FStar_Syntax_Embeddings.e_string
-                                                     uu___842))))) tau1
+                                                     uu___0))))) tau1
                                       tactic_already_typed ps in
                                   match uu___7 with
                                   | (gs,

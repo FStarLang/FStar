@@ -145,6 +145,8 @@ val ide                         : unit    -> bool
 val ide_id_info_off             : unit    -> bool
 val set_ide_filename            : string -> unit
 val ide_filename                : unit -> option string
+val lib_root                    : unit    -> option string
+val lib_paths                   : unit    -> list string
 val include_path                : unit    -> list string
 val print                       : unit    -> bool
 val print_in_place              : unit    -> bool
@@ -172,6 +174,10 @@ val no_smt                      : unit    -> bool
 val normalize_pure_terms_for_extraction
                                 : unit    -> bool
 val krmloutput                  : unit    -> option string
+val list_plugins                : unit    -> bool
+val locate                      : unit    -> bool
+val locate_lib                  : unit    -> bool
+val locate_ocaml                : unit    -> bool
 val output_deps_to              : unit    -> option string
 val output_dir                  : unit    -> option string
 val prepend_cache_dir           : string  -> string

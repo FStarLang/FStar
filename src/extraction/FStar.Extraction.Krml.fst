@@ -1164,6 +1164,10 @@ and translate_expr' env e: expr =
     when string_of_mlpath p = "FStar.SizeT.sizet_to_uint32" ->
       ECast (translate_expr env arg, TInt UInt32)
 
+  | MLE_App ({ expr = MLE_Name p }, [ arg ])
+    when string_of_mlpath p = "FStar.SizeT.sizet_to_uint64" ->
+      ECast (translate_expr env arg, TInt UInt64)
+
   | MLE_App (head, args) ->
       EApp (translate_expr env head, List.map (translate_expr env) args)
 
