@@ -41,12 +41,17 @@ type vconfig = {
   tcnorm                                    : bool;
   no_plugins                                : bool;
   no_tactics                                : bool;
-  vcgen_optimize_bind_as_seq                : option string;
   z3cliopt                                  : list string;
+  z3smtopt                                  : list string;  
   z3refresh                                 : bool;
   z3rlimit                                  : int;
   z3rlimit_factor                           : int;
   z3seed                                    : int;
+  z3version                                 : string;
   trivial_pre_for_unannotated_effectful_fns : bool;
   reuse_hint_for                            : option string;
 }
+
+(** Marker to check a sigelt with a particular vconfig *)
+irreducible
+let check_with (vcfg : vconfig) : unit = ()

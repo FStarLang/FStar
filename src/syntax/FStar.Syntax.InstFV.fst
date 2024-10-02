@@ -48,25 +48,25 @@ let rec inst (s:term -> fv -> term) t =
       | Tm_fvar fv ->
         s t fv
 
-      | Tm_abs(bs, body, lopt) ->
+      | Tm_abs {bs; body; rc_opt=lopt} ->
         let bs = inst_binders s bs in
         let body = inst s body in
-        mk (Tm_abs(bs, body, inst_lcomp_opt s lopt))
+        mk (Tm_abs {bs; body; rc_opt=inst_lcomp_opt s lopt})
 
-      | Tm_arrow (bs, c) ->
+      | Tm_arrow {bs; comp=c} ->
         let bs = inst_binders s bs in
         let c = inst_comp s c in
-        mk (Tm_arrow(bs, c))
+        mk (Tm_arrow {bs; comp=c})
 
-      | Tm_refine(bv, t) ->
+      | Tm_refine {b=bv; phi=t} ->
         let bv = {bv with sort=inst s bv.sort} in
         let t = inst s t in
-        mk (Tm_refine(bv, t))
+        mk (Tm_refine {b=bv; phi=t})
 
-      | Tm_app(t, args) ->
-        mk (Tm_app(inst s t, inst_args s args))
+      | Tm_app {hd=t; args} ->
+        mk (Tm_app {hd=inst s t; args=inst_args s args})
 
-      | Tm_match(t, asc_opt, pats, lopt) ->
+      | Tm_match {scrutinee=t; ret_opt=asc_opt; brs=pats; rc_opt=lopt} ->
         let pats = pats |> List.map (fun (p, wopt, t) ->
             let wopt = match wopt with
                 | None ->   None
@@ -78,23 +78,26 @@ let rec inst (s:term -> fv -> term) t =
           | None -> None
           | Some (b, asc) ->
             Some (inst_binder s b, inst_ascription s asc) in
-        mk (Tm_match(inst s t, asc_opt, pats, inst_lcomp_opt s lopt))
+        mk (Tm_match {scrutinee=inst s t;
+                      ret_opt=asc_opt;
+                      brs=pats;
+                      rc_opt=inst_lcomp_opt s lopt})
 
-      | Tm_ascribed(t1, asc, f) ->
-        mk (Tm_ascribed(inst s t1, inst_ascription s asc, f))
+      | Tm_ascribed {tm=t1; asc; eff_opt=f} ->
+        mk (Tm_ascribed {tm=inst s t1; asc=inst_ascription s asc; eff_opt=f})
 
-      | Tm_let(lbs, t) ->
+      | Tm_let {lbs; body=t} ->
         let lbs = fst lbs, snd lbs |> List.map (fun lb -> {lb with lbtyp=inst s lb.lbtyp; lbdef=inst s lb.lbdef}) in
-        mk (Tm_let(lbs, inst s t))
+        mk (Tm_let {lbs; body=inst s t})
 
-      | Tm_meta(t, Meta_pattern (bvs, args)) ->
-        mk (Tm_meta(inst s t, Meta_pattern (bvs, args |> List.map (inst_args s))))
+      | Tm_meta {tm=t; meta=Meta_pattern (bvs, args)} ->
+        mk (Tm_meta {tm=inst s t; meta=Meta_pattern (bvs, args |> List.map (inst_args s))})
 
-      | Tm_meta(t, Meta_monadic (m, t')) ->
-        mk (Tm_meta(inst s t, Meta_monadic(m, inst s t')))
+      | Tm_meta {tm=t; meta=Meta_monadic (m, t')} ->
+        mk (Tm_meta {tm=inst s t; meta=Meta_monadic(m, inst s t')})
 
-      | Tm_meta(t, tag) ->
-        mk (Tm_meta(inst s t, tag))
+      | Tm_meta {tm=t; meta=tag} ->
+        mk (Tm_meta {tm=inst s t; meta=tag})
 
 and inst_binder s b =
   { b with
@@ -106,8 +109,8 @@ and inst_binders s bs = bs |> List.map (inst_binder s)
 and inst_args s args = args |> List.map (fun (a, imp) -> inst s a, imp)
 
 and inst_comp s c = match c.n with
-    | Total (t, uopt) -> S.mk_Total' (inst s t) uopt
-    | GTotal (t, uopt) -> S.mk_GTotal' (inst s t) uopt
+    | Total t -> S.mk_Total (inst s t)
+    | GTotal t -> S.mk_GTotal (inst s t)
     | Comp ct -> let ct = {ct with result_typ=inst s ct.result_typ;
                                    effect_args=inst_args s ct.effect_args;
                                    flags=ct.flags |> List.map (function
@@ -143,4 +146,3 @@ let instantiate i t = match i with
         end
       in
         inst inst_fv t
-

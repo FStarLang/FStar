@@ -35,13 +35,15 @@ type locals_t = m:locals_t'{
 
 type pre_t = locals_t -> Type0
 type post_t (a:Type) = a -> locals_t -> Type0
-type wp_t (a:Type) = post_t a -> pre_t
+type wp_t0 (a:Type) = post_t a -> pre_t
 
-assume WP_t_monotonic:
-  forall (a:Type) (wp:wp_t a).
-    (forall (p q:post_t a).
-       (forall x m. p x m ==> q x m) ==>
-       (forall m. wp p m ==> wp q m))
+unfold
+let wpt_monotonic (#a:Type) (wp:wp_t0 a) =
+  forall (p q:post_t a).
+    (forall x m. p x m ==> q x m) ==>
+    (forall m. wp p m ==> wp q m)
+
+type wp_t (a:Type) = wp:wp_t0 a{wpt_monotonic wp}
 
 open FStar.Monotonic.Pure
 
@@ -78,25 +80,21 @@ let if_then_else (a:Type)
 = repr a (fun post m -> (p ==> wp_f post m) /\ ((~ p) ==> wp_g post m))
 
 total reifiable reflectable
-layered_effect {
-  LVARS : a:Type -> wp_t a -> Effect
-  with repr         = repr;
-       return       = return;
-       bind         = bind;
-       subcomp      = subcomp;
-       if_then_else = if_then_else
+effect {
+  LVARS (a:Type) (_:wp_t a)
+  with {repr; return; bind; subcomp; if_then_else}
 }
 
-assume Pure_wp_monotonicity:
-  forall (a:Type) (wp:pure_wp a).
-    (forall (p q:pure_post a).
-       (forall (x:a). p x ==> q x) ==>
-       (wp p ==> wp q))
+unfold
+let lift_pure_wp (#a:Type) (wp:pure_wp a) : wp_t a =
+  FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
+  fun p m -> wp (fun x -> p x m)  
 
 let lift_pure_lvars (a:Type)
-  (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
-: repr a (fun p m -> wp (fun x -> p x m))
-= fun m -> f (), m
+  (wp:pure_wp a) (f:unit -> PURE a wp)
+: repr a (lift_pure_wp wp)
+= FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
+  fun m -> f (), m
 
 sub_effect PURE ~> LVARS = lift_pure_lvars
 
@@ -104,12 +102,8 @@ effect LV (a:Type) (pre:locals_t -> Type0) (post:locals_t -> a -> locals_t -> Ty
   LVARS a (fun p m -> pre m /\ (forall x m1. post m x m1 ==> p x m1))
 
 
-let create (a:Type0) (x:a)
-: LVARS nat
-  (fun p m0 ->
-    forall r m1.
-      (not (m0.m `M.contains` r) /\
-       m1.m == Map.upd m0.m r (| a, x |)) ==> p r m1)
+let create (a:Type0) (x:a) : LV nat (fun m0 -> True)
+                                  (fun m0 r m1 -> not (m0.m `M.contains` r) /\ m1.m == Map.upd m0.m r (| a, x |))
 = LVARS?.reflect (fun m ->
     let next = m.next in
     next, {
@@ -117,30 +111,28 @@ let create (a:Type0) (x:a)
       m = Map.upd m.m next (| a, x |)
     })
 
-
 let read (#a:Type0) (n:nat)
-: LVARS a
-  (fun p m0 ->
-   m0.m `M.contains` n /\
-   dfst (m0.m `M.sel` n) == a /\
-   (forall r. r == dsnd (m0.m `M.sel` n) ==> p r m0))
+  : LV a (fun m0 -> m0.m `M.contains` n /\
+                 dfst (m0.m `M.sel` n) == a)
+         (fun m0 r m1 ->
+          m0.m `M.contains` n /\
+          dfst (m0.m `M.sel` n) == a /\
+          r == dsnd (m0.m `M.sel` n) /\ m0 == m1)
 = LVARS?.reflect (fun m -> dsnd (m.m `M.sel` n), m)
 
 let write (#a:Type0) (n:nat) (x:a)
-: LVARS unit
-  (fun p m0 ->
-   m0.m `M.contains` n /\
-   dfst (m0.m `M.sel` n) == a /\
-   (forall m1.
-     (m1.next == m0.next /\
-      m1.m == Map.upd m0.m n (| a, x |)) ==> p () m1))
+  : LV unit (fun m0 -> m0.m `M.contains` n /\
+                    dfst (m0.m `M.sel` n) == a)
+            (fun m0 _ m1 ->
+             m1.next == m0.next /\
+             m1.m == Map.upd m0.m n (| a, x |))
 = LVARS?.reflect (fun m -> (), { m with m = Map.upd m.m n (| a, x |) })
 
 let get ()
-: LVARS (Map.t nat (a:Type0 & a))
-  (fun p m0 -> p m0.m m0)
+: LV (Map.t nat (a:Type0 & a))
+     (fun m0 -> True)
+     (fun m0 r m1 -> m0 == m1 /\ r == m0.m)
 = LVARS?.reflect (fun m -> m.m, m)
-
 
 let test () : LV unit (fun _ -> True) (fun _ _ _ -> True) =
   let n1 = create nat 0 in

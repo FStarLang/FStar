@@ -1,6 +1,6 @@
 module Bug2138
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 type t1 = {
   x : bool;

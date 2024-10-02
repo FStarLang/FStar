@@ -63,7 +63,7 @@ instance printable_pair #a #b {| printable a |} {| printable b |} : printable (a
   to_string = (fun (x, y) -> "(" ^ to_string x ^ ", " ^ to_string y ^ ")")
 }
 
-instance printable_option #a #b {| printable a |} : printable (option a) =
+instance printable_option #a {| printable a |} : printable (option a) =
 {
   to_string = (function None -> "None" | Some x -> "(Some " ^ to_string x ^ ")")
 }

@@ -5,7 +5,7 @@ module ST = FStar.HyperStack.ST
 module B = LowStar.Buffer
 
 open FStar.List
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Mul
 open FStar.InteractiveHelpers.Tutorial.Definitions
 
@@ -20,7 +20,7 @@ module FI = FStar.InteractiveHelpers
 /// alternatively if you're not afraid of shadowing:
 /// open FStar.InteractiveHelpers
 
-#push-options "--z3rlimit 50 --fuel 0 --ifuel 0"
+#set-options "--z3rlimit 50 --fuel 0 --ifuel 0"
 
 (*** Basic commands *)
 (**** Rolling admit (C-S-r) *)
@@ -371,7 +371,7 @@ let dbg_ex1 () : Tot nat =
 /// Note that the post-processing tactic will FAIL: it is NORMAL. It aborts early
 /// so as not to deal with any proof obligation. However, you should be able to
 /// retrieve useful information from the *Messages* buffer.
-[@(postprocess_with (FStar.InteractiveHelpers.pp_analyze_effectful_term false false true))]
+[@@(postprocess_with (FStar.InteractiveHelpers.pp_analyze_effectful_term false false true)); expect_failure]
 let dbg_ex2 () : Tot nat =
   let x = 4 in
   let y = 2 in

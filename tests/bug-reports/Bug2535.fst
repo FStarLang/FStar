@@ -1,6 +1,6 @@
 module Bug2535
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val some_f : unit -> int
 

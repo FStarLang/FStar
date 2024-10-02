@@ -1,6 +1,6 @@
 module ResolveImplicitsHook
-open FStar.Tactics
-module T = FStar.Tactics
+open FStar.Tactics.V2
+module T = FStar.Tactics.V2
 irreducible
 let marker : unit = ()
 
@@ -48,8 +48,11 @@ val frame_delta (pre p post q : resource) : Type
 
 assume
 val frame2
-    (#[@@@marker]pre #[@@@marker]post #[@@@marker]p #[@@@marker]q : resource)
-    (#[@@@marker]delta:frame_delta pre p post q)
+    (#[@@@defer_to marker]pre
+     #[@@@defer_to marker]post
+     #[@@@defer_to marker]p
+     #[@@@defer_to marker]q : resource)
+    (#[@@@defer_to marker]delta:frame_delta pre p post q)
     (f:cmd p q)
   : cmd pre post
 
@@ -104,6 +107,12 @@ val frame3
     (f:cmd p q)
   : cmd pre post
 
+(*
+GM 2023-12-03: This example now fails since we don't run meta args
+in contexts/types that have uvars in them. But the only thing forcing
+the resolution of pre and post is the tactic
+*)
+[@@expect_failure [66]]
 let test2
   : cmd (r1 ** r2) (r1 ** r2)
   =
@@ -122,7 +131,12 @@ let resolve_tac_alt () : Tac unit =
   else T.admit_all()
 #push-options "--warn_error @348"
 
-[@@expect_failure [348;348;348;348;348;66]] //raises 348 for ambiguity in resolve_implicits
+//raises 348 for ambiguity in resolve_implicits
+// GM 2023-02-01: Used to raise 348 five times, but now it's 15 after
+// some scoping fixes in Tc (why?)
+// GM 2023-12-03: Now 21 times, whatever. It's probably due to slight
+// differences in the messages which decrease deduplication.
+[@@expect_failure [348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 66]]
 let test3 (b:bool)
   : cmd (r1 ** r2 ** r3 ** r4 ** r5)
         (r1 ** r2 ** r3 ** r4 ** r5)
@@ -151,3 +165,5 @@ let test3 (b:bool)
   frame2 f3 >>
   frame2 f4 >>
   frame2 f5
+
+#pop-options

@@ -17,7 +17,7 @@ module Rename
 
 (* Testing the new printing based on the static environment *)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val phi : Type
 assume val psi : Type

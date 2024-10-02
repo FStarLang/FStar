@@ -1,0 +1,29 @@
+[
+  "\u0001_ﬁË3ÅIëA˘'\u0005\u0013ö(ë",
+  [
+    [
+      "FStar.Classical.impl_intro_gen",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "ddfd22093f12dd9235048c98e0dc6b2d"
+    ],
+    [
+      "FStar.Classical.or_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "58119726ec26d0ecd08a7751e840e989"
+    ]
+  ]
+]

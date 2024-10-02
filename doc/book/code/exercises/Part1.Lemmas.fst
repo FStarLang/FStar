@@ -122,14 +122,14 @@ let rev_is_ok #a (l:list a)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let rec fib_aux (a b n:nat)
+let rec fib (a b n:nat)
   : Tot nat (decreases n)
   = match n with
     | 0 -> a
-    | _ -> fib_aux b (a+b) (n-1)
+    | _ -> fib b (a+b) (n-1)
 
-let fib (n:nat) : nat = fib_aux 1 1 n
+let fib_tail (n:nat) : nat = fib 1 1 n
 
-let fib_is_ok (n:nat)
-  : Lemma (fibonacci n == fib n)
+let fib_tail_is_ok (n:nat)
+  : Lemma (fib_tail n == fibonacci n)
   = admit()

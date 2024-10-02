@@ -53,17 +53,13 @@ let if_then_else (a : Type) (wp1 wp2 : w a) (f : repr a wp1) (g : repr a wp2) (p
 total
 reifiable
 reflectable
-layered_effect {
-  ID : a:Type -> wp : w a -> Effect
-  with repr         = repr;
-       return       = return;
-       bind         = bind;
-       subcomp      = subcomp;
-       if_then_else = if_then_else
+effect {
+  ID (a:Type) (_ : w a)
+  with {repr; return; bind; subcomp; if_then_else}
 }
 
-let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
-  Pure (repr a wp) (requires (wp (fun _ -> True))) // Can only lift from `Tot`
+let lift_pure_nd (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp) :
+  Pure (repr a wp) (requires (wp (fun _ -> True)))
                    (ensures (fun _ -> True))
   = elim_pure_wp_monotonicity_forall ();
     f ()
@@ -75,7 +71,7 @@ sub_effect PURE ~> ID = lift_pure_nd
 val test_f : unit -> ID int (as_pure_wp (fun p -> p 5 /\ p 3))
 let test_f () = 3
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 let l () : int =
   reify (test_f ())

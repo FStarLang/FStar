@@ -238,7 +238,8 @@ let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 inline_for_extraction
 let minus (a:t) = add_mod (lognot a) (uint_to_t 1)
 
-(** The maximum value for this type *)
+(** The maximum shift value for this type, i.e. its width minus one,
+    as an  *)
 inline_for_extraction
 let n_minus_one = uint_to_t (n - 1)
 
@@ -251,6 +252,7 @@ let n_minus_one = uint_to_t (n - 1)
 
     Note, the branching on [a=b] is just for proof-purposes.
   *)
+[@ CNoInline ]
 let eq_mask (a:t) (b:t)
   : Pure t
     (requires True)
@@ -289,6 +291,7 @@ val lemma_sub_msbs (a:t) (b:t)
 
     With inspiration from https://git.zx2c4.com/WireGuard/commit/src/crypto/curve25519-hacl64.h?id=0a483a9b431d87eca1b275463c632f8d5551978a
   *)
+[@ CNoInline ]
 let gte_mask (a:t) (b:t)
   : Pure t
     (requires True)
@@ -344,7 +347,7 @@ val to_string_hex_pad: t -> Tot string
 
 val of_string: string -> Tot t
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants
 //with a desugaring-time check of the size of the number,

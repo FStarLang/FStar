@@ -34,11 +34,10 @@ let singleton_includes_argument_lemma ()
 : Lemma (forall (ty: eqtype) (r: ty). includes (singleton r) r) =
   ()
 
-#push-options "--z3cliopt 'smt.qi.eager_threshold=100' --query_stats --fuel 1 --ifuel 1"
+#push-options "--z3cliopt 'smt.qi.eager_threshold=100' --fuel 1 --ifuel 1"
 #restart-solver
 let singleton_includes_argument_lemma_bad ()
 : Lemma (forall (ty: eqtype) (r: ty). includes (singleton r) r) 
 = introduce forall (ty: eqtype) (r: ty). includes (singleton r) r
   with ()
-
-
+#pop-options

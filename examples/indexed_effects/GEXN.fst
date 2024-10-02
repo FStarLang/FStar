@@ -24,7 +24,7 @@ open FStar.Set
 
 let exn = string
 
-let gex (a:Type) = unit -> M ((set exn) * either a exn)
+let gex (a:Type) = unit -> M ((set exn) & either a exn)
 
 (* If DM4F would accept it, would prefer to use the more precise spec below *)
 
@@ -54,7 +54,7 @@ reifiable reflectable new_effect {
 
 (* Syntactic sugar packaging an allowed exceptions index and EXN WP *)
 
-let gexn_wp (a:Type) = unit -> (set exn * either a exn -> Type0) -> Type0
+let gexn_wp (a:Type) = unit -> (set exn & either a exn -> Type0) -> Type0
 let exn_wp (a:Type)  = (either a exn -> Type0) -> Type0
 
 unfold

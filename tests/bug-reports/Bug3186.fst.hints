@@ -1,0 +1,132 @@
+[
+  "Ã\u001d3\f†V”bYÈ\u0001Ÿ…CÏ^",
+  [
+    [
+      "Bug3186.base",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0cc3b8bc4390a8152398abb544530a43"
+      ],
+      0,
+      "e472ce29e63f912567d96dd9b63719aa"
+    ],
+    [
+      "Bug3186.base2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_Prims.Refl", "fuel_guarded_inversion_Prims.equals",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion"
+      ],
+      0,
+      "d8d8a6eb0c845026a6e2e91d589cfbff"
+    ],
+    [
+      "Bug3186.vec",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "81491d9b73dab7ed469389944f3b2049"
+    ],
+    [
+      "Bug3186.vec",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "a5c390b8bd999f16972c27309eb2026d"
+    ],
+    [
+      "Bug3186.__proj__Cons__item__n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1a116130b76e885fa4991a27c9201108"
+      ],
+      0,
+      "412ae5f8559402154b1f26b3c2c57a84"
+    ],
+    [
+      "Bug3186.__proj__Cons__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1a116130b76e885fa4991a27c9201108"
+      ],
+      0,
+      "c9da1fb648d22dec9de3fa6fab19f15e"
+    ],
+    [
+      "Bug3186.__proj__Cons__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Bug3186.Cons",
+        "refinement_interpretation_Tm_refine_1a116130b76e885fa4991a27c9201108"
+      ],
+      0,
+      "21dcf0c0130914cd15fa91d4a91f5b14"
+    ],
+    [
+      "Bug3186.pconv_vec_z",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0cc3b8bc4390a8152398abb544530a43"
+      ],
+      0,
+      "12526d13a144ca82731dbb6f1c825005"
+    ],
+    [
+      "Bug3186.pconv_vec_z'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0cc3b8bc4390a8152398abb544530a43"
+      ],
+      0,
+      "91e9e1dff8588d5b6644ac48761ade96"
+    ],
+    [
+      "Bug3186.pconv_vec_z''",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0cc3b8bc4390a8152398abb544530a43"
+      ],
+      0,
+      "9317fafd63e16e3b9d801a9499bcd049"
+    ]
+  ]
+]

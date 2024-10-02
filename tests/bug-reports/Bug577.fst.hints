@@ -6,12 +6,9 @@
       1,
       2,
       1,
-      [
-        "@query", "proj_equation_Bug577.Multi_step_x",
-        "projection_inverse_Bug577.Multi_step_x"
-      ],
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug577.Multi_step" ],
       0,
-      "e46e25b0a216cbc0335bab2a50078cff"
+      "5b6416871d428550c5d8b35734f98e54"
     ],
     [
       "Bug577.steps_preserves_red",
@@ -23,7 +20,7 @@
         "fuel_guarded_inversion_Bug577.step"
       ],
       0,
-      "28d846ba21ba885277ce9bf946a4ccc5"
+      "22141ce1a2f63928071b94cf6de22f71"
     ]
   ]
 ]

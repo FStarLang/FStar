@@ -29,8 +29,8 @@ module LM = LowStar.Modifies
 let loc_vb #a (x:L.buffer a) = LM.loc_buffer (L.as_buffer x)
 
 /// Defining the view:
-let v : L.view int (int * int) =
-  let get (s:Seq.lseq int 2) : int * int = Seq.index s 0, Seq.index s 1 in
+let v : L.view int (int & int) =
+  let get (s:Seq.lseq int 2) : int & int = Seq.index s 0, Seq.index s 1 in
   let put (x, y) : Seq.lseq int 2 = Seq.upd (Seq.create 2 x) 1 y in
   assert (forall x. put (get x) `Seq.equal` x); //requires a use of extensional equality
   L.View 2 get put
@@ -40,7 +40,7 @@ let bsel #a h (x:B.buffer a) (i:nat{i<B.length x}) =
   Seq.index (B.as_seq h x) i
 
 /// You can use an L.buffer without thinking about its underlying B.buffer
-let use_view (n:pos) (i:nat{i<n}) (vb:L.buffer (int * int) {L.length vb = n}) (h:mem)
+let use_view (n:pos) (i:nat{i<n}) (vb:L.buffer (int & int) {L.length vb = n}) (h:mem)
   : Ghost mem
     (requires L.live h vb)
     (ensures (fun h' ->

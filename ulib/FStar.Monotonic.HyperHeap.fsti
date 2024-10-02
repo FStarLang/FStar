@@ -33,7 +33,13 @@ open FStar.Ghost
 [@@must_erase_for_extraction]
 val rid :eqtype
 
-val reveal (r:rid) :GTot (list (int * int))
+val reveal (r:rid) :GTot (list (int & int))
+
+let rid_last_component (r:rid) :GTot int
+  = let open FStar.List.Tot.Base in
+    let r = reveal r in
+    if length r = 0 then 0
+    else snd (hd r)
 
 val color (x:rid) :GTot int
 
@@ -42,6 +48,8 @@ val rid_freeable (x:rid) : GTot bool
 type hmap = Map.t rid heap
 
 val root : r:rid{color r == 0 /\ not (rid_freeable r)}
+
+val root_last_component (_:unit) : Lemma (rid_last_component root == 0)
 
 let root_has_color_zero (u:unit) :Lemma (color root == 0) = ()
 
@@ -58,7 +66,7 @@ let disjoint (i:rid) (j:rid) :GTot bool = not (includes i j) && not (includes j 
 val lemma_disjoint_includes (i:rid) (j:rid) (k:rid)
   :Lemma (requires  (disjoint i j /\ includes j k))
          (ensures   (disjoint i k))
-         (decreases (List.Tot.length (reveal k)))
+         (decreases (List.Tot.Base.length (reveal k)))
          [SMTPat (disjoint i j); SMTPat (includes j k)]
 
 val extends (i:rid) (j:rid) :GTot bool

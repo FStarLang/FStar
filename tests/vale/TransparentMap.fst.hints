@@ -1,0 +1,91 @@
+[
+  "ÖÑp∏©=†9q\f‹ø\u0019¶É¿",
+  [
+    [
+      "TransparentMap.sel_upd1",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
+        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_a7d5cc170be69663c495e8582d2bc62a",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_Prims.eqtype", "equation_TransparentMap.sel",
+        "equation_TransparentMap.upd",
+        "interpretation_Tm_abs_134069e179ddf4705519081c391c4e10",
+        "interpretation_Tm_abs_331bcae1afb9bcb02e34122de03c3f66",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
+        "primitive_Prims.op_Equality",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Tm_abs_134069e179ddf4705519081c391c4e10",
+        "typing_Tm_abs_331bcae1afb9bcb02e34122de03c3f66"
+      ],
+      0,
+      "d1aa495dd7896ac0db094fe8393b51ef"
+    ],
+    [
+      "TransparentMap.sel_upd2",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
+        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_a7d5cc170be69663c495e8582d2bc62a",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_Prims.eqtype", "equation_TransparentMap.sel",
+        "equation_TransparentMap.upd",
+        "interpretation_Tm_abs_134069e179ddf4705519081c391c4e10",
+        "interpretation_Tm_abs_331bcae1afb9bcb02e34122de03c3f66",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Tm_abs_134069e179ddf4705519081c391c4e10",
+        "typing_Tm_abs_331bcae1afb9bcb02e34122de03c3f66"
+      ],
+      0,
+      "f2b048430683b67ecfa13fa32c2adc20"
+    ],
+    [
+      "TransparentMap.lemma_equal_intro",
+      1,
+      1,
+      0,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.feq",
+        "equation_TransparentMap.equal", "equation_TransparentMap.sel"
+      ],
+      0,
+      "0e85bf78d985d81c02a8026930685721"
+    ],
+    [
+      "TransparentMap.lemma_equal_elim",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.FunctionalExtensionality.is_restricted",
+        "equation_FStar.FunctionalExtensionality.restricted_t",
+        "equation_Prims.eqtype", "equation_TransparentMap.equal",
+        "equation_TransparentMap.map",
+        "lemma_FStar.FunctionalExtensionality.extensionality",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_7e4a6c5999db731b5d17d0418dfeea3e",
+        "typing_Tm_abs_134069e179ddf4705519081c391c4e10"
+      ],
+      0,
+      "87fb424e1c22a2dcd73fb985348905de"
+    ],
+    [
+      "TransparentMap.lemma_equal_refl",
+      1,
+      1,
+      0,
+      [ "@query", "lemma_TransparentMap.lemma_equal_intro" ],
+      0,
+      "d040edafdba4775e5649f9d39d10ff17"
+    ]
+  ]
+]

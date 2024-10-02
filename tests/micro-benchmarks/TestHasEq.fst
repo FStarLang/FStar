@@ -84,6 +84,6 @@ type erasable_t =
 let test (x:erasable_t{C_erasable_t? x}) (y:erasable_t{D_erasable_t? y}) : Tot (n:int{n == 1}) =
   if x = y then 0 else 1  //this would extract to if () = () then 0 else 1 if we allowed equality on erasable_t
 
-[@@erasable expect_failure]
+[@@erasable; expect_failure]
 unopteq type erasable_t2 =
   | C_erasable_2 : erasable_t2

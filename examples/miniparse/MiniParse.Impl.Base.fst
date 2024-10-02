@@ -31,7 +31,7 @@ let parser_impl
   (#t: Type0)
   (p: parser_spec t)
 : Tot Type0
-= (input: buffer8) -> (l: U32.t { l == B.len input } ) -> HST.Stack (option (t * U32.t))
+= (input: buffer8) -> (l: U32.t { l == B.len input } ) -> HST.Stack (option (t & U32.t))
   (requires (fun h -> B.live h input))
   (ensures (fun h res h' ->
     M.modifies M.loc_none h h' /\ (

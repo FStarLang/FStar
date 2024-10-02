@@ -5,12 +5,12 @@ module ST = FStar.HyperStack.ST
 module B = LowStar.Buffer
 
 open FStar.List
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Mul
 
 /// Some dummy functions used for the tutorial for the FStar.FStar.InteractiveHelpers functions
 
-#push-options "--z3rlimit 50 --fuel 0 --ifuel 0"
+#set-options "--z3rlimit 50 --fuel 0 --ifuel 0"
 
 let f1 (n : int) (m : nat) : Pure nat (requires (n > 3)) (ensures (fun _ -> True)) =
   m % (n - 3)

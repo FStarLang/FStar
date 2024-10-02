@@ -19,6 +19,8 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.Tactics.Result
 open FStar.Tactics.Types
+open FStar.Class.Monad
+open FStar.Errors.Msg
 
 module Range = FStar.Compiler.Range
 module BU    = FStar.Compiler.Util
@@ -27,17 +29,13 @@ module O     = FStar.Options
 (* Type of tactics *)
 val tac (a:Type0) : Type0
 
+instance val monad_tac : monad tac
+
 (* Simply unpack and run *)
 val run : tac 'a -> proofstate -> __result 'a
 
 (* Run, but catch exceptions as errors within the monad *)
 val run_safe : tac 'a -> proofstate -> __result 'a
-
-(* Monadic return *)
-val ret : 'a -> tac 'a
-
-(* Monadic bind *)
-val bind : tac 'a -> ('a -> tac 'b) -> tac 'b
 
 (* Get current proofstate *)
 val get : tac proofstate
@@ -45,14 +43,13 @@ val get : tac proofstate
 (* Get first goal *)
 val cur_goal : tac goal
 
-(* idtac: do nothing *)
-val idtac : tac unit
-
 (* Raise an exception *)
 val traise : exn -> tac 'a
 
-(* A common failure. TODO: stop using string errors so much
- * and provide more structure. *)
+(* A common failure. *)
+val fail_doc : error_message -> tac 'a
+
+(* A common failure. *)
 val fail : string -> tac 'a
 
 (* Catch exceptions, restore UF graph on a failure *)
@@ -67,8 +64,13 @@ val trytac : tac 'a -> tac (option 'a)
 (* As [trytac], but also catches exceptions and turns them into [None]. *)
 val trytac_exn : tac 'a -> tac (option 'a)
 
-(* Good old mapM *)
-val mapM : ('a -> tac 'b) -> list 'a -> tac (list 'b)
+(* iter combinator *)
+val iter_tac (f: 'a -> tac unit) (l:list 'a) : tac unit
+
+(* Defensive checks. Will only do anything if --defensive is on. If so,
+and some goal is ill-scoped, they will log a warning. *)
+val check_valid_goal (g:goal) : unit
+val check_valid_goals (gs:list goal) : unit
 
 (* Set the current set of goals / SMT goals *)
 val set_goals      : list goal -> tac unit
@@ -103,30 +105,38 @@ val add_implicits : implicits -> tac unit
 
 (* Create a new uvar, and keep track of it in the proofstate to
  * ensure we solve it. *)
-val new_uvar : string -> env -> typ -> option should_check_uvar -> list ctx_uvar -> Range.range -> tac (term * ctx_uvar)
+val new_uvar : string -> env -> typ -> option should_check_uvar -> list ctx_uvar -> Range.range -> tac (term & ctx_uvar)
 
 (* Create a squashed goal from a given formula *)
-val mk_irrelevant_goal : string -> env -> typ -> Range.range -> O.optionstate -> string -> tac goal
+val mk_irrelevant_goal : string -> env -> typ -> option should_check_uvar -> Range.range -> O.optionstate -> string -> tac goal
 
 (* Create an add an irrelevant goal, allows to set options and label *)
-val add_irrelevant_goal' : string -> env -> typ -> Range.range -> O.optionstate -> string -> tac unit
+val add_irrelevant_goal' : string -> env -> typ -> option should_check_uvar -> Range.range -> O.optionstate -> string -> tac unit
 
 (* Create an add an irrelevant goal, taking a [base_goal] as a template for
  * options and label (which seldom need to be changed) *)
-val add_irrelevant_goal : goal -> string -> env -> typ -> tac unit
+val add_irrelevant_goal : goal -> string -> env -> typ -> option should_check_uvar -> tac unit
 
 (* Create a goal from a typechecking guard. *)
-val goal_of_guard : string -> env -> term -> Range.range -> tac goal
+val goal_of_guard : string -> env -> term -> option should_check_uvar -> Range.range -> tac goal
 
-(* Run a tactic [t], and it fails with a [TacticFailure] exception,
- * add a note in the error message. *)
-val wrap_err : string -> tac 'a -> tac 'a
+(* Run a tactic [t], and if it fails with a [TacticFailure] exception,
+ * add a prefix to the error message. *)
+val wrap_err_doc : pref:error_message -> tac 'a -> tac 'a
+
+(* Run a tactic [t], and if it fails with a [TacticFailure] exception,
+ * add a small string prefix to the first component of the error. *)
+val wrap_err : pref:string -> tac 'a -> tac 'a
 
 (* Call a (logging) function is verbose debugging is on *)
-val log : proofstate -> (unit -> unit) -> unit
+val log : (unit -> unit) -> tac unit
 
-(* As above, but as a tac<> with an implicit bind for brevity *)
+(* As above, but as a tac<> with an implicit bind for brevity (in code that does use
+monadic notation...) *)
 val mlog : (unit -> unit) -> (unit -> tac 'a) -> tac 'a
+
+val if_verbose_tac: (unit -> tac unit) -> tac unit
+val if_verbose: (unit -> unit) -> tac unit
 
 (* Discard the implicits in the proofstate that are already
  * solved, only matters for performance. *)
@@ -135,6 +145,8 @@ val compress_implicits : tac unit
 (* Only leave goals that are unsolved in the main list *)
 val remove_solved_goals : tac unit
 
+val is_goal_safe_as_well_typed (g:goal) : bool
+
 (* DANGER AHEAD, DO NOT USE *)
 
 (* Set the proofstate *)
@@ -142,3 +154,19 @@ val set : proofstate -> tac unit
 
 (* Create a tactic *)
 val mk_tac : (proofstate -> __result 'a) -> tac 'a
+
+(* inform the core of a well-typed goal *)
+val register_goal (g:goal) : unit
+
+val divide (n:BigInt.t) (l : tac 'a) (r : tac 'b) : tac ('a & 'b)
+val focus (f:tac 'a) : tac 'a
+
+(* Internal utilities *)
+val get_phi : goal -> option term
+val is_irrelevant : goal -> bool
+val goal_typedness_deps : goal -> list ctx_uvar
+val set_uvar_expected_typ (u:ctx_uvar) (t:typ) : unit
+val mark_uvar_with_should_check_tag (u:ctx_uvar) (sc:should_check_uvar) : unit
+val mark_uvar_as_already_checked (u:ctx_uvar) : unit
+val mark_goal_implicit_already_checked (g:goal) : unit
+val goal_with_type : goal -> typ -> goal

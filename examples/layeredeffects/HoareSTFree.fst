@@ -184,7 +184,7 @@ unfold
 let pure_q (#a:Type) (wp:pure_wp a) : post a =
   fun s0 x s1 -> s0 == s1 /\ as_ensures wp x
 
-let lift_PURE_M (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
+let lift_PURE_M (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
   : repr a (pure_p wp) (pure_q wp)
   = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
     fun _ ->

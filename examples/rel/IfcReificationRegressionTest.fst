@@ -27,30 +27,30 @@ let x1 (b:bool) =
   match b with
   | true -> (fun s0 ->
     let (_,s) = reify (incr ()) s0 in
-    let (y,s) = reify (STINT?.get ()) s in
+    let (y,s) = reify (get ()) s in
     let (_,s) = reify (decr ()) s in
     (y,s))
   | _ -> (fun s0 ->
-    let (x,s) = reify (STINT?.get ()) s0 in
+    let (x,s) = reify (get ()) s0 in
     (fun s0 -> (x+1, s0)) s)
 
 let x2 (b:bool) =
   match b with
   | true -> (fun s0 ->
     let (_,s) = reify (incr ()) s0 in
-    let (y,s) = reify (STINT?.get ()) s in
+    let (y,s) = reify (get ()) s in
     let (_,s) = reify (decr ()) s in
     (y,s))
-  | _ -> (fun s0 -> reify (STINT?.get () + 1) s0)
+  | _ -> (fun s0 -> reify (get () + 1) s0)
 
 let x3 (b:bool) (s0:int) =
   match b with
   | true ->
     let (_,s) = reify (incr ()) s0 in
-    let (y,s) = reify (STINT?.get ()) s in
+    let (y,s) = reify (get ()) s in
     let (_,s) = reify (decr ()) s in
     (y,s)
-  | _ -> reify (STINT?.get () + 1) s0
+  | _ -> reify (get () + 1) s0
 
 let bidule0 = assert (forall s0. x0 true s0 = x0 false s0)
 let bidule1 = assert (forall s0. x1 true s0 = x1 false s0)

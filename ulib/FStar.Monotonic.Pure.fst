@@ -55,3 +55,8 @@ let as_pure_wp (#a:Type) (wp:pure_wp' a)
       (ensures fun r -> r == wp)
   = intro_pure_wp_monotonicity wp;
     wp
+
+let elim_pure (#a:Type) (#wp:pure_wp a) ($f : unit -> PURE a wp) (p:pure_post a)
+  : Pure a (requires (wp p)) (ensures (fun r -> p r))
+  = elim_pure_wp_monotonicity wp;
+    f ()

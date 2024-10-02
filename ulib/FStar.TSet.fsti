@@ -18,20 +18,18 @@
 module FStar.TSet
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-module P = FStar.PropositionalExtensionality
-module F = FStar.FunctionalExtensionality
 
 (*
  * AR: mark it must_erase_for_extraction temporarily until CMI comes in
  *)
-[@@must_erase_for_extraction]
+[@@must_erase_for_extraction; erasable]
 val set (a:Type u#a) : Type u#(max 1 a)
 
-val equal (#a:Type) (s1:set a) (s2:set a) : Type0
+val equal (#a:Type) (s1:set a) (s2:set a) : prop
 
 (* destructors *)
 
-val mem : 'a -> set 'a -> Tot Type0
+val mem : 'a -> set 'a -> prop
 
 (* constructors *)
 val empty      : #a:Type -> Tot (set a)
@@ -39,6 +37,7 @@ val singleton  : #a:Type -> x:a -> Tot (set a)
 val union      : #a:Type -> x:set a -> y:set a -> Tot (set a)
 val intersect  : #a:Type -> x:set a -> y:set a -> Tot (set a)
 val complement : #a:Type -> x:set a -> Tot (set a)
+val intension  : #a:Type -> (a -> prop) -> Tot (set a)
 
 (* ops *)
 let subset (#a:Type) (s1:set a) (s2:set a) : Type0 = forall x. mem x s1 ==> mem x s2
@@ -78,6 +77,11 @@ val subset_mem: #a:Type -> s1:set a -> s2:set a -> Lemma
    (requires (subset s1 s2))
    (ensures (forall x. mem x s1 ==> mem x s2))
    [SMTPat (subset s1 s2)]
+
+val mem_intension (#a:Type) (x:a) (f:(a -> prop))
+: Lemma 
+  (ensures (mem x (intension f) == f x))
+  [SMTPat (mem x (intension f))]
 
 (* extensionality *)
 

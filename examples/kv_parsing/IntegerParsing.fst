@@ -128,7 +128,7 @@ let parse_u32_st : parser_st (hide parse_u32) = fun input ->
 
 // TODO: this isn't a parser_st_nochk because its output isn't exactly the same
 // as the parser; the relationship requires converting the return value to bytes
-let parse_u16_array_nochk : input:bslice -> Stack (u16_array_st * off:U32.t{U32.v off <= U32.v input.len})
+let parse_u16_array_nochk : input:bslice -> Stack (u16_array_st & off:U32.t{U32.v off <= U32.v input.len})
   (requires (fun h0 -> live h0 input /\
                     (let bs = as_seq h0 input in
                     Some? (parse_u16_array bs))))
@@ -150,7 +150,7 @@ let parse_u16_array_nochk : input:bslice -> Stack (u16_array_st * off:U32.t{U32.
   let a = U16ArraySt len (truncate_slice input (Cast.uint16_to_uint32 len)) in
   (a, U32.add off (Cast.uint16_to_uint32 len))
 
-let parse_u32_array_nochk : input:bslice -> Stack (u32_array_st * U32.t)
+let parse_u32_array_nochk : input:bslice -> Stack (u32_array_st & U32.t)
   (requires (fun h0 -> live h0 input /\
                     (let bs = as_seq h0 input in
                     Some? (parse_u32_array bs))))

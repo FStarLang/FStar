@@ -1,0 +1,133 @@
+[
+  "–À±©­õiV\u000bSHÓ–/Ù\u0013",
+  [
+    [
+      "BinomialQueue.ms",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.key_t",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "d22e2dea72f8ff2e481c7bc527d25f5a"
+    ],
+    [
+      "BinomialQueue.__proj__Mkms__item__ms_elems",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.key_t",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "24cc9a6b4498eaeb66de0cd84697a9e0"
+    ],
+    [
+      "BinomialQueue.__proj__Mkms__item__ms_elems",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.key_t",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "a0d6465c551fb73b8806c57130cac233"
+    ],
+    [
+      "BinomialQueue.ms_empty",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.key_t",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "8d3b9baf0bc45ac2c8ef06aba3ca175e"
+    ],
+    [
+      "BinomialQueue.ms_singleton",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.key_t",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "ce9470ec7581c5f374f47ae1e409db6b"
+    ],
+    [
+      "BinomialQueue.ms_append",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "BinomialQueue_interpretation_Tm_arrow_e979b9dc6be45dd92c9914c44a112e40",
+        "data_elim_BinomialQueue.Mkms", "equation_BinomialQueue.key_t",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "fuel_guarded_inversion_BinomialQueue.ms",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "primitive_Prims.op_Addition",
+        "proj_equation_BinomialQueue.Mkms_ms_count",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count"
+      ],
+      0,
+      "33ebaf0aa8cab7c0914f35e010e32dc5"
+    ],
+    [
+      "BinomialQueue.permutation",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.key_t",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "d0febb76b59cfe06ebed46c7780464a7"
+    ],
+    [
+      "BinomialQueue.delete_max_some_repr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.key_t",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "9783e7df46fbe4e67847a28cc0c98f62"
+    ]
+  ]
+]

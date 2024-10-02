@@ -26,7 +26,7 @@ let string_compare s1 s2 =
 
 type heap 'a =
 | EmptyHeap
-| Heap of 'a * list (heap 'a)
+| Heap of 'a & list (heap 'a)
 
 let heap_merge cmp h1 h2 =
   match h1, h2 with
@@ -75,7 +75,7 @@ let merge_increasing_lists_rev (key_fn: 'a -> string) (lists: list (list 'a)) =
     | (pr1, h1 :: _), (pr2, h2 :: _) ->
       let cmp_h = string_compare (key_fn h1) (key_fn h2) in
       if cmp_h <> 0 then cmp_h else pr1 - pr2 in
-  let rec aux (lists: heap (int * list 'a)) (acc: list 'a) =
+  let rec aux (lists: heap (int & list 'a)) (acc: list 'a) =
     match heap_pop cmp lists with
     | None -> acc
     | Some ((pr, []), _) -> failwith "impossible"
@@ -92,18 +92,18 @@ let merge_increasing_lists_rev (key_fn: 'a -> string) (lists: list (list 'a)) =
 
 type btree 'a =
 | StrEmpty
-| StrBranch of string * 'a * (btree 'a) * (btree 'a)
+| StrBranch of string & 'a & (btree 'a) & (btree 'a)
 (* (key: string) * (value: 'a) * (lbt: btree 'a) * (rbt: btree 'a) *)
 
-let rec btree_to_list_rev (btree:btree 'a) (acc:list (string * 'a))
-  : list (string * 'a) =
+let rec btree_to_list_rev (btree:btree 'a) (acc:list (string & 'a))
+  : list (string & 'a) =
   match btree with
   | StrEmpty -> acc
   | StrBranch (key, value, lbt, rbt) ->
     btree_to_list_rev rbt ((key, value) :: btree_to_list_rev lbt acc)
 
-let rec btree_from_list (nodes:list (string * 'a)) (size:int)
- : btree 'a * list (string * 'a) =
+let rec btree_from_list (nodes:list (string & 'a)) (size:int)
+ : btree 'a & list (string & 'a) =
   if size = 0 then (StrEmpty, nodes)
   else
     let lbt_size = size / 2 in
@@ -139,7 +139,7 @@ let rec btree_find_exact (bt: btree 'a) (k: string) : option 'a =
     else
       Some v
 
-let rec btree_extract_min (bt: btree 'a) : option (string * 'a * btree 'a) =
+let rec btree_extract_min (bt: btree 'a) : option (string & 'a & btree 'a) =
   match bt with
   | StrEmpty -> None
   | StrBranch (k, v, StrEmpty, rbt) -> Some (k, v, rbt)
@@ -175,8 +175,8 @@ let matched_prefix_of_path_elem (elem: path_elem) = elem.segment.prefix
 let mk_path_el imports segment = { imports = imports; segment = segment }
 
 let btree_find_prefix (bt: btree 'a) (prefix: string)
-    : list (prefix_match * 'a) (* ↑ keys *) =
-  let rec aux (bt: btree 'a) (prefix: string) (acc: list (prefix_match * 'a)) : list (prefix_match * 'a) =
+    : list (prefix_match & 'a) (* ↑ keys *) =
+  let rec aux (bt: btree 'a) (prefix: string) (acc: list (prefix_match & 'a)) : list (prefix_match & 'a) =
     match bt with
     | StrEmpty -> acc
     | StrBranch (k, v, lbt, rbt) ->
@@ -209,7 +209,7 @@ let query_to_string q = String.concat "." q
 
 type name_collection 'a =
 | Names of btree 'a
-| ImportedNames of string * names 'a
+| ImportedNames of string & names 'a
 and names 'a = list (name_collection 'a)
 
 type trie (a:Type0) =
@@ -301,10 +301,10 @@ let trie_add_alias (tr: trie 'a) (key: string)
           { bindings = [ImportedNames (label, inc.bindings)]; namespaces = [] }))
 
 let names_revmap (fn: btree 'a -> 'b) (name_collections: names 'a (* ↓ priority *))
-    : list (list string (* imports *) * 'b) (* ↑ priority *) =
-  let rec aux (acc: list (list string * 'b))
+    : list (list string (* imports *) & 'b) (* ↑ priority *) =
+  let rec aux (acc: list (list string & 'b))
               (imports: list string) (name_collections: names 'a)
-      : list (list string * 'b) (* #1158 *) =
+      : list (list string & 'b) (* #1158 *) =
     List.fold_left (fun acc -> function
         | Names bt -> (imports, fn bt) :: acc
         | ImportedNames (nm, name_collections) ->
@@ -313,7 +313,7 @@ let names_revmap (fn: btree 'a -> 'b) (name_collections: names 'a (* ↓ priorit
   aux [] [] name_collections
 
 let btree_find_all (prefix: option string) (bt: btree 'a)
-    : list (prefix_match * 'a) (* ↑ keys *) =
+    : list (prefix_match & 'a) (* ↑ keys *) =
   btree_fold bt (fun k tr acc ->
       ({ prefix = prefix; completion = k }, tr) :: acc) []
 
@@ -322,7 +322,7 @@ type name_search_term =
 | NSTNone
 | NSTPrefix of string
 
-let names_find_rev (names: names 'a) (id: name_search_term) : list (path_elem * 'a) =
+let names_find_rev (names: names 'a) (id: name_search_term) : list (path_elem & 'a) =
   let matching_values_per_collection_with_imports =
     match id with
     | NSTNone -> []
@@ -337,8 +337,8 @@ let names_find_rev (names: names 'a) (id: name_search_term) : list (path_elem * 
     (fun (path_el, _) -> path_el.segment.completion) matching_values_per_collection
 
 let rec trie_find_prefix' (tr: trie 'a) (path_acc: path)
-                          (query: query) (acc: list (path * 'a))
-    : list (path * 'a) =
+                          (query: query) (acc: list (path & 'a))
+    : list (path & 'a) =
   let ns_search_term, bindings_search_term, query =
     match query with
     | [] -> NSTAll, NSTAll, []
@@ -355,7 +355,7 @@ let rec trie_find_prefix' (tr: trie 'a) (path_acc: path)
   List.rev_map_onto (fun (path_el, v) -> (List.rev (path_el :: path_acc), v))
     matching_bindings_rev acc_with_recursive_bindings
 
-let trie_find_prefix (tr: trie 'a) (query: query) : list (path * 'a) =
+let trie_find_prefix (tr: trie 'a) (query: query) : list (path & 'a) =
   trie_find_prefix' tr [] query []
 
 (** * High level interface * **)
@@ -446,18 +446,18 @@ let first_import_of_path (path: path) : option string =
   | { imports = imports } :: _ -> List.last_opt imports
 
 let alist_of_ns_info ns_info =
-  [("name", FStar.Compiler.Util.JsonStr ns_info.ns_name);
-   ("loaded", FStar.Compiler.Util.JsonBool ns_info.ns_loaded)]
+  [("name", Json.JsonStr ns_info.ns_name);
+   ("loaded", Json.JsonBool ns_info.ns_loaded)]
 
 let alist_of_mod_info mod_info =
-  [("name", FStar.Compiler.Util.JsonStr mod_info.mod_name);
-   ("path", FStar.Compiler.Util.JsonStr mod_info.mod_path);
-   ("loaded", FStar.Compiler.Util.JsonBool mod_info.mod_loaded)]
+  [("name", Json.JsonStr mod_info.mod_name);
+   ("path", Json.JsonStr mod_info.mod_path);
+   ("loaded", Json.JsonBool mod_info.mod_loaded)]
 
 let json_of_completion_result (result: completion_result) =
-  Util.JsonList [Util.JsonInt result.completion_match_length;
-                 Util.JsonStr result.completion_annotation;
-                 Util.JsonStr result.completion_candidate]
+  Json.JsonList [Json.JsonInt result.completion_match_length;
+                 Json.JsonStr result.completion_annotation;
+                 Json.JsonStr result.completion_candidate]
 
 let completion_result_of_lid (path, _lid) =
   { completion_match_length = match_length_of_path path;
@@ -480,7 +480,7 @@ let find_module_or_ns (tbl:table) (query:query) =
 let autocomplete_lid (tbl: table) (query: query) =
   List.map completion_result_of_lid (trie_find_prefix tbl.tbl_lids query)
 
-let autocomplete_mod_or_ns (tbl: table) (query: query) (filter: (path * mod_symbol) -> option (path * mod_symbol)) =
+let autocomplete_mod_or_ns (tbl: table) (query: query) (filter: (path & mod_symbol) -> option (path & mod_symbol)) =
   trie_find_prefix tbl.tbl_mods query
   |> List.filter_map filter
   |> List.map completion_result_of_ns_or_mod

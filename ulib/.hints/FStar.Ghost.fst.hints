@@ -1,0 +1,135 @@
+[
+  "ùÙÁ““)|¶r5…®~\u0001ÌÈ",
+  [
+    [
+      "FStar.Ghost.hide_reveal",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.hide",
+        "equation_FStar.Ghost.reveal",
+        "fuel_guarded_inversion_FStar.Ghost.erased"
+      ],
+      0,
+      "d335bb71a5e6ff35ca0eb067d3a46e55"
+    ],
+    [
+      "FStar.Ghost.elift1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Ghost.bind", "equation_FStar.Ghost.hide",
+        "equation_FStar.Ghost.return", "equation_FStar.Ghost.reveal",
+        "interpretation_Tm_abs_2803a9c1af1d9dc145d83da24dc06dff",
+        "projection_inverse_FStar.Ghost.E__0"
+      ],
+      0,
+      "5dccc92db317c294341d4a7bfd538e49"
+    ],
+    [
+      "FStar.Ghost.elift2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.bind",
+        "equation_FStar.Ghost.hide", "equation_FStar.Ghost.return",
+        "equation_FStar.Ghost.reveal",
+        "fuel_guarded_inversion_FStar.Ghost.erased",
+        "interpretation_Tm_abs_1ff49a62e4ae845aa978cdcf16058b23",
+        "interpretation_Tm_abs_643b500d9ac7fa57b10f357e1de909c5",
+        "projection_inverse_FStar.Ghost.E__0"
+      ],
+      0,
+      "06cb55618cf6d5b6ad0143ec2322b13f"
+    ],
+    [
+      "FStar.Ghost.elift3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.bind",
+        "equation_FStar.Ghost.hide", "equation_FStar.Ghost.return",
+        "equation_FStar.Ghost.reveal",
+        "fuel_guarded_inversion_FStar.Ghost.erased",
+        "interpretation_Tm_abs_2874654179ed0421cb9fea732ed8a98d",
+        "interpretation_Tm_abs_34d5bc670140e73226e463ea38520b5d",
+        "interpretation_Tm_abs_a603c06988898ace82f560734e827be9",
+        "projection_inverse_FStar.Ghost.E__0"
+      ],
+      0,
+      "a4423f786660618c438a97bab1aff6d3"
+    ],
+    [
+      "FStar.Ghost.push_refinement",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_4861ff30b18822886452f698558931e8"
+      ],
+      0,
+      "87124896023a9acee7e4af7f702cda6d"
+    ],
+    [
+      "FStar.Ghost.elift1_p",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.hide",
+        "equation_FStar.Ghost.return", "equation_FStar.Ghost.reveal",
+        "projection_inverse_FStar.Ghost.E__0",
+        "refinement_interpretation_Tm_refine_4861ff30b18822886452f698558931e8"
+      ],
+      0,
+      "05f41eb561873fd20074f4cd4e1c6a71"
+    ],
+    [
+      "FStar.Ghost.elift2_p",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.hide",
+        "equation_FStar.Ghost.return", "equation_FStar.Ghost.reveal",
+        "projection_inverse_FStar.Ghost.E__0",
+        "refinement_interpretation_Tm_refine_50e552dc638ed7dac9f2492d99576667"
+      ],
+      0,
+      "621bf4a965a12b21eec7bb690d25b928"
+    ],
+    [
+      "FStar.Ghost.elift1_pq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.hide",
+        "equation_FStar.Ghost.return", "equation_FStar.Ghost.reveal",
+        "projection_inverse_FStar.Ghost.E__0",
+        "refinement_interpretation_Tm_refine_4861ff30b18822886452f698558931e8"
+      ],
+      0,
+      "a33047b81d9bf1c6749753d59bb078e3"
+    ],
+    [
+      "FStar.Ghost.elift2_pq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.hide",
+        "equation_FStar.Ghost.return", "equation_FStar.Ghost.reveal",
+        "projection_inverse_FStar.Ghost.E__0",
+        "refinement_interpretation_Tm_refine_50e552dc638ed7dac9f2492d99576667"
+      ],
+      0,
+      "09b9258c94782c7ef0c945ca517eb3f3"
+    ]
+  ]
+]

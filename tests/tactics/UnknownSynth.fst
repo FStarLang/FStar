@@ -15,7 +15,7 @@
 *)
 module UnknownSynth
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* We cannot determine the type of `x` a-priori, so this should fail
  * before running. Currently it runs and fails, we should fix that. *)

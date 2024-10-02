@@ -16,12 +16,12 @@
 module Eval.DB
 
 noeq type var : Type -> Type -> Type =
-   | O : g:Type -> a:Type -> var (g * a) a
-   | S : g:Type -> a:Type -> b:Type -> var g a -> var (g * b) a
+   | O : g:Type -> a:Type -> var (g & a) a
+   | S : g:Type -> a:Type -> b:Type -> var g a -> var (g & b) a
 
 noeq type tm : Type -> Type -> Type =
    | Var : g:Type -> a:Type -> var g a -> tm g a
-   | Lam : g:Type -> a:Type -> b:Type -> body:tm (g * a) b -> tm g (a -> Tot b)
+   | Lam : g:Type -> a:Type -> b:Type -> body:tm (g & a) b -> tm g (a -> Tot b)
    | App : g:Type -> a:Type -> b:Type -> e1:tm g (a -> Tot b) -> e2:tm g a -> tm g b
 
 val eval_var : g:Type -> a:Type -> var g a -> g -> Tot a
@@ -33,7 +33,7 @@ val eval: g:Type -> a:Type -> tm g a -> g -> Tot a
 let rec eval (g:Type) (a:Type) t env = match t with
  | Var _ _ v -> eval_var g a v env
  | Lam 'gg 'arg 'res body ->
-    (fun (x:'arg) -> eval (g * 'arg) 'res body (env,x))
+    (fun (x:'arg) -> eval (g & 'arg) 'res body (env,x))
  | App 'gg 'arg 'res e1 e2 ->
     (eval g ('arg -> Tot 'res) e1 env <: 'arg -> Tot 'res (* still need this silly annotation; TODO, fix *))
     (eval g 'arg e2 env)

@@ -12,4 +12,6 @@ lex.fs: lex.fsl
 clean:
 	rm lex.fs parse.fs
 
+FSTAR_HOME ?= ../..
+
 include ../Makefile.boot.common

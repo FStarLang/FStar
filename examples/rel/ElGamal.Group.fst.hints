@@ -1,0 +1,42 @@
+[
+  "\u001crO\bœ|Jµi¹\u001fzñ{\u0019\r",
+  [
+    [
+      "ElGamal.Group.mul_pow",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4f3f664a584ae561a9b2e9ae35ed1538"
+    ],
+    [
+      "ElGamal.Group.mod_plus_minus",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.DM4F.Heap.Random.elem", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c45738073e069418e791c7f105cc9178"
+      ],
+      0,
+      "13f75c365a748a3a732712673946235c"
+    ],
+    [
+      "ElGamal.Group.mod_minus_plus",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.DM4F.Heap.Random.elem", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c45738073e069418e791c7f105cc9178"
+      ],
+      0,
+      "15c5e28c45b012ac55fe1da7c8ea2e5c"
+    ]
+  ]
+]

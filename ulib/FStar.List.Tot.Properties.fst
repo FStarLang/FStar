@@ -22,21 +22,72 @@ operations on lists.
 module FStar.List.Tot.Properties
 open FStar.List.Tot.Base
 
-(** A list indexed by its length **)
-let llist a (n:nat) = l:list a {length l = n}
-
 (** Properties about mem **)
 
+(** Correctness of [mem] for types with decidable equality. TODO:
+replace [mem] with [memP] in relevant lemmas and define the right
+SMTPat to automatically recover lemmas about [mem] for types with
+decidable equality *)
+let rec mem_memP
+  (#a: eqtype)
+  (x: a)
+  (l: list a)
+: Lemma (ensures (mem x l <==> memP x l))
+        [SMTPat (mem x l); SMTPat (memP x l)]
+= match l with
+  | [] -> ()
+  | a :: q -> mem_memP x q
+
+(** If an element can be [index]ed, then it is a [memP] of the list. *)
+let rec lemma_index_memP (#t:Type) (l:list t) (i:nat{i < length l}) :
+  Lemma
+    (ensures (index l i `memP` l))
+    [SMTPat (index l i `memP` l)] =
+  match i with
+  | 0 -> ()
+  | _ -> lemma_index_memP (tl l) (i - 1)
+
+(** The empty list has no elements. *)
+let memP_empty #a x = ()
+
+(** Full specification for [existsb]: [existsb f xs] holds if, and
+only if, there exists an element [x] of [xs] such that [f x] holds. *)
+let rec memP_existsb #a f xs =
+  match xs with
+  | [] -> ()
+  | hd::tl -> memP_existsb f tl
+
+let rec memP_map_intro
+  (#a #b: Type)
+  (f: a -> Tot b)
+  (x: a)
+  (l: list a)
+: Lemma
+  (requires True)
+  (ensures (memP x l ==> memP (f x) (map f l)))
+  (decreases l)
+= match l with
+  | [] -> ()
+  | _ :: q -> memP_map_intro f x q (* NOTE: would fail if [requires memP x l] instead of [ ==> ] *)
+
+let rec memP_map_elim
+  (#a #b: Type)
+  (f: a -> Tot b)
+  (y: b)
+  (l: list a)
+: Lemma
+  (requires True)
+  (ensures (memP y (map f l) ==> (exists (x : a) . memP x l /\ f x == y)))
+  (decreases l)
+= match l with
+  | [] -> ()
+  | _ :: q -> memP_map_elim f y q
+
 (** The empty list has no elements *)
-val mem_empty : #a:eqtype -> x:a ->
-  Lemma (requires (mem x []))
-        (ensures False)
 let mem_empty #a x = ()
 
 (** Full specification for [existsb]: [existsb f xs] holds if, and
 only if, there exists an element [x] of [xs] such that [f x] holds. *)
-val mem_existsb: #a:eqtype -> f:(a -> Tot bool) -> xs:list a ->
-  Lemma(ensures (existsb f xs <==> (exists (x:a). (f x = true /\ mem x xs))))
 let rec mem_existsb #a f xs =
   match xs with
   | [] -> ()
@@ -54,128 +105,77 @@ let rec mem_count
 
 (** Properties about rev **)
 
-val rev_acc_length : l:list 'a -> acc:list 'a ->
-  Lemma (requires True)
-        (ensures (length (rev_acc l acc) = length l + length acc))
 let rec rev_acc_length l acc = match l with
     | [] -> ()
     | hd::tl -> rev_acc_length tl (hd::acc)
 
-val rev_length : l:list 'a ->
-  Lemma (requires True)
-        (ensures (length (rev l) = length l))
 let rev_length l = rev_acc_length l []
 
-val rev_acc_mem : #a:eqtype -> l:list a -> acc:list a -> x:a ->
-  Lemma (requires True)
-        (ensures (mem x (rev_acc l acc) <==> (mem x l \/ mem x acc)))
-let rec rev_acc_mem #a l acc x = match l with
+let rec rev_acc_memP #a l acc x = match l with
     | [] -> ()
-    | hd::tl -> rev_acc_mem tl (hd::acc) x
+    | hd::tl -> rev_acc_memP tl (hd::acc) x
 
 (** A list and its reversed have the same elements *)
-val rev_mem : #a:eqtype -> l:list a -> x:a ->
-  Lemma (requires True)
-        (ensures (mem x (rev l) <==> mem x l))
-let rev_mem #a l x = rev_acc_mem l [] x
+let rev_memP #a l x = rev_acc_memP l [] x
 
+let rev_mem l x = rev_memP l x
 
 (** Properties about append **)
 
-val append_nil_l: l:list 'a ->
-  Lemma (requires True)
-        (ensures ([]@l == l))
 let append_nil_l l = ()
 
-val append_l_nil: l:list 'a ->
-  Lemma (requires True)
-        (ensures (l@[] == l)) [SMTPat (l@[])]
 let rec append_l_nil = function
   | [] -> ()
   | hd::tl -> append_l_nil tl
 
-val append_cons_l: hd:'a -> tl:list 'a -> l:list 'a ->
-  Lemma (requires True)
-        (ensures (((hd::tl)@l) == (hd::(tl@l))))
 let append_cons_l hd tl l = ()
 
-val append_l_cons: hd:'a -> tl:list 'a -> l:list 'a ->
-  Lemma (requires True)
-        (ensures ((l@(hd::tl)) == ((l@[hd])@tl)))
 let rec append_l_cons hd tl l = match l with
     | [] -> ()
     | hd'::tl' -> append_l_cons hd tl tl'
 
-val append_assoc: l1:list 'a -> l2:list 'a -> l3:list 'a ->
-  Lemma (requires True)
-        (ensures ((l1@(l2@l3)) == ((l1@l2)@l3)))
 let rec append_assoc l1 l2 l3 = match l1 with
     | [] -> ()
     | hd::tl -> append_assoc tl l2 l3
 
-val append_length: l1:list 'a -> l2:list 'a ->
-  Lemma (requires True)
-        (ensures (length (l1@l2) = length l1 + length l2)) [SMTPat (length (l1 @ l2))]
 let rec append_length l1 l2 = match l1 with
   | [] -> ()
   | hd::tl -> append_length tl l2
 
-val append_mem: #t:eqtype ->  l1:list t
-              -> l2:list t
-              -> a:t
-              -> Lemma (requires True)
-                       (ensures (mem a (l1@l2) = (mem a l1 || mem a l2)))
-                       (* [SMTPat (mem a (l1@l2))] *)
 let rec append_mem #t l1 l2 a = match l1 with
   | [] -> ()
   | hd::tl -> append_mem tl l2 a
 
-val append_mem_forall: #a:eqtype -> l1:list a
-              -> l2:list a
-              -> Lemma (requires True)
-                       (ensures (forall a. mem a (l1@l2) = (mem a l1 || mem a l2)))
+let rec append_memP #t l1 l2 a = match l1 with
+  | [] -> ()
+  | hd::tl -> append_memP tl l2 a
+
+
 let rec append_mem_forall #a l1 l2 = match l1 with
   | [] -> ()
   | hd::tl -> append_mem_forall tl l2
 
-val append_count: #t:eqtype ->  l1:list t
-              -> l2:list t
-              -> a:t
-              -> Lemma (requires True)
-                       (ensures (count a (l1@l2) = (count a l1 + count a l2)))
+let rec append_memP_forall #a l1 l2 = match l1 with
+  | [] -> ()
+  | hd::tl -> append_memP_forall tl l2
+
+
 let rec append_count #t l1 l2 a = match l1 with
   | [] -> ()
   | hd::tl -> append_count tl l2 a
 
-val append_count_forall: #a:eqtype ->  l1:list a
-              -> l2:list a
-              -> Lemma (requires True)
-                       (ensures (forall a. count a (l1@l2) = (count a l1 + count a l2)))
-                       (* [SMTPat (l1@l2)] *)
 let rec append_count_forall #a l1 l2 = match l1 with
   | [] -> ()
   | hd::tl -> append_count_forall tl l2
 
-val append_eq_nil: l1:list 'a -> l2:list 'a ->
-  Lemma (requires (l1@l2 == []))
-        (ensures (l1 == [] /\ l2 == []))
 let append_eq_nil l1 l2 = ()
 
-val append_eq_singl: l1:list 'a -> l2:list 'a -> x:'a ->
-  Lemma (requires (l1@l2 == [x]))
-        (ensures ((l1 == [x] /\ l2 == []) \/ (l1 == [] /\ l2 == [x])))
 let append_eq_singl l1 l2 x = ()
 
-val append_inv_head: l:list 'a -> l1:list 'a -> l2:list 'a ->
-  Lemma (requires ((l@l1) == (l@l2)))
-        (ensures (l1 == l2))
 let rec append_inv_head l l1 l2 = match l with
     | [] -> ()
     | hd::tl -> append_inv_head tl l1 l2
 
-val append_inv_tail: l:list 'a -> l1:list 'a -> l2:list 'a ->
-  Lemma (requires ((l1@l) == (l2@l)))
-        (ensures (l1 == l2))
 let rec append_inv_tail l l1 l2 = match l1, l2 with
     | [], [] -> ()
     | hd1::tl1, hd2::tl2 -> append_inv_tail l tl1 tl2
@@ -244,76 +244,38 @@ let rec lemma_append_last (#a:Type) (l1 l2:list a) :
 
 (** Properties mixing rev and append **)
 
-val rev': list 'a -> Tot (list 'a)
-let rec rev' = function
-  | [] -> []
-  | hd::tl -> (rev' tl)@[hd]
-let rev'T = rev'
-
-val rev_acc_rev': l:list 'a -> acc:list 'a ->
-  Lemma (requires (True))
-        (ensures ((rev_acc l acc) == ((rev' l)@acc)))
 let rec rev_acc_rev' l acc = match l with
     | [] -> ()
     | hd::tl -> rev_acc_rev' tl (hd::acc); append_l_cons hd acc (rev' tl)
 
-val rev_rev': l:list 'a ->
-  Lemma (requires True)
-        (ensures ((rev l) == (rev' l)))
 let rev_rev' l = rev_acc_rev' l []; append_l_nil (rev' l)
 
-val rev'_append: l1:list 'a -> l2:list 'a ->
-  Lemma (requires True)
-        (ensures ((rev' (l1@l2)) == ((rev' l2)@(rev' l1))))
 let rec rev'_append l1 l2 = match l1 with
     | [] -> append_l_nil (rev' l2)
     | hd::tl -> rev'_append tl l2; append_assoc (rev' l2) (rev' tl) [hd]
 
-val rev_append: l1:list 'a -> l2:list 'a ->
-  Lemma (requires True)
-        (ensures ((rev (l1@l2)) == ((rev l2)@(rev l1))))
 let rev_append l1 l2 = rev_rev' l1; rev_rev' l2; rev_rev' (l1@l2); rev'_append l1 l2
 
-val rev'_involutive : l:list 'a ->
-  Lemma (requires True)
-        (ensures (rev' (rev' l) == l))
 let rec rev'_involutive = function
   | [] -> ()
   | hd::tl -> rev'_append (rev' tl) [hd]; rev'_involutive tl
 
-val rev_involutive : l:list 'a ->
-  Lemma (requires True)
-        (ensures (rev (rev l) == l))
 let rev_involutive l = rev_rev' l; rev_rev' (rev' l); rev'_involutive l
 
 (** Properties about snoc *)
 
-val lemma_snoc_length : (lx:(list 'a * 'a)) ->
-  Lemma (requires True)
-        (ensures (length (snoc lx) = length (fst lx) + 1))
 let lemma_snoc_length (l, x) = append_length l [x]
 
 (** Reverse induction principle **)
 
-val rev'_list_ind: p:(list 'a -> Tot bool) -> l:list 'a ->
-  Lemma (requires ((p []) /\ (forall hd tl. p (rev' tl) ==> p (rev' (hd::tl)))))
-        (ensures (p (rev' l)))
 let rec rev'_list_ind p = function
   | [] -> ()
   | hd::tl -> rev'_list_ind p tl
 
-val rev_ind: p:(list 'a -> Tot bool) -> l:list 'a ->
-  Lemma (requires ((p []) /\ (forall hd tl. p hd ==> p (hd@[tl]))))
-        (ensures (p l))
 let rev_ind p l = rev'_involutive l; rev'_list_ind p (rev' l)
 
 (** Properties about iterators **)
 
-val map_lemma: f:('a -> Tot 'b)
-             -> l:(list 'a)
-             -> Lemma (requires True)
-                      (ensures (length (map f l)) = length l)
-                      [SMTPat (map f l)]
 let rec map_lemma f l =
     match l with
     | [] -> ()
@@ -322,10 +284,6 @@ let rec map_lemma f l =
 (** Properties about unsnoc *)
 
 (** [unsnoc] is the inverse of [snoc] *)
-val lemma_unsnoc_snoc: #a:Type -> l:list a{length l > 0} ->
-  Lemma (requires True)
-    (ensures (snoc (unsnoc l) == l))
-    [SMTPat (snoc (unsnoc l))]
 let lemma_unsnoc_snoc #a l =
   let l', x = unsnoc l in
   let l1, l2 = l', [x] in
@@ -338,21 +296,13 @@ let lemma_unsnoc_snoc #a l =
   aux l
 
 (** [snoc] is the inverse of [unsnoc] *)
-val lemma_snoc_unsnoc: #a:Type -> lx:(list a * a) ->
-  Lemma (requires True)
-    (ensures (unsnoc (snoc lx) == lx))
-    (decreases (length (fst (lx))))
-    [SMTPat (unsnoc (snoc lx))]
-let rec lemma_snoc_unsnoc #a lx =
+let rec lemma_snoc_unsnoc #a lx : Lemma (ensures unsnoc (snoc lx) == lx) (decreases (length (fst lx)))=
   let l, x = lx in
   match l with
   | [] -> ()
   | _ -> lemma_snoc_unsnoc (tl l, x)
 
 (** Doing an [unsnoc] gives us a list that is shorter in length by 1 *)
-val lemma_unsnoc_length: #a:Type -> l:list a{length l > 0} ->
-  Lemma (requires True)
-    (ensures (length (fst (unsnoc l)) == length l - 1))
 let lemma_unsnoc_length #a l =
   lemma_snoc_length (unsnoc l)
 
@@ -391,22 +341,6 @@ let rec lemma_unsnoc_index (#t:Type) (l:list t) (i:nat) :
 
 (** Definition and properties about [split_using] *)
 
-(** [split_using] splits a list at the first instance of finding an
-    element in it.
-
-    NOTE: Uses [strong_excluded_middle] axiom. *)
-let rec split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
-  GTot (list t * list t) =
-  match l with
-  | [_] -> [], l
-  | a :: rest ->
-    if FStar.StrongExcludedMiddle.strong_excluded_middle (a == x) then (
-      [], l
-    ) else (
-      let l1', l2' = split_using rest x in
-      a :: l1', l2'
-    )
-
 let rec lemma_split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
   Lemma
     (ensures (
@@ -431,53 +365,21 @@ let rec lemma_split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
       (fun (_:squash (a == x)) -> ())
       (fun (_:squash (x `memP` rest)) -> lemma_split_using rest x)
 
-(** Definition of [index_of] *)
-
-(** [index_of l x] gives the index of the leftmost [x] in [l].
-
-    NOTE: Uses [strong_excluded_middle] axiom. *)
-let rec index_of (#t:Type) (l:list t) (x:t{x `memP` l}) :
-  GTot (i:nat{i < length l /\ index l i == x}) =
-  match l with
-  | [_] -> 0
-  | a :: rest ->
-    if FStar.StrongExcludedMiddle.strong_excluded_middle (a == x) then (
-      0
-    ) else (
-      1 + index_of rest x
-    )
-
 (** Properties about partition **)
 
 (** If [partition f l = (l1, l2)], then for any [x], [x] is in [l] if
 and only if [x] is in either one of [l1] or [l2] *)
-val partition_mem: #a:eqtype -> f:(a -> Tot bool)
-                  -> l:list a
-                  -> x:a
-                  -> Lemma (requires True)
-                          (ensures (let l1, l2 = partition f l in
-                                    mem x l = (mem x l1 || mem x l2)))
 let rec partition_mem #a f l x = match l with
   | [] -> ()
   | hd::tl -> partition_mem f tl x
 
 (** Same as [partition_mem], but using [forall] *)
-val partition_mem_forall: #a:eqtype -> f:(a -> Tot bool)
-                  -> l:list a
-                  -> Lemma (requires True)
-                          (ensures (let l1, l2 = partition f l in
-                                    (forall x. mem x l = (mem x l1 || mem x l2))))
 let rec partition_mem_forall #a f l = match l with
   | [] -> ()
   | hd::tl -> partition_mem_forall f tl
 
 (** If [partition f l = (l1, l2)], then for any [x], if [x] is in [l1]
 (resp. [l2]), then [f x] holds (resp. does not hold) *)
-val partition_mem_p_forall: #a:eqtype -> p:(a -> Tot bool)
-                  -> l:list a
-                  -> Lemma (requires True)
-                          (ensures (let l1, l2 = partition p l in
-                                    (forall x. mem x l1 ==> p x) /\ (forall x. mem x l2 ==> not (p x))))
 let rec partition_mem_p_forall #a p l = match l with
   | [] -> ()
   | hd::tl -> partition_mem_p_forall p tl
@@ -485,36 +387,37 @@ let rec partition_mem_p_forall #a p l = match l with
 (** If [partition f l = (l1, l2)], then the number of occurrences of
 any [x] in [l] is the same as the sum of the number of occurrences in
 [l1] and [l2]. *)
-val partition_count: #a:eqtype -> f:(a -> Tot bool)
-                  -> l:list a
-                  -> x:a
-                  -> Lemma (requires True)
-                           (ensures (count x l = (count x (fst (partition f l)) + count x (snd (partition f l)))))
 let rec partition_count #a f l x = match l with
   | [] -> ()
   | hd::tl -> partition_count f tl x
 
 (** Same as [partition_count], but using [forall] *)
-val partition_count_forall: #a:eqtype -> f:(a -> Tot bool)
-                  -> l:list a
-                  -> Lemma (requires True)
-                           (ensures (forall x. count x l = (count x (fst (partition f l)) + count x (snd (partition f l)))))
-                           (* [SMTPat (partitionT f l)] *)
 let rec partition_count_forall #a f l= match l with
   | [] -> ()
   | hd::tl -> partition_count_forall f tl
 
+(** Properties about subset **)
+
+let rec mem_subset (#a: eqtype) (la lb: list a)
+    : Lemma (subset la lb <==> (forall x. mem x la ==> mem x lb))
+            [SMTPat (subset la lb)] =
+  match la with
+  | [] -> ()
+  | hd :: tl -> mem_subset tl lb
+
+(* NOTE: This is implied by mem_subset above, kept for compatibility *)
+let subset_reflexive (#a: eqtype) (l: list a)
+    : Lemma (subset l l) = ()
 
 (** Correctness of quicksort **)
 
 (** Correctness of [sortWith], part 1/2: the number of occurrences of
 any [x] in [sortWith f l] is the same as the number of occurrences in
 [l]. *)
-val sortWith_permutation: #a:eqtype -> f:(a -> a -> Tot int) -> l:list a ->
-  Lemma (requires True)
-        (ensures (forall x. count x l = count x (sortWith f l)))
-        (decreases (length l))
-let rec sortWith_permutation #a f l = match l with
+let rec sortWith_permutation #a f l :
+  Lemma (ensures forall x. count x l = count x (sortWith f l))
+        (decreases length l)
+= match l with
     | [] -> ()
     | pivot::tl ->
        let hi, lo  = partition (bool_of_compare f pivot) tl in
@@ -524,34 +427,7 @@ let rec sortWith_permutation #a f l = match l with
        sortWith_permutation f hi;
        append_count_forall (sortWith f lo) (pivot::sortWith f hi)
 
-(** [sorted f l] holds if, and only if, any two consecutive elements
-    [x], [y] of [l] are such that [f x y] holds
- *)
-val sorted: ('a -> 'a -> Tot bool) -> list 'a -> Tot bool
-let rec sorted f = function
-  | []
-  | [_] -> true
-  | x::y::tl -> f x y && sorted f (y::tl)
-
-(** [f] is a total order if, and only if, it is reflexive,
-anti-symmetric, transitive and total. *)
-type total_order (#a:Type) (f: (a -> a -> Tot bool)) =
-    (forall a. f a a)                                           (* reflexivity   *)
-    /\ (forall a1 a2. f a1 a2 /\ f a2 a1  ==> a1 == a2)          (* anti-symmetry *)
-    /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
-    /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                       (* totality *)
-
 (** Correctness of the merging of two sorted lists around a pivot. *)
-val append_sorted: #a:eqtype
-               ->  f:(a -> a -> Tot bool)
-               ->  l1:list a{sorted f l1}
-               ->  l2:list a{sorted f l2}
-               ->  pivot:a
-               ->  Lemma (requires (total_order #a f
-                                    /\ (forall y. mem y l1 ==> not(f pivot y))
-                                    /\ (forall y. mem y l2 ==> f pivot y)))
-                        (ensures (sorted f (l1@(pivot::l2))))
-                        [SMTPat (sorted f (l1@(pivot::l2)))]
 let rec append_sorted #a f l1 l2 pivot = match l1 with
   | [] -> ()
   | hd::tl -> append_sorted f tl l2 pivot
@@ -559,86 +435,22 @@ let rec append_sorted #a f l1 l2 pivot = match l1 with
 (** Correctness of [sortWith], part 2/2: the elements of [sortWith f
 l] are sorted according to comparison function [f], and the elements
 of [sortWith f l] are the elements of [l]. *)
-val sortWith_sorted: #a:eqtype -> f:(a -> a -> Tot int) -> l:list a ->
+let rec sortWith_sorted (#a:eqtype) (f:(a -> a -> Tot int)) (l:list a) :
   Lemma (requires (total_order #a (bool_of_compare f)))
         (ensures ((sorted (bool_of_compare f) (sortWith f l)) /\ (forall x. mem x l = mem x (sortWith f l))))
-        (decreases (length l))
-let rec sortWith_sorted #a f l = match l with
-    | [] -> ()
-    | pivot::tl ->
-       let hi, lo  = partition (bool_of_compare f pivot) tl in
-       partition_length (bool_of_compare f pivot) tl;
-       partition_mem_forall (bool_of_compare f pivot) tl;
-       partition_mem_p_forall (bool_of_compare f pivot) tl;
-       sortWith_sorted f lo;
-       sortWith_sorted f hi;
-       append_mem_forall (sortWith f lo) (pivot::sortWith f hi);
-       append_sorted (bool_of_compare f) (sortWith f lo) (sortWith f hi) pivot
-
-
-(** Correctness of [mem] for types with decidable equality. TODO:
-replace [mem] with [memP] in relevant lemmas and define the right
-SMTPat to automatically recover lemmas about [mem] for types with
-decidable equality *)
-let rec mem_memP
-  (#a: eqtype)
-  (x: a)
-  (l: list a)
-: Lemma (ensures (mem x l <==> memP x l))
-        [SMTPat (mem x l); SMTPat (memP x l)]
-= match l with
+        (decreases length l)
+=
+  match l with
   | [] -> ()
-  | a :: q -> mem_memP x q
-
-(** If an element can be [index]ed, then it is a [memP] of the list. *)
-let rec lemma_index_memP (#t:Type) (l:list t) (i:nat{i < length l}) :
-  Lemma
-    (ensures (index l i `memP` l))
-    [SMTPat (index l i `memP` l)] =
-  match i with
-  | 0 -> ()
-  | _ -> lemma_index_memP (tl l) (i - 1)
-
-(** The empty list has no elements. *)
-val memP_empty : #a: Type -> x:a ->
-  Lemma (requires (memP x []))
-        (ensures False)
-let memP_empty #a x = ()
-
-(** Full specification for [existsb]: [existsb f xs] holds if, and
-only if, there exists an element [x] of [xs] such that [f x] holds. *)
-val memP_existsb: #a: Type -> f:(a -> Tot bool) -> xs:list a ->
-  Lemma(ensures (existsb f xs <==> (exists (x:a). (f x = true /\ memP x xs))))
-let rec memP_existsb #a f xs =
-  match xs with
-  | [] -> ()
-  | hd::tl -> memP_existsb f tl
-
-let rec memP_map_intro
-  (#a #b: Type)
-  (f: a -> Tot b)
-  (x: a)
-  (l: list a)
-: Lemma
-  (requires True)
-  (ensures (memP x l ==> memP (f x) (map f l)))
-  (decreases l)
-= match l with
-  | [] -> ()
-  | _ :: q -> memP_map_intro f x q (* NOTE: would fail if [requires memP x l] instead of [ ==> ] *)
-
-let rec memP_map_elim
-  (#a #b: Type)
-  (f: a -> Tot b)
-  (y: b)
-  (l: list a)
-: Lemma
-  (requires True)
-  (ensures (memP y (map f l) ==> (exists (x : a) . memP x l /\ f x == y)))
-  (decreases l)
-= match l with
-  | [] -> ()
-  | _ :: q -> memP_map_elim f y q
+  | pivot::tl ->
+     let hi, lo  = partition (bool_of_compare f pivot) tl in
+     partition_length (bool_of_compare f pivot) tl;
+     partition_mem_forall (bool_of_compare f pivot) tl;
+     partition_mem_p_forall (bool_of_compare f pivot) tl;
+     sortWith_sorted f lo;
+     sortWith_sorted f hi;
+     append_mem_forall (sortWith f lo) (pivot::sortWith f hi);
+     append_sorted (bool_of_compare f) (sortWith f lo) (sortWith f hi) pivot
 
 (** Properties of [noRepeats] *)
 let noRepeats_nil
@@ -682,6 +494,99 @@ let rec noRepeats_append_intro
     append_mem q1 l2 x;
     noRepeats_append_intro q1 l2
 
+(** Properties of [no_repeats_p] *)
+let no_repeats_p_nil
+  (#a: Type)
+: Lemma
+  (ensures (no_repeats_p #a []))
+= ()
+
+let no_repeats_p_cons
+  (#a: Type)
+  (h: a)
+  (tl: list a)
+: Lemma
+  (requires ((~ (memP h tl)) /\ no_repeats_p tl))
+  (ensures (no_repeats_p #a (h::tl)))
+= ()
+
+let rec no_repeats_p_append_elim
+  (#a: Type)
+  (l1 l2: list a)
+: Lemma
+  (requires (no_repeats_p (l1 `append` l2)))
+  (ensures (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x . memP x l1 ==> ~ (memP x l2))))
+  (decreases l1)
+= match l1 with
+  | [] -> ()
+  | x :: q1 ->
+    append_memP q1 l2 x;
+    no_repeats_p_append_elim q1 l2
+
+let rec no_repeats_p_append_intro
+  (#a: Type)
+  (l1 l2: list a)
+: Lemma
+  (requires (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x . memP x l1 ==> ~ (memP x l2))))
+  (ensures (no_repeats_p (l1 `append` l2)))
+  (decreases l1)
+= match l1 with
+  | [] -> ()
+  | x :: q1 ->
+    append_memP q1 l2 x;
+    no_repeats_p_append_intro q1 l2
+
+let no_repeats_p_append
+  (#a: Type)
+  (l1 l2: list a)
+: Lemma
+  (no_repeats_p (l1 `append` l2) <==> (
+    (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x . memP x l1 ==> ~ (memP x l2)))
+  ))
+= FStar.Classical.move_requires (no_repeats_p_append_intro l1) l2;
+  FStar.Classical.move_requires (no_repeats_p_append_elim l1) l2
+
+let no_repeats_p_append_swap
+  (#a: Type)
+  (l1 l2: list a)
+: Lemma
+  (no_repeats_p (l1 `append` l2) <==> no_repeats_p (l2 `append` l1))
+= no_repeats_p_append l1 l2;
+  no_repeats_p_append l2 l1
+
+let no_repeats_p_append_permut
+  (#a: Type)
+  (l1 l2 l3 l4 l5: list a)
+: Lemma
+  ((no_repeats_p (l1 `append` (l2 `append` (l3 `append` (l4 `append` l5))))) <==> no_repeats_p (l1 `append` (l4 `append` (l3 `append` (l2 `append` l5)))))
+= no_repeats_p_append l1 (l2 `append` (l3 `append` (l4 `append` l5)));
+  append_memP_forall l2 (l3 `append` (l4 `append` l5));
+  append_memP_forall l3 (l4 `append` l5);
+  append_memP_forall l4 l5;
+  no_repeats_p_append l2 (l3 `append` (l4 `append` l5));
+  no_repeats_p_append l3 (l4 `append` l5);
+  no_repeats_p_append l4 l5;
+  no_repeats_p_append l2 l5;
+  no_repeats_p_append l3 (l2 `append` l5);
+  append_memP_forall l2 l5;
+  no_repeats_p_append l4 (l3 `append` (l2 `append` l5));
+  append_memP_forall l3 (l2 `append` l5);
+  no_repeats_p_append l1 (l4 `append` (l3 `append` (l2 `append` l5)));
+  append_memP_forall l4 (l3 `append` (l2 `append` l5))
+
+let no_repeats_p_false_intro
+  (#a: Type)
+  (l1 l l2 l3: list a)
+: Lemma
+  (requires (Cons? l))
+  (ensures (~ (no_repeats_p (l1 `append` (l `append` (l2 `append` (l `append` l3)))))))
+= let x = hd l in
+  assert (memP x l);
+  no_repeats_p_append l1 (l `append` (l2 `append` (l `append` l3)));
+  no_repeats_p_append l (l2 `append` (l `append` l3));
+  append_memP l2 (l `append` l3) x;
+  append_memP l l3 x
+
 (** Properties of [assoc] *)
 
 let assoc_nil
@@ -697,7 +602,7 @@ let assoc_cons_eq
   (#b: Type)
   (x: a)
   (y: b)
-  (q: list (a * b))
+  (q: list (a & b))
 : Lemma
   (ensures (assoc x ((x, y) :: q) == Some y))
 = ()
@@ -707,7 +612,7 @@ let assoc_cons_not_eq
   (#b: Type)
   (x x': a)
   (y: b)
-  (q: list (a * b))
+  (q: list (a & b))
 : Lemma
   (requires (x <> x'))
   (ensures (assoc x' ((x, y) :: q) == assoc x' q))
@@ -717,7 +622,7 @@ let rec assoc_append_elim_r
   (#a: eqtype)
   (#b: Type)
   (x: a)
-  (l1 l2: list (a * b))
+  (l1 l2: list (a & b))
 : Lemma
   (requires (assoc x l2 == None \/ ~ (assoc x l1 == None)))
   (ensures (assoc x (l1 @ l2) == assoc x l1))
@@ -730,7 +635,7 @@ let rec assoc_append_elim_l
   (#a: eqtype)
   (#b: Type)
   (x: a)
-  (l1 l2: list (a * b))
+  (l1 l2: list (a & b))
 : Lemma
   (requires (assoc x l1 == None))
   (ensures (assoc x (l1 @ l2) == assoc x l2))
@@ -744,7 +649,7 @@ let rec assoc_memP_some
   (#b: Type)
   (x: a)
   (y: b)
-  (l: list (a * b))
+  (l: list (a & b))
 : Lemma
   (requires (assoc x l == Some y))
   (ensures (memP (x, y) l))
@@ -757,7 +662,7 @@ let rec assoc_memP_none
   (#a: eqtype)
   (#b: Type)
   (x: a)
-  (l: list (a * b))
+  (l: list (a & b))
 : Lemma
   (requires (assoc x l == None))
   (ensures (forall y . ~ (memP (x, y) l)))
@@ -770,7 +675,7 @@ let assoc_mem
   (#a: eqtype)
   (#b: Type)
   (x: a)
-  (l: list (a * b))
+  (l: list (a & b))
 : Lemma
   (ensures (mem x (map fst l) <==> (exists y . assoc x l == Some y)))
 = match assoc x l with
@@ -1020,10 +925,10 @@ let rec precedes_append_cons_r
 
 let precedes_append_cons_prod_r
   (#a #b: Type)
-  (l1: list (a * b))
+  (l1: list (a & b))
   (x: a)
   (y: b)
-  (l2: list (a * b))
+  (l2: list (a & b))
 : Lemma
   (ensures
     x << (append l1 ((x, y) :: l2)) /\
@@ -1052,7 +957,7 @@ let assoc_precedes
   (#a: eqtype)
   (#b: Type)
   (x: a)
-  (l: list (a * b))
+  (l: list (a & b))
   (y: b)
 : Lemma
   (requires (assoc x l == Some y))

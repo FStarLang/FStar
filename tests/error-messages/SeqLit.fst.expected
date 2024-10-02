@@ -1,0 +1,82 @@
+Module after desugaring:
+module SeqLit
+Declarations: [
+let x = seq![1; 2; 3]
+let y = [1; 2; 3]
+private
+let _ = assert (FStar.Seq.Base.seq_to_list SeqLit.x == SeqLit.y)
+private
+let _ = [1; 2] @ [3]
+private
+let _ = [1; 2; 3]
+private
+let _ = [1; 2; 3]
+private
+let _ = [1; 2; 3]
+private
+let _ = FStar.Seq.Base.append seq![1; 2] seq![3]
+private
+let _ = seq![1; 2; 3]
+private
+let _ = seq![1; 2; 3]
+private
+let _ = seq![1; 2; 3]
+]
+
+Module before type checking:
+module SeqLit
+Declarations: [
+let x = seq![1; 2; 3]
+let y = [1; 2; 3]
+private
+let _ = assert (FStar.Seq.Base.seq_to_list SeqLit.x == SeqLit.y)
+private
+let _ = [1; 2] @ [3]
+private
+let _ = [1; 2; 3]
+private
+let _ = [1; 2; 3]
+private
+let _ = [1; 2; 3]
+private
+let _ = FStar.Seq.Base.append seq![1; 2] seq![3]
+private
+let _ = seq![1; 2; 3]
+private
+let _ = seq![1; 2; 3]
+private
+let _ = seq![1; 2; 3]
+]
+
+Module after type checking:
+module SeqLit
+Declarations: [
+let x = seq![1; 2; 3]
+let y = [1; 2; 3]
+private
+let _ = assert (FStar.Seq.Base.seq_to_list SeqLit.x == SeqLit.y)
+private
+let _ = [1; 2] @ [3]
+private
+let _ = [1; 2; 3]
+private
+let _ = [1; 2; 3]
+private
+let _ = [1; 2; 3]
+private
+let _ = FStar.Seq.Base.append seq![1; 2] seq![3]
+private
+let _ = seq![1; 2; 3]
+private
+let _ = seq![1; 2; 3]
+private
+let _ = seq![1; 2; 3]
+]
+
+* Warning 337 at SeqLit.fst(8,17-8,18):
+  - The operator '@' has been resolved to FStar.List.Tot.append even though
+    FStar.List.Tot is not in scope. Please add an 'open FStar.List.Tot' to stop
+    relying on this deprecated, special treatment of '@'.
+
+Verified module: SeqLit
+All verification conditions discharged successfully

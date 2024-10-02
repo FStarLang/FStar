@@ -35,8 +35,8 @@ assume val upd_ref (#a:Type) (r:ref a) (v:a) : ST unit
 ///  hlens as pure lenses, rather than ghost lenses
 noeq
 type hlens a b = {
-     get: (heap * a) -> GTot b;
-     put: b -> (heap * a) -> GTot (heap * a)
+     get: (heap & a) -> GTot b;
+     put: b -> (heap & a) -> GTot (heap & a)
 }
 
 /// `hlens a b` is just like `Lens.lens (heap * a) b`, except it uses the GTot effect.
@@ -185,8 +185,8 @@ let ( |^. ) #a #b #c (#l:hlens b c) (m:lens a b) (sl:stlens l) = (~. m) |.. sl
 let ( |.^ ) #a #b #c (#l:hlens a b) (sl:stlens l) (m:lens b c) = sl |.. (~. m)
 let ( |. ) #a #b #c (m:lens a b) (n:lens b c) = Lens.(m |.. n)
 
-let ( .() ) #a #b (#l:hlens a b) (x:a) ($hs:(heap * stlens l)) = l.get (fst hs, x)
-let ( .()<- ) #a #b (#l:hlens a b) (x:a) ($hs:(heap * stlens l)) (y:b)  = l.put y (fst hs, x)
+let ( .() ) #a #b (#l:hlens a b) (x:a) ($hs:(heap & stlens l)) = l.get (fst hs, x)
+let ( .()<- ) #a #b (#l:hlens a b) (x:a) ($hs:(heap & stlens l)) (y:b)  = l.put y (fst hs, x)
 
 let move_x (delta:int) (c:circle) : ST unit
   (requires (fun _ -> True))

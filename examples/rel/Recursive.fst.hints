@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b418dcf4171c1181b489e353c002749e"
+      "27f8b0373798d98f9a4a1c2f73b1f18b"
     ],
     [
       "Recursive.fac_mon",
@@ -32,7 +32,7 @@
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
         "equation_with_fuel_Recursive.fac.fuel_instrumented",
         "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "int_inversion", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
@@ -40,12 +40,12 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_2109a9cb7598c32b2a6dc17a8260aba2",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_ebf1bd75f4a8e346dc8e321c84517de1",
         "typing_Recursive.fac", "well-founded-ordering-on-nat"
       ],
       0,
-      "e21186645e920b9dd5362a13a8432fb8"
+      "d425f990136664540ec77f40edebd127"
     ],
     [
       "Recursive.fac_sum",
@@ -61,7 +61,7 @@
         "typing_Recursive.fac"
       ],
       0,
-      "3766da6b4665d17086806c0f8529bf5e"
+      "f9a7c3c64dc8a32d6a0393c0c8751d4a"
     ],
     [
       "Recursive.fac_sum_mon",
@@ -69,12 +69,14 @@
       1,
       1,
       [
+        "@MaxFuel_assumption",
         "@fuel_correspondence_Recursive.fac.fuel_instrumented", "@query",
-        "equation_Recursive.fac_sum", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0"
+        "equation_Recursive.fac_sum",
+        "equation_with_fuel_Recursive.fac.fuel_instrumented",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "505a08016f939d7b6f92f874f0e8f84b"
+      "84b58f7c71dcd6cbf37407f7aff9da3c"
     ]
   ]
 ]

@@ -1,6 +1,5 @@
 FSTAR_HOME=../..
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS)
-FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 
 # Tests for which the native tactics used in module named Sample.Test.fst are
 # declared in a corresponding module named Sample.fst
@@ -15,7 +14,9 @@ TAC_MODULES=Print\
     Evens\
     Embeddings\
     Plugins\
-    Registers.List
+    Registers.List\
+    Sealed.Plugins \
+		LocalState
 
 # Tests for which the native tatics are declared and used in the same module
 ALL=Apply\
@@ -41,7 +42,7 @@ OTHERFLAGS +=
 all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 
 # .depend:
-# 	$(FSTAR) --dep full $(addsuffix .Test.fst, $(ALL)) > .depend
+# 	$(FSTAR) --dep full $(addsuffix .Test.fst, $(ALL)) --output_deps_to .depend
 
 # include .depend
 

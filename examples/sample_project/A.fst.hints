@@ -1,0 +1,53 @@
+[
+  "¤j&§„Í\\p N«\u0012 Æ<Y",
+  [
+    [
+      "A.main", 1, 2, 1, [ "@query" ], 0, "6f750e14988c9d2f368d0dbe870cf695"
+    ],
+    [
+      "A.main",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Prims.pow2.fuel_instrumented",
+        "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
+        "b2t_def", "equation_FStar.Buffer.buffer",
+        "equation_FStar.Buffer.length",
+        "equation_FStar.Int.Cast.int32_to_uint32", "equation_FStar.Int.fits",
+        "equation_FStar.Int.int_t", "equation_FStar.Int.max_int",
+        "equation_FStar.Int.size", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.size",
+        "equation_FStar.UInt.uint_t", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_Prims.pow2.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Buffer._buffer",
+        "function_token_typing_Prims.string", "int_inversion", "int_typing",
+        "lemma_FStar.UInt.pow2_values", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "proj_equation_FStar.Buffer.MkBuffer_length",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_6134c9eff0a9c4bd13e16e87561f4756",
+        "refinement_interpretation_Tm_refine_b9c2c2637b975f8310ab94d98036713d",
+        "refinement_interpretation_Tm_refine_c156ecc6eab05d1687a383ef171435eb",
+        "refinement_interpretation_Tm_refine_d02c3b6ffdeb0591f5aa4a4d977f5728",
+        "refinement_interpretation_Tm_refine_ede139465c8cc364700c780844934147",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "typing_FStar.Buffer.__proj__MkBuffer__item__length",
+        "typing_FStar.Buffer.length",
+        "typing_FStar.Int.Cast.int32_to_uint32", "typing_FStar.Int32.v",
+        "typing_FStar.UInt32.v"
+      ],
+      0,
+      "cc8512fe1e77a0d4555c69be94f69c17"
+    ],
+    [
+      "A.main", 3, 2, 1, [ "@query" ], 0, "28bc3f92a81c933bf4e3be46158de614"
+    ]
+  ]
+]

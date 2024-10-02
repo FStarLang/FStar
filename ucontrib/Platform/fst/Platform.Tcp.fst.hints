@@ -1,0 +1,38 @@
+[
+  "¨ðß\u001fÚ\u000bÁ\u0007Åhê‡îp\u0002Ù",
+  [
+    [
+      "Platform.Tcp.recv_result",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
+      0,
+      "a804f62c34f89bbd587a556d7a123e19"
+    ],
+    [
+      "Platform.Tcp.__proj__RecvError__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_52b43c0350e02e55f362469611c85013"
+      ],
+      0,
+      "3374f727e9d10b23dec1c5b90051a3f3"
+    ],
+    [
+      "Platform.Tcp.__proj__Received__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_063ba1a50c9f650b997f512f60f82d49"
+      ],
+      0,
+      "c4fd2a4450148ebe7c38dda5f5beb3ae"
+    ]
+  ]
+]

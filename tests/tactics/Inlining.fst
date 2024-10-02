@@ -19,7 +19,7 @@ module Inlining
 // see https://github.com/FStarLang/FStar/issues/1190
 // (fixed in guido_fix)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 open FStar.HyperStack
 open FStar.HyperStack.ST

@@ -18,7 +18,7 @@
         "typing_Tm_abs_dbc241f45b0c6f5a341c51802caa5547"
       ],
       0,
-      "5fd977cbc7234650705cc66fafbaba17"
+      "1efa3aab038adf36a9635d185a7bf9c2"
     ],
     [
       "DelimCC.left_unit",
@@ -33,7 +33,7 @@
         "interpretation_Tm_abs_dbc241f45b0c6f5a341c51802caa5547"
       ],
       0,
-      "6ee7c3c340fe4bcd5c96e5c0e7fa1ed1"
+      "1c977eab28ac2159e14d558dac106f9e"
     ],
     [
       "DelimCC.associativity",
@@ -51,7 +51,7 @@
         "typing_Tm_abs_dbc241f45b0c6f5a341c51802caa5547"
       ],
       0,
-      "68df21e89e426d7eaef2a5bfb281e45a"
+      "ac86856b64818ab95111f3cfd881c682"
     ],
     [
       "DelimCC.right_unit2",
@@ -70,7 +70,7 @@
         "typing_Tm_abs_a210d7a9f583a6ace87f21677d0e5051"
       ],
       0,
-      "2c9be780dda8bb5218382c6475571657"
+      "d4f05635f191703cf97028c0c6316db0"
     ],
     [
       "DelimCC.left_unit2",
@@ -85,7 +85,7 @@
         "interpretation_Tm_abs_a210d7a9f583a6ace87f21677d0e5051"
       ],
       0,
-      "d6b18a35ab854d98ebcf655b2252160c"
+      "846b13bbe33854347b7a1c977b203ee5"
     ],
     [
       "DelimCC.associativity2",
@@ -103,7 +103,7 @@
         "typing_Tm_abs_a210d7a9f583a6ace87f21677d0e5051"
       ],
       0,
-      "3364f4ebd6b5ebe43b3f11f8860cea8c"
+      "917972a1c99c3489214c9435f4d1497f"
     ],
     [
       "DelimCC.left_unit3",
@@ -115,16 +115,7 @@
         "interpretation_Tm_abs_dbdc705d0aa12bf03732867b4b6d0795"
       ],
       0,
-      "5c8a967dfa4352c9b86f3bc8c3d2ae96"
-    ],
-    [
-      "DelimCC.associativity3",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "b33c4e94b9e5a31ed47d2b55c377baa5"
+      "704f5b5121b8fe100cfd1bc7d918edef"
     ]
   ]
 ]

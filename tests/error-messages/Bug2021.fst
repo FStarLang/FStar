@@ -30,9 +30,8 @@ let test4 (f : (unit -> #x:int -> unit -> unit)) =
   let blah = f () () in
   ()
 
-(* Reports over `f ()`, since it raises that error first
- * and then typechecking is aborted. Showing the first or both
- * would also be OK IMO. *)
+(* Reports over `f`, since it raises that error first
+ * and then typechecking is aborted. *)
 [@(expect_failure [66])]
 let test5 (f : (#i:int -> unit -> #x:int -> unit -> unit)) =
   let blah = f () () in

@@ -39,7 +39,7 @@ let add_mod a b =
   let y = bvadd #32 a b in
   assert (y == u (FStar.UInt.add_mod #32 (v a) (v b)))
      by  (mapply (`sym);
-          mapply (quote (int2bv_add #32));
+          mapply (`int2bv_add);
           pointwise
               (fun _ -> try mapply (`uv_inv) with | _ -> trefl());
           trefl());
@@ -51,7 +51,7 @@ let sub_mod a b =
   assert (y == u (FStar.UInt.sub_mod #32 (v a) (v b)))
      by
          (mapply (`sym);
-          mapply (quote (int2bv_sub #32));
+          mapply (`int2bv_sub);
           pointwise
               (fun _ -> try mapply (`uv_inv) with | _ -> trefl());
           trefl());

@@ -16,14 +16,14 @@
 module TestBV
 
 open FStar.UInt
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Tactics.BV
 module U64 = FStar.UInt64
 
 /// These examples only rely on facts about bounded ints, U64, and Prims
 /// In particular, pruning away sequences, reflection, tactics etc.
 /// from the SMT solver makes a big difference
-#reset-options "--using_facts_from '+FStar.UInt +FStar.UInt64 +Prims' --__temp_fast_implicits"
+#reset-options "--using_facts_from '+FStar.UInt +FStar.UInt64 +Prims'"
 
 ////////////////////////////////////////////////////////////////////////////////
 //Some examples working on FStar.UInt.uint_t, i.e., bounded natural numbers
@@ -98,7 +98,7 @@ let unfold64 () : Tac unit =
           (fun () -> or_else (fun () -> mapply (quote unfold_logor64))
                              (fun () -> mapply (quote unfold_logxor64)))
 
-let aux () : Tac unit = or_else unfold64 (fun () -> fail "SKIP")
+let aux () : Tac unit = or_else unfold64 (fun () -> raise SKIP)
 
 /// Finally, a tactic for bitwise operations on U64.t
 let bv64_tac () : Tac unit =

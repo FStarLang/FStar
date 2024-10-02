@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Unit1.Projectors1
-open FStar.BaseTypes
+open FStar.Char
 
 type t = 
   | T : x:int -> y:nat -> t

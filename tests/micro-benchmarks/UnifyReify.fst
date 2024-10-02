@@ -1,6 +1,6 @@
 module UnifyReify
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let test1 tb  : Tac unit =
     let (t1, t2, b) = tb in
@@ -33,7 +33,7 @@ let r1 () : Tot int = 5
 let _ =
     assert_norm (rc1 () == 5)
 
-let tests () : Tac (list (term * term * bool)) = [
+let tests () : Tac (list (term & term & bool)) = [
 
   (`(rc1),
    `(r1),

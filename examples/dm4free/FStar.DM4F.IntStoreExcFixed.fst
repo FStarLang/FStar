@@ -18,7 +18,7 @@ module FStar.DM4F.IntStoreExcFixed
 open FStar.DM4F.Heap.IntStoreFixed
 
 (* TODO : Try to use [either a exn] instead of [option] *)
-type int_store_exc (a:Type) = heap -> M (option a * heap)
+type int_store_exc (a:Type) = heap -> M (option a & heap)
 let return_is (a:Type) (x:a) : int_store_exc a = fun store -> Some x, store
 let bind_is (a b : Type) (x:int_store_exc a) (f: a -> int_store_exc b) : int_store_exc b =
   fun store ->
@@ -27,8 +27,8 @@ let bind_is (a b : Type) (x:int_store_exc a) (f: a -> int_store_exc b) : int_sto
     | None -> None, store'
     | Some xa -> f xa store'
 
-let get () : int_store_exc (heap) = fun store -> Some store, store
-let put s : int_store_exc unit = fun _ -> Some (), s
+let iget () : int_store_exc (heap) = fun store -> Some store, store
+let iput s : int_store_exc unit = fun _ -> Some (), s
 
 (* DM4F does not handle polymorphic types yet so we go around this limitation *)
 (* by returning an inhabitant of False and define a second polymorphic raise_ afterwards *)
@@ -39,19 +39,22 @@ total reifiable reflectable new_effect {
   with repr   = int_store_exc
      ; bind   = bind_is
      ; return = return_is
-     ; get   = get
-     ; put    = put
+     ; get   = iget
+     ; put    = iput
      ; raise_ = raise_impl
 }
+
+let get = INT_STORE_EXC?.get
+let put = INT_STORE_EXC?.put
 
 effect IntStoreExc (a:Type) (pre:INT_STORE_EXC?.pre) (post: heap -> option a -> heap -> GTot Type0) =
   INT_STORE_EXC a (fun l0 p -> pre l0 /\ (forall x l1. pre l0 /\ post l0 x l1 ==> p (x, l1)))
 
 effect ISE (a:Type) =
-  INT_STORE_EXC a (fun (l0:heap) (p:((option a * heap) -> Type0)) -> forall (x:a). p (Some x, l0))
+  INT_STORE_EXC a (fun (l0:heap) (p:((option a & heap) -> Type0)) -> forall (x:a). p (Some x, l0))
 
 effect ISENull (a:Type) =
-  INT_STORE_EXC a (fun (l0:heap) (p:((option a * heap) -> Type0)) -> forall (x:option a * heap). p x)
+  INT_STORE_EXC a (fun (l0:heap) (p:((option a & heap) -> Type0)) -> forall (x:option a & heap). p x)
 
 
 let raise_ (#a:Type) ()

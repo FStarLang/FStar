@@ -1,0 +1,35 @@
+[
+  "LI<ˆ›\u000fÈ·ý\n\u0006b©Ôåé",
+  [
+    [
+      "NegativeTests.Bug260.pnat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ddf73de2d21428ae75ccf298636de76e"
+    ],
+    [
+      "NegativeTests.Bug260.__proj__S__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_c7798980fdaa69b62544817f36c3402f"
+      ],
+      0,
+      "5244424b4c999c9dcc42ef6b5cb8c225"
+    ],
+    [
+      "NegativeTests.Bug260.validity",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_NegativeTests.Bug260.pnat__uu___haseq" ],
+      0,
+      "2f4e58e93059699219984f570f78ee88"
+    ]
+  ]
+]

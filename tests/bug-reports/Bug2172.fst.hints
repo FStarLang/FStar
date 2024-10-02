@@ -1,0 +1,39 @@
+[
+  "ˆé¤ªDgM\u001f¤îB={/\u0003\u001b",
+  [
+    [
+      "Bug2172.uu___4",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Bug2172.p1", "int_typing",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "f12a827c1870ad0869d2d54060fee0f2"
+    ],
+    [
+      "Bug2172.uu___5",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Bug2172.p2", "int_typing",
+        "l_quant_interp_7a6b72aad9fbf3df656cee56b85ae8e6",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "a93af153903b937088e45903435ae312"
+    ],
+    [
+      "Bug2172.uu___6",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Bug2172.p1", "equation_Bug2172.p2" ],
+      0,
+      "a4ed4e8c104dbfc55a3d61d800ea1ef5"
+    ]
+  ]
+]

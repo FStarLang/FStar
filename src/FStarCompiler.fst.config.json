@@ -1,0 +1,30 @@
+{
+  "fstar_exe": "fstar.exe",
+  "options": [
+    "--MLish",
+    "--lax",
+    "--cache_dir",
+    ".cache.boot",
+    "--no_location_info",
+    "--warn_error",
+    "-271-272-241-319-274"
+  ],
+  "include_dirs": [
+    "../ulib",
+    "basic",
+    "class",
+    "data",
+    "extraction",
+    "fstar",
+    "parser",
+    "prettyprint",
+    "reflection",
+    "smtencoding",
+    "syntax",
+    "syntax/print",
+    "tactics",
+    "tosyntax",
+    "typechecker",
+    "tests"
+  ]
+}

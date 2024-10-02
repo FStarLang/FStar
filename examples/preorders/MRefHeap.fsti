@@ -59,7 +59,7 @@ val alloc_ref : h0:heap ->
 		a:Type ->
 		r:preorder a ->
 	        x:a ->
-		Tot (mh1:(mref a r * heap){~(contains #a #r h0 (fst mh1)) /\
+		Tot (mh1:(mref a r & heap){~(contains #a #r h0 (fst mh1)) /\
 		                           contains (snd mh1) (fst mh1) /\
 		                           sel (snd mh1) (fst mh1) == x /\
 					   (forall b r' (m:mref b r') .

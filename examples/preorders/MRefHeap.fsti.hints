@@ -1,0 +1,60 @@
+[
+  "|fé'f—\u0004Gâ\u0019O\u0001R9\u001c×",
+  [
+    [
+      "MRefHeap.contains_same_addr_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "045c2b73e78cf97dc3487bd3c8a72200"
+    ],
+    [
+      "MRefHeap.contains_diff_addr_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "6fc3af3703662bd0d6ef75529b59b42f"
+    ],
+    [
+      "MRefHeap.alloc_ref",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_36453e3eb6145226f640e16ed9612466"
+      ],
+      0,
+      "ea4fdc89486e899d45519ec7c7b13f49"
+    ],
+    [
+      "MRefHeap.upd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_36453e3eb6145226f640e16ed9612466",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "09be7c3a8dea485d124e0f9924036cdd"
+    ]
+  ]
+]

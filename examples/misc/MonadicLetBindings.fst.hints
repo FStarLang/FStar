@@ -1,0 +1,153 @@
+[
+  "@Øë‚Agé\u0016D7u\u001fúFD\u0004",
+  [
+    [
+      "MonadicLetBindings.op_let_Question",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Pervasives.invertOption" ],
+      0,
+      "fcf4af5b19248e40e00ce817c73c964d"
+    ],
+    [
+      "MonadicLetBindings.option_example",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
+      0,
+      "0b3010e50eea84969b0d6815e1e1363b"
+    ],
+    [
+      "MonadicLetBindings.sequence_example",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Equality" ],
+      0,
+      "8707a9ee80535fa413ac674153119834"
+    ],
+    [
+      "MonadicLetBindings.sugared2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1f7845b1fff7007399b5f18ce2fe63d7"
+    ],
+    [
+      "MonadicLetBindings.desugared2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "89fa3607e8482c4596f67a5eab6a6332"
+    ],
+    [
+      "MonadicLetBindings.zip",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_3dddec8ced2db740e4e8aaf70542be7a_4",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "6ce05a1a378f75515d111afa83f20f13"
+    ],
+    [
+      "MonadicLetBindings.exp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "53118fccbefe133a9df0bb5fe028bd22"
+    ],
+    [
+      "MonadicLetBindings.__proj__Const__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d405158072015f458f791f5ac15aeb94"
+      ],
+      0,
+      "7de61e0adc92bda37b53750afc029016"
+    ],
+    [
+      "MonadicLetBindings.__proj__Addition__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_63574e1869a11ca1d9c7d14d978c92a7"
+      ],
+      0,
+      "06a99ab65049bff16ae44b2f23350968"
+    ],
+    [
+      "MonadicLetBindings.__proj__Addition__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_63574e1869a11ca1d9c7d14d978c92a7"
+      ],
+      0,
+      "384afb6d1b519baac68f3ad596054e2b"
+    ],
+    [
+      "MonadicLetBindings.__proj__Division__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_217c480e43cb68047d7a89fd94e54252"
+      ],
+      0,
+      "9e475c860876c6f04dac42e1d6dc663e"
+    ],
+    [
+      "MonadicLetBindings.__proj__Division__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_217c480e43cb68047d7a89fd94e54252"
+      ],
+      0,
+      "f9b15547c01e797068dc4d254e506f77"
+    ],
+    [
+      "MonadicLetBindings.eval",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "MonadicLetBindings_pretyping_66efaf146f0bdf852352b426871e22cd",
+        "binder_x_66efaf146f0bdf852352b426871e22cd_0",
+        "disc_equation_MonadicLetBindings.Addition",
+        "disc_equation_MonadicLetBindings.Const",
+        "disc_equation_MonadicLetBindings.Division",
+        "fuel_guarded_inversion_MonadicLetBindings.exp",
+        "projection_inverse_BoxBool_proj_0",
+        "subterm_ordering_MonadicLetBindings.Addition",
+        "subterm_ordering_MonadicLetBindings.Division"
+      ],
+      0,
+      "d434b66aa7324ec913c2d9e96f9dfc45"
+    ]
+  ]
+]

@@ -12,8 +12,8 @@
         "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "@query",
-        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "FStar.Pervasives.Native_interpretation_Tm_arrow_b8cce376a4a678a51298a0f3945f25ce",
+        "FStar.TSet_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "bool_inversion", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
@@ -48,7 +48,7 @@
         "typing_tok_FStar.Pointer.Base.TInt@tok"
       ],
       0,
-      "09b8d79d44298b24ce0955ec598796bc"
+      "1dbad6c78b945580c54058b087c88b3e"
     ],
     [
       "Test.colored_object_struct",
@@ -62,9 +62,9 @@
         "@fuel_correspondence_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "@query",
-        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "FStar.Pervasives.Native_interpretation_Tm_arrow_b8cce376a4a678a51298a0f3945f25ce",
         "FStar.Pointer.Base_pretyping_c187978e0b47d492be4f7ef67953e027",
+        "FStar.TSet_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "bool_inversion", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil",
         "data_elim_FStar.Pointer.Base.Mkstruct_typ", "data_elim_Prims.Cons",
@@ -102,7 +102,7 @@
         "typing_FStar.List.Tot.Base.noRepeats", "typing_Test.point_struct"
       ],
       0,
-      "f64bbb418d339fc3fb97373f5d9700d8"
+      "a258a6b615bb9685a9ebfc66ae38c738"
     ],
     [
       "Test.write_struct_field",
@@ -120,6 +120,7 @@
         "equation_FStar.Pointer.Base.type_of_struct_field",
         "equation_FStar.Pointer.Base.type_of_struct_field_",
         "equation_FStar.Pointer.Base.type_of_struct_field__",
+        "interpretation_Tm_abs_2bc9591a7ae56c98cef4b0180a729165",
         "lemma_FStar.Pointer.Base.live_gfield",
         "lemma_FStar.Pointer.Base.modifies_1_readable_struct",
         "lemma_FStar.Pointer.Base.readable_live",
@@ -129,11 +130,10 @@
         "refinement_interpretation_Tm_refine_cbc48cae9b8b6a3b9ce94ee71b2d46ac",
         "string_inversion",
         "token_correspondence_FStar.Pointer.Base.type_of_struct_field",
-        "token_correspondence_FStar.Pointer.Base.type_of_struct_field_",
-        "token_correspondence_FStar.Pointer.Base.type_of_typ"
+        "token_correspondence_FStar.Pointer.Base.type_of_struct_field_"
       ],
       0,
-      "073aab3c3505f21cf711a924f715b3f6"
+      "50c161218f93df265807762e451bb8f0"
     ],
     [
       "Test.flip",
@@ -149,8 +149,8 @@
         "@fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "@query",
-        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "FStar.Pervasives.Native_interpretation_Tm_arrow_b8cce376a4a678a51298a0f3945f25ce",
+        "FStar.TSet_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "bool_inversion", "constructor_distinct_Prims.Cons",
         "data_elim_FStar.Pointer.Base.Mkstruct_typ", "data_elim_Prims.Cons",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
@@ -222,7 +222,7 @@
         "typing_Test.point_struct", "typing_Test.point_t"
       ],
       0,
-      "653c8b139e767b31464ba45625521e32"
+      "b97b6e34f138889cc89d5e817e6aa54d"
     ],
     [
       "Test.flip'",
@@ -238,8 +238,8 @@
         "@fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "@query",
-        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "FStar.Pervasives.Native_interpretation_Tm_arrow_b8cce376a4a678a51298a0f3945f25ce",
+        "FStar.TSet_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "bool_inversion", "constructor_distinct_Prims.Cons",
         "data_elim_FStar.Pointer.Base.Mkstruct_typ", "data_elim_Prims.Cons",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
@@ -311,7 +311,7 @@
         "typing_Test.point_struct", "typing_Test.point_t"
       ],
       0,
-      "aca8753e67a2858b6badb00888caafec"
+      "6ae6d04c03f2488f1076f09474328c0c"
     ]
   ]
 ]

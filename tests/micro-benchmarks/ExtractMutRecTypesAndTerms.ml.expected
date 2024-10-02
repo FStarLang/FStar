@@ -1,0 +1,3 @@
+open Prims
+type 'x f = Prims.trivial
+let rec (g : Prims.nat -> Prims.nat) = fun x -> x

@@ -1,6 +1,31 @@
 [
-  "Bı7J_~\rG˛\u001b∑‰êóôa",
+  "∂ruòÚ\u0012bá§“îçh7õ˚",
   [
+    [
+      "MkList.constant_list",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
+        "constructor_distinct_FStar.Tactics.NamedView.Sg_Let",
+        "disc_equation_FStar.Tactics.NamedView.Unk",
+        "equation_FStar.Stubs.Reflection.Types.name",
+        "equation_FStar.Tactics.NamedView.term",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_v"
+      ],
+      0,
+      "a03ce0b389fdfb4b6acd001841b8dded"
+    ],
     [
       "MkList.l1",
       1,
@@ -35,7 +60,7 @@
         "typing_FStar.UInt8.uint_to_t"
       ],
       0,
-      "c2fc981c61c750d045a033497e2e61d6"
+      "2966a8ecc647caaa36c38d95b653b850"
     ],
     [
       "MkList.l2",
@@ -72,7 +97,7 @@
         "typing_FStar.UInt8.uint_to_t"
       ],
       0,
-      "bbf8f4a7482ea5f3e83556c54f7656c1"
+      "d16ff34bba5e5971c38f930883500d3e"
     ]
   ]
 ]

@@ -15,7 +15,9 @@
 *)
 module HoleBy
 
-open FStar.Tactics
+open FStar.Tactics.V2
+
+#set-options "--warn_error +240" // do not error on missing defns (lem3)
 
 let x : int = _ by (exact (`1))
 let _ = assert (x == 1)

@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Imp.Fun
-//#set-options "--debug Imp --debug_level SMTQuery"
+//#set-options "--debug SMTQuery"
 open FStar.Mul
 module R = Registers.Fun
 
@@ -167,7 +167,7 @@ let normal #a (e:a) =
 
 let norm_assert (p:Type) : Lemma (requires (normal p)) (ensures True) = ()
 
-#set-options "--debug Registers.Imp --debug_level print_normalized_terms --admit_smt_queries true"
+#set-options "--debug print_normalized_terms --admit_smt_queries true"
 // let _ = norm_assert (forall (x:int) rm. R.sel (eval' (Seq [Const x (reg 0)]) rm) 0 == x) // eval' (Seq [Const x (reg 0)]) rm == rm)
 let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
 // let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
@@ -254,7 +254,7 @@ let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
 
 // //--------------------------------------------------------------------------------
 
-// // open FStar.Tactics
+// // open FStar.Tactics.V2
 // // open FStar.Tactics.CanonCommSemiring
 // // open FStar.Algebra.CommMonoid
 

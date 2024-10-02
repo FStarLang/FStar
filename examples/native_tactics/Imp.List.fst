@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Imp.List
-//#set-options "--debug Imp --debug_level SMTQuery"
+//#set-options "--debug SMTQuery"
 open FStar.Mul
 module R = Registers.List
 
@@ -221,7 +221,7 @@ let x_times_42 x : prog = [
 
 // //--------------------------------------------------------------------------------
 
-// // open FStar.Tactics
+// // open FStar.Tactics.V2
 // // open FStar.Tactics.CanonCommSemiring
 // // open FStar.Algebra.CommMonoid
 

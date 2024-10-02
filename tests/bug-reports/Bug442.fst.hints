@@ -1,5 +1,5 @@
 [
-  "ÿı0EA\u0019\u001dö\u0013¢gpeV∑",
+  "}“jêòîñ\u0016¸’\u0011¸%ÚëI",
   [
     [
       "Bug442.dList1",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5d400f45d9edd1d8e889f150fc5d5d7b"
+      "9198871e3aa65b8a433edbab0e98ec4e"
     ],
     [
       "Bug442.__proj__Unit__item___0",
@@ -26,7 +26,7 @@
         "refinement_interpretation_Tm_refine_282d2343f4d149a96e73dfb3e3022a06"
       ],
       0,
-      "5cdebbcd7def50614e6c24f4c9a9b4d2"
+      "73ba393281e85bb155a8b2e140cae8f9"
     ],
     [
       "Bug442.__proj__Join__item___0",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Tm_refine_55d37cc4215d7c096ad6f1e75c907170"
       ],
       0,
-      "f1ab651b1336a7620d4ea4570fc53404"
+      "c8fd795c3cdbb34cc5de13e672d2a944"
     ],
     [
       "Bug442.__proj__Join__item___1",
@@ -52,7 +52,7 @@
         "refinement_interpretation_Tm_refine_55d37cc4215d7c096ad6f1e75c907170"
       ],
       0,
-      "8d535a69db30ab947bb048e2f33e8050"
+      "5d4a918ec1d7209c3ad6bcc8c74ef714"
     ],
     [
       "Bug442.__proj__Join__item___2",
@@ -65,7 +65,7 @@
         "refinement_interpretation_Tm_refine_55d37cc4215d7c096ad6f1e75c907170"
       ],
       0,
-      "60832bd44029d4795c396464058f9452"
+      "72a4605ba0bd7b22001f0389b2175674"
     ],
     [
       "Bug442.isCorrectJoined",
@@ -80,7 +80,7 @@
         "projection_inverse_Bug442.Join__0", "subterm_ordering_Bug442.Join"
       ],
       0,
-      "67bbf483179fce1547d5d71060211710"
+      "85156fb2f0f6358662de792298d4e8f3"
     ],
     [
       "Bug442.ld",
@@ -112,7 +112,7 @@
         "typing_Bug442.isCorrectJoined"
       ],
       0,
-      "01335d95bcef89813bd24e903fba443e"
+      "f01a25518d8fda86f83baa809aefc6b5"
     ],
     [
       "Bug442.lt",
@@ -134,7 +134,7 @@
         "subterm_ordering_Prims.Cons", "typing_Bug442.ld"
       ],
       0,
-      "dfd0b78dc5320e2d2fa8d30f64b059d0"
+      "b41b7321be854efa6556e7115eb45dfe"
     ],
     [
       "Bug442.walk",
@@ -186,7 +186,7 @@
         "typing_tok_Prims.LexTop@tok", "well-founded-ordering-on-nat"
       ],
       0,
-      "01a9cfec1444963a81e73668536f5c50"
+      "39f4cbed75ce0291e6e077d4d07d33fc"
     ],
     [
       "Bug442.walk",
@@ -198,23 +198,22 @@
         "@fuel_correspondence_Bug442.lt.fuel_instrumented",
         "@fuel_irrelevance_Bug442.lt.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_e4836109f73687024ac3edd113084865",
         "binder_x_ae8bc5256c55976e18f280230b4e2516_2",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
-        "equation_Bug442.dList", "equation_Prims.nat",
+        "disc_equation_Prims.Nil", "equation_Bug442.dList",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Bug442.lt.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.__cache_version_number__", "int_typing",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "typing_tok_Prims.LexTop@tok",
-        "well-founded-ordering-on-nat"
+        "projection_inverse_Prims.Cons_tl", "well-founded-ordering-on-nat"
       ],
       0,
-      "e76b4f6fd9280603a59db45e1f9d3cfb"
+      "86fe39da19d06ff08567c540056a01eb"
     ],
     [
       "Bug442.walk_alt",
@@ -265,7 +264,7 @@
         "typing_tok_Prims.LexTop@tok", "well-founded-ordering-on-nat"
       ],
       0,
-      "49aa0da36c7915fe17d5612a72b96970"
+      "60f6078a60bab5ef7c672294c5ce3fbf"
     ]
   ]
 ]

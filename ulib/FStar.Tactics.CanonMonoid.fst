@@ -17,8 +17,11 @@ module FStar.Tactics.CanonMonoid
 
 open FStar.Algebra.Monoid
 open FStar.List
-open FStar.Tactics
-open FStar.Reflection
+open FStar.Reflection.V2
+open FStar.Tactics.V2
+
+private
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
 
 (* Only dump when debugging is on *)
 let dump m = if debugging () then dump m
@@ -85,11 +88,11 @@ let rec reification_aux (#a:Type) (mult unit me : term) : Tac (exp a) =
   let tl = list_unref tl in
   match inspect hd, tl with
   | Tv_FVar fv, [(me1, Q_Explicit) ; (me2, Q_Explicit)] ->
-    if term_eq (pack (Tv_FVar fv)) mult
+    if term_eq_old (pack (Tv_FVar fv)) mult
     then Mult (reification_aux mult unit me1) (reification_aux mult unit me2)
     else Var (unquote me)
   | _, _ ->
-    if term_eq me unit
+    if term_eq_old me unit
     then Unit
     else Var (unquote me)
 
@@ -107,24 +110,18 @@ let canon_monoid (#a:Type) (m:monoid a) : Tac unit =
   let g = cur_goal () in
   match term_as_formula g with
   | Comp (Eq (Some t)) me1 me2 ->
-      if term_eq t (quote a) then
-        let r1 = reification m me1 in
-        let r2 = reification m me2 in
-        change_sq (quote (mdenote m r1 == mdenote m r2));
-        apply (`monoid_reflect);
-        norm [delta_only ["CanonMonoid.mldenote";
-                          "CanonMonoid.flatten";
-                          "FStar.List.Tot.Base.op_At";
-                          "FStar.List.Tot.Base.append"]]
-      else fail "Goal should be an equality at the right monoid type"
+      (* First, make sure we have an equality at type ta, since otherwise
+      we will fail to apply the reflection Lemma. We can just cut by the equality
+      we want, since they should be equiprovable (though not equal). *)
+      let b = tcut (`(squash (eq2 #(`#(quote a)) (`#me1) (`#me2)))) in
+      smt (); // let the SMT prove it, it should really be trivial
+
+      let r1 = reification m me1 in
+      let r2 = reification m me2 in
+      change_sq (quote (eq2 #a (mdenote m r1) (mdenote m r2)));
+      apply (`monoid_reflect);
+      norm [delta_only [`%mldenote;
+                        `%flatten;
+                        `%FStar.List.Tot.op_At;
+                        `%FStar.List.Tot.append]]
   | _ -> fail "Goal should be an equality"
-
-let lem0 (a b c d : int) =
-  assert_by_tactic (0 + a + b + c + d == (0 + a) + (b + c + 0) + (d + 0))
-  (fun _ -> canon_monoid int_plus_monoid (* string_of_int *); trefl())
-
-(* TODO: would be nice to just find all terms of monoid type in the
-         goal and replace them with their canonicalization;
-         basically use flatten_correct instead of monoid_reflect
-         - even better, the user would have control over the place(s)
-           where the canonicalization is done *)

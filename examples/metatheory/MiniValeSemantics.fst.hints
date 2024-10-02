@@ -1,0 +1,827 @@
+[
+  "È%¬}ˆÅñ\u0014 *\u0005≠Â∂&\u0000",
+  [
+    [
+      "MiniValeSemantics.operand",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_MiniValeSemantics.reg__uu___haseq",
+        "equation_MiniValeSemantics.nat64", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_b70c6c7a290daae9963f0dad8b8a49a2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "e94012f12420955397510331340e60d3"
+    ],
+    [
+      "MiniValeSemantics.__proj__OReg__item__r",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e19cc1b47db23313f2b8c63598c87f67"
+      ],
+      0,
+      "36fff237a9abead4d9592a2df060e91b"
+    ],
+    [
+      "MiniValeSemantics.__proj__OConst__item__n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_da3cc568c12f5974ef7f2a45eb005e88"
+      ],
+      0,
+      "d39310ded27b8f3817022fab03184b72"
+    ],
+    [
+      "MiniValeSemantics.ins",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_MiniValeSemantics.operand__uu___haseq" ],
+      0,
+      "24a375000b37f9d4c72afa30105f4e2f"
+    ],
+    [
+      "MiniValeSemantics.__proj__Mov64__item__dst",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_688c7d24518e11fcf2cc6adde1bbfc21"
+      ],
+      0,
+      "d41441e923e019310787141f12cef997"
+    ],
+    [
+      "MiniValeSemantics.__proj__Mov64__item__src",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_688c7d24518e11fcf2cc6adde1bbfc21"
+      ],
+      0,
+      "57ad553e77614319480aced684cbfe91"
+    ],
+    [
+      "MiniValeSemantics.__proj__Add64__item__dst",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_a68d1143124baea7b8322aa3ba6e8ed1"
+      ],
+      0,
+      "38c61261af1ae9dfdb59cbcc9798c0e9"
+    ],
+    [
+      "MiniValeSemantics.__proj__Add64__item__src",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_a68d1143124baea7b8322aa3ba6e8ed1"
+      ],
+      0,
+      "350a179c29d7030c30dfcb60cf5e6aee"
+    ],
+    [
+      "MiniValeSemantics.code",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_MiniValeSemantics.ins__uu___haseq",
+        "assumption_MiniValeSemantics.operand__uu___haseq",
+        "assumption_Prims.list__uu___haseq",
+        "kinding_MiniValeSemantics.code@tok"
+      ],
+      0,
+      "ef7c85d34e5ffda5e673c43d69491f9d"
+    ],
+    [
+      "MiniValeSemantics.__proj__Ins__item__ins",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d8b66995d420cf8102a6f7e4aa7dd275"
+      ],
+      0,
+      "001979cdcba46d8087b8998dde054115"
+    ],
+    [
+      "MiniValeSemantics.__proj__Block__item__block",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8f0064c55a2b5d8315bfa4eb552c7335"
+      ],
+      0,
+      "66611ae94cc051bd3535eb06b9f1dae9"
+    ],
+    [
+      "MiniValeSemantics.__proj__WhileLessThan__item__src1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_c67ee4031ffa0c6bc5c865ca20d6a4cb"
+      ],
+      0,
+      "8ee2234ac3dcd2c90d9683e65ac6534c"
+    ],
+    [
+      "MiniValeSemantics.__proj__WhileLessThan__item__src2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_c67ee4031ffa0c6bc5c865ca20d6a4cb"
+      ],
+      0,
+      "161f0f4df3b6c67c2270daca84dbdea3"
+    ],
+    [
+      "MiniValeSemantics.__proj__WhileLessThan__item__whileBody",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_c67ee4031ffa0c6bc5c865ca20d6a4cb"
+      ],
+      0,
+      "c0cdb4e0909645944af81bae240c06a7"
+    ],
+    [
+      "MiniValeSemantics.eval_operand",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_MiniValeSemantics.OConst",
+        "disc_equation_MiniValeSemantics.OReg",
+        "fuel_guarded_inversion_MiniValeSemantics.operand",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "1248b24a1e46f27bcbd143d17e713b5b"
+    ],
+    [
+      "MiniValeSemantics.update_reg",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_MiniValeSemantics.reg__uu___haseq" ],
+      0,
+      "8c37c1bac38a5e51aaa0623bc7325c13"
+    ],
+    [
+      "MiniValeSemantics.eval_ins",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_MiniValeSemantics.Add64",
+        "disc_equation_MiniValeSemantics.Mov64",
+        "disc_equation_MiniValeSemantics.OConst",
+        "disc_equation_MiniValeSemantics.OReg",
+        "equation_MiniValeSemantics.pow2_64",
+        "fuel_guarded_inversion_MiniValeSemantics.ins",
+        "fuel_guarded_inversion_MiniValeSemantics.operand",
+        "primitive_Prims.op_Modulus",
+        "proj_equation_MiniValeSemantics.Add64_dst",
+        "proj_equation_MiniValeSemantics.Mov64_dst",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_688c7d24518e11fcf2cc6adde1bbfc21",
+        "refinement_interpretation_Tm_refine_a68d1143124baea7b8322aa3ba6e8ed1",
+        "typing_MiniValeSemantics.__proj__Add64__item__dst",
+        "typing_MiniValeSemantics.__proj__Mov64__item__dst"
+      ],
+      0,
+      "d53b0ac077ab0044c2e43c53b61c0f17"
+    ],
+    [
+      "MiniValeSemantics.eval_code",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "MiniValeSemantics_pretyping_df71b73f58694851c2b27d74cd0a6e58",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_aecceaf855f1ab2e0635e7bde98d7864_1",
+        "binder_x_df71b73f58694851c2b27d74cd0a6e58_0",
+        "disc_equation_MiniValeSemantics.Block",
+        "disc_equation_MiniValeSemantics.Ins",
+        "disc_equation_MiniValeSemantics.WhileLessThan",
+        "equation_MiniValeSemantics.fuel",
+        "equation_MiniValeSemantics.state", "equation_Prims.nat",
+        "fuel_guarded_inversion_MiniValeSemantics.code",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "kinding_Tm_arrow_35fff5d1b1420ec0ea38fb0261ddd938",
+        "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "subterm_ordering_MiniValeSemantics.Block",
+        "subterm_ordering_MiniValeSemantics.WhileLessThan",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "cdb36ddbbe14ee3c866397ffdf7a4b8f"
+    ],
+    [
+      "MiniValeSemantics.eval_code",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_cc44a3606a56e52d6229863c1496543c_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_MiniValeSemantics.state",
+        "fuel_guarded_inversion_Prims.list",
+        "kinding_Tm_arrow_35fff5d1b1420ec0ea38fb0261ddd938",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "c0e8c4e67e4d338a01f9ea625ca833c0"
+    ],
+    [
+      "MiniValeSemantics.increase_fuel",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_MiniValeSemantics.eval_code.fuel_instrumented",
+        "@fuel_irrelevance_MiniValeSemantics.eval_code.fuel_instrumented",
+        "@query",
+        "FStar.Pervasives.Native_pretyping_b53dbd183c526bc5d0f20d7b966ae125",
+        "MiniValeSemantics_pretyping_df71b73f58694851c2b27d74cd0a6e58",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "binder_x_3bb27175f4ee4d95e4329195c91fd84d_1",
+        "binder_x_3bb27175f4ee4d95e4329195c91fd84d_3",
+        "binder_x_aecceaf855f1ab2e0635e7bde98d7864_2",
+        "binder_x_aecceaf855f1ab2e0635e7bde98d7864_4",
+        "binder_x_df71b73f58694851c2b27d74cd0a6e58_0",
+        "constructor_distinct_FStar.Pervasives.Native.None",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_FStar.Pervasives.Native.option",
+        "constructor_distinct_MiniValeSemantics.Ins",
+        "constructor_distinct_MiniValeSemantics.WhileLessThan",
+        "constructor_distinct_Prims.unit",
+        "disc_equation_MiniValeSemantics.Block",
+        "disc_equation_MiniValeSemantics.Ins",
+        "disc_equation_MiniValeSemantics.WhileLessThan",
+        "equation_MiniValeSemantics.fuel",
+        "equation_MiniValeSemantics.state", "equation_Prims.nat",
+        "equation_with_fuel_MiniValeSemantics.eval_code.fuel_instrumented",
+        "fuel_guarded_inversion_MiniValeSemantics.code",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing",
+        "kinding_Tm_arrow_35fff5d1b1420ec0ea38fb0261ddd938",
+        "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_MiniValeSemantics.Ins_ins",
+        "projection_inverse_MiniValeSemantics.WhileLessThan_src1",
+        "projection_inverse_MiniValeSemantics.WhileLessThan_src2",
+        "projection_inverse_MiniValeSemantics.WhileLessThan_whileBody",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "subterm_ordering_MiniValeSemantics.Block",
+        "subterm_ordering_MiniValeSemantics.WhileLessThan",
+        "typing_MiniValeSemantics.eval_code", "unit_inversion",
+        "unit_typing", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "742907621d315b7db120fe8f91e540bb"
+    ],
+    [
+      "MiniValeSemantics.increase_fuel",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_MiniValeSemantics.eval_code.fuel_instrumented",
+        "@fuel_irrelevance_MiniValeSemantics.eval_code.fuel_instrumented",
+        "@fuel_irrelevance_MiniValeSemantics.eval_codes.fuel_instrumented",
+        "@query",
+        "MiniValeSemantics_pretyping_df71b73f58694851c2b27d74cd0a6e58",
+        "binder_x_3bb27175f4ee4d95e4329195c91fd84d_1",
+        "binder_x_aecceaf855f1ab2e0635e7bde98d7864_2",
+        "binder_x_aecceaf855f1ab2e0635e7bde98d7864_4",
+        "binder_x_cc44a3606a56e52d6229863c1496543c_0",
+        "constructor_distinct_FStar.Pervasives.Native.None",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_MiniValeSemantics.Block",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "data_typing_intro_MiniValeSemantics.Block@tok",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_MiniValeSemantics.fuel",
+        "equation_MiniValeSemantics.state", "equation_Prims.nat",
+        "equation_with_fuel_MiniValeSemantics.eval_code.fuel_instrumented",
+        "equation_with_fuel_MiniValeSemantics.eval_codes.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list", "int_inversion",
+        "kinding_Tm_arrow_35fff5d1b1420ec0ea38fb0261ddd938",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_MiniValeSemantics.Block_block",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "subterm_ordering_Prims.Cons", "typing_MiniValeSemantics.eval_code"
+      ],
+      0,
+      "14200da853973147a7319291664f9aed"
+    ],
+    [
+      "MiniValeSemantics.lemma_merge",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_MiniValeSemantics.eval_code.fuel_instrumented",
+        "@fuel_irrelevance_MiniValeSemantics.eval_code.fuel_instrumented",
+        "@fuel_irrelevance_MiniValeSemantics.eval_codes.fuel_instrumented",
+        "@query",
+        "MiniValeSemantics_pretyping_df71b73f58694851c2b27d74cd0a6e58",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_MiniValeSemantics.Block",
+        "constructor_distinct_Prims.Cons",
+        "data_typing_intro_MiniValeSemantics.Block@tok",
+        "data_typing_intro_Prims.Cons@tok",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_MiniValeSemantics.fuel",
+        "equation_MiniValeSemantics.state", "equation_Prims.nat",
+        "equation_with_fuel_MiniValeSemantics.eval_code.fuel_instrumented",
+        "equation_with_fuel_MiniValeSemantics.eval_codes.fuel_instrumented",
+        "int_inversion", "kinding_MiniValeSemantics.code@tok",
+        "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_MiniValeSemantics.Block_block",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "c7746a50e4c03904a89fae6103d1addc"
+    ],
+    [
+      "MiniValeSemantics.__proj__QProc__item__hasWp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_MiniValeSemantics.QProc"
+      ],
+      0,
+      "d29a43f1f6106a8dd03d6bf81f6d9a98"
+    ],
+    [
+      "MiniValeSemantics.__proj__QSeq__item__c",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2130a8854c6f44909c32777c097d6e1b"
+      ],
+      0,
+      "603b82b2f2a48ca571e96e075d2eff03"
+    ],
+    [
+      "MiniValeSemantics.__proj__QSeq__item__cs",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2130a8854c6f44909c32777c097d6e1b"
+      ],
+      0,
+      "a1aaf7212a70fdd7ecb5fcc7255e4fcb"
+    ],
+    [
+      "MiniValeSemantics.__proj__QSeq__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_MiniValeSemantics.QSeq",
+        "refinement_interpretation_Tm_refine_2130a8854c6f44909c32777c097d6e1b"
+      ],
+      0,
+      "3a98026c40d18635ac1a29a85920ef36"
+    ],
+    [
+      "MiniValeSemantics.__proj__QSeq__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_MiniValeSemantics.QSeq",
+        "refinement_interpretation_Tm_refine_2130a8854c6f44909c32777c097d6e1b"
+      ],
+      0,
+      "dcfa254ed7a8be933792756d99faae54"
+    ],
+    [
+      "MiniValeSemantics.__proj__QLemma__item__cs",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bf4f082af8cfb03efd7e0918816a6ae8"
+      ],
+      0,
+      "28d2c426e26e9ee669c37eac1a2205d6"
+    ],
+    [
+      "MiniValeSemantics.__proj__QLemma__item__pre",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bf4f082af8cfb03efd7e0918816a6ae8"
+      ],
+      0,
+      "060307067121d5c39d1076341512dec3"
+    ],
+    [
+      "MiniValeSemantics.__proj__QLemma__item__post",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bf4f082af8cfb03efd7e0918816a6ae8"
+      ],
+      0,
+      "bdc0770c85bf1e75745656e41def545d"
+    ],
+    [
+      "MiniValeSemantics.__proj__QLemma__item___3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_MiniValeSemantics.QLemma",
+        "refinement_interpretation_Tm_refine_bf4f082af8cfb03efd7e0918816a6ae8"
+      ],
+      0,
+      "4d21cd767a2d8a46268497dfc602cbba"
+    ],
+    [
+      "MiniValeSemantics.__proj__QLemma__item___4",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_MiniValeSemantics.QLemma",
+        "refinement_interpretation_Tm_refine_bf4f082af8cfb03efd7e0918816a6ae8"
+      ],
+      0,
+      "ecfd8ccfbc5d4518e3d8ea42b54689ea"
+    ],
+    [
+      "MiniValeSemantics.vc_gen",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_49a83bdddb9aedebcc8cc2e32d82b7d4_1",
+        "constructor_distinct_Prims.Cons",
+        "data_elim_MiniValeSemantics.QLemma",
+        "data_elim_MiniValeSemantics.QSeq",
+        "disc_equation_MiniValeSemantics.QEmpty",
+        "disc_equation_MiniValeSemantics.QLemma",
+        "disc_equation_MiniValeSemantics.QSeq", "disc_equation_Prims.Cons",
+        "fuel_guarded_inversion_MiniValeSemantics.with_wps",
+        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "subterm_ordering_MiniValeSemantics.QLemma",
+        "subterm_ordering_MiniValeSemantics.QSeq"
+      ],
+      0,
+      "632372df2dc36d5b8951d8d7a30b9eae"
+    ],
+    [
+      "MiniValeSemantics.vc_sound",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_MiniValeSemantics.eval_code.fuel_instrumented",
+        "@fuel_correspondence_MiniValeSemantics.vc_gen.fuel_instrumented",
+        "@fuel_irrelevance_MiniValeSemantics.vc_gen.fuel_instrumented",
+        "@query",
+        "MiniValeSemantics_pretyping_f355d058b8cf1e452ba1e821d237b355",
+        "binder_x_3bb27175f4ee4d95e4329195c91fd84d_3",
+        "binder_x_49a83bdddb9aedebcc8cc2e32d82b7d4_1",
+        "binder_x_b260295f78a45317e485c2d3b542e304_2",
+        "binder_x_cc44a3606a56e52d6229863c1496543c_0",
+        "constructor_distinct_MiniValeSemantics.Block",
+        "constructor_distinct_MiniValeSemantics.QEmpty",
+        "constructor_distinct_MiniValeSemantics.QLemma",
+        "constructor_distinct_MiniValeSemantics.QSeq",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "data_elim_MiniValeSemantics.QEmpty",
+        "data_elim_MiniValeSemantics.QLemma",
+        "data_elim_MiniValeSemantics.QSeq",
+        "data_typing_intro_MiniValeSemantics.Block@tok",
+        "disc_equation_MiniValeSemantics.QEmpty",
+        "disc_equation_MiniValeSemantics.QLemma",
+        "disc_equation_MiniValeSemantics.QSeq", "disc_equation_Prims.Cons",
+        "equality_tok_MiniValeSemantics.QEmpty@tok",
+        "equation_MiniValeSemantics.fuel",
+        "equation_MiniValeSemantics.state",
+        "equation_MiniValeSemantics.t_post", "equation_Prims.nat",
+        "equation_with_fuel_MiniValeSemantics.eval_code.fuel_instrumented",
+        "equation_with_fuel_MiniValeSemantics.eval_codes.fuel_instrumented",
+        "equation_with_fuel_MiniValeSemantics.vc_gen.fuel_instrumented",
+        "fuel_guarded_inversion_MiniValeSemantics.with_wp",
+        "fuel_guarded_inversion_MiniValeSemantics.with_wps",
+        "fuel_token_correspondence_MiniValeSemantics.vc_gen.fuel_instrumented_token",
+        "int_typing",
+        "interpretation_Tm_abs_c72d578a45f1b1297ac4bfddad571652",
+        "l_and-interp", "l_imp-interp",
+        "proj_equation_MiniValeSemantics.QProc_c",
+        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_MiniValeSemantics.Block_block",
+        "projection_inverse_MiniValeSemantics.QLemma__3",
+        "projection_inverse_MiniValeSemantics.QLemma__4",
+        "projection_inverse_MiniValeSemantics.QLemma_cs",
+        "projection_inverse_MiniValeSemantics.QLemma_post",
+        "projection_inverse_MiniValeSemantics.QLemma_pre",
+        "projection_inverse_MiniValeSemantics.QSeq_c",
+        "projection_inverse_MiniValeSemantics.QSeq_cs",
+        "projection_inverse_MiniValeSemantics.QSeq_hd",
+        "projection_inverse_MiniValeSemantics.QSeq_tl",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "subterm_ordering_MiniValeSemantics.QLemma",
+        "subterm_ordering_Prims.Cons",
+        "token_correspondence_MiniValeSemantics.vc_gen",
+        "typing_tok_MiniValeSemantics.QEmpty@tok"
+      ],
+      0,
+      "96c24c2dd37a7ef92bdc5df767358b66"
+    ],
+    [
+      "MiniValeSemantics.lemma_Move",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_MiniValeSemantics.eval_code.fuel_instrumented",
+        "@query",
+        "MiniValeSemantics_pretyping_ed9cf12f578fb9b74f0f3da9b8a3612f",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_MiniValeSemantics.Ins",
+        "constructor_distinct_MiniValeSemantics.Mov64",
+        "data_typing_intro_MiniValeSemantics.Ins@tok",
+        "data_typing_intro_MiniValeSemantics.Mov64@tok",
+        "data_typing_intro_MiniValeSemantics.Rbx@tok",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "disc_equation_MiniValeSemantics.OReg",
+        "equation_MiniValeSemantics.eval_ins",
+        "equation_MiniValeSemantics.eval_operand",
+        "equation_MiniValeSemantics.fuel",
+        "equation_MiniValeSemantics.state",
+        "equation_MiniValeSemantics.update_reg",
+        "equation_MiniValeSemantics.update_state", "equation_Prims.nat",
+        "equation_with_fuel_MiniValeSemantics.eval_code.fuel_instrumented",
+        "int_typing",
+        "interpretation_Tm_abs_7b16144abc83726f0659e90f416f8e31",
+        "primitive_Prims.op_Equality",
+        "proj_equation_MiniValeSemantics.OReg_r",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_MiniValeSemantics.Ins_ins",
+        "projection_inverse_MiniValeSemantics.Mov64_dst",
+        "projection_inverse_MiniValeSemantics.Mov64_src",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_957b7cbc807a2027599d74cc022ac860"
+      ],
+      0,
+      "7cb004f54d9b95c39c08d6bc76be3667"
+    ],
+    [
+      "MiniValeSemantics.wp_Move",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "74777f028beb34fa515b76d11fd74ef2"
+    ],
+    [
+      "MiniValeSemantics.hasWp_Move",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_MiniValeSemantics.OReg",
+        "equation_MiniValeSemantics.eval_operand",
+        "equation_MiniValeSemantics.update_state",
+        "equation_MiniValeSemantics.wp_Move",
+        "proj_equation_MiniValeSemantics.OReg_r",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_MiniValeSemantics.eval_operand"
+      ],
+      0,
+      "e1536e659ea7d235119d21108ffafd65"
+    ],
+    [
+      "MiniValeSemantics.lemma_Add",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_MiniValeSemantics.eval_code.fuel_instrumented",
+        "@query",
+        "MiniValeSemantics_pretyping_ed9cf12f578fb9b74f0f3da9b8a3612f",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_MiniValeSemantics.Add64",
+        "constructor_distinct_MiniValeSemantics.Ins",
+        "data_typing_intro_MiniValeSemantics.Add64@tok",
+        "data_typing_intro_MiniValeSemantics.Ins@tok",
+        "data_typing_intro_MiniValeSemantics.Rbx@tok",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "disc_equation_MiniValeSemantics.OReg",
+        "equation_MiniValeSemantics.eval_ins",
+        "equation_MiniValeSemantics.eval_operand",
+        "equation_MiniValeSemantics.fuel",
+        "equation_MiniValeSemantics.nat64",
+        "equation_MiniValeSemantics.pow2_64",
+        "equation_MiniValeSemantics.state",
+        "equation_MiniValeSemantics.update_reg",
+        "equation_MiniValeSemantics.update_state", "equation_Prims.nat",
+        "equation_with_fuel_MiniValeSemantics.eval_code.fuel_instrumented",
+        "int_inversion", "int_typing",
+        "interpretation_Tm_abs_7b16144abc83726f0659e90f416f8e31",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Modulus",
+        "proj_equation_MiniValeSemantics.OReg_r",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_MiniValeSemantics.Add64_dst",
+        "projection_inverse_MiniValeSemantics.Add64_src",
+        "projection_inverse_MiniValeSemantics.Ins_ins",
+        "refinement_interpretation_Tm_refine_259a72c0bdc8827e44a36e64eb7ee460",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_b70c6c7a290daae9963f0dad8b8a49a2",
+        "typing_MiniValeSemantics.eval_operand"
+      ],
+      0,
+      "efcf63f759cd4a895c33ee7974138fc5"
+    ],
+    [
+      "MiniValeSemantics.wp_Add",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "67ce43a23c036cb1ee962cd675975a03"
+    ],
+    [
+      "MiniValeSemantics.hasWp_Add",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_MiniValeSemantics.OReg",
+        "equation_MiniValeSemantics.eval_operand",
+        "equation_MiniValeSemantics.state",
+        "equation_MiniValeSemantics.update_reg",
+        "equation_MiniValeSemantics.update_state",
+        "equation_MiniValeSemantics.wp_Add",
+        "proj_equation_MiniValeSemantics.OReg_r",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_MiniValeSemantics.eval_operand",
+        "typing_Tm_abs_7b16144abc83726f0659e90f416f8e31"
+      ],
+      0,
+      "263dd8958f62a49d3af6cf3d3efad7c0"
+    ],
+    [
+      "MiniValeSemantics.vc_sound_norm",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "eca7e9437197837cfb39d0f34862a6e8"
+    ],
+    [
+      "MiniValeSemantics.state_eq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "MiniValeSemantics_pretyping_ed9cf12f578fb9b74f0f3da9b8a3612f",
+        "data_typing_intro_MiniValeSemantics.Rbx@tok", "eq2-interp",
+        "equality_tok_MiniValeSemantics.Rax@tok",
+        "equality_tok_MiniValeSemantics.Rbx@tok",
+        "equality_tok_MiniValeSemantics.Rcx@tok",
+        "equality_tok_MiniValeSemantics.Rdx@tok",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_MiniValeSemantics.nat64",
+        "fuel_guarded_inversion_MiniValeSemantics.reg", "l_and-interp"
+      ],
+      0,
+      "f937ae244a2be6ac579db7d85a552d0e"
+    ],
+    [
+      "MiniValeSemantics.lemma_Triple_opt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
+        "equality_tok_MiniValeSemantics.Rax@tok",
+        "equality_tok_MiniValeSemantics.Rbx@tok",
+        "equation_MiniValeSemantics.fuel",
+        "equation_MiniValeSemantics.nat64",
+        "equation_MiniValeSemantics.pow2_64",
+        "equation_MiniValeSemantics.state",
+        "equation_MiniValeSemantics.state_eq",
+        "equation_MiniValeSemantics.update_reg",
+        "equation_MiniValeSemantics.update_state", "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_a02fbdfdba31d36a2065abd1d9a31c0e",
+        "refinement_interpretation_Tm_refine_b70c6c7a290daae9963f0dad8b8a49a2",
+        "typing_MiniValeSemantics.state_eq",
+        "typing_Tm_abs_7b16144abc83726f0659e90f416f8e31"
+      ],
+      0,
+      "3a32af72d487f5c0f682600e3c9655c6"
+    ]
+  ]
+]

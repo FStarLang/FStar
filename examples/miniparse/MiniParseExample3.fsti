@@ -20,7 +20,7 @@ open MiniParse.Impl.Base
 module U8 = FStar.UInt8
 
 type color = U8.t // | Red | Blue | Green | Yellow
-type palette = nlist 18 (color * U8.t)
+type palette = nlist 18 (color & U8.t)
 
 noextract
 val ps: package palette

@@ -1,6 +1,6 @@
 module Bug2622
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 type ind : Type u#1 = | A
 

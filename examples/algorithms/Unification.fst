@@ -58,7 +58,7 @@ let rec vars = function
   | F t1 t2 -> OrdSet.union (vars t1) (vars t2)
 
 (* Equations among pairs of terms, to be solved *)
-type eqns  = list (term * term)
+type eqns  = list (term & term)
 
 (* All the variables in a set of equations *)
 val evars : eqns -> Tot varset
@@ -91,7 +91,7 @@ let rec n_flex_rhs = function
   | _::tl -> n_flex_rhs tl
 
 (* A point substitution *)
-type subst = (nat * term)
+type subst = (nat & term)
 
 (* Composition of point substitutions *)
 type lsubst = list subst

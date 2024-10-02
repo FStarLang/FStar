@@ -15,7 +15,8 @@
 *)
 module FStar.Tactics.Types
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
@@ -23,19 +24,15 @@ open FStar.TypeChecker.Common
 
 module Env     = FStar.TypeChecker.Env
 module O       = FStar.Options
-module SS      = FStar.Syntax.Subst
-module Cfg     = FStar.TypeChecker.Cfg
-module N       = FStar.TypeChecker.Normalize
 module Range   = FStar.Compiler.Range
-module BU      = FStar.Compiler.Util
-module S       = FStar.Syntax.Syntax
 module U       = FStar.Syntax.Util
-module UF      = FStar.Syntax.Unionfind
 
 let goal_env g = g.goal_main_env
+let goal_range g = g.goal_main_env.range
 let goal_witness g =
     FStar.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], NoUseRange))) Range.dummyRange
 let goal_type g = U.ctx_uvar_typ g.goal_ctx_uvar
+let goal_opts g = g.opts
 
 let goal_with_env g env : goal =
     let c = g.goal_ctx_uvar in
@@ -54,13 +51,12 @@ let mk_goal env u o b l = {
     label=l;
 }
 
-let goal_of_goal_ty env typ : goal * guard_t =
-    let u, ctx_uvars, g_u =
-        Env.new_implicit_var_aux "proofstate_of_goal_ty" typ.pos env typ Strict None
-    in
-    let ctx_uvar, _ = List.hd ctx_uvars in
-    let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in
-    g, g_u
+let goal_of_goal_ty env typ : goal & guard_t =
+  let u, (ctx_uvar, _) , g_u =
+    Env.new_implicit_var_aux "proofstate_of_goal_ty" typ.pos env typ Strict None false
+  in
+  let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in
+  g, g_u
 
 let goal_of_implicit env (i:Env.implicit) : goal =
   mk_goal ({env with gamma=i.imp_uvar.ctx_uvar_gamma}) i.imp_uvar (FStar.Options.peek()) false i.imp_reason
@@ -105,8 +101,8 @@ let check_goal_solved' goal =
 let check_goal_solved goal =
   Option.isSome (check_goal_solved' goal)
 
-let get_phi (g:goal) : option term =
-    U.un_squash (N.unfold_whnf (goal_env g) (goal_type g))
-
-let is_irrelevant (g:goal) : bool =
-    Option.isSome (get_phi g)
+let non_informative_token (g:env) (t:typ) = unit
+let subtyping_token (g:env) (t0 t1:typ) = unit
+let equiv_token (g:env) (t0 t1:typ) = unit
+let typing_token (g:env) (e:term) (c:Core.tot_or_ghost & typ) = unit
+let match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) = unit

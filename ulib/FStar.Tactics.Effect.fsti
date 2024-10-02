@@ -16,11 +16,10 @@
 module FStar.Tactics.Effect
 
 open FStar.Monotonic.Pure
-open FStar.Calc
 
-open FStar.Reflection.Types
-open FStar.Tactics.Types
-open FStar.Tactics.Result
+open FStar.Stubs.Reflection.Types
+open FStar.Stubs.Tactics.Types
+open FStar.Stubs.Tactics.Result
 
 (* This module is extracted, don't add any `assume val`s or extraction
  * will break. (`synth_by_tactic` is fine) *)
@@ -88,12 +87,12 @@ let tac_bind (a:Type) (b:Type)
   (t1:tac_repr a wp_f)
   (t2:(x:a -> tac_repr b (wp_g x))) : tac_repr b (tac_wp_compact b (tac_bind_wp wp_f wp_g)) =
   fun ps ->
-  let ps = set_proofstate_range ps (FStar.Range.prims_to_fstar_range r1) in
+  let ps = set_proofstate_range ps r1 in
   let ps = incr_depth ps in
   let r = t1 ps in
   match r with
   | Success a ps' ->
-    let ps' = set_proofstate_range ps' (FStar.Range.prims_to_fstar_range r2) in
+    let ps' = set_proofstate_range ps' r2 in
     // Force evaluation of __tracepoint q even on the interpreter
     begin match tracepoint ps' with
           | true -> t2 a (decr_depth ps')
@@ -131,6 +130,12 @@ let tac_subcomp (a:Type)
          (ensures fun _ -> True)
   = f
 
+let tac_close (a b:Type)
+  (wp_f:b -> tac_wp_t a)
+  (f:(x:b -> tac_repr a (wp_f x))) =
+
+  tac_repr a (fun ps post -> forall (x:b). wp_f x ps post)
+
 /// default effect is Tac : meaning, unannotated TAC functions will be
 ///                         typed as Tac a
 ///
@@ -145,9 +150,9 @@ effect {
          return=tac_return;
          bind=tac_bind;
          if_then_else=tac_if_then_else;
-         subcomp=tac_subcomp }
+         subcomp=tac_subcomp;
+         close = tac_close }
 }
-
 
 (* Hoare variant *)
 effect TacH (a:Type) (pre : proofstate -> Tot Type0) (post : proofstate -> __result a -> Tot Type0) =

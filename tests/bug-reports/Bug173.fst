@@ -101,7 +101,7 @@ let rec step_exp h e = match e with
 | _ -> None
 
 (* small step evaluation function for statements *)
-val step : heap -> stmt -> Tot (option (heap * stmt))
+val step : heap -> stmt -> Tot (option (heap & stmt))
 let rec step h s = match s with
 | Skip -> None
 | Assign x t -> (match t with
@@ -130,7 +130,7 @@ let rec step h s = match s with
 
 
 (* mapping from operators to (input_type1 * input_type2 * output_type) *)
-val op_type : binop -> Tot (typ * typ * typ)
+val op_type : binop -> Tot (typ & typ & typ)
 let op_type op = match op with
 | Plus
 | Minus

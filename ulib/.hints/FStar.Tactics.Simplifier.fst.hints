@@ -1,0 +1,174 @@
+[
+  "`\u0018\u001eùõl;°G¿¦áQ²Dg",
+  [
+    [
+      "FStar.Tactics.Simplifier.lem_iff_trans",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0103d32d182e7a4924fcb3c14da51cc6"
+      ],
+      0,
+      "8a8f4d712bd87e136e81de00b377f192"
+    ],
+    [
+      "FStar.Tactics.Simplifier.lem_fa_false",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f4af737fc16c67c033281c67fc2ebbda"
+    ],
+    [
+      "FStar.Tactics.Simplifier.lem_ex_true",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "639801eb1c8d94cba300d10e34d33cf4"
+    ],
+    [
+      "FStar.Tactics.Simplifier.and_cong",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0103d32d182e7a4924fcb3c14da51cc6"
+      ],
+      0,
+      "ebb07f44f941af119cc20c2cea4533b4"
+    ],
+    [
+      "FStar.Tactics.Simplifier.or_cong",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0103d32d182e7a4924fcb3c14da51cc6"
+      ],
+      0,
+      "27a0d2408ce129df9e741f301ea9716f"
+    ],
+    [
+      "FStar.Tactics.Simplifier.imp_cong",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0103d32d182e7a4924fcb3c14da51cc6"
+      ],
+      0,
+      "0bd5cc3249c01be3e1d2dbe717251414"
+    ],
+    [
+      "FStar.Tactics.Simplifier.fa_cong",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ddf411903966bf2752b797841fbff173",
+        "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8"
+      ],
+      0,
+      "e76ca4f3c33be1f67e0a97d3fea57304"
+    ],
+    [
+      "FStar.Tactics.Simplifier.fa_cong",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ddf411903966bf2752b797841fbff173",
+        "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8"
+      ],
+      0,
+      "3016499a9a7b5c45fa6a825a5d483944"
+    ],
+    [
+      "FStar.Tactics.Simplifier.ex_cong",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ddf411903966bf2752b797841fbff173"
+      ],
+      0,
+      "71eb6296007321f504223d9d0097c257"
+    ],
+    [
+      "FStar.Tactics.Simplifier.ex_cong",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ddf411903966bf2752b797841fbff173"
+      ],
+      0,
+      "fd617101515c827a3768c29f077fcfde"
+    ],
+    [
+      "FStar.Tactics.Simplifier.neg_cong",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0103d32d182e7a4924fcb3c14da51cc6"
+      ],
+      0,
+      "514173e14c59a2a93f0a582aeb03a45f"
+    ],
+    [
+      "FStar.Tactics.Simplifier.iff_cong",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0103d32d182e7a4924fcb3c14da51cc6"
+      ],
+      0,
+      "edc0c5915761844e31b9ec68a9926a19"
+    ],
+    [
+      "FStar.Tactics.Simplifier.inhabit",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Stubs.Reflection.Types.name",
+        "equation_FStar.Stubs.Reflection.Types.typ", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Stubs.Reflection.Types.name"
+      ],
+      0,
+      "14f06f6337349f2292588bf4bde12d3d"
+    ],
+    [
+      "FStar.Tactics.Simplifier.equiv",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_0103d32d182e7a4924fcb3c14da51cc6",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "5e4d1322be84862a7f92644e42d78031"
+    ]
+  ]
+]

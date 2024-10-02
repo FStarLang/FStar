@@ -17,7 +17,7 @@
 module DijkstraStateMonad
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 /// This example illustrates how to derive a WP-indexed state monad
 /// from a free state monad, parametric in the type of the state
@@ -41,7 +41,7 @@ let rec bind_m #s #a #b (x:m s a) (y: (a -> m s b)) : m s b =
 
 
 /// A postcondition is a predicate relating a result and final state
-let post_t (s:Type0) (a:Type) = a * s -> Type0
+let post_t (s:Type0) (a:Type) = a & s -> Type0
 
 /// A precondition is a predicate on the initial state (we don't
 /// really use this type in what follows)
@@ -87,7 +87,7 @@ let rec wp_of #a #s (x:m s a)
 /// We prove the soundness of the wp semantics by giving it a model in
 /// terms of F*'s pure computations
 let rec run (#a:_) (#s:_) (m:m s a) (s0:s) (post: post_t s a)
-  : Pure (a * s)
+  : Pure (a & s)
          (requires
            wp_of m s0 post)
          (ensures
@@ -152,7 +152,6 @@ let lem_on_comp #a #b #c (f:b -> c) (g:a -> b)
 /// AR: 05/11, eta is no longer provable, so admitting it
 let eta (a:Type) (b:Type) (f:a -> b) : Lemma (f == (fun x -> f x)) = admit()
 
-#push-options "--print_bound_var_types --print_implicits"
 /// Now, here's the main lemma of property (b).
 ///   stating at first using extensional equality
 let rec bind_wp_lem' (#a:Type u#aa) (#b:Type u#bb) (#s:_) (f:m s a) (g: (a -> m s b))
@@ -162,13 +161,9 @@ let rec bind_wp_lem' (#a:Type u#aa) (#b:Type u#bb) (#s:_) (f:m s a) (g: (a -> m 
       assert (bind_m f g == g x);
       assert_norm (wp_of #a #s (Ret x) `F.feq` (fun s0 post -> post (x, s0)));
       assert (wp_of (bind_m (Ret x) g) `F.feq` bind_wp (wp_of (Ret x)) (wp_of *. g))
-           by (T.dump "A";
-               T.norm [zeta; iota; delta];
-               T.dump "B";
+           by (T.norm [zeta; iota; delta];
                let x = T.forall_intro () in
-               T.dump "C";
-               T.mapply (quote (eta u#(max bb 1) u#1));
-               T.dump "D")
+               T.mapply (quote (eta u#(max bb 1) u#1)))
 
     | Put s k ->
       bind_wp_lem' k g;
@@ -282,9 +277,9 @@ let lift_wp (a:Type)
 /// Again, without a proof ...
 let lift_pure_ifst
     (a:Type)
-    (s:Type0)
     (wp:pure_wp a)
-    (f:eqtype_as_type unit -> PURE a wp)
+    (s:Type0)
+    (f:unit -> PURE a wp)
   : irepr a s (lift_wp a s wp)
   = admit();
     let x = f() in
@@ -292,17 +287,19 @@ let lift_pure_ifst
 
 
 /// Now, we have what we need to turn it into a layered effect
-reifiable reflectable
-layered_effect {
-  IFST : a:Type -> s:Type0 -> wp:wp_t s a -> Effect
-  with repr         = irepr;
-       return       = ireturn;
-       bind         = ibind;
-       subcomp      = isubcomp;
-       if_then_else = i_if_then_else;
 
-       get = iget;
-       put = iput
+reifiable
+reflectable
+effect {
+  IFST (a:Type) ([@@@ effect_param] s:Type0) (wp:wp_t s a)
+  with {repr = irepr;
+        return = ireturn;
+        bind = ibind;
+        subcomp = isubcomp;
+        if_then_else = i_if_then_else;
+
+        get = iget;
+        put = iput}
 }
 sub_effect PURE ~> IFST = lift_pure_ifst
 

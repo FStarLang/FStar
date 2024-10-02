@@ -62,32 +62,36 @@ let read_and_increment_v1 : st int =
   bind (write (x + 1)) (fun _ -> 
   return x))
 //SNIPPET_END: read_and_increment_v1$
-  
+
+//SNIPPET_START: let!$
+let (let!) = bind
+//SNIPPET_END: let!$
+
 //SNIPPET_START: read_and_increment$
 let read_and_increment : st int =
-  x <-- read;
-  write (x + 1);;
+  let! x = read in
+  write (x + 1) ;!
   return x
 //SNIPPET_END: read_and_increment$
 
 //SNIPPET_START: inc_twice$
 let inc_twice : st int = 
-  x <-- read_and_increment;
-  read_and_increment;;
+  let! x = read_and_increment in
+  read_and_increment ;!
   return x
 //SNIPPET_END: inc_twice$
 
 //SNIPPET_START: monad_laws$
 let feq #a #b (f g : a -> b) = forall x. f x == g x
 let left_identity #a #b (x:a) (g: a -> st b)
-  : Lemma ((v <-- return x; g v) `feq` g x)
+  : Lemma ((let! v = return x in g v) `feq` g x)
   = ()
 let right_identity #a (f:st a)
-  : Lemma ((x <-- f; return x) `feq` f)
+  : Lemma ((let! x = f in return x) `feq` f)
   = ()
 let associativity #a #b #c (f1:st a) (f2:a -> st b) (f3:b -> st c)
-  : Lemma ((x <-- f1; y <-- f2 x; f3 y) `feq`
-           (y <-- (x <-- f1; f2 x); f3 y))
+  : Lemma ((let! x = f1 in let! y = f2 x in f3 y) `feq`
+           (let! y = (let! x = f1 in f2 x) in f3 y))
   = ()
 //SNIPPET_END: monad_laws$
 
@@ -108,15 +112,15 @@ let right_identity_fail #a (f:st a)
 
 //SNIPPET_START: action_laws$
 let redundant_read_elim ()
-  : Lemma ((read;; read) `feq` read)
+  : Lemma ((read;! read) `feq` read)
   = ()
 
 let redundant_write_elim (x y:int)
-  : Lemma ((write x ;; write y) `feq` write y)
+  : Lemma ((write x ;! write y) `feq` write y)
   = ()
 
 let read_write_noop ()
-  : Lemma ((x <-- read;  write x) `feq` return ())
+  : Lemma ((let! x = read in write x) `feq` return ())
   = ()
 //SNIPPET_END: action_laws$
 

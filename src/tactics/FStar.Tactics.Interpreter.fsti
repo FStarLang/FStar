@@ -22,20 +22,43 @@ open FStar.Syntax.Embeddings
 open FStar.Tactics.Types
 module Env = FStar.TypeChecker.Env
 
+(* Run a `tac` *)
+val run_unembedded_tactic_on_ps :
+    range -> (* position on the tactic call *)
+    range -> (* position for the goal *)
+    bool ->  (* whether this call is in the "background", like resolve_implicits *)
+    'a ->
+    ('a -> Monad.tac 'b) -> (* a term representing an `'a -> tac 'b` *)
+    proofstate ->  (* proofstate *)
+    list goal & 'b (* goals and return value *)
+
+(* Run a term of type `a -> Tac b` *)
 val run_tactic_on_ps :
     range -> (* position on the tactic call *)
     range -> (* position for the goal *)
-    bool -> (* whether this call is in the "background", like resolve_implicits *)
+    bool ->  (* whether this call is in the "background", like resolve_implicits *)
     embedding 'a ->
     'a ->
     embedding 'b ->
     term ->        (* a term representing an `'a -> tac 'b` *)
+    bool ->        (* true if the tactic term is already typechecked *)
     proofstate ->  (* proofstate *)
-    list goal * 'b (* goals and return value *)
+    list goal & 'b (* goals and return value *)
 
-val primitive_steps : unit -> list FStar.TypeChecker.Cfg.primitive_step
+(* Only plugins *)
+val native_tactics_steps : unit -> list FStar.TypeChecker.Primops.primitive_step
+
+(* Plugins + primitives. *)
+val primitive_steps : unit -> list FStar.TypeChecker.Primops.primitive_step
 
 val report_implicits : range -> FStar.TypeChecker.Rel.tagged_implicits -> unit
 
-(* For debugging only *)
-val tacdbg : ref bool
+(* Called by Main *)
+val register_tactic_primitive_step : FStar.TypeChecker.Primops.primitive_step -> unit
+
+open FStar.Tactics.Monad
+module NBET = FStar.TypeChecker.NBETerm
+val e_tactic_thunk (er : embedding 'r) : embedding (tac 'r)
+val e_tactic_nbe_thunk (er : NBET.embedding 'r) : NBET.embedding (tac 'r)
+val e_tactic_1 (ea : embedding 'a) (er : embedding 'r) : embedding ('a -> tac 'r)
+val e_tactic_nbe_1 (ea : NBET.embedding 'a) (er : NBET.embedding 'r) : NBET.embedding ('a -> tac 'r)

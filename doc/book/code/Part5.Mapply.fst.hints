@@ -1,0 +1,38 @@
+[
+  "\u001aÅÄNÙ£D\u007fB∆Ü~ìÛñ&",
+  [
+    [
+      "Part5.Mapply.test",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "13f3d2b53e5c04d8bf035cc1c87d4665"
+    ],
+    [
+      "Part5.Mapply.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_7a3bd9cfd60e65a77a656fd59cd76e42"
+      ],
+      0,
+      "545da53062f14dc61fb7e7c51aaa6a53"
+    ],
+    [
+      "Part5.Mapply.test",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_7a3bd9cfd60e65a77a656fd59cd76e42"
+      ],
+      0,
+      "545da53062f14dc61fb7e7c51aaa6a53"
+    ]
+  ]
+]

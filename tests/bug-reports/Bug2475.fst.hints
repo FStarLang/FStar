@@ -1,0 +1,19 @@
+[
+  "öè\u0006sfZ_àvúU\u0003 úŠQ",
+  [
+    [
+      "Bug2475.tuple2_ind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "refinement_interpretation_Tm_refine_589ee561fb7ab2450268914c9d04d0e3"
+      ],
+      0,
+      "1fbaaa87b5854d1d62355467e9fe46a7"
+    ]
+  ]
+]

@@ -24,7 +24,7 @@ module FStar.DM4F.ST
  **********************************************************)
 
 (* The underlying representation type *)
-let st (s:Type) (a:Type) = s -> M (a * s)
+let st (s:Type) (a:Type) = s -> M (a & s)
 
 (* Monad definition *)
 let return_st (s:Type) (a:Type) (x:a) : st s a = fun s0 -> x, s0

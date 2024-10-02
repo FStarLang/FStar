@@ -15,7 +15,7 @@
 *)
 module Bug1206
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.HyperStack.ST
 
 #reset-options "--max_fuel 1 --max_ifuel 1"

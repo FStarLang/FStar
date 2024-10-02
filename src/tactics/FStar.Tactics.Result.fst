@@ -29,3 +29,5 @@ each other. *)
 // full definition of all relevant types (from ulib, we use an different
 // interface that hides those definitions).
 open FStar.Tactics.Types
+
+let proofstate = FStar.Tactics.Types.proofstate

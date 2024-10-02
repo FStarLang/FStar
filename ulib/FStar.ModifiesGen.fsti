@@ -23,8 +23,10 @@ module HST = FStar.HyperStack.ST
 (* NOTE: aloc cannot be a member of the class, because of OCaml
    extraction. So it must be a parameter of the class instead. *)
 
+[@@erasable]
 type aloc_t = HS.rid -> nat -> Tot Type
 
+[@@erasable]
 noeq
 type cls (aloc: aloc_t) : Type = | Cls:
   (aloc_includes: (
@@ -124,6 +126,7 @@ type cls (aloc: aloc_t) : Type = | Cls:
   )) ->
   cls aloc
 
+[@@erasable]
 val loc (#aloc: aloc_t u#x) (c: cls aloc) : Tot (Type u#x)
 
 val loc_none (#aloc: aloc_t) (#c: cls aloc): Tot (loc c)
@@ -226,6 +229,7 @@ let loc_all_regions_from
 
 (* Inclusion of memory locations *)
 
+[@@erasable]
 val loc_includes
   (#aloc: aloc_t) (#c: cls aloc)
   (s1 s2: loc c)
@@ -352,6 +356,7 @@ val loc_includes_addresses_addresses
 
 (* Disjointness of two memory locations *)
 
+[@@erasable]
 val loc_disjoint
   (#aloc: aloc_t) (#c: cls aloc)
   (s1 s2: loc c)
@@ -494,6 +499,7 @@ val loc_includes_region_liveness_insensitive_locs_loc_of_aloc
 
 (** The modifies clause proper *)
 
+[@@erasable]
 val modifies
   (#aloc: aloc_t) (#c: cls aloc)
   (s: loc c)
@@ -916,14 +922,15 @@ val modifies_strengthen
 
 (** BEGIN TODO: move to FStar.Monotonic.HyperStack *)
 
+[@@erasable]
 val does_not_contain_addr
   (h: HS.mem)
-  (ra: HS.rid * nat)
+  (ra: HS.rid & nat)
 : GTot Type0
 
 val not_live_region_does_not_contain_addr
   (h: HS.mem)
-  (ra: HS.rid * nat)
+  (ra: HS.rid & nat)
 : Lemma
   (requires (~ (HS.live_region h (fst ra))))
   (ensures (h `does_not_contain_addr` ra))
@@ -939,14 +946,14 @@ val unused_in_does_not_contain_addr
 
 val addr_unused_in_does_not_contain_addr
   (h: HS.mem)
-  (ra: HS.rid * nat)
+  (ra: HS.rid & nat)
 : Lemma
   (requires (HS.live_region h (fst ra) ==> snd ra `Heap.addr_unused_in` (HS.get_hmap h `Map.sel` (fst ra))))
   (ensures (h `does_not_contain_addr` ra))
 
 val does_not_contain_addr_addr_unused_in
   (h: HS.mem)
-  (ra: HS.rid * nat)
+  (ra: HS.rid & nat)
 : Lemma
   (requires (h `does_not_contain_addr` ra))
   (ensures (HS.live_region h (fst ra) ==> snd ra `Heap.addr_unused_in` (HS.get_hmap h `Map.sel` (fst ra))))
@@ -956,7 +963,7 @@ val free_does_not_contain_addr
   (#rel: Preorder.preorder a)
   (r: HS.mreference a rel)
   (m: HS.mem)
-  (x: HS.rid * nat)
+  (x: HS.rid & nat)
 : Lemma
   (requires (
     HS.is_mm r /\
@@ -973,7 +980,7 @@ val does_not_contain_addr_elim
   (#rel: Preorder.preorder a)
   (r: HS.mreference a rel)
   (m: HS.mem)
-  (x: HS.rid * nat)
+  (x: HS.rid & nat)
 : Lemma
   (requires (
     m `does_not_contain_addr` x /\

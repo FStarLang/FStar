@@ -1,0 +1,26 @@
+[
+  "Ú±\u001a¼ŒV{B'žßtv+š²",
+  [
+    [
+      "Bug3213.forall_elim",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1ac4be74ddb97e87b1abf5f0cb5f005a"
+    ],
+    [
+      "Bug3213.falso",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "30431f16af68a7ee79656cbba9f88e2e"
+    ]
+  ]
+]

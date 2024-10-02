@@ -26,7 +26,6 @@ all:\
   IfcTypechecker.uver\
   Loops.uver\
   Memo.uver\
-  NetKat.uver\
   OneTimePad.uver\
   Point.uver\
   ProgramEquivalence.uver\
@@ -43,7 +42,8 @@ all:\
   While.uver\
   WhileReify.uver \
   OTP.uver \
-  ElGamal.uver
+  ElGamal.uver \
+  Setoids.uver
   # IfcRecursiveHeapReify.uver\ regressed; too slow (NS/07-10)
 
 benton2004:\

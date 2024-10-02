@@ -1,0 +1,85 @@
+[
+  "\u001e»&sã$Mœ•ªÏ”\u0000è\u0003n",
+  [
+    [
+      "FStar.DependentMap.restrict",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "ab2cbc14bcac72d519985a222db9af0c"
+    ],
+    [
+      "FStar.DependentMap.sel_restrict",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "16b967d94de9e2c31ece56e31855eeae"
+    ],
+    [
+      "FStar.DependentMap.concat_value",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "6ec244f3459cae8e6a90440e198fdda0"
+    ],
+    [
+      "FStar.DependentMap.concat",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.either__uu___haseq",
+        "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "90df816fb09ada93b1f4d8b938ff19bf"
+    ],
+    [
+      "FStar.DependentMap.sel_concat_l",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.either__uu___haseq",
+        "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "2fd1f7ba2f8cf8999df5cd6a4f41706f"
+    ],
+    [
+      "FStar.DependentMap.sel_concat_r",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.either__uu___haseq",
+        "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "23a2883d9b06676db063018c55514ac6"
+    ]
+  ]
+]

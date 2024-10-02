@@ -36,113 +36,95 @@ module BU    = FStar.Compiler.Util
 module Print = FStar.Syntax.Print
 module Cfg   = FStar.TypeChecker.Cfg
 module E     = FStar.Tactics.Embedding
-module RE    = FStar.Reflection.Embeddings
 module NBETerm = FStar.TypeChecker.NBETerm
 module NBET    = FStar.TypeChecker.NBETerm
+module PO    = FStar.TypeChecker.Primops
 
-let unembed e t n = FStar.Syntax.Embeddings.unembed e t true n
-let embed e rng t n = FStar.Syntax.Embeddings.embed e t rng None n
+let solve (#a:Type) {| ev : a |} : Tot a = ev
 
-let rec drop n l =
-    if n = 0 then l
-    else
-        match l with
-        | [] -> failwith "drop: impossible"
-        | _::xs -> drop (n-1) xs
+(* This module does not use typeclasses *)
+let embed (e:embedding 'a) rng (t:'a) n = FStar.Syntax.Embeddings.embed #_ #e t rng None n
+let unembed (e:embedding 'a) t n : option 'a = FStar.Syntax.Embeddings.unembed #_ #e t n
 
-let timing_int (l:Ident.lid) f =
-    fun psc cb args ->
-        (* BU.print1 "Entering primitive %s {\n" (Ident.string_of_lid l); *)
-        let r = f psc cb args in
-        (* BU.print1 "%s }\n" (Ident.string_of_lid l); *)
-        r
+let interp_ctx s f = Errors.with_ctx ("While running primitive " ^ s) f
 
-let timing_nbe (l:Ident.lid) f =
-    fun nbe_cbs args ->
-        (* BU.print1 "Entering NBE primitive %s {\n" (Ident.string_of_lid l); *)
-        let r = f nbe_cbs args in
-        (* BU.print1 "%s }\n" (Ident.string_of_lid l); *)
-        r
+let run_wrap (label : string) (t : tac 'a) ps : __result 'a =
+  interp_ctx label (fun () -> run_safe t ps)
 
-let mk nm arity nunivs interp nbe_interp =
-  let nm = PC.fstar_tactics_lid' ["Builtins"; nm] in
-  { Cfg.name                         = nm
-  ; Cfg.arity                        = arity
-  ; Cfg.univ_arity                   = nunivs
-  ; Cfg.auto_reflect                 = Some (arity - 1)
-  ; Cfg.strong_reduction_ok          = true
-  ; Cfg.requires_binder_substitution = true
-  ; Cfg.interpretation               = timing_int nm interp
-  ; Cfg.interpretation_nbe           = timing_nbe nm nbe_interp
-  }
+let builtin_lid nm = PC.fstar_stubs_tactics_lid' ["V2"; "Builtins"; nm]
+let types_lid   nm = PC.fstar_stubs_tactics_lid' ["Types"; nm]
 
-let mkt nm arity nunivs interp nbe_interp =
-  let nm = PC.fstar_tactics_lid' ["Builtins"; nm] in
-  { Cfg.name                         = nm
-  ; Cfg.arity                        = arity
-  ; Cfg.univ_arity                   = nunivs
-  ; Cfg.auto_reflect                 = None
-  ; Cfg.strong_reduction_ok          = true
-  ; Cfg.requires_binder_substitution = true
-  ; Cfg.interpretation               = timing_int nm interp
-  ; Cfg.interpretation_nbe           = timing_nbe nm nbe_interp
-  }
+let set_auto_reflect arity (p:PO.primitive_step) : PO.primitive_step =
+  { p with auto_reflect = Some arity }
 
-(* This _psc variant is a special case *)
-let mk_total_interpretation_1_psc
-    (f:Cfg.psc -> 't1 -> 'r)
-    (e1: embedding 't1)
-    (er:embedding 'r)
-    (psc:Cfg.psc)
-    (ncb:norm_cb)
-    (args:args)
-  : option term
-  =
-  match args with
-  | [(a1, _)] ->
-    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
-    let r = f psc a1 in
-    Some (embed er (Cfg.psc_range psc) r ncb))
-  | _ ->
-    None
+let mk_tot_step_1 uarity nm f nbe_f =
+  let lid = types_lid nm in
+  PO.mk1' uarity lid
+    (fun x -> f x |> Some)
+    (fun x -> nbe_f x |> Some)
 
-let mk_total_nbe_interpretation_1_psc
-    cb
-    (f:Cfg.psc -> 't1 -> 'r)
-    (e1: NBET.embedding 't1)
-    (er:NBET.embedding 'r)
-    (args:NBET.args)
-  : option NBET.t
-  =
-  match args with
-  | [(a1, _)] ->
-    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
-    let r = f Cfg.null_psc a1 in // TODO: no psc here?
-    Some (NBET.embed er cb r))
-  | _ ->
-    None
+let mk_tot_step_2 uarity nm f nbe_f =
+  let lid = types_lid nm in
+  PO.mk2' uarity lid
+    (fun x y -> f x y |> Some)
+    (fun x y -> nbe_f x y |> Some)
 
-let mk_total_step_1_psc (nunivs:int) (name : string)
-           (f : Cfg.psc -> 'a -> 'r)
-           (ea : embedding 'a)
-           (er : embedding 'r)
-           (nf : Cfg.psc -> 'na -> 'nr)
-           (nea : NBETerm.embedding 'na)
-           (ner : NBETerm.embedding 'nr)
-           : Cfg.primitive_step =
-    mkt name 1 nunivs (mk_total_interpretation_1_psc     f  ea  er)
-                      (fun cb args -> mk_total_nbe_interpretation_1_psc cb nf nea ner (drop nunivs args))
+let mk_tot_step_1_psc us nm f nbe_f =
+  let lid = types_lid nm in
+  PO.mk1_psc' us lid
+    (fun psc x -> f psc x |> Some)
+    (fun psc x -> nbe_f psc x |> Some)
+
+let mk_tac_step_1 univ_arity nm f nbe_f : PO.primitive_step =
+  let lid = builtin_lid nm in
+  set_auto_reflect 1 <|
+    PO.mk2' univ_arity lid
+      (fun a ps -> Some (run_wrap nm (f a) ps))
+      (fun a ps -> Some (run_wrap nm (nbe_f a) ps))
+
+let mk_tac_step_2 univ_arity nm f nbe_f : PO.primitive_step =
+  let lid = builtin_lid nm in
+  set_auto_reflect 2 <|
+    PO.mk3' univ_arity lid
+      (fun a b ps -> Some (run_wrap nm (f a b) ps))
+      (fun a b ps -> Some (run_wrap nm (nbe_f a b) ps))
+
+let mk_tac_step_3 univ_arity nm f nbe_f : PO.primitive_step =
+  let lid = builtin_lid nm in
+  set_auto_reflect 3 <|
+    PO.mk4' univ_arity lid
+      (fun a b c ps -> Some (run_wrap nm (f a b c) ps))
+      (fun a b c ps -> Some (run_wrap nm (nbe_f a b c) ps))
+
+let mk_tac_step_4 univ_arity nm f nbe_f : PO.primitive_step =
+  let lid = builtin_lid nm in
+  set_auto_reflect 4 <|
+    PO.mk5' univ_arity lid
+      (fun a b c d ps -> Some (run_wrap nm (f a b c d) ps))
+      (fun a b c d ps -> Some (run_wrap nm (nbe_f a b c d) ps))
+
+let mk_tac_step_5 univ_arity nm f nbe_f : PO.primitive_step =
+  let lid = builtin_lid nm in
+  set_auto_reflect 5 <|
+    PO.mk6' univ_arity lid
+      (fun a b c d e ps -> Some (run_wrap nm (f a b c d e) ps))
+      (fun a b c d e ps -> Some (run_wrap nm (nbe_f a b c d e) ps))
 
 let max_tac_arity = 20
 
 (* NOTE: THE REST OF THIS MODULE IS AUTOGENERATED
+ * and here only for plugins to call into. The rest of the compiler
+ * makes no use of these functions.
  * See .scripts/mk_tac_interps.sh *)
+
 let mk_tactic_interpretation_1
+    (name : string)
     (t : 't1 -> tac 'r)
     (e1:embedding 't1)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -151,18 +133,20 @@ let mk_tactic_interpretation_1
     BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
     BU.bind_opt (unembed E.e_proofstate a2 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))
+    let r = interp_ctx name (fun () -> run_safe (t a1) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))
   | _ ->
     None
 
 let mk_tactic_interpretation_2
+    (name : string)
     (t : 't1 -> 't2 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -172,19 +156,21 @@ let mk_tactic_interpretation_2
     BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
     BU.bind_opt (unembed E.e_proofstate a3 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))
   | _ ->
     None
 
 let mk_tactic_interpretation_3
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
     (e3:embedding 't3)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -195,20 +181,22 @@ let mk_tactic_interpretation_3
     BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
     BU.bind_opt (unembed E.e_proofstate a4 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))
   | _ ->
     None
 
 let mk_tactic_interpretation_4
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
     (e3:embedding 't3)
     (e4:embedding 't4)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -220,12 +208,13 @@ let mk_tactic_interpretation_4
     BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
     BU.bind_opt (unembed E.e_proofstate a5 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))
   | _ ->
     None
 
 let mk_tactic_interpretation_5
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -233,8 +222,9 @@ let mk_tactic_interpretation_5
     (e4:embedding 't4)
     (e5:embedding 't5)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -247,12 +237,13 @@ let mk_tactic_interpretation_5
     BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
     BU.bind_opt (unembed E.e_proofstate a6 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4 a5) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))))
   | _ ->
     None
 
 let mk_tactic_interpretation_6
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -261,8 +252,9 @@ let mk_tactic_interpretation_6
     (e5:embedding 't5)
     (e6:embedding 't6)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -276,12 +268,13 @@ let mk_tactic_interpretation_6
     BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
     BU.bind_opt (unembed E.e_proofstate a7 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4 a5 a6) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))))
   | _ ->
     None
 
 let mk_tactic_interpretation_7
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -291,8 +284,9 @@ let mk_tactic_interpretation_7
     (e6:embedding 't6)
     (e7:embedding 't7)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -307,12 +301,13 @@ let mk_tactic_interpretation_7
     BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
     BU.bind_opt (unembed E.e_proofstate a8 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))))))
   | _ ->
     None
 
 let mk_tactic_interpretation_8
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -323,8 +318,9 @@ let mk_tactic_interpretation_8
     (e7:embedding 't7)
     (e8:embedding 't8)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -340,12 +336,13 @@ let mk_tactic_interpretation_8
     BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
     BU.bind_opt (unembed E.e_proofstate a9 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))))))
   | _ ->
     None
 
 let mk_tactic_interpretation_9
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -357,8 +354,9 @@ let mk_tactic_interpretation_9
     (e8:embedding 't8)
     (e9:embedding 't9)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -375,12 +373,13 @@ let mk_tactic_interpretation_9
     BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
     BU.bind_opt (unembed E.e_proofstate a10 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))))))))
   | _ ->
     None
 
 let mk_tactic_interpretation_10
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -393,8 +392,9 @@ let mk_tactic_interpretation_10
     (e9:embedding 't9)
     (e10:embedding 't10)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -412,12 +412,13 @@ let mk_tactic_interpretation_10
     BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
     BU.bind_opt (unembed E.e_proofstate a11 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))))))))
   | _ ->
     None
 
 let mk_tactic_interpretation_11
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -431,8 +432,9 @@ let mk_tactic_interpretation_11
     (e10:embedding 't10)
     (e11:embedding 't11)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -451,12 +453,13 @@ let mk_tactic_interpretation_11
     BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
     BU.bind_opt (unembed E.e_proofstate a12 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))))))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))))))))))
   | _ ->
     None
 
 let mk_tactic_interpretation_12
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -471,8 +474,9 @@ let mk_tactic_interpretation_12
     (e11:embedding 't11)
     (e12:embedding 't12)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -492,12 +496,13 @@ let mk_tactic_interpretation_12
     BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
     BU.bind_opt (unembed E.e_proofstate a13 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))))))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))))))))))
   | _ ->
     None
 
 let mk_tactic_interpretation_13
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -513,8 +518,9 @@ let mk_tactic_interpretation_13
     (e12:embedding 't12)
     (e13:embedding 't13)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -535,12 +541,13 @@ let mk_tactic_interpretation_13
     BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
     BU.bind_opt (unembed E.e_proofstate a14 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))))))))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))))))))))))
   | _ ->
     None
 
 let mk_tactic_interpretation_14
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -557,8 +564,9 @@ let mk_tactic_interpretation_14
     (e13:embedding 't13)
     (e14:embedding 't14)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -580,12 +588,13 @@ let mk_tactic_interpretation_14
     BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
     BU.bind_opt (unembed E.e_proofstate a15 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))))))))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))))))))))))
   | _ ->
     None
 
 let mk_tactic_interpretation_15
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -603,8 +612,9 @@ let mk_tactic_interpretation_15
     (e14:embedding 't14)
     (e15:embedding 't15)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -627,12 +637,13 @@ let mk_tactic_interpretation_15
     BU.bind_opt (unembed e15 a15 ncb) (fun a15 ->
     BU.bind_opt (unembed E.e_proofstate a16 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))))))))))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))))))))))))))
   | _ ->
     None
 
 let mk_tactic_interpretation_16
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -651,8 +662,9 @@ let mk_tactic_interpretation_16
     (e15:embedding 't15)
     (e16:embedding 't16)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -676,12 +688,13 @@ let mk_tactic_interpretation_16
     BU.bind_opt (unembed e16 a16 ncb) (fun a16 ->
     BU.bind_opt (unembed E.e_proofstate a17 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))))))))))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))))))))))))))
   | _ ->
     None
 
 let mk_tactic_interpretation_17
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -701,8 +714,9 @@ let mk_tactic_interpretation_17
     (e16:embedding 't16)
     (e17:embedding 't17)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -727,12 +741,13 @@ let mk_tactic_interpretation_17
     BU.bind_opt (unembed e17 a17 ncb) (fun a17 ->
     BU.bind_opt (unembed E.e_proofstate a18 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))))))))))))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))))))))))))))))
   | _ ->
     None
 
 let mk_tactic_interpretation_18
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -753,8 +768,9 @@ let mk_tactic_interpretation_18
     (e17:embedding 't17)
     (e18:embedding 't18)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -780,12 +796,13 @@ let mk_tactic_interpretation_18
     BU.bind_opt (unembed e18 a18 ncb) (fun a18 ->
     BU.bind_opt (unembed E.e_proofstate a19 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))))))))))))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))))))))))))))))
   | _ ->
     None
 
 let mk_tactic_interpretation_19
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -807,8 +824,9 @@ let mk_tactic_interpretation_19
     (e18:embedding 't18)
     (e19:embedding 't19)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -835,12 +853,13 @@ let mk_tactic_interpretation_19
     BU.bind_opt (unembed e19 a19 ncb) (fun a19 ->
     BU.bind_opt (unembed E.e_proofstate a20 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))))))))))))))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))))))))))))))))))
   | _ ->
     None
 
 let mk_tactic_interpretation_20
+    (name : string)
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 't20 -> tac 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -863,8 +882,9 @@ let mk_tactic_interpretation_20
     (e19:embedding 't19)
     (e20:embedding 't20)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -892,16 +912,18 @@ let mk_tactic_interpretation_20
     BU.bind_opt (unembed e20 a20 ncb) (fun a20 ->
     BU.bind_opt (unembed E.e_proofstate a21 ncb) (fun ps ->
     let ps = set_ps_psc psc ps in
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20) ps in
-    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))))))))))))))))))
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20) ps) in
+    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))))))))))))))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_1
+    (name : string)
     cb
     (t : 't1 -> tac 'r)
     (e1:NBET.embedding 't1)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -909,17 +931,19 @@ let mk_tactic_nbe_interpretation_1
   | [(a1, _); (a2, _)] ->
     BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a2) (fun ps ->
-    let r = run_safe (t a1) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r)))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_2
+    (name : string)
     cb
     (t : 't1 -> 't2 -> tac 'r)
     (e1:NBET.embedding 't1)
     (e2:NBET.embedding 't2)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -928,18 +952,20 @@ let mk_tactic_nbe_interpretation_2
     BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
     BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a3) (fun ps ->
-    let r = run_safe (t a1 a2) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_3
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> tac 'r)
     (e1:NBET.embedding 't1)
     (e2:NBET.embedding 't2)
     (e3:NBET.embedding 't3)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -949,12 +975,13 @@ let mk_tactic_nbe_interpretation_3
     BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
     BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a4) (fun ps ->
-    let r = run_safe (t a1 a2 a3) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r)))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_4
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -962,6 +989,7 @@ let mk_tactic_nbe_interpretation_4
     (e3:NBET.embedding 't3)
     (e4:NBET.embedding 't4)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -972,12 +1000,13 @@ let mk_tactic_nbe_interpretation_4
     BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
     BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a5) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_5
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -986,6 +1015,7 @@ let mk_tactic_nbe_interpretation_5
     (e4:NBET.embedding 't4)
     (e5:NBET.embedding 't5)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -997,12 +1027,13 @@ let mk_tactic_nbe_interpretation_5
     BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
     BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a6) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4 a5) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r)))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_6
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -1012,6 +1043,7 @@ let mk_tactic_nbe_interpretation_6
     (e5:NBET.embedding 't5)
     (e6:NBET.embedding 't6)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -1024,12 +1056,13 @@ let mk_tactic_nbe_interpretation_6
     BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
     BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a7) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4 a5 a6) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r))))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_7
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -1040,6 +1073,7 @@ let mk_tactic_nbe_interpretation_7
     (e6:NBET.embedding 't6)
     (e7:NBET.embedding 't7)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -1053,12 +1087,13 @@ let mk_tactic_nbe_interpretation_7
     BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
     BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a8) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r)))))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_8
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -1070,6 +1105,7 @@ let mk_tactic_nbe_interpretation_8
     (e7:NBET.embedding 't7)
     (e8:NBET.embedding 't8)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -1084,12 +1120,13 @@ let mk_tactic_nbe_interpretation_8
     BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
     BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a9) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r))))))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_9
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -1102,6 +1139,7 @@ let mk_tactic_nbe_interpretation_9
     (e8:NBET.embedding 't8)
     (e9:NBET.embedding 't9)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -1117,12 +1155,13 @@ let mk_tactic_nbe_interpretation_9
     BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
     BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a10) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_10
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -1136,6 +1175,7 @@ let mk_tactic_nbe_interpretation_10
     (e9:NBET.embedding 't9)
     (e10:NBET.embedding 't10)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -1152,12 +1192,13 @@ let mk_tactic_nbe_interpretation_10
     BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
     BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a11) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_11
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -1172,6 +1213,7 @@ let mk_tactic_nbe_interpretation_11
     (e10:NBET.embedding 't10)
     (e11:NBET.embedding 't11)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -1189,12 +1231,13 @@ let mk_tactic_nbe_interpretation_11
     BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
     BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a12) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_12
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -1210,6 +1253,7 @@ let mk_tactic_nbe_interpretation_12
     (e11:NBET.embedding 't11)
     (e12:NBET.embedding 't12)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -1228,12 +1272,13 @@ let mk_tactic_nbe_interpretation_12
     BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
     BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a13) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_13
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -1250,6 +1295,7 @@ let mk_tactic_nbe_interpretation_13
     (e12:NBET.embedding 't12)
     (e13:NBET.embedding 't13)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -1269,12 +1315,13 @@ let mk_tactic_nbe_interpretation_13
     BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
     BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a14) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_14
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -1292,6 +1339,7 @@ let mk_tactic_nbe_interpretation_14
     (e13:NBET.embedding 't13)
     (e14:NBET.embedding 't14)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -1312,12 +1360,13 @@ let mk_tactic_nbe_interpretation_14
     BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
     BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a15) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_15
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -1336,6 +1385,7 @@ let mk_tactic_nbe_interpretation_15
     (e14:NBET.embedding 't14)
     (e15:NBET.embedding 't15)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -1357,12 +1407,13 @@ let mk_tactic_nbe_interpretation_15
     BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
     BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a16) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_16
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -1382,6 +1433,7 @@ let mk_tactic_nbe_interpretation_16
     (e15:NBET.embedding 't15)
     (e16:NBET.embedding 't16)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -1404,12 +1456,13 @@ let mk_tactic_nbe_interpretation_16
     BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
     BU.bind_opt (NBET.unembed e16 cb a16) (fun a16 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a17) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_17
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -1430,6 +1483,7 @@ let mk_tactic_nbe_interpretation_17
     (e16:NBET.embedding 't16)
     (e17:NBET.embedding 't17)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -1453,12 +1507,13 @@ let mk_tactic_nbe_interpretation_17
     BU.bind_opt (NBET.unembed e16 cb a16) (fun a16 ->
     BU.bind_opt (NBET.unembed e17 cb a17) (fun a17 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a18) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))))))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_18
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -1480,6 +1535,7 @@ let mk_tactic_nbe_interpretation_18
     (e17:NBET.embedding 't17)
     (e18:NBET.embedding 't18)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -1504,12 +1560,13 @@ let mk_tactic_nbe_interpretation_18
     BU.bind_opt (NBET.unembed e17 cb a17) (fun a17 ->
     BU.bind_opt (NBET.unembed e18 cb a18) (fun a18 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a19) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))))))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_19
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -1532,6 +1589,7 @@ let mk_tactic_nbe_interpretation_19
     (e18:NBET.embedding 't18)
     (e19:NBET.embedding 't19)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -1557,12 +1615,13 @@ let mk_tactic_nbe_interpretation_19
     BU.bind_opt (NBET.unembed e18 cb a18) (fun a18 ->
     BU.bind_opt (NBET.unembed e19 cb a19) (fun a19 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a20) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))))))))))))
   | _ ->
     None
 
 let mk_tactic_nbe_interpretation_20
+    (name : string)
     cb
     (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 't20 -> tac 'r)
     (e1:NBET.embedding 't1)
@@ -1586,6 +1645,7 @@ let mk_tactic_nbe_interpretation_20
     (e19:NBET.embedding 't19)
     (e20:NBET.embedding 't20)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -1612,35 +1672,39 @@ let mk_tactic_nbe_interpretation_20
     BU.bind_opt (NBET.unembed e19 cb a19) (fun a19 ->
     BU.bind_opt (NBET.unembed e20 cb a20) (fun a20 ->
     BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a21) (fun ps ->
-    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20) ps in
+    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20) ps) in
     Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))))))))))))
   | _ ->
     None
 
 let mk_total_interpretation_1
+    (name : string)
     (f : 't1 -> 'r)
     (e1:embedding 't1)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
   match args with
   | [(a1, _)] ->
     BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
-    let r = f a1 in
-    Some (embed er (Cfg.psc_range psc) r ncb))
+    let r = interp_ctx name (fun () -> f a1) in
+    Some (embed er (PO.psc_range psc) r ncb))
   | _ ->
     None
 
 let mk_total_interpretation_2
+    (name : string)
     (f : 't1 -> 't2 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -1648,19 +1712,21 @@ let mk_total_interpretation_2
   | [(a1, _); (a2, _)] ->
     BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
     BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
-    let r = f a1 a2 in
-    Some (embed er (Cfg.psc_range psc) r ncb)))
+    let r = interp_ctx name (fun () -> f a1 a2) in
+    Some (embed er (PO.psc_range psc) r ncb)))
   | _ ->
     None
 
 let mk_total_interpretation_3
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
     (e3:embedding 't3)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -1669,20 +1735,22 @@ let mk_total_interpretation_3
     BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
     BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
     BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
-    let r = f a1 a2 a3 in
-    Some (embed er (Cfg.psc_range psc) r ncb))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3) in
+    Some (embed er (PO.psc_range psc) r ncb))))
   | _ ->
     None
 
 let mk_total_interpretation_4
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
     (e3:embedding 't3)
     (e4:embedding 't4)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -1692,12 +1760,13 @@ let mk_total_interpretation_4
     BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
     BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
     BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
-    let r = f a1 a2 a3 a4 in
-    Some (embed er (Cfg.psc_range psc) r ncb)))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4) in
+    Some (embed er (PO.psc_range psc) r ncb)))))
   | _ ->
     None
 
 let mk_total_interpretation_5
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -1705,8 +1774,9 @@ let mk_total_interpretation_5
     (e4:embedding 't4)
     (e5:embedding 't5)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -1717,12 +1787,13 @@ let mk_total_interpretation_5
     BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
     BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
     BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
-    let r = f a1 a2 a3 a4 a5 in
-    Some (embed er (Cfg.psc_range psc) r ncb))))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5) in
+    Some (embed er (PO.psc_range psc) r ncb))))))
   | _ ->
     None
 
 let mk_total_interpretation_6
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -1731,8 +1802,9 @@ let mk_total_interpretation_6
     (e5:embedding 't5)
     (e6:embedding 't6)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -1744,12 +1816,13 @@ let mk_total_interpretation_6
     BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
     BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
     BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
-    let r = f a1 a2 a3 a4 a5 a6 in
-    Some (embed er (Cfg.psc_range psc) r ncb)))))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6) in
+    Some (embed er (PO.psc_range psc) r ncb)))))))
   | _ ->
     None
 
 let mk_total_interpretation_7
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -1759,8 +1832,9 @@ let mk_total_interpretation_7
     (e6:embedding 't6)
     (e7:embedding 't7)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -1773,12 +1847,13 @@ let mk_total_interpretation_7
     BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
     BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
     BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 in
-    Some (embed er (Cfg.psc_range psc) r ncb))))))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7) in
+    Some (embed er (PO.psc_range psc) r ncb))))))))
   | _ ->
     None
 
 let mk_total_interpretation_8
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -1789,8 +1864,9 @@ let mk_total_interpretation_8
     (e7:embedding 't7)
     (e8:embedding 't8)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -1804,12 +1880,13 @@ let mk_total_interpretation_8
     BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
     BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
     BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 in
-    Some (embed er (Cfg.psc_range psc) r ncb)))))))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8) in
+    Some (embed er (PO.psc_range psc) r ncb)))))))))
   | _ ->
     None
 
 let mk_total_interpretation_9
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -1821,8 +1898,9 @@ let mk_total_interpretation_9
     (e8:embedding 't8)
     (e9:embedding 't9)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -1837,12 +1915,13 @@ let mk_total_interpretation_9
     BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
     BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
     BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 in
-    Some (embed er (Cfg.psc_range psc) r ncb))))))))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9) in
+    Some (embed er (PO.psc_range psc) r ncb))))))))))
   | _ ->
     None
 
 let mk_total_interpretation_10
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -1855,8 +1934,9 @@ let mk_total_interpretation_10
     (e9:embedding 't9)
     (e10:embedding 't10)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -1872,12 +1952,13 @@ let mk_total_interpretation_10
     BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
     BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
     BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 in
-    Some (embed er (Cfg.psc_range psc) r ncb)))))))))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10) in
+    Some (embed er (PO.psc_range psc) r ncb)))))))))))
   | _ ->
     None
 
 let mk_total_interpretation_11
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -1891,8 +1972,9 @@ let mk_total_interpretation_11
     (e10:embedding 't10)
     (e11:embedding 't11)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -1909,12 +1991,13 @@ let mk_total_interpretation_11
     BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
     BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
     BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 in
-    Some (embed er (Cfg.psc_range psc) r ncb))))))))))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11) in
+    Some (embed er (PO.psc_range psc) r ncb))))))))))))
   | _ ->
     None
 
 let mk_total_interpretation_12
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -1929,8 +2012,9 @@ let mk_total_interpretation_12
     (e11:embedding 't11)
     (e12:embedding 't12)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -1948,12 +2032,13 @@ let mk_total_interpretation_12
     BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
     BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
     BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 in
-    Some (embed er (Cfg.psc_range psc) r ncb)))))))))))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12) in
+    Some (embed er (PO.psc_range psc) r ncb)))))))))))))
   | _ ->
     None
 
 let mk_total_interpretation_13
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -1969,8 +2054,9 @@ let mk_total_interpretation_13
     (e12:embedding 't12)
     (e13:embedding 't13)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -1989,12 +2075,13 @@ let mk_total_interpretation_13
     BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
     BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
     BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 in
-    Some (embed er (Cfg.psc_range psc) r ncb))))))))))))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13) in
+    Some (embed er (PO.psc_range psc) r ncb))))))))))))))
   | _ ->
     None
 
 let mk_total_interpretation_14
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -2011,8 +2098,9 @@ let mk_total_interpretation_14
     (e13:embedding 't13)
     (e14:embedding 't14)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -2032,12 +2120,13 @@ let mk_total_interpretation_14
     BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
     BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
     BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 in
-    Some (embed er (Cfg.psc_range psc) r ncb)))))))))))))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) in
+    Some (embed er (PO.psc_range psc) r ncb)))))))))))))))
   | _ ->
     None
 
 let mk_total_interpretation_15
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -2055,8 +2144,9 @@ let mk_total_interpretation_15
     (e14:embedding 't14)
     (e15:embedding 't15)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -2077,12 +2167,13 @@ let mk_total_interpretation_15
     BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
     BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
     BU.bind_opt (unembed e15 a15 ncb) (fun a15 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 in
-    Some (embed er (Cfg.psc_range psc) r ncb))))))))))))))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15) in
+    Some (embed er (PO.psc_range psc) r ncb))))))))))))))))
   | _ ->
     None
 
 let mk_total_interpretation_16
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -2101,8 +2192,9 @@ let mk_total_interpretation_16
     (e15:embedding 't15)
     (e16:embedding 't16)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -2124,12 +2216,13 @@ let mk_total_interpretation_16
     BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
     BU.bind_opt (unembed e15 a15 ncb) (fun a15 ->
     BU.bind_opt (unembed e16 a16 ncb) (fun a16 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 in
-    Some (embed er (Cfg.psc_range psc) r ncb)))))))))))))))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16) in
+    Some (embed er (PO.psc_range psc) r ncb)))))))))))))))))
   | _ ->
     None
 
 let mk_total_interpretation_17
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -2149,8 +2242,9 @@ let mk_total_interpretation_17
     (e16:embedding 't16)
     (e17:embedding 't17)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -2173,12 +2267,13 @@ let mk_total_interpretation_17
     BU.bind_opt (unembed e15 a15 ncb) (fun a15 ->
     BU.bind_opt (unembed e16 a16 ncb) (fun a16 ->
     BU.bind_opt (unembed e17 a17 ncb) (fun a17 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 in
-    Some (embed er (Cfg.psc_range psc) r ncb))))))))))))))))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17) in
+    Some (embed er (PO.psc_range psc) r ncb))))))))))))))))))
   | _ ->
     None
 
 let mk_total_interpretation_18
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -2199,8 +2294,9 @@ let mk_total_interpretation_18
     (e17:embedding 't17)
     (e18:embedding 't18)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -2224,12 +2320,13 @@ let mk_total_interpretation_18
     BU.bind_opt (unembed e16 a16 ncb) (fun a16 ->
     BU.bind_opt (unembed e17 a17 ncb) (fun a17 ->
     BU.bind_opt (unembed e18 a18 ncb) (fun a18 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 in
-    Some (embed er (Cfg.psc_range psc) r ncb)))))))))))))))))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18) in
+    Some (embed er (PO.psc_range psc) r ncb)))))))))))))))))))
   | _ ->
     None
 
 let mk_total_interpretation_19
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -2251,8 +2348,9 @@ let mk_total_interpretation_19
     (e18:embedding 't18)
     (e19:embedding 't19)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -2277,12 +2375,13 @@ let mk_total_interpretation_19
     BU.bind_opt (unembed e17 a17 ncb) (fun a17 ->
     BU.bind_opt (unembed e18 a18 ncb) (fun a18 ->
     BU.bind_opt (unembed e19 a19 ncb) (fun a19 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 in
-    Some (embed er (Cfg.psc_range psc) r ncb))))))))))))))))))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19) in
+    Some (embed er (PO.psc_range psc) r ncb))))))))))))))))))))
   | _ ->
     None
 
 let mk_total_interpretation_20
+    (name : string)
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 't20 -> 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
@@ -2305,8 +2404,9 @@ let mk_total_interpretation_20
     (e19:embedding 't19)
     (e20:embedding 't20)
     (er:embedding 'r)
-    (psc:Cfg.psc)
+    (psc:PO.psc)
     (ncb:norm_cb)
+    (us:universes)
     (args:args)
   : option term
   =
@@ -2332,33 +2432,37 @@ let mk_total_interpretation_20
     BU.bind_opt (unembed e18 a18 ncb) (fun a18 ->
     BU.bind_opt (unembed e19 a19 ncb) (fun a19 ->
     BU.bind_opt (unembed e20 a20 ncb) (fun a20 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 in
-    Some (embed er (Cfg.psc_range psc) r ncb)))))))))))))))))))))
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20) in
+    Some (embed er (PO.psc_range psc) r ncb)))))))))))))))))))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_1
+    (name : string)
     cb
     (f : 't1 -> 'r)
     (e1:NBET.embedding 't1)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
   match args with
   | [(a1, _)] ->
     BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
-    let r = f a1 in
+    let r = interp_ctx name (fun () -> f a1) in
     Some (NBET.embed er cb r))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_2
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 'r)
     (e1:NBET.embedding 't1)
     (e2:NBET.embedding 't2)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2366,18 +2470,20 @@ let mk_total_nbe_interpretation_2
   | [(a1, _); (a2, _)] ->
     BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
     BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
-    let r = f a1 a2 in
+    let r = interp_ctx name (fun () -> f a1 a2) in
     Some (NBET.embed er cb r)))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_3
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 'r)
     (e1:NBET.embedding 't1)
     (e2:NBET.embedding 't2)
     (e3:NBET.embedding 't3)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2386,12 +2492,13 @@ let mk_total_nbe_interpretation_3
     BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
     BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
     BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
-    let r = f a1 a2 a3 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3) in
     Some (NBET.embed er cb r))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_4
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 'r)
     (e1:NBET.embedding 't1)
@@ -2399,6 +2506,7 @@ let mk_total_nbe_interpretation_4
     (e3:NBET.embedding 't3)
     (e4:NBET.embedding 't4)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2408,12 +2516,13 @@ let mk_total_nbe_interpretation_4
     BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
     BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
     BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
-    let r = f a1 a2 a3 a4 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4) in
     Some (NBET.embed er cb r)))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_5
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 'r)
     (e1:NBET.embedding 't1)
@@ -2422,6 +2531,7 @@ let mk_total_nbe_interpretation_5
     (e4:NBET.embedding 't4)
     (e5:NBET.embedding 't5)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2432,12 +2542,13 @@ let mk_total_nbe_interpretation_5
     BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
     BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
     BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
-    let r = f a1 a2 a3 a4 a5 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5) in
     Some (NBET.embed er cb r))))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_6
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 'r)
     (e1:NBET.embedding 't1)
@@ -2447,6 +2558,7 @@ let mk_total_nbe_interpretation_6
     (e5:NBET.embedding 't5)
     (e6:NBET.embedding 't6)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2458,12 +2570,13 @@ let mk_total_nbe_interpretation_6
     BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
     BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
     BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
-    let r = f a1 a2 a3 a4 a5 a6 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6) in
     Some (NBET.embed er cb r)))))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_7
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 'r)
     (e1:NBET.embedding 't1)
@@ -2474,6 +2587,7 @@ let mk_total_nbe_interpretation_7
     (e6:NBET.embedding 't6)
     (e7:NBET.embedding 't7)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2486,12 +2600,13 @@ let mk_total_nbe_interpretation_7
     BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
     BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
     BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7) in
     Some (NBET.embed er cb r))))))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_8
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 'r)
     (e1:NBET.embedding 't1)
@@ -2503,6 +2618,7 @@ let mk_total_nbe_interpretation_8
     (e7:NBET.embedding 't7)
     (e8:NBET.embedding 't8)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2516,12 +2632,13 @@ let mk_total_nbe_interpretation_8
     BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
     BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
     BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8) in
     Some (NBET.embed er cb r)))))))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_9
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 'r)
     (e1:NBET.embedding 't1)
@@ -2534,6 +2651,7 @@ let mk_total_nbe_interpretation_9
     (e8:NBET.embedding 't8)
     (e9:NBET.embedding 't9)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2548,12 +2666,13 @@ let mk_total_nbe_interpretation_9
     BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
     BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
     BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9) in
     Some (NBET.embed er cb r))))))))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_10
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 'r)
     (e1:NBET.embedding 't1)
@@ -2567,6 +2686,7 @@ let mk_total_nbe_interpretation_10
     (e9:NBET.embedding 't9)
     (e10:NBET.embedding 't10)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2582,12 +2702,13 @@ let mk_total_nbe_interpretation_10
     BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
     BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
     BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10) in
     Some (NBET.embed er cb r)))))))))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_11
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 'r)
     (e1:NBET.embedding 't1)
@@ -2602,6 +2723,7 @@ let mk_total_nbe_interpretation_11
     (e10:NBET.embedding 't10)
     (e11:NBET.embedding 't11)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2618,12 +2740,13 @@ let mk_total_nbe_interpretation_11
     BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
     BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
     BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11) in
     Some (NBET.embed er cb r))))))))))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_12
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 'r)
     (e1:NBET.embedding 't1)
@@ -2639,6 +2762,7 @@ let mk_total_nbe_interpretation_12
     (e11:NBET.embedding 't11)
     (e12:NBET.embedding 't12)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2656,12 +2780,13 @@ let mk_total_nbe_interpretation_12
     BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
     BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
     BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12) in
     Some (NBET.embed er cb r)))))))))))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_13
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 'r)
     (e1:NBET.embedding 't1)
@@ -2678,6 +2803,7 @@ let mk_total_nbe_interpretation_13
     (e12:NBET.embedding 't12)
     (e13:NBET.embedding 't13)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2696,12 +2822,13 @@ let mk_total_nbe_interpretation_13
     BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
     BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
     BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13) in
     Some (NBET.embed er cb r))))))))))))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_14
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 'r)
     (e1:NBET.embedding 't1)
@@ -2719,6 +2846,7 @@ let mk_total_nbe_interpretation_14
     (e13:NBET.embedding 't13)
     (e14:NBET.embedding 't14)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2738,12 +2866,13 @@ let mk_total_nbe_interpretation_14
     BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
     BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
     BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) in
     Some (NBET.embed er cb r)))))))))))))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_15
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 'r)
     (e1:NBET.embedding 't1)
@@ -2762,6 +2891,7 @@ let mk_total_nbe_interpretation_15
     (e14:NBET.embedding 't14)
     (e15:NBET.embedding 't15)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2782,12 +2912,13 @@ let mk_total_nbe_interpretation_15
     BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
     BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
     BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15) in
     Some (NBET.embed er cb r))))))))))))))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_16
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 'r)
     (e1:NBET.embedding 't1)
@@ -2807,6 +2938,7 @@ let mk_total_nbe_interpretation_16
     (e15:NBET.embedding 't15)
     (e16:NBET.embedding 't16)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2828,12 +2960,13 @@ let mk_total_nbe_interpretation_16
     BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
     BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
     BU.bind_opt (NBET.unembed e16 cb a16) (fun a16 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16) in
     Some (NBET.embed er cb r)))))))))))))))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_17
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 'r)
     (e1:NBET.embedding 't1)
@@ -2854,6 +2987,7 @@ let mk_total_nbe_interpretation_17
     (e16:NBET.embedding 't16)
     (e17:NBET.embedding 't17)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2876,12 +3010,13 @@ let mk_total_nbe_interpretation_17
     BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
     BU.bind_opt (NBET.unembed e16 cb a16) (fun a16 ->
     BU.bind_opt (NBET.unembed e17 cb a17) (fun a17 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17) in
     Some (NBET.embed er cb r))))))))))))))))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_18
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 'r)
     (e1:NBET.embedding 't1)
@@ -2903,6 +3038,7 @@ let mk_total_nbe_interpretation_18
     (e17:NBET.embedding 't17)
     (e18:NBET.embedding 't18)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2926,12 +3062,13 @@ let mk_total_nbe_interpretation_18
     BU.bind_opt (NBET.unembed e16 cb a16) (fun a16 ->
     BU.bind_opt (NBET.unembed e17 cb a17) (fun a17 ->
     BU.bind_opt (NBET.unembed e18 cb a18) (fun a18 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18) in
     Some (NBET.embed er cb r)))))))))))))))))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_19
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 'r)
     (e1:NBET.embedding 't1)
@@ -2954,6 +3091,7 @@ let mk_total_nbe_interpretation_19
     (e18:NBET.embedding 't18)
     (e19:NBET.embedding 't19)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -2978,12 +3116,13 @@ let mk_total_nbe_interpretation_19
     BU.bind_opt (NBET.unembed e17 cb a17) (fun a17 ->
     BU.bind_opt (NBET.unembed e18 cb a18) (fun a18 ->
     BU.bind_opt (NBET.unembed e19 cb a19) (fun a19 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19) in
     Some (NBET.embed er cb r))))))))))))))))))))
   | _ ->
     None
 
 let mk_total_nbe_interpretation_20
+    (name : string)
     cb
     (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 't20 -> 'r)
     (e1:NBET.embedding 't1)
@@ -3007,6 +3146,7 @@ let mk_total_nbe_interpretation_20
     (e19:NBET.embedding 't19)
     (e20:NBET.embedding 't20)
     (er:NBET.embedding 'r)
+    (us:universes)
     (args:NBET.args)
   : option NBET.t
   =
@@ -3032,1368 +3172,7 @@ let mk_total_nbe_interpretation_20
     BU.bind_opt (NBET.unembed e18 cb a18) (fun a18 ->
     BU.bind_opt (NBET.unembed e19 cb a19) (fun a19 ->
     BU.bind_opt (NBET.unembed e20 cb a20) (fun a20 ->
-    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 in
+    let r = interp_ctx name (fun () -> f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20) in
     Some (NBET.embed er cb r)))))))))))))))))))))
   | _ ->
     None
-
-let mk_tac_step_1
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> tac 'r)
-  (e1:embedding 't1)
-  (er:embedding 'r)
-  (nt : 'nt1 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 2 nunivs
-      (mk_tactic_interpretation_1 t e1 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_1 cb nt ne1 ner (drop nunivs args))
-
-let mk_tac_step_2
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 3 nunivs
-      (mk_tactic_interpretation_2 t e1 e2 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_2 cb nt ne1 ne2 ner (drop nunivs args))
-
-let mk_tac_step_3
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 4 nunivs
-      (mk_tactic_interpretation_3 t e1 e2 e3 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_3 cb nt ne1 ne2 ne3 ner (drop nunivs args))
-
-let mk_tac_step_4
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 5 nunivs
-      (mk_tactic_interpretation_4 t e1 e2 e3 e4 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_4 cb nt ne1 ne2 ne3 ne4 ner (drop nunivs args))
-
-let mk_tac_step_5
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 6 nunivs
-      (mk_tactic_interpretation_5 t e1 e2 e3 e4 e5 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_5 cb nt ne1 ne2 ne3 ne4 ne5 ner (drop nunivs args))
-
-let mk_tac_step_6
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 7 nunivs
-      (mk_tactic_interpretation_6 t e1 e2 e3 e4 e5 e6 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_6 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ner (drop nunivs args))
-
-let mk_tac_step_7
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 8 nunivs
-      (mk_tactic_interpretation_7 t e1 e2 e3 e4 e5 e6 e7 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_7 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ner (drop nunivs args))
-
-let mk_tac_step_8
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 9 nunivs
-      (mk_tactic_interpretation_8 t e1 e2 e3 e4 e5 e6 e7 e8 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_8 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ner (drop nunivs args))
-
-let mk_tac_step_9
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 10 nunivs
-      (mk_tactic_interpretation_9 t e1 e2 e3 e4 e5 e6 e7 e8 e9 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_9 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ner (drop nunivs args))
-
-let mk_tac_step_10
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 11 nunivs
-      (mk_tactic_interpretation_10 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_10 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ner (drop nunivs args))
-
-let mk_tac_step_11
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 12 nunivs
-      (mk_tactic_interpretation_11 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_11 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ner (drop nunivs args))
-
-let mk_tac_step_12
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 13 nunivs
-      (mk_tactic_interpretation_12 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_12 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ner (drop nunivs args))
-
-let mk_tac_step_13
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (e13:embedding 't13)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ne13:NBET.embedding 'nt13)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 14 nunivs
-      (mk_tactic_interpretation_13 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_13 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ner (drop nunivs args))
-
-let mk_tac_step_14
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (e13:embedding 't13)
-  (e14:embedding 't14)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ne13:NBET.embedding 'nt13)
-  (ne14:NBET.embedding 'nt14)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 15 nunivs
-      (mk_tactic_interpretation_14 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_14 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ner (drop nunivs args))
-
-let mk_tac_step_15
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (e13:embedding 't13)
-  (e14:embedding 't14)
-  (e15:embedding 't15)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ne13:NBET.embedding 'nt13)
-  (ne14:NBET.embedding 'nt14)
-  (ne15:NBET.embedding 'nt15)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 16 nunivs
-      (mk_tactic_interpretation_15 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_15 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ner (drop nunivs args))
-
-let mk_tac_step_16
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (e13:embedding 't13)
-  (e14:embedding 't14)
-  (e15:embedding 't15)
-  (e16:embedding 't16)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ne13:NBET.embedding 'nt13)
-  (ne14:NBET.embedding 'nt14)
-  (ne15:NBET.embedding 'nt15)
-  (ne16:NBET.embedding 'nt16)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 17 nunivs
-      (mk_tactic_interpretation_16 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_16 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ner (drop nunivs args))
-
-let mk_tac_step_17
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (e13:embedding 't13)
-  (e14:embedding 't14)
-  (e15:embedding 't15)
-  (e16:embedding 't16)
-  (e17:embedding 't17)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nt17 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ne13:NBET.embedding 'nt13)
-  (ne14:NBET.embedding 'nt14)
-  (ne15:NBET.embedding 'nt15)
-  (ne16:NBET.embedding 'nt16)
-  (ne17:NBET.embedding 'nt17)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 18 nunivs
-      (mk_tactic_interpretation_17 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_17 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ner (drop nunivs args))
-
-let mk_tac_step_18
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (e13:embedding 't13)
-  (e14:embedding 't14)
-  (e15:embedding 't15)
-  (e16:embedding 't16)
-  (e17:embedding 't17)
-  (e18:embedding 't18)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nt17 -> 'nt18 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ne13:NBET.embedding 'nt13)
-  (ne14:NBET.embedding 'nt14)
-  (ne15:NBET.embedding 'nt15)
-  (ne16:NBET.embedding 'nt16)
-  (ne17:NBET.embedding 'nt17)
-  (ne18:NBET.embedding 'nt18)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 19 nunivs
-      (mk_tactic_interpretation_18 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 e18 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_18 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ne18 ner (drop nunivs args))
-
-let mk_tac_step_19
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (e13:embedding 't13)
-  (e14:embedding 't14)
-  (e15:embedding 't15)
-  (e16:embedding 't16)
-  (e17:embedding 't17)
-  (e18:embedding 't18)
-  (e19:embedding 't19)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nt17 -> 'nt18 -> 'nt19 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ne13:NBET.embedding 'nt13)
-  (ne14:NBET.embedding 'nt14)
-  (ne15:NBET.embedding 'nt15)
-  (ne16:NBET.embedding 'nt16)
-  (ne17:NBET.embedding 'nt17)
-  (ne18:NBET.embedding 'nt18)
-  (ne19:NBET.embedding 'nt19)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 20 nunivs
-      (mk_tactic_interpretation_19 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 e18 e19 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_19 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ne18 ne19 ner (drop nunivs args))
-
-let mk_tac_step_20
-  (nunivs:int)
-  (name:string)
-  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 't20 -> tac 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (e13:embedding 't13)
-  (e14:embedding 't14)
-  (e15:embedding 't15)
-  (e16:embedding 't16)
-  (e17:embedding 't17)
-  (e18:embedding 't18)
-  (e19:embedding 't19)
-  (e20:embedding 't20)
-  (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nt17 -> 'nt18 -> 'nt19 -> 'nt20 -> tac 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ne13:NBET.embedding 'nt13)
-  (ne14:NBET.embedding 'nt14)
-  (ne15:NBET.embedding 'nt15)
-  (ne16:NBET.embedding 'nt16)
-  (ne17:NBET.embedding 'nt17)
-  (ne18:NBET.embedding 'nt18)
-  (ne19:NBET.embedding 'nt19)
-  (ne20:NBET.embedding 'nt20)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 21 nunivs
-      (mk_tactic_interpretation_20 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 e18 e19 e20 er)
-      (fun cb args -> mk_tactic_nbe_interpretation_20 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ne18 ne19 ne20 ner (drop nunivs args))
-
-let mk_total_step_1
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 'r)
-  (e1:embedding 't1)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 1 nunivs
-      (mk_total_interpretation_1 f e1 er)
-      (fun cb args -> mk_total_nbe_interpretation_1 cb nf ne1 ner (drop nunivs args))
-
-let mk_total_step_2
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 2 nunivs
-      (mk_total_interpretation_2 f e1 e2 er)
-      (fun cb args -> mk_total_nbe_interpretation_2 cb nf ne1 ne2 ner (drop nunivs args))
-
-let mk_total_step_3
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 3 nunivs
-      (mk_total_interpretation_3 f e1 e2 e3 er)
-      (fun cb args -> mk_total_nbe_interpretation_3 cb nf ne1 ne2 ne3 ner (drop nunivs args))
-
-let mk_total_step_4
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 4 nunivs
-      (mk_total_interpretation_4 f e1 e2 e3 e4 er)
-      (fun cb args -> mk_total_nbe_interpretation_4 cb nf ne1 ne2 ne3 ne4 ner (drop nunivs args))
-
-let mk_total_step_5
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 5 nunivs
-      (mk_total_interpretation_5 f e1 e2 e3 e4 e5 er)
-      (fun cb args -> mk_total_nbe_interpretation_5 cb nf ne1 ne2 ne3 ne4 ne5 ner (drop nunivs args))
-
-let mk_total_step_6
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 6 nunivs
-      (mk_total_interpretation_6 f e1 e2 e3 e4 e5 e6 er)
-      (fun cb args -> mk_total_nbe_interpretation_6 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ner (drop nunivs args))
-
-let mk_total_step_7
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 7 nunivs
-      (mk_total_interpretation_7 f e1 e2 e3 e4 e5 e6 e7 er)
-      (fun cb args -> mk_total_nbe_interpretation_7 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ner (drop nunivs args))
-
-let mk_total_step_8
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 8 nunivs
-      (mk_total_interpretation_8 f e1 e2 e3 e4 e5 e6 e7 e8 er)
-      (fun cb args -> mk_total_nbe_interpretation_8 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ner (drop nunivs args))
-
-let mk_total_step_9
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 9 nunivs
-      (mk_total_interpretation_9 f e1 e2 e3 e4 e5 e6 e7 e8 e9 er)
-      (fun cb args -> mk_total_nbe_interpretation_9 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ner (drop nunivs args))
-
-let mk_total_step_10
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 10 nunivs
-      (mk_total_interpretation_10 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 er)
-      (fun cb args -> mk_total_nbe_interpretation_10 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ner (drop nunivs args))
-
-let mk_total_step_11
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 11 nunivs
-      (mk_total_interpretation_11 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 er)
-      (fun cb args -> mk_total_nbe_interpretation_11 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ner (drop nunivs args))
-
-let mk_total_step_12
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 12 nunivs
-      (mk_total_interpretation_12 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 er)
-      (fun cb args -> mk_total_nbe_interpretation_12 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ner (drop nunivs args))
-
-let mk_total_step_13
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (e13:embedding 't13)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ne13:NBET.embedding 'nt13)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 13 nunivs
-      (mk_total_interpretation_13 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 er)
-      (fun cb args -> mk_total_nbe_interpretation_13 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ner (drop nunivs args))
-
-let mk_total_step_14
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (e13:embedding 't13)
-  (e14:embedding 't14)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ne13:NBET.embedding 'nt13)
-  (ne14:NBET.embedding 'nt14)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 14 nunivs
-      (mk_total_interpretation_14 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 er)
-      (fun cb args -> mk_total_nbe_interpretation_14 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ner (drop nunivs args))
-
-let mk_total_step_15
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (e13:embedding 't13)
-  (e14:embedding 't14)
-  (e15:embedding 't15)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ne13:NBET.embedding 'nt13)
-  (ne14:NBET.embedding 'nt14)
-  (ne15:NBET.embedding 'nt15)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 15 nunivs
-      (mk_total_interpretation_15 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 er)
-      (fun cb args -> mk_total_nbe_interpretation_15 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ner (drop nunivs args))
-
-let mk_total_step_16
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (e13:embedding 't13)
-  (e14:embedding 't14)
-  (e15:embedding 't15)
-  (e16:embedding 't16)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ne13:NBET.embedding 'nt13)
-  (ne14:NBET.embedding 'nt14)
-  (ne15:NBET.embedding 'nt15)
-  (ne16:NBET.embedding 'nt16)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 16 nunivs
-      (mk_total_interpretation_16 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 er)
-      (fun cb args -> mk_total_nbe_interpretation_16 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ner (drop nunivs args))
-
-let mk_total_step_17
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (e13:embedding 't13)
-  (e14:embedding 't14)
-  (e15:embedding 't15)
-  (e16:embedding 't16)
-  (e17:embedding 't17)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nt17 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ne13:NBET.embedding 'nt13)
-  (ne14:NBET.embedding 'nt14)
-  (ne15:NBET.embedding 'nt15)
-  (ne16:NBET.embedding 'nt16)
-  (ne17:NBET.embedding 'nt17)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 17 nunivs
-      (mk_total_interpretation_17 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 er)
-      (fun cb args -> mk_total_nbe_interpretation_17 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ner (drop nunivs args))
-
-let mk_total_step_18
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (e13:embedding 't13)
-  (e14:embedding 't14)
-  (e15:embedding 't15)
-  (e16:embedding 't16)
-  (e17:embedding 't17)
-  (e18:embedding 't18)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nt17 -> 'nt18 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ne13:NBET.embedding 'nt13)
-  (ne14:NBET.embedding 'nt14)
-  (ne15:NBET.embedding 'nt15)
-  (ne16:NBET.embedding 'nt16)
-  (ne17:NBET.embedding 'nt17)
-  (ne18:NBET.embedding 'nt18)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 18 nunivs
-      (mk_total_interpretation_18 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 e18 er)
-      (fun cb args -> mk_total_nbe_interpretation_18 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ne18 ner (drop nunivs args))
-
-let mk_total_step_19
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (e13:embedding 't13)
-  (e14:embedding 't14)
-  (e15:embedding 't15)
-  (e16:embedding 't16)
-  (e17:embedding 't17)
-  (e18:embedding 't18)
-  (e19:embedding 't19)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nt17 -> 'nt18 -> 'nt19 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ne13:NBET.embedding 'nt13)
-  (ne14:NBET.embedding 'nt14)
-  (ne15:NBET.embedding 'nt15)
-  (ne16:NBET.embedding 'nt16)
-  (ne17:NBET.embedding 'nt17)
-  (ne18:NBET.embedding 'nt18)
-  (ne19:NBET.embedding 'nt19)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 19 nunivs
-      (mk_total_interpretation_19 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 e18 e19 er)
-      (fun cb args -> mk_total_nbe_interpretation_19 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ne18 ne19 ner (drop nunivs args))
-
-let mk_total_step_20
-  (nunivs:int)
-  (name:string)
-  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 't20 -> 'r)
-  (e1:embedding 't1)
-  (e2:embedding 't2)
-  (e3:embedding 't3)
-  (e4:embedding 't4)
-  (e5:embedding 't5)
-  (e6:embedding 't6)
-  (e7:embedding 't7)
-  (e8:embedding 't8)
-  (e9:embedding 't9)
-  (e10:embedding 't10)
-  (e11:embedding 't11)
-  (e12:embedding 't12)
-  (e13:embedding 't13)
-  (e14:embedding 't14)
-  (e15:embedding 't15)
-  (e16:embedding 't16)
-  (e17:embedding 't17)
-  (e18:embedding 't18)
-  (e19:embedding 't19)
-  (e20:embedding 't20)
-  (er:embedding 'r)
-  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nt17 -> 'nt18 -> 'nt19 -> 'nt20 -> 'nr)
-  (ne1:NBET.embedding 'nt1)
-  (ne2:NBET.embedding 'nt2)
-  (ne3:NBET.embedding 'nt3)
-  (ne4:NBET.embedding 'nt4)
-  (ne5:NBET.embedding 'nt5)
-  (ne6:NBET.embedding 'nt6)
-  (ne7:NBET.embedding 'nt7)
-  (ne8:NBET.embedding 'nt8)
-  (ne9:NBET.embedding 'nt9)
-  (ne10:NBET.embedding 'nt10)
-  (ne11:NBET.embedding 'nt11)
-  (ne12:NBET.embedding 'nt12)
-  (ne13:NBET.embedding 'nt13)
-  (ne14:NBET.embedding 'nt14)
-  (ne15:NBET.embedding 'nt15)
-  (ne16:NBET.embedding 'nt16)
-  (ne17:NBET.embedding 'nt17)
-  (ne18:NBET.embedding 'nt18)
-  (ne19:NBET.embedding 'nt19)
-  (ne20:NBET.embedding 'nt20)
-  (ner:NBET.embedding 'nr)
-  : Cfg.primitive_step
-  =
-    mk name 20 nunivs
-      (mk_total_interpretation_20 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 e18 e19 e20 er)
-      (fun cb args -> mk_total_nbe_interpretation_20 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ne18 ne19 ne20 ner (drop nunivs args))
-

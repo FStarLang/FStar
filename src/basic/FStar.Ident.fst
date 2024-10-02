@@ -6,12 +6,13 @@ open FStar.Compiler.Range
 open FStar.Compiler.List
 module List = FStar.Compiler.List
 module Util = FStar.Compiler.Util
+module GS = FStar.GenSym
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type ident = {idText:string;
               idRange:range}
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type lident = {ns:ipath; //["FStar"; "Basic"]
                ident:ident;    //"lident"
                nsstr:string; // Cached version of the namespace
@@ -22,17 +23,9 @@ let mk_ident (text,range) = {idText=text; idRange=range}
 let set_id_range r i = { i with idRange=r }
 
 let reserved_prefix = "uu___"
-let _gen =
-    let x = Util.mk_ref 0 in
-    let next_id () = let v = !x in x := v + 1; v in
-    let reset () = x := 0 in
-    next_id, reset
-
-let next_id () = fst _gen ()
-let reset_gensym () = snd _gen ()
 
 let gen' s r =
-    let i = next_id() in
+    let i = GS.next_id() in
     mk_ident (s ^ string_of_int i, r)
 
 let gen r = gen' reserved_prefix r
@@ -80,3 +73,26 @@ let qual_id lid id =
     set_lid_range (lid_of_ids (lid.ns @ [lid.ident;id])) (range_of_id id)
 
 let nsstr (l:lid) : string = l.nsstr
+
+instance showable_ident = {
+  show = string_of_id;
+}
+instance showable_lident = {
+  show = string_of_lid;
+}
+let pretty_ident = pretty_from_showable
+let pretty_lident = pretty_from_showable
+instance hasrange_ident = {
+  pos = range_of_id;
+  setPos = (fun rng id -> { id with idRange = rng });
+}
+instance hasrange_lident = {
+  pos = (fun lid -> Class.HasRange.pos lid.ident);
+  setPos = (fun rng id -> { id with ident = setPos rng id.ident });
+}
+instance deq_ident = {
+  (=?) = ident_equals;
+}
+instance deq_lident = {
+  (=?) = lid_equals;
+}

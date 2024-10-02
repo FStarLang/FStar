@@ -39,7 +39,7 @@ open FStar.MRef
 type index = nat    // counter values (no overflow detection yet)
 type state = string // the type of the enclave state; reset on crash.
 
-type record = index * state // the type of backup records protected by authenticated encryption
+type record = index & state // the type of backup records protected by authenticated encryption
 
 // A small ghost state machine we use to capture the intermediate steps in the protocol.
 type case = 

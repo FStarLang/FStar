@@ -23,7 +23,7 @@ let interp_seclevel (t: Type0) (s: seclevel) : GTot (nstype t) =
   | Low -> ns_delta
   | High -> ns_t
 
-type context = (l: list (var * seclevel) { List.Tot.noRepeats (List.Tot.map fst l) } )
+type context = (l: list (var & seclevel) { List.Tot.noRepeats (List.Tot.map fst l) } )
 
 let rec interp_context
   (gamma: context)

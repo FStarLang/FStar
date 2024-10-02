@@ -69,7 +69,7 @@ let read_subcomp_impl
 
 let lift_pure_read_impl
   a wp f_pure_spec_for_impl l
-=
+= FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
   fun _ -> Correct (f_pure_spec_for_impl ())
 
 let failwith_impl
@@ -242,7 +242,7 @@ let bind_impl
 
 inline_for_extraction
 let subcomp_impl
-  a r_in r_out pre post post_err pre' post' post_err' l l' f_subcomp_spec f_subcomp sq
+  a r_in r_out pre post post_err l r_in' r_out' pre' post' post_err' l' f_subcomp_spec f_subcomp sq
 : Tot (repr_impl a r_in r_out pre' post' post_err' l' (subcomp_spec a r_in r_out pre post post_err pre' post' post_err' f_subcomp_spec))
 = (fun b len pos -> f_subcomp b len pos)
 

@@ -1,6 +1,30 @@
 [
-  "ç**²ƒ%AÂŸ>‚ß’“ú\n",
+  "I‹°”\u0016øË¤•Š\u001a\u0011\rû\u00194",
   [
+    [
+      "MultiStage.tau1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
+        "constructor_distinct_FStar.Tactics.NamedView.Sg_Let",
+        "disc_equation_FStar.Tactics.NamedView.Unk",
+        "equation_FStar.Stubs.Reflection.Types.name",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_v"
+      ],
+      0,
+      "369b338a408db339293625ed9926adc6"
+    ],
     [
       "MultiStage.uu___6",
       1,
@@ -8,7 +32,32 @@
       1,
       [ "@query", "equation_MultiStage.test1" ],
       0,
-      "6f576c0893d3eedd1a382f334ee0ae82"
+      "0b9d5c3f9b60d5c2a1fdc59b1f3bdbd4"
+    ],
+    [
+      "MultiStage.tau2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
+        "constructor_distinct_FStar.Tactics.NamedView.Sg_Let",
+        "disc_equation_FStar.Tactics.NamedView.Unk",
+        "equation_FStar.Stubs.Reflection.Types.name",
+        "equation_FStar.Tactics.NamedView.term",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_v"
+      ],
+      0,
+      "b7f9b007103296ba4f5bc4fbe82bde4a"
     ],
     [
       "MultiStage.uu___15",
@@ -17,7 +66,32 @@
       1,
       [ "@query", "equation_MultiStage.test2" ],
       0,
-      "a0254a3feace04329ceabf4c3e9bfcd5"
+      "42f5052ea04504805fe5f2b7601b9fe7"
+    ],
+    [
+      "MultiStage.tau3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
+        "constructor_distinct_FStar.Tactics.NamedView.Sg_Let",
+        "disc_equation_FStar.Tactics.NamedView.Unk",
+        "equation_FStar.Stubs.Reflection.Types.name",
+        "equation_FStar.Tactics.NamedView.term",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_v"
+      ],
+      0,
+      "f7100ca47366d6161f10a54860fe3460"
     ],
     [
       "MultiStage.uu___24",
@@ -26,7 +100,32 @@
       1,
       [ "@query", "equation_MultiStage.test3" ],
       0,
-      "882874fbb060c7a2ddc6b8f6e2b3505e"
+      "b13eb6135c3ea74c52f226a4ee01c99d"
+    ],
+    [
+      "MultiStage.tau5",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
+        "constructor_distinct_FStar.Tactics.NamedView.Sg_Let",
+        "disc_equation_FStar.Tactics.NamedView.Unk",
+        "equation_FStar.Stubs.Reflection.Types.name",
+        "equation_FStar.Tactics.NamedView.term",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_v"
+      ],
+      0,
+      "647128f05dc61ab376aeb1837111e5c4"
     ],
     [
       "MultiStage.uu___35",
@@ -35,7 +134,7 @@
       1,
       [ "@query", "equation_MultiStage.test5" ],
       0,
-      "6b075653c5462dfca910568469edc9d7"
+      "79d3e92de6313dab630060b6a86f5c17"
     ]
   ]
 ]

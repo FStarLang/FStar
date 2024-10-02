@@ -24,6 +24,7 @@ module F = FStar.FunctionalExtensionality
 (*
  * AR: mark it must_erase_for_extraction temporarily until CMI comes in
  *)
+[@@erasable]
 let set a = F.restricted_t a (fun _ -> prop)
 
 let equal #_ s1 s2 = forall x. s1 x <==> s2 x
@@ -35,6 +36,7 @@ let singleton #a x     = F.on_dom a #(fun _ -> prop) (fun y -> y == x)
 let union #a s1 s2     = F.on_dom a #(fun _ -> prop) (fun x -> s1 x \/ s2 x)
 let intersect #a s1 s2 = F.on_dom a #(fun _ -> prop) (fun x -> s1 x /\ s2 x)
 let complement #a s    = F.on_dom a #(fun _ -> prop) (fun x -> ~ (s x))
+let intension #a f     = F.on_dom a #(fun _ -> prop) f
 
 let mem_empty      #_ _     = ()
 let mem_singleton  #_ _ _   = ()
@@ -43,6 +45,7 @@ let mem_intersect  #_ _ _ _ = ()
 let mem_complement #_ _ _   = ()
 let mem_subset     #_ _ _   = ()
 let subset_mem     #_ _ _   = ()
+let mem_intension  #_ _ _   = ()
 
 let lemma_equal_intro #_ _ _   = ()
 let lemma_equal_elim  #a s1 s2 = PredicateExtensionality.predicateExtensionality a s1 s2

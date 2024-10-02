@@ -20,8 +20,24 @@ open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.UEnv
+module S = FStar.Syntax.Syntax
 
 val iface : Type0
-val extract_iface: uenv -> modul -> uenv * iface
-val extract : uenv -> modul -> uenv * option mllib
 
+type extension_sigelt_extractor =
+  uenv -> sigelt -> FStar.Dyn.dyn -> either mlmodule string
+type extension_sigelt_iface_extractor =
+  uenv -> sigelt -> FStar.Dyn.dyn -> either (uenv & iface) string
+
+type extension_extractor = {
+   extract_sigelt : extension_sigelt_extractor;
+   extract_sigelt_iface : extension_sigelt_iface_extractor;
+}
+
+val register_extension_extractor
+         (extension_name:string)
+         (extractor:extension_extractor)
+  : unit
+
+val extract_iface: uenv -> modul -> uenv & iface
+val extract : uenv -> modul -> uenv & option mllib

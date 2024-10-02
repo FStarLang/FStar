@@ -31,25 +31,32 @@ open FStar.Extraction.ML.Util
 open FStar.Syntax.Syntax
 open FStar.Errors
 
-module Code = FStar.Extraction.ML.Code
-module BU = FStar.Compiler.Util
-module S  = FStar.Syntax.Syntax
-module SS = FStar.Syntax.Subst
-module U  = FStar.Syntax.Util
-module N  = FStar.TypeChecker.Normalize
-module PC = FStar.Parser.Const
-module TcEnv = FStar.TypeChecker.Env
+module BU     = FStar.Compiler.Util
+module Code   = FStar.Extraction.ML.Code
+module EMB    = FStar.Syntax.Embeddings
+module Env    = FStar.TypeChecker.Env
+module N      = FStar.TypeChecker.Normalize
+module PC     = FStar.Parser.Const
+module RC     = FStar.Reflection.V2.Constants
+module RD     = FStar.Reflection.V2.Data
+module RE     = FStar.Reflection.V2.Embeddings
+module R      = FStar.Reflection.V2.Builtins
+module S      = FStar.Syntax.Syntax
+module SS     = FStar.Syntax.Subst
+module TcEnv  = FStar.TypeChecker.Env
 module TcTerm = FStar.TypeChecker.TcTerm
 module TcUtil = FStar.TypeChecker.Util
-module R  = FStar.Reflection.Basic
-module RD = FStar.Reflection.Data
-module EMB = FStar.Syntax.Embeddings
-module RE = FStar.Reflection.Embeddings
-module Env = FStar.TypeChecker.Env
+module U      = FStar.Syntax.Util
 
-module RC = FStar.Reflection.Constants
+let dbg_Extraction     = Debug.get_toggle "Extraction"
+let dbg_ExtractionNorm = Debug.get_toggle "ExtractionNorm"
 
 exception Un_extractable
+
+open FStar.Class.Show
+open FStar.Class.Tagged
+open FStar.Class.PP
+
 
 (*
   Below, "the thesis" refers to:
@@ -72,38 +79,39 @@ module Print = FStar.Syntax.Print
 (********************************************************************************************)
 (* Some basic error reporting; all are fatal errors at this stage                           *)
 (********************************************************************************************)
-let fail r err =
-    Errors.raise_error err r
-
-let err_ill_typed_application env (t : term) mlhead args (ty : mlty) =
-    fail t.pos
-      (Fatal_IllTyped,
-       BU.format4 "Ill-typed application: source application is %s \n translated prefix to %s at type %s\n remaining args are %s\n"
-                (Print.term_to_string t)
+let err_ill_typed_application env (t : term) mlhead (args : args) (ty : mlty) =
+    Errors.raise_error t Fatal_IllTyped
+       (BU.format4 "Ill-typed application: source application is %s \n translated prefix to %s at type %s\n remaining args are %s\n"
+                (show t)
                 (Code.string_of_mlexpr (current_module_of_uenv env) mlhead)
                 (Code.string_of_mlty (current_module_of_uenv env) ty)
-                (args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat " "))
+                (show args))
 
-let err_ill_typed_erasure env pos (ty : mlty) =
-    fail pos
-      (Fatal_IllTyped,
-       BU.format1 "Erased value found where a value of type %s was expected"
+let err_ill_typed_erasure env (pos:Range.range) (ty : mlty) =
+    Errors.raise_error pos Fatal_IllTyped
+       (BU.format1 "Erased value found where a value of type %s was expected"
                   (Code.string_of_mlty (current_module_of_uenv env) ty))
 
-let err_value_restriction t =
-    fail t.pos
-      (Fatal_ValueRestriction,
-       BU.format2 "Refusing to generalize because of the value restriction: (%s) %s"
-                    (Print.tag_of_term t) (Print.term_to_string t))
+let err_value_restriction (t:term) =
+    Errors.raise_error t Fatal_ValueRestriction
+       (BU.format2 "Refusing to generalize because of the value restriction: (%s) %s"
+                    (tag_of t) (show t))
 
-let err_unexpected_eff env t ty f0 f1 =
-    Errors.log_issue t.pos
-      (Warning_ExtractionUnexpectedEffect,
-       BU.format4 "for expression %s of type %s, Expected effect %s; got effect %s"
-                        (Print.term_to_string t)
-                        (Code.string_of_mlty (current_module_of_uenv env) ty)
-                        (eff_to_string f0)
-                        (eff_to_string f1))
+let err_unexpected_eff env (t:term) ty f0 f1 =
+    let open FStar.Errors.Msg in
+    let open FStar.Pprint in
+    Errors.log_issue t Warning_ExtractionUnexpectedEffect [
+        prefix 4 1 (text "For expression") (pp t) ^/^
+        prefix 4 1 (text "of type") (arbitrary_string (Code.string_of_mlty (current_module_of_uenv env) ty));
+        prefix 4 1 (text "Expected effect") (arbitrary_string (eff_to_string f0)) ^/^
+        prefix 4 1 (text "got effect") (arbitrary_string (eff_to_string f1))]
+
+let err_cannot_extract_effect (l:lident) (r:Range.range) (reason:string) (ctxt:string) =
+  Errors.raise_error r Errors.Fatal_UnexpectedEffect [
+    Errors.text <|
+     BU.format3 "Cannot extract effect %s because %s (when extracting %s)"
+       (string_of_lid l) reason ctxt
+  ]
 
 (***********************************************************************)
 (* Translating an effect lid to an e_tag = {E_PURE, E_ERASABLE, E_IMPURE} *)
@@ -147,49 +155,56 @@ let effect_as_etag =
              where PC.result_type is an arity
 
  *)
-let rec is_arity env t =
+let rec is_arity_aux tcenv t =
     let t = U.unmeta t in
     match (SS.compress t).n with
     | Tm_unknown
     | Tm_delayed _
     | Tm_ascribed _
-    | Tm_meta _ -> failwith "Impossible"
-    | Tm_lazy i -> is_arity env (U.unfold_lazy i)
+    | Tm_meta _ -> failwith (BU.format1 "Impossible: is_arity (%s)" (tag_of t))
+    | Tm_lazy i -> is_arity_aux tcenv (U.unfold_lazy i)
     | Tm_uvar _
     | Tm_constant _
     | Tm_name _
     | Tm_quoted _
     | Tm_bvar _ -> false
     | Tm_type _ -> true
-    | Tm_arrow(_, c) ->
-      is_arity env (FStar.Syntax.Util.comp_result c)
+    | Tm_arrow  {comp=c} ->
+      is_arity_aux tcenv (FStar.Syntax.Util.comp_result c)
     | Tm_fvar fv ->
       let topt =
         FStar.TypeChecker.Env.lookup_definition
           [Env.Unfold delta_constant]
-          (tcenv_of_uenv env)
+          tcenv
           fv.fv_name.v
       in
       begin
       match topt with
       | None -> false
-      | Some (_, t) -> is_arity env t
+      | Some (_, t) -> is_arity_aux tcenv t
       end
     | Tm_app _ ->
       let head, _ = U.head_and_args t in
-      is_arity env head
+      is_arity_aux tcenv head
     | Tm_uinst(head, _) ->
-      is_arity env head
-    | Tm_refine(x, _) ->
-      is_arity env x.sort
-    | Tm_abs(_, body, _)
-    | Tm_let(_, body) ->
-      is_arity env body
-    | Tm_match(_, _, branches, _) ->
+      is_arity_aux tcenv head
+    | Tm_refine {b=x} ->
+      is_arity_aux tcenv x.sort
+    | Tm_abs {body}
+    | Tm_let {body} ->
+      is_arity_aux tcenv body
+    | Tm_match {brs=branches} ->
       begin match branches with
-        | (_, _, e)::_ -> is_arity env e
+        | (_, _, e)::_ -> is_arity_aux tcenv e
         | _ -> false
       end
+
+let is_arity env t = is_arity_aux (tcenv_of_uenv env) t
+
+let push_tcenv_binders (u:uenv) (bs:binders) =
+  let tcenv = tcenv_of_uenv u in
+  let tcenv = TcEnv.push_binders tcenv bs in
+  set_tcenv u tcenv
 
 //is_type_aux env t:
 //     Determines whether or not t is a type
@@ -199,7 +214,7 @@ let rec is_type_aux env t =
     match t.n with
     | Tm_delayed _
     | Tm_unknown ->
-        failwith (BU.format1 "Impossible: %s" (Print.tag_of_term t))
+        failwith (BU.format1 "Impossible: %s" (tag_of t))
 
     | Tm_lazy i -> is_type_aux env (U.unfold_lazy i)
 
@@ -221,56 +236,101 @@ let rec is_type_aux env t =
       let t= U.ctx_uvar_typ u in
       is_arity env (SS.subst' s t)
 
-    | Tm_bvar ({sort=t})
-    | Tm_name ({sort=t}) ->
+    | Tm_bvar ({sort=t}) ->
       is_arity env t
 
-    | Tm_ascribed(t, _, _) ->
+    | Tm_name x -> (
+      let g = UEnv.tcenv_of_uenv env in
+      match try_lookup_bv g x with
+      | Some (t, _) ->
+        is_arity env t
+      | _ -> (
+        failwith (BU.format1 "Extraction: variable not found: %s" (tag_of t))
+      )
+    )
+
+    | Tm_ascribed {tm=t} ->
       is_type_aux env t
 
     | Tm_uinst(t, _) ->
       is_type_aux env t
 
-    | Tm_abs(bs, body, _) ->
-      let _, body = SS.open_term bs body in
+    | Tm_abs {bs; body} ->
+      let bs, body = SS.open_term bs body in
+      let env = push_tcenv_binders env bs in
       is_type_aux env body
 
-    | Tm_let((false, [lb]), body) ->
+    | Tm_let {lbs=(false, [lb]); body} ->
       let x = BU.left lb.lbname in
-      let _, body = SS.open_term [S.mk_binder x] body in
+      let bs, body = SS.open_term [S.mk_binder x] body in
+      let env = push_tcenv_binders env bs in
       is_type_aux env body
 
-    | Tm_let((_, lbs), body) ->
-      let _, body = SS.open_let_rec lbs body in
+    | Tm_let {lbs=(_, lbs); body} ->
+      let lbs, body = SS.open_let_rec lbs body in
+      let env = push_tcenv_binders env (List.map (fun lb -> S.mk_binder (BU.left lb.lbname)) lbs) in
       is_type_aux env body
 
-    | Tm_match(_, _, branches, _) ->
+    | Tm_match {brs=branches} ->
       begin match branches with
-        | b::_ ->
-          let _, _, e = SS.open_branch b in
-          is_type_aux env e
+        | b::_ -> (
+          let pat, _, e = SS.open_branch b in
+          match FStar.TypeChecker.PatternUtils.raw_pat_as_exp (tcenv_of_uenv env) pat with
+          | None -> false
+          | Some (_, bvs) ->
+            let binders = List.map (fun bv -> S.mk_binder bv) bvs in
+            let env = push_tcenv_binders env binders in
+            is_type_aux env e
+        )
         | _ -> false
       end
 
     | Tm_quoted _ -> false
 
-    | Tm_meta(t, _) ->
+    | Tm_meta {tm=t} ->
       is_type_aux env t
 
-    | Tm_app(head, _) ->
+    | Tm_app {hd=head} ->
       is_type_aux env head
 
 let is_type env t =
     debug env (fun () -> BU.print2 "checking is_type (%s) %s\n"
-                                (Print.tag_of_term t)
-                                (Print.term_to_string t)
+                                (tag_of t)
+                                (show t)
                                 );
     let b = is_type_aux env t in
     debug env (fun _ ->
         if b
-        then BU.print2 "yes, is_type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t)
-        else BU.print2 "not a type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
+        then BU.print2 "yes, is_type %s (%s)\n" (show t) (tag_of t)
+        else BU.print2 "not a type %s (%s)\n" (show t) (tag_of t));
     b
+
+let is_steel_with_invariant_g t =
+  let head, args = U.head_and_args t in
+  match (U.un_uinst head).n, args with
+  | Tm_fvar fv, [_a; _fp; _fp'; _o; _p; _i; _body] ->
+    S.fv_eq_lid fv PC.steel_with_invariant_g_lid ||
+    S.fv_eq_lid fv PC.steel_st_with_invariant_g_lid
+  | _ -> false
+
+let is_steel_with_invariant t : option term =
+  let head, args = U.head_and_args t in
+  match (U.un_uinst head).n, args with
+  | Tm_fvar fv, [_a; _fp; _fp'; _o; _obs; _p; _i; body]
+    when
+      S.fv_eq_lid fv PC.steel_with_invariant_lid ||
+      S.fv_eq_lid fv PC.steel_st_with_invariant_lid -> 
+    Some (fst body)
+
+  | _ -> None
+
+let is_steel_new_invariant t =
+  let head, args = U.head_and_args t in
+  match (U.un_uinst head).n, args with
+  | Tm_fvar fv, [_o; _p] ->
+    S.fv_eq_lid fv PC.steel_new_invariant_lid ||
+    S.fv_eq_lid fv PC.steel_st_new_invariant_lid
+  | _ -> false
 
 let is_type_binder env x = is_arity env x.binder_bv.sort
 
@@ -287,7 +347,7 @@ let rec is_fstar_value (t:term) =
     | Tm_bvar _
     | Tm_fvar _
     | Tm_abs _  -> true
-    | Tm_app(head, args) ->
+    | Tm_app {hd=head; args} ->
         if is_constructor head
         then args |> List.for_all (fun (te, _) -> is_fstar_value te)
         else false
@@ -302,8 +362,8 @@ let rec is_fstar_value (t:term) =
            This may cause extraction to eta-expand g, which isn't terrible,
            but we should improve it.
         *)
-    | Tm_meta(t, _)
-    | Tm_ascribed(t, _, _) -> is_fstar_value t
+    | Tm_meta {tm=t}
+    | Tm_ascribed {tm=t} -> is_fstar_value t
     | _ -> false
 
 let rec is_ml_value e =
@@ -314,7 +374,7 @@ let rec is_ml_value e =
     | MLE_Fun   _ -> true
     | MLE_CTor (_, exps)
     | MLE_Tuple exps -> BU.for_all is_ml_value exps
-    | MLE_Record (_, fields) -> BU.for_all (fun (_, e) -> is_ml_value e) fields
+    | MLE_Record (_, _, fields) -> BU.for_all (fun (_, e) -> is_ml_value e) fields
     | MLE_TApp (h, _) -> is_ml_value h
     | _ -> false
 
@@ -326,7 +386,7 @@ let normalize_abs (t0:term) : term =
     let rec aux bs t copt =
         let t = SS.compress t in
         match t.n with
-            | Tm_abs(bs', body, copt) -> aux (bs@bs') body copt
+            | Tm_abs {bs=bs'; body; rc_opt=copt} -> aux (bs@bs') body copt
             | _ ->
               let e' = U.unascribe t in
               if U.is_fun e'
@@ -338,9 +398,9 @@ let unit_binder () = S.mk_binder <| S.new_bv None t_unit
 
 //check_pats_for_ite l:
 //    A helper to enable translating boolean matches back to if/then/else
-let check_pats_for_ite (l:list (pat * option term * term)) : (bool   //if l is pair of boolean branches
-                                                             * option term  //the 'then' case
-                                                             * option term) = //the 'else' case
+let check_pats_for_ite (l:list (pat & option term & term)) : (bool   //if l is pair of boolean branches
+                                                             & option term  //the 'then' case
+                                                             & option term) = //the 'else' case
     let def = false, None, None in
     if List.length l <> 2 then def
     else
@@ -377,7 +437,7 @@ let check_pats_for_ite (l:list (pat * option term * term)) : (bool   //if l is p
 //      pre-condition: List.length (fst s) = List.length args
 let instantiate_tyscheme (s:mltyscheme) (args:list mlty) : mlty = Util.subst s args
 
-let fresh_mlidents (ts:list mlty) (g:uenv) : list (mlident * mlty) * uenv =
+let fresh_mlidents (ts:list mlty) (g:uenv) : list (mlident & mlty) & uenv =
    let g, vs_ts =
      List.fold_right
         (fun t (uenv, vs) ->
@@ -387,12 +447,17 @@ let fresh_mlidents (ts:list mlty) (g:uenv) : list (mlident * mlty) * uenv =
    in
    vs_ts, g
 
+let fresh_binders (ts:list mlty) (g:uenv) : list mlbinder & uenv =
+  let vs_ts, g = fresh_mlidents ts g in
+  List.map (fun (v, t) -> {mlbinder_name=v; mlbinder_ty=t; mlbinder_attrs=[]}) vs_ts,
+  g
+
 //instantiate_maybe_partial:
 //  When `e` has polymorphic type `s`
 //  and isn't instantiated in F* (e.g., because of first-class polymorphism)
 //  we extract e to a type application in ML by instantiating all its
 //  type arguments to MLTY_Erased (later, perhaps, being forced to insert magics)
-let instantiate_maybe_partial (g:uenv) (e:mlexpr) (s:mltyscheme) (tyargs:list mlty) : (mlexpr * e_tag * mlty) =
+let instantiate_maybe_partial (g:uenv) (e:mlexpr) (s:mltyscheme) (tyargs:list mlty) : (mlexpr & e_tag & mlty) =
     let vars, t = s in
     let n_vars = List.length vars in
     let n_args = List.length tyargs in
@@ -432,7 +497,7 @@ let instantiate_maybe_partial (g:uenv) (e:mlexpr) (s:mltyscheme) (tyargs:list ml
           ts
           extra_tyargs
       in
-      let vs_ts, g = fresh_mlidents extra_tyargs g in
+      let vs_ts, g = fresh_binders extra_tyargs g in
       let f = with_ty t <| MLE_Fun (vs_ts, tapp) in
       (f, E_PURE, t)
     else failwith "Impossible: instantiate_maybe_partial called with too many arguments"
@@ -443,8 +508,8 @@ let eta_expand (g:uenv) (t : mlty) (e : mlexpr) : mlexpr =
     if ts = []
     then e
     else // just quit if this is not a function type
-      let vs_ts, g = fresh_mlidents ts g in
-      let vs_es = List.map (fun (v, t) -> with_ty t (MLE_Var v)) vs_ts in
+      let vs_ts, g = fresh_binders ts g in
+      let vs_es = List.map (fun {mlbinder_name=v; mlbinder_ty=t} -> with_ty t (MLE_Var v)) vs_ts in
       let body = with_ty r <| MLE_App (e, vs_es) in
       with_ty t <| MLE_Fun (vs_ts, body)
 
@@ -466,7 +531,7 @@ let default_value_for_ty (g:uenv) (t : mlty) : mlexpr  =
     in
     if ts = []
     then body r
-    else let vs_ts, g = fresh_mlidents ts g in
+    else let vs_ts, g = fresh_binders ts g in
          with_ty t <| MLE_Fun (vs_ts, body r)
 
 let maybe_eta_expand_coercion g expect e =
@@ -480,12 +545,12 @@ let maybe_eta_expand_coercion g expect e =
   Otherwise, we often end up with coercions like (Obj.magic (fun x -> e) : a -> b) : a -> c
   Whereas with this optimization we produce (fun x -> Obj.magic (e : b) : c)  : a -> c
 *)
-let apply_coercion pos (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
+let apply_coercion (pos:Range.range) (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
     if Util.codegen_fsharp()
     then //magics are not always sound in F#; warn
         FStar.Errors.log_issue pos
-          (Errors.Warning_NoMagicInFSharp,
-           BU.format2
+          Errors.Warning_NoMagicInFSharp
+           (BU.format2
              "Inserted an unsafe type coercion in generated code from %s to %s; this may be unsound in F#"
                (Code.string_of_mlty (current_module_of_uenv g) ty)
                (Code.string_of_mlty (current_module_of_uenv g) expect));
@@ -503,7 +568,14 @@ let apply_coercion pos (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
         //                   (Code.string_of_mlty (current_module_of_uenv g) ty)
         //                   (Code.string_of_mlty (current_module_of_uenv g) expect)
         //                   e ty expect;
-        match e.expr, ty, expect with
+        (* The expected type may be an abbreviation and not a literal
+        arrow. Try to unfold it. *)
+        let rec undelta mlty =
+          match Util.udelta_unfold g mlty with
+          | Some t -> undelta t
+          | None -> mlty
+        in
+        match e.expr, ty, undelta expect with
         | MLE_Fun(arg::rest, body), MLTY_Fun(t0, _, t1), MLTY_Fun(s0, _, s1) ->
           let body =
                  match rest with
@@ -515,14 +587,15 @@ let apply_coercion pos (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
           then with_ty expect (mk_fun arg body)
           else let lb =
                     { mllb_meta = [];
-                      mllb_name = fst arg;
+                      mllb_attrs = [];
+                      mllb_name = arg.mlbinder_name;
                       mllb_tysc = Some ([], t0);
                       mllb_add_unit = false;
-                      mllb_def = with_ty t0 (MLE_Coerce(with_ty s0 <| MLE_Var (fst arg), s0, t0));
+                      mllb_def = with_ty t0 (MLE_Coerce(with_ty s0 <| MLE_Var arg.mlbinder_name, s0, t0));
                       print_typ=false }
                 in
                 let body = with_ty s1 <| MLE_Let((NonRec, [lb]), body) in
-                with_ty expect (mk_fun (fst arg, s0) body)
+                with_ty expect (mk_fun {mlbinder_name=arg.mlbinder_name;mlbinder_ty=s0;mlbinder_attrs=[]} body)
 
         | MLE_Let(lbs, body), _, _ ->
           with_ty expect <| (MLE_Let(lbs, aux body ty expect))
@@ -611,37 +684,37 @@ let extraction_norm_steps =
   then extraction_norm_steps_nbe
   else extraction_norm_steps_core
 
-let comp_no_args c =
-    match c.n with
-    | Total _
-    | GTotal _ -> c
-    | Comp ct ->
-       let effect_args = List.map (fun (_, aq) -> (S.t_unit, aq)) ct.effect_args in
-       let ct = { ct with effect_args = effect_args } in
-       let c = { c with n = Comp ct } in
-       c
+let normalize_for_extraction (env:uenv) (e:S.term) =
+  N.normalize extraction_norm_steps (tcenv_of_uenv env) e
 
-(*
- * AR: hoisting it so that it can be called from the extraction of
- *     Tm_ascribed as well (in case it is a comp annotation
- *)
 let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
-  (*
-   * AR: this is subtle
-   *     it replaces all the effect indices with unit
-   *     which is bad for indexed effects in general
-   *     but currently (as of 11/06/19) our layered effect indices are erasable anyway
-   *     since they are assumed to be unit for combinators application too
-   *
-   *     if and when that is fixed, this call should also be conditional-ed under if (not layered effect)
-   *)
-  let c = comp_no_args c in
+  match c |> U.comp_effect_name
+          |> TcUtil.effect_extraction_mode env with
+  | S.Extract_reify ->
+    TcEnv.reify_comp env c S.U_unknown
+    |> N.normalize extraction_norm_steps env
+  | S.Extract_primitive -> U.comp_result c
+  | S.Extract_none s ->
+    err_cannot_extract_effect (c |> U.comp_effect_name) c.pos s (show c)
 
-  //AR: normalize the reified comp, to inline definitions that reification may have introduced
-  if c |> U.comp_effect_name |> TcEnv.norm_eff_name env |> TcEnv.is_reifiable_effect env
-  then TcEnv.reify_comp env c S.U_unknown |> N.normalize extraction_norm_steps env
-  else U.comp_result c
+let maybe_reify_term (env:TcEnv.env) (t:S.term) (l:lident) : S.term  =
+  match TcUtil.effect_extraction_mode env l with
+  | S.Extract_reify ->
+    TcUtil.norm_reify env
+      [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe]
+      (U.mk_reify t (Some l))
+  | S.Extract_primitive -> t
+  | S.Extract_none s ->
+    err_cannot_extract_effect l t.pos s (show t)
 
+let has_extract_as_impure_effect (g:uenv) (fv:S.fv) =
+  TcEnv.fv_has_attr (tcenv_of_uenv g) fv FStar.Parser.Const.extract_as_impure_effect_lid
+
+let head_of_type_is_extract_as_impure_effect g t =
+  let hd, _ = U.head_and_args t in
+  match (U.un_uinst hd).n with
+  | Tm_fvar fv -> has_extract_as_impure_effect g fv
+  | _ -> false
 
 let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
     let arg_as_mlty (g:uenv) (a, _) : mlty =
@@ -649,27 +722,30 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
         then translate_term_to_mlty g a
         else MLTY_Erased
     in
-
     let fv_app_as_mlty (g:uenv) (fv:fv) (args : args) : mlty =
         if not (is_fv_type g fv)
         then MLTY_Top //it was translated as an expression or erased
-        else
-            let formals, _ =
+        else (
+            if has_extract_as_impure_effect g fv
+            then let (a, _)::_ = args in
+                 translate_term_to_mlty g a
+            else (
+              let formals, _ =
                 let (_, fvty), _ = FStar.TypeChecker.Env.lookup_lid (tcenv_of_uenv g) fv.fv_name.v in
                 let fvty = N.normalize [Env.UnfoldUntil delta_constant; Env.ForExtraction] (tcenv_of_uenv g) fvty in
                 U.arrow_formals fvty in
-            let mlargs = List.map (arg_as_mlty g) args in
-            let mlargs =
+              let mlargs = List.map (arg_as_mlty g) args in
+              let mlargs =
                 let n_args = List.length args in
                 if List.length formals > n_args //it's not fully applied; so apply the rest to unit
                 then let _, rest = BU.first_N n_args formals in
                      mlargs @ (List.map (fun _ -> MLTY_Erased) rest)
                 else mlargs in
-            let nm = UEnv.mlpath_of_lident g fv.fv_name.v in
-            MLTY_Named (mlargs, nm)
-
+              let nm = UEnv.mlpath_of_lident g fv.fv_name.v in
+              MLTY_Named (mlargs, nm)
+            )
+        )
     in
-
     let aux env t =
          let t = SS.compress t in
          match t.n with
@@ -677,7 +753,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
 
           | Tm_bvar _
           | Tm_delayed _
-          | Tm_unknown -> failwith (BU.format1 "Impossible: Unexpected term %s" (Print.term_to_string t))
+          | Tm_unknown -> failwith (BU.format1 "Impossible: Unexpected term %s" (show t))
 
           | Tm_lazy i -> translate_term_to_mlty env (U.unfold_lazy i)
 
@@ -686,10 +762,10 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
 
           | Tm_uvar _ -> MLTY_Top //really shouldn't have any uvars left; TODO: fatal failure?
 
-          | Tm_meta(t, _)
-          | Tm_refine({sort=t}, _)
+          | Tm_meta {tm=t}
+          | Tm_refine {b={sort=t}}
           | Tm_uinst(t, _)
-          | Tm_ascribed(t, _, _) -> translate_term_to_mlty env t
+          | Tm_ascribed {tm=t} -> translate_term_to_mlty env t
 
           | Tm_name bv ->
             bv_as_mlty env bv
@@ -699,32 +775,41 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
                However, this case is needed to translate types like nnat, and so far seems to work as expected*)
             fv_app_as_mlty env fv []
 
-          | Tm_arrow(bs, c) ->
+          | Tm_arrow {bs; comp=c} ->
             let bs, c = SS.open_comp bs c in
             let mlbs, env = binders_as_ml_binders env bs in
-            let t_ret = translate_term_to_mlty env (maybe_reify_comp env (tcenv_of_uenv env) c) in
-            let erase = effect_as_etag env (U.comp_effect_name c) in
-            let _, t = List.fold_right (fun (_, t) (tag, t') -> (E_PURE, MLTY_Fun(t, tag, t'))) mlbs (erase, t_ret) in
+            let codom = maybe_reify_comp env (tcenv_of_uenv env) c in
+            let t_ret = translate_term_to_mlty env codom in
+            let etag = effect_as_etag env (U.comp_effect_name c) in
+            let etag =
+              if etag = E_IMPURE then etag
+              else if head_of_type_is_extract_as_impure_effect env codom
+              then E_IMPURE
+              else etag
+            in
+            let _, t = List.fold_right (fun (_, t) (tag, t') -> (E_PURE, MLTY_Fun(t, tag, t'))) mlbs (etag, t_ret) in
             t
 
           (*can this be a partial type application? , i.e can the result of this application be something like Type -> Type, or nat -> Type? : Yes *)
           (* should we try to apply additional arguments here? if not, where? FIX!! *)
-          | Tm_app (head, args) ->
-            let res = match (U.un_uinst head).n with
-                | Tm_name bv ->
+          | Tm_app _ ->
+            let head, args = U.head_and_args_full t in
+            let res = match (U.un_uinst head).n, args with
+                | Tm_name bv, _ ->
                   (*the args are thrown away, because in OCaml, type variables have type Type and not something like -> .. -> .. Type *)
                   bv_as_mlty env bv
 
-                | Tm_fvar fv ->
-                  fv_app_as_mlty env fv args
+                | Tm_fvar fv, [_]
+                  when S.fv_eq_lid fv PC.steel_memory_inv_lid ->
+                  translate_term_to_mlty env S.t_unit
 
-                | Tm_app (head, args') ->
-                  translate_term_to_mlty env (S.mk (Tm_app(head, args'@args)) t.pos)
+                | Tm_fvar fv, _ ->
+                  fv_app_as_mlty env fv args
 
                 | _ -> MLTY_Top in
             res
 
-          | Tm_abs(bs,ty,_) ->  (* (sch) rule in \hat{\epsilon} *)
+          | Tm_abs {bs;body=ty} ->  (* (sch) rule in \hat{\epsilon} *)
             (* We just translate the body in an extended environment; the binders will just end up as units *)
             let bs, ty = SS.open_term bs ty in
             let bts, env = binders_as_ml_binders env bs in
@@ -751,7 +836,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
          else mlt
 
 
-and binders_as_ml_binders (g:uenv) (bs:binders) : list (mlident * mlty) * uenv =
+and binders_as_ml_binders (g:uenv) (bs:binders) : list (mlident & mlty) & uenv =
     let ml_bs, env = bs |> List.fold_left (fun (ml_bs, env) b ->
             if is_type_binder g b
             then //no first-class polymorphism; so type-binders get wiped out
@@ -822,6 +907,7 @@ let resugar_pat g q p = match p with
           | Some (Record_ctor (ty, fns)) ->
               let path = List.map string_of_id (ns_of_lid ty) in
               let fs = record_fields g ty fns pats in
+              let path = no_fstar_stubs_ns path in
               MLP_Record(path, fs)
           | _ -> p
       end
@@ -842,7 +928,7 @@ let resugar_pat g q p = match p with
 // match v with
 // | (| true, b |) -> ...
 //
-// In F*, the sort of b is computed to be bool, since the conditional 
+// In F*, the sort of b is computed to be bool, since the conditional
 // can be eliminated
 // But, in OCaml, this should be typed as Obj.t, since the type of v itself is
 // (bool, Obj.t) dtuple2
@@ -851,10 +937,10 @@ let rec extract_one_pat (imp : bool)
                         (g:uenv)
                         (p:S.pat)
                         (expected_ty:mlty)
-                        (term_as_mlexpr:uenv -> S.term -> (mlexpr * e_tag * mlty))
+                        (term_as_mlexpr:uenv -> S.term -> (mlexpr & e_tag & mlty))
     : uenv
-    * option (mlpattern * list mlexpr)
-    * bool =  //the bool indicates whether or not a magic should be inserted around the scrutinee
+    & option (mlpattern & list mlexpr)
+    & bool =  //the bool indicates whether or not a magic should be inserted around the scrutinee
     let ok t =
       match expected_ty with
       | MLTY_Top ->
@@ -884,7 +970,7 @@ let rec extract_one_pat (imp : bool)
         in
         //these may be extracted to bigint, in which case, we need to emit a when clause
         let g, x = UEnv.new_mlident g in
-        let x_exp = 
+        let x_exp =
           let x_exp = with_ty expected_ty <| MLE_Var x in
           let coerce x = with_ty ml_ty <| (MLE_Coerce(x, ml_ty, expected_ty)) in
           match expected_ty with
@@ -904,10 +990,7 @@ let rec extract_one_pat (imp : bool)
         let mlty = term_as_mlty g t in
         g, Some (MLP_Const (mlconst_of_const p.p s), []), ok mlty
 
-    | Pat_var x | Pat_wild x ->
-        // JP,NS: Pat_wild turns into a binder in the internal syntax because
-        // the types of other terms may depend on it
-
+    | Pat_var x ->
         //In some cases, the computed_mlty based on the F* computed sort x.sort
         //can be more precise than the type in ML. see e.g., Bug2595
         //So, prefer to extend the environment with the expected ML type of the
@@ -921,7 +1004,7 @@ let rec extract_one_pat (imp : bool)
     | Pat_dot_term _ ->
         g, None, true
 
-    | Pat_cons (f, pats) ->
+    | Pat_cons (f, _, pats) ->
         // The main subtlety here, relative to Bug2595, is to propapate the
         // expected type properly
 
@@ -933,10 +1016,8 @@ let rec extract_one_pat (imp : bool)
           | Some ({exp_b_expr={expr=MLE_Name n}; exp_b_tscheme=ttys}) -> n, ttys
           | Some _ -> failwith "Expected a constructor"
           | None ->
-            Errors.raise_error (Errors.Error_ErasedCtor,
-                                BU.format1 "Cannot extract this pattern, the %s constructor was erased"
-                                            (Print.fv_to_string f))
-                               f.fv_name.p
+            Errors.raise_error f.fv_name.p  Errors.Error_ErasedCtor
+              (BU.format1 "Cannot extract this pattern, the %s constructor was erased" (show f))
         in
         // The prefix of the pattern are dot patterns matching the type parameters
         let nTyVars = List.length (fst tys) in
@@ -945,7 +1026,7 @@ let rec extract_one_pat (imp : bool)
         let f_ty =
             let mlty_args =
                 tysVarPats |>
-                List.map 
+                List.map
                   (fun (p, _) ->
                     match expected_ty with
                     | MLTY_Top ->
@@ -955,7 +1036,7 @@ let rec extract_one_pat (imp : bool)
                     | _ ->
                       //Otherwise, if it has a dot pattern for matching the type parameters
                       match p.v with
-                      | Pat_dot_term (_, t) ->
+                      | Pat_dot_term (Some t) ->
                         //use the type that the dot patterns is instantiated to
                         term_as_mlty g t
                       | _ ->
@@ -968,10 +1049,10 @@ let rec extract_one_pat (imp : bool)
             Util.uncurry_mlty_fun f_ty
         in
         debug g (fun () -> BU.print2 "@@@Expected type of pattern with head = %s is %s\n"
-                          (Print.fv_to_string f)
+                          (show f)
                           (let args, t = f_ty in
                            let args =
-                               List.map 
+                               List.map
                                  (Code.string_of_mlty (current_module_of_uenv g))
                                  args
                                |> String.concat " -> "
@@ -982,7 +1063,7 @@ let rec extract_one_pat (imp : bool)
         // These should all come out as None, if they are dot patterns
         // Their expected type does not matter
         let g, tyMLPats =
-          BU.fold_map 
+          BU.fold_map
             (fun g (p, imp) ->
               let g, p, _ = extract_one_pat true g p MLTY_Top term_as_mlexpr in
               g, p)
@@ -1011,8 +1092,8 @@ let rec extract_one_pat (imp : bool)
           |> List.collect (function (Some x) -> [x] | _ -> [])
           |> List.split
         in
-        
-        let pat_ty_compat = 
+
+        let pat_ty_compat =
           match f_ty with
           | ([], t) -> ok t
           | _ -> false //arity mismatch, should be impossible
@@ -1024,8 +1105,8 @@ let rec extract_one_pat (imp : bool)
         pat_ty_compat
 
 let extract_pat (g:uenv) (p:S.pat) (expected_t:mlty)
-                (term_as_mlexpr: uenv -> S.term -> (mlexpr * e_tag * mlty))
-    : (uenv * list (mlpattern * option mlexpr) * bool) =
+                (term_as_mlexpr: uenv -> S.term -> (mlexpr & e_tag & mlty))
+    : (uenv & list (mlpattern & option mlexpr) & bool) =
     let extract_one_pat g p expected_t =
         match extract_one_pat false g p expected_t term_as_mlexpr with
         | g, Some (x, v), b -> g, (x, v), b
@@ -1071,7 +1152,8 @@ let maybe_eta_data_and_project_record (g:uenv) (qual : option fv_qual) (residual
       | MLE_CTor(_, args), Some (Record_ctor(tyname, fields)) ->
         let path = List.map string_of_id (ns_of_lid tyname) in
         let fields = record_fields g tyname fields args in
-        with_ty e.mlty <| MLE_Record(path, fields)
+        let path = no_fstar_stubs_ns path in
+        with_ty e.mlty <| MLE_Record (path, tyname |> ident_of_lid |> string_of_id, fields)
       | _ -> e
      in
     let resugar_and_maybe_eta qual e =
@@ -1083,7 +1165,7 @@ let maybe_eta_data_and_project_record (g:uenv) (qual : option fv_qual) (residual
           match e.expr with
           | MLE_CTor(head, args) ->
             let body = Util.resugar_exp <| (as_record qual <| (with_ty tres <| MLE_CTor(head, args@eargs))) in
-            with_ty e.mlty <| MLE_Fun(binders, body)
+            with_ty e.mlty <| MLE_Fun(List.map (fun (x,t) -> {mlbinder_name=x;mlbinder_ty=t;mlbinder_attrs=[]}) binders, body)
           | _ -> failwith "Impossible: Not a constructor"
     in
     match mlAppExpr.expr, qual with
@@ -1119,16 +1201,19 @@ let maybe_promote_effect ml_e tag t =
     | _ -> ml_e, tag
 
 
-let extract_lb_sig (g:uenv) (lbs:letbindings) =
-    let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef; lbattrs=lbattrs}
-            : lbname //just lbname returned back
-            * e_tag  //the ML version of the effect label lbeff
-            * (typ   //just the source type lbtyp=t, after compression
-               * (S.binders //the erased type binders
-                  * mltyscheme)) //translation of the source type t as a ML type scheme
-            * bool   //whether or not to add a unit argument
-            * term   //the term e, maybe after some type binders have been erased
-            =
+type lb_sig =
+    lbname //just lbname returned back
+  & e_tag  //the ML version of the effect label lbeff
+  & (typ   //just the source type lbtyp=t, after compression
+     & (S.binders //the erased type binders
+        & mltyscheme)) //translation of the source type t as a ML type scheme
+  & bool   //whether or not to add a unit argument
+  & bool   //whether this was marked CInline
+  & term   //the term e, maybe after some type binders have been erased
+
+let rec extract_lb_sig (g:uenv) (lbs:letbindings) : list lb_sig =
+    let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef; lbattrs=lbattrs} : lb_sig =
+              let has_c_inline = U.has_attribute lbattrs PC.c_inline_attr in
               // begin match lbattrs with
               // | [] -> ()
               // | _ ->
@@ -1147,13 +1232,13 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
               let lbtyp = SS.compress lbtyp in
               let no_gen () =
                   let expected_t = term_as_mlty g lbtyp in
-                  (lbname_, f_e, (lbtyp, ([], ([],expected_t))), false, lbdef)
+                  (lbname_, f_e, (lbtyp, ([], ([],expected_t))), false, has_c_inline, lbdef)
               in
               if TcUtil.must_erase_for_extraction (tcenv_of_uenv g) lbtyp
-              then (lbname_, f_e, (lbtyp, ([], ([], MLTY_Erased))), false, lbdef)
-              else  //              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (Print.lbname_to_string lbname) (Print.typ_to_string t) f_e);
+              then (lbname_, f_e, (lbtyp, ([], ([], MLTY_Erased))), false, has_c_inline, lbdef)
+              else  //              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (show lbname) (Print.typ_to_string t) f_e);
                 match lbtyp.n with
-                | Tm_arrow(bs, c) when (List.hd bs |> is_type_binder g) ->
+                | Tm_arrow {bs; comp=c} when (List.hd bs |> is_type_binder g) ->
                    let bs, c = SS.open_comp bs c in
                   //need to generalize, but will erase all the type abstractions;
                   //If, after erasure, what remains is not a value, then add an extra unit arg. to preserve order of evaluation/generativity
@@ -1168,8 +1253,11 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
 
                    let n_tbinders = List.length tbinders in
                    let lbdef = normalize_abs lbdef |> U.unmeta in
+                   let tbinders_as_ty_params env = List.map (fun ({binder_bv=x; binder_attrs}) -> {
+                     ty_param_name = (UEnv.lookup_ty env x).ty_b_name;
+                     ty_param_attrs = List.map (fun attr -> let e, _, _ = term_as_mlexpr g attr in e) binder_attrs}) in
                    begin match lbdef.n with
-                      | Tm_abs(bs, body, copt) ->
+                      | Tm_abs {bs; body; rc_opt=copt} ->
                         let bs, body = SS.open_term bs body in
                         if n_tbinders <= List.length bs
                         then let targs, rest_args = BU.first_N n_tbinders bs in
@@ -1178,7 +1266,7 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
                                 SS.subst s tbody in
                              let env = List.fold_left (fun env ({binder_bv=a}) -> UEnv.extend_ty env a false) g targs in
                              let expected_t = term_as_mlty env expected_source_ty in
-                             let polytype = targs |> List.map (fun ({binder_bv=x}) -> (UEnv.lookup_ty env x).ty_b_name), expected_t in
+                             let polytype = tbinders_as_ty_params env targs, expected_t in
                              let add_unit =
                                 match rest_args with
                                 | [] ->
@@ -1188,7 +1276,7 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
                              let rest_args = if add_unit then (unit_binder()::rest_args) else rest_args in
                              let polytype = if add_unit then push_unit polytype else polytype in
                              let body = U.abs rest_args body copt in
-                             (lbname_, f_e, (lbtyp, (targs, polytype)), add_unit, body)
+                             (lbname_, f_e, (lbtyp, (targs, polytype)), add_unit, has_c_inline, body)
 
                         else (* fails to handle:
                                 let f : a:Type -> b:Type -> a -> b -> Tot (nat * a * b) =
@@ -1205,11 +1293,11 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
                      | Tm_name _ ->
                        let env = List.fold_left (fun env ({binder_bv=a}) -> UEnv.extend_ty env a false) g tbinders in
                        let expected_t = term_as_mlty env tbody in
-                       let polytype = tbinders |> List.map (fun ({binder_bv=x}) -> (UEnv.lookup_ty env x).ty_b_name), expected_t in
+                       let polytype = tbinders_as_ty_params env tbinders, expected_t in
                        //In this case, an eta expansion is safe
                        let args = tbinders |> List.map (fun ({binder_bv=bv}) -> S.bv_to_name bv |> as_arg) in
-                       let e = mk (Tm_app(lbdef, args)) lbdef.pos in
-                       (lbname_, f_e, (lbtyp, (tbinders, polytype)), false, e)
+                       let e = mk (Tm_app {hd=lbdef; args}) lbdef.pos in
+                       (lbname_, f_e, (lbtyp, (tbinders, polytype)), false, has_c_inline, e)
 
                      | _ ->
                         //ETA-EXPANSION?
@@ -1231,13 +1319,13 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
     in
     snd lbs |> List.map maybe_generalize
 
-let extract_lb_iface (g:uenv) (lbs:letbindings)
-    : uenv * list (fv * exp_binding) =
+and extract_lb_iface (g:uenv) (lbs:letbindings)
+    : uenv & list (fv & exp_binding) =
     let is_top = FStar.Syntax.Syntax.is_top_level (snd lbs) in
     let is_rec = not is_top && fst lbs in
     let lbs = extract_lb_sig g lbs in
     BU.fold_map (fun env
-                     (lbname, e_tag, (typ, (binders, mltyscheme)), add_unit, _body) ->
+                     (lbname, _e_tag, (typ, (_binders, mltyscheme)), add_unit, _has_c_inline, _body) ->
                   let env, _, exp_binding =
                       UEnv.extend_lb env lbname typ mltyscheme add_unit in
                   env, (BU.right lbname, exp_binding))
@@ -1245,10 +1333,10 @@ let extract_lb_iface (g:uenv) (lbs:letbindings)
                 lbs
 
 //The main extraction function
-let rec check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty) =
+and check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr & mlty) =
     debug g
       (fun () -> BU.print3 "Checking %s at type %s and eff %s\n"
-                        (Print.term_to_string e)
+                        (show e)
                         (Code.string_of_mlty (current_module_of_uenv g) ty)
                         (Util.eff_to_string f));
     match f, ty with
@@ -1265,18 +1353,18 @@ let rec check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * 
              err_unexpected_eff g e ty f tag;
              maybe_coerce e.pos g ml_e t ty, ty
 
-and term_as_mlexpr (g:uenv) (e:term) : (mlexpr * e_tag * mlty) =
+and term_as_mlexpr (g:uenv) (e:term) : (mlexpr & e_tag & mlty) =
     let e, f, t = term_as_mlexpr' g e in
     let e, f = maybe_promote_effect e f t in
     e, f, t
 
 
-and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
+and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
     let top = SS.compress top in
     (debug g (fun u -> BU.print_string (BU.format3 "%s: term_as_mlexpr' (%s) :  %s \n"
         (Range.string_of_range top.pos)
-        (Print.tag_of_term top)
-        (Print.term_to_string top))));
+        (tag_of top)
+        (show top))));
 
     (*
      * AR: Following util functions are to implement the following rule:
@@ -1303,12 +1391,12 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
     //precondition: is_match head = true
     let apply_to_match_branches head args =
       match (head |> SS.compress |> U.unascribe).n with
-      | Tm_match (scrutinee, _, branches, _) ->
+      | Tm_match {scrutinee; brs=branches} ->
         let branches =
           branches |> List.map (fun (pat, when_opt, body) ->
-            pat, when_opt, { body with n = Tm_app (body, args) }
+            pat, when_opt, { body with n = Tm_app {hd=body; args} }
           ) in
-        { head with n = Tm_match (scrutinee, None, branches, None) }  //AR: dropping the return annotation and rc
+        { head with n = Tm_match {scrutinee; ret_opt=None; brs=branches; rc_opt=None} }  //AR: dropping the return annotation and rc
       | _ -> failwith "Impossible! cannot apply args to match branches if head is not a match" in
 
     let t = SS.compress top in
@@ -1316,7 +1404,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_unknown
         | Tm_delayed _
         | Tm_uvar _
-        | Tm_bvar _ -> failwith (BU.format1 "Impossible: Unexpected term: %s" (Print.tag_of_term t))
+        | Tm_bvar _ -> failwith (BU.format1 "Impossible: Unexpected term: %s" (tag_of t))
 
         | Tm_lazy i -> term_as_mlexpr g (U.unfold_lazy i)
 
@@ -1326,42 +1414,54 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           ml_unit, E_PURE, ml_unit_ty
 
         | Tm_quoted (qt, { qkind = Quote_dynamic }) ->
-          let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv (PC.failwith_lid()) delta_constant None) in
+          let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv (PC.failwith_lid()) None) in
           with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Cannot evaluate open quotation at runtime")]),
           E_PURE,
           ml_int_ty
 
-        | Tm_quoted (qt, { qkind = Quote_static; antiquotes = aqs }) ->
+        | Tm_quoted (qt, { qkind = Quote_static; antiquotations = (shift, aqs) }) ->
           begin match R.inspect_ln qt with
-          | RD.Tv_Var bv ->
-            begin match S.lookup_aq bv aqs with
-            | Some tm ->
+          | RD.Tv_BVar bv ->
+            (* If it's a variable, check whether it's an antiquotation or just a bvar node *)
+            if bv.index < shift then
+              (* just a local bvar *)
+              let tv' = RD.Tv_BVar bv in
+              let tv = EMB.embed tv' t.pos None EMB.id_norm_cb in
+              let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
+              term_as_mlexpr g t
+            else
+              let tm = S.lookup_aq bv (shift, aqs) in
               term_as_mlexpr g tm
 
-            | None ->
-              let tv = EMB.embed (RE.e_term_view_aq aqs) (RD.Tv_Var bv) t.pos None EMB.id_norm_cb in
-              let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
-              term_as_mlexpr g t
-            end
           | tv ->
-              let tv = EMB.embed (RE.e_term_view_aq aqs) tv t.pos None EMB.id_norm_cb in
-              let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
-              term_as_mlexpr g t
+            (* Else, just embed recursively. *)
+            let tv = EMB.embed #_ #(RE.e_term_view_aq (shift, aqs)) tv t.pos None EMB.id_norm_cb in
+            let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
+            term_as_mlexpr g t
           end
 
-        | Tm_meta(t, Meta_monadic (m, _)) ->
+        | Tm_meta {tm=t; meta=Meta_monadic (m, _)} ->
+          //
+          // A meta monadic node
+          // We should have taken care of it when we were reifying the Tm_abs
+          // But it is ok, if the effect is primitive
+          //
           let t = SS.compress t in
           begin match t.n with
-            | Tm_let((false, [lb]), body) when (BU.is_left lb.lbname) ->
-              let ed, qualifiers = must (TypeChecker.Env.effect_decl_opt (tcenv_of_uenv g) m) in
-              if not (TcEnv.is_reifiable_effect (tcenv_of_uenv g) ed.mname)
+            | Tm_let {lbs=(false, [lb]); body} when (BU.is_left lb.lbname) ->
+              let tcenv = tcenv_of_uenv g in
+              let ed, qualifiers = must (TypeChecker.Env.effect_decl_opt tcenv m) in
+              if TcUtil.effect_extraction_mode tcenv ed.mname = S.Extract_primitive
               then term_as_mlexpr g t
               else
-                failwith "This should not happen (should have been handled at Tm_abs level)"
+                failwith
+                  (BU.format1
+                     "This should not happen (should have been handled at Tm_abs level for effect %s)"
+                     (string_of_lid ed.mname))
             | _ -> term_as_mlexpr g t
          end
 
-        | Tm_meta (t, Meta_monadic_lift (m1, _m2, _ty))
+        | Tm_meta {tm=t; meta=Meta_monadic_lift (m1, _m2, _ty)}
           when effect_as_etag g m1 = E_ERASABLE ->
           (*
            * We would come here if m2 is not erasable,
@@ -1373,13 +1473,13 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
            *)
           ml_unit, E_ERASABLE, MLTY_Erased
 
-        | Tm_meta(t, Meta_desugared (Machine_integer (signedness, width))) ->
+        | Tm_meta {tm=t; meta=Meta_desugared (Machine_integer (signedness, width))} ->
 
             let t = SS.compress t in
             let t = U.unascribe t in
             (match t.n with
              (* Should we check if hd here is [__][u]int_to_t? *)
-            | Tm_app(hd, [x, _]) ->
+            | Tm_app {hd; args=[x, _]} ->
               (let x = SS.compress x in
                let x = U.unascribe x in
                match x.n with
@@ -1392,14 +1492,17 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                |_ -> term_as_mlexpr g t)
             | _ -> term_as_mlexpr g t)
 
-        | Tm_meta(t, _) //TODO: handle the resugaring in case it's a 'Meta_desugared' ... for more readable output
+        | Tm_meta {tm=t}  //TODO: handle the resugaring in case it's a 'Meta_desugared' ... for more readable output
         | Tm_uinst(t, _) ->
           term_as_mlexpr g t
 
         | Tm_constant c ->
-          let _, ty, _ = TcTerm.typeof_tot_or_gtot_term (tcenv_of_uenv g) t true in  //AR: TODO: type_of_well_typed?
-          let ml_ty = term_as_mlty g ty in
-          with_ty ml_ty (mlexpr_of_const t.pos c), E_PURE, ml_ty
+          let tcenv = tcenv_of_uenv g in
+          let _, ty, _ = TcTerm.typeof_tot_or_gtot_term tcenv t true in  //AR: TODO: type_of_well_typed?
+          if TcUtil.must_erase_for_extraction tcenv ty
+          then ml_unit, E_PURE, MLTY_Erased
+          else let ml_ty = term_as_mlty g ty in
+               with_ty ml_ty (mlexpr_of_const t.pos c), E_PURE, ml_ty
 
         | Tm_name _ -> //lookup in g; decide if its in left or right; tag is Pure because it's just a variable
           if is_type g t //Here, we really need to be certain that g is a type; unclear if level ensures it
@@ -1431,14 +1534,14 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           begin
                match try_lookup_fv t.pos g fv with
                | None -> //it's been erased
-                 // Errors.log_issue t.pos (Errors.Error_CallToErased,
-                 //                         BU.format1 "Attempting to extract a call into erased function %s" (Print.fv_to_string fv));
+                 // Errors.log_issue t (Errors.Error_CallToErased,
+                 //                         BU.format1 "Attempting to extract a call into erased function %s" (show fv));
                  ml_unit, E_PURE, MLTY_Erased
 
                | Some {exp_b_expr=x; exp_b_tscheme=mltys} ->
                  let _ = debug g (fun () ->
                           BU.print3 "looked up %s: got %s at %s \n"
-                              (Print.fv_to_string fv)
+                              (show fv)
                               (Code.string_of_mlexpr (current_module_of_uenv g) x)
                               (Code.string_of_mlty (current_module_of_uenv g) (snd mltys))) in
                  begin match mltys with
@@ -1448,37 +1551,58 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                  end
           end
 
-        | Tm_abs(bs, body, rcopt (* the annotated computation type of the body *)) ->
+        | Tm_abs {bs;body;rc_opt=rcopt} (* the annotated computation type of the body *) ->
           let bs, body = SS.open_term bs body in
           let ml_bs, env = binders_as_ml_binders g bs in
+          let ml_bs = List.map2 (fun (x,t) b -> {
+            mlbinder_name=x;
+            mlbinder_ty=t;
+            mlbinder_attrs=List.map (fun attr -> let e, _, _ = term_as_mlexpr env attr in e) b.binder_attrs;
+          }) ml_bs bs in
           let body =
             match rcopt with
             | Some rc ->
-                if TcEnv.is_reifiable_rc (tcenv_of_uenv env) rc
-                then TcUtil.reify_body (tcenv_of_uenv env) [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] body
-                else body
-            | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (Print.term_to_string body)); body in
+              maybe_reify_term (tcenv_of_uenv env) body rc.residual_effect
+            | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (show body)); body in
           let ml_body, f, t = term_as_mlexpr env body in
           let f, tfun = List.fold_right
-            (fun (_, targ) (f, t) -> E_PURE, MLTY_Fun (targ, f, t))
+            (fun {mlbinder_ty=targ} (f, t) -> E_PURE, MLTY_Fun (targ, f, t))
             ml_bs (f, t) in
           with_ty tfun <| MLE_Fun(ml_bs, ml_body), f, tfun
 
-        | Tm_app({n=Tm_constant Const_range_of}, [(a1, _)]) ->
+        | Tm_app {hd={n=Tm_constant Const_range_of}; args=[(a1, _)]} ->
           let ty = term_as_mlty g (tabbrev PC.range_lid) in
           with_ty ty <| mlexpr_of_range a1.pos, E_PURE, ty
 
-        | Tm_app({n=Tm_constant Const_set_range_of}, [(t, _); (r, _)]) ->
+        | Tm_app {hd={n=Tm_constant Const_set_range_of}; args=[(t, _); (r, _)]} ->
           term_as_mlexpr g t
 
-        | Tm_app({n=Tm_constant (Const_reflect _)}, _) -> failwith "Unreachable? Tm_app Const_reflect"
+        | Tm_app {hd={n=Tm_constant (Const_reflect _)}} ->
+            let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv (PC.failwith_lid()) None) in
+            with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Extraction of reflect is not supported")]),
+            E_PURE,
+            ml_int_ty
 
-        | Tm_app (head, args)
+        | Tm_app _
+          when is_steel_with_invariant_g t ->
+          ml_unit, E_PURE, MLTY_Erased
+
+        | Tm_app _
+          when Some? (is_steel_with_invariant t) ->
+          let body = Some?.v (is_steel_with_invariant t) in
+          let tm = S.mk_Tm_app body [as_arg unit_const] body.pos in
+          term_as_mlexpr g tm 
+
+        | Tm_app _
+          when is_steel_new_invariant t ->
+          ml_unit, E_PURE, ml_unit_ty
+
+        | Tm_app {hd=head; args}
           when is_match head &&
                args |> should_apply_to_match_branches ->
           args |> apply_to_match_branches head |> term_as_mlexpr g
 
-        | Tm_app (head, args) ->
+        | Tm_app {hd=head; args} ->
           let is_total rc =
               Ident.lid_equals rc.residual_effect PC.effect_Tot_lid
               || rc.residual_flags |> List.existsb (function TOTAL -> true | _ -> false)
@@ -1488,15 +1612,21 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             (*
              * AR: do we need is_total rc here?
              *)
-            | Tm_abs(bs, _, _rc) (* when is_total _rc *) -> //this is a beta_redex --- also reduce it before extraction
+            | Tm_abs {bs; rc_opt=rc} (* when is_total _rc *) -> //this is a beta_redex --- also reduce it before extraction
               t
               |> N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction] (tcenv_of_uenv g)
               |> term_as_mlexpr g
 
-            | Tm_constant Const_reify ->
-              let e = TcUtil.reify_body_with_arg (tcenv_of_uenv g) [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] head (List.hd args) in
-              let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos in
-              term_as_mlexpr g tm
+            | Tm_constant (Const_reify lopt) ->
+              (match lopt with
+               | Some l ->
+                 let e = maybe_reify_term (tcenv_of_uenv g) (args |> List.hd |> fst) l in
+                 let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos in
+                 term_as_mlexpr g tm
+               | None ->
+                 raise_error top Errors.Fatal_ExtractionUnsupported
+                   (BU.format1 "Cannot extract %s (reify effect is not set)" (show top))
+              )
 
             | _ ->
 
@@ -1508,7 +1638,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                 debug g (fun () -> BU.print3 "extract_app ml_head=%s type of head = %s, next arg = %s\n"
                                 (Code.string_of_mlexpr (current_module_of_uenv g) (mk_head()))
                                 (Code.string_of_mlty (current_module_of_uenv g) t)
-                                (match restArgs with [] -> "none" | (hd, _)::_ -> Print.term_to_string hd));
+                                (match restArgs with [] -> "none" | (hd, _)::_ -> show hd));
                                         //            Printf.printf "synth_app restArgs=%d, t=%A\n" (List.length restArgs) t;
                 match restArgs, t with
                     | [], _ ->
@@ -1590,7 +1720,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                         | Inr exp_b, q ->
                           debug g (fun () ->
                               BU.print3 "@@@looked up %s: got %s at %s\n"
-                                  (Print.term_to_string head)
+                                  (show head)
                                   (Code.string_of_mlexpr (current_module_of_uenv g) exp_b.exp_b_expr)
                                   (Code.string_of_mlty (current_module_of_uenv g) (snd exp_b.exp_b_tscheme)));
                           (exp_b.exp_b_expr, exp_b.exp_b_tscheme), q
@@ -1665,9 +1795,9 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                    | Tm_fvar fv ->
                      (match try_lookup_fv t.pos g fv with
                       | None -> //erased head
-                        // Errors.log_issue t.pos
+                        // Errors.log_issue t
                         //   (Errors.Error_CallToErased,
-                        //    BU.format1 "Attempting to extract a call into erased function %s" (Print.fv_to_string fv));
+                        //    BU.format1 "Attempting to extract a call into erased function %s" (show fv));
                         ml_unit, E_PURE, MLTY_Erased
                       | _ ->
                         extract_app_with_instantiations ())
@@ -1676,7 +1806,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                      extract_app_with_instantiations ()
             end
 
-        | Tm_ascribed(e0, (tc, _, _), f) ->
+        | Tm_ascribed {tm=e0; asc=(tc, _, _); eff_opt=f} ->
           let t = match tc with
             | Inl t -> term_as_mlty g t
             | Inr c -> term_as_mlty g (maybe_reify_comp g (tcenv_of_uenv g) c) in
@@ -1686,7 +1816,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           let e, t = check_term_as_mlexpr g e0 f t in
           e, f, t
 
-        | Tm_let((false, [lb]), e')
+        | Tm_let {lbs=(false, [lb]); body=e'}
           when not (is_top_level [lb])
           && BU.is_some (U.get_attribute FStar.Parser.Const.rename_let_attr lb.lbattrs) ->
           let b = S.mk_binder (BU.left lb.lbname) in
@@ -1706,14 +1836,14 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                   let bv = freshen_bv bv in
                   Some bv
                 | _ ->
-                  Errors.log_issue top.pos (Errors.Warning_UnrecognizedAttribute,
-                                         ("Ignoring ill-formed application of `rename_let`"));
+                  Errors.log_issue top Errors.Warning_UnrecognizedAttribute
+                    "Ignoring ill-formed application of `rename_let`";
                   None
                 end
 
               | Some _ ->
-                Errors.log_issue top.pos (Errors.Warning_UnrecognizedAttribute,
-                                         ("Ignoring ill-formed application of `rename_let`"));
+                  Errors.log_issue top Errors.Warning_UnrecognizedAttribute
+                    "Ignoring ill-formed application of `rename_let`";
                 None
 
               | None ->
@@ -1731,19 +1861,19 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             match suggested_name with
             | None ->
               let other_attrs = remove_attr lb.lbattrs in
-              Tm_let ((false, [{lb with lbattrs=other_attrs}]), e')
+              Tm_let {lbs=(false, [{lb with lbattrs=other_attrs}]); body=e'}
 
             | Some y ->
               let other_attrs = remove_attr lb.lbattrs in
               let rename = [NT(x, S.bv_to_name y)] in
               let body = SS.close ([S.mk_binder y]) (SS.subst rename body) in
               let lb = { lb with lbname=Inl y; lbattrs=other_attrs } in
-              Tm_let ((false, [lb]), body)
+              Tm_let {lbs=(false, [lb]); body}
            in
            let top = {top with n = maybe_rewritten_let } in
            term_as_mlexpr' g top
 
-        | Tm_let((is_rec, lbs), e') ->
+        | Tm_let {lbs=(is_rec, lbs); body=e'} ->
           let top_level = is_top_level lbs in
           let lbs, e' =
             if is_rec
@@ -1764,34 +1894,32 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                     // let tcenv = TcEnv.set_current_module (tcenv_of_uenv g)
                     //             (Ident.lid_of_path ((fst (current_module_of_uenv g)) @ [snd (current_module_of_uenv g)]) Range.dummyRange) in
                     // debug g (fun () ->
-                    //            BU.print1 "!!!!!!!About to normalize: %s\n" (Print.term_to_string lb.lbdef);
-                    //            Options.set_option "debug_level" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
+                    //            BU.print1 "!!!!!!!About to normalize: %s\n" (show lb.lbdef);
+                    //            Options.set_option "debug" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
                     let lbdef =
-                        if Options.ml_ish()
-                        then lb.lbdef
-                        else let norm_call () =
-                                 Profiling.profile
-                                   (fun () ->
-                                     N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::extraction_norm_steps) tcenv lb.lbdef)
-                                   (Some (Ident.string_of_lid (Env.current_module tcenv)))
-                                   "FStar.Extraction.ML.Term.normalize_lb_def"
+                        let norm_call () =
+                            Profiling.profile
+                              (fun () ->
+                                N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::extraction_norm_steps) tcenv lb.lbdef)
+                              (Some (Ident.string_of_lid (Env.current_module tcenv)))
+                              "FStar.Extraction.ML.Term.normalize_lb_def"
+                        in
+                        if !dbg_Extraction || !dbg_ExtractionNorm
+                        then let _ = BU.print2 "Starting to normalize top-level let %s = %s\n"
+                                       (show lb.lbname)
+                                       (show lb.lbdef)
                              in
-                             if TcEnv.debug tcenv <| Options.Other "Extraction"
-                             || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
-                             then let _ = BU.print2 "Starting to normalize top-level let %s = %s\n"
-                                            (Print.lbname_to_string lb.lbname)
-                                            (Print.term_to_string lb.lbdef)
-                                  in
-                                  let a = norm_call() in
-                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
-                                  a
-                             else norm_call ()
+                             let a = norm_call() in
+                             BU.print1 "Normalized to %s\n" (show a);
+                             a
+                        else norm_call ()
                     in
                     {lb with lbdef=lbdef})
             else lbs
           in
 
-          let check_lb env (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, e)) =
+          let check_lb env (nm_sig : mlident & lb_sig) =
+              let (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, has_c_inline, e)) = nm_sig in
               let env = List.fold_left (fun env ({binder_bv=a}) -> UEnv.extend_ty env a false) env targs in
               let expected_t = snd polytype in
               let e, ty = check_term_as_mlexpr env e f expected_t in
@@ -1802,7 +1930,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                   | E_ERASABLE, MLTY_Erased -> [Erased]
                   | _ -> []
               in
-              f, {mllb_meta = meta; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true}
+              let meta = if has_c_inline then CInline :: meta else meta in
+              f, {mllb_meta = meta; mllb_attrs = []; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true}
           in
           let lbs = extract_lb_sig g (is_rec, lbs) in
 
@@ -1811,7 +1940,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
            * code that is more understandable. We only do it for OCaml,
            * to not affect Karamel naming. *)
           let env_body, lbs, env_burn = List.fold_right (fun lb (env, lbs, env_burn) ->
-              let (lbname, _, (t, (_, polytype)), add_unit, _) = lb in
+              let (lbname, _, (t, (_, polytype)), add_unit, _has_c_inline, _) = lb in
               let env, nm, _ = UEnv.extend_lb env lbname t polytype add_unit in
               let env_burn =
                 if Options.codegen () <> Some Options.Krml
@@ -1835,7 +1964,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
 
           with_ty_loc t' (mk_MLE_Let top_level (is_rec, List.map snd lbs) e') (Util.mlloc_of_range t.pos), f, t'
 
-      | Tm_match(scrutinee, _, pats, _) ->
+      | Tm_match {scrutinee;brs=pats} ->
         let e, f_e, t_e = term_as_mlexpr g scrutinee in
         let b, then_e, else_e = check_pats_for_ite pats in
         let no_lift : mlexpr -> mlty -> mlexpr = fun x t -> x in
@@ -1872,7 +2001,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                     let when_clause = conjoin_opt wopt when_opt in
                     p, (when_clause, f_when), (mlbranch, f_branch, t_branch)))
                 true in
-             let mlbranches : list (mlpattern * (option mlexpr * e_tag) * (mlexpr * e_tag * mlty))
+             let mlbranches : list (mlpattern & (option mlexpr & e_tag) & (mlexpr & e_tag & mlty))
                = List.flatten mlbranches in
              //if the type of the pattern isn't compatible with the type of the scrutinee
              //    insert a magic around the scrutinee
@@ -1884,7 +2013,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                            with_ty t_e <| MLE_Coerce (e, t_e, MLTY_Top)) in
              begin match mlbranches with
                 | [] ->
-                    let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv (PC.failwith_lid()) delta_constant None) in
+                    let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv (PC.failwith_lid()) None) in
                     with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),
                     E_PURE,
                     ml_int_ty
@@ -1926,7 +2055,7 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
     // First, lookup the original (F*) type to figure out how many implicit arguments there are.
     let _, fstar_disc_type = fst <| TypeChecker.Env.lookup_lid (tcenv_of_uenv env) discName in
     let g, wildcards = match (SS.compress fstar_disc_type).n with
-        | Tm_arrow (binders, _) ->
+        | Tm_arrow {bs=binders} ->
           let binders =
               binders
               |> List.filter (function ({binder_qual=Some (Implicit _)}) -> true | _ -> false)
@@ -1949,8 +2078,11 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
     // polymorphic value to make sure that the type is not printed.
     let disc_ty = MLTY_Top in
     let discrBody =
+        let bs =
+          wildcards @ [(mlid, targ)]
+          |> List.map (fun (x,t) -> {mlbinder_name=x;mlbinder_ty=t;mlbinder_attrs=[]}) in
         with_ty disc_ty <|
-            MLE_Fun(wildcards @ [(mlid, targ)],
+            MLE_Fun(bs,
                     with_ty ml_bool_ty <|
                         (MLE_Match(with_ty targ <| MLE_Name([], mlid),
                                     // Note: it is legal in OCaml to write [Foo _] for a constructor with zero arguments, so don't bother.
@@ -1965,8 +2097,9 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
     let _, name = mlpath_of_lident env discName in
     MLM_Let (NonRec,
             [{ mllb_meta=[];
+               mllb_attrs=[];
                mllb_name=name;
                mllb_tysc=None;
                mllb_add_unit=false;
                mllb_def=discrBody;
-               print_typ=false}] )
+               print_typ=false}] ) |> mk_mlmodule1

@@ -4,7 +4,7 @@ open FStar.All
 open FStar.IO
 open FStar.Int.Cast
 open FStar.Int.Cast.Full
-open FStar.Tactics
+open FStar.Tactics.V2
 
 module I8   = FStar.Int8
 module I16  = FStar.Int16
@@ -94,7 +94,7 @@ let test_i32_arith_right () : ML unit =
         (I32.to_string (I32.int_to_t (- pow2 31) `I32.shift_arithmetic_right` 31ul) = "-1");
     ()
 
-#push-options "--lax" // sigh, it's this or a huge rlimit
+#push-options "--admit_smt_queries true" // sigh, it's this or a huge rlimit
 let test_i32_left () : ML unit =
     check "i32l0"
         (I32.to_string (I32.int_to_t 1 `I32.shift_left` 0ul)  = "1");

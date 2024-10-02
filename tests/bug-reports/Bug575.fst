@@ -26,7 +26,7 @@ noeq type multi (r:relation) : int -> Type0 =
 
 // Because the dependent pattern matching here goes wrong
 //    Probably because the abbreviation isn't unfolded at the right time
-//#set-options "--debug Bug575 --debug_level Rel --debug_level RelCheck"
+//#set-options "--debug Rel,RelCheck"
 let is_Multi_step (r:relation) (x:int) (projectee : multi r x) =
   match projectee with
   | Multi_step y ry  -> true

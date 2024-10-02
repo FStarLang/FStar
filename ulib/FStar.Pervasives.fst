@@ -28,6 +28,11 @@ let smt_pat_or _ = ()
 
 let spinoff p = p
 
+#push-options "--no_tactics"
+let spinoff_eq _ = ()
+let spinoff_equiv _ = ()
+#pop-options
+
 let assert_spinoff _ = ()
 
 let ambient #_ _ = True
@@ -50,6 +55,7 @@ type norm_step =
   | Iota // Reduce case analysis (i.e., match)
   | NBE // Use normalization-by-evaluation, instead of interpretation (experimental)
   | Reify // Reify effectful definitions into their representations
+  | NormDebug // Turn on debugging for this call
   | UnfoldOnly : list string -> norm_step // Unlike Delta, unfold definitions for only the given
   // names, each string is a fully qualified name
   // like `A.M.f`
@@ -57,7 +63,9 @@ type norm_step =
   | UnfoldFully : list string -> norm_step
   | UnfoldAttr : list string -> norm_step // Unfold definitions marked with the given attributes
   | UnfoldQual : list string -> norm_step
+  | UnfoldNamespace : list string -> norm_step
   | Unmeta : norm_step
+  | Unascribe // Remove type ascriptions [t <: ty ~> t]
 
 irreducible
 let simplify = Simpl
@@ -73,6 +81,9 @@ let primops = Primops
 
 irreducible
 let delta = Delta
+
+irreducible
+let norm_debug = NormDebug
 
 irreducible
 let zeta = Zeta
@@ -102,7 +113,13 @@ irreducible
 let delta_qualifier s = UnfoldAttr s
 
 irreducible
+let delta_namespace s = UnfoldNamespace s
+
+irreducible
 let unmeta = Unmeta
+
+irreducible
+let unascribe = Unascribe
 
 let norm _ #_ x = x
 
@@ -152,25 +169,38 @@ let handle_smt_goals = ()
 
 let erasable = ()
 
-let allow_informative_binders = ()
-
 let commute_nested_matches = ()
 
 let noextract_to _ = ()
 
 let normalize_for_extraction _ = ()
 
-let ite_soundness_by = ()
+let ite_soundness_by _ = ()
 
 let default_effect _ = ()
+let top_level_effect _ = ()
+let effect_param = ()
 let bind_has_range_args = ()
+let primitive_extraction = ()
+
+let extract_as_impure_effect = ()
 
 let strictly_positive = ()
 
+let unused = ()
+
 let no_auto_projectors = ()
+
+let no_auto_projectors_decls = ()
 
 let no_subtyping = ()
 
+let admit_termination = ()
+
 let singleton #_ x = x
 
-let with_type #_ e = e
+let coercion = ()
+
+let desugar_of_variant_record _ = ()
+
+let defer_to #a (_:a) = ()

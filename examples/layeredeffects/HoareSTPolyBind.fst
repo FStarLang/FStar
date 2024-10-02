@@ -84,13 +84,13 @@ let if_then_else (a:Type)
   (fun h0 r h1 -> (p ==> post_f h0 r h1) /\ ((~ p) ==> post_g h0 r h1))
 
 reflectable
-layered_effect {
-  HoareST : a:Type -> pre:pre_t -> post:post_t a -> Effect
-  with repr         = repr;
-       return       = returnc;
-       bind         = bind;
-       subcomp      = subcomp;
-       if_then_else = if_then_else
+effect {
+  HoareST (a:Type) (pre:pre_t) (post:post_t a)
+  with {repr;
+        return = returnc;
+        bind;
+        subcomp;
+        if_then_else}
 }
 
 
@@ -136,25 +136,17 @@ let get ()
   (fun h0 h h1 -> h0 == h1 /\ h == h1)
 = HoareST?.reflect get
 
-assume val elim_pure_wp_monotonicity_forall (_:unit)
-  : Lemma
-    (forall (a:Type) (wp:pure_wp a).
-       (forall (p q:pure_post a).
-          (forall (x:a). p x ==> q x) ==>
-          (wp p ==> wp q)))
-
-
 /// We don't define a traditional lift from PURE to HoareST
 ///
 /// But rather we define two polymonadic binds
 
 
 let bind_pure_hoarest (a:Type) (b:Type) (wp:pure_wp a) (req:a -> pre_t) (ens:a -> post_t b)
-  (f:eqtype_as_type unit -> PURE a wp) (g:(x:a -> repr b (req x) (ens x)))
+  (f:unit -> PURE a wp) (g:(x:a -> repr b (req x) (ens x)))
 : repr b
   (fun h -> wp (fun x -> req x h))
   (fun h0 r h1 -> exists x. (~ (wp (fun r -> r =!= x))) /\ ens x h0 r h1)
-= elim_pure_wp_monotonicity_forall ();
+= FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
   fun _ ->
   let x = f () in
   g x ()
@@ -164,11 +156,11 @@ polymonadic_bind (PURE, HoareST) |> HoareST = bind_pure_hoarest
 
 
 let bind_hoarest_pure (a:Type) (b:Type) (req:pre_t) (ens:post_t a) (wp:a -> pure_wp b)
-  (f:repr a req ens) (g:(x:a -> eqtype_as_type unit -> PURE b (wp x)))
+  (f:repr a req ens) (g:(x:a -> unit -> PURE b (wp x)))
 : repr b
   (fun h -> req h /\ (forall x h1. ens h x h1 ==> (wp x) (fun _ -> True)))
   (fun h0 r h1 -> exists x. ens h0 x h1 /\ (~ ((wp x) (fun y -> y =!= r))))
-= elim_pure_wp_monotonicity_forall ();
+= FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
   fun _ ->
   let x = f () in
   (g x) ()
@@ -181,13 +173,13 @@ polymonadic_bind (HoareST, PURE) |> HoareST = bind_hoarest_pure
 //  *)
 
 let subcomp_pure_hoarest (a:Type) (wp:pure_wp a) (req:pre_t) (ens:post_t a)
-  (f:eqtype_as_type unit -> PURE a wp)
+  (f:unit -> PURE a wp)
 : Pure (repr a req ens)
   (requires
     (forall h. req h ==>  wp (fun _ -> True)) /\
     (forall h0 r h1. (~ (wp (fun x -> x =!= r \/ h0 =!= h1))) ==>  ens h0 r h1))
   (ensures fun _ -> True)
-= elim_pure_wp_monotonicity_forall ();
+= FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
   fun _ -> f ()
 
 polymonadic_subcomp PURE <: HoareST = subcomp_pure_hoarest

@@ -1,0 +1,67 @@
+[
+  "ªªÿd\u0014\u0000óvzÅW◊å\f¿Ç",
+  [
+    [
+      "FStar.String.make",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "52c2933931ffec6982d8b74cc2c7f581"
+    ],
+    [
+      "FStar.String.sub",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "529c05ee8b98babf2186d89adbfd9425"
+    ],
+    [
+      "FStar.String.index_string_of_list",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.String.strlen" ],
+      0,
+      "cc4c8db811441cc2fe4ada7efc51a09a"
+    ],
+    [
+      "FStar.String.index_list_of_string",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.String.strlen",
+        "refinement_interpretation_Tm_refine_1ca113d8204771fcd4ddf6572679125d",
+        "string_inversion"
+      ],
+      0,
+      "4f9fae1bf38ae54e7d5201f52e2418a5"
+    ],
+    [
+      "FStar.String.concat_injective",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.Base.op_At",
+        "equation_FStar.String.strlen"
+      ],
+      0,
+      "ca7094cf6cca118697649e29f81b3e75"
+    ]
+  ]
+]

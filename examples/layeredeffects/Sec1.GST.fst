@@ -5,7 +5,7 @@ let op t0 t1 = match t0, t1 with _, RW | RW, _ -> RW | _ -> R
 let gst (a:Type) (t:tag) =
   match t with
   | R -> (state -> a)
-  | RW -> (state -> a * state)
+  | RW -> (state -> a & state)
 let return a (x:a)
   : gst a R
   = fun s -> x
@@ -41,21 +41,22 @@ let gst_read : gst state R = fun s -> s
 let gst_write (s:state) : gst unit RW = fun _ -> (), s
 
 reflectable
-layered_effect {
-  GST : a:Type -> tag -> Effect
-  with
-  repr = gst;
-  return = return;
-  bind = bind
+effect {
+  GST (a:Type) (_:tag)
+  with {repr = gst;
+        return;
+        bind}
 }
 let read () : GST state R = GST?.reflect gst_read
 let write (s:state) : GST unit RW = GST?.reflect (gst_write s)
-let u : Type = unit
-let lift_pure a (x:u -> Tot a)
-  : gst a R
-  = fun (_:state) -> x()
+let lift_pure a (wp:pure_wp a) (f:unit -> PURE a wp)
+  : Pure (gst a R)
+         (requires wp (fun _ -> True))
+         (ensures fun _ -> True)
+  = fun s -> f ()
 
 sub_effect PURE ~> GST = lift_pure
+
 
 let increment ()
   : GST unit RW

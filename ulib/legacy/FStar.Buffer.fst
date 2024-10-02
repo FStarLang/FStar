@@ -21,7 +21,7 @@ module Int32 = FStar.Int32
 open FStar.HyperStack
 open FStar.HyperStack.ST
 open FStar.Ghost
-
+module L = FStar.List.Tot.Base
 
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
@@ -824,8 +824,8 @@ let create #a init len =
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
 unfold let p (#a:Type0) (init:list a) : GTot Type0 =
-  normalize (0 < FStar.List.Tot.length init) /\
-  normalize (FStar.List.Tot.length init <= UInt.max_int 32)
+  normalize (0 < L.length init) /\
+  normalize (L.length init <= UInt.max_int 32)
 
 unfold let q (#a:Type0) (len:nat) (buf:buffer a) : GTot Type0 =
   normalize (length buf == len)
@@ -834,7 +834,7 @@ unfold let q (#a:Type0) (len:nat) (buf:buffer a) : GTot Type0 =
 val createL: #a:Type0 -> init:list a -> StackInline (buffer a)
   (requires (fun h -> p #a init))
   (ensures (fun (h0:mem) b h1 ->
-     let len = FStar.List.Tot.length init in
+     let len = L.length init in
      len > 0
      /\ b `unused_in` h0
      /\ live h1 b /\ idx b == 0 /\ length b == len
@@ -846,7 +846,7 @@ val createL: #a:Type0 -> init:list a -> StackInline (buffer a)
 #set-options "--initial_fuel 1 --max_fuel 1" //the normalize_term (length init) in the pre-condition will be unfolded
 	                                     //whereas the L.length init below will not
 let createL #a init =
-  let len = UInt32.uint_to_t (FStar.List.Tot.length init) in
+  let len = UInt32.uint_to_t (L.length init) in
   let s = Seq.seq_of_list init in
   let content: reference (lseq a (v len)) =
     salloc (Seq.seq_of_list init) in
@@ -1170,6 +1170,7 @@ val blit: #t:Type
         Seq.slice (as_seq h0 b) 0 (v idx_b)
       /\ Seq.slice (as_seq h1 b) (v idx_b+v len) (length b) ==
         Seq.slice (as_seq h0 b) (v idx_b+v len) (length b) ))
+#restart-solver
 let rec blit #t a idx_a b idx_b len =
   let h0 = HST.get () in
   if len =^ 0ul then ()
@@ -1212,7 +1213,7 @@ let rec fill #t b z len =
   Seq.lemma_eq_intro (Seq.slice (as_seq h1 b) 0 (v len)) (Seq.create (v len) z)
 
 
-let split #t (b:buffer t) (i:UInt32.t{v i <= length b}) : Tot (buffer t * buffer t)
+let split #t (b:buffer t) (i:UInt32.t{v i <= length b}) : Tot (buffer t & buffer t)
   = sub b 0ul i, offset b i
 
 let join #t (b:buffer t) (b':buffer t{b.max_length == b'.max_length /\ b.content === b'.content /\ idx b + length b == idx b'}) : Tot (buffer t)
@@ -1444,7 +1445,7 @@ let lemma_equal_domains_2 (h0 h1 h2 h3 h4:mem) : Lemma
 let rec assignL #a (l: list a) (b: buffer a): Stack unit
   (requires (fun h0 ->
     live h0 b /\
-    length b = List.Tot.length l))
+    length b = L.length l))
   (ensures (fun h0 _ h1 ->
     live h1 b /\
     modifies_1 b h0 h1 /\

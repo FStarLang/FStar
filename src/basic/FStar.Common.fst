@@ -49,8 +49,8 @@ let try_convert_file_name_to_mixed =
     else
       s
 
-let snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int * 'b) = BU.atomically (fun () ->
-  let len = List.length !stackref in
+let snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b) = BU.atomically (fun () ->
+  let len : int = List.length !stackref in
   let arg' = push arg in
   (len, arg'))
 
@@ -70,8 +70,25 @@ let raise_failed_assertion msg =
 let runtime_assert b msg =
   if not b then raise_failed_assertion msg
 
-let string_of_list (f : 'a -> string) (l : list 'a) : string =
-  "[" ^ String.concat ", " (List.map f l) ^ "]"
+let __string_of_list (delim:string) (f : 'a -> string) (l : list 'a) : string =
+  match l with
+  | [] -> "[]"
+  | x::xs ->
+    let strb = BU.new_string_builder () in
+    BU.string_builder_append strb "[";
+    BU.string_builder_append strb (f x);
+    List.iter (fun x ->
+               BU.string_builder_append strb delim;
+               BU.string_builder_append strb (f x)
+               ) xs ;
+    BU.string_builder_append strb "]";
+    BU.string_of_string_builder strb
+
+(* Why two? This function was added during a refactoring, and
+both variants existed. We cannot simply move to ";" since that is a
+breaking change to anything that parses F* source code (like Vale). *)
+let string_of_list = __string_of_list ", "
+let string_of_list' = __string_of_list "; "
 
 let list_of_option (o:option 'a) : list 'a =
     match o with
@@ -95,7 +112,7 @@ let tabulate (n:int) (f : int -> 'a) : list 'a =
   * l@r == xs
   * and l is the largest list satisfying that
   *)
-let rec max_prefix (f : 'a -> bool) (xs : list 'a) : list 'a * list 'a =
+let rec max_prefix (f : 'a -> bool) (xs : list 'a) : list 'a & list 'a =
   match xs with
   | [] -> [], []
   | x::xs when f x ->
@@ -109,7 +126,7 @@ let rec max_prefix (f : 'a -> bool) (xs : list 'a) : list 'a * list 'a =
   * l@r == xs
   * and r is the largest list satisfying that
   *)
-let max_suffix (f : 'a -> bool) (xs : list 'a) : list 'a * list 'a =
+let max_suffix (f : 'a -> bool) (xs : list 'a) : list 'a & list 'a =
   let rec aux acc xs =
     match xs with
     | [] -> acc, []
@@ -119,3 +136,21 @@ let max_suffix (f : 'a -> bool) (xs : list 'a) : list 'a * list 'a =
       (acc, x::xs)
   in
   xs |> List.rev |> aux [] |> (fun (xs, ys) -> List.rev ys, xs)
+
+let rec eq_list (f: 'a -> 'a -> bool) (l1 l2 : list 'a)
+  : bool
+  = match l1, l2 with
+    | [], [] -> true
+    | [], _ | _, [] -> false
+    | x1::t1, x2::t2 -> f x1 x2 && eq_list f t1 t2
+
+let psmap_to_list m =
+  BU.psmap_fold m (fun k v a -> (k,v)::a) []
+let psmap_keys m =
+  BU.psmap_fold m (fun k v a -> k::a) []
+let psmap_values m =
+  BU.psmap_fold m (fun k v a -> v::a) []
+
+let option_to_list = function
+  | None -> []
+  | Some x -> [x]

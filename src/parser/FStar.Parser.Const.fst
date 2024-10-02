@@ -45,6 +45,10 @@ let bytes_lid        = pconst "bytes"
 let int_lid          = pconst "int"
 let exn_lid          = pconst "exn"
 let list_lid         = pconst "list"
+let immutable_array_t_lid = p2l ["FStar"; "ImmutableArray"; "Base"; "t"]
+let immutable_array_of_list_lid  = p2l ["FStar"; "ImmutableArray"; "Base"; "of_list"]
+let immutable_array_length_lid   = p2l ["FStar"; "ImmutableArray"; "Base"; "length"]
+let immutable_array_index_lid    = p2l ["FStar"; "ImmutableArray"; "Base"; "index"]
 let eqtype_lid       = pconst "eqtype"
 let option_lid       = psnconst "option"
 let either_lid       = psconst "either"
@@ -66,6 +70,7 @@ let int32_lid   = p2l ["FStar"; "Int32"; "t"]
 let uint32_lid  = p2l ["FStar"; "UInt32"; "t"]
 let int64_lid   = p2l ["FStar"; "Int64"; "t"]
 let uint64_lid  = p2l ["FStar"; "UInt64"; "t"]
+let sizet_lid  = p2l ["FStar"; "SizeT"; "t"]
 
 let salloc_lid = p2l ["FStar"; "ST"; "salloc"]
 let swrite_lid = p2l ["FStar"; "ST"; "op_Colon_Equals"]
@@ -82,6 +87,7 @@ let char_lid  = p2l ["FStar"; "Char"; "char"]
 let heap_lid   = p2l ["FStar"; "Heap"; "heap"]
 
 let logical_lid = pconst "logical"
+let prop_lid    = pconst "prop"
 
 let smt_theory_symbol_attr_lid = pconst "smt_theory_symbol"
 
@@ -121,6 +127,8 @@ let none_lid              = psnconst  "None"
 let assume_lid            = pconst  "_assume"
 let assert_lid            = pconst  "_assert"
 let pure_wp_lid           = pconst "pure_wp"
+let pure_wp_monotonic_lid = pconst "pure_wp_monotonic"
+let pure_wp_monotonic0_lid = pconst "pure_wp_monotonic0"
 let trivial_pure_post_lid = psconst "trivial_pure_post"
 let pure_assert_wp_lid    = pconst "pure_assert_wp0"
 let pure_assume_wp_lid    = pconst "pure_assume_wp0"
@@ -130,6 +138,9 @@ let list_append_lid       = p2l ["FStar"; "List"; "append"]
 (* list_tot_append_lid is used to desugar @ everywhere else *)
 let list_tot_append_lid   = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let id_lid                = psconst "id"
+
+let seq_cons_lid              = p2l ["FStar"; "Seq"; "Base"; "cons"]
+let seq_empty_lid             = p2l ["FStar"; "Seq"; "Base"; "empty"]
 
 /// Constants from FStar.Char
 let c2l s = p2l ["FStar"; "Char"; s]
@@ -154,6 +165,8 @@ let prims_op_Hat_lid = pconst "op_Hat"
 let let_in_typ      = p2l ["Prims"; "Let"]
 let string_of_int_lid = p2l ["Prims"; "string_of_int"]
 let string_of_bool_lid = p2l ["Prims"; "string_of_bool"]
+let int_of_string_lid = p2l ["FStar"; "Parse"; "int_of_string"]
+let bool_of_string_lid = p2l ["FStar"; "Parse"; "bool_of_string"]
 let string_compare = p2l ["FStar"; "String"; "compare"]
 let order_lid       = p2l ["FStar"; "Order"; "order"]
 let vconfig_lid     = p2l ["FStar"; "VConfig"; "vconfig"]
@@ -175,6 +188,7 @@ let op_Modulus         = pconst "op_Modulus"
 let op_And             = pconst "op_AmpAmp"
 let op_Or              = pconst "op_BarBar"
 let op_Negation        = pconst "op_Negation"
+let subtype_of_lid     = pconst "subtype_of"
 
 let real_const  s        = p2l ["FStar";"Real";s]
 let real_op_LT           = real_const "op_Less_Dot"
@@ -208,6 +222,16 @@ let bv_shift_right_lid = bvconst "bvshr"
 let bv_udiv_lid        = bvconst "bvdiv"
 let bv_mod_lid         = bvconst "bvmod"
 let bv_mul_lid         = bvconst "bvmul"
+// shifts, division and multiplication take natural numbers as their second
+// arguments, which incurs some encoding overhead. The primed versions bvshl',
+// bvshr', bvdiv_unsafe, bvmod_unsafe and bvmul' take a bitvector as the second
+// argument instead, which more closely matches SMT-LIB.
+let bv_shift_left'_lid = bvconst "bvshl'"
+let bv_shift_right'_lid= bvconst "bvshr'"
+let bv_udiv_unsafe_lid = bvconst "bvdiv_unsafe"
+let bv_mod_unsafe_lid  = bvconst "bvmod_unsafe"
+let bv_mul'_lid        = bvconst "bvmul'"
+
 let bv_ult_lid         = bvconst "bvult"
 let bv_uext_lid        = bvconst "bv_uext"
 
@@ -283,29 +307,21 @@ let as_requires    = pconst "as_requires"
 let as_ensures     = pconst "as_ensures"
 let decreases_lid  = pconst "decreases"
 
-let inspect        = p2l ["FStar"; "Tactics"; "Builtins"; "inspect"]
-let pack           = p2l ["FStar"; "Tactics"; "Builtins"; "pack"]
-let binder_to_term = p2l ["FStar"; "Tactics"; "Derived"; "binder_to_term"]
-
 let reveal = p2l ["FStar"; "Ghost"; "reveal"]
 let hide   = p2l ["FStar"; "Ghost"; "hide"]
 
-let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
-let term_view_lid  = p2l ["FStar"; "Reflection"; "Data"; "term_view"]
+(* FStar.Range *)
+let labeled_lid    = p2l ["FStar"; "Range"; "labeled"]
+let __range_lid    = p2l ["FStar"; "Range"; "__range"]
+let range_lid      = p2l ["FStar"; "Range"; "range"] (* this is a sealed version of the above *)
+let range_0        = p2l ["FStar"; "Range"; "range_0"]
+let mk_range_lid   = p2l ["FStar"; "Range"; "mk_range"]
+let __mk_range_lid = p2l ["FStar"; "Range"; "__mk_range"]
+let __explode_range_lid = p2l ["FStar"; "Range"; "explode"]
+let join_range_lid   = p2l ["FStar"; "Range"; "join_range"]
 
-let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
-
-let ctx_uvar_and_subst_lid = p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
-let universe_uvar_lid      = p2l ["FStar"; "Reflection"; "Types"; "universe_uvar"]
-
-
-let range_lid      = pconst "range"
-let range_of_lid   = pconst "range_of"
-let labeled_lid    = pconst "labeled"
-let range_0        = pconst "range_0"
 let guard_free     = pconst "guard_free"
 let inversion_lid  = p2l ["FStar"; "Pervasives"; "inversion"]
-let with_type_lid  = psconst "with_type"
 
 (* Constants for marking terms with normalization hints *)
 let normalize      = psconst "normalize"
@@ -322,10 +338,13 @@ let steps_zeta_full     = psconst "zeta_full"
 let steps_iota          = psconst "iota"
 let steps_delta         = psconst "delta"
 let steps_reify         = psconst "reify_"
+let steps_norm_debug    = psconst "norm_debug"
 let steps_unfoldonly    = psconst "delta_only"
 let steps_unfoldfully   = psconst "delta_fully"
 let steps_unfoldattr    = psconst "delta_attr"
 let steps_unfoldqual    = psconst "delta_qualifier"
+let steps_unfoldnamespace = psconst "delta_namespace"
+let steps_unascribe     = psconst "unascribe"
 let steps_nbe           = psconst "nbe"
 let steps_unmeta        = psconst "unmeta"
 
@@ -340,30 +359,37 @@ let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
 let must_erase_for_extraction_attr = psconst "must_erase_for_extraction"
 let strict_on_arguments_attr = p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
 let resolve_implicits_attr_string = "FStar.Pervasives.resolve_implicits"
+let unification_tag_lid = psconst "defer_to"
 let override_resolve_implicits_handler_lid = p2l ["FStar"; "Pervasives"; "override_resolve_implicits_handler"]
 let handle_smt_goals_attr = psconst "handle_smt_goals"
 let handle_smt_goals_attr_string = "FStar.Pervasives.handle_smt_goals"
 let erasable_attr = p2l ["FStar"; "Pervasives"; "erasable"]
 let comment_attr = p2l ["FStar"; "Pervasives"; "Comment"]
+let c_inline_attr = p2l ["FStar"; "Pervasives"; "CInline"]
 let fail_attr      = psconst "expect_failure"
 let fail_lax_attr  = psconst "expect_lax_failure"
 let tcdecltime_attr = psconst "tcdecltime"
 let noextract_to_attr = psconst "noextract_to"
 let unifier_hint_injective_lid = psconst "unifier_hint_injective"
 let normalize_for_extraction_lid = psconst "normalize_for_extraction"
-let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
-let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
-let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
-let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Compiler.Range.dummyRange
 let commute_nested_matches_lid = psconst "commute_nested_matches"
-let allow_informative_binders_attr = psconst "allow_informative_binders"
 let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 let ite_soundness_by_attr = psconst "ite_soundness_by"
 let default_effect_attr = psconst "default_effect"
+let top_level_effect_attr = psconst "top_level_effect"
+let effect_parameter_attr = psconst "effect_param"
 let bind_has_range_args_attr = psconst "bind_has_range_args"
+let primitive_extraction_attr = psconst "primitive_extraction"
 let binder_strictly_positive_attr = psconst "strictly_positive"
+let binder_unused_attr = psconst "unused"
+let no_auto_projectors_decls_attr = psconst "no_auto_projectors_decls"
 let no_auto_projectors_attr = psconst "no_auto_projectors"
 let no_subtping_attr_lid = psconst "no_subtyping"
+let admit_termination_lid = psconst "admit_termination"
+let unrefine_binder_attr = pconst "unrefine"
+let do_not_unrefine_attr = pconst "do_not_unrefine"
+let attr_substitute_lid = p2l ["FStar"; "Pervasives"; "Substitute"]
+let desugar_of_variant_record_lid = psconst "desugar_of_variant_record"
 
 
 //the type of well-founded relations, used for decreases clauses with relations
@@ -386,15 +412,17 @@ let const_to_string x = match x with
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
   | Const_real r -> r^"R"
-  | Const_float x ->      U.string_of_float x
   | Const_string(s, _) -> U.format1 "\"%s\"" s
-  | Const_bytearray _  ->  "<bytearray>"
   | Const_int (x, _) -> x
   | Const_char c -> "'" ^ U.string_of_char c ^ "'"
   | Const_range r -> FStar.Compiler.Range.string_of_range r
   | Const_range_of -> "range_of"
   | Const_set_range_of -> "set_range_of"
-  | Const_reify -> "reify"
+  | Const_reify lopt ->
+    U.format1 "reify%s"
+      (match lopt with
+       | None -> ""
+       | Some l -> U.format1 "<%s>" (string_of_lid l))    
   | Const_reflect l -> U.format1 "[[%s.reflect]]" (sli l)
 
 
@@ -406,6 +434,8 @@ let mk_tuple_lid n r =
 
 let lid_tuple2   = mk_tuple_lid 2 dummyRange
 let lid_tuple3   = mk_tuple_lid 3 dummyRange
+let lid_tuple4   = mk_tuple_lid 4 dummyRange
+let lid_tuple5   = mk_tuple_lid 5 dummyRange
 
 let is_tuple_constructor_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.tuple"
@@ -419,6 +449,8 @@ let mk_tuple_data_lid n r =
 
 let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
 let lid_Mktuple3 = mk_tuple_data_lid 3 dummyRange
+let lid_Mktuple4 = mk_tuple_data_lid 4 dummyRange
+let lid_Mktuple5 = mk_tuple_data_lid 5 dummyRange
 
 let is_tuple_datacon_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.Mktuple"
@@ -463,11 +495,19 @@ let is_name (lid:lident) =
   let c = U.char_at (string_of_id (ident_of_lid lid)) 0 in
   U.is_upper c
 
+let term_view_lid  = p2l ["FStar"; "Reflection"; "V1"; "Data"; "term_view"]
+
 (* tactic constants *)
 let fstar_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStar.Compiler.Range.dummyRange
+let fstar_stubs_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Stubs"; "Tactics"]@s) FStar.Compiler.Range.dummyRange
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tac_lid = fstar_tactics_lid' ["Effect"; "tac"]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
+
+let tac_opaque_attr = pconst "tac_opaque"
+
+let meta_projectors_attr = fstar_tactics_lid' ["MkProjectors"; "meta_projectors"]
+let mk_projs_lid   = fstar_tactics_lid' ["MkProjectors"; "mk_projs"]
 
 let mk_class_lid   = fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
@@ -483,11 +523,25 @@ let rewrite_by_tactic_lid = fstar_tactics_lid' ["Effect"; "rewrite_with_tactic"]
 let synth_lid = fstar_tactics_lid' ["Effect"; "synth_by_tactic"]
 let assert_by_tactic_lid = fstar_tactics_lid' ["Effect"; "assert_by_tactic"]
 let fstar_syntax_syntax_term = FStar.Ident.lid_of_str "FStar.Syntax.Syntax.term"
-let binder_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binder"]) FStar.Compiler.Range.dummyRange
-let binders_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binders"]) FStar.Compiler.Range.dummyRange
-let bv_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "bv"]) FStar.Compiler.Range.dummyRange
-let fv_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "fv"]) FStar.Compiler.Range.dummyRange
+let binder_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "binder"]) FStar.Compiler.Range.dummyRange
+let binders_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "binders"]) FStar.Compiler.Range.dummyRange
+let bv_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "bv"]) FStar.Compiler.Range.dummyRange
+let fv_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "fv"]) FStar.Compiler.Range.dummyRange
 let norm_step_lid = psconst "norm_step"
+let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
+let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
+let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
+let term_lid       = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "term"]
+let ctx_uvar_and_subst_lid = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
+let universe_uvar_lid      = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "universe_uvar"]
+let check_with_lid = lid_of_path (["FStar"; "VConfig"; "check_with"]) FStar.Compiler.Range.dummyRange
+
+let decls_lid      = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "decls"]
+
+// meta dsl constants
+let dsl_typing_builtin s = lid_of_path (["FStar"; "Reflection"; "Typing"; "Builtins"]@[s]) FStar.Compiler.Range.dummyRange
+let dsl_tac_typ_lid = lid_of_path ["FStar"; "Reflection"; "Typing"; "dsl_tac_t"] FStar.Compiler.Range.dummyRange
+
 
 (* Calculational proofs, from FStar.Calc *)
 let calc_lid i : lid = lid_of_path ["FStar"; "Calc"; i] FStar.Compiler.Range.dummyRange
@@ -515,10 +569,34 @@ let and_elim_lid = classical_sugar_lid "and_elim"
 
 let match_returns_def_name = reserved_prefix ^ "_ret_"
 
-//
-// lid for the reify function assume val for an indexed effect
-//
-let layered_effect_reify_val_lid (eff_name:lident) (r:range) : lident =
-  let ns = Ident.ns_of_lid eff_name in
-  let reify_fn_name = "reify___" ^ (eff_name |> ident_of_lid |> string_of_id) in
-  lid_of_ns_and_id ns (mk_ident (reify_fn_name, r))
+let steel_memory_inv_lid = FStar.Ident.lid_of_path ["Steel"; "Memory"; "inv"] FStar.Compiler.Range.dummyRange
+
+let steel_new_invariant_lid = FStar.Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "new_invariant"] FStar.Compiler.Range.dummyRange
+let steel_st_new_invariant_lid = FStar.Ident.lid_of_path ["Steel"; "ST"; "Util"; "new_invariant"] FStar.Compiler.Range.dummyRange
+
+let steel_with_invariant_g_lid = FStar.Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "with_invariant_g"] FStar.Compiler.Range.dummyRange
+let steel_st_with_invariant_g_lid = FStar.Ident.lid_of_path ["Steel"; "ST"; "Util"; "with_invariant_g"] FStar.Compiler.Range.dummyRange
+
+let steel_with_invariant_lid = FStar.Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "with_invariant"] FStar.Compiler.Range.dummyRange
+let steel_st_with_invariant_lid = FStar.Ident.lid_of_path ["Steel"; "ST"; "Util"; "with_invariant"] FStar.Compiler.Range.dummyRange
+
+
+(* on_domain_lids are constant, so compute them once *)
+let fext_lid s = Ident.lid_of_path ["FStar"; "FunctionalExtensionality"; s] FStar.Compiler.Range.dummyRange
+let fext_on_domain_lid = fext_lid "on_domain"
+let fext_on_dom_lid = fext_lid "on_dom"
+let fext_on_domain_g_lid = fext_lid "on_domain_g"
+let fext_on_dom_g_lid = fext_lid "on_dom_g"
+
+let sealed_lid      = p2l ["FStar"; "Sealed"; "sealed"]
+let seal_lid        = p2l ["FStar"; "Sealed"; "seal"]
+let unseal_lid      = p2l ["FStar"; "Tactics"; "Unseal"; "unseal"] (* In a separate module due to the mention of TAC *)
+let map_seal_lid    = p2l ["FStar"; "Sealed"; "map_seal"]
+let bind_seal_lid   = p2l ["FStar"; "Sealed"; "bind_seal"]
+let tref_lid        = p2l ["FStar"; "Stubs"; "Tactics"; "Types"; "tref"]
+
+let document_lid = p2l ["FStar"; "Stubs"; "Pprint"; "document"]
+let issue_lid = p2l ["FStar"; "Issue"; "issue"]
+
+let extract_as_lid = p2l ["FStar"; "ExtractAs"; "extract_as"]
+let extract_as_impure_effect_lid = p2l ["FStar"; "Pervasives"; "extract_as_impure_effect"]

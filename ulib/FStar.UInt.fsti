@@ -50,6 +50,7 @@ let fits (x:int) (n:nat) : Tot bool = min_int n <= x && x <= max_int n
 let size (x:int) (n:nat) : Tot Type0 = b2t(fits x n)
 
 (* Machine integer type *)
+[@@do_not_unrefine]
 type uint_t (n:nat) = x:int{size x n}
 
 /// Constants
@@ -172,14 +173,14 @@ let lte #n (a:uint_t n) (b:uint_t n) : Tot bool = (a <= b)
 
 let to_uint_t (m:nat) (a:int) : Tot (uint_t m) = a % pow2 m
 
-open FStar.Seq
+open FStar.Seq.Base
 
 (* WARNING: Mind the big endian vs little endian definition *)
 
 (* Casts *)
 let rec to_vec (#n:nat) (num:uint_t n) : Tot (bv_t n) =
-  if n = 0 then Seq.empty #bool
-  else Seq.append (to_vec #(n - 1) (num / 2)) (Seq.create 1 (num % 2 = 1))
+  if n = 0 then empty #bool
+  else append (to_vec #(n - 1) (num / 2)) (create 1 (num % 2 = 1))
 
 let rec from_vec (#n:nat) (vec:bv_t n) : Tot (uint_t n) =
   if n = 0 then 0
@@ -560,8 +561,8 @@ val lemma_mod_sub_distr_l: a:int -> b:int -> p:pos ->
 val lemma_sub_add_cancel: #n:pos -> a:uint_t n -> b:uint_t n ->
   Lemma (sub_mod (add_mod a b) b = a)
 
-let zero_extend_vec (#n:pos) (a:BitVector.bv_t n): Tot (BitVector.bv_t (n+1)) = Seq.append (Seq.create 1 false) a
-let one_extend_vec (#n:pos) (a:BitVector.bv_t n): Tot (BitVector.bv_t (n+1)) = Seq.append (Seq.create 1 true) a
+let zero_extend_vec (#n:pos) (a:BitVector.bv_t n): Tot (BitVector.bv_t (n+1)) = append (create 1 false) a
+let one_extend_vec (#n:pos) (a:BitVector.bv_t n): Tot (BitVector.bv_t (n+1)) = append (create 1 true) a
 
 let zero_extend (#n:pos) (a:uint_t n): Tot (uint_t (n+1)) = from_vec (zero_extend_vec (to_vec a))
 let one_extend (#n:pos) (a:uint_t n): Tot (uint_t (n+1)) = from_vec (one_extend_vec (to_vec a))

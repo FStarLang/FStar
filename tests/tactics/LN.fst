@@ -17,12 +17,16 @@ module LN
 
 (* Making sure that LN violations don't explode the engine *)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let badtm () : Tac term =
-    pack (Tv_BVar (pack_bv ({ bv_index  = 0;
-                              bv_sort   = (`int);
-                              bv_ppname = "ouch"; })))
+    pack (Tv_BVar (pack_bv ({ index  = 0;
+                              sort = seal (pack Tv_Unknown);
+                              ppname = seal "ouch"})))
+
+[@@expect_failure [228]]
+let _ = assert True by (exact (badtm ()))
+
 let _ =
     assert True 
         by (let _ = trytac (fun () -> exact (badtm ())) in

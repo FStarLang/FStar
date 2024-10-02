@@ -20,8 +20,8 @@ module Embeddings
    Tactics should be generated without warnings and compile without errors.
 *)
 
-open FStar.Reflection
-open FStar.Tactics
+open FStar.Reflection.V2
+open FStar.Tactics.V2
 
 (* Simple types *)
 [@@plugin]
@@ -59,7 +59,7 @@ let list_tac: list int -> Tac (list int) = fun n -> admit ()
 let option_tac: option int -> Tac (option term) = fun n -> admit ()
 
 [@@plugin]
-let tuple_tac: (int * bool) -> Tac (string * term) = fun n -> admit ()
+let tuple_tac: (int * bool) -> Tac (string & term) = fun n -> admit ()
 
 [@@plugin]
 let any_tac (#a: Type) (l: list a): Tac (list a) = l

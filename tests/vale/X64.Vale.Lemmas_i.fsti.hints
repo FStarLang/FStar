@@ -1,0 +1,51 @@
+[
+  "\u0004M僜\嬏E 3+7󕇱�",
+  [
+    [
+      "X64.Vale.Lemmas_i.cf",
+      1,
+      1,
+      0,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Prims.pow2.fuel_instrumented",
+        "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
+        "equation_FStar.UInt.min_int", "equation_Prims.nat", "int_typing",
+        "lemma_FStar.UInt.pow2_values", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "37cf4210c0f6420f201daea6a5e0b7d0"
+    ],
+    [
+      "X64.Vale.Lemmas_i.lemma_cmp_ne",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_X64.Machine_s.nat64",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "haseqTm_refine_a608a89bbc0a207d5920d37d906f7f40",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "3f17b1eab4a1a29e8ef23927d1092b62"
+    ],
+    [
+      "X64.Vale.Lemmas_i.lemma_whileTrue",
+      1,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "ab288789dbe4597c94add8ed48804b4d"
+    ]
+  ]
+]

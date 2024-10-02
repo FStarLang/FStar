@@ -39,6 +39,6 @@ module FStar.FiniteMap.Ambient
 
 open FStar.FiniteMap.Base
 
-let all_finite_map_facts_ambient : squash (all_finite_map_facts) =
-  all_finite_map_facts_lemma ()
+let all_finite_map_facts_ambient : squash (all_finite_map_facts u#b) =
+  all_finite_map_facts_lemma u#b ()
 

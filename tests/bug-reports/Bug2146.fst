@@ -1,11 +1,11 @@
 module Bug2146
 
 (* This file should work anyway, but the bug we're checking for was at
-desugaring time, so even --lax took forever. It should take about a
-second. Without --lax, this takes about 30 seconds since it builds a big
+desugaring time, so even --admit_smt_queries true took forever. It should take about a
+second. Without --admit_smt_queries true, this takes about 30 seconds since it builds a big
 VC. *)
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 
 let f (args:list int) : int =
   match args with

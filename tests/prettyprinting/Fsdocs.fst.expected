@@ -20,7 +20,7 @@ module Fh
 
 let ne e1 e2 = CompProp e1 C_Ne e2
 assume new
-type eq : #a: Type -> #m: nat -> #n: nat -> matrix2 m n a -> matrix2 m n a -> Type 
+type eq : #a: Type -> #m: nat -> #n: nat -> matrix2 m n a -> matrix2 m n a -> Type
 
 (* TODO: move to FStar.Reflection.Basic? *)
 (** [push_binder] extends the environment with a single binder.

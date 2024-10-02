@@ -28,6 +28,10 @@ open FStar.Tactics.Types
 open FStar.Tactics.Result
 open FStar.Tactics.Printing
 open FStar.Tactics.Common
+open FStar.Errors.Msg
+
+open FStar.Class.Show
+open FStar.Class.Setlike
 
 module O       = FStar.Options
 module BU      = FStar.Compiler.Util
@@ -39,6 +43,65 @@ module UF      = FStar.Syntax.Unionfind
 module Print   = FStar.Syntax.Print
 module Env     = FStar.TypeChecker.Env
 module Rel     = FStar.TypeChecker.Rel
+module Core    = FStar.TypeChecker.Core
+
+let dbg_Core         = Debug.get_toggle "Core"
+let dbg_CoreEq       = Debug.get_toggle "CoreEq"
+let dbg_RegisterGoal = Debug.get_toggle "RegisterGoal"
+let dbg_TacFail      = Debug.get_toggle "TacFail"
+
+let goal_ctr = BU.mk_ref 0
+let get_goal_ctr () = !goal_ctr
+let incr_goal_ctr () = let v = !goal_ctr in goal_ctr := v + 1; v
+
+let is_goal_safe_as_well_typed (g:goal) =
+  let uv = g.goal_ctx_uvar in
+  let all_deps_resolved =
+      List.for_all 
+          (fun uv -> 
+            match UF.find uv.ctx_uvar_head with
+            | Some t -> is_empty (FStar.Syntax.Free.uvars t)
+            | _ -> false)
+          (U.ctx_uvar_typedness_deps uv)
+  in
+  all_deps_resolved
+
+let register_goal (g:goal) =
+  if not (Options.compat_pre_core_should_register()) then () else
+  let env = goal_env g in
+  if env.phase1 || Options.lax () then () else
+  let uv = g.goal_ctx_uvar in
+  let i = Core.incr_goal_ctr () in
+  if Allow_untyped? (U.ctx_uvar_should_check g.goal_ctx_uvar) then () else
+  let env = {env with gamma = uv.ctx_uvar_gamma } in
+  if !dbg_CoreEq
+  then BU.print1 "(%s) Registering goal\n" (show i);
+  let should_register = is_goal_safe_as_well_typed g in
+  if not should_register
+  then (
+    if !dbg_Core || !dbg_RegisterGoal
+    then BU.print1 "(%s) Not registering goal since it has unresolved uvar deps\n"
+                     (show i);
+        
+    ()
+  )
+  else (
+    if !dbg_Core || !dbg_RegisterGoal
+    then BU.print2 "(%s) Registering goal for %s\n"
+                     (show i)
+                     (show uv);
+    let goal_ty = U.ctx_uvar_typ uv in
+    match FStar.TypeChecker.Core.compute_term_type_handle_guards env goal_ty (fun _ _ -> true) 
+    with
+    | Inl _ -> ()  // ghost is ok
+    | Inr err ->
+      let msg = 
+          BU.format2 "Failed to check initial tactic goal %s because %s"
+                     (show (U.ctx_uvar_typ uv))
+                     (FStar.TypeChecker.Core.print_error_short err)
+      in
+      Errors.log_issue uv.ctx_uvar_range Err.Warning_FailedToCheckInitialTacticGoal msg
+  )
 
 (*
  * A record, so we can keep it somewhat encapsulated and
@@ -58,9 +121,7 @@ let run_safe t ps =
     if Options.tactics_failhard ()
     then run t ps
     else try run t ps
-    with | Errors.Err (_, msg, _)
-         | Errors.Error (_, msg, _, _) -> Failed (TacticFailure msg, ps)
-         | e -> Failed (e, ps)
+    with | e -> Failed (e, ps)
 
 let ret (x:'a) : tac 'a =
     mk_tac (fun ps -> Success (x, ps))
@@ -71,7 +132,10 @@ let bind (t1:tac 'a) (t2:'a -> tac 'b) : tac 'b =
             | Success (a, q)  -> run (t2 a) q
             | Failed (msg, q) -> Failed (msg, q))
 
-let idtac : tac unit = ret ()
+instance monad_tac : monad tac = {
+    return   = ret;
+    ( let! ) = bind;
+}
 
 (* Set the current proofstate *)
 let set (ps:proofstate) : tac unit =
@@ -84,20 +148,27 @@ let get : tac proofstate =
 let traise e =
     mk_tac (fun ps -> Failed (e, ps))
 
-let log ps (f : unit -> unit) : unit =
-    if ps.tac_verb_dbg
-    then f ()
-    else ()
+let do_log ps (f : unit -> unit) : unit =
+  if ps.tac_verb_dbg then
+    f ()
 
-let fail (msg:string) =
+let log (f : unit -> unit) : tac unit =
+  mk_tac (fun ps ->
+    do_log ps f;
+    Success ((), ps))
+
+let fail_doc (msg:error_message) =
     mk_tac (fun ps ->
-        if Env.debug ps.main_context (Options.Other "TacFail") then
-          do_dump_proofstate ps ("TACTIC FAILING: " ^ msg);
-        Failed (TacticFailure msg, ps)
+        if !dbg_TacFail then
+          do_dump_proofstate ps ("TACTIC FAILING: " ^ renderdoc (hd msg));
+        Failed (TacticFailure (msg, None), ps)
     )
+
+let fail msg = fail_doc [text msg]
 
 let catch (t : tac 'a) : tac (either exn 'a) =
     mk_tac (fun ps ->
+            let idtable = !ps.main_context.identifier_info in
             let tx = UF.new_transaction () in
             match run t ps with
             | Success (a, q) ->
@@ -105,6 +176,7 @@ let catch (t : tac 'a) : tac (either exn 'a) =
                 Success (Inr a, q)
             | Failed (m, q) ->
                 UF.rollback tx;
+                ps.main_context.identifier_info := idtable;
                 let ps = { ps with freshness = q.freshness } in //propagate the freshness even on failures
                 Success (Inl m, ps)
            )
@@ -125,40 +197,44 @@ let trytac (t : tac 'a) : tac (option 'a) =
 let trytac_exn (t : tac 'a) : tac (option 'a) =
     mk_tac (fun ps ->
     try run (trytac t) ps
-    with | Errors.Err (_, msg, _)
-         | Errors.Error (_, msg, _, _) ->
-           log ps (fun () -> BU.print1 "trytac_exn error: (%s)" msg);
+    with | Errors.Error (_, msg, _, _) ->
+           do_log ps (fun () -> BU.print1 "trytac_exn error: (%s)" (Errors.rendermsg msg));
            Success (None, ps))
 
-let rec mapM (f : 'a -> tac 'b) (l : list 'a) : tac (list 'b) =
-    match l with
-    | [] -> ret []
-    | x::xs ->
-        bind (f x) (fun y ->
-        bind (mapM f xs) (fun ys ->
-        ret (y::ys)))
+let rec iter_tac f l =
+  match l with
+  | [] -> ret ()
+  | hd::tl -> f hd ;! iter_tac f tl
+
+exception Bad of string
 
 (* private *)
 let nwarn = BU.mk_ref 0
 let check_valid_goal g =
   if Options.defensive () then begin
-    let b = true in
-    let env = (goal_env g) in
-    let b = b && Env.closed env (goal_witness g) in
-    let b = b && Env.closed env (goal_type g) in
-    let rec aux b e =
-        match Env.pop_bv e with
-        | None -> b
-        | Some (bv, e) -> (
-            let b = b && Env.closed e bv.sort in
-            aux b e
-            )
-    in
-    if not (aux b env) && !nwarn < 5
-    then (Err.log_issue (goal_type g).pos
-              (Errors.Warning_IllFormedGoal, BU.format1 "The following goal is ill-formed. Keeping calm and carrying on...\n<%s>\n\n"
-                          (goal_to_string_verbose g));
-          nwarn := !nwarn + 1)
+    try
+      let env = (goal_env g) in
+      if not (Env.closed env (goal_witness g)) then
+        raise (Bad "witness");
+      if not (Env.closed env (goal_type g)) then
+        raise (Bad "goal type");
+      let rec aux e =
+          match Env.pop_bv e with
+          | None -> ()
+          | Some (bv, e) ->
+            if not (Env.closed e bv.sort) then
+              raise (Bad ("bv: " ^ show bv));
+            aux e
+      in
+      aux env
+    with
+     | Bad culprit ->
+       if !nwarn < 5 then begin
+         Err.log_issue (goal_type g)
+           Errors.Warning_IllFormedGoal
+           (BU.format2 "The following goal is ill-formed (%s). Keeping calm and carrying on...\n<%s>\n\n" culprit (goal_to_string_verbose g));
+         nwarn := !nwarn + 1
+       end
   end
 
 let check_valid_goals (gs:list goal) : unit =
@@ -177,6 +253,12 @@ let cur_goals : tac (list goal) =
   bind get (fun ps ->
   ret ps.goals)
 
+let cur_goal_maybe_solved 
+  : tac goal
+  = bind cur_goals (function
+    | [] -> fail "No more goals"
+    | hd::tl -> ret hd)
+
 let cur_goal : tac goal =
   bind cur_goals (function
   | [] -> fail "No more goals"
@@ -186,7 +268,7 @@ let cur_goal : tac goal =
     | Some t ->
       BU.print2 "!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n"
               (goal_to_string_verbose hd)
-              (Print.term_to_string t);
+              (show t);
       ret hd)
 
 let remove_solved_goals : tac unit =
@@ -206,7 +288,7 @@ let replace_cur (g:goal) : tac unit =
     set ({ps with goals=g::(List.tl ps.goals)}))
 
 let getopts : tac FStar.Options.optionstate =
-    bind (trytac cur_goal) (function
+    bind (trytac cur_goal_maybe_solved) (function
     | Some g -> ret g.opts
     | None -> ret (FStar.Options.peek ()))
 
@@ -240,63 +322,77 @@ let add_implicits (i:implicits) : tac unit =
 
 let new_uvar (reason:string) (env:env) (typ:typ)
              (sc_opt:option should_check_uvar)
-             (apply_uvar_deps:list S.ctx_uvar)
+             (uvar_typedness_deps:list ctx_uvar)
              (rng:Range.range) 
-  : tac (term * ctx_uvar) =
+  : tac (term & ctx_uvar) =
     let should_check = 
       match sc_opt with
       | Some sc -> sc
-      | _ -> 
-        if Env.debug env <| Options.Other "2635"
-        then BU.print1 "Tactic introduced a strict uvar for %s\n" 
-               (Print.term_to_string typ);
-        Strict
+      | _ -> Strict
     in
     let u, ctx_uvar, g_u =
-        Env.new_tac_implicit_var reason rng env typ should_check None apply_uvar_deps
+        Env.new_tac_implicit_var reason rng env typ should_check uvar_typedness_deps None false
     in
     bind (add_implicits g_u.implicits) (fun _ ->
-    ret (u, fst (List.hd ctx_uvar)))
+    ret (u, fst ctx_uvar))
 
-let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) (rng:Range.range) opts label : tac goal =
+let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) (sc_opt:option should_check_uvar) (rng:Range.range) opts label : tac goal =
     let typ = U.mk_squash (env.universe_of env phi) phi in
-    bind (new_uvar reason env typ (Some Strict) [] rng) (fun (_, ctx_uvar) ->
+    bind (new_uvar reason env typ sc_opt [] rng) (fun (_, ctx_uvar) ->
     let goal = mk_goal env ctx_uvar opts false label in
     ret goal)
 
 let add_irrelevant_goal' (reason:string) (env:Env.env)
-                         (phi:term) (rng:Range.range)
+                         (phi:term) 
+                         (sc_opt:option should_check_uvar)
+                         (rng:Range.range)
                          (opts:FStar.Options.optionstate)
                          (label:string) : tac unit =
-    bind (mk_irrelevant_goal reason env phi rng opts label) (fun goal ->
+    bind (mk_irrelevant_goal reason env phi sc_opt rng opts label) (fun goal ->
     add_goals [goal])
 
 let add_irrelevant_goal (base_goal:goal) (reason:string) 
-                         (env:Env.env) (phi:term) : tac unit =
-    add_irrelevant_goal' reason env phi base_goal.goal_ctx_uvar.ctx_uvar_range
+                        (env:Env.env) (phi:term)
+                        (sc_opt:option should_check_uvar) : tac unit =
+    add_irrelevant_goal' reason env phi sc_opt
+                         base_goal.goal_ctx_uvar.ctx_uvar_range
                          base_goal.opts base_goal.label
 
-let goal_of_guard (reason:string) (e:Env.env) (f:term) (rng:Range.range) : tac goal =
+let goal_of_guard (reason:string) (e:Env.env)
+                  (f:term) (sc_opt:option should_check_uvar)
+                  (rng:Range.range) : tac goal =
   bind getopts (fun opts ->
-  bind (mk_irrelevant_goal reason e f rng opts "") (fun goal ->
+  bind (mk_irrelevant_goal reason e f sc_opt rng opts "") (fun goal ->
   let goal = { goal with is_guard = true } in
   ret goal))
 
-let wrap_err (pref:string) (t : tac 'a) : tac 'a =
+let wrap_err_doc (pref:error_message) (t : tac 'a) : tac 'a =
     mk_tac (fun ps ->
             match run t ps with
             | Success (a, q) ->
                 Success (a, q)
 
-            | Failed (TacticFailure msg, q) ->
-                Failed (TacticFailure (pref ^ ": " ^ msg), q)
+            | Failed (TacticFailure (msg, r), q) ->
+                Failed (TacticFailure (pref @ msg, r), q)
 
             | Failed (e, q) ->
                 Failed (e, q)
            )
 
+let wrap_err (pref:string) (t : tac 'a) : tac 'a =
+  wrap_err_doc [text ("'" ^ pref ^ "' failed")] t
+
 let mlog f (cont : unit -> tac 'a) : tac 'a =
-    bind get (fun ps -> log ps f; cont ())
+  log f;!
+  cont ()
+
+let if_verbose_tac f =
+  let! ps = get in
+  if ps.tac_verb_dbg
+  then f ()
+  else ret ()
+
+let if_verbose f = if_verbose_tac (fun _ -> f(); ret ()) 
 
 let compress_implicits : tac unit =
     bind get (fun ps ->
@@ -305,3 +401,61 @@ let compress_implicits : tac unit =
     let imps = Rel.resolve_implicits_tac ps.main_context g in
     let ps' = { ps with all_implicits = List.map fst imps } in
     set ps')
+
+module N = FStar.TypeChecker.Normalize
+let get_phi (g:goal) : option term = U.un_squash (N.unfold_whnf (goal_env g) (goal_type g))
+let is_irrelevant (g:goal) : bool = Option.isSome (get_phi g)
+let goal_typedness_deps (g:goal) = U.ctx_uvar_typedness_deps g.goal_ctx_uvar
+
+let set_uvar_expected_typ (u:ctx_uvar) (t:typ)
+  : unit
+  = let dec = UF.find_decoration u.ctx_uvar_head in
+    UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_typ = t })
+
+let mark_uvar_with_should_check_tag (u:ctx_uvar) (sc:should_check_uvar)
+  : unit
+  = let dec = UF.find_decoration u.ctx_uvar_head in
+    UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_should_check = sc })
+
+let mark_uvar_as_already_checked (u:ctx_uvar)
+  : unit
+  = mark_uvar_with_should_check_tag u Already_checked
+
+let mark_goal_implicit_already_checked (g:goal)
+  : unit
+  = mark_uvar_as_already_checked g.goal_ctx_uvar
+
+let goal_with_type g t
+  : goal
+  = let u = g.goal_ctx_uvar in
+    set_uvar_expected_typ u t;
+    g
+
+module Z = FStar.BigInt
+
+let divide (n:Z.t) (l : tac 'a) (r : tac 'b) : tac ('a & 'b) =
+  let! p = get in
+  let! lgs, rgs =
+    try return (List.splitAt (Z.to_int_fs n) p.goals) with
+    | _ -> fail "divide: not enough goals"
+  in
+  let lp = { p with goals = lgs; smt_goals = [] } in
+  set lp;!
+  let! a = l in
+  let! lp' = get in
+  let rp = { lp' with goals = rgs; smt_goals = [] } in
+  set rp;!
+  let! b = r in
+  let! rp' = get in
+  let p' = { rp' with goals = lp'.goals @ rp'.goals;
+                      smt_goals = lp'.smt_goals @ rp'.smt_goals @ p.smt_goals }
+  in
+  set p';!
+  remove_solved_goals;!
+  return (a, b)
+
+(* focus: runs f on the current goal only, and then restores all the goals *)
+(* There is a user defined version as well, we just use this one internally, but can't mark it as private *)
+let focus (f:tac 'a) : tac 'a =
+    let! (a, _) = divide FStar.BigInt.one f (return ()) in
+    return a

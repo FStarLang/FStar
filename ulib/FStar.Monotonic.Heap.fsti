@@ -35,6 +35,7 @@ val emp :heap
 
 val next_addr: heap -> GTot pos
 
+new
 val core_mref ([@@@ strictly_positive] a:Type0) : Type0
 
 let mref (a:Type0) (rel:preorder a) : Type0 = core_mref a
@@ -76,7 +77,7 @@ val upd_tot: #a:Type0 -> #rel:preorder a -> h:heap -> r:mref a rel{h `contains` 
 
 val upd: #a:Type0 -> #rel:preorder a -> h:heap -> r:mref a rel -> x:a -> GTot heap
 
-val alloc: #a:Type0 -> rel:preorder a -> heap -> a -> mm:bool -> Tot (mref a rel * heap)
+val alloc: #a:Type0 -> rel:preorder a -> heap -> a -> mm:bool -> Tot (mref a rel & heap)
 
 val free_mm: #a:Type0 -> #rel:preorder a -> h:heap -> r:mref a rel{h `contains` r /\ is_mm r} -> Tot heap
 

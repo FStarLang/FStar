@@ -14,15 +14,14 @@
    limitations under the License.
 *)
 module FStar.SMTEncoding.Term
-open FStar.Compiler.Effect
-open FStar.Compiler.List
+
 open FStar
 open FStar.Compiler
-open FStar.Syntax.Syntax
-open FStar.Syntax
-open FStar.Compiler.Util
-module BU = FStar.Compiler.Util
-module U = FStar.Syntax.Util
+open FStar.Compiler.Effect
+
+module S   = FStar.Syntax.Syntax
+module BU  = FStar.Compiler.Util
+module U   = FStar.Syntax.Util
 
 let escape (s:string) = BU.replace_char s '\'' '_'
 
@@ -51,7 +50,7 @@ F* would encode this to SMT as (roughly)
 ```
 (declare-fun n () Term)
 (assert (HasType n u32))
-(assert (n = U32.uint_to_to 0))
+(assert (n = U32.uint_to_t 0))
 ```
 
 i.e., ground facts about the `n`'s typing and definition would be
@@ -128,17 +127,25 @@ let mk_decls_trivial decls = [{
 
 let decls_list_of l = l |> List.collect (fun elt -> elt.decls)
 
-let mk_fv (x, y) : fv = x, y, false
-let fv_name (x:fv) = let nm, _, _ = x in nm
-let fv_sort (x:fv) = let _, sort, _ = x in sort
-let fv_force (x:fv) = let _, _, force = x in force
+let mk_fv (x, y) : fv = FV (x, y, false)
+
+let fv_name (x:fv) = let FV (nm, _, _) = x in nm
+
+instance deq_fv : deq fv = {
+  (=?) = (fun fv1 fv2 -> fv_name fv1 = fv_name fv2);
+}
+instance ord_fv : ord fv = {
+  super = deq_fv;
+  cmp = (fun fv1 fv2 -> Order.order_from_int (BU.compare (fv_name fv1) (fv_name fv2)));
+}
+
+let fv_sort (x:fv) = let FV (_, sort, _) = x in sort
+let fv_force (x:fv) = let FV (_, _, force) = x in force
 let fv_eq (x:fv) (y:fv) = fv_name x = fv_name y
 let fvs_subset_of (x:fvs) (y:fvs) =
-  let cmp_fv x y =
-    BU.compare (fv_name x) (fv_name y)
-  in
-  BU.set_is_subset_of (BU.as_set x cmp_fv)
-                      (BU.as_set y cmp_fv)
+  let open FStar.Class.Setlike in
+  subset (from_list x <: RBSet.t fv) (from_list y)
+
 let freevar_eq x y = match x.tm, y.tm with
     | FreeV x, FreeV y -> fv_eq x y
     | _ -> false
@@ -168,6 +175,28 @@ let free_variables t = match !t.freevars with
     let fvs = BU.remove_dups fv_eq (freevars t) in
     t.freevars := Some fvs;
     fvs
+
+open FStar.Class.Setlike
+let free_top_level_names (t:term)
+: RBSet.t string
+= let rec free_top_level_names acc t =
+    match t.tm with
+    | FreeV (FV (nm, _, _)) -> add nm acc
+    | App (Var s, args) -> 
+      let acc = add s acc in
+      List.fold_left free_top_level_names acc args
+    | App (_, args) -> List.fold_left free_top_level_names acc args
+    | Quant (_, pats, _, _, body) ->
+      let acc = List.fold_left (fun acc pats -> List.fold_left free_top_level_names acc pats) acc pats in
+      free_top_level_names acc body
+    | Let(tms, t) ->
+      let acc = List.fold_left free_top_level_names acc tms in
+      free_top_level_names acc t
+    | Labeled(t, _, _)
+    | LblPos(t, _) -> free_top_level_names acc t
+    | _ -> acc
+  in
+  free_top_level_names (empty()) t
 
 (*****************************************************)
 (* Pretty printing terms and decls in SMT Lib format *)
@@ -224,7 +253,7 @@ let rec hash_of_term' t = match t with
   | BoundV i  -> "@"^string_of_int i
   | FreeV x   -> fv_name x ^ ":" ^ strSort (fv_sort x) //Question: Why is the sort part of the hash?
   | App(op, tms) -> "("^(op_to_string op)^(List.map hash_of_term tms |> String.concat " ")^")"
-  | Labeled(t, r1, r2) -> hash_of_term t ^ r1 ^ (Range.string_of_range r2)
+  | Labeled(t, r1, r2) -> hash_of_term t ^ Errors.Msg.rendermsg r1 ^ (Range.string_of_range r2)
   | LblPos(t, r) -> "(! " ^hash_of_term t^ " :lblpos " ^r^ ")"
   | Quant(qop, pats, wopt, sorts, body) ->
       "("
@@ -311,6 +340,11 @@ let mkBvShr sz (t1, t2) r = mkApp'(BvShr, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvUdiv sz (t1, t2) r = mkApp'(BvUdiv, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvMod sz (t1, t2) r = mkApp'(BvMod, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvMul sz (t1, t2) r = mkApp' (BvMul, [t1;(mkNatToBv sz t2 r)]) r
+let mkBvShl' sz (t1, t2) r = mkApp'(BvShl, [t1;t2]) r
+let mkBvShr' sz (t1, t2) r = mkApp'(BvShr, [t1;t2]) r
+let mkBvMul' sz (t1, t2) r = mkApp' (BvMul, [t1;t2]) r
+let mkBvUdivUnsafe sz (t1, t2) r = mkApp'(BvUdiv, [t1;t2]) r
+let mkBvModUnsafe sz (t1, t2) r = mkApp'(BvMod, [t1;t2]) r
 let mkBvUlt = mk_bin_op BvUlt
 let mkIff = mk_bin_op Iff
 let mkEq (t1, t2) r = match t1.tm, t2.tm with
@@ -417,7 +451,7 @@ let check_pattern_ok (t:term) : option term =
   | BoundV  n               -> BU.format1 "(BoundV %s)" (BU.string_of_int n)
   | FreeV  fv               -> BU.format1 "(FreeV %s)" (fv_name fv)
   | App (op, l)             -> BU.format2 "(%s %s)" (op_to_string op) (print_smt_term_list l)
-  | Labeled(t, r1, r2)      -> BU.format2 "(Labeled '%s' %s)" r1 (print_smt_term t)
+  | Labeled(t, r1, r2)      -> BU.format2 "(Labeled '%s' %s)" (Errors.Msg.rendermsg r1) (print_smt_term t)
   | LblPos(t, s)            -> BU.format2 "(LblPos %s %s)" s (print_smt_term t)
   | Quant (qop, l, _, _, t) -> BU.format3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
   | Let (es, body) -> BU.format2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)
@@ -434,10 +468,8 @@ let mkQuant r check_pats (qop, pats, wopt, vars, body) =
         | None -> pats
         | Some p ->
           begin
-            Errors.log_issue
-                    r
-                    (Errors.Warning_SMTPatternIllFormed,
-                     BU.format1 "Pattern (%s) contains illegal symbols; dropping it" (print_smt_term p));
+            Errors.log_issue r Errors.Warning_SMTPatternIllFormed
+              (BU.format1 "Pattern (%s) contains illegal symbols; dropping it" (print_smt_term p));
             []
            end
     in
@@ -534,12 +566,14 @@ let mkDefineFun (nm, vars, s, tm, c) = DefineFun(nm, List.map fv_sort vars, s, a
 let constr_id_of_sort sort = format1 "%s_constr_id" (strSort sort)
 let fresh_token (tok_name, sort) id =
     let a_name = "fresh_token_" ^tok_name in
+    let tm = mkEq(mkInteger' id norng,
+                                  mkApp(constr_id_of_sort sort,
+                                        [mkApp (tok_name,[]) norng]) norng) norng in
     let a = {assumption_name=escape a_name;
              assumption_caption=Some "fresh token";
-             assumption_term=mkEq(mkInteger' id norng,
-                                  mkApp(constr_id_of_sort sort,
-                                        [mkApp (tok_name,[]) norng]) norng) norng;
-             assumption_fact_ids=[]} in
+             assumption_term=tm;
+             assumption_fact_ids=[];
+             assumption_free_names=free_top_level_names tm} in
     Assume a
 
 let fresh_constructor rng (name, arg_sorts, sort, id) =
@@ -549,72 +583,115 @@ let fresh_constructor rng (name, arg_sorts, sort, id) =
   let capp = mkApp(name, bvars) norng in
   let cid_app = mkApp(constr_id_of_sort sort, [capp]) norng in
   let a_name = "constructor_distinct_" ^name in
+  let tm = mkForall rng ([[capp]], bvar_names, mkEq(mkInteger id norng, cid_app) norng) in
   let a = {
     assumption_name=escape a_name;
     assumption_caption=Some "Constructor distinct";
-    assumption_term=mkForall rng ([[capp]], bvar_names, mkEq(mkInteger id norng, cid_app) norng);
-    assumption_fact_ids=[]
+    assumption_term=tm;
+    assumption_fact_ids=[];
+    assumption_free_names=free_top_level_names tm
   } in
   Assume a
 
 let injective_constructor
   (rng:Range.range)
-  ((name, fields, sort):(string * list constructor_field * sort)) :list decl =
+  ((name, fields, sort):(string & list constructor_field & sort)) :list decl =
     let n_bvars = List.length fields in
     let bvar_name i = "x_" ^ string_of_int i in
     let bvar_index i = n_bvars - (i + 1) in
     let bvar i s = mkFreeV <| mk_fv (bvar_name i, s) in
-    let bvars = fields |> List.mapi (fun i (_, s, _) -> bvar i s norng) in
+    let bvars = fields |> List.mapi (fun i f -> bvar i f.field_sort norng) in
     let bvar_names = List.map fv_of_term bvars in
     let capp = mkApp(name, bvars) norng in
     fields
-    |> List.mapi (fun i (name, s, projectible) ->
-            let cproj_app = mkApp(name, [capp]) norng in
-            let proj_name = DeclFun(name, [sort], s, Some "Projector") in
+    |> List.mapi (fun i {field_projectible=projectible; field_name=name; field_sort=s} ->
             if projectible
-            then let a = {
+            then
+              let cproj_app = mkApp(name, [capp]) norng in
+              let proj_name = DeclFun(name, [sort], s, Some "Projector") in
+              let tm = mkForall rng ([[capp]], bvar_names, mkEq(cproj_app, bvar i s norng) norng) in
+              let a = {
                     assumption_name = escape ("projection_inverse_"^name);
                     assumption_caption = Some "Projection inverse";
-                    assumption_term = mkForall rng ([[capp]], bvar_names, mkEq(cproj_app, bvar i s norng) norng);
-                    assumption_fact_ids = []
+                    assumption_term = tm;
+                    assumption_fact_ids = [];
+                    assumption_free_names = free_top_level_names tm
                  } in
-                 [proj_name; Assume a]
-            else [proj_name])
+              [proj_name; Assume a]
+            else [])
     |> List.flatten
 
-let constructor_to_decl rng (name, fields, sort, id, injective) =
-    let injective = injective || true in
-    let field_sorts = fields |> List.map (fun (_, sort, _) -> sort) in
-    let cdecl = DeclFun(name, field_sorts, sort, Some "Constructor") in
-    let cid = fresh_constructor rng (name, field_sorts, sort, id) in
+let discriminator_name constr = "is-"^constr.constr_name
+
+let constructor_to_decl rng constr =
+    let sort = constr.constr_sort in
+    let field_sorts = constr.constr_fields |> List.map (fun f -> f.field_sort) in
+    let cdecl = DeclFun(constr.constr_name, field_sorts, constr.constr_sort, Some "Constructor") in
+    let cid = 
+      match constr.constr_id with
+      | None -> []
+      | Some id -> [fresh_constructor rng (constr.constr_name, field_sorts, sort, id)]
+    in
     let disc =
-        let disc_name = "is-"^name in
+        let disc_name = discriminator_name constr in
         let xfv = mk_fv ("x", sort) in
         let xx = mkFreeV xfv norng in
-        let disc_eq = mkEq(mkApp(constr_id_of_sort sort, [xx]) norng, mkInteger (string_of_int id) norng) norng in
         let proj_terms, ex_vars =
-            fields
-         |> List.mapi (fun i (proj, s, projectible) ->
+            constr.constr_fields
+         |> List.mapi (fun i {field_projectible=projectible; field_sort=s; field_name=proj} ->
                 if projectible
                 then mkApp(proj, [xx]) norng, []
                 else let fi = mk_fv ("f_" ^ BU.string_of_int i, s) in
                      mkFreeV fi norng, [fi])
          |> List.split in
         let ex_vars = List.flatten ex_vars in
-        let disc_inv_body = mkEq(xx, mkApp(name, proj_terms) norng) norng in
+        let disc_inv_body = mkEq(xx, mkApp(constr.constr_name, proj_terms) norng) norng in
         let disc_inv_body = match ex_vars with
             | [] -> disc_inv_body
             | _ -> mkExists norng ([], ex_vars, disc_inv_body) in
-        let disc_ax = mkAnd(disc_eq, disc_inv_body) norng in
+        let disc_ax =
+          match constr.constr_id with
+          | None -> disc_inv_body
+          | Some id ->
+            let disc_eq = mkEq(mkApp(constr_id_of_sort constr.constr_sort, [xx]) norng, mkInteger (string_of_int id) norng) norng in
+            mkAnd(disc_eq, disc_inv_body) norng in
         let def = mkDefineFun(disc_name, [xfv], Bool_sort,
                     disc_ax,
                     Some "Discriminator definition") in
         def in
-    let projs =
-        if injective
-        then injective_constructor rng (name, fields, sort)
-        else [] in
-    Caption (format1 "<start constructor %s>" name)::cdecl::cid::projs@[disc]@[Caption (format1 "</end constructor %s>" name)]
+    let projs = injective_constructor rng (constr.constr_name, constr.constr_fields, sort) in
+    let base =
+      if not constr.constr_base
+      then []
+      else (
+        let arg_sorts =
+          constr.constr_fields 
+          |> List.filter (fun f -> f.field_projectible)
+          |> List.map (fun _ -> Term_sort)
+        in
+        let base_name = constr.constr_name ^ "@base" in
+        let decl = DeclFun(base_name, arg_sorts, Term_sort, Some "Constructor base") in
+        let formals = List.mapi (fun i _ -> mk_fv ("x" ^ string_of_int i, Term_sort)) constr.constr_fields in
+        let constructed_term = mkApp(constr.constr_name, List.map (fun fv -> mkFreeV fv norng) formals) norng in
+        let inj_formals = List.flatten <| List.map2 (fun f fld -> if fld.field_projectible then [f] else []) formals constr.constr_fields in
+        let base_term = mkApp(base_name, List.map (fun fv -> mkFreeV fv norng) inj_formals) norng in
+        let eq = mkEq(constructed_term, base_term) norng in
+        let guard = mkApp(discriminator_name constr, [constructed_term]) norng in
+        let q = mkForall rng ([[constructed_term]], formals, mkImp (guard, eq) norng) in
+        //forall (x0...xn:Term). {:pattern (C x0 ...xn)} is-C (C x0..xn) ==> C x0..xn == C-base x2 x3..xn
+        let a = {
+          assumption_name=escape ("constructor_base_" ^ constr.constr_name);
+          assumption_caption=Some "Constructor base";
+          assumption_term=q;
+          assumption_fact_ids=[];
+          assumption_free_names=free_top_level_names q
+        } in
+        [decl; Assume a]
+    )
+    in
+    Caption (format1 "<start constructor %s>" constr.constr_name)::
+    [cdecl]@cid@projs@[disc]@base
+    @[Caption (format1 "</end constructor %s>" constr.constr_name)]
 
 (****************************************************************************)
 (* Standard SMTLib prelude for F* and some term constructors                *)
@@ -693,7 +770,7 @@ let termToSmt
           let pats_str =
             match pats with
             | [[]]
-            | [] -> ";;no pats"
+            | [] -> if print_ranges then ";;no pats" else ""
             | _ ->
               pats
               |> List.map (fun pats ->
@@ -802,8 +879,8 @@ let rec declToSmt' print_captions z3options decl =
     ""
   | CheckSat -> "(echo \"<result>\")\n(check-sat)\n(echo \"</result>\")"
   | GetUnsatCore -> "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
-  | Push -> "(push)"
-  | Pop -> "(pop)"
+  | Push n -> BU.format1 "(push) ;; push{%s" (show n)
+  | Pop n -> BU.format1 "(pop) ;; %s}pop" (show n)
   | SetOption (s, v) -> format2 "(set-option :%s %s)" s v
   | GetStatistics -> "(echo \"<statistics>\")\n(get-info :all-statistics)\n(echo \"</statistics>\")"
   | GetReasonUnknown-> "(echo \"<reason-unknown>\")\n(get-info :reason-unknown)\n(echo \"</reason-unknown>\")"
@@ -847,7 +924,14 @@ and mkPrelude z3options =
                     (exists ((t Term)) (HasTypeZ x t)))\n\
                 (declare-fun ApplyTF (Term Fuel) Term)\n\
                 (declare-fun ApplyTT (Term Term) Term)\n\
-                (declare-fun Rank (Term) Int)\n\
+                (declare-fun Prec (Term Term) Bool)\n\
+                (assert (forall ((x Term) (y Term) (z Term))\n\
+                                (! (implies (and (Prec x y) (Prec y z))\n\
+                                            (Prec x z))
+                                   :pattern ((Prec x z) (Prec x y)))))\n\
+                (assert (forall ((x Term) (y Term))\n\
+                         (implies (Prec x y)\n\
+                                  (not (Prec y x)))))\n\
                 (declare-fun Closure (Term) Term)\n\
                 (declare-fun ConsTerm (Term Term) Term)\n\
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
@@ -868,14 +952,24 @@ and mkPrelude z3options =
                 (assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (/ x y)) :pattern ((_rdiv x y)))))\n\
                 (define-fun Unreachable () Bool false)"
    in
-   let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
-                                 ("Tm_type",  [], Term_sort, 2, true);
-                                 ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, 3, false);
-                                 ("Tm_unit",  [], Term_sort, 6, true);
-                                 (fst boxIntFun,     [snd boxIntFun,  Int_sort, true],   Term_sort, 7, true);
-                                 (fst boxBoolFun,    [snd boxBoolFun, Bool_sort, true],  Term_sort, 8, true);
-                                 (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
-                                 (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true)] in
+   let as_constr (name, fields, sort, id, _injective)
+     : constructor_t
+     = { constr_name=name;
+         constr_fields=List.map (fun (field_name, field_sort, field_projectible) -> {field_name; field_sort; field_projectible}) fields;
+         constr_sort=sort;
+         constr_id=Some id;
+         constr_base=false }
+   in
+   let constrs : constructors = 
+     List.map as_constr
+       [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
+        ("Tm_type",  [], Term_sort, 2, true);
+        ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, 3, false);
+        ("Tm_unit",  [], Term_sort, 6, true);
+        (fst boxIntFun,     [snd boxIntFun,  Int_sort, true],   Term_sort, 7, true);
+        (fst boxBoolFun,    [snd boxBoolFun, Bool_sort, true],  Term_sort, 8, true);
+        (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
+        (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true)] in
    let bcons = constrs |> List.collect (constructor_to_decl norng)
                        |> List.map (declToSmt z3options) |> String.concat "\n" in
 
@@ -903,7 +997,7 @@ and mkPrelude z3options =
                                                           :pattern (Prims.precedes t1 t2 e1 e2))))\n\
                       (assert (forall ((t1 Term) (t2 Term))\n\
                                       (! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n\
-                                      (< (Rank t1) (Rank t2)))\n\
+                                              (Prec t1 t2))\n\
                                       :pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
 
    let valid_intro =
@@ -940,9 +1034,16 @@ let declToSmt_no_caps z3options decl = declToSmt' false z3options decl
    I am computing them based on the size in this not very robust way.
    z3options are only used by the prelude so passing the empty string should be ok. *)
 let mkBvConstructor (sz : int) =
-    (fst (boxBitVecFun sz),
-        [snd (boxBitVecFun sz), BitVec_sort sz, true], Term_sort, 12+sz, true)
-    |> constructor_to_decl norng
+  let constr : constructor_t = {
+    constr_name=fst (boxBitVecFun sz);
+    constr_sort=Term_sort;
+    constr_id=None;
+    constr_fields=[{field_projectible=true; field_name=snd (boxBitVecFun sz); field_sort=BitVec_sort sz }];
+    constr_base=false
+  } in
+  constructor_to_decl norng constr, 
+  constr.constr_name, 
+  discriminator_name constr
 
 let __range_c = BU.mk_ref 0
 let mk_Range_const () =
@@ -1017,10 +1118,11 @@ let mk_Valid t        = match t.tm with
     | App(Var "Prims.b2t", [t1]) -> {unboxBool t1 with rng=t.rng}
     | _ ->
         mkApp("Valid",  [t]) t.rng
+let mk_unit_type = mkApp("Prims.unit", []) norng
+let mk_subtype_of_unit v = mkApp("Prims.subtype_of", [v;mk_unit_type]) v.rng
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t]) t.rng
 let mk_IsTotFun t     = mkApp("IsTotFun", [t]) t.rng
-let mk_IsTyped v      = mkApp("IsTyped", [v]) norng
 let mk_HasTypeFuel f v t =
    if Options.unthrottle_inductives()
    then mk_HasType v t
@@ -1029,8 +1131,6 @@ let mk_HasTypeWithFuel f v t = match f with
     | None -> mk_HasType v t
     | Some f -> mk_HasTypeFuel f v t
 let mk_NoHoist dummy b = mkApp("NoHoist", [dummy;b]) b.rng
-let mk_Destruct v     = mkApp("Destruct", [v])
-let mk_Rank x         = mkApp("Rank", [x])
 let mk_tester n t     = mkApp("is-"^n,   [t]) t.rng
 let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t']) t.rng
 let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
@@ -1040,17 +1140,6 @@ let mk_Precedes x1 x2 x3 x4 r = mkApp("Prims.precedes", [x1;x2;x3;x4])  r|> mk_V
 let rec n_fuel n =
     if n = 0 then mkApp("ZFuel", []) norng
     else mkApp("SFuel", [n_fuel (n - 1)]) norng
-let fuel_2 = n_fuel 2
-let fuel_100 = n_fuel 100
-
-let mk_and_opt p1 p2 r = match p1, p2  with
-  | Some p1, Some p2 -> Some (mkAnd(p1, p2) r)
-  | Some p, None
-  | None, Some p -> Some p
-  | None, None -> None
-
-let mk_and_opt_l pl r =
-  List.fold_right (fun p out -> mk_and_opt p out r) pl None
 
 let mk_and_l l r = List.fold_right (fun p1 p2 -> mkAnd(p1, p2) r) l (mkTrue r)
 
@@ -1058,3 +1147,36 @@ let mk_or_l l r = List.fold_right (fun p1 p2 -> mkOr(p1,p2) r) l (mkFalse r)
 
 let mk_haseq t = mk_Valid (mkApp ("Prims.hasEq", [t]) t.rng)
 let dummy_sort = Sort "Dummy_sort"
+
+instance showable_smt_term = {
+  show = print_smt_term;
+}
+
+instance showable_decl = {
+  show = declToSmt_no_caps "";
+}
+
+let rec names_of_decl d =
+  match d with
+  | Assume a -> [a.assumption_name]
+  | Module (_, ds) -> List.collect names_of_decl ds
+  | _ -> []
+
+let decl_to_string_short d =
+  match d with
+  | DefPrelude -> "prelude"
+  | DeclFun (s, _, _, _) -> "DeclFun " ^ s
+  | DefineFun (s, _, _, _, _) -> "DefineFun " ^ s
+  | Assume a -> "Assumption " ^ a.assumption_name
+  | Caption s -> "Caption " ^s
+  | Module (s, _) -> "Module " ^ s
+  | Eval _ -> "Eval"
+  | Echo s -> "Echo " ^ s
+  | RetainAssumptions _ -> "RetainAssumptions"
+  | Push n -> BU.format1 "push %s" (show n)
+  | Pop n -> BU.format1 "pop %s" (show n)
+  | CheckSat -> "check-sat"
+  | GetUnsatCore -> "get-unsat-core"
+  | SetOption (s, v) -> "SetOption " ^ s ^ " " ^ v
+  | GetStatistics -> "get-statistics"
+  | GetReasonUnknown -> "get-reason-unknown"

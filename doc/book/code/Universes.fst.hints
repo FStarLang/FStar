@@ -1,0 +1,164 @@
+[
+  "i0Å…Ù.\bàQ∏ê9´\u007fπõ",
+  [
+    [
+      "Universes.uu___0",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Universes.ty0", "equation_Universes.ty_poly" ],
+      0,
+      "362e9d0cc8d30088b3458b6996727c18"
+    ],
+    [
+      "Universes.uu___1",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Universes.ty1", "equation_Universes.ty_poly" ],
+      0,
+      "a3204417382e6556364491b87406c5d0"
+    ],
+    [
+      "Universes.uu___2",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Universes.ty2", "equation_Universes.ty_poly" ],
+      0,
+      "560b513dc7410157347a785d0e7d6cf3"
+    ],
+    [
+      "Universes.uu___3",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Universes.ty0", "equation_Universes.ty_poly" ],
+      0,
+      "18423f682f7ac8188f0e4c8ccfc36ad2"
+    ],
+    [
+      "Universes.list",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ae40d40865d63c6476d23542767aa75c"
+    ],
+    [
+      "Universes.__proj__Cons__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3c1b97e4120bd80fe1302fd106a008d6"
+      ],
+      0,
+      "98604643e3aaa44d4a4d5e6bde2cc0e5"
+    ],
+    [
+      "Universes.__proj__Cons__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3c1b97e4120bd80fe1302fd106a008d6"
+      ],
+      0,
+      "fff15d2d71e6eef0405f5f8cb0c39321"
+    ],
+    [
+      "Universes.list'",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2508e2d4492f0a4d9233b45881ddd8d8"
+    ],
+    [
+      "Universes.__proj__Cons'__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8f39bc31184d8ae0acdd1e5c0bc83fc5"
+      ],
+      0,
+      "6bb227aff309cbb283b292f66b7d7a2a"
+    ],
+    [
+      "Universes.__proj__Cons'__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8f39bc31184d8ae0acdd1e5c0bc83fc5"
+      ],
+      0,
+      "86a0369e3c40b5125e7bd092af607f35"
+    ],
+    [
+      "Universes.pair",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "510a2d6882a17729c31fa2104e5c24fc"
+    ],
+    [
+      "Universes.__proj__NilAlt__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1fc10e6a73e2f6e1644f0cd1b482aba1"
+      ],
+      0,
+      "a69f4e72187a93fbf96c2805078b8892"
+    ],
+    [
+      "Universes.__proj__ConsAlt__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_41fa5c7070b4aa2b5223068ef430c5a0"
+      ],
+      0,
+      "d4c9fcf2149b238c9f9f15d45890d7d8"
+    ],
+    [
+      "Universes.__proj__ConsAlt__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Universes.ConsAlt",
+        "refinement_interpretation_Tm_refine_41fa5c7070b4aa2b5223068ef430c5a0"
+      ],
+      0,
+      "60e9955f41d35d26825934bb7038f715"
+    ],
+    [
+      "Universes.__proj__ConsAlt__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Universes.ConsAlt",
+        "refinement_interpretation_Tm_refine_41fa5c7070b4aa2b5223068ef430c5a0"
+      ],
+      0,
+      "34cdadbf592ef7a3d2dae4e8a9610d8c"
+    ]
+  ]
+]

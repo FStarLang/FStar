@@ -14,15 +14,15 @@
    limitations under the License.
 *)
 module FStar.Const
-open FStar.Compiler.Effect module List = FStar.Compiler.List
-open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect
+module List = FStar.Compiler.List
 
 open FStar.BaseTypes
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type signedness = | Unsigned | Signed
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
-type width = | Int8 | Int16 | Int32 | Int64
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
+type width = | Int8 | Int16 | Int32 | Int64 | Sizet
 
 (* NB:
     Const_int (_, None) is not a canonical representation for a mathematical integer
@@ -37,21 +37,20 @@ type width = | Int8 | Int16 | Int32 | Int64
     eq_const below does that for you
 *)
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type sconst =
   | Const_effect
   | Const_unit
   | Const_bool        of bool
-  | Const_int         of string * option (signedness * width) (* When None, means "mathematical integer", i.e. Prims.int. *)
+  | Const_int         of string & option (signedness & width) (* When None, means "mathematical integer", i.e. Prims.int. *)
   | Const_char        of char (* unicode code point: char in F#, int in OCaml *)
-  | Const_float       of double
   | Const_real        of string
-  | Const_bytearray   of array byte * FStar.Compiler.Range.range
-  | Const_string      of string * FStar.Compiler.Range.range                (* UTF-8 encoded *)
+  | Const_string      of string & FStar.Compiler.Range.range                (* UTF-8 encoded *)
   | Const_range_of                                           (* `range_of` primitive *)
   | Const_set_range_of                                       (* `set_range_of` primitive *)
-  | Const_range       of FStar.Compiler.Range.range                         (* not denotable by the programmer *)
-  | Const_reify                                              (* a coercion from a computation to a Tot term *)
+  | Const_range       of FStar.Compiler.Range.range          (* not denotable by the programmer *)
+  | Const_reify       of option Ident.lid                    (* a coercion from a computation to its underlying repr *)
+                                                             (* decorated optionally with the computation effect name *)
   | Const_reflect     of Ident.lid                           (* a coercion from a Tot term to an l-computation type *)
 
 let eq_const c1 c2 =
@@ -59,9 +58,9 @@ let eq_const c1 c2 =
     | Const_int (s1, o1), Const_int(s2, o2) ->
       FStar.Compiler.Util.ensure_decimal s1 = FStar.Compiler.Util.ensure_decimal s2 &&
       o1=o2
-    | Const_bytearray(a, _), Const_bytearray(b, _) -> a=b
     | Const_string(a, _), Const_string(b, _) -> a=b
     | Const_reflect l1, Const_reflect l2 -> Ident.lid_equals l1 l2
+    | Const_reify _, Const_reify _ -> true
     | _ -> c1=c2
 
 open FStar.BigInt
@@ -78,6 +77,7 @@ let bounds signedness width =
         | Int16 -> big_int_of_string "16"
         | Int32 -> big_int_of_string "32"
         | Int64 -> big_int_of_string "64"
+        | Sizet -> big_int_of_string "16"
     in
     let lower, upper =
       match signedness with

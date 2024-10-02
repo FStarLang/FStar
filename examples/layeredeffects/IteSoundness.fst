@@ -26,7 +26,7 @@ module IteSoundness
  *   effects if-then-else combinator using a tactic
  *)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let unit : Type0 = unit
 irreducible let an_attr : unit = ()
@@ -83,7 +83,7 @@ let mtac () : Tac unit =
     | _ -> false in
   let is_squash_goal g : Tac bool =
     match term_as_formula' (goal_type g) with
-    | App t _ -> term_eq t (`squash)
+    | App t _ -> is_fvar t (`%squash)
     | _ -> false in
   let rec separate_eq_and_squash_goals gs : Tac (list goal & list goal & list goal) =
     match gs with
@@ -133,8 +133,8 @@ let mbind (a:Type) (b:Type) (f:mrepr a) (g:a -> mrepr b) : mrepr b = g f
  *)
 
 let mif_then_else (a:Type)
-  ([@@@ an_attr] phi:Type0)
-  ([@@@ an_attr] bb:squash phi) 
+  (phi:Type0)
+  (bb:squash phi)
   (f:mrepr a)
   (g:mrepr a)
   (b:bool)
@@ -142,8 +142,8 @@ let mif_then_else (a:Type)
   = mrepr a
 
 let msubcomp (a:Type)
-  ([@@@ an_attr] phi:Type0)
-  ([@@@ an_attr] bb:squash phi)  (f:mrepr a)
+  (phi:Type0)
+  (bb:squash phi)  (f:mrepr a)
   : mrepr a = f
 
 let an_attr1 = ()

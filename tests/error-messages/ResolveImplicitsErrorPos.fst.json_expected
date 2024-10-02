@@ -1,0 +1,10 @@
+proof-state: State dump @ depth 0 (at the time of failure):
+Location: ResolveImplicitsErrorPos.fst(14,13-16,7)
+Goal 1/1 (Instantiating meta argument):
+(_: Prims.unit) |- _ : Prims.int
+
+>> Got issues: [
+{"msg":["Tactic failed","oops"],"level":"Error","range":{"def":{"file_name":"ResolveImplicitsErrorPos.fst","start_pos":{"line":15,"col":10},"end_pos":{"line":15,"col":11}},"use":{"file_name":"ResolveImplicitsErrorPos.fst","start_pos":{"line":15,"col":10},"end_pos":{"line":15,"col":11}}},"number":228,"ctx":["While solving implicits with a tactic","While solving deferred constraints","While typechecking the top-level declaration `let test`","While typechecking the top-level declaration `[@@expect_failure] let test`"]}
+>>]
+Verified module: ResolveImplicitsErrorPos
+All verification conditions discharged successfully

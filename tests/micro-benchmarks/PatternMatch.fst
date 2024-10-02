@@ -71,3 +71,8 @@ let (true, true) = (2, false)
 let (z, 0) = (42, 0)
 
 let () = ()
+
+// VQuotes in patterns
+let _ = assert_norm ( match "PatternMatch.r", [`%int; "foo"; "bar"] with
+                    | (`%r, [`%int; "foo"; _]) -> True
+                    | _ -> False )

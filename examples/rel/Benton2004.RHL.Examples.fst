@@ -185,10 +185,12 @@ let d_su1'_flip
   ]]
 = d_su1' c c' c'' (flip phi) (flip phi') (flip phi'')
 
-#set-options "--z3rlimit 100"
+#set-options "--z3rlimit 150"
 let sec43
   (i n x y: var)
-  (diffs: squash (List.Tot.noRepeats [i; n; x; y] == true))
+  (diffs: squash (i <> n /\ i <> x /\ i <> y /\
+                  n <> x /\ n <> y /\
+                  x <> y))
 : Lemma
   (ensures (
     exec_equiv
@@ -209,10 +211,8 @@ let sec43
   let rloop = while cond asi in
   let phi1 = gand phi (geq (gvar x Right) (gop op_Addition (gvar y Right) (gconst 1))) in
   let phi2 = gand phi1 (geq (gvar x Left) (gvar x Right)) in
-  assert (x <> i /\ x <> n /\ x <> y); // for the substitutions in phi, phi1
   r_dassr x asx_e phi phi1;
   r_dassl x asx_e phi1 phi2;
-  assert (i <> x /\ i <> n /\ i <> y); // for the substitutions in phi2
   r_ass i i asi_e asi_e phi2 phi2;
   d_su1' asx asi asi phi1 phi2 phi2;
   r_while cond cond lbody asi phi1;

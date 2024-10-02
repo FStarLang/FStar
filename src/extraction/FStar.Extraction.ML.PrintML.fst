@@ -20,6 +20,12 @@ open FStar.Compiler
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.Code
 
+(* NOTE!!!! This file is not used by the OCaml build of F* (i.e. the main one).
+Instead, it uses an OCaml version ocaml/fstar-lib/FStar_Extraction_ML_PrintML,
+so it can use OCaml's native pretty printers.
+
+This file is here for the F# build. *)
+
 let print (_: option string) (ext: string) (l: mllib) =
     let newDoc = FStar.Extraction.ML.Code.doc_of_mllib l in
     List.iter (fun (n,d) ->

@@ -1,0 +1,100 @@
+[
+  "!\bZ\nñKDá\u001d\t\u0002:àòZê",
+  [
+    [
+      "PatternMatch.uu___14",
+      1,
+      2,
+      1,
+      [ "@query", "equation_PatternMatch.uu___13" ],
+      0,
+      "0d1b2dbadb27a61527aea5b66200f610"
+    ],
+    [
+      "PatternMatch.uu___45",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_PatternMatch.uu___31", "equation_PatternMatch.x1",
+        "function_token_typing_Prims.__cache_version_number__",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
+      ],
+      0,
+      "1132cf57caf32efc638f27fa67e02557"
+    ],
+    [
+      "PatternMatch.uu___46",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_PatternMatch.uu___31", "equation_PatternMatch.y1",
+        "function_token_typing_Prims.__cache_version_number__",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "7a0d590095ffe1b9be463f4af8c3d604"
+    ],
+    [
+      "PatternMatch.uu___47",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_PatternMatch.uu___38", "equation_PatternMatch.x2",
+        "function_token_typing_Prims.__cache_version_number__",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
+      ],
+      0,
+      "34d161cab928966fe3779676dd05e50e"
+    ],
+    [
+      "PatternMatch.uu___48",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_PatternMatch.uu___38", "equation_PatternMatch.y2",
+        "function_token_typing_Prims.__cache_version_number__",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "6b9db81a104dd948c2e779ca5812fe04"
+    ],
+    [
+      "PatternMatch.x",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_PatternMatch.uu___69",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "a3b61b2230afe5248e22c6c4257c9e88"
+    ],
+    [
+      "PatternMatch.z",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_PatternMatch.uu___78",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "c2abe5c01a3a5db69ebc1263b8ecabfa"
+    ]
+  ]
+]

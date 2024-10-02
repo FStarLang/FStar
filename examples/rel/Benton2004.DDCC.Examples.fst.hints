@@ -12,7 +12,7 @@
         "equation_Benton2004.op_abs", "lemma_Benton2004.DDCC.holds_ns_singl"
       ],
       0,
-      "5d2440434a8f9b0c274241d0e79ddd49"
+      "df3bbc505cf8722ed978981c2a8a2fb4"
     ],
     [
       "Benton2004.DDCC.Examples.d_op_singl",
@@ -21,7 +21,7 @@
       1,
       [ "@query" ],
       0,
-      "4a09109b14245e8b6b249d586148194b"
+      "966a151d7283ea718063cf31df986650"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d1",
@@ -55,7 +55,7 @@
         "typing_Benton2004.evar", "typing_Benton2004.skip"
       ],
       0,
-      "75a4fa60118ef4d988873f813248d934"
+      "cc00143a152251de9759c07972e50d26"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d2",
@@ -112,7 +112,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "73e2ee212be36de8e8407b9940278d82"
+      "9b94c1208cf1f07e0690ba229195fb6e"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d3",
@@ -122,15 +122,13 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Benton2004.Aux.rel", "equation_Benton2004.DDCC.ns_singl",
-        "equation_Benton2004.DDCC.ns_t", "equation_Benton2004.DDCC.per",
-        "equation_Benton2004.DDCC.st_cons",
+        "equation_Benton2004.DDCC.ns_singl", "equation_Benton2004.DDCC.ns_t",
+        "equation_Benton2004.DDCC.per", "equation_Benton2004.DDCC.st_cons",
         "equation_Benton2004.DDCC.st_fresh_in",
         "equation_Benton2004.DDCC.st_intersect",
         "equation_Benton2004.DDCC.st_var", "equation_Benton2004.DDCC.sttype",
         "equation_Benton2004.assign", "equation_Benton2004.included",
-        "equation_Benton2004.skip", "equation_Benton2004.var",
-        "equation_Prims.eqtype",
+        "equation_Benton2004.var", "equation_Prims.eqtype",
         "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "int_typing",
         "lemma_Benton2004.DDCC.d_csub", "lemma_Benton2004.DDCC.d_n",
@@ -138,21 +136,20 @@
         "lemma_Benton2004.DDCC.holds_st_intersect",
         "lemma_Benton2004.DDCC.holds_st_var",
         "lemma_Benton2004.holds_intersect",
+        "refinement_interpretation_Tm_refine_0cc8554141b8034f1dda2ef35236d18f",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_6e59f68a0d33b59bc022e273d9bc9e1d",
         "refinement_interpretation_Tm_refine_a966fc9ff097cba5ee1a94fa7b7f3341",
-        "refinement_interpretation_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
+        "refinement_interpretation_Tm_refine_ead654012437dd38d360bd9556aa1705",
         "typing_Benton2004.DDCC.ns_singl", "typing_Benton2004.DDCC.ns_t",
         "typing_Benton2004.DDCC.st_cons",
         "typing_Benton2004.DDCC.st_intersect",
         "typing_Benton2004.DDCC.st_var", "typing_Benton2004.assign",
         "typing_Benton2004.const", "typing_Benton2004.skip",
         "typing_FStar.DM4F.Heap.IntStoreFixed.heap",
-        "typing_FStar.DM4F.Heap.IntStoreFixed.sel",
-        "typing_Tm_abs_04b4b1a839a48e842d2fa816f86804d5"
+        "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "b26acd0eeb3983b2411567f426417fc9"
+      "2c4b5eae41cd3bef716fd09683906439"
     ],
     [
       "Benton2004.DDCC.Examples.fig3",
@@ -162,8 +159,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Benton2004_interpretation_Tm_arrow_ca13e3f48edab78b734271373e04eb58",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_typing",
         "equation_Benton2004.DDCC.ns_singl", "equation_Benton2004.DDCC.ns_t",
         "equation_Benton2004.DDCC.per", "equation_Benton2004.DDCC.st_cons",
         "equation_Benton2004.DDCC.st_fresh_in",
@@ -202,7 +198,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "18761cc95d7532f7b88bd7a3e619a296"
+      "45c7921a53558db80f063cf6235b379b"
     ]
   ]
 ]

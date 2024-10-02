@@ -1,0 +1,78 @@
+[
+  "\u0004òGO§kwâšèÏ™xÏ\"\u000b",
+  [
+    [
+      "FStar.OrdMap.const_on",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdMap.total_order",
+        "equation_FStar.OrdSet.total_order"
+      ],
+      0,
+      "f9dbb9993fd7b8a706ca28ffc63039da"
+    ],
+    [
+      "FStar.OrdMap.dom",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdMap.total_order",
+        "equation_FStar.OrdSet.total_order"
+      ],
+      0,
+      "aa4c6798e078842038d12523e345f07f"
+    ],
+    [
+      "FStar.OrdMap.choose_m",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1e59092a30b113f1fc4a68aad5e6f73f"
+    ],
+    [
+      "FStar.OrdMap.dom_lemma",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdMap.total_order",
+        "equation_FStar.OrdSet.total_order"
+      ],
+      0,
+      "6ffe81c27b98b6a4e09a628c6c80dcbd"
+    ],
+    [
+      "FStar.OrdMap.contains_const_on",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.OrdMap.total_order",
+        "equation_FStar.OrdSet.total_order"
+      ],
+      0,
+      "9a8bf4b614882825c464f9973b238a06"
+    ],
+    [
+      "FStar.OrdMap.select_const_on",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.OrdMap.cmp",
+        "equation_FStar.OrdMap.total_order",
+        "equation_FStar.OrdSet.total_order",
+        "lemma_FStar.OrdMap.sel_contains",
+        "refinement_interpretation_Tm_refine_934c4481f7588ba9d1f579f93b88abd0",
+        "typing_FStar.OrdMap.const_on"
+      ],
+      0,
+      "8a6dd838cdb22099984588b3c5ac4419"
+    ]
+  ]
+]

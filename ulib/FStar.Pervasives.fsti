@@ -118,6 +118,10 @@ effect Lemma (a: eqtype_u) (pre: Type) (post: (squash pre -> Type)) (pats: list 
     spawned off into a separate SMT query *)
 val spinoff (p: Type0) : Type0
 
+val spinoff_eq (p:Type0) : Lemma (spinoff p == p)
+
+val spinoff_equiv (p:Type0) : Lemma (p <==> spinoff p) [SMTPat (spinoff p)]
+
 (** Logically equivalent to assert, but spins off separate query *)
 val assert_spinoff (p: Type) : Pure unit (requires (spinoff (squash p))) (ensures (fun x -> p))
 
@@ -163,7 +167,7 @@ val simplify : norm_step
 (** Weak reduction: Do not reduce under binders *)
 val weak : norm_step
 
-(** Head normal form *)
+(** Head normal form: Do not reduce in function arguments or in binder types *)
 val hnf : norm_step
 
 (** Reduce primitive operators, e.g., [1 + 1 ~> 2] *)
@@ -171,6 +175,9 @@ val primops : norm_step
 
 (** Unfold all non-recursive definitions *)
 val delta : norm_step
+
+(** Turn on debugging for this specific call. *)
+val norm_debug : norm_step
 
 (** Unroll recursive calls
 
@@ -269,6 +276,8 @@ val delta_attr (s: list string) : Tot norm_step
   *)
 val delta_qualifier (s: list string) : Tot norm_step
 
+val delta_namespace (s: list string) : Tot norm_step
+
 (**
     This step removes the some internal meta nodes during normalization
 
@@ -277,6 +286,28 @@ val delta_qualifier (s: list string) : Tot norm_step
    *)
 val unmeta : norm_step
 
+(**
+    This step removes ascriptions during normalization
+
+    An ascription is a type or computation type annotation on
+      an expression, written as (e <: t) or (e <: C)
+
+    normalize (e <: (t|C)) usually would normalize both the expression e
+      and the ascription
+
+    However, with unascribe step on, it will drop the ascription
+      and return the result of (normalize e),
+
+    Removing ascriptions may improve the performance,
+      as the normalization has less work to do
+
+    However, ascriptions help in re-typechecking of the terms,
+      and in some cases, are necessary for doing so
+
+    Use it with care
+
+   *)
+val unascribe : norm_step
 
 (** [norm s e] requests normalization of [e] with the reduction steps
     [s]. *)
@@ -720,6 +751,14 @@ type dtuple4
   (d: (x: a -> y: b x -> z: c x y -> GTot Type))
   = | Mkdtuple4 : _1: a -> _2: b _1 -> _3: c _1 _2 -> _4: d _1 _2 _3 -> dtuple4 a b c d
 
+(** Dependent quadruples, with sugar [x:a & y:b x & z:c x y & d x y z] *)
+unopteq
+type dtuple5
+  (a: Type) (b: (x: a -> GTot Type)) (c: (x: a -> b x -> GTot Type))
+  (d: (x: a -> y: b x -> z: c x y -> GTot Type))
+  (e: (x: a -> y: b x -> z: c x y -> w: d x y z -> GTot Type))
+  = | Mkdtuple5 : _1: a -> _2: b _1 -> _3: c _1 _2 -> _4: d _1 _2 _3 -> _5: e _1 _2 _3 _4 -> dtuple5 a b c d e
+
 (** Explicitly discarding a value *)
 let ignore (#a: Type) (x: a) : Tot unit = ()
 
@@ -757,12 +796,13 @@ val false_elim (#a: Type) (u: unit{False}) : Tot a
     is extracted to C by KaRaMeL to a C definition tagged with the
     [inline] qualifier. *)
 type __internal_ocaml_attributes =
-  | PpxDerivingShow
-  | PpxDerivingShowConstant of string (* Generate [@@@ deriving show ] on the resulting OCaml type *)
-  | PpxDerivingYoJson (* Similar, but for constant printers. *)
-  | CInline (* Generate [@@@ deriving yojson ] on the resulting OCaml type *)
+  | PpxDerivingShow (* Generate [@@@ deriving show ] on the resulting OCaml type *)
+  | PpxDerivingShowConstant of string (* Similar, but for constant printers. *)
+  | PpxDerivingYoJson (* Generate [@@@ deriving yojson ] on the resulting OCaml type *)
+  | CInline
   (* KaRaMeL-only: generates a C "inline" attribute on the resulting
-     * function declaration. *)
+     * function declaration. When used on a local definition (i.e. a letbinding)
+     KaRaMeL will try to inline this binding in the extracted C code. *)
   | Substitute
   (* KaRaMeL-only: forces KaRaMeL to inline the function at call-site; this is
      * deprecated and the recommended way is now to use F*'s
@@ -777,22 +817,27 @@ type __internal_ocaml_attributes =
   | CPrologue of string
   (* KaRaMeL-only: verbatim C code to be prepended to the declaration.
      * Multiple attributes are valid and accumulate, separated by newlines. *)
-  | CEpilogue of string
-  | CConst of string (* Ibid. *)
+  | CEpilogue of string (* Ibid. *)
+  | CConst of string
   (* KaRaMeL-only: indicates that the parameter with that name is to be marked
      * as C const.  This will be checked by the C compiler, not by KaRaMeL or F*.
      *
      * This is deprecated and doesn't work as intended. Use
      * LowStar.ConstBuffer.fst instead! *)
-  | CCConv of string
-  | CAbstractStruct (* A calling convention for C, one of stdcall, cdecl, fastcall *)
+  | CCConv of string (* A calling convention for C, one of stdcall, cdecl, fastcall *)
+  | CAbstractStruct
   (* KaRaMeL-only: for types that compile to struct types (records and
      * inductives), indicate that the header file should only contain a forward
      * declaration, which in turn forces the client to only ever use this type
      * through a pointer. *)
-  | CIfDef
-  | CMacro (* KaRaMeL-only: on a given `val foo`, compile if foo with #ifdef. *)
+  | CIfDef (* KaRaMeL-only: on a given `val foo`, compile if foo with #ifdef. *)
+  | CMacro
 (* KaRaMeL-only: for a top-level `let v = e`, compile as a macro *)
+  | CNoInline
+    (* For security-sensitive functions only: generate special attributes in C
+       to prevent inlining; if the function is subjected to a -static-header
+       option, the `inline` attribute will be removed, but the static will
+       remain. *)
 
 (** The [inline_let] attribute on a local let-binding, instructs the
     extraction pipeline to inline the definition. This may be both to
@@ -848,7 +893,7 @@ val dm4f_bind_range : unit
     specified multiplicity, but order does not matter. *)
 val expect_failure (errs: list int) : Tot unit
 
-(** When --lax is present, with the previous attribute since some
+(** When --admit_smt_queries true is present, with the previous attribute since some
   definitions only fail when verification is turned on. With this
   attribute, one can ensure that a definition fails while lax-checking
   too. Same semantics as above, but lax mode will be turned on for the
@@ -933,16 +978,6 @@ val handle_smt_goals : unit
     see https://github.com/FStarLang/FStar/issues/1844 *)
 val erasable : unit
 
-(** THIS ATTRIBUTE CAN BREAK EXTRACTION SOUNDNESS, USE WITH CARE
-
-    Combinators for reifiable layered effects must have binders with
-    non-informative types, since at extraction time, those binders are
-    substituted with ().
-    This attribute can be added to a layered effect definition to skip this
-    check, i.e. adding it will allow informative binder types, but then
-    the code should not be extracted *)
-val allow_informative_binders : unit
-
 (** [commute_nested_matches]
     This attribute can be used to decorate an inductive type [t]
 
@@ -1023,7 +1058,7 @@ val normalize_for_extraction (steps:list norm_step) : Tot unit
 
     See examples/layeredeffects/IteSoundess.fst for a few examples
   *)
-val ite_soundness_by : unit
+val ite_soundness_by (attribute: unit): Tot unit
 
 (** By-default functions that have a layered effect, need to have a type
     annotation for their bodies
@@ -1041,6 +1076,43 @@ val ite_soundness_by : unit
   *)
 val default_effect (s:string) : Tot unit
 
+(** A layered effect may optionally be annotated with the
+    top_level_effect attribute so indicate that this effect may
+    appear at the top-level
+    (e.g., a top-level let x = e, where e has a layered effect type)
+
+    The top_level_effect attribute takes (optional) string argument, that is the
+    name of the effect abbreviation that may constrain effect arguments
+    for the top-level effect
+
+    As with default effect, the string argument must be a string constant,
+    and fully qualified
+
+    E.g. a Hoare-style effect `M a pre post`, may have the attribute
+    `@@ top_level_effect "N"`, where the effect abbreviation `N` may be:
+
+    effect N a post = M a True post
+
+    i.e., enforcing a trivial precondition if `M` appears at the top-level
+
+    If the argument to `top_level_effect` is absent, then the effect itself
+    is allowed at the top-level with any effect arguments
+
+    See tests/micro-benchmarks/TopLevelIndexedEffects.fst for examples
+
+    *)
+val top_level_effect (s:string) : Tot unit
+
+(** This attribute can be annotated on the binders in an effect signature
+    to indicate that they are effect parameters. For example, for a
+    state effect that is parametric in the type of the state, the state
+    index may be marked as an effect parameter.
+
+    Also see https://github.com/FStarLang/FStar/wiki/Indexed-effects
+
+    *)
+val effect_param : unit
+
 (** Bind definition for a layered effect may optionally contain range
     arguments, that are provided by the typechecker during reification
     This attribute on the effect definition indicates that the bind
@@ -1048,6 +1120,32 @@ val default_effect (s:string) : Tot unit
     See for example the TAC effect in FStar.Tactics.Effect.fsti
   *)
 val bind_has_range_args : unit
+
+
+(** An indexed effect definition may be annotated with
+    this attribute to indicate that the effect should be
+    extracted "natively". E.g., the `bind` of the effect is
+    extracted to primitive `let` bindings
+
+    As an example, `Steel` effects (the effect for concurrent
+    separation logic) are marked as such
+
+  *)
+val primitive_extraction : unit
+
+(** A qualifier on a type definition which when used in co-domain position
+    on an arrow type will be extracted as if it were an impure effect type.
+
+    e.g., if you have
+    
+    [@@extract_as_impure_effect]
+    val stt (a:Type) (pre:_) (post:_) : Type
+
+    then arrows of the form `a -> stt b p q` will be extracted 
+    similarly to `a -> Dv b`.
+ *)
+val extract_as_impure_effect : unit
+
 
 (** A binder in a definition/declaration may optionally be annotated as strictly_positive
     When the let definition is used in a data constructor type in an inductive
@@ -1058,6 +1156,19 @@ val bind_has_range_args : unit
     See tests/micro-benchmarks/Positivity.fst and NegativeTests.Positivity.fst for a few examples
   *)
 val strictly_positive : unit
+
+(** A binder in a definition/declaration may optionally be annotated as unused.
+    This is used in the strict positivity checker. E.g., a type such as the one
+    below is accepted
+    
+    let f ([@@@unused] a:Type) = unit
+    type t = | MkT: f t -> t
+    
+    F* checks that the binder is actually unused in the definition
+
+    See tests/micro-benchmarks/Positivity.fst for a few examples
+  *)
+val unused : unit
 
 (** This attribute may be added to an inductive type
     to disable auto generated projectors
@@ -1071,6 +1182,10 @@ val strictly_positive : unit
   *)
 val no_auto_projectors : unit
 
+(** As [no_auto_projectors] but also do not even generate declarations
+    for them. *)
+val no_auto_projectors_decls : unit
+
 (** This attribute can be added to a let definition
     and indicates to the typechecker to typecheck the signature of the definition
     without using subtyping. This is sometimes useful for indicating that a lemma
@@ -1079,6 +1194,8 @@ val no_auto_projectors : unit
 *)
 val no_subtyping : unit
 
+val admit_termination : unit
+
 (** Pure and ghost inner let bindings are now always inlined during
     the wp computation, if: the return type is not unit and the head
     symbol is not marked irreducible.
@@ -1086,12 +1203,6 @@ val no_subtyping : unit
     To circumvent this behavior, singleton can be used.
     See the example usage in ulib/FStar.Algebra.Monoid.fst. *)
 val singleton (#a: Type) (x: a) : Tot (y: a{y == x})
-
-(** [with_type t e] is just an identity function, but it receives
-    special treatment in the SMT encoding, where in addition to being
-    an identity function, we have an SMT axiom:
-    [forall t e.{:pattern (with_type t e)} has_type (with_type t e) t] *)
-val with_type (#t: Type) (e: t) : Tot t
 
 (** A weakening coercion from eqtype to Type.
 
@@ -1104,3 +1215,16 @@ unfold let eqtype_as_type (a:eqtype) : Type = a
     along a provable equality (as in the body of this
     function). Occasionally, you may need to apply this explicitly *)
 let coerce_eq (#a:Type) (#b:Type) (_:squash (a == b)) (x:a) : b = x
+
+val coercion : unit
+
+(** Marks a record type as being the result of an automatic desugar of
+    a constructor with a record payload.
+    For example, in a module `M`, `type foo = | A {x: int}` desugars
+    to the type `M.foo` and a type `M.foo__A__payload`. That latter
+    type `foo__A__payload` is decorated with an attribute
+    `desugar_of_variant_record ["M.A"]`. *)
+val desugar_of_variant_record (type_name: string): unit
+
+(** Tag for implicits that are to be solved by a tactic. *)
+val defer_to (#a:Type) (tag : a) : unit

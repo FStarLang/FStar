@@ -52,7 +52,7 @@ let tc_one_file (remaining:list string) (env:TcEnv.env) = //:((string option * s
 
 type env_t = TcEnv.env
 type modul_t = option Syntax.Syntax.modul
-type stack_t = list (env_t * modul_t)
+type stack_t = list (env_t & modul_t)
 
 // Note: many of these functions are passing env around just for the sake of
 // providing a link to the solver (to avoid a cross-project dependency). They're
@@ -64,7 +64,7 @@ let pop env msg =
     Options.pop()
 
 let push_with_kind env lax restore_cmd_line_options msg =
-    let env = { env with lax = lax } in
+    let env = { env with admit = lax } in
     let res = TypeChecker.Tc.push_context env msg in
     Options.push();
     if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
@@ -72,15 +72,11 @@ let push_with_kind env lax restore_cmd_line_options msg =
 
 let check_frag (env:TcEnv.env) curmod frag =
     try
-        let m, env = tc_one_fragment curmod env frag in
+        let m, env, _ = tc_one_fragment curmod env (Inl frag) in
         Some (m, env, FStar.Errors.get_err_count())
     with
         | FStar.Errors.Error(e, msg, r, ctx) when not ((Options.trace_error())) ->
           FStar.TypeChecker.Err.add_errors env [(e, msg, r, ctx)];
-          None
-
-        | FStar.Errors.Err (e, msg, ctx) when not ((Options.trace_error())) ->
-          FStar.TypeChecker.Err.add_errors env [(e, msg, FStar.TypeChecker.Env.get_range env, ctx)];
           None
 
 let report_fail () =
@@ -96,10 +92,10 @@ let report_fail () =
 (* Internal data structures for managing chunks of input from the editor                *)
 (****************************************************************************************)
 type input_chunks =
-  | Push of bool * int * int //the bool flag indicates lax flag set from the editor
+  | Push of bool & int & int //the bool flag indicates lax flag set from the editor
   | Pop  of string
-  | Code of string * (string * string)
-  | Info of string * bool * option (string * int * int)
+  | Code of string & (string & string)
+  | Info of string & bool & option (string & int & int)
   | Completions of string
 
 
@@ -110,7 +106,7 @@ type interactive_state = {
   stdin: ref (option stream_reader); // Initialized once.
   // A list of chunks read so far
   buffer: ref (list input_chunks);
-  log: ref (option file_handle);
+  log: ref (option out_channel);
 }
 
 
@@ -127,7 +123,7 @@ let the_interactive_state = {
 let rec read_chunk () =
   let s = the_interactive_state in
   let log : string -> unit =
-    if Options.debug_any() then
+    if Debug.any() then
       let transcript =
         match !s.log with
         | Some transcript -> transcript
@@ -138,7 +134,7 @@ let rec read_chunk () =
       in
       fun line ->
         Util.append_to_file transcript line;
-        Util.flush_file transcript
+        Util.flush transcript
     else
       fun _ -> ()
   in
@@ -174,7 +170,7 @@ let rec read_chunk () =
             | [l; c; "#lax"] -> true, Util.int_of_string l, Util.int_of_string c
             | [l; c]         -> false, Util.int_of_string l, Util.int_of_string c
             | _              ->
-              Errors. log_issue Range.dummyRange (Errors.Warning_WrongErrorLocation, ("Error locations may be wrong, unrecognized string after #push: " ^ lc_lax));
+              Errors.log_issue0 Errors.Warning_WrongErrorLocation ("Error locations may be wrong, unrecognized string after #push: " ^ lc_lax);
               false, 1, 0
         in
         Push lc)
@@ -187,7 +183,7 @@ let rec read_chunk () =
         Util.clear_string_builder s.chunk;
         Info (symbol, false, Some (file, Util.int_of_string row, Util.int_of_string col))
       | _ ->
-        Errors. log_issue Range.dummyRange (Errors.Error_IDEUnrecognized, "Unrecognized \"#info\" request: " ^l);
+        Errors.log_issue0 Errors.Error_IDEUnrecognized ("Unrecognized \"#info\" request: " ^ l);
         exit 1
   else if Util.starts_with l "#completions " then
       match Util.split l " " with
@@ -195,7 +191,7 @@ let rec read_chunk () =
         Util.clear_string_builder s.chunk;
         Completions (prefix)
       | _ ->
-        Errors. log_issue Range.dummyRange (Errors.Error_IDEUnrecognized, "Unrecognized \"#completions\" request: " ^ l);
+        Errors.log_issue0 Errors.Error_IDEUnrecognized ("Unrecognized \"#completions\" request: " ^ l);
         exit 1
   else if l = "#finish" then exit 0
   else
@@ -233,18 +229,18 @@ let deps_of_our_file filename =
   let maybe_intf = match same_name with
     | [ intf; impl ] ->
         if not (Parser.Dep.is_interface intf) || not (Parser.Dep.is_implementation impl) then
-          Errors. log_issue Range.dummyRange (Errors.Warning_MissingInterfaceOrImplementation, (Util.format2 "Found %s and %s but not an interface + implementation" intf impl));
+          Errors.log_issue0 Errors.Warning_MissingInterfaceOrImplementation (Util.format2 "Found %s and %s but not an interface + implementation" intf impl);
         Some intf
     | [ impl ] ->
         None
     | _ ->
-        Errors. log_issue Range.dummyRange (Errors.Warning_UnexpectedFile, (Util.format1 "Unexpected: ended up with %s" (String.concat " " same_name)));
+        Errors.log_issue0 Errors.Warning_UnexpectedFile (Util.format1 "Unexpected: ended up with %s" (String.concat " " same_name));
         None
   in
   deps, maybe_intf, dep_graph
 
 (* .fsti name (optional) * .fst name * .fsti recorded timestamp (optional) * .fst recorded timestamp  *)
-type m_timestamps = list (option string * string * option time * time)
+type m_timestamps = list (option string & string & option time & time)
 
 (*
  * type check remaining dependencies and record the timestamps.
@@ -289,7 +285,7 @@ let rec tc_deps (m:modul_t) (stack:stack_t)
  * returns the new stack, environment, and timestamps
  *)
 let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_timestamps)
-  : (stack_t * env_t * m_timestamps) =
+  : (stack_t & env_t & m_timestamps) =
   let is_stale (intf:option string) (impl:string) (intf_t:option time) (impl_t:time) :bool =
     let impl_mt = get_file_last_modification_time impl in
     (is_before impl_t impl_mt ||
@@ -314,7 +310,7 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
   (ts:m_timestamps) (good_stack:stack_t) (good_ts:m_timestamps) = //:(stack 'env, modul_t * 'env * m_timestamps) =
     //invariant length good_stack = length good_ts, and same for stack and ts
 
-    let match_dep (depnames:list string) (intf:option string) (impl:string) : (bool * list string) =
+    let match_dep (depnames:list string) (intf:option string) (impl:string) : (bool & list string) =
       match intf with
         | None      ->
           (match depnames with
@@ -327,7 +323,7 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
     in
 
     //expected the stack to be in "last dependency first order", we want to pop in the proper order (although should not matter)
-    let rec pop_tc_and_stack (env:env_t) (stack:list (env_t * modul_t)) ts =
+    let rec pop_tc_and_stack (env:env_t) (stack:list (env_t & modul_t)) ts =
       match ts with
         | []    -> (* stack should also be empty here *) env
         | _::ts ->
@@ -365,7 +361,7 @@ let format_info env name typ range (doc: option string) =
      | Some docstring -> Util.format1 "#doc %s" docstring
      | None -> "")
 
-let rec go (line_col:(int*int))
+let rec go (line_col:(int&int))
            (filename:string)
            (stack:stack_t) (curmod:modul_t) (env:env_t) (ts:m_timestamps) : unit = begin
   match shift_chunk () with
@@ -397,7 +393,7 @@ let rec go (line_col:(int*int))
     //search_term is the partially written identifer by the user
     // FIXME a regular expression might be faster than this explicit matching
     let rec measure_anchored_match
-      : list string -> list ident -> option (list ident * int)
+      : list string -> list ident -> option (list ident & int)
       //determines it the candidate may match the search term
       //and, if so, provides an integer measure of the degree of the match
       //Q: isn't the output list ident always the same as the candidate?
@@ -422,7 +418,7 @@ let rec go (line_col:(int*int))
                         Util.map_option (fun (matched, len) -> (hc :: matched, String.length hc_text + 1 + len))
             else None in
     let rec locate_match
-      : list string -> list ident -> option (list ident * list ident * int)
+      : list string -> list ident -> option (list ident & list ident & int)
       = fun needle candidate ->
       match measure_anchored_match needle candidate with
       | Some (matched, n) -> Some ([], matched, n)
@@ -457,7 +453,7 @@ let rec go (line_col:(int*int))
         //In case (b), we find all lidents in the type-checking environment
         //   and rank them by potential matches to the needle
         let case_a_find_transitive_includes (orig_ns:list string) (m:lident) (id:string)
-            : list (list ident * list ident * int)
+            : list (list ident & list ident & int)
             =
             let exported_names = DsEnv.transitive_exported_ids env.dsenv m in
             let matched_length =
@@ -475,7 +471,7 @@ let rec go (line_col:(int*int))
             else None)
         in
         let case_b_find_matches_in_env ()
-          : list (list ident * list ident * int)
+          : list (list ident & list ident & int)
           = let matches = List.filter_map (match_lident_against needle) all_lidents_in_env in
             //Retain only the ones that can be resolved that are resolvable to themselves in dsenv
             matches |> List.filter (fun (ns, id, _) ->
@@ -513,7 +509,7 @@ let rec go (line_col:(int*int))
       pop env msg;
       let (env, curmod), stack =
         match stack with
-        | [] -> Errors. log_issue Range.dummyRange (Errors.Error_IDETooManyPops,  "too many pops"); exit 1
+        | [] -> Errors.log_issue0 Errors.Error_IDETooManyPops "Too many pops"; exit 1
         | hd::tl -> hd, tl
       in
       go line_col filename stack curmod env ts
@@ -543,7 +539,7 @@ let rec go (line_col:(int*int))
                   frag_text=text;
                   frag_line=fst line_col;
                   frag_col=snd line_col} in
-      let res = check_frag env curmod frag in begin
+      let res = check_frag env curmod (frag,[]) in begin
         match res with
         | Some (curmod, env, n_errs) ->
             if n_errs=0 then begin
@@ -558,8 +554,8 @@ end
 // filename is the name of the file currently edited
 let interactive_mode (filename:string): unit =
 
-  if Option.isSome (Options.codegen())
-  then Errors. log_issue Range.dummyRange (Errors.Warning_IDEIgnoreCodeGen, "code-generation is not supported in interactive mode, ignoring the codegen flag");
+  if Option.isSome (Options.codegen()) then
+    Errors.log_issue0 Errors.Warning_IDEIgnoreCodeGen "Code-generation is not supported in interactive mode, ignoring the codegen flag";
 
   //type check prims and the dependencies
   let filenames, maybe_intf, dep_graph = deps_of_our_file filename in

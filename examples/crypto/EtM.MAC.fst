@@ -54,7 +54,7 @@ let hmac_sha1 k t =
 (* Type log_t defined as follows (in ulib/FStar.Monotonic.Seq.fst):
    type log_t (i:rid) (a:Type) = m_rref i (seq a) grows *)
 
-let log_entry = msg * tag
+let log_entry = msg & tag
 let entry_message (l:log_entry) = fst l
 let entry_tag (l:log_entry) = snd l
 type log_t (r:rid) = m_rref r (seq log_entry) grows

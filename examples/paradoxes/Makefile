@@ -2,7 +2,7 @@ include ../Makefile.include
 
 all: uall
 
-uall: propext propImpredicative ioWpInconsistent injectiveTypeFormers
+uall: propext propImpredicative ioWpInconsistent injectiveTypeFormers PrecedesRank.uver
 
 injectiveTypeFormers:
 	$(FSTAR) InjectiveTypeFormers.Explicit.fst

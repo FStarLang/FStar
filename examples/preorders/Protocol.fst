@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module Protocol
-
 open FStar.Seq
 
 open FStar.Preorder
@@ -59,7 +58,7 @@ let pad (m:message) :network_message = append m (zeroes (fragment_size - (length
 
 (* an unpad function that strips off the trailing pad *)
 assume val unpad (s:network_message)
-  :(r:(nat * message){length (snd r) = fst r /\ s == pad (snd r)})
+  :(r:(nat & message){length (snd r) = fst r /\ s == pad (snd r)})
 
 assume val lemma_pad_unpad (x:unit) :Lemma (ensures (forall (m:message). snd (unpad (pad m)) == m))
 
@@ -243,7 +242,7 @@ let ciphers (c:connection) (h:heap) :GTot (seq network_message) =
   ArrayUtils.seq_map E?.cipher (sel h (entries_of c))
 
 assume val network_receive (c:connection)
-  :ST (option (network_message * seq byte)) (requires (fun h0 -> h0 `live_connection` c))
+  :ST (option (network_message & seq byte)) (requires (fun h0 -> h0 `live_connection` c))
                                      (ensures  (fun h0 _ h1 -> h0 == h1))
 
 let modifies_r (#n:nat) (c:connection{receiver c}) (arr:array byte n) (h0 h1:heap) :Type0
@@ -427,7 +426,7 @@ val send_aux
                       from <= ctr c h1 /\
                       (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
                       sent_bytes (as_initialized_seq file h0) c from (ctr c h1) h1))
-#push-options "--z3rlimit 500"
+#restart-solver
 let rec send_aux #n file c from pos
       = if pos = n then ()
         else

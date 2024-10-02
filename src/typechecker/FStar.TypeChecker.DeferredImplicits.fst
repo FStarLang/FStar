@@ -35,6 +35,10 @@ module BU = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module SS = FStar.Syntax.Subst
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
+
+open FStar.Class.Setlike
+open FStar.Class.Show
 
 let is_flex t =
   let head, _args = U.head_and_args_full t in
@@ -49,35 +53,10 @@ let flex_uvar_head t =
     | _ -> failwith "Not a flex-uvar"
 
 type goal_type =
-  | FlexRigid of ctx_uvar * term
-  | FlexFlex of ctx_uvar * ctx_uvar
-  | Can_be_split_into of term * term * ctx_uvar
+  | FlexRigid of ctx_uvar & term
+  | FlexFlex of ctx_uvar & ctx_uvar
+  | Can_be_split_into of term & term & ctx_uvar
   | Imp of ctx_uvar
-
-type goal_dep =
-  {
-    goal_dep_id:int;       //Assign each goal an id, for cycle detection
-    goal_type:goal_type; //What sort of goal ...
-    goal_imp:implicit;   //The entire implicit from which this was generated
-    assignees:BU.set ctx_uvar; //The set of uvars assigned by the goal
-    goal_dep_uvars:BU.set ctx_uvar; //The set of uvars this goal depends on
-    dependences:ref goal_deps; //NB: mutable; the goals that must precede this one in the order
-    visited:ref int //NB: mutable; a field to mark visited goals during the sort
-  }
-and goal_deps = list goal_dep
-
-let print_uvar_set (s:BU.set ctx_uvar) =
-    (BU.set_elements s
-     |> List.map (fun u -> "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head))
-     |> String.concat "; ")
-
-let print_goal_dep gd =
-  BU.format4 "%s:{assignees=[%s], dependences=[%s]}\n\t%s\n"
-    (BU.string_of_int gd.goal_dep_id)
-    (print_uvar_set gd.assignees)
-    (List.map (fun gd -> string_of_int gd.goal_dep_id) (!gd.dependences)
-     |> String.concat "; ")
-    (Print.ctx_uvar_to_string gd.goal_imp.imp_uvar)
 
 (*
   If [u] is tagged with attribute [a]
@@ -138,7 +117,7 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
       (* candidates: hooks that also have the attribute [a] *)
       let candidates = 
         hooks |> List.filter
-                  (fun hook -> hook.sigattrs |> BU.for_some (U.attr_eq a))
+                  (fun hook -> hook.sigattrs |> BU.for_some (TEQ.eq_tm_bool env a))
       in
       (* The environment sometimes returns duplicates in the candidate list; filter out dups *)
       let candidates =
@@ -169,7 +148,7 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
                  | Tm_fvar fv, [_; (a', _); (overrides, _)] //type argument may be missing, since it is just an attr
                  | Tm_fvar fv, [(a', _); (overrides, _)]                 
                    when fv_eq_lid fv FStar.Parser.Const.override_resolve_implicits_handler_lid
-                     && U.attr_eq a a' ->
+                     && TEQ.eq_tm_bool env a a' ->
                    //other has an attribute [@@override_resolve_implicits_handler a overrides]
                    begin
                    match attr_list_elements overrides with
@@ -190,10 +169,10 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
       | [ c ] -> Some c //if there is a unique candidate return it
       | _ -> //it is ambiguous; complain
         let candidates = candidate_names candidates in
-        let attr = Print.term_to_string a in
+        let attr = show a in
         FStar.Errors.log_issue u.ctx_uvar_range
-                               (FStar.Errors.Warning_AmbiguousResolveImplicitsHook,
-                                BU.format2
+                               FStar.Errors.Warning_AmbiguousResolveImplicitsHook
+                               (BU.format2
                                   "Multiple resolve_implicits hooks are eligible for attribute %s; \n\
                                    please resolve the ambiguity by using the `override_resolve_implicits_handler` attribute \
                                    to choose among these candidates {%s}"
@@ -204,27 +183,25 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
     | _ -> None
 
 let should_defer_uvar_to_user_tac env (u:ctx_uvar) =
-  if not env.enable_defer_to_tac then false
-  else Option.isSome (find_user_tac_for_uvar env u)
-
+  if not env.enable_defer_to_tac
+  then false
+  else Some? (find_user_tac_for_uvar env u)
 
 let solve_goals_with_tac env g (deferred_goals:implicits) (tac:sigelt) =
-  let resolve_tac =
-    match tac.sigel with
-    | Sig_let (_, [lid]) ->
-      let qn = Env.lookup_qname env lid in
-      let fv = S.lid_as_fv lid (Delta_constant_at_level 0) None in
-      let dd =
-        match Env.delta_depth_of_qninfo fv qn with
-        | Some dd -> dd
-        | None -> failwith "Expected a dd"
-      in
-      let term = S.fv_to_tm (S.lid_as_fv lid dd None) in
-      term
-    | _ -> failwith "Resolve_tac not found"
-  in
-  let env = { env with enable_defer_to_tac = false } in
-  env.try_solve_implicits_hook env resolve_tac deferred_goals
+  Profiling.profile (fun () ->
+    let resolve_tac =
+      match tac.sigel with
+      | Sig_let {lids=[lid]} ->
+        let qn = Env.lookup_qname env lid in
+        let fv = S.lid_as_fv lid None in
+        let term = S.fv_to_tm (S.lid_as_fv lid None) in
+        term
+      | _ -> failwith "Resolve_tac not found"
+    in
+    let env = { env with enable_defer_to_tac = false } in
+    env.try_solve_implicits_hook env resolve_tac deferred_goals)
+  (Some (Ident.string_of_lid (Env.current_module env)))
+  "FStar.TypeChecker.DeferredImplicits.solve_goals_with_tac"
 
 (** This functions is called in Rel.force_trivial_guard to solve all
     goals in a guard that were deferred to a tactic *)
@@ -234,12 +211,12 @@ let solve_deferred_to_tactic_goals env g =
     (** A unification problem between two terms is presented to
         a tactic as an equality goal between the terms. *)
     let prob_as_implicit (_, reason, prob)
-      : implicit * sigelt =
+      : implicit & sigelt =
       match prob with
       | TProb tp when tp.relation=EQ ->
         let env, _ = Env.clear_expected_typ env in
         let env = {env with gamma=tp.logical_guard_uvar.ctx_uvar_gamma} in
-        let env_lax = {env with lax=true; use_bv_sorts=true; enable_defer_to_tac=false} in
+        let env_lax = {env with admit=true; enable_defer_to_tac=false} in
         let _, t_eq, _ =
           //Prefer to use the type of the flex term to compute the
           //type instantiation of the equality, since it is more efficient
@@ -251,11 +228,11 @@ let solve_deferred_to_tactic_goals env g =
         in
         let goal_ty = U.mk_eq2 (env.universe_of env_lax t_eq) t_eq tp.lhs tp.rhs in
         let goal, ctx_uvar, _ =
-            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Strict None
+            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Strict None false
         in
         let imp =
             { imp_reason = "";
-              imp_uvar = fst (List.hd ctx_uvar);
+              imp_uvar = fst ctx_uvar;
               imp_tm = goal;
               imp_range = tp.lhs.pos
             }
@@ -303,8 +280,8 @@ let solve_deferred_to_tactic_goals env g =
     (** Each implicit is associated with a sigelt.
         Group them so that all implicits with the same associated sigelt
         are in the same bucket *)
-    let bucketize (is:list (implicit * sigelt)) : list (implicits * sigelt) =
-      let map : BU.smap (implicits * sigelt) = BU.smap_create 17 in
+    let bucketize (is:list (implicit & sigelt)) : list (implicits & sigelt) =
+      let map : BU.smap (implicits & sigelt) = BU.smap_create 17 in
       List.iter
         (fun (i, s) ->
            match U.lid_of_sigelt s with

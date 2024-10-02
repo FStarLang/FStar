@@ -23,6 +23,7 @@ open FStar.Compiler.Util
 open FStar.Compiler.Range
 open FStar.Errors
 open FStar.Universal
+open FStar.Interactive.Ide.Types
 open FStar.Interactive.JsonHelper
 
 module U = FStar.Compiler.Util
@@ -34,7 +35,7 @@ module TcEnv = FStar.TypeChecker.Env
 (* Request *)
 
 // nothrow
-let unpack_lsp_query (r : list (string * json)) : lsp_query =
+let unpack_lsp_query (r : list (string & json)) : lsp_query =
   let qid = try_assoc "id" r |> U.map_option js_str_int in // noexcept
 
   // If we make it this far, exceptions will come with qid info.
@@ -102,7 +103,7 @@ let deserialize_lsp_query js_query : lsp_query =
 
 let parse_lsp_query query_str : lsp_query =
   if false then U.print1_error ">>> %s\n" query_str;
-  match U.json_of_string query_str with
+  match json_of_string query_str with
   | None -> { query_id = None; q = BadProtocolMsg "Json parsing failed" }
   | Some request -> deserialize_lsp_query request
 
@@ -112,16 +113,23 @@ let repl_state_init (fname: string) : repl_state =
   let intial_range = Range.mk_range fname (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
   let env = init_env FStar.Parser.Dep.empty_deps in
   let env = TcEnv.set_range env intial_range in
-  { repl_line = 1; repl_column = 0; repl_fname = fname;
-    repl_curmod = None; repl_env = env; repl_deps_stack = [];
-    repl_stdin = open_stdin (); repl_names = CompletionTable.empty }
+  { repl_line = 1;
+    repl_column = 0;
+    repl_fname = fname;
+    repl_curmod = None;
+    repl_env = env;
+    repl_deps_stack = [];
+    repl_stdin = open_stdin ();
+    repl_names = CompletionTable.empty;
+    repl_buffered_input_queries = [];
+    repl_lang = [] }
 
 type optresponse = option assoct // Contains [("result", ...)], [("error", ...)], but is not
                                   // the full response; call json_of_response for that
 type either_gst_exit = either grepl_state int // grepl_state is independent of exit_code
 
 let invoke_full_lax (gst: grepl_state) (fname: string) (text: string) (force: bool)
-  : optresponse * either_gst_exit =
+  : optresponse & either_gst_exit =
   let aux () =
     PI.add_vfs_entry fname text;
     let diag, st' = PH.full_lax text (repl_state_init fname) in
@@ -133,7 +141,7 @@ let invoke_full_lax (gst: grepl_state) (fname: string) (text: string) (force: bo
  | Some _ -> if force then aux () else None, Inl gst
  | None -> aux ()
 
-let run_query (gst: grepl_state) (q: lquery) : optresponse * either_gst_exit =
+let run_query (gst: grepl_state) (q: lquery) : optresponse & either_gst_exit =
   match q with
   | Initialize (_, _) -> resultResponse js_servcap, Inl gst
   | Initialized -> None, Inl gst
@@ -219,7 +227,7 @@ let rec go (gst: grepl_state) : int =
   let r, state_opt = run_query gst query.q in
   (match r with
    | Some response -> (let response' = json_of_response query.query_id response in
-                       if false then U.print1_error "<<< %s\n" (U.string_of_json response');
+                       if false then U.print1_error "<<< %s\n" (string_of_json response');
                        write_jsonrpc response')
    | None -> ()); // Don't respond
   match state_opt with

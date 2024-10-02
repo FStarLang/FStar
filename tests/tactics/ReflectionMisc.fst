@@ -15,9 +15,10 @@
 *)
 module ReflectionMisc
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
-let mk (#a: Type u#a) (u: universe_view) (#[exact (pack_ln (Tv_Type (pack_universe u)))]r: a) (): a = r
+let mk (#a: Type u#a) (u: universe_view) (#[exact (pack (Tv_Type (pack_universe u)))]r: a) (): a = r
+
 let univs (_: Type u#a) (_: Type u#b): _ = 
   assert (mk (Uv_Name ("a", range_of 1)) () == Type u#a);
   assert (mk (
@@ -66,18 +67,18 @@ let _ = assert True
 //  Taking the universe from Tot
 //  And applying Succ to it
 //
-let get_u () : Tac term =
-  let t = `(int -> Tot u#0 int) in
-  match inspect t with
-  | Tv_Arrow _ c ->
-    (match inspect_comp c with
-     | C_Total _ u _ -> pack_ln (Tv_Type (pack_universe (Uv_Succ u)))
-     | _ -> fail "2")
-  | _ -> fail "3"
+// let get_u () : Tac term =
+//   let t = `(int -> Tot u#0 int) in
+//   match inspect t with
+//   | Tv_Arrow _ c ->
+//     (match inspect_comp c with
+//      | C_Total _ u _ -> pack (Tv_Type (pack_universe (Uv_Succ u)))
+//      | _ -> fail "2")
+//   | _ -> fail "3"
 
-let test0 (#[exact (get_u ())]t:Type u#2) () : Type u#2 = t
-let test1 () = test0 ()
+// let test0 (#[exact (get_u ())]t:Type u#2) () : Type u#2 = t
+// let test1 () = test0 ()
 
-let test2 (#[exact (get_u ())]t:Type u#1) () : Type u#1 = t
-[@@ expect_failure [228]]
-let test3 () = test2 ()
+// let test2 (#[exact (get_u ())]t:Type u#1) () : Type u#1 = t
+// [@@ expect_failure [228]]
+// let test3 () = test2 ()

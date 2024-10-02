@@ -2,7 +2,7 @@ module Bug2189
 
 module L = FStar.List.Tot
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 
 [@@ strict_on_arguments [1]]

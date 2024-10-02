@@ -25,3 +25,6 @@ miniparse:
 endif
 
 .PHONY: miniparse
+
+%.fst-in:
+	@echo $(OTHERFLAGS) $(addprefix --include , $(INCLUDE_PATHS))

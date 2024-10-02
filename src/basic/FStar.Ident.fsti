@@ -16,24 +16,28 @@
 module FStar.Ident
 
 open FStar.Compiler.Range
+open FStar.Class.Show
+open FStar.Class.HasRange
+open FStar.Class.Deq
+open FStar.Class.PP
 
 (** A (short) identifier for a local name.
  *  e.g. x in `fun x -> ...` *)
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
-val ident : Type0
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
+new val ident : Type0
 
 // type ident
 
 (** A module path *)
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type path = list string
 
 (** A module path, as idents *)
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type ipath = list ident
 
 (** Create an ident *)
-val mk_ident            : (string * range) -> ident
+val mk_ident            : (string & range) -> ident
 
 (** Obtain the range of an ident *)
 val range_of_id         : ident -> range
@@ -53,13 +57,7 @@ val ident_equals        : ident -> ident -> bool
 (** Print an ident *)
 val string_of_id        : ident -> string
 
-
-
-
-
-(** Gensym, generating fresh names *)
-val reset_gensym        : unit -> unit
-val next_id             : unit -> int
+(** Generating fresh names, uses GenSym. *)
 val gen'                : string -> range -> ident
 val gen                 : range -> ident
 
@@ -77,10 +75,10 @@ val path_of_ns          : ipath -> path
     e.g. Prims.string. Essentially a list of idents where
     the last one denotes a name, and all the others denote a
     module path that qualifies the name. *)
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
-val lident : Type0
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
+new val lident : Type0
 
-// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
+[@@ PpxDerivingYoJson; PpxDerivingShow ]
 type lid = lident
 
 (** Obtain the range of an lid *)
@@ -136,3 +134,13 @@ val text_of_path        : path -> string
 
 (* Similar to string_of_lid, but separates with "_" instead of "." *)
 val ml_path_of_lid      : lident -> string
+
+(* Showable instances *)
+instance val showable_ident  : showable ident
+instance val showable_lident : showable lident
+instance val pretty_ident    : pretty ident
+instance val pretty_lident   : pretty lident
+instance val hasrange_ident  : hasRange ident
+instance val hasrange_lident : hasRange lident
+instance val deq_ident  : deq ident
+instance val deq_lident : deq lident

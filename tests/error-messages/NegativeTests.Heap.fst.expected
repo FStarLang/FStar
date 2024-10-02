@@ -1,5 +1,9 @@
 >> Got issues: [
-NegativeTests.Heap.fst(26,21-26,54): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details.
+* Error 19 at NegativeTests.Heap.fst(26,21-26,54):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+
 >>]
 Verified module: NegativeTests.Heap
 All verification conditions discharged successfully

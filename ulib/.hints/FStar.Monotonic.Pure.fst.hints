@@ -1,0 +1,79 @@
+[
+  "ã+\bÔ\u0000 ØX<+\u001b\u0015<3Å_",
+  [
+    [
+      "FStar.Monotonic.Pure.elim_pure_wp_monotonicity",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pure_wp",
+        "equation_Prims.pure_wp_monotonic0",
+        "function_token_typing_Prims.pure_wp_monotonic",
+        "l_quant_interp_71257c228512ceaa84671e7dd2ff0073",
+        "refinement_interpretation_Tm_refine_15e0beb75f7033bad5fae236999feebe",
+        "token_correspondence_Prims.pure_wp_monotonic0"
+      ],
+      0,
+      "701e0a892729e1f3eab6239f3ecc3cde"
+    ],
+    [
+      "FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pure_wp",
+        "equation_Prims.pure_wp_monotonic0",
+        "function_token_typing_Prims.pure_wp_monotonic",
+        "l_quant_interp_71257c228512ceaa84671e7dd2ff0073",
+        "refinement_interpretation_Tm_refine_15e0beb75f7033bad5fae236999feebe",
+        "token_correspondence_Prims.pure_wp_monotonic0"
+      ],
+      0,
+      "0eee51a0d5a6136a22d52ac64e7de9b2"
+    ],
+    [
+      "FStar.Monotonic.Pure.intro_pure_wp_monotonicity",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Prims.pure_wp_monotonic0",
+        "function_token_typing_Prims.pure_wp_monotonic",
+        "l_quant_interp_71257c228512ceaa84671e7dd2ff0073",
+        "token_correspondence_Prims.pure_wp_monotonic0"
+      ],
+      0,
+      "a8edac9c935aa2321f6dea8bcf0bdfd4"
+    ],
+    [
+      "FStar.Monotonic.Pure.as_pure_wp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c1e0414cae0599d290dc7d3bae8c8cf7"
+    ],
+    [
+      "FStar.Monotonic.Pure.elim_pure",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "eq2-interp", "equation_Prims.l_True", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_",
+        "interpretation_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec",
+        "l_imp-interp", "l_quant_interp_904a74cfe3507104488fdcb4d014247a",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec"
+      ],
+      0,
+      "22db72bb5025c48ef5a136c568ec73c2"
+    ]
+  ]
+]

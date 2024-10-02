@@ -916,6 +916,7 @@ let matrix_left_mul_identity_aux_0 #c #eq #m
             (fun (k: under m) -> ijth (matrix_mul_unit add mul m) i k `mul.mult` ijth mx k j)) 
            `eq.eq` add.unit) = eq.reflexivity add.unit 
            
+#restart-solver           
 let rec matrix_left_mul_identity_aux_1 #c #eq #m 
                                        (add: CE.cm c eq) 
                                        (mul: CE.cm c eq{is_absorber add.unit mul}) 
@@ -946,6 +947,7 @@ let rec matrix_left_mul_identity_aux_1 #c #eq #m
                   (add.mult add.unit add.unit)
                   add.unit 
 
+#push-options "--z3rlimit 20"
 let matrix_left_mul_identity_aux_2 #c #eq #m 
                                        (add: CE.cm c eq) 
                                        (mul: CE.cm c eq{is_absorber add.unit mul}) 
@@ -1134,6 +1136,7 @@ let matrix_mul_is_left_distributive #c #eq #m #n #p (add: CE.cm c eq)
                     (sum_j init_rhs)
                     (ijth rhs i k) 
   in matrix_equiv_from_proof eq lhs rhs aux 
+#pop-options
 
 let matrix_mul_is_right_distributive #c #eq #m #n #p (add: CE.cm c eq)
                                     (mul: CE.cm c eq{is_fully_distributive mul add /\ is_absorber add.unit mul}) 

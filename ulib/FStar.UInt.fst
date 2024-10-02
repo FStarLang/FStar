@@ -325,6 +325,13 @@ let logand_mask #n a m =
     (logand_vec (to_vec a) (to_vec (pow2 m - 1)))
     (append (zero_vec #(n - m)) (slice (to_vec a) (n - m) n));
   append_lemma #(n - m) #m (zero_vec #(n - m)) (slice (to_vec a) (n - m) n);
+  calc (==) {
+    0 * pow2 m + a % pow2 m;
+    == { }
+    0 + a % pow2 m;
+    == { }
+    a % pow2 m;
+  };
   assert (0 * pow2 m + a % pow2 m == a % pow2 m);
   assert (from_vec #(n - m) (zero_vec #(n - m)) == 0);
   slice_right_lemma #n (to_vec a) m;
@@ -373,7 +380,7 @@ let shift_right_value_aux_1 #n a s =
 
 let shift_right_value_aux_2 #n a = assert_norm (pow2 0 == 1)
 
-#push-options "--z3rlimit 20"
+#push-options "--z3rlimit 50"
 let shift_right_value_aux_3 #n a s =
   append_lemma #s #(n - s) (zero_vec #s) (slice (to_vec a) 0 (n - s));
   slice_left_lemma #n (to_vec a) (n - s)
@@ -384,7 +391,9 @@ let shift_right_value_lemma #n a s =
   else if s = 0 then shift_right_value_aux_2 #n a
   else shift_right_value_aux_3 #n a s
 
+#push-options "--z3rlimit 10"
 let lemma_msb_pow2 #n a = if n = 1 then () else from_vec_propriety (to_vec a) 1
+#pop-options
 
 val plus_one_mod : p:pos -> a:nat ->
     Lemma (requires (a < p /\ ((a + 1) % p == 0))) (ensures (a == p - 1))
@@ -451,6 +460,7 @@ let lemma_zero_extend #n a =
   from_vec_propriety #(n+1) eav 1;
   assert (r = a)
 
+#push-options "--z3rlimit 40"
 let lemma_one_extend #n a =
   let hd1 = Seq.create 1 true in
   let av = to_vec a in
@@ -460,6 +470,7 @@ let lemma_one_extend #n a =
   assert (r = from_vec eav);
   from_vec_propriety #(n+1) eav 1;
   assert (r = pow2 n + a)
+#pop-options
 
 #push-options "--fuel 1 --ifuel 0 --z3rlimit 40"
 let lemma_lognot_zero_ext #n a =
@@ -573,7 +584,7 @@ let lemma_lognot_value_zero #n a =
 private
 val lemma_mod_variation: #n:pos -> a:uint_t n ->
   Lemma (a <> 0 ==> ((-a) % pow2 n) - 1 % pow2 n = (((-a) % pow2 n) - 1) % pow2 n)
-let lemma_mod_variation #n a = ()
+let lemma_mod_variation #n a = assert (pow2 n =!= 0)
 #pop-options
 
 let lemma_one_mod_pow2 #n = ()

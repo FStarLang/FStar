@@ -30,6 +30,7 @@ open FStar.Universal
 open FStar.Parser.ParseIt
 open FStar.TypeChecker.Env
 open FStar.Interactive.JsonHelper
+open FStar.Interactive.Ide.Types
 
 module U = FStar.Compiler.Util
 module SS = FStar.Syntax.Syntax
@@ -41,7 +42,7 @@ module CTable = FStar.Interactive.CompletionTable
 let repl_stack: ref repl_stack_t = U.mk_ref []
 
 let set_check_kind env check_kind =
-  { env with lax = (check_kind = LaxCheck);
+  { env with admit = (check_kind = LaxCheck || Options.lax());
              dsenv = DsEnv.set_syntax_only env.dsenv (check_kind = SyntaxCheck)}
 
 (** Build a list of dependency loading tasks from a list of dependencies **)
@@ -63,8 +64,8 @@ The dependencies are a list of file name.  The steps are a list of
 ``repl_task`` elements, to be executed by ``run_repl_task``. **)
 let deps_and_repl_ld_tasks_of_our_file filename
     : list string
-    * list repl_task
-    * FStar.Parser.Dep.deps =
+    & list repl_task
+    & FStar.Parser.Dep.deps =
   let get_mod_name fname =
     Parser.Dep.lowercase_module_name fname in
   let our_mod_name =
@@ -81,18 +82,17 @@ let deps_and_repl_ld_tasks_of_our_file filename
     match same_name with
     | [intf; impl] ->
       if not (Parser.Dep.is_interface intf) then
-         raise_err (Errors.Fatal_MissingInterface, U.format1 "Expecting an interface, got %s" intf);
+         raise_error0 Errors.Fatal_MissingInterface (U.format1 "Expecting an interface, got %s" intf);
       if not (Parser.Dep.is_implementation impl) then
-         raise_err (Errors.Fatal_MissingImplementation,
-                    U.format1 "Expecting an implementation, got %s" impl);
+         raise_error0 Errors.Fatal_MissingImplementation
+           (U.format1 "Expecting an implementation, got %s" impl);
       [LDInterfaceOfCurrentFile ({ tf_fname = intf; tf_modtime = U.now () }) ]
     | [impl] ->
       []
     | _ ->
       let mods_str = String.concat " " same_name in
       let message = "Too many or too few files matching %s: %s" in
-      raise_err (Errors.Fatal_TooManyOrTooFewFileMatch,
-                 (U.format message [our_mod_name; mods_str]));
+      raise_error0 Errors.Fatal_TooManyOrTooFewFileMatch (U.format message [our_mod_name; mods_str]);
       [] in
 
   let tasks =
@@ -100,15 +100,27 @@ let deps_and_repl_ld_tasks_of_our_file filename
   real_deps, tasks, dep_graph
 
 (** Checkpoint the current (typechecking and desugaring) environment **)
-let snapshot_env env msg : repl_depth_t * env_t =
+let snapshot_env env msg : repl_depth_t & env_t =
   let ctx_depth, env = TypeChecker.Tc.snapshot_context env msg in
   let opt_depth, () = Options.snapshot () in
   (ctx_depth, opt_depth), env
 
-let push_repl msg push_kind task st =
+let push_repl msg push_kind_opt task st =
   let depth, env = snapshot_env st.repl_env msg in
   repl_stack := (depth, (task, st)) :: !repl_stack;
-  { st with repl_env = set_check_kind env push_kind } // repl_env is the only mutable part of st
+  match push_kind_opt with
+  | None -> st
+  | Some push_kind ->
+    { st with repl_env = set_check_kind env push_kind } // repl_env is the only mutable part of st
+
+(* Record the issues that were raised by the last push *)
+let add_issues_to_push_fragment (issues: list json) =
+  match !repl_stack with
+  | (depth, (PushFragment(frag, push_kind, i), st))::rest -> (
+    let pf = PushFragment(frag, push_kind, issues @ i) in
+    repl_stack := (depth, (pf, st)) :: rest
+  )
+  | _ -> ()
 
 (** Revert to a previous checkpoint.
 
@@ -156,19 +168,26 @@ let tc_one (env:env_t) intf_opt modf =
   let _, env = tc_one_file_for_ide env intf_opt modf parse_data in
   env
 
+open FStar.Class.Show
 (** Load the file or files described by `task` **)
-let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) : optmod_t * env_t =
+let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) lds : optmod_t & env_t & lang_decls_t =
   match task with
   | LDInterleaved (intf, impl) ->
-    curmod, tc_one env (Some intf.tf_fname) impl.tf_fname
+    curmod, tc_one env (Some intf.tf_fname) impl.tf_fname, []
   | LDSingle intf_or_impl ->
-    curmod, tc_one env None intf_or_impl.tf_fname
+    curmod, tc_one env None intf_or_impl.tf_fname, []
   | LDInterfaceOfCurrentFile intf ->
-    curmod, Universal.load_interface_decls env intf.tf_fname
-  | PushFragment frag ->
-    tc_one_fragment curmod env frag
+    curmod, Universal.load_interface_decls env intf.tf_fname, []
+  | PushFragment (frag, _, _) ->
+    let frag =
+      match frag with
+      | Inl frag -> Inl (frag, lds)
+      | Inr decl -> Inr decl
+    in
+    let o, e, langs = tc_one_fragment curmod env frag in
+    o, e, langs
   | Noop ->
-    curmod, env
+    curmod, env, []
 
 (*******************************************)
 (* Name tracking: required for completions *)
@@ -189,10 +208,10 @@ let update_names_from_event cur_mod_str table evt =
         table (string_of_id id) [] (query_of_lid included)
     else
       table
-  | NTOpen (host, (included, kind)) ->
+  | NTOpen (host, (included, kind, _)) ->
     if is_cur_mod host then
       CTable.register_open
-        table (kind = DsEnv.Open_module) [] (query_of_lid included)
+        table (kind = FStar.Syntax.Syntax.Open_module) [] (query_of_lid included)
     else
       table
   | NTInclude (host, included) ->
@@ -234,7 +253,7 @@ let fresh_name_tracking_hooks () =
       (fun _ s -> push_event (NTBinding s)) }
 
 let track_name_changes (env: env_t)
-    : env_t * (env_t -> env_t * list name_tracking_event) =
+    : env_t & (env_t -> env_t & list name_tracking_event) =
   let set_hooks dshooks tchooks env =
     let (), tcenv' = with_dsenv_of_tcenv env (fun dsenv -> (), DsEnv.set_ds_hooks dsenv dshooks) in
     TcEnv.set_tc_hooks tcenv' tchooks in
@@ -250,10 +269,10 @@ let track_name_changes (env: env_t)
 // variant of run_repl_transaction in IDE
 let repl_tx st push_kind task =
   try
-    let st = push_repl "repl_tx" push_kind task st in
+    let st = push_repl "repl_tx" (Some push_kind) task st in
     let env, finish_name_tracking = track_name_changes st.repl_env in // begin name tracking
-    let curmod, env = run_repl_task st.repl_curmod env task in
-    let st = { st with repl_curmod = curmod; repl_env = env } in
+    let curmod, env, lds = run_repl_task st.repl_curmod env task st.repl_lang in
+    let st = { st with repl_curmod = curmod; repl_env = env; repl_lang=List.rev lds @ st.repl_lang } in
     let env, name_events = finish_name_tracking env in // end name tracking
     None, commit_name_tracking st name_events
   with
@@ -262,9 +281,8 @@ let repl_tx st push_kind task =
   | U.SigInt ->
     U.print_error "[E] Interrupt"; None, st
   | Error (e, msg, r, _ctx) -> // TODO: display the error context somehow
-    Some (js_diag st.repl_fname msg (Some r)), st
-  | Err (e, msg, _ctx) ->
-    Some (js_diag st.repl_fname msg None), st
+    // FIXME, or is it OK to render?
+    Some (js_diag st.repl_fname (Errors.rendermsg msg) (Some r)), st
   | Stop ->
     U.print_error "[E] Stop"; None, st
 
@@ -336,7 +354,7 @@ let ld_deps st =
     | Inr st -> Inr st
     | Inl st -> Inl (st, deps)
   with
-  | Err (e, msg, ctx) -> U.print1_error "[E] Failed to load deps. %s" msg; Inr st
+  | Error (e, msg, _rng, ctx) -> U.print1_error "[E] Failed to load deps. %s" (Errors.rendermsg msg); Inr st
   | exn -> U.print1_error "[E] Failed to load deps. Message: %s" (message_of_exn exn); Inr st
 
 let add_module_completions this_fname deps table =
@@ -370,5 +388,5 @@ let full_lax text st =
   match ld_deps st with
   | Inl (st, deps) ->
       let names = add_module_completions st.repl_fname deps st.repl_names in
-      repl_tx ({ st with repl_names = names }) LaxCheck (PushFragment frag)
+      repl_tx ({ st with repl_names = names }) LaxCheck (PushFragment (Inl frag, LaxCheck, []))
   | Inr st -> None, st

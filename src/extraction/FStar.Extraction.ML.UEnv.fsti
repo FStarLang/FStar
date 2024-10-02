@@ -48,8 +48,8 @@ type exp_binding = {
 type ty_or_exp_b = either ty_binding exp_binding
 
 type binding =
-  | Bv  of bv * ty_or_exp_b
-  | Fv  of fv * exp_binding
+  | Bv  of bv & ty_or_exp_b
+  | Fv  of fv & exp_binding
   | ErasedFv of fv
 
 (** Type abbreviations, aka definitions *)
@@ -65,7 +65,7 @@ val tcenv_of_uenv : u:uenv -> TypeChecker.Env.env
 val set_tcenv : u:uenv -> t:TypeChecker.Env.env -> uenv
 val current_module_of_uenv : u:uenv -> mlpath
 val set_current_module : u:uenv -> p:mlpath -> uenv
-val with_typars_env : uenv -> (RemoveUnusedParameters.env_t -> RemoveUnusedParameters.env_t * 'a) -> uenv * 'a
+val with_typars_env : uenv -> (RemoveUnusedParameters.env_t -> RemoveUnusedParameters.env_t & 'a) -> uenv & 'a
 
 (** Debugging only *)
 val bindings_of_uenv : uenv -> list binding
@@ -89,7 +89,7 @@ val lookup_fv: Range.range -> g:uenv -> fv:fv -> exp_binding
 val lookup_bv: g:uenv -> bv: bv -> ty_or_exp_b
 
 (** Lookup a top-level term or local type variable *)
-val lookup_term: g:uenv -> t:term -> ty_or_exp_b * option fv_qual
+val lookup_term: g:uenv -> t:term -> ty_or_exp_b & option fv_qual
 
 (** Lookup a type variable *)
 val lookup_ty: g:uenv -> bv:bv -> ty_binding
@@ -110,13 +110,13 @@ val is_type_name : g:uenv -> fv:fv -> bool
 val is_fv_type: uenv -> fv -> bool
 
 (** ML record name for an F* pair of type name and field name *)
-val lookup_record_field_name: uenv -> (lident * ident) -> mlpath
+val lookup_record_field_name: uenv -> (lident & ident) -> mlpath
 
 (*** Extending environment *)
 
 
 (** Fresh local identifer *)
-val new_mlident : g:uenv -> uenv * mlident
+val new_mlident : g:uenv -> uenv & mlident
 
 (** Extend with a type variable, potentially erased to MLTY_Top *)
 val extend_ty: g:uenv -> a:bv -> map_to_top:bool -> uenv
@@ -128,7 +128,7 @@ val extend_bv:
     mltyscheme ->
     add_unit: bool ->
     mk_unit: bool ->
-    uenv * mlident * exp_binding
+    uenv & mlident & exp_binding
 
 (** Make sure a given ML name is not used in an environment. The
 scope of the environment is not changed at all. This can be used to
@@ -147,7 +147,7 @@ val extend_fv:
     fv ->
     mltyscheme ->
     add_unit:bool ->
-    uenv * mlident * exp_binding
+    uenv & mlident & exp_binding
 
 (** Extend the fv environment by marking that a variable was erased. *)
 val extend_erased_fv:
@@ -162,7 +162,7 @@ val extend_lb:
     t:typ ->
     t_x:mltyscheme ->
     add_unit:bool ->
-    uenv * mlident * exp_binding
+    uenv & mlident & exp_binding
 
 (** Extend with a type abbreviation *)
 val extend_tydef:
@@ -170,7 +170,7 @@ val extend_tydef:
     fv ->
     mltyscheme ->
     FStar.Extraction.ML.Syntax.metadata ->
-    tydef * mlpath * uenv
+    tydef & mlpath & uenv
 
 (** This identifier is for the declaration of a type `val t _ : Type` 
     We record it in the environment to control later if we are
@@ -184,7 +184,7 @@ val extend_with_tydef_declaration:
 val extend_type_name: 
     uenv ->
     fv ->
-    mlpath * uenv
+    mlpath & uenv
 
 (** Extend with a [bind] or [return], 
       returns both the ML identifier and the generated F* lid for it *)
@@ -193,7 +193,7 @@ val extend_with_monad_op_name:
     Syntax.eff_decl ->
     string -> (* name of the op *)
     mltyscheme ->
-    mlpath * lident * exp_binding * uenv
+    mlpath & lident & exp_binding & uenv
 
 (** Extend with an action, returns both the ML identifer and generated F* lident *)
 val extend_with_action_name:
@@ -201,19 +201,22 @@ val extend_with_action_name:
     Syntax.eff_decl ->
     Syntax.action ->
     mltyscheme -> 
-    mlpath * lident * exp_binding * uenv
+    mlpath & lident & exp_binding & uenv
 
 (** The F* record field identifier is a pair of the *typename* and the field name *)
 val extend_record_field_name :
     uenv ->
-    (lident * ident) ->
-    mlident * uenv
+    (lident & ident) ->
+    mlident & uenv
     
 (** ML module identifier for an F* module name *)
 val extend_with_module_name : 
     uenv -> 
     lident ->
-    mlpath * uenv
+    mlpath & uenv
 
 (** Mark exiting a module scope *)
 val exit_module : uenv -> uenv
+
+val no_fstar_stubs : mlpath -> mlpath
+val no_fstar_stubs_ns : list mlsymbol -> list mlsymbol

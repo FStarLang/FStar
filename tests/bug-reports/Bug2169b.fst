@@ -1,7 +1,7 @@
 module Bug2169b
 
 open FStar.FunctionalExtensionality
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 open FStar.Monotonic.Pure
 
@@ -97,7 +97,7 @@ let rewrite_inside_reify (f : int -> ND unit (as_pure_wp(fun p -> True))) (x' : 
      | 0 ->
        let ll = reify (f x) (fun _ -> True) in
        assert (ll == ll) by begin
-         let beq = T.nth_binder 5 in
+         let beq = T.nth_var (-1) in
          T.rewrite beq;
          ()
        end

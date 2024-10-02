@@ -24,7 +24,7 @@ open PureEncoder
 open Serializer
 open Slice
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Ghost
 open FStar.Seq
 open FStar.HyperStack
@@ -336,7 +336,7 @@ let ser_TwoNums' (n m:U32.t) : serializer_ty =
 let unfold_only (ns:list (list string)) : Tot (list norm_step) =
   FStar.List.Tot.map delta_only ns
 
-#reset-options "--lax"
+#push-options "--admit_smt_queries true"
 
 let ser_TwoNums'' (n m:U32.t) : serializer_ty =
   synth_by_tactic (fun () ->
@@ -344,7 +344,7 @@ let ser_TwoNums'' (n m:U32.t) : serializer_ty =
                       ["EnumParsing.ser_TwoNums";
                       "Serializing.ser_append"]] (ser_TwoNums n m <: serializer_ty))
 
-#reset-options
+#pop-options
 
 // this works, but perhaps it should be eta expanded for extraction purposes
 val ser_numbers_data: ns:numbers -> serializer (hide (encode_numbers_data ns))
@@ -370,23 +370,25 @@ let ser_numbers_data2 ns =
   | OneNum n -> ser_OneNum n
   | TwoNums n m -> ser_TwoNums n m
 
-//but doing it via tactic normalization does not; NS/JR/JP: We added the --lax on 09/14
+//but doing it via tactic normalization does not; NS/JR/JP: We added the --admit_smt_queries true on 09/14
 // this is the same as ser_numbers_data; haven't synthesized the eta expansion
-#set-options "--lax"
+#push-options "--admit_smt_queries true"
 let ser_numbers_data'' ns : serializer_ty =
     synth_by_tactic (fun () ->
                         normalize' [delta_only
                                    ["EnumParsing.ser_numbers_data2"]] (ser_numbers_data2 ns))
 
-#reset-options
+#pop-options
+
 val ser_numbers: ns:numbers -> serializer (hide (encode_numbers ns))
 let ser_numbers ns = fun buf ->
   (ser_numbers_tag (numbers_tag_val ns) `ser_append`
    ser_numbers_data ns) buf
 
 //same problem as ser_numbers_data''
-#set-options "--lax"
+#push-options "--admit_smt_queries true"
 let ser_numbers' ns : serializer_ty =
   synth_by_tactic (fun () -> normalize' [delta_only
                              ["EnumParsing.ser_numbers";
                               "Serializing.ser_append"]] (ser_numbers ns <: serializer_ty))
+#pop-options

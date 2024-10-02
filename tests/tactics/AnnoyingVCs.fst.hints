@@ -1,23 +1,29 @@
 [
-  "%‰š/\\ì¬™°l\u000b?\u0015f[Ú",
+  "IÐc\u001a}¿\u0007¾è\naƒ¸ìO~",
   [
     [
       "AnnoyingVCs.test1",
-      1,
+      2,
       2,
       1,
-      [ "@query", "true_interp" ],
+      [
+        "@query", "b2t_def", "primitive_Prims.op_GreaterThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
       0,
-      "ea42586b9cf25395a6b61f5a89339d78"
+      "96a419420fa01dde231f89b267a7f0f7"
     ],
     [
       "AnnoyingVCs.test2",
       1,
       2,
       1,
-      [ "@query", "true_interp" ],
+      [
+        "@query", "b2t_def", "primitive_Prims.op_GreaterThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
       0,
-      "73871b9d469995e265e1fa51b79e7c5f"
+      "42c7bf87fe888d1fa6988cb4fef749d8"
     ],
     [
       "AnnoyingVCs.test2",
@@ -29,28 +35,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "6dba5f6c45d665197e784ad89ca5e473"
-    ],
-    [
-      "AnnoyingVCs.test2",
-      3,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "a00b323a452a5a9fd1cb19c98c58697a"
-    ],
-    [
-      "AnnoyingVCs.test2",
-      4,
-      2,
-      1,
-      [
-        "@query", "b2t_def", "primitive_Prims.op_GreaterThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "05d562dc0ff240de434aba21cdc1b940"
+      "a624f76503695b5a469ec5b0a0943958"
     ]
   ]
 ]

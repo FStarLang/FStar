@@ -1,0 +1,65 @@
+[
+  "\u001bv¦]\u0018€§»I&{¶ÿˆ¶À",
+  [
+    [
+      "NegativeTests.Positivity.__proj__C41__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b87d6bbfde336dc7bda327a6b8b57fe0"
+      ],
+      0,
+      "f9e8b664602ececbe4d860cf9f316422"
+    ],
+    [
+      "NegativeTests.Positivity.__proj__C42__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_57bfa41d0d733420720971d3c9002d84"
+      ],
+      0,
+      "d2f9ed9c7c4767e8cd91516ddd644392"
+    ],
+    [
+      "NegativeTests.Positivity.__proj__C42__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_57bfa41d0d733420720971d3c9002d84"
+      ],
+      0,
+      "09b80a2e5414a68cab7f90e3523b1f58"
+    ],
+    [
+      "NegativeTests.Positivity.__proj__C61__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d189dce05c186475c90958872418b4e6"
+      ],
+      0,
+      "310693582e317616830eda4febe144f9"
+    ],
+    [
+      "NegativeTests.Positivity.__proj__C61__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d189dce05c186475c90958872418b4e6"
+      ],
+      0,
+      "d90faa26f189de7d6fff8209331c1d85"
+    ]
+  ]
+]

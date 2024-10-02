@@ -20,7 +20,7 @@ open FStar.DM4F.Heap
 open FStar.DM4F.Heap.ST
 #reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
 
-let v (r:ref int) (res: (unit * heap)) : GTot int = sel (snd res) r
+let v (r:ref int) (res: (unit & heap)) : GTot int = sel (snd res) r
 
 let rec sum_up (r:ref int) (from:int) (to:int{from <= to})
     : ST unit (requires (fun h -> h `contains_a_well_typed` r))

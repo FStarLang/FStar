@@ -1,0 +1,31 @@
+[
+  "gž\u0015\u0011F\u001cWmüZ‹‚×Ý\u0006½",
+  [
+    [
+      "Ex04g.hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
+      ],
+      0,
+      "42d73d7ea7c52e60127f6b49811a0a85"
+    ],
+    [
+      "Ex04g.tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
+      ],
+      0,
+      "1dedec1e0a3bf5708737f57a311010c0"
+    ]
+  ]
+]

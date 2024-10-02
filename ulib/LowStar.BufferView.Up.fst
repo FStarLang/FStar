@@ -48,8 +48,8 @@ let view_indexing #b vb i
 let split_at_i (#b: _) (vb:buffer b) (i:nat{i < length vb}) (h:HS.mem)
     : GTot (frags:
                (let src_t = buffer_src vb in
-                Seq.seq src_t *
-                Seq.lseq src_t (View?.n (get_view vb)) *
+                Seq.seq src_t &
+                Seq.lseq src_t (View?.n (get_view vb)) &
                 Seq.seq src_t){
                let prefix, es, suffix = frags in
                Down.as_seq h (as_down_buffer vb) ==

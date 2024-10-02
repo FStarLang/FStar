@@ -8,11 +8,13 @@ include $(FSTAR_HOME)/examples/Makefile.include
 verify-all: $(ALL_CHECKED_FILES)
 
 .depend:
-	$(FSTAR) --dep full $(wildcard *.fst *.fsti) > .depend
+	$(call msg, "DEPEND", $(patsubst $(shell realpath $(FSTAR_HOME))/%,%/,$(shell pwd)))
+	$(Q)$(FSTAR) --dep full $(wildcard *.fst *.fsti) --output_deps_to .depend
 
 %.checked:
-	$(FSTAR) --cache_checked_modules $<
-	touch -c $@
+	$(call msg, "CHECK", $<)
+	$(Q)$(FSTAR) $(SIL) --cache_checked_modules $<
+	$(Q)touch -c $@
 
 clean:
 	rm -f .depend *.checked

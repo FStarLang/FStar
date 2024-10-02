@@ -2,7 +2,7 @@ module Calc
 
 open FStar.Mul
 open FStar.Calc
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let eta (f:'a->'b->bool) x y : Type0 = f x y
 

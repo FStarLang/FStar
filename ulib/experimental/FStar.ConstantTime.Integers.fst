@@ -67,8 +67,8 @@ let addition #sl (#l:lattice_element sl) #s
              (x : secret_int l s)
              (y : secret_int l s {ok ( + ) (m x) (m y)})
     : Tot (z:secret_int l s{m z == m x + m y})
-    = a <-- x ;
-      b <-- y ;
+    = let>> a = x in
+      let>> b = y in
       return l (a + b)
 
 noextract
@@ -79,6 +79,6 @@ let addition_mod (#sl:sl)
                  (x : secret_int l sw)
                  (y : secret_int l sw)
     : Tot (z:secret_int l sw { m z == m x +% m y } )
-    = a <-- x;
-      b <-- y;
+    = let>> a = x in
+      let>> b = y in
       return l (a +% b)

@@ -1,5 +1,5 @@
 module NormMachineInteger
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.UInt32
 
 let check_norm ()
@@ -8,7 +8,7 @@ let check_norm ()
     let g = cur_goal () in
     match term_as_formula g with
     | Comp (Eq _) t0 t1 ->
-      if term_eq t0 t1
+      if term_eq_old t0 t1
       then trefl ()
       else fail "Not syntactically equal"
     | _ -> fail "Unexpected goal"

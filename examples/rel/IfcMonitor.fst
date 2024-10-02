@@ -21,6 +21,7 @@ open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.IntStoreExcFixed
 
 module ISFR = FStar.DM4F.IntStoreFixedReader
+module X = FStar.DM4F.IntStoreFixed
 
 type binop =
 | Plus
@@ -76,7 +77,7 @@ type no_sensitive_upd (h:heap) (env:label_fun) (pc:label) (h':heap) =
 
 let rec interpret_exp_st (env:label_fun) (e:exp) 
   (* : INT_STORE_EXC int (fun s0 p -> forall x. p (Some x, s0)) *)
-  : ISFR.ISRNull (int * label)
+  : ISFR.ISRNull (int & label)
 =
   match e with
   | AInt i -> i, Low
@@ -88,7 +89,7 @@ let rec interpret_exp_st (env:label_fun) (e:exp)
 
 
 (* unfold *)
-let interpret_exp (h:heap) (env:label_fun) (e:exp)  : Tot (int * label) = reify (interpret_exp_st env e) h
+let interpret_exp (h:heap) (env:label_fun) (e:exp)  : Tot (int & label) = reify (interpret_exp_st env e) h
 
 let interpret_exp' (h:heap) (e:exp) : Tot nat =
   let n,_ = interpret_exp h (fun _ -> Low)  e in
@@ -104,11 +105,11 @@ let decr_while h c =
 exception OutOfFuel
 exception IfcViolation
 
- val interpret_com_st : c:com -> h0:heap -> env:label_fun -> pc:label -> IntStoreExc unit
+val interpret_com_st : c:com -> h0:heap -> env:label_fun -> pc:label -> IntStoreExc unit
   (requires (fun h -> h == h0))
   (ensures (fun h _ ho -> h == h0))
   (decreases %[c; decr_while h0 c])
- let rec interpret_com_st c h0 env pc =
+let rec interpret_com_st c h0 env pc =
   match c with
   | Skip -> ()
   | Assign x e ->
@@ -122,31 +123,31 @@ exception IfcViolation
       raise_  () (* IfcViolation *)
   | Seq c1 c2 ->
     begin
-      let h1 = (ISE?.get()) in
+      let h1 = (X.get()) in
       interpret_com_st c1 h1 env pc;
-      let h2 = (ISE?.get()) in
+      let h2 = (X.get()) in
       interpret_com_st c2 h2 env pc
     end
   | If e ct cf ->
       let v,l  = interpret_exp_st env e in
       let c = if v = 0 then cf else ct in
-      let h = (ISE?.get()) in
+      let h = (X.get()) in
       interpret_com_st c h env (join l pc)
   | While e body v ->
     let v0, l = interpret_exp_st env e in
     if v0 <> 0 then
       begin
         (* let m0 = interpret_exp_st v in *)
-        (* let h = ISE?.get () in *)
+        (* let h = X.get () in *)
         (* interpret_com_st body h; *)
         (* let m1 = interpret_exp_st v in *)
         (* proving recursive terminating relies of interpret_exp not *)
         (* changing the state? somehow F* can't prove this although *)
         (* interpret_exp_st has that in the spec! *)
         let m0 = interpret_exp' h0 v in
-        let h1 = ISE?.get () in
+        let h1 = X.get () in
         interpret_com_st body h1 env (join l pc);
-        let h2 = ISE?.get() in
+        let h2 = X.get() in
         let m1 = interpret_exp' h2 v in
         if m0 > m1 then
           interpret_com_st c h2 env pc

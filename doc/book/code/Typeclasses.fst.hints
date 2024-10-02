@@ -1,5 +1,5 @@
 [
-  "œ_†óðßD\u0018i‹\u0004Â*2£Æ",
+  "U7ö÷D¼„ßSsŽc¥%\u0011˜",
   [
     [
       "Typeclasses.printable_option",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "c5a6fd76b9890d7c4f9d2483341745cc"
+      "35a8ceead21efa4b5a9a43c8d91f2cfc"
     ],
     [
       "Typeclasses.printable_either",
@@ -23,7 +23,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "df12c0d1b0ade6782d793a19c14038d0"
+      "d9289d7e08cbdea73825048e5b36b29f"
     ],
     [
       "Typeclasses.bounded_unsigned_int",
@@ -32,7 +32,7 @@
       1,
       [ "@query" ],
       0,
-      "4e94eff7b0aeb9fc82d3a3d54459b4f5"
+      "e99d7d2fb8c31a280328af355b7517d6"
     ],
     [
       "Typeclasses.__proj__Mkbounded_unsigned_int__item__properties",
@@ -41,7 +41,7 @@
       1,
       [ "@query" ],
       0,
-      "83abbc78b2966bc17e506c7187301ab3"
+      "84978142e3221ade8ca2d4ee03751c72"
     ],
     [
       "Typeclasses.__proj__Mkbounded_unsigned_int__item__properties",
@@ -50,7 +50,7 @@
       1,
       [ "@query" ],
       0,
-      "804294900252d9504516df013e40b085"
+      "a5f57710938c3d989db38818248175a4"
     ],
     [
       "Typeclasses.op_Plus_Hat",
@@ -60,12 +60,13 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Typeclasses.fits",
         "fuel_guarded_inversion_Typeclasses.bounded_unsigned_int",
-        "interpretation_Tm_abs_342140275acda8aae6cf4f026e3530c6",
+        "interpretation_Tm_abs_e0816c017aa4eeb1f8db67121cfb73a4",
+        "proj_equation_Typeclasses.Mkbounded_unsigned_int_fits",
         "token_correspondence_Typeclasses.__proj__Mkbounded_unsigned_int__item__fits",
         "token_correspondence_Typeclasses.fits"
       ],
       0,
-      "11b0be95a9ff048b4fa614c3e54a0b7d"
+      "121ba45c408ef8a974256e19f9385cf9"
     ],
     [
       "Typeclasses.op_Subtraction_Hat",
@@ -75,12 +76,13 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Typeclasses.fits",
         "fuel_guarded_inversion_Typeclasses.bounded_unsigned_int",
-        "interpretation_Tm_abs_342140275acda8aae6cf4f026e3530c6",
+        "interpretation_Tm_abs_e0816c017aa4eeb1f8db67121cfb73a4",
+        "proj_equation_Typeclasses.Mkbounded_unsigned_int_fits",
         "token_correspondence_Typeclasses.__proj__Mkbounded_unsigned_int__item__fits",
         "token_correspondence_Typeclasses.fits"
       ],
       0,
-      "57d0c73c7ac0e4f8e61644cc02e6fb7d"
+      "b393d16145205578999d91203bf417d9"
     ],
     [
       "Typeclasses.u32_instance",
@@ -117,7 +119,7 @@
         "typing_FStar.UInt32.sub", "typing_FStar.UInt32.v"
       ],
       0,
-      "cc6d876ff8082d4293ac8b1ce70c3c6c"
+      "98f4ece83d8ef153c3b1436616983691"
     ],
     [
       "Typeclasses.u64_instance",
@@ -154,7 +156,7 @@
         "typing_FStar.UInt64.sub", "typing_FStar.UInt64.v"
       ],
       0,
-      "e42593f04506ed6ffc6de6be40d8de4c"
+      "ea106170b66f1f41ceccd49bc966d5ba"
     ],
     [
       "Typeclasses.bounded_unsigned_int_eq",
@@ -168,16 +170,14 @@
         "equation_Typeclasses.lt",
         "fuel_guarded_inversion_Typeclasses.bounded_unsigned_int",
         "int_inversion",
-        "interpretation_Tm_abs_b53dbfd54d613bf634cc12b93726f94a",
-        "primitive_Prims.op_Negation",
-        "proj_equation_Typeclasses.Mkbounded_unsigned_int_lt",
-        "projection_inverse_BoxBool_proj_0",
+        "interpretation_Tm_abs_6565e286ae42e5c941463d4aa1f90d62",
+        "primitive_Prims.op_Negation", "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_e9c8369c89dc7f6f499e4562ff9f8e9f",
         "token_correspondence_Typeclasses.lt"
       ],
       0,
-      "089ecab992634dca93a042dbd3b2b1be"
+      "bf3158778c704b7e80d3f855a157c20c"
     ],
     [
       "Typeclasses.test32",
@@ -205,19 +205,16 @@
         "equation_Typeclasses.u32_instance",
         "function_token_typing_FStar.UInt32.uint_to_t",
         "function_token_typing_FStar.UInt32.v", "int_typing",
-        "interpretation_Tm_abs_342140275acda8aae6cf4f026e3530c6",
+        "interpretation_Tm_abs_6565e286ae42e5c941463d4aa1f90d62",
         "interpretation_Tm_abs_707b76618d150032d670eadea8c2886a",
+        "interpretation_Tm_abs_961ba5096cffcaea5c47db68024a196a",
         "interpretation_Tm_abs_a662ed8dd6b4f5c75fb10f329404d1fc",
-        "interpretation_Tm_abs_aeb26e9e366b33b01427e92c701e0a70",
-        "interpretation_Tm_abs_b53dbfd54d613bf634cc12b93726f94a",
+        "interpretation_Tm_abs_e0816c017aa4eeb1f8db67121cfb73a4",
         "l_and-interp", "lemma_FStar.UInt.pow2_values",
         "lemma_FStar.UInt32.vu_inv", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
-        "proj_equation_Typeclasses.Mkbounded_unsigned_int_fits",
-        "proj_equation_Typeclasses.Mkbounded_unsigned_int_lt",
-        "proj_equation_Typeclasses.Mkeq_eq_op",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Typeclasses.Mkbounded_unsigned_int_fits",
@@ -240,7 +237,7 @@
         "typing_Typeclasses.u32_instance"
       ],
       0,
-      "378fd749d2541f9d4218a0c710a204c4"
+      "9a049bd9c7ac494cb22abf01d0bbe74c"
     ],
     [
       "Typeclasses.test64",
@@ -268,19 +265,16 @@
         "equation_Typeclasses.u64_instance",
         "function_token_typing_FStar.UInt64.uint_to_t",
         "function_token_typing_FStar.UInt64.v", "int_typing",
-        "interpretation_Tm_abs_342140275acda8aae6cf4f026e3530c6",
+        "interpretation_Tm_abs_6565e286ae42e5c941463d4aa1f90d62",
         "interpretation_Tm_abs_656d0f2049ea412abf4d6cc7d0dce066",
+        "interpretation_Tm_abs_961ba5096cffcaea5c47db68024a196a",
         "interpretation_Tm_abs_a662ed8dd6b4f5c75fb10f329404d1fc",
-        "interpretation_Tm_abs_aeb26e9e366b33b01427e92c701e0a70",
-        "interpretation_Tm_abs_b53dbfd54d613bf634cc12b93726f94a",
+        "interpretation_Tm_abs_e0816c017aa4eeb1f8db67121cfb73a4",
         "l_and-interp", "lemma_FStar.UInt.pow2_values",
         "lemma_FStar.UInt64.vu_inv", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
-        "proj_equation_Typeclasses.Mkbounded_unsigned_int_fits",
-        "proj_equation_Typeclasses.Mkbounded_unsigned_int_lt",
-        "proj_equation_Typeclasses.Mkeq_eq_op",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Typeclasses.Mkbounded_unsigned_int_fits",
@@ -303,7 +297,7 @@
         "typing_Typeclasses.u64_instance"
       ],
       0,
-      "c9d5bdfc785b8f13b3e8e79fa8b43e63"
+      "a0ad43ee6ce32a3f32d2a828e5bea470"
     ],
     [
       "Typeclasses.try_add",
@@ -312,9 +306,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.UInt32_interpretation_Tm_arrow_33a06d9a3ec1c77524ab958d37ae1453",
         "FStar.UInt32_pretyping_2ab3c8ba2d08b0172817fc70b5994868",
+        "Typeclasses_interpretation_Tm_arrow_1306a99da913949e984f061e825ba070",
         "Typeclasses_interpretation_Tm_arrow_1eea001dc988a6a52767d18e2341e80f",
+        "Typeclasses_interpretation_Tm_arrow_4854a37a44266626aa4e306dc02dd5e4",
         "b2t_def", "data_elim_Typeclasses.Mkbounded_unsigned_int",
         "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
         "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
@@ -329,22 +324,18 @@
         "equation_Typeclasses.op_Subtraction_Hat",
         "equation_Typeclasses.sub", "equation_Typeclasses.u32_instance",
         "function_token_typing_FStar.UInt32.v",
-        "interpretation_Tm_abs_26aca97caf97ae97b5ce9060dfb49046",
-        "interpretation_Tm_abs_342140275acda8aae6cf4f026e3530c6",
+        "function_token_typing_Typeclasses.bound",
+        "interpretation_Tm_abs_37a0a4a84a56f18c93c5e050ff3013e0",
+        "interpretation_Tm_abs_6565e286ae42e5c941463d4aa1f90d62",
         "interpretation_Tm_abs_707b76618d150032d670eadea8c2886a",
+        "interpretation_Tm_abs_832f0fe6c37da7dc40003af1526bd23b",
+        "interpretation_Tm_abs_961ba5096cffcaea5c47db68024a196a",
         "interpretation_Tm_abs_a662ed8dd6b4f5c75fb10f329404d1fc",
-        "interpretation_Tm_abs_aeb26e9e366b33b01427e92c701e0a70",
-        "interpretation_Tm_abs_b53dbfd54d613bf634cc12b93726f94a",
-        "interpretation_Tm_abs_f640c6f28fd1244298abfbdc17bf8ea7",
+        "interpretation_Tm_abs_e0816c017aa4eeb1f8db67121cfb73a4",
         "l_and-interp", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Negation",
         "primitive_Prims.op_Subtraction",
-        "proj_equation_Typeclasses.Mkbounded_unsigned_int_bound",
-        "proj_equation_Typeclasses.Mkbounded_unsigned_int_fits",
-        "proj_equation_Typeclasses.Mkbounded_unsigned_int_lt",
-        "proj_equation_Typeclasses.Mkbounded_unsigned_int_sub",
-        "proj_equation_Typeclasses.Mkeq_eq_op",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Typeclasses.Mkbounded_unsigned_int_bound",
@@ -356,18 +347,17 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_e9c8369c89dc7f6f499e4562ff9f8e9f",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
-        "token_correspondence_FStar.UInt32.v",
         "token_correspondence_Prims.op_Addition",
+        "token_correspondence_Prims.op_Subtraction",
         "token_correspondence_Typeclasses.bound",
         "token_correspondence_Typeclasses.eq_op",
         "token_correspondence_Typeclasses.fits",
         "token_correspondence_Typeclasses.lt",
         "token_correspondence_Typeclasses.sub", "typing_FStar.UInt32.t",
-        "typing_Typeclasses.__proj__Mkbounded_unsigned_int__item__bound",
-        "typing_Typeclasses.u32_instance"
+        "typing_FStar.UInt32.v", "typing_Typeclasses.u32_instance"
       ],
       0,
-      "6e297ea3031817c244356d48059fc5ff"
+      "85a280c85ae905ba501ec93df40316c1"
     ],
     [
       "Typeclasses.sum",
@@ -377,8 +367,10 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_47fc285d7b44e13bcb7e420cbfc55623",
+        "Typeclasses_interpretation_Tm_arrow_1306a99da913949e984f061e825ba070",
+        "Typeclasses_interpretation_Tm_arrow_1a0120adf1d7bc7634d805f5498b2ea3",
         "Typeclasses_interpretation_Tm_arrow_1eea001dc988a6a52767d18e2341e80f",
-        "Typeclasses_interpretation_Tm_arrow_b9521ecef567189c3c74c890707705d4",
+        "Typeclasses_interpretation_Tm_arrow_4854a37a44266626aa4e306dc02dd5e4",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "data_elim_Typeclasses.Mkbounded_unsigned_int",
         "disc_equation_FStar.Pervasives.Native.Some", "equation_Prims.nat",
@@ -392,43 +384,36 @@
         "equation_Typeclasses.op_Subtraction_Hat",
         "equation_Typeclasses.sub",
         "fuel_guarded_inversion_Typeclasses.bounded_unsigned_int",
-        "function_token_typing_Typeclasses.__proj__Mkbounded_unsigned_int__item__fits",
-        "int_inversion", "int_typing",
-        "interpretation_Tm_abs_26aca97caf97ae97b5ce9060dfb49046",
-        "interpretation_Tm_abs_342140275acda8aae6cf4f026e3530c6",
+        "function_token_typing_Typeclasses.bound", "int_inversion",
+        "int_typing",
+        "interpretation_Tm_abs_37a0a4a84a56f18c93c5e050ff3013e0",
+        "interpretation_Tm_abs_6565e286ae42e5c941463d4aa1f90d62",
+        "interpretation_Tm_abs_832f0fe6c37da7dc40003af1526bd23b",
+        "interpretation_Tm_abs_961ba5096cffcaea5c47db68024a196a",
         "interpretation_Tm_abs_a662ed8dd6b4f5c75fb10f329404d1fc",
-        "interpretation_Tm_abs_aeb26e9e366b33b01427e92c701e0a70",
-        "interpretation_Tm_abs_b53dbfd54d613bf634cc12b93726f94a",
-        "interpretation_Tm_abs_f640c6f28fd1244298abfbdc17bf8ea7",
+        "interpretation_Tm_abs_e0816c017aa4eeb1f8db67121cfb73a4",
         "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
         "primitive_tot_fun_Prims.op_Addition",
         "primitive_tot_fun_Prims.op_Addition.1",
-        "proj_equation_Typeclasses.Mkbounded_unsigned_int_bound",
-        "proj_equation_Typeclasses.Mkbounded_unsigned_int_fits",
-        "proj_equation_Typeclasses.Mkbounded_unsigned_int_lt",
-        "proj_equation_Typeclasses.Mkbounded_unsigned_int_sub",
-        "proj_equation_Typeclasses.Mkeq_eq_op",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "projection_inverse_Typeclasses.Mkeq_eq_op",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_8aab5cc4f53d4f30b40ce6e16d731077",
+        "refinement_interpretation_Tm_refine_c87fd7e81b78266e7c4e88b82bffe3f2",
         "refinement_interpretation_Tm_refine_e9c8369c89dc7f6f499e4562ff9f8e9f",
         "token_correspondence_Prims.op_Addition",
         "token_correspondence_Typeclasses.bound",
         "token_correspondence_Typeclasses.eq_op",
         "token_correspondence_Typeclasses.fits",
         "token_correspondence_Typeclasses.lt",
-        "token_correspondence_Typeclasses.sub",
-        "typing_Typeclasses.__proj__Mkbounded_unsigned_int__item__bound",
-        "typing_Typeclasses.__proj__Mkbounded_unsigned_int__item__sub"
+        "token_correspondence_Typeclasses.sub"
       ],
       0,
-      "a51d2f275295a2f8ff18671af31441fd"
+      "66482768807a23769697891116fb5703"
     ]
   ]
 ]

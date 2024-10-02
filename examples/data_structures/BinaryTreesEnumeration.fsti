@@ -32,7 +32,7 @@ let product #a #b (l1: list a) (l2: list b) =
 
 type bin_tree =
 | Leaf
-| Branch of bin_tree * bin_tree
+| Branch of bin_tree & bin_tree
 
 let rec size bt : nat =
   match bt with
@@ -53,7 +53,7 @@ let rec trees_of_size (s: nat) : list (bt_with_size s) =
   else
     List.Tot.concatMap #(prod_with_sum (s - 1))
       (fun (s1, s2) ->
-       List.Tot.map #((bt_with_size s1) * (bt_with_size s2))
+       List.Tot.map #((bt_with_size s1) & (bt_with_size s2))
                     #(bt_with_size s)
          (fun (t1, t2) -> Branch (t1, t2))
          (product (trees_of_size s1) (trees_of_size s2)))
@@ -106,7 +106,7 @@ let pure_as_squash (#a:Type)
 let rec memP_append_aux #a (x: a) (l: list a) :
   Lemma
     (requires (List.memP x l))
-    (ensures (exists (l12: (list a * list a)). l == fst l12 @ x :: snd l12))
+    (ensures (exists (l12: (list a & list a)). l == fst l12 @ x :: snd l12))
     =  let goal = exists l12. l == fst l12 @ x :: snd l12 in
        let x : squash goal =
          match l with
@@ -131,7 +131,7 @@ let rec memP_append_aux #a (x: a) (l: list a) :
 let memP_append #a (x: a) (l: list a) :
   Lemma
     (ensures (List.memP x l ==>
-              (exists (l12: (list a * list a)). l == (fst l12) @ (x :: (snd l12))))) =
+              (exists (l12: (list a & list a)). l == (fst l12) @ (x :: (snd l12))))) =
   FStar.Classical.move_requires (memP_append_aux x) l
 
 (*> * Should this be in the stdlib? *)
@@ -264,7 +264,7 @@ let unfold_tos (s: nat) :
           else
             List.Tot.concatMap #(prod_with_sum (s - 1))
               (fun (s1, s2) ->
-               List.Tot.map #(bt_with_size s1 * bt_with_size s2)
+               List.Tot.map #(bt_with_size s1 & bt_with_size s2)
                             #(bt_with_size s)
                  (fun (t1, t2) -> Branch (t1, t2))
                  (product (trees_of_size s1) (trees_of_size s2)))
@@ -275,7 +275,7 @@ let unfold_tos (s: nat) :
                 else
                   List.Tot.concatMap #(prod_with_sum (s - 1))
                     (fun (s1, s2) ->
-                     List.Tot.map #(bt_with_size s1 * bt_with_size s2)
+                     List.Tot.map #(bt_with_size s1 & bt_with_size s2)
                                   #(bt_with_size s)
                        (fun (t1, t2) -> Branch (t1, t2))
                        (product (trees_of_size s1) (trees_of_size s2)))
@@ -318,7 +318,7 @@ let rec tos_complete (bt0: bin_tree) :
       product_complete trees1 trees2 t1 t2;
       (* assert (List.memP (t1, t2) (product trees1 trees2)); *)
 
-      memP_map_intro #(bt_with_size s1 * bt_with_size s2)
+      memP_map_intro #(bt_with_size s1 & bt_with_size s2)
         (fun (t1, t2) -> Branch (t1, t2) <: (bt_with_size s))
         (t1, t2)
         (product trees1 trees2);
@@ -337,7 +337,7 @@ let rec tos_complete (bt0: bin_tree) :
         (s1, s2)
         (Branch (t1, t2))
         (fun (s1, s2) ->
-         List.Tot.map #(bt_with_size s1 * bt_with_size s2)
+         List.Tot.map #(bt_with_size s1 & bt_with_size s2)
                       #(bt_with_size s)
            (fun (t1, t2) -> Branch (t1, t2))
            (product (trees_of_size s1) (trees_of_size s2)))

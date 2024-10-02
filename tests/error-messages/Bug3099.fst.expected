@@ -1,0 +1,7 @@
+proof-state: State dump @ depth 0 (X):
+Location: Bug3099.fst(11,50-11,64)
+Goal 1/1:
+(_: Prims.unit), (return_val: Prims.eqtype), (_: return_val == Prims.int & (Prims.int & (Prims.int & Prims.int))), (any_result: Prims.bool), (_: true == any_result), (any_result'0: Prims.logical), (_: Prims.l_True == any_result'0) |- _ : Prims.squash ((1, (2, (3, 4))) = (1, (2, (3, 4))))
+
+Verified module: Bug3099
+All verification conditions discharged successfully

@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Map.OpaqueToSMT
-module M = Map
+module M = MyMap
 
 [@@"opaque_to_smt"]
 let map k v = M.map k v

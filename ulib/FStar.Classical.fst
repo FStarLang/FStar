@@ -65,6 +65,8 @@ let move_requires_2 #a #b #p #q f x y = move_requires (f x) y
 
 let move_requires_3 #a #b #c #p #q f x y z = move_requires (f x y) z
 
+let move_requires_4 #a #b #c #d #p #q f x y z w = move_requires (f x y z) w
+
 // Thanks KM, CH and SZ
 let impl_intro_gen #p #q f =
   let g () : Lemma (requires p) (ensures (p ==> q ())) = give_proof #(q ()) (f (get_proof p)) in
@@ -72,7 +74,9 @@ let impl_intro_gen #p #q f =
 
 (*** Universal quantification *)
 let get_forall #a p =
-  assert_norm ((forall (x: a). p x) == squash ((x: a -> GTot (p x))));
+  let t = (forall (x:a). p x) in
+  assert (norm [delta; delta_only [`%l_Forall]] t == (squash (x:a -> GTot (p x))));
+  norm_spec [delta; delta_only [`%l_Forall]] t;
   get_squashed #(x: a -> GTot (p x)) (forall (x: a). p x)
 
 (* TODO: Maybe this should move to FStar.Squash.fst *)

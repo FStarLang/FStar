@@ -1,0 +1,41 @@
+[
+  ",%J\fÞº¦J•ä\u001d‹Â\u0018»j",
+  [
+    [
+      "NegativeTests.False.foo",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_85721560a0c745412eef4b2aa333de58"
+      ],
+      0,
+      "3ebc60a15d1ff00f97cc6f8d095c7f68"
+    ],
+    [
+      "NegativeTests.False.f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.l_True", "equation_Prims.squash",
+        "function_token_typing_Prims.unit",
+        "haseqTm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "84cf7c47e5804cf74390d8d32ad30fb8"
+    ],
+    [
+      "NegativeTests.False.f",
+      2,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
+      0,
+      "8d817b3910dc2685e763eed4a543c012"
+    ]
+  ]
+]

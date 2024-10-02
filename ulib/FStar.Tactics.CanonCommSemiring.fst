@@ -44,9 +44,23 @@ module FStar.Tactics.CanonCommSemiring
 ///  - http://www.cs.ru.nl/~freek/courses/tt-2014/read/10.1.1.61.3041.pdf
 
 open FStar.List
-open FStar.Tactics
-open FStar.Reflection
 open FStar.Algebra.CommMonoid
+
+(* Trying to not just open FStar.Tactics.V2 to reduce deps.
+TODO: Add an interface to this module. It's non trivial due to the quoting. *)
+open FStar.Stubs.Reflection.Types
+open FStar.Reflection.V2
+open FStar.Reflection.V2.Formula
+open FStar.Stubs.Tactics.Types
+open FStar.Tactics.Effect
+open FStar.Stubs.Tactics.V2.Builtins
+open FStar.Tactics.V2.Derived
+open FStar.Tactics.Util
+open FStar.Tactics.NamedView
+open FStar.Tactics.MApply
+
+private
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
 
 (** An attribute for marking definitions to unfold by the tactic *)
 irreducible let canon_attr = ()
@@ -358,6 +372,8 @@ let spolynomial_simplify #a r p =
 /// Interpretation of varlists, monomials and canonical sums
 ///
 
+type var = nat
+
 (**
  * The variable map:
  * This maps polynomial variables to ring expressions. That is, any term
@@ -366,7 +382,7 @@ let spolynomial_simplify #a r p =
  * The representation is inefficient. For large terms it might be worthwhile
  * using a better data structure.
 **)
-let vmap a = list (var * a) * a
+let vmap a = list (var & a) & a
 
 (** Add a new entry in a variable map *)
 let update (#a:Type) (x:var) (xa:a) (vm:vmap a) : vmap a =
@@ -383,7 +399,7 @@ let rec quote_list (#a:Type) (ta:term) (quotea:a -> Tac term) (xs:list a) :
 
 (** Quotes a variable map *)
 let quote_vm (#a:Type) (ta: term) (quotea:a -> Tac term) (vm:vmap a) : Tac term =
-  let quote_map_entry (p:(nat * a)) : Tac term =
+  let quote_map_entry (p:(nat & a)) : Tac term =
     mk_app (`Mktuple2) [(`nat, Q_Implicit); (ta, Q_Implicit);
       (pack (Tv_Const (C_Int (fst p))), Q_Explicit);
       (quotea (snd p), Q_Explicit)] in
@@ -1499,7 +1515,7 @@ let ddump m = if debugging () then dump m
  * Finds the position of first occurrence of x in xs.
  * This is specialized to terms and their funny term_eq.
 **)
-let rec find_aux (n:nat) (x:term) (xs:list term) : Tot (option nat) (decreases xs) =
+let rec find_aux (n:nat) (x:term) (xs:list term) : Tac (option nat) =
   match xs with
   | [] -> None
   | x'::xs' -> if term_eq x x' then Some n else find_aux (n+1) x xs'
@@ -1507,7 +1523,7 @@ let rec find_aux (n:nat) (x:term) (xs:list term) : Tot (option nat) (decreases x
 let find = find_aux 0
 
 let make_fvar (#a:Type) (t:term) (unquotea:term -> Tac a) (ts:list term)
-  (vm:vmap a) : Tac (polynomial a * list term * vmap a) =
+  (vm:vmap a) : Tac (polynomial a & list term & vmap a) =
   match find t ts with
   | Some v -> (Pvar v, ts, vm)
   | None ->
@@ -1516,7 +1532,7 @@ let make_fvar (#a:Type) (t:term) (unquotea:term -> Tac a) (ts:list term)
     (Pvar vfresh, ts @ [t], update vfresh z vm)
 
 (** This expects that add, opp, mone mult, and t have already been normalized *)
-let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vmap a) (add opp mone mult t: term) : Tac (polynomial a * list term * vmap a) =
+let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vmap a) (add opp mone mult t: term) : Tac (polynomial a & list term & vmap a) =
   // ddump ("term = " ^ term_to_string t ^ "\n");
   let hd, tl = collect_app_ref t in
   match inspect hd, list_unref tl with
@@ -1524,7 +1540,7 @@ let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vm
     //ddump ("add = " ^ term_to_string add ^ "
     //     \nmul = " ^ term_to_string mult);
     //ddump ("fv = " ^ term_to_string (pack (Tv_FVar fv)));
-    let binop (op:polynomial a -> polynomial a -> polynomial a) : Tac (polynomial a * list term * vmap a) =
+    let binop (op:polynomial a -> polynomial a -> polynomial a) : Tac (polynomial a & list term & vmap a) =
       let (e1, ts, vm) = reification_aux unquotea ts vm add opp mone mult t1 in
       let (e2, ts, vm) = reification_aux unquotea ts vm add opp mone mult t2 in
       (op e1 e2, ts, vm)
@@ -1533,7 +1549,7 @@ let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vm
     if term_eq (pack (Tv_FVar fv)) mult then binop Pmult else
     make_fvar t unquotea ts vm
   | Tv_FVar fv, [(t1, _)] ->
-    let monop (op:polynomial a -> polynomial a) : Tac (polynomial a * list term * vmap a) =
+    let monop (op:polynomial a -> polynomial a) : Tac (polynomial a & list term & vmap a) =
       let (e, ts, vm) = reification_aux unquotea ts vm add opp mone mult t1 in
       (op e, ts, vm)
       in
@@ -1561,20 +1577,20 @@ let steps =
       `%__proj__CR__item__cm_add;
       `%__proj__CR__item__opp;
       `%__proj__CR__item__cm_mult;
-      `%FStar.List.Tot.Base.assoc;
+      `%FStar.List.Tot.assoc;
       `%FStar.Pervasives.Native.fst;
       `%FStar.Pervasives.Native.snd;
       `%FStar.Pervasives.Native.__proj__Mktuple2__item___1;
       `%FStar.Pervasives.Native.__proj__Mktuple2__item___2;
-      `%FStar.List.Tot.Base.op_At;
-      `%FStar.List.Tot.Base.append;
+      `%FStar.List.Tot.op_At;
+      `%FStar.List.Tot.append;
     ]
   ]
 
 let canon_norm () : Tac unit = norm steps
 
 let reification (#a:Type)
-  (unquotea:term -> Tac a) (quotea:a -> Tac term) (tadd topp tmone tmult:term) (munit:a) (ts:list term) : Tac (list (polynomial a) * vmap a) =
+  (unquotea:term -> Tac a) (quotea:a -> Tac term) (tadd topp tmone tmult:term) (munit:a) (ts:list term) : Tac (list (polynomial a) & vmap a) =
   // Be careful not to normalize operations too much
   // E.g. we don't want to turn ( +% ) into (a + b) % prime
   // or we won't be able to spot ring operations
@@ -1627,46 +1643,50 @@ let canon_semiring_aux
   let g = cur_goal () in
   match term_as_formula g with
   | Comp (Eq (Some t)) t1 t2 ->
+    (* First, make sure we have an equality at type ta, since otherwise
+    we will fail to apply the reflection Lemma. We can just cut by the equality
+    we want, since they should be equiprovable (though not equal). *)
+    let b = tcut (`(squash (eq2 #(`#ta) (`#t1) (`#t2)))) in
+    (* Try solving it trivially if type was exactly the same, or give to smt.
+    It should really be trivial. *)
     begin
-      //ddump ("t1 = " ^ term_to_string t1 ^ "\nt2 = " ^ term_to_string t2);
-      if term_eq t ta then
-      begin
-      match reification unquotea quotea tadd topp tmone tmult munit [t1; t2] with
-      | ([e1; e2], vm) ->
+      try exact b with | _ -> smt ()
+    end;
+    begin
+    match reification unquotea quotea tadd topp tmone tmult munit [t1; t2] with
+    | ([e1; e2], vm) ->
 (*
-        ddump (term_to_string t1);
-        ddump (term_to_string t2);
-        let r : cr a = unquote tr in
-        ddump ("vm = " ^ term_to_string (quote vm) ^ "\n" ^
-               "before = " ^ term_to_string (norm_term steps
-                    (quote (interp_p r vm e1 == interp_p r vm e2))));
-        dump ("expected after = " ^ term_to_string (norm_term steps
-          (quote (
-              interp_cs r vm (polynomial_simplify r e1) ==
-              interp_cs r vm (polynomial_simplify r e2)))));
+      ddump (term_to_string t1);
+      ddump (term_to_string t2);
+      let r : cr a = unquote tr in
+      ddump ("vm = " ^ term_to_string (quote vm) ^ "\n" ^
+             "before = " ^ term_to_string (norm_term steps
+                  (quote (interp_p r vm e1 == interp_p r vm e2))));
+      dump ("expected after = " ^ term_to_string (norm_term steps
+        (quote (
+            interp_cs r vm (polynomial_simplify r e1) ==
+            interp_cs r vm (polynomial_simplify r e2)))));
 *)
-        let tvm = quote_vm ta quotea vm in
-        let te1 = quote_polynomial ta quotea e1 in
-        //ddump ("te1 = " ^ term_to_string te1);
-        let te2 = quote_polynomial ta quotea e2 in
-        //ddump ("te2 = " ^ term_to_string te2);
-        mapply (`(semiring_reflect
-          #(`#ta) (`#tr) (`#tvm) (`#te1) (`#te2) (`#t1) (`#t2)));
-        //ddump "Before canonization";
-        canon_norm ();
-        //ddump "After canonization";
-        later ();
-        //ddump "Before normalizing left-hand side";
-        canon_norm ();
-        //ddump "After normalizing left-hand side";
-        trefl ();
-        //ddump "Before normalizing right-hand side";
-        canon_norm ();
-        //ddump "After normalizing right-hand side";
-        trefl ()
-      | _ -> fail "Unexpected"
-      end
-      else fail "Found equality, but terms do not have the expected type"
+      let tvm = quote_vm ta quotea vm in
+      let te1 = quote_polynomial ta quotea e1 in
+      //ddump ("te1 = " ^ term_to_string te1);
+      let te2 = quote_polynomial ta quotea e2 in
+      //ddump ("te2 = " ^ term_to_string te2);
+      mapply (`(semiring_reflect
+        #(`#ta) (`#tr) (`#tvm) (`#te1) (`#te2) (`#t1) (`#t2)));
+      //ddump "Before canonization";
+      canon_norm ();
+      //ddump "After canonization";
+      later ();
+      //ddump "Before normalizing left-hand side";
+      canon_norm ();
+      //ddump "After normalizing left-hand side";
+      trefl ();
+      //ddump "Before normalizing right-hand side";
+      canon_norm ();
+      //ddump "After normalizing right-hand side";
+      trefl ()
+    | _ -> fail "Unexpected"
     end
   | _ -> fail "Goal should be an equality")
 
@@ -1685,21 +1705,4 @@ let canon_semiring (#a:eqtype) (r:cr a) : Tac unit =
 let int_cr : cr int =
   CR int_plus_cm int_multiply_cm op_Minus (fun x -> ()) (fun x y z -> ()) (fun x -> ())
 
-private
-let eq_nat_via_int (a b : nat) (eq : squash (eq2 #int a b)) : Lemma (eq2 #nat a b) = ()
-
-let int_semiring () : Tac unit =
-    (* Check to see if goal is a `nat` equality, change the equality to `int` beforehand *)
-    match term_as_formula (cur_goal ()) with
-    | Comp (Eq (Some t)) _ _ ->
-        if term_eq t (`Prims.nat)
-        then (apply_lemma (`eq_nat_via_int); canon_semiring int_cr)
-        else canon_semiring int_cr
-    | _ ->
-        canon_semiring int_cr
-
-#set-options "--tactic_trace_d 0 --no_smt"
-
-let test (a:int) =
-  let open FStar.Mul in
-  assert (a + - a + 2 * a + - a == -a + 2 * a) by (int_semiring ())
+let int_semiring () : Tac unit = canon_semiring int_cr

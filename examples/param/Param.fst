@@ -1,175 +1,143 @@
 module Param
-open FStar.List.Tot
-open FStar.Tactics
 
-type bvmap = list (bv & (binder & binder & binder))
+open FStar.Tactics.V2
+open FStar.Tactics.Parametricity
 
-let update_bvmap (bv:bv) (b0 b1 b2 : binder) (bvm : bvmap) : bvmap =
-  (bv, (b0, b1, b2)) :: bvm
+(***** Unary nats *)
 
-let rec lookup (bvm : bvmap) (bv:bv) : Tac (binder & binder & binder) =
-  match bvm with
-  | [] ->
-    fail ("not found: " ^ bv_to_string bv)
-  | (bv', r)::tl ->
-    if compare_bv bv bv' = Order.Eq
-    then r
-    else lookup tl bv
+type nat =
+  | Z
+  | S of nat
 
-let replace_var (bvmap:bvmap) (b:bool) (t:term) : Tac term =
-  match inspect_ln t with
-  | Tv_Var bv ->
-    let (x, y, _) = lookup bvmap bv in
-    let bv = if b then fst (inspect_binder y) else fst (inspect_binder x) in
-    pack (Tv_Var bv)
-  | _ -> t
+%splice[nat_param; Z_param; S_param] (paramd (`%nat))
 
-let replace_by (bvmap:bvmap) (b:bool) (t:term) : Tac term =
-  let r = visit_tm (replace_var bvmap b) t in
-  //print ("rep " ^ string_of_bool b ^ " " ^ term_to_string t ^ " = " ^ term_to_string r);
-  r
+let safepred (x:nat) : nat =
+  match x with
+  | Z -> Z
+  | S x -> x
 
-let rec list_rec #t1 #t2 (r : t1 -> t2 -> Type) (l1 : list t1) (l2 : list t2) =
-  match l1, l2 with
-  | [], [] -> True
-  | h1::t1, h2::t2 -> r h1 h2 /\ list_rec r t1 t2
-  | _ -> False
+%splice[safepred_param] (paramd (`%safepred))
 
-let param_list = (fun (t1 t2 : Type) rel_f l1 l2 -> squash (list_rec #t1 #t2 rel_f l1 l2))
-let param_int = (fun (x y : int) -> squash (x == y))
+(***** Pairs *)
 
-let binder_set_qual (b:binder) (q:aqualv) : Tac binder =
-  let bv, (_, attrs) = inspect_binder b in
-  pack_binder bv q attrs
+// Universe polymorphism currently broken in tactics
+let fst (#a #b : Type0) (p : a & b) : a =
+  match p with
+  | Mktuple2 x y -> x <: a
 
-let rec param' (bvmap : bvmap) (t:term) : Tac term =
-  let r =
-  match inspect t with
-  | Tv_Type _ ->
-    `(fun (s t : Type) -> s -> t -> Type0)
-  | Tv_Var bv ->
-    let (_, _, b) = lookup bvmap bv in
-    binder_to_term b
-  | Tv_Arrow b c ->
-    let bv, (q, _attrs) = inspect_binder b in
-    begin match inspect_comp c with
-    | C_Total t2 _ _ ->
-      let t1 = (inspect_bv bv).bv_sort in
-      // bv:t1 -> t2
+let snd (#a #b : Type0) (p : a & b) : b =
+  match p with
+  | Mktuple2 x y -> y <: b
 
-      let app q t1 t2 = pack (Tv_App t1 (t2, q)) in
-      let abs b t : Tac term = pack (Tv_Abs b t) in
-      let bf0 = fresh_binder_named "f0" (replace_by bvmap false t) in
-      let bf1 = fresh_binder_named "f1" (replace_by bvmap true t) in
-      let bx0 = fresh_binder_named "x0" (replace_by bvmap false t1) in
-      let bx1 = fresh_binder_named "x1" (replace_by bvmap true t1) in
-      let brx = fresh_binder_named "xR" (`(`#(param' bvmap t1)) (`#bx0) (`#bx1)) in
-      let bvmap' = update_bvmap bv bx0 bx1 brx bvmap in
-      let res = `((`#(param' bvmap' t2)) (`#(app q bf0 bx0)) (`#(app q bf1 bx1))) in
-      abs bf0 (abs bf1 (mk_tot_arr [bx0; bx1; brx] res))
-    | _ -> fail "we don't support effects"
-    end
+%splice[tuple2_param] (paramd (`%tuple2))
 
-  | Tv_App l (r, q) ->
-    let lR = param' bvmap l in
-    let l0 = replace_by bvmap false r in
-    let l1 = replace_by bvmap true r in
-    let rR = param' bvmap r in
-    mk_e_app lR [l0; l1; rR]
+%splice[fst_param] (paramd (`%fst))
 
- | Tv_Abs b t ->
-    let abs b t : Tac term = pack (Tv_Abs b t) in
-    let (bv, q) = inspect_binder b in
-    let bvs = (inspect_bv bv).bv_sort in
-    let bx0 = fresh_binder_named "z0" (replace_by bvmap false bvs) in
-    let bx1 = fresh_binder_named "z1" (replace_by bvmap true bvs) in
-    let bxR = fresh_binder_named "zR" (`(`#(param' bvmap bvs)) (`#bx0) (`#bx1)) in
-    let bvmap' = update_bvmap bv bx0 bx1 bxR bvmap in
-    let t = param' bvmap' t in
-    abs bx0 (abs bx1 (abs bxR t))
+%splice[snd_param] (paramd (`%snd))
 
-  | Tv_FVar fv ->
-    if fv_to_string fv = "Prims.list" then
-      `param_list
-    else if fv_to_string fv = "Prims.int" then
-      `param_int
-    else
-    fail ("unknown fv: " ^ fv_to_string fv)
+(***** Lists *)
 
-  | _ ->
-    let q = inspect t in
-    fail ("unexpec " ^ term_to_string (quote q))
-  in
-  r
+%splice[list_param; Nil_param; Cons_param] (paramd (`%list))
 
-let param t =
-  let t = param' [] t in
-  let t = norm_term [] t in
-  //dump ("res = " ^ term_to_string t);
-  t
+//[@@erasable]
+//noeq
+//type list_param (a1:Type u#aa) (a2:Type u#aa) (ar:a1 -> a2 -> Type0) : list a1 -> list a2 -> Type u#aa =
+//  | Nil_param : list_param a1 a2 ar [] []
+//  | Cons_param : (h1:a1) -> (h2:a2) -> (hr:ar h1 h2) ->
+//                 (t1:list a1) -> (t2:list a2) -> (tr:list_param a1 a2 ar t1 t2) ->
+//                 list_param a1 a2 ar (h1::t1) (h2::t2)
 
-[@@(preprocess_with param)]
-let test0 = Type
+let safetail (#a:Type0) (x:list a) : list a =
+  match x with
+  | [] -> []
+  | x::xs -> xs
 
-[@@(preprocess_with param)]
-let test1 = Type -> Type
+let safetail_param_manual
+  (#a #b : Type0) (#r : a -> b -> Type0)
+  (l0:list a) (l1:list b) (lR : list_param a b r l0 l1)
+: list_param a b r (safetail l0) (safetail l1)
+// ^ needed!!!
+=
+  match lR with
+  | Nil_param -> Nil_param
+  | Cons_param _ _ _ _ _ r -> r
 
-[@@(preprocess_with param)]
+%splice[safetail_param] (paramd (`%safetail))
+
+
+(***** Misc *)
+
+let test0 : int = 2
+
+%splice[test0_param] (paramd (`%test0))
+
+let int_int_t = int -> int
+%splice[int_int_t_param] (paramd (`%int_int_t))
+
+let my_int : Type = Prims.int
+%splice[my_int_param] (paramd (`%my_int))
+
+let test1 : Type u#2 = Type u#1
+
+[@@expect_failure] // FIXME
+%splice[test1_param] (paramd (`%test1))
+
 let test2 = bd1:Type -> bd2:Type -> bd1
 
-// GM: Using implicits here. The `param` metaprogram is meant to handle
-// them properly but take that with a grain of salt.
-[@@(preprocess_with param)]
-let param_id = #a:Type -> a -> a
+[@@expect_failure] // FIXME
+%splice[test2_param] (paramd (`%test2))
+
+let id_t = #a:Type -> a -> a
+
+[@@expect_failure] // FIXME
+%splice[id_t_param] (paramd (`%id_t))
 
 let id (#a:Type0) (x:a) : a = x
+%splice[id_param] (paramd (`%id))
 
-let id_is_unique (f : (#a:Type -> a -> a)) (f_parametric : param_id f f) : Lemma (forall a (x:a). f x == x) =
-  let aux a x : Lemma (f x == x) =
-    f_parametric a unit (fun y () -> squash (x == y)) x () ()
-  in
-  Classical.forall_intro_2 aux
+//let id_is_unique (f : (#a:Type -> a -> a)) (f_parametric : id_t_param f f) : Lemma (forall a (x:a). f x == x) =
+//  let aux (a:Type) (x:a) : Lemma (f x == x) =
+//    f_parametric (fun y () -> squash (x == y)) x () ()
+//  in
+//  Classical.forall_intro_2 aux
 
-[@@preprocess_with param]
-let id_is_param = (fun (#a:Type) (x:a) -> x)
+//let test () = id_is_unique id id_param
 
-let test () = id_is_unique id id_is_param
+let binop_t = #a:Type -> a -> a -> a
+//%splice[binop_t_param] (paramd (`%binop_t))
 
-[@@preprocess_with param]
-let binop_param = #a:Type -> a -> a -> a
+//let binop_is_fst_or_snd_pointwise (f : (#a:Type -> a -> a -> a)) (f_param : binop_t_param f f)
+//  : Lemma (forall a (x y : a). f x y == x \/ f x y == y)
+//  =
+//  let aux a (x y : a) : Lemma (f x y == x \/ f x y == y) =
+//   f_param (fun z () -> squash (z == x \/ z == y)) x () () y () ()
+//  in
+//  Classical.forall_intro_3 aux
+//
+//let binop_is_fst_or_snd_extensional (f : (#a:Type -> a -> a -> a)) (f_param : binop_t_param f f)
+//  : Lemma ((forall a (x y : a). f x y == x) \/ (forall a (x y : a). f x y == y))
+//  =
+//  binop_is_fst_or_snd_pointwise f f_param;
+//  assert (f 1 2 == 1 \/ f 1 2 == 2);
+//  let aux1 (_ : squash (f 1 2 == 1))
+//           a (x y : a) : Lemma (f x y == x) =
+//   f_param (fun z i -> squash (i == 1 ==> z == x)) x 1 () y 2 ()
+//  in
+//  let aux2 (_ : squash (f 1 2 == 2))
+//           a (x y : a) : Lemma (f x y == y) =
+//   f_param (fun z i -> squash (i == 2 ==> z == y)) x 1 () y 2 ()
+//  in
+//  let aux1' () : Lemma (requires (f 1 2 == 1)) (ensures (forall a (x y : a). f x y == x)) =
+//    Classical.forall_intro_3 (aux1 ())
+//  in
+//  let aux2' () : Lemma (requires (f 1 2 == 2)) (ensures (forall a (x y : a). f x y == y)) =
+//    Classical.forall_intro_3 (aux2 ())
+//  in
+//  Classical.move_requires aux1' ();
+//  Classical.move_requires aux2' ()
 
-let binop_is_fst_or_snd_pointwise (f : (#a:Type -> a -> a -> a)) (f_param : binop_param f f)
-  : Lemma (forall a (x y : a). f x y == x \/ f x y == y)
-  =
-  let aux a (x y : a) : Lemma (f x y == x \/ f x y == y) =
-   f_param a unit (fun z () -> squash (z == x \/ z == y)) x () () y () ()
-  in
-  Classical.forall_intro_3 aux
-
-let binop_is_fst_or_snd_extensional (f : (#a:Type -> a -> a -> a)) (f_param : binop_param f f)
-  : Lemma ((forall a (x y : a). f x y == x) \/ (forall a (x y : a). f x y == y))
-  =
-  binop_is_fst_or_snd_pointwise f f_param;
-  assert (f 1 2 == 1 \/ f 1 2 == 2);
-  let aux1 (_ : squash (f 1 2 == 1))
-           a (x y : a) : Lemma (f x y == x) =
-   f_param a int (fun z i -> squash (i == 1 ==> z == x)) x 1 () y 2 ()
-  in
-  let aux2 (_ : squash (f 1 2 == 2))
-           a (x y : a) : Lemma (f x y == y) =
-   f_param a int (fun z i -> squash (i == 2 ==> z == y)) x 1 () y 2 ()
-  in
-  let aux1' () : Lemma (requires (f 1 2 == 1)) (ensures (forall a (x y : a). f x y == x)) =
-    Classical.forall_intro_3 (aux1 ())
-  in
-  let aux2' () : Lemma (requires (f 1 2 == 2)) (ensures (forall a (x y : a). f x y == y)) =
-    Classical.forall_intro_3 (aux2 ())
-  in
-  Classical.move_requires aux1' ();
-  Classical.move_requires aux2' ()
-
-[@@(preprocess_with param)]
 let test_int_to_int = int -> int
+%splice [test_int_to_int_param] (paramd (`%test_int_to_int))
 
 [@@(preprocess_with param)]
 let test_list_0 = list
@@ -178,59 +146,126 @@ let test_list_0 = list
 let test_list = list int
 
 [@@(preprocess_with param)]
-let rev_param = a:Type -> list a -> list a
+let rev_param = #a:Type -> list a -> list a
 
+// GM: squash needed
 let rel_of_fun #a #b (f : a -> b) : a -> b -> Type =
-  fun x y -> y == f x
+  fun x y -> squash (y == f x)
 
-let rec list_rec_of_function_is_map #a #b (f : a -> b) (l1 : list a) (l2 : list b)
-        : Lemma (list_rec (rel_of_fun f) l1 l2 <==> l2 == List.Tot.map f l1)
+let rec list_rec_of_function_is_map_1 #a #b (f : a -> b) (l1 : list a) (l2 : list b)
+                                            (p : list_param _ _ (rel_of_fun f) l1 l2)
+        : Lemma (l2 == List.Tot.map f l1)
+ = match p with
+   | Nil_param -> ()
+   | Cons_param _ _ _ _ _ t -> list_rec_of_function_is_map_1 _ _ _ t
+
+let rec list_rec_of_function_is_map_2 #a #b (f : a -> b) (l1 : list a) (l2 : list b)
+        : Pure (list_param _ _ (rel_of_fun f) l1 l2)
+               (requires (l2 == List.Tot.map f l1))
+               (ensures (fun _ -> True))
  = match l1, l2 with
-   | [], [] -> ()
-   | h1::t1, h2::t2 -> list_rec_of_function_is_map f t1 t2
-   | _ -> ()
+   | Nil, Nil -> Nil_param
+   | Cons h1 t1, Cons h2 t2 ->
+     Cons_param h1 h2 () _ _ (list_rec_of_function_is_map_2 f t1 t2)
 
 let reverse_commutes_with_map
-    (rev : (a:Type -> list a -> list a)) // doesn't really have to be "reverse"...
+    (rev : (#a:Type -> list a -> list a)) // doesn't really have to be "reverse"...
     (rev_is_param : rev_param rev rev)
-    : Lemma (forall a b (f : a -> b) l. rev b (List.Tot.map f l) == List.Tot.map f (rev a l))
+    : Lemma (forall a b (f : a -> b) l. rev (List.Tot.map f l) == List.Tot.map f (rev l))
     =
-  let aux a b f l : Lemma (rev b (List.Tot.map f l) == List.Tot.map f (rev a l)) =
+  let aux a b f l : Lemma (rev (List.Tot.map f l) == List.Tot.map f (rev l)) =
     let rel_f : a -> b -> Type = rel_of_fun f in
-    list_rec_of_function_is_map f l (List.Tot.map f l);
-    rev_is_param a b rel_f l (List.Tot.map f l) ();
-    list_rec_of_function_is_map f (rev _ l) (rev _ (List.Tot.map f l));
+    let rpf = list_rec_of_function_is_map_2 f l (List.Tot.map f l) in
+    let rpf2 = rev_is_param #_ #_ #rel_f l (List.Tot.map f l) rpf in
+    list_rec_of_function_is_map_1 f (rev l) (rev (List.Tot.map f l)) rpf2;
     ()
   in
   Classical.forall_intro_4 aux
 
-let rec reverse (a:Type) (l : list a) : list a =
+let rec app (#a:Type) (l1 l2 : list a) : list a =
+  match l1 with
+  | [] -> l2
+  | h::t -> h :: (app t l2)
+
+let rec app_rel (#a0:Type) (#a1:Type) (aR : a0 -> a1 -> Type)
+            (l11 : list a0) (l12 : list a1) (l1R : list_param _ _ aR l11 l12)
+            (l21 : list a0) (l22 : list a1) (l2R : list_param _ _ aR l21 l22)
+            : list_param a0 a1 aR (l11 `app` l21) (l12 `app` l22) =
+   match l11, l12 with
+   | [], [] -> l2R
+   | h1::t1, h2::t2 ->
+     begin match l1R with
+     | Cons_param _ _ hr _ _ tr -> Cons_param h1 h2 hr (app t1 l21) (app t2 l22) (app_rel aR t1 t2 tr l21 l22 l2R)
+     end
+
+
+let rec reverse (#a:Type) (l : list a) : list a =
   match l with
   | [] -> []
-  | x::xs -> reverse _ xs @ [x]
+  | x::xs -> reverse xs `app` [x]
 
-let rec lem_rel_app (a0 a1 : Type) (ra : a0 -> a1 -> Type)
-                (l0 r0 : list a0) (l1 r1 : list a1)
-                : Lemma (requires (list_rec ra l0 l1 /\ list_rec ra r0 r1))
-                        (ensures (list_rec ra (l0@r0) (l1@r1))) =
-   match l0, l1 with                       
-   | h0::t0, h1::t1 -> lem_rel_app a0 a1 ra t0 r0 t1 r1
-   | _ -> ()
+let rec reverse_rel (#a0:Type) (#a1:Type) (#aR: a0 -> a1 -> Type)
+                    (l0 : list a0) (l1 : list a1) (lR : list_param _ _ aR l0 l1)
+                  : list_param _ _ aR (reverse l0) (reverse l1) =
+  match l0, l1 with
+  | [], [] -> Nil_param
+  | h1::t1, h2::t2 ->
+    begin match lR with
+    | Cons_param _ _ hr _ _ tr ->
+    app_rel aR (reverse t1) (reverse t2) (reverse_rel t1 t2 tr)
+               [h1] [h2] (Cons_param h1 h2 hr Nil Nil Nil_param)
+    end
 
 (* Doesn't work by SMT, and tactic above does not handle fixpoints.
  * What to do about them? Is there a translation for general recursion?
  * Should read https://openaccess.city.ac.uk/id/eprint/1072/1/PFF.pdf in
  * more detail. *)
-let rev_is_param () : rev_param reverse reverse =
-  fun a0 a1 ra l0 l1 (sq : squash (list_rec ra l0 l1)) ->
-    let rec aux l0 l1 : Lemma (requires (list_rec ra l0 l1))
-                          (ensures list_rec ra (reverse _ l0) (reverse _ l1)) =
-      match l0, l1 with
-      | h0::t0, h1::t1 -> aux t0 t1; lem_rel_app _ _ ra (reverse _ t0) [h0] (reverse _ t1) [h1]
-      | _ -> ()
-    in
-    aux l0 l1
+(* ^ stale comment, using inductive proofs right now *)
 
 let real_reverse_commutes_with_map ()
-  : Lemma (forall a b (f : a -> b) l. reverse b (List.Tot.map f l) == List.Tot.map f (reverse a l))
-  = reverse_commutes_with_map reverse (rev_is_param ())
+  : Lemma (forall a b (f : a -> b) l. reverse (List.Tot.map f l) == List.Tot.map f (reverse l))
+  = reverse_commutes_with_map reverse reverse_rel
+
+(* 2020/07/23: This doesn't work from outside this module... why? *)
+
+type label =
+  | Low
+  | High
+
+%splice[label_param] (paramd (`%label))
+
+noeq type labeled_interface : Type u#(1 + a) = {
+  labeled : Type u#a -> Type u#a;
+  mk_labeled : #a:Type u#a -> a -> label -> labeled a;
+  label_of : #a:Type u#a -> labeled a -> label;
+}
+
+%splice[labeled_interface_param] (paramd (`%labeled_interface))
+
+// From here onwards, every u#0 should be an u#a
+
+let proj_labeled (r:labeled_interface u#0) : Type u#0 -> Type u#0 =
+  match r with
+  | Mklabeled_interface l m lo -> l
+
+let proj_mk_labeled (r:labeled_interface u#0) : #a:Type u#0 -> a -> label -> (proj_labeled r) a =
+  match r with
+  | Mklabeled_interface l m lo -> m
+
+let proj_label_of (r:labeled_interface u#0) : #a:Type u#0 -> (proj_labeled r) a -> label =
+  match r with
+  | Mklabeled_interface l m lo -> lo
+
+%splice[proj_labeled_param] (paramd (`%proj_labeled))
+
+%splice[proj_mk_labeled_param] (paramd (`%proj_mk_labeled))
+
+%splice[proj_label_of_param] (paramd (`%proj_label_of))
+
+let lab_impl : labeled_interface = {
+  labeled = (fun (a:Type) -> a & label);
+  mk_labeled = (fun (#a:Type) (x:a) (l:label) -> (x,l));
+  label_of = (fun (#a:Type) x -> snd x);
+}
+
+%splice[lab_impl_param] (paramd (`%lab_impl))

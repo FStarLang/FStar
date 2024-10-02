@@ -26,10 +26,8 @@ open FStar.Compiler.Util
 open FStar.Const
 open FStar.BaseTypes
 
-(* -------------------------------------------------------------------- *)
-type mlsymbol = string
-type mlident  = mlsymbol
-type mlpath   = list mlsymbol * mlsymbol //Path and name of a module
+open FStar.Class.Show
+open FStar.Pprint
 
 (* -------------------------------------------------------------------- *)
 let krml_keywords = []
@@ -73,177 +71,22 @@ let fsharpkeywords = [
 let string_of_mlpath ((p, s) : mlpath) : mlsymbol =
     String.concat "." (p @ [s])
 
-
-(* -------------------------------------------------------------------- *)
-type mlidents  = list mlident
-type mlsymbols = list mlsymbol
-
-(* -------------------------------------------------------------------- *)
-type e_tag =
-  | E_PURE
-  | E_ERASABLE
-  | E_IMPURE
-
-// Line number, file name; that's all we can emit in OCaml anyhwow
-type mlloc = int * string
 let dummy_loc: mlloc = 0, ""
 
-type mlty =
-| MLTY_Var   of mlident
-| MLTY_Fun   of mlty * e_tag * mlty
-| MLTY_Named of list mlty * mlpath
-| MLTY_Tuple of list mlty
-| MLTY_Top  (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
-| MLTY_Erased //a type that extracts to unit
-
-type mltyscheme = mlidents * mlty   //forall a1..an. t  (the list of binders can be empty)
-
-type mlconstant =
-| MLC_Unit
-| MLC_Bool   of bool
-| MLC_Int    of string * option (signedness * width)
-| MLC_Float  of float
-| MLC_Char   of char
-| MLC_String of string
-| MLC_Bytes  of array byte
-
-type mlpattern =
-| MLP_Wild
-| MLP_Const  of mlconstant
-| MLP_Var    of mlident
-| MLP_CTor   of mlpath * list mlpattern
-| MLP_Branch of list mlpattern
-(* SUGAR *)
-| MLP_Record of list mlsymbol * list (mlsymbol * mlpattern)
-| MLP_Tuple  of list mlpattern
-
-
-(* metadata, suitable for either the C or the OCaml backend *)
-type meta =
-  | Mutable (* deprecated *)
-  | Assumed
-  | Private
-  | NoExtract
-  | CInline
-  | Substitute
-  | GCType
-  | PpxDerivingShow
-  | PpxDerivingShowConstant of string
-  | PpxDerivingYoJson
-  | Comment of string
-  | StackInline
-  | CPrologue of string
-  | CEpilogue of string
-  | CConst of string
-  | CCConv of string
-  | Erased
-  | CAbstract
-  | CIfDef
-  | CMacro
-  | Deprecated of string
-  | RemoveUnusedTypeParameters of list int * FStar.Compiler.Range.range //positional
-  | HasValDecl of FStar.Compiler.Range.range //this symbol appears in the interface of a module
-
-// rename
-type metadata = list meta
-
-type mlletflavor =
-  | Rec
-  | NonRec
-
-type mlexpr' =
-| MLE_Const  of mlconstant
-| MLE_Var    of mlident
-| MLE_Name   of mlpath
-| MLE_Let    of mlletbinding * mlexpr //tyscheme for polymorphic recursion
-| MLE_App    of mlexpr * list mlexpr //why are function types curried, but the applications not curried
-| MLE_TApp   of mlexpr * list mlty
-| MLE_Fun    of list (mlident * mlty) * mlexpr
-| MLE_Match  of mlexpr * list mlbranch
-| MLE_Coerce of mlexpr * mlty * mlty
-(* SUGAR *)
-| MLE_CTor   of mlpath * list mlexpr
-| MLE_Seq    of list mlexpr
-| MLE_Tuple  of list mlexpr
-| MLE_Record of list mlsymbol * list (mlsymbol * mlexpr)
-| MLE_Proj   of mlexpr * mlpath
-| MLE_If     of mlexpr * mlexpr * option mlexpr
-| MLE_Raise  of mlpath * list mlexpr
-| MLE_Try    of mlexpr * list mlbranch
-
-and mlexpr = {
-    expr:mlexpr';
-    mlty:mlty;
-    loc: mlloc;
-}
-
-and mlbranch = mlpattern * option mlexpr * mlexpr
-
-and mllb = {
-    mllb_name:mlident;
-    mllb_tysc:option mltyscheme; // May be None for top-level bindings only
-    mllb_add_unit:bool;
-    mllb_def:mlexpr;
-    mllb_meta:metadata;
-    print_typ:bool;
-}
-
-and mlletbinding = mlletflavor * list mllb
-
-type mltybody =
-| MLTD_Abbrev of mlty
-| MLTD_Record of list (mlsymbol * mlty)
-| MLTD_DType  of list (mlsymbol * list (mlsymbol * mlty))
-    (*list of constructors? list mlty is the list of arguments of the constructors?
-        One could have instead used a mlty and tupled the argument types?
-     *)
-
-
-type one_mltydecl = {
-  tydecl_assumed : bool; // bool: this was assumed (C backend)
-  tydecl_name    : mlsymbol;
-  tydecl_ignored : option mlsymbol;
-  tydecl_parameters : mlidents;
-  tydecl_meta    : metadata;
-  tydecl_defn    : option mltybody
-}
-
-type mltydecl = list one_mltydecl // each element of this list is one among a collection of mutually defined types
-
-type mlmodule1 =
-| MLM_Ty  of mltydecl
-| MLM_Let of mlletbinding
-| MLM_Exn of mlsymbol * list (mlsymbol * mlty)
-| MLM_Top of mlexpr // this seems outdated
-| MLM_Loc of mlloc // Location information; line number + file; only for the OCaml backend
-
-type mlmodule = list mlmodule1
-
-type mlsig1 =
-| MLS_Mod of mlsymbol * mlsig
-| MLS_Ty  of mltydecl
-    (*used for both type schemes and inductive types. Even inductives are defined in OCaml using type ....,
-        unlike data in Haskell *)
-| MLS_Val of mlsymbol * mltyscheme
-| MLS_Exn of mlsymbol * list mlty
-
-and mlsig = list mlsig1
+let mk_mlmodule1 m = { mlmodule1_m = m; mlmodule1_attrs = [] }
+let mk_mlmodule1_with_attrs m attrs = { mlmodule1_m = m; mlmodule1_attrs = attrs }
 
 let with_ty_loc t e l = {expr=e; mlty=t; loc = l }
 let with_ty t e = with_ty_loc t e dummy_loc
 
-(* -------------------------------------------------------------------- *)
-type mllib =
-  | MLLib of list (mlpath * option (mlsig * mlmodule) * mllib) //Last field never seems to be used. Refactor?
-
-(* -------------------------------------------------------------------- *)
 // do NOT remove Prims, because all mentions of unit/bool in F* are actually Prims.unit/bool.
-let ml_unit_ty = MLTY_Erased
-let ml_bool_ty = MLTY_Named ([], (["Prims"], "bool"))
-let ml_int_ty  = MLTY_Named ([], (["Prims"], "int"))
+let ml_unit_ty    = MLTY_Erased
+let ml_bool_ty    = MLTY_Named ([], (["Prims"], "bool"))
+let ml_int_ty     = MLTY_Named ([], (["Prims"], "int"))
 let ml_string_ty  = MLTY_Named ([], (["Prims"], "string"))
-let ml_unit    = with_ty ml_unit_ty (MLE_Const MLC_Unit)
-let mlp_lalloc = (["SST"], "lalloc")
+
+let ml_unit       = with_ty ml_unit_ty (MLE_Const MLC_Unit)
+
 let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
     let repr_name = if Options.codegen() = Some Options.FSharp
                     then MLE_Name([], "box")
@@ -251,7 +94,8 @@ let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
     let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) repr_name in
     with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc
 
-open FStar.Syntax.Syntax
+let ty_param_names (tys:list ty_param) : list string =
+  tys |> List.map (fun {ty_param_name} -> ty_param_name)
 
 let push_unit (ts : mltyscheme) : mltyscheme =
     let vs, ty = ts in
@@ -266,3 +110,177 @@ let pop_unit (ts : mltyscheme) : mltyscheme =
         else failwith "unexpected: pop_unit: domain was not unit"
     | _ ->
         failwith "unexpected: pop_unit: not a function type"
+module BU = FStar.Compiler.Util
+
+let ctor' (n: string) (args: list document) =
+  nest 2 (group (parens (flow (break_ 1) (doc_of_string n :: args))))
+let ctor (n: string) (arg: document) =
+  nest 2 (group (parens (doc_of_string n ^/^ arg)))
+
+let rec mlty_to_doc (t:mlty) =
+  match t with
+  | MLTY_Var v -> doc_of_string v
+  | MLTY_Fun (t1, _, t2) ->
+    ctor' "<MLTY_Fun>" [mlty_to_doc t1; doc_of_string "->"; mlty_to_doc t2]
+  | MLTY_Named (ts, p) ->
+    ctor' "<MLTY_Named>" (List.map mlty_to_doc ts @ [doc_of_string (string_of_mlpath p)])
+  | MLTY_Tuple ts ->
+    ctor "<MLTY_Tuple>" <| flow_map (doc_of_string " *" ^^ break_ 1) mlty_to_doc ts
+  | MLTY_Top -> doc_of_string "MLTY_Top"
+  | MLTY_Erased -> doc_of_string "MLTY_Erased"
+let mlty_to_string (t:mlty) = render (mlty_to_doc t)
+
+let mltyscheme_to_doc (tsc:mltyscheme) =
+  ctor "<MLTY_Scheme>"
+    (brackets (flow_map (comma ^^ break_ 1) doc_of_string (ty_param_names (fst tsc)))
+      ^^ doc_of_string "," ^/^ mlty_to_doc (snd tsc))
+let mltyscheme_to_string (tsc:mltyscheme) = render (mltyscheme_to_doc tsc)
+
+let pair a b = group (parens (a ^^ comma ^/^ b))
+let triple a b c = group (parens (a ^^ comma ^/^ b ^^ comma ^/^ c))
+let ctor2 n a b = ctor n (pair a b)
+let list_to_doc #t (xs: list t) (f: t -> document) : document =
+  nest 2 (group (brackets (flow_map (semi ^^ break_ 1) f xs)))
+let option_to_doc #t (x: option t) (f: t -> document) : document =
+  match x with
+  | Some x -> group (doc_of_string "Some" ^/^ f x)
+  | None -> doc_of_string "None"
+let spaced a = break_ 1 ^^ a ^^ break_ 1
+let record fs =
+  group <| nest 2 <| braces <| spaced <| separate (semi ^^ break_ 1) fs
+let fld n v = group <| nest 2 <| doc_of_string (n ^ " =") ^/^ v
+
+let rec mlexpr_to_doc (e:mlexpr) =
+  match e.expr with
+  | MLE_Const c ->
+    ctor "MLE_Const" (mlconstant_to_doc c)
+  | MLE_Var x ->
+    ctor "MLE_Var" (doc_of_string x)
+  | MLE_Name (p, x) ->
+    ctor2 "MLE_Name" (doc_of_string (String.concat "." p)) (doc_of_string x)
+  | MLE_Let (lbs, e) ->
+    ctor2 "MLE_Let" (mlletbinding_to_doc lbs) (mlexpr_to_doc e)
+  | MLE_App (e, es) ->
+    ctor2 "MLE_App" (mlexpr_to_doc e) (list_to_doc es mlexpr_to_doc)
+  | MLE_TApp (e, ts) ->
+    ctor2 "MLE_TApp" (mlexpr_to_doc e) (list_to_doc ts mlty_to_doc)
+  | MLE_Fun (bs, e) ->
+    ctor2 "MLE_Fun"
+      (list_to_doc bs (fun b -> pair (doc_of_string b.mlbinder_name) (mlty_to_doc b.mlbinder_ty)))
+      (mlexpr_to_doc e)
+  | MLE_Match (e, bs) ->
+    ctor2 "MLE_Match" (mlexpr_to_doc e) (list_to_doc bs mlbranch_to_doc)
+  | MLE_Coerce (e, t1, t2) ->
+    ctor "MLE_Coerce" <| triple (mlexpr_to_doc e) (mlty_to_doc t1) (mlty_to_doc t2)
+  | MLE_CTor (p, es) ->
+    ctor2 "MLE_CTor" (doc_of_string (string_of_mlpath p)) (list_to_doc es mlexpr_to_doc)
+  | MLE_Seq es ->
+    ctor "MLE_Seq" (list_to_doc es mlexpr_to_doc)
+  | MLE_Tuple es ->
+    ctor "MLE_Tuple" (list_to_doc es mlexpr_to_doc)
+  | MLE_Record (p, n, es) ->
+    ctor2 "MLE_Record" (list_to_doc (p@[n]) doc_of_string)
+      (list_to_doc es (fun (x, e) -> pair (doc_of_string x) (mlexpr_to_doc e)))
+  | MLE_Proj (e, p) ->
+    ctor2 "MLE_Proj" (mlexpr_to_doc e) (doc_of_string (string_of_mlpath p))
+  | MLE_If (e1, e2, e3) ->
+    ctor "MLE_If" <| triple (mlexpr_to_doc e1) (mlexpr_to_doc e2) (option_to_doc e3 mlexpr_to_doc)
+  | MLE_Raise (p, es) ->
+    ctor2 "MLE_Raise" (doc_of_string (string_of_mlpath p)) (list_to_doc es mlexpr_to_doc)
+  | MLE_Try (e, bs) ->
+    ctor2 "MLE_Try" (mlexpr_to_doc e) (list_to_doc bs mlbranch_to_doc)
+
+and mlbranch_to_doc (p, e1, e2) =
+  triple (mlpattern_to_doc p) (option_to_doc e1 mlexpr_to_doc) (mlexpr_to_doc e2)
+
+and mlletbinding_to_doc (lbs) =
+  parens <|
+    doc_of_string (match lbs._1 with | Rec -> "Rec" | NonRec -> "NonRec")
+    ^^ doc_of_string ", " ^^
+    list_to_doc lbs._2 mllb_to_doc
+
+and mllb_to_doc (lb) =
+  record [
+    fld "mllb_name" (doc_of_string lb.mllb_name);
+    fld "mllb_attrs" (list_to_doc lb.mllb_attrs mlexpr_to_doc);
+    fld "mllb_tysc" (option_to_doc lb.mllb_tysc (fun (_, t) -> mlty_to_doc t));
+    fld "mllb_add_unit" (doc_of_string (string_of_bool lb.mllb_add_unit));
+    fld "mllb_def" (mlexpr_to_doc lb.mllb_def);
+  ]
+
+and mlconstant_to_doc mlc =
+  match mlc with
+  | MLC_Unit -> doc_of_string "MLC_Unit"
+  | MLC_Bool b -> ctor "MLC_Bool" (doc_of_string (string_of_bool b))
+  | MLC_Int (s, None) -> ctor "MLC_Int" (doc_of_string s)
+  | MLC_Int (s, Some (s1, s2)) ->
+    ctor "MLC_Int" <| triple (doc_of_string s) underscore underscore
+  | MLC_Float f -> ctor "MLC_Float" underscore
+  | MLC_Char c -> ctor "MLC_Char" underscore
+  | MLC_String s -> ctor "MLC_String" (doc_of_string s)
+  | MLC_Bytes b -> ctor "MLC_Bytes" underscore
+
+and mlpattern_to_doc mlp =
+  match mlp with
+  | MLP_Wild -> doc_of_string "MLP_Wild"
+  | MLP_Const c -> ctor "MLP_Const" (mlconstant_to_doc c)
+  | MLP_Var x -> ctor "MLP_Var" (doc_of_string x)
+  | MLP_CTor (p, ps) -> ctor2 "MLP_CTor" (doc_of_string (string_of_mlpath p)) (list_to_doc ps mlpattern_to_doc)
+  | MLP_Branch ps -> ctor "MLP_Branch" (list_to_doc ps mlpattern_to_doc)
+
+  | MLP_Record (path, fields) ->
+    ctor2 "MLP_Record"
+      (doc_of_string (String.concat "." path))
+      (list_to_doc fields (fun (x, p) ->
+        pair (doc_of_string x) (mlpattern_to_doc p)))
+  | MLP_Tuple ps ->
+    ctor "MLP_Tuple" (list_to_doc ps mlpattern_to_doc)
+
+let mlbranch_to_string b = render (mlbranch_to_doc b)
+let mlletbinding_to_string lb = render (mlletbinding_to_doc lb)
+let mllb_to_string lb = render (mllb_to_doc lb)
+let mlpattern_to_string p = render (mlpattern_to_doc p)
+let mlconstant_to_string c = render (mlconstant_to_doc c)
+let mlexpr_to_string e = render (mlexpr_to_doc e)
+
+let mltybody_to_doc (d:mltybody) : document =
+  match d with
+  | MLTD_Abbrev mlty -> ctor "MLTD_Abbrev" (mlty_to_doc mlty)
+  | MLTD_Record l ->
+    ctor "MLTD_Record" <| group <| nest 2 <| braces <| spaced <|
+      flow_map (semi ^^ break_ 1) (fun (x, t) -> pair (doc_of_string x) (mlty_to_doc t)) l
+  | MLTD_DType l ->
+    ctor "MLTD_DType" <| group <| nest 2 <| brackets <| spaced <|
+      flow_map (semi ^^ break_ 1) (fun (x, l) -> pair (doc_of_string x)
+        (list_to_doc l fun (x, t) -> pair (doc_of_string x) (mlty_to_doc t))) l
+let mltybody_to_string (d:mltybody) : string = render (mltybody_to_doc d)
+
+let one_mltydecl_to_doc (d:one_mltydecl) : document =
+  record [
+    fld "tydecl_name" (doc_of_string d.tydecl_name);
+    fld "tydecl_parameters" (doc_of_string (String.concat "," (d.tydecl_parameters |> ty_param_names)));
+    fld "tydecl_defn" (option_to_doc d.tydecl_defn mltybody_to_doc);
+  ]
+let one_mltydecl_to_string (d:one_mltydecl) : string = render (one_mltydecl_to_doc d)
+
+let mlmodule1_to_doc (m:mlmodule1) : document =
+  group (match m.mlmodule1_m with
+  | MLM_Ty d -> doc_of_string "MLM_Ty " ^^ list_to_doc d one_mltydecl_to_doc
+  | MLM_Let l -> doc_of_string "MLM_Let " ^^ mlletbinding_to_doc l
+  | MLM_Exn (s, l) ->
+    doc_of_string "MLM_Exn" ^/^
+      pair (doc_of_string s)
+      (list_to_doc l (fun (x, t) -> pair (doc_of_string x) (mlty_to_doc t)))
+  | MLM_Top e -> doc_of_string "MLM_Top" ^/^ mlexpr_to_doc e
+  | MLM_Loc _mlloc -> doc_of_string "MLM_Loc")
+let mlmodule1_to_string (m:mlmodule1) : string = render (mlmodule1_to_doc m)
+
+let mlmodule_to_doc (m:mlmodule) : document =
+  group <| brackets <| spaced <| separate_map (semi ^^ break_ 1) mlmodule1_to_doc m
+let mlmodule_to_string (m:mlmodule) : string = render (mlmodule_to_doc m)
+
+instance showable_mlty : showable mlty = { show = mlty_to_string }
+instance showable_mlconstant : showable mlconstant = { show = mlconstant_to_string }  
+instance showable_mlexpr : showable mlexpr = { show = mlexpr_to_string }
+instance showable_mlmodule1 : showable mlmodule1 = { show = mlmodule1_to_string }
+instance showable_mlmodule : showable mlmodule = { show = mlmodule_to_string }

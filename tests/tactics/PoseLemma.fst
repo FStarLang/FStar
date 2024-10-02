@@ -1,6 +1,6 @@
 module PoseLemma
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val pred : int -> int -> Type0
 assume val lem1 : x:int -> y:int -> Lemma (requires (x < 0)) (ensures (pred x y))

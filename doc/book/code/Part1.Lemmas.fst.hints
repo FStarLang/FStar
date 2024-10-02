@@ -1,5 +1,5 @@
 [
-  "a4 “\u001ei∏s5™Ãï\u000e«u◊",
+  "\u001a£ñXêáT‚ueñ\u000bnjni",
   [
     [
       "Part1.Lemmas.factorial",
@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9281d3d5cd69c7ab99aef23b7573698c"
+      "0aa74c002914ad5f3a1e8e282953afd7"
     ],
     [
       "Part1.Lemmas.factorial_is_positive",
@@ -39,7 +39,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2c50b406bb913ac008f1bf449b073ad2"
+      "ba1ac46a8164d12c53023a26461760a1"
     ],
     [
       "Part1.Lemmas.factorial_is_pos",
@@ -47,13 +47,26 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Part1.Lemmas.factorial.fuel_instrumented",
+        "@fuel_irrelevance_Part1.Lemmas.factorial.fuel_instrumented",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "b2t_def", "binder_x_ae567c2fb75be05905677af440075565_0",
+        "equation_Prims.nat", "equation_Prims.squash",
+        "equation_with_fuel_Part1.Lemmas.factorial.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_06e008d982e92b4ef982b858ebbce5e0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
       ],
       0,
-      "f15c48a438090dcb2bdf8e6dde3b812c"
+      "2778bd21a5cba52269b04a06de64f8d3"
     ],
     [
       "Part1.Lemmas.factorial_is_pos",
@@ -80,22 +93,33 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "892ea716fa7b5450c33da4a13fa279aa"
+      "dd7a6486a233fbe0d9c70c6e78a6618d"
     ],
     [
       "Part1.Lemmas.factorial_is_greater_than_arg",
       1,
+      4,
       2,
-      1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
-        "primitive_Prims.op_GreaterThan",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Part1.Lemmas.factorial.fuel_instrumented",
+        "@fuel_irrelevance_Part1.Lemmas.factorial.fuel_instrumented",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "b2t_def", "binder_x_ae567c2fb75be05905677af440075565_0",
+        "equation_Prims.nat", "equation_Prims.squash",
+        "equation_with_fuel_Part1.Lemmas.factorial.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
       ],
       0,
-      "ea5c9278003499e03e14823def48f2a2"
+      "0c649a5d25c4f26d8f5346ec5240cd78"
     ],
     [
       "Part1.Lemmas.factorial_is_greater_than_arg",
@@ -121,7 +145,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "360fc629c5a60a0205013dae31bd3b04"
+      "a9313a457c17eb5e26c75515226931e2"
     ],
     [
       "Part1.Lemmas.fibonacci",
@@ -138,7 +162,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "55d28b767ecd822d2295f0cd37737093"
+      "2a56fbad9a30834ff2b8bc6556c75973"
     ],
     [
       "Part1.Lemmas.fibonacci_greater_than_arg",
@@ -162,7 +186,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f2df90514c19c19a768a072d610716fa"
+      "f2f719ce63f07b3e9ffdae999b1d7b08"
     ],
     [
       "Part1.Lemmas.fib_greater_than_arg",
@@ -189,7 +213,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "407ad453f89fc276092625bfcd6dca1b"
+      "d991cb4e4b53df0f70d5ba6d29b62831"
     ],
     [
       "Part1.Lemmas.app",
@@ -204,7 +228,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "78357e9fe996858de9022529f6f54134"
+      "a406e08e94e803bd02c19d1f4828d384"
     ],
     [
       "Part1.Lemmas.app_length",
@@ -236,7 +260,7 @@
         "typing_Part1.Lemmas.app"
       ],
       0,
-      "5f4d0130b482a3ec5daf609fac2e9c80"
+      "cd0e71be01690f0046ca0768716cf5ed"
     ],
     [
       "Part1.Lemmas.reverse",
@@ -251,7 +275,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d9bc9943a16db6b4272c79b52b15a4a7"
+      "d9786257286b080fa6fa9b8714d0190b"
     ],
     [
       "Part1.Lemmas.snoc_cons",
@@ -283,7 +307,7 @@
         "typing_Part1.Lemmas.snoc"
       ],
       0,
-      "a665b0e6f34c4200928b4717dcddeb1e"
+      "04a8a2cf2e0fcc07d78c5cf3739ac410"
     ],
     [
       "Part1.Lemmas.rev_involutive",
@@ -308,16 +332,48 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9d91fe8b3ddba911c2f8bc4463baaa70"
+      "4f412b1db3a06c4da47257516593ee69"
     ],
     [
       "Part1.Lemmas.snoc_injective",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Part1.Inductives.append.fuel_instrumented",
+        "@fuel_correspondence_Part1.Inductives.length.fuel_instrumented",
+        "@fuel_irrelevance_Part1.Inductives.append.fuel_instrumented",
+        "@fuel_irrelevance_Part1.Inductives.length.fuel_instrumented",
+        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_4",
+        "binder_x_e09860b75d8922ab497a3e5bc9347578_3",
+        "binder_x_e09860b75d8922ab497a3e5bc9347578_5",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "constructor_distinct_Prims.Cons", "data_elim_Prims.Cons",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
+        "equation_Part1.Lemmas.snoc", "equation_Prims.nat",
+        "equation_with_fuel_Part1.Inductives.append.fuel_instrumented",
+        "equation_with_fuel_Part1.Inductives.length.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list", "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_2bfe218824093cb0229eca7dd5b8616e",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "subterm_ordering_Prims.Cons",
+        "token_correspondence_Part1.Inductives.length.fuel_instrumented",
+        "typing_Part1.Lemmas.snoc"
+      ],
       0,
-      "96973aa2b08ee1849f5df73e20a7a120"
+      "e29f2b6e38875d53381256df95e9b956"
     ],
     [
       "Part1.Lemmas.snoc_injective",
@@ -358,7 +414,7 @@
         "typing_Part1.Lemmas.snoc"
       ],
       0,
-      "13bd28f31ba5f4013d55e3b6ed6ac379"
+      "0c25fd54d1bbfccaf51f0d5ef7e94767"
     ],
     [
       "Part1.Lemmas.rev_injective",
@@ -396,7 +452,7 @@
         "typing_Part1.Lemmas.reverse"
       ],
       0,
-      "1725524eb136dee70d2c80ca99e1417f"
+      "e9981009a80f70c55cdf6879a01a8675"
     ],
     [
       "Part1.Lemmas.rev_injective_alt",
@@ -405,7 +461,7 @@
       1,
       [ "@query" ],
       0,
-      "c4a249d8299068620e80e8d3a6a770ec"
+      "d2e669ff67051c93e58f41ff15d572a0"
     ],
     [
       "Part1.Lemmas.map",
@@ -420,7 +476,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "8feff3f639330addf2f624bd58e289ed"
+      "3f073bba7af05655d3ff97b05372c95a"
     ],
     [
       "Part1.Lemmas.find",
@@ -440,7 +496,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1b882564d1a48957b9afc6d6fdf54d8c"
+      "de65beb78c70df28f322ae391a93bfe0"
     ],
     [
       "Part1.Lemmas.find_alt",
@@ -455,7 +511,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "000bff0b0021e0a5acd604a0f0968918"
+      "e1d189ae9f308d3972076fd6d7d4a0ce"
     ],
     [
       "Part1.Lemmas.find_alt_ok",
@@ -486,7 +542,7 @@
         "subterm_ordering_Prims.Cons", "typing_Part1.Lemmas.find_alt"
       ],
       0,
-      "45fbf6d30e404fb3a5d2482fe304212d"
+      "d4f9d4290237575c410e19eff714af27"
     ],
     [
       "Part1.Lemmas.fold_left",
@@ -501,16 +557,34 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3120b3b05f44739581e55deb7fc0d0ea"
+      "6bb65264ba2d12979a59d60c4a8de633"
     ],
     [
       "Part1.Lemmas.append_assoc",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Part1.Inductives.append.fuel_instrumented",
+        "@fuel_irrelevance_Part1.Inductives.append.fuel_instrumented",
+        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_4",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_with_fuel_Part1.Inductives.append.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_01ccdeebf7ed5468582bf0b1967db510",
+        "subterm_ordering_Prims.Cons", "typing_Part1.Inductives.append"
+      ],
       0,
-      "976d11ef68db9996c2a9968fe139483f"
+      "7cd513234f9742f769bb7e5cf2f62a0f"
     ],
     [
       "Part1.Lemmas.append_assoc",
@@ -537,7 +611,7 @@
         "subterm_ordering_Prims.Cons", "typing_Part1.Inductives.append"
       ],
       0,
-      "01adaa60192e1b043177b89f9d0e0646"
+      "7526c20111a8afa1bd48a57b2ad3c862"
     ],
     [
       "Part1.Lemmas.fold_left_Cons_is_rev_stronger",
@@ -572,7 +646,7 @@
         "typing_tok_Prims.Cons@tok"
       ],
       0,
-      "4e5a903215eec73e274a258e4acb6735"
+      "5266747cc7d66f4f9edd2fddcd84c023"
     ],
     [
       "Part1.Lemmas.append_right_unit",
@@ -597,7 +671,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0db6e598196fb421417b9b2197ecb075"
+      "b558eaf790c09f7ebac0de69c8f420a7"
     ],
     [
       "Part1.Lemmas.fold_left_Cons_is_rev",
@@ -606,7 +680,7 @@
       1,
       [ "@query" ],
       0,
-      "dd16417e7d7ad4771ecb11efc5e62432"
+      "485ef9f05f68eda5212585b91473dde4"
     ],
     [
       "Part1.Lemmas.rev_aux",
@@ -621,7 +695,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "944e729a183bd06bdd38cd0f1d12112b"
+      "e0c39085c40506aebaa3e8b68b765b12"
     ],
     [
       "Part1.Lemmas.rev_is_ok_aux",
@@ -653,7 +727,7 @@
         "subterm_ordering_Prims.Cons", "typing_Part1.Lemmas.reverse"
       ],
       0,
-      "4c7b6c2d743d8d259c4da1e78fce3ec6"
+      "0846b787e86788e314e1a3103eaae3fe"
     ],
     [
       "Part1.Lemmas.rev_is_ok",
@@ -662,55 +736,41 @@
       1,
       [ "@query", "equation_Part1.Lemmas.rev" ],
       0,
-      "9e9d70500fb6463a6cd095e0b0d6972c"
+      "9ed330498a641203bf10878fba392f62"
     ],
     [
-      "Part1.Lemmas.fib_aux",
+      "Part1.Lemmas.fib",
       1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_2", "equation_Prims.nat",
         "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "355277c22e5fbbb9d831524b0e6e36dd"
+      "45f441dc59d70f0237c6daf7b433cc99"
     ],
     [
       "Part1.Lemmas.fib_is_ok_aux",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_b653907b4915737c74f20d3e463995be"
-      ],
-      0,
-      "661074cb76f737f3da729a2287b45dbf"
-    ],
-    [
-      "Part1.Lemmas.fib_is_ok_aux",
-      2,
       2,
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Part1.Lemmas.fib_aux.fuel_instrumented",
+        "@fuel_correspondence_Part1.Lemmas.fib.fuel_instrumented",
         "@fuel_correspondence_Part1.Lemmas.fibonacci.fuel_instrumented",
-        "@fuel_irrelevance_Part1.Lemmas.fib_aux.fuel_instrumented",
+        "@fuel_irrelevance_Part1.Lemmas.fib.fuel_instrumented",
         "@fuel_irrelevance_Part1.Lemmas.fibonacci.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
-        "equation_with_fuel_Part1.Lemmas.fib_aux.fuel_instrumented",
+        "equation_with_fuel_Part1.Lemmas.fib.fuel_instrumented",
         "equation_with_fuel_Part1.Lemmas.fibonacci.fuel_instrumented",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Addition",
@@ -722,17 +782,32 @@
         "typing_Part1.Lemmas.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-      "c4d4ff0d9083762ad409f867059c014d"
+      "3955b5d06845b287e60ce6436442a647"
     ],
     [
-      "Part1.Lemmas.fib_is_ok",
+      "Part1.Lemmas.fib_is_ok_aux",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_fcf9bc93148e2006d0c8c316f0330267"
+      ],
+      0,
+      "d653c52b0ac4a14ab6f643c6301f17ec"
+    ],
+    [
+      "Part1.Lemmas.fib_tail_is_ok",
       1,
       2,
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Part1.Lemmas.fibonacci.fuel_instrumented",
-        "@query", "equation_Part1.Lemmas.fib", "equation_Prims.nat",
+        "@query", "equation_Part1.Lemmas.fib_tail", "equation_Prims.nat",
         "equation_with_fuel_Part1.Lemmas.fibonacci.fuel_instrumented",
         "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_LessThanOrEqual",
@@ -741,7 +816,7 @@
         "typing_Part1.Lemmas.fibonacci"
       ],
       0,
-      "0e2901a7f4955be99fbb4e03b807ab12"
+      "7627ae2af4896ddb7b6715a9f744e303"
     ]
   ]
 ]

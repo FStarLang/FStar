@@ -28,6 +28,7 @@ open FStar.Ident
 open FStar.Const
 open FStar.Pprint
 open FStar.Compiler.Range
+open FStar.Class.Show
 
 module C = FStar.Parser.Const
 module BU = FStar.Compiler.Util
@@ -35,7 +36,7 @@ module BU = FStar.Compiler.Util
 
 
 (* !!! SIDE EFFECT WARNING !!! *)
-(* There is 1 uses of global side-effect in the printer for : *)
+(* There is ONE use of global side-effect in the printer for : *)
 (* - Printing the comments [comment_stack] *)
 
 let maybe_unthunk t =
@@ -74,15 +75,11 @@ let rec all (f: 'a -> bool) (l: list 'a): bool =
   | [] -> true
   | x :: xs -> if f x then all f xs else false
 
-let all1_explicit (args:list (term*imp)) : bool =
+let all1_explicit (args:list (term&imp)) : bool =
     not (List.isEmpty args) &&
     BU.for_all (function
                 | (_, Nothing) -> true
                 | _ -> false) args
-
-(* Tuples which come from a resugared AST, via term_to_document are already flattened *)
-(* This reference is set to false in term_to_document and checked in p_tmNoEqWith'    *)
-let unfold_tuples = BU.mk_ref true
 
 // abbrev
 let str s = doc_of_string s
@@ -159,8 +156,30 @@ let brackets_with_nesting contents =
 let soft_brackets_with_nesting contents =
   soft_surround 2 1 lbracket contents rbracket
 
+let soft_lens_access_with_nesting contents =
+  soft_surround 2 1 (str "(|") contents (str "|)")
+
+let soft_brackets_lens_access_with_nesting contents =
+  soft_surround 2 1 (str "[|") contents (str "|]")
+
 let soft_begin_end_with_nesting contents =
   soft_surround 2 1 (str "begin") contents (str "end")
+
+let tc_arg contents =
+  soft_surround 2 1 (str "{|") contents (str "|}")
+
+let is_tc_binder (b:binder) : bool =
+  match b.aqual with
+  | Some TypeClassArg -> true
+  | _ -> false
+
+let is_meta_qualifier aq =
+  match aq with
+  | Some (Meta _) -> true
+  | _ -> false
+
+let is_joinable_binder (b:binder) : bool =
+  not (is_tc_binder b) && not (is_meta_qualifier b.aqual)
 
 let separate_map_last sep f es =
   let l = List.length es in
@@ -218,25 +237,9 @@ let matches_var t x =
 let is_tuple_constructor = C.is_tuple_data_lid'
 let is_dtuple_constructor = C.is_dtuple_data_lid'
 
-let is_list_structure cons_lid nil_lid =
-  let rec aux e = match e.tm with
-    | Construct (lid, []) -> lid_equals lid nil_lid
-    | Construct (lid, [ _ ; e2, _]) -> lid_equals lid cons_lid && aux e2
-    | _ -> false
-  in aux
-
-let is_list = is_list_structure C.cons_lid C.nil_lid
-
-(* [extract_from_list e] assumes that [is_list_structure xxx yyy e] holds *)
-(* and returns the list of terms contained in the list *)
-let rec extract_from_list e = match e.tm with
-  | Construct (_, []) -> []
-  | Construct (_, [e1,Nothing ; e2, Nothing]) -> e1 :: extract_from_list e2
-  | _ -> failwith (Util.format1 "Not a list %s" (term_to_string e))
-
 let is_array e = match e.tm with
     (* TODO check that there is no implicit parameters *)
-    | App ({tm=Var lid}, l, Nothing) -> lid_equals lid C.array_of_list_lid && is_list l
+    | App ({tm=Var lid}, l, Nothing) -> lid_equals lid C.array_of_list_lid && ListLiteral? l.tm
     | _ -> false
 
 let rec is_ref_set e = match e.tm with
@@ -259,7 +262,7 @@ let is_general_application e =
   not (is_array e || is_ref_set e)
 
 let is_general_construction e =
-  not (is_list e)
+  not (ListLiteral? e.tm)
 
 let is_general_prefix_op op =
   let op_starting_char =  char_at (Ident.string_of_id op) 0 in
@@ -284,18 +287,26 @@ type associativity =
     | Right
     | NonAssoc
 
-(* A token is either a character c representing any string beginning with c or a complete string *)
-type token = either FStar.Char.char string
+(* A token is either a character c representing any string beginning with c, a complete string or a unicode operator *)
+type token =
+    | StartsWith: Char.char -> token
+    | Exact     : string    -> token
+    | UnicodeOperator
 
-type associativity_level = associativity * list token
+type associativity_level = associativity & list token
 
 let token_to_string = function
-    | Inl c -> string_of_char c ^ ".*"
-    | Inr s -> s
+    | StartsWith      c -> string_of_char c ^ ".*"
+    | Exact           s -> s
+    | UnicodeOperator -> "<unicode-op>"
+
+let is_non_latin_char (s:Char.char): bool
+    = int_of_char s > 0x024f
 
 let matches_token (s:string) = function
-    | Inl c -> FStar.String.get s 0 = c
-    | Inr s' -> s = s'
+    | StartsWith c  -> FStar.Compiler.String.get s 0 = c
+    | Exact      s' -> s = s'
+    | UnicodeOperator -> is_non_latin_char (FStar.Compiler.String.get s 0)
 
 let matches_level s (assoc_levels, tokens) =
     List.tryFind (matches_token s) tokens <> None
@@ -303,21 +314,21 @@ let matches_level s (assoc_levels, tokens) =
 // GM 05/10/18, TODO: This still needs to be heavily annotated with the new unifier:
 
 (* Precedence and associativity levels, taken from ../src/parse.mly *)
-let opinfix4 : associativity_level = Right, [Inr "**"]
+let opinfix4 : associativity_level = Right, [Exact "**"; UnicodeOperator]
 // level backtick won't be used here
-let opinfix3 : associativity_level = Left,  [Inl '*' ; Inl '/' ; Inl '%']
-let opinfix2 : associativity_level = Left,  [Inl '+' ; Inl '-' ]
-let minus_lvl : associativity_level = Left, [Inr "-"] // Sublevel of opinfix2, not a level on its own !!!
-let opinfix1 : associativity_level = Right, [Inl '@' ; Inl '^']
-let pipe_right : associativity_level = Left,  [Inr "|>"]
-let opinfix0d : associativity_level = Left,  [Inl '$']
-let opinfix0c : associativity_level = Left,  [Inl '=' ; Inl '<' ; Inl '>']
-let equal : associativity_level = Left, [Inr "="] // Sublevel of opinfix0c, not a level on its own !!!
-let opinfix0b : associativity_level = Left,  [Inl '&']
-let opinfix0a : associativity_level = Left,  [Inl '|']
-let colon_equals : associativity_level = NonAssoc, [Inr ":="]
-let amp : associativity_level = Right, [Inr "&"]
-let colon_colon : associativity_level = Right, [Inr "::"]
+let opinfix3 : associativity_level = Left,  [StartsWith '*' ; StartsWith '/' ; StartsWith '%']
+let opinfix2 : associativity_level = Left,  [StartsWith '+' ; StartsWith '-' ]
+let minus_lvl : associativity_level = Left, [Exact "-"] // Sublevel of opinfix2, not a level on its own !!!
+let opinfix1 : associativity_level = Right, [StartsWith '@' ; StartsWith '^']
+let pipe_right : associativity_level = Left,  [Exact "|>"]
+let opinfix0d : associativity_level = Left,  [StartsWith '$']
+let opinfix0c : associativity_level = Left,  [StartsWith '=' ; StartsWith '<' ; StartsWith '>']
+let equal : associativity_level = Left, [Exact "="] // Sublevel of opinfix0c, not a level on its own !!!
+let opinfix0b : associativity_level = Left,  [StartsWith '&']
+let opinfix0a : associativity_level = Left,  [StartsWith '|']
+let colon_equals : associativity_level = NonAssoc, [Exact ":="]
+let amp : associativity_level = Right, [Exact "&"]
+let colon_colon : associativity_level = Right, [Exact "::"]
 
 (* The latter the element, the tighter it binds *)
 let level_associativity_spec : list associativity_level =
@@ -344,7 +355,7 @@ let level_table =
   in
   List.mapi (fun i (assoc, tokens) -> (levels_from_associativity i assoc, tokens)) level_associativity_spec
 
-let assign_levels (token_associativity_spec : list associativity_level) (s:string) : int * int * int =
+let assign_levels (token_associativity_spec : list associativity_level) (s:string) : int & int & int =
     match List.tryFind (matches_level s) level_table with
         | Some (assoc_levels, _) -> assoc_levels
         | _ -> failwith ("Unrecognized operator " ^ s)
@@ -358,18 +369,18 @@ let max_level l =
   in List.fold_left find_level_and_max 0 l
 
 let levels op =
-  (* See comment in parse.fsy: tuples MUST be parenthesized because [t * u * v]
-   * is not the same thing as [(t * u) * v]. So, we are conservative and make an
-   * exception for the "*" operator and treat it as, really, non-associative. If
+  (* See comment in parse.fsy: tuples MUST be parenthesized because [t & u & v]
+   * is not the same thing as [(t & u) & v]. So, we are conservative and make an
+   * exception for the "&" operator and treat it as, really, non-associative. If
    * the AST comes from the user, then the Paren node was there already and no
    * extra parentheses are added. If the AST comes from some client inside of
    * the F* compiler that doesn't know about this quirk, then it forces it to be
-   * parenthesized properly. In case the user overrode * to be a truly
-   * associative operator (e.g. multiplication) then we're just being a little
+   * parenthesized properly. In case the user overrode & to be a truly
+   * associative operator then we're just being a little
    * conservative because, unlike ToSyntax.fs, we don't have lexical context to
    * help us determine which operator this is, really. *)
   let left, mine, right = assign_levels level_associativity_spec op in
-  if op = "*" then
+  if op = "&" then
     left - 1, mine, right
   else
     left, mine, right
@@ -388,9 +399,9 @@ let handleable_args_length (op:ident) =
   if is_general_prefix_op op || List.mem op_s [ "-" ; "~" ] then 1
   else if (is_operatorInfix0ad12 op ||
     is_operatorInfix34 op ||
-    List.mem op_s ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"])
+    List.mem op_s ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"; ".(||)"; ".[||]"])
   then 2
-  else if (List.mem op_s [".()<-" ; ".[]<-"]) then 3
+  else if (List.mem op_s [".()<-" ; ".[]<-"; ".(||)<-"; ".[||]<-"]) then 3
   else 0
 
 let handleable_op op args =
@@ -400,8 +411,8 @@ let handleable_op op args =
   | 2 ->
     is_operatorInfix0ad12 op ||
     is_operatorInfix34 op ||
-    List.mem (Ident.string_of_id op) ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"]
-  | 3 -> List.mem (Ident.string_of_id op) [".()<-" ; ".[]<-"]
+    List.mem (Ident.string_of_id op) ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"; ".(||)"; ".[||]"]
+  | 3 -> List.mem (Ident.string_of_id op) [".()<-" ; ".[]<-"; ".(||)<-"; ".[||]<-"]
   | _ -> false
 
 
@@ -420,8 +431,8 @@ let handleable_op op args =
 // The third parameter in Binders controls whether each binder is
 // paranthesised
 type annotation_style =
-  | Binders of int * int * bool // val f (x1:t1) ... (xn:tn) : C
-  | Arrows of int * int //  val f : x1:t1 -> ... -> xn:tn -> C
+  | Binders of int & int & bool // val f (x1:t1) ... (xn:tn) : C
+  | Arrows of int & int //  val f : x1:t1 -> ... -> xn:tn -> C
 
 // decide whether a type signature can be printed in the format
 //   val f (x1:t1) ... (xn:tn) : C
@@ -478,7 +489,7 @@ let cat_with_colon x y = x ^^ colon ^/^ y
 (* that all printed AST nodes that could eventually contain a comment are printed in the *)
 (* sequential order of the document. *)
 
-let comment_stack : ref (list (string*range))= BU.mk_ref []
+let comment_stack : ref (list (string&range))= BU.mk_ref []
 
 (* some meta-information that informs spacing and the placement of comments around a declaration *)
 type decl_meta =
@@ -642,6 +653,58 @@ let separate_map_with_comments_kw prefix sep f xs extract_meta =
   in
   snd (List.fold_left fold_fun init xs)
 
+let p_lidentOrOperator' l s_l p_l = 
+  let lstr = s_l l in 
+  if lstr `starts_with` "op_" then
+    match AST.string_to_op lstr with
+    | None -> 
+      str "( " ^^  p_l l ^^ str " )"
+    | Some (s, _) -> 
+      str "( " ^^ str s ^^ str " )"
+  else
+    p_l l
+
+(* ****************************************************************************)
+(*                                                                            *)
+(*                Printing identifiers and module paths                       *)
+(*                                                                            *)
+(* ****************************************************************************)
+
+let string_of_id_or_underscore lid =
+  if starts_with (string_of_id lid) reserved_prefix && not (Options.print_real_names ())
+  then underscore
+  else str (string_of_id lid)
+
+let text_of_lid_or_underscore lid =
+  if starts_with (string_of_id (ident_of_lid lid)) reserved_prefix && not (Options.print_real_names ())
+  then underscore
+  else str (string_of_lid lid)
+
+let p_qlident lid =
+  text_of_lid_or_underscore lid
+
+let p_quident lid =
+  text_of_lid_or_underscore lid
+
+let p_ident lid =
+  string_of_id_or_underscore lid
+
+let p_lident lid =
+  string_of_id_or_underscore lid
+
+let p_uident lid =
+  string_of_id_or_underscore lid
+
+let p_tvar lid =
+  string_of_id_or_underscore lid
+
+let p_qlidentOrOperator lid =
+  p_lidentOrOperator' lid Ident.string_of_lid p_qlident
+  
+let p_lidentOrOperator lid =
+  p_lidentOrOperator' lid Ident.string_of_id p_lident
+
+
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -659,25 +722,25 @@ let rec p_decl (d: decl): document =
         p_qualifiers d.quals
     | _ -> p_qualifiers d.quals
   in
-  p_attributes d.attrs ^^
+  p_attributes true d.attrs ^^
   qualifiers ^^
   p_rawDecl d
 
-and p_attributes attrs =
+and p_attributes isTopLevel attrs =
     match attrs with
     | [] -> empty
-    | _ -> lbracket ^^ str "@@ " ^^
-             align ((flow (str "; ") (List.map (p_noSeqTermAndComment false false) attrs)) ^^ rbracket) ^^ hardline
+    | _ -> lbracket ^^ str (if isTopLevel then "@@ " else "@@@ ") ^^
+             align ((flow (str "; ") (List.map (p_noSeqTermAndComment false false) attrs)) ^^ rbracket) ^^ (if isTopLevel then hardline else empty)
 
 and p_justSig d = match d.d with
   | Val (lid, t) ->
-      (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^^ p_typ false false t
+      (str "val" ^^ space ^^ p_lidentOrOperator lid ^^ space ^^ colon) ^^ p_typ false false t
   | TopLevelLet (_, lbs) ->
       separate_map hardline (fun lb -> group (p_letlhs (str "let") lb false)) lbs
   | _ ->
       empty
 
-and p_list f sep l =
+and p_list #t (f: t -> _) sep l =
     let rec p_list' = function
         | [] -> empty
         | [x] -> f x
@@ -685,11 +748,22 @@ and p_list f sep l =
     in
     str "[" ^^ p_list' l ^^ str "]"
 
+and p_restriction
+  = let open FStar.Syntax.Syntax in
+    function | Unrestricted -> empty
+             | AllowList ids ->
+                space
+             ^^ lbrace
+             ^^ p_list (fun (id, renamed) ->
+                   p_ident id ^/^ optional p_ident renamed
+                ) (str ", ") ids
+             ^^ rbrace
+
 and p_rawDecl d = match d.d with
-  | Open uid ->
-    group (str "open" ^/^ p_quident uid)
-  | Include uid ->
-    group (str "include" ^/^ p_quident uid)
+  | Open (uid, r) ->
+    group (str "open" ^/^ p_quident uid ^/^ p_restriction r)
+  | Include (uid, r) ->
+    group (str "include" ^/^ p_quident uid ^/^ p_restriction r)
   | Friend uid ->
     group (str "friend" ^/^ p_quident uid)
   | ModuleAbbrev (uid1, uid2) ->
@@ -711,7 +785,7 @@ and p_rawDecl d = match d.d with
           has_qs = false;
           has_attrs = false; })
   | Val(lid, t) ->
-    group <| str "val" ^^ space ^^ p_lident lid ^^ (sig_as_binders_if_possible t false)
+    group <| str "val" ^^ space ^^ p_lidentOrOperator lid ^^ (sig_as_binders_if_possible t false)
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
   | Assume(id, t) ->
     let decl_keyword =
@@ -736,10 +810,20 @@ and p_rawDecl d = match d.d with
     p_pragma p
   | Tycon(true, _, _) ->
     failwith "Effect abbreviation is expected to be defined by an abbreviation"
-  | Splice (ids, t) ->
-    str "%splice" ^^ p_list p_uident (str ";") ids ^^ space ^^ p_term false false t
+  | Splice (is_typed, ids, t) ->
+    str "%splice" ^^
+    (if is_typed then str "_t" else empty) ^^
+    p_list p_uident (str ";") ids ^^ space ^^ p_term false false t
+  | DeclSyntaxExtension (tag, blob, blob_rng, start_rng) ->
+    // NB: using ^^ since the blob also contains the newlines
+    doc_of_string ("```"^tag) ^^
+    arbitrary_string blob ^^
+    doc_of_string "```"
+  | DeclToBeDesugared tbs ->
+    arbitrary_string <| tbs.to_string tbs.blob
 
 and p_pragma = function
+  | ShowOptions -> str "#show-options"
   | SetOptions s -> str "#set-options" ^^ space ^^ dquotes (str s)
   | ResetOptions s_opt -> str "#reset-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt
   | PushOptions s_opt -> str "#push-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt
@@ -769,22 +853,19 @@ and p_typeDecl pre = function
   | TyconAbbrev (lid, bs, typ_opt, t) ->
     let comm, doc = p_typ_sep false false t in
     comm, p_typeDeclPrefix pre true lid bs typ_opt, doc, jump2
-  | TyconRecord (lid, bs, typ_opt, record_field_decls) ->
-    let p_recordField (ps: bool) (lid, aq, attrs, t) =
-      let comm, field =
-        with_comment_sep (p_recordFieldDecl ps) (lid, aq, attrs, t)
-                         (extend_to_end_of_line t.range) in
-      let sep = if ps then semi else empty in
-      inline_comment_or_above comm field sep
-    in
-    let p_fields = braces_with_nesting (
-        separate_map_last hardline p_recordField record_field_decls)
-    in
-    empty, p_typeDeclPrefix pre true lid bs typ_opt, p_fields, (fun d -> space ^^ d)
+  | TyconRecord (lid, bs, typ_opt, attrs, record_field_decls) ->
+      empty
+    , p_typeDeclPrefix pre true lid bs typ_opt
+    , p_attributes false attrs ^^ p_typeDeclRecord record_field_decls
+    , (fun d -> space ^^ d)
   | TyconVariant (lid, bs, typ_opt, ct_decls) ->
-    let p_constructorBranchAndComments (uid, t_opt, use_of) =
-        let range = extend_to_end_of_line (dflt (range_of_id uid) (map_opt t_opt (fun t -> t.range))) in
-        let comm, ctor = with_comment_sep p_constructorBranch (uid, t_opt, use_of) range in
+    let p_constructorBranchAndComments (uid, payload, attrs) =
+        let range = extend_to_end_of_line (
+          dflt (range_of_id uid) 
+               (bind_opt payload 
+                   (function | VpOfNotation t | VpArbitrary t -> Some t.range
+                             | VpRecord (record, _)           -> None))) in
+        let comm, ctor = with_comment_sep p_constructorBranch (uid, payload, attrs) range in
         inline_comment_or_above comm ctor empty
     in
     (* Beware of side effects with comments printing *)
@@ -792,6 +873,15 @@ and p_typeDecl pre = function
         separate_map hardline p_constructorBranchAndComments ct_decls
     in
     empty, p_typeDeclPrefix pre true lid bs typ_opt, datacon_doc, jump2
+and p_typeDeclRecord (fields: tycon_record): document =
+    let p_recordField (ps: bool) (lid, aq, attrs, t) =
+      let comm, field =
+        with_comment_sep (p_recordFieldDecl ps) (lid, aq, attrs, t)
+                         (extend_to_end_of_line t.range) in
+      let sep = if ps then semi else empty in
+      inline_comment_or_above comm field sep
+    in
+    separate_map_last hardline p_recordField fields |> braces_with_nesting
 
 and p_typeDeclPrefix kw eq lid bs typ_opt =
   let with_kw cont =
@@ -813,13 +903,21 @@ and p_typeDeclPrefix kw eq lid bs typ_opt =
     with_kw (fun n -> prefix2 (prefix2 n (flow break1 binders)) typ)
 
 and p_recordFieldDecl ps (lid, aq, attrs, t) =
-  group (optional p_aqual aq ^^ p_attributes attrs ^^ p_lident lid ^^ colon ^^ p_typ ps false t)
+  group (optional p_aqual aq ^^
+         p_attributes false attrs ^^
+         p_lidentOrOperator lid ^^
+         colon ^^
+         p_typ ps false t)
 
-and p_constructorBranch (uid, t_opt, use_of) =
-  let sep = if use_of then str "of" else colon in
-  let uid_doc = group (bar ^^ space ^^ p_uident uid) in
-  default_or_map uid_doc (fun t -> (group (uid_doc ^^ space ^^ sep ^^ space ^^ p_typ false false t))) t_opt
-
+and p_constructorBranch (uid, variant, attrs) =
+  let h isOf t = (if isOf then str "of" else colon) ^^ space ^^ p_typ false false t
+  in group (bar ^^ space ^^ p_attributes false attrs ^^ p_uident uid)
+  ^^ default_or_map empty
+        (fun payload -> space ^^ group
+           ( match payload with
+           | VpOfNotation t -> h true t | VpArbitrary t -> h false t
+           | VpRecord (r, t) -> p_typeDeclRecord r ^^ default_or_map empty (h false) t
+           )) variant
 and p_letlhs kw (pat, _) inner_let =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
   let pat, ascr =
@@ -842,12 +940,12 @@ and p_letlhs kw (pat, _) inner_let =
         // VD: should we indent inner lets less?
         if inner_let then
           let bs, style = pats_as_binders_if_possible pats in
-          bs @ [ascr_doc], style
+          bs, style
         else
           let bs, style = pats_as_binders_if_possible pats in
-          bs @ [ascr_doc], style
+          bs, style
       in
-      group <| kw ^^ space ^^ p_lident lid ^^ (format_sig style terms true true)
+      group <| kw ^^ space ^^ p_lidentOrOperator lid ^^ (format_sig style terms ascr_doc true true)
   | _ ->
       (* doesn't have binders *)
       let ascr_doc =
@@ -898,7 +996,7 @@ and p_effectDecl ps d = match d.d with
       prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm ps false e)
   | _ ->
       failwith (Util.format1 "Not a declaration of an effect member... or at least I hope so : %s"
-                              (decl_to_string d))
+                              (show d))
 
 and p_subEffect lift =
   let lift_op_doc =
@@ -953,6 +1051,8 @@ and p_letqualifier = function
   | Rec -> space ^^ str "rec"
   | NoLetQualifier -> empty
 
+(* This prints both arg qualifiers and binder qualifiers. Note that Meta and
+Typeclass do not make sense for arg qualifiers. *)
 and p_aqual = function
   | Implicit -> str "#"
   | Equality -> str "$"
@@ -963,6 +1063,7 @@ and p_aqual = function
       | _ -> mk_term (App (t, unit_const t.range, Nothing)) t.range Expr
     in
     str "#[" ^^ p_term false false t ^^ str "]" ^^ break1
+  | TypeClassArg -> empty (* This is handled externally *)
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1004,6 +1105,14 @@ and p_atomicPattern p = match p.pat with
       soft_parens_with_nesting (p_refinement aqual attrs (p_ident lid) t phi)
     | PatWild (aqual, attrs), Refine({b = NoName t}, phi) ->
       soft_parens_with_nesting (p_refinement aqual attrs underscore t phi)
+    | PatVar (_, aqual, _), _
+    | PatWild (aqual, _), _ ->
+        let wrap =
+          if aqual = Some TypeClassArg
+          then tc_arg
+          else soft_parens_with_nesting
+        in
+        wrap (p_tuplePattern pat ^^ colon ^/^ p_tmEqNoRefinement t)
     | _ ->
         (* TODO implement p_simpleArrow *)
         soft_parens_with_nesting (p_tuplePattern pat ^^ colon ^/^ p_tmEqNoRefinement t)
@@ -1022,11 +1131,12 @@ and p_atomicPattern p = match p.pat with
   | PatOp op ->
     lparen ^^ space ^^ str (Ident.string_of_id op) ^^ space ^^ rparen
   | PatWild (aqual, attrs) ->
-    optional p_aqual aqual ^^ p_attributes attrs ^^ underscore
+    optional p_aqual aqual ^^ p_attributes false attrs ^^ underscore
   | PatConst c ->
     p_constant c
+  | PatVQuote e -> group (str "`%" ^^ p_noSeqTermAndComment false false e)
   | PatVar (lid, aqual, attrs) ->
-    optional p_aqual aqual ^^ p_attributes attrs ^^ p_lident lid
+    optional p_aqual aqual ^^ p_attributes false attrs ^^ p_lident lid
   | PatName uid ->
       p_quident uid
   | PatOr _ -> failwith "Inner or pattern !"
@@ -1041,22 +1151,28 @@ and is_typ_tuple e = match e.tm with
   | Op(id, _) when string_of_id id = "*" -> true
   | _ -> false
 
-and is_meta_qualifier aq =
-  match aq with
-  | Some (Meta _) -> true
-  | _ -> false
-
 and p_binder is_atomic b =
-  let b', t', catf = p_binder' is_atomic b in
-  match t' with
-  | Some typ -> catf b' typ
-  | None -> b'
+  let is_tc = is_tc_binder b in
+  let b', t' = p_binder' false (is_atomic && not is_tc) b in
+  let d =
+    match t' with
+    | Some (typ, catf) -> catf b' typ
+    | None -> b'
+  in
+  if is_tc
+  then tc_arg d
+  else d
 
 (* is_atomic is true if the binder must be parsed atomically *)
-and p_binder' (is_atomic: bool) (b: binder): document * option document * catf =
+// Returns:
+//  1- a doc for binder
+//  2- optionally: a doc for the type annotation (if any), and a function to concat it to the binder
+// When the binder is nameless, the at
+// This does NOT handle typeclass arguments. The wrapping is done from the outside.
+and p_binder' (no_pars: bool) (is_atomic: bool) (b: binder): document & option (document & catf) =
   match b.b with
-  | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid, None, cat_with_colon
-  | TVariable lid -> p_lident lid, None, cat_with_colon
+  | Variable lid -> optional p_aqual b.aqual ^^ p_attributes false b.battributes ^^ p_lident lid, None
+  | TVariable lid -> p_attributes false b.battributes ^^ p_lident lid, None
   | Annotated (lid, t) ->
       let b', t' =
         match t.tm with
@@ -1068,26 +1184,26 @@ and p_binder' (is_atomic: bool) (b: binder): document * option document * catf =
           else
             p_tmFormula t
           in
-          optional p_aqual b.aqual ^^ p_lident lid, t'
+          optional p_aqual b.aqual ^^ p_attributes false b.battributes ^^ p_lident lid, t'
         in
         let catf =
-          if is_atomic || (is_meta_qualifier b.aqual) then
+          if is_atomic || (is_meta_qualifier b.aqual && not no_pars) then
             (fun x y -> group (lparen ^^ (cat_with_colon x y) ^^ rparen))
           else
             (fun x y -> group (cat_with_colon x y))
         in
-        b', Some t', catf
+        b', Some (t', catf)
   | TAnnotated _ -> failwith "Is this still used ?"
   | NoName t ->
     begin match t.tm with
       | Refine ({b = NoName t}, phi) ->
         let b', t' = p_refinement' b.aqual b.battributes underscore t phi in
-        b', Some t', cat_with_colon
+        b', Some (t', cat_with_colon)
       | _ ->
-        if is_atomic
-        then p_atomicTerm t, None, cat_with_colon (* t is a type but it might need some parenthesis *)
-        else p_appTerm t, None, cat_with_colon (* This choice seems valid (used in p_tmNoEq') *)
-    end
+        let pref = optional p_aqual b.aqual ^^ p_attributes false b.battributes in
+        let p_Tm = if is_atomic then p_atomicTerm else p_appTerm in
+        pref ^^ p_Tm t, None
+    end 
 
 and p_refinement aqual_opt attrs binder t phi =
   let b, typ = p_refinement' aqual_opt attrs binder t phi in
@@ -1107,7 +1223,7 @@ and p_refinement' aqual_opt attrs binder t phi =
    * If t can be displayed on a single line, tightly surround it with braces,
    * otherwise pad with a space. *)
   let jump_break = if is_t_atomic then 0 else 1 in
-  (optional p_aqual aqual_opt ^^ p_attributes attrs ^^ binder),
+  (optional p_aqual aqual_opt ^^ p_attributes false attrs ^^ binder),
     (p_appTerm t ^^
       (jump 2 jump_break (group ((ifflat
         (soft_braces_with_nesting_tight phi) (soft_braces_with_nesting phi))))))
@@ -1121,39 +1237,6 @@ and p_binders (is_atomic: bool) (bs: list binder): document = separate_or_flow b
 and p_binders_sep (bs: list binder): document = separate_map space (fun x -> x) (p_binders_list true bs)
 
 
-(* ****************************************************************************)
-(*                                                                            *)
-(*                Printing identifiers and module paths                       *)
-(*                                                                            *)
-(* ****************************************************************************)
-
-and string_of_id_or_underscore lid =
-  if starts_with (string_of_id lid) reserved_prefix && not (Options.print_real_names ())
-  then underscore
-  else str (string_of_id lid)
-
-and text_of_lid_or_underscore lid =
-  if starts_with (string_of_id (ident_of_lid lid)) reserved_prefix && not (Options.print_real_names ())
-  then underscore
-  else str (string_of_lid lid)
-
-and p_qlident lid =
-  text_of_lid_or_underscore lid
-
-and p_quident lid =
-  text_of_lid_or_underscore lid
-
-and p_ident lid =
-  string_of_id_or_underscore lid
-
-and p_lident lid =
-  string_of_id_or_underscore lid
-
-and p_uident lid =
-  string_of_id_or_underscore lid
-
-and p_tvar lid =
-  string_of_id_or_underscore lid
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1235,6 +1318,14 @@ and p_noSeqTerm' ps pb e = match e.tm with
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_brackets_with_nesting (p_term false false e2)
           ^^ space ^^ larrow) ^^ jump2 (p_noSeqTermAndComment ps pb e3))
+  | Op (id, [ e1; e2; e3 ]) when string_of_id id = ".(||)<-" ->
+      group (
+        group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_lens_access_with_nesting (p_term false false e2)
+          ^^ space ^^ larrow) ^^ jump2 (p_noSeqTermAndComment ps pb e3))
+  | Op (id, [ e1; e2; e3 ]) when string_of_id id = ".[||]<-" ->
+      group (
+        group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_brackets_lens_access_with_nesting (p_term false false e2)
+          ^^ space ^^ larrow) ^^ jump2 (p_noSeqTermAndComment ps pb e3))
   | Requires (e, wtf) ->
       assert (wtf = None);
       group (str "requires" ^/^ p_typ ps pb e)
@@ -1250,18 +1341,20 @@ and p_noSeqTerm' ps pb e = match e.tm with
       group (str "decreases" ^/^ p_typ ps pb e)
   | Attributes es ->
       group (str "attributes" ^/^ separate_map break1 p_atomicTerm es)
-  | If (e1, ret_opt, e2, e3) ->
+  | If (e1, op_opt, ret_opt, e2, e3) ->
       (* No need to wrap with parentheses here, since if e1 then e2; e3 really
        * does parse as (if e1 then e2); e3 -- the IF does not swallow
        * semicolons. We forward our caller's [ps] parameter, though, because
        * something in [e2] may swallow. *)
       if is_unit e3
-      then group ((str "if" ^/+^ p_noSeqTermAndComment false false e1) ^/^ (str "then" ^/+^ p_noSeqTermAndComment ps pb e2))
+      then group ((str ("if" ^ (dflt "" (op_opt `map_opt` string_of_id
+                                          `bind_opt` strip_prefix "let")))
+                  ^/+^ p_noSeqTermAndComment false false e1) ^/^ (str "then" ^/+^ p_noSeqTermAndComment ps pb e2))
       else
            let e2_doc =
               match e2.tm with
                   (* Not protecting, since an ELSE follows. *)
-                  | If (_,_, _,e3) when is_unit e3 ->
+                  | If (_, _, _, _,e3) when is_unit e3 ->
                       (* Dangling else *)
                       soft_parens_with_nesting (p_noSeqTermAndComment false false e2)
                   | _ -> p_noSeqTermAndComment false false e2
@@ -1286,14 +1379,16 @@ and p_noSeqTerm' ps pb e = match e.tm with
       paren_if (ps || pb) (
           group (prefix2 (str "try") (p_noSeqTermAndComment false false e) ^/^ str "with" ^/^
               separate_map_last hardline p_patternBranch branches))
-  | Match (e, ret_opt, branches) ->
+  | Match (e, op_opt, ret_opt, branches) ->
+      let match_doc
+        = str ("match" ^ (dflt "" (op_opt `map_opt` string_of_id
+                                          `bind_opt` strip_prefix "let"))) in
       paren_if (ps || pb) (
-
       (match ret_opt with
        | None ->
-        group (surround 2 1 (str "match") (p_noSeqTermAndComment false false e) (str "with"))
+        group (surround 2 1 match_doc (p_noSeqTermAndComment false false e) (str "with"))
        | Some (as_opt, ret, use_eq) ->
-         group (surround 2 1 (str "match")
+         group (surround 2 1 match_doc
                              ((p_noSeqTermAndComment false false e) ^/+^
                               (match as_opt with
                                | None -> empty
@@ -1313,6 +1408,30 @@ and p_noSeqTerm' ps pb e = match e.tm with
         group (surround 2 1 (str "let open") (p_term false pb r) (str "as") ^/^ (p_term false pb rty)
                ^/^ str "in" ^/^ p_term false pb e)
       )
+  | LetOperator(lets, body) ->
+    let p_let (id, pat, e) is_last =
+      let doc_let_or_and = str (string_of_id id) in
+      let doc_pat = p_letlhs doc_let_or_and (pat, e) true in
+      match pat.pat, e.tm with
+      | PatVar (pid, _, _), Name tid
+      | PatVar (pid, _, _), Var tid
+        when string_of_id pid = List.last (path_of_lid tid) ->
+          doc_pat ^/^ (if is_last then str "in" else empty)
+      | _ ->
+        let comm, doc_expr = p_term_sep false false e in
+        let doc_expr = inline_comment_or_above comm doc_expr empty in
+        if is_last then
+          surround 2 1 (flow break1 [doc_pat; equals]) doc_expr (str "in")
+        else
+          hang 2 (flow break1 [doc_pat; equals; doc_expr])
+    in
+    let l = List.length lets in
+    let lets_docs = List.mapi (fun i lb ->
+        group (p_let lb (i = l - 1))
+    ) lets in
+    let lets_doc = group (separate break1 lets_docs) in
+    let r = paren_if ps (group (lets_doc ^^ hardline ^^ p_term false pb body)) in
+    r
   | Let(q, lbs, e) ->
     (* We wish to print let-bindings as follows.
      *
@@ -1323,7 +1442,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
      * in
      * ... *)
     let p_lb q (a, (pat, e)) is_last =
-      let attrs = p_attrs_opt a in
+      let attrs = p_attrs_opt true a in
       let doc_let_or_and = match q with
         | Some Rec -> group (str "let" ^/^ str "rec")
         | Some NoLetQualifier -> str "let"
@@ -1348,9 +1467,6 @@ and p_noSeqTerm' ps pb e = match e.tm with
     let lbs_doc = group (separate break1 lbs_docs) in
     paren_if ps (group (lbs_doc ^^ hardline ^^ p_term false pb e))
 
-  | Abs([{pat=PatVar(x, typ_opt, _)}], {tm=Match(maybe_x, None, branches)}) when matches_var maybe_x x ->
-    paren_if (ps || pb) (
-      group (str "function" ^/^ separate_map_last hardline p_patternBranch branches))
   | Quote (e, Dynamic) ->
     group (str "quote" ^/^ p_noSeqTermAndComment ps pb e)
   | Quote (e, Static) ->
@@ -1458,7 +1574,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
     str "eliminate" ^^ space ^^ p ^^ space ^^ str "/\\" ^^ space ^^ q ^^ hardline ^^
     str "returns" ^^ space ^^ r ^^ hardline ^^
     str "with" ^^ space ^^ xy ^^ space ^^ str "." ^^ space ^^ e
-
+    
   | _ -> p_typ ps pb e
 
 and p_dec_wf ps pb rel e =
@@ -1469,10 +1585,10 @@ and p_calcStep _ (CalcStep (rel, just, next)) =
   group (p_noSeqTermAndComment false false rel ^^ space ^^ lbrace ^^ space ^^ p_noSeqTermAndComment false false just ^^ space ^^ rbrace ^^ hardline
          ^^ p_noSeqTermAndComment false false next ^^ str ";")
 
-and p_attrs_opt = function
+and p_attrs_opt (isTopLevel: bool) = function
   | None -> empty
   | Some terms ->
-    group (str "[@@" ^/^
+    group (str (if isTopLevel then "[@@" else "[@@@") ^/^
            (separate_map (str "; ")
                          (p_noSeqTermAndComment false false)
                          terms) ^/^
@@ -1484,7 +1600,8 @@ and p_typ_sep ps pb e = with_comment_sep (p_typ' ps pb) e e.range
 
 and p_typ' ps pb e = match e.tm with
   | QForall (bs, (_, trigger), e1)
-  | QExists (bs, (_, trigger), e1) ->
+  | QExists (bs, (_, trigger), e1)
+  | QuantOp (_, bs, (_, trigger), e1) ->
       let binders_doc = p_binders true bs in
       let term_doc = p_noSeqTermAndComment ps pb e1 in
       //VD: We could dispense with this pattern matching if we removed trailing whitespace after the fact
@@ -1509,43 +1626,49 @@ and sig_as_binders_if_possible t extra_space =
   else
     group (colon ^^ s ^^ p_typ_top (Arrows (2, 2)) false false t)
 
-and collapse_pats (pats: list (document * document)): list document =
-  let fold_fun (bs: list (list document * document)) (x: document * document) =
-    let b1, t1 = x in
+// Typeclass arguments are not collapsed.
+and collapse_pats (pats: list (document & document & bool & bool)): list document =
+  let fold_fun (bs: list (list document & document & bool & bool)) (x: document & document & bool & bool) =
+    let b1, t1, tc1, j1 = x in
     match bs with
-    | [] -> [([b1], t1)]
+    | [] -> [([b1], t1, tc1, j1)]
     | hd::tl ->
-      let b2s, t2 = hd in
-      if t1 = t2 then
-        (b2s @ [b1], t1) :: tl
+      let b2s, t2, tc2, j2 = hd in
+      if t1 = t2 && j1 && j2 then
+        (b2s @ [b1], t1, false, true) :: tl
       else
-        ([b1], t1) :: hd :: tl
+        ([b1], t1, tc1, j1) :: hd :: tl
   in
-  let p_collapsed_binder (cb: list document * document): document =
-    let bs, typ = cb in
-    match bs with
-    | [] -> failwith "Impossible" // can't have dangling type
-    | [b] -> cat_with_colon b typ
-    | hd::tl -> cat_with_colon (List.fold_left (fun x y -> x ^^ space ^^ y) hd tl) typ
+  let p_collapsed_binder (cb: list document & document & bool & bool): document =
+    let bs, typ, istcarg, _ = cb in
+    let body =
+      match bs with
+      | [] -> failwith "Impossible" // can't have dangling type
+      | hd::tl -> cat_with_colon (List.fold_left (fun x y -> x ^^ space ^^ y) hd tl) typ
+    in
+    if istcarg
+    then tc_arg body
+    else soft_parens_with_nesting body
   in
   let binders = List.fold_left fold_fun [] (List.rev pats) in
   map_rev p_collapsed_binder binders
 
-and pats_as_binders_if_possible pats =
-  let all_binders p = match p.pat with
+and pats_as_binders_if_possible pats : list document & annotation_style =
+  // returns: doc for name, doc for type, boolean if typeclass arg
+  let all_binders (p:pattern) : option (document & document & bool & bool) =
+  match p.pat with
   | PatAscribed(pat, (t, None)) ->
-    (match pat.pat, t.tm  with
+    (match pat.pat, t.tm with
      | PatVar (lid, aqual, attrs), Refine({b = Annotated(lid', t)}, phi)
        when (string_of_id lid) = (string_of_id lid') ->
-         Some (p_refinement' aqual attrs (p_ident lid) t phi)
+         let (x, y) = p_refinement' aqual attrs (p_ident lid) t phi in
+         Some (x, y, false, false)
      | PatVar (lid, aqual, attrs), _ ->
-       Some (optional p_aqual aqual ^^ p_attributes attrs ^^  p_ident lid, p_tmEqNoRefinement t)
+       let is_tc = aqual = Some TypeClassArg in
+       let is_meta = match aqual with | Some (Meta _) -> true | _ -> false in
+       Some (optional p_aqual aqual ^^ p_attributes false attrs ^^  p_ident lid, p_tmEqNoRefinement t, is_tc, not is_tc && not is_meta)
      | _ -> None)
   | _ -> None
-  in
-  let all_unbound p = match p.pat with
-  | PatAscribed _ -> false
-  | _ -> true
   in
   match map_if_all all_binders pats with
   | Some bs ->
@@ -1556,6 +1679,7 @@ and pats_as_binders_if_possible pats =
 and p_quantifier e = match e.tm with
     | QForall _ -> str "forall"
     | QExists _ -> str "exists"
+    | QuantOp (i, _, _, _) -> p_ident i
     | _ -> failwith "Imposible : p_quantifier called on a non-quantifier term"
 
 and p_trigger = function
@@ -1570,6 +1694,10 @@ and p_conjunctivePats pats =
     group (separate_map (semi ^^ break1) p_appTerm pats)
 
 and p_simpleTerm ps pb e = match e.tm with
+    | Function(branches, _) ->
+      paren_if (ps || pb) (
+        group (str "function" ^/^ separate_map_last hardline p_patternBranch branches))
+
     | Abs(pats, e) ->
         let comm, doc = p_term_sep false pb e in
         let prefix = str "fun" ^/+^ separate_map break1 p_atomicPattern pats ^/^ rarrow in
@@ -1649,41 +1777,41 @@ and p_tmImplies e = match e.tm with
 // It also needs to make adjustments depending on which style a signature
 // is to be printed in. For more details see the `annotation_style` type
 // definition.
-and format_sig style terms no_last_op flat_space =
-  let terms', last = List.splitAt (List.length terms - 1) terms in
-  let n, last_n, terms', sep, last_op =
+and format_sig style terms ret_d no_last_op flat_space =
+  let n, last_n, sep, last_op =
     match style with
     | Arrows (n, ln)->
-        n, ln, terms', space ^^ rarrow ^^ break1, rarrow ^^ space
+        n, ln, space ^^ rarrow ^^ break1, rarrow ^^ space
     | Binders (n, ln, parens) ->
-        n, ln,
-        (if parens then List.map soft_parens_with_nesting terms' else terms'),
-        break1, colon ^^ space
+        n, ln, break1, colon ^^ space
   in
-  let last = List.hd last in
-  let last_op = if List.length terms > 1 && (not no_last_op) then last_op else empty in
-  let one_line_space = if not (last = empty) || not no_last_op then space else empty in
+  let last_op = if List.length terms > 0 && (not no_last_op) then last_op else empty in
+  let one_line_space = if not (ret_d = empty) || not no_last_op then space else empty in
   let single_line_arg_indent = repeat n space in
   let fs = if flat_space then space else empty in
   match List.length terms with
-  | 1 -> List.hd terms
-  | _ -> group (ifflat (fs ^^ (separate sep terms') ^^ one_line_space ^^ last_op ^^ last)
-           (prefix n 1 (group ((ifflat (fs ^^ separate sep terms')
-             (jump2 ((single_line_arg_indent ^^ separate (sep ^^ single_line_arg_indent) (List.map (fun x -> align (hang 2 x)) terms')))))))
-               (align (hang last_n (last_op ^^ last)))))
+  | 0 -> ret_d
+  | _ -> group (ifflat (fs ^^ (separate sep terms) ^^ one_line_space ^^ last_op ^^ ret_d)
+           (prefix n 1 (group ((ifflat (fs ^^ separate sep terms)
+             (jump2 ((single_line_arg_indent ^^ separate (sep ^^ single_line_arg_indent) (List.map (fun x -> align (hang 2 x)) terms)))))))
+               (align (hang last_n (last_op ^^ ret_d)))))
 
 and p_tmArrow style flat_space p_Tm e =
-  let terms =
+  let terms, ret_d =
     match style with
     | Arrows _ -> p_tmArrow' p_Tm e
-    | Binders _ -> collapse_binders p_Tm e
+    | Binders _ -> collapse_binders style p_Tm e
   in
-  format_sig style terms false flat_space
+  format_sig style terms ret_d false flat_space
 
-and p_tmArrow' p_Tm e =
+and p_tmArrow' p_Tm e : list document & document =
   match e.tm with
-  | Product(bs, tgt) -> (List.map (fun b -> p_binder false b) bs) @ (p_tmArrow' p_Tm tgt)
-  | _ -> [p_Tm e]
+  | Product(bs, tgt) ->
+    let bs_ds = List.map (fun b -> p_binder false b) bs in
+    let bs_ds', ret = p_tmArrow' p_Tm tgt in
+    bs_ds@bs_ds', ret
+  | _ ->
+    ([], p_Tm e)
 
 // When printing in `Binders` style, collapse binders which have the same
 // type, so instead of printing
@@ -1691,45 +1819,66 @@ and p_tmArrow' p_Tm e =
 // print
 //    val f (a b c: t) : Tot nat
 // For this, we use the generalised version of p_binder, which returns
-// the binder, its type (as an optional) and a function which
+// the binder, and optionally its type and a function which
 // concatenates them.
-and collapse_binders (p_Tm: term -> document) (e: term): list document =
-  let rec accumulate_binders p_Tm e: list (document * option document * catf) =
+and collapse_binders (style : annotation_style) (p_Tm: term -> document) (e: term): list document & document =
+  let atomize = match style with
+   | Binders (_, _, a) -> a
+   | _ -> false
+  in
+  let wrap is_tc doc =
+    if is_tc then tc_arg doc
+    else if atomize then soft_parens_with_nesting doc
+    else doc
+  in
+  // For each binder, return:
+  // - document for binder
+  // - optional annotation doc + cat function
+  // - whether it was a typeclass arg
+  // - whether it is joinable (tc args and meta args are not)
+  let rec accumulate_binders p_Tm e: list ((document & option (document & catf)) & bool & bool) & document =
     match e.tm with
-    | Product(bs, tgt) -> (List.map (fun b -> p_binder' false b) bs) @ (accumulate_binders p_Tm tgt)
-    | _ -> [(p_Tm e, None, cat_with_colon)]
+    | Product(bs, tgt) ->
+        let bs_ds = List.map (fun b -> p_binder' true false b, is_tc_binder b, is_joinable_binder b) bs in
+        let bs_ds', ret = accumulate_binders p_Tm tgt in
+        bs_ds@bs_ds', ret
+    | _ -> ([], p_Tm e)
   in
-  let fold_fun (bs: list (list document * option document * catf)) (x: document * option document * catf) =
-    let b1, t1, f1 = x in
+  let fold_fun (bs: list (list document & option (document & catf) & bool & bool)) (x: (document & option (document & catf)) & bool & bool) =
+    let (b1, t1), tc1, j1 = x in
     match bs with
-    | [] -> [([b1], t1, f1)]
+    | [] -> [([b1], t1, tc1, j1)]
     | hd::tl ->
-      let b2s, t2, _ = hd in
+      let b2s, t2, tc2, j2 = hd in
       match (t1, t2) with
-      | (Some typ1, Some typ2) ->
-        if typ1 = typ2 then
-          (b2s @ [b1], t1, f1) :: tl
-        else
-          ([b1], t1, f1) :: hd :: tl
-      | _ -> ([b1], t1, f1) :: bs
+      | Some (typ1, catf1), Some (typ2, _)
+        when typ1 = typ2 && j1 && j2 ->
+        (* If the `x` binder has the same type as the group that follows,
+         * and both are joinable (the group and the new binder), then join
+         * them. Take the cat function from x. NOTE: if they were joinable,
+         * then they are not tc-args, hence the false. *)
+          (b2s @ [b1], t1, false, true) :: tl
+      | _ ->
+        (* Otherwise just make a new group *)
+        ([b1], t1, tc1, j1) :: bs
   in
-  let p_collapsed_binder (cb: list document * option document * catf): document =
-    let bs, t, f = cb in
+  let p_collapsed_binder (cb: list document & option (document & catf) & bool & bool): document =
+    let bs, t, is_tc, _ = cb in
     match t with
     | None -> begin
       match bs with
-      | [b] -> b
+      | [b] -> wrap is_tc b
       | _ -> failwith "Impossible" // can't have dangling type or collapse unannotated binders
     end
-    | Some typ -> begin
+    | Some (typ, f) -> begin
       match bs with
       | [] -> failwith "Impossible" // can't have dangling type
-      | [b] -> f b typ
-      | hd::tl -> f (List.fold_left (fun x y -> x ^^ space ^^ y) hd tl) typ
+      | hd::tl -> wrap is_tc <| f (List.fold_left (fun x y -> x ^^ space ^^ y) hd tl) typ
     end
   in
-  let binders = List.fold_left fold_fun [] (accumulate_binders p_Tm e) in
-  map_rev p_collapsed_binder binders
+  let bs_ds, ret_d = accumulate_binders p_Tm e in
+  let binders = List.fold_left fold_fun [] bs_ds in
+  map_rev p_collapsed_binder binders, ret_d
 
 and p_tmFormula e =
     let conj = space ^^ (str "/\\") ^^ break1 in
@@ -1755,10 +1904,10 @@ and p_tmTuple' e = match e.tm with
   | _ -> p_tmEq e
 
 and paren_if_gt curr mine doc =
-  if mine <= curr then
-    doc
-  else
+  if mine > curr then
     group (lparen ^^ doc ^^ rparen)
+  else
+    doc
 
 and p_tmEqWith p_X e =
   (* TODO : this should be precomputed but F* complains about a potential ML effect *)
@@ -1789,7 +1938,7 @@ and p_tmNoEqWith p_X e =
   p_tmNoEqWith' false p_X n e
 
 and p_tmNoEqWith' inside_tuple p_X curr e = match e.tm with
-  | Construct (lid, [e1, _ ; e2, _]) when lid_equals lid C.cons_lid && not (is_list e) ->
+  | Construct (lid, [e1, _ ; e2, _]) when lid_equals lid C.cons_lid ->
       let op = "::" in
       let left, mine, right = levels op in
       paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' false p_X left e1) (p_tmNoEqWith' false p_X right e2))
@@ -1802,13 +1951,6 @@ and p_tmNoEqWith' inside_tuple p_X curr e = match e.tm with
         | Inr t -> p_tmNoEqWith' false p_X left t ^^ space ^^ str op ^^ break1
       in
       paren_if_gt curr mine (concat_map p_dsumfst binders ^^ p_tmNoEqWith' false p_X right res)
-  | Op(id, [e1; e2]) when string_of_id id = "*" && !unfold_tuples ->
-      let op = "*" in
-      let left, mine, right = levels op in
-      if inside_tuple then
-        infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2)
-      else
-        paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2))
   | Op (op, [e1; e2]) when is_operatorInfix34 op ->
       let op = Ident.string_of_id op in
       let left, mine, right = levels op in
@@ -1845,14 +1987,16 @@ and p_with_clause e = p_appTerm e ^^ space ^^ str "with" ^^ break1
 and p_refinedBinder b phi =
     match b.b with
     | Annotated (lid, t) -> p_refinement b.aqual b.battributes (p_lident lid) t phi
+    | Variable lid ->       p_refinement b.aqual b.battributes (p_lident lid) (mk_term Wild (range_of_id lid) Type_level) phi
     | TAnnotated _ -> failwith "Is this still used ?"
-    | Variable _
     | TVariable _
-    | NoName _ -> failwith (Util.format1 "Imposible : a refined binder ought to be annotated %s" (binder_to_string b))
+    | NoName _ ->
+      failwith (Util.format1 "Impossible: a refined binder ought to be annotated (%s)" (binder_to_string b))
 
 (* A simple def can be followed by a ';'. Protect except for the last one. *)
 and p_simpleDef ps (lid, e) =
-  group (p_qlident lid ^/^ equals ^/^ p_noSeqTermAndComment ps false e)
+  group (p_qlidentOrOperator lid ^/^ equals ^/^ p_noSeqTermAndComment ps false e)
+
 
 and p_appTerm e = match e.tm with
   | App _ when is_general_application e ->
@@ -1865,9 +2009,10 @@ and p_appTerm e = match e.tm with
         group (soft_surround_map_or_flow 2 0 head_doc (head_doc ^^ space) break1 empty p_argTerm args)
       )
 
-  (* (explicit) dependent tuples are handled below *)
+  (* (explicit) tuples and dependent tuples are handled below *)
   | Construct (lid, args) when is_general_construction e
-        && not (is_dtuple_constructor lid && all1_explicit args) ->
+        && not (is_dtuple_constructor lid && all1_explicit args)
+        && not (is_tuple_constructor  lid && all1_explicit args) ->
     begin match args with
       | [] -> p_quident lid
       | [arg] -> group (p_quident lid ^/^ p_argTerm arg)
@@ -1883,7 +2028,7 @@ and p_argTerm arg_imp = match arg_imp with
   | (u, UnivApp) -> p_universe u
   | (e, FsTypApp) ->
       (* This case should not happen since it might lead to badly formed type applications (e.g t a b)*)
-      Errors.log_issue e.range (Errors.Warning_UnexpectedFsTypApp, "Unexpected FsTypApp, output might not be formatted correctly.") ;
+      Errors.log_issue e Errors.Warning_UnexpectedFsTypApp "Unexpected FsTypApp, output might not be formatted correctly.";
       surround 2 1 langle (p_indexingTerm e) rangle
   | (e, Hash) -> str "#" ^^ p_indexingTerm e
   | (e, HashBrace t) -> str "#[" ^^ p_indexingTerm t ^^ str "]" ^^ p_indexingTerm e
@@ -1898,6 +2043,12 @@ and p_indexingTerm_aux exit e = match e.tm with
   | Op(id, [e1; e2]) when string_of_id id = ".[]" ->
         group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^
         soft_brackets_with_nesting (p_term false false e2))
+  | Op(id, [e1; e2]) when string_of_id id = ".(||)" ->
+        group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^
+        soft_lens_access_with_nesting (p_term false false e2))
+  | Op(id, [e1; e2]) when string_of_id id = ".[||]" ->
+        group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^
+        soft_brackets_lens_access_with_nesting (p_term false false e2))
   | _ ->
       exit e
 and p_indexingTerm e = p_indexingTerm_aux p_atomicTerm e
@@ -1910,8 +2061,27 @@ and p_atomicTerm e = match e.tm with
       p_quident lid ^^ dot ^^ soft_parens_with_nesting (p_term false false e)
   | Name lid ->
       p_quident lid
+  | Construct (lid, []) when is_general_construction e ->
+      (*
+       * This case is needed to avoid extra parenthesis on applications
+       * where the argument is a constructor. cf. #2181.
+       *)
+      p_quident lid
   | Op(op, [e]) when is_general_prefix_op op ->
       str (Ident.string_of_id op) ^^ p_atomicTerm e
+
+  | ListLiteral ts ->
+    surround 2 0
+      lbracket
+      (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) ts)
+      rbracket
+
+  | SeqLiteral ts ->
+    surround 2 0
+      (doc_of_string "seq!" ^^ lbracket)
+      (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) ts)
+      rbracket
+
   | _ -> p_atomicTermNotQUident e
 
 and p_atomicTermNotQUident e = match e.tm with
@@ -1937,6 +2107,8 @@ and p_atomicTermNotQUident e = match e.tm with
       surround 2 1 (lparen ^^ bar)
         (separate_map (comma ^^ break1) (fun (e, _) -> p_tmEq e) args)
                    (bar ^^ rparen)
+  | Construct (lid, args) when is_tuple_constructor lid && all1_explicit args ->
+      parens (p_tmTuple e)
   | Project (e, lid) ->
     group (prefix 2 0 (p_atomicTermNotQUident e)  (dot ^^ p_qlident lid))
   | _ ->
@@ -1960,11 +2132,9 @@ and p_projectionLHS e = match e.tm with
       doc
     else
       comm ^^ hardline ^^ doc
-  | _ when is_array e ->
-    let es = extract_from_list e in
-    surround 2 0 (lbracket ^^ bar) (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) es) (bar ^^ rbracket)
-  | _ when is_list e ->
-    surround 2 0 lbracket (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) (extract_from_list e)) rbracket
+  // | _ when is_array e ->
+  //   let es = extract_from_list e in
+  //   surround 2 0 (lbracket ^^ bar) (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) es) (bar ^^ rbracket)
   | _ when is_ref_set e ->
     let es = extract_from_ref_set e in
     surround 2 0 (bang ^^ lbrace) (separate_map_or_flow (comma ^^ break1) p_appTerm es) rbrace
@@ -1991,10 +2161,11 @@ and p_projectionLHS e = match e.tm with
   | Tvar _      (* p_atomicTermNotQUident *)
   | Var _       (* p_projectionLHS *)
   | Name _      (* p_atomicTerm *)
-  | Construct _ (* p_appTerm *)
+  | Construct _ (* p_atomicTerm and p_appTerm *)
   | Abs _       (* p_simpleTerm *)
   | App _       (* p_appTerm *)
   | Let _       (* p_noSeqTerm *)
+  | LetOperator _   (* p_noSeqTerm *)
   | LetOpen _   (* p_noSeqTerm *)
   | LetOpenRecord _ (* p_noSeqTerm *)
   | Seq _       (* p_term *)
@@ -2009,6 +2180,7 @@ and p_projectionLHS e = match e.tm with
   | Sum _       (* p_tmNoEq *)
   | QForall _   (* p_typ *)
   | QExists _   (* p_typ *)
+  | QuantOp _
   | Refine _    (* p_tmNoEq *)
   | NamedTyp _  (* p_tmNoEq *)
   | Requires _  (* p_noSeqTerm *)
@@ -2019,6 +2191,8 @@ and p_projectionLHS e = match e.tm with
   | VQuote _    (* p_noSeqTerm *)
   | Antiquote _ (* p_noSeqTerm *)
   | CalcProof _ (* p_noSeqTerm *)
+  | ListLiteral _
+  | SeqLiteral _
   | ElimExists _
     -> soft_parens_with_nesting (p_term false false e)
   | LexList l -> group (str "%" ^^ p_term_list false false l)
@@ -2030,10 +2204,8 @@ and p_constant = function
   | Const_unit -> str "()"
   | Const_bool b -> doc_of_bool b
   | Const_real r -> str (r ^"R")
-  | Const_float x -> str (Util.string_of_float x)
   | Const_char x -> doc_of_char x
-  | Const_string(s, _) -> dquotes (str (FStar.String.escaped s))
-  | Const_bytearray(bytes,_) -> dquotes (str (Util.string_of_bytes bytes)) ^^ str "B"
+  | Const_string(s, _) -> dquotes (str (FStar.Compiler.String.escaped s))
   | Const_int (repr, sign_width_opt) ->
       let signedness = function
           | Unsigned -> str "u"
@@ -2045,12 +2217,19 @@ and p_constant = function
           | Int32 -> str "l"
           | Int64 -> str "L"
       in
-      let ending = default_or_map empty (fun (s, w) -> signedness s ^^ width w) sign_width_opt in
+      let suffix (s, w) =
+        (* This handles the Sizet case, which is unsigned but
+         * does not have a "u" suffix. *)
+        match (s, w) with
+        | _, Sizet -> str "sz"
+        | _ -> signedness s ^^ width w
+      in
+      let ending = default_or_map empty suffix sign_width_opt in
       str repr ^^ ending
   | Const_range_of -> str "range_of"
   | Const_set_range_of -> str "set_range_of"
   | Const_range r -> str (Range.string_of_range r)
-  | Const_reify -> str "reify"
+  | Const_reify _ -> str "reify"
   | Const_reflect lid -> p_quident lid ^^ qmark ^^ dot ^^ str "reflect"
 
 and p_universe u = str "u#" ^^ p_atomicUniverse u
@@ -2080,7 +2259,6 @@ and p_atomicUniverse u = match u.tm with
   | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
 
 let term_to_document e =
-  unfold_tuples := false;
   p_term false false e
 
 let signature_to_document e = p_justSig e
@@ -2097,7 +2275,7 @@ let modul_to_document (m:modul) =
   | Interface (_, decls, _) ->
     decls |> List.map decl_to_document |> separate hardline
 
-let comments_to_document (comments : list (string * FStar.Compiler.Range.range)) =
+let comments_to_document (comments : list (string & FStar.Compiler.Range.range)) =
     separate_map hardline (fun (comment, range) -> str comment) comments
 
 let extract_decl_range (d: decl): decl_meta =
@@ -2112,16 +2290,7 @@ let extract_decl_range (d: decl): decl_meta =
     has_qs = has_qs;
     has_attrs = not (List.isEmpty d.attrs); }
 
-(* [modul_with_comments_to_document m comments] prints the module [m] trying *)
-(* to insert the comments from [comments]. The list comments is composed of *)
-(* pairs of a raw string and a position which is used to place the comment *)
-(* not too far from its original position. The rules for placing comments *)
-(* are described in the ``Taking care of comments`` section *)
-let modul_with_comments_to_document (m:modul) comments =
-  let decls = match m with
-    | Module (_, decls)
-    | Interface (_, decls, _) -> decls
-  in
+let decls_with_comments_to_document (decls:list decl) comments =
   match decls with
     | [] -> empty, comments
     | d :: ds ->
@@ -2132,3 +2301,18 @@ let modul_with_comments_to_document (m:modul) comments =
   let comments = !comment_stack in
   comment_stack := [] ;
   (initial_comment ^^ doc, comments)
+
+(* [modul_with_comments_to_document m comments] prints the module [m] trying *)
+(* to insert the comments from [comments]. The list comments is composed of *)
+(* pairs of a raw string and a position which is used to place the comment *)
+(* not too far from its original position. The rules for placing comments *)
+(* are described in the ``Taking care of comments`` section *)
+let modul_with_comments_to_document (m:modul) comments =
+  let decls = match m with
+    | Module (_, decls)
+    | Interface (_, decls, _) -> decls
+  in
+  decls_with_comments_to_document decls comments
+
+let decl_with_comments_to_document (d:decl) comments =
+  decls_with_comments_to_document [d] comments

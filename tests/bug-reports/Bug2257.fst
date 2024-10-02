@@ -1,6 +1,6 @@
 module Bug2257
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let match_sigelt (n: name) =
   let se = lookup_typ (top_env ()) n in

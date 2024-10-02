@@ -1,0 +1,84 @@
+[
+  "¬Ðð\"LZ¬\u0010kd´é\u0015°“Ì",
+  [
+    [
+      "PositiveRelaxed.nat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f1b409e28c4de5249ab41bd578ca0e53"
+    ],
+    [
+      "PositiveRelaxed.__proj__S__item__pre",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_629234387675c267a369c7d87670b9af"
+      ],
+      0,
+      "982e089609b8f3fe9f70c0df3549b0eb"
+    ],
+    [
+      "PositiveRelaxed.__proj__PSO__item__f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b3056343c7f1c6b9a52e7e02a8379fbd"
+      ],
+      0,
+      "31455b83e43b93ef724947008b3ee17a"
+    ],
+    [
+      "PositiveRelaxed.__proj__POd__item__h",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_10093c564537c9c0559bbc0a0a24fba4"
+      ],
+      0,
+      "4633346b7a527c244c3853ef968c796d"
+    ],
+    [
+      "PositiveRelaxed.bad",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_PositiveRelaxed.O",
+        "constructor_distinct_PositiveRelaxed.S",
+        "disc_equation_PositiveRelaxed.PSO",
+        "equality_tok_PositiveRelaxed.O@tok",
+        "fuel_guarded_inversion_PositiveRelaxed.p",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "7f94f6f89a12171e76afd7f2f652350f"
+    ],
+    [
+      "PositiveRelaxed.loop",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_PositiveRelaxed.O",
+        "constructor_distinct_PositiveRelaxed.S",
+        "disc_equation_PositiveRelaxed.POd",
+        "equality_tok_PositiveRelaxed.O@tok",
+        "fuel_guarded_inversion_PositiveRelaxed.p",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "9fc25a5e6cb8bac2e66d62ff340c68ae"
+    ]
+  ]
+]

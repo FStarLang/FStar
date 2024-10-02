@@ -21,7 +21,6 @@ module FStar.LexicographicOrdering
 open FStar.ReflexiveTransitiveClosure
 open FStar.WellFounded
 
-
 /// A helper lemma about reflexive transitive closure
 
 let closure_transitive (#a:Type u#a) (#r_a:binrel u#a u#ra a) (x y z:a)

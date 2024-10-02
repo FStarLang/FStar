@@ -1,5 +1,5 @@
 [
-  "\r`Ç¹«;·¥kÊ/¬t#¤X",
+  "0×\u0016£ˆ3{ÈZ„òC%rÒ¯",
   [
     [
       "Sec1.GST.gst",
@@ -12,7 +12,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "b349873d947c66e45f2fa79dc5248562"
+      "70ecdf8bfd8d01034778cbfd7d4047d7"
     ],
     [
       "Sec1.GST.lift",
@@ -27,18 +27,16 @@
         "data_typing_intro_Sec1.GST.RW@tok", "disc_equation_Sec1.GST.R",
         "disc_equation_Sec1.GST.RW", "equality_tok_Sec1.GST.R@tok",
         "equality_tok_Sec1.GST.RW@tok", "equation_Sec1.GST.gst",
-        "equation_Sec1.GST.lift_r_rw", "equation_Sec1.GST.op",
-        "fuel_guarded_inversion_Sec1.GST.tag",
+        "equation_Sec1.GST.op", "fuel_guarded_inversion_Sec1.GST.tag",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "typing_Sec1.GST.op",
-        "typing_Tm_abs_2d5879fa2d03ea229bbae67ba018b9e1"
+        "typing_Sec1.GST.op"
       ],
       0,
-      "55ee99ba12bb179498f214822af61eba"
+      "d79d2651a8f1a52ac9b9667b5407c5ce"
     ],
     [
       "Sec1.GST.bind_homogeneous",
@@ -54,7 +52,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "2b3444fb0cf2c89e0b980f92f84bb8c9"
+      "a449b15a491043df987555bc32ed7aaa"
     ],
     [
       "Sec1.GST.bind",
@@ -75,7 +73,25 @@
         "typing_Sec1.GST.lift", "typing_Sec1.GST.op"
       ],
       0,
-      "b0fcf2a781bca95ae5fe7f368f6d1933"
+      "f4e314023e1f17ac01195cbe940900bb"
+    ],
+    [
+      "Sec1.GST.lift_pure",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5af636d64b8f668affe7528493517804"
+    ],
+    [
+      "Sec1.GST.6035",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c5677f12e0c0be3ce54230b4beba2fad"
     ]
   ]
 ]

@@ -1,26 +1,26 @@
 opam-version: "2.0"
-version: "2022.07.13~dev"
+version: "2024.09.05~dev"
 maintainer: "taramana@microsoft.com"
 authors: "Nik Swamy <nswamy@microsoft.com>,Jonathan Protzenko <protz@microsoft.com>,Tahina Ramananandro <taramana@microsoft.com>"
 homepage: "http://fstar-lang.org"
 license: "Apache-2.0"
 depends: [
-  "ocaml" {>= "4.07.0"}
-  "ocamlfind"
+  "ocaml" {>= "4.14.0"}
   "batteries"
   "zarith"
   "stdint"
   "yojson"
-  "ocamlbuild" {build}
-  "fileutils"
-  "menhir" {>= "20161115" build}
-  "pprint" {build}
-  "sedlex" {build}
-  "ppxlib" {>= "0.22.0"}
-  "ppx_deriving"
-  "ppx_deriving_yojson"
+  "dune" {build & >= "3.8.0"}
+  "memtrace"
+  "menhirLib"
+  "menhir" {build & >= "2.1"}
+  "pprint"
+  "sedlex"
+  "ppxlib" {>= "0.27.0"}
   "process"
-  "z3" {= "4.8.5"}
+  "ppx_deriving" {build}
+  "ppx_deriving_yojson" {build}
+  "z3" {= "4.8.5-1"}
 ]
 depexts: ["coreutils"] {os = "macos" & os-distribution = "homebrew"}
 build: [
@@ -29,10 +29,7 @@ build: [
 install: [
   [make "PREFIX=%{prefix}%" "install"]
 ]
-remove: [
-  [make "PREFIX=%{prefix}%" "uninstall"]
-]
-dev-repo: "git://github.com/FStarLang/FStar"
+dev-repo: "git+https://github.com/FStarLang/FStar"
 bug-reports: "https://github.com/FStarLang/FStar/issues"
 synopsis: "Verification system for effectful programs"
 url {

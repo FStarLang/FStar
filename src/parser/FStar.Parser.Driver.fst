@@ -24,33 +24,46 @@ open FStar.Parser.AST
 open FStar.Parser.ParseIt
 open FStar.Compiler.Util
 open FStar.Errors
+open FStar.Class.Show
 
 let is_cache_file (fn: string) = Util.get_file_extension fn = ".cache"
 
-let parse_fragment (frag: ParseIt.input_frag) : fragment =
-    match ParseIt.parse (Toplevel frag) with
+let parse_fragment lang_opt (frag: ParseIt.input_frag) : fragment =
+    match ParseIt.parse lang_opt (Toplevel frag) with
     | ASTFragment (Inl modul, _) -> //interactive mode: module
         Modul modul
     | ASTFragment (Inr [], _) -> //interactive mode: blank space
         Empty
     | ASTFragment (Inr decls, _) -> //interactive mode: more decls
         Decls decls
+    | IncrementalFragment (decls, _, _) -> 
+        DeclsWithContent decls
     | ParseError (e, msg, r) ->
-        raise_error (e, msg) r
+        raise_error r e msg
     | Term _ ->
         failwith "Impossible: parsing a Toplevel always results in an ASTFragment"
 
+let maybe_dump_module (m:modul) = 
+    match m with
+    | Module (l, ds)
+    | Interface (l, ds, _) ->
+      if FStar.Options.dump_module (Ident.string_of_lid l)
+      then (
+        print2 "Parsed module %s\n%s\n"
+            (Ident.string_of_lid l)
+            (List.map show ds |> String.concat "\n")
+      )
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
 let parse_file fn =
-    match ParseIt.parse (Filename fn) with
+    match ParseIt.parse None (Filename fn) with
     | ASTFragment (Inl ast, comments) ->
         ast, comments
     | ASTFragment (Inr _ , _) ->
         let msg = Util.format1 "%s: expected a module\n" fn in
         let r = Range.dummyRange in
-        raise_error (Errors.Fatal_ModuleExpected, msg) r
+        raise_error r Errors.Fatal_ModuleExpected msg
     | ParseError (e, msg, r) ->
-        raise_error (e, msg) r
+        raise_error r e msg
     | Term _ ->
         failwith "Impossible: parsing a Filename always results in an ASTFragment"
 

@@ -24,7 +24,7 @@ all: verify-all
 # a.fst.checked is the binary, checked version of a.fst
 %.checked: %
 	$(FSTAR) $*
-	touch $@
+	touch -c $@
 
 # The _tags file is a directive to ocamlbuild
 # The extracted ML files are precious, because you may want to examine them,
@@ -43,8 +43,9 @@ _tags:
 $(OUTPUT_DIRECTORY)/%.ml:
 	$(FSTAR) $(subst .checked,,$<) --codegen OCaml --extract_module $(subst .fst.checked,,$<)
 
+# FIXME: ocamlbuild is deprecated, use dune instead
 $(OCAML_EXE): _tags $(ML_FILES) $(TOP_LEVEL_FILE)
-	OCAMLPATH="$(FSTAR_HOME)/bin" ocamlbuild -I $(OUTPUT_DIRECTORY) -use-ocamlfind -pkg fstarlib $(subst .ml,.native,$(TOP_LEVEL_FILE))
+	OCAMLPATH="$(FSTAR_HOME)/lib" ocamlbuild -I $(OUTPUT_DIRECTORY) -use-ocamlfind -pkg fstar.lib $(subst .ml,.native,$(TOP_LEVEL_FILE))
 	mv _build/$(subst .ml,.native,$(TOP_LEVEL_FILE)) $@
 
 test.ocaml: $(OCAML_EXE)
@@ -65,7 +66,7 @@ clean:
 	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KRML_EXE) .depend
 
 .depend:
-	$(FSTAR) --dep full $(FSTAR_FILES) --extract '* -FStar -Prims' > .depend
+	$(FSTAR) --dep full $(FSTAR_FILES) --extract '* -FStar -Prims' --output_deps_to .depend
 
 depend: .depend
 
@@ -73,6 +74,6 @@ include .depend
 
 # The default target is to verify all files, without extracting anything
 # It needs to be here, because it reads the variable ALL_FST_FILES in .depend
-verify-all: $(addsuffix .checked, $(ALL_FST_FILES))
+verify-all: $(ALL_CHECKED_FILES)
 
 extract-all: $(ALL_ML_FILES)

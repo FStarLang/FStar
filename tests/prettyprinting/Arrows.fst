@@ -70,10 +70,12 @@ val last (a b: int) : Tot (array a)
 [@@ one; two; three; four; five; six; seven; eight; nine; ten; eleven; ten; eleven; ten; eleven; ten; eleven; ten; here;
     eleven; ten; eleven; ten; eleven; ten; eleven]
 type t =
-  | A : int -> t
+  | [@@@ 123] A : int -> t
   | B
   | C : int -> int -> t
   | D of int
+
+type r = [@@@ ()] { [@@@ 123] field: int }
 
 type signatureScheme =
   | RSA_PKCS1_SHA256
@@ -108,4 +110,7 @@ val gf128_add_pure_loop (#n: pos) (a: seq (bv_t 8) {length a = n}) (b: seq (bv_t
       seq (bv_t 8)
         { length r = n /\
           (forall (i: nat{i < n}). equal (index r i) (logxor_vec (index a i) (index b i))) })
+
+let binder_attrs ([@@@()]y: nat): unit = ()
+val binder_collapse_parenthesis: (x: int) -> (#[@@@()]y: nat) -> unit
 

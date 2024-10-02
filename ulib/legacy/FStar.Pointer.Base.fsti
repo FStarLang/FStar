@@ -65,7 +65,7 @@ type typ =
 | TBuffer:
   (t: typ) ->
   typ
-and struct_typ' = (l: list (string * typ) {
+and struct_typ' = (l: list (string & typ) {
   Cons? l /\ // C11, 6.2.5 al. 20: structs and unions must have at least one field
   List.Tot.noRepeats (List.Tot.map fst l)
 })
@@ -130,7 +130,7 @@ let rec typ_depth
   | TStruct l -> 1 + struct_typ_depth l.fields
   | _ -> 0
 and struct_typ_depth
-  (l: list (string * typ))
+  (l: list (string & typ))
 : GTot nat
 = match l with
   | [] -> 0

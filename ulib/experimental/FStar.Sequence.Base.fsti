@@ -154,7 +154,7 @@ val rank: #ty: Type -> ty -> ty
 /// axiom (forall<T> :: { Seq#Empty(): Seq T } Seq#Length(Seq#Empty(): Seq T) == 0);
 
 private let length_of_empty_is_zero_fact =
-  forall (ty: Type).{:pattern empty #ty} length (empty #ty) = 0
+  forall (ty: Type u#a).{:pattern empty #ty} length (empty #ty) = 0
 
 /// We represent the following Dafny axiom with `length_zero_implies_empty_fact`:
 ///
@@ -162,14 +162,14 @@ private let length_of_empty_is_zero_fact =
 ///   (Seq#Length(s) == 0 ==> s == Seq#Empty())
 
 private let length_zero_implies_empty_fact =
-  forall (ty: Type) (s: seq ty).{:pattern length s} length s = 0 ==> s == empty
+  forall (ty: Type u#a) (s: seq ty).{:pattern length s} length s = 0 ==> s == empty
 
 /// We represent the following Dafny axiom with `singleton_length_one_fact`:
 /// 
 /// axiom (forall<T> t: T :: { Seq#Length(Seq#Singleton(t)) } Seq#Length(Seq#Singleton(t)) == 1);
 
 private let singleton_length_one_fact =
-  forall (ty: Type) (v: ty).{:pattern length (singleton v)} length (singleton v) = 1
+  forall (ty: Type u#a) (v: ty).{:pattern length (singleton v)} length (singleton v) = 1
 
 /// We represent the following Dafny axiom with `build_increments_length_fact`:
 ///
@@ -178,7 +178,7 @@ private let singleton_length_one_fact =
 ///   Seq#Length(Seq#Build(s,v)) == 1 + Seq#Length(s));
 
 private let build_increments_length_fact =
-  forall (ty: Type) (s: seq ty) (v: ty).{:pattern build s v}
+  forall (ty: Type u#a) (s: seq ty) (v: ty).{:pattern build s v}
     length (build s v) = 1 + length s
 
 /// We represent the following Dafny axiom with `index_into_build_fact`:
@@ -187,8 +187,8 @@ private let build_increments_length_fact =
 ///   (i == Seq#Length(s) ==> Seq#Index(Seq#Build(s,v), i) == v) &&
 ///   (i != Seq#Length(s) ==> Seq#Index(Seq#Build(s,v), i) == Seq#Index(s, i)));
 
-private let index_into_build_fact (_: squash build_increments_length_fact) =
-  forall (ty: Type) (s: seq ty) (v: ty) (i: nat{i < length (build s v)})
+private let index_into_build_fact (_: squash (build_increments_length_fact u#a)) =
+  forall (ty: Type u#a) (s: seq ty) (v: ty) (i: nat{i < length (build s v)})
     .{:pattern index (build s v) i}
       (i = length s ==> index (build s v) i == v)
     /\ (i <> length s ==> index (build s v) i == index s i)
@@ -199,15 +199,15 @@ private let index_into_build_fact (_: squash build_increments_length_fact) =
 ///   Seq#Length(Seq#Append(s0,s1)) == Seq#Length(s0) + Seq#Length(s1));
 
 private let append_sums_lengths_fact =
-  forall (ty: Type) (s0: seq ty) (s1: seq ty).{:pattern length (append s0 s1)}
+  forall (ty: Type u#a) (s0: seq ty) (s1: seq ty).{:pattern length (append s0 s1)}
     length (append s0 s1) = length s0 + length s1
 
 /// We represent the following Dafny axiom with `index_into_singleton_fact`:
 ///
 /// axiom (forall<T> t: T :: { Seq#Index(Seq#Singleton(t), 0) } Seq#Index(Seq#Singleton(t), 0) == t);
 
-private let index_into_singleton_fact (_: squash singleton_length_one_fact) =
-  forall (ty: Type) (v: ty).{:pattern index (singleton v) 0}
+private let index_into_singleton_fact (_: squash (singleton_length_one_fact u#a)) =
+  forall (ty: Type u#a) (v: ty).{:pattern index (singleton v) 0}
      index (singleton v) 0 == v
 
 /// We represent the following axiom with `index_after_append_fact`:
@@ -216,8 +216,8 @@ private let index_into_singleton_fact (_: squash singleton_length_one_fact) =
 ///   (n < Seq#Length(s0) ==> Seq#Index(Seq#Append(s0,s1), n) == Seq#Index(s0, n)) &&
 ///   (Seq#Length(s0) <= n ==> Seq#Index(Seq#Append(s0,s1), n) == Seq#Index(s1, n - Seq#Length(s0))));
 
-private let index_after_append_fact (_: squash append_sums_lengths_fact) =
-  forall (ty: Type) (s0: seq ty) (s1: seq ty) (n: nat{n < length (append s0 s1)})
+private let index_after_append_fact (_: squash (append_sums_lengths_fact u#a)) =
+  forall (ty: Type u#a) (s0: seq ty) (s1: seq ty) (n: nat{n < length (append s0 s1)})
     .{:pattern index (append s0 s1) n}
       (n < length s0 ==> index (append s0 s1) n == index s0 n)
     /\ (length s0 <= n ==> index (append s0 s1) n == index s1 (n - length s0))
@@ -228,7 +228,7 @@ private let index_after_append_fact (_: squash append_sums_lengths_fact) =
 ///   0 <= i && i < Seq#Length(s) ==> Seq#Length(Seq#Update(s,i,v)) == Seq#Length(s));
 
 private let update_maintains_length_fact =
-  forall (ty: Type) (s: seq ty) (i: nat{i < length s}) (v: ty).{:pattern length (update s i v)}
+  forall (ty: Type u#a) (s: seq ty) (i: nat{i < length s}) (v: ty).{:pattern length (update s i v)}
     length (update s i v) = length s
 
 /// We represent the following Dafny axiom with `update_then_index_fact`:
@@ -239,7 +239,7 @@ private let update_maintains_length_fact =
 ///     (i != n ==> Seq#Index(Seq#Update(s,i,v),n) == Seq#Index(s,n)));
 
 private let update_then_index_fact =
-  forall (ty: Type) (s: seq ty) (i: nat{i < length s}) (v: ty) (n: nat{n < length (update s i v)})
+  forall (ty: Type u#a) (s: seq ty) (i: nat{i < length s}) (v: ty) (n: nat{n < length (update s i v)})
       .{:pattern index (update s i v) n}
       n < length s ==>
           (i = n ==> index (update s i v) n == v)
@@ -252,7 +252,7 @@ private let update_then_index_fact =
 ///     (exists i: int :: { Seq#Index(s,i) } 0 <= i && i < Seq#Length(s) && Seq#Index(s,i) == x));
 
 private let contains_iff_exists_index_fact =
-  forall (ty: Type) (s: seq ty) (x: ty).{:pattern contains s x}
+  forall (ty: Type u#a) (s: seq ty) (x: ty).{:pattern contains s x}
     contains s x <==> (exists (i: nat).{:pattern index s i} i < length s /\ index s i == x)
 
 /// We represent the following Dafny axiom with `empty_doesnt_contain_fact`:
@@ -262,7 +262,7 @@ private let contains_iff_exists_index_fact =
 ///   !Seq#Contains(Seq#Empty(), x));
 
 private let empty_doesnt_contain_anything_fact =
-  forall (ty: Type) (x: ty).{:pattern contains empty x} ~(contains empty x)
+  forall (ty: Type u#a) (x: ty).{:pattern contains empty x} ~(contains empty x)
 
 /// We represent the following Dafny axiom with `build_contains_equiv_fact`:
 ///
@@ -271,7 +271,7 @@ private let empty_doesnt_contain_anything_fact =
 ///     Seq#Contains(Seq#Build(s, v), x) <==> (v == x || Seq#Contains(s, x)));
 
 private let build_contains_equiv_fact =
-  forall (ty: Type) (s: seq ty) (v: ty) (x: ty).{:pattern contains (build s v) x}
+  forall (ty: Type u#a) (s: seq ty) (v: ty) (x: ty).{:pattern contains (build s v) x}
     contains (build s v) x <==> (v == x \/ contains s x)
 
 /// We represent the following Dafny axiom with `take_contains_equiv_exists_fact`:
@@ -283,7 +283,7 @@ private let build_contains_equiv_fact =
 ///       0 <= i && i < n && i < Seq#Length(s) && Seq#Index(s, i) == x));
 
 private let take_contains_equiv_exists_fact =
-  forall (ty: Type) (s: seq ty) (n: nat{n <= length s}) (x: ty).{:pattern contains (take s n) x}
+  forall (ty: Type u#a) (s: seq ty) (n: nat{n <= length s}) (x: ty).{:pattern contains (take s n) x}
     contains (take s n) x <==>
     (exists (i: nat).{:pattern index s i} i < n /\ i < length s /\ index s i == x)
 
@@ -296,7 +296,7 @@ private let take_contains_equiv_exists_fact =
 ///       0 <= n && n <= i && i < Seq#Length(s) && Seq#Index(s, i) == x));
 
 private let drop_contains_equiv_exists_fact =
-  forall (ty: Type) (s: seq ty) (n: nat{n <= length s}) (x: ty).{:pattern contains (drop s n) x}
+  forall (ty: Type u#a) (s: seq ty) (n: nat{n <= length s}) (x: ty).{:pattern contains (drop s n) x}
     contains (drop s n) x <==>
     (exists (i: nat).{:pattern index s i} n <= i && i < length s /\ index s i == x)
 
@@ -309,7 +309,7 @@ private let drop_contains_equiv_exists_fact =
 ///         0 <= j && j < Seq#Length(s0) ==> Seq#Index(s0,j) == Seq#Index(s1,j)));
 
 private let equal_def_fact =
-  forall (ty: Type) (s0: seq ty) (s1: seq ty).{:pattern equal s0 s1}
+  forall (ty: Type u#a) (s0: seq ty) (s1: seq ty).{:pattern equal s0 s1}
     equal s0 s1 <==>
     length s0 == length s1 /\
       (forall j.{:pattern index s0 j \/ index s1 j}
@@ -321,7 +321,7 @@ private let equal_def_fact =
 ///   Seq#Equal(a,b) ==> a == b);
 
 private let extensionality_fact =
-  forall (ty: Type) (a: seq ty) (b: seq ty).{:pattern equal a b}
+  forall (ty: Type u#a) (a: seq ty) (b: seq ty).{:pattern equal a b}
     equal a b ==> a == b
 
 /// We represent an analog of the following Dafny axiom with
@@ -334,7 +334,7 @@ private let extensionality_fact =
 ///         0 <= j && j < n ==> Seq#Index(s0,j) == Seq#Index(s1,j)));
 
 private let is_prefix_def_fact =
-  forall (ty: Type) (s0: seq ty) (s1: seq ty).{:pattern is_prefix s0 s1}
+  forall (ty: Type u#a) (s0: seq ty) (s1: seq ty).{:pattern is_prefix s0 s1}
     is_prefix s0 s1 <==>
       length s0 <= length s1
     /\ (forall (j: nat).{:pattern index s0 j \/ index s1 j}
@@ -346,7 +346,7 @@ private let is_prefix_def_fact =
 ///   0 <= n && n <= Seq#Length(s) ==> Seq#Length(Seq#Take(s,n)) == n);
 
 private let take_length_fact =
-  forall (ty: Type) (s: seq ty) (n: nat).{:pattern length (take s n)}
+  forall (ty: Type u#a) (s: seq ty) (n: nat).{:pattern length (take s n)}
     n <= length s ==> length (take s n) = n
 
 /// We represent the following Dafny axiom with `index_into_take_fact`.
@@ -358,8 +358,8 @@ private let take_length_fact =
 ///   0 <= j && j < n && j < Seq#Length(s) ==>
 ///     Seq#Index(Seq#Take(s,n), j) == Seq#Index(s, j));
 
-private let index_into_take_fact (_ : squash take_length_fact) =
-  forall (ty: Type) (s: seq ty) (n: nat) (j: nat).
+private let index_into_take_fact (_ : squash (take_length_fact u#a)) =
+  forall (ty: Type u#a) (s: seq ty) (n: nat) (j: nat).
     {:pattern index (take s n) j \/ index s j ; take s n}
     j < n && n <= length s ==> index (take s n) j == index s j
 
@@ -369,7 +369,7 @@ private let index_into_take_fact (_ : squash take_length_fact) =
 ///   0 <= n && n <= Seq#Length(s) ==> Seq#Length(Seq#Drop(s,n)) == Seq#Length(s) - n);
 
 private let drop_length_fact =
-  forall (ty: Type) (s: seq ty) (n: nat).
+  forall (ty: Type u#a) (s: seq ty) (n: nat).
     {:pattern length (drop s n)}
     n <= length s ==> length (drop s n) = length s - n
 
@@ -381,8 +381,8 @@ private let drop_length_fact =
 ///   0 <= n && 0 <= j && j < Seq#Length(s)-n ==>
 ///     Seq#Index(Seq#Drop(s,n), j) == Seq#Index(s, j+n));
 
-private let index_into_drop_fact (_ : squash drop_length_fact) =
-  forall (ty: Type) (s: seq ty) (n: nat) (j: nat).
+private let index_into_drop_fact (_ : squash (drop_length_fact u#a)) =
+  forall (ty: Type u#a) (s: seq ty) (n: nat) (j: nat).
     {:pattern index (drop s n) j}
     j < length s - n ==> index (drop s n) j == index s (j + n)
 
@@ -394,8 +394,8 @@ private let index_into_drop_fact (_ : squash drop_length_fact) =
 ///   0 <= n && n <= k && k < Seq#Length(s) ==>
 ///     Seq#Index(Seq#Drop(s,n), k-n) == Seq#Index(s, k));
 
-private let drop_index_offset_fact (_ : squash drop_length_fact) =
-  forall (ty: Type) (s: seq ty) (n: nat) (k: nat).
+private let drop_index_offset_fact (_ : squash (drop_length_fact u#a)) =
+  forall (ty: Type u#a) (s: seq ty) (n: nat) (k: nat).
     {:pattern index s k; drop s n}
     n <= k && k < length s ==> index (drop s n) (k - n) == index s k
 
@@ -409,8 +409,8 @@ private let drop_index_offset_fact (_ : squash drop_length_fact) =
 ///   Seq#Take(Seq#Append(s, t), n) == s &&
 ///   Seq#Drop(Seq#Append(s, t), n) == t);
 
-private let append_then_take_or_drop_fact (_ : squash append_sums_lengths_fact) =
-  forall (ty: Type) (s: seq ty) (t: seq ty) (n: nat).
+private let append_then_take_or_drop_fact (_ : squash (append_sums_lengths_fact u#a)) =
+  forall (ty: Type u#a) (s: seq ty) (t: seq ty) (n: nat).
     {:pattern take (append s t) n \/ drop (append s t) n}
     n = length s ==> take (append s t) n == s /\ drop (append s t) n == t
 
@@ -422,8 +422,8 @@ private let append_then_take_or_drop_fact (_ : squash append_sums_lengths_fact) 
 ///         Seq#Take(Seq#Update(s, i, v), n) == Seq#Update(Seq#Take(s, n), i, v) );
 
 private let take_commutes_with_in_range_update_fact
-  (_ : squash (update_maintains_length_fact /\ take_length_fact)) =
-  forall (ty: Type) (s: seq ty) (i: nat) (v: ty) (n: nat).{:pattern take (update s i v) n}
+  (_ : squash (update_maintains_length_fact u#a /\ take_length_fact u#a)) =
+  forall (ty: Type u#a) (s: seq ty) (i: nat) (v: ty) (n: nat).{:pattern take (update s i v) n}
     i < n && n <= length s ==>
     take (update s i v) n == update (take s n) i v
 
@@ -433,8 +433,8 @@ private let take_commutes_with_in_range_update_fact
 ///         { Seq#Take(Seq#Update(s, i, v), n) }
 ///         n <= i && i < Seq#Length(s) ==> Seq#Take(Seq#Update(s, i, v), n) == Seq#Take(s, n));
 
-private let take_ignores_out_of_range_update_fact (_ : squash update_maintains_length_fact) =
-  forall (ty: Type) (s: seq ty) (i: nat) (v: ty) (n: nat).{:pattern take (update s i v) n}
+private let take_ignores_out_of_range_update_fact (_ : squash (update_maintains_length_fact u#a)) =
+  forall (ty: Type u#a) (s: seq ty) (i: nat) (v: ty) (n: nat).{:pattern take (update s i v) n}
     n <= i && i < length s ==>
     take (update s i v) n == take s n
 
@@ -446,8 +446,8 @@ private let take_ignores_out_of_range_update_fact (_ : squash update_maintains_l
 ///         Seq#Drop(Seq#Update(s, i, v), n) == Seq#Update(Seq#Drop(s, n), i-n, v) );
 
 private let drop_commutes_with_in_range_update_fact
-  (_ : squash (update_maintains_length_fact /\ drop_length_fact)) =
-  forall (ty: Type) (s: seq ty) (i: nat) (v: ty) (n: nat).{:pattern drop (update s i v) n}
+  (_ : squash (update_maintains_length_fact u#a /\ drop_length_fact u#a)) =
+  forall (ty: Type u#a) (s: seq ty) (i: nat) (v: ty) (n: nat).{:pattern drop (update s i v) n}
     n <= i && i < length s ==>
     drop (update s i v) n == update (drop s n) (i - n) v
 
@@ -459,8 +459,8 @@ private let drop_commutes_with_in_range_update_fact
 ///         { Seq#Drop(Seq#Update(s, i, v), n) }
 ///         0 <= i && i < n && n < Seq#Length(s) ==> Seq#Drop(Seq#Update(s, i, v), n) == Seq#Drop(s, n));
 
-private let drop_ignores_out_of_range_update_fact (_ : squash update_maintains_length_fact) =
-  forall (ty: Type) (s: seq ty) (i: nat) (v: ty) (n: nat).{:pattern drop (update s i v) n}
+private let drop_ignores_out_of_range_update_fact (_ : squash (update_maintains_length_fact u#a)) =
+  forall (ty: Type u#a) (s: seq ty) (i: nat) (v: ty) (n: nat).{:pattern drop (update s i v) n}
     i < n && n <= length s ==>
     drop (update s i v) n == drop s n
 
@@ -471,14 +471,14 @@ private let drop_ignores_out_of_range_update_fact (_ : squash update_maintains_l
 ///         0 <= n && n <= Seq#Length(s) ==>
 ///         Seq#Drop(Seq#Build(s, v), n) == Seq#Build(Seq#Drop(s, n), v) );
 
-private let drop_commutes_with_build_fact (_ : squash build_increments_length_fact) =
-  forall (ty: Type) (s: seq ty) (v: ty) (n: nat).{:pattern drop (build s v) n}
+private let drop_commutes_with_build_fact (_ : squash (build_increments_length_fact u#a)) =
+  forall (ty: Type u#a) (s: seq ty) (v: ty) (n: nat).{:pattern drop (build s v) n}
     n <= length s ==> drop (build s v) n == build (drop s n) v
 
 /// We include the definition of `rank` among our facts.
 
 private let rank_def_fact =
-  forall (ty: Type) (v: ty).{:pattern rank v} rank v == v
+  forall (ty: Type u#a) (v: ty).{:pattern rank v} rank v == v
 
 /// We represent the following Dafny axiom with `element_ranks_less_fact`.
 ///
@@ -487,7 +487,7 @@ private let rank_def_fact =
 ///         0 <= i && i < Seq#Length(s) ==> DtRank($Unbox(Seq#Index(s, i)): DatatypeType) < Seq#Rank(s) );
 
 private let element_ranks_less_fact =
-  forall (ty: Type) (s: seq ty) (i: nat).{:pattern rank (index s i)}
+  forall (ty: Type u#a) (s: seq ty) (i: nat).{:pattern rank (index s i)}
     i < length s ==> rank (index s i) << rank s
 
 /// We represent the following Dafny axiom with `drop_ranks_less_fact`.
@@ -497,7 +497,7 @@ private let element_ranks_less_fact =
 ///         0 < i && i <= Seq#Length(s) ==> Seq#Rank(Seq#Drop(s, i)) < Seq#Rank(s) );
 
 private let drop_ranks_less_fact =
-  forall (ty: Type) (s: seq ty) (i: nat).{:pattern rank (drop s i)}
+  forall (ty: Type u#a) (s: seq ty) (i: nat).{:pattern rank (drop s i)}
     0 < i && i <= length s ==> rank (drop s i) << rank s
 
 /// We represent the following Dafny axiom with
@@ -510,7 +510,7 @@ private let drop_ranks_less_fact =
 ///         0 <= i && i < Seq#Length(s) ==> Seq#Rank(Seq#Take(s, i)) < Seq#Rank(s) );
 
 private let take_ranks_less_fact =
-  forall (ty: Type) (s: seq ty) (i: nat).{:pattern length (take s i)}
+  forall (ty: Type u#a) (s: seq ty) (i: nat).{:pattern length (take s i)}
     i < length s ==> length (take s i) << length s
 
 /// We represent the following Dafny axiom with
@@ -525,7 +525,7 @@ private let take_ranks_less_fact =
 ///         Seq#Rank(Seq#Append(Seq#Take(s, i), Seq#Drop(s, j))) < Seq#Rank(s) );
 
 private let append_take_drop_ranks_less_fact =
-  forall (ty: Type) (s: seq ty) (i: nat) (j: nat).{:pattern length (append (take s i) (drop s j))}
+  forall (ty: Type u#a) (s: seq ty) (i: nat) (j: nat).{:pattern length (append (take s i) (drop s j))}
     i < j && j <= length s ==> length (append (take s i) (drop s j)) << length s
 
 /// We represent the following Dafny axiom with `drop_zero_fact`.
@@ -534,7 +534,7 @@ private let append_take_drop_ranks_less_fact =
 ///         n == 0 ==> Seq#Drop(s, n) == s);
 
 private let drop_zero_fact =
-  forall (ty: Type) (s: seq ty) (n: nat).{:pattern drop s n}
+  forall (ty: Type u#a) (s: seq ty) (n: nat).{:pattern drop s n}
     n = 0 ==> drop s n == s
 
 /// We represent the following Dafny axiom with `take_zero_fact`.
@@ -543,7 +543,7 @@ private let drop_zero_fact =
 ///         n == 0 ==> Seq#Take(s, n) == Seq#Empty());
 
 private let take_zero_fact =
-  forall (ty: Type) (s: seq ty) (n: nat).{:pattern take s n}
+  forall (ty: Type u#a) (s: seq ty) (n: nat).{:pattern take s n}
     n = 0 ==> take s n == empty
 
 /// We represent the following Dafny axiom with `drop_then_drop_fact`.
@@ -552,8 +552,8 @@ private let take_zero_fact =
 ///         0 <= m && 0 <= n && m+n <= Seq#Length(s) ==>
 ///         Seq#Drop(Seq#Drop(s, m), n) == Seq#Drop(s, m+n));
 
-private let drop_then_drop_fact (_: squash drop_length_fact) =
-  forall (ty: Type) (s: seq ty) (m: nat) (n: nat).{:pattern drop (drop s m) n}
+private let drop_then_drop_fact (_: squash (drop_length_fact u#a)) =
+  forall (ty: Type u#a) (s: seq ty) (m: nat) (n: nat).{:pattern drop (drop s m) n}
     m + n <= length s ==> drop (drop s m) n == drop s (m + n)
 
 (**
@@ -562,42 +562,42 @@ private let drop_then_drop_fact (_: squash drop_length_fact) =
 **)
 
 let all_seq_facts =
-    length_of_empty_is_zero_fact
-  /\ length_zero_implies_empty_fact
-  /\ singleton_length_one_fact
-  /\ build_increments_length_fact
-  /\ index_into_build_fact ()
-  /\ append_sums_lengths_fact
-  /\ index_into_singleton_fact ()
-  /\ index_after_append_fact ()
-  /\ update_maintains_length_fact
-  /\ update_then_index_fact
-  /\ contains_iff_exists_index_fact
-  /\ empty_doesnt_contain_anything_fact
-  /\ build_contains_equiv_fact
-  /\ take_contains_equiv_exists_fact
-  /\ drop_contains_equiv_exists_fact
-  /\ equal_def_fact
-  /\ extensionality_fact
-  /\ is_prefix_def_fact
-  /\ take_length_fact
-  /\ index_into_take_fact ()
-  /\ drop_length_fact
-  /\ index_into_drop_fact ()
-  /\ drop_index_offset_fact ()
-  /\ append_then_take_or_drop_fact ()
-  /\ take_commutes_with_in_range_update_fact ()
-  /\ take_ignores_out_of_range_update_fact ()
-  /\ drop_commutes_with_in_range_update_fact ()
-  /\ drop_ignores_out_of_range_update_fact ()
-  /\ drop_commutes_with_build_fact ()
-  /\ rank_def_fact
-  /\ element_ranks_less_fact
-  /\ drop_ranks_less_fact
-  /\ take_ranks_less_fact
-  /\ append_take_drop_ranks_less_fact
-  /\ drop_zero_fact
-  /\ take_zero_fact
-  /\ drop_then_drop_fact ()
+    length_of_empty_is_zero_fact u#a
+  /\ length_zero_implies_empty_fact u#a
+  /\ singleton_length_one_fact u#a
+  /\ build_increments_length_fact u#a
+  /\ index_into_build_fact u#a ()
+  /\ append_sums_lengths_fact u#a
+  /\ index_into_singleton_fact u#a ()
+  /\ index_after_append_fact u#a ()
+  /\ update_maintains_length_fact u#a
+  /\ update_then_index_fact u#a
+  /\ contains_iff_exists_index_fact u#a
+  /\ empty_doesnt_contain_anything_fact u#a
+  /\ build_contains_equiv_fact u#a
+  /\ take_contains_equiv_exists_fact u#a
+  /\ drop_contains_equiv_exists_fact u#a
+  /\ equal_def_fact u#a
+  /\ extensionality_fact u#a
+  /\ is_prefix_def_fact u#a
+  /\ take_length_fact u#a
+  /\ index_into_take_fact u#a ()
+  /\ drop_length_fact u#a
+  /\ index_into_drop_fact u#a ()
+  /\ drop_index_offset_fact u#a ()
+  /\ append_then_take_or_drop_fact u#a ()
+  /\ take_commutes_with_in_range_update_fact u#a ()
+  /\ take_ignores_out_of_range_update_fact u#a ()
+  /\ drop_commutes_with_in_range_update_fact u#a ()
+  /\ drop_ignores_out_of_range_update_fact u#a ()
+  /\ drop_commutes_with_build_fact u#a ()
+  /\ rank_def_fact u#a
+  /\ element_ranks_less_fact u#a
+  /\ drop_ranks_less_fact u#a
+  /\ take_ranks_less_fact u#a
+  /\ append_take_drop_ranks_less_fact u#a
+  /\ drop_zero_fact u#a
+  /\ take_zero_fact u#a
+  /\ drop_then_drop_fact u#a ()
 
-val all_seq_facts_lemma : unit -> Lemma (all_seq_facts)
+val all_seq_facts_lemma : unit -> Lemma (all_seq_facts u#a)

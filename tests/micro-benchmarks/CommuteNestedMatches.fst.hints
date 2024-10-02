@@ -1,0 +1,63 @@
+[
+  "Þš\u0000°MÛYî{z\u000fØð#Û}",
+  [
+    [
+      "CommuteNestedMatches.outer",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_CommuteNestedMatches.A",
+        "disc_equation_CommuteNestedMatches.B",
+        "equality_tok_CommuteNestedMatches.A@tok",
+        "equality_tok_CommuteNestedMatches.B@tok",
+        "equation_CommuteNestedMatches.inner",
+        "fuel_guarded_inversion_CommuteNestedMatches.t",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_CommuteNestedMatches.inner"
+      ],
+      0,
+      "a95af349d1c3b34a1b7e9956acbe293e"
+    ],
+    [
+      "CommuteNestedMatches.outer_s",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_CommuteNestedMatches.C",
+        "disc_equation_CommuteNestedMatches.D",
+        "equality_tok_CommuteNestedMatches.C@tok",
+        "equality_tok_CommuteNestedMatches.D@tok",
+        "equation_CommuteNestedMatches.inner_s",
+        "fuel_guarded_inversion_CommuteNestedMatches.s",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_CommuteNestedMatches.inner_s"
+      ],
+      0,
+      "42a854abe969fdf853265b4868f663a7"
+    ],
+    [
+      "CommuteNestedMatches.test_s",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "constructor_distinct_CommuteNestedMatches.C",
+        "constructor_distinct_CommuteNestedMatches.D",
+        "equality_tok_CommuteNestedMatches.C@tok",
+        "equality_tok_CommuteNestedMatches.D@tok",
+        "equation_CommuteNestedMatches.inner_s",
+        "equation_CommuteNestedMatches.opt_s",
+        "equation_CommuteNestedMatches.outer_s",
+        "fuel_guarded_inversion_CommuteNestedMatches.s",
+        "typing_CommuteNestedMatches.inner_s"
+      ],
+      0,
+      "d2d9a3bff2695bbc4d53ac1d1b6c8748"
+    ]
+  ]
+]

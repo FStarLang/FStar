@@ -17,10 +17,12 @@ module FStar.Tactics.CanonCommMonoidSimple
 
 open FStar.Algebra.CommMonoid
 open FStar.List
-open FStar.Tactics
-open FStar.Reflection
+open FStar.Reflection.V2
+open FStar.Tactics.V2
 open FStar.Classical
 open FStar.Tactics.CanonCommSwaps
+
+let term_eq = FStar.Tactics.V2.term_eq_old
 
 (* A simple expression canonizer for commutative monoids.
    For a canonizer with more features see FStar.Tactics.CanonCommMonoid.fst.
@@ -55,7 +57,7 @@ let rec exp_to_string (e:exp) : string =
 // (1) its denotation that should be treated abstractly (type a) and
 // (2) user-specified extra information depending on its term (type b)
 
-let amap (a:Type) = list (atom * a) * a
+let amap (a:Type) = list (atom & a) & a
 let const (#a:Type) (xa:a) : amap a = ([], xa)
 let select (#a:Type) (x:atom) (am:amap a) : Tot a =
   match assoc #atom #a x (fst am) with
@@ -209,7 +211,7 @@ let monoid_reflect (#a:Type) (m:cm a) (am:amap a) (e1 e2:exp)
 (* Finds the position of first occurrence of x in xs.
    This is now specialized to terms and their funny term_eq. *)
 let rec where_aux (n:nat) (x:term) (xs:list term) :
-    Tot (option nat) (decreases xs) =
+    Tac (option nat) =
   match xs with
   | [] -> None
   | x'::xs' -> if term_eq x x' then Some n else where_aux (n+1) x xs'
@@ -217,9 +219,9 @@ let where = where_aux 0
 
 // This expects that mult, unit, and t have already been normalized
 let rec reification_aux (#a:Type) (ts:list term) (am:amap a)
-                        (mult unit t : term) : Tac (exp * list term * amap a) =
+                        (mult unit t : term) : Tac (exp & list term & amap a) =
   let hd, tl = collect_app_ref t in
-  let fatom (t:term) (ts:list term) (am:amap a) : Tac (exp * list term * amap a) =
+  let fatom (t:term) (ts:list term) (am:amap a) : Tac (exp & list term & amap a) =
     match where t ts with
     | Some v -> (Atom v, ts, am)
     | None -> let vfresh = length ts in let z = unquote t in
@@ -238,7 +240,7 @@ let rec reification_aux (#a:Type) (ts:list term) (am:amap a)
     else fatom t ts am
 
 let reification (#a:Type) (m:cm a) (ts:list term) (am:amap a) (t:term) :
-    Tac (exp * list term * amap a) =
+    Tac (exp & list term & amap a) =
   let mult = norm_term [delta;zeta;iota] (quote (CM?.mult m)) in
   let unit = norm_term [delta;zeta;iota] (quote (CM?.unit m)) in
   let t    = norm_term [delta;zeta;iota] t in
@@ -264,21 +266,9 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
         // dump ("after apply");
         norm [delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
                 `%select; `%assoc; `%fst; `%__proj__Mktuple2__item___1;
-                `%(@); `%append; `%List.Tot.Base.sortWith;
-                `%List.Tot.Base.partition; `%bool_of_compare; `%compare_of_bool;
+                `%(@); `%append; `%List.Tot.sortWith;
+                `%List.Tot.partition; `%bool_of_compare; `%compare_of_bool;
            ]; primops]
         // ;dump "done"
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
-
-(***** Example *)
-
-let lem0 (a b c d : int) =
-  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid int_plus_cm; trefl())
-
-open FStar.Mul
-
-let _ =
-  assert_by_tactic (forall (a b c d : int). ((b + 1) * 1) * 2 * a * (c * a) * 1 == a * (b + 1) * c * a * 2)
-  (fun _ -> ignore (forall_intros()); canon_monoid int_multiply_cm; trefl())

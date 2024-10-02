@@ -1,0 +1,133 @@
+[
+  "\n\n‘ƒ\r®\u0006fÊ\u0018é”—Z¤B",
+  [
+    [
+      "FStar.IntegerIntervals.coerce_to_not_less_than",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "b03b65efec7bfc43e8bcd3a4cc93b61d"
+    ],
+    [
+      "FStar.IntegerIntervals.closed_interval_lemma",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.IntegerIntervals.ifrom_ito" ],
+      0,
+      "866fcf59597e7c26434db37bdb856cfa"
+    ],
+    [
+      "FStar.IntegerIntervals.interval_size",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "3d84b28141f57a8d3ba3cdfeb1537d3f"
+    ],
+    [
+      "FStar.IntegerIntervals.uu___41",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.IntegerIntervals.interval_size",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "94e39ab728a5c899694fb4c864600b91"
+    ],
+    [
+      "FStar.IntegerIntervals.uu___42",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.IntegerIntervals.interval_size",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "d12f7bab8531b3c4b244347eba2adbc2"
+    ],
+    [
+      "FStar.IntegerIntervals.uu___43",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.IntegerIntervals.interval_size",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "38761cd572b5756454f52657b2d299ca"
+    ],
+    [
+      "FStar.IntegerIntervals.counter_bounds_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.counter_for",
+        "equation_FStar.IntegerIntervals.ifrom_ito",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.interval_size",
+        "equation_FStar.IntegerIntervals.under", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
+      ],
+      0,
+      "b36f6cdeb9ad5ad5fcb5914135336147"
+    ],
+    [
+      "FStar.IntegerIntervals.indices_seq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.IntegerIntervals_interpretation_Tm_arrow_228eb393a9eb9a40ceba40f3bf06b6f8",
+        "FStar.Seq.Base_interpretation_Tm_arrow_44bb45ed5c2534b346e0f58ea5033251",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.interval_type",
+        "equation_FStar.IntegerIntervals.under", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "haseqTm_refine_fcf1a3596fffd49dd2e91f2678358f19", "int_inversion",
+        "interpretation_Tm_abs_07607a90cdec640007c6e8f2e5d63494",
+        "lemma_FStar.Seq.Base.init_index_",
+        "lemma_FStar.Seq.Base.lemma_init_len", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_3c4167b507ffe04135b47025f765c8a4",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19",
+        "typing_FStar.IntegerIntervals.under"
+      ],
+      0,
+      "c05cc0cea0789bdfe39c6476799f4a51"
+    ]
+  ]
+]

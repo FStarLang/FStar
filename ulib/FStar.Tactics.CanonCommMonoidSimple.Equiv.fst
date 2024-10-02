@@ -17,10 +17,12 @@ module FStar.Tactics.CanonCommMonoidSimple.Equiv
 
 open FStar.Algebra.CommMonoid.Equiv
 open FStar.List
-open FStar.Tactics
-open FStar.Reflection
 open FStar.Classical
 open FStar.Tactics.CanonCommSwaps
+open FStar.Tactics.V2
+
+private
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
 
 (* A simple expression canonizer for commutative monoids (working up to
    some given equivalence relation as opposed to just propositional equality).
@@ -57,7 +59,7 @@ let rec exp_to_string (e:exp) : string =
 // (1) its denotation that should be treated abstractly (type a) and
 // (2) user-specified extra information depending on its term (type b)
 
-let amap (a:Type) = list (atom * a) * a
+let amap (a:Type) = list (atom & a) & a
 let const (#a:Type) (xa:a) : amap a = ([], xa)
 let select (#a:Type) (x:atom) (am:amap a) : Tot a =
   match assoc #atom #a x (fst am) with
@@ -143,20 +145,6 @@ let permute_correct (p:permute) =
 // In the general case, an arbitrary permutation can be done via swaps.
 // (see FStar.Tactics.CanonCommSwaps for a proof)
 
-let swap (n:nat) :Type = x:nat{x < n-1}
-
-let rec apply_swap_aux (#a:Type) (n:nat) (xs:list a) (s:swap (length xs + n))
-  : Pure (list a) (requires True)
-                  (ensures (fun zs -> length zs == length xs)) (decreases xs) =
-  match xs with
-  | [] | [_] -> xs
-  | x1 :: x2 :: xs' ->
-      if n = (s <: nat)
-      then x2 :: x1 :: xs'
-      else x1 :: apply_swap_aux (n+1) (x2 :: xs') s
-
-let apply_swap (#a:Type) = apply_swap_aux #a 0
-
 let rec apply_swap_aux_correct (#a:Type) (n:nat) (eq:equiv a) (m:cm a eq) (am:amap a)
                            (xs:list atom) (s:swap (length xs + n))
   : Lemma (requires True)
@@ -198,13 +186,6 @@ let apply_swap_correct (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a)
           (decreases xs) =
   apply_swap_aux_correct 0 eq m am xs s
 
-let rec apply_swaps (#a:Type) (xs:list a) (ss:list (swap (length xs)))
-  : Pure (list a) (requires True)
-                  (ensures (fun zs -> length zs == length xs)) (decreases ss) =
-  match ss with
-  | [] -> xs
-  | s::ss' -> apply_swaps (apply_swap xs s) ss'
-
 let rec apply_swaps_correct (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a)
                             (xs:list atom) (ss:list (swap (length xs)))
   : Lemma (requires True)
@@ -244,14 +225,10 @@ let permute_via_swaps_correct
 let sort : permute = List.Tot.Base.sortWith #int (compare_of_bool (<))
 
 let sort_via_swaps (#a:Type) (am:amap a)  (xs:list atom)
-  : Lemma (exists (ss:swaps_for xs). sort xs == apply_swaps xs ss) =
-  List.Tot.Properties.sortWith_permutation #int (compare_of_bool (<)) xs;
-  let (ss:swaps_for xs) = equal_counts_implies_swaps #int xs (sort xs) in
-  assume (sort xs == apply_swaps xs ss)
-  // this should just work from the type of ss
-  // (and the postcondition of equal_counts_implies_swaps),
-  // but ss gets substituted by its definition in the WP
-  // (the same already in FStar.Tactics.CanonCommMonoidSimple.fst)
+  : Lemma (exists (ss:swaps_for xs). sort xs == apply_swaps xs ss) 
+  = List.Tot.Properties.sortWith_permutation #int (compare_of_bool (<)) xs;
+    let ss = equal_counts_implies_swaps xs (sort xs) in
+    ()
 
 let sort_correct_aux (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (xs:list atom)
   : Lemma (xsdenote eq m am xs `EQ?.eq eq` xsdenote eq m am (sort xs)) =
@@ -292,13 +269,13 @@ let monoid_reflect (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (e1 e2:exp)
 (* Finds the position of first occurrence of x in xs.
    This is now specialized to terms and their funny term_eq. *)
 let rec where_aux (n:nat) (x:term) (xs:list term) :
-    Tot (option nat) (decreases xs) =
+    Tac (option nat) =
   match xs with
   | [] -> None
   | x'::xs' -> if term_eq x x' then Some n else where_aux (n+1) x xs'
 let where = where_aux 0
 
-let fatom (t:term) (ts:list term) (am:amap term) : Tac (exp * list term * amap term) =
+let fatom (t:term) (ts:list term) (am:amap term) : Tac (exp & list term & amap term) =
   match where t ts with
   | Some v -> (Atom v, ts, am)
   | None ->
@@ -308,9 +285,9 @@ let fatom (t:term) (ts:list term) (am:amap term) : Tac (exp * list term * amap t
 
 // This expects that mult, unit, and t have already been normalized
 let rec reification_aux (ts:list term) (am:amap term)
-                        (mult unit t : term) : Tac (exp * list term * amap term) =
-  let hd, tl = collect_app_ref t in
-  match inspect hd, list_unref tl with
+                        (mult unit t : term) : Tac (exp & list term & amap term) =
+  let hd, tl = collect_app t in
+  match inspect hd, tl with
   | Tv_FVar fv, [(t1, Q_Explicit) ; (t2, Q_Explicit)] ->
     if term_eq (pack (Tv_FVar fv)) mult
     then (let (e1, ts, am) = reification_aux ts am mult unit t1 in
@@ -323,7 +300,7 @@ let rec reification_aux (ts:list term) (am:amap term)
     else fatom t ts am
 
 let reification (eq: term) (m: term) (ts:list term) (am:amap term) (t:term) :
-    Tac (exp * list term * amap term) =
+    Tac (exp & list term & amap term) =
   let mult = norm_term [iota; zeta; delta] (`CM?.mult (`#m)) in
   let unit = norm_term [iota; zeta; delta] (`CM?.unit (`#m)) in
   let t    = norm_term [iota; zeta] t in
@@ -337,11 +314,11 @@ let rec repeat_cong_right_identity (eq: term) (m: term) : Tac unit =
                     repeat_cong_right_identity eq m
                     )
 
-let rec convert_map (m : list (atom * term)) : term =
+let rec convert_map (m : list (atom & term)) : term =
   match m with
   | [] -> `[]
   | (a, t)::ps ->
-      let a = pack_ln (Tv_Const (C_Int a)) in
+      let a = pack (Tv_Const (C_Int a)) in
       (* let t = norm_term [delta] t in *)
       `((`#a, (`#t)) :: (`#(convert_map ps)))
 
@@ -357,7 +334,7 @@ let rec quote_exp (e:exp) : term =
     match e with
     | Unit -> (`Unit)
     | Mult e1 e2 -> (`Mult (`#(quote_exp e1)) (`#(quote_exp e2)))
-    | Atom n -> let nt = pack_ln (Tv_Const (C_Int n)) in
+    | Atom n -> let nt = pack (Tv_Const (C_Int n)) in
                 (`Atom (`#nt))
 
 let canon_lhs_rhs (eq: term) (m: term) (lhs rhs:term) : Tac unit =
@@ -384,8 +361,8 @@ let canon_lhs_rhs (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   //dump ("after apply monoid_reflect");
   norm [iota; zeta; delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
                     `%select; `%assoc; `%fst; `%__proj__Mktuple2__item___1;
-                    `%(@); `%append; `%List.Tot.Base.sortWith;
-                    `%List.Tot.Base.partition; `%bool_of_compare;
+                    `%(@); `%append; `%List.Tot.sortWith;
+                    `%List.Tot.partition; `%bool_of_compare;
                     `%compare_of_bool;
        ]; primops];
   //dump "before refl";
@@ -397,11 +374,11 @@ let canon_monoid (eq: term) (m: term) : Tac unit =
   norm [iota; zeta];
   let t = cur_goal () in
   // removing top-level squash application
-  let sq, rel_xy = collect_app_ref t in
+  let sq, rel_xy = collect_app t in
   // unpacking the application of the equivalence relation (lhs `EQ?.eq eq` rhs)
   (match rel_xy with
    | [(rel_xy,_)] -> (
-       let rel, xy = collect_app_ref rel_xy in
+       let rel, xy = collect_app rel_xy in
        if (length xy >= 2)
        then (
          match FStar.List.Tot.Base.index xy (length xy - 2) , FStar.List.Tot.index xy (length xy - 1) with
@@ -413,17 +390,3 @@ let canon_monoid (eq: term) (m: term) : Tac unit =
        )
      )
    | _ -> fail "Goal should be squash applied to a binary relation")
-
-(***** Example *)
-
-(*
-let test1 (a b c d : int) =
-  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid (equality_equiv int) int_plus_cm)
-
-open FStar.Mul
-
-let test2 =
-  assert_by_tactic (forall (a b c d : int). ((b + 1) * 1) * 2 * a * (c * a) * 1 == a * (b + 1) * c * a * 2)
-  (fun _ -> ignore (forall_intros()); canon_monoid (equality_equiv int) int_multiply_cm)
-*)

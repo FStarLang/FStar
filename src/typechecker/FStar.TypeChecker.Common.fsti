@@ -18,11 +18,18 @@ open Prims
 open FStar.Pervasives
 open FStar.Compiler.Effect
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Ident
+open FStar.Class.Show
+open FStar.Class.Monoid
+
+(* Bring instances in scope *)
+open FStar.Syntax.Print {}
+
 module S = FStar.Syntax.Syntax
 
 module BU = FStar.Compiler.Util
@@ -52,11 +59,13 @@ type problem 'a = {                  //Try to prove: lhs rel rhs ~ guard
     reason: list string;             //why we generated this problem, for error reporting
     loc: Range.range;                 //and the source location where this arose
     rank: option rank_t;
+    logical : bool;                             //logical problems cannot unfold connectives
 }
 
 type prob =
   | TProb of problem typ
   | CProb of problem comp
+type prob_t = prob
 
 val as_tprob : prob -> problem typ
 
@@ -65,6 +74,8 @@ type probs = list prob
 type guard_formula =
   | Trivial
   | NonTrivial of formula
+
+instance val showable_guard_formula : showable guard_formula
 
 type deferred_reason =
   | Deferred_univ_constraint
@@ -77,9 +88,11 @@ type deferred_reason =
   | Deferred_delay_match_heuristic
   | Deferred_to_user_tac
 
-type deferred = list (deferred_reason * string * prob)
+instance val showable_deferred_reason : showable deferred_reason
 
-type univ_ineq = universe * universe
+type deferred = list (deferred_reason & string & prob)
+
+type univ_ineq = universe & universe
 
 (***********************************************************************************)
 (* A table of file -> starting row -> starting col -> identifier info              *)
@@ -98,7 +111,7 @@ type identifier_info = {
 }
 
 type id_info_by_col = //sorted in ascending order of columns
-    list (int * identifier_info)
+    list (int & identifier_info)
 
 type col_info_by_row =
     BU.pimap id_info_by_col
@@ -119,15 +132,15 @@ val mk_by_tactic : term -> term -> term
 val delta_depth_greater_than : delta_depth -> delta_depth -> bool
 val decr_delta_depth : delta_depth -> option delta_depth
 
-val insert_col_info : int -> identifier_info -> list (int * identifier_info) -> list (int * identifier_info)
-val find_nearest_preceding_col_info : int -> list (int * identifier_info) -> option identifier_info
+val insert_col_info : int -> identifier_info -> list (int & identifier_info) -> list (int & identifier_info)
+val find_nearest_preceding_col_info : int -> list (int & identifier_info) -> option identifier_info
 
 val id_info_table_empty : id_info_table
 
 val id_info_insert_bv : id_info_table -> bv -> typ -> id_info_table
 val id_info_insert_fv : id_info_table -> fv -> typ -> id_info_table
 val id_info_toggle    : id_info_table -> bool -> id_info_table
-val id_info_promote   : id_info_table -> (typ -> typ) -> id_info_table
+val id_info_promote   : id_info_table -> (typ -> option typ) -> id_info_table
 val id_info_at_pos    : id_info_table -> string -> int -> int -> option identifier_info
 
 // Reason, term and uvar, and (rough) position where it is introduced
@@ -138,6 +151,9 @@ type implicit = {
     imp_tm     : term;                    // The term, made up of the ctx_uvar
     imp_range  : Range.range;             // Position where it was introduced
 }
+
+instance val show_implicit : showable implicit
+
 type implicits = list implicit
 
 val implicits_to_string : implicits -> string
@@ -147,34 +163,40 @@ type guard_t = {
   deferred_to_tac: deferred; //This field maintains problems that are to be dispatched to a tactic
                              //They are never attempted by the unification engine in Rel
   deferred:   deferred;
-  univ_ineqs: list universe * list univ_ineq;
+  univ_ineqs: list universe & list univ_ineq;
   implicits:  implicits;
 }
 
 val trivial_guard : guard_t
-
 val conj_guard    : guard_t -> guard_t -> guard_t
+
+instance val monoid_guard_t : monoid guard_t (* conj_guard, trivial_guard *)
+
 val check_trivial : term -> guard_formula
 val imp_guard     : guard_t -> guard_t -> guard_t
 val conj_guards   : list guard_t -> guard_t
+
+// splits the guard into the logical component (snd in the returned tuple)
+//   and the rest (fst in the returned tuple)
+val split_guard   : guard_t -> guard_t & guard_t
 
 val weaken_guard_formula: guard_t -> typ -> guard_t
 type lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
     cflags: list cflag;
-    comp_thunk: ref (either (unit -> (comp * guard_t)) comp)
+    comp_thunk: ref (either (unit -> (comp & guard_t)) comp)
 }
 
 val mk_lcomp:
     eff_name: lident ->
     res_typ: typ ->
     cflags: list cflag ->
-    comp_thunk: (unit -> (comp * guard_t)) -> lcomp
+    comp_thunk: (unit -> (comp & guard_t)) -> lcomp
 
-val lcomp_comp: lcomp -> (comp * guard_t)
+val lcomp_comp: lcomp -> (comp & guard_t)
 val apply_lcomp : (comp -> comp) -> (guard_t -> guard_t) -> lcomp -> lcomp
-val lcomp_to_string : lcomp -> string
+val lcomp_to_string : lcomp -> string (* CAUTION! can have side effects of forcing the lcomp *)
 val lcomp_set_flags : lcomp -> list S.cflag -> lcomp
 val is_total_lcomp : lcomp -> bool
 val is_tot_or_gtot_lcomp : lcomp -> bool
@@ -186,5 +208,6 @@ val residual_comp_of_lcomp : lcomp -> residual_comp
 val lcomp_of_comp_guard : comp -> guard_t -> lcomp
 //lcomp_of_comp_guard with trivial guard
 val lcomp_of_comp : comp -> lcomp
-val simplify : debug:bool -> term -> term
 
+val check_positivity_qual (subtyping:bool) (p0 p1:option positivity_qualifier)
+  : bool

@@ -13,9 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Bug1347B
+module Bug1347b
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let test (x : int) =
     assert True

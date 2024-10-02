@@ -1,0 +1,56 @@
+[
+  "z\\:ð'ù7=»©ó|Ç\u0019'\u007f",
+  [
+    [
+      "Bug2269.a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Bug2269_interpretation_Tm_arrow_fce5e26d6599fbb4e26956c05e4721d2",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_Prims.dtuple2__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
+        "interpretation_Tm_abs_198369e9b95c3a9aefb7ef145e8927e9",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Tm_abs_198369e9b95c3a9aefb7ef145e8927e9"
+      ],
+      0,
+      "67b70413c6b2368669c1c0900dcf5aee"
+    ],
+    [
+      "Bug2269.a",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Bug2269_interpretation_Tm_arrow_fce5e26d6599fbb4e26956c05e4721d2",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_Prims.dtuple2__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
+        "interpretation_Tm_abs_198369e9b95c3a9aefb7ef145e8927e9",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Tm_abs_198369e9b95c3a9aefb7ef145e8927e9"
+      ],
+      0,
+      "67b70413c6b2368669c1c0900dcf5aee"
+    ],
+    [
+      "Bug2269.uu___8",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Bug2269.a" ],
+      0,
+      "9353e66f9722baa2f6d0107859cdcc01"
+    ]
+  ]
+]

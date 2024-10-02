@@ -21,14 +21,14 @@ open FStar.SMTEncoding.Term
 open FStar.BaseTypes
 open FStar.Compiler.Util
 module BU = FStar.Compiler.Util
+module U = FStar.SMTEncoding.UnsatCore
+module SolverState = FStar.SMTEncoding.SolverState
 
-type unsat_core = option (list string)
-type scope_t = list (list decl)
 type z3status =
-    | UNSAT   of unsat_core
-    | SAT     of error_labels * option string         //error labels * z3 reason
-    | UNKNOWN of error_labels * option string         //error labels * z3 reason
-    | TIMEOUT of error_labels * option string         //error labels * z3 reason
+    | UNSAT   of option U.unsat_core
+    | SAT     of error_labels & option string         //error labels & z3 reason
+    | UNKNOWN of error_labels & option string         //error labels & z3 reason
+    | TIMEOUT of error_labels & option string         //error labels & z3 reason
     | KILLED
 type z3statistics = BU.smap string
 
@@ -43,29 +43,38 @@ type z3result = {
 type query_log = {
     get_module_name: unit -> string;
     set_module_name: string -> unit;
-    write_to_log:    bool -> string -> string;
-    close_log:       unit -> unit
+    write_to_log:    bool -> string -> string; (* returns name of log file written to *)
+    append_to_log:   string -> string; (* idem *)
+    close_log:       unit -> unit;
 }
 
-val status_string_and_errors : z3status -> string * error_labels
-val set_z3_options : string -> unit
+val status_string_and_errors : z3status -> string & error_labels
+
 val giveZ3 : list decl -> unit
 
-val ask: r:Range.range
-       -> filter:(list decl -> list decl * bool)
+val ask_text
+       : r:Range.range
        -> cache:(option string) // hash
        -> label_messages:error_labels
        -> qry:list decl
-       -> scope:option scope_t
+       -> queryid:string
+       -> core:option U.unsat_core
+       -> string
+
+val ask: r:Range.range
+       -> cache:option string // hash
+       -> label_messages:error_labels
+       -> qry:list decl
+       -> queryid:string
        -> fresh:bool
+       -> core:option U.unsat_core
        -> z3result
 
-val refresh: unit -> unit
-val finish: unit -> unit
-val mk_fresh_scope: unit -> scope_t
-val init : unit -> unit
+val refresh: option SolverState.using_facts_from_setting -> unit
 val push : msg:string -> unit
 val pop : msg:string -> unit
-val snapshot : msg:string -> (int * unit)
-val rollback : msg:string -> option int -> unit
+val snapshot : string -> int
+val rollback : string -> option int -> unit
+val start_query (msg:string) (prefix_to_push:list decl) (query:decl) : unit
+val finish_query (msg:string) : unit
 val query_logging : query_log

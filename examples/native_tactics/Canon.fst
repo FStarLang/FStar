@@ -14,8 +14,8 @@
    limitations under the License.
 *)
 module Canon
-module XX = FStar.Tactics.Canon // load it, to get the symbols for the lemmas
-open FStar.Tactics
+
+open FStar.Tactics.V2
 open FStar.Mul
 open FStar.Tactics.Canon
 
