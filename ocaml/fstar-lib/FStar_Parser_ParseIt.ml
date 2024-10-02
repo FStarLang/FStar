@@ -159,13 +159,10 @@ let parse_incremental_decls
     let start_pos = current_pos lexbuf in
     let d =
       try
-        (* Reset the gensym before parsing decls, to ensure determinism,
-            otherwise, every _ is parsed as different name. However, make
-            sure to not affect the external state. *)
-        FStar_GenSym.with_frozen_gensym (fun () ->
-          FStar_GenSym.reset_gensym();
-          Inl (parse_one lexer)
-        )
+        (* Reset the gensym between decls, to ensure determinism, 
+            otherwise, every _ is parsed as different name *)
+        FStar_GenSym.reset_gensym();
+        Inl (parse_one lexer)
       with 
       | FStar_Errors.Error(e, msg, r, ctx) ->
         Inr (e, msg, r)
