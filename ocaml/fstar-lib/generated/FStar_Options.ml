@@ -4103,8 +4103,27 @@ let (lib_root : unit -> Prims.string FStar_Pervasives_Native.option) =
        | FStar_Pervasives_Native.Some s -> FStar_Pervasives_Native.Some s
        | FStar_Pervasives_Native.None ->
            let uu___6 =
-             FStar_Compiler_String.op_Hat fstar_bin_directory "/../ulib" in
-           FStar_Pervasives_Native.Some uu___6)
+             let uu___7 =
+               FStar_Compiler_String.op_Hat fstar_bin_directory "/../ulib" in
+             FStar_Compiler_Util.file_exists uu___7 in
+           if uu___6
+           then
+             let uu___7 =
+               FStar_Compiler_String.op_Hat fstar_bin_directory "/../ulib" in
+             FStar_Pervasives_Native.Some uu___7
+           else
+             (let uu___8 =
+                let uu___9 =
+                  FStar_Compiler_String.op_Hat fstar_bin_directory
+                    "/../lib/fstar" in
+                FStar_Compiler_Util.file_exists uu___9 in
+              if uu___8
+              then
+                let uu___9 =
+                  FStar_Compiler_String.op_Hat fstar_bin_directory
+                    "/../lib/fstar" in
+                FStar_Pervasives_Native.Some uu___9
+              else FStar_Pervasives_Native.None))
 let (lib_paths : unit -> Prims.string Prims.list) =
   fun uu___ ->
     let uu___3 =
