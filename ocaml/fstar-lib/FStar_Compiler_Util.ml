@@ -866,9 +866,21 @@ let concat_dir_filename d f = Filename.concat d f
 let slash_code : int =
   BatUChar.code (BatUChar.of_char '/')
 
+let rec dropWhile f xs =
+  match xs with
+  | [] -> []
+  | x::xs ->
+    if f x
+    then dropWhile f xs
+    else x::xs
+
 let path_parent (fn : string) : string =
-    let cs = FStar_String.split [slash_code] fn in
-    FStar_String.concat "/" (FStar_List.init cs)
+  let cs = FStar_String.split [slash_code] fn in
+  (* ^ Components of the path *)
+  let cs = cs |> List.rev |> dropWhile (fun s -> s = "") |> List.rev in
+  (* ^ Remove empty trailing components, so we interpret a/b/c/ as a/b/c *)
+  (* Remove last component to get parent and concat. *)
+  FStar_String.concat "/" (FStar_List.init cs)
 
 let rec __mkdir clean mkparents nm =
   let remove_all_in_dir nm =
@@ -883,7 +895,7 @@ let rec __mkdir clean mkparents nm =
   | Unix_error (EEXIST, _, _) ->
     if clean then remove_all_in_dir nm
 
-  (* failed due to existing directory, mkparents is true, and nm has a slash:
+  (* failed due to nonexisting directory, mkparents is true, and nm has a slash:
       attempt to recursively create parent and retry. *)
   | Unix_error (ENOENT, _, _) when mkparents && FStar_String.index_of nm slash_code <> (Z.of_int (-1)) ->
     __mkdir false true (path_parent nm);
