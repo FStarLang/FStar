@@ -83,7 +83,7 @@ let (uu___is_Valid : tc_result_t -> Prims.bool) =
   fun projectee -> match projectee with | Valid _0 -> true | uu___ -> false
 let (__proj__Valid__item___0 : tc_result_t -> Prims.string) =
   fun projectee -> match projectee with | Valid _0 -> _0
-let (uu___0 : tc_result_t FStar_Class_Show.showable) =
+let (uu___44 : tc_result_t FStar_Class_Show.showable) =
   {
     FStar_Class_Show.show =
       (fun uu___ ->

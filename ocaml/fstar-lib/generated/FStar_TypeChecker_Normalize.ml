@@ -9215,7 +9215,7 @@ let (get_n_binders :
       FStar_Syntax_Syntax.term ->
         (FStar_Syntax_Syntax.binder Prims.list * FStar_Syntax_Syntax.comp))
   = fun env1 -> fun n -> fun t -> get_n_binders' env1 [] n t
-let (uu___0 : unit) =
+let (uu___3496 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals __get_n_binders get_n_binders'
 let (maybe_unfold_head_fv :
   FStar_TypeChecker_Env.env ->

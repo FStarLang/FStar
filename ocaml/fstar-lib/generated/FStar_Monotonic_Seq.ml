@@ -158,4 +158,7 @@ let testify_seqn :
   fun i ->
     fun l ->
       fun log ->
-        fun max -> fun ctr -> let n = FStar_HyperStack_ST.op_Bang ctr in ()
+        fun max ->
+          fun ctr ->
+            let n = FStar_HyperStack_ST.op_Bang ctr in
+            FStar_HyperStack_ST.testify ()

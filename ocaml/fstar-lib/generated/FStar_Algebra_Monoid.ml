@@ -57,13 +57,13 @@ let intro_monoid_morphism :
       'a monoid -> 'b monoid -> ('a, 'b, unit, unit, unit) monoid_morphism
   = fun f -> fun ma -> fun mb -> MonoidMorphism ((), ())
 let (embed_nat_int : Prims.nat -> Prims.int) = fun n -> n
-let (uu___0 : (Prims.nat, Prims.int, unit, unit, unit) monoid_morphism) =
+let (uu___181 : (Prims.nat, Prims.int, unit, unit, unit) monoid_morphism) =
   intro_monoid_morphism embed_nat_int nat_plus_monoid int_plus_monoid
 type 'p neg = unit
-let (uu___1 : (unit, unit, unit neg, unit, unit) monoid_morphism) =
+let (uu___183 : (unit, unit, unit neg, unit, unit) monoid_morphism) =
   intro_monoid_morphism (fun uu___ -> ()) conjunction_monoid
     disjunction_monoid
-let (uu___2 : (unit, unit, unit neg, unit, unit) monoid_morphism) =
+let (uu___192 : (unit, unit, unit neg, unit, unit) monoid_morphism) =
   intro_monoid_morphism (fun uu___ -> ()) disjunction_monoid
     conjunction_monoid
 type ('m, 'a, 'mult, 'act) mult_act_lemma = unit

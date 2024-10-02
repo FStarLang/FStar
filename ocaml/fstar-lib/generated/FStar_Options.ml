@@ -422,7 +422,7 @@ let (init : unit -> unit) =
     FStar_Compiler_List.iter set_option' defaults
 let (clear : unit -> unit) =
   fun uu___ -> FStar_Compiler_Effect.op_Colon_Equals history [[]]; init ()
-let (uu___0 : unit) = clear ()
+let (uu___151 : unit) = clear ()
 let (get_option : Prims.string -> option_val) =
   fun s ->
     let uu___ =
@@ -1135,7 +1135,8 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else FStar_Compiler_Effect.failwith "unexpected value for --quake"
     | uu___ -> FStar_Compiler_Effect.failwith "unexpected value for --quake"
-let (uu___1 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit))) =
+let (uu___526 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+  =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
     FStar_Compiler_Effect.op_Colon_Equals cb (FStar_Pervasives_Native.Some f) in
@@ -1146,11 +1147,11 @@ let (uu___1 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit))) =
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___1 with
+  match uu___526 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___1 with
+  match uu___526 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1163,107 +1164,107 @@ let rec (specs_with_types :
   fun warn_unsafe ->
     let text s =
       let uu___ = FStar_Pprint.break_ Prims.int_one in
-      let uu___2 = FStar_Pprint.words s in FStar_Pprint.flow uu___ uu___2 in
+      let uu___1 = FStar_Pprint.words s in FStar_Pprint.flow uu___ uu___1 in
     let uu___ =
-      let uu___2 =
+      let uu___1 =
         text
           "Abort on the n-th error or warning raised. Useful in combination with --trace_error. Count starts at 1, use 0 to disable. (default 0)" in
       (FStar_Getopt.noshort, "abort_on",
         (PostProcessed
-           ((fun uu___3 ->
-               match uu___3 with
+           ((fun uu___2 ->
+               match uu___2 with
                | Int x ->
                    (FStar_Compiler_Effect.op_Colon_Equals abort_counter x;
                     Int x)
                | x -> FStar_Compiler_Effect.failwith "?"),
-             (IntStr "non-negative integer"))), uu___2) in
-    let uu___2 =
-      let uu___3 =
-        let uu___4 = text "Admit SMT queries, unsafe! (default 'false')" in
+             (IntStr "non-negative integer"))), uu___1) in
+    let uu___1 =
+      let uu___2 =
+        let uu___3 = text "Admit SMT queries, unsafe! (default 'false')" in
         (FStar_Getopt.noshort, "admit_smt_queries",
           (WithSideEffect
-             ((fun uu___5 ->
+             ((fun uu___4 ->
                  if warn_unsafe
                  then option_warning_callback "admit_smt_queries"
-                 else ()), BoolStr)), uu___4) in
-      let uu___4 =
-        let uu___5 =
-          let uu___6 =
+                 else ()), BoolStr)), uu___3) in
+      let uu___3 =
+        let uu___4 =
+          let uu___5 =
             text
               "Admit all queries, except those with label ( symbol,  id))(e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)" in
           (FStar_Getopt.noshort, "admit_except",
             (WithSideEffect
-               ((fun uu___7 ->
+               ((fun uu___6 ->
                    if warn_unsafe
                    then option_warning_callback "admit_except"
-                   else ()), (SimpleStr "[symbol|(symbol, id)]"))), uu___6) in
-        let uu___6 =
-          let uu___7 =
-            let uu___8 =
+                   else ()), (SimpleStr "[symbol|(symbol, id)]"))), uu___5) in
+        let uu___5 =
+          let uu___6 =
+            let uu___7 =
               text
                 "Retain behavior of the tactic engine prior to the introduction of FStar.TypeChecker.Core (0 is most permissive, 2 is least permissive)" in
             (FStar_Getopt.noshort, "compat_pre_core", (IntStr "0, 1, 2"),
-              uu___8) in
-          let uu___8 =
-            let uu___9 =
-              let uu___10 = text "Retain untyped indexed effects implicits" in
+              uu___7) in
+          let uu___7 =
+            let uu___8 =
+              let uu___9 = text "Retain untyped indexed effects implicits" in
               (FStar_Getopt.noshort, "compat_pre_typed_indexed_effects",
-                (Const (Bool true)), uu___10) in
-            let uu___10 =
-              let uu___11 =
-                let uu___12 =
+                (Const (Bool true)), uu___9) in
+            let uu___9 =
+              let uu___10 =
+                let uu___11 =
                   text
                     "Fail if the SMT guard are produced when the tactic engine re-checks solutions produced by the unifier (default 'false')" in
                 (FStar_Getopt.noshort, "disallow_unification_guards",
-                  BoolStr, uu___12) in
-              let uu___12 =
-                let uu___13 =
-                  let uu___14 =
+                  BoolStr, uu___11) in
+              let uu___11 =
+                let uu___12 =
+                  let uu___13 =
                     text
                       "Expects all modules whose names or namespaces match the provided options to already have valid .checked files in the include path" in
                   (FStar_Getopt.noshort, "already_cached",
                     (Accumulated
                        (SimpleStr
                           "One or more space-separated occurrences of '[+|-]( * | namespace | module)'")),
-                    uu___14) in
-                let uu___14 =
-                  let uu___15 =
-                    let uu___16 =
+                    uu___13) in
+                let uu___13 =
+                  let uu___14 =
+                    let uu___15 =
                       text
                         "Write a '.checked' file for each module after verification and read from it if present, instead of re-verifying" in
                     (FStar_Getopt.noshort, "cache_checked_modules",
-                      (Const (Bool true)), uu___16) in
-                  let uu___16 =
-                    let uu___17 =
-                      let uu___18 =
+                      (Const (Bool true)), uu___15) in
+                  let uu___15 =
+                    let uu___16 =
+                      let uu___17 =
                         text
                           "Read and write .checked and .checked.lax in directory dir" in
                       (FStar_Getopt.noshort, "cache_dir",
                         (PostProcessed (pp_validate_dir, (PathStr "dir"))),
-                        uu___18) in
-                    let uu___18 =
-                      let uu___19 =
-                        let uu___20 =
+                        uu___17) in
+                    let uu___17 =
+                      let uu___18 =
+                        let uu___19 =
                           text "Do not read or write any .checked files" in
                         (FStar_Getopt.noshort, "cache_off",
-                          (Const (Bool true)), uu___20) in
-                      let uu___20 =
-                        let uu___21 =
-                          let uu___22 =
+                          (Const (Bool true)), uu___19) in
+                      let uu___19 =
+                        let uu___20 =
+                          let uu___21 =
                             text
                               "Print the version for .checked files and exit." in
                           (FStar_Getopt.noshort, "print_cache_version",
-                            (Const (Bool true)), uu___22) in
-                        let uu___22 =
-                          let uu___23 =
-                            let uu___24 =
+                            (Const (Bool true)), uu___21) in
+                        let uu___21 =
+                          let uu___22 =
+                            let uu___23 =
                               text
                                 "Inline across module interfaces during extraction (aka. cross-module inlining)" in
                             (FStar_Getopt.noshort, "cmi",
-                              (Const (Bool true)), uu___24) in
-                          let uu___24 =
-                            let uu___25 =
-                              let uu___26 =
+                              (Const (Bool true)), uu___23) in
+                          let uu___23 =
+                            let uu___24 =
+                              let uu___25 =
                                 text
                                   "Generate code for further compilation to executable code, or build a compiler plugin" in
                               (FStar_Getopt.noshort, "codegen",
@@ -1272,18 +1273,18 @@ let rec (specs_with_types :
                                    "FSharp";
                                    "krml";
                                    "Plugin";
-                                   "Extension"]), uu___26) in
-                            let uu___26 =
-                              let uu___27 =
-                                let uu___28 =
+                                   "Extension"]), uu___25) in
+                            let uu___25 =
+                              let uu___26 =
+                                let uu___27 =
                                   text
                                     "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)" in
                                 (FStar_Getopt.noshort, "codegen-lib",
                                   (Accumulated (SimpleStr "namespace")),
-                                  uu___28) in
-                              let uu___28 =
-                                let uu___29 =
-                                  let uu___30 =
+                                  uu___27) in
+                              let uu___27 =
+                                let uu___28 =
+                                  let uu___29 =
                                     text
                                       "Debug toggles (comma-separated list of debug keys)" in
                                   (100, "debug",
@@ -1295,10 +1296,10 @@ let rec (specs_with_types :
                                            o),
                                          (ReverseAccumulated
                                             (SimpleStr "debug toggles")))),
-                                    uu___30) in
-                                let uu___30 =
-                                  let uu___31 =
-                                    let uu___32 =
+                                    uu___29) in
+                                let uu___29 =
+                                  let uu___30 =
+                                    let uu___31 =
                                       text
                                         "Enable all debug toggles. WARNING: this will cause a lot of output!" in
                                     (FStar_Getopt.noshort, "debug_all",
@@ -1309,136 +1310,136 @@ let rec (specs_with_types :
                                                  (FStar_Compiler_Debug.set_debug_all
                                                     ();
                                                   o)
-                                             | uu___33 ->
+                                             | uu___32 ->
                                                  FStar_Compiler_Effect.failwith
                                                    "?"), (Const (Bool true)))),
-                                      uu___32) in
-                                  let uu___32 =
-                                    let uu___33 =
-                                      let uu___34 =
+                                      uu___31) in
+                                  let uu___31 =
+                                    let uu___32 =
+                                      let uu___33 =
                                         text
                                           "Enable to make the effect of --debug apply to every module processed by the compiler, including dependencies." in
                                       (FStar_Getopt.noshort,
                                         "debug_all_modules",
-                                        (Const (Bool true)), uu___34) in
-                                    let uu___34 =
+                                        (Const (Bool true)), uu___33) in
+                                    let uu___33 =
+                                      let uu___34 =
+                                        let uu___35 =
+                                          let uu___36 =
+                                            text
+                                              "Enable several internal sanity checks, useful to track bugs and report issues." in
+                                          let uu___37 =
+                                            let uu___38 =
+                                              let uu___39 =
+                                                let uu___40 =
+                                                  text
+                                                    "if 'no', no checks are performed" in
+                                                let uu___41 =
+                                                  let uu___42 =
+                                                    text
+                                                      "if 'warn', checks are performed and raise a warning when they fail" in
+                                                  let uu___43 =
+                                                    let uu___44 =
+                                                      text
+                                                        "if 'error, like 'warn', but the compiler raises a hard error instead" in
+                                                    let uu___45 =
+                                                      let uu___46 =
+                                                        text
+                                                          "if 'abort, like 'warn', but the compiler immediately aborts on an error" in
+                                                      [uu___46] in
+                                                    uu___44 :: uu___45 in
+                                                  uu___42 :: uu___43 in
+                                                uu___40 :: uu___41 in
+                                              FStar_Errors_Msg.bulleted
+                                                uu___39 in
+                                            let uu___39 =
+                                              text "(default 'no')" in
+                                            FStar_Pprint.op_Hat_Slash_Hat
+                                              uu___38 uu___39 in
+                                          FStar_Pprint.op_Hat_Hat uu___36
+                                            uu___37 in
+                                        (FStar_Getopt.noshort, "defensive",
+                                          (EnumStr
+                                             ["no"; "warn"; "error"; "abort"]),
+                                          uu___35) in
                                       let uu___35 =
                                         let uu___36 =
                                           let uu___37 =
-                                            text
-                                              "Enable several internal sanity checks, useful to track bugs and report issues." in
-                                          let uu___38 =
+                                            let uu___38 =
+                                              text
+                                                "Output the transitive closure of the full dependency graph in three formats:" in
                                             let uu___39 =
                                               let uu___40 =
                                                 let uu___41 =
                                                   text
-                                                    "if 'no', no checks are performed" in
+                                                    "'graph': a format suitable the 'dot' tool from 'GraphViz'" in
                                                 let uu___42 =
                                                   let uu___43 =
                                                     text
-                                                      "if 'warn', checks are performed and raise a warning when they fail" in
+                                                      "'full': a format suitable for 'make', including dependences for producing .ml and .krml files" in
                                                   let uu___44 =
                                                     let uu___45 =
                                                       text
-                                                        "if 'error, like 'warn', but the compiler raises a hard error instead" in
-                                                    let uu___46 =
-                                                      let uu___47 =
-                                                        text
-                                                          "if 'abort, like 'warn', but the compiler immediately aborts on an error" in
-                                                      [uu___47] in
-                                                    uu___45 :: uu___46 in
+                                                        "'make': (deprecated) a format suitable for 'make', including only dependences among source files" in
+                                                    [uu___45] in
                                                   uu___43 :: uu___44 in
                                                 uu___41 :: uu___42 in
                                               FStar_Errors_Msg.bulleted
                                                 uu___40 in
-                                            let uu___40 =
-                                              text "(default 'no')" in
-                                            FStar_Pprint.op_Hat_Slash_Hat
-                                              uu___39 uu___40 in
-                                          FStar_Pprint.op_Hat_Hat uu___37
-                                            uu___38 in
-                                        (FStar_Getopt.noshort, "defensive",
-                                          (EnumStr
-                                             ["no"; "warn"; "error"; "abort"]),
-                                          uu___36) in
-                                      let uu___36 =
-                                        let uu___37 =
-                                          let uu___38 =
-                                            let uu___39 =
-                                              text
-                                                "Output the transitive closure of the full dependency graph in three formats:" in
-                                            let uu___40 =
-                                              let uu___41 =
-                                                let uu___42 =
-                                                  text
-                                                    "'graph': a format suitable the 'dot' tool from 'GraphViz'" in
-                                                let uu___43 =
-                                                  let uu___44 =
-                                                    text
-                                                      "'full': a format suitable for 'make', including dependences for producing .ml and .krml files" in
-                                                  let uu___45 =
-                                                    let uu___46 =
-                                                      text
-                                                        "'make': (deprecated) a format suitable for 'make', including only dependences among source files" in
-                                                    [uu___46] in
-                                                  uu___44 :: uu___45 in
-                                                uu___42 :: uu___43 in
-                                              FStar_Errors_Msg.bulleted
-                                                uu___41 in
-                                            FStar_Pprint.op_Hat_Hat uu___39
-                                              uu___40 in
+                                            FStar_Pprint.op_Hat_Hat uu___38
+                                              uu___39 in
                                           (FStar_Getopt.noshort, "dep",
                                             (EnumStr
                                                ["make";
                                                "graph";
                                                "full";
-                                               "raw"]), uu___38) in
-                                        let uu___38 =
-                                          let uu___39 =
-                                            let uu___40 =
+                                               "raw"]), uu___37) in
+                                        let uu___37 =
+                                          let uu___38 =
+                                            let uu___39 =
                                               text
                                                 "Emit a detailed error report by asking the SMT solver many queries; will take longer" in
                                             (FStar_Getopt.noshort,
                                               "detail_errors",
-                                              (Const (Bool true)), uu___40) in
-                                          let uu___40 =
-                                            let uu___41 =
-                                              let uu___42 =
+                                              (Const (Bool true)), uu___39) in
+                                          let uu___39 =
+                                            let uu___40 =
+                                              let uu___41 =
                                                 text
                                                   "Emit a detailed report for proof whose unsat core fails to replay" in
                                               (FStar_Getopt.noshort,
                                                 "detail_hint_replay",
-                                                (Const (Bool true)), uu___42) in
-                                            let uu___42 =
-                                              let uu___43 =
-                                                let uu___44 =
+                                                (Const (Bool true)), uu___41) in
+                                            let uu___41 =
+                                              let uu___42 =
+                                                let uu___43 =
                                                   text
                                                     "Print out this module as it passes through the compiler pipeline" in
                                                 (FStar_Getopt.noshort,
                                                   "dump_module",
                                                   (Accumulated
                                                      (SimpleStr "module_name")),
-                                                  uu___44) in
-                                              let uu___44 =
-                                                let uu___45 =
-                                                  let uu___46 =
+                                                  uu___43) in
+                                              let uu___43 =
+                                                let uu___44 =
+                                                  let uu___45 =
                                                     text
                                                       "Try to solve subtyping constraints at each binder (loses precision but may be slightly more efficient)" in
                                                   (FStar_Getopt.noshort,
                                                     "eager_subtyping",
                                                     (Const (Bool true)),
-                                                    uu___46) in
-                                                let uu___46 =
-                                                  let uu___47 =
-                                                    let uu___48 =
+                                                    uu___45) in
+                                                let uu___45 =
+                                                  let uu___46 =
+                                                    let uu___47 =
                                                       text
                                                         "Print context information for each error or warning raised (default false)" in
                                                     (FStar_Getopt.noshort,
                                                       "error_contexts",
-                                                      BoolStr, uu___48) in
-                                                  let uu___48 =
-                                                    let uu___49 =
-                                                      let uu___50 =
+                                                      BoolStr, uu___47) in
+                                                  let uu___47 =
+                                                    let uu___48 =
+                                                      let uu___49 =
                                                         text
                                                           "These options are set in extensions option map. Keys are usually namespaces separated by \":\". E.g., 'pulse:verbose=1;my:extension:option=xyz;foo:bar=baz'. These options are typically interpreted by extensions. Any later use of --ext over the same key overrides the old value. An entry 'e' that is not of the form 'a=b' is treated as 'e=1', i.e., 'e' associated with string \"1\"." in
                                                       (FStar_Getopt.noshort,
@@ -1461,38 +1462,38 @@ let rec (specs_with_types :
                                                                     ->
                                                                     [(k, v)]
                                                                     | 
-                                                                    uu___51
+                                                                    uu___50
                                                                     ->
                                                                     [
                                                                     (s1, "1")])
                                                                    exts in
-                                                               (let uu___52 =
-                                                                  let uu___53
+                                                               (let uu___51 =
+                                                                  let uu___52
                                                                     =
                                                                     as_comma_string_list
                                                                     o in
                                                                   FStar_Compiler_List.collect
                                                                     parse_ext
-                                                                    uu___53 in
+                                                                    uu___52 in
                                                                 FStar_Compiler_List.iter
                                                                   (fun
-                                                                    uu___53
+                                                                    uu___52
                                                                     ->
-                                                                    match uu___53
+                                                                    match uu___52
                                                                     with
                                                                     | 
                                                                     (k, v) ->
                                                                     FStar_Options_Ext.set
                                                                     k v)
-                                                                  uu___52);
+                                                                  uu___51);
                                                                o),
                                                              (ReverseAccumulated
                                                                 (SimpleStr
                                                                    "extension knobs")))),
-                                                        uu___50) in
-                                                    let uu___50 =
-                                                      let uu___51 =
-                                                        let uu___52 =
+                                                        uu___49) in
+                                                    let uu___49 =
+                                                      let uu___50 =
+                                                        let uu___51 =
                                                           text
                                                             "Extract only those modules whose names or namespaces match the provided options. 'TargetName' ranges over {OCaml, krml, FSharp, Plugin, Extension}. A 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'. For example --extract 'OCaml:A -A.B' --extract 'krml:A -A.C' --extract '*' means for OCaml, extract everything in the A namespace only except A.B; for krml, extract everything in the A namespace only except A.C; for everything else, extract everything. Note, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing. Note also that '--extract A' applies both to a module named 'A' and to any module in the 'A' namespace Multiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'." in
                                                         (FStar_Getopt.noshort,
@@ -1500,10 +1501,10 @@ let rec (specs_with_types :
                                                           (Accumulated
                                                              (SimpleStr
                                                                 "One or more semicolon separated occurrences of '[TargetName:]ModuleSelector'")),
-                                                          uu___52) in
-                                                      let uu___52 =
-                                                        let uu___53 =
-                                                          let uu___54 =
+                                                          uu___51) in
+                                                      let uu___51 =
+                                                        let uu___52 =
+                                                          let uu___53 =
                                                             text
                                                               "Deprecated: use --extract instead; Only extract the specified modules (instead of the possibly-partial dependency graph)" in
                                                           (FStar_Getopt.noshort,
@@ -1514,10 +1515,10 @@ let rec (specs_with_types :
                                                                     (
                                                                     SimpleStr
                                                                     "module_name")))),
-                                                            uu___54) in
-                                                        let uu___54 =
-                                                          let uu___55 =
-                                                            let uu___56 =
+                                                            uu___53) in
+                                                        let uu___53 =
+                                                          let uu___54 =
+                                                            let uu___55 =
                                                               text
                                                                 "Deprecated: use --extract instead; Only extract modules in the specified namespace" in
                                                             (FStar_Getopt.noshort,
@@ -1527,20 +1528,20 @@ let rec (specs_with_types :
                                                                     (pp_lowercase,
                                                                     (SimpleStr
                                                                     "namespace name")))),
-                                                              uu___56) in
-                                                          let uu___56 =
-                                                            let uu___57 =
-                                                              let uu___58 =
+                                                              uu___55) in
+                                                          let uu___55 =
+                                                            let uu___56 =
+                                                              let uu___57 =
                                                                 text
                                                                   "Explicitly break the abstraction imposed by the interface of any implementation file that appears on the command line (use with care!)" in
                                                               (FStar_Getopt.noshort,
                                                                 "expose_interfaces",
                                                                 (Const
                                                                    (Bool true)),
-                                                                uu___58) in
-                                                            let uu___58 =
-                                                              let uu___59 =
-                                                                let uu___60 =
+                                                                uu___57) in
+                                                            let uu___57 =
+                                                              let uu___58 =
+                                                                let uu___59 =
                                                                   text
                                                                     "Format of the messages emitted by F* (default `human`)" in
                                                                 (FStar_Getopt.noshort,
@@ -1548,10 +1549,10 @@ let rec (specs_with_types :
                                                                   (EnumStr
                                                                     ["human";
                                                                     "json"]),
-                                                                  uu___60) in
-                                                              let uu___60 =
-                                                                let uu___61 =
-                                                                  let uu___62
+                                                                  uu___59) in
+                                                              let uu___59 =
+                                                                let uu___60 =
+                                                                  let uu___61
                                                                     =
                                                                     text
                                                                     "Don't print unification variable numbers" in
@@ -1561,11 +1562,11 @@ let rec (specs_with_types :
                                                                     Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___62) in
-                                                                let uu___62 =
-                                                                  let uu___63
+                                                                    uu___61) in
+                                                                let uu___61 =
+                                                                  let uu___62
                                                                     =
-                                                                    let uu___64
+                                                                    let uu___63
                                                                     =
                                                                     text
                                                                     "Read/write hints to  dir/module_name.hints (instead of placing hint-file alongside source file)" in
@@ -1575,12 +1576,12 @@ let rec (specs_with_types :
                                                                     (pp_validate_dir,
                                                                     (PathStr
                                                                     "dir"))),
-                                                                    uu___64) in
-                                                                  let uu___64
+                                                                    uu___63) in
+                                                                  let uu___63
+                                                                    =
+                                                                    let uu___64
                                                                     =
                                                                     let uu___65
-                                                                    =
-                                                                    let uu___66
                                                                     =
                                                                     text
                                                                     "Read/write hints to  path (instead of module-specific hints files; overrides hint_dir)" in
@@ -1588,12 +1589,12 @@ let rec (specs_with_types :
                                                                     "hint_file",
                                                                     (PathStr
                                                                     "path"),
-                                                                    uu___66) in
+                                                                    uu___65) in
+                                                                    let uu___65
+                                                                    =
                                                                     let uu___66
                                                                     =
                                                                     let uu___67
-                                                                    =
-                                                                    let uu___68
                                                                     =
                                                                     text
                                                                     "Print information regarding hints (deprecated; use --query_stats instead)" in
@@ -1602,12 +1603,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___68) in
+                                                                    uu___67) in
+                                                                    let uu___67
+                                                                    =
                                                                     let uu___68
                                                                     =
                                                                     let uu___69
-                                                                    =
-                                                                    let uu___70
                                                                     =
                                                                     text
                                                                     "Legacy interactive mode; reads input from stdin" in
@@ -1616,12 +1617,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___70) in
+                                                                    uu___69) in
+                                                                    let uu___69
+                                                                    =
                                                                     let uu___70
                                                                     =
                                                                     let uu___71
-                                                                    =
-                                                                    let uu___72
                                                                     =
                                                                     text
                                                                     "JSON-based interactive mode for IDEs" in
@@ -1630,12 +1631,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___72) in
+                                                                    uu___71) in
+                                                                    let uu___71
+                                                                    =
                                                                     let uu___72
                                                                     =
                                                                     let uu___73
-                                                                    =
-                                                                    let uu___74
                                                                     =
                                                                     text
                                                                     "Disable identifier tables in IDE mode (temporary workaround useful in Steel)" in
@@ -1644,12 +1645,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___74) in
+                                                                    uu___73) in
+                                                                    let uu___73
+                                                                    =
                                                                     let uu___74
                                                                     =
                                                                     let uu___75
-                                                                    =
-                                                                    let uu___76
                                                                     =
                                                                     text
                                                                     "Language Server Protocol-based interactive mode for IDEs" in
@@ -1658,12 +1659,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___76) in
+                                                                    uu___75) in
+                                                                    let uu___75
+                                                                    =
                                                                     let uu___76
                                                                     =
                                                                     let uu___77
-                                                                    =
-                                                                    let uu___78
                                                                     =
                                                                     text
                                                                     "A directory in which to search for files included on the command line" in
@@ -1672,12 +1673,12 @@ let rec (specs_with_types :
                                                                     (ReverseAccumulated
                                                                     (PathStr
                                                                     "path")),
-                                                                    uu___78) in
+                                                                    uu___77) in
+                                                                    let uu___77
+                                                                    =
                                                                     let uu___78
                                                                     =
                                                                     let uu___79
-                                                                    =
-                                                                    let uu___80
                                                                     =
                                                                     text
                                                                     "Parses and prettyprints the files included on the command line" in
@@ -1686,12 +1687,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___80) in
+                                                                    uu___79) in
+                                                                    let uu___79
+                                                                    =
                                                                     let uu___80
                                                                     =
                                                                     let uu___81
-                                                                    =
-                                                                    let uu___82
                                                                     =
                                                                     text
                                                                     "Parses and prettyprints in place the files included on the command line" in
@@ -1700,12 +1701,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___82) in
+                                                                    uu___81) in
+                                                                    let uu___81
+                                                                    =
                                                                     let uu___82
                                                                     =
                                                                     let uu___83
-                                                                    =
-                                                                    let uu___84
                                                                     =
                                                                     text
                                                                     "Force checking the files given as arguments even if they have valid checked files" in
@@ -1714,12 +1715,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___84) in
+                                                                    uu___83) in
+                                                                    let uu___83
+                                                                    =
                                                                     let uu___84
                                                                     =
                                                                     let uu___85
-                                                                    =
-                                                                    let uu___86
                                                                     =
                                                                     text
                                                                     "Set initial_fuel and max_fuel at once" in
@@ -1727,21 +1728,21 @@ let rec (specs_with_types :
                                                                     "fuel",
                                                                     (PostProcessed
                                                                     ((fun
-                                                                    uu___87
+                                                                    uu___86
                                                                     ->
-                                                                    match uu___87
+                                                                    match uu___86
                                                                     with
                                                                     | 
                                                                     String s
                                                                     ->
                                                                     let p f =
-                                                                    let uu___88
+                                                                    let uu___87
                                                                     =
                                                                     FStar_Compiler_Util.int_of_string
                                                                     f in
                                                                     Int
-                                                                    uu___88 in
-                                                                    let uu___88
+                                                                    uu___87 in
+                                                                    let uu___87
                                                                     =
                                                                     match 
                                                                     FStar_Compiler_Util.split
@@ -1755,40 +1756,40 @@ let rec (specs_with_types :
                                                                     ->
                                                                     (f1, f2)
                                                                     | 
-                                                                    uu___89
+                                                                    uu___88
                                                                     ->
                                                                     FStar_Compiler_Effect.failwith
                                                                     "unexpected value for --fuel" in
-                                                                    (match uu___88
+                                                                    (match uu___87
                                                                     with
                                                                     | 
                                                                     (min,
                                                                     max) ->
                                                                     ((
-                                                                    let uu___90
+                                                                    let uu___89
                                                                     = p min in
                                                                     set_option
                                                                     "initial_fuel"
-                                                                    uu___90);
-                                                                    (let uu___91
+                                                                    uu___89);
+                                                                    (let uu___90
                                                                     = p max in
                                                                     set_option
                                                                     "max_fuel"
-                                                                    uu___91);
+                                                                    uu___90);
                                                                     String s))
                                                                     | 
-                                                                    uu___88
+                                                                    uu___87
                                                                     ->
                                                                     FStar_Compiler_Effect.failwith
                                                                     "impos"),
                                                                     (SimpleStr
                                                                     "non-negative integer or pair of non-negative integers"))),
-                                                                    uu___86) in
+                                                                    uu___85) in
+                                                                    let uu___85
+                                                                    =
                                                                     let uu___86
                                                                     =
                                                                     let uu___87
-                                                                    =
-                                                                    let uu___88
                                                                     =
                                                                     text
                                                                     "Set initial_ifuel and max_ifuel at once" in
@@ -1796,21 +1797,21 @@ let rec (specs_with_types :
                                                                     "ifuel",
                                                                     (PostProcessed
                                                                     ((fun
-                                                                    uu___89
+                                                                    uu___88
                                                                     ->
-                                                                    match uu___89
+                                                                    match uu___88
                                                                     with
                                                                     | 
                                                                     String s
                                                                     ->
                                                                     let p f =
-                                                                    let uu___90
+                                                                    let uu___89
                                                                     =
                                                                     FStar_Compiler_Util.int_of_string
                                                                     f in
                                                                     Int
-                                                                    uu___90 in
-                                                                    let uu___90
+                                                                    uu___89 in
+                                                                    let uu___89
                                                                     =
                                                                     match 
                                                                     FStar_Compiler_Util.split
@@ -1824,40 +1825,40 @@ let rec (specs_with_types :
                                                                     ->
                                                                     (f1, f2)
                                                                     | 
-                                                                    uu___91
+                                                                    uu___90
                                                                     ->
                                                                     FStar_Compiler_Effect.failwith
                                                                     "unexpected value for --ifuel" in
-                                                                    (match uu___90
+                                                                    (match uu___89
                                                                     with
                                                                     | 
                                                                     (min,
                                                                     max) ->
                                                                     ((
-                                                                    let uu___92
+                                                                    let uu___91
                                                                     = p min in
                                                                     set_option
                                                                     "initial_ifuel"
-                                                                    uu___92);
-                                                                    (let uu___93
+                                                                    uu___91);
+                                                                    (let uu___92
                                                                     = p max in
                                                                     set_option
                                                                     "max_ifuel"
-                                                                    uu___93);
+                                                                    uu___92);
                                                                     String s))
                                                                     | 
-                                                                    uu___90
+                                                                    uu___89
                                                                     ->
                                                                     FStar_Compiler_Effect.failwith
                                                                     "impos"),
                                                                     (SimpleStr
                                                                     "non-negative integer or pair of non-negative integers"))),
-                                                                    uu___88) in
+                                                                    uu___87) in
+                                                                    let uu___87
+                                                                    =
                                                                     let uu___88
                                                                     =
                                                                     let uu___89
-                                                                    =
-                                                                    let uu___90
                                                                     =
                                                                     text
                                                                     "Number of unrolling of recursive functions to try initially (default 2)" in
@@ -1865,12 +1866,12 @@ let rec (specs_with_types :
                                                                     "initial_fuel",
                                                                     (IntStr
                                                                     "non-negative integer"),
-                                                                    uu___90) in
+                                                                    uu___89) in
+                                                                    let uu___89
+                                                                    =
                                                                     let uu___90
                                                                     =
                                                                     let uu___91
-                                                                    =
-                                                                    let uu___92
                                                                     =
                                                                     text
                                                                     "Number of unrolling of inductive datatypes to try at first (default 1)" in
@@ -1878,24 +1879,24 @@ let rec (specs_with_types :
                                                                     "initial_ifuel",
                                                                     (IntStr
                                                                     "non-negative integer"),
-                                                                    uu___92) in
+                                                                    uu___91) in
+                                                                    let uu___91
+                                                                    =
                                                                     let uu___92
                                                                     =
                                                                     let uu___93
-                                                                    =
-                                                                    let uu___94
                                                                     =
                                                                     text
                                                                     "Retain comments in the logged SMT queries (requires --log_queries or --log_failing_queries; default true)" in
                                                                     (FStar_Getopt.noshort,
                                                                     "keep_query_captions",
                                                                     BoolStr,
-                                                                    uu___94) in
+                                                                    uu___93) in
+                                                                    let uu___93
+                                                                    =
                                                                     let uu___94
                                                                     =
                                                                     let uu___95
-                                                                    =
-                                                                    let uu___96
                                                                     =
                                                                     text
                                                                     "Run the lax-type checker only (admit all verification conditions)" in
@@ -1903,7 +1904,7 @@ let rec (specs_with_types :
                                                                     "lax",
                                                                     (WithSideEffect
                                                                     ((fun
-                                                                    uu___97
+                                                                    uu___96
                                                                     ->
                                                                     if
                                                                     warn_unsafe
@@ -1914,12 +1915,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)))),
-                                                                    uu___96) in
+                                                                    uu___95) in
+                                                                    let uu___95
+                                                                    =
                                                                     let uu___96
                                                                     =
                                                                     let uu___97
-                                                                    =
-                                                                    let uu___98
                                                                     =
                                                                     text
                                                                     "Load OCaml module, compiling it if necessary" in
@@ -1928,12 +1929,12 @@ let rec (specs_with_types :
                                                                     (ReverseAccumulated
                                                                     (PathStr
                                                                     "module")),
-                                                                    uu___98) in
+                                                                    uu___97) in
+                                                                    let uu___97
+                                                                    =
                                                                     let uu___98
                                                                     =
                                                                     let uu___99
-                                                                    =
-                                                                    let uu___100
                                                                     =
                                                                     text
                                                                     "Load compiled module, fails hard if the module is not already compiled" in
@@ -1942,12 +1943,12 @@ let rec (specs_with_types :
                                                                     (ReverseAccumulated
                                                                     (PathStr
                                                                     "module")),
-                                                                    uu___100) in
+                                                                    uu___99) in
+                                                                    let uu___99
+                                                                    =
                                                                     let uu___100
                                                                     =
                                                                     let uu___101
-                                                                    =
-                                                                    let uu___102
                                                                     =
                                                                     text
                                                                     "Print types computed for data/val/let-bindings" in
@@ -1956,12 +1957,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___102) in
+                                                                    uu___101) in
+                                                                    let uu___101
+                                                                    =
                                                                     let uu___102
                                                                     =
                                                                     let uu___103
-                                                                    =
-                                                                    let uu___104
                                                                     =
                                                                     text
                                                                     "Log the Z3 queries in several queries-*.smt2 files, as we go" in
@@ -1970,12 +1971,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___104) in
+                                                                    uu___103) in
+                                                                    let uu___103
+                                                                    =
                                                                     let uu___104
                                                                     =
                                                                     let uu___105
-                                                                    =
-                                                                    let uu___106
                                                                     =
                                                                     text
                                                                     "As --log_queries, but only save the failing queries. Each query is\n    saved in its own file regardless of whether they were checked during the\n    same invocation. The SMT2 file names begin with \"failedQueries\"" in
@@ -1984,12 +1985,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___106) in
+                                                                    uu___105) in
+                                                                    let uu___105
+                                                                    =
                                                                     let uu___106
                                                                     =
                                                                     let uu___107
-                                                                    =
-                                                                    let uu___108
                                                                     =
                                                                     text
                                                                     "Number of unrolling of recursive functions to try at most (default 8)" in
@@ -1997,12 +1998,12 @@ let rec (specs_with_types :
                                                                     "max_fuel",
                                                                     (IntStr
                                                                     "non-negative integer"),
-                                                                    uu___108) in
+                                                                    uu___107) in
+                                                                    let uu___107
+                                                                    =
                                                                     let uu___108
                                                                     =
                                                                     let uu___109
-                                                                    =
-                                                                    let uu___110
                                                                     =
                                                                     text
                                                                     "Number of unrolling of inductive datatypes to try at most (default 2)" in
@@ -2010,12 +2011,12 @@ let rec (specs_with_types :
                                                                     "max_ifuel",
                                                                     (IntStr
                                                                     "non-negative integer"),
-                                                                    uu___110) in
+                                                                    uu___109) in
+                                                                    let uu___109
+                                                                    =
                                                                     let uu___110
                                                                     =
                                                                     let uu___111
-                                                                    =
-                                                                    let uu___112
                                                                     =
                                                                     text
                                                                     "Trigger various specializations for compiling the F* compiler itself (not meant for user code)" in
@@ -2024,12 +2025,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___112) in
+                                                                    uu___111) in
+                                                                    let uu___111
+                                                                    =
                                                                     let uu___112
                                                                     =
                                                                     let uu___113
-                                                                    =
-                                                                    let uu___114
                                                                     =
                                                                     text
                                                                     "Ignore the default module search paths" in
@@ -2038,12 +2039,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___114) in
+                                                                    uu___113) in
+                                                                    let uu___113
+                                                                    =
                                                                     let uu___114
                                                                     =
                                                                     let uu___115
-                                                                    =
-                                                                    let uu___116
                                                                     =
                                                                     text
                                                                     "Deprecated: use --extract instead; Do not extract code from this module" in
@@ -2052,12 +2053,12 @@ let rec (specs_with_types :
                                                                     (Accumulated
                                                                     (PathStr
                                                                     "module name")),
-                                                                    uu___116) in
+                                                                    uu___115) in
+                                                                    let uu___115
+                                                                    =
                                                                     let uu___116
                                                                     =
                                                                     let uu___117
-                                                                    =
-                                                                    let uu___118
                                                                     =
                                                                     text
                                                                     "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)" in
@@ -2066,12 +2067,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___118) in
+                                                                    uu___117) in
+                                                                    let uu___117
+                                                                    =
                                                                     let uu___118
                                                                     =
                                                                     let uu___119
-                                                                    =
-                                                                    let uu___120
                                                                     =
                                                                     text
                                                                     "Do not send any queries to the SMT solver, and fail on them instead" in
@@ -2080,12 +2081,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___120) in
+                                                                    uu___119) in
+                                                                    let uu___119
+                                                                    =
                                                                     let uu___120
                                                                     =
                                                                     let uu___121
-                                                                    =
-                                                                    let uu___122
                                                                     =
                                                                     text
                                                                     "Extract top-level pure terms after normalizing them. This can lead to very large code, but can result in more partial evaluation and compile-time specialization." in
@@ -2094,12 +2095,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___122) in
+                                                                    uu___121) in
+                                                                    let uu___121
+                                                                    =
                                                                     let uu___122
                                                                     =
                                                                     let uu___123
-                                                                    =
-                                                                    let uu___124
                                                                     =
                                                                     text
                                                                     "Place KaRaMeL extraction output in file <filename>. The path can be relative or absolute and does not dependon the --odir option." in
@@ -2107,12 +2108,12 @@ let rec (specs_with_types :
                                                                     "krmloutput",
                                                                     (PathStr
                                                                     "filename"),
-                                                                    uu___124) in
+                                                                    uu___123) in
+                                                                    let uu___123
+                                                                    =
                                                                     let uu___124
                                                                     =
                                                                     let uu___125
-                                                                    =
-                                                                    let uu___126
                                                                     =
                                                                     text
                                                                     "Place output in directory  dir" in
@@ -2122,12 +2123,12 @@ let rec (specs_with_types :
                                                                     (pp_validate_dir,
                                                                     (PathStr
                                                                     "dir"))),
-                                                                    uu___126) in
+                                                                    uu___125) in
+                                                                    let uu___125
+                                                                    =
                                                                     let uu___126
                                                                     =
                                                                     let uu___127
-                                                                    =
-                                                                    let uu___128
                                                                     =
                                                                     text
                                                                     "Output the result of --dep into this file instead of to standard output." in
@@ -2135,12 +2136,12 @@ let rec (specs_with_types :
                                                                     "output_deps_to",
                                                                     (PathStr
                                                                     "file"),
-                                                                    uu___128) in
+                                                                    uu___127) in
+                                                                    let uu___127
+                                                                    =
                                                                     let uu___128
                                                                     =
                                                                     let uu___129
-                                                                    =
-                                                                    let uu___130
                                                                     =
                                                                     text
                                                                     "Use a custom Prims.fst file. Do not use if you do not know exactly what you're doing." in
@@ -2148,12 +2149,12 @@ let rec (specs_with_types :
                                                                     "prims",
                                                                     (PathStr
                                                                     "file"),
-                                                                    uu___130) in
+                                                                    uu___129) in
+                                                                    let uu___129
+                                                                    =
                                                                     let uu___130
                                                                     =
                                                                     let uu___131
-                                                                    =
-                                                                    let uu___132
                                                                     =
                                                                     text
                                                                     "Print the types of bound variables" in
@@ -2162,12 +2163,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___132) in
+                                                                    uu___131) in
+                                                                    let uu___131
+                                                                    =
                                                                     let uu___132
                                                                     =
                                                                     let uu___133
-                                                                    =
-                                                                    let uu___134
                                                                     =
                                                                     text
                                                                     "Print inferred predicate transformers for all computation types" in
@@ -2176,12 +2177,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___134) in
+                                                                    uu___133) in
+                                                                    let uu___133
+                                                                    =
                                                                     let uu___134
                                                                     =
                                                                     let uu___135
-                                                                    =
-                                                                    let uu___136
                                                                     =
                                                                     text
                                                                     "Print the errors generated by declarations marked with expect_failure, useful for debugging error locations" in
@@ -2190,12 +2191,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___136) in
+                                                                    uu___135) in
+                                                                    let uu___135
+                                                                    =
                                                                     let uu___136
                                                                     =
                                                                     let uu___137
-                                                                    =
-                                                                    let uu___138
                                                                     =
                                                                     text
                                                                     "Print full names of variables" in
@@ -2204,12 +2205,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___138) in
+                                                                    uu___137) in
+                                                                    let uu___137
+                                                                    =
                                                                     let uu___138
                                                                     =
                                                                     let uu___139
-                                                                    =
-                                                                    let uu___140
                                                                     =
                                                                     text
                                                                     "Print implicit arguments" in
@@ -2218,12 +2219,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___140) in
+                                                                    uu___139) in
+                                                                    let uu___139
+                                                                    =
                                                                     let uu___140
                                                                     =
                                                                     let uu___141
-                                                                    =
-                                                                    let uu___142
                                                                     =
                                                                     text
                                                                     "Print universes" in
@@ -2232,12 +2233,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___142) in
+                                                                    uu___141) in
+                                                                    let uu___141
+                                                                    =
                                                                     let uu___142
                                                                     =
                                                                     let uu___143
-                                                                    =
-                                                                    let uu___144
                                                                     =
                                                                     text
                                                                     "Print Z3 statistics for each SMT query (details such as relevant modules, facts, etc. for each proof)" in
@@ -2246,12 +2247,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___144) in
+                                                                    uu___143) in
+                                                                    let uu___143
+                                                                    =
                                                                     let uu___144
                                                                     =
                                                                     let uu___145
-                                                                    =
-                                                                    let uu___146
                                                                     =
                                                                     text
                                                                     "Print full names (deprecated; use --print_full_names instead)" in
@@ -2260,12 +2261,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___146) in
+                                                                    uu___145) in
+                                                                    let uu___145
+                                                                    =
                                                                     let uu___146
                                                                     =
                                                                     let uu___147
-                                                                    =
-                                                                    let uu___148
                                                                     =
                                                                     text
                                                                     "Proof recovery mode: before failing an SMT query, retry 3 times, increasing rlimits. If the query goes through after retrying, verification will succeed, but a warning will be emitted. This feature is useful to restore a project after some change to its libraries or F* upgrade. Importantly, then, this option cannot be used in a pragma (#set-options, etc)." in
@@ -2274,14 +2275,14 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___148) in
+                                                                    uu___147) in
+                                                                    let uu___147
+                                                                    =
                                                                     let uu___148
                                                                     =
                                                                     let uu___149
                                                                     =
                                                                     let uu___150
-                                                                    =
-                                                                    let uu___151
                                                                     =
                                                                     text
                                                                     "Repeats SMT queries to check for robustness" in
@@ -2333,15 +2334,15 @@ let rec (specs_with_types :
                                                                     uu___153
                                                                     uu___154 in
                                                                     FStar_Pprint.op_Hat_Hat
-                                                                    uu___151
+                                                                    uu___150
                                                                     uu___152 in
                                                                     (FStar_Getopt.noshort,
                                                                     "quake",
                                                                     (PostProcessed
                                                                     ((fun
-                                                                    uu___151
+                                                                    uu___150
                                                                     ->
-                                                                    match uu___151
+                                                                    match uu___150
                                                                     with
                                                                     | 
                                                                     String s
@@ -2377,10 +2378,10 @@ let rec (specs_with_types :
                                                                     "impos"),
                                                                     (SimpleStr
                                                                     "positive integer or pair of positive integers"))),
-                                                                    uu___150) in
-                                                                    let uu___150
+                                                                    uu___149) in
+                                                                    let uu___149
                                                                     =
-                                                                    let uu___151
+                                                                    let uu___150
                                                                     =
                                                                     let uu___152
                                                                     =
@@ -3640,188 +3641,188 @@ let rec (specs_with_types :
                                                                     uu___153
                                                                     ::
                                                                     uu___154 in
-                                                                    uu___151
+                                                                    uu___150
                                                                     ::
                                                                     uu___152 in
-                                                                    uu___149
+                                                                    uu___148
                                                                     ::
-                                                                    uu___150 in
-                                                                    uu___147
+                                                                    uu___149 in
+                                                                    uu___146
                                                                     ::
-                                                                    uu___148 in
-                                                                    uu___145
+                                                                    uu___147 in
+                                                                    uu___144
                                                                     ::
-                                                                    uu___146 in
-                                                                    uu___143
+                                                                    uu___145 in
+                                                                    uu___142
                                                                     ::
-                                                                    uu___144 in
-                                                                    uu___141
+                                                                    uu___143 in
+                                                                    uu___140
                                                                     ::
-                                                                    uu___142 in
-                                                                    uu___139
+                                                                    uu___141 in
+                                                                    uu___138
                                                                     ::
-                                                                    uu___140 in
-                                                                    uu___137
+                                                                    uu___139 in
+                                                                    uu___136
                                                                     ::
-                                                                    uu___138 in
-                                                                    uu___135
+                                                                    uu___137 in
+                                                                    uu___134
                                                                     ::
-                                                                    uu___136 in
-                                                                    uu___133
+                                                                    uu___135 in
+                                                                    uu___132
                                                                     ::
-                                                                    uu___134 in
-                                                                    uu___131
+                                                                    uu___133 in
+                                                                    uu___130
                                                                     ::
-                                                                    uu___132 in
-                                                                    uu___129
+                                                                    uu___131 in
+                                                                    uu___128
                                                                     ::
-                                                                    uu___130 in
-                                                                    uu___127
+                                                                    uu___129 in
+                                                                    uu___126
                                                                     ::
-                                                                    uu___128 in
-                                                                    uu___125
+                                                                    uu___127 in
+                                                                    uu___124
                                                                     ::
-                                                                    uu___126 in
-                                                                    uu___123
+                                                                    uu___125 in
+                                                                    uu___122
                                                                     ::
-                                                                    uu___124 in
-                                                                    uu___121
+                                                                    uu___123 in
+                                                                    uu___120
                                                                     ::
-                                                                    uu___122 in
-                                                                    uu___119
+                                                                    uu___121 in
+                                                                    uu___118
                                                                     ::
-                                                                    uu___120 in
-                                                                    uu___117
+                                                                    uu___119 in
+                                                                    uu___116
                                                                     ::
-                                                                    uu___118 in
-                                                                    uu___115
+                                                                    uu___117 in
+                                                                    uu___114
                                                                     ::
-                                                                    uu___116 in
-                                                                    uu___113
+                                                                    uu___115 in
+                                                                    uu___112
                                                                     ::
-                                                                    uu___114 in
-                                                                    uu___111
+                                                                    uu___113 in
+                                                                    uu___110
                                                                     ::
-                                                                    uu___112 in
-                                                                    uu___109
+                                                                    uu___111 in
+                                                                    uu___108
                                                                     ::
-                                                                    uu___110 in
-                                                                    uu___107
+                                                                    uu___109 in
+                                                                    uu___106
                                                                     ::
-                                                                    uu___108 in
-                                                                    uu___105
+                                                                    uu___107 in
+                                                                    uu___104
                                                                     ::
-                                                                    uu___106 in
-                                                                    uu___103
+                                                                    uu___105 in
+                                                                    uu___102
                                                                     ::
-                                                                    uu___104 in
-                                                                    uu___101
+                                                                    uu___103 in
+                                                                    uu___100
                                                                     ::
-                                                                    uu___102 in
-                                                                    uu___99
+                                                                    uu___101 in
+                                                                    uu___98
                                                                     ::
-                                                                    uu___100 in
-                                                                    uu___97
+                                                                    uu___99 in
+                                                                    uu___96
                                                                     ::
-                                                                    uu___98 in
-                                                                    uu___95
+                                                                    uu___97 in
+                                                                    uu___94
                                                                     ::
-                                                                    uu___96 in
-                                                                    uu___93
+                                                                    uu___95 in
+                                                                    uu___92
                                                                     ::
-                                                                    uu___94 in
-                                                                    uu___91
+                                                                    uu___93 in
+                                                                    uu___90
                                                                     ::
-                                                                    uu___92 in
-                                                                    uu___89
+                                                                    uu___91 in
+                                                                    uu___88
                                                                     ::
-                                                                    uu___90 in
-                                                                    uu___87
+                                                                    uu___89 in
+                                                                    uu___86
                                                                     ::
-                                                                    uu___88 in
-                                                                    uu___85
+                                                                    uu___87 in
+                                                                    uu___84
                                                                     ::
-                                                                    uu___86 in
-                                                                    uu___83
+                                                                    uu___85 in
+                                                                    uu___82
                                                                     ::
-                                                                    uu___84 in
-                                                                    uu___81
+                                                                    uu___83 in
+                                                                    uu___80
                                                                     ::
-                                                                    uu___82 in
-                                                                    uu___79
+                                                                    uu___81 in
+                                                                    uu___78
                                                                     ::
-                                                                    uu___80 in
-                                                                    uu___77
+                                                                    uu___79 in
+                                                                    uu___76
                                                                     ::
-                                                                    uu___78 in
-                                                                    uu___75
+                                                                    uu___77 in
+                                                                    uu___74
                                                                     ::
-                                                                    uu___76 in
-                                                                    uu___73
+                                                                    uu___75 in
+                                                                    uu___72
                                                                     ::
-                                                                    uu___74 in
-                                                                    uu___71
+                                                                    uu___73 in
+                                                                    uu___70
                                                                     ::
-                                                                    uu___72 in
-                                                                    uu___69
+                                                                    uu___71 in
+                                                                    uu___68
                                                                     ::
-                                                                    uu___70 in
-                                                                    uu___67
+                                                                    uu___69 in
+                                                                    uu___66
                                                                     ::
-                                                                    uu___68 in
-                                                                    uu___65
+                                                                    uu___67 in
+                                                                    uu___64
                                                                     ::
-                                                                    uu___66 in
-                                                                  uu___63 ::
-                                                                    uu___64 in
-                                                                uu___61 ::
-                                                                  uu___62 in
-                                                              uu___59 ::
-                                                                uu___60 in
-                                                            uu___57 ::
-                                                              uu___58 in
-                                                          uu___55 :: uu___56 in
-                                                        uu___53 :: uu___54 in
-                                                      uu___51 :: uu___52 in
-                                                    uu___49 :: uu___50 in
-                                                  uu___47 :: uu___48 in
-                                                uu___45 :: uu___46 in
-                                              uu___43 :: uu___44 in
-                                            uu___41 :: uu___42 in
-                                          uu___39 :: uu___40 in
-                                        uu___37 :: uu___38 in
-                                      uu___35 :: uu___36 in
-                                    uu___33 :: uu___34 in
-                                  uu___31 :: uu___32 in
-                                uu___29 :: uu___30 in
-                              uu___27 :: uu___28 in
-                            uu___25 :: uu___26 in
-                          uu___23 :: uu___24 in
-                        uu___21 :: uu___22 in
-                      uu___19 :: uu___20 in
-                    uu___17 :: uu___18 in
-                  uu___15 :: uu___16 in
-                uu___13 :: uu___14 in
-              uu___11 :: uu___12 in
-            uu___9 :: uu___10 in
-          uu___7 :: uu___8 in
-        uu___5 :: uu___6 in
-      uu___3 :: uu___4 in
-    uu___ :: uu___2
+                                                                    uu___65 in
+                                                                  uu___62 ::
+                                                                    uu___63 in
+                                                                uu___60 ::
+                                                                  uu___61 in
+                                                              uu___58 ::
+                                                                uu___59 in
+                                                            uu___56 ::
+                                                              uu___57 in
+                                                          uu___54 :: uu___55 in
+                                                        uu___52 :: uu___53 in
+                                                      uu___50 :: uu___51 in
+                                                    uu___48 :: uu___49 in
+                                                  uu___46 :: uu___47 in
+                                                uu___44 :: uu___45 in
+                                              uu___42 :: uu___43 in
+                                            uu___40 :: uu___41 in
+                                          uu___38 :: uu___39 in
+                                        uu___36 :: uu___37 in
+                                      uu___34 :: uu___35 in
+                                    uu___32 :: uu___33 in
+                                  uu___30 :: uu___31 in
+                                uu___28 :: uu___29 in
+                              uu___26 :: uu___27 in
+                            uu___24 :: uu___25 in
+                          uu___22 :: uu___23 in
+                        uu___20 :: uu___21 in
+                      uu___18 :: uu___19 in
+                    uu___16 :: uu___17 in
+                  uu___14 :: uu___15 in
+                uu___12 :: uu___13 in
+              uu___10 :: uu___11 in
+            uu___8 :: uu___9 in
+          uu___6 :: uu___7 in
+        uu___4 :: uu___5 in
+      uu___2 :: uu___3 in
+    uu___ :: uu___1
 and (specs :
   Prims.bool -> (FStar_Getopt.opt * FStar_Pprint.document) Prims.list) =
   fun warn_unsafe ->
     let uu___ = specs_with_types warn_unsafe in
     FStar_Compiler_List.map
-      (fun uu___2 ->
-         match uu___2 with
+      (fun uu___1 ->
+         match uu___1 with
          | (short, long, typ, doc) ->
-             let uu___3 =
-               let uu___4 =
-                 let uu___5 = arg_spec_of_opt_type long typ in
-                 (short, long, uu___5) in
-               mk_spec uu___4 in
-             (uu___3, doc)) uu___
+             let uu___2 =
+               let uu___3 =
+                 let uu___4 = arg_spec_of_opt_type long typ in
+                 (short, long, uu___4) in
+               mk_spec uu___3 in
+             (uu___2, doc)) uu___
 let (settable : Prims.string -> Prims.bool) =
   fun uu___ ->
     match uu___ with
@@ -3913,7 +3914,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "profile_group_by_decl" -> true
     | "profile_component" -> true
     | "profile" -> true
-    | uu___2 -> false
+    | uu___1 -> false
 let (all_specs : (FStar_Getopt.opt * FStar_Pprint.document) Prims.list) =
   specs true
 let (all_specs_getopt : FStar_Getopt.opt Prims.list) =
@@ -3928,9 +3929,9 @@ let (settable_specs :
   =
   FStar_Compiler_List.filter
     (fun uu___ ->
-       match uu___ with | ((uu___2, x, uu___3), uu___4) -> settable x)
+       match uu___ with | ((uu___1, x, uu___2), uu___3) -> settable x)
     all_specs
-let (uu___2 :
+let (uu___753 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -3939,19 +3940,19 @@ let (uu___2 :
     FStar_Compiler_Effect.op_Colon_Equals callback
       (FStar_Pervasives_Native.Some f) in
   let call uu___ =
-    let uu___3 = FStar_Compiler_Effect.op_Bang callback in
-    match uu___3 with
+    let uu___1 = FStar_Compiler_Effect.op_Bang callback in
+    match uu___1 with
     | FStar_Pervasives_Native.None ->
         FStar_Compiler_Effect.failwith "Error flags callback not yet set"
     | FStar_Pervasives_Native.Some f -> f () in
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___2 with
+  match uu___753 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___2 with
+  match uu___753 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -3977,10 +3978,10 @@ let rec (parse_filename_arg :
         else
           (if enable_filenames
            then
-             (let uu___4 =
-                let uu___5 = FStar_Compiler_Effect.op_Bang file_list_ in
-                FStar_Compiler_List.op_At uu___5 [arg] in
-              FStar_Compiler_Effect.op_Colon_Equals file_list_ uu___4)
+             (let uu___2 =
+                let uu___3 = FStar_Compiler_Effect.op_Bang file_list_ in
+                FStar_Compiler_List.op_At uu___3 [arg] in
+              FStar_Compiler_Effect.op_Colon_Equals file_list_ uu___2)
            else ();
            FStar_Getopt.Success)
 let (parse_cmd_line :
@@ -3990,11 +3991,11 @@ let (parse_cmd_line :
       FStar_Getopt.parse_cmdline all_specs_getopt
         (parse_filename_arg all_specs_getopt true) in
     let res1 = if res = FStar_Getopt.Success then set_error_flags () else res in
-    let uu___3 =
-      let uu___4 = FStar_Compiler_Effect.op_Bang file_list_ in
+    let uu___1 =
+      let uu___2 = FStar_Compiler_Effect.op_Bang file_list_ in
       FStar_Compiler_List.map FStar_Common.try_convert_file_name_to_mixed
-        uu___4 in
-    (res1, uu___3)
+        uu___2 in
+    (res1, uu___1)
 let (file_list : unit -> Prims.string Prims.list) =
   fun uu___ -> FStar_Compiler_Effect.op_Bang file_list_
 let (restore_cmd_line_options : Prims.bool -> FStar_Getopt.parse_cmdline_res)
@@ -4003,30 +4004,30 @@ let (restore_cmd_line_options : Prims.bool -> FStar_Getopt.parse_cmdline_res)
     let old_verify_module = get_verify_module () in
     if should_clear then clear () else init ();
     (let specs1 =
-       let uu___3 = specs false in
-       FStar_Compiler_List.map FStar_Pervasives_Native.fst uu___3 in
+       let uu___1 = specs false in
+       FStar_Compiler_List.map FStar_Pervasives_Native.fst uu___1 in
      let r =
        FStar_Getopt.parse_cmdline specs1 (parse_filename_arg specs1 false) in
-     (let uu___4 =
-        let uu___5 =
-          let uu___6 =
-            FStar_Compiler_List.map (fun uu___7 -> String uu___7)
+     (let uu___2 =
+        let uu___3 =
+          let uu___4 =
+            FStar_Compiler_List.map (fun uu___5 -> String uu___5)
               old_verify_module in
-          List uu___6 in
-        ("verify_module", uu___5) in
-      set_option' uu___4);
+          List uu___4 in
+        ("verify_module", uu___3) in
+      set_option' uu___2);
      r)
 let (module_name_of_file_name : Prims.string -> Prims.string) =
   fun f ->
     let f1 = FStar_Compiler_Util.basename f in
     let f2 =
       let uu___ =
-        let uu___3 =
-          let uu___4 =
-            let uu___5 = FStar_Compiler_Util.get_file_extension f1 in
-            FStar_Compiler_String.length uu___5 in
-          (FStar_Compiler_String.length f1) - uu___4 in
-        uu___3 - Prims.int_one in
+        let uu___1 =
+          let uu___2 =
+            let uu___3 = FStar_Compiler_Util.get_file_extension f1 in
+            FStar_Compiler_String.length uu___3 in
+          (FStar_Compiler_String.length f1) - uu___2 in
+        uu___1 - Prims.int_one in
       FStar_Compiler_String.substring f1 Prims.int_zero uu___ in
     FStar_Compiler_String.lowercase f2
 let (should_check : Prims.string -> Prims.bool) =
@@ -4060,17 +4061,17 @@ let (read_fstar_include :
                FStar_Compiler_List.filter
                  (fun s1 ->
                     (s1 <> "") &&
-                      (let uu___3 =
-                         let uu___4 =
+                      (let uu___1 =
+                         let uu___2 =
                            FStar_Compiler_String.get s1 Prims.int_zero in
-                         uu___4 = 35 in
-                       Prims.op_Negation uu___3))
+                         uu___2 = 35 in
+                       Prims.op_Negation uu___1))
                  (FStar_Compiler_String.split [10] s) in
              FStar_Pervasives_Native.Some subdirs) ()
     with
     | uu___ ->
-        ((let uu___4 = FStar_Compiler_String.op_Hat "Could not read " fn in
-          FStar_Compiler_Effect.failwith uu___4);
+        ((let uu___2 = FStar_Compiler_String.op_Hat "Could not read " fn in
+          FStar_Compiler_Effect.failwith uu___2);
          FStar_Pervasives_Native.None)
 let rec (expand_include_d : Prims.string -> Prims.string Prims.list) =
   fun dirname ->
@@ -4083,68 +4084,68 @@ let rec (expand_include_d : Prims.string -> Prims.string Prims.list) =
       let uu___ =
         FStar_Compiler_List.collect
           (fun subd ->
-             let uu___3 =
-               let uu___4 = FStar_Compiler_String.op_Hat "/" subd in
-               FStar_Compiler_String.op_Hat dirname uu___4 in
-             expand_include_d uu___3) subdirs in
+             let uu___1 =
+               let uu___2 = FStar_Compiler_String.op_Hat "/" subd in
+               FStar_Compiler_String.op_Hat dirname uu___2 in
+             expand_include_d uu___1) subdirs in
       dirname :: uu___
     else [dirname]
 let (expand_include_ds : Prims.string Prims.list -> Prims.string Prims.list)
   = fun dirnames -> FStar_Compiler_List.collect expand_include_d dirnames
 let (lib_root : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ ->
-    let uu___3 = get_no_default_includes () in
-    if uu___3
+    let uu___1 = get_no_default_includes () in
+    if uu___1
     then FStar_Pervasives_Native.None
     else
-      (let uu___5 =
+      (let uu___3 =
          FStar_Compiler_Util.expand_environment_variable "FSTAR_LIB" in
-       match uu___5 with
+       match uu___3 with
        | FStar_Pervasives_Native.Some s -> FStar_Pervasives_Native.Some s
        | FStar_Pervasives_Native.None ->
-           let uu___6 =
-             let uu___7 =
+           let uu___4 =
+             let uu___5 =
                FStar_Compiler_String.op_Hat fstar_bin_directory "/../ulib" in
-             FStar_Compiler_Util.file_exists uu___7 in
-           if uu___6
+             FStar_Compiler_Util.file_exists uu___5 in
+           if uu___4
            then
-             let uu___7 =
+             let uu___5 =
                FStar_Compiler_String.op_Hat fstar_bin_directory "/../ulib" in
-             FStar_Pervasives_Native.Some uu___7
+             FStar_Pervasives_Native.Some uu___5
            else
-             (let uu___8 =
-                let uu___9 =
+             (let uu___6 =
+                let uu___7 =
                   FStar_Compiler_String.op_Hat fstar_bin_directory
                     "/../lib/fstar" in
-                FStar_Compiler_Util.file_exists uu___9 in
-              if uu___8
+                FStar_Compiler_Util.file_exists uu___7 in
+              if uu___6
               then
-                let uu___9 =
+                let uu___7 =
                   FStar_Compiler_String.op_Hat fstar_bin_directory
                     "/../lib/fstar" in
-                FStar_Pervasives_Native.Some uu___9
+                FStar_Pervasives_Native.Some uu___7
               else FStar_Pervasives_Native.None))
 let (lib_paths : unit -> Prims.string Prims.list) =
   fun uu___ ->
-    let uu___3 =
-      let uu___4 = lib_root () in FStar_Common.option_to_list uu___4 in
-    expand_include_ds uu___3
+    let uu___1 =
+      let uu___2 = lib_root () in FStar_Common.option_to_list uu___2 in
+    expand_include_ds uu___1
 let (include_path : unit -> Prims.string Prims.list) =
   fun uu___ ->
     let cache_dir =
-      let uu___3 = get_cache_dir () in
-      match uu___3 with
+      let uu___1 = get_cache_dir () in
+      match uu___1 with
       | FStar_Pervasives_Native.None -> []
       | FStar_Pervasives_Native.Some c -> [c] in
     let include_paths =
-      let uu___3 = get_include () in expand_include_ds uu___3 in
-    let uu___3 =
-      let uu___4 = lib_paths () in
-      let uu___5 =
-        let uu___6 = expand_include_d "." in
-        FStar_Compiler_List.op_At include_paths uu___6 in
-      FStar_Compiler_List.op_At uu___4 uu___5 in
-    FStar_Compiler_List.op_At cache_dir uu___3
+      let uu___1 = get_include () in expand_include_ds uu___1 in
+    let uu___1 =
+      let uu___2 = lib_paths () in
+      let uu___3 =
+        let uu___4 = expand_include_d "." in
+        FStar_Compiler_List.op_At include_paths uu___4 in
+      FStar_Compiler_List.op_At uu___2 uu___3 in
+    FStar_Compiler_List.op_At cache_dir uu___1
 let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
   =
   let file_map = FStar_Compiler_Util.smap_create (Prims.of_int (100)) in
@@ -4155,20 +4156,20 @@ let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
     | FStar_Pervasives_Native.None ->
         let result =
           try
-            (fun uu___3 ->
+            (fun uu___1 ->
                match () with
                | () ->
-                   let uu___4 = FStar_Compiler_Util.is_path_absolute filename in
-                   if uu___4
+                   let uu___2 = FStar_Compiler_Util.is_path_absolute filename in
+                   if uu___2
                    then
                      (if FStar_Compiler_Util.file_exists filename
                       then FStar_Pervasives_Native.Some filename
                       else FStar_Pervasives_Native.None)
                    else
-                     (let uu___6 =
-                        let uu___7 = include_path () in
-                        FStar_Compiler_List.rev uu___7 in
-                      FStar_Compiler_Util.find_map uu___6
+                     (let uu___4 =
+                        let uu___5 = include_path () in
+                        FStar_Compiler_List.rev uu___5 in
+                      FStar_Compiler_Util.find_map uu___4
                         (fun p ->
                            let path =
                              if p = "."
@@ -4177,57 +4178,57 @@ let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
                            if FStar_Compiler_Util.file_exists path
                            then FStar_Pervasives_Native.Some path
                            else FStar_Pervasives_Native.None))) ()
-          with | uu___3 -> FStar_Pervasives_Native.None in
+          with | uu___1 -> FStar_Pervasives_Native.None in
         (if FStar_Compiler_Option.isSome result
          then FStar_Compiler_Util.smap_add file_map filename result
          else ();
          result)
 let (prims : unit -> Prims.string) =
   fun uu___ ->
-    let uu___3 = get_prims () in
-    match uu___3 with
+    let uu___1 = get_prims () in
+    match uu___1 with
     | FStar_Pervasives_Native.None ->
         let filename = "Prims.fst" in
-        let uu___4 = find_file filename in
-        (match uu___4 with
+        let uu___2 = find_file filename in
+        (match uu___2 with
          | FStar_Pervasives_Native.Some result -> result
          | FStar_Pervasives_Native.None ->
-             let uu___5 =
+             let uu___3 =
                FStar_Compiler_Util.format1
                  "unable to find required file \"%s\" in the module search path.\n"
                  filename in
-             FStar_Compiler_Effect.failwith uu___5)
+             FStar_Compiler_Effect.failwith uu___3)
     | FStar_Pervasives_Native.Some x -> x
 let (prims_basename : unit -> Prims.string) =
-  fun uu___ -> let uu___3 = prims () in FStar_Compiler_Util.basename uu___3
+  fun uu___ -> let uu___1 = prims () in FStar_Compiler_Util.basename uu___1
 let (pervasives : unit -> Prims.string) =
   fun uu___ ->
     let filename = "FStar.Pervasives.fsti" in
-    let uu___3 = find_file filename in
-    match uu___3 with
+    let uu___1 = find_file filename in
+    match uu___1 with
     | FStar_Pervasives_Native.Some result -> result
     | FStar_Pervasives_Native.None ->
-        let uu___4 =
+        let uu___2 =
           FStar_Compiler_Util.format1
             "unable to find required file \"%s\" in the module search path.\n"
             filename in
-        FStar_Compiler_Effect.failwith uu___4
+        FStar_Compiler_Effect.failwith uu___2
 let (pervasives_basename : unit -> Prims.string) =
   fun uu___ ->
-    let uu___3 = pervasives () in FStar_Compiler_Util.basename uu___3
+    let uu___1 = pervasives () in FStar_Compiler_Util.basename uu___1
 let (pervasives_native_basename : unit -> Prims.string) =
   fun uu___ ->
     let filename = "FStar.Pervasives.Native.fst" in
-    let uu___3 = find_file filename in
-    match uu___3 with
+    let uu___1 = find_file filename in
+    match uu___1 with
     | FStar_Pervasives_Native.Some result ->
         FStar_Compiler_Util.basename result
     | FStar_Pervasives_Native.None ->
-        let uu___4 =
+        let uu___2 =
           FStar_Compiler_Util.format1
             "unable to find required file \"%s\" in the module search path.\n"
             filename in
-        FStar_Compiler_Effect.failwith uu___4
+        FStar_Compiler_Effect.failwith uu___2
 let (prepend_output_dir : Prims.string -> Prims.string) =
   fun fname ->
     let uu___ = get_odir () in
@@ -4241,8 +4242,8 @@ let (prepend_cache_dir : Prims.string -> Prims.string) =
     match uu___ with
     | FStar_Pervasives_Native.None -> fpath
     | FStar_Pervasives_Native.Some x ->
-        let uu___3 = FStar_Compiler_Util.basename fpath in
-        FStar_Compiler_Util.join_paths x uu___3
+        let uu___1 = FStar_Compiler_Util.basename fpath in
+        FStar_Compiler_Util.join_paths x uu___1
 let (path_of_text : Prims.string -> Prims.string Prims.list) =
   fun text -> FStar_Compiler_String.split [46] text
 let (parse_settings :
@@ -4267,9 +4268,9 @@ let (parse_settings :
           if FStar_Compiler_Util.starts_with s "-"
           then
             (let path =
-               let uu___4 =
+               let uu___2 =
                  FStar_Compiler_Util.substring_from s Prims.int_one in
-               path_of_text uu___4 in
+               path_of_text uu___2 in
              (path, false))
           else
             (let s1 =
@@ -4287,13 +4288,13 @@ let (parse_settings :
              with_cache
                (fun s2 ->
                   let s3 = FStar_Compiler_Util.replace_char s2 32 44 in
-                  let uu___4 =
-                    let uu___5 =
+                  let uu___2 =
+                    let uu___3 =
                       FStar_Compiler_List.concatMap
                         (fun s4 -> FStar_Compiler_Util.split s4 ",")
                         (FStar_Compiler_Util.splitlines s3) in
-                    FStar_Compiler_List.filter (fun s4 -> s4 <> "") uu___5 in
-                  FStar_Compiler_List.map parse_one_setting uu___4) s1) ns in
+                    FStar_Compiler_List.filter (fun s4 -> s4 <> "") uu___3 in
+                  FStar_Compiler_List.map parse_one_setting uu___2) s1) ns in
     FStar_Compiler_List.rev uu___
 let (admit_smt_queries : unit -> Prims.bool) =
   fun uu___ -> get_admit_smt_queries ()
@@ -4301,26 +4302,26 @@ let (admit_except : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> get_admit_except ()
 let (compat_pre_core_should_register : unit -> Prims.bool) =
   fun uu___ ->
-    let uu___3 = get_compat_pre_core () in
-    match uu___3 with
-    | FStar_Pervasives_Native.Some uu___4 when uu___4 = Prims.int_zero ->
+    let uu___1 = get_compat_pre_core () in
+    match uu___1 with
+    | FStar_Pervasives_Native.Some uu___2 when uu___2 = Prims.int_zero ->
         false
-    | uu___4 -> true
+    | uu___2 -> true
 let (compat_pre_core_should_check : unit -> Prims.bool) =
   fun uu___ ->
-    let uu___3 = get_compat_pre_core () in
-    match uu___3 with
-    | FStar_Pervasives_Native.Some uu___4 when uu___4 = Prims.int_zero ->
+    let uu___1 = get_compat_pre_core () in
+    match uu___1 with
+    | FStar_Pervasives_Native.Some uu___2 when uu___2 = Prims.int_zero ->
         false
-    | FStar_Pervasives_Native.Some uu___4 when uu___4 = Prims.int_one ->
+    | FStar_Pervasives_Native.Some uu___2 when uu___2 = Prims.int_one ->
         false
-    | uu___4 -> true
+    | uu___2 -> true
 let (compat_pre_core_set : unit -> Prims.bool) =
   fun uu___ ->
-    let uu___3 = get_compat_pre_core () in
-    match uu___3 with
+    let uu___1 = get_compat_pre_core () in
+    match uu___1 with
     | FStar_Pervasives_Native.None -> false
-    | uu___4 -> true
+    | uu___2 -> true
 let (compat_pre_typed_indexed_effects : unit -> Prims.bool) =
   fun uu___ -> get_compat_pre_typed_indexed_effects ()
 let (disallow_unification_guards : unit -> Prims.bool) =
@@ -4340,7 +4341,7 @@ let (parse_codegen :
     | "krml" -> FStar_Pervasives_Native.Some Krml
     | "Plugin" -> FStar_Pervasives_Native.Some Plugin
     | "Extension" -> FStar_Pervasives_Native.Some Extension
-    | uu___3 -> FStar_Pervasives_Native.None
+    | uu___1 -> FStar_Pervasives_Native.None
 let (print_codegen : codegen_t -> Prims.string) =
   fun uu___ ->
     match uu___ with
@@ -4351,29 +4352,29 @@ let (print_codegen : codegen_t -> Prims.string) =
     | Extension -> "Extension"
 let (codegen : unit -> codegen_t FStar_Pervasives_Native.option) =
   fun uu___ ->
-    let uu___3 = get_codegen () in
-    FStar_Compiler_Util.map_opt uu___3
+    let uu___1 = get_codegen () in
+    FStar_Compiler_Util.map_opt uu___1
       (fun s ->
-         let uu___4 = parse_codegen s in FStar_Compiler_Util.must uu___4)
+         let uu___2 = parse_codegen s in FStar_Compiler_Util.must uu___2)
 let (codegen_libs : unit -> Prims.string Prims.list Prims.list) =
   fun uu___ ->
-    let uu___3 = get_codegen_lib () in
-    FStar_Compiler_List.map (fun x -> FStar_Compiler_Util.split x ".") uu___3
+    let uu___1 = get_codegen_lib () in
+    FStar_Compiler_List.map (fun x -> FStar_Compiler_Util.split x ".") uu___1
 let (profile_group_by_decl : unit -> Prims.bool) =
   fun uu___ -> get_profile_group_by_decl ()
 let (defensive : unit -> Prims.bool) =
-  fun uu___ -> let uu___3 = get_defensive () in uu___3 <> "no"
+  fun uu___ -> let uu___1 = get_defensive () in uu___1 <> "no"
 let (defensive_error : unit -> Prims.bool) =
-  fun uu___ -> let uu___3 = get_defensive () in uu___3 = "error"
+  fun uu___ -> let uu___1 = get_defensive () in uu___1 = "error"
 let (defensive_abort : unit -> Prims.bool) =
-  fun uu___ -> let uu___3 = get_defensive () in uu___3 = "abort"
+  fun uu___ -> let uu___1 = get_defensive () in uu___1 = "abort"
 let (dep : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> get_dep ()
 let (detail_errors : unit -> Prims.bool) = fun uu___ -> get_detail_errors ()
 let (detail_hint_replay : unit -> Prims.bool) =
   fun uu___ -> get_detail_hint_replay ()
 let (any_dump_module : unit -> Prims.bool) =
-  fun uu___ -> let uu___3 = get_dump_module () in Prims.uu___is_Cons uu___3
+  fun uu___ -> let uu___1 = get_dump_module () in Prims.uu___is_Cons uu___1
 let (dump_module : Prims.string -> Prims.bool) =
   fun s ->
     let uu___ = get_dump_module () in
@@ -4386,19 +4387,19 @@ let (expose_interfaces : unit -> Prims.bool) =
   fun uu___ -> get_expose_interfaces ()
 let (message_format : unit -> message_format_t) =
   fun uu___ ->
-    let uu___3 = get_message_format () in
-    match uu___3 with
+    let uu___1 = get_message_format () in
+    match uu___1 with
     | "human" -> Human
     | "json" -> Json
     | illegal ->
-        let uu___4 =
-          let uu___5 =
+        let uu___2 =
+          let uu___3 =
             FStar_Compiler_String.op_Hat illegal
               "`. This should be impossible: `message_format` was supposed to be validated." in
           FStar_Compiler_String.op_Hat
             "print_issue: option `message_format` was expected to be `human` or `json`, not `"
-            uu___5 in
-        FStar_Compiler_Effect.failwith uu___4
+            uu___3 in
+        FStar_Compiler_Effect.failwith uu___2
 let (force : unit -> Prims.bool) = fun uu___ -> get_force ()
 let (full_context_dependency : unit -> Prims.bool) = fun uu___ -> true
 let (hide_uvar_nums : unit -> Prims.bool) =
@@ -4416,12 +4417,12 @@ let (hint_file_for_src : Prims.string -> Prims.string) =
     | FStar_Pervasives_Native.Some fn -> fn
     | FStar_Pervasives_Native.None ->
         let file_name =
-          let uu___3 = hint_dir () in
-          match uu___3 with
+          let uu___1 = hint_dir () in
+          match uu___1 with
           | FStar_Pervasives_Native.Some dir ->
-              let uu___4 = FStar_Compiler_Util.basename src_filename in
-              FStar_Compiler_Util.concat_dir_filename dir uu___4
-          | uu___4 -> src_filename in
+              let uu___2 = FStar_Compiler_Util.basename src_filename in
+              FStar_Compiler_Util.concat_dir_filename dir uu___2
+          | uu___2 -> src_filename in
         FStar_Compiler_Util.format1 "%s.hints" file_name
 let (ide : unit -> Prims.bool) = fun uu___ -> get_ide ()
 let (ide_id_info_off : unit -> Prims.bool) =
@@ -4437,7 +4438,7 @@ let (ide_file_name_st :
     | FStar_Pervasives_Native.None ->
         FStar_Compiler_Effect.op_Colon_Equals v
           (FStar_Pervasives_Native.Some f)
-    | FStar_Pervasives_Native.Some uu___3 ->
+    | FStar_Pervasives_Native.Some uu___1 ->
         FStar_Compiler_Effect.failwith "ide_file_name_st already set" in
   let get uu___ = FStar_Compiler_Effect.op_Bang v in (set1, get)
 let (set_ide_filename : Prims.string -> unit) =
@@ -4449,12 +4450,12 @@ let (print_in_place : unit -> Prims.bool) =
   fun uu___ -> get_print_in_place ()
 let (initial_fuel : unit -> Prims.int) =
   fun uu___ ->
-    let uu___3 = get_initial_fuel () in
-    let uu___4 = get_max_fuel () in Prims.min uu___3 uu___4
+    let uu___1 = get_initial_fuel () in
+    let uu___2 = get_max_fuel () in Prims.min uu___1 uu___2
 let (initial_ifuel : unit -> Prims.int) =
   fun uu___ ->
-    let uu___3 = get_initial_ifuel () in
-    let uu___4 = get_max_ifuel () in Prims.min uu___3 uu___4
+    let uu___1 = get_initial_ifuel () in
+    let uu___2 = get_max_ifuel () in Prims.min uu___1 uu___2
 let (interactive : unit -> Prims.bool) =
   fun uu___ -> ((get_in ()) || (get_ide ())) || (get_lsp ())
 let (lax : unit -> Prims.bool) = fun uu___ -> get_lax ()
@@ -4538,19 +4539,19 @@ let (smtencoding_elim_box : unit -> Prims.bool) =
   fun uu___ -> get_smtencoding_elim_box ()
 let (smtencoding_nl_arith_native : unit -> Prims.bool) =
   fun uu___ ->
-    let uu___3 = get_smtencoding_nl_arith_repr () in uu___3 = "native"
+    let uu___1 = get_smtencoding_nl_arith_repr () in uu___1 = "native"
 let (smtencoding_nl_arith_wrapped : unit -> Prims.bool) =
   fun uu___ ->
-    let uu___3 = get_smtencoding_nl_arith_repr () in uu___3 = "wrapped"
+    let uu___1 = get_smtencoding_nl_arith_repr () in uu___1 = "wrapped"
 let (smtencoding_nl_arith_default : unit -> Prims.bool) =
   fun uu___ ->
-    let uu___3 = get_smtencoding_nl_arith_repr () in uu___3 = "boxwrap"
+    let uu___1 = get_smtencoding_nl_arith_repr () in uu___1 = "boxwrap"
 let (smtencoding_l_arith_native : unit -> Prims.bool) =
   fun uu___ ->
-    let uu___3 = get_smtencoding_l_arith_repr () in uu___3 = "native"
+    let uu___1 = get_smtencoding_l_arith_repr () in uu___1 = "native"
 let (smtencoding_l_arith_default : unit -> Prims.bool) =
   fun uu___ ->
-    let uu___3 = get_smtencoding_l_arith_repr () in uu___3 = "boxwrap"
+    let uu___1 = get_smtencoding_l_arith_repr () in uu___1 = "boxwrap"
 let (smtencoding_valid_intro : unit -> Prims.bool) =
   fun uu___ -> get_smtencoding_valid_intro ()
 let (smtencoding_valid_elim : unit -> Prims.bool) =
@@ -4565,9 +4566,9 @@ let (parse_split_queries :
     | uu___ -> FStar_Pervasives_Native.None
 let (split_queries : unit -> split_queries_t) =
   fun uu___ ->
-    let uu___3 =
-      let uu___4 = get_split_queries () in parse_split_queries uu___4 in
-    FStar_Compiler_Util.must uu___3
+    let uu___1 =
+      let uu___2 = get_split_queries () in parse_split_queries uu___2 in
+    FStar_Compiler_Util.must uu___1
 let (tactic_raw_binders : unit -> Prims.bool) =
   fun uu___ -> get_tactic_raw_binders ()
 let (tactics_failhard : unit -> Prims.bool) =
@@ -4592,19 +4593,19 @@ let (use_native_tactics :
   unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> get_use_native_tactics ()
 let (use_tactics : unit -> Prims.bool) =
-  fun uu___ -> let uu___3 = get_no_tactics () in Prims.op_Negation uu___3
+  fun uu___ -> let uu___1 = get_no_tactics () in Prims.op_Negation uu___1
 let (using_facts_from :
   unit -> (Prims.string Prims.list * Prims.bool) Prims.list) =
   fun uu___ ->
-    let uu___3 = get_using_facts_from () in
-    match uu___3 with
+    let uu___1 = get_using_facts_from () in
+    match uu___1 with
     | FStar_Pervasives_Native.None -> [([], true)]
     | FStar_Pervasives_Native.Some ns -> parse_settings ns
 let (warn_default_effects : unit -> Prims.bool) =
   fun uu___ -> get_warn_default_effects ()
 let (warn_error : unit -> Prims.string) =
   fun uu___ ->
-    let uu___3 = get_warn_error () in FStar_Compiler_String.concat " " uu___3
+    let uu___1 = get_warn_error () in FStar_Compiler_String.concat " " uu___1
 let (z3_cliopt : unit -> Prims.string Prims.list) =
   fun uu___ -> get_z3cliopt ()
 let (z3_smtopt : unit -> Prims.string Prims.list) =
@@ -4629,16 +4630,16 @@ let (debug_all_modules : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "debug_all_modules" as_bool
 let with_saved_options : 'a . (unit -> 'a) -> 'a =
   fun f ->
-    let uu___ = let uu___3 = trace_error () in Prims.op_Negation uu___3 in
+    let uu___ = let uu___1 = trace_error () in Prims.op_Negation uu___1 in
     if uu___
     then
       (push ();
        (let r =
           try
-            (fun uu___4 ->
+            (fun uu___2 ->
                match () with
-               | () -> let uu___5 = f () in FStar_Pervasives.Inr uu___5) ()
-          with | uu___4 -> FStar_Pervasives.Inl uu___4 in
+               | () -> let uu___3 = f () in FStar_Pervasives.Inr uu___3) ()
+          with | uu___2 -> FStar_Pervasives.Inl uu___2 in
         pop ();
         (match r with
          | FStar_Pervasives.Inr v -> v
@@ -4660,12 +4661,12 @@ let (module_matches_namespace_filter :
         | uu___ -> false in
       let uu___ =
         FStar_Compiler_Util.try_find
-          (fun uu___3 ->
-             match uu___3 with
-             | (path, uu___4) -> matches_path m_components path) setting in
+          (fun uu___1 ->
+             match uu___1 with
+             | (path, uu___2) -> matches_path m_components path) setting in
       match uu___ with
       | FStar_Pervasives_Native.None -> false
-      | FStar_Pervasives_Native.Some (uu___3, flag) -> flag
+      | FStar_Pervasives_Native.Some (uu___1, flag) -> flag
 let (matches_namespace_filter_opt :
   Prims.string ->
     Prims.string Prims.list FStar_Pervasives_Native.option -> Prims.bool)
@@ -4694,14 +4695,14 @@ let (__proj__Mkparsed_extract_setting__item__default_settings :
 let (print_pes : parsed_extract_setting -> Prims.string) =
   fun pes ->
     let uu___ =
-      let uu___3 =
+      let uu___1 =
         FStar_Compiler_List.map
-          (fun uu___4 ->
-             match uu___4 with
+          (fun uu___2 ->
+             match uu___2 with
              | (tgt, s) ->
                  FStar_Compiler_Util.format2 "(%s, %s)" (print_codegen tgt) s)
           pes.target_specific_settings in
-      FStar_Compiler_String.concat "; " uu___3 in
+      FStar_Compiler_String.concat "; " uu___1 in
     FStar_Compiler_Util.format2
       "{ target_specific_settings = %s;\n\t\n               default_settings = %s }"
       uu___
@@ -4717,11 +4718,11 @@ let (find_setting_for_target :
     fun s ->
       let uu___ =
         FStar_Compiler_Util.try_find
-          (fun uu___3 -> match uu___3 with | (x, uu___4) -> x = tgt) s in
+          (fun uu___1 -> match uu___1 with | (x, uu___2) -> x = tgt) s in
       match uu___ with
-      | FStar_Pervasives_Native.Some (uu___3, s1) ->
+      | FStar_Pervasives_Native.Some (uu___1, s1) ->
           FStar_Pervasives_Native.Some s1
-      | uu___3 -> FStar_Pervasives_Native.None
+      | uu___1 -> FStar_Pervasives_Native.None
 let (extract_settings :
   unit -> parsed_extract_setting FStar_Pervasives_Native.option) =
   let memo = FStar_Compiler_Util.mk_ref (FStar_Pervasives_Native.None, false) in
@@ -4737,37 +4738,37 @@ let (extract_settings :
       | (FStar_Pervasives_Native.Some p01, FStar_Pervasives_Native.Some p11)
           ->
           let uu___ =
-            let uu___3 = FStar_Compiler_String.op_Hat "," p11 in
-            FStar_Compiler_String.op_Hat p01 uu___3 in
+            let uu___1 = FStar_Compiler_String.op_Hat "," p11 in
+            FStar_Compiler_String.op_Hat p01 uu___1 in
           FStar_Pervasives_Native.Some uu___ in
     let merge_target tgt =
       let uu___ =
-        let uu___3 = find_setting_for_target tgt p0.target_specific_settings in
-        let uu___4 = find_setting_for_target tgt p1.target_specific_settings in
-        merge_setting uu___3 uu___4 in
+        let uu___1 = find_setting_for_target tgt p0.target_specific_settings in
+        let uu___2 = find_setting_for_target tgt p1.target_specific_settings in
+        merge_setting uu___1 uu___2 in
       match uu___ with
       | FStar_Pervasives_Native.None -> []
       | FStar_Pervasives_Native.Some x -> [(tgt, x)] in
     let uu___ =
       FStar_Compiler_List.collect merge_target
         [OCaml; FSharp; Krml; Plugin; Extension] in
-    let uu___3 = merge_setting p0.default_settings p1.default_settings in
-    { target_specific_settings = uu___; default_settings = uu___3 } in
+    let uu___1 = merge_setting p0.default_settings p1.default_settings in
+    { target_specific_settings = uu___; default_settings = uu___1 } in
   fun uu___ ->
-    let uu___3 = FStar_Compiler_Effect.op_Bang memo in
-    match uu___3 with
+    let uu___1 = FStar_Compiler_Effect.op_Bang memo in
+    match uu___1 with
     | (result, set1) ->
         let fail msg =
           display_usage ();
-          (let uu___5 =
+          (let uu___3 =
              FStar_Compiler_Util.format1
                "Could not parse '%s' passed to the --extract option" msg in
-           FStar_Compiler_Effect.failwith uu___5) in
+           FStar_Compiler_Effect.failwith uu___3) in
         if set1
         then result
         else
-          (let uu___5 = get_extract () in
-           match uu___5 with
+          (let uu___3 = get_extract () in
+           match uu___3 with
            | FStar_Pervasives_Native.None ->
                (FStar_Compiler_Effect.op_Colon_Equals memo
                   (FStar_Pervasives_Native.None, true);
@@ -4783,23 +4784,23 @@ let (extract_settings :
                          (FStar_Compiler_Util.trim_string default_setting)
                    | target::setting::[] ->
                        let target1 = FStar_Compiler_Util.trim_string target in
-                       let uu___6 = parse_codegen target1 in
-                       (match uu___6 with
+                       let uu___4 = parse_codegen target1 in
+                       (match uu___4 with
                         | FStar_Pervasives_Native.None -> fail target1
                         | FStar_Pervasives_Native.Some tgt ->
                             FStar_Pervasives.Inl
                               (tgt,
                                 (FStar_Compiler_Util.trim_string setting))
-                        | uu___7 -> fail t_setting) in
+                        | uu___5 -> fail t_setting) in
                  let settings =
                    FStar_Compiler_List.map split_one tgt_specific_settings in
                  let fail_duplicate msg tgt =
                    display_usage ();
-                   (let uu___7 =
+                   (let uu___5 =
                       FStar_Compiler_Util.format2
                         "Could not parse '%s'; multiple setting for %s target"
                         msg tgt in
-                    FStar_Compiler_Effect.failwith uu___7) in
+                    FStar_Compiler_Effect.failwith uu___5) in
                  let pes =
                    FStar_Compiler_List.fold_right
                      (fun setting ->
@@ -4814,16 +4815,16 @@ let (extract_settings :
                                      default_settings =
                                        (FStar_Pervasives_Native.Some def)
                                    }
-                               | FStar_Pervasives_Native.Some uu___6 ->
+                               | FStar_Pervasives_Native.Some uu___4 ->
                                    fail_duplicate def "default")
                           | FStar_Pervasives.Inl (target, setting1) ->
-                              let uu___6 =
+                              let uu___4 =
                                 FStar_Compiler_Util.try_find
-                                  (fun uu___7 ->
-                                     match uu___7 with
-                                     | (x, uu___8) -> x = target)
+                                  (fun uu___5 ->
+                                     match uu___5 with
+                                     | (x, uu___6) -> x = target)
                                   out.target_specific_settings in
-                              (match uu___6 with
+                              (match uu___4 with
                                | FStar_Pervasives_Native.None ->
                                    {
                                      target_specific_settings =
@@ -4832,7 +4833,7 @@ let (extract_settings :
                                      default_settings =
                                        (out.default_settings)
                                    }
-                               | FStar_Pervasives_Native.Some uu___7 ->
+                               | FStar_Pervasives_Native.Some uu___5 ->
                                    fail_duplicate setting1
                                      (print_codegen target))) settings
                      {
@@ -4849,8 +4850,8 @@ let (extract_settings :
                  FStar_Compiler_List.fold_right
                    (fun setting ->
                       fun pes1 ->
-                        let uu___6 = parse_one_setting setting in
-                        merge_parsed_extract_settings pes1 uu___6)
+                        let uu___4 = parse_one_setting setting in
+                        merge_parsed_extract_settings pes1 uu___4)
                    extract_settings1 empty_pes in
                (FStar_Compiler_Effect.op_Colon_Equals memo
                   ((FStar_Pervasives_Native.Some pes), true);
@@ -4862,23 +4863,23 @@ let (should_extract : Prims.string -> codegen_t -> Prims.bool) =
       if m1 = "prims"
       then false
       else
-        (let uu___3 = extract_settings () in
-         match uu___3 with
+        (let uu___1 = extract_settings () in
+         match uu___1 with
          | FStar_Pervasives_Native.Some pes ->
-             ((let uu___5 =
-                 let uu___6 = get_no_extract () in
-                 let uu___7 = get_extract_namespace () in
-                 let uu___8 = get_extract_module () in
-                 (uu___6, uu___7, uu___8) in
-               match uu___5 with
+             ((let uu___3 =
+                 let uu___4 = get_no_extract () in
+                 let uu___5 = get_extract_namespace () in
+                 let uu___6 = get_extract_module () in
+                 (uu___4, uu___5, uu___6) in
+               match uu___3 with
                | ([], [], []) -> ()
-               | uu___6 ->
+               | uu___4 ->
                    FStar_Compiler_Effect.failwith
                      "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module");
               (let tsetting =
-                 let uu___5 =
+                 let uu___3 =
                    find_setting_for_target tgt pes.target_specific_settings in
-                 match uu___5 with
+                 match uu___3 with
                  | FStar_Pervasives_Native.Some s -> s
                  | FStar_Pervasives_Native.None ->
                      (match pes.default_settings with
@@ -4887,8 +4888,8 @@ let (should_extract : Prims.string -> codegen_t -> Prims.bool) =
                module_matches_namespace_filter m1 [tsetting]))
          | FStar_Pervasives_Native.None ->
              let should_extract_namespace m2 =
-               let uu___4 = get_extract_namespace () in
-               match uu___4 with
+               let uu___2 = get_extract_namespace () in
+               match uu___2 with
                | [] -> false
                | ns ->
                    FStar_Compiler_Util.for_some
@@ -4896,19 +4897,19 @@ let (should_extract : Prims.string -> codegen_t -> Prims.bool) =
                         FStar_Compiler_Util.starts_with m2
                           (FStar_Compiler_String.lowercase n)) ns in
              let should_extract_module m2 =
-               let uu___4 = get_extract_module () in
-               match uu___4 with
+               let uu___2 = get_extract_module () in
+               match uu___2 with
                | [] -> false
                | l ->
                    FStar_Compiler_Util.for_some
                      (fun n -> (FStar_Compiler_String.lowercase n) = m2) l in
-             (let uu___4 = no_extract m1 in Prims.op_Negation uu___4) &&
-               (let uu___4 =
-                  let uu___5 = get_extract_namespace () in
-                  let uu___6 = get_extract_module () in (uu___5, uu___6) in
-                (match uu___4 with
+             (let uu___2 = no_extract m1 in Prims.op_Negation uu___2) &&
+               (let uu___2 =
+                  let uu___3 = get_extract_namespace () in
+                  let uu___4 = get_extract_module () in (uu___3, uu___4) in
+                (match uu___2 with
                  | ([], []) -> true
-                 | uu___5 ->
+                 | uu___3 ->
                      (should_extract_namespace m1) ||
                        (should_extract_module m1))))
 let (should_be_already_cached : Prims.string -> Prims.bool) =
@@ -4964,74 +4965,74 @@ let (set_options : Prims.string -> FStar_Getopt.parse_cmdline_res) =
                 else res)) ()
     with
     | File_argument s1 ->
-        let uu___3 =
+        let uu___1 =
           FStar_Compiler_Util.format1 "File %s is not a valid option" s1 in
-        FStar_Getopt.Error uu___3
+        FStar_Getopt.Error uu___1
 let with_options : 'a . Prims.string -> (unit -> 'a) -> 'a =
   fun s ->
     fun f ->
       with_saved_options
-        (fun uu___ -> (let uu___4 = set_options s in ()); f ())
+        (fun uu___ -> (let uu___2 = set_options s in ()); f ())
 let (get_vconfig : unit -> FStar_VConfig.vconfig) =
   fun uu___ ->
     let vcfg =
-      let uu___3 = get_initial_fuel () in
-      let uu___4 = get_max_fuel () in
-      let uu___5 = get_initial_ifuel () in
-      let uu___6 = get_max_ifuel () in
-      let uu___7 = get_detail_errors () in
-      let uu___8 = get_detail_hint_replay () in
-      let uu___9 = get_no_smt () in
-      let uu___10 = get_quake_lo () in
-      let uu___11 = get_quake_hi () in
-      let uu___12 = get_quake_keep () in
-      let uu___13 = get_retry () in
-      let uu___14 = get_smtencoding_elim_box () in
-      let uu___15 = get_smtencoding_nl_arith_repr () in
-      let uu___16 = get_smtencoding_l_arith_repr () in
-      let uu___17 = get_smtencoding_valid_intro () in
-      let uu___18 = get_smtencoding_valid_elim () in
-      let uu___19 = get_tcnorm () in
-      let uu___20 = get_no_plugins () in
-      let uu___21 = get_no_tactics () in
-      let uu___22 = get_z3cliopt () in
-      let uu___23 = get_z3smtopt () in
-      let uu___24 = get_z3refresh () in
-      let uu___25 = get_z3rlimit () in
-      let uu___26 = get_z3rlimit_factor () in
-      let uu___27 = get_z3seed () in
-      let uu___28 = get_z3version () in
-      let uu___29 = get_trivial_pre_for_unannotated_effectful_fns () in
-      let uu___30 = get_reuse_hint_for () in
+      let uu___1 = get_initial_fuel () in
+      let uu___2 = get_max_fuel () in
+      let uu___3 = get_initial_ifuel () in
+      let uu___4 = get_max_ifuel () in
+      let uu___5 = get_detail_errors () in
+      let uu___6 = get_detail_hint_replay () in
+      let uu___7 = get_no_smt () in
+      let uu___8 = get_quake_lo () in
+      let uu___9 = get_quake_hi () in
+      let uu___10 = get_quake_keep () in
+      let uu___11 = get_retry () in
+      let uu___12 = get_smtencoding_elim_box () in
+      let uu___13 = get_smtencoding_nl_arith_repr () in
+      let uu___14 = get_smtencoding_l_arith_repr () in
+      let uu___15 = get_smtencoding_valid_intro () in
+      let uu___16 = get_smtencoding_valid_elim () in
+      let uu___17 = get_tcnorm () in
+      let uu___18 = get_no_plugins () in
+      let uu___19 = get_no_tactics () in
+      let uu___20 = get_z3cliopt () in
+      let uu___21 = get_z3smtopt () in
+      let uu___22 = get_z3refresh () in
+      let uu___23 = get_z3rlimit () in
+      let uu___24 = get_z3rlimit_factor () in
+      let uu___25 = get_z3seed () in
+      let uu___26 = get_z3version () in
+      let uu___27 = get_trivial_pre_for_unannotated_effectful_fns () in
+      let uu___28 = get_reuse_hint_for () in
       {
-        FStar_VConfig.initial_fuel = uu___3;
-        FStar_VConfig.max_fuel = uu___4;
-        FStar_VConfig.initial_ifuel = uu___5;
-        FStar_VConfig.max_ifuel = uu___6;
-        FStar_VConfig.detail_errors = uu___7;
-        FStar_VConfig.detail_hint_replay = uu___8;
-        FStar_VConfig.no_smt = uu___9;
-        FStar_VConfig.quake_lo = uu___10;
-        FStar_VConfig.quake_hi = uu___11;
-        FStar_VConfig.quake_keep = uu___12;
-        FStar_VConfig.retry = uu___13;
-        FStar_VConfig.smtencoding_elim_box = uu___14;
-        FStar_VConfig.smtencoding_nl_arith_repr = uu___15;
-        FStar_VConfig.smtencoding_l_arith_repr = uu___16;
-        FStar_VConfig.smtencoding_valid_intro = uu___17;
-        FStar_VConfig.smtencoding_valid_elim = uu___18;
-        FStar_VConfig.tcnorm = uu___19;
-        FStar_VConfig.no_plugins = uu___20;
-        FStar_VConfig.no_tactics = uu___21;
-        FStar_VConfig.z3cliopt = uu___22;
-        FStar_VConfig.z3smtopt = uu___23;
-        FStar_VConfig.z3refresh = uu___24;
-        FStar_VConfig.z3rlimit = uu___25;
-        FStar_VConfig.z3rlimit_factor = uu___26;
-        FStar_VConfig.z3seed = uu___27;
-        FStar_VConfig.z3version = uu___28;
-        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns = uu___29;
-        FStar_VConfig.reuse_hint_for = uu___30
+        FStar_VConfig.initial_fuel = uu___1;
+        FStar_VConfig.max_fuel = uu___2;
+        FStar_VConfig.initial_ifuel = uu___3;
+        FStar_VConfig.max_ifuel = uu___4;
+        FStar_VConfig.detail_errors = uu___5;
+        FStar_VConfig.detail_hint_replay = uu___6;
+        FStar_VConfig.no_smt = uu___7;
+        FStar_VConfig.quake_lo = uu___8;
+        FStar_VConfig.quake_hi = uu___9;
+        FStar_VConfig.quake_keep = uu___10;
+        FStar_VConfig.retry = uu___11;
+        FStar_VConfig.smtencoding_elim_box = uu___12;
+        FStar_VConfig.smtencoding_nl_arith_repr = uu___13;
+        FStar_VConfig.smtencoding_l_arith_repr = uu___14;
+        FStar_VConfig.smtencoding_valid_intro = uu___15;
+        FStar_VConfig.smtencoding_valid_elim = uu___16;
+        FStar_VConfig.tcnorm = uu___17;
+        FStar_VConfig.no_plugins = uu___18;
+        FStar_VConfig.no_tactics = uu___19;
+        FStar_VConfig.z3cliopt = uu___20;
+        FStar_VConfig.z3smtopt = uu___21;
+        FStar_VConfig.z3refresh = uu___22;
+        FStar_VConfig.z3rlimit = uu___23;
+        FStar_VConfig.z3rlimit_factor = uu___24;
+        FStar_VConfig.z3seed = uu___25;
+        FStar_VConfig.z3version = uu___26;
+        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns = uu___27;
+        FStar_VConfig.reuse_hint_for = uu___28
       } in
     vcfg
 let (set_vconfig : FStar_VConfig.vconfig -> unit) =
@@ -5065,18 +5066,18 @@ let (set_vconfig : FStar_VConfig.vconfig -> unit) =
     set_option "tcnorm" (Bool (vcfg.FStar_VConfig.tcnorm));
     set_option "no_plugins" (Bool (vcfg.FStar_VConfig.no_plugins));
     set_option "no_tactics" (Bool (vcfg.FStar_VConfig.no_tactics));
-    (let uu___22 =
-       let uu___23 =
-         FStar_Compiler_List.map (fun uu___24 -> String uu___24)
+    (let uu___20 =
+       let uu___21 =
+         FStar_Compiler_List.map (fun uu___22 -> String uu___22)
            vcfg.FStar_VConfig.z3cliopt in
-       List uu___23 in
-     set_option "z3cliopt" uu___22);
-    (let uu___23 =
-       let uu___24 =
-         FStar_Compiler_List.map (fun uu___25 -> String uu___25)
+       List uu___21 in
+     set_option "z3cliopt" uu___20);
+    (let uu___21 =
+       let uu___22 =
+         FStar_Compiler_List.map (fun uu___23 -> String uu___23)
            vcfg.FStar_VConfig.z3smtopt in
-       List uu___24 in
-     set_option "z3smtopt" uu___23);
+       List uu___22 in
+     set_option "z3smtopt" uu___21);
     set_option "z3refresh" (Bool (vcfg.FStar_VConfig.z3refresh));
     set_option "z3rlimit" (Int (vcfg.FStar_VConfig.z3rlimit));
     set_option "z3rlimit_factor" (Int (vcfg.FStar_VConfig.z3rlimit_factor));
@@ -5084,7 +5085,7 @@ let (set_vconfig : FStar_VConfig.vconfig -> unit) =
     set_option "z3version" (String (vcfg.FStar_VConfig.z3version));
     set_option "trivial_pre_for_unannotated_effectful_fns"
       (Bool (vcfg.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns));
-    (let uu___30 =
-       option_as (fun uu___31 -> String uu___31)
+    (let uu___28 =
+       option_as (fun uu___29 -> String uu___29)
          vcfg.FStar_VConfig.reuse_hint_for in
-     set_option "reuse_hint_for" uu___30)
+     set_option "reuse_hint_for" uu___28)

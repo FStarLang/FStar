@@ -25,8 +25,8 @@ let op_Greater_Equals : 't . 't totalorder -> 't -> 't -> Prims.bool =
   fun uu___ -> fun x -> fun y -> (compare uu___ x y) <> FStar_Order.Lt
 let op_Less_Greater : 't . 't totalorder -> 't -> 't -> Prims.bool =
   fun uu___ -> fun x -> fun y -> (compare uu___ x y) <> FStar_Order.Eq
-let (uu___0 : Prims.int totalorder) = { compare = FStar_Order.compare_int }
-let (uu___1 : Prims.bool totalorder) =
+let (uu___54 : Prims.int totalorder) = { compare = FStar_Order.compare_int }
+let (uu___55 : Prims.bool totalorder) =
   {
     compare =
       (fun b1 ->
@@ -44,8 +44,8 @@ let totalorder_pair :
       {
         compare =
           (fun uu___ ->
-             fun uu___2 ->
-               match (uu___, uu___2) with
+             fun uu___1 ->
+               match (uu___, uu___1) with
                | ((xa, xb), (ya, yb)) ->
                    (match compare d1 xa ya with
                     | FStar_Order.Lt -> FStar_Order.Lt
@@ -76,8 +76,8 @@ let rec raw_compare_lists :
       fun l2 ->
         match (l1, l2) with
         | ([], []) -> FStar_Order.Eq
-        | ([], uu___::uu___2) -> FStar_Order.Lt
-        | (uu___::uu___2, []) -> FStar_Order.Gt
+        | ([], uu___::uu___1) -> FStar_Order.Lt
+        | (uu___::uu___1, []) -> FStar_Order.Gt
         | (x::xs, y::ys) ->
             (match compare d x y with
              | FStar_Order.Lt -> FStar_Order.Lt

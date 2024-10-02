@@ -4003,7 +4003,7 @@ let (translate :
                        "Unable to translate module: %s because:\n  %s\n"
                        m_name uu___3);
                     FStar_Pervasives_Native.None)) modules
-let (uu___0 : unit) =
+let (uu___2060 : unit) =
   register_post_translate_type_without_decay translate_type_without_decay';
   register_post_translate_type translate_type';
   register_post_translate_type_decl translate_type_decl';
