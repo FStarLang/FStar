@@ -457,14 +457,14 @@ let fresh_binders (ts:list mlty) (g:uenv) : list mlbinder & uenv =
 //  and isn't instantiated in F* (e.g., because of first-class polymorphism)
 //  we extract e to a type application in ML by instantiating all its
 //  type arguments to MLTY_Erased (later, perhaps, being forced to insert magics)
-let instantiate_maybe_partial (g:uenv) (e:mlexpr) (s:mltyscheme) (tyargs:list mlty) : (mlexpr & e_tag & mlty) =
+let instantiate_maybe_partial (g:uenv) (e:mlexpr) (eff:e_tag) (s:mltyscheme) (tyargs:list mlty) : (mlexpr & e_tag & mlty) =
     let vars, t = s in
     let n_vars = List.length vars in
     let n_args = List.length tyargs in
     if n_args = n_vars
     then //easy, just make a type application node
       if n_args = 0
-      then (e, E_PURE, t)
+      then (e, eff, t)
       else
         let ts = instantiate_tyscheme (vars, t) tyargs in
         let tapp = {
@@ -472,7 +472,7 @@ let instantiate_maybe_partial (g:uenv) (e:mlexpr) (s:mltyscheme) (tyargs:list ml
             expr=MLE_TApp(e, tyargs);
             mlty=ts
         } in
-        (tapp, E_PURE, ts)
+        (tapp, eff, ts)
     else if n_args < n_vars
     then //We have a partial type-application in F*
          //So, make a full type application node in ML,
@@ -499,7 +499,7 @@ let instantiate_maybe_partial (g:uenv) (e:mlexpr) (s:mltyscheme) (tyargs:list ml
       in
       let vs_ts, g = fresh_binders extra_tyargs g in
       let f = with_ty t <| MLE_Fun (vs_ts, tapp) in
-      (f, E_PURE, t)
+      (f, eff, t)
     else failwith "Impossible: instantiate_maybe_partial called with too many arguments"
 
 (* eta-expand `e` according to its type `t` *)
@@ -1246,11 +1246,14 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) : list lb_sig =
 
                   //TODO: ERASE ONLY THOSE THAT ABSTRACT OVER PURE FUNCTIONS in Type(i),
                   //      NOT, e.g., (x:int -> St Type)
-                   let tbinders, tbody =
+                   let etag_of_comp c = effect_as_etag g (U.comp_effect_name c) in
+                   let tbinders, eff_body, tbody =
                         match BU.prefix_until (fun x -> not (is_type_binder g x)) bs with
-                            | None -> bs, U.comp_result c
-                            | Some (bs, b, rest) -> bs, U.arrow (b::rest) c in
-
+                        | None -> bs, etag_of_comp c, U.comp_result c
+                        | Some (bs, b, rest) -> bs, E_PURE, U.arrow (b::rest) c
+                  in
+                  debug g (fun () -> 
+                    BU.print1 "Extract LB SIG: %s\n" (show tbody));
                    let n_tbinders = List.length tbinders in
                    let lbdef = normalize_abs lbdef |> U.unmeta in
                    let tbinders_as_ty_params env = List.map (fun ({binder_bv=x; binder_attrs}) -> {
@@ -1274,7 +1277,7 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) : list lb_sig =
                                   || not (U.is_pure_comp c)
                                 | _ -> false in
                              let rest_args = if add_unit then (unit_binder()::rest_args) else rest_args in
-                             let polytype = if add_unit then push_unit polytype else polytype in
+                             let polytype = if add_unit then push_unit eff_body polytype else polytype in
                              let body = U.abs rest_args body copt in
                              (lbname_, f_e, (lbtyp, (targs, polytype)), add_unit, has_c_inline, body)
 
@@ -1344,6 +1347,12 @@ and check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr & mlty
     | E_PURE, MLTY_Erased -> ml_unit, MLTY_Erased
     | _ ->
       let ml_e, tag, t = term_as_mlexpr g e in
+      debug g (fun _ ->
+        BU.print4 "Extracted %s to %s at eff %s and type %s\n"
+          (show e)
+          (Code.string_of_mlexpr (current_module_of_uenv g) ml_e)
+          (Util.eff_to_string tag)
+          (Code.string_of_mlty (current_module_of_uenv g) t));
       if eff_leq tag f
       then maybe_coerce e.pos g ml_e t ty, ty
       else match tag, f, ty with
@@ -1511,19 +1520,19 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                 | Inl _, _ ->
                   ml_unit, E_PURE, ml_unit_ty
 
-                | Inr ({exp_b_expr=x; exp_b_tscheme=mltys}), qual ->
+                | Inr ({exp_b_expr=x; exp_b_tscheme=mltys; exp_b_eff=etag}), qual ->
                   //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
                   begin match mltys with
                     | ([], t) when t=ml_unit_ty ->
-                      ml_unit, E_PURE, t //optimize (x:unit) to ()
+                      ml_unit, etag, t //optimize (x:unit) to ()
 
                     | ([], t) ->
-                      maybe_eta_data_and_project_record g qual t x, E_PURE, t
+                      maybe_eta_data_and_project_record g qual t x, etag, t
 
                     | _ ->
                       (* We have a first-class polymorphic value;
                          Extract it to ML by instantiating its type arguments to MLTY_Erased *)
-                      instantiate_maybe_partial g x mltys []
+                      instantiate_maybe_partial g x etag mltys []
                   end
                end
 
@@ -1547,7 +1556,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                  begin match mltys with
                     | ([], t) when (t=ml_unit_ty) -> ml_unit, E_PURE, t //optimize (x:unit) to ()
                     | ([], t) -> maybe_eta_data_and_project_record g fv.fv_qual t x, E_PURE, t
-                    | _ -> instantiate_maybe_partial g x mltys []
+                    | _ -> instantiate_maybe_partial g x E_PURE mltys []
                  end
           end
 
@@ -1715,21 +1724,22 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                     | Tm_name _
                     | Tm_fvar _ ->
                        //             debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
-                      let (head_ml, (vars, t)), qual =
+                      let (head_ml, (vars, t), head_eff), qual =
                         match lookup_term g head with
                         | Inr exp_b, q ->
                           debug g (fun () ->
-                              BU.print3 "@@@looked up %s: got %s at %s\n"
+                              BU.print4 "@@@looked up %s: got %s at %s with eff <%s>\n"
                                   (show head)
                                   (Code.string_of_mlexpr (current_module_of_uenv g) exp_b.exp_b_expr)
-                                  (Code.string_of_mlty (current_module_of_uenv g) (snd exp_b.exp_b_tscheme)));
-                          (exp_b.exp_b_expr, exp_b.exp_b_tscheme), q
+                                  (Code.string_of_mlty (current_module_of_uenv g) (snd exp_b.exp_b_tscheme))
+                                  (show exp_b.exp_b_eff));
+                          (exp_b.exp_b_expr, exp_b.exp_b_tscheme, exp_b.exp_b_eff), q
                         | _ -> failwith "FIXME Ty" in
 
                       let has_typ_apps = match args with
                         | (a, _)::_ -> is_type g a
                         | _ -> false in
-                      let head_ml, head_t, args =
+                      let head_ml, head_eff, head_t, args =
                           (* Here, we have, say, f extracted to head_ml, with a polymorphic ML type with n type-args
                              If, in F*, `f` is applied to exactly `n` type args, then things are easy:
                                We extract those n arguments to ML types
@@ -1755,32 +1765,33 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                                  List.map (fun (x, _) -> term_as_mlty g x) prefix,
                                  rest
                           in
-                          let head, t =
+                          let head, head_eff, t =
                               match head_ml.expr with
                               | MLE_Name _
                               | MLE_Var _ ->
-                                let head, _, t =
-                                  instantiate_maybe_partial g head_ml (vars, t) provided_type_args
+                                let head, eff, t =
+                                  instantiate_maybe_partial g head_ml head_eff (vars, t) provided_type_args
                                 in
-                                head, t
+                                head, eff, t
 
                               | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) ->
                                 //this happens when the extraction inserted an extra
                                 //unit argument to circumvent ML's value restriction
-                                let head, _, t =
-                                  instantiate_maybe_partial g head (vars, t) provided_type_args
+                                let head, eff, t =
+                                  instantiate_maybe_partial g head head_eff (vars, t) provided_type_args
                                 in
                                 MLE_App(head, [ ml_unit ]) |> with_ty t,
+                                eff,
                                 t
 
                               | _ -> failwith "Impossible: Unexpected head term"
                           in
-                          head, t, rest
+                          head, head_eff, t, rest
                        in
                        begin
                        match args with
-                       | [] -> maybe_eta_data_and_project_record g qual head_t head_ml, E_PURE, head_t
-                       | _  -> extract_app_maybe_projector qual head_ml (E_PURE, head_t) args
+                       | [] -> maybe_eta_data_and_project_record g qual head_t head_ml, head_eff, head_t
+                       | _  -> extract_app_maybe_projector qual head_ml (head_eff, head_t) args
                        end
 
                     | _ ->
@@ -1920,6 +1931,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
 
           let check_lb env (nm_sig : mlident & lb_sig) =
               let (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, has_c_inline, e)) = nm_sig in
+              debug g (fun () -> BU.print2 "Checking lb %s at %s\n" (show nm) (show (snd polytype)));
               let env = List.fold_left (fun env ({binder_bv=a}) -> UEnv.extend_ty env a false) env targs in
               let expected_t = snd polytype in
               let e, ty = check_term_as_mlexpr env e f expected_t in

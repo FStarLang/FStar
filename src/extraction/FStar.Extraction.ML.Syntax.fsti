@@ -239,8 +239,8 @@ val apply_obj_repr :  mlexpr -> mlty -> mlexpr
 
 val ty_param_names (tys:list ty_param) : list string
 
-val push_unit (ts : mltyscheme) : mltyscheme
-val pop_unit (ts : mltyscheme) : mltyscheme
+val push_unit (eff:e_tag) (ts : mltyscheme) : mltyscheme
+val pop_unit (ts : mltyscheme) : e_tag & mltyscheme
 
 val mltyscheme_to_string (tsc:mltyscheme) : string
 val mlbranch_to_string (b:mlbranch) : string

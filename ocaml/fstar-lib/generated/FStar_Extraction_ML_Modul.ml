@@ -1224,12 +1224,13 @@ let (extract_reifiable_effect :
              (match uu___2 with
               | { FStar_Extraction_ML_UEnv.exp_b_name = uu___3;
                   FStar_Extraction_ML_UEnv.exp_b_expr = uu___4;
-                  FStar_Extraction_ML_UEnv.exp_b_tscheme = tysc;_} ->
-                  let uu___5 =
+                  FStar_Extraction_ML_UEnv.exp_b_tscheme = tysc;
+                  FStar_Extraction_ML_UEnv.exp_b_eff = uu___5;_} ->
+                  let uu___6 =
                     FStar_Extraction_ML_Syntax.with_ty
                       FStar_Extraction_ML_Syntax.MLTY_Top
                       (FStar_Extraction_ML_Syntax.MLE_Name mlp) in
-                  (uu___5, tysc))
+                  (uu___6, tysc))
          | uu___2 ->
              let uu___3 =
                let uu___4 =
