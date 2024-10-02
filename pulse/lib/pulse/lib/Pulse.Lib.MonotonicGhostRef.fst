@@ -70,9 +70,8 @@ ensures pts_to r #(f +. g) v
   unfold pts_to;
   with hg. assert (GR.pts_to r (Some g, hg));
   GR.gather r (Some f, hf) (Some g, hg);
-  let q : perm = f +. g; //annoying; can't write (f +. g) inline below
   rewrite (GR.pts_to r ((Some f, hf) `(FP.fp_pcm p).p.op` (Some g, hf)))
-       as (GR.pts_to r (Some q, hf));
+       as (GR.pts_to r (Some #perm (f +. g), hf));
   fold (pts_to r #(f +. g) v);
 }
 
