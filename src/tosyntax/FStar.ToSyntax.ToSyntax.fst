@@ -3719,6 +3719,7 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t & sigelts) =
   env, sigelts
 
 and desugar_decl env (d:decl) :(env_t & sigelts) =
+  FStar.GenSym.reset_gensym ();
   let env, ses = desugar_decl_maybe_fail_attr env d in
   env, ses |> List.map generalize_annotated_univs
 
@@ -3967,7 +3968,13 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
         | [pat, body] -> pat, body
         | _ -> failwith "expand_toplevel_pattern should only allow single definition lets"
       in
-      let fresh_toplevel_name = Ident.gen Range.dummyRange in
+      let rec gen_fresh_toplevel_name () =
+        let nm = Ident.gen Range.dummyRange in
+        if Some? <| DsEnv.resolve_name env (Ident.lid_of_ids [nm])
+        then gen_fresh_toplevel_name()
+        else nm
+      in
+      let fresh_toplevel_name = gen_fresh_toplevel_name() in
       let fresh_pat =
         let var_pat = mk_pattern (PatVar (fresh_toplevel_name, None, [])) Range.dummyRange in
         (* TODO : What about inner type ascriptions ? Is there any way to retrieve those ? *)
@@ -4010,7 +4017,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
             bv_pat, branch
 
           | None ->
-            let id = Ident.gen Range.dummyRange in
+            let id = gen_fresh_toplevel_name () in
             let branch = mk_term (Const FStar.Const.Const_unit) Range.dummyRange Expr in
             let bv_pat = mk_pattern (PatVar (id, None, [])) (range_of_id id) in
             let bv_pat = mk_pattern (PatAscribed (bv_pat, (unit_ty (range_of_id id), None)))

@@ -9267,11 +9267,13 @@ and (desugar_decl :
   env_t -> FStar_Parser_AST.decl -> (env_t * FStar_Syntax_Syntax.sigelts)) =
   fun env ->
     fun d ->
-      let uu___ = desugar_decl_maybe_fail_attr env d in
-      match uu___ with
-      | (env1, ses) ->
-          let uu___1 = FStar_Compiler_List.map generalize_annotated_univs ses in
-          (env1, uu___1)
+      FStar_GenSym.reset_gensym ();
+      (let uu___1 = desugar_decl_maybe_fail_attr env d in
+       match uu___1 with
+       | (env1, ses) ->
+           let uu___2 =
+             FStar_Compiler_List.map generalize_annotated_univs ses in
+           (env1, uu___2))
 and (desugar_decl_core :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.term Prims.list ->
@@ -9839,8 +9841,16 @@ and (desugar_decl_core :
                        "expand_toplevel_pattern should only allow single definition lets" in
                match uu___1 with
                | (pat, body) ->
-                   let fresh_toplevel_name =
-                     FStar_Ident.gen FStar_Compiler_Range_Type.dummyRange in
+                   let rec gen_fresh_toplevel_name uu___2 =
+                     let nm =
+                       FStar_Ident.gen FStar_Compiler_Range_Type.dummyRange in
+                     let uu___3 =
+                       let uu___4 =
+                         let uu___5 = FStar_Ident.lid_of_ids [nm] in
+                         FStar_Syntax_DsEnv.resolve_name env uu___5 in
+                       FStar_Pervasives_Native.uu___is_Some uu___4 in
+                     if uu___3 then gen_fresh_toplevel_name () else nm in
+                   let fresh_toplevel_name = gen_fresh_toplevel_name () in
                    let fresh_pat =
                      let var_pat =
                        FStar_Parser_AST.mk_pattern
@@ -9904,9 +9914,7 @@ and (desugar_decl_core :
                                    uu___4 in
                                (bv_pat, branch)
                            | FStar_Pervasives_Native.None ->
-                               let id =
-                                 FStar_Ident.gen
-                                   FStar_Compiler_Range_Type.dummyRange in
+                               let id = gen_fresh_toplevel_name () in
                                let branch =
                                  FStar_Parser_AST.mk_term
                                    (FStar_Parser_AST.Const
