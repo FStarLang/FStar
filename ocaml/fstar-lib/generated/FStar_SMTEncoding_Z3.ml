@@ -423,9 +423,44 @@ let (new_z3proc :
   fun id ->
     fun cmd_and_args ->
       let proc =
-        FStar_Compiler_Util.start_process id
-          (FStar_Pervasives_Native.fst cmd_and_args)
-          (FStar_Pervasives_Native.snd cmd_and_args) (fun s -> s = "Done!") in
+        try
+          (fun uu___ ->
+             match () with
+             | () ->
+                 FStar_Compiler_Util.start_process id
+                   (FStar_Pervasives_Native.fst cmd_and_args)
+                   (FStar_Pervasives_Native.snd cmd_and_args)
+                   (fun s -> s = "Done!")) ()
+        with
+        | uu___ ->
+            let uu___1 =
+              let uu___2 =
+                FStar_Errors_Msg.text "Could not start SMT solver process." in
+              let uu___3 =
+                let uu___4 =
+                  let uu___5 = FStar_Errors_Msg.text "Command:" in
+                  let uu___6 =
+                    let uu___7 =
+                      FStar_Pprint.arbitrary_string
+                        (FStar_Pervasives_Native.fst cmd_and_args) in
+                    FStar_Pprint.squotes uu___7 in
+                  FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___5
+                    uu___6 in
+                let uu___5 =
+                  let uu___6 =
+                    let uu___7 = FStar_Errors_Msg.text "Exception:" in
+                    let uu___8 =
+                      let uu___9 = FStar_Compiler_Util.print_exn uu___ in
+                      FStar_Pprint.arbitrary_string uu___9 in
+                    FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                      uu___7 uu___8 in
+                  [uu___6] in
+                uu___4 :: uu___5 in
+              uu___2 :: uu___3 in
+            FStar_Errors.raise_error0
+              FStar_Errors_Codes.Error_Z3InvocationError ()
+              (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
+              (Obj.magic uu___1) in
       check_z3version proc; proc
 let (new_z3proc_with_id :
   (Prims.string * Prims.string Prims.list) -> FStar_Compiler_Util.proc) =
