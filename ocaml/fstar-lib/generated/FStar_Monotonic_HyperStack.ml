@@ -20,13 +20,11 @@ let (__proj__HS__item__rid_ctr : mem' -> Prims.int) =
   fun projectee -> match projectee with | HS (rid_ctr, h, tip) -> rid_ctr
 let (__proj__HS__item__h : mem' -> FStar_Monotonic_HyperHeap.hmap) =
   fun projectee -> match projectee with | HS (rid_ctr, h, tip) -> h
-
 let (mk_mem : Prims.int -> FStar_Monotonic_HyperHeap.hmap -> unit -> mem') =
   fun rid_ctr -> fun h -> fun tip -> HS (rid_ctr, h, ())
 let (get_hmap : mem' -> FStar_Monotonic_HyperHeap.hmap) =
   fun m -> __proj__HS__item__h m
 let (get_rid_ctr : mem' -> Prims.int) = fun m -> __proj__HS__item__rid_ctr m
-
 type mem = mem'
 let (empty_mem : mem) =
   let empty_map =
@@ -51,12 +49,10 @@ type ('a, 'rel) mreference' =
   | MkRef of unit * ('a, 'rel) FStar_Monotonic_Heap.mref 
 let uu___is_MkRef : 'a 'rel . ('a, 'rel) mreference' -> Prims.bool =
   fun projectee -> true
-
 let __proj__MkRef__item__ref :
   'a 'rel . ('a, 'rel) mreference' -> ('a, 'rel) FStar_Monotonic_Heap.mref =
   fun projectee -> match projectee with | MkRef (frame, ref) -> ref
 type ('a, 'rel) mreference = ('a, 'rel) mreference'
-
 let mk_mreference :
   'a 'rel .
     unit -> ('a, 'rel) FStar_Monotonic_Heap.mref -> ('a, 'rel) mreference
@@ -187,7 +183,6 @@ type ('rs, 'h0, 'h1) mods = unit
 type aref =
   | ARef of unit * FStar_Monotonic_Heap.aref 
 let (uu___is_ARef : aref -> Prims.bool) = fun projectee -> true
-
 let (__proj__ARef__item__aref_aref : aref -> FStar_Monotonic_Heap.aref) =
   fun projectee ->
     match projectee with | ARef (aref_region, aref_aref) -> aref_aref

@@ -7302,63 +7302,16 @@ let (must_erase_for_extraction :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun g ->
     fun t ->
-      let rec descend env t1 =
-        let uu___ =
-          let uu___1 = FStar_Syntax_Subst.compress t1 in
-          uu___1.FStar_Syntax_Syntax.n in
-        match uu___ with
-        | FStar_Syntax_Syntax.Tm_arrow uu___1 ->
-            let uu___2 = FStar_Syntax_Util.arrow_formals_comp t1 in
-            (match uu___2 with
-             | (bs, c) ->
-                 let env1 = FStar_TypeChecker_Env.push_binders env bs in
-                 (FStar_TypeChecker_Env.is_erasable_effect env1
-                    (FStar_Syntax_Util.comp_effect_name c))
-                   ||
-                   ((FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
-                      (aux env1 (FStar_Syntax_Util.comp_result c))))
-        | FStar_Syntax_Syntax.Tm_refine
-            {
-              FStar_Syntax_Syntax.b =
-                { FStar_Syntax_Syntax.ppname = uu___1;
-                  FStar_Syntax_Syntax.index = uu___2;
-                  FStar_Syntax_Syntax.sort = t2;_};
-              FStar_Syntax_Syntax.phi = uu___3;_}
-            -> aux env t2
-        | FStar_Syntax_Syntax.Tm_app
-            { FStar_Syntax_Syntax.hd = head;
-              FStar_Syntax_Syntax.args = uu___1;_}
-            -> descend env head
-        | FStar_Syntax_Syntax.Tm_uinst (head, uu___1) -> descend env head
-        | FStar_Syntax_Syntax.Tm_fvar fv ->
-            FStar_TypeChecker_Env.fv_has_attr env fv
-              FStar_Parser_Const.must_erase_for_extraction_attr
-        | uu___1 -> false
-      and aux env t1 =
-        let t2 =
-          FStar_TypeChecker_Normalize.normalize
-            [FStar_TypeChecker_Env.Primops;
-            FStar_TypeChecker_Env.Weak;
-            FStar_TypeChecker_Env.HNF;
-            FStar_TypeChecker_Env.UnfoldUntil
-              FStar_Syntax_Syntax.delta_constant;
-            FStar_TypeChecker_Env.Beta;
-            FStar_TypeChecker_Env.AllowUnboundUniverses;
-            FStar_TypeChecker_Env.Zeta;
-            FStar_TypeChecker_Env.Iota;
-            FStar_TypeChecker_Env.Unascribe] env t1 in
-        let res =
-          (FStar_TypeChecker_Env.non_informative env t2) || (descend env t2) in
-        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Extraction in
-         if uu___1
-         then
-           let uu___2 =
-             FStar_Class_Show.show FStar_Syntax_Print.showable_term t2 in
-           FStar_Compiler_Util.print2 "must_erase=%s: %s\n"
-             (if res then "true" else "false") uu___2
-         else ());
-        res in
-      aux g t
+      let res = FStar_TypeChecker_Normalize.non_info_norm g t in
+      (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Extraction in
+       if uu___1
+       then
+         let uu___2 =
+           FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
+         FStar_Compiler_Util.print2 "must_erase=%s: %s\n"
+           (if res then "true" else "false") uu___2
+       else ());
+      res
 let (effect_extraction_mode :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident -> FStar_Syntax_Syntax.eff_extraction_mode)

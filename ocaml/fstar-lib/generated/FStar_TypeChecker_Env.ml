@@ -4150,7 +4150,15 @@ let (fv_has_erasable_attr : env -> FStar_Syntax_Syntax.fv -> Prims.bool) =
           fv_exists_and_has_attr env1
             (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
             FStar_Parser_Const.erasable_attr in
-        match uu___1 with | (ex, erasable) -> (ex, erasable) in
+        match uu___1 with
+        | (ex, erasable) ->
+            let uu___2 =
+              fv_exists_and_has_attr env1
+                (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                FStar_Parser_Const.must_erase_for_extraction_attr in
+            (match uu___2 with
+             | (ex1, must_erase_for_extraction) ->
+                 (ex1, (erasable || must_erase_for_extraction))) in
       cache_in_fv_tab env1.erasable_types_tab fv f
 let (fv_has_strict_args :
   env ->
@@ -4370,6 +4378,10 @@ let rec (non_informative : env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
           { FStar_Syntax_Syntax.hd = head;
             FStar_Syntax_Syntax.args = uu___1;_}
           -> non_informative env1 head
+      | FStar_Syntax_Syntax.Tm_abs
+          { FStar_Syntax_Syntax.bs = uu___1; FStar_Syntax_Syntax.body = body;
+            FStar_Syntax_Syntax.rc_opt = uu___2;_}
+          -> non_informative env1 body
       | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> non_informative env1 t1
       | FStar_Syntax_Syntax.Tm_arrow
           { FStar_Syntax_Syntax.bs1 = uu___1; FStar_Syntax_Syntax.comp = c;_}
@@ -4378,6 +4390,10 @@ let rec (non_informative : env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
              (non_informative env1 (FStar_Syntax_Util.comp_result c)))
             ||
             (is_erasable_effect env1 (FStar_Syntax_Util.comp_effect_name c))
+      | FStar_Syntax_Syntax.Tm_meta
+          { FStar_Syntax_Syntax.tm2 = tm;
+            FStar_Syntax_Syntax.meta = uu___1;_}
+          -> non_informative env1 tm
       | uu___1 -> false
 let (num_effect_indices :
   env -> FStar_Ident.lident -> FStar_Compiler_Range_Type.range -> Prims.int)

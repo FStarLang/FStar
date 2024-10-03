@@ -322,6 +322,23 @@ let (check_sigelt_quals_pre :
                if uu___5 then err [] else ()
            | uu___4 -> ()))
        else ())
+let (non_info_norm_weak :
+  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.bool) =
+  fun env ->
+    fun t ->
+      let steps =
+        [FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
+        FStar_TypeChecker_Env.AllowUnboundUniverses;
+        FStar_TypeChecker_Env.EraseUniverses;
+        FStar_TypeChecker_Env.Primops;
+        FStar_TypeChecker_Env.Beta;
+        FStar_TypeChecker_Env.Iota;
+        FStar_TypeChecker_Env.HNF;
+        FStar_TypeChecker_Env.Weak;
+        FStar_TypeChecker_Env.Unascribe;
+        FStar_TypeChecker_Env.ForExtraction] in
+      let uu___ = FStar_TypeChecker_Normalize.normalize steps env t in
+      FStar_TypeChecker_Env.non_informative env uu___
 let (check_erasable :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.qualifier Prims.list ->
@@ -387,205 +404,176 @@ let (check_erasable :
                (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
                (Obj.magic uu___2))
           else ();
+          (let uu___3 =
+             (Prims.op_Negation se_has_erasable_attr) &&
+               (let uu___4 = FStar_Options.ide () in Prims.op_Negation uu___4) in
+           if uu___3
+           then
+             match se.FStar_Syntax_Syntax.sigel with
+             | FStar_Syntax_Syntax.Sig_let
+                 { FStar_Syntax_Syntax.lbs1 = (false, lb::[]);
+                   FStar_Syntax_Syntax.lids1 = uu___4;_}
+                 ->
+                 let lbname =
+                   FStar_Compiler_Util.right lb.FStar_Syntax_Syntax.lbname in
+                 let has_iface_val =
+                   let uu___5 =
+                     let uu___6 = FStar_TypeChecker_Env.dsenv env in
+                     let uu___7 = FStar_TypeChecker_Env.current_module env in
+                     FStar_Syntax_DsEnv.iface_decls uu___6 uu___7 in
+                   match uu___5 with
+                   | FStar_Pervasives_Native.Some iface_decls ->
+                       let uu___6 =
+                         let uu___7 =
+                           FStar_Ident.ident_of_lid
+                             (lbname.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+                         FStar_Parser_AST.decl_is_val uu___7 in
+                       FStar_Compiler_Util.for_some uu___6 iface_decls
+                   | FStar_Pervasives_Native.None -> false in
+                 let uu___5 =
+                   FStar_Syntax_Util.abs_formals lb.FStar_Syntax_Syntax.lbdef in
+                 (match uu___5 with
+                  | (uu___6, body, uu___7) ->
+                      let uu___8 =
+                        has_iface_val && (non_info_norm_weak env body) in
+                      if uu___8
+                      then
+                        let uu___9 =
+                          let uu___10 =
+                            let uu___11 =
+                              let uu___12 =
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_fv lbname in
+                              let uu___13 =
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_fv lbname in
+                              FStar_Compiler_Util.format2
+                                "Values of type `%s` will be erased during extraction, but its interface hides this fact. Add the `erasable` attribute to the `val %s` declaration for this symbol in the interface"
+                                uu___12 uu___13 in
+                            FStar_Errors_Msg.text uu___11 in
+                          [uu___10] in
+                        FStar_Errors.log_issue
+                          FStar_Syntax_Syntax.hasRange_fv lbname
+                          FStar_Errors_Codes.Error_MustEraseMissing ()
+                          (Obj.magic
+                             FStar_Errors_Msg.is_error_message_list_doc)
+                          (Obj.magic uu___9)
+                      else ())
+             | uu___4 -> ()
+           else ());
           if se_has_erasable_attr
           then
             (match se.FStar_Syntax_Syntax.sigel with
-             | FStar_Syntax_Syntax.Sig_bundle uu___2 ->
-                 let uu___3 =
-                   let uu___4 =
+             | FStar_Syntax_Syntax.Sig_bundle uu___3 ->
+                 let uu___4 =
+                   let uu___5 =
                      FStar_Compiler_Util.for_some
-                       (fun uu___5 ->
-                          match uu___5 with
+                       (fun uu___6 ->
+                          match uu___6 with
                           | FStar_Syntax_Syntax.Noeq -> true
-                          | uu___6 -> false) quals in
-                   Prims.op_Negation uu___4 in
-                 if uu___3
+                          | uu___7 -> false) quals in
+                   Prims.op_Negation uu___5 in
+                 if uu___4
                  then
-                   let uu___4 =
-                     let uu___5 =
+                   let uu___5 =
+                     let uu___6 =
                        FStar_Errors_Msg.text
                          "Incompatible attributes and qualifiers: erasable types do not support decidable equality and must be marked `noeq`." in
-                     [uu___5] in
+                     [uu___6] in
                    FStar_Errors.raise_error
                      FStar_Class_HasRange.hasRange_range r
                      FStar_Errors_Codes.Fatal_QulifierListNotPermitted ()
                      (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
-                     (Obj.magic uu___4)
+                     (Obj.magic uu___5)
                  else ()
-             | FStar_Syntax_Syntax.Sig_declare_typ uu___2 -> ()
-             | FStar_Syntax_Syntax.Sig_fail uu___2 -> ()
+             | FStar_Syntax_Syntax.Sig_declare_typ uu___3 -> ()
+             | FStar_Syntax_Syntax.Sig_fail uu___3 -> ()
              | FStar_Syntax_Syntax.Sig_let
                  { FStar_Syntax_Syntax.lbs1 = (false, lb::[]);
-                   FStar_Syntax_Syntax.lids1 = uu___2;_}
+                   FStar_Syntax_Syntax.lids1 = uu___3;_}
                  ->
-                 let uu___3 =
+                 let uu___4 =
                    FStar_Syntax_Util.abs_formals lb.FStar_Syntax_Syntax.lbdef in
-                 (match uu___3 with
-                  | (uu___4, body, uu___5) ->
-                      let uu___6 =
-                        let uu___7 =
+                 (match uu___4 with
+                  | (uu___5, body, uu___6) ->
+                      let uu___7 =
+                        let uu___8 =
                           FStar_TypeChecker_Normalize.non_info_norm env body in
-                        Prims.op_Negation uu___7 in
-                      if uu___6
+                        Prims.op_Negation uu___8 in
+                      if uu___7
                       then
-                        let uu___7 =
-                          let uu___8 =
+                        let uu___8 =
+                          let uu___9 =
                             FStar_Errors_Msg.text
                               "Illegal attribute: the `erasable` attribute is only permitted on inductive type definitions and abbreviations for non-informative types." in
-                          let uu___9 =
-                            let uu___10 =
-                              let uu___11 = FStar_Errors_Msg.text "The term" in
-                              let uu___12 =
-                                let uu___13 =
+                          let uu___10 =
+                            let uu___11 =
+                              let uu___12 = FStar_Errors_Msg.text "The term" in
+                              let uu___13 =
+                                let uu___14 =
                                   FStar_Class_PP.pp
                                     FStar_Syntax_Print.pretty_term body in
-                                let uu___14 =
+                                let uu___15 =
                                   FStar_Errors_Msg.text
                                     "is considered informative." in
-                                FStar_Pprint.op_Hat_Slash_Hat uu___13 uu___14 in
-                              FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
-                            [uu___10] in
-                          uu___8 :: uu___9 in
+                                FStar_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
+                            [uu___11] in
+                          uu___9 :: uu___10 in
                         FStar_Errors.raise_error
                           (FStar_Syntax_Syntax.has_range_syntax ()) body
                           FStar_Errors_Codes.Fatal_QulifierListNotPermitted
                           ()
                           (Obj.magic
                              FStar_Errors_Msg.is_error_message_list_doc)
-                          (Obj.magic uu___7)
+                          (Obj.magic uu___8)
                       else ())
              | FStar_Syntax_Syntax.Sig_new_effect
                  { FStar_Syntax_Syntax.mname = eff_name;
-                   FStar_Syntax_Syntax.cattributes = uu___2;
-                   FStar_Syntax_Syntax.univs = uu___3;
-                   FStar_Syntax_Syntax.binders = uu___4;
-                   FStar_Syntax_Syntax.signature = uu___5;
-                   FStar_Syntax_Syntax.combinators = uu___6;
-                   FStar_Syntax_Syntax.actions = uu___7;
-                   FStar_Syntax_Syntax.eff_attrs = uu___8;
-                   FStar_Syntax_Syntax.extraction_mode = uu___9;_}
+                   FStar_Syntax_Syntax.cattributes = uu___3;
+                   FStar_Syntax_Syntax.univs = uu___4;
+                   FStar_Syntax_Syntax.binders = uu___5;
+                   FStar_Syntax_Syntax.signature = uu___6;
+                   FStar_Syntax_Syntax.combinators = uu___7;
+                   FStar_Syntax_Syntax.actions = uu___8;
+                   FStar_Syntax_Syntax.eff_attrs = uu___9;
+                   FStar_Syntax_Syntax.extraction_mode = uu___10;_}
                  ->
                  if
                    Prims.op_Negation
                      (FStar_Compiler_List.contains
                         FStar_Syntax_Syntax.TotalEffect quals)
                  then
-                   let uu___10 =
-                     let uu___11 =
-                       let uu___12 = FStar_Errors_Msg.text "Effect" in
-                       let uu___13 =
-                         let uu___14 =
+                   let uu___11 =
+                     let uu___12 =
+                       let uu___13 = FStar_Errors_Msg.text "Effect" in
+                       let uu___14 =
+                         let uu___15 =
                            FStar_Class_PP.pp FStar_Ident.pretty_lident
                              eff_name in
-                         let uu___15 =
+                         let uu___16 =
                            FStar_Errors_Msg.text
                              "is marked erasable but only total effects are allowed to be erasable." in
-                         FStar_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
-                       FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
-                     [uu___11] in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___15 uu___16 in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___13 uu___14 in
+                     [uu___12] in
                    FStar_Errors.raise_error
                      FStar_Class_HasRange.hasRange_range r
                      FStar_Errors_Codes.Fatal_QulifierListNotPermitted ()
                      (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
-                     (Obj.magic uu___10)
+                     (Obj.magic uu___11)
                  else ()
-             | uu___2 ->
-                 let uu___3 =
-                   let uu___4 =
+             | uu___3 ->
+                 let uu___4 =
+                   let uu___5 =
                      FStar_Errors_Msg.text
                        "Illegal attribute: the `erasable` attribute is only permitted on inductive type definitions and abbreviations for non-informative types." in
-                   [uu___4] in
+                   [uu___5] in
                  FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range
                    r FStar_Errors_Codes.Fatal_QulifierListNotPermitted ()
                    (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
-                   (Obj.magic uu___3))
+                   (Obj.magic uu___4))
           else ()
-let (check_must_erase_attribute :
-  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.sigelt -> unit) =
-  fun env ->
-    fun se ->
-      let uu___ = FStar_Options.ide () in
-      if uu___
-      then ()
-      else
-        (match se.FStar_Syntax_Syntax.sigel with
-         | FStar_Syntax_Syntax.Sig_let
-             { FStar_Syntax_Syntax.lbs1 = lbs;
-               FStar_Syntax_Syntax.lids1 = l;_}
-             ->
-             let uu___2 =
-               let uu___3 = FStar_TypeChecker_Env.dsenv env in
-               let uu___4 = FStar_TypeChecker_Env.current_module env in
-               FStar_Syntax_DsEnv.iface_decls uu___3 uu___4 in
-             (match uu___2 with
-              | FStar_Pervasives_Native.None -> ()
-              | FStar_Pervasives_Native.Some iface_decls ->
-                  FStar_Compiler_List.iter
-                    (fun lb ->
-                       let lbname =
-                         FStar_Compiler_Util.right
-                           lb.FStar_Syntax_Syntax.lbname in
-                       let has_iface_val =
-                         let uu___3 =
-                           let uu___4 =
-                             FStar_Ident.ident_of_lid
-                               (lbname.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                           FStar_Parser_AST.decl_is_val uu___4 in
-                         FStar_Compiler_Util.for_some uu___3 iface_decls in
-                       if has_iface_val
-                       then
-                         let must_erase =
-                           FStar_TypeChecker_Util.must_erase_for_extraction
-                             env lb.FStar_Syntax_Syntax.lbdef in
-                         let has_attr =
-                           FStar_TypeChecker_Env.fv_has_attr env lbname
-                             FStar_Parser_Const.must_erase_for_extraction_attr in
-                         (if must_erase && (Prims.op_Negation has_attr)
-                          then
-                            let uu___3 =
-                              let uu___4 =
-                                let uu___5 =
-                                  let uu___6 =
-                                    FStar_Class_Show.show
-                                      FStar_Syntax_Print.showable_fv lbname in
-                                  let uu___7 =
-                                    FStar_Class_Show.show
-                                      FStar_Syntax_Print.showable_fv lbname in
-                                  FStar_Compiler_Util.format2
-                                    "Values of type `%s` will be erased during extraction, but its interface hides this fact. Add the `must_erase_for_extraction` attribute to the `val %s` declaration for this symbol in the interface"
-                                    uu___6 uu___7 in
-                                FStar_Errors_Msg.text uu___5 in
-                              [uu___4] in
-                            FStar_Errors.log_issue
-                              FStar_Syntax_Syntax.hasRange_fv lbname
-                              FStar_Errors_Codes.Error_MustEraseMissing ()
-                              (Obj.magic
-                                 FStar_Errors_Msg.is_error_message_list_doc)
-                              (Obj.magic uu___3)
-                          else
-                            if has_attr && (Prims.op_Negation must_erase)
-                            then
-                              (let uu___4 =
-                                 let uu___5 =
-                                   let uu___6 =
-                                     let uu___7 =
-                                       FStar_Class_Show.show
-                                         FStar_Syntax_Print.showable_fv
-                                         lbname in
-                                     FStar_Compiler_Util.format1
-                                       "Values of type `%s` cannot be erased during extraction, but the `must_erase_for_extraction` attribute claims that it can. Please remove the attribute."
-                                       uu___7 in
-                                   FStar_Errors_Msg.text uu___6 in
-                                 [uu___5] in
-                               FStar_Errors.log_issue
-                                 FStar_Syntax_Syntax.hasRange_fv lbname
-                                 FStar_Errors_Codes.Error_MustEraseMissing ()
-                                 (Obj.magic
-                                    FStar_Errors_Msg.is_error_message_list_doc)
-                                 (Obj.magic uu___4))
-                            else ())
-                       else ()) (FStar_Pervasives_Native.snd lbs))
-         | uu___2 -> ())
 let (check_typeclass_instance_attribute :
   FStar_TypeChecker_Env.env ->
     FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.sigelt -> unit)
@@ -721,5 +709,4 @@ let (check_sigelt_quals_post :
       let quals = se.FStar_Syntax_Syntax.sigquals in
       let r = se.FStar_Syntax_Syntax.sigrng in
       check_erasable env quals r se;
-      check_must_erase_attribute env se;
       check_typeclass_instance_attribute env r se

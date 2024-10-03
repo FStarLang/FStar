@@ -21,7 +21,6 @@ type ('a, 'h, 'vec) live =
   ('a, unit, unit, unit, unit) LowStar_Monotonic_Buffer.live
 type ('a, 'vec) freeable =
   ('a, unit, unit, unit) LowStar_Monotonic_Buffer.freeable
-
 type ('h0, 'h1) hmap_dom_eq = (unit, unit, unit) FStar_Set.equal
 let alloc_empty : 'a . unit -> 'a vector =
   fun uu___ ->
