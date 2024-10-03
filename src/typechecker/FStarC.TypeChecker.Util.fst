@@ -3190,40 +3190,9 @@ let maybe_add_implicit_binders (env:env) (bs:binders) : binders =
 
 
 let must_erase_for_extraction (g:env) (t:typ) =
-    let rec descend env t = //t is expected to b in WHNF
-      match (SS.compress t).n with
-      | Tm_arrow _ ->
-           let bs, c = U.arrow_formals_comp t in
-           let env = FStarC.TypeChecker.Env.push_binders env bs in
-           (Env.is_erasable_effect env (U.comp_effect_name c))  //includes GHOST
-           || (U.is_pure_or_ghost_comp c && aux env (U.comp_result c))
-      | Tm_refine {b={sort=t}} ->
-           aux env t
-      | Tm_app {hd=head}
-      | Tm_uinst (head, _) ->
-           descend env head
-      | Tm_fvar fv ->
-           //special treatment for must_erase_for_extraction here
-           //See Env.type_is_erasable for more explanations
-           Env.fv_has_attr env fv C.must_erase_for_extraction_attr
-      | _ -> false
-    and aux env t =
-        let t = N.normalize [Env.Primops;
-                             Env.Weak;
-                             Env.HNF;
-                             Env.UnfoldUntil delta_constant;
-                             Env.Beta;
-                             Env.AllowUnboundUniverses;
-                             Env.Zeta;
-                             Env.Iota;
-                             Env.Unascribe] env t in
-//        debug g (fun () -> BU.print1 "aux %s\n" (show t));
-        let res = Env.non_informative env t || descend env t in
-        if !dbg_Extraction
-        then BU.print2 "must_erase=%s: %s\n" (if res then "true" else "false") (show t);
-        res
-    in
-    aux g t
+  let res = N.non_info_norm g t in
+  if !dbg_Extraction then BU.print2 "must_erase=%s: %s\n" (if res then "true" else "false") (show t);
+  res
 
 let effect_extraction_mode env l =
   l |> Env.norm_eff_name env
