@@ -3,6 +3,7 @@ use ocaml_interop::{
     ToOCaml,
 };
 use proc_macro2::Span;
+use quote::ToTokens;
 use syn::{
     punctuated::Punctuated, token::Brace, token::Colon, token::Comma, token::Eq, token::Let,
     token::Mut, token::Paren, token::Pub, token::RArrow, token::Ref, token::Semi, Block, Generics,
@@ -47,6 +48,10 @@ enum BinOp {
     And,
     Or,
     Mul,
+    Shr,
+    Shl,
+    BitAnd,
+    BitOr,
 }
 
 enum UnOp {
@@ -132,6 +137,11 @@ struct ExprMethodCall {
     expr_method_call_args: Vec<Expr>,
 }
 
+struct ExprCast {
+    expr_cast_expr: Box<Expr>,
+    expr_cast_type: Box<Typ>,
+}
+
 enum Expr {
     EBinOp(ExprBin),
     EPath(Vec<PathSegment>),
@@ -150,6 +160,7 @@ enum Expr {
     EStruct(ExprStruct),
     ETuple(Vec<Expr>),
     EMethodCall(ExprMethodCall),
+    ECast(ExprCast),
 }
 
 struct TypeReference {
@@ -356,7 +367,11 @@ impl_from_ocaml_variant! {
       BinOp::Rem,
       BinOp::And,
       BinOp::Or,
-      BinOp::Mul
+      BinOp::Mul,
+      BinOp::Shr,
+      BinOp::Shl,
+      BinOp::BitAnd,
+      BinOp::BitOr,
   }
 }
 
@@ -385,6 +400,7 @@ impl_from_ocaml_variant! {
     Expr::EStruct (payload:ExprStruct),
     Expr::ETuple (payload:OCamlList<Expr>),
     Expr::EMethodCall (payload:ExprMethodCall),
+    Expr::ECast (payload:ExprCast),
   }
 }
 
@@ -494,6 +510,13 @@ impl_from_ocaml_record! {
     expr_method_call_receiver: Expr,
     expr_method_call_name: String,
     expr_method_call_args: OCamlList<Expr>,
+  }
+}
+
+impl_from_ocaml_record! {
+  ExprCast {
+    expr_cast_expr: Expr,
+    expr_cast_type: Typ,
   }
 }
 
@@ -789,6 +812,18 @@ fn to_syn_binop(op: &BinOp) -> syn::BinOp {
             spans: [Span::call_site(), Span::call_site()],
         }),
         BinOp::Mul => syn::BinOp::Mul(syn::token::Star {
+            spans: [Span::call_site()],
+        }),
+        BinOp::Shr => syn::BinOp::Shr(syn::token::Shr {
+            spans: [Span::call_site(), Span::call_site()],
+        }),
+        BinOp::Shl => syn::BinOp::Shl(syn::token::Shl {
+            spans: [Span::call_site(), Span::call_site()],
+        }),
+        BinOp::BitAnd => syn::BinOp::BitAnd(syn::token::And {
+            spans: [Span::call_site()],
+        }),
+        BinOp::BitOr => syn::BinOp::BitOr(syn::token::Or {
             spans: [Span::call_site()],
         }),
     }
@@ -1159,7 +1194,15 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
                 paren_token: Paren::default(),
                 args,
             })
-        }
+        },
+        Expr::ECast(ExprCast { expr_cast_expr, expr_cast_type }) => {
+            syn::Expr::Cast(syn::ExprCast {
+                attrs: vec![],
+                expr: Box::new(to_syn_expr(expr_cast_expr)),
+                as_token: syn::token::As { span: Span::call_site() },
+                ty: Box::new(to_syn_typ(expr_cast_type)),
+            })
+        },
     }
 }
 
@@ -1825,8 +1868,9 @@ fn to_syn_file(f: &File) -> syn::File {
 
 fn file_to_syn_string(f: &File) -> String {
     let f: syn::File = to_syn_file(f);
+    // The to_token_stream() function adds parentheses where necessary, see also syn::fixup::FixupContext
+    let f = syn::parse2(f.to_token_stream()).unwrap();
     prettyplease::unparse(&f)
-    // quote::quote!(#f).to_string()
 }
 
 // fn fn_to_syn_string(f: &Fn) -> String {
@@ -1849,6 +1893,10 @@ impl fmt::Display for BinOp {
             BinOp::And => "&&",
             BinOp::Or => "||",
             BinOp::Mul => "*",
+            BinOp::Shr => ">>",
+            BinOp::Shl => "<<",
+            BinOp::BitAnd => "&",
+            BinOp::BitOr => "|",
         };
         write!(f, "{}", s)
     }
@@ -2084,6 +2132,15 @@ impl fmt::Display for Expr {
                     .map(|e| e.to_string())
                     .collect::<Vec<_>>()
                     .join(",")
+            ),
+            Expr::ECast(ExprCast {
+                expr_cast_expr,
+                expr_cast_type,
+            }) => write!(
+                f,
+                "{} as {}",
+                expr_cast_expr,
+                expr_cast_type,
             ),
         }
     }
