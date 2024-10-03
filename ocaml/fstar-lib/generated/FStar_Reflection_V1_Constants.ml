@@ -62,72 +62,71 @@ let (mk_inspect_pack_pair : Prims.string -> (refl_constant * refl_constant))
       let uu___ = FStar_Syntax_Syntax.fv_to_tm pack_fv in
       { lid = pack_lid; fv = pack_fv; t = uu___ } in
     (inspect, pack)
-let (uu___31 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_ln"
+let (uu___0 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_ln"
 let (fstar_refl_inspect_ln : refl_constant) =
-  match uu___31 with
+  match uu___0 with
   | (fstar_refl_inspect_ln1, fstar_refl_pack_ln) -> fstar_refl_inspect_ln1
 let (fstar_refl_pack_ln : refl_constant) =
-  match uu___31 with
+  match uu___0 with
   | (fstar_refl_inspect_ln1, fstar_refl_pack_ln1) -> fstar_refl_pack_ln1
-let (uu___38 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_fv"
+let (uu___1 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_fv"
 let (fstar_refl_inspect_fv : refl_constant) =
-  match uu___38 with
+  match uu___1 with
   | (fstar_refl_inspect_fv1, fstar_refl_pack_fv) -> fstar_refl_inspect_fv1
 let (fstar_refl_pack_fv : refl_constant) =
-  match uu___38 with
+  match uu___1 with
   | (fstar_refl_inspect_fv1, fstar_refl_pack_fv1) -> fstar_refl_pack_fv1
-let (uu___45 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_bv"
+let (uu___2 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_bv"
 let (fstar_refl_inspect_bv : refl_constant) =
-  match uu___45 with
+  match uu___2 with
   | (fstar_refl_inspect_bv1, fstar_refl_pack_bv) -> fstar_refl_inspect_bv1
 let (fstar_refl_pack_bv : refl_constant) =
-  match uu___45 with
+  match uu___2 with
   | (fstar_refl_inspect_bv1, fstar_refl_pack_bv1) -> fstar_refl_pack_bv1
-let (uu___52 : (refl_constant * refl_constant)) =
+let (uu___3 : (refl_constant * refl_constant)) =
   mk_inspect_pack_pair "_binder"
 let (fstar_refl_inspect_binder : refl_constant) =
-  match uu___52 with
+  match uu___3 with
   | (fstar_refl_inspect_binder1, fstar_refl_pack_binder) ->
       fstar_refl_inspect_binder1
 let (fstar_refl_pack_binder : refl_constant) =
-  match uu___52 with
+  match uu___3 with
   | (fstar_refl_inspect_binder1, fstar_refl_pack_binder1) ->
       fstar_refl_pack_binder1
-let (uu___59 : (refl_constant * refl_constant)) =
-  mk_inspect_pack_pair "_comp"
+let (uu___4 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_comp"
 let (fstar_refl_inspect_comp : refl_constant) =
-  match uu___59 with
+  match uu___4 with
   | (fstar_refl_inspect_comp1, fstar_refl_pack_comp) ->
       fstar_refl_inspect_comp1
 let (fstar_refl_pack_comp : refl_constant) =
-  match uu___59 with
+  match uu___4 with
   | (fstar_refl_inspect_comp1, fstar_refl_pack_comp1) ->
       fstar_refl_pack_comp1
-let (uu___66 : (refl_constant * refl_constant)) =
+let (uu___5 : (refl_constant * refl_constant)) =
   mk_inspect_pack_pair "_sigelt"
 let (fstar_refl_inspect_sigelt : refl_constant) =
-  match uu___66 with
+  match uu___5 with
   | (fstar_refl_inspect_sigelt1, fstar_refl_pack_sigelt) ->
       fstar_refl_inspect_sigelt1
 let (fstar_refl_pack_sigelt : refl_constant) =
-  match uu___66 with
+  match uu___5 with
   | (fstar_refl_inspect_sigelt1, fstar_refl_pack_sigelt1) ->
       fstar_refl_pack_sigelt1
-let (uu___73 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_lb"
+let (uu___6 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_lb"
 let (fstar_refl_inspect_lb : refl_constant) =
-  match uu___73 with
+  match uu___6 with
   | (fstar_refl_inspect_lb1, fstar_refl_pack_lb) -> fstar_refl_inspect_lb1
 let (fstar_refl_pack_lb : refl_constant) =
-  match uu___73 with
+  match uu___6 with
   | (fstar_refl_inspect_lb1, fstar_refl_pack_lb1) -> fstar_refl_pack_lb1
-let (uu___80 : (refl_constant * refl_constant)) =
+let (uu___7 : (refl_constant * refl_constant)) =
   mk_inspect_pack_pair "_universe"
 let (fstar_refl_inspect_universe : refl_constant) =
-  match uu___80 with
+  match uu___7 with
   | (fstar_refl_inspect_universe1, fstar_refl_pack_universe) ->
       fstar_refl_inspect_universe1
 let (fstar_refl_pack_universe : refl_constant) =
-  match uu___80 with
+  match uu___7 with
   | (fstar_refl_inspect_universe1, fstar_refl_pack_universe1) ->
       fstar_refl_pack_universe1
 let (fstar_refl_env : FStar_Syntax_Syntax.term) =
@@ -230,18 +229,18 @@ let (ref_Mk_bv : refl_constant) =
   let lid = fstar_refl_data_lid "Mkbv_view" in
   let attr =
     let uu___ =
-      let uu___1 = fstar_refl_data_lid "bv_view" in
-      let uu___2 =
-        let uu___3 =
+      let uu___8 = fstar_refl_data_lid "bv_view" in
+      let uu___9 =
+        let uu___10 =
           FStar_Ident.mk_ident
             ("bv_ppname", FStar_Compiler_Range_Type.dummyRange) in
-        let uu___4 =
-          let uu___5 =
+        let uu___11 =
+          let uu___12 =
             FStar_Ident.mk_ident
               ("bv_index", FStar_Compiler_Range_Type.dummyRange) in
-          [uu___5] in
-        uu___3 :: uu___4 in
-      (uu___1, uu___2) in
+          [uu___12] in
+        uu___10 :: uu___11 in
+      (uu___8, uu___9) in
     FStar_Syntax_Syntax.Record_ctor uu___ in
   let fv =
     FStar_Syntax_Syntax.lid_as_fv lid (FStar_Pervasives_Native.Some attr) in
@@ -250,28 +249,28 @@ let (ref_Mk_binder : refl_constant) =
   let lid = fstar_refl_data_lid "Mkbinder_view" in
   let attr =
     let uu___ =
-      let uu___1 = fstar_refl_data_lid "binder_view" in
-      let uu___2 =
-        let uu___3 =
+      let uu___8 = fstar_refl_data_lid "binder_view" in
+      let uu___9 =
+        let uu___10 =
           FStar_Ident.mk_ident
             ("binder_bv", FStar_Compiler_Range_Type.dummyRange) in
-        let uu___4 =
-          let uu___5 =
+        let uu___11 =
+          let uu___12 =
             FStar_Ident.mk_ident
               ("binder_qual", FStar_Compiler_Range_Type.dummyRange) in
-          let uu___6 =
-            let uu___7 =
+          let uu___13 =
+            let uu___14 =
               FStar_Ident.mk_ident
                 ("binder_attrs", FStar_Compiler_Range_Type.dummyRange) in
-            let uu___8 =
-              let uu___9 =
+            let uu___15 =
+              let uu___16 =
                 FStar_Ident.mk_ident
                   ("binder_sort", FStar_Compiler_Range_Type.dummyRange) in
-              [uu___9] in
-            uu___7 :: uu___8 in
-          uu___5 :: uu___6 in
-        uu___3 :: uu___4 in
-      (uu___1, uu___2) in
+              [uu___16] in
+            uu___14 :: uu___15 in
+          uu___12 :: uu___13 in
+        uu___10 :: uu___11 in
+      (uu___8, uu___9) in
     FStar_Syntax_Syntax.Record_ctor uu___ in
   let fv =
     FStar_Syntax_Syntax.lid_as_fv lid (FStar_Pervasives_Native.Some attr) in
@@ -280,28 +279,28 @@ let (ref_Mk_lb : refl_constant) =
   let lid = fstar_refl_data_lid "Mklb_view" in
   let attr =
     let uu___ =
-      let uu___1 = fstar_refl_data_lid "lb_view" in
-      let uu___2 =
-        let uu___3 =
+      let uu___8 = fstar_refl_data_lid "lb_view" in
+      let uu___9 =
+        let uu___10 =
           FStar_Ident.mk_ident
             ("lb_fv", FStar_Compiler_Range_Type.dummyRange) in
-        let uu___4 =
-          let uu___5 =
+        let uu___11 =
+          let uu___12 =
             FStar_Ident.mk_ident
               ("lb_us", FStar_Compiler_Range_Type.dummyRange) in
-          let uu___6 =
-            let uu___7 =
+          let uu___13 =
+            let uu___14 =
               FStar_Ident.mk_ident
                 ("lb_typ", FStar_Compiler_Range_Type.dummyRange) in
-            let uu___8 =
-              let uu___9 =
+            let uu___15 =
+              let uu___16 =
                 FStar_Ident.mk_ident
                   ("lb_def", FStar_Compiler_Range_Type.dummyRange) in
-              [uu___9] in
-            uu___7 :: uu___8 in
-          uu___5 :: uu___6 in
-        uu___3 :: uu___4 in
-      (uu___1, uu___2) in
+              [uu___16] in
+            uu___14 :: uu___15 in
+          uu___12 :: uu___13 in
+        uu___10 :: uu___11 in
+      (uu___8, uu___9) in
     FStar_Syntax_Syntax.Record_ctor uu___ in
   let fv =
     FStar_Syntax_Syntax.lid_as_fv lid (FStar_Pervasives_Native.Some attr) in

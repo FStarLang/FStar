@@ -881,6 +881,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
  * the list of typechecked sig_elts, and a list of new sig_elts elaborated
  * during typechecking but not yet typechecked *)
 let tc_decl env se: list sigelt & list sigelt & Env.env =
+  FStar.GenSym.reset_gensym();
   let env0 = env in
   let env = set_hint_correlator env se in
   let env =

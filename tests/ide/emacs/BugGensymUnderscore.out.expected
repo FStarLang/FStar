@@ -1,0 +1,10 @@
+{"kind": "protocol-info", "rest": "[...]"}
+{"contents": "Parsed 5 declarations\n", "kind": "message", "level": "info", "query-id": "2"}
+{"kind": "response", "query-id": "2.2", "response": [], "status": "success"}
+{"kind": "response", "query-id": "2.4", "response": [], "status": "success"}
+{"kind": "response", "query-id": "2.6", "response": [], "status": "success"}
+{"kind": "response", "query-id": "2.8", "response": [], "status": "success"}
+{"contents": "Parsed 5 declarations\n", "kind": "message", "level": "info", "query-id": "3"}
+{"kind": "response", "query-id": "3.2", "response": [], "status": "success"}
+{"contents": "Parsed 6 declarations\n", "kind": "message", "level": "info", "query-id": "13"}
+{"kind": "response", "query-id": "13.2", "response": [], "status": "success"}

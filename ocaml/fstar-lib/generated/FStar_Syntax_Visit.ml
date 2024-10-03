@@ -4,7 +4,7 @@ type 'a id =
 let uu___is_I : 'a . 'a id -> Prims.bool = fun projectee -> true
 let __proj__I__item__run : 'a . 'a id -> 'a =
   fun projectee -> match projectee with | I run -> run
-let (uu___9 : unit id FStar_Class_Monad.monad) =
+let (uu___0 : unit id FStar_Class_Monad.monad) =
   {
     FStar_Class_Monad.return =
       (fun uu___1 ->
@@ -37,7 +37,7 @@ let (visit_term :
       fun t ->
         let uu___ =
           Obj.magic
-            (FStar_Syntax_VisitM.visitM_term uu___9 pq
+            (FStar_Syntax_VisitM.visitM_term uu___0 pq
                (fun uu___1 ->
                   (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vt))
                     uu___1) t) in
@@ -54,7 +54,7 @@ let (visit_term_univs :
         fun t ->
           let uu___ =
             Obj.magic
-              (FStar_Syntax_VisitM.visitM_term_univs uu___9 pq
+              (FStar_Syntax_VisitM.visitM_term_univs uu___0 pq
                  (fun uu___1 ->
                     (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vt))
                       uu___1)
@@ -74,7 +74,7 @@ let (visit_sigelt :
         fun se ->
           let uu___ =
             Obj.magic
-              (FStar_Syntax_VisitM.visitM_sigelt uu___9 pq
+              (FStar_Syntax_VisitM.visitM_sigelt uu___0 pq
                  (fun uu___1 ->
                     (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vt))
                       uu___1)

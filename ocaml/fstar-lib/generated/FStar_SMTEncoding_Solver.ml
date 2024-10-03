@@ -1220,7 +1220,7 @@ let (ans_fail : answer) =
     tried_recovery = (ans_ok.tried_recovery);
     errs = (ans_ok.errs)
   }
-let (uu___476 : answer FStar_Class_Show.showable) =
+let (uu___0 : answer FStar_Class_Show.showable) =
   {
     FStar_Class_Show.show =
       (fun ans ->
