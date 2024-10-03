@@ -310,7 +310,7 @@ let (init_once : unit -> unit) =
                 FStar_TypeChecker_Env.set_current_module env3 test_lid in
               FStar_Compiler_Effect.op_Colon_Equals tcenv_ref
                 (FStar_Pervasives_Native.Some env4)))
-let (uu___52 : unit) = FStar_Main.setup_hooks (); init_once ()
+let (uu___0 : unit) = FStar_Main.setup_hooks (); init_once ()
 let (init : unit -> FStar_TypeChecker_Env.env) =
   fun uu___ ->
     let uu___1 = FStar_Compiler_Effect.op_Bang tcenv_ref in
