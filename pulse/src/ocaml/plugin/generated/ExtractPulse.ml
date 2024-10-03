@@ -483,7 +483,7 @@ let (pulse_translate_expr : FStar_Extraction_Krml.translate_expr_t) =
        | uu___1 ->
            FStar_Compiler_Effect.raise
              FStar_Extraction_Krml.NotSupportedByKrmlExtension)
-let (uu___277 : unit) =
+let (uu___0 : unit) =
   FStar_Extraction_Krml.register_pre_translate_type_without_decay
     pulse_translate_type_without_decay;
   FStar_Extraction_Krml.register_pre_translate_expr pulse_translate_expr
