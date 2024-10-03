@@ -10,28 +10,20 @@ type 'a pointer_or_null = 'a ubuffer
 let usub :
   'a .
     unit ->
-      ('a FStar_Pervasives_Native.option,
-        ('a, unit, unit) initialization_preorder,
-        ('a, unit, unit) initialization_preorder)
+      ('a FStar_Pervasives_Native.option, unit, unit)
         LowStar_Monotonic_Buffer.mbuffer ->
         FStar_UInt32.t ->
           unit ->
-            ('a FStar_Pervasives_Native.option,
-              ('a, unit, unit) initialization_preorder,
-              ('a, unit, unit) initialization_preorder)
+            ('a FStar_Pervasives_Native.option, unit, unit)
               LowStar_Monotonic_Buffer.mbuffer
   = fun uu___ -> LowStar_Monotonic_Buffer.msub
 let uoffset :
   'a .
     unit ->
-      ('a FStar_Pervasives_Native.option,
-        ('a, unit, unit) initialization_preorder,
-        ('a, unit, unit) initialization_preorder)
+      ('a FStar_Pervasives_Native.option, unit, unit)
         LowStar_Monotonic_Buffer.mbuffer ->
         FStar_UInt32.t ->
-          ('a FStar_Pervasives_Native.option,
-            ('a, unit, unit) initialization_preorder,
-            ('a, unit, unit) initialization_preorder)
+          ('a FStar_Pervasives_Native.option, unit, unit)
             LowStar_Monotonic_Buffer.mbuffer
   = fun uu___ -> LowStar_Monotonic_Buffer.moffset
 type ('a, 'i, 's) ipred = unit

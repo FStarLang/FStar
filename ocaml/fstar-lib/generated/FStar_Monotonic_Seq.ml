@@ -9,15 +9,14 @@ let alloc_mref_seq :
   'a .
     unit ->
       'a FStar_Seq_Base.seq ->
-        (unit, 'a FStar_Seq_Base.seq, ('a, unit, unit) grows)
-          FStar_HyperStack_ST.m_rref
+        (unit, 'a FStar_Seq_Base.seq, unit) FStar_HyperStack_ST.m_rref
   = fun r -> fun init -> FStar_HyperStack_ST.ralloc () init
 type ('a, 'i, 'n, 'x, 'r, 'h) at_least = unit
 let write_at_end :
   'a .
     unit ->
-      (unit, 'a FStar_Seq_Base.seq, ('a, unit, unit) grows)
-        FStar_HyperStack_ST.m_rref -> 'a -> unit
+      (unit, 'a FStar_Seq_Base.seq, unit) FStar_HyperStack_ST.m_rref ->
+        'a -> unit
   =
   fun i ->
     fun r ->
@@ -52,16 +51,15 @@ let i_write_at_end : 'a 'p . unit -> (unit, 'a, 'p) i_seq -> 'a -> unit =
 type 's invariant = unit
 let (test0 :
   unit ->
-    (unit, Prims.nat FStar_Seq_Base.seq, (Prims.nat, unit, unit) grows)
-      FStar_HyperStack_ST.m_rref -> Prims.nat -> unit)
+    (unit, Prims.nat FStar_Seq_Base.seq, unit) FStar_HyperStack_ST.m_rref ->
+      Prims.nat -> unit)
   =
   fun r ->
     fun a ->
       fun k ->
         let h0 = FStar_HyperStack_ST.get () in
         FStar_HyperStack_ST.mr_witness () () () (Obj.magic a) ()
-let (itest :
-  unit -> (unit, Prims.nat, unit invariant) i_seq -> Prims.nat -> unit) =
+let (itest : unit -> (unit, Prims.nat, unit) i_seq -> Prims.nat -> unit) =
   fun r ->
     fun a ->
       fun k ->

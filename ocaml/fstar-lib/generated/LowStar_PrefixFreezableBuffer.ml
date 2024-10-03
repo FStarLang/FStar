@@ -14,10 +14,7 @@ type 'len lbuffer = buffer
 type ('r, 'len) malloc_pre = unit
 type ('h0, 'b, 'h1) alloc_post_mem_common = unit
 let (update_frozen_until_alloc :
-  (u8, (unit, unit) prefix_freezable_preorder,
-    (unit, unit) prefix_freezable_preorder) LowStar_Monotonic_Buffer.mbuffer
-    -> unit)
-  =
+  (u8, unit, unit) LowStar_Monotonic_Buffer.mbuffer -> unit) =
   fun b ->
     LowStar_Endianness.store32_le_i b Stdint.Uint32.zero
       (Stdint.Uint32.of_int (4));

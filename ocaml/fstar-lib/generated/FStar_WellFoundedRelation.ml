@@ -37,8 +37,7 @@ let default_wfr : 'a . unit -> 'a wfr_t =
       proof = ()
     }
 type ('a, 'x1, 'x2) empty_relation = unit
-let rec empty_decreaser :
-  'a . 'a -> ('a, ('a, unit, unit) empty_relation, unit) acc_classical =
+let rec empty_decreaser : 'a . 'a -> ('a, unit, unit) acc_classical =
   fun x -> let smaller y = empty_decreaser y in AccClassicalIntro smaller
 let empty_wfr : 'a . unit -> 'a wfr_t =
   fun uu___ ->
@@ -48,9 +47,7 @@ let empty_wfr : 'a . unit -> 'a wfr_t =
       proof = ()
     }
 type ('a, 'r, 'x1, 'x2) acc_relation = unit
-let rec acc_decreaser :
-  'a 'r .
-    unit -> 'a -> ('a, ('a, 'r, unit, unit) acc_relation, unit) acc_classical
+let rec acc_decreaser : 'a 'r . unit -> 'a -> ('a, unit, unit) acc_classical
   =
   fun f ->
     fun x -> let smaller y = acc_decreaser () y in AccClassicalIntro smaller
