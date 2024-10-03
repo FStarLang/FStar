@@ -12,14 +12,6 @@ pub struct evercrypt {
         msg: *mut u8,
         signature: *mut u8,
     ) -> bool,
-    pub EverCrypt_HMAC_compute: unsafe extern "C" fn(
-        a: Spec_Hash_Definitions_hash_alg,
-        x0: *mut u8,
-        x1: *mut u8,
-        x2: u32,
-        x3: *mut u8,
-        x4: u32,
-    ),
     pub EverCrypt_Hash_Incremental_hash_len:
         unsafe extern "C" fn(a: Spec_Hash_Definitions_hash_alg) -> u32,
     pub EverCrypt_Hash_Incremental_hash: unsafe extern "C" fn(
@@ -27,6 +19,14 @@ pub struct evercrypt {
         output: *mut u8,
         input: *mut u8,
         input_len: u32,
+    ),
+    pub EverCrypt_HMAC_compute: unsafe extern "C" fn(
+        a: Spec_Hash_Definitions_hash_alg,
+        x0: *mut u8,
+        x1: *mut u8,
+        x2: u32,
+        x3: *mut u8,
+        x4: u32,
     ),
 }
 impl evercrypt {
@@ -49,21 +49,21 @@ impl evercrypt {
         let EverCrypt_Ed25519_verify = __library
             .get(b"EverCrypt_Ed25519_verify\0")
             .map(|sym| *sym)?;
-        let EverCrypt_HMAC_compute = __library.get(b"EverCrypt_HMAC_compute\0").map(|sym| *sym)?;
         let EverCrypt_Hash_Incremental_hash_len = __library
             .get(b"EverCrypt_Hash_Incremental_hash_len\0")
             .map(|sym| *sym)?;
         let EverCrypt_Hash_Incremental_hash = __library
             .get(b"EverCrypt_Hash_Incremental_hash\0")
             .map(|sym| *sym)?;
+        let EverCrypt_HMAC_compute = __library.get(b"EverCrypt_HMAC_compute\0").map(|sym| *sym)?;
         Ok(evercrypt {
             __library,
             EverCrypt_AutoConfig2_init,
             EverCrypt_Ed25519_sign,
             EverCrypt_Ed25519_verify,
-            EverCrypt_HMAC_compute,
             EverCrypt_Hash_Incremental_hash_len,
             EverCrypt_Hash_Incremental_hash,
+            EverCrypt_HMAC_compute,
         })
     }
     pub unsafe fn EverCrypt_AutoConfig2_init(&self) {
@@ -87,17 +87,6 @@ impl evercrypt {
     ) -> bool {
         (self.EverCrypt_Ed25519_verify)(public_key, msg_len, msg, signature)
     }
-    pub unsafe fn EverCrypt_HMAC_compute(
-        &self,
-        a: Spec_Hash_Definitions_hash_alg,
-        x0: *mut u8,
-        x1: *mut u8,
-        x2: u32,
-        x3: *mut u8,
-        x4: u32,
-    ) {
-        (self.EverCrypt_HMAC_compute)(a, x0, x1, x2, x3, x4)
-    }
     pub unsafe fn EverCrypt_Hash_Incremental_hash_len(
         &self,
         a: Spec_Hash_Definitions_hash_alg,
@@ -112,5 +101,16 @@ impl evercrypt {
         input_len: u32,
     ) {
         (self.EverCrypt_Hash_Incremental_hash)(a, output, input, input_len)
+    }
+    pub unsafe fn EverCrypt_HMAC_compute(
+        &self,
+        a: Spec_Hash_Definitions_hash_alg,
+        x0: *mut u8,
+        x1: *mut u8,
+        x2: u32,
+        x3: *mut u8,
+        x4: u32,
+    ) {
+        (self.EverCrypt_HMAC_compute)(a, x0, x1, x2, x3, x4)
     }
 }
