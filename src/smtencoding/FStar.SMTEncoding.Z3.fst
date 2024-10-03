@@ -232,7 +232,21 @@ let check_z3version (p:proc) : unit =
   ()
 
 let new_z3proc (id:string) (cmd_and_args : string & list string) : BU.proc =
-    let proc = BU.start_process id (fst cmd_and_args) (snd cmd_and_args) (fun s -> s = "Done!") in
+    let proc =
+      try
+        BU.start_process id (fst cmd_and_args) (snd cmd_and_args) (fun s -> s = "Done!")
+      with
+      | e ->
+        let open FStar.Pprint in
+        let open FStar.Errors.Msg in
+        Errors.raise_error0 Errors.Error_Z3InvocationError [
+          text "Could not start SMT solver process.";
+          prefix 2 1 (text "Command:" )
+            (fst cmd_and_args |> arbitrary_string |> squotes);
+          prefix 2 1 (text "Exception:")
+            (BU.print_exn e |> arbitrary_string);
+        ]
+    in
     check_z3version proc;
     proc
 
