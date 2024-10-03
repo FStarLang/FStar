@@ -2808,6 +2808,8 @@ let non_info_norm env t =
   let steps = [UnfoldUntil delta_constant;
                AllowUnboundUniverses;
                EraseUniverses;
+               Primops;
+               Beta; Iota;
                HNF;
                (* We could use Weak too were it not that we need
                 * to descend in the codomain of arrows. *)

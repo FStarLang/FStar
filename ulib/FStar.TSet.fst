@@ -22,7 +22,7 @@ module P = FStar.PropositionalExtensionality
 module F = FStar.FunctionalExtensionality
 
 (*
- * AR: mark it must_erase_for_extraction temporarily until CMI comes in
+ * AR: mark it erasable temporarily until CMI comes in
  *)
 [@@erasable]
 let set a = F.restricted_t a (fun _ -> prop)
