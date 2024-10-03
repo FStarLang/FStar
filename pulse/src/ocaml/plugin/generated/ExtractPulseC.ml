@@ -845,5 +845,5 @@ let (my_type_decls : unit -> unit) =
            | uu___1 ->
                FStar_Compiler_Effect.raise
                  FStar_Extraction_Krml.NotSupportedByKrmlExtension)
-let (uu___496 : unit) =
+let (uu___0 : unit) =
   my_types_without_decay (); my_types (); my_exprs (); my_type_decls ()
