@@ -495,7 +495,7 @@ let rec (doc_of_mltype' :
             let d1 = doc_of_mltype currentModule (t_prio_fun, Left) t1 in
             let d2 = doc_of_mltype currentModule (t_prio_fun, Right) t2 in
             let uu___ =
-              let uu___1 = reduce1 [d1; text "->"; d2] in hbox uu___1 in
+              let uu___1 = reduce1 [d1; text " -> "; d2] in hbox uu___1 in
             maybe_paren outer t_prio_fun uu___
         | FStar_Extraction_ML_Syntax.MLTY_Top ->
             let uu___ = FStar_Extraction_ML_Util.codegen_fsharp () in

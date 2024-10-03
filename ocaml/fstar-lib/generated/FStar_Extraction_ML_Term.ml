@@ -2289,325 +2289,316 @@ let rec (extract_lb_sig :
                                 uu___8) in
                         (match uu___6 with
                          | (tbinders, eff_body, tbody) ->
-                             (FStar_Extraction_ML_UEnv.debug g
-                                (fun uu___8 ->
-                                   let uu___9 =
-                                     FStar_Class_Show.show
-                                       FStar_Syntax_Print.showable_term tbody in
-                                   FStar_Compiler_Util.print1
-                                     "Extract LB SIG: %s\n" uu___9);
-                              (let n_tbinders =
-                                 FStar_Compiler_List.length tbinders in
-                               let lbdef1 =
-                                 let uu___8 = normalize_abs lbdef in
-                                 FStar_Syntax_Util.unmeta uu___8 in
-                               let tbinders_as_ty_params env =
-                                 FStar_Compiler_List.map
-                                   (fun uu___8 ->
-                                      match uu___8 with
-                                      | { FStar_Syntax_Syntax.binder_bv = x;
-                                          FStar_Syntax_Syntax.binder_qual =
-                                            uu___9;
-                                          FStar_Syntax_Syntax.binder_positivity
-                                            = uu___10;
-                                          FStar_Syntax_Syntax.binder_attrs =
-                                            binder_attrs;_}
-                                          ->
+                             let n_tbinders =
+                               FStar_Compiler_List.length tbinders in
+                             let lbdef1 =
+                               let uu___7 = normalize_abs lbdef in
+                               FStar_Syntax_Util.unmeta uu___7 in
+                             let tbinders_as_ty_params env =
+                               FStar_Compiler_List.map
+                                 (fun uu___7 ->
+                                    match uu___7 with
+                                    | { FStar_Syntax_Syntax.binder_bv = x;
+                                        FStar_Syntax_Syntax.binder_qual =
+                                          uu___8;
+                                        FStar_Syntax_Syntax.binder_positivity
+                                          = uu___9;
+                                        FStar_Syntax_Syntax.binder_attrs =
+                                          binder_attrs;_}
+                                        ->
+                                        let uu___10 =
                                           let uu___11 =
-                                            let uu___12 =
-                                              FStar_Extraction_ML_UEnv.lookup_ty
-                                                env x in
-                                            uu___12.FStar_Extraction_ML_UEnv.ty_b_name in
-                                          let uu___12 =
-                                            FStar_Compiler_List.map
-                                              (fun attr ->
-                                                 let uu___13 =
-                                                   term_as_mlexpr g attr in
-                                                 match uu___13 with
-                                                 | (e, uu___14, uu___15) -> e)
-                                              binder_attrs in
-                                          {
-                                            FStar_Extraction_ML_Syntax.ty_param_name
-                                              = uu___11;
-                                            FStar_Extraction_ML_Syntax.ty_param_attrs
-                                              = uu___12
-                                          }) in
-                               match lbdef1.FStar_Syntax_Syntax.n with
-                               | FStar_Syntax_Syntax.Tm_abs
-                                   { FStar_Syntax_Syntax.bs = bs2;
-                                     FStar_Syntax_Syntax.body = body;
-                                     FStar_Syntax_Syntax.rc_opt = copt;_}
-                                   ->
-                                   let uu___8 =
-                                     FStar_Syntax_Subst.open_term bs2 body in
-                                   (match uu___8 with
-                                    | (bs3, body1) ->
-                                        if
-                                          n_tbinders <=
-                                            (FStar_Compiler_List.length bs3)
-                                        then
-                                          let uu___9 =
-                                            FStar_Compiler_Util.first_N
-                                              n_tbinders bs3 in
-                                          (match uu___9 with
-                                           | (targs, rest_args) ->
-                                               let expected_source_ty =
-                                                 let s =
-                                                   FStar_Compiler_List.map2
-                                                     (fun uu___10 ->
-                                                        fun uu___11 ->
-                                                          match (uu___10,
-                                                                  uu___11)
-                                                          with
-                                                          | ({
-                                                               FStar_Syntax_Syntax.binder_bv
-                                                                 = x;
-                                                               FStar_Syntax_Syntax.binder_qual
-                                                                 = uu___12;
-                                                               FStar_Syntax_Syntax.binder_positivity
-                                                                 = uu___13;
-                                                               FStar_Syntax_Syntax.binder_attrs
-                                                                 = uu___14;_},
-                                                             {
-                                                               FStar_Syntax_Syntax.binder_bv
-                                                                 = y;
-                                                               FStar_Syntax_Syntax.binder_qual
-                                                                 = uu___15;
-                                                               FStar_Syntax_Syntax.binder_positivity
-                                                                 = uu___16;
-                                                               FStar_Syntax_Syntax.binder_attrs
-                                                                 = uu___17;_})
-                                                              ->
-                                                              let uu___18 =
-                                                                let uu___19 =
-                                                                  FStar_Syntax_Syntax.bv_to_name
-                                                                    y in
-                                                                (x, uu___19) in
-                                                              FStar_Syntax_Syntax.NT
-                                                                uu___18)
-                                                     tbinders targs in
-                                                 FStar_Syntax_Subst.subst s
-                                                   tbody in
-                                               let env =
-                                                 FStar_Compiler_List.fold_left
-                                                   (fun env1 ->
-                                                      fun uu___10 ->
-                                                        match uu___10 with
-                                                        | {
-                                                            FStar_Syntax_Syntax.binder_bv
-                                                              = a;
-                                                            FStar_Syntax_Syntax.binder_qual
-                                                              = uu___11;
-                                                            FStar_Syntax_Syntax.binder_positivity
-                                                              = uu___12;
-                                                            FStar_Syntax_Syntax.binder_attrs
-                                                              = uu___13;_}
-                                                            ->
-                                                            FStar_Extraction_ML_UEnv.extend_ty
-                                                              env1 a false) g
-                                                   targs in
-                                               let expected_t =
-                                                 term_as_mlty env
-                                                   expected_source_ty in
-                                               let polytype =
-                                                 let uu___10 =
-                                                   tbinders_as_ty_params env
-                                                     targs in
-                                                 (uu___10, expected_t) in
-                                               let add_unit =
-                                                 match rest_args with
-                                                 | [] ->
-                                                     (let uu___10 =
-                                                        is_fstar_value body1 in
-                                                      Prims.op_Negation
-                                                        uu___10)
-                                                       ||
-                                                       (let uu___10 =
-                                                          FStar_Syntax_Util.is_pure_comp
-                                                            c1 in
-                                                        Prims.op_Negation
-                                                          uu___10)
-                                                 | uu___10 -> false in
-                                               let rest_args1 =
-                                                 if add_unit
-                                                 then
-                                                   let uu___10 =
-                                                     unit_binder () in
-                                                   uu___10 :: rest_args
-                                                 else rest_args in
-                                               let polytype1 =
-                                                 if add_unit
-                                                 then
-                                                   FStar_Extraction_ML_Syntax.push_unit
-                                                     eff_body polytype
-                                                 else polytype in
-                                               let body2 =
-                                                 FStar_Syntax_Util.abs
-                                                   rest_args1 body1 copt in
-                                               (lbname_, f_e,
-                                                 (lbtyp1, (targs, polytype1)),
-                                                 add_unit, has_c_inline,
-                                                 body2))
-                                        else
-                                          FStar_Compiler_Effect.failwith
-                                            "Not enough type binders")
-                               | FStar_Syntax_Syntax.Tm_uinst uu___8 ->
-                                   let env =
-                                     FStar_Compiler_List.fold_left
-                                       (fun env1 ->
-                                          fun uu___9 ->
-                                            match uu___9 with
-                                            | {
-                                                FStar_Syntax_Syntax.binder_bv
-                                                  = a;
-                                                FStar_Syntax_Syntax.binder_qual
-                                                  = uu___10;
-                                                FStar_Syntax_Syntax.binder_positivity
-                                                  = uu___11;
-                                                FStar_Syntax_Syntax.binder_attrs
-                                                  = uu___12;_}
-                                                ->
-                                                FStar_Extraction_ML_UEnv.extend_ty
-                                                  env1 a false) g tbinders in
-                                   let expected_t = term_as_mlty env tbody in
-                                   let polytype =
-                                     let uu___9 =
-                                       tbinders_as_ty_params env tbinders in
-                                     (uu___9, expected_t) in
-                                   let args =
-                                     FStar_Compiler_List.map
-                                       (fun uu___9 ->
-                                          match uu___9 with
-                                          | {
-                                              FStar_Syntax_Syntax.binder_bv =
-                                                bv;
-                                              FStar_Syntax_Syntax.binder_qual
-                                                = uu___10;
-                                              FStar_Syntax_Syntax.binder_positivity
-                                                = uu___11;
-                                              FStar_Syntax_Syntax.binder_attrs
-                                                = uu___12;_}
-                                              ->
-                                              let uu___13 =
-                                                FStar_Syntax_Syntax.bv_to_name
-                                                  bv in
-                                              FStar_Syntax_Syntax.as_arg
-                                                uu___13) tbinders in
-                                   let e =
-                                     FStar_Syntax_Syntax.mk
-                                       (FStar_Syntax_Syntax.Tm_app
-                                          {
-                                            FStar_Syntax_Syntax.hd = lbdef1;
-                                            FStar_Syntax_Syntax.args = args
-                                          }) lbdef1.FStar_Syntax_Syntax.pos in
-                                   (lbname_, f_e,
-                                     (lbtyp1, (tbinders, polytype)), false,
-                                     has_c_inline, e)
-                               | FStar_Syntax_Syntax.Tm_fvar uu___8 ->
-                                   let env =
-                                     FStar_Compiler_List.fold_left
-                                       (fun env1 ->
-                                          fun uu___9 ->
-                                            match uu___9 with
-                                            | {
-                                                FStar_Syntax_Syntax.binder_bv
-                                                  = a;
-                                                FStar_Syntax_Syntax.binder_qual
-                                                  = uu___10;
-                                                FStar_Syntax_Syntax.binder_positivity
-                                                  = uu___11;
-                                                FStar_Syntax_Syntax.binder_attrs
-                                                  = uu___12;_}
-                                                ->
-                                                FStar_Extraction_ML_UEnv.extend_ty
-                                                  env1 a false) g tbinders in
-                                   let expected_t = term_as_mlty env tbody in
-                                   let polytype =
-                                     let uu___9 =
-                                       tbinders_as_ty_params env tbinders in
-                                     (uu___9, expected_t) in
-                                   let args =
-                                     FStar_Compiler_List.map
-                                       (fun uu___9 ->
-                                          match uu___9 with
-                                          | {
-                                              FStar_Syntax_Syntax.binder_bv =
-                                                bv;
-                                              FStar_Syntax_Syntax.binder_qual
-                                                = uu___10;
-                                              FStar_Syntax_Syntax.binder_positivity
-                                                = uu___11;
-                                              FStar_Syntax_Syntax.binder_attrs
-                                                = uu___12;_}
-                                              ->
-                                              let uu___13 =
-                                                FStar_Syntax_Syntax.bv_to_name
-                                                  bv in
-                                              FStar_Syntax_Syntax.as_arg
-                                                uu___13) tbinders in
-                                   let e =
-                                     FStar_Syntax_Syntax.mk
-                                       (FStar_Syntax_Syntax.Tm_app
-                                          {
-                                            FStar_Syntax_Syntax.hd = lbdef1;
-                                            FStar_Syntax_Syntax.args = args
-                                          }) lbdef1.FStar_Syntax_Syntax.pos in
-                                   (lbname_, f_e,
-                                     (lbtyp1, (tbinders, polytype)), false,
-                                     has_c_inline, e)
-                               | FStar_Syntax_Syntax.Tm_name uu___8 ->
-                                   let env =
-                                     FStar_Compiler_List.fold_left
-                                       (fun env1 ->
-                                          fun uu___9 ->
-                                            match uu___9 with
-                                            | {
-                                                FStar_Syntax_Syntax.binder_bv
-                                                  = a;
-                                                FStar_Syntax_Syntax.binder_qual
-                                                  = uu___10;
-                                                FStar_Syntax_Syntax.binder_positivity
-                                                  = uu___11;
-                                                FStar_Syntax_Syntax.binder_attrs
-                                                  = uu___12;_}
-                                                ->
-                                                FStar_Extraction_ML_UEnv.extend_ty
-                                                  env1 a false) g tbinders in
-                                   let expected_t = term_as_mlty env tbody in
-                                   let polytype =
-                                     let uu___9 =
-                                       tbinders_as_ty_params env tbinders in
-                                     (uu___9, expected_t) in
-                                   let args =
-                                     FStar_Compiler_List.map
-                                       (fun uu___9 ->
-                                          match uu___9 with
-                                          | {
-                                              FStar_Syntax_Syntax.binder_bv =
-                                                bv;
-                                              FStar_Syntax_Syntax.binder_qual
-                                                = uu___10;
-                                              FStar_Syntax_Syntax.binder_positivity
-                                                = uu___11;
-                                              FStar_Syntax_Syntax.binder_attrs
-                                                = uu___12;_}
-                                              ->
-                                              let uu___13 =
-                                                FStar_Syntax_Syntax.bv_to_name
-                                                  bv in
-                                              FStar_Syntax_Syntax.as_arg
-                                                uu___13) tbinders in
-                                   let e =
-                                     FStar_Syntax_Syntax.mk
-                                       (FStar_Syntax_Syntax.Tm_app
-                                          {
-                                            FStar_Syntax_Syntax.hd = lbdef1;
-                                            FStar_Syntax_Syntax.args = args
-                                          }) lbdef1.FStar_Syntax_Syntax.pos in
-                                   (lbname_, f_e,
-                                     (lbtyp1, (tbinders, polytype)), false,
-                                     has_c_inline, e)
-                               | uu___8 -> err_value_restriction lbdef1))))
+                                            FStar_Extraction_ML_UEnv.lookup_ty
+                                              env x in
+                                          uu___11.FStar_Extraction_ML_UEnv.ty_b_name in
+                                        let uu___11 =
+                                          FStar_Compiler_List.map
+                                            (fun attr ->
+                                               let uu___12 =
+                                                 term_as_mlexpr g attr in
+                                               match uu___12 with
+                                               | (e, uu___13, uu___14) -> e)
+                                            binder_attrs in
+                                        {
+                                          FStar_Extraction_ML_Syntax.ty_param_name
+                                            = uu___10;
+                                          FStar_Extraction_ML_Syntax.ty_param_attrs
+                                            = uu___11
+                                        }) in
+                             (match lbdef1.FStar_Syntax_Syntax.n with
+                              | FStar_Syntax_Syntax.Tm_abs
+                                  { FStar_Syntax_Syntax.bs = bs2;
+                                    FStar_Syntax_Syntax.body = body;
+                                    FStar_Syntax_Syntax.rc_opt = copt;_}
+                                  ->
+                                  let uu___7 =
+                                    FStar_Syntax_Subst.open_term bs2 body in
+                                  (match uu___7 with
+                                   | (bs3, body1) ->
+                                       if
+                                         n_tbinders <=
+                                           (FStar_Compiler_List.length bs3)
+                                       then
+                                         let uu___8 =
+                                           FStar_Compiler_Util.first_N
+                                             n_tbinders bs3 in
+                                         (match uu___8 with
+                                          | (targs, rest_args) ->
+                                              let expected_source_ty =
+                                                let s =
+                                                  FStar_Compiler_List.map2
+                                                    (fun uu___9 ->
+                                                       fun uu___10 ->
+                                                         match (uu___9,
+                                                                 uu___10)
+                                                         with
+                                                         | ({
+                                                              FStar_Syntax_Syntax.binder_bv
+                                                                = x;
+                                                              FStar_Syntax_Syntax.binder_qual
+                                                                = uu___11;
+                                                              FStar_Syntax_Syntax.binder_positivity
+                                                                = uu___12;
+                                                              FStar_Syntax_Syntax.binder_attrs
+                                                                = uu___13;_},
+                                                            {
+                                                              FStar_Syntax_Syntax.binder_bv
+                                                                = y;
+                                                              FStar_Syntax_Syntax.binder_qual
+                                                                = uu___14;
+                                                              FStar_Syntax_Syntax.binder_positivity
+                                                                = uu___15;
+                                                              FStar_Syntax_Syntax.binder_attrs
+                                                                = uu___16;_})
+                                                             ->
+                                                             let uu___17 =
+                                                               let uu___18 =
+                                                                 FStar_Syntax_Syntax.bv_to_name
+                                                                   y in
+                                                               (x, uu___18) in
+                                                             FStar_Syntax_Syntax.NT
+                                                               uu___17)
+                                                    tbinders targs in
+                                                FStar_Syntax_Subst.subst s
+                                                  tbody in
+                                              let env =
+                                                FStar_Compiler_List.fold_left
+                                                  (fun env1 ->
+                                                     fun uu___9 ->
+                                                       match uu___9 with
+                                                       | {
+                                                           FStar_Syntax_Syntax.binder_bv
+                                                             = a;
+                                                           FStar_Syntax_Syntax.binder_qual
+                                                             = uu___10;
+                                                           FStar_Syntax_Syntax.binder_positivity
+                                                             = uu___11;
+                                                           FStar_Syntax_Syntax.binder_attrs
+                                                             = uu___12;_}
+                                                           ->
+                                                           FStar_Extraction_ML_UEnv.extend_ty
+                                                             env1 a false) g
+                                                  targs in
+                                              let expected_t =
+                                                term_as_mlty env
+                                                  expected_source_ty in
+                                              let polytype =
+                                                let uu___9 =
+                                                  tbinders_as_ty_params env
+                                                    targs in
+                                                (uu___9, expected_t) in
+                                              let add_unit =
+                                                match rest_args with
+                                                | [] ->
+                                                    (let uu___9 =
+                                                       is_fstar_value body1 in
+                                                     Prims.op_Negation uu___9)
+                                                      ||
+                                                      (let uu___9 =
+                                                         FStar_Syntax_Util.is_pure_comp
+                                                           c1 in
+                                                       Prims.op_Negation
+                                                         uu___9)
+                                                | uu___9 -> false in
+                                              let rest_args1 =
+                                                if add_unit
+                                                then
+                                                  let uu___9 = unit_binder () in
+                                                  uu___9 :: rest_args
+                                                else rest_args in
+                                              let polytype1 =
+                                                if add_unit
+                                                then
+                                                  FStar_Extraction_ML_Syntax.push_unit
+                                                    eff_body polytype
+                                                else polytype in
+                                              let body2 =
+                                                FStar_Syntax_Util.abs
+                                                  rest_args1 body1 copt in
+                                              (lbname_, f_e,
+                                                (lbtyp1, (targs, polytype1)),
+                                                add_unit, has_c_inline,
+                                                body2))
+                                       else
+                                         FStar_Compiler_Effect.failwith
+                                           "Not enough type binders")
+                              | FStar_Syntax_Syntax.Tm_uinst uu___7 ->
+                                  let env =
+                                    FStar_Compiler_List.fold_left
+                                      (fun env1 ->
+                                         fun uu___8 ->
+                                           match uu___8 with
+                                           | {
+                                               FStar_Syntax_Syntax.binder_bv
+                                                 = a;
+                                               FStar_Syntax_Syntax.binder_qual
+                                                 = uu___9;
+                                               FStar_Syntax_Syntax.binder_positivity
+                                                 = uu___10;
+                                               FStar_Syntax_Syntax.binder_attrs
+                                                 = uu___11;_}
+                                               ->
+                                               FStar_Extraction_ML_UEnv.extend_ty
+                                                 env1 a false) g tbinders in
+                                  let expected_t = term_as_mlty env tbody in
+                                  let polytype =
+                                    let uu___8 =
+                                      tbinders_as_ty_params env tbinders in
+                                    (uu___8, expected_t) in
+                                  let args =
+                                    FStar_Compiler_List.map
+                                      (fun uu___8 ->
+                                         match uu___8 with
+                                         | {
+                                             FStar_Syntax_Syntax.binder_bv =
+                                               bv;
+                                             FStar_Syntax_Syntax.binder_qual
+                                               = uu___9;
+                                             FStar_Syntax_Syntax.binder_positivity
+                                               = uu___10;
+                                             FStar_Syntax_Syntax.binder_attrs
+                                               = uu___11;_}
+                                             ->
+                                             let uu___12 =
+                                               FStar_Syntax_Syntax.bv_to_name
+                                                 bv in
+                                             FStar_Syntax_Syntax.as_arg
+                                               uu___12) tbinders in
+                                  let e =
+                                    FStar_Syntax_Syntax.mk
+                                      (FStar_Syntax_Syntax.Tm_app
+                                         {
+                                           FStar_Syntax_Syntax.hd = lbdef1;
+                                           FStar_Syntax_Syntax.args = args
+                                         }) lbdef1.FStar_Syntax_Syntax.pos in
+                                  (lbname_, f_e,
+                                    (lbtyp1, (tbinders, polytype)), false,
+                                    has_c_inline, e)
+                              | FStar_Syntax_Syntax.Tm_fvar uu___7 ->
+                                  let env =
+                                    FStar_Compiler_List.fold_left
+                                      (fun env1 ->
+                                         fun uu___8 ->
+                                           match uu___8 with
+                                           | {
+                                               FStar_Syntax_Syntax.binder_bv
+                                                 = a;
+                                               FStar_Syntax_Syntax.binder_qual
+                                                 = uu___9;
+                                               FStar_Syntax_Syntax.binder_positivity
+                                                 = uu___10;
+                                               FStar_Syntax_Syntax.binder_attrs
+                                                 = uu___11;_}
+                                               ->
+                                               FStar_Extraction_ML_UEnv.extend_ty
+                                                 env1 a false) g tbinders in
+                                  let expected_t = term_as_mlty env tbody in
+                                  let polytype =
+                                    let uu___8 =
+                                      tbinders_as_ty_params env tbinders in
+                                    (uu___8, expected_t) in
+                                  let args =
+                                    FStar_Compiler_List.map
+                                      (fun uu___8 ->
+                                         match uu___8 with
+                                         | {
+                                             FStar_Syntax_Syntax.binder_bv =
+                                               bv;
+                                             FStar_Syntax_Syntax.binder_qual
+                                               = uu___9;
+                                             FStar_Syntax_Syntax.binder_positivity
+                                               = uu___10;
+                                             FStar_Syntax_Syntax.binder_attrs
+                                               = uu___11;_}
+                                             ->
+                                             let uu___12 =
+                                               FStar_Syntax_Syntax.bv_to_name
+                                                 bv in
+                                             FStar_Syntax_Syntax.as_arg
+                                               uu___12) tbinders in
+                                  let e =
+                                    FStar_Syntax_Syntax.mk
+                                      (FStar_Syntax_Syntax.Tm_app
+                                         {
+                                           FStar_Syntax_Syntax.hd = lbdef1;
+                                           FStar_Syntax_Syntax.args = args
+                                         }) lbdef1.FStar_Syntax_Syntax.pos in
+                                  (lbname_, f_e,
+                                    (lbtyp1, (tbinders, polytype)), false,
+                                    has_c_inline, e)
+                              | FStar_Syntax_Syntax.Tm_name uu___7 ->
+                                  let env =
+                                    FStar_Compiler_List.fold_left
+                                      (fun env1 ->
+                                         fun uu___8 ->
+                                           match uu___8 with
+                                           | {
+                                               FStar_Syntax_Syntax.binder_bv
+                                                 = a;
+                                               FStar_Syntax_Syntax.binder_qual
+                                                 = uu___9;
+                                               FStar_Syntax_Syntax.binder_positivity
+                                                 = uu___10;
+                                               FStar_Syntax_Syntax.binder_attrs
+                                                 = uu___11;_}
+                                               ->
+                                               FStar_Extraction_ML_UEnv.extend_ty
+                                                 env1 a false) g tbinders in
+                                  let expected_t = term_as_mlty env tbody in
+                                  let polytype =
+                                    let uu___8 =
+                                      tbinders_as_ty_params env tbinders in
+                                    (uu___8, expected_t) in
+                                  let args =
+                                    FStar_Compiler_List.map
+                                      (fun uu___8 ->
+                                         match uu___8 with
+                                         | {
+                                             FStar_Syntax_Syntax.binder_bv =
+                                               bv;
+                                             FStar_Syntax_Syntax.binder_qual
+                                               = uu___9;
+                                             FStar_Syntax_Syntax.binder_positivity
+                                               = uu___10;
+                                             FStar_Syntax_Syntax.binder_attrs
+                                               = uu___11;_}
+                                             ->
+                                             let uu___12 =
+                                               FStar_Syntax_Syntax.bv_to_name
+                                                 bv in
+                                             FStar_Syntax_Syntax.as_arg
+                                               uu___12) tbinders in
+                                  let e =
+                                    FStar_Syntax_Syntax.mk
+                                      (FStar_Syntax_Syntax.Tm_app
+                                         {
+                                           FStar_Syntax_Syntax.hd = lbdef1;
+                                           FStar_Syntax_Syntax.args = args
+                                         }) lbdef1.FStar_Syntax_Syntax.pos in
+                                  (lbname_, f_e,
+                                    (lbtyp1, (tbinders, polytype)), false,
+                                    has_c_inline, e)
+                              | uu___7 -> err_value_restriction lbdef1)))
                | uu___5 -> no_gen ()) in
       FStar_Compiler_List.map maybe_generalize
         (FStar_Pervasives_Native.snd lbs)
@@ -3115,13 +3106,11 @@ and (term_as_mlexpr' :
                           FStar_Class_Show.show
                             FStar_Syntax_Print.showable_fv fv in
                         let uu___9 =
-                          let uu___10 =
-                            FStar_Extraction_ML_UEnv.current_module_of_uenv g in
-                          FStar_Extraction_ML_Code.string_of_mlexpr uu___10 x in
+                          FStar_Class_Show.show
+                            FStar_Extraction_ML_Code.showable_mlexpr x in
                         let uu___10 =
-                          let uu___11 =
-                            FStar_Extraction_ML_UEnv.current_module_of_uenv g in
-                          FStar_Extraction_ML_Code.string_of_mlty uu___11
+                          FStar_Class_Show.show
+                            FStar_Extraction_ML_Code.showable_mlty
                             (FStar_Pervasives_Native.snd mltys) in
                         FStar_Compiler_Util.print3
                           "looked up %s: got %s at %s \n" uu___8 uu___9
@@ -3559,18 +3548,12 @@ and (term_as_mlexpr' :
                                     FStar_Class_Show.show
                                       FStar_Syntax_Print.showable_term head1 in
                                   let uu___10 =
-                                    let uu___11 =
-                                      FStar_Extraction_ML_UEnv.current_module_of_uenv
-                                        g in
-                                    FStar_Extraction_ML_Code.string_of_mlexpr
-                                      uu___11
+                                    FStar_Class_Show.show
+                                      FStar_Extraction_ML_Code.showable_mlexpr
                                       exp_b.FStar_Extraction_ML_UEnv.exp_b_expr in
                                   let uu___11 =
-                                    let uu___12 =
-                                      FStar_Extraction_ML_UEnv.current_module_of_uenv
-                                        g in
-                                    FStar_Extraction_ML_Code.string_of_mlty
-                                      uu___12
+                                    FStar_Class_Show.show
+                                      FStar_Extraction_ML_Code.showable_mlty
                                       (FStar_Pervasives_Native.snd
                                          exp_b.FStar_Extraction_ML_UEnv.exp_b_tscheme) in
                                   let uu___12 =
@@ -3691,18 +3674,12 @@ and (term_as_mlexpr' :
                                     FStar_Class_Show.show
                                       FStar_Syntax_Print.showable_term head1 in
                                   let uu___10 =
-                                    let uu___11 =
-                                      FStar_Extraction_ML_UEnv.current_module_of_uenv
-                                        g in
-                                    FStar_Extraction_ML_Code.string_of_mlexpr
-                                      uu___11
+                                    FStar_Class_Show.show
+                                      FStar_Extraction_ML_Code.showable_mlexpr
                                       exp_b.FStar_Extraction_ML_UEnv.exp_b_expr in
                                   let uu___11 =
-                                    let uu___12 =
-                                      FStar_Extraction_ML_UEnv.current_module_of_uenv
-                                        g in
-                                    FStar_Extraction_ML_Code.string_of_mlty
-                                      uu___12
+                                    FStar_Class_Show.show
+                                      FStar_Extraction_ML_Code.showable_mlty
                                       (FStar_Pervasives_Native.snd
                                          exp_b.FStar_Extraction_ML_UEnv.exp_b_tscheme) in
                                   let uu___12 =
@@ -4145,69 +4122,55 @@ and (term_as_mlexpr' :
                   | (nm,
                      (_lbname, f, (_t, (targs, polytype)), add_unit,
                       has_c_inline, e)) ->
-                      (FStar_Extraction_ML_UEnv.debug g
-                         (fun uu___4 ->
-                            let uu___5 =
-                              FStar_Class_Show.show
-                                (FStar_Class_Show.printableshow
-                                   FStar_Class_Printable.printable_string) nm in
-                            let uu___6 =
-                              FStar_Class_Show.show
-                                FStar_Extraction_ML_Code.showable_mlty
-                                (FStar_Pervasives_Native.snd polytype) in
-                            FStar_Compiler_Util.print2
-                              "Checking lb %s at %s\n" uu___5 uu___6);
-                       (let env1 =
-                          FStar_Compiler_List.fold_left
-                            (fun env2 ->
-                               fun uu___4 ->
-                                 match uu___4 with
-                                 | { FStar_Syntax_Syntax.binder_bv = a;
-                                     FStar_Syntax_Syntax.binder_qual = uu___5;
-                                     FStar_Syntax_Syntax.binder_positivity =
-                                       uu___6;
-                                     FStar_Syntax_Syntax.binder_attrs =
-                                       uu___7;_}
-                                     ->
-                                     FStar_Extraction_ML_UEnv.extend_ty env2
-                                       a false) env targs in
-                        let expected_t = FStar_Pervasives_Native.snd polytype in
-                        let uu___4 = check_term_as_mlexpr env1 e f expected_t in
-                        match uu___4 with
-                        | (e1, ty) ->
-                            let uu___5 = maybe_promote_effect e1 f expected_t in
-                            (match uu___5 with
-                             | (e2, f1) ->
-                                 let meta =
-                                   match (f1, ty) with
-                                   | (FStar_Extraction_ML_Syntax.E_PURE,
-                                      FStar_Extraction_ML_Syntax.MLTY_Erased)
-                                       -> [FStar_Extraction_ML_Syntax.Erased]
-                                   | (FStar_Extraction_ML_Syntax.E_ERASABLE,
-                                      FStar_Extraction_ML_Syntax.MLTY_Erased)
-                                       -> [FStar_Extraction_ML_Syntax.Erased]
-                                   | uu___6 -> [] in
-                                 let meta1 =
-                                   if has_c_inline
-                                   then FStar_Extraction_ML_Syntax.CInline ::
-                                     meta
-                                   else meta in
-                                 (f1,
-                                   {
-                                     FStar_Extraction_ML_Syntax.mllb_name =
-                                       nm;
-                                     FStar_Extraction_ML_Syntax.mllb_tysc =
-                                       (FStar_Pervasives_Native.Some polytype);
-                                     FStar_Extraction_ML_Syntax.mllb_add_unit
-                                       = add_unit;
-                                     FStar_Extraction_ML_Syntax.mllb_def = e2;
-                                     FStar_Extraction_ML_Syntax.mllb_attrs =
-                                       [];
-                                     FStar_Extraction_ML_Syntax.mllb_meta =
-                                       meta1;
-                                     FStar_Extraction_ML_Syntax.print_typ =
-                                       true
-                                   })))) in
+                      let env1 =
+                        FStar_Compiler_List.fold_left
+                          (fun env2 ->
+                             fun uu___3 ->
+                               match uu___3 with
+                               | { FStar_Syntax_Syntax.binder_bv = a;
+                                   FStar_Syntax_Syntax.binder_qual = uu___4;
+                                   FStar_Syntax_Syntax.binder_positivity =
+                                     uu___5;
+                                   FStar_Syntax_Syntax.binder_attrs = uu___6;_}
+                                   ->
+                                   FStar_Extraction_ML_UEnv.extend_ty env2 a
+                                     false) env targs in
+                      let expected_t = FStar_Pervasives_Native.snd polytype in
+                      let uu___3 = check_term_as_mlexpr env1 e f expected_t in
+                      (match uu___3 with
+                       | (e1, ty) ->
+                           let uu___4 = maybe_promote_effect e1 f expected_t in
+                           (match uu___4 with
+                            | (e2, f1) ->
+                                let meta =
+                                  match (f1, ty) with
+                                  | (FStar_Extraction_ML_Syntax.E_PURE,
+                                     FStar_Extraction_ML_Syntax.MLTY_Erased)
+                                      -> [FStar_Extraction_ML_Syntax.Erased]
+                                  | (FStar_Extraction_ML_Syntax.E_ERASABLE,
+                                     FStar_Extraction_ML_Syntax.MLTY_Erased)
+                                      -> [FStar_Extraction_ML_Syntax.Erased]
+                                  | uu___5 -> [] in
+                                let meta1 =
+                                  if has_c_inline
+                                  then FStar_Extraction_ML_Syntax.CInline ::
+                                    meta
+                                  else meta in
+                                (f1,
+                                  {
+                                    FStar_Extraction_ML_Syntax.mllb_name = nm;
+                                    FStar_Extraction_ML_Syntax.mllb_tysc =
+                                      (FStar_Pervasives_Native.Some polytype);
+                                    FStar_Extraction_ML_Syntax.mllb_add_unit
+                                      = add_unit;
+                                    FStar_Extraction_ML_Syntax.mllb_def = e2;
+                                    FStar_Extraction_ML_Syntax.mllb_attrs =
+                                      [];
+                                    FStar_Extraction_ML_Syntax.mllb_meta =
+                                      meta1;
+                                    FStar_Extraction_ML_Syntax.print_typ =
+                                      true
+                                  }))) in
                 let lbs3 = extract_lb_sig g (is_rec, lbs2) in
                 let uu___2 =
                   FStar_Compiler_List.fold_right

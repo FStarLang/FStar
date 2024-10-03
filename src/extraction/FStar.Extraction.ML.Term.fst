@@ -1244,16 +1244,18 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) : list lb_sig =
                   //If, after erasure, what remains is not a value, then add an extra unit arg. to preserve order of evaluation/generativity
                   //and to circumvent the value restriction
 
-                  //TODO: ERASE ONLY THOSE THAT ABSTRACT OVER PURE FUNCTIONS in Type(i),
-                  //      NOT, e.g., (x:int -> St Type)
+                  //We also erase type arguments that abstract over impure functions,
+                  //replacing the type arguments with a single unit.
+                  //For example, `a:Type -> Dv a` is extracted to `unit -Impure-> 'a`
+                  //The important thing is that we retain an effect tag on the arrow to note
+                  //that the type application is impure.
+                  //See Issue #3473
                    let etag_of_comp c = effect_as_etag g (U.comp_effect_name c) in
                    let tbinders, eff_body, tbody =
                         match BU.prefix_until (fun x -> not (is_type_binder g x)) bs with
                         | None -> bs, etag_of_comp c, U.comp_result c
                         | Some (bs, b, rest) -> bs, E_PURE, U.arrow (b::rest) c
                   in
-                  debug g (fun () -> 
-                    BU.print1 "Extract LB SIG: %s\n" (show tbody));
                    let n_tbinders = List.length tbinders in
                    let lbdef = normalize_abs lbdef |> U.unmeta in
                    let tbinders_as_ty_params env = List.map (fun ({binder_bv=x; binder_attrs}) -> {
@@ -1277,7 +1279,12 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) : list lb_sig =
                                   || not (U.is_pure_comp c)
                                 | _ -> false in
                              let rest_args = if add_unit then (unit_binder()::rest_args) else rest_args in
-                             let polytype = if add_unit then push_unit eff_body polytype else polytype in
+                             let polytype =
+                                if add_unit
+                                then (* record the effect of type application, eff_body *)
+                                      push_unit eff_body polytype
+                                else polytype
+                             in
                              let body = U.abs rest_args body copt in
                              (lbname_, f_e, (lbtyp, (targs, polytype)), add_unit, has_c_inline, body)
 
@@ -1521,7 +1528,9 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                   ml_unit, E_PURE, ml_unit_ty
 
                 | Inr ({exp_b_expr=x; exp_b_tscheme=mltys; exp_b_eff=etag}), qual ->
-                  //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
+                  //etag is the effect associated with simply using t, since it may
+                  //be an effectful type application in F*
+                  //in the common case, etag is E_PURE
                   begin match mltys with
                     | ([], t) when t=ml_unit_ty ->
                       ml_unit, etag, t //optimize (x:unit) to ()
@@ -1551,8 +1560,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                  let _ = debug g (fun () ->
                           BU.print3 "looked up %s: got %s at %s \n"
                               (show fv)
-                              (Code.string_of_mlexpr (current_module_of_uenv g) x)
-                              (Code.string_of_mlty (current_module_of_uenv g) (snd mltys))) in
+                              (show x)
+                              (show (snd mltys))) in
                  begin match mltys with
                     | ([], t) when (t=ml_unit_ty) -> ml_unit, E_PURE, t //optimize (x:unit) to ()
                     | ([], t) -> maybe_eta_data_and_project_record g fv.fv_qual t x, E_PURE, t
@@ -1730,8 +1739,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                           debug g (fun () ->
                               BU.print4 "@@@looked up %s: got %s at %s with eff <%s>\n"
                                   (show head)
-                                  (Code.string_of_mlexpr (current_module_of_uenv g) exp_b.exp_b_expr)
-                                  (Code.string_of_mlty (current_module_of_uenv g) (snd exp_b.exp_b_tscheme))
+                                  (show exp_b.exp_b_expr)
+                                  (show (snd exp_b.exp_b_tscheme))
                                   (show exp_b.exp_b_eff));
                           (exp_b.exp_b_expr, exp_b.exp_b_tscheme, exp_b.exp_b_eff), q
                         | _ -> failwith "FIXME Ty" in
@@ -1931,7 +1940,6 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
 
           let check_lb env (nm_sig : mlident & lb_sig) =
               let (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, has_c_inline, e)) = nm_sig in
-              debug g (fun () -> BU.print2 "Checking lb %s at %s\n" (show nm) (show (snd polytype)));
               let env = List.fold_left (fun env ({binder_bv=a}) -> UEnv.extend_ty env a false) env targs in
               let expected_t = snd polytype in
               let e, ty = check_term_as_mlexpr env e f expected_t in

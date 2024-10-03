@@ -352,7 +352,7 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
     | MLTY_Fun (t1, et, t2) ->
         let d1 = doc_of_mltype currentModule (t_prio_fun, Left ) t1 in
         let d2 = doc_of_mltype currentModule (t_prio_fun, Right) t2 in
-        maybe_paren outer t_prio_fun (hbox (reduce1 [d1; text "->"; d2]))
+        maybe_paren outer t_prio_fun (hbox (reduce1 [d1; text " -> "; d2]))
 
     | MLTY_Top ->
       if Util.codegen_fsharp()
