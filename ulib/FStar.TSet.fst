@@ -20,9 +20,6 @@ module FStar.TSet
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 module F = FStar.FunctionalExtensionality
 
-(*
- * AR: mark it must_erase_for_extraction temporarily until CMI comes in
- *)
 [@@erasable]
 let set a = F.restricted_t a (fun _ -> prop)
 
