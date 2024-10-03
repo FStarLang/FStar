@@ -3,6 +3,7 @@ use ocaml_interop::{
     ToOCaml,
 };
 use proc_macro2::Span;
+use quote::ToTokens;
 use syn::{
     punctuated::Punctuated, token::Brace, token::Colon, token::Comma, token::Eq, token::Let,
     token::Mut, token::Paren, token::Pub, token::RArrow, token::Ref, token::Semi, Block, Generics,
@@ -1867,8 +1868,9 @@ fn to_syn_file(f: &File) -> syn::File {
 
 fn file_to_syn_string(f: &File) -> String {
     let f: syn::File = to_syn_file(f);
+    // The to_token_stream() function adds parentheses where necessary, see also syn::fixup::FixupContext
+    let f = syn::parse2(f.to_token_stream()).unwrap();
     prettyplease::unparse(&f)
-    // quote::quote!(#f).to_string()
 }
 
 // fn fn_to_syn_string(f: &Fn) -> String {
