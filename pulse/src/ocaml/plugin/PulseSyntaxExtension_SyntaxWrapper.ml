@@ -180,12 +180,14 @@ let tm_par p1 p2 q1 q2 b1 b2 r : st_term =
 let tm_admit r : st_term =
   PSB.(with_range (tm_admit STT u_zero (tm_unknown r) None) r)
 let tm_unreachable r : st_term =
-  PSB.(with_range (tm_unreachable) r)
+  let dummy_comp = C_Tot (tm_unknown r) in
+  PSB.(with_range (tm_unreachable { c = dummy_comp }) r)
   
 let close_term t v = Pulse_Syntax_Naming.close_term t v
 let close_st_term t v = Pulse_Syntax_Naming.close_st_term t v
 let close_st_term_n t v = Pulse_Syntax_Naming.close_st_term_n t v
 let close_comp t v = Pulse_Syntax_Naming.close_comp t v
+let close_comp_n t v = Pulse_Syntax_Naming.close_comp_n t v
 let comp_pre c =
   match c with
    | C_ST st

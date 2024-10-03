@@ -18,7 +18,7 @@ module Fibonacci
 #lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --ext 'pulse:rvalues'"
+#push-options "--ext 'pulse:rvalues'"
 
 let rec fib (n:nat) : nat =
   if n <= 1 then 1

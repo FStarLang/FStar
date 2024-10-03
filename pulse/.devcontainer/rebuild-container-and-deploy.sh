@@ -4,16 +4,19 @@ set -eux
 DOCKERFILE=.devcontainer/fromscratch/minimal.Dockerfile
 REPO=mtzguido/pulse-base-devcontainer
 
+# Actually, the dockerfile never looks at the context, so
+# we do not have to prevent against any of this.
+#
 # -f to detect worktrees too, where .git is not a directory
-if ! [ -d .git ] && ! [ -f .git ]; then
-	echo "This script must be run from the root of the repo" >&2
-	exit 1
-fi
+# if ! [ -d .git ] && ! [ -f .git ]; then
+#         echo "This script must be run from the root of the repo" >&2
+#         exit 1
+# fi
 
-if ! [ x"$(git clean -dnx)" == x"" ]; then
-	echo "Repository seems dirty: aborting" >&2
-	exit 1
-fi
+# if ! [ x"$(git clean -dnx)" == x"" ]; then
+#         echo "Repository seems dirty: aborting" >&2
+#         exit 1
+# fi
 
 docker build --no-cache -f "${DOCKERFILE}" -t "${REPO}" .
 

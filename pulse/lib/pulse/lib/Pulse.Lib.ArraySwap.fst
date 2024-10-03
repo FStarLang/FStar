@@ -18,7 +18,7 @@ module Pulse.Lib.ArraySwap
 #lang-pulse
 module R = Pulse.Lib.Reference
 module Prf = Pulse.Lib.ArraySwap.Proof
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 2 --ifuel 1"
+#set-options "--fuel 2 --ifuel 1"
 #restart-solver
 
 inline_for_extraction

@@ -27,7 +27,13 @@ module RU = Pulse.RuntimeUtils
 let r_subst_of_rt_subst_elt (x:subst_elt)
   : FStar.Reflection.V2.subst_elt
   = match x with
-    | RT.DT i t -> R2.DT i t
+    | RT.DT i t -> (
+      match R2.inspect_ln t with
+      //map (i->n) specially, to ensure that ranges on opened variables
+      //are assigned properly
+      | R2.Tv_Var n -> R2.DB i n
+      | _ -> R2.DT i t
+    )
     | RT.NT x t -> R2.NT (RT.var_as_namedv x) t
     | RT.ND x i -> R2.NM (RT.var_as_namedv x) i
 
@@ -217,7 +223,8 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' typ x i;
       close_open_inverse_opt' post x (i + 1)
 
-    | Tm_Unreachable -> ()
+    | Tm_Unreachable {c} ->
+      close_open_inverse_comp' c x i
     
     | Tm_ProofHintWithBinders { binders; hint_type; t} ->
       let n = L.length binders in

@@ -284,20 +284,31 @@ let check_renaming
    // with bs. assert goal;
    // rename [pairs] in goal;
    // ...
-   let body = {st with term = Tm_ProofHintWithBinders { ht with binders = [] }} in
-   { st with term = Tm_ProofHintWithBinders { hint_type=ASSERT { p = goal }; binders=bs; t=body } }
+   let body = {st with term = Tm_ProofHintWithBinders { ht with binders = [] };
+                       source = Sealed.seal false; } in
+   { st with
+       term = Tm_ProofHintWithBinders { hint_type=ASSERT { p = goal }; binders=bs; t=body };
+       source = Sealed.seal false;
+   }
 
   | [], None ->
     // if there is no goal, take the goal to be the full current pre
     let lhs, rhs = rewrite_all g pairs pre in
-    let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt} } in
-    { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } }
+    let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt};
+                      source = Sealed.seal false; } in
+    { st with
+        term = Tm_Bind { binder = as_binder tm_unit; head = t; body };
+        source = Sealed.seal false;
+    }
 
   | [], Some goal -> (
       let goal, _ = PC.instantiate_term_implicits g goal None in
       let lhs, rhs = rewrite_all g pairs goal in
-      let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt } } in
-      { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } }
+      let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt };
+                        source = Sealed.seal false; } in
+      { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body };
+                source = Sealed.seal false;
+      }
   )
 
 let check_wild
@@ -480,11 +491,15 @@ let check
                                    t2 = rhs;
                                    tac_opt = Some Pulse.Reflection.Util.slprop_equiv_norm_tm };
                range = st.range;
-               effect_tag = as_effect_hint STT_Ghost } in
+               effect_tag = as_effect_hint STT_Ghost;
+               source = Sealed.seal false;
+    } in
     let st = { term = Tm_Bind { binder = as_binder (wr (`unit) st.range);
                                 head = rw; body };
                range = st.range;
-               effect_tag = body.effect_tag } in
+               effect_tag = body.effect_tag;
+               source = Sealed.seal false;
+    } in
 
     let st =
       match bs with
@@ -494,5 +509,8 @@ let check
                                            binders = bs;
                                            t = st };
           range = st.range;
-          effect_tag = st.effect_tag } in
+          effect_tag = st.effect_tag;
+          source = Sealed.seal false;
+        }
+    in
     check g pre pre_typing post_hint res_ppname st

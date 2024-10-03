@@ -41,7 +41,7 @@ let rec mk_abs (g:env) (qbs:list (option qualifier & binder & bv)) (body:st_term
                (fun _ r -> match r with FStar.Tactics.Result.Success v _ -> Tm_Abs? v.term | _ -> False)
 =
   let with_range (s:st_term') (r:range) : st_term =
-    { term = s; range = r; effect_tag = default_effect_hint }
+    { term = s; range = r; effect_tag = default_effect_hint; source=Sealed.seal false }
   in
   match qbs with
   | [(q, last, last_bv)] -> 
@@ -53,6 +53,11 @@ let rec mk_abs (g:env) (qbs:list (option qualifier & binder & bv)) (body:st_term
     let body = mk_abs g qbs body comp in
     let body = close_st_term body bv.bv_index in
     with_range (Pulse.Syntax.Builder.tm_abs b q empty_ascription body) body.range
+
+let set_impl #g #t (se: RT.sigelt_for g t) (r: bool) (impl: R.term) : Dv (RT.sigelt_for g t) =
+  let checked, se, blob = se in
+  let se = RU.add_attribute se (Extract.CompilerLib.mk_extracted_as_attr impl) in
+  checked, se, blob
 
 #push-options "--z3rlimit_factor 4"
 let check_fndefn
@@ -102,13 +107,24 @@ let check_fndefn
   let elab_derivation = T.ext_getv "pulse:elab_derivation" <> "" in
   let cur_module = T.cur_module () in
 
+  let maybe_add_impl t (se: RT.sigelt_for (fstar_env g) t) : Tac (RT.sigelt_for (fstar_env g) t) =
+    let open Pulse.Extract.Main in begin
+    if C_STGhost? comp then
+      se
+    else if fn_d.isrec then
+      let impl = extract_dv_recursive g body (R.pack_fv (cur_module @ [nm_orig])) in
+      set_impl se true impl
+    else
+      set_impl se false (extract_pulse_dv g body)
+    end in
+
   let mk_main_decl
     (refl_t:typ)
     (_:squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) refl_t)) =
     let nm = fst (inspect_ident id) in
     if elab_derivation
     then RT.mk_checked_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
-    else Pulse.Reflection.Util.mk_opaque_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
+    else Reflection.Util.mk_opaque_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
   in
 
   if fn_d.isrec
@@ -131,7 +147,7 @@ let check_fndefn
     let main_decl = chk, se, Some blob in
     let recursive_decl : RT.sigelt_for (elab_env g) expected_t =
       Rec.tie_knot g rng nm_orig nm_aux refl_t blob in
-    [main_decl], recursive_decl, []
+    [main_decl], maybe_add_impl _ recursive_decl, []
   end
   else begin
     //
@@ -163,7 +179,7 @@ let check_fndefn
     let main_decl = mk_main_decl refl_t () in
     let chk, se, _ = main_decl in
     let main_decl = chk, se, Some blob in
-    [], main_decl, []
+    [], maybe_add_impl _ main_decl, []
   end
 
 let check_fndecl
@@ -189,6 +205,7 @@ let check_fndecl
     };
     range = d.range;
     effect_tag = seal None;
+    source = seal false;
   }
   in
   let body = mk_abs g bs body comp in
@@ -288,7 +305,7 @@ let main t pre : RT.dsl_tac_t = fun (g, expected_t) ->
   res
 
 let check_pulse_core 
-        (as_decl: unit -> Dv (either Pulse.Syntax.decl (option (string & R.range))))
+        (as_decl: unit -> Tac (either Pulse.Syntax.decl (option (string & R.range))))
   : RT.dsl_tac_t
   = fun (env, expected_t) ->
       if ext_getv "pulse:dump_on_failure" <> "1" then

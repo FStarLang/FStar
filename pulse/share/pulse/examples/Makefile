@@ -6,6 +6,7 @@ INCLUDE_PATHS += $(PULSE_HOME)/lib/pulse/c
 OUTPUT_DIRECTORY=_output
 CACHE_DIRECTORY=$(OUTPUT_DIRECTORY)/cache
 
+.PHONY: all
 all: verify test dice
 
 include $(PULSE_SHARE)/Makefile.include
@@ -14,22 +15,21 @@ include $(PULSE_SHARE)/Makefile.include
 dice:
 	+$(MAKE) -C dice
 
-ifeq (,$(CACHE_DIRECTORY))
-	extractiontest_fst_checked=ExtractionTest.fst.checked
-else
-	extractiontest_fst_checked=$(CACHE_DIRECTORY)/ExtractionTest.fst.checked
-endif
+$(OUTPUT_DIRECTORY)/Example_Hashtable.c: $(addprefix $(OUTPUT_DIRECTORY)/,\
+	FStar_Pervasives.krml FStar_Pervasives_Native.krml \
+	Pulse_Lib_Vec.krml \
+	Pulse_Lib_HashTable_Type.krml Pulse_Lib_HashTable_Spec.krml Pulse_Lib_HashTable.krml)
 
-extract: $(extractiontest_fst_checked)
-#	$(FSTAR) --odir $(OUTPUT_DIRECTORY) --codegen OCaml CustomSyntax.fst --extract CustomSyntax
-	$(FSTAR) --codegen OCaml ExtractionTest.fst --extract ExtractionTest
+$(OUTPUT_DIRECTORY)/Example_Unreachable.c: $(addprefix $(OUTPUT_DIRECTORY)/,FStar_Pervasives.krml FStar_Pervasives_Native.krml)
 
-extract_c: $(extractiontest_fst_checked)
-	$(FSTAR) --codegen krml ExtractionTest.fst --extract ExtractionTest
-	$(KRML_HOME)/krml -bundle ExtractionTest=* -skip-compilation $(OUTPUT_DIRECTORY)/ExtractionTest.krml -tmpdir $(OUTPUT_DIRECTORY)
+$(OUTPUT_DIRECTORY)/%.c: $(EXTRA_KRML_DEPS) $(OUTPUT_DIRECTORY)/%.krml
+	$(KRML_HOME)/krml -bundle $*=* $(EXTRA_KRML_OPTS) -skip-linking $+ -tmpdir $(OUTPUT_DIRECTORY)
 
-#	$(FSTAR) --codegen krml Demo.MultiplyByRepeatedAddition.fst --extract '* -Pulse.Lib.Core'
-#	$(FSTAR_HOME)/../karamel/krml -bundle Demo.MultiplyByRepeatedAddition=* -skip-compilation $(OUTPUT_DIRECTORY)/out.krml
+.PHONY: extract
+extract: $(OUTPUT_DIRECTORY)/ExtractionTest.ml
+
+.PHONY: extract_unreachable
+extract_unreachable: $(OUTPUT_DIRECTORY)/Example_Unreachable.ml
 
 ifneq (,$(KRML_HOME))
 test-dpe-c: dice
@@ -38,32 +38,38 @@ test-dpe-c: dice
 test-cbor: dice
 	+$(MAKE) -C dice/cbor
 
-ifeq (,$(CACHE_DIRECTORY))
-	pulsepointstruct_fst_checked=c/PulsePointStruct.fst.checked
-else
-	pulsepointstruct_fst_checked=$(CACHE_DIRECTORY)/PulsePointStruct.fst.checked
-endif
+extract_c: $(OUTPUT_DIRECTORY)/ExtractionTest.c
 
-extract_pulse_c: $(pulsepointstruct_fst_checked)
-	$(FSTAR) --odir $(OUTPUT_DIRECTORY) --codegen krml PulsePointStruct.fst --extract PulsePointStruct
-	$(KRML_HOME)/krml -bundle PulsePointStruct=* -skip-linking $(OUTPUT_DIRECTORY)/PulsePointStruct.krml -tmpdir $(OUTPUT_DIRECTORY)
+extract_pulse_c: $(OUTPUT_DIRECTORY)/PulsePointStruct.c
+
+extract_c_bug166: $(OUTPUT_DIRECTORY)/Bug166.c
+
+extract_c_unreachable: $(OUTPUT_DIRECTORY)/Example_Unreachable.c
+
+extract_c_hashtable: $(OUTPUT_DIRECTORY)/Example_Hashtable.c
 
 else
 test-dpe-c:
 
 test-cbor:
 
+extract_c:
+
 extract_pulse_c:
+
+extract_c_bug166:
+
+extract_c_unreachable:
 
 endif
 
-test: test-cbor extract_pulse_c test-dpe-c test-error-messages
+test: test-cbor extract extract_pulse_c extract_c extract_c_bug166 test-dpe-c test-error-messages extract_c_unreachable extract_c_hashtable
 
 test-error-messages:
 	+$(MAKE) -C bug-reports/error-messages
 
 .PHONY: test-dpe-c test-error-messages
 
-.PHONY: extract_pulse_c
+.PHONY: extract_pulse_c extract_c extract_c_bug166 extract_c_unreachable extract_c_hashtable
 
 .PHONY: test test-cbor test-cbor-raw

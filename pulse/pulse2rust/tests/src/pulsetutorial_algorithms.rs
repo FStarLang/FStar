@@ -35,7 +35,7 @@ pub fn majority<A: Copy + PartialEq>(
         } else {
             k = vk - 1;
             i = vi + 1;
-        };
+        }
     }
     let vk = k;
     let vcand = cand;
@@ -58,7 +58,7 @@ pub fn majority<A: Copy + PartialEq>(
                 i = vi + 1;
             } else {
                 i = vi + 1
-            };
+            }
         }
         let vk1 = k;
         if len < 2 * vk1 { Some(vcand) } else { None }

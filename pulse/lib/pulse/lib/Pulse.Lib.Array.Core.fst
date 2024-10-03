@@ -362,6 +362,41 @@ ensures post
   free arr  
 }
 
+```pulse
+ghost
+fn pts_to_range_share
+  (#a:Type)
+  (arr:array a)
+  (#l #r: nat)
+  (#s:Seq.seq a)
+  (#p:perm)
+      requires pts_to_range arr l r #p s
+      ensures pts_to_range arr l r #(p /. 2.0R) s ** pts_to_range arr l r #(p /. 2.0R) s
+{
+  unfold (pts_to_range arr l r #p s);
+  H.pts_to_range_share arr;
+  fold (pts_to_range arr l r #(p /. 2.0R) s);
+  fold (pts_to_range arr l r #(p /. 2.0R) s);
+}
+```
+
+```pulse
+ghost
+fn pts_to_range_gather
+  (#a:Type)
+  (arr:array a)
+  (#l #r: nat)
+  (#s0 #s1: Seq.seq a)
+  (#p0 #p1:perm)
+      requires pts_to_range arr l r #p0 s0 ** pts_to_range arr l r #p1 s1
+      ensures pts_to_range arr l r #(p0 +. p1) s0 ** pure (s0 == s1)
+{
+  unfold (pts_to_range arr l r #p0 s0);
+  unfold (pts_to_range arr l r #p1 s1);
+  H.pts_to_range_gather arr;
+  fold (pts_to_range arr l r #(p0 +. p1) s0)
+}
+```
 
 ```pulse
 ghost

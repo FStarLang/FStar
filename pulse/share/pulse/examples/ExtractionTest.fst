@@ -45,6 +45,22 @@ fn test_write_10 (x:ref U32.t)
     x := 0ul;
 }
 
+assume val p : int -> slprop
+assume val q : int -> slprop
+
+fn test_inner_ghost_fun ()
+  requires p 1
+  ensures  q 1
+{
+  ghost
+  fn aux (i:int)
+    requires p i
+    ensures  q i
+  {
+    admit()
+  };
+  aux 1
+}
 
 #push-options "--ext 'pulse:rvalues'"
 
@@ -179,4 +195,21 @@ ensures emp
   let n = fib x;
   let m = fib (x + 1);
   (m + n)
+}
+
+
+type data (a b: Type0) =
+  | One: a -> b -> data a b
+  | Two: a -> data a b
+  | Three: b -> a -> data a b
+fn test_that_we_access_the_right_field_in_matches (x: data nat bool)
+  requires emp
+  returns y: nat
+  ensures emp
+{
+  match x {
+    One y z -> { y }
+    Two y -> { y }
+    Three z y -> { y }
+  }
 }

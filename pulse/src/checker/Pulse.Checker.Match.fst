@@ -246,7 +246,7 @@ let check_branch
     fail g (Some e.range) "should not happen: pattern elaborated to Tv_Unknown";
   // T.print ("Elaborated pattern = " ^ T.term_to_string (fst (Some?.v elab_p)));
   let elab_p_tm = fst (Some?.v elab_p) in
-  let eq_typ = mk_sq_eq2 sc_u sc_ty sc (wr elab_p_tm Range.range_0) in
+  let eq_typ = mk_sq_eq2 sc_u sc_ty sc elab_p_tm in
   let g' = push_binding g' hyp_var ({name = Sealed.seal "branch equality"; range = Range.range_0 }) eq_typ in
   let e = open_st_term_bs e pulse_bs in
   let e =
@@ -254,11 +254,14 @@ let check_branch
       term =
         Tm_ProofHintWithBinders {
           binders = [];
-          hint_type = RENAME { pairs = [(sc, elab_p_tm)]; goal=None; tac_opt=None; };
+          hint_type = RENAME { pairs = [(sc, elab_p_tm)];
+                               goal = None;
+                               tac_opt = Some Pulse.Reflection.Util.match_rewrite_tac_tm; };
           t = e;
         };
       range = e.range;
       effect_tag = e.effect_tag;
+      source = Sealed.seal false;
     }
   in
   let pre_typing = tot_typing_weakening_n pulse_bs pre_typing in // weaken w/ binders

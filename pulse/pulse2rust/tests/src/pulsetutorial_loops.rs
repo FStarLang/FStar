@@ -8,7 +8,7 @@ pub fn count_down(x: &mut i64, __v: ()) -> () {
     let mut keep_going = true;
     while keep_going {
         let n = *x;
-        if n == 0 { keep_going = false } else { *x = n - 1 };
+        if n == 0 { keep_going = false } else { *x = n - 1 }
     }
 }
 pub fn count_down3(x: &mut i64, __v: ()) -> () {

@@ -21,6 +21,9 @@ let rec with_context (c:context) (f: unit -> 'a utac) : 'a utac =
     | sr::tl ->
       with_context tl (fun _ ps ->
       FStar_Errors.with_ctx (ctxt_elt_as_string sr) (fun _ -> f () ps)) ps
+let with_error_bound (r:FStar_Range.range) (f: unit -> 'a utac) : 'a utac =
+  fun ps ->
+    FStar_Errors.with_error_bound r (fun _ -> f () ps)
 let disable_admit_smt_queries (f: unit -> 'a utac) : 'a utac =
   fun ps ->
     FStar_Options.with_saved_options (fun _ ->
@@ -29,15 +32,12 @@ let disable_admit_smt_queries (f: unit -> 'a utac) : 'a utac =
     )
 let with_extv (k:string) (v:string) (f: unit -> 'a utac) : 'a utac =
   fun ps ->
-    let open FStar_Options in
-    with_saved_options (fun _ ->
-      let v0 = get_option "ext" in
-      let v1 = match v0 with
-               | List l0 -> List (String (k^"="^v) :: l0)
-      in
-      set_option "ext" v1;
-      f () ps
-    )
+    let open FStar_Options_Ext in
+    let x = FStar_Options_Ext.save() in
+    FStar_Options_Ext.set k v;
+    let res = f () ps in
+    FStar_Options_Ext.restore x;
+    res
 let env_set_context (g:FStar_Reflection_Types.env) (c:context) = g
 let print_exn (e:exn) = Printexc.to_string e
 let debug_at_level_no_module (s:string) =
@@ -52,7 +52,10 @@ let bv_range (bv:FStar_Syntax_Syntax.bv) = FStar_Syntax_Syntax.range_of_bv bv
 let binder_set_range (b:FStar_Syntax_Syntax.binder) (r:FStar_Range.range) =
     { b with FStar_Syntax_Syntax.binder_bv = (bv_set_range b.FStar_Syntax_Syntax.binder_bv r) }
 let binder_range (b:FStar_Syntax_Syntax.binder) = bv_range b.FStar_Syntax_Syntax.binder_bv
-let set_range (t:FStar_Syntax_Syntax.term) (r:FStar_Range.range) = { t with FStar_Syntax_Syntax.pos = r}
+let start_of_range (r:FStar_Range.range) =
+  let open FStar_Compiler_Range in
+  mk_range (file_of_range r) (start_of_range r) (start_of_range r)
+  let set_range (t:FStar_Syntax_Syntax.term) (r:FStar_Range.range) = { t with FStar_Syntax_Syntax.pos = r}
 let set_use_range (t:FStar_Syntax_Syntax.term) (r:FStar_Range.range) = FStar_Syntax_Subst.set_use_range r t
 let error_code_uninstantiated_variable () = FStar_Errors.errno FStar_Errors_Codes.Error_UninstantiatedUnificationVarInTactic
 let is_range_zero (r:FStar_Range.range) = r = FStar_Range.range_0
@@ -63,7 +66,7 @@ let env_set_range (e:FStar_Reflection_Types.env) (r:FStar_Range.range) =
 
 let is_pulse_option_set (x:string) : bool =
   let key = ("pulse:"^x) in
-  let value = FStar_Options.ext_getv key in
+  let value = FStar_Options_Ext.get key in
   value <> ""
 
 module U = FStar_Syntax_Util
@@ -113,6 +116,7 @@ let builtin_lids = [
 
 let deep_transform_to_unary_applications (t:S.term) =
   FStar_Syntax_Visit.visit_term
+    false
     (fun t -> 
       let open S in
       match t.n with

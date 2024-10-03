@@ -68,21 +68,25 @@ let (encode_open_namespaces_and_abbreviations :
       let lid_as_term1 ns = lid_as_term ns r in
       let namespaces =
         let uu___ =
-          FStar_Compiler_List.map lid_as_term1
-            ctx.FStar_Parser_AST_Util.open_namespaces in
-        FStar_Parser_AST.mkConsList r uu___ in
+          let uu___1 =
+            FStar_Compiler_List.map lid_as_term1
+              ctx.FStar_Parser_AST_Util.open_namespaces in
+          FStar_Parser_AST.ListLiteral uu___1 in
+        tm1 uu___ in
       let abbrevs =
         let uu___ =
-          FStar_Compiler_List.map
-            (fun uu___1 ->
-               match uu___1 with
-               | (a, m) ->
-                   let a1 =
-                     let uu___2 = FStar_Ident.string_of_id a in str1 uu___2 in
-                   let m1 = lid_as_term1 m in
-                   FStar_Parser_AST.mkTuple [a1; m1] r)
-            ctx.FStar_Parser_AST_Util.module_abbreviations in
-        FStar_Parser_AST.mkConsList r uu___ in
+          let uu___1 =
+            FStar_Compiler_List.map
+              (fun uu___2 ->
+                 match uu___2 with
+                 | (a, m) ->
+                     let a1 =
+                       let uu___3 = FStar_Ident.string_of_id a in str1 uu___3 in
+                     let m1 = lid_as_term1 m in
+                     FStar_Parser_AST.mkTuple [a1; m1] r)
+              ctx.FStar_Parser_AST_Util.module_abbreviations in
+          FStar_Parser_AST.ListLiteral uu___1 in
+        tm1 uu___ in
       (namespaces, abbrevs)
 let (encode_range :
   FStar_Compiler_Range_Type.range ->
@@ -237,7 +241,7 @@ let (parse_extension_lang :
                let id_and_range_of_decl d =
                  match d with
                  | PulseSyntaxExtension_Sugar.FnDefn
-                     { PulseSyntaxExtension_Sugar.id2 = id;
+                     { PulseSyntaxExtension_Sugar.id1 = id;
                        PulseSyntaxExtension_Sugar.is_rec = uu___2;
                        PulseSyntaxExtension_Sugar.binders2 = uu___3;
                        PulseSyntaxExtension_Sugar.ascription1 = uu___4;
@@ -247,7 +251,7 @@ let (parse_extension_lang :
                        PulseSyntaxExtension_Sugar.range3 = range;_}
                      -> (id, range)
                  | PulseSyntaxExtension_Sugar.FnDecl
-                     { PulseSyntaxExtension_Sugar.id3 = id;
+                     { PulseSyntaxExtension_Sugar.id2 = id;
                        PulseSyntaxExtension_Sugar.binders3 = uu___2;
                        PulseSyntaxExtension_Sugar.ascription2 = uu___3;
                        PulseSyntaxExtension_Sugar.decorations1 = uu___4;
@@ -261,7 +265,7 @@ let (parse_extension_lang :
                      let decors =
                        match d with
                        | PulseSyntaxExtension_Sugar.FnDefn
-                           { PulseSyntaxExtension_Sugar.id2 = uu___3;
+                           { PulseSyntaxExtension_Sugar.id1 = uu___3;
                              PulseSyntaxExtension_Sugar.is_rec = uu___4;
                              PulseSyntaxExtension_Sugar.binders2 = uu___5;
                              PulseSyntaxExtension_Sugar.ascription1 = uu___6;
@@ -272,7 +276,7 @@ let (parse_extension_lang :
                              PulseSyntaxExtension_Sugar.range3 = uu___9;_}
                            -> decorations
                        | PulseSyntaxExtension_Sugar.FnDecl
-                           { PulseSyntaxExtension_Sugar.id3 = uu___3;
+                           { PulseSyntaxExtension_Sugar.id2 = uu___3;
                              PulseSyntaxExtension_Sugar.binders3 = uu___4;
                              PulseSyntaxExtension_Sugar.ascription2 = uu___5;
                              PulseSyntaxExtension_Sugar.decorations1 =
@@ -289,14 +293,16 @@ let (parse_extension_lang :
                            FStar_Parser_AST.eq =
                              (fun d11 ->
                                 fun d2 ->
-                                  PulseSyntaxExtension_Sugar.eq_decl
-                                    (FStar_Dyn.undyn d11)
-                                    (FStar_Dyn.undyn d2));
+                                  let uu___3 = FStar_Dyn.undyn d11 in
+                                  let uu___4 = FStar_Dyn.undyn d2 in
+                                  PulseSyntaxExtension_Sugar.eq_decl uu___3
+                                    uu___4);
                            FStar_Parser_AST.dep_scan =
                              (fun cbs ->
                                 fun d2 ->
+                                  let uu___3 = FStar_Dyn.undyn d2 in
                                   PulseSyntaxExtension_Sugar.scan_decl cbs
-                                    (FStar_Dyn.undyn d2))
+                                    uu___3)
                          } in
                      let d2 =
                        let uu___3 =
@@ -385,8 +391,8 @@ let (desugar_pulse_decl_callback :
           let d =
             let uu___ =
               let uu___1 = PulseSyntaxExtension_Desugar.mk_env env in
-              PulseSyntaxExtension_Desugar.desugar_decl uu___1
-                (FStar_Dyn.undyn blob) in
+              let uu___2 = FStar_Dyn.undyn blob in
+              PulseSyntaxExtension_Desugar.desugar_decl uu___1 uu___2 in
             uu___ Prims.int_zero in
           match FStar_Pervasives_Native.fst d with
           | FStar_Pervasives.Inr (FStar_Pervasives_Native.None) ->
@@ -394,13 +400,16 @@ let (desugar_pulse_decl_callback :
               let rng1 =
                 let uu___ = FStar_Compiler_Range_Ops.file_of_range rng in
                 FStar_Compiler_Range_Type.mk_range uu___ start start in
-              FStar_Errors.raise_error
-                (FStar_Errors_Codes.Fatal_SyntaxError,
-                  "Failed to desugar pulse declaration") rng1
+              FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range
+                rng1 FStar_Errors_Codes.Fatal_SyntaxError ()
+                (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                (Obj.magic "Failed to desugar pulse declaration")
           | FStar_Pervasives.Inr (FStar_Pervasives_Native.Some (msg, rng1))
               ->
-              FStar_Errors.raise_error
-                (FStar_Errors_Codes.Fatal_SyntaxError, msg) rng1
+              FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range
+                rng1 FStar_Errors_Codes.Fatal_SyntaxError ()
+                (Obj.magic FStar_Errors_Msg.is_error_message_string)
+                (Obj.magic msg)
           | FStar_Pervasives.Inl d1 ->
               let blob1 =
                 FStar_Syntax_Util.mk_lazy d1 FStar_Syntax_Syntax.t_bool

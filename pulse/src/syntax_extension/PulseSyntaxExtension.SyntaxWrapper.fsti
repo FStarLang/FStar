@@ -110,6 +110,7 @@ val close_term (t:term) (v:var) : term
 val close_st_term (t:st_term) (v:var) : st_term
 val close_st_term_n (t:st_term) (vs:list var) : st_term
 val close_comp (t:comp) (v:var) : comp
+val close_comp_n (t:comp) (vs:list var) : comp
 val comp_pre (c:comp) : term
 val comp_res (c:comp) : term
 val comp_post (c:comp) : term

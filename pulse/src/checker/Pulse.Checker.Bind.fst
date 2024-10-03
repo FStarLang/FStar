@@ -28,7 +28,7 @@ module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
 module PS = Pulse.Checker.Prover.Substs
 module Abs = Pulse.Checker.Abs
-
+module RU = Pulse.RuntimeUtils
 
 #push-options "--z3rlimit_factor 4 --split_queries no"
 let check_bind_fn
@@ -72,8 +72,8 @@ let check_bind
   (res_ppname:ppname)
   (t:st_term {Tm_Bind? t.term})
   (check:check_t)
-  : T.Tac (checker_result_t g ctxt post_hint) =
-
+  : T.Tac (checker_result_t g ctxt post_hint)
+=
   let g = Pulse.Typing.Env.push_context g "check_bind" t.range in
 
   debug_prover g (fun _ ->
@@ -110,8 +110,12 @@ let check_bind
         //   rename x0 x; ...
         // to leverage the pure case
         if not (eq_tm ty t) then
-          fail g (Some e1.range)
-            (Printf.sprintf "Type mismatch: expected %s, got %s" (P.term_to_string ty) (P.term_to_string t))
+          let open Pulse.PP in
+          fail_doc g (Some e1.range) [
+            text "Type mismatch (NB: this is a syntactic check)";
+            prefix 2 1 (text "Expected:") (pp ty);
+            prefix 2 1 (text "Got:") (pp t);
+          ]
       end;
       r
     in
@@ -126,7 +130,6 @@ let check_bind
     checker_result_for_st_typing d res_ppname
   )
 
-
 let check_tot_bind
   (g:env)
   (pre:term)
@@ -135,8 +138,8 @@ let check_tot_bind
   (res_ppname:ppname)
   (t:st_term { Tm_TotBind? t.term })
   (check:check_t)
-  : T.Tac (checker_result_t g pre post_hint) =
-
+  : T.Tac (checker_result_t g pre post_hint)
+=
   let g = Pulse.Typing.Env.push_context g "check_tot_bind" t.range in
 
   if None? post_hint
@@ -146,13 +149,14 @@ let check_tot_bind
   let Tm_TotBind { binder=b; head=e1; body=e2 } = t.term in
   match Pulse.Checker.Base.is_stateful_application g e1 with
   | Some st_app -> (
+    let st_app = { st_app with source = t.source } in
     let t = { t with term = Tm_Bind { binder=b; head=st_app; body=e2 } } in
     check_bind g pre pre_typing post_hint res_ppname t check
   )
 
   | None -> (
     let head = Tm_Return { expected_type = b.binder_ty; term = e1; insert_eq = true } in
-    let head = { term = head; range = Pulse.RuntimeUtils.range_of_term e1; effect_tag = default_effect_hint } in
+    let head = { term = head; range = Pulse.RuntimeUtils.range_of_term e1; effect_tag = default_effect_hint; source = Sealed.seal false } in
     let t = { t with term = Tm_Bind { binder=b; head; body=e2 } } in
     check_bind g pre pre_typing post_hint res_ppname t check
   )

@@ -384,8 +384,6 @@ let rec extract_mlpattern_to_pat (g:env) (p:S.mlpattern) : env & pat =
 // Given an mllb,
 //   compute the rust let binding mut flag, typ, and initializer
 //
-// If the mllb has Mutable flag, this means either a Tm_WithLocal or Tm_WithLocalArray in pulse
-//
 // Tm_WithLocal in pulse looks like (in mllb): let x : ref t = alloc e, where e : t
 // So we return true, extract t, extract e
 //
@@ -394,7 +392,7 @@ let rec extract_mlpattern_to_pat (g:env) (p:S.mlpattern) : env & pat =
 // Basically, a local array in pulse becomes a mutable reference to a slice in rust
 // Note that the let binding itself is immutable, but the slice is mutable
 //
-// If the mllb does not have Mutable flag, but the initializer is Vec::alloc or Box::alloc,
+// If the initializer is Vec::alloc or Box::alloc,
 //   we extract it as: let mut x = std::vec::new(...) or std::boxed::Box::new(...)
 // So we return true, extract (vec t), extract (Vec::alloc (...)), or
 //              true, extract (box t), extract (Box::new (...))
@@ -404,19 +402,17 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
     typ &        // type of the let binder
     expr =       // init expression
   
-  let is_mut = contains S.Mutable lb.mllb_meta in
-  if is_mut
-  then
     match lb.mllb_def.expr, lb.mllb_tysc with
-    | S.MLE_App ({expr=S.MLE_Name pe}, [init]),
+    | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name pe}, _)}, [init]),
       Some ([], S.MLTY_Named ([ty], pt))
       when S.string_of_mlpath pe = "Pulse.Lib.Reference.alloc" &&
            S.string_of_mlpath pt = "Pulse.Lib.Reference.ref" ->
+      let is_mut = true in
       is_mut,
       extract_mlty g ty,
       extract_mlexpr g init
 
-    | S.MLE_App ({expr=S.MLE_Name pe}, [init; len]),
+    | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name pe}, _)}, [init; len]),
       Some ([], S.MLTY_Named ([ty], pt))
       when S.string_of_mlpath pe = "Pulse.Lib.Array.Core.alloc" &&
            S.string_of_mlpath pt = "Pulse.Lib.Array.Core.array" ->
@@ -428,9 +424,7 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
       mk_reference_expr true (mk_repeat init len)
 
     | _ ->
-      fail (format1 "unexpected initializer for mutable local: %s" (S.mlexpr_to_string lb.mllb_def))
 
-  else
     let is_mut =
       match lb.mllb_def.expr with
       | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _) ->
@@ -476,7 +470,8 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     else mk_expr_path_singl (snd p)
 
     // nested let binding
-  | S.MLE_Let _ -> e |> extract_mlexpr_to_stmts g |> mk_block_expr
+  | S.MLE_Let _ | S.MLE_Seq _ ->
+    e |> extract_mlexpr_to_stmts g |> mk_block_expr
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
     when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tfst" ||
@@ -644,7 +639,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     fail_nyi (format1 "mlexpr %s" (S.mlexpr_to_string e))
 
   | S.MLE_App ({expr=S.MLE_Name p}, [{expr=S.MLE_Fun (_, cond)}; {expr=S.MLE_Fun (_, body)}])
-    when S.string_of_mlpath p = "Pulse.Lib.Core.while_" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Dv.while_" ->
     let expr_while_cond = extract_mlexpr g cond in
     let expr_while_body = extract_mlexpr_to_stmts g body in
     Expr_while {expr_while_cond; expr_while_body}
@@ -656,7 +651,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
   | S.MLE_App ({expr=S.MLE_Name p}, _)
     when S.string_of_mlpath p = "failwith" ||
-         S.string_of_mlpath p = "Pulse.Lib.Core.unreachable" ->
+         S.string_of_mlpath p = "Pulse.Lib.Dv.unreachable" ->
     mk_call (mk_expr_path_singl panic_fn) []
 
   | S.MLE_App ({expr=S.MLE_Name p}, [e1; e2])
@@ -680,8 +675,8 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_CTor (p, args) ->
     let is_native =
-      S.mlpath_to_string p = "FStar.Pervasives.Native.Some" ||
-      S.mlpath_to_string p = "FStar.Pervasives.Native.None" in
+      S.string_of_mlpath p = "FStar.Pervasives.Native.Some" ||
+      S.string_of_mlpath p = "FStar.Pervasives.Native.None" in
     let ty_name =
       match e.mlty with
       | S.MLTY_Named (_, p) -> p |> snd |> enum_or_struct_name
@@ -753,6 +748,21 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
       s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name ty is_mut) e)
     end
 
+  | S.MLE_Seq es ->
+    let rec fixup_nonterminal_exprs = function
+      | [] -> []
+      | [e] -> [e]
+      | Stmt_expr e :: es ->
+        Stmt_local {
+          local_stmt_pat = None;
+          local_stmt_init = Some e;
+        } :: fixup_nonterminal_exprs es
+      | e::es -> e :: fixup_nonterminal_exprs es in
+    let rec aux = function
+      | [] -> []
+      | e::es -> extract_mlexpr_to_stmts g e @ aux es in
+    fixup_nonterminal_exprs (aux es)
+
   | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
     when S.string_of_mlpath p = "failwith" ->
     [Stmt_expr (mk_call (mk_expr_path_singl panic_fn) [])]
@@ -803,7 +813,8 @@ let extract_generic_type_params (tyvars:list S.ty_param)
 
 let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
   let is_rec, lbs = lbs in
-  if is_rec = S.Rec
+  // FIXME: [@@extract_as] marks all replaced lbs as recursive
+  if false && is_rec = S.Rec
   then fail_nyi "recursive let bindings"
   else begin
     let [lb] = lbs in

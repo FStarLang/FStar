@@ -22,6 +22,8 @@ open FStar.PCM
 module G = FStar.Ghost
 module Set = FStar.Set
 module T = FStar.Tactics.V2
+open Pulse.Lib.Dv {}
+open FStar.ExtractAs {}
 
 (* This attribute can be used on the indexes of a slprop
    to instruct the checker to call the SMT solver to relate
@@ -656,6 +658,16 @@ let rewrite_tactic_t = unit -> T.Tac unit
 than SMT. This tactic is also used by the checker when elaborating fold/unfold. *)
 let slprop_equiv_norm (_:unit) : T.Tac unit =
     T.mapply (`slprop_equiv_refl)
+
+let slprop_equiv_ext' (p1 p2:slprop) (_: squash (p1 == p2))
+  : slprop_equiv p1 p2 = slprop_equiv_refl p1
+
+let match_rewrite_tac (_:unit) : T.Tac unit =
+    let b = T.nth_var (-1) in
+    T.norm []; // Needed, or otherwise the `tcut` in grewrite_eq can fail, unsure why.
+    T.grewrite_eq b;
+    T.mapply (`slprop_equiv_ext');
+    T.trefl ()
 
 [@@deprecated "Use (rewrite .. as .. by ..) syntax instead!"]
 val rewrite_by (p:slprop) (q:slprop) 
