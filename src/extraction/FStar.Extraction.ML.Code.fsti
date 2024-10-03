@@ -30,3 +30,5 @@ val string_of_mlty:   mlpath -> mlty -> string
 val pretty:           int -> doc -> string
 
 instance val showable_mlexpr : showable mlexpr
+instance val showable_mlty : showable mlty
+instance val showable_etag : showable e_tag

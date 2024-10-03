@@ -446,6 +446,12 @@ let (string_of_mlconstant :
     | uu___ ->
         FStar_Compiler_Effect.failwith
           "TODO: extract integer constants properly into OCaml"
+let (string_of_etag : FStar_Extraction_ML_Syntax.e_tag -> Prims.string) =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Extraction_ML_Syntax.E_PURE -> ""
+    | FStar_Extraction_ML_Syntax.E_ERASABLE -> "Erased"
+    | FStar_Extraction_ML_Syntax.E_IMPURE -> "Impure"
 let rec (doc_of_mltype' :
   FStar_Extraction_ML_Syntax.mlsymbol ->
     level -> FStar_Extraction_ML_Syntax.mlty -> doc)
@@ -485,12 +491,12 @@ let rec (doc_of_mltype' :
                   parens uu___1 in
             let name1 = ptsym currentModule name in
             let uu___ = reduce1 [args1; text name1] in hbox uu___
-        | FStar_Extraction_ML_Syntax.MLTY_Fun (t1, uu___, t2) ->
+        | FStar_Extraction_ML_Syntax.MLTY_Fun (t1, et, t2) ->
             let d1 = doc_of_mltype currentModule (t_prio_fun, Left) t1 in
             let d2 = doc_of_mltype currentModule (t_prio_fun, Right) t2 in
-            let uu___1 =
-              let uu___2 = reduce1 [d1; text " -> "; d2] in hbox uu___2 in
-            maybe_paren outer t_prio_fun uu___1
+            let uu___ =
+              let uu___1 = reduce1 [d1; text " -> "; d2] in hbox uu___1 in
+            maybe_paren outer t_prio_fun uu___
         | FStar_Extraction_ML_Syntax.MLTY_Top ->
             let uu___ = FStar_Extraction_ML_Util.codegen_fsharp () in
             if uu___ then text "obj" else text "Obj.t"
@@ -1431,3 +1437,9 @@ let (string_of_mlty :
 let (showable_mlexpr :
   FStar_Extraction_ML_Syntax.mlexpr FStar_Class_Show.showable) =
   { FStar_Class_Show.show = (string_of_mlexpr ([], "")) }
+let (showable_mlty :
+  FStar_Extraction_ML_Syntax.mlty FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = (string_of_mlty ([], "")) }
+let (showable_etag :
+  FStar_Extraction_ML_Syntax.e_tag FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = string_of_etag }

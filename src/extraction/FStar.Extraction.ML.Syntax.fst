@@ -97,16 +97,16 @@ let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
 let ty_param_names (tys:list ty_param) : list string =
   tys |> List.map (fun {ty_param_name} -> ty_param_name)
 
-let push_unit (ts : mltyscheme) : mltyscheme =
+let push_unit eff (ts : mltyscheme) : mltyscheme =
     let vs, ty = ts in
-    vs, MLTY_Fun(ml_unit_ty, E_PURE, ty)
+    vs, MLTY_Fun(ml_unit_ty, eff, ty)
 
-let pop_unit (ts : mltyscheme) : mltyscheme =
+let pop_unit (ts : mltyscheme) : e_tag & mltyscheme =
     let vs, ty = ts in
     match ty with
-    | MLTY_Fun (l, E_PURE, t) ->
+    | MLTY_Fun (l, eff, t) ->
         if l = ml_unit_ty
-        then vs, t
+        then eff, (vs, t)
         else failwith "unexpected: pop_unit: domain was not unit"
     | _ ->
         failwith "unexpected: pop_unit: not a function type"

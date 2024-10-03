@@ -42,7 +42,8 @@ type ty_binding = {
 type exp_binding = {
   exp_b_name:mlident;
   exp_b_expr:mlexpr;
-  exp_b_tscheme:mltyscheme
+  exp_b_tscheme:mltyscheme;
+  exp_b_eff: e_tag
 }
 
 type ty_or_exp_b = either ty_binding exp_binding

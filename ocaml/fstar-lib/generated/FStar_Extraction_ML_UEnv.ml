@@ -14,22 +14,28 @@ type exp_binding =
   {
   exp_b_name: FStar_Extraction_ML_Syntax.mlident ;
   exp_b_expr: FStar_Extraction_ML_Syntax.mlexpr ;
-  exp_b_tscheme: FStar_Extraction_ML_Syntax.mltyscheme }
+  exp_b_tscheme: FStar_Extraction_ML_Syntax.mltyscheme ;
+  exp_b_eff: FStar_Extraction_ML_Syntax.e_tag }
 let (__proj__Mkexp_binding__item__exp_b_name :
   exp_binding -> FStar_Extraction_ML_Syntax.mlident) =
   fun projectee ->
     match projectee with
-    | { exp_b_name; exp_b_expr; exp_b_tscheme;_} -> exp_b_name
+    | { exp_b_name; exp_b_expr; exp_b_tscheme; exp_b_eff;_} -> exp_b_name
 let (__proj__Mkexp_binding__item__exp_b_expr :
   exp_binding -> FStar_Extraction_ML_Syntax.mlexpr) =
   fun projectee ->
     match projectee with
-    | { exp_b_name; exp_b_expr; exp_b_tscheme;_} -> exp_b_expr
+    | { exp_b_name; exp_b_expr; exp_b_tscheme; exp_b_eff;_} -> exp_b_expr
 let (__proj__Mkexp_binding__item__exp_b_tscheme :
   exp_binding -> FStar_Extraction_ML_Syntax.mltyscheme) =
   fun projectee ->
     match projectee with
-    | { exp_b_name; exp_b_expr; exp_b_tscheme;_} -> exp_b_tscheme
+    | { exp_b_name; exp_b_expr; exp_b_tscheme; exp_b_eff;_} -> exp_b_tscheme
+let (__proj__Mkexp_binding__item__exp_b_eff :
+  exp_binding -> FStar_Extraction_ML_Syntax.e_tag) =
+  fun projectee ->
+    match projectee with
+    | { exp_b_name; exp_b_expr; exp_b_tscheme; exp_b_eff;_} -> exp_b_eff
 type ty_or_exp_b = (ty_binding, exp_binding) FStar_Pervasives.either
 type binding =
   | Bv of (FStar_Syntax_Syntax.bv * ty_or_exp_b) 
@@ -757,34 +763,38 @@ let (extend_bv :
                        FStar_Extraction_ML_Syntax.with_ty
                          FStar_Extraction_ML_Syntax.MLTY_Top uu___2)
                     else FStar_Extraction_ML_Syntax.with_ty ml_ty mlx in
-                let t_x1 =
+                let uu___1 =
                   if add_unit
                   then FStar_Extraction_ML_Syntax.pop_unit t_x
-                  else t_x in
-                let exp_binding1 =
-                  {
-                    exp_b_name = mlident;
-                    exp_b_expr = mlx1;
-                    exp_b_tscheme = t_x1
-                  } in
-                let gamma = (Bv (x, (FStar_Pervasives.Inr exp_binding1))) ::
-                  (g.env_bindings) in
-                let tcenv =
-                  let uu___1 = FStar_Syntax_Syntax.binders_of_list [x] in
-                  FStar_TypeChecker_Env.push_binders g.env_tcenv uu___1 in
-                ({
-                   env_tcenv = tcenv;
-                   env_bindings = gamma;
-                   env_mlident_map = mlident_map;
-                   env_remove_typars = (g.env_remove_typars);
-                   mlpath_of_lid = (g.mlpath_of_lid);
-                   env_fieldname_map = (g.env_fieldname_map);
-                   mlpath_of_fieldname = (g.mlpath_of_fieldname);
-                   tydefs = (g.tydefs);
-                   type_names = (g.type_names);
-                   tydef_declarations = (g.tydef_declarations);
-                   currentModule = (g.currentModule)
-                 }, mlident, exp_binding1)
+                  else (FStar_Extraction_ML_Syntax.E_PURE, t_x) in
+                (match uu___1 with
+                 | (eff, t_x1) ->
+                     let exp_binding1 =
+                       {
+                         exp_b_name = mlident;
+                         exp_b_expr = mlx1;
+                         exp_b_tscheme = t_x1;
+                         exp_b_eff = eff
+                       } in
+                     let gamma =
+                       (Bv (x, (FStar_Pervasives.Inr exp_binding1))) ::
+                       (g.env_bindings) in
+                     let tcenv =
+                       let uu___2 = FStar_Syntax_Syntax.binders_of_list [x] in
+                       FStar_TypeChecker_Env.push_binders g.env_tcenv uu___2 in
+                     ({
+                        env_tcenv = tcenv;
+                        env_bindings = gamma;
+                        env_mlident_map = mlident_map;
+                        env_remove_typars = (g.env_remove_typars);
+                        mlpath_of_lid = (g.mlpath_of_lid);
+                        env_fieldname_map = (g.env_fieldname_map);
+                        mlpath_of_fieldname = (g.mlpath_of_fieldname);
+                        tydefs = (g.tydefs);
+                        type_names = (g.type_names);
+                        tydef_declarations = (g.tydef_declarations);
+                        currentModule = (g.currentModule)
+                      }, mlident, exp_binding1))
 let (burn_name : uenv -> FStar_Extraction_ML_Syntax.mlident -> uenv) =
   fun g ->
     fun i ->
@@ -874,33 +884,36 @@ let (extend_fv :
                     FStar_Extraction_ML_Syntax.with_ty
                       FStar_Extraction_ML_Syntax.MLTY_Top uu___2
                   else FStar_Extraction_ML_Syntax.with_ty ml_ty mly in
-                let t_x1 =
+                let uu___2 =
                   if add_unit
                   then FStar_Extraction_ML_Syntax.pop_unit t_x
-                  else t_x in
-                let exp_binding1 =
-                  {
-                    exp_b_name = mlsymbol;
-                    exp_b_expr = mly1;
-                    exp_b_tscheme = t_x1
-                  } in
-                let gamma = (Fv (x, exp_binding1)) :: (g1.env_bindings) in
-                let mlident_map =
-                  FStar_Compiler_Util.psmap_add g1.env_mlident_map mlsymbol
-                    "" in
-                ({
-                   env_tcenv = (g1.env_tcenv);
-                   env_bindings = gamma;
-                   env_mlident_map = mlident_map;
-                   env_remove_typars = (g1.env_remove_typars);
-                   mlpath_of_lid = (g1.mlpath_of_lid);
-                   env_fieldname_map = (g1.env_fieldname_map);
-                   mlpath_of_fieldname = (g1.mlpath_of_fieldname);
-                   tydefs = (g1.tydefs);
-                   type_names = (g1.type_names);
-                   tydef_declarations = (g1.tydef_declarations);
-                   currentModule = (g1.currentModule)
-                 }, mlsymbol, exp_binding1)
+                  else (FStar_Extraction_ML_Syntax.E_PURE, t_x) in
+                (match uu___2 with
+                 | (eff, t_x1) ->
+                     let exp_binding1 =
+                       {
+                         exp_b_name = mlsymbol;
+                         exp_b_expr = mly1;
+                         exp_b_tscheme = t_x1;
+                         exp_b_eff = eff
+                       } in
+                     let gamma = (Fv (x, exp_binding1)) :: (g1.env_bindings) in
+                     let mlident_map =
+                       FStar_Compiler_Util.psmap_add g1.env_mlident_map
+                         mlsymbol "" in
+                     ({
+                        env_tcenv = (g1.env_tcenv);
+                        env_bindings = gamma;
+                        env_mlident_map = mlident_map;
+                        env_remove_typars = (g1.env_remove_typars);
+                        mlpath_of_lid = (g1.mlpath_of_lid);
+                        env_fieldname_map = (g1.env_fieldname_map);
+                        mlpath_of_fieldname = (g1.mlpath_of_fieldname);
+                        tydefs = (g1.tydefs);
+                        type_names = (g1.type_names);
+                        tydef_declarations = (g1.tydef_declarations);
+                        currentModule = (g1.currentModule)
+                      }, mlsymbol, exp_binding1))
           else
             (let uu___2 =
                let uu___3 =

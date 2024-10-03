@@ -779,19 +779,20 @@ let (ty_param_names : ty_param Prims.list -> Prims.string Prims.list) =
       (fun uu___ ->
          match uu___ with
          | { ty_param_name; ty_param_attrs = uu___1;_} -> ty_param_name) tys
-let (push_unit : mltyscheme -> mltyscheme) =
-  fun ts ->
-    let uu___ = ts in
-    match uu___ with | (vs, ty) -> (vs, (MLTY_Fun (ml_unit_ty, E_PURE, ty)))
-let (pop_unit : mltyscheme -> mltyscheme) =
+let (push_unit : e_tag -> mltyscheme -> mltyscheme) =
+  fun eff ->
+    fun ts ->
+      let uu___ = ts in
+      match uu___ with | (vs, ty) -> (vs, (MLTY_Fun (ml_unit_ty, eff, ty)))
+let (pop_unit : mltyscheme -> (e_tag * mltyscheme)) =
   fun ts ->
     let uu___ = ts in
     match uu___ with
     | (vs, ty) ->
         (match ty with
-         | MLTY_Fun (l, E_PURE, t) ->
+         | MLTY_Fun (l, eff, t) ->
              if l = ml_unit_ty
-             then (vs, t)
+             then (eff, (vs, t))
              else
                FStar_Compiler_Effect.failwith
                  "unexpected: pop_unit: domain was not unit"

@@ -314,6 +314,11 @@ let string_of_mlconstant (sctt : mlconstant) =
 
 
 (* -------------------------------------------------------------------- *)
+let string_of_etag = function
+    | E_PURE -> ""
+    | E_ERASABLE -> "Erased"
+    | E_IMPURE -> "Impure"
+
 let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
     match ty with
     | MLTY_Var x ->
@@ -344,7 +349,7 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
         hbox (reduce1 [args; text name])
     end
 
-    | MLTY_Fun (t1, _, t2) ->
+    | MLTY_Fun (t1, et, t2) ->
         let d1 = doc_of_mltype currentModule (t_prio_fun, Left ) t1 in
         let d2 = doc_of_mltype currentModule (t_prio_fun, Right) t2 in
         maybe_paren outer t_prio_fun (hbox (reduce1 [d1; text " -> "; d2]))
@@ -853,4 +858,12 @@ let string_of_mlty (cmod) (e:mlty) =
 
 instance showable_mlexpr : showable mlexpr = {
   show = string_of_mlexpr ([], "");
+}
+
+instance showable_mlty : showable mlty = {
+  show = string_of_mlty ([], "");
+}
+
+instance showable_etag : showable e_tag = {
+  show = string_of_etag
 }
