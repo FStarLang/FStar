@@ -774,6 +774,9 @@ let (proc_guard' :
                 (fun uu___1 ->
                    (fun uu___1 ->
                       let uu___1 = Obj.magic uu___1 in
+                      let imps =
+                        FStar_TypeChecker_Common.as_implicits
+                          g.FStar_TypeChecker_Common.implicits in
                       (match sc_opt with
                        | FStar_Pervasives_Native.Some
                            (FStar_Syntax_Syntax.Allow_untyped r) ->
@@ -781,12 +784,9 @@ let (proc_guard' :
                              (fun imp ->
                                 FStar_Tactics_Monad.mark_uvar_with_should_check_tag
                                   imp.FStar_TypeChecker_Common.imp_uvar
-                                  (FStar_Syntax_Syntax.Allow_untyped r))
-                             g.FStar_TypeChecker_Common.implicits
+                                  (FStar_Syntax_Syntax.Allow_untyped r)) imps
                        | uu___3 -> ());
-                      (let uu___3 =
-                         FStar_Tactics_Monad.add_implicits
-                           g.FStar_TypeChecker_Common.implicits in
+                      (let uu___3 = FStar_Tactics_Monad.add_implicits imps in
                        Obj.magic
                          (FStar_Class_Monad.op_let_Bang
                             FStar_Tactics_Monad.monad_tac () () uu___3
@@ -1268,8 +1268,12 @@ let (__do_unify_wflags :
                                                                     uu___7 in
                                                                     let uu___8
                                                                     =
-                                                                    FStar_Tactics_Monad.add_implicits
+                                                                    let uu___9
+                                                                    =
+                                                                    FStar_TypeChecker_Common.as_implicits
                                                                     g.FStar_TypeChecker_Common.implicits in
+                                                                    FStar_Tactics_Monad.add_implicits
+                                                                    uu___9 in
                                                                     Obj.magic
                                                                     (FStar_Class_Monad.op_let_Bang
                                                                     FStar_Tactics_Monad.monad_tac
@@ -11896,10 +11900,12 @@ let (refl_instantiate_implicits :
                                    FStar_TypeChecker_Rel.resolve_implicits g3
                                      uu___5 in
                                  let bvs_and_ts =
-                                   match guard1.FStar_TypeChecker_Common.implicits
-                                   with
+                                   let uu___5 =
+                                     FStar_TypeChecker_Common.as_implicits
+                                       guard1.FStar_TypeChecker_Common.implicits in
+                                   match uu___5 with
                                    | [] -> []
-                                   | uu___5 ->
+                                   | imps ->
                                        let l =
                                          FStar_Compiler_List.map
                                            (fun uu___6 ->
@@ -11926,8 +11932,7 @@ let (refl_instantiate_implicits :
                                                       FStar_Pervasives_Native.None
                                                       uu___12 in
                                                   ((imp_uvar.FStar_Syntax_Syntax.ctx_uvar_head),
-                                                    uu___10, uu___11))
-                                           guard1.FStar_TypeChecker_Common.implicits in
+                                                    uu___10, uu___11)) imps in
                                        (FStar_Compiler_List.iter
                                           (fun uu___7 ->
                                              match uu___7 with
@@ -12364,43 +12369,46 @@ let (refl_try_unify :
                                                   FStar_TypeChecker_Rel.resolve_implicits
                                                     g2 uu___5 in
                                                 let b =
+                                                  let uu___5 =
+                                                    FStar_TypeChecker_Common.as_implicits
+                                                      guard2.FStar_TypeChecker_Common.implicits in
                                                   FStar_Compiler_List.existsb
-                                                    (fun uu___5 ->
-                                                       match uu___5 with
+                                                    (fun uu___6 ->
+                                                       match uu___6 with
                                                        | {
                                                            FStar_TypeChecker_Common.imp_reason
-                                                             = uu___6;
+                                                             = uu___7;
                                                            FStar_TypeChecker_Common.imp_uvar
                                                              =
                                                              {
                                                                FStar_Syntax_Syntax.ctx_uvar_head
                                                                  =
-                                                                 (uv, uu___7,
-                                                                  uu___8);
+                                                                 (uv, uu___8,
+                                                                  uu___9);
                                                                FStar_Syntax_Syntax.ctx_uvar_gamma
-                                                                 = uu___9;
-                                                               FStar_Syntax_Syntax.ctx_uvar_binders
                                                                  = uu___10;
-                                                               FStar_Syntax_Syntax.ctx_uvar_reason
+                                                               FStar_Syntax_Syntax.ctx_uvar_binders
                                                                  = uu___11;
-                                                               FStar_Syntax_Syntax.ctx_uvar_range
+                                                               FStar_Syntax_Syntax.ctx_uvar_reason
                                                                  = uu___12;
+                                                               FStar_Syntax_Syntax.ctx_uvar_range
+                                                                 = uu___13;
                                                                FStar_Syntax_Syntax.ctx_uvar_meta
-                                                                 = uu___13;_};
+                                                                 = uu___14;_};
                                                            FStar_TypeChecker_Common.imp_tm
-                                                             = uu___14;
+                                                             = uu___15;
                                                            FStar_TypeChecker_Common.imp_range
-                                                             = uu___15;_}
+                                                             = uu___16;_}
                                                            ->
-                                                           let uu___16 =
-                                                             let uu___17 =
+                                                           let uu___17 =
+                                                             let uu___18 =
                                                                FStar_Unionfind.puf_unique_id
                                                                  uv in
                                                              FStar_Compiler_Util.pimap_try_find
-                                                               tbl uu___17 in
-                                                           uu___16 =
+                                                               tbl uu___18 in
+                                                           uu___17 =
                                                              FStar_Pervasives_Native.None)
-                                                    guard2.FStar_TypeChecker_Common.implicits in
+                                                    uu___5 in
                                                 if b
                                                 then []
                                                 else
@@ -13354,8 +13362,10 @@ let (proofstate_of_goal_ty :
         match uu___ with
         | (g, g_u) ->
             let ps =
-              proofstate_of_goals rng env3 [g]
-                g_u.FStar_TypeChecker_Common.implicits in
+              let uu___1 =
+                FStar_TypeChecker_Common.as_implicits
+                  g_u.FStar_TypeChecker_Common.implicits in
+              proofstate_of_goals rng env3 [g] uu___1 in
             let uu___1 = FStar_Tactics_Types.goal_witness g in (ps, uu___1)
 let (proofstate_of_all_implicits :
   FStar_Compiler_Range_Type.range ->
@@ -13444,7 +13454,8 @@ let run_unembedded_tactic_on_ps_and_solve_remaining :
                                 FStar_TypeChecker_Common.deferred = [];
                                 FStar_TypeChecker_Common.univ_ineqs =
                                   ([], []);
-                                FStar_TypeChecker_Common.implicits = []
+                                FStar_TypeChecker_Common.implicits =
+                                  (FStar_TypeChecker_Common.Flat [])
                               } in
                             let uu___3 = FStar_Tactics_Types.goal_env g in
                             FStar_TypeChecker_Rel.force_trivial_guard uu___3
@@ -13579,7 +13590,8 @@ let run_tactic_on_ps_and_solve_remaining :
                                FStar_TypeChecker_Common.deferred_to_tac = [];
                                FStar_TypeChecker_Common.deferred = [];
                                FStar_TypeChecker_Common.univ_ineqs = ([], []);
-                               FStar_TypeChecker_Common.implicits = []
+                               FStar_TypeChecker_Common.implicits =
+                                 (FStar_TypeChecker_Common.Flat [])
                              } in
                            let uu___3 = FStar_Tactics_Types.goal_env g in
                            FStar_TypeChecker_Rel.force_trivial_guard uu___3

@@ -486,6 +486,9 @@ let (proc_guard' :
                    FStar_Compiler_Util.print2 "Processing guard (%s:%s)\n"
                      reason uu___1)
                 (fun uu___ ->
+                   let imps =
+                     FStar_TypeChecker_Common.as_implicits
+                       g.FStar_TypeChecker_Common.implicits in
                    (match sc_opt with
                     | FStar_Pervasives_Native.Some
                         (FStar_Syntax_Syntax.Allow_untyped r) ->
@@ -493,12 +496,9 @@ let (proc_guard' :
                           (fun imp ->
                              mark_uvar_with_should_check_tag
                                imp.FStar_TypeChecker_Common.imp_uvar
-                               (FStar_Syntax_Syntax.Allow_untyped r))
-                          g.FStar_TypeChecker_Common.implicits
+                               (FStar_Syntax_Syntax.Allow_untyped r)) imps
                     | uu___2 -> ());
-                   (let uu___2 =
-                      FStar_Tactics_Monad.add_implicits
-                        g.FStar_TypeChecker_Common.implicits in
+                   (let uu___2 = FStar_Tactics_Monad.add_implicits imps in
                     FStar_Class_Monad.op_let_Bang
                       FStar_Tactics_Monad.monad_tac () () uu___2
                       (fun uu___3 ->
@@ -1055,8 +1055,12 @@ let (__do_unify_wflags :
                                                                     uu___8 in
                                                                     let uu___9
                                                                     =
-                                                                    FStar_Tactics_Monad.add_implicits
+                                                                    let uu___10
+                                                                    =
+                                                                    FStar_TypeChecker_Common.as_implicits
                                                                     g.FStar_TypeChecker_Common.implicits in
+                                                                    FStar_Tactics_Monad.add_implicits
+                                                                    uu___10 in
                                                                     Obj.magic
                                                                     (FStar_Class_Monad.op_let_Bang
                                                                     FStar_Tactics_Monad.monad_tac

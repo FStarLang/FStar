@@ -1888,14 +1888,14 @@ let guard_of_guard_formula g = {
   deferred=[];
   deferred_to_tac=[];
   univ_ineqs=([], []);
-  implicits=[]
+  implicits=Flat []
 }
 
 let guard_form g = g.guard_f
 
 let is_trivial g = match g with
     | {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=i} ->
-      i |> BU.for_all (fun imp ->
+      as_implicits i |> BU.for_all (fun imp ->
            (Allow_unresolved? (U.ctx_uvar_should_check imp.imp_uvar))
            || (match Unionfind.find imp.imp_uvar.ctx_uvar_head with
                | Some _ -> true
@@ -2025,7 +2025,7 @@ let new_tac_implicit_var
             } in
   if !dbg_ImplicitTrace then
     BU.print1 "Just created uvar for implicit {%s}\n" (show ctx_uvar.ctx_uvar_head);
-  let g = {trivial_guard with implicits=[imp]} in
+  let g = {trivial_guard with implicits=Flat [imp]} in
   t, (ctx_uvar, r), g
 
 let new_implicit_var_aux reason r env k should_check meta unrefine =

@@ -1582,7 +1582,8 @@ let (synthesize :
                                     FStar_TypeChecker_Common.deferred = [];
                                     FStar_TypeChecker_Common.univ_ineqs =
                                       ([], []);
-                                    FStar_TypeChecker_Common.implicits = []
+                                    FStar_TypeChecker_Common.implicits =
+                                      (FStar_TypeChecker_Common.Flat [])
                                   } in
                                 let uu___6 = FStar_Tactics_Types.goal_env g in
                                 FStar_TypeChecker_Rel.force_trivial_guard
@@ -1663,7 +1664,7 @@ let (solve_implicits :
                                        FStar_TypeChecker_Common.univ_ineqs =
                                          ([], []);
                                        FStar_TypeChecker_Common.implicits =
-                                         []
+                                         (FStar_TypeChecker_Common.Flat [])
                                      } in
                                    FStar_Profiling.profile
                                      (fun uu___8 ->
@@ -2226,7 +2227,9 @@ let (splice :
                                                     FStar_TypeChecker_Common.univ_ineqs
                                                       = ([], []);
                                                     FStar_TypeChecker_Common.implicits
-                                                      = []
+                                                      =
+                                                      (FStar_TypeChecker_Common.Flat
+                                                         [])
                                                   } in
                                                 let uu___11 =
                                                   FStar_Tactics_Types.goal_env
@@ -2518,7 +2521,9 @@ let (postprocess :
                                            FStar_TypeChecker_Common.univ_ineqs
                                              = ([], []);
                                            FStar_TypeChecker_Common.implicits
-                                             = []
+                                             =
+                                             (FStar_TypeChecker_Common.Flat
+                                                [])
                                          } in
                                        let uu___8 =
                                          FStar_Tactics_Types.goal_env g in

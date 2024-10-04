@@ -333,7 +333,7 @@ let new_uvar (reason:string) (env:env) (typ:typ)
     let u, ctx_uvar, g_u =
         Env.new_tac_implicit_var reason rng env typ should_check uvar_typedness_deps None false
     in
-    bind (add_implicits g_u.implicits) (fun _ ->
+    bind (add_implicits (as_implicits g_u.implicits)) (fun _ ->
     ret (u, fst ctx_uvar))
 
 let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) (sc_opt:option should_check_uvar) (rng:Range.range) opts label : tac goal =
@@ -397,7 +397,7 @@ let if_verbose f = if_verbose_tac (fun _ -> f(); ret ())
 let compress_implicits : tac unit =
     bind get (fun ps ->
     let imps = ps.all_implicits in
-    let g = { Env.trivial_guard with implicits = imps } in
+    let g = { Env.trivial_guard with implicits = Flat imps } in
     let imps = Rel.resolve_implicits_tac ps.main_context g in
     let ps' = { ps with all_implicits = List.map fst imps } in
     set ps')
