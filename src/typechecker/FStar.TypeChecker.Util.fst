@@ -36,6 +36,7 @@ open FStar.Syntax
 open FStar.Dyn
 open FStar.Class.Show
 open FStar.Class.PP
+open FStar.Class.Monoid
 
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
@@ -2863,10 +2864,13 @@ let instantiate_one_binder (env:env_t) (r:Range.range) (b:binder) : term & typ &
     BU.print1 "instantiate_one_binder: result = %s\n" (show (r._1, r._2));
   r
 
+(* Will instantiate e, by applying it to some unification variables for its implicit
+arguments, if that is needed to match the expected type in the environment. [t] is the type
+of [e]. Returns elaborated [e'], its type [t'], and a guard. *)
 let maybe_instantiate (env:Env.env) (e:term) (t:typ) : term & typ & guard_t =
   let torig = SS.compress t in
   if not env.instantiate_imp
-  then e, torig, Env.trivial_guard
+  then e, torig, mzero
   else begin
        if Debug.high () then
          BU.print3 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
@@ -2927,9 +2931,9 @@ let maybe_instantiate (env:Env.env) (e:term) (t:typ) : term & typ & guard_t =
                       let tm, ty, aq, g = instantiate_one_binder env e.pos b in
                       let subst = NT(b.binder_bv, tm)::subst in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
-                      (tm, aq)::args, bs, subst, Env.conj_guard g g'
+                      (tm, aq)::args, bs, subst, g ++ g'
 
-                 | _, bs -> [], bs, subst, Env.trivial_guard
+                 | _, bs -> [], bs, subst, mzero
               in
               let args, bs, subst, guard = aux [] (inst_n_binders t) bs in
               begin match args, bs with
