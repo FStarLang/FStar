@@ -122,3 +122,7 @@ val split (#t: Type) (mutb: bool) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq
 val join (#t: Type) (s1: slice t) (#p: perm) (#v1: Seq.seq t) (s2: slice t) (#v2: Seq.seq t) (#i: SZ.t) (s: slice t) : stt_ghost unit emp_inames
     (pts_to s1 #p v1 ** pts_to s2 #p v2 ** is_split s p i s1 s2)
     (fun _ -> pts_to s #p (Seq.append v1 v2))
+
+val copy (#t: Type) (dst: slice t) (#p: perm) (src: slice t) (#v: Ghost.erased (Seq.seq t)) : stt unit
+    (exists* v_dst . pts_to dst v_dst ** pts_to src #p v ** pure (len src == len dst))
+    (fun _ -> pts_to dst v ** pts_to src #p v)

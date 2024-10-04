@@ -36,13 +36,15 @@ val op_Array_Access
         (i: SZ.t)
         (#p: perm)
         (#fp: footprint t)
-        (#s: Ghost.erased (Seq.seq t){SZ.v i < Seq.length s})
+        (#s: Ghost.erased (Seq.seq t))
   : stt t
         (requires
-            pts_to a #p fp s)
+            pts_to a #p fp s ** pure (SZ.v i < Seq.length s))
         (ensures fun res ->
             pts_to a #p fp s **
-            pure (res == Seq.index s (SZ.v i)))
+            pure (
+              SZ.v i < Seq.length s /\
+              res == Seq.index s (SZ.v i)))
 
 (* Written a.(i) <- v *)
 val op_Array_Assignment
@@ -51,12 +53,15 @@ val op_Array_Assignment
         (i: SZ.t)
         (v: t)
         (#fp: footprint t)
-        (#s: Ghost.erased (Seq.seq t) {SZ.v i < Seq.length s})
+        (#s: Ghost.erased (Seq.seq t))
   : stt unit
         (requires
-            pts_to a fp s)
-        (ensures fun res ->
-            pts_to a fp (Seq.upd s (SZ.v i) v))
+            pts_to a fp s ** pure (SZ.v i < Seq.length s))
+        (ensures fun res -> exists* s' .
+            pts_to a fp s' **
+            pure (SZ.v i < Seq.length s /\
+              s' == Seq.upd s (SZ.v i) v
+            ))
 
 val share
   (#a:Type)
@@ -119,3 +124,36 @@ val split (#t: Type) (s: ptr t) (#p: perm) (#fp: footprint t) (#v: Ghost.erased 
 val join (#t: Type) (s1: ptr t) (#p: perm) (#fp1: footprint t) (#v1: Seq.seq t) (s2: ptr t) (#fp2: footprint t {adjacent fp1 fp2}) (#v2: Seq.seq t) : stt_ghost unit emp_inames
     (pts_to s1 #p fp1 v1 ** pts_to s2 #p fp2 v2)
     (fun _ -> pts_to s1 #p (merge fp1 fp2) (Seq.append v1 v2))
+
+let blit_post
+(#t:_) (s0 s1:Ghost.erased (Seq.seq t))
+           (idx_src: SZ.t)
+           (idx_dst: SZ.t)
+           (len: SZ.t)
+           (s1' : Seq.seq t)
+: Tot prop
+=
+        SZ.v idx_src + SZ.v len <= Seq.length s0 /\
+        SZ.v idx_dst + SZ.v len <= Seq.length s1 /\
+        Seq.length s1' == Seq.length s1 /\
+        Seq.slice s1' (SZ.v idx_dst) (SZ.v idx_dst + SZ.v len) `Seq.equal`
+          Seq.slice s0 (SZ.v idx_src) (SZ.v idx_src + SZ.v len) /\
+        Seq.slice s1' 0 (SZ.v idx_dst) `Seq.equal`
+          Seq.slice s1 0 (SZ.v idx_dst) /\
+        Seq.slice s1' (SZ.v idx_dst + SZ.v len) (Seq.length s1) `Seq.equal`
+          Seq.slice s1 (SZ.v idx_dst + SZ.v len) (Seq.length s1)
+
+val blit (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t)) (#fp0 #fp1: footprint t)
+           (src:ptr t)
+           (idx_src: SZ.t)
+           (dst:ptr t)
+           (idx_dst: SZ.t)
+           (len: SZ.t)
+  : stt unit
+    (pts_to src #p0 fp0 s0 ** pts_to dst fp1 s1 ** pure (
+      SZ.v idx_src + SZ.v len <= Seq.length s0 /\
+      SZ.v idx_dst + SZ.v len <= Seq.length s1
+    ))
+    (fun _ -> exists* s1' . pts_to src #p0 fp0 s0 ** pts_to dst fp1 s1' **
+      pure (blit_post s0 s1 idx_src idx_dst len s1')
+    )

@@ -200,3 +200,20 @@ fn join (#t: Type) (s1: slice t) (#p: perm) (#v1: Seq.seq t) (s2: slice t) (#v2:
     fold (pts_to s #p (Seq.append v1 v2))
 }
 ```
+
+```pulse
+fn copy
+  (#t: Type) (dst: slice t) (#p: perm) (src: slice t) (#v: Ghost.erased (Seq.seq t))
+requires
+  (exists* v_dst . pts_to dst v_dst ** pts_to src #p v ** pure (len src == len dst))
+ensures
+  (pts_to dst v ** pts_to src #p v)
+{
+  with v_dst . assert (pts_to dst v_dst);
+  unfold (pts_to dst v_dst);
+  unfold (pts_to src #p v);
+  AP.blit src.elt 0sz dst.elt 0sz src.len;
+  fold (pts_to src #p v);
+  fold (pts_to dst v)
+}
+```

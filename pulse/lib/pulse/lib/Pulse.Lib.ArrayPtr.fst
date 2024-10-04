@@ -69,13 +69,15 @@ fn op_Array_Access
         (i: SZ.t)
         (#p: perm)
         (#fp: footprint t)
-        (#s: Ghost.erased (Seq.seq t){SZ.v i < Seq.length s})
-        requires
-            pts_to a #p fp s
-        returns res: t
-        ensures
+        (#s: Ghost.erased (Seq.seq t))
+   requires
+     pts_to a #p fp s ** pure (SZ.v i < Seq.length s)
+   returns res: t
+   ensures
             pts_to a #p fp s **
-            pure (res == Seq.index s (SZ.v i))
+            pure (
+              SZ.v i < Seq.length s /\
+              res == Seq.index s (SZ.v i))
 {
     unfold (pts_to a #p fp s);
     A.pts_to_range_prop a.base;
@@ -92,11 +94,14 @@ fn op_Array_Assignment
         (i: SZ.t)
         (v: t)
         (#fp: footprint t)
-        (#s: Ghost.erased (Seq.seq t) {SZ.v i < Seq.length s})
-        requires
-            pts_to a fp s
-        ensures
-            pts_to a fp (Seq.upd s (SZ.v i) v)
+        (#s: Ghost.erased (Seq.seq t))
+   requires
+     pts_to a fp s ** pure (SZ.v i < Seq.length s)
+   ensures exists* s' .
+            pts_to a fp s' **
+            pure (SZ.v i < Seq.length s /\
+              s' == Seq.upd s (SZ.v i) v
+            )
 {
     unfold (pts_to a fp s);
     A.pts_to_range_prop a.base;
@@ -203,5 +208,62 @@ fn join (#t: Type) (s1: ptr t) (#p: perm) (#fp1: footprint t) (#v1: Seq.seq t) (
         as (A.pts_to_range s1.base (SZ.v s1.offset + SZ.v fp1.len) (SZ.v s1.offset + SZ.v (merge fp1 fp2).len) #p v2);
     A.pts_to_range_join s1.base (SZ.v s1.offset) (SZ.v s1.offset + SZ.v fp1.len) (SZ.v s1.offset + SZ.v (merge fp1 fp2).len);
     fold (pts_to s1 #p (merge fp1 fp2) (Seq.append v1 v2))
+}
+```
+
+module R = Pulse.Lib.Reference
+
+```pulse
+fn blit (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t)) (#fp0 #fp1: footprint t)
+           (src:ptr t)
+           (idx_src: SZ.t)
+           (dst:ptr t)
+           (idx_dst: SZ.t)
+           (len: SZ.t)
+requires
+    (pts_to src #p0 fp0 s0 ** pts_to dst fp1 s1 ** pure (
+      SZ.v idx_src + SZ.v len <= Seq.length s0 /\
+      SZ.v idx_dst + SZ.v len <= Seq.length s1
+    ))
+ensures
+    (exists* s1' . pts_to src #p0 fp0 s0 ** pts_to dst fp1 s1' **
+      pure (blit_post s0 s1 idx_src idx_dst len s1')
+    )
+{
+  unfold (pts_to src #p0 fp0 s0);
+  A.pts_to_range_prop src.base;
+  fold (pts_to src #p0 fp0 s0);
+  let mut pi = 0sz;
+  while (
+    let i = !pi;
+    SZ.lt i len
+  )
+  invariant b . exists* i s1' .
+    R.pts_to pi i **
+    pts_to src #p0 fp0 s0 **
+    pts_to dst fp1 s1' **
+    pure (
+      SZ.v i <= SZ.v len /\
+      b == (SZ.v i < SZ.v len) /\
+      blit_post s0 s1 idx_src idx_dst i s1'
+    )
+  {
+    with s1' . assert (pts_to dst fp1 s1');
+    unfold (pts_to dst fp1 s1');
+    A.pts_to_range_prop dst.base;
+    fold (pts_to dst fp1 s1');
+    let i = !pi;
+    let x = op_Array_Access src (SZ.add idx_src i);
+    op_Array_Assignment dst (SZ.add idx_dst i) x;
+    pi := SZ.add i 1sz;
+    Seq.lemma_split (Seq.slice s1' (SZ.v idx_dst) (SZ.v idx_dst + SZ.v (SZ.add i 1sz))) (SZ.v i);
+    Seq.lemma_split (Seq.slice s0 (SZ.v idx_src) (SZ.v idx_src + SZ.v (SZ.add i 1sz))) (SZ.v i);
+    Seq.slice_slice s1' (SZ.v idx_dst + SZ.v i) (Seq.length s1') 1 (Seq.length s1' - (SZ.v idx_dst + SZ.v i));
+    with s1'' . assert (pts_to dst fp1 s1'');
+    assert (pure (
+        Seq.slice s1'' (SZ.v idx_dst + SZ.v (SZ.add i 1sz)) (Seq.length s1) `Seq.equal`
+          Seq.slice s1' (SZ.v idx_dst + SZ.v (SZ.add i 1sz)) (Seq.length s1')
+    ));
+  };
 }
 ```
