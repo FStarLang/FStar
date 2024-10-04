@@ -284,15 +284,16 @@ let proc_guard_formula
 
 let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:option should_check_uvar) (rng:Range.range) : tac unit =
     log (fun () -> BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g));!
+    let imps = as_implicits g.implicits in
     let _ =
       match sc_opt with
       | Some (Allow_untyped r) ->
         List.iter
           (fun imp -> mark_uvar_with_should_check_tag imp.imp_uvar (Allow_untyped r))
-          g.implicits
+          imps
       | _ -> ()
     in
-    add_implicits g.implicits;!
+    add_implicits imps ;!
     let guard_f =
       if simplify
       then (Rel.simplify_guard e g).guard_f
@@ -414,7 +415,7 @@ let __do_unify_wflags
             return None
           | Some g ->
             tc_unifier_solved_implicits env must_tot allow_guards all_uvars;!
-            add_implicits g.implicits;!
+            add_implicits (as_implicits g.implicits);!
             return (Some g)
 
         with | Errors.Error (_, msg, r, _) ->
@@ -2677,9 +2678,9 @@ let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
     //
     let guard = guard |> Rel.solve_deferred_constraints g |> Rel.resolve_implicits g in
     let bvs_and_ts : list (bv & typ) =
-      match guard.implicits with
+      match as_implicits guard.implicits with
       | [] -> []
-      | _ ->
+      | imps ->
         //
         // We could not solve all implicits
         //
@@ -2689,7 +2690,7 @@ let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
         //   the uvars will be substituted with the names
         //
         let l : list (uvar & typ & bv) =
-          guard.implicits
+          imps
           |> List.map (fun {imp_uvar} ->
                        (imp_uvar.ctx_uvar_head,
                         U.ctx_uvar_typ imp_uvar,
@@ -2775,7 +2776,7 @@ let refl_try_unify (g:env) (uvs:list (bv & typ)) (t0 t1:term)
         //   e.g., created as part of Rel.try_teq, return []
         //
         let b = List.existsb (fun {imp_uvar = {ctx_uvar_head = (uv, _, _)}} ->
-          BU.pimap_try_find tbl (Unionfind.puf_unique_id uv) = None) guard.implicits in
+          BU.pimap_try_find tbl (Unionfind.puf_unique_id uv) = None) (as_implicits guard.implicits) in
         if b then []
         else
           //
@@ -2898,7 +2899,7 @@ let proofstate_of_goal_ty rng env typ =
     let env = { env with range = rng } in
     let env = tac_env env in
     let g, g_u = goal_of_goal_ty env typ in
-    let ps = proofstate_of_goals rng env [g] g_u.implicits in
+    let ps = proofstate_of_goals rng env [g] (as_implicits g_u.implicits) in
     (ps, goal_witness g)
 
 let proofstate_of_all_implicits rng env imps =
@@ -2945,7 +2946,7 @@ let run_unembedded_tactic_on_ps_and_solve_remaining
                       ; deferred_to_tac = []
                       ; deferred = []
                       ; univ_ineqs = [], []
-                      ; implicits = [] } in
+                      ; implicits = Flat [] } in
           Rel.force_trivial_guard (goal_env g) guard
       | None ->
           Err.raise_error g_range Err.Fatal_OpenGoalsInSynthesis "tactic left a computationally-relevant goal unsolved");
@@ -2982,7 +2983,7 @@ let run_tactic_on_ps_and_solve_remaining
                       ; deferred_to_tac = []
                       ; deferred = []
                       ; univ_ineqs = [], []
-                      ; implicits = [] } in
+                      ; implicits = Flat [] } in
           Rel.force_trivial_guard (goal_env g) guard
       | None ->
           Err.raise_error g_range Err.Fatal_OpenGoalsInSynthesis "tactic left a computationally-relevant goal unsolved");

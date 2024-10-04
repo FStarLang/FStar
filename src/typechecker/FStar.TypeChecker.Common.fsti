@@ -155,7 +155,10 @@ type implicit = {
 instance val show_implicit : showable implicit
 
 type implicits = list implicit
-
+type implicits_t =
+| Flat of implicits
+| Conj : implicits_t -> implicits_t -> implicits_t
+val as_implicits : implicits_t -> implicits
 val implicits_to_string : implicits -> string
 
 type guard_t = {
@@ -164,7 +167,7 @@ type guard_t = {
                              //They are never attempted by the unification engine in Rel
   deferred:   deferred;
   univ_ineqs: list universe & list univ_ineq;
-  implicits:  implicits;
+  implicits:  implicits_t;
 }
 
 val trivial_guard : guard_t

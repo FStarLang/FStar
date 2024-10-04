@@ -1027,7 +1027,8 @@ let run_unembedded_tactic_on_ps :
                                FStar_TypeChecker_Common.univ_ineqs =
                                  (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
                                FStar_TypeChecker_Common.implicits =
-                                 (ps3.FStar_Tactics_Types.all_implicits)
+                                 (FStar_TypeChecker_Common.Flat
+                                    (ps3.FStar_Tactics_Types.all_implicits))
                              } in
                            let g1 =
                              FStar_TypeChecker_Rel.solve_deferred_constraints

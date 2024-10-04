@@ -195,7 +195,7 @@ type worklist =
   smt_ok: Prims.bool ;
   umax_heuristic_ok: Prims.bool ;
   tcenv: FStar_TypeChecker_Env.env ;
-  wl_implicits: FStar_TypeChecker_Common.implicits ;
+  wl_implicits: FStar_TypeChecker_Common.implicits_t ;
   repr_subcomp_allowed: Prims.bool ;
   typeclass_variables: FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_RBSet.t }
 let (__proj__Mkworklist__item__attempting :
@@ -257,7 +257,7 @@ let (__proj__Mkworklist__item__tcenv : worklist -> FStar_TypeChecker_Env.env)
         umax_heuristic_ok; tcenv; wl_implicits; repr_subcomp_allowed;
         typeclass_variables;_} -> tcenv
 let (__proj__Mkworklist__item__wl_implicits :
-  worklist -> FStar_TypeChecker_Common.implicits) =
+  worklist -> FStar_TypeChecker_Common.implicits_t) =
   fun projectee ->
     match projectee with
     | { attempting; wl_deferred; wl_deferred_to_tac; ctr; defer_ok; smt_ok;
@@ -377,7 +377,10 @@ let (new_uvar :
                        smt_ok = (wl.smt_ok);
                        umax_heuristic_ok = (wl.umax_heuristic_ok);
                        tcenv = (wl.tcenv);
-                       wl_implicits = (imp :: (wl.wl_implicits));
+                       wl_implicits =
+                         (FStar_TypeChecker_Common.Conj
+                            ((FStar_TypeChecker_Common.Flat [imp]),
+                              (wl.wl_implicits)));
                        repr_subcomp_allowed = (wl.repr_subcomp_allowed);
                        typeclass_variables = (wl.typeclass_variables)
                      }))
@@ -510,14 +513,14 @@ let (copy_uvar :
             u.FStar_Syntax_Syntax.ctx_uvar_meta
 type solution =
   | Success of (FStar_TypeChecker_Common.deferred *
-  FStar_TypeChecker_Common.deferred * FStar_TypeChecker_Common.implicits) 
+  FStar_TypeChecker_Common.deferred * FStar_TypeChecker_Common.implicits_t) 
   | Failed of (FStar_TypeChecker_Common.prob * lstring) 
 let (uu___is_Success : solution -> Prims.bool) =
   fun projectee -> match projectee with | Success _0 -> true | uu___ -> false
 let (__proj__Success__item___0 :
   solution ->
     (FStar_TypeChecker_Common.deferred * FStar_TypeChecker_Common.deferred *
-      FStar_TypeChecker_Common.implicits))
+      FStar_TypeChecker_Common.implicits_t))
   = fun projectee -> match projectee with | Success _0 -> _0
 let (uu___is_Failed : solution -> Prims.bool) =
   fun projectee -> match projectee with | Failed _0 -> true | uu___ -> false
@@ -528,7 +531,7 @@ let (extend_wl :
   worklist ->
     FStar_TypeChecker_Common.deferred ->
       FStar_TypeChecker_Common.deferred ->
-        FStar_TypeChecker_Common.implicits -> worklist)
+        FStar_TypeChecker_Common.implicits_t -> worklist)
   =
   fun wl ->
     fun defers ->
@@ -549,7 +552,8 @@ let (extend_wl :
             smt_ok = (wl.smt_ok);
             umax_heuristic_ok = (wl.umax_heuristic_ok);
             tcenv = (wl.tcenv);
-            wl_implicits = (FStar_Compiler_List.op_At wl.wl_implicits imps);
+            wl_implicits =
+              (FStar_TypeChecker_Common.Conj ((wl.wl_implicits), imps));
             repr_subcomp_allowed = (wl.repr_subcomp_allowed);
             typeclass_variables = (wl.typeclass_variables)
           }
@@ -1159,7 +1163,7 @@ let (empty_worklist : FStar_TypeChecker_Env.env -> worklist) =
       smt_ok = true;
       umax_heuristic_ok = true;
       tcenv = env;
-      wl_implicits = [];
+      wl_implicits = (FStar_TypeChecker_Common.Flat []);
       repr_subcomp_allowed = false;
       typeclass_variables = uu___
     }
@@ -4885,9 +4889,9 @@ let (apply_substitutive_indexed_subcomp :
                                                                    (wl3.tcenv);
                                                                  wl_implicits
                                                                    =
-                                                                   (FStar_Compiler_List.op_At
-                                                                    g.FStar_TypeChecker_Common.implicits
-                                                                    wl3.wl_implicits);
+                                                                   (FStar_TypeChecker_Common.Conj
+                                                                    ((g.FStar_TypeChecker_Common.implicits),
+                                                                    (wl3.wl_implicits)));
                                                                  repr_subcomp_allowed
                                                                    =
                                                                    (wl3.repr_subcomp_allowed);
@@ -5028,9 +5032,9 @@ let (apply_ad_hoc_indexed_subcomp :
                                  umax_heuristic_ok = (wl.umax_heuristic_ok);
                                  tcenv = (wl.tcenv);
                                  wl_implicits =
-                                   (FStar_Compiler_List.op_At
-                                      g_uvars.FStar_TypeChecker_Common.implicits
-                                      wl.wl_implicits);
+                                   (FStar_TypeChecker_Common.Conj
+                                      ((g_uvars.FStar_TypeChecker_Common.implicits),
+                                        (wl.wl_implicits)));
                                  repr_subcomp_allowed =
                                    (wl.repr_subcomp_allowed);
                                  typeclass_variables =
@@ -5256,7 +5260,9 @@ let rec (solve : worklist -> solution) =
      if uu___2
      then
        let uu___3 =
-         FStar_TypeChecker_Common.implicits_to_string probs.wl_implicits in
+         let uu___4 =
+           FStar_TypeChecker_Common.as_implicits probs.wl_implicits in
+         FStar_TypeChecker_Common.implicits_to_string uu___4 in
        FStar_Compiler_Util.print1 "solve: wl_implicits = %s\n" uu___3
      else ());
     (let uu___2 = next_prob probs in
@@ -5772,7 +5778,9 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                   umax_heuristic_ok =
                                                     (wl4.umax_heuristic_ok);
                                                   tcenv = (wl4.tcenv);
-                                                  wl_implicits = [];
+                                                  wl_implicits =
+                                                    (FStar_TypeChecker_Common.Flat
+                                                       []);
                                                   repr_subcomp_allowed =
                                                     (wl4.repr_subcomp_allowed);
                                                   typeclass_variables =
@@ -6262,7 +6270,9 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                           umax_heuristic_ok =
                                                             (wl'.umax_heuristic_ok);
                                                           tcenv = (wl'.tcenv);
-                                                          wl_implicits = [];
+                                                          wl_implicits =
+                                                            (FStar_TypeChecker_Common.Flat
+                                                               []);
                                                           repr_subcomp_allowed
                                                             =
                                                             (wl'.repr_subcomp_allowed);
@@ -6910,7 +6920,7 @@ and (try_solve_without_smt_or_else :
             smt_ok = false;
             umax_heuristic_ok = false;
             tcenv = (wl.tcenv);
-            wl_implicits = [];
+            wl_implicits = (FStar_TypeChecker_Common.Flat []);
             repr_subcomp_allowed = (wl.repr_subcomp_allowed);
             typeclass_variables = (wl.typeclass_variables)
           } in
@@ -6941,7 +6951,7 @@ and (try_solve_then_or_else :
               smt_ok = (wl.smt_ok);
               umax_heuristic_ok = (wl.umax_heuristic_ok);
               tcenv = (wl.tcenv);
-              wl_implicits = [];
+              wl_implicits = (FStar_TypeChecker_Common.Flat []);
               repr_subcomp_allowed = (wl.repr_subcomp_allowed);
               typeclass_variables = (wl.typeclass_variables)
             } in
@@ -6973,7 +6983,7 @@ and (try_solve_probs_without_smt :
               smt_ok = false;
               umax_heuristic_ok = false;
               tcenv = (wl.tcenv);
-              wl_implicits = [];
+              wl_implicits = (FStar_TypeChecker_Common.Flat []);
               repr_subcomp_allowed = (wl.repr_subcomp_allowed);
               typeclass_variables = (wl.typeclass_variables)
             } in
@@ -7709,7 +7719,9 @@ and (solve_t_flex_rigid_eq :
                                                           umax_heuristic_ok =
                                                             (wl5.umax_heuristic_ok);
                                                           tcenv = (wl5.tcenv);
-                                                          wl_implicits = [];
+                                                          wl_implicits =
+                                                            (FStar_TypeChecker_Common.Flat
+                                                               []);
                                                           repr_subcomp_allowed
                                                             =
                                                             (wl5.repr_subcomp_allowed);
@@ -8978,7 +8990,9 @@ and (solve_t' : tprob -> worklist -> solution) =
                                            umax_heuristic_ok =
                                              (wl4.umax_heuristic_ok);
                                            tcenv = (wl4.tcenv);
-                                           wl_implicits = [];
+                                           wl_implicits =
+                                             (FStar_TypeChecker_Common.Flat
+                                                []);
                                            repr_subcomp_allowed =
                                              (wl4.repr_subcomp_allowed);
                                            typeclass_variables =
@@ -8986,7 +9000,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                                          }
                                          g_pat_term.FStar_TypeChecker_Common.deferred
                                          g_pat_term.FStar_TypeChecker_Common.deferred_to_tac
-                                         [] in
+                                         (FStar_TypeChecker_Common.Flat []) in
                                      let tx =
                                        FStar_Syntax_Unionfind.new_transaction
                                          () in
@@ -9026,13 +9040,14 @@ and (solve_t' : tprob -> worklist -> solution) =
                                                      (FStar_Compiler_List.op_At
                                                         defer_to_tac
                                                         defer_to_tac')
-                                                     (FStar_Compiler_List.op_At
-                                                        imps
-                                                        (FStar_Compiler_List.op_At
-                                                           imps'
-                                                           (FStar_Compiler_List.op_At
-                                                              g_pat_as_exp.FStar_TypeChecker_Common.implicits
-                                                              g_pat_term.FStar_TypeChecker_Common.implicits))) in
+                                                     (FStar_TypeChecker_Common.Conj
+                                                        (imps,
+                                                          (FStar_TypeChecker_Common.Conj
+                                                             (imps',
+                                                               (FStar_TypeChecker_Common.Conj
+                                                                  ((g_pat_as_exp.FStar_TypeChecker_Common.implicits),
+                                                                    (
+                                                                    g_pat_term.FStar_TypeChecker_Common.implicits))))))) in
                                                  FStar_Pervasives_Native.Some
                                                    uu___13))
                                            | Failed uu___11 ->
@@ -10098,7 +10113,9 @@ and (solve_t' : tprob -> worklist -> solution) =
                                                   umax_heuristic_ok =
                                                     (wl2.umax_heuristic_ok);
                                                   tcenv = (wl2.tcenv);
-                                                  wl_implicits = [];
+                                                  wl_implicits =
+                                                    (FStar_TypeChecker_Common.Flat
+                                                       []);
                                                   repr_subcomp_allowed =
                                                     (wl2.repr_subcomp_allowed);
                                                   typeclass_variables =
@@ -13048,9 +13065,9 @@ and (solve_c :
                                 umax_heuristic_ok = (wl3.umax_heuristic_ok);
                                 tcenv = (wl3.tcenv);
                                 wl_implicits =
-                                  (FStar_Compiler_List.op_At
-                                     g_lift.FStar_TypeChecker_Common.implicits
-                                     wl3.wl_implicits);
+                                  (FStar_TypeChecker_Common.Conj
+                                     ((g_lift.FStar_TypeChecker_Common.implicits),
+                                       (wl3.wl_implicits)));
                                 repr_subcomp_allowed =
                                   (wl3.repr_subcomp_allowed);
                                 typeclass_variables =
@@ -13978,11 +13995,13 @@ let (print_pending_implicits :
   FStar_TypeChecker_Common.guard_t -> Prims.string) =
   fun g ->
     let uu___ =
+      let uu___1 =
+        FStar_TypeChecker_Common.as_implicits
+          g.FStar_TypeChecker_Common.implicits in
       FStar_Compiler_List.map
         (fun i ->
            FStar_Class_Show.show FStar_Syntax_Print.showable_ctxu
-             i.FStar_TypeChecker_Common.imp_uvar)
-        g.FStar_TypeChecker_Common.implicits in
+             i.FStar_TypeChecker_Common.imp_uvar) uu___1 in
     FStar_Compiler_String.concat ", " uu___
 let (ineqs_to_string :
   (FStar_Syntax_Syntax.universe Prims.list * (FStar_Syntax_Syntax.universe *
@@ -14117,10 +14136,12 @@ let (solve_and_commit :
   worklist ->
     ((FStar_TypeChecker_Common.prob * lstring) ->
        (FStar_TypeChecker_Common.deferred * FStar_TypeChecker_Common.deferred
-         * FStar_TypeChecker_Common.implicits) FStar_Pervasives_Native.option)
+         * FStar_TypeChecker_Common.implicits_t)
+         FStar_Pervasives_Native.option)
       ->
       (FStar_TypeChecker_Common.deferred * FStar_TypeChecker_Common.deferred
-        * FStar_TypeChecker_Common.implicits) FStar_Pervasives_Native.option)
+        * FStar_TypeChecker_Common.implicits_t)
+        FStar_Pervasives_Native.option)
   =
   fun wl ->
     fun err ->
@@ -14175,8 +14196,9 @@ let (with_guard :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.prob ->
       (FStar_TypeChecker_Common.deferred * FStar_TypeChecker_Common.deferred
-        * FStar_TypeChecker_Common.implicits) FStar_Pervasives_Native.option
-        -> FStar_TypeChecker_Common.guard_t FStar_Pervasives_Native.option)
+        * FStar_TypeChecker_Common.implicits_t)
+        FStar_Pervasives_Native.option ->
+        FStar_TypeChecker_Common.guard_t FStar_Pervasives_Native.option)
   =
   fun env ->
     fun prob ->
@@ -14686,6 +14708,9 @@ let (try_solve_deferred_constraints :
                    FStar_Pervasives_Native.Some uu___2 in
                  FStar_Profiling.profile
                    (fun uu___2 ->
+                      let imps_l =
+                        FStar_TypeChecker_Common.as_implicits
+                          g.FStar_TypeChecker_Common.implicits in
                       let typeclass_variables =
                         let uu___3 =
                           FStar_Compiler_List.collect
@@ -14716,8 +14741,7 @@ let (try_solve_deferred_constraints :
                                                   FStar_Syntax_Free.ord_ctx_uvar))
                                             (Obj.magic uvs)
                                         else [])
-                               | uu___4 -> [])
-                            g.FStar_TypeChecker_Common.implicits in
+                               | uu___4 -> []) imps_l in
                         Obj.magic
                           (FStar_Class_Setlike.from_list ()
                              (Obj.magic
@@ -14765,8 +14789,7 @@ let (try_solve_deferred_constraints :
                            FStar_Class_Show.show
                              (FStar_Class_Show.printableshow
                                 FStar_Class_Printable.printable_nat)
-                             (FStar_Compiler_List.length
-                                g.FStar_TypeChecker_Common.implicits) in
+                             (FStar_Compiler_List.length imps_l) in
                          FStar_Compiler_Util.print4
                            "Trying to solve carried problems (defer_ok=%s) (deferred_to_tac_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
                            uu___5 uu___6 uu___7 uu___8
@@ -14792,8 +14815,9 @@ let (try_solve_deferred_constraints :
                                FStar_TypeChecker_Common.univ_ineqs =
                                  (g.FStar_TypeChecker_Common.univ_ineqs);
                                FStar_TypeChecker_Common.implicits =
-                                 (FStar_Compiler_List.op_At
-                                    g.FStar_TypeChecker_Common.implicits imps)
+                                 (FStar_TypeChecker_Common.Conj
+                                    ((g.FStar_TypeChecker_Common.implicits),
+                                      imps))
                              }
                          | uu___5 ->
                              FStar_Compiler_Effect.failwith
@@ -14822,9 +14846,12 @@ let (try_solve_deferred_constraints :
                          then
                            let uu___7 = guard_to_string env g2 in
                            let uu___8 =
-                             FStar_Compiler_Util.string_of_int
-                               (FStar_Compiler_List.length
-                                  g2.FStar_TypeChecker_Common.implicits) in
+                             let uu___9 =
+                               let uu___10 =
+                                 FStar_TypeChecker_Common.as_implicits
+                                   g2.FStar_TypeChecker_Common.implicits in
+                               FStar_Compiler_List.length uu___10 in
+                             FStar_Compiler_Util.string_of_int uu___9 in
                            FStar_Compiler_Util.print2
                              "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s (and %s implicits)\n"
                              uu___7 uu___8
@@ -15431,7 +15458,7 @@ let (check_implicit_solution_and_discharge_guard :
     FStar_TypeChecker_Common.implicit ->
       Prims.bool ->
         Prims.bool ->
-          FStar_TypeChecker_Env.implicits FStar_Pervasives_Native.option)
+          FStar_TypeChecker_Common.implicits_t FStar_Pervasives_Native.option)
   =
   fun env ->
     fun imp ->
@@ -15907,11 +15934,14 @@ let (resolve_implicits' :
                                             FStar_Compiler_Util.must uu___6 in
                                           let uu___6 =
                                             let uu___7 =
+                                              FStar_TypeChecker_Common.as_implicits
+                                                imps1 in
+                                            let uu___8 =
                                               FStar_Compiler_List.map
                                                 FStar_Pervasives_Native.fst
                                                 rest in
-                                            FStar_Compiler_List.op_At imps1
-                                              uu___7 in
+                                            FStar_Compiler_List.op_At uu___7
+                                              uu___8 in
                                           until_fixpoint ([], false, true)
                                             uu___6)))
                  | hd::tl ->
@@ -16174,7 +16204,8 @@ let (resolve_implicits' :
                                                          "resolve_implicits: unifying with an unresolved uvar failed?"
                                                    | FStar_Pervasives_Native.Some
                                                        g ->
-                                                       g.FStar_TypeChecker_Common.implicits in
+                                                       FStar_TypeChecker_Common.as_implicits
+                                                         g.FStar_TypeChecker_Common.implicits in
                                                  until_fixpoint
                                                    (out, true,
                                                      defer_open_metas)
@@ -16392,8 +16423,12 @@ let (resolve_implicits' :
                                                  check_implicit_solution_and_discharge_guard
                                                    env1 hd1 is_tac
                                                    force_univ_constraints in
+                                               let res1 =
+                                                 FStar_Compiler_Util.map_opt
+                                                   res
+                                                   FStar_TypeChecker_Common.as_implicits in
                                                (if
-                                                  res <>
+                                                  res1 <>
                                                     (FStar_Pervasives_Native.Some
                                                        [])
                                                 then
@@ -16423,11 +16458,14 @@ let (resolve_implicits' :
                                                 let uu___7 =
                                                   let uu___8 =
                                                     let uu___9 =
+                                                      let uu___10 =
+                                                        FStar_TypeChecker_Common.as_implicits
+                                                          imps in
                                                       FStar_Compiler_List.map
                                                         (fun i ->
                                                            (i,
                                                              Implicit_unresolved))
-                                                        imps in
+                                                        uu___10 in
                                                     FStar_Compiler_List.op_At
                                                       uu___9 out in
                                                   (uu___8, true,
@@ -16449,8 +16487,10 @@ let (resolve_implicits :
            uu___2
        else ());
       (let tagged_implicits1 =
-         resolve_implicits' env false false
-           g.FStar_TypeChecker_Common.implicits in
+         let uu___1 =
+           FStar_TypeChecker_Common.as_implicits
+             g.FStar_TypeChecker_Common.implicits in
+         resolve_implicits' env false false uu___1 in
        (let uu___2 = FStar_Compiler_Effect.op_Bang dbg_ResolveImplicitsHook in
         if uu___2
         then
@@ -16458,8 +16498,10 @@ let (resolve_implicits :
             "//////////////////////////ResolveImplicitsHook: resolve_implicits end////////////\n}\n"
         else ());
        (let uu___2 =
-          FStar_Compiler_List.map FStar_Pervasives_Native.fst
-            tagged_implicits1 in
+          let uu___3 =
+            FStar_Compiler_List.map FStar_Pervasives_Native.fst
+              tagged_implicits1 in
+          FStar_TypeChecker_Common.Flat uu___3 in
         {
           FStar_TypeChecker_Common.guard_f =
             (g.FStar_TypeChecker_Common.guard_f);
@@ -16478,10 +16520,15 @@ let (resolve_generalization_implicits :
   fun env ->
     fun g ->
       let tagged_implicits1 =
-        resolve_implicits' env false true
-          g.FStar_TypeChecker_Common.implicits in
+        let uu___ =
+          FStar_TypeChecker_Common.as_implicits
+            g.FStar_TypeChecker_Common.implicits in
+        resolve_implicits' env false true uu___ in
       let uu___ =
-        FStar_Compiler_List.map FStar_Pervasives_Native.fst tagged_implicits1 in
+        let uu___1 =
+          FStar_Compiler_List.map FStar_Pervasives_Native.fst
+            tagged_implicits1 in
+        FStar_TypeChecker_Common.Flat uu___1 in
       {
         FStar_TypeChecker_Common.guard_f =
           (g.FStar_TypeChecker_Common.guard_f);
@@ -16499,7 +16546,10 @@ let (resolve_implicits_tac :
   =
   fun env ->
     fun g ->
-      resolve_implicits' env true false g.FStar_TypeChecker_Common.implicits
+      let uu___ =
+        FStar_TypeChecker_Common.as_implicits
+          g.FStar_TypeChecker_Common.implicits in
+      resolve_implicits' env true false uu___
 let (force_trivial_guard :
   FStar_TypeChecker_Env.env -> FStar_TypeChecker_Common.guard_t -> unit) =
   fun env ->
@@ -16514,47 +16564,50 @@ let (force_trivial_guard :
        else ());
       (let g1 = solve_deferred_constraints env g in
        let g2 = resolve_implicits env g1 in
-       match g2.FStar_TypeChecker_Common.implicits with
-       | [] -> let uu___1 = discharge_guard env g2 in ()
-       | imp::uu___1 ->
-           let uu___2 =
-             let uu___3 =
-               let uu___4 =
-                 let uu___5 =
-                   FStar_Errors_Msg.text
-                     "Failed to resolve implicit argument" in
-                 let uu___6 =
-                   let uu___7 =
-                     FStar_Class_Show.show FStar_Syntax_Print.showable_uvar
-                       (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
-                   FStar_Pprint.arbitrary_string uu___7 in
-                 FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___5
-                   uu___6 in
+       let uu___1 =
+         FStar_TypeChecker_Common.as_implicits
+           g2.FStar_TypeChecker_Common.implicits in
+       match uu___1 with
+       | [] -> let uu___2 = discharge_guard env g2 in ()
+       | imp::uu___2 ->
+           let uu___3 =
+             let uu___4 =
                let uu___5 =
                  let uu___6 =
-                   let uu___7 = FStar_Errors_Msg.text "of type" in
+                   FStar_Errors_Msg.text
+                     "Failed to resolve implicit argument" in
+                 let uu___7 =
                    let uu___8 =
-                     let uu___9 =
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_uvar
+                       (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                   FStar_Pprint.arbitrary_string uu___8 in
+                 FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___6
+                   uu___7 in
+               let uu___6 =
+                 let uu___7 =
+                   let uu___8 = FStar_Errors_Msg.text "of type" in
+                   let uu___9 =
+                     let uu___10 =
                        FStar_Syntax_Util.ctx_uvar_typ
                          imp.FStar_TypeChecker_Common.imp_uvar in
-                     FStar_TypeChecker_Normalize.term_to_doc env uu___9 in
+                     FStar_TypeChecker_Normalize.term_to_doc env uu___10 in
                    FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
-                     uu___7 uu___8 in
-                 let uu___7 =
-                   let uu___8 = FStar_Errors_Msg.text "introduced for" in
-                   let uu___9 =
+                     uu___8 uu___9 in
+                 let uu___8 =
+                   let uu___9 = FStar_Errors_Msg.text "introduced for" in
+                   let uu___10 =
                      FStar_Errors_Msg.text
                        imp.FStar_TypeChecker_Common.imp_reason in
                    FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
-                     uu___8 uu___9 in
-                 FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
-               FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
-             [uu___3] in
+                     uu___9 uu___10 in
+                 FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+               FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+             [uu___4] in
            FStar_Errors.raise_error FStar_Class_HasRange.hasRange_range
              imp.FStar_TypeChecker_Common.imp_range
              FStar_Errors_Codes.Fatal_FailToResolveImplicitArgument ()
              (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
-             (Obj.magic uu___2))
+             (Obj.magic uu___3))
 let (subtype_nosmt_force :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> Prims.bool)

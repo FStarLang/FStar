@@ -253,15 +253,16 @@ let with_policy pol (t : tac 'a) : tac 'a =
 let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:option should_check_uvar) (rng:Range.range) : tac unit =
     mlog (fun () ->
         BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
+    let imps = as_implicits g.implicits in 
     let _ =
       match sc_opt with
       | Some (Allow_untyped r) ->
         List.iter
           (fun imp -> mark_uvar_with_should_check_tag imp.imp_uvar (Allow_untyped r))
-          g.implicits
+          imps
       | _ -> ()
     in
-    add_implicits g.implicits;!
+    add_implicits imps ;!
     let guard_f =
       if simplify
       then (Rel.simplify_guard e g).guard_f
@@ -413,7 +414,7 @@ let __do_unify_wflags
             ret None
           | Some g ->
             tc_unifier_solved_implicits env must_tot allow_guards all_uvars;!
-            add_implicits g.implicits;!
+            add_implicits (as_implicits g.implicits);!
             ret (Some g)
 
         with | Errors.Error (_, msg, r, _) -> begin

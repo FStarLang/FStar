@@ -211,6 +211,14 @@ instance show_implicit : showable implicit = {
   show = (fun i -> show i.imp_uvar.ctx_uvar_head);
 }
 
+let as_implicits imps =
+  let rec aux imps out =
+    match imps with
+    | Flat i -> (match out with | [] -> i | _ -> i@out)
+    | Conj imps1 imps2 -> aux imps1 (aux imps2 out)
+  in
+  aux imps []
+
 let implicits_to_string imps =
     let imp_to_string i = show i.imp_uvar.ctx_uvar_head in
     FStar.Common.string_of_list imp_to_string imps
@@ -220,7 +228,7 @@ let trivial_guard = {
   deferred_to_tac=[];
   deferred=[];
   univ_ineqs=([], []);
-  implicits=[]
+  implicits=Flat []
 }
 
 let conj_guard_f g1 g2 = match g1, g2 with
@@ -234,7 +242,7 @@ let binop_guard f g1 g2 = {
   deferred=g1.deferred@g2.deferred;
   univ_ineqs=(fst g1.univ_ineqs@fst g2.univ_ineqs,
               snd g1.univ_ineqs@snd g2.univ_ineqs);
-  implicits=g1.implicits@g2.implicits
+  implicits=Conj g1.implicits g2.implicits
 }
 let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
 

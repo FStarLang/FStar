@@ -720,7 +720,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
                         ; deferred_to_tac = []
                         ; deferred = []
                         ; univ_ineqs = [], []
-                        ; implicits = [] } in
+                        ; implicits = Flat [] } in
             TcRel.force_trivial_guard (goal_env g) guard
             end
         | None ->
@@ -756,7 +756,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
                           ; deferred_to_tac = []
                           ; deferred = []
                           ; univ_ineqs = [], []
-                          ; implicits = [] } in
+                          ; implicits = Flat [] } in
               Profiling.profile (fun () ->
                 TcRel.force_trivial_guard (goal_env g) guard)
               None
@@ -938,7 +938,7 @@ let splice
                         ; deferred_to_tac = []
                         ; deferred = []
                         ; univ_ineqs = [], []
-                        ; implicits = [] } in
+                        ; implicits = Flat [] } in
               TcRel.force_trivial_guard (goal_env g) guard
             end
         | None ->
@@ -1030,7 +1030,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
                         ; deferred_to_tac = []
                         ; deferred = []
                         ; univ_ineqs = [], []
-                        ; implicits = [] } in
+                        ; implicits = Flat [] } in
             TcRel.force_trivial_guard (goal_env g) guard
             end
         | None ->

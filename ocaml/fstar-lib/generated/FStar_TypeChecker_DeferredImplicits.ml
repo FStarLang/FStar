@@ -694,16 +694,19 @@ let (solve_deferred_to_tactic_goals :
            FStar_Compiler_List.map prob_as_implicit
              g.FStar_TypeChecker_Common.deferred_to_tac in
          let uu___1 =
+           let uu___2 =
+             FStar_TypeChecker_Common.as_implicits
+               g.FStar_TypeChecker_Common.implicits in
            FStar_Compiler_List.fold_right
              (fun imp ->
-                fun uu___2 ->
-                  match uu___2 with
+                fun uu___3 ->
+                  match uu___3 with
                   | (more, imps) ->
-                      let uu___3 =
+                      let uu___4 =
                         FStar_Syntax_Unionfind.find
                           (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
-                      (match uu___3 with
-                       | FStar_Pervasives_Native.Some uu___4 ->
+                      (match uu___4 with
+                       | FStar_Pervasives_Native.Some uu___5 ->
                            (more, (imp :: imps))
                        | FStar_Pervasives_Native.None ->
                            let se =
@@ -713,8 +716,8 @@ let (solve_deferred_to_tactic_goals :
                             | FStar_Pervasives_Native.None ->
                                 (more, (imp :: imps))
                             | FStar_Pervasives_Native.Some se1 ->
-                                (((imp, se1) :: more), imps))))
-             g.FStar_TypeChecker_Common.implicits ([], []) in
+                                (((imp, se1) :: more), imps)))) uu___2
+             ([], []) in
          match uu___1 with
          | (more, imps) ->
              let bucketize is =
@@ -756,5 +759,6 @@ let (solve_deferred_to_tactic_goals :
                   (g.FStar_TypeChecker_Common.deferred);
                 FStar_TypeChecker_Common.univ_ineqs =
                   (g.FStar_TypeChecker_Common.univ_ineqs);
-                FStar_TypeChecker_Common.implicits = imps
+                FStar_TypeChecker_Common.implicits =
+                  (FStar_TypeChecker_Common.Flat imps)
               }))

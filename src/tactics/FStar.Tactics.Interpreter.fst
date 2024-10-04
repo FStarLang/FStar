@@ -341,7 +341,7 @@ let run_unembedded_tactic_on_ps
                                                                       (fun imp -> show imp.imp_uvar)
                                                                       ps.all_implicits);
 
-          let g = {Env.trivial_guard with TcComm.implicits=ps.all_implicits} in
+          let g = {Env.trivial_guard with TcComm.implicits=Flat ps.all_implicits} in
           let g = TcRel.solve_deferred_constraints env g in
           if !dbg_Tac then
               BU.print2 "Checked %s implicits (1): %s\n"

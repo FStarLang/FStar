@@ -843,7 +843,10 @@ let (new_uvar :
               match uu___ with
               | (u, ctx_uvar, g_u) ->
                   let uu___1 =
-                    add_implicits g_u.FStar_TypeChecker_Common.implicits in
+                    let uu___2 =
+                      FStar_TypeChecker_Common.as_implicits
+                        g_u.FStar_TypeChecker_Common.implicits in
+                    add_implicits uu___2 in
                   bind uu___1
                     (fun uu___2 ->
                        ret (u, (FStar_Pervasives_Native.fst ctx_uvar)))
@@ -1004,7 +1007,8 @@ let (compress_implicits : unit tac) =
              (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
            FStar_TypeChecker_Common.univ_ineqs =
              (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
-           FStar_TypeChecker_Common.implicits = imps
+           FStar_TypeChecker_Common.implicits =
+             (FStar_TypeChecker_Common.Flat imps)
          } in
        let imps1 =
          FStar_TypeChecker_Rel.resolve_implicits_tac
