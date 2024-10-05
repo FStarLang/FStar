@@ -597,7 +597,7 @@ let display_debug_keys () =
   let keys = Debug.list_all_toggles () in
   keys |> List.sortWith String.compare |> List.iter (fun s -> Util.print_string (s ^ "\n"))
 
-let display_usage_aux specs =
+let display_usage_aux (specs : list (opt & Pprint.document)) : unit =
   let open FStar.Pprint in
   let open FStar.Errors.Msg in
   let text (s:string) : document = flow (break_ 1) (words s) in
@@ -612,14 +612,23 @@ let display_usage_aux specs =
     doc_of_string "fstar.exe [options] file[s] [@respfile...]" ^/^
     doc_of_string (Util.format1 "  %srespfile: read command-line options from respfile\n" (Util.colorize_bold "@")) ^/^
     List.fold_right
-      (fun ((_, flag, p), explain) rest ->
-        let opt = doc_of_string ("--" ^ flag) in
+      (fun ((short, flag, p), explain) rest ->
         let arg =
           match p with
           | ZeroArgs _ -> empty
           | OneArg (_, argname) -> blank 1 ^^ doc_of_string argname
         in
-        group (bold_doc (opt ^^ arg)) ^^ hardline ^^
+        let short_opt =
+          if short <> noshort
+          then [doc_of_string ("-" ^ String.make 1 short) ^^ arg]
+          else []
+        in
+        let long_opt =
+          if flag <> ""
+          then [doc_of_string ("--" ^ flag) ^^ arg]
+          else []
+        in
+        group (bold_doc (separate (comma ^^ blank 1) (short_opt @ long_opt))) ^^ hardline ^^
         group (blank 4 ^^ align explain) ^^ hardline ^^
         rest
       )
@@ -841,13 +850,21 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     text "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
 
   ( 'd',
+    "",
+    PostProcessed (
+      (fun o ->
+        Debug.enable ();
+        o), Const (Bool true)),
+    text "Enable general debugging, i.e. increase verbosity.");
+
+  ( noshort,
     "debug",
     PostProcessed (
       (fun o ->
         let keys = as_comma_string_list o in
         Debug.enable_toggles keys;
         o), ReverseAccumulated (SimpleStr "debug toggles")),
-    text "Debug toggles (comma-separated list of debug keys)");
+    text "Enable specific debug toggles (comma-separated list of debug keys)");
 
   ( noshort,
     "debug_all",
