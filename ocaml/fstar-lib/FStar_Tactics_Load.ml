@@ -6,12 +6,14 @@ module EC = FStar_Errors_Codes
 module EM = FStar_Errors_Msg
 module O = FStar_Options
 
+let pout  s   = if FStar_Compiler_Debug.any () then U.print_string s
+let pout1 s x = if FStar_Compiler_Debug.any () then U.print1 s x
 let perr  s   = if FStar_Compiler_Debug.any () then U.print_error s
 let perr1 s x = if FStar_Compiler_Debug.any () then U.print1_error s x
 
 let dynlink (fname:string) : unit =
   try
-    perr ("Attempting to load " ^ fname ^ "\n");
+    pout ("Attempting to load " ^ fname ^ "\n");
     Dynlink.loadfile fname
   with Dynlink.Error e ->
     E.log_issue_doc FStar_Compiler_Range.dummyRange EC.Error_PluginDynlink [
@@ -25,7 +27,7 @@ let dynlink (fname:string) : unit =
 
 let load_tactic tac =
   dynlink tac;
-  perr1 "Loaded %s\n" tac
+  pout1 "Loaded %s\n" tac
 
 let load_tactics tacs =
     List.iter load_tactic tacs
