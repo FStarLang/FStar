@@ -1512,17 +1512,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
                 mk (Tm_uinst(head, universes)), aq
        in aux [] top
 
-    | App _ ->
-      let rec aux args aqs e = match (unparen e).tm with
-        | App(e, t, imp) when imp <> UnivApp ->
-          let t, aq = desugar_term_aq env t in
-          let arg = arg_withimp_t imp t in
-          aux (arg::args) (aq::aqs) e
-        | _ ->
-          let head, aq = desugar_term_aq env e in
-          S.extend_app_n head args top.range, join_aqs (aq::aqs)
-      in
-      aux [] [] top
+    | App (e, t, imp) ->
+      let head, aq1 = desugar_term_aq env e in
+      let t, aq2 = desugar_term_aq env t in
+      let arg = arg_withimp_t imp t in
+      S.extend_app head arg top.range, aq1@aq2
 
     | Bind(x, t1, t2) ->
       let xpat = AST.mk_pattern (AST.PatVar(x, None, [])) (range_of_id x) in

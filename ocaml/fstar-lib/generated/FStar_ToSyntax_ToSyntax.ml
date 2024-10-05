@@ -3510,27 +3510,18 @@ and (desugar_term_maybe_top :
                           mk (FStar_Syntax_Syntax.Tm_uinst (head, universes)) in
                         (uu___7, aq)) in
              aux [] top
-         | FStar_Parser_AST.App uu___2 ->
-             let rec aux args aqs e =
-               let uu___3 =
-                 let uu___4 = unparen e in uu___4.FStar_Parser_AST.tm in
-               match uu___3 with
-               | FStar_Parser_AST.App (e1, t, imp) when
-                   imp <> FStar_Parser_AST.UnivApp ->
-                   let uu___4 = desugar_term_aq env t in
-                   (match uu___4 with
-                    | (t1, aq) ->
-                        let arg = arg_withimp_t imp t1 in
-                        aux (arg :: args) (aq :: aqs) e1)
-               | uu___4 ->
-                   let uu___5 = desugar_term_aq env e in
-                   (match uu___5 with
-                    | (head, aq) ->
-                        let uu___6 =
-                          FStar_Syntax_Syntax.extend_app_n head args
-                            top.FStar_Parser_AST.range in
-                        (uu___6, (join_aqs (aq :: aqs)))) in
-             aux [] [] top
+         | FStar_Parser_AST.App (e, t, imp) ->
+             let uu___2 = desugar_term_aq env e in
+             (match uu___2 with
+              | (head, aq1) ->
+                  let uu___3 = desugar_term_aq env t in
+                  (match uu___3 with
+                   | (t1, aq2) ->
+                       let arg = arg_withimp_t imp t1 in
+                       let uu___4 =
+                         FStar_Syntax_Syntax.extend_app head arg
+                           top.FStar_Parser_AST.range in
+                       (uu___4, (FStar_Compiler_List.op_At aq1 aq2))))
          | FStar_Parser_AST.Bind (x, t1, t2) ->
              let xpat =
                let uu___2 = FStar_Ident.range_of_id x in
