@@ -922,7 +922,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
   if Debug.low ()
   then BU.print2
     ">>>>>>>>>>>>>>Adding top-level decl to environment: %s (from_cache:%s)\n"
-    (show se) (show from_cache);
+    (Print.sigelt_to_string_short se) (show from_cache);
 
   match se.sigel with
   | Sig_inductive_typ _
@@ -1009,7 +1009,7 @@ let tc_decls env ses =
     if Debug.low ()
     then BU.print2 ">>>>>>>>>>>>>>Checking top-level %s decl %s\n"
                         (tag_of se)
-                        (show se);
+                        (Print.sigelt_to_string_short se);
 
     if Options.ide_id_info_off() then Env.toggle_id_info env false;
     if !dbg_IdInfoOn then Env.toggle_id_info env true;

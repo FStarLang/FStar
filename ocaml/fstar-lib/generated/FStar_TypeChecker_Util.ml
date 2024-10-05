@@ -6618,7 +6618,9 @@ let (maybe_instantiate :
       fun t ->
         let torig = FStar_Syntax_Subst.compress t in
         if Prims.op_Negation env.FStar_TypeChecker_Env.instantiate_imp
-        then (e, torig, FStar_TypeChecker_Env.trivial_guard)
+        then
+          (e, torig,
+            (FStar_Class_Monoid.mzero FStar_TypeChecker_Common.monoid_guard_t))
         else
           ((let uu___2 = FStar_Compiler_Debug.high () in
             if uu___2
@@ -6765,7 +6767,9 @@ let (maybe_instantiate :
                                 (match uu___9 with
                                  | (args, bs3, subst2, g') ->
                                      let uu___10 =
-                                       FStar_TypeChecker_Env.conj_guard g g' in
+                                       FStar_Class_Monoid.op_Plus_Plus
+                                         FStar_TypeChecker_Common.monoid_guard_t
+                                         g g' in
                                      (((tm, aq) :: args), bs3, subst2,
                                        uu___10)))
                        | (uu___3,
@@ -6792,7 +6796,9 @@ let (maybe_instantiate :
                                 (match uu___9 with
                                  | (args, bs3, subst2, g') ->
                                      let uu___10 =
-                                       FStar_TypeChecker_Env.conj_guard g g' in
+                                       FStar_Class_Monoid.op_Plus_Plus
+                                         FStar_TypeChecker_Common.monoid_guard_t
+                                         g g' in
                                      (((tm, aq) :: args), bs3, subst2,
                                        uu___10)))
                        | (uu___3,
@@ -6817,12 +6823,15 @@ let (maybe_instantiate :
                                 (match uu___10 with
                                  | (args, bs3, subst2, g') ->
                                      let uu___11 =
-                                       FStar_TypeChecker_Env.conj_guard g g' in
+                                       FStar_Class_Monoid.op_Plus_Plus
+                                         FStar_TypeChecker_Common.monoid_guard_t
+                                         g g' in
                                      (((tm, aq) :: args), bs3, subst2,
                                        uu___11)))
                        | (uu___3, bs3) ->
                            ([], bs3, subst,
-                             FStar_TypeChecker_Env.trivial_guard) in
+                             (FStar_Class_Monoid.mzero
+                                FStar_TypeChecker_Common.monoid_guard_t)) in
                      let uu___3 =
                        let uu___4 = inst_n_binders t1 in aux [] uu___4 bs1 in
                      (match uu___3 with
