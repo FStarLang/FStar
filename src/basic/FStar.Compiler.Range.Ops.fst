@@ -123,15 +123,22 @@ let json_of_def_range r =
 
 let intersect_rng r1 r2 =
   if r1.file_name <> r2.file_name then r2
-  else let start_pos =
-           if pos_geq r1.start_pos r2.start_pos then
-             r1.start_pos
-           else r2.start_pos in
-       let end_pos =
-           if pos_geq r1.end_pos r2.end_pos then
-             r2.end_pos
-           else r1.end_pos in
-       mk_rng r1.file_name start_pos end_pos
+  else
+    let start_pos =
+      if pos_geq r1.start_pos r2.start_pos
+      then r1.start_pos
+      else r2.start_pos
+    in
+    let end_pos =
+      if pos_geq r1.end_pos r2.end_pos
+      then r2.end_pos
+      else r1.end_pos
+    in
+    (* If start_pos > end_pos, then the intersection is empty, just take the bound *)
+    if pos_geq start_pos end_pos
+    then r2
+    else mk_rng r1.file_name start_pos end_pos
+
 let intersect_ranges r1 r2 = {
   def_range=intersect_rng r1.def_range r2.def_range;
   use_range=intersect_rng r1.use_range r2.use_range
