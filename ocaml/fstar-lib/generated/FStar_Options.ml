@@ -4962,11 +4962,12 @@ let (should_extract : Prims.string -> codegen_t -> Prims.bool) =
                        (should_extract_module m1))))
 let (should_be_already_cached : Prims.string -> Prims.bool) =
   fun m ->
-    let uu___ = get_already_cached () in
-    match uu___ with
-    | FStar_Pervasives_Native.None -> false
-    | FStar_Pervasives_Native.Some already_cached_setting ->
-        module_matches_namespace_filter m already_cached_setting
+    (let uu___ = should_check m in Prims.op_Negation uu___) &&
+      (let uu___ = get_already_cached () in
+       match uu___ with
+       | FStar_Pervasives_Native.None -> false
+       | FStar_Pervasives_Native.Some already_cached_setting ->
+           module_matches_namespace_filter m already_cached_setting)
 let (profile_enabled :
   Prims.string FStar_Pervasives_Native.option -> Prims.string -> Prims.bool)
   =
