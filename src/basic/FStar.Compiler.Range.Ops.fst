@@ -23,28 +23,31 @@ friend FStar.Compiler.Range.Type
 open FStar.Json
 open FStar.Compiler.Effect 
 open FStar.Compiler.Util
+open FStar.Class.Ord
 
 module Options = FStar.Options
 
 let union_rng r1 r2 =
-  if r1.file_name <> r2.file_name then r2
-  else let start_pos =
-           if pos_geq r1.start_pos r2.start_pos then
-             r2.start_pos
-           else r1.start_pos in
-       let end_pos =
-           if pos_geq r1.end_pos r2.end_pos then
-             r1.end_pos
-           else r2.end_pos in
-       mk_rng r1.file_name start_pos end_pos
+  if r1.file_name <> r2.file_name
+  then r2
+  else
+    let start_pos = min r1.start_pos r2.start_pos in
+    let end_pos   = max r1.end_pos   r2.end_pos in
+    mk_rng r1.file_name start_pos end_pos
+
 let union_ranges r1 r2 = {
   def_range=union_rng r1.def_range r2.def_range;
   use_range=union_rng r1.use_range r2.use_range
 }
+
+(* is r1 included in r2? *)
 let rng_included r1 r2 =
-    if r1.file_name <> r2.file_name then false
-    else pos_geq r1.start_pos r2.start_pos &&
-         pos_geq r2.end_pos r1.end_pos
+  if r1.file_name <> r2.file_name
+  then false
+  else
+    r2.start_pos <=? r1.start_pos &&
+    r2.end_pos >=? r1.end_pos
+
 let string_of_pos pos =
     format2 "%s,%s" (string_of_int pos.line) (string_of_int pos.col)
 let string_of_file_name f =
@@ -95,7 +98,8 @@ let compare_rng r1 r2     =
 let compare r1 r2 = compare_rng r1.def_range r2.def_range
 let compare_use_range r1 r2 = compare_rng r1.use_range r2.use_range
 let range_before_pos m1 p =
-    pos_geq p (end_of_range m1)
+    p >=? end_of_range m1
+
 let end_of_line p = {p with col=max_int}
 let extend_to_end_of_line r = mk_range (file_of_range r)
                                        (start_of_range r)
@@ -122,20 +126,13 @@ let json_of_def_range r =
             (end_of_range r)
 
 let intersect_rng r1 r2 =
-  if r1.file_name <> r2.file_name then r2
+  if r1.file_name <> r2.file_name
+  then r2
   else
-    let start_pos =
-      if pos_geq r1.start_pos r2.start_pos
-      then r1.start_pos
-      else r2.start_pos
-    in
-    let end_pos =
-      if pos_geq r1.end_pos r2.end_pos
-      then r2.end_pos
-      else r1.end_pos
-    in
+    let start_pos = max r1.start_pos r2.start_pos in
+    let end_pos   = min r1.end_pos   r2.end_pos in
     (* If start_pos > end_pos, then the intersection is empty, just take the bound *)
-    if pos_geq start_pos end_pos
+    if start_pos >=? end_pos
     then r2
     else mk_rng r1.file_name start_pos end_pos
 

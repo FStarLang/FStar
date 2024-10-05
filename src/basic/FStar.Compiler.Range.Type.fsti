@@ -16,6 +16,8 @@
 module FStar.Compiler.Range.Type
 
 open FStar.Compiler.Effect
+open FStar.Class.Deq
+open FStar.Class.Ord
 
 [@@ PpxDerivingYoJson; PpxDerivingShow]
 new val rng : Type0
@@ -25,6 +27,9 @@ new val range : Type0
 
 [@@ PpxDerivingYoJson; PpxDerivingShow]
 new val pos : Type0
+
+instance val deq_pos : deq pos
+instance val ord_pos : ord pos
 
 val dummy_rng : rng
 val mk_rng : string -> pos -> pos -> rng
