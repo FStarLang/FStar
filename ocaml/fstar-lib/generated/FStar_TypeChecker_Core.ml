@@ -5270,7 +5270,14 @@ and (do_check :
                                   Success uu___6
                               | err -> err)
                          | Error err -> Error err)
-                    else fail "Let binding is effectful"))
+                    else
+                      (let uu___4 =
+                         let uu___5 =
+                           FStar_Class_Show.show FStar_Ident.showable_lident
+                             lb.FStar_Syntax_Syntax.lbeff in
+                         FStar_Compiler_Util.format1
+                           "Let binding is effectful (lbeff = %s)" uu___5 in
+                       fail uu___4)))
       | FStar_Syntax_Syntax.Tm_match
           { FStar_Syntax_Syntax.scrutinee = sc;
             FStar_Syntax_Syntax.ret_opt = FStar_Pervasives_Native.None;
