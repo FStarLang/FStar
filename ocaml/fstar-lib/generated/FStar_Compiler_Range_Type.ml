@@ -9,10 +9,17 @@ let (__proj__Mkpos__item__col : pos -> Prims.int) =
   fun projectee -> match projectee with | { line; col;_} -> col
 let (max : Prims.int -> Prims.int -> Prims.int) =
   fun i -> fun j -> if i < j then j else i
-let (pos_geq : pos -> pos -> Prims.bool) =
+let (compare_pos : pos -> pos -> FStar_Compiler_Order.order) =
   fun p1 ->
     fun p2 ->
-      (p1.line > p2.line) || ((p1.line = p2.line) && (p1.col >= p2.col))
+      let uu___ = FStar_Class_Ord.cmp FStar_Class_Ord.ord_int p1.line p2.line in
+      FStar_Compiler_Order.lex uu___
+        (fun uu___1 ->
+           FStar_Class_Ord.cmp FStar_Class_Ord.ord_int p1.col p2.col)
+let (deq_pos : pos FStar_Class_Deq.deq) =
+  { FStar_Class_Deq.op_Equals_Question = (=) }
+let (ord_pos : pos FStar_Class_Ord.ord) =
+  { FStar_Class_Ord.super = deq_pos; FStar_Class_Ord.cmp = compare_pos }
 type rng = {
   file_name: file_name ;
   start_pos: pos ;
