@@ -4542,8 +4542,7 @@ let (add_sigelt_to_env :
         (let uu___1 = FStar_Compiler_Debug.low () in
          if uu___1
          then
-           let uu___2 =
-             FStar_Class_Show.show FStar_Syntax_Print.showable_sigelt se in
+           let uu___2 = FStar_Syntax_Print.sigelt_to_string_short se in
            let uu___3 =
              FStar_Class_Show.show
                (FStar_Class_Show.printableshow
@@ -5156,9 +5155,7 @@ let (tc_decls :
                     let uu___6 =
                       FStar_Class_Tagged.tag_of
                         FStar_Syntax_Syntax.tagged_sigelt se in
-                    let uu___7 =
-                      FStar_Class_Show.show
-                        FStar_Syntax_Print.showable_sigelt se in
+                    let uu___7 = FStar_Syntax_Print.sigelt_to_string_short se in
                     FStar_Compiler_Util.print2
                       ">>>>>>>>>>>>>>Checking top-level %s decl %s\n" uu___6
                       uu___7
