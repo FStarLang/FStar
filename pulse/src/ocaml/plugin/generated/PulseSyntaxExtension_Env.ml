@@ -262,7 +262,7 @@ let (free_vars_comp :
               c.PulseSyntaxExtension_Sugar.postcondition in
           FStar_List_Tot_Base.op_At uu___2 uu___3 in
         FStar_List_Tot_Base.op_At uu___ uu___1 in
-      FStar_Compiler_List.deduplicate FStar_Ident.ident_equals ids
+      FStar_Class_Ord.dedup FStar_Syntax_Syntax.ord_ident ids
 let (pat_vars :
   FStar_Parser_AST.pattern ->
     FStar_Ident.ident Prims.list PulseSyntaxExtension_Err.err)
