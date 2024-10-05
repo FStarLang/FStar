@@ -850,13 +850,21 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     text "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
 
   ( 'd',
+    "",
+    PostProcessed (
+      (fun o ->
+        Debug.enable ();
+        o), Const (Bool true)),
+    text "Enable general debugging, i.e. increase verbosity.");
+
+  ( noshort,
     "debug",
     PostProcessed (
       (fun o ->
         let keys = as_comma_string_list o in
         Debug.enable_toggles keys;
         o), ReverseAccumulated (SimpleStr "debug toggles")),
-    text "Debug toggles (comma-separated list of debug keys)");
+    text "Enable specific debug toggles (comma-separated list of debug keys)");
 
   ( noshort,
     "debug_all",
