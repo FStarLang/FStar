@@ -22,6 +22,7 @@ open PulseCore.FractionalPermission
 open Pulse.Main
 open Pulse.Lib.Reference
 open FStar.Ghost
+open Pulse.Class.PtsTo
 
 module U32 = FStar.UInt32
 module B = Pulse.Lib.Box

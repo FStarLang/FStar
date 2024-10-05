@@ -20,6 +20,7 @@ open FStar.Ghost
 open PulseCore.FractionalPermission
 
 open Pulse.Lib.Core
+open Pulse.Class.PtsTo
 
 module U32 = FStar.UInt32
 module T = FStar.Tactics.V2
@@ -33,6 +34,11 @@ val pts_to (#a:Type0)
            ([@@@equate_strict] b:box a)
            (#[T.exact (`1.0R)] p:perm)
            (v:a) : slprop
+
+[@@pulse_unfold]
+instance has_pts_to_box (a:Type u#0) : has_pts_to (box a) a = {
+  pts_to = pts_to;
+}
 
 val pts_to_is_slprop2 (#a:Type) (r:box a) (p:perm) (x:a)
   : Lemma (is_slprop2 (pts_to r #p x))

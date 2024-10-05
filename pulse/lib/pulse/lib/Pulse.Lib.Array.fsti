@@ -23,6 +23,7 @@ include Pulse.Lib.Array.Core
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
 module U8 = FStar.UInt8
+open Pulse.Class.PtsTo
 
 val compare
         (#t:eqtype)

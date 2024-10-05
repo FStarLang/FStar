@@ -20,6 +20,7 @@ open Pulse.Lib.Core
 
 open Pulse.Lib.Reference
 open Pulse.Lib.SpinLock
+open Pulse.Class.PtsTo
 
 module R = Pulse.Lib.Reference
 module B = Pulse.Lib.Box
