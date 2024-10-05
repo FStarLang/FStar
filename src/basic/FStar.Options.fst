@@ -597,7 +597,7 @@ let display_debug_keys () =
   let keys = Debug.list_all_toggles () in
   keys |> List.sortWith String.compare |> List.iter (fun s -> Util.print_string (s ^ "\n"))
 
-let display_usage_aux specs =
+let display_usage_aux (specs : list (opt & Pprint.document)) : unit =
   let open FStar.Pprint in
   let open FStar.Errors.Msg in
   let text (s:string) : document = flow (break_ 1) (words s) in
@@ -612,14 +612,23 @@ let display_usage_aux specs =
     doc_of_string "fstar.exe [options] file[s] [@respfile...]" ^/^
     doc_of_string (Util.format1 "  %srespfile: read command-line options from respfile\n" (Util.colorize_bold "@")) ^/^
     List.fold_right
-      (fun ((_, flag, p), explain) rest ->
-        let opt = doc_of_string ("--" ^ flag) in
+      (fun ((short, flag, p), explain) rest ->
         let arg =
           match p with
           | ZeroArgs _ -> empty
           | OneArg (_, argname) -> blank 1 ^^ doc_of_string argname
         in
-        group (bold_doc (opt ^^ arg)) ^^ hardline ^^
+        let short_opt =
+          if short <> noshort
+          then [doc_of_string ("-" ^ String.make 1 short) ^^ arg]
+          else []
+        in
+        let long_opt =
+          if flag <> ""
+          then [doc_of_string ("--" ^ flag) ^^ arg]
+          else []
+        in
+        group (bold_doc (separate (comma ^^ blank 1) (short_opt @ long_opt))) ^^ hardline ^^
         group (blank 4 ^^ align explain) ^^ hardline ^^
         rest
       )
