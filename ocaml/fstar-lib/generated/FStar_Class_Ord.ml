@@ -31,6 +31,18 @@ let op_Greater_Equals_Question : 'a . 'a ord -> 'a -> 'a -> Prims.bool =
     fun x ->
       fun y ->
         let uu___1 = cmp uu___ x y in uu___1 <> FStar_Compiler_Order.Lt
+let min : 'a . 'a ord -> 'a -> 'a -> 'a =
+  fun uu___ ->
+    fun x ->
+      fun y ->
+        let uu___1 = op_Less_Equals_Question uu___ x y in
+        if uu___1 then x else y
+let max : 'a . 'a ord -> 'a -> 'a -> 'a =
+  fun uu___ ->
+    fun x ->
+      fun y ->
+        let uu___1 = op_Greater_Equals_Question uu___ x y in
+        if uu___1 then x else y
 let ord_eq : 'a . 'a ord -> 'a FStar_Class_Deq.deq = fun d -> d.super
 let rec insert : 'a . 'a ord -> 'a -> 'a Prims.list -> 'a Prims.list =
   fun uu___ ->

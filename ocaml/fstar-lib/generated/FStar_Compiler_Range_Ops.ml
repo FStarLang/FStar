@@ -11,19 +11,13 @@ let (union_rng :
       then r2
       else
         (let start_pos =
-           if
-             FStar_Compiler_Range_Type.pos_geq
-               r1.FStar_Compiler_Range_Type.start_pos
-               r2.FStar_Compiler_Range_Type.start_pos
-           then r2.FStar_Compiler_Range_Type.start_pos
-           else r1.FStar_Compiler_Range_Type.start_pos in
+           FStar_Class_Ord.min FStar_Compiler_Range_Type.ord_pos
+             r1.FStar_Compiler_Range_Type.start_pos
+             r2.FStar_Compiler_Range_Type.start_pos in
          let end_pos =
-           if
-             FStar_Compiler_Range_Type.pos_geq
-               r1.FStar_Compiler_Range_Type.end_pos
-               r2.FStar_Compiler_Range_Type.end_pos
-           then r1.FStar_Compiler_Range_Type.end_pos
-           else r2.FStar_Compiler_Range_Type.end_pos in
+           FStar_Class_Ord.max FStar_Compiler_Range_Type.ord_pos
+             r1.FStar_Compiler_Range_Type.end_pos
+             r2.FStar_Compiler_Range_Type.end_pos in
          FStar_Compiler_Range_Type.mk_rng
            r1.FStar_Compiler_Range_Type.file_name start_pos end_pos)
 let (union_ranges :
@@ -53,11 +47,13 @@ let (rng_included :
           r2.FStar_Compiler_Range_Type.file_name
       then false
       else
-        (FStar_Compiler_Range_Type.pos_geq
-           r1.FStar_Compiler_Range_Type.start_pos
-           r2.FStar_Compiler_Range_Type.start_pos)
+        (FStar_Class_Ord.op_Less_Equals_Question
+           FStar_Compiler_Range_Type.ord_pos
+           r2.FStar_Compiler_Range_Type.start_pos
+           r1.FStar_Compiler_Range_Type.start_pos)
           &&
-          (FStar_Compiler_Range_Type.pos_geq
+          (FStar_Class_Ord.op_Greater_Equals_Question
+             FStar_Compiler_Range_Type.ord_pos
              r2.FStar_Compiler_Range_Type.end_pos
              r1.FStar_Compiler_Range_Type.end_pos)
 let (string_of_pos : FStar_Compiler_Range_Type.pos -> Prims.string) =
@@ -201,7 +197,8 @@ let (range_before_pos :
   fun m1 ->
     fun p ->
       let uu___ = end_of_range m1 in
-      FStar_Compiler_Range_Type.pos_geq p uu___
+      FStar_Class_Ord.op_Greater_Equals_Question
+        FStar_Compiler_Range_Type.ord_pos p uu___
 let (end_of_line :
   FStar_Compiler_Range_Type.pos -> FStar_Compiler_Range_Type.pos) =
   fun p ->
@@ -267,21 +264,21 @@ let (intersect_rng :
       then r2
       else
         (let start_pos =
-           if
-             FStar_Compiler_Range_Type.pos_geq
-               r1.FStar_Compiler_Range_Type.start_pos
-               r2.FStar_Compiler_Range_Type.start_pos
-           then r1.FStar_Compiler_Range_Type.start_pos
-           else r2.FStar_Compiler_Range_Type.start_pos in
+           FStar_Class_Ord.max FStar_Compiler_Range_Type.ord_pos
+             r1.FStar_Compiler_Range_Type.start_pos
+             r2.FStar_Compiler_Range_Type.start_pos in
          let end_pos =
-           if
-             FStar_Compiler_Range_Type.pos_geq
-               r1.FStar_Compiler_Range_Type.end_pos
-               r2.FStar_Compiler_Range_Type.end_pos
-           then r2.FStar_Compiler_Range_Type.end_pos
-           else r1.FStar_Compiler_Range_Type.end_pos in
-         FStar_Compiler_Range_Type.mk_rng
-           r1.FStar_Compiler_Range_Type.file_name start_pos end_pos)
+           FStar_Class_Ord.min FStar_Compiler_Range_Type.ord_pos
+             r1.FStar_Compiler_Range_Type.end_pos
+             r2.FStar_Compiler_Range_Type.end_pos in
+         let uu___1 =
+           FStar_Class_Ord.op_Greater_Equals_Question
+             FStar_Compiler_Range_Type.ord_pos start_pos end_pos in
+         if uu___1
+         then r2
+         else
+           FStar_Compiler_Range_Type.mk_rng
+             r1.FStar_Compiler_Range_Type.file_name start_pos end_pos)
 let (intersect_ranges :
   FStar_Compiler_Range_Type.range ->
     FStar_Compiler_Range_Type.range -> FStar_Compiler_Range_Type.range)

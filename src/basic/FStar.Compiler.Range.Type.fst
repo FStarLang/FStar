@@ -16,6 +16,9 @@
 module FStar.Compiler.Range.Type
 
 open FStar.Compiler.Effect 
+open FStar.Class.Deq
+open FStar.Class.Ord
+open FStar.Compiler.Order
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type file_name = string
@@ -26,9 +29,16 @@ type pos = {
   col: int
 }
 let max i j = if i < j then j else i
-let pos_geq p1 p2 =
-   (p1.line > p2.line ||
-   (p1.line = p2.line && p1.col >= p2.col))
+
+let compare_pos (p1 p2 : pos) : order =
+  lex (cmp p1.line p2.line) (fun _ -> cmp p1.col p2.col)
+
+instance deq_pos : deq pos = { (=?) = (=); }
+
+instance ord_pos : ord pos = {
+  super = deq_pos;
+  cmp = compare_pos;
+}
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type rng = {
