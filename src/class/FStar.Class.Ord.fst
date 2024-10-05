@@ -9,6 +9,9 @@ let (<=?) x y = cmp x y <> Gt
 let (>?)  x y = cmp x y =  Gt
 let (>=?) x y = cmp x y <> Lt
 
+let min x y = if x <=? y then x else y
+let max x y = if x >=? y then x else y
+
 instance ord_eq (a:Type) (d : ord a) : Tot (deq a) = d.super
 
 let rec insert (#a:Type) {| ord a |} (x:a) (xs:list a) : list a =

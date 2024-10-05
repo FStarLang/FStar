@@ -29,6 +29,9 @@ val (<=?) : #a:Type -> {| ord a |} -> a -> a -> bool
 val (>?)  : #a:Type -> {| ord a |} -> a -> a -> bool
 val (>=?) : #a:Type -> {| ord a |} -> a -> a -> bool
 
+val min : #a:Type -> {| ord a |} -> a -> a -> a
+val max : #a:Type -> {| ord a |} -> a -> a -> a
+
 instance val ord_int    : ord int
 instance val ord_bool   : ord bool
 instance val ord_unit   : ord unit
