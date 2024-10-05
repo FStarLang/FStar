@@ -154,7 +154,14 @@ let free_vars_comp (env:env_t) (c:Sugar.computation_type)
         free_vars_term env c.return_type @
         free_vars_slprop (fst (push_bv env c.return_name)) c.postcondition
     in
-    L.deduplicate Ident.ident_equals ids
+    (* NOTE: We use this particular dedup function since it favors
+    occurrences on the left, so `dedup [1;2;1]` is `[1;2]`  instaed of `[2;1]`.
+    This is important for something like
+      requires foo 'x 'y
+      ensures  bar 'x
+    which elaborates to implicit arguments for `x` and `y`, and they should
+    be in that order, i.e. textual order. *)
+    FStar.Class.Ord.dedup ids
 
 let pat_vars (p:A.pattern)
   : err (list ident)
