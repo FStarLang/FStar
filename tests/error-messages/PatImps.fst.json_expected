@@ -1,0 +1,116 @@
+Module after desugaring:
+module PatImps
+Declarations: [
+let f1 x =
+  (match x with
+    | [] -> 0
+    | _ :: _ -> 1)
+  <:
+  Prims.int
+noeq
+type t2 = | A : PatImps.t2
+
+
+
+let f2 x =
+  (let PatImps.A #i = x in
+    i)
+  <:
+  Prims.int
+noeq
+type t3 =
+  | C : PatImps.t3
+  | B : PatImps.t3
+
+
+
+
+
+
+let f3 x =
+  (match x with
+    | PatImps.B #i -> i
+    | PatImps.C #i -> i)
+  <:
+  Prims.int
+]
+
+Module before type checking:
+module PatImps
+Declarations: [
+let f1 x =
+  (match x with
+    | [] -> 0
+    | _ :: _ -> 1)
+  <:
+  Prims.int
+noeq
+type t2 = | A : PatImps.t2
+
+
+
+let f2 x =
+  (let PatImps.A #i = x in
+    i)
+  <:
+  Prims.int
+noeq
+type t3 =
+  | C : PatImps.t3
+  | B : PatImps.t3
+
+
+
+
+
+
+let f3 x =
+  (match x with
+    | PatImps.B #i -> i
+    | PatImps.C #i -> i)
+  <:
+  Prims.int
+]
+
+Module after type checking:
+module PatImps
+Declarations: [
+let f1 x =
+  (match x with
+    | [] -> 0
+    | _ :: _ -> 1)
+  <:
+  Prims.int
+noeq
+type t2 = | A : PatImps.t2
+
+
+
+
+let f2 x =
+  (let PatImps.A #i = x in
+    i)
+  <:
+  Prims.int
+noeq
+type t3 =
+  | C : PatImps.t3
+  | B : PatImps.t3
+
+
+
+
+
+
+
+
+let f3 x =
+  (match x with
+    | PatImps.B #i -> i
+    | PatImps.C #i -> i)
+  <:
+  Prims.int
+]
+
+Verified module: PatImps
+All verification conditions discharged successfully

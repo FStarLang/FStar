@@ -43,6 +43,12 @@ DTuples.fst.json_output  : OTHERFLAGS+=--dump_module DTuples
 DTuples.fst.output       : OTHERFLAGS+=--dump_module DTuples
 SeqLit.fst.json_output   : OTHERFLAGS+=--dump_module SeqLit
 SeqLit.fst.output        : OTHERFLAGS+=--dump_module SeqLit
+PatImps.fst.json_output  : OTHERFLAGS+=--dump_module PatImps
+PatImps.fst.output       : OTHERFLAGS+=--dump_module PatImps
+TuplePat.fst.json_output : OTHERFLAGS+=--dump_module TuplePat
+TuplePat.fst.output      : OTHERFLAGS+=--dump_module TuplePat
+Monoid.fst.json_output   : OTHERFLAGS+=--dump_module Monoid
+Monoid.fst.output        : OTHERFLAGS+=--dump_module Monoid
 
 include $(FSTAR_HOME)/examples/Makefile.common
 
