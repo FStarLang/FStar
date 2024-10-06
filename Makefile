@@ -98,21 +98,9 @@ package: all
 # Removes everything created by `make all`. MUST NOT be used when
 # bootstrapping.
 .PHONY: clean
-clean: clean-intermediate clean-buildfiles
+clean: clean-intermediate
 	$(call msg, "CLEAN")
-	$(Q)cd $(DUNE_SNAPSHOT) && { dune uninstall --prefix=$(FSTAR_CURDIR) || true ; }
-
-# Clean temporary dune build files, while retaining all checked files
-# and installed files. Used to save space after building, particularly
-# after CI. Note we have to keep fstar.install or otherwise `dune
-# uninstall` cannot work.
-.PHONY: clean-buildfiles
-clean-buildfiles:
-	$(call msg, "CLEAN BUILDFILES")
-	$(Q)cp -f $(DUNE_SNAPSHOT)/_build/default/fstar.install ._fstar.install
 	$(Q)cd $(DUNE_SNAPSHOT) && { dune clean || true ; }
-	$(Q)mkdir -p $(DUNE_SNAPSHOT)/_build/default/
-	$(Q)cp -f ._fstar.install $(DUNE_SNAPSHOT)/_build/default/fstar.install
 
 # Removes all .checked files and other intermediate files
 # Does not remove the object files from the dune snapshot.

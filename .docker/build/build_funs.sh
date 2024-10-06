@@ -78,10 +78,6 @@ function fstar_default_build () {
         return 1
     fi
 
-    # Clean temporary build files, not needed and saves
-    # several hundred MB
-    make clean-buildfiles || true
-
     export_home FSTAR "$(pwd)"
 
     wait # for fetches above

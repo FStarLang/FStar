@@ -18,9 +18,9 @@ clean: clean-ocaml
 # --------------------------------------------------------------------
 
 clean_boot:
-	rm -rf .cache.boot
-	rm -f ._depend
-	rm -f .depend
+	$(Q)rm -rf .cache.boot
+	$(Q)rm -f ._depend
+	$(Q)rm -f .depend
 
 # --------------------------------------------------------------------------------
 # Now we have some make targets wrap calls to other makefiles,
@@ -31,7 +31,7 @@ ocaml:
 	$(Q)+$(MAKE) -f Makefile.boot all-ml
 
 clean-ocaml: clean_boot
-	+$(MAKE) -C ocaml-output clean
+	+$(Q)$(MAKE) -C ocaml-output clean
 
 # --------------------------------------------------------------------
 # Testing
