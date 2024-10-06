@@ -17,14 +17,15 @@
 module BugWhileInv
 #lang-pulse
 open Pulse.Lib.Pervasives
+module R = Pulse.Lib.Reference
 
 let workaround (b:bool) (v:nat) : slprop =
     pure (not b ==> v == 0)
 
 
 fn count_down_ugly (x:ref nat)
-requires exists* v. pts_to x v
-ensures pts_to x 0
+requires exists* v. R.pts_to x v
+ensures  R.pts_to x 0
 {
   with v. assert (pts_to x v);
   fold (workaround true v);
@@ -54,8 +55,8 @@ ensures pts_to x 0
 
 
 fn count_down (x:ref nat)
-requires exists* v. pts_to x v
-ensures pts_to x 0
+requires exists* v. R.pts_to x v
+ensures  R.pts_to x 0
 {
   while (
     let v = !x;
@@ -71,7 +72,7 @@ ensures pts_to x 0
   )
   invariant b.
     exists* v. 
-        pts_to x v **
+        R.pts_to x v **
         pure ((b == false) ==> (v == 0))
   { () };
  }

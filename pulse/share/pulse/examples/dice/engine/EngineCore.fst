@@ -98,14 +98,14 @@ fn compute_cdi
   ([@@@ Rust_mut_binder] record:engine_record_t)
   (#uds_perm #p:perm)
   (#uds_bytes:Ghost.erased (Seq.seq U8.t))
-  requires A.pts_to uds #uds_perm uds_bytes
-        ** A.pts_to cdi 'c0
+  requires pts_to uds #uds_perm uds_bytes
+        ** pts_to cdi 'c0
         ** engine_record_perm record p 'repr
   returns record:engine_record_t
   ensures engine_record_perm record p 'repr
-       ** A.pts_to uds #uds_perm uds_bytes
+       ** pts_to uds #uds_perm uds_bytes
        ** (exists* (c1:Seq.seq U8.t). 
-            A.pts_to cdi c1 **
+            pts_to cdi c1 **
             pure (cdi_functional_correctness c1 uds_bytes 'repr))
 {
   A.pts_to_len uds;
@@ -137,13 +137,13 @@ fn engine_main
   (#repr:Ghost.erased engine_record_repr)
   (#uds_perm #p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
   requires engine_record_perm record p repr **
-           A.pts_to uds #uds_perm uds_bytes **
-           A.pts_to cdi c0
+           pts_to uds #uds_perm uds_bytes **
+           pts_to cdi c0
   returns  r:(engine_record_t & dice_return_code)
   ensures  engine_record_perm (fst r) p repr **
-           A.pts_to uds #uds_perm uds_bytes **
+           pts_to uds #uds_perm uds_bytes **
           (exists* (c1:Seq.seq U8.t).
-             A.pts_to cdi c1 **
+             pts_to cdi c1 **
              pure (snd r = DICE_SUCCESS ==> l0_is_authentic repr /\ cdi_functional_correctness c1 uds_bytes repr))
 {
   let b = authenticate_l0_image record;

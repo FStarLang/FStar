@@ -21,12 +21,12 @@ fn check_starts_with_at
       (#s1:erased (Seq.seq t) { Seq.length s1 == SZ.v len1})
       (#p:perm)
 requires
-  A.pts_to a0 #p s0 **
-  A.pts_to a1 #p s1
+  pts_to a0 #p s0 **
+  pts_to a1 #p s1
 returns b:bool
 ensures
-  A.pts_to a0 #p s0 **
-  A.pts_to a1 #p s1 **
+  pts_to a0 #p s0 **
+  pts_to a1 #p s1 **
   pure (b <==> starts_with_at (SZ.v j) s0 s1)
 {
   if (len1 - j < len0)
@@ -51,8 +51,8 @@ ensures
         pts_to i0 v0 **
         pts_to i1 v1 **
         pts_to break vb **
-        A.pts_to a0 #p s0 **
-        A.pts_to a1 #p s1 **
+        pts_to a0 #p s0 **
+        pts_to a1 #p s1 **
         pure (
           v0 <= len0 /\
           v1 <= len1 /\
@@ -94,12 +94,12 @@ fn contiguous_sub_sequence
       (#s1:erased (Seq.seq t) { Seq.length s1 == SZ.v len1})
       (#p:perm)
 requires
-  A.pts_to a0 #p s0 **
-  A.pts_to a1 #p s1
+  pts_to a0 #p s0 **
+  pts_to a1 #p s1
 returns b:bool
 ensures
-  A.pts_to a0 #p s0 **
-  A.pts_to a1 #p s1 **
+  pts_to a0 #p s0 **
+  pts_to a1 #p s1 **
   pure (b <==> (exists (j:nat { j < SZ.v len1 }).  starts_with_at j s0 s1))
 { 
   let mut j : SZ.t = 0sz;
@@ -114,8 +114,8 @@ ensures
     exists* vj vb.
       pts_to j vj **
       pts_to found vb **
-      A.pts_to a0 #p s0 **
-      A.pts_to a1 #p s1 **
+      pts_to a0 #p s0 **
+      pts_to a1 #p s1 **
       pure (
         vj <= len1 /\
         b == (not vb && vj < len1) /\

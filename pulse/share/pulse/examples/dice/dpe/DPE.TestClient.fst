@@ -29,7 +29,7 @@ module A = Pulse.Lib.Array
 assume val get_uds ()  // used only for testing a client
   : stt (larray U8.t (US.v uds_len))
         (requires emp)
-        (ensures fun uds -> exists* uds_repr. A.pts_to uds uds_repr)
+        (ensures fun uds -> exists* uds_repr. pts_to uds uds_repr)
 
 assume val get_engine_record ()  // used only for testing a client
   : stt record_t
@@ -54,7 +54,7 @@ fn dpe_client ()
   match sid_opt {
     Some sid -> {
       let uds = get_uds ();
-      with uds_repr. assert (A.pts_to uds uds_repr);
+      with uds_repr. assert (pts_to uds uds_repr);
       unfold (open_session_client_perm (Some sid));
       initialize_context sid _ uds;
       unfold (initialize_context_client_perm sid uds_repr);
@@ -66,10 +66,10 @@ fn dpe_client ()
         unfold (derive_child_client_perm sid t repr true);
         let r = get_l0_record ();
         let hopt = derive_child sid _ r;
-        drop_ (A.pts_to uds uds_repr);
+        drop_ (pts_to uds uds_repr);
         drop_ (derive_child_client_perm _ _ _ _);
       } else {
-        drop_ (A.pts_to uds uds_repr);
+        drop_ (pts_to uds uds_repr);
         drop_ (derive_child_client_perm _ _ _ _)
       }
     }
@@ -90,7 +90,7 @@ fn dpe_client_err ()
   match sid_opt {
     Some sid -> {
       let uds = get_uds ();
-      with uds_repr. assert (A.pts_to uds uds_repr);
+      with uds_repr. assert (pts_to uds uds_repr);
       unfold (open_session_client_perm (Some sid));
       initialize_context sid _ uds;
       unfold (initialize_context_client_perm sid uds_repr);

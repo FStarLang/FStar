@@ -384,10 +384,10 @@ val initialize_context (sid:sid_t)
   (uds:A.larray U8.t (SZ.v uds_len)) 
   : stt unit
         (requires
-           A.pts_to uds #p uds_bytes **
+           pts_to uds #p uds_bytes **
            sid_pts_to trace_ref sid t)
         (ensures fun b ->
-           A.pts_to uds #p uds_bytes **
+           pts_to uds #p uds_bytes **
            initialize_context_client_perm sid uds_bytes)
 
 noextract
@@ -465,13 +465,13 @@ val certify_key (sid:sid_t)
         (requires
            sid_pts_to trace_ref sid t **
            (exists* pub_key_repr crt_repr.
-              A.pts_to pub_key pub_key_repr **
-              A.pts_to crt crt_repr))
+              pts_to pub_key pub_key_repr **
+              pts_to crt crt_repr))
         (ensures fun _ ->
            certify_key_client_perm sid t **
            (exists* pub_key_repr crt_repr.
-              A.pts_to pub_key pub_key_repr **
-              A.pts_to crt crt_repr))
+              pts_to pub_key pub_key_repr **
+              pts_to crt crt_repr))
 
 noextract
 let trace_valid_for_sign (t:trace) : prop =
@@ -492,10 +492,10 @@ val sign (sid:sid_t)
         (requires
            sid_pts_to trace_ref sid t **
            (exists* signature_repr msg_repr.
-              A.pts_to signature signature_repr **
-              A.pts_to msg msg_repr))
+              pts_to signature signature_repr **
+              pts_to msg msg_repr))
         (ensures fun _ ->
            certify_key_client_perm sid t **
            (exists* signature_repr msg_repr.
-              A.pts_to signature signature_repr **
-              A.pts_to msg msg_repr))
+              pts_to signature signature_repr **
+              pts_to msg msg_repr))

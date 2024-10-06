@@ -124,9 +124,9 @@ let cbor_read_success_post
 : Tot slprop
 = exists* v rem.
     raw_data_item_match 1.0R c.cbor_read_payload v **
-    A.pts_to c.cbor_read_remainder #p rem **
-    ((raw_data_item_match 1.0R c.cbor_read_payload v ** A.pts_to c.cbor_read_remainder #p rem) @==>
-      A.pts_to a #p va) **
+    pts_to c.cbor_read_remainder #p rem **
+    ((raw_data_item_match 1.0R c.cbor_read_payload v ** pts_to c.cbor_read_remainder #p rem) @==>
+      pts_to a #p va) **
     pure (cbor_read_success_postcond va c v rem)
 
 
@@ -141,7 +141,7 @@ let cbor_read_error_post
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
 : Tot slprop
-= A.pts_to a #p va ** pure (cbor_read_error_postcond va)
+= pts_to a #p va ** pure (cbor_read_error_postcond va)
 
 let cbor_read_post
   (a: A.array U8.t)
@@ -159,7 +159,7 @@ val cbor_read
   (#va: Ghost.erased (Seq.seq U8.t))
   (#p: perm)
 : stt cbor_read_t
-    (A.pts_to a #p va ** pure (
+    (pts_to a #p va ** pure (
       (SZ.v sz == Seq.length va \/ SZ.v sz == A.length a)
     ))
     (fun res -> cbor_read_post a p va res)
@@ -182,9 +182,9 @@ let cbor_read_deterministically_encoded_success_post
 : Tot slprop
 = ((exists* v rem.
     raw_data_item_match 1.0R c.cbor_read_payload v **
-    A.pts_to c.cbor_read_remainder #p rem **
-    ((raw_data_item_match 1.0R c.cbor_read_payload v ** A.pts_to c.cbor_read_remainder #p rem) @==>
-      A.pts_to a #p va) **
+    pts_to c.cbor_read_remainder #p rem **
+    ((raw_data_item_match 1.0R c.cbor_read_payload v ** pts_to c.cbor_read_remainder #p rem) @==>
+      pts_to a #p va) **
     pure (cbor_read_deterministically_encoded_success_postcond va c v rem)
   ))
 
@@ -199,7 +199,7 @@ let cbor_read_deterministically_encoded_error_post
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
 : Tot slprop
-= A.pts_to a #p va ** pure (cbor_read_deterministically_encoded_error_postcond va)
+= pts_to a #p va ** pure (cbor_read_deterministically_encoded_error_postcond va)
 
 let cbor_read_deterministically_encoded_post
   (a: A.array U8.t)
@@ -217,7 +217,7 @@ val cbor_read_deterministically_encoded
   (#va: Ghost.erased (Seq.seq U8.t))
   (#p: perm)
 : stt cbor_read_t
-    (A.pts_to a #p va ** pure (SZ.v sz == Seq.length va \/ SZ.v sz == A.length a))
+    (pts_to a #p va ** pure (SZ.v sz == Seq.length va \/ SZ.v sz == A.length a))
     (fun res -> cbor_read_deterministically_encoded_post a p va res)
 
 (* Destructors and constructors *)
@@ -281,8 +281,8 @@ val cbor_destr_string
       Cbor.String? va
     ))
     (fun c' -> exists* vc' p'.
-      A.pts_to c'.cbor_string_payload #p' vc' **
-      (A.pts_to c'.cbor_string_payload #p' vc' @==> raw_data_item_match p c (Ghost.reveal va)) **
+      pts_to c'.cbor_string_payload #p' vc' **
+      (pts_to c'.cbor_string_payload #p' vc' @==> raw_data_item_match p c (Ghost.reveal va)) **
       pure (cbor_destr_string_post va c'  vc'
     ))
 
@@ -293,13 +293,13 @@ val cbor_constr_string
   (#va: Ghost.erased (Seq.seq U8.t))
   (#p: perm)
 : stt cbor
-    (A.pts_to a #p va ** pure (
+    (pts_to a #p va ** pure (
       U64.v len == Seq.length va
     ))
     (fun c' -> exists* vc'.
       raw_data_item_match 1.0R c' vc' **
       (raw_data_item_match 1.0R c' vc' @==>
-        A.pts_to a #p va
+        pts_to a #p va
       ) ** pure (
       U64.v len == Seq.length va /\
       vc' == Cbor.String typ va
@@ -311,7 +311,7 @@ val cbor_constr_array
   (#c': Ghost.erased (Seq.seq cbor))
   (#v': Ghost.erased (list Cbor.raw_data_item))
 : stt cbor
-    (A.pts_to a c' **
+    (pts_to a c' **
       raw_data_item_array_match 1.0R c' v' **
       pure (
         U64.v len == List.Tot.length v'
@@ -319,7 +319,7 @@ val cbor_constr_array
     (fun res -> exists* vres.
       raw_data_item_match 1.0R res vres **
       (raw_data_item_match 1.0R res vres @==>
-        (A.pts_to a c' **
+        (pts_to a c' **
           raw_data_item_array_match 1.0R c' v')
       ) ** pure (
       U64.v len == List.Tot.length v' /\
@@ -405,11 +405,11 @@ val cbor_array_iterator_next
   (#l: Ghost.erased (list Cbor.raw_data_item))
   (#i: Ghost.erased cbor_array_iterator_t)
 : stt cbor
-    (R.pts_to pi i ** cbor_array_iterator_match p i l **
+    (pts_to pi i ** cbor_array_iterator_match p i l **
       pure (Cons? l)
     )
     (fun c -> exists* i' vc vi'.
-      R.pts_to pi i' **
+      pts_to pi i' **
       raw_data_item_match p c vc **
       cbor_array_iterator_match p i' vi' **
       ((raw_data_item_match p c vc **
@@ -428,7 +428,7 @@ val cbor_read_array
   (#vdest: Ghost.erased (Seq.seq cbor))
 : stt (A.array cbor)
     (raw_data_item_match p a v **
-      A.pts_to dest vdest **
+      pts_to dest vdest **
       pure (
         (Cbor.Array? v /\
           (U64.v len == A.length dest \/ U64.v len == Seq.length vdest) /\
@@ -436,12 +436,12 @@ val cbor_read_array
         )
     ))
     (fun res -> exists* vres.
-      A.pts_to res vres **
+      pts_to res vres **
       raw_data_item_array_match p vres (maybe_cbor_array v) **
-      ((A.pts_to res vres **
+      ((pts_to res vres **
         raw_data_item_array_match p vres (maybe_cbor_array v)) @==> (
         raw_data_item_match p a v **
-        (exists* _x. (A.pts_to dest #1.0R _x))
+        (exists* _x. (pts_to dest #1.0R _x))
       )) ** pure (
       Cbor.Array? v /\
       U64.v len == A.length dest /\
@@ -495,12 +495,12 @@ val cbor_constr_tagged
   (#c': Ghost.erased (cbor))
   (#v': Ghost.erased (Cbor.raw_data_item))
 : stt cbor
-    (R.pts_to a c' **
+    (pts_to a c' **
       raw_data_item_match 1.0R c' v')
     (fun res ->
       raw_data_item_match 1.0R res (Cbor.Tagged tag v') **
       (raw_data_item_match 1.0R res (Cbor.Tagged tag v') @==>
-        (R.pts_to a c' **
+        (pts_to a c' **
           raw_data_item_match 1.0R c' v')
       )
     )
@@ -511,7 +511,7 @@ val cbor_constr_map
   (#c': Ghost.erased (Seq.seq cbor_map_entry))
   (#v': Ghost.erased (list (Cbor.raw_data_item & Cbor.raw_data_item)))
 : stt cbor
-    (A.pts_to a c' **
+    (pts_to a c' **
       raw_data_item_map_match 1.0R c' v' **
       pure (
         U64.v len == List.Tot.length v'
@@ -519,7 +519,7 @@ val cbor_constr_map
     (fun res -> exists* vres.
       raw_data_item_match 1.0R res vres **
       (raw_data_item_match 1.0R res vres @==>
-        (A.pts_to a c' **
+        (pts_to a c' **
           raw_data_item_map_match 1.0R c' v')
       ) ** pure (
       U64.v len == List.Tot.length v' /\
@@ -649,7 +649,7 @@ let cbor_write_post
   (vout': Seq.seq U8.t)
 : Tot slprop
 = 
-  A.pts_to out vout' **
+  pts_to out vout' **
   pure (cbor_write_postcond va out vout' res)
 
 val cbor_write
@@ -661,7 +661,7 @@ val cbor_write
   (#vout: Ghost.erased (Seq.seq U8.t))
 : stt SZ.t
     (raw_data_item_match p c (Ghost.reveal va) **
-      A.pts_to out vout **
+      pts_to out vout **
       pure (
         (SZ.v sz == A.length out)
     ))

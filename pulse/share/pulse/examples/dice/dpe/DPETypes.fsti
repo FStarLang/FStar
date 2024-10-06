@@ -135,7 +135,7 @@ type engine_context_t = {
 }
 
 let engine_context_perm (c:engine_context_t) (uds_bytes:Seq.seq U8.t) : slprop
-  = V.pts_to c.uds uds_bytes ** 
+  = pts_to c.uds uds_bytes ** 
     pure (V.is_full_vec c.uds)
 
 let mk_engine_context_t uds : engine_context_t = {uds}
@@ -167,7 +167,7 @@ let mk_l0_context_repr_t
 = {uds; cdi; repr}
 
 let l0_context_perm (c:l0_context_t) (r:l0_context_repr_t): slprop
-  = V.pts_to c.cdi r.cdi **
+  = pts_to c.cdi r.cdi **
     pure (V.is_full_vec c.cdi)
 
 (* L1 Context *)
@@ -257,11 +257,11 @@ let mk_l1_context_repr_t
 
 let l1_context_perm (c:l1_context_t) (r:l1_context_repr_t)
   : slprop
-  = V.pts_to c.deviceID_pub r.deviceID_pub **
-    V.pts_to c.aliasKey_pub r.aliasKey_pub **
-    V.pts_to c.aliasKey_priv r.aliasKey_priv **
-    V.pts_to c.deviceIDCSR r.deviceIDCSR **
-    V.pts_to c.aliasKeyCRT r.aliasKeyCRT **
+  = pts_to c.deviceID_pub r.deviceID_pub **
+    pts_to c.aliasKey_pub r.aliasKey_pub **
+    pts_to c.aliasKey_priv r.aliasKey_priv **
+    pts_to c.deviceIDCSR r.deviceIDCSR **
+    pts_to c.aliasKeyCRT r.aliasKeyCRT **
     pure (V.is_full_vec c.deviceID_pub /\
           V.is_full_vec c.aliasKey_pub /\
           V.is_full_vec c.aliasKey_priv /\

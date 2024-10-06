@@ -35,12 +35,12 @@ val engine_main (cdi:A.larray U8.t (SZ.v (digest_len dice_hash_alg))) (uds:A.lar
                 (#uds_bytes:Ghost.erased (Seq.seq U8.t))
   : stt (engine_record_t & dice_return_code)
         (engine_record_perm record p repr **
-         A.pts_to uds #uds_perm uds_bytes **
-         A.pts_to cdi c0)
+         pts_to uds #uds_perm uds_bytes **
+         pts_to cdi c0)
         (fun r ->
          engine_record_perm (fst r) p repr **
-         A.pts_to uds #uds_perm uds_bytes **
+         pts_to uds #uds_perm uds_bytes **
          (exists* (c1:Seq.seq U8.t).
-          A.pts_to cdi c1 **
+          pts_to cdi c1 **
           pure (snd r = DICE_SUCCESS ==>
                 l0_is_authentic repr /\ cdi_functional_correctness c1 uds_bytes repr)))

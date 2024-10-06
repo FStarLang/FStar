@@ -64,7 +64,7 @@ fn mult32 (x y:U32.t)
     let mut acc = 0ul;
     while ((ctr < x))
     invariant b.
-    exists* c a.
+    exists* c (a : UInt32.t). // FIXME: this type should have been instantiate by fundeps?
         pts_to ctr c **
         pts_to acc a **
         pure (c <= x /\

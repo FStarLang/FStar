@@ -59,14 +59,14 @@ let compute_st (a: H.hash_alg) =
   datalen: U32.t{ U32.v datalen = A.length data } ->
   stt (squash (Seq.length v_key == A.length key /\ Seq.length v_data == A.length data))
   (requires
-    (exists* v_tag . A.pts_to tag v_tag) **
-    A.pts_to key #p_key v_key **
-    A.pts_to data #p_data v_data
+    (exists* v_tag . pts_to tag v_tag) **
+    pts_to key #p_key v_key **
+    pts_to data #p_data v_data
   )
   (ensures fun _ ->
     A.pts_to tag (spec_hmac a v_key v_data) **
-    A.pts_to key #p_key v_key **
-    A.pts_to data #p_data v_data
+    pts_to key #p_key v_key **
+    pts_to data #p_data v_data
   )
 
 /// From EverCrypt.HMAC.compute

@@ -30,11 +30,11 @@ fn hacl_hash0
               (#psrc:perm)
               (#src_seq #dst_seq:erased (Seq.seq U8.t))
 requires
-    (A.pts_to dst dst_seq **
-     A.pts_to src #psrc src_seq)
+    (pts_to dst dst_seq **
+     pts_to src #psrc src_seq)
 ensures
-       A.pts_to src #psrc src_seq **
-       A.pts_to dst (spec_hash alg src_seq)
+       pts_to src #psrc src_seq **
+       pts_to dst (spec_hash alg src_seq)
 {
   A.pts_to_len src;
   EverCrypt.AutoConfig2.init ();
@@ -67,17 +67,17 @@ fn hacl_hmac0 (alg:alg_t { alg == Spec.Hash.Definitions.sha2_256 })
               (#key_seq:erased (Seq.seq U8.t))
               (#msg_seq:erased (Seq.seq U8.t))
 requires
-    (A.pts_to dst dst_seq **
-     A.pts_to key #pkey key_seq **
-     A.pts_to msg #pmsg msg_seq)
+    (pts_to dst dst_seq **
+     pts_to key #pkey key_seq **
+     pts_to msg #pmsg msg_seq)
 ensures    (
-       A.pts_to key #pkey key_seq **
-       A.pts_to msg #pmsg msg_seq **
-       A.pts_to dst (spec_hmac alg key_seq msg_seq))
+       pts_to key #pkey key_seq **
+       pts_to msg #pmsg msg_seq **
+       pts_to dst (spec_hmac alg key_seq msg_seq))
 {
   let prf = EverCrypt.HMAC.compute alg dst key pkey key_seq (US.sizet_to_uint32 key_len) msg pmsg msg_seq (US.sizet_to_uint32 msg_len);
   rewrite (A.pts_to dst (EverCrypt.HMAC.spec_hmac alg key_seq msg_seq))
-    as (A.pts_to dst (spec_hmac alg key_seq msg_seq))
+    as (pts_to dst (spec_hmac alg key_seq msg_seq))
 }
 
 
@@ -103,15 +103,15 @@ fn ed25519_verify0
   (#ppubk #phdr #psig:perm)
   (#pubk_seq #hdr_seq #sig_seq:erased (Seq.seq U8.t))
 requires
-    (A.pts_to pubk #ppubk pubk_seq **
-     A.pts_to hdr #phdr hdr_seq **
-     A.pts_to sig #psig sig_seq)
+    (pts_to pubk #ppubk pubk_seq **
+     pts_to hdr #phdr hdr_seq **
+     pts_to sig #psig sig_seq)
 returns res: bool
 ensures
     (
-      A.pts_to pubk #ppubk pubk_seq **
-      A.pts_to hdr #phdr hdr_seq **
-      A.pts_to sig #psig sig_seq **
+      pts_to pubk #ppubk pubk_seq **
+      pts_to hdr #phdr hdr_seq **
+      pts_to sig #psig sig_seq **
       pure (res == true <==> spec_ed25519_verify pubk_seq hdr_seq sig_seq)
     )
 {
@@ -140,14 +140,14 @@ fn ed25519_sign0
   (#pprivk #pmsg:perm)
   (#buf0 #privk_seq #msg_seq:erased (Seq.seq U8.t))
 requires
-    (A.pts_to buf buf0 **
-     A.pts_to privk #pprivk privk_seq **
-     A.pts_to msg #pmsg msg_seq)
+    (pts_to buf buf0 **
+     pts_to privk #pprivk privk_seq **
+     pts_to msg #pmsg msg_seq)
 ensures
     (exists* (buf1:Seq.seq U8.t).
-      A.pts_to buf buf1 ** 
-      A.pts_to privk #pprivk privk_seq **
-      A.pts_to msg #pmsg msg_seq **
+      pts_to buf buf1 ** 
+      pts_to privk #pprivk privk_seq **
+      pts_to msg #pmsg msg_seq **
       pure (buf1 `Seq.equal` spec_ed25519_sign privk_seq msg_seq))
 {
   A.pts_to_len privk;

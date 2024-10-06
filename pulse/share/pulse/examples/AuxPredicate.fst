@@ -28,15 +28,15 @@ module R = Pulse.Lib.Reference
 // writing Pulse syntax for slprops in predicates 
 let my_inv (b:bool) (r:R.ref int) : slprop
   = exists* v.
-      R.pts_to r v ** 
+      pts_to r v ** 
       pure ( (v==0 \/ v == 1) /\ b == (v = 0) )
     
 
 
 
 fn invar_introduces_ghost (r:R.ref int)
-  requires R.pts_to r 0
-  ensures R.pts_to r 1
+  requires pts_to r 0
+  ensures  pts_to r 1
 {
   r := 0;
 
@@ -70,8 +70,8 @@ fn invar_introduces_ghost (r:R.ref int)
 [@@expect_failure]
 
 fn invar_introduces_orig (r:R.ref int)
-  requires R.pts_to r 0
-  ensures R.pts_to r 1
+  requires pts_to r 0
+  ensures pts_to r 1
 {
   r := 0;
 
@@ -92,15 +92,15 @@ fn invar_introduces_orig (r:R.ref int)
 // it just works without further ado
 
 fn invar_introduces_ghost_alt (r:R.ref int)
-  requires R.pts_to r 0
-  ensures R.pts_to r 1
+  requires pts_to r 0
+  ensures pts_to r 1
 {
   r := 0;
 
   while (let vr = !r; (vr = 0))
   invariant b. 
     exists* v.
-      R.pts_to r v **
+      pts_to r v **
       pure ( (v==0 \/ v == 1) /\ b == (v = 0) )
   {
     r := 1;
@@ -112,8 +112,8 @@ fn invar_introduces_ghost_alt (r:R.ref int)
 
 
 fn exists_introduces_ghost (r:R.ref int)
-  requires R.pts_to r 0
-  ensures exists* v. R.pts_to r v ** pure (v == 0 \/ v == 1)
+  requires pts_to r 0
+  ensures exists* v. pts_to r v ** pure (v == 0 \/ v == 1)
 {
   r := 0;
 
@@ -128,8 +128,8 @@ fn exists_introduces_ghost (r:R.ref int)
 
 
 fn with_assert_OK (r:R.ref int)
-  requires R.pts_to r 0
-  ensures R.pts_to r 0
+  requires pts_to r 0
+  ensures pts_to r 0
 {
   r := 0;
 

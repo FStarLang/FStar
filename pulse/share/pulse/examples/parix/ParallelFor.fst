@@ -25,6 +25,7 @@ open Pulse.Lib.Pledge
 open Pulse.Lib.OnRange
 
 module P = Pulse.Lib.Pledge
+module R = Pulse.Lib.Reference
 
 
 ghost
@@ -349,7 +350,7 @@ let wsr_loop_inv_f
   : Tot slprop
   =
   exists* (ii:nat).
-       pts_to i ii
+       R.pts_to i ii
     ** full_post ii
     ** on_range post ii n
     ** pure (b == (Prims.op_LessThan ii n))
