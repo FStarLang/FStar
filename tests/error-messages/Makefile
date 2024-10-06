@@ -35,12 +35,20 @@ Bug3227.fst.json_output  : OTHERFLAGS+=--dump_module Bug3227
 Bug3227.fst.output       : OTHERFLAGS+=--dump_module Bug3227
 Bug3292.fst.json_output  : OTHERFLAGS+=--dump_module Bug3292
 Bug3292.fst.output       : OTHERFLAGS+=--dump_module Bug3292
+Bug3530.fst.json_output  : OTHERFLAGS+=--dump_module Bug3530
+Bug3530.fst.output       : OTHERFLAGS+=--dump_module Bug3530
 CalcImpl.fst.json_output : OTHERFLAGS+=--dump_module CalcImpl
 CalcImpl.fst.output      : OTHERFLAGS+=--dump_module CalcImpl
 DTuples.fst.json_output  : OTHERFLAGS+=--dump_module DTuples
 DTuples.fst.output       : OTHERFLAGS+=--dump_module DTuples
 SeqLit.fst.json_output   : OTHERFLAGS+=--dump_module SeqLit
 SeqLit.fst.output        : OTHERFLAGS+=--dump_module SeqLit
+PatImps.fst.json_output  : OTHERFLAGS+=--dump_module PatImps
+PatImps.fst.output       : OTHERFLAGS+=--dump_module PatImps
+TuplePat.fst.json_output : OTHERFLAGS+=--dump_module TuplePat
+TuplePat.fst.output      : OTHERFLAGS+=--dump_module TuplePat
+Monoid.fst.json_output   : OTHERFLAGS+=--dump_module Monoid
+Monoid.fst.output        : OTHERFLAGS+=--dump_module Monoid
 
 include $(FSTAR_HOME)/examples/Makefile.common
 

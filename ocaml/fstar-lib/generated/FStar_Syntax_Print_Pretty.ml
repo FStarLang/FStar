@@ -152,13 +152,10 @@ let (binder_to_string' :
     fun b ->
       FStar_GenSym.with_frozen_gensym
         (fun uu___ ->
-           let uu___1 =
+           let e =
              FStar_Syntax_Resugar.resugar_binder b
                FStar_Compiler_Range_Type.dummyRange in
-           match uu___1 with
-           | FStar_Pervasives_Native.None -> ""
-           | FStar_Pervasives_Native.Some e ->
-               let d = FStar_Parser_ToDocument.binder_to_document e in pp d)
+           let d = FStar_Parser_ToDocument.binder_to_document e in pp d)
 let (eff_decl_to_string : FStar_Syntax_Syntax.eff_decl -> Prims.string) =
   fun ed ->
     FStar_GenSym.with_frozen_gensym

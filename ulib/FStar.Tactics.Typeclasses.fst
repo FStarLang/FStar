@@ -390,7 +390,7 @@ let mk_class (nm:string) : Tac decls =
           | Sg_Let {lbs} -> lookup_lb lbs proj_name
           | _ -> fail "mk_class: proj not Sg_Let?"
       in
-      (* print ("proj_ty = " ^ term_to_string proj_lb.lb_typ); *)
+      debug (fun () -> "proj_ty = " ^ term_to_string proj_lb.lb_typ);
 
       let ty =
         let bs, cod = collect_arr_bs proj_lb.lb_typ in

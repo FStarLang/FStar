@@ -1,0 +1,51 @@
+Module after desugaring:
+module TuplePat
+Declarations: [
+let mult x y =
+  match x, y with
+  | 0, 0 -> 0
+  | x, y -> x * y
+let mult2 x y =
+  match x, y with
+  | FStar.Pervasives.Native.Some x, FStar.Pervasives.Native.Some y -> x * y
+  | FStar.Pervasives.Native.None, _ -> 0
+  | _, FStar.Pervasives.Native.None -> 0
+  | _ -> 123
+]
+
+Module before type checking:
+module TuplePat
+Declarations: [
+let mult x y =
+  match x, y with
+  | 0, 0 -> 0
+  | x, y -> x * y
+let mult2 x y =
+  match x, y with
+  | FStar.Pervasives.Native.Some x, FStar.Pervasives.Native.Some y -> x * y
+  | FStar.Pervasives.Native.None, _ -> 0
+  | _, FStar.Pervasives.Native.None -> 0
+  | _ -> 123
+]
+
+Module after type checking:
+module TuplePat
+Declarations: [
+let mult x y =
+  (match x, y with
+    | 0, 0 -> 0
+    | x, y -> x * y)
+  <:
+  Prims.int
+let mult2 x y =
+  (match x, y with
+    | FStar.Pervasives.Native.Some x, FStar.Pervasives.Native.Some y -> x * y
+    | FStar.Pervasives.Native.None , _ -> 0
+    | _, FStar.Pervasives.Native.None  -> 0
+    | _ -> 123)
+  <:
+  Prims.int
+]
+
+Verified module: TuplePat
+All verification conditions discharged successfully

@@ -131,11 +131,9 @@ let pat_to_string (p:pat) : string = GenSym.with_frozen_gensym (fun () ->
 )
 
 let binder_to_string' is_arrow (b:binder) : string = GenSym.with_frozen_gensym (fun () ->
-  match Resugar.resugar_binder b Range.dummyRange with
-  | None -> ""
-  | Some e ->
-    let d = ToDocument.binder_to_document e in
-    pp d
+  let e = Resugar.resugar_binder b Range.dummyRange in
+  let d = ToDocument.binder_to_document e in
+  pp d
 )
 
 let eff_decl_to_string ed = GenSym.with_frozen_gensym (fun () ->
