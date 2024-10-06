@@ -1,0 +1,65 @@
+Module after desugaring:
+module Bug3530
+Declarations: [
+private
+let _ = x: Prims.int -> Prims.bool
+private
+let _ = Prims.bool
+private
+let _ = Prims.bool
+private
+let _ = [@@@ 1]x: Prims.int -> Prims.bool
+private
+let _ = x: Prims.int -> Prims.bool
+private
+let _ = Prims.bool
+private
+let _ = Prims.bool
+private
+let _ = [@@@ 1]x: Prims.int -> Prims.bool
+]
+
+Module before type checking:
+module Bug3530
+Declarations: [
+private
+let _ = x: Prims.int -> Prims.bool
+private
+let _ = Prims.bool
+private
+let _ = Prims.bool
+private
+let _ = [@@@ 1]x: Prims.int -> Prims.bool
+private
+let _ = x: Prims.int -> Prims.bool
+private
+let _ = Prims.bool
+private
+let _ = Prims.bool
+private
+let _ = [@@@ 1]x: Prims.int -> Prims.bool
+]
+
+Module after type checking:
+module Bug3530
+Declarations: [
+private
+let _ = x: Prims.int -> Prims.bool
+private
+let _ = Prims.bool
+private
+let _ = Prims.bool
+private
+let _ = [@@@ 1]x: Prims.int -> Prims.bool
+private
+let _ = x: Prims.int -> Prims.bool
+private
+let _ = Prims.bool
+private
+let _ = Prims.bool
+private
+let _ = [@@@ 1]x: Prims.int -> Prims.bool
+]
+
+Verified module: Bug3530
+All verification conditions discharged successfully
