@@ -1210,28 +1210,29 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
     match p.v with
     | Pat_constant c -> mk (A.PatConst c)
 
-    | Pat_cons (fv, _, []) ->
-      mk (A.PatName fv.fv_name.v)
+    (* List patterns. *)
+    | Pat_cons(fv, _, args)
+      when lid_equals fv.fv_name.v C.nil_lid -> (
+      match filter_pattern_imp args with
+      | [] -> mk (A.PatList [])
+      | _ -> resugar_plain_pat_cons fv args
+    )
 
-    | Pat_cons(fv, _, args) when (lid_equals fv.fv_name.v C.nil_lid
-                               && may_drop_implicits args) ->
-      if not (List.isEmpty (filter_pattern_imp args)) then
-        E.log_issue p.p E.Warning_NilGivenExplicitArgs "Prims.Nil given explicit arguments";
-      mk (A.PatList [])
-
-    | Pat_cons(fv, _, args) when (lid_equals fv.fv_name.v C.cons_lid
-                               && may_drop_implicits args) ->
-      (match filter_pattern_imp args with
+    | Pat_cons(fv, _, args)
+      when lid_equals fv.fv_name.v C.cons_lid -> (
+      match filter_pattern_imp args with
        | [(hd, false); (tl, false)] ->
          let hd' = aux hd (Some false) in
          (match aux tl (Some false) with
           | { pat = A.PatList tl'; prange = p } -> A.mk_pattern (A.PatList (hd' :: tl')) p
           | tl' -> resugar_plain_pat_cons' fv [hd'; tl'])
-       | args' ->
-         E.log_issue p.p E.Warning_ConsAppliedExplicitArgs
-           (Util.format1 "Prims.Cons applied to %s explicit arguments"
-             (string_of_int <| List.length args'));
-         resugar_plain_pat_cons fv args)
+
+       | _ -> resugar_plain_pat_cons fv args
+    )
+
+    | Pat_cons (fv, _, []) ->
+      mk (A.PatName fv.fv_name.v)
+
 
     | Pat_cons(fv, _, args) when (is_tuple_constructor_lid fv.fv_name.v
                                && not (must_print args)) ->
