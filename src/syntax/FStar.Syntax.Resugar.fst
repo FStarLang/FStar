@@ -63,8 +63,8 @@ let bv_as_unique_ident (x:S.bv) : I.ident =
   in
   I.mk_ident (unique_name, (range_of_id x.ppname))
 
+(* Filter out implicit arguments, keep typeclass args. *)
 let filter_imp a =
-  (* keep typeclass args *)
   match a with
   | Some (S.Meta t) when U.is_fvar C.tcresolve_lid t -> true
   | Some (S.Implicit _)
@@ -397,7 +397,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       let xs, body = SS.open_term xs body in
       let xs = if Options.print_implicits () then xs else xs |> List.filter (fun x -> x.binder_qual |> filter_imp) in
       let body_bv = FStar.Syntax.Free.names body in
-      let patterns = xs |> List.choose (fun x ->
+      let patterns = xs |> List.map (fun x ->
         //x.sort contains a type annotation for the bound variable
         //the pattern `p` below only contains the variable, not the annotation
         //but, if the user wrote the annotation, then we should record that and print it back
@@ -424,7 +424,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         then xs
         else filter_imp_bs xs in
       let body = resugar_comp' env body in
-      let xs = xs |> map_opt (fun b -> resugar_binder' env b t.pos) |> List.rev in
+      let xs = xs |> map (fun b -> resugar_binder' env b t.pos) |> List.rev in
       let rec aux body = function
         | [] -> body
         | hd::tl ->
@@ -435,7 +435,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
     | Tm_refine {b=x; phi} ->
       (* bv * term -> binder * term *)
       let x, phi = SS.open_term [S.mk_binder x] phi in
-      let b = BU.must (resugar_binder' env (List.hd x) t.pos) in
+      let b = resugar_binder' env (List.hd x) t.pos in
       mk (A.Refine(b, resugar_term' env phi))
 
     | Tm_app {hd={n=Tm_fvar fv}; args=[(e, _)]}
@@ -577,7 +577,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           let pre_bs_types, last_type = unsnoc opened_bs_types in
           let bs = List.map2 (fun b t ->
                       let b = set_binder_sort t b in
-                      BU.must <| resugar_binder' env b t.pos)
+                      resugar_binder' env b t.pos)
                     bs pre_bs_types
           in
           Some <| mk (A.Sum (List.map Inl bs, resugar_term' env last_type))
@@ -695,7 +695,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                   if (Options.print_implicits())
                   then xs
                   else filter_imp_bs xs in
-                let xs = xs |> map_opt (fun b -> resugar_binder' env b t.pos) in
+                let xs = xs |> map (fun b -> resugar_binder' env b t.pos) in
                 let pats, body = match (SS.compress body).n with
                   | Tm_meta {tm=e; meta=m} ->
                     let body = resugar_term' env e in
@@ -849,13 +849,12 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         in
         attrs_opt,
         (if is_pat_app then
-          let args = binders |> map_opt (fun b ->
-            BU.map_opt
-              (resugar_bqual env b.binder_qual)
-              (fun q ->
-               mk_pat(A.PatVar (bv_as_unique_ident b.binder_bv,
-                                q,
-                                b.binder_attrs |> List.map (resugar_term' env))))) in
+          // let binders = filter_imp binders in
+          let args = binders |> map (fun b ->
+            let q = resugar_bqual env b.binder_qual in
+            mk_pat(A.PatVar (bv_as_unique_ident b.binder_bv,
+                             q,
+                             b.binder_attrs |> List.map (resugar_term' env)))) in
           (mk_pat (A.PatApp (pat, args)), resugar_term' env term), (universe_to_string univs)
         else
           (pat, resugar_term' env term), (universe_to_string univs))
@@ -1077,7 +1076,7 @@ and resugar_match_returns env scrutinee r asc_opt =
            | _ -> None, asc
       else Some b, asc in
     let bopt = BU.map_option (fun b ->
-      BU.must (resugar_binder' env b r)
+      resugar_binder' env b r
       |> A.ident_of_binder r) bopt in
     let asc, use_eq =
       match resugar_ascription env asc with
@@ -1152,8 +1151,8 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
     else
       mk (A.Construct(maybe_shorten_lid env c.effect_name, [result]))
 
-and resugar_binder' env (b:S.binder) r : option A.binder =
-  let! imp = resugar_bqual env b.binder_qual in
+and resugar_binder' env (b:S.binder) r : A.binder =
+  let imp = resugar_bqual env b.binder_qual in
   let e = resugar_term' env b.binder_bv.sort in
   let attrs = List.map (resugar_term' env) b.binder_attrs in
   let b' =
@@ -1166,7 +1165,7 @@ and resugar_binder' env (b:S.binder) r : option A.binder =
     else
       A.Annotated (bv_as_unique_ident b.binder_bv, e)
   in
-  Some <| A.mk_binder_with_attrs b' r A.Type_level imp attrs
+  A.mk_binder_with_attrs b' r A.Type_level imp attrs
 
 and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: FlatSet.t bv) typ_opt =
   let mk a = A.mk_pattern a (S.range_of_bv v) in
@@ -1181,10 +1180,9 @@ and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: FlatSet.t bv) typ_opt =
                then mk (A.PatAscribed (pat, (resugar_term' env typ, None)))
                else pat
 
-and resugar_bv_as_pat env (x:S.bv) qual body_bv: option A.pattern =
-  BU.map_opt
-   (resugar_bqual env qual)
-   (fun bq -> resugar_bv_as_pat' env x bq body_bv (Some <| SS.compress x.sort))
+and resugar_bv_as_pat env (x:S.bv) qual body_bv: A.pattern =
+  let bq = resugar_bqual env qual in
+  resugar_bv_as_pat' env x bq body_bv (Some <| SS.compress x.sort)
 
 and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
   (* We lose information when desugar PatAscribed to able to resugar it back *)
@@ -1281,18 +1279,13 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
   aux p None
 // FIXME inspect uses of resugar_arg_qual and resugar_imp
 (* If resugar_arg_qual returns None, the corresponding binder should *not* be resugared *)
-and resugar_bqual env (q:S.bqual) : option (option A.arg_qualifier) =
+and resugar_bqual env (q:S.bqual) : option A.arg_qualifier =
   match q with
-  | None -> Some None
-  | Some (S.Implicit b) ->
-    (* TODO : set an option to print these inaccessible patterns at least with a comment *)
-    if b then None
-    else Some (Some A.Implicit)
-  | Some S.Equality -> Some (Some A.Equality)
-  | Some (S.Meta t) when U.is_fvar C.tcresolve_lid t ->
-    Some (Some (A.TypeClassArg))
-  | Some (S.Meta t) ->
-    Some (Some (A.Meta (resugar_term' env t)))
+  | None -> None
+  | Some (S.Implicit b) -> Some A.Implicit
+  | Some S.Equality -> Some A.Equality
+  | Some (S.Meta t) when U.is_fvar C.tcresolve_lid t -> Some (A.TypeClassArg)
+  | Some (S.Meta t) -> Some (A.Meta (resugar_term' env t))
 
 and resugar_aqual env (q:S.aqual) : A.imp =
   match q with
@@ -1349,7 +1342,7 @@ let resugar_typ env datacon_ses se : sigelts & A.tycon =
         if (Options.print_implicits())
         then bs
         else filter_imp_bs bs in
-      let bs = bs |> map_opt (fun b -> resugar_binder' env b t.pos) in
+      let bs = bs |> map (fun b -> resugar_binder' env b t.pos) in
       let tyc =
         if se.sigquals |> BU.for_some (function | RecordType _ -> true | _ -> false)
         then
@@ -1361,12 +1354,11 @@ let resugar_typ env datacon_ses se : sigelts & A.tycon =
                 | Tm_arrow {bs} ->
                   let mfields =
                     bs
-                    |> List.collect (fun b ->
-                          match resugar_bqual env b.binder_qual with
-                          | None -> [] //inaccessible argument
-                          | Some q ->
-                           [(bv_as_unique_ident b.binder_bv, q, b.binder_attrs |> List.map (resugar_term' env), resugar_term' env b.binder_bv.sort)]) in
-                  mfields@fields
+                    |> List.map (fun b ->
+                        let q = resugar_bqual env b.binder_qual in
+                        (bv_as_unique_ident b.binder_bv, q, b.binder_attrs |> List.map (resugar_term' env), resugar_term' env b.binder_bv.sort))
+                  in
+                  mfields @ fields
                 | _ -> failwith "unexpected"
               end
             | _ -> failwith "unexpected"
@@ -1456,7 +1448,7 @@ let resugar_eff_decl' env ed =
       if (Options.print_implicits())
       then action_params
       else filter_imp_bs action_params in
-    let action_params = action_params |> map_opt (fun b -> resugar_binder' env b r) |> List.rev in
+    let action_params = action_params |> map (fun b -> resugar_binder' env b r) |> List.rev in
     let action_defn = resugar_term' env action_defn in
     let action_typ = resugar_term' env action_typ in
     if for_free then
@@ -1474,7 +1466,7 @@ let resugar_eff_decl' env ed =
     if (Options.print_implicits())
     then eff_binders
     else filter_imp_bs eff_binders in
-  let eff_binders = eff_binders |> map_opt (fun b -> resugar_binder' env b r) |> List.rev in
+  let eff_binders = eff_binders |> map (fun b -> resugar_binder' env b r) |> List.rev in
   let eff_typ = resugar_term' env eff_typ in
 
   let mandatory_members_decls = resugar_combinators env ed.combinators in
@@ -1574,7 +1566,7 @@ let resugar_sigelt' env se : option A.decl =
       if (Options.print_implicits())
       then bs
       else filter_imp_bs bs in
-    let bs = bs |> map_opt (fun b -> resugar_binder' env b se.sigrng) in
+    let bs = bs |> map (fun b -> resugar_binder' env b se.sigrng) in
     Some (decl'_to_decl se (A.Tycon(false, false, [A.TyconAbbrev(ident_of_lid lid, bs, None, resugar_comp' env c)])))
 
   | Sig_pragma p ->
@@ -1629,7 +1621,7 @@ let resugar_comp (c:S.comp) : A.term =
 let resugar_pat (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
   noenv resugar_pat' p branch_bv
 
-let resugar_binder (b:S.binder) r : option A.binder =
+let resugar_binder (b:S.binder) r : A.binder =
   noenv resugar_binder' b r
 
 let resugar_tscheme (ts:S.tscheme) =
