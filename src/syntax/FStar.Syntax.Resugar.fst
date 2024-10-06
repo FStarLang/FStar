@@ -1034,27 +1034,21 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option A.term =
     let fallback () =
         mk (A.Paren (resugar_term' env rel))
     in
-    let hd, args = U.head_and_args rel in
-    if Options.print_implicits ()
-    && List.existsb (fun (_, q) -> S.is_aqual_implicit q) args
-    then fallback ()
-    else
-      begin match resugar_term_as_op hd with
-      | Some (s, None)
-      | Some (s, Some 2) -> mk (A.Op (Ident.id_of_text s, []))
-      | _ -> fallback ()
-      end
+    begin match resugar_term_as_op rel with
+    | Some (s, None)
+    | Some (s, Some 2) -> mk (A.Op (Ident.id_of_text s, []))
+    | _ -> fallback ()
+    end
   in
   let build_calc (rel:S.term) (x0:S.term) (steps : list (S.term & S.term & S.term)) : A.term =
     let r = resugar_term' env in
     mk (CalcProof (resugar_rel rel, r x0,
                     List.map (fun (z, rel, j) -> CalcStep (resugar_rel rel, r j, r z)) steps))
   in
-
-  BU.bind_opt (resugar_calc_finish t0) (fun (rel, pack) ->
-  BU.bind_opt (resugar_all_steps pack) (fun (steps, k) ->
-  BU.bind_opt (resugar_init k) (fun x0 ->
-  Some <| build_calc rel x0 (List.rev steps))))
+  let! (rel, pack) = resugar_calc_finish t0 in
+  let! (steps, k) = resugar_all_steps pack in
+  let! x0 = resugar_init k in
+  Some <| build_calc rel x0 (List.rev steps)
 
 and resugar_match_returns env scrutinee r asc_opt =
   match asc_opt with
