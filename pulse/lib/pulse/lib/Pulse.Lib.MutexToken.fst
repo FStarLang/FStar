@@ -27,13 +27,13 @@ module L = Pulse.Lib.SpinLockToken
 noeq
 type mutex (#a:Type0) (p:a -> slprop) = {
   r : B.box a;
-  l : L.lock (exists* v. B.pts_to r v ** p v)
+  l : L.lock (exists* v. pts_to r v ** p v)
 }
 
 let mutex_guard (a:Type0) : Type0 = R.ref a
 
 let pts_to (#a:Type0) (mg:mutex_guard a) (#[T.exact (`1.0R)] p:perm) (x:a) : slprop =
-  R.pts_to mg #p x
+  pts_to mg #p x
 
 let ( ! ) (#a:Type0) (mg:mutex_guard a) (#x:erased a) (#p:perm)
   : stt a
