@@ -1238,10 +1238,11 @@ simpleArrowDomain:
   | LBRACE_BAR t=tmEqNoRefinement BAR_RBRACE { ((Some TypeClassArg, []), t) }
   | aq_opt=ioption(aqual) attrs_opt=ioption(binderAttributes) dom_tm=tmEqNoRefinement { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 
-(* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
+(* Tm already accounts for ( term ), we need to add an explicit case for (#Tm), (#[@@@...]Tm) and ([@@@...]Tm) *)
 %inline tmArrowDomain(Tm):
   | LBRACE_BAR t=Tm BAR_RBRACE { ((Some TypeClassArg, []), t) }
   | LPAREN q=aqual attrs_opt=ioption(binderAttributes) dom_tm=Tm RPAREN { (Some q, none_to_empty_list attrs_opt), dom_tm }
+  | LPAREN attrs=binderAttributes dom_tm=Tm RPAREN { (None, attrs), dom_tm }
   | aq_opt=ioption(aqual) attrs_opt=ioption(binderAttributes) dom_tm=Tm { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 
 tmFormula:
