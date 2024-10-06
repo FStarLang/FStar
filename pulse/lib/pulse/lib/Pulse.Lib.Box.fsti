@@ -26,6 +26,7 @@ module T = FStar.Tactics.V2
 
 module R = Pulse.Lib.Reference
 
+new
 val box ([@@@strictly_positive] a:Type0) : Type0
 
 val pts_to (#a:Type0) 

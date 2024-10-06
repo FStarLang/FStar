@@ -20,20 +20,56 @@ open Pulse.Lib.Core
 
 module R = Pulse.Lib.Reference
 
-type box a = R.ref a
-let pts_to b #p v = R.pts_to b #p v
+#lang-pulse
+
+noeq
+type box a = | B : r:R.ref a -> box a
+
+let pts_to b #p v = R.pts_to b.r #p v
+
 let pts_to_is_slprop2 _ _ _ = ()
-let alloc x = R.alloc x
-let op_Bang b #v #p = R.op_Bang b #v #p
-let op_Colon_Equals b x #v = R.op_Colon_Equals b x #v
-let free b #v = R.free b #v
-let share b = R.share b
-let gather b = R.gather b
-let share2 b = R.share2 b
-let gather2 b = R.gather2 b
-let pts_to_injective_eq b = R.pts_to_injective_eq b
-let box_to_ref b = b
+
+fn alloc (#a:Type0) (x:a)
+  requires emp
+  returns  b : box a
+  ensures  pts_to b x
+{
+  let r = R.alloc x;
+  rewrite R.pts_to r x as pts_to (B r) x;
+  (B r);
+}
+
+fn op_Bang (#a:Type0) (b:box a) (#v:erased a) (#p:perm)
+  requires pts_to b #p v
+  returns  x : a
+  ensures  pts_to b #p v ** pure (reveal v == x)
+{
+  unfold (pts_to b #p v);
+  let x = R.(!b.r);
+  fold (pts_to b #p v);
+  x
+}
+
+fn op_Colon_Equals (#a:Type0) (b:box a) (x:a) (#v:erased a)
+  requires pts_to b v
+  ensures  pts_to b (hide x)
+{
+  unfold (pts_to b v);
+  R.(b.r := x);
+  fold (pts_to b (hide x));
+}
+
+#lang-fstar // 'rewrite' below is not the keyword!
+
+let free b #v = R.free b.r #v
+
+let share b = R.share b.r
+let gather b = R.gather b.r
+let share2 b = R.share2 b.r
+let gather2 b = R.gather2 b.r
+let pts_to_injective_eq b = R.pts_to_injective_eq b.r
+let box_to_ref b = b.r
 let to_ref_pts_to #a b #p #v =
-  rewrite (pts_to b #p v) (R.pts_to b #p v) (slprop_equiv_refl _)
-let to_box_pts_to #a r #p #v =
-  rewrite (R.pts_to r #p v) (pts_to r #p v) (slprop_equiv_refl _)
+  rewrite (pts_to b #p v) (R.pts_to b.r #p v) (slprop_equiv_refl _)
+let to_box_pts_to #a b #p #v =
+  rewrite (R.pts_to b.r #p v) (pts_to b #p v) (slprop_equiv_refl _)
