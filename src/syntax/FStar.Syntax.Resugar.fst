@@ -1155,14 +1155,18 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
 and resugar_binder' env (b:S.binder) r : option A.binder =
   let! imp = resugar_bqual env b.binder_qual in
   let e = resugar_term' env b.binder_bv.sort in
+  let attrs = List.map (resugar_term' env) b.binder_attrs in
+  let b' =
   match (e.tm) with
   | A.Wild ->
-    Some <| A.mk_binder (A.Variable(bv_as_unique_ident b.binder_bv)) r A.Type_level imp
+    A.Variable (bv_as_unique_ident b.binder_bv)
   | _ ->
     if S.is_null_bv b.binder_bv then
-      Some <| A.mk_binder (A.NoName e) r A.Type_level imp
+      A.NoName e
     else
-      Some <| A.mk_binder (A.Annotated (bv_as_unique_ident b.binder_bv, e)) r A.Type_level imp
+      A.Annotated (bv_as_unique_ident b.binder_bv, e)
+  in
+  Some <| A.mk_binder_with_attrs b' r A.Type_level imp attrs
 
 and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: FlatSet.t bv) typ_opt =
   let mk a = A.mk_pattern a (S.range_of_bv v) in
