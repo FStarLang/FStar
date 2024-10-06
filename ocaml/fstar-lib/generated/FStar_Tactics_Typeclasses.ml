@@ -4082,8 +4082,8 @@ let (mk_class :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Typeclasses.fst"
-                                                                    (Prims.of_int (392))
-                                                                    (Prims.of_int (8))
+                                                                    (Prims.of_int (393))
+                                                                    (Prims.of_int (6))
                                                                     (Prims.of_int (425))
                                                                     (Prims.of_int (8)))))
                                                                     (Obj.magic
@@ -4096,7 +4096,72 @@ let (mk_class :
                                                                     ->
                                                                     let uu___52
                                                                     =
-                                                                    let uu___53
+                                                                    debug
+                                                                    (fun
+                                                                    uu___53
+                                                                    ->
+                                                                    let uu___54
+                                                                    =
+                                                                    FStar_Tactics_V2_Builtins.term_to_string
+                                                                    proj_lb.FStar_Tactics_NamedView.lb_typ in
+                                                                    FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Typeclasses.fst"
+                                                                    (Prims.of_int (393))
+                                                                    (Prims.of_int (38))
+                                                                    (Prims.of_int (393))
+                                                                    (Prims.of_int (67)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Prims.fst"
+                                                                    (Prims.of_int (611))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (611))
+                                                                    (Prims.of_int (31)))))
+                                                                    (Obj.magic
+                                                                    uu___54)
+                                                                    (fun
+                                                                    uu___55
+                                                                    ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___56
+                                                                    ->
+                                                                    Prims.strcat
+                                                                    "proj_ty = "
+                                                                    uu___55))) in
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Typeclasses.fst"
+                                                                    (Prims.of_int (393))
+                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (393))
+                                                                    (Prims.of_int (68)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Typeclasses.fst"
+                                                                    (Prims.of_int (393))
+                                                                    (Prims.of_int (69))
+                                                                    (Prims.of_int (425))
+                                                                    (Prims.of_int (8)))))
+                                                                    (Obj.magic
+                                                                    uu___52)
+                                                                    (fun
+                                                                    uu___53
+                                                                    ->
+                                                                    (fun
+                                                                    uu___53
+                                                                    ->
+                                                                    let uu___54
+                                                                    =
+                                                                    let uu___55
                                                                     =
                                                                     FStar_Tactics_V2_SyntaxHelpers.collect_arr_bs
                                                                     proj_lb.FStar_Tactics_NamedView.lb_typ in
@@ -4118,24 +4183,24 @@ let (mk_class :
                                                                     (Prims.of_int (402))
                                                                     (Prims.of_int (37)))))
                                                                     (Obj.magic
-                                                                    uu___53)
+                                                                    uu___55)
                                                                     (fun
-                                                                    uu___54
+                                                                    uu___56
                                                                     ->
                                                                     (fun
-                                                                    uu___54
+                                                                    uu___56
                                                                     ->
-                                                                    match uu___54
+                                                                    match uu___56
                                                                     with
                                                                     | 
                                                                     (bs1,
                                                                     cod2) ->
-                                                                    let uu___55
+                                                                    let uu___57
                                                                     =
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___56
+                                                                    uu___58
                                                                     ->
                                                                     FStar_List_Tot_Base.splitAt
                                                                     (FStar_List_Tot_Base.length
@@ -4160,14 +4225,14 @@ let (mk_class :
                                                                     (Prims.of_int (402))
                                                                     (Prims.of_int (37)))))
                                                                     (Obj.magic
-                                                                    uu___55)
+                                                                    uu___57)
                                                                     (fun
-                                                                    uu___56
+                                                                    uu___58
                                                                     ->
                                                                     (fun
-                                                                    uu___56
+                                                                    uu___58
                                                                     ->
-                                                                    match uu___56
+                                                                    match uu___58
                                                                     with
                                                                     | 
                                                                     (ps, bs2)
@@ -4185,12 +4250,12 @@ let (mk_class :
                                                                     ->
                                                                     Obj.magic
                                                                     (Obj.repr
-                                                                    (let uu___57
+                                                                    (let uu___59
                                                                     =
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___58
+                                                                    uu___60
                                                                     ->
                                                                     binder_set_meta
                                                                     b1 tcr)) in
@@ -4212,9 +4277,9 @@ let (mk_class :
                                                                     (Prims.of_int (402))
                                                                     (Prims.of_int (37)))))
                                                                     (Obj.magic
-                                                                    uu___57)
+                                                                    uu___59)
                                                                     (fun
-                                                                    uu___58
+                                                                    uu___60
                                                                     ->
                                                                     (fun b11
                                                                     ->
@@ -4225,9 +4290,9 @@ let (mk_class :
                                                                     (b11 ::
                                                                     bs'))
                                                                     cod2))
-                                                                    uu___58)))))
-                                                                    uu___56)))
-                                                                    uu___54) in
+                                                                    uu___60)))))
+                                                                    uu___58)))
+                                                                    uu___56) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -4247,15 +4312,15 @@ let (mk_class :
                                                                     (Prims.of_int (425))
                                                                     (Prims.of_int (8)))))
                                                                     (Obj.magic
-                                                                    uu___52)
+                                                                    uu___54)
                                                                     (fun
-                                                                    uu___53
+                                                                    uu___55
                                                                     ->
                                                                     (fun ty1
                                                                     ->
-                                                                    let uu___53
+                                                                    let uu___55
                                                                     =
-                                                                    let uu___54
+                                                                    let uu___56
                                                                     =
                                                                     FStar_Tactics_V2_SyntaxHelpers.collect_abs
                                                                     proj_lb.FStar_Tactics_NamedView.lb_def in
@@ -4277,24 +4342,24 @@ let (mk_class :
                                                                     (Prims.of_int (411))
                                                                     (Prims.of_int (38)))))
                                                                     (Obj.magic
-                                                                    uu___54)
+                                                                    uu___56)
                                                                     (fun
-                                                                    uu___55
+                                                                    uu___57
                                                                     ->
                                                                     (fun
-                                                                    uu___55
+                                                                    uu___57
                                                                     ->
-                                                                    match uu___55
+                                                                    match uu___57
                                                                     with
                                                                     | 
                                                                     (bs1,
                                                                     body) ->
-                                                                    let uu___56
+                                                                    let uu___58
                                                                     =
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___57
+                                                                    uu___59
                                                                     ->
                                                                     FStar_List_Tot_Base.splitAt
                                                                     (FStar_List_Tot_Base.length
@@ -4319,14 +4384,14 @@ let (mk_class :
                                                                     (Prims.of_int (411))
                                                                     (Prims.of_int (38)))))
                                                                     (Obj.magic
-                                                                    uu___56)
+                                                                    uu___58)
                                                                     (fun
-                                                                    uu___57
+                                                                    uu___59
                                                                     ->
                                                                     (fun
-                                                                    uu___57
+                                                                    uu___59
                                                                     ->
-                                                                    match uu___57
+                                                                    match uu___59
                                                                     with
                                                                     | 
                                                                     (ps, bs2)
@@ -4344,12 +4409,12 @@ let (mk_class :
                                                                     ->
                                                                     Obj.magic
                                                                     (Obj.repr
-                                                                    (let uu___58
+                                                                    (let uu___60
                                                                     =
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___59
+                                                                    uu___61
                                                                     ->
                                                                     binder_set_meta
                                                                     b1 tcr)) in
@@ -4371,9 +4436,9 @@ let (mk_class :
                                                                     (Prims.of_int (411))
                                                                     (Prims.of_int (38)))))
                                                                     (Obj.magic
-                                                                    uu___58)
+                                                                    uu___60)
                                                                     (fun
-                                                                    uu___59
+                                                                    uu___61
                                                                     ->
                                                                     (fun b11
                                                                     ->
@@ -4384,9 +4449,9 @@ let (mk_class :
                                                                     (b11 ::
                                                                     bs'))
                                                                     body))
-                                                                    uu___59)))))
-                                                                    uu___57)))
-                                                                    uu___55) in
+                                                                    uu___61)))))
+                                                                    uu___59)))
+                                                                    uu___57) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -4406,19 +4471,19 @@ let (mk_class :
                                                                     (Prims.of_int (425))
                                                                     (Prims.of_int (8)))))
                                                                     (Obj.magic
-                                                                    uu___53)
+                                                                    uu___55)
                                                                     (fun
-                                                                    uu___54
+                                                                    uu___56
                                                                     ->
                                                                     (fun def
                                                                     ->
-                                                                    let uu___54
+                                                                    let uu___56
                                                                     =
                                                                     debug
                                                                     (fun
-                                                                    uu___55
+                                                                    uu___57
                                                                     ->
-                                                                    let uu___56
+                                                                    let uu___58
                                                                     =
                                                                     FStar_Tactics_V2_Builtins.term_to_string
                                                                     def in
@@ -4440,17 +4505,17 @@ let (mk_class :
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    uu___56)
+                                                                    uu___58)
                                                                     (fun
-                                                                    uu___57
+                                                                    uu___59
                                                                     ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___58
+                                                                    uu___60
                                                                     ->
                                                                     Prims.strcat
                                                                     "def = "
-                                                                    uu___57))) in
+                                                                    uu___59))) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -4470,20 +4535,20 @@ let (mk_class :
                                                                     (Prims.of_int (425))
                                                                     (Prims.of_int (8)))))
                                                                     (Obj.magic
-                                                                    uu___54)
+                                                                    uu___56)
                                                                     (fun
-                                                                    uu___55
+                                                                    uu___57
                                                                     ->
-                                                                    (fun
-                                                                    uu___55
-                                                                    ->
-                                                                    let uu___56
-                                                                    =
-                                                                    debug
                                                                     (fun
                                                                     uu___57
                                                                     ->
                                                                     let uu___58
+                                                                    =
+                                                                    debug
+                                                                    (fun
+                                                                    uu___59
+                                                                    ->
+                                                                    let uu___60
                                                                     =
                                                                     FStar_Tactics_V2_Builtins.term_to_string
                                                                     ty1 in
@@ -4505,17 +4570,17 @@ let (mk_class :
                                                                     (Prims.of_int (611))
                                                                     (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    uu___58)
+                                                                    uu___60)
                                                                     (fun
-                                                                    uu___59
+                                                                    uu___61
                                                                     ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___60
+                                                                    uu___62
                                                                     ->
                                                                     Prims.strcat
                                                                     "ty  = "
-                                                                    uu___59))) in
+                                                                    uu___61))) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -4535,19 +4600,19 @@ let (mk_class :
                                                                     (Prims.of_int (425))
                                                                     (Prims.of_int (8)))))
                                                                     (Obj.magic
-                                                                    uu___56)
+                                                                    uu___58)
                                                                     (fun
-                                                                    uu___57
+                                                                    uu___59
                                                                     ->
                                                                     (fun
-                                                                    uu___57
+                                                                    uu___59
                                                                     ->
-                                                                    let uu___58
+                                                                    let uu___60
                                                                     =
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___59
+                                                                    uu___61
                                                                     -> ty1)) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -4568,18 +4633,18 @@ let (mk_class :
                                                                     (Prims.of_int (425))
                                                                     (Prims.of_int (8)))))
                                                                     (Obj.magic
-                                                                    uu___58)
+                                                                    uu___60)
                                                                     (fun
-                                                                    uu___59
+                                                                    uu___61
                                                                     ->
                                                                     (fun ty2
                                                                     ->
-                                                                    let uu___59
+                                                                    let uu___61
                                                                     =
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___60
+                                                                    uu___62
                                                                     -> def)) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -4600,18 +4665,18 @@ let (mk_class :
                                                                     (Prims.of_int (425))
                                                                     (Prims.of_int (8)))))
                                                                     (Obj.magic
-                                                                    uu___59)
+                                                                    uu___61)
                                                                     (fun
-                                                                    uu___60
+                                                                    uu___62
                                                                     ->
                                                                     (fun def1
                                                                     ->
-                                                                    let uu___60
+                                                                    let uu___62
                                                                     =
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___61
+                                                                    uu___63
                                                                     -> sfv)) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -4632,18 +4697,18 @@ let (mk_class :
                                                                     (Prims.of_int (425))
                                                                     (Prims.of_int (8)))))
                                                                     (Obj.magic
-                                                                    uu___60)
+                                                                    uu___62)
                                                                     (fun
-                                                                    uu___61
+                                                                    uu___63
                                                                     ->
                                                                     (fun sfv1
                                                                     ->
-                                                                    let uu___61
+                                                                    let uu___63
                                                                     =
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___62
+                                                                    uu___64
                                                                     ->
                                                                     {
                                                                     FStar_Tactics_NamedView.lb_fv
@@ -4675,13 +4740,13 @@ let (mk_class :
                                                                     (Prims.of_int (425))
                                                                     (Prims.of_int (8)))))
                                                                     (Obj.magic
-                                                                    uu___61)
+                                                                    uu___63)
                                                                     (fun
-                                                                    uu___62
+                                                                    uu___64
                                                                     ->
                                                                     (fun lb
                                                                     ->
-                                                                    let uu___62
+                                                                    let uu___64
                                                                     =
                                                                     FStar_Tactics_NamedView.pack_sigelt
                                                                     (FStar_Tactics_NamedView.Sg_Let
@@ -4710,25 +4775,26 @@ let (mk_class :
                                                                     (Prims.of_int (423))
                                                                     (Prims.of_int (42)))))
                                                                     (Obj.magic
-                                                                    uu___62)
+                                                                    uu___64)
                                                                     (fun se1
                                                                     ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___63
+                                                                    uu___65
                                                                     ->
                                                                     FStar_Reflection_V2_Builtins.set_sigelt_attrs
                                                                     b.FStar_Tactics_NamedView.attrs
                                                                     (FStar_Reflection_V2_Builtins.set_sigelt_quals
                                                                     to_propagate
                                                                     se1)))))
+                                                                    uu___64)))
+                                                                    uu___63)))
                                                                     uu___62)))
                                                                     uu___61)))
-                                                                    uu___60)))
                                                                     uu___59)))
                                                                     uu___57)))
+                                                                    uu___56)))
                                                                     uu___55)))
-                                                                    uu___54)))
                                                                     uu___53)))
                                                                     uu___52)))
                                                                     uu___51)))
