@@ -14,10 +14,8 @@
    limitations under the License.
 *)
 
-module FStar.Tactics.Load
+module FStar.Compiler.Plugins
 
 open FStar.Compiler.Effect
-
-val load_tactics         : list string -> unit
-val load_tactics_dir     : string -> unit
-val compile_modules      : string -> list string -> unit
+open FStar.Compiler.Plugins.Base
+module BU = FStar.Compiler.Util
