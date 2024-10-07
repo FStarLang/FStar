@@ -362,7 +362,6 @@ ensures post
   free arr  
 }
 
-```pulse
 ghost
 fn pts_to_range_share
   (#a:Type)
@@ -378,9 +377,7 @@ fn pts_to_range_share
   fold (pts_to_range arr l r #(p /. 2.0R) s);
   fold (pts_to_range arr l r #(p /. 2.0R) s);
 }
-```
 
-```pulse
 ghost
 fn pts_to_range_gather
   (#a:Type)
@@ -396,7 +393,6 @@ fn pts_to_range_gather
   H.pts_to_range_gather arr;
   fold (pts_to_range arr l r #(p0 +. p1) s0)
 }
-```
 
 
 (* this is universe-polymorphic in ret_t; so can't define it in Pulse yet *)

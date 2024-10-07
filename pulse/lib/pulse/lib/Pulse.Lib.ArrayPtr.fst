@@ -1,4 +1,5 @@
 module Pulse.Lib.ArrayPtr
+#lang-pulse
 
 noeq
 type ptr t = {
@@ -22,7 +23,6 @@ let pts_to_is_slprop2 x p fp s = ()
 let is_from_array p fp a =
     pure (fp.elt.base == a /\ SZ.v fp.len == A.length a)
 
-```pulse
 fn from_array (#t: Type) (a: A.array t) (#p: perm) (#v: Ghost.erased (Seq.seq t))
     requires A.pts_to a #p v
     returns s: ptr t
@@ -44,9 +44,7 @@ fn from_array (#t: Type) (a: A.array t) (#p: perm) (#v: Ghost.erased (Seq.seq t)
     fold (pts_to res #p fp v);
     res
 }
-```
 
-```pulse 
 ghost
 fn to_array (#t: Type) (s: ptr t) (a: array t) (#p: perm) (#fp: footprint t) (#v: Seq.seq t)
     requires pts_to s #p fp v ** is_from_array p fp a ** pure (
@@ -60,9 +58,7 @@ fn to_array (#t: Type) (s: ptr t) (a: array t) (#p: perm) (#fp: footprint t) (#v
         as (A.pts_to_range a 0 (A.length a) #p v);
     A.pts_to_range_elim a _ _;
 }
-```
 
-```pulse
 fn op_Array_Access
         (#t: Type)
         (a: ptr t)
@@ -85,9 +81,7 @@ fn op_Array_Access
     fold (pts_to a #p fp s);
     res
 }
-```
 
-```pulse
 fn op_Array_Assignment
         (#t: Type)
         (a: ptr t)
@@ -108,9 +102,7 @@ fn op_Array_Assignment
     let res = A.pts_to_range_upd a.base (SZ.add a.offset i) v;
     fold (pts_to a fp (Seq.upd s (SZ.v i) v));
 }
-```
 
-```pulse
 ghost
 fn share
   (#a:Type)
@@ -126,9 +118,7 @@ fn share
     fold (pts_to arr #(p /. 2.0R) fp s);
     fold (pts_to arr #(p /. 2.0R) fp s);    
 }
-```
 
-```pulse
 ghost
 fn gather
   (#a:Type)
@@ -144,7 +134,6 @@ fn gather
     A.pts_to_range_gather arr.base;
     fold (pts_to arr #(p0 +. p1) fp s0)
 }
-```
 
 let adjacent fp1 fp2 =
     fp1.elt.base == fp2.elt.base /\
@@ -157,7 +146,6 @@ let merge fp1 fp2 = {
 
 let merge_assoc fp1 fp2 fp3 = ()
 
-```pulse
 fn split (#t: Type) (s: ptr t) (#p: perm) (#fp: footprint t) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t)
     requires pts_to s #p fp v ** pure (SZ.v i <= Seq.length v)
     returns s' : ptr t
@@ -194,9 +182,7 @@ fn split (#t: Type) (s: ptr t) (#p: perm) (#fp: footprint t) (#v: Ghost.erased (
     fold (pts_to s' #p fp2 s2);
     s'
 }
-```
 
-```pulse
 ghost
 fn join (#t: Type) (s1: ptr t) (#p: perm) (#fp1: footprint t) (#v1: Seq.seq t) (s2: ptr t) (#fp2: footprint t {adjacent fp1 fp2}) (#v2: Seq.seq t)
     requires pts_to s1 #p fp1 v1 ** pts_to s2 #p fp2 v2
@@ -209,11 +195,9 @@ fn join (#t: Type) (s1: ptr t) (#p: perm) (#fp1: footprint t) (#v1: Seq.seq t) (
     A.pts_to_range_join s1.base (SZ.v s1.offset) (SZ.v s1.offset + SZ.v fp1.len) (SZ.v s1.offset + SZ.v (merge fp1 fp2).len);
     fold (pts_to s1 #p (merge fp1 fp2) (Seq.append v1 v2))
 }
-```
 
 module R = Pulse.Lib.Reference
 
-```pulse
 fn blit (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t)) (#fp0 #fp1: footprint t)
            (src:ptr t)
            (idx_src: SZ.t)
@@ -266,4 +250,3 @@ ensures
     ));
   };
 }
-```

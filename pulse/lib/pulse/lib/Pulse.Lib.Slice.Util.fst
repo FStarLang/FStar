@@ -1,4 +1,5 @@
 module Pulse.Lib.Slice.Util
+#lang-pulse
 include Pulse.Lib.Pervasives
 include Pulse.Lib.Slice
 include Pulse.Lib.Trade
@@ -32,7 +33,6 @@ let append_split_post
 
 inline_for_extraction
 noextract
-```pulse
 fn append_split (#t: Type) (mutb: bool) (s: S.slice t) (#p: perm) (#v1 #v2: Ghost.erased (Seq.seq t)) (i: SZ.t)
     requires S.pts_to s #p (v1 `Seq.append` v2) ** pure (append_split_precond mutb p v1 i)
     returns res: S.slice_pair t
@@ -52,7 +52,6 @@ fn append_split (#t: Type) (mutb: bool) (s: S.slice t) (#p: perm) (#v1 #v2: Ghos
     }
   }
 }
-```
 
 let append_split_trade_post'
     (#t: Type) (s: S.slice t) (p: perm) (v1 v2: Ghost.erased (Seq.seq t)) (i: SZ.t)
@@ -71,7 +70,6 @@ let append_split_trade_post
 = let S.SlicePair s1 s2 = res in
   append_split_trade_post' s p v1 v2 i s1 s2
 
-```pulse
 ghost
 fn append_split_trade_aux
   (#t: Type) (input: S.slice t) (p: perm) (v1 v2: (Seq.seq t)) (i: SZ.t) (input1 input2: S.slice t) (_: unit)
@@ -80,11 +78,9 @@ fn append_split_trade_aux
 {
   S.join input1 input2 input
 }
-```
 
 inline_for_extraction
 noextract
-```pulse
 fn append_split_trade (#t: Type) (mutb: bool) (input: S.slice t) (#p: perm) (#v1 #v2: Ghost.erased (Seq.seq t)) (i: SZ.t)
     requires S.pts_to input #p (v1 `Seq.append` v2) ** pure (append_split_precond mutb p v1 i)
     returns res: S.slice_pair t
@@ -102,7 +98,6 @@ fn append_split_trade (#t: Type) (mutb: bool) (input: S.slice t) (#p: perm) (#v1
     }
   }
 }
-```
 
 let split_trade_post'
     (#t: Type) (s: S.slice t) (p: perm) (v: Ghost.erased (Seq.seq t)) (i: SZ.t)
@@ -125,7 +120,6 @@ let split_trade_post
 = let (S.SlicePair s1 s2) = res in
   split_trade_post' s p v i s1 s2
 
-```pulse
 ghost
 fn split_trade_aux
   (#t: Type) (s: S.slice t) (p: perm) (v: Seq.seq t) (i: SZ.t)
@@ -135,11 +129,9 @@ fn split_trade_aux
     {
       S.join s1 s2 s
     }
-```
 
 inline_for_extraction
 noextract
-```pulse
 fn split_trade (#t: Type) (mutb: bool) (s: S.slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t)
     requires S.pts_to s #p v ** pure (S.split_precond mutb p v i)
     returns res: S.slice_pair t
@@ -157,4 +149,3 @@ fn split_trade (#t: Type) (mutb: bool) (s: S.slice t) (#p: perm) (#v: Ghost.eras
     (S.SlicePair s1 s2)
   }}
 }
-```

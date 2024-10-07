@@ -1,8 +1,8 @@
 module Bug166
 open Pulse
+#lang-pulse
 
 inline_for_extraction noextract
-```pulse
 fn h ()
   requires emp
   returns  x : int
@@ -10,5 +10,4 @@ fn h ()
 {
   42
 }
-```
 let h2 = h
