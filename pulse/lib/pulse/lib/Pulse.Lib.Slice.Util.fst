@@ -38,7 +38,7 @@ let append_split_post'
 =
             S.pts_to s1 #p v1 **
             S.pts_to s2 #p v2 **
-            S.is_split s p i s1 s2
+            S.is_split s s1 s2
 
 let append_split_post
     (#t: Type) (s: S.slice t) (p: perm) (v1 v2: Ghost.erased (Seq.seq t)) (i: SZ.t)
@@ -89,7 +89,7 @@ let append_split_trade_post
 ghost
 fn append_split_trade_aux
   (#t: Type) (input: S.slice t) (p: perm) (v1 v2: (Seq.seq t)) (i: SZ.t) (input1 input2: S.slice t) (_: unit)
-    requires S.is_split input p i input1 input2 ** (S.pts_to input1 #p v1 ** S.pts_to input2 #p v2)
+    requires S.is_split input input1 input2 ** (S.pts_to input1 #p v1 ** S.pts_to input2 #p v2)
     ensures S.pts_to input #p (v1 `Seq.append` v2)
 {
   S.join input1 input2 input
@@ -140,7 +140,7 @@ ghost
 fn split_trade_aux
   (#t: Type) (s: S.slice t) (p: perm) (v: Seq.seq t) (i: SZ.t)
   (s1 s2: S.slice t) (v1 v2: Seq.seq t) (hyp: squash (v == Seq.append v1 v2)) (_: unit)
-    requires (S.is_split s p i s1 s2 ** (S.pts_to s1 #p v1 ** S.pts_to s2 #p v2))
+    requires (S.is_split s s1 s2 ** (S.pts_to s1 #p v1 ** S.pts_to s2 #p v2))
     ensures (S.pts_to s #p v)
     {
       S.join s1 s2 s
