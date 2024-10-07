@@ -70,7 +70,12 @@ let register_extension_extractor (ext:string) (callback:extension_extractor) =
   FStar.Compiler.Util.smap_add extension_extractor_table ext callback
 
 let lookup_extension_extractor (ext:string) =
-  FStar.Compiler.Util.smap_try_find extension_extractor_table ext
+  match FStar.Compiler.Util.smap_try_find extension_extractor_table ext with
+  | None ->
+    if Plugins.autoload_plugin ext
+    then FStar.Compiler.Util.smap_try_find extension_extractor_table ext
+    else None
+  | r -> r
 
 type env_t = UEnv.uenv
 
