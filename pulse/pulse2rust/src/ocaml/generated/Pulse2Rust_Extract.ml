@@ -376,22 +376,28 @@ let (is_binop :
   =
   fun s ->
     if
-      (((s = "Prims.op_Addition") || (s = "FStar.UInt16.add")) ||
-         (s = "FStar.UInt32.add"))
+      (((((s = "Prims.op_Addition") || (s = "FStar.UInt8.add")) ||
+           (s = "FStar.UInt16.add"))
+          || (s = "FStar.UInt32.add"))
+         || (s = "FStar.UInt64.add"))
         || (s = "FStar.SizeT.add")
     then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Add
     else
       if
-        (((s = "Prims.op_Subtraction") || (s = "FStar.SizeT.sub")) ||
-           (s = "FStar.UInt16.sub"))
-          || (s = "FStar.UInt32.sub")
+        (((((s = "Prims.op_Subtraction") || (s = "FStar.SizeT.sub")) ||
+             (s = "FStar.UInt8.sub"))
+            || (s = "FStar.UInt16.sub"))
+           || (s = "FStar.UInt32.sub"))
+          || (s = "FStar.UInt64.sub")
       then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Sub
       else
         if
-          ((((((s = "Prims.op_Multiply") || (s = "FStar.Mul.op_Star")) ||
-                (s = "FStar.UInt16.mul"))
-               || (s = "FStar.UInt32.mul"))
-              || (s = "FStar.UInt32.op_Star_Hat"))
+          ((((((((s = "Prims.op_Multiply") || (s = "FStar.Mul.op_Star")) ||
+                  (s = "FStar.UInt8.mul"))
+                 || (s = "FStar.UInt16.mul"))
+                || (s = "FStar.UInt32.mul"))
+               || (s = "FStar.UInt32.op_Star_Hat"))
+              || (s = "FStar.UInt64.mul"))
              || (s = "FStar.SizeT.mul"))
             || (s = "FStar.SizeT.op_Star_Hat")
         then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Mul
@@ -400,27 +406,36 @@ let (is_binop :
           then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Ne
           else
             if
-              (((s = "Prims.op_LessThanOrEqual") || (s = "FStar.UInt16.lte"))
-                 || (s = "FStar.UInt32.lte"))
+              (((((s = "Prims.op_LessThanOrEqual") || (s = "FStar.UInt8.lte"))
+                   || (s = "FStar.UInt16.lte"))
+                  || (s = "FStar.UInt32.lte"))
+                 || (s = "FStar.UInt64.lte"))
                 || (s = "FStar.SizeT.lte")
             then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Le
             else
               if
-                (((s = "Prims.op_LessThan") || (s = "FStar.UInt16.lt")) ||
-                   (s = "FStar.UInt32.lt"))
+                (((((s = "Prims.op_LessThan") || (s = "FStar.UInt8.lt")) ||
+                     (s = "FStar.UInt16.lt"))
+                    || (s = "FStar.UInt32.lt"))
+                   || (s = "FStar.UInt64.lt"))
                   || (s = "FStar.SizeT.lt")
               then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Lt
               else
                 if
-                  (((s = "Prims.op_GreaterThanOrEqual") ||
-                      (s = "FStar.UInt16.gte"))
-                     || (s = "FStar.UInt32.gte"))
+                  (((((s = "Prims.op_GreaterThanOrEqual") ||
+                        (s = "FStar.UInt8.gte"))
+                       || (s = "FStar.UInt16.gte"))
+                      || (s = "FStar.UInt32.gte"))
+                     || (s = "FStar.UInt64.gte"))
                     || (s = "FStar.SizeT.gte")
                 then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Ge
                 else
                   if
-                    (((s = "Prims.op_GreaterThan") || (s = "FStar.UInt16.gt"))
-                       || (s = "FStar.UInt32.gt"))
+                    (((((s = "Prims.op_GreaterThan") ||
+                          (s = "FStar.UInt8.gt"))
+                         || (s = "FStar.UInt16.gt"))
+                        || (s = "FStar.UInt32.gt"))
+                       || (s = "FStar.UInt64.gt"))
                       || (s = "FStar.SizeT.gt")
                   then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Gt
                   else
@@ -429,8 +444,10 @@ let (is_binop :
                       FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Eq
                     else
                       if
-                        (((s = "Prims.rem") || (s = "FStar.UInt16.rem")) ||
-                           (s = "FStar.UInt32.rem"))
+                        (((((s = "Prims.rem") || (s = "FStar.UInt8.rem")) ||
+                             (s = "FStar.UInt16.rem"))
+                            || (s = "FStar.UInt32.rem"))
+                           || (s = "FStar.UInt64.rem"))
                           || (s = "FStar.SizeT.rem")
                       then
                         FStar_Pervasives_Native.Some
@@ -445,7 +462,43 @@ let (is_binop :
                           then
                             FStar_Pervasives_Native.Some
                               Pulse2Rust_Rust_Syntax.Or
-                          else FStar_Pervasives_Native.None
+                          else
+                            if
+                              (((s = "FStar.UInt8.shift_left") ||
+                                  (s = "FStar.UInt16.shift_left"))
+                                 || (s = "FStar.UInt32.shift_left"))
+                                || (s = "FStar.UInt64.shift_left")
+                            then
+                              FStar_Pervasives_Native.Some
+                                Pulse2Rust_Rust_Syntax.Shl
+                            else
+                              if
+                                (((s = "FStar.UInt8.shift_right") ||
+                                    (s = "FStar.UInt16.shift_right"))
+                                   || (s = "FStar.UInt32.shift_right"))
+                                  || (s = "FStar.UInt64.shift_right")
+                              then
+                                FStar_Pervasives_Native.Some
+                                  Pulse2Rust_Rust_Syntax.Shr
+                              else
+                                if
+                                  (((s = "FStar.UInt8.logor") ||
+                                      (s = "FStar.UInt16.logor"))
+                                     || (s = "FStar.UInt32.logor"))
+                                    || (s = "FStar.UInt64.logor")
+                                then
+                                  FStar_Pervasives_Native.Some
+                                    Pulse2Rust_Rust_Syntax.BitOr
+                                else
+                                  if
+                                    (((s = "FStar.UInt8.logand") ||
+                                        (s = "FStar.UInt16.logand"))
+                                       || (s = "FStar.UInt32.logand"))
+                                      || (s = "FStar.UInt64.logand")
+                                  then
+                                    FStar_Pervasives_Native.Some
+                                      Pulse2Rust_Rust_Syntax.BitAnd
+                                  else FStar_Pervasives_Native.None
 let (extract_mlconstant_to_lit :
   FStar_Extraction_ML_Syntax.mlconstant -> Pulse2Rust_Rust_Syntax.lit) =
   fun c ->
@@ -560,6 +613,13 @@ let rec (extract_mlpattern_to_pat :
                      FStar_Compiler_List.map FStar_Pervasives_Native.fst fs in
                    FStar_Compiler_List.zip uu___4 ps in
                  Pulse2Rust_Rust_Syntax.mk_pat_struct uu___2 uu___3 in
+               (g1, uu___1))
+      | FStar_Extraction_ML_Syntax.MLP_Tuple ps ->
+          let uu___ =
+            FStar_Compiler_List.fold_left_map extract_mlpattern_to_pat g ps in
+          (match uu___ with
+           | (g1, ps1) ->
+               let uu___1 = Pulse2Rust_Rust_Syntax.mk_pat_tuple ps1 in
                (g1, uu___1))
       | uu___ ->
           let uu___1 =
@@ -713,7 +773,84 @@ and (extract_mlexpr :
           let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___2 = "FStar.SizeT.uint16_to_sizet" ->
           let uu___2 = extract_mlexpr g e1 in
-          Pulse2Rust_Rust_Syntax.mk_method_call uu___2 "into" []
+          let uu___3 = Pulse2Rust_Rust_Syntax.mk_scalar_typ "usize" in
+          Pulse2Rust_Rust_Syntax.mk_cast uu___2 uu___3
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_Name p;
+             FStar_Extraction_ML_Syntax.mlty = uu___;
+             FStar_Extraction_ML_Syntax.loc = uu___1;_},
+           e1::[])
+          when
+          ((let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___2 = "FStar.Int.Cast.uint16_to_uint8") ||
+             (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___2 = "FStar.Int.Cast.uint32_to_uint8"))
+            ||
+            (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___2 = "FStar.Int.Cast.uint64_to_uint8")
+          ->
+          let uu___2 = extract_mlexpr g e1 in
+          let uu___3 = Pulse2Rust_Rust_Syntax.mk_scalar_typ "u8" in
+          Pulse2Rust_Rust_Syntax.mk_cast uu___2 uu___3
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_Name p;
+             FStar_Extraction_ML_Syntax.mlty = uu___;
+             FStar_Extraction_ML_Syntax.loc = uu___1;_},
+           e1::[])
+          when
+          ((let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___2 = "FStar.Int.Cast.uint8_to_uint16") ||
+             (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___2 = "FStar.Int.Cast.uint32_to_uint16"))
+            ||
+            (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___2 = "FStar.Int.Cast.uint64_to_uint16")
+          ->
+          let uu___2 = extract_mlexpr g e1 in
+          let uu___3 = Pulse2Rust_Rust_Syntax.mk_scalar_typ "u16" in
+          Pulse2Rust_Rust_Syntax.mk_cast uu___2 uu___3
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_Name p;
+             FStar_Extraction_ML_Syntax.mlty = uu___;
+             FStar_Extraction_ML_Syntax.loc = uu___1;_},
+           e1::[])
+          when
+          ((let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___2 = "FStar.Int.Cast.uint8_to_uint32") ||
+             (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___2 = "FStar.Int.Cast.uint16_to_uint32"))
+            ||
+            (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___2 = "FStar.Int.Cast.uint64_to_uint32")
+          ->
+          let uu___2 = extract_mlexpr g e1 in
+          let uu___3 = Pulse2Rust_Rust_Syntax.mk_scalar_typ "u32" in
+          Pulse2Rust_Rust_Syntax.mk_cast uu___2 uu___3
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_Name p;
+             FStar_Extraction_ML_Syntax.mlty = uu___;
+             FStar_Extraction_ML_Syntax.loc = uu___1;_},
+           e1::[])
+          when
+          ((let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___2 = "FStar.Int.Cast.uint8_to_uint64") ||
+             (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___2 = "FStar.Int.Cast.uint16_to_uint64"))
+            ||
+            (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___2 = "FStar.Int.Cast.uint32_to_uint64")
+          ->
+          let uu___2 = extract_mlexpr g e1 in
+          let uu___3 = Pulse2Rust_Rust_Syntax.mk_scalar_typ "u64" in
+          Pulse2Rust_Rust_Syntax.mk_cast uu___2 uu___3
       | FStar_Extraction_ML_Syntax.MLE_Var x ->
           let uu___ = varname x in
           Pulse2Rust_Rust_Syntax.mk_expr_path_singl uu___
@@ -752,8 +889,11 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::[])
           when
-          ((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___5 = "Pulse.Lib.Pervasives.tfst") ||
+          (((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___5 = "Pulse.Lib.Pervasives.tfst") ||
+              (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___5 = "FStar.Pervasives.Native.__proj__Mktuple2__item___1"))
+             ||
              (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
               uu___5 = "FStar.Pervasives.Native.fst"))
             ||
@@ -776,8 +916,11 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::[])
           when
-          ((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___5 = "Pulse.Lib.Pervasives.tsnd") ||
+          (((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___5 = "Pulse.Lib.Pervasives.tsnd") ||
+              (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___5 = "FStar.Pervasives.Native.__proj__Mktuple2__item___2"))
+             ||
              (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
               uu___5 = "FStar.Pervasives.Native.snd"))
             ||
@@ -946,19 +1089,22 @@ and (extract_mlexpr :
                 uu___2::[]);
              FStar_Extraction_ML_Syntax.mlty = uu___3;
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
-           e1::i::uu___5::uu___6::[])
+           e1::i::uu___5)
           when
-          ((let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___7 = "Pulse.Lib.Array.Core.op_Array_Access") ||
-             (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-              uu___7 = "Pulse.Lib.Vec.op_Array_Access"))
+          (((let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___6 = "Pulse.Lib.Array.Core.op_Array_Access") ||
+              (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___6 = "Pulse.Lib.Array.Core.pts_to_range_index"))
+             ||
+             (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___6 = "Pulse.Lib.Vec.op_Array_Access"))
             ||
-            (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___7 = "Pulse.Lib.Vec.read_ref")
+            (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___6 = "Pulse.Lib.Vec.read_ref")
           ->
-          let uu___7 = extract_mlexpr g e1 in
-          let uu___8 = extract_mlexpr g i in
-          Pulse2Rust_Rust_Syntax.mk_expr_index uu___7 uu___8
+          let uu___6 = extract_mlexpr g e1 in
+          let uu___7 = extract_mlexpr g i in
+          Pulse2Rust_Rust_Syntax.mk_expr_index uu___6 uu___7
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -973,8 +1119,11 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::e2::e3::uu___5)
           when
-          ((let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___6 = "Pulse.Lib.Array.Core.op_Array_Assignment") ||
+          (((let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___6 = "Pulse.Lib.Array.Core.op_Array_Assignment") ||
+              (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___6 = "Pulse.Lib.Array.Core.pts_to_range_upd"))
+             ||
              (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
               uu___6 = "Pulse.Lib.Vec.op_Array_Assignment"))
             ||

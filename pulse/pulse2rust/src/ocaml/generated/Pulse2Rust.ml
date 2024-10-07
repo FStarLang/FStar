@@ -262,46 +262,44 @@ let (extract :
       fun libs ->
         let d = read_all_ast_files files in
         let all_modules = Pulse2Rust_Deps.topsort_all d [] in
-        let uu___ = all_modules in
+        let root_module =
+          file_to_module_name
+            (let uu___ = files in
+             match uu___ with | root_file::uu___1 -> root_file) in
+        let reachable_defs = collect_reachable_defs d root_module in
+        let external_libs =
+          FStar_Compiler_List.map FStar_Compiler_Util.trim_string
+            (FStar_Compiler_Util.split libs ",") in
+        let g =
+          Pulse2Rust_Env.empty_env external_libs d all_modules reachable_defs in
+        let uu___ =
+          FStar_Compiler_List.fold_left
+            (fun uu___1 ->
+               fun f ->
+                 match uu___1 with
+                 | (g1, all_rust_files) ->
+                     let uu___2 =
+                       let uu___3 = FStar_Compiler_Util.smap_try_find d f in
+                       FStar_Compiler_Util.must uu___3 in
+                     (match uu___2 with
+                      | (uu___3, bs, ds) ->
+                          let uu___4 = extract_one g1 f bs ds in
+                          (match uu___4 with
+                           | (s, g2) ->
+                               let rust_fname =
+                                 let uu___5 = rust_file_name f in
+                                 FStar_Compiler_Util.concat_dir_filename odir
+                                   uu___5 in
+                               let rust_f =
+                                 FStar_Compiler_Util.open_file_for_writing
+                                   rust_fname in
+                               (FStar_Compiler_Util.append_to_file rust_f
+                                  header;
+                                FStar_Compiler_Util.append_to_file rust_f s;
+                                FStar_Compiler_Util.close_out_channel rust_f;
+                                (g2, (rust_fname :: all_rust_files))))))
+            (g, []) all_modules in
         match uu___ with
-        | root_module::uu___1 ->
-            let reachable_defs = collect_reachable_defs d root_module in
-            let external_libs =
-              FStar_Compiler_List.map FStar_Compiler_Util.trim_string
-                (FStar_Compiler_Util.split libs ",") in
-            let g =
-              Pulse2Rust_Env.empty_env external_libs d all_modules
-                reachable_defs in
-            let uu___2 =
-              FStar_Compiler_List.fold_left
-                (fun uu___3 ->
-                   fun f ->
-                     match uu___3 with
-                     | (g1, all_rust_files) ->
-                         let uu___4 =
-                           let uu___5 = FStar_Compiler_Util.smap_try_find d f in
-                           FStar_Compiler_Util.must uu___5 in
-                         (match uu___4 with
-                          | (uu___5, bs, ds) ->
-                              let uu___6 = extract_one g1 f bs ds in
-                              (match uu___6 with
-                               | (s, g2) ->
-                                   let rust_fname =
-                                     let uu___7 = rust_file_name f in
-                                     FStar_Compiler_Util.concat_dir_filename
-                                       odir uu___7 in
-                                   let rust_f =
-                                     FStar_Compiler_Util.open_file_for_writing
-                                       rust_fname in
-                                   (FStar_Compiler_Util.append_to_file rust_f
-                                      header;
-                                    FStar_Compiler_Util.append_to_file rust_f
-                                      s;
-                                    FStar_Compiler_Util.close_out_channel
-                                      rust_f;
-                                    (g2, (rust_fname :: all_rust_files))))))
-                (g, []) all_modules in
-            (match uu___2 with
-             | (uu___3, all_rust_files) ->
-                 FStar_Compiler_Util.print1 "\n\nExtracted: %s\n\n"
-                   (FStar_Compiler_String.concat " " all_rust_files))
+        | (uu___1, all_rust_files) ->
+            FStar_Compiler_Util.print1 "\n\nExtracted: %s\n\n"
+              (FStar_Compiler_String.concat " " all_rust_files)

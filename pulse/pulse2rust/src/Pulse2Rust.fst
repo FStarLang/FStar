@@ -179,7 +179,8 @@ let extract (files:list string) (odir:string) (libs:string) : unit =
   //
   let all_modules = topsort_all d [] in
   // print1 "all_modules: %s\n" (String.concat " " all_modules);
-  let root_module::_ = all_modules in
+  let root_module = file_to_module_name (let root_file::_ = files in root_file) in
+  // print1 "root_module: %s\n" root_module;
   let reachable_defs = collect_reachable_defs d root_module in
   let external_libs = FStar.Compiler.Util.split libs "," |> List.map trim_string in
   let g = empty_env external_libs d all_modules reachable_defs in

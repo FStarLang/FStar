@@ -59,8 +59,8 @@ ensures
 
 let cas r u v #i = Pulse.Lib.Core.as_atomic _ _ (cas_impl r u v #i)
 
-let read_atomic_box b #n #p = read_atomic b #n #p
+let read_atomic_box b #n #p = read_atomic b.r #n #p
 
-let write_atomic_box b x #n = write_atomic b x #n
+let write_atomic_box b x #n = write_atomic b.r x #n
 
-let cas_box r u v #i = cas r u v #i
+let cas_box b u v #i = cas b.r u v #i

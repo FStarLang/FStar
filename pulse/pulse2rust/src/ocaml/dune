@@ -1,15 +1,5 @@
 (include_subdirs unqualified)
 
-(rule
- (targets librustast_bindings.a)
- (deps (source_tree .))
- (action
-  (no-infer
-   (progn
-    (run cargo build)
-    (run cp target/debug/librustast_bindings.a ./librustast_bindings.a)
-   ))))
-
 (executable
  (name main)
  (libraries batteries fstar.lib menhirLib)

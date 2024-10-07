@@ -335,13 +335,13 @@ let (parse_extension_lang :
                       | FStar_Pervasives.Inl d -> splice_decl d
                       | FStar_Pervasives.Inr d -> d) decls1 in
                FStar_Pervasives.Inr uu___2)
-let (uu___144 : unit) =
+let (uu___0 : unit) =
   FStar_Parser_AST_Util.register_extension_parser "pulse"
     {
       FStar_Parser_AST_Util.parse_decl_name = parse_decl_name;
       FStar_Parser_AST_Util.parse_decl = parse_decl
     }
-let (uu___145 : unit) =
+let (uu___1 : unit) =
   FStar_Parser_AST_Util.register_extension_lang_parser "pulse"
     { FStar_Parser_AST_Util.parse_decls = parse_extension_lang }
 type sugar_decl = PulseSyntaxExtension_Sugar.decl
@@ -366,7 +366,7 @@ let (desugar_pulse :
               (fun uu___ ->
                  match uu___ with
                  | (x, l) ->
-                     let uu___1 = FStar_Ident.path_of_text l in (x, uu___1))
+                     let uu___2 = FStar_Ident.path_of_text l in (x, uu___2))
               module_abbrevs in
           let env1 =
             let uu___ = FStar_TypeChecker_Env.current_module env in
@@ -374,8 +374,8 @@ let (desugar_pulse :
               env.FStar_TypeChecker_Env.dsenv uu___ namespaces1
               module_abbrevs1 in
           let uu___ =
-            let uu___1 = PulseSyntaxExtension_Desugar.desugar_decl env1 sugar in
-            uu___1 Prims.int_zero in
+            let uu___2 = PulseSyntaxExtension_Desugar.desugar_decl env1 sugar in
+            uu___2 Prims.int_zero in
           FStar_Pervasives_Native.fst uu___
 let (desugar_pulse_decl_callback :
   FStar_Syntax_DsEnv.env ->
@@ -390,9 +390,9 @@ let (desugar_pulse_decl_callback :
         fun rng ->
           let d =
             let uu___ =
-              let uu___1 = PulseSyntaxExtension_Desugar.mk_env env in
-              let uu___2 = FStar_Dyn.undyn blob in
-              PulseSyntaxExtension_Desugar.desugar_decl uu___1 uu___2 in
+              let uu___2 = PulseSyntaxExtension_Desugar.mk_env env in
+              let uu___3 = FStar_Dyn.undyn blob in
+              PulseSyntaxExtension_Desugar.desugar_decl uu___2 uu___3 in
             uu___ Prims.int_zero in
           match FStar_Pervasives_Native.fst d with
           | FStar_Pervasives.Inr (FStar_Pervasives_Native.None) ->
@@ -430,7 +430,7 @@ let (desugar_pulse_decl_callback :
                    FStar_Syntax_Syntax.lids2 = lids;
                    FStar_Syntax_Syntax.tac = splicer
                  }]
-let (uu___175 : unit) =
+let (uu___2 : unit) =
   FStar_ToSyntax_ToSyntax.register_extension_tosyntax "pulse"
     desugar_pulse_decl_callback
 let (parse_pulse :

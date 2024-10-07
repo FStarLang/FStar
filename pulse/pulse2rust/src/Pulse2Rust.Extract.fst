@@ -273,56 +273,96 @@ let extract_top_level_sig
 //
 let is_binop (s:string) : option binop =
   if s = "Prims.op_Addition" ||
+     s = "FStar.UInt8.add" ||
      s = "FStar.UInt16.add" ||
      s = "FStar.UInt32.add" ||
+     s = "FStar.UInt64.add" ||
      s = "FStar.SizeT.add"
   then Some Add
   else if s = "Prims.op_Subtraction" ||
           s = "FStar.SizeT.sub" ||
+          s = "FStar.UInt8.sub" ||
           s = "FStar.UInt16.sub" ||
-          s = "FStar.UInt32.sub"
+          s = "FStar.UInt32.sub" ||
+          s = "FStar.UInt64.sub"
   then Some Sub
   else if s = "Prims.op_Multiply" ||
           s = "FStar.Mul.op_Star" ||
+          s = "FStar.UInt8.mul" ||
           s = "FStar.UInt16.mul" ||
           s = "FStar.UInt32.mul" ||
           s = "FStar.UInt32.op_Star_Hat" ||
+          s = "FStar.UInt64.mul" ||
           s = "FStar.SizeT.mul" ||
           s = "FStar.SizeT.op_Star_Hat"
   then Some Mul
   else if s = "Prims.op_disEquality"
   then Some Ne
   else if s = "Prims.op_LessThanOrEqual" ||
+          s = "FStar.UInt8.lte" ||
           s = "FStar.UInt16.lte" ||
           s = "FStar.UInt32.lte" ||
+          s = "FStar.UInt64.lte" ||
           s = "FStar.SizeT.lte"
   then Some Le
   else if s = "Prims.op_LessThan" ||
+          s = "FStar.UInt8.lt" ||
           s = "FStar.UInt16.lt" ||
           s = "FStar.UInt32.lt" ||
+          s = "FStar.UInt64.lt" ||
           s = "FStar.SizeT.lt"
   then Some Lt
   else if s = "Prims.op_GreaterThanOrEqual" ||
+          s = "FStar.UInt8.gte" ||
           s = "FStar.UInt16.gte" ||
           s = "FStar.UInt32.gte" ||
+          s = "FStar.UInt64.gte" ||
           s = "FStar.SizeT.gte"
   then Some Ge
   else if s = "Prims.op_GreaterThan" ||
+          s = "FStar.UInt8.gt" ||
           s = "FStar.UInt16.gt" ||
           s = "FStar.UInt32.gt" ||
+          s = "FStar.UInt64.gt" ||
           s = "FStar.SizeT.gt"
   then Some Gt
   else if s = "Prims.op_Equality"
   then Some Eq
   else if s = "Prims.rem" ||
+          s = "FStar.UInt8.rem" ||
           s = "FStar.UInt16.rem" ||
           s = "FStar.UInt32.rem" ||
+          s = "FStar.UInt64.rem" ||
           s = "FStar.SizeT.rem"
   then Some Rem
   else if s = "Prims.op_AmpAmp"
   then Some And
   else if s = "Prims.op_BarBar"
   then Some Or
+  else if
+    s = "FStar.UInt8.shift_left" ||
+    s = "FStar.UInt16.shift_left" ||
+    s = "FStar.UInt32.shift_left" ||
+    s = "FStar.UInt64.shift_left"
+  then Some Shl
+  else if
+    s = "FStar.UInt8.shift_right" ||
+    s = "FStar.UInt16.shift_right" ||
+    s = "FStar.UInt32.shift_right" ||
+    s = "FStar.UInt64.shift_right"
+  then Some Shr
+  else if
+    s = "FStar.UInt8.logor" ||
+    s = "FStar.UInt16.logor" ||
+    s = "FStar.UInt32.logor" ||
+    s = "FStar.UInt64.logor"
+  then Some BitOr
+  else if
+    s = "FStar.UInt8.logand" ||
+    s = "FStar.UInt16.logand" ||
+    s = "FStar.UInt32.logand" ||
+    s = "FStar.UInt64.logand"
+  then Some BitAnd
   else None
 
 let extract_mlconstant_to_lit (c:S.mlconstant) : lit =
@@ -378,6 +418,9 @@ let rec extract_mlpattern_to_pat (g:env) (p:S.mlpattern) : env & pat =
     let g, ps = fold_left_map extract_mlpattern_to_pat g (List.map snd fs) in
     g,
     mk_pat_struct (List.last p) (zip (List.map fst fs) ps)
+  | S.MLP_Tuple ps ->
+    let g, ps = fold_left_map extract_mlpattern_to_pat g ps in
+    g, mk_pat_tuple ps
   | _ -> fail_nyi (format1 "mlpattern_to_pat %s" (S.mlpattern_to_string p))
 
 //
@@ -461,7 +504,28 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     extract_mlexpr g e
   | S.MLE_App ({expr=S.MLE_Name p}, [e])
     when S.string_of_mlpath p = "FStar.SizeT.uint16_to_sizet" ->
-    mk_method_call (extract_mlexpr g e) "into" []
+    mk_cast (extract_mlexpr g e) (mk_scalar_typ "usize")
+
+  | S.MLE_App ({expr=S.MLE_Name p}, [e])
+    when S.string_of_mlpath p = "FStar.Int.Cast.uint16_to_uint8" ||
+         S.string_of_mlpath p = "FStar.Int.Cast.uint32_to_uint8" ||
+         S.string_of_mlpath p = "FStar.Int.Cast.uint64_to_uint8" ->
+    mk_cast (extract_mlexpr g e) (mk_scalar_typ "u8")
+  | S.MLE_App ({expr=S.MLE_Name p}, [e])
+    when S.string_of_mlpath p = "FStar.Int.Cast.uint8_to_uint16" ||
+         S.string_of_mlpath p = "FStar.Int.Cast.uint32_to_uint16" ||
+         S.string_of_mlpath p = "FStar.Int.Cast.uint64_to_uint16" ->
+    mk_cast (extract_mlexpr g e) (mk_scalar_typ "u16")
+  | S.MLE_App ({expr=S.MLE_Name p}, [e])
+    when S.string_of_mlpath p = "FStar.Int.Cast.uint8_to_uint32" ||
+         S.string_of_mlpath p = "FStar.Int.Cast.uint16_to_uint32" ||
+         S.string_of_mlpath p = "FStar.Int.Cast.uint64_to_uint32" ->
+    mk_cast (extract_mlexpr g e) (mk_scalar_typ "u32")
+  | S.MLE_App ({expr=S.MLE_Name p}, [e])
+    when S.string_of_mlpath p = "FStar.Int.Cast.uint8_to_uint64" ||
+         S.string_of_mlpath p = "FStar.Int.Cast.uint16_to_uint64" ||
+         S.string_of_mlpath p = "FStar.Int.Cast.uint32_to_uint64" ->
+    mk_cast (extract_mlexpr g e) (mk_scalar_typ "u64")
 
   | S.MLE_Var x -> mk_expr_path_singl (varname x)
   | S.MLE_Name p ->
@@ -475,12 +539,14 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
     when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tfst" ||
+         S.string_of_mlpath p = "FStar.Pervasives.Native.__proj__Mktuple2__item___1" ||
          S.string_of_mlpath p = "FStar.Pervasives.Native.fst" ||
          S.string_of_mlpath p = "FStar.Pervasives.dfst" ->
     let e = extract_mlexpr g e in
     mk_expr_field_unnamed e 0
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
     when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tsnd" ||
+         S.string_of_mlpath p = "FStar.Pervasives.Native.__proj__Mktuple2__item___2" ||
          S.string_of_mlpath p = "FStar.Pervasives.Native.snd" ||
          S.string_of_mlpath p = "FStar.Pervasives.dsnd" ->
     let e = extract_mlexpr g e in
@@ -541,8 +607,9 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     mk_call (mk_expr_path (["std"; "boxed"; "Box"; "new"])) [e]
 
 
-  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; i; _; _])
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e::i::_)
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Access" ||
+         S.string_of_mlpath p = "Pulse.Lib.Array.Core.pts_to_range_index" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Access" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.read_ref" ->
 
@@ -550,6 +617,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e1::e2::e3::_)
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Assignment" ||
+         S.string_of_mlpath p = "Pulse.Lib.Array.Core.pts_to_range_upd" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Assignment" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.write_ref" ->
 

@@ -183,6 +183,12 @@ let mk_method_call (receiver:expr) (name:string) (args:list expr) : expr =
     expr_method_call_args = args;
   }
 
+let mk_cast (e:expr) (ty:typ) : expr =
+  Expr_cast {
+    expr_cast_expr = e;
+    expr_cast_type = ty;
+  }
+
 let mk_new_mutex (e:expr) =
   mk_call
     (mk_expr_path ["std"; "sync"; "Mutex"; "new"])

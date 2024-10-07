@@ -5,7 +5,7 @@ FROM fstar:local-branch-$FSTAR_BRANCH
 
 # CI dependencies for the Wasm11 test: node.js
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
-RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends nodejs
+RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends nodejs libgmp-dev pkg-config
 
 # install rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
