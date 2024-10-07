@@ -58,6 +58,7 @@ let qual_to_string = function
   | None -> ""
   | Some Implicit -> "#"
   | Some TcArg -> "#[tcresolve]"
+  | Some (Meta t) -> sprintf "#[%s]" (T.term_to_string t)
 
 let indent (level:string) = level ^ "\t"
 

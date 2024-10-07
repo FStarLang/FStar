@@ -36,6 +36,8 @@ type binder = Pulse_Syntax_Base.binder
 type comp = Pulse_Syntax_Base.comp
 type slprop = term
 
+let meta_qual t = Some (Pulse_Syntax_Base.Meta t)
+
 let ppname_of_id (i:ident) : ppname = { name = FStarC_Ident.string_of_id i; range = i.idRange }
 
 let mk_binder_with_attrs (x:ident) (t:term) (attrs:term list) : binder =

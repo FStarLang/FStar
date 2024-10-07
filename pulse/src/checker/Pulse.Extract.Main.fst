@@ -328,7 +328,11 @@ let extract_dv_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.q
     attrs = T.unseal b.binder_attrs;
     qual = (match q with
       | Some Implicit -> R.Q_Implicit
-      | Some TcArg -> R.Q_Explicit // ??
+
+      (* This translation does not really have to respect implicit/explicit args,
+      as that is irrelevant for extraction. We just make these explicit too. *)
+      | Some TcArg -> R.Q_Explicit
+      | Some (Meta t) -> R.Q_Explicit
       | None -> R.Q_Explicit);
   }
 
