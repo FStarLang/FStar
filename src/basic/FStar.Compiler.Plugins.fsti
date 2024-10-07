@@ -18,3 +18,8 @@ module FStar.Compiler.Plugins
 
 open FStar.Compiler.Effect
 include FStar.Compiler.Plugins.Base
+
+(* Tries to load a plugin named like the extension. Returns true
+if it could find a plugin with the proper name. This will fail hard
+if loading the plugin fails. *)
+val autoload_plugin (ext:string) : bool

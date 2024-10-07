@@ -747,26 +747,11 @@ let extension_parser_table : BU.smap extension_parser = FStar.Compiler.Util.smap
 let register_extension_parser (ext:string) (parser:extension_parser) =
   FStar.Compiler.Util.smap_add extension_parser_table ext parser
 
-(* Tries to load a plugin named like the extension. Returns true
-if it could find a plugin with the proper name. This will fail hard
-if loading the plugin fails. *)
-let autoload_plugin (ext:string) : bool =
-  if Debug.any () then
-    print1 "Trying to find a plugin for extension %s\n" ext;
-  match Options.find_file (ext ^ ".cmxs") with
-  | Some fn ->
-    if Debug.any () then
-      print1 "Autoloading plugin %s ...\n" fn;
-    Tactics.Load.load_tactics [fn];
-    true
-  | None ->
-    false
-
 let lookup_extension_parser (ext:string) =
   let r = FStar.Compiler.Util.smap_try_find extension_parser_table ext in
   match r with
   | None ->
-    if autoload_plugin ext
+    if Plugins.autoload_plugin ext
     then FStar.Compiler.Util.smap_try_find extension_parser_table ext
     else None
   | _ -> r
@@ -789,7 +774,7 @@ let lookup_extension_lang_parser (ext:string) =
   let r = FStar.Compiler.Util.smap_try_find extension_lang_parser_table ext in
   match r with
   | None ->
-    if autoload_plugin ext
+    if Plugins.autoload_plugin ext
     then FStar.Compiler.Util.smap_try_find extension_lang_parser_table ext
     else None
   | _ -> r

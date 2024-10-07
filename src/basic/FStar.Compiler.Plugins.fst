@@ -19,3 +19,18 @@ module FStar.Compiler.Plugins
 open FStar.Compiler.Effect
 open FStar.Compiler.Plugins.Base
 module BU = FStar.Compiler.Util
+
+(* Tries to load a plugin named like the extension. Returns true
+if it could find a plugin with the proper name. This will fail hard
+if loading the plugin fails. *)
+let autoload_plugin (ext:string) : bool =
+  if Debug.any () then
+    BU.print1 "Trying to find a plugin for extension %s\n" ext;
+  match Options.find_file (ext ^ ".cmxs") with
+  | Some fn ->
+    if Debug.any () then
+      BU.print1 "Autoloading plugin %s ...\n" fn;
+    Plugins.Base.load_tactics [fn];
+    true
+  | None ->
+    false
