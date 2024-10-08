@@ -351,6 +351,7 @@ instance showable_ctx_uvar_meta = {
           | Ctx_uvar_meta_attr attr -> "Ctx_uvar_meta_attr " ^ show attr
           | Ctx_uvar_meta_tac r -> "Ctx_uvar_meta_tac " ^ show r);
 }
+instance showable_bqual   = { show = (fun b -> bqual_to_string (Some b)); } // really silly but OK
 instance showable_aqual   = { show = aqual_to_string; }
 
 let tscheme_to_string ts =
