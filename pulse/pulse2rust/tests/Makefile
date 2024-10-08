@@ -1,7 +1,7 @@
 PULSE_HOME ?= ../..
 PULSE_EXAMPLES_ROOT ?= $(PULSE_HOME)/share/pulse/examples
 
-SRC_DIRS := $(addprefix $(PULSE_EXAMPLES_ROOT)/,by-example dice/external dice/external/hacl dice/external/l0 dice/dpe dice/engine dice/l0)
+SRC_DIRS := $(addprefix $(PULSE_EXAMPLES_ROOT)/,. by-example dice/external dice/external/hacl dice/external/l0 dice/dpe dice/engine dice/l0)
 ifneq (,$(wildcard $(PULSE_EXAMPLES_ROOT)/dice/_output/cache))
 SRC_DIRS += $(PULSE_EXAMPLES_ROOT)/dice/_output/cache
 endif
@@ -16,7 +16,8 @@ CACHE_DIRECTORY := $(OUTPUT_DIRECTORY)/cache
 FSTAR_OPTIONS += --warn_error -342 --cmi
 
 MAIN=../main.exe
-RUST_SRC_DIR=./src/
+RUST_SRC_DIR=src
+RUST_OUT_DIR=out
 DPE_OUTPUT_DIR=../dpe/src/generated
 
 all: test dpe
@@ -60,17 +61,23 @@ FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Pulse +Pulse.Cl
 # files. If so, then this %.ast rule will be generic and can move to
 # share/pulse/Makefile.include-base.
 
-%.ast:
+$(OUTPUT_DIRECTORY)/%.ast:
 		$(FSTAR) --admit_smt_queries true --codegen Extension $(subst .ast,.fst, $(subst _,., $(notdir $@))) --extract_module $(basename $(subst .ast,.fst, $(subst _,., $(notdir $@))))
 
-pulsetutorial-array.rs: PulseTutorial_Array.ast
-	$(MAIN) -odir $(RUST_SRC_DIR) $(addprefix $(OUTPUT_DIRECTORY)/, $^)
+$(RUST_SRC_DIR)/pulsetutorial_array.rs: $(OUTPUT_DIRECTORY)/PulseTutorial_Array.ast
+	$(MAIN) -odir $(RUST_SRC_DIR) $+
 
-pulsetutorial-loops.rs: PulseTutorial_Loops.ast
-	$(MAIN) -odir $(RUST_SRC_DIR) $(addprefix $(OUTPUT_DIRECTORY)/, $^)
+$(RUST_SRC_DIR)/pulsetutorial_loops.rs: $(OUTPUT_DIRECTORY)/PulseTutorial_Loops.ast
+	$(MAIN) -odir $(RUST_SRC_DIR) $+
 
-pulsetutorial-algorithms.rs: PulseTutorial_Algorithms.ast
-	$(MAIN) -odir $(RUST_SRC_DIR) $(addprefix $(OUTPUT_DIRECTORY)/, $^)
+$(RUST_SRC_DIR)/pulsetutorial_algorithms.rs: $(OUTPUT_DIRECTORY)/PulseTutorial_Algorithms.ast
+	$(main) -odir $(rust_src_dir) $+
+
+$(RUST_SRC_DIR)/example_slice.rs: $(OUTPUT_DIRECTORY)/Example_Slice.ast
+	$(MAIN) -odir $(RUST_SRC_DIR) $+
+
+%.rlib: %.rs
+	rustc --crate-type rlib -o $@ $+
 
 DPE_FILES = EngineTypes.ast \
   EngineCore.ast \
@@ -87,7 +94,7 @@ DPE_LIB = L0Core,Pulse.Lib.Array,FStar.SizeT,EverCrypt.HMAC,EverCrypt.Hash.Incre
 dpe.rs: $(DPE_FILES)
 	$(MAIN) -odir $(DPE_OUTPUT_DIR)/ -lib $(DPE_LIB) $(addprefix $(OUTPUT_DIRECTORY)/, $^)
 
-all-rs: pulsetutorial-loops.rs pulsetutorial-algorithms.rs
+all-rs: $(addprefix $(RUST_SRC_DIR)/, pulsetutorial_loops.rlib pulsetutorial_algorithms.rs pulsetutorial_array.rs example_slice.rlib)
 
 test: all-rs
 	cargo test

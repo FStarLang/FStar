@@ -17,10 +17,13 @@ module Example.Slice
 #lang-pulse
 open Pulse
 open Pulse.Lib.Slice
+module A = Pulse.Lib.Array
 
-fn test () requires emp ensures emp {
-  let arr = Pulse.Lib.Array.alloc 42uy 10sz;
-  let slice = from_array arr 10sz;
+fn test (arr: A.array UInt8.t)
+    requires A.pts_to arr seq![0uy; 1uy; 2uy; 3uy; 4uy]
+    ensures exists* s. A.pts_to arr s ** pure (s `Seq.equal` seq![0uy; 4uy; 2uy; 3uy; 4uy]) {
+  A.pts_to_len arr;
+  let slice = from_array arr 5sz;
   let SlicePair s1 s2 = split slice 2sz;
   share s2;
   let x = s2.(2sz);
@@ -28,5 +31,4 @@ fn test () requires emp ensures emp {
   gather s2;
   join s1 s2 slice;
   to_array slice;
-  Pulse.Lib.Array.free arr;
 }
