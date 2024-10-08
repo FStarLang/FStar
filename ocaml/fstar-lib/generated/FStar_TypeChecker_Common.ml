@@ -263,7 +263,8 @@ let (showable_deferred_reason : deferred_reason FStar_Class_Show.showable) =
          | Deferred_delay_match_heuristic -> "Deferred_delay_match_heuristic"
          | Deferred_to_user_tac -> "Deferred_to_user_tac")
   }
-type deferred = (deferred_reason * Prims.string * prob) Prims.list
+type deferred =
+  (deferred_reason * Prims.string * prob) FStar_Compiler_CList.clist
 type univ_ineq =
   (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe)
 type identifier_info =
@@ -599,7 +600,9 @@ type guard_t =
   deferred_to_tac: deferred ;
   deferred: deferred ;
   univ_ineqs:
-    (FStar_Syntax_Syntax.universe Prims.list * univ_ineq Prims.list) ;
+    (FStar_Syntax_Syntax.universe FStar_Compiler_CList.clist * univ_ineq
+      FStar_Compiler_CList.clist)
+    ;
   implicits: implicits_t }
 let (__proj__Mkguard_t__item__guard_f : guard_t -> guard_formula) =
   fun projectee ->
@@ -617,7 +620,9 @@ let (__proj__Mkguard_t__item__deferred : guard_t -> deferred) =
     | { guard_f; deferred_to_tac; deferred = deferred1; univ_ineqs;
         implicits = implicits1;_} -> deferred1
 let (__proj__Mkguard_t__item__univ_ineqs :
-  guard_t -> (FStar_Syntax_Syntax.universe Prims.list * univ_ineq Prims.list))
+  guard_t ->
+    (FStar_Syntax_Syntax.universe FStar_Compiler_CList.clist * univ_ineq
+      FStar_Compiler_CList.clist))
   =
   fun projectee ->
     match projectee with
@@ -631,9 +636,21 @@ let (__proj__Mkguard_t__item__implicits : guard_t -> implicits_t) =
 let (trivial_guard : guard_t) =
   {
     guard_f = Trivial;
-    deferred_to_tac = [];
-    deferred = [];
-    univ_ineqs = ([], []);
+    deferred_to_tac =
+      (Obj.magic
+         (FStar_Class_Listlike.empty ()
+            (Obj.magic (FStar_Compiler_CList.listlike_clist ()))));
+    deferred =
+      (Obj.magic
+         (FStar_Class_Listlike.empty ()
+            (Obj.magic (FStar_Compiler_CList.listlike_clist ()))));
+    univ_ineqs =
+      ((Obj.magic
+          (FStar_Class_Listlike.empty ()
+             (Obj.magic (FStar_Compiler_CList.listlike_clist ())))),
+        (Obj.magic
+           (FStar_Class_Listlike.empty ()
+              (Obj.magic (FStar_Compiler_CList.listlike_clist ())))));
     implicits =
       (Obj.magic
          (FStar_Class_Listlike.empty ()
@@ -657,20 +674,32 @@ let (binop_guard :
         let uu___ = f g1.guard_f g2.guard_f in
         let uu___1 =
           FStar_Class_Monoid.op_Plus_Plus
+            (FStar_Compiler_CList.monoid_clist ()) g1.deferred_to_tac
+            g2.deferred_to_tac in
+        let uu___2 =
+          FStar_Class_Monoid.op_Plus_Plus
+            (FStar_Compiler_CList.monoid_clist ()) g1.deferred g2.deferred in
+        let uu___3 =
+          let uu___4 =
+            FStar_Class_Monoid.op_Plus_Plus
+              (FStar_Compiler_CList.monoid_clist ())
+              (FStar_Pervasives_Native.fst g1.univ_ineqs)
+              (FStar_Pervasives_Native.fst g2.univ_ineqs) in
+          let uu___5 =
+            FStar_Class_Monoid.op_Plus_Plus
+              (FStar_Compiler_CList.monoid_clist ())
+              (FStar_Pervasives_Native.snd g1.univ_ineqs)
+              (FStar_Pervasives_Native.snd g2.univ_ineqs) in
+          (uu___4, uu___5) in
+        let uu___4 =
+          FStar_Class_Monoid.op_Plus_Plus
             (FStar_Compiler_CList.monoid_clist ()) g1.implicits g2.implicits in
         {
           guard_f = uu___;
-          deferred_to_tac =
-            (FStar_Compiler_List.op_At g1.deferred_to_tac g2.deferred_to_tac);
-          deferred = (FStar_Compiler_List.op_At g1.deferred g2.deferred);
-          univ_ineqs =
-            ((FStar_Compiler_List.op_At
-                (FStar_Pervasives_Native.fst g1.univ_ineqs)
-                (FStar_Pervasives_Native.fst g2.univ_ineqs)),
-              (FStar_Compiler_List.op_At
-                 (FStar_Pervasives_Native.snd g1.univ_ineqs)
-                 (FStar_Pervasives_Native.snd g2.univ_ineqs)));
-          implicits = uu___1
+          deferred_to_tac = uu___1;
+          deferred = uu___2;
+          univ_ineqs = uu___3;
+          implicits = uu___4
         }
 let (conj_guard : guard_t -> guard_t -> guard_t) =
   fun g1 -> fun g2 -> binop_guard conj_guard_f g1 g2

@@ -6861,9 +6861,21 @@ let (guard_of_guard_formula :
   fun g ->
     {
       FStar_TypeChecker_Common.guard_f = g;
-      FStar_TypeChecker_Common.deferred_to_tac = [];
-      FStar_TypeChecker_Common.deferred = [];
-      FStar_TypeChecker_Common.univ_ineqs = ([], []);
+      FStar_TypeChecker_Common.deferred_to_tac =
+        (Obj.magic
+           (FStar_Class_Listlike.empty ()
+              (Obj.magic (FStar_Compiler_CList.listlike_clist ()))));
+      FStar_TypeChecker_Common.deferred =
+        (Obj.magic
+           (FStar_Class_Listlike.empty ()
+              (Obj.magic (FStar_Compiler_CList.listlike_clist ()))));
+      FStar_TypeChecker_Common.univ_ineqs =
+        ((Obj.magic
+            (FStar_Class_Listlike.empty ()
+               (Obj.magic (FStar_Compiler_CList.listlike_clist ())))),
+          (Obj.magic
+             (FStar_Class_Listlike.empty ()
+                (Obj.magic (FStar_Compiler_CList.listlike_clist ())))));
       FStar_TypeChecker_Common.implicits =
         (Obj.magic
            (FStar_Class_Listlike.empty ()
@@ -6873,25 +6885,38 @@ let (guard_form : guard_t -> FStar_TypeChecker_Common.guard_formula) =
   fun g -> g.FStar_TypeChecker_Common.guard_f
 let (is_trivial : guard_t -> Prims.bool) =
   fun g ->
-    match g with
-    | { FStar_TypeChecker_Common.guard_f = FStar_TypeChecker_Common.Trivial;
-        FStar_TypeChecker_Common.deferred_to_tac = uu___;
-        FStar_TypeChecker_Common.deferred = [];
-        FStar_TypeChecker_Common.univ_ineqs = ([], []);
-        FStar_TypeChecker_Common.implicits = i;_} ->
-        FStar_Compiler_CList.for_all
-          (fun imp ->
+    let uu___ =
+      (((FStar_TypeChecker_Common.uu___is_Trivial
+           g.FStar_TypeChecker_Common.guard_f)
+          &&
+          (FStar_Class_Listlike.is_empty
+             (FStar_Compiler_CList.listlike_clist ())
+             g.FStar_TypeChecker_Common.deferred))
+         &&
+         (FStar_Class_Listlike.is_empty
+            (FStar_Compiler_CList.listlike_clist ())
+            (FStar_Pervasives_Native.fst
+               g.FStar_TypeChecker_Common.univ_ineqs)))
+        &&
+        (FStar_Class_Listlike.is_empty
+           (FStar_Compiler_CList.listlike_clist ())
+           (FStar_Pervasives_Native.snd g.FStar_TypeChecker_Common.univ_ineqs)) in
+    if uu___
+    then
+      FStar_Compiler_CList.for_all
+        (fun imp ->
+           (let uu___1 =
+              FStar_Syntax_Util.ctx_uvar_should_check
+                imp.FStar_TypeChecker_Common.imp_uvar in
+            FStar_Syntax_Syntax.uu___is_Allow_unresolved uu___1) ||
              (let uu___1 =
-                FStar_Syntax_Util.ctx_uvar_should_check
-                  imp.FStar_TypeChecker_Common.imp_uvar in
-              FStar_Syntax_Syntax.uu___is_Allow_unresolved uu___1) ||
-               (let uu___1 =
-                  FStar_Syntax_Unionfind.find
-                    (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
-                match uu___1 with
-                | FStar_Pervasives_Native.Some uu___2 -> true
-                | FStar_Pervasives_Native.None -> false)) i
-    | uu___ -> false
+                FStar_Syntax_Unionfind.find
+                  (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+              match uu___1 with
+              | FStar_Pervasives_Native.Some uu___2 -> true
+              | FStar_Pervasives_Native.None -> false))
+        g.FStar_TypeChecker_Common.implicits
+    else false
 let (is_trivial_guard_formula : guard_t -> Prims.bool) =
   fun g ->
     match g with
