@@ -2375,6 +2375,14 @@ let (check_inductive_well_typedness :
                              FStar_Compiler_List.map
                                FStar_Pervasives_Native.snd tcs in
                            let g3 =
+                             let uu___5 =
+                               let uu___6 =
+                                 FStar_Class_Listlike.from_list
+                                   (FStar_Compiler_CList.listlike_clist ())
+                                   tc_universe_vars in
+                               (uu___6,
+                                 (FStar_Pervasives_Native.snd
+                                    g2.FStar_TypeChecker_Common.univ_ineqs)) in
                              {
                                FStar_TypeChecker_Common.guard_f =
                                  (g2.FStar_TypeChecker_Common.guard_f);
@@ -2382,10 +2390,7 @@ let (check_inductive_well_typedness :
                                  (g2.FStar_TypeChecker_Common.deferred_to_tac);
                                FStar_TypeChecker_Common.deferred =
                                  (g2.FStar_TypeChecker_Common.deferred);
-                               FStar_TypeChecker_Common.univ_ineqs =
-                                 (tc_universe_vars,
-                                   (FStar_Pervasives_Native.snd
-                                      g2.FStar_TypeChecker_Common.univ_ineqs));
+                               FStar_TypeChecker_Common.univ_ineqs = uu___5;
                                FStar_TypeChecker_Common.implicits =
                                  (g2.FStar_TypeChecker_Common.implicits)
                              } in

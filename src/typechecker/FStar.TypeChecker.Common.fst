@@ -215,13 +215,15 @@ let implicits_to_string imps =
     let imp_to_string i = show i.imp_uvar.ctx_uvar_head in
     FStar.Common.string_of_list imp_to_string imps
 
-let trivial_guard = {
-  guard_f=Trivial;
-  deferred_to_tac=[];
-  deferred=[];
-  univ_ineqs=([], []);
-  implicits=Class.Listlike.empty;
-}
+let trivial_guard =
+  let open FStar.Class.Listlike in
+  {
+    guard_f=Trivial;
+    deferred_to_tac=empty;
+    deferred=empty;
+    univ_ineqs=(empty, empty);
+    implicits=empty;
+  }
 
 let conj_guard_f g1 g2 = match g1, g2 with
   | Trivial, g
@@ -230,10 +232,10 @@ let conj_guard_f g1 g2 = match g1, g2 with
 
 let binop_guard f g1 g2 = {
   guard_f=f g1.guard_f g2.guard_f;
-  deferred_to_tac=g1.deferred_to_tac@g2.deferred_to_tac;
-  deferred=g1.deferred@g2.deferred;
-  univ_ineqs=(fst g1.univ_ineqs@fst g2.univ_ineqs,
-              snd g1.univ_ineqs@snd g2.univ_ineqs);
+  deferred_to_tac=g1.deferred_to_tac ++ g2.deferred_to_tac;
+  deferred=g1.deferred ++ g2.deferred;
+  univ_ineqs=(fst g1.univ_ineqs ++ fst g2.univ_ineqs,
+              snd g1.univ_ineqs ++ snd g2.univ_ineqs);
   implicits=g1.implicits ++ g2.implicits;
 }
 let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2

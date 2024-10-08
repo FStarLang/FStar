@@ -38,6 +38,8 @@ open FStar.Class.Show
 open FStar.Class.PP
 open FStar.Class.Monoid
 
+module Listlike = FStar.Class.Listlike
+
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
 module BU = FStar.Compiler.Util
@@ -75,7 +77,7 @@ let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t 
   || solve_deferred
   then
     let solve_now, defer =
-      g.deferred |> List.partition (fun (_, _, p) -> Rel.flex_prob_closing env xs p)
+      g.deferred |> Listlike.to_list |> List.partition (fun (_, _, p) -> Rel.flex_prob_closing env xs p)
     in
     if !dbg_Rel
     then begin
@@ -85,8 +87,8 @@ let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t 
       List.iter (fun (_, s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) defer;
       BU.print_string "END\n"
     end;
-    let g = Rel.solve_non_tactic_deferred_constraints false env ({g with deferred=solve_now}) in
-    let g = {g with deferred=defer} in
+    let g = Rel.solve_non_tactic_deferred_constraints false env ({g with deferred = Listlike.from_list solve_now}) in
+    let g = {g with deferred = Listlike.from_list defer} in
     g
   else g
 

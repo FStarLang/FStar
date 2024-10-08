@@ -691,8 +691,11 @@ let (solve_deferred_to_tactic_goals :
                     FStar_Compiler_Effect.failwith
                       "Unexpected problem deferred to tactic") in
          let eqs =
-           FStar_Compiler_List.map prob_as_implicit
-             g.FStar_TypeChecker_Common.deferred_to_tac in
+           let uu___1 =
+             FStar_Class_Listlike.to_list
+               (FStar_Compiler_CList.listlike_clist ())
+               g.FStar_TypeChecker_Common.deferred_to_tac in
+           FStar_Compiler_List.map prob_as_implicit uu___1 in
          let uu___1 =
            let uu___2 =
              FStar_Class_Listlike.to_list
@@ -758,7 +761,10 @@ let (solve_deferred_to_tactic_goals :
                {
                  FStar_TypeChecker_Common.guard_f =
                    (g.FStar_TypeChecker_Common.guard_f);
-                 FStar_TypeChecker_Common.deferred_to_tac = [];
+                 FStar_TypeChecker_Common.deferred_to_tac =
+                   (Obj.magic
+                      (FStar_Class_Listlike.empty ()
+                         (Obj.magic (FStar_Compiler_CList.listlike_clist ()))));
                  FStar_TypeChecker_Common.deferred =
                    (g.FStar_TypeChecker_Common.deferred);
                  FStar_TypeChecker_Common.univ_ineqs =

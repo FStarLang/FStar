@@ -39,6 +39,7 @@ module TEQ = FStar.TypeChecker.TermEqAndSimplify
 
 open FStar.Class.Setlike
 open FStar.Class.Show
+module Listlike = FStar.Class.Listlike
 
 let is_flex t =
   let head, _args = U.head_and_args_full t in
@@ -258,7 +259,7 @@ let solve_deferred_to_tactic_goals env g =
         failwith "Unexpected problem deferred to tactic"
     in
     //Turn all the deferred problems into equality goals
-    let eqs = List.map prob_as_implicit g.deferred_to_tac in
+    let eqs = List.map prob_as_implicit (Listlike.to_list g.deferred_to_tac) in
     //Also take any unsolved uvars in the guard implicits that are tagged
     //with attributes
     let more, imps =
@@ -274,7 +275,7 @@ let solve_deferred_to_tactic_goals env g =
                    more, imp::imps
                  | Some se ->
                    (imp, se)::more, imps)
-            (Class.Listlike.to_list g.implicits)
+            (Listlike.to_list g.implicits)
             ([], [])
     in
     (** Each implicit is associated with a sigelt.
@@ -299,4 +300,4 @@ let solve_deferred_to_tactic_goals env g =
     let buckets = bucketize (eqs@more) in
     // Dispatch each bucket of implicits to their respective tactic
     List.iter (fun (imps, sigel) -> solve_goals_with_tac env g imps sigel) buckets;
-    { g with deferred_to_tac=[]; implicits = Class.Listlike.from_list imps}
+    { g with deferred_to_tac=Listlike.empty; implicits = Class.Listlike.from_list imps}

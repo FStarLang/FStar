@@ -58,12 +58,16 @@ let (close_guard_implicits :
           if uu___
           then
             let uu___1 =
+              let uu___2 =
+                FStar_Class_Listlike.to_list
+                  (FStar_Compiler_CList.listlike_clist ())
+                  g.FStar_TypeChecker_Common.deferred in
               FStar_Compiler_List.partition
-                (fun uu___2 ->
-                   match uu___2 with
-                   | (uu___3, uu___4, p) ->
+                (fun uu___3 ->
+                   match uu___3 with
+                   | (uu___4, uu___5, p) ->
                        FStar_TypeChecker_Rel.flex_prob_closing env xs p)
-                g.FStar_TypeChecker_Common.deferred in
+                uu___2 in
             match uu___1 with
             | (solve_now, defer) ->
                 ((let uu___3 = FStar_Compiler_Effect.op_Bang dbg_Rel in
@@ -92,26 +96,33 @@ let (close_guard_implicits :
                      FStar_Compiler_Util.print_string "END\n")
                   else ());
                  (let g1 =
-                    FStar_TypeChecker_Rel.solve_non_tactic_deferred_constraints
-                      false env
+                    let uu___3 =
+                      let uu___4 =
+                        FStar_Class_Listlike.from_list
+                          (FStar_Compiler_CList.listlike_clist ()) solve_now in
                       {
                         FStar_TypeChecker_Common.guard_f =
                           (g.FStar_TypeChecker_Common.guard_f);
                         FStar_TypeChecker_Common.deferred_to_tac =
                           (g.FStar_TypeChecker_Common.deferred_to_tac);
-                        FStar_TypeChecker_Common.deferred = solve_now;
+                        FStar_TypeChecker_Common.deferred = uu___4;
                         FStar_TypeChecker_Common.univ_ineqs =
                           (g.FStar_TypeChecker_Common.univ_ineqs);
                         FStar_TypeChecker_Common.implicits =
                           (g.FStar_TypeChecker_Common.implicits)
                       } in
+                    FStar_TypeChecker_Rel.solve_non_tactic_deferred_constraints
+                      false env uu___3 in
                   let g2 =
+                    let uu___3 =
+                      FStar_Class_Listlike.from_list
+                        (FStar_Compiler_CList.listlike_clist ()) defer in
                     {
                       FStar_TypeChecker_Common.guard_f =
                         (g1.FStar_TypeChecker_Common.guard_f);
                       FStar_TypeChecker_Common.deferred_to_tac =
                         (g1.FStar_TypeChecker_Common.deferred_to_tac);
-                      FStar_TypeChecker_Common.deferred = defer;
+                      FStar_TypeChecker_Common.deferred = uu___3;
                       FStar_TypeChecker_Common.univ_ineqs =
                         (g1.FStar_TypeChecker_Common.univ_ineqs);
                       FStar_TypeChecker_Common.implicits =
