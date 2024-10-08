@@ -180,55 +180,34 @@ fn join (#t: Type) (s1: ptr t) (#p: perm) (#v1: Seq.seq t) (s2: ptr t) (#v2: Seq
 
 module R = Pulse.Lib.Reference
 
-fn blit (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
-           (src:ptr t)
-           (idx_src: SZ.t)
-           (dst:ptr t)
-           (idx_dst: SZ.t)
-           (len: SZ.t)
-requires
-    (pts_to src #p0 s0 ** pts_to dst s1 ** pure (
-      SZ.v idx_src + SZ.v len <= Seq.length s0 /\
-      SZ.v idx_dst + SZ.v len <= Seq.length s1
-    ))
-ensures
-    (exists* s1' . pts_to src #p0 s0 ** pts_to dst s1' **
-      pure (blit_post s0 s1 idx_src idx_dst len s1')
-    )
+fn memcpy
+    (#t:Type0) (#p0:perm)
+    (src:ptr t) (idx_src: SZ.t)
+    (dst:ptr t) (idx_dst: SZ.t)
+    (len: SZ.t)
+    (#s0:Ghost.erased (Seq.seq t) { SZ.v idx_src + SZ.v len <= Seq.length s0 })
+    (#s1:Ghost.erased (Seq.seq t) { SZ.v idx_dst + SZ.v len <= Seq.length s1 })
+  requires pts_to src #p0 s0 ** pts_to dst s1
+  ensures pts_to src #p0 s0 **
+    pts_to dst (Seq.slice s0 0 (SZ.v len) `Seq.append` Seq.slice s1 (SZ.v len) (Seq.length s1))
 {
-  unfold (pts_to src #p0 s0);
-  A.pts_to_range_prop src.base;
-  fold (pts_to src #p0 s0);
-  let mut pi = 0sz;
-  while (
-    let i = !pi;
-    SZ.lt i len
-  )
-  invariant b . exists* i s1' .
-    R.pts_to pi i **
-    pts_to src #p0 s0 **
-    pts_to dst s1' **
-    pure (
-      SZ.v i <= SZ.v len /\
-      b == (SZ.v i < SZ.v len) /\
-      blit_post s0 s1 idx_src idx_dst i s1'
-    )
+  let mut i = 0sz;
+  while (let vi = !i; SZ.lt vi len)
+    invariant b. exists* s1' vi.
+      R.pts_to i vi **
+      pts_to src #p0 s0 **
+      pts_to dst s1' **
+      pure (b == SZ.lt vi len /\ SZ.lte vi len /\
+        Seq.length s1' == Seq.length s1 /\
+        forall (j:nat). j < Seq.length s1' ==>
+          Seq.index s1' j == (if j < SZ.v vi then Seq.index s0 j else Seq.index s1 j))
   {
-    with s1'. assert pts_to dst s1';
-    unfold pts_to dst s1';
-    A.pts_to_range_prop dst.base;
-    fold pts_to dst s1';
-    let i = !pi;
-    let x = op_Array_Access src (SZ.add idx_src i);
-    op_Array_Assignment dst (SZ.add idx_dst i) x;
-    pi := SZ.add i 1sz;
-    Seq.lemma_split (Seq.slice s1' (SZ.v idx_dst) (SZ.v idx_dst + SZ.v (SZ.add i 1sz))) (SZ.v i);
-    Seq.lemma_split (Seq.slice s0 (SZ.v idx_src) (SZ.v idx_src + SZ.v (SZ.add i 1sz))) (SZ.v i);
-    Seq.slice_slice s1' (SZ.v idx_dst + SZ.v i) (Seq.length s1') 1 (Seq.length s1' - (SZ.v idx_dst + SZ.v i));
-    with s1''. assert pts_to dst s1'';
-    assert (pure (
-        Seq.slice s1'' (SZ.v idx_dst + SZ.v (SZ.add i 1sz)) (Seq.length s1) `Seq.equal`
-          Seq.slice s1' (SZ.v idx_dst + SZ.v (SZ.add i 1sz)) (Seq.length s1')
-    ));
+    let vi = !i;
+    let x = src.(vi);
+    dst.(vi) <- x;
+    i := SZ.add vi 1sz;
   };
+  with s1'. assert pts_to dst s1';
+  assert pure (s1' `Seq.equal`
+    (Seq.slice s0 0 (SZ.v len) `Seq.append` Seq.slice s1 (SZ.v len) (Seq.length s1)))
 }

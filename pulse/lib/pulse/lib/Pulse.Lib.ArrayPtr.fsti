@@ -118,35 +118,13 @@ val join (#t: Type) (s1: ptr t) (#p: perm) (#v1: Seq.seq t) (s2: ptr t) (#v2: Se
     (pts_to s1 #p v1 ** pts_to s2 #p v2 ** pure (adjacent s1 (Seq.length v1) s2))
     (fun _ -> pts_to s1 #p (Seq.append v1 v2))
 
-let blit_post
-(#t:_) (s0 s1:Ghost.erased (Seq.seq t))
-           (idx_src: SZ.t)
-           (idx_dst: SZ.t)
-           (len: SZ.t)
-           (s1' : Seq.seq t)
-: Tot prop
-=
-        SZ.v idx_src + SZ.v len <= Seq.length s0 /\
-        SZ.v idx_dst + SZ.v len <= Seq.length s1 /\
-        Seq.length s1' == Seq.length s1 /\
-        Seq.slice s1' (SZ.v idx_dst) (SZ.v idx_dst + SZ.v len) `Seq.equal`
-          Seq.slice s0 (SZ.v idx_src) (SZ.v idx_src + SZ.v len) /\
-        Seq.slice s1' 0 (SZ.v idx_dst) `Seq.equal`
-          Seq.slice s1 0 (SZ.v idx_dst) /\
-        Seq.slice s1' (SZ.v idx_dst + SZ.v len) (Seq.length s1) `Seq.equal`
-          Seq.slice s1 (SZ.v idx_dst + SZ.v len) (Seq.length s1)
-
-val blit (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
-           (src:ptr t)
-           (idx_src: SZ.t)
-           (dst:ptr t)
-           (idx_dst: SZ.t)
-           (len: SZ.t)
+val memcpy
+    (#t:Type0) (#p0:perm)
+    (src:ptr t) (idx_src: SZ.t)
+    (dst:ptr t) (idx_dst: SZ.t)
+    (len: SZ.t)
+    (#s0:Ghost.erased (Seq.seq t) { SZ.v idx_src + SZ.v len <= Seq.length s0 })
+    (#s1:Ghost.erased (Seq.seq t) { SZ.v idx_dst + SZ.v len <= Seq.length s1 })
   : stt unit
-    (pts_to src #p0 s0 ** pts_to dst s1 ** pure (
-      SZ.v idx_src + SZ.v len <= Seq.length s0 /\
-      SZ.v idx_dst + SZ.v len <= Seq.length s1
-    ))
-    (fun _ -> exists* s1' . pts_to src #p0 s0 ** pts_to dst s1' **
-      pure (blit_post s0 s1 idx_src idx_dst len s1')
-    )
+    (pts_to src #p0 s0 ** pts_to dst s1)
+    (fun _ -> pts_to src #p0 s0 ** pts_to dst (Seq.slice s0 0 (SZ.v len) `Seq.append` Seq.slice s1 (SZ.v len) (Seq.length s1)))

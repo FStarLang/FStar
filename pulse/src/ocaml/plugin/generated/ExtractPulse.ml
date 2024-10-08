@@ -498,10 +498,10 @@ let (pulse_translate_expr : FStar_Extraction_Krml.translate_expr_t) =
                  uu___3);
               FStar_Extraction_ML_Syntax.mlty = uu___4;
               FStar_Extraction_ML_Syntax.loc = uu___5;_},
-            uu___6::uu___7::uu___8::e11::e2::e3::e4::e5::[])
+            uu___6::e11::e2::e3::e4::e5::uu___7::uu___8::[])
            when
            let uu___9 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___9 = "Pulse.Lib.ArrayPtr.blit" ->
+           uu___9 = "Pulse.Lib.ArrayPtr.memcpy" ->
            let uu___9 =
              let uu___10 = FStar_Extraction_Krml.translate_expr env e11 in
              let uu___11 = FStar_Extraction_Krml.translate_expr env e2 in
