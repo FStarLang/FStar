@@ -34,6 +34,7 @@ open FStar.Syntax.Syntax
 open FStar.VConfig
 open FStar.Class.Show
 open FStar.Class.Tagged
+module Listlike = FStar.Class.Listlike
 
 friend FStar.Pervasives (* to use Delta below *)
 
@@ -253,7 +254,7 @@ let with_policy pol (t : tac 'a) : tac 'a =
 let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:option should_check_uvar) (rng:Range.range) : tac unit =
     mlog (fun () ->
         BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
-    let imps = as_implicits g.implicits in 
+    let imps = Listlike.to_list g.implicits in 
     let _ =
       match sc_opt with
       | Some (Allow_untyped r) ->
@@ -414,7 +415,7 @@ let __do_unify_wflags
             ret None
           | Some g ->
             tc_unifier_solved_implicits env must_tot allow_guards all_uvars;!
-            add_implicits (as_implicits g.implicits);!
+            add_implicits (Listlike.to_list g.implicits);!
             ret (Some g)
 
         with | Errors.Error (_, msg, r, _) -> begin

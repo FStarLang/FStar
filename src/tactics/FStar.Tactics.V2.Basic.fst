@@ -34,6 +34,7 @@ open FStar.Tactics.Printing
 open FStar.Syntax.Syntax
 open FStar.VConfig
 open FStar.Errors.Msg
+module Listlike = FStar.Class.Listlike
 
 friend FStar.Pervasives (* to expose norm_step *)
 
@@ -284,7 +285,7 @@ let proc_guard_formula
 
 let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:option should_check_uvar) (rng:Range.range) : tac unit =
     log (fun () -> BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g));!
-    let imps = as_implicits g.implicits in
+    let imps = Listlike.to_list g.implicits in
     let _ =
       match sc_opt with
       | Some (Allow_untyped r) ->
@@ -415,7 +416,7 @@ let __do_unify_wflags
             return None
           | Some g ->
             tc_unifier_solved_implicits env must_tot allow_guards all_uvars;!
-            add_implicits (as_implicits g.implicits);!
+            add_implicits (Listlike.to_list g.implicits);!
             return (Some g)
 
         with | Errors.Error (_, msg, r, _) ->
@@ -2678,7 +2679,7 @@ let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
     //
     let guard = guard |> Rel.solve_deferred_constraints g |> Rel.resolve_implicits g in
     let bvs_and_ts : list (bv & typ) =
-      match as_implicits guard.implicits with
+      match Listlike.to_list guard.implicits with
       | [] -> []
       | imps ->
         //
@@ -2776,7 +2777,7 @@ let refl_try_unify (g:env) (uvs:list (bv & typ)) (t0 t1:term)
         //   e.g., created as part of Rel.try_teq, return []
         //
         let b = List.existsb (fun {imp_uvar = {ctx_uvar_head = (uv, _, _)}} ->
-          BU.pimap_try_find tbl (Unionfind.puf_unique_id uv) = None) (as_implicits guard.implicits) in
+          BU.pimap_try_find tbl (Unionfind.puf_unique_id uv) = None) (Listlike.to_list guard.implicits) in
         if b then []
         else
           //
@@ -2899,7 +2900,7 @@ let proofstate_of_goal_ty rng env typ =
     let env = { env with range = rng } in
     let env = tac_env env in
     let g, g_u = goal_of_goal_ty env typ in
-    let ps = proofstate_of_goals rng env [g] (as_implicits g_u.implicits) in
+    let ps = proofstate_of_goals rng env [g] (Listlike.to_list g_u.implicits) in
     (ps, goal_witness g)
 
 let proofstate_of_all_implicits rng env imps =
@@ -2946,7 +2947,7 @@ let run_unembedded_tactic_on_ps_and_solve_remaining
                       ; deferred_to_tac = []
                       ; deferred = []
                       ; univ_ineqs = [], []
-                      ; implicits = Flat [] } in
+                      ; implicits = Listlike.empty } in
           Rel.force_trivial_guard (goal_env g) guard
       | None ->
           Err.raise_error g_range Err.Fatal_OpenGoalsInSynthesis "tactic left a computationally-relevant goal unsolved");
@@ -2983,7 +2984,7 @@ let run_tactic_on_ps_and_solve_remaining
                       ; deferred_to_tac = []
                       ; deferred = []
                       ; univ_ineqs = [], []
-                      ; implicits = Flat [] } in
+                      ; implicits = Listlike.empty } in
           Rel.force_trivial_guard (goal_env g) guard
       | None ->
           Err.raise_error g_range Err.Fatal_OpenGoalsInSynthesis "tactic left a computationally-relevant goal unsolved");

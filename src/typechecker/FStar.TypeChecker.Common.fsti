@@ -27,6 +27,8 @@ open FStar.Ident
 open FStar.Class.Show
 open FStar.Class.Monoid
 
+module CList = FStar.Compiler.CList
+
 (* Bring instances in scope *)
 open FStar.Syntax.Print {}
 
@@ -152,14 +154,12 @@ type implicit = {
     imp_range  : Range.range;             // Position where it was introduced
 }
 
-instance val show_implicit : showable implicit
+instance val showable_implicit : showable implicit
 
+(* Bad naming here *)
 type implicits = list implicit
-type implicits_t =
-| Flat of implicits
-| Conj : implicits_t -> implicits_t -> implicits_t
-val as_implicits : implicits_t -> implicits
 val implicits_to_string : implicits -> string
+type implicits_t = CList.t implicit
 
 type guard_t = {
   guard_f:    guard_formula;

@@ -29,6 +29,7 @@ open FStar.TypeChecker.Common
 open FStar.Tactics.Types
 open FStar.Tactics.Interpreter
 open FStar.Class.Show
+module Listlike = FStar.Class.Listlike
 
 module BU      = FStar.Compiler.Util
 module Range   = FStar.Compiler.Range
@@ -720,7 +721,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
                         ; deferred_to_tac = []
                         ; deferred = []
                         ; univ_ineqs = [], []
-                        ; implicits = Flat [] } in
+                        ; implicits = Listlike.empty } in
             TcRel.force_trivial_guard (goal_env g) guard
             end
         | None ->
@@ -756,7 +757,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
                           ; deferred_to_tac = []
                           ; deferred = []
                           ; univ_ineqs = [], []
-                          ; implicits = Flat [] } in
+                          ; implicits = Listlike.empty } in
               Profiling.profile (fun () ->
                 TcRel.force_trivial_guard (goal_env g) guard)
               None
@@ -938,7 +939,7 @@ let splice
                         ; deferred_to_tac = []
                         ; deferred = []
                         ; univ_ineqs = [], []
-                        ; implicits = Flat [] } in
+                        ; implicits = Listlike.empty } in
               TcRel.force_trivial_guard (goal_env g) guard
             end
         | None ->
@@ -1030,7 +1031,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
                         ; deferred_to_tac = []
                         ; deferred = []
                         ; univ_ineqs = [], []
-                        ; implicits = Flat [] } in
+                        ; implicits = Listlike.empty } in
             TcRel.force_trivial_guard (goal_env g) guard
             end
         | None ->
