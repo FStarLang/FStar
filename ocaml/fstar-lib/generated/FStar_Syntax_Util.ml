@@ -1945,19 +1945,6 @@ let (is_fstar_tactics_by_tactic : FStar_Syntax_Syntax.term -> Prims.bool) =
     | FStar_Syntax_Syntax.Tm_fvar fv ->
         FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.by_tactic_lid
     | uu___1 -> false
-let (is_builtin_tactic : FStar_Ident.lident -> Prims.bool) =
-  fun md ->
-    let path = FStar_Ident.path_of_lid md in
-    if (FStar_Compiler_List.length path) > (Prims.of_int (2))
-    then
-      let uu___ =
-        let uu___1 = FStar_Compiler_List.splitAt (Prims.of_int (2)) path in
-        FStar_Pervasives_Native.fst uu___1 in
-      match uu___ with
-      | "FStar"::"Tactics"::[] -> true
-      | "FStar"::"Reflection"::[] -> true
-      | uu___1 -> false
-    else false
 let (ktype : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.mk
     (FStar_Syntax_Syntax.Tm_type FStar_Syntax_Syntax.U_unknown)
