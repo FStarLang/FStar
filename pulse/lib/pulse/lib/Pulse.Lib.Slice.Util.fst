@@ -68,27 +68,6 @@ fn append_split_trade (#t: Type) (input: S.slice t) (#p: perm) (i: SZ.t)
   SlicePair s1 s2
 }
 
-let split_trade_post'
-    (#t: Type) (s: S.slice t) (p: perm) (v: Ghost.erased (Seq.seq t)) (i: SZ.t)
-    (s1: S.slice t)
-    (s2: S.slice t)
-: Tot slprop
-= exists* v1 v2 .
-            pts_to s1 #p v1 **
-            pts_to s2 #p v2 **
-            (trade (pts_to s1 #p v1 ** pts_to s2 #p v2) (pts_to s #p v)) **
-            pure (
-                SZ.v i <= Seq.length v /\
-                (v1, v2) == Seq.split v (SZ.v i)
-            )
-
-let split_trade_post
-    (#t: Type) (s: S.slice t) (p: perm) (v: Ghost.erased (Seq.seq t)) (i: SZ.t)
-    (res: S.slice_pair t)
-: Tot slprop
-= let (S.SlicePair s1 s2) = res in
-  split_trade_post' s p v i s1 s2
-
 ghost
 fn split_trade_aux
   (#t: Type) (s: S.slice t) (p: perm) (v: Seq.seq t) (i: SZ.t)
