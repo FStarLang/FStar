@@ -36,15 +36,9 @@ val pts_to_len (#t: Type) (s: slice t) (#p: perm) (#v: Seq.seq t) : stt_ghost un
 
 val is_from_array (#t: Type) (a: array t) (s: slice t) : slprop
 
-val from_array (#t: Type) (mutb: bool) (a: array t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (alen: SZ.t {
-    SZ.v alen == A.length a /\
-    (mutb == true ==> p == 1.0R)
-}) : stt (slice t)
+val from_array (#t: Type) (a: array t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (alen: SZ.t { SZ.v alen == A.length a }) : stt (slice t)
     (A.pts_to a #p v)
-    (fun s ->
-        pts_to s #p v **
-        is_from_array a s
-    )
+    (fun s -> pts_to s #p v ** is_from_array a s)
 
 val to_array (#t: Type) (s: slice t) (#p: perm) (#v: Seq.seq t) (#a: array t) : stt_ghost unit emp_inames
     (pts_to s #p v ** is_from_array a s)
@@ -105,35 +99,12 @@ val is_split_is_slprop2 (#t: Type) (s: slice t) (left: slice t) (right: slice t)
 
 noeq type slice_pair (t: Type) = | SlicePair: (fst: slice t) -> (snd: slice t) -> slice_pair t
 
-let split_precond
-  (#t: Type) (mutb: bool) (p: perm) (v: Ghost.erased (Seq.seq t)) (i: SZ.t)
-: Tot prop
-= SZ.v i <= Seq.length v /\ (mutb == true ==> p == 1.0R)
-
-let split_post'
-    (#t: Type) (s: slice t) (p: perm) (v: Ghost.erased (Seq.seq t)) (i: SZ.t)
-    (s1: slice t)
-    (s2: slice t)
-: Tot slprop
-=       exists* v1 v2 .
-            pts_to s1 #p v1 **
-            pts_to s2 #p v2 **
-            is_split s s1 s2 **
-            pure (
-                SZ.v i <= Seq.length v /\
-                (v1, v2) == Seq.split v (SZ.v i)
-            )
-
-let split_post
-    (#t: Type) (s: slice t) (p: perm) (v: Ghost.erased (Seq.seq t)) (i: SZ.t)
-    (res: slice_pair t)
-: Tot slprop
-= let SlicePair s1 s2 = res in
-    split_post' s p v i s1 s2
-
-val split (#t: Type) (mutb: bool) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t) : stt (slice_pair t)
-    (requires pts_to s #p v ** pure (split_precond mutb p v i))
-    (ensures fun res -> split_post s p v i res)
+val split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t) (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v }) : stt (slice_pair t)
+    (requires pts_to s #p v)
+    (ensures fun (SlicePair s1 s2) ->
+      pts_to s1 #p (Seq.slice v 0 (SZ.v i)) **
+      pts_to s2 #p (Seq.slice v (SZ.v i) (Seq.length v)) **
+      is_split s s1 s2)
 
 val join (#t: Type) (s1: slice t) (#p: perm) (#v1: Seq.seq t) (s2: slice t) (#v2: Seq.seq t) (s: slice t) : stt_ghost unit emp_inames
     (pts_to s1 #p v1 ** pts_to s2 #p v2 ** is_split s s1 s2)

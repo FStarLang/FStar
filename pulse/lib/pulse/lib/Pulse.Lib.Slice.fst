@@ -45,8 +45,8 @@ fn pts_to_len (#t: Type) (s: slice t) (#p: perm) (#v: Seq.seq t)
 let is_from_array a s =
   AP.is_from_array s.elt (SZ.v s.len) a
 
-fn from_array (#t: Type) (mutb: bool) (a: array t) (#p: perm) (#v: Ghost.erased (Seq.seq t))
-  (alen: SZ.t { SZ.v alen == A.length a /\ (mutb == true ==> p == 1.0R) })
+fn from_array (#t: Type) (a: array t) (#p: perm) (#v: Ghost.erased (Seq.seq t))
+  (alen: SZ.t { SZ.v alen == A.length a })
   requires A.pts_to a #p v
   returns s: (slice t)
   ensures 
@@ -150,28 +150,30 @@ let is_split #t s s1 s2 =
 
 let is_split_is_slprop2 s s1 s2 = ()
 
-fn split (#t: Type) (mutb: bool) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t)
-    requires pts_to s #p v ** pure (split_precond mutb p v i)
-    returns res : slice_pair t
-    ensures (split_post s p v i res)
+fn split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t)
+    (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v })
+  requires pts_to s #p v
+  returns res : slice_pair t
+  ensures
+    (let SlicePair s1 s2 = res in
+    pts_to s1 #p (Seq.slice v 0 (SZ.v i)) **
+    pts_to s2 #p (Seq.slice v (SZ.v i) (Seq.length v)) **
+    is_split s s1 s2)
 {
     unfold (pts_to s #p v);
     Seq.lemma_split v (SZ.v i);
     let elt' = AP.split s.elt #p #v i;
-    with _v1 _v2. assert AP.pts_to s.elt #p _v1 ** AP.pts_to elt' #p _v2;
     let s1 = {
         elt = s.elt;
         len = i;
     };
-    fold (pts_to s1 #p _v1);
+    fold pts_to s1 #p (Seq.slice v 0 (SZ.v i));
     let s2 = {
         elt = elt';
         len = s.len `SZ.sub` i;
     };
-    fold (pts_to s2 #p _v2);
+    fold pts_to s2 #p (Seq.slice v (SZ.v i) (Seq.length v));
     fold (is_split s s1 s2);
-    fold (split_post' s p v i s1 s2);
-    fold (split_post s p v i (s1 `SlicePair` s2));
     (s1 `SlicePair` s2)
 }
 

@@ -22,69 +22,24 @@ include Pulse.Lib.Trade
 
 module S = Pulse.Lib.Slice
 module SZ = FStar.SizeT
-module T = FStar.Tactics
-
-noextract
-let append_split_precond
-  (#t: Type) (mutb: bool) (p: perm) (v1: Ghost.erased (Seq.seq t)) (i: SZ.t)
-: Tot prop
-= SZ.v i == Seq.length v1 /\ (mutb == true ==> p == 1.0R)
-
-let append_split_post'
-    (#t: Type) (s: S.slice t) (p: perm) (v1 v2: Ghost.erased (Seq.seq t)) (i: SZ.t)
-    (s1: S.slice t)
-    (s2: S.slice t)
-: Tot slprop
-=
-            S.pts_to s1 #p v1 **
-            S.pts_to s2 #p v2 **
-            S.is_split s s1 s2
-
-let append_split_post
-    (#t: Type) (s: S.slice t) (p: perm) (v1 v2: Ghost.erased (Seq.seq t)) (i: SZ.t)
-    (res: S.slice_pair t)
-: Tot slprop
-= let S.SlicePair s1 s2 = res in
-  append_split_post' s p v1 v2 i s1 s2
 
 inline_for_extraction
 noextract
-fn append_split (#t: Type) (mutb: bool) (s: S.slice t) (#p: perm) (#v1 #v2: Ghost.erased (Seq.seq t)) (i: SZ.t)
-    requires S.pts_to s #p (v1 `Seq.append` v2) ** pure (append_split_precond mutb p v1 i)
-    returns res: S.slice_pair t
-    ensures append_split_post  s p v1 v2 i res
+fn append_split (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t)
+    (#v1: Ghost.erased (Seq.seq t) { SZ.v i == Seq.length v1 })
+    (#v2: Ghost.erased (Seq.seq t))
+  requires S.pts_to s #p (v1 `Seq.append` v2)
+  returns res: S.slice_pair t
+  ensures
+    (let S.SlicePair s1 s2 = res in
+      S.pts_to s1 #p v1 **
+      S.pts_to s2 #p v2 **
+      S.is_split s s1 s2)
 {
-  let vs = Ghost.hide (Seq.split (Seq.append v1 v2) (SZ.v i));
-  assert (pure (fst vs `Seq.equal` v1));
-  assert (pure (snd vs `Seq.equal` v2));
-  let res = S.split mutb s i;
-  match res {
-    S.SlicePair s1 s2 -> {
-      unfold (S.split_post s p (Seq.append v1 v2) i res);
-      unfold (S.split_post' s p (Seq.append v1 v2) i s1 s2);
-      fold (append_split_post' s p v1 v2 i s1 s2);
-      fold (append_split_post s p v1 v2 i (S.SlicePair s1 s2));
-      (S.SlicePair s1 s2)
-    }
-  }
+  assert pure (v1 `Seq.equal` Seq.slice (Seq.append v1 v2) 0 (SZ.v i));
+  assert pure (v2 `Seq.equal` Seq.slice (Seq.append v1 v2) (SZ.v i) (Seq.length v1 + Seq.length v2));
+  S.split s i
 }
-
-let append_split_trade_post'
-    (#t: Type) (s: S.slice t) (p: perm) (v1 v2: Ghost.erased (Seq.seq t)) (i: SZ.t)
-    (s1: S.slice t)
-    (s2: S.slice t)
-: Tot slprop
-=
-            S.pts_to s1 #p v1 **
-            S.pts_to s2 #p v2 **
-            (trade (S.pts_to s1 #p v1 ** S.pts_to s2 #p v2) (S.pts_to s #p (v1 `Seq.append` v2)))
-
-let append_split_trade_post
-    (#t: Type) (s: S.slice t) (p: perm) (v1 v2: Ghost.erased (Seq.seq t)) (i: SZ.t)
-    (res: S.slice_pair t)
-: Tot slprop
-= let S.SlicePair s1 s2 = res in
-  append_split_trade_post' s p v1 v2 i s1 s2
 
 ghost
 fn append_split_trade_aux
@@ -97,22 +52,20 @@ fn append_split_trade_aux
 
 inline_for_extraction
 noextract
-fn append_split_trade (#t: Type) (mutb: bool) (input: S.slice t) (#p: perm) (#v1 #v2: Ghost.erased (Seq.seq t)) (i: SZ.t)
-    requires S.pts_to input #p (v1 `Seq.append` v2) ** pure (append_split_precond mutb p v1 i)
-    returns res: S.slice_pair t
-    ensures append_split_trade_post input p v1 v2 i res
+fn append_split_trade (#t: Type) (input: S.slice t) (#p: perm) (i: SZ.t)
+    (#v1: Ghost.erased (Seq.seq t) { SZ.v i == Seq.length v1 })
+    (#v2: Ghost.erased (Seq.seq t))
+  requires S.pts_to input #p (v1 `Seq.append` v2)
+  returns res: S.slice_pair t
+  ensures
+    (let SlicePair s1 s2 = res in
+      S.pts_to s1 #p v1 ** S.pts_to s2 #p v2 **
+      trade (S.pts_to s1 #p v1 ** S.pts_to s2 #p v2)
+        (S.pts_to input #p (v1 `Seq.append` v2)))
 {
-  let res = append_split mutb input i;
-  match res {
-    S.SlicePair input1 input2 -> {
-      unfold (append_split_post input p v1 v2 i res);
-      unfold (append_split_post' input p v1 v2 i input1 input2);
-      intro_trade _ _ _ (append_split_trade_aux input p v1 v2 i input1 input2);
-      fold (append_split_trade_post' input p v1 v2 i input1 input2);
-      fold (append_split_trade_post input p v1 v2 i (S.SlicePair input1 input2));
-      (S.SlicePair input1 input2)
-    }
-  }
+  let SlicePair s1 s2 = append_split input i;
+  intro_trade _ _ _ (append_split_trade_aux input p v1 v2 i s1 s2);
+  SlicePair s1 s2
 }
 
 let split_trade_post'
@@ -142,26 +95,26 @@ fn split_trade_aux
   (s1 s2: S.slice t) (v1 v2: Seq.seq t) (hyp: squash (v == Seq.append v1 v2)) (_: unit)
     requires (S.is_split s s1 s2 ** (S.pts_to s1 #p v1 ** S.pts_to s2 #p v2))
     ensures (S.pts_to s #p v)
-    {
-      S.join s1 s2 s
-    }
+{
+  S.join s1 s2 s
+}
 
 inline_for_extraction
 noextract
-fn split_trade (#t: Type) (mutb: bool) (s: S.slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t)
-    requires S.pts_to s #p v ** pure (S.split_precond mutb p v i)
-    returns res: S.slice_pair t
-    ensures split_trade_post s p v i res
+fn split_trade (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t) (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v })
+  requires S.pts_to s #p v
+  returns res: S.slice_pair t
+  ensures
+    (let SlicePair s1 s2 = res in
+      let v1 = Seq.slice v 0 (SZ.v i) in
+      let v2 = Seq.slice v (SZ.v i) (Seq.length v) in
+      S.pts_to s1 #p v1 ** S.pts_to s2 #p v2 **
+      trade (S.pts_to s1 #p v1 ** S.pts_to s2 #p v2)
+        (S.pts_to s #p (v1 `Seq.append` v2)))
 {
   Seq.lemma_split v (SZ.v i);
-  let res = S.split mutb s i;
-  match res { S.SlicePair s1 s2 -> {
-    unfold (S.split_post s p v i res);
-    unfold (S.split_post' s p v i s1 s2);
-    with v1 v2 . assert (S.pts_to s1 #p v1 ** S.pts_to s2 #p v2);
-    intro_trade _ _ _ (split_trade_aux s p v i s1 s2 v1 v2 ());
-    fold (split_trade_post' s p v i s1 s2);
-    fold (split_trade_post s p v i (S.SlicePair s1 s2));
-    (S.SlicePair s1 s2)
-  }}
+  let SlicePair s1 s2 = S.split s i;
+  with v1 v2. assert S.pts_to s1 #p v1 ** S.pts_to s2 #p v2;
+  intro_trade _ _ _ (split_trade_aux s p v i s1 s2 v1 v2 ());
+  S.SlicePair s1 s2
 }
