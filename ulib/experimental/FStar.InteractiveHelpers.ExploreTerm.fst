@@ -5,7 +5,7 @@ open FStar.Tactics
 open FStar.Mul
 open FStar.InteractiveHelpers.Base
 
-#push-options "--z3rlimit 15 --fuel 0 --ifuel 1"
+#set-options "--z3rlimit 15 --fuel 0 --ifuel 1"
 
 (*** Types and effects *)
 /// Define utilities to handle and carry types and effects
