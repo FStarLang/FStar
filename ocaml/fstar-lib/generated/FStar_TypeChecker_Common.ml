@@ -578,7 +578,7 @@ let (__proj__Mkimplicit__item__imp_range :
   fun projectee ->
     match projectee with
     | { imp_reason; imp_uvar; imp_tm; imp_range;_} -> imp_range
-let (show_implicit : implicit FStar_Class_Show.showable) =
+let (showable_implicit : implicit FStar_Class_Show.showable) =
   {
     FStar_Class_Show.show =
       (fun i ->
@@ -586,36 +586,13 @@ let (show_implicit : implicit FStar_Class_Show.showable) =
            (i.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head)
   }
 type implicits = implicit Prims.list
-type implicits_t =
-  | Flat of implicits 
-  | Conj of implicits_t * implicits_t 
-let (uu___is_Flat : implicits_t -> Prims.bool) =
-  fun projectee -> match projectee with | Flat _0 -> true | uu___ -> false
-let (__proj__Flat__item___0 : implicits_t -> implicits) =
-  fun projectee -> match projectee with | Flat _0 -> _0
-let (uu___is_Conj : implicits_t -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Conj (_0, _1) -> true | uu___ -> false
-let (__proj__Conj__item___0 : implicits_t -> implicits_t) =
-  fun projectee -> match projectee with | Conj (_0, _1) -> _0
-let (__proj__Conj__item___1 : implicits_t -> implicits_t) =
-  fun projectee -> match projectee with | Conj (_0, _1) -> _1
-let (as_implicits : implicits_t -> implicits) =
-  fun imps ->
-    let rec aux imps1 out =
-      match imps1 with
-      | Flat i ->
-          (match out with
-           | [] -> i
-           | uu___ -> FStar_Compiler_List.op_At i out)
-      | Conj (imps11, imps2) -> let uu___ = aux imps2 out in aux imps11 uu___ in
-    aux imps []
 let (implicits_to_string : implicits -> Prims.string) =
   fun imps ->
     let imp_to_string i =
       FStar_Class_Show.show FStar_Syntax_Print.showable_uvar
         (i.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
     (FStar_Common.string_of_list ()) imp_to_string imps
+type implicits_t = implicit FStar_Compiler_CList.t
 type guard_t =
   {
   guard_f: guard_formula ;
@@ -657,7 +634,10 @@ let (trivial_guard : guard_t) =
     deferred_to_tac = [];
     deferred = [];
     univ_ineqs = ([], []);
-    implicits = (Flat [])
+    implicits =
+      (Obj.magic
+         (FStar_Class_Listlike.empty ()
+            (Obj.magic (FStar_Compiler_CList.listlike_clist ()))))
   }
 let (conj_guard_f : guard_formula -> guard_formula -> guard_formula) =
   fun g1 ->
@@ -675,6 +655,9 @@ let (binop_guard :
     fun g1 ->
       fun g2 ->
         let uu___ = f g1.guard_f g2.guard_f in
+        let uu___1 =
+          FStar_Class_Monoid.op_Plus_Plus
+            (FStar_Compiler_CList.monoid_clist ()) g1.implicits g2.implicits in
         {
           guard_f = uu___;
           deferred_to_tac =
@@ -687,7 +670,7 @@ let (binop_guard :
               (FStar_Compiler_List.op_At
                  (FStar_Pervasives_Native.snd g1.univ_ineqs)
                  (FStar_Pervasives_Native.snd g2.univ_ineqs)));
-          implicits = (Conj ((g1.implicits), (g2.implicits)))
+          implicits = uu___1
         }
 let (conj_guard : guard_t -> guard_t -> guard_t) =
   fun g1 -> fun g2 -> binop_guard conj_guard_f g1 g2

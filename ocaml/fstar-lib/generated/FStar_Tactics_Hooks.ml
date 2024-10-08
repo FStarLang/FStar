@@ -1574,17 +1574,8 @@ let (synthesize :
                                     "Synthesis left a goal: %s\n" uu___7
                                 else ());
                                (let guard =
-                                  {
-                                    FStar_TypeChecker_Common.guard_f =
-                                      (FStar_TypeChecker_Common.NonTrivial vc);
-                                    FStar_TypeChecker_Common.deferred_to_tac
-                                      = [];
-                                    FStar_TypeChecker_Common.deferred = [];
-                                    FStar_TypeChecker_Common.univ_ineqs =
-                                      ([], []);
-                                    FStar_TypeChecker_Common.implicits =
-                                      (FStar_TypeChecker_Common.Flat [])
-                                  } in
+                                  FStar_TypeChecker_Env.guard_of_guard_formula
+                                    (FStar_TypeChecker_Common.NonTrivial vc) in
                                 let uu___6 = FStar_Tactics_Types.goal_env g in
                                 FStar_TypeChecker_Rel.force_trivial_guard
                                   uu___6 guard))
@@ -1654,18 +1645,9 @@ let (solve_implicits :
                                     env.FStar_TypeChecker_Env.admit
                                 then
                                   (let guard =
-                                     {
-                                       FStar_TypeChecker_Common.guard_f =
-                                         (FStar_TypeChecker_Common.NonTrivial
-                                            vc);
-                                       FStar_TypeChecker_Common.deferred_to_tac
-                                         = [];
-                                       FStar_TypeChecker_Common.deferred = [];
-                                       FStar_TypeChecker_Common.univ_ineqs =
-                                         ([], []);
-                                       FStar_TypeChecker_Common.implicits =
-                                         (FStar_TypeChecker_Common.Flat [])
-                                     } in
+                                     FStar_TypeChecker_Env.guard_of_guard_formula
+                                       (FStar_TypeChecker_Common.NonTrivial
+                                          vc) in
                                    FStar_Profiling.profile
                                      (fun uu___8 ->
                                         let uu___9 =
@@ -2215,22 +2197,9 @@ let (splice :
                                                     uu___12
                                                 else ());
                                                (let guard =
-                                                  {
-                                                    FStar_TypeChecker_Common.guard_f
-                                                      =
-                                                      (FStar_TypeChecker_Common.NonTrivial
-                                                         vc);
-                                                    FStar_TypeChecker_Common.deferred_to_tac
-                                                      = [];
-                                                    FStar_TypeChecker_Common.deferred
-                                                      = [];
-                                                    FStar_TypeChecker_Common.univ_ineqs
-                                                      = ([], []);
-                                                    FStar_TypeChecker_Common.implicits
-                                                      =
-                                                      (FStar_TypeChecker_Common.Flat
-                                                         [])
-                                                  } in
+                                                  FStar_TypeChecker_Env.guard_of_guard_formula
+                                                    (FStar_TypeChecker_Common.NonTrivial
+                                                       vc) in
                                                 let uu___11 =
                                                   FStar_Tactics_Types.goal_env
                                                     g1 in
@@ -2510,21 +2479,9 @@ let (postprocess :
                                            uu___9
                                        else ());
                                       (let guard =
-                                         {
-                                           FStar_TypeChecker_Common.guard_f =
-                                             (FStar_TypeChecker_Common.NonTrivial
-                                                vc);
-                                           FStar_TypeChecker_Common.deferred_to_tac
-                                             = [];
-                                           FStar_TypeChecker_Common.deferred
-                                             = [];
-                                           FStar_TypeChecker_Common.univ_ineqs
-                                             = ([], []);
-                                           FStar_TypeChecker_Common.implicits
-                                             =
-                                             (FStar_TypeChecker_Common.Flat
-                                                [])
-                                         } in
+                                         FStar_TypeChecker_Env.guard_of_guard_formula
+                                           (FStar_TypeChecker_Common.NonTrivial
+                                              vc) in
                                        let uu___8 =
                                          FStar_Tactics_Types.goal_env g in
                                        FStar_TypeChecker_Rel.force_trivial_guard

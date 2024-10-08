@@ -695,7 +695,8 @@ let (solve_deferred_to_tactic_goals :
              g.FStar_TypeChecker_Common.deferred_to_tac in
          let uu___1 =
            let uu___2 =
-             FStar_TypeChecker_Common.as_implicits
+             FStar_Class_Listlike.to_list
+               (FStar_Compiler_CList.listlike_clist ())
                g.FStar_TypeChecker_Common.implicits in
            FStar_Compiler_List.fold_right
              (fun imp ->
@@ -751,14 +752,16 @@ let (solve_deferred_to_tactic_goals :
                    match uu___3 with
                    | (imps1, sigel) -> solve_goals_with_tac env g imps1 sigel)
                 buckets;
-              {
-                FStar_TypeChecker_Common.guard_f =
-                  (g.FStar_TypeChecker_Common.guard_f);
-                FStar_TypeChecker_Common.deferred_to_tac = [];
-                FStar_TypeChecker_Common.deferred =
-                  (g.FStar_TypeChecker_Common.deferred);
-                FStar_TypeChecker_Common.univ_ineqs =
-                  (g.FStar_TypeChecker_Common.univ_ineqs);
-                FStar_TypeChecker_Common.implicits =
-                  (FStar_TypeChecker_Common.Flat imps)
-              }))
+              (let uu___3 =
+                 FStar_Class_Listlike.from_list
+                   (FStar_Compiler_CList.listlike_clist ()) imps in
+               {
+                 FStar_TypeChecker_Common.guard_f =
+                   (g.FStar_TypeChecker_Common.guard_f);
+                 FStar_TypeChecker_Common.deferred_to_tac = [];
+                 FStar_TypeChecker_Common.deferred =
+                   (g.FStar_TypeChecker_Common.deferred);
+                 FStar_TypeChecker_Common.univ_ineqs =
+                   (g.FStar_TypeChecker_Common.univ_ineqs);
+                 FStar_TypeChecker_Common.implicits = uu___3
+               })))

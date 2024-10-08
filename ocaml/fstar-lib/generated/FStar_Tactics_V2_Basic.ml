@@ -775,7 +775,8 @@ let (proc_guard' :
                    (fun uu___1 ->
                       let uu___1 = Obj.magic uu___1 in
                       let imps =
-                        FStar_TypeChecker_Common.as_implicits
+                        FStar_Class_Listlike.to_list
+                          (FStar_Compiler_CList.listlike_clist ())
                           g.FStar_TypeChecker_Common.implicits in
                       (match sc_opt with
                        | FStar_Pervasives_Native.Some
@@ -1270,7 +1271,9 @@ let (__do_unify_wflags :
                                                                     =
                                                                     let uu___9
                                                                     =
-                                                                    FStar_TypeChecker_Common.as_implicits
+                                                                    FStar_Class_Listlike.to_list
+                                                                    (FStar_Compiler_CList.listlike_clist
+                                                                    ())
                                                                     g.FStar_TypeChecker_Common.implicits in
                                                                     FStar_Tactics_Monad.add_implicits
                                                                     uu___9 in
@@ -11901,7 +11904,9 @@ let (refl_instantiate_implicits :
                                      uu___5 in
                                  let bvs_and_ts =
                                    let uu___5 =
-                                     FStar_TypeChecker_Common.as_implicits
+                                     FStar_Class_Listlike.to_list
+                                       (FStar_Compiler_CList.listlike_clist
+                                          ())
                                        guard1.FStar_TypeChecker_Common.implicits in
                                    match uu___5 with
                                    | [] -> []
@@ -12370,7 +12375,9 @@ let (refl_try_unify :
                                                     g2 uu___5 in
                                                 let b =
                                                   let uu___5 =
-                                                    FStar_TypeChecker_Common.as_implicits
+                                                    FStar_Class_Listlike.to_list
+                                                      (FStar_Compiler_CList.listlike_clist
+                                                         ())
                                                       guard2.FStar_TypeChecker_Common.implicits in
                                                   FStar_Compiler_List.existsb
                                                     (fun uu___6 ->
@@ -13363,7 +13370,8 @@ let (proofstate_of_goal_ty :
         | (g, g_u) ->
             let ps =
               let uu___1 =
-                FStar_TypeChecker_Common.as_implicits
+                FStar_Class_Listlike.to_list
+                  (FStar_Compiler_CList.listlike_clist ())
                   g_u.FStar_TypeChecker_Common.implicits in
               proofstate_of_goals rng env3 [g] uu___1 in
             let uu___1 = FStar_Tactics_Types.goal_witness g in (ps, uu___1)
@@ -13447,16 +13455,8 @@ let run_unembedded_tactic_on_ps_and_solve_remaining :
                         match uu___2 with
                         | FStar_Pervasives_Native.Some vc ->
                             let guard =
-                              {
-                                FStar_TypeChecker_Common.guard_f =
-                                  (FStar_TypeChecker_Common.NonTrivial vc);
-                                FStar_TypeChecker_Common.deferred_to_tac = [];
-                                FStar_TypeChecker_Common.deferred = [];
-                                FStar_TypeChecker_Common.univ_ineqs =
-                                  ([], []);
-                                FStar_TypeChecker_Common.implicits =
-                                  (FStar_TypeChecker_Common.Flat [])
-                              } in
+                              FStar_TypeChecker_Env.guard_of_guard_formula
+                                (FStar_TypeChecker_Common.NonTrivial vc) in
                             let uu___3 = FStar_Tactics_Types.goal_env g in
                             FStar_TypeChecker_Rel.force_trivial_guard uu___3
                               guard
@@ -13584,15 +13584,8 @@ let run_tactic_on_ps_and_solve_remaining :
                        match uu___2 with
                        | FStar_Pervasives_Native.Some vc ->
                            let guard =
-                             {
-                               FStar_TypeChecker_Common.guard_f =
-                                 (FStar_TypeChecker_Common.NonTrivial vc);
-                               FStar_TypeChecker_Common.deferred_to_tac = [];
-                               FStar_TypeChecker_Common.deferred = [];
-                               FStar_TypeChecker_Common.univ_ineqs = ([], []);
-                               FStar_TypeChecker_Common.implicits =
-                                 (FStar_TypeChecker_Common.Flat [])
-                             } in
+                             FStar_TypeChecker_Env.guard_of_guard_formula
+                               (FStar_TypeChecker_Common.NonTrivial vc) in
                            let uu___3 = FStar_Tactics_Types.goal_env g in
                            FStar_TypeChecker_Rel.force_trivial_guard uu___3
                              guard

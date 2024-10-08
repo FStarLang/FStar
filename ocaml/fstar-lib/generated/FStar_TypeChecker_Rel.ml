@@ -367,23 +367,27 @@ let (new_uvar :
                       FStar_Compiler_Util.print1
                         "Just created uvar (Rel) {%s}\n" uu___3
                     else ());
-                   (ctx_uvar, t,
-                     {
-                       attempting = (wl.attempting);
-                       wl_deferred = (wl.wl_deferred);
-                       wl_deferred_to_tac = (wl.wl_deferred_to_tac);
-                       ctr = (wl.ctr);
-                       defer_ok = (wl.defer_ok);
-                       smt_ok = (wl.smt_ok);
-                       umax_heuristic_ok = (wl.umax_heuristic_ok);
-                       tcenv = (wl.tcenv);
-                       wl_implicits =
-                         (FStar_TypeChecker_Common.Conj
-                            ((FStar_TypeChecker_Common.Flat [imp]),
-                              (wl.wl_implicits)));
-                       repr_subcomp_allowed = (wl.repr_subcomp_allowed);
-                       typeclass_variables = (wl.typeclass_variables)
-                     }))
+                   (let uu___2 =
+                      let uu___3 =
+                        Obj.magic
+                          (FStar_Class_Listlike.cons ()
+                             (Obj.magic
+                                (FStar_Compiler_CList.listlike_clist ())) imp
+                             (Obj.magic wl.wl_implicits)) in
+                      {
+                        attempting = (wl.attempting);
+                        wl_deferred = (wl.wl_deferred);
+                        wl_deferred_to_tac = (wl.wl_deferred_to_tac);
+                        ctr = (wl.ctr);
+                        defer_ok = (wl.defer_ok);
+                        smt_ok = (wl.smt_ok);
+                        umax_heuristic_ok = (wl.umax_heuristic_ok);
+                        tcenv = (wl.tcenv);
+                        wl_implicits = uu___3;
+                        repr_subcomp_allowed = (wl.repr_subcomp_allowed);
+                        typeclass_variables = (wl.typeclass_variables)
+                      } in
+                    (ctx_uvar, t, uu___2)))
 let (copy_uvar :
   FStar_Syntax_Syntax.ctx_uvar ->
     FStar_Syntax_Syntax.binders ->
@@ -543,6 +547,9 @@ let (extend_wl :
           let uu___1 =
             let uu___2 = as_wl_deferred wl defer_to_tac in
             FStar_Compiler_List.op_At wl.wl_deferred_to_tac uu___2 in
+          let uu___2 =
+            FStar_Class_Monoid.op_Plus_Plus
+              (FStar_Compiler_CList.monoid_clist ()) wl.wl_implicits imps in
           {
             attempting = (wl.attempting);
             wl_deferred = uu___;
@@ -552,8 +559,7 @@ let (extend_wl :
             smt_ok = (wl.smt_ok);
             umax_heuristic_ok = (wl.umax_heuristic_ok);
             tcenv = (wl.tcenv);
-            wl_implicits =
-              (FStar_TypeChecker_Common.Conj ((wl.wl_implicits), imps));
+            wl_implicits = uu___2;
             repr_subcomp_allowed = (wl.repr_subcomp_allowed);
             typeclass_variables = (wl.typeclass_variables)
           }
@@ -1163,7 +1169,10 @@ let (empty_worklist : FStar_TypeChecker_Env.env -> worklist) =
       smt_ok = true;
       umax_heuristic_ok = true;
       tcenv = env;
-      wl_implicits = (FStar_TypeChecker_Common.Flat []);
+      wl_implicits =
+        (Obj.magic
+           (FStar_Class_Listlike.empty ()
+              (Obj.magic (FStar_Compiler_CList.listlike_clist ()))));
       repr_subcomp_allowed = false;
       typeclass_variables = uu___
     }
@@ -4862,11 +4871,13 @@ let (apply_substitutive_indexed_subcomp :
                                                             r1 in
                                                         (match uu___6 with
                                                          | (uv_t::[], g) ->
-                                                             ((FStar_Compiler_List.op_At
-                                                                 ss
-                                                                 [FStar_Syntax_Syntax.NT
-                                                                    ((b.FStar_Syntax_Syntax.binder_bv),
-                                                                    uv_t)]),
+                                                             let uu___7 =
+                                                               let uu___8 =
+                                                                 FStar_Class_Monoid.op_Plus_Plus
+                                                                   (FStar_Compiler_CList.monoid_clist
+                                                                    ())
+                                                                   g.FStar_TypeChecker_Common.implicits
+                                                                   wl3.wl_implicits in
                                                                {
                                                                  attempting =
                                                                    (wl3.attempting);
@@ -4888,17 +4899,20 @@ let (apply_substitutive_indexed_subcomp :
                                                                  tcenv =
                                                                    (wl3.tcenv);
                                                                  wl_implicits
-                                                                   =
-                                                                   (FStar_TypeChecker_Common.Conj
-                                                                    ((g.FStar_TypeChecker_Common.implicits),
-                                                                    (wl3.wl_implicits)));
+                                                                   = uu___8;
                                                                  repr_subcomp_allowed
                                                                    =
                                                                    (wl3.repr_subcomp_allowed);
                                                                  typeclass_variables
                                                                    =
                                                                    (wl3.typeclass_variables)
-                                                               })))
+                                                               } in
+                                                             ((FStar_Compiler_List.op_At
+                                                                 ss
+                                                                 [FStar_Syntax_Syntax.NT
+                                                                    ((b.FStar_Syntax_Syntax.binder_bv),
+                                                                    uv_t)]),
+                                                               uu___7)))
                                                (subst3, wl2) bs5 in
                                            (match uu___4 with
                                             | (subst4, wl3) ->
@@ -5022,6 +5036,11 @@ let (apply_ad_hoc_indexed_subcomp :
                         (match uu___1 with
                          | (rest_bs_uvars, g_uvars) ->
                              let wl1 =
+                               let uu___2 =
+                                 FStar_Class_Monoid.op_Plus_Plus
+                                   (FStar_Compiler_CList.monoid_clist ())
+                                   g_uvars.FStar_TypeChecker_Common.implicits
+                                   wl.wl_implicits in
                                {
                                  attempting = (wl.attempting);
                                  wl_deferred = (wl.wl_deferred);
@@ -5031,10 +5050,7 @@ let (apply_ad_hoc_indexed_subcomp :
                                  smt_ok = (wl.smt_ok);
                                  umax_heuristic_ok = (wl.umax_heuristic_ok);
                                  tcenv = (wl.tcenv);
-                                 wl_implicits =
-                                   (FStar_TypeChecker_Common.Conj
-                                      ((g_uvars.FStar_TypeChecker_Common.implicits),
-                                        (wl.wl_implicits)));
+                                 wl_implicits = uu___2;
                                  repr_subcomp_allowed =
                                    (wl.repr_subcomp_allowed);
                                  typeclass_variables =
@@ -5260,9 +5276,9 @@ let rec (solve : worklist -> solution) =
      if uu___2
      then
        let uu___3 =
-         let uu___4 =
-           FStar_TypeChecker_Common.as_implicits probs.wl_implicits in
-         FStar_TypeChecker_Common.implicits_to_string uu___4 in
+         FStar_Class_Show.show
+           (FStar_Compiler_CList.showable_clist
+              FStar_TypeChecker_Common.showable_implicit) probs.wl_implicits in
        FStar_Compiler_Util.print1 "solve: wl_implicits = %s\n" uu___3
      else ());
     (let uu___2 = next_prob probs in
@@ -5779,8 +5795,12 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                     (wl4.umax_heuristic_ok);
                                                   tcenv = (wl4.tcenv);
                                                   wl_implicits =
-                                                    (FStar_TypeChecker_Common.Flat
-                                                       []);
+                                                    (Obj.magic
+                                                       (FStar_Class_Listlike.empty
+                                                          ()
+                                                          (Obj.magic
+                                                             (FStar_Compiler_CList.listlike_clist
+                                                                ()))));
                                                   repr_subcomp_allowed =
                                                     (wl4.repr_subcomp_allowed);
                                                   typeclass_variables =
@@ -6271,8 +6291,12 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                             (wl'.umax_heuristic_ok);
                                                           tcenv = (wl'.tcenv);
                                                           wl_implicits =
-                                                            (FStar_TypeChecker_Common.Flat
-                                                               []);
+                                                            (Obj.magic
+                                                               (FStar_Class_Listlike.empty
+                                                                  ()
+                                                                  (Obj.magic
+                                                                    (FStar_Compiler_CList.listlike_clist
+                                                                    ()))));
                                                           repr_subcomp_allowed
                                                             =
                                                             (wl'.repr_subcomp_allowed);
@@ -6920,7 +6944,10 @@ and (try_solve_without_smt_or_else :
             smt_ok = false;
             umax_heuristic_ok = false;
             tcenv = (wl.tcenv);
-            wl_implicits = (FStar_TypeChecker_Common.Flat []);
+            wl_implicits =
+              (Obj.magic
+                 (FStar_Class_Listlike.empty ()
+                    (Obj.magic (FStar_Compiler_CList.listlike_clist ()))));
             repr_subcomp_allowed = (wl.repr_subcomp_allowed);
             typeclass_variables = (wl.typeclass_variables)
           } in
@@ -6951,7 +6978,10 @@ and (try_solve_then_or_else :
               smt_ok = (wl.smt_ok);
               umax_heuristic_ok = (wl.umax_heuristic_ok);
               tcenv = (wl.tcenv);
-              wl_implicits = (FStar_TypeChecker_Common.Flat []);
+              wl_implicits =
+                (Obj.magic
+                   (FStar_Class_Listlike.empty ()
+                      (Obj.magic (FStar_Compiler_CList.listlike_clist ()))));
               repr_subcomp_allowed = (wl.repr_subcomp_allowed);
               typeclass_variables = (wl.typeclass_variables)
             } in
@@ -6983,7 +7013,10 @@ and (try_solve_probs_without_smt :
               smt_ok = false;
               umax_heuristic_ok = false;
               tcenv = (wl.tcenv);
-              wl_implicits = (FStar_TypeChecker_Common.Flat []);
+              wl_implicits =
+                (Obj.magic
+                   (FStar_Class_Listlike.empty ()
+                      (Obj.magic (FStar_Compiler_CList.listlike_clist ()))));
               repr_subcomp_allowed = (wl.repr_subcomp_allowed);
               typeclass_variables = (wl.typeclass_variables)
             } in
@@ -7720,8 +7753,12 @@ and (solve_t_flex_rigid_eq :
                                                             (wl5.umax_heuristic_ok);
                                                           tcenv = (wl5.tcenv);
                                                           wl_implicits =
-                                                            (FStar_TypeChecker_Common.Flat
-                                                               []);
+                                                            (Obj.magic
+                                                               (FStar_Class_Listlike.empty
+                                                                  ()
+                                                                  (Obj.magic
+                                                                    (FStar_Compiler_CList.listlike_clist
+                                                                    ()))));
                                                           repr_subcomp_allowed
                                                             =
                                                             (wl5.repr_subcomp_allowed);
@@ -8991,8 +9028,12 @@ and (solve_t' : tprob -> worklist -> solution) =
                                              (wl4.umax_heuristic_ok);
                                            tcenv = (wl4.tcenv);
                                            wl_implicits =
-                                             (FStar_TypeChecker_Common.Flat
-                                                []);
+                                             (Obj.magic
+                                                (FStar_Class_Listlike.empty
+                                                   ()
+                                                   (Obj.magic
+                                                      (FStar_Compiler_CList.listlike_clist
+                                                         ()))));
                                            repr_subcomp_allowed =
                                              (wl4.repr_subcomp_allowed);
                                            typeclass_variables =
@@ -9000,7 +9041,11 @@ and (solve_t' : tprob -> worklist -> solution) =
                                          }
                                          g_pat_term.FStar_TypeChecker_Common.deferred
                                          g_pat_term.FStar_TypeChecker_Common.deferred_to_tac
-                                         (FStar_TypeChecker_Common.Flat []) in
+                                         (Obj.magic
+                                            (FStar_Class_Listlike.empty ()
+                                               (Obj.magic
+                                                  (FStar_Compiler_CList.listlike_clist
+                                                     ())))) in
                                      let tx =
                                        FStar_Syntax_Unionfind.new_transaction
                                          () in
@@ -9036,18 +9081,25 @@ and (solve_t' : tprob -> worklist -> solution) =
                                                (FStar_Syntax_Unionfind.commit
                                                   tx;
                                                 (let uu___13 =
+                                                   let uu___14 =
+                                                     let uu___15 =
+                                                       let uu___16 =
+                                                         FStar_Class_Monoid.op_Plus_Plus
+                                                           (FStar_Compiler_CList.monoid_clist
+                                                              ()) imps imps' in
+                                                       FStar_Class_Monoid.op_Plus_Plus
+                                                         (FStar_Compiler_CList.monoid_clist
+                                                            ()) uu___16
+                                                         g_pat_as_exp.FStar_TypeChecker_Common.implicits in
+                                                     FStar_Class_Monoid.op_Plus_Plus
+                                                       (FStar_Compiler_CList.monoid_clist
+                                                          ()) uu___15
+                                                       g_pat_term.FStar_TypeChecker_Common.implicits in
                                                    extend_wl wl4 []
                                                      (FStar_Compiler_List.op_At
                                                         defer_to_tac
                                                         defer_to_tac')
-                                                     (FStar_TypeChecker_Common.Conj
-                                                        (imps,
-                                                          (FStar_TypeChecker_Common.Conj
-                                                             (imps',
-                                                               (FStar_TypeChecker_Common.Conj
-                                                                  ((g_pat_as_exp.FStar_TypeChecker_Common.implicits),
-                                                                    (
-                                                                    g_pat_term.FStar_TypeChecker_Common.implicits))))))) in
+                                                     uu___14 in
                                                  FStar_Pervasives_Native.Some
                                                    uu___13))
                                            | Failed uu___11 ->
@@ -10114,8 +10166,12 @@ and (solve_t' : tprob -> worklist -> solution) =
                                                     (wl2.umax_heuristic_ok);
                                                   tcenv = (wl2.tcenv);
                                                   wl_implicits =
-                                                    (FStar_TypeChecker_Common.Flat
-                                                       []);
+                                                    (Obj.magic
+                                                       (FStar_Class_Listlike.empty
+                                                          ()
+                                                          (Obj.magic
+                                                             (FStar_Compiler_CList.listlike_clist
+                                                                ()))));
                                                   repr_subcomp_allowed =
                                                     (wl2.repr_subcomp_allowed);
                                                   typeclass_variables =
@@ -13055,6 +13111,11 @@ and (solve_c :
                               | FStar_TypeChecker_Common.NonTrivial f ->
                                   FStar_Syntax_Util.mk_conj guard1 f in
                             let wl4 =
+                              let uu___7 =
+                                FStar_Class_Monoid.op_Plus_Plus
+                                  (FStar_Compiler_CList.monoid_clist ())
+                                  g_lift.FStar_TypeChecker_Common.implicits
+                                  wl3.wl_implicits in
                               {
                                 attempting = (wl3.attempting);
                                 wl_deferred = (wl3.wl_deferred);
@@ -13064,10 +13125,7 @@ and (solve_c :
                                 smt_ok = (wl3.smt_ok);
                                 umax_heuristic_ok = (wl3.umax_heuristic_ok);
                                 tcenv = (wl3.tcenv);
-                                wl_implicits =
-                                  (FStar_TypeChecker_Common.Conj
-                                     ((g_lift.FStar_TypeChecker_Common.implicits),
-                                       (wl3.wl_implicits)));
+                                wl_implicits = uu___7;
                                 repr_subcomp_allowed =
                                   (wl3.repr_subcomp_allowed);
                                 typeclass_variables =
@@ -13996,13 +14054,16 @@ let (print_pending_implicits :
   fun g ->
     let uu___ =
       let uu___1 =
-        FStar_TypeChecker_Common.as_implicits
+        FStar_Class_Listlike.to_list (FStar_Compiler_CList.listlike_clist ())
           g.FStar_TypeChecker_Common.implicits in
       FStar_Compiler_List.map
         (fun i ->
            FStar_Class_Show.show FStar_Syntax_Print.showable_ctxu
              i.FStar_TypeChecker_Common.imp_uvar) uu___1 in
-    FStar_Compiler_String.concat ", " uu___
+    FStar_Class_Show.show
+      (FStar_Class_Show.show_list
+         (FStar_Class_Show.printableshow
+            FStar_Class_Printable.printable_string)) uu___
 let (ineqs_to_string :
   (FStar_Syntax_Syntax.universe Prims.list * (FStar_Syntax_Syntax.universe *
     FStar_Syntax_Syntax.universe) Prims.list) -> Prims.string)
@@ -14070,7 +14131,7 @@ let (guard_to_string :
           let uu___2 = carry g.FStar_TypeChecker_Common.deferred_to_tac in
           let uu___3 = ineqs_to_string g.FStar_TypeChecker_Common.univ_ineqs in
           FStar_Compiler_Util.format5
-            "\n\t{guard_f=%s;\n\t deferred={\n%s};\n\t deferred_to_tac={\n%s};\n\t univ_ineqs={%s};\n\t implicits={%s}}\n"
+            "\n\t{guard_f=%s;\n\t deferred={\n%s};\n\t deferred_to_tac={\n%s};\n\t univ_ineqs={%s};\n\t implicits=%s}\n"
             form uu___1 uu___2 uu___3 imps
 let (new_t_problem :
   worklist ->
@@ -14709,7 +14770,8 @@ let (try_solve_deferred_constraints :
                  FStar_Profiling.profile
                    (fun uu___2 ->
                       let imps_l =
-                        FStar_TypeChecker_Common.as_implicits
+                        FStar_Class_Listlike.to_list
+                          (FStar_Compiler_CList.listlike_clist ())
                           g.FStar_TypeChecker_Common.implicits in
                       let typeclass_variables =
                         let uu___3 =
@@ -14804,6 +14866,10 @@ let (try_solve_deferred_constraints :
                                "Impossible: Unexpected deferred constraints remain"
                          | FStar_Pervasives_Native.Some
                              (deferred, defer_to_tac, imps) ->
+                             let uu___5 =
+                               FStar_Class_Monoid.op_Plus_Plus
+                                 (FStar_Compiler_CList.monoid_clist ())
+                                 g.FStar_TypeChecker_Common.implicits imps in
                              {
                                FStar_TypeChecker_Common.guard_f =
                                  (g.FStar_TypeChecker_Common.guard_f);
@@ -14814,10 +14880,7 @@ let (try_solve_deferred_constraints :
                                FStar_TypeChecker_Common.deferred = deferred;
                                FStar_TypeChecker_Common.univ_ineqs =
                                  (g.FStar_TypeChecker_Common.univ_ineqs);
-                               FStar_TypeChecker_Common.implicits =
-                                 (FStar_TypeChecker_Common.Conj
-                                    ((g.FStar_TypeChecker_Common.implicits),
-                                      imps))
+                               FStar_TypeChecker_Common.implicits = uu___5
                              }
                          | uu___5 ->
                              FStar_Compiler_Effect.failwith
@@ -14848,10 +14911,13 @@ let (try_solve_deferred_constraints :
                            let uu___8 =
                              let uu___9 =
                                let uu___10 =
-                                 FStar_TypeChecker_Common.as_implicits
+                                 FStar_Class_Listlike.to_list
+                                   (FStar_Compiler_CList.listlike_clist ())
                                    g2.FStar_TypeChecker_Common.implicits in
                                FStar_Compiler_List.length uu___10 in
-                             FStar_Compiler_Util.string_of_int uu___9 in
+                             FStar_Class_Show.show
+                               (FStar_Class_Show.printableshow
+                                  FStar_Class_Printable.printable_nat) uu___9 in
                            FStar_Compiler_Util.print2
                              "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s (and %s implicits)\n"
                              uu___7 uu___8
@@ -15934,14 +16000,16 @@ let (resolve_implicits' :
                                             FStar_Compiler_Util.must uu___6 in
                                           let uu___6 =
                                             let uu___7 =
-                                              FStar_TypeChecker_Common.as_implicits
-                                                imps1 in
+                                              FStar_Class_Listlike.to_list
+                                                (FStar_Compiler_CList.listlike_clist
+                                                   ()) imps1 in
                                             let uu___8 =
                                               FStar_Compiler_List.map
                                                 FStar_Pervasives_Native.fst
                                                 rest in
-                                            FStar_Compiler_List.op_At uu___7
-                                              uu___8 in
+                                            FStar_Class_Monoid.op_Plus_Plus
+                                              (FStar_Class_Monoid.monoid_list
+                                                 ()) uu___7 uu___8 in
                                           until_fixpoint ([], false, true)
                                             uu___6)))
                  | hd::tl ->
@@ -16204,7 +16272,9 @@ let (resolve_implicits' :
                                                          "resolve_implicits: unifying with an unresolved uvar failed?"
                                                    | FStar_Pervasives_Native.Some
                                                        g ->
-                                                       FStar_TypeChecker_Common.as_implicits
+                                                       FStar_Class_Listlike.to_list
+                                                         (FStar_Compiler_CList.listlike_clist
+                                                            ())
                                                          g.FStar_TypeChecker_Common.implicits in
                                                  until_fixpoint
                                                    (out, true,
@@ -16426,7 +16496,9 @@ let (resolve_implicits' :
                                                let res1 =
                                                  FStar_Compiler_Util.map_opt
                                                    res
-                                                   FStar_TypeChecker_Common.as_implicits in
+                                                   (FStar_Class_Listlike.to_list
+                                                      (FStar_Compiler_CList.listlike_clist
+                                                         ())) in
                                                (if
                                                   res1 <>
                                                     (FStar_Pervasives_Native.Some
@@ -16459,8 +16531,9 @@ let (resolve_implicits' :
                                                   let uu___8 =
                                                     let uu___9 =
                                                       let uu___10 =
-                                                        FStar_TypeChecker_Common.as_implicits
-                                                          imps in
+                                                        FStar_Class_Listlike.to_list
+                                                          (FStar_Compiler_CList.listlike_clist
+                                                             ()) imps in
                                                       FStar_Compiler_List.map
                                                         (fun i ->
                                                            (i,
@@ -16488,7 +16561,8 @@ let (resolve_implicits :
        else ());
       (let tagged_implicits1 =
          let uu___1 =
-           FStar_TypeChecker_Common.as_implicits
+           FStar_Class_Listlike.to_list
+             (FStar_Compiler_CList.listlike_clist ())
              g.FStar_TypeChecker_Common.implicits in
          resolve_implicits' env false false uu___1 in
        (let uu___2 = FStar_Compiler_Effect.op_Bang dbg_ResolveImplicitsHook in
@@ -16501,7 +16575,8 @@ let (resolve_implicits :
           let uu___3 =
             FStar_Compiler_List.map FStar_Pervasives_Native.fst
               tagged_implicits1 in
-          FStar_TypeChecker_Common.Flat uu___3 in
+          FStar_Class_Listlike.from_list
+            (FStar_Compiler_CList.listlike_clist ()) uu___3 in
         {
           FStar_TypeChecker_Common.guard_f =
             (g.FStar_TypeChecker_Common.guard_f);
@@ -16521,14 +16596,16 @@ let (resolve_generalization_implicits :
     fun g ->
       let tagged_implicits1 =
         let uu___ =
-          FStar_TypeChecker_Common.as_implicits
+          FStar_Class_Listlike.to_list
+            (FStar_Compiler_CList.listlike_clist ())
             g.FStar_TypeChecker_Common.implicits in
         resolve_implicits' env false true uu___ in
       let uu___ =
         let uu___1 =
           FStar_Compiler_List.map FStar_Pervasives_Native.fst
             tagged_implicits1 in
-        FStar_TypeChecker_Common.Flat uu___1 in
+        FStar_Class_Listlike.from_list
+          (FStar_Compiler_CList.listlike_clist ()) uu___1 in
       {
         FStar_TypeChecker_Common.guard_f =
           (g.FStar_TypeChecker_Common.guard_f);
@@ -16547,7 +16624,7 @@ let (resolve_implicits_tac :
   fun env ->
     fun g ->
       let uu___ =
-        FStar_TypeChecker_Common.as_implicits
+        FStar_Class_Listlike.to_list (FStar_Compiler_CList.listlike_clist ())
           g.FStar_TypeChecker_Common.implicits in
       resolve_implicits' env true false uu___
 let (force_trivial_guard :
@@ -16565,7 +16642,8 @@ let (force_trivial_guard :
       (let g1 = solve_deferred_constraints env g in
        let g2 = resolve_implicits env g1 in
        let uu___1 =
-         FStar_TypeChecker_Common.as_implicits
+         FStar_Class_Listlike.to_list
+           (FStar_Compiler_CList.listlike_clist ())
            g2.FStar_TypeChecker_Common.implicits in
        match uu___1 with
        | [] -> let uu___2 = discharge_guard env g2 in ()
