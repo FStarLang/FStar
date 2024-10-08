@@ -10,7 +10,7 @@ open FStar.InteractiveHelpers.Propositions
 /// Facilities to output results to the IDE/emacs/whatever.
 /// Contains datatypes and functions to carry information.
 
-#push-options "--z3rlimit 15 --fuel 0 --ifuel 1"
+#set-options "--z3rlimit 15 --fuel 0 --ifuel 1"
 
 (*** Convert terms to string *)
 /// The important point is to handle variable shadowing properly, so that the

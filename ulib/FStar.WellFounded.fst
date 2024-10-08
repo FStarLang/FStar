@@ -22,7 +22,7 @@
 
 module FStar.WellFounded
 
-#push-options "--warn_error -242" //inner let recs not encoded to SMT; ok
+#set-options "--warn_error -242" //inner let recs not encoded to SMT; ok
 
 let binrel (a:Type) = a -> a -> Type
 

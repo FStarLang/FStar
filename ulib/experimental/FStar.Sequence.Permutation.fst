@@ -196,6 +196,8 @@ let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x
             )
       );
       reveal_is_permutation_nopats s0 s1 f; f)
+#pop-options
+
 #restart-solver
 
 module CM = FStar.Algebra.CommMonoid
@@ -254,6 +256,7 @@ let rec foldm_back_append #a (m:CM.cm a) (s1 s2: seq a)
         m.mult (foldm_back m s1) (foldm_back m s2);
       }
     )
+#pop-options
 
 let foldm_back_sym #a (m:CM.cm a) (s1 s2: seq a)
   : Lemma

@@ -337,6 +337,8 @@ let sub_mod_wrap1_ok a b =
       ()
     end
 #pop-options
+#pop-options
+
 
 let sum_lt (a1 a2 b1 b2:nat) : Lemma
   (requires (a1 + a2 < b1 + b2 /\ a1 >= b1))
@@ -372,6 +374,7 @@ let sub_mod (a b: t) : Pure t
     else sub_mod_wrap_ok a b);
   sub_mod_impl a b
 #pop-options
+
 #restart-solver
 
 val shift_bound : #n:nat -> num:UInt.uint_t n -> n':nat ->
