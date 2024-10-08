@@ -27,6 +27,7 @@ open FStar.Ident
 open FStar.Class.Show
 open FStar.Class.Monoid
 
+open FStar.Compiler.CList
 module CList = FStar.Compiler.CList
 
 (* Bring instances in scope *)
@@ -92,7 +93,7 @@ type deferred_reason =
 
 instance val showable_deferred_reason : showable deferred_reason
 
-type deferred = list (deferred_reason & string & prob)
+type deferred = clist (deferred_reason & string & prob)
 
 type univ_ineq = universe & universe
 
@@ -166,7 +167,7 @@ type guard_t = {
   deferred_to_tac: deferred; //This field maintains problems that are to be dispatched to a tactic
                              //They are never attempted by the unification engine in Rel
   deferred:   deferred;
-  univ_ineqs: list universe & list univ_ineq;
+  univ_ineqs: clist universe & clist univ_ineq;
   implicits:  implicits_t;
 }
 
