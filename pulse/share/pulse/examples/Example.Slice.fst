@@ -25,8 +25,9 @@ fn test (arr: A.array UInt8.t)
   A.pts_to_len arr;
   let slice = from_array arr 6sz;
   let SlicePair s1 s2 = split slice 2sz;
+  pts_to_len s1;
   share s2;
-  let x = s2.(2sz);
+  let x = s2.(len s1);
   s1.(1sz) <- x;
   gather s2;
   let SlicePair s3 s4 = split s2 2sz;

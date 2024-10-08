@@ -9,7 +9,7 @@ pub fn test(arr: &mut [u8]) -> () {
     let _letpattern = slice.split_at_mut(2);
     match _letpattern {
         (mut s1, mut s2) => {
-            let x = s2[2];
+            let x = s2[s1.len()];
             s1[1] = x;
             let _letpattern1 = s2.split_at_mut(2);
             match _letpattern1 {
