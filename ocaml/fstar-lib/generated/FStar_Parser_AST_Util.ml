@@ -1143,35 +1143,17 @@ let (register_extension_parser : Prims.string -> extension_parser -> unit) =
   fun ext ->
     fun parser ->
       FStar_Compiler_Util.smap_add extension_parser_table ext parser
-let (autoload_plugin : Prims.string -> Prims.bool) =
-  fun ext ->
-    (let uu___1 = FStar_Compiler_Debug.any () in
-     if uu___1
-     then
-       FStar_Compiler_Util.print1
-         "Trying to find a plugin for extension %s\n" ext
-     else ());
-    (let uu___1 = FStar_Options.find_file (Prims.strcat ext ".cmxs") in
-     match uu___1 with
-     | FStar_Pervasives_Native.Some fn ->
-         ((let uu___3 = FStar_Compiler_Debug.any () in
-           if uu___3
-           then FStar_Compiler_Util.print1 "Autoloading plugin %s ...\n" fn
-           else ());
-          FStar_Tactics_Load.load_tactics [fn];
-          true)
-     | FStar_Pervasives_Native.None -> false)
 let (lookup_extension_parser :
   Prims.string -> extension_parser FStar_Pervasives_Native.option) =
   fun ext ->
-    let r = FStar_Compiler_Util.smap_try_find extension_parser_table ext in
-    match r with
+    let do1 uu___ =
+      FStar_Compiler_Util.smap_try_find extension_parser_table ext in
+    let uu___ = do1 () in
+    match uu___ with
     | FStar_Pervasives_Native.None ->
-        let uu___ = autoload_plugin ext in
-        if uu___
-        then FStar_Compiler_Util.smap_try_find extension_parser_table ext
-        else FStar_Pervasives_Native.None
-    | uu___ -> r
+        let uu___1 = FStar_Compiler_Plugins.autoload_plugin ext in
+        if uu___1 then do1 () else FStar_Pervasives_Native.None
+    | r -> r
 type extension_lang_parser =
   {
   parse_decls:
@@ -1221,7 +1203,7 @@ let (lookup_extension_lang_parser :
     let r = FStar_Compiler_Util.smap_try_find extension_lang_parser_table ext in
     match r with
     | FStar_Pervasives_Native.None ->
-        let uu___ = autoload_plugin ext in
+        let uu___ = FStar_Compiler_Plugins.autoload_plugin ext in
         if uu___
         then
           FStar_Compiler_Util.smap_try_find extension_lang_parser_table ext
