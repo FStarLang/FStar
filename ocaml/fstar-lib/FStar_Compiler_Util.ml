@@ -287,6 +287,8 @@ let run_process (id: string) (prog: string) (args: string list) (stdin: string o
   kill_process p;
   s
 
+let system_run = Sys.command
+
 type read_result = EOF | SIGINT
 
 let handle_stderr (p:proc) (h : string -> unit) =
