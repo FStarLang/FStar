@@ -24,7 +24,7 @@ val slice : Type0 -> Type0
 
 val len (#t: Type) : slice t -> SZ.t
 
-val pts_to (#t: Type) (s: slice t) (#[exact (`1.0R)] p: perm) (v: Seq.seq t) : slprop
+instance val has_pts_to_slice (t: Type u#0) : has_pts_to (slice t) (Seq.seq t)
 
 val pts_to_is_slprop2 (#a:Type) (x:slice a) (p:perm) (s:Seq.seq a)
   : Lemma (is_slprop2 (pts_to x #p s))

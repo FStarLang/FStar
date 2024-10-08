@@ -20,8 +20,8 @@ open Pulse.Lib.Slice
 module A = Pulse.Lib.Array
 
 fn test (arr: A.array UInt8.t)
-    requires A.pts_to arr seq![0uy; 1uy; 2uy; 3uy; 4uy; 5uy]
-    ensures exists* s. A.pts_to arr s ** pure (s `Seq.equal` seq![0uy; 4uy; 4uy; 5uy; 4uy; 5uy]) {
+    requires pts_to arr seq![0uy; 1uy; 2uy; 3uy; 4uy; 5uy]
+    ensures exists* s. pts_to arr s ** pure (s `Seq.equal` seq![0uy; 4uy; 4uy; 5uy; 4uy; 5uy]) {
   A.pts_to_len arr;
   let slice = from_array arr 6sz;
   let SlicePair s1 s2 = split slice 2sz;

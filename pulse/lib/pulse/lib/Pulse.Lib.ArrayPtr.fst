@@ -26,8 +26,27 @@ type ptr t = {
 let base a = a.base
 let offset a = SZ.v a.offset
 
-let pts_to s #p v =
+instance has_pts_to_array_ptr t = {
+  pts_to = (fun s #p v ->
+    A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v)
+}
+
+ghost fn unfold_pts_to #t (s: ptr t) #p v
+  requires pts_to s #p v
+  ensures A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v
+{
+  rewrite pts_to s #p v as
     A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v
+}
+
+ghost fn fold_pts_to #t (s: ptr t) #p v
+  requires A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v
+  ensures pts_to s #p v
+{
+  rewrite
+    A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v
+    as pts_to s #p v
+}
 
 let pts_to_is_slprop2 x p s = ()
 
@@ -48,7 +67,7 @@ fn from_array (#t: Type) (a: A.array t) (#p: perm) (#v: Ghost.erased (Seq.seq t)
     A.pts_to_range_intro a p v;
     rewrite (A.pts_to_range a 0 (A.length a) #p v)
         as (A.pts_to_range res.base (SZ.v res.offset) (SZ.v res.offset + Seq.length v) #p v);
-    fold (pts_to res #p v);
+    fold_pts_to res #p v;
     res
 }
 
@@ -58,7 +77,7 @@ fn to_array (#t: Type) (s: ptr t) (a: array t) (#p: perm) (#v: Seq.seq t)
     ensures A.pts_to a #p v
 {
     unfold is_from_array s (Seq.length v) a;
-    unfold pts_to s #p v;
+    unfold_pts_to s #p v;
     A.pts_to_range_prop s.base;
     rewrite (A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v)
         as (A.pts_to_range a 0 (A.length a) #p v);
@@ -80,10 +99,10 @@ fn op_Array_Access
               SZ.v i < Seq.length s /\
               res == Seq.index s (SZ.v i))
 {
-    unfold pts_to a #p s;
+    unfold_pts_to a #p s;
     A.pts_to_range_prop a.base;
     let res = A.pts_to_range_index a.base (SZ.add a.offset i);
-    fold pts_to a #p s;
+    fold_pts_to a #p s;
     res
 }
 
@@ -101,10 +120,10 @@ fn op_Array_Assignment
               s' == Seq.upd s (SZ.v i) v
             )
 {
-    unfold pts_to a s;
+    unfold_pts_to a s;
     A.pts_to_range_prop a.base;
     let res = A.pts_to_range_upd a.base (SZ.add a.offset i) v;
-    fold pts_to a (Seq.upd s (SZ.v i) v);
+    fold_pts_to a (Seq.upd s (SZ.v i) v);
 }
 
 ghost
@@ -116,10 +135,10 @@ fn share
   requires pts_to arr #p s
   ensures pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s
 {
-    unfold pts_to arr #p s;
+    unfold_pts_to arr #p s;
     A.pts_to_range_share arr.base;
-    fold pts_to arr #(p /. 2.0R) s;
-    fold pts_to arr #(p /. 2.0R) s;    
+    fold_pts_to arr #(p /. 2.0R) s;
+    fold_pts_to arr #(p /. 2.0R) s;    
 }
 
 ghost
@@ -131,10 +150,10 @@ fn gather
   requires pts_to arr #p0 s0 ** pts_to arr #p1 s1 ** pure (Seq.length s0 == Seq.length s1)
   ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
 {
-    unfold pts_to arr #p0 s0;
-    unfold pts_to arr #p1 s1;
+    unfold_pts_to arr #p0 s0;
+    unfold_pts_to arr #p1 s1;
     A.pts_to_range_gather arr.base;
-    fold pts_to arr #(p0 +. p1) s0
+    fold_pts_to arr #(p0 +. p1) s0
 }
 
 fn split (#t: Type) (s: ptr t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t { SZ.v i <= Seq.length v })
@@ -145,7 +164,7 @@ fn split (#t: Type) (s: ptr t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.
     pts_to s' #p (Seq.slice v (SZ.v i) (Seq.length v)) **
     pure (adjacent s (SZ.v i) s')
 {
-    unfold pts_to s #p v;
+    unfold_pts_to s #p v;
     A.pts_to_range_prop s.base;
     let s' = {
         base = s.base;
@@ -156,12 +175,12 @@ fn split (#t: Type) (s: ptr t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.
     rewrite
         (A.pts_to_range s.base (SZ.v s.offset) (SZ.v s'.offset) #p s1)
         as (A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + SZ.v i) #p s1);
-    fold pts_to s #p s1;  
+    fold_pts_to s #p s1;  
     with s2. assert A.pts_to_range s.base (SZ.v s'.offset) (SZ.v s.offset + Seq.length v) #p s2;
     rewrite
         (A.pts_to_range s.base (SZ.v s'.offset) (SZ.v s.offset + Seq.length v) #p s2)
         as (A.pts_to_range s'.base (SZ.v s'.offset) (SZ.v s'.offset + Seq.length s2) #p s2);
-    fold pts_to s' #p s2;
+    fold_pts_to s' #p s2;
     s'
 }
 
@@ -170,12 +189,12 @@ fn join (#t: Type) (s1: ptr t) (#p: perm) (#v1: Seq.seq t) (s2: ptr t) (#v2: Seq
     requires pts_to s1 #p v1 ** pts_to s2 #p v2 ** pure (adjacent s1 (Seq.length v1) s2)
     ensures pts_to s1 #p (Seq.append v1 v2)
 {
-    unfold pts_to s1 #p v1;
-    unfold pts_to s2 #p v2;
+    unfold_pts_to s1 #p v1;
+    unfold_pts_to s2 #p v2;
     rewrite (A.pts_to_range s2.base (SZ.v s2.offset) (SZ.v s2.offset + Seq.length v2) #p v2)
         as (A.pts_to_range s1.base (SZ.v s1.offset + Seq.length v1) (SZ.v s1.offset + Seq.length v1 + Seq.length v2) #p v2);
     A.pts_to_range_join s1.base (SZ.v s1.offset) (SZ.v s1.offset + Seq.length v1) (SZ.v s1.offset + Seq.length v1 + Seq.length v2);
-    fold (pts_to s1 #p (Seq.append v1 v2))
+    fold_pts_to s1 #p (Seq.append v1 v2)
 }
 
 module R = Pulse.Lib.Reference

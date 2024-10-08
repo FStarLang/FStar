@@ -27,9 +27,31 @@ type slice t = {
 
 let len s = s.len
 
-let pts_to #t s #p v =
-    AP.pts_to s.elt #p v **
+let has_pts_to_slice t = {
+  pts_to = (fun s #p v ->
+    pts_to s.elt #p v **
+    pure (Seq.length v == SZ.v s.len))
+}
+
+ghost fn unfold_pts_to #t (s: slice t) #p v
+  requires pts_to s #p v
+  ensures pts_to s.elt #p v **
     pure (Seq.length v == SZ.v s.len)
+{
+  rewrite pts_to s #p v as
+    pts_to s.elt #p v **
+    pure (Seq.length v == SZ.v s.len)
+}
+
+ghost fn fold_pts_to #t (s: slice t) #p v
+  requires pts_to s.elt #p v **
+    pure (Seq.length v == SZ.v s.len)
+  ensures pts_to s #p v
+{
+  rewrite pts_to s.elt #p v **
+      pure (Seq.length v == SZ.v s.len)
+    as pts_to s #p v;
+}
 
 let pts_to_is_slprop2 x p v = ()
 
@@ -38,8 +60,8 @@ fn pts_to_len (#t: Type) (s: slice t) (#p: perm) (#v: Seq.seq t)
   requires pts_to s #p v
   ensures pts_to s #p v ** pure (Seq.length v == SZ.v (len s))
 {
-    unfold (pts_to s #p v);
-    fold (pts_to s #p v)
+    unfold_pts_to s #p v;
+    fold_pts_to s #p v
 }
 
 let is_from_array a s =
@@ -59,7 +81,7 @@ fn from_array (#t: Type) (a: array t) (#p: perm) (#v: Ghost.erased (Seq.seq t))
         elt = ptr;
         len = alen;
     };
-    fold pts_to res #p v;
+    fold_pts_to res #p v;
     fold is_from_array a res;
     res
 }
@@ -70,7 +92,7 @@ fn to_array
 requires    (pts_to s #p v ** is_from_array a s)
 ensures    (A.pts_to a #p v)
 {
-    unfold (pts_to s #p v);
+    unfold_pts_to s #p v;
     unfold is_from_array a s;
     AP.to_array s.elt a
 }
@@ -88,9 +110,9 @@ ensures
             pts_to a #p s **
             pure (res == Seq.index s (SZ.v i))
 {
-    unfold (pts_to a #p s);
+    unfold_pts_to a #p s;
     let res = AP.op_Array_Access a.elt i;
-    fold (pts_to a #p s);
+    fold_pts_to a #p s;
     res
 }
 
@@ -105,9 +127,9 @@ fn op_Array_Assignment
         ensures
             pts_to a (Seq.upd s (SZ.v i) v)
 {
-    unfold (pts_to a s);
+    unfold_pts_to a s;
     AP.op_Array_Assignment a.elt i v;
-    fold (pts_to a (Seq.upd s (SZ.v i) v))
+    fold_pts_to a (Seq.upd s (SZ.v i) v)
 }
 
 ghost
@@ -120,10 +142,10 @@ requires
     pts_to arr #p s
 ensures pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s
 {
-    unfold (pts_to arr #p s);
+    unfold_pts_to arr #p s;
     AP.share arr.elt;
-    fold (pts_to arr #(p /. 2.0R) s);
-    fold (pts_to arr #(p /. 2.0R) s)
+    fold_pts_to arr #(p /. 2.0R) s;
+    fold_pts_to arr #(p /. 2.0R) s
 }
 
 ghost
@@ -135,10 +157,10 @@ fn gather
 requires pts_to arr #p0 s0 ** pts_to arr #p1 s1
 ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
 {
-    unfold (pts_to arr #p0 s0);
-    unfold (pts_to arr #p1 s1);
+    unfold_pts_to arr #p0 s0;
+    unfold_pts_to arr #p1 s1;
     AP.gather arr.elt;
-    fold (pts_to arr #(p0 +. p1) s0)
+    fold_pts_to arr #(p0 +. p1) s0
 }
 
 let is_split #t s s1 s2 =
@@ -160,19 +182,19 @@ fn split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t)
     pts_to s2 #p (Seq.slice v (SZ.v i) (Seq.length v)) **
     is_split s s1 s2)
 {
-    unfold (pts_to s #p v);
+    unfold_pts_to s #p v;
     Seq.lemma_split v (SZ.v i);
     let elt' = AP.split s.elt #p #v i;
     let s1 = {
         elt = s.elt;
         len = i;
     };
-    fold pts_to s1 #p (Seq.slice v 0 (SZ.v i));
+    fold_pts_to s1 #p (Seq.slice v 0 (SZ.v i));
     let s2 = {
         elt = elt';
         len = s.len `SZ.sub` i;
     };
-    fold pts_to s2 #p (Seq.slice v (SZ.v i) (Seq.length v));
+    fold_pts_to s2 #p (Seq.slice v (SZ.v i) (Seq.length v));
     fold (is_split s s1 s2);
     (s1 `SlicePair` s2)
 }
@@ -183,10 +205,10 @@ fn join (#t: Type) (s1: slice t) (#p: perm) (#v1: Seq.seq t) (s2: slice t) (#v2:
     ensures pts_to s #p (Seq.append v1 v2)
 {
     unfold (is_split s s1 s2);
-    unfold (pts_to s1 #p v1);
-    unfold (pts_to s2 #p v2);
+    unfold_pts_to s1 #p v1;
+    unfold_pts_to s2 #p v2;
     AP.join s1.elt s2.elt;
-    fold (pts_to s #p (Seq.append v1 v2))
+    fold_pts_to s #p (Seq.append v1 v2)
 }
 
 fn copy
@@ -197,12 +219,12 @@ ensures
   (pts_to dst v ** pts_to src #p v)
 {
   with v_dst . assert (pts_to dst v_dst);
-  unfold (pts_to dst v_dst);
-  unfold (pts_to src #p v);
+  unfold_pts_to dst v_dst;
+  unfold_pts_to src #p v;
   AP.memcpy src.elt 0sz dst.elt 0sz src.len;
-  fold (pts_to src #p v);
+  fold_pts_to src #p v;
   assert pure (v `Seq.equal`
     Seq.append (Seq.slice v 0 (SZ.v src.len))
       (Seq.slice v_dst (SZ.v src.len) (Seq.length v_dst)));
-  fold (pts_to dst v)
+  fold_pts_to dst v
 }

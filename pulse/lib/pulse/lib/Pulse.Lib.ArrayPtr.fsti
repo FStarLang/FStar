@@ -35,7 +35,7 @@ val ptr : Type0 -> Type0
 val base #t (p: ptr t) : GTot (A.array t)
 val offset #t (p: ptr t) : GTot nat
 
-val pts_to (#t: Type) (s: ptr t) (#[exact (`1.0R)] p: perm) (v: Seq.seq t) : slprop
+instance val has_pts_to_array_ptr (t: Type) : has_pts_to (ptr t) (Seq.seq t)
 
 val pts_to_is_slprop2 (#a:Type) (x:ptr a) (p:perm) (s:Seq.seq a)
   : Lemma (is_slprop2 (pts_to x #p s))
