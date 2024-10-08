@@ -11,8 +11,6 @@ ALREADY_CACHED_LIST ?= Prims,FStar,PulseCore,Pulse
 # FIXME: do we still need separate subdirectories for pledges, classes?
 INCLUDE_PATHS += $(PULSE_HOME)/lib/pulse $(PULSE_HOME)/lib/pulse/lib $(PULSE_HOME)/lib/pulse/lib/class $(PULSE_HOME)/lib/pulse/lib/pledge $(PULSE_HOME)/lib/pulse/core
 
-FSTAR_OPTIONS += --load_cmxs pulse
-
 # There are other user-configurable variables in the following file being
 # included
 include $(PULSE_HOME)/share/pulse/Makefile.include-base

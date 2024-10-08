@@ -81,5 +81,5 @@ To call F* with Pulse:
 
 1. Make sure F* and Pulse are properly located, following steps 1 and 2 above.
 2. Pass the following options to F*:
-   * in all cases, `--include $PULSE_HOME/lib/pulse --include $PULSE_HOME/lib/pulse/core --include $PULSE_HOME/lib/pulse/class  --include $PULSE_HOME/lib/pulse/pledge --load_cmxs pulse`
+   * in all cases, `--include $PULSE_HOME`
    * if you want to use PulseC, add `--include $PULSE_HOME/lib/pulse/c`
