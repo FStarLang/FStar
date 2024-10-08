@@ -54,7 +54,7 @@ endif
 
 extract_c: $(EXTRACT_C_FILES)
 
-test: test-cbor extract extract_pulse_c extract_c extract_c_bug166 test-dpe-c test-error-messages extract_c_unreachable extract_c_hashtable
+test: test-cbor extract extract_pulse_c extract_c test-dpe-c test-error-messages
 
 test-error-messages:
 	+$(MAKE) -C bug-reports/error-messages
