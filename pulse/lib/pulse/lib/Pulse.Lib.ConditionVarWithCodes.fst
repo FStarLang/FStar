@@ -76,8 +76,8 @@ let map_invariant #c (v:U32.t) (m:carrier c) (n:nat) (p:slprop)
 let cvar_inv #c (b: cvar_t_core c) (p:slprop)
 : slprop3
 = exists* v n m.
-    Box.pts_to b.r #0.5R v **
-    GR.pts_to #nat b.ctr n **
+    pts_to b.r #0.5R v **
+    pts_to b.ctr n **
     big_ghost_pcm_pts_to b.gref m **
     big_ghost_pcm_pts_to b.gref (empty_map_below n) **
     map_invariant v m n p
@@ -91,7 +91,7 @@ let inv_name #c (b:cvar_t c) = b.i
 let send #c (b: cvar_t c) (p:slprop)
 : slprop
 = cvar b p **
-  Box.pts_to b.core.r #0.5R 0ul
+  pts_to b.core.r #0.5R 0ul
 
 let singleton #c (i:nat) (#p:perm) (code:c.t)
 : carrier c
@@ -234,8 +234,8 @@ ghost
 fn fold_cvar_inv #c (b: cvar_t_core c) (p:slprop)
                     (v n m:_)
 requires
-    Box.pts_to b.r #0.5R v **
-    GR.pts_to #nat b.ctr n **
+    pts_to b.r #0.5R v **
+    pts_to b.ctr n **
     big_ghost_pcm_pts_to b.gref m **
     big_ghost_pcm_pts_to b.gref (empty_map_below n) **
     map_invariant v m n p
@@ -320,7 +320,7 @@ ensures emp
     Box.gather b.core.r;
     write_atomic_box b.core.r 1ul;
     Box.share b.core.r;
-    drop_ (Box.pts_to b.core.r #0.5R 1ul);
+    drop_ (pts_to b.core.r #0.5R 1ul);
     flip_map_invariant #c _ _ _ _;
     fold (cvar_inv b.core p);
   };
@@ -605,7 +605,7 @@ ensures
 ghost
 fn alloc #c (#b:cvar_t_core c) (#n:nat) (q:c.t)
 requires big_ghost_pcm_pts_to b.gref (empty_map_below n) **
-         GR.pts_to b.ctr n
+         pts_to b.ctr n
 ensures  GR.pts_to b.ctr (n + 1) **
          big_ghost_pcm_pts_to b.gref (empty_map_below (n + 1)) **
          big_ghost_pcm_pts_to b.gref (singleton n #0.5R q) **
@@ -796,7 +796,7 @@ ensures cvinv cv p ** cvinv cv p
 
 
 let send_core #c (cv:cvar_t c) : slprop3 =
-  Box.pts_to cv.core.r #0.5R 0ul
+  pts_to cv.core.r #0.5R 0ul
 
 
 ghost

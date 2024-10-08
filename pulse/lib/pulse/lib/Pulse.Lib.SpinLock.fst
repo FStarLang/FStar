@@ -26,8 +26,8 @@ module GR = Pulse.Lib.GhostReference
 module CInv = Pulse.Lib.CancellableInvariant
 
 let lock_inv_aux (r:B.box U32.t) (gr:GR.ref U32.t) (v:slprop) : (w:slprop { is_storable v ==> is_storable w })  =
-  exists* i p. B.pts_to r #1.0R i **
-               GR.pts_to gr #p i **
+  exists* i p. pts_to r #1.0R i **
+               pts_to gr #p i **
                (if i = 0ul then v else emp) **
                pure ((i == 0ul ==> p == 1.0R) /\
                      (i =!= 0ul ==> p == 0.5R)) 
@@ -48,7 +48,7 @@ type lock = {
 let lock_alive l #p v =
   inv (iname_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) ** active l.i p
 
-let lock_acquired l = GR.pts_to l.gr #0.5R 1ul
+let lock_acquired l = pts_to l.gr #0.5R 1ul
 
 
 fn new_lock (v:slprop { is_storable v })
@@ -83,11 +83,11 @@ fn rec acquire (#v:slprop) (#p:perm) (l:lock)
       returns b:bool
       ensures cinv_vp l.i (lock_inv l.r l.gr v) **
               active l.i p **
-              (if b then v ** GR.pts_to l.gr #0.5R 1ul else emp) {
+              (if b then v ** pts_to l.gr #0.5R 1ul else emp) {
       unpack_cinv_vp l.i;
       unfold lock_inv;
       unfold lock_inv_aux;
-      with i. assert (B.pts_to l.r i);
+      with i. assert (pts_to l.r i);
       let b = cas_box l.r 0ul 1ul;
       if b {
         elim_cond_true _ _ _;
@@ -99,11 +99,11 @@ fn rec acquire (#v:slprop) (#p:perm) (l:lock)
         pack_cinv_vp l.i;
         assert (cinv_vp l.i (lock_inv l.r l.gr v) **
                 active l.i p **
-                GR.pts_to l.gr #0.5R 1ul **
+                pts_to l.gr #0.5R 1ul **
                 v);
         let b = true;
-        rewrite (v ** GR.pts_to l.gr #0.5R 1ul)
-             as (if b then v ** GR.pts_to l.gr #0.5R 1ul else emp);
+        rewrite (v ** pts_to l.gr #0.5R 1ul)
+             as (if b then v ** pts_to l.gr #0.5R 1ul else emp);
         b
       } else {
         elim_cond_false _ _ _;
@@ -114,7 +114,7 @@ fn rec acquire (#v:slprop) (#p:perm) (l:lock)
                 active l.i p);
         let b = false;
         rewrite emp as
-                (if b then v ** GR.pts_to l.gr #0.5R 1ul else emp);
+                (if b then v ** pts_to l.gr #0.5R 1ul else emp);
         b
       }
     };

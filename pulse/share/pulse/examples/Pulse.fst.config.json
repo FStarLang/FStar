@@ -2,8 +2,6 @@
   "fstar_exe": "fstar.exe",
   "options": [
     "--query_cache",
-    "--load_cmxs",
-    "pulse",
     "--cache_dir",
     "_output/cache",
     "--warn_error", 

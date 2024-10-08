@@ -17,6 +17,7 @@
 module Assert
 #lang-pulse
 open Pulse.Lib.Pervasives
+module R = Pulse.Lib.Reference
 
 
 fn test_assert (r0 r1: ref nat)
@@ -30,7 +31,7 @@ fn test_assert (r0 r1: ref nat)
         (exists* v1. pts_to r1 #p1 v1)
 {
     //assert_ (pts_to r1 ?p1 ?v1); would be nice to have a version that also binds witnesses
-    assert_ (pts_to r0 #p0 (v0 + 0));
+    assert (R.pts_to r0 #p0 (v0 + 0));
     ()
 }
 

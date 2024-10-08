@@ -19,6 +19,7 @@ module Pulse.Lib.Vec
 open FStar.Ghost
 open PulseCore.FractionalPermission
 open Pulse.Lib.Core
+open Pulse.Class.PtsTo
 
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
@@ -42,6 +43,11 @@ val pts_to
   (#[T.exact (`1.0R)] p:perm)
   (s:Seq.seq a)
 : slprop
+
+[@@pulse_unfold]
+instance has_pts_to_vec (a:Type u#0) : has_pts_to (vec a) (Seq.seq a) = { pts_to; }
+[@@pulse_unfold]
+instance has_pts_to_lvec (a:Type u#0) (n : nat) : has_pts_to (lvec a n) (Seq.seq a) = { pts_to; }
 
 val pts_to_is_slprop2 (#a:Type0) (v:vec a) (p:perm) (s:Seq.seq a)
   : Lemma (is_slprop2 (pts_to v #p s))

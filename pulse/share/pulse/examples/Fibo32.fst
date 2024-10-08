@@ -20,6 +20,8 @@ open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 #push-options "--fuel 2 --ifuel 2"
 
+module R = Pulse.Lib.Reference
+
 
 let rec fib (n:nat) : nat =
   if n <= 1 then 1
@@ -44,7 +46,7 @@ fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
   let mut j = 1ul;
   let mut ctr = 1ul;
   while (let vctr = !ctr; (vctr < k))
-  invariant b . exists* vi vj vctr. (
+  invariant b . exists* (vi vj vctr : U32.t). (
      pts_to i vi **
      pts_to j vj **
      pts_to ctr vctr **     
@@ -67,5 +69,3 @@ fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
   let r = !j;
   r
 }
-
-

@@ -68,11 +68,11 @@ val hacl_hash (alg:alg_t)
               (#psrc:perm)
               (#src_seq #dst_seq:erased (Seq.seq U8.t))
   : stt unit
-    (A.pts_to dst dst_seq **
-     A.pts_to src #psrc src_seq)
+    (pts_to dst dst_seq **
+     pts_to src #psrc src_seq)
     (fun _ ->
-       A.pts_to src #psrc src_seq **
-       A.pts_to dst (spec_hash alg src_seq))
+       pts_to src #psrc src_seq **
+       pts_to dst (spec_hash alg src_seq))
 
 noextract [@@noextract_to "krml"]
 val spec_hmac 
@@ -92,13 +92,13 @@ val hacl_hmac (alg:alg_t { alg == Spec.Hash.Definitions.sha2_256 })
               (#key_seq:erased (Seq.seq U8.t))
               (#msg_seq:erased (Seq.seq U8.t))
   : stt unit
-    (A.pts_to dst dst_seq **
-     A.pts_to key #pkey key_seq **
-     A.pts_to msg #pmsg msg_seq)
+    (pts_to dst dst_seq **
+     pts_to key #pkey key_seq **
+     pts_to msg #pmsg msg_seq)
     (fun _ ->
-       A.pts_to key #pkey key_seq **
-       A.pts_to msg #pmsg msg_seq **
-       A.pts_to dst (spec_hmac alg key_seq msg_seq))
+       pts_to key #pkey key_seq **
+       pts_to msg #pmsg msg_seq **
+       pts_to dst (spec_hmac alg key_seq msg_seq))
 
 val spec_ed25519_verify (pubk hdr sig:Seq.seq U8.t) : prop 
 
@@ -110,13 +110,13 @@ val ed25519_verify
   (#ppubk #phdr #psig:perm)
   (#pubk_seq #hdr_seq #sig_seq:erased (Seq.seq U8.t))
   : stt bool
-    (A.pts_to pubk #ppubk pubk_seq **
-     A.pts_to hdr #phdr hdr_seq **
-     A.pts_to sig #psig sig_seq)
+    (pts_to pubk #ppubk pubk_seq **
+     pts_to hdr #phdr hdr_seq **
+     pts_to sig #psig sig_seq)
     (fun res ->
-      A.pts_to pubk #ppubk pubk_seq **
-      A.pts_to hdr #phdr hdr_seq **
-      A.pts_to sig #psig sig_seq **
+      pts_to pubk #ppubk pubk_seq **
+      pts_to hdr #phdr hdr_seq **
+      pts_to sig #psig sig_seq **
       pure (res == true <==> spec_ed25519_verify pubk_seq hdr_seq sig_seq))
 
 noextract [@@noextract_to "krml"]
@@ -130,13 +130,13 @@ val ed25519_sign
   (#pprivk #pmsg:perm)
   (#buf0 #privk_seq #msg_seq:erased (Seq.seq U8.t))
   : stt unit
-    (A.pts_to buf buf0 **
-     A.pts_to privk #pprivk privk_seq **
-     A.pts_to msg #pmsg msg_seq)
+    (pts_to buf buf0 **
+     pts_to privk #pprivk privk_seq **
+     pts_to msg #pmsg msg_seq)
     (fun _ -> exists* (buf1:Seq.seq U8.t).
-      A.pts_to buf buf1 ** 
-      A.pts_to privk #pprivk privk_seq **
-      A.pts_to msg #pmsg msg_seq **
+      pts_to buf buf1 ** 
+      pts_to privk #pprivk privk_seq **
+      pts_to msg #pmsg msg_seq **
       pure (buf1 `Seq.equal` spec_ed25519_sign privk_seq msg_seq))
 
 (* DICE hash constants *)

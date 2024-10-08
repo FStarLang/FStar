@@ -17,6 +17,7 @@
 module Pulse.Lib.HigherArray
 open FStar.Tactics.V2
 open Pulse.Lib.Core
+open Pulse.Class.PtsTo
 open PulseCore.FractionalPermission
 open FStar.Ghost
 module SZ = FStar.SizeT
@@ -33,6 +34,15 @@ type larray t (n:nat) = a:array t { length a == n }
 val is_full_array (#a:Type) (x:array a) : prop
 
 val pts_to (#a:Type) (x:array a) (#[exact (`1.0R)] p:perm) (s: Seq.seq a) : slprop
+
+[@@pulse_unfold]
+instance has_pts_to_array (a:Type u#1) : has_pts_to (array a) (Seq.seq a) = {
+  pts_to = pts_to;
+}
+[@@pulse_unfold]
+instance has_pts_to_larray (a:Type u#1) (n : nat) : has_pts_to (larray a n) (Seq.seq a) = {
+  pts_to = pts_to;
+}
 
 val pts_to_is_slprop2 (#a:Type) (x:array a) (p:perm) (s:Seq.seq a)
   : Lemma (is_slprop2 (pts_to x #p s))

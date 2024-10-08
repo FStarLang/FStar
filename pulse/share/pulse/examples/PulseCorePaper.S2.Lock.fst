@@ -26,10 +26,10 @@ module B = Pulse.Lib.Box
 assume
 val cas_box_alt (r:B.box U32.t) (u v:U32.t) (#i:erased U32.t)
   : stt_atomic bool #Observable emp_inames 
-    (B.pts_to r i)
+    (pts_to r i)
     (fun b ->
-      if b then (B.pts_to r v ** pure (reveal i == u)) 
-           else (B.pts_to r i))
+      if b then (pts_to r v ** pure (reveal i == u)) 
+           else (pts_to r i))
 
 noeq
 type lock = { r:Pulse.Lib.Box.box U32.t; i:iname }

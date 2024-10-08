@@ -19,6 +19,7 @@ module Promises.Examples3
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Pledge
+module R  = Pulse.Lib.Reference
 module GR = Pulse.Lib.GhostReference
 
 assume val done : ref bool
@@ -29,8 +30,8 @@ let inv_p : v:slprop { is_slprop3 v } =
   exists* (v_done:bool) (v_res:option int) (v_claimed:bool).
        pts_to done #0.5R v_done
     ** pts_to res #0.5R v_res
-    ** GR.pts_to claimed #0.5R v_claimed
-    ** (if not v_claimed then pts_to res #0.5R v_res else emp)
+    ** pts_to claimed #0.5R v_claimed
+    ** (if not v_claimed then R.pts_to res #0.5R v_res else emp) // FIXME: cannot use pts_to method or a fold fails; missing unfold?
     ** pure (v_claimed ==> v_done)
     ** pure (v_done ==> Some? v_res)
 
@@ -41,7 +42,7 @@ fn intro_inv_p (v_done:bool) (v_res:option int) (v_claimed:bool)
   requires
        pts_to done #0.5R v_done
     ** pts_to res #0.5R v_res
-    ** GR.pts_to claimed #0.5R v_claimed
+    ** pts_to claimed #0.5R v_claimed
     ** (if not v_claimed then pts_to res #0.5R v_res else emp)
     ** pure (v_claimed ==> v_done)
     ** pure (v_done ==> Some? v_res)
@@ -59,17 +60,17 @@ let goal : slprop =
 atomic
 fn proof
    (i : iname) (_:unit)
-   requires inv i inv_p ** pts_to done #0.5R true ** GR.pts_to claimed #0.5R false
+   requires inv i inv_p ** pts_to done #0.5R true ** pts_to claimed #0.5R false
    ensures inv i inv_p ** pts_to done #0.5R true ** goal
    opens [i]
 {
   with_invariants i {
     unfold inv_p;
-    with v_done v_res v_claimed.
+    with (v_done : bool) v_res v_claimed.
       assert (pts_to done #0.5R v_done
               ** pts_to done #0.5R true
               ** pts_to res #0.5R v_res
-              ** GR.pts_to claimed #0.5R v_claimed
+              ** pts_to claimed #0.5R v_claimed
               ** (if not v_claimed then pts_to res #0.5R v_res else emp)
               ** pure (v_claimed ==> v_done)
               ** pure (v_done ==> Some? v_res));
@@ -101,13 +102,13 @@ fn proof
     //       goal **
     //       pts_to done (reveal v_done) **
     //       pts_to done true **
-    //       GR.pts_to claimed true
+    //       pts_to claimed true
     // since the choice of ?v_done is ambiguous. Further, we don't have a
     // way of saying "fold using the (pts_to done v_done)", or "fold ignoring
     // the pts_to done true". So we use the explicit introduction.
     intro_inv_p v_done v_res true;
     
-    drop_ (GR.pts_to claimed #0.5R true);
+    drop_ (pts_to claimed #0.5R true);
 
     ()
   }
@@ -117,7 +118,7 @@ fn proof
 let cheat_proof (i:iname)
   : (_:unit) ->
       stt_ghost unit (add_inv emp_inames i)
-        (requires pts_to done #0.5R true ** (inv i inv_p ** GR.pts_to claimed #0.5R false))
+        (requires pts_to done #0.5R true ** (inv i inv_p ** pts_to claimed #0.5R false))
         (ensures fun _ -> pts_to done #0.5R true ** goal)
   = admit() //proof is atomic, not ghost
 
@@ -125,7 +126,7 @@ let cheat_proof (i:iname)
 
 
 fn setup (_:unit)
-   requires pts_to done 'v_done ** pts_to res 'v_res ** GR.pts_to claimed 'v_claimed
+   requires pts_to done 'v_done ** pts_to res 'v_res ** pts_to claimed 'v_claimed
    returns i:iname
    ensures pts_to done #0.5R false **
            pledge (add_inv emp_inames i) (pts_to done #0.5R true) goal
@@ -139,7 +140,7 @@ fn setup (_:unit)
   GR.share2 #_ claimed;
   
   rewrite (pts_to res #0.5R None)
-       as (if not false then  pts_to res #0.5R None else emp);
+       as (if not false then pts_to res #0.5R None else emp);
        
   fold inv_p;
   
@@ -149,7 +150,7 @@ fn setup (_:unit)
     (add_inv emp_inames i)
     (pts_to done #0.5R true) //f
     goal  //v
-    (inv i inv_p ** GR.pts_to claimed #0.5R false)  //extra
+    (inv i inv_p ** pts_to claimed #0.5R false)  //extra
     (cheat_proof i);
 
   i
@@ -168,7 +169,7 @@ fn worker (i : iname) (_:unit)
       assert (pts_to done #0.5R v_done
               ** pts_to done #0.5R false
               ** pts_to res #0.5R v_res
-              ** GR.pts_to claimed #0.5R v_claimed
+              ** pts_to claimed #0.5R v_claimed
               ** (if not v_claimed then pts_to res #0.5R v_res else emp)
               ** pure (v_claimed ==> v_done)
               ** pure (v_done ==> Some? v_res));

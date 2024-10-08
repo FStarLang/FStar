@@ -89,8 +89,8 @@ module A = Pulse.Lib.Array
 
 
 fn fill_array (x:array U32.t) (n:SZ.t) (v:U32.t)
-  requires A.pts_to x 's ** pure (A.length x == SZ.v n)
-  ensures exists* s. A.pts_to x s ** pure (Seq.equal s (Seq.create (SZ.v n) v))
+  requires pts_to x 's ** pure (A.length x == SZ.v n)
+  ensures exists* s. pts_to x s ** pure (Seq.equal s (Seq.create (SZ.v n) v))
 {
   A.pts_to_len x;
   let mut i : SZ.t = 0sz;
@@ -98,7 +98,7 @@ fn fill_array (x:array U32.t) (n:SZ.t) (v:U32.t)
   invariant b.
     exists* (vi:SZ.t) (s:Seq.seq U32.t).
       pts_to i vi **
-      A.pts_to x s **
+      pts_to x s **
       pure (SZ.(vi <=^ n) /\
             Seq.length s == Seq.length 's /\
             (forall (j:nat). j < SZ.v vi ==> Seq.index s j == v) /\

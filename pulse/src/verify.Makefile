@@ -28,6 +28,6 @@ PULSE_EXAMPLES_SUBDIRS = \
 	.
 
 SRC_DIRS := $(PULSE_HOME)/src/checker $(addprefix $(PULSE_HOME)/lib/pulse/,$(PULSE_LIB_SUBDIRS)) $(addprefix $(PULSE_HOME)/share/pulse/examples/,$(PULSE_EXAMPLES_SUBDIRS))
-FSTAR_OPTIONS += --already_cached 'Prims,FStar' --load_cmxs pulse
+FSTAR_OPTIONS += --already_cached 'Prims,FStar'
 
 include $(PULSE_HOME)/share/pulse/Makefile.include-base

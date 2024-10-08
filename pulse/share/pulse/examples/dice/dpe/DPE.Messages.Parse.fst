@@ -203,11 +203,11 @@ let parse_dpe_cmd_post
   (res: option dpe_cmd)
 : slprop
 = match res with
-  | None -> A.pts_to input #p s ** pure (parse_dpe_cmd_failure_postcond s)
+  | None -> pts_to input #p s ** pure (parse_dpe_cmd_failure_postcond s)
   | Some cmd -> exists* vargs.
       raw_data_item_match 1.0R cmd.dpe_cmd_args vargs **
       (raw_data_item_match 1.0R cmd.dpe_cmd_args vargs @==>
-        A.pts_to input #p s
+        pts_to input #p s
       ) **
       pure (
         exists (vsess: raw_data_item) (rem: Seq.seq U8.t) .
@@ -222,7 +222,7 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
                  (len:SZ.t)
                  (input:A.larray U8.t (SZ.v len))
     requires
-        A.pts_to input #p s
+        pts_to input #p s
     returns res:option dpe_cmd
     ensures
       parse_dpe_cmd_post len input s p res
@@ -237,21 +237,21 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
         unfold (cbor_read_deterministically_encoded_with_typ_post Spec.session_message input p s c);
         unfold (cbor_read_deterministically_encoded_with_typ_success_post Spec.session_message input p s c);
         with vc . assert (raw_data_item_match 1.0R c.cbor_read_payload vc);
-        with vrem1 . assert (A.pts_to c.cbor_read_remainder #p vrem1);
+        with vrem1 . assert (pts_to c.cbor_read_remainder #p vrem1);
         stick_consume_r ()
           #(raw_data_item_match 1.0R c.cbor_read_payload vc)
-          #(A.pts_to c.cbor_read_remainder #p vrem1)
-          #(A.pts_to input #p s)
+          #(pts_to c.cbor_read_remainder #p vrem1)
+          #(pts_to input #p s)
         ;
         let i0 = cbor_array_index c.cbor_read_payload 0sz;
         let cbor_int = cbor_destr_int64 i0;
         let sid = cbor_int.cbor_int_value;
         elim_implies #(raw_data_item_match 1.0R i0 _) ();
         let i1 = cbor_array_index c.cbor_read_payload 1sz;
-        stick_trans () #_ #_ #(A.pts_to input #p s);
+        stick_trans () #_ #_ #(pts_to input #p s);
         let cbor_str = cbor_destr_string i1;
-        stick_trans () #_ #_ #(A.pts_to input #p s);
-        with cs ps . assert (A.pts_to cbor_str.cbor_string_payload #ps cs);
+        stick_trans () #_ #_ #(pts_to input #p s);
+        with cs ps . assert (pts_to cbor_str.cbor_string_payload #ps cs);
         let msg = cbor_read_deterministically_encoded_with_typ impl_command_message cbor_str.cbor_string_payload (SZ.of_u64 cbor_str.cbor_string_length);
         if (not msg.cbor_read_is_success) {
             unfold (cbor_read_deterministically_encoded_with_typ_post Spec.command_message cbor_str.cbor_string_payload ps cs msg);
@@ -264,13 +264,13 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
             unfold (cbor_read_deterministically_encoded_with_typ_post Spec.command_message cbor_str.cbor_string_payload ps cs msg);
             unfold (cbor_read_deterministically_encoded_with_typ_success_post Spec.command_message cbor_str.cbor_string_payload ps cs msg);
             with vmsg . assert (raw_data_item_match 1.0R msg.cbor_read_payload vmsg);
-            with vrem2 . assert (A.pts_to msg.cbor_read_remainder #ps vrem2);
+            with vrem2 . assert (pts_to msg.cbor_read_remainder #ps vrem2);
             stick_consume_r ()
               #(raw_data_item_match 1.0R msg.cbor_read_payload vmsg)
-              #(A.pts_to msg.cbor_read_remainder #ps vrem2)
-              #(A.pts_to cbor_str.cbor_string_payload #ps cs)
+              #(pts_to msg.cbor_read_remainder #ps vrem2)
+              #(pts_to cbor_str.cbor_string_payload #ps cs)
             ;
-            stick_trans () #_ #_ #(A.pts_to input #p s);
+            stick_trans () #_ #_ #(pts_to input #p s);
             if (msg.cbor_read_remainder_length <> 0sz) {
               elim_implies ();
               serialize_cbor_inj' vmsg vrem2;
@@ -283,7 +283,7 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
               let cmd_id = cmd_id_int.cbor_int_value;
               elim_implies #(raw_data_item_match 1.0R cmd_id_cbor _) ();
               let cmd_args = cbor_array_index msg.cbor_read_payload 1sz;
-              stick_trans () #_ #_ #(A.pts_to input #p s);
+              stick_trans () #_ #_ #(pts_to input #p s);
               with vargs . assert (raw_data_item_match 1.0R cmd_args vargs);
 
               let res = {
@@ -291,8 +291,8 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
                 dpe_cmd_cid = cmd_id;
                 dpe_cmd_args = cmd_args;
               };
-              rewrite (raw_data_item_match 1.0R cmd_args vargs ** (raw_data_item_match 1.0R cmd_args vargs @==> A.pts_to input #p s)) // FIXME: should `fold` honor projectors and not just `match`?
-                as (raw_data_item_match 1.0R res.dpe_cmd_args vargs ** (raw_data_item_match 1.0R res.dpe_cmd_args vargs @==> A.pts_to input #p s));
+              rewrite (raw_data_item_match 1.0R cmd_args vargs ** (raw_data_item_match 1.0R cmd_args vargs @==> pts_to input #p s)) // FIXME: should `fold` honor projectors and not just `match`?
+                as (raw_data_item_match 1.0R res.dpe_cmd_args vargs ** (raw_data_item_match 1.0R res.dpe_cmd_args vargs @==> pts_to input #p s));
               fold (parse_dpe_cmd_post len input s p (Some res));
               Some res
             }

@@ -3,7 +3,7 @@ PULSE_HOME ?= $(realpath ../..)
 all: verify
 
 SRC_DIRS := . core lib lib/class lib/pledge c
-FSTAR_OPTIONS += --already_cached '*,-Pulse,-PulseCore' --load_cmxs pulse
+FSTAR_OPTIONS += --already_cached '*,-Pulse,-PulseCore'
 
 include $(PULSE_HOME)/share/pulse/Makefile.include-base
 

@@ -31,14 +31,14 @@ instance non_informative_cinv = {
 }
 
 let cinv_vp_aux (r:GR.ref bool) (v:slprop) : (w:slprop { is_storable v ==> is_storable w }) =
-  exists* (b:bool). GR.pts_to r #0.5R b **
+  exists* (b:bool). pts_to r #0.5R b **
                     (if b then v else emp)
 
 let cinv_vp c v = cinv_vp_aux c.r v
 
 let is_storable_cinv_vp _ _ = ()
 
-let active c p = GR.pts_to c.r #(p /. 2.0R) true
+let active c p = pts_to c.r #(p /. 2.0R) true
 
 let active_is_slprop2 p c = ()
 
@@ -59,12 +59,12 @@ fn new_cancellable_invariant (v:slprop { is_storable v })
   let i = new_invariant (cinv_vp_aux r v);
   let c = {i;r};
   rewrite (inv i (cinv_vp_aux r v)) as (inv (iname_of c) (cinv_vp c v));
-  with _p _v. rewrite (GR.pts_to r #_p _v) as (active c 1.0R);
+  with _p _v. rewrite (pts_to r #_p _v) as (active c 1.0R);
   c
 }
 
 
-let unpacked c _v = GR.pts_to c.r #0.5R true
+let unpacked c _v = pts_to c.r #0.5R true
 
 
 
@@ -148,7 +148,7 @@ opens []
   GR.share2 c.r;
   fold (cinv_vp_aux c.r v);
   fold (cinv_vp c v);
-  drop_ (GR.pts_to c.r #0.5R _)
+  drop_ (pts_to c.r #0.5R _)
 }
 
 

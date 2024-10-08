@@ -2,10 +2,7 @@
   "fstar_exe": "fstar.exe",
   "options": [
     "--query_cache",
-    "--load_cmxs",
-    "pulse",
-    "--ext",
-    "context_pruning"
+    "--ext", "context_pruning"
   ],
   "include_dirs": [
     "lib/pulse",

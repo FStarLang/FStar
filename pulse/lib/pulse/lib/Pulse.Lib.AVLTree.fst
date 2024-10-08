@@ -97,7 +97,7 @@ ensures
 }
 
 
-let is_tree_cases #t x ft
+let is_tree_cases #t (x : option (ref (node t))) ft
 = match x with
   | None -> pure (ft == T.Leaf)
   | Some v -> 

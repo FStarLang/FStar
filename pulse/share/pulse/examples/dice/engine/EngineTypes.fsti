@@ -55,8 +55,8 @@ let mk_engine_repr  l0_image_header_size l0_image_header l0_image_header_sig
 
 let engine_record_perm (record:engine_record_t) (p:perm) (repr:engine_record_repr)
   : slprop = 
-  V.pts_to record.l0_image_header #p repr.l0_image_header **
-  V.pts_to record.l0_image_header_sig #p repr.l0_image_header_sig **
-  V.pts_to record.l0_binary #p repr.l0_binary **
-  V.pts_to record.l0_binary_hash #p repr.l0_binary_hash **
-  V.pts_to record.l0_image_auth_pubkey #p repr.l0_image_auth_pubkey
+  pts_to record.l0_image_header #p repr.l0_image_header **
+  pts_to record.l0_image_header_sig #p repr.l0_image_header_sig **
+  pts_to record.l0_binary #p repr.l0_binary **
+  pts_to record.l0_binary_hash #p repr.l0_binary_hash **
+  pts_to record.l0_image_auth_pubkey #p repr.l0_image_auth_pubkey

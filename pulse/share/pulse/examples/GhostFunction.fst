@@ -29,8 +29,8 @@ assume val f (x:int) : GTot int
 
 ghost
 fn test_gtot (x:GR.ref int)
-  requires GR.pts_to x 0
-  ensures GR.pts_to x (f 0)
+  requires pts_to x 0
+  ensures pts_to x (f 0)
 {
   open GR;
   let y = f 0;
@@ -40,8 +40,8 @@ fn test_gtot (x:GR.ref int)
 
 
 fn increment (x:GR.ref int) (#n:erased int)
-    requires GR.pts_to x n
-    ensures GR.pts_to x (n + 1)
+    requires pts_to x n
+    ensures pts_to x (n + 1)
 {  
    open GR;
    let v = !x;
@@ -52,8 +52,8 @@ fn increment (x:GR.ref int) (#n:erased int)
 
 ghost
 fn incrementg (x:GR.ref int) (#n:erased int)
-    requires GR.pts_to x n
-    ensures GR.pts_to x (n + 1)
+    requires pts_to x n
+    ensures pts_to x (n + 1)
 {
    open GR;
    let v = !x;
@@ -64,8 +64,8 @@ fn incrementg (x:GR.ref int) (#n:erased int)
 
 ghost
 fn test_gtot_app_f (x:GR.ref int) (y:int)
-  requires GR.pts_to x 0
-  ensures GR.pts_to x y
+  requires pts_to x 0
+  ensures pts_to x y
 {
   open GR;
   x := y
@@ -78,8 +78,8 @@ fn test_gtot_app_f (x:GR.ref int) (y:int)
 
 ghost
 fn test_gtot_app (x:GR.ref int)
-  requires GR.pts_to x 0
-  ensures GR.pts_to x (f 0)
+  requires pts_to x 0
+  ensures pts_to x (f 0)
 {
   test_gtot_app_f x (f 0)
 }

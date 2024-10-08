@@ -36,14 +36,14 @@ let rec is_deque_suffix
   = match l with
     | [n] ->
       exists* (v:node t).
-        Box.pts_to p v **
+        pts_to p v **
         pure (v.value == n /\
           v.dnext == last /\
           v.dprev == prev /\
           p == tail)
     | n::ns ->
       exists* (v:node t) (np:node_ptr t).
-        Box.pts_to p v **
+        pts_to p v **
         is_deque_suffix np ns (Some p) tail last **
         pure (v.value == n /\
           v.dprev == prev /\
@@ -61,7 +61,7 @@ fn fold_is_deque_suffix_cons
   (last:option (node_ptr t))
   (v : node t) (np : node_ptr t)
   requires
-    Box.pts_to p v **
+    pts_to p v **
     is_deque_suffix np ns (Some p) tail last **
     pure (v.value == n /\
       v.dprev == prev /\
@@ -281,7 +281,7 @@ let is_deque_suffix_factored
    (last : option (node_ptr t))
 : Tot slprop
   = exists* (v:node t).
-      Box.pts_to x v **
+      pts_to x v **
       pure (
         v.value == List.Tot.hd l /\
         v.dprev == prev
@@ -305,14 +305,14 @@ fn factor_is_deque_suffix
     Nil -> {
       assert (pure (l == [hd]));
       unfold (is_deque_suffix p [hd] prev tail);
-      with v. assert (Box.pts_to p v);
+      with v. assert (pts_to p v);
       fold (is_deque_suffix_factored_next p [hd] tail last v.dnext);
       fold (is_deque_suffix_factored p [hd] prev tail last);
     }
     Cons y ys -> {
       assert (pure (l == hd::y::ys));
       unfold (is_deque_suffix p (hd::y::ys) prev tail);
-      with v. assert (Box.pts_to p v);
+      with v. assert (pts_to p v);
       fold (is_deque_suffix_factored_next p (hd::y::ys) tail last v.dnext);
       fold (is_deque_suffix_factored p (hd::y::ys) prev tail last);
     }
@@ -333,7 +333,7 @@ fn unfactor_is_deque_suffix
      is_deque_suffix p l prev tail last
 {
   unfold (is_deque_suffix_factored p l prev tail last);
-  with v. assert (Box.pts_to p v);
+  with v. assert (pts_to p v);
   unfold (is_deque_suffix_factored_next p l tail last v.dnext);
   let hd : t = List.Tot.hd l;
   let tl : list t = List.Tot.tl l;
@@ -365,7 +365,7 @@ fn set_back_pointer
 {
   factor_is_deque_suffix x l prev tail;
   unfold (is_deque_suffix_factored x l prev tail);
-  with v. assert (Box.pts_to x v);
+  with v. assert (pts_to x v);
   let cv = Box.( !x );
   let cv' = { cv with dprev = prev' };
   Box.( x := cv' );
@@ -589,7 +589,7 @@ fn is_singleton
   factor_is_deque_suffix headp _ _ _;
   unfold is_deque_suffix_factored;
 
-  with v. assert (Box.pts_to headp v);
+  with v. assert (pts_to headp v);
   let vv = Box.( !headp );
   rewrite each v as vv;
 
@@ -663,7 +663,7 @@ fn rec join_last
   (#last : erased (option (node_ptr t)))
   (#v : erased (node t))
   requires is_deque_suffix headp ys prev tailp (Some tailp') **
-           Box.pts_to tailp' v **
+           pts_to tailp' v **
            pure (v.value == y /\ v.dprev == Some (reveal tailp) /\ v.dnext == last)
   ensures  is_deque_suffix headp (snoc ys y) prev tailp' last
   decreases length ys
@@ -772,7 +772,7 @@ fn rec sep_last
   requires is_deque_suffix headp (snoc ys y) prev tailp last
   returns  tailp' : erased (node_ptr t)
   ensures  is_deque_suffix headp ys prev tailp' (Some tailp) **
-           (exists* v. Box.pts_to tailp v
+           (exists* v. pts_to tailp v
                     ** pure (v.value == y /\ v.dprev == Some (reveal tailp') /\ v.dnext == last))
   decreases length ys
 {
@@ -787,7 +787,7 @@ fn rec sep_last
         is_deque_suffix headp [y1; reveal y] prev tailp last;
 
       unfold is_deque_suffix;
-      with v_headp. assert (Box.pts_to headp v_headp);
+      with v_headp. assert (pts_to headp v_headp);
       with np. assert (is_deque_suffix np [reveal y] (Some headp) tailp last);
       unfold is_deque_suffix np [reveal y] (Some headp) tailp last;
 
@@ -807,7 +807,7 @@ fn rec sep_last
 
       unfold (is_deque_suffix headp (y1 :: y2 :: snoc ys' y) prev tailp last);
       
-      with v np. assert (Box.pts_to headp v ** is_deque_suffix np (y2 :: snoc ys' y) (Some headp) tailp last);
+      with v np. assert (pts_to headp v ** is_deque_suffix np (y2 :: snoc ys' y) (Some headp) tailp last);
       rewrite is_deque_suffix np (y2 :: snoc ys' y) (Some headp) tailp last
            as is_deque_suffix np (snoc (y2 :: ys') y) (Some headp) tailp last;
       let tailp' = sep_last np tailp;
@@ -832,7 +832,7 @@ let rec is_deque_suffix_nolast
       pure (p == tail)
     | n::ns ->
       exists* (v:node t) (np:node_ptr t).
-        Box.pts_to p v **
+        pts_to p v **
         is_deque_suffix_nolast np ns (Some p) tail **
         pure (v.value == n /\
           v.dprev == prev /\
@@ -850,8 +850,8 @@ fn rec is_deque_suffix_nolast_helper
   (last' : option (node_ptr t))
   requires is_deque_suffix p l prev tail last
   returns  v : erased (node t)
-  ensures  Box.pts_to tail v **
-           trade (Box.pts_to tail { v with dnext = last' }) (is_deque_suffix p l prev tail last')
+  ensures  pts_to tail v **
+           trade (pts_to tail { v with dnext = last' }) (is_deque_suffix p l prev tail last')
   decreases length l
 {
   let hd = List.Tot.hd l;
@@ -862,11 +862,11 @@ fn rec is_deque_suffix_nolast_helper
     Nil -> {
       unfold is_deque_suffix p [hd] prev tail last;
       rewrite each p as tail;
-      with v. assert (Box.pts_to tail v);
+      with v. assert (pts_to tail v);
       ghost fn pf ()
         requires
           emp **
-          Box.pts_to tail ({ v with dnext = last' })
+          pts_to tail ({ v with dnext = last' })
         ensures
           is_deque_suffix p [hd] prev tail last'
       {
@@ -874,7 +874,7 @@ fn rec is_deque_suffix_nolast_helper
         fold (is_deque_suffix p [hd] prev tail last');
       };
       intro_trade
-        (Box.pts_to tail { v with dnext = last' })
+        (pts_to tail { v with dnext = last' })
         (is_deque_suffix p [hd] prev tail last')
         emp
         pf;
@@ -884,7 +884,7 @@ fn rec is_deque_suffix_nolast_helper
       rewrite each l as (hd :: h2 :: tl2);
       unfold is_deque_suffix p (hd :: h2 :: tl2) prev tail last;
       
-      with vp. assert (Box.pts_to p vp);
+      with vp. assert (pts_to p vp);
       let p' = Some?.v vp.dnext;
       
       let v = is_deque_suffix_nolast_helper p' (h2 :: tl2) (Some p) tail last last';
@@ -892,10 +892,10 @@ fn rec is_deque_suffix_nolast_helper
       ghost fn pf ()
         requires
           (
-            Box.pts_to p vp **
-            trade (Box.pts_to tail { v with dnext = last' }) (is_deque_suffix p' (h2 :: tl2) (Some p) tail last')
+            pts_to p vp **
+            trade (pts_to tail { v with dnext = last' }) (is_deque_suffix p' (h2 :: tl2) (Some p) tail last')
           ) **
-          Box.pts_to tail ({ v with dnext = last' })
+          pts_to tail ({ v with dnext = last' })
         ensures
           is_deque_suffix p (hd :: h2 :: tl2) prev tail last'
       {
@@ -903,11 +903,11 @@ fn rec is_deque_suffix_nolast_helper
         fold (is_deque_suffix p (hd :: h2 :: tl2) prev tail last');
       };
       intro_trade
-        (Box.pts_to tail { v with dnext = last' })
+        (pts_to tail { v with dnext = last' })
         (is_deque_suffix p (hd :: h2 :: tl2) prev tail last')
         (
-          Box.pts_to p vp **
-          trade (Box.pts_to tail { v with dnext = last' }) (is_deque_suffix p' (h2 :: tl2) (Some p) tail last')
+          pts_to p vp **
+          trade (pts_to tail { v with dnext = last' }) (is_deque_suffix p' (h2 :: tl2) (Some p) tail last')
         )
         pf;
 

@@ -126,7 +126,7 @@ fn array_swap_aux(#t: Type0) (a: A.array t) (lb: SZ.t) (rb: SZ.t) (mb: (mb: SZ.t
     while (let i = !pi; ((i `SZ.sub` lb) `size_lt` d))
     invariant b . exists* s i . (
       A.pts_to_range a (Ghost.reveal (SZ.v lb)) (Ghost.reveal (SZ.v rb)) s **
-      R.pts_to pi i **
+      pts_to pi i **
       pure (
         SZ.v i >= SZ.v lb /\
         SZ.v i < SZ.v rb /\
@@ -140,9 +140,9 @@ fn array_swap_aux(#t: Type0) (a: A.array t) (lb: SZ.t) (rb: SZ.t) (mb: (mb: SZ.t
       while (let j = !pj; (j `size_lt` (size_sub q 1sz ())))
       invariant b . exists* s j idx . (
         A.pts_to_range a (Ghost.reveal (SZ.v lb)) (Ghost.reveal (SZ.v rb)) s **
-        R.pts_to pi i **
-        R.pts_to pj j **
-        R.pts_to pidx idx **
+        pts_to pi i **
+        pts_to pj j **
+        pts_to pidx idx **
         pure (
           SZ.v idx >= SZ.v lb /\
           SZ.v idx < SZ.v rb /\

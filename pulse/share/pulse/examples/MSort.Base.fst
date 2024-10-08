@@ -121,8 +121,8 @@ merge_impl
       pts_to i vi **
       pts_to j vj **
       pts_to k vk **
-      A.pts_to sw1 (reveal s1) **
-      A.pts_to sw2 (reveal s2) **
+      pts_to sw1 (reveal s1) **
+      pts_to sw2 (reveal s2) **
       pts_to_range a (SZ.v lo) (SZ.v hi) ss **
       pure (SZ.v vi <= SZ.v l1 /\ SZ.v vj <= SZ.v l2 /\ vk == vi `SZ.add` vj /\
             (ss == S.append (merge (stake (SZ.v vi) (reveal s1)) (stake (SZ.v vj) (reveal s2)))
