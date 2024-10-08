@@ -11,6 +11,10 @@ pub fn test(arr: &mut [u8]) -> () {
         (mut s1, mut s2) => {
             let x = s2[2];
             s1[1] = x;
+            let _letpattern1 = s2.split_at_mut(2);
+            match _letpattern1 {
+                (mut s3, mut s4) => s3.copy_from_slice(s4),
+            }
         }
     }
 }

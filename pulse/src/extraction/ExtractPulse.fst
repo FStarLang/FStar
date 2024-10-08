@@ -136,10 +136,9 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     when string_of_mlpath p = "Pulse.Lib.ArrayPtr.op_Array_Assignment" ->
     EBufWrite (translate_expr env e, translate_expr env i, translate_expr env v)
 
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _; _; _; _; _; e1; e2; e3; e4; e5 ]) when (
-      string_of_mlpath p = "Pulse.Lib.ArrayPtr.blit"
-    ) ->
-      EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _; _; _; e1; e2; e3; e4; e5 ])
+    when string_of_mlpath p = "Pulse.Lib.ArrayPtr.blit" ->
+    EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
 
 
   (* Pulse control, while etc *)

@@ -660,6 +660,9 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e::_::i::_)
     when S.string_of_mlpath p = "Pulse.Lib.Slice.split" ->
     mk_method_call (extract_mlexpr g e) "split_at_mut" [extract_mlexpr g i]
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, a::_::b::_)
+    when S.string_of_mlpath p = "Pulse.Lib.Slice.copy" ->
+    mk_method_call (extract_mlexpr g a) "copy_from_slice" [extract_mlexpr g b]
 
     //
     // vec_as_array e extracted to &mut e

@@ -72,7 +72,7 @@ $(RUST_SRC_DIR)/pulsetutorial_loops.rs: $(OUTPUT_DIRECTORY)/PulseTutorial_Loops.
 	$(MAIN) -odir $(RUST_SRC_DIR) $+
 
 $(RUST_SRC_DIR)/pulsetutorial_algorithms.rs: $(OUTPUT_DIRECTORY)/PulseTutorial_Algorithms.ast
-	$(main) -odir $(rust_src_dir) $+
+	$(MAIN) -odir $(RUST_SRC_DIR) $+
 
 $(RUST_SRC_DIR)/example_slice.rs: $(OUTPUT_DIRECTORY)/Example_Slice.ast
 	$(MAIN) -odir $(RUST_SRC_DIR) $+

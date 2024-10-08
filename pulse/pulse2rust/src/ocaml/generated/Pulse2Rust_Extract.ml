@@ -1248,6 +1248,26 @@ and (extract_mlexpr :
                 uu___2::[]);
              FStar_Extraction_ML_Syntax.mlty = uu___3;
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           a::uu___5::b::uu___6)
+          when
+          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___7 = "Pulse.Lib.Slice.copy" ->
+          let uu___7 = extract_mlexpr g a in
+          let uu___8 = let uu___9 = extract_mlexpr g b in [uu___9] in
+          Pulse2Rust_Rust_Syntax.mk_method_call uu___7 "copy_from_slice"
+            uu___8
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::[])
           when
           let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
