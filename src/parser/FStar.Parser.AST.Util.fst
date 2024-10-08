@@ -748,13 +748,13 @@ let register_extension_parser (ext:string) (parser:extension_parser) =
   FStar.Compiler.Util.smap_add extension_parser_table ext parser
 
 let lookup_extension_parser (ext:string) =
-  let r = FStar.Compiler.Util.smap_try_find extension_parser_table ext in
-  match r with
+  let do () = FStar.Compiler.Util.smap_try_find extension_parser_table ext in
+  match do () with
   | None ->
     if Plugins.autoload_plugin ext
-    then FStar.Compiler.Util.smap_try_find extension_parser_table ext
+    then do ()
     else None
-  | _ -> r
+  | r -> r
 
 let as_open_namespaces_and_abbrevs (ls:list decl)
 : open_namespaces_and_abbreviations

@@ -18,6 +18,8 @@ module FStar.Compiler.Plugins.Base
 
 open FStar.Compiler.Effect
 
+val loaded : ref (list string)
+
 val load_tactics         : list string -> unit
 val load_tactics_dir     : string -> unit
 val compile_modules      : string -> list string -> unit

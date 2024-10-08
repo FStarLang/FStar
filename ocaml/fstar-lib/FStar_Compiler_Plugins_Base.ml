@@ -6,6 +6,8 @@ module EC = FStar_Errors_Codes
 module EM = FStar_Errors_Msg
 module O = FStar_Options
 
+let loaded : (string list) ref = ref []
+
 let pout  s   = if FStar_Compiler_Debug.any () then U.print_string s
 let pout1 s x = if FStar_Compiler_Debug.any () then U.print1 s x
 let perr  s   = if FStar_Compiler_Debug.any () then U.print_error s
@@ -27,6 +29,7 @@ let dynlink (fname:string) : unit =
 
 let load_tactic tac =
   dynlink tac;
+  loaded := tac :: !loaded;
   pout1 "Loaded %s\n" tac
 
 let load_tactics tacs =

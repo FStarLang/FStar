@@ -70,10 +70,12 @@ let register_extension_extractor (ext:string) (callback:extension_extractor) =
   FStar.Compiler.Util.smap_add extension_extractor_table ext callback
 
 let lookup_extension_extractor (ext:string) =
-  match FStar.Compiler.Util.smap_try_find extension_extractor_table ext with
+  (* Try to find a plugin if lookup fails *)
+  let do () = FStar.Compiler.Util.smap_try_find extension_extractor_table ext in
+  match do () with
   | None ->
     if Plugins.autoload_plugin ext
-    then FStar.Compiler.Util.smap_try_find extension_extractor_table ext
+    then do ()
     else None
   | r -> r
 
