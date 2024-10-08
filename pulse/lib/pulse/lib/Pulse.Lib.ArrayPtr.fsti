@@ -20,7 +20,15 @@ open Pulse.Lib.Pervasives
 module SZ = FStar.SizeT
 module A = Pulse.Lib.Array
 
-(* This module can be used only for Pulse programs extracted to C, not Rust. *)
+(*
+The `ArrayPtr.ptr t` type in this module cannot be extracted to Rust
+because of the `split` operation, which assumes that the same pointer
+can point to either the large subarray or its sub-subarray, depending on the permission.
+Rust slices have the length baked in, so they cannot support this operation
+without modifying the pointer.
+
+Use `Pulse.Lib.Slice.slice` instead when possible.
+*)
 
 val ptr : Type0 -> Type0
 
