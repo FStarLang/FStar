@@ -2943,11 +2943,7 @@ let run_unembedded_tactic_on_ps_and_solve_remaining
   remaining_goals |> List.iter (fun g ->
       match getprop (goal_env g) (goal_type g) with
       | Some vc ->
-          let guard = { guard_f = NonTrivial vc
-                      ; deferred_to_tac = []
-                      ; deferred = []
-                      ; univ_ineqs = [], []
-                      ; implicits = Listlike.empty } in
+          let guard = guard_of_guard_formula (NonTrivial vc) in
           Rel.force_trivial_guard (goal_env g) guard
       | None ->
           Err.raise_error g_range Err.Fatal_OpenGoalsInSynthesis "tactic left a computationally-relevant goal unsolved");
@@ -2980,11 +2976,7 @@ let run_tactic_on_ps_and_solve_remaining
   remaining_goals |> List.iter (fun g ->
       match getprop (goal_env g) (goal_type g) with
       | Some vc ->
-          let guard = { guard_f = NonTrivial vc
-                      ; deferred_to_tac = []
-                      ; deferred = []
-                      ; univ_ineqs = [], []
-                      ; implicits = Listlike.empty } in
+          let guard = guard_of_guard_formula (NonTrivial vc) in
           Rel.force_trivial_guard (goal_env g) guard
       | None ->
           Err.raise_error g_range Err.Fatal_OpenGoalsInSynthesis "tactic left a computationally-relevant goal unsolved");
