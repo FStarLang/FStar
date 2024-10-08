@@ -36,7 +36,7 @@ val pts_to_len (#t: Type) (s: slice t) (#p: perm) (#v: Seq.seq t) : stt_ghost un
 
 val is_from_array (#t: Type) (a: array t) (s: slice t) : slprop
 
-val from_array (#t: Type) (a: array t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (alen: SZ.t { SZ.v alen == A.length a }) : stt (slice t)
+val from_array (#t: Type) (a: array t) (#p: perm) (alen: SZ.t) (#v: Ghost.erased (Seq.seq t) { SZ.v alen == A.length a }) : stt (slice t)
     (A.pts_to a #p v)
     (fun s -> pts_to s #p v ** is_from_array a s)
 

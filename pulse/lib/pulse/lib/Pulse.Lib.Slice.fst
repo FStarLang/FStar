@@ -67,8 +67,8 @@ fn pts_to_len (#t: Type) (s: slice t) (#p: perm) (#v: Seq.seq t)
 let is_from_array a s =
   AP.is_from_array s.elt (SZ.v s.len) a
 
-fn from_array (#t: Type) (a: array t) (#p: perm) (#v: Ghost.erased (Seq.seq t))
-  (alen: SZ.t { SZ.v alen == A.length a })
+fn from_array (#t: Type) (a: array t) (#p: perm) (alen: SZ.t)
+    (#v: Ghost.erased (Seq.seq t) { SZ.v alen == A.length a })
   requires A.pts_to a #p v
   returns s: (slice t)
   ensures 
