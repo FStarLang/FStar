@@ -100,7 +100,7 @@ let (load_native_tactics : unit -> unit) =
              | FStar_Pervasives_Native.Some ml ->
                  let dir = FStar_Compiler_Util.dirname ml in
                  ((let uu___5 = let uu___6 = ml_module_name m in [uu___6] in
-                   FStar_Tactics_Load.compile_modules dir uu___5);
+                   FStar_Compiler_Plugins.compile_modules dir uu___5);
                   (let uu___5 = FStar_Options.find_file cmxs in
                    match uu___5 with
                    | FStar_Pervasives_Native.None ->
@@ -123,9 +123,10 @@ let (load_native_tactics : unit -> unit) =
        FStar_Compiler_Util.print1 "Will try to load cmxs files: [%s]\n"
          (FStar_Compiler_String.concat ", " cmxs_files)
      else ());
-    FStar_Tactics_Load.load_tactics cmxs_files;
+    FStar_Compiler_Plugins.load_plugins cmxs_files;
     (let uu___4 = FStar_Options.use_native_tactics () in
-     FStar_Compiler_Util.iter_opt uu___4 FStar_Tactics_Load.load_tactics_dir)
+     FStar_Compiler_Util.iter_opt uu___4
+       FStar_Compiler_Plugins.load_plugins_dir)
 let (fstar_files :
   Prims.string Prims.list FStar_Pervasives_Native.option
     FStar_Compiler_Effect.ref)

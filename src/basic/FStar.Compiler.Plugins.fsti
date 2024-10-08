@@ -14,10 +14,17 @@
    limitations under the License.
 *)
 
-module FStar.Tactics.Load
+module FStar.Compiler.Plugins
 
 open FStar.Compiler.Effect
+include FStar.Compiler.Plugins.Base
 
-val load_tactics         : list string -> unit
-val load_tactics_dir     : string -> unit
+val load_plugin          : string -> unit
+val load_plugins         : list string -> unit
+val load_plugins_dir     : string -> unit
 val compile_modules      : string -> list string -> unit
+
+(* Tries to load a plugin named like the extension. Returns true
+if it could find a plugin with the proper name. This will fail hard
+if loading the plugin fails. *)
+val autoload_plugin (ext:string) : bool

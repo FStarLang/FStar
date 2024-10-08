@@ -14,11 +14,10 @@
    limitations under the License.
 *)
 
-module FStar.Tactics.Load
-open FStar.Compiler.Effect
-open FStar.Compiler
+module FStar.Compiler.Plugins.Base
 
-let load_tactic (tac: string) : unit = failwith "load_tactic: Not implemented in F#"
-let load_tactics (tacs: list string) = List.iter load_tactic tacs
-let load_tactics_dir (dir: string) : unit = failwith "load_tactics_dir: Not implemented in F#"
-let compile_modules (dir: string) (tacs: list string) : unit = failwith "compile_modules: Not implemented in F#"
+open FStar.Compiler.Effect
+
+exception DynlinkError of string
+
+val dynlink_loadfile : string -> unit
