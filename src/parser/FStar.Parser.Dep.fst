@@ -1521,8 +1521,10 @@ let collect (all_cmd_line_files: list file_name)
       with_file_outchannel fn (fun outc -> print_graph outc fn dep_graph);
 
       print_string "\n";
-      raise_error0 Errors.Fatal_CyclicDependence
-        (BU.format1 "Recursive dependency on module %s\n" filename)
+      raise_error0 Errors.Fatal_CyclicDependence [
+        text (BU.format1 "Recursive dependency on module %s." filename);
+        text "A full dependency graph was written to dep.graph.";
+      ]
   in
   (* full_cycle_detection finds cycles across interface
      boundaries that can otherwise be exploited to
