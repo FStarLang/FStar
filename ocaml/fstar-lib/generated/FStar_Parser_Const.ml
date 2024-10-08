@@ -296,6 +296,8 @@ let (deprecated_attr : FStar_Ident.lident) = pconst "deprecated"
 let (warn_on_use_attr : FStar_Ident.lident) = pconst "warn_on_use"
 let (inline_let_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "inline_let"]
+let (no_inline_let_attr : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "no_inline_let"]
 let (rename_let_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "rename_let"]
 let (plugin_attr : FStar_Ident.lident) =

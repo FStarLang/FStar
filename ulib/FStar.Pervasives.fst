@@ -141,6 +141,8 @@ let rec false_elim #_ _ = false_elim ()
 
 let inline_let = ()
 
+let no_inline_let = ()
+
 let rename_let _ = ()
 
 let plugin _ = ()

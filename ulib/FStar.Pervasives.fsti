@@ -847,6 +847,12 @@ type __internal_ocaml_attributes =
     size. *)
 val inline_let : unit
 
+(** The [no_inline_let] attribute on a local let-binding prevents the
+    normalizer from unfolding the definition of a local let-binding. This
+    attribute can be useful when processing definitions with tactics, as
+    otherwise the normalizer will eagerly unfold all pure definitions. *)
+val no_inline_let : unit
+
 (** The [rename_let] attribute support a form of metaprogramming for
     the names of let-bound variables used in extracted code.
 
