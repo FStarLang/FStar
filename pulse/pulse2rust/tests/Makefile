@@ -20,6 +20,7 @@ RUST_SRC_DIR=src
 RUST_OUT_DIR=out
 DPE_OUTPUT_DIR=../dpe/src/generated
 
+.PHONY: all
 all: test dpe
 
 include $(PULSE_HOME)/share/pulse/Makefile.include
@@ -79,23 +80,28 @@ $(RUST_SRC_DIR)/example_slice.rs: $(OUTPUT_DIRECTORY)/Example_Slice.ast
 %.rlib: %.rs
 	rustc --crate-type rlib -o $@ $+
 
-DPE_FILES = EngineTypes.ast \
-  EngineCore.ast \
+DPE_FILES = $(addprefix $(OUTPUT_DIRECTORY)/, \
+	EngineTypes.ast \
+	EngineCore.ast \
 	HACL.ast \
 	L0Types.ast \
 	Pulse_Lib_HashTable_Type.ast \
 	Pulse_Lib_HashTable_Spec.ast \
 	Pulse_Lib_HashTable.ast \
 	DPETypes.ast \
-	DPE.ast
+	DPE.ast \
+)
 
 DPE_LIB = L0Core,Pulse.Lib.Array,FStar.SizeT,EverCrypt.HMAC,EverCrypt.Hash.Incremental,EverCrypt.Ed25519,EverCrypt.AutoConfig2,Spec.Hash.Definitions
 
+.PHONY: dpe.rs
 dpe.rs: $(DPE_FILES)
-	$(MAIN) -odir $(DPE_OUTPUT_DIR)/ -lib $(DPE_LIB) $(addprefix $(OUTPUT_DIRECTORY)/, $^)
+	$(MAIN) -odir $(DPE_OUTPUT_DIR)/ -lib $(DPE_LIB) $^
 
+.PHONY: all-rs
 all-rs: $(addprefix $(RUST_SRC_DIR)/, pulsetutorial_loops.rlib pulsetutorial_algorithms.rs pulsetutorial_array.rs example_slice.rlib)
 
+.PHONY: test
 test: all-rs
 	cargo test
 
@@ -103,6 +109,7 @@ test: all-rs
 external:
 	../dpe/gen-rust-bindings.sh
 
+.PHONY: dpe
 dpe: dpe.rs external
 	cd ../dpe && cargo build && cd -
 	$(MAKE) -C ../dpe -f c.Makefile
