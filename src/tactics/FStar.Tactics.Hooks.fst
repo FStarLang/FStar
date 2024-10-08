@@ -29,6 +29,7 @@ open FStar.TypeChecker.Common
 open FStar.Tactics.Types
 open FStar.Tactics.Interpreter
 open FStar.Class.Show
+module Listlike = FStar.Class.Listlike
 
 module BU      = FStar.Compiler.Util
 module Range   = FStar.Compiler.Range
@@ -716,11 +717,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
             begin
             if !dbg_Tac then
               BU.print1 "Synthesis left a goal: %s\n" (show vc);
-            let guard = { guard_f = NonTrivial vc
-                        ; deferred_to_tac = []
-                        ; deferred = []
-                        ; univ_ineqs = [], []
-                        ; implicits = Flat [] } in
+            let guard = guard_of_guard_formula (NonTrivial vc) in
             TcRel.force_trivial_guard (goal_env g) guard
             end
         | None ->
@@ -752,11 +749,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
               BU.print1 "Synthesis left a goal: %s\n" (show vc);
             if not env.admit
             then (
-              let guard = { guard_f = NonTrivial vc
-                          ; deferred_to_tac = []
-                          ; deferred = []
-                          ; univ_ineqs = [], []
-                          ; implicits = Flat [] } in
+              let guard = guard_of_guard_formula (NonTrivial vc) in
               Profiling.profile (fun () ->
                 TcRel.force_trivial_guard (goal_env g) guard)
               None
@@ -934,12 +927,8 @@ let splice
             begin
             if !dbg_Tac then
               BU.print1 "Splice left a goal: %s\n" (show vc);
-            let guard = { guard_f = NonTrivial vc
-                        ; deferred_to_tac = []
-                        ; deferred = []
-                        ; univ_ineqs = [], []
-                        ; implicits = Flat [] } in
-              TcRel.force_trivial_guard (goal_env g) guard
+            let guard = guard_of_guard_formula (NonTrivial vc) in
+            TcRel.force_trivial_guard (goal_env g) guard
             end
         | None ->
             Err.raise_error rng Err.Fatal_OpenGoalsInSynthesis "splice left open goals") gs);
@@ -1026,11 +1015,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
             begin
             if !dbg_Tac then
               BU.print1 "Postprocessing left a goal: %s\n" (show vc);
-            let guard = { guard_f = NonTrivial vc
-                        ; deferred_to_tac = []
-                        ; deferred = []
-                        ; univ_ineqs = [], []
-                        ; implicits = Flat [] } in
+            let guard = guard_of_guard_formula (NonTrivial vc) in
             TcRel.force_trivial_guard (goal_env g) guard
             end
         | None ->

@@ -39,6 +39,7 @@ open FStar.Tactics.Common
 open FStar.Class.Show
 open FStar.Class.PP
 open FStar.Class.Monad
+module Listlike = FStar.Class.Listlike
 
 module BU      = FStar.Compiler.Util
 module Cfg     = FStar.TypeChecker.Cfg
@@ -341,7 +342,7 @@ let run_unembedded_tactic_on_ps
                                                                       (fun imp -> show imp.imp_uvar)
                                                                       ps.all_implicits);
 
-          let g = {Env.trivial_guard with TcComm.implicits=Flat ps.all_implicits} in
+          let g = {Env.trivial_guard with TcComm.implicits=Listlike.from_list ps.all_implicits} in
           let g = TcRel.solve_deferred_constraints env g in
           if !dbg_Tac then
               BU.print2 "Checked %s implicits (1): %s\n"

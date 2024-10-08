@@ -41,6 +41,10 @@ open FStar.Class.Deq
 open FStar.Class.Show
 open FStar.Class.Tagged
 open FStar.Class.Setlike
+open FStar.Class.Listlike
+open FStar.Class.Monoid
+module Setlike = FStar.Class.Setlike
+module Listlike = FStar.Class.Listlike
 
 module BU = FStar.Compiler.Util //basic util
 module U = FStar.Syntax.Util
@@ -52,6 +56,7 @@ module PC = FStar.Parser.Const
 module FC = FStar.Const
 module TcComm = FStar.TypeChecker.Common
 module TEQ = FStar.TypeChecker.TermEqAndSimplify
+module CList = FStar.Compiler.CList
 
 let dbg_Disch                = Debug.get_toggle "Disch"
 let dbg_Discharge            = Debug.get_toggle "Discharge"
@@ -93,7 +98,7 @@ let term_is_uvar (uv:ctx_uvar) (t:term) : bool =
   | _ -> false
 
 let binders_as_bv_set (bs:binders) : FlatSet.t bv =
-  from_list (List.map (fun b -> b.binder_bv) bs)
+  Setlike.from_list (List.map (fun b -> b.binder_bv) bs)
 
 (* lazy string, for error reporting *)
 type lstring = Thunk.t string
@@ -136,7 +141,7 @@ type worklist = {
     smt_ok:       bool;                         //whether or not falling back to the SMT solver is permitted
     umax_heuristic_ok: bool;                    //whether or not it's ok to apply a structural match on umax us = umax us'
     tcenv:        Env.env;                      //the top-level environment on which Rel was called
-    wl_implicits: implicits_t;                    //additional uvars introduced
+    wl_implicits: implicits_t;                  //additional uvars introduced
     repr_subcomp_allowed:bool;                  //whether subtyping of effectful computations
                                                 //with a representation (which need a monadic lift)
                                                 //is allowed; disabled by default, enabled in
@@ -201,7 +206,7 @@ let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar & term & w
               } in
     if !dbg_ImplicitTrace then
       BU.print1 "Just created uvar (Rel) {%s}\n" (show ctx_uvar.ctx_uvar_head);
-    ctx_uvar, t, {wl with wl_implicits=Conj (Flat [imp]) wl.wl_implicits}
+    ctx_uvar, t, {wl with wl_implicits = cons imp wl.wl_implicits}
 
 let copy_uvar u (bs:binders) t wl =
   let env = {wl.tcenv with gamma = u.ctx_uvar_gamma } in
@@ -224,7 +229,7 @@ type solution =
 let extend_wl (wl:worklist) (defers:deferred) (defer_to_tac:deferred) (imps:implicits_t) =
   {wl with wl_deferred=wl.wl_deferred@(as_wl_deferred wl defers);
            wl_deferred_to_tac=wl.wl_deferred_to_tac@(as_wl_deferred wl defer_to_tac);
-           wl_implicits=Conj wl.wl_implicits imps}
+           wl_implicits=wl.wl_implicits ++ imps}
 
 type variance =
     | COVARIANT
@@ -315,7 +320,7 @@ let def_scope_wf msg rng r =
     in aux [] r
 
 instance hasBinders_prob : Class.Binders.hasBinders prob = {
-  boundNames = (fun prob -> from_list (List.map (fun b -> b.binder_bv) <| p_scope prob));
+  boundNames = (fun prob -> Setlike.from_list (List.map (fun b -> b.binder_bv) <| p_scope prob));
 }
 
 let def_check_term_scoped_in_prob msg prob phi =
@@ -415,9 +420,9 @@ let empty_worklist env = {
     defer_ok=DeferAny;
     smt_ok=true;
     umax_heuristic_ok=true;
-    wl_implicits=Flat [];
+    wl_implicits=empty;
     repr_subcomp_allowed=false;
-    typeclass_variables = empty();
+    typeclass_variables = Setlike.empty();
 }
 
 let giveup wl (reason : lstring) prob =
@@ -997,7 +1002,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
                            (tag_of head)
                            (tag_of (SS.compress head)))
 
-let no_free_uvars t = is_empty (Free.uvars t) && is_empty (Free.univs t)
+let no_free_uvars t = Setlike.is_empty (Free.uvars t) && Setlike.is_empty (Free.univs t)
 
 (* Deciding when it's okay to issue an SMT query for
  * equating a term whose head symbol is `head` with another term
@@ -1224,12 +1229,12 @@ let restrict_all_uvars env (tgt:ctx_uvar) (bs:binders) (sources:list ctx_uvar) w
 
 let intersect_binders (g:gamma) (v1:binders) (v2:binders) : binders =
     let as_set (v:binders) : RBSet.t bv =
-      v |> List.fold_left (fun out x -> add x.binder_bv out) (empty ())
+      v |> List.fold_left (fun out x -> add x.binder_bv out) (Setlike.empty ())
     in
     let v1_set = as_set v1 in
     let ctx_binders =
         List.fold_left (fun out b -> match b with Binding_var x -> add x out | _ -> out)
-                        (empty ())
+                        (Setlike.empty ())
                         g
     in
     let isect, _ =
@@ -2027,7 +2032,7 @@ let apply_substitutive_indexed_subcomp (env:Env.env)
                 (Range.string_of_range r1)
          else "apply_substitutive_indexed_subcomp") r1 in
       ss@[NT (b.binder_bv, uv_t)],
-      {wl with wl_implicits=Conj g.implicits wl.wl_implicits}) (subst, wl) bs in
+      {wl with wl_implicits=g.implicits ++ wl.wl_implicits}) (subst, wl) bs in
 
   // apply the substitutions to subcomp_c,
   //   and get the precondition from the PURE wp
@@ -2088,7 +2093,7 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
               (Range.string_of_range r1)
        else "apply_ad_hoc_indexed_subcomp") r1 in
 
-  let wl = { wl with wl_implicits = Conj g_uvars.implicits wl.wl_implicits } in
+  let wl = { wl with wl_implicits = g_uvars.implicits ++ wl.wl_implicits } in
 
   let substs =
     List.map2 (fun b t -> NT (b.binder_bv, t))
@@ -2160,7 +2165,7 @@ let lazy_complete_repr (k:lazy_kind) : bool =
   | _ -> false
 
 let has_free_uvars (t:term) : bool =
-  not (is_empty (Free.uvars_uncached t))
+  not (Setlike.is_empty (Free.uvars_uncached t))
 
 let env_has_free_uvars (e:env_t) : bool =
   List.existsb (fun b -> has_free_uvars b.binder_bv.sort) (Env.all_binders e)
@@ -2181,8 +2186,7 @@ let rec solve (probs :worklist) : solution =
     if !dbg_Rel
     then BU.print1 "solve:\n\t%s\n" (wl_to_string probs);
     if !dbg_ImplicitTrace then
-      BU.print1 "solve: wl_implicits = %s\n"
-                    (Common.implicits_to_string (as_implicits probs.wl_implicits));
+      BU.print1 "solve: wl_implicits = %s\n" (show probs.wl_implicits);
 
     match next_prob probs with
     | Some (hd, tl, rank) ->
@@ -2417,7 +2421,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                                      smt_ok=false;
                                      attempting=probs;
                                      wl_deferred=[];
-                                     wl_implicits=Flat []} in
+                                     wl_implicits=Listlike.empty} in
                   let tx = UF.new_transaction () in
                   match solve wl' with
                   | Success (_, defer_to_tac, imps) ->
@@ -2611,7 +2615,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
         begin
         List.iter (def_check_prob "meet_or_join3_sub") sub_probs;
         match solve_t eq_prob ({wl' with defer_ok=NoDefer;
-                                        wl_implicits = Flat [];
+                                        wl_implicits = Listlike.empty;
                                         wl_deferred = [];
                                         attempting=sub_probs}) with
         | Success (_, defer_to_tac, imps) ->
@@ -2824,7 +2828,7 @@ and try_solve_without_smt_or_else
                        umax_heuristic_ok=false;
                        attempting=[];
                        wl_deferred=[];
-                       wl_implicits=Flat []} in
+                       wl_implicits=Listlike.empty} in
     let tx = UF.new_transaction () in
     match try_solve wl' with
     | Success (_, defer_to_tac, imps) ->
@@ -2845,7 +2849,7 @@ and try_solve_then_or_else
       {wl with defer_ok=NoDefer;
                attempting=[];
                wl_deferred=[];
-               wl_implicits=Flat []} in
+               wl_implicits=Listlike.empty} in
     let tx = UF.new_transaction () in
     match try_solve empty_wl with
     | Success (_, defer_to_tac, imps) ->
@@ -2866,7 +2870,7 @@ and try_solve_probs_without_smt
                        umax_heuristic_ok=false;
                        attempting=probs;
                        wl_deferred=[];
-                       wl_implicits=Flat []} in
+                       wl_implicits=Listlike.empty} in
     match solve wl' with
     | Success (_, defer_to_tac, imps) ->
       let wl = extend_wl wl [] defer_to_tac imps in
@@ -3228,7 +3232,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
                                    smt_ok = false;
                                    attempting = sub_probs;
                                    wl_deferred = [];
-                                   wl_implicits = Flat [] } in
+                                   wl_implicits = Listlike.empty } in
               match solve wl' with
               | Success (_, defer_to_tac, imps) ->
                 let wl = extend_wl wl [] defer_to_tac imps in
@@ -3740,10 +3744,10 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                                     smt_ok=false;
                                     attempting=[TProb prob];
                                     wl_deferred=[];
-                                    wl_implicits=Flat []})
+                                    wl_implicits=Listlike.empty})
                                   g_pat_term.deferred
                                   g_pat_term.deferred_to_tac
-                                  (Flat []) in
+                                  (Listlike.empty) in
               let tx = UF.new_transaction () in
               match solve wl' with
               | Success (_, defer_to_tac, imps) ->
@@ -3754,7 +3758,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                     Some (extend_wl wl
                                     []
                                     (defer_to_tac@defer_to_tac')
-                                    (Conj imps (Conj imps' (Conj g_pat_as_exp.implicits g_pat_term.implicits))))
+                                    (imps ++ imps' ++ g_pat_as_exp.implicits ++ g_pat_term.implicits))
   
                   | Failed _ ->
                     UF.rollback tx;
@@ -4097,8 +4101,8 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
            solve (attempt [base_prob] wl)
         in
         let has_uvars =
-            not (is_empty (FStar.Syntax.Free.uvars phi1))
-            || not (is_empty (FStar.Syntax.Free.uvars phi2))
+            not (Setlike.is_empty (FStar.Syntax.Free.uvars phi1))
+            || not (Setlike.is_empty (FStar.Syntax.Free.uvars phi2))
         in
         if problem.relation = EQ
         || (not env.uvar_subtyping && has_uvars)
@@ -4112,7 +4116,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
               * extend the original wl with the extra implicits we get, and we
               * do not want to duplicate the existing ones. *)
              match solve ({wl with defer_ok=NoDefer;
-                                   wl_implicits=Flat [];
+                                   wl_implicits=Listlike.empty;
                                    attempting=[ref_prob];
                                    wl_deferred=[]}) with
              | Failed (prob, msg) ->
@@ -4451,7 +4455,7 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
                match g_lift.guard_f with
                | Trivial -> guard
                | NonTrivial f -> U.mk_conj guard f in
-             let wl = { wl with wl_implicits =Conj g_lift.implicits wl.wl_implicits } in
+             let wl = { wl with wl_implicits =g_lift.implicits ++ wl.wl_implicits } in
              let wl = solve_prob orig (Some guard) [] wl in
              solve (attempt sub_probs wl)
     in
@@ -4776,7 +4780,7 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
 (* top-level interface                                      *)
 (* -------------------------------------------------------- *)
 let print_pending_implicits g =
-    g.implicits |> as_implicits |> List.map (fun i -> show i.imp_uvar) |> String.concat ", "
+    to_list g.implicits |> List.map (fun i -> show i.imp_uvar) |> show
 
 let ineqs_to_string (ineqs : list universe & list (universe & universe)) =
     let vars =
@@ -4807,7 +4811,7 @@ let guard_to_string (env:env) g =
               else "non-trivial" in
       let carry defs = List.map (fun (_, msg, x) -> msg ^ ": " ^ prob_to_string env x) defs |> String.concat ",\n" in
       let imps = print_pending_implicits g in
-      BU.format5 "\n\t{guard_f=%s;\n\t deferred={\n%s};\n\t deferred_to_tac={\n%s};\n\t univ_ineqs={%s};\n\t implicits={%s}}\n"
+      BU.format5 "\n\t{guard_f=%s;\n\t deferred={\n%s};\n\t deferred_to_tac={\n%s};\n\t univ_ineqs={%s};\n\t implicits=%s}\n"
         form (carry g.deferred) (carry g.deferred_to_tac)
         (ineqs_to_string g.univ_ineqs) imps
 
@@ -5030,7 +5034,7 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
   let smt_ok = smt_ok && not (Options.ml_ish ()) in
   Errors.with_ctx "While solving deferred constraints" (fun () ->
   Profiling.profile (fun () ->
-   let imps_l = g.implicits |> as_implicits in
+   let imps_l = g.implicits |> Listlike.to_list in
    let typeclass_variables =
     imps_l
     |> List.collect
@@ -5045,7 +5049,7 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
                 elems uvs
               )
               else []
-            | _ -> []) |> from_list
+            | _ -> []) |> Setlike.from_list
    in
    let wl = {wl_of_guard env g.deferred with defer_ok=defer_ok
                                            ; smt_ok=smt_ok
@@ -5068,7 +5072,7 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
      | Some (deferred, defer_to_tac, imps) ->
        {g with deferred=deferred;
                deferred_to_tac=g.deferred_to_tac@defer_to_tac;
-               implicits=Conj g.implicits imps}
+               implicits = g.implicits ++ imps}
 
      | _ ->
        failwith "Impossible: should have raised a failure already"
@@ -5084,7 +5088,7 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
    if !dbg_ResolveImplicitsHook
    then BU.print2 "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s (and %s implicits)\n"
           (guard_to_string env g)
-          (string_of_int (List.length (as_implicits g.implicits)));
+          (show (List.length (Listlike.to_list g.implicits)));
    {g with univ_ineqs=([], [])}
   )
   (Some (Ident.string_of_lid (Env.current_module env)))
@@ -5616,7 +5620,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
                        imp
                        is_tac
                        force_univ_constraints |> must in
-                   until_fixpoint ([], false, true) (as_implicits imps@List.map fst rest))
+                   until_fixpoint ([], false, true) (Listlike.to_list imps ++ List.map fst rest))
       )
 
     | hd::tl ->
@@ -5650,7 +5654,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
             let extra =
               match teq_nosmt env t tm with
               | None -> failwith "resolve_implicits: unifying with an unresolved uvar failed?"
-              | Some g -> as_implicits g.implicits
+              | Some g -> Listlike.to_list g.implicits
             in
             until_fixpoint (out, true, defer_open_metas) (extra @ tl)
           in
@@ -5691,7 +5695,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
                  hd
                  is_tac
                  force_univ_constraints in
-               let res = BU.map_opt res as_implicits in
+               let res = BU.map_opt res Listlike.to_list in
                if res <> Some []
                then failwith "Impossible: check_implicit_solution_and_discharge_guard for tac must return Some []"
                else ()
@@ -5713,7 +5717,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
             until_fixpoint ((hd, Implicit_checking_defers_univ_constraint)::out, changed, defer_open_metas) tl  //Move hd to out
           | Some imps ->
             //add imps to out
-            until_fixpoint ((imps |> as_implicits |> List.map (fun i -> i, Implicit_unresolved))@out, true, defer_open_metas) tl
+            until_fixpoint ((imps |> Listlike.to_list |> List.map (fun i -> i, Implicit_unresolved))@out, true, defer_open_metas) tl
         end
       end
   in
@@ -5724,17 +5728,17 @@ let resolve_implicits env g =
     then BU.print1 "//////////////////////////ResolveImplicitsHook: resolve_implicits begin////////////\n\
                     guard = %s {\n"
                     (guard_to_string env g);
-    let tagged_implicits = resolve_implicits' env false false (as_implicits g.implicits) in
+    let tagged_implicits = resolve_implicits' env false false (Listlike.to_list g.implicits) in
     if !dbg_ResolveImplicitsHook
     then BU.print_string "//////////////////////////ResolveImplicitsHook: resolve_implicits end////////////\n\
                     }\n";
-    {g with implicits = Flat <| List.map fst tagged_implicits}
+    {g with implicits = Listlike.from_list <| List.map fst tagged_implicits}
 
 let resolve_generalization_implicits env g =
-    let tagged_implicits = resolve_implicits' env false true (as_implicits g.implicits) in
-    {g with implicits = Flat <| List.map fst tagged_implicits}
+    let tagged_implicits = resolve_implicits' env false true (Listlike.to_list g.implicits) in
+    {g with implicits = Listlike.from_list <| List.map fst tagged_implicits}
 
-let resolve_implicits_tac env g = resolve_implicits' env true false (as_implicits g.implicits)
+let resolve_implicits_tac env g = resolve_implicits' env true false (Listlike.to_list g.implicits)
 
 let force_trivial_guard env g =
     if !dbg_ResolveImplicitsHook
@@ -5743,7 +5747,7 @@ let force_trivial_guard env g =
                     (guard_to_string env g);
     let g = solve_deferred_constraints env g in
     let g = resolve_implicits env g in
-    match as_implicits g.implicits with
+    match Listlike.to_list g.implicits with
     | [] -> ignore <| discharge_guard env g
     | imp::_ ->
       let open FStar.Pprint in

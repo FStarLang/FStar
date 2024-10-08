@@ -274,7 +274,7 @@ let solve_deferred_to_tactic_goals env g =
                    more, imp::imps
                  | Some se ->
                    (imp, se)::more, imps)
-            (as_implicits g.implicits)
+            (Class.Listlike.to_list g.implicits)
             ([], [])
     in
     (** Each implicit is associated with a sigelt.
@@ -299,4 +299,4 @@ let solve_deferred_to_tactic_goals env g =
     let buckets = bucketize (eqs@more) in
     // Dispatch each bucket of implicits to their respective tactic
     List.iter (fun (imps, sigel) -> solve_goals_with_tac env g imps sigel) buckets;
-    { g with deferred_to_tac=[]; implicits = Flat imps}
+    { g with deferred_to_tac=[]; implicits = Class.Listlike.from_list imps}

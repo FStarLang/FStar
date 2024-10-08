@@ -844,7 +844,8 @@ let (new_uvar :
               | (u, ctx_uvar, g_u) ->
                   let uu___1 =
                     let uu___2 =
-                      FStar_TypeChecker_Common.as_implicits
+                      FStar_Class_Listlike.to_list
+                        (FStar_Compiler_CList.listlike_clist ())
                         g_u.FStar_TypeChecker_Common.implicits in
                     add_implicits uu___2 in
                   bind uu___1
@@ -998,6 +999,9 @@ let (compress_implicits : unit tac) =
     (fun ps ->
        let imps = ps.FStar_Tactics_Types.all_implicits in
        let g =
+         let uu___ =
+           FStar_Class_Listlike.from_list
+             (FStar_Compiler_CList.listlike_clist ()) imps in
          {
            FStar_TypeChecker_Common.guard_f =
              (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.guard_f);
@@ -1007,8 +1011,7 @@ let (compress_implicits : unit tac) =
              (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
            FStar_TypeChecker_Common.univ_ineqs =
              (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
-           FStar_TypeChecker_Common.implicits =
-             (FStar_TypeChecker_Common.Flat imps)
+           FStar_TypeChecker_Common.implicits = uu___
          } in
        let imps1 =
          FStar_TypeChecker_Rel.resolve_implicits_tac

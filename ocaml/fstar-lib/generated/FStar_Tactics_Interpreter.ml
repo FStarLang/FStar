@@ -1017,6 +1017,10 @@ let run_unembedded_tactic_on_ps :
                                "About to check tactic implicits: %s\n" uu___7
                            else ());
                           (let g =
+                             let uu___6 =
+                               FStar_Class_Listlike.from_list
+                                 (FStar_Compiler_CList.listlike_clist ())
+                                 ps3.FStar_Tactics_Types.all_implicits in
                              {
                                FStar_TypeChecker_Common.guard_f =
                                  (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.guard_f);
@@ -1026,9 +1030,7 @@ let run_unembedded_tactic_on_ps :
                                  (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
                                FStar_TypeChecker_Common.univ_ineqs =
                                  (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
-                               FStar_TypeChecker_Common.implicits =
-                                 (FStar_TypeChecker_Common.Flat
-                                    (ps3.FStar_Tactics_Types.all_implicits))
+                               FStar_TypeChecker_Common.implicits = uu___6
                              } in
                            let g1 =
                              FStar_TypeChecker_Rel.solve_deferred_constraints
@@ -1046,7 +1048,7 @@ let run_unembedded_tactic_on_ps :
                               let uu___9 =
                                 FStar_Class_Show.show
                                   (FStar_Class_Show.show_list
-                                     FStar_TypeChecker_Common.show_implicit)
+                                     FStar_TypeChecker_Common.showable_implicit)
                                   ps3.FStar_Tactics_Types.all_implicits in
                               FStar_Compiler_Util.print2
                                 "Checked %s implicits (1): %s\n" uu___8
@@ -1068,7 +1070,7 @@ let run_unembedded_tactic_on_ps :
                                let uu___10 =
                                  FStar_Class_Show.show
                                    (FStar_Class_Show.show_list
-                                      FStar_TypeChecker_Common.show_implicit)
+                                      FStar_TypeChecker_Common.showable_implicit)
                                    ps3.FStar_Tactics_Types.all_implicits in
                                FStar_Compiler_Util.print2
                                  "Checked %s implicits (2): %s\n" uu___9

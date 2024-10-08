@@ -487,7 +487,8 @@ let (proc_guard' :
                      reason uu___1)
                 (fun uu___ ->
                    let imps =
-                     FStar_TypeChecker_Common.as_implicits
+                     FStar_Class_Listlike.to_list
+                       (FStar_Compiler_CList.listlike_clist ())
                        g.FStar_TypeChecker_Common.implicits in
                    (match sc_opt with
                     | FStar_Pervasives_Native.Some
@@ -1057,7 +1058,9 @@ let (__do_unify_wflags :
                                                                     =
                                                                     let uu___10
                                                                     =
-                                                                    FStar_TypeChecker_Common.as_implicits
+                                                                    FStar_Class_Listlike.to_list
+                                                                    (FStar_Compiler_CList.listlike_clist
+                                                                    ())
                                                                     g.FStar_TypeChecker_Common.implicits in
                                                                     FStar_Tactics_Monad.add_implicits
                                                                     uu___10 in
