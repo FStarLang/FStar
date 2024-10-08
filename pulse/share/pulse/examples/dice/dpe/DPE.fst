@@ -44,6 +44,7 @@ open Pulse.Lib.OnRange
 open Pulse.Lib.HashTable.Type
 open Pulse.Lib.HashTable
 open Pulse.Lib.MutexToken
+open Pulse.Class.PtsTo
 
 // We assume a combinator to run pulse computations for initialization of top-level state, it gets primitive support in extraction
 assume val run_stt (#a:Type) (#post:a -> slprop) (f:stt a emp post) : a
@@ -596,9 +597,9 @@ fn init_engine_ctxt
   (uds:A.array U8.t { A.length uds == SZ.v uds_len })
   (#p:perm)
   (#uds_bytes:Ghost.erased (Seq.seq U8.t))
-  requires A.pts_to uds #p uds_bytes
+  requires pts_to uds #p uds_bytes
   returns ctxt:context_t
-  ensures A.pts_to uds #p uds_bytes **
+  ensures pts_to uds #p uds_bytes **
           context_perm ctxt (Engine_context_repr uds_bytes)
 { 
   let uds_buf = V.alloc 0uy uds_len;
@@ -656,10 +657,10 @@ fn initialize_context (sid:sid_t)
   (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
   (uds:A.larray U8.t (SZ.v uds_len)) 
                        
-  requires A.pts_to uds #p uds_bytes **
+  requires pts_to uds #p uds_bytes **
            sid_pts_to trace_ref sid t
 
-  ensures A.pts_to uds #p uds_bytes **
+  ensures pts_to uds #p uds_bytes **
           initialize_context_client_perm sid uds_bytes
 {
   rewrite emp as (session_state_related InUse (G_InUse (current_state t)));
@@ -711,10 +712,10 @@ fn init_l0_ctxt
   (#uds_bytes:erased (Seq.seq U8.t))
   (_:squash (cdi_functional_correctness s uds_bytes engine_repr /\
              l0_is_authentic engine_repr))
-  requires A.pts_to cdi s
+  requires pts_to cdi s
   returns ctxt:l0_context_t
   ensures
-    A.pts_to cdi s **
+    pts_to cdi s **
     l0_context_perm ctxt (mk_l0_context_repr_t uds_bytes s engine_repr)
 {
   let cdi_buf = V.alloc 0uy dice_digest_len;
@@ -766,11 +767,11 @@ fn init_l1_ctxt
      deviceIDCSR_repr
      aliasKeyCRT_len
      aliasKeyCRT_repr))
-  requires V.pts_to deviceID_pub deviceID_pub_repr ** 
-           V.pts_to aliasKey_pub aliasKey_pub_repr ** 
-           V.pts_to aliasKey_priv aliasKey_priv_repr ** 
-           V.pts_to deviceIDCSR deviceIDCSR_repr **
-           V.pts_to aliasKeyCRT aliasKeyCRT_repr **
+  requires pts_to deviceID_pub deviceID_pub_repr ** 
+           pts_to aliasKey_pub aliasKey_pub_repr ** 
+           pts_to aliasKey_priv aliasKey_priv_repr ** 
+           pts_to deviceIDCSR deviceIDCSR_repr **
+           pts_to aliasKeyCRT aliasKeyCRT_repr **
            pure (V.is_full_vec deviceID_pub /\
                  V.is_full_vec aliasKey_pub /\
                  V.is_full_vec aliasKey_priv /\
@@ -825,11 +826,11 @@ fn l0_record_perm_aux (r1 r2:l0_record_t) (#p:perm) (#repr:l0_record_repr_t)
   ensures l0_record_perm r2 p repr
 {
   unfold (l0_record_perm r1 p repr);
-  rewrite (V.pts_to r1.fwid #p repr.fwid) as (V.pts_to r2.fwid #p repr.fwid);
-  rewrite (V.pts_to r1.deviceID_label #p repr.deviceID_label)
-       as (V.pts_to r2.deviceID_label #p repr.deviceID_label);
-  rewrite (V.pts_to r1.aliasKey_label #p repr.aliasKey_label)
-       as (V.pts_to r2.aliasKey_label #p repr.aliasKey_label);
+  rewrite (pts_to r1.fwid #p repr.fwid) as (pts_to r2.fwid #p repr.fwid);
+  rewrite (pts_to r1.deviceID_label #p repr.deviceID_label)
+       as (pts_to r2.deviceID_label #p repr.deviceID_label);
+  rewrite (pts_to r1.aliasKey_label #p repr.aliasKey_label)
+       as (pts_to r2.aliasKey_label #p repr.aliasKey_label);
   fold (l0_record_perm r2 p repr)
 }
 
@@ -926,7 +927,7 @@ fn derive_child_from_context
           let r = fst ret;
           rewrite each fst ret as r;
 
-          with s. assert (A.pts_to cdi s);
+          with s. assert (pts_to cdi s);
           fold (engine_context_perm c uds_bytes);
           rewrite (engine_context_perm c uds_bytes)
                as (context_perm (Engine_context c) context_repr);
@@ -970,7 +971,7 @@ fn derive_child_from_context
         L0_record r -> {
           let cr = rewrite_context_perm_l0 c;
           unfold (l0_context_perm c cr);
-          with s. assert (V.pts_to c.cdi s);
+          with s. assert (pts_to c.cdi s);
 
           let r0 = rewrite_record_perm_l0 r;
           unfold (l0_record_perm r 1.0R r0);
@@ -1022,11 +1023,11 @@ fn derive_child_from_context
           V.to_vec_pts_to deviceIDCSR;
           V.to_vec_pts_to aliasKeyCRT;
 
-          with deviceID_pub_repr. assert (V.pts_to deviceID_pub deviceID_pub_repr);
-          with aliasKey_pub_repr. assert (V.pts_to aliasKey_pub aliasKey_pub_repr);
-          with aliasKey_priv_repr. assert (V.pts_to aliasKey_priv aliasKey_priv_repr);
-          with deviceIDCSR_repr. assert (V.pts_to deviceIDCSR deviceIDCSR_repr);
-          with aliasKeyCRT_repr. assert (V.pts_to aliasKeyCRT aliasKeyCRT_repr);
+          with deviceID_pub_repr. assert (pts_to deviceID_pub deviceID_pub_repr);
+          with aliasKey_pub_repr. assert (pts_to aliasKey_pub aliasKey_pub_repr);
+          with aliasKey_priv_repr. assert (pts_to aliasKey_priv aliasKey_priv_repr);
+          with deviceIDCSR_repr. assert (pts_to deviceIDCSR deviceIDCSR_repr);
+          with aliasKeyCRT_repr. assert (pts_to aliasKeyCRT aliasKeyCRT_repr);
 
           let l1_context : l1_context_t = init_l1_ctxt
             s
@@ -1272,13 +1273,13 @@ fn certify_key (sid:sid_t)
   (t:G.erased trace { trace_valid_for_certify_key t })
   requires sid_pts_to trace_ref sid t **
            (exists* pub_key_repr crt_repr.
-              A.pts_to pub_key pub_key_repr **
-              A.pts_to crt crt_repr)
+              pts_to pub_key pub_key_repr **
+              pts_to crt crt_repr)
   returns _:U32.t
   ensures certify_key_client_perm sid t **
           (exists* pub_key_repr crt_repr.
-             A.pts_to pub_key pub_key_repr **
-             A.pts_to crt crt_repr)
+             pts_to pub_key pub_key_repr **
+             pts_to crt crt_repr)
 {
   rewrite emp as (session_state_related InUse (G_InUse (current_state t)));
   let s = replace_session sid t InUse (G_InUse (current_state t));
@@ -1374,12 +1375,12 @@ fn sign (sid:sid_t)
   (t:G.erased trace { trace_valid_for_sign t })
   requires sid_pts_to trace_ref sid t **
            (exists* signature_repr msg_repr.
-              A.pts_to signature signature_repr **
-              A.pts_to msg msg_repr)
+              pts_to signature signature_repr **
+              pts_to msg msg_repr)
   ensures sign_client_perm sid t **
           (exists* signature_repr msg_repr.
-             A.pts_to signature signature_repr **
-             A.pts_to msg msg_repr)
+             pts_to signature signature_repr **
+             pts_to msg msg_repr)
 {
   rewrite emp as (session_state_related InUse (G_InUse (current_state t)));
   let s = replace_session sid t InUse (G_InUse (current_state t));

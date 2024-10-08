@@ -18,6 +18,7 @@ module DPE_CBOR
 #lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Mutex
+open Pulse.Class.PtsTo
 
 open DPE
 open DPE.Messages.Parse
@@ -55,23 +56,23 @@ fn elim_implies () (#p #q:slprop)
 
 
 fn finish (c:cbor_read_t)
-          (input:_)
+          (input:array U8.t)
           (#p:perm)
           (#v:erased (raw_data_item))
           (#s:erased (Seq.seq U8.t))
           (#rem:erased (Seq.seq U8.t))
   requires ((raw_data_item_match 1.0R c.cbor_read_payload v **
-               A.pts_to c.cbor_read_remainder #p rem) @==>
-              A.pts_to input #p s) **
+               pts_to c.cbor_read_remainder #p rem) @==>
+              pts_to input #p s) **
             raw_data_item_match 1.0R c.cbor_read_payload v **
-            A.pts_to c.cbor_read_remainder #p rem **
+            pts_to c.cbor_read_remainder #p rem **
             'uds_is_enabled
   returns _:bool
-  ensures A.pts_to input #p s
+  ensures pts_to input #p s
 {
    elim_implies ()  #(raw_data_item_match 1.0R c.cbor_read_payload v **
-                            A.pts_to c.cbor_read_remainder #p rem)
-                            #(A.pts_to input #p s);
+                            pts_to c.cbor_read_remainder #p rem)
+                            #(pts_to input #p s);
     drop 'uds_is_enabled;
     false
 }
@@ -86,10 +87,10 @@ fn initialize_context (len:SZ.t)
                       (#s:erased (Seq.seq U8.t))
                       (#p:perm)
     requires
-        A.pts_to input #p s
+        pts_to input #p s
     returns r:bool
     ensures
-        A.pts_to input #p s
+        pts_to input #p s
 {
     let read = parse_dpe_cmd len input;
     match read
@@ -130,8 +131,8 @@ fn initialize_context (len:SZ.t)
                                   pure (DPE.trace_valid_for_initialize_context t));
               with t. assert (DPE.sid_pts_to DPE.trace_ref sid t);
               DPE.initialize_context sid t uds.cbor_string_payload;
-              with p' _vv. assert (A.pts_to uds.cbor_string_payload #p' _vv);
-              elim_stick0 () #(A.pts_to uds.cbor_string_payload #p' _);
+              with p' _vv. assert (pts_to uds.cbor_string_payload #p' _vv);
+              elim_stick0 () #(pts_to uds.cbor_string_payload #p' _);
               elim_stick0 () #(raw_data_item_match 1.0R _ _);
               elim_stick0 ();
               drop_ (initialize_context_client_perm sid _);

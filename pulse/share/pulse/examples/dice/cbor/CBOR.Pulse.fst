@@ -134,10 +134,10 @@ fn byte_array_compare
   (#va1: Ghost.erased (Seq.seq U8.t))
   (#va2: Ghost.erased (Seq.seq U8.t))
 requires
-    (A.pts_to a1 #p1 va1 ** A.pts_to a2 #p2 va2)
+    (pts_to a1 #p1 va1 ** pts_to a2 #p2 va2)
 returns res: I16.t
 ensures
-        A.pts_to a1 #p1 va1 ** A.pts_to a2 #p2 va2 **
+        pts_to a1 #p1 va1 ** pts_to a2 #p2 va2 **
         pure (I16.v res == Cbor.bytes_lex_compare va1 va2)
 {
     A.pts_to_len a1;
@@ -148,7 +148,7 @@ ensures
     let prf2 : squash (Ghost.reveal va2 `Seq.equal` Seq.slice va2 0 (SZ.v sz)) = ();
     while (let i = !pi; let res = !pres; ((i `SZ.lt` sz) && (res = 0s)))
     invariant cont . exists* i res .
-        A.pts_to a1 #p1 va1 ** A.pts_to a2 #p2 va2 **
+        pts_to a1 #p1 va1 ** pts_to a2 #p2 va2 **
         pts_to pi i ** pts_to pres res **
         pure (
             SZ.v i <= SZ.v sz /\
@@ -927,12 +927,12 @@ fn cbor_map_sort
     (#c: Ghost.erased (Seq.seq cbor_map_entry))
     (#l: Ghost.erased (list (Cbor.raw_data_item & Cbor.raw_data_item)))
 requires
-    A.pts_to a c **
+    pts_to a c **
     SM.seq_list_match c l (raw_data_item_map_entry_match 1.0R) **
     pure (SZ.v len == A.length a \/ SZ.v len == Seq.length c \/ SZ.v len == List.Tot.length l)
 returns res: bool
 ensures exists* c' l' .
-    A.pts_to a c' **
+    pts_to a c' **
     SM.seq_list_match c' l' (raw_data_item_map_entry_match 1.0R) **
     pure (
         Cbor.cbor_map_sort l == (res, l')

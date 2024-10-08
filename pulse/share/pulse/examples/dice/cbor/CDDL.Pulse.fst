@@ -200,12 +200,12 @@ let impl_array_group3
     (#i: Ghost.erased cbor_array_iterator_t) ->
     (#l: Ghost.erased (list raw_data_item)) ->
     stt bool
-        (R.pts_to pi i **
+        (pts_to pi i **
             cbor_array_iterator_match p i l **
             pure (opt_precedes (Ghost.reveal l) b)
         )
         (fun res -> exists* i' l'.
-            R.pts_to pi i' **
+            pts_to pi i' **
             cbor_array_iterator_match p i' l' **
             (cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p i l) **
             pure (
@@ -229,7 +229,7 @@ fn intro_impl_array_group3_post
     (l': list raw_data_item)
 requires
     (
-            R.pts_to pi i' **
+            pts_to pi i' **
             cbor_array_iterator_match p i' l' **
             (cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p i l) **
             pure (
@@ -240,7 +240,7 @@ requires
     )
 ensures
         (exists* i' l'.
-            R.pts_to pi i' **
+            pts_to pi i' **
             cbor_array_iterator_match p i' l' **
             (cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p i l) **
             pure (
@@ -322,7 +322,7 @@ fn impl_array_group3_item
                 #(raw_data_item_match p c gc ** cbor_array_iterator_match p i' l')
                 #(cbor_array_iterator_match p gi l); // FIXME: WHY WHY WHY those explicit arguments?
             pi := i;
-            rewrite (R.pts_to pi i) as (R.pts_to pi gi);
+            rewrite (pts_to pi i) as (pts_to pi gi);
             stick_refl0 (cbor_array_iterator_match p gi l);
             false
         }
@@ -389,9 +389,9 @@ let cbor_read_with_typ_success_post
 : Tot slprop
 = exists* v rem.
     raw_data_item_match 1.0R c.cbor_read_payload v **
-    A.pts_to c.cbor_read_remainder #p rem **
-    ((raw_data_item_match 1.0R c.cbor_read_payload v ** A.pts_to c.cbor_read_remainder #p rem) @==>
-      A.pts_to a #p va) **
+    pts_to c.cbor_read_remainder #p rem **
+    ((raw_data_item_match 1.0R c.cbor_read_payload v ** pts_to c.cbor_read_remainder #p rem) @==>
+      pts_to a #p va) **
     pure (cbor_read_with_typ_success_postcond t va c v rem)
 
 noextract [@@noextract_to "krml"]
@@ -425,7 +425,7 @@ let cbor_read_with_typ_error_post
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
 : Tot slprop
-= A.pts_to a #p va ** pure (cbor_read_with_typ_error_postcond t va)
+= pts_to a #p va ** pure (cbor_read_with_typ_error_postcond t va)
 
 let cbor_read_with_typ_post
   (t: typ)
@@ -456,7 +456,7 @@ fn cbor_read_with_typ
   (#va: Ghost.erased (Seq.seq U8.t))
   (#p: perm)
 requires
-    (A.pts_to a #p va ** pure (
+    (pts_to a #p va ** pure (
       (SZ.v sz == Seq.length va \/ SZ.v sz == A.length a)
     ))
 returns res: cbor_read_t
@@ -473,10 +473,10 @@ ensures cbor_read_with_typ_post t a p va res
             res
         } else {
             with v . assert (raw_data_item_match 1.0R res.cbor_read_payload v);
-            with vrem . assert (A.pts_to res.cbor_read_remainder #p vrem);
+            with vrem . assert (pts_to res.cbor_read_remainder #p vrem);
             cbor_read_with_typ_error_postcond_intro_typ_fail t va res v vrem;
             elim_stick0 ()
-                #(raw_data_item_match 1.0R res.cbor_read_payload v ** A.pts_to res.cbor_read_remainder #p vrem);
+                #(raw_data_item_match 1.0R res.cbor_read_payload v ** pts_to res.cbor_read_remainder #p vrem);
             fold (cbor_read_with_typ_error_post t a p va);
             let res = mk_cbor_read_error res;
             rewrite (cbor_read_with_typ_error_post t a p va) as (cbor_read_with_typ_post t a p va res);
@@ -539,9 +539,9 @@ let cbor_read_deterministically_encoded_with_typ_success_post
 : Tot slprop
 =   exists* v rem.
         raw_data_item_match 1.0R res.cbor_read_payload v **
-        A.pts_to res.cbor_read_remainder #p rem **
-        ((raw_data_item_match 1.0R res.cbor_read_payload v ** A.pts_to res.cbor_read_remainder #p rem) @==>
-        A.pts_to a #p va) **
+        pts_to res.cbor_read_remainder #p rem **
+        ((raw_data_item_match 1.0R res.cbor_read_payload v ** pts_to res.cbor_read_remainder #p rem) @==>
+        pts_to a #p va) **
         pure (cbor_read_deterministically_encoded_with_typ_success_postcond t va res v rem)
 
 let cbor_read_deterministically_encoded_with_typ_error_post
@@ -550,7 +550,7 @@ let cbor_read_deterministically_encoded_with_typ_error_post
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
 : Tot slprop
-= A.pts_to a #p va ** pure (cbor_read_deterministically_encoded_with_typ_error_postcond t va)
+= pts_to a #p va ** pure (cbor_read_deterministically_encoded_with_typ_error_postcond t va)
 
 let cbor_read_deterministically_encoded_with_typ_post
   (t: typ)
@@ -575,7 +575,7 @@ fn cbor_read_deterministically_encoded_with_typ
   (#va: Ghost.erased (Seq.seq U8.t))
   (#p: perm)
 requires
-    (A.pts_to a #p va ** pure (
+    (pts_to a #p va ** pure (
       (SZ.v sz == Seq.length va \/ SZ.v sz == A.length a)
     ))
 returns res: cbor_read_t
@@ -592,10 +592,10 @@ ensures cbor_read_deterministically_encoded_with_typ_post t a p va res
             res
         } else {
             with v . assert (raw_data_item_match 1.0R res.cbor_read_payload v);
-            with vrem . assert (A.pts_to res.cbor_read_remainder #p vrem);
+            with vrem . assert (pts_to res.cbor_read_remainder #p vrem);
             cbor_read_deterministically_encoded_with_typ_error_postcond_intro_typ_fail t va res v vrem;
             elim_stick0 ()
-                #(raw_data_item_match 1.0R res.cbor_read_payload v ** A.pts_to res.cbor_read_remainder #p vrem);
+                #(raw_data_item_match 1.0R res.cbor_read_payload v ** pts_to res.cbor_read_remainder #p vrem);
             let res = mk_cbor_read_error res;
             fold (cbor_read_deterministically_encoded_with_typ_error_post t a p va);
             fold (cbor_read_deterministically_encoded_with_typ_post t a p va res);

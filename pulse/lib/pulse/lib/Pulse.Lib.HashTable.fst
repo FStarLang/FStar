@@ -110,11 +110,11 @@ fn lookup
          let vcont = !cont;
          (voff <=^ ht.sz && vcont = true))
   invariant b. exists* (voff:SZ.t) (vcont :bool) vcontents. (
-    R.pts_to contents vcontents **
+    pts_to contents vcontents **
     V.pts_to vcontents pht.repr.seq **
-    R.pts_to off voff **
-    R.pts_to cont vcont **
-    R.pts_to ret (if vcont then None else (PHT.lookup_index_us pht k)) **
+    pts_to off voff **
+    pts_to cont vcont **
+    pts_to ret (if vcont then None else (PHT.lookup_index_us pht k)) **
     pure (
       SZ.v ht.sz == pht_sz pht /\
       V.is_full_vec vcontents /\
@@ -128,7 +128,7 @@ fn lookup
     if (voff = ht.sz)
     {
       cont := false;
-      assert (R.pts_to ret None);
+      assert (pts_to ret None);
     }
     else
     {
@@ -144,8 +144,8 @@ fn lookup
             cont := false;
             ret := Some idx;
             V.replace_i_ref contents idx (Used k' v');
-            with vcontents. assert (R.pts_to contents vcontents);
-            with s. assert (V.pts_to vcontents s);
+            with vcontents. assert (pts_to contents vcontents);
+            with s. assert (pts_to vcontents s);
             assert (pure (Seq.equal s pht.repr.seq));
             assert (pure (pht.repr @@ SZ.v idx == Used k' v'));
             assert (pure (lookup_repr_index pht.repr k == Some (v', SZ.v idx)));
@@ -153,8 +153,8 @@ fn lookup
           {
             off := voff +^ 1sz;
             V.replace_i_ref contents idx (Used k' v');
-            with vcontents. assert (R.pts_to contents vcontents);
-            with s. assert (V.pts_to vcontents s);
+            with vcontents. assert (pts_to contents vcontents);
+            with s. assert (pts_to vcontents s);
             assert (pure (Seq.equal s pht.repr.seq));
             assert (pure (walk_get_idx pht.repr (SZ.v cidx) k (SZ.v voff)
               == walk_get_idx pht.repr (SZ.v cidx) k (SZ.v (voff+^1sz))));
@@ -164,18 +164,18 @@ fn lookup
         {
           cont := false;
           V.replace_i_ref contents idx c;
-          with vcontents. assert (R.pts_to contents vcontents);
-          with s. assert (V.pts_to vcontents s);
+          with vcontents. assert (pts_to contents vcontents);
+          with s. assert (pts_to vcontents s);
           assert (pure (Seq.equal s pht.repr.seq));
           assert (pure (walk_get_idx pht.repr (SZ.v cidx) k (SZ.v voff) == None));
-          assert (R.pts_to ret (PHT.lookup_index_us pht k));
+          assert (pts_to ret (PHT.lookup_index_us pht k));
         }
         Zombie ->
         {
           off := voff +^ 1sz;
           V.replace_i_ref contents idx c;
-          with vcontents. assert (R.pts_to contents vcontents);
-          with s. assert (V.pts_to vcontents s);
+          with vcontents. assert (pts_to contents vcontents);
+          with s. assert (pts_to vcontents s);
           assert (pure (Seq.equal s pht.repr.seq));
           assert (pure (walk_get_idx pht.repr (SZ.v cidx) k (SZ.v voff)
             == walk_get_idx pht.repr (SZ.v cidx) k (SZ.v (voff+^1sz))));
@@ -187,11 +187,11 @@ fn lookup
 
   let vcontents = !contents;
   let ht = mk_ht ht.sz ht.hashf vcontents;
-  with vcontents_g. assert (R.pts_to contents vcontents_g);
+  with vcontents_g. assert (pts_to contents vcontents_g);
   rewrite (V.pts_to vcontents_g pht.repr.seq) as (V.pts_to ht.contents pht.repr.seq);
   fold (models ht pht);
   let res = ((ht <: ht_t kt vt), o);
-  assert (R.pts_to ret (PHT.lookup_index_us pht k));
+  assert (pts_to ret (PHT.lookup_index_us pht k));
   rewrite (models ht pht) as (models (fst res) pht);
   res
 }
@@ -217,7 +217,7 @@ fn replace
   let hashf = ht.hashf;
   let mut contents = ht.contents;
   unfold models;
-  rewrite (R.pts_to contents ht.contents) as (R.pts_to contents (reveal (hide ht.contents)));
+  rewrite (pts_to contents ht.contents) as (pts_to contents (reveal (hide ht.contents)));
   rewrite (V.pts_to ht.contents pht.repr.seq) as (V.pts_to (reveal (hide ht.contents)) pht.repr.seq);
   let v' = V.replace_i_ref contents idx (mk_used_cell k v);
   let vcontents = !contents;
@@ -275,10 +275,10 @@ fn insert
     (vcont = true)
   )
   invariant b. exists* (voff:SZ.t) (vcont :bool) (vcontents:V.vec _) vidx s. (
-    R.pts_to off voff **
-    R.pts_to cont vcont **
-    R.pts_to idx vidx **
-    R.pts_to contents vcontents **
+    pts_to off voff **
+    pts_to cont vcont **
+    pts_to idx vidx **
+    pts_to contents vcontents **
     V.pts_to vcontents s **
     pure (
       related ht pht /\
@@ -315,8 +315,8 @@ fn insert
         Used k' v' -> {
           if (k' = k) {
             V.write_ref contents vidx (Used k' v');
-            with vcontents. assert (R.pts_to contents vcontents);
-            with s. assert (V.pts_to vcontents s);
+            with vcontents. assert (pts_to contents vcontents);
+            with s. assert (pts_to vcontents s);
             assert (pure (Seq.equal s pht.repr.seq));
             cont := false;
             idx := vidx;
@@ -324,16 +324,16 @@ fn insert
                           Seq.upd pht.repr.seq (SZ.v vidx) (mk_used_cell k v)));
           } else {
             V.write_ref contents vidx (Used k' v');
-            with vcontents. assert (R.pts_to contents vcontents);
-            with s. assert (V.pts_to vcontents s);
+            with vcontents. assert (pts_to contents vcontents);
+            with s. assert (pts_to vcontents s);
             assert (pure (Seq.equal s pht.repr.seq));
             off := SZ.(voff +^ 1sz);
           };
         }
         Clean -> {
           V.write_ref contents vidx Clean;
-          with vcontents. assert (R.pts_to contents vcontents);
-          with s. assert (V.pts_to vcontents s);
+          with vcontents. assert (pts_to contents vcontents);
+          with s. assert (pts_to vcontents s);
           assert (pure (Seq.equal s pht.repr.seq));
           cont := false;
           idx := vidx;
@@ -342,8 +342,8 @@ fn insert
         }
         Zombie ->
         {
-          with vcontents_g. assert (R.pts_to contents vcontents_g);
-          with s. assert (V.pts_to vcontents_g s);
+          with vcontents_g. assert (pts_to contents vcontents_g);
+          with s. assert (pts_to vcontents_g s);
           assert (pure (Seq.equal s pht.repr.seq));
           let vcontents = !contents;
           let ht = { sz = ht.sz; hashf = hashf; contents = vcontents;};
@@ -392,7 +392,7 @@ fn insert
     V.write_ref contents vidx (mk_used_cell k v);
     let vcontents = !contents;
     let ht = mk_ht ht.sz hashf vcontents;
-    with vcontents. assert (R.pts_to contents vcontents);
+    with vcontents. assert (pts_to contents vcontents);
     with s. assert (V.pts_to vcontents s);
     assert (pure (Seq.equal s (PHT.insert pht k v).repr.seq));
     rewrite (V.pts_to vcontents s) as (V.pts_to ht.contents s);
@@ -404,7 +404,7 @@ fn insert
     let vcontents = !contents;
     let ht = mk_ht ht.sz hashf vcontents;
     let res = ((ht <: ht_t kt vt), false);
-    with vcontents. assert (R.pts_to contents vcontents);
+    with vcontents. assert (pts_to contents vcontents);
     with s. assert (V.pts_to vcontents s);
     rewrite (V.pts_to vcontents s) as (V.pts_to ht.contents s);
     fold (models ht pht);
@@ -449,7 +449,7 @@ fn not_full
       let c = V.replace_i_ref contents vi Zombie;
       let b = is_used c;
       V.replace_i_ref contents vi (snd b);
-      with vcontents. assert (R.pts_to contents vcontents);
+      with vcontents. assert (pts_to contents vcontents);
       with s. assert (V.pts_to vcontents s);
       assert (pure (Seq.equal s pht.repr.seq));
       (fst b)
@@ -460,9 +460,9 @@ fn not_full
     }
   )
   invariant b. exists* (vi:SZ.t) vcontents. (
-    R.pts_to contents vcontents **
+    pts_to contents vcontents **
     V.pts_to vcontents pht.repr.seq **
-    R.pts_to i vi **
+    pts_to i vi **
     pure (
       V.is_full_vec vcontents /\
       SZ.v ht.sz == pht_sz pht /\
@@ -481,7 +481,7 @@ fn not_full
 
   let vcontents = !contents;
   let ht = mk_ht ht.sz hashf vcontents;
-  with vcontentsg. assert (R.pts_to contents vcontentsg);
+  with vcontentsg. assert (pts_to contents vcontentsg);
   with s. rewrite (V.pts_to vcontentsg s) as (V.pts_to ht.contents s);
   fold (models ht pht);
   let b = ((ht <: ht_t kt vt), (res <: bool));
@@ -553,10 +553,10 @@ fn delete
     (vcont = true && verr = false)
   )
   invariant b. exists* (voff:SZ.t) (vcont verr:bool) (contents_v:V.vec _). (
-    R.pts_to off voff **
-    R.pts_to cont vcont **
-    R.pts_to err verr **
-    R.pts_to contents contents_v **
+    pts_to off voff **
+    pts_to cont vcont **
+    pts_to err verr **
+    pts_to contents contents_v **
     V.pts_to contents_v (if (vcont || verr) then pht.repr.seq else (PHT.delete pht k).repr.seq) **
     pure (
       V.is_full_vec contents_v /\
@@ -569,7 +569,7 @@ fn delete
       b == (vcont = true && verr = false)
     ))
   {
-    with vcont. assert (R.pts_to cont vcont);
+    with vcont. assert (pts_to cont vcont);
     let voff = !off;
     if (voff = ht.sz)
     {
@@ -612,7 +612,7 @@ fn delete
     }
   };
 
-  with contents_v_g. assert (R.pts_to contents contents_v_g);
+  with contents_v_g. assert (pts_to contents contents_v_g);
   let contents_v = !contents;
   let ht = mk_ht ht.sz hashf contents_v;
   with s. rewrite (V.pts_to contents_v_g s) as (V.pts_to ht.contents s);

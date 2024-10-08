@@ -17,18 +17,19 @@
 module PulseTutorial.Loops
 #lang-pulse
 open Pulse.Lib.Pervasives
+module R = Pulse.Lib.Reference
 
  //count_down$
 fn count_down (x:ref nat)
-requires pts_to x 'v
-ensures pts_to x 0
+requires R.pts_to x 'v
+ensures  R.pts_to x 0
 {
     let mut keep_going = true;
     while (
         !keep_going
     )
     invariant b. 
-      exists* v.
+      exists* (v:nat).
         pts_to keep_going b **
         pts_to x v **
         pure (b == false ==> v == 0)
@@ -48,8 +49,8 @@ ensures pts_to x 0
 
  //count_down3$
 fn count_down3 (x:ref nat)
-requires pts_to x 'v
-ensures pts_to x 0
+requires R.pts_to x 'v
+ensures  R.pts_to x 0
 {
     while (
         let n = !x;
@@ -64,7 +65,7 @@ ensures pts_to x 0
         }
     )
     invariant b. 
-      exists* v.
+      exists* (v:nat).
         pts_to x v **
         pure (b == false ==> v == 0)
     { () }
@@ -73,8 +74,8 @@ ensures pts_to x 0
 
  //count_down_loopy$
 fn count_down_loopy (x:ref nat)
-requires pts_to x 'v
-ensures pts_to x 0
+requires R.pts_to x 'v
+ensures  R.pts_to x 0
 {
     while (
         let n = !x;
@@ -90,7 +91,7 @@ ensures pts_to x 0
     )
     invariant b. 
       exists* v.
-        pts_to x v **
+        R.pts_to x v **
         pure (b == false ==> v == 0)
     { () }
 }
@@ -111,8 +112,8 @@ fn multiply_by_repeated_addition (x y:nat)
     )
     invariant b.
     exists* c a.
-        pts_to ctr c **
-        pts_to acc a **
+        R.pts_to ctr c **
+        R.pts_to acc a **
         pure (c <= x /\
               a == (c * y) /\
               b == (c < x))
@@ -159,8 +160,8 @@ ensures pure ((n * (n + 1) / 2) == z)
     )
     invariant b.
     exists* c a.
-        pts_to ctr c **
-        pts_to acc a **
+        R.pts_to ctr c **
+        R.pts_to acc a **
         pure (c <= n /\
               a == sum c /\
               b == (c < n))
@@ -228,9 +229,9 @@ fn fib_loop (k:pos)
   )
   invariant b . 
     exists* vi vj vctr. 
-        pts_to i vi **
-        pts_to j vj **
-        pts_to ctr vctr **
+        R.pts_to i vi **
+        R.pts_to j vj **
+        R.pts_to ctr vctr **
         pure (
             1 <= vctr /\
             vctr <= k /\
@@ -279,9 +280,9 @@ fn fibonacci32 (k:U32.t)
   )
   invariant b . 
     exists* vi vj vctr. 
-     pts_to i vi **
-     pts_to j vj **
-     pts_to ctr vctr **
+     R.pts_to i vi **
+     R.pts_to j vj **
+     R.pts_to ctr vctr **
      pure (1ul <= vctr /\
            vctr <= k /\
            fib (v (vctr - 1ul)) == v vi/\

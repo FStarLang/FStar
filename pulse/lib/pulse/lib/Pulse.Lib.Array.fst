@@ -20,6 +20,7 @@ module PM = Pulse.Main
 open Pulse.Lib.Core
 open Pulse.Lib.Reference
 open Pulse.Lib.Array.Core
+open Pulse.Class.PtsTo
 open FStar.Ghost
 module US = FStar.SizeT
 module U8 = FStar.UInt8
@@ -47,9 +48,9 @@ fn compare (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l)) (#p1 #p2:perm)
       (v1 = v2) } 
     else { false } )
   invariant b. exists* (vi:US.t). ( 
-    R.pts_to i vi **
-    A.pts_to a1 #p1 's1 **
-    A.pts_to a2 #p2 's2 **
+    pts_to i vi **
+    pts_to a1 #p1 's1 **
+    pts_to a2 #p2 's2 **
     pure (vi <= l
        /\ (b == (vi < l && Seq.index 's1 (US.v vi) = Seq.index 's2 (US.v vi)))
        /\ (forall (i:nat). i < US.v vi ==> Seq.index 's1 i == Seq.index 's2 i)))
@@ -62,15 +63,13 @@ fn compare (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l)) (#p1 #p2:perm)
   res
 }
 
-
- 
 fn memcpy_l (#t:eqtype) (l:US.t) (src dst:(a:array t { US.v l <= A.length a }))
            (#p:perm) (#src0 #dst0:Ghost.erased (Seq.seq t))
-  requires A.pts_to src #p src0 **
-           A.pts_to dst dst0
+  requires pts_to src #p src0 **
+           pts_to dst dst0
   returns _:squash (Seq.length src0 == A.length src /\ Seq.length dst0 == A.length dst)
-  ensures A.pts_to src #p src0 **
-          A.pts_to dst (Seq.append (Seq.slice src0 0 (US.v l))
+  ensures pts_to src #p src0 **
+          pts_to dst (Seq.append (Seq.slice src0 0 (US.v l))
                                    (Seq.slice dst0 (US.v l) (A.length dst)))
 {
   pts_to_len src #p #src0;
@@ -78,9 +77,9 @@ fn memcpy_l (#t:eqtype) (l:US.t) (src dst:(a:array t { US.v l <= A.length a }))
   let mut i = 0sz;
   while (let vi = !i; (vi < l) )
   invariant b. exists* (vi:US.t) (s:Seq.seq t). ( 
-    R.pts_to i vi **
-    A.pts_to src #p src0 **
-    A.pts_to dst s **
+    pts_to i vi **
+    pts_to src #p src0 **
+    pts_to dst s **
     pure (vi <= l
        /\ Seq.length s == Seq.length dst0
        /\ (b == (vi < l))
@@ -90,11 +89,11 @@ fn memcpy_l (#t:eqtype) (l:US.t) (src dst:(a:array t { US.v l <= A.length a }))
   {
     let vi = !i;
     let x = src.(vi);
-    with s. assert (A.pts_to dst s);
+    with s. assert (pts_to dst s);
     (dst.(vi) <- x);
     i := vi + 1sz;
   };
-  with s. assert (A.pts_to dst s);
+  with s. assert (pts_to dst s);
   assert_ (pure (Seq.equal s (Seq.append (Seq.slice src0 0 (US.v l))
                                          (Seq.slice dst0 (US.v l) (A.length dst)))));
   ()
@@ -114,7 +113,7 @@ fn memcpy
           pts_to dst src0
 {
   memcpy_l l src dst;
-  with s. assert (A.pts_to dst s);
+  with s. assert (pts_to dst s);
   assert_ (pure (Seq.equal s src0));
   ()
 }
@@ -122,17 +121,17 @@ fn memcpy
 
 
 fn fill (#t:Type0) (l:US.t) (a:larray t (US.v l)) (v:t)
-  requires A.pts_to a 's
+  requires pts_to a 's
   ensures exists* (s:Seq.seq t).
-    A.pts_to a s **
+    pts_to a s **
     pure (s `Seq.equal` Seq.create (US.v l) v)
 {
   pts_to_len a #1.0R #'s;
   let mut i = 0sz;
   while (let vi = !i; (vi < l))
   invariant b. exists* (vi:US.t) (s:Seq.seq t). ( 
-    R.pts_to i vi **
-    A.pts_to a s **
+    pts_to i vi **
+    pts_to a s **
     pure (vi <= l
         /\ Seq.length s == US.v l
         /\ (b == (vi < l))
@@ -147,9 +146,9 @@ fn fill (#t:Type0) (l:US.t) (a:larray t (US.v l)) (v:t)
 
 
 fn zeroize (l:US.t) (a:larray U8.t (US.v l))
-  requires A.pts_to a 's
+  requires pts_to a 's
   ensures exists* (s:Seq.seq U8.t).
-    A.pts_to a s **
+    pts_to a s **
     pure (s `Seq.equal` Seq.create (US.v l) 0uy)
 {
   pts_to_len a #1.0R #'s;

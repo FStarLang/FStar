@@ -6,6 +6,7 @@ module MS = Pulse.Lib.PCM.MonoidShares
 module U = FStar.Universe
 module GPR = Pulse.Lib.GhostPCMReference
 module CI = Pulse.Lib.CancellableInvariant
+module R = Pulse.Lib.Reference
 
 // For this example: we assume we have an atomic operation
 // to increment a ref nat
@@ -15,8 +16,8 @@ module CI = Pulse.Lib.CancellableInvariant
 
 atomic
 fn atomic_incr (r:ref nat)
-requires pts_to r 'i
-ensures pts_to r ('i + 1)
+requires R.pts_to r 'i
+ensures  R.pts_to r ('i + 1)
 {
   admit()
 }
@@ -305,7 +306,7 @@ requires
   contributions capacity initial gs r **
   has_given gs capacity
 ensures
-  pts_to r (initial + capacity)
+  R.pts_to r (initial + capacity)
 {
   unfold contributions;
   unfold has_given;
@@ -374,8 +375,8 @@ opens [CI.iname_of i] //we used the invariant
 // the classic Owicki-Gries example
 
 fn incr2 (r:ref nat)
-requires pts_to r 'i
-ensures pts_to r ('i + 2)
+requires R.pts_to r 'i
+ensures  R.pts_to r ('i + 2)
 {
   let gs = init_ghost_state 'i 2 r; // initialize the ghost state with a capacity of 2
   let ci = CI.new_cancellable_invariant (contributions 2 'i gs r); // allocate an invariant
@@ -489,8 +490,8 @@ decreases remaining
 /// Finally, the main `incr_n r n`
 
 fn incr_n (r:ref nat) (n:nat)
-requires pts_to r 'i
-ensures pts_to r ('i + n)
+requires R.pts_to r 'i
+ensures  R.pts_to r ('i + n)
 {
   let gs = init_ghost_state 'i n r;
   let ci = CI.new_cancellable_invariant (contributions n 'i gs r);

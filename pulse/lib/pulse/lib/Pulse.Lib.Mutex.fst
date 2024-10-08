@@ -20,6 +20,7 @@ open Pulse.Lib.Core
 
 open Pulse.Lib.Reference
 open Pulse.Lib.SpinLock
+open Pulse.Class.PtsTo
 
 module R = Pulse.Lib.Reference
 module B = Pulse.Lib.Box
@@ -36,11 +37,11 @@ let mutex_guard a = R.ref a
 
 let lock_inv (#a:Type0) (r:B.box a) (v:a -> slprop)
   : (w:slprop { (forall x. is_storable (v x)) ==> is_storable w }) =
-  exists* x. B.pts_to r x ** v x
+  exists* x. pts_to r x ** v x
 
 let mutex_live #a m #p v = lock_alive m.l #p (lock_inv m.r v)
 
-let pts_to mg #p x = R.pts_to mg #p x
+let pts_to mg #p x = pts_to mg #p x
 
 let op_Bang #a mg #x #p = R.op_Bang #a mg #x #p
 let op_Colon_Equals #a r y #x = R.op_Colon_Equals #a r y #x

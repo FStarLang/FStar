@@ -30,7 +30,7 @@ let closure_list = B.ref (list closure)
 fn mk_closure_list ()
 requires emp
 returns r:closure_list
-ensures B.pts_to r []
+ensures pts_to r []
 {
   B.alloc #(list closure) []
 }
@@ -47,8 +47,8 @@ let mk_closure
 fn push (l:closure_list)
         (#p #q:slprop2)
         (f: unit -> stt unit p (fun _ -> q))
-requires B.pts_to l 'xs
-ensures B.pts_to l (mk_closure f :: 'xs)
+requires pts_to l 'xs
+ensures pts_to l (mk_closure f :: 'xs)
 {
   open B;
   let xs = !l;
@@ -114,7 +114,7 @@ ensures pre_of c ** inv tl
 
 let lock_inv (r:closure_list) : v:slprop { is_slprop3 v } =
   exists* (l:list closure). 
-    B.pts_to r l **
+    pts_to r l **
     inv l
 
 noeq

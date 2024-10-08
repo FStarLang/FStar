@@ -137,26 +137,26 @@ val l0
 
   : stt unit
       (requires
-         A.pts_to cdi cdi_repr **
-         A.pts_to fwid fwid_repr **
-         A.pts_to deviceID_label deviceID_label_repr **
-         A.pts_to aliasKey_label aliasKey_label_repr **
-         A.pts_to deviceID_pub deviceID_pub_repr **
-         A.pts_to aliasKey_pub aliasKey_pub_repr **
-         A.pts_to aliasKey_priv aliasKey_priv_repr **
-         A.pts_to deviceIDCSR_buf deviceIDCSR_buf_repr **
-         A.pts_to aliasKeyCRT_buf aliasKeyCRT_buf_repr)
+         pts_to cdi cdi_repr **
+         pts_to fwid fwid_repr **
+         pts_to deviceID_label deviceID_label_repr **
+         pts_to aliasKey_label aliasKey_label_repr **
+         pts_to deviceID_pub deviceID_pub_repr **
+         pts_to aliasKey_pub aliasKey_pub_repr **
+         pts_to aliasKey_priv aliasKey_priv_repr **
+         pts_to deviceIDCSR_buf deviceIDCSR_buf_repr **
+         pts_to aliasKeyCRT_buf aliasKeyCRT_buf_repr)
       (ensures fun _ ->
-         A.pts_to cdi cdi_repr **
-         A.pts_to fwid fwid_repr **
-         A.pts_to deviceID_label deviceID_label_repr **
-         A.pts_to aliasKey_label aliasKey_label_repr **
+         pts_to cdi cdi_repr **
+         pts_to fwid fwid_repr **
+         pts_to deviceID_label deviceID_label_repr **
+         pts_to aliasKey_label aliasKey_label_repr **
          (exists* deviceID_pub_repr aliasKey_pub_repr aliasKey_priv_repr deviceIDCSR_buf_repr aliasKeyCRT_buf_repr.
-            A.pts_to deviceID_pub deviceID_pub_repr **
-            A.pts_to aliasKey_pub aliasKey_pub_repr **
-            A.pts_to aliasKey_priv aliasKey_priv_repr **
-            A.pts_to deviceIDCSR_buf deviceIDCSR_buf_repr **
-            A.pts_to aliasKeyCRT_buf aliasKeyCRT_buf_repr **
+            pts_to deviceID_pub deviceID_pub_repr **
+            pts_to aliasKey_pub aliasKey_pub_repr **
+            pts_to aliasKey_priv aliasKey_priv_repr **
+            pts_to deviceIDCSR_buf deviceIDCSR_buf_repr **
+            pts_to aliasKeyCRT_buf aliasKeyCRT_buf_repr **
             pure (l0_post
               cdi_repr
               fwid_repr

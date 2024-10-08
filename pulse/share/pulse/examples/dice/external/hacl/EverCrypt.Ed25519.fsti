@@ -35,14 +35,14 @@ val sign:
   -> msg:A.larray U8.t (U32.v msg_len) ->
   stt (squash (Seq.length v_private_key == 32 /\ Seq.length v_msg == U32.v msg_len))
     (requires
-      (exists* v_signature . A.pts_to signature v_signature) **
-      A.pts_to private_key #p_private_key v_private_key **
-      A.pts_to msg #p_msg v_msg
+      (exists* v_signature . pts_to signature v_signature) **
+      pts_to private_key #p_private_key v_private_key **
+      pts_to msg #p_msg v_msg
     )
     (ensures fun _ ->
       A.pts_to signature (spec_ed25519_sign v_private_key v_msg) **
-      A.pts_to private_key #p_private_key v_private_key **
-      A.pts_to msg #p_msg v_msg
+      pts_to private_key #p_private_key v_private_key **
+      pts_to msg #p_msg v_msg
     )
 
 /// From Spec.Ed25519
@@ -68,9 +68,9 @@ val verify:
   -> signature:A.larray U8.t 64 ->
   stt bool
     (requires
-      A.pts_to public_key #p_public_key v_public_key **
-      A.pts_to msg #p_msg v_msg **
-      A.pts_to signature #p_signature v_signature
+      pts_to public_key #p_public_key v_public_key **
+      pts_to msg #p_msg v_msg **
+      pts_to signature #p_signature v_signature
     )
     (ensures fun b ->
       pure (
@@ -79,7 +79,7 @@ val verify:
         Seq.length v_signature == 64 /\
         b == spec_ed25519_verify v_public_key v_msg v_signature
       ) **
-      A.pts_to public_key #p_public_key v_public_key **
-      A.pts_to msg #p_msg v_msg **
-      A.pts_to signature #p_signature v_signature
+      pts_to public_key #p_public_key v_public_key **
+      pts_to msg #p_msg v_msg **
+      pts_to signature #p_signature v_signature
     )

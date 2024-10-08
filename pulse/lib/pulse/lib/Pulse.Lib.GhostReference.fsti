@@ -17,6 +17,7 @@
 module Pulse.Lib.GhostReference
 open FStar.Tactics
 open Pulse.Lib.Core
+open Pulse.Class.PtsTo
 open PulseCore.FractionalPermission
 open FStar.Ghost
 
@@ -31,6 +32,11 @@ val pts_to (#a:Type)
            (#[exact (`1.0R)] p:perm)
            (n:a)
 : slprop
+
+[@@pulse_unfold]
+instance has_pts_to_ref (a:Type) : has_pts_to (ref a) a = {
+  pts_to = (fun r #f v -> pts_to r #f v);
+}
 
 val pts_to_is_slprop2 (#a:Type) (r:ref a) (p:perm) (x:a)
   : Lemma (is_slprop2 (pts_to r #p x))

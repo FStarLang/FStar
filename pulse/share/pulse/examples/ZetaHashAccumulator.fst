@@ -140,10 +140,10 @@ val blake2b:
   -> #p:perm
   -> #sd:Ghost.erased (Seq.seq U8.t) { Seq.length sd == SZ.v ll}
   -> stt unit
-    (A.pts_to output sout ** A.pts_to d #p sd ** pure (Seq.length sout == 32))
-    (λ _ → A.pts_to output (blake_spec (Seq.slice sd 0 (SZ.v ll)))
+    (pts_to output sout ** pts_to d #p sd ** pure (Seq.length sout == 32))
+    (λ _ → pts_to output (blake_spec (Seq.slice sd 0 (SZ.v ll)))
            **
-           A.pts_to d #p sd)
+           pts_to d #p sd)
 
 (***************************************************************)
 (* Pulse *)
