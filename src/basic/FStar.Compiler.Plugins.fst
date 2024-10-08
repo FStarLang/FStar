@@ -33,34 +33,40 @@ let perr  s   = if Debug.any () then BU.print_error s
 let perr1 s x = if Debug.any () then BU.print1_error s x
 
 let dynlink (fname:string) : unit =
-  try
+  if List.mem fname !loaded then (
+    pout1 "Plugin %s already loaded, skipping\n" fname
+  ) else (
     pout ("Attempting to load " ^ fname ^ "\n");
-    dynlink_loadfile fname
-  with DynlinkError e ->
-    E.log_issue0 E.Error_PluginDynlink [
-      E.text (BU.format1 "Failed to load plugin file %s" fname);
-          Pprint.prefix 2 1 (E.text "Reason:")
-            (Pprint.arbitrary_string e);
-          E.text (BU.format1 "Remove the `--load` option or use `--warn_error -%s` to ignore and continue."
-                    (show (E.errno E.Error_PluginDynlink)))];
-    (* If we weren't ignoring this error, just stop now *)
-    E.stop_if_err ()
+    begin try
+      dynlink_loadfile fname
+    with DynlinkError e ->
+      E.log_issue0 E.Error_PluginDynlink [
+        E.text (BU.format1 "Failed to load plugin file %s" fname);
+        Pprint.prefix 2 1 (E.text "Reason:") (E.text e);
+        E.text (BU.format1 "Remove the `--load` option or use `--warn_error -%s` to ignore and continue."
+                  (show (E.errno E.Error_PluginDynlink)))
+      ];
+      (* If we weren't ignoring this error, just stop now *)
+      E.stop_if_err ()
+    end;
+    loaded := fname :: !loaded;
+    pout1 "Loaded %s\n" fname;
+    ()
+  )
 
-let load_tactic tac =
-  dynlink tac;
-  loaded := tac :: !loaded;
-  pout1 "Loaded %s\n" tac
+let load_plugin tac =
+  dynlink tac
 
-let load_tactics tacs =
-    List.iter load_tactic tacs
+let load_plugins tacs =
+    List.iter load_plugin tacs
 
-let load_tactics_dir dir =
+let load_plugins_dir dir =
     (* Dynlink all .cmxs files in the given directory *)
     (* fixme: confusion between FStar.Compiler.String and FStar.String *)
     BU.readdir dir
     |> List.filter (fun s -> String.length s >= 5 && FStar.String.sub s (String.length s - 5) 5 = ".cmxs")
     |> List.map (fun s -> dir ^ "/" ^ s)
-    |> load_tactics
+    |> load_plugins
 
 let compile_modules dir ms =
    let compile m =
@@ -105,6 +111,7 @@ let compile_modules dir ms =
    with e ->
      perr (BU.format1 "Failed to load native tactic: %s\n" (BU.print_exn e));
      raise e
+
 (* Tries to load a plugin named like the extension. Returns true
 if it could find a plugin with the proper name. This will fail hard
 if loading the plugin fails. *)
@@ -118,7 +125,7 @@ let autoload_plugin (ext:string) : bool =
     else (
     if Debug.any () then
       BU.print1 "Autoloading plugin %s ...\n" fn;
-    load_tactics [fn];
+    load_plugin fn;
     true
     )
   | None ->
