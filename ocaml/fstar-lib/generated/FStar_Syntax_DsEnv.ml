@@ -4015,14 +4015,10 @@ let fail_or :
                      let uu___4 =
                        let uu___5 =
                          let uu___6 =
-                           let uu___7 =
-                             let uu___8 = FStar_Ident.string_of_lid modul in
-                             FStar_Compiler_Util.format1
-                               "Module %s does not belong to the list of modules in scope, namely:"
-                               uu___8 in
-                           FStar_Errors_Msg.text uu___7 in
-                         let uu___7 = subdoc opened_modules1 in
-                         FStar_Pprint.op_Hat_Hat uu___6 uu___7 in
+                           let uu___7 = FStar_Ident.string_of_lid modul in
+                           FStar_Compiler_Util.format1
+                             "Could not resolve module name %s" uu___7 in
+                         FStar_Errors_Msg.text uu___6 in
                        [uu___5] in
                      FStar_Compiler_List.op_At msg uu___4
                  | FStar_Pervasives_Native.Some modul' when
