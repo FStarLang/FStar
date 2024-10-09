@@ -998,9 +998,13 @@ let rec (resugar_term' :
                              h rest_args))
                else
                  (let uu___5 =
-                    ((let uu___6 = FStar_Options.print_implicits () in
-                      Prims.op_Negation uu___6) && (is_hide_or_reveal e)) &&
-                      ((FStar_Compiler_List.length args1) = Prims.int_one) in
+                    (((let uu___6 = FStar_Options.print_implicits () in
+                       Prims.op_Negation uu___6) &&
+                        (let uu___6 =
+                           FStar_Options_Ext.get "show_hide_reveal" in
+                         uu___6 = ""))
+                       && (is_hide_or_reveal e))
+                      && ((FStar_Compiler_List.length args1) = Prims.int_one) in
                   if uu___5
                   then
                     let uu___6 = args1 in
