@@ -1188,10 +1188,10 @@ let mk_indexed_bind env
 
   if (Env.is_erasable_effect env m &&
       not (Env.is_erasable_effect env p) &&
-      not (N.non_info_norm env ct1.result_typ)) ||
+      None? (N.non_info_norm env ct1.result_typ)) ||
      (Env.is_erasable_effect env n &&
       not (Env.is_erasable_effect env p) &&
-      not (N.non_info_norm env ct2.result_typ))
+      None? (N.non_info_norm env ct2.result_typ))
   then raise_error r1 Errors.Fatal_UnexpectedEffect [
            text "Cannot apply bind" ^/^ doc_of_string (bind_name ()) ^/^ text "since" ^/^ pp p
              ^/^ text "is not erasable and one of the computations is informative."
@@ -3191,7 +3191,7 @@ let maybe_add_implicit_binders (env:env) (bs:binders) : binders =
 
 let must_erase_for_extraction (g:env) (t:typ) =
   let res = N.non_info_norm g t in
-  if !dbg_Extraction then BU.print2 "must_erase=%s: %s\n" (if res then "true" else "false") (show t);
+  if !dbg_Extraction then BU.print2 "must_erase=%s: %s\n" (show res) (show t);
   res
 
 let effect_extraction_mode env l =
@@ -3267,7 +3267,7 @@ let check_non_informative_type_for_lift env m1 m2 t (r:Range.range) : unit =
   //raise an error if m1 is erasable, m2 is not erasable, and t is informative
   if Env.is_erasable_effect env m1       &&
      not (Env.is_erasable_effect env m2) &&
-     not (N.non_info_norm env t)
+     None? (N.non_info_norm env t)
   then Errors.raise_error r Errors.Error_TypeError
           (BU.format3 "Cannot lift erasable expression from %s ~> %s since its type %s is informative"
             (string_of_lid m1)
