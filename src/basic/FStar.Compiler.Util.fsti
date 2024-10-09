@@ -309,6 +309,7 @@ val mk_ref: 'a -> ref 'a
 
 val exec_name : string
 val get_exec_dir: unit -> string
+val get_cmd_args : unit -> list string
 val expand_environment_variable: string -> option string
 
 val physical_equality: 'a -> 'a -> bool
