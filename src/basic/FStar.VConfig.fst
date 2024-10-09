@@ -15,5 +15,4 @@
 *)
 module FStar.VConfig
 
-(* Empty, since the type is defined in the interface file (in ulib/),
-but we still need this file to trigger extraction. *)
+(* This file here to trigger extraction. *)

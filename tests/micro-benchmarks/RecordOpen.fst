@@ -1,6 +1,6 @@
 module RecordOpen
 
-open FStar.VConfig
+open FStar.Stubs.VConfig
 open FStar.Mul
 
 type ty = {x:int; y:bool}
@@ -50,9 +50,9 @@ let bump_rlimit (v:vconfig) : vconfig =
   { v with z3rlimit = 2 * z3rlimit }
 
 let bump_rlimit2 (v:vconfig) : vconfig =
-  let open v <: FStar.VConfig.vconfig in
+  let open v <: FStar.Stubs.VConfig.vconfig in
   { v with z3rlimit = 2 * z3rlimit }
 
 let bump_rlimit3 (v:vconfig) : vconfig =
-  let open v <: VConfig.vconfig in
+  let open v <: Stubs.VConfig.vconfig in
   { v with z3rlimit = 2 * z3rlimit }

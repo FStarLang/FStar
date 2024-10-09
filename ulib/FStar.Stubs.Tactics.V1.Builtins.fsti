@@ -19,7 +19,7 @@ Every tactic primitive, i.e., those built into the compiler
 *)
 module FStar.Stubs.Tactics.V1.Builtins
 
-open FStar.VConfig
+open FStar.Stubs.VConfig
 open FStar.Stubs.Reflection.V1.Builtins
 open FStar.Stubs.Reflection.Types
 open FStar.Stubs.Reflection.V1.Data
