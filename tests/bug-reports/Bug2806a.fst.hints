@@ -6,12 +6,9 @@
       1,
       2,
       1,
-      [
-        "@query", "equation_Bug2806a.one", "equation_Bug2806a.oone",
-        "true_interp"
-      ],
+      [ "@query", "equation_Bug2806a.one", "equation_Bug2806a.oone" ],
       0,
-      "8486d3941e5cf1d2a07fd17e23a4887b"
+      "96418daf9c30392a6d8b9a842947637c"
     ]
   ]
 ]

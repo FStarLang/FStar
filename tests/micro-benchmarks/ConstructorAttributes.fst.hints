@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_f9cb862b01fa5a0244611626ba3eed33"
       ],
       0,
-      "e75522d5b9f4e2a150fbf89032efb419"
+      "174a2de8bad4ac81017710f279a19b3b"
     ],
     [
       "ConstructorAttributes.terms_eq",
@@ -20,12 +20,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "7749d02d0b0b9481c7ef1204731fc83a"
+      "8c07512ce1435cf53e6216a4b9825d78"
     ]
   ]
 ]

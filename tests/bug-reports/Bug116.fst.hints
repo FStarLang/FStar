@@ -6,16 +6,9 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_Bug116.rtyping",
-        "proj_equation_Bug116.TyAbs_e1", "proj_equation_Bug116.TyAbs_g",
-        "proj_equation_Bug116.TyAbs_x", "projection_inverse_Bug116.TyAbs_e1",
-        "projection_inverse_Bug116.TyAbs_g",
-        "projection_inverse_Bug116.TyAbs_x"
-      ],
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug116.TyAbs" ],
       0,
-      "0984793f41da9819cf69279ed3133e59"
+      "a714487a573dcafa481f3e89d71ce18c"
     ]
   ]
 ]

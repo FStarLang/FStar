@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Simple.Test.t__uu___haseq" ],
       0,
-      "e143874d16f512b88d5784dd35cdda31"
+      "7595ef114c42ebcf3513748c1c2d2120"
     ],
     [
       "Simple.Test.test2",
@@ -20,7 +20,7 @@
         "assumption_Simple.Test.t__uu___haseq", "kinding_Simple.Test.t@tok"
       ],
       0,
-      "04a89e59e8d0a65efca18104c83bcbc2"
+      "5617943becb42a5a80cf2d34b6e023fc"
     ],
     [
       "Simple.Test.test3",
@@ -32,7 +32,7 @@
         "assumption_Simple.Test.t__uu___haseq", "kinding_Simple.Test.t@tok"
       ],
       0,
-      "87f61f6241acd0e3bd66c60afa13ea3b"
+      "d76026b730e04e282659d3ed2a181b32"
     ]
   ]
 ]

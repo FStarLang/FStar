@@ -8,12 +8,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "9198871e3aa65b8a433edbab0e98ec4e"
+      "4d45f7f3e664051b1ff0bd0d9e20c2f4"
     ],
     [
       "Bug442.__proj__Unit__item___0",
@@ -21,12 +22,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Bug442.Unit",
-        "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_282d2343f4d149a96e73dfb3e3022a06"
       ],
       0,
-      "73ba393281e85bb155a8b2e140cae8f9"
+      "5a9df1a243f0c3bb2b6bf8df39c6edfd"
     ],
     [
       "Bug442.__proj__Join__item___0",
@@ -34,12 +34,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Bug442.Join",
-        "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_55d37cc4215d7c096ad6f1e75c907170"
       ],
       0,
-      "c8fd795c3cdbb34cc5de13e672d2a944"
+      "eeb654c4582c4a70a66b1eeba63cbe94"
     ],
     [
       "Bug442.__proj__Join__item___1",
@@ -47,12 +46,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Bug442.Join",
-        "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_55d37cc4215d7c096ad6f1e75c907170"
       ],
       0,
-      "5d4a918ec1d7209c3ad6bcc8c74ef714"
+      "85e6a2c5458d68e0899007c5ed012ecd"
     ],
     [
       "Bug442.__proj__Join__item___2",
@@ -60,12 +58,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Bug442.Join",
-        "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_55d37cc4215d7c096ad6f1e75c907170"
       ],
       0,
-      "72a4605ba0bd7b22001f0389b2175674"
+      "ebd3a7573cae5bd56e35f5a3350065da"
     ],
     [
       "Bug442.isCorrectJoined",
@@ -77,10 +74,10 @@
         "binder_x_edd6cb1544aa88ef8c834760793a3a13_2",
         "disc_equation_Bug442.Join", "disc_equation_Bug442.Nil",
         "disc_equation_Bug442.Unit", "fuel_guarded_inversion_Bug442.dList1",
-        "projection_inverse_Bug442.Join__0", "subterm_ordering_Bug442.Join"
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Bug442.Join"
       ],
       0,
-      "85156fb2f0f6358662de792298d4e8f3"
+      "ffa9f056e990e55d74d2c714d0be0893"
     ],
     [
       "Bug442.ld",
@@ -93,11 +90,11 @@
         "@fuel_irrelevance_Bug442.isCorrectJoined.fuel_instrumented",
         "@query", "binder_x_8a1329006d5a12d96dc3e47cbb3b4147_2",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1", "bool_inversion",
-        "constructor_distinct_Bug442.Join", "constructor_distinct_Tm_unit",
-        "disc_equation_Bug442.Join", "disc_equation_Bug442.Nil",
-        "disc_equation_Bug442.Unit", "equation_Bug442.dList",
-        "equation_Prims.nat",
+        "constructor_distinct_Bug442.Join", "disc_equation_Bug442.Join",
+        "disc_equation_Bug442.Nil", "disc_equation_Bug442.Unit",
+        "equation_Bug442.dList", "equation_Prims.nat",
         "equation_with_fuel_Bug442.isCorrectJoined.fuel_instrumented",
+        "fuel_guarded_inversion_Bug442.dList1",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -112,7 +109,7 @@
         "typing_Bug442.isCorrectJoined"
       ],
       0,
-      "f01a25518d8fda86f83baa809aefc6b5"
+      "3d3c1cbadd490d7b58d6e9890a3346a1"
     ],
     [
       "Bug442.lt",
@@ -127,14 +124,13 @@
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Bug442.dList", "equation_Prims.nat",
         "fuel_guarded_inversion_Prims.list", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "subterm_ordering_Prims.Cons", "typing_Bug442.ld"
       ],
       0,
-      "b41b7321be854efa6556e7115eb45dfe"
+      "91b16d9d8719f7dd2557651330068293"
     ],
     [
       "Bug442.walk",
@@ -150,7 +146,6 @@
         "@fuel_irrelevance_Bug442.ld.fuel_instrumented",
         "@fuel_irrelevance_Bug442.lt.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_e4836109f73687024ac3edd113084865",
         "binder_x_8a1329006d5a12d96dc3e47cbb3b4147_3",
         "binder_x_ae8bc5256c55976e18f280230b4e2516_2",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1", "bool_inversion",
@@ -159,8 +154,7 @@
         "constructor_distinct_Bug442.Unit",
         "constructor_distinct_Prims.Cons", "disc_equation_Bug442.Join",
         "disc_equation_Bug442.Nil", "disc_equation_Bug442.Unit",
-        "equality_tok_Prims.LexTop@tok", "equation_Bug442.dList",
-        "equation_Prims.nat",
+        "equation_Bug442.dList", "equation_Prims.nat",
         "equation_with_fuel_Bug442.isCorrectJoined.fuel_instrumented",
         "equation_with_fuel_Bug442.ld.fuel_instrumented",
         "equation_with_fuel_Bug442.lt.fuel_instrumented",
@@ -182,11 +176,12 @@
         "refinement_interpretation_Tm_refine_3ead50dd0e0b905474660e381a6a1021",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "token_correspondence_Bug442.isCorrectJoined.fuel_instrumented",
-        "typing_Bug442.ld", "typing_Bug442.lt",
-        "typing_tok_Prims.LexTop@tok", "well-founded-ordering-on-nat"
+        "typing_Bug442.isCorrectJoined", "typing_Bug442.ld",
+        "typing_Bug442.lt", "typing_Bug442.uu___is_Nil",
+        "well-founded-ordering-on-nat"
       ],
       0,
-      "39f4cbed75ce0291e6e077d4d07d33fc"
+      "4400efd11afb697271015f7da0586d93"
     ],
     [
       "Bug442.walk",
@@ -213,7 +208,7 @@
         "projection_inverse_Prims.Cons_tl", "well-founded-ordering-on-nat"
       ],
       0,
-      "86fe39da19d06ff08567c540056a01eb"
+      "85165813afde81015697d7cf6389ee2f"
     ],
     [
       "Bug442.walk_alt",
@@ -230,7 +225,6 @@
         "@fuel_irrelevance_Bug442.lt.fuel_instrumented", "@query",
         "Bug442_pretyping_9af0c670938d9b125bcc7f038d3b7e84",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_e4836109f73687024ac3edd113084865",
         "binder_x_c729c9a6b7d93f2292adbef7925012bf_4",
         "binder_x_cbe65e0bce0d143b0043591548223bcf_5",
         "binder_x_fe28d8bcde588226b4e538b35321de05_3", "bool_inversion",
@@ -238,8 +232,8 @@
         "constructor_distinct_Prims.Cons", "data_elim_Bug442.Join",
         "disc_equation_Bug442.Join", "disc_equation_Bug442.Nil",
         "disc_equation_Bug442.Unit", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
-        "equation_Bug442.dList", "equation_Prims.nat",
+        "disc_equation_Prims.Nil", "equation_Bug442.dList",
+        "equation_Prims.nat",
         "equation_with_fuel_Bug442.isCorrectJoined.fuel_instrumented",
         "equation_with_fuel_Bug442.ld.fuel_instrumented",
         "equation_with_fuel_Bug442.lt.fuel_instrumented",
@@ -260,11 +254,11 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "token_correspondence_Bug442.isCorrectJoined.fuel_instrumented",
         "token_correspondence_Bug442.ld.fuel_instrumented",
-        "typing_Bug442.ld", "typing_Bug442.lt",
-        "typing_tok_Prims.LexTop@tok", "well-founded-ordering-on-nat"
+        "typing_Bug442.isCorrectJoined", "typing_Bug442.ld",
+        "typing_Bug442.lt", "well-founded-ordering-on-nat"
       ],
       0,
-      "60f6078a60bab5ef7c672294c5ce3fbf"
+      "b27ef7740ebe166e43e7f0116e87ab7f"
     ]
   ]
 ]

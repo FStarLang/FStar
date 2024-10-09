@@ -8,11 +8,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equation_FStar.Reflection.Types.binders",
-        "fuel_guarded_inversion_Prims.list"
+        "disc_equation_Prims.Nil", "equation_FStar.Tactics.NamedView.namedv",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "21c009bad9dd9cce7f05e93549731e0f"
+      "ba333bf9b683095a1c3d0ecec989c793"
     ],
     [
       "Bug1840.resolve'",
@@ -21,11 +22,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equation_FStar.Reflection.Types.binders",
-        "fuel_guarded_inversion_Prims.list"
+        "disc_equation_Prims.Nil",
+        "equation_FStar.Tactics.NamedView.binding",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "5ea7a8f59ae597d5a638e8d4531fcab9"
+      "f6876822ed10068578872c9cdcd58a29"
     ]
   ]
 ]

@@ -11,16 +11,15 @@
         "Bug710_interpretation_Tm_arrow_657bc76303a8a2e3fadb4915c654df47",
         "Bug710_interpretation_Tm_arrow_89fc5d09c5535f5bc6cb36a74f66fca8",
         "Bug710_pretyping_e9504e14cc1510d6e0212487d8a1730a",
-        "bool_inversion", "bool_typing", "data_typing_intro_Bug710.High@tok",
         "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some", "equation_Bug710.ifc",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equality_tok_Bug710.Low@tok", "equation_Bug710.ifc",
         "kinding_Bug710.label@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "lemma_FStar.Pervasives.invertOption",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
+        "lemma_FStar.Pervasives.invertOption", "typing_tok_Bug710.Low@tok"
       ],
       0,
-      "ce6b039b1e0e0641ccdf24461738a419"
+      "9ccb2987817a254fe6fb138aae51f7f5"
     ],
     [
       "Bug710.left_unit",
@@ -34,7 +33,7 @@
         "Bug710_pretyping_e9504e14cc1510d6e0212487d8a1730a",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "data_elim_FStar.Pervasives.Native.Some",
-        "data_typing_intro_Bug710.High@tok", "equation_Bug710.bind_ifc",
+        "equality_tok_Bug710.Low@tok", "equation_Bug710.bind_ifc",
         "equation_Bug710.eq_ifc", "equation_Bug710.ifc",
         "equation_Bug710.return_ifc", "fuel_guarded_inversion_Bug710.label",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
@@ -45,10 +44,11 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "typing_Bug710.bind_ifc", "typing_Bug710.return_ifc"
+        "typing_Bug710.bind_ifc", "typing_Bug710.return_ifc",
+        "typing_tok_Bug710.Low@tok"
       ],
       0,
-      "128cf89dcb18c69e742b78bc75303ec7"
+      "6c2fd25c47af223a43c3f10afc2d29e7"
     ]
   ]
 ]

@@ -1,5 +1,5 @@
 [
-  "88sF¡s‹N«ÆÞ\u001bç\t†<",
+  "|ä*º?ƒªD®‡VbQu\u0002›",
   [
     [
       "FStar.WellFounded.Util.lift_binrel",
@@ -17,7 +17,7 @@
         "proj_equation_Prims.Mkdtuple2__2"
       ],
       0,
-      "59d62600d473a3a44a58b0d8b197abbb"
+      "f6a55510cb8b7780a9d12a2e418c087c"
     ],
     [
       "FStar.WellFounded.Util.intro_lift_binrel",
@@ -34,7 +34,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "91e058faf118132ad2eaba869db3ac01"
+      "d47e9e1cf64f8871a343d64028e49340"
     ],
     [
       "FStar.WellFounded.Util.elim_lift_binrel",
@@ -51,7 +51,7 @@
         "proj_equation_Prims.Mkdtuple2__2"
       ],
       0,
-      "b71b030339bd162b91407ff9d4fbbd31"
+      "cad4310017d1d9b88dcc00ef1684ef14"
     ],
     [
       "FStar.WellFounded.Util.elim_lift_binrel",
@@ -71,7 +71,7 @@
         "refinement_interpretation_Tm_refine_90adeae11e4eb652ec4345664db5e79a"
       ],
       0,
-      "79012ba855d541791ad034cf7f45b699"
+      "540462fe3d1df8f2e5e1b37970d1e99f"
     ],
     [
       "FStar.WellFounded.Util.lower_binrel",
@@ -85,16 +85,16 @@
         "equation_FStar.WellFounded.Util.top", "equation_Prims.eq2",
         "equation_Prims.l_and", "equation_Prims.logical",
         "equation_Prims.squash", "fuel_guarded_inversion_Prims.dtuple2",
-        "function_token_typing_Prims.logical",
         "interpretation_Tm_abs_5d86101b099adeb833f59d6e8de8d34b",
         "interpretation_Tm_abs_9706396db915b3a2ea86d4646a5b8236",
         "l_and-interp", "proj_equation_Prims.Mkdtuple2__1",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "token_correspondence_FStar.WellFounded.Util.lift_binrel",
-        "typing_FStar.Pervasives.dsnd", "unit_inversion", "unit_typing"
+        "typing_FStar.Pervasives.dsnd", "typing_Prims.logical",
+        "unit_inversion", "unit_typing"
       ],
       0,
-      "1eea9d22887f6c6f1c0f1f4c2722e92e"
+      "c7e480dc4f89f208f8b4818c8a361c78"
     ],
     [
       "FStar.WellFounded.Util.lower_binrel",
@@ -108,16 +108,16 @@
         "equation_FStar.WellFounded.Util.top", "equation_Prims.l_and",
         "equation_Prims.logical", "equation_Prims.squash",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "function_token_typing_Prims.logical",
         "interpretation_Tm_abs_5d86101b099adeb833f59d6e8de8d34b",
         "interpretation_Tm_abs_9706396db915b3a2ea86d4646a5b8236",
         "l_and-interp", "proj_equation_Prims.Mkdtuple2__1",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "token_correspondence_FStar.WellFounded.Util.lift_binrel",
-        "typing_FStar.Pervasives.dsnd", "unit_inversion", "unit_typing"
+        "typing_FStar.Pervasives.dsnd", "typing_Prims.logical",
+        "unit_inversion", "unit_typing"
       ],
       0,
-      "11facd10413d9d7f5dbbd54166156d1e"
+      "676eddd0c457623d0aa37188ac654d79"
     ],
     [
       "FStar.WellFounded.Util.lift_binrel_well_founded",
@@ -136,7 +136,6 @@
         "equation_Prims.squash",
         "fuel_guarded_inversion_FStar.WellFounded.acc",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "function_token_typing_Prims.logical",
         "interpretation_Tm_abs_5d86101b099adeb833f59d6e8de8d34b",
         "interpretation_Tm_abs_9706396db915b3a2ea86d4646a5b8236",
         "l_and-interp",
@@ -150,12 +149,12 @@
         "token_correspondence_FStar.WellFounded.Util.lift_binrel",
         "token_correspondence_FStar.WellFounded.__proj__AccIntro__item__access_smaller",
         "typing_FStar.Pervasives.dsnd",
-        "typing_FStar.WellFounded.Util.lower_binrel", "unit_inversion",
-        "unit_typing",
+        "typing_FStar.WellFounded.Util.lower_binrel", "typing_Prims.logical",
+        "unit_inversion", "unit_typing",
         "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
       ],
       0,
-      "cc8bcfc541333f188540fb36c0121fa5"
+      "a0a7d07d441e4ad758504148b971e8da"
     ],
     [
       "FStar.WellFounded.Util.lift_binrel_squashed",
@@ -172,7 +171,7 @@
         "proj_equation_Prims.Mkdtuple2__2"
       ],
       0,
-      "7761cb9ea2edf04d2f3abcede86554b4"
+      "254c9337027531da903fef87540cb7c7"
     ],
     [
       "FStar.WellFounded.Util.lower_binrel_squashed",
@@ -193,7 +192,7 @@
         "token_correspondence_FStar.WellFounded.Util.lift_binrel_squashed"
       ],
       0,
-      "1124911a8a1d235c57b71b7ae25e9858"
+      "e2c4a170d5d9a1630fc0c01d8b7398d1"
     ],
     [
       "FStar.WellFounded.Util.lower_binrel_squashed",
@@ -211,11 +210,10 @@
         "interpretation_Tm_abs_c0b2d2713728d6e6a55603d19fda193b",
         "l_and-interp", "proj_equation_Prims.Mkdtuple2__1",
         "proj_equation_Prims.Mkdtuple2__2",
-        "token_correspondence_FStar.WellFounded.Util.lift_binrel_squashed",
-        "true_interp"
+        "token_correspondence_FStar.WellFounded.Util.lift_binrel_squashed"
       ],
       0,
-      "337ab4f819a7bae60da35569d35b22e8"
+      "7ad19b3c3fd8534365deea7d558c2c73"
     ],
     [
       "FStar.WellFounded.Util.lift_binrel_squashed_well_founded",
@@ -249,7 +247,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
       ],
       0,
-      "febbdfd310e2a245a9648f0db4727349"
+      "62f67b046635891ecef25a9ce7f95fc1"
     ],
     [
       "FStar.WellFounded.Util.lift_binrel_squashed_intro",
@@ -263,7 +261,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "1ac8bf0a9515993ce982af8dd53426bd"
+      "a5de8a47fa3318918e8169626c969241"
     ],
     [
       "FStar.WellFounded.Util.unsquash_well_founded",
@@ -277,7 +275,7 @@
         "token_correspondence_FStar.WellFounded.Util.lift_binrel_squashed_as_well_founded_relation"
       ],
       0,
-      "c1ababa23f69c0dc5e8b44edc76a0ce5"
+      "a950306b2417970550290c535d7654ed"
     ]
   ]
 ]

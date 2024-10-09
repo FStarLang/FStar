@@ -8,10 +8,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "d534541007a1fd5844ef929649a7ebc5"
+      "bb149d188942354e9d17ebe6805f7f14"
     ]
   ]
 ]

@@ -15,7 +15,6 @@
         "equation_Registers.List.regmap",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_Prims.int",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_Prims.list@tok",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
@@ -24,10 +23,10 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "subterm_ordering_Prims.Cons",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
-        "typing_FStar.Pervasives.Native.fst"
+        "typing_FStar.Pervasives.Native.fst", "typing_Prims.int"
       ],
       0,
-      "689127cceefeb68c58c15ca6b8644715"
+      "60274e04fc4dc3e77827ff1988d600c1"
     ],
     [
       "Registers.List.const_map_n",
@@ -43,7 +42,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1b0d511342a6da3455b9afd2c9e28cf5"
+      "32211333011075d663db7e2e8a023999"
     ],
     [
       "Registers.List.identity_map",
@@ -59,7 +58,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "01da9c4e7343c515badfb67b8f9431e5"
+      "17a276e9874f6af06399f248cffb0734"
     ],
     [
       "Registers.List.eta_map",
@@ -74,7 +73,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a42cf79834bd024ef6f857f3ff58e4f4"
+      "a99f1f1ed0b0cff703d3ee70ddb0a78f"
     ]
   ]
 ]

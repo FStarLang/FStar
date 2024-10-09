@@ -14,7 +14,7 @@
         "typing_FStar.GSet.intersect", "typing_FStar.GSet.mem"
       ],
       0,
-      "b15ebaf658ecb53987921411178d802d"
+      "4b37810041b22309e7290ba24497e8ba"
     ],
     [
       "FStar.GSet.as_set'",
@@ -25,10 +25,11 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "03550d3ffeb78dc58c2556d6c01e9851"
+      "efd36679c617dfd2342c1112fca38823"
     ],
     [
       "FStar.GSet.lemma_disjoint_subset",
@@ -45,7 +46,7 @@
         "typing_FStar.GSet.mem"
       ],
       0,
-      "fa7994caeaeabc05a5b946d2147b3922"
+      "be39f996b62a6e2c0acf7cb17e323afe"
     ]
   ]
 ]

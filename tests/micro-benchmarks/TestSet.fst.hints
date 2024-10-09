@@ -7,15 +7,14 @@
       2,
       1,
       [
-        "@query", "function_token_typing_TestSet.elt", "l_or-interp",
+        "@query", "equation_FStar.TSet.subset", "l_or-interp",
         "lemma_FStar.TSet.lemma_equal_intro",
-        "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_subset",
-        "lemma_FStar.TSet.mem_union", "lemma_FStar.TSet.subset_mem",
+        "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_union",
         "typing_FStar.TSet.singleton", "typing_FStar.TSet.union",
-        "typing_TestSet.a", "typing_TestSet.b"
+        "typing_TestSet.a", "typing_TestSet.b", "typing_TestSet.elt"
       ],
       0,
-      "fdcb63de5bd31ad977c51f2f2a226525"
+      "c891c59e352b66ebb5e6446d84917637"
     ]
   ]
 ]

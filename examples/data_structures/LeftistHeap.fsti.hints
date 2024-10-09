@@ -19,11 +19,12 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "aec62a0340f72fb09dd4ca64d69874fb"
+      "7dfd71b62bed91c3f1966589762d2729"
     ],
     [
       "LeftistHeap.sorted",
@@ -36,7 +37,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "299f89ea3d01e8d5348560c53276b76f"
+      "d767e697f93ebec9f41a18db2cf4e0ae"
     ],
     [
       "LeftistHeap.empty",
@@ -49,7 +50,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b7dd87020985499675fcdadb862c9a53"
+      "2da5d3aa9dfca18120bf3a0e7c581416"
     ],
     [
       "LeftistHeap.isEmpty",
@@ -62,7 +63,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8f8c0a557d64dda0e82daca27b6bc651"
+      "5f0ae296a3fe8a37735b95c2d0844cf8"
     ],
     [
       "LeftistHeap.singleton",
@@ -75,7 +76,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "654b2fc98e9ae0fc32efcde1e68320e0"
+      "beb797789276ec9b191f54d51bfe77bd"
     ],
     [
       "LeftistHeap.merge_heaps",
@@ -88,7 +89,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "4e89169f22ce50b05d08c2f6a3de477a"
+      "bb6918fde2760aacf5a1281965db04cf"
     ],
     [
       "LeftistHeap.insert",
@@ -101,7 +102,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6be85669f2e1a69027f3ae51b2626507"
+      "b568017e4279f7eb1a3e4eb35bb21914"
     ],
     [
       "LeftistHeap.get_min",
@@ -119,7 +120,7 @@
         "typing_LeftistHeap.isEmpty"
       ],
       0,
-      "edf5c1ed496f05b80b421d338a9eb00b"
+      "8f1b3b9e835ee32d4bfba16de32f751e"
     ],
     [
       "LeftistHeap.delete_min",
@@ -140,7 +141,7 @@
         "typing_LeftistHeap.isEmpty", "typing_LeftistHeap.to_list"
       ],
       0,
-      "462590ef017390314979d748d9ba3636"
+      "ac13daedb171c9c3fc337f80a411c6cf"
     ]
   ]
 ]

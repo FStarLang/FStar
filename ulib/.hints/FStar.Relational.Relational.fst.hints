@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "55c2280f0dcc3b1df505a6cb7a6056b1"
+      "0d7ae10dbb52c52c73d4d1bc77f33fba"
     ],
     [
       "FStar.Relational.Relational.tl_rel",
@@ -16,12 +16,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_12775a49c16ac0863ce1a5e5a1a8be3f"
       ],
       0,
-      "a63faa7092c2b52358f57709e8d1fd84"
+      "9c524f3e10dab4b6f07fbaaa5d5d3cfd"
     ]
   ]
 ]

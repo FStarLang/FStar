@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_BugBoxInjectivity.my_t"
       ],
       0,
-      "c22a1f89783706aacee2d9fbb4e45a5c"
+      "3a400980a1ef53fc7c97fb4473ce9040"
     ],
     [
       "BugBoxInjectivity.inj_t",
@@ -27,7 +27,7 @@
         "fuel_guarded_inversion_BugBoxInjectivity.t"
       ],
       0,
-      "238134d8c2739203a0655ad11276d3f3"
+      "e1bb0765d94bef5d061027b8d8180f00"
     ],
     [
       "BugBoxInjectivity.test2_injective",
@@ -41,7 +41,7 @@
         "typing_BugBoxInjectivity.test2_inhabited"
       ],
       0,
-      "6e0254f4cd6ff1ab224a1250ef02b043"
+      "bbbaa90e00d27fa81117224623adc109"
     ],
     [
       "BugBoxInjectivity.itest2_injective'",
@@ -53,7 +53,7 @@
         "refinement_interpretation_Tm_refine_ab9d33a5953a01ee542ad18c0c164ee3"
       ],
       0,
-      "7ee494b05e6b1d09f263fdc0b004a7b6"
+      "0580fe65ff5ad43157ed10152ed13f4f"
     ],
     [
       "BugBoxInjectivity.fals",
@@ -68,7 +68,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "1ea10f4226101df14da5f73385032238"
+      "95f9ecc86556e92bc797f7f4b5ac7b24"
     ],
     [
       "BugBoxInjectivity.test",
@@ -80,7 +80,7 @@
         "fuel_guarded_inversion_BugBoxInjectivity.ceq"
       ],
       0,
-      "e90a5438b101cca2fa7676c1fa531567"
+      "ced668db6829f2b709d47bfb551e72a8"
     ],
     [
       "BugBoxInjectivity.case0",
@@ -95,7 +95,7 @@
         "equation_FStar.Pervasives.coerce_eq"
       ],
       0,
-      "97b66d624dace7052b8626a67a785453"
+      "b387cc34afd72b263b28562d1259654e"
     ],
     [
       "BugBoxInjectivity.case4",
@@ -104,7 +104,7 @@
       1,
       [ "@query" ],
       0,
-      "2ae21732f64aea1d718988c591bae1a4"
+      "183166abe54eb73676b9105a9b24dde4"
     ],
     [
       "BugBoxInjectivity.case5",
@@ -113,7 +113,7 @@
       1,
       [ "@query" ],
       0,
-      "8e269381a820a039076c2984445801c6"
+      "4e1cc38444781e15de4171b7efbb5b9c"
     ],
     [
       "BugBoxInjectivity.case6",
@@ -122,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "571b587717880fc7260df030a7eb3396"
+      "47ea54abb6c3ef63a6bd2fcba30f3194"
     ],
     [
       "BugBoxInjectivity.case6",
@@ -137,7 +137,7 @@
         "equation_FStar.Pervasives.coerce_eq"
       ],
       0,
-      "28d60ff40f7175d853c51e292d0fe6c7"
+      "a7863ee12292e934413982bb2bd1e152"
     ]
   ]
 ]

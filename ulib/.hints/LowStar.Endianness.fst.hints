@@ -21,7 +21,7 @@
         "typing_LowStar.Monotonic.Buffer.frameOf"
       ],
       0,
-      "2f68c556c7843738575f56f5357a30c8"
+      "7e14f3284a6835842e3a137d7e9caeb1"
     ],
     [
       "LowStar.Endianness.store_post",
@@ -43,7 +43,7 @@
         "typing_LowStar.Monotonic.Buffer.frameOf"
       ],
       0,
-      "9ad566d6b194a5ebf62972a4a1345d57"
+      "1e604a07b149230b0cdd5c825b4c8d80"
     ],
     [
       "LowStar.Endianness.store16_le_i",
@@ -62,7 +62,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "daf1f22c97b74c970545c1417a5569a7"
+      "796d7d57be1cb1998ad7b63c58641c47"
     ],
     [
       "LowStar.Endianness.load16_le_i",
@@ -86,7 +86,7 @@
         "typing_FStar.UInt32.v", "typing_FStar.UInt8.t"
       ],
       0,
-      "e271634f33821fa1792c911e942ead2a"
+      "f7f3b569e568ae7837df415d9cb8cbe3"
     ],
     [
       "LowStar.Endianness.store16_be_i",
@@ -105,7 +105,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "edcd61e557b0a8189f928c97233cdc3f"
+      "cf01006f040933c96f821731af097283"
     ],
     [
       "LowStar.Endianness.load16_be_i",
@@ -129,7 +129,7 @@
         "typing_FStar.UInt32.v", "typing_FStar.UInt8.t"
       ],
       0,
-      "067babc6e2c4893d57beeb8b5682ed6f"
+      "378dc4b59c7c7d95f21e37b4597cb967"
     ],
     [
       "LowStar.Endianness.store32_le_i",
@@ -148,7 +148,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "68bb80a872c7818996d8bafa26caec14"
+      "52055543ea24230121e6ba1694abc4a6"
     ],
     [
       "LowStar.Endianness.load32_le_i",
@@ -172,7 +172,7 @@
         "typing_FStar.UInt32.v", "typing_FStar.UInt8.t"
       ],
       0,
-      "e1227e13ffd06b0b82a047c0eafbf494"
+      "d5ce3dfe1bc3f8b81e4c692210b04c8d"
     ],
     [
       "LowStar.Endianness.store32_be_i",
@@ -191,7 +191,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "c3d0d84840044b24b7b94c2c30a7fa4c"
+      "4982399082c8ffafebd7e78d7a0b0a2f"
     ],
     [
       "LowStar.Endianness.load32_be_i",
@@ -215,7 +215,7 @@
         "typing_FStar.UInt32.v", "typing_FStar.UInt8.t"
       ],
       0,
-      "5b92b4e73e129fbf74016b25cffbb68c"
+      "dfa8a1de67d32aa6f4579b51e2a01a18"
     ],
     [
       "LowStar.Endianness.store64_le_i",
@@ -234,7 +234,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "75222715bdfff598e7366f9ac202fc32"
+      "dc4653af2c21095a76c17f5b12bd3fbc"
     ],
     [
       "LowStar.Endianness.load64_le_i",
@@ -258,7 +258,7 @@
         "typing_FStar.UInt32.v", "typing_FStar.UInt8.t"
       ],
       0,
-      "3ffb735f3054cf035e67da189319382a"
+      "c189ac7e52f43cfcf95606b2feb9e0a6"
     ],
     [
       "LowStar.Endianness.store64_be_i",
@@ -277,7 +277,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "53e5c9403385df708514d478dbe25351"
+      "6e11c1466f5deaca4a79205f139d7060"
     ],
     [
       "LowStar.Endianness.load64_be_i",
@@ -301,7 +301,7 @@
         "typing_FStar.UInt32.v", "typing_FStar.UInt8.t"
       ],
       0,
-      "1e4ecac14df46bff50b52b35c83d0e29"
+      "f8c5b7c1f48708de7cbdc165dea7ea6e"
     ],
     [
       "LowStar.Endianness.store128_le_i",
@@ -322,7 +322,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "15c8fc88512e89ceeabbc651fbcd4396"
+      "7dfb3b655f3e6c4f2053d04ea88dcf9f"
     ],
     [
       "LowStar.Endianness.load128_le_i",
@@ -346,7 +346,7 @@
         "typing_FStar.UInt32.v", "typing_FStar.UInt8.t"
       ],
       0,
-      "e1f114d3f8bf0c228d4a84e67d86bdbd"
+      "a3a359f14e4826a814636e8fdbd002ed"
     ],
     [
       "LowStar.Endianness.store128_be_i",
@@ -367,7 +367,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "66be587b62111749be545a6b684cc8d7"
+      "969b01a4b64a2e686bf50e1f52958373"
     ],
     [
       "LowStar.Endianness.load128_be_i",
@@ -391,7 +391,7 @@
         "typing_FStar.UInt32.v", "typing_FStar.UInt8.t"
       ],
       0,
-      "531ad86a249d33947312f169d2331d35"
+      "110c4909795c8d01478effc7eac4197f"
     ],
     [
       "LowStar.Endianness.store16_le",
@@ -415,7 +415,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "416e91f13f8f6ae4373ca3f25127e7d2"
+      "10a94dbea3e2965e0876771845ba0786"
     ],
     [
       "LowStar.Endianness.load16_le",
@@ -435,7 +435,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "6baae480c9bbad3de03dcd57e1c038cd"
+      "abf1dd751e6f5f4188c5e04db54cd213"
     ],
     [
       "LowStar.Endianness.store16_be",
@@ -459,7 +459,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "d3c415d21c1d9a2ffa11a9933a9aca91"
+      "6ea38eb569b26f1930255016f3bd6eaf"
     ],
     [
       "LowStar.Endianness.load16_be",
@@ -479,7 +479,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "fef001eee1c4e3e148df385c0383f806"
+      "9e21d479b14aac32e3776475a0726cfb"
     ],
     [
       "LowStar.Endianness.store32_le",
@@ -503,7 +503,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "6bcea8bc036fef4a132bf8a06d5314ec"
+      "e268a1d153e4a09d51cd7098a6838008"
     ],
     [
       "LowStar.Endianness.load32_le",
@@ -523,7 +523,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "1d8e10115cbc1d6722e1afd9559ad709"
+      "a9e8aa906a39150f1488e7c30a7b0fab"
     ],
     [
       "LowStar.Endianness.store32_be",
@@ -547,7 +547,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "c8344e46d6f001c24f84cca467dcf2dc"
+      "4b13daf7edf467a02c3656da12394e40"
     ],
     [
       "LowStar.Endianness.load32_be",
@@ -567,7 +567,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "8370cb30d9613aa1e03487f352ae2161"
+      "75ebba407cd800cff78b80f9fb48e329"
     ],
     [
       "LowStar.Endianness.store64_le",
@@ -591,7 +591,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "f1e13f91ac01d497a8446a629a54a18f"
+      "0cf03e964af0f8054d9d73bd51ac991e"
     ],
     [
       "LowStar.Endianness.load64_le",
@@ -611,7 +611,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "4d7ce6a26c33c179738f12f836f2b6a7"
+      "200e5986cdcc28c9b2b7033d9ba50cff"
     ],
     [
       "LowStar.Endianness.load64_be",
@@ -631,7 +631,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "72e0216161f3fb9db3cc0aa7a83c1c0a"
+      "b96fe6d5710050e10dc2faef6c4bf4c3"
     ],
     [
       "LowStar.Endianness.store64_be",
@@ -655,7 +655,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "98b0c533cce003440a728c846ca42328"
+      "f788e8201ea6cfc0c81a3aad634d1d16"
     ],
     [
       "LowStar.Endianness.load128_le",
@@ -677,7 +677,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "e018148b2ecd954e748edb4a8a1c5acf"
+      "d860e1bd05a5bc2109485fedff96ce3e"
     ],
     [
       "LowStar.Endianness.store128_le",
@@ -703,7 +703,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "d2c61a2f78a2f03d18987827418f159c"
+      "ae7c43e0e6e8d8d920a767c64ac8f170"
     ],
     [
       "LowStar.Endianness.load128_be",
@@ -725,7 +725,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "201315ed5413ed4f781494821ff02a5c"
+      "3054befb55b96daa4b78b401e9dfac2b"
     ],
     [
       "LowStar.Endianness.store128_be",
@@ -751,7 +751,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "5d0387d08209a8337f4adb1060e6ba64"
+      "501afa0201f78cac7c2760167fc2495e"
     ],
     [
       "LowStar.Endianness.index_32_be",
@@ -786,7 +786,7 @@
         "typing_LowStar.Monotonic.Buffer.length"
       ],
       0,
-      "ef6bae95d02fdc4768c8b5bdf5d78ed4"
+      "31879c188af893751a63a9b49585d7a5"
     ],
     [
       "LowStar.Endianness.index_32_le",
@@ -821,7 +821,7 @@
         "typing_LowStar.Monotonic.Buffer.length"
       ],
       0,
-      "c8354bc145ea6ee3b90038ab830c5e99"
+      "cf69600d68228856c6ba1c67c7dfdd75"
     ],
     [
       "LowStar.Endianness.index_64_be",
@@ -857,7 +857,7 @@
         "typing_LowStar.Monotonic.Buffer.length"
       ],
       0,
-      "8d028409f2af03e3c66a099438f831a8"
+      "06657b938507bbde872bda3431098527"
     ],
     [
       "LowStar.Endianness.index_64_le",
@@ -893,7 +893,7 @@
         "typing_LowStar.Monotonic.Buffer.length"
       ],
       0,
-      "ebf6ee61f8b950e95e3aff9443be4acf"
+      "ac364c4e5e9df8ecc7032ce655f34ea6"
     ],
     [
       "LowStar.Endianness.interval_4_disjoint",
@@ -902,15 +902,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_Prims.int"
       ],
       0,
-      "13e53ef13e6c74b5030fbe874e9f8db5"
+      "48cd5eadc1e4872b557691bb9f0b96b3"
     ],
     [
       "LowStar.Endianness.upd_32_be",
@@ -918,8 +919,9 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
-        "equation_FStar.Endianness.bytes",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
+        "b2t_def", "bool_inversion", "equation_FStar.Endianness.bytes",
         "equation_FStar.Endianness.uint32_of_be",
         "equation_FStar.Monotonic.HyperStack.live_region",
         "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
@@ -927,14 +929,15 @@
         "equation_FStar.UInt.uint_t", "equation_LowStar.Endianness.u32",
         "equation_LowStar.Endianness.u8",
         "equation_LowStar.Monotonic.Buffer.length", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "int_typing", "lemma_FStar.Endianness.offset_uint32_be",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
         "lemma_FStar.Seq.Base.lemma_eq_intro",
         "lemma_FStar.Seq.Base.lemma_index_upd1",
         "lemma_FStar.Seq.Base.lemma_index_upd2",
-        "lemma_FStar.Seq.Base.lemma_len_upd", "lemma_FStar.UInt32.uv_inv",
+        "lemma_FStar.Seq.Base.lemma_len_upd", "lemma_FStar.UInt.pow2_values",
+        "lemma_FStar.UInt32.uv_inv",
         "lemma_LowStar.Monotonic.Buffer.length_as_seq",
         "lemma_LowStar.Monotonic.Buffer.live_region_frameOf",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
@@ -959,10 +962,10 @@
         "typing_LowStar.Monotonic.Buffer.as_seq",
         "typing_LowStar.Monotonic.Buffer.frameOf",
         "typing_LowStar.Monotonic.Buffer.len",
-        "typing_LowStar.Monotonic.Buffer.length"
+        "typing_LowStar.Monotonic.Buffer.length", "typing_Prims.int"
       ],
       0,
-      "0526c0d1771b3e56b88ee7ad1877ee18"
+      "f9344c4ff089926aae21f2c7800199a2"
     ]
   ]
 ]

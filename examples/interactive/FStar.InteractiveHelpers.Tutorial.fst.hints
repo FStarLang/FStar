@@ -1,5 +1,5 @@
 [
-  "n±ÊBZoÄt½¯\u00047@ñà\u0019",
+  "­ÎÞ‡¤¿b­XüÒÀ2°è¡",
   [
     [
       "FStar.InteractiveHelpers.Tutorial.simpl_ex1",
@@ -15,7 +15,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "0d8467c689e0c2d93963d7a159383d3b"
+      "0a333fa731f95aea53bbeebdd60ce8f2"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.simpl_ex2",
@@ -30,7 +30,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "fe82aef8dff1c7f59c432e5cfc381072"
+      "f646c85af3c7015b353aaffe3c3a125e"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ci_ex1",
@@ -39,7 +39,6 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "equation_FStar.InteractiveHelpers.Tutorial.Definitions.f1",
         "equation_FStar.InteractiveHelpers.Tutorial.Definitions.f2",
         "equation_FStar.InteractiveHelpers.Tutorial.Definitions.f4",
         "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Addition",
@@ -48,7 +47,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "de59209e6d5c3b6a4ecb271d9906dd6e"
+      "68a5aedbd59375afb507bb6188b6a3bd"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ci_ex2",
@@ -57,7 +56,7 @@
       0,
       [ "@query" ],
       0,
-      "6fd181172c1bcf20cf5a4b6dcba288c6"
+      "726fa9fbf82ed4e9095174c64b1c0a72"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ci_ex3",
@@ -70,7 +69,7 @@
         "primitive_Prims.op_Addition"
       ],
       0,
-      "ef71f025c4c487525ef94938d71f6fd7"
+      "d908c9114e309bf6121e357361228624"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ci_ex4",
@@ -83,7 +82,7 @@
         "refinement_interpretation_Tm_refine_c60d276dd0e4be790a2120a44d571d0d"
       ],
       0,
-      "6d7ec5db5fe32065fc26aeff0e588160"
+      "bd769a1251823ed1cdbac56dc5e42163"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.split_ex1",
@@ -102,7 +101,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "a095ef748273049c43991d75fef4cd59"
+      "935c419d4554caed23ccf9ae12548505"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ut_ex1",
@@ -113,15 +112,15 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.InteractiveHelpers.Tutorial.Definitions.f3",
         "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_Prims.int"
       ],
       0,
-      "ee13455f2946ec43b2d21653ff6be9a5"
+      "58b3b5b1e5f7b3eba9962acfe785b303"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ut_ex2",
@@ -130,7 +129,7 @@
       0,
       [ "@query" ],
       0,
-      "cb51891daa1386c7408ca2f20d55a742"
+      "822102adbe293fe9f4d9cf19b6756fb0"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.cc_ex1",
@@ -144,7 +143,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "69ae60e41213c554e15a47665d4d724c"
+      "6f0d588e2905d864b5b1fdd913fb8bcc"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ts_ex1",
@@ -160,7 +159,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "f1b21509af481369bdee6bef7cfe721e"
+      "4974277b940ce9f0766f63ced6d18708"
     ]
   ]
 ]

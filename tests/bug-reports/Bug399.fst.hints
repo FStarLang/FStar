@@ -6,12 +6,9 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_unit",
-        "unit_inversion"
-      ],
+      [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
       0,
-      "fc4f30bdb0c005a9639c724a2df1c651"
+      "f5b3ead30689935daf889fd8a954c4dc"
     ]
   ]
 ]

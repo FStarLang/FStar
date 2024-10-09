@@ -7,12 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Bug736.Goal",
-        "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_b0ecc9ff3d7b826e8dfbdbd99e83c3c3"
       ],
       0,
-      "fe4593e2566a35c9d62819fa9922f502"
+      "9d73dfaa69337bcdfbe94af193bd7b41"
     ],
     [
       "Bug736.__proj__Goal__item___1",
@@ -20,13 +19,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Bug736.Goal",
-        "proj_equation_Bug736.Goal_a", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Bug736.Goal_a",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_b0ecc9ff3d7b826e8dfbdbd99e83c3c3"
       ],
       0,
-      "0d146990ba5f26c1157013e87d69cf16"
+      "cd8f88878d39b969f9700d94d124e7bb"
     ],
     [
       "Bug736.__proj__AHyp__item__a",
@@ -34,12 +31,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Bug736.AHyp",
-        "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_bfba6f53fada18c2869c6f69e20ceaa8"
       ],
       0,
-      "6648767f04865063567fe7d65e5e1719"
+      "5f16f9b36c1483fcae78d5dac9d28d43"
     ],
     [
       "Bug736.__proj__AHyp__item___1",
@@ -47,13 +43,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Bug736.AHyp",
-        "proj_equation_Bug736.AHyp_a", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Bug736.AHyp_a",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_bfba6f53fada18c2869c6f69e20ceaa8"
       ],
       0,
-      "550a274884eb4a8c51979cfdb9803bbb"
+      "af6e96d6a180caffe43d438d8ab20e4c"
     ],
     [
       "Bug736.__proj__AHyp__item___2",
@@ -61,13 +55,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Bug736.AHyp",
-        "proj_equation_Bug736.AHyp_a", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Bug736.AHyp_a",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_bfba6f53fada18c2869c6f69e20ceaa8"
       ],
       0,
-      "aa97072640474db0f1bae18b14e6df1e"
+      "dc8545176afb69f8d4a16f3359b002bf"
     ]
   ]
 ]

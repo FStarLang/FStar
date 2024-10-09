@@ -12,7 +12,7 @@
         "typing_FStar.UInt64.t"
       ],
       0,
-      "3098215f6083922b5ca342dbc5634b53"
+      "4daf9e38fa25072beab533e3805c8805"
     ],
     [
       "Bug1091.apr19_2017_mem",
@@ -23,12 +23,11 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_374b44ccfcb77ed85d505dbc44265913_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Prims.eqtype", "equation_Prims.op_Equals_Equals_Equals",
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "14065cb467b29806df622f154fde317a"
+      "fd833d0baeb4c1f48b92e6d657bb5c3d"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -40,7 +39,6 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
-        "equation_Prims.op_Equals_Equals_Equals",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
@@ -50,7 +48,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0223ccd69e615f58fff2c7c7d8cc756c"
+      "c6af91c721a8fd4041d773e4e6f0e041"
     ]
   ]
 ]

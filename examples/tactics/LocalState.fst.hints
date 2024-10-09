@@ -2,18 +2,19 @@
   "UˆŒ‰\u001c\u000bïèÛf]πY˙\u001b≤",
   [
     [
-      "LocalState.uu___35",
+      "LocalState.uu___0",
       1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "432e7d8a52f7b3edb24ae79622f2a1c5"
+      "9ad34dda1c62aea9701faadf4a144caa"
     ]
   ]
 ]

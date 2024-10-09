@@ -10,11 +10,12 @@
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil", "equation_Prims.nat",
         "fuel_guarded_inversion_Prims.list", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "cadc0076acfc7ce0ed0b4edda2b8d389"
+      "989b231836a0c07c678e7f941adf62ab"
     ],
     [
       "Bug1470.length1",
@@ -27,7 +28,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "011e58452a1cc7f2ef05322f31c9266e"
+      "dec16c3ff6ce8516fab9317fb241ae3f"
     ],
     [
       "Bug1470.test",
@@ -39,7 +40,7 @@
         "refinement_interpretation_Tm_refine_f3a309fd18fb30c242602784337aa7c8"
       ],
       0,
-      "93dd4daaa434cf3773a9a5ec3a5acc9e"
+      "11f6339c6e1774b363724e25a8000302"
     ]
   ]
 ]

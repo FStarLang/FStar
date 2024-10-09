@@ -1,0 +1,229 @@
+[
+  "N‹=³Ì¹æƒ¦|² Ñ òª",
+  [
+    [
+      "FStar.Tactics.Canon.Lemmas.distr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "a08d83aeac70089da1a502ab59b8294d"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.distl",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "b0ef9915241c0aeb4cdf8774cccc54bd"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.ass_plus_l",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "ee2264eb318ab8ea07254d153474d2c0"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.ass_mult_l",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "605b8b1f44adf320ad40d4c0bc9c28c4"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.comm_plus",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Addition" ],
+      0,
+      "efb5233cfa3bcd895bbbeceab393564d"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.sw_plus",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "e3fed7ce3f74d2b082159a3a3a84bff8"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.sw_mult",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "a328feeda63ad5bd6b8b012fd29df173"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.comm_mult",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Multiply" ],
+      0,
+      "342bde5304ddca569894e23d8e635979"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.trans",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
+      ],
+      0,
+      "86c14e950c3136a6c2b05059652e0094"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.cong_plus",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
+      ],
+      0,
+      "3cd0e6d08c71bfbc33fa1edf60645520"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.cong_mult",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
+      ],
+      0,
+      "807a4e0625176e6c4fae5e1066997cb1"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.neg_minus_one",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Minus", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "bb653377225431ec968b03c0b8eca3aa"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.x_plus_zero",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "44b310302568725579e3e4943ef5e908"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.zero_plus_x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "3ca5ac2cd60daed4c7bf8975a6f06e3e"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.x_mult_zero",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "890e867ef98081d57b2e8e67de105eed"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.zero_mult_x",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "ce124f01f3c2e96fd44e8bff275ab479"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.x_mult_one",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "d0c01c5a13cb51c8b9d9753b7da48280"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.one_mult_x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "c297d8d83a27449140690ea7a2717289"
+    ],
+    [
+      "FStar.Tactics.Canon.Lemmas.minus_is_plus",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Minus",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "4b792dd5bcf96d5081f8729bdba1559c"
+    ]
+  ]
+]

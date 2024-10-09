@@ -20,7 +20,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "c49decf508332bd174c9787c491f9b6a"
+      "1da71eefe55cb94a980060cbb5b0df09"
     ],
     [
       "X64.Vale.State_i.eval_maddr",
@@ -36,7 +36,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "41ed6e7d1f3c78256fb03505aca80960"
+      "86ba968a787de0c8c9d5e37bac4fa83d"
     ],
     [
       "X64.Vale.State_i.eval_operand",
@@ -52,7 +52,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "aa773ed4f97705b27ae39fb92d528629"
+      "e584314214bcf257753bc19ea929307b"
     ],
     [
       "X64.Vale.State_i.update_reg",
@@ -67,16 +67,16 @@
         "X64.Vale.Regs_i_interpretation_Tm_arrow_73862e447730cb7be03c891c89cb5703",
         "X64.Vale.State_i_interpretation_Tm_arrow_1093f8e31085b67d2aaada502a6d45cd",
         "assumption_X64.Machine_s.reg__uu___haseq",
-        "equality_tok_X64.Machine_s.Rax@tok",
+        "equality_tok_X64.Machine_s.Rsp@tok",
         "equation_FStar.FunctionalExtensionality.is_restricted",
         "interpretation_Tm_abs_bde726dfeb2837d96e43a155f7c873f5",
         "kinding_X64.Machine_s.reg@tok",
         "lemma_FStar.FunctionalExtensionality.idempotence_on_domain",
         "typing_Tm_abs_bde726dfeb2837d96e43a155f7c873f5",
-        "typing_tok_X64.Machine_s.Rax@tok"
+        "typing_tok_X64.Machine_s.Rsp@tok"
       ],
       0,
-      "d9f90e7d2a022a159e4b4e427edfdb45"
+      "0100bf2c67137f02fe8ec58f13502c28"
     ],
     [
       "X64.Vale.State_i.valid_operand",
@@ -92,7 +92,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "453af6b57b06d3ee76d470174fede50a"
+      "3d80f0bc102b0080c418a36ca512b5db"
     ]
   ]
 ]

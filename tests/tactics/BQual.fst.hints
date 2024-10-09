@@ -1,0 +1,27 @@
+[
+  "\u007f$ße+D%´Ó\u0019\tyf¨ñž",
+  [
+    [
+      "BQual.uu___0",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Sealed.Inhabited.is_sealed", "true_interp"
+      ],
+      0,
+      "67cc5580d37e8f69125905a7a1bc8c88"
+    ],
+    [
+      "BQual.uu___0",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Sealed.Inhabited.is_sealed", "true_interp"
+      ],
+      0,
+      "7919d5cf43582cbde400ee7ad4688f66"
+    ]
+  ]
+]

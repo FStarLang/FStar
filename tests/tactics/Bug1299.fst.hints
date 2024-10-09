@@ -13,7 +13,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "95207a578928ff455db7158d3848b2dc"
+      "d4999b3e351edccf0fd1d3e20fbdcd20"
     ],
     [
       "Bug1299.test",
@@ -23,23 +23,25 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Pervasives.Native_pretyping_b53dbd183c526bc5d0f20d7b966ae125",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "data_typing_intro_FStar.Pervasives.Native.None@tok",
         "data_typing_intro_FStar.Stubs.Tactics.Common.TacticFailure@tok",
         "data_typing_intro_FStar.Stubs.Tactics.Result.Failed@tok",
         "data_typing_intro_Prims.Cons@tok",
-        "data_typing_intro_Prims.Nil@tok",
-        "equation_FStar.Pervasives.pattern", "equation_FStar.Range.range",
+        "data_typing_intro_Prims.Nil@tok", "equation_FStar.Range.range",
         "equation_FStar.Stubs.Errors.Msg.error_message",
-        "function_token_typing_FStar.Pervasives.pattern",
-        "function_token_typing_FStar.Range.range",
-        "function_token_typing_FStar.Stubs.Errors.Msg.error_message",
-        "function_token_typing_FStar.Stubs.Pprint.document",
-        "kinding_FStar.Pervasives.Native.option@tok", "string_typing",
-        "typing_FStar.Stubs.Pprint.arbitrary_string"
+        "equation_Prims.eqtype",
+        "kinding_FStar.Pervasives.Native.option@tok",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "string_typing", "typing_FStar.Range.range",
+        "typing_FStar.Stubs.Errors.Msg.error_message",
+        "typing_FStar.Stubs.Pprint.arbitrary_string",
+        "typing_FStar.Stubs.Pprint.document", "typing_Prims.unit",
+        "unit_typing"
       ],
       0,
-      "f0921066fe67e3bb91f3fd22caef7889"
+      "7798fe1ec726ca09aed59ac96e3f7dc5"
     ]
   ]
 ]

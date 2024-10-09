@@ -13,7 +13,6 @@
         "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
         "data_elim_FStar.Stubs.Tactics.Result.Success",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
-        "function_token_typing_FStar.Stubs.Reflection.Types.sigelt",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
         "projection_inverse_FStar.Stubs.Tactics.Result.Failed_exn",
@@ -21,10 +20,11 @@
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_v",
+        "typing_FStar.Stubs.Reflection.Types.sigelt",
         "typing_FStar.Stubs.Reflection.V2.Builtins.lookup_typ"
       ],
       0,
-      "6a206f098fc0efb533f979c24590829c"
+      "de940c0124c5e8bf74ad4a9b826ed374"
     ]
   ]
 ]

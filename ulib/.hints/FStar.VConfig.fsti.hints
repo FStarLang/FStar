@@ -11,11 +11,11 @@
         "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
         "assumption_FStar.Pervasives.Native.option__uu___haseq",
         "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
-        "function_token_typing_Prims.string",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.string"
       ],
       0,
-      "82f19ee370e4336ab450a82e6fb05275"
+      "6f5d61ba6d621a38e60753eef0f746da"
     ]
   ]
 ]

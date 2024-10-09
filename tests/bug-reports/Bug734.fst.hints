@@ -9,10 +9,11 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Bug734.Bool",
         "disc_equation_Bug734.Fun", "disc_equation_Bug734.Int",
-        "fuel_guarded_inversion_Bug734.dir"
+        "fuel_guarded_inversion_Bug734.dir",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "2fc32d7c3259a754f008b7d70dbcdb3d"
+      "5f00343f337598d70722d81db71abb24"
     ],
     [
       "Bug734.def_value",
@@ -31,7 +32,7 @@
         "typing_Tm_abs_f8b7175ad4f28c0bc3c11371abe1d18d"
       ],
       0,
-      "e445499301c6d10dd4cd5350d611f8d4"
+      "ac25f78963fb132c823fdc4fc56638bf"
     ]
   ]
 ]

@@ -12,7 +12,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "ca8dd61cbea8a8f0c815e1cf5a46b870"
+      "2ae0e9e46e3506abc2813db1d8966480"
     ],
     [
       "Quals.test_sp1",
@@ -31,8 +31,6 @@
         "equation_FStar.Stubs.Reflection.Types.name",
         "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
-        "function_token_typing_FStar.Stubs.Reflection.Types.sigelt",
-        "function_token_typing_Prims.string",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
         "projection_inverse_FStar.Stubs.Tactics.Result.Failed_exn",
@@ -41,11 +39,12 @@
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_v",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "string_typing",
-        "typing_FStar.Stubs.Reflection.V2.Builtins.lookup_typ"
+        "string_typing", "typing_FStar.Stubs.Reflection.Types.sigelt",
+        "typing_FStar.Stubs.Reflection.V2.Builtins.lookup_typ",
+        "typing_Prims.string"
       ],
       0,
-      "04fd11bdbac4387af40f8fbcc78073a8"
+      "c2a5187d8432e5d2add6fcbe579f3d5b"
     ],
     [
       "Quals.test_sp1",
@@ -64,8 +63,6 @@
         "equation_FStar.Stubs.Reflection.Types.name",
         "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
-        "function_token_typing_FStar.Stubs.Reflection.Types.sigelt",
-        "function_token_typing_Prims.string",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
         "projection_inverse_FStar.Stubs.Tactics.Result.Failed_exn",
@@ -74,11 +71,12 @@
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_v",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "string_typing", "true_interp",
-        "typing_FStar.Stubs.Reflection.V2.Builtins.lookup_typ"
+        "string_typing", "typing_FStar.Stubs.Reflection.Types.sigelt",
+        "typing_FStar.Stubs.Reflection.V2.Builtins.lookup_typ",
+        "typing_Prims.string"
       ],
       0,
-      "db9d492d73a4713d431024f46f160bca"
+      "17dc8ef9ff6b88608930b0ef33438367"
     ]
   ]
 ]

@@ -9,12 +9,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
-        "equation_Prims.eqtype", "function_token_typing_Prims.bool",
-        "function_token_typing_Prims.int",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.bool", "typing_Prims.int"
       ],
       0,
-      "a644dcdbfb22e26f79926034d2a7314f"
+      "c18be4e52b115126e11bcf96d0cfe38c"
     ],
     [
       "Plugins.Test.uu___2",
@@ -24,11 +24,11 @@
       [
         "@MaxIFuel_assumption", "@query",
         "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
-        "function_token_typing_Prims.int",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "f8707a3335a55ec92b6c8e76f702a521"
+      "ace2335c34acf51c8d998ddd96fd5335"
     ]
   ]
 ]

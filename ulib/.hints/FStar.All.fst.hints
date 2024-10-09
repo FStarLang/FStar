@@ -7,12 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.All.Failure",
-        "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_149c6719f34c408becdf9120a4ae2d59"
       ],
       0,
-      "dc55edbb87b9f6db0f22824de76aacbb"
+      "6954d194c5c87447fe449b9ca66c67d9"
     ]
   ]
 ]

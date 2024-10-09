@@ -12,7 +12,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "f04f840f6131d0c7c2c259ef3923db4d"
+      "290349a690cf2148e2a6077f6bff209f"
     ],
     [
       "FStar.Tactics.CheckLN.check",
@@ -21,6 +21,7 @@
       2,
       [
         "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.NamedView_pretyping_b9909aecbb024f77e489710ef0c3a302",
         "data_elim_FStar.Stubs.Tactics.Result.Success",
         "disc_equation_FStar.Tactics.NamedView.Tv_Abs",
         "disc_equation_FStar.Tactics.NamedView.Tv_App",
@@ -39,12 +40,14 @@
         "disc_equation_FStar.Tactics.NamedView.Tv_Unsupp",
         "disc_equation_FStar.Tactics.NamedView.Tv_Uvar",
         "disc_equation_FStar.Tactics.NamedView.Tv_Var",
+        "equality_tok_FStar.Tactics.NamedView.Tv_Unsupp@tok",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
         "fuel_guarded_inversion_FStar.Tactics.NamedView.named_term_view",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "typing_tok_FStar.Tactics.NamedView.Tv_Unsupp@tok"
       ],
       0,
-      "c1344912d69365a8f8275f9b0e8c15b3"
+      "0395913c9397f7f2f858e9253320f515"
     ],
     [
       "FStar.Tactics.CheckLN.check",
@@ -65,7 +68,7 @@
         "typing_FStar.Tactics.NamedView.inspect_universe"
       ],
       0,
-      "a54303553e055f5af0eb754a695f0ca2"
+      "b30a8dbdfb4df10251e6a6f23ed8c3a2"
     ],
     [
       "FStar.Tactics.CheckLN.check",
@@ -83,7 +86,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "25dfea79991b8c5cdff6184e793c9a94"
+      "e8ed68fe3c9757d25063fefdad63f700"
     ]
   ]
 ]

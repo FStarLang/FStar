@@ -1,5 +1,5 @@
 [
-  "3S,â\u000e]9`¶–&îYoB\u0004",
+  "æÃ§4j\u0005SŸÏáKùËâ/y",
   [
     [
       "FStar.LexicographicOrdering.__proj__Left_lex__item__x1",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_483b7906dc2866de010d2ec5a550fd4c"
       ],
       0,
-      "d8d067f35717fe63d2090a14d4057438"
+      "4e3791ab0bee2c3780c441ccd67d723c"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_lex__item__x2",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_483b7906dc2866de010d2ec5a550fd4c"
       ],
       0,
-      "a19258378881b31cd2093ac95415e7d7"
+      "e67366aa52bfe107e3f30ce44f6c0d68"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_lex__item__y1",
@@ -37,7 +37,7 @@
         "refinement_interpretation_Tm_refine_483b7906dc2866de010d2ec5a550fd4c"
       ],
       0,
-      "46ffa337c28e452ce70dea6c5eb18cb3"
+      "5a3345c9c60f6044d821a246801911fb"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_lex__item__y2",
@@ -51,7 +51,7 @@
         "refinement_interpretation_Tm_refine_483b7906dc2866de010d2ec5a550fd4c"
       ],
       0,
-      "4ac9ce479cc71bdb7ab18a0077625334"
+      "4655d93cb8a9e93637e22fa0198d6d16"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_lex__item___4",
@@ -65,7 +65,7 @@
         "refinement_interpretation_Tm_refine_483b7906dc2866de010d2ec5a550fd4c"
       ],
       0,
-      "b0c29035bb5d42eb6b082dd850fd7073"
+      "7d2fd699abe3ea9e2a256ec1e92faf12"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Right_lex__item__x",
@@ -77,7 +77,7 @@
         "refinement_interpretation_Tm_refine_76a15698df139f661cb175245f098bdd"
       ],
       0,
-      "a3fb89757f51f4793ba72417aaef70ca"
+      "0f1aafafa74ebea01a5b7a6dbea68420"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Right_lex__item__y1",
@@ -91,7 +91,7 @@
         "refinement_interpretation_Tm_refine_76a15698df139f661cb175245f098bdd"
       ],
       0,
-      "b47747f3dfe221b4580afe3274c73f49"
+      "aedd806241947ef2c4d1b23d4eabeca3"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Right_lex__item__y2",
@@ -105,7 +105,7 @@
         "refinement_interpretation_Tm_refine_76a15698df139f661cb175245f098bdd"
       ],
       0,
-      "1bb037dca7cd808a9d232ec2c881af5c"
+      "93f32601b67c2ef64571e9c13afb78fc"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Right_lex__item___3",
@@ -119,7 +119,7 @@
         "refinement_interpretation_Tm_refine_76a15698df139f661cb175245f098bdd"
       ],
       0,
-      "4e298d0b39d723c1d14312b82aefc57c"
+      "b22dc9cd950ae84986d504d88972489d"
     ],
     [
       "FStar.LexicographicOrdering.closure_transitive",
@@ -140,7 +140,7 @@
         "typing_FStar.ReflexiveTransitiveClosure.closure"
       ],
       0,
-      "65a266a3dbb939e0f3746ea19fd4d43f"
+      "297a28bb9131a1d39371d8d28779e52f"
     ],
     [
       "FStar.LexicographicOrdering.lex_t_wf_aux",
@@ -154,6 +154,7 @@
         "binder_x_3cc41ec315ddf1505320309abc4466b9_14",
         "binder_x_46af143e7d484842edaae221104817c6_13",
         "binder_x_75f1c2396a08f09375e7e92b1d338ef2_12",
+        "binder_x_dcdbe2846f34254b2292e779cdbbf5de_8",
         "binder_x_fe28d8bcde588226b4e538b35321de05_4",
         "data_elim_FStar.LexicographicOrdering.Left_lex",
         "data_elim_FStar.LexicographicOrdering.Right_lex",
@@ -167,12 +168,6 @@
         "lemma_FStar.LexicographicOrdering.closure_transitive",
         "lemma_FStar.ReflexiveTransitiveClosure.closure_step",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.LexicographicOrdering.Left_lex__4",
-        "projection_inverse_FStar.LexicographicOrdering.Left_lex_b",
-        "projection_inverse_FStar.LexicographicOrdering.Left_lex_x1",
-        "projection_inverse_FStar.LexicographicOrdering.Left_lex_x2",
-        "projection_inverse_FStar.LexicographicOrdering.Left_lex_y1",
-        "projection_inverse_FStar.LexicographicOrdering.Left_lex_y2",
         "projection_inverse_FStar.WellFounded.AccIntro_access_smaller",
         "projection_inverse_Prims.Mkdtuple2__1",
         "projection_inverse_Prims.Mkdtuple2__2",
@@ -181,7 +176,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
       ],
       0,
-      "b2fc1d83a8bd96a982dcb1bb79648178"
+      "0d90a1b5793a57d54e5463dd449f867a"
     ],
     [
       "FStar.LexicographicOrdering.lex_t_wf",
@@ -190,7 +185,7 @@
       1,
       [ "@query" ],
       0,
-      "18cd28dffbcc95be83866a02d88e7b49"
+      "9fc40fd04cd227c1c9c13f0b461933ff"
     ],
     [
       "FStar.LexicographicOrdering.lex_aux",
@@ -199,7 +194,7 @@
       1,
       [ "@query" ],
       0,
-      "91454c6eed849e87cfe5f00c8df52604"
+      "76a48510f77a3fe13a8d8d253ce048d2"
     ],
     [
       "FStar.LexicographicOrdering.lex_to_lex_t",
@@ -220,7 +215,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "009c1c3925f5d3c9cafe30701ad9b65a"
+      "c90df6f2485e85fc70407a49ab0ea5e7"
     ],
     [
       "FStar.LexicographicOrdering.lex_wf",
@@ -229,7 +224,7 @@
       1,
       [ "@query" ],
       0,
-      "5228dd112af149c98eb032fcf3bd00f4"
+      "4e26fccb6b96539084f87eaee1f2c340"
     ],
     [
       "FStar.LexicographicOrdering.lex",
@@ -238,7 +233,7 @@
       1,
       [ "@query" ],
       0,
-      "c7cf0a7666d8940d9b8286d576a93e47"
+      "e2bcd9e00d91ba70b9475b2a88282026"
     ],
     [
       "FStar.LexicographicOrdering.lex_t_non_dep_wf",
@@ -257,7 +252,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
       ],
       0,
-      "b3ec44c1009797b4271583170099d09e"
+      "e419c2086a64fa26052b438293fed48c"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_sym__item__x1",
@@ -269,7 +264,7 @@
         "refinement_interpretation_Tm_refine_e6204610dcb2b1d0fca4f2a1766034e0"
       ],
       0,
-      "350b6d6a18caf21500daed86987d83b0"
+      "eca08a86344bf2c205b2e06ed56b61d0"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_sym__item__x2",
@@ -281,7 +276,7 @@
         "refinement_interpretation_Tm_refine_e6204610dcb2b1d0fca4f2a1766034e0"
       ],
       0,
-      "fee1ff14ba15c711e6f0642da4113686"
+      "4f2a0cbdeb8d9a2c34e4b8b217f42b04"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_sym__item__y",
@@ -293,7 +288,7 @@
         "refinement_interpretation_Tm_refine_e6204610dcb2b1d0fca4f2a1766034e0"
       ],
       0,
-      "b4bcb146c68b5d5427ca41474fcb1575"
+      "9a42f8fd5547998869145cbfd553a1c3"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_sym__item___3",
@@ -307,7 +302,7 @@
         "refinement_interpretation_Tm_refine_e6204610dcb2b1d0fca4f2a1766034e0"
       ],
       0,
-      "7f61ea20fd1143926ca4941f534d7296"
+      "c3ad34d1648b095347ebb7e407cac54d"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Right_sym__item__x",
@@ -319,7 +314,7 @@
         "refinement_interpretation_Tm_refine_56d069ec247cb909bfad7100a98b8ecd"
       ],
       0,
-      "48c0f793077c36c6624eae7582725ef4"
+      "f6a2c2579c4f84ce0bbca2240d0b8d67"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Right_sym__item__y1",
@@ -331,7 +326,7 @@
         "refinement_interpretation_Tm_refine_56d069ec247cb909bfad7100a98b8ecd"
       ],
       0,
-      "359521f313fb2f384fbeab5913c0e33e"
+      "f60d0e506b2b6db385f63383961e7bff"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Right_sym__item__y2",
@@ -343,7 +338,7 @@
         "refinement_interpretation_Tm_refine_56d069ec247cb909bfad7100a98b8ecd"
       ],
       0,
-      "4ce3cd8fdf48d11e447dff3b65e7df48"
+      "617c74c6278a32957610a16e0301f146"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Right_sym__item___3",
@@ -357,7 +352,7 @@
         "refinement_interpretation_Tm_refine_56d069ec247cb909bfad7100a98b8ecd"
       ],
       0,
-      "5e4aaee916ed3149f2cd74d4c062bebd"
+      "3e46aea10d79fac6385050e3d372257a"
     ],
     [
       "FStar.LexicographicOrdering.sym_sub_lex",
@@ -381,7 +376,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "9261b7cfc6e13ecaaf85520333292003"
+      "78b43a36b5e54acb13ef1056e85720fc"
     ]
   ]
 ]

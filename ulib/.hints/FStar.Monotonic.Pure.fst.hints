@@ -10,12 +10,11 @@
         "@MaxIFuel_assumption", "@query", "equation_Prims.pure_wp",
         "equation_Prims.pure_wp_monotonic0",
         "function_token_typing_Prims.pure_wp_monotonic",
-        "l_quant_interp_71257c228512ceaa84671e7dd2ff0073",
         "refinement_interpretation_Tm_refine_15e0beb75f7033bad5fae236999feebe",
         "token_correspondence_Prims.pure_wp_monotonic0"
       ],
       0,
-      "701e0a892729e1f3eab6239f3ecc3cde"
+      "a8ea87a82776d108546eb7d1e157b170"
     ],
     [
       "FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall",
@@ -26,12 +25,11 @@
         "@MaxIFuel_assumption", "@query", "equation_Prims.pure_wp",
         "equation_Prims.pure_wp_monotonic0",
         "function_token_typing_Prims.pure_wp_monotonic",
-        "l_quant_interp_71257c228512ceaa84671e7dd2ff0073",
         "refinement_interpretation_Tm_refine_15e0beb75f7033bad5fae236999feebe",
         "token_correspondence_Prims.pure_wp_monotonic0"
       ],
       0,
-      "0eee51a0d5a6136a22d52ac64e7de9b2"
+      "d3f070d57ae1c44dc2835d163347a45a"
     ],
     [
       "FStar.Monotonic.Pure.intro_pure_wp_monotonicity",
@@ -41,11 +39,10 @@
       [
         "@query", "equation_Prims.pure_wp_monotonic0",
         "function_token_typing_Prims.pure_wp_monotonic",
-        "l_quant_interp_71257c228512ceaa84671e7dd2ff0073",
         "token_correspondence_Prims.pure_wp_monotonic0"
       ],
       0,
-      "a8edac9c935aa2321f6dea8bcf0bdfd4"
+      "8a451eaf184c0e1791252cb6dbeb3d2d"
     ],
     [
       "FStar.Monotonic.Pure.as_pure_wp",
@@ -54,7 +51,7 @@
       1,
       [ "@query" ],
       0,
-      "c1e0414cae0599d290dc7d3bae8c8cf7"
+      "5513bf237a404138b31e402a0c8b9350"
     ],
     [
       "FStar.Monotonic.Pure.elim_pure",
@@ -73,7 +70,7 @@
         "typing_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec"
       ],
       0,
-      "22db72bb5025c48ef5a136c568ec73c2"
+      "2a735d3fb9d0a7caacf575f979b96a8c"
     ]
   ]
 ]

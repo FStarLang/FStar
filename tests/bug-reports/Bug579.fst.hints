@@ -6,25 +6,18 @@
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [ "@query" ],
       0,
-      "4984ea78291a20195d53f8e05fc39703"
+      "b2b9eaf945ab2e0ca0bff85c9b9126a8"
     ],
     [
       "Bug579.__proj__TyEqu__item__ht",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_Bug579.typing",
-        "proj_equation_Bug579.TyEqu_e", "proj_equation_Bug579.TyEqu_t1",
-        "projection_inverse_Bug579.TyEqu_e",
-        "projection_inverse_Bug579.TyEqu_t1",
-        "projection_inverse_Bug579.TyEqu_t2"
-      ],
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug579.TyEqu" ],
       0,
-      "46cf352870055960c79bf7f02d48e942"
+      "996f3f19d4164622e19455ed506b8125"
     ],
     [
       "Bug579.progress'",
@@ -34,11 +27,10 @@
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_1f4e0e649899230b6279be707e3f85f4_2",
-        "data_elim_Bug579.TyEqu", "equality_tok_Prims.LexTop@tok",
-        "subterm_ordering_Bug579.TyEqu"
+        "data_elim_Bug579.TyEqu", "subterm_ordering_Bug579.TyEqu"
       ],
       0,
-      "2d111edf667b73ae376918b6476c543d"
+      "4a7b318aa3711d7cd2139f6079e74ab1"
     ],
     [
       "Bug579.progress",
@@ -48,11 +40,10 @@
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_1f4e0e649899230b6279be707e3f85f4_2",
-        "data_elim_Bug579.TyEqu", "equality_tok_Prims.LexTop@tok",
-        "subterm_ordering_Bug579.TyEqu"
+        "data_elim_Bug579.TyEqu", "subterm_ordering_Bug579.TyEqu"
       ],
       0,
-      "44d36be99c2ccd1b667e8e4781291e0e"
+      "40e8e24a6947a77a140b557d931b1e6d"
     ]
   ]
 ]

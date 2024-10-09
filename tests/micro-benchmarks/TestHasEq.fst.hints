@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "68acd88b44f362495aa4148d786d001f"
+      "02da6f9178c9f0eba2bf251472729f08"
     ],
     [
       "TestHasEq.__proj__MCons__item__hd",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_04c57beb84c7e65ffbf87f2b1dfc7ef5"
       ],
       0,
-      "9d144482dd22a55f611c4d350c69d5eb"
+      "477e56c27c2f8e307ace8e30c29316ad"
     ],
     [
       "TestHasEq.__proj__MCons__item__tl",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Tm_refine_04c57beb84c7e65ffbf87f2b1dfc7ef5"
       ],
       0,
-      "342dbadf94d775ca3e0954de0c167d28"
+      "0ca0f539618e35878094ba745e03df59"
     ],
     [
       "TestHasEq.__proj__NCons__item__hd",
@@ -44,7 +44,7 @@
         "refinement_interpretation_Tm_refine_7b907b210749d62a64a384804262b9e4"
       ],
       0,
-      "3f9b0493b1b27d2e50d8444ab9d268a9"
+      "7f6c5b7d3fa6a90bf9693ab243b12e0b"
     ],
     [
       "TestHasEq.__proj__NCons__item__tl",
@@ -56,7 +56,7 @@
         "refinement_interpretation_Tm_refine_7b907b210749d62a64a384804262b9e4"
       ],
       0,
-      "f74cb46a852a7ca5b47267695d7181e1"
+      "1370f56b9a012b04da2b51e9147c0b25"
     ],
     [
       "TestHasEq.test1",
@@ -67,13 +67,14 @@
         "@MaxIFuel_assumption", "@query",
         "assumption_TestHasEq.mlist__uu___haseq",
         "assumption_TestHasEq.nlist__uu___haseq", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_Prims.int"
       ],
       0,
-      "572b0133cc092a2083a2c8b51666f63e"
+      "b1feeea1743300a8025ab63020b77adb"
     ],
     [
       "TestHasEq.test2",
@@ -85,16 +86,16 @@
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "TestHasEq_interpretation_Tm_arrow_9974df5c311cfcfa7100bc7bef095e1e",
         "assumption_TestHasEq.t__uu___haseq", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_2b9cd3e1fbccf82e9ebe34941f00564d",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "interpretation_Tm_abs_387fd552e28fe87679131f6c15e8816b",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "typing_Tm_abs_387fd552e28fe87679131f6c15e8816b"
+        "typing_Prims.int", "typing_Tm_abs_387fd552e28fe87679131f6c15e8816b"
       ],
       0,
-      "0ab3b8437a7ff20a46fe410b60c571dd"
+      "191b07f755bc80f01101442793715285"
     ],
     [
       "TestHasEq.t1",
@@ -103,12 +104,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "6a8768aad5101abd9b8ab66dac99920f"
+      "0e5a3f75b530969f110fe3a25e31111c"
     ],
     [
       "TestHasEq.test3",
@@ -118,11 +120,11 @@
       [
         "@MaxIFuel_assumption", "@query",
         "assumption_TestHasEq.t1__uu___haseq", "equation_Prims.eqtype",
-        "function_token_typing_Prims.bool",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.bool"
       ],
       0,
-      "a75cefb2824170319de323ca3b908a87"
+      "49b9db7559c48d9e780d892b38a347a0"
     ],
     [
       "TestHasEq.test4",
@@ -134,16 +136,16 @@
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "TestHasEq_interpretation_Tm_arrow_9974df5c311cfcfa7100bc7bef095e1e",
         "assumption_Prims.dtuple2__uu___haseq", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_2b9cd3e1fbccf82e9ebe34941f00564d",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "interpretation_Tm_abs_387fd552e28fe87679131f6c15e8816b",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "typing_Tm_abs_387fd552e28fe87679131f6c15e8816b"
+        "typing_Prims.int", "typing_Tm_abs_387fd552e28fe87679131f6c15e8816b"
       ],
       0,
-      "6fb73ef48c19de6f5ded69b5f466bb5d"
+      "c535e9226410a0a1bea799781a455868"
     ],
     [
       "TestHasEq.t4",
@@ -152,12 +154,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "34a8bd529a07989482d6781d3500428a"
+      "9eb0d250d7e62fd58a30226e86e1ffec"
     ]
   ]
 ]

@@ -1,0 +1,55 @@
+[
+  "‡zê\u0016©\u000f~¥›&Æ­\u001f\u000b‚B",
+  [
+    [
+      "PatImps.f1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "3d92d015726030d3cbed8a1d13601aba"
+    ],
+    [
+      "PatImps.__proj__B__item__x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d12b69dbfc634a024ebe6635710ee639"
+      ],
+      0,
+      "09531fdf521634c80ebf99aab9602296"
+    ],
+    [
+      "PatImps.__proj__C__item__x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d42021b5d15fa2ad400d571ee4741f6a"
+      ],
+      0,
+      "9b5ef41627b3868a27cccb35c43ab37c"
+    ],
+    [
+      "PatImps.f3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_PatImps.B",
+        "disc_equation_PatImps.C", "fuel_guarded_inversion_PatImps.t3",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "eb3ea7a03000d8f3ee982aa20b08c8e3"
+    ]
+  ]
+]

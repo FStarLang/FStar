@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "c900a2ef8f9a85c72891e7b2beb41956"
+      "8ed87acf82d3e5fcab43219555700601"
     ],
     [
       "FStar.RefinementExtensionality.refext_on_domain",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "equation_FStar.PredicateExtensionality.peq" ],
       0,
-      "8a58bf09ea0fa8302a7dfabfdabfdd74"
+      "9ba03811ffce7f419ffc3fcce479c726"
     ],
     [
       "FStar.RefinementExtensionality.refext",
@@ -26,26 +26,24 @@
       1,
       [ "@query" ],
       0,
-      "0301101b8a6efb25bf3f481e11f426ca"
+      "6d79124e89527b0c10326855ad6e9a45"
     ],
     [
-      "FStar.RefinementExtensionality.uu___47",
+      "FStar.RefinementExtensionality.uu___0",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def",
-        "defn_equation_FStar.RefinementExtensionality.ref2",
-        "equation_FStar.RefinementExtensionality.ref1",
+        "@query", "b2t_def", "equation_FStar.RefinementExtensionality.ref1",
         "equation_FStar.RefinementExtensionality.ref2",
         "equation_FStar.RefinementExtensionality.ty1",
-        "equation_FStar.RefinementExtensionality.ty2", "int_inversion",
-        "l_or-interp", "primitive_Prims.op_GreaterThanOrEqual",
+        "equation_FStar.RefinementExtensionality.ty2",
+        "primitive_Prims.op_GreaterThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "5a6aaf649a54db6882e7e113ad09b6f4"
+      "3feb3d5cd0a725357b560f8cc6ad9a3b"
     ]
   ]
 ]

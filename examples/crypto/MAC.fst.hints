@@ -13,7 +13,7 @@
         "haseqTm_refine_b3982a6d174e1d047431ae85c35dc7d8"
       ],
       0,
-      "aa60d089ee191fdc6174cf615f05401e"
+      "cfec36e9e024cee4fbf02f179750a092"
     ],
     [
       "MAC.verify",
@@ -22,7 +22,7 @@
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
       0,
-      "1bb290ced4d207041fc6658876fae0d6"
+      "750385df0b7b15acf25d37eba0613c73"
     ],
     [
       "MAC.keygen",
@@ -36,7 +36,7 @@
         "refinement_interpretation_Tm_refine_8780019b0aae248f45fa2cdeef995357"
       ],
       0,
-      "d5cc842a3404148237f546c87ed4ae2c"
+      "ffa68fa972c8cc569e4b1bd39b0e7df0"
     ],
     [
       "MAC.mac",
@@ -55,9 +55,8 @@
         "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Heap.trivial_rel",
         "equation_FStar.Monotonic.Heap.only", "equation_FStar.ST.mref",
-        "equation_FStar.ST.ref", "equation_Platform.Bytes.bytes",
-        "equation_Platform.Bytes.lbytes", "equation_SHA1.key",
-        "equation_SHA1.keysize", "equation_SHA1.text",
+        "equation_FStar.ST.ref", "equation_Platform.Bytes.lbytes",
+        "equation_SHA1.key", "equation_SHA1.keysize", "equation_SHA1.text",
         "equation_with_fuel_FStar.List.Tot.Base.find.fuel_instrumented",
         "function_token_typing_FStar.Heap.trivial_preorder",
         "interpretation_Tm_abs_568747eb5009c1dec504311dee989dc2",
@@ -82,7 +81,7 @@
         "typing_Tm_abs_7b3114bf1eb1202b6687fce89dcc274d"
       ],
       0,
-      "62400711df1e969c4798f1c39fffb8c9"
+      "8be0b793d9b76dc0efba54ccaffc3ce8"
     ],
     [
       "MAC.verify",
@@ -97,9 +96,8 @@
         "data_elim_FStar.Pervasives.Native.Some", "data_elim_MAC.Entry",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.Heap.trivial_preorder", "equation_FStar.ST.mref",
-        "equation_FStar.ST.ref", "equation_Platform.Bytes.bytes",
-        "equation_Platform.Bytes.lbytes", "equation_SHA1.key",
-        "equation_SHA1.keysize", "equation_SHA1.text",
+        "equation_FStar.ST.ref", "equation_Platform.Bytes.lbytes",
+        "equation_SHA1.key", "equation_SHA1.keysize", "equation_SHA1.text",
         "fuel_guarded_inversion_MAC.entry",
         "interpretation_Tm_abs_7b3114bf1eb1202b6687fce89dcc274d",
         "kinding_MAC.entry@tok", "kinding_Prims.list@tok",
@@ -116,7 +114,7 @@
         "typing_Tm_abs_7b3114bf1eb1202b6687fce89dcc274d"
       ],
       0,
-      "84fc2a32857a879d6aa7509d43ba8c6c"
+      "1e093dc4a3dcedc3e277ed4880a9e23c"
     ]
   ]
 ]

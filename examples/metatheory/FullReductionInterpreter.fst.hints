@@ -10,12 +10,13 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FullReductionInterpreter.atom",
         "equation_FullReductionInterpreter.index", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "8fa290f84bc2f4890b3e15c36838c76b"
+      "4cc85c70ed03c81a63e03cd7d24011cb"
     ],
     [
       "FullReductionInterpreter.__proj__BV__item___0",
@@ -27,7 +28,7 @@
         "refinement_interpretation_Tm_refine_91ab4e301fa8f3e1b96495d7ec898c9e"
       ],
       0,
-      "c43914b2fbf34f8a64441df1383e719e"
+      "6cf32525eab355106e9206fd86455888"
     ],
     [
       "FullReductionInterpreter.__proj__FV__item___0",
@@ -39,7 +40,7 @@
         "refinement_interpretation_Tm_refine_094461b4c2bb56eb4c22e68e681b710b"
       ],
       0,
-      "a1e98d3c48f3cf025e8436019369f84a"
+      "b971e08990ea9fd9f2efde68921abb62"
     ],
     [
       "FullReductionInterpreter.__proj__App__item___0",
@@ -51,7 +52,7 @@
         "refinement_interpretation_Tm_refine_345f58576b733730f2fa0aaeeff79575"
       ],
       0,
-      "26ee00d915514ee7d1edaf93d50a17e2"
+      "2cd8e17480c2940b3ebcf9a39737bc04"
     ],
     [
       "FullReductionInterpreter.__proj__App__item___1",
@@ -63,7 +64,7 @@
         "refinement_interpretation_Tm_refine_345f58576b733730f2fa0aaeeff79575"
       ],
       0,
-      "6ab74a22327796e848625a18c6761825"
+      "894185822ebaafacc51eda41f406e425"
     ],
     [
       "FullReductionInterpreter.__proj__Lam__item___0",
@@ -75,7 +76,7 @@
         "refinement_interpretation_Tm_refine_e026cbffab79c42fcebe3dd2c4498d1e"
       ],
       0,
-      "2de606af53a685ea7158d6470330eb9d"
+      "a882c0beee5fb74d9de319d348dc1f73"
     ],
     [
       "FullReductionInterpreter.open_term",
@@ -94,17 +95,16 @@
         "equation_FullReductionInterpreter.index", "equation_Prims.eqtype",
         "equation_Prims.nat",
         "fuel_guarded_inversion_FullReductionInterpreter.term",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "subterm_ordering_FullReductionInterpreter.App",
-        "subterm_ordering_FullReductionInterpreter.Lam"
+        "subterm_ordering_FullReductionInterpreter.Lam", "typing_Prims.int"
       ],
       0,
-      "4711e3ef20c4a573d526c7eceac4caf1"
+      "1b489f89aef2a05790267969e623fd9f"
     ],
     [
       "FullReductionInterpreter.close_term",
@@ -124,17 +124,16 @@
         "equation_FullReductionInterpreter.index", "equation_Prims.eqtype",
         "equation_Prims.nat",
         "fuel_guarded_inversion_FullReductionInterpreter.term",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "subterm_ordering_FullReductionInterpreter.App",
-        "subterm_ordering_FullReductionInterpreter.Lam"
+        "subterm_ordering_FullReductionInterpreter.Lam", "typing_Prims.int"
       ],
       0,
-      "286c92f39acc448a27975cc86c791747"
+      "69cbd99313c9b8de7d9b5c804471edb4"
     ],
     [
       "FullReductionInterpreter.fresh_atom",
@@ -156,7 +155,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "d2c05d0764505a3ce900bfe57be5c15e"
+      "7f394f26c2251bc0776db3ee01f41b6c"
     ],
     [
       "FullReductionInterpreter.__proj__Fun__item___0",
@@ -168,7 +167,7 @@
         "refinement_interpretation_Tm_refine_6eaf1255ebd74636f904133dfcd28995"
       ],
       0,
-      "df766b61a60252ecffe20a8e07b3498a"
+      "5898dc658eaa6c571eeb71d0e428227e"
     ],
     [
       "FullReductionInterpreter.__proj__Acc__item___0",
@@ -180,7 +179,7 @@
         "refinement_interpretation_Tm_refine_c1dabe24910280b4a12783d0aa11a5ac"
       ],
       0,
-      "cb485de9d753e0cafc9133ceca6cfa4b"
+      "24a88723805109f55262402d12869e98"
     ],
     [
       "FullReductionInterpreter.__proj__Acc__item___1",
@@ -192,7 +191,7 @@
         "refinement_interpretation_Tm_refine_c1dabe24910280b4a12783d0aa11a5ac"
       ],
       0,
-      "603d49caae6807225c9020ab1fe6c294"
+      "be4ce9942c5d6bfe61c4b0ed6ffcd232"
     ],
     [
       "FullReductionInterpreter.extend_app",
@@ -207,7 +206,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "3f7710970e309cd5e5f3a8416c157d06"
+      "42226dc2d1e914fae4962528efafecb3"
     ],
     [
       "FullReductionInterpreter.translate",
@@ -237,7 +236,7 @@
         "token_correspondence_FStar.List.Tot.Base.nth.fuel_instrumented"
       ],
       0,
-      "e31dbbc27a941228e76530595a50df1f"
+      "2b919f079ec358bcd1c51e99751b788c"
     ],
     [
       "FullReductionInterpreter.readback",
@@ -258,7 +257,7 @@
         "typing_FullReductionInterpreter.__proj__Acc__item___1"
       ],
       0,
-      "00b98c280c0c85db3edef9aa3e3526c8"
+      "67ab3da8bad0b987f01d480d8ec0b130"
     ]
   ]
 ]

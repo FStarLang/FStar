@@ -9,14 +9,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Stubs.Tactics.Types.issues",
-        "function_token_typing_FStar.Stubs.Tactics.Types.issues",
         "kinding_FStar.Pervasives.Native.option@tok",
         "lemma_FStar.Pervasives.invertOption",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
+        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
+        "typing_FStar.Stubs.Tactics.Types.issues"
       ],
       0,
-      "a9cbca0238dd3f9e858fbc0648d76ab0"
+      "9cdeb5d090e85f1fa457f4c2e572d4b9"
     ],
     [
       "CallSubtac.test1",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_30965369282456c847a40c68161cd4ad"
       ],
       0,
-      "c6752cdf4a0433762a8ca34bba883a65"
+      "66dabae774d12de56cd8dab71c98e2ca"
     ],
     [
       "CallSubtac.test1",
@@ -54,7 +54,7 @@
         "refinement_interpretation_Tm_refine_30965369282456c847a40c68161cd4ad"
       ],
       0,
-      "289cddeb5cb1b76c89bec8c5e93a8821"
+      "518f5d4d804967d6f73eb416a8bb9c3b"
     ],
     [
       "CallSubtac.test2",
@@ -73,7 +73,7 @@
         "refinement_interpretation_Tm_refine_30965369282456c847a40c68161cd4ad"
       ],
       0,
-      "4faa662206e58f9a5cb512b96f69b246"
+      "89e39894bb41dc1b47996cb456da6c53"
     ],
     [
       "CallSubtac.test2",
@@ -92,7 +92,7 @@
         "refinement_interpretation_Tm_refine_30965369282456c847a40c68161cd4ad"
       ],
       0,
-      "ffdb2913f53cadadedfad5cd03cc7b20"
+      "ea983b34fa19cdb14305ff1a65606fbf"
     ],
     [
       "CallSubtac.test3",
@@ -111,7 +111,7 @@
         "refinement_interpretation_Tm_refine_30965369282456c847a40c68161cd4ad"
       ],
       0,
-      "391e75f808d3f1d708ed42d4071c3a2a"
+      "d0fcdb1280f7c3d5e8b15abce82f9f86"
     ],
     [
       "CallSubtac.test3",
@@ -130,7 +130,7 @@
         "refinement_interpretation_Tm_refine_30965369282456c847a40c68161cd4ad"
       ],
       0,
-      "289cddeb5cb1b76c89bec8c5e93a8821"
+      "518f5d4d804967d6f73eb416a8bb9c3b"
     ]
   ]
 ]

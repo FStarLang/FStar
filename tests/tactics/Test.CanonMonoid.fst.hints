@@ -1,0 +1,69 @@
+[
+  "\u0014]\fñ\u0011ÉH!\u0010Bz.\f7gƒ",
+  [
+    [
+      "Test.CanonMonoid.lem0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_86378bcbf49edefce0f2701ad7aa8068"
+      ],
+      0,
+      "325f9e0812a8ac8fad8f85aa2ae1c00b"
+    ],
+    [
+      "Test.CanonMonoid.lem1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_86378bcbf49edefce0f2701ad7aa8068"
+      ],
+      0,
+      "c1d47cf1e947cc0500395c7f92c81e5d"
+    ],
+    [
+      "Test.CanonMonoid.lem2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "a33e07240a7b3c06460ea22f08473382"
+    ],
+    [
+      "Test.CanonMonoid.lem2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_86378bcbf49edefce0f2701ad7aa8068"
+      ],
+      0,
+      "2c6dd503330d7642fcde650af4670c15"
+    ],
+    [
+      "Test.CanonMonoid.lem2",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_5afe9c8f95cdb30832cca7da12fc7512",
+        "refinement_interpretation_Tm_refine_6d04fd52b4a5e49051f5c30a0bbf89a1"
+      ],
+      0,
+      "23977b3e7ab52c5fabefb8a77781ffc1"
+    ]
+  ]
+]
