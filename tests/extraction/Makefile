@@ -6,6 +6,7 @@ RUN += Eta_expand.fst
 RUN += Div.fst
 RUN += ExtractAs.fst
 RUN += InlineLet.fst
+RUN += Bug3366.fst
 
 include $(FSTAR_ROOT)/mk/test.mk
 

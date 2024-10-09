@@ -822,7 +822,7 @@ let rec extract_sigelt_iface (g:uenv) (se:sigelt) : uenv & iface =
     | Sig_declare_typ {lid; t} ->
       let quals = se.sigquals in
       if quals |> List.contains Assumption
-      && not (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
+      && None? (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
       then let g, bindings = Term.extract_lb_iface g (false, [always_fail lid t]) in
            g, iface_of_bindings bindings
       else g, empty_iface //it's not assumed, so wait for the corresponding Sig_let to generate code
@@ -999,7 +999,7 @@ let extract_bundle env se =
     | _ -> failwith "Unexpected signature element"
 
 let lb_is_irrelevant (g:env_t) (lb:letbinding) : bool =
-  Env.non_informative (tcenv_of_uenv g) lb.lbtyp && // result type is non informative
+  Some? (Env.non_informative (tcenv_of_uenv g) lb.lbtyp) && // result type is non informative
   not (Term.is_arity g lb.lbtyp) &&  // but not a type definition
   U.is_pure_or_ghost_effect lb.lbeff // and not top-level effectful
 
@@ -1129,7 +1129,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t & list mlmodule1 =
     | Sig_declare_typ {lid; t} ->
       let quals = se.sigquals in
       if quals |> List.contains Assumption
-      && not (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
+      && None? (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
       then let always_fail =
              { se with sigel = Sig_let {lbs=(false, [always_fail lid t]); lids=[]} } in
            let g, mlm = extract_sig g always_fail in //extend the scope with the new name

@@ -4550,7 +4550,7 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
             if is_polymonadic &&
                Env.is_erasable_effect env c1.effect_name &&
                not (Env.is_erasable_effect env c2.effect_name) &&
-               not (N.non_info_norm env c1.result_typ)
+               None? (N.non_info_norm env c1.result_typ)
             then Errors.raise_error r Errors.Error_TypeError
                                      (BU.format3 "Cannot lift erasable expression from %s ~> %s since its type %s is informative"
                                        (string_of_lid c1.effect_name)
@@ -4729,7 +4729,7 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
            else N.ghost_to_pure2 env (c1, c2) in
 
          match c1.n, c2.n with
-         | GTotal t1, Total t2 when (Env.non_informative env t2) ->
+         | GTotal t1, Total t2 when Some? (Env.non_informative env t2) ->
            solve_t (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
          | GTotal _, Total _ ->
