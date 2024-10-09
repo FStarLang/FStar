@@ -9,13 +9,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "data_elim_FStar.Stubs.Tactics.Result.Success",
-        "equation_FStar.Pervasives.pattern",
+        "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
-        "function_token_typing_FStar.Pervasives.pattern",
-        "lemma_FStar.Pervasives.invertOption"
+        "lemma_FStar.Pervasives.invertOption",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.unit"
       ],
       0,
-      "a05104977747b42108c7e47e32f800ea"
+      "3d0434c7f563d1c181d65965c14161f1"
     ]
   ]
 ]

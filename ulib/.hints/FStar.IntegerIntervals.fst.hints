@@ -11,7 +11,7 @@
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "b03b65efec7bfc43e8bcd3a4cc93b61d"
+      "73c3e89a22b9fe80072d711ed1517efb"
     ],
     [
       "FStar.IntegerIntervals.closed_interval_lemma",
@@ -20,7 +20,7 @@
       1,
       [ "@query", "equation_FStar.IntegerIntervals.ifrom_ito" ],
       0,
-      "866fcf59597e7c26434db37bdb856cfa"
+      "17329fbfed1b092dfad1e4b371fb16bd"
     ],
     [
       "FStar.IntegerIntervals.interval_size",
@@ -34,10 +34,10 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "3d84b28141f57a8d3ba3cdfeb1537d3f"
+      "b79d089d8677db3aee3a28ff9ae622ff"
     ],
     [
-      "FStar.IntegerIntervals.uu___41",
+      "FStar.IntegerIntervals.uu___0",
       1,
       2,
       1,
@@ -47,10 +47,10 @@
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "94e39ab728a5c899694fb4c864600b91"
+      "833375027a12ae311686ff84f5d6fff5"
     ],
     [
-      "FStar.IntegerIntervals.uu___42",
+      "FStar.IntegerIntervals.uu___1",
       1,
       2,
       1,
@@ -60,20 +60,21 @@
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "d12f7bab8531b3c4b244347eba2adbc2"
+      "f5ead4112c1991c5c350bcb8c03e780e"
     ],
     [
-      "FStar.IntegerIntervals.uu___43",
+      "FStar.IntegerIntervals.uu___2",
       1,
       2,
       1,
       [
         "@query", "equation_FStar.IntegerIntervals.interval_size",
         "primitive_Prims.op_GreaterThanOrEqual",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "38761cd572b5756454f52657b2d299ca"
+      "f1502f8a0e5c89618a2339b39e002901"
     ],
     [
       "FStar.IntegerIntervals.counter_bounds_lemma",
@@ -96,7 +97,7 @@
         "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
       ],
       0,
-      "b36f6cdeb9ad5ad5fcb5914135336147"
+      "592d885ad90e58d133370286ed3c8b02"
     ],
     [
       "FStar.IntegerIntervals.indices_seq",
@@ -111,7 +112,7 @@
         "equation_FStar.IntegerIntervals.interval_condition",
         "equation_FStar.IntegerIntervals.interval_type",
         "equation_FStar.IntegerIntervals.under", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "haseqTm_refine_fcf1a3596fffd49dd2e91f2678358f19", "int_inversion",
         "interpretation_Tm_abs_07607a90cdec640007c6e8f2e5d63494",
@@ -124,10 +125,10 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
         "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19",
-        "typing_FStar.IntegerIntervals.under"
+        "typing_FStar.IntegerIntervals.under", "typing_Prims.int"
       ],
       0,
-      "c05cc0cea0789bdfe39c6476799f4a51"
+      "ec3d1f8c9e5471ff62c53825417a23a5"
     ]
   ]
 ]

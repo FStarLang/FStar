@@ -17,7 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4c3b6d83a5e3154454f6ebc4288aded6"
+      "7575d77ea3a17a94e1ddaa8a7da65d2d"
     ],
     [
       "Bug989.foo",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "0838e0f85a07b18b82373839bcfd9690"
+      "82cfc93839d0dfcadae8c170b9ae8b90"
     ],
     [
       "Bug989.f",
@@ -44,10 +44,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Bug989.A",
-        "disc_equation_Bug989.B", "fuel_guarded_inversion_Bug989.t"
+        "disc_equation_Bug989.B", "fuel_guarded_inversion_Bug989.t",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "5101a36b5d4a979d468b8086ad0d0f8f"
+      "92445171b72bb95d9e0b75965202b5d8"
     ]
   ]
 ]

@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_MRefST.contains" ],
       0,
-      "692f7134c2cbeac948228e4e88400564"
+      "829e7daaded1c6e8f8d04c596a679f74"
     ],
     [
       "MRefST.heap_rel",
@@ -21,10 +21,10 @@
         "refinement_interpretation_Tm_refine_3568bcf9133bbe8512b3c2560361e2a6"
       ],
       0,
-      "08107ab9a78c93e6a572c3713e80ae5e"
+      "988b774439eaf51202d203d4cdb5287c"
     ],
     [
-      "MRefST.19068",
+      "MRefST.0",
       1,
       2,
       1,
@@ -41,7 +41,7 @@
         "token_correspondence_MRefST.heap_rel", "typing_MRefHeap.sel"
       ],
       0,
-      "39ffbf3b8d93dbc5d430db1d0fdbddda"
+      "227e592ddc092c1b01fbad626f0fe018"
     ],
     [
       "MRefST.ist_get",
@@ -50,7 +50,7 @@
       1,
       [ "@query" ],
       0,
-      "babba73ec3bc6953044d85fcb34ff290"
+      "285bd7478f567d35090e28918da6ddd4"
     ],
     [
       "MRefST.ist_put",
@@ -59,7 +59,7 @@
       1,
       [ "@query", "unit_typing" ],
       0,
-      "305a3f56829c4ba1ea22c48e6552f74f"
+      "fd6c0a3b992444c2c2424331b5ec52ce"
     ],
     [
       "MRefST.ist_witnessed",
@@ -79,7 +79,7 @@
         "token_correspondence_MRefST.heap_rel", "typing_MRefHeap.sel"
       ],
       0,
-      "cd15f53ea99934f08fa1e8ff508fce9e"
+      "3a038e3bf2c2ba255ef4cf5eb2346ed9"
     ],
     [
       "MRefST.ist_witnessed",
@@ -99,7 +99,7 @@
         "token_correspondence_MRefST.heap_rel", "typing_MRefHeap.sel"
       ],
       0,
-      "42a84fb922e88d8f4efcab7449333586"
+      "68de51053c5c54bca6032f7fb8c1eea2"
     ],
     [
       "MRefST.ist_witness",
@@ -119,7 +119,7 @@
         "token_correspondence_MRefST.heap_rel", "typing_MRefHeap.sel"
       ],
       0,
-      "30d4529954aa2bbcbbe8e9defce639c1"
+      "2fda759b2a60260706b80057ebc46a46"
     ],
     [
       "MRefST.ist_recall",
@@ -139,7 +139,7 @@
         "token_correspondence_MRefST.heap_rel", "typing_MRefHeap.sel"
       ],
       0,
-      "b1be82a947339890bf6e547070719af7"
+      "4b334a0818e1626129a6ce07fd71f3ad"
     ],
     [
       "MRefST.mref",
@@ -153,7 +153,7 @@
         "token_correspondence_MRefST.heap_rel"
       ],
       0,
-      "32f5f1338152cec4537420bafd1dcb28"
+      "85a6850bb9ac084d1617c8f8d09f9e44"
     ],
     [
       "MRefST.alloc",
@@ -167,7 +167,7 @@
         "equation_FStar.Preorder.stable", "equation_MRefHeap.preorder_t",
         "equation_MRefST.contains", "equation_MRefST.heap_rel",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_MRefHeap.heap", "lemma_MRefST.contains_lemma",
+        "lemma_MRefST.contains_lemma",
         "refinement_interpretation_Tm_refine_3568bcf9133bbe8512b3c2560361e2a6",
         "refinement_interpretation_Tm_refine_36453e3eb6145226f640e16ed9612466",
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
@@ -175,11 +175,11 @@
         "token_correspondence_MRefST.contains",
         "token_correspondence_MRefST.heap_rel",
         "typing_FStar.Pervasives.Native.fst",
-        "typing_FStar.Pervasives.Native.snd", "typing_MRefHeap.mref",
-        "typing_MRefHeap.sel"
+        "typing_FStar.Pervasives.Native.snd", "typing_MRefHeap.heap",
+        "typing_MRefHeap.mref", "typing_MRefHeap.sel"
       ],
       0,
-      "d406d0deaa163832273bafffa0efd228"
+      "eb4824e53e2fc9a71fe1246a88ae11c1"
     ],
     [
       "MRefST.read",
@@ -188,7 +188,7 @@
       1,
       [ "@query", "equation_MRefST.contains" ],
       0,
-      "518f37a8cc0dc0b55ab7a49dbd0573fb"
+      "23e852fc3062a2214ec66c1ee35f4a07"
     ],
     [
       "MRefST.read",
@@ -204,7 +204,7 @@
         "token_correspondence_MRefST.heap_rel"
       ],
       0,
-      "9d4247de354bbc02955f7a6136be36c6"
+      "a350857c88ff73c7ffc417e0cc81d730"
     ],
     [
       "MRefST.write",
@@ -217,7 +217,7 @@
         "refinement_interpretation_Tm_refine_da9cbab0485332770e2f963089e2dda6"
       ],
       0,
-      "bae2a7407d839f0a0d92c0e7c0a3dcb2"
+      "f3cce227a4748ec7c2774a77fe84d475"
     ],
     [
       "MRefST.write",
@@ -232,7 +232,6 @@
         "equation_MRefST.contains", "equation_MRefST.heap_rel",
         "equation_MRefST.mref", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_Prims.op_Equals_Equals_Equals",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "lemma_MRefHeap.contains_same_addr_lemma",
         "refinement_interpretation_Tm_refine_3568bcf9133bbe8512b3c2560361e2a6",
@@ -242,10 +241,11 @@
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "refinement_interpretation_Tm_refine_da9cbab0485332770e2f963089e2dda6",
         "token_correspondence_MRefST.contains",
-        "token_correspondence_MRefST.heap_rel", "typing_MRefHeap.sel"
+        "token_correspondence_MRefST.heap_rel", "typing_MRefHeap.sel",
+        "typing_Prims.int"
       ],
       0,
-      "1bed788ade8be24ef50a18f2bc5d8bc5"
+      "b4d6eb2b16eaf2ad850846922ebf1051"
     ],
     [
       "MRefST.stable_on_heap_aux",
@@ -254,7 +254,7 @@
       1,
       [ "@query", "equation_MRefST.contains" ],
       0,
-      "9218fb98dd8d352d4f422e857f670d36"
+      "3c5e44af25d05be2eed1c1119359da95"
     ],
     [
       "MRefST.stable_on_heap_stable",
@@ -269,7 +269,7 @@
         "refinement_interpretation_Tm_refine_da9cbab0485332770e2f963089e2dda6"
       ],
       0,
-      "9e725b74bd85bb6b9cb52fd8a544461d"
+      "31592643c4e5a8c7fc267068128afbb2"
     ],
     [
       "MRefST.witness",
@@ -284,7 +284,7 @@
         "token_correspondence_MRefST.heap_rel"
       ],
       0,
-      "21bd21284845f99457fbebecea562e27"
+      "3cfc5c976974acb994055da1f6afa558"
     ],
     [
       "MRefST.witness",
@@ -299,7 +299,7 @@
         "token_correspondence_MRefST.heap_rel"
       ],
       0,
-      "3a25bf3d9b9af2622d58753128a99ac5"
+      "26686f7fdcb6879ac7d40cd994cd98de"
     ],
     [
       "MRefST.recall",
@@ -314,7 +314,7 @@
         "token_correspondence_MRefST.heap_rel"
       ],
       0,
-      "2360ba7b26d86e4b7c35f71529fcdfa2"
+      "49bd5745bdd5cff1bec848c74ff17104"
     ],
     [
       "MRefST.recall",
@@ -329,7 +329,7 @@
         "token_correspondence_MRefST.heap_rel"
       ],
       0,
-      "cc4a97c9ba2a8327f8e142249b9cacaf"
+      "e47b257613f39bba7c8f2e9d18277545"
     ]
   ]
 ]

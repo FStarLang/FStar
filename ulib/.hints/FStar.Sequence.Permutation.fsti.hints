@@ -10,13 +10,13 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Sequence.Permutation.nat_at_most",
         "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "haseqTm_refine_c1424615841f28cac7fc34e92b7ff33c",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "20a78d697f99e0a8f851d709197f7943"
+      "17b0560487d0a5e68db9d3ae403b2dbe"
     ]
   ]
 ]

@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_0251261d5a9adbe2aa6976ed4ea7693e"
       ],
       0,
-      "998717eb6a85265b102d4f9a46e3f418"
+      "b6f8627cd688ba03fa535c01b41b600f"
     ],
     [
       "FStar.Vector.Properties.append_inj",
@@ -19,9 +19,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.UInt32.t__uu___haseq",
-        "equation_FStar.Vector.Base.equal",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Vector.Base.equal",
         "equation_FStar.Vector.Base.len_t",
         "equation_FStar.Vector.Base.raw_length",
         "lemma_FStar.Seq.Base.lemma_eq_elim", "lemma_FStar.UInt32.uv_inv",
@@ -32,7 +30,7 @@
         "typing_FStar.Vector.Base.reveal"
       ],
       0,
-      "27c8a098cb024f281871f9f1a9d1e094"
+      "99aed74a2dabb16cc7ce004c80fea8b3"
     ],
     [
       "FStar.Vector.Properties.head",
@@ -53,7 +51,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "3bcf94ba446063080614c8ad0783a642"
+      "5a5ba7651c0022bc16323d96eb2ba637"
     ],
     [
       "FStar.Vector.Properties.tail",
@@ -75,7 +73,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "6c6fd3f4411968db18b2534d82556eb3"
+      "e746fc08528427b7968607621347a754"
     ],
     [
       "FStar.Vector.Properties.head_append",
@@ -113,7 +111,7 @@
         "typing_FStar.Vector.Base.reveal"
       ],
       0,
-      "000789a7baa06a259d7c790ac04b47b5"
+      "14f341071e0246243dc8e96a578f2ee7"
     ],
     [
       "FStar.Vector.Properties.tail_append",
@@ -154,7 +152,7 @@
         "typing_FStar.Vector.Properties.tail"
       ],
       0,
-      "c93a5e5cc53079de11755d206a6825ee"
+      "1f93f720259305cd5ba9427ee48e3664"
     ]
   ]
 ]

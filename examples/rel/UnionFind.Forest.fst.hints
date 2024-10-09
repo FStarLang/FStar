@@ -9,16 +9,17 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.OrdSet.total_order", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "interpretation_Tm_abs_07a6464fe89c25862436efa9584a8221",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_Prims.int"
       ],
       0,
-      "daaf327fcc269cf86746489330e3692c"
+      "95b5d3318446ef7f630138ecda9dad80"
     ],
     [
       "UnionFind.Forest.set_n",
@@ -32,7 +33,6 @@
         "equation_FStar.OrdSet.total_order", "equation_Prims.eqtype",
         "equation_Prims.nat",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "int_typing",
         "interpretation_Tm_abs_07a6464fe89c25862436efa9584a8221",
@@ -42,10 +42,10 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "well-founded-ordering-on-nat"
+        "typing_Prims.int", "well-founded-ordering-on-nat"
       ],
       0,
-      "3ed39fbc79160dfc2c669f545e759c0e"
+      "7f299746568ea5b9c1e5618214186e6b"
     ],
     [
       "UnionFind.Forest.uf_forest",
@@ -54,12 +54,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "381db25e7ba8a59cd32f2356e339b60b"
+      "a3822c1ecea14fd2f729c60e392b63eb"
     ],
     [
       "UnionFind.Forest.live",
@@ -70,16 +71,16 @@
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_UnionFind.Forest.id",
         "equation_UnionFind.Forest.uf_forest",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "haseqTm_refine_c1424615841f28cac7fc34e92b7ff33c", "int_inversion",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_b9e11f705ac7edee3fdb554505ed9f50",
-        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
+        "typing_Prims.int"
       ],
       0,
-      "3aa4a2fa803d2869a328507e274edf0e"
+      "d8efe440c242423267209403f534bce5"
     ],
     [
       "UnionFind.Forest.get",
@@ -99,7 +100,7 @@
         "typing_UnionFind.Forest.elt"
       ],
       0,
-      "df3dbf28bd844f21bbe1f0743616df3e"
+      "1a0812d0e43339433ec4859643fcecbb"
     ],
     [
       "UnionFind.Forest.set",
@@ -121,7 +122,7 @@
         "typing_UnionFind.Forest.elt", "unit_typing"
       ],
       0,
-      "e367b286b18430526bb7fe50a92cf17b"
+      "279d48d2b6efda284af41388105ab2ba"
     ]
   ]
 ]

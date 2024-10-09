@@ -1,5 +1,5 @@
 [
-  "Oé–Ó<…\u0013u\u0018ò÷¬Ò%ÓÅ",
+  "Ey1ÕÕ‹Æ\u0000~a¤ç\"é\u007f",
   [
     [
       "Trace.mynat",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "b81d53a6e7689e32a8fbc70b1b83ffee"
+      "0967da51012bf96ff0df9def277dbf83"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "111bca9e2c378a016e49c5dcc86a6753"
+      "69ea97db097d1218fd0be66bb339e2f5"
     ],
     [
       "Trace.tick_last",
@@ -29,15 +29,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
         "binder_x_dce109b66917edb1ca83b9408101b740_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_BoxBool_proj_0", "string_typing",
-        "subterm_ordering_Prims.Cons"
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "cf9044d72d2887469a65882a7a340911"
+      "0b31826e81a903ded2e04f94d4040a2c"
     ],
     [
       "Trace.instrument_body",
@@ -50,7 +48,7 @@
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result"
       ],
       0,
-      "f9cb323e235affc752d4a1d0dc48c9c9"
+      "7a76fd32acaeaceb6501d77c2da1d173"
     ],
     [
       "Trace.cutlast",
@@ -60,8 +58,7 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query", "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
-        "binder_x_c31e69c67d10a39a71203e88f1802110_2",
+        "@query", "binder_x_c31e69c67d10a39a71203e88f1802110_2",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
@@ -79,7 +76,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "e1cc3622ae4d10098d49fada1d9648e5"
+      "920de79c8ba72b06d35bf394285cf4b0"
     ],
     [
       "Trace.instrument",
@@ -90,9 +87,9 @@
         "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "constructor_distinct_FStar.Stubs.Tactics.Result.Failed",
         "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
-        "constructor_distinct_FStar.Tactics.NamedView.Tv_FVar",
         "data_elim_FStar.Stubs.Tactics.Result.Success",
         "equation_FStar.Tactics.NamedView.binding",
         "equation_FStar.Tactics.NamedView.term", "equation_Prims.nat",
@@ -108,12 +105,11 @@
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_v",
-        "projection_inverse_FStar.Tactics.NamedView.Tv_FVar_v",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "typing_FStar.List.Tot.Base.length"
+        "typing_FStar.List.Tot.Base.length", "unit_typing"
       ],
       0,
-      "71fab626a24b7272096bfa0baa589765"
+      "eb09d2409373d0e0ef02b63a7817ed34"
     ],
     [
       "Trace.fall",
@@ -130,10 +126,10 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "3f8d1fb37c7d325fe473510a2f836943"
+      "69312884a77be9cb663f5bc650ff0dd6"
     ],
     [
-      "Trace.uu___114",
+      "Trace.uu___0",
       1,
       4,
       2,
@@ -149,7 +145,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "f3ccf773648be96ca61c11af43e38d4a"
+      "574fb31870750b6f6f44216ccc81cc20"
     ],
     [
       "Trace.fact_aux",
@@ -167,10 +163,10 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "75e770e3d65e57b93e388173c41836c2"
+      "c4ac97240138b6275be5e578cee8b847"
     ],
     [
-      "Trace.uu___127",
+      "Trace.uu___1",
       1,
       8,
       2,
@@ -192,10 +188,10 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "6e22cee024d8283fa23552869d6b217a"
+      "e95271b05891fb80b4d417952894d2f2"
     ],
     [
-      "Trace.uu___133",
+      "Trace.uu___2",
       1,
       8,
       2,
@@ -218,7 +214,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "1dab858a0b21c1794ad3f7a1c1bed819"
+      "55008a4cdc53022ea3cdd87cab43bdf2"
     ]
   ]
 ]

@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "ead11425cc54615732a2e7ae3a58c04e"
+      "5e6b94e852773757dd51e3d9cfe76aa1"
     ],
     [
       "Bug022.__proj__EAbs__item___0",
@@ -16,12 +16,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Bug022.EAbs",
-        "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_1fab4118271d47fc28cd28aead33e87f"
       ],
       0,
-      "7d251feece086e8dcc3987763da170b5"
+      "7b70b8d3807d9460d201c79b020ed765"
     ]
   ]
 ]

@@ -8,7 +8,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "data_elim_Bug102.Hst" ],
       0,
-      "22d821e9bdeba0a5bd65d08e10c2fcd9"
+      "a8299f4dda66f488e57120c1eb13a8fd"
     ],
     [
       "Bug102.__proj__Hst__item__post",
@@ -17,43 +17,25 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "data_elim_Bug102.Hst" ],
       0,
-      "bc738b04eff2048e0755586641b7ea15"
+      "e38c3ba0f8fac30a2ad8558c79bb4a5c"
     ],
     [
       "Bug102.__proj__Hst__item__e",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_Bug102.hst", "proj_equation_Bug102.Hst_h",
-        "proj_equation_Bug102.Hst_pre", "projection_inverse_Bug102.Hst_a",
-        "projection_inverse_Bug102.Hst_h",
-        "projection_inverse_Bug102.Hst_post",
-        "projection_inverse_Bug102.Hst_pre",
-        "refinement_interpretation_Tm_refine_3b1cb9ec3355fed185c658f53954b3fa",
-        "token_correspondence_Bug102.__proj__Hst__item__pre"
-      ],
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug102.Hst" ],
       0,
-      "9913f5349fba24a487b8f424e846f1ac"
+      "282154faa12986437039b3c8930cc4c8"
     ],
     [
       "Bug102.__proj__Hst__item___5",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_Bug102.hst", "proj_equation_Bug102.Hst_a",
-        "proj_equation_Bug102.Hst_e", "proj_equation_Bug102.Hst_h",
-        "proj_equation_Bug102.Hst_post", "projection_inverse_Bug102.Hst_a",
-        "projection_inverse_Bug102.Hst_e", "projection_inverse_Bug102.Hst_h",
-        "projection_inverse_Bug102.Hst_post",
-        "projection_inverse_Bug102.Hst_pre",
-        "token_correspondence_Bug102.__proj__Hst__item__post"
-      ],
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug102.Hst" ],
       0,
-      "15c2dbe2bc4496a135298fca55feae3f"
+      "46e010ce9850683e6f34380f1bfb5210"
     ]
   ]
 ]

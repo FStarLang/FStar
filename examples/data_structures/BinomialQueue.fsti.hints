@@ -9,12 +9,12 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.key_t",
         "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "d22e2dea72f8ff2e481c7bc527d25f5a"
+      "154936baaeb47efd9098ad07b6271c2c"
     ],
     [
       "BinomialQueue.__proj__Mkms__item__ms_elems",
@@ -24,12 +24,12 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.key_t",
         "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "24cc9a6b4498eaeb66de0cd84697a9e0"
+      "df24b7c86957f467eab939f93b428b23"
     ],
     [
       "BinomialQueue.__proj__Mkms__item__ms_elems",
@@ -39,12 +39,12 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.key_t",
         "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "a0d6465c551fb73b8806c57130cac233"
+      "c4d302b1ce8548c9cba5a23deeb234af"
     ],
     [
       "BinomialQueue.ms_empty",
@@ -54,12 +54,12 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.key_t",
         "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "8d3b9baf0bc45ac2c8ef06aba3ca175e"
+      "683e7e68de15ce26f620c664c6534c97"
     ],
     [
       "BinomialQueue.ms_singleton",
@@ -69,12 +69,12 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.key_t",
         "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "ce9470ec7581c5f374f47ae1e409db6b"
+      "bfcb7536f9d43f5a05223f2d14a609b9"
     ],
     [
       "BinomialQueue.ms_append",
@@ -87,17 +87,17 @@
         "data_elim_BinomialQueue.Mkms", "equation_BinomialQueue.key_t",
         "equation_Prims.eqtype", "equation_Prims.nat",
         "fuel_guarded_inversion_BinomialQueue.ms",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "primitive_Prims.op_Addition",
         "proj_equation_BinomialQueue.Mkms_ms_count",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count"
+        "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count",
+        "typing_Prims.int"
       ],
       0,
-      "33ebaf0aa8cab7c0914f35e010e32dc5"
+      "a121b0f2f463ce242b2e735d4e340e77"
     ],
     [
       "BinomialQueue.permutation",
@@ -107,12 +107,12 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.key_t",
         "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "d0febb76b59cfe06ebed46c7780464a7"
+      "5a9026ac860e305fa737661bb60d8828"
     ],
     [
       "BinomialQueue.delete_max_some_repr",
@@ -122,12 +122,12 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_BinomialQueue.key_t",
         "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "9783e7df46fbe4e67847a28cc0c98f62"
+      "1b3ab40a042a41611ecbe7534ceb319e"
     ]
   ]
 ]

@@ -20,7 +20,7 @@
         "true_interp"
       ],
       0,
-      "c4adbde36c84a8bc675a811ff3413d58"
+      "ead7a8b11b6e46bde0e9aa060c556825"
     ],
     [
       "DM4F.return_wp",
@@ -32,7 +32,7 @@
         "interpretation_Tm_abs_a53e7fdfe19e2acb9ae53a9cdca91170"
       ],
       0,
-      "06c255093df002d62fe04cb63c176649"
+      "67a62234f10172f2641e5ce53953128d"
     ],
     [
       "DM4F.return",
@@ -41,7 +41,7 @@
       1,
       [ "@query" ],
       0,
-      "fdb72856ea37d1d9a2770e33fa713040"
+      "e1778ca9054d0789e3c629790e0e4527"
     ],
     [
       "DM4F.bind_wp",
@@ -63,7 +63,7 @@
         "typing_Tm_abs_811e8b5e3738987d804ef8609b0e9eff"
       ],
       0,
-      "028b077bff9027dda5fb10b72a747542"
+      "313ba9003d41ef7b4e06d9fa4631000c"
     ],
     [
       "DM4F.bind",
@@ -94,7 +94,7 @@
         "typing_Tm_abs_ade907d0cf068369deec49e03ec454f6"
       ],
       0,
-      "bb88ff6d5db989622818f6e932146d06"
+      "e0cce23c2ec4cf3a75abf02cbdb26c50"
     ],
     [
       "DM4F.ite_wp",
@@ -109,7 +109,7 @@
         "refinement_interpretation_Tm_refine_7d65da4998d4da77eee5d5ab706ad1ce"
       ],
       0,
-      "07fc3aab34b7dd283a0ddd32d417da01"
+      "e9afb1d9c6f88deb387aa594bcb795c3"
     ],
     [
       "DM4F.subcomp",
@@ -126,10 +126,10 @@
         "true_interp"
       ],
       0,
-      "c3e85f057959dd605004aeba6a6b149b"
+      "a82ed93a3ce85f0b1dc4bfc2f2730da8"
     ],
     [
-      "DM4F.ST", 1, 2, 1, [ "@query" ], 0, "354b13485ba4c60eb9586b136166f27b"
+      "DM4F.ST", 1, 2, 1, [ "@query" ], 0, "fed063c44e844f18aebeeb4111d9226f"
     ],
     [
       "DM4F.ST",
@@ -141,7 +141,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "7b569ad62b5b6a319ccf067a349d3e13"
+      "31ad887de5dd55a8fdfecfc7f2efc64b"
     ],
     [
       "DM4F.ST",
@@ -153,7 +153,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "40c4c305a676d7b90f29f6ed77cfacdd"
+      "f6bb8c51a873475ab3439dbd4e026333"
     ],
     [
       "DM4F.lift_wp",
@@ -172,7 +172,7 @@
         "typing_Tm_abs_963d181e5476598451a0d753ab150aec"
       ],
       0,
-      "a568e6550e73e542cc6d7f6d8511f1db"
+      "f970c2d8449e1d70a5c95a97e5262862"
     ],
     [
       "DM4F.lift_pure_st",
@@ -193,7 +193,7 @@
         "typing_Tm_abs_da437716eb372fac740da22fdb123c4f"
       ],
       0,
-      "ecb2c25a9f440db8123df5fdc13ac7aa"
+      "8138d473e7c5a07d0250f7f739c2a022"
     ],
     [
       "DM4F.null",
@@ -209,7 +209,7 @@
         "l_quant_interp_7476593ebb206e7a8235a58ae2f6298e"
       ],
       0,
-      "dd5e9ea48983f0ae05f866b2c95fb57b"
+      "f1ba50f7478ee7c2f73ae428cf368842"
     ],
     [
       "DM4F.get",
@@ -221,7 +221,7 @@
         "interpretation_Tm_abs_20a7238fd07f9d31c2887ac37e91b7a4"
       ],
       0,
-      "17214f43d44cb3d7ded01e9ecb2576a2"
+      "3fe5683ec041bae8e9d0153406de7c2b"
     ],
     [
       "DM4F.put",
@@ -229,12 +229,14 @@
       2,
       1,
       [
-        "@query", "equation_DM4F.st_monotonic",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_DM4F.st_monotonic",
         "interpretation_Tm_abs_bddbf1da97343ce49be9bf357977f029",
         "unit_typing"
       ],
       0,
-      "c6bd75373c174472d52b5df7b1cb85b9"
+      "19869cb8e25c407515be87abd49de467"
     ],
     [
       "DM4F.test",
@@ -244,16 +246,16 @@
       [
         "@MaxIFuel_assumption", "@query",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "equation_DM4F.null", "equation_Prims.eqtype",
-        "function_token_typing_Prims.int", "int_inversion", "int_typing",
+        "equation_DM4F.null", "equation_Prims.eqtype", "int_inversion",
+        "int_typing",
         "interpretation_Tm_abs_ac22a594b282e3624667bed6f5093659",
         "l_quant_interp_7476593ebb206e7a8235a58ae2f6298e",
         "primitive_Prims.op_Addition",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "token_correspondence_DM4F.null"
+        "token_correspondence_DM4F.null", "typing_Prims.int"
       ],
       0,
-      "cfaf1f58082557a0a6f293981a606922"
+      "fa2dcd663f755a53aa4229f8a45319ee"
     ]
   ]
 ]

@@ -6,9 +6,9 @@
       1,
       2,
       1,
-      [ "@query", "equation_Bug067.good", "true_interp" ],
+      [ "@query", "equation_Bug067.good" ],
       0,
-      "92a994150c74cdbbafbff6918bef4783"
+      "995e91b3e4d29f8aea22eeb05ea770be"
     ]
   ]
 ]

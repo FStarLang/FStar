@@ -8,12 +8,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "c4bc48c1001cb23f33948c2c11b7ec43"
+      "b06c8da69f6dc0c7881e020587d2cb8c"
     ],
     [
       "FStar.Fin.seqn",
@@ -22,12 +23,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "72adc366c3b9ed3a8699697f9c4b1eed"
+      "43357c029c810cff6ff7d62ddeab0083"
     ],
     [
       "FStar.Fin.find",
@@ -39,7 +41,7 @@
         "typing_FStar.Fin.in_"
       ],
       0,
-      "4573345cd65078d0ac77ed1208c3fb18"
+      "46dd7452c6f1217eb18527a21929ae0a"
     ],
     [
       "FStar.Fin.pigeonhole",
@@ -49,14 +51,14 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Fin.under",
         "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "haseqTm_refine_c1424615841f28cac7fc34e92b7ff33c",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "typing_Prims.int"
       ],
       0,
-      "140462ed6aba9d8bdb0523758617ca51"
+      "7005b0d56cc837ec6d98d12bbadf7488"
     ],
     [
       "FStar.Fin.find_eq",
@@ -65,7 +67,7 @@
       1,
       [ "@query" ],
       0,
-      "392ff8de65399cf2f15cb9fa24fed81f"
+      "9db2f4661a1d9c0f8ae33b5ff0de3a05"
     ]
   ]
 ]

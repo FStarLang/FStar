@@ -1,5 +1,5 @@
 [
-  "E'uÙEë\u0010y÷QKAˇ‘t3",
+  "8’¬©YK‰kBî»öù.î",
   [
     [
       "Bug2496.intro_set",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "05dd9ce67dc8f1f88b39163ad19c387e"
+      "73a80d6d831c68ec881e4656d24cf514"
     ],
     [
       "Bug2496.set_as_list",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_ea7377a3fd2bd1599ea6567f21fbd5cb"
       ],
       0,
-      "34dc212ca0a2e7c0aa9603bc317a2b00"
+      "62d54c2edebcf2cca4215dfaf0663102"
     ],
     [
       "Bug2496.empty",
@@ -47,7 +47,7 @@
         "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
       ],
       0,
-      "6d84f90405ddbdda0f3b8b809b119c92"
+      "fed8ad12b0d6194a85aaf9c1020e2ae7"
     ],
     [
       "Bug2496.insert",
@@ -76,6 +76,7 @@
         "kinding_Prims.list@tok",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
@@ -91,7 +92,7 @@
         "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
       ],
       0,
-      "2b8cf57a2193383baec1fb1a873caa39"
+      "e52ac2efe8e9b7cd66a44237b972d145"
     ],
     [
       "Bug2496.singleton_includes_argument_lemma",
@@ -120,7 +121,7 @@
         "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
       ],
       0,
-      "fabc9ccf3fba6d501ce1038c38d8bb8e"
+      "e6a7f47dc62fc7f25bdfe80d396d816a"
     ],
     [
       "Bug2496.singleton_includes_argument_lemma_bad",
@@ -150,7 +151,7 @@
         "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
       ],
       0,
-      "9fb835ddd2c55baa88471ee63b08f965"
+      "eb10bc822ba0d7c354634b72e150e220"
     ]
   ]
 ]

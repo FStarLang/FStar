@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
       ],
       0,
-      "c4e6770cc47b393261eb0523737fb66b"
+      "2a8f310d94f73669a59804b163da08cc"
     ],
     [
       "Bug1966a.q_as_lem",
@@ -23,16 +23,16 @@
         "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8"
       ],
       0,
-      "57afc3ea52b557d6cc900fd4385b6ec5"
+      "6f29f448748293ad81dcea1caab9256d"
     ],
     [
       "Bug1966a.congruence_fun'",
       1,
       2,
       1,
-      [ "@query", "true_interp" ],
+      [ "@query" ],
       0,
-      "016076de003c9264fe71d02c12220874"
+      "c068a764d8a5b59082fe677df0278b0c"
     ],
     [
       "Bug1966a.congruence_fun",
@@ -41,7 +41,7 @@
       1,
       [ "@query" ],
       0,
-      "4e5c7ab3a2f9e31558be43746916cd2c"
+      "00d88fb7659446ff84d30afc55613b2e"
     ],
     [
       "Bug1966a.__forall_inst",
@@ -53,7 +53,7 @@
         "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8"
       ],
       0,
-      "3525d60cc7e4b1e656605f5a6e1682f7"
+      "cc1161cc8ac548b5e746de9a496c7e43"
     ],
     [
       "Bug1966a.fun_ext'",
@@ -65,7 +65,7 @@
         "refinement_interpretation_Tm_refine_1aaad12ccaab375dde7c624ef1057c2b"
       ],
       0,
-      "9a5a47cf4c740d4a68265363549edfd5"
+      "5f18f38ab49af9dec7f93b8877612b9d"
     ]
   ]
 ]

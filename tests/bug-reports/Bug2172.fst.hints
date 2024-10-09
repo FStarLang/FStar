@@ -1,8 +1,8 @@
 [
-  "ˆé¤ªDgM\u001f¤îB={/\u0003\u001b",
+  "\nR\t\u007fúNƒ•Ü\u0013t\u0000¼Ñ\u0012†",
   [
     [
-      "Bug2172.uu___4",
+      "Bug2172.test0",
       1,
       2,
       1,
@@ -11,29 +11,29 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "f12a827c1870ad0869d2d54060fee0f2"
+      "3b28c86b18c87bcdd6f0b65bbf4cc819"
     ],
     [
-      "Bug2172.uu___5",
+      "Bug2172.test1",
       1,
       2,
       1,
       [
-        "@query", "equation_Bug2172.p2", "int_typing",
-        "l_quant_interp_7a6b72aad9fbf3df656cee56b85ae8e6",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+        "@MaxIFuel_assumption", "@query", "equation_Bug2172.p2",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Minus", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "a93af153903b937088e45903435ae312"
+      "2458e38b6a865e47d235305ed8ab6250"
     ],
     [
-      "Bug2172.uu___6",
+      "Bug2172.uu___0",
       1,
       2,
       1,
       [ "@query", "equation_Bug2172.p1", "equation_Bug2172.p2" ],
       0,
-      "a4ed4e8c104dbfc55a3d61d800ea1ef5"
+      "a786a83bb08aadf3906b826af7b1c473"
     ]
   ]
 ]

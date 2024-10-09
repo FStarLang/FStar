@@ -14,7 +14,7 @@
         "projection_inverse_FStar.Integers.Unsigned__0"
       ],
       0,
-      "bfbbe9797594d185506156b09bf60579"
+      "c56533f94ffcef2e5bca3719a8c2ab77"
     ],
     [
       "Test.ConstantTime.Integers.hacl_lattice",
@@ -22,13 +22,15 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.IFC.associative",
-        "equation_FStar.IFC.commutative", "equation_FStar.IFC.idempotent",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.IFC.associative", "equation_FStar.IFC.commutative",
+        "equation_FStar.IFC.idempotent",
         "interpretation_Tm_abs_7914e8ab332b69ee3bc4641e99a8399b",
-        "unit_inversion"
+        "unit_inversion", "unit_typing"
       ],
       0,
-      "9f90e67ff5bb9590e5efc018ec7d5281"
+      "ebfb5df593b499f99c8e9ffd935f9341"
     ],
     [
       "Test.ConstantTime.Integers.s_uint32",
@@ -48,7 +50,7 @@
         "projection_inverse_FStar.Integers.Unsigned__0"
       ],
       0,
-      "0117a0e39c8c2175f4ed2dc0a261b445"
+      "399756490717ec29ae50667512ca5f89"
     ],
     [
       "Test.ConstantTime.Integers.ex1",
@@ -70,7 +72,7 @@
         "projection_inverse_FStar.Integers.Unsigned__0"
       ],
       0,
-      "4bc0d8a6effee0be0d5b2c383fa337af"
+      "5ed8d875f9e9320d917dc372fc6bec5f"
     ],
     [
       "Test.ConstantTime.Integers.l_uint32",
@@ -90,7 +92,7 @@
         "projection_inverse_FStar.Integers.Unsigned__0"
       ],
       0,
-      "e066923ddbf7b4822b3f73e13a831c04"
+      "bac711f263432fc3a4c7d2caa6acf64c"
     ],
     [
       "Test.ConstantTime.Integers.ex_poly",
@@ -112,7 +114,7 @@
         "projection_inverse_FStar.Integers.Unsigned__0"
       ],
       0,
-      "4a3660d9a12c971edda0076dc4a8c9dd"
+      "66bcbe3fed583e6d2fd11883868a3a89"
     ]
   ]
 ]

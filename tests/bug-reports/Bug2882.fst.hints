@@ -12,7 +12,7 @@
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result"
       ],
       0,
-      "88736d506366510e6ad51dd3fe956f3d"
+      "103c4eb47ef24b252676fd22d743bd59"
     ],
     [
       "Bug2882.unif_uvars",
@@ -22,14 +22,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Stubs.Reflection.V2.Data_pretyping_250ec2f946e12594618df379d0cb7f9b",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "constructor_distinct_FStar.Stubs.Reflection.V2.Data.Tv_Uvar",
         "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
-        "data_typing_intro_FStar.Stubs.Reflection.V2.Data.Tv_Unknown@tok",
         "disc_equation_FStar.Stubs.Reflection.V2.Data.Tv_Uvar",
+        "equality_tok_FStar.Stubs.Reflection.V2.Data.Tv_Unsupp@tok",
         "equation_FStar.Tactics.NamedView.term", "equation_Prims.eqtype",
         "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "primitive_Prims.op_disEquality",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
@@ -42,10 +42,13 @@
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_v",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int",
+        "typing_tok_FStar.Stubs.Reflection.V2.Data.Tv_Unsupp@tok",
+        "unit_typing"
       ],
       0,
-      "09e8e9bc982349693f1066ec0ff94b56"
+      "9bc8fe38cac918a210054a77946db5ca"
     ]
   ]
 ]

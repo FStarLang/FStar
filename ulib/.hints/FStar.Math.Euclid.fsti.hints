@@ -4,20 +4,20 @@
     [
       "FStar.Math.Euclid.euclid",
       1,
-      0,
-      0,
+      2,
+      1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "e50e91ea5fa67e31826f295e0d17e5ef"
+      "7b7e6671d98cf5661ccf3eeb6268c7a5"
     ],
     [
       "FStar.Math.Euclid.euclid_prime",
       1,
-      0,
-      0,
+      2,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Math.Euclid.is_prime",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_bcc53e0d0118ae334bf1ccba10e6ca4e"
       ],
       0,
-      "3190a3c86bf87fef79c4012a6d3e54b7"
+      "2fa8fa00657c273f74e6aa5db0d80e8d"
     ]
   ]
 ]

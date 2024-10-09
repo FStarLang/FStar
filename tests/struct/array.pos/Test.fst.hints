@@ -12,7 +12,7 @@
         "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "@query",
-        "FStar.Classical_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
+        "FStar.List.Tot.Base_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "FStar.Pervasives.Native_interpretation_Tm_arrow_b8cce376a4a678a51298a0f3945f25ce",
         "bool_inversion", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil",
@@ -27,7 +27,6 @@
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "function_token_typing_FStar.Pervasives.Native.fst",
-        "function_token_typing_Prims.string",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Negation",
@@ -45,12 +44,12 @@
         "token_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "token_correspondence_FStar.Pervasives.Native.fst",
         "typing_FStar.List.Tot.Base.map",
-        "typing_FStar.List.Tot.Base.noRepeats",
+        "typing_FStar.List.Tot.Base.noRepeats", "typing_Prims.string",
         "typing_tok_FStar.Pointer.Base.TBool@tok",
         "typing_tok_FStar.Pointer.Base.TInt@tok"
       ],
       0,
-      "acf36890a463371614f667e2359e8c9b"
+      "2deb039fbdc2e8970c5e290bc1ad6f17"
     ],
     [
       "Test.callee",
@@ -64,7 +63,7 @@
         "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@fuel_correspondence_FStar.Pointer.Base.type_of_typ.fuel_instrumented",
         "@query",
-        "FStar.Classical_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
+        "FStar.List.Tot.Base_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "FStar.Pervasives.Native_interpretation_Tm_arrow_b8cce376a4a678a51298a0f3945f25ce",
         "bool_inversion", "constructor_distinct_FStar.Pointer.Base.TBase",
         "constructor_distinct_FStar.Pointer.Base.TInt",
@@ -86,7 +85,6 @@
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "equation_with_fuel_FStar.Pointer.Base.type_of_typ.fuel_instrumented",
         "function_token_typing_FStar.Pervasives.Native.fst",
-        "function_token_typing_Prims.string",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok",
         "lemma_FStar.Pointer.Base.gread_gfield",
@@ -120,11 +118,11 @@
         "typing_FStar.Monotonic.HyperStack.live_region",
         "typing_FStar.Pointer.Base.__proj__Mkstruct_typ__item__fields",
         "typing_FStar.Pointer.Base.frameOf",
-        "typing_FStar.Pointer.Base.loc_pointer", "typing_Test.struct",
-        "typing_Test.struct_t"
+        "typing_FStar.Pointer.Base.loc_pointer", "typing_Prims.string",
+        "typing_Test.struct", "typing_Test.struct_t"
       ],
       0,
-      "d91feece3993636f135405e69eb661bb"
+      "ef5817b1189d26a1888a43deb4f9171b"
     ],
     [
       "Test.caller",
@@ -142,7 +140,7 @@
         "@fuel_irrelevance_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "@fuel_irrelevance_FStar.Pointer.Base.type_of_typ.fuel_instrumented",
         "@query",
-        "FStar.Classical_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
+        "FStar.List.Tot.Base_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
         "FStar.Pervasives.Native_interpretation_Tm_arrow_b8cce376a4a678a51298a0f3945f25ce",
         "FStar.Pointer.Base_interpretation_Tm_arrow_28e00c6cddbebec863cfb4ba46afe386",
@@ -187,11 +185,10 @@
         "equation_with_fuel_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_FStar.Pervasives.Native.fst",
         "function_token_typing_FStar.Pointer.Base.dfst_struct_field",
         "function_token_typing_FStar.Pointer.Base.fun_of_list",
-        "function_token_typing_Prims.string", "int_inversion", "int_typing",
+        "int_inversion", "int_typing",
         "interpretation_Tm_abs_38d4bb2034e4c433acd11631b66192dd",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok", "kinding_Prims.dtuple2@tok",
@@ -209,8 +206,8 @@
         "lemma_FStar.Pointer.Base.gpointer_of_buffer_cell_gbuffer_of_array_pointer",
         "lemma_FStar.Pointer.Base.gread_gcell",
         "lemma_FStar.Pointer.Base.gread_gfield",
-        "lemma_FStar.Pointer.Base.live_gpointer_of_buffer_cell",
-        "lemma_FStar.Pointer.Base.loc_disjoint_gcell",
+        "lemma_FStar.Pointer.Base.live_gcell",
+        "lemma_FStar.Pointer.Base.loc_disjoint_gpointer_of_buffer_cell",
         "lemma_FStar.Pointer.Base.readable_gcell",
         "lemma_FStar.Pointer.Base.struct_sel_struct_create_fun",
         "lemma_FStar.Pointer.Base.type_of_typ_array",
@@ -263,6 +260,7 @@
         "typing_FStar.List.Tot.Base.noRepeats", "typing_FStar.Map.contains",
         "typing_FStar.Map.domain", "typing_FStar.Map.restrict",
         "typing_FStar.Monotonic.Heap.emp",
+        "typing_FStar.Monotonic.Heap.heap",
         "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperHeap.root",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
@@ -275,12 +273,12 @@
         "typing_FStar.Pointer.Base.type_of_typ",
         "typing_FStar.Set.complement", "typing_FStar.Set.mem",
         "typing_FStar.Set.singleton", "typing_FStar.Set.union",
-        "typing_FStar.UInt32.v", "typing_Test.struct",
+        "typing_FStar.UInt32.v", "typing_Prims.string", "typing_Test.struct",
         "typing_Test.struct_t",
         "typing_Tm_abs_38d4bb2034e4c433acd11631b66192dd"
       ],
       0,
-      "cbee52d75ba7a569703b5e7dde5bd2cc"
+      "b4a42c546baff1f4b9574afee3d4bda9"
     ]
   ]
 ]

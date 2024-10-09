@@ -8,12 +8,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "0bdfca16c31c5a77f057fa6e5541b62f"
+      "bfde14a19b717006374176d715c37947"
     ],
     [
       "Bug1074.does_not_fail_if_annot",
@@ -26,7 +27,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "4aad21297c34726fb386b6f9560c9212"
+      "1d0711e594c405138ebe01267128fa7a"
     ]
   ]
 ]

@@ -8,6 +8,7 @@
       2,
       [
         "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.NamedView_pretyping_b9909aecbb024f77e489710ef0c3a302",
         "data_elim_FStar.Stubs.Tactics.Result.Success",
         "disc_equation_FStar.Tactics.NamedView.Tv_Abs",
         "disc_equation_FStar.Tactics.NamedView.Tv_App",
@@ -26,12 +27,14 @@
         "disc_equation_FStar.Tactics.NamedView.Tv_Unsupp",
         "disc_equation_FStar.Tactics.NamedView.Tv_Uvar",
         "disc_equation_FStar.Tactics.NamedView.Tv_Var",
+        "equality_tok_FStar.Tactics.NamedView.Tv_Unsupp@tok",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
         "fuel_guarded_inversion_FStar.Tactics.NamedView.named_term_view",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "typing_tok_FStar.Tactics.NamedView.Tv_Unsupp@tok"
       ],
       0,
-      "379a4f012d407c00ed8a289a50831484"
+      "5b95f7d6e0150fde88c21098162c2542"
     ]
   ]
 ]

@@ -14,7 +14,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d8b9aea7fd19b19880d374c3da4db9f6"
+      "fb32013f9097e1b8b9fd1404323dbaf1"
     ],
     [
       "Example.reverse",
@@ -47,12 +47,11 @@
         "equation_FStar.Monotonic.HyperStack.poppable",
         "equation_FStar.Monotonic.HyperStack.popped",
         "equation_FStar.Monotonic.HyperStack.remove_elt",
-        "equation_Prims.nat",
+        "equation_FStar.Set.subset", "equation_Prims.nat",
         "equation_with_fuel_DoublyLinkedListIface.g_node_vals.fuel_instrumented",
         "equation_with_fuel_Example.l_reverse.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_FStar.Monotonic.Heap.heap", "int_inversion",
+        "fuel_guarded_inversion_Prims.list", "int_inversion",
         "lemma_DoublyLinkedListIface.auto_dll_as_list_staying_unchanged",
         "lemma_DoublyLinkedListIface.auto_dll_as_payload_list_staying_unchanged",
         "lemma_DoublyLinkedListIface.auto_dll_fp_disjoint_push",
@@ -76,8 +75,7 @@
         "lemma_FStar.Set.lemma_equal_elim",
         "lemma_FStar.Set.lemma_equal_intro",
         "lemma_FStar.Set.mem_complement", "lemma_FStar.Set.mem_intersect",
-        "lemma_FStar.Set.mem_singleton", "lemma_FStar.Set.mem_subset",
-        "lemma_FStar.Set.mem_union",
+        "lemma_FStar.Set.mem_singleton", "lemma_FStar.Set.mem_union",
         "lemma_LowStar.Monotonic.Buffer.fresh_frame_modifies",
         "lemma_LowStar.Monotonic.Buffer.loc_disjoint_includes_r",
         "lemma_LowStar.Monotonic.Buffer.loc_disjoint_none_r",
@@ -117,6 +115,7 @@
         "typing_DoublyLinkedListIface.node", "typing_FStar.Map.contains",
         "typing_FStar.Map.domain", "typing_FStar.Map.restrict",
         "typing_FStar.Monotonic.Heap.emp",
+        "typing_FStar.Monotonic.Heap.heap",
         "typing_FStar.Monotonic.HyperHeap.mod_set",
         "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperHeap.root",
@@ -132,7 +131,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "fdbfffcad0a1fc27bf935812637a5ca7"
+      "e2bedeaaeff18b1e40356a67c5de9d43"
     ],
     [
       "Example.main",
@@ -146,6 +145,7 @@
         "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.append.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
         "@query", "FStar.UInt32_pretyping_2ab3c8ba2d08b0172817fc70b5994868",
         "bool_inversion", "constructor_distinct_Prims.Cons",
@@ -176,9 +176,8 @@
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
-        "function_token_typing_FStar.Monotonic.Heap.heap", "l_or-interp",
+        "fuel_guarded_inversion_Prims.list", "l_or-interp",
         "lemma_DoublyLinkedListIface.auto_dll_as_list_staying_unchanged",
-        "lemma_DoublyLinkedListIface.auto_dll_as_payload_list_staying_unchanged",
         "lemma_DoublyLinkedListIface.auto_dll_fp_upon_staying_unchanged",
         "lemma_DoublyLinkedListIface.auto_dll_remains_valid_upon_staying_unchanged",
         "lemma_DoublyLinkedListIface.auto_node_in_list_is_valid",
@@ -237,6 +236,7 @@
         "typing_DoublyLinkedListIface.node", "typing_FStar.Map.contains",
         "typing_FStar.Map.domain", "typing_FStar.Map.restrict",
         "typing_FStar.Monotonic.Heap.emp",
+        "typing_FStar.Monotonic.Heap.heap",
         "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperHeap.root",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
@@ -252,7 +252,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "e5a2ec6594a213854357373df199166c"
+      "b4ba690160802472965a42f76f76d10e"
     ]
   ]
 ]

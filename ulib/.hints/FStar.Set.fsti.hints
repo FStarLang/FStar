@@ -10,12 +10,11 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_374b44ccfcb77ed85d505dbc44265913_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Prims.eqtype", "equation_Prims.op_Equals_Equals_Equals",
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d7b63153f6b89963d3b3ad8d6de413c2"
+      "c53398443ba9033299f6d0e6c2ba0f50"
     ],
     [
       "FStar.Set.lemma_disjoint_subset",
@@ -32,7 +31,7 @@
         "typing_FStar.Set.mem"
       ],
       0,
-      "4a2ee84e7d6f9c401216f789f7f21fc1"
+      "6d9ab631c6150b29f770428e9975ae8d"
     ]
   ]
 ]

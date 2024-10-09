@@ -11,10 +11,11 @@
         "Bug1536_interpretation_Tm_arrow_72cdc0c9c0d847eb228998a5a6607da8",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr", "equation_Bug1536.ex",
-        "fuel_guarded_inversion_FStar.Pervasives.either", "unit_typing"
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "projection_inverse_BoxBool_proj_0", "unit_typing"
       ],
       0,
-      "60773bdbaa1d2dca4262d61069bf2640"
+      "ee70ca48bed3e1a48c3bdf8fea3368d0"
     ],
     [
       "Bug1536.ret",
@@ -23,7 +24,7 @@
       1,
       [ "@query" ],
       0,
-      "240baa2d3f1cbed8c2d841f994792c93"
+      "d65d96f27a8f063d93fd7a6b8eacf6c7"
     ],
     [
       "Bug1536.t1",
@@ -32,7 +33,7 @@
       1,
       [ "@query", "eq2-interp" ],
       0,
-      "2382bdf1c0a981c18aa6a046bf07ad42"
+      "2b8ed9077719a2f6d032a1764a169e2c"
     ],
     [
       "Bug1536.t2",
@@ -41,7 +42,7 @@
       1,
       [ "@query", "eq2-interp" ],
       0,
-      "cda99c077a434651b94faea53dbd27d6"
+      "76669dca2fe8e25b920be239c5a6befa"
     ]
   ]
 ]

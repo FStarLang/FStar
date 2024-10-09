@@ -6,14 +6,9 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "defn_equation_PropProofs.x",
-        "equation_Prims.l_True", "equation_Prims.squash",
-        "equation_Prims.subtype_of",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
+      [ "@query", "defn_equation_PropProofs.x" ],
       0,
-      "c3425b3b15e11666b5db6a15f8d671d3"
+      "34f8677fe87c8f82972b1b69a3c0c695"
     ]
   ]
 ]

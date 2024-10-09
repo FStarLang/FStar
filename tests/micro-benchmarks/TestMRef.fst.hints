@@ -18,7 +18,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "bc16d74a704d34b5efe526f1dc5830f7"
+      "609cf75b8171cf69d28f2d992e381110"
     ],
     [
       "TestMRef.x",
@@ -37,7 +37,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "6cb17d75a1104ee9c0a2dab0b91822ff"
+      "b13dfb0b096565a4f47a0f9cf7f8e88c"
     ],
     [
       "TestMRef.test_frame_write_ref",
@@ -55,7 +55,6 @@
         "equation_Prims.nat", "equation_Prims.pos",
         "function_token_typing_FStar.Heap.trivial_preorder",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "interpretation_Tm_abs_568747eb5009c1dec504311dee989dc2",
         "lemma_FStar.Monotonic.Heap.lemma_modifies_and_equal_dom_sel_diff_addr",
@@ -70,10 +69,10 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "true_interp", "typing_FStar.Heap.trivial_preorder",
         "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Set.singleton",
-        "typing_TestMRef.y", "typing_TestMRef.z"
+        "typing_Prims.int", "typing_TestMRef.y", "typing_TestMRef.z"
       ],
       0,
-      "bdcaadb9c530be484f767dccc1ef2c0e"
+      "cb6d9f84115ff09a5dafedc281d63b12"
     ],
     [
       "TestMRef.test_frame_write_mref",
@@ -92,7 +91,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "830f0ed226c6544b069eb2aa5f060b5a"
+      "dd9871671b2c0212063c6c11bbb70809"
     ],
     [
       "TestMRef.test_frame_write_mref",
@@ -113,7 +112,6 @@
         "equation_Prims.nat", "equation_Prims.pos",
         "function_token_typing_FStar.Heap.trivial_preorder",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "interpretation_Tm_abs_568747eb5009c1dec504311dee989dc2",
         "interpretation_Tm_abs_5a7d5b4c7f9d14cf0daa3ed1c1662efa",
@@ -130,11 +128,11 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "true_interp", "typing_FStar.Heap.trivial_preorder",
         "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Set.mem",
-        "typing_FStar.Set.singleton", "typing_TestMRef.x",
-        "typing_TestMRef.y"
+        "typing_FStar.Set.singleton", "typing_Prims.int",
+        "typing_TestMRef.x", "typing_TestMRef.y"
       ],
       0,
-      "0fe41a30c7f1033e01081313f585e0f5"
+      "c9814b84814261e7fc1bce8b4595ea5c"
     ],
     [
       "TestMRef.test_frame_alloc_mref",
@@ -153,7 +151,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "1f97ab7a8cbeb5c699d9806ab1d4e405"
+      "38e7aa5c4a8fe93e22a42ddd820bc0d6"
     ],
     [
       "TestMRef.test_frame_alloc_mref",
@@ -170,7 +168,6 @@
         "equation_FStar.Preorder.transitive", "equation_FStar.ST.mref",
         "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "interpretation_Tm_abs_5a7d5b4c7f9d14cf0daa3ed1c1662efa",
         "lemma_FStar.Set.mem_empty",
@@ -184,10 +181,10 @@
         "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Set.empty",
-        "typing_TestMRef.x"
+        "typing_Prims.int", "typing_TestMRef.x"
       ],
       0,
-      "97bc119e34329342849c1ee29812015b"
+      "df1696a3d8decca320c28be37bee108a"
     ],
     [
       "TestMRef.test_write_mref",
@@ -206,7 +203,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "ba5003708be47738d574d82e77bd2da8"
+      "e2d0315a1628f3e029687fffd4d770a3"
     ],
     [
       "TestMRef.test_write_mref",
@@ -230,7 +227,7 @@
         "refinement_interpretation_Tm_refine_769338d37e2d555d728186a4af466836"
       ],
       0,
-      "9d5015918b79a326e074f4154974b24f"
+      "94618dbd05f8dd104620a583fcc04750"
     ]
   ]
 ]

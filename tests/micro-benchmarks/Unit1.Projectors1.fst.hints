@@ -8,12 +8,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "e314557a384b12888f7a0c016afd88aa"
+      "0984ce0a9ffce31d4014f31e8765a9f5"
     ],
     [
       "Unit1.Projectors1.s",
@@ -22,12 +23,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "0adacb1ceddb034aec7d84a8ed1aefab"
+      "917355f0db74a454cda9c0281746f741"
     ],
     [
       "Unit1.Projectors1.u",
@@ -40,7 +42,7 @@
         "typing_FStar.Char.char"
       ],
       0,
-      "ec082febd11a4137321970635571a96e"
+      "571535ec1c9ceef5cb420b9c261b5909"
     ],
     [
       "Unit1.Projectors1.v",
@@ -49,12 +51,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "986e2cbdbb3079ebdebf18cdcad6f017"
+      "c9f3a6cb5cb8520f66d9a020ad3eeab8"
     ],
     [
       "Unit1.Projectors1.__proj__Ret__item__x",
@@ -63,7 +66,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "data_elim_Unit1.Projectors1.Ret" ],
       0,
-      "33a2d14c2d83af36fa87680b5ac875d3"
+      "76bbdb3de53c24cac09cf1d164f7226f"
     ]
   ]
 ]

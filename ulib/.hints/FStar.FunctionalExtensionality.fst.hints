@@ -4,36 +4,36 @@
     [
       "FStar.FunctionalExtensionality.feq_on_domain",
       1,
-      0,
-      0,
+      2,
+      1,
       [
         "@query", "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.on_domain",
         "interpretation_Tm_abs_d3988c6b3796e1c5fa6d721e12c50d6e"
       ],
       0,
-      "aad4338af68a2a1dd4d58e1c56021dd2"
+      "d7bca1faa98e8da75269bef48796b7c8"
     ],
     [
       "FStar.FunctionalExtensionality.idempotence_on_domain",
       1,
+      2,
+      1,
+      [ "@query" ],
       0,
-      0,
-      [ "@query", "equation_FStar.FunctionalExtensionality.on_domain" ],
-      0,
-      "ea8f6c64f4464afeb0768d8a4b3e8672"
+      "c3a5364ac728fb8885d2bcf147168377"
     ],
     [
       "FStar.FunctionalExtensionality.on_dom",
       1,
-      0,
-      0,
+      2,
+      1,
       [
         "@query", "equation_FStar.FunctionalExtensionality.is_restricted",
         "lemma_FStar.FunctionalExtensionality.idempotence_on_domain"
       ],
       0,
-      "92cba613eda77003d68fb61edd333812"
+      "fe193a64e8544d5a5db7d1e3cf78492e"
     ],
     [
       "FStar.FunctionalExtensionality.quantifier_as_lemma",
@@ -45,7 +45,7 @@
         "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8"
       ],
       0,
-      "69b81b6286e1dcec55e10ca3110974a7"
+      "faa92cced2cd2d2c36f0119b80ba89ac"
     ],
     [
       "FStar.FunctionalExtensionality.try_with",
@@ -54,96 +54,93 @@
       2,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
         "data_elim_FStar.Stubs.Tactics.Result.Success",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
         "disc_equation_FStar.Stubs.Tactics.Result.Success",
-        "equality_tok_FStar.Stubs.Tactics.Common.NotAListLiteral@tok",
         "fuel_guarded_inversion_FStar.Pervasives.either",
-        "projection_inverse_BoxBool_proj_0",
-        "typing_tok_FStar.Stubs.Tactics.Common.NotAListLiteral@tok"
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "4492d77d94b6e65afc516ce4d8b07c43"
+      "10a224f08070214b27913c1ab2fae432"
     ],
     [
       "FStar.FunctionalExtensionality.extensionality_1",
       1,
       2,
       1,
-      [ "@query", "true_interp" ],
+      [ "@query" ],
       0,
-      "5f24ccc9f173f5af846bbcf6bdaeb363"
+      "23013067e585da467b57e109aa4e9009"
     ],
     [
       "FStar.FunctionalExtensionality.extensionality",
       1,
-      0,
-      0,
+      2,
+      1,
       [
         "@query", "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.on_domain",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain"
       ],
       0,
-      "46819f88c82ed45f576addc3b69371c8"
+      "b5da47129e741252645e5b0e9c3be6aa"
     ],
     [
       "FStar.FunctionalExtensionality.feq_on_domain_g",
       1,
-      0,
-      0,
+      2,
+      1,
       [
         "@query", "equation_FStar.FunctionalExtensionality.feq_g",
         "equation_FStar.FunctionalExtensionality.on_domain_g",
         "interpretation_Tm_abs_9f8d8bcb0bd54b26007da155012bc829"
       ],
       0,
-      "41177c11ba9a84eac9f216cc14f2cc5b"
+      "2b382b9f91d0fe571bdff680ca45e1b4"
     ],
     [
       "FStar.FunctionalExtensionality.idempotence_on_domain_g",
       1,
+      2,
+      1,
+      [ "@query" ],
       0,
-      0,
-      [ "@query", "equation_FStar.FunctionalExtensionality.on_domain_g" ],
-      0,
-      "7f126c9dc5398076035840fa871c3671"
+      "0bf1a068640b03d5c694349aec4b5570"
     ],
     [
       "FStar.FunctionalExtensionality.on_dom_g",
       1,
-      0,
-      0,
+      2,
+      1,
       [
         "@query", "equation_FStar.FunctionalExtensionality.is_restricted_g",
         "lemma_FStar.FunctionalExtensionality.idempotence_on_domain_g"
       ],
       0,
-      "2848b6c575c7ee5795581ab203498719"
+      "2bf698fc04efa62c7075c3aacc32043f"
     ],
     [
       "FStar.FunctionalExtensionality.extensionality_1_g",
       1,
       2,
       1,
-      [ "@query", "true_interp" ],
+      [ "@query" ],
       0,
-      "13406ddb289b47478e0a91f0cb1e32e0"
+      "00179a339e877a046aba3ab70cb0655c"
     ],
     [
       "FStar.FunctionalExtensionality.extensionality_g",
       1,
-      0,
-      0,
+      2,
+      1,
       [
         "@query", "equation_FStar.FunctionalExtensionality.feq_g",
         "equation_FStar.FunctionalExtensionality.on_domain_g",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain_g"
       ],
       0,
-      "a74d8d486ffea3de9485869b7b2a4068"
+      "a6de9869bef24a8db8d0c83336f5a232"
     ]
   ]
 ]

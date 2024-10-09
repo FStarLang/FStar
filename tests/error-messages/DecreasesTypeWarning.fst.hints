@@ -15,7 +15,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9706a05be54ffa50693fa8c65ea0498c"
+      "d0052225074944468f2c923dca1c20f3"
     ],
     [
       "DecreasesTypeWarning.f",
@@ -30,7 +30,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4e33468df32543a9e76862ec0a1f934f"
+      "4153c56877abe8da1bcc3d4e0ba413af"
     ]
   ]
 ]

@@ -1,5 +1,5 @@
 [
-  "¸ŽDA ÈÍû.7å²kjO\u0010",
+  "dâ\u0003ÑJÁ©²ã1ÝE\u0007§}‹",
   [
     [
       "LowParseWriters.NoHoare.read_return_conv",
@@ -10,7 +10,6 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -22,10 +21,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "d98db8402c0c5b57021e59dcc253a661"
+      "a13969d6ef1a94a9e344d948a681b923"
     ],
     [
       "LowParseWriters.NoHoare.read_return",
@@ -36,7 +36,6 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -48,10 +47,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "1dc87b82b6f60f656a07bb5fdffa9cb5"
+      "0ec2fcdd19a36aeea845e73449db23ef"
     ],
     [
       "LowParseWriters.NoHoare.read_bind_conv",
@@ -61,7 +61,6 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -74,10 +73,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "f616fd0d13723b43ae4f88bbc1bde6ec"
+      "f74aee60f1b9959e508d407fb2498ae0"
     ],
     [
       "LowParseWriters.NoHoare.read_bind",
@@ -87,7 +87,6 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -100,10 +99,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "470263d5fd2c4c5acfbab6fbf377a3cb"
+      "f777adfdd2447d0edc0cf45b2ea6cbbf"
     ],
     [
       "LowParseWriters.NoHoare.read_subcomp_conv",
@@ -115,7 +115,7 @@
         "refinement_interpretation_Tm_refine_b8d40235e77ed96ff0ed3dc65b9756b5"
       ],
       0,
-      "e6435e4722cf014eb7e6c7a89e7d21e5"
+      "ba03ce59d5b9f4d73e6f5545a01a8414"
     ],
     [
       "LowParseWriters.NoHoare.read_subcomp",
@@ -125,7 +125,6 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -136,10 +135,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "fa23a0255f20546f41d7302784b02873"
+      "c4947bc51fdd0c8014742f849f1f44e1"
     ],
     [
       "LowParseWriters.NoHoare.TRead",
@@ -148,7 +148,7 @@
       1,
       [ "@query" ],
       0,
-      "7ec7ba89672f59ebf2fefc4d8312c4f0"
+      "3c17aa2e33576855561722b0e205532b"
     ],
     [
       "LowParseWriters.NoHoare.TRead",
@@ -158,7 +158,6 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -171,10 +170,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "4e473fb77383fbd6375aa987fad5b594"
+      "a2550d738761727ce9872cc0dec3ed1e"
     ],
     [
       "LowParseWriters.NoHoare.TRead",
@@ -184,7 +184,6 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -196,10 +195,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "a0d42d50e0517ae0295dd3f1c3b44216"
+      "b6e7e6eb8595c572e4a0ae7444e26f4b"
     ],
     [
       "LowParseWriters.NoHoare.lift_pure_read_conv",
@@ -210,7 +210,6 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem", "equation_Prims.squash",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -223,10 +222,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "46f2178c5411c17ccec13f7f0ac6ab38"
+      "046a85ed21eba028f34b4b96666c5ccd"
     ],
     [
       "LowParseWriters.NoHoare.lift_pure_read'",
@@ -237,7 +237,6 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -249,19 +248,20 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "ae768b2110f9fc56d39ec158afb55f32"
+      "fbfdb4d93567b3f520d21a2b0e124272"
     ],
     [
-      "LowParseWriters.NoHoare.9795",
+      "LowParseWriters.NoHoare.0",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "53e37905ba41bc6507b78d344265ec58"
+      "9e3809e35043ce0ceb6499459b12ba9e"
     ],
     [
       "LowParseWriters.NoHoare.tread_of_eread",
@@ -272,7 +272,6 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -284,10 +283,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "f783741dd062b62a1ca9fdb118359869"
+      "fbdb141e39ecfc48215b6888e223aff9"
     ],
     [
       "LowParseWriters.NoHoare.failwith",
@@ -298,7 +298,6 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -310,10 +309,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "b67136f1a547eaca5cbd43773b361bde"
+      "a39dff83d021752a6d36e8b5f72f6164"
     ],
     [
       "LowParseWriters.NoHoare.buffer_index",
@@ -324,7 +324,6 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -336,10 +335,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "10fe1985afe69d45a5cc2fc4146beed9"
+      "c6690405081233b203d7260fb930f9e1"
     ],
     [
       "LowParseWriters.NoHoare.buffer_sub",
@@ -350,7 +350,6 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -362,10 +361,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "67d021a2a00c791a1f4be4a92e7f0e11"
+      "a2408f59d476433779e673271364d5cb"
     ],
     [
       "LowParseWriters.NoHoare.return_conv",
@@ -376,7 +376,6 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -388,10 +387,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "ef1ac42219e6da7a0d7a663f7158243c"
+      "05379c647cd588166e3f1fd4b89f96cb"
     ],
     [
       "LowParseWriters.NoHoare.returnc",
@@ -402,7 +402,6 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -414,10 +413,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "eca5d1a782c82baaef77cd13d17b21cf"
+      "e0d4dd867a264dd380190c230fdc84c3"
     ],
     [
       "LowParseWriters.NoHoare.bind_conv",
@@ -427,7 +427,6 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -440,10 +439,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "2b31f7bb41080f12c001ffbb9635c45b"
+      "317ce3fcc8bb9c5ae767f6a3355243a1"
     ],
     [
       "LowParseWriters.NoHoare.bind",
@@ -453,7 +453,6 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -466,10 +465,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "2721067cad6528cdc590853990b76385"
+      "1b35e0de5010d4be91ef7e51405e9f49"
     ],
     [
       "LowParseWriters.NoHoare.tvalid_rewrite_of_evalid_rewrite",
@@ -483,7 +483,7 @@
         "refinement_interpretation_Tm_refine_caa5e59828280ff65970f26faf0172b5"
       ],
       0,
-      "7e4b85d6c7ac8d706fafc6a502c199fa"
+      "63b6df87c71df7aea23bf31e6e0d7778"
     ],
     [
       "LowParseWriters.NoHoare.evalid_rewrite_of_tvalid_rewrite_f",
@@ -497,7 +497,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "cf25a71a5a27316997cfb2a9cb498c1e"
+      "382e939a1e9ee8354a61033809e09535"
     ],
     [
       "LowParseWriters.NoHoare.evalid_rewrite_of_tvalid_rewrite",
@@ -515,7 +515,7 @@
         "unit_inversion"
       ],
       0,
-      "d08089b6b69ca5ef7a512e36a2855850"
+      "5a1c432ca59ce1c27b3bd1e3bd1de2e2"
     ],
     [
       "LowParseWriters.NoHoare.valid_rewrite_refl",
@@ -527,7 +527,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f65f836a913153b3875b2fa2f2533f75"
+      "b022d91f3be3f45e82fa40871638a9b7"
     ],
     [
       "LowParseWriters.NoHoare.valid_rewrite_repr",
@@ -538,7 +538,6 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -550,10 +549,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "de7b0c6bbe23c80d353e4b4e5cf513ae"
+      "b26d9d727879790c89284ce90e74a4bf"
     ],
     [
       "LowParseWriters.NoHoare.subcomp_conv",
@@ -565,7 +565,7 @@
         "refinement_interpretation_Tm_refine_b8d40235e77ed96ff0ed3dc65b9756b5"
       ],
       0,
-      "36c348ab1dddf6c63384f30ecb1caba5"
+      "852abfca4c90e1f611b4586ad9feb8a5"
     ],
     [
       "LowParseWriters.NoHoare.subcomp1",
@@ -575,7 +575,6 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -586,10 +585,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "e1a9183769efee9cb8cdd5ddb9836356"
+      "fade2c527e6a739099100c141e7765af"
     ],
     [
       "LowParseWriters.NoHoare.subcomp2",
@@ -598,7 +598,7 @@
       1,
       [ "@query" ],
       0,
-      "50181af48cc7412ec263011f6556c368"
+      "86a1de6fe3e7016f193921fed181c57e"
     ],
     [
       "LowParseWriters.NoHoare.subcomp",
@@ -610,7 +610,7 @@
         "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
       ],
       0,
-      "59dbb0f312a4e8094b686a333fffb937"
+      "b109ef302f8225c8db2f7409532899da"
     ],
     [
       "LowParseWriters.NoHoare.TWrite",
@@ -619,7 +619,7 @@
       1,
       [ "@query" ],
       0,
-      "50beb8b74561b11ab0b1c6994d2608c7"
+      "1caed51b9d2fc16eddeb75936c7dd501"
     ],
     [
       "LowParseWriters.NoHoare.TWrite",
@@ -631,7 +631,7 @@
         "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
       ],
       0,
-      "158874f96fcd9b5665b1554ee871d718"
+      "1c5b3bc2965eedb3fa5b1fafe92a788b"
     ],
     [
       "LowParseWriters.NoHoare.TWrite",
@@ -641,7 +641,6 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowParseWriters.NoHoare.valid_rewrite_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
@@ -655,10 +654,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "8c28edd3a4aeaf765761ada69877ec45"
+      "e23272ad05ae4dde746b79705e17f326"
     ],
     [
       "LowParseWriters.NoHoare.TWrite",
@@ -668,7 +668,6 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowParseWriters.NoHoare.valid_rewrite_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
@@ -681,10 +680,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "7a230a678304197617fc876e4142ed77"
+      "2efc825198abbb59a38b02b3427e1489"
     ],
     [
       "LowParseWriters.NoHoare.lift_read_conv",
@@ -695,7 +695,6 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -707,10 +706,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "511cf80e4f45a39cba6b939882e0c1df"
+      "169d5df4b269cb79e7c3fc724b320dc1"
     ],
     [
       "LowParseWriters.NoHoare.lift_read",
@@ -721,7 +721,6 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -733,10 +732,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "a79c17d0b388bb55084e256017b7246a"
+      "03c33f2a4a3d2677a3c812749297c6a4"
     ],
     [
       "LowParseWriters.NoHoare.extract_t",
@@ -745,7 +745,7 @@
       1,
       [ "@query" ],
       0,
-      "c399d7d82c675a1443bbf04eb26ea0e9"
+      "803023588f5ece9143e4306c1a9a7b50"
     ],
     [
       "LowParseWriters.NoHoare.bind_spec'",
@@ -758,7 +758,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "c137697592f9a7056289d4eb22e791a2"
+      "3686a11a4e54c2294300e1fed0689c6e"
     ],
     [
       "LowParseWriters.NoHoare.bind_spec2_aux",
@@ -771,7 +771,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "a9294cdb0ea6cb2b246bbc8753c45532"
+      "ef5f2d9acdca0e9560227a9094afa72b"
     ],
     [
       "LowParseWriters.NoHoare.bind_impl'",
@@ -783,7 +783,6 @@
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.LowParse.parser",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowParseWriters.NoHoare.valid_rewrite_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
@@ -796,10 +795,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "9bfad5a6f597f865255df6ab3bc12551"
+      "628c7e687dd14f811ccb69fceaef913b"
     ],
     [
       "LowParseWriters.NoHoare.twrite_of_ewrite",
@@ -810,7 +810,6 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
@@ -822,10 +821,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "03fd42c05b1e708597fff410f5a665e5"
+      "7b5acbe0394b51f096aaaebcd4931d69"
     ],
     [
       "LowParseWriters.NoHoare.wfailwith",
@@ -837,7 +837,6 @@
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.LowParse.parser",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowParseWriters.NoHoare.valid_rewrite_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
@@ -850,10 +849,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "f3ab38f71749549b728b41499dcd2273"
+      "c1f06c01712b57680f4f744a88a20f81"
     ],
     [
       "LowParseWriters.NoHoare.frame",
@@ -865,7 +865,6 @@
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.LowParse.parser",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowParseWriters.NoHoare.valid_rewrite_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
@@ -879,10 +878,11 @@
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.LowParse.parse_pair",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "260fd283cc0573e1b43b977963bbdf95"
+      "f58b15e007ccac33b711d5891f580691"
     ],
     [
       "LowParseWriters.NoHoare.valid_rewrite",
@@ -894,7 +894,6 @@
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.LowParse.parser",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowParseWriters.NoHoare.valid_rewrite_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
@@ -907,10 +906,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "0510f774edc6385acad7565bd9a19f7f"
+      "aee472b7f19e096127405448ecdb4364"
     ],
     [
       "LowParseWriters.NoHoare.cat",
@@ -922,7 +922,6 @@
         "equation_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_LowParseWriters.LowParse.parser",
         "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
         "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
         "lemma_LowParseWriters.NoHoare.valid_rewrite_refl",
         "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
@@ -935,10 +934,11 @@
         "typing_FStar.Ghost.reveal",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
+        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite",
+        "typing_LowStar.Monotonic.Buffer.loc"
       ],
       0,
-      "74a95b91bcb8c7717400df9237d6b07a"
+      "5d505e9421aa5660dd6a8c327cc9c92a"
     ]
   ]
 ]

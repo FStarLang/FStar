@@ -11,16 +11,16 @@
         "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "data_elim_FStar.Stubs.Tactics.Result.Success",
-        "data_typing_intro_FStar.Tactics.V2.Derived.Goal_not_trivial@tok",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
         "disc_equation_FStar.Stubs.Tactics.Result.Success",
+        "equality_tok_Raise.Ex1@tok",
         "fuel_guarded_inversion_FStar.Pervasives.either",
         "function_token_typing_Prims.__cache_version_number__",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0", "typing_tok_Raise.Ex1@tok"
       ],
       0,
-      "b157bb3ef2b3e2386ed000c882e3df47"
+      "a4a59cbc28ce428581f4780fa8161fcc"
     ],
     [
       "Raise.uu___0",
@@ -32,16 +32,16 @@
         "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "data_elim_FStar.Stubs.Tactics.Result.Success",
-        "data_typing_intro_FStar.Tactics.V2.Derived.Goal_not_trivial@tok",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
         "disc_equation_FStar.Stubs.Tactics.Result.Success",
+        "equality_tok_Raise.Ex1@tok",
         "fuel_guarded_inversion_FStar.Pervasives.either",
         "function_token_typing_Prims.__cache_version_number__",
-        "projection_inverse_BoxBool_proj_0", "true_interp"
+        "projection_inverse_BoxBool_proj_0", "typing_tok_Raise.Ex1@tok"
       ],
       0,
-      "0f884acadada90ed4aaf9e5cd849e483"
+      "5a024019fa4c151b3b2029762db88ea0"
     ],
     [
       "Raise.x",
@@ -53,16 +53,16 @@
         "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "data_elim_FStar.Stubs.Tactics.Result.Success",
-        "data_typing_intro_FStar.Tactics.V2.Derived.Goal_not_trivial@tok",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
         "disc_equation_FStar.Stubs.Tactics.Result.Success",
+        "equality_tok_Raise.Ex1@tok",
         "fuel_guarded_inversion_FStar.Pervasives.either",
         "function_token_typing_Prims.__cache_version_number__",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0", "typing_tok_Raise.Ex1@tok"
       ],
       0,
-      "04326e9980da0b05aa6f85b989d0ccc6"
+      "9de2b8bb54f0260fa3cd41e8b19a4054"
     ]
   ]
 ]

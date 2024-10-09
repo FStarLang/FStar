@@ -15,10 +15,9 @@
         "equation_Asm2.op_String_Assignment", "equation_Asm2.state",
         "equation_Prims.eqtype", "function_token_typing_FStar.Map.contains",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int", "int_inversion", "int_typing",
-        "lemma_FStar.Map.lemma_InDomUpd1", "lemma_FStar.Map.lemma_SelUpd1",
-        "lemma_FStar.Map.lemma_SelUpd2", "primitive_Prims.op_BarBar",
-        "projection_inverse_BoxBool_proj_0",
+        "int_inversion", "int_typing", "lemma_FStar.Map.lemma_InDomUpd1",
+        "lemma_FStar.Map.lemma_SelUpd1", "lemma_FStar.Map.lemma_SelUpd2",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_026aaac48ee6fd9eb4372b527051a6a9",
         "refinement_interpretation_Tm_refine_15ad8abc8ff0aeab250120c7dafaf73b",
@@ -32,10 +31,10 @@
         "token_correspondence_Asm2.op_String_Assignment",
         "token_correspondence_FStar.Map.contains",
         "token_correspondence_FStar.Map.sel",
-        "token_correspondence_FStar.Map.upd"
+        "token_correspondence_FStar.Map.upd", "typing_Prims.int"
       ],
       0,
-      "c052db91e74e4c4ffd83dc71c1e2adc6"
+      "11896565a941c4cfe2aa3c39a76977e9"
     ]
   ]
 ]

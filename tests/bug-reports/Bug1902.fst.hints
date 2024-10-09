@@ -12,7 +12,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "c854f494e45c1e3246d81a636ae4f081"
+      "4a009a135257cd6cf7c92ed9bb968dc1"
     ],
     [
       "Bug1902.f",
@@ -30,7 +30,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ab34baffa634a733616d9710d2413166"
+      "18358f5d22dacbb70a257182a2d131f7"
     ],
     [
       "Bug1902.mk_tot_arr_decr",
@@ -43,7 +43,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "582e864b453386a56c2a61cb50367365"
+      "88c64e2568d44de02054bc850cdd9e3c"
     ],
     [
       "Bug1902.craft_f'",
@@ -52,12 +52,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.NamedView_pretyping_b9909aecbb024f77e489710ef0c3a302",
         "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
         "constructor_distinct_FStar.Stubs.Tactics.Result.Failed",
         "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
         "constructor_distinct_FStar.Tactics.NamedView.Sg_Let",
         "data_typing_intro_Prims.Nil@tok",
         "disc_equation_FStar.Tactics.NamedView.Unk",
+        "equality_tok_FStar.Tactics.NamedView.Tv_Unsupp@tok",
         "equation_FStar.Stubs.Reflection.Types.name",
         "equation_FStar.Stubs.Reflection.Types.typ",
         "equation_FStar.Tactics.NamedView.branch",
@@ -65,17 +67,18 @@
         "equation_FStar.Tactics.NamedView.simple_binder",
         "equation_FStar.Tactics.NamedView.term",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
-        "function_token_typing_FStar.Tactics.NamedView.branch",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
         "projection_inverse_FStar.Stubs.Tactics.Result.Failed_exn",
         "projection_inverse_FStar.Stubs.Tactics.Result.Failed_ps",
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
-        "projection_inverse_FStar.Stubs.Tactics.Result.Success_v"
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_v",
+        "typing_FStar.Tactics.NamedView.branch",
+        "typing_tok_FStar.Tactics.NamedView.Tv_Unsupp@tok"
       ],
       0,
-      "ccdd7258346c784d687f0de406f46b5e"
+      "228c7a9c83281cad2f73bea7a1e9c65b"
     ],
     [
       "Bug1902.f'_using_f_type",
@@ -91,7 +94,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "04bdef75843d3b066d0a87fc1ed3f5c0"
+      "32805345c87a840ea41c8c4b01cf1cda"
     ]
   ]
 ]

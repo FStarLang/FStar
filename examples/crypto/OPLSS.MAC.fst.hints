@@ -17,7 +17,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "ed82101a610cf791f2ab354147ab06e5"
+      "906c1527bda1582495bd1e9c803d96fe"
     ],
     [
       "OPLSS.MAC.key",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "assumption_OPLSS.MAC.log_entry__uu___haseq" ],
       0,
-      "2ff07f02982d090be47047595770032e"
+      "122bcfd58ab6ad75e564e1a936e57bcd"
     ],
     [
       "OPLSS.MAC.__proj__Key__item__log",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "assumption_OPLSS.MAC.log_entry__uu___haseq" ],
       0,
-      "d4509e628f3a1c1907a30b41bbff662f"
+      "8323be65c9f746cb62e2f20f6f3d96ba"
     ],
     [
       "OPLSS.MAC.__proj__Key__item__log",
@@ -44,7 +44,7 @@
       1,
       [ "@query", "assumption_OPLSS.MAC.log_entry__uu___haseq" ],
       0,
-      "f9023f9598e50ee650d288a6dc90a29a"
+      "1fbe9f03a37cd6b37355cee057e44af1"
     ],
     [
       "OPLSS.MAC.log",
@@ -53,7 +53,7 @@
       1,
       [ "@query", "assumption_OPLSS.MAC.log_entry__uu___haseq" ],
       0,
-      "560df48037d8f9bc5ef42fdbc09c9f6c"
+      "0fbc7ed7ee530e924e7396a44a467de8"
     ],
     [
       "OPLSS.MAC.keygen",
@@ -87,7 +87,7 @@
         "typing_OPLSS.Log.grows"
       ],
       0,
-      "3a3989d5234f050eb70e0f1d06a6808d"
+      "8eb28091f6436c3de6ebc6cc8d0fc926"
     ],
     [
       "OPLSS.MAC.mac",
@@ -112,8 +112,6 @@
         "equation_OPLSS.MAC.invariant", "equation_OPLSS.MAC.log",
         "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
         "fuel_guarded_inversion_OPLSS.MAC.key",
-        "function_token_typing_FStar.Monotonic.Heap.heap",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "kinding_OPLSS.MAC.log_entry@tok",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_intro",
@@ -131,7 +129,8 @@
         "refinement_interpretation_Tm_refine_9ba6075287196057a203e7ce01daf56f",
         "refinement_interpretation_Tm_refine_bbc2c33c942676f2ea978d203358799a",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "typing_FStar.Map.contains", "typing_FStar.Monotonic.HyperHeap.rid",
+        "typing_FStar.Map.contains", "typing_FStar.Monotonic.Heap.heap",
+        "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperStack.as_addr",
         "typing_FStar.Monotonic.HyperStack.frameOf",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
@@ -141,10 +140,10 @@
         "typing_OPLSS.Flag.idealizing", "typing_OPLSS.HMACSHA1.hmac_sha1",
         "typing_OPLSS.Ideal.uf_cma", "typing_OPLSS.Log.grows",
         "typing_OPLSS.MAC.__proj__Key__item__log",
-        "typing_OPLSS.MAC.__proj__Key__item__raw"
+        "typing_OPLSS.MAC.__proj__Key__item__raw", "typing_Prims.int"
       ],
       0,
-      "45de5d0e7572204367a05de8ce0d5e62"
+      "85601d56d33a741ec752fba59ecb65fb"
     ],
     [
       "OPLSS.MAC.verify",
@@ -177,7 +176,6 @@
         "equation_OPLSS.lbytes", "equation_Prims.eqtype",
         "fuel_guarded_inversion_OPLSS.MAC.key",
         "fuel_guarded_inversion_OPLSS.MAC.log_entry",
-        "function_token_typing_FStar.Monotonic.Heap.heap",
         "haseqTm_refine_1770f7f5914d37a8c358e0f35e606914",
         "interpretation_Tm_abs_80c4598881bc806bb04230c1102bb60c",
         "kinding_OPLSS.MAC.log_entry@tok",
@@ -199,6 +197,7 @@
         "refinement_interpretation_Tm_refine_9ba6075287196057a203e7ce01daf56f",
         "refinement_interpretation_Tm_refine_bbc2c33c942676f2ea978d203358799a",
         "typing_FStar.Map.contains", "typing_FStar.Map.sel",
+        "typing_FStar.Monotonic.Heap.heap",
         "typing_FStar.Monotonic.Heap.sel",
         "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperHeap.rid_freeable",
@@ -214,7 +213,7 @@
         "typing_OPLSS.MAC.__proj__Key__item__raw"
       ],
       0,
-      "d7362010196dcc5b83a309a3b2a64c02"
+      "48d1ad4d353ebed71ba29ee7e8d274b1"
     ]
   ]
 ]

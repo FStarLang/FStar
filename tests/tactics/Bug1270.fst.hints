@@ -11,14 +11,13 @@
         "FStar.Stubs.Reflection.Types_pretyping_d880a66b21ec85b3fa80d2570aa5edd8",
         "data_elim_FStar.Stubs.Tactics.Result.Success",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_FStar.Tactics.NamedView.binding",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Stubs.Reflection.V2.Builtins.vars_of_env"
       ],
       0,
-      "39249f6dfe23c6e48cac615b971ead8d"
+      "d30b85956ad90d8d45faab44b5e78dba"
     ],
     [
       "Bug1270.test",
@@ -30,14 +29,13 @@
         "FStar.Stubs.Reflection.Types_pretyping_d880a66b21ec85b3fa80d2570aa5edd8",
         "data_elim_FStar.Stubs.Tactics.Result.Success",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_FStar.Tactics.NamedView.binding",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
         "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_BoxBool_proj_0", "true_interp",
+        "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Stubs.Reflection.V2.Builtins.vars_of_env"
       ],
       0,
-      "fac863198f3504538f5346971cf7a0c7"
+      "eb72a286193d6256e4156dfdde54d7ae"
     ]
   ]
 ]

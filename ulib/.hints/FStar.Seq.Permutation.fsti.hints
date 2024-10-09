@@ -10,17 +10,17 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.IntegerIntervals.interval_condition",
         "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_f1b2cd79d3149fd8626ce723dde8f1c9", "int_inversion",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55"
+        "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55",
+        "typing_Prims.int"
       ],
       0,
-      "dd67c69db30c0fe1218ee93ce6c266f6"
+      "8b499a5c73660f713edeed622a8871d1"
     ],
     [
       "FStar.Seq.Permutation.init_func_from_expr",
@@ -46,7 +46,7 @@
         "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
       ],
       0,
-      "70ae93ac2a554fbcd3e531b7e6fe3889"
+      "586ed46ae748e321d568329918aa5dd7"
     ],
     [
       "FStar.Seq.Permutation.foldm_snoc_split",
@@ -66,7 +66,7 @@
         "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408"
       ],
       0,
-      "e7ef76a4ad461a8259d72b3e4e15d5ea"
+      "022379d9330d1605575b626d86f290b0"
     ],
     [
       "FStar.Seq.Permutation.foldm_snoc_split_seq",
@@ -86,7 +86,7 @@
         "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
       ],
       0,
-      "d3d8a7d72b72e5a444b3daa5df3478b2"
+      "b595f291a1cc27956bde0c83265ddb27"
     ],
     [
       "FStar.Seq.Permutation.foldm_snoc_of_equal_inits",
@@ -102,7 +102,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "0b8ef824f1fef4bba327f3388ff7509a"
+      "e28585061adb58deb6729a2ae79c455d"
     ],
     [
       "FStar.Seq.Permutation.foldm_snoc_decomposition",
@@ -124,6 +124,7 @@
         "equation_FStar.Seq.Properties.un_snoc",
         "equation_with_fuel_FStar.Seq.Properties.foldr_snoc.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Algebra.CommMonoid.Equiv.cm",
+        "fuel_guarded_inversion_FStar.Algebra.CommMonoid.Equiv.equiv",
         "function_token_typing_Prims.__cache_version_number__",
         "primitive_Prims.op_Equality",
         "proj_equation_FStar.Algebra.CommMonoid.Equiv.CM_mult",
@@ -136,7 +137,7 @@
         "typing_FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit"
       ],
       0,
-      "742e47ceefc6e47e908a5d0fe6346fd4"
+      "e34760e4cf2573a6a65482056171d73f"
     ]
   ]
 ]

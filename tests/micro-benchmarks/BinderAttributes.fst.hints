@@ -1,5 +1,5 @@
 [
-  "É©\u0003Õ\u0014)Û!A'\u0006UAðÛ¡",
+  "\u0001Ì\u0017Æ­jó8X¢UûM%„N",
   [
     [
       "BinderAttributes.default_to",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "fd6e4df7cfa6f8abf51724ca8f1c6c58"
+      "2af0ceb7c0445675365233a55e209d1f"
     ],
     [
       "BinderAttributes.__proj__CaseExplicit__item__x",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_60ef107c0227f3c34cf1307c7bdc6d9c"
       ],
       0,
-      "594b550910397c13b2606a4ad54aa98e"
+      "43ae5dc367d7720f1ed3ed62284b637a"
     ],
     [
       "BinderAttributes.__proj__CaseExplicit__item__y",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Tm_refine_60ef107c0227f3c34cf1307c7bdc6d9c"
       ],
       0,
-      "e9e1c29e9747abe3b5d494dc3bfb927b"
+      "46854baf48b4ac86c3425b1c250a0e47"
     ],
     [
       "BinderAttributes.__proj__CaseImplicit__item__x_imp",
@@ -44,7 +44,7 @@
         "refinement_interpretation_Tm_refine_1d135bf3fcf01e9aa9a9fd681ddfec7c"
       ],
       0,
-      "cd4a4d75bcb742680b540f94f8a17f08"
+      "ad115bc31058bff254a29a5ceb5f691e"
     ],
     [
       "BinderAttributes.__proj__CaseImplicit__item__y_imp",
@@ -56,7 +56,7 @@
         "refinement_interpretation_Tm_refine_1d135bf3fcf01e9aa9a9fd681ddfec7c"
       ],
       0,
-      "4710781d5297b36024bc2839df0ed947"
+      "05640a4a1742a93698887084fe3fded0"
     ],
     [
       "BinderAttributes.__proj__CaseMixed__item__x_imp",
@@ -68,7 +68,7 @@
         "refinement_interpretation_Tm_refine_1c114473de672804c71661e081801a98"
       ],
       0,
-      "b321e6a0c8e8d6ac4e7e4d1ac6a09a2f"
+      "9eaec1f9b7f7d06f15eb232324dfe878"
     ],
     [
       "BinderAttributes.__proj__CaseMixed__item__y",
@@ -80,7 +80,7 @@
         "refinement_interpretation_Tm_refine_1c114473de672804c71661e081801a98"
       ],
       0,
-      "44aa399fca54cf34c2c0bca9b8db425d"
+      "f8f4cc42f40fd09ae3c718a2092d1f52"
     ],
     [
       "BinderAttributes.binder",
@@ -90,11 +90,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "assumption_FStar.Pervasives.Native.option__uu___haseq",
-        "equation_Prims.eqtype", "function_token_typing_Prims.string",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.string"
       ],
       0,
-      "72a835ea5060fc88418114fda95936ac"
+      "caa68fd67ea679a5f82b0d376bd2ff0b"
     ],
     [
       "BinderAttributes.binders_to_string",
@@ -110,7 +111,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "bf84cdb3a658d028fb0d7c00f1d8edd6"
+      "b534bf01b2a16808bc89d78a35569a0b"
     ],
     [
       "BinderAttributes.binder_from_term",
@@ -122,6 +123,7 @@
         "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
         "constructor_distinct_FStar.Stubs.Tactics.Result.Failed",
         "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
+        "disc_equation_FStar.Stubs.Reflection.V2.Data.Q_Equality",
         "disc_equation_FStar.Stubs.Reflection.V2.Data.Q_Explicit",
         "disc_equation_FStar.Stubs.Reflection.V2.Data.Q_Implicit",
         "disc_equation_FStar.Stubs.Reflection.V2.Data.Q_Meta",
@@ -140,7 +142,7 @@
         "string_typing"
       ],
       0,
-      "25867fef895f2109799a01df9cb630c3"
+      "0c98249d142de98b3b055094a7bba3d5"
     ],
     [
       "BinderAttributes.binders_from_term",
@@ -149,12 +151,12 @@
       1,
       [
         "@query", "equation_FStar.Stubs.Reflection.Types.name",
-        "function_token_typing_FStar.Stubs.Reflection.Types.sigelt",
         "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Stubs.Reflection.Types.sigelt",
         "typing_FStar.Stubs.Reflection.V2.Builtins.lookup_typ"
       ],
       0,
-      "0d1b480f0b099e00cfc23327db864e1b"
+      "dbd3a0411bd8b1a37343bf67b64a857a"
     ],
     [
       "BinderAttributes.compare_binders",
@@ -164,11 +166,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "assumption_FStar.Pervasives.Native.option__uu___haseq",
-        "equation_Prims.eqtype", "function_token_typing_Prims.string",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.string"
       ],
       0,
-      "9f97264b0837c59beb0fe44da090fbdf"
+      "0f943d53e4461bf26c7c657f7afcbf94"
     ]
   ]
 ]

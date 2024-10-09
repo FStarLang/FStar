@@ -14,7 +14,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5973075739193c1771c27b399bd4c11b"
+      "55e66971b63b752bba2e15795a3fa024"
     ],
     [
       "Bug3089.index",
@@ -58,7 +58,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "e2582a41879999e19b329b772e4d9ae8"
+      "51a807496542f3048ee0ce613183cbed"
     ],
     [
       "Bug3089.index",
@@ -67,7 +67,7 @@
       1,
       [ "@query" ],
       0,
-      "e21a3b1410e4a36bb22eb8b9e265cebb"
+      "3f15bd7e6138026424d679de0767de6c"
     ],
     [
       "Bug3089.stepx",
@@ -87,16 +87,14 @@
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equation_FStar.List.Tot.Base.hd",
-        "equation_FStar.Pervasives.pattern", "equation_Prims.eqtype",
-        "equation_Prims.nat",
+        "equation_Prims.eqtype", "equation_Prims.nat",
         "equation_with_fuel_Bug3089.index.fuel_instrumented",
         "equation_with_fuel_Bug3089.row.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.index.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "function_token_typing_FStar.Pervasives.pattern",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.bool", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxInt_proj_0",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
@@ -106,11 +104,12 @@
         "refinement_interpretation_Tm_refine_c86aba5c6243e6b7f9a4b0ad41b4e9a0",
         "refinement_interpretation_Tm_refine_edc6aa43549d517b079ed23ecad42e4f",
         "refinement_kinding_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "token_correspondence_Bug3089.row.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "typing_Bug3089.row", "unit_typing"
+        "typing_Bug3089.row", "typing_Prims.bool", "unit_typing"
       ],
       0,
-      "1ef0245ab8f89467c0a7bf26332de01b"
+      "f9dfdf51e23dea1522dfd6262ac9f34c"
     ]
   ]
 ]

@@ -20,7 +20,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1ea2daf32ef4e08d4d0adda85f6f6765"
+      "a6b2d4fc98a50afaa2f16ceb58397a47"
     ],
     [
       "MergeSort2.merge'_permutation",
@@ -42,15 +42,15 @@
         "binder_x_582acf81e02a6e4176cba5e2730f867d_3",
         "binder_x_9cd1733a5204f989dbb2f01d5984df93_0", "bool_inversion",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equation_GenericSort.permutation_2",
-        "equation_Prims.eqtype", "equation_Prims.nat",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_GenericSort.permutation_2", "equation_Prims.eqtype",
+        "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "equation_with_fuel_MergeSort2.merge_.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
         "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Equality",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
@@ -67,7 +67,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "6fdee05504a839cc3d758fe8359db7ca"
+      "7fbd90d89eff4d97f9dcba97142b2262"
     ],
     [
       "MergeSort2.merge'_sorted",
@@ -109,7 +109,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "14ed8746bac223fdc0456cf157b2fbfb"
+      "cd6f068b9ca87102c3a6a6bab24bad16"
     ],
     [
       "MergeSort2.merge'_filter_eq_inv",
@@ -122,7 +122,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "1107a59a650b667f3f47fe648295dda3"
+      "58ad826163d944283cc66075dbf2ba39"
     ],
     [
       "MergeSort2.merge'_filter_eq_inv",
@@ -143,14 +143,15 @@
         "MergeSort2_interpretation_Tm_arrow_605ada36aef613d3875663fdd1971cfd",
         "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "assumption_Prims.list__uu___haseq",
         "binder_x_582acf81e02a6e4176cba5e2730f867d_3",
         "binder_x_9a99f0ed3c7c19be1f30eec0ab46713a_1",
         "binder_x_9a99f0ed3c7c19be1f30eec0ab46713a_2",
         "binder_x_9cd1733a5204f989dbb2f01d5984df93_0", "bool_inversion",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
-        "data_typing_intro_Prims.Cons@tok",
+        "constructor_distinct_Prims.list", "constructor_distinct_Prims.unit",
+        "data_elim_Prims.Cons", "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
         "equation_FStar.List.Tot.Base.hd",
         "equation_FStar.List.Tot.Base.op_At",
@@ -178,14 +179,14 @@
         "subterm_ordering_Prims.Cons",
         "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "token_correspondence_GenericSort.sorted.fuel_instrumented",
-        "typing_FStar.List.Tot.Base.hd", "typing_FStar.List.Tot.Base.op_At",
-        "typing_FStar.List.Tot.Base.tail", "typing_FStar.List.Tot.Base.tl",
-        "typing_GenericSort.sorted", "typing_GenericStability.filter_eq",
-        "typing_MergeSort2.merge_", "typing_Prims.uu___is_Cons",
-        "unit_inversion", "unit_typing"
+        "typing_FStar.List.Tot.Base.append",
+        "typing_FStar.List.Tot.Base.op_At",
+        "typing_FStar.List.Tot.Base.tail", "typing_GenericSort.sorted",
+        "typing_GenericStability.filter_eq", "typing_MergeSort2.merge_",
+        "typing_Prims.uu___is_Cons", "unit_inversion", "unit_typing"
       ],
       0,
-      "ae8685d4b46adef997b9d259771b50cb"
+      "e500e0175bba476beb57ffe9630bfaa0"
     ],
     [
       "MergeSort2.merge'_filter_eq_inv",
@@ -198,7 +199,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "de3d86754653f420962a4eaa758b65e6"
+      "208aaa3dfe5e05890bcee2ae13bdd6f6"
     ],
     [
       "MergeSort2.merge'_stable",
@@ -207,7 +208,7 @@
       1,
       [ "@query", "equation_GenericStability.stable" ],
       0,
-      "d8fd41548f5c56035e69687b625bbbc9"
+      "70de1740adc121f3917512dd4fc4598c"
     ],
     [
       "MergeSort2.split_n",
@@ -220,7 +221,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "040c63b62e0bf42a4db48ab0af419586"
+      "5678dd4c58a3ae55469c6aa6f9b7551c"
     ],
     [
       "MergeSort2.split_n",
@@ -235,15 +236,13 @@
         "@fuel_irrelevance_FStar.List.Tot.Base.append.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "@query", "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_Prims.list__uu___haseq",
         "binder_x_12ad13c179a423968cde28ef13b41120_2",
         "binder_x_374b44ccfcb77ed85d505dbc44265913_1",
         "binder_x_9cd1733a5204f989dbb2f01d5984df93_0", "bool_inversion",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
-        "data_typing_intro_Prims.Cons@tok",
+        "constructor_distinct_Tm_unit", "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
         "equation_FStar.List.Tot.Base.op_At",
         "equation_FStar.Pervasives.Native.fst",
@@ -280,7 +279,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "c8043a621a6cd832cc52fcd0fab1dffa"
+      "8de8aa0f9ad0f8c32178379d48275f2c"
     ],
     [
       "MergeSort2.split_n",
@@ -293,7 +292,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3275cb6b651ea408cf8acc82ae246942"
+      "f8a02fe2836b99f4c74ea291adad0142"
     ],
     [
       "MergeSort2.split_half",
@@ -310,7 +309,7 @@
         "refinement_interpretation_Tm_refine_ce2d1b3837e674d387c3a28a9a7243ba"
       ],
       0,
-      "4b8490702bcfac838ce63cbba55977f2"
+      "efbcf0b807f0a298ae37f8e0cd5d690f"
     ],
     [
       "MergeSort2.mergesort'",
@@ -357,7 +356,7 @@
         "typing_Prims.__proj__Cons__item__tl", "well-founded-ordering-on-nat"
       ],
       0,
-      "6dd3c5c4ffa456c9819cb642e73dd0b3"
+      "370790180ec3e2a2e23c6a492b316413"
     ],
     [
       "MergeSort2.mergesort'_sorted",
@@ -412,7 +411,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "5d79a4f544078d2f6435d65067835d06"
+      "18006c7fbb6a2bd2d21c1090178f4798"
     ],
     [
       "MergeSort2.mergesort'_permutation",
@@ -464,7 +463,7 @@
         "typing_Prims.__proj__Cons__item__tl", "well-founded-ordering-on-nat"
       ],
       0,
-      "eee22eab0ac44605719c8c6f8c31aa3b"
+      "c60912fce26cb2300186cb8b270883cd"
     ],
     [
       "MergeSort2.mergesort'_stable",
@@ -478,7 +477,6 @@
         "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@fuel_correspondence_GenericStability.filter_eq.fuel_instrumented",
         "@fuel_correspondence_MergeSort2.mergesort_.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_MergeSort2.mergesort_.fuel_instrumented",
         "@query",
         "GenericSort_interpretation_Tm_arrow_2b1c71e61beb0ccdfcd22e3f2064d949",
@@ -528,7 +526,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "fa191e8626f5ead838465a6f34e7f8b0"
+      "1349d2e0998df23c33d60f15d700e1d1"
     ],
     [
       "MergeSort2.mergesort",
@@ -537,7 +535,7 @@
       1,
       [ "@query", "equation_GenericStability.stable" ],
       0,
-      "717f1bb95a561f7ce12715d52facfd10"
+      "6efc8d4d485684220720aee1d99b443e"
     ]
   ]
 ]
