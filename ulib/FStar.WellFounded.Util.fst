@@ -1,7 +1,7 @@
 module FStar.WellFounded.Util
 open FStar.WellFounded
 
-#push-options "--warn_error -242" //inner let recs not encoded to SMT; ok
+#set-options "--warn_error -242" //inner let recs not encoded to SMT; ok
 
 let intro_lift_binrel (#a:Type) (r:binrel a) (y:a) (x:a)
   : Lemma

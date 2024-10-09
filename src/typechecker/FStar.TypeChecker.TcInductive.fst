@@ -45,6 +45,7 @@ module PP = FStar.Syntax.Print
 module C  = FStar.Parser.Const
 
 open FStar.Class.Show
+open FStar.Class.Listlike
 
 let dbg_GenUniverses = Debug.get_toggle "GenUniverses"
 let dbg_LogTypes     = Debug.get_toggle "LogTypes"
@@ -868,7 +869,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
   (* Generalize their universes if not already annotated *)
   let tcs, datas =
     let tc_universe_vars = List.map snd tcs in
-    let g = {g with univ_ineqs=tc_universe_vars, snd (g.univ_ineqs)} in
+    let g = {g with univ_ineqs = Class.Listlike.from_list (tc_universe_vars), snd (g.univ_ineqs)} in
 
     if !dbg_GenUniverses
     then BU.print1 "@@@@@@Guard before (possible) generalization: %s\n" (Rel.guard_to_string env g);

@@ -951,15 +951,6 @@ let is_fstar_tactics_by_tactic t =
     | Tm_fvar fv -> fv_eq_lid fv PC.by_tactic_lid
     | _ -> false
 
-let is_builtin_tactic md =
-  let path = Ident.path_of_lid md in
-  if List.length(path) > 2 then
-    match fst (List.splitAt 2 path) with
-    | ["FStar"; "Tactics"]
-    | ["FStar"; "Reflection"] -> true
-    | _ -> false
-  else false
-
 (********************************************************************************)
 (*********************** Constructors of common terms  **************************)
 (********************************************************************************)

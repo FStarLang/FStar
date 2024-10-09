@@ -1492,8 +1492,8 @@ let fail_or env lookup lid =
        match resolve_module_name env modul true with
        | None ->
            let opened_modules = String.concat ", " opened_modules |> Errors.text in
-           msg @ [Errors.text (BU.format1 "Module %s does not belong to the list of modules in scope, namely:"
-                                          (string_of_lid modul)) ^^ subdoc opened_modules]
+           msg @ [Errors.text (BU.format1 "Could not resolve module name %s"
+                                          (string_of_lid modul))]
        | Some modul' when (not (List.existsb (fun m -> m = (string_of_lid modul')) opened_modules)) ->
            let opened_modules = String.concat ", " opened_modules |> Errors.text in
            msg @ [Errors.text (BU.format2 "Module %s resolved into %s, which does not belong to the list of modules in scope, namely:"

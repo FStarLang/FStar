@@ -4,7 +4,7 @@ open FStar.List.Tot
 open FStar.Tactics
 open FStar.Mul
 
-#push-options "--z3rlimit 15 --fuel 0 --ifuel 1"
+#set-options "--z3rlimit 15 --fuel 0 --ifuel 1"
 
 (*** Utilities *)
 val bv_eq : bv -> bv -> Tot bool

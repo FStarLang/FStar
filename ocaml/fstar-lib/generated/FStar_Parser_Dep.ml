@@ -2245,11 +2245,20 @@ let (collect :
             (fun outc -> print_graph outc fn dep_graph1);
           FStar_Compiler_Util.print_string "\n";
           (let uu___4 =
-             FStar_Compiler_Util.format1
-               "Recursive dependency on module %s\n" filename in
+             let uu___5 =
+               let uu___6 =
+                 FStar_Compiler_Util.format1
+                   "Recursive dependency on module %s." filename in
+               FStar_Errors_Msg.text uu___6 in
+             let uu___6 =
+               let uu___7 =
+                 FStar_Errors_Msg.text
+                   "A full dependency graph was written to dep.graph." in
+               [uu___7] in
+             uu___5 :: uu___6 in
            FStar_Errors.raise_error0
              FStar_Errors_Codes.Fatal_CyclicDependence ()
-             (Obj.magic FStar_Errors_Msg.is_error_message_string)
+             (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
              (Obj.magic uu___4))) in
        let full_cycle_detection all_command_line_files file_system_map1 =
          let dep_graph1 = dep_graph_copy dep_graph in

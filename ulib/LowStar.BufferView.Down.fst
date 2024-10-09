@@ -209,6 +209,7 @@ let sel'_tail #a #b v es i =
   FStar.Math.Lemmas.lemma_mod_sub i n 1;
   FStar.Math.Lemmas.add_div_mod_1 j n;
   assert (j / n == (i / n) - 1)
+#pop-options
 
 val as_seq'_sel' (#a #b: _)
                  (v:view a b)
@@ -220,13 +221,6 @@ val as_seq'_sel' (#a #b: _)
        sel' v es i == Seq.index (as_seq' es v) i))
      (decreases (Seq.length es))
 
-//flaky
-#reset-options
-#set-options "--smtencoding.elim_box true"
-#set-options "--smtencoding.l_arith_repr native"
-#set-options "--smtencoding.nl_arith_repr wrapped"
-#set-options "--z3rlimit_factor 10" //just being conservative
-#set-options "--initial_fuel 1 --max_fuel 1 --max_ifuel 0"
 let rec as_seq'_sel' #a #b v es i =
   as_seq'_len es v;
   let n : pos = View?.n v in
@@ -251,7 +245,6 @@ let rec as_seq'_sel' #a #b v es i =
                    Seq.index (as_seq' as' v) j);
            sel'_tail v es i
          end
-#reset-options
 
 let as_seq_sel #b h vb i =
   indexing vb i;
@@ -349,7 +342,7 @@ let rec upd_seq'_spec (#a #b: _) (v:view a b) (s:Seq.seq b{Seq.length s % View?.
          assert (es `Seq.equal` Seq.cons (View?.put v pfx) as');
          as_seq'_cons v (View?.put v pfx) as'
 
-#set-options "--z3rlimit 20"
+#push-options "--z3rlimit 20"
 let upd_seq_spec (#b: _) (h:HS.mem) (vb:buffer b{live h vb}) (s:Seq.seq b{Seq.length s = length vb})
   = let h' = upd_seq h vb s in
     Math.cancel_mul_mod (B.length (as_buffer vb)) (View?.n (get_view vb));
@@ -367,3 +360,4 @@ let upd_seq_spec (#b: _) (h:HS.mem) (vb:buffer b{live h vb}) (s:Seq.seq b{Seq.le
     FStar.Classical.forall_intro_2 (fun as1 as2 ->
       Classical.move_requires (as_seq'_injective v as1) as2
          <: Lemma ((as_seq' as1 v `Seq.equal` as_seq' as2 v) ==> (as1 `Seq.equal` as2)))
+#pop-options
