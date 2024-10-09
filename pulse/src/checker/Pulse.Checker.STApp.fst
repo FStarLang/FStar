@@ -44,7 +44,7 @@ let canon_comp_eq_res (g:env) (c:comp_st)
 #pop-options
 
 let canonicalize_st_typing (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
-  : st_typing g t (canon_comp c)
+  : Dv (st_typing g t (canon_comp c))
   = let c' = canon_comp c in
     let x = fresh g in
     assume ( ~(x `Set.mem` freevars (comp_post c)) /\

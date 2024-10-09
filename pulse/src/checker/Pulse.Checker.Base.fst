@@ -285,7 +285,7 @@ let st_equiv_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
                          slprop_equiv (push_binding g x ppname_default (comp_res c)) 
                                      (open_term (comp_post c) x)
                                      (open_term post x)))
-  : st_typing g t (comp_st_with_post c post)
+  : Dv (st_typing g t (comp_st_with_post c post))
   = if eq_tm post (comp_post c) then d
     else
       let c' = comp_st_with_post c post in
@@ -298,7 +298,7 @@ let st_equiv_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
 
 let simplify_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
                   (post:term { comp_post c == tm_star post tm_emp})
-  : st_typing g t (comp_st_with_post c post)
+  : Dv (st_typing g t (comp_st_with_post c post))
   = st_equiv_post d post (fun x -> ve_unit_r (push_binding g x ppname_default (comp_res c)) (open_term post x))
 
 let simplify_lemma (c:comp_st) (c':comp_st) (post_hint:option post_hint_t)
@@ -329,7 +329,7 @@ let comp_with_pre (c:comp_st) (pre:term) =
 let st_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
                  (pre:term)
                  (veq: slprop_equiv g (comp_pre c) pre)
-  : st_typing g t (comp_with_pre c pre)
+  : Dv (st_typing g t (comp_with_pre c pre))
   = if eq_tm pre (comp_pre c) then d
     else
       let c' = comp_with_pre c pre in
@@ -476,7 +476,7 @@ let st_comp_typing_with_post_hint
       (ctxt_typing:tot_typing g ctxt tm_slprop)
       (post_hint:post_hint_opt g { Some? post_hint })
       (c:comp_st { comp_pre c == ctxt /\ comp_post_matches_hint c post_hint })
-: st_comp_typing g (st_comp_of_comp c)
+: Dv (st_comp_typing g (st_comp_of_comp c))
 = let st = st_comp_of_comp c in
   let Some ph = post_hint in
   let post_typing_src
@@ -582,7 +582,7 @@ let emp_inames_included (g:env) (i:term) (_:tot_typing g i tm_inames)
 let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctxt:slprop)
   (ty_typing:universe_of g ty u)
   (post_hint0:post_hint_opt g { Some? post_hint0 /\ checker_res_matches_post_hint g post_hint0 y ty ctxt})
-: Pure (st_typing_in_ctxt g ctxt post_hint0)
+: Div  (st_typing_in_ctxt g ctxt post_hint0)
        (requires lookup g y == Some ty)
        (ensures fun _ -> True)
 = let Some post_hint = post_hint0 in

@@ -4376,8 +4376,8 @@ let (try_frame_pre_uvs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.fst"
-                                                                    (Prims.of_int (569))
-                                                                    (Prims.of_int (35))
+                                                                    (Prims.of_int (562))
+                                                                    (Prims.of_int (107))
                                                                     (Prims.of_int (589))
                                                                     (Prims.of_int (88)))))
                                                                     (Obj.magic
@@ -4387,41 +4387,8 @@ let (try_frame_pre_uvs :
                                                                     (fun
                                                                     uu___18
                                                                     ->
-                                                                    match 
-                                                                    Pulse_Typing_Metatheory_Base.st_comp_typing_inversion_cofinite
-                                                                    g11
-                                                                    (Pulse_Syntax_Base.st_comp_of_comp
-                                                                    c2)
-                                                                    (FStar_Pervasives_Native.fst
-                                                                    (Pulse_Typing_Metatheory_Base.comp_typing_inversion
-                                                                    g11 c2
-                                                                    (Pulse_Typing_Metatheory_Base.st_typing_correctness
-                                                                    g11 t1 c2
-                                                                    d5)))
-                                                                    with
-                                                                    | 
-                                                                    (comp_res_typing_in_g1,
-                                                                    uu___19,
-                                                                    f) ->
-                                                                    FStar_Pervasives.Mkdtuple5
-                                                                    (x, g2,
-                                                                    (FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Syntax_Base.comp_u
-                                                                    c2), ty,
-                                                                    ())),
-                                                                    (Prims.Mkdtuple2
-                                                                    (ctxt',
-                                                                    ())),
-                                                                    (Pulse_Checker_Base.k_elab_trans
-                                                                    g1 g11 g2
-                                                                    ctxt
-                                                                    (Pulse_Checker_Prover_Base.op_Star
-                                                                    (Pulse_Syntax_Base.comp_pre
-                                                                    c2)
-                                                                    remaining_ctxt)
-                                                                    ctxt'
-                                                                    k_frame1
-                                                                    (Pulse_Checker_Base.k_elab_equiv
+                                                                    let k1 =
+                                                                    Pulse_Checker_Base.k_elab_equiv
                                                                     g11 g2
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     remaining_ctxt
@@ -4433,7 +4400,54 @@ let (try_frame_pre_uvs :
                                                                     remaining_ctxt)
                                                                     ctxt'
                                                                     ctxt' k
-                                                                    () ())))))))
+                                                                    () () in
+                                                                    let k2 =
+                                                                    Pulse_Checker_Base.k_elab_trans
+                                                                    g1 g11 g2
+                                                                    ctxt
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Syntax_Base.comp_pre
+                                                                    c2)
+                                                                    remaining_ctxt)
+                                                                    ctxt'
+                                                                    k_frame1
+                                                                    k1 in
+                                                                    let uu___19
+                                                                    =
+                                                                    let uu___20
+                                                                    =
+                                                                    let uu___21
+                                                                    =
+                                                                    let uu___22
+                                                                    =
+                                                                    Pulse_Typing_Metatheory_Base.st_typing_correctness
+                                                                    g11 t1 c2
+                                                                    d5 in
+                                                                    Pulse_Typing_Metatheory_Base.comp_typing_inversion
+                                                                    g11 c2
+                                                                    uu___22 in
+                                                                    FStar_Pervasives_Native.fst
+                                                                    uu___21 in
+                                                                    Pulse_Typing_Metatheory_Base.st_comp_typing_inversion_cofinite
+                                                                    g11
+                                                                    (Pulse_Syntax_Base.st_comp_of_comp
+                                                                    c2)
+                                                                    uu___20 in
+                                                                    match uu___19
+                                                                    with
+                                                                    | 
+                                                                    (comp_res_typing_in_g1,
+                                                                    uu___20,
+                                                                    f) ->
+                                                                    FStar_Pervasives.Mkdtuple5
+                                                                    (x, g2,
+                                                                    (FStar_Pervasives.Mkdtuple3
+                                                                    ((Pulse_Syntax_Base.comp_u
+                                                                    c2), ty,
+                                                                    ())),
+                                                                    (Prims.Mkdtuple2
+                                                                    (ctxt',
+                                                                    ())), k2)))))
                                                                     uu___17)))
                                                                     uu___16)))
                                                                     uu___15)))

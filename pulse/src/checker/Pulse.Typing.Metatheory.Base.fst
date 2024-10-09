@@ -23,12 +23,13 @@ module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 
 let admit_st_comp_typing (g:env) (st:st_comp) 
-  : st_comp_typing g st
+  : Dv (st_comp_typing g st)
   = admit(); 
-    STC g st (fresh g) (admit()) (admit()) (admit())
+    let x = fresh g in
+    STC g st x (admit()) (admit()) (admit())
 
 let admit_comp_typing (g:env) (c:comp_st)
-  : comp_typing_u g c
+  : Dv (comp_typing_u g c)
   = match c with
     | C_ST st ->
       CT_ST g st (admit_st_comp_typing g st)
@@ -46,12 +47,12 @@ let st_typing_correctness_ctot (#g:env) (#t:st_term) (#c:comp{C_Tot? c})
 
 let st_typing_correctness (#g:env) (#t:st_term) (#c:comp_st) 
                           (_:st_typing g t c)
-  : comp_typing_u g c
+  : Dv (comp_typing_u g c)
   = admit_comp_typing g c
     
 let add_frame_well_typed (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
                          (#f:term) (ft:tot_typing g f tm_slprop)
-  : comp_typing_u g (add_frame c f)
+  : Dv (comp_typing_u g (add_frame c f))
   = admit_comp_typing _ _
 
 let emp_inames_typing (g:env) : tot_typing g tm_emp_inames tm_inames = RU.magic()
@@ -100,7 +101,7 @@ let non_informative_c_weakening (g g':env) (g1:env{ pairwise_disjoint g g1 g' })
 let bind_comp_weakening (g:env) (g':env { disjoint g g' })
   (#x:var) (#c1 #c2 #c3:comp) (d:bind_comp (push_env g g') x c1 c2 c3)
   (g1:env { pairwise_disjoint g g1 g' })
-  : Tot (bind_comp (push_env (push_env g g1) g') x c1 c2 c3)
+  : Dv (bind_comp (push_env (push_env g g1) g') x c1 c2 c3)
         (decreases d) =
   
   match d with
@@ -187,7 +188,7 @@ let comp_typing_weakening (g:env) (g':env { disjoint g g' })
 
 #push-options "--split_queries no --z3rlimit_factor 8 --fuel 1 --ifuel 1"
 let rec st_typing_weakening g g' t c d g1
-  : Tot (st_typing (push_env (push_env g g1) g') t c)
+  : Dv (st_typing (push_env (push_env g g1) g') t c)
         (decreases d) =
   
   match d with

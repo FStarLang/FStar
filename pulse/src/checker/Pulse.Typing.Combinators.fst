@@ -458,7 +458,7 @@ let apply_frame (#g:env)
                 (#c:comp { stateful_comp c })
                 (t_typing: st_typing g t c)
                 (frame_t:frame_for_req_in_ctxt g ctxt (comp_pre c))
-  : Tot (c':comp_st { comp_pre c' == ctxt /\
+  : Dv  (c':comp_st { comp_pre c' == ctxt /\
                       comp_res c' == comp_res c /\
                       comp_u c' == comp_u c /\
                       comp_post c' == tm_star (comp_post c) (frame_of frame_t) } &

@@ -53,19 +53,18 @@ let rec (gen_names_for_unknowns :
                                        match Pulse_Syntax_Pure.inspect_term w
                                        with
                                        | Pulse_Syntax_Pure.Tm_Unknown ->
-                                           ((FStar_Pervasives_Native.Some
-                                               (Pulse_Typing_Env.fresh g)),
+                                           let x = Pulse_Typing_Env.fresh g in
+                                           ((FStar_Pervasives_Native.Some x),
                                              (Pulse_Syntax_Pure.tm_var
                                                 {
                                                   Pulse_Syntax_Base.nm_index
-                                                    =
-                                                    (Pulse_Typing_Env.fresh g);
+                                                    = x;
                                                   Pulse_Syntax_Base.nm_ppname
                                                     =
                                                     (b.Pulse_Syntax_Base.binder_ppname)
                                                 }),
                                              (Pulse_Typing_Env.push_binding g
-                                                (Pulse_Typing_Env.fresh g)
+                                                x
                                                 b.Pulse_Syntax_Base.binder_ppname
                                                 b.Pulse_Syntax_Base.binder_ty))
                                        | uu___3 ->

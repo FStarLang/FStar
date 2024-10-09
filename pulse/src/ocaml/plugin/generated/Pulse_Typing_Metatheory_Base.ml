@@ -5,7 +5,8 @@ let (admit_st_comp_typing :
   =
   fun g ->
     fun st ->
-      Pulse_Typing.STC (g, st, (Pulse_Typing_Env.fresh g), (), (), ())
+      let x = Pulse_Typing_Env.fresh g in
+      Pulse_Typing.STC (g, st, x, (), (), ())
 let (admit_comp_typing :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp_st -> (unit, unit) Pulse_Typing.comp_typing_u)
@@ -14,13 +15,14 @@ let (admit_comp_typing :
     fun c ->
       match c with
       | Pulse_Syntax_Base.C_ST st ->
-          Pulse_Typing.CT_ST (g, st, (admit_st_comp_typing g st))
+          let uu___ = admit_st_comp_typing g st in
+          Pulse_Typing.CT_ST (g, st, uu___)
       | Pulse_Syntax_Base.C_STAtomic (inames, obs, st) ->
-          Pulse_Typing.CT_STAtomic
-            (g, inames, obs, st, (), (admit_st_comp_typing g st))
+          let uu___ = admit_st_comp_typing g st in
+          Pulse_Typing.CT_STAtomic (g, inames, obs, st, (), uu___)
       | Pulse_Syntax_Base.C_STGhost (inames, st) ->
-          Pulse_Typing.CT_STGhost
-            (g, inames, st, (), (admit_st_comp_typing g st))
+          let uu___ = admit_st_comp_typing g st in
+          Pulse_Typing.CT_STGhost (g, inames, st, (), uu___)
 let (st_typing_correctness_ctot :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
@@ -351,9 +353,9 @@ let rec (st_typing_weakening :
                     Pulse_Typing_Env.fresh
                       (Pulse_Typing_Env.push_env
                          (Pulse_Typing_Env.push_env g2 g1) g') in
-                  Pulse_Typing.T_Abs
-                    (g2, x1, q, b, u, body, c1, (),
-                      (st_typing_weakening g2 g' body c1 body_typing g1))
+                  let uu___ =
+                    st_typing_weakening g2 g' body c1 body_typing g1 in
+                  Pulse_Typing.T_Abs (g2, x1, q, b, u, body, c1, (), uu___)
               | Pulse_Typing.T_STApp
                   (uu___, head, ty, q, res, arg, uu___1, uu___2) ->
                   Pulse_Typing.T_STApp
@@ -385,11 +387,11 @@ let rec (st_typing_weakening :
                         (Pulse_Typing_Env.push_env g g1) g'), c1, use_eq, u,
                       t1, e, post, x, (), (), ())
               | Pulse_Typing.T_Lift (uu___, e, c1, c2, d_c1, d_lift) ->
+                  let uu___1 = st_typing_weakening g g' e c1 d_c1 g1 in
                   Pulse_Typing.T_Lift
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), e, c1, c2,
-                      (st_typing_weakening g g' e c1 d_c1 g1),
-                      (lift_comp_weakening g g' c1 c2 d_lift g1))
+                      uu___1, (lift_comp_weakening g g' c1 c2 d_lift g1))
               | Pulse_Typing.T_Bind
                   (uu___, e1, e2, c1, c2, b, x, c3, d_e1, uu___1, d_e2, d_bc)
                   ->
@@ -468,22 +470,23 @@ let rec (st_typing_weakening :
                         (Pulse_Typing_Env.push_env g g1) g'), sc_u, sc_ty,
                       sc, (), (), c1, (), brs, d_brs, d_pats_complete)
               | Pulse_Typing.T_Frame (uu___, e, c1, frame, uu___1, d_e) ->
+                  let uu___2 = st_typing_weakening g g' e c1 d_e g1 in
                   Pulse_Typing.T_Frame
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), e, c1, frame,
-                      (), (st_typing_weakening g g' e c1 d_e g1))
+                      (), uu___2)
               | Pulse_Typing.T_Equiv (uu___, e, c1, c', d_e, d_eq) ->
+                  let uu___1 = st_typing_weakening g g' e c1 d_e g1 in
                   Pulse_Typing.T_Equiv
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), e, c1, c',
-                      (st_typing_weakening g g' e c1 d_e g1),
-                      (st_equiv_weakening g g' c1 c' d_eq g1))
+                      uu___1, (st_equiv_weakening g g' c1 c' d_eq g1))
               | Pulse_Typing.T_Sub (uu___, e, c1, c', d_e, d_sub) ->
+                  let uu___1 = st_typing_weakening g g' e c1 d_e g1 in
                   Pulse_Typing.T_Sub
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), e, c1, c',
-                      (st_typing_weakening g g' e c1 d_e g1),
-                      (st_sub_weakening g g' c1 c' d_sub g1))
+                      uu___1, (st_sub_weakening g g' c1 c' d_sub g1))
               | Pulse_Typing.T_IntroPure (uu___, p, uu___1, token) ->
                   Pulse_Typing.T_IntroPure
                     ((Pulse_Typing_Env.push_env
@@ -503,22 +506,24 @@ let rec (st_typing_weakening :
               | Pulse_Typing.T_While
                   (uu___, inv, cond, body, uu___1, cond_typing, body_typing)
                   ->
+                  let uu___2 =
+                    st_typing_weakening g g' cond
+                      (Pulse_Typing.comp_while_cond
+                         Pulse_Syntax_Base.ppname_default inv) cond_typing g1 in
+                  let uu___3 =
+                    st_typing_weakening g g' body
+                      (Pulse_Typing.comp_while_body
+                         Pulse_Syntax_Base.ppname_default inv) body_typing g1 in
                   Pulse_Typing.T_While
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), inv, cond,
-                      body, (),
-                      (st_typing_weakening g g' cond
-                         (Pulse_Typing.comp_while_cond
-                            Pulse_Syntax_Base.ppname_default inv) cond_typing
-                         g1),
-                      (st_typing_weakening g g' body
-                         (Pulse_Typing.comp_while_body
-                            Pulse_Syntax_Base.ppname_default inv) body_typing
-                         g1))
+                      body, (), uu___2, uu___3)
               | Pulse_Typing.T_Par
                   (uu___, eL, cL, eR, cR, x, cL_typing, cR_typing, eL_typing,
                    eR_typing)
                   ->
+                  let uu___1 = st_typing_weakening g g' eL cL eL_typing g1 in
+                  let uu___2 = st_typing_weakening g g' eR cR eR_typing g1 in
                   Pulse_Typing.T_Par
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), eL, cL, eR, cR,
@@ -527,8 +532,7 @@ let rec (st_typing_weakening :
                          (Pulse_Syntax_Base.universe_of_comp cL) cL_typing g1),
                       (comp_typing_weakening g g' cR
                          (Pulse_Syntax_Base.universe_of_comp cR) cR_typing g1),
-                      (st_typing_weakening g g' eL cL eL_typing g1),
-                      (st_typing_weakening g g' eR cR eR_typing g1))
+                      uu___1, uu___2)
               | Pulse_Typing.T_WithLocal
                   (uu___, ppname, init, body, init_t, c1, x, uu___1, uu___2,
                    d_c, d_body)
@@ -595,13 +599,13 @@ let rec (st_typing_weakening :
                   (uu___, uu___1, uu___2, uu___3, uu___4, i_typing, p_typing,
                    body_typing, tok)
                   ->
+                  let uu___5 =
+                    st_typing_weakening g g' uu___3
+                      (Pulse_Typing.add_frame_l uu___4 uu___2) body_typing g1 in
                   Pulse_Typing.T_WithInv
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), uu___1, uu___2,
-                      uu___3, uu___4, (), (),
-                      (st_typing_weakening g g' uu___3
-                         (Pulse_Typing.add_frame_l uu___4 uu___2) body_typing
-                         g1), ())
+                      uu___3, uu___4, (), (), uu___5, ())
 let (nt :
   Pulse_Syntax_Base.var ->
     Pulse_Syntax_Base.term -> FStar_Reflection_Typing.subst_elt Prims.list)

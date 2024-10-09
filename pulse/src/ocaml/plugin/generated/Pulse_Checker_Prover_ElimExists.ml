@@ -38,6 +38,7 @@ let (mk :
                               Pulse_Syntax_Base.binder_attrs = uu___1;_},
                             p)
                            ->
+                           let x = Pulse_Typing_Env.fresh g in
                            FStar_Pervasives_Native.Some
                              (FStar_Pervasives.Mkdtuple4
                                 (nm,
@@ -50,23 +51,17 @@ let (mk :
                                             (Pulse_Syntax_Pure.tm_exists_sl
                                                (Pulse_Syntax_Base.comp_u
                                                   (Pulse_Typing.comp_elim_exists
-                                                     u t p
-                                                     (nm,
-                                                       (Pulse_Typing_Env.fresh
-                                                          g))))
+                                                     u t p (nm, x)))
                                                (Pulse_Syntax_Base.as_binder t)
                                                p)
                                         })),
                                   (Pulse_Typing.comp_elim_exists u t p
-                                     (nm, (Pulse_Typing_Env.fresh g))),
+                                     (nm, x)),
                                   (Pulse_Typing.T_ElimExists
                                      (g,
                                        (Pulse_Syntax_Base.comp_u
                                           (Pulse_Typing.comp_elim_exists u t
-                                             p
-                                             (nm, (Pulse_Typing_Env.fresh g)))),
-                                       t, p, (Pulse_Typing_Env.fresh g), (),
-                                       ()))))
+                                             p (nm, x))), t, p, x, (), ()))))
                        | uu___1 -> FStar_Pervasives_Native.None))) uu___2
           uu___1 uu___
 let (elim_exists_frame :

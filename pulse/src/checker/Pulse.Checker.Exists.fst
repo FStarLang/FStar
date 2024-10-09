@@ -123,7 +123,8 @@ let check_intro_exists
   let Tm_ExistsSL u b p = tv in
 
   Pulse.Typing.FV.tot_typing_freevars t_typing;
-  let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #b.binder_ty #p t_typing (fresh g) in
+  let x = fresh g in
+  let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #b.binder_ty #p t_typing x in
   let (| witness, witness_typing |) = 
     check_term g witness T.E_Ghost b.binder_ty in
   let d = T_IntroExists g u b p witness ty_typing t_typing witness_typing in

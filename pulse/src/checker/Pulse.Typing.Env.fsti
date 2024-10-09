@@ -93,7 +93,7 @@ let lookup (g:env) (x:var) : option typ =
   let m = as_map g in
   if Map.contains m x then Some (Map.sel m x) else None
 
-val fresh (g:env) : v:var { ~ (Set.mem v (dom g)) }
+val fresh (g:env) : Dv (v:var { ~ (Set.mem v (dom g)) })
 
 let contains (g:env) (x:var) = Map.contains (as_map g) x
 

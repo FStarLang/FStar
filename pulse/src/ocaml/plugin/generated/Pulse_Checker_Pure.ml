@@ -3028,67 +3028,51 @@ let (instantiate_term_implicits_uvs :
                                                                     (namedv,
                                                                     namedvt))
                                                                     ->
-                                                                    FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Typing_Env.push_binding
-                                                                    uvs
-                                                                    (Pulse_Typing_Env.fresh
-                                                                    (Pulse_Typing_Env.push_env
-                                                                    g uvs))
+                                                                    let nview
+                                                                    =
+                                                                    FStar_Reflection_V2_Builtins.inspect_namedv
+                                                                    namedv in
+                                                                    let ppname
+                                                                    =
                                                                     {
                                                                     Pulse_Syntax_Base.name
                                                                     =
-                                                                    ((FStar_Reflection_V2_Builtins.inspect_namedv
-                                                                    namedv).FStar_Reflection_V2_Data.ppname);
+                                                                    (nview.FStar_Reflection_V2_Data.ppname);
                                                                     Pulse_Syntax_Base.range
                                                                     = rng
-                                                                    } namedvt),
+                                                                    } in
+                                                                    let x =
+                                                                    Pulse_Typing_Env.fresh
+                                                                    (Pulse_Typing_Env.push_env
+                                                                    g uvs) in
+                                                                    FStar_Pervasives.Mkdtuple3
+                                                                    ((Pulse_Typing_Env.push_binding
+                                                                    uvs x
+                                                                    ppname
+                                                                    namedvt),
                                                                     (Pulse_Syntax_Naming.subst_term
                                                                     t1
                                                                     [
                                                                     FStar_Reflection_Typing.NT
-                                                                    (((FStar_Reflection_V2_Builtins.inspect_namedv
-                                                                    namedv).FStar_Reflection_V2_Data.uniq),
+                                                                    ((nview.FStar_Reflection_V2_Data.uniq),
                                                                     (Pulse_Syntax_Pure.tm_var
                                                                     {
                                                                     Pulse_Syntax_Base.nm_index
-                                                                    =
-                                                                    (Pulse_Typing_Env.fresh
-                                                                    (Pulse_Typing_Env.push_env
-                                                                    g uvs));
+                                                                    = x;
                                                                     Pulse_Syntax_Base.nm_ppname
-                                                                    =
-                                                                    {
-                                                                    Pulse_Syntax_Base.name
-                                                                    =
-                                                                    ((FStar_Reflection_V2_Builtins.inspect_namedv
-                                                                    namedv).FStar_Reflection_V2_Data.ppname);
-                                                                    Pulse_Syntax_Base.range
-                                                                    = rng
-                                                                    }
+                                                                    = ppname
                                                                     }))]),
                                                                     (Pulse_Syntax_Naming.subst_term
                                                                     ty1
                                                                     [
                                                                     FStar_Reflection_Typing.NT
-                                                                    (((FStar_Reflection_V2_Builtins.inspect_namedv
-                                                                    namedv).FStar_Reflection_V2_Data.uniq),
+                                                                    ((nview.FStar_Reflection_V2_Data.uniq),
                                                                     (Pulse_Syntax_Pure.tm_var
                                                                     {
                                                                     Pulse_Syntax_Base.nm_index
-                                                                    =
-                                                                    (Pulse_Typing_Env.fresh
-                                                                    (Pulse_Typing_Env.push_env
-                                                                    g uvs));
+                                                                    = x;
                                                                     Pulse_Syntax_Base.nm_ppname
-                                                                    =
-                                                                    {
-                                                                    Pulse_Syntax_Base.name
-                                                                    =
-                                                                    ((FStar_Reflection_V2_Builtins.inspect_namedv
-                                                                    namedv).FStar_Reflection_V2_Data.ppname);
-                                                                    Pulse_Syntax_Base.range
-                                                                    = rng
-                                                                    }
+                                                                    = ppname
                                                                     }))])))))
                                                                     uu___9
                                                                     uu___8)

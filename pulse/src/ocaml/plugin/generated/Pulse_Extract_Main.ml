@@ -53,10 +53,9 @@ let (extend_env' :
                Obj.magic
                  (FStar_Tactics_Effect.lift_div_tac
                     (fun uu___ ->
-                       ((Pulse_Typing_Env.push_binding g
-                           (Pulse_Typing_Env.fresh g) ppname ty),
-                         (ppname, (Pulse_Typing_Env.fresh g)))))) uu___2
-          uu___1 uu___
+                       let x = Pulse_Typing_Env.fresh g in
+                       ((Pulse_Typing_Env.push_binding g x ppname ty),
+                         (ppname, x))))) uu___2 uu___1 uu___
 let (extend_env'_binder :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.binder ->
