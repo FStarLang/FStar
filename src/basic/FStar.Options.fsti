@@ -168,7 +168,6 @@ val ml_ish                      : unit    -> bool
 val ml_ish_effect               : unit    -> string
 val set_ml_ish                  : unit    -> unit
 val no_default_includes         : unit    -> bool
-val no_extract                  : string  -> bool
 val no_location_info            : unit    -> bool
 val no_plugins                  : unit    -> bool
 val no_smt                      : unit    -> bool
