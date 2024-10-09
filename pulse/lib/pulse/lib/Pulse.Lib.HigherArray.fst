@@ -904,7 +904,6 @@ ensures
 
 let pts_to_range_upd = pts_to_range_upd'
 
-```pulse
 ghost
 fn pts_to_range_share
   (#a:Type)
@@ -922,9 +921,7 @@ fn pts_to_range_share
   pts_to_range_intro_ij arr (p /. 2.0R) s l r ();
   pts_to_range_intro_ij arr (p /. 2.0R) s l r ();
 }
-```
 
-```pulse
 ghost
 fn pts_to_range_gather
   (#a:Type)
@@ -942,4 +939,3 @@ fn pts_to_range_gather
   gather (array_slice arr l r);
   fold (pts_to_range arr l r #(p0 +. p1) s0)
 }
-```

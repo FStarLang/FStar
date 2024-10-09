@@ -20,6 +20,9 @@ $(OUTPUT_DIRECTORY)/Example_Hashtable.c: $(addprefix $(OUTPUT_DIRECTORY)/,\
 	Pulse_Lib_Vec.krml \
 	Pulse_Lib_HashTable_Type.krml Pulse_Lib_HashTable_Spec.krml Pulse_Lib_HashTable.krml)
 
+$(OUTPUT_DIRECTORY)/Example_Slice.c: $(addprefix $(OUTPUT_DIRECTORY)/,\
+	Pulse_Lib_Slice.krml)
+
 $(OUTPUT_DIRECTORY)/Example_Unreachable.c: $(addprefix $(OUTPUT_DIRECTORY)/,FStar_Pervasives.krml FStar_Pervasives_Native.krml)
 
 $(OUTPUT_DIRECTORY)/%.c: $(EXTRA_KRML_DEPS) $(OUTPUT_DIRECTORY)/%.krml
@@ -31,6 +34,8 @@ extract: $(OUTPUT_DIRECTORY)/ExtractionTest.ml
 .PHONY: extract_unreachable
 extract_unreachable: $(OUTPUT_DIRECTORY)/Example_Unreachable.ml
 
+EXTRACT_C_FILES = $(addprefix $(OUTPUT_DIRECTORY)/,ExtractionTest.c PulsePointStruct.c Bug166.c Example_Unreachable.c Example_Hashtable.c Example_Slice.c)
+
 ifneq (,$(KRML_HOME))
 test-dpe-c: dice
 	+$(MAKE) -C dice test-c
@@ -38,38 +43,24 @@ test-dpe-c: dice
 test-cbor: dice
 	+$(MAKE) -C dice/cbor
 
-extract_c: $(OUTPUT_DIRECTORY)/ExtractionTest.c
-
-extract_pulse_c: $(OUTPUT_DIRECTORY)/PulsePointStruct.c
-
-extract_c_bug166: $(OUTPUT_DIRECTORY)/Bug166.c
-
-extract_c_unreachable: $(OUTPUT_DIRECTORY)/Example_Unreachable.c
-
-extract_c_hashtable: $(OUTPUT_DIRECTORY)/Example_Hashtable.c
-
 else
 test-dpe-c:
 
 test-cbor:
 
-extract_c:
-
-extract_pulse_c:
-
-extract_c_bug166:
-
-extract_c_unreachable:
+EXTRACT_C_FILES =
 
 endif
 
-test: test-cbor extract extract_pulse_c extract_c extract_c_bug166 test-dpe-c test-error-messages extract_c_unreachable extract_c_hashtable
+extract_c: $(EXTRACT_C_FILES)
+
+test: test-cbor extract extract_pulse_c extract_c test-dpe-c test-error-messages
 
 test-error-messages:
 	+$(MAKE) -C bug-reports/error-messages
 
 .PHONY: test-dpe-c test-error-messages
 
-.PHONY: extract_pulse_c extract_c extract_c_bug166 extract_c_unreachable extract_c_hashtable
+.PHONY: extract_pulse_c extract_c
 
 .PHONY: test test-cbor test-cbor-raw

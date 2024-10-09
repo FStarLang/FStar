@@ -238,6 +238,10 @@ let rec (extract_mlty :
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "Pulse.Lib.Array.Core.array" ->
           let is_mut = true in mk_slice is_mut arg
+      | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
+          let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___ = "Pulse.Lib.Slice.slice" ->
+          let is_mut = true in mk_slice is_mut arg
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::uu___::[], p) when
           let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___1 = "Pulse.Lib.Array.Core.larray" ->
@@ -571,6 +575,14 @@ let rec (extract_mlpattern_to_pat :
              ((FStar_Pervasives_Native.snd p1) = "Mktuple3"))
             || ((FStar_Pervasives_Native.snd p1) = "Mkdtuple2")
           ->
+          let uu___ =
+            FStar_Compiler_List.fold_left_map extract_mlpattern_to_pat g ps in
+          (match uu___ with
+           | (g1, ps1) ->
+               let uu___1 = Pulse2Rust_Rust_Syntax.mk_pat_tuple ps1 in
+               (g1, uu___1))
+      | FStar_Extraction_ML_Syntax.MLP_CTor (p1, ps) when
+          (FStar_Pervasives_Native.snd p1) = "SlicePair" ->
           let uu___ =
             FStar_Compiler_List.fold_left_map extract_mlpattern_to_pat g ps in
           (match uu___ with
@@ -1091,10 +1103,13 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::i::uu___5)
           when
-          (((let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___6 = "Pulse.Lib.Array.Core.op_Array_Access") ||
+          ((((let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___6 = "Pulse.Lib.Array.Core.op_Array_Access") ||
+               (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                uu___6 = "Pulse.Lib.Array.Core.pts_to_range_index"))
+              ||
               (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-               uu___6 = "Pulse.Lib.Array.Core.pts_to_range_index"))
+               uu___6 = "Pulse.Lib.Slice.op_Array_Access"))
              ||
              (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
               uu___6 = "Pulse.Lib.Vec.op_Array_Access"))
@@ -1119,10 +1134,13 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::e2::e3::uu___5)
           when
-          (((let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___6 = "Pulse.Lib.Array.Core.op_Array_Assignment") ||
+          ((((let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___6 = "Pulse.Lib.Array.Core.op_Array_Assignment") ||
+               (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                uu___6 = "Pulse.Lib.Array.Core.pts_to_range_upd"))
+              ||
               (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-               uu___6 = "Pulse.Lib.Array.Core.pts_to_range_upd"))
+               uu___6 = "Pulse.Lib.Slice.op_Array_Assignment"))
              ||
              (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
               uu___6 = "Pulse.Lib.Vec.op_Array_Assignment"))
@@ -1183,6 +1201,79 @@ and (extract_mlexpr :
           let uu___6 = extract_mlexpr g e_r in
           let uu___7 = extract_mlexpr g e_x in
           Pulse2Rust_Rust_Syntax.mk_mem_replace uu___5 uu___6 uu___7
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           e1::uu___5)
+          when
+          let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___6 = "Pulse.Lib.Slice.from_array" -> extract_mlexpr g e1
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           e1::uu___5::i::uu___6)
+          when
+          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___7 = "Pulse.Lib.Slice.split" ->
+          let uu___7 = extract_mlexpr g e1 in
+          let uu___8 = let uu___9 = extract_mlexpr g i in [uu___9] in
+          Pulse2Rust_Rust_Syntax.mk_method_call uu___7 "split_at_mut" uu___8
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           a::uu___5::b::uu___6)
+          when
+          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___7 = "Pulse.Lib.Slice.copy" ->
+          let uu___7 = extract_mlexpr g a in
+          let uu___8 = let uu___9 = extract_mlexpr g b in [uu___9] in
+          Pulse2Rust_Rust_Syntax.mk_method_call uu___7 "copy_from_slice"
+            uu___8
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           a::[])
+          when
+          let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___5 = "Pulse.Lib.Slice.len" ->
+          let uu___5 = extract_mlexpr g a in
+          Pulse2Rust_Rust_Syntax.mk_method_call uu___5 "len" []
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
