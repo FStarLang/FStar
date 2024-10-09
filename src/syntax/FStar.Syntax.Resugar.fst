@@ -458,6 +458,12 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
     | Tm_app _ ->
       let t = U.canon_app t in
       let Tm_app {hd=e; args} = t.n in
+      let is_hide_or_reveal e =
+        match U.un_uinst e with
+        | {n=Tm_fvar fv} ->
+          S.fv_eq_lid fv C.hide || S.fv_eq_lid fv C.reveal
+        | _ -> false
+      in
       (* NB: This cannot fail since U.canon_app constructs a Tm_app. *)
 
       (* Op("=!=", args) is desugared into Op("~", Op("==") and not resugared back as "=!=" *)
@@ -523,6 +529,14 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                        let qq = resugar_aqual env q in
                        mk (A.App (acc, aa, qq)))
                      h
+      else if not (Options.print_implicits ())
+           && Options.Ext.get "show_hide_reveal" = ""
+           && is_hide_or_reveal e
+           && List.length args = 1 //args already filtered
+      then (
+        let [(e, _)] = args in
+        resugar_term' env e
+      )
       else
       let unsnoc (#a:Type) (l : list a) : (list a & a) =
         let rec unsnoc' acc = function
