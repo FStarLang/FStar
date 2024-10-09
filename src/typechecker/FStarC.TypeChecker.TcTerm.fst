@@ -172,7 +172,7 @@ let check_erasable_binder_attributes env attrs (binder_ty:typ) =
     List.iter
       (fun attr ->
         if U.is_fvar Const.erasable_attr attr
-        && not (N.non_info_norm env binder_ty)
+        && None? (N.non_info_norm env binder_ty)
         then raise_error attr Errors.Fatal_QulifierListNotPermitted
                 ("Incompatible attributes:  an erasable attribute on a binder must bind a name at an non-informative type"))
 
@@ -2700,7 +2700,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                    //this argument is effectful, warn if the function would be erased
                    //special casing for ignore, may be use an attribute instead?
                    let warn_effectful_args  =
-                     (TcUtil.must_erase_for_extraction env chead.res_typ) &&
+                     Some? (TcUtil.must_erase_for_extraction env chead.res_typ) &&
                      (not (match (U.un_uinst head).n with
                            | Tm_fvar fv -> S.fv_eq_lid fv (Parser.Const.psconst "ignore")
                            | _ -> true))
@@ -3090,7 +3090,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           //Data constructors are marked with the "erasable" attribute
           //if their types are; matching on this constructor incurs
           //a ghost effect
-          let erasable = Env.non_informative env t in
+          let erasable = Some? (Env.non_informative env t) in
           if List.length formals <> List.length args
           then fail "Pattern is not a fully-applied data constructor";
           let rec aux (subst, args_out, bvs, guard) formals args =
@@ -4751,7 +4751,7 @@ let tc_tparams env0 (tps:binders) : (binders & Env.env & universes) =
 
 let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : option typ =
   let mk_tm_type u = S.mk (Tm_type u) t.pos in
-  let effect_ok k = (not must_tot) || (N.non_info_norm env k) in
+  let effect_ok k = (not must_tot) || Some? (N.non_info_norm env k) in
   let t = SS.compress t in
   match t.n with
   | Tm_delayed _
@@ -4841,7 +4841,7 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
     let k = U.comp_result c in
     if (not must_tot) ||
        (c |> U.comp_effect_name |> Env.norm_eff_name env |> lid_equals Const.effect_PURE_lid) ||
-       (N.non_info_norm env k)
+       Some? (N.non_info_norm env k)
     then Some k
     else None
 

@@ -249,7 +249,7 @@ let check_erasable env quals (r:Range.range) se =
         | Some iface_decls -> iface_decls |> BU.for_some (Parser.AST.decl_is_val (ident_of_lid lbname.fv_name.v))
         | None -> false in
       let _, body, _ = U.abs_formals lb.lbdef in
-      if has_iface_val && non_info_norm_weak env body then log_issue lbname Error_MustEraseMissing [
+      if has_iface_val && Some? (non_info_norm_weak env body) then log_issue lbname Error_MustEraseMissing [
         text (BU.format1 "Values of type `%s` will be erased during extraction, \
               but its interface hides this fact." (show lbname));
         text (BU.format1 "Add the `erasable` \
@@ -273,7 +273,7 @@ let check_erasable env quals (r:Range.range) se =
 
     | Sig_let {lbs=(false, [lb])} ->
       let _, body, _ = U.abs_formals lb.lbdef in
-      if not (N.non_info_norm env body)
+      if None? (N.non_info_norm env body)
       then raise_error body Errors.Fatal_QulifierListNotPermitted [
                   text "Illegal attribute: \
                    the `erasable` attribute is only permitted on inductive type definitions \

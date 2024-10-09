@@ -1035,20 +1035,33 @@ let is_erasable_effect env l =
 
 let rec non_informative env t =
     match (U.unrefine t).n with
-    | Tm_type _ -> true
-    | Tm_fvar fv ->
-      fv_eq_lid fv Const.unit_lid
-      || fv_eq_lid fv Const.squash_lid
-      || fv_eq_lid fv Const.erased_lid
-      || fv_has_erasable_attr env fv
+    | Tm_type _ -> Some unit_const
+    | Tm_fvar fv when 
+           fv_eq_lid fv Const.unit_lid
+        || fv_eq_lid fv Const.squash_lid
+        || fv_eq_lid fv Const.erased_lid ->
+      Some unit_const
+    | Tm_fvar fv when fv_has_erasable_attr env fv ->
+      // Note: this is unsound (see #3366), but only happens when we compile without `--cmi`.
+      Some unit_const
     | Tm_app {hd=head} -> non_informative env head
-    | Tm_abs {body} -> non_informative env body
     | Tm_uinst (t, _) -> non_informative env t
-    | Tm_arrow {comp=c} ->
-      (is_pure_or_ghost_comp c && non_informative env (comp_result c))
-      || is_erasable_effect env (comp_effect_name c)
+    | Tm_arrow {bs;comp=c} ->
+      if is_ghost_effect (comp_effect_name c) || is_erasable_effect env (comp_effect_name c) then
+        // Functions with a ghost effect can only be invoked in a ghost context,
+        // therefore it is safe to erase them to unit, a non-function.
+        Some unit_const
+      else if is_pure_comp c then
+        // Only the result of a pure computation can be erased;
+        // a pure function can be still be invoked in non-ghost contexts (see #3366)
+        match non_informative env (comp_result c) with
+        | Some body -> Some (mk (Tm_abs { body; rc_opt = None; bs }) t.pos)
+        | None -> None
+      else
+        // Effectful computations may not be erased
+        None
     | Tm_meta {tm} -> non_informative env tm
-    | _ -> false
+    | _ -> None
 
 let num_effect_indices env name r =
   let sig_t = name |> lookup_effect_lid env |> SS.compress in
