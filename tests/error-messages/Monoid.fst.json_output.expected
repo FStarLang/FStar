@@ -345,8 +345,8 @@ let left_action_morphism f mf la lb = forall (g: ma) (x: a). lb.act (mf g) (f x)
 Module after type checking:
 module Monoid
 Declarations: [
-let right_unitality_lemma m u466 mult = forall (x: m). mult x u466 == x
-let left_unitality_lemma m u466 mult = forall (x: m). mult u466 x == x
+let right_unitality_lemma m u476 mult = forall (x: m). mult x u476 == x
+let left_unitality_lemma m u476 mult = forall (x: m). mult u476 x == x
 let associativity_lemma m mult = forall (x: m) (y: m) (z: m). mult (mult x y) z == mult x (mult y z)
 unopteq
 type monoid (m: Type) =
@@ -382,25 +382,25 @@ val monoid__uu___haseq: Prims.l_True /\
 
 
 
-let intro_monoid m u466 mult = Monoid.Monoid u466 mult () () () <: Prims.Pure (Monoid.monoid m)
+let intro_monoid m u476 mult = Monoid.Monoid u476 mult () () () <: Prims.Pure (Monoid.monoid m)
 let nat_plus_monoid =
   let add x y = x + y <: Prims.nat in
   Monoid.intro_monoid Prims.nat 0 add
 let int_plus_monoid = Monoid.intro_monoid Prims.int 0 Prims.op_Addition
 let conjunction_monoid =
-  let u464 = FStar.Pervasives.singleton Prims.l_True in
+  let u474 = FStar.Pervasives.singleton Prims.l_True in
   let mult p q = p /\ q <: Prims.prop in
   let left_unitality_helper p =
-    (assert (mult u464 p <==> p);
-      FStar.PropositionalExtensionality.apply (mult u464 p) p)
+    (assert (mult u474 p <==> p);
+      FStar.PropositionalExtensionality.apply (mult u474 p) p)
     <:
-    FStar.Pervasives.Lemma (ensures mult u464 p == p)
+    FStar.Pervasives.Lemma (ensures mult u474 p == p)
   in
   let right_unitality_helper p =
-    (assert (mult p u464 <==> p);
-      FStar.PropositionalExtensionality.apply (mult p u464) p)
+    (assert (mult p u474 <==> p);
+      FStar.PropositionalExtensionality.apply (mult p u474) p)
     <:
-    FStar.Pervasives.Lemma (ensures mult p u464 == p)
+    FStar.Pervasives.Lemma (ensures mult p u474 == p)
   in
   let associativity_helper p1 p2 p3 =
     (assert (mult (mult p1 p2) p3 <==> mult p1 (mult p2 p3));
@@ -409,26 +409,26 @@ let conjunction_monoid =
     FStar.Pervasives.Lemma (ensures mult (mult p1 p2) p3 == mult p1 (mult p2 p3))
   in
   FStar.Classical.forall_intro right_unitality_helper;
-  assert (Monoid.right_unitality_lemma Prims.prop u464 mult);
+  assert (Monoid.right_unitality_lemma Prims.prop u474 mult);
   FStar.Classical.forall_intro left_unitality_helper;
-  assert (Monoid.left_unitality_lemma Prims.prop u464 mult);
+  assert (Monoid.left_unitality_lemma Prims.prop u474 mult);
   FStar.Classical.forall_intro_3 associativity_helper;
   assert (Monoid.associativity_lemma Prims.prop mult);
-  Monoid.intro_monoid Prims.prop u464 mult
+  Monoid.intro_monoid Prims.prop u474 mult
 let disjunction_monoid =
-  let u464 = FStar.Pervasives.singleton Prims.l_False in
+  let u474 = FStar.Pervasives.singleton Prims.l_False in
   let mult p q = p \/ q <: Prims.prop in
   let left_unitality_helper p =
-    (assert (mult u464 p <==> p);
-      FStar.PropositionalExtensionality.apply (mult u464 p) p)
+    (assert (mult u474 p <==> p);
+      FStar.PropositionalExtensionality.apply (mult u474 p) p)
     <:
-    FStar.Pervasives.Lemma (ensures mult u464 p == p)
+    FStar.Pervasives.Lemma (ensures mult u474 p == p)
   in
   let right_unitality_helper p =
-    (assert (mult p u464 <==> p);
-      FStar.PropositionalExtensionality.apply (mult p u464) p)
+    (assert (mult p u474 <==> p);
+      FStar.PropositionalExtensionality.apply (mult p u474) p)
     <:
-    FStar.Pervasives.Lemma (ensures mult p u464 == p)
+    FStar.Pervasives.Lemma (ensures mult p u474 == p)
   in
   let associativity_helper p1 p2 p3 =
     (assert (mult (mult p1 p2) p3 <==> mult p1 (mult p2 p3));
@@ -437,12 +437,12 @@ let disjunction_monoid =
     FStar.Pervasives.Lemma (ensures mult (mult p1 p2) p3 == mult p1 (mult p2 p3))
   in
   FStar.Classical.forall_intro right_unitality_helper;
-  assert (Monoid.right_unitality_lemma Prims.prop u464 mult);
+  assert (Monoid.right_unitality_lemma Prims.prop u474 mult);
   FStar.Classical.forall_intro left_unitality_helper;
-  assert (Monoid.left_unitality_lemma Prims.prop u464 mult);
+  assert (Monoid.left_unitality_lemma Prims.prop u474 mult);
   FStar.Classical.forall_intro_3 associativity_helper;
   assert (Monoid.associativity_lemma Prims.prop mult);
-  Monoid.intro_monoid Prims.prop u464 mult
+  Monoid.intro_monoid Prims.prop u474 mult
 let bool_and_monoid =
   let and_ b1 b2 = b1 && b2 in
   Monoid.intro_monoid Prims.bool true and_
@@ -520,7 +520,7 @@ let _ =
   Monoid.intro_monoid_morphism Monoid.neg Monoid.disjunction_monoid Monoid.conjunction_monoid
 let mult_act_lemma m a mult act =
   forall (x: m) (x': m) (y: a). act (mult x x') y == act x (act x' y)
-let unit_act_lemma m a u468 act = forall (y: a). act u468 y == y
+let unit_act_lemma m a u478 act = forall (y: a). act u478 y == y
 unopteq
 type left_action (mm: Monoid.monoid m) (a: Type) =
   | LAct :
