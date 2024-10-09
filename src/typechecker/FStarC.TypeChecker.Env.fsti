@@ -342,9 +342,9 @@ val fv_has_attr            : env -> fv -> attr_lid:lid -> bool
 val fv_has_strict_args     : env -> fv -> option (list int)
 val fv_has_erasable_attr   : env -> fv -> bool
 
-(* `non_informative env t` is true if the type family `t: (... -> Type) is noninformative,
-   i.e., any `x: t ...` can be erased to `()`. *)
-val non_informative        : env -> typ -> bool
+(* `non_informative env t` is `Some i` if the type `t: Type` is noninformative,
+   and any `x: t ...` can be erased to `i`. *)
+val non_informative        : env -> typ -> option term
 
 val try_lookup_effect_lid  : env -> lident -> option term
 val lookup_effect_lid      : env -> lident -> term
