@@ -998,10 +998,18 @@ let extract_bundle env se =
 
     | _ -> failwith "Unexpected signature element"
 
-let lb_irrelevant (g:env_t) (lb:letbinding) : bool =
-    Env.non_informative (tcenv_of_uenv g) lb.lbtyp && // result type is non informative
-    not (Term.is_arity g lb.lbtyp) &&  // but not a type definition
-    U.is_pure_or_ghost_effect lb.lbeff // and not top-level effectful
+let lb_is_irrelevant (g:env_t) (lb:letbinding) : bool =
+  Env.non_informative (tcenv_of_uenv g) lb.lbtyp && // result type is non informative
+  not (Term.is_arity g lb.lbtyp) &&  // but not a type definition
+  U.is_pure_or_ghost_effect lb.lbeff // and not top-level effectful
+
+let lb_is_tactic (g:env_t) (lb:letbinding) : bool =
+  if U.is_pure_effect lb.lbeff then // not top-level effectful
+    let bs, c = U.arrow_formals_comp_ln lb.lbtyp in
+    let c_eff_name = c |> U.comp_effect_name |> Env.norm_eff_name (tcenv_of_uenv g) in
+    lid_equals c_eff_name PC.effect_TAC_lid
+  else
+    false
 
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
@@ -1039,7 +1047,13 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t & list mlmodule1 =
       g, []
 
     (* Ignore all non-informative sigelts *)
-    | Sig_let {lbs=(_, lbs)} when List.for_all (lb_irrelevant g) lbs ->
+    | Sig_let {lbs=(_, lbs)} when List.for_all (lb_is_irrelevant g) lbs ->
+      g, []
+
+    (* Ignore tactics whenever we're not extracting plugins *)
+    | Sig_let {lbs=(_, lbs)}
+        when Options.codegen () <> Some (Options.Plugin) &&
+             List.for_all (lb_is_tactic g) lbs ->
       g, []
 
     | Sig_declare_typ {lid; us=univs; t}  when Term.is_arity g t -> //lid is a type

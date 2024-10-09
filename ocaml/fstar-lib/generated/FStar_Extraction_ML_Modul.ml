@@ -2180,7 +2180,8 @@ let (extract_bundle :
                       (env2, uu___5)))
       | uu___ ->
           FStar_Compiler_Effect.failwith "Unexpected signature element"
-let (lb_irrelevant : env_t -> FStar_Syntax_Syntax.letbinding -> Prims.bool) =
+let (lb_is_irrelevant :
+  env_t -> FStar_Syntax_Syntax.letbinding -> Prims.bool) =
   fun g ->
     fun lb ->
       ((let uu___ = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
@@ -2193,6 +2194,25 @@ let (lb_irrelevant : env_t -> FStar_Syntax_Syntax.letbinding -> Prims.bool) =
         &&
         (FStar_Syntax_Util.is_pure_or_ghost_effect
            lb.FStar_Syntax_Syntax.lbeff)
+let (lb_is_tactic : env_t -> FStar_Syntax_Syntax.letbinding -> Prims.bool) =
+  fun g ->
+    fun lb ->
+      let uu___ =
+        FStar_Syntax_Util.is_pure_effect lb.FStar_Syntax_Syntax.lbeff in
+      if uu___
+      then
+        let uu___1 =
+          FStar_Syntax_Util.arrow_formals_comp_ln
+            lb.FStar_Syntax_Syntax.lbtyp in
+        match uu___1 with
+        | (bs, c) ->
+            let c_eff_name =
+              let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
+              FStar_TypeChecker_Env.norm_eff_name uu___2
+                (FStar_Syntax_Util.comp_effect_name c) in
+            FStar_Ident.lid_equals c_eff_name
+              FStar_Parser_Const.effect_TAC_lid
+      else false
 let rec (extract_sig :
   env_t ->
     FStar_Syntax_Syntax.sigelt ->
@@ -2264,8 +2284,17 @@ let rec (extract_sig :
                | FStar_Syntax_Syntax.Sig_let
                    { FStar_Syntax_Syntax.lbs1 = (uu___5, lbs);
                      FStar_Syntax_Syntax.lids1 = uu___6;_}
-                   when FStar_Compiler_List.for_all (lb_irrelevant g) lbs ->
-                   (g, [])
+                   when FStar_Compiler_List.for_all (lb_is_irrelevant g) lbs
+                   -> (g, [])
+               | FStar_Syntax_Syntax.Sig_let
+                   { FStar_Syntax_Syntax.lbs1 = (uu___5, lbs);
+                     FStar_Syntax_Syntax.lids1 = uu___6;_}
+                   when
+                   (let uu___7 = FStar_Options.codegen () in
+                    uu___7 <>
+                      (FStar_Pervasives_Native.Some FStar_Options.Plugin))
+                     && (FStar_Compiler_List.for_all (lb_is_tactic g) lbs)
+                   -> (g, [])
                | FStar_Syntax_Syntax.Sig_declare_typ
                    { FStar_Syntax_Syntax.lid2 = lid;
                      FStar_Syntax_Syntax.us2 = univs;
