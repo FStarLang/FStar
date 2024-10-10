@@ -378,6 +378,47 @@ let rec pack_pat p : S.pat =
     wrap <| Pat_var bv
   | Pat_Dot_Term eopt -> wrap <| Pat_dot_term eopt
 
+let rec canon_app (t:term) : term =
+  let t = t |> SS.compress_subst in
+  match t.n with
+  | Tm_app {hd; args} -> begin
+      let hd = canon_app hd in
+      match (SS.compress_subst hd).n with
+      | Tm_app {hd=hd'; args=args'} ->
+        S.mk (Tm_app {hd=hd'; args=args'@args}) t.pos
+      | _ -> t
+    end
+  | _ -> t
+
+let rec canon_abs (t:term) : term =
+  let t = t |> SS.compress_subst in
+  match t.n with
+  | Tm_abs {bs; body; rc_opt=None} -> begin
+      let body = canon_abs body in
+      match (SS.compress_subst body).n with
+      | Tm_abs {bs=bs'; body=body'; rc_opt} ->
+        S.mk (Tm_abs {bs=bs@bs'; body=body'; rc_opt}) t.pos
+      | _ -> t
+    end
+  | _ -> t
+
+let rec canon_arrow (t:term) : term =
+  let t = t |> SS.compress_subst in
+  match t.n with
+  | Tm_arrow {bs; comp} ->
+    begin match comp.n with
+    | Total t' -> begin
+      let t' = canon_arrow t' in
+      match (SS.compress_subst t').n with
+      | Tm_arrow {bs=bs'; comp=comp'} ->
+        S.mk (Tm_arrow {bs=bs@bs'; comp=comp'}) t.pos
+      | _ -> t
+    end
+    (* Two nested arrows *)
+    | _ -> t
+    end
+  | _ -> t
+
 // TODO: pass in range?
 let pack_ln (tv:term_view) : term =
     match tv with
@@ -394,13 +435,17 @@ let pack_ln (tv:term_view) : term =
       mk_Tm_uinst (S.fv_to_tm fv) us
 
     | Tv_App (l, (r, q)) ->
+      canon_app <| (
         let q' = pack_aqual q in
         U.mk_app l [(r, q')]
+      )
 
     | Tv_Abs (b, t) ->
+      canon_abs <|
         mk (Tm_abs {bs=[b]; body=t; rc_opt=None}) t.pos // TODO: effect?
 
     | Tv_Arrow (b, c) ->
+      canon_arrow <|
         mk (Tm_arrow {bs=[b]; comp=c}) c.pos
 
     | Tv_Type u ->
