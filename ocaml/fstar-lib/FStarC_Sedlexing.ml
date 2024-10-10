@@ -32,7 +32,7 @@ let get_start lb = lb.start
    we want to ble able to interpret a fragment as if it was part
    of a larger file and report absolute error positions *)
 let create (s:string) fn loffset coffset =
-  let a = FStar_Parser_Utf8.to_int_array s 0 (String.length s) in
+  let a = FStarC_Parser_Utf8.to_int_array s 0 (String.length s) in
   let start_p = {
     L.pos_fname = fn;
     L.pos_cnum = coffset;
@@ -102,11 +102,11 @@ let rollback b =
   b.cur_p <- b.start_p
 
 let lexeme lexbuf =
-  FStar_Parser_Utf8.from_int_array lexbuf.buf lexbuf.start (lexbuf.cur - lexbuf.start)
+  FStarC_Parser_Utf8.from_int_array lexbuf.buf lexbuf.start (lexbuf.cur - lexbuf.start)
 
 let lookahead b pos =
   if b.len <= pos then ""
-  else FStar_Parser_Utf8.from_int_array b.buf pos (b.len - pos)
+  else FStarC_Parser_Utf8.from_int_array b.buf pos (b.len - pos)
 
 let source_file b =
   b.cur_p.L.pos_fname

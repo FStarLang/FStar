@@ -1,20 +1,20 @@
 open Prims
 open FStar_Pervasives_Native
 open FStar_Pervasives
-open FStar_Tactics_Result
-open FStar_Tactics_Types
+open FStarC_Tactics_Result
+open FStarC_Tactics_Types
 open FStar_Tactics_Effect
 
-module N    = FStar_TypeChecker_Normalize
+module N    = FStarC_TypeChecker_Normalize
 module E    = FStar_Tactics_Effect
-module B    = FStar_Tactics_V1_Basic
-module TM   = FStar_Tactics_Monad
-module CTRW = FStar_Tactics_CtrlRewrite
-module RT   = FStar_Reflection_Types
-module RD   = FStar_Reflection_V1_Data
-module EMB  = FStar_Syntax_Embeddings
-module EMBBase  = FStar_Syntax_Embeddings_Base
-module NBET = FStar_TypeChecker_NBETerm
+module B    = FStarC_Tactics_V1_Basic
+module TM   = FStarC_Tactics_Monad
+module CTRW = FStarC_Tactics_CtrlRewrite
+module RT   = FStarC_Reflection_Types
+module RD   = FStarC_Reflection_V1_Data
+module EMB  = FStarC_Syntax_Embeddings
+module EMBBase  = FStarC_Syntax_Embeddings_Base
+module NBET = FStarC_TypeChecker_NBETerm
 
 type 'a __tac = ('a, unit) E.tac_repr
 

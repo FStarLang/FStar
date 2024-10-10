@@ -1,10 +1,10 @@
-open FStar_Compiler_Range
+open FStarC_Compiler_Range
 open Lexing
 
 (* This brings into scope enough the translation of F# type names into the
  * corresponding OCaml type names; the reason for that is that we massage
  * parse.fsy (using sed) into parse.mly; but, we don't rename types. *)
-include FStar_BaseTypes
+include FStarC_BaseTypes
 type single = float
 type decimal = int
 type bytes = byte array
@@ -28,16 +28,16 @@ exception ReportedError
 exception StopProcessing
 
 let warningHandler = ref (fun (e:exn) -> 
-                          FStar_Compiler_Util.print_string "no warning handler installed\n" ; 
-                          FStar_Compiler_Util.print_any e; ())
+                          FStarC_Compiler_Util.print_string "no warning handler installed\n" ; 
+                          FStarC_Compiler_Util.print_any e; ())
 let errorHandler = ref (fun (e:exn) -> 
-                        FStar_Compiler_Util.print_string "no warning handler installed\n" ; 
-                        FStar_Compiler_Util.print_any e; ())
+                        FStarC_Compiler_Util.print_string "no warning handler installed\n" ; 
+                        FStarC_Compiler_Util.print_any e; ())
 let errorAndWarningCount = ref 0
 let errorR  exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !errorHandler exn
 let warning exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !warningHandler exn
 
-let comments : (string * FStar_Compiler_Range.range) list ref = ref []
+let comments : (string * FStarC_Compiler_Range.range) list ref = ref []
 let add_comment x = comments := x :: !comments
 let flush_comments () =
   let lexed_comments = !comments in

@@ -8,7 +8,7 @@ open Ast_helper
 open Astlib.Ast_500.Asttypes
 open Longident
 
-open FStar_Extraction_ML_Syntax
+open FStarC_Extraction_ML_Syntax
 
 (* Global state used for the name of the ML module being pprinted.
    current_module is only set once in build_ast and read once in
@@ -61,7 +61,7 @@ let split_path (l1: string list) (l2: string list): (string list * string list) 
   else None
 
 let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
-  let codegen_libs = FStar_Options.codegen_libs() in
+  let codegen_libs = FStarC_Options.codegen_libs() in
   match l with
   | [] -> mk_lident sym
   | hd::tl ->
@@ -96,10 +96,10 @@ let mk_top_mllb (e: mlexpr): mllb =
 FStar.All.try_with (for most users) or FStarC.Compiler.Effect.try_with (during
 bootstrapping with "--MLish --MLish_effect FStarC.Compiler.Effect"). *)
 let try_with_ident () =
-  let lid = FStar_Parser_Const.try_with_lid () in
-  let ns = FStar_Ident.ns_of_lid lid in
-  let id = FStar_Ident.ident_of_lid lid in
-  path_to_ident (List.map FStar_Ident.string_of_id ns, FStar_Ident.string_of_id id)
+  let lid = FStarC_Parser_Const.try_with_lid () in
+  let ns = FStarC_Ident.ns_of_lid lid in
+  let id = FStarC_Ident.ident_of_lid lid in
+  path_to_ident (List.map FStarC_Ident.string_of_id ns, FStarC_Ident.string_of_id id)
 
 (* For integer constants (not 0/1) in this range we will use Prims.of_int
  * Outside this range we will use string parsing to allow arbitrary sized
@@ -112,17 +112,17 @@ let min_of_int_const = Z.of_int (-65536)
 
 (* mapping functions from F* ML AST to Parsetree *)
 let build_constant (c: mlconstant): Parsetree.constant =
-  let stdint_module (s:FStar_Const.signedness) (w:FStar_Const.width) : string =
+  let stdint_module (s:FStarC_Const.signedness) (w:FStarC_Const.width) : string =
     let sign = match s with
-      | FStar_Const.Signed -> "Int"
-      | FStar_Const.Unsigned -> "Uint" in
+      | FStarC_Const.Signed -> "Int"
+      | FStarC_Const.Unsigned -> "Uint" in
     let with_w ws = BatString.concat "" ["Stdint."; sign; ws] in
     match w with
-    | FStar_Const.Int8 -> with_w "8"
-    | FStar_Const.Int16 -> with_w "16"
-    | FStar_Const.Int32 -> with_w "32"
-    | FStar_Const.Int64 -> with_w "64"
-    | FStar_Const.Sizet -> with_w "64" in
+    | FStarC_Const.Int8 -> with_w "8"
+    | FStarC_Const.Int16 -> with_w "16"
+    | FStarC_Const.Int32 -> with_w "32"
+    | FStarC_Const.Int64 -> with_w "64"
+    | FStarC_Const.Sizet -> with_w "64" in
   match c with
   | MLC_Int (v, None) ->
       let s = match Z.of_string v with
@@ -134,7 +134,7 @@ let build_constant (c: mlconstant): Parsetree.constant =
             BatString.concat v ["(Prims.parse_int \""; "\")"] in
       Const.integer s
   (* Special case for UInt8, as it's realized as OCaml built-in int type *)
-  | MLC_Int (v, Some (FStar_Const.Unsigned, FStar_Const.Int8)) ->
+  | MLC_Int (v, Some (FStarC_Const.Unsigned, FStarC_Const.Int8)) ->
       Const.integer v
   | MLC_Int (v, Some (s, w)) ->
       let s = match Z.of_string v with
@@ -220,7 +220,7 @@ let rec build_core_type ?(annots = []) (ty: mlty): core_type =
      (match path with
       | ["FStar"; "Pervasives"; "Native"] ->
         (* A special case for tuples, so they are displayed as
-         * ('a * 'b) instead of ('a,'b) FStar_Pervasives_Native.tuple2
+         * ('a * 'b) instead of ('a,'b) FStarC_Pervasives_Native.tuple2
          * VD: Should other types named "tupleXX" where XX does not represent
          * the arity of the tuple be added to FStar.Pervasives.Native,
          * the condition below might need to be more specific. *)
@@ -535,10 +535,10 @@ let print (out_dir: string option) (ext: string) (ml: mllib) =
      iter print_module ast
   | ".fs" ->
      (* Use the old printer for F# extraction *)
-     let new_doc = FStar_Extraction_ML_Code.doc_of_mllib ml in
+     let new_doc = FStarC_Extraction_ML_Code.doc_of_mllib ml in
      iter (fun (n, d) ->
-         FStar_Compiler_Util.write_file
-           (FStar_Options.prepend_output_dir (BatString.concat "" [n;ext]))
-           (FStar_Extraction_ML_Code.pretty (Prims.parse_int "120") d)
+         FStarC_Compiler_Util.write_file
+           (FStarC_Options.prepend_output_dir (BatString.concat "" [n;ext]))
+           (FStarC_Extraction_ML_Code.pretty (Prims.parse_int "120") d)
            ) new_doc
   | _ -> failwith "Unrecognized extension"

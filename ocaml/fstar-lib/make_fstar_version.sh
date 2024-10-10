@@ -20,9 +20,9 @@ fi
 COMMITDATE=$(git log --pretty=format:%ci -n 1 2>/dev/null || echo unset)
 
 echo "let dummy () = ();;"
-echo "FStar_Options._version := \"$VERSION\";"
-echo "FStar_Options._platform := \"$PLATFORM\";;"
-echo "FStar_Options._compiler := \"$COMPILER\";;"
+echo "FStarC_Options._version := \"$VERSION\";"
+echo "FStarC_Options._platform := \"$PLATFORM\";;"
+echo "FStarC_Options._compiler := \"$COMPILER\";;"
 # We deliberately use commitdate instead of date, so that rebuilds are no-ops
-echo "FStar_Options._date := \"$COMMITDATE\";;"
-echo "FStar_Options._commit:= \"$FSTAR_COMMIT\";;"
+echo "FStarC_Options._date := \"$COMMITDATE\";;"
+echo "FStarC_Options._commit:= \"$FSTAR_COMMIT\";;"

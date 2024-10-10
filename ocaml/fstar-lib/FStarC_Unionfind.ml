@@ -1,8 +1,8 @@
 (* Persistent union-find implementation adapted from
    https://www.lri.fr/~filliatr/puf/ *)
 
-open FStar_Compiler_Effect
-open FStar_Compiler_Util
+open FStarC_Compiler_Effect
+open FStarC_Compiler_Util
 
 (* Persistent arrays *)
 type 'a pa_t = 'a data ref

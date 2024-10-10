@@ -1,10 +1,10 @@
-module U = FStar_Compiler_Util
-open FStar_Errors
-open FStar_Syntax_Syntax
+module U = FStarC_Compiler_Util
+open FStarC_Errors
+open FStarC_Syntax_Syntax
 open Lexing
-open FStar_Sedlexing
-module Codes = FStar_Errors_Codes
-module Msg = FStar_Errors_Msg
+open FStarC_Sedlexing
+module Codes = FStarC_Errors_Codes
+module Msg = FStarC_Errors_Msg
 
 type filename = string
 
@@ -25,27 +25,27 @@ type parse_frag =
     | Incremental of input_frag
     | Fragment of input_frag
 
-type parse_error = (Codes.error_code * Msg.error_message * FStar_Compiler_Range.range)
+type parse_error = (Codes.error_code * Msg.error_message * FStarC_Compiler_Range.range)
 
 type code_fragment = {
-   range : FStar_Compiler_Range.range;
+   range : FStarC_Compiler_Range.range;
    code: string;
 }
 
 type parse_result =
-    | ASTFragment of (FStar_Parser_AST.inputFragment * (string * FStar_Compiler_Range.range) list)
-    | IncrementalFragment of ((FStar_Parser_AST.decl * code_fragment) list * (string * FStar_Compiler_Range.range) list * parse_error option)
-    | Term of FStar_Parser_AST.term
+    | ASTFragment of (FStarC_Parser_AST.inputFragment * (string * FStarC_Compiler_Range.range) list)
+    | IncrementalFragment of ((FStarC_Parser_AST.decl * code_fragment) list * (string * FStarC_Compiler_Range.range) list * parse_error option)
+    | Term of FStarC_Parser_AST.term
     | ParseError of parse_error
 
 val parse_incremental_decls :
     (*filename*)string ->
     (*contents*)string ->
-    FStar_Sedlexing.lexbuf ->
+    FStarC_Sedlexing.lexbuf ->
     (unit -> 'token * Lexing.position * Lexing.position) ->
-    ('semantic_value -> FStar_Compiler_Range.range) ->
+    ('semantic_value -> FStarC_Compiler_Range.range) ->
     ((Lexing.lexbuf -> 'token) -> Lexing.lexbuf ->
-         ('semantic_value list * FStar_Sedlexing.snap option) option) ->
+         ('semantic_value list * FStarC_Sedlexing.snap option) option) ->
 'semantic_value list * parse_error option
 
 type lang_opts = string option
@@ -55,4 +55,4 @@ val find_file: string -> string
 
 val parse_warn_error: string -> Codes.error_setting list 
 
-val parse_fstar_incrementally: FStar_Parser_AST_Util.extension_lang_parser
+val parse_fstar_incrementally: FStarC_Parser_AST_Util.extension_lang_parser

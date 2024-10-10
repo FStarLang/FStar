@@ -1,3 +1,3 @@
 let _ =
   Printexc.record_backtrace true;
-  FStar_Tests_Test.main ()
+  FStarC_Tests_Test.main ()

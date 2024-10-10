@@ -1,11 +1,11 @@
-module U = FStar_Compiler_Util
-open FStar_Errors
-open FStar_Syntax_Syntax
+module U = FStarC_Compiler_Util
+open FStarC_Errors
+open FStarC_Syntax_Syntax
 open Lexing
-open FStar_Sedlexing
-open FStar_Errors_Codes
-module Codes = FStar_Errors_Codes
-module Msg = FStar_Errors_Msg
+open FStarC_Sedlexing
+open FStarC_Errors_Codes
+module Codes = FStarC_Errors_Codes
+module Msg = FStarC_Errors_Msg
 
 type filename = string
 
@@ -33,11 +33,11 @@ let setLexbufPos filename lexbuf line col =
 module Path = BatPathGen.OfString
 
 let find_file filename =
-  match FStar_Find.find_file filename with
+  match FStarC_Find.find_file filename with
     | Some s ->
       s
     | None ->
-      raise_error_text FStar_Compiler_Range.dummyRange Fatal_ModuleOrFileNotFound (U.format1 "Unable to find file: %s\n" filename)
+      raise_error_text FStarC_Compiler_Range.dummyRange Fatal_ModuleOrFileNotFound (U.format1 "Unable to find file: %s\n" filename)
 
 let vfs_entries : (U.time * string) U.smap = U.smap_create (Z.of_int 1)
 
@@ -62,10 +62,10 @@ let read_physical_file (filename: string) =
       (fun channel -> really_input_string channel (in_channel_length channel))
       channel
   with e ->
-    raise_error_text FStar_Compiler_Range.dummyRange Fatal_UnableToReadFile (U.format1 "Unable to read file %s\n" filename)
+    raise_error_text FStarC_Compiler_Range.dummyRange Fatal_UnableToReadFile (U.format1 "Unable to read file %s\n" filename)
 
 let read_file (filename:string) =
-  let debug = FStar_Compiler_Debug.any () in
+  let debug = FStarC_Compiler_Debug.any () in
   match read_vfs_entry filename with
   | Some (_mtime, contents) ->
     if debug then U.print1 "Reading in-memory file %s\n" filename;
@@ -80,7 +80,7 @@ let fst_extensions = [".fst"; ".fsti"]
 let interface_extensions = [".fsti"; ".fsi"]
 
 let valid_extensions () =
-  fst_extensions @ if FStar_Options.ml_ish () then fs_extensions else []
+  fst_extensions @ if FStarC_Options.ml_ish () then fs_extensions else []
 
 let has_extension file extensions =
   FStar_List.existsb (U.ends_with file) extensions
@@ -88,7 +88,7 @@ let has_extension file extensions =
 let check_extension fn =
   if (not (has_extension fn (valid_extensions ()))) then
     let message = U.format1 "Unrecognized extension '%s'" fn in
-    raise_error_text FStar_Compiler_Range.dummyRange Fatal_UnrecognizedExtension
+    raise_error_text FStarC_Compiler_Range.dummyRange Fatal_UnrecognizedExtension
       (if has_extension fn fs_extensions
        then message ^ " (pass --MLish to process .fs and .fsi files)"
        else message)
@@ -99,31 +99,31 @@ type parse_frag =
     | Incremental of input_frag
     | Fragment of input_frag
 
-type parse_error = (Codes.error_code * Msg.error_message * FStar_Compiler_Range.range)
+type parse_error = (Codes.error_code * Msg.error_message * FStarC_Compiler_Range.range)
 
 
 type code_fragment = {
-   range: FStar_Compiler_Range.range;
+   range: FStarC_Compiler_Range.range;
    code: string;
 }
 
 type 'a incremental_result = 
-    ('a * code_fragment) list * (string * FStar_Compiler_Range.range) list * parse_error option
+    ('a * code_fragment) list * (string * FStarC_Compiler_Range.range) list * parse_error option
 
 type parse_result =
-    | ASTFragment of (FStar_Parser_AST.inputFragment * (string * FStar_Compiler_Range.range) list)
-    | IncrementalFragment of FStar_Parser_AST.decl incremental_result
-    | Term of FStar_Parser_AST.term
+    | ASTFragment of (FStarC_Parser_AST.inputFragment * (string * FStarC_Compiler_Range.range) list)
+    | IncrementalFragment of FStarC_Parser_AST.decl incremental_result
+    | Term of FStarC_Parser_AST.term
     | ParseError of parse_error
 
-module BU = FStar_Compiler_Util
-module Range = FStar_Compiler_Range
+module BU = FStarC_Compiler_Util
+module Range = FStarC_Compiler_Range
 module MHL = MenhirLib.Convert
 
 let range_of_positions filename start fin = 
-  let start_pos = FStar_Parser_Util.pos_of_lexpos start in
-  let end_pos = FStar_Parser_Util.pos_of_lexpos fin in
-  FStar_Compiler_Range.mk_range filename start_pos end_pos
+  let start_pos = FStarC_Parser_Util.pos_of_lexpos start in
+  let end_pos = FStarC_Parser_Util.pos_of_lexpos fin in
+  FStarC_Compiler_Range.mk_range filename start_pos end_pos
 
 let err_of_parse_error filename lexbuf tag =
     let pos = lexbuf.cur_p in
@@ -138,18 +138,18 @@ let err_of_parse_error filename lexbuf tag =
 
 let string_of_lexpos lp = 
     let r = range_of_positions "<input>" lp lp in
-    FStar_Compiler_Range.string_of_range r
+    FStarC_Compiler_Range.string_of_range r
 
 let parse_incremental_decls
     filename
     (contents:string)
     lexbuf
     (lexer:unit -> 'token * Lexing.position * Lexing.position)
-    (range_of: 'semantic_value -> FStar_Compiler_Range.range)
+    (range_of: 'semantic_value -> FStarC_Compiler_Range.range)
     (parse_one:
      (Lexing.lexbuf -> 'token) ->
          Lexing.lexbuf ->
-         ('semantic_value list * FStar_Sedlexing.snap option) option)
+         ('semantic_value list * FStarC_Sedlexing.snap option) option)
 : 'semantic_value list * parse_error option
 = let parse_one = MenhirLib.Convert.Simplified.traditional2revised parse_one in
   let err_of_parse_error tag = err_of_parse_error filename lexbuf tag in
@@ -161,10 +161,10 @@ let parse_incremental_decls
       try
         (* Reset the gensym between decls, to ensure determinism, 
             otherwise, every _ is parsed as different name *)
-        FStar_GenSym.reset_gensym();
+        FStarC_GenSym.reset_gensym();
         Inl (parse_one lexer)
       with 
-      | FStar_Errors.Error(e, msg, r, ctx) ->
+      | FStarC_Errors.Error(e, msg, r, ctx) ->
         Inr (e, msg, r)
 
       | e -> 
@@ -205,7 +205,7 @@ let contents_at contents =
             let chars = FStar_String.list_of_string line in
             if col <= List.length chars
             then (
-              let prefix, suffix = FStar_Compiler_Util.first_N (Z.of_int col) chars in
+              let prefix, suffix = FStarC_Compiler_Util.first_N (Z.of_int col) chars in
               Some (FStar_String.string_of_list prefix, 
                     FStar_String.string_of_list suffix)
             )
@@ -237,13 +237,13 @@ let contents_at contents =
       let end_line = Z.to_int (Range.line_of_pos end_pos) in
       let end_col = Z.to_int (Range.col_of_pos end_pos) in          
       let suffix = 
-        FStar_Compiler_Util.nth_tail 
+        FStarC_Compiler_Util.nth_tail 
           (Z.of_int (if start_line > 0 then start_line - 1 else 0))
           lines
       in
       (* Take all the lines between the start and end lines *)
       let text, rest =
-        FStar_Compiler_Util.first_N
+        FStarC_Compiler_Util.first_N
           (Z.of_int (end_line - start_line))
           suffix
       in
@@ -283,25 +283,24 @@ let parse_incremental_fragment
     (contents:string)
     lexbuf
     (lexer:unit -> 'token * Lexing.position * Lexing.position)
-    (range_of: 'semantic_value -> FStar_Compiler_Range.range)
+    (range_of: 'semantic_value -> FStarC_Compiler_Range.range)
     (parse_one:
      (Lexing.lexbuf -> 'token) ->
          Lexing.lexbuf ->
-         ('semantic_value list * FStar_Sedlexing.snap option) option)
+         ('semantic_value list * FStarC_Sedlexing.snap option) option)
 : 'semantic_value incremental_result
 = let res = parse_incremental_decls filename contents lexbuf lexer range_of parse_one in
-  let comments = FStar_Parser_Util.flush_comments () in
+  let comments = FStarC_Parser_Util.flush_comments () in
   let contents_at = contents_at contents in
   let decls, err_opt = res in
   let decls = List.map (fun d -> d, contents_at (range_of d)) decls in
   decls, comments, err_opt
 
 let parse_fstar_incrementally
-: FStar_Parser_AST_Util.extension_lang_parser 
+: FStarC_Parser_AST_Util.extension_lang_parser 
 = let f =
-    fun (s:string) (r:FStar_Compiler_Range.range) ->
-      let open FStar_Pervasives in
-      let open FStar_Compiler_Range in
+    fun (s:string) (r:FStarC_Compiler_Range.range) ->
+      let open FStarC_Compiler_Range in
       let lexbuf =
         create s
              (file_of_range r)
@@ -311,7 +310,7 @@ let parse_fstar_incrementally
       let filename = file_of_range r in 
       let contents = s in
       let lexer () =
-        let tok = FStar_Parser_LexFStar.token lexbuf in
+        let tok = FStarC_Parser_LexFStar.token lexbuf in
         (tok, lexbuf.start_p, lexbuf.cur_p)
       in
       try 
@@ -321,28 +320,28 @@ let parse_fstar_incrementally
             contents
             lexbuf
             lexer
-            (fun (d:FStar_Parser_AST.decl) -> d.drange)
-            FStar_Parser_Parse.oneDeclOrEOF
+            (fun (d:FStarC_Parser_AST.decl) -> d.drange)
+            FStarC_Parser_Parse.oneDeclOrEOF
         in
         match err_opt with
-        | None -> Inr decls
+        | None -> FStar_Pervasives.Inr decls
         | Some (_, msg, r) -> 
-          let open FStar_Parser_AST in
+          let open FStarC_Parser_AST in
           let err_decl = mk_decl Unparseable r [] in
           Inr (decls @ [err_decl])
       with
-      | FStar_Errors.Error(e, msg, r, _ctx) ->
-        let msg = FStar_Errors_Msg.rendermsg msg in
-        let err : FStar_Parser_AST_Util.error_message = { message = msg; range = r } in
+      | FStarC_Errors.Error(e, msg, r, _ctx) ->
+        let msg = FStarC_Errors_Msg.rendermsg msg in
+        let err : FStarC_Parser_AST_Util.error_message = { message = msg; range = r } in
         Inl err
       | e ->
-        let pos = FStar_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
-        let r = FStar_Compiler_Range.mk_range filename pos pos in
-        let err : FStar_Parser_AST_Util.error_message = { message = "Syntax error parsing #lang-fstar block: "; range = r } in
+        let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
+        let r = FStarC_Compiler_Range.mk_range filename pos pos in
+        let err : FStarC_Parser_AST_Util.error_message = { message = "Syntax error parsing #lang-fstar block: "; range = r } in
         Inl err
   in
   { parse_decls = f }
-let _ = FStar_Parser_AST_Util.register_extension_lang_parser "fstar" parse_fstar_incrementally
+let _ = FStarC_Parser_AST_Util.register_extension_lang_parser "fstar" parse_fstar_incrementally
 
 type lang_opts = string option
 
@@ -354,17 +353,17 @@ let parse_lang lang fn =
   | Toplevel s
   | Fragment s ->
     try
-      let frag_pos = FStar_Compiler_Range.mk_pos s.frag_line s.frag_col in
-      let rng = FStar_Compiler_Range.mk_range s.frag_fname frag_pos frag_pos in
-      let decls = FStar_Parser_AST_Util.parse_extension_lang lang s.frag_text rng in
-      let comments = FStar_Parser_Util.flush_comments () in
+      let frag_pos = FStarC_Compiler_Range.mk_pos s.frag_line s.frag_col in
+      let rng = FStarC_Compiler_Range.mk_range s.frag_fname frag_pos frag_pos in
+      let decls = FStarC_Parser_AST_Util.parse_extension_lang lang s.frag_text rng in
+      let comments = FStarC_Parser_Util.flush_comments () in
       ASTFragment (Inr decls, comments)
     with
-    | FStar_Errors.Error(e, msg, r, _ctx) ->
+    | FStarC_Errors.Error(e, msg, r, _ctx) ->
       ParseError (e, msg, r)
 
 let parse (lang_opt:lang_opts) fn =
-  FStar_Parser_Util.warningHandler := (function
+  FStarC_Parser_Util.warningHandler := (function
     | e -> Printf.printf "There was some warning (TODO)\n");
   match lang_opt with
   | Some lang -> parse_lang lang fn
@@ -375,7 +374,7 @@ let parse (lang_opt:lang_opts) fn =
           check_extension f;
           let f', contents = read_file f in
           (try create contents f' 1 0, f', contents
-          with _ -> raise_error_text FStar_Compiler_Range.dummyRange Fatal_InvalidUTF8Encoding (U.format1 "File %s has invalid UTF-8 encoding." f'))
+          with _ -> raise_error_text FStarC_Compiler_Range.dummyRange Fatal_InvalidUTF8Encoding (U.format1 "File %s has invalid UTF-8 encoding." f'))
       | Incremental s
       | Toplevel s
       | Fragment s ->
@@ -383,7 +382,7 @@ let parse (lang_opt:lang_opts) fn =
     in
 
     let lexer () =
-      let tok = FStar_Parser_LexFStar.token lexbuf in
+      let tok = FStarC_Parser_LexFStar.token lexbuf in
       (tok, lexbuf.start_p, lexbuf.cur_p)
     in
     try
@@ -391,18 +390,18 @@ let parse (lang_opt:lang_opts) fn =
       | Filename _
       | Toplevel _ -> begin
         let fileOrFragment =
-            MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer
+            MenhirLib.Convert.Simplified.traditional2revised FStarC_Parser_Parse.inputFragment lexer
         in
         let frags = match fileOrFragment with
             | FStar_Pervasives.Inl modul ->
               if has_extension filename interface_extensions
               then match modul with
-                    | FStar_Parser_AST.Module(l,d) ->
-                      FStar_Pervasives.Inl (FStar_Parser_AST.Interface(l, d, true))
+                    | FStarC_Parser_AST.Module(l,d) ->
+                      FStar_Pervasives.Inl (FStarC_Parser_AST.Interface(l, d, true))
                     | _ -> failwith "Impossible"
               else FStar_Pervasives.Inl modul
             | _ -> fileOrFragment
-        in ASTFragment (frags, FStar_Parser_Util.flush_comments ())
+        in ASTFragment (frags, FStarC_Parser_Util.flush_comments ())
         end
         
       | Incremental i ->
@@ -412,24 +411,24 @@ let parse (lang_opt:lang_opts) fn =
             i.frag_text
             lexbuf
             lexer
-            (fun (d:FStar_Parser_AST.decl) -> d.drange)
-            FStar_Parser_Parse.oneDeclOrEOF
+            (fun (d:FStarC_Parser_AST.decl) -> d.drange)
+            FStarC_Parser_Parse.oneDeclOrEOF
         in
         IncrementalFragment(decls, comments, err_opt)
       
       | Fragment _ ->
-        Term (MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.term lexer)
+        Term (MenhirLib.Convert.Simplified.traditional2revised FStarC_Parser_Parse.term lexer)
     with
-      | FStar_Errors.Empty_frag ->
+      | FStarC_Errors.Empty_frag ->
         ASTFragment (FStar_Pervasives.Inr [], [])
 
-      | FStar_Errors.Error(e, msg, r, _ctx) ->
+      | FStarC_Errors.Error(e, msg, r, _ctx) ->
         ParseError (e, msg, r)
 
       | e ->
   (*
       | Parsing.Parse_error as _e
-      | FStar_Parser_Parse.MenhirBasics.Error as _e  ->
+      | FStarC_Parser_Parse.MenhirBasics.Error as _e  ->
   *)
         ParseError (err_of_parse_error filename lexbuf None)
 
@@ -440,13 +439,13 @@ let parse_warn_error s =
     if s = ""
     then []
     else
-      let lexbuf = FStar_Sedlexing.create s "" 0 (String.length s) in
-      let lexer() = let tok = FStar_Parser_LexFStar.token lexbuf in
+      let lexbuf = FStarC_Sedlexing.create s "" 0 (String.length s) in
+      let lexer() = let tok = FStarC_Parser_LexFStar.token lexbuf in
         (tok, lexbuf.start_p, lexbuf.cur_p)
       in
       try
-        MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.warn_error_list lexer
+        MenhirLib.Convert.Simplified.traditional2revised FStarC_Parser_Parse.warn_error_list lexer
       with e ->
         failwith (U.format1 "Malformed warn-error list: %s" s)
   in
-  FStar_Errors.update_flags user_flags
+  FStarC_Errors.update_flags user_flags

@@ -1,13 +1,13 @@
-open FStar_Parser_Parse
-open FStar_Parser_Util
+open FStarC_Parser_Parse
+open FStarC_Parser_Util
 
 module Option  = BatOption
 module String  = BatString
 module Hashtbl = BatHashtbl
-module Sedlexing = FStar_Sedlexing
+module Sedlexing = FStarC_Sedlexing
 module L = Sedlexing
-module E = FStar_Errors
-module Codes = FStar_Errors_Codes
+module E = FStarC_Errors
+module Codes = FStarC_Errors_Codes
 
 let ba_of_string s = Array.init (String.length s) (fun i -> Char.code (String.get s i))
 let array_trim_both a n m = Array.sub a n (Array.length a - n - m)
@@ -29,10 +29,10 @@ let unescape (a:int array) : int =
     | 102 (*f*) -> 12
     | 114 (*r*) -> 13
     | 117 (*u*) ->
-      let s = FStar_Parser_Utf8.from_int_array a 2 4 in
+      let s = FStarC_Parser_Utf8.from_int_array a 2 4 in
       int_of_string ("0x"^s)
     | 120 (*x*) ->
-      let s = FStar_Parser_Utf8.from_int_array a 2 2 in
+      let s = FStarC_Parser_Utf8.from_int_array a 2 2 in
       int_of_string ("0x"^s)
     | c -> c)
   | c -> c
@@ -225,7 +225,7 @@ let () =
    List.iter (fun (k,v) -> Hashtbl.add operators k v) l
 
 let current_range lexbuf =
-    FStar_Parser_Util.mksyn_range (fst (L.range lexbuf)) (snd (L.range lexbuf))
+    FStarC_Parser_Util.mksyn_range (fst (L.range lexbuf)) (snd (L.range lexbuf))
 
 let fail lexbuf (e, msg) =
      let m = current_range lexbuf in
@@ -273,12 +273,12 @@ let terminate_comment buffer startpos lexbuf =
   let comment = Buffer.contents buffer in
   let comment = maybe_trim_lines (startpos.Lexing.pos_cnum - startpos.Lexing.pos_bol) comment in
   Buffer.clear buffer;
-  add_comment (comment, FStar_Parser_Util.mksyn_range startpos endpos)
+  add_comment (comment, FStarC_Parser_Util.mksyn_range startpos endpos)
 
 let push_one_line_comment pre lexbuf =
   let startpos, endpos = L.range lexbuf in
   assert (startpos.Lexing.pos_lnum = endpos.Lexing.pos_lnum);
-  add_comment (pre ^ L.lexeme lexbuf, FStar_Parser_Util.mksyn_range startpos endpos)
+  add_comment (pre ^ L.lexeme lexbuf, FStarC_Parser_Util.mksyn_range startpos endpos)
 
 (** Unicode class definitions
   Auto-generated from http:/ /www.unicode.org/Public/8.0.0/ucd/UnicodeData.txt **)
@@ -548,9 +548,9 @@ match%sedlex lexbuf with
  | ";;" -> SEMICOLON_OP None
 
  | ident -> let id = L.lexeme lexbuf in
-   if FStar_Compiler_Util.starts_with id FStar_Ident.reserved_prefix
-   then FStar_Errors.raise_error_text (current_range lexbuf) Codes.Fatal_ReservedPrefix
-                     (FStar_Ident.reserved_prefix  ^ " is a reserved prefix for an identifier");
+   if FStarC_Compiler_Util.starts_with id FStarC_Ident.reserved_prefix
+   then FStarC_Errors.raise_error_text (current_range lexbuf) Codes.Fatal_ReservedPrefix
+                     (FStarC_Ident.reserved_prefix  ^ " is a reserved prefix for an identifier");
    Hashtbl.find_option keywords id |> Option.default (IDENT id)
  | constructor -> let id = L.lexeme lexbuf in
    Hashtbl.find_option constructors id |> Option.default (NAME id)

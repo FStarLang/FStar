@@ -25,15 +25,15 @@
 )
 
 (menhir
- (modules FStar_Parser_Parse))
+ (modules FStarC_Parser_Parse))
 
 (rule
-  (target FStar_Version.ml)
+  (target FStarC_Version.ml)
   (deps (:script make_fstar_version.sh)
         (:version ../../version.txt))
   (action
     (progn
       (copy %{version} version.txt)
       (with-stdout-to
-        FStar_Version.ml
+        FStarC_Version.ml
         (run bash %{script})))))

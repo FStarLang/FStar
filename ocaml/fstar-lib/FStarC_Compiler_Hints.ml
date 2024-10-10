@@ -1,4 +1,4 @@
-open FStar_Json
+open FStarC_Json
 
 (** Hints. *)
 type hint = {

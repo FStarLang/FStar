@@ -1,4 +1,4 @@
-open FStar_Json
+open FStarC_Json
 
 let max_int = Z.of_int max_int
 let is_letter c = if c > 255 then false else BatChar.is_letter (BatChar.chr c)

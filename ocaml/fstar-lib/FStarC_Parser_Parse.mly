@@ -20,20 +20,20 @@
 (* (c) Microsoft Corporation. All rights reserved *)
 open Prims
 open FStar_Pervasives
-open FStar_Errors
-open FStar_Compiler_List
-open FStar_Compiler_Util
-open FStar_Compiler_Range
+open FStarC_Errors
+open FStarC_Compiler_List
+open FStarC_Compiler_Util
+open FStarC_Compiler_Range
 
 (* TODO : these files should be deprecated and removed *)
-open FStar_Parser_Const
-open FStar_Parser_AST
-open FStar_Const
-open FStar_Ident
+open FStarC_Parser_Const
+open FStarC_Parser_AST
+open FStarC_Const
+open FStarC_Ident
 
 (* Shorthands *)
-let rr = FStar_Parser_Util.translate_range
-let rr2 = FStar_Parser_Util.translate_range2
+let rr = FStarC_Parser_Util.translate_range
+let rr2 = FStarC_Parser_Util.translate_range2
 
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue."
@@ -55,15 +55,15 @@ let none_to_empty_list x =
 let parse_extension_blob (extension_name:string)
                          (s:string)
                          (blob_range:range)
-                         (extension_syntax_start:range) : FStar_Parser_AST.decl' =
+                         (extension_syntax_start:range) : FStarC_Parser_AST.decl' =
     DeclSyntaxExtension (extension_name, s, blob_range, extension_syntax_start)
 
 let parse_use_lang_blob (extension_name:string)
                          (s:string)
                          (blob_range:range)
                          (extension_syntax_start:range) 
-: FStar_Parser_AST.decl list
-= FStar_Parser_AST_Util.parse_extension_lang extension_name s extension_syntax_start
+: FStarC_Parser_AST.decl list
+= FStarC_Parser_AST_Util.parse_extension_lang extension_name s extension_syntax_start
 
 %}
 
@@ -101,7 +101,7 @@ let parse_use_lang_blob (extension_name:string)
 
 /* [SEMICOLON_OP] encodes either:
 - [;;], which used to be SEMICOLON_SEMICOLON, or
-- [;<OP>], with <OP> a sequence of [op_char] (see FStar_Parser_LexFStar).
+- [;<OP>], with <OP> a sequence of [op_char] (see FStarC_Parser_LexFStar).
 */
 %token <string option> SEMICOLON_OP
 
@@ -137,8 +137,8 @@ let parse_use_lang_blob (extension_name:string)
 
 %token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
 %token<string>  OP_MIXFIX_ASSIGNMENT OP_MIXFIX_ACCESS
-%token<string * string * Lexing.position * FStar_Sedlexing.snap>  BLOB
-%token<string * string * Lexing.position * FStar_Sedlexing.snap>  USE_LANG_BLOB
+%token<string * string * Lexing.position * FStarC_Sedlexing.snap>  BLOB
+%token<string * string * Lexing.position * FStarC_Sedlexing.snap>  USE_LANG_BLOB
 
 /* These are artificial */
 %token EOF
@@ -171,11 +171,11 @@ let parse_use_lang_blob (extension_name:string)
 %start term
 %start warn_error_list
 %start oneDeclOrEOF
-%type <FStar_Parser_AST.inputFragment> inputFragment
-%type <(FStar_Parser_AST.decl list * FStar_Sedlexing.snap option) option> oneDeclOrEOF
-%type <FStar_Parser_AST.term> term
-%type <FStar_Ident.ident> lident
-%type <(FStar_Errors_Codes.error_flag * string) list> warn_error_list
+%type <FStarC_Parser_AST.inputFragment> inputFragment
+%type <(FStarC_Parser_AST.decl list * FStarC_Sedlexing.snap option) option> oneDeclOrEOF
+%type <FStarC_Parser_AST.term> term
+%type <FStarC_Ident.ident> lident
+%type <(FStarC_Errors_Codes.error_flag * string) list> warn_error_list
 %%
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
@@ -374,8 +374,8 @@ typeclassDecl:
 
 restriction:
   | LBRACE ids=separated_list(COMMA, id=ident renamed=option(AS id=ident {id} ) {(id, renamed)}) RBRACE
-      { FStar_Syntax_Syntax.AllowList ids }
-  |   { FStar_Syntax_Syntax.Unrestricted  }
+      { FStarC_Syntax_Syntax.AllowList ids }
+  |   { FStarC_Syntax_Syntax.Unrestricted  }
 
 rawDecl:
   | p=pragma
@@ -387,7 +387,7 @@ rawDecl:
   | INCLUDE uid=quident r=restriction
       { Include (uid, r) }
   | MODULE UNDERSCORE EQUALS uid=quident
-      { Open (uid, FStar_Syntax_Syntax.AllowList []) }
+      { Open (uid, FStarC_Syntax_Syntax.AllowList []) }
   | MODULE uid1=uident EQUALS uid2=quident
       { ModuleAbbrev(uid1, uid2) }
   | MODULE q=qlident
