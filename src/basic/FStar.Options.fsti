@@ -133,7 +133,6 @@ val error_contexts              : unit    -> bool
 val expose_interfaces           : unit    -> bool
 val message_format              : unit    -> message_format_t
 val file_list                   : unit    -> list string
-val find_file                   : (string  -> option string)
 val force                       : unit    -> bool
 val fstar_bin_directory         : string
 val get_option                  : string  -> option_val
@@ -182,11 +181,7 @@ val output_deps_to              : unit    -> option string
 val output_dir                  : unit    -> option string
 val prepend_cache_dir           : string  -> string
 val prepend_output_dir          : string  -> string
-val prims                       : unit    -> string
-val prims_basename              : unit    -> string
-val pervasives                  : unit    -> string
-val pervasives_basename         : unit    -> string
-val pervasives_native_basename  : unit    -> string
+val custom_prims                : unit    -> option string
 val print_bound_var_types       : unit    -> bool
 val print_effect_args           : unit    -> bool
 val print_expected_failures     : unit    -> bool

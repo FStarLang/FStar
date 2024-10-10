@@ -119,7 +119,7 @@ let autoload_plugin (ext:string) : bool =
   if Options.Ext.get "noautoload" <> "" then false else (
   if Debug.any () then
     BU.print1 "Trying to find a plugin for extension %s\n" ext;
-  match Options.find_file (ext ^ ".cmxs") with
+  match Find.find_file (ext ^ ".cmxs") with
   | Some fn ->
     if List.mem fn !loaded then false
     else (

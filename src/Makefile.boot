@@ -30,7 +30,8 @@ EXTRACT_NAMESPACES=FStar.Extraction FStar.Parser			\
 		   FStar.Class						\
 		   FStar.Reflection FStar.SMTEncoding FStar.Syntax	\
 		   FStar.Tactics FStar.Tests FStar.ToSyntax		\
-		   FStar.TypeChecker FStar.Profiling FStar.Compiler
+		   FStar.TypeChecker FStar.Profiling FStar.Compiler	\
+		   FStar.Find FStar.Basefiles
 
 # Except some files that want to extract are not within a particularly
 # specific namespace. So, we mention extracting those explicitly.

@@ -56,7 +56,7 @@ let string_of_file_name f =
         basename f
       else begin
           try
-              match Options.find_file (basename f) with
+              match Find.find_file (basename f) with
               | None -> f //couldn't find file; just return the relative path
               | Some absolute_path ->
                   absolute_path

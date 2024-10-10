@@ -78,20 +78,20 @@ let load_native_tactics () =
     let ml_file m = ml_module_name m ^ ".ml" in
     let cmxs_file m =
         let cmxs = ml_module_name m ^ ".cmxs" in
-        match FStar.Options.find_file cmxs with
+        match Find.find_file cmxs with
         | Some f -> f
         | None ->
           if List.contains m cmxs_to_load  //if this module comes from the cmxs list, fail hard
           then E.raise_error0 E.Fatal_FailToCompileNativeTactic (Util.format1 "Could not find %s to load" cmxs)
           else  //else try to find and compile the ml file
-            match FStar.Options.find_file (ml_file m) with
+            match Find.find_file (ml_file m) with
             | None ->
               E.raise_error0 E.Fatal_FailToCompileNativeTactic
                 (Util.format1 "Failed to compile native tactic; extracted module %s not found" (ml_file m))
             | Some ml ->
               let dir = Util.dirname ml in
-              FStar.Compiler.Plugins.compile_modules dir [ml_module_name m];
-              begin match FStar.Options.find_file cmxs with
+              Plugins.compile_modules dir [ml_module_name m];
+              begin match Find.find_file cmxs with
                 | None ->
                   E.raise_error0 E.Fatal_FailToCompileNativeTactic
                     (Util.format1 "Failed to compile native tactic; compiled object %s not found" cmxs)
@@ -101,9 +101,9 @@ let load_native_tactics () =
     let cmxs_files = (modules_to_load@cmxs_to_load) |> List.map cmxs_file in
     if Debug.any () then
       Util.print1 "Will try to load cmxs files: [%s]\n" (String.concat ", " cmxs_files);
-    FStar.Compiler.Plugins.load_plugins cmxs_files;
+    Plugins.load_plugins cmxs_files;
     iter_opt (Options.use_native_tactics ())
-      FStar.Compiler.Plugins.load_plugins_dir;
+      Plugins.load_plugins_dir;
     ()
 
 
