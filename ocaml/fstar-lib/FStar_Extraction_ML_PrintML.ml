@@ -92,9 +92,14 @@ let mk_top_mllb (e: mlexpr): mllb =
    mllb_attrs=[];
    print_typ=false }
 
-(* names of F* functions which need to be handled differently *)
-let fstar_compiler_effect_try_with_ident = path_to_ident (["FStar"; "Compiler"; "Effect"], "try_with")
-let fstar_all_try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
+(* Find the try_with in the default effect module. For instance this can be
+FStar.All.try_with (for most users) or FStarC.Compiler.Effect.try_with (during
+bootstrapping with "--MLish --MLish_effect FStarC.Compiler.Effect"). *)
+let try_with_ident () =
+  let lid = FStar_Parser_Const.try_with_lid () in
+  let ns = FStar_Ident.ns_of_lid lid in
+  let id = FStar_Ident.ident_of_lid lid in
+  path_to_ident (List.map FStar_Ident.string_of_id ns, FStar_Ident.string_of_id id)
 
 (* For integer constants (not 0/1) in this range we will use Prims.of_int
  * Outside this range we will use string parsing to allow arbitrary sized
@@ -317,9 +322,8 @@ let rec build_expr (e: mlexpr): expression =
 
 and resugar_app f args es: expression =
   match f.pexp_desc with
-  | Pexp_ident x when (x = fstar_all_try_with_ident ||
-                       x = fstar_compiler_effect_try_with_ident) ->
-    (* resugar FStar_All.try_with to a try...with
+  | Pexp_ident x when x = try_with_ident () ->
+    (* resugar try_with to a try...with
        try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a *)
     assert (length es == 2);
     let s, cs = BatList.first es, BatList.last es in
