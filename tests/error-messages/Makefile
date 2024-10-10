@@ -18,6 +18,7 @@ OTHERFLAGS+=--already_cached 'Prims FStar'
 # they output timing info.
 OTHERFLAGS := $(filter-out --query_stats, $(OTHERFLAGS))
 OTHERFLAGS := $(filter-out --hint_info, $(OTHERFLAGS))
+OTHERFLAGS += --ext fstar:no_absolute_paths
 
 check-all: $(addsuffix .human_check, $(FSTAR_FILES)) \
            $(addsuffix .json_check, $(FSTAR_FILES))
