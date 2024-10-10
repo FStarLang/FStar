@@ -1620,6 +1620,31 @@ let (apply_impure_function :
                                                                     (fun
                                                                     uu___15
                                                                     ->
+                                                                    let d =
+                                                                    Pulse_Typing.T_STApp
+                                                                    (g, head,
+                                                                    formal,
+                                                                    qual,
+                                                                    comp_typ,
+                                                                    arg1, (),
+                                                                    ()) in
+                                                                    let d1 =
+                                                                    canonicalize_st_typing
+                                                                    g
+                                                                    (Pulse_Typing.wrst
+                                                                    comp_typ
+                                                                    (Pulse_Syntax_Base.Tm_STApp
+                                                                    {
+                                                                    Pulse_Syntax_Base.head
+                                                                    = head;
+                                                                    Pulse_Syntax_Base.arg_qual
+                                                                    = qual;
+                                                                    Pulse_Syntax_Base.arg
+                                                                    = arg1
+                                                                    }))
+                                                                    (Pulse_Syntax_Naming.open_comp_with
+                                                                    comp_typ
+                                                                    arg1) d in
                                                                     FStar_Pervasives.Mkdtuple3
                                                                     ({
                                                                     Pulse_Syntax_Base.term1
@@ -1649,29 +1674,7 @@ let (apply_impure_function :
                                                                     (Pulse_Syntax_Naming.open_comp_with
                                                                     comp_typ
                                                                     arg1)),
-                                                                    (canonicalize_st_typing
-                                                                    g
-                                                                    (Pulse_Typing.wrst
-                                                                    comp_typ
-                                                                    (Pulse_Syntax_Base.Tm_STApp
-                                                                    {
-                                                                    Pulse_Syntax_Base.head
-                                                                    = head;
-                                                                    Pulse_Syntax_Base.arg_qual
-                                                                    = qual;
-                                                                    Pulse_Syntax_Base.arg
-                                                                    = arg1
-                                                                    }))
-                                                                    (Pulse_Syntax_Naming.open_comp_with
-                                                                    comp_typ
-                                                                    arg1)
-                                                                    (Pulse_Typing.T_STApp
-                                                                    (g, head,
-                                                                    formal,
-                                                                    qual,
-                                                                    comp_typ,
-                                                                    arg1, (),
-                                                                    ())))))))
+                                                                    d1))))
                                                                     | 
                                                                     Pulse_Syntax_Base.C_STAtomic
                                                                     (uu___15,
@@ -1683,6 +1686,31 @@ let (apply_impure_function :
                                                                     (fun
                                                                     uu___17
                                                                     ->
+                                                                    let d =
+                                                                    Pulse_Typing.T_STApp
+                                                                    (g, head,
+                                                                    formal,
+                                                                    qual,
+                                                                    comp_typ,
+                                                                    arg1, (),
+                                                                    ()) in
+                                                                    let d1 =
+                                                                    canonicalize_st_typing
+                                                                    g
+                                                                    (Pulse_Typing.wrst
+                                                                    comp_typ
+                                                                    (Pulse_Syntax_Base.Tm_STApp
+                                                                    {
+                                                                    Pulse_Syntax_Base.head
+                                                                    = head;
+                                                                    Pulse_Syntax_Base.arg_qual
+                                                                    = qual;
+                                                                    Pulse_Syntax_Base.arg
+                                                                    = arg1
+                                                                    }))
+                                                                    (Pulse_Syntax_Naming.open_comp_with
+                                                                    comp_typ
+                                                                    arg1) d in
                                                                     FStar_Pervasives.Mkdtuple3
                                                                     ({
                                                                     Pulse_Syntax_Base.term1
@@ -1712,29 +1740,7 @@ let (apply_impure_function :
                                                                     (Pulse_Syntax_Naming.open_comp_with
                                                                     comp_typ
                                                                     arg1)),
-                                                                    (canonicalize_st_typing
-                                                                    g
-                                                                    (Pulse_Typing.wrst
-                                                                    comp_typ
-                                                                    (Pulse_Syntax_Base.Tm_STApp
-                                                                    {
-                                                                    Pulse_Syntax_Base.head
-                                                                    = head;
-                                                                    Pulse_Syntax_Base.arg_qual
-                                                                    = qual;
-                                                                    Pulse_Syntax_Base.arg
-                                                                    = arg1
-                                                                    }))
-                                                                    (Pulse_Syntax_Naming.open_comp_with
-                                                                    comp_typ
-                                                                    arg1)
-                                                                    (Pulse_Typing.T_STApp
-                                                                    (g, head,
-                                                                    formal,
-                                                                    qual,
-                                                                    comp_typ,
-                                                                    arg1, (),
-                                                                    ())))))))
+                                                                    d1))))
                                                                     | 
                                                                     Pulse_Syntax_Base.C_STGhost
                                                                     (uu___15,
@@ -1969,8 +1975,8 @@ let (apply_impure_function :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.STApp.fst"
-                                                                    (Prims.of_int (217))
-                                                                    (Prims.of_int (10))
+                                                                    (Prims.of_int (207))
+                                                                    (Prims.of_int (53))
                                                                     (Prims.of_int (217))
                                                                     (Prims.of_int (23)))))
                                                                     (Obj.magic
@@ -1982,6 +1988,32 @@ let (apply_impure_function :
                                                                     (fun
                                                                     uu___20
                                                                     ->
+                                                                    let d =
+                                                                    Pulse_Typing.T_STGhostApp
+                                                                    (g, head,
+                                                                    formal,
+                                                                    qual,
+                                                                    comp_typ,
+                                                                    arg1, x,
+                                                                    (), (),
+                                                                    ()) in
+                                                                    let d1 =
+                                                                    canonicalize_st_typing
+                                                                    g
+                                                                    (Pulse_Typing.wrst
+                                                                    comp_typ
+                                                                    (Pulse_Syntax_Base.Tm_STApp
+                                                                    {
+                                                                    Pulse_Syntax_Base.head
+                                                                    = head;
+                                                                    Pulse_Syntax_Base.arg_qual
+                                                                    = qual;
+                                                                    Pulse_Syntax_Base.arg
+                                                                    = arg1
+                                                                    }))
+                                                                    (Pulse_Syntax_Naming.open_comp_with
+                                                                    comp_typ
+                                                                    arg1) d in
                                                                     FStar_Pervasives.Mkdtuple3
                                                                     ({
                                                                     Pulse_Syntax_Base.term1
@@ -2010,30 +2042,7 @@ let (apply_impure_function :
                                                                     (Pulse_Syntax_Naming.open_comp_with
                                                                     comp_typ
                                                                     arg1)),
-                                                                    (canonicalize_st_typing
-                                                                    g
-                                                                    (Pulse_Typing.wrst
-                                                                    comp_typ
-                                                                    (Pulse_Syntax_Base.Tm_STApp
-                                                                    {
-                                                                    Pulse_Syntax_Base.head
-                                                                    = head;
-                                                                    Pulse_Syntax_Base.arg_qual
-                                                                    = qual;
-                                                                    Pulse_Syntax_Base.arg
-                                                                    = arg1
-                                                                    }))
-                                                                    (Pulse_Syntax_Naming.open_comp_with
-                                                                    comp_typ
-                                                                    arg1)
-                                                                    (Pulse_Typing.T_STGhostApp
-                                                                    (g, head,
-                                                                    formal,
-                                                                    qual,
-                                                                    comp_typ,
-                                                                    arg1, x,
-                                                                    (), (),
-                                                                    ()))))))))
+                                                                    d1)))))
                                                                     uu___18)))
                                                                     uu___17)))
                                                                     | 

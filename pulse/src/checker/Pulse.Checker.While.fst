@@ -29,12 +29,12 @@ module RU = Pulse.RuntimeUtils
 
 let while_cond_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:term)
                            (inv_typing:tot_typing g (tm_exists_sl u (as_binder ty) inv_body) tm_slprop)
-  : comp_typing_u g (comp_while_cond x inv_body)
+  : Dv (comp_typing_u g (comp_while_cond x inv_body))
   = Metatheory.admit_comp_typing g (comp_while_cond x inv_body)
 
 let while_body_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:term)
                            (inv_typing:tot_typing g (tm_exists_sl u (as_binder ty) inv_body) tm_slprop)
-  : comp_typing_u g (comp_while_body x inv_body)
+  : Dv (comp_typing_u g (comp_while_body x inv_body))
   = Metatheory.admit_comp_typing g (comp_while_body x inv_body)
 
 #push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 4"

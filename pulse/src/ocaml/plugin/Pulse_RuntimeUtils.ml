@@ -47,6 +47,7 @@ let debug_at_level (g:FStar_Reflection_Types.env) (s:string) =
   let r = FStar_Compiler_Debug.get_toggle s in
   !r
 
+let next_id () = FStar_GenSym.next_id ()
 let bv_set_range (bv:FStar_Syntax_Syntax.bv) (r:FStar_Range.range) = FStar_Syntax_Syntax.set_range_of_bv bv r
 let bv_range (bv:FStar_Syntax_Syntax.bv) = FStar_Syntax_Syntax.range_of_bv bv
 let binder_set_range (b:FStar_Syntax_Syntax.binder) (r:FStar_Range.range) =

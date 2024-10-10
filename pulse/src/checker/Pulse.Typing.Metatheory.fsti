@@ -37,18 +37,18 @@ val st_typing_weakening
   (g:env) (g':env { disjoint g g' })
   (t:st_term) (c:comp) (d:st_typing (push_env g g') t c)
   (g1:env { g1 `env_extends` g /\ disjoint g1 g' })
-  : st_typing (push_env g1 g') t c
+  : Dv (st_typing (push_env g1 g') t c)
 
 val st_typing_weakening_standard
   (#g:env) (#t:st_term) (#c:comp) (d:st_typing g t c)
   (g1:env { g1 `env_extends` g })
-  : st_typing g1 t c
+  : Dv (st_typing g1 t c)
 
 val st_typing_weakening_end
   (g:env) (g':env { disjoint g g' })
   (t:st_term) (c:comp) (d:st_typing (push_env g g') t c)
   (g'':env { g'' `env_extends` g' /\ disjoint g'' g })
-  : st_typing (push_env g g'') t c
+  : Dv (st_typing (push_env g g'') t c)
 
 val veq_weakening
   (g:env) (g':env { disjoint g g' })

@@ -96,20 +96,10 @@ let push_binding_bs _ _ _ _ = ()
 
 let push_binding_as_map _ _ _ _ = ()
 
-let rec max (bs:list (var & typ)) (current:var)
-  : v:var { current <= v /\ (forall (b:var & typ). List.Tot.memP b bs ==> fst b <= v) } =
-  match bs with
-  | [] -> current
-  | (x, t)::rest ->
-    let current = if x < current then current else x in
-    max rest current
-
 let fresh g =
-  match g.bs with
-  | [] -> 1
-  | (x, _)::bs_rest ->
-    let max = max bs_rest x in
-    max + 1
+  let v = RU.next_id () in
+  assume ~(v `Set.mem` dom g);
+  v
 
 //
 // TODO: Move to ulib

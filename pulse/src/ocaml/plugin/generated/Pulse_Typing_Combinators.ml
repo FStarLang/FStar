@@ -316,7 +316,13 @@ let (try_lift_ghost_atomic :
       fun c ->
         fun d ->
           let uu___ =
-            Obj.magic (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> ())) in
+            Obj.magic
+              (FStar_Tactics_Effect.lift_div_tac
+                 (fun uu___1 ->
+                    let d1 =
+                      Pulse_Typing_Metatheory_Base.st_typing_correctness g e
+                        c d in
+                    ())) in
           FStar_Tactics_Effect.tac_bind
             (FStar_Sealed.seal
                (Obj.magic

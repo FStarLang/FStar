@@ -27,6 +27,7 @@ val print_context (c:context) : T.Tac string
 val debug_at_level_no_module (s:string) : bool
 val debug_at_level (g:env) (s:string) : bool
 val print_exn (e:exn) : string
+val next_id () : Dv nat
 val bv_set_range (x:bv) (r:range) : b:bv{b==x}
 val bv_range (x:bv) : range
 val binder_set_range (x:binder) (r:range) : b:binder{b==x}

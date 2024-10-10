@@ -32,7 +32,7 @@ open FStar.Ghost
 
 
 val admit_comp_typing (g:env) (c:comp_st)
-  : comp_typing_u g c
+  : Dv (comp_typing_u g c)
 
 let rt_equiv_typing (#g:_) (#t0 #t1:_) (d:RT.equiv g t0 t1)
                     (#k:_)
@@ -54,7 +54,7 @@ let iname_typing (g:env) (c:comp_st) = tot_typing g (inames_of_comp_st c) tm_ina
 
 val st_typing_correctness (#g:env) (#t:st_term) (#c:comp_st) 
                           (d:st_typing g t c)
-  : comp_typing_u g c
+  : Dv (comp_typing_u g c)
   
 val comp_typing_inversion (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
   : st_comp_typing g (st_comp_of_comp c) & iname_typing g c
@@ -109,7 +109,7 @@ val st_typing_weakening
   (g:env) (g':env { disjoint g g' })
   (t:st_term) (c:comp) (_:st_typing (push_env g g') t c)
   (g1:env { pairwise_disjoint g g1 g' })
-  : st_typing (push_env (push_env g g1) g') t c
+  : Dv (st_typing (push_env (push_env g g1) g') t c)
 
 let veq_weakening
   (g:env) (g':env { disjoint g g' })
