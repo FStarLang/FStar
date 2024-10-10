@@ -1,4 +1,4 @@
-FROM ubuntu:23.10
+FROM --platform=linux/amd64  ubuntu:23.10
 
 SHELL ["/bin/bash", "-c"]
 
@@ -17,6 +17,7 @@ RUN apt-get update \
       python-is-python3 \
       libgmp-dev \
       opam \
+      pkg-config \
     && apt-get clean -y
 # FIXME: libgmp-dev should be installed automatically by opam,
 # but it is not working, so just adding it above.
