@@ -10479,18 +10479,6 @@ let (desugar_decls :
                         (env2, (FStar_Compiler_List.op_At sigelts se))))
           (env, []) decls in
       match uu___ with | (env1, sigelts) -> (env1, sigelts)
-let (open_prims_all :
-  (FStar_Parser_AST.decoration Prims.list -> FStar_Parser_AST.decl)
-    Prims.list)
-  =
-  [FStar_Parser_AST.mk_decl
-     (FStar_Parser_AST.Open
-        (FStar_Parser_Const.prims_lid, FStar_Syntax_Syntax.Unrestricted))
-     FStar_Compiler_Range_Type.dummyRange;
-  FStar_Parser_AST.mk_decl
-    (FStar_Parser_AST.Open
-       (FStar_Parser_Const.all_lid, FStar_Syntax_Syntax.Unrestricted))
-    FStar_Compiler_Range_Type.dummyRange]
 let (desugar_modul_common :
   FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option ->
     FStar_Syntax_DsEnv.env ->

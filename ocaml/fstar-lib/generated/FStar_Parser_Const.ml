@@ -219,39 +219,36 @@ let (effect_Ghost_lid : FStar_Ident.lident) = pconst "Ghost"
 let (effect_DIV_lid : FStar_Ident.lident) = psconst "DIV"
 let (effect_Div_lid : FStar_Ident.lident) = psconst "Div"
 let (effect_Dv_lid : FStar_Ident.lident) = psconst "Dv"
-let (compiler_effect_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Compiler"; "Effect"]
-let (compiler_effect_ALL_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Compiler"; "Effect"; "ALL"]
-let (compiler_effect_ML_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Compiler"; "Effect"; "ML"]
-let (compiler_effect_failwith_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Compiler"; "Effect"; "failwith"]
-let (compiler_effect_try_with_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Compiler"; "Effect"; "try_with"]
-let (all_lid : FStar_Ident.lident) = p2l ["FStar"; "All"]
-let (all_ALL_lid : FStar_Ident.lident) = p2l ["FStar"; "All"; "All"]
-let (all_ML_lid : FStar_Ident.lident) = p2l ["FStar"; "All"; "ML"]
-let (all_failwith_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "All"; "failwith"]
-let (all_try_with_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "All"; "try_with"]
+let (ef_base : unit -> Prims.string Prims.list) =
+  fun uu___ ->
+    let uu___1 = FStar_Options.ml_ish () in
+    if uu___1
+    then
+      let uu___2 = FStar_Options.ml_ish_effect () in
+      FStar_String.split [46] uu___2
+    else ["FStar"; "All"]
 let (effect_ALL_lid : unit -> FStar_Ident.lident) =
   fun uu___ ->
-    let uu___1 = FStar_Options.ml_ish () in
-    if uu___1 then compiler_effect_ALL_lid else all_lid
+    let uu___1 =
+      let uu___2 = ef_base () in FStar_Compiler_List.op_At uu___2 ["ALL"] in
+    p2l uu___1
 let (effect_ML_lid : unit -> FStar_Ident.lident) =
   fun uu___ ->
-    let uu___1 = FStar_Options.ml_ish () in
-    if uu___1 then compiler_effect_ML_lid else all_ML_lid
+    let uu___1 =
+      let uu___2 = ef_base () in FStar_Compiler_List.op_At uu___2 ["ML"] in
+    p2l uu___1
 let (failwith_lid : unit -> FStar_Ident.lident) =
   fun uu___ ->
-    let uu___1 = FStar_Options.ml_ish () in
-    if uu___1 then compiler_effect_failwith_lid else all_failwith_lid
+    let uu___1 =
+      let uu___2 = ef_base () in
+      FStar_Compiler_List.op_At uu___2 ["failwith"] in
+    p2l uu___1
 let (try_with_lid : unit -> FStar_Ident.lident) =
   fun uu___ ->
-    let uu___1 = FStar_Options.ml_ish () in
-    if uu___1 then compiler_effect_try_with_lid else all_try_with_lid
+    let uu___1 =
+      let uu___2 = ef_base () in
+      FStar_Compiler_List.op_At uu___2 ["try_with"] in
+    p2l uu___1
 let (as_requires : FStar_Ident.lident) = pconst "as_requires"
 let (as_ensures : FStar_Ident.lident) = pconst "as_ensures"
 let (decreases_lid : FStar_Ident.lident) = pconst "decreases"

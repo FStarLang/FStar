@@ -612,13 +612,6 @@ let (set_dep_graph : env -> FStar_Parser_Dep.deps -> env) =
 let (sigmap :
   env -> (FStar_Syntax_Syntax.sigelt * Prims.bool) FStar_Compiler_Util.smap)
   = fun env1 -> env1.sigmap
-let (has_all_in_scope : env -> Prims.bool) =
-  fun env1 ->
-    FStar_Compiler_List.existsb
-      (fun uu___ ->
-         match uu___ with
-         | (m, uu___1) -> FStar_Ident.lid_equals m FStar_Parser_Const.all_lid)
-      env1.modules
 let (set_bv_range :
   FStar_Syntax_Syntax.bv ->
     FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.bv)
