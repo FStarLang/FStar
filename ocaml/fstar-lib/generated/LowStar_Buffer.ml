@@ -8,25 +8,15 @@ type 'a pointer_or_null = 'a buffer
 let sub :
   'a .
     unit ->
-      ('a, ('a, unit, unit) trivial_preorder,
-        ('a, unit, unit) trivial_preorder) LowStar_Monotonic_Buffer.mbuffer
-        ->
+      ('a, unit, unit) LowStar_Monotonic_Buffer.mbuffer ->
         FStar_UInt32.t ->
-          unit ->
-            ('a, ('a, unit, unit) trivial_preorder,
-              ('a, unit, unit) trivial_preorder)
-              LowStar_Monotonic_Buffer.mbuffer
+          unit -> ('a, unit, unit) LowStar_Monotonic_Buffer.mbuffer
   = fun uu___ -> LowStar_Monotonic_Buffer.msub
 let offset :
   'a .
     unit ->
-      ('a, ('a, unit, unit) trivial_preorder,
-        ('a, unit, unit) trivial_preorder) LowStar_Monotonic_Buffer.mbuffer
-        ->
-        FStar_UInt32.t ->
-          ('a, ('a, unit, unit) trivial_preorder,
-            ('a, unit, unit) trivial_preorder)
-            LowStar_Monotonic_Buffer.mbuffer
+      ('a, unit, unit) LowStar_Monotonic_Buffer.mbuffer ->
+        FStar_UInt32.t -> ('a, unit, unit) LowStar_Monotonic_Buffer.mbuffer
   = fun uu___ -> LowStar_Monotonic_Buffer.moffset
 type ('a, 'len) lbuffer = ('a, unit, unit) LowStar_Monotonic_Buffer.mbuffer
 let gcmalloc :
@@ -34,45 +24,31 @@ let gcmalloc :
     unit ->
       unit ->
         'a ->
-          FStar_UInt32.t ->
-            ('a, ('a, unit, unit) trivial_preorder,
-              ('a, unit, unit) trivial_preorder)
-              LowStar_Monotonic_Buffer.mbuffer
+          FStar_UInt32.t -> ('a, unit, unit) LowStar_Monotonic_Buffer.mbuffer
   = fun uu___ -> LowStar_Monotonic_Buffer.mgcmalloc
 let malloc :
   'a .
     unit ->
       unit ->
         'a ->
-          FStar_UInt32.t ->
-            ('a, ('a, unit, unit) trivial_preorder,
-              ('a, unit, unit) trivial_preorder)
-              LowStar_Monotonic_Buffer.mbuffer
+          FStar_UInt32.t -> ('a, unit, unit) LowStar_Monotonic_Buffer.mbuffer
   = fun uu___ -> LowStar_Monotonic_Buffer.mmalloc
 let alloca :
   'a .
     unit ->
       'a ->
-        FStar_UInt32.t ->
-          ('a, ('a, unit, unit) trivial_preorder,
-            ('a, unit, unit) trivial_preorder)
-            LowStar_Monotonic_Buffer.mbuffer
+        FStar_UInt32.t -> ('a, unit, unit) LowStar_Monotonic_Buffer.mbuffer
   = fun uu___ -> LowStar_Monotonic_Buffer.malloca
 let alloca_of_list :
   'a .
     unit ->
-      'a Prims.list ->
-        ('a, ('a, unit, unit) trivial_preorder,
-          ('a, unit, unit) trivial_preorder) LowStar_Monotonic_Buffer.mbuffer
+      'a Prims.list -> ('a, unit, unit) LowStar_Monotonic_Buffer.mbuffer
   = fun uu___ -> LowStar_Monotonic_Buffer.malloca_of_list
 let gcmalloc_of_list :
   'a .
     unit ->
       unit ->
-        'a Prims.list ->
-          ('a, ('a, unit, unit) trivial_preorder,
-            ('a, unit, unit) trivial_preorder)
-            LowStar_Monotonic_Buffer.mbuffer
+        'a Prims.list -> ('a, unit, unit) LowStar_Monotonic_Buffer.mbuffer
   = fun uu___ -> LowStar_Monotonic_Buffer.mgcmalloc_of_list
 type ('a, 'l) assign_list_t = 'a buffer -> unit
 let rec assign_list : 'a . 'a Prims.list -> 'a buffer -> unit =

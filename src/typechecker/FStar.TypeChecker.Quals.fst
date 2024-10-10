@@ -161,6 +161,26 @@ let check_sigelt_quals_pre (env:FStar.TypeChecker.Env.env) se =
         then err []
       | _ -> ()
 
+// A faster under-approximation of non_info_norm.
+// We call this function on every let-binding that has an interface val
+// (while non_info_norm is only called on types),
+// so it needs to be fast and shouldn't unfold too much.
+// The regular non_info_norm doesn't set Weak,
+// which makes the normalizer reduce lets.
+let non_info_norm_weak env t =
+  let steps = [UnfoldUntil delta_constant;
+               AllowUnboundUniverses;
+               EraseUniverses;
+               Primops;
+               Beta; Iota;
+               HNF;
+               Weak;
+               Unascribe;   //remove ascriptions
+               ForExtraction //and refinement types
+               ]
+  in
+  non_informative env (N.normalize steps env t)
+
 let check_erasable env quals (r:Range.range) se =
   let lids = U.lids_of_sigelt se in
   let val_exists =
@@ -183,6 +203,22 @@ let check_erasable env quals (r:Range.range) se =
            text "Mismatch of attributes between declaration and definition.";
            text "Definition is marked `erasable` but the declaration is not.";
          ];
+  if not se_has_erasable_attr && not (Options.ide ()) then begin
+    match se.sigel with
+    | Sig_let {lbs=(false, [lb])} ->
+      let lbname = BU.right lb.lbname in
+      let has_iface_val = match DsEnv.iface_decls (Env.dsenv env) (Env.current_module env) with
+        | Some iface_decls -> iface_decls |> BU.for_some (Parser.AST.decl_is_val (ident_of_lid lbname.fv_name.v))
+        | None -> false in
+      let _, body, _ = U.abs_formals lb.lbdef in
+      if has_iface_val && non_info_norm_weak env body then log_issue lbname Error_MustEraseMissing [
+        text (BU.format2 "Values of type `%s` will be erased during extraction, \
+              but its interface hides this fact. Add the `erasable` \
+              attribute to the `val %s` declaration for this symbol in the interface"
+              (show lbname) (show lbname));
+      ]
+    | _ -> ()
+  end;
   if se_has_erasable_attr
   then begin
     match se.sigel with
@@ -220,47 +256,6 @@ let check_erasable env quals (r:Range.range) se =
           and abbreviations for non-informative types.";
         ]
   end
-
-(*
- *  Given `val t : Type` in an interface
- *  and   `let t = e`    in the corresponding implementation
- *  The val declaration should contains the `must_erase_for_extraction` attribute
- *  if and only if `e` is a type that's non-informative (e..g., unit, t -> unit, etc.)
- *)
-let check_must_erase_attribute env se =
-  if Options.ide() then () else
-  match se.sigel with
-  | Sig_let {lbs; lids=l} ->
-    begin match DsEnv.iface_decls (Env.dsenv env) (Env.current_module env) with
-     | None ->
-       ()
-
-     | Some iface_decls ->
-       snd lbs |> List.iter (fun lb ->
-           let lbname = BU.right lb.lbname in
-           let has_iface_val =
-               iface_decls |> BU.for_some (Parser.AST.decl_is_val (ident_of_lid lbname.fv_name.v))
-           in
-           if has_iface_val
-           then
-               let must_erase = TcUtil.must_erase_for_extraction env lb.lbdef in
-               let has_attr = Env.fv_has_attr env lbname C.must_erase_for_extraction_attr in
-               if must_erase && not has_attr
-               then log_issue lbname Error_MustEraseMissing [
-                        text (BU.format2 "Values of type `%s` will be erased during extraction, \
-                               but its interface hides this fact. Add the `must_erase_for_extraction` \
-                               attribute to the `val %s` declaration for this symbol in the interface"
-                               (show lbname) (show lbname));
-                      ]
-               else if has_attr && not must_erase
-               then log_issue lbname Error_MustEraseMissing [
-                        text (BU.format1 "Values of type `%s` cannot be erased during extraction, \
-                               but the `must_erase_for_extraction` attribute claims that it can. \
-                               Please remove the attribute."
-                               (show lbname));
-                      ])
-  end
-  | _ -> ()
 
 let check_typeclass_instance_attribute env (rng:Range.range) se =
   let is_tc_instance =
@@ -316,6 +311,5 @@ let check_sigelt_quals_post env se =
   let quals = se.sigquals in
   let r = se.sigrng in
   check_erasable env quals r se;
-  check_must_erase_attribute env se;
   check_typeclass_instance_attribute env r se;
   ()

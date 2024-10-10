@@ -867,19 +867,7 @@ val plugin (x: int) : Tot unit
     elaborate and typecheck, but unfold before verification. *)
 val tcnorm : unit
 
-(** We erase all ghost functions and unit-returning pure functions to
-    [()] at extraction. This creates a small issue with abstract
-    types. Consider a module that defines an abstract type [t] whose
-    (internal) definition is [unit] and also defines [f: int -> t]. [f]
-    would be erased to be just [()] inside the module, while the
-    client calls to [f] would not, since [t] is abstract. To get
-    around this, when extracting interfaces, if we encounter an
-    abstract type, we tag it with this attribute, so that
-    extraction can treat it specially.
-
-    Note, since the use of cross-module inlining (the [--cmi] option),
-    this attribute is no longer necessary. We retain it for legacy,
-    but will remove it in the future. *)
+[@@deprecated "use [@@erasable] instead"]
 val must_erase_for_extraction : unit
 
 (** This attribute is used with the Dijkstra Monads for Free

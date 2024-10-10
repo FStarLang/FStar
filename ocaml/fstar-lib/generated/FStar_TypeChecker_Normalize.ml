@@ -7744,6 +7744,9 @@ let (non_info_norm :
         [FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
         FStar_TypeChecker_Env.AllowUnboundUniverses;
         FStar_TypeChecker_Env.EraseUniverses;
+        FStar_TypeChecker_Env.Primops;
+        FStar_TypeChecker_Env.Beta;
+        FStar_TypeChecker_Env.Iota;
         FStar_TypeChecker_Env.HNF;
         FStar_TypeChecker_Env.Unascribe;
         FStar_TypeChecker_Env.ForExtraction] in

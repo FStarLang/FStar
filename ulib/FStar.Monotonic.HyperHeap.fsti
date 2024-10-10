@@ -28,9 +28,9 @@ open FStar.Ghost
  *)
 
 (*
- * AR: mark it must_erase_for_extraction temporarily until CMI comes in
+ * AR: mark it erasable temporarily until CMI comes in
  *)
-[@@must_erase_for_extraction]
+[@@erasable]
 val rid :eqtype
 
 val reveal (r:rid) :GTot (list (int & int))
