@@ -375,7 +375,7 @@ and (aqual_cmp : FStar_Reflection_V2_Data.aqualv comparator_for) =
          m2) -> term_cmp m1 m2
       | uu___ -> Neq
 and (match_returns_ascription_cmp :
-  FStar_Reflection_Types.match_returns_ascription comparator_for) =
+  FStar_Syntax_Syntax.match_returns_ascription comparator_for) =
   fun asc1 ->
     fun asc2 ->
       let uu___ = asc1 in
