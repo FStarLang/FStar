@@ -96,11 +96,11 @@ include .depend
 
 %.fst.output: %.fst
 	$(call msg, "OUTPUT", $(basename $(notdir $@)))
-	$(Q)$(VERBOSE_FSTAR) -f --print_expected_failures $< >$@ 2>&1
+	$(Q)$(VERBOSE_FSTAR) --message_format human -f --print_expected_failures $< >$@ 2>&1
 
 %.fsti.output: %.fsti
 	$(call msg, "OUTPUT", $(basename $(notdir $@)))
-	$(Q)$(VERBOSE_FSTAR) -f --print_expected_failures $< >$@ 2>&1
+	$(Q)$(VERBOSE_FSTAR) --message_format human -f --print_expected_failures $< >$@ 2>&1
 
 %.fst.json_output: %.fst
 	$(call msg, "JSONOUT", $(basename $(notdir $@)))
