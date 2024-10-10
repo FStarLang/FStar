@@ -1252,6 +1252,36 @@ and (extract_mlexpr :
                 uu___2::[]);
              FStarC_Extraction_ML_Syntax.mlty = uu___3;
              FStarC_Extraction_ML_Syntax.loc = uu___4;_},
+           s::uu___5::a::b::uu___6)
+          when
+          let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___7 = "Pulse.Lib.Slice.subslice" ->
+          let mutb = true in
+          let uu___7 =
+            let uu___8 = extract_mlexpr g s in
+            let uu___9 =
+              let uu___10 =
+                let uu___11 = extract_mlexpr g a in
+                FStar_Pervasives_Native.Some uu___11 in
+              let uu___11 =
+                let uu___12 = extract_mlexpr g b in
+                FStar_Pervasives_Native.Some uu___12 in
+              Pulse2Rust_Rust_Syntax.mk_range uu___10
+                Pulse2Rust_Rust_Syntax.RangeLimitsHalfOpen uu___11 in
+            Pulse2Rust_Rust_Syntax.mk_expr_index uu___8 uu___9 in
+          Pulse2Rust_Rust_Syntax.mk_reference_expr true uu___7
+      | FStarC_Extraction_ML_Syntax.MLE_App
+          ({
+             FStarC_Extraction_ML_Syntax.expr =
+               FStarC_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStarC_Extraction_ML_Syntax.expr =
+                    FStarC_Extraction_ML_Syntax.MLE_Name p;
+                  FStarC_Extraction_ML_Syntax.mlty = uu___;
+                  FStarC_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2::[]);
+             FStarC_Extraction_ML_Syntax.mlty = uu___3;
+             FStarC_Extraction_ML_Syntax.loc = uu___4;_},
            a::uu___5::b::uu___6)
           when
           let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in

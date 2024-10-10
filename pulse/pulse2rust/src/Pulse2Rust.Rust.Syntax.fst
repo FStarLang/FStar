@@ -189,6 +189,13 @@ let mk_cast (e:expr) (ty:typ) : expr =
     expr_cast_type = ty;
   }
 
+let mk_range (s:option expr) (l:range_limits) (e:option expr) : expr =
+  Expr_range {
+    expr_range_start = s;
+    expr_range_limits = l;
+    expr_range_end = e;
+  }
+
 let mk_new_mutex (e:expr) =
   mk_call
     (mk_expr_path ["std"; "sync"; "Mutex"; "new"])

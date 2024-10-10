@@ -455,7 +455,7 @@ let (pulse_translate_expr : FStarC_Extraction_Krml.translate_expr_t) =
                  uu___3);
               FStarC_Extraction_ML_Syntax.mlty = uu___4;
               FStarC_Extraction_ML_Syntax.loc = uu___5;_},
-            a::_p::_w::i::[])
+            a::_p::i::_w::[])
            when
            let uu___6 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
            uu___6 = "Pulse.Lib.ArrayPtr.split" ->

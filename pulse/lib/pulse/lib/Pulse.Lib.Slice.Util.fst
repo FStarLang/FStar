@@ -97,3 +97,56 @@ fn split_trade (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t) (#v: Ghost.erased 
   intro_trade _ _ _ (split_trade_aux s p v i s1 s2 v1 v2 ());
   S.SlicePair s1 s2
 }
+
+// TODO(GE): fix extraction for inline ghost functions (currently extracts to Obj.magic (fun _ -> ()))
+ghost fn subslice_trade_mut_aux #t (s: slice t) (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length v }) (res: slice t) (v': Seq.seq t) ()
+  requires subslice_rest res s 1.0R i j v ** pts_to res v'
+  ensures pts_to s (Seq.slice v 0 (SZ.v i) `Seq.append` v' `Seq.append` Seq.slice v (SZ.v j) (Seq.length v))
+{
+  unfold subslice_rest;
+  join res _ _;
+  join _ _ s;
+  assert pure (
+    Seq.Base.append (Seq.Base.append (Seq.Base.slice v 0 (SZ.v i)) v')
+          (Seq.Base.slice v (SZ.v j) (Seq.Base.length v))
+    `Seq.equal`
+    Seq.Base.append (Seq.Base.slice v 0 (SZ.v i))
+        (Seq.Base.append v' (Seq.Base.slice v (SZ.v j) (Seq.Base.length v))));
+}
+
+inline_for_extraction
+noextract
+fn subslice_trade_mut #t (s: slice t) (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length v })
+  requires pts_to s v
+  returns res: slice t
+  ensures pts_to res (Seq.slice v (SZ.v i) (SZ.v j)) **
+    (forall* v'. trade (pts_to res v') (pts_to s (Seq.slice v 0 (SZ.v i) `Seq.append` v' `Seq.append` Seq.slice v (SZ.v j) (Seq.length v))))
+{
+  let res = subslice s i j;
+  intro_forall _ (fun v' -> intro_trade _ _ _ (subslice_trade_mut_aux s i j #v res v'));
+  res
+}
+
+ghost fn subslice_trade_aux #t (s: slice t) #p (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length v }) (res: slice t) ()
+  requires subslice_rest res s p i j v ** pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j))
+  ensures pts_to s #p v
+{
+  unfold subslice_rest;
+  join res _ _;
+  join _ _ s;
+  assert pure (v `Seq.equal` Seq.append (Seq.slice v 0 (SZ.v i))
+    (Seq.append (Seq.slice v (SZ.v i) (SZ.v j)) (Seq.slice v (SZ.v j) (Seq.length v))));
+}
+
+inline_for_extraction
+noextract
+fn subslice_trade #t (s: slice t) #p (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length v })
+  requires pts_to s #p v
+  returns res: slice t
+  ensures pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j)) **
+    trade (pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j))) (pts_to s #p v)
+{
+  let res = subslice s i j;
+  intro_trade _ _ _ (subslice_trade_aux s i j #v res);
+  res
+}
