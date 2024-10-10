@@ -979,6 +979,14 @@ let (emit :
   fun dep_graph ->
     fun mllibs ->
       let opt = FStar_Options.codegen () in
+      let fail uu___ =
+        let uu___1 =
+          let uu___2 =
+            FStar_Class_Show.show
+              (FStar_Class_Show.show_option FStar_Options.showable_codegen_t)
+              opt in
+          Prims.strcat "Unrecognized extraction backend: " uu___2 in
+        FStar_Compiler_Effect.failwith uu___1 in
       if opt <> FStar_Pervasives_Native.None
       then
         let ext =
@@ -988,7 +996,7 @@ let (emit :
           | FStar_Pervasives_Native.Some (FStar_Options.Plugin) -> ".ml"
           | FStar_Pervasives_Native.Some (FStar_Options.Krml) -> ".krml"
           | FStar_Pervasives_Native.Some (FStar_Options.Extension) -> ".ast"
-          | uu___ -> FStar_Compiler_Effect.failwith "Unrecognized option" in
+          | uu___ -> fail () in
         match opt with
         | FStar_Pervasives_Native.Some (FStar_Options.FSharp) ->
             let outdir = FStar_Options.output_dir () in
@@ -1068,7 +1076,7 @@ let (emit :
                        FStar_Options.prepend_output_dir
                          (Prims.strcat "out" ext)) in
             FStar_Compiler_Util.save_value_to_file oname bin
-        | uu___ -> FStar_Compiler_Effect.failwith "Unrecognized option"
+        | uu___ -> fail ()
       else ()
 let (tc_one_file :
   uenv ->

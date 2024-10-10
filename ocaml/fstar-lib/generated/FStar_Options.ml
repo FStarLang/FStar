@@ -4213,89 +4213,8 @@ let (include_path : unit -> Prims.string Prims.list) =
         FStar_Compiler_List.op_At include_paths uu___6 in
       FStar_Compiler_List.op_At uu___4 uu___5 in
     FStar_Compiler_List.op_At cache_dir uu___3
-let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
-  =
-  let file_map = FStar_Compiler_Util.smap_create (Prims.of_int (100)) in
-  fun filename ->
-    let uu___ = FStar_Compiler_Util.smap_try_find file_map filename in
-    match uu___ with
-    | FStar_Pervasives_Native.Some f -> f
-    | FStar_Pervasives_Native.None ->
-        let result =
-          try
-            (fun uu___3 ->
-               match () with
-               | () ->
-                   let uu___4 = FStar_Compiler_Util.is_path_absolute filename in
-                   if uu___4
-                   then
-                     (if FStar_Compiler_Util.file_exists filename
-                      then FStar_Pervasives_Native.Some filename
-                      else FStar_Pervasives_Native.None)
-                   else
-                     (let uu___6 =
-                        let uu___7 = include_path () in
-                        FStar_Compiler_List.rev uu___7 in
-                      FStar_Compiler_Util.find_map uu___6
-                        (fun p ->
-                           let path =
-                             if p = "."
-                             then filename
-                             else FStar_Compiler_Util.join_paths p filename in
-                           if FStar_Compiler_Util.file_exists path
-                           then FStar_Pervasives_Native.Some path
-                           else FStar_Pervasives_Native.None))) ()
-          with | uu___3 -> FStar_Pervasives_Native.None in
-        (if FStar_Compiler_Option.isSome result
-         then FStar_Compiler_Util.smap_add file_map filename result
-         else ();
-         result)
-let (prims : unit -> Prims.string) =
-  fun uu___ ->
-    let uu___3 = get_prims () in
-    match uu___3 with
-    | FStar_Pervasives_Native.None ->
-        let filename = "Prims.fst" in
-        let uu___4 = find_file filename in
-        (match uu___4 with
-         | FStar_Pervasives_Native.Some result -> result
-         | FStar_Pervasives_Native.None ->
-             let uu___5 =
-               FStar_Compiler_Util.format1
-                 "unable to find required file \"%s\" in the module search path.\n"
-                 filename in
-             FStar_Compiler_Effect.failwith uu___5)
-    | FStar_Pervasives_Native.Some x -> x
-let (prims_basename : unit -> Prims.string) =
-  fun uu___ -> let uu___3 = prims () in FStar_Compiler_Util.basename uu___3
-let (pervasives : unit -> Prims.string) =
-  fun uu___ ->
-    let filename = "FStar.Pervasives.fsti" in
-    let uu___3 = find_file filename in
-    match uu___3 with
-    | FStar_Pervasives_Native.Some result -> result
-    | FStar_Pervasives_Native.None ->
-        let uu___4 =
-          FStar_Compiler_Util.format1
-            "unable to find required file \"%s\" in the module search path.\n"
-            filename in
-        FStar_Compiler_Effect.failwith uu___4
-let (pervasives_basename : unit -> Prims.string) =
-  fun uu___ ->
-    let uu___3 = pervasives () in FStar_Compiler_Util.basename uu___3
-let (pervasives_native_basename : unit -> Prims.string) =
-  fun uu___ ->
-    let filename = "FStar.Pervasives.Native.fst" in
-    let uu___3 = find_file filename in
-    match uu___3 with
-    | FStar_Pervasives_Native.Some result ->
-        FStar_Compiler_Util.basename result
-    | FStar_Pervasives_Native.None ->
-        let uu___4 =
-          FStar_Compiler_Util.format1
-            "unable to find required file \"%s\" in the module search path.\n"
-            filename in
-        FStar_Compiler_Effect.failwith uu___4
+let (custom_prims : unit -> Prims.string FStar_Pervasives_Native.option) =
+  fun uu___ -> get_prims ()
 let (prepend_output_dir : Prims.string -> Prims.string) =
   fun fname ->
     let uu___ = get_odir () in
@@ -5158,3 +5077,5 @@ let (set_vconfig : FStar_VConfig.vconfig -> unit) =
        option_as (fun uu___31 -> String uu___31)
          vcfg.FStar_VConfig.reuse_hint_for in
      set_option "reuse_hint_for" uu___30)
+let (showable_codegen_t : codegen_t FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = print_codegen }

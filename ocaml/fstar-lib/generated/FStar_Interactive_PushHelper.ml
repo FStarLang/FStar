@@ -873,7 +873,8 @@ let (add_module_completions :
         let mods = FStar_Parser_Dep.build_inclusion_candidates_list () in
         let loaded_mods_set =
           let uu___ = FStar_Compiler_Util.psmap_empty () in
-          let uu___1 = let uu___2 = FStar_Options.prims () in uu___2 :: deps in
+          let uu___1 =
+            let uu___2 = FStar_Basefiles.prims () in uu___2 :: deps in
           FStar_Compiler_List.fold_left
             (fun acc ->
                fun dep ->

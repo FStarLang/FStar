@@ -138,9 +138,10 @@ let (bool_of_string_lid : FStar_Ident.lident) =
 let (string_compare : FStar_Ident.lident) =
   p2l ["FStar"; "String"; "compare"]
 let (order_lid : FStar_Ident.lident) = p2l ["FStar"; "Order"; "order"]
-let (vconfig_lid : FStar_Ident.lident) = p2l ["FStar"; "VConfig"; "vconfig"]
+let (vconfig_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Stubs"; "VConfig"; "vconfig"]
 let (mkvconfig_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "VConfig"; "Mkvconfig"]
+  p2l ["FStar"; "Stubs"; "VConfig"; "Mkvconfig"]
 let (op_Eq : FStar_Ident.lident) = pconst "op_Equality"
 let (op_notEq : FStar_Ident.lident) = pconst "op_disEquality"
 let (op_LT : FStar_Ident.lident) = pconst "op_LessThan"
@@ -576,7 +577,7 @@ let (ctx_uvar_and_subst_lid : FStar_Ident.lident) =
 let (universe_uvar_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "universe_uvar"]
 let (check_with_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["FStar"; "VConfig"; "check_with"]
+  FStar_Ident.lid_of_path ["FStar"; "Stubs"; "VConfig"; "check_with"]
     FStar_Compiler_Range_Type.dummyRange
 let (decls_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "decls"]

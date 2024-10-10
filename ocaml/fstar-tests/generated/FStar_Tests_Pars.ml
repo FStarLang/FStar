@@ -90,7 +90,7 @@ let (init_once : unit -> unit) =
         FStar_Universal.core_check in
     (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.init env;
     (let uu___2 =
-       let uu___3 = FStar_Options.prims () in
+       let uu___3 = FStar_Basefiles.prims () in
        let uu___4 = FStar_Syntax_DsEnv.empty_env FStar_Parser_Dep.empty_deps in
        parse_mod uu___3 uu___4 in
      match uu___2 with

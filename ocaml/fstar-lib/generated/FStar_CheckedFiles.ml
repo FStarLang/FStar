@@ -116,7 +116,7 @@ let (hash_dependences :
   fun deps ->
     fun fn ->
       let fn1 =
-        let uu___ = FStar_Options.find_file fn in
+        let uu___ = FStar_Find.find_file fn in
         match uu___ with
         | FStar_Pervasives_Native.Some fn2 -> fn2
         | uu___1 -> fn in

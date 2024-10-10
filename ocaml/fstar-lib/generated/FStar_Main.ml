@@ -71,7 +71,7 @@ let (load_native_tactics : unit -> unit) =
       let uu___1 = ml_module_name m in Prims.strcat uu___1 ".ml" in
     let cmxs_file m =
       let cmxs = let uu___1 = ml_module_name m in Prims.strcat uu___1 ".cmxs" in
-      let uu___1 = FStar_Options.find_file cmxs in
+      let uu___1 = FStar_Find.find_file cmxs in
       match uu___1 with
       | FStar_Pervasives_Native.Some f -> f
       | FStar_Pervasives_Native.None ->
@@ -85,7 +85,7 @@ let (load_native_tactics : unit -> unit) =
               (Obj.magic uu___2)
           else
             (let uu___3 =
-               let uu___4 = ml_file m in FStar_Options.find_file uu___4 in
+               let uu___4 = ml_file m in FStar_Find.find_file uu___4 in
              match uu___3 with
              | FStar_Pervasives_Native.None ->
                  let uu___4 =
@@ -101,7 +101,7 @@ let (load_native_tactics : unit -> unit) =
                  let dir = FStar_Compiler_Util.dirname ml in
                  ((let uu___5 = let uu___6 = ml_module_name m in [uu___6] in
                    FStar_Compiler_Plugins.compile_modules dir uu___5);
-                  (let uu___5 = FStar_Options.find_file cmxs in
+                  (let uu___5 = FStar_Find.find_file cmxs in
                    match uu___5 with
                    | FStar_Pervasives_Native.None ->
                        let uu___6 =
