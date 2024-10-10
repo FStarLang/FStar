@@ -22,6 +22,7 @@ open FStar.Stubs.Reflection.V2.Data {}
 open FStar.Stubs.Reflection.V2.Builtins {}
 
 open FStar.Stubs.Reflection.Types
+open FStar.Stubs.Syntax.Syntax
 
 (* V1 does not really use the primitive ident type, but this
 explicit pair of string & range *)

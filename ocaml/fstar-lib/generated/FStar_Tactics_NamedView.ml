@@ -2553,7 +2553,7 @@ let (close_branch : branch -> FStar_Reflection_V2_Data.branch) =
              let t' = FStar_Reflection_V2_Builtins.subst_term s t in
              (pat1, t'))
 let (open_match_returns_ascription :
-  FStar_Reflection_Types.match_returns_ascription ->
+  FStar_Syntax_Syntax.match_returns_ascription ->
     (match_returns_ascription, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun mra ->
@@ -2752,8 +2752,7 @@ let (open_match_returns_ascription :
                                                    (nb, (ct1, topt1, use_eq))))))
                                      uu___4))) uu___3))) uu___1)
 let (close_match_returns_ascription :
-  match_returns_ascription -> FStar_Reflection_Types.match_returns_ascription)
-  =
+  match_returns_ascription -> FStar_Syntax_Syntax.match_returns_ascription) =
   fun mra ->
     let uu___ = mra in
     match uu___ with

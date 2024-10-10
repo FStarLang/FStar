@@ -554,8 +554,8 @@ and (subst_branches :
       | [] -> []
       | br::brs1 -> (subst_branch br ss) :: (subst_branches brs1 ss)
 and (subst_match_returns :
-  FStar_Reflection_Types.match_returns_ascription ->
-    subst -> FStar_Reflection_Types.match_returns_ascription)
+  FStar_Syntax_Syntax.match_returns_ascription ->
+    subst -> FStar_Syntax_Syntax.match_returns_ascription)
   =
   fun m ->
     fun ss ->
@@ -802,7 +802,7 @@ and (freevars_branches :
     | [] -> FStar_Set.empty ()
     | hd::tl -> FStar_Set.union (freevars_branch hd) (freevars_branches tl)
 and (freevars_match_returns :
-  FStar_Reflection_Types.match_returns_ascription ->
+  FStar_Syntax_Syntax.match_returns_ascription ->
     FStar_Reflection_V2_Data.var FStar_Set.set)
   =
   fun m ->
@@ -928,8 +928,7 @@ and (ln'_branches :
       | [] -> true
       | br::brs1 -> (ln'_branch br i) && (ln'_branches brs1 i)
 and (ln'_match_returns :
-  FStar_Reflection_Types.match_returns_ascription -> Prims.int -> Prims.bool)
-  =
+  FStar_Syntax_Syntax.match_returns_ascription -> Prims.int -> Prims.bool) =
   fun m ->
     fun i ->
       let uu___ = m in
