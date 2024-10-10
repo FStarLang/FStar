@@ -204,7 +204,7 @@ let defaults =
       ("eager_subtyping"              , Bool false);
       ("error_contexts"               , Bool false);
       ("expose_interfaces"            , Bool false);
-      ("message_format"               , String "human");
+      ("message_format"               , String "auto");
       ("ext"                          , Unset);
       ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
@@ -983,8 +983,10 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "message_format",
-    EnumStr ["human"; "json"; "github"],
-    text "Format of the messages emitted by F* (default `human`)");
+    EnumStr ["human"; "json"; "github"; "auto"],
+    text "Format of the messages emitted by F*. Using 'auto' will use human messages \
+          unless the variable GITHUB_ENV is defined, which usually indicates that F* is \
+          running inside a github actions workflow (default `auto`).");
 
   ( noshort,
     "hide_uvar_nums",
@@ -2057,6 +2059,12 @@ let error_contexts               () = get_error_contexts              ()
 let expose_interfaces            () = get_expose_interfaces          ()
 let message_format               () =
   match get_message_format () with
+  | "auto" -> (
+    match Util.expand_environment_variable "GITHUB_ENV" with
+    | None
+    | Some "" -> Human
+    | Some _ -> Github
+  )
   | "human" -> Human
   | "json" -> Json
   | "github" -> Github
