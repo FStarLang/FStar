@@ -77,6 +77,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 	$(call msg, "EXTRACT", $(notdir $@))
 	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
 		   --odir "$(call OUTPUT_DIRECTORY_FOR,"$@")" \
+		   $(if $(findstring /ulib/,$<),,--MLish) \
 		   --codegen Plugin \
 		   --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
