@@ -238,6 +238,7 @@ let defaults =
       ("max_fuel"                     , Int 8);
       ("max_ifuel"                    , Int 2);
       ("MLish"                        , Bool false);
+      ("MLish_effect"                 , String "FStar.Compiler.Effect");
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
@@ -500,6 +501,7 @@ let get_log_types               ()      = lookup_opt "log_types"                
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
 let get_max_ifuel               ()      = lookup_opt "max_ifuel"                as_int
 let get_MLish                   ()      = lookup_opt "MLish"                    as_bool
+let get_MLish_effect            ()      = lookup_opt "MLish_effect"             as_string
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
@@ -1141,6 +1143,11 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     "MLish",
     Const (Bool true),
     text "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
+
+  ( noshort,
+    "MLish_effect",
+    SimpleStr "module_name",
+    text "Set the default effect *module* for --MLish (default: FStar.Compiler.Effect)");
 
   ( noshort,
     "no_default_includes",
@@ -2103,6 +2110,7 @@ let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()
 let max_ifuel                    () = get_max_ifuel                   ()
 let ml_ish                       () = get_MLish                       ()
+let ml_ish_effect                () = get_MLish_effect                ()
 let set_ml_ish                   () = set_option "MLish" (Bool true)
 let no_default_includes          () = get_no_default_includes         ()
 let no_extract                   s  = get_no_extract() |> List.existsb (module_name_eq s)
