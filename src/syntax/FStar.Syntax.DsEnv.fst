@@ -177,9 +177,6 @@ let empty_env deps = {curmodule=None;
 let dep_graph env = env.dep_graph
 let set_dep_graph env ds = {env with dep_graph=ds}
 let sigmap env = env.sigmap
-let has_all_in_scope env =
-  List.existsb (fun (m, _) ->
-    lid_equals m Const.all_lid) env.modules
 
 let set_bv_range bv r =
     let id = set_id_range r bv.ppname in
