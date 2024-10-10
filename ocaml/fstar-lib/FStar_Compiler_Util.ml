@@ -917,6 +917,7 @@ let geq (i:int) (j:int) = i >= j
 
 let exec_name = Sys.executable_name
 let get_exec_dir () = Filename.dirname (Sys.executable_name)
+let get_cmd_args () = Array.to_list Sys.argv
 let expand_environment_variable x = try Some (Sys.getenv x) with Not_found -> None
 
 let physical_equality (x:'a) (y:'a) = x == y
