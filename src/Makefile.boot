@@ -18,42 +18,26 @@ FSTAR_BOOT ?= $(FSTAR)
 #   -- MLish and lax tune type-inference for use with unverified ML programs
 DUNE_SNAPSHOT ?= $(call maybe_cygwin_path,$(FSTAR_HOME)/ocaml)
 OUTPUT_DIRECTORY = $(FSTAR_HOME)/src/ocaml-output/fstarc
+
+FSTAR_BOOT_OPTIONS += --MLish_effect FStarC.Compiler.Effect
+
 FSTAR_C=$(RUNLIM) $(FSTAR_BOOT) $(SIL) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules
 
 # Tests.* goes to fstar-tests, the rest to fstar-lib
-OUTPUT_DIRECTORY_FOR = $(if $(findstring FStar_Tests_,$(1)),$(DUNE_SNAPSHOT)/fstar-tests/generated,$(OUTPUT_DIRECTORY))
+OUTPUT_DIRECTORY_FOR = $(if $(findstring FStarC_Tests_,$(1)),$(DUNE_SNAPSHOT)/fstar-tests/generated,$(OUTPUT_DIRECTORY))
 
-# Each "project" for the compiler is in its own namespace.  We want to
-# extract them all to OCaml.  Would be more convenient if all of them
-# were within, say, FStar.Compiler.*
-EXTRACT_NAMESPACES=FStar.Extraction FStar.Parser			\
-		   FStar.Class						\
-		   FStar.Reflection FStar.SMTEncoding FStar.Syntax	\
-		   FStar.Tactics FStar.Tests FStar.ToSyntax		\
-		   FStar.TypeChecker FStar.Profiling FStar.Compiler	\
-		   FStar.Find FStar.Basefiles
+EXTRACT_NAMESPACES=FStarC # It's that easy!
 
 # Except some files that want to extract are not within a particularly
 # specific namespace. So, we mention extracting those explicitly.
 # TODO: Do we really need this anymore? Which (implementation) modules
 # from src/basic are *not* extracted?
-EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Thunk		\
-		FStar.VConfig FStar.Options FStar.Options.Ext FStar.Ident FStar.Errors FStar.Errors.Codes	\
-		FStar.Errors.Msg FStar.Errors.Raise FStar.Const				\
-		FStar.Compiler.Order FStar.Order FStar.Dependencies			\
-		FStar.Interactive.CompletionTable			\
-		FStar.Interactive.JsonHelper FStar.Interactive.QueryHelper \
-		FStar.Interactive.PushHelper FStar.Interactive.Lsp	\
-		FStar.Interactive.Ide FStar.Interactive.Ide.Types       \
-		FStar.Interactive.Incremental FStar.Interactive.Legacy	\
-		FStar.CheckedFiles FStar.Universal FStar.Prettyprint    \
-		FStar.Main FStar.Json FStar.GenSym \
-		FStar.Defensive
+EXTRACT_MODULES=FStar.Pervasives FStar.Order
 
 # And there are a few specific files that should not be extracted at
 # all, despite being in one of the EXTRACT_NAMESPACES
-NO_EXTRACT=FStar.Tactics.Native FStar.Tactics.Load	\
-	   FStar.Extraction.ML.PrintML FStar.Compiler.List
+NO_EXTRACT=FStarC.Tactics.Native FStarC.Tactics.Load	\
+	   FStarC.Extraction.ML.PrintML FStarC.Compiler.List
 
 EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 	  $(addprefix --extract_namespace , $(EXTRACT_NAMESPACES))	\
@@ -96,22 +80,22 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 .depend:
 	$(call msg, "DEPEND")
 	$(Q)$(FSTAR_C) --dep full		\
-		fstar/FStar.Main.fst		\
-		tests/FStar.Tests.Test.fst	\
+		fstar/FStarC.Main.fst		\
+		tests/FStarC.Tests.Test.fst	\
 		--odir $(OUTPUT_DIRECTORY)	\
 		$(EXTRACT)			\
 		--output_deps_to ._depend
 	@# We've generated deps for everything into fstar-lib/generated.
 	@# Here we fix up the .depend file to move tests out of the library.
-	$(Q)$(SED) 's,src/ocaml-output/fstarc/FStar_Test,ocaml/fstar-tests/generated/FStar_Test,g' <._depend >.depend
+	$(Q)$(SED) 's,src/ocaml-output/fstarc/FStarC_Test,ocaml/fstar-tests/generated/FStarC_Test,g' <._depend >.depend
 	$(Q)mkdir -p $(CACHE_DIR)
 
 .PHONY: dep.graph
 dep.graph:
 	$(call msg, "DEPEND")
 	$(Q)$(FSTAR_C) --dep graph		\
-		fstar/FStar.Main.fst		\
-		tests/FStar.Tests.Test.fst	\
+		fstar/FStarC.Main.fst		\
+		tests/FStarC.Tests.Test.fst	\
 		$(EXTRACT)			\
 		--output_deps_to dep.graph
 
