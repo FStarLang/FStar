@@ -204,8 +204,7 @@ let (query_logging : query_log) =
   let get_module_name uu___ =
     let uu___1 = FStar_Compiler_Effect.op_Bang current_module_name in
     match uu___1 with
-    | FStar_Pervasives_Native.None ->
-        FStar_Compiler_Effect.failwith "Module name not set"
+    | FStar_Pervasives_Native.None -> failwith "Module name not set"
     | FStar_Pervasives_Native.Some n -> n in
   let next_file_name uu___ =
     let n = get_module_name () in
@@ -263,8 +262,7 @@ let (query_logging : query_log) =
   let log_file_name uu___ =
     let uu___1 = FStar_Compiler_Effect.op_Bang current_file_name in
     match uu___1 with
-    | FStar_Pervasives_Native.None ->
-        FStar_Compiler_Effect.failwith "no log file"
+    | FStar_Pervasives_Native.None -> failwith "no log file"
     | FStar_Pervasives_Native.Some n -> n in
   { get_module_name; set_module_name; write_to_log; append_to_log; close_log
   }
@@ -669,7 +667,7 @@ let (smt_output_sections :
               let uu___1 = until (end_tag tag) suffix in
               (match uu___1 with
                | FStar_Pervasives_Native.None ->
-                   FStar_Compiler_Effect.failwith
+                   failwith
                      (Prims.strcat "Parse error: "
                         (Prims.strcat (end_tag tag) " not found"))
                | FStar_Pervasives_Native.Some (section, suffix1) ->
@@ -685,7 +683,7 @@ let (smt_output_sections :
                     FStar_Compiler_Util.format1
                       "Unexpexted output from Z3: no result section found:\n%s"
                       (FStar_Compiler_String.concat "\n" lines1) in
-                  FStar_Compiler_Effect.failwith uu___1
+                  failwith uu___1
               | FStar_Pervasives_Native.Some result1 -> result1 in
             let uu___1 = find_section "reason-unknown" lines1 in
             (match uu___1 with
@@ -977,7 +975,7 @@ let (doZ3Exe :
                            "Unexpected output from Z3: got output result: %s\n"
                            (FStar_Compiler_String.concat "\n"
                               smt_output1.smt_result) in
-                       FStar_Compiler_Effect.failwith uu___2) in
+                       failwith uu___2) in
                 (status, statistics) in
               let log_result fwrite uu___ =
                 match uu___ with
@@ -1359,7 +1357,7 @@ let (ask :
                   | FStar_Pervasives_Native.Some core1 ->
                       (if Prims.op_Negation fresh
                        then
-                         FStar_Compiler_Effect.failwith
+                         failwith
                            "Unexpected: unsat core must only be used with fresh solvers"
                        else ();
                        reading_solver_state

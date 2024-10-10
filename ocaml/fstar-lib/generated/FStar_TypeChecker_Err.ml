@@ -52,20 +52,18 @@ let print_discrepancy : 'a 'b . ('a -> 'b) -> 'a -> 'a -> ('b * 'b) =
           | (h1::t1, h2::t2) ->
               ((Prims.op_Negation h1) || h2) && (blist_leq t1 t2)
           | ([], []) -> true
-          | uu___ ->
-              FStar_Compiler_Effect.failwith "print_discrepancy: bad lists" in
+          | uu___ -> failwith "print_discrepancy: bad lists" in
         let rec succ l =
           match l with
           | (false)::t -> true :: t
           | (true)::t -> let uu___ = succ t in false :: uu___
-          | [] -> FStar_Compiler_Effect.failwith "" in
+          | [] -> failwith "" in
         let full l = FStar_Compiler_List.for_all (fun b1 -> b1) l in
         let get_bool_option s =
           let uu___ = FStar_Options.get_option s in
           match uu___ with
           | FStar_Options.Bool b1 -> b1
-          | uu___1 ->
-              FStar_Compiler_Effect.failwith "print_discrepancy: impossible" in
+          | uu___1 -> failwith "print_discrepancy: impossible" in
         let set_bool_option s b1 =
           FStar_Options.set_option s (FStar_Options.Bool b1) in
         let get uu___ =
@@ -80,8 +78,7 @@ let print_discrepancy : 'a 'b . ('a -> 'b) -> 'a -> 'a -> ('b * 'b) =
                set_bool_option "print_universes" pu;
                set_bool_option "print_effect_args" pea;
                set_bool_option "print_full_names " pf)
-          | uu___ ->
-              FStar_Compiler_Effect.failwith "impossible: print_discrepancy" in
+          | uu___ -> failwith "impossible: print_discrepancy" in
         let bas = get () in
         let rec go cur =
           if full cur

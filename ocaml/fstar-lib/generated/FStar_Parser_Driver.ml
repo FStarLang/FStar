@@ -48,7 +48,7 @@ let (parse_fragment :
             (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
             (Obj.magic msg)
       | FStar_Parser_ParseIt.Term uu___1 ->
-          FStar_Compiler_Effect.failwith
+          failwith
             "Impossible: parsing a Toplevel always results in an ASTFragment"
 let (maybe_dump_module : FStar_Parser_AST.modul -> unit) =
   fun m ->
@@ -106,5 +106,5 @@ let (parse_file :
           (Obj.magic FStar_Errors_Msg.is_error_message_list_doc)
           (Obj.magic msg)
     | FStar_Parser_ParseIt.Term uu___1 ->
-        FStar_Compiler_Effect.failwith
+        failwith
           "Impossible: parsing a Filename always results in an ASTFragment"

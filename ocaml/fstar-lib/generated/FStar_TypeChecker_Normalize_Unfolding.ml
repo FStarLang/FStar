@@ -749,7 +749,7 @@ let (should_unfold :
                              FStar_Class_Printable.printable_bool)) res in
                    FStar_Compiler_Util.format1
                      "Unexpected unfolding result: %s" uu___3 in
-                 FStar_Compiler_Effect.failwith uu___2 in
+                 failwith uu___2 in
            (let uu___2 =
               ((((FStar_Pervasives_Native.uu___is_Some
                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.dont_unfold_attr)

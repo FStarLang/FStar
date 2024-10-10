@@ -235,8 +235,7 @@ and (hash_term' : FStar_Syntax_Syntax.term -> FStar_Hash.hash_code mm) =
           let uu___4 = hash_quoteinfo qi in mix uu___3 uu___4 in
         mix uu___1 uu___2
     | FStar_Syntax_Syntax.Tm_unknown -> of_int (Prims.of_int (73))
-    | FStar_Syntax_Syntax.Tm_delayed uu___1 ->
-        FStar_Compiler_Effect.failwith "Impossible"
+    | FStar_Syntax_Syntax.Tm_delayed uu___1 -> failwith "Impossible"
 and (hash_comp' : FStar_Syntax_Syntax.comp -> FStar_Hash.hash_code mm) =
   fun c ->
     match c.FStar_Syntax_Syntax.n with

@@ -1644,7 +1644,7 @@ let (rename_gamma :
                         FStar_Syntax_Syntax.sort = uu___3
                       } in
                     FStar_Syntax_Syntax.Binding_var uu___2
-                | uu___2 -> FStar_Compiler_Effect.failwith "Not a renaming")
+                | uu___2 -> failwith "Not a renaming")
            | b -> b) gamma
 let (rename_env : FStar_Syntax_Syntax.subst_t -> env -> env) =
   fun subst ->
@@ -2134,35 +2134,30 @@ let (initial_env :
                             (fun e ->
                                fun g ->
                                  fun tau ->
-                                   FStar_Compiler_Effect.failwith
-                                     "no synthesizer available");
+                                   failwith "no synthesizer available");
                           try_solve_implicits_hook =
                             (fun e ->
                                fun tau ->
                                  fun imps ->
-                                   FStar_Compiler_Effect.failwith
-                                     "no implicit hook available");
+                                   failwith "no implicit hook available");
                           splice =
                             (fun e ->
                                fun is_typed ->
                                  fun lids ->
                                    fun tau ->
                                      fun range ->
-                                       FStar_Compiler_Effect.failwith
-                                         "no splicer available");
+                                       failwith "no splicer available");
                           mpreprocess =
                             (fun e ->
                                fun tau ->
                                  fun tm ->
-                                   FStar_Compiler_Effect.failwith
-                                     "no preprocessor available");
+                                   failwith "no preprocessor available");
                           postprocess =
                             (fun e ->
                                fun tau ->
                                  fun typ ->
                                    fun tm ->
-                                     FStar_Compiler_Effect.failwith
-                                       "no postprocessor available");
+                                     failwith "no postprocessor available");
                           identifier_info = uu___7;
                           tc_hooks = default_tc_hooks;
                           dsenv = uu___8;
@@ -2191,7 +2186,7 @@ let (push_query_indices : unit -> unit) =
   fun uu___ ->
     let uu___1 = FStar_Compiler_Effect.op_Bang query_indices in
     match uu___1 with
-    | [] -> FStar_Compiler_Effect.failwith "Empty query indices!"
+    | [] -> failwith "Empty query indices!"
     | uu___2 ->
         let uu___3 =
           let uu___4 =
@@ -2204,7 +2199,7 @@ let (pop_query_indices : unit -> unit) =
   fun uu___ ->
     let uu___1 = FStar_Compiler_Effect.op_Bang query_indices in
     match uu___1 with
-    | [] -> FStar_Compiler_Effect.failwith "Empty query indices!"
+    | [] -> failwith "Empty query indices!"
     | hd::tl -> FStar_Compiler_Effect.op_Colon_Equals query_indices tl
 let (snapshot_query_indices : unit -> (Prims.int * unit)) =
   fun uu___ -> FStar_Common.snapshot push_query_indices query_indices ()
@@ -2220,7 +2215,7 @@ let (add_query_index : (FStar_Ident.lident * Prims.int) -> unit) =
          | hd::tl ->
              FStar_Compiler_Effect.op_Colon_Equals query_indices (((l, n) ::
                hd) :: tl)
-         | uu___2 -> FStar_Compiler_Effect.failwith "Empty query indices")
+         | uu___2 -> failwith "Empty query indices")
 let (peek_query_indices :
   unit -> (FStar_Ident.lident * Prims.int) Prims.list) =
   fun uu___ ->
@@ -2308,7 +2303,7 @@ let (pop_stack : unit -> env) =
     let uu___1 = FStar_Compiler_Effect.op_Bang stack in
     match uu___1 with
     | env1::tl -> (FStar_Compiler_Effect.op_Colon_Equals stack tl; env1)
-    | uu___2 -> FStar_Compiler_Effect.failwith "Impossible: Too many pops"
+    | uu___2 -> failwith "Impossible: Too many pops"
 let (snapshot_stack : env -> (Prims.int * env)) =
   fun env1 -> FStar_Common.snapshot push_stack stack env1
 let (rollback_stack : Prims.int FStar_Pervasives_Native.option -> env) =
@@ -2867,7 +2862,7 @@ let (inst_effect_fun_with :
                     FStar_Compiler_Util.format4
                       "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
                       uu___4 uu___5 uu___6 uu___7 in
-                  FStar_Compiler_Effect.failwith uu___3)
+                  failwith uu___3)
                else ();
                (let uu___3 = inst_tscheme_with (us, t) insts in
                 FStar_Pervasives_Native.snd uu___3))
@@ -3185,8 +3180,7 @@ let (lookup_type_of_let :
             FStar_Compiler_Util.find_map lbs
               (fun lb ->
                  match lb.FStar_Syntax_Syntax.lbname with
-                 | FStar_Pervasives.Inl uu___2 ->
-                     FStar_Compiler_Effect.failwith "impossible"
+                 | FStar_Pervasives.Inl uu___2 -> failwith "impossible"
                  | FStar_Pervasives.Inr fv ->
                      let uu___2 = FStar_Syntax_Syntax.fv_eq_lid fv lid in
                      if uu___2
@@ -3251,7 +3245,7 @@ let (effect_signature :
                       Prims.strcat
                         "effect_signature: incorrect number of universes for the signature of "
                         uu___3 in
-                    FStar_Compiler_Effect.failwith uu___2
+                    failwith uu___2
                   else ());
              (let uu___2 =
                 let uu___3 = inst_ts us_opt sig_ts in
@@ -3763,7 +3757,7 @@ let (typ_of_datacon : env -> FStar_Ident.lident -> FStar_Ident.lident) =
             let uu___3 =
               FStar_Class_Show.show FStar_Ident.showable_lident lid in
             FStar_Compiler_Util.format1 "Not a datacon: %s" uu___3 in
-          FStar_Compiler_Effect.failwith uu___2
+          failwith uu___2
 let (num_datacon_non_injective_ty_params :
   env -> FStar_Ident.lident -> Prims.int FStar_Pervasives_Native.option) =
   fun env1 ->
@@ -3936,11 +3930,9 @@ let rec (delta_depth_of_qninfo_lid :
                         else FStar_Pervasives_Native.None) in
                  FStar_Compiler_Util.must uu___4
              | FStar_Syntax_Syntax.Sig_fail uu___2 ->
-                 FStar_Compiler_Effect.failwith
-                   "impossible: delta_depth_of_qninfo"
+                 failwith "impossible: delta_depth_of_qninfo"
              | FStar_Syntax_Syntax.Sig_splice uu___2 ->
-                 FStar_Compiler_Effect.failwith
-                   "impossible: delta_depth_of_qninfo"
+                 failwith "impossible: delta_depth_of_qninfo"
              | FStar_Syntax_Syntax.Sig_assume uu___2 ->
                  FStar_Syntax_Syntax.delta_constant
              | FStar_Syntax_Syntax.Sig_new_effect uu___2 ->
@@ -4010,9 +4002,9 @@ and (delta_depth_of_term :
       let t1 = FStar_Syntax_Util.unmeta t in
       match t1.FStar_Syntax_Syntax.n with
       | FStar_Syntax_Syntax.Tm_meta uu___ ->
-          FStar_Compiler_Effect.failwith "Impossible (delta depth of term)"
+          failwith "Impossible (delta depth of term)"
       | FStar_Syntax_Syntax.Tm_delayed uu___ ->
-          FStar_Compiler_Effect.failwith "Impossible (delta depth of term)"
+          failwith "Impossible (delta depth of term)"
       | FStar_Syntax_Syntax.Tm_lazy i ->
           let uu___ = FStar_Syntax_Util.unfold_lazy i in
           delta_depth_of_term env1 uu___
@@ -4273,10 +4265,10 @@ let (lookup_effect_abbrev :
                       FStar_Compiler_Util.format3
                         "(%s) Unexpected instantiation of effect %s with %s universes"
                         uu___12 uu___13 uu___14 in
-                    FStar_Compiler_Effect.failwith uu___11) in
+                    failwith uu___11) in
                match (binders, univs) with
                | ([], uu___10) ->
-                   FStar_Compiler_Effect.failwith
+                   failwith
                      "Unexpected effect abbreviation with no arguments"
                | (uu___10, uu___11::uu___12::uu___13) ->
                    let uu___14 =
@@ -4288,7 +4280,7 @@ let (lookup_effect_abbrev :
                      FStar_Compiler_Util.format2
                        "Unexpected effect abbreviation %s; polymorphic in %s universes"
                        uu___15 uu___16 in
-                   FStar_Compiler_Effect.failwith uu___14
+                   failwith uu___14
                | uu___10 ->
                    let uu___11 =
                      let uu___12 =
@@ -4308,8 +4300,7 @@ let (lookup_effect_abbrev :
                              { FStar_Syntax_Syntax.bs1 = binders1;
                                FStar_Syntax_Syntax.comp = c1;_}
                              -> FStar_Pervasives_Native.Some (binders1, c1)
-                         | uu___14 ->
-                             FStar_Compiler_Effect.failwith "Impossible")))
+                         | uu___14 -> failwith "Impossible")))
         | uu___1 -> FStar_Pervasives_Native.None
 let (norm_eff_name : env -> FStar_Ident.lident -> FStar_Ident.lident) =
   fun env1 ->
@@ -4440,7 +4431,7 @@ let (lookup_projector :
             FStar_Compiler_Util.format2
               "Impossible: projecting field #%s from constructor %s is undefined"
               uu___2 uu___3 in
-          FStar_Compiler_Effect.failwith uu___1 in
+          failwith uu___1 in
         let uu___ = lookup_datacon env1 lid in
         match uu___ with
         | (uu___1, t) ->
@@ -4907,7 +4898,7 @@ let wp_sig_aux :
             let uu___2 = FStar_Ident.string_of_lid m in
             FStar_Compiler_Util.format1
               "Impossible: declaration for monad %s not found" uu___2 in
-          FStar_Compiler_Effect.failwith uu___1
+          failwith uu___1
       | FStar_Pervasives_Native.Some (md, _q) ->
           let uu___1 =
             let uu___2 =
@@ -4929,7 +4920,7 @@ let wp_sig_aux :
                     ->
                     ((b.FStar_Syntax_Syntax.binder_bv),
                       ((wp_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort))
-                | uu___3 -> FStar_Compiler_Effect.failwith "Impossible"))
+                | uu___3 -> failwith "Impossible"))
 let (wp_signature :
   env ->
     FStar_Ident.lident -> (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term))
@@ -5303,8 +5294,7 @@ let (reify_comp :
         (let uu___1 = effect_repr_aux true env1 c u_c in
          match uu___1 with
          | FStar_Pervasives_Native.None ->
-             FStar_Compiler_Effect.failwith
-               "internal error: reifiable effect has no repr?"
+             failwith "internal error: reifiable effect has no repr?"
          | FStar_Pervasives_Native.Some tm -> tm)
 let rec (record_vals_and_defns : env -> FStar_Syntax_Syntax.sigelt -> env) =
   fun g ->
@@ -7048,8 +7038,7 @@ let (trivial : FStar_TypeChecker_Common.guard_formula -> unit) =
   fun t ->
     match t with
     | FStar_TypeChecker_Common.Trivial -> ()
-    | FStar_TypeChecker_Common.NonTrivial uu___ ->
-        FStar_Compiler_Effect.failwith "impossible"
+    | FStar_TypeChecker_Common.NonTrivial uu___ -> failwith "impossible"
 let (check_trivial :
   FStar_Syntax_Syntax.term -> FStar_TypeChecker_Common.guard_formula) =
   fun t -> FStar_TypeChecker_Common.check_trivial t

@@ -41,7 +41,7 @@ let (disentangle_abbrevs_from_bundle :
                        FStar_Syntax_Syntax.lids1 = uu___7;_}
                      -> [x]
                  | FStar_Syntax_Syntax.Sig_let uu___ ->
-                     FStar_Compiler_Effect.failwith
+                     failwith
                        "mutrecty: disentangle_abbrevs_from_bundle: type_abbrev_sigelts: impossible"
                  | uu___ -> []) sigelts in
           match type_abbrev_sigelts with
@@ -83,7 +83,7 @@ let (disentangle_abbrevs_from_bundle :
                          ->
                          (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                      | uu___1 ->
-                         FStar_Compiler_Effect.failwith
+                         failwith
                            "mutrecty: disentangle_abbrevs_from_bundle: type_abbrevs: impossible")
                   type_abbrev_sigelts in
               let unfolded_type_abbrevs =
@@ -224,7 +224,7 @@ let (disentangle_abbrevs_from_bundle :
                         | FStar_Pervasives.Inr fv ->
                             (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                         | uu___2 ->
-                            FStar_Compiler_Effect.failwith
+                            failwith
                               "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: lid: impossible" in
                       ((let uu___3 =
                           let uu___4 =
@@ -297,7 +297,7 @@ let (disentangle_abbrevs_from_bundle :
                                             in_progress uu___6);
                                          (match () with | () -> tm'))))))))
                   | uu___1 ->
-                      FStar_Compiler_Effect.failwith
+                      failwith
                         "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: impossible" in
                 let rec aux uu___1 =
                   let uu___2 = FStar_Compiler_Effect.op_Bang not_unfolded_yet in
@@ -431,7 +431,7 @@ let (disentangle_abbrevs_from_bundle :
                        }]
                   | FStar_Syntax_Syntax.Sig_let uu___1 -> []
                   | uu___1 ->
-                      FStar_Compiler_Effect.failwith
+                      failwith
                         "mutrecty: inductives_with_abbrevs_unfolded: unfold_in_sig: impossible" in
                 FStar_Compiler_List.collect unfold_in_sig sigelts in
               let new_members = filter_out_type_abbrevs members in

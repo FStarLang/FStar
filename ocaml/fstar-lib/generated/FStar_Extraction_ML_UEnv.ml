@@ -366,7 +366,7 @@ let (lookup_fv :
               FStar_Compiler_Util.format3
                 "Internal error: (%s) free variable %s not found during extraction (erased=%s)\n"
                 uu___2 uu___3 uu___4 in
-            FStar_Compiler_Effect.failwith uu___1
+            failwith uu___1
 let (lookup_bv : uenv -> FStar_Syntax_Syntax.bv -> ty_or_exp_b) =
   fun g ->
     fun bv ->
@@ -388,7 +388,7 @@ let (lookup_bv : uenv -> FStar_Syntax_Syntax.bv -> ty_or_exp_b) =
               FStar_Class_Show.show FStar_Syntax_Print.showable_bv bv in
             FStar_Compiler_Util.format2 "(%s) bound Variable %s not found\n"
               uu___1 uu___2 in
-          FStar_Compiler_Effect.failwith uu___
+          failwith uu___
       | FStar_Pervasives_Native.Some y -> y
 let (lookup_term :
   uenv ->
@@ -406,16 +406,14 @@ let (lookup_term :
             let uu___1 = lookup_fv t.FStar_Syntax_Syntax.pos g x in
             FStar_Pervasives.Inr uu___1 in
           (uu___, (x.FStar_Syntax_Syntax.fv_qual))
-      | uu___ ->
-          FStar_Compiler_Effect.failwith
-            "Impossible: lookup_term for a non-name"
+      | uu___ -> failwith "Impossible: lookup_term for a non-name"
 let (lookup_ty : uenv -> FStar_Syntax_Syntax.bv -> ty_binding) =
   fun g ->
     fun x ->
       let uu___ = lookup_bv g x in
       match uu___ with
       | FStar_Pervasives.Inl ty -> ty
-      | uu___1 -> FStar_Compiler_Effect.failwith "Expected a type name"
+      | uu___1 -> failwith "Expected a type name"
 let (lookup_tydef :
   uenv ->
     FStar_Extraction_ML_Syntax.mlpath ->
@@ -459,7 +457,7 @@ let (mlpath_of_lident :
            (let uu___2 =
               let uu___3 = FStar_Ident.string_of_lid x in
               Prims.strcat "Identifier not found: " uu___3 in
-            FStar_Compiler_Effect.failwith uu___2))
+            failwith uu___2))
       | FStar_Pervasives_Native.Some mlp -> mlp
 let (is_type_name : uenv -> FStar_Syntax_Syntax.fv -> Prims.bool) =
   fun g ->
@@ -509,7 +507,7 @@ let (lookup_record_field_name :
                let uu___2 =
                  let uu___3 = FStar_Ident.string_of_lid key in
                  Prims.strcat "Field name not found: " uu___3 in
-               FStar_Compiler_Effect.failwith uu___2
+               failwith uu___2
            | FStar_Pervasives_Native.Some mlp ->
                let uu___2 = mlp in
                (match uu___2 with
@@ -919,7 +917,7 @@ let (extend_fv :
                let uu___3 =
                  FStar_Extraction_ML_Syntax.mltyscheme_to_string t_x in
                FStar_Compiler_Util.format1 "freevars found (%s)" uu___3 in
-             FStar_Compiler_Effect.failwith uu___2)
+             failwith uu___2)
 let (extend_erased_fv : uenv -> FStar_Syntax_Syntax.fv -> uenv) =
   fun g ->
     fun f ->

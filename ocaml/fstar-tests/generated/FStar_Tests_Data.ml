@@ -94,9 +94,7 @@ let (run_all : unit -> unit) =
                        FStar_Compiler_Util.print1 "FlatSet all_remove: %s\n"
                          uu___8);
                       if Prims.op_Negation f_ok
-                      then
-                        FStar_Compiler_Effect.failwith
-                          "FlatSet all_mem failed"
+                      then failwith "FlatSet all_mem failed"
                       else ();
                       (let uu___10 =
                          let uu___11 =
@@ -106,9 +104,7 @@ let (run_all : unit -> unit) =
                                    FStar_Class_Ord.ord_int)) (Obj.magic f1) in
                          Prims.op_Negation uu___11 in
                        if uu___10
-                       then
-                         FStar_Compiler_Effect.failwith
-                           "FlatSet all_remove failed"
+                       then failwith "FlatSet all_remove failed"
                        else ());
                       (let uu___10 =
                          FStar_Compiler_Util.record_time
@@ -161,9 +157,7 @@ let (run_all : unit -> unit) =
                                          FStar_Compiler_Util.print1
                                            "RBSet all_remove: %s\n" uu___16);
                                         if Prims.op_Negation rb_ok
-                                        then
-                                          FStar_Compiler_Effect.failwith
-                                            "RBSet all_mem failed"
+                                        then failwith "RBSet all_mem failed"
                                         else ();
                                         (let uu___18 =
                                            let uu___19 =
@@ -175,6 +169,5 @@ let (run_all : unit -> unit) =
                                            Prims.op_Negation uu___19 in
                                          if uu___18
                                          then
-                                           FStar_Compiler_Effect.failwith
-                                             "RBSet all_remove failed"
+                                           failwith "RBSet all_remove failed"
                                          else ())))))))))))))

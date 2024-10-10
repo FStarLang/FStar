@@ -104,7 +104,7 @@ let rec (elim_mlty :
                   (FStar_Compiler_List.length entry1) <>
                     (FStar_Compiler_List.length args1)
                 then
-                  FStar_Compiler_Effect.failwith
+                  failwith
                     "Impossible: arity mismatch between definition and use"
                 else ();
                 (let args2 =

@@ -2335,7 +2335,7 @@ and (try_or_match_to_string :
               match x.tm with
               | Match uu___ -> "match"
               | TryWith uu___ -> "try"
-              | uu___ -> FStar_Compiler_Effect.failwith "impossible" in
+              | uu___ -> failwith "impossible" in
             let uu___ =
               match op_opt with
               | FStar_Pervasives_Native.Some op ->
@@ -2414,11 +2414,9 @@ and (aqual_to_string :
     | FStar_Pervasives_Native.Some (Implicit) -> "#"
     | FStar_Pervasives_Native.None -> ""
     | FStar_Pervasives_Native.Some (Meta uu___1) ->
-        FStar_Compiler_Effect.failwith
-          "aqual_to_strings: meta arg qualifier?"
+        failwith "aqual_to_strings: meta arg qualifier?"
     | FStar_Pervasives_Native.Some (TypeClassArg) ->
-        FStar_Compiler_Effect.failwith
-          "aqual_to_strings: meta arg qualifier?"
+        failwith "aqual_to_strings: meta arg qualifier?"
 and (attr_list_to_string : term Prims.list -> Prims.string) =
   fun uu___ ->
     match uu___ with

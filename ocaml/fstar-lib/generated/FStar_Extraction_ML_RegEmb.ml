@@ -1866,9 +1866,7 @@ let (mk_unembed :
                           br :: uu___5 in
                         FStar_Compiler_Effect.op_Colon_Equals e_branches
                           uu___4)
-               | uu___1 ->
-                   FStar_Compiler_Effect.failwith "impossible, filter above")
-            ctors;
+               | uu___1 -> failwith "impossible, filter above") ctors;
           (let nomatch =
              (FStar_Extraction_ML_Syntax.MLP_Wild,
                FStar_Pervasives_Native.None, ml_none) in
@@ -2025,9 +2023,7 @@ let (mk_embed :
                           br :: uu___5 in
                         FStar_Compiler_Effect.op_Colon_Equals e_branches
                           uu___4)
-               | uu___1 ->
-                   FStar_Compiler_Effect.failwith "impossible, filter above")
-            ctors;
+               | uu___1 -> failwith "impossible, filter above") ctors;
           (let branches =
              let uu___1 = FStar_Compiler_Effect.op_Bang e_branches in
              FStar_Compiler_List.rev uu___1 in

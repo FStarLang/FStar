@@ -1271,7 +1271,7 @@ let (make_solver_configs :
                     match (env.FStar_SMTEncoding_Env.tcenv).FStar_TypeChecker_Env.qtbl_name_and_index
                     with
                     | (FStar_Pervasives_Native.None, uu___2) ->
-                        FStar_Compiler_Effect.failwith "No query name set!"
+                        failwith "No query name set!"
                     | (FStar_Pervasives_Native.Some (q, _typ, n), uu___2) ->
                         let uu___3 = FStar_Ident.string_of_lid q in
                         (uu___3, n) in
@@ -2188,8 +2188,7 @@ let (encode_and_ask :
                                  match uu___8 with
                                  | (configs, next_hint) ->
                                      ask_solver env configs next_hint))
-                           | uu___6 ->
-                               FStar_Compiler_Effect.failwith "Impossible"))))) in
+                           | uu___6 -> failwith "Impossible"))))) in
             let uu___ =
               FStar_SMTEncoding_Solver_Cache.try_find_query_cache tcenv q in
             if uu___
@@ -2264,8 +2263,7 @@ let (do_solve :
             | FStar_Pervasives_Native.Some (uu___, ans) when ans.ok -> ()
             | FStar_Pervasives_Native.Some ([], ans) when
                 Prims.op_Negation ans.ok ->
-                FStar_Compiler_Effect.failwith
-                  "impossible: bad answer from encode_and_ask"
+                failwith "impossible: bad answer from encode_and_ask"
             | FStar_Pervasives_Native.None -> ()
 let (split_and_solve :
   Prims.bool ->
@@ -2297,8 +2295,7 @@ let (split_and_solve :
              let uu___1 = FStar_TypeChecker_Env.split_smt_query tcenv q in
              match uu___1 with
              | FStar_Pervasives_Native.None ->
-                 FStar_Compiler_Effect.failwith
-                   "Impossible: split_query callback is not set"
+                 failwith "Impossible: split_query callback is not set"
              | FStar_Pervasives_Native.Some goals1 -> goals1 in
            FStar_Compiler_List.iter
              (fun uu___2 ->

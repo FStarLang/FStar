@@ -43,8 +43,7 @@ let (and_op :
                | FStar_Pervasives_Native.Some (true) ->
                    FStar_Pervasives_Native.Some a2
                | uu___1 -> FStar_Pervasives_Native.None)
-          | uu___ ->
-              FStar_Compiler_Effect.failwith "Unexpected number of arguments"
+          | uu___ -> failwith "Unexpected number of arguments"
 let (or_op :
   FStar_TypeChecker_Primops_Base.psc ->
     FStar_Syntax_Embeddings_Base.norm_cb ->
@@ -73,8 +72,7 @@ let (or_op :
                | FStar_Pervasives_Native.Some (false) ->
                    FStar_Pervasives_Native.Some a2
                | uu___1 -> FStar_Pervasives_Native.None)
-          | uu___ ->
-              FStar_Compiler_Effect.failwith "Unexpected number of arguments"
+          | uu___ -> failwith "Unexpected number of arguments"
 let (division_modulus_op :
   (FStar_BigInt.t -> FStar_BigInt.t -> FStar_BigInt.t) ->
     FStar_BigInt.t ->

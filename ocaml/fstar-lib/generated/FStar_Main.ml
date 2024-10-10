@@ -225,7 +225,7 @@ let go : 'uuuuu . 'uuuuu -> unit =
                           else FStar_Prettyprint.FromTempToFile in
                         FStar_Prettyprint.generate printing_mode filenames
                       else
-                        FStar_Compiler_Effect.failwith
+                        failwith
                           "You seem to be using the F#-generated version ofthe compiler ; \\o\n                         reindenting is not known to work yet with this version")
                    else
                      (let uu___11 =
@@ -494,8 +494,7 @@ let (lazy_chooser :
   fun k ->
     fun i ->
       match k with
-      | FStar_Syntax_Syntax.BadLazy ->
-          FStar_Compiler_Effect.failwith "lazy chooser: got a BadLazy"
+      | FStar_Syntax_Syntax.BadLazy -> failwith "lazy chooser: got a BadLazy"
       | FStar_Syntax_Syntax.Lazy_bv ->
           FStar_Reflection_V2_Embeddings.unfold_lazy_bv i
       | FStar_Syntax_Syntax.Lazy_namedv ->

@@ -1183,7 +1183,7 @@ let (do_unify_aux :
                          Prims.op_Negation uu___5 in
                        if uu___4
                        then
-                         FStar_Compiler_Effect.failwith
+                         failwith
                            "internal error: do_unify: guard is not trivial"
                        else ());
                       ret true))
@@ -3829,9 +3829,7 @@ let (lemma_or_sq :
             | pre::post::uu___3 ->
                 ((FStar_Pervasives_Native.fst pre),
                   (FStar_Pervasives_Native.fst post))
-            | uu___3 ->
-                FStar_Compiler_Effect.failwith
-                  "apply_lemma: impossible: not a lemma" in
+            | uu___3 -> failwith "apply_lemma: impossible: not a lemma" in
           (match uu___2 with
            | (pre, post) ->
                let post1 =
@@ -5618,7 +5616,7 @@ let (_t_trefl :
                                                              if uu___6
                                                              then ret true
                                                              else
-                                                               FStar_Compiler_Effect.failwith
+                                                               failwith
                                                                  "internal error: _t_refl: guard is not trivial")))
                                                     uu___4)))) uu___2)))
                      uu___2 uu___1 in
@@ -7364,7 +7362,7 @@ let (t_destruct :
                                                       | FStar_Syntax_Syntax.Tm_fvar
                                                           fv -> ret (fv, us)
                                                       | uu___9 ->
-                                                          FStar_Compiler_Effect.failwith
+                                                          failwith
                                                             "impossible: uinst over something that's not an fvar")
                                                  | uu___8 ->
                                                      FStar_Tactics_Monad.fail
@@ -8329,13 +8327,13 @@ let (gather_explicit_guards_for_resolved_goals :
 let rec last : 'a . 'a Prims.list -> 'a =
   fun l ->
     match l with
-    | [] -> FStar_Compiler_Effect.failwith "last: empty list"
+    | [] -> failwith "last: empty list"
     | x::[] -> x
     | uu___::xs -> last xs
 let rec init : 'a . 'a Prims.list -> 'a Prims.list =
   fun l ->
     match l with
-    | [] -> FStar_Compiler_Effect.failwith "init: empty list"
+    | [] -> failwith "init: empty list"
     | x::[] -> []
     | x::xs -> let uu___ = init xs in x :: uu___
 let rec (inspect :
@@ -8376,7 +8374,7 @@ let rec (inspect :
                             (ret (FStar_Reflection_V1_Data.Tv_UInst (fv, us)))
                       | uu___3 ->
                           Obj.magic
-                            (FStar_Compiler_Effect.failwith
+                            (failwith
                                "Tac::inspect: Tm_uinst head not an fvar"))
                  | FStar_Syntax_Syntax.Tm_ascribed
                      { FStar_Syntax_Syntax.tm = t3;
@@ -8401,10 +8399,7 @@ let rec (inspect :
                  | FStar_Syntax_Syntax.Tm_app
                      { FStar_Syntax_Syntax.hd = uu___2;
                        FStar_Syntax_Syntax.args = [];_}
-                     ->
-                     Obj.magic
-                       (FStar_Compiler_Effect.failwith
-                          "empty arguments on Tm_app")
+                     -> Obj.magic (failwith "empty arguments on Tm_app")
                  | FStar_Syntax_Syntax.Tm_app
                      { FStar_Syntax_Syntax.hd = hd;
                        FStar_Syntax_Syntax.args = args;_}
@@ -8427,10 +8422,7 @@ let rec (inspect :
                      { FStar_Syntax_Syntax.bs = [];
                        FStar_Syntax_Syntax.body = uu___2;
                        FStar_Syntax_Syntax.rc_opt = uu___3;_}
-                     ->
-                     Obj.magic
-                       (FStar_Compiler_Effect.failwith
-                          "empty arguments on Tm_abs")
+                     -> Obj.magic (failwith "empty arguments on Tm_abs")
                  | FStar_Syntax_Syntax.Tm_abs
                      { FStar_Syntax_Syntax.bs = bs;
                        FStar_Syntax_Syntax.body = t3;
@@ -8440,9 +8432,7 @@ let rec (inspect :
                      (match uu___2 with
                       | (bs1, t4) ->
                           (match bs1 with
-                           | [] ->
-                               Obj.magic
-                                 (FStar_Compiler_Effect.failwith "impossible")
+                           | [] -> Obj.magic (failwith "impossible")
                            | b::bs2 ->
                                let uu___3 =
                                  let uu___4 =
@@ -8456,10 +8446,7 @@ let rec (inspect :
                  | FStar_Syntax_Syntax.Tm_arrow
                      { FStar_Syntax_Syntax.bs1 = [];
                        FStar_Syntax_Syntax.comp = uu___2;_}
-                     ->
-                     Obj.magic
-                       (FStar_Compiler_Effect.failwith
-                          "empty binders on arrow")
+                     -> Obj.magic (failwith "empty binders on arrow")
                  | FStar_Syntax_Syntax.Tm_arrow uu___2 ->
                      let uu___3 = FStar_Syntax_Util.arrow_one t2 in
                      (match uu___3 with
@@ -8467,8 +8454,7 @@ let rec (inspect :
                           Obj.magic
                             (ret (FStar_Reflection_V1_Data.Tv_Arrow (b, c)))
                       | FStar_Pervasives_Native.None ->
-                          Obj.magic
-                            (FStar_Compiler_Effect.failwith "impossible"))
+                          Obj.magic (failwith "impossible"))
                  | FStar_Syntax_Syntax.Tm_refine
                      { FStar_Syntax_Syntax.b = bv;
                        FStar_Syntax_Syntax.phi = t3;_}
@@ -8480,8 +8466,7 @@ let rec (inspect :
                           let b1 =
                             match b' with
                             | b'1::[] -> b'1
-                            | uu___3 ->
-                                FStar_Compiler_Effect.failwith "impossible" in
+                            | uu___3 -> failwith "impossible" in
                           Obj.magic
                             (ret
                                (FStar_Reflection_V1_Data.Tv_Refine
@@ -8525,7 +8510,7 @@ let rec (inspect :
                                    match bs with
                                    | b2::[] -> b2
                                    | uu___4 ->
-                                       FStar_Compiler_Effect.failwith
+                                       failwith
                                          "impossible: open_term returned different amount of binders" in
                                  Obj.magic
                                    (ret
@@ -8572,7 +8557,7 @@ let rec (inspect :
                                                      t22))))
                                   | uu___4 ->
                                       Obj.magic
-                                        (FStar_Compiler_Effect.failwith
+                                        (failwith
                                            "impossible: open_term returned different amount of binders"))))
                  | FStar_Syntax_Syntax.Tm_match
                      { FStar_Syntax_Syntax.scrutinee = t3;
@@ -9056,7 +9041,7 @@ let (t_commute_applied_match : unit -> unit FStar_Tactics_Monad.tac) =
                                                    FStar_Syntax_Util.exp_unit))
                                            else
                                              Obj.magic
-                                               (FStar_Compiler_Effect.failwith
+                                               (failwith
                                                   "internal error: _t_refl: guard is not trivial"))
                                       uu___6))
                         | uu___5 ->

@@ -55,9 +55,7 @@ let (unshadow :
               let uu___ = FStar_Syntax_Subst.subst_binders subst [b] in
               match uu___ with
               | b2::[] -> b2
-              | uu___1 ->
-                  FStar_Compiler_Effect.failwith
-                    "impossible: unshadow subst_binders" in
+              | uu___1 -> failwith "impossible: unshadow subst_binders" in
             let uu___ =
               ((b1.FStar_Syntax_Syntax.binder_bv),
                 (b1.FStar_Syntax_Syntax.binder_qual)) in
@@ -162,8 +160,7 @@ let (goal_to_string :
                          FStar_Syntax_Syntax.binder_attrs =
                            (uu___1.FStar_Syntax_Syntax.binder_attrs)
                        }
-                   | uu___3 ->
-                       FStar_Compiler_Effect.failwith "Not a renaming") bs in
+                   | uu___3 -> failwith "Not a renaming") bs in
             let goal_binders =
               (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_binders in
             let goal_ty = FStar_Tactics_Types.goal_type g in

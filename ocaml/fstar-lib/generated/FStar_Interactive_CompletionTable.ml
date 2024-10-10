@@ -101,10 +101,8 @@ let merge_increasing_lists_rev :
     fun lists ->
       let cmp v1 v2 =
         match (v1, v2) with
-        | ((uu___, []), uu___1) ->
-            FStar_Compiler_Effect.failwith "impossible"
-        | (uu___, (uu___1, [])) ->
-            FStar_Compiler_Effect.failwith "impossible"
+        | ((uu___, []), uu___1) -> failwith "impossible"
+        | (uu___, (uu___1, [])) -> failwith "impossible"
         | ((pr1, h1::uu___), (pr2, h2::uu___1)) ->
             let cmp_h =
               let uu___2 = key_fn h1 in
@@ -115,7 +113,7 @@ let merge_increasing_lists_rev :
         match uu___ with
         | FStar_Pervasives_Native.None -> acc
         | FStar_Pervasives_Native.Some ((pr, []), uu___1) ->
-            FStar_Compiler_Effect.failwith "impossible"
+            failwith "impossible"
         | FStar_Pervasives_Native.Some ((pr, v::[]), lists2) ->
             let uu___1 = push_nodup key_fn v acc in aux lists2 uu___1
         | FStar_Pervasives_Native.Some ((pr, v::tl), lists2) ->
@@ -168,9 +166,7 @@ let rec btree_from_list :
          match uu___1 with
          | (lbt, nodes_left) ->
              (match nodes_left with
-              | [] ->
-                  FStar_Compiler_Effect.failwith
-                    "Invalid size passed to btree_from_list"
+              | [] -> failwith "Invalid size passed to btree_from_list"
               | (k, v)::nodes_left1 ->
                   let uu___2 = btree_from_list nodes_left1 rbt_size in
                   (match uu___2 with
@@ -396,7 +392,7 @@ let rec trie_find_exact :
   fun tr ->
     fun query1 ->
       match query1 with
-      | [] -> FStar_Compiler_Effect.failwith "Empty query in trie_find_exact"
+      | [] -> failwith "Empty query in trie_find_exact"
       | name::[] -> names_find_exact tr.bindings name
       | ns::query2 ->
           let uu___ = names_find_exact tr.namespaces ns in

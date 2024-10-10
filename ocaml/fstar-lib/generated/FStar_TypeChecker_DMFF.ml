@@ -1016,9 +1016,7 @@ let (gen_wps_for_free :
                     | FStar_Syntax_Syntax.Tm_arrow
                         { FStar_Syntax_Syntax.bs1 = [];
                           FStar_Syntax_Syntax.comp = uu___4;_}
-                        ->
-                        FStar_Compiler_Effect.failwith
-                          "impossible: arrow with empty binders"
+                        -> failwith "impossible: arrow with empty binders"
                     | uu___4 -> FStar_Syntax_Util.mk_untyped_eq2 x y in
                   let stronger =
                     let wp1 =
@@ -1073,7 +1071,7 @@ let (gen_wps_for_free :
                                          mk_stronger t2 uu___7 uu___8) args in
                             match uu___5 with
                             | [] ->
-                                FStar_Compiler_Effect.failwith
+                                failwith
                                   "Impossible: empty application when creating stronger relation in DM4F"
                             | rel0::rels -> (rel0, rels) in
                           (match uu___4 with
@@ -1168,9 +1166,7 @@ let (gen_wps_for_free :
                           FStar_Compiler_List.fold_right
                             (fun bv -> fun body1 -> mk_forall bv body1) bvs
                             body
-                      | uu___4 ->
-                          FStar_Compiler_Effect.failwith
-                            "Not a DM elaborated type" in
+                      | uu___4 -> failwith "Not a DM elaborated type" in
                     let body =
                       let uu___3 = FStar_Syntax_Util.unascribe wp_a1 in
                       let uu___4 = FStar_Syntax_Syntax.bv_to_name wp1 in
@@ -1251,7 +1247,7 @@ let (gen_wps_for_free :
                               FStar_Syntax_Util.close_forall_no_univs
                                 binders1 pattern_guarded_body
                           | uu___5 ->
-                              FStar_Compiler_Effect.failwith
+                              failwith
                                 "Impossible: Expected the equivalence to be a quantified formula" in
                         let body =
                           let uu___4 =
@@ -1385,7 +1381,7 @@ let (gen_wps_for_free :
                             } in
                           FStar_Syntax_Syntax.DM4F_eff uu___4
                       | uu___4 ->
-                          FStar_Compiler_Effect.failwith
+                          failwith
                             "Impossible! For a DM4F effect combinators must be in DM4f_eff" in
                     let uu___4 =
                       let uu___5 = FStar_Compiler_Effect.op_Bang sigelts in
@@ -1469,9 +1465,7 @@ let (is_monadic_arrow : FStar_Syntax_Syntax.term' -> nm) =
     | FStar_Syntax_Syntax.Tm_arrow
         { FStar_Syntax_Syntax.bs1 = uu___; FStar_Syntax_Syntax.comp = c;_} ->
         nm_of_comp c
-    | uu___ ->
-        FStar_Compiler_Effect.failwith
-          "unexpected_argument: [is_monadic_arrow]"
+    | uu___ -> failwith "unexpected_argument: [is_monadic_arrow]"
 let (is_monadic_comp :
   FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax -> Prims.bool) =
   fun c ->
@@ -2047,16 +2041,14 @@ and (star_type' :
       | FStar_Syntax_Syntax.Tm_lazy i ->
           let uu___ = FStar_Syntax_Util.unfold_lazy i in
           star_type' env1 uu___
-      | FStar_Syntax_Syntax.Tm_delayed uu___ ->
-          FStar_Compiler_Effect.failwith "impossible"
+      | FStar_Syntax_Syntax.Tm_delayed uu___ -> failwith "impossible"
 let (is_monadic :
   FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option ->
     Prims.bool)
   =
   fun uu___ ->
     match uu___ with
-    | FStar_Pervasives_Native.None ->
-        FStar_Compiler_Effect.failwith "un-annotated lambda?!"
+    | FStar_Pervasives_Native.None -> failwith "un-annotated lambda?!"
     | FStar_Pervasives_Native.Some rc ->
         FStar_Compiler_Util.for_some
           (fun uu___1 ->
@@ -2260,7 +2252,7 @@ let rec (check :
           let strip_m uu___ =
             match uu___ with
             | (M t, s_e, u_e) -> (t, s_e, u_e)
-            | uu___1 -> FStar_Compiler_Effect.failwith "impossible" in
+            | uu___1 -> failwith "impossible" in
           match context_nm with
           | N t ->
               let uu___ =
@@ -2326,31 +2318,31 @@ let rec (check :
               let uu___3 =
                 FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
               FStar_Compiler_Util.format1 "[check]: Tm_let %s" uu___3 in
-            FStar_Compiler_Effect.failwith uu___2
+            failwith uu___2
         | FStar_Syntax_Syntax.Tm_type uu___1 ->
-            FStar_Compiler_Effect.failwith "impossible (DM stratification)"
+            failwith "impossible (DM stratification)"
         | FStar_Syntax_Syntax.Tm_arrow uu___1 ->
-            FStar_Compiler_Effect.failwith "impossible (DM stratification)"
+            failwith "impossible (DM stratification)"
         | FStar_Syntax_Syntax.Tm_refine uu___1 ->
             let uu___2 =
               let uu___3 =
                 FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
               FStar_Compiler_Util.format1 "[check]: Tm_refine %s" uu___3 in
-            FStar_Compiler_Effect.failwith uu___2
+            failwith uu___2
         | FStar_Syntax_Syntax.Tm_uvar uu___1 ->
             let uu___2 =
               let uu___3 =
                 FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
               FStar_Compiler_Util.format1 "[check]: Tm_uvar %s" uu___3 in
-            FStar_Compiler_Effect.failwith uu___2
+            failwith uu___2
         | FStar_Syntax_Syntax.Tm_delayed uu___1 ->
-            FStar_Compiler_Effect.failwith "impossible (compressed)"
+            failwith "impossible (compressed)"
         | FStar_Syntax_Syntax.Tm_unknown ->
             let uu___1 =
               let uu___2 =
                 FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
               FStar_Compiler_Util.format1 "[check]: Tm_unknown %s" uu___2 in
-            FStar_Compiler_Effect.failwith uu___1
+            failwith uu___1
 and (infer :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -2373,7 +2365,7 @@ and (infer :
         uu___1.FStar_Syntax_Syntax.n in
       match uu___ with
       | FStar_Syntax_Syntax.Tm_bvar bv ->
-          FStar_Compiler_Effect.failwith "I failed to open a binder... boo"
+          failwith "I failed to open a binder... boo"
       | FStar_Syntax_Syntax.Tm_name bv ->
           ((N (bv.FStar_Syntax_Syntax.sort)), e, e)
       | FStar_Syntax_Syntax.Tm_lazy i ->
@@ -3004,12 +2996,9 @@ and (infer :
                                                 uu___9 in
                                             mk uu___8 in
                                           N uu___7
-                                      | uu___7 ->
-                                          FStar_Compiler_Effect.failwith
-                                            "wat?")
+                                      | uu___7 -> failwith "wat?")
                                  | ([], uu___6::uu___7) ->
-                                     FStar_Compiler_Effect.failwith
-                                       "just checked that?!"
+                                     failwith "just checked that?!"
                                  | ({ FStar_Syntax_Syntax.binder_bv = bv;
                                       FStar_Syntax_Syntax.binder_qual =
                                         uu___6;
@@ -3130,31 +3119,31 @@ and (infer :
             let uu___3 =
               FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
             FStar_Compiler_Util.format1 "[infer]: Tm_let %s" uu___3 in
-          FStar_Compiler_Effect.failwith uu___2
+          failwith uu___2
       | FStar_Syntax_Syntax.Tm_type uu___1 ->
-          FStar_Compiler_Effect.failwith "impossible (DM stratification)"
+          failwith "impossible (DM stratification)"
       | FStar_Syntax_Syntax.Tm_arrow uu___1 ->
-          FStar_Compiler_Effect.failwith "impossible (DM stratification)"
+          failwith "impossible (DM stratification)"
       | FStar_Syntax_Syntax.Tm_refine uu___1 ->
           let uu___2 =
             let uu___3 =
               FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
             FStar_Compiler_Util.format1 "[infer]: Tm_refine %s" uu___3 in
-          FStar_Compiler_Effect.failwith uu___2
+          failwith uu___2
       | FStar_Syntax_Syntax.Tm_uvar uu___1 ->
           let uu___2 =
             let uu___3 =
               FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
             FStar_Compiler_Util.format1 "[infer]: Tm_uvar %s" uu___3 in
-          FStar_Compiler_Effect.failwith uu___2
+          failwith uu___2
       | FStar_Syntax_Syntax.Tm_delayed uu___1 ->
-          FStar_Compiler_Effect.failwith "impossible (compressed)"
+          failwith "impossible (compressed)"
       | FStar_Syntax_Syntax.Tm_unknown ->
           let uu___1 =
             let uu___2 =
               FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
             FStar_Compiler_Util.format1 "[infer]: Tm_unknown %s" uu___2 in
-          FStar_Compiler_Effect.failwith uu___1
+          failwith uu___1
 and (mk_match :
   env ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -3243,8 +3232,7 @@ and (mk_match :
                                             ((M t2), (pat, guard, s_body1),
                                               (pat, guard, u_body1)))
                                    | (M uu___6, false) ->
-                                       FStar_Compiler_Effect.failwith
-                                         "impossible")) nms branches1 in
+                                       failwith "impossible")) nms branches1 in
                      FStar_Compiler_List.unzip3 uu___4 in
                    (match uu___3 with
                     | (nms1, s_branches, u_branches) ->
@@ -3663,7 +3651,7 @@ and (check_n :
       let uu___ = check env1 e mn in
       match uu___ with
       | (N t, s_e, u_e) -> (t, s_e, u_e)
-      | uu___1 -> FStar_Compiler_Effect.failwith "[check_n]: impossible"
+      | uu___1 -> failwith "[check_n]: impossible"
 and (check_m :
   env_ ->
     FStar_Syntax_Syntax.term ->
@@ -3680,7 +3668,7 @@ and (check_m :
       let uu___ = check env1 e mn in
       match uu___ with
       | (M t, s_e, u_e) -> (t, s_e, u_e)
-      | uu___1 -> FStar_Compiler_Effect.failwith "[check_m]: impossible"
+      | uu___1 -> failwith "[check_m]: impossible"
 and (comp_of_nm : nm_ -> FStar_Syntax_Syntax.comp) =
   fun nm1 ->
     match nm1 with | N t -> FStar_Syntax_Syntax.mk_Total t | M t -> mk_M t
@@ -3743,9 +3731,7 @@ and (trans_F_ :
                                FStar_Compiler_Range_Type.dummyRange in
                            FStar_Syntax_Util.is_constructor wp_head uu___6 in
                          Prims.op_Negation uu___5) in
-                    if uu___4
-                    then FStar_Compiler_Effect.failwith "mismatch"
-                    else ());
+                    if uu___4 then failwith "mismatch" else ());
                    (let uu___4 =
                       let uu___5 =
                         let uu___6 =
@@ -3911,7 +3897,7 @@ and (trans_F_ :
              { FStar_Syntax_Syntax.tm = e; FStar_Syntax_Syntax.asc = uu___2;
                FStar_Syntax_Syntax.eff_opt = uu___3;_}
              -> trans_F_ env1 e wp
-         | uu___2 -> FStar_Compiler_Effect.failwith "impossible trans_F_")
+         | uu___2 -> failwith "impossible trans_F_")
 and (trans_G :
   env_ ->
     FStar_Syntax_Syntax.typ ->
@@ -4289,7 +4275,7 @@ let (cps_and_elaborate :
                                                  | (b11::b21::[], body1) ->
                                                      (b11, b21, body1)
                                                  | uu___17 ->
-                                                     FStar_Compiler_Effect.failwith
+                                                     failwith
                                                        "Impossible : open_term not preserving binders arity" in
                                                (match uu___15 with
                                                 | (b11, b21, body1) ->
@@ -4524,7 +4510,7 @@ let (cps_and_elaborate :
                                          let rec apply_last f l =
                                            match l with
                                            | [] ->
-                                               FStar_Compiler_Effect.failwith
+                                               failwith
                                                  "impossible: empty path.."
                                            | a2::[] ->
                                                let uu___14 = f a2 in
@@ -4964,7 +4950,7 @@ let (cps_and_elaborate :
                                                       | (b::bs, body) ->
                                                           (b, bs, body)
                                                       | uu___21 ->
-                                                          FStar_Compiler_Effect.failwith
+                                                          failwith
                                                             "Impossible : open_term nt preserving binders arity" in
                                                     (match uu___19 with
                                                      | (type_param1,
@@ -5209,7 +5195,7 @@ let (cps_and_elaborate :
                                                            FStar_Syntax_Syntax.DM4F_eff
                                                              uu___20
                                                        | uu___20 ->
-                                                           FStar_Compiler_Effect.failwith
+                                                           failwith
                                                              "Impossible! For a DM4F effect combinators must be in DM4f_eff" in
                                                      let ed1 =
                                                        let uu___20 =

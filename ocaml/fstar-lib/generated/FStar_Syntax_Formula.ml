@@ -398,9 +398,7 @@ and (destruct_sq_exists :
                                      let b1 =
                                        match bs with
                                        | b2::[] -> b2
-                                       | uu___8 ->
-                                           FStar_Compiler_Effect.failwith
-                                             "impossible" in
+                                       | uu___8 -> failwith "impossible" in
                                      let uu___8 = patterns q1 in
                                      (match uu___8 with
                                       | (pats, q2) ->

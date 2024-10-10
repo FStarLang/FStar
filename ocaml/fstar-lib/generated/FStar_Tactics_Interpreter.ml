@@ -398,9 +398,7 @@ let e_tactic_thunk :
       (fun uu___1 ->
          fun uu___2 ->
            fun uu___3 ->
-             fun uu___4 ->
-               FStar_Compiler_Effect.failwith
-                 "Impossible: embedding tactic (thunk)?")
+             fun uu___4 -> failwith "Impossible: embedding tactic (thunk)?")
       (fun t ->
          fun cb ->
            let uu___1 =
@@ -416,9 +414,7 @@ let e_tactic_nbe_thunk :
   fun er ->
     FStar_TypeChecker_NBETerm.mk_emb
       (fun cb ->
-         fun uu___ ->
-           FStar_Compiler_Effect.failwith
-             "Impossible: NBE embedding tactic (thunk)?")
+         fun uu___ -> failwith "Impossible: NBE embedding tactic (thunk)?")
       (fun cb ->
          fun t ->
            let uu___ =
@@ -445,9 +441,7 @@ let e_tactic_1 :
         (fun uu___1 ->
            fun uu___2 ->
              fun uu___3 ->
-               fun uu___4 ->
-                 FStar_Compiler_Effect.failwith
-                   "Impossible: embedding tactic (1)?")
+               fun uu___4 -> failwith "Impossible: embedding tactic (1)?")
         (fun t ->
            fun cb ->
              let uu___1 = unembed_tactic_1 ea er t cb in
@@ -463,9 +457,7 @@ let e_tactic_nbe_1 :
     fun er ->
       FStar_TypeChecker_NBETerm.mk_emb
         (fun cb ->
-           fun uu___ ->
-             FStar_Compiler_Effect.failwith
-               "Impossible: NBE embedding tactic (1)?")
+           fun uu___ -> failwith "Impossible: NBE embedding tactic (1)?")
         (fun cb ->
            fun t ->
              let uu___ = unembed_tactic_nbe_1 ea er cb t in
@@ -508,7 +500,7 @@ let e_tactic_1_alt :
   fun ea ->
     fun er ->
       let em uu___ uu___1 uu___2 uu___3 =
-        FStar_Compiler_Effect.failwith "Impossible: embedding tactic (1)?" in
+        failwith "Impossible: embedding tactic (1)?" in
       let un t0 n =
         let uu___ = unembed_tactic_1_alt ea er t0 n in
         match uu___ with
@@ -998,7 +990,7 @@ let run_unembedded_tactic_on_ps :
                                     FStar_Compiler_Util.format1
                                       "Irrelevant tactic witness does not unify with (): %s"
                                       uu___9 in
-                                  FStar_Compiler_Effect.failwith uu___8)))
+                                  failwith uu___8)))
                            else ())) remaining_smt_goals;
                      FStar_Errors.with_ctx
                        "While checking implicits left by a tactic"

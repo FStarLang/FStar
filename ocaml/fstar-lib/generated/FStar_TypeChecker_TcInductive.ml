@@ -126,8 +126,7 @@ let (check_sig_inductive_injectivity_on_params :
                                                    FStar_Compiler_Util.format3
                                                      "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
                                                      uu___16 uu___17 uu___18 in
-                                                 FStar_Compiler_Effect.failwith
-                                                   uu___15
+                                                 failwith uu___15
                                              | (uu___14,
                                                 FStar_Syntax_Syntax.U_unknown)
                                                  ->
@@ -147,8 +146,7 @@ let (check_sig_inductive_injectivity_on_params :
                                                    FStar_Compiler_Util.format3
                                                      "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
                                                      uu___16 uu___17 uu___18 in
-                                                 FStar_Compiler_Effect.failwith
-                                                   uu___15
+                                                 failwith uu___15
                                              | (FStar_Syntax_Syntax.U_unif
                                                 uu___14, uu___15) ->
                                                  let uu___16 =
@@ -167,8 +165,7 @@ let (check_sig_inductive_injectivity_on_params :
                                                    FStar_Compiler_Util.format3
                                                      "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
                                                      uu___17 uu___18 uu___19 in
-                                                 FStar_Compiler_Effect.failwith
-                                                   uu___16
+                                                 failwith uu___16
                                              | (uu___14,
                                                 FStar_Syntax_Syntax.U_unif
                                                 uu___15) ->
@@ -188,8 +185,7 @@ let (check_sig_inductive_injectivity_on_params :
                                                    FStar_Compiler_Util.format3
                                                      "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
                                                      uu___17 uu___18 uu___19 in
-                                                 FStar_Compiler_Effect.failwith
-                                                   uu___16
+                                                 failwith uu___16
                                              | uu___14 -> false in
                                            let u_leq_u_k u =
                                              let u1 =
@@ -531,7 +527,7 @@ let (tc_tycon :
                                                          =
                                                          (s.FStar_Syntax_Syntax.sigopts)
                                                      }, u, guard1))))))))))
-      | uu___ -> FStar_Compiler_Effect.failwith "impossible"
+      | uu___ -> failwith "impossible"
 let (mk_implicit : FStar_Syntax_Syntax.bqual -> FStar_Syntax_Syntax.bqual) =
   fun uu___ ->
     match uu___ with
@@ -627,9 +623,7 @@ let (tc_data :
                                             (uu___14, tps2, u_tc) in
                                           FStar_Pervasives_Native.Some
                                             uu___13
-                                      | uu___6 ->
-                                          FStar_Compiler_Effect.failwith
-                                            "Impossible")
+                                      | uu___6 -> failwith "Impossible")
                                    else FStar_Pervasives_Native.None) in
                         match tps_u_opt with
                         | FStar_Pervasives_Native.Some x -> x
@@ -1054,7 +1048,7 @@ let (tc_data :
                                                          =
                                                          (se.FStar_Syntax_Syntax.sigopts)
                                                      }, g)))))))))))))
-        | uu___ -> FStar_Compiler_Effect.failwith "impossible"
+        | uu___ -> failwith "impossible"
 let (generalize_and_inst_within :
   FStar_TypeChecker_Env.env_t ->
     (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.universe) Prims.list ->
@@ -1085,8 +1079,7 @@ let (generalize_and_inst_within :
                           let uu___9 = FStar_Syntax_Syntax.mk_Total k in
                           FStar_Syntax_Util.arrow tps uu___9 in
                         FStar_Syntax_Syntax.null_binder uu___8
-                    | uu___2 -> FStar_Compiler_Effect.failwith "Impossible"))
-            tcs in
+                    | uu___2 -> failwith "Impossible")) tcs in
         let binders' =
           FStar_Compiler_List.map
             (fun se ->
@@ -1100,7 +1093,7 @@ let (generalize_and_inst_within :
                      FStar_Syntax_Syntax.mutuals1 = uu___4;
                      FStar_Syntax_Syntax.injective_type_params1 = uu___5;_}
                    -> FStar_Syntax_Syntax.null_binder t
-               | uu___ -> FStar_Compiler_Effect.failwith "Impossible") datas in
+               | uu___ -> failwith "Impossible") datas in
         let t =
           let uu___ = FStar_Syntax_Syntax.mk_Total FStar_Syntax_Syntax.t_unit in
           FStar_Syntax_Util.arrow
@@ -1256,9 +1249,8 @@ let (generalize_and_inst_within :
                                                         =
                                                         (se.FStar_Syntax_Syntax.sigopts)
                                                     })
-                                           | uu___13 ->
-                                               FStar_Compiler_Effect.failwith
-                                                 "Impossible")) tc_types tcs in
+                                           | uu___13 -> failwith "Impossible"))
+                                 tc_types tcs in
                              let datas1 =
                                match uvs1 with
                                | [] -> datas
@@ -1305,9 +1297,8 @@ let (generalize_and_inst_within :
                                               FStar_Syntax_Syntax.sigopts =
                                                 uu___21;_}
                                               -> (tc, uvs_universes)
-                                          | uu___9 ->
-                                              FStar_Compiler_Effect.failwith
-                                                "Impossible") tcs1 in
+                                          | uu___9 -> failwith "Impossible")
+                                       tcs1 in
                                    FStar_Compiler_List.map2
                                      (fun uu___8 ->
                                         fun d ->
@@ -1388,8 +1379,7 @@ let (generalize_and_inst_within :
                                                        (d.FStar_Syntax_Syntax.sigopts)
                                                    }
                                                | uu___12 ->
-                                                   FStar_Compiler_Effect.failwith
-                                                     "Impossible"))
+                                                   failwith "Impossible"))
                                      data_types datas in
                              (tcs1, datas1))))))
 let (datacon_typ : FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.term) =
@@ -1402,7 +1392,7 @@ let (datacon_typ : FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.term) =
           FStar_Syntax_Syntax.mutuals1 = uu___4;
           FStar_Syntax_Syntax.injective_type_params1 = uu___5;_}
         -> t
-    | uu___ -> FStar_Compiler_Effect.failwith "Impossible!"
+    | uu___ -> failwith "Impossible!"
 let (haseq_suffix : Prims.string) = "__uu___haseq"
 let (is_haseq_lid : FStar_Ident.lid -> Prims.bool) =
   fun lid ->
@@ -1456,7 +1446,7 @@ let (get_optimized_haseq_axiom :
                   FStar_Syntax_Syntax.ds = uu___4;
                   FStar_Syntax_Syntax.injective_type_params = uu___5;_}
                 -> (lid, bs, t)
-            | uu___1 -> FStar_Compiler_Effect.failwith "Impossible!" in
+            | uu___1 -> failwith "Impossible!" in
           match uu___ with
           | (lid, bs, t) ->
               let bs1 = FStar_Syntax_Subst.subst_binders usubst bs in
@@ -1731,7 +1721,7 @@ let (optimized_haseq_ty :
                     FStar_Syntax_Syntax.ds = uu___5;
                     FStar_Syntax_Syntax.injective_type_params = uu___6;_}
                   -> lid1
-              | uu___ -> FStar_Compiler_Effect.failwith "Impossible!" in
+              | uu___ -> failwith "Impossible!" in
             let uu___ = acc in
             match uu___ with
             | (uu___1, en, uu___2, uu___3) ->
@@ -1761,9 +1751,8 @@ let (optimized_haseq_ty :
                                        FStar_Syntax_Syntax.injective_type_params1
                                          = uu___11;_}
                                      -> t_lid = lid
-                                 | uu___6 ->
-                                     FStar_Compiler_Effect.failwith
-                                       "Impossible") all_datas_in_the_bundle in
+                                 | uu___6 -> failwith "Impossible")
+                              all_datas_in_the_bundle in
                           let cond =
                             FStar_Compiler_List.fold_left
                               (fun acc1 ->
@@ -1800,7 +1789,7 @@ let (optimized_haseq_scheme :
                   FStar_Syntax_Syntax.ds = uu___5;
                   FStar_Syntax_Syntax.injective_type_params = uu___6;_}
                 -> (us, t)
-            | uu___1 -> FStar_Compiler_Effect.failwith "Impossible!" in
+            | uu___1 -> failwith "Impossible!" in
           match uu___ with
           | (us, t) ->
               let uu___1 = FStar_Syntax_Subst.univ_var_opening us in
@@ -2028,7 +2017,7 @@ let (unoptimized_haseq_ty :
                       FStar_Syntax_Syntax.ds = d_lids;
                       FStar_Syntax_Syntax.injective_type_params = uu___4;_}
                     -> (lid, bs, t, d_lids)
-                | uu___1 -> FStar_Compiler_Effect.failwith "Impossible!" in
+                | uu___1 -> failwith "Impossible!" in
               match uu___ with
               | (lid, bs, t, d_lids) ->
                   let bs1 = FStar_Syntax_Subst.subst_binders usubst bs in
@@ -2093,8 +2082,7 @@ let (unoptimized_haseq_ty :
                                     FStar_Syntax_Syntax.injective_type_params1
                                       = uu___7;_}
                                   -> t_lid = lid
-                              | uu___2 ->
-                                  FStar_Compiler_Effect.failwith "Impossible")
+                              | uu___2 -> failwith "Impossible")
                            all_datas_in_the_bundle in
                        let data_cond =
                          FStar_Compiler_List.fold_left
@@ -2199,7 +2187,7 @@ let (unoptimized_haseq_scheme :
                        FStar_Syntax_Syntax.ds = uu___5;
                        FStar_Syntax_Syntax.injective_type_params = uu___6;_}
                      -> lid
-                 | uu___ -> FStar_Compiler_Effect.failwith "Impossible!") tcs in
+                 | uu___ -> failwith "Impossible!") tcs in
           let uu___ =
             let ty = FStar_Compiler_List.hd tcs in
             match ty.FStar_Syntax_Syntax.sigel with
@@ -2212,7 +2200,7 @@ let (unoptimized_haseq_scheme :
                   FStar_Syntax_Syntax.ds = uu___5;
                   FStar_Syntax_Syntax.injective_type_params = uu___6;_}
                 -> (lid, us)
-            | uu___1 -> FStar_Compiler_Effect.failwith "Impossible!" in
+            | uu___1 -> failwith "Impossible!" in
           match uu___ with
           | (lid, us) ->
               let uu___1 = FStar_Syntax_Subst.univ_var_opening us in
@@ -2316,9 +2304,7 @@ let (check_inductive_well_typedness :
                            FStar_Syntax_Syntax.injective_type_params =
                              uu___10;_}
                          -> uvs
-                     | uu___4 ->
-                         FStar_Compiler_Effect.failwith
-                           "Impossible, can't happen!") in
+                     | uu___4 -> failwith "Impossible, can't happen!") in
                 let env0 = env in
                 let uu___2 =
                   FStar_Compiler_List.fold_right
@@ -3676,9 +3662,7 @@ let (mk_data_operations :
                                              ((FStar_Compiler_List.length
                                                  constrs)
                                                 > Prims.int_one))
-                                     | uu___7 ->
-                                         FStar_Compiler_Effect.failwith
-                                           "Impossible"
+                                     | uu___7 -> failwith "Impossible"
                                    else FStar_Pervasives_Native.None) in
                             match tps_opt with
                             | FStar_Pervasives_Native.Some x -> x

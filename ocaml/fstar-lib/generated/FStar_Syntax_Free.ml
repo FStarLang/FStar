@@ -340,8 +340,7 @@ let rec (free_names_and_uvs' :
         op_Plus_Plus from_binders from_body in
       let t = FStar_Syntax_Subst.compress tm in
       match t.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Tm_delayed uu___ ->
-          FStar_Compiler_Effect.failwith "Impossible"
+      | FStar_Syntax_Syntax.Tm_delayed uu___ -> failwith "Impossible"
       | FStar_Syntax_Syntax.Tm_name x -> singleton_bv x
       | FStar_Syntax_Syntax.Tm_uvar (uv, (s, uu___)) ->
           let uu___1 = singleton_uv uv in

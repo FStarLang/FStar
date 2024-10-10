@@ -497,9 +497,7 @@ let rec (eq_t :
               (if
                  (FStar_Compiler_List.length args1) <>
                    (FStar_Compiler_List.length args2)
-               then
-                 FStar_Compiler_Effect.failwith
-                   "eq_t, different number of args on Construct"
+               then failwith "eq_t, different number of args on Construct"
                else ();
                (let uu___2 =
                   let uu___3 = FStar_Syntax_Syntax.lid_of_fv v1 in
@@ -1835,9 +1833,7 @@ let (e_issue : FStar_Errors.issue embedding) =
   let em1 cb iss =
     let uu___ =
       let uu___1 =
-        FStar_Thunk.mk
-          (fun uu___2 ->
-             FStar_Compiler_Effect.failwith "Cannot unembed issue") in
+        FStar_Thunk.mk (fun uu___2 -> failwith "Cannot unembed issue") in
       ((FStar_Pervasives.Inl (li iss FStar_Compiler_Range_Type.dummyRange)),
         uu___1) in
     Lazy uu___ in
@@ -1870,9 +1866,7 @@ let (e_document : FStar_Pprint.document embedding) =
   let em1 cb doc =
     let uu___ =
       let uu___1 =
-        FStar_Thunk.mk
-          (fun uu___2 ->
-             FStar_Compiler_Effect.failwith "Cannot unembed document") in
+        FStar_Thunk.mk (fun uu___2 -> failwith "Cannot unembed document") in
       ((FStar_Pervasives.Inl (li doc FStar_Compiler_Range_Type.dummyRange)),
         uu___1) in
     Lazy uu___ in
@@ -1894,8 +1888,8 @@ let (e_document : FStar_Pprint.document embedding) =
     (FStar_Syntax_Embeddings_Base.emb_typ_of
        FStar_Syntax_Embeddings.e_document)
 let (e_vconfig : FStar_VConfig.vconfig embedding) =
-  let em1 cb r = FStar_Compiler_Effect.failwith "e_vconfig NBE" in
-  let un1 cb t1 = FStar_Compiler_Effect.failwith "e_vconfig NBE" in
+  let em1 cb r = failwith "e_vconfig NBE" in
+  let un1 cb t1 = failwith "e_vconfig NBE" in
   mk_emb' em1 un1
     (fun uu___ -> lid_as_typ FStar_Parser_Const.vconfig_lid [] [])
     (FStar_Syntax_Embeddings_Base.emb_typ_of
@@ -1998,8 +1992,7 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
                         | FStar_Pervasives_Native.Some a1 ->
                             let uu___5 = f a1 in embed eb cb uu___5
                         | FStar_Pervasives_Native.None ->
-                            FStar_Compiler_Effect.failwith
-                              "cannot unembed function argument");
+                            failwith "cannot unembed function argument");
                    shape = uu___3;
                    arity = Prims.int_one
                  } in
@@ -2019,8 +2012,7 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
                match uu___ with
                | FStar_Pervasives_Native.Some y -> y
                | FStar_Pervasives_Native.None ->
-                   FStar_Compiler_Effect.failwith
-                     "cannot unembed function result") in
+                   failwith "cannot unembed function result") in
         lazy_unembed etyp lam k in
       mk_emb em1 un1
         (fun uu___ ->
@@ -2033,10 +2025,8 @@ let (e_abstract_nbe_term : abstract_nbe_term embedding) =
     FStar_Pervasives_Native.None
 let e_unsupported : 'a . unit -> 'a embedding =
   fun uu___ ->
-    let em1 _cb a1 =
-      FStar_Compiler_Effect.failwith "Unsupported NBE embedding" in
-    let un1 _cb t1 =
-      FStar_Compiler_Effect.failwith "Unsupported NBE embedding" in
+    let em1 _cb a1 = failwith "Unsupported NBE embedding" in
+    let un1 _cb t1 = failwith "Unsupported NBE embedding" in
     mk_emb em1 un1
       (fun uu___1 -> lid_as_typ FStar_Parser_Const.term_lid [] [])
       (fun uu___1 -> FStar_Syntax_Syntax.ET_abstract)
@@ -2236,8 +2226,7 @@ let (e_norm_step : FStar_Pervasives.norm_step embedding) =
 let (bogus_cbs : nbe_cbs) =
   {
     iapp = (fun h -> fun _args -> h);
-    translate =
-      (fun uu___ -> FStar_Compiler_Effect.failwith "bogus_cbs translate")
+    translate = (fun uu___ -> failwith "bogus_cbs translate")
   }
 let (arg_as_int : arg -> FStar_BigInt.t FStar_Pervasives_Native.option) =
   fun a -> unembed e_int bogus_cbs (FStar_Pervasives_Native.fst a)
@@ -2349,7 +2338,7 @@ let (dummy_interp :
       let uu___ =
         let uu___1 = FStar_Ident.string_of_lid lid in
         Prims.strcat "No interpretation for " uu___1 in
-      FStar_Compiler_Effect.failwith uu___
+      failwith uu___
 let (and_op : args -> t FStar_Pervasives_Native.option) =
   fun args1 ->
     match args1 with
@@ -2362,8 +2351,7 @@ let (and_op : args -> t FStar_Pervasives_Native.option) =
          | FStar_Pervasives_Native.Some (true) ->
              FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst a2)
          | uu___1 -> FStar_Pervasives_Native.None)
-    | uu___ ->
-        FStar_Compiler_Effect.failwith "Unexpected number of arguments"
+    | uu___ -> failwith "Unexpected number of arguments"
 let (or_op : args -> t FStar_Pervasives_Native.option) =
   fun args1 ->
     match args1 with
@@ -2376,8 +2364,7 @@ let (or_op : args -> t FStar_Pervasives_Native.option) =
          | FStar_Pervasives_Native.Some (false) ->
              FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst a2)
          | uu___1 -> FStar_Pervasives_Native.None)
-    | uu___ ->
-        FStar_Compiler_Effect.failwith "Unexpected number of arguments"
+    | uu___ -> failwith "Unexpected number of arguments"
 let arrow_as_prim_step_1 :
   'a 'b .
     'a embedding ->

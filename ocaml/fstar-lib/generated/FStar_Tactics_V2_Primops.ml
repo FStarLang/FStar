@@ -547,7 +547,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     fun
                                                                     uu___79
                                                                     ->
-                                                                    FStar_Compiler_Effect.failwith
+                                                                    failwith
                                                                     "NBE unquote") in
                                                                     let uu___78
                                                                     =

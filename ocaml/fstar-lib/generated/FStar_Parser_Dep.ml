@@ -2004,7 +2004,7 @@ let (topological_dependences_of' :
                     FStar_Compiler_Util.must uu___1 in
                   (match dep_node1.color with
                    | Gray ->
-                       FStar_Compiler_Effect.failwith
+                       failwith
                          "Impossible: cycle detected after cycle detection has passed"
                    | Black -> (all_friends, all_files)
                    | White ->
@@ -2272,7 +2272,7 @@ let (collect :
                  let uu___2 =
                    FStar_Compiler_Util.format1
                      "Impossible: Failed to find dependencies of %s" filename in
-                 FStar_Compiler_Effect.failwith uu___2 in
+                 failwith uu___2 in
            let direct_deps =
              FStar_Compiler_List.collect
                (fun x ->
@@ -2494,7 +2494,7 @@ let (print_full : FStar_Compiler_Util.out_channel -> deps -> unit) =
                            FStar_Compiler_Util.format2
                              "Impossible: module %s: %s not found"
                              lc_module_name file_name1 in
-                         FStar_Compiler_Effect.failwith uu___2
+                         failwith uu___2
                      | FStar_Pervasives_Native.Some
                          { edges = immediate_deps; color = uu___2;_} ->
                          let immediate_deps1 =
