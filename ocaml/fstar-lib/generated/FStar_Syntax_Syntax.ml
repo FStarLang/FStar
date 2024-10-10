@@ -2414,8 +2414,7 @@ let (lookup_aq : bv -> antiquotations -> term) =
                       - Prims.int_one)
                      - bv1.index)
                     + (FStar_Pervasives_Native.fst aq))) ()
-      with
-      | uu___ -> FStar_Compiler_Effect.failwith "antiquotation out of bounds"
+      with | uu___ -> failwith "antiquotation out of bounds"
 type path = Prims.string Prims.list
 type subst_t = subst_elt Prims.list
 let deq_instance_from_cmp :
@@ -2530,8 +2529,7 @@ let (mk_Tm_uinst : term -> universes -> term) =
       match t.n with
       | Tm_fvar uu___ ->
           (match us with | [] -> t | us1 -> mk (Tm_uinst (t, us1)) t.pos)
-      | uu___ ->
-          FStar_Compiler_Effect.failwith "Unexpected universe instantiation"
+      | uu___ -> failwith "Unexpected universe instantiation"
 let (extend_app_n : term -> args -> FStar_Compiler_Range_Type.range -> term)
   =
   fun t ->
@@ -3209,9 +3207,7 @@ let (showable_lazy_kind : lazy_kind FStar_Class_Show.showable) =
          | Lazy_tref -> "Lazy_tref"
          | Lazy_embedding uu___1 -> "Lazy_embedding _"
          | Lazy_extension s -> Prims.strcat "Lazy_extension " s
-         | uu___1 ->
-             FStar_Compiler_Effect.failwith
-               "FIXME! lazy_kind_to_string must be complete")
+         | uu___1 -> failwith "FIXME! lazy_kind_to_string must be complete")
   }
 let (deq_lazy_kind : lazy_kind FStar_Class_Deq.deq) =
   {

@@ -17,7 +17,7 @@ module FStar.Stubs.Reflection.V2.Builtins
 
 open FStar.Order
 open FStar.Stubs.Syntax.Syntax
-open FStar.VConfig
+open FStar.Stubs.VConfig
 open FStar.Stubs.Reflection.Types
 open FStar.Stubs.Reflection.V2.Data
 

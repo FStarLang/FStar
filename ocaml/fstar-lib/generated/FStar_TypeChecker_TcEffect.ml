@@ -3916,7 +3916,7 @@ let (tc_layered_eff_decl :
                     match ed.FStar_Syntax_Syntax.signature with
                     | FStar_Syntax_Syntax.Layered_eff_sig (n, ts) -> (n, ts)
                     | uu___6 ->
-                        FStar_Compiler_Effect.failwith
+                        failwith
                           "Impossible (tc_layered_eff_decl with a wp effect sig" in
                   match uu___5 with
                   | (n, sig_ts) ->
@@ -4369,8 +4369,7 @@ let (tc_layered_eff_decl :
                                                        } in
                                                      ([], uu___17)
                                                  | uu___16 ->
-                                                     FStar_Compiler_Effect.failwith
-                                                       "Impossible!"))
+                                                     failwith "Impossible!"))
                                        | uu___13 -> ts in
                                      let r =
                                        (FStar_Pervasives_Native.snd
@@ -4576,7 +4575,7 @@ let (tc_layered_eff_decl :
                                                              } in
                                                            ([], uu___19)
                                                        | uu___18 ->
-                                                           FStar_Compiler_Effect.failwith
+                                                           failwith
                                                              "Impossible!"))
                                              | uu___15 -> ts in
                                            let r =
@@ -4760,7 +4759,7 @@ let (tc_layered_eff_decl :
                                                                     f_b, g_b,
                                                                     uu___25))
                                                          | uu___20 ->
-                                                             FStar_Compiler_Effect.failwith
+                                                             failwith
                                                                "Impossible! ite_t must have been an abstraction with at least 3 binders" in
                                                        (match uu___18 with
                                                         | (env,
@@ -4862,7 +4861,7 @@ let (tc_layered_eff_decl :
                                                                     | 
                                                                     uu___26
                                                                     ->
-                                                                    FStar_Compiler_Effect.failwith
+                                                                    failwith
                                                                     "Impossible! subcomp_ty must have been an arrow with at lease 1 binder")) in
                                                             (match uu___19
                                                              with
@@ -6410,7 +6409,7 @@ let (tc_layered_eff_decl :
                                                                   (us, a_b,
                                                                     rest_bs))
                                                          | uu___19 ->
-                                                             FStar_Compiler_Effect.failwith
+                                                             failwith
                                                                "Impossible!") in
                                                   match uu___16 with
                                                   | (us, a_b, rest_bs) ->
@@ -7455,7 +7454,7 @@ let (tc_non_layered_eff_decl :
                                                          (wp, uu___21)::[];_}
                                                      -> (t1, wp)
                                                  | uu___19 ->
-                                                     FStar_Compiler_Effect.failwith
+                                                     failwith
                                                        "Unexpected repr type" in
                                                let return_repr =
                                                  let return_repr_ts =
@@ -7959,7 +7958,7 @@ let (tc_non_layered_eff_decl :
                                                           act.FStar_Syntax_Syntax.action_params)
                                                          <> Prims.int_zero
                                                      then
-                                                       FStar_Compiler_Effect.failwith
+                                                       failwith
                                                          "tc_eff_decl: expected action_params to be empty"
                                                      else ();
                                                      (let uu___21 =
@@ -8652,7 +8651,7 @@ let (tc_non_layered_eff_decl :
                                                                     | 
                                                                     uu___31
                                                                     ->
-                                                                    FStar_Compiler_Effect.failwith
+                                                                    failwith
                                                                     "Impossible (expected_k is an arrow)" in
                                                                     let uu___30
                                                                     =
@@ -8770,7 +8769,7 @@ let (tc_non_layered_eff_decl :
                                                  FStar_Syntax_Syntax.DM4F_eff
                                                    combinators1
                                              | uu___15 ->
-                                                 FStar_Compiler_Effect.failwith
+                                                 failwith
                                                    "Impossible! tc_eff_decl on a layered effect is not expected" in
                                            let ed3 =
                                              let uu___15 =
@@ -9108,7 +9107,7 @@ let (tc_lift :
                            FStar_TypeChecker_Env.effect_decl_opt env eff_name in
                          match uu___7 with
                          | FStar_Pervasives_Native.None ->
-                             FStar_Compiler_Effect.failwith
+                             failwith
                                "internal error: reifiable effect has no decl?"
                          | FStar_Pervasives_Native.Some (ed, qualifiers) ->
                              let repr =
@@ -9142,8 +9141,7 @@ let (tc_lift :
                         with
                         | (FStar_Pervasives_Native.None,
                            FStar_Pervasives_Native.None) ->
-                            FStar_Compiler_Effect.failwith
-                              "Impossible (parser)"
+                            failwith "Impossible (parser)"
                         | (lift, FStar_Pervasives_Native.Some (uvs, lift_wp))
                             ->
                             let uu___7 =
@@ -9739,7 +9737,7 @@ let (tc_effect_abbrev :
                                              FStar_Syntax_Syntax.comp = c5;_})
                                             -> (tps5, c5)
                                         | uu___10 ->
-                                            FStar_Compiler_Effect.failwith
+                                            failwith
                                               "Impossible (t is an arrow)" in
                                       (match uu___8 with
                                        | (tps5, c5) ->

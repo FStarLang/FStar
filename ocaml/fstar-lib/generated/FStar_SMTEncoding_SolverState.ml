@@ -172,9 +172,7 @@ let (debug : Prims.string -> solver_state -> solver_state -> unit) =
 let (peek : solver_state -> (decls_at_level * decls_at_level Prims.list)) =
   fun s ->
     match s.levels with
-    | [] ->
-        FStar_Compiler_Effect.failwith
-          "Solver state cannot have an empty stack"
+    | [] -> failwith "Solver state cannot have an empty stack"
     | hd::tl -> (hd, tl)
 let (replace_head : decls_at_level -> solver_state -> solver_state) =
   fun hd ->
@@ -227,9 +225,7 @@ let (pop : solver_state -> solver_state) =
     match uu___ with
     | (hd, tl) ->
         (if Prims.uu___is_Nil tl
-         then
-           FStar_Compiler_Effect.failwith
-             "Solver state cannot have an empty stack"
+         then failwith "Solver state cannot have an empty stack"
          else ();
          (let s1 =
             if Prims.op_Negation hd.given_some_decls
@@ -597,7 +593,7 @@ let (name_of_assumption : FStar_SMTEncoding_Term.decl -> Prims.string) =
     match d with
     | FStar_SMTEncoding_Term.Assume a ->
         a.FStar_SMTEncoding_Term.assumption_name
-    | uu___ -> FStar_Compiler_Effect.failwith "Expected an assumption"
+    | uu___ -> failwith "Expected an assumption"
 let (prune_level :
   FStar_SMTEncoding_Term.decl Prims.list ->
     decls_at_level -> solver_state -> decls_at_level)

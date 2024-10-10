@@ -366,7 +366,7 @@ let add_module_completions this_fname deps table =
   let loaded_mods_set =
     List.fold_left
       (fun acc dep -> psmap_add acc (Parser.Dep.lowercase_module_name dep) true)
-      (psmap_empty ()) (Options.prims () :: deps) in // Prims is an implicit dependency
+      (psmap_empty ()) (Basefiles.prims () :: deps) in // Prims is an implicit dependency
   let loaded modname =
     psmap_find_default loaded_mods_set modname false in
   let this_mod_key =

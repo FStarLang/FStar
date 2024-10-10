@@ -15,8 +15,7 @@ let rec (inst :
       let t1 = FStar_Syntax_Subst.compress t in
       let mk1 = mk t1 in
       match t1.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Tm_delayed uu___ ->
-          FStar_Compiler_Effect.failwith "Impossible"
+      | FStar_Syntax_Syntax.Tm_delayed uu___ -> failwith "Impossible"
       | FStar_Syntax_Syntax.Tm_name uu___ -> t1
       | FStar_Syntax_Syntax.Tm_uvar uu___ -> t1
       | FStar_Syntax_Syntax.Tm_uvar uu___ -> t1

@@ -51,7 +51,7 @@ let (fix_module :
         FStar_TypeChecker_Primops_Base.interpretation_nbe =
           (ps.FStar_TypeChecker_Primops_Base.interpretation_nbe)
       }
-    else FStar_Compiler_Effect.failwith "huh?"
+    else failwith "huh?"
 let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
   let uu___ =
     let uu___1 =
@@ -335,7 +335,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                       FStar_Tactics_V1_Basic.unquote
                                                       (fun uu___48 ->
                                                          fun uu___49 ->
-                                                           FStar_Compiler_Effect.failwith
+                                                           failwith
                                                              "NBE unquote") in
                                                   let uu___48 =
                                                     let uu___49 =

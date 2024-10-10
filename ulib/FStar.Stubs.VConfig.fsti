@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.VConfig
+module FStar.Stubs.VConfig
 
 (** This type represents the set of verification-relevant options used
     to check a particular definition. It can be read from tactics via

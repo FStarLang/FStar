@@ -1890,63 +1890,7 @@ let include_path () =
   in
   cache_dir @ lib_paths () @ include_paths @ expand_include_d "."
 
-let find_file =
-  let file_map = Util.smap_create 100 in
-  fun filename ->
-     match Util.smap_try_find file_map filename with
-     | Some f -> f
-     | None ->
-       let result =
-          (try
-              if Util.is_path_absolute filename then
-                if Util.file_exists filename then
-                  Some filename
-                else
-                  None
-              else
-                (* In reverse, because the last directory has the highest precedence. *)
-                Util.find_map (List.rev (include_path ())) (fun p ->
-                  let path =
-                    if p = "." then filename
-                    else Util.join_paths p filename in
-                  if Util.file_exists path then
-                    Some path
-                  else
-                    None)
-           with | _ -> //to deal with issues like passing bogus strings as paths like " input"
-                  None)
-       in
-       if Option.isSome result
-       then Util.smap_add file_map filename result;
-       result
-
-let prims () =
-  match get_prims() with
-  | None ->
-    let filename = "Prims.fst" in
-    begin match find_file filename with
-      | Some result ->
-        result
-      | None ->
-        failwith (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)
-    end
-  | Some x -> x
-
-let prims_basename () = basename (prims ())
-
-let pervasives () =
-  let filename = "FStar.Pervasives.fsti" in
-  match find_file filename with
-  | Some result -> result
-  | None        -> failwith (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)
-
-let pervasives_basename () = basename (pervasives ())
-let pervasives_native_basename () =
-  let filename = "FStar.Pervasives.Native.fst" in
-  match find_file filename with
-  | Some result -> basename result
-  | None        -> failwith (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)
-
+let custom_prims () = get_prims()
 
 let prepend_output_dir fname =
   match get_odir() with
@@ -2517,3 +2461,7 @@ let set_vconfig (vcfg:vconfig) : unit =
   set_option "trivial_pre_for_unannotated_effectful_fns" (Bool vcfg.trivial_pre_for_unannotated_effectful_fns);
   set_option "reuse_hint_for"                            (option_as String vcfg.reuse_hint_for);
   ()
+
+instance showable_codegen_t : showable codegen_t = {
+  show = print_codegen;
+}

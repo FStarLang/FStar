@@ -175,7 +175,7 @@ let (autoload_plugin : Prims.string -> Prims.bool) =
           FStar_Compiler_Util.print1
             "Trying to find a plugin for extension %s\n" ext
         else ());
-       (let uu___3 = FStar_Options.find_file (Prims.strcat ext ".cmxs") in
+       (let uu___3 = FStar_Find.find_file (Prims.strcat ext ".cmxs") in
         match uu___3 with
         | FStar_Pervasives_Native.Some fn ->
             let uu___4 =

@@ -127,7 +127,7 @@ let (bogus_cbs : FStar_TypeChecker_NBETerm.nbe_cbs) =
   {
     FStar_TypeChecker_NBETerm.iapp = (fun h -> fun _args -> h);
     FStar_TypeChecker_NBETerm.translate =
-      (fun uu___ -> FStar_Compiler_Effect.failwith "bogus_cbs translate")
+      (fun uu___ -> failwith "bogus_cbs translate")
   }
 let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
   let of_list_op =

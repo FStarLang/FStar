@@ -1050,7 +1050,7 @@ and (on_subterms :
                                                          | x2::[] ->
                                                              x2.FStar_Syntax_Syntax.binder_bv
                                                          | uu___3 ->
-                                                             FStar_Compiler_Effect.failwith
+                                                             failwith
                                                                "Impossible" in
                                                        FStar_Syntax_Syntax.Tm_refine
                                                          {
@@ -1262,9 +1262,7 @@ and (on_subterms :
                                                   FStar_Syntax_Syntax.body1 =
                                                     uu___7;_}
                                                 -> lb1
-                                            | uu___7 ->
-                                                FStar_Compiler_Effect.failwith
-                                                  "impossible" in
+                                            | uu___7 -> failwith "impossible" in
                                           let uu___6 =
                                             FStar_Syntax_Subst.open_term_bv
                                               bv e in
@@ -1578,7 +1576,7 @@ let (ctrl_rewrite :
                   let uu___1 =
                     match ps.FStar_Tactics_Types.goals with
                     | g::gs -> (g, gs)
-                    | [] -> FStar_Compiler_Effect.failwith "no goals" in
+                    | [] -> failwith "no goals" in
                   match uu___1 with
                   | (g, gs) ->
                       Obj.magic

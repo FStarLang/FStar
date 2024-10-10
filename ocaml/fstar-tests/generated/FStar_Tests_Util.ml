@@ -298,7 +298,7 @@ let rec (term_eq' :
             let uu___4 =
               FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term t21 in
             FStar_Compiler_Util.format2 "Impossible: %s and %s" uu___3 uu___4 in
-          FStar_Compiler_Effect.failwith uu___2
+          failwith uu___2
       | (uu___, FStar_Syntax_Syntax.Tm_delayed uu___1) ->
           let uu___2 =
             let uu___3 =
@@ -306,7 +306,7 @@ let rec (term_eq' :
             let uu___4 =
               FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term t21 in
             FStar_Compiler_Util.format2 "Impossible: %s and %s" uu___3 uu___4 in
-          FStar_Compiler_Effect.failwith uu___2
+          failwith uu___2
       | (FStar_Syntax_Syntax.Tm_unknown, FStar_Syntax_Syntax.Tm_unknown) ->
           true
       | uu___ -> false

@@ -572,8 +572,7 @@ let (preprocess :
               | Unchanged t' -> (false, (t', []))
               | Simplified (t', gs) -> (true, (t', gs))
               | uu___4 ->
-                  FStar_Compiler_Effect.failwith
-                    "preprocess: impossible, traverse returned a Dual" in
+                  failwith "preprocess: impossible, traverse returned a Dual" in
             match uu___2 with
             | (did_anything, (t', gs)) ->
                 ((let uu___4 = FStar_Compiler_Effect.op_Bang dbg_Tac in
@@ -1423,8 +1422,7 @@ let (spinoff_strictly_positive_goals :
              | Unchanged t' -> (t', [])
              | Simplified (t', gs) -> (t', gs)
              | uu___4 ->
-                 FStar_Compiler_Effect.failwith
-                   "preprocess: impossible, traverse returned a Dual" in
+                 failwith "preprocess: impossible, traverse returned a Dual" in
            match uu___2 with
            | (t', gs) ->
                let t'1 =
@@ -1708,8 +1706,7 @@ let (handle_smt_goal :
                        FStar_Syntax_Syntax.lid_as_fv lid
                          FStar_Pervasives_Native.None in
                      FStar_Syntax_Syntax.fv_to_tm uu___3
-                 | uu___2 ->
-                     FStar_Compiler_Effect.failwith "Resolve_tac not found" in
+                 | uu___2 -> failwith "Resolve_tac not found" in
                let gs =
                  FStar_Errors.with_ctx
                    "While handling an SMT goal with a tactic"

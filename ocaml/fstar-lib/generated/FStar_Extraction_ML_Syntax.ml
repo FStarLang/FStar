@@ -793,12 +793,8 @@ let (pop_unit : mltyscheme -> (e_tag * mltyscheme)) =
          | MLTY_Fun (l, eff, t) ->
              if l = ml_unit_ty
              then (eff, (vs, t))
-             else
-               FStar_Compiler_Effect.failwith
-                 "unexpected: pop_unit: domain was not unit"
-         | uu___1 ->
-             FStar_Compiler_Effect.failwith
-               "unexpected: pop_unit: not a function type")
+             else failwith "unexpected: pop_unit: domain was not unit"
+         | uu___1 -> failwith "unexpected: pop_unit: not a function type")
 let (ctor' :
   Prims.string -> FStar_Pprint.document Prims.list -> FStar_Pprint.document)
   =

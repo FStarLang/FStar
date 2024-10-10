@@ -523,7 +523,7 @@ let (cache_file_name : Prims.string -> Prims.string) =
     let mname = module_name_of_file fn in
     let uu___ =
       let uu___1 = FStar_Compiler_Util.basename cache_fn in
-      FStar_Options.find_file uu___1 in
+      FStar_Find.find_file uu___1 in
     match uu___ with
     | FStar_Pervasives_Native.Some path ->
         let expected_cache_file = FStar_Options.prepend_cache_dir cache_fn in
@@ -945,11 +945,11 @@ let (uu___is_Exit : Prims.exn -> Prims.bool) =
 let (core_modules : unit -> Prims.string Prims.list) =
   fun uu___ ->
     let uu___1 =
-      let uu___2 = FStar_Options.prims_basename () in
+      let uu___2 = FStar_Basefiles.prims_basename () in
       let uu___3 =
-        let uu___4 = FStar_Options.pervasives_basename () in
+        let uu___4 = FStar_Basefiles.pervasives_basename () in
         let uu___5 =
-          let uu___6 = FStar_Options.pervasives_native_basename () in
+          let uu___6 = FStar_Basefiles.pervasives_native_basename () in
           [uu___6] in
         uu___4 :: uu___5 in
       uu___2 :: uu___3 in
@@ -2004,7 +2004,7 @@ let (topological_dependences_of' :
                     FStar_Compiler_Util.must uu___1 in
                   (match dep_node1.color with
                    | Gray ->
-                       FStar_Compiler_Effect.failwith
+                       failwith
                          "Impossible: cycle detected after cycle detection has passed"
                    | Black -> (all_friends, all_files)
                    | White ->
@@ -2161,7 +2161,7 @@ let (collect :
       let all_cmd_line_files2 =
         FStar_Compiler_List.map
           (fun fn ->
-             let uu___ = FStar_Options.find_file fn in
+             let uu___ = FStar_Find.find_file fn in
              match uu___ with
              | FStar_Pervasives_Native.None ->
                  let uu___1 =
@@ -2272,7 +2272,7 @@ let (collect :
                  let uu___2 =
                    FStar_Compiler_Util.format1
                      "Impossible: Failed to find dependencies of %s" filename in
-                 FStar_Compiler_Effect.failwith uu___2 in
+                 failwith uu___2 in
            let direct_deps =
              FStar_Compiler_List.collect
                (fun x ->
@@ -2494,7 +2494,7 @@ let (print_full : FStar_Compiler_Util.out_channel -> deps -> unit) =
                            FStar_Compiler_Util.format2
                              "Impossible: module %s: %s not found"
                              lc_module_name file_name1 in
-                         FStar_Compiler_Effect.failwith uu___2
+                         failwith uu___2
                      | FStar_Pervasives_Native.Some
                          { edges = immediate_deps; color = uu___2;_} ->
                          let immediate_deps1 =

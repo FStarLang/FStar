@@ -338,7 +338,7 @@ let (pop_repl :
     fun st ->
       let uu___ = FStar_Compiler_Effect.op_Bang repl_stack in
       match uu___ with
-      | [] -> FStar_Compiler_Effect.failwith "Too many pops"
+      | [] -> failwith "Too many pops"
       | (depth, (uu___1, st'))::stack_tl ->
           let env =
             rollback_env
@@ -873,7 +873,8 @@ let (add_module_completions :
         let mods = FStar_Parser_Dep.build_inclusion_candidates_list () in
         let loaded_mods_set =
           let uu___ = FStar_Compiler_Util.psmap_empty () in
-          let uu___1 = let uu___2 = FStar_Options.prims () in uu___2 :: deps in
+          let uu___1 =
+            let uu___2 = FStar_Basefiles.prims () in uu___2 :: deps in
           FStar_Compiler_List.fold_left
             (fun acc ->
                fun dep ->

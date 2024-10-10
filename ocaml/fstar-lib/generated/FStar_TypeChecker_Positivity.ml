@@ -119,8 +119,7 @@ let rec (term_as_fv_or_name :
          | FStar_Syntax_Syntax.Tm_fvar fv ->
              FStar_Pervasives_Native.Some (FStar_Pervasives.Inl (fv, us))
          | uu___2 ->
-             FStar_Compiler_Effect.failwith
-               "term_as_fv_or_name: impossible non fvar in uinst")
+             failwith "term_as_fv_or_name: impossible non fvar in uinst")
     | FStar_Syntax_Syntax.Tm_ascribed
         { FStar_Syntax_Syntax.tm = t1; FStar_Syntax_Syntax.asc = uu___1;
           FStar_Syntax_Syntax.eff_opt = uu___2;_}
@@ -154,7 +153,7 @@ let (open_sig_inductive_typ :
                let ty_params2 = FStar_Syntax_Subst.open_binders ty_params1 in
                let env2 = FStar_TypeChecker_Env.push_binders env1 ty_params2 in
                (env2, (lid, ty_us1, ty_params2)))
-      | uu___ -> FStar_Compiler_Effect.failwith "Impossible!"
+      | uu___ -> failwith "Impossible!"
 let (name_as_fv_in_t :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.bv -> (FStar_Syntax_Syntax.term * FStar_Ident.lident))
@@ -652,12 +651,9 @@ let (may_be_an_arity :
             -> aux t3
         | FStar_Syntax_Syntax.Tm_uvar uu___1 -> true
         | FStar_Syntax_Syntax.Tm_let uu___1 -> true
-        | FStar_Syntax_Syntax.Tm_delayed uu___1 ->
-            FStar_Compiler_Effect.failwith "Impossible"
-        | FStar_Syntax_Syntax.Tm_bvar uu___1 ->
-            FStar_Compiler_Effect.failwith "Impossible"
-        | FStar_Syntax_Syntax.Tm_unknown ->
-            FStar_Compiler_Effect.failwith "Impossible" in
+        | FStar_Syntax_Syntax.Tm_delayed uu___1 -> failwith "Impossible"
+        | FStar_Syntax_Syntax.Tm_bvar uu___1 -> failwith "Impossible"
+        | FStar_Syntax_Syntax.Tm_unknown -> failwith "Impossible" in
       aux t1
 let (check_no_index_occurrences_in_arities :
   FStar_TypeChecker_Env.env ->
@@ -1398,8 +1394,7 @@ and (ty_strictly_positive_in_arguments_to_fvar :
                                   env ilid in
                               match uu___6 with
                               | FStar_Pervasives_Native.None ->
-                                  FStar_Compiler_Effect.failwith
-                                    "Unexpected type"
+                                  failwith "Unexpected type"
                               | FStar_Pervasives_Native.Some n -> n in
                             let uu___6 =
                               FStar_Compiler_List.splitAt num_uniform_params

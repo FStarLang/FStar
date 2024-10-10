@@ -33,7 +33,7 @@ let setLexbufPos filename lexbuf line col =
 module Path = BatPathGen.OfString
 
 let find_file filename =
-  match FStar_Options.find_file filename with
+  match FStar_Find.find_file filename with
     | Some s ->
       s
     | None ->

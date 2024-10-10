@@ -1477,7 +1477,7 @@ let (do_unify_aux :
                                           Prims.op_Negation uu___4 in
                                         if uu___3
                                         then
-                                          FStar_Compiler_Effect.failwith
+                                          failwith
                                             "internal error: do_unify: guard is not trivial"
                                         else
                                           FStar_Class_Monad.return
@@ -4505,9 +4505,7 @@ let (lemma_or_sq :
             | pre::post::uu___3 ->
                 ((FStar_Pervasives_Native.fst pre),
                   (FStar_Pervasives_Native.fst post))
-            | uu___3 ->
-                FStar_Compiler_Effect.failwith
-                  "apply_lemma: impossible: not a lemma" in
+            | uu___3 -> failwith "apply_lemma: impossible: not a lemma" in
           (match uu___2 with
            | (pre, post) ->
                let post1 =
@@ -6761,7 +6759,7 @@ let (_t_trefl :
                                                                     true))
                                                           else
                                                             Obj.repr
-                                                              (FStar_Compiler_Effect.failwith
+                                                              (failwith
                                                                  "internal error: _t_refl: guard is not trivial"))))
                                                  uu___4))) uu___2))) uu___2
                      uu___1 in
@@ -8531,7 +8529,7 @@ let (t_destruct :
                                                                     (fv, us)))
                                                            | uu___9 ->
                                                                Obj.repr
-                                                                 (FStar_Compiler_Effect.failwith
+                                                                 (failwith
                                                                     "impossible: uinst over something that's not an fvar")))
                                                  | uu___8 ->
                                                      Obj.magic
@@ -9534,13 +9532,13 @@ let (gather_explicit_guards_for_resolved_goals :
 let rec last : 'a . 'a Prims.list -> 'a =
   fun l ->
     match l with
-    | [] -> FStar_Compiler_Effect.failwith "last: empty list"
+    | [] -> failwith "last: empty list"
     | x::[] -> x
     | uu___::xs -> last xs
 let rec init : 'a . 'a Prims.list -> 'a Prims.list =
   fun l ->
     match l with
-    | [] -> FStar_Compiler_Effect.failwith "init: empty list"
+    | [] -> failwith "init: empty list"
     | x::[] -> []
     | x::xs -> let uu___ = init xs in x :: uu___
 let (lget :
@@ -9801,7 +9799,7 @@ let (t_commute_applied_match : unit -> unit FStar_Tactics_Monad.tac) =
                                                    FStar_Syntax_Util.exp_unit))
                                            else
                                              Obj.magic
-                                               (FStar_Compiler_Effect.failwith
+                                               (failwith
                                                   "internal error: _t_refl: guard is not trivial"))
                                       uu___6))
                         | uu___5 ->
@@ -11678,7 +11676,7 @@ let (refl_check_match_complete :
                                                                     -> p)
                                                                brs1
                                                          | uu___7 ->
-                                                             FStar_Compiler_Effect.failwith
+                                                             failwith
                                                                "refl_check_match_complete: not a match?" in
                                                        let pats1 =
                                                          get_pats mm1 in

@@ -402,10 +402,8 @@ let on_sub_term : 'm . 'm lvm -> FStar_Syntax_Syntax.term -> 'm =
       let mk t = FStar_Syntax_Syntax.mk t tm.FStar_Syntax_Syntax.pos in
       let tm1 = compress tm in
       match tm1.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Tm_lazy uu___ ->
-          FStar_Compiler_Effect.failwith "impos"
-      | FStar_Syntax_Syntax.Tm_delayed uu___ ->
-          FStar_Compiler_Effect.failwith "impos"
+      | FStar_Syntax_Syntax.Tm_lazy uu___ -> failwith "impos"
+      | FStar_Syntax_Syntax.Tm_delayed uu___ -> failwith "impos"
       | FStar_Syntax_Syntax.Tm_fvar uu___ ->
           FStar_Class_Monad.return (_lvm_monad d) () (Obj.magic tm1)
       | FStar_Syntax_Syntax.Tm_constant uu___ ->
@@ -2104,7 +2102,7 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStar_Syntax_Syntax.sigelt' -> 'm =
                                FStar_Syntax_Syntax.lids2 = lids;
                                FStar_Syntax_Syntax.tac = tac1
                              })))) uu___1)
-      | uu___ -> FStar_Compiler_Effect.failwith "on_sub_sigelt: missing case"
+      | uu___ -> failwith "on_sub_sigelt: missing case"
 and on_sub_sigelt : 'm . 'm lvm -> FStar_Syntax_Syntax.sigelt -> 'm =
   fun d ->
     fun se ->

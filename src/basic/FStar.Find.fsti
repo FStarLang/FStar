@@ -1,5 +1,5 @@
-(*
-   Copyright 2008-2020 Microsoft Research
+﻿(*
+   Copyright 2008-2024 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,6 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.VConfig
+module FStar.Find
 
-(* This file here to trigger extraction. *)
+open FStar.Compiler.Effect
+
+(* Try to find a file in the include path with a given basename. *)
+val find_file (basename : string) : option string

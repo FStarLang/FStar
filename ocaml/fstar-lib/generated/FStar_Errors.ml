@@ -40,7 +40,7 @@ let lookup_error :
       match uu___ with
       | FStar_Pervasives_Native.Some i -> i
       | FStar_Pervasives_Native.None ->
-          FStar_Compiler_Effect.failwith "Impossible: unrecognized error"
+          failwith "Impossible: unrecognized error"
 let lookup_error_range :
   'uuuuu 'uuuuu1 .
     ('uuuuu * 'uuuuu1 * Prims.int) Prims.list ->
@@ -588,10 +588,7 @@ let (mk_default_handler : Prims.bool -> error_handler) =
       (let uu___3 =
          (FStar_Options.defensive_abort ()) &&
            (e.issue_number = (FStar_Pervasives_Native.Some defensive_errno)) in
-       if uu___3
-       then
-         FStar_Compiler_Effect.failwith "Aborting due to --defensive abort"
-       else ()) in
+       if uu___3 then failwith "Aborting due to --defensive abort" else ()) in
     let count_errors uu___ = FStar_Compiler_Effect.op_Bang err_count in
     let report uu___ =
       let unique_issues =
@@ -661,9 +658,7 @@ let (wrapped_eh_add_one : error_handler -> issue -> unit) =
             let uu___3 =
               FStar_Compiler_Effect.op_Bang FStar_Options.abort_counter in
             uu___3 = Prims.int_zero in
-          if uu___2
-          then FStar_Compiler_Effect.failwith "Aborting due to --abort_on"
-          else ()))
+          if uu___2 then failwith "Aborting due to --abort_on" else ()))
       else ()
 let (add_one : issue -> unit) =
   fun issue1 ->
@@ -731,7 +726,7 @@ let (error_context : error_context_t) =
     let uu___ = FStar_Compiler_Effect.op_Bang ctxs in
     match uu___ with
     | h::t -> (FStar_Compiler_Effect.op_Colon_Equals ctxs t; h)
-    | uu___1 -> FStar_Compiler_Effect.failwith "cannot pop error prefix..." in
+    | uu___1 -> failwith "cannot pop error prefix..." in
   let clear1 uu___ = FStar_Compiler_Effect.op_Colon_Equals ctxs [] in
   let get uu___ = FStar_Compiler_Effect.op_Bang ctxs in
   let set c = FStar_Compiler_Effect.op_Colon_Equals ctxs c in
@@ -790,8 +785,7 @@ let (uu___0 :
       let uu___1 = FStar_Compiler_Effect.op_Bang parser_callback in
       match uu___1 with
       | FStar_Pervasives_Native.None ->
-          FStar_Compiler_Effect.failwith
-            "Callback for parsing warn_error strings is not set"
+          failwith "Callback for parsing warn_error strings is not set"
       | FStar_Pervasives_Native.Some f -> f s in
     let we = FStar_Options.warn_error () in
     try
@@ -902,7 +896,7 @@ let (log_issue_ctx :
                       Prims.strcat
                         "don't use log_issue to report fatal error, should use raise_error: "
                         uu___6 in
-                    FStar_Compiler_Effect.failwith uu___5))
+                    failwith uu___5))
 let info :
   'posut .
     'posut FStar_Class_HasRange.hasRange ->

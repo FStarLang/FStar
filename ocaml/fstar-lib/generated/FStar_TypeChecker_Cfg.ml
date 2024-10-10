@@ -1108,8 +1108,7 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             default_univs_to_zero = (fs.default_univs_to_zero);
             tactics = (fs.tactics)
           }
-      | FStar_TypeChecker_Env.Exclude uu___ ->
-          FStar_Compiler_Effect.failwith "Bad exclude"
+      | FStar_TypeChecker_Env.Exclude uu___ -> failwith "Bad exclude"
       | FStar_TypeChecker_Env.Weak ->
           {
             beta = (fs.beta);

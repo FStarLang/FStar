@@ -926,7 +926,7 @@ let (simplify :
                                                                  = uu___34;_}
                                                              -> hd
                                                          | uu___34 ->
-                                                             FStar_Compiler_Effect.failwith
+                                                             failwith
                                                                "Impossible! We have already checked that this is a Tm_app" in
                                                        let uu___33 =
                                                          let uu___34 =
@@ -1320,7 +1320,7 @@ let (simplify :
                                                                  = uu___30;_}
                                                              -> hd
                                                          | uu___30 ->
-                                                             FStar_Compiler_Effect.failwith
+                                                             failwith
                                                                "Impossible! We have already checked that this is a Tm_app" in
                                                        let uu___29 =
                                                          let uu___30 =

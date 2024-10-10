@@ -65,7 +65,7 @@ let (push_binder : env -> FStar_Syntax_Syntax.binder -> env) =
         (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.index <=
           g.max_binder_index
       then
-        FStar_Compiler_Effect.failwith
+        failwith
           "Assertion failed: unexpected shadowing in the core environment"
       else
         (let uu___1 = FStar_TypeChecker_Env.push_binders g.tcenv [b] in
@@ -7569,8 +7569,7 @@ and (pattern_branch_condition :
               let uu___ =
                 FStar_TypeChecker_PatternUtils.raw_pat_as_exp g.tcenv pat in
               match uu___ with
-              | FStar_Pervasives_Native.None ->
-                  FStar_Compiler_Effect.failwith "Impossible"
+              | FStar_Pervasives_Native.None -> failwith "Impossible"
               | FStar_Pervasives_Native.Some (e, uu___1) -> e in
             let uu___ = check "constant pattern" g const_exp in
             (fun ctx0 ->
@@ -8113,7 +8112,7 @@ let (compute_term_type_handle_guards :
         match uu___ with
         | Success (r, FStar_Pervasives_Native.None) -> FStar_Pervasives.Inl r
         | Success (uu___1, FStar_Pervasives_Native.Some uu___2) ->
-            FStar_Compiler_Effect.failwith
+            failwith
               "Impossible: All guards should have been handled already"
         | Error err -> FStar_Pervasives.Inr err
 let (open_binders_in_term :

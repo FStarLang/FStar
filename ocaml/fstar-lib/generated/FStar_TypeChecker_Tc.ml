@@ -454,9 +454,7 @@ let (tc_inductive' :
                                      FStar_Syntax_Syntax.injective_type_params
                                        = uu___13;_}
                                    -> (lid, (ty.FStar_Syntax_Syntax.sigrng))
-                               | uu___7 ->
-                                   FStar_Compiler_Effect.failwith
-                                     "Impossible!" in
+                               | uu___7 -> failwith "Impossible!" in
                              match uu___6 with
                              | (lid, r) ->
                                  let uu___7 =
@@ -488,8 +486,7 @@ let (tc_inductive' :
                                    FStar_Syntax_Syntax.injective_type_params1
                                      = uu___11;_}
                                  -> (data_lid, ty_lid)
-                             | uu___7 ->
-                                 FStar_Compiler_Effect.failwith "Impossible" in
+                             | uu___7 -> failwith "Impossible" in
                            match uu___6 with
                            | (data_lid, ty_lid) ->
                                let uu___7 =
@@ -534,8 +531,7 @@ let (tc_inductive' :
                                FStar_Syntax_Syntax.injective_type_params =
                                  uu___10;_}
                              -> lid1
-                         | uu___4 ->
-                             FStar_Compiler_Effect.failwith "Impossible" in
+                         | uu___4 -> failwith "Impossible" in
                        FStar_Compiler_List.existsb
                          (fun s ->
                             let uu___4 =
@@ -623,13 +619,11 @@ let proc_check_with :
               FStar_Syntax_Embeddings.e_vconfig a1
               FStar_Syntax_Embeddings_Base.id_norm_cb in
           (match uu___1 with
-           | FStar_Pervasives_Native.None ->
-               FStar_Compiler_Effect.failwith "nah"
+           | FStar_Pervasives_Native.None -> failwith "nah"
            | FStar_Pervasives_Native.Some vcfg ->
                FStar_Options.with_saved_options
                  (fun uu___2 -> FStar_Options.set_vconfig vcfg; kont ())
-           | uu___2 ->
-               FStar_Compiler_Effect.failwith "ill-formed `check_with`")
+           | uu___2 -> failwith "ill-formed `check_with`")
 let (handle_postprocess_with_attr :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.attribute Prims.list ->
@@ -1214,7 +1208,7 @@ let (tc_sig_let :
                                                 -> true
                                             | uu___10 -> false)
                                        | uu___7 ->
-                                           FStar_Compiler_Effect.failwith
+                                           failwith
                                              "Impossible: first phase lb and second phase lb differ in structure!" in
                                      if lb_unannotated
                                      then
@@ -1538,9 +1532,7 @@ let (tc_sig_let :
                                        (se2.FStar_Syntax_Syntax.sigopts)
                                    } in
                                  set_hint_correlator env' se3
-                             | uu___5 ->
-                                 FStar_Compiler_Effect.failwith
-                                   "no way, not a let?" in
+                             | uu___5 -> failwith "no way, not a let?" in
                            (FStar_Errors.stop_if_err ();
                             (let r1 =
                                let should_generalize1 =
@@ -1749,7 +1741,7 @@ let (tc_sig_let :
                                           (se2.FStar_Syntax_Syntax.sigopts)
                                       }, lbs3)))
                                | uu___6 ->
-                                   FStar_Compiler_Effect.failwith
+                                   failwith
                                      "impossible (typechecking should preserve Tm_let)" in
                              match uu___5 with
                              | (se3, lbs1) ->
@@ -2047,11 +2039,9 @@ let (tc_decl' :
              if uu___2 then store_sigopts se1 else se1 in
            match se2.FStar_Syntax_Syntax.sigel with
            | FStar_Syntax_Syntax.Sig_inductive_typ uu___2 ->
-               FStar_Compiler_Effect.failwith
-                 "Impossible bare data-constructor"
+               failwith "Impossible bare data-constructor"
            | FStar_Syntax_Syntax.Sig_datacon uu___2 ->
-               FStar_Compiler_Effect.failwith
-                 "Impossible bare data-constructor"
+               failwith "Impossible bare data-constructor"
            | FStar_Syntax_Syntax.Sig_fail
                { FStar_Syntax_Syntax.errs = uu___2;
                  FStar_Syntax_Syntax.fail_in_lax = false;
@@ -2990,7 +2980,7 @@ let (tc_decl' :
                               FStar_Syntax_Syntax.cflags = uu___6;_}
                             -> (lid1, uvs1, tps1, c1)
                         | uu___6 ->
-                            FStar_Compiler_Effect.failwith
+                            failwith
                               "Did not expect Sig_effect_abbrev to not be one after phase 1")
                  else (lid, uvs, tps, c) in
                (match uu___2 with
@@ -3840,7 +3830,7 @@ let (tc_decl' :
                                 FStar_Syntax_Syntax.kind1 = uu___11;_}
                               -> (t2, ty)
                           | uu___8 ->
-                              FStar_Compiler_Effect.failwith
+                              failwith
                                 "Impossible! tc for Sig_polymonadic_bind must be a Sig_polymonadic_bind" in
                         match uu___6 with
                         | (t2, ty) ->
@@ -4084,7 +4074,7 @@ let (tc_decl' :
                                 FStar_Syntax_Syntax.kind2 = uu___10;_}
                               -> (t2, ty)
                           | uu___8 ->
-                              FStar_Compiler_Effect.failwith
+                              failwith
                                 "Impossible! tc for Sig_polymonadic_subcomp must be a Sig_polymonadic_subcomp" in
                         match uu___6 with
                         | (t2, ty) ->

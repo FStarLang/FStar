@@ -344,9 +344,7 @@ let (extract_let_rec_annotation :
                                        move_decreases d
                                          (FStar_Compiler_List.op_At pfx sfx)
                                          (FStar_Syntax_Util.comp_flags c')
-                                   | uu___10 ->
-                                       FStar_Compiler_Effect.failwith
-                                         "Impossible")))) in
+                                   | uu___10 -> failwith "Impossible")))) in
                  let extract_annot_from_body lbtyp_opt =
                    let rec aux_lbdef e2 =
                      let e3 = FStar_Syntax_Subst.compress e2 in
@@ -588,9 +586,7 @@ let (extract_let_rec_annotation :
                                                 (FStar_Compiler_List.length
                                                    bs')
                                                   <> n_bs
-                                              then
-                                                FStar_Compiler_Effect.failwith
-                                                  "Impossible"
+                                              then failwith "Impossible"
                                               else
                                                 (let subst =
                                                    FStar_Syntax_Util.rename_binders
@@ -740,7 +736,7 @@ let rec (decorated_pattern_as_term :
     | FStar_Syntax_Syntax.Pat_dot_term eopt ->
         (match eopt with
          | FStar_Pervasives_Native.None ->
-             FStar_Compiler_Effect.failwith
+             failwith
                "TcUtil::decorated_pattern_as_term: dot pattern not resolved"
          | FStar_Pervasives_Native.Some e -> ([], e))
 let (comp_univ_opt :
@@ -1857,7 +1853,7 @@ let (substitutive_indexed_bind_substs :
                                                                     uv_t)]),
                                                                     uu___11))
                                                                else
-                                                                 FStar_Compiler_Effect.failwith
+                                                                 failwith
                                                                    "Impossible (standard bind with unexpected binder kind)")
                                                   (subst2, guard) uu___6
                                                   args2 in
@@ -2084,8 +2080,7 @@ let (ad_hoc_indexed_bind_substs :
                                               Prims.strcat
                                                 "Impossible, expected a uvar, got : "
                                                 uu___7 in
-                                            FStar_Compiler_Effect.failwith
-                                              uu___6) rest_bs_uvars
+                                            failwith uu___6) rest_bs_uvars
                                  else ());
                                 (let subst =
                                    FStar_Compiler_List.map2
@@ -2205,7 +2200,7 @@ let (ad_hoc_indexed_bind_substs :
                                                 (FStar_Syntax_Subst.subst
                                                    subst) uu___5)
                                      | uu___4 ->
-                                         FStar_Compiler_Effect.failwith
+                                         failwith
                                            "impossible: mk_indexed_bind" in
                                    let env_g =
                                      FStar_TypeChecker_Env.push_binders env
@@ -2824,7 +2819,7 @@ let (mk_bind :
                                        | FStar_Syntax_Syntax.Layered_eff_sig
                                            (n, uu___6) -> n
                                        | uu___6 ->
-                                           FStar_Compiler_Effect.failwith
+                                           failwith
                                              "Impossible (mk_bind expected an indexed effect)" in
                                      let uu___6 =
                                        FStar_Syntax_Util.get_bind_vc_combinator
@@ -4064,7 +4059,7 @@ let (substitutive_indexed_ite_substs :
                                              guard args1 args2 in
                                          (bs3, subst2, uu___5))
                                       else
-                                        FStar_Compiler_Effect.failwith
+                                        failwith
                                           "Impossible (substitutive_indexed_ite: unexpected k)" in
                                   (match uu___3 with
                                    | (bs4, subst3, guard1) ->
@@ -4396,9 +4391,7 @@ let (mk_layered_conjunction :
                                     with
                                     | FStar_Syntax_Syntax.Layered_eff_sig
                                         (n, uu___6) -> n
-                                    | uu___6 ->
-                                        FStar_Compiler_Effect.failwith
-                                          "Impossible!" in
+                                    | uu___6 -> failwith "Impossible!" in
                                   substitutive_indexed_ite_substs env kind bs
                                     a p ct1 ct2 num_effect_params r) in
                              match uu___4 with
@@ -6361,10 +6354,8 @@ let (pure_or_ghost_pre_and_post :
         (FStar_Pervasives_Native.None, (FStar_Syntax_Util.comp_result comp))
       else
         (match comp.FStar_Syntax_Syntax.n with
-         | FStar_Syntax_Syntax.GTotal uu___2 ->
-             FStar_Compiler_Effect.failwith "Impossible"
-         | FStar_Syntax_Syntax.Total uu___2 ->
-             FStar_Compiler_Effect.failwith "Impossible"
+         | FStar_Syntax_Syntax.GTotal uu___2 -> failwith "Impossible"
+         | FStar_Syntax_Syntax.Total uu___2 -> failwith "Impossible"
          | FStar_Syntax_Syntax.Comp ct ->
              let uu___2 =
                (FStar_Ident.lid_equals ct.FStar_Syntax_Syntax.effect_name
@@ -6472,7 +6463,7 @@ let (pure_or_ghost_pre_and_post :
                                     ct1.FStar_Syntax_Syntax.result_typ ens in
                                 norm uu___12 in
                               (uu___10, uu___11)))
-                | uu___4 -> FStar_Compiler_Effect.failwith "Impossible"))
+                | uu___4 -> failwith "Impossible"))
 let (norm_reify :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Env.steps ->
@@ -6533,7 +6524,7 @@ let (remove_reify : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
              (match args with
               | x::[] -> FStar_Pervasives_Native.fst x
               | uu___4 ->
-                  FStar_Compiler_Effect.failwith
+                  failwith
                     "Impossible : Reify applied to multiple arguments after normalization.")
            else t)
 let (maybe_implicit_with_meta_or_attr :
@@ -7167,9 +7158,7 @@ let (short_circuit :
         match uu___ with
         | [] -> FStar_TypeChecker_Common.Trivial
         | (fst, uu___1)::[] -> f fst
-        | uu___1 ->
-            FStar_Compiler_Effect.failwith
-              "Unexpected args to binary operator" in
+        | uu___1 -> failwith "Unexpected args to binary operator" in
       let op_and_e e =
         let uu___ = FStar_Syntax_Util.b2t e in
         FStar_TypeChecker_Common.NonTrivial uu___ in
@@ -7190,7 +7179,7 @@ let (short_circuit :
         | _then::(guard, uu___1)::[] ->
             let uu___2 = FStar_Syntax_Util.mk_neg guard in
             FStar_TypeChecker_Common.NonTrivial uu___2
-        | uu___1 -> FStar_Compiler_Effect.failwith "Unexpected args to ITE" in
+        | uu___1 -> failwith "Unexpected args to ITE" in
       let table =
         let uu___ =
           let uu___1 = short_bin_op op_and_e in

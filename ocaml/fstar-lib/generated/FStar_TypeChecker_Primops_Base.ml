@@ -179,10 +179,7 @@ let mk_interp1 :
                                            (FStar_Class_Monad.return
                                               FStar_Class_Monad.monad_option
                                               () (Obj.magic uu___4))) uu___4)))
-                       | uu___2 ->
-                           Obj.magic
-                             (Obj.repr
-                                (FStar_Compiler_Effect.failwith "arity")))
+                       | uu___2 -> Obj.magic (Obj.repr (failwith "arity")))
           uu___2 uu___1 uu___
 let mk_nbe_interp1 :
   'a 'r .
@@ -283,9 +280,7 @@ let mk_interp2 :
                                                   () (Obj.magic uu___6)))
                                             uu___6)))
                            | uu___3 ->
-                               Obj.magic
-                                 (Obj.repr
-                                    (FStar_Compiler_Effect.failwith "arity")))
+                               Obj.magic (Obj.repr (failwith "arity")))
             uu___3 uu___2 uu___1 uu___
 let mk_nbe_interp2 :
   'a 'b 'r .
@@ -415,11 +410,8 @@ let mk_interp3 :
                                                       () (Obj.magic uu___8)))
                                                 uu___8)))
                                | uu___4 ->
-                                   Obj.magic
-                                     (Obj.repr
-                                        (FStar_Compiler_Effect.failwith
-                                           "arity"))) uu___4 uu___3 uu___2
-              uu___1 uu___
+                                   Obj.magic (Obj.repr (failwith "arity")))
+              uu___4 uu___3 uu___2 uu___1 uu___
 let mk_nbe_interp3 :
   'a 'b 'c 'r .
     'a FStar_TypeChecker_NBETerm.embedding ->
@@ -580,10 +572,8 @@ let mk_interp4 :
                                                     uu___10)))
                                    | uu___5 ->
                                        Obj.magic
-                                         (Obj.repr
-                                            (FStar_Compiler_Effect.failwith
-                                               "arity"))) uu___5 uu___4
-                uu___3 uu___2 uu___1 uu___
+                                         (Obj.repr (failwith "arity")))
+                uu___5 uu___4 uu___3 uu___2 uu___1 uu___
 let mk_nbe_interp4 :
   'a 'b 'c 'd 'r .
     'a FStar_TypeChecker_NBETerm.embedding ->
@@ -786,10 +776,8 @@ let mk_interp5 :
                                                         uu___12)))
                                        | uu___6 ->
                                            Obj.magic
-                                             (Obj.repr
-                                                (FStar_Compiler_Effect.failwith
-                                                   "arity"))) uu___6 uu___5
-                  uu___4 uu___3 uu___2 uu___1 uu___
+                                             (Obj.repr (failwith "arity")))
+                  uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___
 let mk_nbe_interp5 :
   'a 'b 'c 'd 'e 'r .
     'a FStar_TypeChecker_NBETerm.embedding ->
@@ -1113,9 +1101,7 @@ let mk1' :
                                                       FStar_Class_Monad.monad_option
                                                       () (Obj.magic uu___6)))
                                                 uu___6))) uu___6)))
-                    | uu___4 ->
-                        Obj.magic
-                          (Obj.repr (FStar_Compiler_Effect.failwith "arity")) in
+                    | uu___4 -> Obj.magic (Obj.repr (failwith "arity")) in
                   let nbe_interp cbs us args =
                     match args with
                     | (a1, uu___4)::[] ->
@@ -1151,9 +1137,7 @@ let mk1' :
                                                       FStar_Class_Monad.monad_option
                                                       () (Obj.magic uu___6)))
                                                 uu___6))) uu___6)))
-                    | uu___4 ->
-                        Obj.magic
-                          (Obj.repr (FStar_Compiler_Effect.failwith "arity")) in
+                    | uu___4 -> Obj.magic (Obj.repr (failwith "arity")) in
                   as_primitive_step_nbecbs true
                     (name, Prims.int_one, u_arity, interp, nbe_interp)
 let mk1_psc' :
@@ -1210,9 +1194,7 @@ let mk1_psc' :
                                                       FStar_Class_Monad.monad_option
                                                       () (Obj.magic uu___6)))
                                                 uu___6))) uu___6)))
-                    | uu___4 ->
-                        Obj.magic
-                          (Obj.repr (FStar_Compiler_Effect.failwith "arity")) in
+                    | uu___4 -> Obj.magic (Obj.repr (failwith "arity")) in
                   let nbe_interp cbs us args =
                     match args with
                     | (a1, uu___4)::[] ->
@@ -1249,9 +1231,7 @@ let mk1_psc' :
                                                       FStar_Class_Monad.monad_option
                                                       () (Obj.magic uu___6)))
                                                 uu___6))) uu___6)))
-                    | uu___4 ->
-                        Obj.magic
-                          (Obj.repr (FStar_Compiler_Effect.failwith "arity")) in
+                    | uu___4 -> Obj.magic (Obj.repr (failwith "arity")) in
                   as_primitive_step_nbecbs true
                     (name, Prims.int_one, u_arity, interp, nbe_interp)
 let mk2' :
@@ -1323,10 +1303,7 @@ let mk2' :
                                                           ()
                                                           (Obj.magic uu___9)))
                                                     uu___9))) uu___9)))
-                        | uu___6 ->
-                            Obj.magic
-                              (Obj.repr
-                                 (FStar_Compiler_Effect.failwith "arity")) in
+                        | uu___6 -> Obj.magic (Obj.repr (failwith "arity")) in
                       let nbe_interp cbs us args =
                         match args with
                         | (a1, uu___6)::(b1, uu___7)::[] ->
@@ -1375,10 +1352,7 @@ let mk2' :
                                                           ()
                                                           (Obj.magic uu___9)))
                                                     uu___9))) uu___9)))
-                        | uu___6 ->
-                            Obj.magic
-                              (Obj.repr
-                                 (FStar_Compiler_Effect.failwith "arity")) in
+                        | uu___6 -> Obj.magic (Obj.repr (failwith "arity")) in
                       as_primitive_step_nbecbs true
                         (name, (Prims.of_int (2)), u_arity, interp,
                           nbe_interp)
@@ -1471,9 +1445,7 @@ let mk3' :
                                                                  uu___12)))
                                                         uu___12))) uu___12)))
                             | uu___8 ->
-                                Obj.magic
-                                  (Obj.repr
-                                     (FStar_Compiler_Effect.failwith "arity")) in
+                                Obj.magic (Obj.repr (failwith "arity")) in
                           let nbe_interp cbs us args =
                             match args with
                             | (a1, uu___8)::(b1, uu___9)::(c1, uu___10)::[]
@@ -1535,9 +1507,7 @@ let mk3' :
                                                                  uu___12)))
                                                         uu___12))) uu___12)))
                             | uu___8 ->
-                                Obj.magic
-                                  (Obj.repr
-                                     (FStar_Compiler_Effect.failwith "arity")) in
+                                Obj.magic (Obj.repr (failwith "arity")) in
                           as_primitive_step_nbecbs true
                             (name, (Prims.of_int (3)), u_arity, interp,
                               nbe_interp)
@@ -1653,10 +1623,7 @@ let mk4' :
                                                             uu___15)))
                                                  uu___15)))
                                 | uu___10 ->
-                                    Obj.magic
-                                      (Obj.repr
-                                         (FStar_Compiler_Effect.failwith
-                                            "arity")) in
+                                    Obj.magic (Obj.repr (failwith "arity")) in
                               let nbe_interp cbs us args =
                                 match args with
                                 | (a1, uu___10)::(b1, uu___11)::(c1, uu___12)::
@@ -1731,10 +1698,7 @@ let mk4' :
                                                             uu___15)))
                                                  uu___15)))
                                 | uu___10 ->
-                                    Obj.magic
-                                      (Obj.repr
-                                         (FStar_Compiler_Effect.failwith
-                                            "arity")) in
+                                    Obj.magic (Obj.repr (failwith "arity")) in
                               as_primitive_step_nbecbs true
                                 (name, (Prims.of_int (4)), u_arity, interp,
                                   nbe_interp)
@@ -1878,9 +1842,7 @@ let mk5' :
                                                      uu___18)))
                                     | uu___12 ->
                                         Obj.magic
-                                          (Obj.repr
-                                             (FStar_Compiler_Effect.failwith
-                                                "arity")) in
+                                          (Obj.repr (failwith "arity")) in
                                   let nbe_interp cbs us args =
                                     match args with
                                     | (a1, uu___12)::(b1, uu___13)::(c1,
@@ -1976,9 +1938,7 @@ let mk5' :
                                                      uu___18)))
                                     | uu___12 ->
                                         Obj.magic
-                                          (Obj.repr
-                                             (FStar_Compiler_Effect.failwith
-                                                "arity")) in
+                                          (Obj.repr (failwith "arity")) in
                                   as_primitive_step_nbecbs true
                                     (name, (Prims.of_int (5)), u_arity,
                                       interp, nbe_interp)
@@ -2151,9 +2111,7 @@ let mk6' :
                                                          uu___21)))
                                         | uu___14 ->
                                             Obj.magic
-                                              (Obj.repr
-                                                 (FStar_Compiler_Effect.failwith
-                                                    "arity")) in
+                                              (Obj.repr (failwith "arity")) in
                                       let nbe_interp cbs us args =
                                         match args with
                                         | (a1, uu___14)::(b1, uu___15)::
@@ -2275,9 +2233,7 @@ let mk6' :
                                                          uu___21)))
                                         | uu___14 ->
                                             Obj.magic
-                                              (Obj.repr
-                                                 (FStar_Compiler_Effect.failwith
-                                                    "arity")) in
+                                              (Obj.repr (failwith "arity")) in
                                       as_primitive_step_nbecbs true
                                         (name, (Prims.of_int (6)), u_arity,
                                           interp, nbe_interp)

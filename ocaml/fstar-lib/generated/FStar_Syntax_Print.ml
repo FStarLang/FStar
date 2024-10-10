@@ -726,8 +726,7 @@ let rec (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string)
           FStar_Compiler_String.concat " and " uu___2 in
         FStar_Compiler_Util.format1 "let rec %s" uu___1
     | FStar_Syntax_Syntax.Sig_let uu___ ->
-        FStar_Compiler_Effect.failwith
-          "Impossible: sigelt_to_string_short, ill-formed let"
+        failwith "Impossible: sigelt_to_string_short, ill-formed let"
     | FStar_Syntax_Syntax.Sig_declare_typ
         { FStar_Syntax_Syntax.lid2 = lid; FStar_Syntax_Syntax.us2 = uu___;
           FStar_Syntax_Syntax.t2 = uu___1;_}

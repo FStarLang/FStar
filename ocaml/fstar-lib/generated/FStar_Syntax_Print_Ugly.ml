@@ -242,12 +242,11 @@ let rec (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
            let uu___1 = FStar_Options.print_implicits () in
            if uu___1 then x1 else FStar_Syntax_Util.unmeta x1 in
          match x2.FStar_Syntax_Syntax.n with
-         | FStar_Syntax_Syntax.Tm_delayed uu___1 ->
-             FStar_Compiler_Effect.failwith "impossible"
+         | FStar_Syntax_Syntax.Tm_delayed uu___1 -> failwith "impossible"
          | FStar_Syntax_Syntax.Tm_app
              { FStar_Syntax_Syntax.hd = uu___1;
                FStar_Syntax_Syntax.args = [];_}
-             -> FStar_Compiler_Effect.failwith "Empty args!"
+             -> failwith "Empty args!"
          | FStar_Syntax_Syntax.Tm_lazy
              { FStar_Syntax_Syntax.blob = b;
                FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_embedding
@@ -1390,7 +1389,7 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
                        { FStar_Syntax_Syntax.bs1 = bs;
                          FStar_Syntax_Syntax.comp = c1;_}
                        -> (bs, c1)
-                   | uu___4 -> FStar_Compiler_Effect.failwith "impossible" in
+                   | uu___4 -> failwith "impossible" in
                  (match uu___2 with
                   | (tps1, c1) ->
                       let uu___3 = sli l in
