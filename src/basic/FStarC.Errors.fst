@@ -175,27 +175,26 @@ let optional_def (f : 'a -> PP.document) (def : PP.document) (o : option 'a) : P
 
 let format_issue' (print_hdr:bool) (issue:issue) : string =
   let open FStarC.Pprint in
-  let level_header = doc_of_string (string_of_issue_level issue.issue_level) in
-  let num_opt =
-    if issue.issue_level = EError || issue.issue_level = EWarning
-    then blank 1 ^^ optional_def (fun n -> doc_of_string (string_of_int n)) (doc_of_string "<unknown>") issue.issue_number
-    else empty
-  in
   let r = issue.issue_range in
-  let atrng : document =
-    match r with
-    | Some r when r <> Range.dummyRange ->
-      blank 1 ^^ doc_of_string "at" ^^ blank 1 ^^ doc_of_string (Range.string_of_use_range r)
-    | _ ->
-      empty
-  in
   let hdr : document =
-    if print_hdr
-    then
+    if print_hdr then (
+      let level_header = doc_of_string (string_of_issue_level issue.issue_level) in
+      let num_opt =
+        if issue.issue_level = EError || issue.issue_level = EWarning
+        then blank 1 ^^ optional_def (fun n -> doc_of_string (string_of_int n)) (doc_of_string "<unknown>") issue.issue_number
+        else empty
+      in
+      let atrng : document =
+        match r with
+        | Some r when r <> Range.dummyRange ->
+          blank 1 ^^ doc_of_string "at" ^^ blank 1 ^^ doc_of_string (Range.string_of_use_range r)
+        | _ ->
+          empty
+      in
       doc_of_string "*" ^^ blank 1 ^^ level_header ^^ num_opt ^^
         atrng ^^
         doc_of_string ":" ^^ hardline
-    else empty
+    ) else empty
   in
   let seealso : document =
     match r with
