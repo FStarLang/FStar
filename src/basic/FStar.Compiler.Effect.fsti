@@ -37,31 +37,24 @@ effect All (a:Type) (pre:all_pre) (post:(h:unit -> Tot (all_post' a (pre h)))) =
 
 effect ML (a:Type) = ALL a (fun (p:all_post a) (_:unit) -> forall (a:result a) (h:unit). p a h)
 
-assume
+new
 val ref (a:Type) : Type0
 
-assume
 val (!) (#a:Type) (r:ref a)
   : ML a
 
-assume
 val (:=) (#a:Type) (r:ref a) (x:a)
   : ML unit
 
-assume
 val alloc (#a:Type) (x:a)
   : ML (ref a)
 
-assume
 val raise (e: exn) : ML 'a
 
-assume
 val exit : int -> ML 'a
 
-assume
 val try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a
 
 exception Failure of string
 
-assume
 val failwith : string -> ML 'a

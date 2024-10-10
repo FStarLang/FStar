@@ -52,8 +52,7 @@ EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Thunk		\
 # And there are a few specific files that should not be extracted at
 # all, despite being in one of the EXTRACT_NAMESPACES
 NO_EXTRACT=FStar.Tactics.Native FStar.Tactics.Load	\
-	   FStar.Extraction.ML.PrintML FStar.Compiler.List \
-	   FStar.Compiler.Effect
+	   FStar.Extraction.ML.PrintML FStar.Compiler.List
 
 EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 	  $(addprefix --extract_namespace , $(EXTRACT_NAMESPACES))	\
