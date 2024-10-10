@@ -299,6 +299,7 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
 (* Extraction to OCaml, F# or Krml *)
 let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
   let opt = Options.codegen () in
+  let fail #a () : a = failwith ("Unrecognized extraction backend: " ^ show opt) in
   if opt <> None then
     let ext = match opt with
       | Some Options.FSharp -> ".fs"
@@ -306,7 +307,7 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
       | Some Options.Plugin -> ".ml"
       | Some Options.Krml -> ".krml"
       | Some Options.Extension -> ".ast"
-      | _ -> failwith "Unrecognized option"
+      | _ -> fail ()
     in
     match opt with
     | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin ->
@@ -354,7 +355,7 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
       in
       save_value_to_file oname bin
 
-   | _ -> failwith "Unrecognized option"
+    | _ -> fail ()
 
 let tc_one_file
         (env:uenv)

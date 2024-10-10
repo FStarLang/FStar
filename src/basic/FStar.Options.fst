@@ -2461,3 +2461,7 @@ let set_vconfig (vcfg:vconfig) : unit =
   set_option "trivial_pre_for_unannotated_effectful_fns" (Bool vcfg.trivial_pre_for_unannotated_effectful_fns);
   set_option "reuse_hint_for"                            (option_as String vcfg.reuse_hint_for);
   ()
+
+instance showable_codegen_t : showable codegen_t = {
+  show = print_codegen;
+}

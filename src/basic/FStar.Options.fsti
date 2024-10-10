@@ -22,7 +22,11 @@ open FStar.VConfig
 open FStar.Compiler
 
 type codegen_t =
-    | OCaml | FSharp | Krml | Plugin | Extension
+  | OCaml
+  | FSharp
+  | Krml
+  | Plugin
+  | Extension
 
 //let __test_norm_all = Util.mk_ref false
 
@@ -279,3 +283,5 @@ val eager_embedding: ref bool
 
 val get_vconfig : unit -> vconfig
 val set_vconfig : vconfig -> unit
+
+instance val showable_codegen_t : Class.Show.showable codegen_t
