@@ -7,7 +7,7 @@ FSTAR_HOME/ocaml/fstar-lib/FStar_Parser_Parse.mly
 To call into the parser from F*, we have a wrapper written in OCaml
 with an F* interface:
 
-* FStar.Parser.ParseIt.fsti: This is the F* interface
+* FStarC.Parser.ParseIt.fsti: This is the F* interface
 
 * FSTAR_HOME/ocaml/fstar-lib/FStar_Parser_ParseIt.ml: This is its
   implementation
@@ -29,7 +29,7 @@ FSTAR_HOME/ocaml/fstar-lib/FStar_SedLexing.ml
 
 If you want to modify the parser, you need a recent version of menhir
 (at least december 2016). Also the printer in
-[src/parser/FStar.Parser.ToDocument.fs] should be kept up to date with
+[src/parser/FStarC.Parser.ToDocument.fs] should be kept up to date with
 the parser as much as possible since it tries to keep the same general
 structure as the parser.
 
