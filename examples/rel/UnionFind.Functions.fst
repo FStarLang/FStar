@@ -26,9 +26,9 @@ open UnionFind.Forest
 module ST = FStar.DM4F.Heap.ST
 
 (* helpers for getting the parent, height, and the subtree *)
-unfold let parent  (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot (id n)    = Mktuple3?._1 (sel h (index uf i))
-unfold let height  (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot nat         = Mktuple3?._2 (sel h (index uf i))
-unfold let subtree (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot subtree_t = reveal (Mktuple3?._3 (sel h (index uf i)))
+unfold let parent  (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot (id n)    = Tuple3.Mktuple3?._1 (sel h (index uf i))
+unfold let height  (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot nat       = Tuple3.Mktuple3?._2 (sel h (index uf i))
+unfold let subtree (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot subtree_t = reveal (Tuple3.Mktuple3?._3 (sel h (index uf i)))
 
 (*
  * well-formed conditions on the forest, essentially the invariants needed for proving the termination of operations

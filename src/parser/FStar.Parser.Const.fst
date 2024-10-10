@@ -409,68 +409,104 @@ let const_to_string x = match x with
 
 (* Tuples  *)
 
+// Arity, type constructor, and data constructor for tuples
+private
+let tuple_table : list (int & string & string) = [
+  (2,  "FStar.Pervasives.Native.tuple2", "FStar.Pervasives.Native.Mktuple2");
+  (3,  "FStar.Tuple3.tuple3",   "FStar.Tuple3.Mktuple3");
+  (4,  "FStar.Tuple4.tuple4",   "FStar.Tuple4.Mktuple4");
+  (5,  "FStar.Tuple5.tuple5",   "FStar.Tuple5.Mktuple5");
+  (6,  "FStar.Tuple6.tuple6",   "FStar.Tuple6.Mktuple6");
+  (7,  "FStar.Tuple7.tuple7",   "FStar.Tuple7.Mktuple7");
+  (8,  "FStar.Tuple8.tuple8",   "FStar.Tuple8.Mktuple8");
+  (9,  "FStar.Tuple9.tuple9",   "FStar.Tuple9.Mktuple9");
+  (10, "FStar.Tuple10.tuple10", "FStar.Tuple10.Mktuple10");
+  (11, "FStar.Tuple11.tuple11", "FStar.Tuple11.Mktuple11");
+  (12, "FStar.Tuple12.tuple12", "FStar.Tuple12.Mktuple12");
+  (13, "FStar.Tuple13.tuple13", "FStar.Tuple13.Mktuple13");
+  (14, "FStar.Tuple14.tuple14", "FStar.Tuple14.Mktuple14");
+]
+
 let mk_tuple_lid n r =
-  let t = U.format1 "tuple%s" (U.string_of_int n) in
-  set_lid_range (psnconst t) r
+  match List.tryFind (fun (n', _, _) -> n = n') tuple_table with
+  | Some (_, s, _) -> 
+    let l = Ident.lid_of_str s in
+    set_lid_range l r
+  | None ->
+    failwith "Tuple too large"
 
-let lid_tuple2   = mk_tuple_lid 2 dummyRange
-let lid_tuple3   = mk_tuple_lid 3 dummyRange
-let lid_tuple4   = mk_tuple_lid 4 dummyRange
-let lid_tuple5   = mk_tuple_lid 5 dummyRange
+let mk_tuple_data_lid n r =
+  match List.tryFind (fun (n', _, _) -> n = n') tuple_table with
+  | Some (_, _, s) -> 
+    let l = Ident.lid_of_str s in
+    set_lid_range l r
+  | None ->
+    failwith "Tuple too large"
+    
+let get_tuple_datacon_arity (s:string) : option int =
+  match List.tryFind (fun (_, _, s') -> s = s') tuple_table with
+  | Some (n, _, _) -> Some n
+  | None -> None
+let get_tuple_tycon_arity (s:string) : option int =
+  match List.tryFind (fun (_, s', _) -> s = s') tuple_table with
+  | Some (n, _, _) -> Some n
+  | None -> None
 
-let is_tuple_constructor_string (s:string) :bool =
-  U.starts_with s "FStar.Pervasives.Native.tuple"
+let is_tuple_constructor_string (s:string) : bool =
+  List.existsb (fun (_, s', _) -> s = s') tuple_table
+
+let is_tuple_datacon_string (s:string) : bool =
+  List.existsb (fun (n, _, s') -> s = s') tuple_table
 
 let is_tuple_constructor_id  id  = is_tuple_constructor_string (string_of_id id)
 let is_tuple_constructor_lid lid = is_tuple_constructor_string (string_of_lid lid)
 
-let mk_tuple_data_lid n r =
-  let t = U.format1 "Mktuple%s" (U.string_of_int n) in
-  set_lid_range (psnconst t) r
+let is_tuple_datacon_id  id  = is_tuple_datacon_string (string_of_id id)
+let is_tuple_datacon_lid lid = is_tuple_datacon_string (string_of_lid lid)
+let is_tuple_data_lid f n = lid_equals f (mk_tuple_data_lid n dummyRange)
 
+let lid_tuple2   = mk_tuple_lid 2 dummyRange
+let lid_tuple3   = mk_tuple_lid 3 dummyRange
 let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
 let lid_Mktuple3 = mk_tuple_data_lid 3 dummyRange
 let lid_Mktuple4 = mk_tuple_data_lid 4 dummyRange
 let lid_Mktuple5 = mk_tuple_data_lid 5 dummyRange
 
-let is_tuple_datacon_string (s:string) :bool =
-  U.starts_with s "FStar.Pervasives.Native.Mktuple"
-
-let is_tuple_datacon_id  id  = is_tuple_datacon_string (string_of_id id)
-let is_tuple_datacon_lid lid = is_tuple_datacon_string (string_of_lid lid)
-
-let is_tuple_data_lid f n =
-  lid_equals f (mk_tuple_data_lid n dummyRange)
-
-let is_tuple_data_lid' f = is_tuple_datacon_string (string_of_lid f)
-
-
 (* Dtuples *)
 
-(* dtuple is defined in prims if n = 2, in pervasives otherwise *)
-let mod_prefix_dtuple (n:int) :(string -> lident) =
-  if n = 2 then pconst else psconst
+// Arity, type constructor, and data constructor for dependent tuples
+private
+let dtuple_table : list (int & string & string) = [
+  (2, "Prims.dtuple2", "Prims.Mkdtuple2");
+  (3, "FStar.DTuple3.dtuple3", "FStar.DTuple3.Mkdtuple3");
+  (4, "FStar.DTuple4.dtuple4", "FStar.DTuple4.Mkdtuple4");
+  (5, "FStar.DTuple5.dtuple5", "FStar.DTuple5.Mkdtuple5");
+]
 
 let mk_dtuple_lid n r =
-  let t = U.format1 "dtuple%s" (U.string_of_int n) in
-  set_lid_range ((mod_prefix_dtuple n) t) r
-
-let is_dtuple_constructor_string (s:string) :bool =
-  s = "Prims.dtuple2" || U.starts_with s "FStar.Pervasives.dtuple"
-
-let is_dtuple_constructor_lid lid = is_dtuple_constructor_string (string_of_lid lid)
+  match List.tryFind (fun (n', _, _) -> n = n') dtuple_table with
+  | Some (_, s, _) -> 
+    let l = Ident.lid_of_str s in
+    set_lid_range l r
+  | None ->
+    failwith "Dependent Tuple too large"
 
 let mk_dtuple_data_lid n r =
-  let t = U.format1 "Mkdtuple%s" (U.string_of_int n) in
-  set_lid_range ((mod_prefix_dtuple n) t) r
+  match List.tryFind (fun (n', _, _) -> n = n') dtuple_table with
+  | Some (_, _, s) -> 
+    let l = Ident.lid_of_str s in
+    set_lid_range l r
+  | None ->
+    failwith "Dependent Tuple too large"
 
-let is_dtuple_datacon_string (s:string) :bool =
-  s = "Prims.Mkdtuple2" || U.starts_with s "FStar.Pervasives.Mkdtuple"
+let is_dtuple_constructor_string (s:string) : bool =
+  List.existsb (fun (_, s', _) -> s = s') dtuple_table
+let is_dtuple_datacon_string (s:string) : bool =
+  List.existsb (fun (_, _, s') -> s = s') dtuple_table
 
-let is_dtuple_data_lid f n =
-  lid_equals f (mk_dtuple_data_lid n dummyRange)
-
-let is_dtuple_data_lid' f = is_dtuple_datacon_string (string_of_lid f)
+let is_dtuple_constructor_lid lid = is_dtuple_constructor_string (string_of_lid lid)
+let is_dtuple_data_lid f n = lid_equals f (mk_dtuple_data_lid n dummyRange)
+let is_dtuple_datacon_lid f = is_dtuple_datacon_string (string_of_lid f)
 
 let is_name (lid:lident) =
   let c = U.char_at (string_of_id (ident_of_lid lid)) 0 in

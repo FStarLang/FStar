@@ -30,6 +30,8 @@ module LowStar.BufferView
  **)
 open LowStar.Monotonic.Buffer
 
+open FStar.DTuple4
+
 module HS=FStar.HyperStack
 module B=LowStar.Monotonic.Buffer
 

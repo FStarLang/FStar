@@ -393,3 +393,5 @@ type error_code =
 type error_setting = error_code & error_flag & int
 
 val default_settings : list error_setting
+
+module X = FStar.Tuple3 // stupid hack

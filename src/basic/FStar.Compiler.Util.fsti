@@ -20,6 +20,7 @@ open FStar.Compiler.Effect
 open FStar.Json
 open FStar.BaseTypes
 
+open FStar.Tuple3
 exception Impos
 
 val max_int: int

@@ -212,18 +212,15 @@ let rec build_core_type ?(annots = []) (ty: mlty): core_type =
      let c_tys = map build_core_type tys in
      let p = path_to_ident (path, sym) in
      let ty = Typ.mk (Ptyp_constr (p, c_tys)) in
-     (match path with
-      | ["FStar"; "Pervasives"; "Native"] ->
-        (* A special case for tuples, so they are displayed as
-         * ('a * 'b) instead of ('a,'b) FStar_Pervasives_Native.tuple2
-         * VD: Should other types named "tupleXX" where XX does not represent
-         * the arity of the tuple be added to FStar.Pervasives.Native,
-         * the condition below might need to be more specific. *)
-        if BatString.starts_with sym "tuple" then
-          Typ.mk (Ptyp_tuple (map build_core_type tys))
-        else
-          ty
-      | _ -> ty)
+     if FStar_Parser_Const.is_tuple_constructor_string (String.concat "." (path@[sym])) then
+       (* A special case for tuples, so they are displayed as
+        * ('a * 'b) instead of ('a,'b) FStar_Pervasives_Native.tuple2
+        * VD: Should other types named "tupleXX" where XX does not represent
+        * the arity of the tuple be added to FStar.Pervasives.Native,
+        * the condition below might need to be more specific. *)
+       Typ.mk (Ptyp_tuple (map build_core_type tys))
+     else
+       ty
   | MLTY_Tuple tys -> Typ.mk (Ptyp_tuple (map build_core_type tys))
   | MLTY_Top -> Typ.mk (Ptyp_constr (mk_lident "Obj.t", []))
   | MLTY_Erased -> Typ.mk (Ptyp_constr (mk_lident "unit", []))
