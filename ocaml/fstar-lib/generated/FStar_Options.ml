@@ -28,10 +28,13 @@ let (uu___is_Always : split_queries_t -> Prims.bool) =
 type message_format_t =
   | Json 
   | Human 
+  | Github 
 let (uu___is_Json : message_format_t -> Prims.bool) =
   fun projectee -> match projectee with | Json -> true | uu___ -> false
 let (uu___is_Human : message_format_t -> Prims.bool) =
   fun projectee -> match projectee with | Human -> true | uu___ -> false
+let (uu___is_Github : message_format_t -> Prims.bool) =
+  fun projectee -> match projectee with | Github -> true | uu___ -> false
 type option_val =
   | Bool of Prims.bool 
   | String of Prims.string 
@@ -295,7 +298,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("eager_subtyping", (Bool false));
   ("error_contexts", (Bool false));
   ("expose_interfaces", (Bool false));
-  ("message_format", (String "human"));
+  ("message_format", (String "auto"));
   ("ext", Unset);
   ("extract", Unset);
   ("extract_all", (Bool false));
@@ -1584,13 +1587,15 @@ let rec (specs_with_types :
                                                                   let uu___62
                                                                     =
                                                                     text
-                                                                    "Format of the messages emitted by F* (default `human`)" in
+                                                                    "Format of the messages emitted by F*. Using 'auto' will use human messages unless the variable GITHUB_ENV is defined, which usually indicates that F* is running inside a github actions workflow (default `auto`)." in
                                                                   (FStar_Getopt.noshort,
                                                                     "message_format",
                                                                     (
                                                                     EnumStr
                                                                     ["human";
-                                                                    "json"]),
+                                                                    "json";
+                                                                    "github";
+                                                                    "auto"]),
                                                                     uu___62) in
                                                                 let uu___62 =
                                                                   let uu___63
@@ -4370,8 +4375,16 @@ let (message_format : unit -> message_format_t) =
   fun uu___ ->
     let uu___3 = get_message_format () in
     match uu___3 with
+    | "auto" ->
+        let uu___4 =
+          FStar_Compiler_Util.expand_environment_variable "GITHUB_ENV" in
+        (match uu___4 with
+         | FStar_Pervasives_Native.None -> Human
+         | FStar_Pervasives_Native.Some "" -> Human
+         | FStar_Pervasives_Native.Some uu___5 -> Github)
     | "human" -> Human
     | "json" -> Json
+    | "github" -> Github
     | illegal ->
         let uu___4 =
           let uu___5 =
