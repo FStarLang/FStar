@@ -4289,10 +4289,6 @@ let desugar_decls env decls =
   in
   env, sigelts
 
-let open_prims_all =
-    [AST.mk_decl (AST.Open (C.prims_lid, Unrestricted)) Range.dummyRange;
-     AST.mk_decl (AST.Open (C.all_lid, Unrestricted)) Range.dummyRange]
-
 (* Top-level functionality: from AST to a module
    Keeps track of the name of variables and so on (in the context)
  *)

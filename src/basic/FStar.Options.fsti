@@ -165,6 +165,7 @@ val log_types                   : unit    -> bool
 val max_fuel                    : unit    -> int
 val max_ifuel                   : unit    -> int
 val ml_ish                      : unit    -> bool
+val ml_ish_effect               : unit    -> string
 val set_ml_ish                  : unit    -> unit
 val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
