@@ -22,12 +22,13 @@ open FStarC.Compiler.Effect
 open FStarC.Compiler.List
 open FStarC.Compiler.Util
 open FStarC.Compiler.Range
-open FStarC.Class.Monad
 open FStarC.Options
 module List = FStarC.Compiler.List
 module BU = FStarC.Compiler.Util
 module PP = FStarC.Pprint
 
+open FStarC.Class.Monad
+open FStarC.Class.Show
 open FStarC.Errors.Codes
 open FStarC.Errors.Msg
 open FStarC.Json
@@ -229,6 +230,38 @@ let format_issue issue : string = format_issue' true issue
 let print_issue_json issue =
     json_of_issue issue |> string_of_json |> BU.print1_error "%s\n"
 
+(*
+  Printing for nicer display in github actions runs. See
+    https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions
+  for more info. The idea here is basically render it as text and then
+  add a github header. Also we replace newlines by %0A which become
+  newlines in the rendered github annotation, though that does not seem
+  to be very well documented (https://github.com/orgs/community/discussions/26736)
+*)
+let print_issue_github issue =
+  match issue.issue_level with
+  | ENotImplemented
+  | EInfo -> ()
+  | EError
+  | EWarning ->
+    let level = if EError? issue.issue_level then "error" else "warning" in
+    let rng = dflt dummyRange issue.issue_range in
+    let msg = format_issue' true issue in
+    let msg = msg |> BU.splitlines |> String.concat "%0A" in
+    let num =
+      match issue.issue_number with
+      | None -> ""
+      | Some n -> BU.format1 "(%s) " (show n)
+    in
+    BU.print_warning <|
+      BU.format6 "::%s file=%s,line=%s,endLine=%s::%s%s\n"
+        level
+        (Range.file_of_range rng)
+        (show (rng |> Range.start_of_range |> Range.line_of_pos))
+        (show (rng |> Range.end_of_range   |> Range.line_of_pos))
+        num
+        msg
+
 let print_issue_rendered issue =
     let printer =
         match issue.issue_level with
@@ -242,6 +275,7 @@ let print_issue issue =
     match FStarC.Options.message_format () with
     | Human -> print_issue_rendered issue
     | Json -> print_issue_json issue
+    | Github -> print_issue_github issue
 
 let compare_issues i1 i2 =
     match i1.issue_range, i2.issue_range with
