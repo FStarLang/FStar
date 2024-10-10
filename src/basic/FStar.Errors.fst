@@ -22,12 +22,13 @@ open FStar.Compiler.Effect
 open FStar.Compiler.List
 open FStar.Compiler.Util
 open FStar.Compiler.Range
-open FStar.Class.Monad
 open FStar.Options
 module List = FStar.Compiler.List
 module BU = FStar.Compiler.Util
 module PP = FStar.Pprint
 
+open FStar.Class.Monad
+open FStar.Class.Show
 open FStar.Errors.Codes
 open FStar.Errors.Msg
 open FStar.Json
@@ -229,6 +230,30 @@ let format_issue issue : string = format_issue' true issue
 let print_issue_json issue =
     json_of_issue issue |> string_of_json |> BU.print1_error "%s\n"
 
+let print_issue_github issue =
+  match issue.issue_level with
+  | ENotImplemented
+  | EInfo -> ()
+  | EError
+  | EWarning ->
+    let level = if EError? issue.issue_level then "error" else "warning" in
+    let rng = dflt dummyRange issue.issue_range in
+    let msg = String.concat "; " <| List.map renderdoc issue.issue_msg in
+    let msg = BU.replace_char msg '\n' ' ' in
+    let num =
+      match issue.issue_number with
+      | None -> ""
+      | Some n -> BU.format1 "(%s) " (show n)
+    in
+    BU.print_warning <|
+      BU.format6 "::%s file=%s,line=%s,endLine=%s::%s%s\n"
+        level
+        (Range.file_of_range rng)
+        (show (rng |> Range.start_of_range |> Range.line_of_pos))
+        (show (rng |> Range.end_of_range   |> Range.line_of_pos))
+        num
+        msg
+
 let print_issue_rendered issue =
     let printer =
         match issue.issue_level with
@@ -242,6 +267,7 @@ let print_issue issue =
     match FStar.Options.message_format () with
     | Human -> print_issue_rendered issue
     | Json -> print_issue_json issue
+    | Github -> print_issue_github issue
 
 let compare_issues i1 i2 =
     match i1.issue_range, i2.issue_range with
