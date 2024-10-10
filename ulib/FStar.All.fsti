@@ -36,8 +36,8 @@ effect All (a:Type) (pre:all_pre) (post:(h:heap -> Tot (all_post' a (pre h)))) =
     (fun (p : all_post a) (h : heap) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1))
 effect ML (a:Type) = ALL a (fun (p:all_post a) (_:heap) -> forall (a:result a) (h:heap). p a h)
 
-assume val exit : int -> ML 'a
-assume val try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a
+val exit : int -> ML 'a
+val try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a
 
-assume exception Failure of string
-assume val failwith : string -> All 'a (fun h -> True) (fun h a h' -> Err? a /\ h == h')
+exception Failure of string
+val failwith : string -> All 'a (fun h -> True) (fun h a h' -> Err? a /\ h == h')
