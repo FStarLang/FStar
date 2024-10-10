@@ -28,10 +28,13 @@ let (uu___is_Always : split_queries_t -> Prims.bool) =
 type message_format_t =
   | Json 
   | Human 
+  | Github 
 let (uu___is_Json : message_format_t -> Prims.bool) =
   fun projectee -> match projectee with | Json -> true | uu___ -> false
 let (uu___is_Human : message_format_t -> Prims.bool) =
   fun projectee -> match projectee with | Human -> true | uu___ -> false
+let (uu___is_Github : message_format_t -> Prims.bool) =
+  fun projectee -> match projectee with | Github -> true | uu___ -> false
 type option_val =
   | Bool of Prims.bool 
   | String of Prims.string 
@@ -1595,7 +1598,8 @@ let rec (specs_with_types :
                                                                     (
                                                                     EnumStr
                                                                     ["human";
-                                                                    "json"]),
+                                                                    "json";
+                                                                    "github"]),
                                                                     uu___62) in
                                                                 let uu___62 =
                                                                   let uu___63
@@ -4458,6 +4462,7 @@ let (message_format : unit -> message_format_t) =
     match uu___3 with
     | "human" -> Human
     | "json" -> Json
+    | "github" -> Github
     | illegal ->
         let uu___4 =
           let uu___5 =
