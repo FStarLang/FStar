@@ -41,7 +41,7 @@ include .depend
 	$(call msg, "EXTRACT", $(notdir $@))
 	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
 	--odir $(OUTPUT_DIRECTORY) \
-	--codegen OCaml \
+	--codegen OCaml --MLish \
 	--extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
 extract: $(ALL_ML_FILES)

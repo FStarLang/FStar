@@ -16,6 +16,7 @@
 
 module Pulse2Rust.Deps
 
+open FStarC
 open FStarC.Compiler
 open FStarC.Compiler.Util
 open FStarC.Compiler.List
