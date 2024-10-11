@@ -100,7 +100,7 @@ let (tm_exists_inversion :
   = fun g -> fun u -> fun ty -> fun p -> fun uu___ -> fun x -> ((), ())
 
 let (renaming :
-  FStar_Reflection_V2_Data.var ->
+  FStarC_Reflection_V2_Data.var ->
     Pulse_Syntax_Base.var -> FStar_Reflection_Typing.subst_elt Prims.list)
   =
   fun x ->
@@ -867,7 +867,7 @@ let rec (st_typing_subst :
       Pulse_Syntax_Base.typ ->
         Pulse_Typing_Env.env ->
           Pulse_Syntax_Base.term ->
-            FStar_TypeChecker_Core.tot_or_ghost ->
+            FStarC_TypeChecker_Core.tot_or_ghost ->
               unit ->
                 Pulse_Syntax_Base.st_term ->
                   Pulse_Syntax_Base.comp_st ->

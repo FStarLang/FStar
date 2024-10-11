@@ -16,10 +16,10 @@
 
 module Pulse2Rust.Deps
 
-open FStar.Compiler
-open FStar.Compiler.Util
-open FStar.Compiler.List
-open FStar.Compiler.Effect
+open FStarC.Compiler
+open FStarC.Compiler.Util
+open FStarC.Compiler.List
+open FStarC.Compiler.Effect
 
 open Pulse2Rust.Rust.Syntax
 open Pulse2Rust.Env
@@ -27,12 +27,12 @@ open Pulse2Rust.Extract
 
 open RustBindings
 
-open FStar.Class.Setlike
+open FStarC.Class.Setlike
 
-module S = FStar.Extraction.ML.Syntax
-module EUtil = FStar.Extraction.ML.Util
+module S = FStarC.Extraction.ML.Syntax
+module EUtil = FStarC.Extraction.ML.Util
 
-module UEnv = FStar.Extraction.ML.UEnv
+module UEnv = FStarC.Extraction.ML.UEnv
 
 let empty_defs : reachable_defs = RBSet.empty ()
 let singleton (p:S.mlpath) : reachable_defs = singleton (S.string_of_mlpath p)

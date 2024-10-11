@@ -2,30 +2,30 @@ open Prims
 let fail : 'a . Prims.string -> 'a =
   fun s ->
     let uu___ =
-      FStar_Compiler_Util.format1 "Pulse to Rust extraction failed: %s" s in
-    FStar_Compiler_Effect.failwith uu___
+      FStarC_Compiler_Util.format1 "Pulse to Rust extraction failed: %s" s in
+    FStarC_Compiler_Effect.failwith uu___
 let fail_nyi : 'a . Prims.string -> 'a =
   fun s ->
     let uu___ =
-      FStar_Compiler_Util.format1
+      FStarC_Compiler_Util.format1
         "Pulse to Rust extraction failed: no support yet for %s" s in
-    FStar_Compiler_Effect.failwith uu___
+    FStarC_Compiler_Effect.failwith uu___
 type var = Prims.string
 type binding = (var * Pulse2Rust_Rust_Syntax.typ * Prims.bool)
-type reachable_defs = Prims.string FStar_Compiler_RBSet.t
+type reachable_defs = Prims.string FStarC_Compiler_RBSet.t
 let (reachable_defs_to_string : reachable_defs -> Prims.string) =
   fun d ->
     let uu___ =
       let uu___1 =
-        FStar_Class_Setlike.elems ()
+        FStarC_Class_Setlike.elems ()
           (Obj.magic
-             (FStar_Compiler_RBSet.setlike_rbset FStar_Class_Ord.ord_string))
+             (FStarC_Compiler_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))
           (Obj.magic d) in
-      FStar_Compiler_String.concat ";" uu___1 in
-    FStar_Compiler_Util.format1 "[%s]" uu___
+      FStarC_Compiler_String.concat ";" uu___1 in
+    FStarC_Compiler_Util.format1 "[%s]" uu___
 type dict =
-  (Prims.string Prims.list * FStar_Extraction_ML_UEnv.binding Prims.list *
-    FStar_Extraction_ML_Syntax.mlmodule) FStar_Compiler_Util.smap
+  (Prims.string Prims.list * FStarC_Extraction_ML_UEnv.binding Prims.list *
+    FStarC_Extraction_ML_Syntax.mlmodule) FStarC_Compiler_Util.smap
 type env =
   {
   external_libs: Prims.string Prims.list ;
@@ -97,9 +97,9 @@ let (lookup_global_fn :
   fun g ->
     fun s ->
       let uu___ =
-        FStar_Compiler_List.tryFind
+        FStarC_Compiler_List.tryFind
           (fun uu___1 -> match uu___1 with | (f, uu___2) -> f = s) g.fns in
-      FStar_Compiler_Util.map_option
+      FStarC_Compiler_Util.map_option
         (fun uu___1 -> match uu___1 with | (uu___2, t) -> t) uu___
 let (lookup_local :
   env ->
@@ -110,10 +110,10 @@ let (lookup_local :
   fun g ->
     fun s ->
       let uu___ =
-        FStar_Compiler_List.tryFind
+        FStarC_Compiler_List.tryFind
           (fun uu___1 -> match uu___1 with | (x, uu___2, uu___3) -> x = s)
           g.gamma in
-      FStar_Compiler_Util.map_option
+      FStarC_Compiler_Util.map_option
         (fun uu___1 -> match uu___1 with | (uu___2, t, b) -> (t, b)) uu___
 let (push_fn :
   env -> Prims.string -> Pulse2Rust_Rust_Syntax.fn_signature -> env) =
@@ -159,4 +159,4 @@ let (push_local :
             reachable_defs = (g.reachable_defs)
           }
 let (is_external_lib : env -> Prims.string -> Prims.bool) =
-  fun g -> fun s -> FStar_Compiler_List.contains s g.external_libs
+  fun g -> fun s -> FStarC_Compiler_List.contains s g.external_libs

@@ -1,19 +1,19 @@
 module ExtractPulseC
 
-friend FStar.Extraction.Krml
-open FStar.Compiler.Effect
-open FStar.Compiler.List
+friend FStarC.Extraction.Krml
+open FStarC.Compiler.Effect
+open FStarC.Compiler.List
 open FStar
-open FStar.Compiler
-open FStar.Compiler.Util
-open FStar.Extraction
-open FStar.Extraction.ML
-open FStar.Extraction.ML.Syntax
-open FStar.Const
-open FStar.BaseTypes
-open FStar.Extraction.Krml
-module K = FStar.Extraction.Krml
-module BU = FStar.Compiler.Util
+open FStarC.Compiler
+open FStarC.Compiler.Util
+open FStarC.Extraction
+open FStarC.Extraction.ML
+open FStarC.Extraction.ML.Syntax
+open FStarC.Const
+open FStarC.BaseTypes
+open FStarC.Extraction.Krml
+module K = FStarC.Extraction.Krml
+module BU = FStarC.Compiler.Util
 
 (* JL: TODO: in stdlib somewhere? *)
 let opt_bind (m: option 'a) (k: 'a -> option 'b): option 'b =
@@ -26,7 +26,7 @@ let char_of_typechar (t: mlty): option char =
     if p = "Pulse.C.Typestring.cdot" then
       Some '.'
     else if BU.starts_with p "Pulse.C.Typestring.c" then
-      Some (FStar.Compiler.String.get p (FStar.String.strlen "Pulse.C.Typestring.c"))
+      Some (FStarC.Compiler.String.get p (FStar.String.strlen "Pulse.C.Typestring.c"))
     else
       None
 
@@ -327,7 +327,7 @@ let parse_steel_c_fields env (fields: mlty): option (list _) =
       match go fields with
       | None ->
         BU.print1 "Failed to parse fields from %s.\n"
-          (FStar.Extraction.ML.Code.string_of_mlty ([], "") fields);
+          (FStarC.Extraction.ML.Code.string_of_mlty ([], "") fields);
         None
 
       | Some fields ->
@@ -336,14 +336,14 @@ let parse_steel_c_fields env (fields: mlty): option (list _) =
             (fun () (field, ty) ->
                BU.print2 "  %s : %s\n"
                  field
-                 (FStar.Extraction.ML.Code.string_of_mlty ([], "") ty))
+                 (FStarC.Extraction.ML.Code.string_of_mlty ([], "") ty))
             ()
             fields;
           Some (
             List.map
               (fun (field, ty) ->
                  BU.print1 "Translating %s.\n"
-                   (FStar.Extraction.ML.Code.string_of_mlty ([], "") ty);
+                   (FStarC.Extraction.ML.Code.string_of_mlty ([], "") ty);
                  (field, translate_type_without_decay env ty))
               fields)
 
@@ -363,7 +363,7 @@ let define_struct
   match lident_of_typestring tag with
   | None ->
     BU.print1 "Failed to parse struct tag from %s.\n"
-      (FStar.Extraction.ML.Code.string_of_mlty ([], "") tag);
+      (FStarC.Extraction.ML.Code.string_of_mlty ([], "") tag);
     None
   | Some p ->
     define_struct_gen env p [] fields
@@ -383,7 +383,7 @@ let define_union
   match lident_of_typestring tag with
   | None ->
     BU.print1 "Failed to parse union tag from %s.\n"
-      (FStar.Extraction.ML.Code.string_of_mlty ([], "") tag);
+      (FStarC.Extraction.ML.Code.string_of_mlty ([], "") tag);
     None
   | Some p ->
     define_union_gen env p [] fields

@@ -16,10 +16,10 @@
 
 module Pulse2Rust
 
-open FStar.Compiler
-open FStar.Compiler.Util
-open FStar.Compiler.List
-open FStar.Compiler.Effect
+open FStarC.Compiler
+open FStarC.Compiler.Util
+open FStarC.Compiler.List
+open FStarC.Compiler.Effect
 
 open Pulse2Rust.Deps
 open Pulse2Rust.Rust.Syntax
@@ -28,12 +28,12 @@ open Pulse2Rust.Extract
 
 open RustBindings
 
-open FStar.Class.Setlike
+open FStarC.Class.Setlike
 
-module S = FStar.Extraction.ML.Syntax
-module EUtil = FStar.Extraction.ML.Util
+module S = FStarC.Extraction.ML.Syntax
+module EUtil = FStarC.Extraction.ML.Util
 
-module UEnv = FStar.Extraction.ML.UEnv
+module UEnv = FStarC.Extraction.ML.UEnv
 
 let mlmodule1_name (m:S.mlmodule1) : list S.mlsymbol =
   let open S in
@@ -182,7 +182,7 @@ let extract (files:list string) (odir:string) (libs:string) : unit =
   let root_module = file_to_module_name (let root_file::_ = files in root_file) in
   // print1 "root_module: %s\n" root_module;
   let reachable_defs = collect_reachable_defs d root_module in
-  let external_libs = FStar.Compiler.Util.split libs "," |> List.map trim_string in
+  let external_libs = FStarC.Compiler.Util.split libs "," |> List.map trim_string in
   let g = empty_env external_libs d all_modules reachable_defs in
   let _, all_rust_files = List.fold_left (fun (g, all_rust_files) f ->
     // print1 "Extracting file: %s\n" f;

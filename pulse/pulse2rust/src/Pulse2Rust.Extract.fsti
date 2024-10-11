@@ -16,15 +16,15 @@
 
 module Pulse2Rust.Extract
 
-open FStar.Compiler
-open FStar.Compiler.Util
-open FStar.Compiler.List
-open FStar.Compiler.Effect
+open FStarC.Compiler
+open FStarC.Compiler.Util
+open FStarC.Compiler.List
+open FStarC.Compiler.Effect
 
 open Pulse2Rust.Rust.Syntax
 open Pulse2Rust.Env
 
-module S = FStar.Extraction.ML.Syntax
+module S = FStarC.Extraction.ML.Syntax
 
 val extract_mlty (g:env) (t:S.mlty) : typ
 

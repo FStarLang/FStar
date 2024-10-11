@@ -7,19 +7,19 @@ Warning: 221 end-of-stream conflicts were arbitrarily resolved.
 (* (c) Microsoft Corporation. All rights reserved *)
 open Prims
 open FStar_Pervasives
-open FStar_Errors
-open FStar_Compiler_List
-open FStar_Compiler_Util
-open FStar_Compiler_Range
-open FStar_Options
+open FStarC_Errors
+open FStarC_Compiler_List
+open FStarC_Compiler_Util
+open FStarC_Compiler_Range
+open FStarC_Options
 (* TODO : these files should be deprecated and removed *)
-open FStar_Syntax_Syntax
-open FStar_Parser_Const
-open FStar_Syntax_Util
-open FStar_Parser_AST
-open FStar_Parser_Util
-open FStar_Const
-open FStar_Ident
+open FStarC_Syntax_Syntax
+open FStarC_Parser_Const
+open FStarC_Syntax_Util
+open FStarC_Parser_AST
+open FStarC_Parser_Util
+open FStarC_Const
+open FStarC_Ident
 open FStar_String
 module PulseSyntaxExtension_Sugar = PulseSyntaxExtension_Sugar
 
@@ -41,7 +41,7 @@ let as_aqual (q:unit option) =
     | None -> None
     | Some _ -> Some Implicit
 
-let pos_of_lexpos (p:Lexing.position) = FStar_Parser_Util.pos_of_lexpos p
+let pos_of_lexpos (p:Lexing.position) = FStarC_Parser_Util.pos_of_lexpos p
 
 let default_return =
     gen dummyRange,
@@ -64,7 +64,7 @@ let mk_fn_defn q id is_rec bs body range =
 let add_decorations decors ds =
   List.map (function
     | Inl p -> Inl (PulseSyntaxExtension_Sugar.add_decorations p decors)
-    | Inr d -> Inr (FStar_Parser_AST.add_decorations d decors)) ds
+    | Inr d -> Inr (FStarC_Parser_AST.add_decorations d decors)) ds
 
 %}
 
@@ -78,7 +78,7 @@ let add_decorations decors ds =
 %start iLangDeclOrEOF
 %type <PulseSyntaxExtension_Sugar.decl> pulseDeclEOF
 %type <string> peekFnId
-%type <(((PulseSyntaxExtension_Sugar.decl, FStar_Parser_AST.decl) either) list * FStar_Sedlexing.snap option) option> iLangDeclOrEOF
+%type <(((PulseSyntaxExtension_Sugar.decl, FStarC_Parser_AST.decl) either) list * FStarC_Sedlexing.snap option) option> iLangDeclOrEOF
 %%
 
 maybeRec:
@@ -90,9 +90,9 @@ maybeRec:
 /* This is to just peek at the name of the top-level definition */
 peekFnId:
   | q=option(qual) FN maybeRec id=lident
-      { FStar_Ident.string_of_id id }
+      { FStarC_Ident.string_of_id id }
   | q=option(qual) VAL FN id=lident
-      { FStar_Ident.string_of_id id }
+      { FStarC_Ident.string_of_id id }
 
 qual:
   | GHOST { PulseSyntaxExtension_Sugar.STGhost }
@@ -226,7 +226,7 @@ pulseStmtNoSeq:
         | None, _ ->
           PulseSyntaxExtension_Sugar.mk_expr tm
 
-        | Some arr_elt, Op(op, [arr;ix]) when FStar_Ident.string_of_id op = ".()" ->
+        | Some arr_elt, Op(op, [arr;ix]) when FStarC_Ident.string_of_id op = ".()" ->
           PulseSyntaxExtension_Sugar.mk_array_assignment arr ix arr_elt
 
         | _ ->

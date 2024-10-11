@@ -1,24 +1,24 @@
 open Prims
-let (text : Prims.string -> FStar_Pprint.document) =
+let (text : Prims.string -> FStarC_Pprint.document) =
   fun s ->
-    FStar_Pprint.flow (FStar_Pprint.break_ Prims.int_one)
-      (FStar_Pprint.words s)
-let (indent : FStar_Pprint.document -> FStar_Pprint.document) =
+    FStarC_Pprint.flow (FStarC_Pprint.break_ Prims.int_one)
+      (FStarC_Pprint.words s)
+let (indent : FStarC_Pprint.document -> FStarC_Pprint.document) =
   fun d ->
-    FStar_Pprint.nest (Prims.of_int (2))
-      (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.align d))
+    FStarC_Pprint.nest (Prims.of_int (2))
+      (FStarC_Pprint.op_Hat_Hat FStarC_Pprint.hardline (FStarC_Pprint.align d))
 type 'a printable =
   {
-  pp: 'a -> (FStar_Pprint.document, unit) FStar_Tactics_Effect.tac_repr }
+  pp: 'a -> (FStarC_Pprint.document, unit) FStar_Tactics_Effect.tac_repr }
 let __proj__Mkprintable__item__pp :
   'a .
     'a printable ->
-      'a -> (FStar_Pprint.document, unit) FStar_Tactics_Effect.tac_repr
+      'a -> (FStarC_Pprint.document, unit) FStar_Tactics_Effect.tac_repr
   = fun projectee -> match projectee with | { pp;_} -> pp
 let pp :
   'a .
     'a printable ->
-      'a -> (FStar_Pprint.document, unit) FStar_Tactics_Effect.tac_repr
+      'a -> (FStarC_Pprint.document, unit) FStar_Tactics_Effect.tac_repr
   = fun projectee -> match projectee with | { pp = pp1;_} -> pp1
 let show_from_pp : 'a . 'a printable -> 'a Pulse_Show.tac_showable =
   fun d ->
@@ -39,7 +39,7 @@ let show_from_pp : 'a . 'a printable -> 'a Pulse_Show.tac_showable =
                       (Prims.of_int (32))))) (Obj.magic uu___)
              (fun uu___1 ->
                 FStar_Tactics_Effect.lift_div_tac
-                  (fun uu___2 -> FStar_Pprint.render uu___1)))
+                  (fun uu___2 -> FStarC_Pprint.render uu___1)))
     }
 let from_show : 'a . 'a Pulse_Show.tac_showable -> 'a printable =
   fun d ->
@@ -60,7 +60,7 @@ let from_show : 'a . 'a Pulse_Show.tac_showable -> 'a printable =
                       (Prims.of_int (42))))) (Obj.magic uu___)
              (fun uu___1 ->
                 FStar_Tactics_Effect.lift_div_tac
-                  (fun uu___2 -> FStar_Pprint.arbitrary_string uu___1)))
+                  (fun uu___2 -> FStarC_Pprint.arbitrary_string uu___1)))
     }
 let (printable_string : Prims.string printable) =
   from_show Pulse_Show.tac_showable_string
@@ -84,7 +84,7 @@ let printable_option :
                   Obj.magic
                     (Obj.repr
                        (FStar_Tactics_Effect.lift_div_tac
-                          (fun uu___2 -> FStar_Pprint.doc_of_string "None")))
+                          (fun uu___2 -> FStarC_Pprint.doc_of_string "None")))
               | FStar_Pervasives_Native.Some v ->
                   Obj.magic
                     (Obj.repr
@@ -104,16 +104,16 @@ let printable_option :
                           (fun uu___3 ->
                              FStar_Tactics_Effect.lift_div_tac
                                (fun uu___4 ->
-                                  FStar_Pprint.op_Hat_Slash_Hat
-                                    (FStar_Pprint.doc_of_string "Some")
+                                  FStarC_Pprint.op_Hat_Slash_Hat
+                                    (FStarC_Pprint.doc_of_string "Some")
                                     uu___3))))) uu___1)
     }
 let rec separate_map :
   'a .
-    FStar_Pprint.document ->
-      ('a -> (FStar_Pprint.document, unit) FStar_Tactics_Effect.tac_repr) ->
+    FStarC_Pprint.document ->
+      ('a -> (FStarC_Pprint.document, unit) FStar_Tactics_Effect.tac_repr) ->
         'a Prims.list ->
-          (FStar_Pprint.document, unit) FStar_Tactics_Effect.tac_repr
+          (FStarC_Pprint.document, unit) FStar_Tactics_Effect.tac_repr
   =
   fun uu___2 ->
     fun uu___1 ->
@@ -126,7 +126,7 @@ let rec separate_map :
                    Obj.magic
                      (Obj.repr
                         (FStar_Tactics_Effect.lift_div_tac
-                           (fun uu___ -> FStar_Pprint.empty)))
+                           (fun uu___ -> FStarC_Pprint.empty)))
                | x::[] -> Obj.magic (Obj.repr (f x))
                | x::xs ->
                    Obj.magic
@@ -169,7 +169,7 @@ let rec separate_map :
                                      (fun uu___4 ->
                                         FStar_Tactics_Effect.lift_div_tac
                                           (fun uu___5 ->
-                                             FStar_Pprint.op_Hat_Slash_Hat
+                                             FStarC_Pprint.op_Hat_Slash_Hat
                                                sep uu___4)) in
                                  Obj.magic
                                    (FStar_Tactics_Effect.tac_bind
@@ -193,7 +193,7 @@ let rec separate_map :
                                       (fun uu___3 ->
                                          FStar_Tactics_Effect.lift_div_tac
                                            (fun uu___4 ->
-                                              FStar_Pprint.op_Hat_Hat uu___1
+                                              FStarC_Pprint.op_Hat_Hat uu___1
                                                 uu___3)))) uu___1)))) uu___2
           uu___1 uu___
 let printable_list : 'a . 'a printable -> 'a Prims.list printable =
@@ -201,7 +201,7 @@ let printable_list : 'a . 'a printable -> 'a Prims.list printable =
     {
       pp =
         (fun l ->
-           let uu___1 = separate_map FStar_Pprint.comma (pp uu___) l in
+           let uu___1 = separate_map FStarC_Pprint.comma (pp uu___) l in
            FStar_Tactics_Effect.tac_bind
              (FStar_Sealed.seal
                 (Obj.magic
@@ -215,7 +215,7 @@ let printable_list : 'a . 'a printable -> 'a Prims.list printable =
                       (Prims.of_int (51))))) (Obj.magic uu___1)
              (fun uu___2 ->
                 FStar_Tactics_Effect.lift_div_tac
-                  (fun uu___3 -> FStar_Pprint.brackets uu___2)))
+                  (fun uu___3 -> FStarC_Pprint.brackets uu___2)))
     }
 let (printable_term : Pulse_Syntax_Base.term printable) =
   { pp = Pulse_Syntax_Printer.term_to_doc }
@@ -232,12 +232,12 @@ let (printable_env : Pulse_Typing_Env.env printable) =
 let (pp_effect_annot : Pulse_Syntax_Base.effect_annot printable) =
   from_show Pulse_Show.tac_showable_effect_annot
 let (pp_record :
-  (Prims.string * FStar_Pprint.document) Prims.list ->
-    (FStar_Pprint.document, unit) FStar_Tactics_Effect.tac_repr)
+  (Prims.string * FStarC_Pprint.document) Prims.list ->
+    (FStarC_Pprint.document, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun flds ->
     let uu___ =
-      separate_map (FStar_Pprint.doc_of_string ";")
+      separate_map (FStarC_Pprint.doc_of_string ";")
         (fun uu___1 ->
            (fun uu___1 ->
               Obj.magic
@@ -245,11 +245,11 @@ let (pp_record :
                    (fun uu___2 ->
                       match uu___1 with
                       | (s, d) ->
-                          FStar_Pprint.group
-                            (FStar_Pprint.op_Hat_Slash_Hat
-                               (FStar_Pprint.doc_of_string s)
-                               (FStar_Pprint.op_Hat_Slash_Hat
-                                  FStar_Pprint.equals (FStar_Pprint.group d))))))
+                          FStarC_Pprint.group
+                            (FStarC_Pprint.op_Hat_Slash_Hat
+                               (FStarC_Pprint.doc_of_string s)
+                               (FStarC_Pprint.op_Hat_Slash_Hat
+                                  FStarC_Pprint.equals (FStarC_Pprint.group d))))))
              uu___1) flds in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
@@ -263,7 +263,7 @@ let (pp_record :
       (Obj.magic uu___)
       (fun flds_doc ->
          FStar_Tactics_Effect.lift_div_tac
-           (fun uu___1 -> FStar_Pprint.braces (FStar_Pprint.align flds_doc)))
+           (fun uu___1 -> FStarC_Pprint.braces (FStarC_Pprint.align flds_doc)))
 let (printable_post_hint_t : Pulse_Typing.post_hint_t printable) =
   {
     pp =
@@ -613,8 +613,8 @@ let printable_tuple2 :
                                (fun uu___8 ->
                                   FStar_Tactics_Effect.lift_div_tac
                                     (fun uu___9 ->
-                                       FStar_Pprint.op_Hat_Slash_Hat
-                                         FStar_Pprint.comma uu___8)) in
+                                       FStarC_Pprint.op_Hat_Slash_Hat
+                                         FStarC_Pprint.comma uu___8)) in
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
                                 (FStar_Sealed.seal
@@ -635,7 +635,7 @@ let printable_tuple2 :
                                 (fun uu___7 ->
                                    FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___8 ->
-                                        FStar_Pprint.op_Hat_Hat uu___5 uu___7))))
+                                        FStarC_Pprint.op_Hat_Hat uu___5 uu___7))))
                           uu___5) in
                  FStar_Tactics_Effect.tac_bind
                    (FStar_Sealed.seal
@@ -651,7 +651,7 @@ let printable_tuple2 :
                    (Obj.magic uu___3)
                    (fun uu___4 ->
                       FStar_Tactics_Effect.lift_div_tac
-                        (fun uu___5 -> FStar_Pprint.parens uu___4)))
+                        (fun uu___5 -> FStarC_Pprint.parens uu___4)))
       }
 let printable_tuple3 :
   'a 'b 'c .
@@ -725,8 +725,8 @@ let printable_tuple3 :
                                              (fun uu___13 ->
                                                 FStar_Tactics_Effect.lift_div_tac
                                                   (fun uu___14 ->
-                                                     FStar_Pprint.op_Hat_Slash_Hat
-                                                       FStar_Pprint.comma
+                                                     FStarC_Pprint.op_Hat_Slash_Hat
+                                                       FStarC_Pprint.comma
                                                        uu___13)) in
                                          Obj.magic
                                            (FStar_Tactics_Effect.tac_bind
@@ -750,7 +750,7 @@ let printable_tuple3 :
                                               (fun uu___12 ->
                                                  FStar_Tactics_Effect.lift_div_tac
                                                    (fun uu___13 ->
-                                                      FStar_Pprint.op_Hat_Hat
+                                                      FStarC_Pprint.op_Hat_Hat
                                                         uu___10 uu___12))))
                                         uu___10) in
                                FStar_Tactics_Effect.tac_bind
@@ -772,8 +772,8 @@ let printable_tuple3 :
                                  (fun uu___9 ->
                                     FStar_Tactics_Effect.lift_div_tac
                                       (fun uu___10 ->
-                                         FStar_Pprint.op_Hat_Slash_Hat
-                                           FStar_Pprint.comma uu___9)) in
+                                         FStarC_Pprint.op_Hat_Slash_Hat
+                                           FStarC_Pprint.comma uu___9)) in
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Sealed.seal
@@ -794,7 +794,7 @@ let printable_tuple3 :
                                   (fun uu___8 ->
                                      FStar_Tactics_Effect.lift_div_tac
                                        (fun uu___9 ->
-                                          FStar_Pprint.op_Hat_Hat uu___6
+                                          FStarC_Pprint.op_Hat_Hat uu___6
                                             uu___8)))) uu___6) in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
@@ -810,7 +810,7 @@ let printable_tuple3 :
                      (Obj.magic uu___4)
                      (fun uu___5 ->
                         FStar_Tactics_Effect.lift_div_tac
-                          (fun uu___6 -> FStar_Pprint.parens uu___5)))
+                          (fun uu___6 -> FStarC_Pprint.parens uu___5)))
         }
 let printable_tuple4 :
   'a 'b 'c 'd .
@@ -914,8 +914,8 @@ let printable_tuple4 :
                                                               FStar_Tactics_Effect.lift_div_tac
                                                                 (fun uu___19
                                                                    ->
-                                                                   FStar_Pprint.op_Hat_Slash_Hat
-                                                                    FStar_Pprint.comma
+                                                                   FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.comma
                                                                     uu___18)) in
                                                        Obj.magic
                                                          (FStar_Tactics_Effect.tac_bind
@@ -941,7 +941,7 @@ let printable_tuple4 :
                                                                FStar_Tactics_Effect.lift_div_tac
                                                                  (fun uu___18
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     uu___15
                                                                     uu___17))))
                                                       uu___15) in
@@ -966,8 +966,8 @@ let printable_tuple4 :
                                                (fun uu___14 ->
                                                   FStar_Tactics_Effect.lift_div_tac
                                                     (fun uu___15 ->
-                                                       FStar_Pprint.op_Hat_Slash_Hat
-                                                         FStar_Pprint.comma
+                                                       FStarC_Pprint.op_Hat_Slash_Hat
+                                                         FStarC_Pprint.comma
                                                          uu___14)) in
                                            Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
@@ -991,7 +991,7 @@ let printable_tuple4 :
                                                 (fun uu___13 ->
                                                    FStar_Tactics_Effect.lift_div_tac
                                                      (fun uu___14 ->
-                                                        FStar_Pprint.op_Hat_Hat
+                                                        FStarC_Pprint.op_Hat_Hat
                                                           uu___11 uu___13))))
                                           uu___11) in
                                  FStar_Tactics_Effect.tac_bind
@@ -1013,8 +1013,8 @@ let printable_tuple4 :
                                    (fun uu___10 ->
                                       FStar_Tactics_Effect.lift_div_tac
                                         (fun uu___11 ->
-                                           FStar_Pprint.op_Hat_Slash_Hat
-                                             FStar_Pprint.comma uu___10)) in
+                                           FStarC_Pprint.op_Hat_Slash_Hat
+                                             FStarC_Pprint.comma uu___10)) in
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (FStar_Sealed.seal
@@ -1037,7 +1037,7 @@ let printable_tuple4 :
                                     (fun uu___9 ->
                                        FStar_Tactics_Effect.lift_div_tac
                                          (fun uu___10 ->
-                                            FStar_Pprint.op_Hat_Hat uu___7
+                                            FStarC_Pprint.op_Hat_Hat uu___7
                                               uu___9)))) uu___7) in
                      FStar_Tactics_Effect.tac_bind
                        (FStar_Sealed.seal
@@ -1053,7 +1053,7 @@ let printable_tuple4 :
                        (Obj.magic uu___5)
                        (fun uu___6 ->
                           FStar_Tactics_Effect.lift_div_tac
-                            (fun uu___7 -> FStar_Pprint.parens uu___6)))
+                            (fun uu___7 -> FStarC_Pprint.parens uu___6)))
           }
 let printable_tuple5 :
   'a 'b 'c 'd 'e .
@@ -1194,8 +1194,8 @@ let printable_tuple5 :
                                                                     (fun
                                                                     uu___24
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
-                                                                    FStar_Pprint.comma
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.comma
                                                                     uu___23)) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1224,7 +1224,7 @@ let printable_tuple5 :
                                                                     (fun
                                                                     uu___23
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     uu___20
                                                                     uu___22))))
                                                                     uu___20) in
@@ -1252,8 +1252,8 @@ let printable_tuple5 :
                                                                   (fun
                                                                     uu___20
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
-                                                                    FStar_Pprint.comma
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.comma
                                                                     uu___19)) in
                                                          Obj.magic
                                                            (FStar_Tactics_Effect.tac_bind
@@ -1282,7 +1282,7 @@ let printable_tuple5 :
                                                                    (fun
                                                                     uu___19
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     uu___16
                                                                     uu___18))))
                                                         uu___16) in
@@ -1307,8 +1307,8 @@ let printable_tuple5 :
                                                  (fun uu___15 ->
                                                     FStar_Tactics_Effect.lift_div_tac
                                                       (fun uu___16 ->
-                                                         FStar_Pprint.op_Hat_Slash_Hat
-                                                           FStar_Pprint.comma
+                                                         FStarC_Pprint.op_Hat_Slash_Hat
+                                                           FStarC_Pprint.comma
                                                            uu___15)) in
                                              Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
@@ -1332,7 +1332,7 @@ let printable_tuple5 :
                                                   (fun uu___14 ->
                                                      FStar_Tactics_Effect.lift_div_tac
                                                        (fun uu___15 ->
-                                                          FStar_Pprint.op_Hat_Hat
+                                                          FStarC_Pprint.op_Hat_Hat
                                                             uu___12 uu___14))))
                                             uu___12) in
                                    FStar_Tactics_Effect.tac_bind
@@ -1356,8 +1356,8 @@ let printable_tuple5 :
                                      (fun uu___11 ->
                                         FStar_Tactics_Effect.lift_div_tac
                                           (fun uu___12 ->
-                                             FStar_Pprint.op_Hat_Slash_Hat
-                                               FStar_Pprint.comma uu___11)) in
+                                             FStarC_Pprint.op_Hat_Slash_Hat
+                                               FStarC_Pprint.comma uu___11)) in
                                  Obj.magic
                                    (FStar_Tactics_Effect.tac_bind
                                       (FStar_Sealed.seal
@@ -1380,7 +1380,7 @@ let printable_tuple5 :
                                       (fun uu___10 ->
                                          FStar_Tactics_Effect.lift_div_tac
                                            (fun uu___11 ->
-                                              FStar_Pprint.op_Hat_Hat uu___8
+                                              FStarC_Pprint.op_Hat_Hat uu___8
                                                 uu___10)))) uu___8) in
                        FStar_Tactics_Effect.tac_bind
                          (FStar_Sealed.seal
@@ -1396,7 +1396,7 @@ let printable_tuple5 :
                          (Obj.magic uu___6)
                          (fun uu___7 ->
                             FStar_Tactics_Effect.lift_div_tac
-                              (fun uu___8 -> FStar_Pprint.parens uu___7)))
+                              (fun uu___8 -> FStarC_Pprint.parens uu___7)))
             }
 let printable_tuple6 :
   'a 'b 'c 'd 'e 'f .
@@ -1579,8 +1579,8 @@ let printable_tuple6 :
                                                                     (fun
                                                                     uu___29
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
-                                                                    FStar_Pprint.comma
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.comma
                                                                     uu___28)) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1609,7 +1609,7 @@ let printable_tuple6 :
                                                                     (fun
                                                                     uu___28
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     uu___25
                                                                     uu___27))))
                                                                     uu___25) in
@@ -1639,8 +1639,8 @@ let printable_tuple6 :
                                                                     (fun
                                                                     uu___25
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
-                                                                    FStar_Pprint.comma
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.comma
                                                                     uu___24)) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1669,7 +1669,7 @@ let printable_tuple6 :
                                                                     (fun
                                                                     uu___24
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     uu___21
                                                                     uu___23))))
                                                                     uu___21) in
@@ -1699,8 +1699,8 @@ let printable_tuple6 :
                                                                     fun
                                                                     uu___21
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
-                                                                    FStar_Pprint.comma
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.comma
                                                                     uu___20)) in
                                                            Obj.magic
                                                              (FStar_Tactics_Effect.tac_bind
@@ -1728,7 +1728,7 @@ let printable_tuple6 :
                                                                     (fun
                                                                     uu___20
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     uu___17
                                                                     uu___19))))
                                                           uu___17) in
@@ -1753,8 +1753,8 @@ let printable_tuple6 :
                                                    (fun uu___16 ->
                                                       FStar_Tactics_Effect.lift_div_tac
                                                         (fun uu___17 ->
-                                                           FStar_Pprint.op_Hat_Slash_Hat
-                                                             FStar_Pprint.comma
+                                                           FStarC_Pprint.op_Hat_Slash_Hat
+                                                             FStarC_Pprint.comma
                                                              uu___16)) in
                                                Obj.magic
                                                  (FStar_Tactics_Effect.tac_bind
@@ -1778,7 +1778,7 @@ let printable_tuple6 :
                                                     (fun uu___15 ->
                                                        FStar_Tactics_Effect.lift_div_tac
                                                          (fun uu___16 ->
-                                                            FStar_Pprint.op_Hat_Hat
+                                                            FStarC_Pprint.op_Hat_Hat
                                                               uu___13 uu___15))))
                                               uu___13) in
                                      FStar_Tactics_Effect.tac_bind
@@ -1802,8 +1802,8 @@ let printable_tuple6 :
                                        (fun uu___12 ->
                                           FStar_Tactics_Effect.lift_div_tac
                                             (fun uu___13 ->
-                                               FStar_Pprint.op_Hat_Slash_Hat
-                                                 FStar_Pprint.comma uu___12)) in
+                                               FStarC_Pprint.op_Hat_Slash_Hat
+                                                 FStarC_Pprint.comma uu___12)) in
                                    Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
                                         (FStar_Sealed.seal
@@ -1826,7 +1826,7 @@ let printable_tuple6 :
                                         (fun uu___11 ->
                                            FStar_Tactics_Effect.lift_div_tac
                                              (fun uu___12 ->
-                                                FStar_Pprint.op_Hat_Hat
+                                                FStarC_Pprint.op_Hat_Hat
                                                   uu___9 uu___11)))) uu___9) in
                          FStar_Tactics_Effect.tac_bind
                            (FStar_Sealed.seal
@@ -1842,7 +1842,7 @@ let printable_tuple6 :
                            (Obj.magic uu___7)
                            (fun uu___8 ->
                               FStar_Tactics_Effect.lift_div_tac
-                                (fun uu___9 -> FStar_Pprint.parens uu___8)))
+                                (fun uu___9 -> FStarC_Pprint.parens uu___8)))
               }
 let printable_tuple7 :
   'a 'b 'c 'd 'e 'f 'g .
@@ -2062,8 +2062,8 @@ let printable_tuple7 :
                                                                     (fun
                                                                     uu___34
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
-                                                                    FStar_Pprint.comma
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.comma
                                                                     uu___33)) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -2092,7 +2092,7 @@ let printable_tuple7 :
                                                                     (fun
                                                                     uu___33
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     uu___30
                                                                     uu___32))))
                                                                     uu___30) in
@@ -2122,8 +2122,8 @@ let printable_tuple7 :
                                                                     (fun
                                                                     uu___30
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
-                                                                    FStar_Pprint.comma
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.comma
                                                                     uu___29)) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -2152,7 +2152,7 @@ let printable_tuple7 :
                                                                     (fun
                                                                     uu___29
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     uu___26
                                                                     uu___28))))
                                                                     uu___26) in
@@ -2182,8 +2182,8 @@ let printable_tuple7 :
                                                                     (fun
                                                                     uu___26
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
-                                                                    FStar_Pprint.comma
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.comma
                                                                     uu___25)) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -2212,7 +2212,7 @@ let printable_tuple7 :
                                                                     (fun
                                                                     uu___25
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     uu___22
                                                                     uu___24))))
                                                                     uu___22) in
@@ -2243,8 +2243,8 @@ let printable_tuple7 :
                                                                     (fun
                                                                     uu___22
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
-                                                                    FStar_Pprint.comma
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.comma
                                                                     uu___21)) in
                                                              Obj.magic
                                                                (FStar_Tactics_Effect.tac_bind
@@ -2273,7 +2273,7 @@ let printable_tuple7 :
                                                                     (fun
                                                                     uu___21
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     uu___18
                                                                     uu___20))))
                                                             uu___18) in
@@ -2298,8 +2298,8 @@ let printable_tuple7 :
                                                      (fun uu___17 ->
                                                         FStar_Tactics_Effect.lift_div_tac
                                                           (fun uu___18 ->
-                                                             FStar_Pprint.op_Hat_Slash_Hat
-                                                               FStar_Pprint.comma
+                                                             FStarC_Pprint.op_Hat_Slash_Hat
+                                                               FStarC_Pprint.comma
                                                                uu___17)) in
                                                  Obj.magic
                                                    (FStar_Tactics_Effect.tac_bind
@@ -2323,7 +2323,7 @@ let printable_tuple7 :
                                                       (fun uu___16 ->
                                                          FStar_Tactics_Effect.lift_div_tac
                                                            (fun uu___17 ->
-                                                              FStar_Pprint.op_Hat_Hat
+                                                              FStarC_Pprint.op_Hat_Hat
                                                                 uu___14
                                                                 uu___16))))
                                                 uu___14) in
@@ -2348,8 +2348,8 @@ let printable_tuple7 :
                                          (fun uu___13 ->
                                             FStar_Tactics_Effect.lift_div_tac
                                               (fun uu___14 ->
-                                                 FStar_Pprint.op_Hat_Slash_Hat
-                                                   FStar_Pprint.comma uu___13)) in
+                                                 FStarC_Pprint.op_Hat_Slash_Hat
+                                                   FStarC_Pprint.comma uu___13)) in
                                      Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
                                           (FStar_Sealed.seal
@@ -2372,7 +2372,7 @@ let printable_tuple7 :
                                           (fun uu___12 ->
                                              FStar_Tactics_Effect.lift_div_tac
                                                (fun uu___13 ->
-                                                  FStar_Pprint.op_Hat_Hat
+                                                  FStarC_Pprint.op_Hat_Hat
                                                     uu___10 uu___12))))
                                     uu___10) in
                            FStar_Tactics_Effect.tac_bind
@@ -2393,5 +2393,5 @@ let printable_tuple7 :
                              (Obj.magic uu___8)
                              (fun uu___9 ->
                                 FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___10 -> FStar_Pprint.parens uu___9)))
+                                  (fun uu___10 -> FStarC_Pprint.parens uu___9)))
                 }

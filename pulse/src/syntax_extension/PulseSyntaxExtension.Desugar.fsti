@@ -17,11 +17,11 @@
 module PulseSyntaxExtension.Desugar
 open FStarC
 
-open FStar.Compiler.Effect
+open FStarC.Compiler.Effect
 module Sugar = PulseSyntaxExtension.Sugar
 module SW = PulseSyntaxExtension.SyntaxWrapper
-module D = FStar.Syntax.DsEnv
-module R = FStar.Compiler.Range
+module D = FStarC.Syntax.DsEnv
+module R = FStarC.Compiler.Range
 
 // An error can be "None", which means all relevant
 // errors were already logged via the error API.
@@ -38,7 +38,7 @@ val desugar_decl (env:env_t)
 let name = list string
 
 val reinitialize_env (env:D.env)
-                     (curmode:FStar.Ident.lident)
+                     (curmode:FStarC.Ident.lident)
                      (open_namespaces: list name)
                      (module_abbrevs: list (string & name))
 : env_t

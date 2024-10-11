@@ -709,7 +709,7 @@ let (check :
                                                                     ->
                                                                     let uu___13
                                                                     =
-                                                                    FStar_Tactics_V2_Builtins.ide
+                                                                    FStarC_Tactics_V2_Builtins.ide
                                                                     () in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -740,7 +740,7 @@ let (check :
                                                                     =
                                                                     let uu___15
                                                                     =
-                                                                    FStar_Tactics_V2_Builtins.ext_getv
+                                                                    FStarC_Tactics_V2_Builtins.ext_getv
                                                                     "pulse:no_admit_diag" in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -807,7 +807,7 @@ let (check :
                                                                     (Obj.repr
                                                                     (let uu___16
                                                                     =
-                                                                    FStar_Tactics_V2_Builtins.norm_well_typed_term
+                                                                    FStarC_Tactics_V2_Builtins.norm_well_typed_term
                                                                     (Pulse_Typing.elab_env
                                                                     g1)
                                                                     [FStar_Pervasives.unascribe;
@@ -936,7 +936,7 @@ let (check :
                                                                     (fun
                                                                     uu___22
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "Current context:")
                                                                     uu___21)) in

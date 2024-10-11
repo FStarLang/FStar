@@ -1,11 +1,11 @@
 open Lexing
 open FStar_Pervasives_Native
 open FStar_Pervasives
-open FStar_Compiler_Range
-open FStar_Parser_ParseIt
-module FP = FStar_Parser_Parse
+open FStarC_Compiler_Range
+open FStarC_Parser_ParseIt
+module FP = FStarC_Parser_Parse
 module PP = Pulse_FStar_Parser
-module S = FStar_Sedlexing
+module S = FStarC_Sedlexing
 
 let rewrite_token (tok:FP.token)
   : PP.token
@@ -23,7 +23,7 @@ let rewrite_token (tok:FP.token)
     | IDENT "with_invariants" -> PP.WITH_INVS
     | IDENT "opens" -> PP.OPENS
     | IDENT "show_proof_state" -> PP.SHOW_PROOF_STATE
-    (* the rest are just copied from FStar_Parser_Parse *)
+    (* the rest are just copied from FStarC_Parser_Parse *)
     | IDENT s -> PP.IDENT s
     | AMP -> PP.AMP
     | AND -> PP.AND
@@ -203,7 +203,7 @@ let rewrite_token (tok:FP.token)
     | WITH -> PP.WITH 
 
 let wrap_lexer lexbuf () =
-  let tok = FStar_Parser_LexFStar.token lexbuf in
+  let tok = FStarC_Parser_LexFStar.token lexbuf in
   rewrite_token tok, lexbuf.start_p, lexbuf.cur_p
 
 let lexbuf_and_lexer (s:string) (r:range) = 
@@ -224,8 +224,8 @@ let parse_decl (s:string) (r:range) =
     Inl d
   with
   | e ->
-    let pos = FStar_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
-    let r = FStar_Compiler_Range.mk_range fn pos pos in
+    let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
+    let r = FStarC_Compiler_Range.mk_range fn pos pos in
     Inr (Some ("Syntax error", r))
 
  
@@ -238,11 +238,11 @@ let parse_peek_id (s:string) (r:range) : (string, string * range) either =
     Inl lid
   with
   | e ->
-    let pos = FStar_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
-    let r = FStar_Compiler_Range.mk_range fn pos pos in
-    let msg = FStar_Compiler_Util.format3 
+    let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
+    let r = FStarC_Compiler_Range.mk_range fn pos pos in
+    let msg = FStarC_Compiler_Util.format3 
          "Failed to peek id, Syntax error @ %s\n%s\n%s\n"
-          (FStar_Compiler_Range.string_of_range r)
+          (FStarC_Compiler_Range.string_of_range r)
           (Printexc.to_string e)
           (Printexc.get_backtrace()) in
     Inr (msg, r)
@@ -251,16 +251,16 @@ let parse_peek_id (s:string) (r:range) : (string, string * range) either =
 let parse_lang (s:string) (r:range) =
   let fn = file_of_range r in
   let lexbuf, lexer = lexbuf_and_lexer s r in
-  let range_of_either (d: (PulseSyntaxExtension_Sugar.decl, FStar_Parser_AST.decl) either) =
+  let range_of_either (d: (PulseSyntaxExtension_Sugar.decl, FStarC_Parser_AST.decl) either) =
       match d with 
       | Inl d -> PulseSyntaxExtension_Sugar.range_of_decl d
       | Inr f -> f.drange
   in
   try
-    let ds, err = FStar_Parser_ParseIt.parse_incremental_decls fn s lexbuf lexer range_of_either PP.iLangDeclOrEOF in
+    let ds, err = FStarC_Parser_ParseIt.parse_incremental_decls fn s lexbuf lexer range_of_either PP.iLangDeclOrEOF in
     Inl (ds, err)
   with
   | e ->
-    let pos = FStar_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
-    let r = FStar_Compiler_Range.mk_range fn pos pos in
+    let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
+    let r = FStarC_Compiler_Range.mk_range fn pos pos in
     Inr (Some ("#lang-pulse: Syntax error", r))

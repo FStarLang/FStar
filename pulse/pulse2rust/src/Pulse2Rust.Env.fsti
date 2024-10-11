@@ -16,16 +16,16 @@
 
 module Pulse2Rust.Env
 
-open FStar.Compiler
-open FStar.Compiler.Util
-open FStar.Compiler.List
-open FStar.Compiler.Effect
+open FStarC.Compiler
+open FStarC.Compiler.Util
+open FStarC.Compiler.List
+open FStarC.Compiler.Effect
 
 open Pulse2Rust.Rust.Syntax
 
-module S = FStar.Extraction.ML.Syntax
+module S = FStarC.Extraction.ML.Syntax
 
-module UEnv = FStar.Extraction.ML.UEnv
+module UEnv = FStarC.Extraction.ML.UEnv
 
 val fail (s:string) : 'a
 

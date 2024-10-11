@@ -10,7 +10,7 @@ let (debug :
   =
   fun g ->
     fun msg ->
-      let uu___ = FStar_Tactics_V2_Builtins.debugging () in
+      let uu___ = FStarC_Tactics_V2_Builtins.debugging () in
       FStar_Tactics_Effect.tac_bind
         (FStar_Sealed.seal
            (Obj.magic
@@ -110,7 +110,7 @@ let (debug :
                         (fun uu___2 ->
                            (fun uu___2 ->
                               Obj.magic
-                                (FStar_Tactics_V2_Builtins.print uu___2))
+                                (FStarC_Tactics_V2_Builtins.print uu___2))
                              uu___2)))
               else
                 Obj.magic
@@ -120,7 +120,7 @@ let (debug :
 let (check_ln :
   Pulse_Typing_Env.env ->
     Prims.string ->
-      FStar_Reflection_Types.term ->
+      FStarC_Reflection_Types.term ->
         (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -186,7 +186,7 @@ let (check_ln :
                                 (fun uu___6 ->
                                    FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___7 ->
-                                        FStar_Pprint.op_Hat_Slash_Hat
+                                        FStarC_Pprint.op_Hat_Slash_Hat
                                           (Pulse_PP.text
                                              "Aborting before calling")
                                           uu___6)) in
@@ -235,8 +235,8 @@ let (check_ln :
                                             (fun uu___10 ->
                                                FStar_Tactics_Effect.lift_div_tac
                                                  (fun uu___11 ->
-                                                    FStar_Pprint.op_Hat_Slash_Hat
-                                                      FStar_Pprint.equals
+                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                      FStarC_Pprint.equals
                                                       uu___10)) in
                                         FStar_Tactics_Effect.tac_bind
                                           (FStar_Sealed.seal
@@ -259,7 +259,7 @@ let (check_ln :
                                           (fun uu___9 ->
                                              FStar_Tactics_Effect.lift_div_tac
                                                (fun uu___10 ->
-                                                  FStar_Pprint.op_Hat_Slash_Hat
+                                                  FStarC_Pprint.op_Hat_Slash_Hat
                                                     (Pulse_PP.text "term")
                                                     uu___9)) in
                                       FStar_Tactics_Effect.tac_bind
@@ -354,9 +354,9 @@ let (check_ln :
                uu___1)
 let (rtb_core_compute_term_type :
   Pulse_Typing_Env.env ->
-    FStar_Reflection_Types.env ->
-      FStar_Reflection_Types.term ->
-        (((FStar_TypeChecker_Core.tot_or_ghost * FStar_Reflection_Types.typ)
+    FStarC_Reflection_Types.env ->
+      FStarC_Reflection_Types.term ->
+        (((FStarC_TypeChecker_Core.tot_or_ghost * FStarC_Reflection_Types.typ)
            FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -381,7 +381,7 @@ let (rtb_core_compute_term_type :
                   debug g
                     (fun uu___3 ->
                        let uu___4 =
-                         FStar_Tactics_V2_Builtins.term_to_string e in
+                         FStarC_Tactics_V2_Builtins.term_to_string e in
                        FStar_Tactics_Effect.tac_bind
                          (FStar_Sealed.seal
                             (Obj.magic
@@ -398,7 +398,7 @@ let (rtb_core_compute_term_type :
                             (fun uu___5 ->
                                let uu___6 =
                                  let uu___7 =
-                                   FStar_Tactics_V2_Builtins.range_to_string
+                                   FStarC_Tactics_V2_Builtins.range_to_string
                                      (Pulse_RuntimeUtils.range_of_term e) in
                                  FStar_Tactics_Effect.tac_bind
                                    (FStar_Sealed.seal
@@ -469,7 +469,7 @@ let (rtb_core_compute_term_type :
                              Pulse_RuntimeUtils.with_context
                                (Pulse_Typing_Env.get_context g)
                                (fun uu___5 ->
-                                  FStar_Tactics_V2_Builtins.core_compute_term_type
+                                  FStarC_Tactics_V2_Builtins.core_compute_term_type
                                     f e) in
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
@@ -495,10 +495,10 @@ let (rtb_core_compute_term_type :
                                      (fun uu___5 -> res)))) uu___3))) uu___1)
 let (rtb_tc_term :
   Pulse_Typing_Env.env ->
-    FStar_Reflection_Types.env ->
-      FStar_Reflection_Types.term ->
-        (((FStar_Reflection_Types.term * (FStar_TypeChecker_Core.tot_or_ghost
-           * FStar_Reflection_Types.typ)) FStar_Pervasives_Native.option *
+    FStarC_Reflection_Types.env ->
+      FStarC_Reflection_Types.term ->
+        (((FStarC_Reflection_Types.term * (FStarC_TypeChecker_Core.tot_or_ghost
+           * FStarC_Reflection_Types.typ)) FStar_Pervasives_Native.option *
            FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -545,7 +545,7 @@ let (rtb_tc_term :
                              debug g
                                (fun uu___4 ->
                                   let uu___5 =
-                                    FStar_Tactics_V2_Builtins.term_to_string
+                                    FStarC_Tactics_V2_Builtins.term_to_string
                                       e1 in
                                   FStar_Tactics_Effect.tac_bind
                                     (FStar_Sealed.seal
@@ -569,7 +569,7 @@ let (rtb_tc_term :
                                        (fun uu___6 ->
                                           let uu___7 =
                                             let uu___8 =
-                                              FStar_Tactics_V2_Builtins.range_to_string
+                                              FStarC_Tactics_V2_Builtins.range_to_string
                                                 (Pulse_RuntimeUtils.range_of_term
                                                    e1) in
                                             FStar_Tactics_Effect.tac_bind
@@ -649,7 +649,7 @@ let (rtb_tc_term :
                                         Pulse_RuntimeUtils.with_context
                                           (Pulse_Typing_Env.get_context g)
                                           (fun uu___6 ->
-                                             FStar_Tactics_V2_Builtins.tc_term
+                                             FStarC_Tactics_V2_Builtins.tc_term
                                                f e1) in
                                       Obj.magic
                                         (FStar_Tactics_Effect.tac_bind
@@ -676,9 +676,9 @@ let (rtb_tc_term :
                           uu___3))) uu___1)
 let (rtb_universe_of :
   Pulse_Typing_Env.env ->
-    FStar_Reflection_Types.env ->
-      FStar_Reflection_Types.term ->
-        ((FStar_Reflection_Types.universe FStar_Pervasives_Native.option *
+    FStarC_Reflection_Types.env ->
+      FStarC_Reflection_Types.term ->
+        ((FStarC_Reflection_Types.universe FStar_Pervasives_Native.option *
            FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -703,7 +703,7 @@ let (rtb_universe_of :
                   debug g
                     (fun uu___3 ->
                        let uu___4 =
-                         FStar_Tactics_V2_Builtins.term_to_string e in
+                         FStarC_Tactics_V2_Builtins.term_to_string e in
                        FStar_Tactics_Effect.tac_bind
                          (FStar_Sealed.seal
                             (Obj.magic
@@ -720,7 +720,7 @@ let (rtb_universe_of :
                             (fun uu___5 ->
                                let uu___6 =
                                  let uu___7 =
-                                   FStar_Tactics_V2_Builtins.range_to_string
+                                   FStarC_Tactics_V2_Builtins.range_to_string
                                      (Pulse_RuntimeUtils.range_of_term e) in
                                  FStar_Tactics_Effect.tac_bind
                                    (FStar_Sealed.seal
@@ -791,7 +791,7 @@ let (rtb_universe_of :
                              Pulse_RuntimeUtils.with_context
                                (Pulse_Typing_Env.get_context g)
                                (fun uu___5 ->
-                                  FStar_Tactics_V2_Builtins.universe_of f e) in
+                                  FStarC_Tactics_V2_Builtins.universe_of f e) in
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
                                 (FStar_Sealed.seal
@@ -906,7 +906,7 @@ let (rtb_check_subtyping :
                                                  (fun uu___10 ->
                                                     let uu___11 =
                                                       let uu___12 =
-                                                        FStar_Tactics_V2_Builtins.range_to_string
+                                                        FStarC_Tactics_V2_Builtins.range_to_string
                                                           (Pulse_RuntimeUtils.range_of_term
                                                              t2) in
                                                       FStar_Tactics_Effect.tac_bind
@@ -931,7 +931,7 @@ let (rtb_check_subtyping :
                                                            (fun uu___13 ->
                                                               let uu___14 =
                                                                 let uu___15 =
-                                                                  FStar_Tactics_V2_Builtins.range_to_string
+                                                                  FStarC_Tactics_V2_Builtins.range_to_string
                                                                     (
                                                                     Pulse_RuntimeUtils.range_of_term
                                                                     t1) in
@@ -1083,7 +1083,7 @@ let (rtb_check_subtyping :
                                         Pulse_RuntimeUtils.with_context
                                           (Pulse_Typing_Env.get_context g)
                                           (fun uu___7 ->
-                                             FStar_Tactics_V2_Builtins.check_subtyping
+                                             FStarC_Tactics_V2_Builtins.check_subtyping
                                                (Pulse_Typing.elab_env g) t1
                                                t2) in
                                       Obj.magic
@@ -1111,12 +1111,12 @@ let (rtb_check_subtyping :
                           uu___3))) uu___1)
 let (rtb_instantiate_implicits :
   Pulse_Typing_Env.env ->
-    FStar_Reflection_Types.env ->
-      FStar_Reflection_Types.term ->
-        FStar_Reflection_Types.term FStar_Pervasives_Native.option ->
-          ((((FStar_Reflection_Types.namedv * FStar_Reflection_Types.typ)
-             Prims.list * FStar_Reflection_Types.term *
-             FStar_Reflection_Types.typ) FStar_Pervasives_Native.option *
+    FStarC_Reflection_Types.env ->
+      FStarC_Reflection_Types.term ->
+        FStarC_Reflection_Types.term FStar_Pervasives_Native.option ->
+          ((((FStarC_Reflection_Types.namedv * FStarC_Reflection_Types.typ)
+             Prims.list * FStarC_Reflection_Types.term *
+             FStarC_Reflection_Types.typ) FStar_Pervasives_Native.option *
              FStar_Issue.issue Prims.list),
             unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -1143,7 +1143,7 @@ let (rtb_instantiate_implicits :
                     debug g
                       (fun uu___3 ->
                          let uu___4 =
-                           FStar_Tactics_V2_Builtins.term_to_string t in
+                           FStarC_Tactics_V2_Builtins.term_to_string t in
                          FStar_Tactics_Effect.tac_bind
                            (FStar_Sealed.seal
                               (Obj.magic
@@ -1209,7 +1209,7 @@ let (rtb_instantiate_implicits :
                                           Pulse_RuntimeUtils.with_context
                                             (Pulse_Typing_Env.get_context g)
                                             (fun uu___6 ->
-                                               FStar_Tactics_V2_Builtins.instantiate_implicits
+                                               FStarC_Tactics_V2_Builtins.instantiate_implicits
                                                  f t1 expected) in
                                         Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
@@ -1288,7 +1288,7 @@ let (rtb_instantiate_implicits :
                                                                    ->
                                                                    let uu___11
                                                                     =
-                                                                    FStar_Tactics_V2_Builtins.term_to_string
+                                                                    FStarC_Tactics_V2_Builtins.term_to_string
                                                                     t2 in
                                                                    FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1355,11 +1355,11 @@ let (rtb_instantiate_implicits :
                  uu___1)
 let (rtb_core_check_term :
   Pulse_Typing_Env.env ->
-    FStar_Reflection_Types.env ->
-      FStar_Reflection_Types.term ->
-        FStar_TypeChecker_Core.tot_or_ghost ->
-          FStar_Reflection_Types.term ->
-            (((unit, unit, unit) FStar_Tactics_Types.typing_token
+    FStarC_Reflection_Types.env ->
+      FStarC_Reflection_Types.term ->
+        FStarC_TypeChecker_Core.tot_or_ghost ->
+          FStarC_Reflection_Types.term ->
+            (((unit, unit, unit) FStarC_Tactics_Types.typing_token
                FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
               unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -1403,7 +1403,7 @@ let (rtb_core_check_term :
                                  debug g
                                    (fun uu___5 ->
                                       let uu___6 =
-                                        FStar_Tactics_V2_Builtins.term_to_string
+                                        FStarC_Tactics_V2_Builtins.term_to_string
                                           t in
                                       FStar_Tactics_Effect.tac_bind
                                         (FStar_Sealed.seal
@@ -1427,7 +1427,7 @@ let (rtb_core_check_term :
                                            (fun uu___7 ->
                                               let uu___8 =
                                                 let uu___9 =
-                                                  FStar_Tactics_V2_Builtins.term_to_string
+                                                  FStarC_Tactics_V2_Builtins.term_to_string
                                                     e in
                                                 FStar_Tactics_Effect.tac_bind
                                                   (FStar_Sealed.seal
@@ -1451,7 +1451,7 @@ let (rtb_core_check_term :
                                                      (fun uu___10 ->
                                                         let uu___11 =
                                                           let uu___12 =
-                                                            FStar_Tactics_V2_Builtins.range_to_string
+                                                            FStarC_Tactics_V2_Builtins.range_to_string
                                                               (Pulse_RuntimeUtils.range_of_term
                                                                  e) in
                                                           FStar_Tactics_Effect.tac_bind
@@ -1567,7 +1567,7 @@ let (rtb_core_check_term :
                                             Pulse_RuntimeUtils.with_context
                                               (Pulse_Typing_Env.get_context g)
                                               (fun uu___7 ->
-                                                 FStar_Tactics_V2_Builtins.core_check_term
+                                                 FStarC_Tactics_V2_Builtins.core_check_term
                                                    f e t eff) in
                                           Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
@@ -1594,10 +1594,10 @@ let (rtb_core_check_term :
                                          uu___5))) uu___3))) uu___1)
 let (rtb_core_check_term_at_type :
   Pulse_Typing_Env.env ->
-    FStar_Reflection_Types.env ->
-      FStar_Reflection_Types.term ->
-        FStar_Reflection_Types.term ->
-          ((FStar_TypeChecker_Core.tot_or_ghost
+    FStarC_Reflection_Types.env ->
+      FStarC_Reflection_Types.term ->
+        FStarC_Reflection_Types.term ->
+          ((FStarC_TypeChecker_Core.tot_or_ghost
              FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
             unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -1608,7 +1608,7 @@ let (rtb_core_check_term_at_type :
           let uu___ =
             debug g
               (fun uu___1 ->
-                 let uu___2 = FStar_Tactics_V2_Builtins.term_to_string t in
+                 let uu___2 = FStarC_Tactics_V2_Builtins.term_to_string t in
                  FStar_Tactics_Effect.tac_bind
                    (FStar_Sealed.seal
                       (Obj.magic
@@ -1625,7 +1625,7 @@ let (rtb_core_check_term_at_type :
                       (fun uu___3 ->
                          let uu___4 =
                            let uu___5 =
-                             FStar_Tactics_V2_Builtins.term_to_string e in
+                             FStarC_Tactics_V2_Builtins.term_to_string e in
                            FStar_Tactics_Effect.tac_bind
                              (FStar_Sealed.seal
                                 (Obj.magic
@@ -1647,7 +1647,7 @@ let (rtb_core_check_term_at_type :
                                 (fun uu___6 ->
                                    let uu___7 =
                                      let uu___8 =
-                                       FStar_Tactics_V2_Builtins.range_to_string
+                                       FStarC_Tactics_V2_Builtins.range_to_string
                                          (Pulse_RuntimeUtils.range_of_term e) in
                                      FStar_Tactics_Effect.tac_bind
                                        (FStar_Sealed.seal
@@ -1744,7 +1744,7 @@ let (rtb_core_check_term_at_type :
                     Pulse_RuntimeUtils.with_context
                       (Pulse_Typing_Env.get_context g)
                       (fun uu___3 ->
-                         FStar_Tactics_V2_Builtins.core_check_term_at_type f
+                         FStarC_Tactics_V2_Builtins.core_check_term_at_type f
                            e t) in
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
@@ -1762,21 +1762,21 @@ let (rtb_core_check_term_at_type :
                        (fun res ->
                           FStar_Tactics_Effect.lift_div_tac
                             (fun uu___3 -> res)))) uu___1)
-let (mk_squash0 : FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+let (mk_squash0 : FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term)
   =
   fun t ->
     let sq =
-      FStar_Reflection_V2_Builtins.pack_ln
-        (FStar_Reflection_V2_Data.Tv_UInst
-           ((FStar_Reflection_V2_Builtins.pack_fv
+      FStarC_Reflection_V2_Builtins.pack_ln
+        (FStarC_Reflection_V2_Data.Tv_UInst
+           ((FStarC_Reflection_V2_Builtins.pack_fv
                FStar_Reflection_Const.squash_qn), [Pulse_Syntax_Pure.u_zero])) in
     FStar_Reflection_V2_Derived.mk_e_app sq [t]
 
 let (rtb_check_prop_validity :
   Pulse_Typing_Env.env ->
     Prims.bool ->
-      FStar_Reflection_Types.env ->
-        FStar_Reflection_Types.term ->
+      FStarC_Reflection_Types.env ->
+        FStarC_Reflection_Types.term ->
           ((unit FStar_Pervasives_Native.option * FStar_Issue.issue
              Prims.list),
             unit) FStar_Tactics_Effect.tac_repr)
@@ -1804,7 +1804,7 @@ let (rtb_check_prop_validity :
                     debug g
                       (fun uu___3 ->
                          let uu___4 =
-                           FStar_Tactics_V2_Builtins.term_to_string p in
+                           FStarC_Tactics_V2_Builtins.term_to_string p in
                          FStar_Tactics_Effect.tac_bind
                            (FStar_Sealed.seal
                               (Obj.magic
@@ -1823,7 +1823,7 @@ let (rtb_check_prop_validity :
                               (fun uu___5 ->
                                  let uu___6 =
                                    let uu___7 =
-                                     FStar_Tactics_V2_Builtins.range_to_string
+                                     FStarC_Tactics_V2_Builtins.range_to_string
                                        (Pulse_RuntimeUtils.range_of_term p) in
                                    FStar_Tactics_Effect.tac_bind
                                      (FStar_Sealed.seal
@@ -1922,12 +1922,12 @@ let (rtb_check_prop_validity :
                                                if sync
                                                then
                                                  FStar_Tactics_V2_Derived.with_policy
-                                                   FStar_Tactics_Types.ForceSMT
+                                                   FStarC_Tactics_Types.ForceSMT
                                                    (fun uu___7 ->
-                                                      FStar_Tactics_V2_Builtins.check_prop_validity
+                                                      FStarC_Tactics_V2_Builtins.check_prop_validity
                                                         f sp)
                                                else
-                                                 FStar_Tactics_V2_Builtins.check_prop_validity
+                                                 FStarC_Tactics_V2_Builtins.check_prop_validity
                                                    f sp) in
                                         Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
@@ -1967,7 +1967,7 @@ let (rtb_check_prop_validity :
 let (exn_as_issue : Prims.exn -> FStar_Issue.issue) =
   fun e ->
     FStar_Issue.mk_issue_doc "Error"
-      [FStar_Pprint.arbitrary_string (Pulse_RuntimeUtils.print_exn e)]
+      [FStarC_Pprint.arbitrary_string (Pulse_RuntimeUtils.print_exn e)]
       FStar_Pervasives_Native.None FStar_Pervasives_Native.None []
 let catch_all :
   'a .
@@ -1979,7 +1979,7 @@ let catch_all :
         unit) FStar_Tactics_Effect.tac_repr
   =
   fun f ->
-    let uu___ = FStar_Tactics_V2_Builtins.catch f in
+    let uu___ = FStarC_Tactics_V2_Builtins.catch f in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -1999,11 +1999,11 @@ let catch_all :
                   (FStar_Pervasives_Native.None, [exn_as_issue exn])
               | FStar_Pervasives.Inr v -> v))
 let (readback_failure :
-  FStar_Reflection_Types.term ->
+  FStarC_Reflection_Types.term ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun s ->
-    let uu___ = FStar_Tactics_V2_Builtins.term_to_string s in
+    let uu___ = FStarC_Tactics_V2_Builtins.term_to_string s in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -2024,7 +2024,7 @@ let (ill_typed_term :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
       Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
-        (FStar_Pprint.document Prims.list, unit)
+        (FStarC_Pprint.document Prims.list, unit)
           FStar_Tactics_Effect.tac_repr)
   =
   fun t ->
@@ -2049,7 +2049,7 @@ let (ill_typed_term :
                 (fun uu___3 ->
                    FStar_Tactics_Effect.lift_div_tac
                      (fun uu___4 ->
-                        FStar_Pprint.op_Hat_Hat
+                        FStarC_Pprint.op_Hat_Hat
                           (Pulse_PP.text "Ill-typed term: ") uu___3)) in
             FStar_Tactics_Effect.tac_bind
               (FStar_Sealed.seal
@@ -2084,7 +2084,7 @@ let (ill_typed_term :
                   (fun uu___3 ->
                      FStar_Tactics_Effect.lift_div_tac
                        (fun uu___4 ->
-                          FStar_Pprint.prefix (Prims.of_int (2))
+                          FStarC_Pprint.prefix (Prims.of_int (2))
                             Prims.int_one
                             (Pulse_PP.text "Expected term of type") uu___3)) in
               FStar_Tactics_Effect.tac_bind
@@ -2120,7 +2120,7 @@ let (ill_typed_term :
                           (fun uu___5 ->
                              FStar_Tactics_Effect.lift_div_tac
                                (fun uu___6 ->
-                                  FStar_Pprint.prefix (Prims.of_int (2))
+                                  FStarC_Pprint.prefix (Prims.of_int (2))
                                     Prims.int_one (Pulse_PP.text "got term")
                                     uu___5)) in
                       Obj.magic
@@ -2141,7 +2141,7 @@ let (ill_typed_term :
                            (fun uu___4 ->
                               FStar_Tactics_Effect.lift_div_tac
                                 (fun uu___5 ->
-                                   FStar_Pprint.op_Hat_Slash_Hat uu___2
+                                   FStarC_Pprint.op_Hat_Slash_Hat uu___2
                                      uu___4)))) uu___2) in
             FStar_Tactics_Effect.tac_bind
               (FStar_Sealed.seal
@@ -2177,7 +2177,7 @@ let (ill_typed_term :
                   (fun uu___3 ->
                      FStar_Tactics_Effect.lift_div_tac
                        (fun uu___4 ->
-                          FStar_Pprint.prefix (Prims.of_int (2))
+                          FStarC_Pprint.prefix (Prims.of_int (2))
                             Prims.int_one
                             (Pulse_PP.text "Expected term of type") uu___3)) in
               FStar_Tactics_Effect.tac_bind
@@ -2214,7 +2214,7 @@ let (ill_typed_term :
                             (fun uu___6 ->
                                FStar_Tactics_Effect.lift_div_tac
                                  (fun uu___7 ->
-                                    FStar_Pprint.prefix (Prims.of_int (2))
+                                    FStarC_Pprint.prefix (Prims.of_int (2))
                                       Prims.int_one
                                       (Pulse_PP.text "got term") uu___6)) in
                         FStar_Tactics_Effect.tac_bind
@@ -2257,7 +2257,7 @@ let (ill_typed_term :
                                     (fun uu___8 ->
                                        FStar_Tactics_Effect.lift_div_tac
                                          (fun uu___9 ->
-                                            FStar_Pprint.prefix
+                                            FStarC_Pprint.prefix
                                               (Prims.of_int (2))
                                               Prims.int_one
                                               (Pulse_PP.text "of type")
@@ -2284,7 +2284,7 @@ let (ill_typed_term :
                                      (fun uu___7 ->
                                         FStar_Tactics_Effect.lift_div_tac
                                           (fun uu___8 ->
-                                             FStar_Pprint.op_Hat_Slash_Hat
+                                             FStarC_Pprint.op_Hat_Slash_Hat
                                                uu___5 uu___7)))) uu___5) in
                       Obj.magic
                         (FStar_Tactics_Effect.tac_bind
@@ -2304,7 +2304,7 @@ let (ill_typed_term :
                            (fun uu___4 ->
                               FStar_Tactics_Effect.lift_div_tac
                                 (fun uu___5 ->
-                                   FStar_Pprint.op_Hat_Slash_Hat uu___2
+                                   FStarC_Pprint.op_Hat_Slash_Hat uu___2
                                      uu___4)))) uu___2) in
             FStar_Tactics_Effect.tac_bind
               (FStar_Sealed.seal
@@ -2325,7 +2325,7 @@ let maybe_fail_doc :
     FStar_Issue.issue Prims.list ->
       Pulse_Typing_Env.env ->
         Pulse_Syntax_Base.range ->
-          FStar_Pprint.document Prims.list ->
+          FStarC_Pprint.document Prims.list ->
             ('uuuuu, unit) FStar_Tactics_Effect.tac_repr
   =
   fun issues ->
@@ -2361,9 +2361,9 @@ let maybe_fail_doc :
                       Obj.magic
                         (FStar_Tactics_Effect.lift_div_tac
                            (fun uu___2 ->
-                              FStar_Pprint.pretty_string
+                              FStarC_Pprint.pretty_string
                                 Pulse_RuntimeUtils.float_one
-                                (Prims.of_int (80)) (FStar_Pprint.concat doc))) in
+                                (Prims.of_int (80)) (FStarC_Pprint.concat doc))) in
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
                          (FStar_Sealed.seal
@@ -2509,7 +2509,7 @@ let (instantiate_term_implicits :
                                                  match uu___4 with
                                                  | (topt, issues) ->
                                                      let uu___5 =
-                                                       FStar_Tactics_V2_Builtins.log_issues
+                                                       FStarC_Tactics_V2_Builtins.log_issues
                                                          issues in
                                                      Obj.magic
                                                        (FStar_Tactics_Effect.tac_bind
@@ -2573,7 +2573,7 @@ let (instantiate_term_implicits :
                                                                     (fun
                                                                     uu___11
                                                                     ->
-                                                                    FStar_Pprint.prefix
+                                                                    FStarC_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -2681,7 +2681,7 @@ let (instantiate_term_implicits :
                                                                     (fun
                                                                     uu___11
                                                                     ->
-                                                                    FStar_Pprint.prefix
+                                                                    FStarC_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -2873,7 +2873,7 @@ let (instantiate_term_implicits_uvs :
                                                match uu___4 with
                                                | (topt, issues) ->
                                                    let uu___5 =
-                                                     FStar_Tactics_V2_Builtins.log_issues
+                                                     FStarC_Tactics_V2_Builtins.log_issues
                                                        issues in
                                                    Obj.magic
                                                      (FStar_Tactics_Effect.tac_bind
@@ -2934,7 +2934,7 @@ let (instantiate_term_implicits_uvs :
                                                                     (fun
                                                                     uu___11
                                                                     ->
-                                                                    FStar_Pprint.prefix
+                                                                    FStarC_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -3030,14 +3030,14 @@ let (instantiate_term_implicits_uvs :
                                                                     ->
                                                                     let nview
                                                                     =
-                                                                    FStar_Reflection_V2_Builtins.inspect_namedv
+                                                                    FStarC_Reflection_V2_Builtins.inspect_namedv
                                                                     namedv in
                                                                     let ppname
                                                                     =
                                                                     {
                                                                     Pulse_Syntax_Base.name
                                                                     =
-                                                                    (nview.FStar_Reflection_V2_Data.ppname);
+                                                                    (nview.FStarC_Reflection_V2_Data.ppname);
                                                                     Pulse_Syntax_Base.range
                                                                     = rng
                                                                     } in
@@ -3054,7 +3054,7 @@ let (instantiate_term_implicits_uvs :
                                                                     t1
                                                                     [
                                                                     FStar_Reflection_Typing.NT
-                                                                    ((nview.FStar_Reflection_V2_Data.uniq),
+                                                                    ((nview.FStarC_Reflection_V2_Data.uniq),
                                                                     (Pulse_Syntax_Pure.tm_var
                                                                     {
                                                                     Pulse_Syntax_Base.nm_index
@@ -3066,7 +3066,7 @@ let (instantiate_term_implicits_uvs :
                                                                     ty1
                                                                     [
                                                                     FStar_Reflection_Typing.NT
-                                                                    ((nview.FStar_Reflection_V2_Data.uniq),
+                                                                    ((nview.FStarC_Reflection_V2_Data.uniq),
                                                                     (Pulse_Syntax_Pure.tm_var
                                                                     {
                                                                     Pulse_Syntax_Base.nm_index
@@ -3164,7 +3164,7 @@ let (check_universe :
                          match uu___2 with
                          | (ru_opt, issues) ->
                              let uu___3 =
-                               FStar_Tactics_V2_Builtins.log_issues issues in
+                               FStarC_Tactics_V2_Builtins.log_issues issues in
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Sealed.seal
@@ -3232,10 +3232,10 @@ let (check_universe :
                         uu___2))) uu___1)
 let (tc_meta_callback :
   Pulse_Typing_Env.env ->
-    FStar_Reflection_Types.env ->
-      FStar_Reflection_Types.term ->
-        (((FStar_Reflection_Types.term, FStar_TypeChecker_Core.tot_or_ghost,
-           FStar_Reflection_Types.term,
+    FStarC_Reflection_Types.env ->
+      FStarC_Reflection_Types.term ->
+        (((FStarC_Reflection_Types.term, FStarC_TypeChecker_Core.tot_or_ghost,
+           FStarC_Reflection_Types.term,
            (unit, unit, unit) FStar_Reflection_Typing.typing)
            FStar_Pervasives.dtuple4 FStar_Pervasives_Native.option *
            FStar_Issue.issue Prims.list),
@@ -3287,7 +3287,7 @@ let (tc_meta_callback :
 let (compute_term_type :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
-      ((Pulse_Syntax_Base.term, FStar_TypeChecker_Core.tot_or_ghost,
+      ((Pulse_Syntax_Base.term, FStarC_TypeChecker_Core.tot_or_ghost,
          Pulse_Syntax_Base.term, unit) FStar_Pervasives.dtuple4,
         unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -3313,7 +3313,7 @@ let (compute_term_type :
               let uu___1 =
                 debug g
                   (fun uu___2 ->
-                     let uu___3 = FStar_Tactics_V2_Builtins.term_to_string t in
+                     let uu___3 = FStarC_Tactics_V2_Builtins.term_to_string t in
                      FStar_Tactics_Effect.tac_bind
                        (FStar_Sealed.seal
                           (Obj.magic
@@ -3422,7 +3422,7 @@ let (compute_term_type :
                                     match uu___4 with
                                     | (res, issues) ->
                                         let uu___5 =
-                                          FStar_Tactics_V2_Builtins.log_issues
+                                          FStarC_Tactics_V2_Builtins.log_issues
                                             issues in
                                         Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
@@ -3499,7 +3499,7 @@ let (compute_term_type :
 let (compute_term_type_and_u :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
-      ((Pulse_Syntax_Base.term, FStar_TypeChecker_Core.tot_or_ghost,
+      ((Pulse_Syntax_Base.term, FStarC_TypeChecker_Core.tot_or_ghost,
          Pulse_Syntax_Base.term,
          (Pulse_Syntax_Base.universe, unit) Prims.dtuple2, unit)
          FStar_Pervasives.dtuple5,
@@ -3544,7 +3544,7 @@ let (compute_term_type_and_u :
                          match uu___2 with
                          | (res, issues) ->
                              let uu___3 =
-                               FStar_Tactics_V2_Builtins.log_issues issues in
+                               FStarC_Tactics_V2_Builtins.log_issues issues in
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Sealed.seal
@@ -3637,7 +3637,7 @@ let (compute_term_type_and_u :
 let (check_term :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
-      FStar_TypeChecker_Core.tot_or_ghost ->
+      FStarC_TypeChecker_Core.tot_or_ghost ->
         Pulse_Syntax_Base.term ->
           ((Pulse_Syntax_Base.term, unit) Prims.dtuple2, unit)
             FStar_Tactics_Effect.tac_repr)
@@ -3691,7 +3691,7 @@ let (check_term :
                                         rtb_core_check_term
                                           (Pulse_Typing_Env.push_context g
                                              "check_term_with_expected_type_and_effect"
-                                             (FStar_Reflection_V2_Builtins.range_of_term
+                                             (FStarC_Reflection_V2_Builtins.range_of_term
                                                 t)) fg e1 eff t) in
                                  Obj.magic
                                    (FStar_Tactics_Effect.tac_bind
@@ -3717,7 +3717,7 @@ let (check_term :
                                             match uu___5 with
                                             | (topt, issues) ->
                                                 let uu___6 =
-                                                  FStar_Tactics_V2_Builtins.log_issues
+                                                  FStarC_Tactics_V2_Builtins.log_issues
                                                     issues in
                                                 Obj.magic
                                                   (FStar_Tactics_Effect.tac_bind
@@ -3799,7 +3799,7 @@ let (check_term_at_type :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term ->
-        ((Pulse_Syntax_Base.term, FStar_TypeChecker_Core.tot_or_ghost, 
+        ((Pulse_Syntax_Base.term, FStarC_TypeChecker_Core.tot_or_ghost, 
            unit) FStar_Pervasives.dtuple3,
           unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -3849,7 +3849,7 @@ let (check_term_at_type :
                                       rtb_core_check_term_at_type
                                         (Pulse_Typing_Env.push_context g
                                            "check_term_with_expected_type"
-                                           (FStar_Reflection_V2_Builtins.range_of_term
+                                           (FStarC_Reflection_V2_Builtins.range_of_term
                                               t)) fg e1 t) in
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
@@ -3875,7 +3875,7 @@ let (check_term_at_type :
                                           match uu___5 with
                                           | (effopt, issues) ->
                                               let uu___6 =
-                                                FStar_Tactics_V2_Builtins.log_issues
+                                                FStarC_Tactics_V2_Builtins.log_issues
                                                   issues in
                                               Obj.magic
                                                 (FStar_Tactics_Effect.tac_bind
@@ -3954,9 +3954,9 @@ let (check_term_at_type :
                               uu___4))) uu___1)
 let (tc_with_core :
   Pulse_Typing_Env.env ->
-    FStar_Reflection_Types.env ->
-      FStar_Reflection_Types.term ->
-        (((FStar_TypeChecker_Core.tot_or_ghost, FStar_Reflection_Types.term,
+    FStarC_Reflection_Types.env ->
+      FStarC_Reflection_Types.term ->
+        (((FStarC_TypeChecker_Core.tot_or_ghost, FStarC_Reflection_Types.term,
            (unit, unit, unit) FStar_Reflection_Typing.typing)
            FStar_Pervasives.dtuple3 FStar_Pervasives_Native.option *
            FStar_Issue.issue Prims.list),
@@ -3970,7 +3970,7 @@ let (tc_with_core :
             (fun uu___1 ->
                rtb_core_compute_term_type
                  (Pulse_Typing_Env.push_context g "tc_with_core"
-                    (FStar_Reflection_V2_Builtins.range_of_term e)) f e) in
+                    (FStarC_Reflection_V2_Builtins.range_of_term e)) f e) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
              (Obj.magic
@@ -4000,7 +4000,7 @@ let (tc_with_core :
 let (core_compute_term_type :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
-      ((FStar_TypeChecker_Core.tot_or_ghost, Pulse_Syntax_Base.term, 
+      ((FStarC_TypeChecker_Core.tot_or_ghost, Pulse_Syntax_Base.term, 
          unit) FStar_Pervasives.dtuple3,
         unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -4027,7 +4027,7 @@ let (core_compute_term_type :
               let uu___1 =
                 tc_with_core
                   (Pulse_Typing_Env.push_context g "core_check_term"
-                     (FStar_Reflection_V2_Builtins.range_of_term t)) fg t in
+                     (FStarC_Reflection_V2_Builtins.range_of_term t)) fg t in
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Sealed.seal
@@ -4046,7 +4046,7 @@ let (core_compute_term_type :
                          match uu___2 with
                          | (res, issues) ->
                              let uu___3 =
-                               FStar_Tactics_V2_Builtins.log_issues issues in
+                               FStarC_Tactics_V2_Builtins.log_issues issues in
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Sealed.seal
@@ -4115,7 +4115,7 @@ let (core_compute_term_type :
 let (core_check_term :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
-      FStar_TypeChecker_Core.tot_or_ghost ->
+      FStarC_TypeChecker_Core.tot_or_ghost ->
         Pulse_Syntax_Base.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -4145,7 +4145,7 @@ let (core_check_term :
                       (fun uu___2 ->
                          rtb_core_check_term
                            (Pulse_Typing_Env.push_context g "core_check_term"
-                              (FStar_Reflection_V2_Builtins.range_of_term t))
+                              (FStarC_Reflection_V2_Builtins.range_of_term t))
                            fg e eff t) in
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
@@ -4165,7 +4165,7 @@ let (core_check_term :
                              match uu___2 with
                              | (topt, issues) ->
                                  let uu___3 =
-                                   FStar_Tactics_V2_Builtins.log_issues
+                                   FStarC_Tactics_V2_Builtins.log_issues
                                      issues in
                                  Obj.magic
                                    (FStar_Tactics_Effect.tac_bind
@@ -4234,7 +4234,7 @@ let (core_check_term_at_type :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term ->
-        ((FStar_TypeChecker_Core.tot_or_ghost, unit) Prims.dtuple2, unit)
+        ((FStarC_TypeChecker_Core.tot_or_ghost, unit) Prims.dtuple2, unit)
           FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -4264,7 +4264,7 @@ let (core_check_term_at_type :
                        rtb_core_check_term_at_type
                          (Pulse_Typing_Env.push_context g
                             "core_check_term_at_type"
-                            (FStar_Reflection_V2_Builtins.range_of_term t))
+                            (FStarC_Reflection_V2_Builtins.range_of_term t))
                          fg e t) in
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
@@ -4284,7 +4284,7 @@ let (core_check_term_at_type :
                            match uu___2 with
                            | (effopt, issues) ->
                                let uu___3 =
-                                 FStar_Tactics_V2_Builtins.log_issues issues in
+                                 FStarC_Tactics_V2_Builtins.log_issues issues in
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (FStar_Sealed.seal
@@ -4359,7 +4359,7 @@ let (check_slprop :
   fun g ->
     fun t ->
       check_term (Pulse_Typing_Env.push_context_no_range g "check_slprop") t
-        FStar_TypeChecker_Core.E_Total Pulse_Syntax_Pure.tm_slprop
+        FStarC_TypeChecker_Core.E_Total Pulse_Syntax_Pure.tm_slprop
 let (check_slprop_with_core :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
@@ -4368,7 +4368,7 @@ let (check_slprop_with_core :
     fun t ->
       core_check_term
         (Pulse_Typing_Env.push_context_no_range g "check_slprop_with_core") t
-        FStar_TypeChecker_Core.E_Total Pulse_Syntax_Pure.tm_slprop
+        FStarC_TypeChecker_Core.E_Total Pulse_Syntax_Pure.tm_slprop
 let (try_get_non_informative_witness_aux :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.universe ->
@@ -4445,7 +4445,7 @@ let (try_get_non_informative_witness_aux :
                                   (fun uu___3 ->
                                      (fun constraint_typing ->
                                         let uu___3 =
-                                          FStar_Tactics_V2_Builtins.call_subtac
+                                          FStarC_Tactics_V2_Builtins.call_subtac
                                             r_env
                                             FStar_Tactics_Typeclasses.tcresolve
                                             u goal in
@@ -4546,7 +4546,7 @@ let (get_non_informative_witness :
                   match uu___1 with
                   | (FStar_Pervasives_Native.None, issues) ->
                       let uu___2 =
-                        FStar_Tactics_V2_Builtins.log_issues issues in
+                        FStarC_Tactics_V2_Builtins.log_issues issues in
                       Obj.magic
                         (FStar_Tactics_Effect.tac_bind
                            (FStar_Sealed.seal
@@ -4591,7 +4591,7 @@ let (get_non_informative_witness :
                                          (fun uu___8 ->
                                             FStar_Tactics_Effect.lift_div_tac
                                               (fun uu___9 ->
-                                                 FStar_Pprint.prefix
+                                                 FStarC_Pprint.prefix
                                                    (Prims.of_int (2))
                                                    Prims.int_one
                                                    (Pulse_PP.text "Got:")
@@ -4670,7 +4670,7 @@ let (get_non_informative_witness :
                                 uu___3))
                   | (FStar_Pervasives_Native.Some e, issues) ->
                       let uu___2 =
-                        FStar_Tactics_V2_Builtins.log_issues issues in
+                        FStarC_Tactics_V2_Builtins.log_issues issues in
                       Obj.magic
                         (FStar_Tactics_Effect.tac_bind
                            (FStar_Sealed.seal
@@ -4742,7 +4742,7 @@ let (check_prop_validity :
              (fun uu___2 ->
                 match uu___2 with
                 | (t_opt, issues) ->
-                    let uu___3 = FStar_Tactics_V2_Builtins.log_issues issues in
+                    let uu___3 = FStarC_Tactics_V2_Builtins.log_issues issues in
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
                          (FStar_Sealed.seal
@@ -4788,7 +4788,7 @@ let (check_prop_validity :
                                                (fun uu___8 ->
                                                   FStar_Tactics_Effect.lift_div_tac
                                                     (fun uu___9 ->
-                                                       FStar_Pprint.prefix
+                                                       FStarC_Pprint.prefix
                                                          (Prims.of_int (2))
                                                          Prims.int_one
                                                          (Pulse_PP.text
@@ -4870,7 +4870,7 @@ let fail_expected_tot_found_ghost :
             (fun uu___3 ->
                FStar_Tactics_Effect.lift_div_tac
                  (fun uu___4 ->
-                    FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                    FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
                       (Pulse_PP.text
                          "Expected a total term, got found ghost term:")
                       uu___3)) in
@@ -4931,7 +4931,7 @@ let (compute_tot_term_type :
            (fun uu___1 ->
               match uu___1 with
               | FStar_Pervasives.Mkdtuple4 (t1, eff, ty, t_typing) ->
-                  if eff = FStar_TypeChecker_Core.E_Total
+                  if eff = FStarC_TypeChecker_Core.E_Total
                   then
                     Obj.magic
                       (Obj.repr
@@ -4968,7 +4968,7 @@ let (compute_tot_term_type_and_u :
               match uu___1 with
               | FStar_Pervasives.Mkdtuple5
                   (t1, eff, ty, Prims.Mkdtuple2 (u, ty_typing), t_typing) ->
-                  if eff = FStar_TypeChecker_Core.E_Total
+                  if eff = FStarC_TypeChecker_Core.E_Total
                   then
                     Obj.magic
                       (Obj.repr
@@ -4985,7 +4985,7 @@ let (check_tot_term :
         ((Pulse_Syntax_Base.term, unit) Prims.dtuple2, unit)
           FStar_Tactics_Effect.tac_repr)
   =
-  fun g -> fun e -> fun t -> check_term g e FStar_TypeChecker_Core.E_Total t
+  fun g -> fun e -> fun t -> check_term g e FStarC_TypeChecker_Core.E_Total t
 let (core_compute_tot_term_type :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
@@ -5011,7 +5011,7 @@ let (core_compute_tot_term_type :
            (fun uu___1 ->
               match uu___1 with
               | FStar_Pervasives.Mkdtuple3 (eff, ty, d) ->
-                  if eff = FStar_TypeChecker_Core.E_Total
+                  if eff = FStarC_TypeChecker_Core.E_Total
                   then
                     Obj.magic
                       (Obj.repr
@@ -5026,11 +5026,11 @@ let (core_check_tot_term :
       Pulse_Syntax_Base.typ -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
-    fun e -> fun t -> core_check_term g e FStar_TypeChecker_Core.E_Total t
+    fun e -> fun t -> core_check_term g e FStarC_TypeChecker_Core.E_Total t
 let (is_non_informative :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp ->
-      ((unit, unit) FStar_Tactics_Types.non_informative_token
+      ((unit, unit) FStarC_Tactics_Types.non_informative_token
          FStar_Pervasives_Native.option,
         unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -5039,7 +5039,7 @@ let (is_non_informative :
       let uu___ =
         catch_all
           (fun uu___1 ->
-             FStar_Tactics_V2_Builtins.is_non_informative
+             FStarC_Tactics_V2_Builtins.is_non_informative
                (Pulse_Typing.elab_env g) (Pulse_Elaborate_Pure.elab_comp c)) in
       FStar_Tactics_Effect.tac_bind
         (FStar_Sealed.seal
@@ -5056,7 +5056,7 @@ let (is_non_informative :
            (fun uu___1 ->
               match uu___1 with
               | (ropt, issues) ->
-                  let uu___2 = FStar_Tactics_V2_Builtins.log_issues issues in
+                  let uu___2 = FStarC_Tactics_V2_Builtins.log_issues issues in
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Sealed.seal
@@ -5083,7 +5083,7 @@ let (check_subtyping :
   fun g ->
     fun t1 ->
       fun t2 ->
-        FStar_Tactics_V2_Derived.with_policy FStar_Tactics_Types.ForceSMT
+        FStar_Tactics_V2_Derived.with_policy FStarC_Tactics_Types.ForceSMT
           (fun uu___ ->
              let uu___1 = rtb_check_subtyping g t1 t2 in
              FStar_Tactics_Effect.tac_bind
@@ -5103,7 +5103,7 @@ let (check_subtyping :
                      match uu___2 with
                      | (res, issues) ->
                          let uu___3 =
-                           FStar_Tactics_V2_Builtins.log_issues issues in
+                           FStarC_Tactics_V2_Builtins.log_issues issues in
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
                               (FStar_Sealed.seal
@@ -5191,7 +5191,7 @@ let (check_subtyping :
                                                                     (fun
                                                                     uu___13
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
                                                                     (Pulse_PP.text
                                                                     "and")
                                                                     uu___12)) in
@@ -5223,7 +5223,7 @@ let (check_subtyping :
                                                                     (fun
                                                                     uu___12
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
                                                                     uu___9
                                                                     uu___11))))
                                                            uu___9) in
@@ -5248,7 +5248,7 @@ let (check_subtyping :
                                                     (fun uu___8 ->
                                                        FStar_Tactics_Effect.lift_div_tac
                                                          (fun uu___9 ->
-                                                            FStar_Pprint.op_Hat_Slash_Hat
+                                                            FStarC_Pprint.op_Hat_Slash_Hat
                                                               (Pulse_PP.text
                                                                  "Could not prove subtyping of ")
                                                               uu___8)) in
@@ -5305,7 +5305,7 @@ let (check_equiv :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term ->
-        ((unit, unit, unit) FStar_Tactics_Types.equiv_token
+        ((unit, unit, unit) FStarC_Tactics_Types.equiv_token
            FStar_Pervasives_Native.option,
           unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -5330,7 +5330,7 @@ let (check_equiv :
              (fun uu___1 ->
                 match uu___1 with
                 | (res, issues) ->
-                    let uu___2 = FStar_Tactics_V2_Builtins.log_issues issues in
+                    let uu___2 = FStarC_Tactics_V2_Builtins.log_issues issues in
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
                          (FStar_Sealed.seal

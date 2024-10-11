@@ -1,17 +1,17 @@
 open Prims
-let (hasRange_ident : FStar_Ident.ident FStar_Class_HasRange.hasRange) =
+let (hasRange_ident : FStarC_Ident.ident FStarC_Class_HasRange.hasRange) =
   {
-    FStar_Class_HasRange.pos = FStar_Ident.range_of_id;
-    FStar_Class_HasRange.setPos = FStar_Ident.set_id_range
+    FStarC_Class_HasRange.pos = FStarC_Ident.range_of_id;
+    FStarC_Class_HasRange.setPos = FStarC_Ident.set_id_range
   }
-let (hasRange_lident : FStar_Ident.lident FStar_Class_HasRange.hasRange) =
+let (hasRange_lident : FStarC_Ident.lident FStarC_Class_HasRange.hasRange) =
   {
-    FStar_Class_HasRange.pos = FStar_Ident.range_of_lid;
-    FStar_Class_HasRange.setPos =
-      (fun x -> fun y -> FStar_Ident.set_lid_range y x)
+    FStarC_Class_HasRange.pos = FStarC_Ident.range_of_lid;
+    FStarC_Class_HasRange.setPos =
+      (fun x -> fun y -> FStarC_Ident.set_lid_range y x)
   }
 type error =
-  (Prims.string * FStar_Compiler_Range_Type.range)
+  (Prims.string * FStarC_Compiler_Range_Type.range)
     FStar_Pervasives_Native.option
 type 'a err = Prims.nat -> (('a, error) FStar_Pervasives.either * Prims.nat)
 let bind_err :
@@ -29,12 +29,12 @@ let bind_err :
         | (FStar_Pervasives.Inr e, ctr1) -> ((FStar_Pervasives.Inr e), ctr1)
 let return : 'a . 'a -> 'a err =
   fun x -> fun ctr -> ((FStar_Pervasives.Inl x), ctr)
-let (err_monad : unit err FStar_Class_Monad.monad) =
+let (err_monad : unit err FStarC_Class_Monad.monad) =
   {
-    FStar_Class_Monad.return =
+    FStarC_Class_Monad.return =
       (fun uu___1 ->
          fun uu___ -> (fun uu___ -> Obj.magic return) uu___1 uu___);
-    FStar_Class_Monad.op_let_Bang =
+    FStarC_Class_Monad.op_let_Bang =
       (fun uu___3 ->
          fun uu___2 ->
            fun uu___1 ->
@@ -42,14 +42,14 @@ let (err_monad : unit err FStar_Class_Monad.monad) =
                (fun uu___1 -> fun uu___ -> Obj.magic bind_err) uu___3 uu___2
                  uu___1 uu___)
   }
-let fail : 'a . Prims.string -> FStar_Compiler_Range_Type.range -> 'a err =
+let fail : 'a . Prims.string -> FStarC_Compiler_Range_Type.range -> 'a err =
   fun message ->
     fun range ->
       fun ctr ->
         ((FStar_Pervasives.Inr
             (FStar_Pervasives_Native.Some (message, range))), ctr)
 let (fail_if :
-  Prims.bool -> Prims.string -> FStar_Compiler_Range_Type.range -> unit err)
+  Prims.bool -> Prims.string -> FStarC_Compiler_Range_Type.range -> unit err)
   =
   fun b ->
     fun message -> fun range -> if b then fail message range else return ()
@@ -76,7 +76,7 @@ let map_err_opt :
                Obj.magic
                  (Obj.repr
                     (let uu___ = f v in
-                     FStar_Class_Monad.op_let_Bang err_monad () ()
+                     FStarC_Class_Monad.op_let_Bang err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
                           (fun v' ->
@@ -100,7 +100,7 @@ let rec map2 :
                    Obj.magic
                      (Obj.repr
                         (let uu___ = map2 f xx yy in
-                         FStar_Class_Monad.op_let_Bang err_monad () ()
+                         FStarC_Class_Monad.op_let_Bang err_monad () ()
                            (Obj.magic uu___)
                            (fun uu___1 ->
                               (fun r ->
@@ -112,12 +112,12 @@ let rec map2 :
                    Obj.magic
                      (Obj.repr
                         (fail "map2: mismatch"
-                           FStar_Compiler_Range_Type.dummyRange))) uu___2
+                           FStarC_Compiler_Range_Type.dummyRange))) uu___2
           uu___1 uu___
 let left :
   'a 'b .
     ('a, 'b) FStar_Pervasives.either ->
-      FStar_Compiler_Range_Type.range -> 'a err
+      FStarC_Compiler_Range_Type.range -> 'a err
   =
   fun f ->
     fun r ->
@@ -127,7 +127,7 @@ let left :
 let right :
   'a 'b .
     ('a, 'b) FStar_Pervasives.either ->
-      FStar_Compiler_Range_Type.range -> 'b err
+      FStarC_Compiler_Range_Type.range -> 'b err
   =
   fun f ->
     fun r ->

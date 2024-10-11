@@ -30,7 +30,7 @@ let (debug :
                      (Obj.magic uu___)
                      (fun uu___1 ->
                         (fun uu___1 ->
-                           Obj.magic (FStar_Tactics_V2_Builtins.print uu___1))
+                           Obj.magic (FStarC_Tactics_V2_Builtins.print uu___1))
                           uu___1)))
            else
              Obj.magic
@@ -246,18 +246,18 @@ let (is_erasable :
               | uu___2 -> false))
 let (head_and_args :
   Pulse_Syntax_Base.term ->
-    (FStar_Reflection_Types.term * FStar_Reflection_V2_Data.argv Prims.list)
+    (FStarC_Reflection_Types.term * FStarC_Reflection_V2_Data.argv Prims.list)
       FStar_Pervasives_Native.option)
   =
   fun t ->
     FStar_Pervasives_Native.Some
       (FStar_Reflection_V2_Collect.collect_app_ln t)
 let (term_eq_string :
-  Prims.string -> FStar_Reflection_Types.term -> Prims.bool) =
+  Prims.string -> FStarC_Reflection_Types.term -> Prims.bool) =
   fun s ->
     fun t ->
-      match FStar_Reflection_V2_Builtins.inspect_ln t with
-      | FStar_Reflection_V2_Data.Tv_Const (FStar_Reflection_V2_Data.C_String
+      match FStarC_Reflection_V2_Builtins.inspect_ln t with
+      | FStarC_Reflection_V2_Data.Tv_Const (FStarC_Reflection_V2_Data.C_String
           s') -> s = s'
       | uu___ -> false
 let (push_binding :
@@ -2829,7 +2829,7 @@ and (erase_ghost_subterms_branch :
 let (extract_dv_binder :
   Pulse_Syntax_Base.binder ->
     Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option ->
-      (FStar_Reflection_Types.binder, unit) FStar_Tactics_Effect.tac_repr)
+      (FStarC_Reflection_Types.binder, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun b ->
     fun q ->
@@ -2852,20 +2852,20 @@ let (extract_dv_binder :
              FStar_Tactics_Effect.lift_div_tac
                (fun uu___3 ->
                   {
-                    FStar_Reflection_V2_Data.sort2 =
+                    FStarC_Reflection_V2_Data.sort2 =
                       (b.Pulse_Syntax_Base.binder_ty);
-                    FStar_Reflection_V2_Data.qual =
+                    FStarC_Reflection_V2_Data.qual =
                       (match q with
                        | FStar_Pervasives_Native.Some
                            (Pulse_Syntax_Base.Implicit) ->
-                           FStar_Reflection_V2_Data.Q_Implicit
+                           FStarC_Reflection_V2_Data.Q_Implicit
                        | FStar_Pervasives_Native.Some
                            (Pulse_Syntax_Base.TcArg) ->
-                           FStar_Reflection_V2_Data.Q_Explicit
+                           FStarC_Reflection_V2_Data.Q_Explicit
                        | FStar_Pervasives_Native.None ->
-                           FStar_Reflection_V2_Data.Q_Explicit);
-                    FStar_Reflection_V2_Data.attrs = uu___2;
-                    FStar_Reflection_V2_Data.ppname2 =
+                           FStarC_Reflection_V2_Data.Q_Explicit);
+                    FStarC_Reflection_V2_Data.attrs = uu___2;
+                    FStarC_Reflection_V2_Data.ppname2 =
                       ((b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name)
                   })) in
       FStar_Tactics_Effect.tac_bind
@@ -2881,11 +2881,11 @@ let (extract_dv_binder :
                  (Prims.of_int (3))))) (Obj.magic uu___)
         (fun uu___1 ->
            FStar_Tactics_Effect.lift_div_tac
-             (fun uu___2 -> FStar_Reflection_V2_Builtins.pack_binder uu___1))
+             (fun uu___2 -> FStarC_Reflection_V2_Builtins.pack_binder uu___1))
 let rec (extract_dv_pattern :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.pattern ->
-      ((Pulse_Typing_Env.env * FStar_Reflection_V2_Data.pattern *
+      ((Pulse_Typing_Env.env * FStarC_Reflection_V2_Data.pattern *
          Pulse_Typing_Env.binding Prims.list),
         unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -2901,7 +2901,7 @@ let rec (extract_dv_pattern :
                        Obj.magic
                          (FStar_Tactics_Effect.lift_div_tac
                             (fun uu___1 ->
-                               FStar_Reflection_V2_Builtins.pack_fv
+                               FStarC_Reflection_V2_Builtins.pack_fv
                                  fv.Pulse_Syntax_Base.fv_name)) in
                      FStar_Tactics_Effect.tac_bind
                        (FStar_Sealed.seal
@@ -2946,7 +2946,7 @@ let rec (extract_dv_pattern :
                                           match uu___2 with
                                           | (g1, pats1, bs) ->
                                               (g1,
-                                                (FStar_Reflection_V2_Data.Pat_Cons
+                                                (FStarC_Reflection_V2_Data.Pat_Cons
                                                    (fv1,
                                                      FStar_Pervasives_Native.None,
                                                      (FStar_List_Tot_Base.map
@@ -2958,7 +2958,7 @@ let rec (extract_dv_pattern :
                  (Obj.repr
                     (FStar_Tactics_Effect.lift_div_tac
                        (fun uu___ ->
-                          (g, (FStar_Reflection_V2_Data.Pat_Constant c), []))))
+                          (g, (FStarC_Reflection_V2_Data.Pat_Constant c), []))))
            | Pulse_Syntax_Base.Pat_Var (ppname, sort) ->
                Obj.magic
                  (Obj.repr
@@ -3006,7 +3006,7 @@ let rec (extract_dv_pattern :
                                           match uu___2 with
                                           | (g1, (uu___4, x)) ->
                                               (g1,
-                                                (FStar_Reflection_V2_Data.Pat_Var
+                                                (FStarC_Reflection_V2_Data.Pat_Var
                                                    (sort, ppname)),
                                                 [(x, ty)]))))) uu___1)))
            | Pulse_Syntax_Base.Pat_Dot_Term t ->
@@ -3014,12 +3014,12 @@ let rec (extract_dv_pattern :
                  (Obj.repr
                     (FStar_Tactics_Effect.lift_div_tac
                        (fun uu___ ->
-                          (g, (FStar_Reflection_V2_Data.Pat_Dot_Term t), [])))))
+                          (g, (FStarC_Reflection_V2_Data.Pat_Dot_Term t), [])))))
         uu___1 uu___
 and (extract_dv_patterns :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.pattern Prims.list ->
-      ((Pulse_Typing_Env.env * FStar_Reflection_V2_Data.pattern Prims.list *
+      ((Pulse_Typing_Env.env * FStarC_Reflection_V2_Data.pattern Prims.list *
          Pulse_Typing_Env.binding Prims.list),
         unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -3084,7 +3084,7 @@ and (extract_dv_patterns :
         uu___1 uu___
 let (get_type_of_ref :
   Pulse_Syntax_Base.term ->
-    (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+    (FStarC_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun p ->
     let uu___ =
@@ -3138,15 +3138,15 @@ let (get_type_of_ref :
                (Prims.of_int (16))))) (Obj.magic uu___)
       (fun uu___1 ->
          (fun fail ->
-            match FStar_Reflection_V2_Builtins.inspect_ln p with
-            | FStar_Reflection_V2_Data.Tv_App (hd, (arg, uu___1)) ->
+            match FStarC_Reflection_V2_Builtins.inspect_ln p with
+            | FStarC_Reflection_V2_Data.Tv_App (hd, (arg, uu___1)) ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac (fun uu___2 -> arg)))
             | uu___1 -> Obj.magic (Obj.repr (fail ()))) uu___1)
 let (get_type_of_array :
   Pulse_Syntax_Base.term ->
-    (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+    (FStarC_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun p ->
     let uu___ =
@@ -3200,33 +3200,33 @@ let (get_type_of_array :
                (Prims.of_int (16))))) (Obj.magic uu___)
       (fun uu___1 ->
          (fun fail ->
-            match FStar_Reflection_V2_Builtins.inspect_ln p with
-            | FStar_Reflection_V2_Data.Tv_App (hd, (arg, uu___1)) ->
+            match FStarC_Reflection_V2_Builtins.inspect_ln p with
+            | FStarC_Reflection_V2_Data.Tv_App (hd, (arg, uu___1)) ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac (fun uu___2 -> arg)))
             | uu___1 -> Obj.magic (Obj.repr (fail ()))) uu___1)
 let (mk_abs :
-  FStar_Reflection_Types.binder ->
-    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  FStarC_Reflection_Types.binder ->
+    FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term)
   =
   fun b ->
     fun e ->
-      FStar_Reflection_V2_Builtins.pack_ln
-        (FStar_Reflection_V2_Data.Tv_Abs (b, e))
-let (unit_binder : Prims.string -> FStar_Reflection_Types.binder) =
+      FStarC_Reflection_V2_Builtins.pack_ln
+        (FStarC_Reflection_V2_Data.Tv_Abs (b, e))
+let (unit_binder : Prims.string -> FStarC_Reflection_Types.binder) =
   fun ppname ->
-    FStar_Reflection_V2_Builtins.pack_binder
+    FStarC_Reflection_V2_Builtins.pack_binder
       {
-        FStar_Reflection_V2_Data.sort2 = Pulse_Extract_CompilerLib.unit_ty;
-        FStar_Reflection_V2_Data.qual = FStar_Reflection_V2_Data.Q_Explicit;
-        FStar_Reflection_V2_Data.attrs = [];
-        FStar_Reflection_V2_Data.ppname2 = (FStar_Sealed.seal ppname)
+        FStarC_Reflection_V2_Data.sort2 = Pulse_Extract_CompilerLib.unit_ty;
+        FStarC_Reflection_V2_Data.qual = FStarC_Reflection_V2_Data.Q_Explicit;
+        FStarC_Reflection_V2_Data.attrs = [];
+        FStarC_Reflection_V2_Data.ppname2 = (FStar_Sealed.seal ppname)
       }
 let rec (extract_dv :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
-      (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+      (FStarC_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
     fun p ->
@@ -3716,7 +3716,7 @@ let rec (extract_dv :
                                  (fun uu___6 ->
                                     FStar_Tactics_Effect.lift_div_tac
                                       (fun uu___7 ->
-                                         FStar_Reflection_V2_Data.Tv_Match
+                                         FStarC_Reflection_V2_Data.Tv_Match
                                            (sc, FStar_Pervasives_Native.None,
                                              uu___6))) in
                              FStar_Tactics_Effect.tac_bind
@@ -3740,7 +3740,7 @@ let rec (extract_dv :
                                (fun uu___5 ->
                                   FStar_Tactics_Effect.lift_div_tac
                                     (fun uu___6 ->
-                                       FStar_Reflection_V2_Builtins.pack_ln
+                                       FStarC_Reflection_V2_Builtins.pack_ln
                                          uu___5)))
                       | Pulse_Syntax_Base.Tm_While
                           { Pulse_Syntax_Base.invariant = uu___3;
@@ -3795,9 +3795,9 @@ let rec (extract_dv :
                                                (fun uu___7 ->
                                                   Pulse_Extract_CompilerLib.mk_meta_monadic
                                                     (FStar_Reflection_V2_Derived.mk_app
-                                                       (FStar_Reflection_V2_Builtins.pack_ln
-                                                          (FStar_Reflection_V2_Data.Tv_FVar
-                                                             (FStar_Reflection_V2_Builtins.pack_fv
+                                                       (FStarC_Reflection_V2_Builtins.pack_ln
+                                                          (FStarC_Reflection_V2_Data.Tv_FVar
+                                                             (FStarC_Reflection_V2_Builtins.pack_fv
                                                                 ["Pulse";
                                                                 "Lib";
                                                                 "Dv";
@@ -3806,12 +3806,12 @@ let rec (extract_dv :
                                                             (unit_binder
                                                                "while_cond")
                                                             condition1),
-                                                          FStar_Reflection_V2_Data.Q_Explicit);
+                                                          FStarC_Reflection_V2_Data.Q_Explicit);
                                                        ((mk_abs
                                                            (unit_binder
                                                               "while_body")
                                                            body1),
-                                                         FStar_Reflection_V2_Data.Q_Explicit)])))))
+                                                         FStarC_Reflection_V2_Data.Q_Explicit)])))))
                                     uu___6))
                       | Pulse_Syntax_Base.Tm_Par
                           { Pulse_Syntax_Base.pre1 = uu___3;
@@ -3868,9 +3868,9 @@ let rec (extract_dv :
                                                (fun uu___9 ->
                                                   Pulse_Extract_CompilerLib.mk_meta_monadic
                                                     (FStar_Reflection_V2_Derived.mk_app
-                                                       (FStar_Reflection_V2_Builtins.pack_ln
-                                                          (FStar_Reflection_V2_Data.Tv_FVar
-                                                             (FStar_Reflection_V2_Builtins.pack_fv
+                                                       (FStarC_Reflection_V2_Builtins.pack_ln
+                                                          (FStarC_Reflection_V2_Data.Tv_FVar
+                                                             (FStarC_Reflection_V2_Builtins.pack_fv
                                                                 ["Pulse";
                                                                 "Lib";
                                                                 "Dv";
@@ -3879,12 +3879,12 @@ let rec (extract_dv :
                                                             (unit_binder
                                                                "par_b1")
                                                             body11),
-                                                          FStar_Reflection_V2_Data.Q_Explicit);
+                                                          FStarC_Reflection_V2_Data.Q_Explicit);
                                                        ((mk_abs
                                                            (unit_binder
                                                               "par_b2")
                                                            body21),
-                                                         FStar_Reflection_V2_Data.Q_Explicit)])))))
+                                                         FStarC_Reflection_V2_Data.Q_Explicit)])))))
                                     uu___8))
                       | Pulse_Syntax_Base.Tm_WithLocal
                           { Pulse_Syntax_Base.binder2 = binder;
@@ -3943,7 +3943,7 @@ let rec (extract_dv :
                                                 FStar_Tactics_Effect.lift_div_tac
                                                   (fun uu___9 ->
                                                      (uu___8,
-                                                       FStar_Reflection_V2_Data.Q_Implicit))) in
+                                                       FStarC_Reflection_V2_Data.Q_Implicit))) in
                                          FStar_Tactics_Effect.tac_bind
                                            (FStar_Sealed.seal
                                               (Obj.magic
@@ -3967,7 +3967,7 @@ let rec (extract_dv :
                                                 (fun uu___8 ->
                                                    [uu___7;
                                                    (initializer1,
-                                                     FStar_Reflection_V2_Data.Q_Explicit)])) in
+                                                     FStarC_Reflection_V2_Data.Q_Explicit)])) in
                                        FStar_Tactics_Effect.tac_bind
                                          (FStar_Sealed.seal
                                             (Obj.magic
@@ -3990,9 +3990,9 @@ let rec (extract_dv :
                                             FStar_Tactics_Effect.lift_div_tac
                                               (fun uu___7 ->
                                                  FStar_Reflection_V2_Derived.mk_app
-                                                   (FStar_Reflection_V2_Builtins.pack_ln
-                                                      (FStar_Reflection_V2_Data.Tv_FVar
-                                                         (FStar_Reflection_V2_Builtins.pack_fv
+                                                   (FStarC_Reflection_V2_Builtins.pack_ln
+                                                      (FStarC_Reflection_V2_Data.Tv_FVar
+                                                         (FStarC_Reflection_V2_Builtins.pack_fv
                                                             ["Pulse";
                                                             "Lib";
                                                             "Reference";
@@ -4145,7 +4145,7 @@ let rec (extract_dv :
                                                 FStar_Tactics_Effect.lift_div_tac
                                                   (fun uu___9 ->
                                                      (uu___8,
-                                                       FStar_Reflection_V2_Data.Q_Implicit))) in
+                                                       FStarC_Reflection_V2_Data.Q_Implicit))) in
                                          FStar_Tactics_Effect.tac_bind
                                            (FStar_Sealed.seal
                                               (Obj.magic
@@ -4169,9 +4169,9 @@ let rec (extract_dv :
                                                 (fun uu___8 ->
                                                    [uu___7;
                                                    (initializer1,
-                                                     FStar_Reflection_V2_Data.Q_Explicit);
+                                                     FStarC_Reflection_V2_Data.Q_Explicit);
                                                    (length,
-                                                     FStar_Reflection_V2_Data.Q_Explicit)])) in
+                                                     FStarC_Reflection_V2_Data.Q_Explicit)])) in
                                        FStar_Tactics_Effect.tac_bind
                                          (FStar_Sealed.seal
                                             (Obj.magic
@@ -4194,9 +4194,9 @@ let rec (extract_dv :
                                             FStar_Tactics_Effect.lift_div_tac
                                               (fun uu___7 ->
                                                  FStar_Reflection_V2_Derived.mk_app
-                                                   (FStar_Reflection_V2_Builtins.pack_ln
-                                                      (FStar_Reflection_V2_Data.Tv_FVar
-                                                         (FStar_Reflection_V2_Builtins.pack_fv
+                                                   (FStarC_Reflection_V2_Builtins.pack_ln
+                                                      (FStarC_Reflection_V2_Data.Tv_FVar
+                                                         (FStarC_Reflection_V2_Builtins.pack_fv
                                                             ["Pulse";
                                                             "Lib";
                                                             "Array";
@@ -4305,17 +4305,17 @@ let rec (extract_dv :
                                (fun uu___3 ->
                                   Pulse_Extract_CompilerLib.mk_meta_monadic
                                     (FStar_Reflection_V2_Derived.mk_app
-                                       (FStar_Reflection_V2_Builtins.pack_ln
-                                          (FStar_Reflection_V2_Data.Tv_FVar
-                                             (FStar_Reflection_V2_Builtins.pack_fv
+                                       (FStarC_Reflection_V2_Builtins.pack_ln
+                                          (FStarC_Reflection_V2_Data.Tv_FVar
+                                             (FStarC_Reflection_V2_Builtins.pack_fv
                                                 ["Pulse";
                                                 "Lib";
                                                 "Dv";
                                                 "unreachable"])))
                                        [((Pulse_Syntax_Base.comp_res c),
-                                          FStar_Reflection_V2_Data.Q_Explicit);
+                                          FStarC_Reflection_V2_Data.Q_Explicit);
                                        (Pulse_Reflection_Util.unit_tm,
-                                         FStar_Reflection_V2_Data.Q_Explicit)])))
+                                         FStarC_Reflection_V2_Data.Q_Explicit)])))
                       | Pulse_Syntax_Base.Tm_WithInv
                           { Pulse_Syntax_Base.name1 = uu___3;
                             Pulse_Syntax_Base.body6 = body;
@@ -4324,7 +4324,7 @@ let rec (extract_dv :
 and (extract_dv_branch :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.branch ->
-      (FStar_Reflection_V2_Data.branch, unit) FStar_Tactics_Effect.tac_repr)
+      (FStarC_Reflection_V2_Data.branch, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
     fun b ->
@@ -4421,7 +4421,7 @@ and (extract_dv_branch :
 let (extract_pulse_dv :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
-      (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+      (FStarC_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
     fun p ->
@@ -4460,8 +4460,8 @@ let (extract_pulse_dv :
 let rec (extract_dv_recursive :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
-      FStar_Reflection_Types.fv ->
-        (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+      FStarC_Reflection_Types.fv ->
+        (FStarC_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___2 ->
     fun uu___1 ->
@@ -4602,8 +4602,8 @@ let rec (extract_dv_recursive :
                                          [FStar_Reflection_Typing.DT
                                             (Prims.int_zero,
                                               (Pulse_Syntax_Pure.wr
-                                                 (FStar_Reflection_V2_Builtins.pack_ln
-                                                    (FStar_Reflection_V2_Data.Tv_FVar
+                                                 (FStarC_Reflection_V2_Builtins.pack_ln
+                                                    (FStarC_Reflection_V2_Data.Tv_FVar
                                                        rec_name))
                                                  FStar_Range.range_0))])) in
                              FStar_Tactics_Effect.tac_bind

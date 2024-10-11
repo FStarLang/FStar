@@ -735,7 +735,7 @@ let (should_allow_ambiguous :
                              (Obj.repr
                                 (let uu___5 =
                                    let uu___6 =
-                                     FStar_Tactics_V2_Builtins.top_env () in
+                                     FStarC_Tactics_V2_Builtins.top_env () in
                                    FStar_Tactics_Effect.tac_bind
                                      (FStar_Sealed.seal
                                         (Obj.magic
@@ -757,9 +757,9 @@ let (should_allow_ambiguous :
                                      (fun uu___7 ->
                                         FStar_Tactics_Effect.lift_div_tac
                                           (fun uu___8 ->
-                                             FStar_Reflection_V2_Builtins.lookup_typ
+                                             FStarC_Reflection_V2_Builtins.lookup_typ
                                                uu___7
-                                               (FStar_Reflection_V2_Builtins.inspect_fv
+                                               (FStarC_Reflection_V2_Builtins.inspect_fv
                                                   hfv))) in
                                  FStar_Tactics_Effect.tac_bind
                                    (FStar_Sealed.seal
@@ -794,7 +794,7 @@ let (should_allow_ambiguous :
                                                      Obj.magic
                                                        (FStar_Tactics_Effect.lift_div_tac
                                                           (fun uu___8 ->
-                                                             FStar_Reflection_V2_Builtins.sigelt_attrs
+                                                             FStarC_Reflection_V2_Builtins.sigelt_attrs
                                                                se)) in
                                                    FStar_Tactics_Effect.tac_bind
                                                      (FStar_Sealed.seal
@@ -846,7 +846,7 @@ let (apply_impure_function :
                       FStar_Pervasives_Native.option ->
                       Pulse_Syntax_Base.term ->
                         Pulse_Syntax_Base.term ->
-                          FStar_TypeChecker_Core.tot_or_ghost ->
+                          FStarC_TypeChecker_Core.tot_or_ghost ->
                             unit ->
                               (Pulse_Syntax_Base.binder *
                                 Pulse_Syntax_Base.qualifier
@@ -1151,7 +1151,7 @@ let (apply_impure_function :
                                                                     (fun
                                                                     uu___8 ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_V2_Builtins.print
+                                                                    (FStarC_Tactics_V2_Builtins.print
                                                                     uu___8))
                                                                     uu___8)) in
                                                                   Obj.magic
@@ -1220,7 +1220,7 @@ let (apply_impure_function :
                                                                     &&
                                                                     (eff_head
                                                                     =
-                                                                    FStar_TypeChecker_Core.E_Ghost)
+                                                                    FStarC_TypeChecker_Core.E_Ghost)
                                                                     then
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -1540,9 +1540,9 @@ let (apply_impure_function :
                                                                     if
                                                                     allow_ghost
                                                                     then
-                                                                    FStar_TypeChecker_Core.E_Ghost
+                                                                    FStarC_TypeChecker_Core.E_Ghost
                                                                     else
-                                                                    FStar_TypeChecker_Core.E_Total)) in
+                                                                    FStarC_TypeChecker_Core.E_Total)) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -2296,7 +2296,7 @@ let (apply_impure_function :
                                                                     uu___23
                                                                     ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_V2_Builtins.print
+                                                                    (FStarC_Tactics_V2_Builtins.print
                                                                     uu___23))
                                                                     uu___23)) in
                                                                     Obj.magic
@@ -2735,7 +2735,7 @@ let (check :
                                                                     uu___12
                                                                     ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_V2_Builtins.print
+                                                                    (FStarC_Tactics_V2_Builtins.print
                                                                     uu___12))
                                                                     uu___12)) in
                                                                     Obj.magic

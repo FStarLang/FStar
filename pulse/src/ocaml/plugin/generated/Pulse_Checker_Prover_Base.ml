@@ -926,7 +926,7 @@ type 'preamble1 prover_state =
   ss: Pulse_Checker_Prover_Substs.ss_t ;
   nts:
     (Pulse_Checker_Prover_Substs.nt_substs,
-      FStar_TypeChecker_Core.tot_or_ghost Prims.list) Prims.dtuple2
+      FStarC_TypeChecker_Core.tot_or_ghost Prims.list) Prims.dtuple2
       FStar_Pervasives_Native.option
     ;
   solved: Pulse_Syntax_Base.slprop ;
@@ -973,7 +973,7 @@ let (__proj__Mkprover_state__item__nts :
   preamble ->
     unit prover_state ->
       (Pulse_Checker_Prover_Substs.nt_substs,
-        FStar_TypeChecker_Core.tot_or_ghost Prims.list) Prims.dtuple2
+        FStarC_TypeChecker_Core.tot_or_ghost Prims.list) Prims.dtuple2
         FStar_Pervasives_Native.option)
   =
   fun preamble1 ->

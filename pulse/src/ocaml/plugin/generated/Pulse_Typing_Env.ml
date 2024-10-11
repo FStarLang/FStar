@@ -358,7 +358,7 @@ let (ctxt_elt_to_string :
        | FStar_Pervasives_Native.Some r ->
            Obj.magic
              (Obj.repr
-                (let uu___ = FStar_Tactics_V2_Builtins.range_to_string r in
+                (let uu___ = FStarC_Tactics_V2_Builtins.range_to_string r in
                  FStar_Tactics_Effect.tac_bind
                    (FStar_Sealed.seal
                       (Obj.magic
@@ -524,7 +524,7 @@ let (print_issue :
                        | FStar_Pervasives_Native.Some r ->
                            Obj.magic
                              (Obj.repr
-                                (FStar_Tactics_V2_Builtins.range_to_string r)))
+                                (FStarC_Tactics_V2_Builtins.range_to_string r)))
                     uu___2 uu___1)) in
       FStar_Tactics_Effect.tac_bind
         (FStar_Sealed.seal
@@ -884,10 +884,10 @@ let (env_to_string :
            (fun uu___1 -> FStar_String.concat "\n  " bs))
 let rec separate_map :
   'a .
-    FStar_Pprint.document ->
-      ('a -> (FStar_Pprint.document, unit) FStar_Tactics_Effect.tac_repr) ->
+    FStarC_Pprint.document ->
+      ('a -> (FStarC_Pprint.document, unit) FStar_Tactics_Effect.tac_repr) ->
         'a Prims.list ->
-          (FStar_Pprint.document, unit) FStar_Tactics_Effect.tac_repr
+          (FStarC_Pprint.document, unit) FStar_Tactics_Effect.tac_repr
   =
   fun uu___2 ->
     fun uu___1 ->
@@ -900,7 +900,7 @@ let rec separate_map :
                    Obj.magic
                      (Obj.repr
                         (FStar_Tactics_Effect.lift_div_tac
-                           (fun uu___ -> FStar_Pprint.empty)))
+                           (fun uu___ -> FStarC_Pprint.empty)))
                | x::[] -> Obj.magic (Obj.repr (f x))
                | x::xs ->
                    Obj.magic
@@ -943,7 +943,7 @@ let rec separate_map :
                                      (fun uu___4 ->
                                         FStar_Tactics_Effect.lift_div_tac
                                           (fun uu___5 ->
-                                             FStar_Pprint.op_Hat_Slash_Hat
+                                             FStarC_Pprint.op_Hat_Slash_Hat
                                                sep uu___4)) in
                                  Obj.magic
                                    (FStar_Tactics_Effect.tac_bind
@@ -967,12 +967,12 @@ let rec separate_map :
                                       (fun uu___3 ->
                                          FStar_Tactics_Effect.lift_div_tac
                                            (fun uu___4 ->
-                                              FStar_Pprint.op_Hat_Hat uu___1
+                                              FStarC_Pprint.op_Hat_Hat uu___1
                                                 uu___3)))) uu___1)))) uu___2
           uu___1 uu___
 let (env_to_doc' :
   Prims.bool ->
-    env -> (FStar_Pprint.document, unit) FStar_Tactics_Effect.tac_repr)
+    env -> (FStarC_Pprint.document, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun simplify ->
     fun e ->
@@ -1022,7 +1022,7 @@ let (env_to_doc' :
                           (fun uu___5 ->
                              FStar_Tactics_Effect.lift_div_tac
                                (fun uu___6 ->
-                                  FStar_Pprint.doc_of_string uu___5)) in
+                                  FStarC_Pprint.doc_of_string uu___5)) in
                       FStar_Tactics_Effect.tac_bind
                         (FStar_Sealed.seal
                            (Obj.magic
@@ -1061,7 +1061,7 @@ let (env_to_doc' :
                                   (fun uu___7 ->
                                      FStar_Tactics_Effect.lift_div_tac
                                        (fun uu___8 ->
-                                          FStar_Pprint.align uu___7)) in
+                                          FStarC_Pprint.align uu___7)) in
                               Obj.magic
                                 (FStar_Tactics_Effect.tac_bind
                                    (FStar_Sealed.seal
@@ -1084,9 +1084,9 @@ let (env_to_doc' :
                                    (fun uu___6 ->
                                       FStar_Tactics_Effect.lift_div_tac
                                         (fun uu___7 ->
-                                           FStar_Pprint.infix
+                                           FStarC_Pprint.infix
                                              (Prims.of_int (2)) Prims.int_one
-                                             FStar_Pprint.colon uu___4 uu___6))))
+                                             FStarC_Pprint.colon uu___4 uu___6))))
                              uu___4))) in
       FStar_Tactics_Effect.tac_bind
         (FStar_Sealed.seal
@@ -1122,9 +1122,9 @@ let (env_to_doc' :
                                                        (fun uu___5 ->
                                                           FStar_Reflection_TermEq.term_eq
                                                             t
-                                                            (FStar_Reflection_V2_Builtins.pack_ln
-                                                               (FStar_Reflection_V2_Data.Tv_FVar
-                                                                  (FStar_Reflection_V2_Builtins.pack_fv
+                                                            (FStarC_Reflection_V2_Builtins.pack_ln
+                                                               (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                  (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["Prims";
                                                                     "unit"]))))) in
                                                 FStar_Tactics_Effect.tac_bind
@@ -1302,10 +1302,10 @@ let (env_to_doc' :
                               (fun uu___3 ->
                                  (fun uu___3 ->
                                     Obj.magic
-                                      (separate_map FStar_Pprint.comma pp1
+                                      (separate_map FStarC_Pprint.comma pp1
                                          uu___3)) uu___3))) uu___2))) uu___1)
 let (env_to_doc :
-  env -> (FStar_Pprint.document, unit) FStar_Tactics_Effect.tac_repr) =
+  env -> (FStarC_Pprint.document, unit) FStar_Tactics_Effect.tac_repr) =
   env_to_doc' false
 let (get_range :
   env ->
@@ -1347,7 +1347,7 @@ let fail_doc_env :
     Prims.bool ->
       env ->
         Pulse_Syntax_Base.range FStar_Pervasives_Native.option ->
-          FStar_Pprint.document Prims.list ->
+          FStarC_Pprint.document Prims.list ->
             ('a, unit) FStar_Tactics_Effect.tac_repr
   =
   fun with_env ->
@@ -1375,10 +1375,10 @@ let fail_doc_env :
                         (FStar_Tactics_Effect.lift_div_tac
                            (fun uu___3 ->
                               fun d ->
-                                FStar_Pprint.nest (Prims.of_int (2))
-                                  (FStar_Pprint.op_Hat_Hat
-                                     FStar_Pprint.hardline
-                                     (FStar_Pprint.align d)))) in
+                                FStarC_Pprint.nest (Prims.of_int (2))
+                                  (FStarC_Pprint.op_Hat_Hat
+                                     FStarC_Pprint.hardline
+                                     (FStarC_Pprint.align d)))) in
                     FStar_Tactics_Effect.tac_bind
                       (FStar_Sealed.seal
                          (Obj.magic
@@ -1477,8 +1477,8 @@ let fail_doc_env :
                                                      (fun uu___7 ->
                                                         FStar_Tactics_Effect.lift_div_tac
                                                           (fun uu___8 ->
-                                                             FStar_Pprint.op_Hat_Hat
-                                                               (FStar_Pprint.doc_of_string
+                                                             FStarC_Pprint.op_Hat_Hat
+                                                               (FStarC_Pprint.doc_of_string
                                                                   "In typing environment:")
                                                                uu___7)) in
                                                  FStar_Tactics_Effect.tac_bind
@@ -1597,7 +1597,7 @@ let fail_doc_env :
                                   (fun uu___3 ->
                                      (fun issue ->
                                         let uu___3 =
-                                          FStar_Tactics_V2_Builtins.log_issues
+                                          FStarC_Tactics_V2_Builtins.log_issues
                                             [issue] in
                                         Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
@@ -1628,13 +1628,13 @@ let fail_doc :
   'a .
     env ->
       Pulse_Syntax_Base.range FStar_Pervasives_Native.option ->
-        FStar_Pprint.document Prims.list ->
+        FStarC_Pprint.document Prims.list ->
           ('a, unit) FStar_Tactics_Effect.tac_repr
   = fun g -> fun r -> fun msg -> fail_doc_env false g r msg
 let (warn_doc :
   env ->
     Pulse_Syntax_Base.range FStar_Pervasives_Native.option ->
-      FStar_Pprint.document Prims.list ->
+      FStarC_Pprint.document Prims.list ->
         (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -1691,12 +1691,12 @@ let (warn_doc :
                      (fun uu___2 ->
                         (fun issue ->
                            Obj.magic
-                             (FStar_Tactics_V2_Builtins.log_issues [issue]))
+                             (FStarC_Tactics_V2_Builtins.log_issues [issue]))
                           uu___2))) uu___1)
 let (info_doc :
   env ->
     Pulse_Syntax_Base.range FStar_Pervasives_Native.option ->
-      FStar_Pprint.document Prims.list ->
+      FStarC_Pprint.document Prims.list ->
         (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -1753,12 +1753,12 @@ let (info_doc :
                      (fun uu___2 ->
                         (fun issue ->
                            Obj.magic
-                             (FStar_Tactics_V2_Builtins.log_issues [issue]))
+                             (FStarC_Tactics_V2_Builtins.log_issues [issue]))
                           uu___2))) uu___1)
 let (info_doc_env :
   env ->
     Pulse_Syntax_Base.range FStar_Pervasives_Native.option ->
-      FStar_Pprint.document Prims.list ->
+      FStarC_Pprint.document Prims.list ->
         (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -1769,9 +1769,9 @@ let (info_doc_env :
             (FStar_Tactics_Effect.lift_div_tac
                (fun uu___1 ->
                   fun d ->
-                    FStar_Pprint.nest (Prims.of_int (2))
-                      (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
-                         (FStar_Pprint.align d)))) in
+                    FStarC_Pprint.nest (Prims.of_int (2))
+                      (FStarC_Pprint.op_Hat_Hat FStarC_Pprint.hardline
+                         (FStarC_Pprint.align d)))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
              (Obj.magic
@@ -1821,8 +1821,8 @@ let (info_doc_env :
                         (fun uu___5 ->
                            FStar_Tactics_Effect.lift_div_tac
                              (fun uu___6 ->
-                                FStar_Pprint.op_Hat_Hat
-                                  (FStar_Pprint.doc_of_string
+                                FStarC_Pprint.op_Hat_Hat
+                                  (FStarC_Pprint.doc_of_string
                                      "In typing environment:") uu___5)) in
                     FStar_Tactics_Effect.tac_bind
                       (FStar_Sealed.seal
@@ -1877,18 +1877,18 @@ let fail :
         Prims.string -> ('a, unit) FStar_Tactics_Effect.tac_repr
   =
   fun g ->
-    fun r -> fun msg -> fail_doc g r [FStar_Pprint.arbitrary_string msg]
+    fun r -> fun msg -> fail_doc g r [FStarC_Pprint.arbitrary_string msg]
 let (warn :
   env ->
     Pulse_Syntax_Base.range FStar_Pervasives_Native.option ->
       Prims.string -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
-    fun r -> fun msg -> warn_doc g r [FStar_Pprint.arbitrary_string msg]
+    fun r -> fun msg -> warn_doc g r [FStarC_Pprint.arbitrary_string msg]
 let (info :
   env ->
     Pulse_Syntax_Base.range FStar_Pervasives_Native.option ->
       Prims.string -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
-    fun r -> fun msg -> info_doc g r [FStar_Pprint.arbitrary_string msg]
+    fun r -> fun msg -> info_doc g r [FStarC_Pprint.arbitrary_string msg]

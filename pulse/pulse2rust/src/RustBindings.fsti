@@ -16,7 +16,7 @@
 
 module RustBindings
 
-open FStar.Compiler.Effect
+open FStarC.Compiler.Effect
 
 open Pulse2Rust.Rust.Syntax
 

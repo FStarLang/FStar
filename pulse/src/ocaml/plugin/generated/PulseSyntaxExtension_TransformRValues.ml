@@ -1,6 +1,6 @@
 open Prims
 type mutvar_entry =
-  (FStar_Ident.ident * FStar_Syntax_Syntax.bv * FStar_Ident.ident
+  (FStarC_Ident.ident * FStarC_Syntax_Syntax.bv * FStarC_Ident.ident
     FStar_Pervasives_Native.option)
 type menv =
   {
@@ -10,14 +10,14 @@ let (__proj__Mkmenv__item__map : menv -> mutvar_entry Prims.list) =
   fun projectee -> match projectee with | { map; env;_} -> map
 let (__proj__Mkmenv__item__env : menv -> PulseSyntaxExtension_Env.env_t) =
   fun projectee -> match projectee with | { map; env;_} -> env
-let (menv_push_ns : menv -> FStar_Ident.lid -> menv) =
+let (menv_push_ns : menv -> FStarC_Ident.lid -> menv) =
   fun m ->
     fun ns ->
       let uu___ = PulseSyntaxExtension_Env.push_namespace m.env ns in
       { map = (m.map); env = uu___ }
 let (menv_push_bv :
   menv ->
-    FStar_Ident.ident ->
+    FStarC_Ident.ident ->
       PulseSyntaxExtension_Sugar.mut_or_ref FStar_Pervasives_Native.option ->
         Prims.bool -> menv)
   =
@@ -40,7 +40,7 @@ let (menv_push_bv :
                   env = (m1.env)
                 }
               else m1
-let (menv_push_bvs : menv -> FStar_Ident.ident Prims.list -> menv) =
+let (menv_push_bvs : menv -> FStarC_Ident.ident Prims.list -> menv) =
   fun m ->
     fun xs ->
       let uu___ =
@@ -49,58 +49,58 @@ let (menv_push_bvs : menv -> FStar_Ident.ident Prims.list -> menv) =
       { map = (m.map); env = uu___ }
 let (is_mut :
   menv ->
-    FStar_Syntax_Syntax.bv ->
-      FStar_Ident.ident FStar_Pervasives_Native.option
+    FStarC_Syntax_Syntax.bv ->
+      FStarC_Ident.ident FStar_Pervasives_Native.option
         FStar_Pervasives_Native.option)
   =
   fun m ->
     fun x ->
       let uu___ =
-        FStar_Compiler_List.tryFind
+        FStarC_Compiler_List.tryFind
           (fun uu___1 ->
              match uu___1 with
-             | (uu___2, y, uu___3) -> FStar_Syntax_Syntax.bv_eq x y) 
+             | (uu___2, y, uu___3) -> FStarC_Syntax_Syntax.bv_eq x y) 
           m.map in
       match uu___ with
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
       | FStar_Pervasives_Native.Some (uu___1, uu___2, curval) ->
           FStar_Pervasives_Native.Some curval
-type needs_derefs = (FStar_Ident.ident * FStar_Ident.ident) Prims.list
+type needs_derefs = (FStarC_Ident.ident * FStarC_Ident.ident) Prims.list
 let (fresh_var :
-  FStar_Ident.ident -> FStar_Ident.ident PulseSyntaxExtension_Err.err) =
+  FStarC_Ident.ident -> FStarC_Ident.ident PulseSyntaxExtension_Err.err) =
   fun uu___ ->
     (fun nm ->
        Obj.magic
-         (FStar_Class_Monad.op_let_Bang PulseSyntaxExtension_Err.err_monad ()
+         (FStarC_Class_Monad.op_let_Bang PulseSyntaxExtension_Err.err_monad ()
             () (Obj.magic PulseSyntaxExtension_Err.next_ctr)
             (fun uu___ ->
                (fun ctr ->
                   let ctr = Obj.magic ctr in
                   let s =
                     let uu___ =
-                      FStar_Class_Show.show FStar_Ident.showable_ident nm in
+                      FStarC_Class_Show.show FStarC_Ident.showable_ident nm in
                     let uu___1 =
                       let uu___2 =
-                        FStar_Class_Show.show
-                          (FStar_Class_Show.printableshow
+                        FStarC_Class_Show.show
+                          (FStarC_Class_Show.printableshow
                              FStar_Class_Printable.printable_nat) ctr in
                       Prims.strcat "@" uu___2 in
                     Prims.strcat uu___ uu___1 in
                   let uu___ =
                     let uu___1 =
-                      let uu___2 = FStar_Ident.range_of_id nm in (s, uu___2) in
-                    FStar_Ident.mk_ident uu___1 in
+                      let uu___2 = FStarC_Ident.range_of_id nm in (s, uu___2) in
+                    FStarC_Ident.mk_ident uu___1 in
                   Obj.magic (PulseSyntaxExtension_Err.return uu___)) uu___)))
       uu___
-let (bind_curval : menv -> FStar_Ident.ident -> FStar_Ident.ident -> menv) =
+let (bind_curval : menv -> FStarC_Ident.ident -> FStarC_Ident.ident -> menv) =
   fun m ->
     fun x ->
       fun curval ->
         let uu___ =
-          FStar_Compiler_List.tryFind
+          FStarC_Compiler_List.tryFind
             (fun uu___1 ->
                match uu___1 with
-               | (y, uu___2, uu___3) -> FStar_Ident.ident_equals x y) 
+               | (y, uu___2, uu___3) -> FStarC_Ident.ident_equals x y) 
             m.map in
         match uu___ with
         | FStar_Pervasives_Native.None -> failwith "Impossible 1"
@@ -110,14 +110,14 @@ let (bind_curval : menv -> FStar_Ident.ident -> FStar_Ident.ident -> menv) =
                 (m.map));
               env = (m.env)
             }
-let (clear_curval : menv -> FStar_Ident.ident -> menv) =
+let (clear_curval : menv -> FStarC_Ident.ident -> menv) =
   fun m ->
     fun x ->
       let uu___ =
-        FStar_Compiler_List.tryFind
+        FStarC_Compiler_List.tryFind
           (fun uu___1 ->
              match uu___1 with
-             | (y, uu___2, uu___3) -> FStar_Ident.ident_equals x y) m.map in
+             | (y, uu___2, uu___3) -> FStarC_Ident.ident_equals x y) m.map in
       match uu___ with
       | FStar_Pervasives_Native.None -> failwith "Impossible 2"
       | FStar_Pervasives_Native.Some (x1, bv, uu___1) ->
@@ -128,35 +128,35 @@ let (clear_curval : menv -> FStar_Ident.ident -> menv) =
 let (bind_curvals : menv -> needs_derefs -> menv) =
   fun m ->
     fun l ->
-      FStar_Compiler_List.fold_left
+      FStarC_Compiler_List.fold_left
         (fun m1 ->
            fun uu___ -> match uu___ with | (x, y) -> bind_curval m1 x y) m l
 let (resolve_mut :
   menv ->
-    FStar_Parser_AST.term -> mutvar_entry FStar_Pervasives_Native.option)
+    FStarC_Parser_AST.term -> mutvar_entry FStar_Pervasives_Native.option)
   =
   fun m ->
     fun e ->
-      match e.FStar_Parser_AST.tm with
-      | FStar_Parser_AST.Var l ->
+      match e.FStarC_Parser_AST.tm with
+      | FStarC_Parser_AST.Var l ->
           let topt =
-            FStar_Syntax_DsEnv.try_lookup_lid
+            FStarC_Syntax_DsEnv.try_lookup_lid
               (m.env).PulseSyntaxExtension_Env.dsenv l in
           (match topt with
            | FStar_Pervasives_Native.Some
-               { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_name x;
-                 FStar_Syntax_Syntax.pos = uu___;
-                 FStar_Syntax_Syntax.vars = uu___1;
-                 FStar_Syntax_Syntax.hash_code = uu___2;_}
+               { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_name x;
+                 FStarC_Syntax_Syntax.pos = uu___;
+                 FStarC_Syntax_Syntax.vars = uu___1;
+                 FStarC_Syntax_Syntax.hash_code = uu___2;_}
                ->
-               FStar_Compiler_List.tryFind
+               FStarC_Compiler_List.tryFind
                  (fun uu___3 ->
                     match uu___3 with
-                    | (uu___4, y, uu___5) -> FStar_Syntax_Syntax.bv_eq x y)
+                    | (uu___4, y, uu___5) -> FStarC_Syntax_Syntax.bv_eq x y)
                  m.map
            | uu___ -> FStar_Pervasives_Native.None)
       | uu___ -> FStar_Pervasives_Native.None
-let (maybe_clear_curval : menv -> FStar_Parser_AST.term -> menv) =
+let (maybe_clear_curval : menv -> FStarC_Parser_AST.term -> menv) =
   fun m ->
     fun x ->
       let uu___ = resolve_mut m x in
@@ -167,31 +167,31 @@ let (maybe_clear_curval : menv -> FStar_Parser_AST.term -> menv) =
             map = ((x1, y, FStar_Pervasives_Native.None) :: (m.map));
             env = (m.env)
           }
-let (read : FStar_Ident.ident -> FStar_Parser_AST.term) =
+let (read : FStarC_Ident.ident -> FStarC_Parser_AST.term) =
   fun x ->
-    let range = FStar_Ident.range_of_id x in
-    let level = FStar_Parser_AST.Un in
+    let range = FStarC_Ident.range_of_id x in
+    let level = FStarC_Parser_AST.Un in
     let head =
       {
-        FStar_Parser_AST.tm =
-          (FStar_Parser_AST.Var PulseSyntaxExtension_Env.op_bang_lid);
-        FStar_Parser_AST.range = range;
-        FStar_Parser_AST.level = level
+        FStarC_Parser_AST.tm =
+          (FStarC_Parser_AST.Var PulseSyntaxExtension_Env.op_bang_lid);
+        FStarC_Parser_AST.range = range;
+        FStarC_Parser_AST.level = level
       } in
     let arg =
       let uu___ =
-        let uu___1 = FStar_Ident.lid_of_ids [x] in
-        FStar_Parser_AST.Var uu___1 in
+        let uu___1 = FStarC_Ident.lid_of_ids [x] in
+        FStarC_Parser_AST.Var uu___1 in
       {
-        FStar_Parser_AST.tm = uu___;
-        FStar_Parser_AST.range = range;
-        FStar_Parser_AST.level = level
+        FStarC_Parser_AST.tm = uu___;
+        FStarC_Parser_AST.range = range;
+        FStarC_Parser_AST.level = level
       } in
     {
-      FStar_Parser_AST.tm =
-        (FStar_Parser_AST.App (head, arg, FStar_Parser_AST.Nothing));
-      FStar_Parser_AST.range = range;
-      FStar_Parser_AST.level = level
+      FStarC_Parser_AST.tm =
+        (FStarC_Parser_AST.App (head, arg, FStarC_Parser_AST.Nothing));
+      FStarC_Parser_AST.range = range;
+      FStarC_Parser_AST.level = level
     }
 let (add_derefs_in_scope :
   needs_derefs ->
@@ -199,16 +199,16 @@ let (add_derefs_in_scope :
   =
   fun n ->
     fun p ->
-      FStar_Compiler_List.fold_right
+      FStarC_Compiler_List.fold_right
         (fun uu___ ->
            fun p1 ->
              match uu___ with
              | (x, y) ->
                  let lb =
                    let pat =
-                     let uu___1 = FStar_Ident.range_of_id y in
-                     FStar_Parser_AST.mk_pattern
-                       (FStar_Parser_AST.PatVar
+                     let uu___1 = FStarC_Ident.range_of_id y in
+                     FStarC_Parser_AST.mk_pattern
+                       (FStarC_Parser_AST.PatVar
                           (y, FStar_Pervasives_Native.None, [])) uu___1 in
                    let uu___1 =
                      let uu___2 =
@@ -242,21 +242,21 @@ let (add_derefs_in_scope :
                    PulseSyntaxExtension_Sugar.range1 =
                      (p1.PulseSyntaxExtension_Sugar.range1)
                  }) n p
-let (term'_of_id : FStar_Ident.ident -> FStar_Parser_AST.term') =
+let (term'_of_id : FStarC_Ident.ident -> FStarC_Parser_AST.term') =
   fun y ->
-    let uu___ = FStar_Ident.lid_of_ids [y] in FStar_Parser_AST.Var uu___
+    let uu___ = FStarC_Ident.lid_of_ids [y] in FStarC_Parser_AST.Var uu___
 let rec (transform_term :
   menv ->
-    FStar_Parser_AST.term ->
-      (FStar_Parser_AST.term * needs_derefs * menv)
+    FStarC_Parser_AST.term ->
+      (FStarC_Parser_AST.term * needs_derefs * menv)
         PulseSyntaxExtension_Err.err)
   =
   fun uu___1 ->
     fun uu___ ->
       (fun m ->
          fun e ->
-           match e.FStar_Parser_AST.tm with
-           | FStar_Parser_AST.Var uu___ ->
+           match e.FStarC_Parser_AST.tm with
+           | FStarC_Parser_AST.Var uu___ ->
                Obj.magic
                  (Obj.repr
                     (let uu___1 = resolve_mut m e in
@@ -268,7 +268,7 @@ let rec (transform_term :
                          (x, uu___2, FStar_Pervasives_Native.None) ->
                          Obj.repr
                            (let uu___3 = fresh_var x in
-                            FStar_Class_Monad.op_let_Bang
+                            FStarC_Class_Monad.op_let_Bang
                               PulseSyntaxExtension_Err.err_monad () ()
                               (Obj.magic uu___3)
                               (fun uu___4 ->
@@ -278,14 +278,14 @@ let rec (transform_term :
                                       let uu___5 =
                                         let uu___6 =
                                           let uu___7 =
-                                            FStar_Ident.lid_of_ids [y] in
-                                          FStar_Parser_AST.Var uu___7 in
+                                            FStarC_Ident.lid_of_ids [y] in
+                                          FStarC_Parser_AST.Var uu___7 in
                                         {
-                                          FStar_Parser_AST.tm = uu___6;
-                                          FStar_Parser_AST.range =
-                                            (e.FStar_Parser_AST.range);
-                                          FStar_Parser_AST.level =
-                                            (e.FStar_Parser_AST.level)
+                                          FStarC_Parser_AST.tm = uu___6;
+                                          FStarC_Parser_AST.range =
+                                            (e.FStarC_Parser_AST.range);
+                                          FStarC_Parser_AST.level =
+                                            (e.FStarC_Parser_AST.level)
                                         } in
                                       let uu___6 = bind_curval m x y in
                                       (uu___5, [(x, y)], uu___6) in
@@ -298,23 +298,23 @@ let rec (transform_term :
                            (let uu___4 =
                               let uu___5 =
                                 let uu___6 =
-                                  let uu___7 = FStar_Ident.lid_of_ids [y] in
-                                  FStar_Parser_AST.Var uu___7 in
+                                  let uu___7 = FStarC_Ident.lid_of_ids [y] in
+                                  FStarC_Parser_AST.Var uu___7 in
                                 {
-                                  FStar_Parser_AST.tm = uu___6;
-                                  FStar_Parser_AST.range =
-                                    (e.FStar_Parser_AST.range);
-                                  FStar_Parser_AST.level =
-                                    (e.FStar_Parser_AST.level)
+                                  FStarC_Parser_AST.tm = uu___6;
+                                  FStarC_Parser_AST.range =
+                                    (e.FStarC_Parser_AST.range);
+                                  FStarC_Parser_AST.level =
+                                    (e.FStarC_Parser_AST.level)
                                 } in
                               (uu___5, [], m) in
                             PulseSyntaxExtension_Err.return uu___4)))
-           | FStar_Parser_AST.Op (id, tms) ->
+           | FStarC_Parser_AST.Op (id, tms) ->
                Obj.magic
                  (Obj.repr
                     (let uu___ =
                        Obj.magic
-                         (FStar_Class_Monad.foldM_left
+                         (FStarC_Class_Monad.foldM_left
                             PulseSyntaxExtension_Err.err_monad () ()
                             (fun uu___2 ->
                                fun uu___1 ->
@@ -326,7 +326,7 @@ let rec (transform_term :
                                       | (tms1, needs, m1) ->
                                           let uu___2 = transform_term m1 tm in
                                           Obj.magic
-                                            (FStar_Class_Monad.op_let_Bang
+                                            (FStarC_Class_Monad.op_let_Bang
                                                PulseSyntaxExtension_Err.err_monad
                                                () () (Obj.magic uu___2)
                                                (fun uu___3 ->
@@ -344,7 +344,7 @@ let rec (transform_term :
                                                                 m'))) uu___3)))
                                    uu___2 uu___1) (Obj.magic ([], [], m))
                             (Obj.magic tms)) in
-                     FStar_Class_Monad.op_let_Bang
+                     FStarC_Class_Monad.op_let_Bang
                        PulseSyntaxExtension_Err.err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
@@ -354,23 +354,23 @@ let rec (transform_term :
                              | (tms1, needs, m1) ->
                                  let e1 =
                                    {
-                                     FStar_Parser_AST.tm =
-                                       (FStar_Parser_AST.Op
+                                     FStarC_Parser_AST.tm =
+                                       (FStarC_Parser_AST.Op
                                           (id,
-                                            (FStar_Compiler_List.rev tms1)));
-                                     FStar_Parser_AST.range =
-                                       (e.FStar_Parser_AST.range);
-                                     FStar_Parser_AST.level =
-                                       (e.FStar_Parser_AST.level)
+                                            (FStarC_Compiler_List.rev tms1)));
+                                     FStarC_Parser_AST.range =
+                                       (e.FStarC_Parser_AST.range);
+                                     FStarC_Parser_AST.level =
+                                       (e.FStarC_Parser_AST.level)
                                    } in
                                  Obj.magic
                                    (PulseSyntaxExtension_Err.return
                                       (e1, needs, m1))) uu___1)))
-           | FStar_Parser_AST.App (head, arg, imp) ->
+           | FStarC_Parser_AST.App (head, arg, imp) ->
                Obj.magic
                  (Obj.repr
                     (let uu___ = transform_term m head in
-                     FStar_Class_Monad.op_let_Bang
+                     FStarC_Class_Monad.op_let_Bang
                        PulseSyntaxExtension_Err.err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
@@ -380,7 +380,7 @@ let rec (transform_term :
                              | (head1, needs, m1) ->
                                  let uu___2 = transform_term m1 arg in
                                  Obj.magic
-                                   (FStar_Class_Monad.op_let_Bang
+                                   (FStarC_Class_Monad.op_let_Bang
                                       PulseSyntaxExtension_Err.err_monad ()
                                       () (Obj.magic uu___2)
                                       (fun uu___3 ->
@@ -390,13 +390,13 @@ let rec (transform_term :
                                             | (arg1, needs', m2) ->
                                                 let e1 =
                                                   {
-                                                    FStar_Parser_AST.tm =
-                                                      (FStar_Parser_AST.App
+                                                    FStarC_Parser_AST.tm =
+                                                      (FStarC_Parser_AST.App
                                                          (head1, arg1, imp));
-                                                    FStar_Parser_AST.range =
-                                                      (e.FStar_Parser_AST.range);
-                                                    FStar_Parser_AST.level =
-                                                      (e.FStar_Parser_AST.level)
+                                                    FStarC_Parser_AST.range =
+                                                      (e.FStarC_Parser_AST.range);
+                                                    FStarC_Parser_AST.level =
+                                                      (e.FStarC_Parser_AST.level)
                                                   } in
                                                 Obj.magic
                                                   (PulseSyntaxExtension_Err.return
@@ -404,11 +404,11 @@ let rec (transform_term :
                                                        (FStar_List_Tot_Base.op_At
                                                           needs needs'), m2)))
                                            uu___3))) uu___1)))
-           | FStar_Parser_AST.Ascribed (e1, t, topt, b) ->
+           | FStarC_Parser_AST.Ascribed (e1, t, topt, b) ->
                Obj.magic
                  (Obj.repr
                     (let uu___ = transform_term m e1 in
-                     FStar_Class_Monad.op_let_Bang
+                     FStarC_Class_Monad.op_let_Bang
                        PulseSyntaxExtension_Err.err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
@@ -418,22 +418,22 @@ let rec (transform_term :
                              | (e2, needs, m1) ->
                                  let e3 =
                                    {
-                                     FStar_Parser_AST.tm =
-                                       (FStar_Parser_AST.Ascribed
+                                     FStarC_Parser_AST.tm =
+                                       (FStarC_Parser_AST.Ascribed
                                           (e2, t, topt, b));
-                                     FStar_Parser_AST.range =
-                                       (e2.FStar_Parser_AST.range);
-                                     FStar_Parser_AST.level =
-                                       (e2.FStar_Parser_AST.level)
+                                     FStarC_Parser_AST.range =
+                                       (e2.FStarC_Parser_AST.range);
+                                     FStarC_Parser_AST.level =
+                                       (e2.FStarC_Parser_AST.level)
                                    } in
                                  Obj.magic
                                    (PulseSyntaxExtension_Err.return
                                       (e3, needs, m1))) uu___1)))
-           | FStar_Parser_AST.Paren e1 ->
+           | FStarC_Parser_AST.Paren e1 ->
                Obj.magic
                  (Obj.repr
                     (let uu___ = transform_term m e1 in
-                     FStar_Class_Monad.op_let_Bang
+                     FStarC_Class_Monad.op_let_Bang
                        PulseSyntaxExtension_Err.err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
@@ -443,22 +443,22 @@ let rec (transform_term :
                              | (e2, needs, m1) ->
                                  let e3 =
                                    {
-                                     FStar_Parser_AST.tm =
-                                       (FStar_Parser_AST.Paren e2);
-                                     FStar_Parser_AST.range =
-                                       (e2.FStar_Parser_AST.range);
-                                     FStar_Parser_AST.level =
-                                       (e2.FStar_Parser_AST.level)
+                                     FStarC_Parser_AST.tm =
+                                       (FStarC_Parser_AST.Paren e2);
+                                     FStarC_Parser_AST.range =
+                                       (e2.FStarC_Parser_AST.range);
+                                     FStarC_Parser_AST.level =
+                                       (e2.FStarC_Parser_AST.level)
                                    } in
                                  Obj.magic
                                    (PulseSyntaxExtension_Err.return
                                       (e3, needs, m1))) uu___1)))
-           | FStar_Parser_AST.Construct (lid, tms) ->
+           | FStarC_Parser_AST.Construct (lid, tms) ->
                Obj.magic
                  (Obj.repr
                     (let uu___ =
                        Obj.magic
-                         (FStar_Class_Monad.foldM_left
+                         (FStarC_Class_Monad.foldM_left
                             PulseSyntaxExtension_Err.err_monad () ()
                             (fun uu___2 ->
                                fun uu___1 ->
@@ -470,7 +470,7 @@ let rec (transform_term :
                                       | ((tms1, needs, m1), (tm, imp)) ->
                                           let uu___3 = transform_term m1 tm in
                                           Obj.magic
-                                            (FStar_Class_Monad.op_let_Bang
+                                            (FStarC_Class_Monad.op_let_Bang
                                                PulseSyntaxExtension_Err.err_monad
                                                () () (Obj.magic uu___3)
                                                (fun uu___4 ->
@@ -489,7 +489,7 @@ let rec (transform_term :
                                                                 m'))) uu___4)))
                                    uu___2 uu___1) (Obj.magic ([], [], m))
                             (Obj.magic tms)) in
-                     FStar_Class_Monad.op_let_Bang
+                     FStarC_Class_Monad.op_let_Bang
                        PulseSyntaxExtension_Err.err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
@@ -499,24 +499,24 @@ let rec (transform_term :
                              | (tms1, needs, m1) ->
                                  let e1 =
                                    {
-                                     FStar_Parser_AST.tm =
-                                       (FStar_Parser_AST.Construct
+                                     FStarC_Parser_AST.tm =
+                                       (FStarC_Parser_AST.Construct
                                           (lid,
-                                            (FStar_Compiler_List.rev tms1)));
-                                     FStar_Parser_AST.range =
-                                       (e.FStar_Parser_AST.range);
-                                     FStar_Parser_AST.level =
-                                       (e.FStar_Parser_AST.level)
+                                            (FStarC_Compiler_List.rev tms1)));
+                                     FStarC_Parser_AST.range =
+                                       (e.FStarC_Parser_AST.range);
+                                     FStarC_Parser_AST.level =
+                                       (e.FStarC_Parser_AST.level)
                                    } in
                                  Obj.magic
                                    (PulseSyntaxExtension_Err.return
                                       (e1, needs, m1))) uu___1)))
-           | FStar_Parser_AST.LetOpen (l, t) ->
+           | FStarC_Parser_AST.LetOpen (l, t) ->
                Obj.magic
                  (Obj.repr
                     (let m1 = menv_push_ns m l in
                      let uu___ = transform_term m1 t in
-                     FStar_Class_Monad.op_let_Bang
+                     FStarC_Class_Monad.op_let_Bang
                        PulseSyntaxExtension_Err.err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
@@ -552,7 +552,7 @@ let rec (transform_stmt_with_reads :
                Obj.magic
                  (Obj.repr
                     (let uu___ = transform_stmt_with_reads m s1 in
-                     FStar_Class_Monad.op_let_Bang
+                     FStarC_Class_Monad.op_let_Bang
                        PulseSyntaxExtension_Err.err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
@@ -562,7 +562,7 @@ let rec (transform_stmt_with_reads :
                              | (s11, needs, m1) ->
                                  let uu___2 = transform_stmt m1 s2 in
                                  Obj.magic
-                                   (FStar_Class_Monad.op_let_Bang
+                                   (FStarC_Class_Monad.op_let_Bang
                                       PulseSyntaxExtension_Err.err_monad ()
                                       () (Obj.magic uu___2)
                                       (fun uu___3 ->
@@ -598,7 +598,7 @@ let rec (transform_stmt_with_reads :
                Obj.magic
                  (Obj.repr
                     (let uu___ = transform_term m e in
-                     FStar_Class_Monad.op_let_Bang
+                     FStarC_Class_Monad.op_let_Bang
                        PulseSyntaxExtension_Err.err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
@@ -625,7 +625,7 @@ let rec (transform_stmt_with_reads :
                Obj.magic
                  (Obj.repr
                     (let uu___ = transform_term m value in
-                     FStar_Class_Monad.op_let_Bang
+                     FStarC_Class_Monad.op_let_Bang
                        PulseSyntaxExtension_Err.err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
@@ -658,7 +658,7 @@ let rec (transform_stmt_with_reads :
                Obj.magic
                  (Obj.repr
                     (let uu___ = transform_term m arr in
-                     FStar_Class_Monad.op_let_Bang
+                     FStarC_Class_Monad.op_let_Bang
                        PulseSyntaxExtension_Err.err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
@@ -668,7 +668,7 @@ let rec (transform_stmt_with_reads :
                              | (arr1, arr_needs, m1) ->
                                  let uu___2 = transform_term m1 index in
                                  Obj.magic
-                                   (FStar_Class_Monad.op_let_Bang
+                                   (FStarC_Class_Monad.op_let_Bang
                                       PulseSyntaxExtension_Err.err_monad ()
                                       () (Obj.magic uu___2)
                                       (fun uu___3 ->
@@ -679,7 +679,7 @@ let rec (transform_stmt_with_reads :
                                                 let uu___4 =
                                                   transform_term m2 value in
                                                 Obj.magic
-                                                  (FStar_Class_Monad.op_let_Bang
+                                                  (FStarC_Class_Monad.op_let_Bang
                                                      PulseSyntaxExtension_Err.err_monad
                                                      () () (Obj.magic uu___4)
                                                      (fun uu___5 ->
@@ -742,12 +742,12 @@ let rec (transform_stmt_with_reads :
                                    FStar_Pervasives_Native.Some
                                      (PulseSyntaxExtension_Sugar.Default_initializer
                                         e1) in
-                                 match e.FStar_Parser_AST.tm with
-                                 | FStar_Parser_AST.Var zlid ->
+                                 match e.FStarC_Parser_AST.tm with
+                                 | FStarC_Parser_AST.Var zlid ->
                                      Obj.repr
                                        (let uu___1 =
                                           let uu___2 =
-                                            FStar_Ident.ids_of_lid zlid in
+                                            FStarC_Ident.ids_of_lid zlid in
                                           (qualifier, uu___2) in
                                         match uu___1 with
                                         | (FStar_Pervasives_Native.None,
@@ -770,14 +770,14 @@ let rec (transform_stmt_with_reads :
                                                          let uu___8 =
                                                            term'_of_id y in
                                                          {
-                                                           FStar_Parser_AST.tm
+                                                           FStarC_Parser_AST.tm
                                                              = uu___8;
-                                                           FStar_Parser_AST.range
+                                                           FStarC_Parser_AST.range
                                                              =
-                                                             (e.FStar_Parser_AST.range);
-                                                           FStar_Parser_AST.level
+                                                             (e.FStarC_Parser_AST.range);
+                                                           FStarC_Parser_AST.level
                                                              =
-                                                             (e.FStar_Parser_AST.level)
+                                                             (e.FStarC_Parser_AST.level)
                                                          } in
                                                        mk_init uu___7 in
                                                      (uu___6, [], m) in
@@ -800,7 +800,7 @@ let rec (transform_stmt_with_reads :
                                             Obj.repr
                                               (let uu___3 =
                                                  transform_term m e in
-                                               FStar_Class_Monad.op_let_Bang
+                                               FStarC_Class_Monad.op_let_Bang
                                                  PulseSyntaxExtension_Err.err_monad
                                                  () () (Obj.magic uu___3)
                                                  (fun uu___4 ->
@@ -819,7 +819,7 @@ let rec (transform_stmt_with_reads :
                                  | uu___1 ->
                                      Obj.repr
                                        (let uu___2 = transform_term m e in
-                                        FStar_Class_Monad.op_let_Bang
+                                        FStarC_Class_Monad.op_let_Bang
                                           PulseSyntaxExtension_Err.err_monad
                                           () () (Obj.magic uu___2)
                                           (fun uu___3 ->
@@ -840,7 +840,7 @@ let rec (transform_stmt_with_reads :
                            Obj.magic
                              (Obj.repr
                                 (let uu___1 = transform_term m init1 in
-                                 FStar_Class_Monad.op_let_Bang
+                                 FStarC_Class_Monad.op_let_Bang
                                    PulseSyntaxExtension_Err.err_monad () ()
                                    (Obj.magic uu___1)
                                    (fun uu___2 ->
@@ -851,7 +851,7 @@ let rec (transform_stmt_with_reads :
                                              let uu___3 =
                                                transform_term m1 len in
                                              Obj.magic
-                                               (FStar_Class_Monad.op_let_Bang
+                                               (FStarC_Class_Monad.op_let_Bang
                                                   PulseSyntaxExtension_Err.err_monad
                                                   () () (Obj.magic uu___3)
                                                   (fun uu___4 ->
@@ -891,7 +891,7 @@ let rec (transform_stmt_with_reads :
                              (Obj.repr
                                 (PulseSyntaxExtension_Err.fail
                                    "Lambdas are not yet supported" range)) in
-                     FStar_Class_Monad.op_let_Bang
+                     FStarC_Class_Monad.op_let_Bang
                        PulseSyntaxExtension_Err.err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
@@ -908,14 +908,14 @@ let rec (transform_stmt_with_reads :
                                  let uu___2 =
                                    PulseSyntaxExtension_Env.pat_vars pat in
                                  Obj.magic
-                                   (FStar_Class_Monad.op_let_Bang
+                                   (FStarC_Class_Monad.op_let_Bang
                                       PulseSyntaxExtension_Err.err_monad ()
                                       () (Obj.magic uu___2)
                                       (fun uu___3 ->
                                          (fun vs ->
                                             let vs = Obj.magic vs in
                                             let m2 =
-                                              FStar_Compiler_List.fold_left
+                                              FStarC_Compiler_List.fold_left
                                                 (fun m3 ->
                                                    fun v ->
                                                      menv_push_bv m3 v
@@ -950,7 +950,7 @@ let rec (transform_stmt_with_reads :
                Obj.magic
                  (Obj.repr
                     (let uu___ = transform_stmt m stmt in
-                     FStar_Class_Monad.op_let_Bang
+                     FStarC_Class_Monad.op_let_Bang
                        PulseSyntaxExtension_Err.err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
@@ -979,7 +979,7 @@ let rec (transform_stmt_with_reads :
                Obj.magic
                  (Obj.repr
                     (let uu___ = transform_term m head in
-                     FStar_Class_Monad.op_let_Bang
+                     FStarC_Class_Monad.op_let_Bang
                        PulseSyntaxExtension_Err.err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
@@ -989,7 +989,7 @@ let rec (transform_stmt_with_reads :
                              | (head1, needs, m1) ->
                                  let uu___2 = transform_stmt m1 then_ in
                                  Obj.magic
-                                   (FStar_Class_Monad.op_let_Bang
+                                   (FStarC_Class_Monad.op_let_Bang
                                       PulseSyntaxExtension_Err.err_monad ()
                                       () (Obj.magic uu___2)
                                       (fun uu___3 ->
@@ -1010,7 +1010,7 @@ let rec (transform_stmt_with_reads :
                                                        (let uu___4 =
                                                           transform_stmt m1
                                                             else_ in
-                                                        FStar_Class_Monad.op_let_Bang
+                                                        FStarC_Class_Monad.op_let_Bang
                                                           PulseSyntaxExtension_Err.err_monad
                                                           () ()
                                                           (Obj.magic uu___4)
@@ -1025,7 +1025,7 @@ let rec (transform_stmt_with_reads :
                                                                     else_1)))
                                                                uu___5))) in
                                             Obj.magic
-                                              (FStar_Class_Monad.op_let_Bang
+                                              (FStarC_Class_Monad.op_let_Bang
                                                  PulseSyntaxExtension_Err.err_monad
                                                  () () (Obj.magic uu___3)
                                                  (fun uu___4 ->
@@ -1066,7 +1066,7 @@ let rec (transform_stmt_with_reads :
                Obj.magic
                  (Obj.repr
                     (let uu___ = transform_term m head in
-                     FStar_Class_Monad.op_let_Bang
+                     FStarC_Class_Monad.op_let_Bang
                        PulseSyntaxExtension_Err.err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
@@ -1076,7 +1076,7 @@ let rec (transform_stmt_with_reads :
                              | (head1, needs, m1) ->
                                  let uu___2 =
                                    Obj.magic
-                                     (FStar_Class_Monad.mapM
+                                     (FStarC_Class_Monad.mapM
                                         PulseSyntaxExtension_Err.err_monad ()
                                         ()
                                         (fun uu___3 ->
@@ -1088,7 +1088,7 @@ let rec (transform_stmt_with_reads :
                                                     PulseSyntaxExtension_Env.pat_vars
                                                       p1 in
                                                   Obj.magic
-                                                    (FStar_Class_Monad.op_let_Bang
+                                                    (FStarC_Class_Monad.op_let_Bang
                                                        PulseSyntaxExtension_Err.err_monad
                                                        () ()
                                                        (Obj.magic uu___4)
@@ -1103,7 +1103,7 @@ let rec (transform_stmt_with_reads :
                                                                transform_stmt
                                                                  m2 s in
                                                              Obj.magic
-                                                               (FStar_Class_Monad.op_let_Bang
+                                                               (FStarC_Class_Monad.op_let_Bang
                                                                   PulseSyntaxExtension_Err.err_monad
                                                                   () ()
                                                                   (Obj.magic
@@ -1122,7 +1122,7 @@ let rec (transform_stmt_with_reads :
                                                             uu___5))) uu___3)
                                         (Obj.magic branches)) in
                                  Obj.magic
-                                   (FStar_Class_Monad.op_let_Bang
+                                   (FStarC_Class_Monad.op_let_Bang
                                       PulseSyntaxExtension_Err.err_monad ()
                                       () (Obj.magic uu___2)
                                       (fun uu___3 ->
@@ -1159,7 +1159,7 @@ let rec (transform_stmt_with_reads :
                Obj.magic
                  (Obj.repr
                     (let uu___ = transform_stmt m guard in
-                     FStar_Class_Monad.op_let_Bang
+                     FStarC_Class_Monad.op_let_Bang
                        PulseSyntaxExtension_Err.err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
@@ -1167,7 +1167,7 @@ let rec (transform_stmt_with_reads :
                              let guard1 = Obj.magic guard1 in
                              let uu___1 = transform_stmt m body in
                              Obj.magic
-                               (FStar_Class_Monad.op_let_Bang
+                               (FStarC_Class_Monad.op_let_Bang
                                   PulseSyntaxExtension_Err.err_monad () ()
                                   (Obj.magic uu___1)
                                   (fun uu___2 ->
@@ -1205,7 +1205,7 @@ let rec (transform_stmt_with_reads :
                Obj.magic
                  (Obj.repr
                     (let uu___ = transform_stmt m b1 in
-                     FStar_Class_Monad.op_let_Bang
+                     FStarC_Class_Monad.op_let_Bang
                        PulseSyntaxExtension_Err.err_monad () ()
                        (Obj.magic uu___)
                        (fun uu___1 ->
@@ -1213,7 +1213,7 @@ let rec (transform_stmt_with_reads :
                              let b11 = Obj.magic b11 in
                              let uu___1 = transform_stmt m b2 in
                              Obj.magic
-                               (FStar_Class_Monad.op_let_Bang
+                               (FStarC_Class_Monad.op_let_Bang
                                   PulseSyntaxExtension_Err.err_monad () ()
                                   (Obj.magic uu___1)
                                   (fun uu___2 ->
@@ -1262,7 +1262,7 @@ and (transform_stmt :
          fun p ->
            let uu___ = transform_stmt_with_reads m p in
            Obj.magic
-             (FStar_Class_Monad.op_let_Bang
+             (FStarC_Class_Monad.op_let_Bang
                 PulseSyntaxExtension_Err.err_monad () () (Obj.magic uu___)
                 (fun uu___1 ->
                    (fun uu___1 ->

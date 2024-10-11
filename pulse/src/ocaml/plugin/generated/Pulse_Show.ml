@@ -566,10 +566,10 @@ let (tac_showable_post_hint_t : Pulse_Typing.post_hint_t tac_showable) =
               FStar_Tactics_Effect.lift_div_tac
                 (fun uu___2 -> Prims.strcat "{" uu___1)))
   }
-let (tac_showable_r_term : FStar_Reflection_Types.term tac_showable) =
-  { show = FStar_Tactics_V1_Builtins.term_to_string }
+let (tac_showable_r_term : FStarC_Reflection_Types.term tac_showable) =
+  { show = FStarC_Tactics_V1_Builtins.term_to_string }
 let (tac_showable_range : FStar_Range.range tac_showable) =
-  { show = FStar_Tactics_V1_Builtins.range_to_string }
+  { show = FStarC_Tactics_V1_Builtins.range_to_string }
 let tac_showable_tuple2 :
   'a 'b . 'a tac_showable -> 'b tac_showable -> ('a * 'b) tac_showable =
   fun uu___ ->

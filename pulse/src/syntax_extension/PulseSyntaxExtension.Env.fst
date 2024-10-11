@@ -16,27 +16,27 @@
 
 module PulseSyntaxExtension.Env
 open FStarC
-open FStar.Compiler.Effect
+open FStarC.Compiler.Effect
 // module Sugar = PulseSugar
 module SW = PulseSyntaxExtension.SyntaxWrapper
-module A = FStar.Parser.AST
-module D = FStar.Syntax.DsEnv
-module S = FStar.Syntax.Syntax
-module L = FStar.Compiler.List
-module U = FStar.Syntax.Util
-module SS = FStar.Syntax.Subst
-module R = FStar.Compiler.Range
-module BU = FStar.Compiler.Util
-module P =  FStar.Syntax.Print
-module ToSyntax = FStar.ToSyntax.ToSyntax
-open FStar.Class.Show
-open FStar.Class.HasRange
-open FStar.Class.Monad
-open FStar.Ident
+module A = FStarC.Parser.AST
+module D = FStarC.Syntax.DsEnv
+module S = FStarC.Syntax.Syntax
+module L = FStarC.Compiler.List
+module U = FStarC.Syntax.Util
+module SS = FStarC.Syntax.Subst
+module R = FStarC.Compiler.Range
+module BU = FStarC.Compiler.Util
+module P =  FStarC.Syntax.Print
+module ToSyntax = FStarC.ToSyntax.ToSyntax
+open FStarC.Class.Show
+open FStarC.Class.HasRange
+open FStarC.Class.Monad
+open FStarC.Ident
 open FStar.List.Tot
 open PulseSyntaxExtension.Err
 
-let r_ = FStar.Compiler.Range.dummyRange
+let r_ = FStarC.Compiler.Range.dummyRange
 #push-options "--warn_error -272" //intentional top-level effects
 let admit_lid = Ident.lid_of_path ["Prims"; "admit"] r_
 let pulse_lib_core_lid l = Ident.lid_of_path (["Pulse"; "Lib"; "Core"]@[l]) r_
@@ -162,7 +162,7 @@ let free_vars_comp (env:env_t) (c:Sugar.computation_type)
       ensures  bar 'x
     which elaborates to implicit arguments for `x` and `y`, and they should
     be in that order, i.e. textual order. *)
-    FStar.Class.Ord.dedup ids
+    FStarC.Class.Ord.dedup ids
 
 let pat_vars (p:A.pattern)
   : err (list ident)

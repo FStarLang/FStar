@@ -16,20 +16,20 @@
 
 module Pulse2Rust.Extract
 
-open FStar.Compiler
-open FStar.Compiler.Util
-open FStar.Compiler.List
-open FStar.Compiler.Effect
+open FStarC.Compiler
+open FStarC.Compiler.Util
+open FStarC.Compiler.List
+open FStarC.Compiler.Effect
 
 open Pulse2Rust.Rust.Syntax
 open Pulse2Rust.Env
 
 open RustBindings
 
-module S = FStar.Extraction.ML.Syntax
-module EUtil = FStar.Extraction.ML.Util
+module S = FStarC.Extraction.ML.Syntax
+module EUtil = FStarC.Extraction.ML.Util
 
-module UEnv = FStar.Extraction.ML.UEnv
+module UEnv = FStarC.Extraction.ML.UEnv
 
 //
 // 'a to A
@@ -73,7 +73,7 @@ let lookup_datacon (g:env) (s:S.mlident) : option (list string & S.mlsymbol) =
     let ropt = find_map decls (lookup_datacon_in_module1 s) in
     match ropt with
     | None -> None
-    | Some tname -> Some (FStar.Compiler.Util.split k ".", tname)
+    | Some tname -> Some (FStarC.Compiler.Util.split k ".", tname)
   )
 
 //
@@ -374,16 +374,16 @@ let extract_mlconstant_to_lit (c:S.mlconstant) : lit =
   | S.MLC_Int (lit_int_val, swopt) ->
     let lit_int_signed =
       match swopt with
-      | Some (FStar.Const.Unsigned, _) -> Some false
-      | Some (FStar.Const.Signed, _) -> Some true
+      | Some (FStarC.Const.Unsigned, _) -> Some false
+      | Some (FStarC.Const.Signed, _) -> Some true
       | None -> None in
     let lit_int_width =
       match swopt with
-      | Some (_, FStar.Const.Int8) -> Some I8
-      | Some (_, FStar.Const.Int16) -> Some I16
-      | Some (_, FStar.Const.Int32) -> Some I32
-      | Some (_, FStar.Const.Int64) -> Some I64
-      | Some (_, FStar.Const.Sizet) -> Some I64  // TODO: FIXME
+      | Some (_, FStarC.Const.Int8) -> Some I8
+      | Some (_, FStarC.Const.Int16) -> Some I16
+      | Some (_, FStarC.Const.Int32) -> Some I32
+      | Some (_, FStarC.Const.Int64) -> Some I64
+      | Some (_, FStarC.Const.Sizet) -> Some I64  // TODO: FIXME
       | None -> None in
     Lit_int {lit_int_val; lit_int_signed; lit_int_width}
   | S.MLC_Bool b -> Lit_bool b
@@ -890,7 +890,7 @@ let extract_generic_type_param_trait_bounds (attrs:list S.mlexpr) : list (list s
                       match e.expr with
                       | MLE_Const (MLC_String s) -> s
                       | _ -> failwith "unexpected generic type param bounds")
-         |> List.map (fun bound -> FStar.Compiler.Util.split bound "::"))
+         |> List.map (fun bound -> FStarC.Compiler.Util.split bound "::"))
   |> dflt []
 
 let extract_generic_type_params (tyvars:list S.ty_param)

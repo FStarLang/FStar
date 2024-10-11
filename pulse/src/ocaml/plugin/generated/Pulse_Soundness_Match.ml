@@ -8,7 +8,7 @@ let (complete_soundness :
             Pulse_Syntax_Base.comp_st ->
               (unit, unit, unit, unit, unit, unit) Pulse_Typing.brs_typing ->
                 (unit, unit, unit, unit) Pulse_Typing.pats_complete ->
-                  FStar_Reflection_V2_Data.binding Prims.list Prims.list ->
+                  FStarC_Reflection_V2_Data.binding Prims.list Prims.list ->
                     (unit, unit, unit, unit, unit)
                       FStar_Reflection_Typing.match_is_complete)
   =

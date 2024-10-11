@@ -926,7 +926,7 @@ let (mk_named_typ :
     fun s ->
       fun generic_args ->
         let path1 =
-          FStar_Compiler_List.map
+          FStarC_Compiler_List.map
             (fun s1 ->
                { path_segment_name = s1; path_segment_generic_args = [] })
             path in
@@ -942,7 +942,7 @@ let (mk_expr_path_singl : Prims.string -> expr) =
 let (mk_expr_path : Prims.string Prims.list -> expr) =
   fun l ->
     let uu___ =
-      FStar_Compiler_List.map
+      FStarC_Compiler_List.map
         (fun s -> { path_segment_name = s; path_segment_generic_args = [] })
         l in
     Expr_path uu___
@@ -997,13 +997,13 @@ let (mk_pat_ts :
   fun path ->
     fun s ->
       fun pat_ts_elems ->
-        if (FStar_Compiler_List.length pat_ts_elems) = Prims.int_zero
+        if (FStarC_Compiler_List.length pat_ts_elems) = Prims.int_zero
         then
-          (if (FStar_Compiler_List.length path) = Prims.int_zero
+          (if (FStarC_Compiler_List.length path) = Prims.int_zero
            then Pat_ident { pat_name = s; by_ref = false; is_mut = false }
            else
              (let uu___1 =
-                FStar_Compiler_List.map
+                FStarC_Compiler_List.map
                   (fun s1 ->
                      { path_segment_name = s1; path_segment_generic_args = []
                      }) (FStar_List_Tot_Base.append path [s]) in
@@ -1011,7 +1011,7 @@ let (mk_pat_ts :
         else
           (let uu___1 =
              let uu___2 =
-               FStar_Compiler_List.map
+               FStarC_Compiler_List.map
                  (fun s1 ->
                     { path_segment_name = s1; path_segment_generic_args = []
                     }) (FStar_List_Tot_Base.append path [s]) in
@@ -1023,7 +1023,7 @@ let (mk_pat_struct : Prims.string -> (Prims.string * pat) Prims.list -> pat)
     fun pats ->
       let uu___ =
         let uu___1 =
-          FStar_Compiler_List.map
+          FStarC_Compiler_List.map
             (fun uu___2 ->
                match uu___2 with
                | (s, p) -> { field_pat_name = s; field_pat_pat = p }) pats in
@@ -1059,7 +1059,7 @@ let (mk_expr_struct :
     fun fields ->
       let uu___ =
         let uu___1 =
-          FStar_Compiler_List.map
+          FStarC_Compiler_List.map
             (fun uu___2 ->
                match uu___2 with
                | (f, e) -> { field_val_name = f; field_val_expr = e }) fields in
@@ -1136,7 +1136,7 @@ let (mk_fn_signature :
         fun fn_args ->
           fun fn_ret_t ->
             let fn_generics1 =
-              FStar_Compiler_List.map (fun uu___ -> Generic_type_param uu___)
+              FStarC_Compiler_List.map (fun uu___ -> Generic_type_param uu___)
                 fn_generics in
             {
               fn_const;
@@ -1185,10 +1185,10 @@ let (mk_item_struct :
         fun fields ->
           let uu___ =
             let uu___1 =
-              FStar_Compiler_List.map
+              FStarC_Compiler_List.map
                 (fun uu___2 -> Generic_type_param uu___2) generics in
             let uu___2 =
-              FStar_Compiler_List.map
+              FStarC_Compiler_List.map
                 (fun uu___3 ->
                    match uu___3 with
                    | (f, t) -> { field_typ_name = f; field_typ_typ = t })
@@ -1207,7 +1207,7 @@ let (mk_item_type :
       fun t ->
         let uu___ =
           let uu___1 =
-            FStar_Compiler_List.map (fun uu___2 -> Generic_type_param uu___2)
+            FStarC_Compiler_List.map (fun uu___2 -> Generic_type_param uu___2)
               generics in
           {
             item_type_name = name;
@@ -1227,10 +1227,10 @@ let (mk_item_enum :
         fun variants ->
           let uu___ =
             let uu___1 =
-              FStar_Compiler_List.map
+              FStarC_Compiler_List.map
                 (fun uu___2 -> Generic_type_param uu___2) generics in
             let uu___2 =
-              FStar_Compiler_List.map
+              FStarC_Compiler_List.map
                 (fun uu___3 ->
                    match uu___3 with
                    | (v, typs) ->

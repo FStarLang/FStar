@@ -46,9 +46,9 @@ let (check :
                               (FStar_Tactics_Effect.lift_div_tac
                                  (fun uu___2 ->
                                     Pulse_Syntax_Pure.wr
-                                      (FStar_Reflection_V2_Builtins.pack_ln
-                                         (FStar_Reflection_V2_Data.Tv_FVar
-                                            (FStar_Reflection_V2_Builtins.pack_fv
+                                      (FStarC_Reflection_V2_Builtins.pack_ln
+                                         (FStarC_Reflection_V2_Data.Tv_FVar
+                                            (FStarC_Reflection_V2_Builtins.pack_fv
                                                ["Prims"; "l_False"]))) rng)) in
                           Obj.magic
                             (FStar_Tactics_Effect.tac_bind
@@ -100,7 +100,7 @@ let (check :
                                                     (eff, ff_typing) ->
                                                     if
                                                       eff <>
-                                                        FStar_TypeChecker_Core.E_Total
+                                                        FStarC_TypeChecker_Core.E_Total
                                                     then
                                                       Obj.magic
                                                         (Obj.repr

@@ -1,10 +1,10 @@
 open Prims
-open FStar_Ident
+open FStarC_Ident
 open Pulse_Syntax_Base
 module U = Pulse_Syntax_Pure
-module S = FStar_Syntax_Syntax
+module S = FStarC_Syntax_Syntax
 type universe = Pulse_Syntax_Base.universe
-type range = FStar_Compiler_Range.range
+type range = FStarC_Compiler_Range.range
 let u_zero : universe = U.u_zero
 let u_succ (u:universe) : universe = U.u_succ u
 let u_var (s:string) : universe = U.u_var s
@@ -27,7 +27,7 @@ let mk_nm (i:index) (name:string) (r:range) : nm =
 
 type fv = Pulse_Syntax_Base.fv
 let mk_fv (nm:lident) (r:range) : fv = 
- { fv_name = FStar_Ident.path_of_lid nm;
+ { fv_name = FStarC_Ident.path_of_lid nm;
    fv_range = r }
 
 type term = Pulse_Syntax_Base.term
@@ -35,7 +35,7 @@ type binder = Pulse_Syntax_Base.binder
 type comp = Pulse_Syntax_Base.comp
 type slprop = term
 
-let ppname_of_id (i:ident) : ppname = { name = FStar_Ident.string_of_id i; range = i.idRange }
+let ppname_of_id (i:ident) : ppname = { name = FStarC_Ident.string_of_id i; range = i.idRange }
 
 let mk_binder_with_attrs (x:ident) (t:term) (attrs:term list) : binder =
   { binder_ty = t;
@@ -95,7 +95,7 @@ let atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
 
 module PSB = Pulse_Syntax_Builder
 type constant = Pulse_Syntax_Base.constant
-let inspect_const = FStar_Reflection_V2_Builtins.inspect_const
+let inspect_const = FStarC_Reflection_V2_Builtins.inspect_const
 
 type pattern = Pulse_Syntax_Base.pattern
 
@@ -154,7 +154,7 @@ let is_tm_intro_exists (s:st_term) : bool =
 
 let trans_ns = function
   | None -> None
-  | Some l -> Some (List.map FStar_Ident.string_of_lid l)
+  | Some l -> Some (List.map FStarC_Ident.string_of_lid l)
 
 type hint_type = Pulse_Syntax_Base.proof_hint_type
 
@@ -212,25 +212,25 @@ let comp_post c =
 let print_exn (e:exn) = Printexc.to_string e
 
 open FStar_Pervasives
-module Env = FStar_TypeChecker_Env
+module Env = FStarC_TypeChecker_Env
 let tac_to_string (env:Env.env) f =
     let ps =
-        FStar_Tactics_V2_Basic.proofstate_of_goals 
+        FStarC_Tactics_V2_Basic.proofstate_of_goals 
                 (Env.get_range env)
                 env
                 []
                 []
     in
     match f ps with
-    | FStar_Tactics_Result.Success (x, _) -> x
-    | FStar_Tactics_Result.Failed (exn, _) -> failwith (print_exn exn)
+    | FStarC_Tactics_Result.Success (x, _) -> x
+    | FStarC_Tactics_Result.Failed (exn, _) -> failwith (print_exn exn)
 
 let binder_to_string (env:Env.env) (b:binder)
   : string
   = tac_to_string env (Pulse_Syntax_Printer.binder_to_string b)
 let bv_to_string (x:bv) : string =
     x.bv_ppname.name ^ "@" ^
-     (FStar_Compiler_Util.string_of_int x.bv_index)
+     (FStarC_Compiler_Util.string_of_int x.bv_index)
 let term_to_string (env:Env.env) (t:term)
   : string
   = tac_to_string env (Pulse_Syntax_Printer.term_to_string t)

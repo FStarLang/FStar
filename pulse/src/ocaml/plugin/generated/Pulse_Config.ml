@@ -3,7 +3,7 @@ let (join_goals : Prims.bool) = false
 let (debug_flag :
   Prims.string -> (Prims.bool, unit) FStar_Tactics_Effect.tac_repr) =
   fun s ->
-    let uu___ = FStar_Tactics_V2_Builtins.ext_getv (Prims.strcat "pulse:" s) in
+    let uu___ = FStarC_Tactics_V2_Builtins.ext_getv (Prims.strcat "pulse:" s) in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic

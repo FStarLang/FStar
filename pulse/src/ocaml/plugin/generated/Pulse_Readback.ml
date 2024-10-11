@@ -23,13 +23,13 @@ let op_let_Question :
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
       | FStar_Pervasives_Native.Some x -> g x
 let (readback_observability :
-  FStar_Reflection_Types.term ->
+  FStarC_Reflection_Types.term ->
     Pulse_Syntax_Base.observability FStar_Pervasives_Native.option)
   =
   fun t ->
-    match FStar_Reflection_V2_Builtins.inspect_ln t with
-    | FStar_Reflection_V2_Data.Tv_FVar fv ->
-        let fv_lid = FStar_Reflection_V2_Builtins.inspect_fv fv in
+    match FStarC_Reflection_V2_Builtins.inspect_ln t with
+    | FStarC_Reflection_V2_Data.Tv_FVar fv ->
+        let fv_lid = FStarC_Reflection_V2_Builtins.inspect_fv fv in
         if fv_lid = Pulse_Reflection_Util.observable_lid
         then FStar_Pervasives_Native.Some Pulse_Syntax_Base.Observable
         else
@@ -38,31 +38,31 @@ let (readback_observability :
           else FStar_Pervasives_Native.None
     | uu___ -> FStar_Pervasives_Native.None
 let (try_readback_st_comp :
-  FStar_Reflection_Types.term ->
+  FStarC_Reflection_Types.term ->
     Pulse_Syntax_Base.comp FStar_Pervasives_Native.option)
   =
   fun t ->
     let uu___ = FStar_Reflection_V2_Collect.collect_app_ln t in
     match uu___ with
     | (hd, args) ->
-        (match FStar_Reflection_V2_Builtins.inspect_ln hd with
-         | FStar_Reflection_V2_Data.Tv_UInst (fv, u::[]) ->
-             let fv_lid = FStar_Reflection_V2_Builtins.inspect_fv fv in
+        (match FStarC_Reflection_V2_Builtins.inspect_ln hd with
+         | FStarC_Reflection_V2_Data.Tv_UInst (fv, u::[]) ->
+             let fv_lid = FStarC_Reflection_V2_Builtins.inspect_fv fv in
              if fv_lid = Pulse_Reflection_Util.stt_lid
              then
                (match args with
                 | res::pre::post::[] ->
-                    (match FStar_Reflection_V2_Builtins.inspect_ln
+                    (match FStarC_Reflection_V2_Builtins.inspect_ln
                              (FStar_Pervasives_Native.fst post)
                      with
-                     | FStar_Reflection_V2_Data.Tv_Abs (b, body) ->
+                     | FStarC_Reflection_V2_Data.Tv_Abs (b, body) ->
                          let uu___1 =
-                           FStar_Reflection_V2_Builtins.inspect_binder b in
+                           FStarC_Reflection_V2_Builtins.inspect_binder b in
                          (match uu___1 with
-                          | { FStar_Reflection_V2_Data.sort2 = sort;
-                              FStar_Reflection_V2_Data.qual = aq;
-                              FStar_Reflection_V2_Data.attrs = attrs;
-                              FStar_Reflection_V2_Data.ppname2 = uu___2;_} ->
+                          | { FStarC_Reflection_V2_Data.sort2 = sort;
+                              FStarC_Reflection_V2_Data.qual = aq;
+                              FStarC_Reflection_V2_Data.attrs = attrs;
+                              FStarC_Reflection_V2_Data.ppname2 = uu___2;_} ->
                               let res' = FStar_Pervasives_Native.fst res in
                               let pre' = FStar_Pervasives_Native.fst pre in
                               let post' = body in
@@ -82,17 +82,17 @@ let (try_readback_st_comp :
                then
                  (match args with
                   | res::obs::opened::pre::post::[] ->
-                      (match FStar_Reflection_V2_Builtins.inspect_ln
+                      (match FStarC_Reflection_V2_Builtins.inspect_ln
                                (FStar_Pervasives_Native.fst post)
                        with
-                       | FStar_Reflection_V2_Data.Tv_Abs (b, body) ->
+                       | FStarC_Reflection_V2_Data.Tv_Abs (b, body) ->
                            let uu___2 =
-                             FStar_Reflection_V2_Builtins.inspect_binder b in
+                             FStarC_Reflection_V2_Builtins.inspect_binder b in
                            (match uu___2 with
-                            | { FStar_Reflection_V2_Data.sort2 = uu___3;
-                                FStar_Reflection_V2_Data.qual = aq;
-                                FStar_Reflection_V2_Data.attrs = attrs;
-                                FStar_Reflection_V2_Data.ppname2 = uu___4;_}
+                            | { FStarC_Reflection_V2_Data.sort2 = uu___3;
+                                FStarC_Reflection_V2_Data.qual = aq;
+                                FStarC_Reflection_V2_Data.attrs = attrs;
+                                FStarC_Reflection_V2_Data.ppname2 = uu___4;_}
                                 ->
                                 let res' = FStar_Pervasives_Native.fst res in
                                 op_let_Question
@@ -121,17 +121,17 @@ let (try_readback_st_comp :
                  then
                    (match args with
                     | res::inames::pre::post::[] ->
-                        (match FStar_Reflection_V2_Builtins.inspect_ln
+                        (match FStarC_Reflection_V2_Builtins.inspect_ln
                                  (FStar_Pervasives_Native.fst post)
                          with
-                         | FStar_Reflection_V2_Data.Tv_Abs (b, body) ->
+                         | FStarC_Reflection_V2_Data.Tv_Abs (b, body) ->
                              let uu___3 =
-                               FStar_Reflection_V2_Builtins.inspect_binder b in
+                               FStarC_Reflection_V2_Builtins.inspect_binder b in
                              (match uu___3 with
-                              | { FStar_Reflection_V2_Data.sort2 = uu___4;
-                                  FStar_Reflection_V2_Data.qual = aq;
-                                  FStar_Reflection_V2_Data.attrs = attrs;
-                                  FStar_Reflection_V2_Data.ppname2 = uu___5;_}
+                              | { FStarC_Reflection_V2_Data.sort2 = uu___4;
+                                  FStarC_Reflection_V2_Data.qual = aq;
+                                  FStarC_Reflection_V2_Data.attrs = attrs;
+                                  FStarC_Reflection_V2_Data.ppname2 = uu___5;_}
                                   ->
                                   let res' = FStar_Pervasives_Native.fst res in
                                   let inames' =
@@ -153,7 +153,7 @@ let (try_readback_st_comp :
                  else FStar_Pervasives_Native.None
          | uu___1 -> FStar_Pervasives_Native.None)
 let (readback_comp :
-  FStar_Reflection_Types.term ->
+  FStarC_Reflection_Types.term ->
     Pulse_Syntax_Base.comp FStar_Pervasives_Native.option)
   =
   fun t ->

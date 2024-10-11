@@ -19,11 +19,11 @@ let (head_show_proof_state : Pulse_Syntax_Base.st_term -> Prims.bool) =
     | uu___ -> false
 let (handle_head_immediately : Pulse_Syntax_Base.st_term -> Prims.bool) =
   fun st -> (head_wild st) || (head_show_proof_state st)
-let (is_host_term : FStar_Reflection_Types.term -> Prims.bool) =
+let (is_host_term : FStarC_Reflection_Types.term -> Prims.bool) =
   fun t ->
     Prims.op_Negation
-      (FStar_Reflection_V2_Data.uu___is_Tv_Unknown
-         (FStar_Reflection_V2_Builtins.inspect_ln t))
+      (FStarC_Reflection_V2_Data.uu___is_Tv_Unknown
+         (FStarC_Reflection_V2_Builtins.inspect_ln t))
 let (debug_log :
   Pulse_Typing_Env.env ->
     (unit -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) ->
@@ -44,7 +44,7 @@ let option_must :
            | FStar_Pervasives_Native.None ->
                Obj.magic (FStar_Tactics_V2_Derived.fail msg)) uu___1 uu___
 let rec (refl_abs_binders :
-  FStar_Reflection_Types.term ->
+  FStarC_Reflection_Types.term ->
     Pulse_Syntax_Base.binder Prims.list ->
       (Pulse_Syntax_Base.binder Prims.list, unit)
         FStar_Tactics_Effect.tac_repr)
@@ -53,15 +53,15 @@ let rec (refl_abs_binders :
     fun uu___ ->
       (fun t ->
          fun acc ->
-           match FStar_Reflection_V2_Builtins.inspect_ln t with
-           | FStar_Reflection_V2_Data.Tv_Abs (b, body) ->
+           match FStarC_Reflection_V2_Builtins.inspect_ln t with
+           | FStarC_Reflection_V2_Data.Tv_Abs (b, body) ->
                Obj.magic
                  (Obj.repr
                     (let uu___ =
                        Obj.magic
                          (FStar_Tactics_Effect.lift_div_tac
                             (fun uu___1 ->
-                               FStar_Reflection_V2_Builtins.inspect_binder b)) in
+                               FStarC_Reflection_V2_Builtins.inspect_binder b)) in
                      FStar_Tactics_Effect.tac_bind
                        (FStar_Sealed.seal
                           (Obj.magic
@@ -79,10 +79,10 @@ let rec (refl_abs_binders :
                        (fun uu___1 ->
                           (fun uu___1 ->
                              match uu___1 with
-                             | { FStar_Reflection_V2_Data.sort2 = sort;
-                                 FStar_Reflection_V2_Data.qual = uu___2;
-                                 FStar_Reflection_V2_Data.attrs = uu___3;
-                                 FStar_Reflection_V2_Data.ppname2 = ppname;_}
+                             | { FStarC_Reflection_V2_Data.sort2 = sort;
+                                 FStarC_Reflection_V2_Data.qual = uu___2;
+                                 FStarC_Reflection_V2_Data.attrs = uu___3;
+                                 FStarC_Reflection_V2_Data.ppname2 = ppname;_}
                                  ->
                                  Obj.magic
                                    (refl_abs_binders body
@@ -171,17 +171,17 @@ let (infer_binder_types :
                                                 (FStar_Tactics_Effect.lift_div_tac
                                                    (fun uu___4 ->
                                                       fun b ->
-                                                        FStar_Reflection_V2_Builtins.pack_binder
+                                                        FStarC_Reflection_V2_Builtins.pack_binder
                                                           {
-                                                            FStar_Reflection_V2_Data.sort2
+                                                            FStarC_Reflection_V2_Data.sort2
                                                               =
                                                               (b.Pulse_Syntax_Base.binder_ty);
-                                                            FStar_Reflection_V2_Data.qual
+                                                            FStarC_Reflection_V2_Data.qual
                                                               =
-                                                              FStar_Reflection_V2_Data.Q_Explicit;
-                                                            FStar_Reflection_V2_Data.attrs
+                                                              FStarC_Reflection_V2_Data.Q_Explicit;
+                                                            FStarC_Reflection_V2_Data.attrs
                                                               = [];
-                                                            FStar_Reflection_V2_Data.ppname2
+                                                            FStarC_Reflection_V2_Data.ppname2
                                                               =
                                                               ((b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name)
                                                           })) in
@@ -213,8 +213,8 @@ let (infer_binder_types :
                                                                  FStar_List_Tot_Base.fold_right
                                                                    (fun b ->
                                                                     fun tv ->
-                                                                    FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_Abs
+                                                                    FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_Abs
                                                                     ((as_binder
                                                                     b), tv)))
                                                                    bs v)) in
@@ -591,7 +591,7 @@ let (unfold_all :
           (fun uu___1 ->
              (fun rg ->
                 let uu___1 =
-                  FStar_Tactics_V2_Builtins.norm_term_env rg
+                  FStarC_Tactics_V2_Builtins.norm_term_env rg
                     [FStar_Pervasives.primops;
                     FStar_Pervasives.iota;
                     FStar_Pervasives.delta_only names] t in
@@ -614,9 +614,9 @@ let (unfold_all :
                         FStar_Tactics_Effect.lift_div_tac (fun uu___2 -> t1))))
                uu___1)
 let (def_of_fv :
-  FStar_Reflection_Types.env ->
-    FStar_Reflection_Types.fv ->
-      (FStar_Reflection_Types.term FStar_Pervasives_Native.option, unit)
+  FStarC_Reflection_Types.env ->
+    FStarC_Reflection_Types.fv ->
+      (FStarC_Reflection_Types.term FStar_Pervasives_Native.option, unit)
         FStar_Tactics_Effect.tac_repr)
   =
   fun uu___1 ->
@@ -626,34 +626,34 @@ let (def_of_fv :
            Obj.magic
              (FStar_Tactics_Effect.lift_div_tac
                 (fun uu___ ->
-                   match FStar_Reflection_V2_Builtins.lookup_typ g
-                           (FStar_Reflection_V2_Builtins.inspect_fv fv)
+                   match FStarC_Reflection_V2_Builtins.lookup_typ g
+                           (FStarC_Reflection_V2_Builtins.inspect_fv fv)
                    with
                    | FStar_Pervasives_Native.None ->
                        FStar_Pervasives_Native.None
                    | FStar_Pervasives_Native.Some se ->
-                       (match FStar_Reflection_V2_Builtins.inspect_sigelt se
+                       (match FStarC_Reflection_V2_Builtins.inspect_sigelt se
                         with
-                        | FStar_Reflection_V2_Data.Unk ->
+                        | FStarC_Reflection_V2_Data.Unk ->
                             FStar_Pervasives_Native.None
-                        | FStar_Reflection_V2_Data.Sg_Let (uu___1, lbs) ->
+                        | FStarC_Reflection_V2_Data.Sg_Let (uu___1, lbs) ->
                             FStar_List_Tot_Base.tryPick
                               (fun lb ->
                                  if
-                                   (FStar_Reflection_V2_Builtins.inspect_fv
-                                      (FStar_Reflection_V2_Builtins.inspect_lb
-                                         lb).FStar_Reflection_V2_Data.lb_fv)
+                                   (FStarC_Reflection_V2_Builtins.inspect_fv
+                                      (FStarC_Reflection_V2_Builtins.inspect_lb
+                                         lb).FStarC_Reflection_V2_Data.lb_fv)
                                      =
-                                     (FStar_Reflection_V2_Builtins.inspect_fv
+                                     (FStarC_Reflection_V2_Builtins.inspect_fv
                                         fv)
                                  then
                                    FStar_Pervasives_Native.Some
-                                     ((FStar_Reflection_V2_Builtins.inspect_lb
-                                         lb).FStar_Reflection_V2_Data.lb_def)
+                                     ((FStarC_Reflection_V2_Builtins.inspect_lb
+                                         lb).FStarC_Reflection_V2_Data.lb_def)
                                  else FStar_Pervasives_Native.None) lbs
-                        | FStar_Reflection_V2_Data.Sg_Val (uu___1, uu___2, t)
+                        | FStarC_Reflection_V2_Data.Sg_Val (uu___1, uu___2, t)
                             -> FStar_Pervasives_Native.Some t
-                        | FStar_Reflection_V2_Data.Sg_Inductive
+                        | FStarC_Reflection_V2_Data.Sg_Inductive
                             (_nm, _univs, params, typ, uu___1) ->
                             FStar_Pervasives_Native.None)))) uu___1 uu___
 let (unfold_head :
@@ -701,12 +701,12 @@ let (unfold_head :
                          match uu___2 with
                          | FStar_Pervasives_Native.Some (fv, u, args) ->
                              let uu___3 =
-                               FStar_Tactics_V2_Builtins.norm_term_env rg
+                               FStarC_Tactics_V2_Builtins.norm_term_env rg
                                  [FStar_Pervasives.hnf;
                                  FStar_Pervasives.zeta;
                                  FStar_Pervasives.delta_only
-                                   [FStar_Reflection_V2_Builtins.implode_qn
-                                      (FStar_Reflection_V2_Builtins.inspect_fv
+                                   [FStarC_Reflection_V2_Builtins.implode_qn
+                                      (FStarC_Reflection_V2_Builtins.inspect_fv
                                          fv)]] t in
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
@@ -733,7 +733,7 @@ let (unfold_head :
                          | FStar_Pervasives_Native.None ->
                              let uu___3 =
                                let uu___4 =
-                                 FStar_Tactics_V2_Builtins.term_to_string t in
+                                 FStarC_Tactics_V2_Builtins.term_to_string t in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -835,7 +835,7 @@ let (unfold_defs :
                      (fun uu___2 ->
                         (fun t2 ->
                            let uu___2 =
-                             FStar_Tactics_V2_Builtins.norm_term_env
+                             FStarC_Tactics_V2_Builtins.norm_term_env
                                (Pulse_Typing.elab_env g)
                                [FStar_Pervasives.hnf;
                                FStar_Pervasives.iota;
@@ -922,7 +922,7 @@ let (check_unfoldable :
                                      (Pulse_RuntimeUtils.range_of_term v))
                                   uu___2)) uu___2)))) uu___1 uu___
 let (visit_and_rewrite :
-  (FStar_Reflection_Types.term * FStar_Reflection_Types.term) ->
+  (FStarC_Reflection_Types.term * FStarC_Reflection_Types.term) ->
     Pulse_Syntax_Base.term ->
       (Pulse_Syntax_Base.term, unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -978,18 +978,18 @@ let (visit_and_rewrite :
                        (Obj.magic uu___2)
                        (fun uu___3 ->
                           (fun visitor ->
-                             match FStar_Reflection_V2_Builtins.inspect_ln
+                             match FStarC_Reflection_V2_Builtins.inspect_ln
                                      lhs
                              with
-                             | FStar_Reflection_V2_Data.Tv_Var n ->
+                             | FStarC_Reflection_V2_Data.Tv_Var n ->
                                  Obj.magic
                                    (Obj.repr
                                       (FStar_Tactics_Effect.lift_div_tac
                                          (fun uu___3 ->
                                             Pulse_Syntax_Naming.subst_term t
                                               [FStar_Reflection_Typing.NT
-                                                 (((FStar_Reflection_V2_Builtins.inspect_namedv
-                                                      n).FStar_Reflection_V2_Data.uniq),
+                                                 (((FStarC_Reflection_V2_Builtins.inspect_namedv
+                                                      n).FStarC_Reflection_V2_Data.uniq),
                                                    (Pulse_Syntax_Pure.wr rhs
                                                       (Pulse_RuntimeUtils.range_of_term
                                                          t)))])))
@@ -999,12 +999,12 @@ let (visit_and_rewrite :
                                       (FStar_Tactics_Visit.visit_tm visitor t)))
                             uu___3))) uu___1)
 let (visit_and_rewrite_conjuncts :
-  (FStar_Reflection_Types.term * FStar_Reflection_Types.term) ->
+  (FStarC_Reflection_Types.term * FStarC_Reflection_Types.term) ->
     Pulse_Syntax_Base.term Prims.list ->
       (Pulse_Syntax_Base.term Prims.list, unit) FStar_Tactics_Effect.tac_repr)
   = fun p -> fun tms -> FStar_Tactics_Util.map (visit_and_rewrite p) tms
 let (visit_and_rewrite_conjuncts_all :
-  (FStar_Reflection_Types.term * FStar_Reflection_Types.term) Prims.list ->
+  (FStarC_Reflection_Types.term * FStarC_Reflection_Types.term) Prims.list ->
     Pulse_Syntax_Base.term ->
       ((Pulse_Syntax_Base.term * Pulse_Syntax_Base.term), unit)
         FStar_Tactics_Effect.tac_repr)
@@ -1125,13 +1125,13 @@ let rec (as_subst :
               then FStar_Pervasives_Native.Some out
               else FStar_Pervasives_Native.None
           | (e1, e2)::p1 ->
-              (match FStar_Reflection_V2_Builtins.inspect_ln e1 with
-               | FStar_Reflection_V2_Data.Tv_Var n ->
-                   let nv = FStar_Reflection_V2_Builtins.inspect_namedv n in
+              (match FStarC_Reflection_V2_Builtins.inspect_ln e1 with
+               | FStarC_Reflection_V2_Data.Tv_Var n ->
+                   let nv = FStarC_Reflection_V2_Builtins.inspect_namedv n in
                    as_subst p1
                      ((FStar_Reflection_Typing.NT
-                         ((nv.FStar_Reflection_V2_Data.uniq), e2)) :: out)
-                     ((nv.FStar_Reflection_V2_Data.uniq) :: domain)
+                         ((nv.FStarC_Reflection_V2_Data.uniq), e2)) :: out)
+                     ((nv.FStarC_Reflection_V2_Data.uniq) :: domain)
                      (FStar_Set.union codomain
                         (Pulse_Syntax_Naming.freevars e2))
                | uu___ -> FStar_Pervasives_Native.None)
@@ -1964,7 +1964,7 @@ let (check_wild :
                                                                     (fun
                                                                     uu___14
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "The context was:")
                                                                     uu___13)) in
@@ -2159,7 +2159,7 @@ let (check_wild :
                                                                     (fun
                                                                     uu___17
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "The context was:")
                                                                     uu___16)) in
@@ -2582,7 +2582,7 @@ let (check_wild :
                                                                     (fun
                                                                     uu___19
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "The context was:")
                                                                     uu___18)) in
@@ -3048,7 +3048,7 @@ let (check :
                                                   (fun uu___6 ->
                                                      FStar_Tactics_Effect.lift_div_tac
                                                        (fun uu___7 ->
-                                                          FStar_Pprint.op_Hat_Hat
+                                                          FStarC_Pprint.op_Hat_Hat
                                                             (Pulse_PP.text
                                                                "Current context:")
                                                             uu___6)) in
@@ -4296,7 +4296,7 @@ let (check :
                                                                     (fun
                                                                     uu___27
                                                                     ->
-                                                                    FStar_Pprint.prefix
+                                                                    FStarC_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -4362,7 +4362,7 @@ let (check :
                                                                     (fun
                                                                     uu___30
                                                                     ->
-                                                                    FStar_Pprint.prefix
+                                                                    FStarC_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -4594,9 +4594,9 @@ let (check :
                                                                     =
                                                                     (Pulse_Syntax_Base.as_binder
                                                                     (Pulse_Syntax_Pure.wr
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["Prims";
                                                                     "unit"])))
                                                                     st.Pulse_Syntax_Base.range1));
@@ -5362,7 +5362,7 @@ let (check :
                                                                     (fun
                                                                     uu___27
                                                                     ->
-                                                                    FStar_Pprint.prefix
+                                                                    FStarC_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -5428,7 +5428,7 @@ let (check :
                                                                     (fun
                                                                     uu___30
                                                                     ->
-                                                                    FStar_Pprint.prefix
+                                                                    FStarC_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -5660,9 +5660,9 @@ let (check :
                                                                     =
                                                                     (Pulse_Syntax_Base.as_binder
                                                                     (Pulse_Syntax_Pure.wr
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["Prims";
                                                                     "unit"])))
                                                                     st.Pulse_Syntax_Base.range1));

@@ -471,24 +471,24 @@ let (shift_subst :
   FStar_Reflection_Typing.subst_elt Prims.list ->
     FStar_Reflection_Typing.subst_elt Prims.list)
   = FStar_Reflection_Typing.shift_subst
-let (r_subst_of_rt_subst_elt : subst_elt -> FStar_Syntax_Syntax.subst_elt) =
+let (r_subst_of_rt_subst_elt : subst_elt -> FStarC_Syntax_Syntax.subst_elt) =
   fun x ->
     match x with
     | FStar_Reflection_Typing.DT (i, t) ->
-        (match FStar_Reflection_V2_Builtins.inspect_ln t with
-         | FStar_Reflection_V2_Data.Tv_Var n -> FStar_Syntax_Syntax.DB (i, n)
-         | uu___ -> FStar_Syntax_Syntax.DT (i, t))
+        (match FStarC_Reflection_V2_Builtins.inspect_ln t with
+         | FStarC_Reflection_V2_Data.Tv_Var n -> FStarC_Syntax_Syntax.DB (i, n)
+         | uu___ -> FStarC_Syntax_Syntax.DT (i, t))
     | FStar_Reflection_Typing.NT (x1, t) ->
-        FStar_Syntax_Syntax.NT
+        FStarC_Syntax_Syntax.NT
           ((FStar_Reflection_Typing.var_as_namedv x1), t)
     | FStar_Reflection_Typing.ND (x1, i) ->
-        FStar_Syntax_Syntax.NM
+        FStarC_Syntax_Syntax.NM
           ((FStar_Reflection_Typing.var_as_namedv x1), i)
 let (subst_host_term' :
-  Pulse_Syntax_Base.term -> subst -> FStar_Reflection_Types.term) =
+  Pulse_Syntax_Base.term -> subst -> FStarC_Reflection_Types.term) =
   fun t ->
     fun ss ->
-      FStar_Reflection_V2_Builtins.subst_term
+      FStarC_Reflection_V2_Builtins.subst_term
         (FStar_List_Tot_Base.map r_subst_of_rt_subst_elt ss) t
 let (subst_host_term :
   Pulse_Syntax_Base.term -> subst -> Pulse_Syntax_Base.term) =
@@ -1054,7 +1054,7 @@ let (close_term_list' :
     fun v -> fun i -> subst_term_list t [FStar_Reflection_Typing.ND (v, i)]
 let (close_binder :
   Pulse_Syntax_Base.binder ->
-    FStar_Reflection_V2_Data.var -> Prims.nat -> Pulse_Syntax_Base.binder)
+    FStarC_Reflection_V2_Data.var -> Prims.nat -> Pulse_Syntax_Base.binder)
   =
   fun b ->
     fun v -> fun i -> subst_binder b [FStar_Reflection_Typing.ND (v, i)]

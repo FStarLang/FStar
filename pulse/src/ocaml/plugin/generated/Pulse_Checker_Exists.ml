@@ -1149,7 +1149,7 @@ let (check_intro_exists :
                                                                     Pulse_Checker_Pure.check_term
                                                                     g1
                                                                     witness
-                                                                    FStar_TypeChecker_Core.E_Ghost
+                                                                    FStarC_TypeChecker_Core.E_Ghost
                                                                     b.Pulse_Syntax_Base.binder_ty in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
