@@ -1,8 +1,8 @@
 open Prims
-type constant = FStar_Reflection_V2_Data.vconst
+type constant = FStarC_Reflection_V2_Data.vconst
 type var = Prims.nat
 type index = Prims.nat
-type universe = FStar_Reflection_Types.universe
+type universe = FStarC_Reflection_Types.universe
 type 'r range_singleton_trigger = unit
 type range = FStar_Range.range
 type ppname = {
@@ -46,15 +46,15 @@ let (uu___is_Implicit : qualifier -> Prims.bool) =
 let (uu___is_TcArg : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | TcArg -> true | uu___ -> false
 type fv = {
-  fv_name: FStar_Reflection_Types.name ;
+  fv_name: FStarC_Reflection_Types.name ;
   fv_range: range }
-let (__proj__Mkfv__item__fv_name : fv -> FStar_Reflection_Types.name) =
+let (__proj__Mkfv__item__fv_name : fv -> FStarC_Reflection_Types.name) =
   fun projectee -> match projectee with | { fv_name; fv_range;_} -> fv_name
 let (__proj__Mkfv__item__fv_range : fv -> range) =
   fun projectee -> match projectee with | { fv_name; fv_range;_} -> fv_range
-let (as_fv : FStar_Reflection_Types.name -> fv) =
+let (as_fv : FStarC_Reflection_Types.name -> fv) =
   fun l -> { fv_name = l; fv_range = FStar_Range.range_0 }
-type term = FStar_Reflection_Types.term
+type term = FStarC_Reflection_Types.term
 type slprop = term
 type typ = term
 type binder =
@@ -527,13 +527,14 @@ let uu___is_Tm_WithInv uu___ =
 type branch = (pattern * st_term)
 type fn_defn =
   {
-  id: FStar_Reflection_Types.ident ;
+  id: FStarC_Reflection_Types.ident ;
   isrec: Prims.bool ;
   bs: (qualifier FStar_Pervasives_Native.option * binder * bv) Prims.list ;
   comp: comp ;
   meas: term FStar_Pervasives_Native.option ;
   body7: st_term }
-let (__proj__Mkfn_defn__item__id : fn_defn -> FStar_Reflection_Types.ident) =
+let (__proj__Mkfn_defn__item__id : fn_defn -> FStarC_Reflection_Types.ident)
+  =
   fun projectee ->
     match projectee with
     | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> id
@@ -563,10 +564,11 @@ let (__proj__Mkfn_defn__item__body : fn_defn -> st_term) =
     | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> body
 type fn_decl =
   {
-  id1: FStar_Reflection_Types.ident ;
+  id1: FStarC_Reflection_Types.ident ;
   bs1: (qualifier FStar_Pervasives_Native.option * binder * bv) Prims.list ;
   comp1: comp_st }
-let (__proj__Mkfn_decl__item__id : fn_decl -> FStar_Reflection_Types.ident) =
+let (__proj__Mkfn_decl__item__id : fn_decl -> FStarC_Reflection_Types.ident)
+  =
   fun projectee ->
     match projectee with | { id1 = id; bs1 = bs; comp1;_} -> id
 let (__proj__Mkfn_decl__item__bs :
@@ -696,8 +698,8 @@ let (eq_binder : binder -> binder -> Prims.bool) =
 let (eq_tm_list : term Prims.list -> term Prims.list -> Prims.bool) =
   fun t1 -> fun t2 -> eq_list eq_tm t1 t2
 let (fstar_const_eq :
-  FStar_Reflection_V2_Data.vconst ->
-    FStar_Reflection_V2_Data.vconst -> Prims.bool)
+  FStarC_Reflection_V2_Data.vconst ->
+    FStarC_Reflection_V2_Data.vconst -> Prims.bool)
   =
   fun c1 ->
     fun c2 ->
@@ -883,7 +885,7 @@ let (with_st_comp : comp -> st_comp -> comp) =
       | C_STAtomic (inames, obs, uu___) -> C_STAtomic (inames, obs, s)
       | C_STGhost (inames, uu___) -> C_STGhost (inames, s)
 let (comp_u : comp -> universe) = fun c -> (st_comp_of_comp c).u
-let (universe_of_comp : comp_st -> FStar_Reflection_Types.universe) =
+let (universe_of_comp : comp_st -> FStarC_Reflection_Types.universe) =
   fun c ->
     match c with
     | C_ST uu___ -> FStar_Reflection_Typing.u_zero

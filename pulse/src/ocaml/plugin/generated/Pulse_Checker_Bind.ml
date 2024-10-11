@@ -840,7 +840,7 @@ let (check_bind :
                                                                     (fun
                                                                     uu___31
                                                                     ->
-                                                                    FStar_Pprint.prefix
+                                                                    FStarC_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -906,7 +906,7 @@ let (check_bind :
                                                                     (fun
                                                                     uu___34
                                                                     ->
-                                                                    FStar_Pprint.prefix
+                                                                    FStarC_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text

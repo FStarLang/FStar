@@ -16,20 +16,20 @@
 
 module Pulse2Rust.Env
 
-open FStar.Compiler
-open FStar.Compiler.Util
-open FStar.Compiler.List
-open FStar.Compiler.Effect
+open FStarC.Compiler
+open FStarC.Compiler.Util
+open FStarC.Compiler.List
+open FStarC.Compiler.Effect
 
-open FStar.Class.Setlike
+open FStarC.Class.Setlike
 
 open Pulse2Rust.Rust.Syntax
 
 open RustBindings
 
-module S = FStar.Extraction.ML.Syntax
+module S = FStarC.Extraction.ML.Syntax
 
-module UEnv = FStar.Extraction.ML.UEnv
+module UEnv = FStarC.Extraction.ML.UEnv
 
 let fail (s:string) =
   failwith (format1 "Pulse to Rust extraction failed: %s" s)

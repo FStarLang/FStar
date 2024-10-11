@@ -1,31 +1,31 @@
 open Prims
 let (tot_or_ghost_to_string :
-  FStar_TypeChecker_Core.tot_or_ghost -> Prims.string) =
+  FStarC_TypeChecker_Core.tot_or_ghost -> Prims.string) =
   fun uu___ ->
     match uu___ with
-    | FStar_TypeChecker_Core.E_Total -> "total"
-    | FStar_TypeChecker_Core.E_Ghost -> "ghost"
-let (name_to_string : FStar_Reflection_Types.name -> Prims.string) =
+    | FStarC_TypeChecker_Core.E_Total -> "total"
+    | FStarC_TypeChecker_Core.E_Ghost -> "ghost"
+let (name_to_string : FStarC_Reflection_Types.name -> Prims.string) =
   fun f -> FStar_String.concat "." f
 let (dbg_printing : Prims.bool) = true
 let rec (universe_to_string :
   Prims.nat -> Pulse_Syntax_Base.universe -> Prims.string) =
   fun n ->
     fun u ->
-      match FStar_Reflection_V2_Builtins.inspect_universe u with
-      | FStar_Reflection_V2_Data.Uv_Unk -> "_"
-      | FStar_Reflection_V2_Data.Uv_Zero ->
+      match FStarC_Reflection_V2_Builtins.inspect_universe u with
+      | FStarC_Reflection_V2_Data.Uv_Unk -> "_"
+      | FStarC_Reflection_V2_Data.Uv_Zero ->
           Prims.strcat "" (Prims.strcat (Prims.string_of_int n) "")
-      | FStar_Reflection_V2_Data.Uv_Succ u1 ->
+      | FStarC_Reflection_V2_Data.Uv_Succ u1 ->
           universe_to_string (n + Prims.int_one) u1
-      | FStar_Reflection_V2_Data.Uv_BVar x ->
+      | FStarC_Reflection_V2_Data.Uv_BVar x ->
           if n = Prims.int_zero
           then Prims.strcat "" (Prims.strcat (Prims.string_of_int x) "")
           else
             Prims.strcat
               (Prims.strcat "(" (Prims.strcat (Prims.string_of_int x) " + "))
               (Prims.strcat (Prims.string_of_int n) ")")
-      | FStar_Reflection_V2_Data.Uv_Max us ->
+      | FStarC_Reflection_V2_Data.Uv_Max us ->
           let r = "(max _)" in
           if n = Prims.int_zero
           then r
@@ -778,13 +778,13 @@ and (term_to_string' :
                             uu___1)))
            | Pulse_Syntax_Pure.Tm_FStar t1 ->
                Obj.magic
-                 (Obj.repr (FStar_Tactics_V2_Builtins.term_to_string t1)))
+                 (Obj.repr (FStarC_Tactics_V2_Builtins.term_to_string t1)))
         uu___1 uu___
 let (term_to_string :
   Pulse_Syntax_Base.term ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   = fun t -> term_to_string' "" t
-let (star_doc : FStar_Pprint.document) = FStar_Pprint.doc_of_string "**"
+let (star_doc : FStarC_Pprint.document) = FStarC_Pprint.doc_of_string "**"
 let rec fold_right1 :
   'a .
     ('a -> 'a -> ('a, unit) FStar_Tactics_Effect.tac_repr) ->
@@ -847,7 +847,7 @@ let (should_paren_term :
               | uu___3 -> false))
 let rec (binder_to_doc :
   Pulse_Syntax_Base.binder ->
-    (FStar_Pprint.document, unit) FStar_Tactics_Effect.tac_repr)
+    (FStarC_Pprint.document, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun b ->
     let uu___ =
@@ -869,7 +869,7 @@ let rec (binder_to_doc :
           (Obj.magic uu___2)
           (fun uu___3 ->
              FStar_Tactics_Effect.lift_div_tac
-               (fun uu___4 -> FStar_Pprint.doc_of_string uu___3)) in
+               (fun uu___4 -> FStarC_Pprint.doc_of_string uu___3)) in
       FStar_Tactics_Effect.tac_bind
         (FStar_Sealed.seal
            (Obj.magic
@@ -900,8 +900,8 @@ let rec (binder_to_doc :
                   (fun uu___5 ->
                      FStar_Tactics_Effect.lift_div_tac
                        (fun uu___6 ->
-                          FStar_Pprint.op_Hat_Hat
-                            (FStar_Pprint.doc_of_string ":") uu___5)) in
+                          FStarC_Pprint.op_Hat_Hat
+                            (FStarC_Pprint.doc_of_string ":") uu___5)) in
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Sealed.seal
@@ -917,7 +917,7 @@ let rec (binder_to_doc :
                    (Obj.magic uu___3)
                    (fun uu___4 ->
                       FStar_Tactics_Effect.lift_div_tac
-                        (fun uu___5 -> FStar_Pprint.op_Hat_Hat uu___2 uu___4))))
+                        (fun uu___5 -> FStarC_Pprint.op_Hat_Hat uu___2 uu___4))))
              uu___2) in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
@@ -932,10 +932,10 @@ let rec (binder_to_doc :
                (Prims.of_int (37))))) (Obj.magic uu___)
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac
-           (fun uu___2 -> FStar_Pprint.parens uu___1))
+           (fun uu___2 -> FStarC_Pprint.parens uu___1))
 and (term_to_doc :
   Pulse_Syntax_Base.term ->
-    (FStar_Pprint.document, unit) FStar_Tactics_Effect.tac_repr)
+    (FStarC_Pprint.document, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
     (fun t ->
@@ -944,7 +944,7 @@ and (term_to_doc :
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.lift_div_tac
-                   (fun uu___ -> FStar_Pprint.doc_of_string "emp")))
+                   (fun uu___ -> FStarC_Pprint.doc_of_string "emp")))
        | Pulse_Syntax_Pure.Tm_Pure p ->
            Obj.magic
              (Obj.repr
@@ -964,7 +964,7 @@ and (term_to_doc :
                      (Obj.magic uu___1)
                      (fun uu___2 ->
                         FStar_Tactics_Effect.lift_div_tac
-                          (fun uu___3 -> FStar_Pprint.parens uu___2)) in
+                          (fun uu___3 -> FStarC_Pprint.parens uu___2)) in
                  FStar_Tactics_Effect.tac_bind
                    (FStar_Sealed.seal
                       (Obj.magic
@@ -980,8 +980,8 @@ and (term_to_doc :
                    (fun uu___1 ->
                       FStar_Tactics_Effect.lift_div_tac
                         (fun uu___2 ->
-                           FStar_Pprint.op_Hat_Hat
-                             (FStar_Pprint.doc_of_string "pure ") uu___1))))
+                           FStarC_Pprint.op_Hat_Hat
+                             (FStarC_Pprint.doc_of_string "pure ") uu___1))))
        | Pulse_Syntax_Pure.Tm_Star (uu___, uu___1) ->
            Obj.magic
              (Obj.repr
@@ -1054,7 +1054,7 @@ and (term_to_doc :
                                                     (fun uu___8 ->
                                                        FStar_Tactics_Effect.lift_div_tac
                                                          (fun uu___9 ->
-                                                            FStar_Pprint.parens
+                                                            FStarC_Pprint.parens
                                                               uu___8)))
                                              else Obj.magic (term_to_doc t1))
                                             uu___6))) in
@@ -1113,11 +1113,11 @@ and (term_to_doc :
                                                                (FStar_Tactics_Effect.lift_div_tac
                                                                   (fun uu___6
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
-                                                                    (FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    (FStarC_Pprint.op_Hat_Hat
                                                                     p
-                                                                    (FStar_Pprint.op_Hat_Hat
-                                                                    (FStar_Pprint.doc_of_string
+                                                                    (FStarC_Pprint.op_Hat_Hat
+                                                                    (FStarC_Pprint.doc_of_string
                                                                     " ")
                                                                     star_doc))
                                                                     q)))
@@ -1144,7 +1144,7 @@ and (term_to_doc :
                                                     (fun uu___6 ->
                                                        FStar_Tactics_Effect.lift_div_tac
                                                          (fun uu___7 ->
-                                                            FStar_Pprint.group
+                                                            FStarC_Pprint.group
                                                               uu___6))))
                                               uu___5))) uu___4))) uu___3)))
        | Pulse_Syntax_Pure.Tm_ExistsSL (uu___, uu___1, uu___2) ->
@@ -1198,8 +1198,8 @@ and (term_to_doc :
                                      (fun uu___9 ->
                                         FStar_Tactics_Effect.lift_div_tac
                                           (fun uu___10 ->
-                                             FStar_Pprint.separate
-                                               (FStar_Pprint.doc_of_string
+                                             FStarC_Pprint.separate
+                                               (FStarC_Pprint.doc_of_string
                                                   " ") uu___9)) in
                                  FStar_Tactics_Effect.tac_bind
                                    (FStar_Sealed.seal
@@ -1222,7 +1222,7 @@ and (term_to_doc :
                                    (fun uu___8 ->
                                       FStar_Tactics_Effect.lift_div_tac
                                         (fun uu___9 ->
-                                           FStar_Pprint.group uu___8)) in
+                                           FStarC_Pprint.group uu___8)) in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -1244,7 +1244,7 @@ and (term_to_doc :
                                  (fun uu___7 ->
                                     FStar_Tactics_Effect.lift_div_tac
                                       (fun uu___8 ->
-                                         FStar_Pprint.align uu___7)) in
+                                         FStarC_Pprint.align uu___7)) in
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Sealed.seal
@@ -1289,17 +1289,17 @@ and (term_to_doc :
                                             (fun uu___8 ->
                                                FStar_Tactics_Effect.lift_div_tac
                                                  (fun uu___9 ->
-                                                    FStar_Pprint.prefix
+                                                    FStarC_Pprint.prefix
                                                       (Prims.of_int (2))
                                                       Prims.int_one
-                                                      (FStar_Pprint.op_Hat_Hat
-                                                         (FStar_Pprint.prefix
+                                                      (FStarC_Pprint.op_Hat_Hat
+                                                         (FStarC_Pprint.prefix
                                                             (Prims.of_int (2))
                                                             Prims.int_one
-                                                            (FStar_Pprint.doc_of_string
+                                                            (FStarC_Pprint.doc_of_string
                                                                "exists*")
                                                             bs_doc)
-                                                         FStar_Pprint.dot)
+                                                         FStarC_Pprint.dot)
                                                       uu___8)) in
                                         Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
@@ -1323,7 +1323,7 @@ and (term_to_doc :
                                              (fun uu___7 ->
                                                 FStar_Tactics_Effect.lift_div_tac
                                                   (fun uu___8 ->
-                                                     FStar_Pprint.parens
+                                                     FStarC_Pprint.parens
                                                        uu___7)))) uu___6)))
                         uu___4)))
        | Pulse_Syntax_Pure.Tm_ForallSL (uu___, uu___1, uu___2) ->
@@ -1377,8 +1377,8 @@ and (term_to_doc :
                                      (fun uu___9 ->
                                         FStar_Tactics_Effect.lift_div_tac
                                           (fun uu___10 ->
-                                             FStar_Pprint.separate
-                                               (FStar_Pprint.doc_of_string
+                                             FStarC_Pprint.separate
+                                               (FStarC_Pprint.doc_of_string
                                                   " ") uu___9)) in
                                  FStar_Tactics_Effect.tac_bind
                                    (FStar_Sealed.seal
@@ -1401,7 +1401,7 @@ and (term_to_doc :
                                    (fun uu___8 ->
                                       FStar_Tactics_Effect.lift_div_tac
                                         (fun uu___9 ->
-                                           FStar_Pprint.group uu___8)) in
+                                           FStarC_Pprint.group uu___8)) in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -1423,7 +1423,7 @@ and (term_to_doc :
                                  (fun uu___7 ->
                                     FStar_Tactics_Effect.lift_div_tac
                                       (fun uu___8 ->
-                                         FStar_Pprint.align uu___7)) in
+                                         FStarC_Pprint.align uu___7)) in
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Sealed.seal
@@ -1468,17 +1468,17 @@ and (term_to_doc :
                                             (fun uu___8 ->
                                                FStar_Tactics_Effect.lift_div_tac
                                                  (fun uu___9 ->
-                                                    FStar_Pprint.prefix
+                                                    FStarC_Pprint.prefix
                                                       (Prims.of_int (2))
                                                       Prims.int_one
-                                                      (FStar_Pprint.op_Hat_Hat
-                                                         (FStar_Pprint.prefix
+                                                      (FStarC_Pprint.op_Hat_Hat
+                                                         (FStarC_Pprint.prefix
                                                             (Prims.of_int (2))
                                                             Prims.int_one
-                                                            (FStar_Pprint.doc_of_string
+                                                            (FStarC_Pprint.doc_of_string
                                                                "forall*")
                                                             bs_doc)
-                                                         FStar_Pprint.dot)
+                                                         FStarC_Pprint.dot)
                                                       uu___8)) in
                                         Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
@@ -1502,24 +1502,24 @@ and (term_to_doc :
                                              (fun uu___7 ->
                                                 FStar_Tactics_Effect.lift_div_tac
                                                   (fun uu___8 ->
-                                                     FStar_Pprint.parens
+                                                     FStarC_Pprint.parens
                                                        uu___7)))) uu___6)))
                         uu___4)))
        | Pulse_Syntax_Pure.Tm_SLProp ->
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.lift_div_tac
-                   (fun uu___ -> FStar_Pprint.doc_of_string "slprop")))
+                   (fun uu___ -> FStarC_Pprint.doc_of_string "slprop")))
        | Pulse_Syntax_Pure.Tm_Inames ->
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.lift_div_tac
-                   (fun uu___ -> FStar_Pprint.doc_of_string "inames")))
+                   (fun uu___ -> FStarC_Pprint.doc_of_string "inames")))
        | Pulse_Syntax_Pure.Tm_EmpInames ->
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.lift_div_tac
-                   (fun uu___ -> FStar_Pprint.doc_of_string "emp_inames")))
+                   (fun uu___ -> FStarC_Pprint.doc_of_string "emp_inames")))
        | Pulse_Syntax_Pure.Tm_Inv (i, p) ->
            Obj.magic
              (Obj.repr
@@ -1563,7 +1563,7 @@ and (term_to_doc :
                                  (fun uu___6 ->
                                     FStar_Tactics_Effect.lift_div_tac
                                       (fun uu___7 ->
-                                         FStar_Pprint.parens uu___6)) in
+                                         FStarC_Pprint.parens uu___6)) in
                              FStar_Tactics_Effect.tac_bind
                                (FStar_Sealed.seal
                                   (Obj.magic
@@ -1585,8 +1585,8 @@ and (term_to_doc :
                                (fun uu___5 ->
                                   FStar_Tactics_Effect.lift_div_tac
                                     (fun uu___6 ->
-                                       FStar_Pprint.op_Hat_Hat
-                                         (FStar_Pprint.doc_of_string " ")
+                                       FStarC_Pprint.op_Hat_Hat
+                                         (FStarC_Pprint.doc_of_string " ")
                                          uu___5)) in
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
@@ -1610,8 +1610,8 @@ and (term_to_doc :
                                 (fun uu___4 ->
                                    FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___5 ->
-                                        FStar_Pprint.op_Hat_Hat uu___2 uu___4))))
-                          uu___2) in
+                                        FStarC_Pprint.op_Hat_Hat uu___2
+                                          uu___4)))) uu___2) in
                  FStar_Tactics_Effect.tac_bind
                    (FStar_Sealed.seal
                       (Obj.magic
@@ -1627,15 +1627,15 @@ and (term_to_doc :
                    (fun uu___1 ->
                       FStar_Tactics_Effect.lift_div_tac
                         (fun uu___2 ->
-                           FStar_Pprint.op_Hat_Hat
-                             (FStar_Pprint.doc_of_string "inv ") uu___1))))
+                           FStarC_Pprint.op_Hat_Hat
+                             (FStarC_Pprint.doc_of_string "inv ") uu___1))))
        | Pulse_Syntax_Pure.Tm_Unknown ->
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.lift_div_tac
-                   (fun uu___ -> FStar_Pprint.doc_of_string "_")))
+                   (fun uu___ -> FStarC_Pprint.doc_of_string "_")))
        | Pulse_Syntax_Pure.Tm_FStar t1 ->
-           Obj.magic (Obj.repr (FStar_Tactics_V2_Builtins.term_to_doc t1)))
+           Obj.magic (Obj.repr (FStarC_Tactics_V2_Builtins.term_to_doc t1)))
       uu___
 let (binder_to_string :
   Pulse_Syntax_Base.binder ->
@@ -5776,7 +5776,7 @@ let (decl_to_string :
                    (fun uu___6 ->
                       Prims.strcat
                         (FStar_Pervasives_Native.fst
-                           (FStar_Reflection_V2_Builtins.inspect_ident id))
+                           (FStarC_Reflection_V2_Builtins.inspect_ident id))
                         uu___5)) in
           FStar_Tactics_Effect.tac_bind
             (FStar_Sealed.seal
@@ -5864,7 +5864,7 @@ let (decl_to_string :
                  (fun uu___4 ->
                     Prims.strcat
                       (FStar_Pervasives_Native.fst
-                         (FStar_Reflection_V2_Builtins.inspect_ident id))
+                         (FStarC_Reflection_V2_Builtins.inspect_ident id))
                       uu___3)) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal

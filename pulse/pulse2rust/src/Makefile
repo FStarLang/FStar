@@ -11,6 +11,7 @@ include $(FSTAR_HOME)/src/Makefile.boot.common
 
 CACHE_DIR = $(CURDIR)
 OUTPUT_DIRECTORY = $(CURDIR)/ocaml/generated
+FSTAR_BOOT_OPTIONS += --MLish_effect FStarC.Compiler.Effect
 FSTAR_C=$(RUNLIM) $(FSTAR_EXE) $(SIL) $(FSTAR_BOOT_OPTIONS) --include $(FSTAR_HOME)/src/.cache.boot --cache_checked_modules
 
 # Would be nice to add --already_cached 'Prims FStar'
@@ -40,7 +41,7 @@ include .depend
 	$(call msg, "EXTRACT", $(notdir $@))
 	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
 	--odir $(OUTPUT_DIRECTORY) \
-	--codegen OCaml \
+	--codegen OCaml --MLish \
 	--extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
 extract: $(ALL_ML_FILES)

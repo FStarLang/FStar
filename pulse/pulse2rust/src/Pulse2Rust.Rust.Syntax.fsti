@@ -16,7 +16,7 @@
 
 module Pulse2Rust.Rust.Syntax
 
-open FStar.Compiler.Effect
+open FStarC.Compiler.Effect
 
 type lit_int_width =
   | I8

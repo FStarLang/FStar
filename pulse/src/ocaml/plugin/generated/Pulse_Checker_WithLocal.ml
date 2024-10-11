@@ -60,7 +60,7 @@ let (extend_post_hint_for_local :
                           (fun g' ->
                              let uu___2 =
                                Pulse_Checker_Pure.core_check_term g' conjunct
-                                 FStar_TypeChecker_Core.E_Total
+                                 FStarC_TypeChecker_Core.E_Total
                                  Pulse_Syntax_Pure.tm_slprop in
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
@@ -318,7 +318,7 @@ let (check :
                                                                     =
                                                                     Pulse_Checker_Pure.check_term
                                                                     g1 init
-                                                                    FStar_TypeChecker_Core.E_Total
+                                                                    FStarC_TypeChecker_Core.E_Total
                                                                     ty in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind

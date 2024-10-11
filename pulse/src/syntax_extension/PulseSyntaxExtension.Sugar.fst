@@ -15,14 +15,15 @@
 *)
 
 module PulseSyntaxExtension.Sugar
-open FStar.Ident
-module A = FStar.Parser.AST
-module AU = FStar.Parser.AST.Util
-open FStar.Class.Show
-open FStar.Class.Tagged
+open FStarC
+open FStarC.Ident
+module A = FStarC.Parser.AST
+module AU = FStarC.Parser.AST.Util
+open FStarC.Class.Show
+open FStarC.Class.Tagged
 
-let rng = FStar.Compiler.Range.range
-let dummyRange = FStar.Compiler.Range.dummyRange
+let rng = FStarC.Compiler.Range.range
+let dummyRange = FStarC.Compiler.Range.dummyRange
 
 //Note: We do not yet process binder attributes, like typeclass attributes
 type binder = A.binder
@@ -292,13 +293,13 @@ let rec stmt_to_string (s:stmt) : string =
       "head", show head;
       "join_slprop", show join_slprop;
       "then_", stmt_to_string then_;
-      "else_opt", FStar.Common.string_of_option stmt_to_string else_opt;
+      "else_opt", FStarC.Common.string_of_option stmt_to_string else_opt;
     ]
   | Match { head; returns_annot; branches } ->
     "Match " ^ record_string [
       "head", show head;
       "returns_annot", show returns_annot;
-      "branches", FStar.Common.string_of_list branch_to_string branches;
+      "branches", FStarC.Common.string_of_list branch_to_string branches;
     ]
   | While { guard; id; invariant; body } ->
     "While " ^ record_string [
@@ -310,7 +311,7 @@ let rec stmt_to_string (s:stmt) : string =
   | Introduce { slprop; witnesses } ->
     "Introduce " ^ record_string [
       "slprop", show slprop;
-      "witnesses", FStar.Common.string_of_list show witnesses
+      "witnesses", FStarC.Common.string_of_list show witnesses
     ]
   | Sequence { s1; s2 } ->
     "Sequence " ^ record_string [
@@ -333,9 +334,9 @@ let rec stmt_to_string (s:stmt) : string =
     ]
   | WithInvariants { names; body; returns_ } ->
     "WithInvariants " ^ record_string [
-      "names", FStar.Common.string_of_list show names;
+      "names", FStarC.Common.string_of_list show names;
       "body", stmt_to_string body;
-      "returns_", FStar.Common.string_of_option show returns_;
+      "returns_", FStarC.Common.string_of_option show returns_;
     ]
 
 and branch_to_string (b:A.pattern & stmt) : string =
@@ -349,7 +350,7 @@ instance showable_stmt : showable stmt = {
 type decl =
   | FnDefn of fn_defn
   | FnDecl of fn_decl
-open FStar.Class.Deq
+open FStarC.Class.Deq
 let eq_ident (i1 i2:Ident.ident) = i1 =? i2
 let eq_lident (i1 i2:Ident.lident) = i1 =? i2
 let rec forall2 (f:'a -> 'a -> bool) (l1 l2:list 'a) : bool =

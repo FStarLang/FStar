@@ -2,7 +2,7 @@ open Prims
 let (check_effect :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
-      FStar_TypeChecker_Core.tot_or_ghost ->
+      FStarC_TypeChecker_Core.tot_or_ghost ->
         Pulse_Syntax_Base.term ->
           unit ->
             Pulse_Syntax_Base.ctag FStar_Pervasives_Native.option ->
@@ -24,7 +24,7 @@ let (check_effect :
                          fun c ->
                            match (c, eff) with
                            | (FStar_Pervasives_Native.None,
-                              FStar_TypeChecker_Core.E_Total) ->
+                              FStarC_TypeChecker_Core.E_Total) ->
                                Obj.magic
                                  (Obj.repr
                                     (FStar_Tactics_Effect.lift_div_tac
@@ -33,7 +33,7 @@ let (check_effect :
                                             (Pulse_Syntax_Base.STT_Atomic, e,
                                               ()))))
                            | (FStar_Pervasives_Native.None,
-                              FStar_TypeChecker_Core.E_Ghost) ->
+                              FStarC_TypeChecker_Core.E_Ghost) ->
                                Obj.magic
                                  (Obj.repr
                                     (FStar_Tactics_Effect.lift_div_tac
@@ -43,7 +43,7 @@ let (check_effect :
                                               ()))))
                            | (FStar_Pervasives_Native.Some
                               (Pulse_Syntax_Base.STT_Ghost),
-                              FStar_TypeChecker_Core.E_Total) ->
+                              FStarC_TypeChecker_Core.E_Total) ->
                                Obj.magic
                                  (Obj.repr
                                     (FStar_Tactics_Effect.lift_div_tac
@@ -53,7 +53,7 @@ let (check_effect :
                                               ()))))
                            | (FStar_Pervasives_Native.Some
                               (Pulse_Syntax_Base.STT_Ghost),
-                              FStar_TypeChecker_Core.E_Ghost) ->
+                              FStarC_TypeChecker_Core.E_Ghost) ->
                                Obj.magic
                                  (Obj.repr
                                     (FStar_Tactics_Effect.lift_div_tac
@@ -61,7 +61,7 @@ let (check_effect :
                                           FStar_Pervasives.Mkdtuple3
                                             (Pulse_Syntax_Base.STT_Ghost, e,
                                               ()))))
-                           | (uu___, FStar_TypeChecker_Core.E_Total) ->
+                           | (uu___, FStarC_TypeChecker_Core.E_Total) ->
                                Obj.magic
                                  (Obj.repr
                                     (FStar_Tactics_Effect.lift_div_tac

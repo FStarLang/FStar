@@ -388,21 +388,21 @@ let (is_eq2_uvar : pure_uv_heuristic_t) =
                             else FStar_Pervasives_Native.None
                         | uu___2 -> FStar_Pervasives_Native.None))))
 let (is_host_var :
-  FStar_Reflection_Types.term ->
+  FStarC_Reflection_Types.term ->
     Pulse_Syntax_Base.nm FStar_Pervasives_Native.option)
   =
   fun x ->
-    match FStar_Reflection_V2_Builtins.inspect_ln x with
-    | FStar_Reflection_V2_Data.Tv_Var nv ->
-        let nv_view = FStar_Reflection_V2_Builtins.inspect_namedv nv in
+    match FStarC_Reflection_V2_Builtins.inspect_ln x with
+    | FStarC_Reflection_V2_Data.Tv_Var nv ->
+        let nv_view = FStarC_Reflection_V2_Builtins.inspect_namedv nv in
         FStar_Pervasives_Native.Some
           {
             Pulse_Syntax_Base.nm_index =
-              (nv_view.FStar_Reflection_V2_Data.uniq);
+              (nv_view.FStarC_Reflection_V2_Data.uniq);
             Pulse_Syntax_Base.nm_ppname =
               (Pulse_Syntax_Base.mk_ppname
-                 nv_view.FStar_Reflection_V2_Data.ppname
-                 (FStar_Reflection_V2_Builtins.range_of_term x))
+                 nv_view.FStarC_Reflection_V2_Data.ppname
+                 (FStarC_Reflection_V2_Builtins.range_of_term x))
           }
     | uu___ -> FStar_Pervasives_Native.None
 let (is_uvar_implication : pure_uv_heuristic_t) =
@@ -500,7 +500,7 @@ let (is_uvar_implication : pure_uv_heuristic_t) =
                                                          uvs
                                                          (fun uu___6 ->
                                                             let uu___7 =
-                                                              FStar_Tactics_V2_Builtins.term_to_string
+                                                              FStarC_Tactics_V2_Builtins.term_to_string
                                                                 t0 in
                                                             FStar_Tactics_Effect.tac_bind
                                                               (FStar_Sealed.seal
@@ -552,10 +552,10 @@ let (is_uvar_implication : pure_uv_heuristic_t) =
                                                        (Obj.magic uu___5)
                                                        (fun uu___6 ->
                                                           (fun uu___6 ->
-                                                             match FStar_Reflection_V2_Builtins.inspect_ln
+                                                             match FStarC_Reflection_V2_Builtins.inspect_ln
                                                                     t0
                                                              with
-                                                             | FStar_Reflection_V2_Data.Tv_Unknown
+                                                             | FStarC_Reflection_V2_Data.Tv_Unknown
                                                                  ->
                                                                  Obj.magic
                                                                    (Obj.repr
@@ -621,9 +621,9 @@ let (is_uvar_implication : pure_uv_heuristic_t) =
                                                                     Pulse_Syntax_Base.eq_tm
                                                                     ty
                                                                     (Pulse_Syntax_Pure.wr
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["Prims";
                                                                     "bool"])))
                                                                     FStar_Range.range_0)
@@ -685,15 +685,15 @@ let (is_uvar_implication : pure_uv_heuristic_t) =
                                                                     (Prims.Mkdtuple2
                                                                     ((nm.Pulse_Syntax_Base.nm_index),
                                                                     (Pulse_Syntax_Pure.wr
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["Prims";
                                                                     "op_Negation"]))),
                                                                     (rhs,
-                                                                    FStar_Reflection_V2_Data.Q_Explicit))))
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit))))
                                                                     FStar_Range.range_0)))
                                                                     | 
                                                                     uu___12
@@ -1307,7 +1307,7 @@ let (intro_pure :
                                                                     (fun
                                                                     uu___14
                                                                     ->
-                                                                    FStar_Pprint.prefix
+                                                                    FStarC_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -1431,7 +1431,7 @@ let (intro_pure :
                                                                     let uu___10
                                                                     =
                                                                     FStar_Tactics_V2_Derived.with_policy
-                                                                    FStar_Tactics_Types.ForceSMT
+                                                                    FStarC_Tactics_Types.ForceSMT
                                                                     (fun
                                                                     uu___11
                                                                     ->

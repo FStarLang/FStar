@@ -2,18 +2,18 @@ open Prims
 
 let rec (equational : Pulse_Syntax_Base.term -> Prims.bool) =
   fun t ->
-    match FStar_Reflection_V2_Builtins.inspect_ln t with
-    | FStar_Reflection_V2_Data.Tv_App (h, uu___) -> equational h
-    | FStar_Reflection_V2_Data.Tv_Match (uu___, uu___1, uu___2) -> true
-    | FStar_Reflection_V2_Data.Tv_AscribedT (t1, uu___, uu___1, uu___2) ->
+    match FStarC_Reflection_V2_Builtins.inspect_ln t with
+    | FStarC_Reflection_V2_Data.Tv_App (h, uu___) -> equational h
+    | FStarC_Reflection_V2_Data.Tv_Match (uu___, uu___1, uu___2) -> true
+    | FStarC_Reflection_V2_Data.Tv_AscribedT (t1, uu___, uu___1, uu___2) ->
         equational t1
-    | FStar_Reflection_V2_Data.Tv_AscribedC (t1, uu___, uu___1, uu___2) ->
+    | FStarC_Reflection_V2_Data.Tv_AscribedC (t1, uu___, uu___1, uu___2) ->
         equational t1
     | uu___ -> false
 let (type_of_fv :
   Pulse_Typing_Env.env ->
-    FStar_Reflection_Types.fv ->
-      (FStar_Reflection_Types.term FStar_Pervasives_Native.option, unit)
+    FStarC_Reflection_Types.fv ->
+      (FStarC_Reflection_Types.term FStar_Pervasives_Native.option, unit)
         FStar_Tactics_Effect.tac_repr)
   =
   fun uu___1 ->
@@ -23,35 +23,36 @@ let (type_of_fv :
            Obj.magic
              (FStar_Tactics_Effect.lift_div_tac
                 (fun uu___ ->
-                   match FStar_Reflection_V2_Builtins.lookup_typ
+                   match FStarC_Reflection_V2_Builtins.lookup_typ
                            (Pulse_Typing_Env.fstar_env g)
-                           (FStar_Reflection_V2_Builtins.inspect_fv fv)
+                           (FStarC_Reflection_V2_Builtins.inspect_fv fv)
                    with
                    | FStar_Pervasives_Native.None ->
                        FStar_Pervasives_Native.None
                    | FStar_Pervasives_Native.Some se ->
-                       (match FStar_Reflection_V2_Builtins.inspect_sigelt se
+                       (match FStarC_Reflection_V2_Builtins.inspect_sigelt se
                         with
-                        | FStar_Reflection_V2_Data.Unk ->
+                        | FStarC_Reflection_V2_Data.Unk ->
                             FStar_Pervasives_Native.None
-                        | FStar_Reflection_V2_Data.Sg_Let (uu___1, lbs) ->
+                        | FStarC_Reflection_V2_Data.Sg_Let (uu___1, lbs) ->
                             FStar_List_Tot_Base.tryPick
                               (fun lb ->
                                  if
-                                   (FStar_Reflection_V2_Builtins.inspect_fv
-                                      (FStar_Reflection_V2_Builtins.inspect_lb
-                                         lb).FStar_Reflection_V2_Data.lb_fv)
+                                   (FStarC_Reflection_V2_Builtins.inspect_fv
+                                      (FStarC_Reflection_V2_Builtins.inspect_lb
+                                         lb).FStarC_Reflection_V2_Data.lb_fv)
                                      =
-                                     (FStar_Reflection_V2_Builtins.inspect_fv
+                                     (FStarC_Reflection_V2_Builtins.inspect_fv
                                         fv)
                                  then
                                    FStar_Pervasives_Native.Some
-                                     ((FStar_Reflection_V2_Builtins.inspect_lb
-                                         lb).FStar_Reflection_V2_Data.lb_typ)
+                                     ((FStarC_Reflection_V2_Builtins.inspect_lb
+                                         lb).FStarC_Reflection_V2_Data.lb_typ)
                                  else FStar_Pervasives_Native.None) lbs
-                        | FStar_Reflection_V2_Data.Sg_Val (uu___1, uu___2, t)
-                            -> FStar_Pervasives_Native.Some t
-                        | FStar_Reflection_V2_Data.Sg_Inductive
+                        | FStarC_Reflection_V2_Data.Sg_Val
+                            (uu___1, uu___2, t) ->
+                            FStar_Pervasives_Native.Some t
+                        | FStarC_Reflection_V2_Data.Sg_Inductive
                             (_nm, _univs, params, typ, uu___1) ->
                             FStar_Pervasives_Native.None)))) uu___1 uu___
 type matching_kind =
@@ -64,25 +65,25 @@ let (uu___is_Strict : matching_kind -> Prims.bool) =
   fun projectee -> match projectee with | Strict -> true | uu___ -> false
 let (uu___is_Full : matching_kind -> Prims.bool) =
   fun projectee -> match projectee with | Full -> true | uu___ -> false
-let (is_equate_by_smt : FStar_Reflection_Types.term -> Prims.bool) =
+let (is_equate_by_smt : FStarC_Reflection_Types.term -> Prims.bool) =
   fun t ->
-    match FStar_Reflection_V2_Builtins.inspect_ln t with
-    | FStar_Reflection_V2_Data.Tv_FVar fv ->
-        let name = FStar_Reflection_V2_Builtins.inspect_fv fv in
+    match FStarC_Reflection_V2_Builtins.inspect_ln t with
+    | FStarC_Reflection_V2_Data.Tv_FVar fv ->
+        let name = FStarC_Reflection_V2_Builtins.inspect_fv fv in
         name = ["Pulse"; "Lib"; "Core"; "equate_by_smt"]
     | uu___ -> false
-let (is_equate_strict : FStar_Reflection_Types.term -> Prims.bool) =
+let (is_equate_strict : FStarC_Reflection_Types.term -> Prims.bool) =
   fun t ->
-    match FStar_Reflection_V2_Builtins.inspect_ln t with
-    | FStar_Reflection_V2_Data.Tv_FVar fv ->
-        let name = FStar_Reflection_V2_Builtins.inspect_fv fv in
+    match FStarC_Reflection_V2_Builtins.inspect_ln t with
+    | FStarC_Reflection_V2_Data.Tv_FVar fv ->
+        let name = FStarC_Reflection_V2_Builtins.inspect_fv fv in
         name = ["Pulse"; "Lib"; "Core"; "equate_strict"]
     | uu___ -> false
-let (is_equate_syntactic : FStar_Reflection_Types.term -> Prims.bool) =
+let (is_equate_syntactic : FStarC_Reflection_Types.term -> Prims.bool) =
   fun t ->
-    match FStar_Reflection_V2_Builtins.inspect_ln t with
-    | FStar_Reflection_V2_Data.Tv_FVar fv ->
-        let name = FStar_Reflection_V2_Builtins.inspect_fv fv in
+    match FStarC_Reflection_V2_Builtins.inspect_ln t with
+    | FStarC_Reflection_V2_Data.Tv_FVar fv ->
+        let name = FStarC_Reflection_V2_Builtins.inspect_fv fv in
         name = ["Pulse"; "Lib"; "Core"; "equate_syntactic"]
     | uu___ -> false
 let (matching_kind_from_attr :
@@ -204,8 +205,8 @@ let (same_head :
                   match uu___1 with
                   | (FStar_Pervasives_Native.Some (h0, us0, args0),
                      FStar_Pervasives_Native.Some (h1, us1, args1)) ->
-                      ((FStar_Reflection_V2_Builtins.inspect_fv h0) =
-                         (FStar_Reflection_V2_Builtins.inspect_fv h1))
+                      ((FStarC_Reflection_V2_Builtins.inspect_fv h0) =
+                         (FStarC_Reflection_V2_Builtins.inspect_fv h1))
                         &&
                         ((FStar_List_Tot_Base.length args0) =
                            (FStar_List_Tot_Base.length args1))
@@ -355,11 +356,11 @@ let (eligible_for_smt_equality :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (match 
-                                                                    FStar_Reflection_V2_Builtins.inspect_ln
+                                                                    FStarC_Reflection_V2_Builtins.inspect_ln
                                                                     h0
                                                                     with
                                                                     | 
-                                                                    FStar_Reflection_V2_Data.Tv_FVar
+                                                                    FStarC_Reflection_V2_Data.Tv_FVar
                                                                     fv ->
                                                                     Obj.repr
                                                                     (let uu___8
@@ -532,8 +533,8 @@ let (eligible_for_smt_equality :
                                                                     (fun
                                                                     uu___20
                                                                     ->
-                                                                    (FStar_Reflection_V2_Builtins.inspect_binder
-                                                                    b).FStar_Reflection_V2_Data.attrs)) in
+                                                                    (FStarC_Reflection_V2_Builtins.inspect_binder
+                                                                    b).FStarC_Reflection_V2_Data.attrs)) in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -677,7 +678,7 @@ let (eligible_for_smt_equality :
                                                                     uu___11))))
                                                                     uu___9))
                                                                     | 
-                                                                    FStar_Reflection_V2_Data.Tv_UInst
+                                                                    FStarC_Reflection_V2_Data.Tv_UInst
                                                                     (fv,
                                                                     uu___8)
                                                                     ->
@@ -854,8 +855,8 @@ let (eligible_for_smt_equality :
                                                                     (fun
                                                                     uu___21
                                                                     ->
-                                                                    (FStar_Reflection_V2_Builtins.inspect_binder
-                                                                    b).FStar_Reflection_V2_Data.attrs)) in
+                                                                    (FStarC_Reflection_V2_Builtins.inspect_binder
+                                                                    b).FStarC_Reflection_V2_Data.attrs)) in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -1020,19 +1021,19 @@ let (eligible_for_smt_equality :
                                             (fun uu___4 -> false))))) uu___2)))
                uu___1)
 let (refl_uvar :
-  FStar_Reflection_Types.term ->
+  FStarC_Reflection_Types.term ->
     Pulse_Typing_Env.env ->
       Pulse_Syntax_Base.var FStar_Pervasives_Native.option)
   =
   fun t ->
     fun uvs ->
-      match FStar_Reflection_V2_Builtins.inspect_ln t with
-      | FStar_Reflection_V2_Data.Tv_Var v ->
-          let uu___ = FStar_Reflection_V2_Builtins.inspect_namedv v in
+      match FStarC_Reflection_V2_Builtins.inspect_ln t with
+      | FStarC_Reflection_V2_Data.Tv_Var v ->
+          let uu___ = FStarC_Reflection_V2_Builtins.inspect_namedv v in
           (match uu___ with
-           | { FStar_Reflection_V2_Data.uniq = n;
-               FStar_Reflection_V2_Data.sort = uu___1;
-               FStar_Reflection_V2_Data.ppname = uu___2;_} ->
+           | { FStarC_Reflection_V2_Data.uniq = n;
+               FStarC_Reflection_V2_Data.sort = uu___1;
+               FStarC_Reflection_V2_Data.ppname = uu___2;_} ->
                if Pulse_Typing_Env.contains uvs n
                then FStar_Pervasives_Native.Some n
                else FStar_Pervasives_Native.None)
@@ -1116,12 +1117,12 @@ let (try_solve_uvars :
                            | ({ Pulse_Syntax_Base.name = name;
                                 Pulse_Syntax_Base.range = uu___5;_},
                               x, t) ->
-                               ((FStar_Reflection_V2_Builtins.pack_namedv
+                               ((FStarC_Reflection_V2_Builtins.pack_namedv
                                    (FStar_Tactics_V2_SyntaxCoercions.binding_to_namedv
                                       {
-                                        FStar_Reflection_V2_Data.uniq1 = x;
-                                        FStar_Reflection_V2_Data.sort3 = t;
-                                        FStar_Reflection_V2_Data.ppname3 =
+                                        FStarC_Reflection_V2_Data.uniq1 = x;
+                                        FStarC_Reflection_V2_Data.sort3 = t;
+                                        FStarC_Reflection_V2_Data.ppname3 =
                                           name
                                       })), t)) uu___2)) in
           FStar_Tactics_Effect.tac_bind
@@ -1145,9 +1146,9 @@ let (try_solve_uvars :
                       (Pulse_Typing_Env.get_context g)
                       (fun uu___2 ->
                          FStar_Tactics_V2_Derived.with_policy
-                           FStar_Tactics_Types.ForceSMT
+                           FStarC_Tactics_Types.ForceSMT
                            (fun uu___3 ->
-                              FStar_Tactics_V2_Builtins.try_unify
+                              FStarC_Tactics_V2_Builtins.try_unify
                                 (Pulse_Typing.elab_env g) uvs1 p q)) in
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
@@ -1169,7 +1170,7 @@ let (try_solve_uvars :
                              match uu___2 with
                              | (l, issues) ->
                                  let uu___3 =
-                                   FStar_Tactics_V2_Builtins.log_issues
+                                   FStarC_Tactics_V2_Builtins.log_issues
                                      issues in
                                  Obj.magic
                                    (FStar_Tactics_Effect.tac_bind
@@ -1206,23 +1207,23 @@ let (try_solve_uvars :
                                                          | (x, t) ->
                                                              if
                                                                (FStar_Set.mem
-                                                                  (FStar_Reflection_V2_Builtins.inspect_namedv
-                                                                    x).FStar_Reflection_V2_Data.uniq
+                                                                  (FStarC_Reflection_V2_Builtins.inspect_namedv
+                                                                    x).FStarC_Reflection_V2_Data.uniq
                                                                   (Pulse_Syntax_Naming.freevars
                                                                     q))
                                                                  &&
                                                                  (Prims.op_Negation
                                                                     (
                                                                     FStar_Set.mem
-                                                                    (FStar_Reflection_V2_Builtins.inspect_namedv
-                                                                    x).FStar_Reflection_V2_Data.uniq
+                                                                    (FStarC_Reflection_V2_Builtins.inspect_namedv
+                                                                    x).FStarC_Reflection_V2_Data.uniq
                                                                     (Pulse_Checker_Prover_Substs.dom
                                                                     ss)))
                                                              then
                                                                Pulse_Checker_Prover_Substs.push
                                                                  ss
-                                                                 (FStar_Reflection_V2_Builtins.inspect_namedv
-                                                                    x).FStar_Reflection_V2_Data.uniq
+                                                                 (FStarC_Reflection_V2_Builtins.inspect_namedv
+                                                                    x).FStarC_Reflection_V2_Data.uniq
                                                                  t
                                                              else ss)
                                                     Pulse_Checker_Prover_Substs.empty
@@ -1233,12 +1234,12 @@ let rec (unascribe :
   =
   fun g ->
     fun t ->
-      match FStar_Reflection_V2_Builtins.inspect_ln t with
-      | FStar_Reflection_V2_Data.Tv_AscribedT (t', uu___, uu___1, uu___2) ->
+      match FStarC_Reflection_V2_Builtins.inspect_ln t with
+      | FStarC_Reflection_V2_Data.Tv_AscribedT (t', uu___, uu___1, uu___2) ->
           let uu___3 = unascribe g t' in
           (match uu___3 with
            | Prims.Mkdtuple2 (t'', tok') -> Prims.Mkdtuple2 (t'', ()))
-      | FStar_Reflection_V2_Data.Tv_AscribedC (t', uu___, uu___1, uu___2) ->
+      | FStarC_Reflection_V2_Data.Tv_AscribedC (t', uu___, uu___1, uu___2) ->
           let uu___3 = unascribe g t' in
           (match uu___3 with
            | Prims.Mkdtuple2 (t'', tok') -> Prims.Mkdtuple2 (t'', ()))
@@ -1264,7 +1265,7 @@ let (try_unif_nosmt :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term ->
-        (((unit, unit, unit) FStar_Tactics_Types.equiv_token
+        (((unit, unit, unit) FStarC_Tactics_Types.equiv_token
            FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -1402,7 +1403,7 @@ let (try_unif_nosmt :
                                                                   (fun
                                                                     uu___12
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "p: ")
                                                                     uu___11)) in
@@ -1461,7 +1462,7 @@ let (try_unif_nosmt :
                                                                     (fun
                                                                     uu___15
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "q: ")
                                                                     uu___14)) in
@@ -1690,7 +1691,7 @@ let (head_is_uvar :
                                         match uu___6 with
                                         | (x, uu___7) ->
                                             x =
-                                              v.FStar_Reflection_V2_Data.uniq)
+                                              v.FStarC_Reflection_V2_Data.uniq)
                                      (Pulse_Typing_Env.bindings uvs)
                                | uu___6 -> false)))) uu___1)
 let (match_syntactic_11 : Pulse_Checker_Prover_Match_Base.matcher_t) =
@@ -1916,11 +1917,11 @@ let (match_fastunif_inst_11 : Pulse_Checker_Prover_Match_Base.matcher_t) =
                                                               let uu___6 =
                                                                 let uu___7 =
                                                                   FStar_Tactics_V2_Derived.with_policy
-                                                                    FStar_Tactics_Types.ForceSMT
+                                                                    FStarC_Tactics_Types.ForceSMT
                                                                     (
                                                                     fun
                                                                     uu___8 ->
-                                                                    FStar_Tactics_V2_Builtins.tc_term
+                                                                    FStarC_Tactics_V2_Builtins.tc_term
                                                                     (Pulse_Typing.elab_env
                                                                     g)
                                                                     q_subst) in
@@ -1956,7 +1957,7 @@ let (match_fastunif_inst_11 : Pulse_Checker_Prover_Match_Base.matcher_t) =
                                                                     []) ->
                                                                     Obj.magic
                                                                     (Obj.repr
-                                                                    (FStar_Tactics_V2_Builtins.norm_well_typed_term
+                                                                    (FStarC_Tactics_V2_Builtins.norm_well_typed_term
                                                                     (Pulse_Typing.elab_env
                                                                     g)
                                                                     [FStar_Pervasives.unascribe;
@@ -2132,7 +2133,7 @@ let (match_fastunif_inst_11 : Pulse_Checker_Prover_Match_Base.matcher_t) =
                                                                     (fun
                                                                     uu___16
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "p: ")
                                                                     uu___15)) in
@@ -2196,7 +2197,7 @@ let (match_fastunif_inst_11 : Pulse_Checker_Prover_Match_Base.matcher_t) =
                                                                     (fun
                                                                     uu___19
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "q: ")
                                                                     uu___18)) in
@@ -2260,7 +2261,7 @@ let (match_fastunif_inst_11 : Pulse_Checker_Prover_Match_Base.matcher_t) =
                                                                     (fun
                                                                     uu___22
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "q_subst: ")
                                                                     uu___21)) in
@@ -2324,7 +2325,7 @@ let (match_fastunif_inst_11 : Pulse_Checker_Prover_Match_Base.matcher_t) =
                                                                     (fun
                                                                     uu___25
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Hat
+                                                                    FStarC_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "q_norm: ")
                                                                     uu___24)) in
@@ -2771,11 +2772,11 @@ let (match_full_11 : Pulse_Checker_Prover_Match_Base.matcher_t) =
                                                               let uu___6 =
                                                                 let uu___7 =
                                                                   FStar_Tactics_V2_Derived.with_policy
-                                                                    FStar_Tactics_Types.ForceSMT
+                                                                    FStarC_Tactics_Types.ForceSMT
                                                                     (
                                                                     fun
                                                                     uu___8 ->
-                                                                    FStar_Tactics_V2_Builtins.tc_term
+                                                                    FStarC_Tactics_V2_Builtins.tc_term
                                                                     (Pulse_Typing.elab_env
                                                                     g)
                                                                     q_subst) in
@@ -2811,7 +2812,7 @@ let (match_full_11 : Pulse_Checker_Prover_Match_Base.matcher_t) =
                                                                     []) ->
                                                                     Obj.magic
                                                                     (Obj.repr
-                                                                    (FStar_Tactics_V2_Builtins.norm_well_typed_term
+                                                                    (FStarC_Tactics_V2_Builtins.norm_well_typed_term
                                                                     (Pulse_Typing.elab_env
                                                                     g)
                                                                     [FStar_Pervasives.unascribe;

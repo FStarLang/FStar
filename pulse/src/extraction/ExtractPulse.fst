@@ -1,25 +1,25 @@
 module ExtractPulse
-friend FStar.Extraction.Krml
+friend FStarC.Extraction.Krml
 
-(* IMPORTANT: these `open` directives come from FStar.Extraction.Krml.
+(* IMPORTANT: these `open` directives come from FStarC.Extraction.Krml.
    Without them, spurious dependencies on F* ulib will be introduced *)
-open FStar.Compiler.Effect
-open FStar.Compiler.List
+open FStarC.Compiler.Effect
+open FStarC.Compiler.List
 open FStar
-open FStar.Compiler
-open FStar.Compiler.Util
-open FStar.Extraction
-open FStar.Extraction.ML
-open FStar.Extraction.ML.Syntax
-open FStar.Const
-open FStar.BaseTypes
+open FStarC.Compiler
+open FStarC.Compiler.Util
+open FStarC.Extraction
+open FStarC.Extraction.ML
+open FStarC.Extraction.ML.Syntax
+open FStarC.Const
+open FStarC.BaseTypes
 
-module BU = FStar.Compiler.Util
-module FC = FStar.Const
+module BU = FStarC.Compiler.Util
+module FC = FStarC.Const
 
-open FStar.Class.Show
+open FStarC.Class.Show
 
-open FStar.Extraction.Krml
+open FStarC.Extraction.Krml
 
 let flatten_app e =
   let rec aux args e =

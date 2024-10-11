@@ -88,7 +88,7 @@ let (extend_post_hint :
                                         let uu___3 =
                                           Pulse_Checker_Pure.core_check_term
                                             g' conjunct
-                                            FStar_TypeChecker_Core.E_Total
+                                            FStarC_TypeChecker_Core.E_Total
                                             Pulse_Syntax_Pure.tm_slprop in
                                         Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
@@ -436,7 +436,7 @@ let (check :
                                                                     Pulse_Checker_Pure.check_term
                                                                     g1
                                                                     initializer1
-                                                                    FStar_TypeChecker_Core.E_Total
+                                                                    FStarC_TypeChecker_Core.E_Total
                                                                     ty1 in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind

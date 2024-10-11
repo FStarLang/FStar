@@ -29,7 +29,8 @@ let (debug :
                      (Obj.magic uu___)
                      (fun uu___1 ->
                         (fun uu___1 ->
-                           Obj.magic (FStar_Tactics_V2_Builtins.print uu___1))
+                           Obj.magic
+                             (FStarC_Tactics_V2_Builtins.print uu___1))
                           uu___1)))
            else
              Obj.magic
@@ -326,20 +327,21 @@ let (format_failed_goal :
                                                 uu___4))) uu___3))) uu___2)))
                uu___1)
 let (mk_arrow :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.typ -> FStar_Reflection_Types.term)
+  FStarC_Reflection_Types.term ->
+    FStarC_Reflection_Types.typ -> FStarC_Reflection_Types.term)
   =
   fun ty ->
     fun t ->
-      FStar_Reflection_Typing.mk_arrow ty FStar_Reflection_V2_Data.Q_Explicit
-        t
+      FStar_Reflection_Typing.mk_arrow ty
+        FStarC_Reflection_V2_Data.Q_Explicit t
 let (mk_abs :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  FStarC_Reflection_Types.term ->
+    FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term)
   =
   fun ty ->
     fun t ->
-      FStar_Reflection_Typing.mk_abs ty FStar_Reflection_V2_Data.Q_Explicit t
+      FStar_Reflection_Typing.mk_abs ty FStarC_Reflection_V2_Data.Q_Explicit
+        t
 let (intro_comp_typing :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp_st ->
@@ -465,10 +467,10 @@ let (intro_comp_typing :
                                            (g, i, st, (), stc))))) uu___1)
 type ('a1, 'a2) effect_annot_labels_match = Obj.t
 let (fstar_equiv_preserves_typing :
-  FStar_Reflection_Types.env ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term ->
-        FStar_Reflection_Types.term ->
+  FStarC_Reflection_Types.env ->
+    FStarC_Reflection_Types.term ->
+      FStarC_Reflection_Types.term ->
+        FStarC_Reflection_Types.term ->
           unit ->
             (unit, unit, unit) FStar_Reflection_Typing.tot_typing ->
               (unit, unit, unit) FStar_Reflection_Typing.tot_typing)
@@ -491,7 +493,7 @@ let (check_effect_annot :
                 fun opens ->
                   let uu___2 =
                     Pulse_Checker_Pure.check_term g opens
-                      FStar_TypeChecker_Core.E_Total
+                      FStarC_TypeChecker_Core.E_Total
                       Pulse_Syntax_Pure.tm_inames in
                   FStar_Tactics_Effect.tac_bind
                     (FStar_Sealed.seal
@@ -510,7 +512,7 @@ let (check_effect_annot :
                           match uu___3 with
                           | Prims.Mkdtuple2 (opens1, d) ->
                               let uu___4 =
-                                FStar_Tactics_V2_Builtins.norm_well_typed_term
+                                FStarC_Tactics_V2_Builtins.norm_well_typed_term
                                   (Pulse_Typing.elab_env g)
                                   [FStar_Pervasives.primops;
                                   FStar_Pervasives.iota;
@@ -2155,7 +2157,7 @@ let (continuation_elaborator_with_bind_fn :
                                                                     =
                                                                     Pulse_Checker_Pure.core_check_term
                                                                     g i
-                                                                    FStar_TypeChecker_Core.E_Total
+                                                                    FStarC_TypeChecker_Core.E_Total
                                                                     Pulse_Syntax_Pure.tm_inames in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -2201,7 +2203,7 @@ let (continuation_elaborator_with_bind_fn :
                                                                     =
                                                                     Pulse_Checker_Pure.core_check_term
                                                                     g i
-                                                                    FStar_TypeChecker_Core.E_Total
+                                                                    FStarC_TypeChecker_Core.E_Total
                                                                     Pulse_Syntax_Pure.tm_inames in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -3084,7 +3086,7 @@ let (readback_comp_res_as_comp :
   =
   fun c ->
     match c with
-    | FStar_Reflection_V2_Data.C_Total t ->
+    | FStarC_Reflection_V2_Data.C_Total t ->
         (match Pulse_Readback.readback_comp t with
          | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
          | FStar_Pervasives_Native.Some c1 -> FStar_Pervasives_Native.Some c1)
@@ -3092,10 +3094,10 @@ let (readback_comp_res_as_comp :
 let rec (is_stateful_arrow :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp FStar_Pervasives_Native.option ->
-      FStar_Reflection_V2_Data.argv Prims.list ->
-        FStar_Reflection_V2_Data.argv Prims.list ->
-          ((FStar_Reflection_V2_Data.argv Prims.list *
-             FStar_Reflection_V2_Data.argv) FStar_Pervasives_Native.option,
+      FStarC_Reflection_V2_Data.argv Prims.list ->
+        FStarC_Reflection_V2_Data.argv Prims.list ->
+          ((FStarC_Reflection_V2_Data.argv Prims.list *
+             FStarC_Reflection_V2_Data.argv) FStar_Pervasives_Native.option,
             unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___3 ->
@@ -3209,9 +3211,9 @@ let rec (is_stateful_arrow :
                                                              if
                                                                FStar_List_Tot_Base.for_all
                                                                  (fun b1 ->
-                                                                    FStar_Reflection_V2_Data.uu___is_Q_Implicit
-                                                                    (FStar_Reflection_V2_Builtins.inspect_binder
-                                                                    b1).FStar_Reflection_V2_Data.qual)
+                                                                    FStarC_Reflection_V2_Data.uu___is_Q_Implicit
+                                                                    (FStarC_Reflection_V2_Builtins.inspect_binder
+                                                                    b1).FStarC_Reflection_V2_Data.qual)
                                                                  bs
                                                              then
                                                                Obj.magic
@@ -3220,7 +3222,7 @@ let rec (is_stateful_arrow :
                                                                     is_stateful_arrow
                                                                     g
                                                                     (readback_comp_res_as_comp
-                                                                    (FStar_Reflection_V2_Builtins.inspect_comp
+                                                                    (FStarC_Reflection_V2_Builtins.inspect_comp
                                                                     c2)) []
                                                                     out))
                                                              else
@@ -3239,9 +3241,9 @@ let rec (is_stateful_arrow :
                                                      (fun uu___2 ->
                                                         match b.FStar_Tactics_NamedView.qual
                                                         with
-                                                        | FStar_Reflection_V2_Data.Q_Equality
+                                                        | FStarC_Reflection_V2_Data.Q_Equality
                                                             ->
-                                                            FStar_Reflection_V2_Data.Q_Explicit
+                                                            FStarC_Reflection_V2_Data.Q_Explicit
                                                         | q -> q)) in
                                               Obj.magic
                                                 (FStar_Tactics_Effect.tac_bind
@@ -3266,9 +3268,9 @@ let rec (is_stateful_arrow :
                                                       (fun bqual ->
                                                          match (bqual, qual)
                                                          with
-                                                         | (FStar_Reflection_V2_Data.Q_Meta
+                                                         | (FStarC_Reflection_V2_Data.Q_Meta
                                                             uu___2,
-                                                            FStar_Reflection_V2_Data.Q_Implicit)
+                                                            FStarC_Reflection_V2_Data.Q_Implicit)
                                                              ->
                                                              Obj.magic
                                                                (Obj.repr
@@ -3279,8 +3281,8 @@ let rec (is_stateful_arrow :
                                                                     ((arg,
                                                                     qual) ::
                                                                     out)))
-                                                         | (FStar_Reflection_V2_Data.Q_Implicit,
-                                                            FStar_Reflection_V2_Data.Q_Implicit)
+                                                         | (FStarC_Reflection_V2_Data.Q_Implicit,
+                                                            FStarC_Reflection_V2_Data.Q_Implicit)
                                                              ->
                                                              Obj.magic
                                                                (Obj.repr
@@ -3291,8 +3293,8 @@ let rec (is_stateful_arrow :
                                                                     ((arg,
                                                                     qual) ::
                                                                     out)))
-                                                         | (FStar_Reflection_V2_Data.Q_Explicit,
-                                                            FStar_Reflection_V2_Data.Q_Explicit)
+                                                         | (FStarC_Reflection_V2_Data.Q_Explicit,
+                                                            FStarC_Reflection_V2_Data.Q_Explicit)
                                                              ->
                                                              Obj.magic
                                                                (Obj.repr
@@ -3303,9 +3305,9 @@ let rec (is_stateful_arrow :
                                                                     ((arg,
                                                                     qual) ::
                                                                     out)))
-                                                         | (FStar_Reflection_V2_Data.Q_Meta
+                                                         | (FStarC_Reflection_V2_Data.Q_Meta
                                                             uu___2,
-                                                            FStar_Reflection_V2_Data.Q_Explicit)
+                                                            FStarC_Reflection_V2_Data.Q_Explicit)
                                                              ->
                                                              Obj.magic
                                                                (Obj.repr
@@ -3314,8 +3316,8 @@ let rec (is_stateful_arrow :
                                                                     (readback_comp_res_as_comp
                                                                     c1) args
                                                                     out))
-                                                         | (FStar_Reflection_V2_Data.Q_Implicit,
-                                                            FStar_Reflection_V2_Data.Q_Explicit)
+                                                         | (FStarC_Reflection_V2_Data.Q_Implicit,
+                                                            FStarC_Reflection_V2_Data.Q_Explicit)
                                                              ->
                                                              Obj.magic
                                                                (Obj.repr
@@ -3399,7 +3401,7 @@ let rec (is_stateful_arrow :
                                                                     uu___5 ->
                                                                     Pulse_Syntax_Pure.wr
                                                                     c_res'
-                                                                    (FStar_Reflection_V2_Builtins.range_of_term
+                                                                    (FStarC_Reflection_V2_Builtins.range_of_term
                                                                     c_res'))) in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -3510,7 +3512,7 @@ let (is_stateful_application :
                                  (FStar_Tactics_Effect.lift_div_tac
                                     (fun uu___3 ->
                                        Pulse_Syntax_Pure.wr ht
-                                         (FStar_Reflection_V2_Builtins.range_of_term
+                                         (FStarC_Reflection_V2_Builtins.range_of_term
                                             ht))) in
                              FStar_Tactics_Effect.tac_bind
                                (FStar_Sealed.seal
@@ -3579,7 +3581,7 @@ let (is_stateful_application :
                                                                     (FStar_Reflection_V2_Derived.mk_app
                                                                     head
                                                                     applied_args)
-                                                                    (FStar_Reflection_V2_Builtins.range_of_term
+                                                                    (FStarC_Reflection_V2_Builtins.range_of_term
                                                                     (FStar_Reflection_V2_Derived.mk_app
                                                                     head
                                                                     applied_args)));
@@ -3589,7 +3591,7 @@ let (is_stateful_application :
                                                                    match aqual
                                                                    with
                                                                    | 
-                                                                   FStar_Reflection_V2_Data.Q_Implicit
+                                                                   FStarC_Reflection_V2_Data.Q_Implicit
                                                                     ->
                                                                     FStar_Pervasives_Native.Some
                                                                     Pulse_Syntax_Base.Implicit
@@ -3600,7 +3602,7 @@ let (is_stateful_application :
                                                                    =
                                                                    (Pulse_Syntax_Pure.wr
                                                                     last_arg
-                                                                    (FStar_Reflection_V2_Builtins.range_of_term
+                                                                    (FStarC_Reflection_V2_Builtins.range_of_term
                                                                     last_arg))
                                                                });
                                                           Pulse_Syntax_Base.range1
@@ -3622,7 +3624,7 @@ let (is_stateful_application :
 let (norm_typing :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
-      FStar_TypeChecker_Core.tot_or_ghost ->
+      FStarC_TypeChecker_Core.tot_or_ghost ->
         Pulse_Syntax_Base.term ->
           unit ->
             FStar_Pervasives.norm_step Prims.list ->
@@ -3655,7 +3657,7 @@ let (norm_typing :
                       let uu___1 =
                         Pulse_RuntimeUtils.norm_well_typed_term
                           (Pulse_Typing.elab_env g) t0
-                          FStar_TypeChecker_Core.E_Total () () steps in
+                          FStarC_TypeChecker_Core.E_Total () () steps in
                       Obj.magic
                         (FStar_Tactics_Effect.tac_bind
                            (FStar_Sealed.seal
@@ -3681,7 +3683,7 @@ let (norm_typing :
 let (norm_typing_inverse :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
-      FStar_TypeChecker_Core.tot_or_ghost ->
+      FStarC_TypeChecker_Core.tot_or_ghost ->
         Pulse_Syntax_Base.term ->
           unit ->
             Pulse_Syntax_Base.term ->
@@ -3722,8 +3724,8 @@ let (norm_typing_inverse :
                               Obj.magic
                                 (Pulse_RuntimeUtils.norm_well_typed_term
                                    (Pulse_Typing.elab_env g) t1
-                                   FStar_TypeChecker_Core.E_Total () () steps))
-                             uu___2) in
+                                   FStarC_TypeChecker_Core.E_Total () ()
+                                   steps)) uu___2) in
                     FStar_Tactics_Effect.tac_bind
                       (FStar_Sealed.seal
                          (Obj.magic
@@ -3786,7 +3788,7 @@ let (norm_st_typing_inverse :
                           let uu___1 =
                             Pulse_RuntimeUtils.norm_well_typed_term
                               (Pulse_Typing.elab_env g) t1
-                              FStar_TypeChecker_Core.E_Total () () steps in
+                              FStarC_TypeChecker_Core.E_Total () () steps in
                           Obj.magic
                             (FStar_Tactics_Effect.tac_bind
                                (FStar_Sealed.seal

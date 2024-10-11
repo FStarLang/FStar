@@ -29,7 +29,8 @@ let (debug_abs :
                      (Obj.magic uu___)
                      (fun uu___1 ->
                         (fun uu___1 ->
-                           Obj.magic (FStar_Tactics_V2_Builtins.print uu___1))
+                           Obj.magic
+                             (FStarC_Tactics_V2_Builtins.print uu___1))
                           uu___1)))
            else
              Obj.magic
@@ -550,7 +551,7 @@ let (qualifier_compat :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.range ->
       Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option ->
-        FStar_Reflection_V2_Data.aqualv ->
+        FStarC_Reflection_V2_Data.aqualv ->
           (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___3 ->
@@ -563,27 +564,27 @@ let (qualifier_compat :
                  fun q' ->
                    match (q, q') with
                    | (FStar_Pervasives_Native.None,
-                      FStar_Reflection_V2_Data.Q_Explicit) ->
+                      FStarC_Reflection_V2_Data.Q_Explicit) ->
                        Obj.magic
                          (Obj.repr
                             (FStar_Tactics_Effect.lift_div_tac
                                (fun uu___ -> ())))
                    | (FStar_Pervasives_Native.Some
                       (Pulse_Syntax_Base.Implicit),
-                      FStar_Reflection_V2_Data.Q_Implicit) ->
+                      FStarC_Reflection_V2_Data.Q_Implicit) ->
                        Obj.magic
                          (Obj.repr
                             (FStar_Tactics_Effect.lift_div_tac
                                (fun uu___ -> ())))
                    | (FStar_Pervasives_Native.Some
                       (Pulse_Syntax_Base.Implicit),
-                      FStar_Reflection_V2_Data.Q_Meta uu___) ->
+                      FStarC_Reflection_V2_Data.Q_Meta uu___) ->
                        Obj.magic
                          (Obj.repr
                             (FStar_Tactics_Effect.lift_div_tac
                                (fun uu___1 -> ())))
                    | (FStar_Pervasives_Native.Some (Pulse_Syntax_Base.TcArg),
-                      FStar_Reflection_V2_Data.Q_Meta uu___) ->
+                      FStarC_Reflection_V2_Data.Q_Meta uu___) ->
                        Obj.magic
                          (Obj.repr
                             (FStar_Tactics_Effect.lift_div_tac
@@ -607,7 +608,7 @@ let rec (rebuild_abs :
         let uu___ =
           debug_abs g
             (fun uu___1 ->
-               let uu___2 = FStar_Tactics_V2_Builtins.term_to_string annot in
+               let uu___2 = FStarC_Tactics_V2_Builtins.term_to_string annot in
                FStar_Tactics_Effect.tac_bind
                  (FStar_Sealed.seal
                     (Obj.magic
@@ -679,18 +680,18 @@ let rec (rebuild_abs :
           (fun uu___1 ->
              (fun uu___1 ->
                 match ((t.Pulse_Syntax_Base.term1),
-                        (FStar_Reflection_V2_Builtins.inspect_ln annot))
+                        (FStarC_Reflection_V2_Builtins.inspect_ln annot))
                 with
                 | (Pulse_Syntax_Base.Tm_Abs
                    { Pulse_Syntax_Base.b = b; Pulse_Syntax_Base.q = q;
                      Pulse_Syntax_Base.ascription = asc;
                      Pulse_Syntax_Base.body = body;_},
-                   FStar_Reflection_V2_Data.Tv_Arrow (b', c')) ->
+                   FStarC_Reflection_V2_Data.Tv_Arrow (b', c')) ->
                     let uu___2 =
                       Obj.magic
                         (FStar_Tactics_Effect.lift_div_tac
                            (fun uu___3 ->
-                              FStar_Reflection_V2_Builtins.inspect_binder b')) in
+                              FStarC_Reflection_V2_Builtins.inspect_binder b')) in
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
                          (FStar_Sealed.seal
@@ -709,7 +710,7 @@ let rec (rebuild_abs :
                                let uu___3 =
                                  qualifier_compat g
                                    (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.range
-                                   q b'1.FStar_Reflection_V2_Data.qual in
+                                   q b'1.FStarC_Reflection_V2_Data.qual in
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (FStar_Sealed.seal
@@ -735,7 +736,7 @@ let rec (rebuild_abs :
                                             Obj.magic
                                               (FStar_Tactics_Effect.lift_div_tac
                                                  (fun uu___6 ->
-                                                    b'1.FStar_Reflection_V2_Data.sort2)) in
+                                                    b'1.FStarC_Reflection_V2_Data.sort2)) in
                                           Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
                                                (FStar_Sealed.seal
@@ -761,7 +762,7 @@ let rec (rebuild_abs :
                                                        Obj.magic
                                                          (FStar_Tactics_Effect.lift_div_tac
                                                             (fun uu___7 ->
-                                                               FStar_Reflection_V2_Builtins.inspect_comp
+                                                               FStarC_Reflection_V2_Builtins.inspect_comp
                                                                  c')) in
                                                      Obj.magic
                                                        (FStar_Tactics_Effect.tac_bind
@@ -786,7 +787,7 @@ let rec (rebuild_abs :
                                                              (fun comp ->
                                                                 match comp
                                                                 with
-                                                                | FStar_Reflection_V2_Data.C_Total
+                                                                | FStarC_Reflection_V2_Data.C_Total
                                                                     res_ty ->
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -905,7 +906,7 @@ let rec (rebuild_abs :
                                                                     =
                                                                     let uu___9
                                                                     =
-                                                                    FStar_Tactics_V2_Builtins.term_to_string
+                                                                    FStarC_Tactics_V2_Builtins.term_to_string
                                                                     res_ty in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -965,7 +966,7 @@ let rec (rebuild_abs :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (FStar_Reflection_V2_Builtins.range_of_term
+                                                                    (FStarC_Reflection_V2_Builtins.range_of_term
                                                                     res_ty))
                                                                     uu___9))
                                                                     uu___9))
@@ -1204,7 +1205,7 @@ let rec (rebuild_abs :
                                                                     =
                                                                     let uu___9
                                                                     =
-                                                                    FStar_Tactics_V2_Builtins.term_to_string
+                                                                    FStarC_Tactics_V2_Builtins.term_to_string
                                                                     annot in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1273,7 +1274,7 @@ let rec (rebuild_abs :
                 | uu___2 ->
                     let uu___3 =
                       let uu___4 =
-                        FStar_Tactics_V2_Builtins.term_to_string annot in
+                        FStarC_Tactics_V2_Builtins.term_to_string annot in
                       FStar_Tactics_Effect.tac_bind
                         (FStar_Sealed.seal
                            (Obj.magic
@@ -1694,7 +1695,7 @@ let (check_effect_annotation :
                                                                     let uu___5
                                                                     =
                                                                     FStar_Tactics_V2_Derived.with_policy
-                                                                    FStar_Tactics_Types.ForceSMT
+                                                                    FStarC_Tactics_Types.ForceSMT
                                                                     (fun
                                                                     uu___6 ->
                                                                     Pulse_Checker_Pure.try_check_prop_validity
@@ -1768,7 +1769,7 @@ let (check_effect_annotation :
                                                                     (fun
                                                                     uu___12
                                                                     ->
-                                                                    FStar_Pprint.prefix
+                                                                    FStarC_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -1834,7 +1835,7 @@ let (check_effect_annotation :
                                                                     (fun
                                                                     uu___15
                                                                     ->
-                                                                    FStar_Pprint.prefix
+                                                                    FStarC_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -1866,7 +1867,7 @@ let (check_effect_annotation :
                                                                     (fun
                                                                     uu___14
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
                                                                     uu___13
                                                                     (Pulse_PP.text
                                                                     "are opened"))) in
@@ -1897,7 +1898,7 @@ let (check_effect_annotation :
                                                                     (fun
                                                                     uu___13
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
                                                                     uu___10
                                                                     uu___12))))
                                                                     uu___10) in
@@ -2117,7 +2118,7 @@ let (check_effect_annotation :
                                                                     let uu___5
                                                                     =
                                                                     FStar_Tactics_V2_Derived.with_policy
-                                                                    FStar_Tactics_Types.ForceSMT
+                                                                    FStarC_Tactics_Types.ForceSMT
                                                                     (fun
                                                                     uu___6 ->
                                                                     Pulse_Checker_Pure.try_check_prop_validity
@@ -2191,7 +2192,7 @@ let (check_effect_annotation :
                                                                     (fun
                                                                     uu___12
                                                                     ->
-                                                                    FStar_Pprint.prefix
+                                                                    FStarC_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -2257,7 +2258,7 @@ let (check_effect_annotation :
                                                                     (fun
                                                                     uu___15
                                                                     ->
-                                                                    FStar_Pprint.prefix
+                                                                    FStarC_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -2289,7 +2290,7 @@ let (check_effect_annotation :
                                                                     (fun
                                                                     uu___14
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
                                                                     uu___13
                                                                     (Pulse_PP.text
                                                                     "are opened"))) in
@@ -2320,7 +2321,7 @@ let (check_effect_annotation :
                                                                     (fun
                                                                     uu___13
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
                                                                     uu___10
                                                                     uu___12))))
                                                                     uu___10) in
@@ -2472,7 +2473,7 @@ let (check_effect_annotation :
                                              (fun uu___8 ->
                                                 FStar_Tactics_Effect.lift_div_tac
                                                   (fun uu___9 ->
-                                                     FStar_Pprint.arbitrary_string
+                                                     FStarC_Pprint.arbitrary_string
                                                        uu___8)) in
                                          FStar_Tactics_Effect.tac_bind
                                            (FStar_Sealed.seal
@@ -2495,7 +2496,7 @@ let (check_effect_annotation :
                                            (fun uu___7 ->
                                               FStar_Tactics_Effect.lift_div_tac
                                                 (fun uu___8 ->
-                                                   FStar_Pprint.prefix
+                                                   FStarC_Pprint.prefix
                                                      (Prims.of_int (4))
                                                      Prims.int_one
                                                      (Pulse_PP.text
@@ -2547,7 +2548,7 @@ let (check_effect_annotation :
                                                      (fun uu___10 ->
                                                         FStar_Tactics_Effect.lift_div_tac
                                                           (fun uu___11 ->
-                                                             FStar_Pprint.arbitrary_string
+                                                             FStarC_Pprint.arbitrary_string
                                                                uu___10)) in
                                                  FStar_Tactics_Effect.tac_bind
                                                    (FStar_Sealed.seal
@@ -2570,7 +2571,7 @@ let (check_effect_annotation :
                                                    (fun uu___9 ->
                                                       FStar_Tactics_Effect.lift_div_tac
                                                         (fun uu___10 ->
-                                                           FStar_Pprint.prefix
+                                                           FStarC_Pprint.prefix
                                                              (Prims.of_int (4))
                                                              Prims.int_one
                                                              (Pulse_PP.text
@@ -2598,7 +2599,7 @@ let (check_effect_annotation :
                                                     (fun uu___8 ->
                                                        FStar_Tactics_Effect.lift_div_tac
                                                          (fun uu___9 ->
-                                                            FStar_Pprint.op_Hat_Slash_Hat
+                                                            FStarC_Pprint.op_Hat_Slash_Hat
                                                               uu___6 uu___8))))
                                               uu___6) in
                                      FStar_Tactics_Effect.tac_bind
@@ -3914,7 +3915,7 @@ let rec (check_abs_core :
                                                                     inames ->
                                                                     let uu___17
                                                                     =
-                                                                    FStar_Tactics_V2_Builtins.norm_well_typed_term
+                                                                    FStarC_Tactics_V2_Builtins.norm_well_typed_term
                                                                     (Pulse_Typing.elab_env
                                                                     g)
                                                                     [FStar_Pervasives.primops;

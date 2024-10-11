@@ -28,7 +28,7 @@ let (check_slprop_equiv_ext :
                   match uu___1 with
                   | (res, issues) ->
                       let uu___2 =
-                        FStar_Tactics_V2_Builtins.log_issues issues in
+                        FStarC_Tactics_V2_Builtins.log_issues issues in
                       Obj.magic
                         (FStar_Tactics_Effect.tac_bind
                            (FStar_Sealed.seal
@@ -230,8 +230,8 @@ let (check_slprop_equiv_tac :
                       Obj.magic
                         (FStar_Tactics_Effect.lift_div_tac
                            (fun uu___3 ->
-                              FStar_Reflection_V2_Builtins.pack_universe
-                                FStar_Reflection_V2_Data.Uv_Zero)) in
+                              FStarC_Reflection_V2_Builtins.pack_universe
+                                FStarC_Reflection_V2_Data.Uv_Zero)) in
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
                          (FStar_Sealed.seal
@@ -329,7 +329,7 @@ let (check_slprop_equiv_tac :
                                                              (fun goal_typing
                                                                 ->
                                                                 let uu___6 =
-                                                                  FStar_Tactics_V2_Builtins.call_subtac_tm
+                                                                  FStarC_Tactics_V2_Builtins.call_subtac_tm
                                                                     r_env
                                                                     tac_tm u0
                                                                     goal in
@@ -372,7 +372,7 @@ let (check_slprop_equiv_tac :
                                                                     (Obj.repr
                                                                     (let uu___8
                                                                     =
-                                                                    FStar_Tactics_V2_Builtins.log_issues
+                                                                    FStarC_Tactics_V2_Builtins.log_issues
                                                                     issues in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -498,7 +498,7 @@ let (check_slprop_equiv_tac :
                                                                     (fun
                                                                     uu___21
                                                                     ->
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
+                                                                    FStarC_Pprint.op_Hat_Slash_Hat
                                                                     (Pulse_PP.text
                                                                     "Using tactic:")
                                                                     uu___20)) in

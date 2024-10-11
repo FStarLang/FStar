@@ -53,7 +53,7 @@ let (debug_log :
                          (fun uu___1 ->
                             (fun uu___1 ->
                                Obj.magic
-                                 (FStar_Tactics_V2_Builtins.print uu___1))
+                                 (FStarC_Tactics_V2_Builtins.print uu___1))
                               uu___1)))
                else
                  Obj.magic
@@ -63,19 +63,20 @@ let (debug_log :
 let (tm_unit : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_fvar
     (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.unit_lid)
-let (tm_bool : FStar_Reflection_Types.term) = FStar_Reflection_Typing.bool_ty
+let (tm_bool : FStarC_Reflection_Types.term) =
+  FStar_Reflection_Typing.bool_ty
 let (tm_int : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_fvar
     (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.int_lid)
 let (tm_nat : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_fvar
     (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.nat_lid)
-let (tm_szt : FStar_Reflection_Types.term) = Pulse_Reflection_Util.szt_tm
+let (tm_szt : FStarC_Reflection_Types.term) = Pulse_Reflection_Util.szt_tm
 let (tm_true : Pulse_Syntax_Base.term) =
-  Pulse_Syntax_Pure.tm_constant FStar_Reflection_V2_Data.C_True
+  Pulse_Syntax_Pure.tm_constant FStarC_Reflection_V2_Data.C_True
 let (tm_false : Pulse_Syntax_Base.term) =
-  Pulse_Syntax_Pure.tm_constant FStar_Reflection_V2_Data.C_False
-let (tm_prop : FStar_Reflection_Types.term) =
+  Pulse_Syntax_Pure.tm_constant FStarC_Reflection_V2_Data.C_False
+let (tm_prop : FStarC_Reflection_Types.term) =
   Pulse_RuntimeUtils.set_range FStar_Reflection_Typing.tm_prop
     FStar_Range.range_0
 let (mk_erased :
@@ -250,8 +251,8 @@ let (comp_return :
                           Pulse_Syntax_Base.post = post_maybe_eq
                         })
 let (extend_env_l :
-  FStar_Reflection_Types.env ->
-    Pulse_Typing_Env.env_bindings -> FStar_Reflection_Types.env)
+  FStarC_Reflection_Types.env ->
+    Pulse_Typing_Env.env_bindings -> FStarC_Reflection_Types.env)
   =
   fun f ->
     fun g ->
@@ -260,7 +261,7 @@ let (extend_env_l :
            fun g1 ->
              match uu___ with
              | (x, b) -> FStar_Reflection_Typing.extend_env g1 x b) g f
-let (elab_env : Pulse_Typing_Env.env -> FStar_Reflection_Types.env) =
+let (elab_env : Pulse_Typing_Env.env -> FStarC_Reflection_Types.env) =
   fun e ->
     extend_env_l (Pulse_Typing_Env.fstar_env e) (Pulse_Typing_Env.bindings e)
 type ('g, 'x) freshv = unit
@@ -857,12 +858,12 @@ let (tm_join_inames :
             (let join_lid =
                Pulse_Reflection_Util.mk_pulse_lib_core_lid "join_inames" in
              let join =
-               FStar_Reflection_V2_Builtins.pack_ln
-                 (FStar_Reflection_V2_Data.Tv_FVar
-                    (FStar_Reflection_V2_Builtins.pack_fv join_lid)) in
+               FStarC_Reflection_V2_Builtins.pack_ln
+                 (FStarC_Reflection_V2_Data.Tv_FVar
+                    (FStarC_Reflection_V2_Builtins.pack_fv join_lid)) in
              Pulse_Syntax_Pure.wr
                (FStar_Reflection_V2_Derived.mk_e_app join [inames1; inames2])
-               (FStar_Reflection_V2_Builtins.range_of_term inames1))
+               (FStarC_Reflection_V2_Builtins.range_of_term inames1))
 let (tm_inames_subset :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
   =
@@ -871,12 +872,12 @@ let (tm_inames_subset :
       let join_lid =
         Pulse_Reflection_Util.mk_pulse_lib_core_lid "inames_subset" in
       let join =
-        FStar_Reflection_V2_Builtins.pack_ln
-          (FStar_Reflection_V2_Data.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv join_lid)) in
+        FStarC_Reflection_V2_Builtins.pack_ln
+          (FStarC_Reflection_V2_Data.Tv_FVar
+             (FStarC_Reflection_V2_Builtins.pack_fv join_lid)) in
       Pulse_Syntax_Pure.wr
         (FStar_Reflection_V2_Derived.mk_e_app join [inames1; inames2])
-        (FStar_Reflection_V2_Builtins.range_of_term inames1)
+        (FStarC_Reflection_V2_Builtins.range_of_term inames1)
 
 type ('g, 't) prop_validity = unit
 type ('dummyV0, 'dummyV1, 'dummyV2) st_equiv =
@@ -969,21 +970,21 @@ let uu___is_Bind_comp uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
   match uu___5 with | Bind_comp _ -> true | _ -> false
 let (tr_binding :
   (Pulse_Syntax_Base.var * Pulse_Syntax_Base.typ) ->
-    FStar_Reflection_V2_Data.binding)
+    FStarC_Reflection_V2_Data.binding)
   =
   fun vt ->
     let uu___ = vt in
     match uu___ with
     | (v, t) ->
         {
-          FStar_Reflection_V2_Data.uniq1 = v;
-          FStar_Reflection_V2_Data.sort3 = t;
-          FStar_Reflection_V2_Data.ppname3 =
+          FStarC_Reflection_V2_Data.uniq1 = v;
+          FStarC_Reflection_V2_Data.sort3 = t;
+          FStarC_Reflection_V2_Data.ppname3 =
             (Pulse_Syntax_Base.ppname_default.Pulse_Syntax_Base.name)
         }
 let (tr_bindings :
   (Pulse_Syntax_Base.var * Pulse_Syntax_Base.typ) Prims.list ->
-    FStar_Reflection_V2_Data.binding Prims.list)
+    FStarC_Reflection_V2_Data.binding Prims.list)
   = FStar_List_Tot_Base.map tr_binding
 type ('dummyV0, 'dummyV1, 'dummyV2) comp_typing =
   | CT_Tot of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
@@ -1005,11 +1006,12 @@ let uu___is_CT_STGhost uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | CT_STGhost _ -> true | _ -> false
 type ('e, 'c) comp_typing_u = (unit, unit, unit) comp_typing
 type ('g, 't1, 't2) subtyping_token =
-  (unit, unit, unit) FStar_Tactics_Types.subtyping_token
+  (unit, unit, unit) FStarC_Tactics_Types.subtyping_token
 let (readback_binding :
-  FStar_Reflection_V2_Data.binding -> Pulse_Typing_Env.binding) =
+  FStarC_Reflection_V2_Data.binding -> Pulse_Typing_Env.binding) =
   fun b ->
-    ((b.FStar_Reflection_V2_Data.uniq1), (b.FStar_Reflection_V2_Data.sort3))
+    ((b.FStarC_Reflection_V2_Data.uniq1),
+      (b.FStarC_Reflection_V2_Data.sort3))
 type ('g, 'c) non_informative = unit
 let (inv_disjointness :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
@@ -1019,11 +1021,11 @@ let (inv_disjointness :
       let g = Pulse_Reflection_Util.inv_disjointness_goal inames i in
       Pulse_Syntax_Pure.wr g (Pulse_RuntimeUtils.range_of_term i)
 let (eff_of_ctag :
-  Pulse_Syntax_Base.ctag -> FStar_TypeChecker_Core.tot_or_ghost) =
+  Pulse_Syntax_Base.ctag -> FStarC_TypeChecker_Core.tot_or_ghost) =
   fun uu___ ->
     match uu___ with
-    | Pulse_Syntax_Base.STT_Ghost -> FStar_TypeChecker_Core.E_Ghost
-    | uu___1 -> FStar_TypeChecker_Core.E_Total
+    | Pulse_Syntax_Base.STT_Ghost -> FStarC_TypeChecker_Core.E_Ghost
+    | uu___1 -> FStarC_TypeChecker_Core.E_Total
 type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   | T_Abs of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
   Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option *
@@ -1111,8 +1113,8 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   unit 
 and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3) pats_complete =
   | PC_Elab of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
-  Pulse_Syntax_Base.typ * FStar_Reflection_V2_Data.pattern Prims.list *
-  FStar_Reflection_V2_Data.binding Prims.list Prims.list * (unit, unit, 
+  Pulse_Syntax_Base.typ * FStarC_Reflection_V2_Data.pattern Prims.list *
+  FStarC_Reflection_V2_Data.binding Prims.list Prims.list * (unit, unit,
   unit, unit, unit) FStar_Reflection_Typing.match_is_complete 
 and ('g, 'scuu, 'scuty, 'sc, 'dummyV0, 'dummyV1) brs_typing =
   | TBRS_0 of Pulse_Syntax_Base.comp_st 
@@ -1125,7 +1127,7 @@ and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3, 'dummyV4, 'dummyV5,
   | TBR of Pulse_Typing_Env.env * Pulse_Syntax_Base.universe *
   Pulse_Syntax_Base.typ * Pulse_Syntax_Base.term * Pulse_Syntax_Base.comp_st
   * Pulse_Syntax_Base.pattern * Pulse_Syntax_Base.st_term *
-  FStar_Reflection_V2_Data.binding Prims.list * unit * unit * unit *
+  FStarC_Reflection_V2_Data.binding Prims.list * unit * unit * unit *
   Pulse_Syntax_Base.var * (unit, unit, unit) st_typing 
 let uu___is_T_Abs uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Abs _ -> true | _ -> false

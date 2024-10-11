@@ -12,18 +12,19 @@ let map_opt :
 let (thunk : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
   fun t ->
     let b =
-      FStar_Reflection_V2_Builtins.pack_binder
+      FStarC_Reflection_V2_Builtins.pack_binder
         {
-          FStar_Reflection_V2_Data.sort2 =
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv ["Prims"; "unit"])));
-          FStar_Reflection_V2_Data.qual = FStar_Reflection_V2_Data.Q_Explicit;
-          FStar_Reflection_V2_Data.attrs = [];
-          FStar_Reflection_V2_Data.ppname2 = (FStar_Sealed.seal "_")
+          FStarC_Reflection_V2_Data.sort2 =
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "unit"])));
+          FStarC_Reflection_V2_Data.qual =
+            FStarC_Reflection_V2_Data.Q_Explicit;
+          FStarC_Reflection_V2_Data.attrs = [];
+          FStarC_Reflection_V2_Data.ppname2 = (FStar_Sealed.seal "_")
         } in
-    FStar_Reflection_V2_Builtins.pack_ln
-      (FStar_Reflection_V2_Data.Tv_Abs (b, t))
+    FStarC_Reflection_V2_Builtins.pack_ln
+      (FStarC_Reflection_V2_Data.Tv_Abs (b, t))
 let (pat_var :
   FStar_Reflection_Typing.pp_name_t ->
     FStar_Reflection_Typing.sort_t -> Pulse_Syntax_Base.pattern)
@@ -208,8 +209,8 @@ let (tm_with_inv :
           }
 let tm_add_inv :
   'uuuuu .
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term -> 'uuuuu -> FStar_Reflection_Types.term
+    FStarC_Reflection_Types.term ->
+      FStarC_Reflection_Types.term -> 'uuuuu -> FStarC_Reflection_Types.term
   = fun names -> fun n -> fun r -> Pulse_Syntax_Pure.tm_add_inv names n
 let (tm_with_local :
   Pulse_Syntax_Base.binder ->
@@ -341,7 +342,7 @@ let (mk_rewrite_hint_type :
             Pulse_Syntax_Base.tac_opt1 = (map_opt tac_opt thunk)
           }
 let (mk_fn_defn :
-  FStar_Reflection_Types.ident ->
+  FStarC_Reflection_Types.ident ->
     Prims.bool ->
       (Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option *
         Pulse_Syntax_Base.binder * Pulse_Syntax_Base.bv) Prims.list ->
@@ -365,7 +366,7 @@ let (mk_fn_defn :
                   Pulse_Syntax_Base.body7 = body
                 }
 let (mk_fn_decl :
-  FStar_Reflection_Types.ident ->
+  FStarC_Reflection_Types.ident ->
     (Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option *
       Pulse_Syntax_Base.binder * Pulse_Syntax_Base.bv) Prims.list ->
       Pulse_Syntax_Base.comp_st -> Pulse_Syntax_Base.decl')

@@ -30,14 +30,14 @@ build-ocaml:
 # this file cannot be copied to `generated` because of a bug with
 # Dune's `menhir` stanza
 # (cf. https://github.com/ocaml/dune/issues/4381 )
-fstar_parser_parse=ocaml/plugin/FStar_Parser_Parse.mly
+fstar_parser_parse=ocaml/plugin/FStarC_Parser_Parse.mly
 
 ifeq (,$(FSTAR_HOME))
 $(fstar_parser_parse):
 	echo "Cannot find the F* parser. Please point FSTAR_HOME to a source repository clone of F*"
 	false
 else
-$(fstar_parser_parse): $(FSTAR_HOME)/ocaml/fstar-lib/FStar_Parser_Parse.mly
+$(fstar_parser_parse): $(FSTAR_HOME)/ocaml/fstar-lib/FStarC_Parser_Parse.mly
 	cp $^ $@
 endif
 

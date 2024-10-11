@@ -457,7 +457,7 @@ let (lift_ghost_atomic :
                                             (fun uu___6 ->
                                                FStar_Tactics_Effect.lift_div_tac
                                                  (fun uu___7 ->
-                                                    FStar_Pprint.prefix
+                                                    FStarC_Pprint.prefix
                                                       (Prims.of_int (2))
                                                       Prims.int_one
                                                       (Pulse_PP.text "Got:")
@@ -2006,7 +2006,7 @@ let rec (mk_bind :
                                                                     (fun
                                                                     uu___11
                                                                     ->
-                                                                    FStar_Pprint.prefix
+                                                                    FStarC_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -2071,7 +2071,7 @@ let rec (mk_bind :
                                                                     (fun
                                                                     uu___14
                                                                     ->
-                                                                    FStar_Pprint.prefix
+                                                                    FStarC_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -2158,10 +2158,10 @@ let rec (mk_bind :
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___9 ->
-                                                                    (FStar_Pprint.op_Hat_Slash_Hat
+                                                                    (FStarC_Pprint.op_Hat_Slash_Hat
                                                                     (Pulse_PP.text
                                                                     "Cannot compose computations in this ")
-                                                                    (FStar_Pprint.op_Hat_Slash_Hat
+                                                                    (FStarC_Pprint.op_Hat_Slash_Hat
                                                                     (Pulse_PP.text
                                                                     tag)
                                                                     (Pulse_PP.text

@@ -488,7 +488,7 @@ let (trace :
       fun pre ->
         fun rng ->
           let uu___ =
-            FStar_Tactics_V2_Builtins.norm_well_typed_term
+            FStarC_Tactics_V2_Builtins.norm_well_typed_term
               (Pulse_Typing.elab_env g)
               [FStar_Pervasives.unascribe;
               FStar_Pervasives.primops;
@@ -560,7 +560,7 @@ let (trace :
                         (fun uu___4 ->
                            FStar_Tactics_Effect.lift_div_tac
                              (fun uu___5 ->
-                                FStar_Pprint.op_Hat_Hat
+                                FStarC_Pprint.op_Hat_Hat
                                   (Pulse_PP.text "TRACE. Current context:")
                                   uu___4)) in
                     FStar_Tactics_Effect.tac_bind
@@ -625,7 +625,7 @@ let (trace :
                                   (fun uu___7 ->
                                      FStar_Tactics_Effect.lift_div_tac
                                        (fun uu___8 ->
-                                          FStar_Pprint.op_Hat_Hat
+                                          FStarC_Pprint.op_Hat_Hat
                                             (Pulse_PP.text
                                                "Typing environment (units elided): ")
                                             uu___7)) in
@@ -675,7 +675,7 @@ let (trace :
                                             (fun uu___10 ->
                                                FStar_Tactics_Effect.lift_div_tac
                                                  (fun uu___11 ->
-                                                    FStar_Pprint.prefix
+                                                    FStarC_Pprint.prefix
                                                       (Prims.of_int (2))
                                                       Prims.int_one
                                                       (Pulse_PP.text
@@ -851,7 +851,7 @@ let (maybe_trace :
       fun pre ->
         fun rng ->
           let uu___ =
-            let uu___1 = FStar_Tactics_V2_Builtins.ext_getv "pulse:trace" in
+            let uu___1 = FStarC_Tactics_V2_Builtins.ext_getv "pulse:trace" in
             FStar_Tactics_Effect.tac_bind
               (FStar_Sealed.seal
                  (Obj.magic
@@ -883,7 +883,7 @@ let (maybe_trace :
                (fun trace_opt ->
                   let uu___1 =
                     let uu___2 =
-                      FStar_Tactics_V2_Builtins.ext_getv "pulse:trace_full" in
+                      FStarC_Tactics_V2_Builtins.ext_getv "pulse:trace_full" in
                     FStar_Tactics_Effect.tac_bind
                       (FStar_Sealed.seal
                          (Obj.magic
@@ -1145,7 +1145,7 @@ let rec (check : Pulse_Checker_Base.check_t) =
                                                                     =
                                                                     let uu___20
                                                                     =
-                                                                    FStar_Tactics_V2_Builtins.range_to_string
+                                                                    FStarC_Tactics_V2_Builtins.range_to_string
                                                                     t.Pulse_Syntax_Base.range1 in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1338,7 +1338,7 @@ let rec (check : Pulse_Checker_Base.check_t) =
                                                          (fun uu___8 ->
                                                             (fun uu___8 ->
                                                                Obj.magic
-                                                                 (FStar_Tactics_V2_Builtins.print
+                                                                 (FStarC_Tactics_V2_Builtins.print
                                                                     uu___8))
                                                               uu___8)))
                                                else

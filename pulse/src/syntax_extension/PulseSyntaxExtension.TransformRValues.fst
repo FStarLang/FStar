@@ -15,22 +15,23 @@
 *)
 
 module PulseSyntaxExtension.TransformRValues
-open FStar.Compiler.Effect
+open FStarC
+open FStarC.Compiler.Effect
 module Sugar = PulseSyntaxExtension.Sugar
 module SW = PulseSyntaxExtension.SyntaxWrapper
-module A = FStar.Parser.AST
-module D = FStar.Syntax.DsEnv
-module S = FStar.Syntax.Syntax
-module L = FStar.Compiler.List
-module U = FStar.Syntax.Util
-module SS = FStar.Syntax.Subst
-module R = FStar.Compiler.Range
-module BU = FStar.Compiler.Util
-module P =  FStar.Syntax.Print
-open FStar.Class.Show
-open FStar.Class.HasRange
-open FStar.Class.Monad
-open FStar.Ident
+module A = FStarC.Parser.AST
+module D = FStarC.Syntax.DsEnv
+module S = FStarC.Syntax.Syntax
+module L = FStarC.Compiler.List
+module U = FStarC.Syntax.Util
+module SS = FStarC.Syntax.Subst
+module R = FStarC.Compiler.Range
+module BU = FStarC.Compiler.Util
+module P =  FStarC.Syntax.Print
+open FStarC.Class.Show
+open FStarC.Class.HasRange
+open FStarC.Class.Monad
+open FStarC.Ident
 open FStar.List.Tot
 open PulseSyntaxExtension.Err
 open PulseSyntaxExtension.Env
@@ -97,7 +98,7 @@ let resolve_mut (m:menv) (e:A.term)
   = let open A in
     match e.tm with
     | Var l -> (
-      let topt = FStar.Syntax.DsEnv.try_lookup_lid m.env.dsenv l in
+      let topt = FStarC.Syntax.DsEnv.try_lookup_lid m.env.dsenv l in
       match topt with
       | Some {n=S.Tm_name x} -> 
         L.tryFind (fun (_, y, _) -> S.bv_eq x y) m.map 

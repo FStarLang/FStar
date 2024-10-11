@@ -15,11 +15,12 @@
 *)
 
 module PulseSyntaxExtension.Err
-module R = FStar.Compiler.Range
-open FStar.Compiler.Effect
-open FStar.Class.HasRange
-open FStar.Ident
-open FStar.Class.Monad
+open FStarC
+module R = FStarC.Compiler.Range
+open FStarC.Compiler.Effect
+open FStarC.Class.HasRange
+open FStarC.Ident
+open FStarC.Class.Monad
 instance hasRange_ident : hasRange ident = {
     pos = Ident.range_of_id;
     setPos = Ident.set_id_range
@@ -73,7 +74,7 @@ let rec map2 (f : 'a -> 'b -> 'c) (xs : list 'a) (ys : list 'b) : err (list 'c) 
     let! r = map2 f xx yy in
     return (f x y :: r)
   | _ ->
-    fail "map2: mismatch" FStar.Compiler.Range.dummyRange
+    fail "map2: mismatch" FStarC.Compiler.Range.dummyRange
 
 
 let left (f:either 'a 'b) (r:R.range)

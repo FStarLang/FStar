@@ -15,25 +15,26 @@
 *)
 
 module PulseSyntaxExtension.Desugar
-open FStar.Compiler.Effect
+open FStarC
+open FStarC.Compiler.Effect
 module Sugar = PulseSyntaxExtension.Sugar
 module SW = PulseSyntaxExtension.SyntaxWrapper
-module A = FStar.Parser.AST
-module D = FStar.Syntax.DsEnv
-module ToSyntax = FStar.ToSyntax.ToSyntax
-module S = FStar.Syntax.Syntax
-module L = FStar.Compiler.List
-module U = FStar.Syntax.Util
-module SS = FStar.Syntax.Subst
-module R = FStar.Compiler.Range
-module BU = FStar.Compiler.Util
-module P =  FStar.Syntax.Print
+module A = FStarC.Parser.AST
+module D = FStarC.Syntax.DsEnv
+module ToSyntax = FStarC.ToSyntax.ToSyntax
+module S = FStarC.Syntax.Syntax
+module L = FStarC.Compiler.List
+module U = FStarC.Syntax.Util
+module SS = FStarC.Syntax.Subst
+module R = FStarC.Compiler.Range
+module BU = FStarC.Compiler.Util
+module P =  FStarC.Syntax.Print
 module LR = PulseSyntaxExtension.TransformRValues
 
-open FStar.Class.Show
-open FStar.Class.HasRange
-open FStar.Class.Monad
-open FStar.Ident
+open FStarC.Class.Show
+open FStarC.Class.HasRange
+open FStarC.Class.Monad
+open FStarC.Ident
 open FStar.List.Tot
 open PulseSyntaxExtension.Err
 open PulseSyntaxExtension.Env
@@ -57,17 +58,17 @@ let as_term (t:S.term)
     | _ -> 
       SW.tm_expr t t.pos
 
-let desugar_const (c:FStar.Const.sconst) : SW.constant =
+let desugar_const (c:FStarC.Const.sconst) : SW.constant =
   SW.inspect_const c
 
 let slprop_to_ast_term (v:Sugar.slprop)
   : err A.term
-  = let open FStar.Parser.AST in
+  = let open FStarC.Parser.AST in
     match v.v with
     | Sugar.SLPropTerm t -> return t
 
 let comp_to_ast_term (c:Sugar.computation_type) : err A.term =
-  let open FStar.Parser.AST in
+  let open FStarC.Parser.AST in
   let return_ty = c.return_type in
   let r = c.range in
   let head =
@@ -158,10 +159,10 @@ let tosyntax' (env:env_t) (t:A.term)
       return (ToSyntax.desugar_term env.dsenv t)
     with 
       | e -> 
-        match FStar.Errors.issue_of_exn e with
+        match FStarC.Errors.issue_of_exn e with
         | Some i ->
           let i = prepend_ctx_issue (Pprint.arbitrary_string "Failed to desugar Pulse term") i in
-          FStar.Errors.add_issues [i];
+          FStarC.Errors.add_issues [i];
           just_fail ()
 
         | None -> 
@@ -183,7 +184,7 @@ let desugar_term (env:env_t) (t:A.term)
 let desugar_term_opt (env:env_t) (t:option A.term)
   : err SW.term
   = match t with
-    | None -> return (SW.tm_unknown FStar.Compiler.Range.dummyRange)
+    | None -> return (SW.tm_unknown FStarC.Compiler.Range.dummyRange)
     | Some e -> desugar_term env e
 
 //
@@ -204,7 +205,7 @@ let idents_as_binders (env:env_t) (l:list ident)
            (BU.format1 "Identifiers (%s) not found, consider adding them as binders" s)
            (non_tick_idents |> L.hd |> Ident.range_of_id)
     else begin
-      let erased_tm = A.(mk_term (Var FStar.Parser.Const.erased_lid) FStar.Compiler.Range.dummyRange Un) in
+      let erased_tm = A.(mk_term (Var FStarC.Parser.Const.erased_lid) FStarC.Compiler.Range.dummyRange Un) in
       let mk_ty i =
         let wild = A.(mk_term Wild (Ident.range_of_id i) Un) in
         A.(mkApp erased_tm [wild, A.Nothing] (Ident.range_of_id i)) in
@@ -361,12 +362,12 @@ let desugar_hint_type (env:env_t) (ht:Sugar.hint_type)
     | UNFOLD (ns, vp) -> 
       let! vp = desugar_slprop env vp in
       let! ns = resolve_names env ns in
-      let ns = BU.map_opt ns (L.map FStar.Ident.string_of_lid) in
+      let ns = BU.map_opt ns (L.map FStarC.Ident.string_of_lid) in
       return (SW.mk_unfold_hint_type ns vp)
     | FOLD (ns, vp) -> 
       let! vp = desugar_slprop env vp in
       let! ns = resolve_names env ns in
-      let ns = BU.map_opt ns (L.map FStar.Ident.string_of_lid) in
+      let ns = BU.map_opt ns (L.map FStarC.Ident.string_of_lid) in
       return (SW.mk_fold_hint_type ns vp)
     | RENAME (pairs, goal, tac_opt) ->
       let! pairs =
@@ -433,7 +434,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
           let env = push_namespace env l in
           return env
         with
-          | FStar.Errors.Error(e, msg, r, ctx) ->
+          | FStarC.Errors.Error(e, msg, r, ctx) ->
             fail (BU.format2
             "Failed to open namespace %s; \
             You may need to bind this namespace outside Pulse for the F* dependency scanner to pick it up, \
@@ -768,7 +769,7 @@ and desugar_lambda (env:env_t) (l:Sugar.lambda)
         return (env, bs, bvs, Some comp)
     in
     let! body = 
-      if FStar.Options.Ext.get "pulse:rvalues" <> ""
+      if FStarC.Options.Ext.get "pulse:rvalues" <> ""
       then LR.transform env body
       else return body
     in
@@ -822,7 +823,7 @@ and desugar_decl (env:env_t)
     let bvs = bvs@bvs' in
     let! comp = desugar_computation_type env ascription in
     let! body = 
-      if FStar.Options.Ext.get "pulse:rvalues" <> ""
+      if FStarC.Options.Ext.get "pulse:rvalues" <> ""
       then LR.transform env body
       else return body
     in

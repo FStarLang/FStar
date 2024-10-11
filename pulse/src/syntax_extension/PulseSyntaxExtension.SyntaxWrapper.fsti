@@ -15,8 +15,9 @@
 *)
 
 module PulseSyntaxExtension.SyntaxWrapper
-open FStar.Ident
-let range = FStar.Compiler.Range.range
+open FStarC
+open FStarC.Ident
+let range = FStarC.Compiler.Range.range
 let var = nat
 let index = nat
 
@@ -55,8 +56,8 @@ val tm_pure (p:term) (_:range) : term
 val tm_star (p0 p1:term) (_:range) : term
 val tm_exists (b:binder) (body:slprop) (_:range)  : term
 val tm_forall (b:binder) (body:slprop) (_:range)  : term
-val tm_arrow (b:binder) (q:FStar.Syntax.Syntax.aqual) (body:comp) (_:range)  : term
-val tm_expr (t:FStar.Syntax.Syntax.term) (_:range) : term
+val tm_arrow (b:binder) (q:FStarC.Syntax.Syntax.aqual) (body:comp) (_:range)  : term
+val tm_expr (t:FStarC.Syntax.Syntax.term) (_:range) : term
 val tm_unknown (_:range)  : term
 val tm_emp_inames : term 
 val mk_tot (t:term) : comp
@@ -76,7 +77,7 @@ val mk_rename_hint_type (l:list (term & term)) (goal:option slprop) (tac_opt : o
 val mk_rewrite_hint_type (p1:term) (p2:term) (tac_opt : option term) : hint_type
 
 new val constant : Type0
-val inspect_const : FStar.Const.sconst -> constant
+val inspect_const : FStarC.Const.sconst -> constant
 
 new val pattern : Type0
 val pat_var (ppname:string) (_:range) : pattern
@@ -88,7 +89,7 @@ type branch = pattern & st_term
 val tm_return (t:term) (_:range) : st_term
 val tm_ghost_return (t:term) (_:range) : st_term
 val tm_abs (b:binder) (q:option qualifier) (_:option comp) (body:st_term) (_:range) : st_term
-val tm_st_app (head:term) (q:FStar.Syntax.Syntax.aqual) (arg:term) (_:range) : st_term
+val tm_st_app (head:term) (q:FStarC.Syntax.Syntax.aqual) (arg:term) (_:range) : st_term
 val tm_bind (x:binder) (e1:st_term) (e2:st_term) (_:range) : st_term
 val tm_totbind (x:binder) (e1:term) (e2:st_term) (_:range) : st_term
 val tm_let_mut (x:binder) (v:term) (k:st_term) (_:range) : st_term
@@ -116,10 +117,10 @@ val comp_res (c:comp) : term
 val comp_post (c:comp) : term
 
 val print_exn (e:exn) : string
-val binder_to_string (env:FStar.TypeChecker.Env.env) (b:binder) : string
-val term_to_string (env:FStar.TypeChecker.Env.env) (_:term) : string
-val st_term_to_string (env:FStar.TypeChecker.Env.env) (_:st_term) : string
-val comp_to_string (env:FStar.TypeChecker.Env.env) (_:comp) : string
+val binder_to_string (env:FStarC.TypeChecker.Env.env) (b:binder) : string
+val term_to_string (env:FStarC.TypeChecker.Env.env) (_:term) : string
+val st_term_to_string (env:FStarC.TypeChecker.Env.env) (_:st_term) : string
+val comp_to_string (env:FStarC.TypeChecker.Env.env) (_:comp) : string
 val bv_to_string (_:bv) : string
 val subst : Type0
 val bvs_as_subst (l:list var) : subst
@@ -129,7 +130,7 @@ val subst_proof_hint (s:subst) (h:hint_type) : hint_type
 
 new
 val decl : Type0
-val decl_to_string (env:FStar.TypeChecker.Env.env) (_:decl) : string
+val decl_to_string (env:FStarC.TypeChecker.Env.env) (_:decl) : string
 
 val fn_defn :
   range ->
