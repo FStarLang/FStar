@@ -59,7 +59,8 @@ let (string_of_typestring :
     opt_bind uu___
       (fun ss -> FStar_Pervasives_Native.Some (FStar_String.concat "" ss))
 let (lident_of_string :
-  Prims.string -> FStarC_Extraction_Krml.lident FStar_Pervasives_Native.option)
+  Prims.string ->
+    FStarC_Extraction_Krml.lident FStar_Pervasives_Native.option)
   =
   fun s ->
     let path = FStar_String.split [46] s in
@@ -82,7 +83,8 @@ let (lident_of_typestring :
   fun t ->
     let uu___ = string_of_typestring t in opt_bind uu___ lident_of_string
 let (int_of_typenat :
-  FStarC_Extraction_ML_Syntax.mlty -> Prims.int FStar_Pervasives_Native.option)
+  FStarC_Extraction_ML_Syntax.mlty ->
+    Prims.int FStar_Pervasives_Native.option)
   =
   fun t ->
     let rec go t1 =
@@ -365,7 +367,8 @@ let (my_exprs : unit -> unit) =
                      FStarC_Extraction_ML_Syntax.string_of_mlpath p in
                    uu___13 = "Pulse.C.Types.Union.union_field0"))
                  ||
-                 (let uu___13 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+                 (let uu___13 =
+                    FStarC_Extraction_ML_Syntax.string_of_mlpath p in
                   uu___13 = "Pulse.C.Types.Union.union_switch_field0")
                ->
                let uu___13 =
@@ -403,7 +406,8 @@ let (my_exprs : unit -> unit) =
                                        FStarC_Extraction_ML_Syntax.MLE_Const
                                        (FStarC_Extraction_ML_Syntax.MLC_String
                                        field_name);
-                                     FStarC_Extraction_ML_Syntax.mlty = uu___8;
+                                     FStarC_Extraction_ML_Syntax.mlty =
+                                       uu___8;
                                      FStarC_Extraction_ML_Syntax.loc = uu___9;_}::uu___10::[])
                when
                let uu___11 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
@@ -463,7 +467,8 @@ let (my_exprs : unit -> unit) =
                let uu___7 =
                  let uu___8 =
                    let uu___9 =
-                     let uu___10 = FStarC_Extraction_Krml.translate_expr env r in
+                     let uu___10 =
+                       FStarC_Extraction_Krml.translate_expr env r in
                      (uu___10,
                        (FStarC_Extraction_Krml.EQualified
                           (["C"], "_zero_for_deref"))) in

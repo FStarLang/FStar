@@ -521,14 +521,14 @@ let (pulse_translate_expr : FStarC_Extraction_Krml.translate_expr_t) =
                 FStarC_Extraction_ML_Syntax.MLE_Fun (uu___3, test);
               FStarC_Extraction_ML_Syntax.mlty = uu___4;
               FStarC_Extraction_ML_Syntax.loc = uu___5;_}::{
-                                                            FStarC_Extraction_ML_Syntax.expr
-                                                              =
-                                                              FStarC_Extraction_ML_Syntax.MLE_Fun
-                                                              (uu___6, body);
-                                                            FStarC_Extraction_ML_Syntax.mlty
-                                                              = uu___7;
-                                                            FStarC_Extraction_ML_Syntax.loc
-                                                              = uu___8;_}::[])
+                                                             FStarC_Extraction_ML_Syntax.expr
+                                                               =
+                                                               FStarC_Extraction_ML_Syntax.MLE_Fun
+                                                               (uu___6, body);
+                                                             FStarC_Extraction_ML_Syntax.mlty
+                                                               = uu___7;
+                                                             FStarC_Extraction_ML_Syntax.loc
+                                                               = uu___8;_}::[])
            when
            let uu___9 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
            uu___9 = "Pulse.Lib.Dv.while_" ->
