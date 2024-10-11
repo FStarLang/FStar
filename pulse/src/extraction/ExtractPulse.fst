@@ -128,7 +128,7 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     when string_of_mlpath p = "Pulse.Lib.ArrayPtr.from_array" ->
     translate_expr env x
 
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ a; _p; _w; i ])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ a; _p; i; _w ])
     when string_of_mlpath p = "Pulse.Lib.ArrayPtr.split" ->
     EBufSub (translate_expr env a, translate_expr env i)
 

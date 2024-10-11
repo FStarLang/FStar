@@ -106,11 +106,23 @@ val gather
 let adjacent #t (a: ptr t) (sz: nat) (b: ptr t) : prop =
   base a == base b /\ offset a + sz == offset b
 
-val split (#t: Type) (s: ptr t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t { SZ.v i <= Seq.length v }) : stt (ptr t)
+val split (#t: Type) (s: ptr t) (#p: perm) (i: SZ.t)
+  (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v })
+  : stt (ptr t)
     (requires pts_to s #p v)
     (ensures fun s' ->
         pts_to s #p (Seq.slice v 0 (SZ.v i)) **
         pts_to s' #p (Seq.slice v (SZ.v i) (Seq.length v)) **
+        pure (adjacent s (SZ.v i) s')
+    )
+
+val ghost_split (#t: Type) (s: ptr t) (#p: perm) (i: SZ.t)
+  (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v })
+  : stt_ghost (erased (ptr t)) []
+    (requires pts_to s #p v)
+    (ensures fun s' ->
+        pts_to s #p (Seq.slice v 0 (SZ.v i)) **
+        pts_to (reveal s') #p (Seq.slice v (SZ.v i) (Seq.length v)) **
         pure (adjacent s (SZ.v i) s')
     )
 

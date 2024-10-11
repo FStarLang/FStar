@@ -112,6 +112,7 @@ and expr =
   | Expr_tuple of list expr
   | Expr_method_call of expr_method_call
   | Expr_cast of expr_cast
+  | Expr_range of expr_range
 
 and expr_bin = {
   expr_bin_left : expr;
@@ -196,6 +197,16 @@ and expr_cast = {
   expr_cast_expr : expr;
   expr_cast_type : typ;
 }
+
+and expr_range = {
+  expr_range_start: option expr;
+  expr_range_limits: range_limits;
+  expr_range_end: option expr;
+}
+
+and range_limits =
+  | RangeLimitsHalfOpen
+  | RangeLimitsClosed
 
 and local_stmt = {
   local_stmt_pat : option pat;
@@ -358,6 +369,7 @@ val mk_expr_tuple (l:list expr) : expr
 val mk_mem_replace (t:typ) (e:expr) (new_v:expr) : expr
 val mk_method_call (receiver:expr) (name:string) (args:list expr) : expr
 val mk_cast (e:expr) (ty:typ) : expr
+val mk_range (s:option expr) (l:range_limits) (e:option expr) : expr
 
 val mk_new_mutex (e:expr) : expr
 val mk_lock_mutex (e:expr) : expr

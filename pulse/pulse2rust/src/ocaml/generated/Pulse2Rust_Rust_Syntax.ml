@@ -163,6 +163,7 @@ and expr =
   | Expr_tuple of expr Prims.list 
   | Expr_method_call of expr_method_call 
   | Expr_cast of expr_cast 
+  | Expr_range of expr_range 
 and expr_bin =
   {
   expr_bin_left: expr ;
@@ -221,6 +222,14 @@ and expr_method_call =
 and expr_cast = {
   expr_cast_expr: expr ;
   expr_cast_type: typ }
+and expr_range =
+  {
+  expr_range_start: expr FStar_Pervasives_Native.option ;
+  expr_range_limits: range_limits ;
+  expr_range_end: expr FStar_Pervasives_Native.option }
+and range_limits =
+  | RangeLimitsHalfOpen 
+  | RangeLimitsClosed 
 and local_stmt =
   {
   local_stmt_pat: pat FStar_Pervasives_Native.option ;
@@ -406,6 +415,11 @@ let (uu___is_Expr_cast : expr -> Prims.bool) =
     match projectee with | Expr_cast _0 -> true | uu___ -> false
 let (__proj__Expr_cast__item___0 : expr -> expr_cast) =
   fun projectee -> match projectee with | Expr_cast _0 -> _0
+let (uu___is_Expr_range : expr -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Expr_range _0 -> true | uu___ -> false
+let (__proj__Expr_range__item___0 : expr -> expr_range) =
+  fun projectee -> match projectee with | Expr_range _0 -> _0
 let (__proj__Mkexpr_bin__item__expr_bin_left : expr_bin -> expr) =
   fun projectee ->
     match projectee with
@@ -567,6 +581,30 @@ let (__proj__Mkexpr_cast__item__expr_cast_type : expr_cast -> typ) =
   fun projectee ->
     match projectee with
     | { expr_cast_expr; expr_cast_type;_} -> expr_cast_type
+let (__proj__Mkexpr_range__item__expr_range_start :
+  expr_range -> expr FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { expr_range_start; expr_range_limits; expr_range_end;_} ->
+        expr_range_start
+let (__proj__Mkexpr_range__item__expr_range_limits :
+  expr_range -> range_limits) =
+  fun projectee ->
+    match projectee with
+    | { expr_range_start; expr_range_limits; expr_range_end;_} ->
+        expr_range_limits
+let (__proj__Mkexpr_range__item__expr_range_end :
+  expr_range -> expr FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { expr_range_start; expr_range_limits; expr_range_end;_} ->
+        expr_range_end
+let (uu___is_RangeLimitsHalfOpen : range_limits -> Prims.bool) =
+  fun projectee ->
+    match projectee with | RangeLimitsHalfOpen -> true | uu___ -> false
+let (uu___is_RangeLimitsClosed : range_limits -> Prims.bool) =
+  fun projectee ->
+    match projectee with | RangeLimitsClosed -> true | uu___ -> false
 let (__proj__Mklocal_stmt__item__local_stmt_pat :
   local_stmt -> pat FStar_Pervasives_Native.option) =
   fun projectee ->
@@ -1088,6 +1126,15 @@ let (mk_method_call : expr -> Prims.string -> expr Prims.list -> expr) =
           }
 let (mk_cast : expr -> typ -> expr) =
   fun e -> fun ty -> Expr_cast { expr_cast_expr = e; expr_cast_type = ty }
+let (mk_range :
+  expr FStar_Pervasives_Native.option ->
+    range_limits -> expr FStar_Pervasives_Native.option -> expr)
+  =
+  fun s ->
+    fun l ->
+      fun e ->
+        Expr_range
+          { expr_range_start = s; expr_range_limits = l; expr_range_end = e }
 let (mk_new_mutex : expr -> expr) =
   fun e ->
     let uu___ = mk_expr_path ["std"; "sync"; "Mutex"; "new"] in

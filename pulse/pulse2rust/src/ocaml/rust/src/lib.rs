@@ -142,6 +142,17 @@ struct ExprCast {
     expr_cast_type: Box<Typ>,
 }
 
+struct ExprRange {
+    expr_range_start: Option<Box<Expr>>,
+    expr_range_limits: RangeLimits,
+    expr_range_end: Option<Box<Expr>>,
+}
+
+enum RangeLimits {
+    RangeLimitsHalfOpen,
+    RangeLimitsClosed,
+}
+
 enum Expr {
     EBinOp(ExprBin),
     EPath(Vec<PathSegment>),
@@ -161,6 +172,7 @@ enum Expr {
     ETuple(Vec<Expr>),
     EMethodCall(ExprMethodCall),
     ECast(ExprCast),
+    ERange(ExprRange),
 }
 
 struct TypeReference {
@@ -401,6 +413,7 @@ impl_from_ocaml_variant! {
     Expr::ETuple (payload:OCamlList<Expr>),
     Expr::EMethodCall (payload:ExprMethodCall),
     Expr::ECast (payload:ExprCast),
+    Expr::ERange (payload:ExprRange)
   }
 }
 
@@ -517,6 +530,21 @@ impl_from_ocaml_record! {
   ExprCast {
     expr_cast_expr: Expr,
     expr_cast_type: Typ,
+  }
+}
+
+impl_from_ocaml_record! {
+  ExprRange {
+    expr_range_start: Option<Expr>,
+    expr_range_limits: RangeLimits,
+    expr_range_end: Option<Expr>,
+  }
+}
+
+impl_from_ocaml_variant! {
+  RangeLimits {
+    RangeLimits::RangeLimitsHalfOpen,
+    RangeLimits::RangeLimitsClosed,
   }
 }
 
@@ -1201,6 +1229,17 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
                 expr: Box::new(to_syn_expr(expr_cast_expr)),
                 as_token: syn::token::As { span: Span::call_site() },
                 ty: Box::new(to_syn_typ(expr_cast_type)),
+            })
+        },
+        Expr::ERange(ExprRange { expr_range_start, expr_range_limits, expr_range_end }) => {
+            syn::Expr::Range(syn::ExprRange {
+                attrs: vec![],
+                start: expr_range_start.as_ref().map(|e| Box::new(to_syn_expr(e))),
+                limits: (match expr_range_limits {
+                    RangeLimits::RangeLimitsHalfOpen => syn::RangeLimits::HalfOpen(syn::token::DotDot { spans: [Span::call_site(), Span::call_site()] }),
+                    RangeLimits::RangeLimitsClosed => syn::RangeLimits::Closed(syn::token::DotDotEq { spans: [Span::call_site(), Span::call_site(), Span::call_site()] }),
+                }),
+                end: expr_range_end.as_ref().map(|e| Box::new(to_syn_expr(e))),
             })
         },
     }
@@ -2142,6 +2181,15 @@ impl fmt::Display for Expr {
                 expr_cast_expr,
                 expr_cast_type,
             ),
+            Expr::ERange(ExprRange { expr_range_start, expr_range_limits, expr_range_end }) => {
+                if let Some(e) = expr_range_start { write!(f, "{}", e)? }
+                write!(f, " {} ", match expr_range_limits {
+                    RangeLimits::RangeLimitsHalfOpen => "..",
+                    RangeLimits::RangeLimitsClosed => "..=",
+                })?;
+                if let Some(e) = expr_range_end { write!(f, "{}", e)? }
+                Ok(())
+            },
         }
     }
 }

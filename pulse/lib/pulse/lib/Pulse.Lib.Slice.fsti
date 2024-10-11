@@ -110,6 +110,18 @@ val join (#t: Type) (s1: slice t) (#p: perm) (#v1: Seq.seq t) (s2: slice t) (#v2
     (pts_to s1 #p v1 ** pts_to s2 #p v2 ** is_split s s1 s2)
     (fun _ -> pts_to s #p (Seq.append v1 v2))
 
+(* `subslice_rest r s p i j v` is the resource remaining after taking the subslice `r = s[i..j]` *)
+let subslice_rest #t (r: slice t) (s: slice t) p (i j: SZ.t) (v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length v }) : slprop =
+  exists* s1 s2 s3.
+    is_split s s1 s2 **
+    is_split s2 r s3 **
+    pts_to s1 #p (Seq.slice v 0 (SZ.v i)) **
+    pts_to s3 #p (Seq.slice v (SZ.v j) (Seq.length v))
+
+val subslice #t (s: slice t) #p (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length v }) :
+  stt (slice t) (pts_to s #p v)
+    fun res -> pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j)) ** subslice_rest res s p i j v
+
 val copy (#t: Type) (dst: slice t) (#p: perm) (src: slice t) (#v: Ghost.erased (Seq.seq t)) : stt unit
     (exists* v_dst . pts_to dst v_dst ** pts_to src #p v ** pure (len src == len dst))
     (fun _ -> pts_to dst v ** pts_to src #p v)

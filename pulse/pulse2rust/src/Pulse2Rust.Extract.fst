@@ -660,6 +660,10 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e::_::i::_)
     when S.string_of_mlpath p = "Pulse.Lib.Slice.split" ->
     mk_method_call (extract_mlexpr g e) "split_at_mut" [extract_mlexpr g i]
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, s::_::a::b::_)
+    when S.string_of_mlpath p = "Pulse.Lib.Slice.subslice" ->
+    let mutb = true in
+    mk_reference_expr true (mk_expr_index (extract_mlexpr g s) (mk_range (Some (extract_mlexpr g a)) RangeLimitsHalfOpen (Some (extract_mlexpr g b))))
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, a::_::b::_)
     when S.string_of_mlpath p = "Pulse.Lib.Slice.copy" ->
     mk_method_call (extract_mlexpr g a) "copy_from_slice" [extract_mlexpr g b]

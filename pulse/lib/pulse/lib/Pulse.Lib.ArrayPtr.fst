@@ -156,7 +156,8 @@ fn gather
     fold_pts_to arr #(p0 +. p1) s0
 }
 
-fn split (#t: Type) (s: ptr t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t { SZ.v i <= Seq.length v })
+fn split (#t: Type) (s: ptr t) (#p: perm) (i: SZ.t)
+    (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v })
   requires pts_to s #p v
   returns s' : ptr t
   ensures
@@ -183,6 +184,36 @@ fn split (#t: Type) (s: ptr t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.
     fold_pts_to s' #p s2;
     s'
 }
+
+ghost fn ghost_split (#t: Type) (s: ptr t) (#p: perm) (i: SZ.t)
+    (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v })
+  requires pts_to s #p v
+  returns s' : erased (ptr t)
+  ensures
+    pts_to s #p (Seq.slice v 0 (SZ.v i)) **
+    pts_to (reveal s') #p (Seq.slice v (SZ.v i) (Seq.length v)) **
+    pure (adjacent s (SZ.v i) s')
+{
+    unfold_pts_to s #p v;
+    A.pts_to_range_prop s.base;
+    let s' = {
+        base = s.base;
+        offset = SZ.add s.offset i;
+    };
+    A.pts_to_range_split s.base _ (SZ.v s'.offset) _;
+    with s1. assert A.pts_to_range s.base (SZ.v s.offset) (SZ.v s'.offset) #p s1;
+    rewrite
+        (A.pts_to_range s.base (SZ.v s.offset) (SZ.v s'.offset) #p s1)
+        as (A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + SZ.v i) #p s1);
+    fold_pts_to s #p s1;
+    with s2. assert A.pts_to_range s.base (SZ.v s'.offset) (SZ.v s.offset + Seq.length v) #p s2;
+    rewrite
+        (A.pts_to_range s.base (SZ.v s'.offset) (SZ.v s.offset + Seq.length v) #p s2)
+        as (A.pts_to_range s'.base (SZ.v s'.offset) (SZ.v s'.offset + Seq.length s2) #p s2);
+    fold_pts_to s' #p s2;
+    s'
+}
+
 
 ghost
 fn join (#t: Type) (s1: ptr t) (#p: perm) (#v1: Seq.seq t) (s2: ptr t) (#v2: Seq.seq t)
