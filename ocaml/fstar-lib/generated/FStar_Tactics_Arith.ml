@@ -56,7 +56,7 @@ let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
          (fun uu___2 ->
             if uu___2
             then
-              let uu___3 = FStar_Tactics_V2_Builtins.prune "" in
+              let uu___3 = FStarC_Tactics_V2_Builtins.prune "" in
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Sealed.seal
@@ -72,7 +72,8 @@ let rec (split_arith : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                    (Obj.magic uu___3)
                    (fun uu___4 ->
                       (fun uu___4 ->
-                         let uu___5 = FStar_Tactics_V2_Builtins.addns "Prims" in
+                         let uu___5 =
+                           FStarC_Tactics_V2_Builtins.addns "Prims" in
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
                               (FStar_Sealed.seal

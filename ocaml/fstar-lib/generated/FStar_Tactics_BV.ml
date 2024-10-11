@@ -9,9 +9,9 @@ let rec (arith_expr_to_bv :
         (e1, uu___)) ->
         let uu___1 =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_mul"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -28,9 +28,9 @@ let rec (arith_expr_to_bv :
              (fun uu___2 ->
                 let uu___3 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -55,9 +55,9 @@ let rec (arith_expr_to_bv :
     | FStar_Reflection_V2_Arith.MulMod (e1, uu___) ->
         let uu___1 =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_mul"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -74,9 +74,9 @@ let rec (arith_expr_to_bv :
              (fun uu___2 ->
                 let uu___3 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -102,9 +102,9 @@ let rec (arith_expr_to_bv :
         (e1, uu___)) ->
         let uu___1 =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_mod"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -121,9 +121,9 @@ let rec (arith_expr_to_bv :
              (fun uu___2 ->
                 let uu___3 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -148,9 +148,9 @@ let rec (arith_expr_to_bv :
     | FStar_Reflection_V2_Arith.Umod (e1, uu___) ->
         let uu___1 =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_mod"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -167,9 +167,9 @@ let rec (arith_expr_to_bv :
              (fun uu___2 ->
                 let uu___3 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -195,9 +195,9 @@ let rec (arith_expr_to_bv :
         (e1, uu___)) ->
         let uu___1 =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_div"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -214,9 +214,9 @@ let rec (arith_expr_to_bv :
              (fun uu___2 ->
                 let uu___3 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -241,9 +241,9 @@ let rec (arith_expr_to_bv :
     | FStar_Reflection_V2_Arith.Udiv (e1, uu___) ->
         let uu___1 =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_div"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -260,9 +260,9 @@ let rec (arith_expr_to_bv :
              (fun uu___2 ->
                 let uu___3 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -288,9 +288,9 @@ let rec (arith_expr_to_bv :
         (e1, uu___)) ->
         let uu___1 =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_shl"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -307,9 +307,9 @@ let rec (arith_expr_to_bv :
              (fun uu___2 ->
                 let uu___3 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -334,9 +334,9 @@ let rec (arith_expr_to_bv :
     | FStar_Reflection_V2_Arith.Shl (e1, uu___) ->
         let uu___1 =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_shl"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -353,9 +353,9 @@ let rec (arith_expr_to_bv :
              (fun uu___2 ->
                 let uu___3 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -381,9 +381,9 @@ let rec (arith_expr_to_bv :
         (e1, uu___)) ->
         let uu___1 =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_shr"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -400,9 +400,9 @@ let rec (arith_expr_to_bv :
              (fun uu___2 ->
                 let uu___3 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -427,9 +427,9 @@ let rec (arith_expr_to_bv :
     | FStar_Reflection_V2_Arith.Shr (e1, uu___) ->
         let uu___1 =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_shr"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -446,9 +446,9 @@ let rec (arith_expr_to_bv :
              (fun uu___2 ->
                 let uu___3 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -474,9 +474,9 @@ let rec (arith_expr_to_bv :
         (e1, e2)) ->
         let uu___ =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_logand"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -493,9 +493,9 @@ let rec (arith_expr_to_bv :
              (fun uu___1 ->
                 let uu___2 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -543,9 +543,9 @@ let rec (arith_expr_to_bv :
     | FStar_Reflection_V2_Arith.Land (e1, e2) ->
         let uu___ =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_logand"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -562,9 +562,9 @@ let rec (arith_expr_to_bv :
              (fun uu___1 ->
                 let uu___2 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -613,9 +613,9 @@ let rec (arith_expr_to_bv :
         (e1, e2)) ->
         let uu___ =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_logxor"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -632,9 +632,9 @@ let rec (arith_expr_to_bv :
              (fun uu___1 ->
                 let uu___2 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -682,9 +682,9 @@ let rec (arith_expr_to_bv :
     | FStar_Reflection_V2_Arith.Lxor (e1, e2) ->
         let uu___ =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_logxor"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -701,9 +701,9 @@ let rec (arith_expr_to_bv :
              (fun uu___1 ->
                 let uu___2 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -752,9 +752,9 @@ let rec (arith_expr_to_bv :
         (e1, e2)) ->
         let uu___ =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_logor"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -771,9 +771,9 @@ let rec (arith_expr_to_bv :
              (fun uu___1 ->
                 let uu___2 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -821,9 +821,9 @@ let rec (arith_expr_to_bv :
     | FStar_Reflection_V2_Arith.Lor (e1, e2) ->
         let uu___ =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_logor"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -840,9 +840,9 @@ let rec (arith_expr_to_bv :
              (fun uu___1 ->
                 let uu___2 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -891,9 +891,9 @@ let rec (arith_expr_to_bv :
         (e1, e2)) ->
         let uu___ =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_add"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -910,9 +910,9 @@ let rec (arith_expr_to_bv :
              (fun uu___1 ->
                 let uu___2 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -960,9 +960,9 @@ let rec (arith_expr_to_bv :
     | FStar_Reflection_V2_Arith.Ladd (e1, e2) ->
         let uu___ =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_add"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -979,9 +979,9 @@ let rec (arith_expr_to_bv :
              (fun uu___1 ->
                 let uu___2 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -1030,9 +1030,9 @@ let rec (arith_expr_to_bv :
         (e1, e2)) ->
         let uu___ =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_sub"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -1049,9 +1049,9 @@ let rec (arith_expr_to_bv :
              (fun uu___1 ->
                 let uu___2 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -1099,9 +1099,9 @@ let rec (arith_expr_to_bv :
     | FStar_Reflection_V2_Arith.Lsub (e1, e2) ->
         let uu___ =
           FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
+            (FStarC_Reflection_V2_Builtins.pack_ln
+               (FStarC_Reflection_V2_Data.Tv_FVar
+                  (FStarC_Reflection_V2_Builtins.pack_fv
                      ["FStar"; "BV"; "int2bv_sub"]))) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -1118,9 +1118,9 @@ let rec (arith_expr_to_bv :
              (fun uu___1 ->
                 let uu___2 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "BV";
@@ -1171,7 +1171,7 @@ let (arith_to_bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
     FStar_Tactics_V2_Derived.focus
       (fun uu___1 ->
          let uu___2 =
-           FStar_Tactics_V2_Builtins.norm
+           FStarC_Tactics_V2_Builtins.norm
              [FStar_Pervasives.delta_only ["FStar.BV.bvult"]] in
          FStar_Tactics_Effect.tac_bind
            (FStar_Sealed.seal
@@ -1260,7 +1260,7 @@ let (arith_to_bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                       | FStar_Pervasives.Inl
                                                           s ->
                                                           let uu___9 =
-                                                            FStar_Tactics_V2_Builtins.dump
+                                                            FStarC_Tactics_V2_Builtins.dump
                                                               s in
                                                           Obj.magic
                                                             (FStar_Tactics_Effect.tac_bind
@@ -1303,7 +1303,7 @@ let (arith_to_bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                        | uu___6 ->
                                            let uu___7 =
                                              let uu___8 =
-                                               FStar_Tactics_V2_Builtins.term_to_string
+                                               FStarC_Tactics_V2_Builtins.term_to_string
                                                  g in
                                              FStar_Tactics_Effect.tac_bind
                                                (FStar_Sealed.seal
@@ -1353,26 +1353,26 @@ let (arith_to_bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                      uu___8))) uu___6)))
                            uu___5))) uu___3))
 let _ =
-  FStar_Tactics_Native.register_tactic "FStar.Tactics.BV.arith_to_bv_tac"
+  FStarC_Tactics_Native.register_tactic "FStar.Tactics.BV.arith_to_bv_tac"
     (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.BV.arith_to_bv_tac (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 arith_to_bv_tac)
-               FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit
-               psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_1 arith_to_bv_tac)
+               FStarC_Syntax_Embeddings.e_unit
+               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let (bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_V2_Derived.focus
       (fun uu___1 ->
          let uu___2 =
            FStar_Tactics_MApply.mapply FStar_Tactics_MApply.termable_term
-             (FStar_Reflection_V2_Builtins.pack_ln
-                (FStar_Reflection_V2_Data.Tv_FVar
-                   (FStar_Reflection_V2_Builtins.pack_fv
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
                       ["FStar"; "Tactics"; "BV"; "Lemmas"; "eq_to_bv"]))) in
          FStar_Tactics_Effect.tac_bind
            (FStar_Sealed.seal
@@ -1391,9 +1391,9 @@ let (bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                  let uu___4 =
                    FStar_Tactics_MApply.mapply
                      FStar_Tactics_MApply.termable_term
-                     (FStar_Reflection_V2_Builtins.pack_ln
-                        (FStar_Reflection_V2_Data.Tv_FVar
-                           (FStar_Reflection_V2_Builtins.pack_fv
+                     (FStarC_Reflection_V2_Builtins.pack_ln
+                        (FStarC_Reflection_V2_Data.Tv_FVar
+                           (FStarC_Reflection_V2_Builtins.pack_fv
                               ["FStar"; "Tactics"; "BV"; "Lemmas"; "trans"]))) in
                  Obj.magic
                    (FStar_Tactics_Effect.tac_bind
@@ -1455,7 +1455,7 @@ let (bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                             (fun uu___9 ->
                                                (fun uu___9 ->
                                                   let uu___10 =
-                                                    FStar_Tactics_V2_Builtins.set_options
+                                                    FStarC_Tactics_V2_Builtins.set_options
                                                       "--smtencoding.elim_box true" in
                                                   Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
@@ -1479,7 +1479,7 @@ let (bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                        (fun uu___11 ->
                                                           (fun uu___11 ->
                                                              let uu___12 =
-                                                               FStar_Tactics_V2_Builtins.norm
+                                                               FStarC_Tactics_V2_Builtins.norm
                                                                  [FStar_Pervasives.delta] in
                                                              Obj.magic
                                                                (FStar_Tactics_Effect.tac_bind
@@ -1514,17 +1514,17 @@ let (bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                             uu___11))) uu___9)))
                                       uu___7))) uu___5))) uu___3))
 let _ =
-  FStar_Tactics_Native.register_tactic "FStar.Tactics.BV.bv_tac"
+  FStarC_Tactics_Native.register_tactic "FStar.Tactics.BV.bv_tac"
     (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.BV.bv_tac (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 bv_tac)
-               FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit
-               psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_1 bv_tac)
+               FStarC_Syntax_Embeddings.e_unit
+               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let (bv_tac_lt : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun n ->
     FStar_Tactics_V2_Derived.focus
@@ -1535,7 +1535,7 @@ let (bv_tac_lt : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                 (fun uu___2 ->
                    FStar_Tactics_NamedView.pack
                      (FStar_Tactics_NamedView.Tv_Const
-                        (FStar_Reflection_V2_Data.C_Int n)))) in
+                        (FStarC_Reflection_V2_Data.C_Int n)))) in
          FStar_Tactics_Effect.tac_bind
            (FStar_Sealed.seal
               (Obj.magic
@@ -1555,15 +1555,15 @@ let (bv_tac_lt : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___3 ->
                            FStar_Reflection_V2_Derived.mk_app
-                             (FStar_Reflection_V2_Builtins.pack_ln
-                                (FStar_Reflection_V2_Data.Tv_FVar
-                                   (FStar_Reflection_V2_Builtins.pack_fv
+                             (FStarC_Reflection_V2_Builtins.pack_ln
+                                (FStarC_Reflection_V2_Data.Tv_FVar
+                                   (FStarC_Reflection_V2_Builtins.pack_fv
                                       ["FStar";
                                       "Tactics";
                                       "BV";
                                       "Lemmas";
                                       "trans_lt2"])))
-                             [(nn, FStar_Reflection_V2_Data.Q_Implicit)])) in
+                             [(nn, FStarC_Reflection_V2_Data.Q_Implicit)])) in
                  Obj.magic
                    (FStar_Tactics_Effect.tac_bind
                       (FStar_Sealed.seal
@@ -1648,7 +1648,7 @@ let (bv_tac_lt : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                        (fun uu___8 ->
                                                           (fun uu___8 ->
                                                              let uu___9 =
-                                                               FStar_Tactics_V2_Builtins.set_options
+                                                               FStarC_Tactics_V2_Builtins.set_options
                                                                  "--smtencoding.elim_box true" in
                                                              Obj.magic
                                                                (FStar_Tactics_Effect.tac_bind
@@ -1683,16 +1683,16 @@ let (bv_tac_lt : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                             uu___8))) uu___6)))
                                       uu___4))) uu___3))) uu___2))
 let _ =
-  FStar_Tactics_Native.register_tactic "FStar.Tactics.BV.bv_tac_lt"
+  FStarC_Tactics_Native.register_tactic "FStar.Tactics.BV.bv_tac_lt"
     (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.BV.bv_tac_lt (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 bv_tac_lt)
-               FStar_Syntax_Embeddings.e_int FStar_Syntax_Embeddings.e_unit
+               (FStarC_Tactics_Native.from_tactic_1 bv_tac_lt)
+               FStarC_Syntax_Embeddings.e_int FStarC_Syntax_Embeddings.e_unit
                psc ncb us args)
 let (to_bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
@@ -1700,9 +1700,9 @@ let (to_bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
       (fun uu___1 ->
          let uu___2 =
            FStar_Tactics_V2_Derived.apply_lemma
-             (FStar_Reflection_V2_Builtins.pack_ln
-                (FStar_Reflection_V2_Data.Tv_FVar
-                   (FStar_Reflection_V2_Builtins.pack_fv
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
                       ["FStar"; "Tactics"; "BV"; "Lemmas"; "eq_to_bv"]))) in
          FStar_Tactics_Effect.tac_bind
            (FStar_Sealed.seal
@@ -1720,9 +1720,9 @@ let (to_bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
               (fun uu___3 ->
                  let uu___4 =
                    FStar_Tactics_V2_Derived.apply_lemma
-                     (FStar_Reflection_V2_Builtins.pack_ln
-                        (FStar_Reflection_V2_Data.Tv_FVar
-                           (FStar_Reflection_V2_Builtins.pack_fv
+                     (FStarC_Reflection_V2_Builtins.pack_ln
+                        (FStarC_Reflection_V2_Data.Tv_FVar
+                           (FStarC_Reflection_V2_Builtins.pack_fv
                               ["FStar"; "Tactics"; "BV"; "Lemmas"; "trans"]))) in
                  Obj.magic
                    (FStar_Tactics_Effect.tac_bind
@@ -1764,14 +1764,14 @@ let (to_bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                        Obj.magic (arith_to_bv_tac ())) uu___7)))
                            uu___5))) uu___3))
 let _ =
-  FStar_Tactics_Native.register_tactic "FStar.Tactics.BV.to_bv_tac"
+  FStarC_Tactics_Native.register_tactic "FStar.Tactics.BV.to_bv_tac"
     (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.BV.to_bv_tac (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 to_bv_tac)
-               FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit
-               psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_1 to_bv_tac)
+               FStarC_Syntax_Embeddings.e_unit
+               FStarC_Syntax_Embeddings.e_unit psc ncb us args)

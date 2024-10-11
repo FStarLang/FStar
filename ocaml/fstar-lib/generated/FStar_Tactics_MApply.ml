@@ -51,9 +51,9 @@ let rec (apply_squash_or_lem :
                 | () ->
                     let uu___2 =
                       FStar_Tactics_V2_Derived.apply
-                        (FStar_Reflection_V2_Builtins.pack_ln
-                           (FStar_Reflection_V2_Data.Tv_FVar
-                              (FStar_Reflection_V2_Builtins.pack_fv
+                        (FStarC_Reflection_V2_Builtins.pack_ln
+                           (FStarC_Reflection_V2_Data.Tv_FVar
+                              (FStarC_Reflection_V2_Builtins.pack_fv
                                  ["FStar"; "Squash"; "return_squash"]))) in
                     FStar_Tactics_Effect.tac_bind
                       (FStar_Sealed.seal
@@ -111,7 +111,7 @@ let rec (apply_squash_or_lem :
                                     (fun uu___6 ->
                                        (fun uu___6 ->
                                           Obj.magic
-                                            (FStar_Tactics_V2_Builtins.tc
+                                            (FStarC_Tactics_V2_Builtins.tc
                                                uu___6 t)) uu___6) in
                                 FStar_Tactics_Effect.tac_bind
                                   (FStar_Sealed.seal
@@ -162,7 +162,7 @@ let rec (apply_squash_or_lem :
                                                        (match FStar_Tactics_NamedView.inspect_comp
                                                                 c
                                                         with
-                                                        | FStar_Reflection_V2_Data.C_Lemma
+                                                        | FStarC_Reflection_V2_Data.C_Lemma
                                                             (pre, post,
                                                              uu___7)
                                                             ->
@@ -174,13 +174,13 @@ let rec (apply_squash_or_lem :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___9 ->
-                                                                    FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
+                                                                    FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
                                                                     (post,
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_Const
-                                                                    FStar_Reflection_V2_Data.C_Unit)),
-                                                                    FStar_Reflection_V2_Data.Q_Explicit))))) in
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_Const
+                                                                    FStarC_Reflection_V2_Data.C_Unit)),
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit))))) in
                                                                   FStar_Tactics_Effect.tac_bind
                                                                     (
                                                                     FStar_Sealed.seal
@@ -277,9 +277,9 @@ let rec (apply_squash_or_lem :
                                                                     (let uu___12
                                                                     =
                                                                     FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "MApply";
@@ -325,7 +325,7 @@ let rec (apply_squash_or_lem :
                                                                     uu___11)))
                                                                     uu___10)))
                                                                     uu___9)))
-                                                        | FStar_Reflection_V2_Data.C_Total
+                                                        | FStarC_Reflection_V2_Data.C_Total
                                                             rt ->
                                                             Obj.magic
                                                               (Obj.repr
@@ -400,9 +400,9 @@ let rec (apply_squash_or_lem :
                                                                     (let uu___10
                                                                     =
                                                                     FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "MApply";
@@ -512,9 +512,9 @@ let rec (apply_squash_or_lem :
                                                                     let uu___10
                                                                     =
                                                                     FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "MApply";
@@ -557,9 +557,9 @@ let rec (apply_squash_or_lem :
                                                                     let uu___11
                                                                     =
                                                                     FStar_Tactics_V2_Derived.apply
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Squash";
                                                                     "return_squash"]))) in
@@ -605,17 +605,17 @@ let (mapply0 :
   FStar_Tactics_NamedView.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   = fun t -> apply_squash_or_lem (Prims.of_int (10)) t
 let _ =
-  FStar_Tactics_Native.register_tactic "FStar.Tactics.MApply.mapply0"
+  FStarC_Tactics_Native.register_tactic "FStar.Tactics.MApply.mapply0"
     (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.MApply.mapply0 (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 mapply0)
-               FStar_Reflection_V2_Embeddings.e_term
-               FStar_Syntax_Embeddings.e_unit psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_1 mapply0)
+               FStarC_Reflection_V2_Embeddings.e_term
+               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let mapply :
   'ty . 'ty termable -> 'ty -> (unit, unit) FStar_Tactics_Effect.tac_repr =
   fun uu___ ->

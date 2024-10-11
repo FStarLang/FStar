@@ -3,7 +3,7 @@ exception Appears
 let (uu___is_Appears : Prims.exn -> Prims.bool) =
   fun projectee -> match projectee with | Appears -> true | uu___ -> false
 let (name_appears_in :
-  FStar_Reflection_Types.name ->
+  FStarC_Reflection_Types.name ->
     FStar_Tactics_NamedView.term ->
       (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -35,7 +35,7 @@ let (name_appears_in :
                                 (Obj.repr
                                    (let uu___4 =
                                       if
-                                        (FStar_Reflection_V2_Builtins.inspect_fv
+                                        (FStarC_Reflection_V2_Builtins.inspect_fv
                                            fv)
                                           = nm
                                       then
@@ -85,7 +85,7 @@ let (name_appears_in :
         (fun uu___1 ->
            (fun ff ->
               let uu___1 =
-                FStar_Tactics_V2_Builtins.catch
+                FStarC_Tactics_V2_Builtins.catch
                   (fun uu___2 ->
                      let uu___3 =
                        let uu___4 = FStar_Tactics_Visit.visit_tm ff t in
@@ -144,16 +144,16 @@ let (name_appears_in :
                       | FStar_Pervasives.Inl e ->
                           FStar_Tactics_Effect.raise e))) uu___1)
 let _ =
-  FStar_Tactics_Native.register_tactic "FStar.Tactics.Names.name_appears_in"
+  FStarC_Tactics_Native.register_tactic "FStar.Tactics.Names.name_appears_in"
     (Prims.of_int (3))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_2
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2
                "FStar.Tactics.Names.name_appears_in (plugin)"
-               (FStar_Tactics_Native.from_tactic_2 name_appears_in)
-               (FStar_Syntax_Embeddings.e_list
-                  FStar_Syntax_Embeddings.e_string)
-               FStar_Reflection_V2_Embeddings.e_term
-               FStar_Syntax_Embeddings.e_bool psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_2 name_appears_in)
+               (FStarC_Syntax_Embeddings.e_list
+                  FStarC_Syntax_Embeddings.e_string)
+               FStarC_Reflection_V2_Embeddings.e_term
+               FStarC_Syntax_Embeddings.e_bool psc ncb us args)

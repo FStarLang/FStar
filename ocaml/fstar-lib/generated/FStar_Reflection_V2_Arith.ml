@@ -1,7 +1,7 @@
 open Prims
 type expr =
   | Lit of Prims.int 
-  | Atom of Prims.nat * FStar_Reflection_Types.term 
+  | Atom of Prims.nat * FStarC_Reflection_Types.term 
   | Plus of expr * expr 
   | Mult of expr * expr 
   | Minus of expr * expr 
@@ -26,7 +26,7 @@ let (uu___is_Atom : expr -> Prims.bool) =
     match projectee with | Atom (_0, _1) -> true | uu___ -> false
 let (__proj__Atom__item___0 : expr -> Prims.nat) =
   fun projectee -> match projectee with | Atom (_0, _1) -> _0
-let (__proj__Atom__item___1 : expr -> FStar_Reflection_Types.term) =
+let (__proj__Atom__item___1 : expr -> FStarC_Reflection_Types.term) =
   fun projectee -> match projectee with | Atom (_0, _1) -> _1
 let (uu___is_Plus : expr -> Prims.bool) =
   fun projectee ->
@@ -180,7 +180,7 @@ let (ne : expr -> expr -> prop) = fun e1 -> fun e2 -> CompProp (e1, C_Ne, e2)
 let (gt : expr -> expr -> prop) = fun e1 -> fun e2 -> CompProp (e1, C_Gt, e2)
 let (ge : expr -> expr -> prop) =
   fun e1 -> fun e2 -> CompProp ((Plus ((Lit Prims.int_one), e1)), C_Gt, e2)
-type st = (Prims.nat * FStar_Reflection_Types.term Prims.list)
+type st = (Prims.nat * FStarC_Reflection_Types.term Prims.list)
 type 'a tm =
   st ->
     ((Prims.string, ('a * st)) FStar_Pervasives.either, unit)
@@ -354,13 +354,13 @@ let rec find_idx :
                                                      ((i + Prims.int_one),
                                                        x1)))))) uu___1))))
         uu___1 uu___
-let (atom : FStar_Reflection_Types.term -> expr tm) =
+let (atom : FStarC_Reflection_Types.term -> expr tm) =
   fun t ->
     fun uu___ ->
       match uu___ with
       | (n, atoms) ->
           let uu___1 =
-            find_idx (FStar_Tactics_V2_Builtins.term_eq_old t) atoms in
+            find_idx (FStarC_Tactics_V2_Builtins.term_eq_old t) atoms in
           FStar_Tactics_Effect.tac_bind
             (FStar_Sealed.seal
                (Obj.magic
@@ -392,17 +392,17 @@ let fail : 'a . Prims.string -> 'a tm =
          Obj.magic
            (FStar_Tactics_Effect.lift_div_tac
               (fun uu___ -> FStar_Pervasives.Inl s))) uu___
-let rec (as_arith_expr : FStar_Reflection_Types.term -> expr tm) =
+let rec (as_arith_expr : FStarC_Reflection_Types.term -> expr tm) =
   fun t ->
     let uu___ = FStar_Reflection_V2_Collect.collect_app_ln t in
     match uu___ with
     | (hd, tl) ->
-        (match ((FStar_Reflection_V2_Builtins.inspect_ln hd), tl) with
-         | (FStar_Reflection_V2_Data.Tv_FVar fv,
-            (e1, FStar_Reflection_V2_Data.Q_Implicit)::(e2,
-                                                        FStar_Reflection_V2_Data.Q_Explicit)::
-            (e3, FStar_Reflection_V2_Data.Q_Explicit)::[]) ->
-             let qn = FStar_Reflection_V2_Builtins.inspect_fv fv in
+        (match ((FStarC_Reflection_V2_Builtins.inspect_ln hd), tl) with
+         | (FStarC_Reflection_V2_Data.Tv_FVar fv,
+            (e1, FStarC_Reflection_V2_Data.Q_Implicit)::(e2,
+                                                         FStarC_Reflection_V2_Data.Q_Explicit)::
+            (e3, FStarC_Reflection_V2_Data.Q_Explicit)::[]) ->
+             let qn = FStarC_Reflection_V2_Builtins.inspect_fv fv in
              let e2' = as_arith_expr e2 in
              let e3' = as_arith_expr e3 in
              if qn = FStar_Reflection_Const.land_qn
@@ -465,11 +465,11 @@ let rec (as_arith_expr : FStar_Reflection_Types.term -> expr tm) =
                                       fun uu___11 -> Lsub (uu___10, uu___11))
                                    e2' e3'
                                else atom t
-         | (FStar_Reflection_V2_Data.Tv_FVar fv,
-            (l, FStar_Reflection_V2_Data.Q_Explicit)::(r,
-                                                       FStar_Reflection_V2_Data.Q_Explicit)::[])
+         | (FStarC_Reflection_V2_Data.Tv_FVar fv,
+            (l, FStarC_Reflection_V2_Data.Q_Explicit)::(r,
+                                                        FStarC_Reflection_V2_Data.Q_Explicit)::[])
              ->
-             let qn = FStar_Reflection_V2_Builtins.inspect_fv fv in
+             let qn = FStarC_Reflection_V2_Builtins.inspect_fv fv in
              let ll = as_arith_expr l in
              let rr = as_arith_expr r in
              if qn = FStar_Reflection_Const.add_qn
@@ -493,27 +493,27 @@ let rec (as_arith_expr : FStar_Reflection_Types.term -> expr tm) =
                        (fun uu___4 -> fun uu___5 -> Mult (uu___4, uu___5)) ll
                        rr
                    else atom t
-         | (FStar_Reflection_V2_Data.Tv_FVar fv,
-            (l, FStar_Reflection_V2_Data.Q_Implicit)::(r,
-                                                       FStar_Reflection_V2_Data.Q_Explicit)::[])
+         | (FStarC_Reflection_V2_Data.Tv_FVar fv,
+            (l, FStarC_Reflection_V2_Data.Q_Implicit)::(r,
+                                                        FStarC_Reflection_V2_Data.Q_Explicit)::[])
              ->
-             let qn = FStar_Reflection_V2_Builtins.inspect_fv fv in
+             let qn = FStarC_Reflection_V2_Builtins.inspect_fv fv in
              let ll = as_arith_expr l in
              let rr = as_arith_expr r in
              if qn = FStar_Reflection_Const.nat_bv_qn
              then liftM (fun uu___1 -> NatToBv uu___1) rr
              else atom t
-         | (FStar_Reflection_V2_Data.Tv_FVar fv,
-            (a, FStar_Reflection_V2_Data.Q_Explicit)::[]) ->
-             let qn = FStar_Reflection_V2_Builtins.inspect_fv fv in
+         | (FStarC_Reflection_V2_Data.Tv_FVar fv,
+            (a, FStarC_Reflection_V2_Data.Q_Explicit)::[]) ->
+             let qn = FStarC_Reflection_V2_Builtins.inspect_fv fv in
              let aa = as_arith_expr a in
              if qn = FStar_Reflection_Const.neg_qn
              then liftM (fun uu___1 -> Neg uu___1) aa
              else atom t
-         | (FStar_Reflection_V2_Data.Tv_Const (FStar_Reflection_V2_Data.C_Int
-            i), uu___1) -> return (Lit i)
+         | (FStarC_Reflection_V2_Data.Tv_Const
+            (FStarC_Reflection_V2_Data.C_Int i), uu___1) -> return (Lit i)
          | uu___1 -> atom t)
-let (is_arith_expr : FStar_Reflection_Types.term -> expr tm) =
+let (is_arith_expr : FStarC_Reflection_Types.term -> expr tm) =
   fun t ->
     op_let_Bang (as_arith_expr t)
       (fun a ->
@@ -523,23 +523,24 @@ let (is_arith_expr : FStar_Reflection_Types.term -> expr tm) =
                FStar_Reflection_V2_Derived_Lemmas.collect_app_ref t1 in
              (match uu___1 with
               | (hd, tl) ->
-                  (match ((FStar_Reflection_V2_Builtins.inspect_ln hd), tl)
+                  (match ((FStarC_Reflection_V2_Builtins.inspect_ln hd), tl)
                    with
-                   | (FStar_Reflection_V2_Data.Tv_FVar uu___2, []) ->
+                   | (FStarC_Reflection_V2_Data.Tv_FVar uu___2, []) ->
                        return a
-                   | (FStar_Reflection_V2_Data.Tv_BVar uu___2, []) ->
+                   | (FStarC_Reflection_V2_Data.Tv_BVar uu___2, []) ->
                        return a
-                   | (FStar_Reflection_V2_Data.Tv_Var uu___2, []) -> return a
+                   | (FStarC_Reflection_V2_Data.Tv_Var uu___2, []) ->
+                       return a
                    | uu___2 ->
                        op_let_Bang
-                         (lift FStar_Tactics_V2_Builtins.term_to_string t1)
+                         (lift FStarC_Tactics_V2_Builtins.term_to_string t1)
                          (fun s ->
                             fail
                               (Prims.strcat "not an arithmetic expression: ("
                                  (Prims.strcat s ")")))))
          | uu___ -> return a)
 let rec (is_arith_prop :
-  FStar_Reflection_Types.term ->
+  FStarC_Reflection_Types.term ->
     st ->
       ((Prims.string, (prop * st)) FStar_Pervasives.either, unit)
         FStar_Tactics_Effect.tac_repr)
@@ -569,7 +570,7 @@ let rec (is_arith_prop :
                liftM2 (fun uu___ -> fun uu___1 -> OrProp (uu___, uu___1))
                  (is_arith_prop l) (is_arith_prop r)
            | uu___ ->
-               op_let_Bang (lift FStar_Tactics_V2_Builtins.term_to_string t)
+               op_let_Bang (lift FStarC_Tactics_V2_Builtins.term_to_string t)
                  (fun s ->
                     fail (Prims.strcat "connector (" (Prims.strcat s ")"))))
         i

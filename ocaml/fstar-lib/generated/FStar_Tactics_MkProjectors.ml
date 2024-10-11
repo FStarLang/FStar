@@ -7,7 +7,7 @@ let (debug :
     (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun f ->
-    let uu___ = FStar_Tactics_V2_Builtins.debugging () in
+    let uu___ = FStarC_Tactics_V2_Builtins.debugging () in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -43,7 +43,7 @@ let (debug :
                       (fun uu___3 ->
                          (fun uu___3 ->
                             Obj.magic
-                              (FStar_Tactics_V2_Builtins.print uu___3))
+                              (FStarC_Tactics_V2_Builtins.print uu___3))
                            uu___3)))
             else
               Obj.magic
@@ -61,7 +61,7 @@ let (mk_one_projector :
           debug
             (fun uu___1 ->
                let uu___2 =
-                 FStar_Tactics_V2_Builtins.dump "ENTRY mk_one_projector" in
+                 FStarC_Tactics_V2_Builtins.dump "ENTRY mk_one_projector" in
                FStar_Tactics_Effect.tac_bind
                  (FStar_Sealed.seal
                     (Obj.magic
@@ -90,7 +90,7 @@ let (mk_one_projector :
           (Obj.magic uu___)
           (fun uu___1 ->
              (fun uu___1 ->
-                let uu___2 = FStar_Tactics_V2_Builtins.intros np in
+                let uu___2 = FStarC_Tactics_V2_Builtins.intros np in
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
@@ -108,7 +108,7 @@ let (mk_one_projector :
                      (Obj.magic uu___2)
                      (fun uu___3 ->
                         (fun _params ->
-                           let uu___3 = FStar_Tactics_V2_Builtins.intro () in
+                           let uu___3 = FStarC_Tactics_V2_Builtins.intro () in
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
                                 (FStar_Sealed.seal
@@ -131,7 +131,7 @@ let (mk_one_projector :
                                 (fun uu___4 ->
                                    (fun thing ->
                                       let uu___4 =
-                                        FStar_Tactics_V2_Builtins.t_destruct
+                                        FStarC_Tactics_V2_Builtins.t_destruct
                                           (FStar_Tactics_V2_SyntaxCoercions.binding_to_term
                                              thing) in
                                       Obj.magic
@@ -196,7 +196,7 @@ let (mk_one_projector :
                                                                    ->
                                                                    let uu___7
                                                                     =
-                                                                    FStar_Tactics_V2_Builtins.intros
+                                                                    FStarC_Tactics_V2_Builtins.intros
                                                                     i in
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -224,7 +224,7 @@ let (mk_one_projector :
                                                                     uu___8 ->
                                                                     let uu___9
                                                                     =
-                                                                    FStar_Tactics_V2_Builtins.intro
+                                                                    FStarC_Tactics_V2_Builtins.intro
                                                                     () in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -253,7 +253,7 @@ let (mk_one_projector :
                                                                     the_b ->
                                                                     let uu___10
                                                                     =
-                                                                    FStar_Tactics_V2_Builtins.intros
+                                                                    FStarC_Tactics_V2_Builtins.intros
                                                                     ((arity -
                                                                     i) -
                                                                     Prims.int_one) in
@@ -285,7 +285,7 @@ let (mk_one_projector :
                                                                     ->
                                                                     let uu___12
                                                                     =
-                                                                    FStar_Tactics_V2_Builtins.intro
+                                                                    FStarC_Tactics_V2_Builtins.intro
                                                                     () in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -314,7 +314,7 @@ let (mk_one_projector :
                                                                     ->
                                                                     let uu___13
                                                                     =
-                                                                    FStar_Tactics_V2_Builtins.rewrite
+                                                                    FStarC_Tactics_V2_Builtins.rewrite
                                                                     eq_b in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -344,7 +344,7 @@ let (mk_one_projector :
                                                                     ->
                                                                     let uu___15
                                                                     =
-                                                                    FStar_Tactics_V2_Builtins.norm
+                                                                    FStarC_Tactics_V2_Builtins.norm
                                                                     [FStar_Pervasives.iota;
                                                                     FStar_Pervasives.delta_only
                                                                     unf;
@@ -394,19 +394,19 @@ let (mk_one_projector :
                                                 uu___5))) uu___4))) uu___3)))
                uu___1)
 let _ =
-  FStar_Tactics_Native.register_tactic
+  FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.MkProjectors.mk_one_projector" (Prims.of_int (4))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_3
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_3
                "FStar.Tactics.MkProjectors.mk_one_projector (plugin)"
-               (FStar_Tactics_Native.from_tactic_3 mk_one_projector)
-               (FStar_Syntax_Embeddings.e_list
-                  FStar_Syntax_Embeddings.e_string)
-               FStar_Syntax_Embeddings.e_int FStar_Syntax_Embeddings.e_int
-               FStar_Syntax_Embeddings.e_unit psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_3 mk_one_projector)
+               (FStarC_Syntax_Embeddings.e_list
+                  FStarC_Syntax_Embeddings.e_string)
+               FStarC_Syntax_Embeddings.e_int FStarC_Syntax_Embeddings.e_int
+               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let (mk_one_method :
   Prims.string -> Prims.nat -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun proj ->
@@ -415,7 +415,7 @@ let (mk_one_method :
         debug
           (fun uu___1 ->
              let uu___2 =
-               FStar_Tactics_V2_Builtins.dump "ENTRY mk_one_method" in
+               FStarC_Tactics_V2_Builtins.dump "ENTRY mk_one_method" in
              FStar_Tactics_Effect.tac_bind
                (FStar_Sealed.seal
                   (Obj.magic
@@ -447,7 +447,7 @@ let (mk_one_method :
                 Obj.magic
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___3 ->
-                        FStar_Reflection_V2_Builtins.explode_qn proj)) in
+                        FStarC_Reflection_V2_Builtins.explode_qn proj)) in
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Sealed.seal
@@ -469,7 +469,7 @@ let (mk_one_method :
                            FStar_Tactics_Util.repeatn np
                              (fun uu___4 ->
                                 let uu___5 =
-                                  FStar_Tactics_V2_Builtins.intro () in
+                                  FStarC_Tactics_V2_Builtins.intro () in
                                 FStar_Tactics_Effect.tac_bind
                                   (FStar_Sealed.seal
                                      (Obj.magic
@@ -493,7 +493,7 @@ let (mk_one_method :
                                        (fun uu___6 ->
                                           ((FStar_Tactics_V2_SyntaxCoercions.binding_to_term
                                               b),
-                                            FStar_Reflection_V2_Data.Q_Implicit)))) in
+                                            FStarC_Reflection_V2_Data.Q_Implicit)))) in
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
                               (FStar_Sealed.seal
@@ -516,7 +516,7 @@ let (mk_one_method :
                               (fun uu___4 ->
                                  (fun params ->
                                     let uu___4 =
-                                      FStar_Tactics_V2_Builtins.intro () in
+                                      FStarC_Tactics_V2_Builtins.intro () in
                                     Obj.magic
                                       (FStar_Tactics_Effect.tac_bind
                                          (FStar_Sealed.seal
@@ -544,7 +544,7 @@ let (mk_one_method :
                                                       (fun uu___6 ->
                                                          FStar_Tactics_NamedView.pack
                                                            (FStar_Tactics_NamedView.Tv_FVar
-                                                              (FStar_Reflection_V2_Builtins.pack_fv
+                                                              (FStarC_Reflection_V2_Builtins.pack_fv
                                                                  nm)))) in
                                                Obj.magic
                                                  (FStar_Tactics_Effect.tac_bind
@@ -576,23 +576,24 @@ let (mk_one_method :
                                                                     [
                                                                     ((FStar_Tactics_V2_SyntaxCoercions.binding_to_term
                                                                     thing),
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)]))))
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)]))))
                                                          uu___6))) uu___5)))
                                    uu___4))) uu___3))) uu___1)
 let _ =
-  FStar_Tactics_Native.register_tactic
+  FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.MkProjectors.mk_one_method" (Prims.of_int (3))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_2
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2
                "FStar.Tactics.MkProjectors.mk_one_method (plugin)"
-               (FStar_Tactics_Native.from_tactic_2 mk_one_method)
-               FStar_Syntax_Embeddings.e_string FStar_Syntax_Embeddings.e_int
-               FStar_Syntax_Embeddings.e_unit psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_2 mk_one_method)
+               FStarC_Syntax_Embeddings.e_string
+               FStarC_Syntax_Embeddings.e_int FStarC_Syntax_Embeddings.e_unit
+               psc ncb us args)
 let (subst_map :
-  (FStar_Tactics_NamedView.namedv * FStar_Reflection_Types.fv) Prims.list ->
+  (FStar_Tactics_NamedView.namedv * FStarC_Reflection_Types.fv) Prims.list ->
     FStar_Tactics_NamedView.term ->
       FStar_Tactics_NamedView.term ->
         (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr)
@@ -606,13 +607,13 @@ let (subst_map :
                Obj.magic
                  (FStar_Tactics_Effect.lift_div_tac
                     (fun uu___ ->
-                       FStar_Reflection_V2_Builtins.subst_term
+                       FStarC_Reflection_V2_Builtins.subst_term
                          (FStar_List_Tot_Base.map
                             (fun uu___1 ->
                                match uu___1 with
                                | (x, fv) ->
-                                   FStar_Syntax_Syntax.NT
-                                     ((FStar_Reflection_V2_Builtins.pack_namedv
+                                   FStarC_Syntax_Syntax.NT
+                                     ((FStarC_Reflection_V2_Builtins.pack_namedv
                                          x),
                                        (FStar_Reflection_V2_Derived.mk_e_app
                                           (FStar_Tactics_NamedView.pack
@@ -624,8 +625,8 @@ let (binder_mk_implicit :
   fun b ->
     let q =
       match b.FStar_Tactics_NamedView.qual with
-      | FStar_Reflection_V2_Data.Q_Explicit ->
-          FStar_Reflection_V2_Data.Q_Implicit
+      | FStarC_Reflection_V2_Data.Q_Explicit ->
+          FStarC_Reflection_V2_Data.Q_Implicit
       | q1 -> q1 in
     {
       FStar_Tactics_NamedView.uniq = (b.FStar_Tactics_NamedView.uniq);
@@ -641,12 +642,12 @@ let (binder_to_term :
       (FStar_Tactics_NamedView.Tv_Var
          (FStar_Tactics_V2_SyntaxCoercions.binder_to_namedv b))
 let (binder_argv :
-  FStar_Tactics_NamedView.binder -> FStar_Reflection_V2_Data.argv) =
+  FStar_Tactics_NamedView.binder -> FStarC_Reflection_V2_Data.argv) =
   fun b ->
     let q =
       match b.FStar_Tactics_NamedView.qual with
-      | FStar_Reflection_V2_Data.Q_Meta uu___ ->
-          FStar_Reflection_V2_Data.Q_Implicit
+      | FStarC_Reflection_V2_Data.Q_Meta uu___ ->
+          FStarC_Reflection_V2_Data.Q_Implicit
       | q1 -> q1 in
     ((binder_to_term b), q)
 let rec list_last :
@@ -663,21 +664,21 @@ let rec list_last :
        | uu___::xs1 -> Obj.magic (Obj.repr (list_last xs1))) uu___
 let (embed_int : Prims.int -> FStar_Tactics_NamedView.term) =
   fun i ->
-    FStar_Reflection_V2_Builtins.pack_ln
-      (FStar_Reflection_V2_Data.Tv_Const (FStar_Reflection_V2_Data.C_Int i))
+    FStarC_Reflection_V2_Builtins.pack_ln
+      (FStarC_Reflection_V2_Data.Tv_Const (FStarC_Reflection_V2_Data.C_Int i))
 let (embed_string : Prims.string -> FStar_Tactics_NamedView.term) =
   fun s ->
-    FStar_Reflection_V2_Builtins.pack_ln
-      (FStar_Reflection_V2_Data.Tv_Const
-         (FStar_Reflection_V2_Data.C_String s))
+    FStarC_Reflection_V2_Builtins.pack_ln
+      (FStarC_Reflection_V2_Data.Tv_Const
+         (FStarC_Reflection_V2_Data.C_String s))
 let (substitute_attr : FStar_Tactics_NamedView.term) =
-  FStar_Reflection_V2_Builtins.pack_ln
-    (FStar_Reflection_V2_Data.Tv_FVar
-       (FStar_Reflection_V2_Builtins.pack_fv
+  FStarC_Reflection_V2_Builtins.pack_ln
+    (FStarC_Reflection_V2_Data.Tv_FVar
+       (FStarC_Reflection_V2_Builtins.pack_fv
           ["FStar"; "Pervasives"; "Substitute"]))
 let (mk_proj_decl :
   Prims.bool ->
-    FStar_Reflection_Types.name ->
+    FStarC_Reflection_Types.name ->
       Prims.string Prims.list ->
         FStar_Tactics_NamedView.univ_name Prims.list ->
           FStar_Tactics_NamedView.binder Prims.list ->
@@ -685,9 +686,9 @@ let (mk_proj_decl :
               FStar_Tactics_NamedView.binder ->
                 FStar_Tactics_NamedView.term ->
                   (FStar_Tactics_NamedView.namedv *
-                    FStar_Reflection_Types.fv) Prims.list ->
-                    ((FStar_Reflection_Types.sigelt Prims.list *
-                       FStar_Reflection_Types.fv),
+                    FStarC_Reflection_Types.fv) Prims.list ->
+                    ((FStarC_Reflection_Types.sigelt Prims.list *
+                       FStarC_Reflection_Types.fv),
                       unit) FStar_Tactics_Effect.tac_repr)
   =
   fun is_method ->
@@ -746,7 +747,7 @@ let (mk_proj_decl :
                               debug
                                 (fun uu___3 ->
                                    let uu___4 =
-                                     FStar_Tactics_V2_Builtins.term_to_string
+                                     FStarC_Tactics_V2_Builtins.term_to_string
                                        field.FStar_Tactics_NamedView.sort in
                                    FStar_Tactics_Effect.tac_bind
                                      (FStar_Sealed.seal
@@ -822,7 +823,7 @@ let (mk_proj_decl :
                                                     Obj.magic
                                                       (FStar_Tactics_Effect.lift_div_tac
                                                          (fun uu___6 ->
-                                                            FStar_Reflection_V2_Builtins.pack_fv
+                                                            FStarC_Reflection_V2_Builtins.pack_fv
                                                               tyqn)) in
                                                   Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
@@ -1092,7 +1093,7 @@ let (mk_proj_decl :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___8 ->
-                                                                    FStar_Reflection_V2_Builtins.pack_fv
+                                                                    FStarC_Reflection_V2_Builtins.pack_fv
                                                                     nm)) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1267,7 +1268,7 @@ let (mk_proj_decl :
                                                                     ->
                                                                     let uu___13
                                                                     =
-                                                                    FStar_Tactics_V2_Builtins.term_to_string
+                                                                    FStarC_Tactics_V2_Builtins.term_to_string
                                                                     projty in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1343,55 +1344,55 @@ let (mk_proj_decl :
                                                                     = projty;
                                                                     FStar_Tactics_NamedView.lb_def
                                                                     =
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Effect";
                                                                     "synth_by_tactic"]))),
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_Abs
-                                                                    ((FStar_Reflection_V2_Builtins.pack_binder
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_Abs
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_binder
                                                                     {
-                                                                    FStar_Reflection_V2_Data.sort2
+                                                                    FStarC_Reflection_V2_Data.sort2
                                                                     =
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    FStar_Reflection_V2_Data.Tv_Unknown);
-                                                                    FStar_Reflection_V2_Data.qual
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    FStarC_Reflection_V2_Data.Tv_Unknown);
+                                                                    FStarC_Reflection_V2_Data.qual
                                                                     =
-                                                                    FStar_Reflection_V2_Data.Q_Explicit;
-                                                                    FStar_Reflection_V2_Data.attrs
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit;
+                                                                    FStarC_Reflection_V2_Data.attrs
                                                                     = [];
-                                                                    FStar_Reflection_V2_Data.ppname2
+                                                                    FStarC_Reflection_V2_Data.ppname2
                                                                     =
                                                                     (FStar_Sealed.seal
                                                                     "uu___")
                                                                     }),
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "MkProjectors";
                                                                     "mk_one_projector"]))),
                                                                     (unfold_names_tm,
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))),
                                                                     ((embed_int
                                                                     np),
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))),
                                                                     ((embed_int
                                                                     idx),
-                                                                    FStar_Reflection_V2_Data.Q_Explicit))))))),
-                                                                    FStar_Reflection_V2_Data.Q_Explicit))))
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit))))))),
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit))))
                                                                     }]
                                                                     }) in
                                                                     Obj.magic
@@ -1438,9 +1439,9 @@ let (mk_proj_decl :
                                                                     (if
                                                                     FStar_List_Tot_Base.existsb
                                                                     (FStar_Reflection_TermEq_Simple.term_eq
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Typeclasses";
@@ -1577,7 +1578,7 @@ let (mk_proj_decl :
                                                                     (fun
                                                                     uu___20
                                                                     ->
-                                                                    FStar_Reflection_V2_Builtins.pack_fv
+                                                                    FStarC_Reflection_V2_Builtins.pack_fv
                                                                     uu___19)) in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1623,10 +1624,10 @@ let (mk_proj_decl :
                                                                     (rb.FStar_Tactics_NamedView.sort);
                                                                     FStar_Tactics_NamedView.qual
                                                                     =
-                                                                    (FStar_Reflection_V2_Data.Q_Meta
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Data.Q_Meta
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Typeclasses";
@@ -1736,52 +1737,52 @@ let (mk_proj_decl :
                                                                     (fun
                                                                     uu___21
                                                                     ->
-                                                                    FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Effect";
                                                                     "synth_by_tactic"]))),
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_Abs
-                                                                    ((FStar_Reflection_V2_Builtins.pack_binder
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_Abs
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_binder
                                                                     {
-                                                                    FStar_Reflection_V2_Data.sort2
+                                                                    FStarC_Reflection_V2_Data.sort2
                                                                     =
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    FStar_Reflection_V2_Data.Tv_Unknown);
-                                                                    FStar_Reflection_V2_Data.qual
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    FStarC_Reflection_V2_Data.Tv_Unknown);
+                                                                    FStarC_Reflection_V2_Data.qual
                                                                     =
-                                                                    FStar_Reflection_V2_Data.Q_Explicit;
-                                                                    FStar_Reflection_V2_Data.attrs
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit;
+                                                                    FStarC_Reflection_V2_Data.attrs
                                                                     = [];
-                                                                    FStar_Reflection_V2_Data.ppname2
+                                                                    FStarC_Reflection_V2_Data.ppname2
                                                                     =
                                                                     (FStar_Sealed.seal
                                                                     "uu___")
                                                                     }),
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "MkProjectors";
                                                                     "mk_one_method"]))),
                                                                     ((embed_string
-                                                                    (FStar_Reflection_V2_Builtins.implode_qn
+                                                                    (FStarC_Reflection_V2_Builtins.implode_qn
                                                                     nm)),
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))),
                                                                     ((embed_int
                                                                     np),
-                                                                    FStar_Reflection_V2_Data.Q_Explicit))))))),
-                                                                    FStar_Reflection_V2_Data.Q_Explicit))))) in
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit))))))),
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit))))) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1886,12 +1887,12 @@ let (mk_proj_decl :
                                                                     uu___15
                                                                     ->
                                                                     (((
-                                                                    FStar_Reflection_V2_Builtins.set_sigelt_attrs
+                                                                    FStarC_Reflection_V2_Builtins.set_sigelt_attrs
                                                                     (FStar_List_Tot_Base.op_At
                                                                     (substitute_attr
                                                                     ::
                                                                     (field.FStar_Tactics_NamedView.attrs))
-                                                                    (FStar_Reflection_V2_Builtins.sigelt_attrs
+                                                                    (FStarC_Reflection_V2_Builtins.sigelt_attrs
                                                                     se_proj))
                                                                     se_proj)
                                                                     ::
@@ -1909,7 +1910,7 @@ let (mk_proj_decl :
 let (mk_projs :
   Prims.bool ->
     Prims.string ->
-      (FStar_Reflection_Types.sigelt Prims.list, unit)
+      (FStarC_Reflection_Types.sigelt Prims.list, unit)
         FStar_Tactics_Effect.tac_repr)
   =
   fun is_class ->
@@ -1941,7 +1942,7 @@ let (mk_projs :
                 Obj.magic
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___3 ->
-                        FStar_Reflection_V2_Builtins.explode_qn tyname)) in
+                        FStarC_Reflection_V2_Builtins.explode_qn tyname)) in
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Sealed.seal
@@ -1960,7 +1961,7 @@ let (mk_projs :
                    (fun uu___3 ->
                       (fun tyqn ->
                          let uu___3 =
-                           let uu___4 = FStar_Tactics_V2_Builtins.top_env () in
+                           let uu___4 = FStarC_Tactics_V2_Builtins.top_env () in
                            FStar_Tactics_Effect.tac_bind
                              (FStar_Sealed.seal
                                 (Obj.magic
@@ -1981,7 +1982,7 @@ let (mk_projs :
                              (fun uu___5 ->
                                 FStar_Tactics_Effect.lift_div_tac
                                   (fun uu___6 ->
-                                     FStar_Reflection_V2_Builtins.lookup_typ
+                                     FStarC_Reflection_V2_Builtins.lookup_typ
                                        uu___5 tyqn)) in
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
@@ -2273,22 +2274,22 @@ let (mk_projs :
                                                                     (fun
                                                                     uu___18
                                                                     ->
-                                                                    FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_UInst
-                                                                    ((FStar_Reflection_V2_Builtins.pack_fv
+                                                                    FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_UInst
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["Prims";
                                                                     "Nil"]),
                                                                     [
-                                                                    FStar_Reflection_V2_Builtins.pack_universe
-                                                                    FStar_Reflection_V2_Data.Uv_Zero]))),
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    FStarC_Reflection_V2_Builtins.pack_universe
+                                                                    FStarC_Reflection_V2_Data.Uv_Zero]))),
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["Prims";
                                                                     "string"]))),
-                                                                    FStar_Reflection_V2_Data.Q_Implicit))))) in
+                                                                    FStarC_Reflection_V2_Data.Q_Implicit))))) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -2378,33 +2379,33 @@ let (mk_projs :
                                                                     field),
                                                                     fv) ::
                                                                     smap),
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_UInst
-                                                                    ((FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_UInst
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["Prims";
                                                                     "Cons"]),
                                                                     [
-                                                                    FStar_Reflection_V2_Builtins.pack_universe
-                                                                    FStar_Reflection_V2_Data.Uv_Zero]))),
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    FStarC_Reflection_V2_Builtins.pack_universe
+                                                                    FStarC_Reflection_V2_Data.Uv_Zero]))),
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["Prims";
                                                                     "string"]))),
-                                                                    FStar_Reflection_V2_Data.Q_Implicit)))),
+                                                                    FStarC_Reflection_V2_Data.Q_Implicit)))),
                                                                     ((embed_string
-                                                                    (FStar_Reflection_V2_Builtins.implode_qn
-                                                                    (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                    (FStarC_Reflection_V2_Builtins.implode_qn
+                                                                    (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                     fv))),
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))),
                                                                     (unfold_names_tm1,
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))),
                                                                     (idx +
                                                                     Prims.int_one)))))
                                                                     ([], [],
@@ -2460,16 +2461,16 @@ let (mk_projs :
                                                      uu___6)))) uu___4)))
                         uu___3))) uu___1)
 let _ =
-  FStar_Tactics_Native.register_tactic "FStar.Tactics.MkProjectors.mk_projs"
+  FStarC_Tactics_Native.register_tactic "FStar.Tactics.MkProjectors.mk_projs"
     (Prims.of_int (3))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_2
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2
                "FStar.Tactics.MkProjectors.mk_projs (plugin)"
-               (FStar_Tactics_Native.from_tactic_2 mk_projs)
-               FStar_Syntax_Embeddings.e_bool
-               FStar_Syntax_Embeddings.e_string
-               (FStar_Syntax_Embeddings.e_list
-                  FStar_Reflection_V2_Embeddings.e_sigelt) psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_2 mk_projs)
+               FStarC_Syntax_Embeddings.e_bool
+               FStarC_Syntax_Embeddings.e_string
+               (FStarC_Syntax_Embeddings.e_list
+                  FStarC_Reflection_V2_Embeddings.e_sigelt) psc ncb us args)
