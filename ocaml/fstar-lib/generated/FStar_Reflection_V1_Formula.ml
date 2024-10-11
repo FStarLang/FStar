@@ -1,13 +1,13 @@
 open Prims
 let (bv_to_string :
-  FStar_Reflection_Types.bv ->
+  FStarC_Reflection_Types.bv ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun bv ->
     let uu___ =
       Obj.magic
         (FStar_Tactics_Effect.lift_div_tac
-           (fun uu___1 -> FStar_Reflection_V1_Builtins.inspect_bv bv)) in
+           (fun uu___1 -> FStarC_Reflection_V1_Builtins.inspect_bv bv)) in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -23,13 +23,13 @@ let (bv_to_string :
          (fun bvv ->
             Obj.magic
               (FStar_Tactics_Unseal.unseal
-                 bvv.FStar_Reflection_V1_Data.bv_ppname)) uu___1)
+                 bvv.FStarC_Reflection_V1_Data.bv_ppname)) uu___1)
 let rec (inspect_unascribe :
-  FStar_Reflection_Types.term ->
-    (FStar_Reflection_V1_Data.term_view, unit) FStar_Tactics_Effect.tac_repr)
+  FStarC_Reflection_Types.term ->
+    (FStarC_Reflection_V1_Data.term_view, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun t ->
-    let uu___ = FStar_Tactics_V1_Builtins.inspect t in
+    let uu___ = FStarC_Tactics_V1_Builtins.inspect t in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -44,10 +44,10 @@ let rec (inspect_unascribe :
       (fun uu___1 ->
          (fun uu___1 ->
             match uu___1 with
-            | FStar_Reflection_V1_Data.Tv_AscribedT
+            | FStarC_Reflection_V1_Data.Tv_AscribedT
                 (t1, uu___2, uu___3, uu___4) ->
                 Obj.magic (Obj.repr (inspect_unascribe t1))
-            | FStar_Reflection_V1_Data.Tv_AscribedC
+            | FStarC_Reflection_V1_Data.Tv_AscribedC
                 (t1, uu___2, uu___3, uu___4) ->
                 Obj.magic (Obj.repr (inspect_unascribe t1))
             | tv ->
@@ -56,9 +56,9 @@ let rec (inspect_unascribe :
                      (FStar_Tactics_Effect.lift_div_tac (fun uu___2 -> tv))))
            uu___1)
 let rec (collect_app' :
-  FStar_Reflection_V1_Data.argv Prims.list ->
-    FStar_Reflection_Types.term ->
-      ((FStar_Reflection_Types.term * FStar_Reflection_V1_Data.argv
+  FStarC_Reflection_V1_Data.argv Prims.list ->
+    FStarC_Reflection_Types.term ->
+      ((FStarC_Reflection_Types.term * FStarC_Reflection_V1_Data.argv
          Prims.list),
         unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -79,7 +79,7 @@ let rec (collect_app' :
         (fun uu___1 ->
            (fun uu___1 ->
               match uu___1 with
-              | FStar_Reflection_V1_Data.Tv_App (l, r) ->
+              | FStarC_Reflection_V1_Data.Tv_App (l, r) ->
                   Obj.magic (Obj.repr (collect_app' (r :: args) l))
               | uu___2 ->
                   Obj.magic
@@ -87,13 +87,14 @@ let rec (collect_app' :
                        (FStar_Tactics_Effect.lift_div_tac
                           (fun uu___3 -> (t, args))))) uu___1)
 let (collect_app :
-  FStar_Reflection_Types.term ->
-    ((FStar_Reflection_Types.term * FStar_Reflection_V1_Data.argv Prims.list),
+  FStarC_Reflection_Types.term ->
+    ((FStarC_Reflection_Types.term * FStarC_Reflection_V1_Data.argv
+       Prims.list),
       unit) FStar_Tactics_Effect.tac_repr)
   = collect_app' []
 type comparison =
-  | Eq of FStar_Reflection_Types.typ FStar_Pervasives_Native.option 
-  | BoolEq of FStar_Reflection_Types.typ FStar_Pervasives_Native.option 
+  | Eq of FStarC_Reflection_Types.typ FStar_Pervasives_Native.option 
+  | BoolEq of FStarC_Reflection_Types.typ FStar_Pervasives_Native.option 
   | Lt 
   | Le 
   | Gt 
@@ -101,12 +102,12 @@ type comparison =
 let (uu___is_Eq : comparison -> Prims.bool) =
   fun projectee -> match projectee with | Eq _0 -> true | uu___ -> false
 let (__proj__Eq__item___0 :
-  comparison -> FStar_Reflection_Types.typ FStar_Pervasives_Native.option) =
+  comparison -> FStarC_Reflection_Types.typ FStar_Pervasives_Native.option) =
   fun projectee -> match projectee with | Eq _0 -> _0
 let (uu___is_BoolEq : comparison -> Prims.bool) =
   fun projectee -> match projectee with | BoolEq _0 -> true | uu___ -> false
 let (__proj__BoolEq__item___0 :
-  comparison -> FStar_Reflection_Types.typ FStar_Pervasives_Native.option) =
+  comparison -> FStarC_Reflection_Types.typ FStar_Pervasives_Native.option) =
   fun projectee -> match projectee with | BoolEq _0 -> _0
 let (uu___is_Lt : comparison -> Prims.bool) =
   fun projectee -> match projectee with | Lt -> true | uu___ -> false
@@ -119,20 +120,20 @@ let (uu___is_Ge : comparison -> Prims.bool) =
 type formula =
   | True_ 
   | False_ 
-  | Comp of comparison * FStar_Reflection_Types.term *
-  FStar_Reflection_Types.term 
-  | And of FStar_Reflection_Types.term * FStar_Reflection_Types.term 
-  | Or of FStar_Reflection_Types.term * FStar_Reflection_Types.term 
-  | Not of FStar_Reflection_Types.term 
-  | Implies of FStar_Reflection_Types.term * FStar_Reflection_Types.term 
-  | Iff of FStar_Reflection_Types.term * FStar_Reflection_Types.term 
-  | Forall of FStar_Reflection_Types.bv * FStar_Reflection_Types.typ *
-  FStar_Reflection_Types.term 
-  | Exists of FStar_Reflection_Types.bv * FStar_Reflection_Types.typ *
-  FStar_Reflection_Types.term 
-  | App of FStar_Reflection_Types.term * FStar_Reflection_Types.term 
-  | Name of FStar_Reflection_Types.bv 
-  | FV of FStar_Reflection_Types.fv 
+  | Comp of comparison * FStarC_Reflection_Types.term *
+  FStarC_Reflection_Types.term 
+  | And of FStarC_Reflection_Types.term * FStarC_Reflection_Types.term 
+  | Or of FStarC_Reflection_Types.term * FStarC_Reflection_Types.term 
+  | Not of FStarC_Reflection_Types.term 
+  | Implies of FStarC_Reflection_Types.term * FStarC_Reflection_Types.term 
+  | Iff of FStarC_Reflection_Types.term * FStarC_Reflection_Types.term 
+  | Forall of FStarC_Reflection_Types.bv * FStarC_Reflection_Types.typ *
+  FStarC_Reflection_Types.term 
+  | Exists of FStarC_Reflection_Types.bv * FStarC_Reflection_Types.typ *
+  FStarC_Reflection_Types.term 
+  | App of FStarC_Reflection_Types.term * FStarC_Reflection_Types.term 
+  | Name of FStarC_Reflection_Types.bv 
+  | FV of FStarC_Reflection_Types.fv 
   | IntLit of Prims.int 
   | F_Unknown 
 let (uu___is_True_ : formula -> Prims.bool) =
@@ -144,74 +145,74 @@ let (uu___is_Comp : formula -> Prims.bool) =
     match projectee with | Comp (_0, _1, _2) -> true | uu___ -> false
 let (__proj__Comp__item___0 : formula -> comparison) =
   fun projectee -> match projectee with | Comp (_0, _1, _2) -> _0
-let (__proj__Comp__item___1 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Comp__item___1 : formula -> FStarC_Reflection_Types.term) =
   fun projectee -> match projectee with | Comp (_0, _1, _2) -> _1
-let (__proj__Comp__item___2 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Comp__item___2 : formula -> FStarC_Reflection_Types.term) =
   fun projectee -> match projectee with | Comp (_0, _1, _2) -> _2
 let (uu___is_And : formula -> Prims.bool) =
   fun projectee ->
     match projectee with | And (_0, _1) -> true | uu___ -> false
-let (__proj__And__item___0 : formula -> FStar_Reflection_Types.term) =
+let (__proj__And__item___0 : formula -> FStarC_Reflection_Types.term) =
   fun projectee -> match projectee with | And (_0, _1) -> _0
-let (__proj__And__item___1 : formula -> FStar_Reflection_Types.term) =
+let (__proj__And__item___1 : formula -> FStarC_Reflection_Types.term) =
   fun projectee -> match projectee with | And (_0, _1) -> _1
 let (uu___is_Or : formula -> Prims.bool) =
   fun projectee ->
     match projectee with | Or (_0, _1) -> true | uu___ -> false
-let (__proj__Or__item___0 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Or__item___0 : formula -> FStarC_Reflection_Types.term) =
   fun projectee -> match projectee with | Or (_0, _1) -> _0
-let (__proj__Or__item___1 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Or__item___1 : formula -> FStarC_Reflection_Types.term) =
   fun projectee -> match projectee with | Or (_0, _1) -> _1
 let (uu___is_Not : formula -> Prims.bool) =
   fun projectee -> match projectee with | Not _0 -> true | uu___ -> false
-let (__proj__Not__item___0 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Not__item___0 : formula -> FStarC_Reflection_Types.term) =
   fun projectee -> match projectee with | Not _0 -> _0
 let (uu___is_Implies : formula -> Prims.bool) =
   fun projectee ->
     match projectee with | Implies (_0, _1) -> true | uu___ -> false
-let (__proj__Implies__item___0 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Implies__item___0 : formula -> FStarC_Reflection_Types.term) =
   fun projectee -> match projectee with | Implies (_0, _1) -> _0
-let (__proj__Implies__item___1 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Implies__item___1 : formula -> FStarC_Reflection_Types.term) =
   fun projectee -> match projectee with | Implies (_0, _1) -> _1
 let (uu___is_Iff : formula -> Prims.bool) =
   fun projectee ->
     match projectee with | Iff (_0, _1) -> true | uu___ -> false
-let (__proj__Iff__item___0 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Iff__item___0 : formula -> FStarC_Reflection_Types.term) =
   fun projectee -> match projectee with | Iff (_0, _1) -> _0
-let (__proj__Iff__item___1 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Iff__item___1 : formula -> FStarC_Reflection_Types.term) =
   fun projectee -> match projectee with | Iff (_0, _1) -> _1
 let (uu___is_Forall : formula -> Prims.bool) =
   fun projectee ->
     match projectee with | Forall (_0, _1, _2) -> true | uu___ -> false
-let (__proj__Forall__item___0 : formula -> FStar_Reflection_Types.bv) =
+let (__proj__Forall__item___0 : formula -> FStarC_Reflection_Types.bv) =
   fun projectee -> match projectee with | Forall (_0, _1, _2) -> _0
-let (__proj__Forall__item___1 : formula -> FStar_Reflection_Types.typ) =
+let (__proj__Forall__item___1 : formula -> FStarC_Reflection_Types.typ) =
   fun projectee -> match projectee with | Forall (_0, _1, _2) -> _1
-let (__proj__Forall__item___2 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Forall__item___2 : formula -> FStarC_Reflection_Types.term) =
   fun projectee -> match projectee with | Forall (_0, _1, _2) -> _2
 let (uu___is_Exists : formula -> Prims.bool) =
   fun projectee ->
     match projectee with | Exists (_0, _1, _2) -> true | uu___ -> false
-let (__proj__Exists__item___0 : formula -> FStar_Reflection_Types.bv) =
+let (__proj__Exists__item___0 : formula -> FStarC_Reflection_Types.bv) =
   fun projectee -> match projectee with | Exists (_0, _1, _2) -> _0
-let (__proj__Exists__item___1 : formula -> FStar_Reflection_Types.typ) =
+let (__proj__Exists__item___1 : formula -> FStarC_Reflection_Types.typ) =
   fun projectee -> match projectee with | Exists (_0, _1, _2) -> _1
-let (__proj__Exists__item___2 : formula -> FStar_Reflection_Types.term) =
+let (__proj__Exists__item___2 : formula -> FStarC_Reflection_Types.term) =
   fun projectee -> match projectee with | Exists (_0, _1, _2) -> _2
 let (uu___is_App : formula -> Prims.bool) =
   fun projectee ->
     match projectee with | App (_0, _1) -> true | uu___ -> false
-let (__proj__App__item___0 : formula -> FStar_Reflection_Types.term) =
+let (__proj__App__item___0 : formula -> FStarC_Reflection_Types.term) =
   fun projectee -> match projectee with | App (_0, _1) -> _0
-let (__proj__App__item___1 : formula -> FStar_Reflection_Types.term) =
+let (__proj__App__item___1 : formula -> FStarC_Reflection_Types.term) =
   fun projectee -> match projectee with | App (_0, _1) -> _1
 let (uu___is_Name : formula -> Prims.bool) =
   fun projectee -> match projectee with | Name _0 -> true | uu___ -> false
-let (__proj__Name__item___0 : formula -> FStar_Reflection_Types.bv) =
+let (__proj__Name__item___0 : formula -> FStarC_Reflection_Types.bv) =
   fun projectee -> match projectee with | Name _0 -> _0
 let (uu___is_FV : formula -> Prims.bool) =
   fun projectee -> match projectee with | FV _0 -> true | uu___ -> false
-let (__proj__FV__item___0 : formula -> FStar_Reflection_Types.fv) =
+let (__proj__FV__item___0 : formula -> FStarC_Reflection_Types.fv) =
   fun projectee -> match projectee with | FV _0 -> _0
 let (uu___is_IntLit : formula -> Prims.bool) =
   fun projectee -> match projectee with | IntLit _0 -> true | uu___ -> false
@@ -220,8 +221,8 @@ let (__proj__IntLit__item___0 : formula -> Prims.int) =
 let (uu___is_F_Unknown : formula -> Prims.bool) =
   fun projectee -> match projectee with | F_Unknown -> true | uu___ -> false
 let (mk_Forall :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term ->
+  FStarC_Reflection_Types.term ->
+    FStarC_Reflection_Types.term ->
       (formula, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___1 ->
@@ -232,31 +233,32 @@ let (mk_Forall :
              (FStar_Tactics_Effect.lift_div_tac
                 (fun uu___ ->
                    Forall
-                     ((FStar_Reflection_V1_Builtins.pack_bv
+                     ((FStarC_Reflection_V1_Builtins.pack_bv
                          {
-                           FStar_Reflection_V1_Data.bv_ppname =
-                             (FStar_Reflection_V1_Data.as_ppname "x");
-                           FStar_Reflection_V1_Data.bv_index = Prims.int_zero
+                           FStarC_Reflection_V1_Data.bv_ppname =
+                             (FStarC_Reflection_V1_Data.as_ppname "x");
+                           FStarC_Reflection_V1_Data.bv_index =
+                             Prims.int_zero
                          }), typ,
-                       (FStar_Reflection_V1_Builtins.pack_ln
-                          (FStar_Reflection_V1_Data.Tv_App
+                       (FStarC_Reflection_V1_Builtins.pack_ln
+                          (FStarC_Reflection_V1_Data.Tv_App
                              (pred,
-                               ((FStar_Reflection_V1_Builtins.pack_ln
-                                   (FStar_Reflection_V1_Data.Tv_BVar
-                                      (FStar_Reflection_V1_Builtins.pack_bv
+                               ((FStarC_Reflection_V1_Builtins.pack_ln
+                                   (FStarC_Reflection_V1_Data.Tv_BVar
+                                      (FStarC_Reflection_V1_Builtins.pack_bv
                                          {
-                                           FStar_Reflection_V1_Data.bv_ppname
+                                           FStarC_Reflection_V1_Data.bv_ppname
                                              =
-                                             (FStar_Reflection_V1_Data.as_ppname
+                                             (FStarC_Reflection_V1_Data.as_ppname
                                                 "x");
-                                           FStar_Reflection_V1_Data.bv_index
+                                           FStarC_Reflection_V1_Data.bv_index
                                              = Prims.int_zero
                                          }))),
-                                 FStar_Reflection_V1_Data.Q_Explicit))))))))
+                                 FStarC_Reflection_V1_Data.Q_Explicit))))))))
         uu___1 uu___
 let (mk_Exists :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term ->
+  FStarC_Reflection_Types.term ->
+    FStarC_Reflection_Types.term ->
       (formula, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___1 ->
@@ -267,30 +269,31 @@ let (mk_Exists :
              (FStar_Tactics_Effect.lift_div_tac
                 (fun uu___ ->
                    Exists
-                     ((FStar_Reflection_V1_Builtins.pack_bv
+                     ((FStarC_Reflection_V1_Builtins.pack_bv
                          {
-                           FStar_Reflection_V1_Data.bv_ppname =
-                             (FStar_Reflection_V1_Data.as_ppname "x");
-                           FStar_Reflection_V1_Data.bv_index = Prims.int_zero
+                           FStarC_Reflection_V1_Data.bv_ppname =
+                             (FStarC_Reflection_V1_Data.as_ppname "x");
+                           FStarC_Reflection_V1_Data.bv_index =
+                             Prims.int_zero
                          }), typ,
-                       (FStar_Reflection_V1_Builtins.pack_ln
-                          (FStar_Reflection_V1_Data.Tv_App
+                       (FStarC_Reflection_V1_Builtins.pack_ln
+                          (FStarC_Reflection_V1_Data.Tv_App
                              (pred,
-                               ((FStar_Reflection_V1_Builtins.pack_ln
-                                   (FStar_Reflection_V1_Data.Tv_BVar
-                                      (FStar_Reflection_V1_Builtins.pack_bv
+                               ((FStarC_Reflection_V1_Builtins.pack_ln
+                                   (FStarC_Reflection_V1_Data.Tv_BVar
+                                      (FStarC_Reflection_V1_Builtins.pack_bv
                                          {
-                                           FStar_Reflection_V1_Data.bv_ppname
+                                           FStarC_Reflection_V1_Data.bv_ppname
                                              =
-                                             (FStar_Reflection_V1_Data.as_ppname
+                                             (FStarC_Reflection_V1_Data.as_ppname
                                                 "x");
-                                           FStar_Reflection_V1_Data.bv_index
+                                           FStarC_Reflection_V1_Data.bv_index
                                              = Prims.int_zero
                                          }))),
-                                 FStar_Reflection_V1_Data.Q_Explicit))))))))
+                                 FStarC_Reflection_V1_Data.Q_Explicit))))))))
         uu___1 uu___
 let (term_as_formula' :
-  FStar_Reflection_Types.term ->
+  FStarC_Reflection_Types.term ->
     (formula, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun t ->
@@ -309,42 +312,42 @@ let (term_as_formula' :
       (fun uu___1 ->
          (fun uu___1 ->
             match uu___1 with
-            | FStar_Reflection_V1_Data.Tv_Var n ->
+            | FStarC_Reflection_V1_Data.Tv_Var n ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___2 -> Name n)))
-            | FStar_Reflection_V1_Data.Tv_FVar fv ->
+            | FStarC_Reflection_V1_Data.Tv_FVar fv ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___2 ->
                            if
-                             (FStar_Reflection_V1_Builtins.inspect_fv fv) =
+                             (FStarC_Reflection_V1_Builtins.inspect_fv fv) =
                                FStar_Reflection_Const.true_qn
                            then True_
                            else
                              if
-                               (FStar_Reflection_V1_Builtins.inspect_fv fv) =
-                                 FStar_Reflection_Const.false_qn
+                               (FStarC_Reflection_V1_Builtins.inspect_fv fv)
+                                 = FStar_Reflection_Const.false_qn
                              then False_
                              else FV fv)))
-            | FStar_Reflection_V1_Data.Tv_UInst (fv, uu___2) ->
+            | FStarC_Reflection_V1_Data.Tv_UInst (fv, uu___2) ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___3 ->
                            if
-                             (FStar_Reflection_V1_Builtins.inspect_fv fv) =
+                             (FStarC_Reflection_V1_Builtins.inspect_fv fv) =
                                FStar_Reflection_Const.true_qn
                            then True_
                            else
                              if
-                               (FStar_Reflection_V1_Builtins.inspect_fv fv) =
-                                 FStar_Reflection_Const.false_qn
+                               (FStarC_Reflection_V1_Builtins.inspect_fv fv)
+                                 = FStar_Reflection_Const.false_qn
                              then False_
                              else FV fv)))
-            | FStar_Reflection_V1_Data.Tv_App (h0, t1) ->
+            | FStarC_Reflection_V1_Data.Tv_App (h0, t1) ->
                 Obj.magic
                   (Obj.repr
                      (let uu___2 = collect_app h0 in
@@ -393,26 +396,26 @@ let (term_as_formula' :
                                        (Obj.magic uu___4)
                                        (fun uu___5 ->
                                           (fun h1 ->
-                                             match ((FStar_Reflection_V1_Builtins.inspect_ln
+                                             match ((FStarC_Reflection_V1_Builtins.inspect_ln
                                                        h1),
                                                      (FStar_List_Tot_Base.op_At
                                                         ts [t1]))
                                              with
-                                             | (FStar_Reflection_V1_Data.Tv_FVar
+                                             | (FStarC_Reflection_V1_Data.Tv_FVar
                                                 fv,
                                                 (a1,
-                                                 FStar_Reflection_V1_Data.Q_Implicit)::
+                                                 FStarC_Reflection_V1_Data.Q_Implicit)::
                                                 (a2,
-                                                 FStar_Reflection_V1_Data.Q_Explicit)::
+                                                 FStarC_Reflection_V1_Data.Q_Explicit)::
                                                 (a3,
-                                                 FStar_Reflection_V1_Data.Q_Explicit)::[])
+                                                 FStarC_Reflection_V1_Data.Q_Explicit)::[])
                                                  ->
                                                  Obj.magic
                                                    (Obj.repr
                                                       (FStar_Tactics_Effect.lift_div_tac
                                                          (fun uu___5 ->
                                                             if
-                                                              (FStar_Reflection_V1_Builtins.inspect_fv
+                                                              (FStarC_Reflection_V1_Builtins.inspect_fv
                                                                  fv)
                                                                 =
                                                                 FStar_Reflection_Const.eq2_qn
@@ -425,7 +428,7 @@ let (term_as_formula' :
                                                                   a3)
                                                             else
                                                               if
-                                                                (FStar_Reflection_V1_Builtins.inspect_fv
+                                                                (FStarC_Reflection_V1_Builtins.inspect_fv
                                                                    fv)
                                                                   =
                                                                   FStar_Reflection_Const.eq1_qn
@@ -437,7 +440,7 @@ let (term_as_formula' :
                                                                     a3)
                                                               else
                                                                 if
-                                                                  (FStar_Reflection_V1_Builtins.inspect_fv
+                                                                  (FStarC_Reflection_V1_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.lt_qn
                                                                 then
@@ -446,7 +449,7 @@ let (term_as_formula' :
                                                                     a3)
                                                                 else
                                                                   if
-                                                                    (FStar_Reflection_V1_Builtins.inspect_fv
+                                                                    (FStarC_Reflection_V1_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.lte_qn
                                                                   then
@@ -455,7 +458,7 @@ let (term_as_formula' :
                                                                     a3)
                                                                   else
                                                                     if
-                                                                    (FStar_Reflection_V1_Builtins.inspect_fv
+                                                                    (FStarC_Reflection_V1_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.gt_qn
                                                                     then
@@ -464,7 +467,7 @@ let (term_as_formula' :
                                                                     a3)
                                                                     else
                                                                     if
-                                                                    (FStar_Reflection_V1_Builtins.inspect_fv
+                                                                    (FStarC_Reflection_V1_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.gte_qn
                                                                     then
@@ -476,19 +479,19 @@ let (term_as_formula' :
                                                                     (h0,
                                                                     (FStar_Pervasives_Native.fst
                                                                     t1)))))
-                                             | (FStar_Reflection_V1_Data.Tv_FVar
+                                             | (FStarC_Reflection_V1_Data.Tv_FVar
                                                 fv,
                                                 (a1,
-                                                 FStar_Reflection_V1_Data.Q_Explicit)::
+                                                 FStarC_Reflection_V1_Data.Q_Explicit)::
                                                 (a2,
-                                                 FStar_Reflection_V1_Data.Q_Explicit)::[])
+                                                 FStarC_Reflection_V1_Data.Q_Explicit)::[])
                                                  ->
                                                  Obj.magic
                                                    (Obj.repr
                                                       (FStar_Tactics_Effect.lift_div_tac
                                                          (fun uu___5 ->
                                                             if
-                                                              (FStar_Reflection_V1_Builtins.inspect_fv
+                                                              (FStarC_Reflection_V1_Builtins.inspect_fv
                                                                  fv)
                                                                 =
                                                                 FStar_Reflection_Const.imp_qn
@@ -497,7 +500,7 @@ let (term_as_formula' :
                                                                 (a1, a2)
                                                             else
                                                               if
-                                                                (FStar_Reflection_V1_Builtins.inspect_fv
+                                                                (FStarC_Reflection_V1_Builtins.inspect_fv
                                                                    fv)
                                                                   =
                                                                   FStar_Reflection_Const.and_qn
@@ -505,7 +508,7 @@ let (term_as_formula' :
                                                                 And (a1, a2)
                                                               else
                                                                 if
-                                                                  (FStar_Reflection_V1_Builtins.inspect_fv
+                                                                  (FStarC_Reflection_V1_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.iff_qn
                                                                 then
@@ -513,7 +516,7 @@ let (term_as_formula' :
                                                                     (a1, a2)
                                                                 else
                                                                   if
-                                                                    (FStar_Reflection_V1_Builtins.inspect_fv
+                                                                    (FStarC_Reflection_V1_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.or_qn
                                                                   then
@@ -521,7 +524,7 @@ let (term_as_formula' :
                                                                     (a1, a2)
                                                                   else
                                                                     if
-                                                                    (FStar_Reflection_V1_Builtins.inspect_fv
+                                                                    (FStarC_Reflection_V1_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.eq2_qn
                                                                     then
@@ -531,7 +534,7 @@ let (term_as_formula' :
                                                                     a1, a2)
                                                                     else
                                                                     if
-                                                                    (FStar_Reflection_V1_Builtins.inspect_fv
+                                                                    (FStarC_Reflection_V1_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.eq1_qn
                                                                     then
@@ -544,12 +547,12 @@ let (term_as_formula' :
                                                                     (h0,
                                                                     (FStar_Pervasives_Native.fst
                                                                     t1)))))
-                                             | (FStar_Reflection_V1_Data.Tv_FVar
+                                             | (FStarC_Reflection_V1_Data.Tv_FVar
                                                 fv,
                                                 (a1,
-                                                 FStar_Reflection_V1_Data.Q_Implicit)::
+                                                 FStarC_Reflection_V1_Data.Q_Implicit)::
                                                 (a2,
-                                                 FStar_Reflection_V1_Data.Q_Explicit)::[])
+                                                 FStarC_Reflection_V1_Data.Q_Explicit)::[])
                                                  ->
                                                  Obj.magic
                                                    (Obj.repr
@@ -557,7 +560,7 @@ let (term_as_formula' :
                                                          Obj.magic
                                                            (FStar_Tactics_Effect.lift_div_tac
                                                               (fun uu___6 ->
-                                                                 FStar_Reflection_V1_Builtins.inspect_fv
+                                                                 FStarC_Reflection_V1_Builtins.inspect_fv
                                                                    fv)) in
                                                        FStar_Tactics_Effect.tac_bind
                                                          (FStar_Sealed.seal
@@ -607,42 +610,42 @@ let (term_as_formula' :
                                                                     (FStar_Pervasives_Native.fst
                                                                     t1)))))))
                                                               uu___6)))
-                                             | (FStar_Reflection_V1_Data.Tv_FVar
+                                             | (FStarC_Reflection_V1_Data.Tv_FVar
                                                 fv,
                                                 (a,
-                                                 FStar_Reflection_V1_Data.Q_Explicit)::[])
+                                                 FStarC_Reflection_V1_Data.Q_Explicit)::[])
                                                  ->
                                                  Obj.magic
                                                    (Obj.repr
                                                       (FStar_Tactics_Effect.lift_div_tac
                                                          (fun uu___5 ->
                                                             if
-                                                              (FStar_Reflection_V1_Builtins.inspect_fv
+                                                              (FStarC_Reflection_V1_Builtins.inspect_fv
                                                                  fv)
                                                                 =
                                                                 FStar_Reflection_Const.not_qn
                                                             then Not a
                                                             else
                                                               if
-                                                                (FStar_Reflection_V1_Builtins.inspect_fv
+                                                                (FStarC_Reflection_V1_Builtins.inspect_fv
                                                                    fv)
                                                                   =
                                                                   FStar_Reflection_Const.b2t_qn
                                                               then
                                                                 (if
-                                                                   FStar_Reflection_V1_Builtins.term_eq
+                                                                   FStarC_Reflection_V1_Builtins.term_eq
                                                                     a
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_Const
-                                                                    FStar_Reflection_V2_Data.C_False))
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_Const
+                                                                    FStarC_Reflection_V2_Data.C_False))
                                                                  then False_
                                                                  else
                                                                    if
-                                                                    FStar_Reflection_V1_Builtins.term_eq
+                                                                    FStarC_Reflection_V1_Builtins.term_eq
                                                                     a
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_Const
-                                                                    FStar_Reflection_V2_Data.C_True))
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_Const
+                                                                    FStarC_Reflection_V2_Data.C_True))
                                                                    then True_
                                                                    else
                                                                     App
@@ -665,70 +668,70 @@ let (term_as_formula' :
                                                                 (FStar_Pervasives_Native.fst
                                                                    t1))))))
                                             uu___5))) uu___3)))
-            | FStar_Reflection_V1_Data.Tv_Const
-                (FStar_Reflection_V1_Data.C_Int i) ->
+            | FStarC_Reflection_V1_Data.Tv_Const
+                (FStarC_Reflection_V1_Data.C_Int i) ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___2 -> IntLit i)))
-            | FStar_Reflection_V1_Data.Tv_Let
+            | FStarC_Reflection_V1_Data.Tv_Let
                 (uu___2, uu___3, uu___4, uu___5, uu___6, uu___7) ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___8 -> F_Unknown)))
-            | FStar_Reflection_V1_Data.Tv_Match (uu___2, uu___3, uu___4) ->
+            | FStarC_Reflection_V1_Data.Tv_Match (uu___2, uu___3, uu___4) ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___5 -> F_Unknown)))
-            | FStar_Reflection_V1_Data.Tv_Type uu___2 ->
+            | FStarC_Reflection_V1_Data.Tv_Type uu___2 ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___3 -> F_Unknown)))
-            | FStar_Reflection_V1_Data.Tv_Abs (uu___2, uu___3) ->
+            | FStarC_Reflection_V1_Data.Tv_Abs (uu___2, uu___3) ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___4 -> F_Unknown)))
-            | FStar_Reflection_V1_Data.Tv_Arrow (uu___2, uu___3) ->
+            | FStarC_Reflection_V1_Data.Tv_Arrow (uu___2, uu___3) ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___4 -> F_Unknown)))
-            | FStar_Reflection_V1_Data.Tv_Uvar (uu___2, uu___3) ->
+            | FStarC_Reflection_V1_Data.Tv_Uvar (uu___2, uu___3) ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___4 -> F_Unknown)))
-            | FStar_Reflection_V1_Data.Tv_Unknown ->
+            | FStarC_Reflection_V1_Data.Tv_Unknown ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___2 -> F_Unknown)))
-            | FStar_Reflection_V1_Data.Tv_Unsupp ->
+            | FStarC_Reflection_V1_Data.Tv_Unsupp ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___2 -> F_Unknown)))
-            | FStar_Reflection_V1_Data.Tv_Refine (uu___2, uu___3, uu___4) ->
+            | FStarC_Reflection_V1_Data.Tv_Refine (uu___2, uu___3, uu___4) ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___5 -> F_Unknown)))
-            | FStar_Reflection_V1_Data.Tv_Const uu___2 ->
+            | FStarC_Reflection_V1_Data.Tv_Const uu___2 ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___3 -> F_Unknown)))
-            | FStar_Reflection_V1_Data.Tv_BVar uu___2 ->
+            | FStarC_Reflection_V1_Data.Tv_BVar uu___2 ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___3 -> F_Unknown)))) uu___1)
 let (term_as_formula :
-  FStar_Reflection_Types.term ->
+  FStarC_Reflection_Types.term ->
     (formula, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
@@ -741,107 +744,108 @@ let (term_as_formula :
        | FStar_Pervasives_Native.Some t1 ->
            Obj.magic (Obj.repr (term_as_formula' t1))) uu___
 let (term_as_formula_total :
-  FStar_Reflection_Types.term ->
+  FStarC_Reflection_Types.term ->
     (formula, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun t ->
     term_as_formula' (FStar_Reflection_V1_Derived.maybe_unsquash_term t)
-let (formula_as_term_view : formula -> FStar_Reflection_V1_Data.term_view) =
+let (formula_as_term_view : formula -> FStarC_Reflection_V1_Data.term_view) =
   fun f ->
     let mk_app' tv args =
       FStar_List_Tot_Base.fold_left
         (fun tv1 ->
            fun a ->
-             FStar_Reflection_V1_Data.Tv_App
-               ((FStar_Reflection_V1_Builtins.pack_ln tv1), a)) tv args in
-    let e = FStar_Reflection_V1_Data.Q_Explicit in
-    let i = FStar_Reflection_V1_Data.Q_Implicit in
+             FStarC_Reflection_V1_Data.Tv_App
+               ((FStarC_Reflection_V1_Builtins.pack_ln tv1), a)) tv args in
+    let e = FStarC_Reflection_V1_Data.Q_Explicit in
+    let i = FStarC_Reflection_V1_Data.Q_Implicit in
     match f with
     | True_ ->
-        FStar_Reflection_V1_Data.Tv_FVar
-          (FStar_Reflection_V1_Builtins.pack_fv
+        FStarC_Reflection_V1_Data.Tv_FVar
+          (FStarC_Reflection_V1_Builtins.pack_fv
              FStar_Reflection_Const.true_qn)
     | False_ ->
-        FStar_Reflection_V1_Data.Tv_FVar
-          (FStar_Reflection_V1_Builtins.pack_fv
+        FStarC_Reflection_V1_Data.Tv_FVar
+          (FStarC_Reflection_V1_Builtins.pack_fv
              FStar_Reflection_Const.false_qn)
     | Comp (Eq (FStar_Pervasives_Native.None), l, r) ->
         mk_app'
-          (FStar_Reflection_V1_Data.Tv_FVar
-             (FStar_Reflection_V1_Builtins.pack_fv
+          (FStarC_Reflection_V1_Data.Tv_FVar
+             (FStarC_Reflection_V1_Builtins.pack_fv
                 FStar_Reflection_Const.eq2_qn)) [(l, e); (r, e)]
     | Comp (Eq (FStar_Pervasives_Native.Some t), l, r) ->
         mk_app'
-          (FStar_Reflection_V1_Data.Tv_FVar
-             (FStar_Reflection_V1_Builtins.pack_fv
+          (FStarC_Reflection_V1_Data.Tv_FVar
+             (FStarC_Reflection_V1_Builtins.pack_fv
                 FStar_Reflection_Const.eq2_qn)) [(t, i); (l, e); (r, e)]
     | Comp (BoolEq (FStar_Pervasives_Native.None), l, r) ->
         mk_app'
-          (FStar_Reflection_V1_Data.Tv_FVar
-             (FStar_Reflection_V1_Builtins.pack_fv
+          (FStarC_Reflection_V1_Data.Tv_FVar
+             (FStarC_Reflection_V1_Builtins.pack_fv
                 FStar_Reflection_Const.eq1_qn)) [(l, e); (r, e)]
     | Comp (BoolEq (FStar_Pervasives_Native.Some t), l, r) ->
         mk_app'
-          (FStar_Reflection_V1_Data.Tv_FVar
-             (FStar_Reflection_V1_Builtins.pack_fv
+          (FStarC_Reflection_V1_Data.Tv_FVar
+             (FStarC_Reflection_V1_Builtins.pack_fv
                 FStar_Reflection_Const.eq1_qn)) [(t, i); (l, e); (r, e)]
     | Comp (Lt, l, r) ->
         mk_app'
-          (FStar_Reflection_V1_Data.Tv_FVar
-             (FStar_Reflection_V1_Builtins.pack_fv
+          (FStarC_Reflection_V1_Data.Tv_FVar
+             (FStarC_Reflection_V1_Builtins.pack_fv
                 FStar_Reflection_Const.lt_qn)) [(l, e); (r, e)]
     | Comp (Le, l, r) ->
         mk_app'
-          (FStar_Reflection_V1_Data.Tv_FVar
-             (FStar_Reflection_V1_Builtins.pack_fv
+          (FStarC_Reflection_V1_Data.Tv_FVar
+             (FStarC_Reflection_V1_Builtins.pack_fv
                 FStar_Reflection_Const.lte_qn)) [(l, e); (r, e)]
     | Comp (Gt, l, r) ->
         mk_app'
-          (FStar_Reflection_V1_Data.Tv_FVar
-             (FStar_Reflection_V1_Builtins.pack_fv
+          (FStarC_Reflection_V1_Data.Tv_FVar
+             (FStarC_Reflection_V1_Builtins.pack_fv
                 FStar_Reflection_Const.gt_qn)) [(l, e); (r, e)]
     | Comp (Ge, l, r) ->
         mk_app'
-          (FStar_Reflection_V1_Data.Tv_FVar
-             (FStar_Reflection_V1_Builtins.pack_fv
+          (FStarC_Reflection_V1_Data.Tv_FVar
+             (FStarC_Reflection_V1_Builtins.pack_fv
                 FStar_Reflection_Const.gte_qn)) [(l, e); (r, e)]
     | And (p, q) ->
         mk_app'
-          (FStar_Reflection_V1_Data.Tv_FVar
-             (FStar_Reflection_V1_Builtins.pack_fv
+          (FStarC_Reflection_V1_Data.Tv_FVar
+             (FStarC_Reflection_V1_Builtins.pack_fv
                 FStar_Reflection_Const.and_qn)) [(p, e); (q, e)]
     | Or (p, q) ->
         mk_app'
-          (FStar_Reflection_V1_Data.Tv_FVar
-             (FStar_Reflection_V1_Builtins.pack_fv
+          (FStarC_Reflection_V1_Data.Tv_FVar
+             (FStarC_Reflection_V1_Builtins.pack_fv
                 FStar_Reflection_Const.or_qn)) [(p, e); (q, e)]
     | Implies (p, q) ->
         mk_app'
-          (FStar_Reflection_V1_Data.Tv_FVar
-             (FStar_Reflection_V1_Builtins.pack_fv
+          (FStarC_Reflection_V1_Data.Tv_FVar
+             (FStarC_Reflection_V1_Builtins.pack_fv
                 FStar_Reflection_Const.imp_qn)) [(p, e); (q, e)]
     | Not p ->
         mk_app'
-          (FStar_Reflection_V1_Data.Tv_FVar
-             (FStar_Reflection_V1_Builtins.pack_fv
+          (FStarC_Reflection_V1_Data.Tv_FVar
+             (FStarC_Reflection_V1_Builtins.pack_fv
                 FStar_Reflection_Const.not_qn)) [(p, e)]
     | Iff (p, q) ->
         mk_app'
-          (FStar_Reflection_V1_Data.Tv_FVar
-             (FStar_Reflection_V1_Builtins.pack_fv
+          (FStarC_Reflection_V1_Data.Tv_FVar
+             (FStarC_Reflection_V1_Builtins.pack_fv
                 FStar_Reflection_Const.iff_qn)) [(p, e); (q, e)]
-    | Forall (b, sort, t) -> FStar_Reflection_V1_Data.Tv_Unknown
-    | Exists (b, sort, t) -> FStar_Reflection_V1_Data.Tv_Unknown
+    | Forall (b, sort, t) -> FStarC_Reflection_V1_Data.Tv_Unknown
+    | Exists (b, sort, t) -> FStarC_Reflection_V1_Data.Tv_Unknown
     | App (p, q) ->
-        FStar_Reflection_V1_Data.Tv_App
-          (p, (q, FStar_Reflection_V1_Data.Q_Explicit))
-    | Name b -> FStar_Reflection_V1_Data.Tv_Var b
-    | FV fv -> FStar_Reflection_V1_Data.Tv_FVar fv
+        FStarC_Reflection_V1_Data.Tv_App
+          (p, (q, FStarC_Reflection_V1_Data.Q_Explicit))
+    | Name b -> FStarC_Reflection_V1_Data.Tv_Var b
+    | FV fv -> FStarC_Reflection_V1_Data.Tv_FVar fv
     | IntLit i1 ->
-        FStar_Reflection_V1_Data.Tv_Const (FStar_Reflection_V1_Data.C_Int i1)
-    | F_Unknown -> FStar_Reflection_V1_Data.Tv_Unknown
-let (formula_as_term : formula -> FStar_Reflection_Types.term) =
-  fun f -> FStar_Reflection_V1_Builtins.pack_ln (formula_as_term_view f)
+        FStarC_Reflection_V1_Data.Tv_Const
+          (FStarC_Reflection_V1_Data.C_Int i1)
+    | F_Unknown -> FStarC_Reflection_V1_Data.Tv_Unknown
+let (formula_as_term : formula -> FStarC_Reflection_Types.term) =
+  fun f -> FStarC_Reflection_V1_Builtins.pack_ln (formula_as_term_view f)
 let (formula_to_string :
   formula -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
@@ -871,7 +875,8 @@ let (formula_to_string :
                            (Obj.repr
                               (let uu___2 =
                                  let uu___3 =
-                                   FStar_Tactics_V1_Builtins.term_to_string t in
+                                   FStarC_Tactics_V1_Builtins.term_to_string
+                                     t in
                                  FStar_Tactics_Effect.tac_bind
                                    (FStar_Sealed.seal
                                       (Obj.magic
@@ -932,7 +937,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V1_Builtins.term_to_string l in
+                                 FStarC_Tactics_V1_Builtins.term_to_string l in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -956,7 +961,7 @@ let (formula_to_string :
                                        let uu___7 =
                                          let uu___8 =
                                            let uu___9 =
-                                             FStar_Tactics_V1_Builtins.term_to_string
+                                             FStarC_Tactics_V1_Builtins.term_to_string
                                                r in
                                            FStar_Tactics_Effect.tac_bind
                                              (FStar_Sealed.seal
@@ -1100,7 +1105,8 @@ let (formula_to_string :
                            (Obj.repr
                               (let uu___2 =
                                  let uu___3 =
-                                   FStar_Tactics_V1_Builtins.term_to_string t in
+                                   FStarC_Tactics_V1_Builtins.term_to_string
+                                     t in
                                  FStar_Tactics_Effect.tac_bind
                                    (FStar_Sealed.seal
                                       (Obj.magic
@@ -1161,7 +1167,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V1_Builtins.term_to_string l in
+                                 FStarC_Tactics_V1_Builtins.term_to_string l in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -1185,7 +1191,7 @@ let (formula_to_string :
                                        let uu___7 =
                                          let uu___8 =
                                            let uu___9 =
-                                             FStar_Tactics_V1_Builtins.term_to_string
+                                             FStarC_Tactics_V1_Builtins.term_to_string
                                                r in
                                            FStar_Tactics_Effect.tac_bind
                                              (FStar_Sealed.seal
@@ -1317,7 +1323,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V1_Builtins.term_to_string l in
+                   let uu___1 = FStarC_Tactics_V1_Builtins.term_to_string l in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -1337,7 +1343,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V1_Builtins.term_to_string r in
+                                 FStarC_Tactics_V1_Builtins.term_to_string r in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -1420,7 +1426,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V1_Builtins.term_to_string l in
+                   let uu___1 = FStarC_Tactics_V1_Builtins.term_to_string l in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -1440,7 +1446,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V1_Builtins.term_to_string r in
+                                 FStarC_Tactics_V1_Builtins.term_to_string r in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -1523,7 +1529,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V1_Builtins.term_to_string l in
+                   let uu___1 = FStarC_Tactics_V1_Builtins.term_to_string l in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -1543,7 +1549,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V1_Builtins.term_to_string r in
+                                 FStarC_Tactics_V1_Builtins.term_to_string r in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -1626,7 +1632,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V1_Builtins.term_to_string l in
+                   let uu___1 = FStarC_Tactics_V1_Builtins.term_to_string l in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -1646,7 +1652,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V1_Builtins.term_to_string r in
+                                 FStarC_Tactics_V1_Builtins.term_to_string r in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -1729,7 +1735,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V1_Builtins.term_to_string p in
+                   let uu___1 = FStarC_Tactics_V1_Builtins.term_to_string p in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -1749,7 +1755,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V1_Builtins.term_to_string q in
+                                 FStarC_Tactics_V1_Builtins.term_to_string q in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -1832,7 +1838,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V1_Builtins.term_to_string p in
+                   let uu___1 = FStarC_Tactics_V1_Builtins.term_to_string p in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -1852,7 +1858,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V1_Builtins.term_to_string q in
+                                 FStarC_Tactics_V1_Builtins.term_to_string q in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -1935,7 +1941,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V1_Builtins.term_to_string p in
+                   let uu___1 = FStarC_Tactics_V1_Builtins.term_to_string p in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -1955,7 +1961,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V1_Builtins.term_to_string q in
+                                 FStarC_Tactics_V1_Builtins.term_to_string q in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -2038,7 +2044,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V1_Builtins.term_to_string p in
+                   let uu___1 = FStarC_Tactics_V1_Builtins.term_to_string p in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -2075,7 +2081,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V1_Builtins.term_to_string p in
+                   let uu___1 = FStarC_Tactics_V1_Builtins.term_to_string p in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -2095,7 +2101,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V1_Builtins.term_to_string q in
+                                 FStarC_Tactics_V1_Builtins.term_to_string q in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -2178,7 +2184,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V1_Builtins.term_to_string t in
+                   let uu___1 = FStarC_Tactics_V1_Builtins.term_to_string t in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -2215,7 +2221,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V1_Builtins.term_to_string t in
+                   let uu___1 = FStarC_Tactics_V1_Builtins.term_to_string t in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -2252,7 +2258,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V1_Builtins.term_to_string p in
+                   let uu___1 = FStarC_Tactics_V1_Builtins.term_to_string p in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -2272,7 +2278,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V1_Builtins.term_to_string q in
+                                 FStarC_Tactics_V1_Builtins.term_to_string q in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -2396,7 +2402,7 @@ let (formula_to_string :
                       Prims.strcat "FV ("
                         (Prims.strcat
                            (FStar_Reflection_V1_Derived.flatten_name
-                              (FStar_Reflection_V1_Builtins.inspect_fv fv))
+                              (FStarC_Reflection_V1_Builtins.inspect_fv fv))
                            ")"))))
        | IntLit i ->
            Obj.magic

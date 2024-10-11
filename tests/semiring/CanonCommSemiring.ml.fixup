@@ -3,7 +3,7 @@
 (* This is needed since we have no automatic embeddings for Tac functions, but we
 should add them *)
 let _ =
-  FStar_Tactics_Native.register_tactic "CanonCommSemiring.canon_semiring_aux"
+  FStarC_Tactics_Native.register_tactic "CanonCommSemiring.canon_semiring_aux"
     (Prims.parse_int "11")
     (fun psc  ->
       fun ncb ->
@@ -11,22 +11,22 @@ let _ =
           fun args  ->
             match args with
             | (tv_0,_)::args_tail ->
-                (FStar_Tactics_InterpFuns.mk_tactic_interpretation_9
+                (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_9
                    "CanonCommSemiring.canon_semiring_aux (plugin)"
-                   (FStar_Tactics_Native.from_tactic_9 canon_semiring_aux)
-                   FStar_Reflection_V2_Embeddings.e_term
-                   (FStar_Tactics_Interpreter.e_tactic_1_alt
-                       FStar_Reflection_V2_Embeddings.e_term
-                       (FStar_Syntax_Embeddings.mk_any_emb tv_0))
-                   (FStar_Tactics_Interpreter.e_tactic_1_alt
-                       (FStar_Syntax_Embeddings.mk_any_emb tv_0)
-                       FStar_Reflection_V2_Embeddings.e_term)
-                   FStar_Reflection_V2_Embeddings.e_term
-                   FStar_Reflection_V2_Embeddings.e_term
-                   FStar_Reflection_V2_Embeddings.e_term
-                   FStar_Reflection_V2_Embeddings.e_term
-                   FStar_Reflection_V2_Embeddings.e_term
-                   FStar_Syntax_Embeddings.e_any
-                   FStar_Syntax_Embeddings.e_unit
+                   (FStarC_Tactics_Native.from_tactic_9 canon_semiring_aux)
+                   FStarC_Reflection_V2_Embeddings.e_term
+                   (FStarC_Tactics_Interpreter.e_tactic_1_alt
+                       FStarC_Reflection_V2_Embeddings.e_term
+                       (FStarC_Syntax_Embeddings.mk_any_emb tv_0))
+                   (FStarC_Tactics_Interpreter.e_tactic_1_alt
+                       (FStarC_Syntax_Embeddings.mk_any_emb tv_0)
+                       FStarC_Reflection_V2_Embeddings.e_term)
+                   FStarC_Reflection_V2_Embeddings.e_term
+                   FStarC_Reflection_V2_Embeddings.e_term
+                   FStarC_Reflection_V2_Embeddings.e_term
+                   FStarC_Reflection_V2_Embeddings.e_term
+                   FStarC_Reflection_V2_Embeddings.e_term
+                   FStarC_Syntax_Embeddings.e_any
+                   FStarC_Syntax_Embeddings.e_unit
                    psc ncb us) args_tail
             | _ -> failwith "arity mismatch")

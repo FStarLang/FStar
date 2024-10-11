@@ -2,6 +2,7 @@
   "fstar_exe": "fstar.exe",
   "options": [
     "--MLish",
+    "--MLish_effect", "FStarC.Compiler.Effect",
     "--lax",
     "--cache_dir",
     ".cache.boot",

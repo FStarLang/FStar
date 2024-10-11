@@ -423,9 +423,9 @@ and (check_comp :
   =
   fun c ->
     match c with
-    | FStar_Reflection_V2_Data.C_Total typ -> check typ
-    | FStar_Reflection_V2_Data.C_GTotal typ -> check typ
-    | FStar_Reflection_V2_Data.C_Lemma (pre, post, pats) ->
+    | FStarC_Reflection_V2_Data.C_Total typ -> check typ
+    | FStarC_Reflection_V2_Data.C_GTotal typ -> check typ
+    | FStarC_Reflection_V2_Data.C_Lemma (pre, post, pats) ->
         let uu___ =
           let uu___1 = check pre in
           FStar_Tactics_Effect.tac_bind
@@ -508,7 +508,7 @@ and (check_comp :
                                           (fun uu___5 -> false)))
                                 else Obj.magic (Obj.repr (check pats)))
                                uu___4)))) uu___1)
-    | FStar_Reflection_V2_Data.C_Eff (us, nm, res, args, decrs) ->
+    | FStarC_Reflection_V2_Data.C_Eff (us, nm, res, args, decrs) ->
         let uu___ =
           let uu___1 = for_all check_u us in
           FStar_Tactics_Effect.tac_bind
@@ -731,14 +731,14 @@ let (check_ln :
     (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
   = fun t -> check t
 let _ =
-  FStar_Tactics_Native.register_tactic "FStar.Tactics.CheckLN.check_ln"
+  FStarC_Tactics_Native.register_tactic "FStar.Tactics.CheckLN.check_ln"
     (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.CheckLN.check_ln (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 check_ln)
-               FStar_Reflection_V2_Embeddings.e_term
-               FStar_Syntax_Embeddings.e_bool psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_1 check_ln)
+               FStarC_Reflection_V2_Embeddings.e_term
+               FStarC_Syntax_Embeddings.e_bool psc ncb us args)

@@ -3,7 +3,7 @@ type ('ps, 'p) break_wp' = unit FStar_Pervasives.spinoff
 let (post : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     let uu___1 =
-      FStar_Tactics_V2_Builtins.norm
+      FStarC_Tactics_V2_Builtins.norm
         [FStar_Pervasives.delta_fully
            ["FStar.Tactics.BreakVC.mono_lem";
            "FStar.Tactics.BreakVC.break_wp'"]] in

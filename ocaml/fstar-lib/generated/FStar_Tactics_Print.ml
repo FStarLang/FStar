@@ -4,7 +4,8 @@ let (namedv_to_string :
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun x ->
-    let uu___ = FStar_Tactics_Unseal.unseal x.FStar_Reflection_V2_Data.ppname in
+    let uu___ =
+      FStar_Tactics_Unseal.unseal x.FStarC_Reflection_V2_Data.ppname in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -21,19 +22,19 @@ let (namedv_to_string :
            (fun uu___2 ->
               Prims.strcat uu___1
                 (Prims.strcat "#"
-                   (Prims.string_of_int x.FStar_Reflection_V2_Data.uniq))))
+                   (Prims.string_of_int x.FStarC_Reflection_V2_Data.uniq))))
 let _ =
-  FStar_Tactics_Native.register_tactic "FStar.Tactics.Print.namedv_to_string"
-    (Prims.of_int (2))
+  FStarC_Tactics_Native.register_tactic
+    "FStar.Tactics.Print.namedv_to_string" (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.Print.namedv_to_string (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 namedv_to_string)
-               FStar_Reflection_V2_Embeddings.e_namedv_view
-               FStar_Syntax_Embeddings.e_string psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_1 namedv_to_string)
+               FStarC_Reflection_V2_Embeddings.e_namedv_view
+               FStarC_Syntax_Embeddings.e_string psc ncb us args)
 let (paren : Prims.string -> Prims.string) =
   fun s -> Prims.strcat "(" (Prims.strcat s ")")
 let rec print_list_aux :
@@ -239,34 +240,34 @@ let rec (universe_to_ast_string :
                 (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> "Uv_Unk"))))
       uu___
 let _ =
-  FStar_Tactics_Native.register_tactic
+  FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.Print.universe_to_ast_string" (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.Print.universe_to_ast_string (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 universe_to_ast_string)
-               FStar_Reflection_V2_Embeddings.e_universe
-               FStar_Syntax_Embeddings.e_string psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_1 universe_to_ast_string)
+               FStarC_Reflection_V2_Embeddings.e_universe
+               FStarC_Syntax_Embeddings.e_string psc ncb us args)
 let (universes_to_ast_string :
-  FStar_Reflection_V2_Data.universes ->
+  FStarC_Reflection_V2_Data.universes ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   = fun us -> print_list universe_to_ast_string us
 let _ =
-  FStar_Tactics_Native.register_tactic
+  FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.Print.universes_to_ast_string" (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.Print.universes_to_ast_string (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 universes_to_ast_string)
-               (FStar_Syntax_Embeddings.e_list
-                  FStar_Reflection_V2_Embeddings.e_universe)
-               FStar_Syntax_Embeddings.e_string psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_1 universes_to_ast_string)
+               (FStarC_Syntax_Embeddings.e_list
+                  FStarC_Reflection_V2_Embeddings.e_universe)
+               FStarC_Syntax_Embeddings.e_string psc ncb us args)
 let rec (term_to_ast_string :
   FStar_Tactics_NamedView.term ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
@@ -1806,7 +1807,7 @@ and (comp_to_ast_string :
   =
   fun c ->
     match FStar_Tactics_NamedView.inspect_comp c with
-    | FStar_Reflection_V2_Data.C_Total t ->
+    | FStarC_Reflection_V2_Data.C_Total t ->
         let uu___ = term_to_ast_string t in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -1822,7 +1823,7 @@ and (comp_to_ast_string :
           (fun uu___1 ->
              FStar_Tactics_Effect.lift_div_tac
                (fun uu___2 -> Prims.strcat "Tot " uu___1))
-    | FStar_Reflection_V2_Data.C_GTotal t ->
+    | FStarC_Reflection_V2_Data.C_GTotal t ->
         let uu___ = term_to_ast_string t in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -1838,7 +1839,7 @@ and (comp_to_ast_string :
           (fun uu___1 ->
              FStar_Tactics_Effect.lift_div_tac
                (fun uu___2 -> Prims.strcat "GTot " uu___1))
-    | FStar_Reflection_V2_Data.C_Lemma (pre, post, uu___) ->
+    | FStarC_Reflection_V2_Data.C_Lemma (pre, post, uu___) ->
         let uu___1 =
           let uu___2 = term_to_ast_string pre in
           FStar_Tactics_Effect.tac_bind
@@ -1903,7 +1904,7 @@ and (comp_to_ast_string :
           (fun uu___2 ->
              FStar_Tactics_Effect.lift_div_tac
                (fun uu___3 -> Prims.strcat "Lemma " uu___2))
-    | FStar_Reflection_V2_Data.C_Eff (us, eff, res, uu___, uu___1) ->
+    | FStarC_Reflection_V2_Data.C_Eff (us, eff, res, uu___, uu___1) ->
         let uu___2 =
           let uu___3 =
             let uu___4 = universes_to_ast_string us in
@@ -1963,7 +1964,7 @@ and (comp_to_ast_string :
                                FStar_Tactics_Effect.lift_div_tac
                                  (fun uu___11 ->
                                     Prims.strcat
-                                      (FStar_Reflection_V2_Builtins.implode_qn
+                                      (FStarC_Reflection_V2_Builtins.implode_qn
                                          eff) uu___10)) in
                         FStar_Tactics_Effect.tac_bind
                           (FStar_Sealed.seal
@@ -2044,7 +2045,7 @@ and (comp_to_ast_string :
              FStar_Tactics_Effect.lift_div_tac
                (fun uu___4 -> Prims.strcat "Effect" uu___3))
 and (const_to_ast_string :
-  FStar_Reflection_V2_Data.vconst ->
+  FStarC_Reflection_V2_Data.vconst ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
@@ -2053,103 +2054,103 @@ and (const_to_ast_string :
          (FStar_Tactics_Effect.lift_div_tac
             (fun uu___ ->
                match c with
-               | FStar_Reflection_V2_Data.C_Unit -> "C_Unit"
-               | FStar_Reflection_V2_Data.C_Int i ->
+               | FStarC_Reflection_V2_Data.C_Unit -> "C_Unit"
+               | FStarC_Reflection_V2_Data.C_Int i ->
                    Prims.strcat "C_Int " (Prims.string_of_int i)
-               | FStar_Reflection_V2_Data.C_True -> "C_True"
-               | FStar_Reflection_V2_Data.C_False -> "C_False"
-               | FStar_Reflection_V2_Data.C_String s ->
+               | FStarC_Reflection_V2_Data.C_True -> "C_True"
+               | FStarC_Reflection_V2_Data.C_False -> "C_False"
+               | FStarC_Reflection_V2_Data.C_String s ->
                    Prims.strcat "C_String " s
-               | FStar_Reflection_V2_Data.C_Range uu___1 -> "C_Range _"
-               | FStar_Reflection_V2_Data.C_Reify -> "C_Reify"
-               | FStar_Reflection_V2_Data.C_Reflect name ->
+               | FStarC_Reflection_V2_Data.C_Range uu___1 -> "C_Range _"
+               | FStarC_Reflection_V2_Data.C_Reify -> "C_Reify"
+               | FStarC_Reflection_V2_Data.C_Reflect name ->
                    Prims.strcat "C_Reflect "
-                     (FStar_Reflection_V2_Builtins.implode_qn name)
-               | FStar_Reflection_V2_Data.C_Real r ->
+                     (FStarC_Reflection_V2_Builtins.implode_qn name)
+               | FStarC_Reflection_V2_Data.C_Real r ->
                    Prims.strcat "C_Real \"" (Prims.strcat r "\"")))) uu___
 let _ =
-  FStar_Tactics_Native.register_tactic
+  FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.Print.term_to_ast_string" (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.Print.term_to_ast_string (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 term_to_ast_string)
-               FStar_Reflection_V2_Embeddings.e_term
-               FStar_Syntax_Embeddings.e_string psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_1 term_to_ast_string)
+               FStarC_Reflection_V2_Embeddings.e_term
+               FStarC_Syntax_Embeddings.e_string psc ncb us args)
 let _ =
-  FStar_Tactics_Native.register_tactic
+  FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.Print.match_returns_to_string" (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.Print.match_returns_to_string (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 match_returns_to_string)
-               (FStar_Syntax_Embeddings.e_option
-                  (FStar_Syntax_Embeddings.e_tuple2
+               (FStarC_Tactics_Native.from_tactic_1 match_returns_to_string)
+               (FStarC_Syntax_Embeddings.e_option
+                  (FStarC_Syntax_Embeddings.e_tuple2
                      FStar_Tactics_NamedView.e_binder
-                     (FStar_Syntax_Embeddings.e_tuple3
-                        (FStar_Syntax_Embeddings.e_either
-                           FStar_Reflection_V2_Embeddings.e_term
-                           FStar_Reflection_V2_Embeddings.e_comp_view)
-                        (FStar_Syntax_Embeddings.e_option
-                           FStar_Reflection_V2_Embeddings.e_term)
-                        FStar_Syntax_Embeddings.e_bool)))
-               FStar_Syntax_Embeddings.e_string psc ncb us args)
+                     (FStarC_Syntax_Embeddings.e_tuple3
+                        (FStarC_Syntax_Embeddings.e_either
+                           FStarC_Reflection_V2_Embeddings.e_term
+                           FStarC_Reflection_V2_Embeddings.e_comp_view)
+                        (FStarC_Syntax_Embeddings.e_option
+                           FStarC_Reflection_V2_Embeddings.e_term)
+                        FStarC_Syntax_Embeddings.e_bool)))
+               FStarC_Syntax_Embeddings.e_string psc ncb us args)
 let _ =
-  FStar_Tactics_Native.register_tactic
+  FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.Print.branches_to_ast_string" (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.Print.branches_to_ast_string (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 branches_to_ast_string)
-               (FStar_Syntax_Embeddings.e_list
-                  (FStar_Syntax_Embeddings.e_tuple2
+               (FStarC_Tactics_Native.from_tactic_1 branches_to_ast_string)
+               (FStarC_Syntax_Embeddings.e_list
+                  (FStarC_Syntax_Embeddings.e_tuple2
                      FStar_Tactics_NamedView.e_pattern
-                     FStar_Reflection_V2_Embeddings.e_term))
-               FStar_Syntax_Embeddings.e_string psc ncb us args)
+                     FStarC_Reflection_V2_Embeddings.e_term))
+               FStarC_Syntax_Embeddings.e_string psc ncb us args)
 let _ =
-  FStar_Tactics_Native.register_tactic
+  FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.Print.branch_to_ast_string" (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.Print.branch_to_ast_string (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 branch_to_ast_string)
-               (FStar_Syntax_Embeddings.e_tuple2
+               (FStarC_Tactics_Native.from_tactic_1 branch_to_ast_string)
+               (FStarC_Syntax_Embeddings.e_tuple2
                   FStar_Tactics_NamedView.e_pattern
-                  FStar_Reflection_V2_Embeddings.e_term)
-               FStar_Syntax_Embeddings.e_string psc ncb us args)
+                  FStarC_Reflection_V2_Embeddings.e_term)
+               FStarC_Syntax_Embeddings.e_string psc ncb us args)
 let _ =
-  FStar_Tactics_Native.register_tactic
+  FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.Print.comp_to_ast_string" (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.Print.comp_to_ast_string (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 comp_to_ast_string)
-               FStar_Reflection_V2_Embeddings.e_comp_view
-               FStar_Syntax_Embeddings.e_string psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_1 comp_to_ast_string)
+               FStarC_Reflection_V2_Embeddings.e_comp_view
+               FStarC_Syntax_Embeddings.e_string psc ncb us args)
 let _ =
-  FStar_Tactics_Native.register_tactic
+  FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.Print.const_to_ast_string" (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.Print.const_to_ast_string (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 const_to_ast_string)
-               FStar_Reflection_V2_Embeddings.e_vconst
-               FStar_Syntax_Embeddings.e_string psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_1 const_to_ast_string)
+               FStarC_Reflection_V2_Embeddings.e_vconst
+               FStarC_Syntax_Embeddings.e_string psc ncb us args)

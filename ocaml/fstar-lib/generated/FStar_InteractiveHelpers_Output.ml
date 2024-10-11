@@ -1,10 +1,10 @@
 open Prims
 let rec _split_subst_at_bv :
   'a 'b .
-    FStar_Reflection_Types.bv ->
-      ((FStar_Reflection_Types.bv * 'a) * 'b) Prims.list ->
-        (((FStar_Reflection_Types.bv * 'a) * 'b) Prims.list *
-          ((FStar_Reflection_Types.bv * 'a) * 'b) Prims.list)
+    FStarC_Reflection_Types.bv ->
+      ((FStarC_Reflection_Types.bv * 'a) * 'b) Prims.list ->
+        (((FStarC_Reflection_Types.bv * 'a) * 'b) Prims.list *
+          ((FStarC_Reflection_Types.bv * 'a) * 'b) Prims.list)
   =
   fun x ->
     fun subst ->
@@ -19,7 +19,7 @@ let rec _split_subst_at_bv :
 let (subst_shadowed_with_abs_in_assertions :
   Prims.bool ->
     FStar_InteractiveHelpers_Base.genv ->
-      FStar_Reflection_Types.bv FStar_Pervasives_Native.option ->
+      FStarC_Reflection_Types.bv FStar_Pervasives_Native.option ->
         FStar_InteractiveHelpers_Propositions.assertions ->
           ((FStar_InteractiveHelpers_Base.genv *
              FStar_InteractiveHelpers_Propositions.assertions),
@@ -109,8 +109,8 @@ let (subst_shadowed_with_abs_in_assertions :
                                         match uu___5 with
                                         | (src, ty, tgt) ->
                                             let uu___6 =
-                                              FStar_Tactics_V1_Builtins.pack
-                                                (FStar_Reflection_V1_Data.Tv_Var
+                                              FStarC_Tactics_V1_Builtins.pack
+                                                (FStarC_Reflection_V1_Data.Tv_Var
                                                    tgt) in
                                             FStar_Tactics_Effect.tac_bind
                                               (FStar_Sealed.seal
@@ -248,7 +248,7 @@ let (subst_shadowed_with_abs_in_assertions :
                                                                     =
                                                                     let uu___16
                                                                     =
-                                                                    FStar_Tactics_V1_Builtins.term_to_string
+                                                                    FStarC_Tactics_V1_Builtins.term_to_string
                                                                     y in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -764,7 +764,7 @@ let (string_to_printout : Prims.string -> Prims.string -> Prims.string) =
 let (term_to_printout :
   FStar_InteractiveHelpers_Base.genv ->
     Prims.string ->
-      FStar_Reflection_Types.term ->
+      FStarC_Reflection_Types.term ->
         (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun ge ->
@@ -817,8 +817,8 @@ let (term_to_printout :
                                (fun uu___3 ->
                                   match uu___3 with
                                   | (bv, uu___4) ->
-                                      FStar_Tactics_V1_Builtins.pack
-                                        (FStar_Reflection_V1_Data.Tv_Var bv))
+                                      FStarC_Tactics_V1_Builtins.pack
+                                        (FStarC_Reflection_V1_Data.Tv_Var bv))
                                abs in
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
@@ -893,7 +893,7 @@ let (term_to_printout :
                                                       (fun uu___5 ->
                                                          (fun t2 ->
                                                             let uu___5 =
-                                                              FStar_Tactics_V1_Builtins.term_to_string
+                                                              FStarC_Tactics_V1_Builtins.term_to_string
                                                                 t2 in
                                                             Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
@@ -930,7 +930,7 @@ let (term_to_printout :
 let (opt_term_to_printout :
   FStar_InteractiveHelpers_Base.genv ->
     Prims.string ->
-      FStar_Reflection_Types.term FStar_Pervasives_Native.option ->
+      FStarC_Reflection_Types.term FStar_Pervasives_Native.option ->
         (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___2 ->
@@ -1234,7 +1234,8 @@ let (result_to_printout :
                     Obj.magic
                       (Obj.repr
                          (let uu___2 =
-                            let uu___3 = FStar_Tactics_V1_Builtins.top_env () in
+                            let uu___3 =
+                              FStarC_Tactics_V1_Builtins.top_env () in
                             FStar_Tactics_Effect.tac_bind
                               (FStar_Sealed.seal
                                  (Obj.magic
@@ -1448,7 +1449,7 @@ let (printout_result :
                  (Prims.of_int (146)) (Prims.of_int (2)) (Prims.of_int (146))
                  (Prims.of_int (39))))) (Obj.magic uu___)
         (fun uu___1 ->
-           (fun uu___1 -> Obj.magic (FStar_Tactics_V1_Builtins.print uu___1))
+           (fun uu___1 -> Obj.magic (FStarC_Tactics_V1_Builtins.print uu___1))
              uu___1)
 let (printout_success :
   FStar_InteractiveHelpers_Base.genv ->
@@ -1456,14 +1457,15 @@ let (printout_success :
       (unit, unit) FStar_Tactics_Effect.tac_repr)
   = fun ge -> fun a -> printout_result "ainfo" (ESuccess (ge, a))
 let (printout_failure :
-  FStar_Errors_Msg.error_message ->
+  FStarC_Errors_Msg.error_message ->
     (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun err ->
-    printout_result "ainfo" (EFailure (FStar_Errors_Msg.rendermsg err))
+    printout_result "ainfo" (EFailure (FStarC_Errors_Msg.rendermsg err))
 let (_debug_print_var :
   Prims.string ->
-    FStar_Reflection_Types.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
+    FStarC_Reflection_Types.term ->
+      (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun name ->
     fun t ->
@@ -1471,7 +1473,7 @@ let (_debug_print_var :
         let uu___1 =
           let uu___2 =
             let uu___3 =
-              let uu___4 = FStar_Tactics_V1_Builtins.term_to_string t in
+              let uu___4 = FStarC_Tactics_V1_Builtins.term_to_string t in
               FStar_Tactics_Effect.tac_bind
                 (FStar_Sealed.seal
                    (Obj.magic
@@ -1530,7 +1532,7 @@ let (_debug_print_var :
           (Obj.magic uu___1)
           (fun uu___2 ->
              (fun uu___2 ->
-                Obj.magic (FStar_Tactics_V1_Builtins.print uu___2)) uu___2) in
+                Obj.magic (FStarC_Tactics_V1_Builtins.print uu___2)) uu___2) in
       FStar_Tactics_Effect.tac_bind
         (FStar_Sealed.seal
            (Obj.magic
@@ -1546,7 +1548,7 @@ let (_debug_print_var :
            (fun uu___1 ->
               let uu___2 =
                 let uu___3 =
-                  let uu___4 = FStar_Tactics_V1_Builtins.top_env () in
+                  let uu___4 = FStarC_Tactics_V1_Builtins.top_env () in
                   FStar_Tactics_Effect.tac_bind
                     (FStar_Sealed.seal
                        (Obj.magic
@@ -1588,7 +1590,7 @@ let (_debug_print_var :
                               (Obj.repr
                                  (let uu___5 =
                                     let uu___6 =
-                                      FStar_Tactics_V1_Builtins.term_to_string
+                                      FStarC_Tactics_V1_Builtins.term_to_string
                                         ty in
                                     FStar_Tactics_Effect.tac_bind
                                       (FStar_Sealed.seal
@@ -1632,7 +1634,7 @@ let (_debug_print_var :
                                     (fun uu___6 ->
                                        (fun uu___6 ->
                                           Obj.magic
-                                            (FStar_Tactics_V1_Builtins.print
+                                            (FStarC_Tactics_V1_Builtins.print
                                                uu___6)) uu___6)))
                         | uu___5 ->
                             Obj.magic
@@ -1700,7 +1702,7 @@ let (_debug_print_var :
                              (fun uu___6 ->
                                 (fun uu___6 ->
                                    Obj.magic
-                                     (FStar_Tactics_V1_Builtins.print uu___6))
+                                     (FStarC_Tactics_V1_Builtins.print uu___6))
                                   uu___6) in
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
@@ -1725,7 +1727,7 @@ let (_debug_print_var :
                                  (fun uu___5 ->
                                     let uu___6 =
                                       let uu___7 =
-                                        FStar_Tactics_V1_Builtins.inspect t in
+                                        FStarC_Tactics_V1_Builtins.inspect t in
                                       FStar_Tactics_Effect.tac_bind
                                         (FStar_Sealed.seal
                                            (Obj.magic
@@ -1747,7 +1749,7 @@ let (_debug_print_var :
                                         (fun uu___8 ->
                                            (fun uu___8 ->
                                               match uu___8 with
-                                              | FStar_Reflection_V1_Data.Tv_Var
+                                              | FStarC_Reflection_V1_Data.Tv_Var
                                                   bv ->
                                                   Obj.magic
                                                     (Obj.repr
@@ -1756,7 +1758,7 @@ let (_debug_print_var :
                                                             (FStar_Tactics_Effect.lift_div_tac
                                                                (fun uu___10
                                                                   ->
-                                                                  FStar_Reflection_V1_Builtins.inspect_bv
+                                                                  FStarC_Reflection_V1_Builtins.inspect_bv
                                                                     bv)) in
                                                         FStar_Tactics_Effect.tac_bind
                                                           (FStar_Sealed.seal
@@ -1816,7 +1818,7 @@ let (_debug_print_var :
                                                                     (Prims.strcat
                                                                     "; index: "
                                                                     (Prims.string_of_int
-                                                                    b.FStar_Reflection_V1_Data.bv_index)))) in
+                                                                    b.FStarC_Reflection_V1_Data.bv_index)))) in
                                                                   FStar_Tactics_Effect.tac_bind
                                                                     (
                                                                     FStar_Sealed.seal
@@ -1877,7 +1879,7 @@ let (_debug_print_var :
                                                                     uu___11
                                                                     ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_V1_Builtins.print
+                                                                    (FStarC_Tactics_V1_Builtins.print
                                                                     uu___11))
                                                                     uu___11)))
                                                                uu___10)))
@@ -1909,7 +1911,7 @@ let (_debug_print_var :
                                          (fun uu___7 ->
                                             (fun uu___7 ->
                                                Obj.magic
-                                                 (FStar_Tactics_V1_Builtins.print
+                                                 (FStarC_Tactics_V1_Builtins.print
                                                     "end of _debug_print_var"))
                                               uu___7))) uu___5))) uu___3)))
              uu___1)
@@ -1921,9 +1923,9 @@ let (tadmit_no_warning : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
     FStar_Tactics_V1_Derived.apply
-      (FStar_Reflection_V2_Builtins.pack_ln
-         (FStar_Reflection_V2_Data.Tv_FVar
-            (FStar_Reflection_V2_Builtins.pack_fv
+      (FStarC_Reflection_V2_Builtins.pack_ln
+         (FStarC_Reflection_V2_Data.Tv_FVar
+            (FStarC_Reflection_V2_Builtins.pack_fv
                ["FStar"; "InteractiveHelpers"; "Output"; "magic_witness"])))
 let (pp_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
@@ -1945,7 +1947,8 @@ let (pp_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
             (Obj.magic uu___4)
             (fun uu___5 ->
                (fun uu___5 ->
-                  Obj.magic (FStar_Tactics_V1_Builtins.term_to_string uu___5))
+                  Obj.magic
+                    (FStarC_Tactics_V1_Builtins.term_to_string uu___5))
                  uu___5) in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -1973,7 +1976,7 @@ let (pp_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                  (Prims.of_int (184)) (Prims.of_int (2)) (Prims.of_int (184))
                  (Prims.of_int (62))))) (Obj.magic uu___2)
         (fun uu___3 ->
-           (fun uu___3 -> Obj.magic (FStar_Tactics_V1_Builtins.print uu___3))
+           (fun uu___3 -> Obj.magic (FStarC_Tactics_V1_Builtins.print uu___3))
              uu___3) in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
@@ -1988,7 +1991,7 @@ let (pp_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                (Prims.of_int (9))))) (Obj.magic uu___1)
       (fun uu___2 ->
          (fun uu___2 ->
-            let uu___3 = FStar_Tactics_V1_Builtins.dump "" in
+            let uu___3 = FStarC_Tactics_V1_Builtins.dump "" in
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
                  (FStar_Sealed.seal

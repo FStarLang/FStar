@@ -1,7 +1,7 @@
 open Prims
 let (term_eq :
-  FStar_Reflection_Types.term -> FStar_Reflection_Types.term -> Prims.bool) =
-  FStar_Reflection_TermEq_Simple.term_eq
+  FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term -> Prims.bool)
+  = FStar_Reflection_TermEq_Simple.term_eq
 let rec (inspect_unascribe :
   FStar_Tactics_NamedView.term ->
     (FStar_Tactics_NamedView.term_view, unit) FStar_Tactics_Effect.tac_repr)
@@ -34,9 +34,9 @@ let rec (inspect_unascribe :
                      (FStar_Tactics_Effect.lift_div_tac (fun uu___2 -> tv))))
            uu___1)
 let rec (collect_app' :
-  FStar_Reflection_V2_Data.argv Prims.list ->
+  FStarC_Reflection_V2_Data.argv Prims.list ->
     FStar_Tactics_NamedView.term ->
-      ((FStar_Tactics_NamedView.term * FStar_Reflection_V2_Data.argv
+      ((FStar_Tactics_NamedView.term * FStarC_Reflection_V2_Data.argv
          Prims.list),
         unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -66,33 +66,33 @@ let rec (collect_app' :
                           (fun uu___3 -> (t, args))))) uu___1)
 let (collect_app :
   FStar_Tactics_NamedView.term ->
-    ((FStar_Tactics_NamedView.term * FStar_Reflection_V2_Data.argv
+    ((FStar_Tactics_NamedView.term * FStarC_Reflection_V2_Data.argv
        Prims.list),
       unit) FStar_Tactics_Effect.tac_repr)
   = collect_app' []
 type comparison =
-  | Eq of FStar_Reflection_Types.typ FStar_Pervasives_Native.option 
-  | BoolEq of FStar_Reflection_Types.typ FStar_Pervasives_Native.option 
+  | Eq of FStarC_Reflection_Types.typ FStar_Pervasives_Native.option 
+  | BoolEq of FStarC_Reflection_Types.typ FStar_Pervasives_Native.option 
   | Lt 
   | Le 
   | Gt 
   | Ge 
 let rec __knot_e_comparison _ =
-  FStar_Syntax_Embeddings_Base.mk_extracted_embedding
+  FStarC_Syntax_Embeddings_Base.mk_extracted_embedding
     "FStar.Reflection.V2.Formula.comparison"
     (fun tm_0 ->
        match tm_0 with
        | ("FStar.Reflection.V2.Formula.Eq", _0_2::[]) ->
-           FStar_Compiler_Util.bind_opt
-             (FStar_Syntax_Embeddings_Base.extracted_unembed
-                (FStar_Syntax_Embeddings.e_option
-                   FStar_Reflection_V2_Embeddings.e_term) _0_2)
+           FStarC_Compiler_Util.bind_opt
+             (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                (FStarC_Syntax_Embeddings.e_option
+                   FStarC_Reflection_V2_Embeddings.e_term) _0_2)
              (fun _0_2 -> FStar_Pervasives_Native.Some (Eq _0_2))
        | ("FStar.Reflection.V2.Formula.BoolEq", _0_4::[]) ->
-           FStar_Compiler_Util.bind_opt
-             (FStar_Syntax_Embeddings_Base.extracted_unembed
-                (FStar_Syntax_Embeddings.e_option
-                   FStar_Reflection_V2_Embeddings.e_term) _0_4)
+           FStarC_Compiler_Util.bind_opt
+             (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                (FStarC_Syntax_Embeddings.e_option
+                   FStarC_Reflection_V2_Embeddings.e_term) _0_4)
              (fun _0_4 -> FStar_Pervasives_Native.Some (BoolEq _0_4))
        | ("FStar.Reflection.V2.Formula.Lt", []) ->
            FStar_Pervasives_Native.Some Lt
@@ -106,47 +106,51 @@ let rec __knot_e_comparison _ =
     (fun tm_9 ->
        match tm_9 with
        | Eq _0_11 ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.Eq"))
-             [((FStar_Syntax_Embeddings_Base.extracted_embed
-                  (FStar_Syntax_Embeddings.e_option
-                     FStar_Reflection_V2_Embeddings.e_term) _0_11),
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.Eq"))
+             [((FStarC_Syntax_Embeddings_Base.extracted_embed
+                  (FStarC_Syntax_Embeddings.e_option
+                     FStarC_Reflection_V2_Embeddings.e_term) _0_11),
                 FStar_Pervasives_Native.None)]
        | BoolEq _0_13 ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.BoolEq"))
-             [((FStar_Syntax_Embeddings_Base.extracted_embed
-                  (FStar_Syntax_Embeddings.e_option
-                     FStar_Reflection_V2_Embeddings.e_term) _0_13),
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.BoolEq"))
+             [((FStarC_Syntax_Embeddings_Base.extracted_embed
+                  (FStarC_Syntax_Embeddings.e_option
+                     FStarC_Reflection_V2_Embeddings.e_term) _0_13),
                 FStar_Pervasives_Native.None)]
        | Lt ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.Lt")) []
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.Lt"))
+             []
        | Le ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.Le")) []
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.Le"))
+             []
        | Gt ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.Gt")) []
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.Gt"))
+             []
        | Ge ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.Ge")) [])
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.Ge"))
+             [])
 let e_comparison = __knot_e_comparison ()
 let (uu___is_Eq : comparison -> Prims.bool) =
   fun projectee -> match projectee with | Eq _0 -> true | uu___ -> false
 let (__proj__Eq__item___0 :
-  comparison -> FStar_Reflection_Types.typ FStar_Pervasives_Native.option) =
+  comparison -> FStarC_Reflection_Types.typ FStar_Pervasives_Native.option) =
   fun projectee -> match projectee with | Eq _0 -> _0
 let (uu___is_BoolEq : comparison -> Prims.bool) =
   fun projectee -> match projectee with | BoolEq _0 -> true | uu___ -> false
 let (__proj__BoolEq__item___0 :
-  comparison -> FStar_Reflection_Types.typ FStar_Pervasives_Native.option) =
+  comparison -> FStarC_Reflection_Types.typ FStar_Pervasives_Native.option) =
   fun projectee -> match projectee with | BoolEq _0 -> _0
 let (uu___is_Lt : comparison -> Prims.bool) =
   fun projectee -> match projectee with | Lt -> true | uu___ -> false
@@ -166,17 +170,17 @@ type formula =
   | Not of FStar_Tactics_NamedView.term 
   | Implies of FStar_Tactics_NamedView.term * FStar_Tactics_NamedView.term 
   | Iff of FStar_Tactics_NamedView.term * FStar_Tactics_NamedView.term 
-  | Forall of FStar_Tactics_NamedView.bv * FStar_Reflection_Types.typ *
+  | Forall of FStar_Tactics_NamedView.bv * FStarC_Reflection_Types.typ *
   FStar_Tactics_NamedView.term 
-  | Exists of FStar_Tactics_NamedView.bv * FStar_Reflection_Types.typ *
+  | Exists of FStar_Tactics_NamedView.bv * FStarC_Reflection_Types.typ *
   FStar_Tactics_NamedView.term 
   | App of FStar_Tactics_NamedView.term * FStar_Tactics_NamedView.term 
   | Name of FStar_Tactics_NamedView.namedv 
-  | FV of FStar_Reflection_Types.fv 
+  | FV of FStarC_Reflection_Types.fv 
   | IntLit of Prims.int 
   | F_Unknown 
 let rec __knot_e_formula _ =
-  FStar_Syntax_Embeddings_Base.mk_extracted_embedding
+  FStarC_Syntax_Embeddings_Base.mk_extracted_embedding
     "FStar.Reflection.V2.Formula.formula"
     (fun tm_18 ->
        match tm_18 with
@@ -185,119 +189,119 @@ let rec __knot_e_formula _ =
        | ("FStar.Reflection.V2.Formula.False_", []) ->
            FStar_Pervasives_Native.Some False_
        | ("FStar.Reflection.V2.Formula.Comp", _0_22::_1_23::_2_24::[]) ->
-           FStar_Compiler_Util.bind_opt
-             (FStar_Syntax_Embeddings_Base.extracted_unembed e_comparison
+           FStarC_Compiler_Util.bind_opt
+             (FStarC_Syntax_Embeddings_Base.extracted_unembed e_comparison
                 _0_22)
              (fun _0_22 ->
-                FStar_Compiler_Util.bind_opt
-                  (FStar_Syntax_Embeddings_Base.extracted_unembed
-                     FStar_Reflection_V2_Embeddings.e_term _1_23)
+                FStarC_Compiler_Util.bind_opt
+                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                     FStarC_Reflection_V2_Embeddings.e_term _1_23)
                   (fun _1_23 ->
-                     FStar_Compiler_Util.bind_opt
-                       (FStar_Syntax_Embeddings_Base.extracted_unembed
-                          FStar_Reflection_V2_Embeddings.e_term _2_24)
+                     FStarC_Compiler_Util.bind_opt
+                       (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                          FStarC_Reflection_V2_Embeddings.e_term _2_24)
                        (fun _2_24 ->
                           FStar_Pervasives_Native.Some
                             (Comp (_0_22, _1_23, _2_24)))))
        | ("FStar.Reflection.V2.Formula.And", _0_26::_1_27::[]) ->
-           FStar_Compiler_Util.bind_opt
-             (FStar_Syntax_Embeddings_Base.extracted_unembed
-                FStar_Reflection_V2_Embeddings.e_term _0_26)
+           FStarC_Compiler_Util.bind_opt
+             (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                FStarC_Reflection_V2_Embeddings.e_term _0_26)
              (fun _0_26 ->
-                FStar_Compiler_Util.bind_opt
-                  (FStar_Syntax_Embeddings_Base.extracted_unembed
-                     FStar_Reflection_V2_Embeddings.e_term _1_27)
+                FStarC_Compiler_Util.bind_opt
+                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                     FStarC_Reflection_V2_Embeddings.e_term _1_27)
                   (fun _1_27 ->
                      FStar_Pervasives_Native.Some (And (_0_26, _1_27))))
        | ("FStar.Reflection.V2.Formula.Or", _0_29::_1_30::[]) ->
-           FStar_Compiler_Util.bind_opt
-             (FStar_Syntax_Embeddings_Base.extracted_unembed
-                FStar_Reflection_V2_Embeddings.e_term _0_29)
+           FStarC_Compiler_Util.bind_opt
+             (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                FStarC_Reflection_V2_Embeddings.e_term _0_29)
              (fun _0_29 ->
-                FStar_Compiler_Util.bind_opt
-                  (FStar_Syntax_Embeddings_Base.extracted_unembed
-                     FStar_Reflection_V2_Embeddings.e_term _1_30)
+                FStarC_Compiler_Util.bind_opt
+                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                     FStarC_Reflection_V2_Embeddings.e_term _1_30)
                   (fun _1_30 ->
                      FStar_Pervasives_Native.Some (Or (_0_29, _1_30))))
        | ("FStar.Reflection.V2.Formula.Not", _0_32::[]) ->
-           FStar_Compiler_Util.bind_opt
-             (FStar_Syntax_Embeddings_Base.extracted_unembed
-                FStar_Reflection_V2_Embeddings.e_term _0_32)
+           FStarC_Compiler_Util.bind_opt
+             (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                FStarC_Reflection_V2_Embeddings.e_term _0_32)
              (fun _0_32 -> FStar_Pervasives_Native.Some (Not _0_32))
        | ("FStar.Reflection.V2.Formula.Implies", _0_34::_1_35::[]) ->
-           FStar_Compiler_Util.bind_opt
-             (FStar_Syntax_Embeddings_Base.extracted_unembed
-                FStar_Reflection_V2_Embeddings.e_term _0_34)
+           FStarC_Compiler_Util.bind_opt
+             (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                FStarC_Reflection_V2_Embeddings.e_term _0_34)
              (fun _0_34 ->
-                FStar_Compiler_Util.bind_opt
-                  (FStar_Syntax_Embeddings_Base.extracted_unembed
-                     FStar_Reflection_V2_Embeddings.e_term _1_35)
+                FStarC_Compiler_Util.bind_opt
+                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                     FStarC_Reflection_V2_Embeddings.e_term _1_35)
                   (fun _1_35 ->
                      FStar_Pervasives_Native.Some (Implies (_0_34, _1_35))))
        | ("FStar.Reflection.V2.Formula.Iff", _0_37::_1_38::[]) ->
-           FStar_Compiler_Util.bind_opt
-             (FStar_Syntax_Embeddings_Base.extracted_unembed
-                FStar_Reflection_V2_Embeddings.e_term _0_37)
+           FStarC_Compiler_Util.bind_opt
+             (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                FStarC_Reflection_V2_Embeddings.e_term _0_37)
              (fun _0_37 ->
-                FStar_Compiler_Util.bind_opt
-                  (FStar_Syntax_Embeddings_Base.extracted_unembed
-                     FStar_Reflection_V2_Embeddings.e_term _1_38)
+                FStarC_Compiler_Util.bind_opt
+                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                     FStarC_Reflection_V2_Embeddings.e_term _1_38)
                   (fun _1_38 ->
                      FStar_Pervasives_Native.Some (Iff (_0_37, _1_38))))
        | ("FStar.Reflection.V2.Formula.Forall", _0_40::_1_41::_2_42::[]) ->
-           FStar_Compiler_Util.bind_opt
-             (FStar_Syntax_Embeddings_Base.extracted_unembed
-                FStar_Reflection_V2_Embeddings.e_bv_view _0_40)
+           FStarC_Compiler_Util.bind_opt
+             (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                FStarC_Reflection_V2_Embeddings.e_bv_view _0_40)
              (fun _0_40 ->
-                FStar_Compiler_Util.bind_opt
-                  (FStar_Syntax_Embeddings_Base.extracted_unembed
-                     FStar_Reflection_V2_Embeddings.e_term _1_41)
+                FStarC_Compiler_Util.bind_opt
+                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                     FStarC_Reflection_V2_Embeddings.e_term _1_41)
                   (fun _1_41 ->
-                     FStar_Compiler_Util.bind_opt
-                       (FStar_Syntax_Embeddings_Base.extracted_unembed
-                          FStar_Reflection_V2_Embeddings.e_term _2_42)
+                     FStarC_Compiler_Util.bind_opt
+                       (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                          FStarC_Reflection_V2_Embeddings.e_term _2_42)
                        (fun _2_42 ->
                           FStar_Pervasives_Native.Some
                             (Forall (_0_40, _1_41, _2_42)))))
        | ("FStar.Reflection.V2.Formula.Exists", _0_44::_1_45::_2_46::[]) ->
-           FStar_Compiler_Util.bind_opt
-             (FStar_Syntax_Embeddings_Base.extracted_unembed
-                FStar_Reflection_V2_Embeddings.e_bv_view _0_44)
+           FStarC_Compiler_Util.bind_opt
+             (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                FStarC_Reflection_V2_Embeddings.e_bv_view _0_44)
              (fun _0_44 ->
-                FStar_Compiler_Util.bind_opt
-                  (FStar_Syntax_Embeddings_Base.extracted_unembed
-                     FStar_Reflection_V2_Embeddings.e_term _1_45)
+                FStarC_Compiler_Util.bind_opt
+                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                     FStarC_Reflection_V2_Embeddings.e_term _1_45)
                   (fun _1_45 ->
-                     FStar_Compiler_Util.bind_opt
-                       (FStar_Syntax_Embeddings_Base.extracted_unembed
-                          FStar_Reflection_V2_Embeddings.e_term _2_46)
+                     FStarC_Compiler_Util.bind_opt
+                       (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                          FStarC_Reflection_V2_Embeddings.e_term _2_46)
                        (fun _2_46 ->
                           FStar_Pervasives_Native.Some
                             (Exists (_0_44, _1_45, _2_46)))))
        | ("FStar.Reflection.V2.Formula.App", _0_48::_1_49::[]) ->
-           FStar_Compiler_Util.bind_opt
-             (FStar_Syntax_Embeddings_Base.extracted_unembed
-                FStar_Reflection_V2_Embeddings.e_term _0_48)
+           FStarC_Compiler_Util.bind_opt
+             (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                FStarC_Reflection_V2_Embeddings.e_term _0_48)
              (fun _0_48 ->
-                FStar_Compiler_Util.bind_opt
-                  (FStar_Syntax_Embeddings_Base.extracted_unembed
-                     FStar_Reflection_V2_Embeddings.e_term _1_49)
+                FStarC_Compiler_Util.bind_opt
+                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                     FStarC_Reflection_V2_Embeddings.e_term _1_49)
                   (fun _1_49 ->
                      FStar_Pervasives_Native.Some (App (_0_48, _1_49))))
        | ("FStar.Reflection.V2.Formula.Name", _0_51::[]) ->
-           FStar_Compiler_Util.bind_opt
-             (FStar_Syntax_Embeddings_Base.extracted_unembed
-                FStar_Reflection_V2_Embeddings.e_namedv_view _0_51)
+           FStarC_Compiler_Util.bind_opt
+             (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                FStarC_Reflection_V2_Embeddings.e_namedv_view _0_51)
              (fun _0_51 -> FStar_Pervasives_Native.Some (Name _0_51))
        | ("FStar.Reflection.V2.Formula.FV", _0_53::[]) ->
-           FStar_Compiler_Util.bind_opt
-             (FStar_Syntax_Embeddings_Base.extracted_unembed
-                FStar_Reflection_V2_Embeddings.e_fv _0_53)
+           FStarC_Compiler_Util.bind_opt
+             (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                FStarC_Reflection_V2_Embeddings.e_fv _0_53)
              (fun _0_53 -> FStar_Pervasives_Native.Some (FV _0_53))
        | ("FStar.Reflection.V2.Formula.IntLit", _0_55::[]) ->
-           FStar_Compiler_Util.bind_opt
-             (FStar_Syntax_Embeddings_Base.extracted_unembed
-                FStar_Syntax_Embeddings.e_int _0_55)
+           FStarC_Compiler_Util.bind_opt
+             (FStarC_Syntax_Embeddings_Base.extracted_unembed
+                FStarC_Syntax_Embeddings.e_int _0_55)
              (fun _0_55 -> FStar_Pervasives_Native.Some (IntLit _0_55))
        | ("FStar.Reflection.V2.Formula.F_Unknown", []) ->
            FStar_Pervasives_Native.Some F_Unknown
@@ -305,135 +309,136 @@ let rec __knot_e_formula _ =
     (fun tm_57 ->
        match tm_57 with
        | True_ ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.True_"))
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.True_"))
              []
        | False_ ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.False_"))
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.False_"))
              []
        | Comp (_0_61, _1_62, _2_63) ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.Comp"))
-             [((FStar_Syntax_Embeddings_Base.extracted_embed e_comparison
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.Comp"))
+             [((FStarC_Syntax_Embeddings_Base.extracted_embed e_comparison
                   _0_61), FStar_Pervasives_Native.None);
-             ((FStar_Syntax_Embeddings_Base.extracted_embed
-                 FStar_Reflection_V2_Embeddings.e_term _1_62),
+             ((FStarC_Syntax_Embeddings_Base.extracted_embed
+                 FStarC_Reflection_V2_Embeddings.e_term _1_62),
                FStar_Pervasives_Native.None);
-             ((FStar_Syntax_Embeddings_Base.extracted_embed
-                 FStar_Reflection_V2_Embeddings.e_term _2_63),
+             ((FStarC_Syntax_Embeddings_Base.extracted_embed
+                 FStarC_Reflection_V2_Embeddings.e_term _2_63),
                FStar_Pervasives_Native.None)]
        | And (_0_65, _1_66) ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.And"))
-             [((FStar_Syntax_Embeddings_Base.extracted_embed
-                  FStar_Reflection_V2_Embeddings.e_term _0_65),
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.And"))
+             [((FStarC_Syntax_Embeddings_Base.extracted_embed
+                  FStarC_Reflection_V2_Embeddings.e_term _0_65),
                 FStar_Pervasives_Native.None);
-             ((FStar_Syntax_Embeddings_Base.extracted_embed
-                 FStar_Reflection_V2_Embeddings.e_term _1_66),
+             ((FStarC_Syntax_Embeddings_Base.extracted_embed
+                 FStarC_Reflection_V2_Embeddings.e_term _1_66),
                FStar_Pervasives_Native.None)]
        | Or (_0_68, _1_69) ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.Or"))
-             [((FStar_Syntax_Embeddings_Base.extracted_embed
-                  FStar_Reflection_V2_Embeddings.e_term _0_68),
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.Or"))
+             [((FStarC_Syntax_Embeddings_Base.extracted_embed
+                  FStarC_Reflection_V2_Embeddings.e_term _0_68),
                 FStar_Pervasives_Native.None);
-             ((FStar_Syntax_Embeddings_Base.extracted_embed
-                 FStar_Reflection_V2_Embeddings.e_term _1_69),
+             ((FStarC_Syntax_Embeddings_Base.extracted_embed
+                 FStarC_Reflection_V2_Embeddings.e_term _1_69),
                FStar_Pervasives_Native.None)]
        | Not _0_71 ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.Not"))
-             [((FStar_Syntax_Embeddings_Base.extracted_embed
-                  FStar_Reflection_V2_Embeddings.e_term _0_71),
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.Not"))
+             [((FStarC_Syntax_Embeddings_Base.extracted_embed
+                  FStarC_Reflection_V2_Embeddings.e_term _0_71),
                 FStar_Pervasives_Native.None)]
        | Implies (_0_73, _1_74) ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.Implies"))
-             [((FStar_Syntax_Embeddings_Base.extracted_embed
-                  FStar_Reflection_V2_Embeddings.e_term _0_73),
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str
+                   "FStar.Reflection.V2.Formula.Implies"))
+             [((FStarC_Syntax_Embeddings_Base.extracted_embed
+                  FStarC_Reflection_V2_Embeddings.e_term _0_73),
                 FStar_Pervasives_Native.None);
-             ((FStar_Syntax_Embeddings_Base.extracted_embed
-                 FStar_Reflection_V2_Embeddings.e_term _1_74),
+             ((FStarC_Syntax_Embeddings_Base.extracted_embed
+                 FStarC_Reflection_V2_Embeddings.e_term _1_74),
                FStar_Pervasives_Native.None)]
        | Iff (_0_76, _1_77) ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.Iff"))
-             [((FStar_Syntax_Embeddings_Base.extracted_embed
-                  FStar_Reflection_V2_Embeddings.e_term _0_76),
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.Iff"))
+             [((FStarC_Syntax_Embeddings_Base.extracted_embed
+                  FStarC_Reflection_V2_Embeddings.e_term _0_76),
                 FStar_Pervasives_Native.None);
-             ((FStar_Syntax_Embeddings_Base.extracted_embed
-                 FStar_Reflection_V2_Embeddings.e_term _1_77),
+             ((FStarC_Syntax_Embeddings_Base.extracted_embed
+                 FStarC_Reflection_V2_Embeddings.e_term _1_77),
                FStar_Pervasives_Native.None)]
        | Forall (_0_79, _1_80, _2_81) ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.Forall"))
-             [((FStar_Syntax_Embeddings_Base.extracted_embed
-                  FStar_Reflection_V2_Embeddings.e_bv_view _0_79),
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.Forall"))
+             [((FStarC_Syntax_Embeddings_Base.extracted_embed
+                  FStarC_Reflection_V2_Embeddings.e_bv_view _0_79),
                 FStar_Pervasives_Native.None);
-             ((FStar_Syntax_Embeddings_Base.extracted_embed
-                 FStar_Reflection_V2_Embeddings.e_term _1_80),
+             ((FStarC_Syntax_Embeddings_Base.extracted_embed
+                 FStarC_Reflection_V2_Embeddings.e_term _1_80),
                FStar_Pervasives_Native.None);
-             ((FStar_Syntax_Embeddings_Base.extracted_embed
-                 FStar_Reflection_V2_Embeddings.e_term _2_81),
+             ((FStarC_Syntax_Embeddings_Base.extracted_embed
+                 FStarC_Reflection_V2_Embeddings.e_term _2_81),
                FStar_Pervasives_Native.None)]
        | Exists (_0_83, _1_84, _2_85) ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.Exists"))
-             [((FStar_Syntax_Embeddings_Base.extracted_embed
-                  FStar_Reflection_V2_Embeddings.e_bv_view _0_83),
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.Exists"))
+             [((FStarC_Syntax_Embeddings_Base.extracted_embed
+                  FStarC_Reflection_V2_Embeddings.e_bv_view _0_83),
                 FStar_Pervasives_Native.None);
-             ((FStar_Syntax_Embeddings_Base.extracted_embed
-                 FStar_Reflection_V2_Embeddings.e_term _1_84),
+             ((FStarC_Syntax_Embeddings_Base.extracted_embed
+                 FStarC_Reflection_V2_Embeddings.e_term _1_84),
                FStar_Pervasives_Native.None);
-             ((FStar_Syntax_Embeddings_Base.extracted_embed
-                 FStar_Reflection_V2_Embeddings.e_term _2_85),
+             ((FStarC_Syntax_Embeddings_Base.extracted_embed
+                 FStarC_Reflection_V2_Embeddings.e_term _2_85),
                FStar_Pervasives_Native.None)]
        | App (_0_87, _1_88) ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.App"))
-             [((FStar_Syntax_Embeddings_Base.extracted_embed
-                  FStar_Reflection_V2_Embeddings.e_term _0_87),
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.App"))
+             [((FStarC_Syntax_Embeddings_Base.extracted_embed
+                  FStarC_Reflection_V2_Embeddings.e_term _0_87),
                 FStar_Pervasives_Native.None);
-             ((FStar_Syntax_Embeddings_Base.extracted_embed
-                 FStar_Reflection_V2_Embeddings.e_term _1_88),
+             ((FStarC_Syntax_Embeddings_Base.extracted_embed
+                 FStarC_Reflection_V2_Embeddings.e_term _1_88),
                FStar_Pervasives_Native.None)]
        | Name _0_90 ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.Name"))
-             [((FStar_Syntax_Embeddings_Base.extracted_embed
-                  FStar_Reflection_V2_Embeddings.e_namedv_view _0_90),
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.Name"))
+             [((FStarC_Syntax_Embeddings_Base.extracted_embed
+                  FStarC_Reflection_V2_Embeddings.e_namedv_view _0_90),
                 FStar_Pervasives_Native.None)]
        | FV _0_92 ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.FV"))
-             [((FStar_Syntax_Embeddings_Base.extracted_embed
-                  FStar_Reflection_V2_Embeddings.e_fv _0_92),
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.FV"))
+             [((FStarC_Syntax_Embeddings_Base.extracted_embed
+                  FStarC_Reflection_V2_Embeddings.e_fv _0_92),
                 FStar_Pervasives_Native.None)]
        | IntLit _0_94 ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str "FStar.Reflection.V2.Formula.IntLit"))
-             [((FStar_Syntax_Embeddings_Base.extracted_embed
-                  FStar_Syntax_Embeddings.e_int _0_94),
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str "FStar.Reflection.V2.Formula.IntLit"))
+             [((FStarC_Syntax_Embeddings_Base.extracted_embed
+                  FStarC_Syntax_Embeddings.e_int _0_94),
                 FStar_Pervasives_Native.None)]
        | F_Unknown ->
-           FStar_Syntax_Util.mk_app
-             (FStar_Syntax_Syntax.tdataconstr
-                (FStar_Ident.lid_of_str
+           FStarC_Syntax_Util.mk_app
+             (FStarC_Syntax_Syntax.tdataconstr
+                (FStarC_Ident.lid_of_str
                    "FStar.Reflection.V2.Formula.F_Unknown")) [])
 let e_formula = __knot_e_formula ()
 let (uu___is_True_ : formula -> Prims.bool) =
@@ -486,7 +491,7 @@ let (uu___is_Forall : formula -> Prims.bool) =
     match projectee with | Forall (_0, _1, _2) -> true | uu___ -> false
 let (__proj__Forall__item___0 : formula -> FStar_Tactics_NamedView.bv) =
   fun projectee -> match projectee with | Forall (_0, _1, _2) -> _0
-let (__proj__Forall__item___1 : formula -> FStar_Reflection_Types.typ) =
+let (__proj__Forall__item___1 : formula -> FStarC_Reflection_Types.typ) =
   fun projectee -> match projectee with | Forall (_0, _1, _2) -> _1
 let (__proj__Forall__item___2 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | Forall (_0, _1, _2) -> _2
@@ -495,7 +500,7 @@ let (uu___is_Exists : formula -> Prims.bool) =
     match projectee with | Exists (_0, _1, _2) -> true | uu___ -> false
 let (__proj__Exists__item___0 : formula -> FStar_Tactics_NamedView.bv) =
   fun projectee -> match projectee with | Exists (_0, _1, _2) -> _0
-let (__proj__Exists__item___1 : formula -> FStar_Reflection_Types.typ) =
+let (__proj__Exists__item___1 : formula -> FStarC_Reflection_Types.typ) =
   fun projectee -> match projectee with | Exists (_0, _1, _2) -> _1
 let (__proj__Exists__item___2 : formula -> FStar_Tactics_NamedView.term) =
   fun projectee -> match projectee with | Exists (_0, _1, _2) -> _2
@@ -512,7 +517,7 @@ let (__proj__Name__item___0 : formula -> FStar_Tactics_NamedView.namedv) =
   fun projectee -> match projectee with | Name _0 -> _0
 let (uu___is_FV : formula -> Prims.bool) =
   fun projectee -> match projectee with | FV _0 -> true | uu___ -> false
-let (__proj__FV__item___0 : formula -> FStar_Reflection_Types.fv) =
+let (__proj__FV__item___0 : formula -> FStarC_Reflection_Types.fv) =
   fun projectee -> match projectee with | FV _0 -> _0
 let (uu___is_IntLit : formula -> Prims.bool) =
   fun projectee -> match projectee with | IntLit _0 -> true | uu___ -> false
@@ -527,10 +532,10 @@ let (mk_Forall :
       let b =
         FStar_Tactics_NamedView.pack_bv
           {
-            FStar_Reflection_V2_Data.index = Prims.int_zero;
-            FStar_Reflection_V2_Data.sort1 = (FStar_Sealed.seal typ);
-            FStar_Reflection_V2_Data.ppname1 =
-              (FStar_Reflection_V2_Data.as_ppname "x")
+            FStarC_Reflection_V2_Data.index = Prims.int_zero;
+            FStarC_Reflection_V2_Data.sort1 = (FStar_Sealed.seal typ);
+            FStarC_Reflection_V2_Data.ppname1 =
+              (FStarC_Reflection_V2_Data.as_ppname "x")
           } in
       Forall
         (b, typ,
@@ -539,7 +544,7 @@ let (mk_Forall :
                 (pred,
                   ((FStar_Tactics_NamedView.pack
                       (FStar_Tactics_NamedView.Tv_BVar b)),
-                    FStar_Reflection_V2_Data.Q_Explicit)))))
+                    FStarC_Reflection_V2_Data.Q_Explicit)))))
 let (mk_Exists :
   FStar_Tactics_NamedView.term -> FStar_Tactics_NamedView.term -> formula) =
   fun typ ->
@@ -547,10 +552,10 @@ let (mk_Exists :
       let b =
         FStar_Tactics_NamedView.pack_bv
           {
-            FStar_Reflection_V2_Data.index = Prims.int_zero;
-            FStar_Reflection_V2_Data.sort1 = (FStar_Sealed.seal typ);
-            FStar_Reflection_V2_Data.ppname1 =
-              (FStar_Reflection_V2_Data.as_ppname "x")
+            FStarC_Reflection_V2_Data.index = Prims.int_zero;
+            FStarC_Reflection_V2_Data.sort1 = (FStar_Sealed.seal typ);
+            FStarC_Reflection_V2_Data.ppname1 =
+              (FStarC_Reflection_V2_Data.as_ppname "x")
           } in
       Exists
         (b, typ,
@@ -559,7 +564,7 @@ let (mk_Exists :
                 (pred,
                   ((FStar_Tactics_NamedView.pack
                       (FStar_Tactics_NamedView.Tv_BVar b)),
-                    FStar_Reflection_V2_Data.Q_Explicit)))))
+                    FStarC_Reflection_V2_Data.Q_Explicit)))))
 let (term_as_formula' :
   FStar_Tactics_NamedView.term ->
     (formula, unit) FStar_Tactics_Effect.tac_repr)
@@ -591,13 +596,13 @@ let (term_as_formula' :
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___2 ->
                            if
-                             (FStar_Reflection_V2_Builtins.inspect_fv fv) =
+                             (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
                                FStar_Reflection_Const.true_qn
                            then True_
                            else
                              if
-                               (FStar_Reflection_V2_Builtins.inspect_fv fv) =
-                                 FStar_Reflection_Const.false_qn
+                               (FStarC_Reflection_V2_Builtins.inspect_fv fv)
+                                 = FStar_Reflection_Const.false_qn
                              then False_
                              else FV fv)))
             | FStar_Tactics_NamedView.Tv_UInst (fv, uu___2) ->
@@ -606,13 +611,13 @@ let (term_as_formula' :
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___3 ->
                            if
-                             (FStar_Reflection_V2_Builtins.inspect_fv fv) =
+                             (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
                                FStar_Reflection_Const.true_qn
                            then True_
                            else
                              if
-                               (FStar_Reflection_V2_Builtins.inspect_fv fv) =
-                                 FStar_Reflection_Const.false_qn
+                               (FStarC_Reflection_V2_Builtins.inspect_fv fv)
+                                 = FStar_Reflection_Const.false_qn
                              then False_
                              else FV fv)))
             | FStar_Tactics_NamedView.Tv_App (h0, t1) ->
@@ -718,14 +723,14 @@ let (term_as_formula' :
                                                           | (FStar_Tactics_NamedView.Tv_FVar
                                                              fv,
                                                              (a1,
-                                                              FStar_Reflection_V2_Data.Q_Implicit)::
+                                                              FStarC_Reflection_V2_Data.Q_Implicit)::
                                                              (a2,
-                                                              FStar_Reflection_V2_Data.Q_Explicit)::
+                                                              FStarC_Reflection_V2_Data.Q_Explicit)::
                                                              (a3,
-                                                              FStar_Reflection_V2_Data.Q_Explicit)::[])
+                                                              FStarC_Reflection_V2_Data.Q_Explicit)::[])
                                                               ->
                                                               if
-                                                                (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                    fv)
                                                                   =
                                                                   FStar_Reflection_Const.eq2_qn
@@ -737,7 +742,7 @@ let (term_as_formula' :
                                                                     a3)
                                                               else
                                                                 if
-                                                                  (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                  (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.eq1_qn
                                                                 then
@@ -748,7 +753,7 @@ let (term_as_formula' :
                                                                     a3)
                                                                 else
                                                                   if
-                                                                    (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                    (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.lt_qn
                                                                   then
@@ -757,7 +762,7 @@ let (term_as_formula' :
                                                                     a3)
                                                                   else
                                                                     if
-                                                                    (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                    (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.lte_qn
                                                                     then
@@ -766,7 +771,7 @@ let (term_as_formula' :
                                                                     a3)
                                                                     else
                                                                     if
-                                                                    (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                    (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.gt_qn
                                                                     then
@@ -775,7 +780,7 @@ let (term_as_formula' :
                                                                     a3)
                                                                     else
                                                                     if
-                                                                    (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                    (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.gte_qn
                                                                     then
@@ -790,12 +795,12 @@ let (term_as_formula' :
                                                           | (FStar_Tactics_NamedView.Tv_FVar
                                                              fv,
                                                              (a1,
-                                                              FStar_Reflection_V2_Data.Q_Explicit)::
+                                                              FStarC_Reflection_V2_Data.Q_Explicit)::
                                                              (a2,
-                                                              FStar_Reflection_V2_Data.Q_Explicit)::[])
+                                                              FStarC_Reflection_V2_Data.Q_Explicit)::[])
                                                               ->
                                                               if
-                                                                (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                    fv)
                                                                   =
                                                                   FStar_Reflection_Const.imp_qn
@@ -804,7 +809,7 @@ let (term_as_formula' :
                                                                   (a1, a2)
                                                               else
                                                                 if
-                                                                  (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                  (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.and_qn
                                                                 then
@@ -812,7 +817,7 @@ let (term_as_formula' :
                                                                     (a1, a2)
                                                                 else
                                                                   if
-                                                                    (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                    (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.iff_qn
                                                                   then
@@ -820,7 +825,7 @@ let (term_as_formula' :
                                                                     (a1, a2)
                                                                   else
                                                                     if
-                                                                    (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                    (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.or_qn
                                                                     then
@@ -828,7 +833,7 @@ let (term_as_formula' :
                                                                     (a1, a2)
                                                                     else
                                                                     if
-                                                                    (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                    (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.eq2_qn
                                                                     then
@@ -838,7 +843,7 @@ let (term_as_formula' :
                                                                     a1, a2)
                                                                     else
                                                                     if
-                                                                    (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                    (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.eq1_qn
                                                                     then
@@ -854,12 +859,12 @@ let (term_as_formula' :
                                                           | (FStar_Tactics_NamedView.Tv_FVar
                                                              fv,
                                                              (a1,
-                                                              FStar_Reflection_V2_Data.Q_Implicit)::
+                                                              FStarC_Reflection_V2_Data.Q_Implicit)::
                                                              (a2,
-                                                              FStar_Reflection_V2_Data.Q_Explicit)::[])
+                                                              FStarC_Reflection_V2_Data.Q_Explicit)::[])
                                                               ->
                                                               if
-                                                                (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                    fv)
                                                                   =
                                                                   FStar_Reflection_Const.forall_qn
@@ -868,7 +873,7 @@ let (term_as_formula' :
                                                                   a2
                                                               else
                                                                 if
-                                                                  (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                  (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.exists_qn
                                                                 then
@@ -882,33 +887,33 @@ let (term_as_formula' :
                                                           | (FStar_Tactics_NamedView.Tv_FVar
                                                              fv,
                                                              (a,
-                                                              FStar_Reflection_V2_Data.Q_Explicit)::[])
+                                                              FStarC_Reflection_V2_Data.Q_Explicit)::[])
                                                               ->
                                                               if
-                                                                (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                    fv)
                                                                   =
                                                                   FStar_Reflection_Const.not_qn
                                                               then Not a
                                                               else
                                                                 if
-                                                                  (FStar_Reflection_V2_Builtins.inspect_fv
+                                                                  (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                     fv) =
                                                                     FStar_Reflection_Const.b2t_qn
                                                                 then
                                                                   (if
                                                                     term_eq a
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_Const
-                                                                    FStar_Reflection_V2_Data.C_False))
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_Const
+                                                                    FStarC_Reflection_V2_Data.C_False))
                                                                    then
                                                                     False_
                                                                    else
                                                                     if
                                                                     term_eq a
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_Const
-                                                                    FStar_Reflection_V2_Data.C_True))
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_Const
+                                                                    FStarC_Reflection_V2_Data.C_True))
                                                                     then
                                                                     True_
                                                                     else
@@ -928,7 +933,7 @@ let (term_as_formula' :
                                                                     t1))))))
                                             uu___5))) uu___3)))
             | FStar_Tactics_NamedView.Tv_Const
-                (FStar_Reflection_V2_Data.C_Int i) ->
+                (FStarC_Reflection_V2_Data.C_Int i) ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.lift_div_tac
@@ -993,21 +998,21 @@ let (term_as_formula' :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.raise
-                        (FStar_Tactics_Common.TacticFailure
-                           ([FStar_Pprint.arbitrary_string
+                        (FStarC_Tactics_Common.TacticFailure
+                           ([FStarC_Pprint.arbitrary_string
                                "Unexpected: term_as_formula"],
                              FStar_Pervasives_Native.None))))) uu___1)
 let _ =
-  FStar_Tactics_Native.register_tactic
+  FStarC_Tactics_Native.register_tactic
     "FStar.Reflection.V2.Formula.term_as_formula'" (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Reflection.V2.Formula.term_as_formula' (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 term_as_formula')
-               FStar_Reflection_V2_Embeddings.e_term e_formula psc ncb us
+               (FStarC_Tactics_Native.from_tactic_1 term_as_formula')
+               FStarC_Reflection_V2_Embeddings.e_term e_formula psc ncb us
                args)
 let (term_as_formula :
   FStar_Tactics_NamedView.term ->
@@ -1036,91 +1041,91 @@ let (formula_as_term_view : formula -> FStar_Tactics_NamedView.term_view) =
            fun a ->
              FStar_Tactics_NamedView.Tv_App
                ((FStar_Tactics_NamedView.pack tv1), a)) tv args in
-    let e = FStar_Reflection_V2_Data.Q_Explicit in
-    let i = FStar_Reflection_V2_Data.Q_Implicit in
+    let e = FStarC_Reflection_V2_Data.Q_Explicit in
+    let i = FStarC_Reflection_V2_Data.Q_Implicit in
     match f with
     | True_ ->
         FStar_Tactics_NamedView.Tv_FVar
-          (FStar_Reflection_V2_Builtins.pack_fv
+          (FStarC_Reflection_V2_Builtins.pack_fv
              FStar_Reflection_Const.true_qn)
     | False_ ->
         FStar_Tactics_NamedView.Tv_FVar
-          (FStar_Reflection_V2_Builtins.pack_fv
+          (FStarC_Reflection_V2_Builtins.pack_fv
              FStar_Reflection_Const.false_qn)
     | Comp (Eq (FStar_Pervasives_Native.None), l, r) ->
         mk_app'
           (FStar_Tactics_NamedView.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv
+             (FStarC_Reflection_V2_Builtins.pack_fv
                 FStar_Reflection_Const.eq2_qn)) [(l, e); (r, e)]
     | Comp (Eq (FStar_Pervasives_Native.Some t), l, r) ->
         mk_app'
           (FStar_Tactics_NamedView.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv
+             (FStarC_Reflection_V2_Builtins.pack_fv
                 FStar_Reflection_Const.eq2_qn)) [(t, i); (l, e); (r, e)]
     | Comp (BoolEq (FStar_Pervasives_Native.None), l, r) ->
         mk_app'
           (FStar_Tactics_NamedView.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv
+             (FStarC_Reflection_V2_Builtins.pack_fv
                 FStar_Reflection_Const.eq1_qn)) [(l, e); (r, e)]
     | Comp (BoolEq (FStar_Pervasives_Native.Some t), l, r) ->
         mk_app'
           (FStar_Tactics_NamedView.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv
+             (FStarC_Reflection_V2_Builtins.pack_fv
                 FStar_Reflection_Const.eq1_qn)) [(t, i); (l, e); (r, e)]
     | Comp (Lt, l, r) ->
         mk_app'
           (FStar_Tactics_NamedView.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv
+             (FStarC_Reflection_V2_Builtins.pack_fv
                 FStar_Reflection_Const.lt_qn)) [(l, e); (r, e)]
     | Comp (Le, l, r) ->
         mk_app'
           (FStar_Tactics_NamedView.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv
+             (FStarC_Reflection_V2_Builtins.pack_fv
                 FStar_Reflection_Const.lte_qn)) [(l, e); (r, e)]
     | Comp (Gt, l, r) ->
         mk_app'
           (FStar_Tactics_NamedView.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv
+             (FStarC_Reflection_V2_Builtins.pack_fv
                 FStar_Reflection_Const.gt_qn)) [(l, e); (r, e)]
     | Comp (Ge, l, r) ->
         mk_app'
           (FStar_Tactics_NamedView.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv
+             (FStarC_Reflection_V2_Builtins.pack_fv
                 FStar_Reflection_Const.gte_qn)) [(l, e); (r, e)]
     | And (p, q) ->
         mk_app'
           (FStar_Tactics_NamedView.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv
+             (FStarC_Reflection_V2_Builtins.pack_fv
                 FStar_Reflection_Const.and_qn)) [(p, e); (q, e)]
     | Or (p, q) ->
         mk_app'
           (FStar_Tactics_NamedView.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv
+             (FStarC_Reflection_V2_Builtins.pack_fv
                 FStar_Reflection_Const.or_qn)) [(p, e); (q, e)]
     | Implies (p, q) ->
         mk_app'
           (FStar_Tactics_NamedView.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv
+             (FStarC_Reflection_V2_Builtins.pack_fv
                 FStar_Reflection_Const.imp_qn)) [(p, e); (q, e)]
     | Not p ->
         mk_app'
           (FStar_Tactics_NamedView.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv
+             (FStarC_Reflection_V2_Builtins.pack_fv
                 FStar_Reflection_Const.not_qn)) [(p, e)]
     | Iff (p, q) ->
         mk_app'
           (FStar_Tactics_NamedView.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv
+             (FStarC_Reflection_V2_Builtins.pack_fv
                 FStar_Reflection_Const.iff_qn)) [(p, e); (q, e)]
     | Forall (b, sort, t) -> FStar_Tactics_NamedView.Tv_Unknown
     | Exists (b, sort, t) -> FStar_Tactics_NamedView.Tv_Unknown
     | App (p, q) ->
         FStar_Tactics_NamedView.Tv_App
-          (p, (q, FStar_Reflection_V2_Data.Q_Explicit))
+          (p, (q, FStarC_Reflection_V2_Data.Q_Explicit))
     | Name b -> FStar_Tactics_NamedView.Tv_Var b
     | FV fv -> FStar_Tactics_NamedView.Tv_FVar fv
     | IntLit i1 ->
-        FStar_Tactics_NamedView.Tv_Const (FStar_Reflection_V2_Data.C_Int i1)
+        FStar_Tactics_NamedView.Tv_Const (FStarC_Reflection_V2_Data.C_Int i1)
     | F_Unknown -> FStar_Tactics_NamedView.Tv_Unknown
 let (formula_as_term : formula -> FStar_Tactics_NamedView.term) =
   fun f -> FStar_Tactics_NamedView.pack (formula_as_term_view f)
@@ -1148,7 +1153,7 @@ let (namedv_to_string :
          (fun namedvv ->
             Obj.magic
               (FStar_Tactics_Unseal.unseal
-                 namedvv.FStar_Reflection_V2_Data.ppname)) uu___1)
+                 namedvv.FStarC_Reflection_V2_Data.ppname)) uu___1)
 let (formula_to_string :
   formula -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
@@ -1178,7 +1183,8 @@ let (formula_to_string :
                            (Obj.repr
                               (let uu___2 =
                                  let uu___3 =
-                                   FStar_Tactics_V2_Builtins.term_to_string t in
+                                   FStarC_Tactics_V2_Builtins.term_to_string
+                                     t in
                                  FStar_Tactics_Effect.tac_bind
                                    (FStar_Sealed.seal
                                       (Obj.magic
@@ -1239,7 +1245,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V2_Builtins.term_to_string l in
+                                 FStarC_Tactics_V2_Builtins.term_to_string l in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -1263,7 +1269,7 @@ let (formula_to_string :
                                        let uu___7 =
                                          let uu___8 =
                                            let uu___9 =
-                                             FStar_Tactics_V2_Builtins.term_to_string
+                                             FStarC_Tactics_V2_Builtins.term_to_string
                                                r in
                                            FStar_Tactics_Effect.tac_bind
                                              (FStar_Sealed.seal
@@ -1407,7 +1413,8 @@ let (formula_to_string :
                            (Obj.repr
                               (let uu___2 =
                                  let uu___3 =
-                                   FStar_Tactics_V2_Builtins.term_to_string t in
+                                   FStarC_Tactics_V2_Builtins.term_to_string
+                                     t in
                                  FStar_Tactics_Effect.tac_bind
                                    (FStar_Sealed.seal
                                       (Obj.magic
@@ -1468,7 +1475,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V2_Builtins.term_to_string l in
+                                 FStarC_Tactics_V2_Builtins.term_to_string l in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -1492,7 +1499,7 @@ let (formula_to_string :
                                        let uu___7 =
                                          let uu___8 =
                                            let uu___9 =
-                                             FStar_Tactics_V2_Builtins.term_to_string
+                                             FStarC_Tactics_V2_Builtins.term_to_string
                                                r in
                                            FStar_Tactics_Effect.tac_bind
                                              (FStar_Sealed.seal
@@ -1624,7 +1631,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V2_Builtins.term_to_string l in
+                   let uu___1 = FStarC_Tactics_V2_Builtins.term_to_string l in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -1644,7 +1651,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V2_Builtins.term_to_string r in
+                                 FStarC_Tactics_V2_Builtins.term_to_string r in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -1727,7 +1734,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V2_Builtins.term_to_string l in
+                   let uu___1 = FStarC_Tactics_V2_Builtins.term_to_string l in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -1747,7 +1754,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V2_Builtins.term_to_string r in
+                                 FStarC_Tactics_V2_Builtins.term_to_string r in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -1830,7 +1837,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V2_Builtins.term_to_string l in
+                   let uu___1 = FStarC_Tactics_V2_Builtins.term_to_string l in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -1850,7 +1857,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V2_Builtins.term_to_string r in
+                                 FStarC_Tactics_V2_Builtins.term_to_string r in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -1933,7 +1940,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V2_Builtins.term_to_string l in
+                   let uu___1 = FStarC_Tactics_V2_Builtins.term_to_string l in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -1953,7 +1960,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V2_Builtins.term_to_string r in
+                                 FStarC_Tactics_V2_Builtins.term_to_string r in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -2036,7 +2043,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V2_Builtins.term_to_string p in
+                   let uu___1 = FStarC_Tactics_V2_Builtins.term_to_string p in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -2056,7 +2063,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V2_Builtins.term_to_string q in
+                                 FStarC_Tactics_V2_Builtins.term_to_string q in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -2139,7 +2146,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V2_Builtins.term_to_string p in
+                   let uu___1 = FStarC_Tactics_V2_Builtins.term_to_string p in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -2159,7 +2166,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V2_Builtins.term_to_string q in
+                                 FStarC_Tactics_V2_Builtins.term_to_string q in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -2242,7 +2249,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V2_Builtins.term_to_string p in
+                   let uu___1 = FStarC_Tactics_V2_Builtins.term_to_string p in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -2262,7 +2269,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V2_Builtins.term_to_string q in
+                                 FStarC_Tactics_V2_Builtins.term_to_string q in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -2345,7 +2352,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V2_Builtins.term_to_string p in
+                   let uu___1 = FStarC_Tactics_V2_Builtins.term_to_string p in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -2382,7 +2389,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V2_Builtins.term_to_string p in
+                   let uu___1 = FStarC_Tactics_V2_Builtins.term_to_string p in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -2402,7 +2409,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V2_Builtins.term_to_string q in
+                                 FStarC_Tactics_V2_Builtins.term_to_string q in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -2485,7 +2492,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V2_Builtins.term_to_string t in
+                   let uu___1 = FStarC_Tactics_V2_Builtins.term_to_string t in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -2522,7 +2529,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V2_Builtins.term_to_string t in
+                   let uu___1 = FStarC_Tactics_V2_Builtins.term_to_string t in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -2559,7 +2566,7 @@ let (formula_to_string :
            Obj.magic
              (Obj.repr
                 (let uu___ =
-                   let uu___1 = FStar_Tactics_V2_Builtins.term_to_string p in
+                   let uu___1 = FStarC_Tactics_V2_Builtins.term_to_string p in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
                         (Obj.magic
@@ -2579,7 +2586,7 @@ let (formula_to_string :
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V2_Builtins.term_to_string q in
+                                 FStarC_Tactics_V2_Builtins.term_to_string q in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -2703,7 +2710,7 @@ let (formula_to_string :
                       Prims.strcat "FV ("
                         (Prims.strcat
                            (FStar_Reflection_V2_Derived.flatten_name
-                              (FStar_Reflection_V2_Builtins.inspect_fv fv))
+                              (FStarC_Reflection_V2_Builtins.inspect_fv fv))
                            ")"))))
        | IntLit i ->
            Obj.magic

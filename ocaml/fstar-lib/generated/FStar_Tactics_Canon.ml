@@ -6,9 +6,9 @@ let (step :
   fun t ->
     let uu___ =
       FStar_Tactics_V2_Derived.apply_lemma
-        (FStar_Reflection_V2_Builtins.pack_ln
-           (FStar_Reflection_V2_Data.Tv_FVar
-              (FStar_Reflection_V2_Builtins.pack_fv
+        (FStarC_Reflection_V2_Builtins.pack_ln
+           (FStarC_Reflection_V2_Data.Tv_FVar
+              (FStarC_Reflection_V2_Builtins.pack_fv
                  ["FStar"; "Tactics"; "Canon"; "Lemmas"; "trans"]))) in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
@@ -69,7 +69,7 @@ let rec (canon_point :
                  FStar_Reflection_V2_Arith.Lit b)
                 ->
                 let uu___1 =
-                  FStar_Tactics_V2_Builtins.norm [FStar_Pervasives.primops] in
+                  FStarC_Tactics_V2_Builtins.norm [FStar_Pervasives.primops] in
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
@@ -115,7 +115,7 @@ let rec (canon_point :
                  FStar_Reflection_V2_Arith.Lit b)
                 ->
                 let uu___1 =
-                  FStar_Tactics_V2_Builtins.norm
+                  FStarC_Tactics_V2_Builtins.norm
                     [FStar_Pervasives.delta; FStar_Pervasives.primops] in
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
@@ -160,9 +160,9 @@ let rec (canon_point :
             | FStar_Reflection_V2_Arith.Neg e1 ->
                 let uu___1 =
                   step_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "Canon";
@@ -192,9 +192,9 @@ let rec (canon_point :
                 (a, FStar_Reflection_V2_Arith.Plus (b, c)) ->
                 let uu___1 =
                   step_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar"; "Tactics"; "Canon"; "Lemmas"; "distr"]))) in
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
@@ -213,9 +213,9 @@ let rec (canon_point :
                         (fun uu___2 ->
                            let uu___3 =
                              step_lemma
-                               (FStar_Reflection_V2_Builtins.pack_ln
-                                  (FStar_Reflection_V2_Data.Tv_FVar
-                                     (FStar_Reflection_V2_Builtins.pack_fv
+                               (FStarC_Reflection_V2_Builtins.pack_ln
+                                  (FStarC_Reflection_V2_Data.Tv_FVar
+                                     (FStarC_Reflection_V2_Builtins.pack_fv
                                         ["FStar";
                                         "Tactics";
                                         "Canon";
@@ -302,9 +302,9 @@ let rec (canon_point :
                 (FStar_Reflection_V2_Arith.Plus (a, b), c) ->
                 let uu___1 =
                   step_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar"; "Tactics"; "Canon"; "Lemmas"; "distl"]))) in
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
@@ -323,9 +323,9 @@ let rec (canon_point :
                         (fun uu___2 ->
                            let uu___3 =
                              step_lemma
-                               (FStar_Reflection_V2_Builtins.pack_ln
-                                  (FStar_Reflection_V2_Data.Tv_FVar
-                                     (FStar_Reflection_V2_Builtins.pack_fv
+                               (FStarC_Reflection_V2_Builtins.pack_ln
+                                  (FStarC_Reflection_V2_Data.Tv_FVar
+                                     (FStarC_Reflection_V2_Builtins.pack_fv
                                         ["FStar";
                                         "Tactics";
                                         "Canon";
@@ -412,9 +412,9 @@ let rec (canon_point :
                 (a, FStar_Reflection_V2_Arith.Mult (b, c)) ->
                 let uu___1 =
                   step_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "Canon";
@@ -437,9 +437,9 @@ let rec (canon_point :
                         (fun uu___2 ->
                            let uu___3 =
                              step_lemma
-                               (FStar_Reflection_V2_Builtins.pack_ln
-                                  (FStar_Reflection_V2_Data.Tv_FVar
-                                     (FStar_Reflection_V2_Builtins.pack_fv
+                               (FStarC_Reflection_V2_Builtins.pack_ln
+                                  (FStarC_Reflection_V2_Data.Tv_FVar
+                                     (FStarC_Reflection_V2_Builtins.pack_fv
                                         ["FStar";
                                         "Tactics";
                                         "Canon";
@@ -523,9 +523,9 @@ let rec (canon_point :
                 (a, FStar_Reflection_V2_Arith.Plus (b, c)) ->
                 let uu___1 =
                   step_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "Canon";
@@ -548,9 +548,9 @@ let rec (canon_point :
                         (fun uu___2 ->
                            let uu___3 =
                              step_lemma
-                               (FStar_Reflection_V2_Builtins.pack_ln
-                                  (FStar_Reflection_V2_Data.Tv_FVar
-                                     (FStar_Reflection_V2_Builtins.pack_fv
+                               (FStarC_Reflection_V2_Builtins.pack_ln
+                                  (FStarC_Reflection_V2_Data.Tv_FVar
+                                     (FStarC_Reflection_V2_Builtins.pack_fv
                                         ["FStar";
                                         "Tactics";
                                         "Canon";
@@ -637,9 +637,9 @@ let rec (canon_point :
                 then
                   let uu___1 =
                     step_lemma
-                      (FStar_Reflection_V2_Builtins.pack_ln
-                         (FStar_Reflection_V2_Data.Tv_FVar
-                            (FStar_Reflection_V2_Builtins.pack_fv
+                      (FStarC_Reflection_V2_Builtins.pack_ln
+                         (FStarC_Reflection_V2_Data.Tv_FVar
+                            (FStarC_Reflection_V2_Builtins.pack_fv
                                ["FStar";
                                "Tactics";
                                "Canon";
@@ -662,9 +662,9 @@ let rec (canon_point :
                           (fun uu___2 ->
                              let uu___3 =
                                FStar_Tactics_V2_Derived.apply_lemma
-                                 (FStar_Reflection_V2_Builtins.pack_ln
-                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                       (FStar_Reflection_V2_Builtins.pack_fv
+                                 (FStarC_Reflection_V2_Builtins.pack_ln
+                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                       (FStarC_Reflection_V2_Builtins.pack_fv
                                           ["FStar";
                                           "Tactics";
                                           "Canon";
@@ -752,9 +752,9 @@ let rec (canon_point :
                 then
                   let uu___1 =
                     step_lemma
-                      (FStar_Reflection_V2_Builtins.pack_ln
-                         (FStar_Reflection_V2_Data.Tv_FVar
-                            (FStar_Reflection_V2_Builtins.pack_fv
+                      (FStarC_Reflection_V2_Builtins.pack_ln
+                         (FStarC_Reflection_V2_Data.Tv_FVar
+                            (FStarC_Reflection_V2_Builtins.pack_fv
                                ["FStar";
                                "Tactics";
                                "Canon";
@@ -777,9 +777,9 @@ let rec (canon_point :
                           (fun uu___2 ->
                              let uu___3 =
                                FStar_Tactics_V2_Derived.apply_lemma
-                                 (FStar_Reflection_V2_Builtins.pack_ln
-                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                       (FStar_Reflection_V2_Builtins.pack_fv
+                                 (FStarC_Reflection_V2_Builtins.pack_ln
+                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                       (FStarC_Reflection_V2_Builtins.pack_fv
                                           ["FStar";
                                           "Tactics";
                                           "Canon";
@@ -865,9 +865,9 @@ let rec (canon_point :
                 uu___1 = Prims.int_zero ->
                 let uu___2 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "Canon";
@@ -893,9 +893,9 @@ let rec (canon_point :
                 uu___1 = Prims.int_zero ->
                 let uu___2 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "Canon";
@@ -922,9 +922,9 @@ let rec (canon_point :
                 then
                   let uu___1 =
                     FStar_Tactics_V2_Derived.apply_lemma
-                      (FStar_Reflection_V2_Builtins.pack_ln
-                         (FStar_Reflection_V2_Data.Tv_FVar
-                            (FStar_Reflection_V2_Builtins.pack_fv
+                      (FStarC_Reflection_V2_Builtins.pack_ln
+                         (FStarC_Reflection_V2_Data.Tv_FVar
+                            (FStarC_Reflection_V2_Builtins.pack_fv
                                ["FStar";
                                "Tactics";
                                "Canon";
@@ -953,9 +953,9 @@ let rec (canon_point :
                 uu___1 = Prims.int_zero ->
                 let uu___3 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "Canon";
@@ -983,9 +983,9 @@ let rec (canon_point :
                 uu___2 = Prims.int_zero ->
                 let uu___3 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "Canon";
@@ -1013,9 +1013,9 @@ let rec (canon_point :
                 uu___1 = Prims.int_one ->
                 let uu___2 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "Canon";
@@ -1041,9 +1041,9 @@ let rec (canon_point :
                 uu___1 = Prims.int_one ->
                 let uu___2 =
                   FStar_Tactics_V2_Derived.apply_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "Canon";
@@ -1070,9 +1070,9 @@ let rec (canon_point :
                 then
                   let uu___1 =
                     FStar_Tactics_V2_Derived.apply_lemma
-                      (FStar_Reflection_V2_Builtins.pack_ln
-                         (FStar_Reflection_V2_Data.Tv_FVar
-                            (FStar_Reflection_V2_Builtins.pack_fv
+                      (FStarC_Reflection_V2_Builtins.pack_ln
+                         (FStarC_Reflection_V2_Data.Tv_FVar
+                            (FStarC_Reflection_V2_Builtins.pack_fv
                                ["FStar";
                                "Tactics";
                                "Canon";
@@ -1099,9 +1099,9 @@ let rec (canon_point :
             | FStar_Reflection_V2_Arith.Minus (a, b) ->
                 let uu___1 =
                   step_lemma
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_FVar
-                          (FStar_Reflection_V2_Builtins.pack_fv
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
                              ["FStar";
                              "Tactics";
                              "Canon";
@@ -1124,9 +1124,9 @@ let rec (canon_point :
                         (fun uu___2 ->
                            let uu___3 =
                              step_lemma
-                               (FStar_Reflection_V2_Builtins.pack_ln
-                                  (FStar_Reflection_V2_Data.Tv_FVar
-                                     (FStar_Reflection_V2_Builtins.pack_fv
+                               (FStarC_Reflection_V2_Builtins.pack_ln
+                                  (FStarC_Reflection_V2_Data.Tv_FVar
+                                     (FStarC_Reflection_V2_Builtins.pack_fv
                                         ["FStar";
                                         "Tactics";
                                         "Canon";
@@ -1248,7 +1248,7 @@ let rec (canon_point :
 let (canon_point_entry : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
-    let uu___1 = FStar_Tactics_V2_Builtins.norm [FStar_Pervasives.primops] in
+    let uu___1 = FStarC_Tactics_V2_Builtins.norm [FStar_Pervasives.primops] in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -1362,7 +1362,7 @@ let (canon_point_entry : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                   | uu___6 ->
                                       let uu___7 =
                                         let uu___8 =
-                                          FStar_Tactics_V2_Builtins.term_to_string
+                                          FStarC_Tactics_V2_Builtins.term_to_string
                                             g in
                                         FStar_Tactics_Effect.tac_bind
                                           (FStar_Sealed.seal
@@ -1413,14 +1413,14 @@ let (canon_point_entry : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
 let (canon : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ -> FStar_Tactics_V2_Derived.pointwise canon_point_entry
 let _ =
-  FStar_Tactics_Native.register_tactic "FStar.Tactics.Canon.canon"
+  FStarC_Tactics_Native.register_tactic "FStar.Tactics.Canon.canon"
     (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.Canon.canon (plugin)"
-               (FStar_Tactics_Native.from_tactic_1 canon)
-               FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit
-               psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_1 canon)
+               FStarC_Syntax_Embeddings.e_unit
+               FStarC_Syntax_Embeddings.e_unit psc ncb us args)

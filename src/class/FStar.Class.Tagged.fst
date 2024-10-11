@@ -1,1 +1,0 @@
-module FStar.Class.Tagged
