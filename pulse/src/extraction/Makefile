@@ -10,6 +10,7 @@ include $(FSTAR_HOME)/ulib/gmake/fstar.mk # and $(FSTAR) for all sub-make calls
 include $(FSTAR_HOME)/src/Makefile.boot.common
 
 OUTPUT_DIRECTORY = $(CURDIR)/../ocaml/plugin/generated
+FSTAR_BOOT_OPTIONS += --MLish_effect FStarC.Compiler.Effect
 FSTAR_C=$(RUNLIM) $(FSTAR_EXE) $(SIL) $(FSTAR_BOOT_OPTIONS)
 
 EXTRACT_FILES=ExtractPulse.ml ExtractPulseC.ml

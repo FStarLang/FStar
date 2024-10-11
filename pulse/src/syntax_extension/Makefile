@@ -13,7 +13,7 @@ OUTPUT_DIRECTORY = $(CURDIR)/../ocaml/plugin/generated
 ADDITIONAL_INCLUDES=$(FSTAR_HOME)/src/.cache.boot
 
 FSTAR_OPTIONS= \
-	$(OTHERFLAGS) --lax --MLish \
+	$(OTHERFLAGS) --lax --MLish --MLish_effect FStarC.Compiler.Effect \
 	--no_location_info --warn_error -271-272-241-319-274 \
 	$(addprefix --include , $(addprefix $(FSTAR_HOME)/src/,$(INCLUDE_PATHS))) \
 	$(addprefix --include , $(ADDITIONAL_INCLUDES)) \
