@@ -13,5 +13,5 @@
 )
 
 (menhir
- (modules pulseparser FStar_Parser_Parse)
+ (modules pulseparser FStarC_Parser_Parse)
  (merge_into Pulse_FStar_Parser))
