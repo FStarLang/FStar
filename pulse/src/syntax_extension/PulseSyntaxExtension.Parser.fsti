@@ -15,6 +15,7 @@
 *)
 
 module PulseSyntaxExtension.Parser
+open FStarC
 
 val parse_peek_id (contents:string)
                   (r:FStar.Compiler.Range.range)

@@ -15,6 +15,7 @@
 *)
 
 module PulseSyntaxExtension.Sugar
+open FStarC
 open FStar.Ident
 module A = FStar.Parser.AST
 module AU = FStar.Parser.AST.Util

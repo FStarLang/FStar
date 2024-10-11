@@ -15,6 +15,7 @@
 *)
 
 module PulseSyntaxExtension.ASTBuilder
+open FStarC
 open FStar.Compiler.Effect
 open FStar.Parser.AST
 open FStar.Parser.AST.Util

@@ -15,6 +15,7 @@
 *)
 
 module PulseSyntaxExtension.Err
+open FStarC
 module R = FStar.Compiler.Range
 open FStar.Compiler.Effect
 open FStar.Class.HasRange

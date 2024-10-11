@@ -15,6 +15,7 @@
 *)
 
 module PulseSyntaxExtension.SyntaxWrapper
+open FStarC
 open FStar.Ident
 let range = FStar.Compiler.Range.range
 let var = nat

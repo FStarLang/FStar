@@ -15,6 +15,7 @@
 *)
 
 module PulseSyntaxExtension.Desugar
+open FStarC
 open FStar.Compiler.Effect
 module Sugar = PulseSyntaxExtension.Sugar
 module SW = PulseSyntaxExtension.SyntaxWrapper

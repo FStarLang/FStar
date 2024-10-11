@@ -15,6 +15,7 @@
 *)
 
 module PulseSyntaxExtension.TransformRValues
+open FStarC
 module Sugar = PulseSyntaxExtension.Sugar
 module Err = PulseSyntaxExtension.Err
 module PulseEnv = PulseSyntaxExtension.Env

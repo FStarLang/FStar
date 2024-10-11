@@ -15,6 +15,7 @@
 *)
 
 module PulseSyntaxExtension.Env
+open FStarC
 open FStar.Compiler.Effect
 // module Sugar = PulseSugar
 module SW = PulseSyntaxExtension.SyntaxWrapper
