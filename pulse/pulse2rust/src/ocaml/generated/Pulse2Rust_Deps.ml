@@ -3,7 +3,8 @@ let (empty_defs : Pulse2Rust_Env.reachable_defs) =
   Obj.magic
     (FStarC_Class_Setlike.empty ()
        (Obj.magic
-          (FStarC_Compiler_RBSet.setlike_rbset FStarC_Class_Ord.ord_string)) ())
+          (FStarC_Compiler_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))
+       ())
 let (singleton :
   FStarC_Extraction_ML_Syntax.mlpath -> Pulse2Rust_Env.reachable_defs) =
   fun uu___ ->
@@ -12,8 +13,8 @@ let (singleton :
        Obj.magic
          (FStarC_Class_Setlike.singleton ()
             (Obj.magic
-               (FStarC_Compiler_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))
-            uu___)) uu___
+               (FStarC_Compiler_RBSet.setlike_rbset
+                  FStarC_Class_Ord.ord_string)) uu___)) uu___
 let reachable_defs_list :
   'a .
     ('a -> Pulse2Rust_Env.reachable_defs) ->
@@ -209,8 +210,8 @@ let rec (reachable_defs_expr' :
                      (FStarC_Class_Setlike.union ()
                         (Obj.magic
                            (FStarC_Compiler_RBSet.setlike_rbset
-                              FStarC_Class_Ord.ord_string)) (Obj.magic uu___2)
-                        (Obj.magic uu___3)) in
+                              FStarC_Class_Ord.ord_string))
+                        (Obj.magic uu___2) (Obj.magic uu___3)) in
                  FStarC_Class_Setlike.union ()
                    (Obj.magic
                       (FStarC_Compiler_RBSet.setlike_rbset
@@ -265,8 +266,8 @@ let rec (reachable_defs_expr' :
                      (FStarC_Class_Setlike.union ()
                         (Obj.magic
                            (FStarC_Compiler_RBSet.setlike_rbset
-                              FStarC_Class_Ord.ord_string)) (Obj.magic uu___2)
-                        (Obj.magic uu___3)) in
+                              FStarC_Class_Ord.ord_string))
+                        (Obj.magic uu___2) (Obj.magic uu___3)) in
                  FStarC_Class_Setlike.union ()
                    (Obj.magic
                       (FStarC_Compiler_RBSet.setlike_rbset
@@ -301,8 +302,9 @@ and (reachable_defs_expr :
        Obj.magic
          (FStarC_Class_Setlike.union ()
             (Obj.magic
-               (FStarC_Compiler_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))
-            (Obj.magic uu___) (Obj.magic uu___1))) uu___
+               (FStarC_Compiler_RBSet.setlike_rbset
+                  FStarC_Class_Ord.ord_string)) (Obj.magic uu___)
+            (Obj.magic uu___1))) uu___
 and (reachable_defs_mlbranch :
   FStarC_Extraction_ML_Syntax.mlbranch -> Pulse2Rust_Env.reachable_defs) =
   fun uu___ ->
@@ -337,10 +339,12 @@ and (reachable_defs_mllb :
        Obj.magic
          (FStarC_Class_Setlike.union ()
             (Obj.magic
-               (FStarC_Compiler_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))
-            (Obj.magic uu___) (Obj.magic uu___1))) uu___
+               (FStarC_Compiler_RBSet.setlike_rbset
+                  FStarC_Class_Ord.ord_string)) (Obj.magic uu___)
+            (Obj.magic uu___1))) uu___
 and (reachable_defs_mlletbinding :
-  FStarC_Extraction_ML_Syntax.mlletbinding -> Pulse2Rust_Env.reachable_defs) =
+  FStarC_Extraction_ML_Syntax.mlletbinding -> Pulse2Rust_Env.reachable_defs)
+  =
   fun uu___ ->
     match uu___ with
     | (uu___1, lbs) -> reachable_defs_list reachable_defs_mllb lbs
@@ -363,7 +367,8 @@ let (reachable_defs_mltybody :
                       match uu___2 with
                       | (uu___3, t1) -> reachable_defs_mlty t1) dts) cts
 let (reachable_defs_one_mltydecl :
-  FStarC_Extraction_ML_Syntax.one_mltydecl -> Pulse2Rust_Env.reachable_defs) =
+  FStarC_Extraction_ML_Syntax.one_mltydecl -> Pulse2Rust_Env.reachable_defs)
+  =
   fun t ->
     reachable_defs_option reachable_defs_mltybody
       t.FStarC_Extraction_ML_Syntax.tydecl_defn
@@ -450,7 +455,7 @@ let rec (topsort :
            then
              let uu___2 =
                FStarC_Compiler_Util.format1 "cyclic dependency: %s" root in
-             FStarC_Compiler_Effect.failwith uu___2
+             failwith uu___2
            else ());
           (let deps2 =
              FStarC_Compiler_List.filter
@@ -497,8 +502,6 @@ let rec (topsort_all :
          match uu___2 with
          | (grey, black1) ->
              (if (FStarC_Compiler_List.length grey) <> Prims.int_zero
-              then
-                FStarC_Compiler_Effect.failwith
-                  "topsort_all: not all files are reachable"
+              then failwith "topsort_all: not all files are reachable"
               else ();
               topsort_all d black1))

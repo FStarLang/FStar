@@ -135,11 +135,13 @@ let (should_extract_mlpath_with_symbol :
 let (rust_mod_name :
   FStarC_Extraction_ML_Syntax.mlsymbol Prims.list -> Prims.string) =
   fun path ->
-    let uu___ = FStarC_Compiler_List.map FStarC_Compiler_String.lowercase path in
+    let uu___ =
+      FStarC_Compiler_List.map FStarC_Compiler_String.lowercase path in
     FStarC_Compiler_String.concat "_" uu___
 let (extract_path_for_symbol :
   Pulse2Rust_Env.env ->
-    FStarC_Extraction_ML_Syntax.mlsymbol Prims.list -> Prims.string Prims.list)
+    FStarC_Extraction_ML_Syntax.mlsymbol Prims.list ->
+      Prims.string Prims.list)
   =
   fun g ->
     fun path ->
@@ -723,7 +725,8 @@ let rec (lb_init_and_def :
                    FStarC_Extraction_ML_Syntax.loc = uu___5;_},
                  uu___6)
                 ->
-                (((let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+                (((let uu___7 =
+                     FStarC_Extraction_ML_Syntax.string_of_mlpath p in
                    uu___7 = "Pulse.Lib.Vec.alloc") ||
                     (let uu___7 =
                        FStarC_Extraction_ML_Syntax.string_of_mlpath p in
@@ -733,7 +736,8 @@ let rec (lb_init_and_def :
                       FStarC_Extraction_ML_Syntax.string_of_mlpath p in
                     uu___7 = "Pulse.Lib.Mutex.lock"))
                   ||
-                  (let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+                  (let uu___7 =
+                     FStarC_Extraction_ML_Syntax.string_of_mlpath p in
                    uu___7 = "Pulse.Lib.MutexToken.lock")
             | uu___1 -> false in
           let uu___1 =
@@ -1519,14 +1523,14 @@ and (extract_mlexpr :
                FStarC_Extraction_ML_Syntax.MLE_Fun (uu___2, cond);
              FStarC_Extraction_ML_Syntax.mlty = uu___3;
              FStarC_Extraction_ML_Syntax.loc = uu___4;_}::{
-                                                           FStarC_Extraction_ML_Syntax.expr
-                                                             =
-                                                             FStarC_Extraction_ML_Syntax.MLE_Fun
-                                                             (uu___5, body);
-                                                           FStarC_Extraction_ML_Syntax.mlty
-                                                             = uu___6;
-                                                           FStarC_Extraction_ML_Syntax.loc
-                                                             = uu___7;_}::[])
+                                                            FStarC_Extraction_ML_Syntax.expr
+                                                              =
+                                                              FStarC_Extraction_ML_Syntax.MLE_Fun
+                                                              (uu___5, body);
+                                                            FStarC_Extraction_ML_Syntax.mlty
+                                                              = uu___6;
+                                                            FStarC_Extraction_ML_Syntax.loc
+                                                              = uu___7;_}::[])
           when
           let uu___8 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
           uu___8 = "Pulse.Lib.Dv.while_" ->
@@ -1680,8 +1684,7 @@ and (extract_mlexpr :
             match e.FStarC_Extraction_ML_Syntax.mlty with
             | FStarC_Extraction_ML_Syntax.MLTY_Named (uu___, p1) ->
                 enum_or_struct_name (FStar_Pervasives_Native.snd p1)
-            | uu___ ->
-                FStarC_Compiler_Effect.failwith "S.MLE_CTor: unexpected type" in
+            | uu___ -> failwith "S.MLE_CTor: unexpected type" in
           let dexpr =
             if is_native
             then
@@ -1919,9 +1922,10 @@ let (extract_generic_type_param_trait_bounds :
                         (fun e ->
                            match e.FStarC_Extraction_ML_Syntax.expr with
                            | FStarC_Extraction_ML_Syntax.MLE_Const
-                               (FStarC_Extraction_ML_Syntax.MLC_String s) -> s
+                               (FStarC_Extraction_ML_Syntax.MLC_String s) ->
+                               s
                            | uu___5 ->
-                               FStarC_Compiler_Effect.failwith
+                               failwith
                                  "unexpected generic type param bounds") l in
                     FStarC_Compiler_List.map
                       (fun bound -> FStarC_Compiler_Util.split bound "::")
@@ -1936,7 +1940,8 @@ let (extract_generic_type_params :
       (fun uu___ ->
          match uu___ with
          | { FStarC_Extraction_ML_Syntax.ty_param_name = ty_param_name;
-             FStarC_Extraction_ML_Syntax.ty_param_attrs = ty_param_attrs;_} ->
+             FStarC_Extraction_ML_Syntax.ty_param_attrs = ty_param_attrs;_}
+             ->
              let uu___1 = tyvar_of ty_param_name in
              let uu___2 =
                extract_generic_type_param_trait_bounds ty_param_attrs in
@@ -1964,8 +1969,8 @@ let (extract_top_level_lb :
                         bs in
                     let arg_attrs =
                       FStarC_Compiler_List.map
-                        (fun b -> b.FStarC_Extraction_ML_Syntax.mlbinder_attrs)
-                        bs in
+                        (fun b ->
+                           b.FStarC_Extraction_ML_Syntax.mlbinder_attrs) bs in
                     let uu___2 =
                       match lb.FStarC_Extraction_ML_Syntax.mllb_tysc with
                       | FStar_Pervasives_Native.Some tsc ->
@@ -1978,7 +1983,8 @@ let (extract_top_level_lb :
                           let uu___3 =
                             FStarC_Compiler_List.map
                               (fun b ->
-                                 b.FStarC_Extraction_ML_Syntax.mlbinder_ty) bs in
+                                 b.FStarC_Extraction_ML_Syntax.mlbinder_ty)
+                              bs in
                           ([], uu___3, FStar_Pervasives_Native.None) in
                     (match uu___2 with
                      | (tvars, arg_ts, ret_t) ->
@@ -2111,8 +2117,8 @@ let (extract_enum :
       fun d ->
         let uu___ = d.FStarC_Extraction_ML_Syntax.tydecl_defn in
         match uu___ with
-        | FStar_Pervasives_Native.Some (FStarC_Extraction_ML_Syntax.MLTD_DType
-            cts) ->
+        | FStar_Pervasives_Native.Some
+            (FStarC_Extraction_ML_Syntax.MLTD_DType cts) ->
             let uu___1 =
               let uu___2 =
                 let uu___3 =

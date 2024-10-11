@@ -3,13 +3,13 @@ let fail : 'a . Prims.string -> 'a =
   fun s ->
     let uu___ =
       FStarC_Compiler_Util.format1 "Pulse to Rust extraction failed: %s" s in
-    FStarC_Compiler_Effect.failwith uu___
+    failwith uu___
 let fail_nyi : 'a . Prims.string -> 'a =
   fun s ->
     let uu___ =
       FStarC_Compiler_Util.format1
         "Pulse to Rust extraction failed: no support yet for %s" s in
-    FStarC_Compiler_Effect.failwith uu___
+    failwith uu___
 type var = Prims.string
 type binding = (var * Pulse2Rust_Rust_Syntax.typ * Prims.bool)
 type reachable_defs = Prims.string FStarC_Compiler_RBSet.t

@@ -39,7 +39,8 @@ let (extract_one :
                        if uu___2
                        then (items, g1)
                        else
-                         (match d.FStarC_Extraction_ML_Syntax.mlmodule1_m with
+                         (match d.FStarC_Extraction_ML_Syntax.mlmodule1_m
+                          with
                           | FStarC_Extraction_ML_Syntax.MLM_Let
                               (FStarC_Extraction_ML_Syntax.NonRec,
                                {
@@ -49,7 +50,8 @@ let (extract_one :
                                    uu___4;
                                  FStarC_Extraction_ML_Syntax.mllb_add_unit =
                                    uu___5;
-                                 FStarC_Extraction_ML_Syntax.mllb_def = uu___6;
+                                 FStarC_Extraction_ML_Syntax.mllb_def =
+                                   uu___6;
                                  FStarC_Extraction_ML_Syntax.mllb_attrs =
                                    uu___7;
                                  FStarC_Extraction_ML_Syntax.mllb_meta =
@@ -114,7 +116,7 @@ let (read_all_ast_files : Prims.string Prims.list -> Pulse2Rust_Env.dict) =
            | FStar_Pervasives_Native.None ->
                let uu___2 =
                  FStarC_Compiler_Util.format1 "Could not load file %s" f in
-               FStarC_Compiler_Effect.failwith uu___2 in
+               failwith uu___2 in
          let uu___1 = file_to_module_name f in
          FStarC_Compiler_Util.smap_add d uu___1 contents) files;
     d
@@ -149,8 +151,8 @@ let rec (collect_reachable_defs_aux :
         let uu___ =
           FStarC_Class_Setlike.is_empty ()
             (Obj.magic
-               (FStarC_Compiler_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))
-            (Obj.magic worklist) in
+               (FStarC_Compiler_RBSet.setlike_rbset
+                  FStarC_Class_Ord.ord_string)) (Obj.magic worklist) in
         if uu___
         then reachable_defs
         else
@@ -288,8 +290,8 @@ let (extract :
                            | (s, g2) ->
                                let rust_fname =
                                  let uu___5 = rust_file_name f in
-                                 FStarC_Compiler_Util.concat_dir_filename odir
-                                   uu___5 in
+                                 FStarC_Compiler_Util.concat_dir_filename
+                                   odir uu___5 in
                                let rust_f =
                                  FStarC_Compiler_Util.open_file_for_writing
                                    rust_fname in

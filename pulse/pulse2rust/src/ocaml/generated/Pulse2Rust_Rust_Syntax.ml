@@ -1136,8 +1136,8 @@ let (mk_fn_signature :
         fun fn_args ->
           fun fn_ret_t ->
             let fn_generics1 =
-              FStarC_Compiler_List.map (fun uu___ -> Generic_type_param uu___)
-                fn_generics in
+              FStarC_Compiler_List.map
+                (fun uu___ -> Generic_type_param uu___) fn_generics in
             {
               fn_const;
               fn_name;
@@ -1207,8 +1207,8 @@ let (mk_item_type :
       fun t ->
         let uu___ =
           let uu___1 =
-            FStarC_Compiler_List.map (fun uu___2 -> Generic_type_param uu___2)
-              generics in
+            FStarC_Compiler_List.map
+              (fun uu___2 -> Generic_type_param uu___2) generics in
           {
             item_type_name = name;
             item_type_generics = uu___1;
