@@ -476,7 +476,8 @@ let (r_subst_of_rt_subst_elt : subst_elt -> FStarC_Syntax_Syntax.subst_elt) =
     match x with
     | FStar_Reflection_Typing.DT (i, t) ->
         (match FStarC_Reflection_V2_Builtins.inspect_ln t with
-         | FStarC_Reflection_V2_Data.Tv_Var n -> FStarC_Syntax_Syntax.DB (i, n)
+         | FStarC_Reflection_V2_Data.Tv_Var n ->
+             FStarC_Syntax_Syntax.DB (i, n)
          | uu___ -> FStarC_Syntax_Syntax.DT (i, t))
     | FStar_Reflection_Typing.NT (x1, t) ->
         FStarC_Syntax_Syntax.NT

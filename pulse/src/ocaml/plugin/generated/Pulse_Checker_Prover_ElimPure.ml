@@ -11,7 +11,8 @@ let (elim_pure_head_ty : FStarC_Reflection_Types.term) =
     Pulse_Reflection_Util.mk_pure
       (FStar_Reflection_Typing.bound_var Prims.int_zero) in
   let post =
-    Pulse_Reflection_Util.mk_abs squash_p FStarC_Reflection_V2_Data.Q_Explicit
+    Pulse_Reflection_Util.mk_abs squash_p
+      FStarC_Reflection_V2_Data.Q_Explicit
       (FStarC_Reflection_V2_Builtins.pack_ln
          (FStarC_Reflection_V2_Data.Tv_FVar
             (FStarC_Reflection_V2_Builtins.pack_fv

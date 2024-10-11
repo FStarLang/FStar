@@ -16,7 +16,8 @@ let (prims_exists_lid : FStarC_Ident.lident) =
   FStarC_Ident.lid_of_path ["Prims"; "l_Exists"] r_
 let (prims_forall_lid : FStarC_Ident.lident) =
   FStarC_Ident.lid_of_path ["Prims"; "l_Forall"] r_
-let (unreachable_lid : FStarC_Ident.lident) = pulse_lib_core_lid "unreachable"
+let (unreachable_lid : FStarC_Ident.lident) =
+  pulse_lib_core_lid "unreachable"
 let (forall_lid : FStarC_Ident.lident) = pulse_lib_core_lid "op_forall_Star"
 let (exists_lid : FStarC_Ident.lident) = pulse_lib_core_lid "op_exists_Star"
 let (star_lid : FStarC_Ident.lident) = pulse_lib_core_lid "op_Star_Star"
@@ -114,8 +115,8 @@ let (resolve_lid :
               FStarC_Class_Show.show FStarC_Ident.showable_lident lid in
             FStarC_Compiler_Util.format1 "Name %s not found" uu___2 in
           let uu___2 =
-            FStarC_Class_HasRange.pos PulseSyntaxExtension_Err.hasRange_lident
-              lid in
+            FStarC_Class_HasRange.pos
+              PulseSyntaxExtension_Err.hasRange_lident lid in
           PulseSyntaxExtension_Err.fail uu___1 uu___2
       | FStar_Pervasives_Native.Some t ->
           let uu___1 =

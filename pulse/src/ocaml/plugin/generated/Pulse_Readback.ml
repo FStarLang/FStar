@@ -62,7 +62,8 @@ let (try_readback_st_comp :
                           | { FStarC_Reflection_V2_Data.sort2 = sort;
                               FStarC_Reflection_V2_Data.qual = aq;
                               FStarC_Reflection_V2_Data.attrs = attrs;
-                              FStarC_Reflection_V2_Data.ppname2 = uu___2;_} ->
+                              FStarC_Reflection_V2_Data.ppname2 = uu___2;_}
+                              ->
                               let res' = FStar_Pervasives_Native.fst res in
                               let pre' = FStar_Pervasives_Native.fst pre in
                               let post' = body in

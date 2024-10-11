@@ -29,7 +29,8 @@ let (debug_abs :
                      (Obj.magic uu___)
                      (fun uu___1 ->
                         (fun uu___1 ->
-                           Obj.magic (FStarC_Tactics_V2_Builtins.print uu___1))
+                           Obj.magic
+                             (FStarC_Tactics_V2_Builtins.print uu___1))
                           uu___1)))
            else
              Obj.magic

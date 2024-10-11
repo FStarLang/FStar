@@ -95,8 +95,9 @@ let (comp_to_ast_term :
          | PulseSyntaxExtension_Sugar.STGhost ->
              let h =
                FStarC_Parser_AST.mk_term
-                 (FStarC_Parser_AST.Var PulseSyntaxExtension_Env.stt_ghost_lid)
-                 r FStarC_Parser_AST.Expr in
+                 (FStarC_Parser_AST.Var
+                    PulseSyntaxExtension_Env.stt_ghost_lid) r
+                 FStarC_Parser_AST.Expr in
              let h1 =
                FStarC_Parser_AST.mk_term
                  (FStarC_Parser_AST.App
@@ -106,8 +107,8 @@ let (comp_to_ast_term :
        let uu___ =
          slprop_to_ast_term c.PulseSyntaxExtension_Sugar.precondition in
        Obj.magic
-         (FStarC_Class_Monad.op_let_Bang PulseSyntaxExtension_Err.err_monad ()
-            () (Obj.magic uu___)
+         (FStarC_Class_Monad.op_let_Bang PulseSyntaxExtension_Err.err_monad
+            () () (Obj.magic uu___)
             (fun uu___1 ->
                (fun pre ->
                   let pre = Obj.magic pre in
@@ -361,12 +362,14 @@ let (idents_as_binders :
         FStarC_Compiler_List.filter
           (fun i ->
              let uu___ = FStarC_Ident.string_of_id i in
-             Prims.op_Negation (FStarC_Compiler_Util.starts_with uu___ "'")) l in
+             Prims.op_Negation (FStarC_Compiler_Util.starts_with uu___ "'"))
+          l in
       if (FStarC_Compiler_List.length non_tick_idents) <> Prims.int_zero
       then
         let s =
           let uu___ =
-            FStarC_Compiler_List.map FStarC_Ident.string_of_id non_tick_idents in
+            FStarC_Compiler_List.map FStarC_Ident.string_of_id
+              non_tick_idents in
           FStarC_Compiler_Util.concat_l ", " uu___ in
         let uu___ =
           FStarC_Compiler_Util.format1
@@ -1089,8 +1092,8 @@ let (desugar_datacon :
                         | uu___3 ->
                             let uu___4 =
                               let uu___5 = FStarC_Ident.string_of_lid l in
-                              FStarC_Compiler_Util.format1 "Not a datacon? %s"
-                                uu___5 in
+                              FStarC_Compiler_Util.format1
+                                "Not a datacon? %s" uu___5 in
                             PulseSyntaxExtension_Err.fail uu___4 rng in
                       Obj.magic
                         (FStarC_Class_Monad.op_let_Bang
@@ -2143,7 +2146,8 @@ and (desugar_pat :
                                           | FStarC_Parser_AST.PatWild uu___3
                                               ->
                                               let uu___4 =
-                                                FStarC_Ident.mk_ident ("_", r) in
+                                                FStarC_Ident.mk_ident
+                                                  ("_", r) in
                                               Obj.magic
                                                 (PulseSyntaxExtension_Err.return
                                                    uu___4)
@@ -3669,7 +3673,8 @@ let (reinitialize_env :
                    let uu___ =
                      FStarC_Ident.lid_of_path ns PulseSyntaxExtension_Env.r_ in
                    FStarC_Syntax_DsEnv.push_namespace env uu___
-                     FStarC_Syntax_Syntax.Unrestricted) open_namespaces dsenv1 in
+                     FStarC_Syntax_Syntax.Unrestricted) open_namespaces
+              dsenv1 in
           let dsenv3 =
             FStarC_Syntax_DsEnv.push_namespace dsenv2 curmod
               FStarC_Syntax_Syntax.Unrestricted in

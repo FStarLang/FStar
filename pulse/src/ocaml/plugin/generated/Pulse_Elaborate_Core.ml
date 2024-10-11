@@ -40,10 +40,12 @@ let (elab_sub :
         let pre1 = Pulse_Syntax_Base.comp_pre c1 in
         let pre2 = Pulse_Syntax_Base.comp_pre c2 in
         let post1 =
-          Pulse_Reflection_Util.mk_abs ty FStarC_Reflection_V2_Data.Q_Explicit
+          Pulse_Reflection_Util.mk_abs ty
+            FStarC_Reflection_V2_Data.Q_Explicit
             (Pulse_Syntax_Base.comp_post c1) in
         let post2 =
-          Pulse_Reflection_Util.mk_abs ty FStarC_Reflection_V2_Data.Q_Explicit
+          Pulse_Reflection_Util.mk_abs ty
+            FStarC_Reflection_V2_Data.Q_Explicit
             (Pulse_Syntax_Base.comp_post c2) in
         if Pulse_Syntax_Base.uu___is_C_ST c1
         then Pulse_Reflection_Util.mk_sub_stt u ty pre1 pre2 post1 post2 e

@@ -71,8 +71,8 @@ let (fresh_var :
   fun uu___ ->
     (fun nm ->
        Obj.magic
-         (FStarC_Class_Monad.op_let_Bang PulseSyntaxExtension_Err.err_monad ()
-            () (Obj.magic PulseSyntaxExtension_Err.next_ctr)
+         (FStarC_Class_Monad.op_let_Bang PulseSyntaxExtension_Err.err_monad
+            () () (Obj.magic PulseSyntaxExtension_Err.next_ctr)
             (fun uu___ ->
                (fun ctr ->
                   let ctr = Obj.magic ctr in
@@ -92,7 +92,8 @@ let (fresh_var :
                     FStarC_Ident.mk_ident uu___1 in
                   Obj.magic (PulseSyntaxExtension_Err.return uu___)) uu___)))
       uu___
-let (bind_curval : menv -> FStarC_Ident.ident -> FStarC_Ident.ident -> menv) =
+let (bind_curval : menv -> FStarC_Ident.ident -> FStarC_Ident.ident -> menv)
+  =
   fun m ->
     fun x ->
       fun curval ->
@@ -117,7 +118,8 @@ let (clear_curval : menv -> FStarC_Ident.ident -> menv) =
         FStarC_Compiler_List.tryFind
           (fun uu___1 ->
              match uu___1 with
-             | (y, uu___2, uu___3) -> FStarC_Ident.ident_equals x y) m.map in
+             | (y, uu___2, uu___3) -> FStarC_Ident.ident_equals x y) 
+          m.map in
       match uu___ with
       | FStar_Pervasives_Native.None -> failwith "Impossible 2"
       | FStar_Pervasives_Native.Some (x1, bv, uu___1) ->

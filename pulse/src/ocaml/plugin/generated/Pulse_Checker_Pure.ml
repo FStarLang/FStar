@@ -356,8 +356,9 @@ let (rtb_core_compute_term_type :
   Pulse_Typing_Env.env ->
     FStarC_Reflection_Types.env ->
       FStarC_Reflection_Types.term ->
-        (((FStarC_TypeChecker_Core.tot_or_ghost * FStarC_Reflection_Types.typ)
-           FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
+        (((FStarC_TypeChecker_Core.tot_or_ghost *
+           FStarC_Reflection_Types.typ) FStar_Pervasives_Native.option *
+           FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -497,8 +498,9 @@ let (rtb_tc_term :
   Pulse_Typing_Env.env ->
     FStarC_Reflection_Types.env ->
       FStarC_Reflection_Types.term ->
-        (((FStarC_Reflection_Types.term * (FStarC_TypeChecker_Core.tot_or_ghost
-           * FStarC_Reflection_Types.typ)) FStar_Pervasives_Native.option *
+        (((FStarC_Reflection_Types.term *
+           (FStarC_TypeChecker_Core.tot_or_ghost *
+           FStarC_Reflection_Types.typ)) FStar_Pervasives_Native.option *
            FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -1762,8 +1764,8 @@ let (rtb_core_check_term_at_type :
                        (fun res ->
                           FStar_Tactics_Effect.lift_div_tac
                             (fun uu___3 -> res)))) uu___1)
-let (mk_squash0 : FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term)
-  =
+let (mk_squash0 :
+  FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term) =
   fun t ->
     let sq =
       FStarC_Reflection_V2_Builtins.pack_ln
@@ -2363,7 +2365,8 @@ let maybe_fail_doc :
                            (fun uu___2 ->
                               FStarC_Pprint.pretty_string
                                 Pulse_RuntimeUtils.float_one
-                                (Prims.of_int (80)) (FStarC_Pprint.concat doc))) in
+                                (Prims.of_int (80))
+                                (FStarC_Pprint.concat doc))) in
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
                          (FStar_Sealed.seal
@@ -3234,7 +3237,8 @@ let (tc_meta_callback :
   Pulse_Typing_Env.env ->
     FStarC_Reflection_Types.env ->
       FStarC_Reflection_Types.term ->
-        (((FStarC_Reflection_Types.term, FStarC_TypeChecker_Core.tot_or_ghost,
+        (((FStarC_Reflection_Types.term,
+           FStarC_TypeChecker_Core.tot_or_ghost,
            FStarC_Reflection_Types.term,
            (unit, unit, unit) FStar_Reflection_Typing.typing)
            FStar_Pervasives.dtuple4 FStar_Pervasives_Native.option *
@@ -3956,7 +3960,8 @@ let (tc_with_core :
   Pulse_Typing_Env.env ->
     FStarC_Reflection_Types.env ->
       FStarC_Reflection_Types.term ->
-        (((FStarC_TypeChecker_Core.tot_or_ghost, FStarC_Reflection_Types.term,
+        (((FStarC_TypeChecker_Core.tot_or_ghost,
+           FStarC_Reflection_Types.term,
            (unit, unit, unit) FStar_Reflection_Typing.typing)
            FStar_Pervasives.dtuple3 FStar_Pervasives_Native.option *
            FStar_Issue.issue Prims.list),
@@ -4234,8 +4239,8 @@ let (core_check_term_at_type :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term ->
-        ((FStarC_TypeChecker_Core.tot_or_ghost, unit) Prims.dtuple2, unit)
-          FStar_Tactics_Effect.tac_repr)
+        ((FStarC_TypeChecker_Core.tot_or_ghost, unit) Prims.dtuple2, 
+          unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
     fun e ->

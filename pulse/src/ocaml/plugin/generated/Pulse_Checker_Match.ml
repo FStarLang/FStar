@@ -24,7 +24,8 @@ let rec (readback_pat :
              (nm,
                (Pulse_RuntimeUtils.map_seal st
                   Pulse_RuntimeUtils.deep_compress)))
-    | FStarC_Reflection_V2_Data.Pat_Dot_Term (FStar_Pervasives_Native.None) ->
+    | FStarC_Reflection_V2_Data.Pat_Dot_Term (FStar_Pervasives_Native.None)
+        ->
         FStar_Pervasives_Native.Some
           (Pulse_Syntax_Base.Pat_Dot_Term FStar_Pervasives_Native.None)
     | FStarC_Reflection_V2_Data.Pat_Dot_Term (FStar_Pervasives_Native.Some t)
@@ -1062,8 +1063,8 @@ let (check_branches_aux :
                 Pulse_Syntax_Base.term ->
                   Pulse_Syntax_Base.branch Prims.list ->
                     (FStarC_Reflection_V2_Data.pattern *
-                      FStarC_Reflection_V2_Data.binding Prims.list) Prims.list
-                      ->
+                      FStarC_Reflection_V2_Data.binding Prims.list)
+                      Prims.list ->
                       ((unit, unit, unit, unit, unit, unit)
                          check_branches_aux_t Prims.list,
                         unit) FStar_Tactics_Effect.tac_repr)
@@ -2178,8 +2179,8 @@ let (check_branches :
                 Pulse_Syntax_Base.term ->
                   Pulse_Syntax_Base.branch Prims.list ->
                     (FStarC_Reflection_V2_Data.pattern *
-                      FStarC_Reflection_V2_Data.binding Prims.list) Prims.list
-                      ->
+                      FStarC_Reflection_V2_Data.binding Prims.list)
+                      Prims.list ->
                       ((Pulse_Syntax_Base.branch Prims.list,
                          Pulse_Syntax_Base.comp_st,
                          (unit, unit, unit, unit, unit, unit)

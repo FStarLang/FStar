@@ -18,7 +18,8 @@ let (thunk : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
             (FStarC_Reflection_V2_Builtins.pack_ln
                (FStarC_Reflection_V2_Data.Tv_FVar
                   (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "unit"])));
-          FStarC_Reflection_V2_Data.qual = FStarC_Reflection_V2_Data.Q_Explicit;
+          FStarC_Reflection_V2_Data.qual =
+            FStarC_Reflection_V2_Data.Q_Explicit;
           FStarC_Reflection_V2_Data.attrs = [];
           FStarC_Reflection_V2_Data.ppname2 = (FStar_Sealed.seal "_")
         } in

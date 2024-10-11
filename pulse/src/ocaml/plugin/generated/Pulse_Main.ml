@@ -29,7 +29,8 @@ let (debug_main :
                      (Obj.magic uu___)
                      (fun uu___1 ->
                         (fun uu___1 ->
-                           Obj.magic (FStarC_Tactics_V2_Builtins.print uu___1))
+                           Obj.magic
+                             (FStarC_Tactics_V2_Builtins.print uu___1))
                           uu___1)))
            else
              Obj.magic
@@ -3761,7 +3762,7 @@ let _ =
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_8
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_8
                "Pulse.Main.check_pulse (plugin)"
                (FStarC_Tactics_Native.from_tactic_8 check_pulse)
                (FStarC_Syntax_Embeddings.e_list
@@ -3771,36 +3772,37 @@ let _ =
                      FStarC_Syntax_Embeddings.e_string
                      FStarC_Syntax_Embeddings.e_string))
                FStarC_Syntax_Embeddings.e_string
-               FStarC_Syntax_Embeddings.e_string FStarC_Syntax_Embeddings.e_int
-               FStarC_Syntax_Embeddings.e_int FStarC_Syntax_Embeddings.e_string
+               FStarC_Syntax_Embeddings.e_string
+               FStarC_Syntax_Embeddings.e_int FStarC_Syntax_Embeddings.e_int
+               FStarC_Syntax_Embeddings.e_string
                (FStarC_Syntax_Embeddings.e_tuple2
-                  FStar_Reflection_V2_Embeddings.e_env
+                  FStarC_Reflection_V2_Embeddings.e_env
                   (FStarC_Syntax_Embeddings.e_option
-                     FStar_Reflection_V2_Embeddings.e_term))
+                     FStarC_Reflection_V2_Embeddings.e_term))
                (FStarC_Syntax_Embeddings.e_tuple3
                   (FStarC_Syntax_Embeddings.e_list
                      (FStarC_Syntax_Embeddings.e_tuple3
                         FStarC_Syntax_Embeddings.e_bool
-                        FStar_Reflection_V2_Embeddings.e_sigelt
+                        FStarC_Reflection_V2_Embeddings.e_sigelt
                         (FStarC_Syntax_Embeddings.e_option
                            (FStarC_Syntax_Embeddings.e_tuple2
                               FStarC_Syntax_Embeddings.e_string
-                              FStar_Reflection_V2_Embeddings.e_term))))
+                              FStarC_Reflection_V2_Embeddings.e_term))))
                   (FStarC_Syntax_Embeddings.e_tuple3
                      FStarC_Syntax_Embeddings.e_bool
-                     FStar_Reflection_V2_Embeddings.e_sigelt
+                     FStarC_Reflection_V2_Embeddings.e_sigelt
                      (FStarC_Syntax_Embeddings.e_option
                         (FStarC_Syntax_Embeddings.e_tuple2
                            FStarC_Syntax_Embeddings.e_string
-                           FStar_Reflection_V2_Embeddings.e_term)))
+                           FStarC_Reflection_V2_Embeddings.e_term)))
                   (FStarC_Syntax_Embeddings.e_list
                      (FStarC_Syntax_Embeddings.e_tuple3
                         FStarC_Syntax_Embeddings.e_bool
-                        FStar_Reflection_V2_Embeddings.e_sigelt
+                        FStarC_Reflection_V2_Embeddings.e_sigelt
                         (FStarC_Syntax_Embeddings.e_option
                            (FStarC_Syntax_Embeddings.e_tuple2
                               FStarC_Syntax_Embeddings.e_string
-                              FStar_Reflection_V2_Embeddings.e_term))))) psc
+                              FStarC_Reflection_V2_Embeddings.e_term))))) psc
                ncb us args)
 let check_pulse_after_desugar : 'a . 'a -> FStar_Reflection_Typing.dsl_tac_t
   =
@@ -3818,8 +3820,8 @@ let check_pulse_after_desugar : 'a . 'a -> FStar_Reflection_Typing.dsl_tac_t
                             (Pulse_RuntimeUtils.unembed_pulse_decl decl))))
                  uu___1) (env, expected_t)
 let _ =
-  FStarC_Tactics_Native.register_tactic "Pulse.Main.check_pulse_after_desugar"
-    (Prims.of_int (4))
+  FStarC_Tactics_Native.register_tactic
+    "Pulse.Main.check_pulse_after_desugar" (Prims.of_int (4))
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -3829,38 +3831,38 @@ let _ =
                (fun _ ->
                   match args with
                   | (tv_0, _)::args_tail ->
-                      (FStar_Tactics_InterpFuns.mk_tactic_interpretation_2
+                      (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2
                          "Pulse.Main.check_pulse_after_desugar (plugin)"
                          (FStarC_Tactics_Native.from_tactic_2
                             check_pulse_after_desugar)
                          (FStarC_Syntax_Embeddings.mk_any_emb tv_0)
                          (FStarC_Syntax_Embeddings.e_tuple2
-                            FStar_Reflection_V2_Embeddings.e_env
+                            FStarC_Reflection_V2_Embeddings.e_env
                             (FStarC_Syntax_Embeddings.e_option
-                               FStar_Reflection_V2_Embeddings.e_term))
+                               FStarC_Reflection_V2_Embeddings.e_term))
                          (FStarC_Syntax_Embeddings.e_tuple3
                             (FStarC_Syntax_Embeddings.e_list
                                (FStarC_Syntax_Embeddings.e_tuple3
                                   FStarC_Syntax_Embeddings.e_bool
-                                  FStar_Reflection_V2_Embeddings.e_sigelt
+                                  FStarC_Reflection_V2_Embeddings.e_sigelt
                                   (FStarC_Syntax_Embeddings.e_option
                                      (FStarC_Syntax_Embeddings.e_tuple2
                                         FStarC_Syntax_Embeddings.e_string
-                                        FStar_Reflection_V2_Embeddings.e_term))))
+                                        FStarC_Reflection_V2_Embeddings.e_term))))
                             (FStarC_Syntax_Embeddings.e_tuple3
                                FStarC_Syntax_Embeddings.e_bool
-                               FStar_Reflection_V2_Embeddings.e_sigelt
+                               FStarC_Reflection_V2_Embeddings.e_sigelt
                                (FStarC_Syntax_Embeddings.e_option
                                   (FStarC_Syntax_Embeddings.e_tuple2
                                      FStarC_Syntax_Embeddings.e_string
-                                     FStar_Reflection_V2_Embeddings.e_term)))
+                                     FStarC_Reflection_V2_Embeddings.e_term)))
                             (FStarC_Syntax_Embeddings.e_list
                                (FStarC_Syntax_Embeddings.e_tuple3
                                   FStarC_Syntax_Embeddings.e_bool
-                                  FStar_Reflection_V2_Embeddings.e_sigelt
+                                  FStarC_Reflection_V2_Embeddings.e_sigelt
                                   (FStarC_Syntax_Embeddings.e_option
                                      (FStarC_Syntax_Embeddings.e_tuple2
                                         FStarC_Syntax_Embeddings.e_string
-                                        FStar_Reflection_V2_Embeddings.e_term)))))
+                                        FStarC_Reflection_V2_Embeddings.e_term)))))
                          psc ncb us) args_tail
                   | _ -> failwith "arity mismatch"))

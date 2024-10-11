@@ -1086,8 +1086,8 @@ let (env_to_doc' :
                                         (fun uu___7 ->
                                            FStarC_Pprint.infix
                                              (Prims.of_int (2)) Prims.int_one
-                                             FStarC_Pprint.colon uu___4 uu___6))))
-                             uu___4))) in
+                                             FStarC_Pprint.colon uu___4
+                                             uu___6)))) uu___4))) in
       FStar_Tactics_Effect.tac_bind
         (FStar_Sealed.seal
            (Obj.magic

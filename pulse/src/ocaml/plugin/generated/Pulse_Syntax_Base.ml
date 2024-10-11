@@ -533,7 +533,8 @@ type fn_defn =
   comp: comp ;
   meas: term FStar_Pervasives_Native.option ;
   body7: st_term }
-let (__proj__Mkfn_defn__item__id : fn_defn -> FStarC_Reflection_Types.ident) =
+let (__proj__Mkfn_defn__item__id : fn_defn -> FStarC_Reflection_Types.ident)
+  =
   fun projectee ->
     match projectee with
     | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> id
@@ -566,7 +567,8 @@ type fn_decl =
   id1: FStarC_Reflection_Types.ident ;
   bs1: (qualifier FStar_Pervasives_Native.option * binder * bv) Prims.list ;
   comp1: comp_st }
-let (__proj__Mkfn_decl__item__id : fn_decl -> FStarC_Reflection_Types.ident) =
+let (__proj__Mkfn_decl__item__id : fn_decl -> FStarC_Reflection_Types.ident)
+  =
   fun projectee ->
     match projectee with | { id1 = id; bs1 = bs; comp1;_} -> id
 let (__proj__Mkfn_decl__item__bs :

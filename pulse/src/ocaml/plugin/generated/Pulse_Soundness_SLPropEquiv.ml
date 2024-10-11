@@ -24,7 +24,8 @@ let (slprop_equiv_sym_type : FStarC_Reflection_Types.term) =
 let (slprop_tm : FStarC_Reflection_Types.term) =
   FStarC_Reflection_V2_Builtins.pack_ln
     (FStarC_Reflection_V2_Data.Tv_FVar
-       (FStarC_Reflection_V2_Builtins.pack_fv Pulse_Reflection_Util.slprop_lid))
+       (FStarC_Reflection_V2_Builtins.pack_fv
+          Pulse_Reflection_Util.slprop_lid))
 let (slprop_equiv_ext_type : FStarC_Reflection_Types.term) =
   let v_typ =
     FStarC_Reflection_V2_Builtins.pack_ln

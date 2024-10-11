@@ -30,7 +30,8 @@ let (debug :
                      (Obj.magic uu___)
                      (fun uu___1 ->
                         (fun uu___1 ->
-                           Obj.magic (FStarC_Tactics_V2_Builtins.print uu___1))
+                           Obj.magic
+                             (FStarC_Tactics_V2_Builtins.print uu___1))
                           uu___1)))
            else
              Obj.magic
@@ -246,8 +247,8 @@ let (is_erasable :
               | uu___2 -> false))
 let (head_and_args :
   Pulse_Syntax_Base.term ->
-    (FStarC_Reflection_Types.term * FStarC_Reflection_V2_Data.argv Prims.list)
-      FStar_Pervasives_Native.option)
+    (FStarC_Reflection_Types.term * FStarC_Reflection_V2_Data.argv
+      Prims.list) FStar_Pervasives_Native.option)
   =
   fun t ->
     FStar_Pervasives_Native.Some
@@ -257,8 +258,8 @@ let (term_eq_string :
   fun s ->
     fun t ->
       match FStarC_Reflection_V2_Builtins.inspect_ln t with
-      | FStarC_Reflection_V2_Data.Tv_Const (FStarC_Reflection_V2_Data.C_String
-          s') -> s = s'
+      | FStarC_Reflection_V2_Data.Tv_Const
+          (FStarC_Reflection_V2_Data.C_String s') -> s = s'
       | uu___ -> false
 let (push_binding :
   Pulse_Typing_Env.env ->

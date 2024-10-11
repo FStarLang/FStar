@@ -6,7 +6,8 @@ let (text : Prims.string -> FStarC_Pprint.document) =
 let (indent : FStarC_Pprint.document -> FStarC_Pprint.document) =
   fun d ->
     FStarC_Pprint.nest (Prims.of_int (2))
-      (FStarC_Pprint.op_Hat_Hat FStarC_Pprint.hardline (FStarC_Pprint.align d))
+      (FStarC_Pprint.op_Hat_Hat FStarC_Pprint.hardline
+         (FStarC_Pprint.align d))
 type 'a printable =
   {
   pp: 'a -> (FStarC_Pprint.document, unit) FStar_Tactics_Effect.tac_repr }
@@ -249,8 +250,8 @@ let (pp_record :
                             (FStarC_Pprint.op_Hat_Slash_Hat
                                (FStarC_Pprint.doc_of_string s)
                                (FStarC_Pprint.op_Hat_Slash_Hat
-                                  FStarC_Pprint.equals (FStarC_Pprint.group d))))))
-             uu___1) flds in
+                                  FStarC_Pprint.equals
+                                  (FStarC_Pprint.group d)))))) uu___1) flds in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -635,8 +636,8 @@ let printable_tuple2 :
                                 (fun uu___7 ->
                                    FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___8 ->
-                                        FStarC_Pprint.op_Hat_Hat uu___5 uu___7))))
-                          uu___5) in
+                                        FStarC_Pprint.op_Hat_Hat uu___5
+                                          uu___7)))) uu___5) in
                  FStar_Tactics_Effect.tac_bind
                    (FStar_Sealed.seal
                       (Obj.magic
@@ -2349,7 +2350,8 @@ let printable_tuple7 :
                                             FStar_Tactics_Effect.lift_div_tac
                                               (fun uu___14 ->
                                                  FStarC_Pprint.op_Hat_Slash_Hat
-                                                   FStarC_Pprint.comma uu___13)) in
+                                                   FStarC_Pprint.comma
+                                                   uu___13)) in
                                      Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
                                           (FStar_Sealed.seal

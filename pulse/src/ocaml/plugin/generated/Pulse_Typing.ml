@@ -63,7 +63,8 @@ let (debug_log :
 let (tm_unit : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_fvar
     (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.unit_lid)
-let (tm_bool : FStarC_Reflection_Types.term) = FStar_Reflection_Typing.bool_ty
+let (tm_bool : FStarC_Reflection_Types.term) =
+  FStar_Reflection_Typing.bool_ty
 let (tm_int : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_fvar
     (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.int_lid)
@@ -1009,7 +1010,8 @@ type ('g, 't1, 't2) subtyping_token =
 let (readback_binding :
   FStarC_Reflection_V2_Data.binding -> Pulse_Typing_Env.binding) =
   fun b ->
-    ((b.FStarC_Reflection_V2_Data.uniq1), (b.FStarC_Reflection_V2_Data.sort3))
+    ((b.FStarC_Reflection_V2_Data.uniq1),
+      (b.FStarC_Reflection_V2_Data.sort3))
 type ('g, 'c) non_informative = unit
 let (inv_disjointness :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
@@ -1112,7 +1114,7 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
 and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3) pats_complete =
   | PC_Elab of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.typ * FStarC_Reflection_V2_Data.pattern Prims.list *
-  FStarC_Reflection_V2_Data.binding Prims.list Prims.list * (unit, unit, 
+  FStarC_Reflection_V2_Data.binding Prims.list Prims.list * (unit, unit,
   unit, unit, unit) FStar_Reflection_Typing.match_is_complete 
 and ('g, 'scuu, 'scuty, 'sc, 'dummyV0, 'dummyV1) brs_typing =
   | TBRS_0 of Pulse_Syntax_Base.comp_st 

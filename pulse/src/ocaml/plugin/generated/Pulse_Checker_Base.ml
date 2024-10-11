@@ -29,7 +29,8 @@ let (debug :
                      (Obj.magic uu___)
                      (fun uu___1 ->
                         (fun uu___1 ->
-                           Obj.magic (FStarC_Tactics_V2_Builtins.print uu___1))
+                           Obj.magic
+                             (FStarC_Tactics_V2_Builtins.print uu___1))
                           uu___1)))
            else
              Obj.magic
@@ -331,15 +332,16 @@ let (mk_arrow :
   =
   fun ty ->
     fun t ->
-      FStar_Reflection_Typing.mk_arrow ty FStarC_Reflection_V2_Data.Q_Explicit
-        t
+      FStar_Reflection_Typing.mk_arrow ty
+        FStarC_Reflection_V2_Data.Q_Explicit t
 let (mk_abs :
   FStarC_Reflection_Types.term ->
     FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term)
   =
   fun ty ->
     fun t ->
-      FStar_Reflection_Typing.mk_abs ty FStarC_Reflection_V2_Data.Q_Explicit t
+      FStar_Reflection_Typing.mk_abs ty FStarC_Reflection_V2_Data.Q_Explicit
+        t
 let (intro_comp_typing :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp_st ->
@@ -3722,8 +3724,8 @@ let (norm_typing_inverse :
                               Obj.magic
                                 (Pulse_RuntimeUtils.norm_well_typed_term
                                    (Pulse_Typing.elab_env g) t1
-                                   FStarC_TypeChecker_Core.E_Total () () steps))
-                             uu___2) in
+                                   FStarC_TypeChecker_Core.E_Total () ()
+                                   steps)) uu___2) in
                     FStar_Tactics_Effect.tac_bind
                       (FStar_Sealed.seal
                          (Obj.magic

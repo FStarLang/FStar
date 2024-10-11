@@ -126,7 +126,8 @@ let (mk_fst :
             let t =
               FStarC_Reflection_V2_Builtins.pack_ln
                 (FStarC_Reflection_V2_Data.Tv_UInst
-                   ((FStarC_Reflection_V2_Builtins.pack_fv fst_lid), [u1; u2])) in
+                   ((FStarC_Reflection_V2_Builtins.pack_fv fst_lid),
+                     [u1; u2])) in
             let t1 =
               FStarC_Reflection_V2_Builtins.pack_ln
                 (FStarC_Reflection_V2_Data.Tv_App
@@ -153,7 +154,8 @@ let (mk_snd :
             let t =
               FStarC_Reflection_V2_Builtins.pack_ln
                 (FStarC_Reflection_V2_Data.Tv_UInst
-                   ((FStarC_Reflection_V2_Builtins.pack_fv snd_lid), [u1; u2])) in
+                   ((FStarC_Reflection_V2_Builtins.pack_fv snd_lid),
+                     [u1; u2])) in
             let t1 =
               FStarC_Reflection_V2_Builtins.pack_ln
                 (FStarC_Reflection_V2_Data.Tv_App
@@ -206,7 +208,8 @@ let (args_of :
   fun tms ->
     FStar_List_Tot_Base.map
       (fun x -> (x, FStarC_Reflection_V2_Data.Q_Explicit)) tms
-let (mk_pure : FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term) =
+let (mk_pure : FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term)
+  =
   fun p ->
     let t =
       FStarC_Reflection_V2_Builtins.pack_ln
@@ -216,7 +219,8 @@ let (mk_pure : FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term) =
       (FStarC_Reflection_V2_Data.Tv_App
          (t, (p, FStarC_Reflection_V2_Data.Q_Explicit)))
 let (uzero : FStarC_Reflection_Types.universe) =
-  FStarC_Reflection_V2_Builtins.pack_universe FStarC_Reflection_V2_Data.Uv_Zero
+  FStarC_Reflection_V2_Builtins.pack_universe
+    FStarC_Reflection_V2_Data.Uv_Zero
 let (uone : FStarC_Reflection_Types.universe) =
   FStarC_Reflection_V2_Builtins.pack_universe
     (FStarC_Reflection_V2_Data.Uv_Succ uzero)
@@ -525,7 +529,8 @@ let (mk_name : Prims.nat -> FStarC_Reflection_Types.term) =
 type arrow_dom =
   (FStarC_Reflection_Types.term * FStarC_Reflection_V2_Data.aqualv)
 let (mk_arrow :
-  arrow_dom -> FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term) =
+  arrow_dom -> FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term)
+  =
   fun f ->
     fun out ->
       let uu___ = f in
@@ -579,7 +584,8 @@ let (mk_abs_with_name :
       fun qual ->
         fun t ->
           FStarC_Reflection_V2_Builtins.pack_ln
-            (FStarC_Reflection_V2_Data.Tv_Abs ((binder_of_t_q_s ty qual s), t))
+            (FStarC_Reflection_V2_Data.Tv_Abs
+               ((binder_of_t_q_s ty qual s), t))
 let (mk_abs_with_name_and_range :
   FStar_Reflection_Typing.pp_name_t ->
     FStar_Range.range ->
@@ -822,7 +828,8 @@ let (non_informative_rt :
              (t, (a, FStarC_Reflection_V2_Data.Q_Explicit))) in
       t1
 let (stt_slprop_equiv_fv : FStarC_Reflection_Types.fv) =
-  FStarC_Reflection_V2_Builtins.pack_fv (mk_pulse_lib_core_lid "slprop_equiv")
+  FStarC_Reflection_V2_Builtins.pack_fv
+    (mk_pulse_lib_core_lid "slprop_equiv")
 let (stt_slprop_equiv_tm : FStarC_Reflection_Types.term) =
   FStarC_Reflection_V2_Builtins.pack_ln
     (FStarC_Reflection_V2_Data.Tv_FVar stt_slprop_equiv_fv)
@@ -835,7 +842,8 @@ let (stt_slprop_equiv :
       let t =
         FStarC_Reflection_V2_Builtins.pack_ln
           (FStarC_Reflection_V2_Data.Tv_App
-             (stt_slprop_equiv_tm, (t1, FStarC_Reflection_V2_Data.Q_Explicit))) in
+             (stt_slprop_equiv_tm,
+               (t1, FStarC_Reflection_V2_Data.Q_Explicit))) in
       FStarC_Reflection_V2_Builtins.pack_ln
         (FStarC_Reflection_V2_Data.Tv_App
            (t, (t2, FStarC_Reflection_V2_Data.Q_Explicit)))
@@ -864,7 +872,8 @@ let (mk_stt_return :
           let t1 =
             FStarC_Reflection_V2_Builtins.pack_ln
               (FStarC_Reflection_V2_Data.Tv_UInst
-                 ((FStarC_Reflection_V2_Builtins.pack_fv return_stt_lid), [u])) in
+                 ((FStarC_Reflection_V2_Builtins.pack_fv return_stt_lid),
+                   [u])) in
           let t2 =
             FStarC_Reflection_V2_Builtins.pack_ln
               (FStarC_Reflection_V2_Data.Tv_App
@@ -915,8 +924,8 @@ let (mk_stt_atomic_return :
           let t1 =
             FStarC_Reflection_V2_Builtins.pack_ln
               (FStarC_Reflection_V2_Data.Tv_UInst
-                 ((FStarC_Reflection_V2_Builtins.pack_fv return_stt_atomic_lid),
-                   [u])) in
+                 ((FStarC_Reflection_V2_Builtins.pack_fv
+                     return_stt_atomic_lid), [u])) in
           let t2 =
             FStarC_Reflection_V2_Builtins.pack_ln
               (FStarC_Reflection_V2_Data.Tv_App
@@ -1169,7 +1178,8 @@ let (mk_bind_stt :
             FStarC_Reflection_Types.term ->
               FStarC_Reflection_Types.term ->
                 FStarC_Reflection_Types.term ->
-                  FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term)
+                  FStarC_Reflection_Types.term ->
+                    FStarC_Reflection_Types.term)
   =
   fun u1 ->
     fun u2 ->
@@ -1374,7 +1384,8 @@ let (mk_frame_stt :
               let frame_univ_inst u1 =
                 FStarC_Reflection_V2_Builtins.pack_ln
                   (FStarC_Reflection_V2_Data.Tv_UInst
-                     ((FStarC_Reflection_V2_Builtins.pack_fv frame_lid), [u1])) in
+                     ((FStarC_Reflection_V2_Builtins.pack_fv frame_lid),
+                       [u1])) in
               let head = frame_univ_inst u in
               FStar_Reflection_V2_Derived.mk_app
                 (FStar_Reflection_V2_Derived.mk_app
@@ -1489,7 +1500,8 @@ let (mk_sub_stt :
                   FStarC_Reflection_V2_Builtins.pack_fv subsumption_lid in
                 let subsumption_univ_inst u1 =
                   FStarC_Reflection_V2_Builtins.pack_ln
-                    (FStarC_Reflection_V2_Data.Tv_UInst (subsumption_fv, [u1])) in
+                    (FStarC_Reflection_V2_Data.Tv_UInst
+                       (subsumption_fv, [u1])) in
                 let head = subsumption_univ_inst u in
                 FStar_Reflection_V2_Derived.mk_app
                   (FStar_Reflection_V2_Derived.mk_app
@@ -1503,7 +1515,8 @@ let (mk_sub_stt :
                                           FStarC_Reflection_V2_Data.Q_Implicit)])
                                     [(pre1,
                                        FStarC_Reflection_V2_Data.Q_Implicit)])
-                                 [(pre2, FStarC_Reflection_V2_Data.Q_Explicit)])
+                                 [(pre2,
+                                    FStarC_Reflection_V2_Data.Q_Explicit)])
                               [(post1, FStarC_Reflection_V2_Data.Q_Implicit)])
                            [(post2, FStarC_Reflection_V2_Data.Q_Explicit)])
                         [((FStarC_Reflection_V2_Builtins.pack_ln
@@ -1678,7 +1691,8 @@ let (mk_par :
             FStarC_Reflection_Types.term ->
               FStarC_Reflection_Types.term ->
                 FStarC_Reflection_Types.term ->
-                  FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term)
+                  FStarC_Reflection_Types.term ->
+                    FStarC_Reflection_Types.term)
   =
   fun u ->
     fun aL ->
@@ -1709,7 +1723,8 @@ let (mk_par :
                     let t4 =
                       FStarC_Reflection_V2_Builtins.pack_ln
                         (FStarC_Reflection_V2_Data.Tv_App
-                           (t3, (postL, FStarC_Reflection_V2_Data.Q_Implicit))) in
+                           (t3,
+                             (postL, FStarC_Reflection_V2_Data.Q_Implicit))) in
                     let t5 =
                       FStarC_Reflection_V2_Builtins.pack_ln
                         (FStarC_Reflection_V2_Data.Tv_App
@@ -1717,7 +1732,8 @@ let (mk_par :
                     let t6 =
                       FStarC_Reflection_V2_Builtins.pack_ln
                         (FStarC_Reflection_V2_Data.Tv_App
-                           (t5, (postR, FStarC_Reflection_V2_Data.Q_Implicit))) in
+                           (t5,
+                             (postR, FStarC_Reflection_V2_Data.Q_Implicit))) in
                     let t7 =
                       FStarC_Reflection_V2_Builtins.pack_ln
                         (FStarC_Reflection_V2_Data.Tv_App
@@ -1729,7 +1745,8 @@ let (tm_rewrite_tactic_t : FStarC_Reflection_Types.term) =
   let fv =
     FStarC_Reflection_V2_Builtins.pack_fv
       (mk_pulse_lib_core_lid "rewrite_tactic_t") in
-  FStarC_Reflection_V2_Builtins.pack_ln (FStarC_Reflection_V2_Data.Tv_FVar fv)
+  FStarC_Reflection_V2_Builtins.pack_ln
+    (FStarC_Reflection_V2_Data.Tv_FVar fv)
 let (mk_rewrite :
   FStarC_Reflection_Types.term ->
     FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term)
@@ -1933,7 +1950,8 @@ let (array_length_lid : Prims.string Prims.list) =
   mk_pulse_lib_array_core_lid "length"
 let (array_is_full_lid : Prims.string Prims.list) =
   mk_pulse_lib_array_core_lid "is_full_array"
-let (mk_array : FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term) =
+let (mk_array : FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term)
+  =
   fun a ->
     let t =
       FStarC_Reflection_V2_Builtins.pack_ln
@@ -2014,7 +2032,8 @@ let (mk_seq_create :
           let t =
             FStarC_Reflection_V2_Builtins.pack_ln
               (FStarC_Reflection_V2_Data.Tv_UInst
-                 ((FStarC_Reflection_V2_Builtins.pack_fv seq_create_lid), [u])) in
+                 ((FStarC_Reflection_V2_Builtins.pack_fv seq_create_lid),
+                   [u])) in
           let t1 =
             FStarC_Reflection_V2_Builtins.pack_ln
               (FStarC_Reflection_V2_Data.Tv_App

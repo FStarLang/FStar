@@ -48,9 +48,11 @@ let (i :
         FStarC_Parser_AST.Const uu___1 in
       tm uu___ r
 let (str :
-  Prims.string -> FStarC_Compiler_Range_Type.range -> FStarC_Parser_AST.term) =
+  Prims.string -> FStarC_Compiler_Range_Type.range -> FStarC_Parser_AST.term)
+  =
   fun s ->
-    fun r -> tm (FStarC_Parser_AST.Const (FStarC_Const.Const_string (s, r))) r
+    fun r ->
+      tm (FStarC_Parser_AST.Const (FStarC_Const.Const_string (s, r))) r
 let (lid_as_term :
   FStarC_Ident.lident ->
     FStarC_Compiler_Range_Type.range -> FStarC_Parser_AST.term)
@@ -81,7 +83,8 @@ let (encode_open_namespaces_and_abbreviations :
                  match uu___2 with
                  | (a, m) ->
                      let a1 =
-                       let uu___3 = FStarC_Ident.string_of_id a in str1 uu___3 in
+                       let uu___3 = FStarC_Ident.string_of_id a in
+                       str1 uu___3 in
                      let m1 = lid_as_term1 m in
                      FStarC_Parser_AST.mkTuple [a1; m1] r)
               ctx.FStarC_Parser_AST_Util.module_abbreviations in
@@ -90,7 +93,8 @@ let (encode_open_namespaces_and_abbreviations :
       (namespaces, abbrevs)
 let (encode_range :
   FStarC_Compiler_Range_Type.range ->
-    (FStarC_Parser_AST.term * FStarC_Parser_AST.term * FStarC_Parser_AST.term))
+    (FStarC_Parser_AST.term * FStarC_Parser_AST.term *
+      FStarC_Parser_AST.term))
   =
   fun r ->
     let line =
@@ -170,7 +174,8 @@ let maybe_report_error :
       FStarC_Compiler_Range_Type.range) FStar_Pervasives_Native.option ->
       ('uuuuu1, FStarC_Parser_AST.decl) FStar_Pervasives.either Prims.list ->
         (FStarC_Parser_AST_Util.error_message,
-          ('uuuuu1, FStarC_Parser_AST.decl) FStar_Pervasives.either Prims.list)
+          ('uuuuu1, FStarC_Parser_AST.decl) FStar_Pervasives.either
+            Prims.list)
           FStar_Pervasives.either
   =
   fun first_error ->
@@ -205,8 +210,8 @@ let maybe_report_error :
                let uu___2 =
                  let uu___3 =
                    let uu___4 =
-                     FStarC_Parser_AST.mk_decl FStarC_Parser_AST.Unparseable r
-                       [] in
+                     FStarC_Parser_AST.mk_decl FStarC_Parser_AST.Unparseable
+                       r [] in
                    FStar_Pervasives.Inr uu___4 in
                  [uu___3] in
                FStar_List_Tot_Base.op_At decls uu___2 in
@@ -214,8 +219,8 @@ let maybe_report_error :
 let (parse_extension_lang :
   Prims.string ->
     FStarC_Compiler_Range_Type.range ->
-      (FStarC_Parser_AST_Util.error_message, FStarC_Parser_AST.decl Prims.list)
-        FStar_Pervasives.either)
+      (FStarC_Parser_AST_Util.error_message,
+        FStarC_Parser_AST.decl Prims.list) FStar_Pervasives.either)
   =
   fun contents ->
     fun r ->
@@ -284,26 +289,28 @@ let (parse_extension_lang :
                              PulseSyntaxExtension_Sugar.range4 = uu___6;_}
                            -> decorations in
                      let d1 =
-                       FStarC_Parser_AST.DeclToBeDesugared
+                       let uu___3 =
+                         let uu___4 = FStarC_Dyn.mkdyn d in
                          {
                            FStarC_Parser_AST.lang_name = "pulse";
-                           FStarC_Parser_AST.blob = (FStarC_Dyn.mkdyn d);
+                           FStarC_Parser_AST.blob = uu___4;
                            FStarC_Parser_AST.idents = [id];
                            FStarC_Parser_AST.to_string = (fun d2 -> "<TBD>");
                            FStarC_Parser_AST.eq =
                              (fun d11 ->
                                 fun d2 ->
-                                  let uu___3 = FStarC_Dyn.undyn d11 in
-                                  let uu___4 = FStarC_Dyn.undyn d2 in
-                                  PulseSyntaxExtension_Sugar.eq_decl uu___3
-                                    uu___4);
+                                  let uu___5 = FStarC_Dyn.undyn d11 in
+                                  let uu___6 = FStarC_Dyn.undyn d2 in
+                                  PulseSyntaxExtension_Sugar.eq_decl uu___5
+                                    uu___6);
                            FStarC_Parser_AST.dep_scan =
                              (fun cbs ->
                                 fun d2 ->
-                                  let uu___3 = FStarC_Dyn.undyn d2 in
+                                  let uu___5 = FStarC_Dyn.undyn d2 in
                                   PulseSyntaxExtension_Sugar.scan_decl cbs
-                                    uu___3)
+                                    uu___5)
                          } in
+                       FStarC_Parser_AST.DeclToBeDesugared uu___3 in
                      let d2 =
                        let uu___3 =
                          FStarC_Compiler_List.partition

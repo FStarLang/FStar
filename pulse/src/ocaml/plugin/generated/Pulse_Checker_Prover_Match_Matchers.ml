@@ -49,8 +49,9 @@ let (type_of_fv :
                                      ((FStarC_Reflection_V2_Builtins.inspect_lb
                                          lb).FStarC_Reflection_V2_Data.lb_typ)
                                  else FStar_Pervasives_Native.None) lbs
-                        | FStarC_Reflection_V2_Data.Sg_Val (uu___1, uu___2, t)
-                            -> FStar_Pervasives_Native.Some t
+                        | FStarC_Reflection_V2_Data.Sg_Val
+                            (uu___1, uu___2, t) ->
+                            FStar_Pervasives_Native.Some t
                         | FStarC_Reflection_V2_Data.Sg_Inductive
                             (_nm, _univs, params, typ, uu___1) ->
                             FStar_Pervasives_Native.None)))) uu___1 uu___

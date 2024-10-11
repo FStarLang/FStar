@@ -68,7 +68,8 @@ let (__proj__Mkcomputation_type__item__postcondition :
     | { tag; precondition; return_name; return_type; postcondition; opens;
         range;_} -> postcondition
 let (__proj__Mkcomputation_type__item__opens :
-  computation_type -> FStarC_Parser_AST.term FStar_Pervasives_Native.option) =
+  computation_type -> FStarC_Parser_AST.term FStar_Pervasives_Native.option)
+  =
   fun projectee ->
     match projectee with
     | { tag; precondition; return_name; return_type; postcondition; opens;
@@ -93,8 +94,8 @@ let (showable_mut_or_ref : mut_or_ref FStarC_Class_Show.showable) =
 type hint_type =
   | ASSERT of slprop 
   | ASSUME of slprop 
-  | UNFOLD of (FStarC_Ident.lident Prims.list FStar_Pervasives_Native.option *
-  slprop) 
+  | UNFOLD of (FStarC_Ident.lident Prims.list FStar_Pervasives_Native.option
+  * slprop) 
   | FOLD of (FStarC_Ident.lident Prims.list FStar_Pervasives_Native.option *
   slprop) 
   | RENAME of ((FStarC_Parser_AST.term * FStarC_Parser_AST.term) Prims.list *
@@ -169,8 +170,8 @@ let (showable_hint_type : hint_type FStarC_Class_Show.showable) =
                let uu___1 =
                  FStarC_Class_Show.show
                    (FStarC_Class_Show.show_option
-                      (FStarC_Class_Show.show_list FStarC_Ident.showable_lident))
-                   ns in
+                      (FStarC_Class_Show.show_list
+                         FStarC_Ident.showable_lident)) ns in
                let uu___2 =
                  let uu___3 = FStarC_Class_Show.show showable_slprop s in
                  Prims.strcat " " uu___3 in
@@ -181,8 +182,8 @@ let (showable_hint_type : hint_type FStarC_Class_Show.showable) =
                let uu___1 =
                  FStarC_Class_Show.show
                    (FStarC_Class_Show.show_option
-                      (FStarC_Class_Show.show_list FStarC_Ident.showable_lident))
-                   ns in
+                      (FStarC_Class_Show.show_list
+                         FStarC_Ident.showable_lident)) ns in
                let uu___2 =
                  let uu___3 = FStarC_Class_Show.show showable_slprop s in
                  Prims.strcat " " uu___3 in
@@ -230,16 +231,18 @@ let (showable_hint_type : hint_type FStarC_Class_Show.showable) =
          | WILD -> "WILD"
          | SHOW_PROOF_STATE r -> "SHOW_PROOF_STATE ...")
   }
-type array_init = {
+type array_init =
+  {
   init: FStarC_Parser_AST.term ;
   len: FStarC_Parser_AST.term }
 let (__proj__Mkarray_init__item__init : array_init -> FStarC_Parser_AST.term)
   = fun projectee -> match projectee with | { init; len;_} -> init
-let (__proj__Mkarray_init__item__len : array_init -> FStarC_Parser_AST.term) =
-  fun projectee -> match projectee with | { init; len;_} -> len
+let (__proj__Mkarray_init__item__len : array_init -> FStarC_Parser_AST.term)
+  = fun projectee -> match projectee with | { init; len;_} -> len
 type ensures_slprop =
-  ((FStarC_Ident.ident * FStarC_Parser_AST.term) FStar_Pervasives_Native.option
-    * slprop * FStarC_Parser_AST.term FStar_Pervasives_Native.option)
+  ((FStarC_Ident.ident * FStarC_Parser_AST.term)
+    FStar_Pervasives_Native.option * slprop * FStarC_Parser_AST.term
+    FStar_Pervasives_Native.option)
 type stmt'__Expr__payload = {
   e: FStarC_Parser_AST.term }
 and stmt'__Assignment__payload =
@@ -738,12 +741,12 @@ let (record_string :
                (fun uu___ ->
                   match uu___ with
                   | (f, s) -> Prims.strcat f (Prims.strcat " = " s)) fs)) "}")
-let (showable_pattern : FStarC_Parser_AST.pattern FStarC_Class_Show.showable) =
-  { FStarC_Class_Show.show = FStarC_Parser_AST.pat_to_string }
+let (showable_pattern : FStarC_Parser_AST.pattern FStarC_Class_Show.showable)
+  = { FStarC_Class_Show.show = FStarC_Parser_AST.pat_to_string }
 let (showable_a_term : FStarC_Parser_AST.term FStarC_Class_Show.showable) =
   { FStarC_Class_Show.show = FStarC_Parser_AST.term_to_string }
-let (showable_a_binder : FStarC_Parser_AST.binder FStarC_Class_Show.showable) =
-  { FStarC_Class_Show.show = FStarC_Parser_AST.binder_to_string }
+let (showable_a_binder : FStarC_Parser_AST.binder FStarC_Class_Show.showable)
+  = { FStarC_Class_Show.show = FStarC_Parser_AST.binder_to_string }
 let rec (stmt_to_string : stmt -> Prims.string) =
   fun s ->
     match s.s with
@@ -809,7 +812,8 @@ let rec (stmt_to_string : stmt -> Prims.string) =
                   let uu___8 =
                     let uu___9 =
                       FStarC_Class_Show.show
-                        (FStarC_Class_Show.show_option showable_let_init) init in
+                        (FStarC_Class_Show.show_option showable_let_init)
+                        init in
                     ("init", uu___9) in
                   [uu___8] in
                 uu___6 :: uu___7 in
@@ -1037,8 +1041,8 @@ let (__proj__FnDecl__item___0 : decl -> fn_decl) =
 let (eq_ident : FStarC_Ident.ident -> FStarC_Ident.ident -> Prims.bool) =
   fun i1 ->
     fun i2 ->
-      FStarC_Class_Deq.op_Equals_Question FStarC_Syntax_Syntax.deq_univ_name i1
-        i2
+      FStarC_Class_Deq.op_Equals_Question FStarC_Syntax_Syntax.deq_univ_name
+        i1 i2
 let (eq_lident : FStarC_Ident.lident -> FStarC_Ident.lident -> Prims.bool) =
   fun i1 ->
     fun i2 ->
@@ -1119,7 +1123,8 @@ and (eq_slprop' : slprop' -> slprop' -> Prims.bool) =
   fun s1 ->
     fun s2 ->
       match (s1, s2) with
-      | (SLPropTerm t1, SLPropTerm t2) -> FStarC_Parser_AST_Util.eq_term t1 t2
+      | (SLPropTerm t1, SLPropTerm t2) ->
+          FStarC_Parser_AST_Util.eq_term t1 t2
 and (eq_body :
   (stmt, lambda) FStar_Pervasives.either ->
     (stmt, lambda) FStar_Pervasives.either -> Prims.bool)
@@ -1294,11 +1299,13 @@ let rec (scan_decl : FStarC_Parser_AST.dep_scan_callbacks -> decl -> unit) =
       match d with
       | FnDefn f -> scan_fn_defn cbs f
       | FnDecl d1 -> scan_fn_decl cbs d1
-and (scan_fn_decl : FStarC_Parser_AST.dep_scan_callbacks -> fn_decl -> unit) =
+and (scan_fn_decl : FStarC_Parser_AST.dep_scan_callbacks -> fn_decl -> unit)
+  =
   fun cbs ->
     fun f ->
       iter (scan_binder cbs) f.binders3; scan_ascription cbs f.ascription2
-and (scan_fn_defn : FStarC_Parser_AST.dep_scan_callbacks -> fn_defn -> unit) =
+and (scan_fn_defn : FStarC_Parser_AST.dep_scan_callbacks -> fn_defn -> unit)
+  =
   fun cbs ->
     fun f ->
       iter (scan_binder cbs) f.binders2;
@@ -1343,7 +1350,8 @@ and (scan_stmt : FStarC_Parser_AST.dep_scan_callbacks -> stmt -> unit) =
       | Open l -> cbs.FStarC_Parser_AST.add_open l
       | Expr e -> cbs.FStarC_Parser_AST.scan_term e.e
       | Assignment { lhs = l; value = v;_} ->
-          (cbs.FStarC_Parser_AST.scan_term l; cbs.FStarC_Parser_AST.scan_term v)
+          (cbs.FStarC_Parser_AST.scan_term l;
+           cbs.FStarC_Parser_AST.scan_term v)
       | ArrayAssignment { arr = a; index = i; value1 = v;_} ->
           (cbs.FStarC_Parser_AST.scan_term a;
            cbs.FStarC_Parser_AST.scan_term i;
@@ -1385,8 +1393,8 @@ and (scan_stmt : FStarC_Parser_AST.dep_scan_callbacks -> stmt -> unit) =
           (iter cbs.FStarC_Parser_AST.scan_term n;
            scan_stmt cbs b;
            iopt (scan_ensures_slprop cbs) r)
-and (scan_let_init : FStarC_Parser_AST.dep_scan_callbacks -> let_init -> unit)
-  =
+and (scan_let_init :
+  FStarC_Parser_AST.dep_scan_callbacks -> let_init -> unit) =
   fun cbs ->
     fun i ->
       match i with
@@ -1487,8 +1495,9 @@ let (add_decorations :
               range4 = (f.range4)
             }
 let (mk_expr : FStarC_Parser_AST.term -> stmt') = fun e -> Expr { e }
-let (mk_assignment : FStarC_Parser_AST.term -> FStarC_Parser_AST.term -> stmt')
-  = fun id -> fun value -> Assignment { lhs = id; value }
+let (mk_assignment :
+  FStarC_Parser_AST.term -> FStarC_Parser_AST.term -> stmt') =
+  fun id -> fun value -> Assignment { lhs = id; value }
 let (mk_array_assignment :
   FStarC_Parser_AST.term ->
     FStarC_Parser_AST.term -> FStarC_Parser_AST.term -> stmt')

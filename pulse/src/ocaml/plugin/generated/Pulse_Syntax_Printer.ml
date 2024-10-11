@@ -1610,8 +1610,8 @@ and (term_to_doc :
                                 (fun uu___4 ->
                                    FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___5 ->
-                                        FStarC_Pprint.op_Hat_Hat uu___2 uu___4))))
-                          uu___2) in
+                                        FStarC_Pprint.op_Hat_Hat uu___2
+                                          uu___4)))) uu___2) in
                  FStar_Tactics_Effect.tac_bind
                    (FStar_Sealed.seal
                       (Obj.magic
