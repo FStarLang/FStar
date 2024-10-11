@@ -89,7 +89,7 @@ fn split_trade (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t) (#v: Ghost.erased 
       let v2 = Seq.slice v (SZ.v i) (Seq.length v) in
       pts_to s1 #p v1 ** pts_to s2 #p v2 **
       trade (pts_to s1 #p v1 ** pts_to s2 #p v2)
-        (pts_to s #p (v1 `Seq.append` v2)))
+        (pts_to s #p v))
 {
   Seq.lemma_split v (SZ.v i);
   let SlicePair s1 s2 = S.split s i;
