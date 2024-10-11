@@ -300,6 +300,7 @@ let parse_fstar_incrementally
 : FStarC_Parser_AST_Util.extension_lang_parser 
 = let f =
     fun (s:string) (r:FStarC_Compiler_Range.range) ->
+      let open FStar_Pervasives in
       let open FStarC_Compiler_Range in
       let lexbuf =
         create s
@@ -324,7 +325,7 @@ let parse_fstar_incrementally
             FStarC_Parser_Parse.oneDeclOrEOF
         in
         match err_opt with
-        | None -> FStar_Pervasives.Inr decls
+        | None -> Inr decls
         | Some (_, msg, r) -> 
           let open FStarC_Parser_AST in
           let err_decl = mk_decl Unparseable r [] in

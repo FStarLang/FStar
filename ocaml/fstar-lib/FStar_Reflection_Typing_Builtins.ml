@@ -1,4 +1,5 @@
 open FStarC_Syntax_Syntax
+open FStarC_Reflection_Types
 module R = FStarC_Compiler_Range
 
 let dummy_range = R.dummyRange
