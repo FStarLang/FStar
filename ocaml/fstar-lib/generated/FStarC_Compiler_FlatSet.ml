@@ -134,6 +134,7 @@ let setlike_flat_set :
       FStarC_Class_Setlike.for_all = for_all;
       FStarC_Class_Setlike.for_any = for_any;
       FStarC_Class_Setlike.elems = elems;
+      FStarC_Class_Setlike.filter = FStarC_Compiler_List.filter;
       FStarC_Class_Setlike.collect = (collect uu___);
       FStarC_Class_Setlike.from_list = (from_list uu___);
       FStarC_Class_Setlike.addn = (addn uu___)

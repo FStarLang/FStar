@@ -3217,6 +3217,22 @@ let (showable_lazy_kind : lazy_kind FStarC_Class_Show.showable) =
          | Lazy_extension s -> Prims.strcat "Lazy_extension " s
          | uu___1 -> failwith "FIXME! lazy_kind_to_string must be complete")
   }
+let (showable_restriction : restriction FStarC_Class_Show.showable) =
+  {
+    FStarC_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Unrestricted -> "Unrestricted"
+         | AllowList l ->
+             let uu___1 =
+               FStarC_Class_Show.show
+                 (FStarC_Class_Show.show_list
+                    (FStarC_Class_Show.show_tuple2
+                       FStarC_Ident.showable_ident
+                       (FStarC_Class_Show.show_option
+                          FStarC_Ident.showable_ident))) l in
+             Prims.strcat "AllowList " uu___1)
+  }
 let (deq_lazy_kind : lazy_kind FStarC_Class_Deq.deq) =
   {
     FStarC_Class_Deq.op_Equals_Question =

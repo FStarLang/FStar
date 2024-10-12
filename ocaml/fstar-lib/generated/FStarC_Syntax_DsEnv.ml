@@ -105,6 +105,14 @@ let (uu___is_Exported_id_term_type : exported_id_kind -> Prims.bool) =
 let (uu___is_Exported_id_field : exported_id_kind -> Prims.bool) =
   fun projectee ->
     match projectee with | Exported_id_field -> true | uu___ -> false
+let (uu___0 : exported_id_kind FStarC_Class_Show.showable) =
+  {
+    FStarC_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Exported_id_field -> "Exported_id_field"
+         | Exported_id_term_type -> "Exported_id_term_type")
+  }
 type exported_id_set =
   exported_id_kind -> string_set FStarC_Compiler_Effect.ref
 type env =
@@ -3267,8 +3275,22 @@ let (push_include' :
                               ->
                               let update_exports k =
                                 let ns_ex =
-                                  let uu___6 = ns_trans_exports k in
-                                  FStarC_Compiler_Effect.op_Bang uu___6 in
+                                  let uu___6 =
+                                    let uu___7 = ns_trans_exports k in
+                                    FStarC_Compiler_Effect.op_Bang uu___7 in
+                                  Obj.magic
+                                    (FStarC_Class_Setlike.filter ()
+                                       (Obj.magic
+                                          (FStarC_Compiler_RBSet.setlike_rbset
+                                             FStarC_Class_Ord.ord_string))
+                                       (fun id ->
+                                          let uu___7 =
+                                            let uu___8 =
+                                              FStarC_Ident.id_of_text id in
+                                            FStarC_Syntax_Syntax.is_ident_allowed_by_restriction
+                                              uu___8 restriction in
+                                          FStarC_Compiler_Util.is_some uu___7)
+                                       (Obj.magic uu___6)) in
                                 let ex = cur_exports k in
                                 (let uu___7 =
                                    let uu___8 =
