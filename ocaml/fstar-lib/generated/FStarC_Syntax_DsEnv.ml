@@ -2678,8 +2678,10 @@ let (find_binders_for_datacons :
     FStarC_Ident.lident ->
       FStarC_Ident.ident Prims.list FStar_Pervasives_Native.option)
   =
+  let debug = FStarC_Compiler_Debug.get_toggle "open_include_restrictions" in
   fun env1 ->
     fun lid ->
+      let ns = FStarC_Ident.ns_of_lid lid in
       let k_global_def lid1 uu___ =
         match uu___ with
         | ({
@@ -2688,29 +2690,53 @@ let (find_binders_for_datacons :
                  FStarC_Syntax_Syntax.us1 = uu___2;
                  FStarC_Syntax_Syntax.t1 = t;
                  FStarC_Syntax_Syntax.ty_lid = uu___3;
-                 FStarC_Syntax_Syntax.num_ty_params = uu___4;
-                 FStarC_Syntax_Syntax.mutuals1 = uu___5;
-                 FStarC_Syntax_Syntax.injective_type_params1 = uu___6;_};
-             FStarC_Syntax_Syntax.sigrng = uu___7;
-             FStarC_Syntax_Syntax.sigquals = uu___8;
-             FStarC_Syntax_Syntax.sigmeta = uu___9;
-             FStarC_Syntax_Syntax.sigattrs = uu___10;
-             FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___11;
-             FStarC_Syntax_Syntax.sigopts = uu___12;_},
-           uu___13) ->
-            let uu___14 =
-              let uu___15 =
-                let uu___16 = FStarC_Syntax_Util.arrow_formals_comp_ln t in
-                FStar_Pervasives_Native.fst uu___16 in
+                 FStarC_Syntax_Syntax.num_ty_params = num_ty_params;
+                 FStarC_Syntax_Syntax.mutuals1 = uu___4;
+                 FStarC_Syntax_Syntax.injective_type_params1 = uu___5;_};
+             FStarC_Syntax_Syntax.sigrng = uu___6;
+             FStarC_Syntax_Syntax.sigquals = uu___7;
+             FStarC_Syntax_Syntax.sigmeta = uu___8;
+             FStarC_Syntax_Syntax.sigattrs = uu___9;
+             FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___10;
+             FStarC_Syntax_Syntax.sigopts = uu___11;_},
+           uu___12) ->
+            let uu___13 =
+              let uu___14 =
+                let uu___15 =
+                  let uu___16 =
+                    let uu___17 = FStarC_Syntax_Util.arrow_formals_comp_ln t in
+                    FStar_Pervasives_Native.fst uu___17 in
+                  FStarC_Compiler_List.splitAt num_ty_params uu___16 in
+                FStar_Pervasives_Native.snd uu___15 in
               FStarC_Compiler_List.map
                 (fun x ->
                    (x.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.ppname)
-                uu___15 in
-            FStar_Pervasives_Native.Some uu___14
+                uu___14 in
+            FStar_Pervasives_Native.Some uu___13
         | uu___1 -> FStar_Pervasives_Native.None in
-      resolve_in_open_namespaces' env1 lid
-        (fun uu___ -> FStar_Pervasives_Native.None)
-        (fun uu___ -> FStar_Pervasives_Native.None) k_global_def
+      let result =
+        resolve_in_open_namespaces' env1 lid
+          (fun uu___ -> FStar_Pervasives_Native.None)
+          (fun uu___ -> FStar_Pervasives_Native.None) k_global_def in
+      (let uu___1 = FStarC_Compiler_Effect.op_Bang debug in
+       if uu___1
+       then
+         let uu___2 =
+           let uu___3 =
+             let uu___4 =
+               FStarC_Class_Show.show FStarC_Ident.showable_lident lid in
+             let uu___5 =
+               let uu___6 =
+                 FStarC_Class_Show.show
+                   (FStarC_Class_Show.show_option
+                      (FStarC_Class_Show.show_list
+                         FStarC_Ident.showable_ident)) result in
+               Prims.strcat ") = " uu___6 in
+             Prims.strcat uu___4 uu___5 in
+           Prims.strcat "find_binders_for_datacons(_, " uu___3 in
+         FStarC_Compiler_Util.print_endline uu___2
+       else ());
+      result
 let elab_restriction :
   'uuuuu .
     (env -> FStarC_Ident.lident -> FStarC_Syntax_Syntax.restriction -> 'uuuuu)
