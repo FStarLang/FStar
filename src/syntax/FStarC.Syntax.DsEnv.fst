@@ -57,6 +57,12 @@ type string_set = RBSet.t string
 type exported_id_kind = (* kinds of identifiers exported by a module *)
 | Exported_id_term_type (* term and type identifiers *)
 | Exported_id_field     (* field identifiers *)
+
+instance _: showable exported_id_kind = {
+  show = (function | Exported_id_field -> "Exported_id_field"
+                   | Exported_id_term_type -> "Exported_id_term_type")
+}
+
 type exported_id_set = exported_id_kind -> ref string_set
 
 type env = {

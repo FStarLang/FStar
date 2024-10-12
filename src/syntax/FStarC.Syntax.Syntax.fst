@@ -591,6 +591,11 @@ instance showable_lazy_kind = {
   );
 }
 
+instance showable_restriction: showable restriction = {
+  show = (function | Unrestricted -> "Unrestricted"
+                   | AllowList l  -> "AllowList " ^ show l);
+}
+
 instance deq_lazy_kind : deq lazy_kind = {
   (=?) = (fun k k' ->
 (* NOTE: Lazy_embedding compares false to itself, by design. *)
