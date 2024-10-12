@@ -1056,9 +1056,11 @@ let find_binders_for_datacons: env -> lident -> option (list ident) =
   fun env lid ->
     let ns = ns_of_lid lid in
     let k_global_def lid = function
-        | ({ sigel = Sig_datacon {t} }, _) ->
-            arrow_formals_comp_ln t
-          |> fst
+        | ({ sigel = Sig_datacon {t; num_ty_params} }, _) ->
+            arrow_formals_comp_ln t |> fst
+            // The first `num_ty_params` of each constructors of a type are
+            // type params, not fields of the constructors: we skip those.
+          |> List.splitAt num_ty_params |> snd
           |> List.map (fun x -> x.binder_bv.ppname)
           |> Some
         | _ -> None in
