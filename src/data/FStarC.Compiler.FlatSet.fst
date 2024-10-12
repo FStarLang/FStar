@@ -102,6 +102,7 @@ instance setlike_flat_set (a:Type) (_ : ord a) : Tot (setlike a (flat_set a)) = 
     remove = remove;
     mem = mem;
     elems = elems;
+    filter = List.filter;
     for_all = for_all;
     for_any = for_any;
     subset = subset;

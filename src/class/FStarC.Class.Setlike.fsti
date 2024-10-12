@@ -19,6 +19,7 @@ class setlike (e:Type) (s:Type) = {
   for_all       : (e -> bool) -> s -> bool;
   for_any       : (e -> bool) -> s -> bool;
   elems         : s -> list e;
+  filter        : (e -> bool) -> s -> s;
 
   collect       : (e -> s) -> list e -> s;
   from_list     : list e -> s;
