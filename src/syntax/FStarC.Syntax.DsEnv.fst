@@ -1051,15 +1051,22 @@ let find_data_constructors_for_typ env (lid:lident) =
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
-let find_binders_for_datacons env (lid:lident) =
-  let k_global_def lid = function
-      | ({ sigel = Sig_datacon {t} }, _) ->
-          arrow_formals_comp_ln t
-        |> fst
-        |> List.map (fun x -> x.binder_bv.ppname)
-        |> Some
-      | _ -> None in
-  resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
+let find_binders_for_datacons: env -> lident -> option (list ident) =
+  let debug = FStarC.Compiler.Debug.get_toggle "open_include_restrictions" in
+  fun env lid ->
+    let ns = ns_of_lid lid in
+    let k_global_def lid = function
+        | ({ sigel = Sig_datacon {t; num_ty_params} }, _) ->
+            arrow_formals_comp_ln t |> fst
+            // The first `num_ty_params` of each constructors of a type are
+            // type params, not fields of the constructors: we skip those.
+          |> List.splitAt num_ty_params |> snd
+          |> List.map (fun x -> x.binder_bv.ppname)
+          |> Some
+        | _ -> None in
+    let result = resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def in
+    if !debug then print_endline ("find_binders_for_datacons(_, " ^ show lid ^ ") = " ^ show result);
+    result
 
 (** Elaborates a `restriction`: this function adds implicit names
 (projectors, discriminators, record fields) that F* generates
