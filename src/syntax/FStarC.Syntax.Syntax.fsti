@@ -945,6 +945,8 @@ instance val showable_should_check_uvar : showable should_check_uvar
 
 instance val showable_lazy_kind : showable lazy_kind
 
+instance val showable_restriction: showable restriction
+
 instance val deq_lazy_kind   : deq lazy_kind
 instance val deq_bv          : deq bv
 instance val deq_ident       : deq ident

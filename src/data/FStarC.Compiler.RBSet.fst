@@ -60,6 +60,13 @@ let add {| ord 'a |} (x:'a) (s:rbset 'a) : rbset 'a =
   in
   blackroot (add' s)
 
+let filter {| ord 'a |} (predicate: 'a -> bool) (set: rbset 'a): rbset 'a =
+  let rec aux acc = function
+    | L -> acc
+    | N (_, l, v, r) ->
+      aux (aux (if predicate v then add v acc else acc) l) r
+  in aux (empty ()) set
+
 let rec extract_min #a {| ord a |} (t : rbset a{N? t}) : rbset a & a =
   match t with
   | N (_, L, x, r) -> r, x
@@ -162,6 +169,7 @@ instance setlike_rbset (a:Type) (_ : ord a) : Tot (setlike a (rbset a)) = {
     for_all = for_all;
     for_any = for_any;
     elems = elems;
+    filter;
 
     collect = collect;
     from_list = from_list;

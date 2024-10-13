@@ -57,6 +57,12 @@ type string_set = RBSet.t string
 type exported_id_kind = (* kinds of identifiers exported by a module *)
 | Exported_id_term_type (* term and type identifiers *)
 | Exported_id_field     (* field identifiers *)
+
+instance _: showable exported_id_kind = {
+  show = (function | Exported_id_field -> "Exported_id_field"
+                   | Exported_id_term_type -> "Exported_id_term_type")
+}
+
 type exported_id_set = exported_id_kind -> ref string_set
 
 type env = {
@@ -1218,7 +1224,7 @@ let push_include' env ns restriction =
         let () = match (get_exported_id_set env curmod, get_trans_exported_id_set env curmod) with
         | (Some cur_exports, Some cur_trans_exports) ->
           let update_exports (k: exported_id_kind) =
-            let ns_ex = ! (ns_trans_exports k) in
+            let ns_ex = ! (ns_trans_exports k) |> filter (fun id -> is_ident_allowed_by_restriction (id_of_text id) restriction |> is_some) in
             let ex = cur_exports k in
             let () = ex := diff (!ex) ns_ex in
             let trans_ex = cur_trans_exports k in
