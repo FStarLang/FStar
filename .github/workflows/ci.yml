@@ -1,0 +1,221 @@
+name: F* CI
+
+on:
+  push:
+  workflow_dispatch:
+  workflow_call:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    # Build an F* binary package: a fully-bootstrapped stage 2 compiler,
+    # with its plugins, a fully checked library (i.e. with .checked)
+    # files and compiled versions of fstar_lib and fstar_plugin_lib.
+    # Also, we build a full stage 1 compiler and its libraries, and
+    # make all possible artifacts.
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Produce all artifacts
+        run: make -skj$(nproc) all-packages FSTAR_VERSION=ci
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: fstar-ci.tar.gz
+          name: fstar-ci.tar.gz
+          retention-days: 3
+      - uses: actions/upload-artifact@v4
+        with:
+          path: fstar-ci-stage1.tar.gz
+          name: fstar-ci-stage1.tar.gz
+          retention-days: 3
+      - uses: actions/upload-artifact@v4
+        with:
+          path: fstar-ci-src.tar.gz
+          name: fstar-ci-src.tar.gz
+          retention-days: 3
+      - uses: actions/upload-artifact@v4
+        with:
+          path: fstar-ci-stage1-src.tar.gz
+          name: fstar-ci-stage1-src.tar.gz
+          retention-days: 3
+
+      # FIXME: Ideally, we could upload the artifacts as soon as each of
+      # them is created, and start the subsequent jobs at that instant too.
+      # Is that even doable...?
+
+  check-friends:
+    needs: build
+    name: friends
+    uses: ./.github/workflows/check-friends.yml
+
+  # This checks that the stage3 extracted fstarc matches exactly with stage2.
+  # There is some overlap with the job above, but the testing jobs do not
+  # need this bit at all and we have plenty of parallelism for now... so just
+  # spawn another one.
+  check-stage3-diff:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Check for a stage 3 diff
+        run: make -skj$(nproc) stage3-diff
+
+  # Download the stage2 binary package from the previous job and run the tests
+  # in the repo. This makes sure that the tests do not depend on some
+  # random internal state of the repo, but only on out/.
+  #
+  # We could be paranoid and rm -rf ulib too, it should not make a difference.
+  #
+  # We also run all tests over the stage 1 compiler. They should all pass,
+  # just like for stage2. The compiler used to build fstar.exe itself
+  # should not matter.
+  test-local:
+    strategy:
+      fail-fast: false
+      matrix:
+        pak:
+          - fstar-ci.tar.gz
+          - fstar-ci-stage1.tar.gz
+    needs: build
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Get fstar package
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.pak }}
+
+      - name: Set up package locally
+        run: mkdir -p out && tar xzf ${{ matrix.pak }} -C out
+
+      - name: Run tests
+        run: make -skj$(nproc) test
+
+  binary-smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        pak:
+          - fstar-ci.tar.gz
+          - fstar-ci-stage1.tar.gz
+        os:
+          # - ubuntu-20.04
+          # - ubuntu-22.04
+          - ubuntu-24.04
+          # - ubuntu-latest
+          # FIXME: the container builds with a recent glibc, use an older
+          # base system to get a more portable executable.
+    needs: build
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: cda-tum/setup-z3@main
+        with:
+          version: 4.8.5
+
+      - name: Get fstar package
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.pak }}
+
+      - run: tar xzf ${{ matrix.pak }}
+
+      - name: Smoke test
+        run: |
+          ./bin/fstar.exe ulib/Prims.fst -f
+          echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          ./bin/fstar.exe A.fst
+
+  ocaml-smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        pak:
+          - fstar-ci-src.tar.gz
+          - fstar-ci-stage1-src.tar.gz
+        os:
+          - ubuntu-20.04
+          - ubuntu-22.04
+          - ubuntu-24.04
+          - ubuntu-latest
+        exclude:
+          - os: ubuntu-24.04 # setup-ocaml fails due to darcs https://github.com/ocaml/setup-ocaml/issues/872
+    needs: build
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: cda-tum/setup-z3@main
+        with:
+          version: 4.8.5
+
+      - name: Get fstar package
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.pak }}
+      - run: tar xzf ${{ matrix.pak }}
+
+      - name: Set-up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 4.14.2
+
+      # F* includes an OPAM dependency to Z3, but we are just
+      # installing a binary with the action above, so we do not
+      # need it. This is also VERY slow as it builds the binary
+      # from source.
+      - run: sed -i '/"z3"/d' fstar.opam
+
+      - run: opam install . --deps-only --with-test
+      - run: eval $(opam env) && make -j$(nproc)
+
+      - name: Smoke test
+        run: |
+          ./out/bin/fstar.exe out/ulib/Prims.fst -f
+          echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          ./out/bin/fstar.exe A.fst
+
+  perf-canaries:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - uses: cda-tum/setup-z3@main
+        with:
+          version: 4.8.5
+
+      - name: Get fstar package
+        uses: actions/download-artifact@v4
+        with:
+          name: fstar-ci.tar.gz
+
+      - run: tar xzf fstar-ci.tar.gz
+
+      - name: Run perf canaries
+        run: .scripts/perf_canaries.sh ./bin/fstar.exe
