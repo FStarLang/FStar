@@ -3523,7 +3523,32 @@ let rec (specs_with_types :
                                                                     (Bool
                                                                     true)),
                                                                     uu___278) in
-                                                                    [uu___277] in
+                                                                    let uu___278
+                                                                    =
+                                                                    let uu___279
+                                                                    =
+                                                                    let uu___280
+                                                                    =
+                                                                    text
+                                                                    "With no arguments: print shell code to set up an environment with the OCaml libraries in scope (similar to 'opam env'). With arguments: run a command in that environment. NOTE: this must be the FIRST argument passed to F* and other options are NOT processed." in
+                                                                    (FStarC_Getopt.noshort,
+                                                                    "ocamlenv",
+                                                                    (WithSideEffect
+                                                                    ((fun
+                                                                    uu___281
+                                                                    ->
+                                                                    FStarC_Compiler_Util.print_error
+                                                                    "--ocamlenv must be the first argument, see fstar.exe --help for details\n";
+                                                                    FStarC_Compiler_Effect.exit
+                                                                    Prims.int_one),
+                                                                    (Const
+                                                                    (Bool
+                                                                    true)))),
+                                                                    uu___280) in
+                                                                    [uu___279] in
+                                                                    uu___277
+                                                                    ::
+                                                                    uu___278 in
                                                                     uu___275
                                                                     ::
                                                                     uu___276 in

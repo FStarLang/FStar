@@ -131,7 +131,39 @@ let (fstar_files :
   Prims.string Prims.list FStar_Pervasives_Native.option
     FStarC_Compiler_Effect.ref)
   = FStarC_Compiler_Util.mk_ref FStar_Pervasives_Native.None
-let go : 'uuuuu . 'uuuuu -> unit =
+let (go_ocamlenv : Prims.string Prims.list -> unit) =
+  fun rest_args ->
+    let shellescape s =
+      let uu___ =
+        let uu___1 = FStarC_Compiler_String.list_of_string s in
+        FStarC_Compiler_List.map
+          (fun uu___2 ->
+             match uu___2 with
+             | 92 -> "\\\\"
+             | 39 -> "'\"'\"'"
+             | c -> FStarC_Compiler_String.make Prims.int_one c) uu___1 in
+      FStarC_Compiler_String.concat "" uu___ in
+    let ocamldir = FStarC_Find.locate_ocaml () in
+    let old_ocamlpath =
+      let uu___ =
+        FStarC_Compiler_Util.expand_environment_variable "OCAMLPATH" in
+      FStarC_Compiler_Util.dflt "" uu___ in
+    let ocamlpath_sep =
+      match FStarC_Platform.system with
+      | FStarC_Platform.Windows -> ";"
+      | FStarC_Platform.Posix -> ":" in
+    let new_ocamlpath =
+      Prims.strcat ocamldir (Prims.strcat ocamlpath_sep old_ocamlpath) in
+    match rest_args with
+    | [] ->
+        ((let uu___1 = shellescape new_ocamlpath in
+          FStarC_Compiler_Util.print1 "OCAMLPATH='%s'; export OCAMLPATH;\n"
+            uu___1);
+         FStarC_Compiler_Effect.exit Prims.int_zero)
+    | cmd::args ->
+        (FStarC_Compiler_Util.putenv "OCAMLPATH" new_ocamlpath;
+         FStarC_Compiler_Util.execvp cmd (cmd :: args))
+let (go_normal : unit -> unit) =
   fun uu___ ->
     let uu___1 = process_args () in
     match uu___1 with
@@ -474,6 +506,12 @@ let go : 'uuuuu . 'uuuuu -> unit =
                                                     FStarC_Errors_Msg.is_error_message_string)
                                                  (Obj.magic
                                                     "No file provided"))))))))))))))
+let (go : unit -> unit) =
+  fun uu___ ->
+    let args = FStarC_Compiler_Util.get_cmd_args () in
+    match args with
+    | uu___1::"--ocamlenv"::rest -> go_ocamlenv rest
+    | uu___1 -> go_normal ()
 let (lazy_chooser :
   FStarC_Syntax_Syntax.lazy_kind ->
     FStarC_Syntax_Syntax.lazyinfo -> FStarC_Syntax_Syntax.term)
