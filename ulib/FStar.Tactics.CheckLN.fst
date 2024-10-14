@@ -1,6 +1,6 @@
 module FStar.Tactics.CheckLN
 
-open FStar.Tactics.V2
+open FStar.Tactics.V2.Bare
 open FStar.Tactics.Util
 
 let rec for_all (p : 'a -> Tac bool) (l : list 'a)  : Tac bool =

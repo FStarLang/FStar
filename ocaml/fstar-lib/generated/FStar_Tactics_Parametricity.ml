@@ -3910,13 +3910,13 @@ let (param_inductive :
                                                                     (Prims.of_int (322))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (322))
-                                                                    (Prims.of_int (54)))))
+                                                                    (Prims.of_int (59)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Parametricity.fst"
                                                                     (Prims.of_int (322))
-                                                                    (Prims.of_int (57))
+                                                                    (Prims.of_int (62))
                                                                     (Prims.of_int (325))
                                                                     (Prims.of_int (20)))))
                                                                     (Obj.magic

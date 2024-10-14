@@ -15,7 +15,7 @@
 *)
 module FStar.Reflection.V2.Arith
 
-open FStar.Tactics.V2
+open FStar.Tactics.V2.Bare
 open FStar.Reflection.V2
 module O = FStar.Order
 

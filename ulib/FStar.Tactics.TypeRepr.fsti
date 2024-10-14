@@ -1,6 +1,6 @@
 module FStar.Tactics.TypeRepr
 
-open FStar.Tactics.V2
+open FStar.Tactics.V2.Bare
 
 private
 let empty_elim (e:empty) (#a:Type) : a = match e with
