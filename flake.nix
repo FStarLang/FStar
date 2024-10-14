@@ -14,7 +14,7 @@
         z3 = pkgs.callPackage (import ./.nix/z3.nix) { };
         version = self.rev or "dirty";
         fstar-dune = ocamlPackages.callPackage ./ocaml { inherit version; };
-        fstar-ulib = pkgs.callPackage ./ulib { inherit fstar-dune version z3; };
+        fstar-ulib = pkgs.callPackage ./nix/ulib.nix { inherit fstar-dune version z3; };
         fstar = pkgs.callPackage ./.nix/fstar.nix {
           inherit fstar-dune fstar-ulib version z3;
         };
