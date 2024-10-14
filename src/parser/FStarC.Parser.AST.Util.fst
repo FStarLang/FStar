@@ -462,6 +462,7 @@ let eq_lift (t1 t2: lift) =
 
 let eq_pragma (t1 t2: pragma) =
   match t1, t2 with
+  | ShowOptions, ShowOptions -> true
   | SetOptions s1, SetOptions s2 -> s1 = s2
   | ResetOptions s1, ResetOptions s2 -> eq_option (fun s1 s2 -> s1 = s2) s1 s2
   | PushOptions s1, PushOptions s2 -> eq_option (fun s1 s2 -> s1 = s2) s1 s2
