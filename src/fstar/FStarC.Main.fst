@@ -118,8 +118,7 @@ let go_ocamlenv rest_args =
   let shellescape (s:string) : string =
     String.list_of_string s |>
     List.map (function
-      | '\\' -> "\\\\" // backslashes can be escaped by themselves
-      | '\'' -> "'\"'\"'" // single quotes can be escaped by closing and reopening
+      | '\'' -> "'\"'\"'" // to escape single quotes we need to put them inside a double quote
       | c -> String.make 1 c
     ) |>
     String.concat ""
