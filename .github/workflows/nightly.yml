@@ -1,0 +1,45 @@
+name: F* nightly build
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    # ^ We use the container here to be more robust, hopefully. Also not using
+    # self-hosted runner to get a clean VM, that is hopefully always available too.
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Produce all artifacts
+        run: make -skj$(nproc) all FSTAR_VERSION=ci
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: fstar-ci.tar.gz
+          name: fstar-ci.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          path: fstar-ci-stage1.tar.gz
+          name: fstar-ci-stage1.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          path: fstar-ci-src.tar.gz
+          name: fstar-ci-src.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          path: fstar-ci-stage1-src.tar.gz
+          name: fstar-ci-stage1-src.tar.gz

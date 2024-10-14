@@ -1,0 +1,20 @@
+name: F* CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: build
+    uses: ./.github/workflows/build.yml
+
+  tests:
+    name: tests
+    needs: build
+    uses: ./.github/workflows/tests.yml
