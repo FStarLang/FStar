@@ -304,13 +304,14 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
     let ext = match opt with
       | Some Options.FSharp -> ".fs"
       | Some Options.OCaml
-      | Some Options.Plugin -> ".ml"
+      | Some Options.Plugin
+      | Some Options.PluginNoLib -> ".ml"
       | Some Options.Krml -> ".krml"
       | Some Options.Extension -> ".ast"
       | _ -> fail ()
     in
     match opt with
-    | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin ->
+    | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin | Some Options.PluginNoLib ->
       (* When bootstrapped in F#, this will use the old printer in
          FStarC.Extraction.ML.Code for both OCaml and F# extraction.
          When bootstarpped in OCaml, this will use the old printer
