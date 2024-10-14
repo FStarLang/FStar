@@ -27,51 +27,60 @@ module O   = FStarC.Options
 open FStarC.Class.Show
 
 let loaded : ref (list string) = BU.mk_ref []
+let loaded_plugin_lib : ref bool = BU.mk_ref false
 
 let pout  s   = if Debug.any () then BU.print_string s
 let pout1 s x = if Debug.any () then BU.print1 s x
 let perr  s   = if Debug.any () then BU.print_error s
 let perr1 s x = if Debug.any () then BU.print1_error s x
 
+let do_dynlink (fname:string) : unit =
+  try
+    dynlink_loadfile fname
+  with DynlinkError e ->
+    E.log_issue0 E.Error_PluginDynlink [
+      E.text (BU.format1 "Failed to load plugin file %s" fname);
+      Pprint.prefix 2 1 (E.text "Reason:") (E.text e);
+      E.text (BU.format1 "Remove the `--load` option or use `--warn_error -%s` to ignore and continue."
+                (show (E.errno E.Error_PluginDynlink)))
+    ];
+    (* If we weren't ignoring this error, just stop now *)
+    E.stop_if_err ()
+
 let dynlink (fname:string) : unit =
   if List.mem fname !loaded then (
     pout1 "Plugin %s already loaded, skipping\n" fname
   ) else (
     pout ("Attempting to load " ^ fname ^ "\n");
-    begin try
-      dynlink_loadfile fname
-    with DynlinkError e ->
-      E.log_issue0 E.Error_PluginDynlink [
-        E.text (BU.format1 "Failed to load plugin file %s" fname);
-        Pprint.prefix 2 1 (E.text "Reason:") (E.text e);
-        E.text (BU.format1 "Remove the `--load` option or use `--warn_error -%s` to ignore and continue."
-                  (show (E.errno E.Error_PluginDynlink)))
-      ];
-      (* If we weren't ignoring this error, just stop now *)
-      E.stop_if_err ()
-    end;
+    do_dynlink fname;
     loaded := fname :: !loaded;
     pout1 "Loaded %s\n" fname;
     ()
   )
 
 let load_plugin tac =
+  if not (!loaded_plugin_lib) then (
+    pout "Loading fstar_plugin_lib before first plugin\n";
+    do_dynlink (BU.normalize_file_path <| BU.get_exec_dir () ^ "/../lib/fstar_plugin_lib/fstar_plugin_lib.cmxs");
+    pout "Loaded fstar_plugin_lib OK\n";
+    loaded_plugin_lib := true
+  );
   dynlink tac
 
 let load_plugins tacs =
-    List.iter load_plugin tacs
+  List.iter load_plugin tacs
 
 let load_plugins_dir dir =
-    (* Dynlink all .cmxs files in the given directory *)
-    (* fixme: confusion between FStarC.Compiler.String and FStar.String *)
-    BU.readdir dir
-    |> List.filter (fun s -> String.length s >= 5 && FStar.String.sub s (String.length s - 5) 5 = ".cmxs")
-    |> List.map (fun s -> dir ^ "/" ^ s)
-    |> load_plugins
+  (* Dynlink all .cmxs files in the given directory *)
+  (* fixme: confusion between FStarC.Compiler.String and FStar.String *)
+  BU.readdir dir
+  |> List.filter (fun s -> String.length s >= 5 && FStar.String.sub s (String.length s - 5) 5 = ".cmxs")
+  |> List.map (fun s -> dir ^ "/" ^ s)
+  |> load_plugins
 
 let compile_modules dir ms =
    let compile m =
-     let packages = [ "fstar.lib" ] in
+     let packages = [ "fstar_plugin_lib" ] in
      let pkg pname = "-package " ^ pname in
      let args = ["ocamlopt"; "-shared"] (* FIXME shell injection *)
                 @ ["-I"; dir]
@@ -88,11 +97,11 @@ let compile_modules dir ms =
        | Some s -> s
        | None -> ""
      in
-     let env_setter = BU.format5 "env OCAMLPATH=\"%s/../lib/%s%s/%s%s\""
-       Find.fstar_bin_directory
+     let env_setter = BU.format3 "env OCAMLPATH=\"%s%s%s\""
+       (Find.locate_ocaml ())
        ocamlpath_sep
-       Find.fstar_bin_directory
-       ocamlpath_sep
+      //  Options.fstar_bin_directory // needed?
+      //  ocamlpath_sep
        old_ocamlpath
      in
      let cmd = String.concat " " (env_setter :: "ocamlfind" :: args) in
