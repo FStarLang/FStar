@@ -113,8 +113,13 @@ let load_native_tactics () =
 (* print_in_place options are passed *)
 let fstar_files: ref (option (list string)) = Util.mk_ref None
 
-(* ocamlenv mode: called whenever the *first* argument is exactly 'ocamlenv' *)
+(* ocamlenv mode: called whenever the *first* argument is exactly '--ocamlenv' *)
 let go_ocamlenv rest_args =
+  if Platform.system = Platform.Windows then (
+    Errors.raise_error0 Errors.Fatal_OptionsNotCompatible [
+      Errors.text "--ocamlenv is not supported on Windows (yet?)"
+    ]
+  );
   let shellescape (s:string) : string =
     String.list_of_string s |>
     List.map (function
@@ -125,11 +130,7 @@ let go_ocamlenv rest_args =
   in
   let ocamldir = Find.locate_ocaml () in
   let old_ocamlpath = Util.dflt "" (Util.expand_environment_variable "OCAMLPATH") in
-  let ocamlpath_sep = match Platform.system with
-    | Platform.Windows -> ";"
-    | Platform.Posix -> ":"
-  in
-  let new_ocamlpath = ocamldir ^ ocamlpath_sep ^ old_ocamlpath in
+  let new_ocamlpath = ocamldir ^ ":" ^ old_ocamlpath in
   match rest_args with
   | [] ->
     Util.print1 "OCAMLPATH='%s'; export OCAMLPATH;\n" (shellescape new_ocamlpath);
