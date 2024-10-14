@@ -1,0 +1,11 @@
+(include_subdirs unqualified)
+(executable
+ (name main)
+ ; ^ can we avoid this? Users do not really need it
+ (libraries
+   fstarcompiler
+   memtrace
+ )
+ (link_flags "-linkall")
+ (modes (native exe))
+)

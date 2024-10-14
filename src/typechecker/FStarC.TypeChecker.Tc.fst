@@ -1222,7 +1222,7 @@ let load_checked_module (en:env) (m:modul) :env =
   module. *)
 
   (* Reset debug flags *)
-  if Options.should_check (string_of_lid m.name) || Options.debug_all_modules ()
+  if Options.should_check (string_of_lid m.name) // || Options.debug_all_modules ()
   then Debug.enable_toggles (Options.debug_keys ())
   else Debug.disable_all ();
 

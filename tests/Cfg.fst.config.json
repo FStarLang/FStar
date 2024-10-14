@@ -1,5 +1,5 @@
 {
-  "fstar_exe": "../bin/fstar.exe",
+  "fstar_exe": "../out/bin/fstar.exe",
   "options": [
     "--ext", "context_pruning",
     "--z3version", "4.13.3"

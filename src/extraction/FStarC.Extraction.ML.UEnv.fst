@@ -265,7 +265,9 @@ let no_fstar_stubs_ns (ns : list mlsymbol) : list mlsymbol =
   | "FStar"::"Stubs"::"Tactics"::"Unseal"::[] when plug () ->
     "FStarC"::"Tactics"::"Unseal"::[]
 
-  | "FStar"::"Stubs"::rest when plug () -> "Fstar_guts.FStarC"::rest // review, but I think it's right
+  | "FStar"::"Stubs"::rest when plug () -> "Fstarcompiler.FStarC"::rest // review, but I think it's right
+
+  | "FStar"::"Stubs"::rest -> "FStar"::rest // review, wrong
 
   | _ -> ns
 
@@ -426,12 +428,14 @@ let new_mlpath_of_lident (g:uenv) (x : lident) : mlpath & uenv =
          let g = { g with env_mlident_map = map } in
          (mlns_of_lid x, name), g
   in
-  let guts (p::ps, l) = ("Fstar_guts."^p) :: ps, l in
+  let guts (p::ps, l) = ("Fstarcompiler."^p) :: ps, l in
   let mlp =
     match string_of_lid x with
     (* This sucks, but these are the types in the interface
     to tactic primitives. Tuples/lists are not here since they
     get extracted to the OCaml native ones. *)
+    | "Prims.dtuple2"
+    | "Prims.Mkdtuple2"
     | "FStar.Pervasives.either"
     | "FStar.Pervasives.Inl"
     | "FStar.Pervasives.Inr"

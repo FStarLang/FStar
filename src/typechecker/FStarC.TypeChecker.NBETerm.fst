@@ -919,7 +919,7 @@ let e_order =
   let ord_Lt_fv = lid_as_fv ord_Lt_lid (Some Data_ctor) in
   let ord_Eq_fv = lid_as_fv ord_Eq_lid (Some Data_ctor) in
   let ord_Gt_fv = lid_as_fv ord_Gt_lid (Some Data_ctor) in
-  let open FStar.Order in
+  let open FStarC.Compiler.Order in
   let embed_order cb (o:order) : t =
       match o with
       | Lt -> mkConstruct ord_Lt_fv [] []

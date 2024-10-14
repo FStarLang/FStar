@@ -60,9 +60,9 @@ let dynlink (fname:string) : unit =
 
 let load_plugin tac =
   if not (!loaded_plugin_lib) then (
-    pout "Loading fstar_plugin_lib before first plugin\n";
-    do_dynlink (BU.normalize_file_path <| BU.get_exec_dir () ^ "/../lib/fstar_plugin_lib/fstar_plugin_lib.cmxs");
-    pout "Loaded fstar_plugin_lib OK\n";
+    pout "Loading fstar.pluginlib before first plugin\n";
+    do_dynlink (BU.normalize_file_path <| BU.get_exec_dir () ^ "/../lib/fstar/pluginlib/fstar_pluginlib.cmxs");
+    pout "Loaded fstar.pluginlib OK\n";
     loaded_plugin_lib := true
   );
   dynlink tac
@@ -80,7 +80,7 @@ let load_plugins_dir dir =
 
 let compile_modules dir ms =
    let compile m =
-     let packages = [ "fstar_plugin_lib" ] in
+     let packages = [ "fstar.pluginlib" ] in
      let pkg pname = "-package " ^ pname in
      let args = ["ocamlopt"; "-shared"] (* FIXME shell injection *)
                 @ ["-I"; dir]
