@@ -30,7 +30,7 @@ module E = FStarC.Errors
 module UF = FStarC.Syntax.Unionfind
 module RE = FStarC.Reflection.V2.Embeddings
 
-let _ = FStarC.Version.dummy ()
+let _ = Version.dummy ()
 
 (* These modules only mentioned to put them in the dep graph
 and hence compile and link them in. They do not export anything,
@@ -141,175 +141,172 @@ let go_ocamlenv rest_args =
     Util.putenv "OCAMLPATH" new_ocamlpath;
     Util.execvp cmd (cmd :: args)
 
+(* This is used to print a backtrace when F* is interrupted by SIGINT *)
+let set_error_trap () =
+  let h = get_sigint_handler () in
+  let h' s =
+    let open FStarC.Pprint in
+    let open FStarC.Errors.Msg in
+    Debug.enable (); (* make sure diag is printed *)
+    Options.set_option "error_contexts" (Options.Bool true);
+    (* ^ Print context. Stack trace will be added since we have trace_error. *)
+    Errors.diag Range.dummyRange [
+      text "GOT SIGINT! Exiting";
+    ];
+    exit 1
+  in
+  set_sigint_handler (sigint_handler_f h')
+
 (* Normal mode with some flags, files, etc *)
 let go_normal () =
   let res, filenames = process_args () in
-  if Options.trace_error () then begin
-    let h = get_sigint_handler () in
-    let h' s =
-      let open FStarC.Pprint in
-      let open FStarC.Errors.Msg in
-      Debug.enable (); (* make sure diag is printed *)
-      Options.set_option "error_contexts" (Options.Bool true);
-      (* ^ Print context. Stack trace will be added since we have trace_error. *)
-      Errors.diag Range.dummyRange [
-        text "GOT SIGINT! Exiting";
-      ];
-      exit 1
-    in
-    set_sigint_handler (sigint_handler_f h')
-  end;
+  if Options.trace_error () then set_error_trap ();
   match res with
-    | Empty ->
-        Options.display_usage(); exit 1
+    | Empty     -> Options.display_usage(); exit 1
+    | Help      -> Options.display_usage(); exit 0
+    | Error msg -> Util.print_error msg; exit 1
 
-    | Help ->
-        Options.display_usage(); exit 0
+    | Success when Options.print_cache_version () ->
+      Util.print1 "F* cache version number: %s\n"
+                   (string_of_int FStarC.CheckedFiles.cache_version_number);
+      exit 0
 
-    | Error msg ->
-        Util.print_error msg; exit 1
+    (* --dep: Just compute and print the transitive dependency graph;
+              don't verify anything *)
+    | Success when Options.dep () <> None ->
+      let _, deps = Parser.Dep.collect filenames FStarC.CheckedFiles.load_parsing_data_from_cache in
+      Parser.Dep.print deps;
+      report_errors []
 
-    | _ when Options.print_cache_version () ->
-        Util.print1 "F* cache version number: %s\n"
-                     (string_of_int FStarC.CheckedFiles.cache_version_number);
+    (* --print: Emit files in canonical source syntax *)
+    | Success when Options.print () || Options.print_in_place () ->
+      if not Platform.is_fstar_compiler_using_ocaml then
+        failwith "You seem to be using the F#-generated version of the compiler ; \o
+                   reindenting is not known to work yet with this version";
+      let printing_mode =
+        if Options.print ()
+        then Prettyprint.FromTempToStdout
+        else Prettyprint.FromTempToFile
+      in
+      Prettyprint.generate printing_mode filenames
+
+    (* --read_checked: read and print a checked file *)
+    | Success when Some? (Options.read_checked_file ()) -> (
+      let path = Some?.v <| Options.read_checked_file () in
+      let env = Universal.init_env Parser.Dep.empty_deps in
+      let res = CheckedFiles.load_tc_result path in
+      match res with
+      | None ->
+        let open FStarC.Pprint in
+        Errors.raise_error0 Errors.Fatal_ModuleOrFileNotFound [
+          Errors.Msg.text "Could not read checked file:" ^/^ doc_of_string path
+        ]
+
+      | Some (_, tcr) ->
+        print1 "%s\n" (show tcr.checked_module)
+    )
+
+    (* --read_krml_file: read and print a krml file *)
+    | Success when Some? (Options.read_krml_file ()) -> (
+      let path = Some?.v <| Options.read_krml_file () in
+      match load_value_from_file path <: option Extraction.Krml.binary_format with
+      | None ->
+        let open FStarC.Pprint in
+        Errors.raise_error0 Errors.Fatal_ModuleOrFileNotFound [
+          Errors.Msg.text "Could not read krml file:" ^/^ doc_of_string path
+        ]
+      | Some (version, files) ->
+        print1 "Karamel format version: %s\n" (show version);
+        (* Just "show decls" would print it, we just format this a bit *)
+        files |> List.iter (fun (name, decls) ->
+          print1 "%s:\n" name;
+          decls |> List.iter (fun d -> print1 "  %s\n" (show d))
+        )
+    )
+
+    (* --list_plugins: emit a list of plugins and exit *)
+    | Success when Options.list_plugins () ->
+      let ps = TypeChecker.Cfg.list_plugins () in
+      let ts = Tactics.Interpreter.native_tactics_steps () in
+      Util.print1 "Registered plugins:\n%s\n" (String.concat "\n" (List.map (fun p -> "  " ^ show p.TypeChecker.Primops.Base.name) ps));
+      Util.print1 "Registered tactic plugins:\n%s\n" (String.concat "\n" (List.map (fun p -> "  " ^ show p.TypeChecker.Primops.Base.name) ts));
+      ()
+
+    (* --locate, --locate_lib, --locate_ocaml *)
+    | Success when Options.locate () ->
+      Util.print1 "%s\n" (Find.locate ());
+      exit 0
+    | Success when Options.locate_lib () -> (
+      match Find.locate_lib () with
+      | None ->
+        Util.print_error "No library found (is --no_default_includes set?)\n";
+        exit 1
+      | Some s ->
+        Util.print1 "%s\n" s;
         exit 0
+    )
+    | Success when Options.locate_ocaml () ->
+      Util.print1 "%s\n" (Find.locate_ocaml ());
+      exit 0
 
+    (* either batch or interactive mode *)
     | Success ->
-        fstar_files := Some filenames;
+      fstar_files := Some filenames;
 
-        if Debug.any () then (
-          Util.print1 "- F* executable: %s\n" (Util.exec_name);
-          Util.print1 "- Library root: %s\n" ((Util.dflt "<none>" (Find.lib_root ())));
-          Util.print1 "- Full include path: %s\n" (show (Find.include_path ()));
-          Util.print_string "\n";
-          ()
-        );
+      if Debug.any () then (
+        Util.print1 "- F* executable: %s\n" (Util.exec_name);
+        Util.print1 "- Library root: %s\n" ((Util.dflt "<none>" (Find.lib_root ())));
+        Util.print1 "- Full include path: %s\n" (show (Find.include_path ()));
+        Util.print_string "\n";
+        ()
+      );
 
-        load_native_tactics ();
+      (* Set the unionfind graph to read-only mode.
+       * This will be unset by the typechecker and other pieces
+       * of code that intend to use it. It helps us catch errors. *)
+      UF.set_ro ();
 
-        (* Set the unionfind graph to read-only mode.
-         * This will be unset by the typechecker and other pieces
-         * of code that intend to use it. It helps us catch errors. *)
-        (* TODO: also needed by the interactive mode below. *)
-        UF.set_ro ();
+      (* Try to load the plugins that are specified in the command line *)
+      load_native_tactics ();
 
-        (* --dep: Just compute and print the transitive dependency graph;
-                  don't verify anything *)
-        if Options.dep() <> None
-        then let _, deps = Parser.Dep.collect filenames FStarC.CheckedFiles.load_parsing_data_from_cache in
-             Parser.Dep.print deps;
-             report_errors []
-
-        (* --print: Emit files in canonical source syntax *)
-        else if Options.print () || Options.print_in_place () then
-          if FStarC.Platform.is_fstar_compiler_using_ocaml
-          then let printing_mode =
-                   if Options.print ()
-                   then FStarC.Prettyprint.FromTempToStdout
-                   else FStarC.Prettyprint.FromTempToFile
-               in
-               FStarC.Prettyprint.generate printing_mode filenames
-          else failwith "You seem to be using the F#-generated version ofthe compiler ; \o
-                         reindenting is not known to work yet with this version"
-
-        (* --read_checked: read and print a checked file *)
-        else if Some? (Options.read_checked_file ()) then
-          let path = Some?.v <| Options.read_checked_file () in
-          let env = Universal.init_env Parser.Dep.empty_deps in
-          let res = FStarC.CheckedFiles.load_tc_result path in
-          match res with
-          | None ->
-            let open FStarC.Pprint in
-            Errors.raise_error0 Errors.Fatal_ModuleOrFileNotFound [
-                Errors.Msg.text "Could not read checked file:" ^/^ doc_of_string path
-              ]
-
-          | Some (_, tcr) ->
-            print1 "%s\n" (show tcr.checked_module)
-
-        else if Options.list_plugins () then
-          let ps = FStarC.TypeChecker.Cfg.list_plugins () in
-          let ts = FStarC.Tactics.Interpreter.native_tactics_steps () in
-          Util.print1 "Registered plugins:\n%s\n" (String.concat "\n" (List.map (fun p -> "  " ^ show p.FStarC.TypeChecker.Primops.Base.name) ps));
-          Util.print1 "Registered tactic plugins:\n%s\n" (String.concat "\n" (List.map (fun p -> "  " ^ show p.FStarC.TypeChecker.Primops.Base.name) ts));
-          ()
-
-        else if Options.locate () then (
-          Util.print1 "%s\n" (Find.locate ());
-          exit 0
-
-        ) else if Options.locate_lib () then (
-          match Find.locate_lib () with
-          | None ->
-            Util.print_error "No library found (is --no_default_includes set?)\n";
-            exit 1
-          | Some s ->
-            Util.print1 "%s\n" s;
-            exit 0
-
-        ) else if Options.locate_ocaml () then (
-          Util.print1 "%s\n" (Find.locate_ocaml ());
-          exit 0
-
-        ) else if Some? (Options.read_krml_file ()) then
-          let path = Some?.v <| Options.read_krml_file () in
-          match load_value_from_file path <: option FStarC.Extraction.Krml.binary_format with
-          | None ->
-            let open FStarC.Pprint in
-            Errors.raise_error0 Errors.Fatal_ModuleOrFileNotFound [
-                Errors.Msg.text "Could not read krml file:" ^/^ doc_of_string path
-              ]
-          | Some (version, files) ->
-            print1 "Karamel format version: %s\n" (show version);
-            (* Just "show decls" would print it, we just format this a bit *)
-            files |> List.iter (fun (name, decls) ->
-              print1 "%s:\n" name;
-              decls |> List.iter (fun d -> print1 "  %s\n" (show d))
-            )
-
-        (* --lsp *)
-        else if Options.lsp_server () then
-          FStarC.Interactive.Lsp.start_server ()
-
-        (* For the following cases we might need native tactics, try to load *)
-        else begin
-
-        (* --ide, --in: Interactive mode *)
-        if Options.interactive () then begin
-          UF.set_rw ();
-          match filenames with
-          | [] -> (* input validation: move to process args? *)
-            Errors.log_issue0 Errors.Error_MissingFileName
-              "--ide: Name of current file missing in command line invocation\n";
-            exit 1
-          | _ :: _ :: _ -> (* input validation: move to process args? *)
-            Errors.log_issue0 Errors.Error_TooManyFiles
-              "--ide: Too many files in command line invocation\n";
-            exit 1
-          | [filename] ->
-            if Options.legacy_interactive () then
-              FStarC.Interactive.Legacy.interactive_mode filename
-            else
-              FStarC.Interactive.Ide.interactive_mode filename
-          end
-
-        (* Normal, batch mode compiler *)
-        else if List.length filenames >= 1 then begin //normal batch mode
-          let filenames, dep_graph = FStarC.Dependencies.find_deps_if_needed filenames FStarC.CheckedFiles.load_parsing_data_from_cache in
-          let tcrs, env, cleanup = Universal.batch_mode_tc filenames dep_graph in
-          ignore (cleanup env);
-          let module_names =
-            tcrs
-            |> List.map (fun tcr ->
-               Universal.module_or_interface_name tcr.checked_module)
-          in
-          report_errors module_names;
-          finished_message module_names 0
-        end //end batch mode
-
-        else
-          Errors.raise_error0 Errors.Error_MissingFileName "No file provided"
+      (* --lsp: interactive mode for Language Server Protocol *)
+      if Options.lsp_server () then
+        Interactive.Lsp.start_server ()
+      (* --ide, --in: Interactive mode *)
+      else if Options.interactive () then begin
+        UF.set_rw ();
+        match filenames with
+        | [] -> (* input validation: move to process args? *)
+          Errors.log_issue0 Errors.Error_MissingFileName
+            "--ide: Name of current file missing in command line invocation\n";
+          exit 1
+        | _ :: _ :: _ -> (* input validation: move to process args? *)
+          Errors.log_issue0 Errors.Error_TooManyFiles
+            "--ide: Too many files in command line invocation\n";
+          exit 1
+        | [filename] ->
+          if Options.legacy_interactive () then
+            Interactive.Legacy.interactive_mode filename
+          else
+            Interactive.Ide.interactive_mode filename
         end
+
+      (* Normal, batch mode compiler *)
+      else if List.length filenames >= 1 then begin //normal batch mode
+        if Nil? filenames then
+          Errors.raise_error0 Errors.Error_MissingFileName "No file provided";
+
+        let filenames, dep_graph = Dependencies.find_deps_if_needed filenames CheckedFiles.load_parsing_data_from_cache in
+        let tcrs, env, cleanup = Universal.batch_mode_tc filenames dep_graph in
+        ignore (cleanup env);
+        let module_names =
+          tcrs
+          |> List.map (fun tcr ->
+             Universal.module_or_interface_name tcr.checked_module)
+        in
+        report_errors module_names;
+        finished_message module_names 0
+      end //end batch mode
 
 (****************************************************************************)
 (* Main function                                                            *)
@@ -351,7 +348,7 @@ let lazy_chooser (k:Syntax.Syntax.lazy_kind) (i:Syntax.Syntax.lazyinfo) : Syntax
 
     | FStarC.Syntax.Syntax.Lazy_embedding (_, t) -> Thunk.force t
     | FStarC.Syntax.Syntax.Lazy_extension s      -> FStarC.Syntax.Util.exp_string (format1 "((extension %s))" s)
-  
+
 // This is called directly by the Javascript port (it doesn't call Main)
 let setup_hooks () =
     FStarC.Syntax.DsEnv.ugly_sigelt_to_string_hook := show;
