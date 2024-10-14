@@ -1759,20 +1759,8 @@ let print_full (outc : out_channel) (deps:deps) : unit =
         pr "\n\n"
     in
     let keys = deps_keys deps.dep_graph in
-    let no_fstar_stubs_file (s:string) : string =
-      (* If the original filename begins with FStar.Stubs, then remove that,
-      consistent with what extraction will actually do. *)
-      let s1 = "FStar.Stubs." in
-      let s2 = "FStar." in
-      let l1 = String.length s1 in
-      if String.length s >= l1 && String.substring s 0 l1 = s1 then
-        s2 ^ String.substring s l1 (String.length s - l1)
-      else
-        s
-    in
     let output_file ext fst_file =
         let basename = Option.get (check_and_strip_suffix (BU.basename fst_file)) in
-        let basename = no_fstar_stubs_file basename in
         let ml_base_name = replace_chars basename '.' "_" in
         Options.prepend_output_dir (ml_base_name ^ ext)
     in
