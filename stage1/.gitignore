@@ -1,0 +1,7 @@
+/inst
+/*.checked/**
+/*.ml/**
+/*.pluginml/**
+.*_depend
+.depend
+*.install

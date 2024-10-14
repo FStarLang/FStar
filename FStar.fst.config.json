@@ -1,7 +1,7 @@
 {
-  "fstar_exe": "./bin/fstar.exe",
+  "fstar_exe": "./out/bin/fstar.exe",
   "options": [
-    "--cache_dir", ".cache",
+    "--include", "./stage1/ulib.checked/",
     "--ext", "context_pruning"
   ],
   "include_dirs": [
