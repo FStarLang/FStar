@@ -2211,8 +2211,7 @@ let canon_monoid_aux :
                                                                     ->
                                                                     let uu___14
                                                                     =
-                                                                    FStar_Tactics_MApply.mapply
-                                                                    FStar_Tactics_MApply.termable_term
+                                                                    FStar_Tactics_MApply0.mapply0
                                                                     (FStar_Reflection_V2_Derived.mk_app
                                                                     (FStarC_Reflection_V2_Builtins.pack_ln
                                                                     (FStarC_Reflection_V2_Data.Tv_FVar
