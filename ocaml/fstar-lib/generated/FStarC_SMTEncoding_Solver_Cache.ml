@@ -84,24 +84,18 @@ let (hashable_pragma :
     FStarC_Class_Hashable.hash =
       (fun uu___ ->
          match uu___ with
+         | FStarC_Syntax_Syntax.ShowOptions ->
+             FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+               Prims.int_one
          | FStarC_Syntax_Syntax.SetOptions s ->
-             let uu___1 =
-               FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
-                 Prims.int_one in
-             let uu___2 =
-               FStarC_Class_Hashable.hash
-                 FStarC_Class_Hashable.hashable_string s in
-             FStarC_Hash.mix uu___1 uu___2
-         | FStarC_Syntax_Syntax.ResetOptions s ->
              let uu___1 =
                FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
                  (Prims.of_int (2)) in
              let uu___2 =
                FStarC_Class_Hashable.hash
-                 (FStarC_Class_Hashable.hashable_option
-                    FStarC_Class_Hashable.hashable_string) s in
+                 FStarC_Class_Hashable.hashable_string s in
              FStarC_Hash.mix uu___1 uu___2
-         | FStarC_Syntax_Syntax.PushOptions s ->
+         | FStarC_Syntax_Syntax.ResetOptions s ->
              let uu___1 =
                FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
                  (Prims.of_int (3)) in
@@ -110,15 +104,24 @@ let (hashable_pragma :
                  (FStarC_Class_Hashable.hashable_option
                     FStarC_Class_Hashable.hashable_string) s in
              FStarC_Hash.mix uu___1 uu___2
+         | FStarC_Syntax_Syntax.PushOptions s ->
+             let uu___1 =
+               FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+                 (Prims.of_int (4)) in
+             let uu___2 =
+               FStarC_Class_Hashable.hash
+                 (FStarC_Class_Hashable.hashable_option
+                    FStarC_Class_Hashable.hashable_string) s in
+             FStarC_Hash.mix uu___1 uu___2
          | FStarC_Syntax_Syntax.PopOptions ->
              FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
-               (Prims.of_int (4))
+               (Prims.of_int (5))
          | FStarC_Syntax_Syntax.RestartSolver ->
              FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
-               (Prims.of_int (5))
+               (Prims.of_int (6))
          | FStarC_Syntax_Syntax.PrintEffectsGraph ->
              FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
-               (Prims.of_int (6)))
+               (Prims.of_int (7)))
   }
 let rec (hash_sigelt : FStarC_Syntax_Syntax.sigelt -> FStarC_Hash.hash_code)
   = fun se -> hash_sigelt' se.FStarC_Syntax_Syntax.sigel
