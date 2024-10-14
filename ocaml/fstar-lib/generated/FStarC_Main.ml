@@ -131,30 +131,68 @@ let (fstar_files :
   Prims.string Prims.list FStar_Pervasives_Native.option
     FStarC_Compiler_Effect.ref)
   = FStarC_Compiler_Util.mk_ref FStar_Pervasives_Native.None
-let go : 'uuuuu . 'uuuuu -> unit =
+let (go_ocamlenv : Prims.string Prims.list -> unit) =
+  fun rest_args ->
+    if FStarC_Platform.system = FStarC_Platform.Windows
+    then
+      (let uu___1 =
+         let uu___2 =
+           FStarC_Errors_Msg.text
+             "--ocamlenv is not supported on Windows (yet?)" in
+         [uu___2] in
+       FStarC_Errors.raise_error0
+         FStarC_Errors_Codes.Fatal_OptionsNotCompatible ()
+         (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+         (Obj.magic uu___1))
+    else ();
+    (let shellescape s =
+       let uu___1 =
+         let uu___2 = FStarC_Compiler_String.list_of_string s in
+         FStarC_Compiler_List.map
+           (fun uu___3 ->
+              match uu___3 with
+              | 39 -> "'\"'\"'"
+              | c -> FStarC_Compiler_String.make Prims.int_one c) uu___2 in
+       FStarC_Compiler_String.concat "" uu___1 in
+     let ocamldir = FStarC_Find.locate_ocaml () in
+     let old_ocamlpath =
+       let uu___1 =
+         FStarC_Compiler_Util.expand_environment_variable "OCAMLPATH" in
+       FStarC_Compiler_Util.dflt "" uu___1 in
+     let new_ocamlpath =
+       Prims.strcat ocamldir (Prims.strcat ":" old_ocamlpath) in
+     match rest_args with
+     | [] ->
+         ((let uu___2 = shellescape new_ocamlpath in
+           FStarC_Compiler_Util.print1 "OCAMLPATH='%s'; export OCAMLPATH;\n"
+             uu___2);
+          FStarC_Compiler_Effect.exit Prims.int_zero)
+     | cmd::args ->
+         (FStarC_Compiler_Util.putenv "OCAMLPATH" new_ocamlpath;
+          FStarC_Compiler_Util.execvp cmd (cmd :: args)))
+let (set_error_trap : unit -> unit) =
+  fun uu___ ->
+    let h = FStarC_Compiler_Util.get_sigint_handler () in
+    let h' s =
+      FStarC_Compiler_Debug.enable ();
+      FStarC_Options.set_option "error_contexts" (FStarC_Options.Bool true);
+      (let uu___4 =
+         let uu___5 = FStarC_Errors_Msg.text "GOT SIGINT! Exiting" in
+         [uu___5] in
+       FStarC_Errors.diag FStarC_Class_HasRange.hasRange_range
+         FStarC_Compiler_Range_Type.dummyRange ()
+         (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+         (Obj.magic uu___4));
+      FStarC_Compiler_Effect.exit Prims.int_one in
+    let uu___1 = FStarC_Compiler_Util.sigint_handler_f h' in
+    FStarC_Compiler_Util.set_sigint_handler uu___1
+let (go_normal : unit -> unit) =
   fun uu___ ->
     let uu___1 = process_args () in
     match uu___1 with
     | (res, filenames) ->
         ((let uu___3 = FStarC_Options.trace_error () in
-          if uu___3
-          then
-            let h = FStarC_Compiler_Util.get_sigint_handler () in
-            let h' s =
-              FStarC_Compiler_Debug.enable ();
-              FStarC_Options.set_option "error_contexts"
-                (FStarC_Options.Bool true);
-              (let uu___7 =
-                 let uu___8 = FStarC_Errors_Msg.text "GOT SIGINT! Exiting" in
-                 [uu___8] in
-               FStarC_Errors.diag FStarC_Class_HasRange.hasRange_range
-                 FStarC_Compiler_Range_Type.dummyRange ()
-                 (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-                 (Obj.magic uu___7));
-              FStarC_Compiler_Effect.exit Prims.int_one in
-            let uu___4 = FStarC_Compiler_Util.sigint_handler_f h' in
-            FStarC_Compiler_Util.set_sigint_handler uu___4
-          else ());
+          if uu___3 then set_error_trap () else ());
          (match res with
           | FStarC_Getopt.Empty ->
               (FStarC_Options.display_usage ();
@@ -165,12 +203,151 @@ let go : 'uuuuu . 'uuuuu -> unit =
           | FStarC_Getopt.Error msg ->
               (FStarC_Compiler_Util.print_error msg;
                FStarC_Compiler_Effect.exit Prims.int_one)
-          | uu___3 when FStarC_Options.print_cache_version () ->
-              ((let uu___5 =
+          | FStarC_Getopt.Success when FStarC_Options.print_cache_version ()
+              ->
+              ((let uu___4 =
                   FStarC_Compiler_Util.string_of_int
                     FStarC_CheckedFiles.cache_version_number in
                 FStarC_Compiler_Util.print1 "F* cache version number: %s\n"
-                  uu___5);
+                  uu___4);
+               FStarC_Compiler_Effect.exit Prims.int_zero)
+          | FStarC_Getopt.Success when
+              let uu___3 = FStarC_Options.dep () in
+              uu___3 <> FStar_Pervasives_Native.None ->
+              let uu___3 =
+                FStarC_Parser_Dep.collect filenames
+                  FStarC_CheckedFiles.load_parsing_data_from_cache in
+              (match uu___3 with
+               | (uu___4, deps) ->
+                   (FStarC_Parser_Dep.print deps; report_errors []))
+          | FStarC_Getopt.Success when
+              (FStarC_Options.print ()) || (FStarC_Options.print_in_place ())
+              ->
+              (if
+                 Prims.op_Negation
+                   FStarC_Platform.is_fstar_compiler_using_ocaml
+               then
+                 failwith
+                   "You seem to be using the F#-generated version of the compiler ; \\o\n                   reindenting is not known to work yet with this version"
+               else ();
+               (let printing_mode =
+                  let uu___4 = FStarC_Options.print () in
+                  if uu___4
+                  then FStarC_Prettyprint.FromTempToStdout
+                  else FStarC_Prettyprint.FromTempToFile in
+                FStarC_Prettyprint.generate printing_mode filenames))
+          | FStarC_Getopt.Success when
+              let uu___3 = FStarC_Options.read_checked_file () in
+              FStar_Pervasives_Native.uu___is_Some uu___3 ->
+              let path =
+                let uu___3 = FStarC_Options.read_checked_file () in
+                FStar_Pervasives_Native.__proj__Some__item__v uu___3 in
+              let env =
+                FStarC_Universal.init_env FStarC_Parser_Dep.empty_deps in
+              let res1 = FStarC_CheckedFiles.load_tc_result path in
+              (match res1 with
+               | FStar_Pervasives_Native.None ->
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 =
+                         FStarC_Errors_Msg.text
+                           "Could not read checked file:" in
+                       let uu___6 = FStarC_Pprint.doc_of_string path in
+                       FStarC_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                     [uu___4] in
+                   FStarC_Errors.raise_error0
+                     FStarC_Errors_Codes.Fatal_ModuleOrFileNotFound ()
+                     (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                     (Obj.magic uu___3)
+               | FStar_Pervasives_Native.Some (uu___3, tcr) ->
+                   let uu___4 =
+                     FStarC_Class_Show.show
+                       FStarC_Syntax_Print.showable_modul
+                       tcr.FStarC_CheckedFiles.checked_module in
+                   FStarC_Compiler_Util.print1 "%s\n" uu___4)
+          | FStarC_Getopt.Success when
+              let uu___3 = FStarC_Options.read_krml_file () in
+              FStar_Pervasives_Native.uu___is_Some uu___3 ->
+              let path =
+                let uu___3 = FStarC_Options.read_krml_file () in
+                FStar_Pervasives_Native.__proj__Some__item__v uu___3 in
+              let uu___3 = FStarC_Compiler_Util.load_value_from_file path in
+              (match uu___3 with
+               | FStar_Pervasives_Native.None ->
+                   let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         FStarC_Errors_Msg.text "Could not read krml file:" in
+                       let uu___7 = FStarC_Pprint.doc_of_string path in
+                       FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                     [uu___5] in
+                   FStarC_Errors.raise_error0
+                     FStarC_Errors_Codes.Fatal_ModuleOrFileNotFound ()
+                     (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                     (Obj.magic uu___4)
+               | FStar_Pervasives_Native.Some (version, files) ->
+                   ((let uu___5 =
+                       FStarC_Class_Show.show
+                         (FStarC_Class_Show.printableshow
+                            FStar_Class_Printable.printable_int) version in
+                     FStarC_Compiler_Util.print1
+                       "Karamel format version: %s\n" uu___5);
+                    FStarC_Compiler_List.iter
+                      (fun uu___5 ->
+                         match uu___5 with
+                         | (name, decls) ->
+                             (FStarC_Compiler_Util.print1 "%s:\n" name;
+                              FStarC_Compiler_List.iter
+                                (fun d ->
+                                   let uu___7 =
+                                     FStarC_Class_Show.show
+                                       FStarC_Extraction_Krml.showable_decl d in
+                                   FStarC_Compiler_Util.print1 "  %s\n"
+                                     uu___7) decls)) files))
+          | FStarC_Getopt.Success when FStarC_Options.list_plugins () ->
+              let ps = FStarC_TypeChecker_Cfg.list_plugins () in
+              let ts = FStarC_Tactics_Interpreter.native_tactics_steps () in
+              ((let uu___4 =
+                  let uu___5 =
+                    FStarC_Compiler_List.map
+                      (fun p ->
+                         let uu___6 =
+                           FStarC_Class_Show.show
+                             FStarC_Ident.showable_lident
+                             p.FStarC_TypeChecker_Primops_Base.name in
+                         Prims.strcat "  " uu___6) ps in
+                  FStarC_Compiler_String.concat "\n" uu___5 in
+                FStarC_Compiler_Util.print1 "Registered plugins:\n%s\n"
+                  uu___4);
+               (let uu___5 =
+                  let uu___6 =
+                    FStarC_Compiler_List.map
+                      (fun p ->
+                         let uu___7 =
+                           FStarC_Class_Show.show
+                             FStarC_Ident.showable_lident
+                             p.FStarC_TypeChecker_Primops_Base.name in
+                         Prims.strcat "  " uu___7) ts in
+                  FStarC_Compiler_String.concat "\n" uu___6 in
+                FStarC_Compiler_Util.print1
+                  "Registered tactic plugins:\n%s\n" uu___5))
+          | FStarC_Getopt.Success when FStarC_Options.locate () ->
+              ((let uu___4 = FStarC_Find.locate () in
+                FStarC_Compiler_Util.print1 "%s\n" uu___4);
+               FStarC_Compiler_Effect.exit Prims.int_zero)
+          | FStarC_Getopt.Success when FStarC_Options.locate_lib () ->
+              let uu___3 = FStarC_Find.locate_lib () in
+              (match uu___3 with
+               | FStar_Pervasives_Native.None ->
+                   (FStarC_Compiler_Util.print_error
+                      "No library found (is --no_default_includes set?)\n";
+                    FStarC_Compiler_Effect.exit Prims.int_one)
+               | FStar_Pervasives_Native.Some s ->
+                   (FStarC_Compiler_Util.print1 "%s\n" s;
+                    FStarC_Compiler_Effect.exit Prims.int_zero))
+          | FStarC_Getopt.Success when FStarC_Options.locate_ocaml () ->
+              ((let uu___4 = FStarC_Find.locate_ocaml () in
+                FStarC_Compiler_Util.print1 "%s\n" uu___4);
                FStarC_Compiler_Effect.exit Prims.int_zero)
           | FStarC_Getopt.Success ->
               (FStarC_Compiler_Effect.op_Colon_Equals fstar_files
@@ -195,285 +372,81 @@ let go : 'uuuuu . 'uuuuu -> unit =
                       uu___9);
                    FStarC_Compiler_Util.print_string "\n")
                 else ());
-               load_native_tactics ();
                FStarC_Syntax_Unionfind.set_ro ();
-               (let uu___7 =
-                  let uu___8 = FStarC_Options.dep () in
-                  uu___8 <> FStar_Pervasives_Native.None in
+               load_native_tactics ();
+               (let uu___7 = FStarC_Options.lsp_server () in
                 if uu___7
-                then
-                  let uu___8 =
-                    FStarC_Parser_Dep.collect filenames
-                      FStarC_CheckedFiles.load_parsing_data_from_cache in
-                  match uu___8 with
-                  | (uu___9, deps) ->
-                      (FStarC_Parser_Dep.print deps; report_errors [])
+                then FStarC_Interactive_Lsp.start_server ()
                 else
-                  (let uu___9 =
-                     (FStarC_Options.print ()) ||
-                       (FStarC_Options.print_in_place ()) in
+                  (let uu___9 = FStarC_Options.interactive () in
                    if uu___9
                    then
-                     (if FStarC_Platform.is_fstar_compiler_using_ocaml
-                      then
-                        let printing_mode =
-                          let uu___10 = FStarC_Options.print () in
-                          if uu___10
-                          then FStarC_Prettyprint.FromTempToStdout
-                          else FStarC_Prettyprint.FromTempToFile in
-                        FStarC_Prettyprint.generate printing_mode filenames
-                      else
-                        failwith
-                          "You seem to be using the F#-generated version ofthe compiler ; \\o\n                         reindenting is not known to work yet with this version")
-                   else
-                     (let uu___11 =
-                        let uu___12 = FStarC_Options.read_checked_file () in
-                        FStar_Pervasives_Native.uu___is_Some uu___12 in
-                      if uu___11
-                      then
-                        let path =
-                          let uu___12 = FStarC_Options.read_checked_file () in
-                          FStar_Pervasives_Native.__proj__Some__item__v
-                            uu___12 in
-                        let env =
-                          FStarC_Universal.init_env
-                            FStarC_Parser_Dep.empty_deps in
-                        let res1 = FStarC_CheckedFiles.load_tc_result path in
-                        match res1 with
-                        | FStar_Pervasives_Native.None ->
-                            let uu___12 =
-                              let uu___13 =
-                                let uu___14 =
-                                  FStarC_Errors_Msg.text
-                                    "Could not read checked file:" in
-                                let uu___15 =
-                                  FStarC_Pprint.doc_of_string path in
-                                FStarC_Pprint.op_Hat_Slash_Hat uu___14
-                                  uu___15 in
-                              [uu___13] in
-                            FStarC_Errors.raise_error0
-                              FStarC_Errors_Codes.Fatal_ModuleOrFileNotFound
-                              ()
+                     (FStarC_Syntax_Unionfind.set_rw ();
+                      (match filenames with
+                       | [] ->
+                           (FStarC_Errors.log_issue0
+                              FStarC_Errors_Codes.Error_MissingFileName ()
                               (Obj.magic
-                                 FStarC_Errors_Msg.is_error_message_list_doc)
-                              (Obj.magic uu___12)
-                        | FStar_Pervasives_Native.Some (uu___12, tcr) ->
-                            let uu___13 =
-                              FStarC_Class_Show.show
-                                FStarC_Syntax_Print.showable_modul
-                                tcr.FStarC_CheckedFiles.checked_module in
-                            FStarC_Compiler_Util.print1 "%s\n" uu___13
-                      else
-                        (let uu___13 = FStarC_Options.list_plugins () in
-                         if uu___13
-                         then
-                           let ps = FStarC_TypeChecker_Cfg.list_plugins () in
-                           let ts =
-                             FStarC_Tactics_Interpreter.native_tactics_steps
-                               () in
-                           ((let uu___15 =
-                               let uu___16 =
-                                 FStarC_Compiler_List.map
-                                   (fun p ->
-                                      let uu___17 =
-                                        FStarC_Class_Show.show
-                                          FStarC_Ident.showable_lident
-                                          p.FStarC_TypeChecker_Primops_Base.name in
-                                      Prims.strcat "  " uu___17) ps in
-                               FStarC_Compiler_String.concat "\n" uu___16 in
-                             FStarC_Compiler_Util.print1
-                               "Registered plugins:\n%s\n" uu___15);
-                            (let uu___16 =
-                               let uu___17 =
-                                 FStarC_Compiler_List.map
-                                   (fun p ->
-                                      let uu___18 =
-                                        FStarC_Class_Show.show
-                                          FStarC_Ident.showable_lident
-                                          p.FStarC_TypeChecker_Primops_Base.name in
-                                      Prims.strcat "  " uu___18) ts in
-                               FStarC_Compiler_String.concat "\n" uu___17 in
-                             FStarC_Compiler_Util.print1
-                               "Registered tactic plugins:\n%s\n" uu___16))
-                         else
-                           (let uu___15 = FStarC_Options.locate () in
-                            if uu___15
-                            then
-                              ((let uu___17 = FStarC_Find.locate () in
-                                FStarC_Compiler_Util.print1 "%s\n" uu___17);
-                               FStarC_Compiler_Effect.exit Prims.int_zero)
-                            else
-                              (let uu___17 = FStarC_Options.locate_lib () in
-                               if uu___17
-                               then
-                                 let uu___18 = FStarC_Find.locate_lib () in
-                                 match uu___18 with
-                                 | FStar_Pervasives_Native.None ->
-                                     (FStarC_Compiler_Util.print_error
-                                        "No library found (is --no_default_includes set?)\n";
-                                      FStarC_Compiler_Effect.exit
-                                        Prims.int_one)
-                                 | FStar_Pervasives_Native.Some s ->
-                                     (FStarC_Compiler_Util.print1 "%s\n" s;
-                                      FStarC_Compiler_Effect.exit
-                                        Prims.int_zero)
-                               else
-                                 (let uu___19 =
-                                    FStarC_Options.locate_ocaml () in
-                                  if uu___19
-                                  then
-                                    ((let uu___21 =
-                                        FStarC_Find.locate_ocaml () in
-                                      FStarC_Compiler_Util.print1 "%s\n"
-                                        uu___21);
-                                     FStarC_Compiler_Effect.exit
-                                       Prims.int_zero)
-                                  else
-                                    (let uu___21 =
-                                       let uu___22 =
-                                         FStarC_Options.read_krml_file () in
-                                       FStar_Pervasives_Native.uu___is_Some
-                                         uu___22 in
-                                     if uu___21
-                                     then
-                                       let path =
-                                         let uu___22 =
-                                           FStarC_Options.read_krml_file () in
-                                         FStar_Pervasives_Native.__proj__Some__item__v
-                                           uu___22 in
-                                       let uu___22 =
-                                         FStarC_Compiler_Util.load_value_from_file
-                                           path in
-                                       match uu___22 with
-                                       | FStar_Pervasives_Native.None ->
-                                           let uu___23 =
-                                             let uu___24 =
-                                               let uu___25 =
-                                                 FStarC_Errors_Msg.text
-                                                   "Could not read krml file:" in
-                                               let uu___26 =
-                                                 FStarC_Pprint.doc_of_string
-                                                   path in
-                                               FStarC_Pprint.op_Hat_Slash_Hat
-                                                 uu___25 uu___26 in
-                                             [uu___24] in
-                                           FStarC_Errors.raise_error0
-                                             FStarC_Errors_Codes.Fatal_ModuleOrFileNotFound
-                                             ()
-                                             (Obj.magic
-                                                FStarC_Errors_Msg.is_error_message_list_doc)
-                                             (Obj.magic uu___23)
-                                       | FStar_Pervasives_Native.Some
-                                           (version, files) ->
-                                           ((let uu___24 =
-                                               FStarC_Class_Show.show
-                                                 (FStarC_Class_Show.printableshow
-                                                    FStar_Class_Printable.printable_int)
-                                                 version in
-                                             FStarC_Compiler_Util.print1
-                                               "Karamel format version: %s\n"
-                                               uu___24);
-                                            FStarC_Compiler_List.iter
-                                              (fun uu___24 ->
-                                                 match uu___24 with
-                                                 | (name, decls) ->
-                                                     (FStarC_Compiler_Util.print1
-                                                        "%s:\n" name;
-                                                      FStarC_Compiler_List.iter
-                                                        (fun d ->
-                                                           let uu___26 =
-                                                             FStarC_Class_Show.show
-                                                               FStarC_Extraction_Krml.showable_decl
-                                                               d in
-                                                           FStarC_Compiler_Util.print1
-                                                             "  %s\n" uu___26)
-                                                        decls)) files)
-                                     else
-                                       (let uu___23 =
-                                          FStarC_Options.lsp_server () in
-                                        if uu___23
-                                        then
-                                          FStarC_Interactive_Lsp.start_server
-                                            ()
-                                        else
-                                          (let uu___25 =
-                                             FStarC_Options.interactive () in
-                                           if uu___25
-                                           then
-                                             (FStarC_Syntax_Unionfind.set_rw
-                                                ();
-                                              (match filenames with
-                                               | [] ->
-                                                   (FStarC_Errors.log_issue0
-                                                      FStarC_Errors_Codes.Error_MissingFileName
-                                                      ()
-                                                      (Obj.magic
-                                                         FStarC_Errors_Msg.is_error_message_string)
-                                                      (Obj.magic
-                                                         "--ide: Name of current file missing in command line invocation\n");
-                                                    FStarC_Compiler_Effect.exit
-                                                      Prims.int_one)
-                                               | uu___27::uu___28::uu___29 ->
-                                                   (FStarC_Errors.log_issue0
-                                                      FStarC_Errors_Codes.Error_TooManyFiles
-                                                      ()
-                                                      (Obj.magic
-                                                         FStarC_Errors_Msg.is_error_message_string)
-                                                      (Obj.magic
-                                                         "--ide: Too many files in command line invocation\n");
-                                                    FStarC_Compiler_Effect.exit
-                                                      Prims.int_one)
-                                               | filename::[] ->
-                                                   let uu___27 =
-                                                     FStarC_Options.legacy_interactive
-                                                       () in
-                                                   if uu___27
-                                                   then
-                                                     FStarC_Interactive_Legacy.interactive_mode
-                                                       filename
-                                                   else
-                                                     FStarC_Interactive_Ide.interactive_mode
-                                                       filename))
-                                           else
-                                             if
-                                               (FStarC_Compiler_List.length
-                                                  filenames)
-                                                 >= Prims.int_one
-                                             then
-                                               (let uu___27 =
-                                                  FStarC_Dependencies.find_deps_if_needed
-                                                    filenames
-                                                    FStarC_CheckedFiles.load_parsing_data_from_cache in
-                                                match uu___27 with
-                                                | (filenames1, dep_graph) ->
-                                                    let uu___28 =
-                                                      FStarC_Universal.batch_mode_tc
-                                                        filenames1 dep_graph in
-                                                    (match uu___28 with
-                                                     | (tcrs, env, cleanup1)
-                                                         ->
-                                                         ((let uu___30 =
-                                                             cleanup1 env in
-                                                           ());
-                                                          (let module_names =
-                                                             FStarC_Compiler_List.map
-                                                               (fun tcr ->
-                                                                  FStarC_Universal.module_or_interface_name
-                                                                    tcr.FStarC_CheckedFiles.checked_module)
-                                                               tcrs in
-                                                           report_errors
-                                                             module_names;
-                                                           finished_message
-                                                             module_names
-                                                             Prims.int_zero))))
-                                             else
-                                               FStarC_Errors.raise_error0
-                                                 FStarC_Errors_Codes.Error_MissingFileName
-                                                 ()
-                                                 (Obj.magic
-                                                    FStarC_Errors_Msg.is_error_message_string)
-                                                 (Obj.magic
-                                                    "No file provided"))))))))))))))
+                                 FStarC_Errors_Msg.is_error_message_string)
+                              (Obj.magic
+                                 "--ide: Name of current file missing in command line invocation\n");
+                            FStarC_Compiler_Effect.exit Prims.int_one)
+                       | uu___11::uu___12::uu___13 ->
+                           (FStarC_Errors.log_issue0
+                              FStarC_Errors_Codes.Error_TooManyFiles ()
+                              (Obj.magic
+                                 FStarC_Errors_Msg.is_error_message_string)
+                              (Obj.magic
+                                 "--ide: Too many files in command line invocation\n");
+                            FStarC_Compiler_Effect.exit Prims.int_one)
+                       | filename::[] ->
+                           let uu___11 = FStarC_Options.legacy_interactive () in
+                           if uu___11
+                           then
+                             FStarC_Interactive_Legacy.interactive_mode
+                               filename
+                           else
+                             FStarC_Interactive_Ide.interactive_mode filename))
+                   else
+                     if
+                       (FStarC_Compiler_List.length filenames) >=
+                         Prims.int_one
+                     then
+                       (if Prims.uu___is_Nil filenames
+                        then
+                          FStarC_Errors.raise_error0
+                            FStarC_Errors_Codes.Error_MissingFileName ()
+                            (Obj.magic
+                               FStarC_Errors_Msg.is_error_message_string)
+                            (Obj.magic "No file provided")
+                        else ();
+                        (let uu___12 =
+                           FStarC_Dependencies.find_deps_if_needed filenames
+                             FStarC_CheckedFiles.load_parsing_data_from_cache in
+                         match uu___12 with
+                         | (filenames1, dep_graph) ->
+                             let uu___13 =
+                               FStarC_Universal.batch_mode_tc filenames1
+                                 dep_graph in
+                             (match uu___13 with
+                              | (tcrs, env, cleanup1) ->
+                                  ((let uu___15 = cleanup1 env in ());
+                                   (let module_names =
+                                      FStarC_Compiler_List.map
+                                        (fun tcr ->
+                                           FStarC_Universal.module_or_interface_name
+                                             tcr.FStarC_CheckedFiles.checked_module)
+                                        tcrs in
+                                    report_errors module_names;
+                                    finished_message module_names
+                                      Prims.int_zero)))))
+                     else ())))))
+let (go : unit -> unit) =
+  fun uu___ ->
+    let args = FStarC_Compiler_Util.get_cmd_args () in
+    match args with
+    | uu___1::"--ocamlenv"::rest -> go_ocamlenv rest
+    | uu___1 -> go_normal ()
 let (lazy_chooser :
   FStarC_Syntax_Syntax.lazy_kind ->
     FStarC_Syntax_Syntax.lazyinfo -> FStarC_Syntax_Syntax.term)

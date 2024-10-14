@@ -1631,6 +1631,13 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     "locate_ocaml",
     Const (Bool true),
     text "Print the root of the built OCaml F* library and exit");
+  ( noshort,
+    "ocamlenv",
+    WithSideEffect ((fun _ -> print_error "--ocamlenv must be the first argument, see fstar.exe --help for details\n"; exit 1),
+                     (Const (Bool true))),
+    text "With no arguments: print shell code to set up an environment with the OCaml libraries in scope (similar to 'opam env'). \
+          With arguments: run a command in that environment. \
+          NOTE: this must be the FIRST argument passed to F* and other options are NOT processed.");
   ]
 
 and specs (warn_unsafe:bool) : list (FStarC.Getopt.opt & Pprint.document) =
