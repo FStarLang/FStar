@@ -1061,7 +1061,7 @@ let e_vconfig =
         (fun () -> ET_app (PC.vconfig_lid |> Ident.string_of_lid, []))
 
 let e_order =
-  let open FStar.Order in
+  let open FStarC.Compiler.Order in
   let ord_Lt_lid = Ident.lid_of_path (["FStar"; "Order"; "Lt"]) Range.dummyRange in
   let ord_Eq_lid = Ident.lid_of_path (["FStar"; "Order"; "Eq"]) Range.dummyRange in
   let ord_Gt_lid = Ident.lid_of_path (["FStar"; "Order"; "Gt"]) Range.dummyRange in

@@ -1,8 +1,0 @@
-(* This file is meant to be concatenated to FStar_Ints.ml.body *)
-module M = Stdint.Int8
-type int8 = M.t
-type t = M.t
-let n = Prims.of_int 8
-
-let int_to_t x = M.of_string (Z.to_string x)
-let __int_to_t = int_to_t

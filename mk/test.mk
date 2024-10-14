@@ -23,7 +23,7 @@ include $(FSTAR_ROOT)/mk/common.mk
 .DEFAULT_GOAL := all
 
 # Set a default FSTAR_EXE for most clients.
-FSTAR_EXE ?= $(FSTAR_ROOT)/bin/fstar.exe
+FSTAR_EXE ?= $(FSTAR_ROOT)/out/bin/fstar.exe
 FSTAR_EXE := $(abspath $(FSTAR_EXE))
 export FSTAR_EXE
 
@@ -49,7 +49,7 @@ FSTAR = $(FSTAR_EXE) $(SIL) 				\
 	$(if $(NO_WRITE_CHECKED),,--cache_checked_modules)		\
 	--odir $(OUTPUT_DIR)				\
 	--cache_dir $(CACHE_DIR)			\
-	--already_cached Prims,FStar			\
+	--already_cached Prims,FStar,LowStar		\
 	 $(OTHERFLAGS) $(MAYBE_ADMIT) $(HINTS_ENABLED)
 
 ifneq ($(MAKECMDGOALS),clean)

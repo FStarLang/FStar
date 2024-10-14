@@ -17,12 +17,12 @@ module FStarC.Reflection.V2.Builtins
 
 open FStarC.Compiler
 open FStarC.Compiler.Effect
-open FStarC.Ident
-open FStar.Order
+open FStarC.Compiler.Order
 open FStarC.Reflection.V2.Data
 open FStarC.Syntax.Embeddings
 open FStarC.Syntax.Syntax
 open FStarC.VConfig
+open FStarC.Ident
 
 module EMB = FStarC.Syntax.Embeddings
 module Env = FStarC.TypeChecker.Env

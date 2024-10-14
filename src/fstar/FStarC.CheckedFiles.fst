@@ -206,8 +206,13 @@ let load_checked_file (fn:string) (checked_fn:string) :cache_t =
   if !dbg then
     BU.print1 "Trying to load checked file result %s\n" checked_fn;
   let elt = checked_fn |> BU.smap_try_find mcache in
-  if elt |> is_some then elt |> must  //already loaded
-  else
+  if elt |> is_some
+  then (
+    //already loaded
+    if !dbg then
+      BU.print1 "Already loaded checked file %s\n" checked_fn;
+    elt |> must
+  ) else
     let add_and_return elt = BU.smap_add mcache checked_fn elt; elt in
     if not (BU.file_exists checked_fn)
     then let msg = BU.format1 "checked file %s does not exist" checked_fn in

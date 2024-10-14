@@ -59,9 +59,7 @@ let lib_root () : option string =
     | None ->
       (* Otherwise, try to find the library in the default locations. It's ulib/
       in the repository, and lib/fstar/ in the binary package. *)
-      if Util.file_exists (fstar_bin_directory ^ "/../ulib")
-      then Some (fstar_bin_directory ^ "/../ulib")
-      else if Util.file_exists (fstar_bin_directory ^ "/../lib/fstar")
+      if Util.file_exists (fstar_bin_directory ^ "/../lib/fstar")
       then Some (fstar_bin_directory ^ "/../lib/fstar")
       else None
 
