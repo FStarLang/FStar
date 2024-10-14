@@ -1,0 +1,75 @@
+name: Build F*
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    # Build an F* binary package: a fully-bootstrapped stage 2 compiler,
+    # with its plugins, a fully checked library (i.e. with .checked)
+    # files and compiled versions of fstar_lib and fstar_plugin_lib.
+    # Also, we build a full stage 1 compiler and its libraries, and
+    # make all possible artifacts.
+    runs-on: [self-hosted, linux, X64] # self-hosted so we use fast runners
+    container: mtzguido/dev-base
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          path: FStar
+
+      - name: Produce all artifacts
+        run: make -skj$(nproc) all-packages FSTAR_VERSION=ci ADMIT=1
+        working-directory: FStar
+
+      # Upload the archives.
+      - uses: actions/upload-artifact@v4
+        with:
+          path: FStar/fstar-ci.tar.gz
+          name: fstar-ci.tar.gz
+          retention-days: 3
+      - uses: actions/upload-artifact@v4
+        with:
+          path: FStar/fstar-ci-stage1.tar.gz
+          name: fstar-ci-stage1.tar.gz
+          retention-days: 3
+      - uses: actions/upload-artifact@v4
+        with:
+          path: FStar/fstar-ci-src.tar.gz
+          name: fstar-ci-src.tar.gz
+          retention-days: 3
+      - uses: actions/upload-artifact@v4
+        with:
+          path: FStar/fstar-ci-stage1-src.tar.gz
+          name: fstar-ci-stage1-src.tar.gz
+          retention-days: 3
+
+      # Upload full repo too, for stage3 check and Pulse. Note: we
+      # explicitly run 'make 2' at this point to generate the out/
+      # directory, as the previous targets do not. Also, remove the
+      # previous archives so they don't blow up the size of this
+      # artifact.
+      - run: rm -f FStar/fstar-ci*.tar.gz
+      - run: make 2
+        working-directory: FStar
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: fstar-repo
+          path: FStar
+          extra: --exclude=FStar/stage*/dune/_build
+          hometag: FSTAR
+
+      # FIXME: Ideally, we could upload the artifacts as soon as each of
+      # them is created, and start the subsequent jobs at that instant too.
+      # Is that even doable...?

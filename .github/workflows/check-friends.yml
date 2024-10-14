@@ -1,0 +1,628 @@
+name: Check F* friends
+
+# This workflow must be called ONLY after a run of build.yml
+on:
+  workflow_call:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-krml:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar-ci.tar.gz
+      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+      - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - name: Checkout karamel
+        uses: actions/checkout@master
+        with:
+          path: karamel/
+          repository: mtzguido/karamel
+          ref: dev
+
+      - name: Build krml
+        run: make -C karamel -skj$(nproc)
+
+      # krml is a symlink to _build/default/src/Karamel.exe, but we want to exclude _build.
+      # So, overwrite the link with the actual file.
+      - name: Fix for symlink
+        run: |
+          cp --remove-destination $(realpath karamel/krml) karamel/krml
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: karamel
+          extra: --exclude=karamel/_build
+          hometag: KRML
+
+  test-krml:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar-ci.tar.gz
+      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+      - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      # node is needed for the wasm tests, skip them for now
+      - name: Test
+        run: make -C karamel -skj$(nproc) test NOWASMTEST=1
+
+  build-steel:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar-ci.tar.gz
+      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+      - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - name: Checkout steel
+        uses: actions/checkout@master
+        with:
+          path: steel/
+          repository: mtzguido/steel
+          ref: dev
+
+      - name: Build
+        run: make -C steel -skj$(nproc)
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: steel
+          hometag: STEEL
+
+  test-steel:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+      - build-steel
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar-ci.tar.gz
+      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+      - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: steel
+
+      - name: Test
+        run: make -C steel -skj$(nproc) test
+
+  build-pulse:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - name: Checkout pulse
+        uses: actions/checkout@master
+        with:
+          path: pulse/
+          repository: mtzguido/pulse
+          ref: dev
+
+      # Since pulse needs F* internal build files, we can't use
+      # binary nor source packages. So we get the whole repo.
+      - uses: mtzguido/gci-download@master
+        with:
+          name: fstar-repo
+
+      - name: Build (after setting up cargo env)
+        run: . $HOME/.cargo/env && make -C pulse -skj$(nproc)
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: pulse
+          hometag: PULSE
+
+  test-pulse:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+      - build-pulse
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      # Since pulse needs F* internal build files, we can't use
+      # binary nor source packages. So we get the whole repo.
+      - uses: mtzguido/gci-download@master
+        with:
+          name: fstar-repo
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: pulse
+
+      - name: Test
+        run: . $HOME/.cargo/env && make -C pulse -skj$(nproc) test
+
+  build-hacl:
+    # runs-on: [self-hosted, linux, big] # using a faster runner
+    # NOTE: To use a self-hosted runner, we must make sure that
+    # the runner is executing as UID 1001 (which is the one the
+    # docker container uses) or it will be unable to write to its
+    # workspace. This is simply a terrible design by github actions.
+    # Somehow the cloud runners work regardless of the uid in
+    # the container.
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar-ci.tar.gz
+      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+      - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      - name: Checkout hacl-star
+        uses: actions/checkout@master
+        with:
+          path: hacl-star/
+          repository: mtzguido/hacl-star
+          ref: dev
+
+      - run: echo "HACL_HOME=$(pwd)/hacl-star" >> $GITHUB_ENV
+
+      - name: Get Vale
+        run: ./hacl-star/tools/get_vale.sh
+
+      - name: Build
+        run: |
+          NPROC=$(nproc)
+          if [ $NPROC -gt 16 ]; then NPROC=16; fi
+          make -C hacl-star -skj${NPROC}
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: hacl-star
+          hometag: HACL
+
+  test-hacl:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+      - build-hacl
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar-ci.tar.gz
+      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+      - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: hacl-star
+
+      - name: Get Vale (again)
+        run: ./hacl-star/tools/get_vale.sh
+
+      - run: sudo apt-get install -y libssl-dev
+
+      - name: Test
+        run: make -C hacl-star -skj$(nproc) test
+
+  build-everparse:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+      - run: opam install -y hex re ctypes sha sexplib
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar-ci.tar.gz
+      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+      - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      - name: Checkout everparse
+        uses: actions/checkout@master
+        with:
+          path: everparse/
+          repository: mtzguido/everparse
+          ref: dev
+
+      - name: Build
+        run: |
+          NPROC=$(nproc)
+          if [ $NPROC -gt 16 ]; then NPROC=16; fi
+          make -C everparse -skj${NPROC}
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: everparse
+          hometag: EVERPARSE
+
+  test-everparse:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+      - build-everparse
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+      - run: opam install -y hex re ctypes sha sexplib
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar-ci.tar.gz
+      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+      - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: everparse
+
+      - name: Test
+        run: make -C everparse -skj$(nproc) test
+
+  build-merkle-tree:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+      - build-hacl
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar-ci.tar.gz
+      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+      - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: hacl-star
+
+      - name: Checkout merkle-tree
+        uses: actions/checkout@master
+        with:
+          path: merkle-tree/
+          repository: mtzguido/merkle-tree
+          ref: dev
+
+      - name: Build
+        run: |
+          NPROC=$(nproc)
+          if [ $NPROC -gt 16 ]; then NPROC=16; fi
+          make -C merkle-tree -skj${NPROC} dist/libmerkletree.a
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: merkle-tree
+
+  test-merkle-tree:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+      - build-hacl
+      - build-merkle-tree
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar-ci.tar.gz
+      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+      - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: hacl-star
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: merkle-tree
+
+      - name: Test
+        run: make -C merkle-tree -skj$(nproc) test
+
+  build-mitls-fstar:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+      - build-hacl
+      - build-everparse
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar-ci.tar.gz
+      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+      - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: everparse
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: hacl-star
+
+      - name: Checkout mitls-fstar
+        uses: actions/checkout@master
+        with:
+          path: mitls-fstar/
+          repository: mtzguido/mitls-fstar
+          ref: dev
+
+      - name: Build
+        run: make -C mitls-fstar/src/tls -skj$(nproc)
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: mitls-fstar
+          hometag: MITLS
+
+  test-mitls-fstar:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+      - build-hacl
+      - build-everparse
+      - build-mitls-fstar
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar-ci.tar.gz
+      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+      - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: everparse
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: hacl-star
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: mitls-fstar
+
+      - name: Build
+        run: make -C mitls-fstar/src/tls -skj$(nproc) test
+
+
+  ### Nix jobs, for some Inria projects
+  #
+  # NOTE: these jobs are not containerized
+  # 1- it should not be needed since Nix takes care of isolating the environment
+  # 2- it would actually fail to setup Nix due to permissions in the container, and I haven't
+  #    found a clear reference on what the permissions/uids should be.
+  #
+  # The fstar-nix job is here to
+  # 1- Test the nix build in this workflow too
+  # 2- Reuse the built F* in the following projects, via the magic-nix-cache (note the 'needs')
+
+  fstar-nix:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: DeterminateSystems/nix-installer-action@main
+    - uses: DeterminateSystems/magic-nix-cache-action@main
+    - name: Build
+      run: nix build -L
+
+  comparse:
+    needs: fstar-nix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - uses: actions/checkout@master
+        with:
+          repository: mtzguido/comparse
+          ref: dev
+
+      - name: Update fstar flake and check
+        run: |
+          nix flake update --update-input fstar-flake --override-input fstar-flake "github:${{github.repository}}?rev=${{github.sha}}"
+          nix flake check
+
+  dy-star:
+    needs: fstar-nix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - uses: actions/checkout@master
+        with:
+          repository: mtzguido/dolev-yao-star-extrinsic
+          ref: dev
+
+      - name: Update fstar flake and check
+        run: |
+          nix flake update --update-input fstar-flake --override-input fstar-flake "github:${{github.repository}}?rev=${{github.sha}}"
+          nix flake check
+
+  mls-star:
+    needs: fstar-nix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - uses: actions/checkout@master
+        with:
+          repository: mtzguido/mls-star
+          ref: dev
+
+      - name: Update fstar flake and check
+        run: |
+          nix flake update --update-input fstar-flake --override-input fstar-flake "github:${{github.repository}}?rev=${{github.sha}}"
+          nix flake check
+
+  build-cbor:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+      - build-pulse
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      # Install rust toolchain
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar-ci.tar.gz
+      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+      - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: pulse
+
+      - name: Checkout everparse (cbor branch)
+        uses: actions/checkout@master
+        with:
+          path: everparse/
+          ref: taramana_cbor
+          repository: project-everest/everparse
+
+      - name: Build
+        run: |
+          make -C everparse -skj$(nproc)
+
+      - name: Test
+        run: |
+          make -C everparse -skj$(nproc) cbor-det-rust-test
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: everparse-cbor
+          path: everparse
