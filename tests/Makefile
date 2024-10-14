@@ -19,6 +19,7 @@ ALL_TEST_DIRS += tactics
 ALL_TEST_DIRS += typeclasses
 ALL_TEST_DIRS += vale
 ALL_TEST_DIRS += hacl
+ALL_TEST_DIRS += simple_hello
 HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
 
 ifneq (,$(HAS_OCAML))
