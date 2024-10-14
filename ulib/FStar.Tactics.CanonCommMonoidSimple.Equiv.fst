@@ -19,7 +19,7 @@ open FStar.Algebra.CommMonoid.Equiv
 open FStar.List
 open FStar.Classical
 open FStar.Tactics.CanonCommSwaps
-open FStar.Tactics.V2
+open FStar.Tactics.V2.Bare
 
 private
 let term_eq = FStar.Reflection.TermEq.Simple.term_eq

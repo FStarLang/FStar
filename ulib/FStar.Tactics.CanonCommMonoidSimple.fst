@@ -18,7 +18,7 @@ module FStar.Tactics.CanonCommMonoidSimple
 open FStar.Algebra.CommMonoid
 open FStar.List
 open FStar.Reflection.V2
-open FStar.Tactics.V2
+open FStar.Tactics.V2.Bare
 open FStar.Classical
 open FStar.Tactics.CanonCommSwaps
 

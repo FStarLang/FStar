@@ -365,8 +365,8 @@ let canon_monoid_aux
           // dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
           //   (quote (xsdenote m vm (canon vm p r1) ==
           //           xsdenote m vm (canon vm p r2)))));
-          // mapply (quote (monoid_reflect #a #b p pc));
-          mapply (mk_app (`monoid_reflect) [(ta, Q_Implicit);
+          // mapply0 (quote (monoid_reflect #a #b p pc));
+          mapply0 (mk_app (`monoid_reflect) [(ta, Q_Implicit);
                                             (tb, Q_Implicit);
                                             (tp, Q_Explicit);
                                             (tpc, Q_Explicit)]);
