@@ -1082,7 +1082,7 @@ let (emit :
                                           FStarC_Parser_Dep.deps_of_modul
                                             dep_graph uu___5 in
                                         let uu___5 =
-                                          FStarC_Options.prepend_output_dir
+                                          FStarC_Find.prepend_output_dir
                                             (Prims.strcat filename ext) in
                                         FStarC_Compiler_Util.save_value_to_file
                                           uu___5 (deps, bindings, decls)
@@ -1105,10 +1105,9 @@ let (emit :
               | uu___1 ->
                   (match programs with
                    | (name, uu___2)::[] ->
-                       FStarC_Options.prepend_output_dir
-                         (Prims.strcat name ext)
+                       FStarC_Find.prepend_output_dir (Prims.strcat name ext)
                    | uu___2 ->
-                       FStarC_Options.prepend_output_dir
+                       FStarC_Find.prepend_output_dir
                          (Prims.strcat "out" ext)) in
             FStarC_Compiler_Util.save_value_to_file oname bin
         | uu___ -> fail ()
