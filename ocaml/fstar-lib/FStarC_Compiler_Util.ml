@@ -1163,3 +1163,6 @@ let array_of_list (l:'a list) = FStar_ImmutableArray_Base.of_list l
 let array_length (l:'a FStar_ImmutableArray_Base.t) = FStar_ImmutableArray_Base.length l
 
 let array_index (l:'a FStar_ImmutableArray_Base.t) (i:Z.t) = FStar_ImmutableArray_Base.index l i
+
+let putenv k v = Unix.putenv k v
+let execvp c args = Unix.execvp c (Array.of_list args)

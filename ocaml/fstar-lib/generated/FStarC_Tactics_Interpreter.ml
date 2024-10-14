@@ -235,13 +235,14 @@ let unembed_tactic_0 :
                                         let uu___3 =
                                           let uu___4 =
                                             FStarC_Pprint.doc_of_string
-                                              "Reduction stopped at: " in
+                                              "Reduction stopped at:" in
                                           let uu___5 =
                                             FStarC_Class_PP.pp
                                               FStarC_Syntax_Print.pretty_term
                                               h_result in
-                                          FStarC_Pprint.op_Hat_Hat uu___4
-                                            uu___5 in
+                                          FStarC_Pprint.prefix
+                                            (Prims.of_int (2)) Prims.int_one
+                                            uu___4 uu___5 in
                                         [uu___3; maybe_admit_tip] in
                                       uu___1 :: uu___2 in
                                     FStarC_Errors.raise_error

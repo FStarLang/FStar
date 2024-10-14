@@ -120,8 +120,8 @@ let (compile_modules : Prims.string -> Prims.string Prims.list -> unit) =
         let env_setter =
           FStarC_Compiler_Util.format5
             "env OCAMLPATH=\"%s/../lib/%s%s/%s%s\""
-            FStarC_Options.fstar_bin_directory ocamlpath_sep
-            FStarC_Options.fstar_bin_directory ocamlpath_sep old_ocamlpath in
+            FStarC_Find.fstar_bin_directory ocamlpath_sep
+            FStarC_Find.fstar_bin_directory ocamlpath_sep old_ocamlpath in
         let cmd =
           FStarC_Compiler_String.concat " " (env_setter :: "ocamlfind" ::
             args) in

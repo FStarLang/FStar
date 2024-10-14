@@ -89,9 +89,9 @@ let compile_modules dir ms =
        | None -> ""
      in
      let env_setter = BU.format5 "env OCAMLPATH=\"%s/../lib/%s%s/%s%s\""
-       Options.fstar_bin_directory
+       Find.fstar_bin_directory
        ocamlpath_sep
-       Options.fstar_bin_directory
+       Find.fstar_bin_directory
        ocamlpath_sep
        old_ocamlpath
      in

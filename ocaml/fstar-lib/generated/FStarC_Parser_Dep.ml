@@ -528,7 +528,7 @@ let (cache_file_name : Prims.string -> Prims.string) =
       FStarC_Find.find_file uu___1 in
     match uu___ with
     | FStar_Pervasives_Native.Some path ->
-        let expected_cache_file = FStarC_Options.prepend_cache_dir cache_fn in
+        let expected_cache_file = FStarC_Find.prepend_cache_dir cache_fn in
         ((let uu___2 =
             ((let uu___3 = FStarC_Options.dep () in
               FStarC_Compiler_Option.isSome uu___3) &&
@@ -605,7 +605,7 @@ let (cache_file_name : Prims.string -> Prims.string) =
               (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
               (Obj.magic uu___4)
           else ());
-         FStarC_Options.prepend_cache_dir cache_fn) in
+         FStarC_Find.prepend_cache_dir cache_fn) in
   let memo = FStarC_Compiler_Util.smap_create (Prims.of_int (100)) in
   let memo1 f x =
     let uu___ = FStarC_Compiler_Util.smap_try_find memo x in
@@ -808,7 +808,7 @@ let (safe_readdir_for_include : Prims.string -> Prims.string Prims.list) =
 let (build_inclusion_candidates_list :
   unit -> (Prims.string * Prims.string) Prims.list) =
   fun uu___ ->
-    let include_directories = FStarC_Options.include_path () in
+    let include_directories = FStarC_Find.include_path () in
     let include_directories1 =
       FStarC_Compiler_List.map FStarC_Compiler_Util.normalize_file_path
         include_directories in
@@ -2139,7 +2139,7 @@ let (topological_dependences_of :
                   interfaces_needing_inlining root_files widened
 let (all_files_in_include_paths : unit -> Prims.string Prims.list) =
   fun uu___ ->
-    let paths = FStarC_Options.include_path () in
+    let paths = FStarC_Find.include_path () in
     FStarC_Compiler_List.collect
       (fun path ->
          let files = safe_readdir_for_include path in
@@ -2532,32 +2532,14 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
       let print_entry target first_dep all_deps =
         pr target; pr ": "; pr first_dep; pr "\\\n\t"; pr all_deps; pr "\n\n" in
       let keys = deps_keys deps1.dep_graph in
-      let no_fstar_stubs_file s =
-        let s1 = "FStar.Stubs." in
-        let s2 = "FStar." in
-        let l1 = FStarC_Compiler_String.length s1 in
-        let uu___ =
-          ((FStarC_Compiler_String.length s) >= l1) &&
-            (let uu___1 =
-               FStarC_Compiler_String.substring s Prims.int_zero l1 in
-             uu___1 = s1) in
-        if uu___
-        then
-          let uu___1 =
-            FStarC_Compiler_String.substring s l1
-              ((FStarC_Compiler_String.length s) - l1) in
-          Prims.strcat s2 uu___1
-        else s in
       let output_file ext fst_file =
         let basename =
           let uu___ =
             let uu___1 = FStarC_Compiler_Util.basename fst_file in
             check_and_strip_suffix uu___1 in
           FStarC_Compiler_Option.get uu___ in
-        let basename1 = no_fstar_stubs_file basename in
-        let ml_base_name =
-          FStarC_Compiler_Util.replace_chars basename1 46 "_" in
-        FStarC_Options.prepend_output_dir (Prims.strcat ml_base_name ext) in
+        let ml_base_name = FStarC_Compiler_Util.replace_chars basename 46 "_" in
+        FStarC_Find.prepend_output_dir (Prims.strcat ml_base_name ext) in
       let norm_path s =
         FStarC_Compiler_Util.replace_chars
           (FStarC_Compiler_Util.replace_chars s 92 "/") 32 "\\ " in

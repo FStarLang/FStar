@@ -391,3 +391,6 @@ val unmarshal: string -> 'a
 val print_array (f: 'a -> string) (s:FStar.ImmutableArray.Base.t 'a) : string 
 val array_length (s:FStar.ImmutableArray.Base.t 'a) : FStarC.BigInt.t
 val array_index (s:FStar.ImmutableArray.Base.t 'a) (i:FStarC.BigInt.t) : 'a
+
+val putenv : string -> string -> unit
+val execvp : string -> list string -> unit
