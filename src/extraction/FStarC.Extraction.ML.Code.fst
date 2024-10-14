@@ -182,7 +182,7 @@ let prim_constructors = [
 
 (* -------------------------------------------------------------------- *)
 let is_prims_ns (ns : list mlsymbol) =
-    ns = ["Prims"] || ns = ["Prims"]
+    ns = ["Prims"] || ns = ["Fstar_guts.Prims"]
 
 (* -------------------------------------------------------------------- *)
 let as_bin_op ((ns, x) : mlpath) =

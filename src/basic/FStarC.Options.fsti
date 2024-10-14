@@ -26,6 +26,7 @@ type codegen_t =
   | FSharp
   | Krml
   | Plugin
+  | PluginNoLib
   | Extension
 
 //let __test_norm_all = Util.mk_ref false
