@@ -1,0 +1,9 @@
+stage0: contains a starting point to start building F*, an ocaml
+snapshot of an older F* that is capable of building the *current* F*
+in this repo, i.e. the sources in src/. We update this snapshot
+only when needed, it absolutely should not be update on every push to
+master or every PR.
+
+An alternative is using some external F* installed in your system instead
+of the one in stage0, which also makes building a bit faster, since we skip
+the dune build of the stage0
