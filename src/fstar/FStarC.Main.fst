@@ -153,9 +153,8 @@ let go _ =
 
         if Debug.any () then (
           Util.print1 "- F* executable: %s\n" (Util.exec_name);
-          Util.print1 "- F* exec dir: %s\n" (Options.fstar_bin_directory);
-          Util.print1 "- Library root: %s\n" ((Util.dflt "<none>" (Options.lib_root ())));
-          Util.print1 "- Full include path: %s\n" (show (Options.include_path ()));
+          Util.print1 "- Library root: %s\n" ((Util.dflt "<none>" (Find.lib_root ())));
+          Util.print1 "- Full include path: %s\n" (show (Find.include_path ()));
           Util.print_string "\n";
           ()
         );
@@ -210,21 +209,20 @@ let go _ =
           ()
 
         else if Options.locate () then (
-          Util.print1 "%s\n" (Util.get_exec_dir () |> Util.normalize_file_path);
+          Util.print1 "%s\n" (Find.locate ());
           exit 0
 
         ) else if Options.locate_lib () then (
-          match Options.lib_root () with
+          match Find.locate_lib () with
           | None ->
             Util.print_error "No library found (is --no_default_includes set?)\n";
             exit 1
           | Some s ->
-            Util.print1 "%s\n" (Util.normalize_file_path s);
+            Util.print1 "%s\n" s;
             exit 0
 
         ) else if Options.locate_ocaml () then (
-          // This is correct right now, but probably should change.
-          Util.print1 "%s\n" (Util.get_exec_dir () ^ "/../lib" |> Util.normalize_file_path);
+          Util.print1 "%s\n" (Find.locate_ocaml ());
           exit 0
 
         ) else if Some? (Options.read_krml_file ()) then

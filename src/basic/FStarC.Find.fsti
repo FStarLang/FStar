@@ -14,8 +14,34 @@
    limitations under the License.
 *)
 module FStarC.Find
+(* Utilities for finding files in the include path and related
+operations. *)
 
 open FStarC.Compiler.Effect
 
+(* A bit silly to have this, but this is the directory where the fstar.exe executable is in. *)
+val fstar_bin_directory : string
+
+(* The root directory of the F* library, if any *)
+val lib_root () : option string
+
+(* The full include path. We search files in all of these directories. *)
+val include_path () : list string
+
 (* Try to find a file in the include path with a given basename. *)
 val find_file (basename : string) : option string
+
+val prepend_cache_dir           : string  -> string
+val prepend_output_dir          : string  -> string
+
+
+
+(* Return absolute path of directory where fstar.exe lives *)
+val locate () : string
+
+(* Return absolute path of F* library, if any.
+(this will be empty with --no_default_includes) *)
+val locate_lib () : option string
+
+(* Return absolute path of OCaml-installed components of F*. *)
+val locate_ocaml () : string
