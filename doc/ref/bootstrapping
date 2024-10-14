@@ -1,0 +1,86 @@
+stage0: contains a starting point to start building F*, an ocaml
+snapshot of an older F* that is capable of building the *current* F* in
+this repo, i.e. the sources in src/. We update this snapshot only when
+needed, it absolutely should not be update on every push to master or
+every PR.
+
+stage1/stage2: These directories are clones of each other. The high
+level idea is that we use the stage0 compiler to extract+build a stage1
+compiler, and then use the stage1 to extract+build a stage2.
+
+One round
+=========
+
+The first step is using stage0 to (lax) check+extract every fst
+file in src/. We place the results into stage1/fstarc.checked and
+stage1/fstarc.ml. The compiler (in src/) can refer to modules in the
+standard library of F*, __as long as they are in stage0 already__. We do
+not read ulib/ at all at this point. In fact, the new library could very
+well not check with stage0.
+
+Once we've extracted this set of ml files, we can build a "bare"
+fstar.exe. We have to also link with some basic support ML files (in
+src/ml/bare) for some interfaces in the compiler that are implemented in
+OCaml. Also, we need the ml implementation for the library modules we
+use. We take these from ulib/ml/app (the directory for ml files of the
+application library).
+
+NOTE: this last inclusion is acctualy not right, we should take this
+from stage0, but stage0 (today) does not provide a directory with the ml
+files for it. In fact it does not provide an application library at all.
+
+This "bare" fstar.exe has all of src/ and is up-to-date, but has
+no plugins whatsoever. (Nit: we could find a better name for these
+"baked-in plugins", they differ from plugins that go in a cmxs and get
+loaded dynamically.) Using fstar-bare.exe, we can (lax) check a part of
+ulib (defined by ROOTS in mk/plugins.mk) to generate the relevant ml
+files for them. We place all these into stage1/plugins.ml, and compile
+them with all previous full to create a full fstar.exe with plugins.
+
+The next steps are building the libraries (applib and pluginlib). Using
+the full compiler, we check every file in ulib/ to generate checked+ml
+files (ml unless the module is filtered by --extract). We can then build
+all of this into a library. This is defined in stage1/dune/libapp.
+
+The next step is building the library for dynamic plugins, i.e. cmxs
+files that get dynlinked into fstar.exe. Since these plugins can
+reference anything in the library, we *must* have implementations for
+all of that, and they are not necessarilly already in fstar.exe itself
+(e.g. maybe the compiler does not use a fancy red-black tree, so it's
+not linked, but a plugin can). The plugin library is essentialy just
+the application library extracted with --codegen Plugin. We reuse the
+checked files from the application library and extract again to build
+this library (as a cmxs). This is defined in stage1/dune/libplugin.
+The cmxs is installed in lib/fstar and is loaded automatically by F*
+before loading any user-created cmxs plugin (hence these cmxs could only
+contain the user module, omitting any support modules in the library).
+
+Second round
+============
+
+The second round is the exact same procedure as above, but using the
+fully-built stage1 compiler and extracting into a stage2. Why do we even
+do this? Because if you had some changes to extraction in stage1 (e.g.
+now everything is 2x faster), the fstar.exe in stage1 wouldn't benefit
+from that, as it was extracted+built with stage0. The second round gives
+you a build of what's in src/, built with a compiler whose source is
+src/, reaping the benefits. It's also a good test, of course.
+
+Note: when we're building a stage2, we are NOT using the stage1's libapp
+nor libplugin. In fact they are not even built.
+
+We also do a stage3: we extract all of src into stage3/fstarc.ml and
+compare with stage2/fstarc.ml. These outputs should be identical, or
+there is a bug somewhere.
+
+Optimizations
+=============
+
+An alternative to building stage0 is using some external F* installed
+in your system instead, which also makes building a bit faster, since
+we skip the dune build of the stage0. You can do this by setting
+FSTAR_EXTERNAL_STAGE0 in your environment, but do so at your own risk.
+You could also add .checked.lax files into this external F*'s cache
+dir to save you from rechecking its library again. We should make this
+easier.
+
