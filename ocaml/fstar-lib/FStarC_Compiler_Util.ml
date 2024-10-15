@@ -1,5 +1,4 @@
 open FStarC_Json
-let strint = string_of_int
 let max_int = Z.of_int max_int
 let is_letter c = if c > 255 then false else BatChar.is_letter (BatChar.chr c)
 let is_digit  c = if c > 255 then false else BatChar.is_digit  (BatChar.chr c)
@@ -782,7 +781,6 @@ let rec fold_flatten f acc l =
   | [] -> acc
   | x :: xs -> 
     let acc, xs' = f acc x in
-    (* print1 "GG len %s\n" (Stdlib.string_of_int (List.length xs')); *)
     fold_flatten f acc (xs' @ xs)
 
 let add_unique f x l =

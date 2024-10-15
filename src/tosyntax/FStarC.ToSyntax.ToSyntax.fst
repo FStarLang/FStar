@@ -1136,8 +1136,6 @@ and desugar_machine_integer env repr (signedness, width) range =
                  meta=Meta_desugared (Machine_integer (signedness, width))}) range
 
 and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & antiquotations_temp =
-  if !dbg_ToSyntax then
-    BU.print1 "desugaring (%s)\n\n" (show top);
   let mk e = S.mk e top.range in
   let noaqs = [] in
   let join_aqs aqs = List.flatten aqs in

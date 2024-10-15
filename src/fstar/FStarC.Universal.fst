@@ -402,7 +402,7 @@ let tc_one_file
         Profiling.profile 
           (fun _ -> parse env pre_fn fn)
           (Some (FStarC.Parser.Dep.module_name_of_file fn))
-          "FStarC.Universal.parse"    
+          "FStarC.Universal.parse"
       in
       let mii = FStarC.Syntax.DsEnv.inclusion_info (tcenv_of_uenv env).dsenv fmod.name in
       let check_mod () =
@@ -423,7 +423,7 @@ let tc_one_file
                  maybe_restore_opts ();
                  let smt_decls =
                    if not (Options.lax())
-                   then 
+                   then
                     Profiling.profile (fun _ -> FStarC.SMTEncoding.Encode.encode_modul env modul)
                               (Some (string_of_lid fmod.name))
                               "FStarC.Universal.encode_module"
