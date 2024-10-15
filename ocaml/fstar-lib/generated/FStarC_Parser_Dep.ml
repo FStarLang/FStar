@@ -2532,13 +2532,31 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
       let print_entry target first_dep all_deps =
         pr target; pr ": "; pr first_dep; pr "\\\n\t"; pr all_deps; pr "\n\n" in
       let keys = deps_keys deps1.dep_graph in
+      let no_fstar_stubs_file s =
+        let s1 = "FStar.Stubs." in
+        let s2 = "FStar." in
+        let l1 = FStarC_Compiler_String.length s1 in
+        let uu___ =
+          ((FStarC_Compiler_String.length s) >= l1) &&
+            (let uu___1 =
+               FStarC_Compiler_String.substring s Prims.int_zero l1 in
+             uu___1 = s1) in
+        if uu___
+        then
+          let uu___1 =
+            FStarC_Compiler_String.substring s l1
+              ((FStarC_Compiler_String.length s) - l1) in
+          Prims.strcat s2 uu___1
+        else s in
       let output_file ext fst_file =
         let basename =
           let uu___ =
             let uu___1 = FStarC_Compiler_Util.basename fst_file in
             check_and_strip_suffix uu___1 in
           FStarC_Compiler_Option.get uu___ in
-        let ml_base_name = FStarC_Compiler_Util.replace_chars basename 46 "_" in
+        let basename1 = no_fstar_stubs_file basename in
+        let ml_base_name =
+          FStarC_Compiler_Util.replace_chars basename1 46 "_" in
         FStarC_Find.prepend_output_dir (Prims.strcat ml_base_name ext) in
       let norm_path s =
         FStarC_Compiler_Util.replace_chars
