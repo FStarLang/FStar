@@ -96,3 +96,13 @@ instance deq_ident = {
 instance deq_lident = {
   (=?) = lid_equals;
 }
+
+instance ord_ident = {
+  super = deq_ident;
+  cmp = (fun x y -> cmp (string_of_id x) (string_of_id y));
+}
+
+instance ord_lident = {
+  super = deq_lident;
+  cmp = (fun x y -> cmp (string_of_lid x) (string_of_lid y));
+}
