@@ -43,7 +43,7 @@ let rec sort_dedup #a xs =
   | [] -> []
   | x::xs -> insert x (sort_dedup xs)
 
-let ord_list_diff (#a:Type) {| ord a |} (xs ys : list a) : list a & list a =
+let ord_list_diff (#a:Type0) {| ord a |} (xs ys : list a) : list a & list a =
   let open FStarC.Compiler.Order in
   let xs = xs |> sort_dedup in
   let ys = ys |> sort_dedup in
