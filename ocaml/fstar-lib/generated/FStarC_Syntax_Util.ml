@@ -322,9 +322,7 @@ let rec (univ_kernel :
         let uu___1 =
           let uu___2 =
             let uu___3 =
-              FStarC_Class_Show.show
-                (FStarC_Class_Show.printableshow
-                   FStar_Class_Printable.printable_int) i in
+              FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
             Prims.strcat uu___3 ")" in
           Prims.strcat "Imposible: univ_kernel (U_bvar " uu___2 in
         failwith uu___1

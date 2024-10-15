@@ -3474,17 +3474,13 @@ let (t_apply :
               FStarC_Tactics_Monad.if_verbose
                 (fun uu___2 ->
                    let uu___3 =
-                     FStarC_Class_Show.show
-                       (FStarC_Class_Show.printableshow
-                          FStar_Class_Printable.printable_bool) uopt in
+                     FStarC_Class_Show.show FStarC_Class_Show.showable_bool
+                       uopt in
                    let uu___4 =
-                     FStarC_Class_Show.show
-                       (FStarC_Class_Show.printableshow
-                          FStar_Class_Printable.printable_bool) only_match in
+                     FStarC_Class_Show.show FStarC_Class_Show.showable_bool
+                       only_match in
                    let uu___5 =
-                     FStarC_Class_Show.show
-                       (FStarC_Class_Show.printableshow
-                          FStar_Class_Printable.printable_bool)
+                     FStarC_Class_Show.show FStarC_Class_Show.showable_bool
                        tc_resolved_uvars1 in
                    let uu___6 =
                      FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
@@ -5146,9 +5142,8 @@ let (clear : FStarC_Syntax_Syntax.binder -> unit FStarC_Tactics_Monad.tac) =
                          let uu___6 = FStarC_Tactics_Types.goal_env goal in
                          FStarC_TypeChecker_Env.all_binders uu___6 in
                        FStarC_Compiler_List.length uu___5 in
-                     FStarC_Class_Show.show
-                       (FStarC_Class_Show.printableshow
-                          FStar_Class_Printable.printable_nat) uu___4 in
+                     FStarC_Class_Show.show FStarC_Class_Show.showable_nat
+                       uu___4 in
                    FStarC_Compiler_Util.print2
                      "Clear of (%s), env has %s binders\n" uu___2 uu___3) in
             Obj.magic

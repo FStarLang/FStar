@@ -105,9 +105,7 @@ let (compress1_u :
             let uu___ =
               let uu___1 =
                 let uu___2 = FStarC_Syntax_Unionfind.univ_uvar_id uv in
-                FStarC_Class_Show.show
-                  (FStarC_Class_Show.printableshow
-                     FStar_Class_Printable.printable_int) uu___2 in
+                FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___2 in
               FStarC_Compiler_Util.format1
                 "Internal error: unexpected unresolved (universe) uvar in deep_compress: %s"
                 uu___1 in

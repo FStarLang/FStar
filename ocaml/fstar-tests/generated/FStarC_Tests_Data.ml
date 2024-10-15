@@ -62,9 +62,7 @@ let (run_all : unit -> unit) =
      match uu___2 with
      | (f, ms) ->
          ((let uu___4 =
-             FStarC_Class_Show.show
-               (FStarC_Class_Show.printableshow
-                  FStar_Class_Printable.printable_int) ms in
+             FStarC_Class_Show.show FStarC_Class_Show.showable_int ms in
            FStarC_Compiler_Util.print1 "FlatSet insert: %s\n" uu___4);
           (let uu___4 =
              FStarC_Compiler_Util.record_time
@@ -75,9 +73,7 @@ let (run_all : unit -> unit) =
            match uu___4 with
            | (f_ok, ms1) ->
                ((let uu___6 =
-                   FStarC_Class_Show.show
-                     (FStarC_Class_Show.printableshow
-                        FStar_Class_Printable.printable_int) ms1 in
+                   FStarC_Class_Show.show FStarC_Class_Show.showable_int ms1 in
                  FStarC_Compiler_Util.print1 "FlatSet all_mem: %s\n" uu___6);
                 (let uu___6 =
                    FStarC_Compiler_Util.record_time
@@ -89,8 +85,7 @@ let (run_all : unit -> unit) =
                  | (f1, ms2) ->
                      ((let uu___8 =
                          FStarC_Class_Show.show
-                           (FStarC_Class_Show.printableshow
-                              FStar_Class_Printable.printable_int) ms2 in
+                           FStarC_Class_Show.showable_int ms2 in
                        FStarC_Compiler_Util.print1 "FlatSet all_remove: %s\n"
                          uu___8);
                       if Prims.op_Negation f_ok
@@ -122,8 +117,7 @@ let (run_all : unit -> unit) =
                        | (rb, ms3) ->
                            ((let uu___12 =
                                FStarC_Class_Show.show
-                                 (FStarC_Class_Show.printableshow
-                                    FStar_Class_Printable.printable_int) ms3 in
+                                 FStarC_Class_Show.showable_int ms3 in
                              FStarC_Compiler_Util.print1 "RBSet insert: %s\n"
                                uu___12);
                             (let uu___12 =
@@ -136,9 +130,7 @@ let (run_all : unit -> unit) =
                              | (rb_ok, ms4) ->
                                  ((let uu___14 =
                                      FStarC_Class_Show.show
-                                       (FStarC_Class_Show.printableshow
-                                          FStar_Class_Printable.printable_int)
-                                       ms4 in
+                                       FStarC_Class_Show.showable_int ms4 in
                                    FStarC_Compiler_Util.print1
                                      "RBSet all_mem: %s\n" uu___14);
                                   (let uu___14 =
@@ -151,8 +143,7 @@ let (run_all : unit -> unit) =
                                    | (rb1, ms5) ->
                                        ((let uu___16 =
                                            FStarC_Class_Show.show
-                                             (FStarC_Class_Show.printableshow
-                                                FStar_Class_Printable.printable_int)
+                                             FStarC_Class_Show.showable_int
                                              ms5 in
                                          FStarC_Compiler_Util.print1
                                            "RBSet all_remove: %s\n" uu___16);

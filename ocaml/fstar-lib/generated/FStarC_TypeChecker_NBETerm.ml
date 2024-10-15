@@ -726,9 +726,7 @@ let rec (t_to_string : t -> Prims.string) =
         let uu___6 =
           let uu___7 =
             FStarC_Class_Show.show
-              (FStarC_Class_Show.show_tuple2
-                 (FStarC_Class_Show.printableshow
-                    FStar_Class_Printable.printable_bool)
+              (FStarC_Class_Show.show_tuple2 FStarC_Class_Show.showable_bool
                  (FStarC_Class_Show.show_list
                     FStarC_Syntax_Print.showable_letbinding)) (true, [l]) in
           Prims.strcat uu___7 ")" in
@@ -763,9 +761,7 @@ and (atom_to_string : atom -> Prims.string) =
         let uu___ =
           let uu___1 =
             FStarC_Class_Show.show
-              (FStarC_Class_Show.show_tuple2
-                 (FStarC_Class_Show.printableshow
-                    FStar_Class_Printable.printable_bool)
+              (FStarC_Class_Show.show_tuple2 FStarC_Class_Show.showable_bool
                  (FStarC_Class_Show.show_list
                     FStarC_Syntax_Print.showable_letbinding)) (false, [lb]) in
           Prims.strcat uu___1 " in ...)" in
@@ -774,9 +770,7 @@ and (atom_to_string : atom -> Prims.string) =
         let uu___1 =
           let uu___2 =
             FStarC_Class_Show.show
-              (FStarC_Class_Show.show_tuple2
-                 (FStarC_Class_Show.printableshow
-                    FStar_Class_Printable.printable_bool)
+              (FStarC_Class_Show.show_tuple2 FStarC_Class_Show.showable_bool
                  (FStarC_Class_Show.show_list
                     FStarC_Syntax_Print.showable_letbinding)) (true, lbs) in
           let uu___3 =

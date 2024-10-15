@@ -2958,8 +2958,7 @@ and (infer :
                             FStarC_Compiler_Util.string_of_int (n' - n) in
                           let uu___7 =
                             FStarC_Class_Show.show
-                              (FStarC_Class_Show.printableshow
-                                 FStar_Class_Printable.printable_nat) n in
+                              FStarC_Class_Show.showable_nat n in
                           FStarC_Compiler_Util.format3
                             "The head of this application, after being applied to %s arguments, is an effectful computation (leaving %s arguments to be applied). Please let-bind the head applied to the %s first arguments."
                             uu___5 uu___6 uu___7 in

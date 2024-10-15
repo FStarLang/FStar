@@ -1863,9 +1863,7 @@ let meas :
            match uu___ with
            | (r, ms) ->
                ((let uu___2 =
-                   FStarC_Class_Show.show
-                     (FStarC_Class_Show.printableshow
-                        FStar_Class_Printable.printable_int) ms in
+                   FStarC_Class_Show.show FStarC_Class_Show.showable_int ms in
                  FStarC_Compiler_Util.print2 "++ Tactic %s ran in \t\t%sms\n"
                    s uu___2);
                 r))
@@ -2718,9 +2716,7 @@ let (binding_to_string : FStarC_Reflection_V2_Data.binding -> Prims.string) =
       let uu___1 =
         let uu___2 =
           FStarC_BigInt.to_int_fs b.FStarC_Reflection_V2_Data.uniq1 in
-        FStarC_Class_Show.show
-          (FStarC_Class_Show.printableshow
-             FStar_Class_Printable.printable_int) uu___2 in
+        FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___2 in
       Prims.strcat "#" uu___1 in
     Prims.strcat
       (FStarC_Compiler_Sealed.unseal b.FStarC_Reflection_V2_Data.ppname3)
@@ -4123,17 +4119,13 @@ let (t_apply :
               FStarC_Tactics_Monad.if_verbose
                 (fun uu___2 ->
                    let uu___3 =
-                     FStarC_Class_Show.show
-                       (FStarC_Class_Show.printableshow
-                          FStar_Class_Printable.printable_bool) uopt in
+                     FStarC_Class_Show.show FStarC_Class_Show.showable_bool
+                       uopt in
                    let uu___4 =
-                     FStarC_Class_Show.show
-                       (FStarC_Class_Show.printableshow
-                          FStar_Class_Printable.printable_bool) only_match in
+                     FStarC_Class_Show.show FStarC_Class_Show.showable_bool
+                       only_match in
                    let uu___5 =
-                     FStarC_Class_Show.show
-                       (FStarC_Class_Show.printableshow
-                          FStar_Class_Printable.printable_bool)
+                     FStarC_Class_Show.show FStarC_Class_Show.showable_bool
                        tc_resolved_uvars1 in
                    let uu___6 =
                      FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
@@ -6297,9 +6289,8 @@ let (clear :
                          let uu___6 = FStarC_Tactics_Types.goal_env goal in
                          FStarC_TypeChecker_Env.all_binders uu___6 in
                        FStarC_Compiler_List.length uu___5 in
-                     FStarC_Class_Show.show
-                       (FStarC_Class_Show.printableshow
-                          FStar_Class_Printable.printable_nat) uu___4 in
+                     FStarC_Class_Show.show FStarC_Class_Show.showable_nat
+                       uu___4 in
                    FStarC_Compiler_Util.print2
                      "Clear of (%s), env has %s binders\n" uu___2 uu___3) in
             Obj.magic
@@ -10641,8 +10632,7 @@ let (refl_is_non_informative :
                            (fun uu___4 ->
                               let uu___5 =
                                 FStarC_Class_Show.show
-                                  (FStarC_Class_Show.printableshow
-                                     FStar_Class_Printable.printable_bool) b in
+                                  FStarC_Class_Show.showable_bool b in
                               FStarC_Compiler_Util.format1
                                 "refl_is_non_informative: returned %s" uu___5);
                          if b

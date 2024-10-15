@@ -169,9 +169,7 @@ let (register_goal : FStarC_Tactics_Types.goal -> unit) =
               if uu___7
               then
                 let uu___8 =
-                  FStarC_Class_Show.show
-                    (FStarC_Class_Show.printableshow
-                       FStar_Class_Printable.printable_int) i in
+                  FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
                 FStarC_Compiler_Util.print1 "(%s) Registering goal\n" uu___8
               else ());
              (let should_register = is_goal_safe_as_well_typed g in
@@ -183,9 +181,7 @@ let (register_goal : FStarC_Tactics_Types.goal -> unit) =
                 (if uu___8
                  then
                    let uu___9 =
-                     FStarC_Class_Show.show
-                       (FStarC_Class_Show.printableshow
-                          FStar_Class_Printable.printable_int) i in
+                     FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
                    FStarC_Compiler_Util.print1
                      "(%s) Not registering goal since it has unresolved uvar deps\n"
                      uu___9
@@ -197,9 +193,7 @@ let (register_goal : FStarC_Tactics_Types.goal -> unit) =
                   if uu___9
                   then
                     let uu___10 =
-                      FStarC_Class_Show.show
-                        (FStarC_Class_Show.printableshow
-                           FStar_Class_Printable.printable_int) i in
+                      FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
                     let uu___11 =
                       FStarC_Class_Show.show
                         FStarC_Syntax_Print.showable_ctxu uv in

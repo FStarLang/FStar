@@ -1051,8 +1051,7 @@ let run_unembedded_tactic_on_ps :
                             then
                               let uu___8 =
                                 FStarC_Class_Show.show
-                                  (FStarC_Class_Show.printableshow
-                                     FStar_Class_Printable.printable_nat)
+                                  FStarC_Class_Show.showable_nat
                                   (FStarC_Compiler_List.length
                                      ps3.FStarC_Tactics_Types.all_implicits) in
                               let uu___9 =
@@ -1073,8 +1072,7 @@ let run_unembedded_tactic_on_ps :
                              then
                                let uu___9 =
                                  FStarC_Class_Show.show
-                                   (FStarC_Class_Show.printableshow
-                                      FStar_Class_Printable.printable_nat)
+                                   FStarC_Class_Show.showable_nat
                                    (FStarC_Compiler_List.length
                                       ps3.FStarC_Tactics_Types.all_implicits) in
                                let uu___10 =
@@ -1177,8 +1175,7 @@ let run_tactic_on_ps' :
                            FStarC_Syntax_Print.showable_term tactic in
                        let uu___3 =
                          FStarC_Class_Show.show
-                           (FStarC_Class_Show.printableshow
-                              FStar_Class_Printable.printable_bool)
+                           FStarC_Class_Show.showable_bool
                            tactic_already_typed in
                        FStarC_Compiler_Util.print2
                          "Typechecking tactic: (%s) (already_typed: %s) {\n"

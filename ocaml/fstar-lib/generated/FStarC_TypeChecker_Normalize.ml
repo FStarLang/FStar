@@ -23,9 +23,7 @@ let (maybe_debug :
                   let uu___2 =
                     FStarC_Compiler_Util.time_diff time_then time_now in
                   FStar_Pervasives_Native.snd uu___2 in
-                FStarC_Class_Show.show
-                  (FStarC_Class_Show.printableshow
-                     FStar_Class_Printable.printable_int) uu___1 in
+                FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___1 in
               let uu___1 =
                 FStarC_Class_Show.show FStarC_Syntax_Print.showable_term tm in
               let uu___2 =
@@ -277,9 +275,7 @@ let (showable_stack_elt : stack_elt FStarC_Class_Show.showable) =
          | MemoLazy uu___1 -> "MemoLazy"
          | Abs (uu___1, bs, uu___2, uu___3, uu___4) ->
              let uu___5 =
-               FStarC_Class_Show.show
-                 (FStarC_Class_Show.printableshow
-                    FStar_Class_Printable.printable_nat)
+               FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                  (FStarC_Compiler_List.length bs) in
              FStarC_Compiler_Util.format1 "Abs %s" uu___5
          | UnivArgs uu___1 -> "UnivArgs"
@@ -746,13 +742,10 @@ let (reduce_primops :
                                             prim_step.FStarC_TypeChecker_Primops_Base.name in
                                         let uu___7 =
                                           FStarC_Class_Show.show
-                                            (FStarC_Class_Show.printableshow
-                                               FStar_Class_Printable.printable_nat)
-                                            l in
+                                            FStarC_Class_Show.showable_nat l in
                                         let uu___8 =
                                           FStarC_Class_Show.show
-                                            (FStarC_Class_Show.printableshow
-                                               FStar_Class_Printable.printable_int)
+                                            FStarC_Class_Show.showable_int
                                             prim_step.FStarC_TypeChecker_Primops_Base.arity in
                                         FStarC_Compiler_Util.print3
                                           "primop: found partially applied %s (%s/%s args)\n"
@@ -2158,16 +2151,12 @@ let rec (norm :
                  FStarC_Class_Tagged.tag_of FStarC_Syntax_Syntax.tagged_term
                    t1 in
                let uu___3 =
-                 FStarC_Class_Show.show
-                   (FStarC_Class_Show.printableshow
-                      FStar_Class_Printable.printable_bool)
+                 FStarC_Class_Show.show FStarC_Class_Show.showable_bool
                    (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.no_full_norm in
                let uu___4 =
                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t1 in
                let uu___5 =
-                 FStarC_Class_Show.show
-                   (FStarC_Class_Show.printableshow
-                      FStar_Class_Printable.printable_nat)
+                 FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                    (FStarC_Compiler_List.length env1) in
                let uu___6 =
                  let uu___7 =
@@ -2436,8 +2425,7 @@ let rec (norm :
                                FStarC_Compiler_Util.time_diff start fin in
                              FStar_Pervasives_Native.snd uu___7 in
                            FStarC_Class_Show.show
-                             (FStarC_Class_Show.printableshow
-                                FStar_Class_Printable.printable_int) uu___6 in
+                             FStarC_Class_Show.showable_int uu___6 in
                          let uu___6 =
                            FStarC_Class_Show.show
                              FStarC_Syntax_Print.showable_term tm' in
@@ -4364,8 +4352,7 @@ and (do_reify_monadic :
                                                              ed.FStarC_Syntax_Syntax.mname in
                                                          let uu___15 =
                                                            FStarC_Class_Show.show
-                                                             (FStarC_Class_Show.printableshow
-                                                                FStar_Class_Printable.printable_int)
+                                                             FStarC_Class_Show.showable_int
                                                              num_fixed_binders in
                                                          let uu___16 =
                                                            let uu___17 =
@@ -5022,9 +5009,7 @@ and (norm_comp :
              let uu___2 =
                FStarC_Class_Show.show FStarC_Syntax_Print.showable_comp comp in
              let uu___3 =
-               FStarC_Class_Show.show
-                 (FStarC_Class_Show.printableshow
-                    FStar_Class_Printable.printable_nat)
+               FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                  (FStarC_Compiler_List.length env1) in
              FStarC_Compiler_Util.print2
                ">>> %s\nNormComp with with %s env elements\n" uu___2 uu___3);
@@ -5189,9 +5174,8 @@ and (maybe_simplify :
                     FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
                       tm' in
                   let uu___4 =
-                    FStarC_Class_Show.show
-                      (FStarC_Class_Show.printableshow
-                         FStar_Class_Printable.printable_bool) renorm in
+                    FStarC_Class_Show.show FStarC_Class_Show.showable_bool
+                      renorm in
                   FStarC_Compiler_Util.print4
                     "%sSimplified\n\t%s to\n\t%s\nrenorm = %s\n"
                     (if
@@ -6589,9 +6573,7 @@ and (rebuild :
                 let uu___4 =
                   FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t in
                 let uu___5 =
-                  FStarC_Class_Show.show
-                    (FStarC_Class_Show.printableshow
-                       FStar_Class_Printable.printable_nat)
+                  FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                     (FStarC_Compiler_List.length env1) in
                 let uu___6 =
                   let uu___7 =
@@ -7703,8 +7685,7 @@ let (normalize_with_primitive_steps :
                                    FStarC_Syntax_Print.showable_term r in
                                let uu___12 =
                                  FStarC_Class_Show.show
-                                   (FStarC_Class_Show.printableshow
-                                      FStar_Class_Printable.printable_int) ms in
+                                   FStarC_Class_Show.showable_int ms in
                                FStarC_Compiler_Util.print3
                                  "}\nNormalization%s result = (%s) in %s ms\n"
                                  maybe_nbe uu___11 uu___12);
@@ -7779,8 +7760,7 @@ let (normalize_comp :
                             FStarC_Syntax_Print.showable_comp c1 in
                         let uu___11 =
                           FStarC_Class_Show.show
-                            (FStarC_Class_Show.printableshow
-                               FStar_Class_Printable.printable_int) ms in
+                            FStarC_Class_Show.showable_int ms in
                         FStarC_Compiler_Util.print2
                           "}\nNormalization result = (%s) in %s ms\n" uu___10
                           uu___11);

@@ -5982,9 +5982,8 @@ let (weaken_result_typ :
              if uu___1
              then
                let uu___2 =
-                 FStarC_Class_Show.show
-                   (FStarC_Class_Show.printableshow
-                      FStar_Class_Printable.printable_bool) use_eq in
+                 FStarC_Class_Show.show FStarC_Class_Show.showable_bool
+                   use_eq in
                let uu___3 =
                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term e in
                let uu___4 = FStarC_TypeChecker_Common.lcomp_to_string lc in
@@ -6698,8 +6697,7 @@ let (maybe_instantiate :
                   (FStarC_Class_Show.show_option
                      (FStarC_Class_Show.show_tuple2
                         FStarC_Syntax_Print.showable_term
-                        (FStarC_Class_Show.printableshow
-                           FStar_Class_Printable.printable_bool))) uu___6 in
+                        FStarC_Class_Show.showable_bool)) uu___6 in
               FStarC_Compiler_Util.print3
                 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
                 uu___3 uu___4 uu___5
@@ -8063,13 +8061,9 @@ let (get_field_projector_name :
                 let uu___3 =
                   FStarC_Class_Show.show FStarC_Ident.showable_lident datacon in
                 let uu___4 =
-                  FStarC_Class_Show.show
-                    (FStarC_Class_Show.printableshow
-                       FStar_Class_Printable.printable_int) n in
+                  FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
                 let uu___5 =
-                  FStarC_Class_Show.show
-                    (FStarC_Class_Show.printableshow
-                       FStar_Class_Printable.printable_int) index in
+                  FStarC_Class_Show.show FStarC_Class_Show.showable_int index in
                 FStarC_Compiler_Util.format3
                   "Data constructor %s does not have enough binders (has %s, tried %s)"
                   uu___3 uu___4 uu___5 in
