@@ -31,10 +31,12 @@ val include_path () : list string
 (* Try to find a file in the include path with a given basename. *)
 val find_file (basename : string) : option string
 
+(* As above, but also looks in the output directory (--odir). This is useful to find
+plugins that we might have created. *)
+val find_file_odir (basename : string) : option string
+
 val prepend_cache_dir           : string  -> string
 val prepend_output_dir          : string  -> string
-
-
 
 (* Return absolute path of directory where fstar.exe lives *)
 val locate () : string
