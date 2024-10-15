@@ -1954,9 +1954,14 @@ let encode_modul tcenv modul =
     then BU.print2 "+++++++++++Encoding externals for %s ... %s declarations\n" name (List.length modul.declarations |> string_of_int);
     let env = get_env modul.name tcenv |> reset_current_module_fvbs in
     let encode_signature (env:env_t) (ses:sigelts) =
-        ses |> List.fold_left (fun (g, env) se ->
-          let g', env = encode_top_level_facts env se in
-          g@g', env) ([], env)
+        let g', env = 
+          ses |> 
+          List.fold_left
+            (fun (g, env) se ->
+              let g', env = encode_top_level_facts env se in
+              List.rev_append g' g, env) ([], env)
+        in
+        List.rev g', env
     in
     let decls, env = encode_signature ({env with warn=false}) modul.declarations in
     give_decls_to_z3_and_set_env env name decls;

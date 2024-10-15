@@ -128,7 +128,9 @@ let (report_human : Prims.string -> counter -> unit) =
              " (Warning, some operations raised exceptions and we not accounted for)"
            else "") in
       let uu___ =
-        let uu___1 = FStarC_Compiler_Effect.op_Bang c.total_time in
+        let uu___1 =
+          let uu___2 = FStarC_Compiler_Effect.op_Bang c.total_time in
+          uu___2 / (Prims.parse_int "1000000") in
         FStarC_Compiler_Util.string_of_int uu___1 in
       FStarC_Compiler_Util.print4 "%s, profiled %s:\t %s ms%s\n" tag 
         c.cid uu___ warn

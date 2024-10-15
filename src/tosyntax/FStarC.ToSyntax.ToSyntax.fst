@@ -1136,6 +1136,8 @@ and desugar_machine_integer env repr (signedness, width) range =
                  meta=Meta_desugared (Machine_integer (signedness, width))}) range
 
 and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & antiquotations_temp =
+  if !dbg_ToSyntax then
+    BU.print1 "desugaring (%s)\n\n" (show top);
   let mk e = S.mk e top.range in
   let noaqs = [] in
   let join_aqs aqs = List.flatten aqs in
@@ -4285,9 +4287,9 @@ let desugar_decls env decls =
   let env, sigelts =
     List.fold_left (fun (env, sigelts) d ->
       let env, se = desugar_decl env d in
-      env, sigelts@se) (env, []) decls
+      env, List.rev_append se sigelts) (env, []) decls
   in
-  env, sigelts
+  env, List.rev sigelts
 
 (* Top-level functionality: from AST to a module
    Keeps track of the name of variables and so on (in the context)

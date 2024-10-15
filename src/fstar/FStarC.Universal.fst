@@ -398,7 +398,12 @@ let tc_one_file
           )
   in
   let tc_source_file () =
-      let fmod, env = parse env pre_fn fn in
+      let fmod, env = 
+        Profiling.profile 
+          (fun _ -> parse env pre_fn fn)
+          (Some (FStarC.Parser.Dep.module_name_of_file fn))
+          "FStarC.Universal.parse"    
+      in
       let mii = FStarC.Syntax.DsEnv.inclusion_info (tcenv_of_uenv env).dsenv fmod.name in
       let check_mod () =
           let check env =
@@ -408,12 +413,20 @@ let tc_one_file
                          | [] -> ()
                          | _ -> failwith "Impossible: gamma contains leaked names"
                  in
-                 let modul, env = Tc.check_module tcenv fmod (is_some pre_fn) in
+                 let modul, env = 
+                    Profiling.profile (fun _ -> Tc.check_module tcenv fmod (is_some pre_fn))
+                              (Some (string_of_lid fmod.name))
+                              "FStarC.Universal.tc_check_module"
+
+                 in
                  //AR: encode the module to to smt
                  maybe_restore_opts ();
                  let smt_decls =
                    if not (Options.lax())
-                   then FStarC.SMTEncoding.Encode.encode_modul env modul
+                   then 
+                    Profiling.profile (fun _ -> FStarC.SMTEncoding.Encode.encode_modul env modul)
+                              (Some (string_of_lid fmod.name))
+                              "FStarC.Universal.encode_module"
                    else [], []
                  in
                  ((modul, smt_decls), env))

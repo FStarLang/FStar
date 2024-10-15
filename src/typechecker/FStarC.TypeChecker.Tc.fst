@@ -1072,7 +1072,8 @@ let tc_decls env ses =
       (Some (Ident.string_of_lid (Env.current_module env)))      
       "FStarC.TypeChecker.Tc.encode_sig";
 
-    (List.rev_append ses' ses, env), ses_elaborated
+    let new_ses = List.rev_append ses' ses in
+    (new_ses, env), ses_elaborated
     end
   in
   // A wrapper to (maybe) print the time taken for each sigelt
@@ -1100,8 +1101,13 @@ let tc_decls env ses =
     r
   in
   let ses, env =
-    UF.with_uf_enabled (fun () ->
-      BU.fold_flatten process_one_decl_timed ([], env) ses) in
+    Profiling.profile
+      (fun _ -> 
+        UF.with_uf_enabled (fun () ->
+          BU.fold_flatten process_one_decl_timed ([], env) ses))
+      (Some (Ident.string_of_lid (Env.current_module env)))
+      "FStarC.TypeChecker.Tc.fold_flatten_process_one_decl"
+  in
   List.rev_append ses [], env
 
 let _ =
@@ -1136,7 +1142,12 @@ let tc_partial_modul env modul =
                      (BU.format2 "While loading dependency %s%s"
                                     (string_of_lid modul.name)
                                     (if modul.is_interface then " (interface)" else "")) (fun () ->
-    let ses, env = tc_decls env modul.declarations in
+    let ses, env = 
+      Profiling.profile
+        (fun _ -> tc_decls env modul.declarations)
+        (Some (Ident.string_of_lid modul.name))
+        "FStarC.TypeChecker.Tc.tc_decls"    
+    in
     {modul with declarations=ses}, env
   )
 
@@ -1180,10 +1191,18 @@ let tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul & env) =
   let msg = "Internals for " ^ string_of_lid m.name in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
-  let modul, env = tc_partial_modul env0 m in
+  let modul, env = 
+    Profiling.profile
+    (fun _ -> tc_partial_modul env0 m)
+    (Some (Ident.string_of_lid m.name))
+    "FStarC.TypeChecker.Tc.tc_partial_modul"
+  in
   // Note: all sigelts returned by tc_partial_modul must already be compressed
   // by Syntax.compress.deep_compress, so they are safe to output.
-  finish_partial_modul false iface_exists env modul
+  Profiling.profile
+    (fun _ -> finish_partial_modul false iface_exists env modul)
+    (Some (Ident.string_of_lid m.name))
+    "FStarC.TypeChecker.Tc.finish_partial_modul"
 
 let load_checked_module_sigelts (en:env) (m:modul) : env =
   //This function tries to very carefully mimic the effect of the environment

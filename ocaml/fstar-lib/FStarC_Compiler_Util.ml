@@ -1,5 +1,5 @@
 open FStarC_Json
-
+let strint = string_of_int
 let max_int = Z.of_int max_int
 let is_letter c = if c > 255 then false else BatChar.is_letter (BatChar.chr c)
 let is_digit  c = if c > 255 then false else BatChar.is_digit  (BatChar.chr c)
@@ -15,16 +15,19 @@ let is_punctuation c = List.mem c [33; 34; 35; 37; 38; 39; 40; 41; 42; 44; 45; 4
 let return_all x = x
 
 type time = float
-let now () = BatUnix.gettimeofday ()
+let now_ns () = Mtime_clock.now_ns()
+let now () = BatUnix.gettimeofday()
 let now_ms () = Z.of_int (int_of_float (now () *. 1000.0))
 let time_diff (t1:time) (t2:time) : float * Prims.int =
   let n = t2 -. t1 in
   n,
   Z.of_float (n *. 1000.0)
+let time_diff_ns t1 t2 : Prims.int =
+    Z.of_int (Int64.to_int (Int64.sub t2 t1))
 let record_time f =
-    let start = now () in
+    let start = now_ns () in
     let res = f () in
-    let _, elapsed = time_diff start (now()) in
+    let elapsed = time_diff_ns start (now_ns()) in
     res, elapsed
 let get_file_last_modification_time f = (BatUnix.stat f).BatUnix.st_mtime
 let is_before t1 t2 = compare t1 t2 < 0
@@ -777,7 +780,10 @@ let take p l =
 let rec fold_flatten f acc l =
   match l with
   | [] -> acc
-  | x :: xs -> let acc, xs' = f acc x in fold_flatten f acc (xs' @ xs)
+  | x :: xs -> 
+    let acc, xs' = f acc x in
+    (* print1 "GG len %s\n" (Stdlib.string_of_int (List.length xs')); *)
+    fold_flatten f acc (xs' @ xs)
 
 let add_unique f x l =
   if for_some (f x) l then

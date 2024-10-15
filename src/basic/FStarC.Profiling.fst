@@ -105,7 +105,7 @@ let report_human tag c =
     BU.print4 "%s, profiled %s:\t %s ms%s\n"
                   tag
                   c.cid
-                  (BU.string_of_int (!c.total_time))
+                  (BU.string_of_int (!c.total_time / 1000000))
                   warn
 
 let report tag c =

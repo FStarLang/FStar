@@ -7675,16 +7675,19 @@ let (encode_modul :
                   let uu___5 = get_env modul.FStarC_Syntax_Syntax.name tcenv1 in
                   FStarC_SMTEncoding_Env.reset_current_module_fvbs uu___5 in
                 let encode_signature env1 ses =
-                  FStarC_Compiler_List.fold_left
-                    (fun uu___5 ->
-                       fun se ->
-                         match uu___5 with
-                         | (g, env2) ->
-                             let uu___6 = encode_top_level_facts env2 se in
-                             (match uu___6 with
-                              | (g', env3) ->
-                                  ((FStarC_Compiler_List.op_At g g'), env3)))
-                    ([], env1) ses in
+                  let uu___5 =
+                    FStarC_Compiler_List.fold_left
+                      (fun uu___6 ->
+                         fun se ->
+                           match uu___6 with
+                           | (g, env2) ->
+                               let uu___7 = encode_top_level_facts env2 se in
+                               (match uu___7 with
+                                | (g', env3) ->
+                                    ((FStarC_Compiler_List.rev_append g' g),
+                                      env3))) ([], env1) ses in
+                  match uu___5 with
+                  | (g', env2) -> ((FStarC_Compiler_List.rev g'), env2) in
                 let uu___5 =
                   encode_signature
                     {
