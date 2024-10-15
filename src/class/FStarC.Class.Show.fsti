@@ -1,16 +1,17 @@
 module FStarC.Class.Show
 
 open FStarC.Compiler.Effect
-open FStar.Class.Printable
 module BU = FStarC.Compiler.Util
 
 class showable (a:Type) = {
   show : a -> ML string;
 }
 
-(* This extends the printable class from ulib, but also allows for an
-ML effect of the `printer. *)
-instance val printableshow (_ : printable 'a) : Tot (showable 'a)
+instance val showable_unit : showable unit
+instance val showable_bool : showable bool
+instance val showable_nat : showable nat
+instance val showable_int : showable int
+instance val showable_string : showable string
 
 instance val show_list (a:Type) (_ : showable a) : Tot (showable (list a))
 
