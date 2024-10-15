@@ -905,7 +905,7 @@ let (ppname_for_uvar :
   fun p ->
     let uu___ =
       let uu___1 =
-        let uu___2 = FStar_Tactics_Unseal.unseal p.name in
+        let uu___2 = FStarC_Tactics_Unseal.unseal p.name in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
              (Obj.magic

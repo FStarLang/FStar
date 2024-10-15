@@ -87,7 +87,7 @@ let rec (binder_to_string_paren :
          (fun uu___1 ->
             let uu___2 =
               let uu___3 =
-                FStar_Tactics_Unseal.unseal
+                FStarC_Tactics_Unseal.unseal
                   (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name in
               FStar_Tactics_Effect.tac_bind
                 (FStar_Sealed.seal
@@ -106,7 +106,7 @@ let rec (binder_to_string_paren :
                       let uu___5 =
                         let uu___6 =
                           let uu___7 =
-                            FStar_Tactics_Unseal.unseal
+                            FStarC_Tactics_Unseal.unseal
                               b.Pulse_Syntax_Base.binder_attrs in
                           FStar_Tactics_Effect.tac_bind
                             (FStar_Sealed.seal
@@ -853,7 +853,7 @@ let rec (binder_to_doc :
     let uu___ =
       let uu___1 =
         let uu___2 =
-          FStar_Tactics_Unseal.unseal
+          FStarC_Tactics_Unseal.unseal
             (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
@@ -1658,7 +1658,7 @@ let (binder_to_string :
          (fun uu___1 ->
             let uu___2 =
               let uu___3 =
-                FStar_Tactics_Unseal.unseal
+                FStarC_Tactics_Unseal.unseal
                   (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name in
               FStar_Tactics_Effect.tac_bind
                 (FStar_Sealed.seal
@@ -1677,7 +1677,7 @@ let (binder_to_string :
                       let uu___5 =
                         let uu___6 =
                           let uu___7 =
-                            FStar_Tactics_Unseal.unseal
+                            FStarC_Tactics_Unseal.unseal
                               b.Pulse_Syntax_Base.binder_attrs in
                           FStar_Tactics_Effect.tac_bind
                             (FStar_Sealed.seal
@@ -5475,7 +5475,7 @@ and (pattern_to_string :
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ -> "<constant>")))
        | Pulse_Syntax_Base.Pat_Var (x, uu___) ->
-           Obj.magic (Obj.repr (FStar_Tactics_Unseal.unseal x))
+           Obj.magic (Obj.repr (FStarC_Tactics_Unseal.unseal x))
        | Pulse_Syntax_Base.Pat_Dot_Term (FStar_Pervasives_Native.None) ->
            Obj.magic
              (Obj.repr (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> "")))

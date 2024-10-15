@@ -289,7 +289,7 @@ let (get_context : env -> Pulse_RuntimeUtils.context) = fun g -> g.ctxt
 let (range_of_env :
   env -> (Pulse_Syntax_Base.range, unit) FStar_Tactics_Effect.tac_repr) =
   fun g ->
-    let uu___ = FStar_Tactics_Unseal.unseal g.ctxt in
+    let uu___ = FStarC_Tactics_Unseal.unseal g.ctxt in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -429,7 +429,7 @@ let (ctx_to_string :
 let (ctxt_to_list :
   env -> (Prims.string Prims.list, unit) FStar_Tactics_Effect.tac_repr) =
   fun g ->
-    let uu___ = FStar_Tactics_Unseal.unseal g.ctxt in
+    let uu___ = FStarC_Tactics_Unseal.unseal g.ctxt in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -446,7 +446,7 @@ let (ctxt_to_list :
 let (print_context :
   env -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) =
   fun g ->
-    let uu___ = FStar_Tactics_Unseal.unseal g.ctxt in
+    let uu___ = FStarC_Tactics_Unseal.unseal g.ctxt in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -541,7 +541,7 @@ let (print_issue :
            (fun range_opt_to_string ->
               let uu___1 =
                 let uu___2 =
-                  let uu___3 = FStar_Tactics_Unseal.unseal (get_context g) in
+                  let uu___3 = FStarC_Tactics_Unseal.unseal (get_context g) in
                   FStar_Tactics_Effect.tac_bind
                     (FStar_Sealed.seal
                        (Obj.magic
@@ -791,7 +791,7 @@ let (env_to_string :
                                   let uu___6 =
                                     let uu___7 =
                                       let uu___8 =
-                                        FStar_Tactics_Unseal.unseal
+                                        FStarC_Tactics_Unseal.unseal
                                           x.Pulse_Syntax_Base.name in
                                       FStar_Tactics_Effect.tac_bind
                                         (FStar_Sealed.seal
@@ -986,7 +986,7 @@ let (env_to_doc' :
                       let uu___3 =
                         let uu___4 =
                           let uu___5 =
-                            FStar_Tactics_Unseal.unseal
+                            FStarC_Tactics_Unseal.unseal
                               x.Pulse_Syntax_Base.name in
                           FStar_Tactics_Effect.tac_bind
                             (FStar_Sealed.seal
@@ -1178,7 +1178,7 @@ let (env_to_doc' :
                                                                     =
                                                                     let uu___7
                                                                     =
-                                                                    FStar_Tactics_Unseal.unseal
+                                                                    FStarC_Tactics_Unseal.unseal
                                                                     x1.Pulse_Syntax_Base.name in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal

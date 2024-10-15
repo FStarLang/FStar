@@ -724,7 +724,7 @@ let (check :
                                                                     =
                                                                     let uu___11
                                                                     =
-                                                                    FStar_Tactics_Unseal.unseal
+                                                                    FStarC_Tactics_Unseal.unseal
                                                                     (binder.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal

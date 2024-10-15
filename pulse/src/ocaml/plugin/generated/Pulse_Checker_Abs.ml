@@ -3594,7 +3594,7 @@ let rec (check_abs_core :
                                                                     =
                                                                     let uu___28
                                                                     =
-                                                                    FStar_Tactics_Unseal.unseal
+                                                                    FStarC_Tactics_Unseal.unseal
                                                                     binder_attrs in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal

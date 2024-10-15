@@ -108,7 +108,7 @@ let rec (extend_env'_pattern :
            | Pulse_Syntax_Base.Pat_Var (ppname, sort) ->
                Obj.magic
                  (Obj.repr
-                    (let uu___ = FStar_Tactics_Unseal.unseal sort in
+                    (let uu___ = FStarC_Tactics_Unseal.unseal sort in
                      FStar_Tactics_Effect.tac_bind
                        (FStar_Sealed.seal
                           (Obj.magic
@@ -226,7 +226,7 @@ let (is_erasable :
     (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun p ->
-    let uu___ = FStar_Tactics_Unseal.unseal p.Pulse_Syntax_Base.effect_tag in
+    let uu___ = FStarC_Tactics_Unseal.unseal p.Pulse_Syntax_Base.effect_tag in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -359,7 +359,7 @@ let (is_internal_binder :
   =
   fun b ->
     let uu___ =
-      FStar_Tactics_Unseal.unseal
+      FStarC_Tactics_Unseal.unseal
         (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
@@ -2836,7 +2836,7 @@ let (extract_dv_binder :
     fun q ->
       let uu___ =
         let uu___1 =
-          FStar_Tactics_Unseal.unseal b.Pulse_Syntax_Base.binder_attrs in
+          FStarC_Tactics_Unseal.unseal b.Pulse_Syntax_Base.binder_attrs in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
              (Obj.magic
@@ -2963,7 +2963,7 @@ let rec (extract_dv_pattern :
            | Pulse_Syntax_Base.Pat_Var (ppname, sort) ->
                Obj.magic
                  (Obj.repr
-                    (let uu___ = FStar_Tactics_Unseal.unseal sort in
+                    (let uu___ = FStarC_Tactics_Unseal.unseal sort in
                      FStar_Tactics_Effect.tac_bind
                        (FStar_Sealed.seal
                           (Obj.magic

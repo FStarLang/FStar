@@ -87,7 +87,7 @@ let rec (r_bindings_to_string :
              (Obj.repr
                 (let uu___ =
                    let uu___1 =
-                     FStar_Tactics_Unseal.unseal
+                     FStarC_Tactics_Unseal.unseal
                        b.FStarC_Reflection_V2_Data.ppname3 in
                    FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
