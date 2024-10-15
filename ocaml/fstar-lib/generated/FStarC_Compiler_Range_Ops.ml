@@ -63,35 +63,11 @@ let (string_of_pos : FStarC_Compiler_Range_Type.pos -> Prims.string) =
     let uu___1 =
       FStarC_Compiler_Util.string_of_int pos.FStarC_Compiler_Range_Type.col in
     FStarC_Compiler_Util.format2 "%s,%s" uu___ uu___1
-let (string_of_file_name : Prims.string -> Prims.string) =
-  fun f ->
-    let uu___ =
-      let uu___1 = FStarC_Options_Ext.get "fstar:no_absolute_paths" in
-      uu___1 = "1" in
-    if uu___
-    then FStarC_Compiler_Util.basename f
-    else
-      (let uu___2 = FStarC_Options.ide () in
-       if uu___2
-       then
-         try
-           (fun uu___3 ->
-              match () with
-              | () ->
-                  let uu___4 =
-                    let uu___5 = FStarC_Compiler_Util.basename f in
-                    FStarC_Find.find_file uu___5 in
-                  (match uu___4 with
-                   | FStar_Pervasives_Native.None -> f
-                   | FStar_Pervasives_Native.Some absolute_path ->
-                       absolute_path)) ()
-         with | uu___3 -> f
-       else f)
 let (file_of_range : FStarC_Compiler_Range_Type.range -> Prims.string) =
   fun r ->
     let f =
       (r.FStarC_Compiler_Range_Type.def_range).FStarC_Compiler_Range_Type.file_name in
-    string_of_file_name f
+    FStarC_Compiler_Range_Type.string_of_file_name f
 let (set_file_of_range :
   FStarC_Compiler_Range_Type.range ->
     Prims.string -> FStarC_Compiler_Range_Type.range)
@@ -113,7 +89,9 @@ let (set_file_of_range :
       }
 let (string_of_rng : FStarC_Compiler_Range_Type.rng -> Prims.string) =
   fun r ->
-    let uu___ = string_of_file_name r.FStarC_Compiler_Range_Type.file_name in
+    let uu___ =
+      FStarC_Compiler_Range_Type.string_of_file_name
+        r.FStarC_Compiler_Range_Type.file_name in
     let uu___1 = string_of_pos r.FStarC_Compiler_Range_Type.start_pos in
     let uu___2 = string_of_pos r.FStarC_Compiler_Range_Type.end_pos in
     FStarC_Compiler_Util.format3 "%s(%s-%s)" uu___ uu___1 uu___2

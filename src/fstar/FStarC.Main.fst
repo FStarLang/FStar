@@ -79,20 +79,20 @@ let load_native_tactics () =
     let ml_file m = ml_module_name m ^ ".ml" in
     let cmxs_file m =
         let cmxs = ml_module_name m ^ ".cmxs" in
-        match Find.find_file cmxs with
+        match Find.find_file_odir cmxs with
         | Some f -> f
         | None ->
           if List.contains m cmxs_to_load  //if this module comes from the cmxs list, fail hard
           then E.raise_error0 E.Fatal_FailToCompileNativeTactic (Util.format1 "Could not find %s to load" cmxs)
           else  //else try to find and compile the ml file
-            match Find.find_file (ml_file m) with
+            match Find.find_file_odir (ml_file m) with
             | None ->
               E.raise_error0 E.Fatal_FailToCompileNativeTactic
                 (Util.format1 "Failed to compile native tactic; extracted module %s not found" (ml_file m))
             | Some ml ->
               let dir = Util.dirname ml in
               Plugins.compile_modules dir [ml_module_name m];
-              begin match Find.find_file cmxs with
+              begin match Find.find_file_odir cmxs with
                 | None ->
                   E.raise_error0 E.Fatal_FailToCompileNativeTactic
                     (Util.format1 "Failed to compile native tactic; compiled object %s not found" cmxs)

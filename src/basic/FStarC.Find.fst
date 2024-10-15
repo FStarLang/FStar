@@ -79,34 +79,49 @@ let include_path () =
   in
   cache_dir @ lib_paths () @ include_paths @ expand_include_d "."
 
+let do_find (paths : list string) (filename : string) : option string =
+  if BU.is_path_absolute filename then
+    if BU.file_exists filename then
+      Some filename
+    else
+      None
+  else
+  try
+      (* In reverse, because the last directory has the highest precedence. *)
+      (* FIXME: We should fail if we find two files with the same name *)
+      BU.find_map (List.rev paths) (fun p ->
+        let path =
+          if p = "." then filename
+          else BU.join_paths p filename in
+        if BU.file_exists path then
+          Some path
+        else
+          None)
+  with
+    | _ -> None
+    // ^ to deal with issues like passing bogus strings as paths like " input"
+
 let find_file =
-  let file_map = BU.smap_create 100 in
+  let cache = BU.smap_create 100 in
   fun filename ->
-     match BU.smap_try_find file_map filename with
+     match BU.smap_try_find cache filename with
      | Some f -> f
      | None ->
-       let result =
-          (try
-              if BU.is_path_absolute filename then
-                if BU.file_exists filename then
-                  Some filename
-                else
-                  None
-              else
-                (* In reverse, because the last directory has the highest precedence. *)
-                BU.find_map (List.rev (include_path ())) (fun p ->
-                  let path =
-                    if p = "." then filename
-                    else BU.join_paths p filename in
-                  if BU.file_exists path then
-                    Some path
-                  else
-                    None)
-           with | _ -> //to deal with issues like passing bogus strings as paths like " input"
-                  None)
-       in
+       let result = do_find (include_path ()) filename in
        if Some? result
-       then BU.smap_add file_map filename result;
+       then BU.smap_add cache filename result;
+       result
+
+let find_file_odir =
+  let cache = BU.smap_create 100 in
+  fun filename ->
+     match BU.smap_try_find cache filename with
+     | Some f -> f
+     | None ->
+       let odir = match Options.output_dir () with Some d -> [d] | None -> [] in
+       let result = do_find (include_path () @ odir) filename in
+       if Some? result
+       then BU.smap_add cache filename result;
        result
 
 

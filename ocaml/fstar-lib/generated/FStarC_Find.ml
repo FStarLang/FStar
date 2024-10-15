@@ -87,42 +87,67 @@ let (include_path : unit -> Prims.string Prims.list) =
         FStarC_Compiler_List.op_At include_paths uu___4 in
       FStarC_Compiler_List.op_At uu___2 uu___3 in
     FStarC_Compiler_List.op_At cache_dir uu___1
+let (do_find :
+  Prims.string Prims.list ->
+    Prims.string -> Prims.string FStar_Pervasives_Native.option)
+  =
+  fun paths ->
+    fun filename ->
+      let uu___ = FStarC_Compiler_Util.is_path_absolute filename in
+      if uu___
+      then
+        (if FStarC_Compiler_Util.file_exists filename
+         then FStar_Pervasives_Native.Some filename
+         else FStar_Pervasives_Native.None)
+      else
+        (try
+           (fun uu___2 ->
+              match () with
+              | () ->
+                  FStarC_Compiler_Util.find_map
+                    (FStarC_Compiler_List.rev paths)
+                    (fun p ->
+                       let path =
+                         if p = "."
+                         then filename
+                         else FStarC_Compiler_Util.join_paths p filename in
+                       if FStarC_Compiler_Util.file_exists path
+                       then FStar_Pervasives_Native.Some path
+                       else FStar_Pervasives_Native.None)) ()
+         with | uu___2 -> FStar_Pervasives_Native.None)
 let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
   =
-  let file_map = FStarC_Compiler_Util.smap_create (Prims.of_int (100)) in
+  let cache = FStarC_Compiler_Util.smap_create (Prims.of_int (100)) in
   fun filename ->
-    let uu___ = FStarC_Compiler_Util.smap_try_find file_map filename in
+    let uu___ = FStarC_Compiler_Util.smap_try_find cache filename in
     match uu___ with
     | FStar_Pervasives_Native.Some f -> f
     | FStar_Pervasives_Native.None ->
-        let result =
-          try
-            (fun uu___1 ->
-               match () with
-               | () ->
-                   let uu___2 =
-                     FStarC_Compiler_Util.is_path_absolute filename in
-                   if uu___2
-                   then
-                     (if FStarC_Compiler_Util.file_exists filename
-                      then FStar_Pervasives_Native.Some filename
-                      else FStar_Pervasives_Native.None)
-                   else
-                     (let uu___4 =
-                        let uu___5 = include_path () in
-                        FStarC_Compiler_List.rev uu___5 in
-                      FStarC_Compiler_Util.find_map uu___4
-                        (fun p ->
-                           let path =
-                             if p = "."
-                             then filename
-                             else FStarC_Compiler_Util.join_paths p filename in
-                           if FStarC_Compiler_Util.file_exists path
-                           then FStar_Pervasives_Native.Some path
-                           else FStar_Pervasives_Native.None))) ()
-          with | uu___1 -> FStar_Pervasives_Native.None in
+        let result = let uu___1 = include_path () in do_find uu___1 filename in
         (if FStar_Pervasives_Native.uu___is_Some result
-         then FStarC_Compiler_Util.smap_add file_map filename result
+         then FStarC_Compiler_Util.smap_add cache filename result
+         else ();
+         result)
+let (find_file_odir :
+  Prims.string -> Prims.string FStar_Pervasives_Native.option) =
+  let cache = FStarC_Compiler_Util.smap_create (Prims.of_int (100)) in
+  fun filename ->
+    let uu___ = FStarC_Compiler_Util.smap_try_find cache filename in
+    match uu___ with
+    | FStar_Pervasives_Native.Some f -> f
+    | FStar_Pervasives_Native.None ->
+        let odir =
+          let uu___1 = FStarC_Options.output_dir () in
+          match uu___1 with
+          | FStar_Pervasives_Native.Some d -> [d]
+          | FStar_Pervasives_Native.None -> [] in
+        let result =
+          let uu___1 =
+            let uu___2 = include_path () in
+            FStarC_Compiler_List.op_At uu___2 odir in
+          do_find uu___1 filename in
+        (if FStar_Pervasives_Native.uu___is_Some result
+         then FStarC_Compiler_Util.smap_add cache filename result
          else ();
          result)
 let (prepend_output_dir : Prims.string -> Prims.string) =

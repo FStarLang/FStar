@@ -15,10 +15,12 @@
 *)
 module FStarC.Compiler.Range.Type
 
+open FStarC
 open FStarC.Compiler.Effect 
 open FStarC.Class.Deq
 open FStarC.Class.Ord
 open FStarC.Compiler.Order
+module BU = FStarC.Compiler.Util
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type file_name = string
@@ -90,6 +92,18 @@ let mk_rng file_name start_pos end_pos = {
 
 let mk_range f b e = let r = mk_rng f b e in range_of_rng r r
 
+let string_of_file_name f =
+  if Options.Ext.get "fstar:no_absolute_paths" = "1" then
+    BU.basename f
+  else if Options.ide () then
+    try
+        match Find.find_file (BU.basename f) with
+        | None -> f //couldn't find file; just return the relative path
+        | Some absolute_path ->
+            absolute_path
+    with _ -> f
+  else f
+
 open FStarC.Json
 let json_of_pos (r: pos): json
   = JsonAssoc [
@@ -98,7 +112,7 @@ let json_of_pos (r: pos): json
     ]
 let json_of_rng (r: rng): json
   = JsonAssoc [
-      "file_name", JsonStr r.file_name;
+      "file_name", JsonStr (string_of_file_name r.file_name);
       "start_pos", json_of_pos r.start_pos;
       "end_pos", json_of_pos r.end_pos;
     ]
