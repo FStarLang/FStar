@@ -724,7 +724,7 @@ jobs:
 
       - name: Update fstar flake and check
         run: |
-          nix flake update --override-input fstar-flake "github:${{github.repository}}?rev=${{github.sha}}"
+          nix flake update --update-input fstar-flake --override-input fstar-flake "github:${{github.repository}}?rev=${{github.sha}}"
           nix flake check
 
   dy-star:
@@ -740,7 +740,7 @@ jobs:
 
       - name: Update fstar flake and check
         run: |
-          nix flake update --override-input fstar-flake "github:${{github.repository}}?rev=${{github.sha}}"
+          nix flake update --update-input fstar-flake --override-input fstar-flake "github:${{github.repository}}?rev=${{github.sha}}"
           nix flake check
 
   mls-star:
@@ -756,5 +756,5 @@ jobs:
 
       - name: Update fstar flake and check
         run: |
-          nix flake update --override-input fstar-flake "github:${{github.repository}}?rev=${{github.sha}}"
+          nix flake update --update-input fstar-flake --override-input fstar-flake "github:${{github.repository}}?rev=${{github.sha}}"
           nix flake check
