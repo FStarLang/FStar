@@ -81,9 +81,8 @@ let (fresh_var :
                       FStarC_Class_Show.show FStarC_Ident.showable_ident nm in
                     let uu___1 =
                       let uu___2 =
-                        FStarC_Class_Show.show
-                          (FStarC_Class_Show.printableshow
-                             FStar_Class_Printable.printable_nat) ctr in
+                        FStarC_Class_Show.show FStarC_Class_Show.showable_nat
+                          ctr in
                       Prims.strcat "@" uu___2 in
                     Prims.strcat uu___ uu___1 in
                   let uu___ =
