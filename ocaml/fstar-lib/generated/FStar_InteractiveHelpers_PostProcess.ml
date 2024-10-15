@@ -2075,7 +2075,7 @@ let (analyze_effectful_term :
                                                                     =
                                                                     let uu___17
                                                                     =
-                                                                    FStar_Tactics_Unseal.unseal
+                                                                    FStarC_Tactics_Unseal.unseal
                                                                     bvv0.FStarC_Reflection_V1_Data.bv_ppname in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal

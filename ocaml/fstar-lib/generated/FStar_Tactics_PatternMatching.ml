@@ -2266,7 +2266,7 @@ let (name_of_namedv :
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun x ->
-    FStar_Tactics_Unseal.unseal
+    FStarC_Tactics_Unseal.unseal
       (FStar_Tactics_NamedView.inspect_namedv x).FStarC_Reflection_V2_Data.ppname
 let rec (pattern_of_term_ex :
   FStarC_Reflection_Types.term ->
@@ -2747,7 +2747,7 @@ let (cleanup_abspat :
 let (name_of_named_binder :
   FStar_Tactics_NamedView.binder ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
-  = fun nb -> FStar_Tactics_Unseal.unseal nb.FStar_Tactics_NamedView.ppname
+  = fun nb -> FStarC_Tactics_Unseal.unseal nb.FStar_Tactics_NamedView.ppname
 let (matching_problem_of_abs :
   FStar_Tactics_NamedView.term ->
     ((matching_problem * abspat_continuation), unit)
@@ -3766,7 +3766,7 @@ let (abspat_arg_of_abspat_argspec :
                 let uu___2 =
                   let uu___3 =
                     let uu___4 =
-                      FStar_Tactics_Unseal.unseal
+                      FStarC_Tactics_Unseal.unseal
                         (argspec.asa_name).FStarC_Reflection_V2_Data.ppname3 in
                     FStar_Tactics_Effect.tac_bind
                       (FStar_Sealed.seal

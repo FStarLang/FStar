@@ -319,7 +319,7 @@ let param_inductive (se:sigelt) (fv0 fv1 : fv) : Tac decls =
     //Tactics.Util.iter (fun bv -> dump ("param bv = " ^ binder_to_string bv)) param_bs;
     let typ = mk_e_app (param' s typ) [replace_by s false orig; replace_by s true orig] in
     (* dump ("new typ = " ^ term_to_string typ); *)
-    let ctors = Tactics.V2.Bare.map (param_ctor nm s) ctors in
+    let ctors = Tactics.Util.map (param_ctor nm s) ctors in
     let se = Sg_Inductive {nm=inspect_fv fv1; univs; params=param_bs; typ; ctors} in
     (* dump ("param_ind : " ^ term_to_string (quote se)); *)
     [pack_sigelt se]

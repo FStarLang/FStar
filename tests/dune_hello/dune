@@ -1,0 +1,11 @@
+(executable
+ (name hello)
+ (public_name hello.exe)
+ (libraries fstar.lib)
+ (modes native)
+)
+(env
+  (_
+    (bin_annot false)
+    (flags (:standard -w -A)))
+)

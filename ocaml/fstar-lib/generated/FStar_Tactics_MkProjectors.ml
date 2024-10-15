@@ -704,7 +704,7 @@ let (mk_proj_decl :
                       debug
                         (fun uu___1 ->
                            let uu___2 =
-                             FStar_Tactics_Unseal.unseal
+                             FStarC_Tactics_Unseal.unseal
                                field.FStar_Tactics_NamedView.ppname in
                            FStar_Tactics_Effect.tac_bind
                              (FStar_Sealed.seal
@@ -914,7 +914,7 @@ let (mk_proj_decl :
                                                                     =
                                                                     let uu___15
                                                                     =
-                                                                    FStar_Tactics_Unseal.unseal
+                                                                    FStarC_Tactics_Unseal.unseal
                                                                     field.FStar_Tactics_NamedView.ppname in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1492,7 +1492,7 @@ let (mk_proj_decl :
                                                                     =
                                                                     let uu___22
                                                                     =
-                                                                    FStar_Tactics_Unseal.unseal
+                                                                    FStarC_Tactics_Unseal.unseal
                                                                     field.FStar_Tactics_NamedView.ppname in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
