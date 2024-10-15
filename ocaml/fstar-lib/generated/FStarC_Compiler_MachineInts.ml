@@ -160,9 +160,8 @@ let (showable_bounded_k :
                let uu___1 =
                  let uu___2 =
                    let uu___3 = FStarC_BigInt.to_int_fs x in
-                   FStarC_Class_Show.show
-                     (FStarC_Class_Show.printableshow
-                        FStar_Class_Printable.printable_int) uu___3 in
+                   FStarC_Class_Show.show FStarC_Class_Show.showable_int
+                     uu___3 in
                  let uu___3 =
                    let uu___4 = module_name_for k in Prims.strcat "@@" uu___4 in
                  Prims.strcat uu___2 uu___3 in

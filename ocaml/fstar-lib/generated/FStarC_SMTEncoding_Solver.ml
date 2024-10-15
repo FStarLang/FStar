@@ -165,17 +165,11 @@ let (__proj__Mkerrors__item__error_messages :
 let (error_to_short_string : errors -> Prims.string) =
   fun err ->
     let uu___ =
-      FStarC_Class_Show.show
-        (FStarC_Class_Show.printableshow FStar_Class_Printable.printable_int)
-        err.error_rlimit in
+      FStarC_Class_Show.show FStarC_Class_Show.showable_int err.error_rlimit in
     let uu___1 =
-      FStarC_Class_Show.show
-        (FStarC_Class_Show.printableshow FStar_Class_Printable.printable_int)
-        err.error_fuel in
+      FStarC_Class_Show.show FStarC_Class_Show.showable_int err.error_fuel in
     let uu___2 =
-      FStarC_Class_Show.show
-        (FStarC_Class_Show.printableshow FStar_Class_Printable.printable_int)
-        err.error_ifuel in
+      FStarC_Class_Show.show FStarC_Class_Show.showable_int err.error_ifuel in
     FStarC_Compiler_Util.format5 "%s (rlimit=%s; fuel=%s; ifuel=%s%s)"
       err.error_reason uu___ uu___1 uu___2
       (if FStarC_Compiler_Option.isSome err.error_hint
@@ -187,17 +181,14 @@ let (error_to_is_timeout : errors -> Prims.string Prims.list) =
     then
       let uu___ =
         let uu___1 =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_int) err.error_rlimit in
+          FStarC_Class_Show.show FStarC_Class_Show.showable_int
+            err.error_rlimit in
         let uu___2 =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_int) err.error_fuel in
+          FStarC_Class_Show.show FStarC_Class_Show.showable_int
+            err.error_fuel in
         let uu___3 =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_int) err.error_ifuel in
+          FStarC_Class_Show.show FStarC_Class_Show.showable_int
+            err.error_ifuel in
         FStarC_Compiler_Util.format5
           "timeout (rlimit=%s; fuel=%s; ifuel=%s; %s)" err.error_reason
           uu___1 uu___2 uu___3
@@ -967,34 +958,29 @@ let (query_info : query_settings -> FStarC_SMTEncoding_Z3.z3result -> unit) =
                        let uu___6 =
                          let uu___7 =
                            FStarC_Class_Show.show
-                             (FStarC_Class_Show.printableshow
-                                FStar_Class_Printable.printable_int)
+                             FStarC_Class_Show.showable_int
                              settings.query_index in
                          let uu___8 =
                            let uu___9 =
                              let uu___10 =
                                let uu___11 =
                                  FStarC_Class_Show.show
-                                   (FStarC_Class_Show.printableshow
-                                      FStar_Class_Printable.printable_int)
+                                   FStarC_Class_Show.showable_int
                                    z3result.FStarC_SMTEncoding_Z3.z3result_time in
                                let uu___12 =
                                  let uu___13 =
                                    FStarC_Class_Show.show
-                                     (FStarC_Class_Show.printableshow
-                                        FStar_Class_Printable.printable_int)
+                                     FStarC_Class_Show.showable_int
                                      settings.query_fuel in
                                  let uu___14 =
                                    let uu___15 =
                                      FStarC_Class_Show.show
-                                       (FStarC_Class_Show.printableshow
-                                          FStar_Class_Printable.printable_int)
+                                       FStarC_Class_Show.showable_int
                                        settings.query_ifuel in
                                    let uu___16 =
                                      let uu___17 =
                                        FStarC_Class_Show.show
-                                         (FStarC_Class_Show.printableshow
-                                            FStar_Class_Printable.printable_int)
+                                         FStarC_Class_Show.showable_int
                                          settings.query_rlimit in
                                      [uu___17] in
                                    uu___15 :: uu___16 in
@@ -1231,25 +1217,16 @@ let (uu___0 : answer FStarC_Class_Show.showable) =
     FStarC_Class_Show.show =
       (fun ans ->
          let uu___ =
-           FStarC_Class_Show.show
-             (FStarC_Class_Show.printableshow
-                FStar_Class_Printable.printable_bool) ans.ok in
+           FStarC_Class_Show.show FStarC_Class_Show.showable_bool ans.ok in
          let uu___1 =
-           FStarC_Class_Show.show
-             (FStarC_Class_Show.printableshow
-                FStar_Class_Printable.printable_int) ans.nsuccess in
+           FStarC_Class_Show.show FStarC_Class_Show.showable_int ans.nsuccess in
          let uu___2 =
-           FStarC_Class_Show.show
-             (FStarC_Class_Show.printableshow
-                FStar_Class_Printable.printable_int) ans.lo in
+           FStarC_Class_Show.show FStarC_Class_Show.showable_int ans.lo in
          let uu___3 =
-           FStarC_Class_Show.show
-             (FStarC_Class_Show.printableshow
-                FStar_Class_Printable.printable_int) ans.hi in
+           FStarC_Class_Show.show FStarC_Class_Show.showable_int ans.hi in
          let uu___4 =
-           FStarC_Class_Show.show
-             (FStarC_Class_Show.printableshow
-                FStar_Class_Printable.printable_bool) ans.tried_recovery in
+           FStarC_Class_Show.show FStarC_Class_Show.showable_bool
+             ans.tried_recovery in
          FStarC_Compiler_Util.format5
            "ok=%s nsuccess=%s lo=%s hi=%s tried_recovery=%s" uu___ uu___1
            uu___2 uu___3 uu___4)
@@ -1800,9 +1777,7 @@ let (maybe_save_failing_query :
            FStarC_Compiler_Effect.op_Bang failing_query_ctr in
          let file_name =
            let uu___2 =
-             FStarC_Class_Show.show
-               (FStarC_Class_Show.printableshow
-                  FStar_Class_Printable.printable_int) n in
+             FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
            FStarC_Compiler_Util.format2 "failedQueries-%s-%s.smt2" mod1
              uu___2 in
          let query_str =

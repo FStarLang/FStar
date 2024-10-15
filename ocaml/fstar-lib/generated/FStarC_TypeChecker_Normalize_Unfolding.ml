@@ -94,9 +94,8 @@ let (should_unfold :
                       FStarC_Class_Show.show FStarC_Syntax_Print.showable_fv
                         fv in
                     let uu___3 =
-                      FStarC_Class_Show.show
-                        (FStarC_Class_Show.printableshow
-                           FStar_Class_Printable.printable_bool) b in
+                      FStarC_Class_Show.show FStarC_Class_Show.showable_bool
+                        b in
                     FStarC_Compiler_Util.print2
                       "should_unfold: For DM4F action %s, should_reify = %s\n"
                       uu___2 uu___3);
@@ -723,12 +722,9 @@ let (should_unfold :
                let uu___4 =
                  FStarC_Class_Show.show
                    (FStarC_Class_Show.show_tuple3
-                      (FStarC_Class_Show.printableshow
-                         FStar_Class_Printable.printable_bool)
-                      (FStarC_Class_Show.printableshow
-                         FStar_Class_Printable.printable_bool)
-                      (FStarC_Class_Show.printableshow
-                         FStar_Class_Printable.printable_bool)) res in
+                      FStarC_Class_Show.showable_bool
+                      FStarC_Class_Show.showable_bool
+                      FStarC_Class_Show.showable_bool) res in
                FStarC_Compiler_Util.print3
                  "should_unfold: For %s (%s), unfolding res = %s\n" uu___2
                  uu___3 uu___4);
@@ -743,12 +739,9 @@ let (should_unfold :
                    let uu___3 =
                      FStarC_Class_Show.show
                        (FStarC_Class_Show.show_tuple3
-                          (FStarC_Class_Show.printableshow
-                             FStar_Class_Printable.printable_bool)
-                          (FStarC_Class_Show.printableshow
-                             FStar_Class_Printable.printable_bool)
-                          (FStarC_Class_Show.printableshow
-                             FStar_Class_Printable.printable_bool)) res in
+                          FStarC_Class_Show.showable_bool
+                          FStarC_Class_Show.showable_bool
+                          FStarC_Class_Show.showable_bool) res in
                    FStarC_Compiler_Util.format1
                      "Unexpected unfolding result: %s" uu___3 in
                  failwith uu___2 in

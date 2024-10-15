@@ -1091,9 +1091,7 @@ let (pack_namedv :
          let uu___3 =
            let uu___4 =
              FStarC_BigInt.to_int_fs vv.FStarC_Reflection_V2_Data.uniq in
-           FStarC_Class_Show.show
-             (FStarC_Class_Show.printableshow
-                FStar_Class_Printable.printable_int) uu___4 in
+           FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___4 in
          FStarC_Compiler_Util.format2
            "pack_namedv: uniq is negative (%s), uniq = %s"
            (FStarC_Compiler_Sealed.unseal vv.FStarC_Reflection_V2_Data.ppname)
@@ -1154,9 +1152,7 @@ let (pack_bv : FStarC_Reflection_V2_Data.bv_view -> FStarC_Syntax_Syntax.bv)
          let uu___3 =
            let uu___4 =
              FStarC_BigInt.to_int_fs bvv.FStarC_Reflection_V2_Data.index in
-           FStarC_Class_Show.show
-             (FStarC_Class_Show.printableshow
-                FStar_Class_Printable.printable_int) uu___4 in
+           FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___4 in
          FStarC_Compiler_Util.format2
            "pack_bv: index is negative (%s), index = %s"
            (FStarC_Compiler_Sealed.unseal

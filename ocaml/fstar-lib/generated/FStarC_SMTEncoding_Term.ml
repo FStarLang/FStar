@@ -2079,15 +2079,11 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
             "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
         | Push n ->
             let uu___ =
-              FStarC_Class_Show.show
-                (FStarC_Class_Show.printableshow
-                   FStar_Class_Printable.printable_int) n in
+              FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
             FStarC_Compiler_Util.format1 "(push) ;; push{%s" uu___
         | Pop n ->
             let uu___ =
-              FStarC_Class_Show.show
-                (FStarC_Class_Show.printableshow
-                   FStar_Class_Printable.printable_int) n in
+              FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
             FStarC_Compiler_Util.format1 "(pop) ;; %s}pop" uu___
         | SetOption (s, v) ->
             FStarC_Compiler_Util.format2 "(set-option :%s %s)" s v
@@ -2532,16 +2528,10 @@ let (decl_to_string_short : decl -> Prims.string) =
     | Echo s -> Prims.strcat "Echo " s
     | RetainAssumptions uu___ -> "RetainAssumptions"
     | Push n ->
-        let uu___ =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_int) n in
+        let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
         FStarC_Compiler_Util.format1 "push %s" uu___
     | Pop n ->
-        let uu___ =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_int) n in
+        let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
         FStarC_Compiler_Util.format1 "pop %s" uu___
     | CheckSat -> "check-sat"
     | GetUnsatCore -> "get-unsat-core"

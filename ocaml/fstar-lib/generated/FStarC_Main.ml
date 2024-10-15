@@ -287,9 +287,8 @@ let (go_normal : unit -> unit) =
                      (Obj.magic uu___4)
                | FStar_Pervasives_Native.Some (version, files) ->
                    ((let uu___5 =
-                       FStarC_Class_Show.show
-                         (FStarC_Class_Show.printableshow
-                            FStar_Class_Printable.printable_int) version in
+                       FStarC_Class_Show.show FStarC_Class_Show.showable_int
+                         version in
                      FStarC_Compiler_Util.print1
                        "Karamel format version: %s\n" uu___5);
                     FStarC_Compiler_List.iter
@@ -365,9 +364,7 @@ let (go_normal : unit -> unit) =
                       let uu___10 = FStarC_Find.include_path () in
                       FStarC_Class_Show.show
                         (FStarC_Class_Show.show_list
-                           (FStarC_Class_Show.printableshow
-                              FStar_Class_Printable.printable_string))
-                        uu___10 in
+                           FStarC_Class_Show.showable_string) uu___10 in
                     FStarC_Compiler_Util.print1 "- Full include path: %s\n"
                       uu___9);
                    FStarC_Compiler_Util.print_string "\n")

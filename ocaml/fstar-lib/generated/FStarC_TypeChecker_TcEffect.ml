@@ -4075,8 +4075,7 @@ let (tc_layered_eff_decl :
                                ed.FStarC_Syntax_Syntax.mname in
                            let uu___9 =
                              FStarC_Class_Show.show
-                               (FStarC_Class_Show.printableshow
-                                  FStar_Class_Printable.printable_int) n in
+                               FStarC_Class_Show.showable_int n in
                            let uu___10 =
                              FStarC_Class_Tagged.tag_of
                                FStarC_Syntax_Syntax.tagged_term t in
@@ -9799,8 +9798,7 @@ let (tc_effect_abbrev :
                                                          lid in
                                                      let uu___14 =
                                                        FStarC_Class_Show.show
-                                                         (FStarC_Class_Show.printableshow
-                                                            FStar_Class_Printable.printable_nat)
+                                                         FStarC_Class_Show.showable_nat
                                                          (FStarC_Compiler_List.length
                                                             uvs2) in
                                                      let uu___15 =

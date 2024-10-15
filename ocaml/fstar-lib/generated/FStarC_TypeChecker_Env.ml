@@ -241,16 +241,14 @@ let rec (step_to_string : step -> Prims.string) =
     | UnfoldQual strs1 ->
         let uu___ =
           FStarC_Class_Show.show
-            (FStarC_Class_Show.show_list
-               (FStarC_Class_Show.printableshow
-                  FStar_Class_Printable.printable_string)) strs1 in
+            (FStarC_Class_Show.show_list FStarC_Class_Show.showable_string)
+            strs1 in
         Prims.strcat "UnfoldQual " uu___
     | UnfoldNamespace strs1 ->
         let uu___ =
           FStarC_Class_Show.show
-            (FStarC_Class_Show.show_list
-               (FStarC_Class_Show.printableshow
-                  FStar_Class_Printable.printable_string)) strs1 in
+            (FStarC_Class_Show.show_list FStarC_Class_Show.showable_string)
+            strs1 in
         Prims.strcat "UnfoldNamespace " uu___
     | DontUnfoldAttr lids1 ->
         let uu___ =
@@ -5138,14 +5136,10 @@ let rec (unfold_effect_abbrev :
                  then
                    (let uu___4 =
                       let uu___5 =
-                        FStarC_Class_Show.show
-                          (FStarC_Class_Show.printableshow
-                             FStar_Class_Printable.printable_nat)
+                        FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                           (FStarC_Compiler_List.length binders1) in
                       let uu___6 =
-                        FStarC_Class_Show.show
-                          (FStarC_Class_Show.printableshow
-                             FStar_Class_Printable.printable_int)
+                        FStarC_Class_Show.show FStarC_Class_Show.showable_int
                           ((FStarC_Compiler_List.length
                               c.FStarC_Syntax_Syntax.effect_args)
                              + Prims.int_one) in

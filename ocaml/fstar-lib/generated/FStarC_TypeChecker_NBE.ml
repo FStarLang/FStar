@@ -1537,13 +1537,11 @@ and (iapp :
                          FStarC_Syntax_Print.showable_fv)
                       lb.FStarC_Syntax_Syntax.lbname in
                   let uu___4 =
-                    FStarC_Class_Show.show
-                      (FStarC_Class_Show.printableshow
-                         FStar_Class_Printable.printable_int) arity in
+                    FStarC_Class_Show.show FStarC_Class_Show.showable_int
+                      arity in
                   let uu___5 =
-                    FStarC_Class_Show.show
-                      (FStarC_Class_Show.printableshow
-                         FStar_Class_Printable.printable_nat) n_args_rev in
+                    FStarC_Class_Show.show FStarC_Class_Show.showable_nat
+                      n_args_rev in
                   FStarC_Compiler_Util.print3
                     "Reached iapp for %s with arity %s and n_args = %s\n"
                     uu___3 uu___4 uu___5);
@@ -2121,8 +2119,7 @@ and (translate_letbinding :
                            lb.FStarC_Syntax_Syntax.lbname in
                        let uu___7 =
                          FStarC_Class_Show.show
-                           (FStarC_Class_Show.printableshow
-                              FStar_Class_Printable.printable_int) arity in
+                           FStarC_Class_Show.showable_int arity in
                        FStarC_Compiler_Util.print2
                          "Making TopLevelLet for %s with arity %s\n" uu___6
                          uu___7);

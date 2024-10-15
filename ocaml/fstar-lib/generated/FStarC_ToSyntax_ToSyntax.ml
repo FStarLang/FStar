@@ -9315,19 +9315,13 @@ and (desugar_decl_maybe_fail_attr :
                                       let uu___12 =
                                         let uu___13 =
                                           FStarC_Class_Show.show
-                                            (FStarC_Class_Show.printableshow
-                                               FStar_Class_Printable.printable_int)
-                                            e in
+                                            FStarC_Class_Show.showable_int e in
                                         let uu___14 =
                                           FStarC_Class_Show.show
-                                            (FStarC_Class_Show.printableshow
-                                               FStar_Class_Printable.printable_int)
-                                            n2 in
+                                            FStarC_Class_Show.showable_int n2 in
                                         let uu___15 =
                                           FStarC_Class_Show.show
-                                            (FStarC_Class_Show.printableshow
-                                               FStar_Class_Printable.printable_int)
-                                            n1 in
+                                            FStarC_Class_Show.showable_int n1 in
                                         FStarC_Compiler_Util.format3
                                           "Error #%s was raised %s times, instead of %s."
                                           uu___13 uu___14 uu___15 in

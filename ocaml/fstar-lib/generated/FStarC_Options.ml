@@ -437,28 +437,18 @@ let rec (option_val_to_string : option_val -> Prims.string) =
   fun v ->
     match v with
     | Bool b ->
-        let uu___ =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_bool) b in
+        let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_bool b in
         FStarC_Compiler_String.op_Hat "Bool " uu___
     | String s ->
         let uu___ =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_string) s in
+          FStarC_Class_Show.show FStarC_Class_Show.showable_string s in
         FStarC_Compiler_String.op_Hat "String " uu___
     | Path s ->
         let uu___ =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_string) s in
+          FStarC_Class_Show.show FStarC_Class_Show.showable_string s in
         FStarC_Compiler_String.op_Hat "Path " uu___
     | Int i ->
-        let uu___ =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_int) i in
+        let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
         FStarC_Compiler_String.op_Hat "Int " uu___
     | List vs ->
         let uu___ = (FStarC_Common.string_of_list ()) option_val_to_string vs in
@@ -539,14 +529,8 @@ let (show_options : unit -> Prims.string) =
       | String s1 ->
           let uu___1 = FStarC_Compiler_String.op_Hat s1 "\"" in
           FStarC_Compiler_String.op_Hat "\"" uu___1
-      | Bool b ->
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_bool) b
-      | Int i ->
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_int) i
+      | Bool b -> FStarC_Class_Show.show FStarC_Class_Show.showable_bool b
+      | Int i -> FStarC_Class_Show.show FStarC_Class_Show.showable_int i
       | Path s1 -> s1
       | List s1 ->
           let uu___1 = FStarC_Compiler_List.map show_optionval s1 in

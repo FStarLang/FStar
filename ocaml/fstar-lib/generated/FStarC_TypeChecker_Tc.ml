@@ -2305,18 +2305,15 @@ let (tc_decl' :
                                            let uu___15 =
                                              let uu___16 =
                                                FStarC_Class_Show.show
-                                                 (FStarC_Class_Show.printableshow
-                                                    FStar_Class_Printable.printable_int)
+                                                 FStarC_Class_Show.showable_int
                                                  e in
                                              let uu___17 =
                                                FStarC_Class_Show.show
-                                                 (FStarC_Class_Show.printableshow
-                                                    FStar_Class_Printable.printable_int)
+                                                 FStarC_Class_Show.showable_int
                                                  n2 in
                                              let uu___18 =
                                                FStarC_Class_Show.show
-                                                 (FStarC_Class_Show.printableshow
-                                                    FStar_Class_Printable.printable_int)
+                                                 FStarC_Class_Show.showable_int
                                                  n1 in
                                              FStarC_Compiler_Util.format3
                                                "Error #%s was raised %s times, instead of %s."
@@ -4328,9 +4325,7 @@ let (tc_decl :
         if uu___3
         then
           let uu___4 =
-            FStarC_Class_Show.show
-              (FStarC_Class_Show.printableshow
-                 FStar_Class_Printable.printable_bool)
+            FStarC_Class_Show.show FStarC_Class_Show.showable_bool
               env2.FStarC_TypeChecker_Env.admit in
           let uu___5 =
             FStarC_Class_Show.show FStarC_Syntax_Print.showable_sigelt se in
@@ -4587,9 +4582,8 @@ let (add_sigelt_to_env :
          then
            let uu___2 = FStarC_Syntax_Print.sigelt_to_string_short se in
            let uu___3 =
-             FStarC_Class_Show.show
-               (FStarC_Class_Show.printableshow
-                  FStar_Class_Printable.printable_bool) from_cache in
+             FStarC_Class_Show.show FStarC_Class_Show.showable_bool
+               from_cache in
            FStarC_Compiler_Util.print2
              ">>>>>>>>>>>>>>Adding top-level decl to environment: %s (from_cache:%s)\n"
              uu___2 uu___3
@@ -5627,9 +5621,8 @@ let (finish_partial_modul :
                let uu___6 =
                  let uu___7 =
                    let uu___8 = FStarC_Options.depth () in
-                   FStarC_Class_Show.show
-                     (FStarC_Class_Show.printableshow
-                        FStar_Class_Printable.printable_int) uu___8 in
+                   FStarC_Class_Show.show FStarC_Class_Show.showable_int
+                     uu___8 in
                  Prims.strcat uu___7 "." in
                Prims.strcat
                  "Some #push-options have not been popped. Current depth is "
