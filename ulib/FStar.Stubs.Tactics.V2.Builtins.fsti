@@ -27,8 +27,7 @@ open FStar.Stubs.Reflection.V2.Builtins
 open FStar.Tactics.Effect
 open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.Types
-
-include FStar.Tactics.Unseal
+include FStar.Stubs.Tactics.Unseal
 
 (** Resolve unification variable indirections at the top of the term. *)
 val compress : term -> Tac term
