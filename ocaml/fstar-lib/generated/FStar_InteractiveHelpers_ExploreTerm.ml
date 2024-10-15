@@ -5041,7 +5041,7 @@ and (explore_pattern :
                               (Obj.repr
                                  (let uu___2 =
                                     let uu___3 =
-                                      FStar_Tactics_Unseal.unseal st in
+                                      FStarC_Tactics_Unseal.unseal st in
                                     FStar_Tactics_Effect.tac_bind
                                       (FStar_Sealed.seal
                                          (Obj.magic

@@ -5,7 +5,7 @@ let (namedv_to_string :
   =
   fun x ->
     let uu___ =
-      FStar_Tactics_Unseal.unseal x.FStarC_Reflection_V2_Data.ppname in
+      FStarC_Tactics_Unseal.unseal x.FStarC_Reflection_V2_Data.ppname in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic

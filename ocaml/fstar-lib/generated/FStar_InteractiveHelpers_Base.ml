@@ -1541,7 +1541,7 @@ let rec bind_map_get_from_name :
                           (fun b'v ->
                              let uu___1 =
                                let uu___2 =
-                                 FStar_Tactics_Unseal.unseal
+                                 FStarC_Tactics_Unseal.unseal
                                    b'v.FStarC_Reflection_V1_Data.bv_ppname in
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
@@ -4838,7 +4838,7 @@ and (deep_apply_subst_in_pattern :
                      (Obj.repr
                         (let uu___ =
                            let uu___1 =
-                             let uu___2 = FStar_Tactics_Unseal.unseal st in
+                             let uu___2 = FStarC_Tactics_Unseal.unseal st in
                              FStar_Tactics_Effect.tac_bind
                                (FStar_Sealed.seal
                                   (Obj.magic
@@ -5158,7 +5158,7 @@ let rec (_generate_shadowed_subst :
                                                                    (fun ty ->
                                                                     let uu___6
                                                                     =
-                                                                    FStar_Tactics_Unseal.unseal
+                                                                    FStarC_Tactics_Unseal.unseal
                                                                     bvv.FStarC_Reflection_V1_Data.bv_ppname in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind

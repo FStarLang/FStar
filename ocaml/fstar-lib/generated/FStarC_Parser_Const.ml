@@ -665,7 +665,7 @@ let (fext_on_dom_g_lid : FStarC_Ident.lident) = fext_lid "on_dom_g"
 let (sealed_lid : FStarC_Ident.lident) = p2l ["FStar"; "Sealed"; "sealed"]
 let (seal_lid : FStarC_Ident.lident) = p2l ["FStar"; "Sealed"; "seal"]
 let (unseal_lid : FStarC_Ident.lident) =
-  p2l ["FStar"; "Tactics"; "Unseal"; "unseal"]
+  p2l ["FStar"; "Stubs"; "Tactics"; "Unseal"; "unseal"]
 let (map_seal_lid : FStarC_Ident.lident) =
   p2l ["FStar"; "Sealed"; "map_seal"]
 let (bind_seal_lid : FStarC_Ident.lident) =
