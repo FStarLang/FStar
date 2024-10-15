@@ -46,23 +46,20 @@ let max : 'a . 'a ord -> 'a -> 'a -> 'a =
         let uu___1 = op_Greater_Equals_Question uu___ x y in
         if uu___1 then x else y
 let ord_eq : 'a . 'a ord -> 'a FStarC_Class_Deq.deq = fun d -> d.super
-let rec insert : 'a . 'a ord -> 'a -> 'a Prims.list -> 'a Prims.list =
+let rec sort : 'a . 'a ord -> 'a Prims.list -> 'a Prims.list =
   fun uu___ ->
-    fun x ->
-      fun xs ->
-        match xs with
+    fun xs ->
+      let rec insert x xs1 =
+        match xs1 with
         | [] -> [x]
         | y::ys ->
             let uu___1 = op_Less_Equals_Question uu___ x y in
             if uu___1
             then x :: y :: ys
-            else (let uu___3 = insert uu___ x ys in y :: uu___3)
-let rec sort : 'a . 'a ord -> 'a Prims.list -> 'a Prims.list =
-  fun uu___ ->
-    fun xs ->
+            else (let uu___3 = insert x ys in y :: uu___3) in
       match xs with
       | [] -> []
-      | x::xs1 -> let uu___1 = sort uu___ xs1 in insert uu___ x uu___1
+      | x::xs1 -> let uu___1 = sort uu___ xs1 in insert x uu___1
 let dedup : 'a . 'a ord -> 'a Prims.list -> 'a Prims.list =
   fun uu___ ->
     fun xs ->
@@ -77,6 +74,48 @@ let dedup : 'a . 'a ord -> 'a Prims.list -> 'a Prims.list =
                    out1 in
                if uu___1 then out1 else x :: out1) [] xs in
       FStarC_Compiler_List.rev out
+let rec sort_dedup : 'a . 'a ord -> 'a Prims.list -> 'a Prims.list =
+  fun uu___ ->
+    fun xs ->
+      let rec insert x xs1 =
+        match xs1 with
+        | [] -> [x]
+        | y::ys ->
+            let uu___1 = cmp uu___ x y in
+            (match uu___1 with
+             | FStarC_Compiler_Order.Eq -> ys
+             | FStarC_Compiler_Order.Lt -> x :: y :: ys
+             | FStarC_Compiler_Order.Gt ->
+                 let uu___2 = insert x ys in y :: uu___2) in
+      match xs with
+      | [] -> []
+      | x::xs1 -> let uu___1 = sort_dedup uu___ xs1 in insert x uu___1
+let ord_list_diff :
+  'a .
+    'a ord ->
+      'a Prims.list -> 'a Prims.list -> ('a Prims.list * 'a Prims.list)
+  =
+  fun uu___ ->
+    fun xs ->
+      fun ys ->
+        let xs1 = sort_dedup uu___ xs in
+        let ys1 = sort_dedup uu___ ys in
+        let rec go uu___1 xs2 ys2 =
+          match uu___1 with
+          | (xd, yd) ->
+              (match (xs2, ys2) with
+               | (x::xs3, y::ys3) ->
+                   let uu___2 = cmp uu___ x y in
+                   (match uu___2 with
+                    | FStarC_Compiler_Order.Lt ->
+                        go ((x :: xd), yd) xs3 (y :: ys3)
+                    | FStarC_Compiler_Order.Eq -> go (xd, yd) xs3 ys3
+                    | FStarC_Compiler_Order.Gt ->
+                        go (xd, (y :: yd)) (x :: xs3) ys3)
+               | (xs3, ys3) ->
+                   ((FStarC_Compiler_List.rev_append xd xs3),
+                     (FStarC_Compiler_List.rev_append yd ys3))) in
+        go ([], []) xs1 ys1
 let (ord_int : Prims.int ord) =
   { super = FStarC_Class_Deq.deq_int; cmp = FStarC_Compiler_Order.compare_int
   }

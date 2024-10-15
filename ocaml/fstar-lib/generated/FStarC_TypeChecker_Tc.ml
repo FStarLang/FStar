@@ -720,71 +720,106 @@ let (tc_sig_let :
                     FStarC_Compiler_List.filter
                       (fun x ->
                          Prims.op_Negation
-                           ((x = FStarC_Syntax_Syntax.Logic) ||
-                              (x = FStarC_Syntax_Syntax.Irreducible))) in
+                           ((FStarC_Syntax_Syntax.uu___is_Logic x) ||
+                              (FStarC_Syntax_Syntax.uu___is_Irreducible x))) in
+                  let val_q1 = drop_logic_and_irreducible val_q in
+                  let q'0 = q' in
+                  let q'1 = drop_logic_and_irreducible q' in
                   let uu___ =
-                    let uu___1 =
-                      let uu___2 = drop_logic_and_irreducible val_q in
-                      let uu___3 = drop_logic_and_irreducible q' in
-                      (uu___2, uu___3) in
-                    match uu___1 with
-                    | (val_q1, q'1) ->
-                        ((FStarC_Compiler_List.length val_q1) =
-                           (FStarC_Compiler_List.length q'1))
-                          &&
-                          (FStarC_Compiler_List.forall2
-                             FStarC_Syntax_Util.qualifier_equal val_q1 q'1) in
-                  if uu___
-                  then FStar_Pervasives_Native.Some q'
-                  else
-                    (let uu___2 =
-                       let uu___3 =
-                         let uu___4 =
-                           FStarC_Errors_Msg.text
-                             "Inconsistent qualifier annotations on" in
-                         let uu___5 =
-                           let uu___6 =
-                             FStarC_Class_Show.show
-                               FStarC_Ident.showable_lident l in
-                           FStarC_Pprint.doc_of_string uu___6 in
-                         FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
-                       let uu___4 =
-                         let uu___5 =
-                           let uu___6 =
-                             let uu___7 = FStarC_Errors_Msg.text "Expected" in
-                             let uu___8 =
-                               let uu___9 =
-                                 let uu___10 =
-                                   FStarC_Class_Show.show
-                                     (FStarC_Class_Show.show_list
-                                        FStarC_Syntax_Print.showable_qualifier)
-                                     val_q in
-                                 FStarC_Pprint.arbitrary_string uu___10 in
-                               FStarC_Pprint.squotes uu___9 in
-                             FStarC_Pprint.prefix (Prims.of_int (4))
-                               Prims.int_one uu___7 uu___8 in
-                           let uu___7 =
-                             let uu___8 = FStarC_Errors_Msg.text "got" in
-                             let uu___9 =
-                               let uu___10 =
-                                 let uu___11 =
-                                   FStarC_Class_Show.show
-                                     (FStarC_Class_Show.show_list
-                                        FStarC_Syntax_Print.showable_qualifier)
-                                     q' in
-                                 FStarC_Pprint.arbitrary_string uu___11 in
-                               FStarC_Pprint.squotes uu___10 in
-                             FStarC_Pprint.prefix (Prims.of_int (4))
-                               Prims.int_one uu___8 uu___9 in
-                           FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
-                         [uu___5] in
-                       uu___3 :: uu___4 in
-                     FStarC_Errors.raise_error
-                       FStarC_Class_HasRange.hasRange_range r
-                       FStarC_Errors_Codes.Fatal_InconsistentQualifierAnnotation
-                       ()
-                       (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-                       (Obj.magic uu___2)) in
+                    FStarC_Class_Ord.ord_list_diff
+                      FStarC_Syntax_Syntax.ord_qualifier val_q1 q'1 in
+                  (match uu___ with
+                   | ([], []) -> FStar_Pervasives_Native.Some q'0
+                   | (d1, d2) ->
+                       let uu___1 =
+                         let uu___2 =
+                           let uu___3 =
+                             FStarC_Errors_Msg.text
+                               "Inconsistent qualifier annotations on" in
+                           let uu___4 =
+                             let uu___5 =
+                               FStarC_Class_Show.show
+                                 FStarC_Ident.showable_lident l in
+                             FStarC_Pprint.doc_of_string uu___5 in
+                           FStarC_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
+                         let uu___3 =
+                           let uu___4 =
+                             let uu___5 =
+                               let uu___6 = FStarC_Errors_Msg.text "Expected" in
+                               let uu___7 =
+                                 let uu___8 =
+                                   let uu___9 =
+                                     FStarC_Class_Show.show
+                                       (FStarC_Class_Show.show_list
+                                          FStarC_Syntax_Print.showable_qualifier)
+                                       val_q1 in
+                                   FStarC_Pprint.arbitrary_string uu___9 in
+                                 FStarC_Pprint.squotes uu___8 in
+                               FStarC_Pprint.prefix (Prims.of_int (4))
+                                 Prims.int_one uu___6 uu___7 in
+                             let uu___6 =
+                               let uu___7 = FStarC_Errors_Msg.text "got" in
+                               let uu___8 =
+                                 let uu___9 =
+                                   let uu___10 =
+                                     FStarC_Class_Show.show
+                                       (FStarC_Class_Show.show_list
+                                          FStarC_Syntax_Print.showable_qualifier)
+                                       q'1 in
+                                   FStarC_Pprint.arbitrary_string uu___10 in
+                                 FStarC_Pprint.squotes uu___9 in
+                               FStarC_Pprint.prefix (Prims.of_int (4))
+                                 Prims.int_one uu___7 uu___8 in
+                             FStarC_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                           let uu___5 =
+                             let uu___6 =
+                               if Prims.uu___is_Cons d1
+                               then
+                                 let uu___7 =
+                                   FStarC_Errors_Msg.text
+                                     "Only in declaration: " in
+                                 let uu___8 =
+                                   let uu___9 =
+                                     let uu___10 =
+                                       FStarC_Class_Show.show
+                                         (FStarC_Class_Show.show_list
+                                            FStarC_Syntax_Print.showable_qualifier)
+                                         d1 in
+                                     FStarC_Pprint.arbitrary_string uu___10 in
+                                   FStarC_Pprint.squotes uu___9 in
+                                 FStarC_Pprint.prefix (Prims.of_int (2))
+                                   Prims.int_one uu___7 uu___8
+                               else FStarC_Pprint.empty in
+                             let uu___7 =
+                               let uu___8 =
+                                 if Prims.uu___is_Cons d2
+                                 then
+                                   let uu___9 =
+                                     FStarC_Errors_Msg.text
+                                       "Only in definition: " in
+                                   let uu___10 =
+                                     let uu___11 =
+                                       let uu___12 =
+                                         FStarC_Class_Show.show
+                                           (FStarC_Class_Show.show_list
+                                              FStarC_Syntax_Print.showable_qualifier)
+                                           d2 in
+                                       FStarC_Pprint.arbitrary_string uu___12 in
+                                     FStarC_Pprint.squotes uu___11 in
+                                   FStarC_Pprint.prefix (Prims.of_int (2))
+                                     Prims.int_one uu___9 uu___10
+                                 else FStarC_Pprint.empty in
+                               [uu___8] in
+                             uu___6 :: uu___7 in
+                           uu___4 :: uu___5 in
+                         uu___2 :: uu___3 in
+                       FStarC_Errors.raise_error
+                         FStarC_Class_HasRange.hasRange_range r
+                         FStarC_Errors_Codes.Fatal_InconsistentQualifierAnnotation
+                         ()
+                         (Obj.magic
+                            FStarC_Errors_Msg.is_error_message_list_doc)
+                         (Obj.magic uu___1)) in
             let rename_parameters lb =
               let rename_in_typ def typ =
                 let typ1 = FStarC_Syntax_Subst.compress typ in

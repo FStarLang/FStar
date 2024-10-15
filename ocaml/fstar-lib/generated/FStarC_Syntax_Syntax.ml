@@ -1345,6 +1345,114 @@ let (lazy_chooser :
   (lazy_kind -> lazyinfo -> term) FStar_Pervasives_Native.option
     FStarC_Compiler_Effect.ref)
   = FStarC_Compiler_Util.mk_ref FStar_Pervasives_Native.None
+let (cmp_qualifier : qualifier -> qualifier -> FStarC_Compiler_Order.order) =
+  fun q1 ->
+    fun q2 ->
+      match (q1, q2) with
+      | (Assumption, Assumption) -> FStarC_Compiler_Order.Eq
+      | (New, New) -> FStarC_Compiler_Order.Eq
+      | (Private, Private) -> FStarC_Compiler_Order.Eq
+      | (Unfold_for_unification_and_vcgen, Unfold_for_unification_and_vcgen)
+          -> FStarC_Compiler_Order.Eq
+      | (Irreducible, Irreducible) -> FStarC_Compiler_Order.Eq
+      | (Inline_for_extraction, Inline_for_extraction) ->
+          FStarC_Compiler_Order.Eq
+      | (NoExtract, NoExtract) -> FStarC_Compiler_Order.Eq
+      | (Noeq, Noeq) -> FStarC_Compiler_Order.Eq
+      | (Unopteq, Unopteq) -> FStarC_Compiler_Order.Eq
+      | (TotalEffect, TotalEffect) -> FStarC_Compiler_Order.Eq
+      | (Logic, Logic) -> FStarC_Compiler_Order.Eq
+      | (Reifiable, Reifiable) -> FStarC_Compiler_Order.Eq
+      | (Reflectable l1, Reflectable l2) ->
+          FStarC_Class_Ord.cmp FStarC_Ident.ord_lident l1 l2
+      | (Visible_default, Visible_default) -> FStarC_Compiler_Order.Eq
+      | (Discriminator l1, Discriminator l2) ->
+          FStarC_Class_Ord.cmp FStarC_Ident.ord_lident l1 l2
+      | (Projector (l1, i1), Projector (l2, i2)) ->
+          FStarC_Class_Ord.cmp
+            (FStarC_Class_Ord.ord_tuple2 FStarC_Ident.ord_lident
+               FStarC_Ident.ord_ident) (l1, i1) (l2, i2)
+      | (RecordType (l1, i1), RecordType (l2, i2)) ->
+          FStarC_Class_Ord.cmp
+            (FStarC_Class_Ord.ord_tuple2
+               (FStarC_Class_Ord.ord_list FStarC_Ident.ord_ident)
+               (FStarC_Class_Ord.ord_list FStarC_Ident.ord_ident)) (l1, i1)
+            (l2, i2)
+      | (RecordConstructor (l1, i1), RecordConstructor (l2, i2)) ->
+          FStarC_Class_Ord.cmp
+            (FStarC_Class_Ord.ord_tuple2
+               (FStarC_Class_Ord.ord_list FStarC_Ident.ord_ident)
+               (FStarC_Class_Ord.ord_list FStarC_Ident.ord_ident)) (l1, i1)
+            (l2, i2)
+      | (Action l1, Action l2) ->
+          FStarC_Class_Ord.cmp FStarC_Ident.ord_lident l1 l2
+      | (ExceptionConstructor, ExceptionConstructor) ->
+          FStarC_Compiler_Order.Eq
+      | (HasMaskedEffect, HasMaskedEffect) -> FStarC_Compiler_Order.Eq
+      | (Effect, Effect) -> FStarC_Compiler_Order.Eq
+      | (OnlyName, OnlyName) -> FStarC_Compiler_Order.Eq
+      | (InternalAssumption, InternalAssumption) -> FStarC_Compiler_Order.Eq
+      | (Assumption, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, Assumption) -> FStarC_Compiler_Order.Gt
+      | (New, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, New) -> FStarC_Compiler_Order.Gt
+      | (Private, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, Private) -> FStarC_Compiler_Order.Gt
+      | (Unfold_for_unification_and_vcgen, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, Unfold_for_unification_and_vcgen) -> FStarC_Compiler_Order.Gt
+      | (Irreducible, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, Irreducible) -> FStarC_Compiler_Order.Gt
+      | (Inline_for_extraction, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, Inline_for_extraction) -> FStarC_Compiler_Order.Gt
+      | (NoExtract, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, NoExtract) -> FStarC_Compiler_Order.Gt
+      | (Noeq, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, Noeq) -> FStarC_Compiler_Order.Gt
+      | (Unopteq, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, Unopteq) -> FStarC_Compiler_Order.Gt
+      | (TotalEffect, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, TotalEffect) -> FStarC_Compiler_Order.Gt
+      | (Logic, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, Logic) -> FStarC_Compiler_Order.Gt
+      | (Reifiable, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, Reifiable) -> FStarC_Compiler_Order.Gt
+      | (Reflectable uu___, uu___1) -> FStarC_Compiler_Order.Lt
+      | (uu___, Reflectable uu___1) -> FStarC_Compiler_Order.Gt
+      | (Visible_default, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, Visible_default) -> FStarC_Compiler_Order.Gt
+      | (Discriminator uu___, uu___1) -> FStarC_Compiler_Order.Lt
+      | (uu___, Discriminator uu___1) -> FStarC_Compiler_Order.Gt
+      | (Projector uu___, uu___1) -> FStarC_Compiler_Order.Lt
+      | (uu___, Projector uu___1) -> FStarC_Compiler_Order.Gt
+      | (RecordType uu___, uu___1) -> FStarC_Compiler_Order.Lt
+      | (uu___, RecordType uu___1) -> FStarC_Compiler_Order.Gt
+      | (RecordConstructor uu___, uu___1) -> FStarC_Compiler_Order.Lt
+      | (uu___, RecordConstructor uu___1) -> FStarC_Compiler_Order.Gt
+      | (Action uu___, uu___1) -> FStarC_Compiler_Order.Lt
+      | (uu___, Action uu___1) -> FStarC_Compiler_Order.Gt
+      | (ExceptionConstructor, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, ExceptionConstructor) -> FStarC_Compiler_Order.Gt
+      | (HasMaskedEffect, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, HasMaskedEffect) -> FStarC_Compiler_Order.Gt
+      | (Effect, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, Effect) -> FStarC_Compiler_Order.Gt
+      | (OnlyName, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, OnlyName) -> FStarC_Compiler_Order.Gt
+      | (InternalAssumption, uu___) -> FStarC_Compiler_Order.Lt
+      | (uu___, InternalAssumption) -> FStarC_Compiler_Order.Gt
+let (deq_qualifier : qualifier FStarC_Class_Deq.deq) =
+  {
+    FStarC_Class_Deq.op_Equals_Question =
+      (fun q1 ->
+         fun q2 ->
+           let uu___ = cmp_qualifier q1 q2 in
+           uu___ = FStarC_Compiler_Order.Eq)
+  }
+let (ord_qualifier : qualifier FStarC_Class_Ord.ord) =
+  {
+    FStarC_Class_Ord.super = deq_qualifier;
+    FStarC_Class_Ord.cmp = cmp_qualifier
+  }
 let (is_internal_qualifier : qualifier -> Prims.bool) =
   fun q ->
     match q with
