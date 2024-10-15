@@ -22,4 +22,5 @@ open FStar.Sealed
 open FStar.Tactics.Effect
 
 (** Observe a sealed value. See Sealed.seal too. *)
+[@@coercion]
 val unseal : #a:Type -> sealed a -> Tac a
