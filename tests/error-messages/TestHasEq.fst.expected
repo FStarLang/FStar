@@ -25,5 +25,3 @@
     don't have decidable equality.
 
 >>]
-Verified module: TestHasEq
-All verification conditions discharged successfully

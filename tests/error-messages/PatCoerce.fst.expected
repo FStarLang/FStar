@@ -10,5 +10,3 @@
 * Warning 240 at PatCoerce.fst(23,0-26,14):
   - Missing definitions in module PatCoerce: bla
 
-Verified module: PatCoerce
-All verification conditions discharged successfully

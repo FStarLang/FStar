@@ -78,5 +78,3 @@ let _ = seq![1; 2; 3]
     FStar.List.Tot is not in scope. Please add an 'open FStar.List.Tot' to stop
     relying on this deprecated, special treatment of '@'.
 
-Verified module: SeqLit
-All verification conditions discharged successfully

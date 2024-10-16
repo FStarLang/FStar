@@ -18,5 +18,3 @@
   - The type of the second term is: Prims.nat
   - If the proof fails, try annotating these with the same type.
 
-Verified module: DecreasesTypeWarning
-All verification conditions discharged successfully

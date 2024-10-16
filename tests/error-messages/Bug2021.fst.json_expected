@@ -16,5 +16,3 @@
 >> Got issues: [
 {"msg":["Failed to resolve implicit argument ?13\nof type Prims.int\nintroduced for Instantiating implicit argument"],"level":"Error","range":{"def":{"file_name":"Bug2021.fst","start_pos":{"line":36,"col":11},"end_pos":{"line":36,"col":12}},"use":{"file_name":"Bug2021.fst","start_pos":{"line":37,"col":13},"end_pos":{"line":37,"col":17}}},"number":66,"ctx":["While checking for top-level effects","While typechecking the top-level declaration `let test5`","While typechecking the top-level declaration `[@@expect_failure] let test5`"]}
 >>]
-Verified module: Bug2021
-All verification conditions discharged successfully

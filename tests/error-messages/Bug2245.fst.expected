@@ -5,5 +5,3 @@
     of type Prims.int & Prims.int & Prims.int
 
 >>]
-Verified module: Bug2245
-All verification conditions discharged successfully

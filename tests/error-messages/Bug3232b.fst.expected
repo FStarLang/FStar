@@ -12,5 +12,3 @@
 * Warning 240 at Bug3232b.fst(8,0-8,12):
   - Missing definitions in module Bug3232b: f
 
-Verified module: Bug3232b
-All verification conditions discharged successfully

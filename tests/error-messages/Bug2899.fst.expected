@@ -35,5 +35,3 @@
   - See also FStar.Tactics.Effect.fsti(212,48-212,58)
 
 >>]
-Verified module: Bug2899
-All verification conditions discharged successfully

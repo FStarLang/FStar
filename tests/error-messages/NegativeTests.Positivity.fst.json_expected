@@ -16,5 +16,3 @@
 >> Got issues: [
 {"msg":["Inductive type NegativeTests.Positivity.t11 does not satisfy the strict positivity condition"],"level":"Error","range":{"def":{"file_name":"NegativeTests.Positivity.fst","start_pos":{"line":66,"col":10},"end_pos":{"line":66,"col":13}},"use":{"file_name":"NegativeTests.Positivity.fst","start_pos":{"line":66,"col":10},"end_pos":{"line":66,"col":13}}},"number":3,"ctx":["While typechecking the top-level declaration `type NegativeTests.Positivity.t11`","While typechecking the top-level declaration `[@@expect_failure] type NegativeTests.Positivity.t11`"]}
 >>]
-Verified module: NegativeTests.Positivity
-All verification conditions discharged successfully
