@@ -136,7 +136,8 @@ let (tacprint3 :
 let (print : Prims.string -> unit FStarC_Tactics_Monad.tac) =
   fun msg ->
     (let uu___1 =
-       let uu___2 = FStarC_Options.silent () in Prims.op_Negation uu___2 in
+       (let uu___2 = FStarC_Options.silent () in Prims.op_Negation uu___2) ||
+         (FStarC_Options.interactive ()) in
      if uu___1 then tacprint msg else ());
     FStarC_Class_Monad.return FStarC_Tactics_Monad.monad_tac () (Obj.repr ())
 let (debugging : unit -> Prims.bool FStarC_Tactics_Monad.tac) =
