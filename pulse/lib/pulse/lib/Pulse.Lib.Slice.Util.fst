@@ -41,15 +41,6 @@ fn append_split (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t)
   S.split s i
 }
 
-ghost
-fn append_split_trade_aux
-  (#t: Type) (input: S.slice t) (p: perm) (v1 v2: (Seq.seq t)) (i: SZ.t) (input1 input2: S.slice t) (_: unit)
-    requires S.is_split input input1 input2 ** (pts_to input1 #p v1 ** pts_to input2 #p v2)
-    ensures pts_to input #p (v1 `Seq.append` v2)
-{
-  S.join input1 input2 input
-}
-
 inline_for_extraction
 noextract
 fn append_split_trade (#t: Type) (input: S.slice t) (#p: perm) (i: SZ.t)
@@ -64,18 +55,14 @@ fn append_split_trade (#t: Type) (input: S.slice t) (#p: perm) (i: SZ.t)
         (pts_to input #p (v1 `Seq.append` v2)))
 {
   let SlicePair s1 s2 = append_split input i;
-  intro_trade _ _ _ (append_split_trade_aux input p v1 v2 i s1 s2);
+  ghost fn aux ()
+    requires S.is_split input s1 s2 ** (pts_to s1 #p v1 ** pts_to s2 #p v2)
+    ensures pts_to input #p (v1 `Seq.append` v2)
+  {
+    S.join s1 s2 input
+  };
+  intro_trade _ _ _ aux;
   SlicePair s1 s2
-}
-
-ghost
-fn split_trade_aux
-  (#t: Type) (s: S.slice t) (p: perm) (v: Seq.seq t) (i: SZ.t)
-  (s1 s2: S.slice t) (v1 v2: Seq.seq t) (hyp: squash (v == Seq.append v1 v2)) (_: unit)
-    requires (S.is_split s s1 s2 ** (pts_to s1 #p v1 ** pts_to s2 #p v2))
-    ensures (pts_to s #p v)
-{
-  S.join s1 s2 s
 }
 
 inline_for_extraction
@@ -94,24 +81,14 @@ fn split_trade (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t) (#v: Ghost.erased 
   Seq.lemma_split v (SZ.v i);
   let SlicePair s1 s2 = S.split s i;
   with v1 v2. assert pts_to s1 #p v1 ** pts_to s2 #p v2;
-  intro_trade _ _ _ (split_trade_aux s p v i s1 s2 v1 v2 ());
+  ghost fn aux ()
+    requires S.is_split s s1 s2 ** (pts_to s1 #p v1 ** pts_to s2 #p v2)
+    ensures pts_to s #p v
+  {
+    S.join s1 s2 s
+  };
+  intro_trade _ _ _ aux;
   S.SlicePair s1 s2
-}
-
-// TODO(GE): fix extraction for inline ghost functions (currently extracts to Obj.magic (fun _ -> ()))
-ghost fn subslice_trade_mut_aux #t (s: slice t) (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length v }) (res: slice t) (v': Seq.seq t) ()
-  requires subslice_rest res s 1.0R i j v ** pts_to res v'
-  ensures pts_to s (Seq.slice v 0 (SZ.v i) `Seq.append` v' `Seq.append` Seq.slice v (SZ.v j) (Seq.length v))
-{
-  unfold subslice_rest;
-  join res _ _;
-  join _ _ s;
-  assert pure (
-    Seq.Base.append (Seq.Base.append (Seq.Base.slice v 0 (SZ.v i)) v')
-          (Seq.Base.slice v (SZ.v j) (Seq.Base.length v))
-    `Seq.equal`
-    Seq.Base.append (Seq.Base.slice v 0 (SZ.v i))
-        (Seq.Base.append v' (Seq.Base.slice v (SZ.v j) (Seq.Base.length v))));
 }
 
 inline_for_extraction
@@ -123,19 +100,22 @@ fn subslice_trade_mut #t (s: slice t) (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v
     (forall* v'. trade (pts_to res v') (pts_to s (Seq.slice v 0 (SZ.v i) `Seq.append` v' `Seq.append` Seq.slice v (SZ.v j) (Seq.length v))))
 {
   let res = subslice s i j;
-  intro_forall _ (fun v' -> intro_trade _ _ _ (subslice_trade_mut_aux s i j #v res v'));
+  ghost fn aux (v': Seq.seq t) ()
+    requires subslice_rest res s 1.0R i j v ** pts_to res v'
+    ensures pts_to s (Seq.slice v 0 (SZ.v i) `Seq.append` v' `Seq.append` Seq.slice v (SZ.v j) (Seq.length v))
+  {
+    unfold subslice_rest;
+    join res _ _;
+    join _ _ s;
+    assert pure (
+      Seq.Base.append (Seq.Base.append (Seq.Base.slice v 0 (SZ.v i)) v')
+            (Seq.Base.slice v (SZ.v j) (Seq.Base.length v))
+      `Seq.equal`
+      Seq.Base.append (Seq.Base.slice v 0 (SZ.v i))
+          (Seq.Base.append v' (Seq.Base.slice v (SZ.v j) (Seq.Base.length v))));
+  };
+  intro_forall _ (fun v' -> intro_trade _ _ _ (aux v'));
   res
-}
-
-ghost fn subslice_trade_aux #t (s: slice t) #p (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length v }) (res: slice t) ()
-  requires subslice_rest res s p i j v ** pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j))
-  ensures pts_to s #p v
-{
-  unfold subslice_rest;
-  join res _ _;
-  join _ _ s;
-  assert pure (v `Seq.equal` Seq.append (Seq.slice v 0 (SZ.v i))
-    (Seq.append (Seq.slice v (SZ.v i) (SZ.v j)) (Seq.slice v (SZ.v j) (Seq.length v))));
 }
 
 inline_for_extraction
@@ -147,6 +127,16 @@ fn subslice_trade #t (s: slice t) #p (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v 
     trade (pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j))) (pts_to s #p v)
 {
   let res = subslice s i j;
-  intro_trade _ _ _ (subslice_trade_aux s i j #v res);
+  ghost fn aux ()
+    requires subslice_rest res s p i j v ** pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j))
+    ensures pts_to s #p v
+  {
+    unfold subslice_rest;
+    join res _ _;
+    join _ _ s;
+    assert pure (v `Seq.equal` Seq.append (Seq.slice v 0 (SZ.v i))
+      (Seq.append (Seq.slice v (SZ.v i) (SZ.v j)) (Seq.slice v (SZ.v j) (Seq.length v))));
+  };
+  intro_trade _ _ _ aux;
   res
 }

@@ -24,6 +24,7 @@ val unit_tm : term
 val unit_ty : term
 val mk_return (t:term) : Dv term
 val mk_meta_monadic : term -> Dv term
+val mk_pure_let (b:binder) (head body:term) : Dv term
 val mk_let (b:binder) (head body:term) : Dv term
 val mk_if (b then_ else_:term) : Dv term
 
