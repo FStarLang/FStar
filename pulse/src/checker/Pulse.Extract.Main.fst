@@ -409,7 +409,13 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
       let e1 = extract_dv g head in
       let g, x = extend_env'_binder g binder in
       let body = extract_dv g (open_st_term_nv body x) in
-      ECL.mk_let b' e1 (close_term body x._2)
+      if Tm_Abs? head.term then
+        // Create a pure let binding for inner functions.
+        // This allow extraction to remove them if they're not used,
+        // otherwise we get too much magic.
+        ECL.mk_pure_let b' e1 (close_term body x._2)
+      else
+        ECL.mk_let b' e1 (close_term body x._2)
 
     | Tm_TotBind { binder; head; body } ->
       let b' = extract_dv_binder binder None in
