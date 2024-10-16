@@ -3740,19 +3740,30 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
     env, []
 
   | Friend lid ->
-    if Env.iface env
-    then raise_error d Errors.Fatal_FriendInterface
-                      "'friend' declarations are not allowed in interfaces"
-    else if not (FStarC.Parser.Dep.module_has_interface (Env.dep_graph env) (Env.current_module env))
-    then raise_error d Errors.Fatal_FriendInterface
-                      "'friend' declarations are not allowed in modules that lack interfaces"
-    else if not (FStarC.Parser.Dep.module_has_interface (Env.dep_graph env) lid)
-    then raise_error d Errors.Fatal_FriendInterface
-                      "'friend' declarations cannot refer to modules that lack interfaces"
-    else if not (FStarC.Parser.Dep.deps_has_implementation (Env.dep_graph env) lid)
-    then raise_error d Errors.Fatal_FriendInterface
-                      "'friend' module has not been loaded; recompute dependences (C-c C-r) if in interactive mode"
-    else env, []
+    (* Several checks to accept a friend declaration. *)
+    let open FStarC.Errors in
+    let open FStarC.Pprint in
+    let open FStarC.Class.PP in
+    if Env.iface env then
+      raise_error d Errors.Fatal_FriendInterface [
+        text "'friend' declarations are not allowed in interfaces.";
+      ];
+    if not (FStarC.Parser.Dep.module_has_interface (Env.dep_graph env) (Env.current_module env)) then
+      raise_error d Errors.Fatal_FriendInterface [
+        text "'friend' declarations are not allowed in modules that lack interfaces.";
+        text "Suggestion: add an interface for module" ^/^ pp (Env.current_module env);
+      ];
+    if not (FStarC.Parser.Dep.deps_has_implementation (Env.dep_graph env) lid) then
+      raise_error d Errors.Fatal_FriendInterface [
+        text "'friend' module" ^/^ pp lid ^/^ text "not found";
+        text "Suggestion: recompute dependences (C-c C-r) if in interactive mode.";
+      ];
+    if not (FStarC.Parser.Dep.module_has_interface (Env.dep_graph env) lid) then
+      raise_error d Errors.Fatal_FriendInterface [
+        text "'friend' declarations cannot refer to modules that lack interfaces.";
+        text "Suggestion: add an interfce for module" ^/^ pp lid;
+      ];
+    env, []
 
   | Include (lid, restriction) ->
     let env = Env.push_include env lid restriction in
