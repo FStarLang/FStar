@@ -13,6 +13,7 @@
     pprint
     process
     sedlex
+    mtime.clock
  )
  (modes native byte)
  ; ^ Note: we need to compile fstar-lib in bytecode since some
