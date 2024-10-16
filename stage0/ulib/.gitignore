@@ -1,0 +1,14 @@
+*.fst-ver
+*.fsti-ver
+*.mgen
+.depend*
+fs/extracted
+[Bb]in/
+[Oo]bj/
+*.bak
+
+dep.graph
+dep_simpl.graph
+depgraph.pdf
+
+depgraph-*
