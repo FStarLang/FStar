@@ -37,6 +37,7 @@ open FStarC.Class.Show
 open FStarC.Class.Tagged
 open FStarC.Class.PP
 open FStarC.Class.Setlike
+open FStarC.Class.Ord
 
 module S  = FStarC.Syntax.Syntax
 module SP  = FStarC.Syntax.Print
@@ -284,23 +285,33 @@ let run_phase1 (f:unit -> 'a) =
 let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
     let env0 = env in
     let env = Env.set_range env r in
-    let check_quals_eq l qopt val_q = match qopt with
+    let check_quals_eq (l:lident) (qopt : option (list qualifier)) (val_q : list qualifier) : option (list qualifier) =
+      match qopt with
       | None -> Some val_q
       | Some q' ->
         //logic is now a deprecated qualifier, so discard it from the checking
         //AR: 05/19: drop irreducible also
         //           irreducible is not allowed on val, but one could add it on let
-        let drop_logic_and_irreducible = List.filter (fun x -> not (x = Logic || x = Irreducible)) in
-        if (let val_q, q' = drop_logic_and_irreducible val_q, drop_logic_and_irreducible q' in
-            List.length val_q = List.length q'
-            && List.forall2 U.qualifier_equal val_q q')
-        then Some q'  //but retain it in the returned list of qualifiers, some code may still add type annotations of Type0, which will hinder `logical` inference
-        else
+        let drop_logic_and_irreducible = List.filter (fun x -> not (Logic? x || Irreducible? x)) in
+        let val_q = drop_logic_and_irreducible val_q in
+        //but we retain it in the returned list of qualifiers, some code may still add type annotations of Type0, which will hinder `logical` inference
+        let q'0 = q' in
+        let q' = drop_logic_and_irreducible q' in
+        match Class.Ord.ord_list_diff val_q q' with
+        | [], [] -> Some q'0
+        | d1, d2 ->
           let open FStarC.Pprint in
           raise_error r Errors.Fatal_InconsistentQualifierAnnotation [
               text "Inconsistent qualifier annotations on" ^/^ doc_of_string (show l);
               prefix 4 1 (text "Expected") (squotes (arbitrary_string (show val_q))) ^/^
-              prefix 4 1 (text "got") (squotes (arbitrary_string (show q')))
+              prefix 4 1 (text "got") (squotes (arbitrary_string (show q')));
+
+              if Cons? d1 then
+                prefix 2 1 (text "Only in declaration: ") (squotes (arbitrary_string (show d1)))
+              else empty;
+              if Cons? d2 then
+                prefix 2 1 (text "Only in definition: ") (squotes (arbitrary_string (show d2)))
+              else empty;
             ]
     in
 

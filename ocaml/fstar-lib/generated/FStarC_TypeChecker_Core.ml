@@ -429,21 +429,18 @@ let (showable_context : context FStarC_Class_Show.showable) =
     FStarC_Class_Show.show =
       (fun context1 ->
          let uu___ =
-           FStarC_Class_Show.show
-             (FStarC_Class_Show.printableshow
-                FStar_Class_Printable.printable_bool) context1.no_guard in
+           FStarC_Class_Show.show FStarC_Class_Show.showable_bool
+             context1.no_guard in
          let uu___1 =
-           FStarC_Class_Show.show
-             (FStarC_Class_Show.printableshow
-                FStar_Class_Printable.printable_bool) context1.unfolding_ok in
+           FStarC_Class_Show.show FStarC_Class_Show.showable_bool
+             context1.unfolding_ok in
          let uu___2 =
            let uu___3 =
              FStarC_Compiler_List.map FStar_Pervasives_Native.fst
                context1.error_context in
            FStarC_Class_Show.show
-             (FStarC_Class_Show.show_list
-                (FStarC_Class_Show.printableshow
-                   FStar_Class_Printable.printable_string)) uu___3 in
+             (FStarC_Class_Show.show_list FStarC_Class_Show.showable_string)
+             uu___3 in
          FStarC_Compiler_Util.format3
            "{no_guard=%s; unfolding_ok=%s; error_context=%s}" uu___ uu___1
            uu___2)
@@ -7962,9 +7959,7 @@ let (check_term_top_gh :
              then
                let uu___2 =
                  let uu___3 = get_goal_ctr () in
-                 FStarC_Class_Show.show
-                   (FStarC_Class_Show.printableshow
-                      FStar_Class_Printable.printable_int) uu___3 in
+                 FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___3 in
                FStarC_Compiler_Util.print1 "(%s) Entering core ... \n" uu___2
              else ());
             (let uu___2 =
@@ -7974,9 +7969,7 @@ let (check_term_top_gh :
              then
                let uu___3 =
                  let uu___4 = get_goal_ctr () in
-                 FStarC_Class_Show.show
-                   (FStarC_Class_Show.printableshow
-                      FStar_Class_Printable.printable_int) uu___4 in
+                 FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___4 in
                let uu___4 =
                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term e in
                let uu___5 =
@@ -8206,13 +8199,11 @@ let (check_term_equality :
                let uu___3 =
                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t1 in
                let uu___4 =
-                 FStarC_Class_Show.show
-                   (FStarC_Class_Show.printableshow
-                      FStar_Class_Printable.printable_bool) guard_ok in
+                 FStarC_Class_Show.show FStarC_Class_Show.showable_bool
+                   guard_ok in
                let uu___5 =
-                 FStarC_Class_Show.show
-                   (FStarC_Class_Show.printableshow
-                      FStar_Class_Printable.printable_bool) unfolding_ok1 in
+                 FStarC_Class_Show.show FStarC_Class_Show.showable_bool
+                   unfolding_ok1 in
                FStarC_Compiler_Util.print4
                  "Entering check_term_equality with %s and %s (guard_ok=%s; unfolding_ok=%s) {\n"
                  uu___2 uu___3 uu___4 uu___5
@@ -8236,8 +8227,7 @@ let (check_term_equality :
                   FStarC_Class_Show.show
                     (showable_result
                        (FStarC_Class_Show.show_tuple2
-                          (FStarC_Class_Show.printableshow
-                             FStar_Class_Printable.printable_unit)
+                          FStarC_Class_Show.showable_unit
                           (FStarC_Class_Show.show_option
                              FStarC_Syntax_Print.showable_term))) r in
                 FStarC_Compiler_Util.print3

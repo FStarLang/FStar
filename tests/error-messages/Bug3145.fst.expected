@@ -25,5 +25,3 @@ let t3 = Prims.int & (Prims.int & Prims.int)
 let t4 = Prims.int & Prims.int & Prims.int
 ]
 
-Verified module: Bug3145
-All verification conditions discharged successfully

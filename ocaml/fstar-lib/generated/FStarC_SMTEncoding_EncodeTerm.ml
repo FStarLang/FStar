@@ -258,13 +258,9 @@ let raise_arity_mismatch :
         fun rng ->
           let uu___ =
             let uu___1 =
-              FStarC_Class_Show.show
-                (FStarC_Class_Show.printableshow
-                   FStar_Class_Printable.printable_int) arity in
+              FStarC_Class_Show.show FStarC_Class_Show.showable_int arity in
             let uu___2 =
-              FStarC_Class_Show.show
-                (FStarC_Class_Show.printableshow
-                   FStar_Class_Printable.printable_int) n_args in
+              FStarC_Class_Show.show FStarC_Class_Show.showable_int n_args in
             FStarC_Compiler_Util.format3
               "Head symbol %s expects at least %s arguments; got only %s"
               head uu___1 uu___2 in

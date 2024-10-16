@@ -235,13 +235,14 @@ let unembed_tactic_0 :
                                         let uu___3 =
                                           let uu___4 =
                                             FStarC_Pprint.doc_of_string
-                                              "Reduction stopped at: " in
+                                              "Reduction stopped at:" in
                                           let uu___5 =
                                             FStarC_Class_PP.pp
                                               FStarC_Syntax_Print.pretty_term
                                               h_result in
-                                          FStarC_Pprint.op_Hat_Hat uu___4
-                                            uu___5 in
+                                          FStarC_Pprint.prefix
+                                            (Prims.of_int (2)) Prims.int_one
+                                            uu___4 uu___5 in
                                         [uu___3; maybe_admit_tip] in
                                       uu___1 :: uu___2 in
                                     FStarC_Errors.raise_error
@@ -1050,8 +1051,7 @@ let run_unembedded_tactic_on_ps :
                             then
                               let uu___8 =
                                 FStarC_Class_Show.show
-                                  (FStarC_Class_Show.printableshow
-                                     FStar_Class_Printable.printable_nat)
+                                  FStarC_Class_Show.showable_nat
                                   (FStarC_Compiler_List.length
                                      ps3.FStarC_Tactics_Types.all_implicits) in
                               let uu___9 =
@@ -1072,8 +1072,7 @@ let run_unembedded_tactic_on_ps :
                              then
                                let uu___9 =
                                  FStarC_Class_Show.show
-                                   (FStarC_Class_Show.printableshow
-                                      FStar_Class_Printable.printable_nat)
+                                   FStarC_Class_Show.showable_nat
                                    (FStarC_Compiler_List.length
                                       ps3.FStarC_Tactics_Types.all_implicits) in
                                let uu___10 =
@@ -1176,8 +1175,7 @@ let run_tactic_on_ps' :
                            FStarC_Syntax_Print.showable_term tactic in
                        let uu___3 =
                          FStarC_Class_Show.show
-                           (FStarC_Class_Show.printableshow
-                              FStar_Class_Printable.printable_bool)
+                           FStarC_Class_Show.showable_bool
                            tactic_already_typed in
                        FStarC_Compiler_Util.print2
                          "Typechecking tactic: (%s) (already_typed: %s) {\n"

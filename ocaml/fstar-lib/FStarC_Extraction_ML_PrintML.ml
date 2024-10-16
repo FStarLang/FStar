@@ -538,7 +538,7 @@ let print (out_dir: string option) (ext: string) (ml: mllib) =
      let new_doc = FStarC_Extraction_ML_Code.doc_of_mllib ml in
      iter (fun (n, d) ->
          FStarC_Compiler_Util.write_file
-           (FStarC_Options.prepend_output_dir (BatString.concat "" [n;ext]))
+           (FStarC_Find.prepend_output_dir (BatString.concat "" [n;ext]))
            (FStarC_Extraction_ML_Code.pretty (Prims.parse_int "120") d)
            ) new_doc
   | _ -> failwith "Unrecognized extension"

@@ -20,6 +20,8 @@ OTHERFLAGS := $(filter-out --query_stats, $(OTHERFLAGS))
 OTHERFLAGS := $(filter-out --hint_info, $(OTHERFLAGS))
 OTHERFLAGS += --ext fstar:no_absolute_paths
 
+OTHERFLAGS += --silent # Make sure we are silent
+
 check-all: $(addsuffix .human_check, $(FSTAR_FILES)) \
            $(addsuffix .json_check, $(FSTAR_FILES))
 

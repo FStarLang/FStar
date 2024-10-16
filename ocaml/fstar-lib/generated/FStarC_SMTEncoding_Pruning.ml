@@ -89,8 +89,7 @@ let (print_pruning_state : pruning_state -> Prims.string) =
                    FStarC_Class_Show.show
                      (FStarC_Class_Show.show_list
                         (FStarC_Compiler_RBSet.showable_rbset
-                           (FStarC_Class_Show.printableshow
-                              FStar_Class_Printable.printable_string))) v in
+                           FStarC_Class_Show.showable_string)) v in
                  FStarC_Compiler_Util.format2 "[%s -> %s]" k uu___1 in
                uu___ :: acc) [] in
     let macros =
@@ -102,19 +101,15 @@ let (print_pruning_state : pruning_state -> Prims.string) =
                  let uu___1 =
                    FStarC_Class_Show.show
                      (FStarC_Class_Show.show_list
-                        (FStarC_Class_Show.printableshow
-                           FStar_Class_Printable.printable_string)) v in
+                        FStarC_Class_Show.showable_string) v in
                  FStarC_Compiler_Util.format2 "[%s -> %s]" k uu___1 in
                uu___ :: acc) [] in
     let uu___ =
       let uu___1 =
         FStarC_Compiler_List.map
           (FStarC_Class_Show.show
-             (FStarC_Class_Show.show_tuple2
-                (FStarC_Class_Show.printableshow
-                   FStar_Class_Printable.printable_string)
-                (FStarC_Class_Show.printableshow
-                   FStar_Class_Printable.printable_int))) t_to_a1 in
+             (FStarC_Class_Show.show_tuple2 FStarC_Class_Show.showable_string
+                FStarC_Class_Show.showable_int)) t_to_a1 in
       FStarC_Compiler_String.concat "\n\t" uu___1 in
     FStarC_Compiler_Util.format3
       "Pruning state:\n\tTriggers to assumptions:\n\t%s\nAssumptions to triggers:\n\t%s\nMacros:\n\t%s\n"

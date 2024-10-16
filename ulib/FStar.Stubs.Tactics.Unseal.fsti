@@ -16,7 +16,7 @@
 (**
 The [unseal] primitive to observe sealed values.
 *)
-module FStar.Tactics.Unseal
+module FStar.Stubs.Tactics.Unseal
 
 open FStar.Sealed
 open FStar.Tactics.Effect

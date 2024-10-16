@@ -30,5 +30,3 @@
   - Inductive type NegativeTests.Positivity.t11 does not satisfy the strict positivity condition
 
 >>]
-Verified module: NegativeTests.Positivity
-All verification conditions discharged successfully

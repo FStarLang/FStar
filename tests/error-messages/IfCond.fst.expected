@@ -3,5 +3,3 @@
   - Expected expression of type Prims.bool got expression 2 of type Prims.int
 
 >>]
-Verified module: IfCond
-All verification conditions discharged successfully

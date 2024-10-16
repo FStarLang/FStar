@@ -706,10 +706,8 @@ let rec (typ_to_doc : typ -> FStarC_Pprint.document) =
               FStarC_Class_Show.show
                 (FStarC_Class_Show.show_tuple2
                    (FStarC_Class_Show.show_list
-                      (FStarC_Class_Show.printableshow
-                         FStar_Class_Printable.printable_string))
-                   (FStarC_Class_Show.printableshow
-                      FStar_Class_Printable.printable_string)) x in
+                      FStarC_Class_Show.showable_string)
+                   FStarC_Class_Show.showable_string) x in
             FStarC_Pprint.doc_of_string uu___2 in
           [uu___1] in
         ctor "TQualified" uu___
@@ -733,10 +731,8 @@ let rec (typ_to_doc : typ -> FStarC_Pprint.document) =
               FStarC_Class_Show.show
                 (FStarC_Class_Show.show_tuple2
                    (FStarC_Class_Show.show_list
-                      (FStarC_Class_Show.printableshow
-                         FStar_Class_Printable.printable_string))
-                   (FStarC_Class_Show.printableshow
-                      FStar_Class_Printable.printable_string)) x in
+                      FStarC_Class_Show.showable_string)
+                   FStarC_Class_Show.showable_string) x in
             FStarC_Pprint.doc_of_string uu___2 in
           let uu___2 = let uu___3 = pp_list' typ_to_doc xs in [uu___3] in
           uu___1 :: uu___2 in

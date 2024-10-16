@@ -9182,11 +9182,10 @@ and (desugar_decl_maybe_fail_attr :
         FStar_Pervasives_Native.snd uu___ in
       let uu___ =
         let attrs =
-          let uu___1 =
-            FStarC_Compiler_List.map (desugar_term env)
-              d.FStarC_Parser_AST.attrs in
-          FStarC_Syntax_Util.deduplicate_terms uu___1 in
-        let uu___1 = get_fail_attr false attrs in
+          FStarC_Compiler_List.map (desugar_term env)
+            d.FStarC_Parser_AST.attrs in
+        let attrs1 = FStarC_Syntax_Util.deduplicate_terms attrs in
+        let uu___1 = get_fail_attr false attrs1 in
         match uu___1 with
         | FStar_Pervasives_Native.Some (expected_errs, lax) ->
             let d1 =
@@ -9202,7 +9201,7 @@ and (desugar_decl_maybe_fail_attr :
               FStarC_Errors.catch_errors
                 (fun uu___3 ->
                    FStarC_Options.with_saved_options
-                     (fun uu___4 -> desugar_decl_core env attrs d1)) in
+                     (fun uu___4 -> desugar_decl_core env attrs1 d1)) in
             (match uu___2 with
              | (errs, r) ->
                  (match (errs, r) with
@@ -9210,7 +9209,7 @@ and (desugar_decl_maybe_fail_attr :
                       let ses1 =
                         FStarC_Compiler_List.map
                           (fun se ->
-                             let uu___3 = no_fail_attrs attrs in
+                             let uu___3 = no_fail_attrs attrs1 in
                              {
                                FStarC_Syntax_Syntax.sigel =
                                  (se.FStarC_Syntax_Syntax.sigel);
@@ -9242,7 +9241,7 @@ and (desugar_decl_maybe_fail_attr :
                           FStarC_Syntax_Syntax.sigquals = [];
                           FStarC_Syntax_Syntax.sigmeta =
                             FStarC_Syntax_Syntax.default_sigmeta;
-                          FStarC_Syntax_Syntax.sigattrs = attrs;
+                          FStarC_Syntax_Syntax.sigattrs = attrs1;
                           FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___3;
                           FStarC_Syntax_Syntax.sigopts =
                             FStar_Pervasives_Native.None
@@ -9315,19 +9314,13 @@ and (desugar_decl_maybe_fail_attr :
                                       let uu___12 =
                                         let uu___13 =
                                           FStarC_Class_Show.show
-                                            (FStarC_Class_Show.printableshow
-                                               FStar_Class_Printable.printable_int)
-                                            e in
+                                            FStarC_Class_Show.showable_int e in
                                         let uu___14 =
                                           FStarC_Class_Show.show
-                                            (FStarC_Class_Show.printableshow
-                                               FStar_Class_Printable.printable_int)
-                                            n2 in
+                                            FStarC_Class_Show.showable_int n2 in
                                         let uu___15 =
                                           FStarC_Class_Show.show
-                                            (FStarC_Class_Show.printableshow
-                                               FStar_Class_Printable.printable_int)
-                                            n1 in
+                                            FStarC_Class_Show.showable_int n1 in
                                         FStarC_Compiler_Util.format3
                                           "Error #%s was raised %s times, instead of %s."
                                           uu___13 uu___14 uu___15 in
@@ -9341,7 +9334,7 @@ and (desugar_decl_maybe_fail_attr :
                                      FStarC_Errors_Msg.is_error_message_list_doc)
                                   (Obj.magic uu___8));
                                (env0, []))))))
-        | FStar_Pervasives_Native.None -> desugar_decl_core env attrs d in
+        | FStar_Pervasives_Native.None -> desugar_decl_core env attrs1 d in
       match uu___ with | (env1, sigelts) -> (env1, sigelts)
 and (desugar_decl :
   env_t -> FStarC_Parser_AST.decl -> (env_t * FStarC_Syntax_Syntax.sigelts))
@@ -9827,13 +9820,16 @@ and (desugar_decl_core :
                                           (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
                                       (match uu___6 with
                                        | (qs', ats') ->
-                                           ((FStarC_Compiler_List.op_At qs'
-                                               qs),
-                                             (FStarC_Compiler_List.op_At ats'
-                                                ats)))) fvs ([], []) in
+                                           ((FStarC_Compiler_List.rev_append
+                                               qs' qs),
+                                             (FStarC_Compiler_List.rev_append
+                                                ats' ats)))) fvs ([], []) in
                          (match uu___4 with
                           | (val_quals, val_attrs) ->
-                              let top_attrs = d_attrs in
+                              let top_attrs =
+                                FStarC_Syntax_Util.deduplicate_terms
+                                  (FStarC_Compiler_List.rev_append val_attrs
+                                     d_attrs) in
                               let lbs1 =
                                 let uu___5 = lbs in
                                 match uu___5 with
@@ -9843,10 +9839,9 @@ and (desugar_decl_core :
                                         (fun lb ->
                                            let uu___6 =
                                              FStarC_Syntax_Util.deduplicate_terms
-                                               (FStarC_Compiler_List.op_At
+                                               (FStarC_Compiler_List.rev_append
                                                   lb.FStarC_Syntax_Syntax.lbattrs
-                                                  (FStarC_Compiler_List.op_At
-                                                     val_attrs top_attrs)) in
+                                                  top_attrs) in
                                            {
                                              FStarC_Syntax_Syntax.lbname =
                                                (lb.FStarC_Syntax_Syntax.lbname);
@@ -9889,10 +9884,6 @@ and (desugar_decl_core :
                                   fvs in
                               let s =
                                 let uu___5 =
-                                  FStarC_Syntax_Util.deduplicate_terms
-                                    (FStarC_Compiler_List.op_At val_attrs
-                                       top_attrs) in
-                                let uu___6 =
                                   FStarC_Syntax_DsEnv.opens_and_abbrevs env in
                                 {
                                   FStarC_Syntax_Syntax.sigel =
@@ -9906,9 +9897,9 @@ and (desugar_decl_core :
                                   FStarC_Syntax_Syntax.sigquals = quals2;
                                   FStarC_Syntax_Syntax.sigmeta =
                                     FStarC_Syntax_Syntax.default_sigmeta;
-                                  FStarC_Syntax_Syntax.sigattrs = uu___5;
+                                  FStarC_Syntax_Syntax.sigattrs = top_attrs;
                                   FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                                    uu___6;
+                                    uu___5;
                                   FStarC_Syntax_Syntax.sigopts =
                                     FStar_Pervasives_Native.None
                                 } in

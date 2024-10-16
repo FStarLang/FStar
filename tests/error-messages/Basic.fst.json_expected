@@ -34,5 +34,3 @@
 >> Got issues: [
 {"msg":["Assertion failed","The SMT solver could not prove the query. Use --query_stats for more details."],"level":"Error","range":{"def":{"file_name":"Prims.fst","start_pos":{"line":451,"col":90},"end_pos":{"line":451,"col":102}},"use":{"file_name":"Basic.fst","start_pos":{"line":23,"col":46},"end_pos":{"line":23,"col":48}}},"number":19,"ctx":["While typechecking the top-level declaration `let test6`","While typechecking the top-level declaration `[@@expect_failure] let test6`"]}
 >>]
-Verified module: Basic
-All verification conditions discharged successfully

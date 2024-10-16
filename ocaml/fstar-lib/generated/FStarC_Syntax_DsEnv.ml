@@ -3113,8 +3113,7 @@ let elab_restriction :
                                      | nth2 ->
                                          let uu___5 =
                                            FStarC_Class_Show.show
-                                             (FStarC_Class_Show.printableshow
-                                                FStar_Class_Printable.printable_int)
+                                             FStarC_Class_Show.showable_int
                                              (nth2 + Prims.int_one) in
                                          Prims.strcat uu___5 "th" in
                                    let uu___5 =
@@ -3149,8 +3148,7 @@ let elab_restriction :
                           let uu___4 =
                             let uu___5 =
                               FStarC_Class_Show.show
-                                (FStarC_Class_Show.printableshow
-                                   FStar_Class_Printable.printable_int)
+                                FStarC_Class_Show.showable_int
                                 ((FStarC_Compiler_List.length others) +
                                    Prims.int_one) in
                             Prims.strcat uu___5 " times" in

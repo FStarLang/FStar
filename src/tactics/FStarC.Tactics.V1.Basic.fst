@@ -157,7 +157,7 @@ let tacprint2 (s:string) x y   = BU.print1 "TAC>> %s\n" (BU.format2 s x y)
 let tacprint3 (s:string) x y z = BU.print1 "TAC>> %s\n" (BU.format3 s x y z)
 
 let print (msg:string) : tac unit =
-    if not (Options.silent ()) then
+    if not (Options.silent ()) || Options.interactive () then
       tacprint msg;
     ret ()
 

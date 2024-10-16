@@ -54,8 +54,7 @@ let (dynlink : Prims.string -> unit) =
                             FStarC_Errors.errno
                               FStarC_Errors_Codes.Error_PluginDynlink in
                           FStarC_Class_Show.show
-                            (FStarC_Class_Show.printableshow
-                               FStar_Class_Printable.printable_int) uu___14 in
+                            FStarC_Class_Show.showable_int uu___14 in
                         FStarC_Compiler_Util.format1
                           "Remove the `--load` option or use `--warn_error -%s` to ignore and continue."
                           uu___13 in
@@ -120,8 +119,8 @@ let (compile_modules : Prims.string -> Prims.string Prims.list -> unit) =
         let env_setter =
           FStarC_Compiler_Util.format5
             "env OCAMLPATH=\"%s/../lib/%s%s/%s%s\""
-            FStarC_Options.fstar_bin_directory ocamlpath_sep
-            FStarC_Options.fstar_bin_directory ocamlpath_sep old_ocamlpath in
+            FStarC_Find.fstar_bin_directory ocamlpath_sep
+            FStarC_Find.fstar_bin_directory ocamlpath_sep old_ocamlpath in
         let cmd =
           FStarC_Compiler_String.concat " " (env_setter :: "ocamlfind" ::
             args) in
@@ -135,9 +134,7 @@ let (compile_modules : Prims.string -> Prims.string Prims.list -> unit) =
               let uu___3 =
                 let uu___4 =
                   let uu___5 =
-                    FStarC_Class_Show.show
-                      (FStarC_Class_Show.printableshow
-                         FStar_Class_Printable.printable_int) rc in
+                    FStarC_Class_Show.show FStarC_Class_Show.showable_int rc in
                   FStarC_Compiler_Util.format2
                     "Command\n`%s`\nreturned with exit code %s" cmd uu___5 in
                 FStarC_Errors_Msg.text uu___4 in

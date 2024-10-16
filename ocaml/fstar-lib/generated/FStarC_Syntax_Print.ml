@@ -21,9 +21,7 @@ let (bv_to_string : FStarC_Syntax_Syntax.bv -> Prims.string) =
           bv.FStarC_Syntax_Syntax.ppname in
       let uu___2 =
         let uu___3 =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_int)
+          FStarC_Class_Show.show FStarC_Class_Show.showable_int
             bv.FStarC_Syntax_Syntax.index in
         Prims.strcat "#" uu___3 in
       Prims.strcat uu___1 uu___2

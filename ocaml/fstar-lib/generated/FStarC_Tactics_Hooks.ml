@@ -640,9 +640,7 @@ let (preprocess :
                                  then
                                    let uu___7 =
                                      FStarC_Class_Show.show
-                                       (FStarC_Class_Show.printableshow
-                                          FStar_Class_Printable.printable_int)
-                                       n in
+                                       FStarC_Class_Show.showable_int n in
                                    let uu___8 =
                                      let uu___9 =
                                        FStarC_Tactics_Types.goal_type g in
@@ -1536,8 +1534,7 @@ let (spinoff_strictly_positive_goals :
                       let uu___7 =
                         let uu___8 =
                           FStarC_Class_Show.show
-                            (FStarC_Class_Show.printableshow
-                               FStar_Class_Printable.printable_nat)
+                            FStarC_Class_Show.showable_nat
                             (FStarC_Compiler_List.length gs3) in
                         FStarC_Compiler_Util.format1
                           "Split query into %s sub-goals" uu___8 in
@@ -1629,9 +1626,7 @@ let (solve_implicits :
                  if uu___3
                  then
                    let uu___4 =
-                     FStarC_Class_Show.show
-                       (FStarC_Class_Show.printableshow
-                          FStar_Class_Printable.printable_nat)
+                     FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                        (FStarC_Compiler_List.length gs) in
                    FStarC_Compiler_Util.print1
                      "solve_implicits produced %s goals\n" uu___4
@@ -1866,8 +1861,7 @@ let (splice :
                                              let uu___10 =
                                                let uu___11 =
                                                  FStarC_Class_Show.show
-                                                   (FStarC_Class_Show.printableshow
-                                                      FStar_Class_Printable.printable_nat)
+                                                   FStarC_Class_Show.showable_nat
                                                    (FStarC_Compiler_List.length
                                                       uvs) in
                                                FStarC_Compiler_Util.format1

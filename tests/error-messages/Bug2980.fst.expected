@@ -5,5 +5,3 @@
     of type _: Prims.int -> Type0
 
 >>]
-Verified module: Bug2980
-All verification conditions discharged successfully

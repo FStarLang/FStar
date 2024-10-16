@@ -1,10 +1,30 @@
 module FStarC.Class.Show
 
 open FStarC.Compiler.Effect
-open FStar.Class.Printable
 
-instance printableshow (_ : printable 'a) : Tot (showable 'a) = {
-  show = to_string;
+instance showable_unit : showable unit =
+{
+  show = (fun _ -> "()")
+}
+
+instance showable_bool : showable bool =
+{
+  show = Prims.string_of_bool
+}
+
+instance showable_nat : showable nat =
+{
+  show = Prims.string_of_int
+}
+
+instance showable_int : showable int =
+{
+  show = Prims.string_of_int
+}
+
+instance showable_string : showable string =
+{
+  show = fun x -> "\"" ^ x ^ "\""
 }
 
 instance show_list (a:Type) (_ : showable a) : Tot (showable (list a)) = {

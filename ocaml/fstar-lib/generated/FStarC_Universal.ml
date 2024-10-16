@@ -1082,7 +1082,7 @@ let (emit :
                                           FStarC_Parser_Dep.deps_of_modul
                                             dep_graph uu___5 in
                                         let uu___5 =
-                                          FStarC_Options.prepend_output_dir
+                                          FStarC_Find.prepend_output_dir
                                             (Prims.strcat filename ext) in
                                         FStarC_Compiler_Util.save_value_to_file
                                           uu___5 (deps, bindings, decls)
@@ -1105,10 +1105,9 @@ let (emit :
               | uu___1 ->
                   (match programs with
                    | (name, uu___2)::[] ->
-                       FStarC_Options.prepend_output_dir
-                         (Prims.strcat name ext)
+                       FStarC_Find.prepend_output_dir (Prims.strcat name ext)
                    | uu___2 ->
-                       FStarC_Options.prepend_output_dir
+                       FStarC_Find.prepend_output_dir
                          (Prims.strcat "out" ext)) in
             FStarC_Compiler_Util.save_value_to_file oname bin
         | uu___ -> fail ()
@@ -1174,12 +1173,7 @@ let (tc_one_file :
                              tcmod) in
                     match uu___4 with | (env2, uu___5) -> env2) in
            let tc_source_file uu___1 =
-             let uu___2 =
-               let uu___3 =
-                 let uu___4 = FStarC_Parser_Dep.module_name_of_file fn in
-                 FStar_Pervasives_Native.Some uu___4 in
-               FStarC_Profiling.profile (fun uu___4 -> parse env pre_fn fn)
-                 uu___3 "FStarC.Universal.parse" in
+             let uu___2 = parse env pre_fn fn in
              match uu___2 with
              | (fmod, env1) ->
                  let mii =
@@ -1207,17 +1201,8 @@ let (tc_one_file :
                                failwith
                                  "Impossible: gamma contains leaked names");
                           (let uu___6 =
-                             let uu___7 =
-                               let uu___8 =
-                                 FStarC_Ident.string_of_lid
-                                   fmod.FStarC_Syntax_Syntax.name in
-                               FStar_Pervasives_Native.Some uu___8 in
-                             FStarC_Profiling.profile
-                               (fun uu___8 ->
-                                  FStarC_TypeChecker_Tc.check_module tcenv
-                                    fmod
-                                    (FStarC_Compiler_Util.is_some pre_fn))
-                               uu___7 "FStarC.Universal.tc_check_module" in
+                             FStarC_TypeChecker_Tc.check_module tcenv fmod
+                               (FStarC_Compiler_Util.is_some pre_fn) in
                            match uu___6 with
                            | (modul, env3) ->
                                (maybe_restore_opts ();
@@ -1227,16 +1212,8 @@ let (tc_one_file :
                                      Prims.op_Negation uu___9 in
                                    if uu___8
                                    then
-                                     let uu___9 =
-                                       let uu___10 =
-                                         FStarC_Ident.string_of_lid
-                                           fmod.FStarC_Syntax_Syntax.name in
-                                       FStar_Pervasives_Native.Some uu___10 in
-                                     FStarC_Profiling.profile
-                                       (fun uu___10 ->
-                                          FStarC_SMTEncoding_Encode.encode_modul
-                                            env3 modul) uu___9
-                                       "FStarC.Universal.encode_module"
+                                     FStarC_SMTEncoding_Encode.encode_modul
+                                       env3 modul
                                    else ([], []) in
                                  ((modul, smt_decls), env3))))) in
                    let uu___4 =

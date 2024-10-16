@@ -16,5 +16,3 @@
 >> Got issues: [
 {"msg":["Bound variable\n'z'\nwould escape in the type of this letbinding","Add a type annotation that does not mention it"],"level":"Error","range":{"def":{"file_name":"Bug3102.fst","start_pos":{"line":49,"col":16},"end_pos":{"line":51,"col":7}},"use":{"file_name":"Bug3102.fst","start_pos":{"line":49,"col":16},"end_pos":{"line":51,"col":7}}},"number":56,"ctx":["While checking for escaped variables","While typechecking the top-level declaration `let g`","While typechecking the top-level declaration `[@@expect_failure] let g`"]}
 >>]
-Verified module: Bug3102
-All verification conditions discharged successfully

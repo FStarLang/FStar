@@ -1631,6 +1631,13 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     "locate_ocaml",
     Const (Bool true),
     text "Print the root of the built OCaml F* library and exit");
+  ( noshort,
+    "ocamlenv",
+    WithSideEffect ((fun _ -> print_error "--ocamlenv must be the first argument, see fstar.exe --help for details\n"; exit 1),
+                     (Const (Bool true))),
+    text "With no arguments: print shell code to set up an environment with the OCaml libraries in scope (similar to 'opam env'). \
+          With arguments: run a command in that environment. \
+          NOTE: this must be the FIRST argument passed to F* and other options are NOT processed.");
   ]
 
 and specs (warn_unsafe:bool) : list (FStarC.Getopt.opt & Pprint.document) =
@@ -1835,72 +1842,12 @@ let should_print_message m =
     then m <> "Prims"
     else false
 
-let read_fstar_include (fn : string) : option (list string) =
-  try
-    let s = file_get_contents fn in
-    let subdirs = String.split ['\n'] s |> List.filter (fun s -> s <> "" && not (String.get s 0 = '#')) in
-    Some subdirs
-  with
-  | _ ->
-    failwith ("Could not read " ^ fn);
-    None
-
-let rec expand_include_d (dirname : string) : list string =
-  let dot_inc_path = dirname ^ "/fstar.include" in
-  if Util.file_exists dot_inc_path then (
-    let subdirs = Some?.v <| read_fstar_include dot_inc_path in
-    dirname :: List.collect (fun subd -> expand_include_d (dirname ^ "/" ^ subd)) subdirs
-  ) else
-    [dirname]
-
-let expand_include_ds (dirnames : list string) : list string =
-  List.collect expand_include_d dirnames
-
-(* TODO: normalize these paths. This will probably affect makefiles since
-make does not normalize the paths itself. Also, move this whole logic away
-from this module. *)
-let lib_root () : option string =
-  (* No default includes means we don't try to find a library on our own. *)
-  if get_no_default_includes() then
-    None
-  else
-    (* FSTAR_LIB can be set in the environment to override the library *)
-    match Util.expand_environment_variable "FSTAR_LIB" with
-    | Some s -> Some s
-    | None ->
-      (* Otherwise, try to find the library in the default locations. It's ulib/
-      in the repository, and lib/fstar/ in the binary package. *)
-      if Util.file_exists (fstar_bin_directory ^ "/../ulib")
-      then Some (fstar_bin_directory ^ "/../ulib")
-      else if Util.file_exists (fstar_bin_directory ^ "/../lib/fstar")
-      then Some (fstar_bin_directory ^ "/../lib/fstar")
-      else None
-
-let lib_paths () =
-  Common.option_to_list (lib_root ()) |> expand_include_ds
-
-let include_path () =
-  let cache_dir =
-    match get_cache_dir() with
-    | None -> []
-    | Some c -> [c]
-  in
-  let include_paths =
-    get_include () |> expand_include_ds
-  in
-  cache_dir @ lib_paths () @ include_paths @ expand_include_d "."
 
 let custom_prims () = get_prims()
 
-let prepend_output_dir fname =
-  match get_odir() with
-  | None -> fname
-  | Some x -> Util.join_paths x fname
+let cache_dir () = get_cache_dir ()
 
-let prepend_cache_dir fpath =
-  match get_cache_dir() with
-  | None -> fpath
-  | Some x -> Util.join_paths x (Util.basename fpath)
+let include_ () = get_include ()
 
 //Used to parse the options of
 //   --using_facts_from

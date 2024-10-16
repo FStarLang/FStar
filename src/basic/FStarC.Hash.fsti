@@ -3,6 +3,10 @@ open FStarC.Compiler.Effect
 
 type hash_code
 
+(* Unsure whether to expose this. Try not to use it. It's
+useful in hashmap to use zarith imaps. *)
+val to_int : hash_code -> int
+
 val cmp_hash (_ _ : hash_code) : int
 
 val of_int : int -> hash_code

@@ -2,7 +2,7 @@ module FStar.Tactics.TypeRepr
 
 //#set-options "--print_implicits --print_full_names --print_universes"
 
-open FStar.Tactics.V2
+open FStar.Tactics.V2.Bare
 
 let add_suffix (s:string) (nm:name) : name =
   explode_qn (implode_qn nm ^ s)
