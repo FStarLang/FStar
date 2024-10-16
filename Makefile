@@ -374,6 +374,8 @@ bring-stage0: _force
 	find stage0/ulib -name '*.checked' -delete
 	find stage0/ulib -name '*.hints' -delete
 	echo '/lib' >> stage0/.gitignore
+	echo '** -diff -merge' >> stage0/.gitattributes
+	echo '** linguist-generated=true' >> stage0/.gitattributes
 
 watch:
 	while true; do \

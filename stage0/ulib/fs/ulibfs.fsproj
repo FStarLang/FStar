@@ -1,0 +1,104 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <OtherFlags>--nowarn:0086 --mlcompatibility --nologo</OtherFlags>
+    <OutputType>Library</OutputType>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDocumentation>True</GenerateDocumentation>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <VersionPrefix>0.0.3</VersionPrefix>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>fstar-new.png</PackageIcon>
+    <PackageProjectUrl>https://fstar-lang.org/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/FStarLang/FStar</RepositoryUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Note, for now we just ignore some modules and or comment out some code in them. -->
+    <Compile Include="prims.fs" Link="prims.fs" />
+    <Compile Include="FStar_All.fs" Link="FStar_All.fs" />
+    <Compile Include="FStar_Char.fs" Link="FStar_Char.fs" />
+    <Compile Include="FStar_Dyn.fs" Link="FStar_Dyn.fs" />
+    <Compile Include="FStar_Float.fs" Link="FStar_Float.fs" />
+    <Compile Include="FStar_Ghost.fs" Link="FStar_Ghost.fs" />
+    <Compile Include="FStar_Monotonic_Heap.fs" Link="FStar_Monotonic_Heap.fs" />
+    <Compile Include="FStar_CommonST.fs" Link="FStar_CommonST.fs" />
+    <Compile Include="FStar_Heap.fs" Link="FStar_Heap.fs" />
+    <Compile Include="FStar_Int16.fs" Link="FStar_Int16.fs" />
+    <Compile Include="FStar_Int32.fs" Link="FStar_Int32.fs" />
+    <Compile Include="FStar_Int64.fs" Link="FStar_Int64.fs" />
+    <Compile Include="FStar_Int8.fs" Link="FStar_Int8.fs" />
+    <Compile Include="FStar_IO.fs" Link="FStar_IO.fs" />
+    <Compile Include="FStar_List.fs" Link="FStar_List.fs" />
+    <Compile Include="FStar_List_Tot_Base.fs" Link="FStar_List_Tot_Base.fs" />
+    <Compile Include="FStar_Mul.fs" Link="FStar_Mul.fs" />
+    <Compile Include="FStar_Option.fs" Link="FStar_Option.fs" />
+    <Compile Include="FStar_Pervasives_Native.fs" Link="FStar_Pervasives_Native.fs" />
+    <!-- TODO: Set is implemented with extra 'comparison' constraint on key. 
+               Extracted modules that depend on Set (e.g. Map) don't respect this (i.e. constraint is not emitted). 
+               Moreover, both Set and Map modules restrict key with 'eqtype' which only gives decidable equality, 
+               but we should require ordering. 
+               
+               So there are two points to address:
+               1. Emitting constraints for type parameters when extracting F# code (e.g. for eqtype or 'ordered')
+               2. Add 'type ordered = Type{hasOrder 'a}' or similar and use it instead of 'eqtype' in Set/Map interface.
+    -->
+    <Compile Include="FStar_Set.fs" Link="FStar_Set.fs" />
+    <Compile Include="FStar_ST.fs" Link="FStar_ST.fs" />
+    <Compile Include="FStar_Exn.fs" Link="FStar_Exn.fs" />
+    <Compile Include="FStar_String.fs" Link="FStar_String.fs" />
+    <Compile Include="FStar_UInt16.fs" Link="FStar_UInt16.fs" />
+    <Compile Include="FStar_UInt32.fs" Link="FStar_UInt32.fs" />
+    <Compile Include="FStar_UInt64.fs" Link="FStar_UInt64.fs" />
+    <Compile Include="FStar_UInt8.fs" Link="FStar_UInt8.fs" />
+    <Compile Link="FStar_Pervasives.fs" Include="extracted\FStar_Pervasives.fs" />
+    <Compile Link="FStar_Preorder.fs" Include="extracted\FStar_Preorder.fs" />
+    <Compile Link="FStar_Squash.fs" Include="extracted\FStar_Squash.fs" />
+    <Compile Link="FStar_Classical.fs" Include="extracted\FStar_Classical.fs" />
+    <Compile Link="FStar_FunctionalExtensionality.fs" Include="extracted\FStar_FunctionalExtensionality.fs" />
+    <Compile Link="FStar_StrongExcludedMiddle.fs" Include="extracted\FStar_StrongExcludedMiddle.fs" />
+    <Compile Link="FStar_PropositionalExtensionality.fs" Include="extracted\FStar_PropositionalExtensionality.fs" />
+    <Compile Link="FStar_PredicateExtensionality.fs" Include="extracted\FStar_PredicateExtensionality.fs" />
+    <Compile Link="FStar_Monotonic_Witnessed.fs" Include="extracted\FStar_Monotonic_Witnessed.fs" />
+    <!-- TODO: (Warning 341) Expected parameter 'state of witnessed to be unused in its definition and eliminated -->
+    <Compile Link="FStar_List_Tot_Properties.fs" Include="extracted\FStar_List_Tot_Properties.fs" />
+    <Compile Include="FStar_Map.fs" Link="FStar_Map.fs" />
+    <!-- TODO: Map is 'almost' extracted. 
+                                                                         It lacks only the constraint on the key and there's an issue 
+                                                                         with erasure of 'key:eqtype implicit parameter on map_val 
+                                                              -->
+    <Compile Link="FStar_Monotonic_HyperHeap.fs" Include="extracted\FStar_Monotonic_HyperHeap.fs" />
+    <Compile Link="FStar_Monotonic_HyperStack.fs" Include="extracted\FStar_Monotonic_HyperStack.fs" />
+    <!-- TODO: Produces unsafe coerce -->
+    <Compile Link="FStar_HyperStack.fs" Include="extracted\FStar_HyperStack.fs" />
+    <Compile Include="FStar_HyperStack_All.fs" Link="FStar_HyperStack_All.fs" />
+    <Compile Include="FStar_HyperStack_ST.fs" Link="FStar_HyperStack_ST.fs" />
+    <Compile Include="FStar_HyperStack_IO.fs" Link="FStar_HyperStack_IO.fs" />
+    <Compile Link="FStar_Monotonic_Map.fs" Include="extracted\FStar_Monotonic_Map.fs" />
+    <!-- TODO: Produces unsafe coerce -->
+    <Compile Link="FStar_Seq_Base.fs" Include="extracted\FStar_Seq_Base.fs" />
+    <Compile Link="FStar_Seq_Properties.fs" Include="extracted\FStar_Seq_Properties.fs" />
+    <Compile Link="FStar_Seq.fs" Include="extracted\FStar_Seq.fs" />
+    <Compile Link="FStar_Calc.fs" Include="extracted\FStar_Calc.fs" />
+    <Compile Link="FStar_Math_Lib.fs" Include="extracted\FStar_Math_Lib.fs" />
+    <Compile Link="FStar_Math_Lemmas.fs" Include="extracted\FStar_Math_Lemmas.fs" />
+    <Compile Link="FStar_BitVector.fs" Include="extracted\FStar_BitVector.fs" />
+    <Compile Link="FStar_UInt.fs" Include="extracted\FStar_UInt.fs" />
+    <Compile Link="FStar_Int.fs" Include="extracted\FStar_Int.fs" />
+    <Compile Link="FStar_Int_Cast.fs" Include="extracted\FStar_Int_Cast.fs" />
+    <Compile Link="FStar_UInt128.fs" Include="extracted\FStar_UInt128.fs" />
+    <Compile Link="FStar_BigOps.fs" Include="extracted\FStar_BigOps.fs" />
+    <Compile Link="FStar_Int128.fs" Include="extracted\FStar_Int128.fs" />
+    <Compile Link="FStar_Integers.fs" Include="extracted\FStar_Integers.fs" />
+    <Compile Link="FStar_Ref.fs" Include="extracted\FStar_Ref.fs" />
+   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="4.3.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="VS\README.md" Pack="true" PackagePath="\"/>
+    <None Include="VS\fstar-new.png" Pack="true" PackagePath="\"/>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\"/>
+    <None Include="..\..\LICENSE-fsharp.txt" Pack="true" PackagePath="\"/>
+  </ItemGroup>
+</Project>
