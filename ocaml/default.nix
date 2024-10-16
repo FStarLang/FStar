@@ -32,6 +32,7 @@ buildDunePackage {
     yojson
     zarith
     memtrace
+    mtime
   ];
 
   enableParallelBuilding = true;
