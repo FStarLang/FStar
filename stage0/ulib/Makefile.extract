@@ -1,0 +1,70 @@
+.PHONY: indent extra
+
+FSTAR_HOME=..
+include ml/Makefile.realized
+
+include $(FSTAR_HOME)/.common.mk
+include gmake/z3.mk
+include gmake/fstar.mk
+
+DUNE_SNAPSHOT ?= $(call maybe_cygwin_path,$(realpath $(FSTAR_HOME)/ocaml))
+OUTPUT_DIRECTORY=$(FSTAR_HOME)/src/ocaml-output/fstarlib
+
+FSTAR_FILES:=
+FSTAR_FILES+=$(wildcard *.fst *.fsti)
+FSTAR_FILES+=$(wildcard experimental/*.fst experimental/*.fsti)
+FSTAR_FILES:=$(filter-out $(NOEXTRACT_FILES), $(FSTAR_FILES))
+
+CODEGEN = Plugin
+MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(OTHERFLAGS) --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache --warn_error @241
+EXTRACT_MODULES=--extract '* $(NOEXTRACT_MODULES)'
+
+# And then, in a separate invocation, from each .checked we
+# extract an .ml file
+$(OUTPUT_DIRECTORY)/%.ml:
+	$(call msg, "EXTRACT", $(basename $(notdir $@)))
+	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
+
+DEPEND=.depend.extract
+DEPENDRSP=.depend.extract.rsp
+
+# GM/TR: These shell commands run ALWAYS, as soon as the Makefile is LOADED.
+# This is clearly undesirable, but the command-line argument line in
+# Windows prevents us from doing this simply.
+$(DEPENDRSP):
+	$(Q)true $(shell rm -f $(DEPENDRSP)) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> $(DEPENDRSP)))
+
+$(DEPEND): $(DEPENDRSP)
+	$(call msg, "DEPEND")
+	$(Q)mkdir -p .cache
+	$(Q)$(MY_FSTAR) --dep full $(EXTRACT_MODULES)  @$(DEPENDRSP) --output_deps_to $@
+
+dep.graph: $(DEPENDRSP)
+	$(Q)$(MY_FSTAR) --dep graph $(EXTRACT_MODULES) @$(DEPENDRSP) --output_deps_to $@
+
+depgraph.pdf: dep.graph
+	$(Q)$(FSTAR_HOME)/.scripts/simpl_graph.py dep.graph > dep_simpl.graph
+	$(call msg, "DOT", $@)
+	$(Q)dot -Tpdf -o $@ dep_simpl.graph
+
+# make depgraph-FStar.Tactics.fst.pdf to get a dep graph of FStar.Tactics.fst downwards
+depgraph-%.pdf:
+	$(Q)$(MY_FSTAR) --dep graph $(EXTRACT_MODULES) $* --output_deps_to $@.graph
+	$(Q)$(FSTAR_HOME)/.scripts/simpl_graph.py $@.graph > $@.graph.simpl
+	$(call msg, "DOT", $@)
+	$(Q)dot -Tpdf -o $@ $@.graph.simpl
+
+depend.extract: $(DEPEND)
+
+include $(DEPEND)
+
+.PHONY: all-ml dune-snapshot intfiles
+
+# Prims is the only .fst (not fsti) with an Ocaml implementation
+# so we do not need to extract it.
+all-ml: $(filter-out %/prims.ml, $(ALL_ML_FILES))
+
+intfiles:
+	+$(MAKE) -C ml intfiles
+
+dune-snapshot: all-ml intfiles
