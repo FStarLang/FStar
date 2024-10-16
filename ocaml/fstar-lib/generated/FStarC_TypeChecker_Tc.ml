@@ -5326,8 +5326,9 @@ let (tc_decls :
                                    (env3.FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.encode_sig
                                      env3 se1) ses'2) uu___12
                            "FStarC.TypeChecker.Tc.encode_sig");
-                        (((FStarC_Compiler_List.rev_append ses'2 ses1), env3),
-                          ses_elaborated1))))))) in
+                        (let new_ses =
+                           FStarC_Compiler_List.rev_append ses'2 ses1 in
+                         ((new_ses, env3), ses_elaborated1)))))))) in
       let process_one_decl_timed acc se =
         FStarC_TypeChecker_Core.clear_memo_table ();
         (let uu___1 = acc in
@@ -5357,10 +5358,18 @@ let (tc_decls :
                else ());
               r)) in
       let uu___ =
-        FStarC_Syntax_Unionfind.with_uf_enabled
-          (fun uu___1 ->
-             FStarC_Compiler_Util.fold_flatten process_one_decl_timed
-               ([], env) ses) in
+        let uu___1 =
+          let uu___2 =
+            let uu___3 = FStarC_TypeChecker_Env.current_module env in
+            FStarC_Ident.string_of_lid uu___3 in
+          FStar_Pervasives_Native.Some uu___2 in
+        FStarC_Profiling.profile
+          (fun uu___2 ->
+             FStarC_Syntax_Unionfind.with_uf_enabled
+               (fun uu___3 ->
+                  FStarC_Compiler_Util.fold_flatten process_one_decl_timed
+                    ([], env) ses)) uu___1
+          "FStarC.TypeChecker.Tc.fold_flatten_process_one_decl" in
       match uu___ with
       | (ses1, env1) -> ((FStarC_Compiler_List.rev_append ses1 []), env1)
 let (uu___0 : unit) =
@@ -5563,7 +5572,14 @@ let (tc_partial_modul :
        FStarC_Errors.with_ctx_if uu___3 uu___4
          (fun uu___5 ->
             let uu___6 =
-              tc_decls env2 modul.FStarC_Syntax_Syntax.declarations in
+              let uu___7 =
+                let uu___8 =
+                  FStarC_Ident.string_of_lid modul.FStarC_Syntax_Syntax.name in
+                FStar_Pervasives_Native.Some uu___8 in
+              FStarC_Profiling.profile
+                (fun uu___8 ->
+                   tc_decls env2 modul.FStarC_Syntax_Syntax.declarations)
+                uu___7 "FStarC.TypeChecker.Tc.tc_decls" in
             match uu___6 with
             | (ses, env3) ->
                 ({
@@ -5693,9 +5709,23 @@ let (tc_modul :
           let uu___ = FStarC_Ident.string_of_lid m.FStarC_Syntax_Syntax.name in
           Prims.strcat "Internals for " uu___ in
         let env01 = push_context env0 msg in
-        let uu___ = tc_partial_modul env01 m in
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              FStarC_Ident.string_of_lid m.FStarC_Syntax_Syntax.name in
+            FStar_Pervasives_Native.Some uu___2 in
+          FStarC_Profiling.profile (fun uu___2 -> tc_partial_modul env01 m)
+            uu___1 "FStarC.TypeChecker.Tc.tc_partial_modul" in
         match uu___ with
-        | (modul, env) -> finish_partial_modul false iface_exists env modul
+        | (modul, env) ->
+            let uu___1 =
+              let uu___2 =
+                FStarC_Ident.string_of_lid m.FStarC_Syntax_Syntax.name in
+              FStar_Pervasives_Native.Some uu___2 in
+            FStarC_Profiling.profile
+              (fun uu___2 ->
+                 finish_partial_modul false iface_exists env modul) uu___1
+              "FStarC.TypeChecker.Tc.finish_partial_modul"
 let (load_checked_module_sigelts :
   FStarC_TypeChecker_Env.env ->
     FStarC_Syntax_Syntax.modul -> FStarC_TypeChecker_Env.env)
