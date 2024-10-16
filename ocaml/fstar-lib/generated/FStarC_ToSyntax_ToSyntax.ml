@@ -9380,56 +9380,101 @@ and (desugar_decl_core :
             let env1 = FStarC_Syntax_DsEnv.push_namespace env lid restriction in
             (env1, [])
         | FStarC_Parser_AST.Friend lid ->
-            let uu___ = FStarC_Syntax_DsEnv.iface env in
-            if uu___
-            then
-              FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_decl d
-                FStarC_Errors_Codes.Fatal_FriendInterface ()
-                (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                (Obj.magic
-                   "'friend' declarations are not allowed in interfaces")
-            else
-              (let uu___2 =
-                 let uu___3 =
-                   let uu___4 = FStarC_Syntax_DsEnv.dep_graph env in
-                   let uu___5 = FStarC_Syntax_DsEnv.current_module env in
-                   FStarC_Parser_Dep.module_has_interface uu___4 uu___5 in
-                 Prims.op_Negation uu___3 in
-               if uu___2
-               then
-                 FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_decl d
-                   FStarC_Errors_Codes.Fatal_FriendInterface ()
-                   (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                   (Obj.magic
-                      "'friend' declarations are not allowed in modules that lack interfaces")
-               else
-                 (let uu___4 =
-                    let uu___5 =
-                      let uu___6 = FStarC_Syntax_DsEnv.dep_graph env in
-                      FStarC_Parser_Dep.module_has_interface uu___6 lid in
-                    Prims.op_Negation uu___5 in
-                  if uu___4
-                  then
-                    FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_decl
-                      d FStarC_Errors_Codes.Fatal_FriendInterface ()
-                      (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                      (Obj.magic
-                         "'friend' declarations cannot refer to modules that lack interfaces")
-                  else
-                    (let uu___6 =
-                       let uu___7 =
-                         let uu___8 = FStarC_Syntax_DsEnv.dep_graph env in
-                         FStarC_Parser_Dep.deps_has_implementation uu___8 lid in
-                       Prims.op_Negation uu___7 in
-                     if uu___6
-                     then
-                       FStarC_Errors.raise_error
-                         FStarC_Parser_AST.hasRange_decl d
-                         FStarC_Errors_Codes.Fatal_FriendInterface ()
-                         (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                         (Obj.magic
-                            "'friend' module has not been loaded; recompute dependences (C-c C-r) if in interactive mode")
-                     else (env, []))))
+            ((let uu___1 = FStarC_Syntax_DsEnv.iface env in
+              if uu___1
+              then
+                let uu___2 =
+                  let uu___3 =
+                    FStarC_Errors_Msg.text
+                      "'friend' declarations are not allowed in interfaces." in
+                  [uu___3] in
+                FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_decl d
+                  FStarC_Errors_Codes.Fatal_FriendInterface ()
+                  (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                  (Obj.magic uu___2)
+              else ());
+             (let uu___2 =
+                let uu___3 =
+                  let uu___4 = FStarC_Syntax_DsEnv.dep_graph env in
+                  let uu___5 = FStarC_Syntax_DsEnv.current_module env in
+                  FStarC_Parser_Dep.module_has_interface uu___4 uu___5 in
+                Prims.op_Negation uu___3 in
+              if uu___2
+              then
+                let uu___3 =
+                  let uu___4 =
+                    FStarC_Errors_Msg.text
+                      "'friend' declarations are not allowed in modules that lack interfaces." in
+                  let uu___5 =
+                    let uu___6 =
+                      let uu___7 =
+                        FStarC_Errors_Msg.text
+                          "Suggestion: add an interface for module" in
+                      let uu___8 =
+                        let uu___9 = FStarC_Syntax_DsEnv.current_module env in
+                        FStarC_Class_PP.pp FStarC_Ident.pretty_lident uu___9 in
+                      FStarC_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                    [uu___6] in
+                  uu___4 :: uu___5 in
+                FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_decl d
+                  FStarC_Errors_Codes.Fatal_FriendInterface ()
+                  (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                  (Obj.magic uu___3)
+              else ());
+             (let uu___3 =
+                let uu___4 =
+                  let uu___5 = FStarC_Syntax_DsEnv.dep_graph env in
+                  FStarC_Parser_Dep.deps_has_implementation uu___5 lid in
+                Prims.op_Negation uu___4 in
+              if uu___3
+              then
+                let uu___4 =
+                  let uu___5 =
+                    let uu___6 = FStarC_Errors_Msg.text "'friend' module" in
+                    let uu___7 =
+                      let uu___8 =
+                        FStarC_Class_PP.pp FStarC_Ident.pretty_lident lid in
+                      let uu___9 = FStarC_Errors_Msg.text "not found" in
+                      FStarC_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                    FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                  let uu___6 =
+                    let uu___7 =
+                      FStarC_Errors_Msg.text
+                        "Suggestion: recompute dependences (C-c C-r) if in interactive mode." in
+                    [uu___7] in
+                  uu___5 :: uu___6 in
+                FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_decl d
+                  FStarC_Errors_Codes.Fatal_FriendInterface ()
+                  (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                  (Obj.magic uu___4)
+              else ());
+             (let uu___4 =
+                let uu___5 =
+                  let uu___6 = FStarC_Syntax_DsEnv.dep_graph env in
+                  FStarC_Parser_Dep.module_has_interface uu___6 lid in
+                Prims.op_Negation uu___5 in
+              if uu___4
+              then
+                let uu___5 =
+                  let uu___6 =
+                    FStarC_Errors_Msg.text
+                      "'friend' declarations cannot refer to modules that lack interfaces." in
+                  let uu___7 =
+                    let uu___8 =
+                      let uu___9 =
+                        FStarC_Errors_Msg.text
+                          "Suggestion: add an interfce for module" in
+                      let uu___10 =
+                        FStarC_Class_PP.pp FStarC_Ident.pretty_lident lid in
+                      FStarC_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                    [uu___8] in
+                  uu___6 :: uu___7 in
+                FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_decl d
+                  FStarC_Errors_Codes.Fatal_FriendInterface ()
+                  (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                  (Obj.magic uu___5)
+              else ());
+             (env, []))
         | FStarC_Parser_AST.Include (lid, restriction) ->
             let env1 = FStarC_Syntax_DsEnv.push_include env lid restriction in
             (env1, [])
