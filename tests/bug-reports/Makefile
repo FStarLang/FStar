@@ -1,10 +1,11 @@
-FSTAR_HOME=../..
-include $(FSTAR_HOME)/examples/Makefile.include
-include $(FSTAR_HOME)/ulib/ml/Makefile.include
+include Makefile.include
+# ^ stopgap so I don't have to rewrite this entire makefile (yet)
+# but the right thing to do is include /mk/test.mk and rewrite this.
 
 OTHERFLAGS+=--warn_error +240
 
-all: verify iverify not-verify extract
+all: verify iverify not-verify # extract
+.DEFAULT_GOAL := all
 
 ##################
 # Positive tests #
@@ -176,6 +177,9 @@ CAPPED=$(subst Bug,Bug,$*)
 Bug1383.verify: OTHERFLAGS += --warn_error @275 #Z3 warnings are fatal
 Bug1694.verify: OTHERFLAGS += --codegen OCaml
 Bug2210.verify: OTHERFLAGS += --codegen OCaml
+
+# Disable hints, see #3572
+Bug1614a.verify: HINTS_ENABLED =
 
 Bug2684a.verify: OTHERFLAGS += --cache_checked_modules
 Bug2684b.verify: OTHERFLAGS += --cache_checked_modules

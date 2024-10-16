@@ -1,0 +1,12 @@
+FSTAR_EXE ?= ../../bin/fstar.exe
+FSTAR_ROOT ?= ../..
+include $(FSTAR_ROOT)/mk/common.mk
+include $(FSTAR_ROOT)/ulib/gmake/fstar.mk
+
+# we ignore the return result in benchmark runs because we can have micro-benchmarks which
+# produce error asserts when executed with '--admit_smt_queries true'
+%.uver: %.fst
+	$(Q)$(BENCHMARK_PRE) $(FSTAR)  $^
+
+%.fail-uver: %.fst
+	(! $(FSTAR) $^ >/dev/null 2>&1) || (echo "NEGATIVE TEST FAILED ($@)!" ; false)

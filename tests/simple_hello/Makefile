@@ -4,7 +4,10 @@
 
 FSTAR ?= ../../bin/fstar.exe
 
-all: Hello.exe
+all: Hello.test
+
+Hello.test: Hello.exe
+	./Hello.exe | grep "Hello F\*!"
 
 %.ml: %.fst
 	$(FSTAR) --codegen OCaml $< --extract $*

@@ -7,17 +7,14 @@
 ### lack implementations
 ################################################################################
 
-# This is needed because ../Makefile.common includes
-# ../../../Makefile.common, but GNU Make does not support chained
-# includes with relative paths
-FSTAR_EXAMPLES = $(realpath ../../../../examples)
-
-ROOTS=Test.fst
-EXTRACT=Test
+FSTAR_ROOT ?= ../../../..
+OTHERFLAGS += --cmi
+include $(FSTAR_ROOT)/mk/test.mk
 
 all: test
 
-include ../Makefile.common
+$(OUTPUT_DIR)/%.ml: %.fst.checked
+	$(FSTAR) --codegen OCaml --extract $* $*.fst
 
-test: Test.ml
+test: $(OUTPUT_DIR)/Test.ml
 	egrep M.f $^ | egrep -q -v magic  #test that there is no magic in the call to M.f; fragile
