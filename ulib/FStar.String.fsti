@@ -146,3 +146,50 @@ let concat_injective (s0 s0':string)
     string_of_list_of_string s0';
     string_of_list_of_string s1;
     string_of_list_of_string s1'
+
+///  Partial equivalence properties.
+let streq_upto s1 s2 (pos: nat) =
+  (pos <= strlen s1 /\ pos <= strlen s2 /\
+   (forall (i: nat{i < pos}). index s1 i = index s2 i))
+
+let streq_upto_min s1 s2 (pos: int{pos < (min (strlen s1) (strlen s2))}) =
+  (forall (i: nat{i < (pos - 1)}). index s1 i = index s2 i)
+
+///  The propositional form of streq.
+let streq (s1 s2: string) =
+  (strlen s1 = strlen s2 /\
+   (forall (i: nat{i < strlen s1}). index s1 i = index s2 i))
+
+///  The boolean form of streq.
+val streq_upto' s1 (s2: string{strlen s1 = strlen s2})  (pos: nat{streq_upto s1 s2 pos}) :
+  Tot (b:bool{b <==> streq s1 s2})
+
+val streq' (s1 s2: string) : Tot (b:bool{b <==> streq s1 s2})
+
+///  Return the first difference position upto a pos as an option.
+val first_diff' s1 s2
+   (pos: nat{pos <= strlen s1 /\ pos <= strlen s2 /\ streq_upto s1 s2 pos}) : 
+   Tot (o : (option (pos: nat{pos <= (min (strlen s1) (strlen s2))})) {
+             (None? o ==> strlen s1 = strlen s2 /\ streq_upto s1 s2 (strlen s1)) /\
+             (Some? o ==> 
+               streq_upto_min s1 s2 ((Some?.v o) - 1) /\
+              (((Some?.v o) = strlen s1  \/ (Some?.v o) = strlen s2) /\ strlen s1 <> strlen s2)
+              \/
+              (((Some?.v o) < strlen s1 /\ (Some?.v o) < strlen s2) /\
+                (index s1 (Some?.v o) <> (index s2 (Some?.v o)))))
+        })
+
+///  Return the first difference position as an option for the whole string.
+val first_diff (s1 s2: string) : 
+   Tot (o : (option (pos: nat{pos <= (min (strlen s1) (strlen s2))})) {
+             (None? o ==> strlen s1 = strlen s2 /\ streq_upto s1 s2 (strlen s1)) /\
+             (Some? o ==> 
+               streq_upto_min s1 s2 ((Some?.v o) - 1) /\
+              (((Some?.v o) = strlen s1  \/ (Some?.v o) = strlen s2) /\ strlen s1 <> strlen s2)
+              \/
+              (((Some?.v o) < strlen s1 /\ (Some?.v o) < strlen s2) /\
+                (index s1 (Some?.v o) <> (index s2 (Some?.v o)))))
+        })
+
+///  Return the line and character upto pos counting each starting at zero.
+val lines (s: string) (upto: nat{upto <= strlen s}) :  Tot (nat & nat) 
