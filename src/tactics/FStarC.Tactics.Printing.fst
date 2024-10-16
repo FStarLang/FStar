@@ -168,7 +168,7 @@ let ps_to_json (msg, ps) =
                  else []))
 
 let do_dump_proofstate ps msg =
-    if not (Options.silent ()) then
+    if not (Options.silent ()) || Options.interactive () then
         Options.with_saved_options (fun () ->
             Options.set_option "print_effect_args" (Options.Bool true);
             print_generic "proof-state" ps_to_string ps_to_json (msg, ps);
