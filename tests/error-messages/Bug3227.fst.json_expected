@@ -72,5 +72,3 @@ let test3 r = r.ff
 let test4 r x = r.ff x <: a
 ]
 
-Verified module: Bug3227
-All verification conditions discharged successfully

@@ -87,5 +87,3 @@
   - Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
 
 >>]
-Verified module: PatternMatch
-All verification conditions discharged successfully

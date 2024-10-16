@@ -4,5 +4,3 @@
 >> Got issues: [
 {"msg":["Expected expression of type Type0\ngot expression tb\nof type Type"],"level":"Error","range":{"def":{"file_name":"AnotType.fst","start_pos":{"line":27,"col":14},"end_pos":{"line":27,"col":16}},"use":{"file_name":"AnotType.fst","start_pos":{"line":27,"col":14},"end_pos":{"line":27,"col":16}}},"number":189,"ctx":["While typechecking the top-level declaration `let uu___0`","While typechecking the top-level declaration `[@@expect_failure] let uu___0`"]}
 >>]
-Verified module: AnotType
-All verification conditions discharged successfully

@@ -3,5 +3,3 @@
     pattern:
       Prims.op_Addition, Prims.op_Subtraction
 
-Verified module: SMTPatSymbols
-All verification conditions discharged successfully

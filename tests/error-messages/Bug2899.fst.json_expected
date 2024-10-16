@@ -10,5 +10,3 @@
 >> Got issues: [
 {"msg":["Tactic failed","Tactic got stuck!","Reduction stopped at: reify (tac ()) \"(((proofstate)))\"",""],"level":"Error","range":{"def":{"file_name":"FStar.Tactics.Effect.fsti","start_pos":{"line":212,"col":48},"end_pos":{"line":212,"col":58}},"use":{"file_name":"Bug2899.fst","start_pos":{"line":17,"col":50},"end_pos":{"line":17,"col":66}}},"number":170,"ctx":["While preprocessing VC with a tactic","While typechecking the top-level declaration `let eval_tactic`","While typechecking the top-level declaration `[@@expect_failure] let eval_tactic`"]}
 >>]
-Verified module: Bug2899
-All verification conditions discharged successfully

@@ -31,5 +31,3 @@
 >> Got issues: [
 {"msg":["Assertion failed","The SMT solver could not prove the query. Use --query_stats for more details."],"level":"Error","range":{"def":{"file_name":"Calc.fst","start_pos":{"line":105,"col":12},"end_pos":{"line":105,"col":17}},"use":{"file_name":"Calc.fst","start_pos":{"line":121,"col":9},"end_pos":{"line":121,"col":17}}},"number":19,"ctx":["While typechecking the top-level declaration `let test_1763`","While typechecking the top-level declaration `[@@expect_failure] let test_1763`"]}
 >>]
-Verified module: Calc
-All verification conditions discharged successfully

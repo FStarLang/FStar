@@ -4,5 +4,3 @@
 >> Got issues: [
 {"msg":["Failed to prove that the type\n'ArrowRanges.ppof'\nsupports decidable equality because of this argument.","Add either the 'noeq' or 'unopteq' qualifier","The SMT solver could not prove the query. Use --query_stats for more details."],"level":"Error","range":{"def":{"file_name":"ArrowRanges.fst","start_pos":{"line":7,"col":0},"end_pos":{"line":11,"col":1}},"use":{"file_name":"ArrowRanges.fst","start_pos":{"line":8,"col":10},"end_pos":{"line":8,"col":28}}},"number":19,"ctx":["While typechecking the top-level declaration `type ArrowRanges.ppof`","While typechecking the top-level declaration `[@@expect_failure] type ArrowRanges.ppof`"]}
 >>]
-Verified module: ArrowRanges
-All verification conditions discharged successfully

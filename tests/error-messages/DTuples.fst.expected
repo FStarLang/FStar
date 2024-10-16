@@ -139,5 +139,3 @@ let dd2 = (| (| 1, 2 |), 3 |)
 let dd3 = (| 1, (| 2, 3 |) |)
 ]
 
-Verified module: DTuples
-All verification conditions discharged successfully

@@ -10,5 +10,3 @@
 >> Got issues: [
 {"msg":["Assertion failed","The SMT solver could not prove the query. Use --query_stats for more details."],"level":"Error","range":{"def":{"file_name":"OptionStack.fst","start_pos":{"line":39,"col":16},"end_pos":{"line":39,"col":21}},"use":{"file_name":"OptionStack.fst","start_pos":{"line":39,"col":9},"end_pos":{"line":39,"col":15}}},"number":19,"ctx":["While checking for top-level effects","While typechecking the top-level declaration `let t7`","While typechecking the top-level declaration `[@@expect_failure] let t7`"]}
 >>]
-Verified module: OptionStack
-All verification conditions discharged successfully

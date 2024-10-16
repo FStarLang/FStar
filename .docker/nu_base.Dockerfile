@@ -69,6 +69,8 @@ RUN sudo apt-get install -y --no-install-recommends \
 # To run Vale
 # RUN sudo apt-get install -y dotnet-runtime-6.0 dotnet-sdk-6.0
 
+RUN opam install --confirm-level=unsafe-yes mtime && opam clean
+
 # everparse (hex for quackyducky)
 RUN opam install --confirm-level=unsafe-yes hex sexplib re sha && opam clean
 

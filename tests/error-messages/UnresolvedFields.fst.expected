@@ -13,5 +13,3 @@
   - Field 'c' is redundant for type UnresolvedFields.t
 
 >>]
-Verified module: UnresolvedFields
-All verification conditions discharged successfully

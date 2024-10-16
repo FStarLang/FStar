@@ -351,7 +351,8 @@ let (do_dump_proofstate :
   fun ps ->
     fun msg ->
       let uu___ =
-        let uu___1 = FStarC_Options.silent () in Prims.op_Negation uu___1 in
+        (let uu___1 = FStarC_Options.silent () in Prims.op_Negation uu___1)
+          || (FStarC_Options.interactive ()) in
       if uu___
       then
         FStarC_Options.with_saved_options

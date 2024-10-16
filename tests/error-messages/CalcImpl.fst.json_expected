@@ -157,5 +157,3 @@ let test5 _ =
   }
 ]
 
-Verified module: CalcImpl
-All verification conditions discharged successfully

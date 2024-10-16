@@ -17,5 +17,3 @@ let basic _ =
   () <: FStar.Pervasives.Lemma (ensures forall (x: Prims.int{x + 1 == 1 + x}). Prims.l_True)
 ]
 
-Verified module: Bug2820
-All verification conditions discharged successfully

@@ -112,5 +112,3 @@ let f3 x =
   Prims.int
 ]
 
-Verified module: PatImps
-All verification conditions discharged successfully

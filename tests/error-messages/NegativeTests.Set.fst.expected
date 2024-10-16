@@ -37,5 +37,3 @@
       should_fail2
       should_fail3
 
-Verified module: NegativeTests.Set
-All verification conditions discharged successfully
