@@ -19,6 +19,7 @@ open FStarC.Compiler.Range
 open FStarC.Class.Show
 open FStarC.Class.HasRange
 open FStarC.Class.Deq
+open FStarC.Class.Ord
 open FStarC.Class.PP
 
 (** A (short) identifier for a local name.
@@ -144,3 +145,5 @@ instance val hasrange_ident  : hasRange ident
 instance val hasrange_lident : hasRange lident
 instance val deq_ident  : deq ident
 instance val deq_lident : deq lident
+instance val ord_ident  : ord ident
+instance val ord_lident : ord lident

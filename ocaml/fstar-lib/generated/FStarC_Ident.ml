@@ -159,3 +159,23 @@ let (deq_ident : ident FStarC_Class_Deq.deq) =
   { FStarC_Class_Deq.op_Equals_Question = ident_equals }
 let (deq_lident : lident FStarC_Class_Deq.deq) =
   { FStarC_Class_Deq.op_Equals_Question = lid_equals }
+let (ord_ident : ident FStarC_Class_Ord.ord) =
+  {
+    FStarC_Class_Ord.super = deq_ident;
+    FStarC_Class_Ord.cmp =
+      (fun x ->
+         fun y ->
+           let uu___ = string_of_id x in
+           let uu___1 = string_of_id y in
+           FStarC_Class_Ord.cmp FStarC_Class_Ord.ord_string uu___ uu___1)
+  }
+let (ord_lident : lident FStarC_Class_Ord.ord) =
+  {
+    FStarC_Class_Ord.super = deq_lident;
+    FStarC_Class_Ord.cmp =
+      (fun x ->
+         fun y ->
+           let uu___ = string_of_lid x in
+           let uu___1 = string_of_lid y in
+           FStarC_Class_Ord.cmp FStarC_Class_Ord.ord_string uu___ uu___1)
+  }

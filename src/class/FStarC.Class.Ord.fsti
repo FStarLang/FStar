@@ -22,6 +22,17 @@ val dedup
   (xs : list a)
   : list a
 
+(* Sort and deduplicate at once *)
+val sort_dedup
+  (#a:Type) {| ord a |}
+  (xs : list a)
+  : list a
+
+(* Returns the difference of two lists, modulo order and duplication.
+The first component is the elements only present in xs, and the second
+is the elements only present in ys. *)
+val ord_list_diff (#a:Type0) {| ord a |} (xs ys : list a) : list a & list a
+
 instance val ord_eq (a:Type) (d : ord a) : Tot (deq a)
 
 val (<?)  : #a:Type -> {| ord a |} -> a -> a -> bool

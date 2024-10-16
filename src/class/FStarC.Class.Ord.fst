@@ -14,12 +14,12 @@ let max x y = if x >=? y then x else y
 
 instance ord_eq (a:Type) (d : ord a) : Tot (deq a) = d.super
 
-let rec insert (#a:Type) {| ord a |} (x:a) (xs:list a) : list a =
-  match xs with
-  | [] -> [x]
-  | y::ys -> if x <=? y then x :: y :: ys else y :: insert x ys
-
-let rec sort xs =
+let rec sort #a xs =
+   let rec insert (x:a) (xs:list a) : list a =
+   match xs with
+   | [] -> [x]
+   | y::ys -> if x <=? y then x :: y :: ys else y :: insert x ys
+  in
   match xs with
   | [] -> []
   | x::xs -> insert x (sort xs)
@@ -28,6 +28,37 @@ let dedup #a xs =
   let open FStarC.Compiler.List in
   let out = fold_left (fun out x -> if existsb (fun y -> x =? y) out then out else x :: out) [] xs in
   List.rev out
+
+let rec sort_dedup #a xs =
+   let rec insert (x:a) (xs:list a) : list a =
+   match xs with
+   | [] -> [x]
+   | y::ys ->
+     match cmp x y with
+     | Eq -> ys
+     | Lt -> x :: y :: ys
+     | Gt -> y :: insert x ys
+  in
+  match xs with
+  | [] -> []
+  | x::xs -> insert x (sort_dedup xs)
+
+let ord_list_diff (#a:Type0) {| ord a |} (xs ys : list a) : list a & list a =
+  let open FStarC.Compiler.Order in
+  let xs = xs |> sort_dedup in
+  let ys = ys |> sort_dedup in
+  let rec go (xd, yd) xs ys : list a & list a =
+    match xs, ys with
+    | x::xs, y::ys -> (
+      match cmp x y with
+      | Lt -> go (x::xd, yd)    xs      (y::ys)
+      | Eq -> go (xd,    yd)    xs      ys
+      | Gt -> go (xd,    y::yd) (x::xs) ys
+    )
+    (* One of the two is empty, that's it *)
+    | xs, ys -> (List.rev_append xd xs, List.rev_append yd ys)
+  in
+  go ([], []) xs ys
 
 instance ord_int : ord int = {
    super = solve;
