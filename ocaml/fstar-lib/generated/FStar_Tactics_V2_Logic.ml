@@ -38,7 +38,8 @@ let (cur_goal :
          | uu___3 ->
              FStar_Tactics_Effect.raise
                (FStarC_Tactics_Common.TacticFailure
-                  ((Obj.magic [Obj.repr ()]), FStar_Pervasives_Native.None)))
+                  ([FStar_Pprint.arbitrary_string "no more goals"],
+                    FStar_Pervasives_Native.None)))
 let (cur_formula :
   unit ->
     (FStar_Reflection_V2_Formula.formula, unit) FStar_Tactics_Effect.tac_repr)

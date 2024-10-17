@@ -2332,8 +2332,8 @@ let (tcresolve : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
-                                                                    (Obj.magic
-                                                                    ())
+                                                                    (FStar_Pprint.arbitrary_string
+                                                                    "Could not solve typeclass constraint")
                                                                     uu___17)) in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -2396,9 +2396,9 @@ let (tcresolve : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     ((op_At
                                                                     ())
                                                                     [
-                                                                    Obj.magic
-                                                                    ()] msg)
-                                                                    r))
+                                                                    FStar_Pprint.arbitrary_string
+                                                                    "Typeclass resolution failed."]
+                                                                    msg) r))
                                                                     | 
                                                                     e ->
                                                                     Obj.magic
