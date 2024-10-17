@@ -90,7 +90,6 @@ let pretty_out_channel rfrac width doc ch =
     PPrint.ToChannel.pretty rfrac (Z.to_int width) ch doc;
     flush ch
 
-(* A simple renderer, with some default values. This is
-   exposed to userspace in FStar.Stubs.Pprint. *)
+(* A simple renderer, with some default values. *)
 let render (doc:document) : string =
     pretty_string 1.0 (Z.of_int 80) doc

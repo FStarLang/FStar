@@ -673,7 +673,7 @@ let (bind_seal_lid : FStarC_Ident.lident) =
 let (tref_lid : FStarC_Ident.lident) =
   p2l ["FStar"; "Stubs"; "Tactics"; "Types"; "tref"]
 let (document_lid : FStarC_Ident.lident) =
-  p2l ["FStar"; "Stubs"; "Pprint"; "document"]
+  p2l ["FStar"; "Pprint"; "document"]
 let (issue_lid : FStarC_Ident.lident) = p2l ["FStar"; "Issue"; "issue"]
 let (extract_as_lid : FStarC_Ident.lident) =
   p2l ["FStar"; "ExtractAs"; "extract_as"]

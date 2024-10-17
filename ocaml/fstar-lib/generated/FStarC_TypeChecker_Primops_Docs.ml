@@ -1,6 +1,6 @@
 open Prims
 let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
-  let nm l = FStarC_Parser_Const.p2l ["FStar"; "Stubs"; "Pprint"; l] in
+  let nm l = FStarC_Parser_Const.p2l ["FStar"; "Pprint"; l] in
   let uu___ =
     let uu___1 = nm "arbitrary_string" in
     FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero uu___1
