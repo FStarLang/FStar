@@ -83,7 +83,7 @@ let check
   (if ide && not no_admit_diag then begin
     (* If we're running interactively, print out the context
     and environment. *)
-    let open FStar.Stubs.Pprint in
+    let open FStar.Pprint in
     let open Pulse.PP in
     let pre = T.norm_well_typed_term (elab_env g) [Pervasives.unascribe; primops; iota] pre in
     let msg = [

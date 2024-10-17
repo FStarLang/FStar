@@ -16,11 +16,11 @@
 
 module Pulse.PP
 
-include FStar.Stubs.Pprint
+include FStar.Pprint
 
 open FStar.Tactics
 open FStar.Tactics.Typeclasses
-open FStar.Stubs.Pprint
+open FStar.Pprint
 open Pulse.Typing
 open Pulse.Syntax.Base
 open Pulse.Syntax.Printer
@@ -28,7 +28,7 @@ open Pulse.Syntax.Printer
 open Pulse.Show
 
 (* A helper to create wrapped text *)
-let text (s:string) : FStar.Stubs.Pprint.document =
+let text (s:string) : FStar.Pprint.document =
   flow (break_ 1) (words s)
 
 (* Nests a document 2 levels deep, as a block. It inserts a hardline

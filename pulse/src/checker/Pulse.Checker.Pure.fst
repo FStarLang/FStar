@@ -176,7 +176,7 @@ let ill_typed_term (t:term) (expected_typ:option term) (got_typ:option term) : T
      prefix 2 1 (text "of type") (pp ty')]
 
 let maybe_fail_doc (issues:list FStar.Issue.issue)
-                   (g:env) (rng:range) (doc:list FStar.Stubs.Pprint.document) =
+                   (g:env) (rng:range) (doc:list FStar.Pprint.document) =
   let has_localized_error = 
       List.Tot.Base.existsb
         (fun i -> 
@@ -185,7 +185,7 @@ let maybe_fail_doc (issues:list FStar.Issue.issue)
         issues
   in
   if has_localized_error
-  then let message = FStar.Stubs.Pprint.(pretty_string RU.float_one 80 (concat doc)) in
+  then let message = FStar.Pprint.(pretty_string RU.float_one 80 (concat doc)) in
        T.fail_at message (Some <| RU.start_of_range rng)
   else fail_doc g (Some rng) doc
 

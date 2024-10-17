@@ -142,7 +142,7 @@ let add_knot (g : env) (rng : R.range)
     (* If ghost/atomic, we need to add a decreases refinement on the last arg *)
     if C_STAtomic? comp || C_STGhost? comp then (
       if None? meas then (
-        let open FStar.Stubs.Pprint in
+        let open FStar.Pprint in
         let open Pulse.PP in
         fail_doc g (Some d.range) [
           text "'ghost' and 'atomic' recursive functions require a 'decreases' clause"]
@@ -174,7 +174,7 @@ let add_knot (g : env) (rng : R.range)
   in
   let r_res = R.subst_term prime_subst r_res in
   let r_ty = FStar.Tactics.V2.SyntaxHelpers.mk_tot_arr r_bs r_res in
-  // let open FStar.Stubs.Pprint in
+  // let open FStar.Pprint in
   // let open Pulse.PP in
   // warn_doc g (Some d.range) [
   //   text "r_ty (type of the knot binder) =" ^/^ pp r_ty

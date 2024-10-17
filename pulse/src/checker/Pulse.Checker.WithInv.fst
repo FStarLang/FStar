@@ -23,7 +23,7 @@ open Pulse.Checker.Base
 open Pulse.Checker.Prover
 open Pulse.Checker.Comp
 open Pulse.Show
-open FStar.Stubs.Pprint
+open FStar.Pprint
 open Pulse.PP
 
 module T = FStar.Tactics.V2
