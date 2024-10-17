@@ -23,7 +23,7 @@ $(OUTPUT_DIR)/%.ml:
 
 %.cmxs: %.ml
 	$(call msg, "OCAMLOPT", $<)
-	$(OCAMLOPT) -w -8 -shared -package fstar.lib -o $@ $*.ml
+	$(FSTAR_EXE) --ocamlc_plugin -o $@ $*.ml
 
 # REMARK: --load will compile $*.ml if $*.cmxs does not exist, but we
 # compile it before and use --load_cmxs

@@ -4,8 +4,3 @@
  (libraries fstar.lib)
  (modes native)
 )
-(env
-  (_
-    (bin_annot false)
-    (flags (:standard -w -A)))
-)

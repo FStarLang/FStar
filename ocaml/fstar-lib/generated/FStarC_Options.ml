@@ -3529,7 +3529,57 @@ let rec (specs_with_types :
                                                                     (Bool
                                                                     true)))),
                                                                     uu___280) in
-                                                                    [uu___279] in
+                                                                    let uu___280
+                                                                    =
+                                                                    let uu___281
+                                                                    =
+                                                                    let uu___282
+                                                                    =
+                                                                    text
+                                                                    "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* application executable." in
+                                                                    (FStarC_Getopt.noshort,
+                                                                    "ocamlc",
+                                                                    (WithSideEffect
+                                                                    ((fun
+                                                                    uu___283
+                                                                    ->
+                                                                    FStarC_Compiler_Util.print_error
+                                                                    "--ocamlc must be the first argument, see fstar.exe --help for details\n";
+                                                                    FStarC_Compiler_Effect.exit
+                                                                    Prims.int_one),
+                                                                    (Const
+                                                                    (Bool
+                                                                    true)))),
+                                                                    uu___282) in
+                                                                    let uu___282
+                                                                    =
+                                                                    let uu___283
+                                                                    =
+                                                                    let uu___284
+                                                                    =
+                                                                    text
+                                                                    "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* plugin from extracted files." in
+                                                                    (FStarC_Getopt.noshort,
+                                                                    "ocamlc_plugin",
+                                                                    (WithSideEffect
+                                                                    ((fun
+                                                                    uu___285
+                                                                    ->
+                                                                    FStarC_Compiler_Util.print_error
+                                                                    "--ocamlc_plugin must be the first argument, see fstar.exe --help for details\n";
+                                                                    FStarC_Compiler_Effect.exit
+                                                                    Prims.int_one),
+                                                                    (Const
+                                                                    (Bool
+                                                                    true)))),
+                                                                    uu___284) in
+                                                                    [uu___283] in
+                                                                    uu___281
+                                                                    ::
+                                                                    uu___282 in
+                                                                    uu___279
+                                                                    ::
+                                                                    uu___280 in
                                                                     uu___277
                                                                     ::
                                                                     uu___278 in

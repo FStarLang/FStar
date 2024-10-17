@@ -13,4 +13,4 @@ Hello.test: Hello.exe
 	$(FSTAR) --codegen OCaml $< --extract $*
 
 %.exe: %.ml
-	$(FSTAR) --ocamlenv ocamlfind ocamlopt -package fstar.lib -linkpkg $< -o $@
+	$(FSTAR) --ocamlc $< -o $@
