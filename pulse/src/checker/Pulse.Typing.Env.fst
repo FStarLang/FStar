@@ -351,7 +351,7 @@ let env_to_string (e:env) : T.Tac string =
     (T.zip e.bs e.names) in
   String.concat "\n  " bs
 
-open FStar.Stubs.Pprint
+open FStar.Pprint
 
 // Cannot use Pprint.separate_map, it takes a pure func
 // FIXME: duplicate in Pulse.PP

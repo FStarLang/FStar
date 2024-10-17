@@ -186,7 +186,7 @@ let (check_ln :
                                 (fun uu___6 ->
                                    FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___7 ->
-                                        FStarC_Pprint.op_Hat_Slash_Hat
+                                        FStar_Pprint.op_Hat_Slash_Hat
                                           (Pulse_PP.text
                                              "Aborting before calling")
                                           uu___6)) in
@@ -235,8 +235,8 @@ let (check_ln :
                                             (fun uu___10 ->
                                                FStar_Tactics_Effect.lift_div_tac
                                                  (fun uu___11 ->
-                                                    FStarC_Pprint.op_Hat_Slash_Hat
-                                                      FStarC_Pprint.equals
+                                                    FStar_Pprint.op_Hat_Slash_Hat
+                                                      FStar_Pprint.equals
                                                       uu___10)) in
                                         FStar_Tactics_Effect.tac_bind
                                           (FStar_Sealed.seal
@@ -259,7 +259,7 @@ let (check_ln :
                                           (fun uu___9 ->
                                              FStar_Tactics_Effect.lift_div_tac
                                                (fun uu___10 ->
-                                                  FStarC_Pprint.op_Hat_Slash_Hat
+                                                  FStar_Pprint.op_Hat_Slash_Hat
                                                     (Pulse_PP.text "term")
                                                     uu___9)) in
                                       FStar_Tactics_Effect.tac_bind
@@ -1969,7 +1969,7 @@ let (rtb_check_prop_validity :
 let (exn_as_issue : Prims.exn -> FStar_Issue.issue) =
   fun e ->
     FStar_Issue.mk_issue_doc "Error"
-      [FStarC_Pprint.arbitrary_string (Pulse_RuntimeUtils.print_exn e)]
+      [FStar_Pprint.arbitrary_string (Pulse_RuntimeUtils.print_exn e)]
       FStar_Pervasives_Native.None FStar_Pervasives_Native.None []
 let catch_all :
   'a .
@@ -2026,7 +2026,7 @@ let (ill_typed_term :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
       Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
-        (FStarC_Pprint.document Prims.list, unit)
+        (FStar_Pprint.document Prims.list, unit)
           FStar_Tactics_Effect.tac_repr)
   =
   fun t ->
@@ -2051,7 +2051,7 @@ let (ill_typed_term :
                 (fun uu___3 ->
                    FStar_Tactics_Effect.lift_div_tac
                      (fun uu___4 ->
-                        FStarC_Pprint.op_Hat_Hat
+                        FStar_Pprint.op_Hat_Hat
                           (Pulse_PP.text "Ill-typed term: ") uu___3)) in
             FStar_Tactics_Effect.tac_bind
               (FStar_Sealed.seal
@@ -2086,7 +2086,7 @@ let (ill_typed_term :
                   (fun uu___3 ->
                      FStar_Tactics_Effect.lift_div_tac
                        (fun uu___4 ->
-                          FStarC_Pprint.prefix (Prims.of_int (2))
+                          FStar_Pprint.prefix (Prims.of_int (2))
                             Prims.int_one
                             (Pulse_PP.text "Expected term of type") uu___3)) in
               FStar_Tactics_Effect.tac_bind
@@ -2122,7 +2122,7 @@ let (ill_typed_term :
                           (fun uu___5 ->
                              FStar_Tactics_Effect.lift_div_tac
                                (fun uu___6 ->
-                                  FStarC_Pprint.prefix (Prims.of_int (2))
+                                  FStar_Pprint.prefix (Prims.of_int (2))
                                     Prims.int_one (Pulse_PP.text "got term")
                                     uu___5)) in
                       Obj.magic
@@ -2143,7 +2143,7 @@ let (ill_typed_term :
                            (fun uu___4 ->
                               FStar_Tactics_Effect.lift_div_tac
                                 (fun uu___5 ->
-                                   FStarC_Pprint.op_Hat_Slash_Hat uu___2
+                                   FStar_Pprint.op_Hat_Slash_Hat uu___2
                                      uu___4)))) uu___2) in
             FStar_Tactics_Effect.tac_bind
               (FStar_Sealed.seal
@@ -2179,7 +2179,7 @@ let (ill_typed_term :
                   (fun uu___3 ->
                      FStar_Tactics_Effect.lift_div_tac
                        (fun uu___4 ->
-                          FStarC_Pprint.prefix (Prims.of_int (2))
+                          FStar_Pprint.prefix (Prims.of_int (2))
                             Prims.int_one
                             (Pulse_PP.text "Expected term of type") uu___3)) in
               FStar_Tactics_Effect.tac_bind
@@ -2216,7 +2216,7 @@ let (ill_typed_term :
                             (fun uu___6 ->
                                FStar_Tactics_Effect.lift_div_tac
                                  (fun uu___7 ->
-                                    FStarC_Pprint.prefix (Prims.of_int (2))
+                                    FStar_Pprint.prefix (Prims.of_int (2))
                                       Prims.int_one
                                       (Pulse_PP.text "got term") uu___6)) in
                         FStar_Tactics_Effect.tac_bind
@@ -2259,7 +2259,7 @@ let (ill_typed_term :
                                     (fun uu___8 ->
                                        FStar_Tactics_Effect.lift_div_tac
                                          (fun uu___9 ->
-                                            FStarC_Pprint.prefix
+                                            FStar_Pprint.prefix
                                               (Prims.of_int (2))
                                               Prims.int_one
                                               (Pulse_PP.text "of type")
@@ -2286,7 +2286,7 @@ let (ill_typed_term :
                                      (fun uu___7 ->
                                         FStar_Tactics_Effect.lift_div_tac
                                           (fun uu___8 ->
-                                             FStarC_Pprint.op_Hat_Slash_Hat
+                                             FStar_Pprint.op_Hat_Slash_Hat
                                                uu___5 uu___7)))) uu___5) in
                       Obj.magic
                         (FStar_Tactics_Effect.tac_bind
@@ -2306,7 +2306,7 @@ let (ill_typed_term :
                            (fun uu___4 ->
                               FStar_Tactics_Effect.lift_div_tac
                                 (fun uu___5 ->
-                                   FStarC_Pprint.op_Hat_Slash_Hat uu___2
+                                   FStar_Pprint.op_Hat_Slash_Hat uu___2
                                      uu___4)))) uu___2) in
             FStar_Tactics_Effect.tac_bind
               (FStar_Sealed.seal
@@ -2327,7 +2327,7 @@ let maybe_fail_doc :
     FStar_Issue.issue Prims.list ->
       Pulse_Typing_Env.env ->
         Pulse_Syntax_Base.range ->
-          FStarC_Pprint.document Prims.list ->
+          FStar_Pprint.document Prims.list ->
             ('uuuuu, unit) FStar_Tactics_Effect.tac_repr
   =
   fun issues ->
@@ -2363,17 +2363,16 @@ let maybe_fail_doc :
                       Obj.magic
                         (FStar_Tactics_Effect.lift_div_tac
                            (fun uu___2 ->
-                              FStarC_Pprint.pretty_string
+                              FStar_Pprint.pretty_string
                                 Pulse_RuntimeUtils.float_one
-                                (Prims.of_int (80))
-                                (FStarC_Pprint.concat doc))) in
+                                (Prims.of_int (80)) (FStar_Pprint.concat doc))) in
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
-                                  (Prims.of_int (188)) (Prims.of_int (41))
-                                  (Prims.of_int (188)) (Prims.of_int (83)))))
+                                  (Prims.of_int (188)) (Prims.of_int (35))
+                                  (Prims.of_int (188)) (Prims.of_int (77)))))
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
@@ -2576,7 +2575,7 @@ let (instantiate_term_implicits :
                                                                     (fun
                                                                     uu___11
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -2684,7 +2683,7 @@ let (instantiate_term_implicits :
                                                                     (fun
                                                                     uu___11
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -2937,7 +2936,7 @@ let (instantiate_term_implicits_uvs :
                                                                     (fun
                                                                     uu___11
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -4596,7 +4595,7 @@ let (get_non_informative_witness :
                                          (fun uu___8 ->
                                             FStar_Tactics_Effect.lift_div_tac
                                               (fun uu___9 ->
-                                                 FStarC_Pprint.prefix
+                                                 FStar_Pprint.prefix
                                                    (Prims.of_int (2))
                                                    Prims.int_one
                                                    (Pulse_PP.text "Got:")
@@ -4793,7 +4792,7 @@ let (check_prop_validity :
                                                (fun uu___8 ->
                                                   FStar_Tactics_Effect.lift_div_tac
                                                     (fun uu___9 ->
-                                                       FStarC_Pprint.prefix
+                                                       FStar_Pprint.prefix
                                                          (Prims.of_int (2))
                                                          Prims.int_one
                                                          (Pulse_PP.text
@@ -4875,7 +4874,7 @@ let fail_expected_tot_found_ghost :
             (fun uu___3 ->
                FStar_Tactics_Effect.lift_div_tac
                  (fun uu___4 ->
-                    FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                    FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
                       (Pulse_PP.text
                          "Expected a total term, got found ghost term:")
                       uu___3)) in
@@ -5196,7 +5195,7 @@ let (check_subtyping :
                                                                     (fun
                                                                     uu___13
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStar_Pprint.op_Hat_Slash_Hat
                                                                     (Pulse_PP.text
                                                                     "and")
                                                                     uu___12)) in
@@ -5228,7 +5227,7 @@ let (check_subtyping :
                                                                     (fun
                                                                     uu___12
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStar_Pprint.op_Hat_Slash_Hat
                                                                     uu___9
                                                                     uu___11))))
                                                            uu___9) in
@@ -5253,7 +5252,7 @@ let (check_subtyping :
                                                     (fun uu___8 ->
                                                        FStar_Tactics_Effect.lift_div_tac
                                                          (fun uu___9 ->
-                                                            FStarC_Pprint.op_Hat_Slash_Hat
+                                                            FStar_Pprint.op_Hat_Slash_Hat
                                                               (Pulse_PP.text
                                                                  "Could not prove subtyping of ")
                                                               uu___8)) in

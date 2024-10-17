@@ -1307,7 +1307,7 @@ let (intro_pure :
                                                                     (fun
                                                                     uu___14
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text

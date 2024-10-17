@@ -23,10 +23,10 @@ let (__proj__Mkss_t__item__m : ss_t -> ss_map) =
   fun projectee -> match projectee with | { l; m;_} -> m
 let rec separate_map :
   'a .
-    FStarC_Pprint.document ->
-      ('a -> (FStarC_Pprint.document, unit) FStar_Tactics_Effect.tac_repr) ->
+    FStar_Pprint.document ->
+      ('a -> (FStar_Pprint.document, unit) FStar_Tactics_Effect.tac_repr) ->
         'a Prims.list ->
-          (FStarC_Pprint.document, unit) FStar_Tactics_Effect.tac_repr
+          (FStar_Pprint.document, unit) FStar_Tactics_Effect.tac_repr
   =
   fun uu___2 ->
     fun uu___1 ->
@@ -39,7 +39,7 @@ let rec separate_map :
                    Obj.magic
                      (Obj.repr
                         (FStar_Tactics_Effect.lift_div_tac
-                           (fun uu___ -> FStarC_Pprint.empty)))
+                           (fun uu___ -> FStar_Pprint.empty)))
                | x::[] -> Obj.magic (Obj.repr (f x))
                | x::xs1 ->
                    Obj.magic
@@ -84,8 +84,8 @@ let rec separate_map :
                                       (fun docs ->
                                          FStar_Tactics_Effect.lift_div_tac
                                            (fun uu___2 ->
-                                              FStarC_Pprint.op_Hat_Hat doc
-                                                (FStarC_Pprint.op_Hat_Hat sep
+                                              FStar_Pprint.op_Hat_Hat doc
+                                                (FStar_Pprint.op_Hat_Hat sep
                                                    docs))))) uu___1))))
           uu___2 uu___1 uu___
 let (pp_ss_t : ss_t Pulse_PP.printable) =
@@ -96,8 +96,8 @@ let (pp_ss_t : ss_t Pulse_PP.printable) =
          | { l; m;_} ->
              let uu___1 =
                separate_map
-                 (FStarC_Pprint.op_Hat_Hat FStarC_Pprint.comma
-                    (FStarC_Pprint.break_ Prims.int_one))
+                 (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma
+                    (FStar_Pprint.break_ Prims.int_one))
                  (fun k ->
                     let uu___2 = Pulse_PP.pp Pulse_PP.printable_int k in
                     FStar_Tactics_Effect.tac_bind
@@ -141,8 +141,8 @@ let (pp_ss_t : ss_t Pulse_PP.printable) =
                                 (fun uu___6 ->
                                    FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___7 ->
-                                        FStarC_Pprint.op_Hat_Hat
-                                          (FStarC_Pprint.doc_of_string " -> ")
+                                        FStar_Pprint.op_Hat_Hat
+                                          (FStar_Pprint.doc_of_string " -> ")
                                           uu___6)) in
                             Obj.magic
                               (FStar_Tactics_Effect.tac_bind
@@ -166,7 +166,7 @@ let (pp_ss_t : ss_t Pulse_PP.printable) =
                                  (fun uu___5 ->
                                     FStar_Tactics_Effect.lift_div_tac
                                       (fun uu___6 ->
-                                         FStarC_Pprint.op_Hat_Hat uu___3
+                                         FStar_Pprint.op_Hat_Hat uu___3
                                            uu___5)))) uu___3)) l in
              FStar_Tactics_Effect.tac_bind
                (FStar_Sealed.seal
@@ -182,7 +182,7 @@ let (pp_ss_t : ss_t Pulse_PP.printable) =
                (Obj.magic uu___1)
                (fun uu___2 ->
                   FStar_Tactics_Effect.lift_div_tac
-                    (fun uu___3 -> FStarC_Pprint.brackets uu___2)))
+                    (fun uu___3 -> FStar_Pprint.brackets uu___2)))
   }
 let (showable_ss_t : ss_t Pulse_Show.tac_showable) =
   Pulse_PP.show_from_pp pp_ss_t

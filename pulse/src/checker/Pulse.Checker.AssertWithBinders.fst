@@ -396,7 +396,7 @@ let check
     check g pre pre_typing post_hint res_ppname st
 
   | SHOW_PROOF_STATE r ->
-    let open FStar.Stubs.Pprint in
+    let open FStar.Pprint in
     let open Pulse.PP in
     let msg = [
       text "Current context:" ^^
@@ -478,7 +478,7 @@ let check
     if RU.debug_at_level (fstar_env g) "fold" then begin
       (* If we're running interactively, print out the context
       and environment. *)
-      let open FStar.Stubs.Pprint in
+      let open FStar.Pprint in
       let open Pulse.PP in
       let msg = [
         text "Elaborated fold/unfold to rewrite";

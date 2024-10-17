@@ -1769,7 +1769,7 @@ let (check_effect_annotation :
                                                                     (fun
                                                                     uu___12
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -1835,7 +1835,7 @@ let (check_effect_annotation :
                                                                     (fun
                                                                     uu___15
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -1867,7 +1867,7 @@ let (check_effect_annotation :
                                                                     (fun
                                                                     uu___14
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStar_Pprint.op_Hat_Slash_Hat
                                                                     uu___13
                                                                     (Pulse_PP.text
                                                                     "are opened"))) in
@@ -1898,7 +1898,7 @@ let (check_effect_annotation :
                                                                     (fun
                                                                     uu___13
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStar_Pprint.op_Hat_Slash_Hat
                                                                     uu___10
                                                                     uu___12))))
                                                                     uu___10) in
@@ -2192,7 +2192,7 @@ let (check_effect_annotation :
                                                                     (fun
                                                                     uu___12
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -2258,7 +2258,7 @@ let (check_effect_annotation :
                                                                     (fun
                                                                     uu___15
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -2290,7 +2290,7 @@ let (check_effect_annotation :
                                                                     (fun
                                                                     uu___14
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStar_Pprint.op_Hat_Slash_Hat
                                                                     uu___13
                                                                     (Pulse_PP.text
                                                                     "are opened"))) in
@@ -2321,7 +2321,7 @@ let (check_effect_annotation :
                                                                     (fun
                                                                     uu___13
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStar_Pprint.op_Hat_Slash_Hat
                                                                     uu___10
                                                                     uu___12))))
                                                                     uu___10) in
@@ -2473,7 +2473,7 @@ let (check_effect_annotation :
                                              (fun uu___8 ->
                                                 FStar_Tactics_Effect.lift_div_tac
                                                   (fun uu___9 ->
-                                                     FStarC_Pprint.arbitrary_string
+                                                     FStar_Pprint.arbitrary_string
                                                        uu___8)) in
                                          FStar_Tactics_Effect.tac_bind
                                            (FStar_Sealed.seal
@@ -2496,7 +2496,7 @@ let (check_effect_annotation :
                                            (fun uu___7 ->
                                               FStar_Tactics_Effect.lift_div_tac
                                                 (fun uu___8 ->
-                                                   FStarC_Pprint.prefix
+                                                   FStar_Pprint.prefix
                                                      (Prims.of_int (4))
                                                      Prims.int_one
                                                      (Pulse_PP.text
@@ -2548,7 +2548,7 @@ let (check_effect_annotation :
                                                      (fun uu___10 ->
                                                         FStar_Tactics_Effect.lift_div_tac
                                                           (fun uu___11 ->
-                                                             FStarC_Pprint.arbitrary_string
+                                                             FStar_Pprint.arbitrary_string
                                                                uu___10)) in
                                                  FStar_Tactics_Effect.tac_bind
                                                    (FStar_Sealed.seal
@@ -2571,7 +2571,7 @@ let (check_effect_annotation :
                                                    (fun uu___9 ->
                                                       FStar_Tactics_Effect.lift_div_tac
                                                         (fun uu___10 ->
-                                                           FStarC_Pprint.prefix
+                                                           FStar_Pprint.prefix
                                                              (Prims.of_int (4))
                                                              Prims.int_one
                                                              (Pulse_PP.text
@@ -2599,7 +2599,7 @@ let (check_effect_annotation :
                                                     (fun uu___8 ->
                                                        FStar_Tactics_Effect.lift_div_tac
                                                          (fun uu___9 ->
-                                                            FStarC_Pprint.op_Hat_Slash_Hat
+                                                            FStar_Pprint.op_Hat_Slash_Hat
                                                               uu___6 uu___8))))
                                               uu___6) in
                                      FStar_Tactics_Effect.tac_bind

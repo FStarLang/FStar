@@ -16,14 +16,14 @@
 
 module Pulse.PP
 
-include FStar.Stubs.Pprint
+include FStar.Pprint
 
 open FStar.Tactics
 open Pulse.Typing
 open Pulse.Syntax.Base
 
 (* A helper to create wrapped text *)
-val text : string -> FStar.Stubs.Pprint.document
+val text : string -> FStar.Pprint.document
 
 (* Nests a document 2 levels deep, as a block. It inserts a hardline
 before the doc, so if you want to format something as
