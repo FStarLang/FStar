@@ -14,3 +14,6 @@ Hello.test: Hello.exe
 
 %.exe: %.ml
 	$(FSTAR) --ocamlc $< -o $@
+
+clean:
+	rm -f *.ml *.exe
