@@ -113,34 +113,6 @@ let load_native_tactics () =
 (* print_in_place options are passed *)
 let fstar_files: ref (option (list string)) = Util.mk_ref None
 
-(* ocamlenv mode: called whenever the *first* argument is exactly '--ocamlenv' *)
-let go_ocamlenv rest_args =
-  if Platform.system = Platform.Windows then (
-    Errors.raise_error0 Errors.Fatal_OptionsNotCompatible [
-      Errors.text "--ocamlenv is not supported on Windows (yet?)"
-    ]
-  );
-  let shellescape (s:string) : string =
-    String.list_of_string s |>
-    List.map (function
-      | '\'' -> "'\"'\"'" // to escape single quotes we need to put them inside a double quote
-      | c -> String.make 1 c
-    ) |>
-    String.concat ""
-  in
-  let ocamldir = Find.locate_ocaml () in
-  let old_ocamlpath = Util.dflt "" (Util.expand_environment_variable "OCAMLPATH") in
-  let new_ocamlpath = ocamldir ^ ":" ^ old_ocamlpath in
-  match rest_args with
-  | [] ->
-    Util.print1 "OCAMLPATH='%s'; export OCAMLPATH;\n" (shellescape new_ocamlpath);
-    exit 0
-
-  | cmd :: args ->
-    (* Update OCAMLPATH and run (exec) the command *)
-    Util.putenv "OCAMLPATH" new_ocamlpath;
-    Util.execvp cmd (cmd :: args)
-
 (* This is used to print a backtrace when F* is interrupted by SIGINT *)
 let set_error_trap () =
   let h = get_sigint_handler () in
@@ -316,7 +288,14 @@ let go_normal () =
 let go () =
   let args = Util.get_cmd_args () in
   match args with
-  | _ :: "--ocamlenv" :: rest -> go_ocamlenv rest
+  | _ :: "--ocamlenv" :: [] ->
+    let new_ocamlpath = OCaml.new_ocamlpath () in
+    Util.print1 "OCAMLPATH='%s'; export OCAMLPATH;\n" (OCaml.shellescape new_ocamlpath);
+    exit 0
+
+  | _ :: "--ocamlenv" :: cmd :: args ->
+    OCaml.exec_in_ocamlenv cmd args
+
   | _ -> go_normal ()
 
 (* This is pretty awful. Now that we have Lazy_embedding, we can get rid of this table. *)
