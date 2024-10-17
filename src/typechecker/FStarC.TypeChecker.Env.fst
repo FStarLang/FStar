@@ -460,31 +460,15 @@ let lookup_qname env (lid:lident) : qninfo =
     if cur_mod <> No
     then match BU.smap_try_find (gamma_cache env) (string_of_lid lid) with
       | None ->
-        BU.catch_opt
-            (BU.find_map env.gamma (function
-              | Binding_lid(l, (us_names, t)) when lid_equals lid l->
-                (* A recursive definition.
-                 * We must return the exact set of universes on which
-                 * it is being defined, and not instantiate it.
-                 * TODO: could we cache this? *)
-                let us = List.map U_name us_names in
-                Some (Inl (us, t), Ident.range_of_lid l)
-              | _ -> None))
-            (fun () -> BU.find_map env.gamma_sig (function
-              | (_, { sigel = Sig_bundle {ses} }) ->
-                  BU.find_map ses (fun se ->
-                    if lids_of_sigelt se |> BU.for_some (lid_equals lid)
-                    then cache (Inr (se, None), U.range_of_sigelt se)
-                    else None)
-              | (lids, s) ->
-                let maybe_cache t = match s.sigel with
-                  | Sig_declare_typ _ -> Some t
-                  | _ -> cache t
-                in
-                begin match List.tryFind (lid_equals lid) lids with
-                      | None -> None
-                      | Some l -> maybe_cache (Inr (s, None), Ident.range_of_lid l)
-                end))
+        (BU.find_map env.gamma (function
+          | Binding_lid(l, (us_names, t)) when lid_equals lid l->
+            (* A recursive definition.
+              * We must return the exact set of universes on which
+              * it is being defined, and not instantiate it.
+              * TODO: could we cache this? *)
+            let us = List.map U_name us_names in
+            Some (Inl (us, t), Ident.range_of_lid l)
+          | _ -> None))
       | se -> se
     else None
   in
@@ -1791,10 +1775,6 @@ let clear_expected_typ (env_: env): env & option (typ & bool) =
 let finish_module =
     let empty_lid = lid_of_ids [id_of_text ""] in
     fun env m ->
-      let sigs =
-        if lid_equals m.name Const.prims_lid
-        then env.gamma_sig |> List.map snd |> List.rev
-        else m.declarations  in
       {env with
         curmodule=empty_lid;
         gamma=[];

@@ -2946,72 +2946,20 @@ let (lookup_qname : env -> FStarC_Ident.lident -> qninfo) =
             FStarC_Compiler_Util.smap_try_find (gamma_cache env1) uu___1 in
           match uu___ with
           | FStar_Pervasives_Native.None ->
-              let uu___1 =
-                FStarC_Compiler_Util.find_map env1.gamma
-                  (fun uu___2 ->
-                     match uu___2 with
-                     | FStarC_Syntax_Syntax.Binding_lid (l, (us_names, t))
-                         when FStarC_Ident.lid_equals lid l ->
-                         let us =
-                           FStarC_Compiler_List.map
-                             (fun uu___3 ->
-                                FStarC_Syntax_Syntax.U_name uu___3) us_names in
-                         let uu___3 =
-                           let uu___4 = FStarC_Ident.range_of_lid l in
-                           ((FStar_Pervasives.Inl (us, t)), uu___4) in
-                         FStar_Pervasives_Native.Some uu___3
-                     | uu___3 -> FStar_Pervasives_Native.None) in
-              FStarC_Compiler_Util.catch_opt uu___1
-                (fun uu___2 ->
-                   FStarC_Compiler_Util.find_map env1.gamma_sig
-                     (fun uu___3 ->
-                        match uu___3 with
-                        | (uu___4,
-                           {
-                             FStarC_Syntax_Syntax.sigel =
-                               FStarC_Syntax_Syntax.Sig_bundle
-                               { FStarC_Syntax_Syntax.ses = ses;
-                                 FStarC_Syntax_Syntax.lids = uu___5;_};
-                             FStarC_Syntax_Syntax.sigrng = uu___6;
-                             FStarC_Syntax_Syntax.sigquals = uu___7;
-                             FStarC_Syntax_Syntax.sigmeta = uu___8;
-                             FStarC_Syntax_Syntax.sigattrs = uu___9;
-                             FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                               uu___10;
-                             FStarC_Syntax_Syntax.sigopts = uu___11;_})
-                            ->
-                            FStarC_Compiler_Util.find_map ses
-                              (fun se ->
-                                 let uu___12 =
-                                   FStarC_Compiler_Util.for_some
-                                     (FStarC_Ident.lid_equals lid)
-                                     (FStarC_Syntax_Util.lids_of_sigelt se) in
-                                 if uu___12
-                                 then
-                                   cache
-                                     ((FStar_Pervasives.Inr
-                                         (se, FStar_Pervasives_Native.None)),
-                                       (FStarC_Syntax_Util.range_of_sigelt se))
-                                 else FStar_Pervasives_Native.None)
-                        | (lids, s) ->
-                            let maybe_cache t =
-                              match s.FStarC_Syntax_Syntax.sigel with
-                              | FStarC_Syntax_Syntax.Sig_declare_typ uu___4
-                                  -> FStar_Pervasives_Native.Some t
-                              | uu___4 -> cache t in
-                            let uu___4 =
-                              FStarC_Compiler_List.tryFind
-                                (FStarC_Ident.lid_equals lid) lids in
-                            (match uu___4 with
-                             | FStar_Pervasives_Native.None ->
-                                 FStar_Pervasives_Native.None
-                             | FStar_Pervasives_Native.Some l ->
-                                 let uu___5 =
-                                   let uu___6 = FStarC_Ident.range_of_lid l in
-                                   ((FStar_Pervasives.Inr
-                                       (s, FStar_Pervasives_Native.None)),
-                                     uu___6) in
-                                 maybe_cache uu___5)))
+              FStarC_Compiler_Util.find_map env1.gamma
+                (fun uu___1 ->
+                   match uu___1 with
+                   | FStarC_Syntax_Syntax.Binding_lid (l, (us_names, t)) when
+                       FStarC_Ident.lid_equals lid l ->
+                       let us =
+                         FStarC_Compiler_List.map
+                           (fun uu___2 -> FStarC_Syntax_Syntax.U_name uu___2)
+                           us_names in
+                       let uu___2 =
+                         let uu___3 = FStarC_Ident.range_of_lid l in
+                         ((FStar_Pervasives.Inl (us, t)), uu___3) in
+                       FStar_Pervasives_Native.Some uu___2
+                   | uu___2 -> FStar_Pervasives_Native.None)
           | se -> se
         else FStar_Pervasives_Native.None in
       if FStarC_Compiler_Util.is_some found
@@ -6503,17 +6451,6 @@ let (finish_module : env -> FStarC_Syntax_Syntax.modul -> env) =
     FStarC_Ident.lid_of_ids uu___ in
   fun env1 ->
     fun m ->
-      let sigs =
-        let uu___ =
-          FStarC_Ident.lid_equals m.FStarC_Syntax_Syntax.name
-            FStarC_Parser_Const.prims_lid in
-        if uu___
-        then
-          let uu___1 =
-            FStarC_Compiler_List.map FStar_Pervasives_Native.snd
-              env1.gamma_sig in
-          FStarC_Compiler_List.rev uu___1
-        else m.FStarC_Syntax_Syntax.declarations in
       {
         solver = (env1.solver);
         range = (env1.range);
