@@ -4,17 +4,14 @@
 ### A.id remains, since it should have been inlined
 ################################################################################
 
-# This is needed because ../Makefile.common includes
-# ../../../Makefile.common, but GNU Make does not support chained
-# includes with relative paths
-FSTAR_EXAMPLES = $(realpath ../../../../examples)
-
-ROOTS=B.fst
-EXTRACT=A B
+FSTAR_ROOT ?= ../../../..
+OTHERFLAGS += --cmi
+include $(FSTAR_ROOT)/mk/test.mk
 
 all: test
 
-include ../Makefile.common
+$(OUTPUT_DIR)/%.ml: %.fst.checked
+	$(FSTAR) --codegen OCaml --extract $* $*.fst
 
-test: B.ml
-	egrep test_function B.ml | egrep -q -v A.id #test that A.id is inlined
+test: $(OUTPUT_DIR)/B.ml
+	egrep test_function $< | egrep -q -v A.id #test that A.id is inlined

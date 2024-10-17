@@ -190,8 +190,7 @@ ci-post:						\
 	ci-ulib-in-fsharp				\
 	ci-ocaml-test					\
 	ci-uregressions					\
-	$(if $(FSTAR_CI_TEST_KARAMEL),ci-karamel-test,)	\
-	ci-ulib-extra
+	$(if $(FSTAR_CI_TEST_KARAMEL),ci-karamel-test,)
 
 .PHONY: ci-uregressions
 ci-uregressions:

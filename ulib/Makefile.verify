@@ -4,7 +4,7 @@
 # NOTE: Only use files that are extracted+linked into the library,
 # or they will anyway be verified when extracting it. Currently, legacy/
 # is the only subdirectory that does not go into fstar.lib.
-EXTRA=legacy/FStar.Pointer.Base.fst FStar.ModifiesGen.fst
+EXTRA=legacy/FStar.Pointer.Base.fst
 
 # List the files that should NOT be verified at all
 FLAKY=

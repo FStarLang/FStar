@@ -1,13 +1,16 @@
-.PHONY: .FORCE rebuild-all check-all accept-all
+.PHONY: .FORCE rebuild-all check-all
 .SUFFIXES:
 
 ALL := $(wildcard *.in)
 
 DISABLED=FailRange.in
 
+# Disable hints, or we get warnings
+HINTS_ENABLED := 
+
 IN=$(filter-out $(DISABLED), $(ALL))
 
-all: check
+all: $(if $(ACCEPT),accept,check)
 
 # Rebuild all .out files
 BUILD_TARGETS := $(IN:.in=.out)
@@ -38,13 +41,9 @@ touch:
 
 %.in: .FORCE
 
-FSTAR_HOME = ../../..
-include $(FSTAR_HOME)/ulib/gmake/z3.mk
-include $(FSTAR_HOME)/.common.mk
-
-ifdef Z3
-SMT=--smt $(Z3)
-endif
+FSTAR_ROOT ?= ../../..
+include $(FSTAR_ROOT)/mk/test.mk
+.DEFAULT_GOAL := all
 
 JSON_CLEANUP:=python ../cleanup.py
 
