@@ -44,3 +44,15 @@ let exec_in_ocamlenv #a (cmd : string) (args : list string) : a =
   Util.putenv "OCAMLPATH" new_ocamlpath;
   Util.execvp cmd (cmd :: args);
   failwith "execvp failed"
+
+(* OCaml Warning 8: this pattern-matching is not exhaustive.
+This is usually benign as we check for exhaustivenss via SMT. *)
+
+let exec_ocamlc args =
+  exec_in_ocamlenv "ocamlfind"
+    ("opt" :: "-w" :: "-8" :: "-linkpkg" :: "-package" :: "fstar.lib" :: args)
+
+let exec_ocamlc_plugin args =
+  exec_in_ocamlenv "ocamlfind"
+    ("opt" :: "-w" :: "-8" :: "-shared" :: "-package" :: "fstar.lib" ::
+    args)

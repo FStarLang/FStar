@@ -28,3 +28,11 @@ val new_ocamlpath () : string
 This calls execvp, so it will not return if successful. Raises a Failure if the execvp fails.
 It also tries to find the command in the PATH, absolute path is not needed. *)
 val exec_in_ocamlenv (#a:Type) (cmd : string) (args : list string) : a
+
+(* Run ocamlc passing appropriate flags to generate an executable. Expects
+the source file and further options as arguments. *)
+val exec_ocamlc #a (args : list string) : a
+
+(* Run ocamlc passing appropriate flags to generate an F* plugin, using
+fstar_plugin_lib. Expects the source file and further options as arguments. *)
+val exec_ocamlc_plugin #a (args : list string) : a

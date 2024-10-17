@@ -296,6 +296,12 @@ let go () =
   | _ :: "--ocamlenv" :: cmd :: args ->
     OCaml.exec_in_ocamlenv cmd args
 
+  | _ :: "--ocamlc" :: rest ->
+    OCaml.exec_ocamlc rest
+
+  | _ :: "--ocamlc_plugin" :: rest ->
+    OCaml.exec_ocamlc_plugin rest
+
   | _ -> go_normal ()
 
 (* This is pretty awful. Now that we have Lazy_embedding, we can get rid of this table. *)
