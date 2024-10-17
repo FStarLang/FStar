@@ -131,45 +131,6 @@ let (fstar_files :
   Prims.string Prims.list FStar_Pervasives_Native.option
     FStarC_Compiler_Effect.ref)
   = FStarC_Compiler_Util.mk_ref FStar_Pervasives_Native.None
-let (go_ocamlenv : Prims.string Prims.list -> unit) =
-  fun rest_args ->
-    if FStarC_Platform.system = FStarC_Platform.Windows
-    then
-      (let uu___1 =
-         let uu___2 =
-           FStarC_Errors_Msg.text
-             "--ocamlenv is not supported on Windows (yet?)" in
-         [uu___2] in
-       FStarC_Errors.raise_error0
-         FStarC_Errors_Codes.Fatal_OptionsNotCompatible ()
-         (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-         (Obj.magic uu___1))
-    else ();
-    (let shellescape s =
-       let uu___1 =
-         let uu___2 = FStarC_Compiler_String.list_of_string s in
-         FStarC_Compiler_List.map
-           (fun uu___3 ->
-              match uu___3 with
-              | 39 -> "'\"'\"'"
-              | c -> FStarC_Compiler_String.make Prims.int_one c) uu___2 in
-       FStarC_Compiler_String.concat "" uu___1 in
-     let ocamldir = FStarC_Find.locate_ocaml () in
-     let old_ocamlpath =
-       let uu___1 =
-         FStarC_Compiler_Util.expand_environment_variable "OCAMLPATH" in
-       FStarC_Compiler_Util.dflt "" uu___1 in
-     let new_ocamlpath =
-       Prims.strcat ocamldir (Prims.strcat ":" old_ocamlpath) in
-     match rest_args with
-     | [] ->
-         ((let uu___2 = shellescape new_ocamlpath in
-           FStarC_Compiler_Util.print1 "OCAMLPATH='%s'; export OCAMLPATH;\n"
-             uu___2);
-          FStarC_Compiler_Effect.exit Prims.int_zero)
-     | cmd::args ->
-         (FStarC_Compiler_Util.putenv "OCAMLPATH" new_ocamlpath;
-          FStarC_Compiler_Util.execvp cmd (cmd :: args)))
 let (set_error_trap : unit -> unit) =
   fun uu___ ->
     let h = FStarC_Compiler_Util.get_sigint_handler () in
@@ -442,7 +403,16 @@ let (go : unit -> unit) =
   fun uu___ ->
     let args = FStarC_Compiler_Util.get_cmd_args () in
     match args with
-    | uu___1::"--ocamlenv"::rest -> go_ocamlenv rest
+    | uu___1::"--ocamlenv"::[] ->
+        let new_ocamlpath = FStarC_OCaml.new_ocamlpath () in
+        ((let uu___3 = FStarC_OCaml.shellescape new_ocamlpath in
+          FStarC_Compiler_Util.print1 "OCAMLPATH='%s'; export OCAMLPATH;\n"
+            uu___3);
+         FStarC_Compiler_Effect.exit Prims.int_zero)
+    | uu___1::"--ocamlenv"::cmd::args1 ->
+        FStarC_OCaml.exec_in_ocamlenv cmd args1
+    | uu___1::"--ocamlc"::rest -> FStarC_OCaml.exec_ocamlc rest
+    | uu___1::"--ocamlc_plugin"::rest -> FStarC_OCaml.exec_ocamlc_plugin rest
     | uu___1 -> go_normal ()
 let (lazy_chooser :
   FStarC_Syntax_Syntax.lazy_kind ->
