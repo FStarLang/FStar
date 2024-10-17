@@ -250,10 +250,10 @@ let rec (match_f_1n :
                                                                     (
                                                                     fun
                                                                     uu___8 ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
-                                                                    (FStarC_Pprint.doc_of_string
+                                                                    (FStar_Pprint.doc_of_string
                                                                     "p =")
                                                                     uu___7)) in
                                                            FStar_Tactics_Effect.tac_bind
@@ -315,10 +315,10 @@ let rec (match_f_1n :
                                                                     (fun
                                                                     uu___11
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
-                                                                    (FStarC_Pprint.doc_of_string
+                                                                    (FStar_Pprint.doc_of_string
                                                                     "q =")
                                                                     uu___10)) in
                                                                     FStar_Tactics_Effect.tac_bind
@@ -768,10 +768,10 @@ let rec (match_f_1n :
                                                                     (fun
                                                                     uu___15
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
-                                                                    (FStarC_Pprint.doc_of_string
+                                                                    (FStar_Pprint.doc_of_string
                                                                     "p =")
                                                                     uu___14)) in
                                                                     FStar_Tactics_Effect.tac_bind
@@ -836,10 +836,10 @@ let rec (match_f_1n :
                                                                     (fun
                                                                     uu___18
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
-                                                                    (FStarC_Pprint.doc_of_string
+                                                                    (FStar_Pprint.doc_of_string
                                                                     "q =")
                                                                     uu___17)) in
                                                                     FStar_Tactics_Effect.tac_bind
@@ -902,10 +902,10 @@ let rec (match_f_1n :
                                                                     (fun
                                                                     uu___21
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
-                                                                    (FStarC_Pprint.doc_of_string
+                                                                    (FStar_Pprint.doc_of_string
                                                                     "ss' =")
                                                                     uu___20)) in
                                                                     FStar_Tactics_Effect.tac_bind
@@ -969,10 +969,10 @@ let rec (match_f_1n :
                                                                     (fun
                                                                     uu___24
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
-                                                                    (FStarC_Pprint.doc_of_string
+                                                                    (FStar_Pprint.doc_of_string
                                                                     "ss'.(q) =")
                                                                     uu___23)) in
                                                                     FStar_Tactics_Effect.tac_bind
@@ -1339,7 +1339,7 @@ let report_ambig :
                         (fun uu___5 ->
                            FStar_Tactics_Effect.lift_div_tac
                              (fun uu___6 ->
-                                FStarC_Pprint.op_Hat_Hat
+                                FStar_Pprint.op_Hat_Hat
                                   (Pulse_PP.text
                                      "Ambiguous match for resource:") uu___5)) in
                     FStar_Tactics_Effect.tac_bind
@@ -1458,10 +1458,10 @@ let report_ambig :
                                                   (fun uu___14 ->
                                                      FStar_Tactics_Effect.lift_div_tac
                                                        (fun uu___15 ->
-                                                          FStarC_Pprint.op_Hat_Hat
+                                                          FStar_Pprint.op_Hat_Hat
                                                             uu___14
-                                                            (FStarC_Pprint.op_Hat_Hat
-                                                               FStarC_Pprint.hardline
+                                                            (FStar_Pprint.op_Hat_Hat
+                                                               FStar_Pprint.hardline
                                                                (Pulse_PP.text
                                                                   "in the context.")))) in
                                               FStar_Tactics_Effect.tac_bind
@@ -1485,7 +1485,7 @@ let report_ambig :
                                                 (fun uu___13 ->
                                                    FStar_Tactics_Effect.lift_div_tac
                                                      (fun uu___14 ->
-                                                        FStarC_Pprint.op_Hat_Hat
+                                                        FStar_Pprint.op_Hat_Hat
                                                           (Pulse_PP.text
                                                              "and:") uu___13)) in
                                             FStar_Tactics_Effect.tac_bind
@@ -1509,8 +1509,8 @@ let report_ambig :
                                               (fun uu___12 ->
                                                  FStar_Tactics_Effect.lift_div_tac
                                                    (fun uu___13 ->
-                                                      FStarC_Pprint.op_Hat_Hat
-                                                        FStarC_Pprint.hardline
+                                                      FStar_Pprint.op_Hat_Hat
+                                                        FStar_Pprint.hardline
                                                         uu___12)) in
                                           Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
@@ -1534,7 +1534,7 @@ let report_ambig :
                                                (fun uu___11 ->
                                                   FStar_Tactics_Effect.lift_div_tac
                                                     (fun uu___12 ->
-                                                       FStarC_Pprint.op_Hat_Hat
+                                                       FStar_Pprint.op_Hat_Hat
                                                          uu___9 uu___11))))
                                          uu___9) in
                                 FStar_Tactics_Effect.tac_bind
@@ -1558,7 +1558,7 @@ let report_ambig :
                                   (fun uu___8 ->
                                      FStar_Tactics_Effect.lift_div_tac
                                        (fun uu___9 ->
-                                          FStarC_Pprint.op_Hat_Hat
+                                          FStar_Pprint.op_Hat_Hat
                                             (Pulse_PP.text
                                                "It can be matched by both:")
                                             uu___8)) in

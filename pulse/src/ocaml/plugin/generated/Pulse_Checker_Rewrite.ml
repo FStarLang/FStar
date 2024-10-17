@@ -498,7 +498,7 @@ let (check_slprop_equiv_tac :
                                                                     (fun
                                                                     uu___21
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStar_Pprint.op_Hat_Slash_Hat
                                                                     (Pulse_PP.text
                                                                     "Using tactic:")
                                                                     uu___20)) in

@@ -1403,7 +1403,7 @@ let (try_unif_nosmt :
                                                                   (fun
                                                                     uu___12
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Hat
+                                                                    FStar_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "p: ")
                                                                     uu___11)) in
@@ -1462,7 +1462,7 @@ let (try_unif_nosmt :
                                                                     (fun
                                                                     uu___15
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Hat
+                                                                    FStar_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "q: ")
                                                                     uu___14)) in
@@ -2133,7 +2133,7 @@ let (match_fastunif_inst_11 : Pulse_Checker_Prover_Match_Base.matcher_t) =
                                                                     (fun
                                                                     uu___16
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Hat
+                                                                    FStar_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "p: ")
                                                                     uu___15)) in
@@ -2197,7 +2197,7 @@ let (match_fastunif_inst_11 : Pulse_Checker_Prover_Match_Base.matcher_t) =
                                                                     (fun
                                                                     uu___19
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Hat
+                                                                    FStar_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "q: ")
                                                                     uu___18)) in
@@ -2261,7 +2261,7 @@ let (match_fastunif_inst_11 : Pulse_Checker_Prover_Match_Base.matcher_t) =
                                                                     (fun
                                                                     uu___22
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Hat
+                                                                    FStar_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "q_subst: ")
                                                                     uu___21)) in
@@ -2325,7 +2325,7 @@ let (match_fastunif_inst_11 : Pulse_Checker_Prover_Match_Base.matcher_t) =
                                                                     (fun
                                                                     uu___25
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Hat
+                                                                    FStar_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "q_norm: ")
                                                                     uu___24)) in

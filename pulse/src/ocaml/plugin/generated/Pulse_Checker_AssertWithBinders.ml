@@ -1965,7 +1965,7 @@ let (check_wild :
                                                                     (fun
                                                                     uu___14
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Hat
+                                                                    FStar_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "The context was:")
                                                                     uu___13)) in
@@ -2160,7 +2160,7 @@ let (check_wild :
                                                                     (fun
                                                                     uu___17
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Hat
+                                                                    FStar_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "The context was:")
                                                                     uu___16)) in
@@ -2583,7 +2583,7 @@ let (check_wild :
                                                                     (fun
                                                                     uu___19
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Hat
+                                                                    FStar_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "The context was:")
                                                                     uu___18)) in
@@ -3049,7 +3049,7 @@ let (check :
                                                   (fun uu___6 ->
                                                      FStar_Tactics_Effect.lift_div_tac
                                                        (fun uu___7 ->
-                                                          FStarC_Pprint.op_Hat_Hat
+                                                          FStar_Pprint.op_Hat_Hat
                                                             (Pulse_PP.text
                                                                "Current context:")
                                                             uu___6)) in
@@ -4297,7 +4297,7 @@ let (check :
                                                                     (fun
                                                                     uu___27
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -4363,7 +4363,7 @@ let (check :
                                                                     (fun
                                                                     uu___30
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -5363,7 +5363,7 @@ let (check :
                                                                     (fun
                                                                     uu___27
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -5429,7 +5429,7 @@ let (check :
                                                                     (fun
                                                                     uu___30
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text

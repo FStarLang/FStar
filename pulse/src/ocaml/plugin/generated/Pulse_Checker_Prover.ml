@@ -238,7 +238,7 @@ let rec (prove_pures :
                                            (fun uu___4 ->
                                               FStar_Tactics_Effect.lift_div_tac
                                                 (fun uu___5 ->
-                                                   FStarC_Pprint.op_Hat_Slash_Hat
+                                                   FStar_Pprint.op_Hat_Slash_Hat
                                                      (Pulse_PP.text
                                                         "Cannot prove pure proposition")
                                                      uu___4)) in
@@ -2132,7 +2132,7 @@ let rec (prover :
                                                                     (fun
                                                                     uu___24
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Hat
+                                                                    FStar_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "Cannot prove:")
                                                                     uu___23)) in
@@ -2257,7 +2257,7 @@ let rec (prover :
                                                                     (fun
                                                                     uu___27
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Hat
+                                                                    FStar_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "In the context:")
                                                                     uu___26)) in
@@ -2443,7 +2443,7 @@ let rec (prover :
                                                                     (fun
                                                                     uu___28
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Hat
+                                                                    FStar_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "The prover was started with goal:")
                                                                     uu___27)) in
@@ -2537,7 +2537,7 @@ let rec (prover :
                                                                     (fun
                                                                     uu___31
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Hat
+                                                                    FStar_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "and initial context:")
                                                                     uu___30)) in
@@ -3068,7 +3068,7 @@ let (prove :
                                                                     (fun
                                                                     uu___13
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -3134,7 +3134,7 @@ let (prove :
                                                                     (fun
                                                                     uu___16
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -3200,7 +3200,7 @@ let (prove :
                                                                     (fun
                                                                     uu___19
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -3267,7 +3267,7 @@ let (prove :
                                                                     (fun
                                                                     uu___22
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -3334,7 +3334,7 @@ let (prove :
                                                                     (fun
                                                                     uu___25
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -4773,7 +4773,7 @@ let (prove_post_hint :
                                                                     (fun
                                                                     uu___14
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Hat
+                                                                    FStar_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "does not match the expected")
                                                                     uu___13)) in
@@ -4804,7 +4804,7 @@ let (prove_post_hint :
                                                                     (fun
                                                                     uu___13
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStar_Pprint.op_Hat_Slash_Hat
                                                                     uu___10
                                                                     uu___12))))
                                                                     uu___10) in
@@ -4833,7 +4833,7 @@ let (prove_post_hint :
                                                                     (fun
                                                                     uu___10
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Hat
+                                                                    FStar_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "The return type")
                                                                     uu___9)) in
@@ -5095,7 +5095,7 @@ let (prove_post_hint :
                                                                     (fun
                                                                     uu___19
                                                                     ->
-                                                                    FStarC_Pprint.align
+                                                                    FStar_Pprint.align
                                                                     uu___18)) in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -5123,7 +5123,7 @@ let (prove_post_hint :
                                                                     (fun
                                                                     uu___18
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text

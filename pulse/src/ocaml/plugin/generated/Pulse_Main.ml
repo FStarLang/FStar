@@ -3675,7 +3675,7 @@ let (check_pulse_core :
                                                 (fun uu___8 ->
                                                    FStar_Issue.mk_issue_doc
                                                      "Error"
-                                                     [FStarC_Pprint.arbitrary_string
+                                                     [FStar_Pprint.arbitrary_string
                                                         uu___7]
                                                      (FStar_Pervasives_Native.Some
                                                         range)

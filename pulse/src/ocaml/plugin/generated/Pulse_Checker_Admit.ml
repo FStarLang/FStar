@@ -936,7 +936,7 @@ let (check :
                                                                     (fun
                                                                     uu___22
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Hat
+                                                                    FStar_Pprint.op_Hat_Hat
                                                                     (Pulse_PP.text
                                                                     "Current context:")
                                                                     uu___21)) in

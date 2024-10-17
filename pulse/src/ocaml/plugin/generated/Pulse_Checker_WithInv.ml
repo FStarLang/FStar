@@ -165,7 +165,7 @@ let (add_remove_inverse :
                                                    (fun uu___8 ->
                                                       FStar_Tactics_Effect.lift_div_tac
                                                         (fun uu___9 ->
-                                                           FStarC_Pprint.prefix
+                                                           FStar_Pprint.prefix
                                                              (Prims.of_int (4))
                                                              Prims.int_one
                                                              (Pulse_PP.text
@@ -218,7 +218,7 @@ let (add_remove_inverse :
                                                               FStar_Tactics_Effect.lift_div_tac
                                                                 (fun uu___11
                                                                    ->
-                                                                   FStarC_Pprint.prefix
+                                                                   FStar_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -247,7 +247,7 @@ let (add_remove_inverse :
                                                                FStar_Tactics_Effect.lift_div_tac
                                                                  (fun uu___10
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStar_Pprint.op_Hat_Slash_Hat
                                                                     uu___7
                                                                     uu___9))))
                                                       uu___7) in
@@ -1035,7 +1035,7 @@ let (check0 :
                                                                     (fun
                                                                     uu___13
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -1099,7 +1099,7 @@ let (check0 :
                                                                     (fun
                                                                     uu___15
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -1132,7 +1132,7 @@ let (check0 :
                                                                     (fun
                                                                     uu___14
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStar_Pprint.op_Hat_Slash_Hat
                                                                     uu___11
                                                                     uu___13))))
                                                                     uu___11) in
@@ -1444,7 +1444,7 @@ let (check0 :
                                                                     (fun
                                                                     uu___21
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -1476,7 +1476,7 @@ let (check0 :
                                                                     (fun
                                                                     uu___20
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStar_Pprint.op_Hat_Slash_Hat
                                                                     uu___19
                                                                     (Pulse_PP.text
                                                                     "in the with_invariants annotated postcondition."))) in
@@ -1632,7 +1632,7 @@ let (check0 :
                                                                     (fun
                                                                     uu___20
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -1698,7 +1698,7 @@ let (check0 :
                                                                     (fun
                                                                     uu___23
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -1788,7 +1788,7 @@ let (check0 :
                                                                     (fun
                                                                     uu___18
                                                                     ->
-                                                                    (FStarC_Pprint.doc_of_string
+                                                                    (FStar_Pprint.doc_of_string
                                                                     "Fatal: multiple annotated postconditions on with_invariant")
                                                                     ::
                                                                     uu___17)) in
@@ -2180,7 +2180,7 @@ let (check0 :
                                                                     (fun
                                                                     uu___27
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -2244,7 +2244,7 @@ let (check0 :
                                                                     (fun
                                                                     uu___29
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
@@ -2277,7 +2277,7 @@ let (check0 :
                                                                     (fun
                                                                     uu___28
                                                                     ->
-                                                                    FStarC_Pprint.op_Hat_Slash_Hat
+                                                                    FStar_Pprint.op_Hat_Slash_Hat
                                                                     uu___25
                                                                     uu___27))))
                                                                     uu___25) in
