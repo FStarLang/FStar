@@ -2705,7 +2705,7 @@ let (unfold_lazy_doc :
   FStarC_Syntax_Syntax.lazyinfo -> FStarC_Syntax_Syntax.term) =
   fun i ->
     let d = FStarC_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
-    let lid = FStarC_Ident.lid_of_str "FStar.Stubs.Pprint.arbitrary_string" in
+    let lid = FStarC_Ident.lid_of_str "FStar.Pprint.arbitrary_string" in
     let s = FStarC_Pprint.render d in
     let uu___ = FStarC_Syntax_Syntax.fvar lid FStar_Pervasives_Native.None in
     let uu___1 =

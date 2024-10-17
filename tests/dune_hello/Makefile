@@ -13,3 +13,6 @@ bin/hello.exe: Hello.ml
 .PHONY: run
 run: bin/hello.exe
 	./bin/hello.exe | grep "Hi!"
+
+clean:
+	dune clean

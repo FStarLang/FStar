@@ -75,5 +75,8 @@ $(OUTPUT_DIR)/%.ml:
 
 verify-all: $(ALL_CHECKED_FILES)
 
-clean:
+common_clean:
 	rm -rf $(OUTPUT_DIR) $(CACHE_DIR) .depend
+
+# Client makefiles can extend the clean, inheriting the common step
+clean: common_clean
