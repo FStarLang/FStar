@@ -21,6 +21,7 @@ ALL_TEST_DIRS += vale
 ALL_TEST_DIRS += hacl
 ALL_TEST_DIRS += simple_hello
 ALL_TEST_DIRS += dune_hello
+ALL_TEST_DIRS += validation-time
 HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
 
 ifneq (,$(HAS_OCAML))

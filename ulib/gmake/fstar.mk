@@ -1,5 +1,5 @@
 HINTS_ENABLED?=--use_hints
-WARN_ERROR=
+WARN_ERROR?=
 OTHERFLAGS+=$(WARN_ERROR)
 
 ifdef Z3

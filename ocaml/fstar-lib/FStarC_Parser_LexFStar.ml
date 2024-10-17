@@ -473,6 +473,7 @@ match%sedlex lexbuf with
  | "#print-effects-graph" -> PRAGMA_PRINT_EFFECTS_GRAPH
  | "__SOURCE_FILE__" -> STRING (L.source_file lexbuf)
  | "__LINE__" -> INT (string_of_int (L.current_line lexbuf), false)
+ | "__FL__"   -> STRING ((L.source_file lexbuf) ^ "(" ^ (string_of_int (L.current_line lexbuf)) ^ ")")
 
  | Plus anywhite -> token lexbuf
  | newline -> L.new_line lexbuf; token lexbuf
