@@ -179,7 +179,9 @@ Bug1694.verify: OTHERFLAGS += --codegen OCaml
 Bug2210.verify: OTHERFLAGS += --codegen OCaml
 
 # Disable hints, see #3572
+# We also have to filter OTHERFLAGS mostly in support of the everest script
 Bug1614a.verify: HINTS_ENABLED =
+Bug1614a.verify: OTHERFLAGS := $(subst --use_hints,,$(OTHERFLAGS))
 
 Bug2684a.verify: OTHERFLAGS += --cache_checked_modules
 Bug2684b.verify: OTHERFLAGS += --cache_checked_modules
