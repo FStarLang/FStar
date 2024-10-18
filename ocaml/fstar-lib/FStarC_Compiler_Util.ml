@@ -14,21 +14,26 @@ let is_punctuation c = List.mem c [33; 34; 35; 37; 38; 39; 40; 41; 42; 44; 45; 4
 
 let return_all x = x
 
-type time = float
-let now () = BatUnix.gettimeofday ()
-let now_ms () = Z.of_int (int_of_float (now () *. 1000.0))
-let time_diff (t1:time) (t2:time) : float * Prims.int =
-  let n = t2 -. t1 in
-  n,
-  Z.of_float (n *. 1000.0)
-let record_time f =
-    let start = now () in
+type time_ns = int64
+let now_ns () = Mtime_clock.now_ns()
+let time_diff_ns t1 t2 = 
+  Z.of_int (Int64.to_int (Int64.sub t2 t1))
+let time_diff_ms t1 t2 = Z.div (time_diff_ns t1 t2) (Z.of_int 1000000)
+let record_time_ns f =
+    let start = now_ns () in
     let res = f () in
-    let _, elapsed = time_diff start (now()) in
+    let elapsed = time_diff_ns start (now_ns()) in
     res, elapsed
+let record_time_ms f =
+    let res, ns = record_time_ns f in
+    res, Z.div ns (Z.of_int 1000000)
+
+type time_of_day = float
+let get_time_of_day () = BatUnix.gettimeofday()
+let get_time_of_day_ms () = Z.of_int (int_of_float (get_time_of_day () *. 1000.0))
 let get_file_last_modification_time f = (BatUnix.stat f).BatUnix.st_mtime
 let is_before t1 t2 = compare t1 t2 < 0
-let string_of_time = string_of_float
+let string_of_time_of_day = string_of_float
 
 exception Impos
 
@@ -99,7 +104,7 @@ type proc =
      stop_marker: (string -> bool) option;
      id : string;
      prog : string;
-     start_time : time}
+     start_time : time_of_day}
 
 let all_procs : (proc list) ref = ref []
 
@@ -156,7 +161,7 @@ let start_process'
                outc = Unix.out_channel_of_descr stdin_w;
                stop_marker = stop_marker;
                killed = false;
-               start_time = now()} in
+               start_time = get_time_of_day()} in
   (* print_string ("Started process " ^ proc.id ^ "\n" ^ (stack_dump())); *)
   all_procs := proc :: !all_procs;
   proc

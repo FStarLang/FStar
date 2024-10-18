@@ -752,7 +752,7 @@ let z3_job
     Profiling.profile
       (fun () ->
         try
-          BU.record_time (fun () -> doZ3Exe log_file r fresh input label_messages queryid)
+          BU.record_time_ms (fun () -> doZ3Exe log_file r fresh input label_messages queryid)
         with e ->
           refresh None; //refresh the solver but don't handle the exception; it'll be caught upstream
           raise e

@@ -15,9 +15,9 @@ type input_frag = {
     frag_col:Prims.int
 }
 
-val read_vfs_entry : string -> (U.time * string) option
+val read_vfs_entry : string -> (U.time_of_day * string) option
 val add_vfs_entry: string -> string -> unit
-val get_file_last_modification_time: string -> U.time
+val get_file_last_modification_time: string -> U.time_of_day
 
 type parse_frag =
     | Filename of filename

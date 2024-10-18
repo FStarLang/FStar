@@ -89,7 +89,7 @@ type optmod_t = option Syntax.Syntax.modul
 
 type timed_fname =
   { tf_fname: string;
-    tf_modtime: time }
+    tf_modtime: time_of_day }
 
 (** Every snapshot pushed in the repl stack is annotated with one of these.  The
 ``LD``-prefixed (“Load Dependency”) onces are useful when loading or updating
@@ -166,7 +166,7 @@ type grepl_state = { grepl_repls: U.psmap repl_state; grepl_stdin: stream_reader
 (* REPL tasks and states *)
 (*************************)
 
-let t0 = Util.now ()
+let t0 = Util.get_time_of_day ()
 
 (** Create a timed_fname with a dummy modtime **)
 let dummy_tf_of_fname fname =
@@ -175,7 +175,7 @@ let dummy_tf_of_fname fname =
 
 let string_of_timed_fname { tf_fname = fname; tf_modtime = modtime } =
   if modtime = t0 then Util.format1 "{ %s }" fname
-  else Util.format2 "{ %s; %s }" fname (string_of_time modtime)
+  else Util.format2 "{ %s; %s }" fname (string_of_time_of_day modtime)
 
 let string_of_repl_task = function
   | LDInterleaved (intf, impl) ->

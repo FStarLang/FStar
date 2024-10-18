@@ -153,7 +153,7 @@ let (repl_ld_tasks_of_deps :
   fun deps ->
     fun final_tasks ->
       let wrap fname =
-        let uu___ = FStarC_Compiler_Util.now () in
+        let uu___ = FStarC_Compiler_Util.get_time_of_day () in
         {
           FStarC_Interactive_Ide_Types.tf_fname = fname;
           FStarC_Interactive_Ide_Types.tf_modtime = uu___
@@ -224,7 +224,7 @@ let (deps_and_repl_ld_tasks_of_our_file :
                      else ());
                     (let uu___4 =
                        let uu___5 =
-                         let uu___6 = FStarC_Compiler_Util.now () in
+                         let uu___6 = FStarC_Compiler_Util.get_time_of_day () in
                          {
                            FStarC_Interactive_Ide_Types.tf_fname = intf;
                            FStarC_Interactive_Ide_Types.tf_modtime = uu___6

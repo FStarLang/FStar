@@ -240,7 +240,7 @@ let deps_of_our_file filename =
   deps, maybe_intf, dep_graph
 
 (* .fsti name (optional) * .fst name * .fsti recorded timestamp (optional) * .fst recorded timestamp  *)
-type m_timestamps = list (option string & string & option time & time)
+type m_timestamps = list (option string & string & option time_of_day & time_of_day)
 
 (*
  * type check remaining dependencies and record the timestamps.
@@ -286,7 +286,7 @@ let rec tc_deps (m:modul_t) (stack:stack_t)
  *)
 let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_timestamps)
   : (stack_t & env_t & m_timestamps) =
-  let is_stale (intf:option string) (impl:string) (intf_t:option time) (impl_t:time) :bool =
+  let is_stale (intf:option string) (impl:string) (intf_t:option time_of_day) (impl_t:time_of_day) :bool =
     let impl_mt = get_file_last_modification_time impl in
     (is_before impl_t impl_mt ||
      (match intf, intf_t with

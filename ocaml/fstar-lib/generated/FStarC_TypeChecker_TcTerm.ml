@@ -1894,7 +1894,7 @@ let rec (tc_term :
            uu___4 uu___5 uu___6 uu___7
        else ());
       (let uu___2 =
-         FStarC_Compiler_Util.record_time
+         FStarC_Compiler_Util.record_time_ms
            (fun uu___3 ->
               tc_maybe_toplevel_term
                 {

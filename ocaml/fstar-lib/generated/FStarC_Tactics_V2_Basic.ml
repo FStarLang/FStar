@@ -1859,7 +1859,7 @@ let meas :
       FStarC_Tactics_Monad.mk_tac
         (fun ps ->
            let uu___ =
-             FStarC_Compiler_Util.record_time
+             FStarC_Compiler_Util.record_time_ms
                (fun uu___1 -> FStarC_Tactics_Monad.run f ps) in
            match uu___ with
            | (r, ms) ->
@@ -1968,7 +1968,7 @@ let (curms : unit -> FStarC_BigInt.t FStarC_Tactics_Monad.tac) =
   fun uu___ ->
     (fun uu___ ->
        let uu___1 =
-         let uu___2 = FStarC_Compiler_Util.now_ms () in
+         let uu___2 = FStarC_Compiler_Util.get_time_of_day_ms () in
          FStarC_BigInt.of_int_fs uu___2 in
        Obj.magic
          (FStarC_Class_Monad.return FStarC_Tactics_Monad.monad_tac ()

@@ -6,7 +6,7 @@ let (dbg_NormRebuild : Prims.bool FStarC_Compiler_Effect.ref) =
 let (maybe_debug :
   FStarC_TypeChecker_Cfg.cfg ->
     FStarC_Syntax_Syntax.term ->
-      (FStarC_Syntax_Syntax.term * FStarC_Compiler_Util.time)
+      (FStarC_Syntax_Syntax.term * FStarC_Compiler_Util.time_ns)
         FStar_Pervasives_Native.option -> unit)
   =
   fun cfg ->
@@ -17,12 +17,10 @@ let (maybe_debug :
         then
           match dbg with
           | FStar_Pervasives_Native.Some (tm, time_then) ->
-              let time_now = FStarC_Compiler_Util.now () in
+              let time_now = FStarC_Compiler_Util.now_ns () in
               let uu___ =
                 let uu___1 =
-                  let uu___2 =
-                    FStarC_Compiler_Util.time_diff time_then time_now in
-                  FStar_Pervasives_Native.snd uu___2 in
+                  FStarC_Compiler_Util.time_diff_ms time_then time_now in
                 FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___1 in
               let uu___1 =
                 FStarC_Class_Show.show FStarC_Syntax_Print.showable_term tm in
@@ -2410,36 +2408,34 @@ let rec (norm :
                  | FStar_Pervasives_Native.Some (s, tm) when is_nbe_request s
                      ->
                      let tm' = closure_as_term cfg env1 tm in
-                     let start = FStarC_Compiler_Util.now () in
-                     let tm_norm = nbe_eval cfg s tm' in
-                     let fin = FStarC_Compiler_Util.now () in
-                     (if
-                        (cfg.FStarC_TypeChecker_Cfg.debug).FStarC_TypeChecker_Cfg.print_normalized
-                      then
-                        (let cfg'1 =
-                           FStarC_TypeChecker_Cfg.config s
-                             cfg.FStarC_TypeChecker_Cfg.tcenv in
-                         let uu___5 =
-                           let uu___6 =
-                             let uu___7 =
-                               FStarC_Compiler_Util.time_diff start fin in
-                             FStar_Pervasives_Native.snd uu___7 in
-                           FStarC_Class_Show.show
-                             FStarC_Class_Show.showable_int uu___6 in
-                         let uu___6 =
-                           FStarC_Class_Show.show
-                             FStarC_Syntax_Print.showable_term tm' in
-                         let uu___7 =
-                           FStarC_Class_Show.show
-                             FStarC_TypeChecker_Cfg.showable_cfg cfg'1 in
-                         let uu___8 =
-                           FStarC_Class_Show.show
-                             FStarC_Syntax_Print.showable_term tm_norm in
-                         FStarC_Compiler_Util.print4
-                           "NBE result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
-                           uu___5 uu___6 uu___7 uu___8)
-                      else ();
-                      rebuild cfg env1 stack2 tm_norm)
+                     let uu___4 =
+                       FStarC_Compiler_Util.record_time_ms
+                         (fun uu___5 -> nbe_eval cfg s tm') in
+                     (match uu___4 with
+                      | (tm_norm, elapsed) ->
+                          (if
+                             (cfg.FStarC_TypeChecker_Cfg.debug).FStarC_TypeChecker_Cfg.print_normalized
+                           then
+                             (let cfg'1 =
+                                FStarC_TypeChecker_Cfg.config s
+                                  cfg.FStarC_TypeChecker_Cfg.tcenv in
+                              let uu___6 =
+                                FStarC_Class_Show.show
+                                  FStarC_Class_Show.showable_int elapsed in
+                              let uu___7 =
+                                FStarC_Class_Show.show
+                                  FStarC_Syntax_Print.showable_term tm' in
+                              let uu___8 =
+                                FStarC_Class_Show.show
+                                  FStarC_TypeChecker_Cfg.showable_cfg cfg'1 in
+                              let uu___9 =
+                                FStarC_Class_Show.show
+                                  FStarC_Syntax_Print.showable_term tm_norm in
+                              FStarC_Compiler_Util.print4
+                                "NBE result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
+                                uu___6 uu___7 uu___8 uu___9)
+                           else ();
+                           rebuild cfg env1 stack2 tm_norm))
                  | FStar_Pervasives_Native.Some (s, tm) ->
                      (if
                         (cfg.FStarC_TypeChecker_Cfg.debug).FStarC_TypeChecker_Cfg.print_normalized
@@ -2585,15 +2581,11 @@ let rec (norm :
                            FStarC_TypeChecker_Cfg.compat_memo_ignore_cfg =
                              (cfg.FStarC_TypeChecker_Cfg.compat_memo_ignore_cfg)
                          } in
-                       let t0 = FStarC_Compiler_Util.now () in
-                       let uu___5 =
-                         FStarC_Compiler_Util.record_time
-                           (fun uu___6 -> norm cfg'1 env1 [] tm) in
-                       match uu___5 with
-                       | (tm_normed, ms) ->
-                           (maybe_debug cfg tm_normed
-                              (FStar_Pervasives_Native.Some (tm, t0));
-                            rebuild cfg env1 stack2 tm_normed)))))
+                       let t0 = FStarC_Compiler_Util.now_ns () in
+                       let tm_normed = norm cfg'1 env1 [] tm in
+                       maybe_debug cfg tm_normed
+                         (FStar_Pervasives_Native.Some (tm, t0));
+                       rebuild cfg env1 stack2 tm_normed))))
            | FStarC_Syntax_Syntax.Tm_type u ->
                let u1 = norm_universe cfg env1 u in
                let uu___2 =
@@ -7673,7 +7665,7 @@ let (normalize_with_primitive_steps :
                       t.FStarC_Syntax_Syntax.pos
                       "normalize_with_primitive_steps call" e t;
                     (let uu___8 =
-                       FStarC_Compiler_Util.record_time
+                       FStarC_Compiler_Util.record_time_ms
                          (fun uu___9 ->
                             if is_nbe then nbe_eval c s t else norm c [] [] t) in
                      match uu___8 with
@@ -7749,7 +7741,7 @@ let (normalize_comp :
              (let uu___7 =
                 FStarC_Errors.with_ctx "While normalizing a computation type"
                   (fun uu___8 ->
-                     FStarC_Compiler_Util.record_time
+                     FStarC_Compiler_Util.record_time_ms
                        (fun uu___9 -> norm_comp cfg [] c)) in
               match uu___7 with
               | (c1, ms) ->

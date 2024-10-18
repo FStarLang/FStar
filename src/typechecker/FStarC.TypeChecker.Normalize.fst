@@ -65,15 +65,15 @@ let dbg_NormRebuild = Debug.get_toggle "NormRebuild"
  * Higher-Order Symb Comput (2007) 20: 209–230
  **********************************************************************************************)
 
-let maybe_debug (cfg:Cfg.cfg) (t:term) (dbg:option (term & BU.time)) =
+let maybe_debug (cfg:Cfg.cfg) (t:term) (dbg:option (term & BU.time_ns)) =
   if cfg.debug.print_normalized
   then match dbg with
        | Some (tm, time_then) ->
-         let time_now = BU.now () in
+         let time_now = BU.now_ns () in
                     // BU.print1 "Normalizer result timing (%s ms)\n"
                     //              (show (snd (BU.time_diff time_then time_now)))
          BU.print4 "Normalizer result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
-                       (show (snd (BU.time_diff time_then time_now)))
+                       (show (BU.time_diff_ms time_then time_now))
                        (show tm)
                        (show cfg)
                        (show t)
@@ -415,8 +415,8 @@ let reduce_primops norm_cb cfg (env:env) tm : term & bool =
                   } in
                   let r =
                       if false
-                      then begin let (r, ms) = BU.record_time (fun () -> prim_step.interpretation psc norm_cb universes args_1) in
-                                 primop_time_count (show fv.fv_name.v) ms;
+                      then begin let (r, ns) = BU.record_time_ns (fun () -> prim_step.interpretation psc norm_cb universes args_1) in
+                                 primop_time_count (show fv.fv_name.v) ns;
                                  r
                            end
                       else prim_step.interpretation psc norm_cb universes args_1
@@ -981,16 +981,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
             | Some (s, tm) when is_nbe_request s ->
               let tm' = closure_as_term cfg env tm in
-              let start = BU.now() in
-              let tm_norm = nbe_eval cfg s tm' in
-              let fin = BU.now () in
+              let tm_norm, elapsed = BU.record_time_ms (fun _ -> nbe_eval cfg s tm') in
               if cfg.debug.print_normalized
               then begin
                 let cfg' = Cfg.config s cfg.tcenv in
                 // BU.print1 "NBE result timing (%s ms)\n"
                 //        (show (snd (BU.time_diff start fin)))
                 BU.print4 "NBE result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
-                       (show (snd (BU.time_diff start fin)))
+                       (show elapsed)
                        (show tm')
                        (show cfg')
                        (show tm_norm)
@@ -1020,8 +1018,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
               (* We reduce the term in an empty stack to prevent unwanted interactions.
               Later, we rebuild the normalized term with the current stack. This is
               not a tail-call, but this happens rarely enough that it should not be a problem. *)
-              let t0 = BU.now () in
-              let (tm_normed, ms) = BU.record_time (fun () -> norm cfg' env [] tm) in
+              let t0 = BU.now_ns () in
+              let tm_normed = norm cfg' env [] tm in
               maybe_debug cfg tm_normed (Some (tm, t0));
               rebuild cfg env stack tm_normed
             end
@@ -2765,7 +2763,7 @@ let normalize_with_primitive_steps ps s e (t:term) =
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (show c));
       def_check_scoped t.pos "normalize_with_primitive_steps call" e t;
       let (r, ms) =
-        BU.record_time (fun () ->
+        BU.record_time_ms (fun () ->
           if is_nbe
           then nbe_eval c s t
           else norm c [] [] t
@@ -2792,7 +2790,7 @@ let normalize_comp s e c =
     log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (show cfg));
     def_check_scoped c.pos "normalize_comp call" e c;
     let (c, ms) = Errors.with_ctx "While normalizing a computation type" (fun () ->
-                    BU.record_time (fun () ->
+                    BU.record_time_ms (fun () ->
                       norm_comp cfg [] c))
     in
     log_top cfg (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (show c) (show ms));

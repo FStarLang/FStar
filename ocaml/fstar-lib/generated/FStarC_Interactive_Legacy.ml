@@ -464,8 +464,8 @@ let (deps_of_our_file :
              (deps1, maybe_intf, dep_graph))
 type m_timestamps =
   (Prims.string FStar_Pervasives_Native.option * Prims.string *
-    FStarC_Compiler_Util.time FStar_Pervasives_Native.option *
-    FStarC_Compiler_Util.time) Prims.list
+    FStarC_Compiler_Util.time_of_day FStar_Pervasives_Native.option *
+    FStarC_Compiler_Util.time_of_day) Prims.list
 let rec (tc_deps :
   modul_t ->
     stack_t ->

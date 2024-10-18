@@ -578,7 +578,7 @@ let is_false t =
 
 let meas (s:string) (f : tac 'a) : tac 'a =
   mk_tac (fun ps ->
-    let (r, ms) = BU.record_time (fun () -> Tactics.Monad.run f ps) in
+    let (r, ms) = BU.record_time_ms (fun () -> Tactics.Monad.run f ps) in
     BU.print2 "++ Tactic %s ran in \t\t%sms\n" s (show ms);
     r)
 
@@ -606,7 +606,7 @@ let fresh () : tac Z.t =
   return (Z.of_int_fs n)
 
 let curms () : tac Z.t =
-    return (BU.now_ms () |> Z.of_int_fs)
+    return (BU.get_time_of_day_ms () |> Z.of_int_fs)
 
 (* Annoying duplication here *)
 let __tc (e : env) (t : term) : tac (term & typ & guard_t) =

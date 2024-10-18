@@ -39,13 +39,13 @@ let find_file filename =
     | None ->
       raise_error_text FStarC_Compiler_Range.dummyRange Fatal_ModuleOrFileNotFound (U.format1 "Unable to find file: %s\n" filename)
 
-let vfs_entries : (U.time * string) U.smap = U.smap_create (Z.of_int 1)
+let vfs_entries : (U.time_of_day * string) U.smap = U.smap_create (Z.of_int 1)
 
 let read_vfs_entry fname =
   U.smap_try_find vfs_entries (U.normalize_file_path fname)
 
 let add_vfs_entry fname contents =
-  U.smap_add vfs_entries (U.normalize_file_path fname) (U.now (), contents)
+  U.smap_add vfs_entries (U.normalize_file_path fname) (U.get_time_of_day (), contents)
 
 let get_file_last_modification_time filename =
   match read_vfs_entry filename with

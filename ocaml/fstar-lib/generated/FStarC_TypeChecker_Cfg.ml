@@ -2340,13 +2340,13 @@ let (primop_time_reset : unit -> unit) =
   fun uu___ -> FStarC_Compiler_Util.smap_clear primop_time_map
 let (primop_time_count : Prims.string -> Prims.int -> unit) =
   fun nm ->
-    fun ms ->
+    fun ns ->
       let uu___ = FStarC_Compiler_Util.smap_try_find primop_time_map nm in
       match uu___ with
       | FStar_Pervasives_Native.None ->
-          FStarC_Compiler_Util.smap_add primop_time_map nm ms
-      | FStar_Pervasives_Native.Some ms0 ->
-          FStarC_Compiler_Util.smap_add primop_time_map nm (ms0 + ms)
+          FStarC_Compiler_Util.smap_add primop_time_map nm ns
+      | FStar_Pervasives_Native.Some ns0 ->
+          FStarC_Compiler_Util.smap_add primop_time_map nm (ns0 + ns)
 let (fixto : Prims.int -> Prims.string -> Prims.string) =
   fun n ->
     fun s ->
@@ -2361,7 +2361,7 @@ let (primop_time_report : unit -> Prims.string) =
   fun uu___ ->
     let pairs =
       FStarC_Compiler_Util.smap_fold primop_time_map
-        (fun nm -> fun ms -> fun rest -> (nm, ms) :: rest) [] in
+        (fun nm -> fun ns -> fun rest -> (nm, ns) :: rest) [] in
     let pairs1 =
       FStarC_Compiler_Util.sort_with
         (fun uu___1 ->
@@ -2372,10 +2372,12 @@ let (primop_time_report : unit -> Prims.string) =
       (fun uu___1 ->
          fun rest ->
            match uu___1 with
-           | (nm, ms) ->
+           | (nm, ns) ->
                let uu___2 =
                  let uu___3 =
-                   let uu___4 = FStarC_Compiler_Util.string_of_int ms in
+                   let uu___4 =
+                     FStarC_Compiler_Util.string_of_int
+                       (ns / (Prims.parse_int "1000000")) in
                    fixto (Prims.of_int (10)) uu___4 in
                  FStarC_Compiler_Util.format2 "%sms --- %s\n" uu___3 nm in
                FStarC_Compiler_String.op_Hat uu___2 rest) pairs1 ""
