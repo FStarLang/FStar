@@ -1,12 +1,8 @@
 {
   "fstar_exe": "./out/bin/fstar.exe",
   "options": [
-    "--include", "./stage1/ulib.checked/",
     "--ext", "context_pruning"
   ],
   "include_dirs": [
-    "ulib/",
-    "ulib/experimental",
-    "ulib/legacy"
   ]
 }
