@@ -45,11 +45,11 @@ type rec_binding   = (ident & lid &                       (* name bound by recur
                       used_marker)                        (* this ref marks whether it was used, so we can warn if not *)
 
 type scope_mod =
-| Local_bindings           of BU.psmap local_binding
+| Local_bindings           of BU.psmap local_binding (* a map local bindings in a scope; a map to avoid a linear scan *) 
 | Rec_binding              of rec_binding
 | Module_abbrev            of module_abbrev
 | Open_module_or_namespace of open_module_or_namespace
-| Top_level_defs           of BU.psmap bool           (* top-level definition for an unqualified identifier x to be resolved as curmodule.x. *)
+| Top_level_defs           of BU.psmap bool   (* a map (to avoid a linear scan) recording that a top-level definition for an unqualified identifier x is in scope and should be resolved as curmodule.x. *)
 | Record_or_dc             of record_or_dc    (* to honor interleavings of "open" and record definitions *)
 
 type string_set = RBSet.t string
