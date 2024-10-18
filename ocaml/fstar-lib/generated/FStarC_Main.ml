@@ -412,7 +412,9 @@ let (go : unit -> unit) =
     | uu___1::"--ocamlenv"::cmd::args1 ->
         FStarC_OCaml.exec_in_ocamlenv cmd args1
     | uu___1::"--ocamlc"::rest -> FStarC_OCaml.exec_ocamlc rest
-    | uu___1::"--ocamlc_plugin"::rest -> FStarC_OCaml.exec_ocamlc_plugin rest
+    | uu___1::"--ocamlopt"::rest -> FStarC_OCaml.exec_ocamlopt rest
+    | uu___1::"--ocamlopt_plugin"::rest ->
+        FStarC_OCaml.exec_ocamlopt_plugin rest
     | uu___1 -> go_normal ()
 let (lazy_chooser :
   FStarC_Syntax_Syntax.lazy_kind ->

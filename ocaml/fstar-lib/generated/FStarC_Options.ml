@@ -3536,7 +3536,7 @@ let rec (specs_with_types :
                                                                     let uu___282
                                                                     =
                                                                     text
-                                                                    "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* application executable." in
+                                                                    "A helper. This runs 'ocamlc' in the environment set up by --ocamlenv, for building an F* application bytecode executable." in
                                                                     (FStarC_Getopt.noshort,
                                                                     "ocamlc",
                                                                     (WithSideEffect
@@ -3558,22 +3558,47 @@ let rec (specs_with_types :
                                                                     let uu___284
                                                                     =
                                                                     text
-                                                                    "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* plugin from extracted files." in
+                                                                    "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* application native executable." in
                                                                     (FStarC_Getopt.noshort,
-                                                                    "ocamlc_plugin",
+                                                                    "ocamlopt",
                                                                     (WithSideEffect
                                                                     ((fun
                                                                     uu___285
                                                                     ->
                                                                     FStarC_Compiler_Util.print_error
-                                                                    "--ocamlc_plugin must be the first argument, see fstar.exe --help for details\n";
+                                                                    "--ocamlopt must be the first argument, see fstar.exe --help for details\n";
                                                                     FStarC_Compiler_Effect.exit
                                                                     Prims.int_one),
                                                                     (Const
                                                                     (Bool
                                                                     true)))),
                                                                     uu___284) in
-                                                                    [uu___283] in
+                                                                    let uu___284
+                                                                    =
+                                                                    let uu___285
+                                                                    =
+                                                                    let uu___286
+                                                                    =
+                                                                    text
+                                                                    "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* plugin." in
+                                                                    (FStarC_Getopt.noshort,
+                                                                    "ocamlopt_plugin",
+                                                                    (WithSideEffect
+                                                                    ((fun
+                                                                    uu___287
+                                                                    ->
+                                                                    FStarC_Compiler_Util.print_error
+                                                                    "--ocamlopt_plugin must be the first argument, see fstar.exe --help for details\n";
+                                                                    FStarC_Compiler_Effect.exit
+                                                                    Prims.int_one),
+                                                                    (Const
+                                                                    (Bool
+                                                                    true)))),
+                                                                    uu___286) in
+                                                                    [uu___285] in
+                                                                    uu___283
+                                                                    ::
+                                                                    uu___284 in
                                                                     uu___281
                                                                     ::
                                                                     uu___282 in
