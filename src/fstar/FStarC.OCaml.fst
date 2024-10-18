@@ -16,6 +16,7 @@
 module FStarC.OCaml
 
 open FStarC
+open FStar.List.Tot.Base
 open FStarC.Compiler
 open FStarC.Compiler.Effect
 
@@ -45,18 +46,25 @@ let exec_in_ocamlenv #a (cmd : string) (args : list string) : a =
   Util.execvp cmd (cmd :: args);
   failwith "execvp failed"
 
+let app_lib = "fstar.lib"
+let plugin_lib = "fstar.lib"
+
 (* OCaml Warning 8: this pattern-matching is not exhaustive.
 This is usually benign as we check for exhaustivenss via SMT. *)
+let wstr = "-8"
+
+let common_args =
+  "-w" :: wstr ::
+  []
 
 let exec_ocamlc args =
   exec_in_ocamlenv "ocamlfind"
-    ("c" :: "-w" :: "-8" :: "-linkpkg" :: "-package" :: "fstar.lib" :: args)
+    ("c" :: common_args @ "-linkpkg" :: "-package" :: app_lib :: args)
 
 let exec_ocamlopt args =
   exec_in_ocamlenv "ocamlfind"
-    ("opt" :: "-w" :: "-8" :: "-linkpkg" :: "-package" :: "fstar.lib" :: args)
+    ("opt" :: common_args @ "-linkpkg" :: "-package" :: app_lib :: args)
 
 let exec_ocamlopt_plugin args =
   exec_in_ocamlenv "ocamlfind"
-    ("opt" :: "-w" :: "-8" :: "-shared" :: "-package" :: "fstar.lib" ::
-    args)
+    ("opt" :: common_args @ "-shared" :: "-package" :: plugin_lib :: args)
