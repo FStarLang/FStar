@@ -9177,9 +9177,6 @@ and (desugar_decl_maybe_fail_attr :
           (fun at ->
              let uu___ = get_fail_attr1 false at in
              FStarC_Compiler_Option.isNone uu___) ats in
-      let env0 =
-        let uu___ = FStarC_Syntax_DsEnv.snapshot env in
-        FStar_Pervasives_Native.snd uu___ in
       let uu___ =
         let attrs =
           FStarC_Compiler_List.map (desugar_term env)
@@ -9188,6 +9185,9 @@ and (desugar_decl_maybe_fail_attr :
         let uu___1 = get_fail_attr false attrs1 in
         match uu___1 with
         | FStar_Pervasives_Native.Some (expected_errs, lax) ->
+            let env0 =
+              let uu___2 = FStarC_Syntax_DsEnv.snapshot env in
+              FStar_Pervasives_Native.snd uu___2 in
             let d1 =
               {
                 FStarC_Parser_AST.d = (d.FStarC_Parser_AST.d);
