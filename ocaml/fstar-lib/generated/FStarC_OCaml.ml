@@ -38,15 +38,22 @@ let exec_in_ocamlenv : 'a . Prims.string -> Prims.string Prims.list -> 'a =
       FStarC_Compiler_Util.putenv "OCAMLPATH" new_ocamlpath1;
       FStarC_Compiler_Util.execvp cmd (cmd :: args);
       failwith "execvp failed"
+let (app_lib : Prims.string) = "fstar.lib"
+let (plugin_lib : Prims.string) = "fstar.lib"
+let (wstr : Prims.string) = "-8"
+let (common_args : Prims.string Prims.list) = ["-w"; wstr; "-thread"]
 let exec_ocamlc : 'a . Prims.string Prims.list -> 'a =
   fun args ->
-    exec_in_ocamlenv "ocamlfind" ("c" :: "-w" :: "-8" :: "-linkpkg" ::
-      "-package" :: "fstar.lib" :: args)
+    exec_in_ocamlenv "ocamlfind"
+      (FStar_List_Tot_Base.op_At ("c" :: common_args) ("-linkpkg" ::
+         "-package" :: app_lib :: args))
 let exec_ocamlopt : 'a . Prims.string Prims.list -> 'a =
   fun args ->
-    exec_in_ocamlenv "ocamlfind" ("opt" :: "-w" :: "-8" :: "-linkpkg" ::
-      "-package" :: "fstar.lib" :: args)
+    exec_in_ocamlenv "ocamlfind"
+      (FStar_List_Tot_Base.op_At ("opt" :: common_args) ("-linkpkg" ::
+         "-package" :: app_lib :: args))
 let exec_ocamlopt_plugin : 'a . Prims.string Prims.list -> 'a =
   fun args ->
-    exec_in_ocamlenv "ocamlfind" ("opt" :: "-w" :: "-8" :: "-shared" ::
-      "-package" :: "fstar.lib" :: args)
+    exec_in_ocamlenv "ocamlfind"
+      (FStar_List_Tot_Base.op_At ("opt" :: common_args) ("-shared" ::
+         "-package" :: plugin_lib :: args))
