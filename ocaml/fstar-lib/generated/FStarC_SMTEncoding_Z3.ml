@@ -1292,7 +1292,7 @@ let (z3_job :
                          (fun uu___3 ->
                             match () with
                             | () ->
-                                FStarC_Compiler_Util.record_time
+                                FStarC_Compiler_Util.record_time_ms
                                   (fun uu___4 ->
                                      doZ3Exe log_file r fresh input
                                        label_messages queryid)) ()

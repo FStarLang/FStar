@@ -14,6 +14,7 @@ depends: [
   "memtrace"
   "menhirLib"
   "menhir" {build & >= "2.1"}
+  "mtime"
   "pprint"
   "sedlex"
   "ppxlib" {>= "0.27.0"}

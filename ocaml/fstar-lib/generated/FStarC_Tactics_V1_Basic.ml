@@ -1478,7 +1478,7 @@ let (fresh : unit -> FStarC_BigInt.t FStarC_Tactics_Monad.tac) =
 let (curms : unit -> FStarC_BigInt.t FStarC_Tactics_Monad.tac) =
   fun uu___ ->
     let uu___1 =
-      let uu___2 = FStarC_Compiler_Util.now_ms () in
+      let uu___2 = FStarC_Compiler_Util.get_time_of_day_ms () in
       FStarC_BigInt.of_int_fs uu___2 in
     ret uu___1
 let (__tc :
