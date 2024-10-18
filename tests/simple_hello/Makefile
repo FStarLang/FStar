@@ -6,14 +6,18 @@ FSTAR ?= ../../bin/fstar.exe
 
 all: Hello.test
 
-Hello.test: Hello.exe
-	./Hello.exe | grep "Hello F\*!"
+Hello.test: Hello.exe Hello.byte
+	./Hello.exe  | grep "Hello F\*!"
+	./Hello.byte | grep "Hello F\*!"
 
 %.ml: %.fst
 	$(FSTAR) --codegen OCaml $< --extract $*
 
 %.exe: %.ml
+	$(FSTAR) --ocamlopt $< -o $@
+
+%.byte: %.ml
 	$(FSTAR) --ocamlc $< -o $@
 
 clean:
-	rm -f *.ml *.exe
+	rm -f *.ml *.exe *.byte

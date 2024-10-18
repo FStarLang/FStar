@@ -13,6 +13,8 @@ bin/hello.exe: Hello.ml
 .PHONY: run
 run: bin/hello.exe
 	./bin/hello.exe | grep "Hi!"
+	# Find a way to install this? dune install skips the bytecode
+	$(FSTAR_EXE) --ocamlenv dune exec ./hello.bc | grep "Hi!"
 
 clean:
 	dune clean
