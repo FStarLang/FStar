@@ -59,7 +59,7 @@ type scope_mod =
   | Module_abbrev of FStarC_Syntax_Syntax.module_abbrev 
   | Open_module_or_namespace of FStarC_Syntax_Syntax.open_module_or_namespace
   
-  | Top_level_def of FStarC_Ident.ident 
+  | Top_level_defs of Prims.bool FStarC_Compiler_Util.psmap 
   | Record_or_dc of record_or_dc 
 let (uu___is_Local_binding : scope_mod -> Prims.bool) =
   fun projectee ->
@@ -85,11 +85,12 @@ let (uu___is_Open_module_or_namespace : scope_mod -> Prims.bool) =
 let (__proj__Open_module_or_namespace__item___0 :
   scope_mod -> FStarC_Syntax_Syntax.open_module_or_namespace) =
   fun projectee -> match projectee with | Open_module_or_namespace _0 -> _0
-let (uu___is_Top_level_def : scope_mod -> Prims.bool) =
+let (uu___is_Top_level_defs : scope_mod -> Prims.bool) =
   fun projectee ->
-    match projectee with | Top_level_def _0 -> true | uu___ -> false
-let (__proj__Top_level_def__item___0 : scope_mod -> FStarC_Ident.ident) =
-  fun projectee -> match projectee with | Top_level_def _0 -> _0
+    match projectee with | Top_level_defs _0 -> true | uu___ -> false
+let (__proj__Top_level_defs__item___0 :
+  scope_mod -> Prims.bool FStarC_Compiler_Util.psmap) =
+  fun projectee -> match projectee with | Top_level_defs _0 -> _0
 let (uu___is_Record_or_dc : scope_mod -> Prims.bool) =
   fun projectee ->
     match projectee with | Record_or_dc _0 -> true | uu___ -> false
@@ -882,10 +883,12 @@ let try_lookup_id'' :
                          | FStar_Pervasives_Native.Some id1 ->
                              find_in_module_with_includes eikind
                                find_in_module Cont_ignore env1 ns id1)
-                    | Top_level_def id' when
-                        let uu___1 = FStarC_Ident.string_of_id id' in
-                        let uu___2 = FStarC_Ident.string_of_id id in
-                        uu___1 = uu___2 -> lookup_default_id Cont_ignore id
+                    | Top_level_defs ids when
+                        let uu___1 =
+                          let uu___2 = FStarC_Ident.string_of_id id in
+                          FStarC_Compiler_Util.psmap_try_find ids uu___2 in
+                        FStar_Pervasives_Native.uu___is_Some uu___1 ->
+                        lookup_default_id Cont_ignore id
                     | Record_or_dc r when is_exported_id_field eikind ->
                         let uu___1 = FStarC_Ident.lid_of_ids curmod_ns in
                         find_in_module_with_includes Exported_id_field
@@ -2566,6 +2569,23 @@ let (push_sigelt' : Prims.bool -> env -> FStarC_Syntax_Syntax.sigelt -> env)
           | uu___1 -> (env3, [((FStarC_Syntax_Util.lids_of_sigelt s), s)]) in
         match uu___ with
         | (env4, lss) ->
+            let push_top_level_def id stack =
+              match stack with
+              | (Top_level_defs ids)::rest ->
+                  let uu___1 =
+                    let uu___2 =
+                      let uu___3 = FStarC_Ident.string_of_id id in
+                      FStarC_Compiler_Util.psmap_add ids uu___3 true in
+                    Top_level_defs uu___2 in
+                  uu___1 :: rest
+              | uu___1 ->
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 = FStarC_Compiler_Util.psmap_empty () in
+                      let uu___5 = FStarC_Ident.string_of_id id in
+                      FStarC_Compiler_Util.psmap_add uu___4 uu___5 true in
+                    Top_level_defs uu___3 in
+                  uu___2 :: stack in
             (FStarC_Compiler_List.iter
                (fun uu___2 ->
                   match uu___2 with
@@ -2573,12 +2593,10 @@ let (push_sigelt' : Prims.bool -> env -> FStarC_Syntax_Syntax.sigelt -> env)
                       FStarC_Compiler_List.iter
                         (fun lid ->
                            (let uu___4 =
-                              let uu___5 =
-                                let uu___6 = FStarC_Ident.ident_of_lid lid in
-                                Top_level_def uu___6 in
+                              let uu___5 = FStarC_Ident.ident_of_lid lid in
                               let uu___6 =
                                 FStarC_Compiler_Effect.op_Bang globals in
-                              uu___5 :: uu___6 in
+                              push_top_level_def uu___5 uu___6 in
                             FStarC_Compiler_Effect.op_Colon_Equals globals
                               uu___4);
                            (match () with
