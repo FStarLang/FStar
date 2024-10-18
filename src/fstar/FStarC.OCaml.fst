@@ -55,6 +55,7 @@ let wstr = "-8"
 
 let common_args =
   "-w" :: wstr ::
+  "-thread" ::
   []
 
 let exec_ocamlc args =
