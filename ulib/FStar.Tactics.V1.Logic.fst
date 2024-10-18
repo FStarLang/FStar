@@ -24,11 +24,6 @@ open FStar.Reflection.V1.Formula
 
 open FStar.Tactics.V1.Logic.Lemmas
 
-private val revert_squash : (#a:Type) -> (#b : (a -> Type)) ->
-                            (squash (forall (x:a). b x)) ->
-                            x:a -> squash (b x)
-let revert_squash #a #b s x = let x : (_:unit{forall x. b x}) = s in ()
-
 (** Revert an introduced binder as a forall. *)
 let l_revert () : Tac unit =
     revert ();
@@ -196,17 +191,9 @@ let destruct_and (t : term) : Tac (binder & binder) =
     and_elim t;
     (implies_intro (), implies_intro ())
 
-private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (exists (x:a). p x)
-private let __witness #a x #p _ = ()
-
 let witness (t : term) : Tac unit =
     apply_raw (`__witness);
     exact t
-
-private
-let __elim_exists' #t (#pred : t -> Type0) #goal (h : (exists x. pred x))
-                          (k : (x:t -> pred x -> squash goal)) : squash goal =
-  FStar.Squash.bind_squash #(x:t & pred x) h (fun (|x, pf|) -> k x pf)
 
 (* returns witness and proof as binders *)
 let elim_exists (t : term) : Tac (binder & binder) =
@@ -214,15 +201,6 @@ let elim_exists (t : term) : Tac (binder & binder) =
   let x = intro () in
   let pf = intro () in
   (x, pf)
-
-private
-let __forall_inst #t (#pred : t -> Type0) (h : (forall x. pred x)) (x : t) : squash (pred x) =
-    ()
-
-(* GM: annoying that this doesn't just work by SMT *)
-private
-let __forall_inst_sq #t (#pred : t -> Type0) (h : squash (forall x. pred x)) (x : t) : squash (pred x) =
-    FStar.Squash.bind_squash h (fun (f : (forall x. pred x)) -> __forall_inst f x)
 
 let instantiate (fa : term) (x : term) : Tac binder =
     try pose (`__forall_inst_sq (`#fa) (`#x)) with | _ ->
