@@ -299,8 +299,11 @@ let go () =
   | _ :: "--ocamlc" :: rest ->
     OCaml.exec_ocamlc rest
 
-  | _ :: "--ocamlc_plugin" :: rest ->
-    OCaml.exec_ocamlc_plugin rest
+  | _ :: "--ocamlopt" :: rest ->
+    OCaml.exec_ocamlopt rest
+
+  | _ :: "--ocamlopt_plugin" :: rest ->
+    OCaml.exec_ocamlopt_plugin rest
 
   | _ -> go_normal ()
 
