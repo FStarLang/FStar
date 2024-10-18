@@ -45,7 +45,7 @@ type rec_binding   = (ident & lid &                       (* name bound by recur
                       used_marker)                        (* this ref marks whether it was used, so we can warn if not *)
 
 type scope_mod =
-| Local_binding            of local_binding
+| Local_bindings           of BU.psmap local_binding
 | Rec_binding              of rec_binding
 | Module_abbrev            of module_abbrev
 | Open_module_or_namespace of open_module_or_namespace
@@ -303,8 +303,9 @@ let try_lookup_id''
     in
     let curmod_ns = ids_of_lid (current_module env) in
     let proc = function
-      | Local_binding l
-        when check_local_binding_id l ->
+      | Local_bindings lbs
+        when Some? (BU.psmap_try_find lbs (string_of_id id)) ->
+        let Some l = BU.psmap_try_find lbs (string_of_id id) in
         let (_, _, used_marker) = l in
         used_marker := true;
         k_local_binding l
@@ -982,7 +983,14 @@ let push_bv' env (x:ident) =
   let r = range_of_id x in
   let bv = S.gen_bv (string_of_id x) (Some r) ({ tun with pos = r }) in
   let used_marker = BU.mk_ref false in
-  push_scope_mod env (Local_binding (x, bv, used_marker)), bv, used_marker
+  let scope_mods =
+    match env.scope_mods with
+    | Local_bindings lbs :: rest ->
+      Local_bindings (BU.psmap_add lbs (string_of_id x) (x, bv, used_marker)) :: rest
+    | _ ->
+      Local_bindings (BU.psmap_add (BU.psmap_empty()) (string_of_id x) (x, bv, used_marker)) :: env.scope_mods
+  in
+  { env with scope_mods }, bv, used_marker
 
 let push_bv env x =
   let (env, bv, _) = push_bv' env x in

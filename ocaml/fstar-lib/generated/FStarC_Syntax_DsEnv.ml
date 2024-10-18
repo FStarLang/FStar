@@ -54,18 +54,19 @@ type local_binding =
   (FStarC_Ident.ident * FStarC_Syntax_Syntax.bv * used_marker)
 type rec_binding = (FStarC_Ident.ident * FStarC_Ident.lid * used_marker)
 type scope_mod =
-  | Local_binding of local_binding 
+  | Local_bindings of local_binding FStarC_Compiler_Util.psmap 
   | Rec_binding of rec_binding 
   | Module_abbrev of FStarC_Syntax_Syntax.module_abbrev 
   | Open_module_or_namespace of FStarC_Syntax_Syntax.open_module_or_namespace
   
   | Top_level_defs of Prims.bool FStarC_Compiler_Util.psmap 
   | Record_or_dc of record_or_dc 
-let (uu___is_Local_binding : scope_mod -> Prims.bool) =
+let (uu___is_Local_bindings : scope_mod -> Prims.bool) =
   fun projectee ->
-    match projectee with | Local_binding _0 -> true | uu___ -> false
-let (__proj__Local_binding__item___0 : scope_mod -> local_binding) =
-  fun projectee -> match projectee with | Local_binding _0 -> _0
+    match projectee with | Local_bindings _0 -> true | uu___ -> false
+let (__proj__Local_bindings__item___0 :
+  scope_mod -> local_binding FStarC_Compiler_Util.psmap) =
+  fun projectee -> match projectee with | Local_bindings _0 -> _0
 let (uu___is_Rec_binding : scope_mod -> Prims.bool) =
   fun projectee ->
     match projectee with | Rec_binding _0 -> true | uu___ -> false
@@ -858,13 +859,22 @@ let try_lookup_id'' :
                     FStarC_Ident.ids_of_lid uu___ in
                   let proc uu___ =
                     match uu___ with
-                    | Local_binding l when check_local_binding_id l ->
-                        let uu___1 = l in
+                    | Local_bindings lbs when
+                        let uu___1 =
+                          let uu___2 = FStarC_Ident.string_of_id id in
+                          FStarC_Compiler_Util.psmap_try_find lbs uu___2 in
+                        FStar_Pervasives_Native.uu___is_Some uu___1 ->
+                        let uu___1 =
+                          let uu___2 = FStarC_Ident.string_of_id id in
+                          FStarC_Compiler_Util.psmap_try_find lbs uu___2 in
                         (match uu___1 with
-                         | (uu___2, uu___3, used_marker1) ->
-                             (FStarC_Compiler_Effect.op_Colon_Equals
-                                used_marker1 true;
-                              k_local_binding l))
+                         | FStar_Pervasives_Native.Some l ->
+                             let uu___2 = l in
+                             (match uu___2 with
+                              | (uu___3, uu___4, used_marker1) ->
+                                  (FStarC_Compiler_Effect.op_Colon_Equals
+                                     used_marker1 true;
+                                   k_local_binding l)))
                     | Rec_binding r when check_rec_binding_id r ->
                         let uu___1 = r in
                         (match uu___1 with
@@ -2426,8 +2436,43 @@ let (push_bv' :
               (FStarC_Syntax_Syntax.tun.FStarC_Syntax_Syntax.hash_code)
           } in
       let used_marker1 = FStarC_Compiler_Util.mk_ref false in
-      ((push_scope_mod env1 (Local_binding (x, bv, used_marker1))), bv,
-        used_marker1)
+      let scope_mods =
+        match env1.scope_mods with
+        | (Local_bindings lbs)::rest ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 = FStarC_Ident.string_of_id x in
+                FStarC_Compiler_Util.psmap_add lbs uu___2
+                  (x, bv, used_marker1) in
+              Local_bindings uu___1 in
+            uu___ :: rest
+        | uu___ ->
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = FStarC_Compiler_Util.psmap_empty () in
+                let uu___4 = FStarC_Ident.string_of_id x in
+                FStarC_Compiler_Util.psmap_add uu___3 uu___4
+                  (x, bv, used_marker1) in
+              Local_bindings uu___2 in
+            uu___1 :: (env1.scope_mods) in
+      ({
+         curmodule = (env1.curmodule);
+         curmonad = (env1.curmonad);
+         modules = (env1.modules);
+         scope_mods;
+         exported_ids = (env1.exported_ids);
+         trans_exported_ids = (env1.trans_exported_ids);
+         includes = (env1.includes);
+         sigaccum = (env1.sigaccum);
+         sigmap = (env1.sigmap);
+         iface = (env1.iface);
+         admitted_iface = (env1.admitted_iface);
+         expect_typ = (env1.expect_typ);
+         remaining_iface_decls = (env1.remaining_iface_decls);
+         syntax_only = (env1.syntax_only);
+         ds_hooks = (env1.ds_hooks);
+         dep_graph = (env1.dep_graph)
+       }, bv, used_marker1)
 let (push_bv : env -> FStarC_Ident.ident -> (env * FStarC_Syntax_Syntax.bv))
   =
   fun env1 ->
