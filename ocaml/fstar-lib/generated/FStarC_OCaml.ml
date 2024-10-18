@@ -40,9 +40,13 @@ let exec_in_ocamlenv : 'a . Prims.string -> Prims.string Prims.list -> 'a =
       failwith "execvp failed"
 let exec_ocamlc : 'a . Prims.string Prims.list -> 'a =
   fun args ->
+    exec_in_ocamlenv "ocamlfind" ("c" :: "-w" :: "-8" :: "-linkpkg" ::
+      "-package" :: "fstar.lib" :: args)
+let exec_ocamlopt : 'a . Prims.string Prims.list -> 'a =
+  fun args ->
     exec_in_ocamlenv "ocamlfind" ("opt" :: "-w" :: "-8" :: "-linkpkg" ::
       "-package" :: "fstar.lib" :: args)
-let exec_ocamlc_plugin : 'a . Prims.string Prims.list -> 'a =
+let exec_ocamlopt_plugin : 'a . Prims.string Prims.list -> 'a =
   fun args ->
     exec_in_ocamlenv "ocamlfind" ("opt" :: "-w" :: "-8" :: "-shared" ::
       "-package" :: "fstar.lib" :: args)
