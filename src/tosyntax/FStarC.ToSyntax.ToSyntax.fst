@@ -3645,12 +3645,6 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t & sigelts) =
       List.filter (fun at -> Option.isNone (get_fail_attr1 false at)) ats
   in
 
-  // The `fail` attribute behaves
-  // differentrly! We only keep that one on the first new decl.
-  let env0 = Env.snapshot env |> snd in (* we need the snapshot since pushing the let
-                                         * will shadow a previous val *)
-
-
   (* If this is an expect_failure, check to see if it fails.
    * If it does, check that the errors match as we normally do.
    * If it doesn't fail, leave it alone! The typechecker will check the failure. *)
@@ -3659,6 +3653,12 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t & sigelts) =
     let attrs = U.deduplicate_terms attrs in
     match get_fail_attr false attrs with
     | Some (expected_errs, lax) ->
+      // The `fail` attribute behaves
+      // differentrly! We only keep that one on the first new decl.
+      let env0 =
+          Env.snapshot env |> snd  (* we need the snapshot since pushing the let
+                                    * will shadow a previous val *)
+      in
       let d = { d with attrs = [] } in
       let errs, r = Errors.catch_errors (fun () ->
                       Options.with_saved_options (fun () ->
