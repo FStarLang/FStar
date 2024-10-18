@@ -91,13 +91,16 @@ type env = {
   remaining_iface_decls:list (lident&list Parser.AST.decl);  (* A map from interface names to their stil-to-be-processed top-level decls *)
   syntax_only:          bool;                             (* Whether next push should skip type-checking *)
   ds_hooks:             dsenv_hooks;                       (* hooks that the interactive more relies onto for symbol tracking *)
-  dep_graph:            FStarC.Parser.Dep.deps
+  dep_graph:            FStarC.Parser.Dep.deps;
+  found_name_cache:     list (BU.smap foundname)
 }
 and dsenv_hooks =
   { ds_push_open_hook : env -> open_module_or_namespace -> unit;
     ds_push_include_hook : env -> lident -> unit;
     ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
 
+let push_cache env = { env with found_name_cache = BU.smap_create 1000 :: env.found_name_cache }
+let pop_cache env = { env with found_name_cache = List.tl env.found_name_cache }
 let mk_dsenv_hooks open_hook include_hook module_abbrev_hook =
   { ds_push_open_hook = open_hook;
     ds_push_include_hook = include_hook;
@@ -179,7 +182,8 @@ let empty_env deps = {curmodule=None;
                     remaining_iface_decls=[];
                     syntax_only=false;
                     ds_hooks=default_ds_hooks;
-                    dep_graph=deps}
+                    dep_graph=deps;
+                    found_name_cache=[ BU.smap_create 1000 ]}
 let dep_graph env = env.dep_graph
 let set_dep_graph env ds = {env with dep_graph=ds}
 let sigmap env = env.sigmap
@@ -533,7 +537,7 @@ let ns_of_lid_equals (lid: lident) (ns: lident) =
     List.length (ns_of_lid lid) = List.length (ids_of_lid ns) &&
     lid_equals (lid_of_ids (ns_of_lid lid)) ns
 
-let try_lookup_name any_val exclude_interf env (lid:lident) : option foundname =
+let try_lookup_name_core any_val exclude_interf env (lid:lident) : option foundname =
   let occurrence_range = Ident.range_of_lid lid in
 
   let k_global_def source_lid = function
@@ -586,6 +590,33 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option foundname =
   match found_unmangled with
   | None -> resolve_in_open_namespaces'  env lid k_local_binding k_rec_binding k_global_def
   | x -> x
+
+let lookup_in_found_name_cache (e:env) (name:lident) =
+  match e.found_name_cache with
+  | cache::_ -> 
+    BU.smap_try_find cache (Ident.string_of_lid name)
+  | _ -> None
+let maybe_update_cache (e:env) (name:lident) res =
+  match res with
+  | Some (Term_name res) -> (
+    match e.found_name_cache with
+    | cache::_ -> BU.smap_add cache (Ident.string_of_lid name) (Term_name res)
+    | _ -> ()
+  )
+  | _ -> ()
+let try_lookup_name any_val exclude_interf env (name:lident) : option foundname = 
+  FStarC.Profiling.profile (fun _ ->
+    match lookup_in_found_name_cache env name with
+    | Some found -> Some found
+    | None -> 
+      let res = try_lookup_name_core any_val exclude_interf env name in
+      if not any_val && not exclude_interf then maybe_update_cache env name res;
+      res)
+    (match env.curmodule with
+    | Some m -> Some (Ident.string_of_lid m)
+    | None -> None)
+    "FStarC.Syntax.DsEnv.try_lookup_name"
+    
 
 let try_lookup_effect_name' exclude_interf env (lid:lident) : option (sigelt&lident) =
   match try_lookup_name true exclude_interf env lid with
@@ -976,7 +1007,7 @@ let unique any_val exclude_interface env lid =
     | Some _ -> false
 
 let push_scope_mod env scope_mod =
- {env with scope_mods = scope_mod :: env.scope_mods}
+ push_cache {env with scope_mods = scope_mod :: env.scope_mods}
 
 let push_bv' env (x:ident) =
   let r = range_of_id x in
@@ -1335,6 +1366,7 @@ let finish env modul =
     modules=(modul.name, modul)::env.modules;
     scope_mods = [];
     sigaccum=[];
+    found_name_cache = [ BU.smap_create 1000 ];
   }
 
 let stack: ref (list env) = BU.mk_ref []
@@ -1344,7 +1376,8 @@ let push env = BU.atomically (fun () ->
   {env with exported_ids = BU.smap_copy env.exported_ids;
             trans_exported_ids = BU.smap_copy env.trans_exported_ids;
             includes = BU.smap_copy env.includes;
-            sigmap = BU.smap_copy env.sigmap })
+            sigmap = BU.smap_copy env.sigmap;
+            found_name_cache = List.map BU.smap_copy env.found_name_cache})
 
 let pop () = BU.atomically (fun () ->
   match !stack with

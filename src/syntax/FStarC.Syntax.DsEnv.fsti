@@ -44,6 +44,10 @@ type record_or_dc = {
   is_record:bool
 }
 
+type foundname =
+  | Term_name of typ & list attribute
+  | Eff_name  of sigelt & lident
+
 val env : Type0
 val dsenv_hooks : Type0
 
@@ -54,10 +58,6 @@ val mk_dsenv_hooks
   : dsenv_hooks
 
 type withenv 'a = env -> 'a & env
-
-type foundname =
-  | Term_name of typ & list attribute
-  | Eff_name  of sigelt & lident
 
 val fail_or:  env -> (lident -> option 'a) -> lident -> 'a
 val fail_or2: (ident -> option 'a) -> ident -> 'a
