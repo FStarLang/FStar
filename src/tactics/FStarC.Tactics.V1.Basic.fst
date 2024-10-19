@@ -596,7 +596,7 @@ let fresh () : tac Z.t =
     ret (Z.of_int_fs n)))
 
 let curms () : tac Z.t =
-    ret (BU.now_ms () |> Z.of_int_fs)
+    ret (BU.get_time_of_day_ms () |> Z.of_int_fs)
 
 (* Annoying duplication here *)
 let __tc (e : env) (t : term) : tac (term & typ & guard_t) =

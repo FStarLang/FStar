@@ -4836,13 +4836,13 @@ let solve_and_commit wl err
   if !dbg_RelBench then
     BU.print1 "solving problems %s {\n"
       (FStarC.Common.string_of_list (fun p -> string_of_int (p_pid p)) wl.attempting);
-  let (sol, ms) = BU.record_time (fun () -> solve wl) in
+  let (sol, ms) = BU.record_time_ms (fun () -> solve wl) in
   if !dbg_RelBench then
     BU.print1 "} solved in %s ms\n" (string_of_int ms);
 
   match sol with
     | Success (deferred, defer_to_tac, implicits) ->
-      let ((), ms) = BU.record_time (fun () -> UF.commit tx) in
+      let ((), ms) = BU.record_time_ms (fun () -> UF.commit tx) in
       if !dbg_RelBench then
         BU.print1 "committed in %s ms\n" (string_of_int ms);
       Some (deferred, defer_to_tac, implicits)
@@ -4925,7 +4925,7 @@ let sub_or_eq_comp env (use_eq:bool) c1 c2 =
     let wl = { wl with repr_subcomp_allowed = true } in
     let prob = CProb prob in
     def_check_prob "sub_comp" prob;
-    let (r, ms) = BU.record_time
+    let (r, ms) = BU.record_time_ms
                   (fun () -> with_guard env prob <| solve_and_commit (singleton wl prob true)  (fun _ -> None))
     in
     if !dbg_Rel || !dbg_RelTop || !dbg_RelBench then

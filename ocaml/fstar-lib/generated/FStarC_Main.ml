@@ -519,7 +519,7 @@ let main : 'uuuuu . unit -> 'uuuuu =
          match () with
          | () ->
              (setup_hooks ();
-              (let uu___3 = FStarC_Compiler_Util.record_time go in
+              (let uu___3 = FStarC_Compiler_Util.record_time_ms go in
                match uu___3 with
                | (uu___4, time) ->
                    ((let uu___6 = FStarC_Options.query_stats () in

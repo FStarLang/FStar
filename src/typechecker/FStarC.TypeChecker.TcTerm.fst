@@ -738,7 +738,7 @@ let rec tc_term env e =
           (tag_of (SS.compress e))
           (print_expected_ty_str env);
 
-    let r, ms = BU.record_time (fun () ->
+    let r, ms = BU.record_time_ms (fun () ->
                     tc_maybe_toplevel_term ({env with top_level=false}) e) in
     if Debug.medium () then begin
         BU.print4 "(%s) } tc_term of %s (%s) took %sms\n" (Range.string_of_range <| Env.get_range env)

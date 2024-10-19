@@ -30,11 +30,11 @@ type input_frag = {
     frag_col:int
 }
 
-val read_vfs_entry : string -> option (time & string)
+val read_vfs_entry : string -> option (time_of_day & string)
 // This lets the ide tell us about edits not (yet) reflected on disk.
 val add_vfs_entry: fname:string -> contents:string -> unit
 // This reads mtimes from the VFS as well
-val get_file_last_modification_time: fname:string -> time
+val get_file_last_modification_time: fname:string -> time_of_day
 
 type parse_frag =
     | Filename of filename

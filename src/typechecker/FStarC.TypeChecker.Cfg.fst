@@ -302,10 +302,10 @@ let primop_time_map : BU.smap int = BU.smap_create 50
 let primop_time_reset () =
     BU.smap_clear primop_time_map
 
-let primop_time_count (nm : string) (ms : int) : unit =
+let primop_time_count (nm : string) (ns : int) : unit =
     match BU.smap_try_find primop_time_map nm with
-    | None     -> BU.smap_add primop_time_map nm ms
-    | Some ms0 -> BU.smap_add primop_time_map nm (ms0 + ms)
+    | None     -> BU.smap_add primop_time_map nm ns
+    | Some ns0 -> BU.smap_add primop_time_map nm (ns0 + ns)
 
 let fixto n s =
     if String.length s < n
@@ -313,9 +313,9 @@ let fixto n s =
     else s
 
 let primop_time_report () : string =
-    let pairs = BU.smap_fold primop_time_map (fun nm ms rest -> (nm, ms)::rest) [] in
+    let pairs = BU.smap_fold primop_time_map (fun nm ns rest -> (nm, ns)::rest) [] in
     let pairs = BU.sort_with (fun (_, t1) (_, t2) -> t1 - t2) pairs in
-    List.fold_right (fun (nm, ms) rest -> (BU.format2 "%sms --- %s\n" (fixto 10 (BU.string_of_int ms)) nm) ^ rest) pairs ""
+    List.fold_right (fun (nm, ns) rest -> (BU.format2 "%sms --- %s\n" (fixto 10 (BU.string_of_int (ns / 1000000))) nm) ^ rest) pairs ""
 
 let extendable_primops_dirty : ref bool = BU.mk_ref true
 

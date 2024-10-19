@@ -7863,7 +7863,7 @@ let (encode_query :
                              "Encoding query formula {: %s\n" uu___6
                          else ());
                         (let uu___5 =
-                           FStarC_Compiler_Util.record_time
+                           FStarC_Compiler_Util.record_time_ms
                              (fun uu___6 ->
                                 FStarC_SMTEncoding_EncodeTerm.encode_formula
                                   q1 env1) in
