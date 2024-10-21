@@ -752,6 +752,7 @@ type sigelt' =
     }
   | Sig_fail                 {
       errs:list int;      // Expected errors (empty for 'any')
+      rng: Range.range;   // range of the `expect_failure`, for error reporting
       fail_in_lax:bool;   // true if should fail in --lax
       ses:list sigelt;    // The sigelts to be checked
   }
