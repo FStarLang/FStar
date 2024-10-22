@@ -16,3 +16,5 @@ let main () =
     if (I64.((-1L) >=^ 0L)) then failwith "Failed (I64)";
     print_string "correct\n";
     0
+
+let _ = main ()

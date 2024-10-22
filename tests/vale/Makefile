@@ -1,8 +1,5 @@
-FSTAR_ROOT ?= ../..
 FSTAR_FILES=$(wildcard *.fst)
 FSTAR_FILES:=$(filter-out X64.Poly1305.fst,$(FSTAR_FILES))
-include $(FSTAR_ROOT)/mk/test.mk
-all: verify-all
 
 OTHERFLAGS += \
 --z3cliopt smt.QI.EAGER_THRESHOLD=100 \
@@ -16,3 +13,6 @@ OTHERFLAGS += \
 --initial_ifuel 0 \
 --warn_error -350
 # ^ 350: deprecated lightweight do notation
+
+FSTAR_ROOT ?= ../..
+include $(FSTAR_ROOT)/mk/test.mk

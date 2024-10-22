@@ -1,7 +1,7 @@
 FSTAR_ROOT ?= ../..
 include $(FSTAR_ROOT)/mk/test.mk
 
-all: verify-all Hacl.Meta.Use.fst.test
+all: Hacl.Meta.Use.fst.test
 
 # The negative tests in this file may succeed with hints, force them off.
 $(CACHE_DIR)/Pruning.fst.checked: HINTS_ENABLED=
