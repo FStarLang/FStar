@@ -1,6 +1,14 @@
-FSTAR_HOME ?= ../..
+# This makefile is meant as an example for new projects, and intentionally
+# does not import any other Makefile in this repo to make this directory standalone.
 
-include $(FSTAR_HOME)/ulib/ml/Makefile.include
+FSTAR_EXE ?= $(shell which fstar.exe)
+# ^ Take F* from the path, but allow to override it.
+
+V != $(FSTAR_EXE) --version
+
+ifeq ($(V),)
+$(error "fstar.exe --version failed... place a valid F* in your PATH or set FSTAR_EXE")
+endif
 
 OUT_DIR   = out
 CACHE_DIR = cache
@@ -9,12 +17,15 @@ ROOTS     = Test.fst
 FSTAR_FLAGS = $(OTHERFLAGS) --cmi --odir $(OUT_DIR) --cache_dir $(CACHE_DIR) \
   --cache_checked_modules --already_cached 'Prims FStar'
 
-FSTAR = $(FSTAR_HOME)/bin/fstar.exe $(FSTAR_FLAGS)
+# Run with ENABLE_HINTS= to disable
+ENABLE_HINTS ?= --use_hints
+
+FSTAR = $(FSTAR_EXE) $(FSTAR_FLAGS)
 
 .PHONY: all test clean
 
 all:
-	rm -f .depend && $(MAKE) .depend
+	rm -f .depend && $(MAKE) .depend # Always re-generate dependencies
 	+$(MAKE) test
 
 # 1. Extract .ml files
@@ -22,29 +33,26 @@ all:
 # - verify every F* file in parallel to generate .checked files
 # - extract each .checked file into a .ml file in parallel
 .depend:
-	$(FSTAR) --dep full $(ROOTS) --extract '* -Prims -FStar' > $@
+	$(FSTAR) --dep full $(ROOTS) --extract '* -Prims -FStar' --output_deps_to $@
 
 include .depend
 
-$(CACHE_DIR)/%.checked: | .depend
+$(CACHE_DIR)/%.checked:
 	$(FSTAR) $< $(ENABLE_HINTS) --hint_file $(HINT_DIR)/$(notdir $<).hints && \
 	touch $@
 
 # 2. Compile all .ml files to .cmx and link them to get an executable
-$(OUT_DIR):
-	mkdir -p $@
-
-$(OUT_DIR)/%.ml: | .depend
+$(OUT_DIR)/%.ml:
 	$(FSTAR) --codegen OCaml \
 	  --extract_module $(basename $(notdir $(subst .checked,,$<))) \
 	  $(notdir $(subst .checked,,$<)) && \
 	touch $@
 
 %.cmx:
-	$(OCAMLOPT) -I $(OUT_DIR) -c $< -o $@
+	$(FSTAR_EXE) --ocamlopt -I $(OUT_DIR) -c $< -o $@
 
 $(OUT_DIR)/test.exe: $(subst .ml,.cmx,$(ALL_ML_FILES)) | $(OUT_DIR)
-	$(OCAMLOPT) -I $(OUT_DIR) -o $(OUT_DIR)/test.exe $(subst .ml,.cmx,$(ALL_ML_FILES))
+	$(FSTAR_EXE) --ocamlopt -I $(OUT_DIR) -o $(OUT_DIR)/test.exe $(subst .ml,.cmx,$(ALL_ML_FILES))
 
 test: $(OUT_DIR)/test.exe
 	$(OUT_DIR)/test.exe

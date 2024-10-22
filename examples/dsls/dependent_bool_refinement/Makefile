@@ -1,5 +1,2 @@
-include ../../Makefile.common
-include ../Makefile.include
-
-all: all-common
-
+FSTAR_ROOT ?= ../../..
+include $(FSTAR_ROOT)/mk/test.mk

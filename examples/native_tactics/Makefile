@@ -1,3 +1,9 @@
+# This makefile is old, and does not use the new test.mk infra. We could
+# extend test.mk to be more aware of plugins and loading, but probably the right
+# thing to do instead is to make using plugins easier at the F* level, without
+# requiring any --load flags. In that case, this whole directory may just be a normal
+# 'include test.mk'.
+
 FSTAR_HOME=../..
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS)
 

@@ -1,87 +1,52 @@
-OTHERFLAGS+=--warn_error -321-274 --ext context_pruning
-all: prep verify special_cases
+rel.__all: dm4free.__all
+# ^ rel uses modules from dm4free, make sure to check them
+# in proper order.
 
-# krml_tests only to be run conditionally, if we have a karamel install.
-# These tests also require that krmllib is already checked.
+SUBDIRS += algorithms
+SUBDIRS += crypto
+SUBDIRS += data_structures
+SUBDIRS += dm4free
+SUBDIRS += doublylinkedlist
+SUBDIRS += dsls
+SUBDIRS += generic
+SUBDIRS += indexed_effects
+SUBDIRS += interactive
+SUBDIRS += layeredeffects
+SUBDIRS += low-mitls-experiments
+SUBDIRS += metatheory
+SUBDIRS += misc
+SUBDIRS += oplss2021
+SUBDIRS += paradoxes
+SUBDIRS += param
+SUBDIRS += preorders
+SUBDIRS += printf
+SUBDIRS += regional
+SUBDIRS += rel
+SUBDIRS += software_foundations
+SUBDIRS += tactics
+SUBDIRS += termination
+SUBDIRS += typeclasses
+SUBDIRS += verifythis
 
-# Note:
-#
-# * old: examples that are not maintained anymore, though may be worth recovering
-#
-# * hello: the main point of the hello example is to test extraction and build
-#   things in OCaml and F#. So, we handle that separately.
-#
-# * native_tactics: called explicitly by the uexamples rule from
-#	the Makefile in ../src/Makefile and need special rules to build the plugins
-#   for them to run. Also, these examples are excluded since the binary package
-#   can't verify them.
-#
-# * kv_parsing: Needs Krml to build
-#
-# * miniparse: Needs Krml to build
+# SUBDIRS += sample_project # requires fstar.exe in the PATH!?!?
 
-
-EXCLUDE_DIRS=old/ hello/ native_tactics/ kv_parsing/ miniparse/ sample_project/
-
-# F* contrib directory needed by crypto/ . Since this Makefile
-# supersedes crypto/Makefile, we need to determine the location of the
-# F* contrib directory here.
-ifdef FSTAR_HOME
-FSTAR_UCONTRIB = $(shell if test -d $(FSTAR_HOME)/ucontrib ; then echo $(FSTAR_HOME)/ucontrib ; else echo $(FSTAR_HOME)/share/fstar/contrib ; fi)
-else
-   # FSTAR_HOME not defined, assume fstar.exe installed through opam
-   # or binary package, and reachable from PATH
-FSTAR_UCONTRIB=$(dir $(shell which fstar.exe))/../share/fstar/contrib
+ifdef KRML_HOME
+SUBDIRS += demos
+SUBDIRS += kv_parsing
+SUBDIRS += miniparse
 endif
 
-INCLUDE_PATHS?= \
-	$(filter-out $(EXCLUDE_DIRS),$(shell ls -d */)) \
-	$(FSTAR_UCONTRIB)/CoreCrypto/fst \
-	$(FSTAR_UCONTRIB)/Platform/fst \
-	$(shell ls -d dsls/*/) \
-	$(shell ls -d verifythis/*/) \
-	tactics/eci19
+# These have custom makefiles
 
-include Makefile.common
+# hello has its F# extraction broken, and the dune/ocamlopt variants can
+# be found in tests/simple_hello and tests/dune_hello, so I'm disabling
+# this.
+# SUBDIRS_ALL += hello
+# SUBDIRS_CLEAN += hello
+SUBDIRS_ALL += dependencies
+SUBDIRS_CLEAN += dependencies
+SUBDIRS_ALL += native_tactics
+SUBDIRS_CLEAN += native_tactics
 
-# Remove ModifiesGen since it "leaks" into this dependency analysis.
-verify: prep $(filter-out $(CACHE_DIR)/Launch.fst.checked $(CACHE_DIR)/FStar.ModifiesGen.fst.checked, $(ALL_CHECKED_FILES))
-
-HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
-
-# The makefile here relies on a global fstar.exe and does not read FSTAR_HOME
-# or anything similar, disable for now.
-# SPECIAL_CASES += sample_project
-
-ifneq (,$(HAS_OCAML))
-SPECIAL_CASES += hello
-SPECIAL_CASES += native_tactics
-endif
-
-KRML_TESTS += demos
-KRML_TESTS += kv_parsing
-KRML_TESTS += miniparse
-
-special_cases: $(addsuffix .all, $(SPECIAL_CASES))
-
-krml_tests: $(addsuffix .all, $(KRML_TESTS))
-
-%.all: %
-	+$(MAKE) -C $^ all
-
-prep:
-	mkdir -p $(OUTPUT_DIRECTORY) $(CACHE_DIR)
-
-FILTER_OUT = $(foreach v,$(2),$(if $(findstring $(1),$(v)),,$(v)))
-
-wc:
-	wc -l $(call FILTER_OUT,ulib, $(ALL_FST_FILES) $(ALL_FSTI_FILES))
-
-clean: $(addsuffix .clean, $(SPECIAL_CASES))
-	rm -rf $(OUTPUT_DIRECTORY) $(CACHE_DIR) .depend
-
-%.clean: %
-	+$(MAKE) -C $^ clean
-
-.PHONY: prep clean special_cases wc
-
+FSTAR_ROOT ?= ..
+include $(FSTAR_ROOT)/mk/test.mk

@@ -1,6 +1,6 @@
-DIRS=low-star
+SUBDIRS += low-star
+# SUBDIRS += fstar_and_lowstar
+# ^ This has never been enabled, add it? It does need karamel and krmllib.
 
-all: $(addsuffix .all, $(DIRS))
-
-%.all: %
-	+$(MAKE) -C $^ all
+FSTAR_ROOT ?= ../..
+include $(FSTAR_ROOT)/mk/test.mk
