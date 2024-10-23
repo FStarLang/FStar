@@ -2,7 +2,7 @@
 # We should not need to include any other internal makefiles.
 # Dune also works fine under the --ocamlenv.
 
-FSTAR ?= ../../bin/fstar.exe
+FSTAR ?= ../../out/bin/fstar.exe
 
 all: Hello.test
 
