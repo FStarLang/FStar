@@ -860,8 +860,7 @@ let (check_expected_effect :
                                         expected_c in
                                     let uu___12 =
                                       FStarC_Class_Show.show
-                                        (FStarC_Class_Show.printableshow
-                                           FStar_Class_Printable.printable_bool)
+                                        FStarC_Class_Show.showable_bool
                                         use_eq in
                                     FStarC_Compiler_Util.print4
                                       "In check_expected_effect, asking rel to solve the problem on e=(%s) and c=(%s), expected_c=(%s), and use_eq=%s\n"
@@ -3455,15 +3454,11 @@ and (tc_maybe_toplevel_term :
                   then
                     let uu___8 =
                       let uu___9 =
-                        FStarC_Class_Show.show
-                          (FStarC_Class_Show.printableshow
-                             FStar_Class_Printable.printable_nat)
+                        FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                           (FStarC_Compiler_List.length
                              uc.FStarC_Syntax_Syntax.uc_fields) in
                       let uu___10 =
-                        FStarC_Class_Show.show
-                          (FStarC_Class_Show.printableshow
-                             FStar_Class_Printable.printable_nat)
+                        FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                           (FStarC_Compiler_List.length fields) in
                       FStarC_Compiler_Util.format2
                         "Could not resolve constructor; expected %s fields but only found %s"
@@ -4943,14 +4938,10 @@ and (tc_value :
                        FStarC_Class_Show.show FStarC_Syntax_Print.showable_fv
                          fv1 in
                      let uu___8 =
-                       FStarC_Class_Show.show
-                         (FStarC_Class_Show.printableshow
-                            FStar_Class_Printable.printable_nat)
+                       FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                          (FStarC_Compiler_List.length us1) in
                      let uu___9 =
-                       FStarC_Class_Show.show
-                         (FStarC_Class_Show.printableshow
-                            FStar_Class_Printable.printable_nat)
+                       FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                          (FStarC_Compiler_List.length us') in
                      FStarC_Compiler_Util.format3
                        "Unexpected number of universe instantiations for \"%s\" (%s vs %s)"
@@ -6642,12 +6633,9 @@ and (tc_abs :
                       (FStarC_Class_Show.show_option
                          (FStarC_Class_Show.show_tuple2
                             FStarC_Syntax_Print.showable_term
-                            (FStarC_Class_Show.printableshow
-                               FStar_Class_Printable.printable_bool))) topt in
+                            FStarC_Class_Show.showable_bool)) topt in
                   let uu___4 =
-                    FStarC_Class_Show.show
-                      (FStarC_Class_Show.printableshow
-                         FStar_Class_Printable.printable_bool)
+                    FStarC_Class_Show.show FStarC_Class_Show.showable_bool
                       env1.FStarC_TypeChecker_Env.top_level in
                   FStarC_Compiler_Util.print2
                     "!!!!!!!!!!!!!!!Expected type is (%s), top_level=%s\n"
@@ -6675,9 +6663,7 @@ and (tc_abs :
                             (FStarC_Class_Show.show_option
                                (FStarC_Class_Show.show_tuple2
                                   FStarC_Syntax_Print.showable_term
-                                  (FStarC_Class_Show.printableshow
-                                     FStar_Class_Printable.printable_bool)))
-                            uu___8 in
+                                  FStarC_Class_Show.showable_bool)) uu___8 in
                         FStarC_Compiler_Util.print3
                           "After expected_function_typ, tfun_opt: %s, c_opt: %s, and expected type in envbody: %s\n"
                           uu___5 uu___6 uu___7

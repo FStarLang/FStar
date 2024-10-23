@@ -2,7 +2,7 @@ module FStar.Stubs.Errors.Msg
 
 (* Implemented in src/, allows constructing structured pretty-printed error messages. *)
 
-open FStar.Stubs.Pprint
+open FStar.Pprint
 
 (* An error message is a list of documents. This allows us to print errors like
 these:

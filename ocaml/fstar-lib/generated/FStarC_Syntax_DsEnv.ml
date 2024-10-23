@@ -54,18 +54,19 @@ type local_binding =
   (FStarC_Ident.ident * FStarC_Syntax_Syntax.bv * used_marker)
 type rec_binding = (FStarC_Ident.ident * FStarC_Ident.lid * used_marker)
 type scope_mod =
-  | Local_binding of local_binding 
+  | Local_bindings of local_binding FStarC_Compiler_Util.psmap 
   | Rec_binding of rec_binding 
   | Module_abbrev of FStarC_Syntax_Syntax.module_abbrev 
   | Open_module_or_namespace of FStarC_Syntax_Syntax.open_module_or_namespace
   
-  | Top_level_def of FStarC_Ident.ident 
+  | Top_level_defs of Prims.bool FStarC_Compiler_Util.psmap 
   | Record_or_dc of record_or_dc 
-let (uu___is_Local_binding : scope_mod -> Prims.bool) =
+let (uu___is_Local_bindings : scope_mod -> Prims.bool) =
   fun projectee ->
-    match projectee with | Local_binding _0 -> true | uu___ -> false
-let (__proj__Local_binding__item___0 : scope_mod -> local_binding) =
-  fun projectee -> match projectee with | Local_binding _0 -> _0
+    match projectee with | Local_bindings _0 -> true | uu___ -> false
+let (__proj__Local_bindings__item___0 :
+  scope_mod -> local_binding FStarC_Compiler_Util.psmap) =
+  fun projectee -> match projectee with | Local_bindings _0 -> _0
 let (uu___is_Rec_binding : scope_mod -> Prims.bool) =
   fun projectee ->
     match projectee with | Rec_binding _0 -> true | uu___ -> false
@@ -85,11 +86,12 @@ let (uu___is_Open_module_or_namespace : scope_mod -> Prims.bool) =
 let (__proj__Open_module_or_namespace__item___0 :
   scope_mod -> FStarC_Syntax_Syntax.open_module_or_namespace) =
   fun projectee -> match projectee with | Open_module_or_namespace _0 -> _0
-let (uu___is_Top_level_def : scope_mod -> Prims.bool) =
+let (uu___is_Top_level_defs : scope_mod -> Prims.bool) =
   fun projectee ->
-    match projectee with | Top_level_def _0 -> true | uu___ -> false
-let (__proj__Top_level_def__item___0 : scope_mod -> FStarC_Ident.ident) =
-  fun projectee -> match projectee with | Top_level_def _0 -> _0
+    match projectee with | Top_level_defs _0 -> true | uu___ -> false
+let (__proj__Top_level_defs__item___0 :
+  scope_mod -> Prims.bool FStarC_Compiler_Util.psmap) =
+  fun projectee -> match projectee with | Top_level_defs _0 -> _0
 let (uu___is_Record_or_dc : scope_mod -> Prims.bool) =
   fun projectee ->
     match projectee with | Record_or_dc _0 -> true | uu___ -> false
@@ -105,6 +107,14 @@ let (uu___is_Exported_id_term_type : exported_id_kind -> Prims.bool) =
 let (uu___is_Exported_id_field : exported_id_kind -> Prims.bool) =
   fun projectee ->
     match projectee with | Exported_id_field -> true | uu___ -> false
+let (uu___0 : exported_id_kind FStarC_Class_Show.showable) =
+  {
+    FStarC_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Exported_id_field -> "Exported_id_field"
+         | Exported_id_term_type -> "Exported_id_term_type")
+  }
 type exported_id_set =
   exported_id_kind -> string_set FStarC_Compiler_Effect.ref
 type env =
@@ -849,13 +859,22 @@ let try_lookup_id'' :
                     FStarC_Ident.ids_of_lid uu___ in
                   let proc uu___ =
                     match uu___ with
-                    | Local_binding l when check_local_binding_id l ->
-                        let uu___1 = l in
+                    | Local_bindings lbs when
+                        let uu___1 =
+                          let uu___2 = FStarC_Ident.string_of_id id in
+                          FStarC_Compiler_Util.psmap_try_find lbs uu___2 in
+                        FStar_Pervasives_Native.uu___is_Some uu___1 ->
+                        let uu___1 =
+                          let uu___2 = FStarC_Ident.string_of_id id in
+                          FStarC_Compiler_Util.psmap_try_find lbs uu___2 in
                         (match uu___1 with
-                         | (uu___2, uu___3, used_marker1) ->
-                             (FStarC_Compiler_Effect.op_Colon_Equals
-                                used_marker1 true;
-                              k_local_binding l))
+                         | FStar_Pervasives_Native.Some l ->
+                             let uu___2 = l in
+                             (match uu___2 with
+                              | (uu___3, uu___4, used_marker1) ->
+                                  (FStarC_Compiler_Effect.op_Colon_Equals
+                                     used_marker1 true;
+                                   k_local_binding l)))
                     | Rec_binding r when check_rec_binding_id r ->
                         let uu___1 = r in
                         (match uu___1 with
@@ -874,10 +893,12 @@ let try_lookup_id'' :
                          | FStar_Pervasives_Native.Some id1 ->
                              find_in_module_with_includes eikind
                                find_in_module Cont_ignore env1 ns id1)
-                    | Top_level_def id' when
-                        let uu___1 = FStarC_Ident.string_of_id id' in
-                        let uu___2 = FStarC_Ident.string_of_id id in
-                        uu___1 = uu___2 -> lookup_default_id Cont_ignore id
+                    | Top_level_defs ids when
+                        let uu___1 =
+                          let uu___2 = FStarC_Ident.string_of_id id in
+                          FStarC_Compiler_Util.psmap_try_find ids uu___2 in
+                        FStar_Pervasives_Native.uu___is_Some uu___1 ->
+                        lookup_default_id Cont_ignore id
                     | Record_or_dc r when is_exported_id_field eikind ->
                         let uu___1 = FStarC_Ident.lid_of_ids curmod_ns in
                         find_in_module_with_includes Exported_id_field
@@ -2415,8 +2436,43 @@ let (push_bv' :
               (FStarC_Syntax_Syntax.tun.FStarC_Syntax_Syntax.hash_code)
           } in
       let used_marker1 = FStarC_Compiler_Util.mk_ref false in
-      ((push_scope_mod env1 (Local_binding (x, bv, used_marker1))), bv,
-        used_marker1)
+      let scope_mods =
+        match env1.scope_mods with
+        | (Local_bindings lbs)::rest ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 = FStarC_Ident.string_of_id x in
+                FStarC_Compiler_Util.psmap_add lbs uu___2
+                  (x, bv, used_marker1) in
+              Local_bindings uu___1 in
+            uu___ :: rest
+        | uu___ ->
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = FStarC_Compiler_Util.psmap_empty () in
+                let uu___4 = FStarC_Ident.string_of_id x in
+                FStarC_Compiler_Util.psmap_add uu___3 uu___4
+                  (x, bv, used_marker1) in
+              Local_bindings uu___2 in
+            uu___1 :: (env1.scope_mods) in
+      ({
+         curmodule = (env1.curmodule);
+         curmonad = (env1.curmonad);
+         modules = (env1.modules);
+         scope_mods;
+         exported_ids = (env1.exported_ids);
+         trans_exported_ids = (env1.trans_exported_ids);
+         includes = (env1.includes);
+         sigaccum = (env1.sigaccum);
+         sigmap = (env1.sigmap);
+         iface = (env1.iface);
+         admitted_iface = (env1.admitted_iface);
+         expect_typ = (env1.expect_typ);
+         remaining_iface_decls = (env1.remaining_iface_decls);
+         syntax_only = (env1.syntax_only);
+         ds_hooks = (env1.ds_hooks);
+         dep_graph = (env1.dep_graph)
+       }, bv, used_marker1)
 let (push_bv : env -> FStarC_Ident.ident -> (env * FStarC_Syntax_Syntax.bv))
   =
   fun env1 ->
@@ -2558,6 +2614,23 @@ let (push_sigelt' : Prims.bool -> env -> FStarC_Syntax_Syntax.sigelt -> env)
           | uu___1 -> (env3, [((FStarC_Syntax_Util.lids_of_sigelt s), s)]) in
         match uu___ with
         | (env4, lss) ->
+            let push_top_level_def id stack =
+              match stack with
+              | (Top_level_defs ids)::rest ->
+                  let uu___1 =
+                    let uu___2 =
+                      let uu___3 = FStarC_Ident.string_of_id id in
+                      FStarC_Compiler_Util.psmap_add ids uu___3 true in
+                    Top_level_defs uu___2 in
+                  uu___1 :: rest
+              | uu___1 ->
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 = FStarC_Compiler_Util.psmap_empty () in
+                      let uu___5 = FStarC_Ident.string_of_id id in
+                      FStarC_Compiler_Util.psmap_add uu___4 uu___5 true in
+                    Top_level_defs uu___3 in
+                  uu___2 :: stack in
             (FStarC_Compiler_List.iter
                (fun uu___2 ->
                   match uu___2 with
@@ -2565,12 +2638,10 @@ let (push_sigelt' : Prims.bool -> env -> FStarC_Syntax_Syntax.sigelt -> env)
                       FStarC_Compiler_List.iter
                         (fun lid ->
                            (let uu___4 =
-                              let uu___5 =
-                                let uu___6 = FStarC_Ident.ident_of_lid lid in
-                                Top_level_def uu___6 in
+                              let uu___5 = FStarC_Ident.ident_of_lid lid in
                               let uu___6 =
                                 FStarC_Compiler_Effect.op_Bang globals in
-                              uu___5 :: uu___6 in
+                              push_top_level_def uu___5 uu___6 in
                             FStarC_Compiler_Effect.op_Colon_Equals globals
                               uu___4);
                            (match () with
@@ -2678,8 +2749,10 @@ let (find_binders_for_datacons :
     FStarC_Ident.lident ->
       FStarC_Ident.ident Prims.list FStar_Pervasives_Native.option)
   =
+  let debug = FStarC_Compiler_Debug.get_toggle "open_include_restrictions" in
   fun env1 ->
     fun lid ->
+      let ns = FStarC_Ident.ns_of_lid lid in
       let k_global_def lid1 uu___ =
         match uu___ with
         | ({
@@ -2688,29 +2761,53 @@ let (find_binders_for_datacons :
                  FStarC_Syntax_Syntax.us1 = uu___2;
                  FStarC_Syntax_Syntax.t1 = t;
                  FStarC_Syntax_Syntax.ty_lid = uu___3;
-                 FStarC_Syntax_Syntax.num_ty_params = uu___4;
-                 FStarC_Syntax_Syntax.mutuals1 = uu___5;
-                 FStarC_Syntax_Syntax.injective_type_params1 = uu___6;_};
-             FStarC_Syntax_Syntax.sigrng = uu___7;
-             FStarC_Syntax_Syntax.sigquals = uu___8;
-             FStarC_Syntax_Syntax.sigmeta = uu___9;
-             FStarC_Syntax_Syntax.sigattrs = uu___10;
-             FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___11;
-             FStarC_Syntax_Syntax.sigopts = uu___12;_},
-           uu___13) ->
-            let uu___14 =
-              let uu___15 =
-                let uu___16 = FStarC_Syntax_Util.arrow_formals_comp_ln t in
-                FStar_Pervasives_Native.fst uu___16 in
+                 FStarC_Syntax_Syntax.num_ty_params = num_ty_params;
+                 FStarC_Syntax_Syntax.mutuals1 = uu___4;
+                 FStarC_Syntax_Syntax.injective_type_params1 = uu___5;_};
+             FStarC_Syntax_Syntax.sigrng = uu___6;
+             FStarC_Syntax_Syntax.sigquals = uu___7;
+             FStarC_Syntax_Syntax.sigmeta = uu___8;
+             FStarC_Syntax_Syntax.sigattrs = uu___9;
+             FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___10;
+             FStarC_Syntax_Syntax.sigopts = uu___11;_},
+           uu___12) ->
+            let uu___13 =
+              let uu___14 =
+                let uu___15 =
+                  let uu___16 =
+                    let uu___17 = FStarC_Syntax_Util.arrow_formals_comp_ln t in
+                    FStar_Pervasives_Native.fst uu___17 in
+                  FStarC_Compiler_List.splitAt num_ty_params uu___16 in
+                FStar_Pervasives_Native.snd uu___15 in
               FStarC_Compiler_List.map
                 (fun x ->
                    (x.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.ppname)
-                uu___15 in
-            FStar_Pervasives_Native.Some uu___14
+                uu___14 in
+            FStar_Pervasives_Native.Some uu___13
         | uu___1 -> FStar_Pervasives_Native.None in
-      resolve_in_open_namespaces' env1 lid
-        (fun uu___ -> FStar_Pervasives_Native.None)
-        (fun uu___ -> FStar_Pervasives_Native.None) k_global_def
+      let result =
+        resolve_in_open_namespaces' env1 lid
+          (fun uu___ -> FStar_Pervasives_Native.None)
+          (fun uu___ -> FStar_Pervasives_Native.None) k_global_def in
+      (let uu___1 = FStarC_Compiler_Effect.op_Bang debug in
+       if uu___1
+       then
+         let uu___2 =
+           let uu___3 =
+             let uu___4 =
+               FStarC_Class_Show.show FStarC_Ident.showable_lident lid in
+             let uu___5 =
+               let uu___6 =
+                 FStarC_Class_Show.show
+                   (FStarC_Class_Show.show_option
+                      (FStarC_Class_Show.show_list
+                         FStarC_Ident.showable_ident)) result in
+               Prims.strcat ") = " uu___6 in
+             Prims.strcat uu___4 uu___5 in
+           Prims.strcat "find_binders_for_datacons(_, " uu___3 in
+         FStarC_Compiler_Util.print_endline uu___2
+       else ());
+      result
 let elab_restriction :
   'uuuuu .
     (env -> FStarC_Ident.lident -> FStarC_Syntax_Syntax.restriction -> 'uuuuu)
@@ -3079,8 +3176,7 @@ let elab_restriction :
                                      | nth2 ->
                                          let uu___5 =
                                            FStarC_Class_Show.show
-                                             (FStarC_Class_Show.printableshow
-                                                FStar_Class_Printable.printable_int)
+                                             FStarC_Class_Show.showable_int
                                              (nth2 + Prims.int_one) in
                                          Prims.strcat uu___5 "th" in
                                    let uu___5 =
@@ -3115,8 +3211,7 @@ let elab_restriction :
                           let uu___4 =
                             let uu___5 =
                               FStarC_Class_Show.show
-                                (FStarC_Class_Show.printableshow
-                                   FStar_Class_Printable.printable_int)
+                                FStarC_Class_Show.showable_int
                                 ((FStarC_Compiler_List.length others) +
                                    Prims.int_one) in
                             Prims.strcat uu___5 " times" in
@@ -3241,8 +3336,22 @@ let (push_include' :
                               ->
                               let update_exports k =
                                 let ns_ex =
-                                  let uu___6 = ns_trans_exports k in
-                                  FStarC_Compiler_Effect.op_Bang uu___6 in
+                                  let uu___6 =
+                                    let uu___7 = ns_trans_exports k in
+                                    FStarC_Compiler_Effect.op_Bang uu___7 in
+                                  Obj.magic
+                                    (FStarC_Class_Setlike.filter ()
+                                       (Obj.magic
+                                          (FStarC_Compiler_RBSet.setlike_rbset
+                                             FStarC_Class_Ord.ord_string))
+                                       (fun id ->
+                                          let uu___7 =
+                                            let uu___8 =
+                                              FStarC_Ident.id_of_text id in
+                                            FStarC_Syntax_Syntax.is_ident_allowed_by_restriction
+                                              uu___8 restriction in
+                                          FStarC_Compiler_Util.is_some uu___7)
+                                       (Obj.magic uu___6)) in
                                 let ex = cur_exports k in
                                 (let uu___7 =
                                    let uu___8 =

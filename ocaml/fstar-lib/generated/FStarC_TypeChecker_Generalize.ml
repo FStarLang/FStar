@@ -608,9 +608,8 @@ let (generalize' :
                              FStarC_Syntax_Print.showable_bv
                              FStarC_Syntax_Print.showable_fv) lb) lecs in
              FStarC_Class_Show.show
-               (FStarC_Class_Show.show_list
-                  (FStarC_Class_Show.printableshow
-                     FStar_Class_Printable.printable_string)) uu___4 in
+               (FStarC_Class_Show.show_list FStarC_Class_Show.showable_string)
+               uu___4 in
            FStarC_Compiler_Util.print1 "Generalizing: %s\n" uu___3
          else ());
         (let univnames_lecs =

@@ -27,8 +27,7 @@ open FStar.Stubs.Reflection.V2.Builtins
 open FStar.Tactics.Effect
 open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.Types
-
-include FStar.Tactics.Unseal
+include FStar.Stubs.Tactics.Unseal
 
 (** Resolve unification variable indirections at the top of the term. *)
 val compress : term -> Tac term
@@ -428,11 +427,11 @@ val comp_to_string : comp -> Tac string
 
 (** Like term_to_string, but returns an unrendered pretty-printing
 document *)
-val term_to_doc : term -> Tac Stubs.Pprint.document
+val term_to_doc : term -> Tac Pprint.document
 
 (** Like comp_to_string, but returns an unrendered pretty-printing
 document *)
-val comp_to_doc : comp -> Tac Stubs.Pprint.document
+val comp_to_doc : comp -> Tac Pprint.document
 
 (** Print a source range as a string *)
 val range_to_string : range -> Tac string

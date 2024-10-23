@@ -3,5 +3,3 @@
   - Expected expression of type Prims.int got expression () of type Prims.unit
 
 >>]
-Verified module: IfThen
-All verification conditions discharged successfully

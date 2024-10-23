@@ -1,4 +1,8 @@
-FSTAR_HOME=../..
+FSTAR_ROOT ?= ../..
+FSTAR_FILES=$(wildcard *.fst)
+FSTAR_FILES:=$(filter-out X64.Poly1305.fst,$(FSTAR_FILES))
+include $(FSTAR_ROOT)/mk/test.mk
+all: verify-all
 
 OTHERFLAGS += \
 --z3cliopt smt.QI.EAGER_THRESHOLD=100 \
@@ -11,21 +15,4 @@ OTHERFLAGS += \
 --max_ifuel 1 \
 --initial_ifuel 0 \
 --warn_error -350
-
 # ^ 350: deprecated lightweight do notation
-
-FSTAR_FILES=$(wildcard *.fst)
-
-FSTAR_FILES:=$(filter-out X64.Poly1305.fst,$(FSTAR_FILES))
-
-all: verify-all
-
-include $(FSTAR_HOME)/examples/Makefile.common
-
-verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))
-
-clean:
-	$(call msg, "CLEAN")
-	$(Q)rm -f .depend
-	$(Q)rm -rf _cache
-	$(Q)rm -rf _output

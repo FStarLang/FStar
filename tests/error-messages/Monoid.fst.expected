@@ -549,5 +549,3 @@ val left_action__uu___haseq: Prims.l_True /\
 let left_action_morphism f mf la lb = forall (g: ma) (x: a). lb.act (mf g) (f x) == f (la.act g x)
 ]
 
-Verified module: Monoid
-All verification conditions discharged successfully

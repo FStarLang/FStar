@@ -437,28 +437,18 @@ let rec (option_val_to_string : option_val -> Prims.string) =
   fun v ->
     match v with
     | Bool b ->
-        let uu___ =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_bool) b in
+        let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_bool b in
         FStarC_Compiler_String.op_Hat "Bool " uu___
     | String s ->
         let uu___ =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_string) s in
+          FStarC_Class_Show.show FStarC_Class_Show.showable_string s in
         FStarC_Compiler_String.op_Hat "String " uu___
     | Path s ->
         let uu___ =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_string) s in
+          FStarC_Class_Show.show FStarC_Class_Show.showable_string s in
         FStarC_Compiler_String.op_Hat "Path " uu___
     | Int i ->
-        let uu___ =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_int) i in
+        let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
         FStarC_Compiler_String.op_Hat "Int " uu___
     | List vs ->
         let uu___ = (FStarC_Common.string_of_list ()) option_val_to_string vs in
@@ -539,14 +529,8 @@ let (show_options : unit -> Prims.string) =
       | String s1 ->
           let uu___1 = FStarC_Compiler_String.op_Hat s1 "\"" in
           FStarC_Compiler_String.op_Hat "\"" uu___1
-      | Bool b ->
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_bool) b
-      | Int i ->
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.printableshow
-               FStar_Class_Printable.printable_int) i
+      | Bool b -> FStarC_Class_Show.show FStarC_Class_Show.showable_bool b
+      | Int i -> FStarC_Class_Show.show FStarC_Class_Show.showable_int i
       | Path s1 -> s1
       | List s1 ->
           let uu___1 = FStarC_Compiler_List.map show_optionval s1 in
@@ -3523,7 +3507,107 @@ let rec (specs_with_types :
                                                                     (Bool
                                                                     true)),
                                                                     uu___278) in
-                                                                    [uu___277] in
+                                                                    let uu___278
+                                                                    =
+                                                                    let uu___279
+                                                                    =
+                                                                    let uu___280
+                                                                    =
+                                                                    text
+                                                                    "With no arguments: print shell code to set up an environment with the OCaml libraries in scope (similar to 'opam env'). With arguments: run a command in that environment. NOTE: this must be the FIRST argument passed to F* and other options are NOT processed." in
+                                                                    (FStarC_Getopt.noshort,
+                                                                    "ocamlenv",
+                                                                    (WithSideEffect
+                                                                    ((fun
+                                                                    uu___281
+                                                                    ->
+                                                                    FStarC_Compiler_Util.print_error
+                                                                    "--ocamlenv must be the first argument, see fstar.exe --help for details\n";
+                                                                    FStarC_Compiler_Effect.exit
+                                                                    Prims.int_one),
+                                                                    (Const
+                                                                    (Bool
+                                                                    true)))),
+                                                                    uu___280) in
+                                                                    let uu___280
+                                                                    =
+                                                                    let uu___281
+                                                                    =
+                                                                    let uu___282
+                                                                    =
+                                                                    text
+                                                                    "A helper. This runs 'ocamlc' in the environment set up by --ocamlenv, for building an F* application bytecode executable." in
+                                                                    (FStarC_Getopt.noshort,
+                                                                    "ocamlc",
+                                                                    (WithSideEffect
+                                                                    ((fun
+                                                                    uu___283
+                                                                    ->
+                                                                    FStarC_Compiler_Util.print_error
+                                                                    "--ocamlc must be the first argument, see fstar.exe --help for details\n";
+                                                                    FStarC_Compiler_Effect.exit
+                                                                    Prims.int_one),
+                                                                    (Const
+                                                                    (Bool
+                                                                    true)))),
+                                                                    uu___282) in
+                                                                    let uu___282
+                                                                    =
+                                                                    let uu___283
+                                                                    =
+                                                                    let uu___284
+                                                                    =
+                                                                    text
+                                                                    "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* application native executable." in
+                                                                    (FStarC_Getopt.noshort,
+                                                                    "ocamlopt",
+                                                                    (WithSideEffect
+                                                                    ((fun
+                                                                    uu___285
+                                                                    ->
+                                                                    FStarC_Compiler_Util.print_error
+                                                                    "--ocamlopt must be the first argument, see fstar.exe --help for details\n";
+                                                                    FStarC_Compiler_Effect.exit
+                                                                    Prims.int_one),
+                                                                    (Const
+                                                                    (Bool
+                                                                    true)))),
+                                                                    uu___284) in
+                                                                    let uu___284
+                                                                    =
+                                                                    let uu___285
+                                                                    =
+                                                                    let uu___286
+                                                                    =
+                                                                    text
+                                                                    "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* plugin." in
+                                                                    (FStarC_Getopt.noshort,
+                                                                    "ocamlopt_plugin",
+                                                                    (WithSideEffect
+                                                                    ((fun
+                                                                    uu___287
+                                                                    ->
+                                                                    FStarC_Compiler_Util.print_error
+                                                                    "--ocamlopt_plugin must be the first argument, see fstar.exe --help for details\n";
+                                                                    FStarC_Compiler_Effect.exit
+                                                                    Prims.int_one),
+                                                                    (Const
+                                                                    (Bool
+                                                                    true)))),
+                                                                    uu___286) in
+                                                                    [uu___285] in
+                                                                    uu___283
+                                                                    ::
+                                                                    uu___284 in
+                                                                    uu___281
+                                                                    ::
+                                                                    uu___282 in
+                                                                    uu___279
+                                                                    ::
+                                                                    uu___280 in
+                                                                    uu___277
+                                                                    ::
+                                                                    uu___278 in
                                                                     uu___275
                                                                     ::
                                                                     uu___276 in
@@ -4120,120 +4204,12 @@ let (module_name_eq : Prims.string -> Prims.string -> Prims.bool) =
 let (should_print_message : Prims.string -> Prims.bool) =
   fun m ->
     let uu___ = should_verify m in if uu___ then m <> "Prims" else false
-let (read_fstar_include :
-  Prims.string -> Prims.string Prims.list FStar_Pervasives_Native.option) =
-  fun fn ->
-    try
-      (fun uu___ ->
-         match () with
-         | () ->
-             let s = FStarC_Compiler_Util.file_get_contents fn in
-             let subdirs =
-               FStarC_Compiler_List.filter
-                 (fun s1 ->
-                    (s1 <> "") &&
-                      (let uu___3 =
-                         let uu___4 =
-                           FStarC_Compiler_String.get s1 Prims.int_zero in
-                         uu___4 = 35 in
-                       Prims.op_Negation uu___3))
-                 (FStarC_Compiler_String.split [10] s) in
-             FStar_Pervasives_Native.Some subdirs) ()
-    with
-    | uu___ ->
-        ((let uu___4 = FStarC_Compiler_String.op_Hat "Could not read " fn in
-          failwith uu___4);
-         FStar_Pervasives_Native.None)
-let rec (expand_include_d : Prims.string -> Prims.string Prims.list) =
-  fun dirname ->
-    let dot_inc_path = FStarC_Compiler_String.op_Hat dirname "/fstar.include" in
-    if FStarC_Compiler_Util.file_exists dot_inc_path
-    then
-      let subdirs =
-        let uu___ = read_fstar_include dot_inc_path in
-        FStar_Pervasives_Native.__proj__Some__item__v uu___ in
-      let uu___ =
-        FStarC_Compiler_List.collect
-          (fun subd ->
-             let uu___3 =
-               let uu___4 = FStarC_Compiler_String.op_Hat "/" subd in
-               FStarC_Compiler_String.op_Hat dirname uu___4 in
-             expand_include_d uu___3) subdirs in
-      dirname :: uu___
-    else [dirname]
-let (expand_include_ds : Prims.string Prims.list -> Prims.string Prims.list)
-  = fun dirnames -> FStarC_Compiler_List.collect expand_include_d dirnames
-let (lib_root : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu___ ->
-    let uu___3 = get_no_default_includes () in
-    if uu___3
-    then FStar_Pervasives_Native.None
-    else
-      (let uu___5 =
-         FStarC_Compiler_Util.expand_environment_variable "FSTAR_LIB" in
-       match uu___5 with
-       | FStar_Pervasives_Native.Some s -> FStar_Pervasives_Native.Some s
-       | FStar_Pervasives_Native.None ->
-           let uu___6 =
-             let uu___7 =
-               FStarC_Compiler_String.op_Hat fstar_bin_directory "/../ulib" in
-             FStarC_Compiler_Util.file_exists uu___7 in
-           if uu___6
-           then
-             let uu___7 =
-               FStarC_Compiler_String.op_Hat fstar_bin_directory "/../ulib" in
-             FStar_Pervasives_Native.Some uu___7
-           else
-             (let uu___8 =
-                let uu___9 =
-                  FStarC_Compiler_String.op_Hat fstar_bin_directory
-                    "/../lib/fstar" in
-                FStarC_Compiler_Util.file_exists uu___9 in
-              if uu___8
-              then
-                let uu___9 =
-                  FStarC_Compiler_String.op_Hat fstar_bin_directory
-                    "/../lib/fstar" in
-                FStar_Pervasives_Native.Some uu___9
-              else FStar_Pervasives_Native.None))
-let (lib_paths : unit -> Prims.string Prims.list) =
-  fun uu___ ->
-    let uu___3 =
-      let uu___4 = lib_root () in FStarC_Common.option_to_list uu___4 in
-    expand_include_ds uu___3
-let (include_path : unit -> Prims.string Prims.list) =
-  fun uu___ ->
-    let cache_dir =
-      let uu___3 = get_cache_dir () in
-      match uu___3 with
-      | FStar_Pervasives_Native.None -> []
-      | FStar_Pervasives_Native.Some c -> [c] in
-    let include_paths =
-      let uu___3 = get_include () in expand_include_ds uu___3 in
-    let uu___3 =
-      let uu___4 = lib_paths () in
-      let uu___5 =
-        let uu___6 = expand_include_d "." in
-        FStarC_Compiler_List.op_At include_paths uu___6 in
-      FStarC_Compiler_List.op_At uu___4 uu___5 in
-    FStarC_Compiler_List.op_At cache_dir uu___3
 let (custom_prims : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> get_prims ()
-let (prepend_output_dir : Prims.string -> Prims.string) =
-  fun fname ->
-    let uu___ = get_odir () in
-    match uu___ with
-    | FStar_Pervasives_Native.None -> fname
-    | FStar_Pervasives_Native.Some x ->
-        FStarC_Compiler_Util.join_paths x fname
-let (prepend_cache_dir : Prims.string -> Prims.string) =
-  fun fpath ->
-    let uu___ = get_cache_dir () in
-    match uu___ with
-    | FStar_Pervasives_Native.None -> fpath
-    | FStar_Pervasives_Native.Some x ->
-        let uu___3 = FStarC_Compiler_Util.basename fpath in
-        FStarC_Compiler_Util.join_paths x uu___3
+let (cache_dir : unit -> Prims.string FStar_Pervasives_Native.option) =
+  fun uu___ -> get_cache_dir ()
+let (include_ : unit -> Prims.string Prims.list) =
+  fun uu___ -> get_include ()
 let (path_of_text : Prims.string -> Prims.string Prims.list) =
   fun text -> FStarC_Compiler_String.split [46] text
 let (parse_settings :

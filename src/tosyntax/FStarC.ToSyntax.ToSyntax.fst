@@ -3645,18 +3645,20 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t & sigelts) =
       List.filter (fun at -> Option.isNone (get_fail_attr1 false at)) ats
   in
 
-  // The `fail` attribute behaves
-  // differentrly! We only keep that one on the first new decl.
-  let env0 = Env.snapshot env |> snd in (* we need the snapshot since pushing the let
-                                         * will shadow a previous val *)
-
   (* If this is an expect_failure, check to see if it fails.
    * If it does, check that the errors match as we normally do.
    * If it doesn't fail, leave it alone! The typechecker will check the failure. *)
   let env, sigelts =
-    let attrs = U.deduplicate_terms (List.map (desugar_term env) d.attrs) in
+    let attrs = List.map (desugar_term env) d.attrs in
+    let attrs = U.deduplicate_terms attrs in
     match get_fail_attr false attrs with
     | Some (expected_errs, lax) ->
+      // The `fail` attribute behaves
+      // differentrly! We only keep that one on the first new decl.
+      let env0 =
+          Env.snapshot env |> snd  (* we need the snapshot since pushing the let
+                                    * will shadow a previous val *)
+      in
       let d = { d with attrs = [] } in
       let errs, r = Errors.catch_errors (fun () ->
                       Options.with_saved_options (fun () ->
@@ -3738,19 +3740,30 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
     env, []
 
   | Friend lid ->
-    if Env.iface env
-    then raise_error d Errors.Fatal_FriendInterface
-                      "'friend' declarations are not allowed in interfaces"
-    else if not (FStarC.Parser.Dep.module_has_interface (Env.dep_graph env) (Env.current_module env))
-    then raise_error d Errors.Fatal_FriendInterface
-                      "'friend' declarations are not allowed in modules that lack interfaces"
-    else if not (FStarC.Parser.Dep.module_has_interface (Env.dep_graph env) lid)
-    then raise_error d Errors.Fatal_FriendInterface
-                      "'friend' declarations cannot refer to modules that lack interfaces"
-    else if not (FStarC.Parser.Dep.deps_has_implementation (Env.dep_graph env) lid)
-    then raise_error d Errors.Fatal_FriendInterface
-                      "'friend' module has not been loaded; recompute dependences (C-c C-r) if in interactive mode"
-    else env, []
+    (* Several checks to accept a friend declaration. *)
+    let open FStarC.Errors in
+    let open FStarC.Pprint in
+    let open FStarC.Class.PP in
+    if Env.iface env then
+      raise_error d Errors.Fatal_FriendInterface [
+        text "'friend' declarations are not allowed in interfaces.";
+      ];
+    if not (FStarC.Parser.Dep.module_has_interface (Env.dep_graph env) (Env.current_module env)) then
+      raise_error d Errors.Fatal_FriendInterface [
+        text "'friend' declarations are not allowed in modules that lack interfaces.";
+        text "Suggestion: add an interface for module" ^/^ pp (Env.current_module env);
+      ];
+    if not (FStarC.Parser.Dep.deps_has_implementation (Env.dep_graph env) lid) then
+      raise_error d Errors.Fatal_FriendInterface [
+        text "'friend' module" ^/^ pp lid ^/^ text "not found";
+        text "Suggestion: recompute dependences (C-c C-r) if in interactive mode.";
+      ];
+    if not (FStarC.Parser.Dep.module_has_interface (Env.dep_graph env) lid) then
+      raise_error d Errors.Fatal_FriendInterface [
+        text "'friend' declarations cannot refer to modules that lack interfaces.";
+        text "Suggestion: add an interfce for module" ^/^ pp lid;
+      ];
+    env, []
 
   | Include (lid, restriction) ->
     let env = Env.push_include env lid restriction in
@@ -3900,6 +3913,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
     in
     if not expand_toplevel_pattern
     then begin
+      (* Usual case *)
       let lets = List.map (fun x -> None, x) lets in
       let as_inner_let =
         mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr
@@ -3912,16 +3926,16 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
           let val_quals, val_attrs =
             List.fold_right (fun fv (qs, ats) ->
                 let qs', ats' = Env.lookup_letbinding_quals_and_attrs env fv.fv_name.v in
-                (qs'@qs, ats'@ats))
+                (List.rev_append qs' qs, List.rev_append ats' ats))
                 fvs
                 ([], [])
           in
           (* Propagate top-level attrs to each lb. The lb.lbattrs field should be empty,
            * but just being safe here. *)
-          let top_attrs = d_attrs in
+          let top_attrs = U.deduplicate_terms <| List.rev_append val_attrs d_attrs in
           let lbs =
             let (isrec, lbs0) = lbs in
-            let lbs0 = lbs0 |> List.map (fun lb -> { lb with lbattrs = U.deduplicate_terms (lb.lbattrs @ val_attrs @ top_attrs) }) in
+            let lbs0 = lbs0 |> List.map (fun lb -> { lb with lbattrs = U.deduplicate_terms (List.rev_append lb.lbattrs top_attrs) }) in
             (isrec, lbs0)
           in
           // BU.print3 "Desugaring %s, val_quals are %s, val_attrs are %s\n"
@@ -3930,29 +3944,29 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
           //   (List.map show val_attrs |> String.concat ", ");
           let quals =
             match quals with
-            | _::_ ->
-             List.map (trans_qual None) quals
-            | _ ->
-             val_quals
+            | _::_ -> List.map (trans_qual None) quals
+            | _ -> val_quals
           in
           let quals =
             if lets |> BU.for_some (fun (_, (_, t)) -> t.level=Formula)
             then S.Logic::quals
-            else quals in
+            else quals
+          in
           let names = fvs |> List.map (fun fv -> fv.fv_name.v) in
           let s = { sigel = Sig_let {lbs; lids=names};
                     sigquals = quals;
                     sigrng = d.drange;
                     sigmeta = default_sigmeta;
-                    sigattrs = U.deduplicate_terms (val_attrs @ top_attrs);
+                    sigattrs = top_attrs;
                     sigopts = None;
-                    sigopens_and_abbrevs = opens_and_abbrevs env
+                    sigopens_and_abbrevs = opens_and_abbrevs env;
                    } in
           let env = push_sigelt env s in
           env, [s]
         | _ -> failwith "Desugaring a let did not produce a let"
     end
     else
+      (* Need to expand the toplevel pattern into more toplevel lets *)
       (* If there is a top-level pattern we first bind the result of the body *)
       (* to some private anonymous name then we gather each idents bounded in *)
       (* the pattern and introduce one toplevel binding for each of them      *)
@@ -4285,9 +4299,9 @@ let desugar_decls env decls =
   let env, sigelts =
     List.fold_left (fun (env, sigelts) d ->
       let env, se = desugar_decl env d in
-      env, sigelts@se) (env, []) decls
+      env, List.rev_append se sigelts) (env, []) decls
   in
-  env, sigelts
+  env, List.rev sigelts
 
 (* Top-level functionality: from AST to a module
    Keeps track of the name of variables and so on (in the context)

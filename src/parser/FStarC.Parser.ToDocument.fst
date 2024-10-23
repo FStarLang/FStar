@@ -665,6 +665,27 @@ let p_lidentOrOperator' l s_l p_l =
   else
     p_l l
 
+let p_char_literal' quote_char (c: FStarC.BaseTypes.char): document =
+  (match c with
+  | '\b' -> "\\b"
+  | '\f' -> "\\f"
+  | '\n' -> "\\n"
+  | '\t' -> "\\t"
+  | '\r' -> "\\r"
+  | '\v' -> "\\v"
+  | '\0' -> "\\0"
+  | c -> let s = FStarC.Compiler.Util.string_of_char c in
+        if quote_char = c then "\\" ^ s else s) |> str
+
+let p_char_literal (c: FStarC.BaseTypes.char): document =
+  p_char_literal' '\'' c |> squotes
+
+let p_string_literal (s: string): document
+  = let quotation_mark = '\x22' in // this is '"', but that messes with syntax highlighting
+    FStar.String.list_of_string s
+    |> concat_map (p_char_literal' quotation_mark)
+    |> dquotes
+
 (* ****************************************************************************)
 (*                                                                            *)
 (*                Printing identifiers and module paths                       *)
@@ -2090,12 +2111,7 @@ and p_atomicTermNotQUident e = match e.tm with
   | Var lid when lid_equals lid C.assert_lid -> str "assert"
   | Var lid when lid_equals lid C.assume_lid -> str "assume"
   | Tvar tv -> p_tvar tv
-  | Const c ->
-    begin match c with
-    | Const.Const_char x  when x = '\n' ->
-       str "0x0Az"
-    | _ -> p_constant c
-    end
+  | Const c -> p_constant c
   | Name lid when lid_equals lid C.true_lid ->
     str "True"
   | Name lid when lid_equals lid C.false_lid ->
@@ -2205,8 +2221,8 @@ and p_constant = function
   | Const_unit -> str "()"
   | Const_bool b -> doc_of_bool b
   | Const_real r -> str (r ^"R")
-  | Const_char x -> doc_of_char x
-  | Const_string(s, _) -> dquotes (str (FStarC.Compiler.String.escaped s))
+  | Const_char x -> p_char_literal x
+  | Const_string(s, _) -> p_string_literal s
   | Const_int (repr, sign_width_opt) ->
       let signedness = function
           | Unsigned -> str "u"

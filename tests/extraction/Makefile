@@ -1,12 +1,12 @@
-FSTAR_EXAMPLES=$(realpath ../../examples)
-include $(FSTAR_EXAMPLES)/Makefile.include
-include $(FSTAR_ULIB)/ml/Makefile.include
+FSTAR_ROOT ?= ../..
+NODEPEND=1
+include $(FSTAR_ROOT)/mk/test.mk
 
 all: inline_let all_cmi Eta_expand.test Div.test ExtractAs.test
 
-%.exe: %.fst | out
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml $<
-	$(OCAMLOPT) out/$(patsubst %.fst,%.ml,$<) -o $@
+%.exe: %.fst
+	$(FSTAR) --codegen OCaml $<
+	$(OCAMLOPT) -package fstar.lib -linkpkg $(OUTPUT_DIR)/$(patsubst %.fst,%.ml,$<) -o $@
 
 %.test: %.exe
 	$(call msg,RUN,$<)
@@ -22,14 +22,11 @@ Div.test: Div.exe
 
 inline_let: InlineLet.fst
 	$(FSTAR) --codegen OCaml InlineLet.fst
-	egrep -A 10 test InlineLet.ml | grep -qs "17"
+	egrep -A 10 test $(OUTPUT_DIR)/InlineLet.ml | grep -qs "17"
 	@touch $@
 
 all_cmi:
 	+$(MAKE) -C cmi all
-
-out:
-	mkdir -p out
 
 clean:
 	rm -rf out
@@ -37,4 +34,3 @@ clean:
 	rm -f *~
 	rm -f *.exe *.test
 	rm -f inline_let
-

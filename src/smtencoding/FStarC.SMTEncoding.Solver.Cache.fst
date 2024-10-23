@@ -65,12 +65,13 @@ instance hashable_letbinding : hashable letbinding = {
 
 instance hashable_pragma : hashable pragma = {
   hash = (function
-          | SetOptions s -> hash 1 `mix` hash s
-          | ResetOptions s -> hash 2 `mix` hash s
-          | PushOptions s -> hash 3 `mix` hash s
-          | PopOptions -> hash 4
-          | RestartSolver -> hash 5
-          | PrintEffectsGraph -> hash 6);
+          | ShowOptions -> hash 1
+          | SetOptions s -> hash 2 `mix` hash s
+          | ResetOptions s -> hash 3 `mix` hash s
+          | PushOptions s -> hash 4 `mix` hash s
+          | PopOptions -> hash 5
+          | RestartSolver -> hash 6
+          | PrintEffectsGraph -> hash 7);
 }
 
 let rec hash_sigelt (se:sigelt) : hash_code =

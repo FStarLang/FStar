@@ -30,6 +30,7 @@ open FStarC.VConfig
 open FStarC.Class.Ord
 open FStarC.Class.HasRange
 open FStarC.Class.Setlike
+open FStarC.Compiler.Order
 
 module O    = FStarC.Options
 module PC   = FStarC.Parser.Const
@@ -84,6 +85,67 @@ instance showable_should_check_uvar = {
 
 // This is set in FStarC.Main.main, where all modules are in-scope.
 let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term)) = mk_ref None
+
+let cmp_qualifier (q1 q2 : qualifier) : FStarC.Compiler.Order.order =
+  match q1, q2 with
+  | Assumption, Assumption -> Eq
+  | New, New -> Eq
+  | Private, Private -> Eq
+  | Unfold_for_unification_and_vcgen, Unfold_for_unification_and_vcgen -> Eq
+  | Irreducible, Irreducible -> Eq
+  | Inline_for_extraction, Inline_for_extraction -> Eq
+  | NoExtract, NoExtract -> Eq
+  | Noeq, Noeq -> Eq
+  | Unopteq, Unopteq -> Eq
+  | TotalEffect, TotalEffect -> Eq
+  | Logic, Logic -> Eq
+  | Reifiable, Reifiable -> Eq
+  | Reflectable l1, Reflectable l2 -> cmp l1 l2
+  | Visible_default, Visible_default -> Eq
+  | Discriminator l1, Discriminator l2 -> cmp l1 l2
+  | Projector (l1, i1), Projector (l2, i2) -> cmp (l1, i1) (l2, i2)
+  | RecordType (l1, i1), RecordType (l2, i2) -> cmp (l1, i1) (l2, i2)
+  | RecordConstructor (l1, i1), RecordConstructor (l2, i2) -> cmp (l1, i1) (l2, i2)
+  | Action l1, Action l2 -> cmp l1 l2
+  | ExceptionConstructor, ExceptionConstructor -> Eq
+  | HasMaskedEffect, HasMaskedEffect -> Eq
+  | Effect, Effect -> Eq
+  | OnlyName, OnlyName -> Eq
+  | InternalAssumption, InternalAssumption -> Eq
+
+  | Assumption, _ -> Lt          | _, Assumption -> Gt
+  | New, _ -> Lt                 | _, New -> Gt
+  | Private, _ -> Lt             | _, Private -> Gt
+  | Unfold_for_unification_and_vcgen, _ -> Lt | _, Unfold_for_unification_and_vcgen -> Gt
+  | Irreducible, _ -> Lt         | _, Irreducible -> Gt
+  | Inline_for_extraction, _ -> Lt | _, Inline_for_extraction -> Gt
+  | NoExtract, _ -> Lt          | _, NoExtract -> Gt
+  | Noeq, _ -> Lt               | _, Noeq -> Gt
+  | Unopteq, _ -> Lt            | _, Unopteq -> Gt
+  | TotalEffect, _ -> Lt        | _, TotalEffect -> Gt
+  | Logic, _ -> Lt              | _, Logic -> Gt
+  | Reifiable, _ -> Lt          | _, Reifiable -> Gt
+  | Reflectable _, _ -> Lt      | _, Reflectable _ -> Gt
+  | Visible_default, _ -> Lt    | _, Visible_default -> Gt
+  | Discriminator _, _ -> Lt    | _, Discriminator _ -> Gt
+  | Projector _, _ -> Lt        | _, Projector _ -> Gt
+  | RecordType _, _ -> Lt       | _, RecordType _ -> Gt
+  | RecordConstructor _, _ -> Lt | _, RecordConstructor _ -> Gt
+  | Action _, _ -> Lt           | _, Action _ -> Gt
+  | ExceptionConstructor, _ -> Lt | _, ExceptionConstructor -> Gt
+  | HasMaskedEffect, _ -> Lt    | _, HasMaskedEffect -> Gt
+  | Effect, _ -> Lt             | _, Effect -> Gt
+  | OnlyName, _ -> Lt           | _, OnlyName -> Gt
+  | InternalAssumption, _ -> Lt | _, InternalAssumption -> Gt
+
+instance deq_qualifier : deq qualifier = {
+  (=?) = (fun q1 q2 -> cmp_qualifier q1 q2 = Eq);
+}
+
+instance ord_qualifier : ord qualifier = {
+  super = deq_qualifier;
+  cmp = cmp_qualifier;
+}
 
 let is_internal_qualifier (q:qualifier) : bool =
   match q with
@@ -589,6 +651,11 @@ instance showable_lazy_kind = {
           | Lazy_extension s -> "Lazy_extension " ^ s
           | _ -> failwith "FIXME! lazy_kind_to_string must be complete"
   );
+}
+
+instance showable_restriction: showable restriction = {
+  show = (function | Unrestricted -> "Unrestricted"
+                   | AllowList l  -> "AllowList " ^ show l);
 }
 
 instance deq_lazy_kind : deq lazy_kind = {

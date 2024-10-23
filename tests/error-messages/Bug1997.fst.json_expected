@@ -291,5 +291,3 @@ private
 let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 ]
 
-Verified module: Bug1997
-All verification conditions discharged successfully

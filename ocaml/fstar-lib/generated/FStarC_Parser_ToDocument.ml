@@ -1060,6 +1060,31 @@ let p_lidentOrOperator' :
                 FStarC_Pprint.op_Hat_Hat uu___4 uu___5 in
               FStarC_Pprint.op_Hat_Hat uu___2 uu___3
         else p_l l
+let (p_char_literal' :
+  FStar_Char.char -> FStarC_BaseTypes.char -> FStarC_Pprint.document) =
+  fun quote_char ->
+    fun c ->
+      str
+        (match c with
+         | 8 -> "\\b"
+         | 12 -> "\\f"
+         | 10 -> "\\n"
+         | 9 -> "\\t"
+         | 13 -> "\\r"
+         | 11 -> "\\v"
+         | 0 -> "\\0"
+         | c1 ->
+             let s = FStarC_Compiler_Util.string_of_char c1 in
+             if quote_char = c1 then Prims.strcat "\\" s else s)
+let (p_char_literal : FStarC_BaseTypes.char -> FStarC_Pprint.document) =
+  fun c -> let uu___ = p_char_literal' 39 c in FStarC_Pprint.squotes uu___
+let (p_string_literal : Prims.string -> FStarC_Pprint.document) =
+  fun s ->
+    let quotation_mark = 34 in
+    let uu___ =
+      FStarC_Pprint.concat_map (p_char_literal' quotation_mark)
+        (FStar_String.list_of_string s) in
+    FStarC_Pprint.dquotes uu___
 let (string_of_id_or_underscore :
   FStarC_Ident.ident -> FStarC_Pprint.document) =
   fun lid ->
@@ -4752,10 +4777,7 @@ and (p_atomicTermNotQUident :
         FStarC_Ident.lid_equals lid FStarC_Parser_Const.assume_lid ->
         str "assume"
     | FStarC_Parser_AST.Tvar tv -> p_tvar tv
-    | FStarC_Parser_AST.Const c ->
-        (match c with
-         | FStarC_Const.Const_char x when x = 10 -> str "0x0Az"
-         | uu___ -> p_constant c)
+    | FStarC_Parser_AST.Const c -> p_constant c
     | FStarC_Parser_AST.Name lid when
         FStarC_Ident.lid_equals lid FStarC_Parser_Const.true_lid ->
         str "True"
@@ -4952,10 +4974,8 @@ and (p_constant : FStarC_Const.sconst -> FStarC_Pprint.document) =
     | FStarC_Const.Const_unit -> str "()"
     | FStarC_Const.Const_bool b -> FStarC_Pprint.doc_of_bool b
     | FStarC_Const.Const_real r -> str (Prims.strcat r "R")
-    | FStarC_Const.Const_char x -> FStarC_Pprint.doc_of_char x
-    | FStarC_Const.Const_string (s, uu___1) ->
-        let uu___2 = str (FStarC_Compiler_String.escaped s) in
-        FStarC_Pprint.dquotes uu___2
+    | FStarC_Const.Const_char x -> p_char_literal x
+    | FStarC_Const.Const_string (s, uu___1) -> p_string_literal s
     | FStarC_Const.Const_int (repr, sign_width_opt) ->
         let signedness uu___1 =
           match uu___1 with

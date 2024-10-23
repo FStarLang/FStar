@@ -7,5 +7,3 @@
 >> Got issues: [
 {"msg":["The qualifier list\n[unopteq]\nis not permissible for this element","The `unopteq` qualifier is not allowed on erasable inductives since they don't\nhave decidable equality."],"level":"Error","range":{"def":{"file_name":"TestHasEq.fst","start_pos":{"line":88,"col":8},"end_pos":{"line":89,"col":30}},"use":{"file_name":"TestHasEq.fst","start_pos":{"line":88,"col":8},"end_pos":{"line":89,"col":30}}},"number":162,"ctx":["While typechecking the top-level declaration `type TestHasEq.erasable_t2`","While typechecking the top-level declaration `[@@expect_failure] type TestHasEq.erasable_t2`"]}
 >>]
-Verified module: TestHasEq
-All verification conditions discharged successfully

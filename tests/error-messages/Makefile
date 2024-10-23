@@ -1,7 +1,6 @@
-FSTAR_HOME=../..
-all: check-all
-
-FSTAR_FILES=$(wildcard *.fst)
+FSTAR_ROOT ?= ../..
+include $(FSTAR_ROOT)/mk/test.mk
+all: $(if $(ACCEPT),accept,check-all)
 
 # This so that we don't get warnings about:
 # 241: "unable to load checked file"
@@ -9,16 +8,13 @@ FSTAR_FILES=$(wildcard *.fst)
 # 333: "unable to read hints"
 OTHERFLAGS+=--warn_error -241-247-333-274+240
 
-# Sorry, without this we can get noise in error locations.
-# See issue #1993. Also, warnings from dependencies would
-# pollute the output.
-OTHERFLAGS+=--already_cached 'Prims FStar'
-
 # Remove --query_stats and --hint_info from this subdir, since
 # they output timing info.
 OTHERFLAGS := $(filter-out --query_stats, $(OTHERFLAGS))
 OTHERFLAGS := $(filter-out --hint_info, $(OTHERFLAGS))
 OTHERFLAGS += --ext fstar:no_absolute_paths
+
+OTHERFLAGS += --silent # Make sure we are silent
 
 check-all: $(addsuffix .human_check, $(FSTAR_FILES)) \
            $(addsuffix .json_check, $(FSTAR_FILES))
@@ -51,7 +47,6 @@ TuplePat.fst.output      : OTHERFLAGS+=--dump_module TuplePat
 Monoid.fst.json_output   : OTHERFLAGS+=--dump_module Monoid
 Monoid.fst.output        : OTHERFLAGS+=--dump_module Monoid
 
-include $(FSTAR_HOME)/examples/Makefile.common
 
 .PHONY: %.human_check
 %.human_check: %.expected %.output

@@ -396,14 +396,10 @@ let (elim_tydef :
                                 ((let uu___7 =
                                     let uu___8 =
                                       FStarC_Class_Show.show
-                                        (FStarC_Class_Show.printableshow
-                                           FStar_Class_Printable.printable_int)
-                                        i in
+                                        FStarC_Class_Show.showable_int i in
                                     let uu___9 =
                                       FStarC_Class_Show.show
-                                        (FStarC_Class_Show.printableshow
-                                           FStar_Class_Printable.printable_int)
-                                        i in
+                                        FStarC_Class_Show.showable_int i in
                                     FStarC_Compiler_Util.format3
                                       "Parameter %s of %s is unused and must be eliminated for F#; add `[@@ remove_unused_type_parameters [%s; ...]]` to the interface signature; \nThis type definition is being dropped"
                                       uu___8 name uu___9 in

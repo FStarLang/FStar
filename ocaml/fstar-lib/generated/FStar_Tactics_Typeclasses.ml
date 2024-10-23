@@ -2301,7 +2301,7 @@ let (tcresolve : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     (fun
                                                                     uu___19
                                                                     ->
-                                                                    FStarC_Pprint.bquotes
+                                                                    FStar_Pprint.bquotes
                                                                     uu___18)) in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -2329,10 +2329,10 @@ let (tcresolve : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     (fun
                                                                     uu___18
                                                                     ->
-                                                                    FStarC_Pprint.prefix
+                                                                    FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
-                                                                    (FStarC_Pprint.arbitrary_string
+                                                                    (FStar_Pprint.arbitrary_string
                                                                     "Could not solve typeclass constraint")
                                                                     uu___17)) in
                                                                     FStar_Tactics_Effect.tac_bind
@@ -2396,7 +2396,7 @@ let (tcresolve : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     ((op_At
                                                                     ())
                                                                     [
-                                                                    FStarC_Pprint.arbitrary_string
+                                                                    FStar_Pprint.arbitrary_string
                                                                     "Typeclass resolution failed."]
                                                                     msg) r))
                                                                     | 

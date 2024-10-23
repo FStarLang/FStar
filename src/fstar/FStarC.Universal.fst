@@ -333,7 +333,7 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
           | Some (_, decls) ->
             let bindings = FStarC.Extraction.ML.UEnv.bindings_of_uenv env in
             let deps : list string = Dep.deps_of_modul dep_graph (MLSyntax.string_of_mlpath mname) in
-            save_value_to_file (Options.prepend_output_dir (filename^ext)) (deps, bindings, decls)
+            save_value_to_file (Find.prepend_output_dir (filename^ext)) (deps, bindings, decls)
           | None ->
             failwith "Unexpected ml modul in Extension extraction mode"
         ) ms
@@ -350,8 +350,8 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
         | Some fname -> fname (* NB: no prepending odir nor adding extension, user chose a explicit path *)
         | _ ->
           match programs with
-          | [ name, _ ] -> name ^ ext  |> Options.prepend_output_dir
-          | _ -> "out" ^ ext |> Options.prepend_output_dir
+          | [ name, _ ] -> name ^ ext  |> Find.prepend_output_dir
+          | _ -> "out" ^ ext |> Find.prepend_output_dir
       in
       save_value_to_file oname bin
 

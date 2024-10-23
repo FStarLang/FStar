@@ -80,6 +80,7 @@ val pimap_add: pimap 'value -> int -> 'value -> pimap 'value
 val pimap_find_default: pimap 'value -> int -> 'value -> 'value
 val pimap_try_find: pimap 'value -> int -> option 'value
 val pimap_fold: pimap 'value -> (int -> 'value -> 'a -> 'a) -> 'a -> 'a
+val pimap_remove: pimap 'value -> int -> pimap 'value
 
 val format: string -> list string -> string
 val format1: string -> string -> string
@@ -391,3 +392,6 @@ val unmarshal: string -> 'a
 val print_array (f: 'a -> string) (s:FStar.ImmutableArray.Base.t 'a) : string 
 val array_length (s:FStar.ImmutableArray.Base.t 'a) : FStarC.BigInt.t
 val array_index (s:FStar.ImmutableArray.Base.t 'a) (i:FStarC.BigInt.t) : 'a
+
+val putenv : string -> string -> unit
+val execvp : string -> list string -> unit // will return only on error

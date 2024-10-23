@@ -61,5 +61,3 @@ private
 let _ = [@@@ 1]x: Prims.int -> Prims.bool
 ]
 
-Verified module: Bug3530
-All verification conditions discharged successfully

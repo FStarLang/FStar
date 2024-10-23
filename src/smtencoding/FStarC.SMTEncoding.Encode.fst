@@ -112,12 +112,12 @@ let prims =
               let app = mk_Apply app [var] in
               let vars = vars @ [var] in
               let axiom_name = axiom_name ^ "." ^ (string_of_int (vars |> List.length)) in
-              axioms @ [Util.mkAssume (mkForall rng ([[app]], vars, mk_IsTotFun app), None, axiom_name)],
+              Util.mkAssume (mkForall rng ([[app]], vars, mk_IsTotFun app), None, axiom_name) :: axioms,
               app,
               vars
             ) ([tot_fun_axiom_for_x], xtok, []) all_vars_but_one
           in
-          axioms
+          List.rev axioms
         in
 
         let rel_body =
@@ -598,9 +598,12 @@ let encode_top_level_val uninterpreted env us fv t quals =
     else decls, env
 
 let encode_top_level_vals env bindings quals =
+  let decls, env =
     bindings |> List.fold_left (fun (decls, env) lb ->
         let decls', env = encode_top_level_val false env lb.lbunivs (BU.right lb.lbname) lb.lbtyp quals in
-        decls@decls', env) ([], env)
+        List.rev_append decls' decls, env) ([], env)
+  in
+  List.rev decls, env
 
 exception Let_rec_unencodeable
 
@@ -1954,9 +1957,12 @@ let encode_modul tcenv modul =
     then BU.print2 "+++++++++++Encoding externals for %s ... %s declarations\n" name (List.length modul.declarations |> string_of_int);
     let env = get_env modul.name tcenv |> reset_current_module_fvbs in
     let encode_signature (env:env_t) (ses:sigelts) =
+      let g', env =
         ses |> List.fold_left (fun (g, env) se ->
           let g', env = encode_top_level_facts env se in
-          g@g', env) ([], env)
+          List.rev_append g' g, env) ([], env)
+      in
+      List.rev g', env
     in
     let decls, env = encode_signature ({env with warn=false}) modul.declarations in
     give_decls_to_z3_and_set_env env name decls;

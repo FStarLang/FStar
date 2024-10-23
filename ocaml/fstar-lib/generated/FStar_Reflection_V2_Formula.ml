@@ -999,7 +999,7 @@ let (term_as_formula' :
                   (Obj.repr
                      (FStar_Tactics_Effect.raise
                         (FStarC_Tactics_Common.TacticFailure
-                           ([FStarC_Pprint.arbitrary_string
+                           ([FStar_Pprint.arbitrary_string
                                "Unexpected: term_as_formula"],
                              FStar_Pervasives_Native.None))))) uu___1)
 let _ =
@@ -1152,7 +1152,7 @@ let (namedv_to_string :
       (fun uu___1 ->
          (fun namedvv ->
             Obj.magic
-              (FStar_Tactics_Unseal.unseal
+              (FStarC_Tactics_Unseal.unseal
                  namedvv.FStarC_Reflection_V2_Data.ppname)) uu___1)
 let (formula_to_string :
   formula -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) =

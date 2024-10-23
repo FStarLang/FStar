@@ -1,10 +1,11 @@
-FSTAR_HOME=../..
-include $(FSTAR_HOME)/examples/Makefile.include
-include $(FSTAR_HOME)/ulib/ml/Makefile.include
+include Makefile.include
+# ^ stopgap so I don't have to rewrite this entire makefile (yet)
+# but the right thing to do is include /mk/test.mk and rewrite this.
 
 OTHERFLAGS+=--warn_error +240
 
-all: verify iverify not-verify extract
+all: verify iverify not-verify # extract
+.DEFAULT_GOAL := all
 
 ##################
 # Positive tests #
@@ -80,7 +81,7 @@ SHOULD_VERIFY_CLOSED=\
 	Bug2155.fst Bug3224a.fst Bug3224b.fst Bug3236.fst Bug3252.fst \
 	BugBoxInjectivity.fst BugTypeParamProjector.fst Bug2172.fst Bug3266.fst		\
 	Bug3264a.fst Bug3264b.fst Bug3286a.fst Bug3286b.fst Bug3320.fst Bug2583.fst \
-	Bug2419.fst Bug3353.fst Bug3426.fst Bug3530.fst
+	Bug2419.fst Bug3353.fst Bug3426.fst Bug3530.fst Bug3559c.fst
 
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
@@ -176,6 +177,11 @@ CAPPED=$(subst Bug,Bug,$*)
 Bug1383.verify: OTHERFLAGS += --warn_error @275 #Z3 warnings are fatal
 Bug1694.verify: OTHERFLAGS += --codegen OCaml
 Bug2210.verify: OTHERFLAGS += --codegen OCaml
+
+# Disable hints, see #3572
+# We also have to filter OTHERFLAGS mostly in support of the everest script
+Bug1614a.verify: HINTS_ENABLED =
+Bug1614a.verify: OTHERFLAGS := $(subst --use_hints,,$(OTHERFLAGS))
 
 Bug2684a.verify: OTHERFLAGS += --cache_checked_modules
 Bug2684b.verify: OTHERFLAGS += --cache_checked_modules

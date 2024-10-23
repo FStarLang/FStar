@@ -9177,18 +9177,17 @@ and (desugar_decl_maybe_fail_attr :
           (fun at ->
              let uu___ = get_fail_attr1 false at in
              FStarC_Compiler_Option.isNone uu___) ats in
-      let env0 =
-        let uu___ = FStarC_Syntax_DsEnv.snapshot env in
-        FStar_Pervasives_Native.snd uu___ in
       let uu___ =
         let attrs =
-          let uu___1 =
-            FStarC_Compiler_List.map (desugar_term env)
-              d.FStarC_Parser_AST.attrs in
-          FStarC_Syntax_Util.deduplicate_terms uu___1 in
-        let uu___1 = get_fail_attr false attrs in
+          FStarC_Compiler_List.map (desugar_term env)
+            d.FStarC_Parser_AST.attrs in
+        let attrs1 = FStarC_Syntax_Util.deduplicate_terms attrs in
+        let uu___1 = get_fail_attr false attrs1 in
         match uu___1 with
         | FStar_Pervasives_Native.Some (expected_errs, lax) ->
+            let env0 =
+              let uu___2 = FStarC_Syntax_DsEnv.snapshot env in
+              FStar_Pervasives_Native.snd uu___2 in
             let d1 =
               {
                 FStarC_Parser_AST.d = (d.FStarC_Parser_AST.d);
@@ -9202,7 +9201,7 @@ and (desugar_decl_maybe_fail_attr :
               FStarC_Errors.catch_errors
                 (fun uu___3 ->
                    FStarC_Options.with_saved_options
-                     (fun uu___4 -> desugar_decl_core env attrs d1)) in
+                     (fun uu___4 -> desugar_decl_core env attrs1 d1)) in
             (match uu___2 with
              | (errs, r) ->
                  (match (errs, r) with
@@ -9210,7 +9209,7 @@ and (desugar_decl_maybe_fail_attr :
                       let ses1 =
                         FStarC_Compiler_List.map
                           (fun se ->
-                             let uu___3 = no_fail_attrs attrs in
+                             let uu___3 = no_fail_attrs attrs1 in
                              {
                                FStarC_Syntax_Syntax.sigel =
                                  (se.FStarC_Syntax_Syntax.sigel);
@@ -9242,7 +9241,7 @@ and (desugar_decl_maybe_fail_attr :
                           FStarC_Syntax_Syntax.sigquals = [];
                           FStarC_Syntax_Syntax.sigmeta =
                             FStarC_Syntax_Syntax.default_sigmeta;
-                          FStarC_Syntax_Syntax.sigattrs = attrs;
+                          FStarC_Syntax_Syntax.sigattrs = attrs1;
                           FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___3;
                           FStarC_Syntax_Syntax.sigopts =
                             FStar_Pervasives_Native.None
@@ -9315,19 +9314,13 @@ and (desugar_decl_maybe_fail_attr :
                                       let uu___12 =
                                         let uu___13 =
                                           FStarC_Class_Show.show
-                                            (FStarC_Class_Show.printableshow
-                                               FStar_Class_Printable.printable_int)
-                                            e in
+                                            FStarC_Class_Show.showable_int e in
                                         let uu___14 =
                                           FStarC_Class_Show.show
-                                            (FStarC_Class_Show.printableshow
-                                               FStar_Class_Printable.printable_int)
-                                            n2 in
+                                            FStarC_Class_Show.showable_int n2 in
                                         let uu___15 =
                                           FStarC_Class_Show.show
-                                            (FStarC_Class_Show.printableshow
-                                               FStar_Class_Printable.printable_int)
-                                            n1 in
+                                            FStarC_Class_Show.showable_int n1 in
                                         FStarC_Compiler_Util.format3
                                           "Error #%s was raised %s times, instead of %s."
                                           uu___13 uu___14 uu___15 in
@@ -9341,7 +9334,7 @@ and (desugar_decl_maybe_fail_attr :
                                      FStarC_Errors_Msg.is_error_message_list_doc)
                                   (Obj.magic uu___8));
                                (env0, []))))))
-        | FStar_Pervasives_Native.None -> desugar_decl_core env attrs d in
+        | FStar_Pervasives_Native.None -> desugar_decl_core env attrs1 d in
       match uu___ with | (env1, sigelts) -> (env1, sigelts)
 and (desugar_decl :
   env_t -> FStarC_Parser_AST.decl -> (env_t * FStarC_Syntax_Syntax.sigelts))
@@ -9387,56 +9380,101 @@ and (desugar_decl_core :
             let env1 = FStarC_Syntax_DsEnv.push_namespace env lid restriction in
             (env1, [])
         | FStarC_Parser_AST.Friend lid ->
-            let uu___ = FStarC_Syntax_DsEnv.iface env in
-            if uu___
-            then
-              FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_decl d
-                FStarC_Errors_Codes.Fatal_FriendInterface ()
-                (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                (Obj.magic
-                   "'friend' declarations are not allowed in interfaces")
-            else
-              (let uu___2 =
-                 let uu___3 =
-                   let uu___4 = FStarC_Syntax_DsEnv.dep_graph env in
-                   let uu___5 = FStarC_Syntax_DsEnv.current_module env in
-                   FStarC_Parser_Dep.module_has_interface uu___4 uu___5 in
-                 Prims.op_Negation uu___3 in
-               if uu___2
-               then
-                 FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_decl d
-                   FStarC_Errors_Codes.Fatal_FriendInterface ()
-                   (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                   (Obj.magic
-                      "'friend' declarations are not allowed in modules that lack interfaces")
-               else
-                 (let uu___4 =
-                    let uu___5 =
-                      let uu___6 = FStarC_Syntax_DsEnv.dep_graph env in
-                      FStarC_Parser_Dep.module_has_interface uu___6 lid in
-                    Prims.op_Negation uu___5 in
-                  if uu___4
-                  then
-                    FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_decl
-                      d FStarC_Errors_Codes.Fatal_FriendInterface ()
-                      (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                      (Obj.magic
-                         "'friend' declarations cannot refer to modules that lack interfaces")
-                  else
-                    (let uu___6 =
-                       let uu___7 =
-                         let uu___8 = FStarC_Syntax_DsEnv.dep_graph env in
-                         FStarC_Parser_Dep.deps_has_implementation uu___8 lid in
-                       Prims.op_Negation uu___7 in
-                     if uu___6
-                     then
-                       FStarC_Errors.raise_error
-                         FStarC_Parser_AST.hasRange_decl d
-                         FStarC_Errors_Codes.Fatal_FriendInterface ()
-                         (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                         (Obj.magic
-                            "'friend' module has not been loaded; recompute dependences (C-c C-r) if in interactive mode")
-                     else (env, []))))
+            ((let uu___1 = FStarC_Syntax_DsEnv.iface env in
+              if uu___1
+              then
+                let uu___2 =
+                  let uu___3 =
+                    FStarC_Errors_Msg.text
+                      "'friend' declarations are not allowed in interfaces." in
+                  [uu___3] in
+                FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_decl d
+                  FStarC_Errors_Codes.Fatal_FriendInterface ()
+                  (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                  (Obj.magic uu___2)
+              else ());
+             (let uu___2 =
+                let uu___3 =
+                  let uu___4 = FStarC_Syntax_DsEnv.dep_graph env in
+                  let uu___5 = FStarC_Syntax_DsEnv.current_module env in
+                  FStarC_Parser_Dep.module_has_interface uu___4 uu___5 in
+                Prims.op_Negation uu___3 in
+              if uu___2
+              then
+                let uu___3 =
+                  let uu___4 =
+                    FStarC_Errors_Msg.text
+                      "'friend' declarations are not allowed in modules that lack interfaces." in
+                  let uu___5 =
+                    let uu___6 =
+                      let uu___7 =
+                        FStarC_Errors_Msg.text
+                          "Suggestion: add an interface for module" in
+                      let uu___8 =
+                        let uu___9 = FStarC_Syntax_DsEnv.current_module env in
+                        FStarC_Class_PP.pp FStarC_Ident.pretty_lident uu___9 in
+                      FStarC_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                    [uu___6] in
+                  uu___4 :: uu___5 in
+                FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_decl d
+                  FStarC_Errors_Codes.Fatal_FriendInterface ()
+                  (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                  (Obj.magic uu___3)
+              else ());
+             (let uu___3 =
+                let uu___4 =
+                  let uu___5 = FStarC_Syntax_DsEnv.dep_graph env in
+                  FStarC_Parser_Dep.deps_has_implementation uu___5 lid in
+                Prims.op_Negation uu___4 in
+              if uu___3
+              then
+                let uu___4 =
+                  let uu___5 =
+                    let uu___6 = FStarC_Errors_Msg.text "'friend' module" in
+                    let uu___7 =
+                      let uu___8 =
+                        FStarC_Class_PP.pp FStarC_Ident.pretty_lident lid in
+                      let uu___9 = FStarC_Errors_Msg.text "not found" in
+                      FStarC_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                    FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                  let uu___6 =
+                    let uu___7 =
+                      FStarC_Errors_Msg.text
+                        "Suggestion: recompute dependences (C-c C-r) if in interactive mode." in
+                    [uu___7] in
+                  uu___5 :: uu___6 in
+                FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_decl d
+                  FStarC_Errors_Codes.Fatal_FriendInterface ()
+                  (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                  (Obj.magic uu___4)
+              else ());
+             (let uu___4 =
+                let uu___5 =
+                  let uu___6 = FStarC_Syntax_DsEnv.dep_graph env in
+                  FStarC_Parser_Dep.module_has_interface uu___6 lid in
+                Prims.op_Negation uu___5 in
+              if uu___4
+              then
+                let uu___5 =
+                  let uu___6 =
+                    FStarC_Errors_Msg.text
+                      "'friend' declarations cannot refer to modules that lack interfaces." in
+                  let uu___7 =
+                    let uu___8 =
+                      let uu___9 =
+                        FStarC_Errors_Msg.text
+                          "Suggestion: add an interfce for module" in
+                      let uu___10 =
+                        FStarC_Class_PP.pp FStarC_Ident.pretty_lident lid in
+                      FStarC_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                    [uu___8] in
+                  uu___6 :: uu___7 in
+                FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_decl d
+                  FStarC_Errors_Codes.Fatal_FriendInterface ()
+                  (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                  (Obj.magic uu___5)
+              else ());
+             (env, []))
         | FStarC_Parser_AST.Include (lid, restriction) ->
             let env1 = FStarC_Syntax_DsEnv.push_include env lid restriction in
             (env1, [])
@@ -9827,13 +9865,16 @@ and (desugar_decl_core :
                                           (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
                                       (match uu___6 with
                                        | (qs', ats') ->
-                                           ((FStarC_Compiler_List.op_At qs'
-                                               qs),
-                                             (FStarC_Compiler_List.op_At ats'
-                                                ats)))) fvs ([], []) in
+                                           ((FStarC_Compiler_List.rev_append
+                                               qs' qs),
+                                             (FStarC_Compiler_List.rev_append
+                                                ats' ats)))) fvs ([], []) in
                          (match uu___4 with
                           | (val_quals, val_attrs) ->
-                              let top_attrs = d_attrs in
+                              let top_attrs =
+                                FStarC_Syntax_Util.deduplicate_terms
+                                  (FStarC_Compiler_List.rev_append val_attrs
+                                     d_attrs) in
                               let lbs1 =
                                 let uu___5 = lbs in
                                 match uu___5 with
@@ -9843,10 +9884,9 @@ and (desugar_decl_core :
                                         (fun lb ->
                                            let uu___6 =
                                              FStarC_Syntax_Util.deduplicate_terms
-                                               (FStarC_Compiler_List.op_At
+                                               (FStarC_Compiler_List.rev_append
                                                   lb.FStarC_Syntax_Syntax.lbattrs
-                                                  (FStarC_Compiler_List.op_At
-                                                     val_attrs top_attrs)) in
+                                                  top_attrs) in
                                            {
                                              FStarC_Syntax_Syntax.lbname =
                                                (lb.FStarC_Syntax_Syntax.lbname);
@@ -9889,10 +9929,6 @@ and (desugar_decl_core :
                                   fvs in
                               let s =
                                 let uu___5 =
-                                  FStarC_Syntax_Util.deduplicate_terms
-                                    (FStarC_Compiler_List.op_At val_attrs
-                                       top_attrs) in
-                                let uu___6 =
                                   FStarC_Syntax_DsEnv.opens_and_abbrevs env in
                                 {
                                   FStarC_Syntax_Syntax.sigel =
@@ -9906,9 +9942,9 @@ and (desugar_decl_core :
                                   FStarC_Syntax_Syntax.sigquals = quals2;
                                   FStarC_Syntax_Syntax.sigmeta =
                                     FStarC_Syntax_Syntax.default_sigmeta;
-                                  FStarC_Syntax_Syntax.sigattrs = uu___5;
+                                  FStarC_Syntax_Syntax.sigattrs = top_attrs;
                                   FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                                    uu___6;
+                                    uu___5;
                                   FStarC_Syntax_Syntax.sigopts =
                                     FStar_Pervasives_Native.None
                                 } in
@@ -10578,9 +10614,10 @@ let (desugar_decls :
                    let uu___2 = desugar_decl env1 d in
                    (match uu___2 with
                     | (env2, se) ->
-                        (env2, (FStarC_Compiler_List.op_At sigelts se))))
+                        (env2, (FStarC_Compiler_List.rev_append se sigelts))))
           (env, []) decls in
-      match uu___ with | (env1, sigelts) -> (env1, sigelts)
+      match uu___ with
+      | (env1, sigelts) -> (env1, (FStarC_Compiler_List.rev sigelts))
 let (desugar_modul_common :
   FStarC_Syntax_Syntax.modul FStar_Pervasives_Native.option ->
     FStarC_Syntax_DsEnv.env ->

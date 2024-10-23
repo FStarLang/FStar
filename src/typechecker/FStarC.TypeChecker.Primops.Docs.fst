@@ -17,7 +17,7 @@ for it. I'm actually not sure how to do that since the document
 type is abstract even internally. *)
 
 let ops =
-  let nm l = PC.p2l ["FStar"; "Stubs"; "Pprint"; l] in
+  let nm l = PC.p2l ["FStar"; "Pprint"; l] in
     let open FStarC.Pprint in
     [
       (* mk1 0 (nm "doc_of_char") doc_of_char; *)

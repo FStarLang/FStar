@@ -1,7 +1,7 @@
 all:
-	+$(MAKE) -C 0
-	+$(MAKE) -C 1
-	+$(MAKE) -C 2
+	+$(MAKE) -C 0 all
+	+$(MAKE) -C 1 all
+	+$(MAKE) -C 2 all
 
 clean:
 	+$(MAKE) -C 0 clean

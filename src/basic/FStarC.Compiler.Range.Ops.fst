@@ -51,17 +51,6 @@ let rng_included r1 r2 =
 
 let string_of_pos pos =
     format2 "%s,%s" (string_of_int pos.line) (string_of_int pos.col)
-let string_of_file_name f =
-  if Options.Ext.get "fstar:no_absolute_paths" = "1" then
-    basename f
-  else if Options.ide () then
-    try
-        match Find.find_file (basename f) with
-        | None -> f //couldn't find file; just return the relative path
-        | Some absolute_path ->
-            absolute_path
-    with _ -> f
-  else f
 let file_of_range r       =
     let f = r.def_range.file_name in
     string_of_file_name f

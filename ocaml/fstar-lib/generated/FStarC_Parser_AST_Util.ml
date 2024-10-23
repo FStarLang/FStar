@@ -514,6 +514,8 @@ let (eq_pragma :
   fun t1 ->
     fun t2 ->
       match (t1, t2) with
+      | (FStarC_Parser_AST.ShowOptions, FStarC_Parser_AST.ShowOptions) ->
+          true
       | (FStarC_Parser_AST.SetOptions s1, FStarC_Parser_AST.SetOptions s2) ->
           s1 = s2
       | (FStarC_Parser_AST.ResetOptions s1, FStarC_Parser_AST.ResetOptions

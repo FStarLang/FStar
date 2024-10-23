@@ -91,15 +91,11 @@ let (uu___0 : tc_result_t FStarC_Class_Show.showable) =
          | Unknown -> "Unknown"
          | Invalid s ->
              let uu___1 =
-               FStarC_Class_Show.show
-                 (FStarC_Class_Show.printableshow
-                    FStar_Class_Printable.printable_string) s in
+               FStarC_Class_Show.show FStarC_Class_Show.showable_string s in
              Prims.strcat "Invalid " uu___1
          | Valid s ->
              let uu___1 =
-               FStarC_Class_Show.show
-                 (FStarC_Class_Show.printableshow
-                    FStar_Class_Printable.printable_string) s in
+               FStarC_Class_Show.show FStarC_Class_Show.showable_string s in
              Prims.strcat "Valid " uu___1)
   }
 type cache_t =

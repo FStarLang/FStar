@@ -2271,7 +2271,7 @@ let rec (open_pat :
            | FStarC_Reflection_V2_Data.Pat_Var (ssort, n) ->
                Obj.magic
                  (Obj.repr
-                    (let uu___ = FStar_Tactics_Unseal.unseal ssort in
+                    (let uu___ = FStarC_Tactics_Unseal.unseal ssort in
                      FStar_Tactics_Effect.tac_bind
                        (FStar_Sealed.seal
                           (Obj.magic

@@ -15,5 +15,3 @@
   - Prims.string is not a subtype of the expected type _: (*?u21*) _ -> (*?u22*) _
 
 >>]
-Verified module: Bug1988
-All verification conditions discharged successfully

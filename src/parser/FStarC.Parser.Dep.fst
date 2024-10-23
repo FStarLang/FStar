@@ -299,7 +299,7 @@ let cache_file_name =
       let mname = fn |> module_name_of_file in
       match Find.find_file (cache_fn |> Util.basename) with
       | Some path ->
-        let expected_cache_file = Options.prepend_cache_dir cache_fn in
+        let expected_cache_file = Find.prepend_cache_dir cache_fn in
         if Option.isSome (Options.dep()) //if we're in the dependence analysis
         && not (Options.should_be_already_cached mname) //and checked file is in the
         && (not (BU.file_exists expected_cache_file) //wrong spot ... complain
@@ -331,7 +331,7 @@ let cache_file_name =
           raise_error0 FStarC.Errors.Error_AlreadyCachedAssertionFailure [
              text (BU.format1 "Expected %s to be already checked but could not find it." mname)
            ];
-        FStarC.Options.prepend_cache_dir cache_fn
+        Find.prepend_cache_dir cache_fn
     in
     let memo = Util.smap_create 100 in
     let memo f x =
@@ -455,7 +455,7 @@ let safe_readdir_for_include (d:string) : list string =
     Return a list of pairs of long names and full paths. *)
 (* In public interface *)
 let build_inclusion_candidates_list (): list (string & string) =
-  let include_directories = Options.include_path () in
+  let include_directories = Find.include_path () in
   let include_directories = List.map normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
@@ -1432,7 +1432,7 @@ let topological_dependences_of
     topological_dependences_of' file_system_map dep_graph interfaces_needing_inlining root_files widened
 
 let all_files_in_include_paths () =
-  let paths = Options.include_path () in
+  let paths = Find.include_path () in
   List.collect
     (fun path -> 
       let files = safe_readdir_for_include path in
@@ -1761,7 +1761,11 @@ let print_full (outc : out_channel) (deps:deps) : unit =
     let keys = deps_keys deps.dep_graph in
     let no_fstar_stubs_file (s:string) : string =
       (* If the original filename begins with FStar.Stubs, then remove that,
-      consistent with what extraction will actually do. *)
+      consistent with what extraction will actually do.
+
+      This is VERY IMPORTANT for krml extraction, since we will generate
+      the krml file even if we're not extracting these files (they are stubs!)
+      per se. Make sure to run karamel tests (or a check-world) if you change this. *)
       let s1 = "FStar.Stubs." in
       let s2 = "FStar." in
       let l1 = String.length s1 in
@@ -1774,7 +1778,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
         let basename = Option.get (check_and_strip_suffix (BU.basename fst_file)) in
         let basename = no_fstar_stubs_file basename in
         let ml_base_name = replace_chars basename '.' "_" in
-        Options.prepend_output_dir (ml_base_name ^ ext)
+        Find.prepend_output_dir (ml_base_name ^ ext)
     in
     let norm_path s = replace_chars (replace_chars s '\\' "/") ' ' "\\ " in
     let output_fs_file f = norm_path (output_file ".fs" f) in

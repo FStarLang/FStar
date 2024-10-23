@@ -1843,7 +1843,7 @@ let rec (inst_comp :
                                          (Obj.repr
                                             (FStar_InteractiveHelpers_Base.mfail_doc
                                                (FStar_List_Tot_Base.op_At
-                                                  [FStarC_Pprint.arbitrary_string
+                                                  [FStar_Pprint.arbitrary_string
                                                      "inst_comp: error"] msg)))
                                    | err ->
                                        Obj.magic
@@ -5041,7 +5041,7 @@ and (explore_pattern :
                               (Obj.repr
                                  (let uu___2 =
                                     let uu___3 =
-                                      FStar_Tactics_Unseal.unseal st in
+                                      FStarC_Tactics_Unseal.unseal st in
                                     FStar_Tactics_Effect.tac_bind
                                       (FStar_Sealed.seal
                                          (Obj.magic

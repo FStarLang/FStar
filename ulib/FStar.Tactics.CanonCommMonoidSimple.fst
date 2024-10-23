@@ -18,11 +18,11 @@ module FStar.Tactics.CanonCommMonoidSimple
 open FStar.Algebra.CommMonoid
 open FStar.List
 open FStar.Reflection.V2
-open FStar.Tactics.V2
+open FStar.Tactics.V2.Bare
 open FStar.Classical
 open FStar.Tactics.CanonCommSwaps
 
-let term_eq = FStar.Tactics.V2.term_eq_old
+let term_eq = FStar.Stubs.Tactics.V2.Builtins.term_eq_old
 
 (* A simple expression canonizer for commutative monoids.
    For a canonizer with more features see FStar.Tactics.CanonCommMonoid.fst.

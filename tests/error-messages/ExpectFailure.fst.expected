@@ -49,5 +49,3 @@
     of type FStar.Char.char
 
 >>]
-Verified module: ExpectFailure
-All verification conditions discharged successfully

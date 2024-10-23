@@ -26,8 +26,7 @@ open FStar.Stubs.Reflection.V1.Data
 open FStar.Reflection.Const
 open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.Types
-
-include FStar.Tactics.Unseal
+include FStar.Stubs.Tactics.Unseal
 
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)

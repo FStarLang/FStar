@@ -266,7 +266,7 @@ let rec tcresolve' (st:st_t) : Tac unit =
 
 [@@plugin]
 let tcresolve () : Tac unit =
-    let open FStar.Stubs.Pprint in
+    let open FStar.Pprint in
     debug (fun () -> dump ""; "tcresolve entry point");
     norm [];
     let w = cur_witness () in
@@ -293,7 +293,7 @@ let tcresolve () : Tac unit =
       debug (fun () -> "Solved to:\n\t" ^ term_to_string w)
     with
     | NoInst ->
-      let open FStar.Stubs.Pprint in
+      let open FStar.Pprint in
       fail_doc [
         prefix 2 1 (text "Could not solve typeclass constraint")
           (bquotes (term_to_doc (cur_goal ())));

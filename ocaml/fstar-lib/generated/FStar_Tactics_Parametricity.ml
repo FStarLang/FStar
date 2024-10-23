@@ -2107,7 +2107,7 @@ and (param_pat :
                   Obj.magic
                     (Obj.repr
                        (let uu___1 =
-                          let uu___2 = FStar_Tactics_Unseal.unseal sort in
+                          let uu___2 = FStarC_Tactics_Unseal.unseal sort in
                           FStar_Tactics_Effect.tac_bind
                             (FStar_Sealed.seal
                                (Obj.magic
@@ -2363,7 +2363,7 @@ and (push_binder :
                    (fun uu___2 ->
                       (fun typ ->
                          let uu___2 =
-                           FStar_Tactics_Unseal.unseal
+                           FStarC_Tactics_Unseal.unseal
                              b.FStar_Tactics_NamedView.ppname in
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
@@ -3910,13 +3910,13 @@ let (param_inductive :
                                                                     (Prims.of_int (322))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (322))
-                                                                    (Prims.of_int (54)))))
+                                                                    (Prims.of_int (56)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Parametricity.fst"
                                                                     (Prims.of_int (322))
-                                                                    (Prims.of_int (57))
+                                                                    (Prims.of_int (59))
                                                                     (Prims.of_int (325))
                                                                     (Prims.of_int (20)))))
                                                                     (Obj.magic

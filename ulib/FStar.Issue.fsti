@@ -1,7 +1,7 @@
 module FStar.Issue
 open FStar.Range
 
-module Pprint = FStar.Stubs.Pprint
+module Pprint = FStar.Pprint
 
 new
 val issue : Type0

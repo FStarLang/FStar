@@ -1,25 +1,3 @@
-proof-state: State dump @ depth 1 (A):
-Location: StrictUnfolding.fst(28,8-28,16)
-Goal 1/1:
-(x: FStar.Pervasives.Native.option (x: FStar.Integers.int{x = 0}) {Some? x}) |- _ : Prims.squash (StrictUnfolding.project x == 0)
-
-proof-state: State dump @ depth 1 (B):
-Location: StrictUnfolding.fst(30,8-30,16)
-Goal 1/1:
-(x: FStar.Pervasives.Native.option (x: FStar.Integers.int{x = 0}) {Some? x}) |- _ : Prims.squash (StrictUnfolding.project x == 0)
-
-proof-state: State dump @ depth 1 (A):
-Location: StrictUnfolding.fst(35,8-35,16)
-Goal 1/1:
-(_: Prims.unit), (return_val: x: FStar.Pervasives.Native.option Prims.int {Some? x}), (_: return_val == FStar.Pervasives.Native.Some 0), (any_result: Prims.int), (_: StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == any_result), (any_result'0: Prims.logical), (_: StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == 0 == any_result'0) |- _ : Prims.squash (StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == 0)
-
-proof-state: State dump @ depth 1 (B):
-Location: StrictUnfolding.fst(37,8-37,16)
-Goal 1/1:
-(_: Prims.unit), (return_val: x: FStar.Pervasives.Native.option Prims.int {Some? x}), (_: return_val == FStar.Pervasives.Native.Some 0), (any_result: Prims.int), (_: StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == any_result), (any_result'0: Prims.logical), (_: StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == 0 == any_result'0) |- _ : Prims.squash (0 == 0)
-
 >> Got issues: [
 {"msg":["Could not prove goal #1\n","The SMT solver could not prove the query. Use --query_stats for more details."],"level":"Error","range":{"def":{"file_name":"StrictUnfolding.fst","start_pos":{"line":50,"col":48},"end_pos":{"line":50,"col":72}},"use":{"file_name":"StrictUnfolding.fst","start_pos":{"line":50,"col":2},"end_pos":{"line":50,"col":8}}},"number":19,"ctx":["While typechecking the top-level declaration `let test_integer_generic_wo_fstar_integers`","While typechecking the top-level declaration `[@@expect_failure] let test_integer_generic_wo_fstar_integers`"]}
 >>]
-Verified module: StrictUnfolding
-All verification conditions discharged successfully

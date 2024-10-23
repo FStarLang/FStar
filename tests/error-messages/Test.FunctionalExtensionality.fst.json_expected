@@ -10,5 +10,3 @@
 >> Got issues: [
 {"msg":["Subtyping check failed","Expected type Prims.int ^-> Prims.int\ngot type Prims.int ^-> Prims.nat","The SMT solver could not prove the query. Use --query_stats for more details."],"level":"Error","range":{"def":{"file_name":"FStar.FunctionalExtensionality.fsti","start_pos":{"line":102,"col":60},"end_pos":{"line":102,"col":77}},"use":{"file_name":"Test.FunctionalExtensionality.fst","start_pos":{"line":142,"col":57},"end_pos":{"line":142,"col":58}}},"number":19,"ctx":["While typechecking the top-level declaration `let sub_currently_not`","While typechecking the top-level declaration `[@@expect_failure] let sub_currently_not`"]}
 >>]
-Verified module: Test.FunctionalExtensionality
-All verification conditions discharged successfully

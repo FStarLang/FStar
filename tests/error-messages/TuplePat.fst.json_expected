@@ -47,5 +47,3 @@ let mult2 x y =
   Prims.int
 ]
 
-Verified module: TuplePat
-All verification conditions discharged successfully

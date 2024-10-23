@@ -55,6 +55,23 @@ let add : 'a . 'a FStarC_Class_Ord.ord -> 'a -> 'a rbset -> 'a rbset =
                  then let uu___4 = add' b in balance c a1 y uu___4
                  else s1) in
         let uu___1 = add' s in blackroot uu___1
+let filter :
+  'a . 'a FStarC_Class_Ord.ord -> ('a -> Prims.bool) -> 'a rbset -> 'a rbset
+  =
+  fun uu___ ->
+    fun predicate ->
+      fun set ->
+        let rec aux acc uu___1 =
+          match uu___1 with
+          | L -> acc
+          | N (uu___2, l, v, r) ->
+              let uu___3 =
+                let uu___4 =
+                  let uu___5 = predicate v in
+                  if uu___5 then add uu___ v acc else acc in
+                aux uu___4 l in
+              aux uu___3 r in
+        aux (empty ()) set
 let rec extract_min :
   'a . 'a FStarC_Class_Ord.ord -> 'a rbset -> ('a rbset * 'a) =
   fun uu___ ->
@@ -212,6 +229,7 @@ let setlike_rbset :
       FStarC_Class_Setlike.for_all = for_all;
       FStarC_Class_Setlike.for_any = for_any;
       FStarC_Class_Setlike.elems = elems;
+      FStarC_Class_Setlike.filter = (filter uu___);
       FStarC_Class_Setlike.collect = (collect uu___);
       FStarC_Class_Setlike.from_list = (from_list uu___);
       FStarC_Class_Setlike.addn = (addn uu___)

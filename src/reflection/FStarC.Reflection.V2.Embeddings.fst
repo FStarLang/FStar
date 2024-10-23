@@ -837,7 +837,7 @@ let unfold_lazy_universe (i : lazyinfo) : term =
 let unfold_lazy_doc (i : lazyinfo) : term =
   let open FStarC.Pprint in
   let d : Pprint.document = undyn i.blob in
-  let lid = Ident.lid_of_str "FStar.Stubs.Pprint.arbitrary_string" in
+  let lid = Ident.lid_of_str "FStar.Pprint.arbitrary_string" in
   let s = Pprint.render d in
   S.mk_Tm_app (S.fvar lid None) [S.as_arg (embed i.rng s)]
               i.rng

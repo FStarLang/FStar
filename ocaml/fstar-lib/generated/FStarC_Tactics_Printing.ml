@@ -39,9 +39,7 @@ let (unshadow :
           let t1 =
             let uu___ =
               let uu___1 =
-                FStarC_Class_Show.show
-                  (FStarC_Class_Show.printableshow
-                     FStar_Class_Printable.printable_int) i in
+                FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
               Prims.strcat "'" uu___1 in
             Prims.strcat b uu___ in
           let uu___ = f t1 in if uu___ then t1 else aux (i + Prims.int_one) in
@@ -115,13 +113,9 @@ let (goal_to_string :
             | FStar_Pervasives_Native.None -> ""
             | FStar_Pervasives_Native.Some (i, n) ->
                 let uu___ =
-                  FStarC_Class_Show.show
-                    (FStarC_Class_Show.printableshow
-                       FStar_Class_Printable.printable_int) i in
+                  FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
                 let uu___1 =
-                  FStarC_Class_Show.show
-                    (FStarC_Class_Show.printableshow
-                       FStar_Class_Printable.printable_int) n in
+                  FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
                 FStarC_Compiler_Util.format2 " %s/%s" uu___ uu___1 in
           let maybe_label =
             match g.FStarC_Tactics_Types.label with
@@ -214,9 +208,7 @@ let (ps_to_string :
           let uu___2 =
             let uu___3 =
               let uu___4 =
-                FStarC_Class_Show.show
-                  (FStarC_Class_Show.printableshow
-                     FStar_Class_Printable.printable_int)
+                FStarC_Class_Show.show FStarC_Class_Show.showable_int
                   ps.FStarC_Tactics_Types.depth in
               FStarC_Compiler_Util.format2 "State dump @ depth %s (%s):\n"
                 uu___4 msg in
@@ -359,7 +351,8 @@ let (do_dump_proofstate :
   fun ps ->
     fun msg ->
       let uu___ =
-        let uu___1 = FStarC_Options.silent () in Prims.op_Negation uu___1 in
+        (let uu___1 = FStarC_Options.silent () in Prims.op_Negation uu___1)
+          || (FStarC_Options.interactive ()) in
       if uu___
       then
         FStarC_Options.with_saved_options

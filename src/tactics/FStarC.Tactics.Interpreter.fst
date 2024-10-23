@@ -181,7 +181,7 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
         in
         Errors.raise_error proof_state.main_context Errors.Fatal_TacticGotStuck [
           doc_of_string "Tactic got stuck!";
-          doc_of_string "Reduction stopped at: " ^^ pp h_result;
+          prefix 2 1 (doc_of_string "Reduction stopped at:") (pp h_result);
           maybe_admit_tip
         ]
 

@@ -125,31 +125,23 @@ let (solver_state_to_string : solver_state -> Prims.string) =
       FStarC_Compiler_List.map
         (fun level ->
            let uu___ =
-             FStarC_Class_Show.show
-               (FStarC_Class_Show.printableshow
-                  FStar_Class_Printable.printable_nat)
+             FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                (FStarC_Compiler_List.length level.all_decls_at_level_rev) in
            let uu___1 =
-             FStarC_Class_Show.show
-               (FStarC_Class_Show.printableshow
-                  FStar_Class_Printable.printable_bool)
+             FStarC_Class_Show.show FStarC_Class_Show.showable_bool
                level.given_some_decls in
            let uu___2 =
-             FStarC_Class_Show.show
-               (FStarC_Class_Show.printableshow
-                  FStar_Class_Printable.printable_nat)
+             FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                (FStarC_Compiler_List.length level.to_flush_rev) in
            FStarC_Compiler_Util.format3
              "Level { all_decls=%s; given_decls=%s; to_flush=%s }" uu___
              uu___1 uu___2) s.levels in
     let uu___ =
       FStarC_Class_Show.show
-        (FStarC_Class_Show.show_list
-           (FStarC_Class_Show.printableshow
-              FStar_Class_Printable.printable_string)) levels in
+        (FStarC_Class_Show.show_list FStarC_Class_Show.showable_string)
+        levels in
     let uu___1 =
-      FStarC_Class_Show.show
-        (FStarC_Class_Show.printableshow FStar_Class_Printable.printable_nat)
+      FStarC_Class_Show.show FStarC_Class_Show.showable_nat
         (FStarC_Compiler_List.length s.pending_flushes_rev) in
     FStarC_Compiler_Util.format2
       "Solver state { levels=%s; pending_flushes=%s }" uu___ uu___1
