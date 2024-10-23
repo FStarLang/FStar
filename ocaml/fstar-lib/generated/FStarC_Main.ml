@@ -366,39 +366,34 @@ let (go_normal : unit -> unit) =
                            else
                              FStarC_Interactive_Ide.interactive_mode filename))
                    else
-                     if
-                       (FStarC_Compiler_List.length filenames) >=
-                         Prims.int_one
-                     then
-                       (if Prims.uu___is_Nil filenames
-                        then
-                          FStarC_Errors.raise_error0
-                            FStarC_Errors_Codes.Error_MissingFileName ()
-                            (Obj.magic
-                               FStarC_Errors_Msg.is_error_message_string)
-                            (Obj.magic "No file provided")
-                        else ();
-                        (let uu___12 =
-                           FStarC_Dependencies.find_deps_if_needed filenames
-                             FStarC_CheckedFiles.load_parsing_data_from_cache in
-                         match uu___12 with
-                         | (filenames1, dep_graph) ->
-                             let uu___13 =
-                               FStarC_Universal.batch_mode_tc filenames1
-                                 dep_graph in
-                             (match uu___13 with
-                              | (tcrs, env, cleanup1) ->
-                                  ((let uu___15 = cleanup1 env in ());
-                                   (let module_names =
-                                      FStarC_Compiler_List.map
-                                        (fun tcr ->
-                                           FStarC_Universal.module_or_interface_name
-                                             tcr.FStarC_CheckedFiles.checked_module)
-                                        tcrs in
-                                    report_errors module_names;
-                                    finished_message module_names
-                                      Prims.int_zero)))))
-                     else ())))))
+                     (if Prims.uu___is_Nil filenames
+                      then
+                        FStarC_Errors.raise_error0
+                          FStarC_Errors_Codes.Error_MissingFileName ()
+                          (Obj.magic
+                             FStarC_Errors_Msg.is_error_message_string)
+                          (Obj.magic "No file provided")
+                      else ();
+                      (let uu___12 =
+                         FStarC_Dependencies.find_deps_if_needed filenames
+                           FStarC_CheckedFiles.load_parsing_data_from_cache in
+                       match uu___12 with
+                       | (filenames1, dep_graph) ->
+                           let uu___13 =
+                             FStarC_Universal.batch_mode_tc filenames1
+                               dep_graph in
+                           (match uu___13 with
+                            | (tcrs, env, cleanup1) ->
+                                ((let uu___15 = cleanup1 env in ());
+                                 (let module_names =
+                                    FStarC_Compiler_List.map
+                                      (fun tcr ->
+                                         FStarC_Universal.module_or_interface_name
+                                           tcr.FStarC_CheckedFiles.checked_module)
+                                      tcrs in
+                                  report_errors module_names;
+                                  finished_message module_names
+                                    Prims.int_zero))))))))))
 let (go : unit -> unit) =
   fun uu___ ->
     let args = FStarC_Compiler_Util.get_cmd_args () in
