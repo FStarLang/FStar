@@ -264,7 +264,7 @@ let go_normal () =
         end
 
       (* Normal, batch mode compiler *)
-      else if List.length filenames >= 1 then begin //normal batch mode
+      else begin
         if Nil? filenames then
           Errors.raise_error0 Errors.Error_MissingFileName "No file provided";
 
