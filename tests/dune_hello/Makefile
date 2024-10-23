@@ -1,4 +1,4 @@
-FSTAR_EXE ?= ../../bin/fstar.exe
+FSTAR_EXE ?= ../../out/bin/fstar.exe
 
 .PHONY: all
 all: run
