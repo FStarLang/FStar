@@ -4143,7 +4143,9 @@ let (fv_has_strict_args :
                      FStarC_ToSyntax_ToSyntax.parse_attr_with_list false x
                        FStarC_Parser_Const.strict_on_arguments_attr in
                    FStar_Pervasives_Native.fst uu___1) in
-            (true, res) in
+            let uu___1 =
+              FStarC_Compiler_Util.map_opt res FStar_Pervasives_Native.fst in
+            (true, uu___1) in
       cache_in_fv_tab env1.strict_args_tab fv f
 let (try_lookup_effect_lid :
   env ->

@@ -1326,7 +1326,7 @@ let rec (generalize_annotated_univs :
           FStarC_Syntax_Syntax.sigopts = (s.FStarC_Syntax_Syntax.sigopts)
         }
     | FStarC_Syntax_Syntax.Sig_fail
-        { FStarC_Syntax_Syntax.errs = errs;
+        { FStarC_Syntax_Syntax.errs = errs; FStarC_Syntax_Syntax.rng1 = rng;
           FStarC_Syntax_Syntax.fail_in_lax = lax;
           FStarC_Syntax_Syntax.ses1 = ses;_}
         ->
@@ -1336,6 +1336,7 @@ let rec (generalize_annotated_univs :
               FStarC_Compiler_List.map generalize_annotated_univs ses in
             {
               FStarC_Syntax_Syntax.errs = errs;
+              FStarC_Syntax_Syntax.rng1 = rng;
               FStarC_Syntax_Syntax.fail_in_lax = lax;
               FStarC_Syntax_Syntax.ses1 = uu___3
             } in
@@ -8138,7 +8139,8 @@ let (parse_attr_with_list :
   Prims.bool ->
     FStarC_Syntax_Syntax.term ->
       FStarC_Ident.lident ->
-        (Prims.int Prims.list FStar_Pervasives_Native.option * Prims.bool))
+        ((Prims.int Prims.list * FStarC_Compiler_Range_Type.range)
+          FStar_Pervasives_Native.option * Prims.bool))
   =
   fun warn ->
     fun at ->
@@ -8167,7 +8169,9 @@ let (parse_attr_with_list :
              | FStarC_Syntax_Syntax.Tm_fvar fv when
                  FStarC_Syntax_Syntax.fv_eq_lid fv head ->
                  (match args with
-                  | [] -> ((FStar_Pervasives_Native.Some []), true)
+                  | [] ->
+                      ((FStar_Pervasives_Native.Some
+                          ([], (at.FStarC_Syntax_Syntax.pos))), true)
                   | (a1, uu___2)::[] ->
                       let uu___3 =
                         FStarC_Syntax_Embeddings_Base.unembed
@@ -8178,8 +8182,10 @@ let (parse_attr_with_list :
                        | FStar_Pervasives_Native.Some es ->
                            let uu___4 =
                              let uu___5 =
-                               FStarC_Compiler_List.map
-                                 FStarC_BigInt.to_int_fs es in
+                               let uu___6 =
+                                 FStarC_Compiler_List.map
+                                   FStarC_BigInt.to_int_fs es in
+                               (uu___6, (at.FStarC_Syntax_Syntax.pos)) in
                              FStar_Pervasives_Native.Some uu___5 in
                            (uu___4, true)
                        | uu___4 ->
@@ -8190,15 +8196,16 @@ let (parse_attr_with_list :
 let (get_fail_attr1 :
   Prims.bool ->
     FStarC_Syntax_Syntax.term ->
-      (Prims.int Prims.list * Prims.bool) FStar_Pervasives_Native.option)
+      (Prims.int Prims.list * FStarC_Compiler_Range_Type.range * Prims.bool)
+        FStar_Pervasives_Native.option)
   =
   fun warn ->
     fun at ->
       let rebind res b =
         match res with
         | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-        | FStar_Pervasives_Native.Some l ->
-            FStar_Pervasives_Native.Some (l, b) in
+        | FStar_Pervasives_Native.Some (l, rng) ->
+            FStar_Pervasives_Native.Some (l, rng, b) in
       let uu___ = parse_attr_with_list warn at FStarC_Parser_Const.fail_attr in
       match uu___ with
       | (res, matched) ->
@@ -8211,20 +8218,23 @@ let (get_fail_attr1 :
 let (get_fail_attr :
   Prims.bool ->
     FStarC_Syntax_Syntax.term Prims.list ->
-      (Prims.int Prims.list * Prims.bool) FStar_Pervasives_Native.option)
+      (Prims.int Prims.list * FStarC_Compiler_Range_Type.range * Prims.bool)
+        FStar_Pervasives_Native.option)
   =
   fun warn ->
     fun ats ->
       let comb f1 f2 =
         match (f1, f2) with
-        | (FStar_Pervasives_Native.Some (e1, l1),
-           FStar_Pervasives_Native.Some (e2, l2)) ->
-            FStar_Pervasives_Native.Some
-              ((FStarC_Compiler_List.op_At e1 e2), (l1 || l2))
-        | (FStar_Pervasives_Native.Some (e, l), FStar_Pervasives_Native.None)
-            -> FStar_Pervasives_Native.Some (e, l)
-        | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some (e, l))
-            -> FStar_Pervasives_Native.Some (e, l)
+        | (FStar_Pervasives_Native.Some (e1, rng1, l1),
+           FStar_Pervasives_Native.Some (e2, rng2, l2)) ->
+            let uu___ =
+              let uu___1 = FStarC_Compiler_Range_Ops.union_ranges rng1 rng2 in
+              ((FStarC_Compiler_List.op_At e1 e2), uu___1, (l1 || l2)) in
+            FStar_Pervasives_Native.Some uu___
+        | (FStar_Pervasives_Native.Some x, FStar_Pervasives_Native.None) ->
+            FStar_Pervasives_Native.Some x
+        | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some x) ->
+            FStar_Pervasives_Native.Some x
         | uu___ -> FStar_Pervasives_Native.None in
       FStarC_Compiler_List.fold_right
         (fun at ->
@@ -9184,7 +9194,7 @@ and (desugar_decl_maybe_fail_attr :
         let attrs1 = FStarC_Syntax_Util.deduplicate_terms attrs in
         let uu___1 = get_fail_attr false attrs1 in
         match uu___1 with
-        | FStar_Pervasives_Native.Some (expected_errs, lax) ->
+        | FStar_Pervasives_Native.Some (expected_errs, err_rng, lax) ->
             let env0 =
               let uu___2 = FStarC_Syntax_DsEnv.snapshot env in
               FStar_Pervasives_Native.snd uu___2 in
@@ -9233,6 +9243,7 @@ and (desugar_decl_maybe_fail_attr :
                             (FStarC_Syntax_Syntax.Sig_fail
                                {
                                  FStarC_Syntax_Syntax.errs = expected_errs;
+                                 FStarC_Syntax_Syntax.rng1 = err_rng;
                                  FStarC_Syntax_Syntax.fail_in_lax = lax;
                                  FStarC_Syntax_Syntax.ses1 = ses1
                                });
@@ -9328,7 +9339,8 @@ and (desugar_decl_maybe_fail_attr :
                                     [uu___11] in
                                   uu___9 :: uu___10 in
                                 FStarC_Errors.log_issue
-                                  FStarC_Parser_AST.hasRange_decl d1
+                                  FStarC_Class_HasRange.hasRange_range
+                                  err_rng
                                   FStarC_Errors_Codes.Error_DidNotFail ()
                                   (Obj.magic
                                      FStarC_Errors_Msg.is_error_message_list_doc)

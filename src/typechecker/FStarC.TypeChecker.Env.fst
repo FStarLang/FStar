@@ -943,7 +943,7 @@ let fv_has_erasable_attr env fv =
   cache_in_fv_tab env.erasable_types_tab fv f
 
 let fv_has_strict_args env fv =
-  let f () =
+  let f () : bool & option (list int) =
     let attrs = lookup_attrs_of_lid env (S.lid_of_fv fv) in
     match attrs with
     | None -> false, None
@@ -953,7 +953,7 @@ let fv_has_strict_args env fv =
             fst (FStarC.ToSyntax.ToSyntax.parse_attr_with_list
                 false x FStarC.Parser.Const.strict_on_arguments_attr))
       in
-      true, res
+      true, BU.map_opt res fst
   in
   cache_in_fv_tab env.strict_args_tab fv f
 

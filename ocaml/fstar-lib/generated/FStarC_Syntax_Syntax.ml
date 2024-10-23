@@ -2053,6 +2053,7 @@ and sigelt'__Sig_polymonadic_subcomp__payload =
 and sigelt'__Sig_fail__payload =
   {
   errs: Prims.int Prims.list ;
+  rng1: FStarC_Compiler_Range_Type.range ;
   fail_in_lax: Prims.bool ;
   ses1: sigelt Prims.list }
 and sigelt' =
@@ -2323,15 +2324,23 @@ let (__proj__Mksigelt'__Sig_polymonadic_subcomp__payload__item__kind :
 let (__proj__Mksigelt'__Sig_fail__payload__item__errs :
   sigelt'__Sig_fail__payload -> Prims.int Prims.list) =
   fun projectee ->
-    match projectee with | { errs; fail_in_lax; ses1 = ses;_} -> errs
+    match projectee with
+    | { errs; rng1 = rng; fail_in_lax; ses1 = ses;_} -> errs
+let (__proj__Mksigelt'__Sig_fail__payload__item__rng :
+  sigelt'__Sig_fail__payload -> FStarC_Compiler_Range_Type.range) =
+  fun projectee ->
+    match projectee with
+    | { errs; rng1 = rng; fail_in_lax; ses1 = ses;_} -> rng
 let (__proj__Mksigelt'__Sig_fail__payload__item__fail_in_lax :
   sigelt'__Sig_fail__payload -> Prims.bool) =
   fun projectee ->
-    match projectee with | { errs; fail_in_lax; ses1 = ses;_} -> fail_in_lax
+    match projectee with
+    | { errs; rng1 = rng; fail_in_lax; ses1 = ses;_} -> fail_in_lax
 let (__proj__Mksigelt'__Sig_fail__payload__item__ses :
   sigelt'__Sig_fail__payload -> sigelt Prims.list) =
   fun projectee ->
-    match projectee with | { errs; fail_in_lax; ses1 = ses;_} -> ses
+    match projectee with
+    | { errs; rng1 = rng; fail_in_lax; ses1 = ses;_} -> ses
 let (uu___is_Sig_inductive_typ : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_inductive_typ _0 -> true | uu___ -> false
@@ -3455,6 +3464,8 @@ let (tagged_sigelt : sigelt FStarC_Class_Tagged.tagged) =
              { m_lid1 = uu___; n_lid1 = uu___1; tm4 = uu___2; typ1 = uu___3;
                kind2 = uu___4;_}
              -> "Sig_polymonadic_subcomp"
-         | Sig_fail { errs = uu___; fail_in_lax = uu___1; ses1 = uu___2;_} ->
-             "Sig_fail")
+         | Sig_fail
+             { errs = uu___; rng1 = uu___1; fail_in_lax = uu___2;
+               ses1 = uu___3;_}
+             -> "Sig_fail")
   }

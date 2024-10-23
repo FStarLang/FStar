@@ -4074,7 +4074,7 @@ let (destruct_lemma_with_smt_patterns :
                    let uu___5 =
                      let uu___6 =
                        FStarC_Errors_Msg.text
-                         "Patterns on lemmas must be a list of simple SMTPat's;or a single SMTPatOr containing a list;of lists of patterns." in
+                         "Patterns on lemmas must be a list of simple SMTPat's; or a single SMTPatOr containing a list of lists of patterns." in
                      [uu___6] in
                    uu___4 :: uu___5 in
                  FStarC_Errors.raise_error

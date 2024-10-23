@@ -457,9 +457,9 @@ let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : m sigelt' =
   (* These two below are hardly used, since they disappear after
   typechecking, but are still useful so the desugarer can make use of
   deep_compress_se. *)
-  | Sig_fail {errs; fail_in_lax; ses} ->
+  | Sig_fail {rng; errs; fail_in_lax; ses} ->
     let! ses = ses |> mapM on_sub_sigelt in
-    return <| Sig_fail {errs; fail_in_lax; ses}
+    return <| Sig_fail {rng; errs; fail_in_lax; ses}
 
   | Sig_splice {is_typed; lids; tac} ->
     let! tac = tac |> f_term in
