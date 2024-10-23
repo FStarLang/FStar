@@ -778,13 +778,14 @@ let rec (sigelt_to_string_short :
         sigelt_to_string_short uu___1
     | FStarC_Syntax_Syntax.Sig_fail
         { FStarC_Syntax_Syntax.errs = uu___;
-          FStarC_Syntax_Syntax.fail_in_lax = uu___1;
+          FStarC_Syntax_Syntax.rng1 = uu___1;
+          FStarC_Syntax_Syntax.fail_in_lax = uu___2;
           FStarC_Syntax_Syntax.ses1 = ses;_}
         ->
-        let uu___2 =
-          let uu___3 = FStarC_Compiler_List.hd ses in
-          sigelt_to_string_short uu___3 in
-        FStarC_Compiler_Util.format1 "[@@expect_failure] %s" uu___2
+        let uu___3 =
+          let uu___4 = FStarC_Compiler_List.hd ses in
+          sigelt_to_string_short uu___4 in
+        FStarC_Compiler_Util.format1 "[@@expect_failure] %s" uu___3
     | FStarC_Syntax_Syntax.Sig_new_effect ed ->
         let kw =
           let uu___ = FStarC_Syntax_Util.is_layered ed in

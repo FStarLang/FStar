@@ -11715,23 +11715,32 @@ and (build_let_rec_env :
                        then
                          (let uu___5 =
                             let uu___6 =
-                              FStarC_Class_Tagged.tag_of
-                                FStarC_Syntax_Syntax.tagged_term lbdef in
+                              FStarC_Errors_Msg.text
+                                "Only function literals with arrow types can be defined recursively." in
                             let uu___7 =
-                              FStarC_Class_Show.show
-                                FStarC_Syntax_Print.showable_term lbdef in
-                            let uu___8 =
-                              FStarC_Class_Show.show
-                                FStarC_Syntax_Print.showable_term lbtyp in
-                            FStarC_Compiler_Util.format3
-                              "Only function literals with arrow types can be defined recursively; got (%s) %s : %s"
-                              uu___6 uu___7 uu___8 in
+                              let uu___8 =
+                                let uu___9 =
+                                  let uu___10 =
+                                    FStarC_Class_Tagged.tag_of
+                                      FStarC_Syntax_Syntax.tagged_term lbdef in
+                                  let uu___11 =
+                                    FStarC_Class_Show.show
+                                      FStarC_Syntax_Print.showable_term lbdef in
+                                  let uu___12 =
+                                    FStarC_Class_Show.show
+                                      FStarC_Syntax_Print.showable_term lbtyp in
+                                  FStarC_Compiler_Util.format3
+                                    "Got (%s) %s : %s" uu___10 uu___11
+                                    uu___12 in
+                                FStarC_Errors_Msg.text uu___9 in
+                              [uu___8] in
+                            uu___6 :: uu___7 in
                           FStarC_Errors.raise_error
                             (FStarC_Syntax_Syntax.has_range_syntax ()) lbtyp
                             FStarC_Errors_Codes.Fatal_RecursiveFunctionLiteral
                             ()
                             (Obj.magic
-                               FStarC_Errors_Msg.is_error_message_string)
+                               FStarC_Errors_Msg.is_error_message_list_doc)
                             (Obj.magic uu___5))
                        else ();
                        (let nformals = FStarC_Compiler_List.length formals in
@@ -12146,24 +12155,32 @@ and (check_let_recs :
                             lb.FStarC_Syntax_Syntax.lbname in
                         let uu___4 =
                           let uu___5 =
-                            FStarC_Class_Show.show
-                              (FStarC_Class_Show.show_either
-                                 FStarC_Syntax_Print.showable_bv
-                                 FStarC_Syntax_Print.showable_fv)
-                              lb.FStarC_Syntax_Syntax.lbname in
+                            FStarC_Errors_Msg.text
+                              "Only function literals may be defined recursively." in
                           let uu___6 =
-                            FStarC_Class_Show.show
-                              FStarC_Syntax_Print.showable_term
-                              lb.FStarC_Syntax_Syntax.lbdef in
-                          FStarC_Compiler_Util.format2
-                            "Only function literals may be defined recursively; %s is defined to be %s"
-                            uu___5 uu___6 in
+                            let uu___7 =
+                              let uu___8 =
+                                let uu___9 =
+                                  FStarC_Class_Show.show
+                                    (FStarC_Class_Show.show_either
+                                       FStarC_Syntax_Print.showable_bv
+                                       FStarC_Syntax_Print.showable_fv)
+                                    lb.FStarC_Syntax_Syntax.lbname in
+                                let uu___10 =
+                                  FStarC_Class_Show.show
+                                    FStarC_Syntax_Print.showable_term
+                                    lb.FStarC_Syntax_Syntax.lbdef in
+                                FStarC_Compiler_Util.format2
+                                  "%s is defined to be %s" uu___9 uu___10 in
+                              FStarC_Errors_Msg.text uu___8 in
+                            [uu___7] in
+                          uu___5 :: uu___6 in
                         FStarC_Errors.raise_error
                           FStarC_Class_HasRange.hasRange_range uu___3
                           FStarC_Errors_Codes.Fatal_RecursiveFunctionLiteral
                           ()
                           (Obj.magic
-                             FStarC_Errors_Msg.is_error_message_string)
+                             FStarC_Errors_Msg.is_error_message_list_doc)
                           (Obj.magic uu___4)
                     | uu___3 ->
                         let arity =
