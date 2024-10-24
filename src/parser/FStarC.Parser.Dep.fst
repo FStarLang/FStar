@@ -230,7 +230,6 @@ type deps = {
     file_system_map:files_for_module_name;      //an abstraction of the file system, keys are lowercase module names
     cmd_line_files:list file_name;              //all command-line files
     all_files:list file_name;                   //all files
-    interfaces_with_inlining:list module_name;  //interfaces that use `inline_for_extraction` require inlining
     parse_results:smap parsing_data             //map from filenames to parsing_data
                                                 //callers (Universal.fs) use this to get the parsing data for caching purposes
 }
@@ -239,16 +238,15 @@ let deps_add_dep (Deps m) k v =
   BU.smap_add m k v
 let deps_keys (Deps m) = BU.smap_keys m
 let deps_empty () = Deps (BU.smap_create 41)
-let mk_deps dg fs c a i pr = {
+let mk_deps dg fs c a pr = {
     dep_graph=dg;
     file_system_map=fs;
     cmd_line_files=c;
     all_files=a;
-    interfaces_with_inlining=i;
     parse_results=pr;
 }
 (* In public interface *)
-let empty_deps = mk_deps (deps_empty ()) (BU.smap_create 0) [] [] [] (BU.smap_create 0)
+let empty_deps = mk_deps (deps_empty ()) (BU.smap_create 0) [] [] (BU.smap_create 0)
 let module_name_of_dep = function
     | UseInterface m
     | PreferInterface m
@@ -284,7 +282,10 @@ let has_interface (file_system_map:files_for_module_name) (key:module_name)
 let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     : bool =
     Option.isSome (implementation_of_internal file_system_map key)
-
+let interfaces_with_inlining deps m =
+  if Options.cmi()
+  then has_interface deps.file_system_map m
+  else false
 
 (*
  * Public interface
@@ -1241,7 +1242,7 @@ let dep_graph_copy dep_graph =
     let (Deps g) = dep_graph in
     Deps (BU.smap_copy g)
 
-let widen_deps friends dep_graph file_system_map widened =
+let widen_deps (friends:string -> bool) dep_graph file_system_map widened =
     let widened = BU.mk_ref widened in
     let (Deps dg) = dep_graph in
     let (Deps dg') = deps_empty() in
@@ -1249,7 +1250,7 @@ let widen_deps friends dep_graph file_system_map widened =
       deps |> List.map (fun d ->
         match d with
         | PreferInterface m
-            when (List.contains m friends &&
+            when (friends m  &&
                  has_implementation file_system_map m) ->
           widened := true;
           FriendImplementation m
@@ -1268,7 +1269,7 @@ let widen_deps friends dep_graph file_system_map widened =
 let topological_dependences_of'
         file_system_map
         dep_graph
-        interfaces_needing_inlining
+        (interfaces_needing_inlining: string -> bool)
         root_files
         widened
     : list file_name
@@ -1385,15 +1386,13 @@ let topological_dependences_of'
         all_friend_deps dep_graph [] ([], []) root_files
     in
     if !dbg
-    then BU.print3 "Phase1 complete:\n\t\
+    then BU.print2 "Phase1 complete:\n\t\
                        all_files = %s\n\t\
-                       all_friends=%s\n\t\
-                       interfaces_with_inlining=%s\n"
+                       all_friends=%s\n"
                    (String.concat ", " all_files_0)
-                   (String.concat ", " (remove_dups (fun x y -> x=y) friends))
-                   (String.concat ", " (interfaces_needing_inlining));
+                   (String.concat ", " (remove_dups (fun x y -> x=y) friends));
     let widened, dep_graph =
-        widen_deps friends dep_graph file_system_map widened
+        widen_deps (fun m -> List.contains m friends) dep_graph file_system_map widened
     in
     let _, all_files =
         if !dbg
@@ -1408,7 +1407,7 @@ let topological_dependences_of'
 let phase1
         file_system_map
         dep_graph
-        interfaces_needing_inlining
+        (interfaces_needing_inlining:string -> bool)
         for_extraction
 =
     if !dbg
@@ -1422,7 +1421,7 @@ let phase1
 let topological_dependences_of
         file_system_map
         dep_graph
-        interfaces_needing_inlining
+        (interfaces_needing_inlining:string -> bool)
         root_files
         for_extraction
     : list file_name
@@ -1623,22 +1622,19 @@ let collect (all_cmd_line_files: list file_name)
     let m = lowercase_module_name f in
     Options.add_verify_module m);
 
-  let inlining_ifaces = !interfaces_needing_inlining in
   let all_files, _ =
     profile
       (fun () ->
          topological_dependences_of
            file_system_map
            dep_graph
-           inlining_ifaces
+           (has_interface file_system_map)
            all_cmd_line_files
            (Options.codegen()<>None))
       "FStarC.Parser.Dep.topological_dependences_of"
   in
-  if !dbg
-  then BU.print1 "Interfaces needing inlining: %s\n" (String.concat ", " inlining_ifaces);
   all_files,
-  mk_deps dep_graph file_system_map all_cmd_line_files all_files inlining_ifaces parse_results
+  mk_deps dep_graph file_system_map all_cmd_line_files all_files parse_results
 
 (* In public interface *)
 let deps_of deps (f:file_name)
@@ -1786,7 +1782,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
     let cache_file f = norm_path (cache_file_name f) in
-    let widened, dep_graph = phase1 deps.file_system_map deps.dep_graph deps.interfaces_with_inlining true in
+    let widened, dep_graph = phase1 deps.file_system_map deps.dep_graph (interfaces_with_inlining deps) true in
     let all_checked_files =
         keys |>
         List.fold_left
@@ -1858,7 +1854,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
                      topological_dependences_of'
                      deps.file_system_map
                      (dep_graph_copy dep_graph)
-                     deps.interfaces_with_inlining
+                     (interfaces_with_inlining deps)
                      [file_name]
                      widened)
                     "FStarC.Parser.Dep.topological_dependences_of_2"
