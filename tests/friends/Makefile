@@ -1,13 +1,6 @@
-# FSTAR_ROOT ?= ../..
-# include $(FSTAR_ROOT)/mk/test.mk
+SUBDIRS += 1
+SUBDIRS += 2
+SUBDIRS += 3
 
-DIRS=1 2 3
-
-all: $(addsuffix .all, $(DIRS))
-clean: $(addsuffix .clean, $(DIRS))
-
-%.all: %
-	+$(MAKE) -C $* all
-
-%.clean: %
-	+$(MAKE) -C $* clean
+FSTAR_ROOT ?= ../..
+include $(FSTAR_ROOT)/mk/test.mk

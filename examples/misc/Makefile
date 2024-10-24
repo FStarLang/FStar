@@ -1,7 +1,2 @@
-include ../Makefile.include
-
-MODULES=$(subst .fst,, $(wildcard *.fst))
-
-all: uall
-
-uall: $(addsuffix .uver, $(MODULES))
+FSTAR_ROOT ?= ../..
+include $(FSTAR_ROOT)/mk/test.mk

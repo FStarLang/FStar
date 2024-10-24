@@ -11,10 +11,4 @@ FSTAR_ROOT ?= ../../../..
 OTHERFLAGS += --cmi
 include $(FSTAR_ROOT)/mk/test.mk
 
-all: test
-
-$(OUTPUT_DIR)/%.ml: %.fst.checked
-	$(FSTAR) --codegen OCaml --extract $* $*.fst
-
-test: $(OUTPUT_DIR)/Test.ml
-	egrep M.f $^ | egrep -q -v magic  #test that there is no magic in the call to M.f; fragile
+# Test.ml.expected should not contain a magic.

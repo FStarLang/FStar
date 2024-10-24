@@ -1,0 +1,2 @@
+open Prims
+let (outside : unit -> Prims.bool) = fun uu___ -> M.f true

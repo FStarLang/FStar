@@ -20,4 +20,4 @@ Hello.test: Hello.exe Hello.byte
 	$(FSTAR) --ocamlc $< -o $@
 
 clean:
-	rm -f *.ml *.exe *.byte
+	rm -f *.ml *.exe *.byte *.cm* *.o
