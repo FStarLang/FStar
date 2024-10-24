@@ -144,11 +144,12 @@ all: $(addsuffix .__all, $(SUBDIRS_ALL))
 # Implied by 'all' for each directory, but we cannot write 'all: verify' or we
 # will get duplicate invocations for all/verify on a same subdir, and they overlap.
 SUBDIRS_VERIFY += $(SUBDIRS)
-ifeq ($(NOVERIFY),)
 __verify: $(ALL_CHECKED_FILES)
-endif
-__verify: $(addsuffix .__verify, $(SUBDIRS_VERIFY))
+verify: $(addsuffix .__verify, $(SUBDIRS_VERIFY))
 verify: __verify
+ifeq ($(NOVERIFY),)
+all: __verify
+endif
 
 # clean
 SUBDIRS_CLEAN += $(SUBDIRS)

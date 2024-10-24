@@ -33,8 +33,9 @@ SUBDIRS += verifythis
 
 ifdef KRML_HOME
 SUBDIRS += demos
-SUBDIRS += kv_parsing
 SUBDIRS += miniparse
+SUBDIRS_ALL += kv_parsing
+SUBDIRS_CLEAN += kv_parsing
 endif
 
 # These have custom makefiles

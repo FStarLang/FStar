@@ -2,7 +2,6 @@
 # # Inspired from: ../tactics/Makefile
 
 # ifdef KRML_HOME
-# INCLUDE_PATHS+=$(KRML_HOME)/krmllib
 # endif
 # FSTAR_FILES=$(wildcard *.fst) $(wildcard *.fsti)
 
@@ -29,6 +28,8 @@
 # %.fst-in:
 #         @echo $(OTHERFLAGS) $(addprefix --include , $(INCLUDE_PATHS))
 
+OTHERFLAGS += --include $(KRML_HOME)/krmllib
+OTHERFLAGS += --include $(KRML_HOME)/krmllib/obj # cache dir for krmllib
 
 FSTAR_ROOT ?= ../..
 include $(FSTAR_ROOT)/mk/test.mk
