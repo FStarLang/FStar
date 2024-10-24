@@ -141,14 +141,14 @@ $(OUTPUT_DIR)/%.accept: $(OUTPUT_DIR)/%
 SUBDIRS_ALL += $(SUBDIRS)
 all: $(addsuffix .__all, $(SUBDIRS_ALL))
 # __verify: check all files here and in subdirectories (SUBDIRS / SUBDIRS_VERIFY)
-# Implied by 'all'
+# Implied by 'all' for each directory, but we cannot write 'all: verify' or we
+# will get duplicate invocations for all/verify on a same subdir, and they overlap.
 SUBDIRS_VERIFY += $(SUBDIRS)
 ifeq ($(NOVERIFY),)
 __verify: $(ALL_CHECKED_FILES)
 endif
 __verify: $(addsuffix .__verify, $(SUBDIRS_VERIFY))
 verify: __verify
-all: verify
 
 # clean
 SUBDIRS_CLEAN += $(SUBDIRS)

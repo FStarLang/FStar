@@ -1,6 +1,7 @@
-rel.__all: dm4free.__all
-# ^ rel uses modules from dm4free, make sure to check them
-# in proper order.
+rel.__all: dm4free.__verify
+rel.__accept: dm4free.__verify
+# ^ rel uses modules from dm4free, make sure to check them in proper
+# order.
 
 SUBDIRS += algorithms
 SUBDIRS += crypto
