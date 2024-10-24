@@ -2,6 +2,11 @@
 
 set -eu
 
+list=false
+if [ $# -gt 0 ] && [ $1 == "list" ]; then
+	list=true
+fi
+
 declare -A files # Store all basenames in repo
 declare -A hints # Store all paths of hints in repo
 
@@ -27,7 +32,11 @@ for h0 in "${!hints[@]}"; do
 	# Given a/b/c/Foo.Bar.fst.hints, if there is no Foo.Bar.fst
 	# anywhere, then delete the hint file.
 	if ! [ -v "files[$h]" ]; then
-		echo "DELETING HINT $h0"
-		rm -f "${h0}"
+		if $list; then
+			echo "$h0"
+		else
+			echo "DELETING HINT $h0"
+			rm -f "${h0}"
+		fi
 	fi
 done
