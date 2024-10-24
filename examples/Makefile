@@ -31,13 +31,6 @@ SUBDIRS += verifythis
 
 # SUBDIRS += sample_project # requires fstar.exe in the PATH!?!?
 
-ifdef KRML_HOME
-SUBDIRS += demos
-SUBDIRS += miniparse
-SUBDIRS_ALL += kv_parsing
-SUBDIRS_CLEAN += kv_parsing
-endif
-
 # These have custom makefiles
 
 # hello has its F# extraction broken, and the dune/ocamlopt variants can
