@@ -232,17 +232,48 @@ let disjoint_worlds (w0 w1:core_world)
 
 let disjoint_world_sym (w0 w1:core_world)
 : Lemma 
-  (requires disjoint_worlds w0 w1)
-  (ensures disjoint_worlds w1 w0)
+  (ensures disjoint_worlds w0 w1 <==> disjoint_worlds w1 w0)
 = pulse_heap_sig.sep.disjoint_sym w0.pulse_heap w1.pulse_heap
 
 let join_worlds (w0:core_world) (w1:core_world { disjoint_worlds w0 w1 })
 : core_world
-= w0
+= { invariants = join_istore w0.invariants w1.invariants;
+    pulse_heap = pulse_heap_sig.sep.join w0.pulse_heap w1.pulse_heap;
+    saved_credits = w0.saved_credits + w1.saved_credits }
 
-let emp_world_pred = fun _ -> True
+let join_worlds_commutative (w0:core_world) (w1:core_world { disjoint_worlds w0 w1 })
+: Lemma (disjoint_world_sym w0 w1; join_worlds w0 w1 == join_worlds w1 w0)
+= join_istore_commutative w0.invariants w1.invariants;
+  pulse_heap_sig.sep.join_commutative w0.pulse_heap w1.pulse_heap
 
+let join_worlds_associative
+    (w0:core_world)
+    (w1:core_world)
+    (w2:core_world { disjoint_worlds w1 w2 /\ disjoint_worlds w0 (join_worlds w1 w2) })
+: Lemma (
+    disjoint_worlds w0 w1 /\
+    disjoint_worlds (join_worlds w0 w1) w2 /\
+    join_worlds w0 (join_worlds w1 w2) ==
+    join_worlds (join_worlds w0 w1) w2
+  )
+= join_istore_associative w0.invariants w1.invariants w2.invariants;
+  pulse_heap_sig.sep.join_associative w0.pulse_heap w1.pulse_heap w2.pulse_heap
 
+let core_world_pred = core_world ^-> prop
+let emp : core_world_pred = F.on_dom core_world #(fun _ -> prop) (fun _ -> True)
+let star (p1 p2:core_world_pred) : core_world_pred =
+  F.on_dom core_world #(fun _ -> prop)
+    (fun w ->
+      exists w1 w2.
+        disjoint_worlds w1 w2 /\
+        w == join_worlds w1 w2 /\
+        p1 w1 /\
+        p2 w2)
+let star_commutative (p1 p2:core_world_pred)
+: Lemma (p1 `star` p2 == p2 `star` p1)
+= FStar.Classical.forall_intro_2 disjoint_world_sym;
+  FStar.Classical.forall_intro_2 join_worlds_commutative;
+  FStar.PredicateExtensionality.predicateExtensionality core_world (p1 `star` p2) (p2 `star` p1)
 
 
 
