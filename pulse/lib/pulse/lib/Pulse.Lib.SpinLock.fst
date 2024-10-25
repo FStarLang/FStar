@@ -47,6 +47,7 @@ type lock = {
 
 let lock_alive l #p v =
   inv (iname_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) ** active l.i p
+  ** pure (is_storable (cinv_vp l.i (lock_inv l.r l.gr v)))
 
 let lock_acquired l = pts_to l.gr #0.5R 1ul
 
@@ -67,6 +68,7 @@ fn new_lock (v:slprop { is_storable v })
   rewrite each r as l.r;
   rewrite each gr as l.gr;
   rewrite each i as l.i;
+  CInv.is_storable_cinv_vp l.i (lock_inv l.r l.gr v);
   fold (lock_alive l #1.0R v);
   l
 }
@@ -262,7 +264,7 @@ fn gather_lock_active (#p1 #p2:perm) (l:lock)
 
 
 ghost
-fn elim_inv_and_active_into_alive (l:lock) (v:slprop) (#p:perm)
+fn elim_inv_and_active_into_alive (l:lock) (v:storable) (#p:perm)
   requires emp
   ensures (inv (iname_of l) (iname_v_of l v) ** lock_active #p l) @==> lock_alive l #p v
 {
@@ -275,6 +277,7 @@ fn elim_inv_and_active_into_alive (l:lock) (v:slprop) (#p:perm)
       iname_of l as CInv.iname_of l.i,
       iname_v_of l v as cinv_vp l.i (lock_inv l.r l.gr v);
     unfold (lock_active #p l);
+    CInv.is_storable_cinv_vp l.i (lock_inv l.r l.gr v);
     fold (lock_alive l #p v)
   };
 
