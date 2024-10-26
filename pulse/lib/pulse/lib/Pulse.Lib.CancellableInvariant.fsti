@@ -76,7 +76,7 @@ val gather2 (c:cinv)
       (active c 0.5R ** active c 0.5R)
       (fun _ -> active c 1.0R)
 
-val cancel (#v:slprop) (c:cinv)
+val cancel (#v:storable) (c:cinv)
   : stt_ghost unit (add_inv emp_inames (iname_of c))
       (inv (iname_of c) (cinv_vp c v) ** active c 1.0R)
       (fun _ -> v)

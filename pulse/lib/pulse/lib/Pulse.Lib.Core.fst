@@ -230,6 +230,7 @@ let equiv_refl a = admit ()
 let equiv_comm a b = admit ()
 let equiv_trans a b c = admit ()
 let equiv_elim a b = admit ()
+let equiv_elim_storable a b = admit ()
 
 ////////////////////////////////////////////////////////////////////
 // Invariants
@@ -241,13 +242,9 @@ let new_invariant' = admit ()
 let fresh_wrt = PulseCore.Action.fresh_wrt
 let fresh_wrt_def i c = ()
 let fresh_invariant = A.fresh_invariant
-let with_invariant' = admit ()
-let with_invariant = A.with_invariant
-let with_invariant_g' = admit ()
-let with_invariant_g = A.with_invariant_g
-let distinct_invariants_have_distinct_names #p #q i j _ = A.distinct_invariants_have_distinct_names #p #q i j _
-let invariant_name_identifies_invariant' #p #q i j = admit ()
-let invariant_name_identifies_invariant #p #q i j = admit () //A.invariant_name_identifies_invariant p q i j
+let with_invariant = admit ()
+let with_invariant_g = admit ()
+let invariant_name_identifies_invariant #p #q i j = admit ()
 
 //////////////////////////////////////////////////////////////////////////
 // Some basic actions and ghost operations

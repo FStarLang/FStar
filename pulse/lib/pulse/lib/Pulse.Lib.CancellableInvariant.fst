@@ -154,16 +154,19 @@ opens []
 
 
 ghost
-fn cancel (#v:slprop) (c:cinv)
+fn cancel (#v:storable) (c:cinv)
   requires inv (iname_of c) (cinv_vp c v) ** active c 1.0R
   ensures v
   opens [iname_of c]
 {
   with_invariants (iname_of c)
     returns _:unit
-    ensures cinv_vp c v ** v
+    ensures later (cinv_vp c v) ** v
     opens [iname_of c] {
-    cancel_ c
+    is_storable_cinv_vp c v;
+    later_elim_storable _;
+    cancel_ c;
+    later_intro (cinv_vp c v);
   };
   drop_ (inv (iname_of c) _)
 }

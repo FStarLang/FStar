@@ -71,10 +71,11 @@ fn flip_on (#p:slprop) (fi:finv p)
   unfold off;
   with_invariants fi.i
     returns _:unit
-    ensures finv_p p fi.r **
+    ensures later (finv_p p fi.r) **
             pts_to fi.r #0.5R true
     opens [fi.i]
   {
+    later_elim_storable _;
     unfold finv_p;
     GR.gather2 fi.r;
     rewrite (if false then p else emp) as emp;
@@ -82,6 +83,7 @@ fn flip_on (#p:slprop) (fi:finv p)
     GR.share2 fi.r;
     rewrite p as (if true then p else emp);
     fold (finv_p p fi.r);
+    later_intro (finv_p p fi.r);
   };
   fold (on fi)
 }
@@ -98,10 +100,11 @@ fn flip_off (#p:slprop) (fi : finv p)
   unfold on;
   with_invariants fi.i
     returns _:unit
-    ensures finv_p p fi.r **
+    ensures later (finv_p p fi.r) **
             pts_to fi.r #0.5R false ** p
     opens [fi.i]
   {
+    later_elim_storable _;
     unfold finv_p;
     GR.gather2 fi.r;
     rewrite (if true then p else emp) as p;
@@ -109,6 +112,7 @@ fn flip_off (#p:slprop) (fi : finv p)
     GR.share2 fi.r;
     rewrite emp as (if false then p else emp);
     fold (finv_p p fi.r);
+    later_intro (finv_p p fi.r);
   };
   fold (off fi)
 }

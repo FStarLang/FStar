@@ -48,7 +48,7 @@ fn rec dup_invlist_inv (is:invlist)
 ghost
 fn shift_invlist_one
   (#a:Type0)
-  (p : slprop)
+  (p : storable)
   (i : iname)
   (is : invlist{not (mem_inv (invlist_names is) i)})
   (#pre:slprop)
@@ -97,12 +97,14 @@ fn rec with_invlist (#a:Type0) (#pre : slprop) (#post : a -> slprop)
       rewrite (invlist_inv is) as (inv (snd h) (fst h) ** invlist_inv t);
       let r = with_invariants (snd h)
         returns v:a
-        ensures fst h ** invlist_inv t ** post v
+        ensures later (fst h) ** invlist_inv t ** post v
         opens (invlist_names t @@ [snd h]) {
         let fw : (unit -> stt_ghost a emp_inames
                             (invlist_v t ** (fst h ** pre))
                             (fun v -> invlist_v t ** (fst h ** post v))) = shift_invlist_one #a (fst h) (snd h) t #pre #post f;
+        later_elim_storable _;
         let v = with_invlist #a #((fst h) ** pre) #(fun v -> (fst h) ** post v) t fw;
+        later_intro (fst h);
         v
       };
       rewrite (inv (snd h) (fst h) ** invlist_inv t) as invlist_inv is;
@@ -120,7 +122,7 @@ fn iname_inj
   requires (inv i1 p1 ** inv i2 p2 ** pure (i1 == i2))
   ensures (inv i1 p1 ** inv i2 p2 ** equiv p1 p2)
 {
-  invariant_name_identifies_invariant' #p1 #p2 i1 i2;
+  invariant_name_identifies_invariant #p1 #p2 i1 i2;
   ()
 }
 

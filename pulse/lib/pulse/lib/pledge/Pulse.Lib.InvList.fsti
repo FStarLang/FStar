@@ -18,7 +18,7 @@ module Pulse.Lib.InvList
 
 open Pulse.Lib.Pervasives
 
-let invlist_elem = slprop & iname
+let invlist_elem = storable & iname
 let invlist0 = list invlist_elem
 
 let rec invlist_names (is : invlist0) : inames =
@@ -56,7 +56,7 @@ val dup_invlist_inv (is:invlist)
 
 val shift_invlist_one
   (#a:Type0)
-  (p : slprop)
+  (p : storable)
   (i : iname)
   (is : invlist{not (mem_inv (invlist_names is) i)})
   (#pre:slprop)

@@ -351,6 +351,9 @@ let tm_all_inames = tm_fvar (as_fv all_inames_lid)
 let tm_add_inv (is iname:R.term) : R.term =
   let h = R.pack_ln (R.Tv_FVar (R.pack_fv add_inv_lid)) in
   R.mk_app h [ex is; ex iname]
+let tm_later (p:term) : term =
+  let h = R.pack_ln (R.Tv_FVar (R.pack_fv later_lid)) in
+  R.mk_app h [ex p]
 let tm_full_perm = tm_constant (R.C_Real "1.0")
 
 

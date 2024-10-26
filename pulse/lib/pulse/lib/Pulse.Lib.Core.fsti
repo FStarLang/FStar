@@ -602,6 +602,9 @@ val equiv_trans a b c : stt_ghost unit emp_inames (equiv a b ** equiv b c) fun _
 
 val equiv_elim a b : stt_ghost unit emp_inames (a ** equiv a b) fun _ -> b
 
+(* This is true because ghost functions are called on heaps of nonzero level. *)
+val equiv_elim_storable (a b: storable) : stt_ghost unit emp_inames (equiv a b) fun _ -> pure (a == b)
+
 //////////////////////////////////////////////////////////////////////////
 // Invariants
 //////////////////////////////////////////////////////////////////////////
@@ -632,7 +635,7 @@ val fresh_invariant
     (p:storable)
 : stt_ghost (i:iname { i `fresh_wrt` ctx }) emp_inames p (fun i -> inv i p)
 
-val with_invariant'
+val with_invariant
     (#a:Type)
     (#obs:_)
     (#fp:slprop)
@@ -645,20 +648,7 @@ val with_invariant'
                            (fun x -> later p ** fp' x))
 : stt_atomic a #obs (add_inv f_opens i) (inv i p ** fp) (fun x -> inv i p ** fp' x)
 
-val with_invariant
-    (#a:Type)
-    (#obs:_)
-    (#fp:slprop)
-    (#fp':a -> slprop)
-    (#f_opens:inames)
-    (#p:storable)
-    (i:iname { not (mem_inv f_opens i) })
-    ($f:unit -> stt_atomic a #obs f_opens
-                           (p ** fp)
-                           (fun x -> p ** fp' x))
-: stt_atomic a #obs (add_inv f_opens i) (inv i p ** fp) (fun x -> inv i p ** fp' x)
-
-val with_invariant_g'
+val with_invariant_g
     (#a:Type)
     (#fp:slprop)
     (#fp':a -> slprop)
@@ -670,30 +660,8 @@ val with_invariant_g'
                             (fun x -> later p ** fp' x))
 : stt_ghost a (add_inv f_opens i) (inv i p ** fp) (fun x -> inv i p ** fp' x)
 
-val with_invariant_g
-    (#a:Type)
-    (#fp:slprop)
-    (#fp':a -> slprop)
-    (#f_opens:inames)
-    (#p:storable)
-    (i:iname { not (mem_inv f_opens i) })
-    ($f:unit -> stt_ghost a f_opens
-                            (p ** fp)
-                            (fun x -> p ** fp' x))
-: stt_ghost a (add_inv f_opens i) (inv i p ** fp) (fun x -> inv i p ** fp' x)
-
-val distinct_invariants_have_distinct_names
-    (#p #q:slprop)
-    (i j:iname)
-    (_:squash (p =!= q))
-: stt_ghost
-    (_:squash (i =!= j))
-    emp_inames
-    (inv i p ** inv j q)
-    (fun _ -> inv i p ** inv j q)
-
 [@@allow_ambiguous]
-val invariant_name_identifies_invariant'
+val invariant_name_identifies_invariant
       (#p #q:slprop)
       (i:iname)
       (j:iname { i == j } )
@@ -702,17 +670,6 @@ val invariant_name_identifies_invariant'
     emp_inames
     (inv i p ** inv j q)
     (fun _ -> inv i p ** inv j q ** equiv p q)
-
-[@@allow_ambiguous]
-val invariant_name_identifies_invariant
-      (#p #q:storable)
-      (i:iname)
-      (j:iname { i == j } )
-: stt_ghost
-    (squash (p == q))
-    emp_inames
-    (inv i p ** inv j q)
-    (fun _ -> inv i p ** inv j q)
 
 (***** end computation types and combinators *****)
 
