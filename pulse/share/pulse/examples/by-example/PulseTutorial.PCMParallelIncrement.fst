@@ -352,6 +352,7 @@ fn increment
 requires
     can_give gs 1 **     //we have permission to add one to the reference
     CI.active i p **     //the invariant is active
+    later_credit 1 **    // we can open one invariant
     inv (CI.iname_of i)   //the invariant itself
         (CI.cinv_vp i (contributions n initial gs r))
 ensures
@@ -363,9 +364,11 @@ opens [CI.iname_of i] //we used the invariant
 { 
   with_invariants (CI.iname_of i)
   {
+    later_elim _;
     CI.unpack_cinv_vp i;
     incr_core gs r;
     CI.pack_cinv_vp i;
+    later_intro (CI.cinv_vp i (contributions n initial gs r));
   }
 }
 
@@ -392,9 +395,12 @@ ensures  R.pts_to r ('i + 2)
   // Note: the code on the two sides is identical! Unlike
   // in classic variants of this example, where you have to run
   // different ghost steps to account for contributions in each thread
+  later_credit_buy 1;
+  later_credit_buy 1;
   par_atomic
     (fun _ -> increment #2 r ci)
     (fun _ -> increment #2 r ci);
+  later_credit_buy 1;
   CI.gather2 ci; CI.cancel ci; // Collect back permission to the invariant and then cancel it
   drop_ (inv _ _); //drop the other copy of the invariant; it is now useless
   // ugly! reveal/hide rewrite
@@ -422,6 +428,7 @@ fn has_given_zero
         (ci:CI.cinv)
 requires
     CI.active ci p **
+    later_credit 1 **
     inv (CI.iname_of ci) 
         (CI.cinv_vp ci (contributions capacity initial gs r))
 ensures
@@ -433,6 +440,7 @@ opens [CI.iname_of ci]
 {
   with_invariants (CI.iname_of ci)
   {
+    later_elim _;
     CI.unpack_cinv_vp ci;
     unfold contributions;
     with u. assert (owns_tank_units gs.to_give u);
@@ -440,6 +448,7 @@ opens [CI.iname_of ci]
     fold (has_given gs 0);
     fold (contributions capacity initial gs r);
     CI.pack_cinv_vp #(contributions capacity initial gs r) ci;
+    later_intro (CI.cinv_vp ci (contributions capacity initial gs r));
   }
 }
 
@@ -470,6 +479,7 @@ decreases remaining
   if (remaining = 0)
   { //we're done; just take out has_given 0 from the invariant
     drop_ (can_give gs remaining);
+    later_credit_buy 1;
     has_given_zero #_ #capacity r ci;
   }
   else
@@ -477,6 +487,7 @@ decreases remaining
     share_can_give gs;
     CI.share ci;
     dup_inv _ _;
+    later_credit_buy 1;
     par_atomic_l
       (fun _ -> increment #capacity r ci) //call increment in one thread
       (fun _ -> incr_n_aux #capacity r (remaining - 1) ci); //recursively call to spawn more
@@ -496,6 +507,7 @@ ensures  R.pts_to r ('i + n)
   let gs = init_ghost_state 'i n r;
   let ci = CI.new_cancellable_invariant (contributions n 'i gs r);
   incr_n_aux #n r n ci;
+  later_credit_buy 1;
   CI.cancel ci;
   elim_ghost_state _ _ _ gs; //elim_ghost_state 'i _ r gs;
 }

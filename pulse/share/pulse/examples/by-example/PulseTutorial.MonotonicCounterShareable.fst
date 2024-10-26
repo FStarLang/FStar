@@ -45,6 +45,7 @@ ensures c.inv 0
     ensures (inv ii (inv_core x mr) ** MR.snapshot mr j) ** pure (i < j)
     {
         with_invariants ii {
+            later_elim_storable _;
             unfold inv_core;
             let res = incr_atomic_box x;
             MR.recall_snapshot mr;
@@ -52,6 +53,7 @@ ensures c.inv 0
             drop_ (MR.snapshot mr i);
             MR.take_snapshot mr #1.0R res;
             fold (inv_core);
+            later_intro (inv_core x mr);
             res
         }
     };
