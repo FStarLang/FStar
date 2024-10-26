@@ -236,9 +236,8 @@ let equiv_elim_storable a b = admit ()
 // Invariants
 ////////////////////////////////////////////////////////////////////
 let dup_inv = A.dup_inv
-let new_invariant = A.new_invariant
+let new_invariant = admit ()
 let new_storable_invariant = A.new_storable_invariant
-let new_invariant' = admit ()
 let fresh_wrt = PulseCore.Action.fresh_wrt
 let fresh_wrt_def i c = ()
 let fresh_invariant = A.fresh_invariant

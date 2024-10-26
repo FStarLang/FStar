@@ -612,14 +612,11 @@ val equiv_elim_storable (a b: storable) : stt_ghost unit emp_inames (equiv a b) 
 val dup_inv (i:iname) (p:slprop)
   : stt_ghost unit emp_inames (inv i p) (fun _ -> inv i p ** inv i p)
 
-val new_invariant (p:storable)
+val new_invariant (p:slprop)
 : stt_ghost iname emp_inames p (fun i -> inv i p)
 
 val new_storable_invariant (p:slprop2)
 : stt_ghost (i:iname { storable_iname i }) emp_inames p (fun i -> inv i p)
-
-val new_invariant' (p:slprop)
-: stt_ghost iname emp_inames p (fun i -> inv i p)
 
 val fresh_wrt (i:iname) (c:list iname)
 : prop
