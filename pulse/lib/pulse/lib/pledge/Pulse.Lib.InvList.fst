@@ -123,7 +123,7 @@ fn iname_inj
   (p1 p2 : slprop)
   (i1 i2 : iname)
   requires (inv i1 p1 ** inv i2 p2 ** pure (i1 == i2))
-  ensures (inv i1 p1 ** inv i2 p2 ** equiv p1 p2)
+  ensures (inv i1 p1 ** inv i2 p2 ** later (equiv p1 p2))
 {
   invariant_name_identifies_invariant #p1 #p2 i1 i2;
   ()
