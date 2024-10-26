@@ -606,6 +606,21 @@ val equiv_elim a b : stt_ghost unit emp_inames (a ** equiv a b) fun _ -> b
 val equiv_elim_storable (a b: storable) : stt_ghost unit emp_inames (equiv a b) fun _ -> pure (a == b)
 
 //////////////////////////////////////////////////////////////////////////
+// Higher-order ghost state
+//////////////////////////////////////////////////////////////////////////
+
+// TODO: these are write-once for now, though it's possible to construct fractional permission variables out of this
+[@@erasable] val really_big_ref : Type0
+val really_big_pts_to (x: really_big_ref) (y: slprop) : slprop
+val really_big_alloc (y: slprop) :
+    stt_ghost really_big_ref emp_inames emp fun x -> really_big_pts_to x y
+val really_big_share (x: really_big_ref) (#y: slprop) :
+    stt_ghost unit emp_inames (really_big_pts_to x y) fun _ -> really_big_pts_to x y ** really_big_pts_to x y
+[@@allow_ambiguous]
+val really_big_gather (x: really_big_ref) (#y1 #y2: slprop) :
+    stt_ghost unit emp_inames (really_big_pts_to x y1 ** really_big_pts_to x y2) fun _ -> really_big_pts_to x y1 ** later (equiv y1 y2)
+
+//////////////////////////////////////////////////////////////////////////
 // Invariants
 //////////////////////////////////////////////////////////////////////////
 
@@ -666,7 +681,7 @@ val invariant_name_identifies_invariant
     unit
     emp_inames
     (inv i p ** inv j q)
-    (fun _ -> inv i p ** inv j q ** equiv p q)
+    (fun _ -> inv i p ** inv j q ** later (equiv p q))
 
 (***** end computation types and combinators *****)
 

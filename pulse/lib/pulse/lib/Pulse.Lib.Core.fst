@@ -232,6 +232,17 @@ let equiv_trans a b c = admit ()
 let equiv_elim a b = admit ()
 let equiv_elim_storable a b = admit ()
 
+//////////////////////////////////////////////////////////////////////////
+// Higher-order ghost state
+//////////////////////////////////////////////////////////////////////////
+
+// TODO: these are write-once for now, though it's possible to construct fractional permission variables out of this
+let really_big_ref = erased (admit ())
+let really_big_pts_to x y = admit ()
+let really_big_alloc x = admit ()
+let really_big_share x #y = admit ()
+let really_big_gather x #y1 #y2 = admit ()
+
 ////////////////////////////////////////////////////////////////////
 // Invariants
 ////////////////////////////////////////////////////////////////////
