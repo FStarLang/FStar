@@ -212,7 +212,7 @@ let sub_invs_ghost = A.sub_invs_stt_ghost
 
 let later_credit amt = admit ()
 let later_credit_zero _ = admit ()
-let later_credit_split a b = admit ()
+let later_credit_add a b = admit ()
 let later_credit_buy amt = admit ()
 
 let later p = admit ()

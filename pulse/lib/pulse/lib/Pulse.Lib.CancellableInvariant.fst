@@ -30,13 +30,11 @@ instance non_informative_cinv = {
   reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer cinv;
 }
 
-let cinv_vp_aux (r:GR.ref bool) (v:slprop) : (w:slprop { is_storable v ==> is_storable w }) =
+let cinv_vp_aux (r:GR.ref bool) (v:slprop) :slprop =
   exists* (b:bool). pts_to r #0.5R b **
                     (if b then v else emp)
 
 let cinv_vp c v = cinv_vp_aux c.r v
-
-let is_storable_cinv_vp _ _ = ()
 
 let active c p = pts_to c.r #(p /. 2.0R) true
 
@@ -46,7 +44,7 @@ let iname_of c = c.i
 
 
 ghost
-fn new_cancellable_invariant (v:slprop { is_storable v })
+fn new_cancellable_invariant (v:slprop)
   requires v
   returns c:cinv
   ensures inv (iname_of c) (cinv_vp c v) ** active c 1.0R
@@ -154,8 +152,9 @@ opens []
 
 
 ghost
-fn cancel (#v:storable) (c:cinv)
+fn cancel (#v:slprop) (c:cinv)
   requires inv (iname_of c) (cinv_vp c v) ** active c 1.0R
+    ** later_credit 1 // Maybe we could hide the credit in active
   ensures v
   opens [iname_of c]
 {
@@ -163,8 +162,7 @@ fn cancel (#v:storable) (c:cinv)
     returns _:unit
     ensures later (cinv_vp c v) ** v
     opens [iname_of c] {
-    is_storable_cinv_vp c v;
-    later_elim_storable _;
+    later_elim _;
     cancel_ c;
     later_intro (cinv_vp c v);
   };

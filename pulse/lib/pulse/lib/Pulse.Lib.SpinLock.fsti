@@ -30,7 +30,7 @@ val lock_alive
 
 val lock_acquired (l:lock) : slprop
 
-val new_lock (v:slprop { is_storable v })
+val new_lock (v:slprop)
   : stt lock v (fun l -> lock_alive l v)
 
 val acquire (#v:slprop) (#p:perm) (l:lock)
@@ -85,7 +85,7 @@ val gather_lock_active (#p1 #p2:perm) (l:lock)
       (requires lock_active #p1 l ** lock_active #p2 l)
       (ensures fun _ -> lock_active #(p1 +. p2) l)
 
-val elim_inv_and_active_into_alive (l:lock) (v:storable) (#p:perm)
+val elim_inv_and_active_into_alive (l:lock) (v:slprop) (#p:perm)
   : stt_ghost unit emp_inames
       (requires emp)
       (ensures fun _ -> (inv (iname_of l) (iname_v_of l v) ** lock_active #p l) @==> lock_alive l #p v)

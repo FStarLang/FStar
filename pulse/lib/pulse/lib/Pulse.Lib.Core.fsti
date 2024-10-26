@@ -576,7 +576,7 @@ val sub_invs_ghost
 
 val later_credit (amt: nat) : slprop
 val later_credit_zero () : Lemma (later_credit 0 == emp)
-val later_credit_split (a b: nat) : Lemma (later_credit (a + b) == later_credit a ** later_credit b)
+val later_credit_add (a b: nat) : Lemma (later_credit (a + b) == later_credit a ** later_credit b)
 val later_credit_buy (amt: nat) : stt unit emp fun _ -> later_credit amt
 
 (* p is true in all successor heap levels

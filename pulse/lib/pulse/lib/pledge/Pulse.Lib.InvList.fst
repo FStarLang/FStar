@@ -48,7 +48,7 @@ fn rec dup_invlist_inv (is:invlist)
 ghost
 fn shift_invlist_one
   (#a:Type0)
-  (p : storable)
+  (p : slprop)
   (i : iname)
   (is : invlist{not (mem_inv (invlist_names is) i)})
   (#pre:slprop)
@@ -80,7 +80,7 @@ ghost
 fn rec with_invlist (#a:Type0) (#pre : slprop) (#post : a -> slprop)
   (is : invlist)
   (f : unit -> stt_ghost a emp_inames (invlist_v is ** pre) (fun v -> invlist_v is ** post v))
-  requires invlist_inv is ** pre
+  requires invlist_inv is ** pre ** later_credit (List.Tot.length is)
   returns v:a
   ensures invlist_inv is ** post v
   opens (invlist_names is)
@@ -91,6 +91,7 @@ fn rec with_invlist (#a:Type0) (#pre : slprop) (#post : a -> slprop)
       rewrite emp as invlist_v is;
       let r = f ();
       rewrite invlist_v is as emp;
+      drop_ (later_credit _);
       r
     }
     Cons h t -> {
@@ -102,7 +103,9 @@ fn rec with_invlist (#a:Type0) (#pre : slprop) (#post : a -> slprop)
         let fw : (unit -> stt_ghost a emp_inames
                             (invlist_v t ** (fst h ** pre))
                             (fun v -> invlist_v t ** (fst h ** post v))) = shift_invlist_one #a (fst h) (snd h) t #pre #post f;
-        later_elim_storable _;
+        later_credit_add 1 (List.Tot.length t);
+        rewrite later_credit (List.Tot.length (h::t)) as later_credit 1 ** later_credit (List.Tot.length t);
+        later_elim _;
         let v = with_invlist #a #((fst h) ** pre) #(fun v -> (fst h) ** post v) t fw;
         later_intro (fst h);
         v

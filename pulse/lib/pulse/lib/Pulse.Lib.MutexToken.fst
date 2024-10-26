@@ -57,7 +57,7 @@ let replace (#a:Type0) (mg:mutex_guard a) (y:a) (#x:erased a)
   R.replace #a mg y #x
 
 
-fn new_mutex (#a:Type0) (v:a -> slprop { forall (x:a). is_storable (v x) }) (x:a)
+fn new_mutex (#a:Type0) (v:a -> slprop) (x:a)
   requires v x
   returns _:mutex v
   ensures emp

@@ -24,8 +24,6 @@ module L = Pulse.Lib.SpinLock
 
 noeq
 type lock (v:slprop) : Type u#4 = {
-  v_st: squash (is_storable v);
-
   l : L.lock;
 
   i : iname;
@@ -35,7 +33,7 @@ type lock (v:slprop) : Type u#4 = {
 }
 
 
-fn new_lock (v:slprop { is_storable v })
+fn new_lock (v:slprop)
   requires v
   returns _:lock v
   ensures emp
@@ -46,7 +44,7 @@ fn new_lock (v:slprop { is_storable v })
   let t1 = T.witness (L.iname_of l);
   let i = new_invariant (exists* (p:perm). L.lock_active #p l);
   let t2 = T.witness i;
-  let l = { l; i; t1; t2; v_st = () };
+  let l = { l; i; t1; t2 };
   l
 }
 

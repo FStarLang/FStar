@@ -24,14 +24,14 @@ val finv (p:slprop) : Type0
 val off #p (fi : finv p) : slprop
 val on  #p (fi : finv p) : slprop
 
-val mk_finv (p:slprop { is_storable p }) : stt (finv p) emp (fun x -> off x)
+val mk_finv (p:slprop) : stt (finv p) emp (fun x -> off x)
 
 val iname_of #p (f : finv p) : iname
 
 
 atomic
 fn flip_on (#p:slprop) (fi : finv p)
-  requires off fi ** p
+  requires off fi ** p ** later_credit 1
   ensures on fi
   opens [iname_of fi]
 
@@ -39,7 +39,7 @@ fn flip_on (#p:slprop) (fi : finv p)
 
 atomic
 fn flip_off (#p:slprop) (fi : finv p)
-  requires on fi
+  requires on fi ** later_credit 1
   ensures  off fi ** p
   opens [iname_of fi]
 

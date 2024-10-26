@@ -20,14 +20,13 @@ module Pulse.Lib.FlippableInv
 open Pulse.Lib.Pervasives
 module GR = Pulse.Lib.GhostReference
 
-let finv_p (p:slprop { is_storable p }) (r : GR.ref bool) : v:slprop { is_storable v } =
+let finv_p (p:slprop) (r : GR.ref bool) : slprop =
   exists* (b:bool). pts_to r #0.5R b ** (if b then p else emp)
 
 noeq
 type finv (p:slprop) = {
   r : GR.ref bool;
   i : iname;
-  p_big : squash (is_storable p);
 }
 
 let off #p (fi : finv p) : slprop =
@@ -36,7 +35,7 @@ let on  #p (fi : finv p) : slprop =
   pts_to fi.r #0.5R true ** inv fi.i (finv_p p fi.r)
 
 
-fn mk_finv (p:slprop { is_storable p })
+fn mk_finv (p:slprop)
    requires emp
    returns f:(finv p)
    ensures off f
@@ -47,7 +46,7 @@ fn mk_finv (p:slprop { is_storable p })
         as (if false then p else emp);
    fold finv_p p r;
    let i = new_invariant (finv_p p r);
-   let fi = Mkfinv r i (() <: squash (is_storable p)); // See #121
+   let fi = Mkfinv #p r i; // See #121
    rewrite (pts_to r #0.5R false)
         as (pts_to fi.r #0.5R false);
    rewrite (inv i (finv_p p r))
@@ -63,7 +62,7 @@ let iname_of #p (f : finv p) : iname = f.i
 
 atomic
 fn flip_on (#p:slprop) (fi:finv p)
-   requires off fi ** p
+   requires off fi ** p ** later_credit 1
    ensures on fi
    opens [iname_of fi]
 {
@@ -75,7 +74,7 @@ fn flip_on (#p:slprop) (fi:finv p)
             pts_to fi.r #0.5R true
     opens [fi.i]
   {
-    later_elim_storable _;
+    later_elim _;
     unfold finv_p;
     GR.gather2 fi.r;
     rewrite (if false then p else emp) as emp;
@@ -92,7 +91,7 @@ fn flip_on (#p:slprop) (fi:finv p)
 
 atomic
 fn flip_off (#p:slprop) (fi : finv p)
-   requires on fi
+   requires on fi ** later_credit 1
    ensures off fi ** p
    opens [iname_of fi]
 {
@@ -104,7 +103,7 @@ fn flip_off (#p:slprop) (fi : finv p)
             pts_to fi.r #0.5R false ** p
     opens [fi.i]
   {
-    later_elim_storable _;
+    later_elim _;
     unfold finv_p;
     GR.gather2 fi.r;
     rewrite (if true then p else emp) as p;
