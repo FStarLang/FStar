@@ -9,7 +9,7 @@ let address = nat
 assume
 val pulse_heap_sig : HS.heap_sig u#3
 let pulse_heap : Type u#4 = pulse_heap_sig.mem
-let invariants (x:Type) = address ^-> option x 
+let invariants (x:Type u#4) : Type u#4 = address ^-> option x 
 let fmap #a #b (f:a -> b) 
 : (invariants a ^-> invariants b)
 = F.on_dom _ 
@@ -52,7 +52,7 @@ type rest : Type u#4 = {
   freshness_counter : nat;
 }
 
-let functor_heap : functor invariants = {
+let functor_heap : functor u#3 invariants = {
   fmap = fmap;
   fmap_id = fmap_id;
   fmap_comp = fmap_comp;
@@ -61,24 +61,13 @@ let functor_heap : functor invariants = {
   other = rest;
 }
 
-let kk = mk_knot functor_heap
-
-assume
-val mk_knot_identities #f (ff:functor f) : Lemma
-  (ensures (
-    let kk = dsnd (mk_knot ff) in
-    kk.pk.f == f /\
-    kk.pk.ff == ff))
-  [SMTPat (mk_knot ff)]
-
-let istore = dfst kk
-instance knot_memtype : knot istore = dsnd kk
+let istore : Type u#4 = knot_t functor_heap
 
 let world = istore & rest
-let istore_repr = nat & invariants (predicate istore)
+let istore_repr = nat & invariants (predicate functor_heap)
 let of_repr (f:istore_repr) : istore = down f
 let as_repr (x:istore) : istore_repr = up x
-let world_pred = world -> prop
+let world_pred : Type u#4 = world ^-> prop
 
 // let approx (n:nat) (p:world_pred) : world_pred = approx n p
 let eq_n (n:nat) (t0 t1:world_pred) =
@@ -112,7 +101,7 @@ let join_istore_repr (is0:istore_repr) (is1:istore_repr { disjoint_istore_repr i
 : istore_repr
 = let n, i0 = is0 in
   let _, i1 = is1 in
-  let i : invariants (predicate istore) =
+  let i : invariants (predicate functor_heap) =
     F.on_dom _ (fun a -> 
       match i0 a, i1 a with
       | None, None -> None
@@ -127,15 +116,15 @@ let join_istore_repr_commutative (is0:istore_repr) (is1:istore_repr { disjoint_i
   let _, i' = join_istore_repr is1 is0 in
   assert (F.feq i i')
 
-let fold_world_pred (f:predicate istore) : world_pred = f
-let unfold_world_pred (f:world_pred) : predicate istore = f
+let fold_world_pred (f:predicate functor_heap) : world_pred = f
+let unfold_world_pred (f:world_pred) : predicate functor_heap = f
 
 let as_repr_of_repr (is:istore_repr)
 : Lemma (as_repr (of_repr (fst is, snd is)) == (fst is, fmap (approx (fst is)) (snd is)))
 = let n, x = is in
   calc (==) {
-    up #istore (down (n, x));
-  (==) { up_down #istore n x }
+    up (down (n, x));
+  (==) { up_down n x }
     (n, fmap (approx n) x);
   }
 
@@ -164,7 +153,7 @@ let join_istore (is0:istore) (is1:istore { disjoint_istore is0 is1 }) =
 
 let of_repr_as_repr (i:istore)
 : Lemma (of_repr (as_repr i) == i)
-= down_up #istore i
+= down_up i
 
 let as_repr_join_istore (is0:istore) (is1:istore {disjoint_istore is0 is1})
 : Lemma (as_repr (join_istore is0 is1) == join_istore_repr (as_repr is0) (as_repr is1))
