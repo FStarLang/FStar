@@ -2,8 +2,6 @@ module PulseCore.IndirectionTheory
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 
-type base : Type u#a =
-
 let pred' #f (ff: functor u#a f) (n: nat) (knot_t: (m:nat {m<n} -> Type u#(a+1))) : Type u#(a+1) =
   f:(m:pos{m<n} -> (knot_t m & ff.other) -> ff.tt) { f == (fun m x -> f m x) }
 
@@ -12,10 +10,6 @@ let funext #t (#s: t->Type) (f1 f2: (x:t -> s x)) (h: (x:t -> squash (f1 x == f2
   let lem x : Lemma (f1 x == f2 x) = h x in
   assert ((fun x -> f1 x) == (fun x -> f2 x)) by
     Tactics.V2.Derived.l_to_r [quote lem]
-
-let funext' #t (#s: t->Type) (f1 f2: (f:(x:t -> s x) {f == fun x -> f x})) (h: (x:t -> squash (f1 x == f2 x))) :
-    squash (f1 == f2) =
-  funext f1 f2 h
 
 let pred'_ext #f (ff: functor u#a f) (n: nat) (knot_t: (m:nat {m<n} -> Type u#(a+1)))
     (f1 f2: pred' ff n knot_t)
