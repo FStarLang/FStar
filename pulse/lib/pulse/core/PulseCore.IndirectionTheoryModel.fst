@@ -65,13 +65,10 @@ type pnat =
   | Z
   | S of pnat
 let rec ipred (f:Type u#a -> Type u#a) {| ff: functor f |} (n:pnat)
-: Tot (Type u#a) (decreases %[n; 0])
+: Type u#a
 = match n with
   | Z -> U.raise_t unit
-  | S n' -> ipred_alt f n' & (f (ipred_alt f n') -> ff.tt)
-and ipred_alt (f:Type u#a -> Type u#a) {| ff: functor f |} (n:pnat)
-: Tot (Type u#a) (decreases %[n; 1]) =
-  ipred f n
+  | S n' -> ipred f n' & (f (ipred f n') -> ff.tt)
 module T = FStar.Tactics
 let fold_ipred_z
      (#f:Type u#a -> Type u#a)
@@ -101,12 +98,10 @@ let unfold_ipred_succ
      {| ff: functor f |}
      (n:pnat)
      (pp:ipred f (S n))
-: ipred_alt f n &
-  (f (ipred_alt f n) -> ff.tt)
+: ipred f n &
+  (f (ipred f n) -> ff.tt)
 = coerce_eq  
   ( _ by (
-    T.dump "A";
-    T.norm [delta_only [`%ipred]; zeta; iota];
     T.trefl()
     )
   )
@@ -114,16 +109,16 @@ let unfold_ipred_succ
 
 let tknot (f:Type u#a -> Type u#a) {| ff: functor f |}
 : Type u#a
-= n:nat & ipred f n
+= n:pnat & f (ipred f n)
+
 let klevel (#f:Type -> Type) {| ff:functor f |} (x:tknot f) = dfst x
 let pred (f:Type -> Type) {| ff:functor f |} = tknot f -> ff.tt
-let rec strat (f:Type u#a -> Type u#a) {| ff:functor f |} (n:nat) (p:pred f)
+
+let rec strat (f:Type u#a -> Type u#a) {| ff:functor f |} (n:pnat) (p:pred f)
 : ipred f n
-= if n = 0 then U.raise_val ()
-  else 
-    let fst : ipred f (n - 1) = strat f (n - 1) p in
-    let snd : f (ipred f (n - 1) -> ff.tt) = magic () in
-    coerce_eq () (fst, snd)
-   
-      // p (| n - 1, fst |) in
-      //     (fun g -> p (| n - 1, g |)) |)
+= match n with
+  | Z -> fold_ipred_z #f #ff
+  | S n -> 
+    let fst : ipred f n = strat f n p in
+    let snd : f (ipred f n) -> ff.tt = fun fi -> p (| n, fi |) in 
+    fold_ipred_succ n fst snd
