@@ -320,6 +320,10 @@ let (add_frame_l :
           Pulse_Syntax_Base.C_STAtomic (inames, obs, (add_frame_s s1))
       | Pulse_Syntax_Base.C_STGhost (inames, s1) ->
           Pulse_Syntax_Base.C_STGhost (inames, (add_frame_s s1))
+let (add_frame_later_l :
+  Pulse_Syntax_Base.comp_st ->
+    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp_st)
+  = fun s -> fun frame -> add_frame_l s (Pulse_Syntax_Pure.tm_later frame)
 let (add_inv :
   Pulse_Syntax_Base.comp_st ->
     Pulse_Syntax_Base.slprop -> Pulse_Syntax_Base.comp_st)

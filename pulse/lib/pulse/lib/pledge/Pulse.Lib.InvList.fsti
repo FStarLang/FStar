@@ -68,7 +68,7 @@ val shift_invlist_one
 val with_invlist (#a:Type0) (#pre : slprop) (#post : a -> slprop)
   (is : invlist)
   (f : unit -> stt_ghost a emp_inames (invlist_v is ** pre) (fun v -> invlist_v is ** post v))
-  : stt_ghost a (invlist_names is) (invlist_inv is ** pre) (fun v -> invlist_inv is ** post v)
+  : stt_ghost a (invlist_names is) (invlist_inv is ** pre ** later_credit (List.Tot.length is)) (fun v -> invlist_inv is ** post v)
 
 (* A helper for a ghost-unit function. *)
 // val with_invlist_ghost (#pre : slprop) (#post : slprop)

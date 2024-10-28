@@ -35,8 +35,7 @@ type mutex (a:Type0) : Type0 = {
 
 let mutex_guard a = R.ref a
 
-let lock_inv (#a:Type0) (r:B.box a) (v:a -> slprop)
-  : (w:slprop { (forall x. is_storable (v x)) ==> is_storable w }) =
+let lock_inv (#a:Type0) (r:B.box a) (v:a -> slprop) : slprop =
   exists* x. pts_to r x ** v x
 
 let mutex_live #a m #p v = lock_alive m.l #p (lock_inv m.r v)
@@ -48,7 +47,7 @@ let op_Colon_Equals #a r y #x = R.op_Colon_Equals #a r y #x
 let replace #a r y #x = R.replace #a r y #x
 
 
-fn new_mutex (#a:Type0) (v:a -> slprop { forall x. is_storable (v x) }) (x:a)
+fn new_mutex (#a:Type0) (v:a -> slprop) (x:a)
   requires v x
   returns m:mutex a
   ensures mutex_live m v

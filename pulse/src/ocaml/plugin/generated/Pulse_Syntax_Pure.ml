@@ -589,6 +589,14 @@ let (tm_add_inv :
                 Pulse_Reflection_Util.add_inv_lid)) in
       FStar_Reflection_V2_Derived.mk_app h
         [Pulse_Reflection_Util.ex is; Pulse_Reflection_Util.ex iname]
+let (tm_later : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
+  fun p ->
+    let h =
+      FStarC_Reflection_V2_Builtins.pack_ln
+        (FStarC_Reflection_V2_Data.Tv_FVar
+           (FStarC_Reflection_V2_Builtins.pack_fv
+              Pulse_Reflection_Util.later_lid)) in
+    FStar_Reflection_V2_Derived.mk_app h [Pulse_Reflection_Util.ex p]
 let (tm_full_perm : Pulse_Syntax_Base.term) =
   tm_constant (FStarC_Reflection_V2_Data.C_Real "1.0")
 type ('tv, 't) is_view_of = Obj.t
@@ -733,14 +741,14 @@ let rec (insert1 :
                                (Obj.magic
                                   (FStar_Range.mk_range
                                      "Pulse.Syntax.Pure.fst"
-                                     (Prims.of_int (482)) (Prims.of_int (13))
-                                     (Prims.of_int (482)) (Prims.of_int (26)))))
+                                     (Prims.of_int (485)) (Prims.of_int (13))
+                                     (Prims.of_int (485)) (Prims.of_int (26)))))
                             (FStar_Sealed.seal
                                (Obj.magic
                                   (FStar_Range.mk_range
                                      "Pulse.Syntax.Pure.fst"
-                                     (Prims.of_int (482)) (Prims.of_int (9))
-                                     (Prims.of_int (482)) (Prims.of_int (26)))))
+                                     (Prims.of_int (485)) (Prims.of_int (9))
+                                     (Prims.of_int (485)) (Prims.of_int (26)))))
                             (Obj.magic uu___1)
                             (fun uu___2 ->
                                FStar_Tactics_Effect.lift_div_tac
@@ -760,12 +768,12 @@ let (canon_slprop_list_print :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "Pulse.Syntax.Pure.fst"
-               (Prims.of_int (491)) (Prims.of_int (22)) (Prims.of_int (491))
+               (Prims.of_int (494)) (Prims.of_int (22)) (Prims.of_int (494))
                (Prims.of_int (35)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "Pulse.Syntax.Pure.fst"
-               (Prims.of_int (491)) (Prims.of_int (4)) (Prims.of_int (491))
+               (Prims.of_int (494)) (Prims.of_int (4)) (Prims.of_int (494))
                (Prims.of_int (35))))) (Obj.magic uu___)
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac

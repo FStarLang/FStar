@@ -198,12 +198,15 @@ fn atomic_increment_f2
 requires inv l (pts_to_refine x pred) ** qpred 'i
 ensures inv l (pts_to_refine x pred) ** qpred ('i + 1)
 {
+  later_credit_buy 1;
   with_invariants l {
+    later_elim _;
     unfold pts_to_refine;
     with v. _;
     atomic_increment x;
     f v 'i;
     fold pts_to_refine;
+    later_intro (pts_to_refine x pred);
   }
 }
 
@@ -224,7 +227,9 @@ requires
      (pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1)))
 ensures inv l (pts_to_refine x pred) ** qpred ('i + 1)
 {
+  later_credit_buy 1;
   with_invariants l {
+    later_elim _;
     unfold pts_to_refine;
     with v. _;
     atomic_increment x;
@@ -235,6 +240,7 @@ ensures inv l (pts_to_refine x pred) ** qpred ('i + 1)
                            (pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))) 'i;
     I.elim _ _;
     fold pts_to_refine;
+    later_intro (pts_to_refine x pred);
   }
 }
 
@@ -256,11 +262,14 @@ requires
   ((exists* v. pts_to x v ** pred v) @==> invp)
 ensures inv l invp ** qpred ('i + 1)
 {
+  later_credit_buy 1;
   with_invariants l {
+    later_elim _;
     I.elim invp _;
     atomic_increment x;
     f _ 'i;
     I.elim (exists* v. pts_to x v ** pred v) invp;
+    later_intro invp;
   }
 }
 
@@ -307,12 +316,15 @@ ensures inv l invp ** qpred ('i + 1)
   returns v:int
   ensures inv l invp
   {
+    later_credit_buy 1;
     with_invariants l {
+        later_elim _;
         elim_inv ();
         with i. _;
         let v = atomic_read x;
         rewrite (pts_to x v) as (pts_to x i);
         intro_inv ();
+        later_intro invp;
         v
     }
   };
@@ -330,13 +342,15 @@ ensures inv l invp ** qpred ('i + 1)
     cond b (qpred 'i) (qpred ('i + 1))
   {
     let v = read ();
+    later_credit_buy 1;
     let next = 
       with_invariants l
       returns b1:bool
-      ensures invp 
+      ensures later invp 
           ** cond b1 (qpred 'i) (qpred ('i + 1))
           ** pts_to continue true
       {
+        later_elim _;
         elim_inv ();
         unfold cond;
         let b = cas x v (v + 1);
@@ -347,6 +361,7 @@ ensures inv l invp ** qpred ('i + 1)
           f vv _;
           intro_inv ();
           fold (cond false (qpred 'i) (qpred ('i + 1)));
+          later_intro invp;
           false
         }
         else
@@ -354,6 +369,7 @@ ensures inv l invp ** qpred ('i + 1)
           unfold cond;
           intro_inv ();
           fold (cond true (qpred 'i) (qpred ('i + 1)));
+          later_intro invp;
           true
         }
       };
@@ -379,11 +395,14 @@ fn atomic_increment_f6
 requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred 'i ** C.active c p
 ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred ('i + 1) ** C.active c p
 {
+  later_credit_buy 1;
   with_invariants (C.iname_of c) {
+    later_elim _;
     C.unpack_cinv_vp c;
     atomic_increment x;
     f _ 'i;
-    C.pack_cinv_vp #(exists* v. pts_to x v ** pred v) c
+    C.pack_cinv_vp #(exists* v. pts_to x v ** pred v) c;
+    later_intro (C.cinv_vp c (exists* v. pts_to x v ** pred v));
   }
 }
 
@@ -470,6 +489,7 @@ ensures pts_to x ('i + 2)
 
     C.gather2 c;
     drop_ (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
+    later_credit_buy 1;
     C.cancel c;
     GR.gather left;
     GR.gather right;

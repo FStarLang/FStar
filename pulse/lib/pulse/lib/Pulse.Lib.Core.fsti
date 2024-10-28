@@ -571,13 +571,63 @@ val sub_invs_ghost
 : stt_ghost a opens2 pre post
 
 //////////////////////////////////////////////////////////////////////////
+// Later
+//////////////////////////////////////////////////////////////////////////
+
+val later_credit (amt: nat) : slprop
+val later_credit_zero () : Lemma (later_credit 0 == emp)
+val later_credit_add (a b: nat) : Lemma (later_credit (a + b) == later_credit a ** later_credit b)
+val later_credit_buy (amt: nat) : stt unit emp fun _ -> later_credit amt
+
+(* p is true in all successor heap levels
+Note: `later p` is vacuously true on heaps of level 0 *)
+val later (p: slprop) : slprop
+val later_intro (p: slprop) : stt_ghost unit emp_inames p fun _ -> later p
+val later_elim (p: slprop) : stt_ghost unit emp_inames (later p ** later_credit 1) fun _ -> p
+
+(* This is true because ghost functions are called on heaps of nonzero level. *)
+val later_elim_storable (p: storable) : stt_ghost unit emp_inames (later p) fun _ -> p
+
+//////////////////////////////////////////////////////////////////////////
+// Equivalence
+//////////////////////////////////////////////////////////////////////////
+
+(* Two slprops are equal when approximated to the current heap level. *)
+val equiv (a b: slprop) : slprop
+
+val equiv_dup a b : stt_ghost unit emp_inames (equiv a b) fun _ -> equiv a b ** equiv a b
+val equiv_refl a : stt_ghost unit emp_inames emp fun _ -> equiv a a
+val equiv_comm a b : stt_ghost unit emp_inames (equiv a b) fun _ -> equiv b a
+val equiv_trans a b c : stt_ghost unit emp_inames (equiv a b ** equiv b c) fun _ -> equiv a c
+
+val equiv_elim a b : stt_ghost unit emp_inames (a ** equiv a b) fun _ -> b
+
+(* This is true because ghost functions are called on heaps of nonzero level. *)
+val equiv_elim_storable (a b: storable) : stt_ghost unit emp_inames (equiv a b) fun _ -> pure (a == b)
+
+//////////////////////////////////////////////////////////////////////////
+// Higher-order ghost state
+//////////////////////////////////////////////////////////////////////////
+
+// TODO: these are write-once for now, though it's possible to construct fractional permission variables out of this
+[@@erasable] val really_big_ref : Type0
+val really_big_pts_to (x: really_big_ref) (y: slprop) : slprop
+val really_big_alloc (y: slprop) :
+    stt_ghost really_big_ref emp_inames emp fun x -> really_big_pts_to x y
+val really_big_share (x: really_big_ref) (#y: slprop) :
+    stt_ghost unit emp_inames (really_big_pts_to x y) fun _ -> really_big_pts_to x y ** really_big_pts_to x y
+[@@allow_ambiguous]
+val really_big_gather (x: really_big_ref) (#y1 #y2: slprop) :
+    stt_ghost unit emp_inames (really_big_pts_to x y1 ** really_big_pts_to x y2) fun _ -> really_big_pts_to x y1 ** later (equiv y1 y2)
+
+//////////////////////////////////////////////////////////////////////////
 // Invariants
 //////////////////////////////////////////////////////////////////////////
 
 val dup_inv (i:iname) (p:slprop)
   : stt_ghost unit emp_inames (inv i p) (fun _ -> inv i p ** inv i p)
 
-val new_invariant (p:storable)
+val new_invariant (p:slprop)
 : stt_ghost iname emp_inames p (fun i -> inv i p)
 
 val new_storable_invariant (p:slprop2)
@@ -606,8 +656,8 @@ val with_invariant
     (#p:slprop)
     (i:iname { not (mem_inv f_opens i) })
     ($f:unit -> stt_atomic a #obs f_opens
-                           (p ** fp)
-                           (fun x -> p ** fp' x))
+                           (later p ** fp)
+                           (fun x -> later p ** fp' x))
 : stt_atomic a #obs (add_inv f_opens i) (inv i p ** fp) (fun x -> inv i p ** fp' x)
 
 val with_invariant_g
@@ -618,19 +668,9 @@ val with_invariant_g
     (#p:slprop)
     (i:iname { not (mem_inv f_opens i) })
     ($f:unit -> stt_ghost a f_opens
-                            (p ** fp)
-                            (fun x -> p ** fp' x))
+                            (later p ** fp)
+                            (fun x -> later p ** fp' x))
 : stt_ghost a (add_inv f_opens i) (inv i p ** fp) (fun x -> inv i p ** fp' x)
-
-val distinct_invariants_have_distinct_names
-    (#p #q:slprop)
-    (i j:iname)
-    (_:squash (p =!= q))
-: stt_ghost
-    (_:squash (i =!= j))
-    emp_inames
-    (inv i p ** inv j q)
-    (fun _ -> inv i p ** inv j q)
 
 [@@allow_ambiguous]
 val invariant_name_identifies_invariant
@@ -638,10 +678,10 @@ val invariant_name_identifies_invariant
       (i:iname)
       (j:iname { i == j } )
 : stt_ghost
-    (squash (p == q))
+    unit
     emp_inames
     (inv i p ** inv j q)
-    (fun _ -> inv i p ** inv j q)
+    (fun _ -> inv i p ** inv j q ** later (equiv p q))
 
 (***** end computation types and combinators *****)
 

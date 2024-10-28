@@ -240,6 +240,10 @@ let add_frame_l (s:comp_st) (frame:term)
     | C_STAtomic inames obs s -> C_STAtomic inames obs (add_frame_s s)
     | C_STGhost inames s -> C_STGhost inames (add_frame_s s)
 
+let add_frame_later_l (s:comp_st) (frame:term)
+  : comp_st
+  = add_frame_l s (tm_later frame)
+
 let add_inv (s:comp_st) (v:slprop)
   : comp_st
   = add_frame s v
@@ -1042,7 +1046,7 @@ type st_typing : env -> st_term -> comp -> Type =
       c:comp_st { C_STAtomic? c || C_STGhost? c } ->
       tot_typing g i tm_iname ->
       tot_typing g p tm_slprop ->
-      body_typing : st_typing g body (add_frame_l c p) ->
+      body_typing : st_typing g body (add_frame_later_l c p) ->
       inv_disjointness_token:prop_validity g (inv_disjointness (comp_inames c) i) ->
       st_typing g (wtag (Some (ctag_of_comp_st c)) (Tm_WithInv {name=i; body; returns_inv=None}))
                   (comp_with_inv c i p)

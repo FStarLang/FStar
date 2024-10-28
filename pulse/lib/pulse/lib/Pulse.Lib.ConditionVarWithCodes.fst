@@ -314,8 +314,9 @@ ensures emp
   unfold cvar;
   with_invariants b.i 
   returns u:unit
-  ensures cvar_inv b.core p ** emp
+  ensures later (cvar_inv b.core p) ** emp
   {
+    later_elim_storable _;
     unfold cvar_inv;
     Box.gather b.core.r;
     write_atomic_box b.core.r 1ul;
@@ -323,6 +324,7 @@ ensures emp
     drop_ (pts_to b.core.r #0.5R 1ul);
     flip_map_invariant #c _ _ _ _;
     fold (cvar_inv b.core p);
+    later_intro (cvar_inv b.core p);
   };
   drop_ (inv b.i _)
 }
@@ -521,9 +523,10 @@ ensures q
   let res : bool =
     with_invariants b.i
     returns res:bool
-    ensures cvar_inv b.core pp **
+    ensures later (cvar_inv b.core pp) **
             (cond res q (big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R code)))
     {
+      later_elim_storable _;
       unfold cvar_inv;
       with _v m n. assert (map_invariant #c _v m n pp);
       let v = read_atomic_box b.core.r;
@@ -533,6 +536,7 @@ ensures q
           q
           (big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R code));
         fold (cvar_inv b.core pp);
+        later_intro (cvar_inv b.core pp);
         false;
       }
       else
@@ -545,6 +549,7 @@ ensures q
             as  (map_invariant #c _v m' n pp);
         fold_cvar_inv _ _ _ _ m';
         drop_ (big_ghost_pcm_pts_to b.core.gref _);
+        later_intro (cvar_inv b.core pp);
         true;
       }
     };
@@ -759,13 +764,15 @@ opens [b.i]
   unfold cvar;
   with_invariants b.i
   returns u:unit
-  ensures cvar_inv b.core (reveal p) **
+  ensures later (cvar_inv b.core (reveal p)) **
          (exists* j k.
             big_ghost_pcm_pts_to b.core.gref (singleton j #0.5R cq.c) **
             big_ghost_pcm_pts_to b.core.gref (singleton k #0.5R cr.c))
   {
+    later_elim_storable _;
     split_aux b p q r cq cr i code;
     unfold split_aux_post;
+    later_intro (cvar_inv b.core (reveal p));
   };
   with j k. _;
   dup_inv _ _;

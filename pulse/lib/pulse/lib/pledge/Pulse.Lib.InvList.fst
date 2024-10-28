@@ -80,7 +80,7 @@ ghost
 fn rec with_invlist (#a:Type0) (#pre : slprop) (#post : a -> slprop)
   (is : invlist)
   (f : unit -> stt_ghost a emp_inames (invlist_v is ** pre) (fun v -> invlist_v is ** post v))
-  requires invlist_inv is ** pre
+  requires invlist_inv is ** pre ** later_credit (List.Tot.length is)
   returns v:a
   ensures invlist_inv is ** post v
   opens (invlist_names is)
@@ -91,18 +91,23 @@ fn rec with_invlist (#a:Type0) (#pre : slprop) (#post : a -> slprop)
       rewrite emp as invlist_v is;
       let r = f ();
       rewrite invlist_v is as emp;
+      drop_ (later_credit _);
       r
     }
     Cons h t -> {
       rewrite (invlist_inv is) as (inv (snd h) (fst h) ** invlist_inv t);
       let r = with_invariants (snd h)
         returns v:a
-        ensures fst h ** invlist_inv t ** post v
+        ensures later (fst h) ** invlist_inv t ** post v
         opens (invlist_names t @@ [snd h]) {
         let fw : (unit -> stt_ghost a emp_inames
                             (invlist_v t ** (fst h ** pre))
                             (fun v -> invlist_v t ** (fst h ** post v))) = shift_invlist_one #a (fst h) (snd h) t #pre #post f;
+        later_credit_add 1 (List.Tot.length t);
+        rewrite later_credit (List.Tot.length (h::t)) as later_credit 1 ** later_credit (List.Tot.length t);
+        later_elim _;
         let v = with_invlist #a #((fst h) ** pre) #(fun v -> (fst h) ** post v) t fw;
+        later_intro (fst h);
         v
       };
       rewrite (inv (snd h) (fst h) ** invlist_inv t) as invlist_inv is;
@@ -118,7 +123,7 @@ fn iname_inj
   (p1 p2 : slprop)
   (i1 i2 : iname)
   requires (inv i1 p1 ** inv i2 p2 ** pure (i1 == i2))
-  ensures (inv i1 p1 ** inv i2 p2 ** pure (p1 == p2))
+  ensures (inv i1 p1 ** inv i2 p2 ** later (equiv p1 p2))
 {
   invariant_name_identifies_invariant #p1 #p2 i1 i2;
   ()

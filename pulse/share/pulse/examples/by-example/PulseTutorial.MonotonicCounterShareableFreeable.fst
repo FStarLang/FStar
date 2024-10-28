@@ -60,7 +60,9 @@ ensures c.inv 1.0R 0
     returns j:int
     ensures (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr j) ** pure (i < j)
     { 
+        later_credit_buy 1;
         with_invariants (iname_of ii) {
+            later_elim _;
             unpack_cinv_vp ii;
             unfold inv_core;
             let res = incr_atomic_box x;
@@ -70,6 +72,7 @@ ensures c.inv 1.0R 0
             MR.take_snapshot mr #1.0R res;
             fold (inv_core);
             pack_cinv_vp ii;
+            later_intro (cinv_vp ii (inv_core x mr));
             res
         }
     };
@@ -100,6 +103,7 @@ ensures c.inv 1.0R 0
     requires inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii 1.0R ** MR.snapshot mr i
     ensures emp
     {
+        later_credit_buy 1;
         CI.cancel ii;
         unfold inv_core;
         B.free x;

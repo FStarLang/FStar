@@ -19,8 +19,6 @@ module PulseCorePaper.S2.Lock
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 module Box = Pulse.Lib.Box
-// let storable = is_big
-// let sprop = s:slprop { storable s }
 
 module B = Pulse.Lib.Box
 assume
@@ -36,7 +34,7 @@ type lock = { r:Pulse.Lib.Box.box U32.t; i:iname }
 [@@pulse_unfold]
 let maybe b p = if b then p else emp
 [@@pulse_unfold]
-let lock_inv r p : v:slprop { is_storable p ==> is_storable v } = exists* v. Box.pts_to r v ** (maybe (v = 0ul) p)
+let lock_inv r p : slprop = exists* v. Box.pts_to r v ** (maybe (v = 0ul) p)
 [@@pulse_unfold]
 let protects l p = inv l.i (lock_inv l.r p)
 
@@ -54,7 +52,7 @@ ensures protects l p
 
 
 
-fn create (p:storable)
+fn create (p:slprop)
 requires p
 returns l:lock
 ensures protects l p
@@ -70,10 +68,13 @@ fn release (#p:slprop) (l:lock)
 requires protects l p ** p
 ensures protects l p
 {
+  later_credit_buy 1;
   with_invariants l.i
   { 
+    later_elim _;
     drop_ (maybe _ _);
     Pulse.Lib.Primitives.write_atomic_box l.r 0ul;
+    later_intro (lock_inv l.r p);
   }
 }
 
@@ -83,12 +84,21 @@ fn rec acquire #p (l:lock)
 requires protects l p
 ensures protects l p ** p
 {
+  later_credit_buy 1;
   let retry = with_invariants l.i
     returns retry:bool 
-    ensures lock_inv l.r p ** (if retry then emp else p)
+    ensures later (lock_inv l.r p) ** (if retry then emp else p)
   {
+    later_elim _;
     let b = cas_box_alt l.r 0ul 1ul;
-    if b { false } else { true }
+    if b {
+      assert p;
+      later_intro (lock_inv l.r p);
+      false
+    } else {
+      later_intro (lock_inv l.r p);
+      true
+    }
   };
   if retry { acquire l }
 }
