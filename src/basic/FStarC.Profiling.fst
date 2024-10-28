@@ -74,7 +74,7 @@ let profile  (f: unit -> 'a) (module_name:option string) (cid:string) : 'a =
        else begin
          try
            c.running := true; //mark the counter as running
-           let res, elapsed = BU.record_time f in
+           let res, elapsed = BU.record_time_ns f in
            c.total_time := !c.total_time + elapsed; //accumulate the time
            c.running := false; //finally mark the counter as not running
            res
@@ -105,7 +105,7 @@ let report_human tag c =
     BU.print4 "%s, profiled %s:\t %s ms%s\n"
                   tag
                   c.cid
-                  (BU.string_of_int (!c.total_time))
+                  (BU.string_of_int (!c.total_time / 1000000))
                   warn
 
 let report tag c =

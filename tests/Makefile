@@ -1,37 +1,29 @@
-FSTAR_HOME=..
-export OTHERFLAGS += --ext context_pruning
-include ../examples/Makefile.include
+SUBDIRS += bug-reports
+SUBDIRS += semiring
+SUBDIRS += coercions
+SUBDIRS += error-messages
+SUBDIRS += tactics
+SUBDIRS += ide
+SUBDIRS += machine_integers
+SUBDIRS += micro-benchmarks
+SUBDIRS += prettyprinting
+SUBDIRS += projectors
+SUBDIRS += typeclasses
+SUBDIRS += restricted_includes
+SUBDIRS += struct
+SUBDIRS += vale
+SUBDIRS += hacl
+SUBDIRS += calc
+SUBDIRS += friends
+SUBDIRS += extraction
 
-ALL_TEST_DIRS += bug-reports
-ALL_TEST_DIRS += coercions
-ALL_TEST_DIRS += error-messages
-ALL_TEST_DIRS += friends
-ALL_TEST_DIRS += ide
-ALL_TEST_DIRS += incl
-ALL_TEST_DIRS += machine_integers
-ALL_TEST_DIRS += micro-benchmarks
-ALL_TEST_DIRS += prettyprinting
-ALL_TEST_DIRS += projectors
-ALL_TEST_DIRS += restricted_includes
-ALL_TEST_DIRS += semiring
-ALL_TEST_DIRS += struct
-ALL_TEST_DIRS += tactics
-ALL_TEST_DIRS += typeclasses
-ALL_TEST_DIRS += vale
-ALL_TEST_DIRS += hacl
-ALL_TEST_DIRS += simple_hello
-ALL_TEST_DIRS += dune_hello
-HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
+# These have special makefiles
+SUBDIRS_ALL += simple_hello
+SUBDIRS_CLEAN += simple_hello
+SUBDIRS_ALL += dune_hello
+SUBDIRS_CLEAN += dune_hello
+SUBDIRS_ALL += incl
+SUBDIRS_CLEAN += incl
 
-ifneq (,$(HAS_OCAML))
-ALL_TEST_DIRS += extraction
-endif
-
-all: $(addsuffix .all, $(ALL_TEST_DIRS))
-clean: $(addsuffix .clean, $(ALL_TEST_DIRS))
-
-%.all: %
-	+$(MAKE) -C $^ all
-
-%.clean: %
-	+$(MAKE) -C $^ clean
+FSTAR_ROOT ?= ..
+include $(FSTAR_ROOT)/mk/test.mk

@@ -1,9 +1,6 @@
-all:
-	+$(MAKE) -C 0
-	+$(MAKE) -C 1
-	+$(MAKE) -C 2
+SUBDIRS += 0
+SUBDIRS += 1
+SUBDIRS += 2
 
-clean:
-	+$(MAKE) -C 0 clean
-	+$(MAKE) -C 1 clean
-	+$(MAKE) -C 2 clean
+FSTAR_ROOT ?= ../../..
+include $(FSTAR_ROOT)/mk/test.mk

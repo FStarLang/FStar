@@ -1638,6 +1638,21 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     text "With no arguments: print shell code to set up an environment with the OCaml libraries in scope (similar to 'opam env'). \
           With arguments: run a command in that environment. \
           NOTE: this must be the FIRST argument passed to F* and other options are NOT processed.");
+  ( noshort,
+    "ocamlc",
+    WithSideEffect ((fun _ -> print_error "--ocamlc must be the first argument, see fstar.exe --help for details\n"; exit 1),
+                     (Const (Bool true))),
+    text "A helper. This runs 'ocamlc' in the environment set up by --ocamlenv, for building an F* application bytecode executable.");
+  ( noshort,
+    "ocamlopt",
+    WithSideEffect ((fun _ -> print_error "--ocamlopt must be the first argument, see fstar.exe --help for details\n"; exit 1),
+                     (Const (Bool true))),
+    text "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* application native executable.");
+  ( noshort,
+    "ocamlopt_plugin",
+    WithSideEffect ((fun _ -> print_error "--ocamlopt_plugin must be the first argument, see fstar.exe --help for details\n"; exit 1),
+                     (Const (Bool true))),
+    text "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* plugin.");
   ]
 
 and specs (warn_unsafe:bool) : list (FStarC.Getopt.opt & Pprint.document) =

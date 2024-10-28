@@ -2108,21 +2108,23 @@ let (tc_decl' :
                failwith "Impossible bare data-constructor"
            | FStarC_Syntax_Syntax.Sig_fail
                { FStarC_Syntax_Syntax.errs = uu___2;
+                 FStarC_Syntax_Syntax.rng1 = uu___3;
                  FStarC_Syntax_Syntax.fail_in_lax = false;
-                 FStarC_Syntax_Syntax.ses1 = uu___3;_}
+                 FStarC_Syntax_Syntax.ses1 = uu___4;_}
                when env.FStarC_TypeChecker_Env.admit ->
-               ((let uu___5 = FStarC_Compiler_Debug.any () in
-                 if uu___5
+               ((let uu___6 = FStarC_Compiler_Debug.any () in
+                 if uu___6
                  then
-                   let uu___6 =
+                   let uu___7 =
                      FStarC_Syntax_Print.sigelt_to_string_short se2 in
                    FStarC_Compiler_Util.print1
                      "Skipping %s since env.admit=true and this is not an expect_lax_failure\n"
-                     uu___6
+                     uu___7
                  else ());
                 ([], [], env))
            | FStarC_Syntax_Syntax.Sig_fail
                { FStarC_Syntax_Syntax.errs = expected_errors;
+                 FStarC_Syntax_Syntax.rng1 = fail_rng;
                  FStarC_Syntax_Syntax.fail_in_lax = lax;
                  FStarC_Syntax_Syntax.ses1 = ses;_}
                ->
@@ -2357,8 +2359,8 @@ let (tc_decl' :
                                          [uu___14] in
                                        uu___12 :: uu___13 in
                                      FStarC_Errors.log_issue
-                                       FStarC_Syntax_Syntax.has_range_sigelt
-                                       se2
+                                       FStarC_Class_HasRange.hasRange_range
+                                       fail_rng
                                        FStarC_Errors_Codes.Error_DidNotFail
                                        ()
                                        (Obj.magic

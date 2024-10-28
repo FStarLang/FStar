@@ -45,11 +45,11 @@ type rec_binding   = (ident & lid &                       (* name bound by recur
                       used_marker)                        (* this ref marks whether it was used, so we can warn if not *)
 
 type scope_mod =
-| Local_binding            of local_binding
+| Local_bindings           of BU.psmap local_binding (* a map local bindings in a scope; a map to avoid a linear scan *) 
 | Rec_binding              of rec_binding
 | Module_abbrev            of module_abbrev
 | Open_module_or_namespace of open_module_or_namespace
-| Top_level_def            of ident           (* top-level definition for an unqualified identifier x to be resolved as curmodule.x. *)
+| Top_level_defs           of BU.psmap bool   (* a map (to avoid a linear scan) recording that a top-level definition for an unqualified identifier x is in scope and should be resolved as curmodule.x. *)
 | Record_or_dc             of record_or_dc    (* to honor interleavings of "open" and record definitions *)
 
 type string_set = RBSet.t string
@@ -303,8 +303,9 @@ let try_lookup_id''
     in
     let curmod_ns = ids_of_lid (current_module env) in
     let proc = function
-      | Local_binding l
-        when check_local_binding_id l ->
+      | Local_bindings lbs
+        when Some? (BU.psmap_try_find lbs (string_of_id id)) ->
+        let Some l = BU.psmap_try_find lbs (string_of_id id) in
         let (_, _, used_marker) = l in
         used_marker := true;
         k_local_binding l
@@ -320,8 +321,8 @@ let try_lookup_id''
         | None -> Cont_ignore
         | Some id -> find_in_module_with_includes eikind find_in_module Cont_ignore env ns id)
 
-      | Top_level_def id'
-        when string_of_id id' = string_of_id id ->
+      | Top_level_defs ids
+        when Some? (BU.psmap_try_find ids (string_of_id id)) ->
         (* indicates a global definition shadowing previous
         "open"s. If the definition is not actually found by the
         [lookup_default_id] finder, then it may mean that we are in a
@@ -982,7 +983,14 @@ let push_bv' env (x:ident) =
   let r = range_of_id x in
   let bv = S.gen_bv (string_of_id x) (Some r) ({ tun with pos = r }) in
   let used_marker = BU.mk_ref false in
-  push_scope_mod env (Local_binding (x, bv, used_marker)), bv, used_marker
+  let scope_mods =
+    match env.scope_mods with
+    | Local_bindings lbs :: rest ->
+      Local_bindings (BU.psmap_add lbs (string_of_id x) (x, bv, used_marker)) :: rest
+    | _ ->
+      Local_bindings (BU.psmap_add (BU.psmap_empty()) (string_of_id x) (x, bv, used_marker)) :: env.scope_mods
+  in
+  { env with scope_mods }, bv, used_marker
 
 let push_bv env x =
   let (env, bv, _) = push_bv' env x in
@@ -1027,12 +1035,19 @@ let push_sigelt' fail_on_dup env s =
   let env, lss = match s.sigel with
     | Sig_bundle {ses} -> env, List.map (fun se -> (lids_of_sigelt se, se)) ses
     | _ -> env, [lids_of_sigelt s, s] in
+  let push_top_level_def id stack =
+    match stack with
+    | Top_level_defs ids :: rest ->
+      Top_level_defs (BU.psmap_add ids (string_of_id id) true) :: rest
+    | _ ->
+      Top_level_defs (BU.psmap_add (BU.psmap_empty()) (string_of_id id) true) :: stack
+  in
   lss |> List.iter (fun (lids, se) ->
     lids |> List.iter (fun lid ->
       (* the identifier is added into the list of global
       declarations, to allow shadowing of definitions that were
       formerly reachable by previous "open"s. *)
-      let () = globals := Top_level_def (ident_of_lid lid) :: !globals in
+      let () = globals := push_top_level_def (ident_of_lid lid) !globals in
       (* the identifier is added into the list of global identifiers
          of the corresponding module to shadow any "include" *)
       let modul = string_of_lid (lid_of_ids (ns_of_lid lid)) in

@@ -25,14 +25,19 @@ exception Impos
 val max_int: int
 val return_all: 'a -> ML 'a
 
-type time
-val now : unit -> time
-val now_ms : unit -> int
-val time_diff: time -> time -> float&int
-val record_time: (unit -> 'a) -> ('a & int)
-val is_before: time -> time -> bool
-val get_file_last_modification_time: string -> time
-val string_of_time: time -> string
+type time_ns
+val now_ns : unit -> time_ns
+val time_diff_ms: time_ns -> time_ns -> int
+val time_diff_ns: time_ns -> time_ns -> int
+val record_time_ns: (unit -> 'a) -> ('a & int)
+val record_time_ms: (unit -> 'a) -> ('a & int)
+
+type time_of_day
+val get_time_of_day : unit -> time_of_day
+val get_time_of_day_ms : unit -> int
+val is_before: time_of_day -> time_of_day -> bool
+val get_file_last_modification_time: string -> time_of_day
+val string_of_time_of_day: time_of_day -> string
 
 (* generic utils *)
 (* smap: map from string keys *)
@@ -394,4 +399,4 @@ val array_length (s:FStar.ImmutableArray.Base.t 'a) : FStarC.BigInt.t
 val array_index (s:FStar.ImmutableArray.Base.t 'a) (i:FStarC.BigInt.t) : 'a
 
 val putenv : string -> string -> unit
-val execvp : string -> list string -> unit
+val execvp : string -> list string -> unit // will return only on error

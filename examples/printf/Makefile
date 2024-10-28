@@ -1,12 +1,4 @@
-VERFILES=
-include ../Makefile.include
-include $(FSTAR_ULIB)/ml/Makefile.include
+RUN += SimplePrintf.fst
 
-all: SimplePrintf.uver
-
-# This doesn't work because of bug #...
-ocaml: SimplePrintf.fst
-	mkdir -p out
-	$(FSTAR) --explicit_deps $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml SimplePrintf.fst
-	$(OCAMLOPT) out/SimplePrintf.ml -o SimplePrintf.exe
-	./SimplePrintf.exe
+FSTAR_ROOT ?= ../..
+include $(FSTAR_ROOT)/mk/test.mk

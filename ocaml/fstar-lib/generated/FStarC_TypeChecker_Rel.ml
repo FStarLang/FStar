@@ -14428,7 +14428,8 @@ let (solve_and_commit :
              wl.attempting in
          FStarC_Compiler_Util.print1 "solving problems %s {\n" uu___2
        else ());
-      (let uu___1 = FStarC_Compiler_Util.record_time (fun uu___2 -> solve wl) in
+      (let uu___1 =
+         FStarC_Compiler_Util.record_time_ms (fun uu___2 -> solve wl) in
        match uu___1 with
        | (sol, ms) ->
            ((let uu___3 = FStarC_Compiler_Effect.op_Bang dbg_RelBench in
@@ -14440,7 +14441,7 @@ let (solve_and_commit :
             (match sol with
              | Success (deferred, defer_to_tac, implicits) ->
                  let uu___3 =
-                   FStarC_Compiler_Util.record_time
+                   FStarC_Compiler_Util.record_time_ms
                      (fun uu___4 -> FStarC_Syntax_Unionfind.commit tx) in
                  (match uu___3 with
                   | ((), ms1) ->
@@ -14727,7 +14728,7 @@ let (sub_or_eq_comp :
                     let prob1 = FStarC_TypeChecker_Common.CProb prob in
                     (def_check_prob "sub_comp" prob1;
                      (let uu___5 =
-                        FStarC_Compiler_Util.record_time
+                        FStarC_Compiler_Util.record_time_ms
                           (fun uu___6 ->
                              let uu___7 =
                                solve_and_commit (singleton wl1 prob1 true)

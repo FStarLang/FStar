@@ -201,22 +201,20 @@ let (prims : prims_t) =
                                        let uu___8 =
                                          let uu___9 =
                                            let uu___10 =
-                                             let uu___11 =
-                                               FStarC_SMTEncoding_Term.mk_IsTotFun
-                                                 app1 in
-                                             ([[app1]], vars2, uu___11) in
-                                           FStarC_SMTEncoding_Term.mkForall
-                                             rng uu___10 in
-                                         (uu___9,
-                                           FStar_Pervasives_Native.None,
-                                           axiom_name1) in
-                                       FStarC_SMTEncoding_Util.mkAssume
-                                         uu___8 in
-                                     [uu___7] in
-                                   FStarC_Compiler_List.op_At axioms uu___6 in
+                                             FStarC_SMTEncoding_Term.mk_IsTotFun
+                                               app1 in
+                                           ([[app1]], vars2, uu___10) in
+                                         FStarC_SMTEncoding_Term.mkForall rng
+                                           uu___9 in
+                                       (uu___8, FStar_Pervasives_Native.None,
+                                         axiom_name1) in
+                                     FStarC_SMTEncoding_Util.mkAssume uu___7 in
+                                   uu___6 :: axioms in
                                  (uu___5, app1, vars2))
                         ([tot_fun_axiom_for_x], xtok1, []) all_vars_but_one in
-                    match uu___3 with | (axioms, uu___4, uu___5) -> axioms in
+                    match uu___3 with
+                    | (axioms, uu___4, uu___5) ->
+                        FStarC_Compiler_List.rev axioms in
                   let rel_body =
                     let rel_body1 = rel_type_f rel (xapp, body) in
                     match precondition with
@@ -2363,22 +2361,25 @@ let (encode_top_level_vals :
   fun env ->
     fun bindings ->
       fun quals ->
-        FStarC_Compiler_List.fold_left
-          (fun uu___ ->
-             fun lb ->
-               match uu___ with
-               | (decls, env1) ->
-                   let uu___1 =
+        let uu___ =
+          FStarC_Compiler_List.fold_left
+            (fun uu___1 ->
+               fun lb ->
+                 match uu___1 with
+                 | (decls, env1) ->
                      let uu___2 =
-                       FStarC_Compiler_Util.right
-                         lb.FStarC_Syntax_Syntax.lbname in
-                     encode_top_level_val false env1
-                       lb.FStarC_Syntax_Syntax.lbunivs uu___2
-                       lb.FStarC_Syntax_Syntax.lbtyp quals in
-                   (match uu___1 with
-                    | (decls', env2) ->
-                        ((FStarC_Compiler_List.op_At decls decls'), env2)))
-          ([], env) bindings
+                       let uu___3 =
+                         FStarC_Compiler_Util.right
+                           lb.FStarC_Syntax_Syntax.lbname in
+                       encode_top_level_val false env1
+                         lb.FStarC_Syntax_Syntax.lbunivs uu___3
+                         lb.FStarC_Syntax_Syntax.lbtyp quals in
+                     (match uu___2 with
+                      | (decls', env2) ->
+                          ((FStarC_Compiler_List.rev_append decls' decls),
+                            env2))) ([], env) bindings in
+        match uu___ with
+        | (decls, env1) -> ((FStarC_Compiler_List.rev decls), env1)
 exception Let_rec_unencodeable 
 let (uu___is_Let_rec_unencodeable : Prims.exn -> Prims.bool) =
   fun projectee ->
@@ -7675,16 +7676,19 @@ let (encode_modul :
                   let uu___5 = get_env modul.FStarC_Syntax_Syntax.name tcenv1 in
                   FStarC_SMTEncoding_Env.reset_current_module_fvbs uu___5 in
                 let encode_signature env1 ses =
-                  FStarC_Compiler_List.fold_left
-                    (fun uu___5 ->
-                       fun se ->
-                         match uu___5 with
-                         | (g, env2) ->
-                             let uu___6 = encode_top_level_facts env2 se in
-                             (match uu___6 with
-                              | (g', env3) ->
-                                  ((FStarC_Compiler_List.op_At g g'), env3)))
-                    ([], env1) ses in
+                  let uu___5 =
+                    FStarC_Compiler_List.fold_left
+                      (fun uu___6 ->
+                         fun se ->
+                           match uu___6 with
+                           | (g, env2) ->
+                               let uu___7 = encode_top_level_facts env2 se in
+                               (match uu___7 with
+                                | (g', env3) ->
+                                    ((FStarC_Compiler_List.rev_append g' g),
+                                      env3))) ([], env1) ses in
+                  match uu___5 with
+                  | (g', env2) -> ((FStarC_Compiler_List.rev g'), env2) in
                 let uu___5 =
                   encode_signature
                     {
@@ -7859,7 +7863,7 @@ let (encode_query :
                              "Encoding query formula {: %s\n" uu___6
                          else ());
                         (let uu___5 =
-                           FStarC_Compiler_Util.record_time
+                           FStarC_Compiler_Util.record_time_ms
                              (fun uu___6 ->
                                 FStarC_SMTEncoding_EncodeTerm.encode_formula
                                   q1 env1) in

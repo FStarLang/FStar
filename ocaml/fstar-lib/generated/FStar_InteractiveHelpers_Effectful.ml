@@ -1689,7 +1689,7 @@ let (compute_eterm_info :
                                      (Obj.repr
                                         (FStar_InteractiveHelpers_Base.mfail_doc
                                            (FStar_List_Tot_Base.op_At
-                                              [FStarC_Pprint.arbitrary_string
+                                              [FStar_Pprint.arbitrary_string
                                                  "compute_eterm_info: failure"]
                                               msg)))
                                | e1 ->

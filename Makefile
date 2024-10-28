@@ -123,31 +123,12 @@ bench:
 # reviewed before checking in.
 .PHONY: output
 output:				\
-	output-error-messages	\
-	output-pretty-printing	\
-	output-ide-emacs	\
-	output-ide-lsp		\
-	output-bug-reports
+	output--examples	\
+	output--tests
 
-.PHONY: output-error-messages
-output-error-messages:
-	+$(Q)$(MAKE) -C tests/error-messages accept
-
-.PHONY: output-pretty-printing
-output-pretty-printing:
-	+$(Q)$(MAKE) -C tests/prettyprinting accept
-
-.PHONY: output-ide-emacs
-output-ide-emacs:
-	+$(Q)$(MAKE) -C tests/ide/emacs accept
-
-.PHONY: output-ide-lsp
-output-ide-lsp:
-	+$(Q)$(MAKE) -C tests/ide/lsp accept
-
-.PHONY: output-bug-reports
-output-bug-reports:
-	+$(Q)$(MAKE) -C tests/bug-reports output-accept
+.PHONY: output--%
+output--%:
+	+$(Q)$(MAKE) -C $* accept
 
 # This rule is meant to mimic what the docker based CI does, but it
 # is not perfect. In particular it will not look for a diff on the
@@ -190,8 +171,7 @@ ci-post:						\
 	ci-ulib-in-fsharp				\
 	ci-ocaml-test					\
 	ci-uregressions					\
-	$(if $(FSTAR_CI_TEST_KARAMEL),ci-karamel-test,)	\
-	ci-ulib-extra
+	$(if $(FSTAR_CI_TEST_KARAMEL),ci-karamel-test,)
 
 .PHONY: ci-uregressions
 ci-uregressions:
@@ -199,7 +179,7 @@ ci-uregressions:
 
 .PHONY: ci-karamel-test
 ci-karamel-test: ci-krmllib
-	+$(Q)$(MAKE) -C examples krml_tests
+	+$(Q)$(MAKE) -C examples -f karamel.Makefile
 
 # krmllib needs FStar.ModifiesGen already checked, so we add the dependency on
 # ulib-extra here. This is possibly spurious and fixable by tweaking krml's makefiles.

@@ -578,7 +578,7 @@ let map_seal_lid    = p2l ["FStar"; "Sealed"; "map_seal"]
 let bind_seal_lid   = p2l ["FStar"; "Sealed"; "bind_seal"]
 let tref_lid        = p2l ["FStar"; "Stubs"; "Tactics"; "Types"; "tref"]
 
-let document_lid = p2l ["FStar"; "Stubs"; "Pprint"; "document"]
+let document_lid = p2l ["FStar"; "Pprint"; "document"]
 let issue_lid = p2l ["FStar"; "Issue"; "issue"]
 
 let extract_as_lid = p2l ["FStar"; "ExtractAs"; "extract_as"]

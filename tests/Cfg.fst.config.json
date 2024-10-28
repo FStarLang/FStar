@@ -1,0 +1,8 @@
+{
+  "fstar_exe": "../bin/fstar.exe",
+  "options": [
+    "--ext", "context_pruning"
+  ],
+  "include_dirs": [
+  ]
+}

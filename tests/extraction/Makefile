@@ -1,40 +1,51 @@
-FSTAR_EXAMPLES=$(realpath ../../examples)
-include $(FSTAR_EXAMPLES)/Makefile.include
-include $(FSTAR_ULIB)/ml/Makefile.include
+FSTAR_ROOT ?= ../..
 
-all: inline_let all_cmi Eta_expand.test Div.test ExtractAs.test
+SUBDIRS += cmi
 
-%.exe: %.fst | out
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml $<
-	$(OCAMLOPT) out/$(patsubst %.fst,%.ml,$<) -o $@
+RUN += Eta_expand.fst
+RUN += Div.fst
+RUN += ExtractAs.fst
+RUN += InlineLet.fst
 
-%.test: %.exe
-	$(call msg,RUN,$<)
-	$(Q)./$<
-	$(Q)touch $@
+include $(FSTAR_ROOT)/mk/test.mk
 
-Div.test: Div.exe
+# Overriding the default rule for this one. We need to wrap this in a timeout.
+$(OUTPUT_DIR)/Div.out: $(OUTPUT_DIR)/Div.exe
 	$(call msg,TIMEOUT,$<)
-	$(Q)timeout 1 ./Div.exe ; \
+	$(Q)timeout 1 $(OUTPUT_DIR)/Div.exe ; \
 	  RC=$$? ;\
 	  if ! [ $$RC -eq 124 ]; then echo "ERROR: Div.exe terminated!?!?!"; false; fi
 	$(Q)touch $@
 
-inline_let: InlineLet.fst
-	$(FSTAR) --codegen OCaml InlineLet.fst
-	egrep -A 10 test InlineLet.ml | grep -qs "17"
-	@touch $@
+# all: inline_let all_cmi Eta_expand.test Div.test ExtractAs.test
 
-all_cmi:
-	+$(MAKE) -C cmi all
+# %.exe: %.fst
+#         $(FSTAR) --codegen OCaml $<
+#         $(OCAMLOPT) -package fstar.lib -linkpkg $(OUTPUT_DIR)/$(patsubst %.fst,%.ml,$<) -o $@
 
-out:
-	mkdir -p out
+# %.test: %.exe
+#         $(call msg,RUN,$<)
+#         $(Q)./$<
+#         $(Q)touch $@
 
-clean:
-	rm -rf out
-	rm -f *.exe
-	rm -f *~
-	rm -f *.exe *.test
-	rm -f inline_let
+# Div.test: Div.exe
+#         $(call msg,TIMEOUT,$<)
+#         $(Q)timeout 1 ./Div.exe ; \
+#           RC=$$? ;\
+#           if ! [ $$RC -eq 124 ]; then echo "ERROR: Div.exe terminated!?!?!"; false; fi
+#         $(Q)touch $@
 
+# inline_let: InlineLet.fst
+#         $(FSTAR) --codegen OCaml InlineLet.fst
+#         egrep -A 10 test $(OUTPUT_DIR)/InlineLet.ml | grep -qs "17"
+#         @touch $@
+
+# all_cmi:
+#         +$(MAKE) -C cmi all
+
+# clean:
+#         rm -rf out
+#         rm -f *.exe
+#         rm -f *~
+#         rm -f *.exe *.test
+#         rm -f inline_let

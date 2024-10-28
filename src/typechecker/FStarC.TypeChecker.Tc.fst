@@ -584,7 +584,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
         (Print.sigelt_to_string_short se);
     [], [], env
 
-  | Sig_fail {errs=expected_errors; fail_in_lax=lax; ses} ->
+  | Sig_fail {rng=fail_rng; errs=expected_errors; fail_in_lax=lax; ses} ->
     let env' = if lax then { env with admit = true } else env in
     let env' = Env.push env' "expect_failure" in
     (* We need to call push since tc_decls will encode the sigelts that
@@ -626,7 +626,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
             let open FStarC.Pprint in
             let open FStarC.Errors.Msg in
             List.iter Errors.print_issue errs;
-            Errors.log_issue se Errors.Error_DidNotFail [
+            Errors.log_issue fail_rng Errors.Error_DidNotFail [
                 prefix 2 1
                   (text "This top-level definition was expected to raise error codes")
                   (pp expected_errors) ^/^

@@ -999,7 +999,7 @@ let (term_as_formula' :
                   (Obj.repr
                      (FStar_Tactics_Effect.raise
                         (FStarC_Tactics_Common.TacticFailure
-                           ([FStarC_Pprint.arbitrary_string
+                           ([FStar_Pprint.arbitrary_string
                                "Unexpected: term_as_formula"],
                              FStar_Pervasives_Native.None))))) uu___1)
 let _ =

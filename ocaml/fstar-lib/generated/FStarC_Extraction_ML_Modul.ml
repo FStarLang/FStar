@@ -326,7 +326,7 @@ let rec (extract_meta :
                   (match uu___5 with
                    | FStar_Pervasives_Native.None ->
                        FStar_Pervasives_Native.None
-                   | FStar_Pervasives_Native.Some l ->
+                   | FStar_Pervasives_Native.Some (l, _rng) ->
                        let uu___6 =
                          let uu___7 =
                            let uu___8 = FStarC_Syntax_Syntax.range_of_fv fv in

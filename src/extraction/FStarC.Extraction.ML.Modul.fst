@@ -171,7 +171,7 @@ let rec extract_meta x : option meta =
                     false x FStarC.Parser.Const.remove_unused_type_parameters_lid)
        with
        | None -> None
-       | Some l -> Some (RemoveUnusedTypeParameters (l, S.range_of_fv fv))
+       | Some (l, _rng) -> Some (RemoveUnusedTypeParameters (l, S.range_of_fv fv))
        end
     | _ -> None
 

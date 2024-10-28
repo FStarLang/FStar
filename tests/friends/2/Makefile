@@ -1,22 +1,2 @@
-FSTAR_HOME=../../..
-
-all: verify-all
-
-include .depend
-include $(FSTAR_HOME)/examples/Makefile.include
-
-verify-all: $(ALL_CHECKED_FILES)
-
-.depend:
-	$(call msg, "DEPEND", $(patsubst $(shell realpath $(FSTAR_HOME))/%,%/,$(shell pwd)))
-	$(Q)$(FSTAR) --dep full $(wildcard *.fst *.fsti) --output_deps_to .depend
-
-%.checked:
-	$(call msg, "CHECK", $<)
-	$(Q)$(FSTAR) $(SIL) --cache_checked_modules $<
-	$(Q)touch -c $@
-
-clean:
-	rm -f .depend *.checked
-
-depend: .depend
+FSTAR_ROOT ?= ../../..
+include $(FSTAR_ROOT)/mk/test.mk

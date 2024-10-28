@@ -644,8 +644,8 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
                                         comp=Subst.subst_comp usubst c;
                                         cflags=flags} }
 
-  | Sig_fail {errs; fail_in_lax=lax; ses} ->
-    { s with sigel = Sig_fail {errs;
+  | Sig_fail {errs; rng; fail_in_lax=lax; ses} ->
+    { s with sigel = Sig_fail {errs; rng;
                                fail_in_lax=lax;
                                ses=List.map generalize_annotated_univs ses} }
 
@@ -3260,7 +3260,7 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
          Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
     else env
 
-let parse_attr_with_list warn (at:S.term) (head:lident) : option (list int) & bool =
+let parse_attr_with_list warn (at:S.term) (head:lident) : option (list int & Range.range) & bool =
   let warn () =
     if warn then
       Errors.log_issue at Errors.Warning_UnappliedFail
@@ -3271,12 +3271,12 @@ let parse_attr_with_list warn (at:S.term) (head:lident) : option (list int) & bo
    | Tm_fvar fv when S.fv_eq_lid fv head ->
      begin
        match args with
-       | [] -> Some [], true
+       | [] -> Some ([], at.pos), true
        | [(a1, _)] ->
          begin
          match EMB.unembed a1 EMB.id_norm_cb with
          | Some es ->
-           Some (List.map FStarC.BigInt.to_int_fs es), true
+           Some (List.map FStarC.BigInt.to_int_fs es, at.pos), true
          | _ ->
            warn();
            None, true
@@ -3291,11 +3291,11 @@ let parse_attr_with_list warn (at:S.term) (head:lident) : option (list int) & bo
 
 
 // If this is an expect_failure attribute, return the listed errors and whether it's a expect_lax_failure or not
-let get_fail_attr1 warn (at : S.term) : option (list int & bool) =
+let get_fail_attr1 warn (at : S.term) : option (list int & Range.range & bool) =
     let rebind res b =
       match res with
       | None -> None
-      | Some l -> Some (l, b)
+      | Some (l, rng) -> Some (l, rng, b)
     in
     let res, matched = parse_attr_with_list warn at C.fail_attr in
     if matched then rebind res false
@@ -3303,15 +3303,15 @@ let get_fail_attr1 warn (at : S.term) : option (list int & bool) =
          rebind res true
 
 // Traverse a list of attributes to find all expect_failures and combine them
-let get_fail_attr warn (ats : list S.term) : option (list int & bool) =
+let get_fail_attr warn (ats : list S.term) : option (list int & Range.range & bool) =
     let comb f1 f2 =
       match f1, f2 with
-      | Some (e1, l1), Some (e2, l2) ->
-        Some (e1@e2, l1 || l2)
+      | Some (e1, rng1, l1), Some (e2, rng2, l2) ->
+        Some (e1@e2, rng1 `Range.union_ranges` rng2, l1 || l2)
 
-      | Some (e, l), None
-      | None, Some (e, l) ->
-        Some (e, l)
+      | Some x, None
+      | None, Some x ->
+        Some x
 
       | _ -> None
     in
@@ -3645,12 +3645,6 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t & sigelts) =
       List.filter (fun at -> Option.isNone (get_fail_attr1 false at)) ats
   in
 
-  // The `fail` attribute behaves
-  // differentrly! We only keep that one on the first new decl.
-  let env0 = Env.snapshot env |> snd in (* we need the snapshot since pushing the let
-                                         * will shadow a previous val *)
-
-
   (* If this is an expect_failure, check to see if it fails.
    * If it does, check that the errors match as we normally do.
    * If it doesn't fail, leave it alone! The typechecker will check the failure. *)
@@ -3658,7 +3652,13 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t & sigelts) =
     let attrs = List.map (desugar_term env) d.attrs in
     let attrs = U.deduplicate_terms attrs in
     match get_fail_attr false attrs with
-    | Some (expected_errs, lax) ->
+    | Some (expected_errs, err_rng, lax) ->
+      // The `fail` attribute behaves
+      // differentrly! We only keep that one on the first new decl.
+      let env0 =
+          Env.snapshot env |> snd  (* we need the snapshot since pushing the let
+                                    * will shadow a previous val *)
+      in
       let d = { d with attrs = [] } in
       let errs, r = Errors.catch_errors (fun () ->
                       Options.with_saved_options (fun () ->
@@ -3668,7 +3668,7 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t & sigelts) =
         (* Succeeded desugaring, carry on, but make a Sig_fail *)
         (* Restore attributes, except for fail *)
         let ses = List.map (fun se -> { se with sigattrs = no_fail_attrs attrs }) ses in
-        let se = { sigel = Sig_fail {errs=expected_errs; fail_in_lax=lax; ses};
+        let se = { sigel = Sig_fail {rng=err_rng;errs=expected_errs; fail_in_lax=lax; ses};
                    sigquals = [];
                    sigrng = d.drange;
                    sigmeta = default_sigmeta;
@@ -3695,7 +3695,7 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t & sigelts) =
             let open FStarC.Class.PP in
             let open FStarC.Pprint in
             List.iter Errors.print_issue errs;
-            Errors.log_issue d Errors.Error_DidNotFail [
+            Errors.log_issue err_rng Errors.Error_DidNotFail [
                 prefix 2 1
                   (text "This top-level definition was expected to raise error codes")
                   (pp expected_errs) ^/^
@@ -3740,19 +3740,30 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
     env, []
 
   | Friend lid ->
-    if Env.iface env
-    then raise_error d Errors.Fatal_FriendInterface
-                      "'friend' declarations are not allowed in interfaces"
-    else if not (FStarC.Parser.Dep.module_has_interface (Env.dep_graph env) (Env.current_module env))
-    then raise_error d Errors.Fatal_FriendInterface
-                      "'friend' declarations are not allowed in modules that lack interfaces"
-    else if not (FStarC.Parser.Dep.module_has_interface (Env.dep_graph env) lid)
-    then raise_error d Errors.Fatal_FriendInterface
-                      "'friend' declarations cannot refer to modules that lack interfaces"
-    else if not (FStarC.Parser.Dep.deps_has_implementation (Env.dep_graph env) lid)
-    then raise_error d Errors.Fatal_FriendInterface
-                      "'friend' module has not been loaded; recompute dependences (C-c C-r) if in interactive mode"
-    else env, []
+    (* Several checks to accept a friend declaration. *)
+    let open FStarC.Errors in
+    let open FStarC.Pprint in
+    let open FStarC.Class.PP in
+    if Env.iface env then
+      raise_error d Errors.Fatal_FriendInterface [
+        text "'friend' declarations are not allowed in interfaces.";
+      ];
+    if not (FStarC.Parser.Dep.module_has_interface (Env.dep_graph env) (Env.current_module env)) then
+      raise_error d Errors.Fatal_FriendInterface [
+        text "'friend' declarations are not allowed in modules that lack interfaces.";
+        text "Suggestion: add an interface for module" ^/^ pp (Env.current_module env);
+      ];
+    if not (FStarC.Parser.Dep.deps_has_implementation (Env.dep_graph env) lid) then
+      raise_error d Errors.Fatal_FriendInterface [
+        text "'friend' module" ^/^ pp lid ^/^ text "not found";
+        text "Suggestion: recompute dependences (C-c C-r) if in interactive mode.";
+      ];
+    if not (FStarC.Parser.Dep.module_has_interface (Env.dep_graph env) lid) then
+      raise_error d Errors.Fatal_FriendInterface [
+        text "'friend' declarations cannot refer to modules that lack interfaces.";
+        text "Suggestion: add an interfce for module" ^/^ pp lid;
+      ];
+    env, []
 
   | Include (lid, restriction) ->
     let env = Env.push_include env lid restriction in

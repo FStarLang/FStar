@@ -1,35 +1,31 @@
-FSTAR_HOME?=../..
-FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS)
+FSTAR_ROOT ?= ../..
+include $(FSTAR_ROOT)/mk/test.mk
 
 # This tests that the semiring tactic can be made into a plugin.
 # We should make it so in the library and just remove this, along
 # with its hacks.
 
-OCAMLOPT=OCAMLPATH="$(FSTAR_HOME)/lib" ocamlfind opt
+all: $(OUTPUT_DIR)/CanonCommSemiring.interpreted $(OUTPUT_DIR)/CanonCommSemiring.native
 
-.PHONY: %.native %.interpreted
-.PRECIOUS: %.fst.checked %.ml %.cmxs
-
-all: CanonCommSemiring.interpreted CanonCommSemiring.native
-
-%.fst.checked: %.fst
-	$(FSTAR) --cache_checked_modules $*.fst
-
-%.ml: %.fst.checked
+# NOTE: This is overriding the default rule in test.mk.
+# If you add explicit dependencies here, it will fall back to the default rule.
+$(OUTPUT_DIR)/%.ml:
+	$(call msg, "EXTRACT", $<)
 	$(FSTAR) --codegen Plugin --extract $* $*.fst
-	cat $*.ml.fixup >> $*.ml
+	cat $*.ml.fixup >> $@
 
-%.cmxs: %.ml $(FSTAR_HOME)/bin/fstar.exe
-	$(OCAMLOPT) -shared -package fstar.lib -o $@ $*.ml
+$(OUTPUT_DIR)/%.cmxs: $(OUTPUT_DIR)/%.ml
+	$(call msg, "OCAMLOPT", $<)
+	$(FSTAR_EXE) --ocamlopt_plugin -o $@ $<
 
-# REMARK: --load will compile $*.ml if $*.cmxs does not exist, but we compile it before
-%.native: %.cmxs %.fst %.Test.fst
-	$(FSTAR) --load $* $*.Test.fst
+# REMARK: --load will compile $*.ml if $*.cmxs does not exist, but we
+# compile it before and use --load_cmxs
+$(OUTPUT_DIR)/%.native: $(OUTPUT_DIR)/%.cmxs %.fst %.Test.fst
+	$(call msg, "CHECK NATIVE", $<)
+	$(FSTAR) --load_cmxs $* $*.Test.fst
 	@touch $@
 
-%.interpreted: %.fst.checked %.Test.fst
+$(OUTPUT_DIR)/%.interpreted: $(CACHE_DIR)/%.fst.checked %.Test.fst
+	$(call msg, "CHECK INTERP", $<)
 	$(FSTAR) $*.Test.fst
 	@touch $@
-
-clean:
-	rm -f *.checked *.ml *.o *.cm[ix] *.cmxs *~

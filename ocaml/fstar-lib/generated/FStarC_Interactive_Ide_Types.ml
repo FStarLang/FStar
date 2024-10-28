@@ -104,12 +104,12 @@ type optmod_t = FStarC_Syntax_Syntax.modul FStar_Pervasives_Native.option
 type timed_fname =
   {
   tf_fname: Prims.string ;
-  tf_modtime: FStarC_Compiler_Util.time }
+  tf_modtime: FStarC_Compiler_Util.time_of_day }
 let (__proj__Mktimed_fname__item__tf_fname : timed_fname -> Prims.string) =
   fun projectee ->
     match projectee with | { tf_fname; tf_modtime;_} -> tf_fname
 let (__proj__Mktimed_fname__item__tf_modtime :
-  timed_fname -> FStarC_Compiler_Util.time) =
+  timed_fname -> FStarC_Compiler_Util.time_of_day) =
   fun projectee ->
     match projectee with | { tf_fname; tf_modtime;_} -> tf_modtime
 type repl_task =
@@ -394,7 +394,8 @@ let (__proj__Mkgrepl_state__item__grepl_stdin :
   grepl_state -> FStarC_Compiler_Util.stream_reader) =
   fun projectee ->
     match projectee with | { grepl_repls; grepl_stdin;_} -> grepl_stdin
-let (t0 : FStarC_Compiler_Util.time) = FStarC_Compiler_Util.now ()
+let (t0 : FStarC_Compiler_Util.time_of_day) =
+  FStarC_Compiler_Util.get_time_of_day ()
 let (dummy_tf_of_fname : Prims.string -> timed_fname) =
   fun fname -> { tf_fname = fname; tf_modtime = t0 }
 let (string_of_timed_fname : timed_fname -> Prims.string) =
@@ -404,7 +405,7 @@ let (string_of_timed_fname : timed_fname -> Prims.string) =
         if modtime = t0
         then FStarC_Compiler_Util.format1 "{ %s }" fname
         else
-          (let uu___2 = FStarC_Compiler_Util.string_of_time modtime in
+          (let uu___2 = FStarC_Compiler_Util.string_of_time_of_day modtime in
            FStarC_Compiler_Util.format2 "{ %s; %s }" fname uu___2)
 let (string_of_repl_task : repl_task -> Prims.string) =
   fun uu___ ->
