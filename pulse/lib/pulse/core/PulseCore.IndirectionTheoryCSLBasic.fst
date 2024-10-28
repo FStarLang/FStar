@@ -28,8 +28,8 @@ let elim_feq #a #b (f g: (a ^-> b))
 
 let fmap_id (a:Type) (x:invariants a)
 : squash (fmap (id #a) == id #(invariants a))
-= assume (forall x. fmap (id #a) x == id #(invariants a) x);
-  assert (fmap (id #a) `F.feq` id #(invariants a));
+= introduce forall x. fmap (id #a) x == id #(invariants a) x with
+    elim_feq (fmap (id #a) x) (id #(invariants a) x);
   elim_feq (fmap (id #a)) (id #(invariants a))
 
 
