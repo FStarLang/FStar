@@ -7,7 +7,11 @@ val world : Type u#4
 val age1 (k:world) : world
 val level (k:world) : GTot nat
 val credits (k:world) : GTot nat
-val is_ghost_action (m0 m1:world) : prop //preorder
+
+val mem : Type u#4
+val core_of : mem -> world
+
+val is_ghost_action (m0 m1:mem) : prop //preorder
 
 val ghost_action_preorder (_:unit)
   : Lemma (FStar.Preorder.preorder_rel is_ghost_action)
