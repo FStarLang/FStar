@@ -26,6 +26,10 @@ let elim_feq #a #b (f g: (a ^-> b))
   (ensures f == g)
 = ()
 
+let on_dom_ext #t #s (f g: t ^-> s) (h: (x:t -> squash (f x == g x))) : squash (f == g) =
+  introduce forall x. f x == g x with h x;
+  F.extensionality _ _ f g
+
 let fmap_id (a:Type) (x:invariants a)
 : squash (fmap (id #a) == id #(invariants a))
 = introduce forall x. fmap (id #a) x == id #(invariants a) x with
@@ -68,6 +72,11 @@ let istore_repr = nat & invariants (predicate functor_heap)
 let of_repr (f:istore_repr) : istore = down f
 let as_repr (x:istore) : istore_repr = up x
 let world_pred : Type u#4 = world ^-> prop
+
+let world_pred_ext (f g: world_pred) (h: (w:world -> squash (f w <==> g w))) : squash (f == g) =
+  introduce forall w. f w == g w with
+    (h w; PropositionalExtensionality.apply (f w) (g w));
+  elim_feq f g
 
 // let approx (n:nat) (p:world_pred) : world_pred = approx n p
 let eq_n (n:nat) (t0 t1:world_pred) =
@@ -264,7 +273,33 @@ let star_commutative (p1 p2:core_world_pred)
   FStar.Classical.forall_intro_2 join_worlds_commutative;
   FStar.PredicateExtensionality.predicateExtensionality core_world (p1 `star` p2) (p2 `star` p1)
 
+let pulse_pred = pulse_heap ^-> prop
+let lift (p:pulse_pred) : world_pred =
+  F.on_dom world fun w -> p ((snd w).pulse_heap)
 
+let age_to (w: world) (n: nat) : world =
+  (down (n, snd (up (fst w))), snd w)
+
+let age_to_rest (w: world) (n: nat) : Lemma ((age_to w n)._2 == w._2) = ()
+
+let age1 (w: world) : world =
+  if level (fst w) > 0 then age_to w (level (fst w) - 1) else w
+
+let later (p: world_pred) : world_pred =
+  F.on_dom _ fun w -> p (age1 w)
+
+let timeless (p: world_pred) = later p == p
+
+let timeless_lift (p: pulse_pred) : squash (timeless (lift p)) =
+  world_pred_ext (later (lift p)) (lift p) fun w -> ()
+
+let hereditary (p: world_pred) : prop =
+  forall (w: world) (n: nat).
+    n < level (fst w) /\ p w ==>
+    p (age_to w n)
+
+let hereditary_lift (p: pulse_pred) : squash (hereditary (lift p)) =
+  ()
 
 // // inv i p
 // let inv (i:address) (p:world_pred) : world_pred =
