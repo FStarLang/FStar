@@ -195,7 +195,7 @@ let age_to_rest (w: world) (n: nat) : Lemma ((age_to w n)._2 == w._2) = ()
 let level (w: world) : nat = level_ w
 
 let age1_ (w: preworld) : preworld =
-  if level_istore (fst w) > 0 then age_to_ w (level_istore (fst w) - 1) else w
+  if level_ w > 0 then age_to_ w (level_ w - 1) else w
 
 let age1 (w: world) : world = age1_ w
 
@@ -518,7 +518,16 @@ let inv (i:iref) (p:slprop) : slprop =
       eq_at (level_ w) p p'
 
 let later (p: slprop) : slprop =
-  admit ();
+  introduce forall (w: preworld) (n: nat).
+      n < level_ w /\ p (age1_ w) ==>
+      p (age1_ (age_to_ w n)) with introduce _ ==> _ with _. (
+    let n' = if n > 0 then n-1 else 0 in
+    assert age_to_ (age1_ w) n' == age_to_ w n'
+  );
+  introduce forall a b. world_le a b /\ p (age1_ a) ==> p (age1_ b) with (
+    world_le_iff a b;
+    world_le_iff (age1_ a) (age1_ b)
+  );
   F.on_dom preworld fun w -> p (age1_ w)
 
 let timeless (p: slprop) = later p == p
@@ -537,6 +546,10 @@ let timeless_later_credit n : squash (timeless (later_credit n)) =
 
 let equiv p q : slprop =
   F.on_dom preworld #(fun _ -> prop) fun w -> eq_at (level_ w + 1) p q
+
+let eq_at_elim n (p q: world_pred) (w: preworld) :
+    Lemma (requires eq_at n p q /\ level_ w < n) (ensures p w <==> q w) =
+  assert approx n p w == approx n q w
 
 // ----------------
 
