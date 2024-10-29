@@ -11,23 +11,23 @@ let _ACTION
   (maybe_ghost:bool)
   (except:inames)
   (expects:slprop)
-  (provides: a -> slprop)
+  (provides: a -> GTot slprop)
   (frame:slprop)
 = HST.st #full_world a
     (requires fun m0 ->
         inames_ok except m0 /\
-        interp (expects `star` frame `star` world_invariant except m0) m0)
+        interpret (expects `star` frame `star` world_invariant except m0) m0)
     (ensures fun m0 x m1 ->
         maybe_ghost_action maybe_ghost m0 m1 /\
         inames_ok except m1 /\
-        interp (provides x `star` frame `star` world_invariant except m1) m1)
+        interpret (provides x `star` frame `star` world_invariant except m1) m1)
 
 let _act_except 
     (a:Type u#a)
     (maybe_ghost:bool)
     (except:inames)
     (expects:slprop)
-    (provides: a -> slprop)
+    (provides: a -> GTot slprop)
  : Type u#(max a 4) 
  = frame:slprop -> _ACTION a maybe_ghost except expects provides frame
 let ghost_act a = _act_except a true
@@ -39,7 +39,7 @@ val lift_mem_action #a #mg #ex #pre #post
 
 let add_inv (e:inames) (i:iref)
 : inames
-= FStar.GhostSet.(union (singleton deq_iref i) e)
+= FStar.GhostSet.(union (singleton world_heap_sig.deq_iref i) e)
 
 let mem_inv (e:inames) (i:iref)
 : GTot bool

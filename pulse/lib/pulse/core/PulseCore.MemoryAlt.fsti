@@ -83,7 +83,6 @@ val up1_is_slprop1 (s:slprop1_base) : Lemma (is_slprop1 (up1 s))
 val slprop_1_is_2 (s:slprop)
   : Lemma (is_slprop1 s ==> is_slprop2 s)
 
-
 (** Interpreting mem assertions as memory predicates *)
 val interp (p:slprop u#a) (m:mem u#a) : prop
 
@@ -229,6 +228,20 @@ val mem_invariant (e:inames) (m:mem u#a) : slprop u#a
 
 val full_mem_pred: mem -> prop
 let full_mem = m:mem{full_mem_pred m}
+
+val pulse_heap_sig : hs:PulseCore.HeapSig.heap_sig {
+  hs.mem == mem /\
+  hs.slprop == slprop /\
+  hs.emp == emp /\
+  hs.star == star /\
+  pure == hs.pure /\
+  (forall p m. interp p m == hs.interp p (hs.sep.core_of m)) /\
+  iref == hs.iref /\
+  (forall e m. inames_ok e m == HeapSig.inames_ok #hs e m) /\
+  mem_invariant == hs.mem_invariant /\
+  full_mem_pred == hs.full_mem_pred
+} 
+
 
 (**** Actions *)
 
