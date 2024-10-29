@@ -16,7 +16,8 @@ let _ACTION
 = HST.st #full_mem a
     (requires fun m0 ->
         inames_ok except m0 /\
-        interpret (expects `star` frame `star` mem_invariant except m0) m0)
+        interpret (expects `star` frame `star` mem_invariant except m0) m0 /\
+        has_credits m0)
     (ensures fun m0 x m1 ->
         maybe_ghost_action maybe_ghost m0 m1 /\
         inames_ok except m1 /\

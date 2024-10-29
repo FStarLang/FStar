@@ -9,6 +9,7 @@ let pulse_mem : Type u#4 = PM.mem u#0
 let pulse_core_mem : Type u#4 = PM.pulse_heap_sig.sep.core
 noeq type mem = { istore:istore; pulse_mem:PM.mem u#0 }
 noeq type core_mem = { istore:core_istore; pulse_mem:pulse_core_mem }
+val has_credits (m:mem) : GTot bool
 val istore_core (i:istore) : core_istore
 let core_of (m:mem)
 : core_mem
@@ -185,3 +186,8 @@ val mem_invariant_equiv :
           inames_ok (single i) m /\
           (mem_invariant e m ==
            mem_invariant (add_inv e i) m `star` later p))
+
+val dup_inv_equiv :
+    i:iref ->
+    p:slprop ->
+    Lemma (inv i p == (inv i p `star` inv i p))

@@ -188,11 +188,20 @@ let buy (e:inames) (n:nat)
 : act unit e emp (fun _ -> later_credit n)
 = admit()
 
+let is_ghost_action_refl (m:mem)
+: Lemma (is_ghost_action m m)
+= is_ghost_action_istore_refl m.istore;
+  PM.ghost_action_preorder ()
+
 let dup_inv (e:inames) (i:iref) (p:slprop)
 : ghost_act unit e 
     (inv i p) 
     (fun _ -> inv i p `star` inv i p)
-= admit()
+= fun frame s0 ->
+    sep_laws();
+    dup_inv_equiv i p;
+    is_ghost_action_refl s0;
+    (), s0
 
 let new_invariant (e:inames) (p:slprop)
 : ghost_act iref e p (fun i -> inv i p)
