@@ -5,29 +5,40 @@ module PM = PulseCore.MemoryAlt
 
 val istore : Type u#4
 val core_istore : Type u#4
-let pulse_mem_t : Type u#4 = PM.mem u#0
-let pulse_core_mem_t : Type u#4 = PM.pulse_heap_sig.sep.core
-noeq type world = { istore:istore; pulse_mem:PM.mem u#0 }
-noeq type core_world = { istore:core_istore; pulse_mem:pulse_core_mem_t }
-val world_heap_sig : hs:PulseCore.HeapSig.heap_sig u#3 {
-  hs.mem == world /\
-  hs.sep.core == core_world
+let pulse_mem : Type u#4 = PM.mem u#0
+let pulse_core_mem : Type u#4 = PM.pulse_heap_sig.sep.core
+noeq type mem = { istore:istore; pulse_mem:PM.mem u#0 }
+noeq type core_mem = { istore:core_istore; pulse_mem:pulse_core_mem }
+val istore_core (i:istore) : core_istore
+let core_of (m:mem)
+: core_mem
+= { istore = istore_core m.istore; pulse_mem = PM.pulse_heap_sig.sep.core_of m.pulse_mem }
+
+val age1 (k:core_mem) : core_mem
+
+[@@erasable]
+val slprop : Type u#4
+
+val level (k:core_mem) : GTot nat
+
+val credits (k:core_mem) : GTot nat
+
+val is_ghost_action_istore : p:(istore -> istore -> prop) { 
+    FStar.Preorder.preorder_rel p 
 }
-let core_of (w:world) : core_world = world_heap_sig.sep.core_of w
-val age1 (k:world) : world
-val level (k:world) : GTot nat
-val credits (k:world) : GTot nat
-let is_ghost_action (m0 m1:world) : prop = world_heap_sig.is_ghost_action m0 m1
 
-let is_full (w:world) : prop = world_heap_sig.full_mem_pred w
-let full_world = w:world { is_full w }
+let is_ghost_action (m0 m1:mem) : prop = 
+  is_ghost_action_istore m0.istore m1.istore /\
+  PM.is_ghost_action m0.pulse_mem m1.pulse_mem
 
-let slprop : Type u#4 = world_heap_sig.slprop
-let interpret (p:slprop) (w:world) : prop = world_heap_sig.interp p (core_of w)
 
-let emp : slprop = world_heap_sig.emp
-let pure (p:prop) : slprop = world_heap_sig.pure p
-let star (p q:slprop) : slprop = world_heap_sig.star p q
+let is_full (m:mem) : prop = PM.pulse_heap_sig.full_mem_pred m.pulse_mem
+let full_mem = m:mem { is_full m }
+
+val emp : slprop
+val pure (p:prop) : slprop
+val star (p q:slprop) : slprop
+
 val ( exists* ) (#a:Type u#a) (f:a -> slprop) : slprop
 
 val sep_laws (_:unit) : squash (
@@ -38,8 +49,43 @@ val sep_laws (_:unit) : squash (
   )
 )
 
+val istore_disjoint (i0 i1:core_istore) : prop
+val istore_join (i0:core_istore) (i1:core_istore { istore_disjoint i0 i1}) : core_istore
+val istore_join_refl (i:core_istore) 
+: Lemma (istore_disjoint i i /\ istore_join i i == i)
+let disjoint (m0 m1:core_mem)
+: prop
+= PM.pulse_heap_sig.sep.disjoint m0.pulse_mem m1.pulse_mem /\
+  istore_disjoint m0.istore m1.istore
+let join (m0:core_mem) (m1:core_mem { disjoint m0 m1 })
+: core_mem
+= { pulse_mem = PM.pulse_heap_sig.sep.join m0.pulse_mem m1.pulse_mem;
+    istore = istore_join m0.istore m1.istore }
+
+let affine_prop (p: core_mem -> prop) =
+  forall (m0 m1:core_mem). p m0 /\ disjoint m0 m1 ==> p (join m0 m1)
+
+val interp (p:slprop) : q:(core_mem  -> prop) { affine_prop q }
+
+val star_equiv :
+      p:slprop ->
+      q:slprop ->
+      m:core_mem ->
+      Lemma (
+        interp (p `star` q) m <==> 
+        (exists m0 m1. 
+          disjoint m0 m1 /\
+          m == join m0 m1 /\
+          interp p m0 /\
+          interp q m1))
+
 let pm_slprop : Type u#4 = PM.slprop u#0
 val lift (p:pm_slprop) : slprop
+
+val lift_eq (p:PM.slprop)
+: Lemma (forall m. interp (lift p) m ==
+                   PM.pulse_heap_sig.interp p m.pulse_mem)
+
 val lift_emp_eq () : Lemma (
   lift PM.emp == emp
 )
@@ -54,30 +100,32 @@ val lift_exists_eq (a:Type u#4) (f:a -> pm_slprop) : Lemma (
 )
 
 (**** Memory invariants *)
-let iref : Type0 = world_heap_sig.iref
-
-(** Invariants have a name *)
+[@@erasable]
+val iref : Type0
+val deq_iref : FStar.GhostSet.decide_eq iref
 let inames = FStar.GhostSet.set iref
 val lower_inames (i:inames) : PM.inames
 
 (** This proposition tells us that all the invariants names in [e] are valid in memory [m] *)
-let inames_ok (e:inames) (m:world)
+val istore_inames_ok (e:inames) (m:istore) : prop
+let inames_ok (e:inames) (m:mem)
 : prop
-= HeapSig.inames_ok #world_heap_sig e m
+= HeapSig.inames_ok #PM.pulse_heap_sig (lower_inames e) m.pulse_mem /\
+  istore_inames_ok e m.istore
 
 (** The empty set of invariants is always empty *)
-val inames_ok_empty (m:world)
+val inames_ok_empty (m:mem)
   : Lemma (ensures inames_ok GhostSet.empty m)
-          [SMTPat (inames_ok GhostSet.empty m)]
 
+val istore_invariant (ex:inames) (i:istore) : slprop
 
-let world_invariant (e:inames) (w:world)
+let world_invariant (e:inames) (w:mem)
 : slprop
-= world_heap_sig.mem_invariant e w
+=  lift (PM.mem_invariant (lower_inames e) w.pulse_mem) `star`
+   istore_invariant e w.istore
 
-let inv (i:iref) (p:slprop)
-: slprop
-= world_heap_sig.inv i p
+
+val inv (i:iref) (p:slprop) : slprop
 
 val later (p:slprop) : slprop
 val later_credit (n:nat) : slprop

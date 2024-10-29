@@ -4,8 +4,8 @@ module T = FStar.Tactics
 module PM = PulseCore.MemoryAlt
 module HST = PulseCore.HoareStateMonad
 open PulseCore.IndirectionTheorySep
-let maybe_ghost_action (b:bool) (m0 m1:world) = b ==> is_ghost_action m0 m1
-
+let maybe_ghost_action (b:bool) (m0 m1:mem) = b ==> is_ghost_action m0 m1
+let interpret (p:slprop) (m:mem) = interp p (core_of m)
 let _ACTION 
   (a:Type u#a)
   (maybe_ghost:bool)
@@ -13,7 +13,7 @@ let _ACTION
   (expects:slprop)
   (provides: a -> GTot slprop)
   (frame:slprop)
-= HST.st #full_world a
+= HST.st #full_mem a
     (requires fun m0 ->
         inames_ok except m0 /\
         interpret (expects `star` frame `star` world_invariant except m0) m0)
@@ -39,7 +39,7 @@ val lift_mem_action #a #mg #ex #pre #post
 
 let add_inv (e:inames) (i:iref)
 : inames
-= FStar.GhostSet.(union (singleton world_heap_sig.deq_iref i) e)
+= FStar.GhostSet.(union (singleton deq_iref i) e)
 
 let mem_inv (e:inames) (i:iref)
 : GTot bool
@@ -109,11 +109,9 @@ val intro_pure (#opened_invariants:_) (p:prop) (_:squash p)
 val drop (#opened_invariants:_) (p:slprop)
 : ghost_act unit opened_invariants p (fun _ -> emp)
 
-let non_info a = x:erased a -> y:a { reveal x == y}
-
 val lift_ghost
       (#a:Type)
       #opened_invariants #p #q
-      (ni_a:non_info a)
+      (ni_a:PulseCore.HeapSig.non_info a)
       (f:erased (ghost_act a opened_invariants p q))
 : ghost_act a opened_invariants p q
