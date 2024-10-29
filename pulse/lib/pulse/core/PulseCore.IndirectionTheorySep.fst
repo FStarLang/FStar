@@ -223,9 +223,14 @@ let as_repr (x:istore) : istore_repr = up x
 let level_down (f: istore_repr) : Lemma (level_istore (down f) == f._1) [SMTPat (level_istore (down f))] =
   up_down f._1 f._2
 
-// let approx (n:nat) (p:world_pred) : world_pred = approx n p
-let eq_n (n:nat) (t0 t1:world_pred) =
+let eq_at (n:nat) (t0 t1:world_pred) =
   approx n t0 == approx n t1
+
+let eq_at_mono (p q: world_pred) m n :
+    Lemma (requires n <= m /\ eq_at m p q) (ensures eq_at n p q)
+      [SMTPat (eq_at m p q); SMTPat (eq_at n p q)] =
+  assert approx n p == approx n (approx m p);
+  assert approx n q == approx n (approx m q)
 
 let is_ghost_action = admit ()
 let ghost_action_preorder = admit ()
@@ -502,19 +507,26 @@ let lift_star_eq p q =
 
 let lift_exists_eq a f =
   world_pred_ext (lift (PM.h_exists f)) (exists* x. lift (f x)) fun w ->
-    HS.interp_exists #pulse_heap_sig (fun x -> f x);
-    assert (forall m. pulse_heap_sig.interp (HS.exists_ f) m <==> (exists x. pulse_heap_sig.interp (f x) m));
-    ()
+    let f' : a -> GTot pulse_heap_sig.slprop = fun x -> f x in
+    HS.interp_exists f';
+    let m = (snd w).pulse_heap in
+    assert pulse_heap_sig.interp (HS.exists_ f') m <==>
+      (exists x. pulse_heap_sig.interp (f x) m);
+    admit ()
 
-let iref = erased (admit ())
-let deq_iref = admit ()
+let iref = erased address
+let deq_iref = fun x y -> reveal x = reveal y
 let lower_inames = admit ()
 let inames_ok = admit ()
 let inames_ok_empty = admit ()
 
 let world_invariant = admit ()
 
-let inv = admit ()
+let inv (i:iref) (p:slprop) : slprop =
+  F.on_dom preworld #(fun _ -> prop) fun w ->
+    exists p'.
+      read w i == Inv p' /\
+      eq_at (level_ w) p p'
 
 let later (p: slprop) : slprop =
   admit ();
@@ -528,85 +540,17 @@ let timeless_lift (p: PM.slprop) : squash (timeless (lift p)) =
 let timeless_pure (p: prop) : squash (timeless (pure p)) =
   world_pred_ext (later (pure p)) (pure p) fun w -> ()
 
-// // inv i p
-// let inv (i:address) (p:world_pred) : world_pred =
-//   fun (invs, ph) ->
-//     let n, inv_heap = mup invs in
-//     exists p'.
-//       inv_heap i == Some p' /\
-//       eq_n n p p'
+let later_credit n : slprop =
+  F.on_dom preworld #(fun _ -> prop) fun w -> (snd w).saved_credits >= n
 
-// let pulse_pred = pulse_heap -> prop
-// let lift (p:pulse_pred) : world_pred = fun (k, (ph, _)) -> p ph
-
-// open FStar.Preorder
-// let box (r:relation world) (p:world_pred) : world_pred =
-//   fun w -> forall w'. r w w' ==> p w'
-
-// let extends : relation world =
-//   fun (k,ph) (k',ph') -> //pulse heap can change arbitrarily
-//     let n, inv_heap = mup k in
-//     let n', inv_heap' = mup k' in
-//     n==n' /\
-//     (forall a. Some? (inv_heap a) ==> inv_heap a == inv_heap' a)
-
-// let extendely (t:heap_pred) = box extends t
-
-// let age_istore (k:istore) : option istore =
-//   let n, psi = mup k in
-//   if n = 0 then None
-//   else Some (mdown (n - 1, psi))
-
-// let age_world (k:world) : option world =
-//   let i, ph = k in
-//   match age_istore i with
-//   | None -> None
-//   | Some k' -> Some (k', ph)
-
-
-
-// let iworld = w:world {
-//   let ih, ph = w in
-//   let n, inv_heap = mup ih in
-//   forall i. 
-//     match inv_heap i, age1 ih with
-//     | Some p, Some ih' -> fold_heap_pred p (ih', ph)
-//     | _ -> True
-// }
-
-//worlds related by a step of aging
-// let relA : relation world =
-//   fun w w' -> age_world w == Some w'
-
-// let remaining w = fst (mup (fst w))
-// let remaining_k k = fst (mup k)
-// let age1_decreases (k:heap { Some? (age1 k)})
-// : Lemma (
-//     remaining_k (Some?.v (age1 k)) == remaining_k k - 1
-//   )
-// = let n, psi = mup k in
-//   up_down #heap (n - 1) psi
-// let rec relAplus_alt (w0:world) (w1:world { remaining w0 > remaining w1})
-// : Tot prop (decreases (remaining w0 - remaining w1))
-// = if remaining w0 = remaining w1 + 1 then relA w0 w1
-//   else (
-//     match age1 (fst w0) with
-//     | None -> False
-//     | Some k ->
-//       age1_decreases (fst w0);
-//       relAplus_alt (k, snd w0) w1
-//   )
-// let relAplus (w0 w1:world) =
-//   if remaining w0 > remaining w1 then relAplus_alt w0 w1
-//   else False
-// let later (t:heap_pred) : heap_pred = box relAplus t
-
+let equiv p q : slprop =
+  F.on_dom preworld #(fun _ -> prop) fun w -> eq_at p q (level_ w)
 
 // ----------------
 
-// inv i p  @ w_n  // eq_n n p p'
+// inv i p  @ w_n  // eq_at n p p'
 
-// i -> Some p' /\ eq_n (n - 1) p p'   @ (agew1 w_n)
+// i -> Some p' /\ eq_at (n - 1) p p'   @ (agew1 w_n)
 
 // p' (age1 w_n) ///because w_n is an iworld
 
