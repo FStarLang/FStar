@@ -406,10 +406,6 @@ let rec extract_mlpattern_to_pat (g:env) (p:S.mlpattern) : env & pat =
     let g, ps = fold_left_map extract_mlpattern_to_pat g ps in
     g,
     mk_pat_tuple ps
-  | S.MLP_CTor (p, ps) when snd p = "SlicePair" ->
-    let g, ps = fold_left_map extract_mlpattern_to_pat g ps in
-    g,
-    mk_pat_tuple ps
   | S.MLP_CTor (p, ps) ->
     let g, ps = fold_left_map extract_mlpattern_to_pat g ps in
     let path =
