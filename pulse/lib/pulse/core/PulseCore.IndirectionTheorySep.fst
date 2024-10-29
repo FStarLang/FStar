@@ -18,16 +18,19 @@ let pulse_heap_sig : HS.heap_sig u#3 = PM.sig
 noeq type istore_val_ (x: Type u#4) =
   | None
   | Inv : x -> istore_val_ x
+  | Pred : x -> istore_val_ x
 
 let istore_val_le #t (x y: istore_val_ t) : prop =
   match x, y with
   | None, _ -> True
   | Inv p, Inv q -> p == q
+  | Pred p, Pred q -> p == q
   | _ -> False
 
 let map_istore_val #x #y (f: x->y) (v: istore_val_ x) : istore_val_ y =
   match v with
   | None -> None
+  | Pred p -> Pred (f p)
   | Inv p -> Inv (f p)
 
 [@@erasable]
@@ -39,34 +42,22 @@ let fmap #a #b (f:a -> b)
     F.on_dom address fun a ->
       map_istore_val f (x a)
 
-let elim_feq #a #b (f g: (a ^-> b))
-: Lemma
-  (requires F.feq f g)
-  (ensures f == g)
-= ()
-
-let on_dom_ext #t #s (f g: t ^-> s) (h: (x:t -> squash (f x == g x))) : squash (f == g) =
+let f_ext #t #s (f g: t ^-> s) (h: (x:t -> squash (f x == g x))) : squash (f == g) =
   introduce forall x. f x == g x with h x;
   F.extensionality _ _ f g
 
 let fmap_id (a:Type) (x:invariants a)
 : squash (fmap (id #a) == id #(invariants a))
-= introduce forall x. fmap (id #a) x == id #(invariants a) x with
-    elim_feq (fmap (id #a) x) (id #(invariants a) x);
-  elim_feq (fmap (id #a)) (id #(invariants a))
+= f_ext (fmap (id #a)) (id #(invariants a)) fun x ->
+    f_ext (fmap (id #a) x) (id x) fun _ -> ()
 
 
 let fmap_comp (a:Type) (b:Type) (c:Type) (b2c:b -> c) (a2b:a -> b)
 : (squash (compose (fmap b2c) (fmap a2b) ==
             fmap (compose b2c a2b)))
-= let lhs : (invariants a ^-> invariants c) = compose (fmap b2c) (fmap a2b) in
-  let rhs : (invariants a ^-> invariants c) = fmap (compose b2c a2b) in
-  introduce forall x. lhs x == rhs x
-  with (
-    assert (F.feq (lhs x) (rhs x))
-  );
-  assert (lhs `F.feq` rhs);
-  elim_feq lhs rhs
+= let lhs = compose (fmap b2c) (fmap a2b) in
+  let rhs = fmap (compose b2c a2b) in
+  f_ext lhs rhs fun x -> f_ext (lhs x) (rhs x) fun _ -> ()
 
 noeq
 type rest : Type u#4 = {
@@ -136,6 +127,7 @@ let slprop_ok (p: world_pred) = hereditary p /\ world_pred_affine p
 let istore_val_ok (v: istore_val) =
   match v with
   | None -> True
+  | Pred p -> slprop_ok p
   | Inv p -> slprop_ok p
 
 let istore_slprops_ok (is: istore) : prop =
@@ -168,8 +160,7 @@ let age_to (w: world) (n: nat) : world =
 
 let istore_ext (i1: istore) (i2: istore { level_istore i1 == level_istore i2 })
     (h: (a:address -> squash (read_istore i1 a == read_istore i2 a))) : squash (i1 == i2) =
-  introduce forall a. (up i1)._2 a == (up i2)._2 a with h a;
-  elim_feq (up i1)._2 (up i2)._2;
+  f_ext (up i1)._2 (up i2)._2 (fun a -> h a);
   down_up i1;
   down_up i2
 
@@ -178,9 +169,9 @@ let world_ext (w1: preworld) (w2: preworld { level_ w1 == level_ w2 /\ snd w1 ==
   istore_ext (fst w1) (fst w2) h
 
 let world_pred_ext (f g: world_pred) (h: (w:preworld -> squash (f w <==> g w))) : squash (f == g) =
-  introduce forall w. f w == g w with
-    (h w; PropositionalExtensionality.apply (f w) (g w));
-  elim_feq f g
+  f_ext f g fun w ->
+    h w;
+    PropositionalExtensionality.apply (f w) (g w)
 
 let approx_approx m n (p: world_pred) : Lemma (approx m (approx n p) == approx (min m n) p) [SMTPat (approx m (approx n p))] =
   world_pred_ext (approx m (approx n p)) (approx (min m n) p) fun w -> ()
@@ -190,16 +181,12 @@ let age_to_age_to (w: preworld) (m n: nat) :
       [SMTPat (age_to_ (age_to_ w m) n)] =
   world_ext (age_to_ (age_to_ w m) n) (age_to_ w n) fun a -> ()
 
-// let up_age_to (w: world) (n: nat) : Lemma (up (age_to w n)._1 == (n, fmap (approx n) (snd (up (fst w))))) =
-//   assert up (age_to w n)._1 == up (down (n, snd (up (fst w))));
-//   up_down n (snd (up (fst w)))
-
 let age_to_rest (w: world) (n: nat) : Lemma ((age_to w n)._2 == w._2) = ()
 
 let level (w: world) : nat = level_ w
 
 let age1_ (w: preworld) : preworld =
-  if level_istore (fst w) > 0 then age_to_ w (level_istore (fst w) - 1) else w
+  if level_ w > 0 then age_to_ w (level_ w - 1) else w
 
 let age1 (w: world) : world = age1_ w
 
@@ -215,13 +202,6 @@ noeq type mem = {
 
 let core_of (m: mem) : world =
   (m.invariants, ({ pulse_heap = pulse_heap_sig.sep.core_of m.pulse_heap; saved_credits = m.saved_credits } <: rest))
-
-let istore_repr = nat & invariants (predicate functor_heap)
-let of_repr (f:istore_repr) : istore = down f
-let as_repr (x:istore) : istore_repr = up x
-
-let level_down (f: istore_repr) : Lemma (level_istore (down f) == f._1) [SMTPat (level_istore (down f))] =
-  up_down f._1 f._2
 
 let eq_at (n:nat) (t0 t1:world_pred) =
   approx n t0 == approx n t1
@@ -243,7 +223,9 @@ unfold
 let istore_val_compat (x y: istore_val) =
   match x, y with
   | None, _ | _, None -> True
+  | Pred p0, Pred p1 -> p0 == p1
   | Inv p0, Inv p1 -> p0 == p1
+  | Inv _, Pred _ | Pred _, Inv _ -> False
 
 let disjoint_istore (is0 is1:istore) =
   level_istore is0 == level_istore is1 /\
@@ -290,12 +272,14 @@ let join_istore (is0:istore) (is1:istore { disjoint_istore is0 is1 }) : istore =
   mk_istore (level_istore is0) fun a ->
     match read_istore is0 a, read_istore is1 a with
     | None, None -> None
+    | Pred p, _ | _, Pred p -> Pred p
     | Inv p, _ | _, Inv p -> Inv p
 
 let read_join_istore (is0:istore) (is1:istore { disjoint_istore is0 is1 }) a :
   Lemma (read_istore (join_istore is0 is1) a ==
     (match read_istore is0 a, read_istore is1 a with
     | None, None -> None
+    | Pred p, _ | _, Pred p -> Pred (approx (level_istore is0) p)
     | Inv p, _ | _, Inv p -> Inv (approx (level_istore is0) p))) =
   ()
 
@@ -400,25 +384,41 @@ let star_ (p1 p2: world_pred) : world_pred =
     fun w -> (exists w1 w2.
       disjoint_worlds w1 w2 /\ w == join_worlds w1 w2 /\ p1 w1 /\ p2 w2)
 
-let star__commutative (p1 p2:slprop)
-: Lemma (p1 `star_` p2 == p2 `star_` p1)
-= FStar.Classical.forall_intro_2 disjoint_world_sym;
-  FStar.Classical.forall_intro_2 join_worlds_commutative;
-  world_pred_ext (p1 `star_` p2) (p2 `star_` p1) fun w -> ()
-
-let star__assoc (x y z:slprop)
-: Lemma (star_ x (star_ y z) == star_ (star_ x y) z)
-= FStar.Classical.forall_intro_2 disjoint_world_sym;
-  FStar.Classical.forall_intro_2 join_worlds_commutative;
-  FStar.Classical.forall_intro_3 join_worlds_associative;
-  world_pred_ext (star_ x (star_ y z)) (star_ (star_ x y) z) fun w -> admit ()
-
 [@@"opaque_to_smt"] irreducible
 let indefinite_description_ghost2 (a b: Type) (p: (a -> b -> prop) { exists x y. p x y })
   : GTot (x: (a&b) { p x._1 x._2 }) =
   let x = indefinite_description_ghost a fun x -> exists y. p x y in
   let y = indefinite_description_ghost b fun y -> p x y in
   (x, y)
+
+let star__commutative (p1 p2:world_pred)
+: Lemma (p1 `star_` p2 == p2 `star_` p1)
+= FStar.Classical.forall_intro_2 disjoint_world_sym;
+  FStar.Classical.forall_intro_2 join_worlds_commutative;
+  world_pred_ext (p1 `star_` p2) (p2 `star_` p1) fun w -> ()
+
+let star__assoc (x y z:world_pred)
+: Lemma (star_ x (star_ y z) == star_ (star_ x y) z)
+=
+  introduce forall x y z w. star_ x (star_ y z) w ==> star_ (star_ x y) z w with introduce _ ==> _ with _. (
+    let (w1, w23) = indefinite_description_ghost2 _ _ fun w1 w23 ->
+      disjoint_worlds w1 w23 /\ w == join_worlds w1 w23 /\ x w1 /\ star_ y z w23 in
+    let (w2, w3) = indefinite_description_ghost2 _ _ fun w2 w3 ->
+      disjoint_worlds w2 w3 /\ w23 == join_worlds w2 w3 /\ y w2 /\ z w3 in
+    join_worlds_associative w1 w2 w3;
+    let w12 = join_worlds w1 w2 in
+    assert star_ x y w12;
+    let w' = join_worlds w12 w3 in
+    assert star_ (star_ x y) z w';
+    assert w == w'
+  );
+  world_pred_ext (star_ x (star_ y z)) (star_ (star_ x y) z) fun w ->
+    star__commutative y z;
+    star__commutative x y;
+    star__commutative x (star_ y z);
+    star__commutative (star_ x y) z;
+    assert star_ x (star_ y z) == star_ (star_ z y) x;
+    assert star_ (star_ x y) z == star_ z (star_ y x)
 
 let star (p1 p2:slprop) : slprop =
   introduce forall a b. world_le a b /\ star_ p1 p2 a ==> star_ p1 p2 b with introduce _ ==> _ with _. (
@@ -452,10 +452,9 @@ let disjoint_istore_empty is : squash (disjoint_istore (empty_istore (level_isto
 let join_istore_empty is : squash (join_istore (empty_istore (level_istore is)) is == is) =
   istore_ext (join_istore (empty_istore (level_istore is)) is) is fun a -> ()
 
-let disjoint_empty w : squash (disjoint_worlds (empty (level_ w)) w) =
+let disjoint_empty w : squash (disjoint_worlds w (empty (level_ w)) /\ disjoint_worlds (empty (level_ w)) w) =
   pulse_heap_sig.sep.join_empty w._2.pulse_heap;
-  pulse_heap_sig.sep.join_commutative w._2.pulse_heap pulse_heap_sig.sep.empty;
-  admit ()
+  disjoint_world_sym w (empty (level_ w))
 
 let join_empty w : squash (disjoint_worlds (empty (level_ w)) w /\ join_worlds (empty (level_ w)) w == w) =
   disjoint_empty w;
@@ -529,7 +528,16 @@ let inv (i:iref) (p:slprop) : slprop =
       eq_at (level_ w) p p'
 
 let later (p: slprop) : slprop =
-  admit ();
+  introduce forall (w: preworld) (n: nat).
+      n < level_ w /\ p (age1_ w) ==>
+      p (age1_ (age_to_ w n)) with introduce _ ==> _ with _. (
+    let n' = if n > 0 then n-1 else 0 in
+    assert age_to_ (age1_ w) n' == age_to_ w n'
+  );
+  introduce forall a b. world_le a b /\ p (age1_ a) ==> p (age1_ b) with (
+    world_le_iff a b;
+    world_le_iff (age1_ a) (age1_ b)
+  );
   F.on_dom preworld fun w -> p (age1_ w)
 
 let timeless (p: slprop) = later p == p
@@ -547,7 +555,11 @@ let timeless_later_credit n : squash (timeless (later_credit n)) =
   world_pred_ext (later (later_credit n)) (later_credit n) fun w -> ()
 
 let equiv p q : slprop =
-  F.on_dom preworld #(fun _ -> prop) fun w -> eq_at (level_ w) p q
+  F.on_dom preworld #(fun _ -> prop) fun w -> eq_at (level_ w + 1) p q
+
+let eq_at_elim n (p q: world_pred) (w: preworld) :
+    Lemma (requires eq_at n p q /\ level_ w < n) (ensures p w <==> q w) =
+  assert approx n p w == approx n q w
 
 // ----------------
 
