@@ -441,10 +441,9 @@ let disjoint_istore_empty is : squash (disjoint_istore (empty_istore (level_isto
 let join_istore_empty is : squash (join_istore (empty_istore (level_istore is)) is == is) =
   istore_ext (join_istore (empty_istore (level_istore is)) is) is fun a -> ()
 
-let disjoint_empty w : squash (disjoint_worlds (empty (level_ w)) w) =
+let disjoint_empty w : squash (disjoint_worlds w (empty (level_ w)) /\ disjoint_worlds (empty (level_ w)) w) =
   pulse_heap_sig.sep.join_empty w._2.pulse_heap;
-  pulse_heap_sig.sep.join_commutative w._2.pulse_heap pulse_heap_sig.sep.empty;
-  admit ()
+  disjoint_world_sym w (empty (level_ w))
 
 let join_empty w : squash (disjoint_worlds (empty (level_ w)) w /\ join_worlds (empty (level_ w)) w == w) =
   disjoint_empty w;
