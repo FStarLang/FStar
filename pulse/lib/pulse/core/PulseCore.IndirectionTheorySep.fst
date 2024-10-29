@@ -544,7 +544,7 @@ let later_credit n : slprop =
   F.on_dom preworld #(fun _ -> prop) fun w -> (snd w).saved_credits >= n
 
 let equiv p q : slprop =
-  F.on_dom preworld #(fun _ -> prop) fun w -> eq_at p q (level_ w)
+  F.on_dom preworld #(fun _ -> prop) fun w -> eq_at (level_ w) p q
 
 // ----------------
 
