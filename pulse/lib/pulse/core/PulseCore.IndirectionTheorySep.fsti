@@ -3,6 +3,8 @@ module F = FStar.FunctionalExtensionality
 module T = FStar.Tactics
 module PM = PulseCore.MemoryAlt
 
+[@@erasable]
+val slprop : Type u#4
 val world : Type u#4
 val level (k:world) : GTot nat
 val age1 (k:world) : world
@@ -19,8 +21,6 @@ val ghost_action_preorder (_:unit)
 val is_full : world -> prop
 let full_world = w:world { is_full w }
 
-[@@erasable]
-val slprop : Type u#4
 val interp (p:slprop) : world -> prop
 val emp : slprop
 val pure (p:prop) : slprop
