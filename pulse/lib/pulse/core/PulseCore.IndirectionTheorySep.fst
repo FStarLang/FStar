@@ -39,34 +39,22 @@ let fmap #a #b (f:a -> b)
     F.on_dom address fun a ->
       map_istore_val f (x a)
 
-let elim_feq #a #b (f g: (a ^-> b))
-: Lemma
-  (requires F.feq f g)
-  (ensures f == g)
-= ()
-
-let on_dom_ext #t #s (f g: t ^-> s) (h: (x:t -> squash (f x == g x))) : squash (f == g) =
+let f_ext #t #s (f g: t ^-> s) (h: (x:t -> squash (f x == g x))) : squash (f == g) =
   introduce forall x. f x == g x with h x;
   F.extensionality _ _ f g
 
 let fmap_id (a:Type) (x:invariants a)
 : squash (fmap (id #a) == id #(invariants a))
-= introduce forall x. fmap (id #a) x == id #(invariants a) x with
-    elim_feq (fmap (id #a) x) (id #(invariants a) x);
-  elim_feq (fmap (id #a)) (id #(invariants a))
+= f_ext (fmap (id #a)) (id #(invariants a)) fun x ->
+    f_ext (fmap (id #a) x) (id x) fun _ -> ()
 
 
 let fmap_comp (a:Type) (b:Type) (c:Type) (b2c:b -> c) (a2b:a -> b)
 : (squash (compose (fmap b2c) (fmap a2b) ==
             fmap (compose b2c a2b)))
-= let lhs : (invariants a ^-> invariants c) = compose (fmap b2c) (fmap a2b) in
-  let rhs : (invariants a ^-> invariants c) = fmap (compose b2c a2b) in
-  introduce forall x. lhs x == rhs x
-  with (
-    assert (F.feq (lhs x) (rhs x))
-  );
-  assert (lhs `F.feq` rhs);
-  elim_feq lhs rhs
+= let lhs = compose (fmap b2c) (fmap a2b) in
+  let rhs = fmap (compose b2c a2b) in
+  f_ext lhs rhs fun x -> f_ext (lhs x) (rhs x) fun _ -> ()
 
 noeq
 type rest : Type u#4 = {
@@ -168,8 +156,7 @@ let age_to (w: world) (n: nat) : world =
 
 let istore_ext (i1: istore) (i2: istore { level_istore i1 == level_istore i2 })
     (h: (a:address -> squash (read_istore i1 a == read_istore i2 a))) : squash (i1 == i2) =
-  introduce forall a. (up i1)._2 a == (up i2)._2 a with h a;
-  elim_feq (up i1)._2 (up i2)._2;
+  f_ext (up i1)._2 (up i2)._2 (fun a -> h a);
   down_up i1;
   down_up i2
 
@@ -178,9 +165,9 @@ let world_ext (w1: preworld) (w2: preworld { level_ w1 == level_ w2 /\ snd w1 ==
   istore_ext (fst w1) (fst w2) h
 
 let world_pred_ext (f g: world_pred) (h: (w:preworld -> squash (f w <==> g w))) : squash (f == g) =
-  introduce forall w. f w == g w with
-    (h w; PropositionalExtensionality.apply (f w) (g w));
-  elim_feq f g
+  f_ext f g fun w ->
+    h w;
+    PropositionalExtensionality.apply (f w) (g w)
 
 let approx_approx m n (p: world_pred) : Lemma (approx m (approx n p) == approx (min m n) p) [SMTPat (approx m (approx n p))] =
   world_pred_ext (approx m (approx n p)) (approx (min m n) p) fun w -> ()
