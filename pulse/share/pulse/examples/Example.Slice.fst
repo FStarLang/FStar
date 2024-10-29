@@ -25,19 +25,27 @@ fn test (arr: A.array UInt8.t)
     ensures exists* s. pts_to arr s ** pure (s `Seq.equal` seq![0uy; 5uy; 4uy; 5uy; 4uy; 5uy]) {
   A.pts_to_len arr;
   let slice = from_array arr 6sz;
-  let SlicePair s1 s2 = split slice 2sz;
-  pts_to_len s1;
-  share s2;
-  let s2' = subslice_trade s2 1sz 4sz;
-  let x = s2'.(len s1);
-  s1.(1sz) <- x;
-  elim_trade _ _;
-  gather s2;
-  let SlicePair s3 s4 = split s2 2sz;
-  pts_to_len s3;
-  pts_to_len s4;
-  copy s3 s4;
-  join s3 s4 s2;
-  join s1 s2 slice;
-  to_array slice;
+  let s' = split slice 2sz;
+  match s' {
+    Mktuple2 s1 s2 -> {
+      pts_to_len s1;
+      share s2;
+      let s2' = subslice_trade s2 1sz 4sz;
+      let x = s2'.(len s1);
+      s1.(1sz) <- x;
+      elim_trade _ _;
+      gather s2;
+      let s' = split s2 2sz;
+      match s' {
+        Mktuple2 s3 s4 -> {
+          pts_to_len s3;
+          pts_to_len s4;
+          copy s3 s4;
+          join s3 s4 s2;
+          join s1 s2 slice;
+          to_array slice;
+        }
+      }
+    }
+  }
 }
