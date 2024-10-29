@@ -18,16 +18,19 @@ let pulse_heap_sig : HS.heap_sig u#3 = PM.sig
 noeq type istore_val_ (x: Type u#4) =
   | None
   | Inv : x -> istore_val_ x
+  | Pred : x -> istore_val_ x
 
 let istore_val_le #t (x y: istore_val_ t) : prop =
   match x, y with
   | None, _ -> True
   | Inv p, Inv q -> p == q
+  | Pred p, Pred q -> p == q
   | _ -> False
 
 let map_istore_val #x #y (f: x->y) (v: istore_val_ x) : istore_val_ y =
   match v with
   | None -> None
+  | Pred p -> Pred (f p)
   | Inv p -> Inv (f p)
 
 [@@erasable]
@@ -124,6 +127,7 @@ let slprop_ok (p: world_pred) = hereditary p /\ world_pred_affine p
 let istore_val_ok (v: istore_val) =
   match v with
   | None -> True
+  | Pred p -> slprop_ok p
   | Inv p -> slprop_ok p
 
 let istore_slprops_ok (is: istore) : prop =
@@ -219,7 +223,9 @@ unfold
 let istore_val_compat (x y: istore_val) =
   match x, y with
   | None, _ | _, None -> True
+  | Pred p0, Pred p1 -> p0 == p1
   | Inv p0, Inv p1 -> p0 == p1
+  | Inv _, Pred _ | Pred _, Inv _ -> False
 
 let disjoint_istore (is0 is1:istore) =
   level_istore is0 == level_istore is1 /\
@@ -266,12 +272,14 @@ let join_istore (is0:istore) (is1:istore { disjoint_istore is0 is1 }) : istore =
   mk_istore (level_istore is0) fun a ->
     match read_istore is0 a, read_istore is1 a with
     | None, None -> None
+    | Pred p, _ | _, Pred p -> Pred p
     | Inv p, _ | _, Inv p -> Inv p
 
 let read_join_istore (is0:istore) (is1:istore { disjoint_istore is0 is1 }) a :
   Lemma (read_istore (join_istore is0 is1) a ==
     (match read_istore is0 a, read_istore is1 a with
     | None, None -> None
+    | Pred p, _ | _, Pred p -> Pred (approx (level_istore is0) p)
     | Inv p, _ | _, Inv p -> Inv (approx (level_istore is0) p))) =
   ()
 
