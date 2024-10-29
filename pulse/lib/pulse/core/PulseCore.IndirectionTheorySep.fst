@@ -547,7 +547,7 @@ let timeless_later_credit n : squash (timeless (later_credit n)) =
   world_pred_ext (later (later_credit n)) (later_credit n) fun w -> ()
 
 let equiv p q : slprop =
-  F.on_dom preworld #(fun _ -> prop) fun w -> eq_at (level_ w) p q
+  F.on_dom preworld #(fun _ -> prop) fun w -> eq_at (level_ w + 1) p q
 
 // ----------------
 
