@@ -4,8 +4,8 @@ module T = FStar.Tactics
 module PM = PulseCore.MemoryAlt
 
 val world : Type u#4
-val age1 (k:world) : world
 val level (k:world) : GTot nat
+val age1 (k:world) : world
 val credits (k:world) : GTot nat
 
 val mem : Type u#4
