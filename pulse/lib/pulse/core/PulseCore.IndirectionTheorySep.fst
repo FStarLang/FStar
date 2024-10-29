@@ -190,10 +190,6 @@ let age_to_age_to (w: preworld) (m n: nat) :
       [SMTPat (age_to_ (age_to_ w m) n)] =
   world_ext (age_to_ (age_to_ w m) n) (age_to_ w n) fun a -> ()
 
-// let up_age_to (w: world) (n: nat) : Lemma (up (age_to w n)._1 == (n, fmap (approx n) (snd (up (fst w))))) =
-//   assert up (age_to w n)._1 == up (down (n, snd (up (fst w))));
-//   up_down n (snd (up (fst w)))
-
 let age_to_rest (w: world) (n: nat) : Lemma ((age_to w n)._2 == w._2) = ()
 
 let level (w: world) : nat = level_ w
@@ -215,13 +211,6 @@ noeq type mem = {
 
 let core_of (m: mem) : world =
   (m.invariants, ({ pulse_heap = pulse_heap_sig.sep.core_of m.pulse_heap; saved_credits = m.saved_credits } <: rest))
-
-let istore_repr = nat & invariants (predicate functor_heap)
-let of_repr (f:istore_repr) : istore = down f
-let as_repr (x:istore) : istore_repr = up x
-
-let level_down (f: istore_repr) : Lemma (level_istore (down f) == f._1) [SMTPat (level_istore (down f))] =
-  up_down f._1 f._2
 
 let eq_at (n:nat) (t0 t1:world_pred) =
   approx n t0 == approx n t1
