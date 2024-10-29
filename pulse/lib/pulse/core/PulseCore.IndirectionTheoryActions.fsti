@@ -16,11 +16,11 @@ let _ACTION
 = HST.st #full_mem a
     (requires fun m0 ->
         inames_ok except m0 /\
-        interpret (expects `star` frame `star` world_invariant except m0) m0)
+        interpret (expects `star` frame `star` mem_invariant except m0) m0)
     (ensures fun m0 x m1 ->
         maybe_ghost_action maybe_ghost m0 m1 /\
         inames_ok except m1 /\
-        interpret (provides x `star` frame `star` world_invariant except m1) m1)
+        interpret (provides x `star` frame `star` mem_invariant except m1) m1)
 
 let _act_except 
     (a:Type u#a)
@@ -37,13 +37,6 @@ val lift_mem_action #a #mg #ex #pre #post
                    (_:PM._pst_action_except a mg (lower_inames ex) pre post)
 : _act_except a mg ex (lift pre) (fun x -> lift (post x))
 
-let add_inv (e:inames) (i:iref)
-: inames
-= FStar.GhostSet.(union (singleton deq_iref i) e)
-
-let mem_inv (e:inames) (i:iref)
-: GTot bool
-= GhostSet.mem i e
 
 val later_elim (e:inames) (p:slprop) 
 : ghost_act unit e (later p `star` later_credit 1) (fun _ -> p)

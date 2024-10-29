@@ -129,11 +129,11 @@ let lift_mem_action #a #mg #ex #pre #post
       (w0:mem {
         inames_ok ex w0 /\
         is_full w0 /\
-        interpret (lift pre `star` frame `star` world_invariant ex w0) w0
+        interpret (lift pre `star` frame `star` mem_invariant ex w0) w0
       }) -> 
     let { pulse_mem; istore } = w0 in
     calc (==) {
-      lift pre `star` frame `star` world_invariant ex w0;
+      lift pre `star` frame `star` mem_invariant ex w0;
     (==) { }
       lift pre `star` frame `star` (lift (PM.mem_invariant (lower_inames ex) pulse_mem) `star`
                                     istore_invariant ex istore);
@@ -175,7 +175,7 @@ let lift_mem_action #a #mg #ex #pre #post
     (==) { }
       lift (post x) `star`
       frame `star`
-      (world_invariant ex w1);
+      (mem_invariant ex w1);
     };
     is_ghost_action_istore_refl w0.istore;
     (x, w1)
@@ -184,18 +184,21 @@ let later_elim (e:inames) (p:slprop)
 : ghost_act unit e (later p `star` later_credit 1) (fun _ -> p)
 = admit()
 
-val buy (e:inames) (n:nat)
+let buy (e:inames) (n:nat)
 : act unit e emp (fun _ -> later_credit n)
+= admit()
 
-val dup_inv (e:inames) (i:iref) (p:slprop)
+let dup_inv (e:inames) (i:iref) (p:slprop)
 : ghost_act unit e 
     (inv i p) 
     (fun _ -> inv i p `star` inv i p)
+= admit()
 
-val new_invariant (e:inames) (p:slprop)
+let new_invariant (e:inames) (p:slprop)
 : ghost_act iref e p (fun i -> inv i p)
+= admit()
 
-val with_invariant (#a:Type)
+let with_invariant (#a:Type)
                    (#fp:slprop)
                    (#fp':a -> slprop)
                    (#opened_invariants:inames)
@@ -209,8 +212,19 @@ val with_invariant (#a:Type)
 : _act_except a maybe_ghost opened_invariants 
       (inv i p `star` fp)
       (fun x -> inv i p `star` fp' x)
+= fun frame s0 ->
+    sep_laws();
+    destruct_star_l (inv i p) (fp `star` frame `star` mem_invariant opened_invariants s0) (core_of s0);
+    mem_invariant_equiv opened_invariants s0 i p;
+    inames_ok_union (single i) opened_invariants s0;
+    let x, s1 = f (frame `star` inv i p) s0 in
+    destruct_star_l (inv i p) (later p `star` fp' x `star` frame `star` mem_invariant (add_inv opened_invariants i) s1) (core_of s1);
+    inames_ok_union (single i) opened_invariants s1;
+    mem_invariant_equiv opened_invariants s1 i p;
+    x, s1
 
-val frame (#a:Type)
+
+let frame (#a:Type)
           (#maybe_ghost:bool)
           (#opened_invariants:inames)
           (#pre:slprop)
@@ -218,9 +232,8 @@ val frame (#a:Type)
           (frame:slprop)
           ($f:_act_except a maybe_ghost opened_invariants pre post)
 : _act_except a maybe_ghost opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
+= fun frame' -> sep_laws (); f (frame `star` frame')
 
-open FStar.Ghost
-module U = FStar.Universe
 val witness_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
 : ghost_act (erased a) opened_invariants
            (op_exists_Star p)

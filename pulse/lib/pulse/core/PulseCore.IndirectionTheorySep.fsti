@@ -79,6 +79,34 @@ val star_equiv :
           interp p m0 /\
           interp q m1))
 
+val emp_equiv (m:core_mem) : Lemma (interp emp m)
+
+let destruct_star_l (p q:slprop) (m:core_mem)
+: Lemma (interp (p `star` q) m ==> interp p m)
+= introduce interp (p `star` q) m ==> interp p m
+  with _ . (
+    star_equiv p q m;
+    eliminate exists c0 c1.
+        disjoint c0 c1 /\
+        m == join c0 c1 /\
+        interp p c0 /\
+        interp q c1
+    returns interp p m
+    with _ . (
+        star_equiv p emp m;
+        emp_equiv c1
+    )
+ )
+
+
+let destruct_star (p q:slprop) (m:core_mem)
+: Lemma
+  (requires interp (p `star` q) m)
+  (ensures interp p m /\ interp q m)
+= sep_laws ();
+  destruct_star_l p q m;
+  destruct_star_l q p m
+
 let pm_slprop : Type u#4 = PM.slprop u#0
 val lift (p:pm_slprop) : slprop
 
@@ -116,17 +144,44 @@ let inames_ok (e:inames) (m:mem)
 (** The empty set of invariants is always empty *)
 val inames_ok_empty (m:mem)
   : Lemma (ensures inames_ok GhostSet.empty m)
+val inames_ok_union (i j:inames) (m:mem)
+: Lemma 
+  (inames_ok (FStar.GhostSet.union i j) m <==>
+   inames_ok i m /\
+   inames_ok j m)
 
 val istore_invariant (ex:inames) (i:istore) : slprop
 
-let world_invariant (e:inames) (w:mem)
+let mem_invariant (e:inames) (w:mem)
 : slprop
 =  lift (PM.mem_invariant (lower_inames e) w.pulse_mem) `star`
    istore_invariant e w.istore
 
 
 val inv (i:iref) (p:slprop) : slprop
-
 val later (p:slprop) : slprop
 val later_credit (n:nat) : slprop
 val equiv (p q:slprop) : slprop
+
+let single (i:iref) : inames = FStar.GhostSet.singleton deq_iref i
+let add_inv (e:inames) (i:iref)
+: inames
+= FStar.GhostSet.(union (single i) e)
+
+let mem_inv (e:inames) (i:iref)
+: GTot bool
+= GhostSet.mem i e
+
+val mem_invariant_equiv : 
+      e:inames ->
+      m:mem ->
+      i:iref ->
+      p:slprop ->
+      Lemma 
+        (requires
+          interp (inv i p) (core_of m) /\
+          ~(mem_inv e i))
+        (ensures
+          inames_ok (single i) m /\
+          (mem_invariant e m ==
+           mem_invariant (add_inv e i) m `star` later p))
