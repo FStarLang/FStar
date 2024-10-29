@@ -376,25 +376,41 @@ let star_ (p1 p2: world_pred) : world_pred =
     fun w -> (exists w1 w2.
       disjoint_worlds w1 w2 /\ w == join_worlds w1 w2 /\ p1 w1 /\ p2 w2)
 
-let star__commutative (p1 p2:slprop)
-: Lemma (p1 `star_` p2 == p2 `star_` p1)
-= FStar.Classical.forall_intro_2 disjoint_world_sym;
-  FStar.Classical.forall_intro_2 join_worlds_commutative;
-  world_pred_ext (p1 `star_` p2) (p2 `star_` p1) fun w -> ()
-
-let star__assoc (x y z:slprop)
-: Lemma (star_ x (star_ y z) == star_ (star_ x y) z)
-= FStar.Classical.forall_intro_2 disjoint_world_sym;
-  FStar.Classical.forall_intro_2 join_worlds_commutative;
-  FStar.Classical.forall_intro_3 join_worlds_associative;
-  world_pred_ext (star_ x (star_ y z)) (star_ (star_ x y) z) fun w -> admit ()
-
 [@@"opaque_to_smt"] irreducible
 let indefinite_description_ghost2 (a b: Type) (p: (a -> b -> prop) { exists x y. p x y })
   : GTot (x: (a&b) { p x._1 x._2 }) =
   let x = indefinite_description_ghost a fun x -> exists y. p x y in
   let y = indefinite_description_ghost b fun y -> p x y in
   (x, y)
+
+let star__commutative (p1 p2:world_pred)
+: Lemma (p1 `star_` p2 == p2 `star_` p1)
+= FStar.Classical.forall_intro_2 disjoint_world_sym;
+  FStar.Classical.forall_intro_2 join_worlds_commutative;
+  world_pred_ext (p1 `star_` p2) (p2 `star_` p1) fun w -> ()
+
+let star__assoc (x y z:world_pred)
+: Lemma (star_ x (star_ y z) == star_ (star_ x y) z)
+=
+  introduce forall x y z w. star_ x (star_ y z) w ==> star_ (star_ x y) z w with introduce _ ==> _ with _. (
+    let (w1, w23) = indefinite_description_ghost2 _ _ fun w1 w23 ->
+      disjoint_worlds w1 w23 /\ w == join_worlds w1 w23 /\ x w1 /\ star_ y z w23 in
+    let (w2, w3) = indefinite_description_ghost2 _ _ fun w2 w3 ->
+      disjoint_worlds w2 w3 /\ w23 == join_worlds w2 w3 /\ y w2 /\ z w3 in
+    join_worlds_associative w1 w2 w3;
+    let w12 = join_worlds w1 w2 in
+    assert star_ x y w12;
+    let w' = join_worlds w12 w3 in
+    assert star_ (star_ x y) z w';
+    assert w == w'
+  );
+  world_pred_ext (star_ x (star_ y z)) (star_ (star_ x y) z) fun w ->
+    star__commutative y z;
+    star__commutative x y;
+    star__commutative x (star_ y z);
+    star__commutative (star_ x y) z;
+    assert star_ x (star_ y z) == star_ (star_ z y) x;
+    assert star_ (star_ x y) z == star_ z (star_ y x)
 
 let star (p1 p2:slprop) : slprop =
   introduce forall a b. world_le a b /\ star_ p1 p2 a ==> star_ p1 p2 b with introduce _ ==> _ with _. (
