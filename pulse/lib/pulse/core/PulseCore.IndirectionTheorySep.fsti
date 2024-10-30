@@ -26,11 +26,7 @@ val level_depends_on_core_istore_only (m:core_mem)
         [SMTPat (level m)]
 
 val icredits (_:core_istore) : GTot nat
-val credits (k:core_mem) : GTot nat
-val credits_depends_on_core_istore_only (m:core_mem) 
-: Lemma (credits m == icredits m.istore)
-        [SMTPat (credits m)]
-
+let credits (k:core_mem) : GTot nat = icredits k.istore
 let level_at_least_credits (m:mem)
 : GTot bool
 = level (core_of m) >= credits (core_of m)
@@ -41,6 +37,7 @@ let level_decreases_by_spent_credits (m0 m1:mem)
   let l1, c1 = level (core_of m1), credits (core_of m1) in
   c1 <= c0 /\ //credits decrease
   l1 == l0 - (c0 - c1) // and level decreases by the amount of credits spent
+let has_credits (m:mem) : GTot bool = credits (core_of m) > 0
 
 val is_ghost_action_istore : p:(istore -> istore -> prop) { 
     FStar.Preorder.preorder_rel p 
@@ -75,7 +72,7 @@ val sep_laws (_:unit) : squash (
 
 val istore_disjoint (i0 i1:core_istore) : prop
 val istore_join (i0:core_istore) (i1:core_istore { istore_disjoint i0 i1}) : core_istore
-val istore_join_refl (i:core_istore) 
+val istore_join_refl (i:core_istore { icredits i == 0 }) 
 : Lemma (istore_disjoint i i /\ istore_join i i == i)
 let disjoint (m0 m1:core_mem)
 : prop
