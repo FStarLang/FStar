@@ -42,7 +42,7 @@ val lift_mem_action #a #mg #ex #pre #post
 val later_elim (e:inames) (p:slprop) 
 : ghost_act unit e (later p `star` later_credit 1) (fun _ -> p)
 
-val buy (e:inames) (n:nat)
+val buy (e:inames) (n:FStar.Ghost.erased nat)
 : act unit e emp (fun _ -> later_credit n)
 
 val dup_inv (e:inames) (i:iref) (p:slprop)

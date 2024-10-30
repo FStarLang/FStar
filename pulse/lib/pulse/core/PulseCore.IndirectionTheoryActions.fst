@@ -4,15 +4,25 @@ module T = FStar.Tactics
 module PM = PulseCore.MemoryAlt
 module HST = PulseCore.HoareStateMonad
 
-assume
-val pm_sep_laws () : squash (
+let pm_sep_laws () : squash (
   PulseCore.Semantics.(
     associative PM.star /\
     commutative PM.star /\
     is_unit PM.emp PM.star
   )
-)
-
+) 
+= introduce forall p q. PM.equiv p q ==> p == q
+  with introduce _ ==> _
+  with _ . (
+    PM.slprop_extensionality p q
+  );
+  let open PM in
+  FStar.Classical.(
+    forall_intro_2 star_commutative;
+    forall_intro_3 star_associative;
+    forall_intro emp_unit
+  )
+  
 let pm_sep : PulseCore.HeapSig.separable pulse_mem = PM.pulse_heap_sig.sep
 let pm_core_of (m:pulse_mem) : pulse_core_mem = PM.pulse_heap_sig.sep.core_of m
 
@@ -184,7 +194,7 @@ let later_elim (e:inames) (p:slprop)
 : ghost_act unit e (later p `star` later_credit 1) (fun _ -> p)
 = admit()
 
-let buy (e:inames) (n:nat)
+let buy (e:inames) (n:FStar.Ghost.erased nat)
 : act unit e emp (fun _ -> later_credit n)
 = admit()
 
