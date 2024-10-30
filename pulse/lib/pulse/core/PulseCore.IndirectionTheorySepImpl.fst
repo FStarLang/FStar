@@ -11,7 +11,7 @@ module B = PulseCore.BaseHeapSig
 module IT = PulseCore.IndirectionTheory
 open FStar.Ghost {erased, hide, reveal}
 
-let address = nat
+let address = erased nat
 let pulse_mem : Type u#4 = PM.mem u#0
 let pulse_core_mem : Type u#4 = PM.pulse_heap_sig.sep.core
 let pulse_heap_sig : HS.heap_sig u#3 = PM.pulse_heap_sig
@@ -126,21 +126,28 @@ let hereditary (p: world_pred) : prop =
 
 let slprop_ok (p: world_pred) = hereditary p /\ world_pred_affine p
 
+let fresh_addr (is: istore) (a: address) =
+  forall (b: address). b >= a ==> None? (read_istore is b)
+
+let istore_bounded (is: istore) =
+  exists a. fresh_addr is a
+
 let istore_val_ok (v: istore_val) =
   match v with
   | None -> True
   | Pred p -> slprop_ok p
   | Inv p -> slprop_ok p
 
-let istore_slprops_ok (is: istore) : prop =
+let istore_ok (is: istore) : prop =
+  istore_bounded is /\
   forall a. istore_val_ok (read_istore is a)
 
-let world_slprops_ok (w: preworld) : prop =
-  istore_slprops_ok (fst w)
+let world_ok (w: preworld) : prop =
+  istore_ok (fst w)
 
 let slprop = p:world_pred { slprop_ok p }
 
-let world = w:preworld { world_slprops_ok w }
+let world = w:preworld { world_ok w }
 
 let read_age_istore_to (is: istore) n a : Lemma (read_istore (age_istore_to is n) a ==
     (map_istore_val (approx n) (read_istore is a)))
@@ -198,11 +205,12 @@ let age1 (w: world) : world = age1_ w
 let credits (w: world) : GTot nat =
   w._2.saved_credits
 
+let okay_istore = is:istore { istore_ok is }
 noeq type mem = {
-  invariants: (is:istore { istore_slprops_ok is });
+  invariants: okay_istore;
   pulse_heap : pulse_heap_sig.mem;
   saved_credits : erased nat;
-  freshness_counter: nat;
+  freshness_counter: (c:erased nat { fresh_addr invariants c });
 }
 
 let core_of (m: mem) : world =
@@ -332,7 +340,7 @@ let join_worlds (w0:preworld) (w1:preworld { disjoint_worlds w0 w1 })
     pulse_heap = pulse_heap_sig.sep.join w0._2.pulse_heap w1._2.pulse_heap;
     saved_credits = w0._2.saved_credits + w1._2.saved_credits } <: rest))
 
-open FStar.IndefiniteDescription { indefinite_description_ghost }
+open FStar.IndefiniteDescription { indefinite_description_ghost, strong_excluded_middle }
 
 let world_le_iff (w1 w2: preworld) :
     Lemma (world_le w1 w2 <==> exists w3. join_worlds w1 w3 == w2) =
@@ -372,15 +380,19 @@ let age_to_disjoint_worlds (w1 w2: preworld) n :
       (ensures disjoint_worlds (age_to_ w1 n) (age_to_ w2 n)) =
   ()
 
+let age_to_istore_join (i1 i2: istore) n :
+    Lemma (requires disjoint_istore i1 i2)
+      (ensures disjoint_istore (age_istore_to i1 n) (age_istore_to i2 n) /\
+        age_istore_to (join_istore i1 i2) n == join_istore (age_istore_to i1 n) (age_istore_to i2 n))
+    [SMTPat (age_istore_to (join_istore i1 i2) n)] =
+  istore_ext (age_istore_to (join_istore i1 i2) n) (join_istore (age_istore_to i1 n) (age_istore_to i2 n)) fun a -> ()
+
 let age_to_join (w1 w2: preworld) n :
     Lemma (requires disjoint_worlds w1 w2)
       (ensures disjoint_worlds (age_to_ w1 n) (age_to_ w2 n) /\
         age_to_ (join_worlds w1 w2) n == join_worlds (age_to_ w1 n) (age_to_ w2 n))
     [SMTPat (age_to_ (join_worlds w1 w2) n)] =
-  let i1, r1 = w1 in
-  let i2, r1 = w2 in
-  age_to_disjoint_worlds w1 w2 n;
-  istore_ext (age_istore_to (join_istore i1 i2) n) (join_istore (age_istore_to i1 n) (age_istore_to i2 n)) fun a -> ()
+  ()
 
 let star_ (p1 p2: world_pred) : world_pred =
   F.on_dom preworld #(fun _ -> prop)
@@ -522,14 +534,6 @@ let lift_exists_eq a f =
       (exists x. pulse_heap_sig.interp (f x) m);
     admit ()
 
-let iref = erased address
-
-let inv (i:iref) (p:slprop) : slprop =
-  F.on_dom preworld #(fun _ -> prop) fun w ->
-    exists p'.
-      read w i == Inv p' /\
-      eq_at (level_ w) p p'
-
 let later (p: slprop) : slprop =
   introduce forall (w: preworld) (n: nat).
       n < level_ w /\ p (age1_ w) ==>
@@ -563,6 +567,95 @@ let equiv p q : slprop =
 let eq_at_elim n (p q: world_pred) (w: preworld) :
     Lemma (requires eq_at n p q /\ level_ w < n) (ensures p w <==> q w) =
   assert approx n p w == approx n q w
+
+let later_emp () : squash (later emp == emp) =
+  world_pred_ext (later emp) emp fun w -> ()
+
+let rejuvenate1_istore (is: istore) (is': istore { istore_le is' (age1_istore is) }) :
+    is'':istore { age1_istore is'' == is' /\ istore_le is'' is } =
+  let is'' = mk_istore (level_istore is) fun a -> if None? (read_istore is' a) then None else read_istore is a in
+  istore_ext (age1_istore is'') is' (fun a -> ());
+  is''
+
+let rejuvenate1_istore_sep (is is1': istore) (is2': istore { disjoint_istore is1' is2' /\ age1_istore is == join_istore is1' is2' }) :
+    is'':(istore&istore) { age1_istore is''._1 == is1' /\ age1_istore is''._2 == is2'
+      /\ disjoint_istore is''._1 is''._2 /\ is == join_istore is''._1 is''._2 } =
+  let is1'' = rejuvenate1_istore is is1' in
+  join_istore_commutative is1' is2';
+  let is2'' = rejuvenate1_istore is is2' in
+  assert disjoint_istore is1'' is2'';
+  istore_ext is (join_istore is1'' is2'') (fun a -> ());
+  (is1'', is2'')
+
+let rejuvenate1 (w: preworld) (w': preworld { world_le w' (age1_ w) }) :
+    w'':preworld { age1_ w'' == w' /\ world_le w'' w /\ snd w'' == snd w' } =
+  (rejuvenate1_istore (fst w) (fst w'), snd w')
+
+let rejuvenate1_sep (w w1': preworld) (w2': preworld { disjoint_worlds w1' w2' /\ age1_ w == join_worlds w1' w2' }) :
+    w'':(preworld&preworld) { age1_ w''._1 == w1' /\ age1_ w''._2 == w2'
+      /\ disjoint_worlds w''._1 w''._2 /\ w == join_worlds w''._1 w''._2 } =
+  let (is1'', is2'') = rejuvenate1_istore_sep (fst w) (fst w1') (fst w2') in
+  ((is1'', snd w1'), (is2'', snd w2'))
+
+let later_star (p q: slprop) : squash (later (star p q) == star (later p) (later q)) =
+  world_pred_ext (later (star p q)) (star (later p) (later q)) fun w ->
+    introduce star p q (age1_ w) ==> star (later p) (later q) w with _. (
+      let (w1', w2') = indefinite_description_ghost2 _ _ fun w1' w2' ->
+        disjoint_worlds w1' w2' /\ age1_ w == join_worlds w1' w2' /\ p w1' /\ q w2' in
+      let (w1, w2) = rejuvenate1_sep w w1' w2' in
+      assert later p w1;
+      assert later q w2
+    )
+
+let iref = address
+
+let inv (i:iref) (p:slprop) : slprop =
+  F.on_dom preworld #(fun _ -> prop) fun w ->
+    exists p'.
+      read w i == Inv p' /\
+      eq_at (level_ w) p p'
+
+module GS = FStar.GhostSet
+
+let inames = GS.set iref
+let inames_dec_eq : GS.decide_eq address = fun x y -> reveal x = reveal y
+let single (i:iref) : inames = GS.singleton inames_dec_eq i
+let add_inv (e:inames) (i:iref) : inames = GS.union (single i) e
+
+let iname_ok (i: iref) (is: istore) =
+  Inv? (read_istore is i)
+
+let read_inv (i: iref) (is: okay_istore { iname_ok i is }) : slprop =
+  let Inv p = read_istore is i in p
+
+let read_inv_equiv i (w: world { level_ w > 0 }) (p: slprop) :
+    Lemma (requires inv i p w)
+      (ensures eq_at (level_ w) (read_inv i (fst w)) p) =
+  ()
+
+let inames_ok (e: inames) (is: istore) : prop =
+  forall a. GS.mem a e ==> iname_ok a is
+
+let istore_dom (is: istore) : inames =
+  GS.comprehend fun a -> Inv? (read_istore is a)
+
+let rec istore_invariant_ (ex: inames) (is: okay_istore) (f: address) : slprop =
+  if reveal f = 0 then
+    emp
+  else
+    let f': address = f - 1 in
+    if GS.mem f' ex then
+      istore_invariant_ ex is f'
+    else
+      match read_istore is f' with
+      | Inv p -> later p `star` istore_invariant_ ex is f'
+      | _ -> istore_invariant_ ex is f'
+
+[@@"opaque_to_smt"] irreducible let some_fresh_addr (is: okay_istore) : a:address { fresh_addr is a } =
+  indefinite_description_ghost address fun a -> fresh_addr is a
+
+let istore_invariant (ex: inames) (is: okay_istore) : slprop =
+  istore_invariant_ ex is (some_fresh_addr is)
 
 // ----------------
 

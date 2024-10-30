@@ -239,6 +239,7 @@ val pulse_heap_sig : hs:PulseCore.HeapSig.heap_sig {
   iref == hs.iref /\
   (forall e m. inames_ok e m == HeapSig.inames_ok #hs e m) /\
   mem_invariant == hs.mem_invariant /\
+  (forall m1 m2. is_ghost_action m1 m2 == hs.is_ghost_action m1 m2) /\
   full_mem_pred == hs.full_mem_pred
 } 
 
