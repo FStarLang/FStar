@@ -203,9 +203,52 @@ let dup_inv (e:inames) (i:iref) (p:slprop)
     is_ghost_action_refl s0;
     (), s0
 
+let fresh_invariant (e:inames) (p:slprop) (ctx:FStar.Ghost.erased (list iref))
+: ghost_act (i:iref{fresh_wrt ctx i}) e p (fun i -> inv i p)
+= fun frame s0 ->
+    let (| i, s0' |) = fresh_inv p s0 ctx in
+    let s1 = join_mem s0 s0' in
+    mem_invariant_disjoint e (single i) (p `star` frame) (inv i p) s0 s0';
+    assert (interp 
+              ((p `star` frame) `star` inv i p `star`
+                (mem_invariant (GhostSet.union e (single i)) s1))
+              (core_of s1));
+    sep_laws ();
+    assert (GhostSet.union e (single i) `GhostSet.equal` (add_inv e i));
+    inames_ok_istore_dom e s0;
+    inames_ok_istore_dom (single i) s0';
+    assert (~(mem_inv e i));
+    assert (interp 
+              (inv i p `star`
+              (frame `star` p `star` mem_invariant (add_inv e i) s1))
+              (core_of s1));
+    destruct_star_l (inv i p)
+                    (frame `star` p `star` mem_invariant (add_inv e i) s1)
+                    (core_of s1);
+    mem_invariant_equiv e s1 i p;
+    star_equiv p (inv i p `star` frame `star` mem_invariant (add_inv e i) s1) (core_of s1);
+    eliminate exists sl sr.
+      disjoint sl sr /\
+      (core_of s1) == join sl sr /\
+      interp p sl /\
+      interp (inv i p `star` frame `star` mem_invariant (add_inv e i) s1) sr
+    returns interp (inv i p `star` frame `star` mem_invariant e s1) (core_of s1)
+    with _ . (
+      intro_later p sl;
+      star_equiv (later p) 
+                 (inv i p `star` frame `star` mem_invariant (add_inv e i) s1)
+                 (core_of s1)
+    );
+    assert (is_ghost_action s0 s1);
+    inames_ok_disjoint e (single i) s0 s0';
+    inames_ok_union e (single i) s1;
+    assert (inames_ok e s1);
+    assert (is_full s1);
+    i, s1
+
 let new_invariant (e:inames) (p:slprop)
 : ghost_act iref e p (fun i -> inv i p)
-= admit()
+= fresh_invariant e p []
 
 let with_invariant (#a:Type)
                    (#fp:slprop)
@@ -376,12 +419,10 @@ let drop (#opened_invariants:_) (p:slprop)
     is_ghost_action_refl s0;
     (), s0
 
-let non_info a = x:erased a -> y:a { reveal x == y}
-
 let lift_ghost
       (#a:Type)
       #opened_invariants #p #q
-      (ni_a:non_info a)
+      (ni_a:HeapSig.non_info a)
       (f:erased (ghost_act a opened_invariants p q))
 : ghost_act a opened_invariants p q
 = fun frame s0 ->

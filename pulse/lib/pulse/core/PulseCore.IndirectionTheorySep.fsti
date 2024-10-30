@@ -176,6 +176,9 @@ val later (p:slprop) : slprop
 val later_credit (n:nat) : slprop
 val equiv (p q:slprop) : slprop
 
+val intro_later (p:slprop) (m:core_mem)
+: Lemma (interp p m ==> interp (later p) m)
+
 let single (i:iref) : inames = FStar.GhostSet.singleton deq_iref i
 let add_inv (e:inames) (i:iref)
 : inames
@@ -198,6 +201,55 @@ val mem_invariant_equiv :
           inames_ok (single i) m /\
           (mem_invariant e m ==
            mem_invariant (add_inv e i) m `star` later p))
+
+val istore_dom (m:mem) : inames
+
+val inames_ok_istore_dom (e:inames) (m:mem)
+: Lemma (inames_ok e m ==> FStar.GhostSet.subset e (istore_dom m))
+
+val join_mem (m0:mem) (m1:mem { disjoint (core_of m0) (core_of m1) })
+: m:mem { core_of m == join (core_of m0) (core_of m1) }
+
+val inames_ok_disjoint (i j:inames) (mi mj:mem)
+: Lemma
+  (requires
+    disjoint (core_of mi) (core_of mj) /\
+    inames_ok i mi /\
+    inames_ok j mj)
+  (ensures
+    inames_ok (FStar.GhostSet.union i j) (join_mem mi mj))
+
+val mem_invariant_disjoint (e f:inames) (p0 p1:slprop) (m0 m1:mem)
+: Lemma
+  (requires
+    disjoint (core_of m0) (core_of m1) /\
+    FStar.GhostSet.disjoint (istore_dom m0) (istore_dom m1) /\
+    interp (p0 `star` mem_invariant e m0) (core_of m0) /\
+    interp (p1 `star` mem_invariant f m1) (core_of m1))
+  (ensures (
+    let m = join_mem m0 m1 in
+    interp (p0 `star` p1 `star` mem_invariant (FStar.GhostSet.union e f) m) (core_of m)))
+
+let fresh_wrt (ctx:list iref)
+              (i:iref)
+  = forall i'. List.Tot.memP i' ctx ==> i' =!= i
+
+val fresh_inv
+    (p:slprop)
+    (m:mem)
+    (ctx:FStar.Ghost.erased (list iref))
+: i:iref &
+  m':mem { 
+    let c, c' = core_of m, core_of m' in
+    fresh_wrt ctx i /\
+    disjoint c c' /\
+    is_ghost_action m (join_mem m m') /\
+    (is_full m ==> is_full (join_mem m m')) /\
+    inames_ok (single i) m' /\
+    interp (inv i p `star` mem_invariant (single i) m') c' /\
+    inames_ok (single i) m' /\
+    FStar.GhostSet.disjoint (istore_dom m) (istore_dom m')
+  }
 
 val dup_inv_equiv :
     i:iref ->
