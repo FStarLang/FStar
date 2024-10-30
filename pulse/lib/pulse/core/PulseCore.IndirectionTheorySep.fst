@@ -86,9 +86,12 @@ let iref = I.iref
 let deq_iref = fun x y -> reveal x = reveal y
 let lower_inames i = GhostSet.empty
 
-let istore_inames_ok e m = admit ()
+let istore_inames_ok e m = I.inames_ok e m.ist
 
-let inames_ok_empty m = admit ()
+let inames_ok_iff e (m: mem) : Lemma (inames_ok e m <==> istore_inames_ok e m.istore) [SMTPat (inames_ok e m)] =
+  ()
+
+let inames_ok_empty m = ()
 let inames_ok_union m = admit ()
 
 let istore_invariant ex i = admit ()
@@ -141,6 +144,20 @@ let buy_disjoint n m0 m1 = ()
 
 let mem_invariant_equiv e m i p = admit ()
 
-let istore_dom = admit ()
+let inames_ok_istore_dom e m = ()
 
-let inames_ok_istore_dom e m = admit ()
+let inames_ok_update e m0 m1 =
+  assert forall i. GhostSet.mem i (istore_dom m0) <==> GhostSet.mem i (istore_dom m1)
+
+let join_mem m0 m1 = admit ()
+
+let inames_ok_disjoint = admit ()
+
+let mem_invariant_disjoint e f p0 p1 m0 m1 = admit ()
+
+let mem_invariant_age e m = ()
+let mem_invariant_spend e m = ()
+
+let fresh_inv p m ctx = admit ()
+
+let dup_inv_equiv i p = admit ()
