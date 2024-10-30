@@ -142,7 +142,7 @@ ci:
 # CI.
 .PHONY: docker-ci
 docker-ci:
-	docker build -f .docker/standalone.Dockerfile \
+	docker build --pull -f .docker/standalone.Dockerfile \
 		--build-arg CI_THREADS=$(shell nproc) \
 		--build-arg FSTAR_CI_NO_GITDIFF=1 \
 		.
