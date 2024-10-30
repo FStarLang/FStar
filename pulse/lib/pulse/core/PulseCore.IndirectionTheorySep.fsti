@@ -314,20 +314,6 @@ val mem_invariant_equiv :
           (mem_invariant e m ==
            mem_invariant (add_inv e i) m `star` later (read_inv i (core_of m))))
 
-// val mem_invariant_equiv : 
-//       e:inames ->
-//       m:mem ->
-//       i:iref ->
-//       p:slprop ->
-//       Lemma 
-//         (requires
-//           interp (inv i p) (core_of m) /\
-//           ~(mem_inv e i))
-//         (ensures
-//           inames_ok (single i) m /\
-//           (mem_invariant e m ==
-//            mem_invariant (add_inv e i) m `star` later p))
-
 
 val inames_ok_istore_dom (e:inames) (m:mem)
 : Lemma (inames_ok e m ==> FStar.GhostSet.subset e (istore_dom m))
@@ -360,9 +346,11 @@ val mem_invariant_disjoint (e f:inames) (p0 p1:slprop) (m0 m1:mem)
     let m = join_mem m0 m1 in
     interp (p0 `star` p1 `star` mem_invariant (FStar.GhostSet.union e f) m) (core_of m)))
 
-val mem_invariant_age (e:inames) (m:mem)
+val mem_invariant_age (e:inames) (m0:mem) (m1:core_mem)
 : Lemma
-  (ensures mem_invariant e m == mem_invariant e (age_mem m))
+  (ensures 
+    interp (mem_invariant e m0) m1 ==>
+    interp (mem_invariant e (age_mem m0)) (age1 m1))
 
 val mem_invariant_spend (e:inames) (m:mem)
 : Lemma

@@ -256,6 +256,7 @@ let intro_star (p q:slprop) (m0 m1:core_mem)
   (ensures interp (p `star` q) (join m0 m1))
 = star_equiv p q (join m0 m1)
 
+
 let later_elim (e:inames) (p:slprop) 
 : ghost_act unit e (later p `star` later_credit 1) (fun _ -> p)
 = fun frame s0 ->
@@ -269,9 +270,15 @@ let later_elim (e:inames) (p:slprop)
     assert (level m1 > 0 /\ level m2 > 0);
     let m1' : erased core_mem = age1 m1 in
     let m2' : erased core_mem = age1 m2 in
+    let m31, m32 = split_mem frame (mem_invariant e s0) m3 in
+    let m31' : erased core_mem = age1 m31 in
+    age_hereditary frame m31;
+    let m32' : erased core_mem = age1 m32 in
+    mem_invariant_age e s0 m32;
+    age_disjoint m31 m32;
+    intro_star frame (mem_invariant e (age_mem s0)) m31' m32';
     let m3' : erased core_mem = age1 m3 in
-    age_hereditary (frame `star` mem_invariant e s0) m3;
-    assert (interp (frame `star` mem_invariant e s0) m3);
+    assert (interp (frame `star` mem_invariant e (age_mem s0)) m3');
     age_later p m2;
     assert (interp p m2');
     age_level m1;
@@ -282,10 +289,10 @@ let later_elim (e:inames) (p:slprop)
     age_disjoint m1 (join m2 m3);
     spend_disjoint m1' (join m2' m3');
     let m : erased core_mem = join m1'' (join m2' m3') in
-    intro_star p (frame `star` mem_invariant e s0) m2' m3';
+    intro_star p (frame `star` mem_invariant e (age_mem s0)) m2' m3';
     emp_equiv m1'';
-    intro_star emp (p `star` (frame `star` mem_invariant e s0)) m1'' (join m2' m3');
-    assert (interp (p `star` (frame `star` mem_invariant e s0)) m);
+    intro_star emp (p `star` (frame `star` mem_invariant e (age_mem s0))) m1'' (join m2' m3');
+    assert (interp (p `star` (frame `star` mem_invariant e (age_mem s0))) m);
     calc (==) {
       level m;
     (==) { disjoint_join_levels m1'' (join m2' m3') }
@@ -324,9 +331,7 @@ let later_elim (e:inames) (p:slprop)
     assert (reveal m == core_of s2);
     is_ghost_action_trans s0 s1 s2;
     assert (is_ghost_action s0 s2);
-    mem_invariant_age e s0;
     mem_invariant_spend e s1;
-    assert (mem_invariant e s0 == mem_invariant e s2);
     inames_ok_update e s0 s2;
     assert (inames_ok e s0 <==> inames_ok e s2);
     assert (level_decreases_by_spent_credits s0 s2);
