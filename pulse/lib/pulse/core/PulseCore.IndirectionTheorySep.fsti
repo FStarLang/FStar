@@ -3,8 +3,8 @@ module F = FStar.FunctionalExtensionality
 module T = FStar.Tactics
 module PM = PulseCore.MemoryAlt
 
-val istore : Type u#4
-val core_istore : Type u#4
+[@@erasable] val istore : Type u#4
+[@@erasable] val core_istore : Type u#4
 let pulse_mem : Type u#4 = PM.mem u#0
 let pulse_core_mem : Type u#4 = PM.pulse_heap_sig.sep.core
 noeq type mem = { istore:istore; pulse_mem:PM.mem u#0 }
