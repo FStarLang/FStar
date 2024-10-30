@@ -9,7 +9,6 @@ let pulse_mem : Type u#4 = PM.mem u#0
 let pulse_core_mem : Type u#4 = PM.pulse_heap_sig.sep.core
 noeq type mem = { istore:istore; pulse_mem:PM.mem u#0 }
 noeq type core_mem = { istore:core_istore; pulse_mem:pulse_core_mem }
-val has_credits (m:mem) : GTot bool
 val istore_core (i:istore) : core_istore
 let core_of (m:mem)
 : core_mem
@@ -22,7 +21,8 @@ val slprop : Type u#4
 
 val level (k:core_mem) : GTot nat
 
-val credits (k:core_mem) : GTot nat
+val credits (k:core_istore) : GTot nat
+let has_credits (m:mem) : GTot bool = credits (istore_core m.istore) > 0
 
 val is_ghost_action_istore : p:(istore -> istore -> prop) { 
     FStar.Preorder.preorder_rel p 
@@ -58,7 +58,7 @@ val sep_laws (_:unit) : squash (
 
 val istore_disjoint (i0 i1:core_istore) : prop
 val istore_join (i0:core_istore) (i1:core_istore { istore_disjoint i0 i1}) : core_istore
-val istore_join_refl (i:core_istore) 
+val istore_join_refl (i:core_istore { credits i == 0 }) 
 : Lemma (istore_disjoint i i /\ istore_join i i == i)
 let disjoint (m0 m1:core_mem)
 : prop
