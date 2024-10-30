@@ -9,7 +9,6 @@ let pulse_mem : Type u#4 = PM.mem u#0
 let pulse_core_mem : Type u#4 = PM.pulse_heap_sig.sep.core
 noeq type mem = { istore:istore; pulse_mem:PM.mem u#0 }
 noeq type core_mem = { istore:core_istore; pulse_mem:pulse_core_mem }
-val has_credits (m:mem) : GTot bool
 val istore_core (i:istore) : core_istore
 let core_of (m:mem)
 : core_mem
@@ -17,12 +16,31 @@ let core_of (m:mem)
 
 val age1 (k:core_mem) : core_mem
 
+
 [@@erasable]
 val slprop : Type u#4
-
+val ilevel (_:core_istore) : GTot nat
 val level (k:core_mem) : GTot nat
+val level_depends_on_core_istore_only (m:core_mem) 
+: Lemma (level m == ilevel m.istore)
+        [SMTPat (level m)]
 
+val icredits (_:core_istore) : GTot nat
 val credits (k:core_mem) : GTot nat
+val credits_depends_on_core_istore_only (m:core_mem) 
+: Lemma (credits m == icredits m.istore)
+        [SMTPat (credits m)]
+
+let level_at_least_credits (m:mem)
+: GTot bool
+= level (core_of m) >= credits (core_of m)
+
+let level_decreases_by_spent_credits (m0 m1:mem)
+: prop
+= let l0, c0 = level (core_of m0), credits (core_of m0) in
+  let l1, c1 = level (core_of m1), credits (core_of m1) in
+  c1 <= c0 /\ //credits decrease
+  l1 == l0 - (c0 - c1) // and level decreases by the amount of credits spent
 
 val is_ghost_action_istore : p:(istore -> istore -> prop) { 
     FStar.Preorder.preorder_rel p 
@@ -37,7 +55,6 @@ val update_ghost :
       m1:FStar.Ghost.erased mem { is_ghost_action m0 m1 } ->
       m:mem { m == FStar.Ghost.reveal m1 }
     
-
 let is_full (m:mem) : prop = PM.pulse_heap_sig.full_mem_pred m.pulse_mem
 let full_mem = m:mem { is_full m }
 
@@ -69,10 +86,20 @@ let join (m0:core_mem) (m1:core_mem { disjoint m0 m1 })
 = { pulse_mem = PM.pulse_heap_sig.sep.join m0.pulse_mem m1.pulse_mem;
     istore = istore_join m0.istore m1.istore }
 
+val disjoint_join_levels (i0 i1:core_mem)
+: Lemma 
+  (requires
+    disjoint i0 i1)
+  (ensures
+    level i0 == level i1 /\
+    level (join i0 i1) == level i0 /\
+    credits (join i0 i1) == credits i0 + credits i1)
+
 let affine_prop (p: core_mem -> prop) =
   forall (m0 m1:core_mem). p m0 /\ disjoint m0 m1 ==> p (join m0 m1)
 
 val interp (p:slprop) : q:(core_mem  -> prop) { affine_prop q }
+
 
 val star_equiv :
       p:slprop ->
@@ -178,6 +205,73 @@ val equiv (p q:slprop) : slprop
 
 val intro_later (p:slprop) (m:core_mem)
 : Lemma (interp p m ==> interp (later p) m)
+val istore_dom (m:mem) : inames
+
+val age_mem (m:mem) : m':mem { 
+  core_of m' == age1 (core_of m) /\
+  is_ghost_action m m' /\
+  (is_full m ==> is_full m') /\
+  (istore_dom m == istore_dom m')
+}
+val age_level (m:core_mem)
+: Lemma
+  (requires level m > 0)
+  (ensures level (age1 m) == level m - 1 /\
+            credits (age1 m) == credits m)
+val age_disjoint (m0 m1:core_mem)
+: Lemma
+  (requires disjoint m0 m1)
+  (ensures 
+    disjoint (age1 m0) (age1 m1) /\
+    age1 (join m0 m1) == join (age1 m0) (age1 m1))
+val age_hereditary (p:slprop) (m:core_mem)
+: Lemma (interp p m ==> interp p (age1 m))
+val age_later (p:slprop) (m:core_mem)
+: Lemma 
+  (requires level m > 0)
+  (ensures interp (later p) m ==> interp p (age1 m))
+
+val spend (m:core_mem) : core_mem
+val spend_mem (m:mem) : m':mem { 
+  core_of m' == spend (core_of m) /\
+  is_ghost_action m m' /\
+  (is_full m ==> is_full m') /\
+  (istore_dom m == istore_dom m')
+}
+val interp_later_credit (n:nat) (m:core_mem)
+: Lemma (interp (later_credit n) m ==> credits m >= n)
+val spend_lemma (m:core_mem)
+: Lemma 
+  (requires
+    credits m > 0)
+  (ensures (
+    let m' = spend m in
+    level m' == level m /\
+    credits m' == credits m - 1))
+val spend_disjoint (m0 m1:core_mem)
+: Lemma
+  (requires
+    disjoint m0 m1 /\
+    credits m0 > 0)
+  (ensures
+    disjoint (spend m0) m1 /\
+    spend (join m0 m1) == join (spend m0) m1)
+
+val buy (n:nat) (m:core_mem) : core_mem
+val buy_mem (n:nat) (m:mem) : m':mem { core_of m' == buy n (core_of m) }
+val buy_lemma (n:nat) (m:core_mem)
+: Lemma (
+  let m' = buy n m in
+  level m' == level m /\
+  credits m' == credits m + n
+)
+val buy_disjoint (n:nat) (m0 m1:core_mem)
+: Lemma
+  (requires
+    disjoint m0 m1)
+  (ensures
+    disjoint (buy n m0) m1 /\
+    buy n (join m0 m1) == join (buy n m0) m1)
 
 let single (i:iref) : inames = FStar.GhostSet.singleton deq_iref i
 let add_inv (e:inames) (i:iref)
@@ -202,10 +296,14 @@ val mem_invariant_equiv :
           (mem_invariant e m ==
            mem_invariant (add_inv e i) m `star` later p))
 
-val istore_dom (m:mem) : inames
 
 val inames_ok_istore_dom (e:inames) (m:mem)
 : Lemma (inames_ok e m ==> FStar.GhostSet.subset e (istore_dom m))
+
+val inames_ok_update (e:inames) (m0 m1:mem)
+: Lemma 
+  (requires istore_dom m0 == istore_dom m1)
+  (ensures inames_ok e m0 <==> inames_ok e m1)
 
 val join_mem (m0:mem) (m1:mem { disjoint (core_of m0) (core_of m1) })
 : m:mem { core_of m == join (core_of m0) (core_of m1) }
@@ -230,6 +328,14 @@ val mem_invariant_disjoint (e f:inames) (p0 p1:slprop) (m0 m1:mem)
     let m = join_mem m0 m1 in
     interp (p0 `star` p1 `star` mem_invariant (FStar.GhostSet.union e f) m) (core_of m)))
 
+val mem_invariant_age (e:inames) (m:mem)
+: Lemma
+  (ensures mem_invariant e m == mem_invariant e (age_mem m))
+
+val mem_invariant_spend (e:inames) (m:mem)
+: Lemma
+  (ensures mem_invariant e m == mem_invariant e (spend_mem m))
+
 let fresh_wrt (ctx:list iref)
               (i:iref)
   = forall i'. List.Tot.memP i' ctx ==> i' =!= i
@@ -247,7 +353,8 @@ val fresh_inv
     (is_full m ==> is_full (join_mem m m')) /\
     inames_ok (single i) m' /\
     interp (inv i p `star` mem_invariant (single i) m') c' /\
-    FStar.GhostSet.disjoint (istore_dom m) (istore_dom m')
+    FStar.GhostSet.disjoint (istore_dom m) (istore_dom m') /\
+    credits c' == 0
   }
 
 val dup_inv_equiv :

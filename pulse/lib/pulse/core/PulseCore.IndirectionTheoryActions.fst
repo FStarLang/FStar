@@ -132,6 +132,18 @@ let is_ghost_action_istore_refl (i:istore)
 : Lemma (is_ghost_action_istore i i)
 = assert (FStar.Preorder.reflexive is_ghost_action_istore)
 
+let is_ghost_action_refl (m:mem)
+: Lemma (is_ghost_action m m)
+= is_ghost_action_istore_refl m.istore;
+  PM.ghost_action_preorder ()
+
+let is_ghost_action_trans (m0 m1 m2:mem)
+: Lemma 
+  (requires is_ghost_action m0 m1 /\ is_ghost_action m1 m2)
+  (ensures is_ghost_action m0 m2)
+= assert (FStar.Preorder.transitive is_ghost_action_istore);
+  PM.ghost_action_preorder ()
+
 let lift_mem_action #a #mg #ex #pre #post
                    (pm_act:PM._pst_action_except a mg (lower_inames ex) pre post)
 : _act_except a mg ex (lift pre) (fun x -> lift (post x))
@@ -189,19 +201,142 @@ let lift_mem_action #a #mg #ex #pre #post
     };
     is_ghost_action_istore_refl w0.istore;
     (x, w1)
+open FStar.Ghost
+
+let split_mem (p:slprop) (q:slprop) (m:core_mem { interp (p `star` q) m })
+: res:(erased core_mem & erased core_mem) {
+    let l, r = res in
+    disjoint l r /\
+    m == join l r /\
+    interp p l /\
+    interp q r
+  }
+= star_equiv p q m;
+  let m1 : erased (core_mem) =
+    FStar.IndefiniteDescription.indefinite_description_tot
+      core_mem
+      (fun m1 -> 
+        exists m2. 
+          disjoint m1 m2 /\
+          m == join m1 m2 /\
+          interp p m1 /\
+          interp q m2)
+  in
+  let m2 : erased (core_mem) =
+    FStar.IndefiniteDescription.indefinite_description_tot
+        core_mem
+        (fun m2 -> 
+            disjoint m1 m2 /\
+            m == join m1 m2 /\
+            interp p m1 /\
+            interp q m2)
+  in
+  m1, m2
+
+let split_mem3 (pp qq rr:slprop) (s:core_mem { interp (pp `star` qq `star` rr) s })
+: res:(erased core_mem & erased core_mem & erased core_mem) {
+    let l, m, r = res in
+    // disjoint l m /\
+    disjoint m r /\
+    disjoint l (join m r) /\
+    s == join l (join m r) /\
+    interp pp l /\
+    interp qq m /\
+    interp rr r
+}
+= sep_laws();
+  let m1, m2 = split_mem pp (qq `star` rr) s in
+  let lr :erased (erased core_mem & erased core_mem) = hide (split_mem qq rr m2) in
+  let l, m, r = m1, fst <| reveal lr, snd <| reveal lr in
+  l, m, r
+
+let intro_star (p q:slprop) (m0 m1:core_mem)
+: Lemma
+  (requires disjoint m0 m1 /\ interp p m0 /\ interp q m1)
+  (ensures interp (p `star` q) (join m0 m1))
+= star_equiv p q (join m0 m1)
 
 let later_elim (e:inames) (p:slprop) 
 : ghost_act unit e (later p `star` later_credit 1) (fun _ -> p)
-= admit()
+= fun frame s0 ->
+    let open FStar.Ghost in
+    sep_laws();
+    let m1, m2, m3 = split_mem3 (later_credit 1) (later p) (frame `star` mem_invariant e s0) (core_of s0) in
+    interp_later_credit 1 m1;
+    assert (interp (later_credit 1) m1);
+    disjoint_join_levels m2 m3;
+    disjoint_join_levels m1 (join m2 m3);
+    assert (level m1 > 0 /\ level m2 > 0);
+    let m1' : erased core_mem = age1 m1 in
+    let m2' : erased core_mem = age1 m2 in
+    let m3' : erased core_mem = age1 m3 in
+    age_hereditary (frame `star` mem_invariant e s0) m3;
+    assert (interp (frame `star` mem_invariant e s0) m3);
+    age_later p m2;
+    assert (interp p m2');
+    age_level m1;
+    assert (level m1' == level (core_of s0) - 1);
+    assert (credits m1' > 0);
+    let m1'' : erased core_mem = spend m1' in
+    age_disjoint m2 m3;
+    age_disjoint m1 (join m2 m3);
+    spend_disjoint m1' (join m2' m3');
+    let m : erased core_mem = join m1'' (join m2' m3') in
+    intro_star p (frame `star` mem_invariant e s0) m2' m3';
+    emp_equiv m1'';
+    intro_star emp (p `star` (frame `star` mem_invariant e s0)) m1'' (join m2' m3');
+    assert (interp (p `star` (frame `star` mem_invariant e s0)) m);
+    calc (==) {
+      level m;
+    (==) { disjoint_join_levels m1'' (join m2' m3') }
+      level m1'';
+    (==) { spend_lemma m1' }
+      level m1';
+    (==) { }
+      level (core_of s0) - 1;
+    };
+    calc (==) {
+      credits m;
+    (==) { disjoint_join_levels m1'' (join m2' m3') }
+      credits m1'' + credits (join m2' m3');
+    (==) { spend_lemma m1' }
+      credits m1' - 1 + credits (join m2' m3');
+    (==) { age_level m1 }
+      credits m1 + credits (join m2' m3') - 1;
+    (==) { 
+         calc (==) {
+            credits (join m2' m3');
+          (==) {disjoint_join_levels m2' m3'}
+            credits m2' + credits m3';
+          (==) {age_level m2; age_level m3}
+            credits m2 + credits m3;
+          (==) {disjoint_join_levels m2 m3}
+            credits (join m2 m3);
+          }
+        }
+      credits m1 + credits (join m2 m3) - 1;
+    (==) {}
+      credits (core_of s0) - 1;
+    };
+    assert (reveal m == spend (age1 (core_of s0)));
+    let s1 = age_mem s0 in
+    let s2 = spend_mem s1 in
+    assert (reveal m == core_of s2);
+    is_ghost_action_trans s0 s1 s2;
+    assert (is_ghost_action s0 s2);
+    mem_invariant_age e s0;
+    mem_invariant_spend e s1;
+    assert (mem_invariant e s0 == mem_invariant e s2);
+    inames_ok_update e s0 s2;
+    assert (inames_ok e s0 <==> inames_ok e s2);
+    assert (level_decreases_by_spent_credits s0 s2);
+    assert (is_full s2);
+    (), s2
 
 let buy (e:inames) (n:FStar.Ghost.erased nat)
 : act unit e emp (fun _ -> later_credit n)
 = admit()
 
-let is_ghost_action_refl (m:mem)
-: Lemma (is_ghost_action m m)
-= is_ghost_action_istore_refl m.istore;
-  PM.ghost_action_preorder ()
 
 let dup_inv (e:inames) (i:iref) (p:slprop)
 : ghost_act unit e 
@@ -254,6 +389,9 @@ let fresh_invariant (e:inames) (p:slprop) (ctx:FStar.Ghost.erased (list iref))
     inames_ok_union e (single i) s1;
     assert (inames_ok e s1);
     assert (is_full s1);
+    disjoint_join_levels (core_of s0) (core_of s0');
+    assert (level (core_of s0) == level (core_of s0'));
+    assert (level_decreases_by_spent_credits s0 s1);
     i, s1
 
 let new_invariant (e:inames) (p:slprop)

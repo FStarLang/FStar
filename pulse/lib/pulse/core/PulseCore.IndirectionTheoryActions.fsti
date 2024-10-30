@@ -17,11 +17,12 @@ let _ACTION
     (requires fun m0 ->
         inames_ok except m0 /\
         interpret (expects `star` frame `star` mem_invariant except m0) m0 /\
-        has_credits m0)
+        level_at_least_credits m0)
     (ensures fun m0 x m1 ->
         maybe_ghost_action maybe_ghost m0 m1 /\
         inames_ok except m1 /\
-        interpret (provides x `star` frame `star` mem_invariant except m1) m1)
+        level_decreases_by_spent_credits m0 m1 /\
+        interpret (provides x `star` frame `star` mem_invariant except m1) m1 )
 
 let _act_except 
     (a:Type u#a)
