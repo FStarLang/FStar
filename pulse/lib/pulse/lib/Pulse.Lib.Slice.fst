@@ -175,9 +175,9 @@ let is_split_is_slprop2 s s1 s2 = ()
 fn split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t)
     (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v })
   requires pts_to s #p v
-  returns res : slice_pair t
+  returns res : (slice t & slice t)
   ensures
-    (let SlicePair s1 s2 = res in
+    (let (s1, s2) = res in
     pts_to s1 #p (Seq.slice v 0 (SZ.v i)) **
     pts_to s2 #p (Seq.slice v (SZ.v i) (Seq.length v)) **
     is_split s s1 s2)
@@ -196,7 +196,7 @@ fn split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t)
     };
     fold_pts_to s2 #p (Seq.slice v (SZ.v i) (Seq.length v));
     fold (is_split s s1 s2);
-    (s1 `SlicePair` s2)
+    (s1, s2)
 }
 
 ghost

@@ -29,9 +29,9 @@ fn append_split (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t)
     (#v1: Ghost.erased (Seq.seq t) { SZ.v i == Seq.length v1 })
     (#v2: Ghost.erased (Seq.seq t))
   requires pts_to s #p (v1 `Seq.append` v2)
-  returns res: S.slice_pair t
+  returns res: (slice t & slice t)
   ensures
-    (let S.SlicePair s1 s2 = res in
+    (let (s1, s2) = res in
       pts_to s1 #p v1 **
       pts_to s2 #p v2 **
       S.is_split s s1 s2)
@@ -47,31 +47,35 @@ fn append_split_trade (#t: Type) (input: S.slice t) (#p: perm) (i: SZ.t)
     (#v1: Ghost.erased (Seq.seq t) { SZ.v i == Seq.length v1 })
     (#v2: Ghost.erased (Seq.seq t))
   requires pts_to input #p (v1 `Seq.append` v2)
-  returns res: S.slice_pair t
+  returns res: (slice t & slice t)
   ensures
-    (let SlicePair s1 s2 = res in
+    (let (s1, s2) = res in
       pts_to s1 #p v1 ** pts_to s2 #p v2 **
       trade (pts_to s1 #p v1 ** pts_to s2 #p v2)
         (pts_to input #p (v1 `Seq.append` v2)))
 {
-  let SlicePair s1 s2 = append_split input i;
-  ghost fn aux ()
-    requires S.is_split input s1 s2 ** (pts_to s1 #p v1 ** pts_to s2 #p v2)
-    ensures pts_to input #p (v1 `Seq.append` v2)
-  {
-    S.join s1 s2 input
-  };
-  intro_trade _ _ _ aux;
-  SlicePair s1 s2
+  let s = append_split input i;
+  match s {
+    Mktuple2 s1 s2 -> {
+      ghost fn aux ()
+        requires S.is_split input s1 s2 ** (pts_to s1 #p v1 ** pts_to s2 #p v2)
+        ensures pts_to input #p (v1 `Seq.append` v2)
+      {
+        S.join s1 s2 input
+      };
+      intro_trade _ _ _ aux;
+      (s1, s2)
+    }
+  }
 }
 
 inline_for_extraction
 noextract
 fn split_trade (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t) (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v })
   requires pts_to s #p v
-  returns res: S.slice_pair t
+  returns res: (slice t & slice t)
   ensures
-    (let SlicePair s1 s2 = res in
+    (let (s1, s2) = res in
       let v1 = Seq.slice v 0 (SZ.v i) in
       let v2 = Seq.slice v (SZ.v i) (Seq.length v) in
       pts_to s1 #p v1 ** pts_to s2 #p v2 **
@@ -79,16 +83,20 @@ fn split_trade (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t) (#v: Ghost.erased 
         (pts_to s #p v))
 {
   Seq.lemma_split v (SZ.v i);
-  let SlicePair s1 s2 = S.split s i;
-  with v1 v2. assert pts_to s1 #p v1 ** pts_to s2 #p v2;
-  ghost fn aux ()
-    requires S.is_split s s1 s2 ** (pts_to s1 #p v1 ** pts_to s2 #p v2)
-    ensures pts_to s #p v
-  {
-    S.join s1 s2 s
-  };
-  intro_trade _ _ _ aux;
-  S.SlicePair s1 s2
+  let s' = S.split s i;
+  match s' {
+    Mktuple2 s1 s2 -> {
+      with v1 v2. assert pts_to s1 #p v1 ** pts_to s2 #p v2;
+      ghost fn aux ()
+        requires S.is_split s s1 s2 ** (pts_to s1 #p v1 ** pts_to s2 #p v2)
+        ensures pts_to s #p v
+      {
+        S.join s1 s2 s
+      };
+      intro_trade _ _ _ aux;
+      (s1, s2)
+    }
+  }
 }
 
 inline_for_extraction
