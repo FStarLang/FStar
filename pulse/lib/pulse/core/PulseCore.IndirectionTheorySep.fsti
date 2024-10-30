@@ -247,7 +247,6 @@ val fresh_inv
     (is_full m ==> is_full (join_mem m m')) /\
     inames_ok (single i) m' /\
     interp (inv i p `star` mem_invariant (single i) m') c' /\
-    inames_ok (single i) m' /\
     FStar.GhostSet.disjoint (istore_dom m) (istore_dom m')
   }
 
