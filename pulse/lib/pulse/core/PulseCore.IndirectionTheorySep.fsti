@@ -32,6 +32,11 @@ let is_ghost_action (m0 m1:mem) : prop =
   is_ghost_action_istore m0.istore m1.istore /\
   PM.is_ghost_action m0.pulse_mem m1.pulse_mem
 
+val update_ghost :
+      m0:mem ->
+      m1:FStar.Ghost.erased mem { is_ghost_action m0 m1 } ->
+      m:mem { m == FStar.Ghost.reveal m1 }
+    
 
 let is_full (m:mem) : prop = PM.pulse_heap_sig.full_mem_pred m.pulse_mem
 let full_mem = m:mem { is_full m }
@@ -49,6 +54,7 @@ val sep_laws (_:unit) : squash (
     is_unit emp star
   )
 )
+
 
 val istore_disjoint (i0 i1:core_istore) : prop
 val istore_join (i0:core_istore) (i1:core_istore { istore_disjoint i0 i1}) : core_istore
@@ -74,13 +80,19 @@ val star_equiv :
       m:core_mem ->
       Lemma (
         interp (p `star` q) m <==> 
-        (exists m0 m1. 
+      (exists m0 m1. 
           disjoint m0 m1 /\
           m == join m0 m1 /\
           interp p m0 /\
           interp q m1))
 
 val emp_equiv (m:core_mem) : Lemma (interp emp m)
+
+val interp_exists (#a:Type u#a) (p: a -> slprop)
+: Lemma (forall m. interp (op_exists_Star p) m <==> (exists x. interp (p x) m))
+
+val interp_pure (p:prop) (m:core_mem)
+: Lemma (interp (pure p) m <==> p)
 
 let destruct_star_l (p q:slprop) (m:core_mem)
 : Lemma (interp (p `star` q) m ==> interp p m)

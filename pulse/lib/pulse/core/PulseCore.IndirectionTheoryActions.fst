@@ -243,35 +243,149 @@ let frame (#a:Type)
 : _act_except a maybe_ghost opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
 = fun frame' -> sep_laws (); f (frame `star` frame')
 
-val witness_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
+let witness_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
 : ghost_act (erased a) opened_invariants
            (op_exists_Star p)
            (fun x -> p x)
+= fun frame s0 ->
+    sep_laws();
+    assert (interpret (op_exists_Star p `star` (frame `star` mem_invariant opened_invariants s0)) s0);
+    star_equiv (op_exists_Star p) (frame `star` mem_invariant opened_invariants s0) (core_of s0);
+    eliminate exists m1 m2.
+      disjoint m1 m2 /\
+      core_of s0 == join m1 m2 /\
+      interp (op_exists_Star p) m1 /\
+      interp (frame `star` mem_invariant opened_invariants s0) m2
+    returns exists x. interp (p x `star` (frame `star` mem_invariant opened_invariants s0)) (core_of s0)
+    with _ . (
+      interp_exists p;
+      eliminate exists x. interp (p x) m1
+      returns _
+      with _. (
+        star_equiv (p x) (frame `star` mem_invariant opened_invariants s0) (core_of s0)
+      )
+    );
+    let x =
+      FStar.IndefiniteDescription.indefinite_description_tot
+        a 
+        (fun x -> interpret (p x `star` (frame `star` mem_invariant opened_invariants s0)) s0)
+    in
+    is_ghost_action_refl s0;
+    x, s0
 
-val intro_exists (#opened_invariants:_) (#a:_) (p:a -> slprop) (x:erased a)
+let intro_exists (#opened_invariants:_) (#a:_) (p:a -> slprop) (x:erased a)
 : ghost_act unit opened_invariants
   (p x)
   (fun _ -> op_exists_Star p)
+= fun frame s0 ->
+    sep_laws();
+    assert (interpret (p x `star` (frame `star` mem_invariant opened_invariants s0)) s0);
+    star_equiv (p x) (frame `star` mem_invariant opened_invariants s0) (core_of s0);
+    eliminate exists m1 m2.
+      disjoint m1 m2 /\
+      core_of s0 == join m1 m2 /\
+      interp (p x) m1 /\
+      interp (frame `star` mem_invariant opened_invariants s0) m2
+    returns interp (op_exists_Star p `star` (frame `star` mem_invariant opened_invariants s0)) (core_of s0)
+    with _ . (
+      interp_exists p;
+      star_equiv (op_exists_Star p) (frame `star` mem_invariant opened_invariants s0) (core_of s0)
+    );
+    is_ghost_action_refl s0;
+    (), s0
 
-val raise_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
+let raise_exists (#opened_invariants:_) (#a:Type u#a) (p:a -> slprop)
 : ghost_act unit opened_invariants
     (op_exists_Star p)
-    (fun _a -> op_exists_Star #(U.raise_t a) (U.lift_dom p))
+    (fun _a -> op_exists_Star #(U.raise_t u#a u#b a) (U.lift_dom u#a u#_ u#b p))
+= fun frame s0 ->
+    let x, s1 = witness_exists #opened_invariants #a p frame s0 in
+    sep_laws();
+    assert (interp (p x `star` (frame `star` mem_invariant opened_invariants s1)) (core_of s1));
+    star_equiv (p x) (frame `star` mem_invariant opened_invariants s1) (core_of s1);
+    eliminate exists m1 m2.
+      disjoint m1 m2 /\
+      core_of s1 == join m1 m2 /\
+      interp (p x) m1 /\
+      interp (frame `star` mem_invariant opened_invariants s1) m2
+    returns interp (op_exists_Star #(U.raise_t a) (U.lift_dom p) `star` (frame `star` mem_invariant opened_invariants s1)) (core_of s1)
+    with _ . (
+      let x = reveal x in
+      assert (interp ((U.lift_dom p) (U.raise_val u#a u#b x)) m1);
+      interp_exists (U.lift_dom u#a u#_ u#b p);
+      assert (interp (op_exists_Star #(U.raise_t u#a u#b a) (U.lift_dom p)) m1);
+      star_equiv (op_exists_Star #(U.raise_t u#a u#b a) (U.lift_dom p)) (frame `star` mem_invariant opened_invariants s1) (core_of s1)
+    );
+    (), s1
 
-val elim_pure (#opened_invariants:_) (p:prop)
+let elim_pure (#opened_invariants:_) (p:prop)
 : ghost_act (u:unit{p}) opened_invariants (pure p) (fun _ -> emp)
+= fun frame s0 ->
+    sep_laws();
+    assert (interpret (pure p `star` (frame `star` mem_invariant opened_invariants s0)) s0);
+    star_equiv (pure p) (frame `star` mem_invariant opened_invariants s0) (core_of s0);
+    eliminate exists m1 m2.
+      disjoint m1 m2 /\
+      core_of s0 == join m1 m2 /\
+      interp (pure p) m1 /\
+      interp (frame `star` mem_invariant opened_invariants s0) m2
+    returns p /\ interp (emp `star` (frame `star` mem_invariant opened_invariants s0)) (core_of s0)
+    with _ . (
+      interp_pure p m1;
+      emp_equiv m1;
+      star_equiv emp (frame `star` mem_invariant opened_invariants s0) (core_of s0)
+    );
+    is_ghost_action_refl s0;
+    (), s0
 
-val intro_pure (#opened_invariants:_) (p:prop) (_:squash p)
+let intro_pure (#opened_invariants:_) (p:prop) (_:squash p)
 : ghost_act unit opened_invariants emp (fun _ -> pure p)
+= fun frame s0 -> 
+    sep_laws();
+    assert (interpret (emp `star` (frame `star` mem_invariant opened_invariants s0)) s0);
+    star_equiv emp (frame `star` mem_invariant opened_invariants s0) (core_of s0);
+    eliminate exists m1 m2.
+      disjoint m1 m2 /\
+      core_of s0 == join m1 m2 /\
+      interp emp m1 /\
+      interp (frame `star` mem_invariant opened_invariants s0) m2
+    returns interp (pure p `star` (frame `star` mem_invariant opened_invariants s0)) (core_of s0)
+    with _ . (
+      interp_pure p m1;
+      star_equiv (pure p) (frame `star` mem_invariant opened_invariants s0) (core_of s0)
+    );
+    is_ghost_action_refl s0;
+    (), s0
 
-val drop (#opened_invariants:_) (p:slprop)
+let drop (#opened_invariants:_) (p:slprop)
 : ghost_act unit opened_invariants p (fun _ -> emp)
+= fun frame s0 -> 
+    sep_laws();
+    assert (interpret (p `star` (frame `star` mem_invariant opened_invariants s0)) s0);
+    star_equiv p (frame `star` mem_invariant opened_invariants s0) (core_of s0);
+    eliminate exists m1 m2.
+      disjoint m1 m2 /\
+      core_of s0 == join m1 m2 /\
+      interp p m1 /\
+      interp (frame `star` mem_invariant opened_invariants s0) m2
+    returns interp (emp `star` (frame `star` mem_invariant opened_invariants s0)) (core_of s0)
+    with _ . (
+      emp_equiv m1;
+      star_equiv emp (frame `star` mem_invariant opened_invariants s0) (core_of s0)
+    );
+    is_ghost_action_refl s0;
+    (), s0
 
 let non_info a = x:erased a -> y:a { reveal x == y}
 
-val lift_ghost
+let lift_ghost
       (#a:Type)
       #opened_invariants #p #q
       (ni_a:non_info a)
       (f:erased (ghost_act a opened_invariants p q))
 : ghost_act a opened_invariants p q
+= fun frame s0 ->
+    let result : erased (a & full_mem) = hide ((reveal f) frame s0) in
+    let res : a = ni_a (hide (fst result)) in
+    let s1 : full_mem = update_ghost s0 (hide (snd result)) in
+    res, s1

@@ -89,10 +89,10 @@ val intro_exists (#opened_invariants:_) (#a:_) (p:a -> slprop) (x:erased a)
   (p x)
   (fun _ -> op_exists_Star p)
 
-val raise_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
+val raise_exists (#opened_invariants:_) (#a:Type u#a) (p:a -> slprop)
 : ghost_act unit opened_invariants
     (op_exists_Star p)
-    (fun _a -> op_exists_Star #(U.raise_t a) (U.lift_dom p))
+    (fun _a -> op_exists_Star #(U.raise_t u#a u#b a) (U.lift_dom u#a u#_ u#b p))
 
 val elim_pure (#opened_invariants:_) (p:prop)
 : ghost_act (u:unit{p}) opened_invariants (pure p) (fun _ -> emp)
