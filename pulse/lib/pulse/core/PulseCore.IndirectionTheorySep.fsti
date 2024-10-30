@@ -72,8 +72,9 @@ val sep_laws (_:unit) : squash (
 
 val istore_disjoint (i0 i1:core_istore) : prop
 val istore_join (i0:core_istore) (i1:core_istore { istore_disjoint i0 i1}) : core_istore
-val istore_join_refl (i:core_istore { icredits i == 0 }) 
-: Lemma (istore_disjoint i i /\ istore_join i i == i)
+val clear_credits (i:core_istore) : core_istore
+val istore_join_refl (i:core_istore)
+: Lemma (istore_disjoint i (clear_credits i) /\ istore_join i (clear_credits i) == i)
 let disjoint (m0 m1:core_mem)
 : prop
 = PM.pulse_heap_sig.sep.disjoint m0.pulse_mem m1.pulse_mem /\

@@ -60,7 +60,7 @@ let pin_frame (p:pm_slprop) (frame:slprop)
       with introduce _ ==> _
       with _. ( 
         let left = { pulse_mem = s0; istore = m1.istore } in
-        let right = { pulse_mem = s1; istore = m1.istore } in
+        let right = { pulse_mem = s1; istore = clear_credits m1.istore } in
         istore_join_refl m1.istore;
         assert (disjoint left right);
         assert (join left right == { pulse_mem = pm_sep.join s0 s1; istore=m1.istore })
