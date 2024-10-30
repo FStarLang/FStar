@@ -237,7 +237,7 @@ val spend_mem (m:mem) : m':mem {
   (istore_dom m == istore_dom m')
 }
 val interp_later_credit (n:nat) (m:core_mem)
-: Lemma (interp (later_credit n) m ==> credits m >= n)
+: Lemma (interp (later_credit n) m <==> credits m >= n)
 val spend_lemma (m:core_mem)
 : Lemma 
   (requires
@@ -256,7 +256,12 @@ val spend_disjoint (m0 m1:core_mem)
     spend (join m0 m1) == join (spend m0) m1)
 
 val buy (n:nat) (m:core_mem) : core_mem
-val buy_mem (n:nat) (m:mem) : m':mem { core_of m' == buy n (core_of m) }
+val buy_mem (n:FStar.Ghost.erased nat) (m:mem) : m':mem {
+  core_of m' == buy n (core_of m) /\
+  is_ghost_action m m' /\
+  (is_full m ==> is_full m') /\
+  (istore_dom m == istore_dom m')
+}
 val buy_lemma (n:nat) (m:core_mem)
 : Lemma (
   let m' = buy n m in
@@ -280,19 +285,48 @@ let mem_inv (e:inames) (i:iref)
 : GTot bool
 = GhostSet.mem i e
 
-val mem_invariant_equiv : 
+val iname_ok (i: iref) (m: core_mem) : prop
+val inames_ok_single (i: iref) (p:slprop) (m:mem)
+: Lemma
+  (requires interp (inv i p) (core_of m))
+  (ensures iname_ok i (core_of m))
+val read_inv (i: iref) (m: core_mem { iname_ok i m }) : slprop
+val read_inv_equiv (i:iref) (m:core_mem { iname_ok i m }) p 
+: Lemma
+  (requires interp (inv i p) m)
+  (ensures interp (equiv (read_inv i m) (later p)) m)
+val read_inv_disjoint (i:iref) (m0 m1:core_mem)
+: Lemma 
+  (requires
+    disjoint m0 m1 /\
+    iname_ok i m0)
+  (ensures 
+    iname_ok i (join m0 m1) /\
+    read_inv i m0 == read_inv i (join m0 m1))
+val mem_invariant_equiv :
       e:inames ->
       m:mem ->
-      i:iref ->
-      p:slprop ->
-      Lemma 
+      i:iref { iname_ok i (core_of m) } ->
+      Lemma
         (requires
-          interp (inv i p) (core_of m) /\
           ~(mem_inv e i))
         (ensures
-          inames_ok (single i) m /\
           (mem_invariant e m ==
-           mem_invariant (add_inv e i) m `star` later p))
+           mem_invariant (add_inv e i) m `star` later (read_inv i (core_of m))))
+
+// val mem_invariant_equiv : 
+//       e:inames ->
+//       m:mem ->
+//       i:iref ->
+//       p:slprop ->
+//       Lemma 
+//         (requires
+//           interp (inv i p) (core_of m) /\
+//           ~(mem_inv e i))
+//         (ensures
+//           inames_ok (single i) m /\
+//           (mem_invariant e m ==
+//            mem_invariant (add_inv e i) m `star` later p))
 
 
 val inames_ok_istore_dom (e:inames) (m:mem)
@@ -333,6 +367,10 @@ val mem_invariant_age (e:inames) (m:mem)
 val mem_invariant_spend (e:inames) (m:mem)
 : Lemma
   (ensures mem_invariant e m == mem_invariant e (spend_mem m))
+
+val mem_invariant_buy (e:inames) (n:nat) (m:mem)
+: Lemma
+  (ensures mem_invariant e m == mem_invariant e (buy_mem n m))
 
 let fresh_wrt (ctx:list iref)
               (i:iref)

@@ -146,7 +146,7 @@ let is_ghost_action_trans (m0 m1 m2:mem)
 
 let lift_mem_action #a #mg #ex #pre #post
                    (pm_act:PM._pst_action_except a mg (lower_inames ex) pre post)
-: _act_except a mg ex (lift pre) (fun x -> lift (post x))
+: _act_except a (if mg then GHOST else ATOMIC) ex (lift pre) (fun x -> lift (post x))
 = fun frame 
       (w0:mem {
         inames_ok ex w0 /\
@@ -203,11 +203,11 @@ let lift_mem_action #a #mg #ex #pre #post
     (x, w1)
 open FStar.Ghost
 
-let split_mem (p:slprop) (q:slprop) (m:core_mem { interp (p `star` q) m })
+let split_mem (p:slprop) (q:slprop) (m:erased core_mem { interp (p `star` q) m })
 : res:(erased core_mem & erased core_mem) {
     let l, r = res in
     disjoint l r /\
-    m == join l r /\
+    reveal m == join l r /\
     interp p l /\
     interp q r
   }
@@ -218,7 +218,7 @@ let split_mem (p:slprop) (q:slprop) (m:core_mem { interp (p `star` q) m })
       (fun m1 -> 
         exists m2. 
           disjoint m1 m2 /\
-          m == join m1 m2 /\
+          reveal m == join m1 m2 /\
           interp p m1 /\
           interp q m2)
   in
@@ -227,19 +227,19 @@ let split_mem (p:slprop) (q:slprop) (m:core_mem { interp (p `star` q) m })
         core_mem
         (fun m2 -> 
             disjoint m1 m2 /\
-            m == join m1 m2 /\
+            reveal m == join m1 m2 /\
             interp p m1 /\
             interp q m2)
   in
   m1, m2
 
-let split_mem3 (pp qq rr:slprop) (s:core_mem { interp (pp `star` qq `star` rr) s })
+let split_mem3 (pp qq rr:slprop) (s:erased core_mem { interp (pp `star` qq `star` rr) s })
 : res:(erased core_mem & erased core_mem & erased core_mem) {
     let l, m, r = res in
     // disjoint l m /\
     disjoint m r /\
     disjoint l (join m r) /\
-    s == join l (join m r) /\
+    reveal s == join l (join m r) /\
     interp pp l /\
     interp qq m /\
     interp rr r
@@ -334,8 +334,23 @@ let later_elim (e:inames) (p:slprop)
     (), s2
 
 let buy (e:inames) (n:FStar.Ghost.erased nat)
-: act unit e emp (fun _ -> later_credit n)
-= admit()
+: buy_act unit e emp (fun _ -> later_credit n)
+= fun frame s0 ->
+    sep_laws();
+    let m0, m1 = split_mem emp (frame `star` mem_invariant e s0) (core_of s0) in
+    let m0' : erased core_mem = buy n m0 in
+    buy_lemma n m0;
+    interp_later_credit n m0';
+    assert (interp (later_credit n) m0');
+    buy_disjoint n m0 m1;
+    assert (disjoint m0' m1);
+    intro_star (later_credit n) (frame `star` mem_invariant e s0) m0' m1;
+    let m' : erased core_mem = join m0' m1 in
+    let s1 = buy_mem n s0 in
+    assert (reveal m' == core_of s1);
+    mem_invariant_buy e n s0;
+    inames_ok_update e s0 s1;
+    (), s1
 
 
 let dup_inv (e:inames) (i:iref) (p:slprop)
@@ -347,6 +362,16 @@ let dup_inv (e:inames) (i:iref) (p:slprop)
     dup_inv_equiv i p;
     is_ghost_action_refl s0;
     (), s0
+
+assume
+val elim_equiv_fwd (p q:slprop) (m:core_mem)
+: Lemma 
+  (interp (equiv p q `star` p) m ==> interp q m)
+  
+assume
+val elim_equiv_bk (p q:slprop) (m:core_mem)
+: Lemma 
+  (interp (equiv p q `star` q) m ==> interp p m)
 
 let fresh_invariant (e:inames) (p:slprop) (ctx:FStar.Ghost.erased (list iref))
 : ghost_act (i:iref{fresh_wrt ctx i}) e p (fun i -> inv i p)
@@ -370,20 +395,38 @@ let fresh_invariant (e:inames) (p:slprop) (ctx:FStar.Ghost.erased (list iref))
     destruct_star_l (inv i p)
                     (frame `star` p `star` mem_invariant (add_inv e i) s1)
                     (core_of s1);
-    mem_invariant_equiv e s1 i p;
-    star_equiv p (inv i p `star` frame `star` mem_invariant (add_inv e i) s1) (core_of s1);
-    eliminate exists sl sr.
-      disjoint sl sr /\
-      (core_of s1) == join sl sr /\
-      interp p sl /\
-      interp (inv i p `star` frame `star` mem_invariant (add_inv e i) s1) sr
-    returns interp (inv i p `star` frame `star` mem_invariant e s1) (core_of s1)
-    with _ . (
-      intro_later p sl;
-      star_equiv (later p) 
-                 (inv i p `star` frame `star` mem_invariant (add_inv e i) s1)
-                 (core_of s1)
-    );
+    assume (iname_ok i (core_of s1));
+    let sl, sr =
+      split_mem (p `star` inv i p)
+                (frame `star` mem_invariant (add_inv e i) s1)
+                (core_of s1)
+    in
+    let sl1, sl2 = split_mem p (inv i p) sl in
+    intro_later p sl1;
+    dup_inv_equiv i p;
+    intro_star (later p) (inv i p `star` inv i p) sl1 sl2;
+    assert (interp (later p `star` (inv i p `star` inv i p)) sl);
+    let sl1, sl2, sl3 = split_mem3 (inv i p) (inv i p) (later p) sl in
+    assume (iname_ok i sl2);
+    read_inv_equiv i sl2 p;
+    assert (interp (equiv (read_inv i sl2) (later p)) sl2);
+    read_inv_disjoint i sl2 sl3;
+    intro_star (equiv (read_inv i (join sl2 sl3)) (later p)) (later p) sl2 sl3;
+    assert (interp (equiv (read_inv i (join sl2 sl3)) (later p) `star` (later p)) (join sl2 sl3));
+    elim_equiv_bk (read_inv i (join sl2 sl3)) (later p) (join sl2 sl3);
+    assert (interp (read_inv i (join sl2 sl3)) (join sl2 sl3));
+    intro_later (read_inv i (join sl2 sl3)) (join sl2 sl3);
+    assert (disjoint sl1 (join sl2 sl3));
+    assume (disjoint (join sl2 sl3) sl1);
+    assume (join (join sl2 sl3) sl1 == reveal sl);
+    read_inv_disjoint i (join sl2 sl3) sl1;
+    assert (interp (later (read_inv i sl)) (join sl2 sl3));
+    intro_star (inv i p) (later (read_inv i sl)) sl1 (join sl2 sl3);
+    read_inv_disjoint i sl sr;
+    intro_star (inv i p `star` later (read_inv i (core_of s1)))
+               (frame `star` mem_invariant (add_inv e i) s1) sl sr;
+    mem_invariant_equiv e s1 i;
+    assert (interp (inv i p `star` frame `star` mem_invariant e s1) (core_of s1));    
     assert (is_ghost_action s0 s1);
     inames_ok_disjoint e (single i) s0 s0';
     inames_ok_union e (single i) s1;
@@ -398,40 +441,76 @@ let new_invariant (e:inames) (p:slprop)
 : ghost_act iref e p (fun i -> inv i p)
 = fresh_invariant e p []
 
+let elim_read_inv (i:iref) (p frame:slprop) (m:core_mem)
+: Lemma
+  (requires 
+    iname_ok i m /\
+    interp (inv i p `star` later (read_inv i m) `star` frame) m)
+  (ensures interp (inv i p `star` later p `star` frame) m)
+= admit()
+
+let intro_read_inv (i:iref) (p frame:slprop) (m:core_mem)
+: Lemma
+  (requires 
+    iname_ok i m /\
+    interp (inv i p `star` later p `star` frame) m)
+  (ensures interp (inv i p `star` later (read_inv i m) `star` frame) m)
+= admit()
+
 let with_invariant (#a:Type)
                    (#fp:slprop)
                    (#fp':a -> slprop)
                    (#opened_invariants:inames)
                    (#p:slprop)
-                   (#maybe_ghost:bool)
+                   (#ak:action_kind {not (BUY? ak)})
                    (i:iref{not (mem_inv opened_invariants i)})
-                   (f:_act_except a maybe_ghost
+                   (f:_act_except a ak
                         (add_inv opened_invariants i) 
                         (later p `star` fp)
                         (fun x -> later p `star` fp' x))
-: _act_except a maybe_ghost opened_invariants 
+: _act_except a ak opened_invariants 
       (inv i p `star` fp)
       (fun x -> inv i p `star` fp' x)
 = fun frame s0 ->
     sep_laws();
-    destruct_star_l (inv i p) (fp `star` frame `star` mem_invariant opened_invariants s0) (core_of s0);
-    mem_invariant_equiv opened_invariants s0 i p;
+    assume (iname_ok i (core_of s0));
+    assume (inames_ok (single i) s0);
+    mem_invariant_equiv opened_invariants s0 i;
+    assert (interp (inv i p `star` fp `star` frame `star` 
+              (mem_invariant (add_inv opened_invariants i) s0 `star` later (read_inv i (core_of s0)))) (core_of s0));
+    elim_read_inv i p (fp `star` frame `star` mem_invariant (add_inv opened_invariants i) s0) (core_of s0);
     inames_ok_union (single i) opened_invariants s0;
+    assert (inames_ok (add_inv opened_invariants i) s0);
+    assert (interp ((later p `star` fp) 
+                    `star` (frame `star` inv i p)
+                    `star` mem_invariant (add_inv opened_invariants i) s0)
+                    (core_of s0));
     let x, s1 = f (frame `star` inv i p) s0 in
-    destruct_star_l (inv i p) (later p `star` fp' x `star` frame `star` mem_invariant (add_inv opened_invariants i) s1) (core_of s1);
     inames_ok_union (single i) opened_invariants s1;
-    mem_invariant_equiv opened_invariants s1 i p;
+    assert (inames_ok (single i) s1);
+    assume (iname_ok i (core_of s1));
+    intro_read_inv i p (fp' x `star` frame `star` mem_invariant (add_inv opened_invariants i) s1) (core_of s1);
+    assert (interp ((inv i p `star` fp' x) 
+                    `star` frame
+                    `star` (mem_invariant (add_inv opened_invariants i) s1 `star` later (read_inv i (core_of s1))))
+                    (core_of s1));
+    mem_invariant_equiv opened_invariants s1 i;
+    assert (interp ((inv i p `star` fp' x) 
+                    `star` frame
+                    `star` mem_invariant opened_invariants s1)
+                    (core_of s1));
+    inames_ok_union (single i) opened_invariants s1;
     x, s1
 
 
 let frame (#a:Type)
-          (#maybe_ghost:bool)
+          (#ak:action_kind)
           (#opened_invariants:inames)
           (#pre:slprop)
           (#post:a -> slprop)
           (frame:slprop)
-          ($f:_act_except a maybe_ghost opened_invariants pre post)
-: _act_except a maybe_ghost opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
+          ($f:_act_except a ak opened_invariants pre post)
+: _act_except a ak opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
 = fun frame' -> sep_laws (); f (frame `star` frame')
 
 let witness_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)

@@ -4,11 +4,15 @@ module T = FStar.Tactics
 module PM = PulseCore.MemoryAlt
 module HST = PulseCore.HoareStateMonad
 open PulseCore.IndirectionTheorySep
-let maybe_ghost_action (b:bool) (m0 m1:mem) = b ==> is_ghost_action m0 m1
+type action_kind =
+| GHOST
+| ATOMIC
+| BUY
+let maybe_ghost_action (k:action_kind) (m0 m1:mem) = GHOST? k ==> is_ghost_action m0 m1
 let interpret (p:slprop) (m:mem) = interp p (core_of m)
 let _ACTION 
   (a:Type u#a)
-  (maybe_ghost:bool)
+  (ak:action_kind)
   (except:inames)
   (expects:slprop)
   (provides: a -> GTot slprop)
@@ -19,32 +23,33 @@ let _ACTION
         interpret (expects `star` frame `star` mem_invariant except m0) m0 /\
         level_at_least_credits m0)
     (ensures fun m0 x m1 ->
-        maybe_ghost_action maybe_ghost m0 m1 /\
+        maybe_ghost_action ak m0 m1 /\
         inames_ok except m1 /\
-        level_decreases_by_spent_credits m0 m1 /\
+        (not (BUY? ak) ==> level_decreases_by_spent_credits m0 m1) /\
         interpret (provides x `star` frame `star` mem_invariant except m1) m1 )
 
 let _act_except 
     (a:Type u#a)
-    (maybe_ghost:bool)
+    (ak:action_kind)
     (except:inames)
     (expects:slprop)
     (provides: a -> GTot slprop)
  : Type u#(max a 4) 
- = frame:slprop -> _ACTION a maybe_ghost except expects provides frame
-let ghost_act a = _act_except a true
-let act a = _act_except a false
+ = frame:slprop -> _ACTION a ak except expects provides frame
+let ghost_act a = _act_except a GHOST
+let act a = _act_except a ATOMIC
+let buy_act a = _act_except a BUY
 
 val lift_mem_action #a #mg #ex #pre #post
                    (_:PM._pst_action_except a mg (lower_inames ex) pre post)
-: _act_except a mg ex (lift pre) (fun x -> lift (post x))
+: _act_except a (if mg then GHOST else ATOMIC) ex (lift pre) (fun x -> lift (post x))
 
 
 val later_elim (e:inames) (p:slprop) 
 : ghost_act unit e (later p `star` later_credit 1) (fun _ -> p)
 
 val buy (e:inames) (n:FStar.Ghost.erased nat)
-: act unit e emp (fun _ -> later_credit n)
+: buy_act unit e emp (fun _ -> later_credit n)
 
 val dup_inv (e:inames) (i:iref) (p:slprop)
 : ghost_act unit e 
@@ -59,24 +64,24 @@ val with_invariant (#a:Type)
                    (#fp':a -> slprop)
                    (#opened_invariants:inames)
                    (#p:slprop)
-                   (#maybe_ghost:bool)
+                   (#ak:action_kind {not (BUY? ak)})
                    (i:iref{not (mem_inv opened_invariants i)})
-                   (f:_act_except a maybe_ghost
+                   (f:_act_except a ak
                         (add_inv opened_invariants i) 
                         (later p `star` fp)
                         (fun x -> later p `star` fp' x))
-: _act_except a maybe_ghost opened_invariants 
+: _act_except a ak opened_invariants 
       (inv i p `star` fp)
       (fun x -> inv i p `star` fp' x)
 
 val frame (#a:Type)
-          (#maybe_ghost:bool)
+          (#ak:action_kind)
           (#opened_invariants:inames)
           (#pre:slprop)
           (#post:a -> slprop)
           (frame:slprop)
-          ($f:_act_except a maybe_ghost opened_invariants pre post)
-: _act_except a maybe_ghost opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
+          ($f:_act_except a ak opened_invariants pre post)
+: _act_except a ak opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
 
 open FStar.Ghost
 module U = FStar.Universe
