@@ -263,6 +263,13 @@ let later_elim (e:inames) (p:slprop)
     let m31' : erased core_mem = age1 m31 in
     age_hereditary frame m31;
     let m32' : erased core_mem = age1 m32 in
+    disjoint_join_levels m1 (join m2 m3);
+    disjoint_join_levels m2 m3;
+    disjoint_join_levels m31 m32;
+    assert (level m32 == level m3);
+    assert (level m32 == level m1);
+    assert (level m1 == level (core_of s0));
+    assert (level m1 > 1);
     mem_invariant_age e s0 m32;
     age_disjoint m31 m32;
     intro_star frame (mem_invariant e (age_mem s0)) m31' m32';
@@ -361,11 +368,13 @@ let intro_read_inv (i:iref) (p frame:slprop) (m:core_mem)
 : Lemma
   (requires 
     iname_ok i m /\
+    level m > 0 /\
     interp (inv i p `star` later p `star` frame) m)
   (ensures interp (inv i p `star` later (read_inv i m) `star` frame) m)
 = sep_laws();
   dup_inv_equiv i p;
   let sl, sr = split_mem (later p `star` inv i p) (inv i p `star` frame) m in
+  disjoint_join_levels sl sr;
   destruct_star (later p) (inv i p) sl;
   inames_ok_single i p sl;
   read_inv_equiv i sl p;
@@ -377,11 +386,13 @@ let elim_read_inv (i:iref) (p frame:slprop) (m:core_mem)
 : Lemma
   (requires 
     iname_ok i m /\
+    level m > 0 /\
     interp (inv i p `star` later (read_inv i m) `star` frame) m)
   (ensures interp (inv i p `star` later p `star` frame) m)
 = sep_laws();
   dup_inv_equiv i p;
   let sl, sr = split_mem (later (read_inv i m) `star` inv i p) (inv i p `star` frame) m in
+  disjoint_join_levels sl sr;
   destruct_star (later (read_inv i m)) (inv i p) sl;
   inames_ok_single i p sl;
   read_inv_disjoint i sl sr;
@@ -395,6 +406,7 @@ let intro_read_inv_later (i:iref) (p frame:slprop) (m:core_mem)
 : Lemma
   (requires 
     iname_ok i m /\
+    level m > 0 /\
     interp (inv i p `star` p `star` frame) m)
   (ensures interp (inv i p `star` later (read_inv i m) `star` frame) m)
 = sep_laws();
@@ -409,6 +421,7 @@ let fresh_invariant (e:inames) (p:slprop) (ctx:FStar.Ghost.erased (list iref))
 = fun frame s0 ->
     let (| i, s0' |) = fresh_inv p s0 ctx in
     let s1 = join_mem s0 s0' in
+    disjoint_join_levels (core_of s0) (core_of s0');
     mem_invariant_disjoint e (single i) (p `star` frame) (inv i p) s0 s0';
     assert (interp 
               ((p `star` frame) `star` inv i p `star`

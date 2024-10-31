@@ -29,7 +29,7 @@ val icredits (_:core_istore) : GTot nat
 let credits (k:core_mem) : GTot nat = icredits k.istore
 let level_at_least_credits (m:mem)
 : GTot bool
-= level (core_of m) >= credits (core_of m)
+= level (core_of m) > credits (core_of m)
 
 let level_decreases_by_spent_credits (m0 m1:mem)
 : prop
