@@ -216,7 +216,20 @@ let join_mem m0 m1 =
 
 let inames_ok_disjoint i j mi mj = ()
 
-let mem_invariant_disjoint e f p0 p1 m0 m1 = admit ()
+let mem_invariant_disjoint e f p0 p1 m0 m1 =
+  I.istore_invariant_disjoint e f m0.istore.ist m1.istore.ist;
+  let m = join_mem m0 m1 in
+  assert 
+    mem_invariant (FStar.GhostSet.union e f) m ==
+    mem_invariant e m0 `star` mem_invariant f m1;
+  I.star_intro
+    (p0 `star` mem_invariant e m0) (p1 `star` mem_invariant f m1)
+    (of_core (core_of m)) (of_core (core_of m0)) (of_core (core_of m1));
+  assert interp ((p0 `star` mem_invariant e m0) `star` (p1 `star` mem_invariant f m1)) (core_of m);
+  let _: squash (p0 `star` p1 `star` mem_invariant (FStar.GhostSet.union e f) m ==
+      (p0 `star` mem_invariant e m0) `star` (p1 `star` mem_invariant f m1)) =
+    sep_laws () in
+  assert interp (p0 `star` p1 `star` mem_invariant (FStar.GhostSet.union e f) m) (core_of m)
 
 let mem_invariant_age e m0 m1 = I.istore_invariant_age e m0.istore.ist (of_core m1)
 let mem_invariant_spend e m = ()

@@ -753,6 +753,51 @@ let istore_invariant_age (e:inames) (is: okay_istore { level_istore is > 0 })
     istore_invariant__congr e (age1_istore is) (some_fresh_addr is) (some_fresh_addr (age1_istore is))
   )
 
+let gs_disjoint_elim #t (a: GS.set t) (b: GS.set t { GS.disjoint a b }) (x: t { GS.mem x a }) :
+    Lemma (~(GS.mem x b)) =
+  ()
+
+let rec istore_invariant__disjoint (e1 e2:inames) (m1 m2:okay_istore) (f: iref) :
+    Lemma (requires
+      disjoint_istore m1 m2 /\
+      GS.disjoint (istore_dom m1) (istore_dom m2) /\
+      GS.disjoint e1 (istore_dom m2) /\ GS.disjoint e2 (istore_dom m1))
+    (ensures 
+      istore_invariant_ (GS.union e1 e2) (join_istore m1 m2) f ==
+        istore_invariant_ e1 m1 f `star` istore_invariant_ e2 m2 f) =
+  if reveal f = 0 then
+    sep_laws ()
+  else
+    let f': address = f - 1 in
+    istore_invariant__disjoint e1 e2 m1 m2 f';
+    if GS.mem f' (GS.union e1 e2) then
+      ()
+    else
+      match read_istore (join_istore m1 m2) f' with
+      | Inv p -> 
+        if Inv? (read_istore m1 f') then (
+          gs_disjoint_elim (istore_dom m1) (istore_dom m2) f';
+          sep_laws ()
+        ) else if Inv? (read_istore m2 f') then (
+          gs_disjoint_elim (istore_dom m2) (istore_dom m1) f';
+          sep_laws ()
+        ) else
+          assert False
+      | _ -> ()
+
+let istore_invariant_disjoint (e1 e2:inames) (m1 m2:okay_istore) :
+    Lemma (requires
+      disjoint_istore m1 m2 /\
+      GS.disjoint (istore_dom m1) (istore_dom m2) /\
+      GS.disjoint e1 (istore_dom m2) /\ GS.disjoint e2 (istore_dom m1))
+    (ensures 
+      istore_invariant (GS.union e1 e2) (join_istore m1 m2) ==
+        istore_invariant e1 m1 `star` istore_invariant e2 m2) =
+  let m = join_istore m1 m2 in
+  istore_invariant__congr e1 m1 (some_fresh_addr m1) (some_fresh_addr m);
+  istore_invariant__congr e2 m2 (some_fresh_addr m2) (some_fresh_addr m);
+  istore_invariant__disjoint e1 e2 m1 m2 (some_fresh_addr m)
+
 let max x y = if x > y then x else y
 
 let istore_single n (a: iref) (p: slprop) : okay_istore =
