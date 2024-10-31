@@ -159,7 +159,7 @@ let read_inv_disjoint i m0 m1 = ()
 
 let add_inv_eq e i : Lemma (add_inv e i == I.add_inv e i) [SMTPat (add_inv e i)] =
   assert_norm (add_inv e i == I.add_inv e i) // why???
-let single_eq i : Lemma (single i == I.single i) [SMTPat (single)] =
+let single_eq i : Lemma (single i == I.single i) [SMTPat (single i)] =
   assert_norm (single i == I.single i) // why???
 
 let mem_invariant_equiv e m i =
