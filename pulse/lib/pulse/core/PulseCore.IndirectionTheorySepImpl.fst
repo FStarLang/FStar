@@ -537,7 +537,25 @@ let lift_pure_eq p =
 let lift_star_eq p q =
   world_pred_ext (lift (PM.star p q)) (star (lift p) (lift q)) fun w ->
     pulse_heap_sig.star_equiv p q (snd w).pulse_heap;
-    admit ()
+    introduce
+      forall (m0 m1 : pulse_core_mem).
+          pulse_heap_sig.sep.disjoint m0 m1 /\
+          (snd w).pulse_heap == pulse_heap_sig.sep.join m0 m1 /\
+          pulse_heap_sig.interp p m0 /\
+          pulse_heap_sig.interp q m1
+        ==> star (lift p) (lift q) w with introduce _ ==> _ with _. (
+      let w0: preworld = (fst w, ({ snd w with pulse_heap = m0 } <: rest)) in
+      let w1: preworld = (fst w, ({ pulse_heap = m1; saved_credits = 0 } <: rest)) in
+      assert disjoint_worlds w0 w1;
+      join_istore_refl (fst w);
+      assert join_worlds w0 w1 == w;
+      assert lift p w0;
+      assert lift q w1;
+      ()
+    );
+    introduce star (lift p) (lift q) w ==> lift (PM.star p q) w with _.
+      let (w1, w2) = star_elim (lift p) (lift q) w in
+      ()
 
 let lift_exists_eq a f =
   world_pred_ext (lift (PM.h_exists f)) (exists* x. lift (f x)) fun w ->
