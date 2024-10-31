@@ -286,15 +286,25 @@ let mem_inv (e:inames) (i:iref)
 = GhostSet.mem i e
 
 val iname_ok (i: iref) (m: core_mem) : prop
-val inames_ok_single (i: iref) (p:slprop) (m:mem)
+val inames_ok_single (i: iref) (p:slprop) (m:core_mem)
 : Lemma
-  (requires interp (inv i p) (core_of m))
-  (ensures iname_ok i (core_of m))
+  (requires interp (inv i p) m)
+  (ensures iname_ok i m)
+
+val iname_ok_inames_ok (i:iref) (m:mem)
+: Lemma (inames_ok (single i) m <==> iname_ok i (core_of m))
+        [SMTPat (inames_ok (single i) m)]
+
 val read_inv (i: iref) (m: core_mem { iname_ok i m }) : slprop
 val read_inv_equiv (i:iref) (m:core_mem { iname_ok i m }) p 
 : Lemma
-  (requires interp (inv i p) m)
-  (ensures interp (equiv (read_inv i m) (later p)) m)
+  (requires 
+    interp (inv i p) m)
+  (ensures
+    interp (later (read_inv i m)) m
+    <==>
+    interp (later p) m)
+
 val read_inv_disjoint (i:iref) (m0 m1:core_mem)
 : Lemma 
   (requires
@@ -303,6 +313,7 @@ val read_inv_disjoint (i:iref) (m0 m1:core_mem)
   (ensures 
     iname_ok i (join m0 m1) /\
     read_inv i m0 == read_inv i (join m0 m1))
+
 val mem_invariant_equiv :
       e:inames ->
       m:mem ->
