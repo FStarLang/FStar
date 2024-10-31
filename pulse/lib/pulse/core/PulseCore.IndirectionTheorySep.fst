@@ -247,4 +247,4 @@ let fresh_inv p m ctx =
     sep_laws () in
   (| i, m' |)
 
-let dup_inv_equiv i p = admit ()
+let dup_inv_equiv i p = I.dup_inv_equiv i p

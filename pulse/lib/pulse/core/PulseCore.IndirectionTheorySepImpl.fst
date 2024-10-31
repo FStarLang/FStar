@@ -785,6 +785,20 @@ let fresh_inv (p: slprop) (is: okay_istore) (a: iref { None? (read_istore is a) 
   istore_single_invariant (level_istore is) a p;
   is'
 
+let non_pulse_prop (p: slprop) =
+  forall i r1 r2. p (i, r1) <==> p (i, r2)
+
+let dup_inv_equiv i p : Lemma (inv i p == (inv i p `star` inv i p)) =
+  world_pred_ext (inv i p) (inv i p `star` inv i p) fun w ->
+    introduce inv i p w ==> star (inv i p) (inv i p) w with _. (
+      let w2 = (fst w, snd (empty (level_ w))) in
+      assert inv i p w;
+      assert inv i p w2;
+      pulse_heap_sig.sep.join_empty (snd w).pulse_heap;
+      assert disjoint_worlds w w2;
+      world_ext w (join_worlds w w2) (fun a -> ())
+    )
+
 // ----------------
 
 // inv i p  @ w_n  // eq_at n p p'
