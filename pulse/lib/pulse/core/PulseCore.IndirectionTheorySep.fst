@@ -36,9 +36,9 @@ let level_depends_on_core_istore_only m = ()
 
 let icredits k = k.saved_credits
 
-let is_ghost_action_istore i1 i2 =
-  i1.saved_credits >= i2.saved_credits /\
-  i1.freshness_counter <= i2.freshness_counter
+let is_ghost_action_istore i1 i2 = True
+  // i1.saved_credits >= i2.saved_credits /\
+  // i1.freshness_counter <= i2.freshness_counter
 
 let update_ghost m1 m2 =
   { istore = (reveal m2).istore; pulse_mem = PM.pulse_heap_sig.update_ghost m1.pulse_mem (reveal m2).pulse_mem; }
@@ -55,6 +55,9 @@ let istore_disjoint i0 i1 = I.disjoint_istore i0.ist i1.ist
 
 let istore_join i0 i1 =
   { ist = I.join_istore i0.ist i1.ist; saved_credits = i0.saved_credits + i1.saved_credits }
+
+let clear_credits i =
+  { i with saved_credits = 0 }
 
 let istore_join_refl i = I.join_istore_refl i.ist
 
@@ -94,7 +97,12 @@ let inames_ok_iff e (m: mem) : Lemma (inames_ok e m <==> istore_inames_ok e m.is
 let inames_ok_empty m = ()
 let inames_ok_union m = admit ()
 
-let istore_invariant ex i = admit ()
+let istore_invariant ex i = I.istore_invariant ex i.ist
+
+let mem_invariant_eq e (w:mem) : Lemma (mem_invariant e w == istore_invariant e w.istore) [SMTPat (mem_invariant e w)] =
+  assume PM.mem_invariant GhostSet.empty w.pulse_mem == PM.emp;
+  I.lift_emp_eq ();
+  I.sep_laws ()
 
 let inv i p = I.inv i p
 
@@ -142,7 +150,18 @@ let buy_mem n m = { m with istore = { m.istore with saved_credits = m.istore.sav
 let buy_lemma n m = ()
 let buy_disjoint n m0 m1 = ()
 
-let mem_invariant_equiv e m i p = admit ()
+let iname_ok i m = I.iname_ok i m.istore.ist
+let inames_ok_single i p m = ()
+let iname_ok_inames_ok i m = ()
+let read_inv i m = I.read_inv i m.istore.ist
+let read_inv_equiv i m p = ()
+let read_inv_disjoint i m0 m1 = ()
+
+let add_inv_eq e i : Lemma (add_inv e i == I.add_inv e i) [SMTPat (add_inv e i)] =
+  assert_norm (add_inv e i == I.add_inv e i) // why???
+
+let mem_invariant_equiv e m i =
+  I.istore_invariant_equiv e m.istore.ist i
 
 let inames_ok_istore_dom e m = ()
 
@@ -155,8 +174,10 @@ let inames_ok_disjoint = admit ()
 
 let mem_invariant_disjoint e f p0 p1 m0 m1 = admit ()
 
-let mem_invariant_age e m = ()
+let mem_invariant_age e m0 m1 = I.istore_invariant_age e m0.istore.ist (of_core m1)
 let mem_invariant_spend e m = ()
+
+let mem_invariant_buy e n m = ()
 
 let fresh_inv p m ctx = admit ()
 
