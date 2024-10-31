@@ -95,7 +95,9 @@ let inames_ok_iff e (m: mem) : Lemma (inames_ok e m <==> istore_inames_ok e m.is
   ()
 
 let inames_ok_empty m = ()
-let inames_ok_union m = admit ()
+let inames_ok_union i j m =
+  assert (I.inames_ok (FStar.GhostSet.union i j) m.istore.ist <==>
+    I.inames_ok i m.istore.ist /\ I.inames_ok j m.istore.ist)
 
 let istore_invariant ex i = I.istore_invariant ex i.ist
 
