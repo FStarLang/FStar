@@ -3,6 +3,7 @@ module F = FStar.FunctionalExtensionality
 module T = FStar.Tactics
 module PM = PulseCore.MemoryAlt
 module HST = PulseCore.HoareStateMonad
+open FStar.Ghost
 
 let pm_sep_laws () : squash (
   PulseCore.Semantics.(
@@ -26,6 +27,53 @@ let pm_sep_laws () : squash (
 let pm_sep : PulseCore.HeapSig.separable pulse_mem = PM.pulse_heap_sig.sep
 let pm_core_of (m:pulse_mem) : pulse_core_mem = PM.pulse_heap_sig.sep.core_of m
 
+let split_mem (p:slprop) (q:slprop) (m:erased core_mem { interp (p `star` q) m })
+: res:(erased core_mem & erased core_mem) {
+    let l, r = res in
+    disjoint l r /\
+    reveal m == join l r /\
+    interp p l /\
+    interp q r
+  }
+= star_equiv p q m;
+  let m1 : erased (core_mem) =
+    FStar.IndefiniteDescription.indefinite_description_tot
+      core_mem
+      (fun m1 -> 
+        exists m2. 
+          disjoint m1 m2 /\
+          reveal m == join m1 m2 /\
+          interp p m1 /\
+          interp q m2)
+  in
+  let m2 : erased (core_mem) =
+    FStar.IndefiniteDescription.indefinite_description_tot
+        core_mem
+        (fun m2 -> 
+            disjoint m1 m2 /\
+            reveal m == join m1 m2 /\
+            interp p m1 /\
+            interp q m2)
+  in
+  m1, m2
+
+let split_mem3 (pp qq rr:slprop) (s:erased core_mem { interp (pp `star` qq `star` rr) s })
+: res:(erased core_mem & erased core_mem & erased core_mem) {
+    let l, m, r = res in
+    // disjoint l m /\
+    disjoint m r /\
+    disjoint l (join m r) /\
+    reveal s == join l (join m r) /\
+    interp pp l /\
+    interp qq m /\
+    interp rr r
+}
+= sep_laws();
+  let m1, m2 = split_mem pp (qq `star` rr) s in
+  let lr :erased (erased core_mem & erased core_mem) = hide (split_mem qq rr m2) in
+  let l, m, r = m1, fst <| reveal lr, snd <| reveal lr in
+  l, m, r
+
 
 let pin_frame (p:pm_slprop) (frame:slprop) 
               (w:mem { interpret (lift p `star` frame) w })
@@ -36,84 +84,72 @@ let pin_frame (p:pm_slprop) (frame:slprop)
       (ensures interpret (lift q `star` frame) { w with pulse_mem = m'}))
 = let c = core_of w in
   let { pulse_mem; istore } = w in
+  let m0, m1 = split_mem (lift p) frame c in
   star_equiv (lift p) frame c;
-  eliminate exists m0 m1.
-      disjoint m0 m1 /\
-      c == join m0 m1 /\
-      interp (lift p) m0 /\
-      interp frame m1
-  returns
-    exists frame'. 
-      PM.interp (p `PM.star` frame') pulse_mem /\
-      (forall (q:PM.slprop) (m':_).
-        PM.interp (q `PM.star` frame') m' ==>
-        interpret (lift q `star` frame) { w with pulse_mem=m'})
-  with _ . (
-    let fr (pm:pulse_core_mem)
-      : prop 
+  let fr (pm:pulse_core_mem)  
+    : prop
     = interp frame { pulse_mem=pm; istore=m1.istore }
-    in
-    let fr_affine ()
-    : Lemma (HeapSig.is_affine_mem_prop pm_sep fr)
-    = introduce forall s0 s1.
-        fr s0 /\ pm_sep.disjoint s0 s1 ==> fr (pm_sep.join s0 s1)
-      with introduce _ ==> _
-      with _. ( 
-        let left = { pulse_mem = s0; istore = m1.istore } in
-        let right = { pulse_mem = s1; istore = clear_credits m1.istore } in
-        istore_join_refl m1.istore;
-        assert (disjoint left right);
-        assert (join left right == { pulse_mem = pm_sep.join s0 s1; istore=m1.istore })
-      )
-    in
-    fr_affine();
-    let frame' = PM.pulse_heap_sig.as_slprop fr in
-    lift_eq p;
-    assert (PM.pulse_heap_sig.interp p m0.pulse_mem);
-    assert (fr m1.pulse_mem);
-    PM.pulse_heap_sig.interp_as fr;
-    assert (PM.pulse_heap_sig.interp frame' m1.pulse_mem);
-    assert (pm_sep.disjoint m0.pulse_mem m1.pulse_mem);
-    assert (pm_sep.join m0.pulse_mem m1.pulse_mem == c.pulse_mem);
-    PM.pulse_heap_sig.star_equiv p frame' c.pulse_mem;
-    assert (PM.interp (p `PM.star` frame') pulse_mem);
-    introduce forall (q:PM.slprop) (m':_).
-        PM.interp (q `PM.star` frame') m' ==>
-        interpret (lift q `star` frame) { w with pulse_mem=m'}
+  in
+  let fr_affine ()
+  : Lemma (HeapSig.is_affine_mem_prop pm_sep fr)
+  = introduce forall s0 s1.
+      fr s0 /\ pm_sep.disjoint s0 s1 ==> fr (pm_sep.join s0 s1)
     with introduce _ ==> _
-    with _ . (
-      PM.pulse_heap_sig.star_equiv q frame' (pm_core_of m');
-      eliminate exists (m0' m1':pulse_core_mem).
-          pm_sep.disjoint m0' m1' /\
-          pm_core_of m' == pm_sep.join m0' m1' /\
-          PM.pulse_heap_sig.interp q m0' /\
-          PM.pulse_heap_sig.interp frame' m1'
-      returns _
-      with _ . ( 
-        assert (fr m1');
-        let mres = core_of { w with pulse_mem = m'} in
-        introduce exists (ml mr:core_mem).
-          disjoint ml mr /\
-          mres == join ml mr /\
-          interp (lift q) ml /\
-          interp frame mr
-        with ({ pulse_mem=m0'; istore=m0.istore})
-             ({ pulse_mem=m1'; istore=m1.istore })
-        and  (
-          let ml = { pulse_mem=m0'; istore=m0.istore } in
-          let mr = { pulse_mem=m1'; istore=m1.istore } in
-          assert (pm_sep.disjoint m0' m1');
-          assert (pm_sep.join m0' m1' == pm_core_of m');
-          assert (istore_disjoint m0.istore m1.istore);
-          assert (istore_join m0.istore m1.istore == c.istore);
-          assert (c.istore == mres.istore);
-          assert (interp frame mr);
-          lift_eq q;
-          assert (interp (lift q) ml)
-        );
-        star_equiv (lift q) frame mres;
-        assert (interp (lift q `star` frame) mres)
-      )
+    with _. ( 
+      let left = { pulse_mem = s0; istore = m1.istore } in
+      let right = { pulse_mem = s1; istore = clear_credits m1.istore } in
+      istore_join_refl m1.istore;
+      assert (disjoint left right);
+      assert (join left right == { pulse_mem = pm_sep.join s0 s1; istore=m1.istore })
+    )
+  in
+  fr_affine();
+  let frame' = PM.pulse_heap_sig.as_slprop fr in
+  lift_eq p;
+  assert (PM.pulse_heap_sig.interp p m0.pulse_mem);
+  assert (fr m1.pulse_mem);
+  PM.pulse_heap_sig.interp_as fr;
+  assert (PM.pulse_heap_sig.interp frame' m1.pulse_mem);
+  assert (pm_sep.disjoint m0.pulse_mem m1.pulse_mem);
+  assert (pm_sep.join m0.pulse_mem m1.pulse_mem == c.pulse_mem);
+  PM.pulse_heap_sig.star_equiv p frame' c.pulse_mem;
+  assert (PM.interp (p `PM.star` frame') pulse_mem);
+  introduce forall (q:PM.slprop) (m':_).
+      PM.interp (q `PM.star` frame') m' ==>
+      interpret (lift q `star` frame) { w with pulse_mem=m'}
+  with introduce _ ==> _
+  with _ . (
+    PM.pulse_heap_sig.star_equiv q frame' (pm_core_of m');
+    eliminate exists (m0' m1':pulse_core_mem).
+        pm_sep.disjoint m0' m1' /\
+        pm_core_of m' == pm_sep.join m0' m1' /\
+        PM.pulse_heap_sig.interp q m0' /\
+        PM.pulse_heap_sig.interp frame' m1'
+    returns _
+    with _ . ( 
+      assert (fr m1');
+      let mres = core_of { w with pulse_mem = m'} in
+      introduce exists (ml mr:core_mem).
+        disjoint ml mr /\
+        mres == join ml mr /\
+        interp (lift q) ml /\
+        interp frame mr
+      with ({ pulse_mem=m0'; istore=m0.istore})
+            ({ pulse_mem=m1'; istore=m1.istore })
+      and  (
+        let ml = { pulse_mem=m0'; istore=m0.istore } in
+        let mr = { pulse_mem=m1'; istore=m1.istore } in
+        assert (pm_sep.disjoint m0' m1');
+        assert (pm_sep.join m0' m1' == pm_core_of m');
+        assert (istore_disjoint m0.istore m1.istore);
+        assert (istore_join m0.istore m1.istore == c.istore);
+        assert (c.istore == mres.istore);
+        assert (interp frame mr);
+        lift_eq q;
+        assert (interp (lift q) ml)
+      );
+      star_equiv (lift q) frame mres;
+      assert (interp (lift q `star` frame) mres)
     )
   );
   let frame' =
@@ -201,54 +237,7 @@ let lift_mem_action #a #mg #ex #pre #post
     };
     is_ghost_action_istore_refl w0.istore;
     (x, w1)
-open FStar.Ghost
 
-let split_mem (p:slprop) (q:slprop) (m:erased core_mem { interp (p `star` q) m })
-: res:(erased core_mem & erased core_mem) {
-    let l, r = res in
-    disjoint l r /\
-    reveal m == join l r /\
-    interp p l /\
-    interp q r
-  }
-= star_equiv p q m;
-  let m1 : erased (core_mem) =
-    FStar.IndefiniteDescription.indefinite_description_tot
-      core_mem
-      (fun m1 -> 
-        exists m2. 
-          disjoint m1 m2 /\
-          reveal m == join m1 m2 /\
-          interp p m1 /\
-          interp q m2)
-  in
-  let m2 : erased (core_mem) =
-    FStar.IndefiniteDescription.indefinite_description_tot
-        core_mem
-        (fun m2 -> 
-            disjoint m1 m2 /\
-            reveal m == join m1 m2 /\
-            interp p m1 /\
-            interp q m2)
-  in
-  m1, m2
-
-let split_mem3 (pp qq rr:slprop) (s:erased core_mem { interp (pp `star` qq `star` rr) s })
-: res:(erased core_mem & erased core_mem & erased core_mem) {
-    let l, m, r = res in
-    // disjoint l m /\
-    disjoint m r /\
-    disjoint l (join m r) /\
-    reveal s == join l (join m r) /\
-    interp pp l /\
-    interp qq m /\
-    interp rr r
-}
-= sep_laws();
-  let m1, m2 = split_mem pp (qq `star` rr) s in
-  let lr :erased (erased core_mem & erased core_mem) = hide (split_mem qq rr m2) in
-  let l, m, r = m1, fst <| reveal lr, snd <| reveal lr in
-  l, m, r
 
 let intro_star (p q:slprop) (m0 m1:core_mem)
 : Lemma
@@ -530,21 +519,12 @@ let witness_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
            (fun x -> p x)
 = fun frame s0 ->
     sep_laws();
-    assert (interpret (op_exists_Star p `star` (frame `star` mem_invariant opened_invariants s0)) s0);
-    star_equiv (op_exists_Star p) (frame `star` mem_invariant opened_invariants s0) (core_of s0);
-    eliminate exists m1 m2.
-      disjoint m1 m2 /\
-      core_of s0 == join m1 m2 /\
-      interp (op_exists_Star p) m1 /\
-      interp (frame `star` mem_invariant opened_invariants s0) m2
+    let m1, m2 = split_mem (op_exists_Star p) (frame `star` mem_invariant opened_invariants s0) (core_of s0) in 
+    interp_exists p;
+    eliminate exists x. interp (p x) m1
     returns exists x. interp (p x `star` (frame `star` mem_invariant opened_invariants s0)) (core_of s0)
-    with _ . (
-      interp_exists p;
-      eliminate exists x. interp (p x) m1
-      returns _
-      with _. (
+    with _. (
         star_equiv (p x) (frame `star` mem_invariant opened_invariants s0) (core_of s0)
-      )
     );
     let x =
       FStar.IndefiniteDescription.indefinite_description_tot
@@ -560,18 +540,9 @@ let intro_exists (#opened_invariants:_) (#a:_) (p:a -> slprop) (x:erased a)
   (fun _ -> op_exists_Star p)
 = fun frame s0 ->
     sep_laws();
-    assert (interpret (p x `star` (frame `star` mem_invariant opened_invariants s0)) s0);
-    star_equiv (p x) (frame `star` mem_invariant opened_invariants s0) (core_of s0);
-    eliminate exists m1 m2.
-      disjoint m1 m2 /\
-      core_of s0 == join m1 m2 /\
-      interp (p x) m1 /\
-      interp (frame `star` mem_invariant opened_invariants s0) m2
-    returns interp (op_exists_Star p `star` (frame `star` mem_invariant opened_invariants s0)) (core_of s0)
-    with _ . (
-      interp_exists p;
-      star_equiv (op_exists_Star p) (frame `star` mem_invariant opened_invariants s0) (core_of s0)
-    );
+    let m1, m2 = split_mem (p x) (frame `star` mem_invariant opened_invariants s0) (core_of s0) in
+    interp_exists p;
+    star_equiv (op_exists_Star p) (frame `star` mem_invariant opened_invariants s0) (core_of s0);
     is_ghost_action_refl s0;
     (), s0
 
@@ -582,40 +553,21 @@ let raise_exists (#opened_invariants:_) (#a:Type u#a) (p:a -> slprop)
 = fun frame s0 ->
     let x, s1 = witness_exists #opened_invariants #a p frame s0 in
     sep_laws();
-    assert (interp (p x `star` (frame `star` mem_invariant opened_invariants s1)) (core_of s1));
-    star_equiv (p x) (frame `star` mem_invariant opened_invariants s1) (core_of s1);
-    eliminate exists m1 m2.
-      disjoint m1 m2 /\
-      core_of s1 == join m1 m2 /\
-      interp (p x) m1 /\
-      interp (frame `star` mem_invariant opened_invariants s1) m2
-    returns interp (op_exists_Star #(U.raise_t a) (U.lift_dom p) `star` (frame `star` mem_invariant opened_invariants s1)) (core_of s1)
-    with _ . (
-      let x = reveal x in
-      assert (interp ((U.lift_dom p) (U.raise_val u#a u#b x)) m1);
-      interp_exists (U.lift_dom u#a u#_ u#b p);
-      assert (interp (op_exists_Star #(U.raise_t u#a u#b a) (U.lift_dom p)) m1);
-      star_equiv (op_exists_Star #(U.raise_t u#a u#b a) (U.lift_dom p)) (frame `star` mem_invariant opened_invariants s1) (core_of s1)
-    );
+    let m1, m2 = split_mem (p x) (frame `star` mem_invariant opened_invariants s1) (core_of s1) in
+    assert (interp ((U.lift_dom p) (U.raise_val u#a u#b (reveal x))) m1);
+    interp_exists (U.lift_dom u#a u#_ u#b p);
+    assert (interp (op_exists_Star #(U.raise_t u#a u#b a) (U.lift_dom p)) m1);
+    star_equiv (op_exists_Star #(U.raise_t u#a u#b a) (U.lift_dom p)) (frame `star` mem_invariant opened_invariants s1) (core_of s1);
     (), s1
 
 let elim_pure (#opened_invariants:_) (p:prop)
 : ghost_act (u:unit{p}) opened_invariants (pure p) (fun _ -> emp)
 = fun frame s0 ->
     sep_laws();
-    assert (interpret (pure p `star` (frame `star` mem_invariant opened_invariants s0)) s0);
-    star_equiv (pure p) (frame `star` mem_invariant opened_invariants s0) (core_of s0);
-    eliminate exists m1 m2.
-      disjoint m1 m2 /\
-      core_of s0 == join m1 m2 /\
-      interp (pure p) m1 /\
-      interp (frame `star` mem_invariant opened_invariants s0) m2
-    returns p /\ interp (emp `star` (frame `star` mem_invariant opened_invariants s0)) (core_of s0)
-    with _ . (
-      interp_pure p m1;
-      emp_equiv m1;
-      star_equiv emp (frame `star` mem_invariant opened_invariants s0) (core_of s0)
-    );
+    let m1, m2 = split_mem (pure p) (frame `star` mem_invariant opened_invariants s0) (core_of s0) in
+    interp_pure p m1;
+    emp_equiv m1;
+    star_equiv emp (frame `star` mem_invariant opened_invariants s0) (core_of s0);
     is_ghost_action_refl s0;
     (), s0
 
@@ -623,18 +575,9 @@ let intro_pure (#opened_invariants:_) (p:prop) (_:squash p)
 : ghost_act unit opened_invariants emp (fun _ -> pure p)
 = fun frame s0 -> 
     sep_laws();
-    assert (interpret (emp `star` (frame `star` mem_invariant opened_invariants s0)) s0);
-    star_equiv emp (frame `star` mem_invariant opened_invariants s0) (core_of s0);
-    eliminate exists m1 m2.
-      disjoint m1 m2 /\
-      core_of s0 == join m1 m2 /\
-      interp emp m1 /\
-      interp (frame `star` mem_invariant opened_invariants s0) m2
-    returns interp (pure p `star` (frame `star` mem_invariant opened_invariants s0)) (core_of s0)
-    with _ . (
-      interp_pure p m1;
-      star_equiv (pure p) (frame `star` mem_invariant opened_invariants s0) (core_of s0)
-    );
+    let m1, m2 = split_mem emp (frame `star` mem_invariant opened_invariants s0) (core_of s0) in
+    interp_pure p m1;
+    star_equiv (pure p) (frame `star` mem_invariant opened_invariants s0) (core_of s0);
     is_ghost_action_refl s0;
     (), s0
 
@@ -642,18 +585,9 @@ let drop (#opened_invariants:_) (p:slprop)
 : ghost_act unit opened_invariants p (fun _ -> emp)
 = fun frame s0 -> 
     sep_laws();
-    assert (interpret (p `star` (frame `star` mem_invariant opened_invariants s0)) s0);
-    star_equiv p (frame `star` mem_invariant opened_invariants s0) (core_of s0);
-    eliminate exists m1 m2.
-      disjoint m1 m2 /\
-      core_of s0 == join m1 m2 /\
-      interp p m1 /\
-      interp (frame `star` mem_invariant opened_invariants s0) m2
-    returns interp (emp `star` (frame `star` mem_invariant opened_invariants s0)) (core_of s0)
-    with _ . (
-      emp_equiv m1;
-      star_equiv emp (frame `star` mem_invariant opened_invariants s0) (core_of s0)
-    );
+    let m1, m2 = split_mem p (frame `star` mem_invariant opened_invariants s0) (core_of s0) in
+    emp_equiv m1;
+    star_equiv emp (frame `star` mem_invariant opened_invariants s0) (core_of s0);
     is_ghost_action_refl s0;
     (), s0
 
