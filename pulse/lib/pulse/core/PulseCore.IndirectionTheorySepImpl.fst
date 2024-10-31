@@ -559,12 +559,7 @@ let lift_star_eq p q =
 
 let lift_exists_eq a f =
   world_pred_ext (lift (PM.h_exists f)) (exists* x. lift (f x)) fun w ->
-    let f' : a -> GTot pulse_heap_sig.slprop = fun x -> f x in
-    HS.interp_exists f';
-    let m = (snd w).pulse_heap in
-    assert pulse_heap_sig.interp (HS.exists_ f') m <==>
-      (exists x. pulse_heap_sig.interp (f x) m);
-    admit ()
+    HS.interp_exists #pulse_heap_sig f
 
 let later (p: slprop) : slprop =
   introduce forall (w: preworld) (n: nat).
