@@ -406,6 +406,16 @@ let indefinite_description_ghost2 (a b: Type) (p: (a -> b -> prop) { exists x y.
   let y = indefinite_description_ghost b fun y -> p x y in
   (x, y)
 
+let star__elim (p1 p2: world_pred) (w: preworld { star_ p1 p2 w }) :
+    GTot (w':(preworld & preworld) { disjoint_worlds w'._1 w'._2 /\ w == join_worlds w'._1 w'._2 /\ p1 w'._1 /\ p2 w'._2 }) =
+  indefinite_description_ghost2 _ _ fun w1 w2 -> 
+    disjoint_worlds w1 w2 /\ w == join_worlds w1 w2 /\ p1 w1 /\ p2 w2 
+
+let star__intro (p1 p2: world_pred) (w w1 w2: preworld) :
+    Lemma (requires disjoint_worlds w1 w2 /\ w == join_worlds w1 w2 /\ p1 w1 /\ p2 w2)
+      (ensures star_ p1 p2 w) =
+  ()
+
 let star__commutative (p1 p2:world_pred)
 : Lemma (p1 `star_` p2 == p2 `star_` p1)
 = FStar.Classical.forall_intro_2 disjoint_world_sym;
@@ -416,10 +426,8 @@ let star__assoc (x y z:world_pred)
 : Lemma (star_ x (star_ y z) == star_ (star_ x y) z)
 =
   introduce forall x y z w. star_ x (star_ y z) w ==> star_ (star_ x y) z w with introduce _ ==> _ with _. (
-    let (w1, w23) = indefinite_description_ghost2 _ _ fun w1 w23 ->
-      disjoint_worlds w1 w23 /\ w == join_worlds w1 w23 /\ x w1 /\ star_ y z w23 in
-    let (w2, w3) = indefinite_description_ghost2 _ _ fun w2 w3 ->
-      disjoint_worlds w2 w3 /\ w23 == join_worlds w2 w3 /\ y w2 /\ z w3 in
+    let (w1, w23) = star__elim x (star_ y z) w in
+    let (w2, w3) = star__elim y z w23 in
     join_worlds_associative w1 w2 w3;
     let w12 = join_worlds w1 w2 in
     assert star_ x y w12;
@@ -439,8 +447,7 @@ let star (p1 p2:slprop) : slprop =
   introduce forall a b. world_le a b /\ star_ p1 p2 a ==> star_ p1 p2 b with introduce _ ==> _ with _. (
     world_le_iff a b;
     let c = indefinite_description_ghost _ fun c -> b == join_worlds a c in
-    let (a1, a2) = indefinite_description_ghost2 _ _ fun a1 a2 ->
-      disjoint_worlds a1 a2 /\ a == join_worlds a1 a2 /\ p1 a1 /\ p2 a2 in
+    let (a1, a2) = star__elim p1 p2 a in
     assert b == join_worlds (join_worlds a1 a2) c;
     join_worlds_commutative (join_worlds a1 a2) c; 
     assert b == join_worlds c (join_worlds a1 a2);
@@ -453,6 +460,14 @@ let star (p1 p2:slprop) : slprop =
     assert p1 (join_worlds a1 c)
   );
   star_ p1 p2
+
+let star_elim (p1 p2: slprop) (w: preworld { star p1 p2 w }) :
+    GTot (w':(preworld & preworld) { disjoint_worlds w'._1 w'._2 /\ w == join_worlds w'._1 w'._2 /\ p1 w'._1 /\ p2 w'._2 }) =
+  star__elim p1 p2 w
+
+let star_intro (p1 p2: slprop) (w w1 w2: preworld) :
+    Lemma (requires disjoint_worlds w1 w2 /\ w == join_worlds w1 w2 /\ p1 w1 /\ p2 w2)
+      (ensures star p1 p2 w) = ()
 
 let star_commutative (p1 p2:slprop)
 : Lemma (p1 `star` p2 == p2 `star` p1)
@@ -486,8 +501,7 @@ let star_emp (x: slprop) : squash (star x emp == x) =
       join_worlds_commutative w2 w
     );
     introduce star x emp w ==> x w with _. (
-      let (w1, w2) = indefinite_description_ghost2 _ _ fun w1 w2 ->
-        disjoint_worlds w1 w2 /\ w == join_worlds w1 w2 /\ x w1 /\ emp w2 in
+      let (w1, w2) = star_elim x emp w in
       world_le_iff w1 w
     )
 
@@ -523,7 +537,25 @@ let lift_pure_eq p =
 let lift_star_eq p q =
   world_pred_ext (lift (PM.star p q)) (star (lift p) (lift q)) fun w ->
     pulse_heap_sig.star_equiv p q (snd w).pulse_heap;
-    admit ()
+    introduce
+      forall (m0 m1 : pulse_core_mem).
+          pulse_heap_sig.sep.disjoint m0 m1 /\
+          (snd w).pulse_heap == pulse_heap_sig.sep.join m0 m1 /\
+          pulse_heap_sig.interp p m0 /\
+          pulse_heap_sig.interp q m1
+        ==> star (lift p) (lift q) w with introduce _ ==> _ with _. (
+      let w0: preworld = (fst w, ({ snd w with pulse_heap = m0 } <: rest)) in
+      let w1: preworld = (fst w, ({ pulse_heap = m1; saved_credits = 0 } <: rest)) in
+      assert disjoint_worlds w0 w1;
+      join_istore_refl (fst w);
+      assert join_worlds w0 w1 == w;
+      assert lift p w0;
+      assert lift q w1;
+      ()
+    );
+    introduce star (lift p) (lift q) w ==> lift (PM.star p q) w with _.
+      let (w1, w2) = star_elim (lift p) (lift q) w in
+      ()
 
 let lift_exists_eq a f =
   world_pred_ext (lift (PM.h_exists f)) (exists* x. lift (f x)) fun w ->
@@ -600,8 +632,7 @@ let rejuvenate1_sep (w w1': preworld) (w2': preworld { disjoint_worlds w1' w2' /
 let later_star (p q: slprop) : squash (later (star p q) == star (later p) (later q)) =
   world_pred_ext (later (star p q)) (star (later p) (later q)) fun w ->
     introduce star p q (age1_ w) ==> star (later p) (later q) w with _. (
-      let (w1', w2') = indefinite_description_ghost2 _ _ fun w1' w2' ->
-        disjoint_worlds w1' w2' /\ age1_ w == join_worlds w1' w2' /\ p w1' /\ q w2' in
+      let (w1', w2') = star_elim p q (age1_ w) in
       let (w1, w2) = rejuvenate1_sep w w1' w2' in
       assert later p w1;
       assert later q w2
@@ -609,11 +640,13 @@ let later_star (p q: slprop) : squash (later (star p q) == star (later p) (later
 
 let iref = address
 
+let inv_prop (i:iref) (p:slprop) (is:istore) : prop =
+  exists p'.
+    read_istore is i == Inv p' /\
+    eq_at (level_istore is) p p'
+
 let inv (i:iref) (p:slprop) : slprop =
-  F.on_dom preworld #(fun _ -> prop) fun w ->
-    exists p'.
-      read w i == Inv p' /\
-      eq_at (level_ w) p p'
+  F.on_dom preworld #(fun _ -> prop) fun w -> inv_prop i p (fst w)
 
 module GS = FStar.GhostSet
 
@@ -651,11 +684,106 @@ let rec istore_invariant_ (ex: inames) (is: okay_istore) (f: address) : slprop =
       | Inv p -> later p `star` istore_invariant_ ex is f'
       | _ -> istore_invariant_ ex is f'
 
+let rec istore_invariant__congr (ex: inames) (m: okay_istore) (f1 f2: (f:address { fresh_addr m f })) :
+    Lemma (ensures istore_invariant_ ex m f1 == istore_invariant_ ex m f2) (decreases f1+f2+f2) =
+  if f1 < f2 then
+    istore_invariant__congr ex m f2 f1
+  else if f1 > f2 then
+    istore_invariant__congr ex m (f1 - 1) f2
+  else
+    ()
+
 [@@"opaque_to_smt"] irreducible let some_fresh_addr (is: okay_istore) : a:address { fresh_addr is a } =
   indefinite_description_ghost address fun a -> fresh_addr is a
 
 let istore_invariant (ex: inames) (is: okay_istore) : slprop =
   istore_invariant_ ex is (some_fresh_addr is)
+
+let rec istore_invariant__equiv (ex: inames) (m: okay_istore) (i:iref { iname_ok i m /\ ~(GS.mem i ex) }) (f: address) :
+    Lemma (istore_invariant_ ex m f ==
+      (if i < f then
+        istore_invariant_ (add_inv ex i) m f `star` later (read_inv i m)
+      else
+        istore_invariant_ (add_inv ex i) m f)) =
+  if reveal f = 0 then
+    ()
+  else
+    let f': address = f - 1 in
+    istore_invariant__equiv ex m i f';
+    if GS.mem f' ex then
+      ()
+    else
+      match read_istore m f' with
+      | Inv p -> sep_laws ()
+      | _ -> ()
+
+let istore_invariant_equiv (ex: inames) (m: okay_istore) (i:iref { iname_ok i m /\ ~(GS.mem i ex) }) :
+    Lemma (istore_invariant ex m ==
+      istore_invariant (add_inv ex i) m `star` later (read_inv i m)) =
+  istore_invariant__equiv ex m i (some_fresh_addr m)
+
+let rec istore_invariant__age (e:inames) (is: okay_istore { level_istore is > 0 }) (f: address) :
+    Lemma (forall w. 1 < level_ w /\ level_ w <= level_istore is /\ istore_invariant_ e is f w ==>
+        istore_invariant_ e (age1_istore is) f (age1_ w)) =
+  if reveal f = 0 then
+    ()
+  else
+    let f': address = f - 1 in
+    istore_invariant__age e is f';
+    if GS.mem f' e then
+      ()
+    else
+      match read_istore is f' with
+      | Inv p ->
+        let Inv p' = read_istore (age1_istore is) f' in
+        assert eq_at (level_istore is - 1) p p';
+        introduce forall (w:preworld { 1 < level_ w /\ level_ w <= level_istore is /\ istore_invariant_ e is f w }).
+            istore_invariant_ e (age1_istore is) f (age1_ w) with (
+          let (w1, w2) = star_elim (later p) (istore_invariant_ e is f') w in
+          assert istore_invariant_ e (age1_istore is) f' (age1_ w2);
+          assert p (age1_ w1);
+          eq_at_elim (level_istore is - 1) p p' (age1_ (age1_ w1));
+          star_intro (later (later p')) (later (istore_invariant_ e (age1_istore is) f')) w w1 w2;
+          later_star (later p') (istore_invariant_ e (age1_istore is) f');
+          assert (later p' `star` istore_invariant_ e (age1_istore is) f') (age1_ w)
+        )
+      | _ ->
+        ()
+
+let istore_invariant_age (e:inames) (is: okay_istore { level_istore is > 0 })
+    (w: preworld { 1 < level_ w /\ level_ w <= level_istore is }) :
+    Lemma (istore_invariant e is w ==> istore_invariant e (age1_istore is) (age1_ w)) =
+  introduce istore_invariant e is w ==> istore_invariant e (age1_istore is) (age1_ w) with _. (
+    istore_invariant__age e is (some_fresh_addr is);
+    istore_invariant__congr e (age1_istore is) (some_fresh_addr is) (some_fresh_addr (age1_istore is))
+  )
+
+let max x y = if x > y then x else y
+
+let istore_single n (a: iref) (p: slprop) : okay_istore =
+  let is = mk_istore n fun b -> if reveal a = reveal b then Inv p else None in
+  assert fresh_addr is (a + 1);
+  is
+
+let rec istore_single_invariant_ n a p f : squash (istore_invariant_ (single a) (istore_single n a p) f == emp) =
+  if reveal f = 0 then
+    ()
+  else
+    istore_single_invariant_ n a p (f - 1)
+
+let istore_single_invariant n a p : Lemma (istore_invariant (single a) (istore_single n a p) == emp) =
+  istore_single_invariant_ n a p (some_fresh_addr (istore_single n a p))
+
+let fresh_inv (p: slprop) (is: okay_istore) (a: iref { None? (read_istore is a) }) :
+    is':okay_istore {
+      disjoint_istore is is' /\
+      inv_prop a p is' /\
+      istore_invariant (single a) is' == emp /\
+      GS.disjoint (istore_dom is) (istore_dom is')
+    } =
+  let is' = istore_single (level_istore is) a p in
+  istore_single_invariant (level_istore is) a p;
+  is'
 
 // ----------------
 

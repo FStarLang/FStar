@@ -296,7 +296,7 @@ val iname_ok_inames_ok (i:iref) (m:mem)
         [SMTPat (inames_ok (single i) m)]
 
 val read_inv (i: iref) (m: core_mem { iname_ok i m }) : slprop
-val read_inv_equiv (i:iref) (m:core_mem { iname_ok i m }) p 
+val read_inv_equiv (i:iref) (m:core_mem { iname_ok i m /\ level m > 0 }) p 
 : Lemma
   (requires 
     interp (inv i p) m)
@@ -357,7 +357,7 @@ val mem_invariant_disjoint (e f:inames) (p0 p1:slprop) (m0 m1:mem)
     let m = join_mem m0 m1 in
     interp (p0 `star` p1 `star` mem_invariant (FStar.GhostSet.union e f) m) (core_of m)))
 
-val mem_invariant_age (e:inames) (m0:mem) (m1:core_mem)
+val mem_invariant_age (e:inames) (m0:mem) (m1:core_mem { 1 < level m1 /\ level m1 <= level (core_of m0) })
 : Lemma
   (ensures 
     interp (mem_invariant e m0) m1 ==>
