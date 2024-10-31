@@ -7,7 +7,7 @@ module PropExt = FStar.PropositionalExtensionality
 noeq type istore = {
   ist: I.okay_istore;
   saved_credits: erased nat;
-  freshness_counter: nat;
+  freshness_counter: n:nat { I.fresh_addr ist n };
 }
 
 [@@erasable]
@@ -159,6 +159,8 @@ let read_inv_disjoint i m0 m1 = ()
 
 let add_inv_eq e i : Lemma (add_inv e i == I.add_inv e i) [SMTPat (add_inv e i)] =
   assert_norm (add_inv e i == I.add_inv e i) // why???
+let single_eq i : Lemma (single i == I.single i) [SMTPat (single)] =
+  assert_norm (single i == I.single i) // why???
 
 let mem_invariant_equiv e m i =
   I.istore_invariant_equiv e m.istore.ist i
@@ -190,6 +192,28 @@ let mem_invariant_spend e m = ()
 
 let mem_invariant_buy e n m = ()
 
-let fresh_inv p m ctx = admit ()
+assume val pulse_empty_mem : m:pulse_mem { pulse_core_of m == PM.pulse_heap_sig.sep.empty
+  /\ forall m'. PM.pulse_heap_sig.sep.disjoint (pulse_core_of m') (pulse_core_of m) /\ pulse_join_mem m' m == m' }
+
+let rec mk_fresh (i: iref) (ctx: list iref) :
+    Tot (j:iref { j >= i /\ fresh_wrt ctx j }) (decreases ctx) =
+  match ctx with
+  | [] -> i
+  | c::cs -> mk_fresh (max i (c+1)) cs
+
+let fresh_inv p m ctx =
+  let i: iref = mk_fresh m.istore.freshness_counter ctx in
+  let m': mem = {
+    istore = {
+      ist = I.fresh_inv p m.istore.ist i;
+      saved_credits = 0;
+      freshness_counter = i+1;
+    };
+    pulse_mem = pulse_empty_mem;
+  } in
+  let _: squash (inv i p `star` mem_invariant (single i) m' == inv i p) =
+    I.istore_single_invariant (level (core_of m)) i p;
+    sep_laws () in
+  (| i, m' |)
 
 let dup_inv_equiv i p = admit ()

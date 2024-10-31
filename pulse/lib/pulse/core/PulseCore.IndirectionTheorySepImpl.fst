@@ -622,11 +622,13 @@ let later_star (p q: slprop) : squash (later (star p q) == star (later p) (later
 
 let iref = address
 
+let inv_prop (i:iref) (p:slprop) (is:istore) : prop =
+  exists p'.
+    read_istore is i == Inv p' /\
+    eq_at (level_istore is) p p'
+
 let inv (i:iref) (p:slprop) : slprop =
-  F.on_dom preworld #(fun _ -> prop) fun w ->
-    exists p'.
-      read w i == Inv p' /\
-      eq_at (level_ w) p p'
+  F.on_dom preworld #(fun _ -> prop) fun w -> inv_prop i p (fst w)
 
 module GS = FStar.GhostSet
 
@@ -737,6 +739,33 @@ let istore_invariant_age (e:inames) (is: okay_istore { level_istore is > 0 })
     istore_invariant__age e is (some_fresh_addr is);
     istore_invariant__congr e (age1_istore is) (some_fresh_addr is) (some_fresh_addr (age1_istore is))
   )
+
+let max x y = if x > y then x else y
+
+let istore_single n (a: iref) (p: slprop) : okay_istore =
+  let is = mk_istore n fun b -> if reveal a = reveal b then Inv p else None in
+  assert fresh_addr is (a + 1);
+  is
+
+let rec istore_single_invariant_ n a p f : squash (istore_invariant_ (single a) (istore_single n a p) f == emp) =
+  if reveal f = 0 then
+    ()
+  else
+    istore_single_invariant_ n a p (f - 1)
+
+let istore_single_invariant n a p : Lemma (istore_invariant (single a) (istore_single n a p) == emp) =
+  istore_single_invariant_ n a p (some_fresh_addr (istore_single n a p))
+
+let fresh_inv (p: slprop) (is: okay_istore) (a: iref { None? (read_istore is a) }) :
+    is':okay_istore {
+      disjoint_istore is is' /\
+      inv_prop a p is' /\
+      istore_invariant (single a) is' == emp /\
+      GS.disjoint (istore_dom is) (istore_dom is')
+    } =
+  let is' = istore_single (level_istore is) a p in
+  istore_single_invariant (level_istore is) a p;
+  is'
 
 // ----------------
 
