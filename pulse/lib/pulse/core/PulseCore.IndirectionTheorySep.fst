@@ -168,9 +168,20 @@ let inames_ok_istore_dom e m = ()
 let inames_ok_update e m0 m1 =
   assert forall i. GhostSet.mem i (istore_dom m0) <==> GhostSet.mem i (istore_dom m1)
 
-let join_mem m0 m1 = admit ()
+let pulse_core_of (m: pulse_mem) : pulse_core_mem = PM.pulse_heap_sig.sep.core_of m
+assume val pulse_join_mem (m0: pulse_mem) (m1: pulse_mem { PM.pulse_heap_sig.sep.disjoint (pulse_core_of m0) (pulse_core_of m1) }) :
+  m:pulse_mem { pulse_core_of m == PM.pulse_heap_sig.sep.join (pulse_core_of m0) (pulse_core_of m1) }
 
-let inames_ok_disjoint = admit ()
+let max x y = if x > y then x else y
+
+let join_mem m0 m1 =
+  { istore = {
+    ist = I.join_istore m0.istore.ist m1.istore.ist;
+    saved_credits = m0.istore.saved_credits + m1.istore.saved_credits;
+    freshness_counter = max m0.istore.freshness_counter m1.istore.freshness_counter;
+  }; pulse_mem = pulse_join_mem m0.pulse_mem m1.pulse_mem }
+
+let inames_ok_disjoint i j mi mj = ()
 
 let mem_invariant_disjoint e f p0 p1 m0 m1 = admit ()
 
