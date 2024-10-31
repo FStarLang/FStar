@@ -139,7 +139,25 @@ let inv i p = I.inv i p
 
 let later p = I.later p
 let later_credit n = I.later_credit n
+
+let later_credit_zero = I.later_credit_zero
+let later_credit_add = I.later_credit_add
+
+let timeless_lift p = I.timeless_lift p
+let timeless_pure p = I.timeless_pure p
+let timeless_emp () = I.timeless_emp ()
+let timeless_later_credit n = I.timeless_later_credit n
+let later_star p q = I.later_star p q
+let later_exists f =
+  assert_norm (later (exists* x. f x) == I.(later (exists* x. f x)));
+  assert_norm ((exists* x. later (f x)) == I.(exists* x. later (f x)));
+  I.later_exists f
+
 let equiv = I.equiv
+let intro_equiv p m = ()
+let equiv_comm p q = I.equiv_comm p q
+let equiv_elim p q = I.equiv_elim p q
+let equiv_trans p q r = I.equiv_trans p q r
 
 let intro_later p m = ()
 
@@ -216,6 +234,7 @@ let join_mem m0 m1 =
 
 let inames_ok_disjoint i j mi mj = ()
 
+#push-options "--split_queries always"
 let mem_invariant_disjoint e f p0 p1 m0 m1 =
   I.istore_invariant_disjoint e f m0.istore.ist m1.istore.ist;
   let m = join_mem m0 m1 in
@@ -230,6 +249,7 @@ let mem_invariant_disjoint e f p0 p1 m0 m1 =
       (p0 `star` mem_invariant e m0) `star` (p1 `star` mem_invariant f m1)) =
     sep_laws () in
   assert interp (p0 `star` p1 `star` mem_invariant (FStar.GhostSet.union e f) m) (core_of m)
+#pop-options
 
 let mem_invariant_age e m0 m1 = I.istore_invariant_age e m0.istore.ist (of_core m1)
 let mem_invariant_spend e m = ()

@@ -197,9 +197,26 @@ let mem_invariant (e:inames) (w:mem)
 
 
 val inv (i:iref) (p:slprop) : slprop
+
 val later (p:slprop) : slprop
 val later_credit (n:nat) : slprop
+
+val later_credit_zero () : squash (later_credit 0 == emp)
+val later_credit_add m n : squash (later_credit (m + n) == later_credit m `star` later_credit n)
+
+let timeless (p: slprop) = later p == p
+val timeless_lift p : squash (timeless (lift p))
+val timeless_pure p : squash (timeless (pure p))
+val timeless_emp () : squash (timeless emp)
+val timeless_later_credit n : squash (timeless (later_credit n))
+val later_star p q : squash (later (star p q) == star (later p) (later q))
+val later_exists #t (f:t->slprop) : squash (later (exists* x. f x) == (exists* x. later (f x)))
+
 val equiv (p q:slprop) : slprop
+val intro_equiv (p: slprop) m : squash (interp (equiv p p) m)
+val equiv_comm (p q: slprop) : squash (equiv p q == equiv q p)
+val equiv_elim p q : squash (equiv p q `star` p == equiv p q `star` q)
+val equiv_trans (p q r: slprop) : squash (equiv p q `star` equiv q r == equiv p q `star` equiv p r)
 
 val intro_later (p:slprop) (m:core_mem)
 : Lemma (interp p m ==> interp (later p) m)

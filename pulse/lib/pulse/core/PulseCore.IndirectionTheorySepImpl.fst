@@ -582,8 +582,21 @@ let timeless_lift (p: PM.slprop) : squash (timeless (lift p)) =
 let timeless_pure (p: prop) : squash (timeless (pure p)) =
   world_pred_ext (later (pure p)) (pure p) fun w -> ()
 
-let later_credit n : slprop =
+let later_credit (n: nat) : slprop =
   F.on_dom preworld #(fun _ -> prop) fun w -> (snd w).saved_credits >= n
+
+let later_credit_zero () : squash (later_credit 0 == emp) =
+  world_pred_ext (later_credit 0) emp fun _ -> ()
+
+let later_credit_add (m n: nat) : squash (later_credit (m + n) == later_credit m `star` later_credit n) =
+  world_pred_ext (later_credit (m+n)) (later_credit m `star` later_credit n) fun w ->
+    introduce later_credit (m+n) w ==> (later_credit m `star` later_credit n) w with _. (
+      let w1: preworld = (fst w, ({ saved_credits = (snd w).saved_credits - n; pulse_heap = (snd w).pulse_heap } <: rest)) in
+      let w2: preworld = (fst w, ({ saved_credits = n; pulse_heap = pulse_heap_sig.sep.empty } <: rest)) in
+      pulse_heap_sig.sep.join_empty (snd w).pulse_heap;
+      assert disjoint_worlds w1 w2;
+      world_ext w (join_worlds w1 w2) fun _ -> ()
+    )
 
 let timeless_later_credit n : squash (timeless (later_credit n)) =
   world_pred_ext (later (later_credit n)) (later_credit n) fun w -> ()
@@ -595,7 +608,22 @@ let eq_at_elim n (p q: world_pred) (w: preworld) :
     Lemma (requires eq_at n p q /\ level_ w < n) (ensures p w <==> q w) =
   assert approx n p w == approx n q w
 
-let later_emp () : squash (later emp == emp) =
+let equiv_comm (p q: slprop) : squash (equiv p q == equiv q p) =
+  world_pred_ext (equiv p q) (equiv q p) fun _ -> ()
+
+let equiv_elim (p q: slprop) : squash (equiv p q `star` p == equiv p q `star` q) =
+  let aux (p q: slprop) (w: preworld) =
+    introduce (equiv p q `star` p) w ==> (equiv p q `star` q) w with _. (
+      let (w1, w2) = star_elim (equiv p q) p w in
+      eq_at_elim (level_ w + 1) p q w2
+    ) in
+  world_pred_ext (equiv p q `star` p) (equiv p q `star` q) fun w ->
+    aux p q w; aux q p w
+
+let equiv_trans (p q r: slprop) : squash (equiv p q `star` equiv q r == equiv p q `star` equiv p r) =
+  world_pred_ext (equiv p q `star` equiv q r) (equiv p q `star` equiv p r) fun w -> ()
+
+let timeless_emp () : squash (timeless emp) =
   world_pred_ext (later emp) emp fun w -> ()
 
 let rejuvenate1_istore (is: istore) (is': istore { istore_le is' (age1_istore is) }) :
@@ -632,6 +660,9 @@ let later_star (p q: slprop) : squash (later (star p q) == star (later p) (later
       assert later p w1;
       assert later q w2
     )
+
+let later_exists #t (f:t->slprop) : squash (later (exists* x. f x) == (exists* x. later (f x))) =
+  world_pred_ext _ _ fun w -> ()
 
 let iref = address
 
