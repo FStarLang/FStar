@@ -68,7 +68,36 @@ let interp p =
     introduce _ ==> _ with _.  assert I.world_le (of_core m0) (of_core (join m0 m1));
   fun m -> p (of_core m)
 
-let star_equiv p q m = admit ()
+let star_equiv p q m =
+  introduce
+    forall m0 m1. 
+      disjoint m0 m1 /\
+      m == join m0 m1 /\
+      interp p m0 /\
+      interp q m1
+      ==> interp (p `star` q) m
+    with introduce _ ==> _ with _. (
+    let w0 = of_core m0 in
+    let w1 = of_core m1 in
+    assert I.disjoint_worlds w0 w1;
+    assert of_core m == I.join_worlds w0 w1
+  );
+  introduce
+    interp (p `star` q) m ==>
+    exists m0 m1. 
+      disjoint m0 m1 /\
+      m == join m0 m1 /\
+      interp p m0 /\
+      interp q m1
+    with _. (
+    let w = of_core m in
+    assert I.star p q w;
+    let (w1, w2) = I.star_elim p q w in
+    let m1 = to_core w1 in
+    let m2 = to_core w2 in
+    assert disjoint m1 m2;
+    assert to_core w == join m1 m2
+  )
 
 let emp_equiv m = ()
 
