@@ -17,7 +17,7 @@ let to_core (w: I.world) : core_mem =
 let of_core (m: core_mem) : GTot I.world =
   (m.istore.ist, ({ saved_credits = m.istore.saved_credits; pulse_heap = m.pulse_mem } <: I.rest))
 
-let istore_core i = { ist = i.ist; saved_credits = i.saved_credits }
+let istore_core i = i
 
 let age1 k =
   { k with istore = { k.istore with ist = I.age1_istore k.istore.ist } }
