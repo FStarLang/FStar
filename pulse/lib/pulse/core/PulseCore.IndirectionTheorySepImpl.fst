@@ -548,9 +548,9 @@ let lift_star_eq p q =
       let (w1, w2) = star_elim (lift p) (lift q) w in
       ()
 
-let lift_exists_eq a f =
-  world_pred_ext (lift (PM.h_exists f)) (exists* x. lift (f x)) fun w ->
-    HS.interp_exists #pulse_heap_sig f
+// let lift_exists_eq a f =
+//   world_pred_ext (lift (PM.h_exists f)) (exists* x. lift (f x)) fun w ->
+//     HS.interp_exists #pulse_heap_sig f
 
 let later (p: slprop) : slprop =
   introduce forall (w: preworld) (n: nat).

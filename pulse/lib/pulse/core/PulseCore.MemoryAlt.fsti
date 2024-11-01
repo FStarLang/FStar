@@ -229,22 +229,6 @@ val mem_invariant (e:inames) (m:mem u#a) : slprop u#a
 val full_mem_pred: mem -> prop
 let full_mem = m:mem{full_mem_pred m}
 
-val pulse_heap_sig : hs:PulseCore.HeapSig.heap_sig {
-  hs.mem == mem /\
-  hs.slprop == slprop /\
-  hs.emp == emp /\
-  hs.star == star /\
-  (forall t (f:t->slprop). HeapSig.exists_ #hs f == h_exists f) /\
-  pure == hs.pure /\
-  (forall p m. interp p m == hs.interp p (hs.sep.core_of m)) /\
-  iref == hs.iref /\
-  (forall e m. inames_ok e m == HeapSig.inames_ok #hs e m) /\
-  mem_invariant == hs.mem_invariant /\
-  (forall m1 m2. is_ghost_action m1 m2 == hs.is_ghost_action m1 m2) /\
-  full_mem_pred == hs.full_mem_pred
-} 
-
-
 (**** Actions *)
 
 let _PST 
@@ -284,6 +268,25 @@ let pst_ghost_action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (
 
 (**** Invariants *)
 val inv (i:iref) (p:slprop u#a) : slprop u#a
+
+val pulse_heap_sig : hs:PulseCore.HeapSig.heap_sig u#(a + 3) {
+// val pulse_heap_sig_properties () : squash (
+  // let hs = pulse_heap_sig in
+  hs.mem == mem /\
+  hs.slprop == slprop /\
+  hs.emp == emp /\
+  hs.star == star /\
+  // (forall t (f:t->slprop). HeapSig.exists_ #hs f == h_exists f) /\
+  pure == hs.pure /\
+  (forall p m. interp p m == hs.interp p (hs.sep.core_of m)) /\
+  iref == hs.iref /\
+  (forall e m. inames_ok e m == HeapSig.inames_ok #hs e m) /\
+  mem_invariant == hs.mem_invariant /\
+  (forall m1 m2. is_ghost_action m1 m2 == hs.is_ghost_action m1 m2) /\
+  full_mem_pred == hs.full_mem_pred
+}
+
+
 val storable_inv (i:iref { storable_iref i }) (p:slprop { is_slprop3 p })
 : Lemma (is_slprop3 (inv i p))
 let live (i:iref) = h_exists (fun p -> inv i p)

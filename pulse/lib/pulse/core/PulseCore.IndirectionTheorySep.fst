@@ -111,9 +111,9 @@ let lift_eq p = ()
 let lift_emp_eq () = I.lift_emp_eq ()
 let lift_pure_eq p = I.lift_pure_eq p
 let lift_star_eq p q = I.lift_star_eq p q
-let lift_exists_eq a f =
-  I.world_pred_ext (lift PM.(h_exists f)) (exists* x. lift (f x)) fun _ ->
-    I.lift_exists_eq a f
+// let lift_exists_eq a f =
+//   I.world_pred_ext (lift PM.(h_exists f)) (exists* x. lift (f x)) fun _ ->
+//     I.lift_exists_eq a f
 
 let iref = I.iref
 let deq_iref = fun x y -> reveal x = reveal y
