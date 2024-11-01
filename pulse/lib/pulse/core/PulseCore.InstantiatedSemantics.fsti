@@ -25,6 +25,12 @@ val ( exists* ) (#a:Type u#a) (p: a -> slprop) : slprop
 val later_credit (n:nat) : slprop
 val later (p:slprop) : slprop
 val equiv (p q:slprop) : slprop
+
+val later_credit_add (a b: nat)
+: Lemma (later_credit (a + b) == later_credit a ** later_credit b)
+
+val later_credit_zero () : Lemma (later_credit 0 == emp)
+
 // val timeless (p:slprop) : prop
 // val timeless_slprops ()
 // : squash (

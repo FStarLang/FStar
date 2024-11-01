@@ -200,11 +200,6 @@ val later_elim (p:slprop)
 val buy (n:erased nat)
 : stt unit emp (fun _ -> later_credit n)
 
-val later_credit_add (a b: nat)
-: Lemma (later_credit (a + b) == later_credit a ** later_credit b)
-
-val later_credit_zero () : Lemma (later_credit 0 == emp)
-
 ////////////////////////////////////////////////////////////////////////
 // References
 ////////////////////////////////////////////////////////////////////////

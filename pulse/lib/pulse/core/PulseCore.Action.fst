@@ -440,8 +440,6 @@ let buy (n:erased nat)
 : stt unit emp (fun _ -> later_credit n)
 = stt_of_action0 (ITA.buy emp_inames n)
 
-let later_credit_add _ _ = admit()
-let later_credit_zero _ = admit()
 ///////////////////////////////////////////////////////////////////
 // Core operations on references
 ///////////////////////////////////////////////////////////////////

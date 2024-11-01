@@ -56,6 +56,8 @@ let op_exists_Star #a p = op_exists_Star #a p
 let later_credit = later_credit
 let later = later
 let equiv = equiv
+let later_credit_add n m = later_credit_add n m
+let later_credit_zero () = later_credit_zero()
 let iref = iref
 let inv i p = inv i p
 

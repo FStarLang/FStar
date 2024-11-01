@@ -543,10 +543,6 @@ let pulse_heap_sig : hs:PulseCore.HeapSig.heap_sig u#(a + 3) {
       (inames_ok e m)
       (HeapSig.inames_ok #hs e m)
   );
-  // introduce forall t (f:t->slprop). HeapSig.exists_ #hs f == h_exists f
-  // with (
-  //   admit()
-  // );
   hs
 
 let storable_inv (i:iref { storable_iref i }) (p:slprop { is_slprop3 p })
