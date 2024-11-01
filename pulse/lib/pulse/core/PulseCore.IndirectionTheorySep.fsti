@@ -415,3 +415,6 @@ val dup_inv_equiv :
     i:iref ->
     p:slprop ->
     Lemma (inv i p == (inv i p `star` inv i p))
+
+val invariant_name_identifies_invariant (i: iref) (p q: slprop) (m: core_mem { level m > 0 }) :
+  Lemma (interp (star (inv i p) (inv i q)) m ==> interp (later (equiv p q)) m)

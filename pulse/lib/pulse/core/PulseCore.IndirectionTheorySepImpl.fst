@@ -861,6 +861,10 @@ let dup_inv_equiv i p : Lemma (inv i p == (inv i p `star` inv i p)) =
       world_ext w (join_worlds w w2) (fun a -> ())
     )
 
+let invariant_name_identifies_invariant (i: iref) (p q: slprop) (w: preworld { level_ w > 0 }) :
+    squash (star (inv i p) (inv i q) w ==> later (equiv p q) w) =
+  ()
+
 // ----------------
 
 // inv i p  @ w_n  // eq_at n p p'

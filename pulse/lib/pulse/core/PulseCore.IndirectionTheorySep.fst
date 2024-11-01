@@ -283,3 +283,6 @@ let fresh_inv p m ctx =
   (| i, m' |)
 
 let dup_inv_equiv i p = I.dup_inv_equiv i p
+
+let invariant_name_identifies_invariant i p q m =
+  I.invariant_name_identifies_invariant i p q (of_core m)
