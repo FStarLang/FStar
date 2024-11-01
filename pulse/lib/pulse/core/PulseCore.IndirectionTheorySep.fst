@@ -42,7 +42,13 @@ let emp = I.emp
 let pure = I.pure
 let star = I.star
 
-let (exists*) #a f = I.((exists*)) f
+let (exists*) #a f = I.((exists*)) #a (F.on_dom a #(fun _ -> slprop) f)
+
+let exists_ext (#a:Type u#a) (p q : a -> slprop)
+: Lemma
+  (requires F.feq p q)
+  (ensures op_exists_Star p == op_exists_Star q)
+= ()
 
 let sep_laws = I.sep_laws
 

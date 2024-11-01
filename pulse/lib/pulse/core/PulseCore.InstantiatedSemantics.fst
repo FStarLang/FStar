@@ -86,7 +86,8 @@ let slprop_equiv_exists
     (p q: a -> slprop)
     (_:squash (forall x. slprop_equiv (p x) (q x)))
 = assert (F.feq p q);
-  exists_ext p q;
+  assert (F.feq (F.on_dom a p) (F.on_dom a q));
+  Sep.exists_ext p q;
   return_slprop_equiv (op_exists_Star p) (op_exists_Star q) ()
 
 (* The type of general-purpose computations *)
