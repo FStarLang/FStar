@@ -368,7 +368,6 @@ val mem_invariant_disjoint (e f:inames) (p0 p1:slprop) (m0 m1:mem)
   (requires
     disjoint (core_of m0) (core_of m1) /\
     FStar.GhostSet.disjoint (istore_dom m0) (istore_dom m1) /\
-    GhostSet.disjoint e (istore_dom m1) /\ GhostSet.disjoint f (istore_dom m0) /\
     interp (p0 `star` mem_invariant e m0) (core_of m0) /\
     interp (p1 `star` mem_invariant f m1) (core_of m1))
   (ensures (

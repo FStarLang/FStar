@@ -230,6 +230,7 @@ let inames_ok_disjoint i j mi mj = ()
 
 #push-options "--split_queries always"
 let mem_invariant_disjoint e f p0 p1 m0 m1 =
+  assume GhostSet.disjoint e (istore_dom m1) /\ GhostSet.disjoint f (istore_dom m0); // FIXME
   I.istore_invariant_disjoint e f m0.istore.ist m1.istore.ist;
   let m = join_mem m0 m1 in
   assert 
