@@ -21,6 +21,7 @@ module FStar.Class.Printable
 open FStar.String
 open FStar.Seq.Properties
 
+
 class printable (a:Type) =
 {
   to_string : a -> string
@@ -84,19 +85,6 @@ instance printable_char : printable FStar.Char.char =
 {
   to_string = string_of_char
 }
-
-(* Floats are not yet well implemented, so these are placeholders.*)
-(*
-instance printable_float : printable FStar.Float.float =
-{
-  to_string = FStar.Float.to_string
-}
-
-instance printable_double : printable FStar.Float.double =
-{
-  to_string = FStar.Float.to_string
-}
-*)
 
 instance printable_byte : printable FStar.UInt8.byte =
 {
@@ -263,4 +251,32 @@ instance printable_seq (#b:Type) (x:printable b) : printable (Seq.seq b) =
      "<" ^
        FStar.String.concat "; " (Seq.seq_to_list strings_of_b) 
      ^ ">")
+}
+
+instance printable_float : printable FStar.Float.float =
+{
+  to_string = (fun f -> "#float")
+}
+
+instance printable_double : printable FStar.Float.double =
+{
+  to_string = (fun d -> "#double")
+}
+
+module IA  = FStar.ImmutableArray
+module IAB = FStar.ImmutableArray.Base
+
+instance printable_array (#a: Type) (b : printable a) : printable (IAB.t a) =
+{
+  to_string = (fun a -> 
+               let l  = IA.to_list a in
+               let ss = List.Tot.map to_string l in
+                  "|[" ^
+                  (FStar.String.concat "; " ss)
+                  ^ "]|")
+}
+
+instance printable_char_code : printable FStar.Char.char_code =
+{
+  to_string = (fun (cc: FStar.Char.char_code) -> FStar.UInt32.to_string cc)
 }
