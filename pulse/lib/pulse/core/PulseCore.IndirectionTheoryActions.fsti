@@ -45,6 +45,9 @@ val lift_mem_action #a #mg #ex #pre #post
 : _act_except a (if mg then GHOST else ATOMIC) ex (lift pre) (fun x -> lift (post x))
 
 
+val later_intro (e:inames) (p:slprop) 
+: ghost_act unit e p (fun _ -> later p)
+
 val later_elim (e:inames) (p:slprop) 
 : ghost_act unit e (later p `star` later_credit 1) (fun _ -> p)
 

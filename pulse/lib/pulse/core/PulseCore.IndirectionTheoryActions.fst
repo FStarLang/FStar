@@ -245,6 +245,16 @@ let intro_star (p q:slprop) (m0 m1:core_mem)
   (ensures interp (p `star` q) (join m0 m1))
 = star_equiv p q (join m0 m1)
 
+let later_intro (e:inames) (p:slprop)
+: ghost_act unit e p (fun _ -> later p)
+= fun frame s0 ->
+    let open FStar.Ghost in
+    sep_laws();
+    let m0, m1 = split_mem p (frame `star` mem_invariant e s0) (core_of s0) in
+    intro_later p m0;
+    star_equiv (later p) (frame `star` mem_invariant e s0) (core_of s0);
+    is_ghost_action_refl s0;
+    (), s0
 
 let later_elim (e:inames) (p:slprop) 
 : ghost_act unit e (later p `star` later_credit 1) (fun _ -> p)

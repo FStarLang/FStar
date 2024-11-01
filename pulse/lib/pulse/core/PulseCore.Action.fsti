@@ -188,6 +188,22 @@ val invariant_name_identifies_invariant
       (inv i p ** inv j q)
       (fun _ -> inv i p ** inv j q ** equiv p q)
 
+////////////////////////////////////////////////////////////////////////
+// later and credits
+////////////////////////////////////////////////////////////////////////
+val later_intro (p:slprop)
+: act unit Ghost emp_inames p (fun _ -> later p)
+
+val later_elim (p:slprop)
+: act unit Ghost emp_inames (later p ** later_credit 1) (fun _ -> p)
+
+val buy (n:erased nat)
+: stt unit emp (fun _ -> later_credit n)
+
+val later_credit_add (a b: nat)
+: Lemma (later_credit (a + b) == later_credit a ** later_credit b)
+
+val later_credit_zero () : Lemma (later_credit 0 == emp)
 
 ////////////////////////////////////////////////////////////////////////
 // References

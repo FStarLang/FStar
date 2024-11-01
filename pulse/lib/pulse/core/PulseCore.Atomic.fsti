@@ -302,7 +302,19 @@ val invariant_name_identifies_invariant
     unit
     emp_inames
     (inv i p ** inv j q)
-    (fun _ -> inv i p ** inv j q ** InstantiatedSemantics.equiv p q)
+    (fun _ -> inv i p ** inv j q ** later (InstantiatedSemantics.equiv p q))
+
+////////////////////////////////////////////////////////////////////////
+// later and credits
+////////////////////////////////////////////////////////////////////////
+val later_intro (p:slprop)
+: stt_ghost unit emp_inames p (fun _ -> later p)
+
+val later_elim (p:slprop)
+: stt_ghost unit emp_inames (later p ** later_credit 1) (fun _ -> p)
+
+val buy (n:erased nat)
+: stt unit emp (fun _ -> later_credit n)
 
 ////////////////////////////////////////////////////////////////////////
 // References

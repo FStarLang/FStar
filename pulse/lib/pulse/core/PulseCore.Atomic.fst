@@ -308,6 +308,9 @@ let with_invariant_g #a #fp #fp' #f_opens #p i $f =
   A.with_invariant #a #Ghost #fp #fp' #f_opens #p i g
 
 let invariant_name_identifies_invariant p q i j = admit()
+let later_intro p = Ghost.hide (A.later_intro p)
+let later_elim p = Ghost.hide (A.later_elim p)
+let buy = A.buy
 
 let pts_to_not_null #a #p r v = Ghost.hide (A.pts_to_not_null #a #p r v)
 let alloc #a #pcm x = A.alloc x

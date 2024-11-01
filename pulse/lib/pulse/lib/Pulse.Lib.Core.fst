@@ -30,49 +30,49 @@ let allow_ambiguous = ()
 
 let slprop = slprop
 
-let slprop4_base = slprop
-let down4 = id
-let up4 = id
-let up4_is_slprop4 = fun _ -> ()
+// let slprop4_base = slprop
+// let down4 = id
+// let up4 = id
+// let up4_is_slprop4 = fun _ -> ()
 
-let slprop3_base = slprop3_base
-let down3 = down3
-let up3 = up3
-let up3_is_slprop3 = up3_is_slprop3
+// let slprop3_base = slprop3_base
+// let down3 = down3
+// let up3 = up3
+// let up3_is_slprop3 = up3_is_slprop3
 
-let slprop2_base = slprop2_base
-let down2 = down2
-let up2 = up2
-let up2_is_slprop2 = up2_is_slprop2
+// let slprop2_base = slprop2_base
+// let down2 = down2
+// let up2 = up2
+// let up2_is_slprop2 = up2_is_slprop2
 
-let slprop1_base = slprop1_base
-let down1 = down1
-let up1 = up1
-let up1_is_slprop1 = up1_is_slprop1
+// let slprop1_base = slprop1_base
+// let down1 = down1
+// let up1 = up1
+// let up1_is_slprop1 = up1_is_slprop1
 
-let slprop_2_is_3 = slprop_2_is_3
-let slprop_1_is_2 = slprop_1_is_2
+// let slprop_2_is_3 = slprop_2_is_3
+// let slprop_1_is_2 = slprop_1_is_2
 
 let emp = emp
-let emp_is_slprop2 = ()
+//let emp_is_slprop2 = ()
 let pure = pure
-let pure_is_slprop2 p = ()
+// let pure_is_slprop2 p = ()
 let op_Star_Star = op_Star_Star
-let slprop3_star p q = slprop3_star p q
-let slprop2_star p q = slprop2_star p q
-let slprop1_star p q = slprop1_star p q
+// let slprop3_star p q = slprop3_star p q
+// let slprop2_star p q = slprop2_star p q
+// let slprop1_star p q = slprop1_star p q
 let op_exists_Star = op_exists_Star
-let slprop3_exists #a p = slprop3_exists #a p
-let slprop2_exists #a p = slprop2_exists #a p
-let slprop1_exists #a p = slprop1_exists #a p
-let up3_emp    = up3_emp
-let down3_emp  = down3_emp
-let up3_star   = up3_star
-let down3_star = down3_star
-let up2_emp    = up2_emp
-let down2_emp  = down2_emp
-let up2_star   = up2_star
-let down2_star = down2_star
+// let slprop3_exists #a p = slprop3_exists #a p
+// let slprop2_exists #a p = slprop2_exists #a p
+// let slprop1_exists #a p = slprop1_exists #a p
+// let up3_emp    = up3_emp
+// let down3_emp  = down3_emp
+// let up3_star   = up3_star
+// let down3_star = down3_star
+// let up2_emp    = up2_emp
+// let down2_emp  = down2_emp
+// let up2_star   = up2_star
+// let down2_star = down2_star
 let slprop_equiv = slprop_equiv
 let elim_slprop_equiv #p #q pf = slprop_equiv_elim p q
 let slprop_post_equiv = slprop_post_equiv
@@ -150,7 +150,6 @@ let slprop_equiv_ext p1 p2 _ = slprop_equiv_refl p1
 module Act = PulseCore.Action
 
 let iname = Act.iref
-let storable_iname = Act.storable_iref
 let deq_iname = Act.deq_iref
 instance non_informative_iname = {
   reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer iname;
@@ -162,7 +161,6 @@ let join_emp is =
   GhostSet.lemma_equal_intro (join_inames emp_inames is) is
 
 let inv i p = Act.(inv i p)
-let storable_inv i p = Act.storable_inv i p
 let add_already_there i is = GhostSet.lemma_equal_intro (add_inv is i) is
 
 ////////////////////////////////////////////////////////////////////
@@ -210,21 +208,22 @@ let sub_invs_ghost = A.sub_invs_stt_ghost
 // Later
 //////////////////////////////////////////////////////////////////////////
 
-let later_credit amt = admit ()
-let later_credit_zero _ = admit ()
-let later_credit_add a b = admit ()
-let later_credit_buy amt = admit ()
+let later_credit = later_credit
+let later_credit_zero _ = PulseCore.Action.later_credit_zero ()
+let later_credit_add a b = PulseCore.Action.later_credit_add a b
+let later_credit_buy amt = A.buy amt
 
-let later p = admit ()
-let later_intro p = admit ()
-let later_elim p = admit ()
-let later_elim_storable p = admit ()
+let later = later
+let later_intro p = A.later_intro p
+let later_elim p = A.later_elim p
+let timeless p = admit ()
+let later_elim_timeless p = admit ()
 
 //////////////////////////////////////////////////////////////////////////
 // Equivalence
 //////////////////////////////////////////////////////////////////////////
 
-let equiv a b = admit ()
+let equiv = I.equiv
 let equiv_dup a b = admit ()
 let equiv_refl a = admit ()
 let equiv_comm a b = admit ()
@@ -247,14 +246,13 @@ let really_big_gather x #y1 #y2 = admit ()
 // Invariants
 ////////////////////////////////////////////////////////////////////
 let dup_inv = A.dup_inv
-let new_invariant = admit ()
-let new_storable_invariant = A.new_storable_invariant
+let new_invariant = A.new_invariant
 let fresh_wrt = PulseCore.Action.fresh_wrt
 let fresh_wrt_def i c = ()
 let fresh_invariant = A.fresh_invariant
-let with_invariant = admit ()
-let with_invariant_g = admit ()
-let invariant_name_identifies_invariant #p #q i j = admit ()
+let with_invariant = A.with_invariant
+let with_invariant_g = A.with_invariant_g
+let invariant_name_identifies_invariant #p #q i j = A.invariant_name_identifies_invariant p q i j
 
 //////////////////////////////////////////////////////////////////////////
 // Some basic actions and ghost operations

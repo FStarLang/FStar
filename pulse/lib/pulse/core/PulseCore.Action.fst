@@ -424,6 +424,24 @@ let with_invariant #a #r #fp #fp' #f_opens #p i f =
 let invariant_name_identifies_invariant p q i j =
   fun #ictx -> admit() //invariant_name_identifies_invariant ictx p q i j
 
+
+////////////////////////////////////////////////////////////////////////
+// later and credits
+////////////////////////////////////////////////////////////////////////
+let later_intro (p:slprop)
+: act unit Ghost emp_inames p (fun _ -> later p)
+= fun #ictx -> ITA.later_intro ictx p
+
+let later_elim (p:slprop)
+: act unit Ghost emp_inames (later p ** later_credit 1) (fun _ -> p)
+= fun #ictx -> ITA.later_elim ictx p
+
+let buy (n:erased nat)
+: stt unit emp (fun _ -> later_credit n)
+= stt_of_action0 (ITA.buy emp_inames n)
+
+let later_credit_add _ _ = admit()
+let later_credit_zero _ = admit()
 ///////////////////////////////////////////////////////////////////
 // Core operations on references
 ///////////////////////////////////////////////////////////////////
