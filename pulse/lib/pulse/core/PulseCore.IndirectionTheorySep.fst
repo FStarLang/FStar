@@ -7,14 +7,9 @@ module PropExt = FStar.PropositionalExtensionality
 noeq type istore = {
   ist: I.okay_istore;
   saved_credits: erased nat;
-  freshness_counter: n:nat { I.fresh_addr ist n };
 }
 
-[@@erasable]
-noeq type core_istore = {
-  ist: I.okay_istore;
-  saved_credits: erased nat;
-}
+let core_istore = istore
 
 let to_core (w: I.world) : core_mem =
   { istore = { ist = fst w; saved_credits = (snd w).saved_credits }; pulse_mem = (snd w).pulse_heap }
@@ -229,7 +224,6 @@ let join_mem m0 m1 =
   { istore = {
     ist = I.join_istore m0.istore.ist m1.istore.ist;
     saved_credits = m0.istore.saved_credits + m1.istore.saved_credits;
-    freshness_counter = max m0.istore.freshness_counter m1.istore.freshness_counter;
   }; pulse_mem = pulse_join_mem m0.pulse_mem m1.pulse_mem }
 
 let inames_ok_disjoint i j mi mj = ()
@@ -266,12 +260,13 @@ let rec mk_fresh (i: iref) (ctx: list iref) :
   | c::cs -> mk_fresh (max i (c+1)) cs
 
 let fresh_inv p m ctx =
-  let i: iref = mk_fresh m.istore.freshness_counter ctx in
+  let f = IndefiniteDescription.indefinite_description_ghost iref fun f ->
+    I.fresh_addr m.istore.ist f in
+  let i: iref = mk_fresh f ctx in
   let m': mem = {
     istore = {
       ist = I.fresh_inv p m.istore.ist i;
       saved_credits = 0;
-      freshness_counter = i+1;
     };
     pulse_mem = pulse_empty_mem;
   } in

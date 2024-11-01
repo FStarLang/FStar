@@ -206,15 +206,6 @@ let credits (w: world) : GTot nat =
   w._2.saved_credits
 
 let okay_istore = is:istore { istore_ok is }
-noeq type mem = {
-  invariants: okay_istore;
-  pulse_heap : pulse_heap_sig.mem;
-  saved_credits : erased nat;
-  freshness_counter: (c:erased nat { fresh_addr invariants c });
-}
-
-let core_of (m: mem) : world =
-  (m.invariants, ({ pulse_heap = pulse_heap_sig.sep.core_of m.pulse_heap; saved_credits = m.saved_credits } <: rest))
 
 let eq_at (n:nat) (t0 t1:world_pred) =
   approx n t0 == approx n t1
