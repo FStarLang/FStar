@@ -58,7 +58,6 @@ let full_mem = m:mem { is_full m }
 val emp : slprop
 val pure (p:prop) : slprop
 val star (p q:slprop) : slprop
-
 val ( exists* ) (#a:Type u#a) (f:a -> slprop) : slprop
 
 val sep_laws (_:unit) : squash (
@@ -69,6 +68,10 @@ val sep_laws (_:unit) : squash (
   )
 )
 
+val exists_ext (#a:Type u#a) (p q : a -> slprop)
+: Lemma
+  (requires F.feq p q)
+  (ensures op_exists_Star p == op_exists_Star q)
 
 val istore_disjoint (i0 i1:core_istore) : prop
 val istore_join (i0:core_istore) (i1:core_istore { istore_disjoint i0 i1}) : core_istore

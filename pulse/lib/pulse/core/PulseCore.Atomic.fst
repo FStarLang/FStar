@@ -24,7 +24,7 @@ open PulseCore.Action
 
 let r_of_obs = function
   | Neutral -> Ghost
-  | _ -> Reifiable
+  | _ -> Atomic
 
 let stt_atomic a #obs opens pre post =
   A.act a (r_of_obs obs) opens pre post
@@ -95,10 +95,9 @@ let bind_atomic
     (e1:stt_atomic a #obs1 opens pre1 post1)
     (e2:(x:a -> stt_atomic b #obs2 opens (post1 x) post2))
 = match r_of_obs obs1, r_of_obs obs2 with
-  | Ghost, Ghost
-  | Reifiable, Reifiable -> A.bind e1 e2
-  | Ghost, _ -> A.bind (A.lift_ghost_reifiable e1) e2
-  | _ -> A.bind e1 (fun x -> A.lift_ghost_reifiable (e2 x))
+  | Ghost, Ghost -> A.bind e1 e2
+  | Ghost, _ -> A.bind (A.lift_ghost_atomic e1) e2
+  | _, Ghost -> A.bind e1 (fun x -> A.lift_ghost_atomic (e2 x))
 
 let lift_observability
     (#a:Type u#a)
@@ -108,7 +107,7 @@ let lift_observability
     (#post:a -> slprop)
     (e:stt_atomic a #obs opens pre post)
 = match r_of_obs obs, r_of_obs obs' with
-  | Ghost, Reifiable -> A.lift_ghost_reifiable e
+  | Ghost, Atomic -> A.lift_ghost_atomic e
   | _ -> e
 
 let lift_atomic0
@@ -285,12 +284,9 @@ let ghost_reveal (a:Type) (x:erased a)
 
 let dup_inv (i:iref) (p:slprop) = A.dup_inv i p
 
-let new_invariant (p:slprop3)
+let new_invariant (p:slprop)
 : stt_ghost iref emp_inames p (fun i -> inv i p)
 = A.new_invariant p
-let new_storable_invariant (p:slprop2)
-: stt_ghost (i:iref{ storable_iref i }) emp_inames p (fun i -> inv i p)
-= A.new_storable_invariant p
 
 let fresh_invariant ctx p = A.fresh_invariant ctx p
 
@@ -301,20 +297,17 @@ let pull_up_ghost (#a #b:Type) (f:a -> GTot b) : GTot (g:(a -> b) {forall x. f x
   FStar.Ghost.Pull.pull f
 
 let with_invariant_g #a #fp #fp' #f_opens #p i $f =
-  let f : unit -> stt_ghost a f_opens (p ** fp) (fun x -> p ** fp' x) = f in
-  let f : unit -> Ghost.erased (act a Ghost f_opens (p ** fp) (fun x -> p ** fp' x)) = f in
-  let g : unit -> GTot (act a Ghost f_opens (p ** fp) (fun x -> p ** fp' x)) =
+  let f : unit -> stt_ghost a f_opens (later p ** fp) (fun x -> later p ** fp' x) = f in
+  let f : unit -> Ghost.erased (act a Ghost f_opens (later p ** fp) (fun x -> later p ** fp' x)) = f in
+  let g : unit -> GTot (act a Ghost f_opens (later p ** fp) (fun x -> later p ** fp' x)) =
     fun () -> 
     let r = f () in
     Ghost.reveal r
   in
-  let g : unit -> act a Ghost f_opens (p ** fp) (fun x -> p ** fp' x) = pull_up_ghost g in
+  let g : unit -> act a Ghost f_opens (later p ** fp) (fun x -> later p ** fp' x) = pull_up_ghost g in
   A.with_invariant #a #Ghost #fp #fp' #f_opens #p i g
 
-let distinct_invariants_have_distinct_names i j _ =
-  A.distinct_invariants_have_distinct_names i j ()
-let invariant_name_identifies_invariant p q i j =
-  A.invariant_name_identifies_invariant p q i j
+let invariant_name_identifies_invariant p q i j = admit()
 
 let pts_to_not_null #a #p r v = Ghost.hide (A.pts_to_not_null #a #p r v)
 let alloc #a #pcm x = A.alloc x

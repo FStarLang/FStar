@@ -56,6 +56,9 @@ val dup_inv (e:inames) (i:iref) (p:slprop)
     (inv i p) 
     (fun _ -> inv i p `star` inv i p)
 
+val fresh_invariant (e:inames) (p:slprop) (ctx:FStar.Ghost.erased (list iref))
+: ghost_act (i:iref{fresh_wrt ctx i}) e p (fun i -> inv i p)
+
 val new_invariant (e:inames) (p:slprop)
 : ghost_act iref e p (fun i -> inv i p)
 
