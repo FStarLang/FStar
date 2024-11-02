@@ -820,6 +820,69 @@ let istore_invariant_disjoint (e1 e2:inames) (m1 m2:okay_istore) :
   istore_invariant__congr e2 m2 (some_fresh_addr m2) (some_fresh_addr m);
   istore_invariant__disjoint e1 e2 m1 m2 (some_fresh_addr m)
 
+let rec istore_invariant__mono (ex1: inames) (ex2: inames)
+    (m: okay_istore { forall i. GS.mem i (istore_dom m) /\ GS.mem i ex1 ==> GS.mem i ex2 })
+    (f: address) (w: preworld) :
+    squash (istore_invariant_ ex1 m f w ==> istore_invariant_ ex2 m f w) =
+  introduce _ ==> _ with _.
+  if reveal f = 0 then
+    ()
+  else
+    let f': address = f - 1 in
+    if GS.mem f' ex1 then
+      istore_invariant__mono ex1 ex2 m f' w
+    else
+      match read_istore m f' with
+      | Inv p ->
+        let (w1, w2) = star_elim (later p) (istore_invariant_ ex1 m f') w in
+        istore_invariant__mono ex1 ex2 m f' w2;
+        join_worlds_commutative w1 w2;
+        assert world_le w2 w
+      | _ ->
+        istore_invariant__mono ex1 ex2 m f' w
+
+let istore_invariant_mono (ex1: inames) (ex2: inames)
+    (m: okay_istore { forall i. GS.mem i (istore_dom m) /\ GS.mem i ex1 ==> GS.mem i ex2 })
+    (w: preworld) :
+    squash (istore_invariant ex1 m w ==> istore_invariant ex2 m w) =
+  istore_invariant__mono ex1 ex2 m (some_fresh_addr m) w
+
+let gs_diff #t (a b: GS.set t) : GS.set t =
+  GS.comprehend fun i -> GS.mem i a && not (GS.mem i b)
+
+let istore_invariant_disjoint' (e f:inames) (p0 p1:slprop) (m0 m1:world) :
+    Lemma (requires
+      disjoint_worlds m0 m1 /\
+      GS.disjoint (istore_dom (fst m0)) (istore_dom (fst m1)) /\
+      (p0 `star` istore_invariant e (fst m0)) m0 /\
+      (p1 `star` istore_invariant f (fst m1)) m1)
+    (ensures (
+      let m = join_worlds m0 m1 in
+      (p0 `star` p1 `star` istore_invariant (GS.union e f) (fst m)) m)) =
+  let e' = gs_diff e (istore_dom (fst m1)) in
+  let _ : squash ((p0 `star` istore_invariant e' (fst m0)) m0) =
+    let (w1, w2) = star_elim p0 (istore_invariant e (fst m0)) m0 in
+    istore_invariant_mono e e' (fst m0) w2;
+    star_intro p0 (istore_invariant e' (fst m0)) m0 w1 w2 in
+  let f' = gs_diff f (istore_dom (fst m0)) in
+  let _ : squash ((p1 `star` istore_invariant f' (fst m1)) m1) =
+    let (w1, w2) = star_elim p1 (istore_invariant f (fst m1)) m1 in
+    istore_invariant_mono f f' (fst m1) w2;
+    star_intro p1 (istore_invariant f' (fst m1)) m1 w1 w2 in
+  istore_invariant_disjoint e' f' (fst m0) (fst m1);
+  let g = GS.union e' f' in
+  let m: world = join_worlds m0 m1 in
+  star_intro
+    (p0 `star` istore_invariant e' (fst m0)) (p1 `star` istore_invariant f' (fst m1))
+    m m0 m1;
+  let _ : squash (
+    (p0 `star` istore_invariant e' (fst m0)) `star` (p1 `star` istore_invariant f' (fst m1)) ==
+    (p0 `star` p1) `star` (istore_invariant (GS.union e' f') (fst m))
+  ) = sep_laws () in
+  let (w1, w2) = star_elim (p0 `star` p1) (istore_invariant (GS.union e' f') (fst m)) m in
+  istore_invariant_mono (GS.union e' f') (GS.union e f) (fst m) w2;
+  star_intro (p0 `star` p1) (istore_invariant (GS.union e f) (fst m)) m w1 w2
+
 let max x y = if x > y then x else y
 
 let istore_single n (a: iref) (p: slprop) : okay_istore =
