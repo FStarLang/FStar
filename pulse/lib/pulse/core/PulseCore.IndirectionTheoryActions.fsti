@@ -80,6 +80,11 @@ val with_invariant (#a:Type)
       (inv i p `star` fp)
       (fun x -> inv i p `star` fp' x)
 
+val invariant_name_identifies_invariant  (e:inames) (i: iref) (p q: slprop)
+: ghost_act unit e 
+     (inv i p `star` inv i q)
+     (fun _ -> inv i p `star` inv i q `star` later (equiv p q))
+
 val frame (#a:Type)
           (#ak:action_kind)
           (#opened_invariants:inames)

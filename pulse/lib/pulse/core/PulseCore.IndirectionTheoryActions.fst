@@ -525,6 +525,23 @@ let with_invariant (#a:Type)
     inames_ok_union (single i) opened_invariants s1;
     x, s1
 
+let invariant_name_identifies_invariant e i p q
+= fun frame s0 ->
+    sep_laws();
+    dup_inv_equiv i p;
+    dup_inv_equiv i q;
+    let m0, m1 =
+        split_mem (inv i p `star` inv i q)
+                  (inv i p `star` inv i q `star` frame `star` mem_invariant e s0)
+                  (core_of s0)
+    in
+    disjoint_join_levels m0 m1;
+    invariant_name_identifies_invariant i p q m0;
+    intro_star (later (equiv p q))
+               (inv i p `star` inv i q `star` frame `star` mem_invariant e s0)
+               m0 m1;
+    is_ghost_action_refl s0;
+    (), s0
 
 let frame (#a:Type)
           (#ak:action_kind)

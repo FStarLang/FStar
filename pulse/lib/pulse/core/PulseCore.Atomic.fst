@@ -307,7 +307,7 @@ let with_invariant_g #a #fp #fp' #f_opens #p i $f =
   let g : unit -> act a Ghost f_opens (later p ** fp) (fun x -> later p ** fp' x) = pull_up_ghost g in
   A.with_invariant #a #Ghost #fp #fp' #f_opens #p i g
 
-let invariant_name_identifies_invariant p q i j = admit()
+let invariant_name_identifies_invariant p q i j = Ghost.hide (A.invariant_name_identifies_invariant p q i)
 let later_intro p = Ghost.hide (A.later_intro p)
 let later_elim p = Ghost.hide (A.later_elim p)
 let buy = A.buy

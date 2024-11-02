@@ -419,10 +419,10 @@ let with_invariant #a #r #fp #fp' #f_opens #p i f =
   let f : act a r f_opens (later p `star` fp) (fun x -> later p `star` fp' x) = f () in
   let ictx' = Sep.add_inv ictx i in
   ITA.with_invariant #a #fp #fp' #ictx i (f #ictx')
-// let distinct_invariants_have_distinct_names #p #q i j _ =
-//   fun #ictx -> distinct_invariants_have_distinct_names ictx p q i j
-let invariant_name_identifies_invariant p q i j =
-  fun #ictx -> admit() //invariant_name_identifies_invariant ictx p q i j
+
+let invariant_name_identifies_invariant p q i =
+  fun #ictx -> 
+    ITA.invariant_name_identifies_invariant ictx i p q
 
 
 ////////////////////////////////////////////////////////////////////////

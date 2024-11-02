@@ -181,12 +181,11 @@ val with_invariant
 val invariant_name_identifies_invariant
       (p q:slprop)
       (i:iref)
-      (j:iref { i == j })
-: act (squash (p == q))
+: act unit
       Ghost
       emp_inames
-      (inv i p ** inv j q)
-      (fun _ -> inv i p ** inv j q ** equiv p q)
+      (inv i p ** inv i q)
+      (fun _ -> inv i p ** inv i q ** later (equiv p q))
 
 ////////////////////////////////////////////////////////////////////////
 // later and credits
