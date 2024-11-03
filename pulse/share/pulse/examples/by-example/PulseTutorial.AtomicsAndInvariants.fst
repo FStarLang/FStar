@@ -19,8 +19,9 @@ module PulseTutorial.AtomicsAndInvariants
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 
+let timeless_slprop = v:slprop { timeless v } 
 //owns$
-let owns (x:ref U32.t) : storable = exists* v. pts_to x v
+let owns (x:ref U32.t) : timeless_slprop = exists* v. pts_to x v
 //owns$
 
  //create_invariant$
@@ -43,7 +44,7 @@ ensures inv i (owns r)
 opens [i]
 {
   with_invariants i {    //owns r
-     later_elim_storable _;
+     later_elim_timeless _;
      unfold owns;        //ghost step;  exists* u. pts_to r u
      write_atomic r v;   //atomic step; pts_to r v
      fold owns;          //ghost step;  owns r
@@ -91,7 +92,7 @@ requires inv i (owns r)
 ensures inv i (owns r)
 {                    
   with_invariants i {    //owns r
-     later_elim_storable _;
+     later_elim_timeless _;
      unfold owns;        //ghost step;  exists* u. pts_to r u
      write_atomic r v;   //atomic step; pts_to r v
      fold owns;          //ghost step;  owns r
@@ -118,7 +119,7 @@ ensures inv i (owns r)
 
 
 
-let readable (r:ref U32.t) : v:slprop { is_slprop3 v } = exists* p v. pts_to r #p v
+let readable (r:ref U32.t) : timeless_slprop  = exists* p v. pts_to r #p v
 
 
 
@@ -139,7 +140,7 @@ ensures inv i (readable r) ** readable r
 opens [i]
 {
     with_invariants i {
-        later_elim_storable _;
+        later_elim_timeless _;
         unfold readable;
         with p v. assert (pts_to r #p v);
         share r;
@@ -151,4 +152,3 @@ opens [i]
         later_intro (readable r)
     };
 }
-

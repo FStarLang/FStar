@@ -16,45 +16,28 @@
 
 module Pulse.Lib.ConditionVar
 open Pulse.Lib.Pervasives
-open Pulse.Lib.ConditionVarWithCodes
-module CV = Pulse.Lib.ConditionVarWithCodes
-////////////////////////////////////////////////////////////////
-//Using condition vars directly with slprop2 slprops
-////////////////////////////////////////////////////////////////
 
-let code : CV.code = {
-  t = slprop2_base;
-  emp = down2 emp;
-  up = (fun x -> up2_timeless x; up2 x);
-  laws = ()
-}
+let cvar_t : Type0 = unit
 
-let code_of (p:slprop2) : CV.codeable code p = {
-  c = down2 p;
-  laws = ()
-}
+let inv_name (c:cvar_t) : iname = admit()
 
-let cvar_t = CV.cvar_t code
+let send (c:cvar_t) (p:slprop) : slprop = admit()
 
-let inv_name (c:cvar_t) = CV.inv_name c
+let recv (c:cvar_t) (p:slprop) : slprop = admit()
 
-let send (cv:cvar_t) (p:slprop) : slprop = CV.send cv p
-
-let recv (cv:cvar_t) (p:slprop) : slprop = CV.recv cv p
-
-let create (p:slprop2)
+let create (p:slprop)
 : stt cvar_t emp (fun b -> send b p ** recv b p)
-= CV.create p (code_of p)
+= admit()
 
-let signal (cv:cvar_t) (#p:slprop)
-: stt unit (send cv p ** p) (fun _ -> emp)
-= CV.signal cv #p
+let signal (b:cvar_t) (#p:slprop)
+: stt unit (send b p ** p) (fun _ -> emp)
+= admit()
 
-let wait (cv:cvar_t) (#p:slprop)
-: stt unit (recv cv p) (fun _ -> p)
-= CV.wait cv #p
+let wait (b:cvar_t) (#p:slprop)
+: stt unit (recv b p) (fun _ -> p)
+= admit()
 
-let split (cv:cvar_t) (#p #q:slprop2)
-: stt_ghost unit (add_inv emp_inames (inv_name cv))
-  (recv cv (p ** q)) (fun _ -> recv cv p ** recv cv q)
-= CV.split cv #p #q (code_of p) (code_of q)
+let split (b:cvar_t) (#p #q:slprop)
+: stt_ghost unit (add_inv emp_inames (inv_name b))
+  (recv b (p ** q)) (fun _ -> recv b p ** recv b q)
+= admit()

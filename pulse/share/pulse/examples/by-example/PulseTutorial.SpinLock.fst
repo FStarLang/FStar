@@ -54,7 +54,7 @@ fn dup_lock_alive (l:lock) (p:slprop)
 
 
  //new_lock$
-fn new_lock (p:slprop { is_storable p })
+fn new_lock (p:slprop)
 requires p
 returns l:lock
 ensures lock_alive l p

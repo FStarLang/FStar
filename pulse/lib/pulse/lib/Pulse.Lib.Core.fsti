@@ -60,6 +60,8 @@ val slprop : Type u#4
 
 val timeless (p: slprop) : prop
 
+let timeless_slprop = v:slprop { timeless v }
+
 val emp : slprop
 
 val timeless_emp : squash (timeless emp)

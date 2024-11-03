@@ -126,7 +126,7 @@ fn test2 ()
     returns _:unit
     ensures later (exists* v. pts_to r v)
     opens [i] {
-      later_elim_storable _;
+      later_elim_timeless _;
       atomic_write_int r 1;
       later_intro (exists* v. pts_to r v);
   };

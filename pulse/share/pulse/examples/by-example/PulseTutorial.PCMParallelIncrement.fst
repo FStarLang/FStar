@@ -84,7 +84,7 @@ let tank (n:nat) = GPR.gref (pcm_of n)
 
 // A predicate asserting ownership of `i` units of the tank
 let owns_tank_units #n (g:tank n) (i:nat)
-: slprop3
+: timeless_slprop
 = GPR.pts_to #_ #(pcm_of n) g i
 
 
@@ -206,7 +206,7 @@ let contributions
     (initial:nat)
     (gs:ghost_state n)
     (r:ref nat)
-: storable
+: timeless_slprop
 = exists* (v g t:nat).
     pts_to r v **    
     owns_tank_units gs.given g **
