@@ -23,6 +23,18 @@ let pts_to (#t:Type)
     GR.pts_to r (Some f, h) **
     pure (f <=. 1.0R /\ Cons? h /\ PulseCore.Preorder.curval h == v)
 
+let pts_to_is_timeless (#t:Type) (#p:preorder t) (r:mref p) #f (v:t) =
+  calc (==) {
+    pts_to r #f v;
+  (==) { _ by (FStar.Tactics.trefl ())}
+    op_exists_Star (fun h -> 
+      GR.pts_to r (Some f, h) **
+      pure (f <=. 1.0R /\ Cons? h /\ PulseCore.Preorder.curval h == v));
+  };
+  timeless_exists (fun h -> 
+      GR.pts_to r (Some f, h) **
+      pure (f <=. 1.0R /\ Cons? h /\ PulseCore.Preorder.curval h == v))
+
 let snapshot (#t:Type)
              (#p:preorder t) 
              (r:mref p)
@@ -31,6 +43,18 @@ let snapshot (#t:Type)
     GR.pts_to r (None, h) **
     pure (Cons? h /\ PulseCore.Preorder.curval h == v)
   
+let snapshot_is_timeless (#t:Type) (#p:preorder t) (r:mref p) (v:t) =
+  calc (==) {
+    snapshot r v;
+  (==) { _ by (FStar.Tactics.trefl ())}
+    op_exists_Star (fun h -> 
+      GR.pts_to r (None, h) **
+      pure (Cons? h /\ PulseCore.Preorder.curval h == v));
+  };
+  timeless_exists (fun h -> 
+      GR.pts_to r (None, h) **
+      pure (Cons? h /\ PulseCore.Preorder.curval h == v))
+      
 let full (#t:Type) (#p:preorder t) (v:t) : FP.pcm_carrier p = 
   (Some 1.0R, [v])
 

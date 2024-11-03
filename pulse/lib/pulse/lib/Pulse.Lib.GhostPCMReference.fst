@@ -10,8 +10,10 @@ let pts_to
     (#p:pcm a)
     (r:gref p)
     (v:a)
-: slprop2
+: slprop
 = ghost_pcm_pts_to #_ #(PR.raise p) r (U.raise_val v)
+
+let pts_to_is_timeless #a #p r v = ()
 
 let alloc #a #p x = ghost_alloc #_ #(PR.raise p) (U.raise_val x)
   

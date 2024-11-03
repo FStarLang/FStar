@@ -29,6 +29,9 @@ let equate_syntactic = ()
 let allow_ambiguous = ()
 
 let slprop = slprop
+assume
+val placeholder : prop
+let timeless p = placeholder
 
 // let slprop4_base = slprop
 // let down4 = id
@@ -54,25 +57,13 @@ let slprop = slprop
 // let slprop_1_is_2 = slprop_1_is_2
 
 let emp = emp
-//let emp_is_slprop2 = ()
+let timeless_emp = admit()
 let pure = pure
-// let pure_is_slprop2 p = ()
+let timeless_pure p = admit()
 let op_Star_Star = op_Star_Star
-// let slprop3_star p q = slprop3_star p q
-// let slprop2_star p q = slprop2_star p q
-// let slprop1_star p q = slprop1_star p q
+let timeless_star p q = admit()
 let op_exists_Star = op_exists_Star
-// let slprop3_exists #a p = slprop3_exists #a p
-// let slprop2_exists #a p = slprop2_exists #a p
-// let slprop1_exists #a p = slprop1_exists #a p
-// let up3_emp    = up3_emp
-// let down3_emp  = down3_emp
-// let up3_star   = up3_star
-// let down3_star = down3_star
-// let up2_emp    = up2_emp
-// let down2_emp  = down2_emp
-// let up2_star   = up2_star
-// let down2_star = down2_star
+let timeless_exists #a p = admit()
 let slprop_equiv = slprop_equiv
 let elim_slprop_equiv #p #q pf = slprop_equiv_elim p q
 let slprop_post_equiv = slprop_post_equiv
@@ -209,14 +200,14 @@ let sub_invs_ghost = A.sub_invs_stt_ghost
 //////////////////////////////////////////////////////////////////////////
 
 let later_credit = later_credit
-let later_credit_zero _ = PulseCore.Action.later_credit_zero ()
-let later_credit_add a b = PulseCore.Action.later_credit_add a b
+let timeless_later_credit amt = admit()
+let later_credit_zero _ = PulseCore.InstantiatedSemantics.later_credit_zero ()
+let later_credit_add a b = PulseCore.InstantiatedSemantics.later_credit_add a b
 let later_credit_buy amt = A.buy amt
 
 let later = later
 let later_intro p = A.later_intro p
 let later_elim p = A.later_elim p
-let timeless p = admit ()
 let later_elim_timeless p = admit ()
 
 //////////////////////////////////////////////////////////////////////////
@@ -229,7 +220,7 @@ let equiv_refl a = admit ()
 let equiv_comm a b = admit ()
 let equiv_trans a b c = admit ()
 let equiv_elim a b = admit ()
-let equiv_elim_storable a b = admit ()
+let equiv_elim_timeless a b = admit ()
 
 //////////////////////////////////////////////////////////////////////////
 // Higher-order ghost state
@@ -310,7 +301,7 @@ let is_null_core_pcm_ref r = PulseCore.Action.is_core_ref_null r
 
 let pcm_pts_to (#a:Type u#1) (#p:pcm a) (r:pcm_ref p) (v:a) =
   PulseCore.Action.pts_to #a #p r v
-let is_slprop2_pcm_pts_to #a #p r v = ()
+let timeless_pcm_pts_to #a #p r v = admit()
 let pts_to_not_null #a #p r v = A.pts_to_not_null #a #p r v
 
 let alloc
@@ -359,7 +350,7 @@ instance non_informative_ghost_pcm_ref a p = {
 }
 
 let ghost_pcm_pts_to #a #p r v = PulseCore.Action.ghost_pts_to #a #p r v
-let is_slprop2_ghost_pcm_pts_to #a #p r v = ()
+let timeless_ghost_pcm_pts_to #a #p r v = admit()
 let ghost_alloc = A.ghost_alloc
 let ghost_read = A.ghost_read
 let ghost_write = A.ghost_write
@@ -398,7 +389,7 @@ let return_stt (#a:Type u#a) (x:a) (p:a -> slprop)
 // big refs
 ////////////////////////////////////////////////////////
 let big_pcm_pts_to #a #p r v = PulseCore.Action.big_pts_to #a #p r v
-let is_slprop3_big_pcm_pts_to _ _ = ()
+let timeless_big_pcm_pts_to _ _ = admit()
 let big_pts_to_not_null #a #p r v = A.big_pts_to_not_null #a #p r v
 
 let big_alloc
@@ -438,61 +429,12 @@ let big_share = A.big_share
 let big_gather = A.big_gather
 
 let big_ghost_pcm_pts_to #a #p r v = PulseCore.Action.big_ghost_pts_to #a #p r v
-let is_slprop3_big_ghost_pcm_pts_to _ _ = ()
+let timeless_big_ghost_pcm_pts_to _ _ = admit()
 let big_ghost_alloc = A.big_ghost_alloc
 let big_ghost_read = A.big_ghost_read
 let big_ghost_write = A.big_ghost_write
 let big_ghost_share = A.big_ghost_share
 let big_ghost_gather = A.big_ghost_gather
-
-////////////////////////////////////////////////////////
-// non-boxable refs
-////////////////////////////////////////////////////////
-let nb_pcm_pts_to #a #p r v = PulseCore.Action.nb_pts_to #a #p r v
-let nb_pts_to_not_null #a #p r v = A.nb_pts_to_not_null #a #p r v
-
-let nb_alloc
-    (#a:Type)
-    (#pcm:pcm a)
-    (x:a{pcm.refine x})
-: stt (pcm_ref pcm)
-    emp
-    (fun r -> nb_pcm_pts_to r x)
-= A.lift_atomic0 (A.nb_alloc #a #pcm x)
-
-let nb_read
-    (#a:Type u#3)
-    (#p:pcm a)
-    (r:pcm_ref p)
-    (x:erased a)
-    (f:(v:a{compatible p x v}
-        -> GTot (y:a{compatible p y v /\
-                     FStar.PCM.frame_compatible p x v y})))
-: stt (v:a{compatible p x v /\ p.refine v})
-    (nb_pcm_pts_to r x)
-    (fun v -> nb_pcm_pts_to r (f v))
-= A.lift_atomic3 (A.nb_read #a #p r x f)
-
-let nb_write
-    (#a:Type)
-    (#p:pcm a)
-    (r:pcm_ref p)
-    (x y:Ghost.erased a)
-    (f:FStar.PCM.frame_preserving_upd p x y)
-: stt unit
-    (nb_pcm_pts_to r x)
-    (fun _ -> nb_pcm_pts_to r y)
-= A.lift_atomic0 (A.nb_write r x y f)
-
-let nb_share = A.nb_share
-let nb_gather = A.nb_gather
-
-let nb_ghost_pcm_pts_to #a #p r v = PulseCore.Action.nb_ghost_pts_to #a #p r v
-let nb_ghost_alloc = A.nb_ghost_alloc
-let nb_ghost_read = A.nb_ghost_read
-let nb_ghost_write = A.nb_ghost_write
-let nb_ghost_share = A.nb_ghost_share
-let nb_ghost_gather = A.nb_ghost_gather
 
 let as_atomic #a pre post (e:stt a pre post) = admit () // intentional since it is an assumption
 

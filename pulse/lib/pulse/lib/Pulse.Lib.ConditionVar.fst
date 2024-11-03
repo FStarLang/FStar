@@ -25,7 +25,7 @@ module CV = Pulse.Lib.ConditionVarWithCodes
 let code : CV.code = {
   t = slprop2_base;
   emp = down2 emp;
-  up = (fun x -> up2_is_slprop2 x; up2 x);
+  up = (fun x -> up2_timeless x; up2 x);
   laws = ()
 }
 

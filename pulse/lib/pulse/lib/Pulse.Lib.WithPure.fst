@@ -3,7 +3,6 @@ module Pulse.Lib.WithPure
 open Pulse.Lib.Core
 open Pulse.Main
 
-// let tag (v:slprop) : slprop = v
 
 let with_pure
   (p : prop)
@@ -14,20 +13,12 @@ let with_pure
 // = exists* v'. tag v' ** pure (p /\ v' == v ())
 // much easier to work with, but proving the size wasn't obvious.
 
-let size_small
+let with_pure_timeless
   (p : prop)
   (v : squash p -> slprop)
-: Lemma (requires forall s. is_slprop2 (v s))
-        (ensures  is_slprop2 (with_pure p v))
-        [SMTPat (is_slprop2 (with_pure p v))]
-= ()
-
-let size_boxable
-  (p : prop)
-  (v : squash p -> slprop)
-: Lemma (requires forall s. is_slprop3 (v s))
-        (ensures  is_slprop3 (with_pure p v))
-        [SMTPat (is_slprop3 (with_pure p v))]
+: Lemma (requires forall s. timeless (v s))
+        (ensures  timeless (with_pure p v))
+        [SMTPat (timeless (with_pure p v))]
 = ()
 
 let eta_exists_aux 

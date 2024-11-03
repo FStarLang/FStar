@@ -50,9 +50,9 @@ let models #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : slprop =
         V.is_full_vec ht.contents /\
         SZ.fits (2 `op_Multiply` SZ.v ht.sz))
 
-val models_is_slprop2 #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt)
-: Lemma (is_slprop2 (models ht pht))
-        [SMTPat (is_slprop2 (models ht pht))]
+val models_timeless #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt)
+: Lemma (timeless (models ht pht))
+        [SMTPat (timeless (models ht pht))]
 
 let pht_sz #k #v (pht:pht_t k v) : GTot pos = pht.repr.sz
 

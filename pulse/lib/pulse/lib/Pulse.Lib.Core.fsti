@@ -58,127 +58,33 @@ val allow_ambiguous : unit
 [@@erasable]
 val slprop : Type u#4
 
-// (* slprop4: slprops that can be represented in universe 4.
-// Currently, just an alias to slprop, but this provides a stable universe 4 interface. *)
-// [@@erasable]
-// val slprop4_base : Type u#4
-// val down4 (p:slprop) : slprop4_base
-// val up4 (p:slprop4_base) : slprop
-// let is_slprop4 (v:slprop) : prop = up4 (down4 v) == v
-// val up4_is_slprop4 (p:slprop4_base) : Lemma (is_slprop4 (up4 p))
-
-// (* slprop3: slprops that can be represented in universe 3. *)
-// [@@erasable]
-// val slprop3_base : Type u#3
-// val down3 (p:slprop) : slprop3_base
-// val up3 (p:slprop3_base) : slprop
-// let is_slprop3 (v:slprop) : prop = up3 (down3 v) == v
-// val up3_is_slprop3 (p:slprop3_base) : Lemma (is_slprop3 (up3 p))
-
-// (* slprop2: slprops that can be represented in universe 2. *)
-// [@@erasable]
-// val slprop2_base : Type u#2
-// val down2 (p:slprop) : slprop2_base
-// val up2 (p:slprop2_base) : slprop
-// let is_slprop2 (v:slprop) : prop = up2 (down2 v) == v
-// val up2_is_slprop2 (p:slprop2_base) : Lemma (is_slprop2 (up2 p))
-
-// (* slprop1: slprops that can be represented in universe 1. *)
-// [@@erasable]
-// val slprop1_base : Type u#1
-// val down1 (p:slprop) : slprop1_base
-// val up1 (p:slprop1_base) : slprop
-// let is_slprop1 (v:slprop) : prop = up1 (down1 v) == v
-// val up1_is_slprop1 (p:slprop1_base) : Lemma (is_slprop1 (up1 p))
-
-// let slprop3 = s:slprop { is_slprop3 s }
-// let slprop2 = s:slprop { is_slprop2 s }
-// let slprop1 = s:slprop { is_slprop1 s }
-
-(* Storable slprops: a storable0 (or storable) can be stored in the heap
-(made into an invariant), and obtain an slprop asserting this fact.
-A storable1, can be stored "twice", in the sense that it can be stored
-in the heap, obtain a pts_to for it, and that pts_to can in turn be stored
-as an invariant.
-
-As the heap stack is extended, these names retain their meaning as being
-"N+1" away from the top of the stack. *)
-
-// let storable0    = slprop3
-// let is_storable0 = is_slprop3
-// let storable1    = slprop2
-// let is_storable1 = is_slprop2
-
-// let storable    = storable0
-// let is_storable = is_storable0
-
-
-//
-// A note on smt patterns on is_slprop2 and is_slprop3 lemmas:
-//
-// While the patterns on the individual lemmas are goal-directed,
-//   there are multiple ways to prove, say, is_slprop3 (p ** q)
-//
-// Either via, is_slprop3 p /\ is_slprop3 q ==> is_slprop3 (p ** q)
-// or via, is_slprop2 p /\ is_slprop2 q ==> is_slprop2 (p ** q) ==> is_slprop3 (p ** q)
-//
-// This is a bit suboptimal
-//
-// val slprop_2_is_3 (v:slprop)
-//   : Lemma (is_slprop2 v ==> is_slprop3 v)
-//           [SMTPat (is_slprop3 v)]
-
-// val slprop_1_is_2 (v:slprop)
-//   : Lemma (is_slprop1 v ==> is_slprop2 v)
-//           [SMTPat (is_slprop2 v)]
+val timeless (p: slprop) : prop
 
 val emp : slprop
-// val emp_is_slprop2 : squash (is_slprop2 emp)
+
+val timeless_emp : squash (timeless emp)
 
 val pure (p:prop) : slprop
-// val pure_is_slprop2 (p:prop)
-//   : Lemma (is_slprop2 (pure p))
-        //   [SMTPat (is_slprop2 (pure p))]
+
+val timeless_pure  (p:prop)
+: Lemma (timeless (pure p))
+        [SMTPat (timeless (pure p))]
 
 val ( ** ) (p q:slprop) : slprop
 
-// val slprop3_star (p q : slprop)
-// : Lemma
-//     (requires is_slprop3 p /\ is_slprop3 q)
-//     (ensures is_slprop3 (p ** q))
-//     [SMTPat (is_slprop3 (p ** q))]
-
-// val slprop2_star (p q : slprop)
-// : Lemma
-//     (requires is_slprop2 p /\ is_slprop2 q)
-//     (ensures is_slprop2 (p ** q))
-//     [SMTPat (is_slprop2 (p ** q))]
-
-// val slprop1_star (p q : slprop)
-// : Lemma
-//     (requires is_slprop1 p /\ is_slprop1 q)
-//     (ensures is_slprop1 (p ** q))
-//     [SMTPat (is_slprop1 (p ** q))]
+val timeless_star (p q : slprop)
+: Lemma
+    (requires timeless p /\ timeless q)
+    (ensures timeless (p ** q))
+    [SMTPat (timeless (p ** q))]
 
 val ( exists* ) (#a:Type) (p:a -> slprop) : slprop
 
-// val slprop3_exists (#a:Type u#a) (p: a -> slprop)
-// : Lemma
-//     (requires forall x. is_slprop3 (p x))
-//     (ensures is_slprop3 (op_exists_Star p))
-//     [SMTPat (is_slprop3 (op_exists_Star p))]
-
-// val slprop2_exists (#a:Type u#a) (p: a -> slprop)
-// : Lemma
-//     (requires forall x. is_slprop2 (p x))
-//     (ensures is_slprop2 (op_exists_Star p))
-//     [SMTPat (is_slprop2 (op_exists_Star p))]
-
-// val slprop1_exists (#a:Type u#a) (p: a -> slprop)
-// : Lemma
-//     (requires forall x. is_slprop1 (p x))
-//     (ensures is_slprop1 (op_exists_Star p))
-//     [SMTPat (is_slprop1 (op_exists_Star p))]
+val timeless_exists (#a:Type u#a) (p: a -> slprop)
+: Lemma
+    (requires forall x. timeless (p x))
+    (ensures timeless (op_exists_Star p))
+    [SMTPat (timeless (op_exists_Star p))]
 
 val slprop_equiv (p q:slprop) : prop
 val elim_slprop_equiv (#p #q:_) (_:slprop_equiv p q) : squash (p == q)
@@ -271,8 +177,6 @@ let (/!) (is1 is2 : inames) : Type0 =
   GhostSet.disjoint is1 is2
 
 val inv (i:iname) (p:slprop) : slprop
-// val storable_inv (i:iname { storable_iname i }) (p:slprop3)
-// : Lemma (is_slprop3 (inv i p))
 
 let mem_iname (e:inames) (i:iname) : erased bool = elift2 (fun e i -> GhostSet.mem i e) e i
 let mem_inv (e:inames) (i:iname) : GTot bool = mem_iname e i
@@ -575,9 +479,19 @@ val sub_invs_ghost
 //////////////////////////////////////////////////////////////////////////
 
 val later_credit (amt: nat) : slprop
-val later_credit_zero () : Lemma (later_credit 0 == emp)
-val later_credit_add (a b: nat) : Lemma (later_credit (a + b) == later_credit a ** later_credit b)
-val later_credit_buy (amt: nat) : stt unit emp fun _ -> later_credit amt
+
+val timeless_later_credit (amt: nat)
+: Lemma (timeless (later_credit amt))
+        [SMTPat (timeless (later_credit amt))]
+
+val later_credit_zero ()
+: Lemma (later_credit 0 == emp)
+
+val later_credit_add (a b: nat)
+: Lemma (later_credit (a + b) == later_credit a ** later_credit b)
+
+val later_credit_buy (amt: nat)
+: stt unit emp fun _ -> later_credit amt
 
 (* p is true in all successor heap levels
 Note: `later p` is vacuously true on heaps of level 0 *)
@@ -585,7 +499,6 @@ val later (p: slprop) : slprop
 val later_intro (p: slprop) : stt_ghost unit emp_inames p fun _ -> later p
 val later_elim (p: slprop) : stt_ghost unit emp_inames (later p ** later_credit 1) fun _ -> p
 
-val timeless (p: slprop) : prop
 (* This is true because ghost functions are called on heaps of nonzero level. *)
 val later_elim_timeless (p: slprop { timeless p }) : stt_ghost unit emp_inames (later p) fun _ -> p
 
@@ -604,7 +517,7 @@ val equiv_trans a b c : stt_ghost unit emp_inames (equiv a b ** equiv b c) fun _
 val equiv_elim a b : stt_ghost unit emp_inames (a ** equiv a b) fun _ -> b
 
 (* This is true because ghost functions are called on heaps of nonzero level. *)
-val equiv_elim_storable (a:slprop { timeless a }) (b: slprop { timeless b }) : stt_ghost unit emp_inames (equiv a b) fun _ -> pure (a == b)
+val equiv_elim_timeless (a:slprop { timeless a }) (b: slprop { timeless b }) : stt_ghost unit emp_inames (equiv a b) fun _ -> pure (a == b)
 
 //////////////////////////////////////////////////////////////////////////
 // Higher-order ghost state
@@ -776,13 +689,13 @@ val pcm_pts_to
     (v:a)
 : slprop
 
-// val is_slprop2_pcm_pts_to
-//     (#a:Type u#1)
-//     (#p:pcm a)
-//     (r:pcm_ref p)
-//     (v:a)
-// : Lemma (is_slprop2 (pcm_pts_to r v))
-//         [SMTPat (is_slprop2 (pcm_pts_to r v))]
+val timeless_pcm_pts_to
+    (#a:Type u#1)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (v:a)
+: Lemma (timeless (pcm_pts_to r v))
+        [SMTPat (timeless (pcm_pts_to r v))]
 
 let pcm_ref_null
     (#a:Type)
@@ -881,13 +794,13 @@ val ghost_pcm_pts_to
     (v:a)
 : slprop
 
-// val is_slprop2_ghost_pcm_pts_to
-//     (#a:Type u#1)
-//     (#p:pcm a)
-//     (r:ghost_pcm_ref p)
-//     (v:a)
-// : Lemma (is_slprop2 (ghost_pcm_pts_to r v))
-//         [SMTPat (is_slprop2 (ghost_pcm_pts_to r v))]
+val timeless_ghost_pcm_pts_to
+    (#a:Type u#1)
+    (#p:pcm a)
+    (r:ghost_pcm_ref p)
+    (v:a)
+: Lemma (timeless (ghost_pcm_pts_to r v))
+        [SMTPat (timeless (ghost_pcm_pts_to r v))]
 
 val ghost_alloc
     (#a:Type u#1)
@@ -956,13 +869,13 @@ val big_pcm_pts_to
 : slprop
 
 
-// val is_slprop3_big_pcm_pts_to
-//     (#a:Type u#2)
-//     (#p:pcm a)
-//     (r:pcm_ref p)
-//     (v:a)
-// : Lemma (is_slprop3 (big_pcm_pts_to r v))
-//         [SMTPat (is_slprop3 (big_pcm_pts_to r v))]
+val timeless_big_pcm_pts_to
+    (#a:Type u#2)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (v:a)
+: Lemma (timeless (big_pcm_pts_to r v))
+        [SMTPat (timeless (big_pcm_pts_to r v))]
 
 val big_pts_to_not_null
     (#a:Type)
@@ -1034,13 +947,13 @@ val big_ghost_pcm_pts_to
     (v:a)
 : slprop
 
-// val is_slprop3_big_ghost_pcm_pts_to
-//     (#a:Type u#2)
-//     (#p:pcm a)
-//     (r:ghost_pcm_ref p)
-//     (v:a)
-// : Lemma (is_slprop3 (big_ghost_pcm_pts_to r v))
-//         [SMTPat (is_slprop3 (big_ghost_pcm_pts_to r v))]
+val timeless_big_ghost_pcm_pts_to
+    (#a:Type u#2)
+    (#p:pcm a)
+    (r:ghost_pcm_ref p)
+    (v:a)
+: Lemma (timeless (big_ghost_pcm_pts_to r v))
+        [SMTPat (timeless (big_ghost_pcm_pts_to r v))]
 
 val big_ghost_alloc
     (#a:Type)
@@ -1097,141 +1010,6 @@ val big_ghost_gather
     emp_inames
     (big_ghost_pcm_pts_to r v0 ** big_ghost_pcm_pts_to r v1)
     (fun _ -> big_ghost_pcm_pts_to r (op pcm v0 v1))
-
-////////////////////////////////////////////////////////
-//Non-boxable PCM references
-////////////////////////////////////////////////////////
-val nb_pcm_pts_to
-    (#a:Type u#3)
-    (#p:pcm a)
-    (r:pcm_ref p)
-    (v:a)
-: slprop
-
-val nb_pts_to_not_null
-    (#a:Type)
-    (#p:FStar.PCM.pcm a)
-    (r:pcm_ref p)
-    (v:a)
-: stt_ghost (squash (not (is_pcm_ref_null r)))
-            emp_inames
-            (nb_pcm_pts_to r v)
-            (fun _ -> nb_pcm_pts_to r v)
-
-val nb_alloc
-    (#a:Type u#3)
-    (#pcm:pcm a)
-    (x:a{pcm.refine x})
-: stt (pcm_ref pcm)
-    emp
-    (fun r -> nb_pcm_pts_to r x)
-
-val nb_read
-    (#a:Type)
-    (#p:pcm a)
-    (r:pcm_ref p)
-    (x:erased a)
-    (f:(v:a{compatible p x v}
-        -> GTot (y:a{compatible p y v /\
-                     FStar.PCM.frame_compatible p x v y})))
-: stt (v:a{compatible p x v /\ p.refine v})
-    (nb_pcm_pts_to r x)
-    (fun v -> nb_pcm_pts_to r (f v))
-
-val nb_write
-    (#a:Type)
-    (#p:pcm a)
-    (r:pcm_ref p)
-    (x y:Ghost.erased a)
-    (f:FStar.PCM.frame_preserving_upd p x y)
-: stt unit
-    (nb_pcm_pts_to r x)
-    (fun _ -> nb_pcm_pts_to r y)
-
-val nb_share
-    (#a:Type)
-    (#pcm:pcm a)
-    (r:pcm_ref pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-: stt_ghost unit
-    emp_inames
-    (nb_pcm_pts_to r (v0 `op pcm` v1))
-    (fun _ -> nb_pcm_pts_to r v0 ** nb_pcm_pts_to r v1)
-
-val nb_gather
-    (#a:Type)
-    (#pcm:pcm a)
-    (r:pcm_ref pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a)
-: stt_ghost (squash (composable pcm v0 v1))
-    emp_inames
-    (nb_pcm_pts_to r v0 ** nb_pcm_pts_to r v1)
-    (fun _ -> nb_pcm_pts_to r (op pcm v0 v1))
-
-val nb_ghost_pcm_pts_to
-    (#a:Type u#3)
-    (#p:pcm a)
-    (r:ghost_pcm_ref p)
-    (v:a)
-: slprop
-
-
-val nb_ghost_alloc
-    (#a:Type)
-    (#pcm:pcm a)
-    (x:erased a{pcm.refine x})
-: stt_ghost (ghost_pcm_ref pcm)
-    emp_inames
-    emp
-    (fun r -> nb_ghost_pcm_pts_to r x)
-
-val nb_ghost_read
-    (#a:Type)
-    (#p:pcm a)
-    (r:ghost_pcm_ref p)
-    (x:erased a)
-    (f:(v:a{compatible p x v}
-        -> GTot (y:a{compatible p y v /\
-                     FStar.PCM.frame_compatible p x v y})))
-: stt_ghost (erased (v:a{compatible p x v /\ p.refine v}))
-    emp_inames
-    (nb_ghost_pcm_pts_to r x)
-    (fun v -> nb_ghost_pcm_pts_to r (f v))
-
-val nb_ghost_write
-    (#a:Type)
-    (#p:pcm a)
-    (r:ghost_pcm_ref p)
-    (x y:Ghost.erased a)
-    (f:FStar.PCM.frame_preserving_upd p x y)
-: stt_ghost unit
-    emp_inames
-    (nb_ghost_pcm_pts_to r x)
-    (fun _ -> nb_ghost_pcm_pts_to r y)
-
-val nb_ghost_share
-    (#a:Type)
-    (#pcm:pcm a)
-    (r:ghost_pcm_ref pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-: stt_ghost unit
-    emp_inames
-    (nb_ghost_pcm_pts_to r (v0 `op pcm` v1))
-    (fun _ -> nb_ghost_pcm_pts_to r v0 ** nb_ghost_pcm_pts_to r v1)
-
-val nb_ghost_gather
-    (#a:Type)
-    (#pcm:pcm a)
-    (r:ghost_pcm_ref pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a)
-: stt_ghost (squash (composable pcm v0 v1))
-    emp_inames
-    (nb_ghost_pcm_pts_to r v0 ** nb_ghost_pcm_pts_to r v1)
-    (fun _ -> nb_ghost_pcm_pts_to r (op pcm v0 v1))
 
 
 // Finally, a big escape hatch for introducing architecture/backend-specific

@@ -48,7 +48,7 @@ ghost fn fold_pts_to #t (s: ptr t) #p v
     as pts_to s #p v
 }
 
-let pts_to_is_slprop2 x p s = ()
+let pts_to_timeless x p s = ()
 
 let is_from_array s sz a =
     pure (sz == A.length a /\ s.base == a)

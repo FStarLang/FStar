@@ -8,20 +8,12 @@ val with_pure
   (v : squash p -> slprop)
 : slprop
 
-val size_small
+val with_pure_timeless
   (p : prop)
   (v : squash p -> slprop)
-: Lemma (requires forall s. is_slprop2 (v s))
-        (ensures  is_slprop2 (with_pure p v))
-        [SMTPat (is_slprop2 (with_pure p v))]
-
-val size_boxable
-  (p : prop)
-  (v : squash p -> slprop)
-: Lemma (requires forall s. is_slprop3 (v s))
-        (ensures  is_slprop3 (with_pure p v))
-        [SMTPat (is_slprop3 (with_pure p v))]
-
+: Lemma (requires forall s. timeless (v s))
+        (ensures  timeless (with_pure p v))
+        [SMTPat (timeless (with_pure p v))]
 ghost
 fn intro_with_pure
   (p : prop)

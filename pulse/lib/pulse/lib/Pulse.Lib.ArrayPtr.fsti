@@ -37,9 +37,9 @@ val offset #t (p: ptr t) : GTot nat
 
 instance val has_pts_to_array_ptr (t: Type) : has_pts_to (ptr t) (Seq.seq t)
 
-val pts_to_is_slprop2 (#a:Type) (x:ptr a) (p:perm) (s:Seq.seq a)
-  : Lemma (is_slprop2 (pts_to x #p s))
-          [SMTPat (is_slprop2 (pts_to x #p s))]
+val pts_to_timeless (#a:Type) (x:ptr a) (p:perm) (s:Seq.seq a)
+  : Lemma (timeless (pts_to x #p s))
+          [SMTPat (timeless (pts_to x #p s))]
 
 val is_from_array (#t: Type) (s: ptr t) (sz: nat) (a: A.array t) : slprop
 

@@ -24,7 +24,7 @@ val send (c:cvar_t) (p:slprop) : slprop
 
 val recv (c:cvar_t) (p:slprop) : slprop
 
-val create (p:slprop2)
+val create (p:slprop)
 : stt cvar_t emp (fun b -> send b p ** recv b p)
 
 val signal (b:cvar_t) (#p:slprop)
@@ -33,6 +33,6 @@ val signal (b:cvar_t) (#p:slprop)
 val wait (b:cvar_t) (#p:slprop)
 : stt unit (recv b p) (fun _ -> p)
 
-val split (b:cvar_t) (#p #q:slprop2)
+val split (b:cvar_t) (#p #q:slprop)
 : stt_ghost unit (add_inv emp_inames (inv_name b))
   (recv b (p ** q)) (fun _ -> recv b p ** recv b q)

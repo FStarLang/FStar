@@ -68,26 +68,15 @@ let rec on_range_frame (p q:nat -> slprop) (i j:nat)
     on_range_frame p q (i + 1) j
   )
 
-let rec on_range_is_slprop2 (p:nat -> slprop) (i:nat) (j:nat)
-: Lemma (requires forall k. (i <= k /\ k < j) ==> is_slprop2 (p k))
-        (ensures is_slprop2 (on_range p i j))
+let rec on_range_timeless (p:nat -> slprop) (i:nat) (j:nat)
+: Lemma (requires forall k. (i <= k /\ k < j) ==> timeless (p k))
+        (ensures timeless (on_range p i j))
         (decreases (if j <= i then 0 else j - i))
 = if j < i
   then ()
   else if j = i
   then ()
-  else on_range_is_slprop2 p (i + 1) j
-
-let rec on_range_is_slprop3 (p:nat -> slprop) (i:nat) (j:nat)
-: Lemma (requires forall k. (i <= k /\ k < j) ==> is_slprop3 (p k))
-        (ensures is_slprop3 (on_range p i j))
-        (decreases (if j <= i then 0 else j - i))
-= if j < i
-  then ()
-  else if j = i
-  then ()
-  else on_range_is_slprop3 p (i + 1) j
-
+  else on_range_timeless p (i + 1) j
 
 ghost
 fn on_range_le
