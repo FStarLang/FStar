@@ -234,6 +234,7 @@ val intro_equiv (p: slprop) m : squash (interp (equiv p p) m)
 val equiv_comm (p q: slprop) : squash (equiv p q == equiv q p)
 val equiv_elim p q : squash (equiv p q `star` p == equiv p q `star` q)
 val equiv_trans (p q r: slprop) : squash (equiv p q `star` equiv q r == equiv p q `star` equiv p r)
+val equiv_timeless (a b: slprop) : Lemma (requires timeless a /\ timeless b) (ensures equiv a b == pure (a == b))
 
 val intro_later (p:slprop) (m:core_mem)
 : Lemma (interp p m ==> interp (later p) m)

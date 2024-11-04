@@ -187,6 +187,7 @@ let intro_equiv p m = ()
 let equiv_comm p q = I.equiv_comm p q
 let equiv_elim p q = I.equiv_elim p q
 let equiv_trans p q r = I.equiv_trans p q r
+let equiv_timeless p q = I.equiv_timeless p q
 
 let intro_later p m = ()
 

@@ -615,6 +615,33 @@ let equiv_trans (p q r: slprop) : squash (equiv p q `star` equiv q r == equiv p 
 let timeless_emp () : squash (timeless emp) =
   world_pred_ext (later emp) emp fun w -> ()
 
+let age_to_zero (w: preworld { level_ w == 0 }) : Lemma (age_to_ w 0 == w) [SMTPat (age_to_ w 0)] =
+  world_ext (age_to_ w 0) w fun i -> ()
+
+let rec timeless_interp (a: slprop { timeless a }) (w: preworld) :
+    Lemma (ensures a w <==> a (age_to_ w 0)) (decreases level_ w) =
+  if level_ w = 0 then () else timeless_interp a (age1_ w)
+
+let timeless_ext (a b: (p:slprop {timeless p})) (h: (w: preworld { level_ w == 0 } -> squash (a w <==> b w))) :
+    squash (a == b) =
+  world_pred_ext a b fun w ->
+    timeless_interp a w;
+    timeless_interp b w;
+    h (age_to_ w 0)
+
+let equiv_timeless (a b: slprop) :
+    Lemma (requires timeless a /\ timeless b)
+      (ensures timeless (equiv a b) /\ equiv a b == pure (a == b)) =
+  world_pred_ext (equiv a b) (later (equiv a b)) (fun w ->
+    introduce equiv a b (age1_ w) ==> equiv a b w with _.
+      world_pred_ext (approx (level_ w + 1) a) (approx (level_ w + 1) b) fun w' ->
+        assert approx (level_ w) a (age1_ w') <==> approx (level_ w) b (age1_ w'));
+  timeless_pure (a == b);
+  timeless_ext (equiv a b) (pure (a == b)) fun w ->
+    introduce equiv a b w ==> a == b with _.
+      timeless_ext a b fun w' ->
+        eq_at_elim 1 a b w'
+
 let rejuvenate1_istore (is: istore) (is': istore { istore_le is' (age1_istore is) }) :
     is'':istore { age1_istore is'' == is' /\ istore_le is'' is } =
   let is'' = mk_istore (level_istore is) fun a -> if None? (read_istore is' a) then None else read_istore is a in
