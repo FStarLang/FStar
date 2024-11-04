@@ -158,6 +158,35 @@ let update_ghost (m0:mem u#a) (m1:erased (mem u#a) { is_ghost_action m0 m1 })
 : m:mem u#a { m == reveal m1 }
 = { heap = H2.upd_ghost_heap m0.heap m1.heap; ctr = m0.ctr; ghost_ctr = m1.ghost_ctr }
 
+let max (i j:nat) : nat = if i >= j then i else j
+let join_mem (m0:mem) (m1:mem { sep.disjoint (sep.core_of m0) (sep.core_of m1) })
+: m:mem { sep.join (sep.core_of m0) (sep.core_of m1) == sep.core_of m }
+= { heap = H2.join m0.heap m1.heap;
+    ctr = max m0.ctr m1.ctr;
+    ghost_ctr = hide <| max m0.ghost_ctr m1.ghost_ctr }
+let empty_mem 
+: m:mem { 
+  sep.core_of m == sep.empty /\
+  (forall m'. sep.disjoint (sep.core_of m') (sep.core_of m) /\ join_mem m' m == m') /\
+  True
+}
+= FStar.Classical.forall_intro sep.join_empty;
+  { heap = H2.empty_heap; ctr = 0; ghost_ctr = 0 }
+let pure_true_emp () : Lemma (pure True == emp) =
+    FStar.Classical.forall_intro (H2.pure_interp True);
+    FStar.Classical.forall_intro H2.intro_emp;
+    assert (H2.equiv (H2.pure True) H2.emp)
+let empty_mem_invariant (e:GhostSet.set unit)
+: Lemma (mem_invariant e empty_mem == emp)
+= FStar.Classical.forall_intro H2.free_above_empty;
+  assert (free_above empty_mem);
+  calc (==) {
+    pure (free_above empty_mem);
+  (==) { FStar.PropositionalExtensionality.apply (free_above empty_mem) True }
+    pure True;
+  (==) { pure_true_emp () }
+    emp;
+  }
 let base_heap : heap_sig u#a =
   {
     mem;
@@ -200,7 +229,10 @@ let base_heap : heap_sig u#a =
     inv_iname_ok = (fun _ _ _ -> ());
     mem_invariant_equiv;
     iref_injective = (fun _ -> false);
-    iref_injectivity = (fun _ _ _ _ _ -> ())
+    iref_injectivity = (fun _ _ _ _ _ -> ());
+    join_mem;
+    empty_mem;
+    empty_mem_invariant
 }
 let join_empty_inverse m0 m1 = H2.join_empty_inverse m0 m1
 let core_ghost_ref_is_null (r:core_ghost_ref) = H2.core_ghost_ref_is_null r
@@ -214,6 +246,9 @@ let core_ghost_ref_as_addr_injective r1 = H2.core_ghost_ref_as_addr_injective r1
 let addr_as_core_ghost_ref_injective a = H2.addr_as_core_ghost_ref_injective a
 let select_ghost i m = H2.select_ghost i m
 let ghost_ctr m = m.ghost_ctr
+let empty_mem_props () = 
+  FStar.Classical.forall_intro H2.free_above_empty;
+  FStar.Classical.forall_intro_3 H2.reveal_free_above_addr
 let mem_invariant_interp (ex:inames base_heap) (h0:base_heap.mem) (h1:base_heap.sep.core)
 : Lemma (base_heap.interp (base_heap.mem_invariant ex h0) h1 ==>
          free_above_ghost_ctr h0)
@@ -222,7 +257,6 @@ let mem_invariant_interp (ex:inames base_heap) (h0:base_heap.mem) (h1:base_heap.
 let inames_ok_trivial (ex:inames base_heap) (h:base_heap.mem)
 : Lemma (inames_ok ex h)
 = ()
-let max (i j:nat) : nat = if i >= j then i else j
 let bump_ghost_ctr (m0:base_heap.mem) (x:erased nat)
 : m1:base_heap.mem {
     core_of m1 == core_of m0 /\

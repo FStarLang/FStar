@@ -27,36 +27,7 @@ let pm_sep_laws () : squash (
 let pm_sep : PulseCore.HeapSig.separable pulse_mem = PM.pulse_heap_sig.sep
 let pm_core_of (m:pulse_mem) : pulse_core_mem = PM.pulse_heap_sig.sep.core_of m
 
-let split_mem (p:slprop) (q:slprop) (m:erased core_mem { interp (p `star` q) m })
-: res:(erased core_mem & erased core_mem) {
-    let l, r = res in
-    disjoint l r /\
-    reveal m == join l r /\
-    interp p l /\
-    interp q r
-  }
-= star_equiv p q m;
-  let m1 : erased (core_mem) =
-    FStar.IndefiniteDescription.indefinite_description_tot
-      core_mem
-      (fun m1 -> 
-        exists m2. 
-          disjoint m1 m2 /\
-          reveal m == join m1 m2 /\
-          interp p m1 /\
-          interp q m2)
-  in
-  let m2 : erased (core_mem) =
-    FStar.IndefiniteDescription.indefinite_description_tot
-        core_mem
-        (fun m2 -> 
-            disjoint m1 m2 /\
-            reveal m == join m1 m2 /\
-            interp p m1 /\
-            interp q m2)
-  in
-  m1, m2
-
+// 
 let split_mem3 (pp qq rr:slprop) (s:erased core_mem { interp (pp `star` qq `star` rr) s })
 : res:(erased core_mem & erased core_mem & erased core_mem) {
     let l, m, r = res in
@@ -238,12 +209,6 @@ let lift_mem_action #a #mg #ex #pre #post
     is_ghost_action_istore_refl w0.istore;
     (x, w1)
 
-
-let intro_star (p q:slprop) (m0 m1:core_mem)
-: Lemma
-  (requires disjoint m0 m1 /\ interp p m0 /\ interp q m1)
-  (ensures interp (p `star` q) (join m0 m1))
-= star_equiv p q (join m0 m1)
 
 let later_intro (e:inames) (p:slprop)
 : ghost_act unit e p (fun _ -> later p)

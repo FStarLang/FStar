@@ -225,6 +225,16 @@ type heap_sig : Type u#(a + 2) = {
          (p =!= q ==> i =!= j) /\
          (i==j ==> p == q))
     );
+    join_mem : (
+      m0:mem ->
+      m1:mem { sep.disjoint (sep.core_of m0) (sep.core_of m1) } ->
+      m:mem { sep.core_of m == sep.join (sep.core_of m0) (sep.core_of m1) }
+    );
+    empty_mem: (m:mem {
+        sep.core_of m == sep.empty /\
+        (forall m'. sep.disjoint (sep.core_of m') (sep.core_of m) /\ join_mem m' m == m')
+    });
+    empty_mem_invariant : (e:Set.set iref -> Lemma (mem_invariant e empty_mem == emp))
 }
 let add_iref (#h:heap_sig) (i:h.iref) (s:GhostSet.set h.iref) = add h.deq_iref i s
 val emp_trivial (h:heap_sig u#a)

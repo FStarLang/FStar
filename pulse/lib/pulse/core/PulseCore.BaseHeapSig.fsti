@@ -25,7 +25,11 @@ val ghost_ctr (b:base_heap.mem) : GTot nat
 let free_above_ghost_ctr (m:base_heap.mem)
 : prop
 = forall addr. addr >= ghost_ctr m ==> select_ghost addr (core_of m) == None
-
+val empty_mem_props () 
+: Lemma (
+    free_above_ghost_ctr base_heap.empty_mem /\
+    ghost_ctr base_heap.empty_mem == 0
+  )
 val mem_invariant_interp (ex:inames base_heap) (h0:base_heap.mem) (h1:base_heap.sep.core)
 : Lemma (base_heap.interp (base_heap.mem_invariant ex h0) h1 ==>
          free_above_ghost_ctr h0)

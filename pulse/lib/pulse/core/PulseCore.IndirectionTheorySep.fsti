@@ -2,6 +2,7 @@ module PulseCore.IndirectionTheorySep
 module F = FStar.FunctionalExtensionality
 module T = FStar.Tactics
 module PM = PulseCore.MemoryAlt
+open FStar.Ghost 
 
 [@@erasable] val istore : Type u#4
 [@@erasable] val core_istore : Type u#4
@@ -112,6 +113,20 @@ val star_equiv :
           m == join m0 m1 /\
           interp p m0 /\
           interp q m1))
+
+val split_mem (p:slprop) (q:slprop) (m:erased core_mem { interp (p `star` q) m })
+: res:(erased core_mem & erased core_mem) {
+    let l, r = res in
+    disjoint l r /\
+    reveal m == join l r /\
+    interp p l /\
+    interp q r
+}
+
+val intro_star (p q:slprop) (m0 m1:core_mem)
+: Lemma
+  (requires disjoint m0 m1 /\ interp p m0 /\ interp q m1)
+  (ensures interp (p `star` q) (join m0 m1))
 
 val emp_equiv (m:core_mem) : Lemma (interp emp m)
 
@@ -370,6 +385,7 @@ val mem_invariant_disjoint (e f:inames) (p0 p1:slprop) (m0 m1:mem)
   (requires
     disjoint (core_of m0) (core_of m1) /\
     FStar.GhostSet.disjoint (istore_dom m0) (istore_dom m1) /\
+    m1.pulse_mem == PM.pulse_heap_sig.empty_mem /\
     interp (p0 `star` mem_invariant e m0) (core_of m0) /\
     interp (p1 `star` mem_invariant f m1) (core_of m1))
   (ensures (
@@ -408,6 +424,7 @@ val fresh_inv
     inames_ok (single i) m' /\
     interp (inv i p `star` mem_invariant (single i) m') c' /\
     FStar.GhostSet.disjoint (istore_dom m) (istore_dom m') /\
+    m'.pulse_mem == PM.pulse_heap_sig.empty_mem /\
     credits c' == 0
   }
 

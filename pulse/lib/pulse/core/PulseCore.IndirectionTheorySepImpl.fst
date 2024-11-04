@@ -523,8 +523,6 @@ let lift_pure_eq p =
   world_pred_ext (lift (PM.pure p)) (pure p) fun w ->
     pulse_heap_sig.pure_interp p (snd w).pulse_heap
 
-// let lift_later_eq #_ = admit ()
-
 let lift_star_eq p q =
   world_pred_ext (lift (PM.star p q)) (star (lift p) (lift q)) fun w ->
     pulse_heap_sig.star_equiv p q (snd w).pulse_heap;

@@ -518,7 +518,10 @@ let pulse_heap_sig0 : HeapSig.heap_sig u#(a + 3) = {
   dup_inv_equiv=(fun i p -> sig.dup_inv_equiv i p);
   iname_ok=(fun x y -> sig.iname_ok x y);
   inv=inv;
-  non_info_iref=(fun x -> reveal x)
+  non_info_iref=(fun x -> reveal x);
+  join_mem=sig.join_mem;
+  empty_mem=sig.empty_mem;
+  empty_mem_invariant=(fun e -> sig.empty_mem_invariant (down_inames e));
 }
 let pulse_heap_sig : hs:PulseCore.HeapSig.heap_sig u#(a + 3) {
 // val pulse_heap_sig_properties () : squash (

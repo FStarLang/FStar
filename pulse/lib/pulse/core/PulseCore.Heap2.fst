@@ -207,6 +207,8 @@ let select i m = H.select i m.concrete
 let select_ghost i m = H.select i m.ghost
 let select_ghost_interp i m = ()
 let free_above_addr tag h a = H.free_above_addr (get tag h) a
+let free_above_empty (t:tag) : Lemma (free_above_addr t (empty_heap u#a) 0) = 
+  H.free_above_empty ()
 let reveal_free_above_addr tag h a = 
   H.interp_free_above h.concrete a;
   H.interp_free_above h.ghost a

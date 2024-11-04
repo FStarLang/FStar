@@ -436,6 +436,8 @@ val heap_evolves : FStar.Preorder.preorder full_heap
 *)
 val free_above_addr (h:heap u#a) (a:nat) : prop
 
+val free_above_empty () : Lemma (free_above_addr empty_heap 0)
+
 val interp_free_above (h:heap u#a) (a:nat)
 : Lemma (free_above_addr h a <==> (forall i. i >= a ==> select i h == None))
 

@@ -980,6 +980,63 @@ let iref_injectivity #h (i:ext_iref h) (j:ext_iref h) (p q:ext_slprop h) (m:ext_
     inv_interp i p m;
     inv_interp j q m
 
+let join_mem
+      (#h:heap_sig u#a)
+      (m0:ext_mem h)
+      (m1:ext_mem h { (ext_sep h).disjoint ((ext_sep h).core_of m0) ((ext_sep h).core_of m1) })
+: m:ext_mem h { (ext_sep h).core_of m == (ext_sep h).join ((ext_sep h).core_of m0) ((ext_sep h).core_of m1) }
+= {
+    small = h.join_mem m0.small m1.small;
+    big = H2.base_heap.join_mem m0.big m1.big
+  }
+
+let empty_mem (#h:heap_sig u#a)
+: m:ext_mem h {
+  let sep = ext_sep h in
+  sep.core_of m == sep.empty /\
+ (forall m'. (sep.disjoint (sep.core_of m') (sep.core_of m) /\ join_mem m' m == m'))
+}
+= FStar.Classical.forall_intro (ext_sep h).join_empty;
+  {
+    small = h.empty_mem;
+    big = H2.base_heap.empty_mem
+  }
+
+let up_emp_ext (h:heap_sig u#a)
+: Lemma (emp == lift h (H2.base_heap.emp))
+= FStar.Classical.forall_intro (intro_emp #h);
+  emp_trivial H2.base_heap;
+  slprop_extensionality h emp (lift h (H2.base_heap.emp))
+
+let empty_mem_invariant (#h:heap_sig u#a) (e:GhostSet.set (ext_iref h))
+: Lemma (mem_invariant e (empty_mem #h) == emp)
+= let m = empty_mem #h in
+  H2.empty_mem_props();
+  calc (==) {
+    mem_invariant e m;
+  (==) {}
+    up (h.mem_invariant (down_irefs e) m.small) `star`
+    istore_invariant #h (H2.ghost_ctr m.big) e (core_of m.big) `star`
+    lift h (H2.base_heap.mem_invariant GhostSet.empty m.big);
+  (==) {h.empty_mem_invariant (down_irefs e); H2.base_heap.empty_mem_invariant GhostSet.empty }
+    emp `star`
+    istore_invariant #h (H2.ghost_ctr m.big) e (core_of m.big) `star`
+    lift h (H2.base_heap.emp);
+  (==) { up_emp_ext h }
+    emp `star`
+    istore_invariant #h (H2.ghost_ctr m.big) e (core_of m.big) `star`
+    emp;
+  (==) { FStar.Classical.forall_intro (emp_unit #h);
+         FStar.Classical.forall_intro_2 (star_commutative #h) }
+    istore_invariant #h (H2.ghost_ctr m.big) e (core_of m.big) ;    
+  (==) { }
+   invariant_of_one_cell 0 e (core_of m.big) `star` emp;
+  (==) {FStar.Classical.forall_intro (emp_unit #h) }
+   invariant_of_one_cell 0 e (core_of m.big);
+  (==) { }
+    emp;
+  }
+
 let extend (h:heap_sig u#a) = {
     mem = ext_mem h;
     sep = ext_sep h;
@@ -1018,8 +1075,12 @@ let extend (h:heap_sig u#a) = {
     mem_invariant = mem_invariant;
     mem_invariant_equiv = mem_invariant_equiv_ext #h;
     iref_injective;
-    iref_injectivity
+    iref_injectivity;
+    join_mem;
+    empty_mem;
+    empty_mem_invariant;
 }
+
 
 let lift_iref (#h:heap_sig u#a) (i:h.iref)
 : ext_iref h
