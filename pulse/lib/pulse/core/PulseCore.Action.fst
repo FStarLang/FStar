@@ -198,9 +198,10 @@ let act
 = #ictx:inames_disj opens ->
   pre_act a r ictx pre post
 
-assume
-val ghost_action_preorder (_:unit)
+let ghost_action_preorder (_:unit)
   : Lemma (FStar.Preorder.preorder_rel is_ghost_action)
+= Mem.ghost_action_preorder ();
+  assert FStar.Preorder.preorder_rel is_ghost_action_istore
 
 let return_pre_act
     (#a:Type u#a)
