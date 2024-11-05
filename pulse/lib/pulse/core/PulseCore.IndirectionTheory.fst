@@ -32,8 +32,9 @@ let pack_unpack_pred #f (ff: functor u#a f) #n (x: pred' ff n (k' ff)) =
   f_ext (pack_pred n (unpack_pred n x)) x fun m ->
     f_ext (pack_pred n (unpack_pred n x) m) (x m) fun x -> ()
 
-let pack #f #ff x = (| fst x, k'_fold (ff.fmap (pack_pred (fst x)) (snd x)) |)
-let unpack #f #ff x = (dfst x, ff.fmap (unpack_pred (dfst x)) (k'_unfold (dsnd x)))
+let level #f #ff x = dfst x
+let pack #f #ff n x = (| n, k'_fold (ff.fmap (pack_pred #f #ff n) x) |)
+let unpack #f #ff x = ff.fmap (unpack_pred (dfst x)) (k'_unfold (dsnd x))
 
 let unpack_pack_pred #f (#ff: functor u#a f) (n:nat) (x: predicate ff) =
   f_ext ((unpack_pred n (pack_pred n x))) (approx n x) fun _ -> ()
