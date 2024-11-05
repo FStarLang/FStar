@@ -18,33 +18,20 @@ let pred'_ext #f (ff: functor u#a f) (n: nat) (knot_t: (m:nat {m<n} -> Type u#(a
   funext (fun m x -> f1 m x) (fun m x -> f2 m x) fun m ->
     funext _ _ fun x -> h m x
 
+// Gadget to control unfolding
 irreducible let irred_true : b:bool{b} = true
-
-let rec iterate #t (step: (n:nat->(m:nat{m<n}->t)->t)) : nat -> t =
-  fun n -> if irred_true then step n (iterate step) else assert False
-
-let congr_fun #t #s (f: t->s) (x1: t) (x2: t {x1==x2}) : squash (f x1 == f x2) = ()
-
-let iterate_eq_fun #t (step: (n:nat->(m:nat{m<n}->t)->t)) :
-    squash (iterate step == (fun n -> step n (iterate step))) =
-  let f (b:bool{b}) n : t = (if b then step n (iterate step) else assert False) in
-  assert_norm (iterate step == f irred_true);
-  congr_fun f irred_true true
-
-let iterate_eq #t (step: (n:nat->(m:nat{m<n}->t)->t)) (n: nat) : squash (iterate step n == step n (iterate step)) =
-  iterate_eq_fun step
 
 let f_pred' #f (ff: functor u#a f) (n: nat) (knot_t: (m:nat {m<n} -> Type u#(a+1))) : Type u#(a+1) =
   f (pred' ff n knot_t)
 
-let k_n #f (ff: functor u#a f) : nat -> Type u#(a+1) =
-  // FIXME: this fails when defined directly as a let rec because of universe bugs
-  iterate (f_pred' ff)
+let rec k_n #f (ff: functor u#a f) : nat -> Type u#(a+1) =
+  fun n -> if irred_true then f_pred' ff n (k_n ff) else (assert False; Type u#a)
 
 let k_n_eq #f (ff: functor u#a f) (n: nat) :
     squash (k_n ff n == f (pred' ff n (k_n ff))) = 
-  iterate_eq_fun (f_pred' ff);
-  assert_norm (k_n ff n == iterate (f_pred' ff) n)
+  let g (b: bool{b}) n : Type =
+    if b then f_pred' ff n (k_n ff) else (assert False; Type u#a) in
+  assert_norm (g irred_true == k_n ff)
 
 let k_n_unfold #f (#ff: functor u#a f) #n (x: k_n ff n) : f (pred' ff n (k_n ff)) =
   k_n_eq ff n; x
