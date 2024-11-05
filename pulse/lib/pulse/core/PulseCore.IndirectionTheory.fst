@@ -24,34 +24,34 @@ irreducible let irred_true : b:bool{b} = true
 let f_pred' #f (ff: functor u#a f) (n: nat) (knot_t: (m:nat {m<n} -> Type u#(a+1))) : Type u#(a+1) =
   f (pred' ff n knot_t)
 
-let rec k_n #f (ff: functor u#a f) : nat -> Type u#(a+1) =
-  fun n -> if irred_true then f_pred' ff n (k_n ff) else (assert False; Type u#a)
+let rec k' #f (ff: functor u#a f) : nat -> Type u#(a+1) =
+  fun n -> if irred_true then f_pred' ff n (k' ff) else (assert False; Type u#a)
 
-let k_n_eq #f (ff: functor u#a f) (n: nat) :
-    squash (k_n ff n == f (pred' ff n (k_n ff))) = 
+let k'_eq #f (ff: functor u#a f) (n: nat) :
+    squash (k' ff n == f (pred' ff n (k' ff))) =
   let g (b: bool{b}) n : Type =
-    if b then f_pred' ff n (k_n ff) else (assert False; Type u#a) in
-  assert_norm (g irred_true == k_n ff)
+    if b then f_pred' ff n (k' ff) else (assert False; Type u#a) in
+  assert_norm (g irred_true == k' ff)
 
-let k_n_unfold #f (#ff: functor u#a f) #n (x: k_n ff n) : f (pred' ff n (k_n ff)) =
-  k_n_eq ff n; x
+let k'_unfold #f (#ff: functor u#a f) #n (x: k' ff n) : f (pred' ff n (k' ff)) =
+  k'_eq ff n; x
 
-let k_n_fold #f (#ff: functor u#a f) #n (x: f (pred' ff n (k_n ff))) : k_n ff n =
-  k_n_eq ff n; x
+let k'_fold #f (#ff: functor u#a f) #n (x: f (pred' ff n (k' ff))) : k' ff n =
+  k'_eq ff n; x
 
-let approx' #f (#ff: functor u#a f) (#n: nat) (m: nat { m <= n }) (x: pred' ff n (k_n ff)) : pred' ff m (k_n ff) =
+let approx' #f (#ff: functor u#a f) (#n: nat) (m: nat { m <= n }) (x: pred' ff n (k' ff)) : pred' ff m (k' ff) =
   fun l h -> x l h
 
 let knot_t #f (ff: functor u#a f) : Type u#(a+1) =
-  n:nat & k_n ff n
+  n:nat & k' ff n
 
-let up_pred #f (#ff: functor u#a f) n (x: pred' ff n (k_n ff)) : pred (knot_t ff) ff.other ff.tt =
+let up_pred #f (#ff: functor u#a f) n (x: pred' ff n (k' ff)) : pred (knot_t ff) ff.other ff.tt =
   F.on_dom (knot_t ff & ff.other) fun ((|m, h|), o) -> if m < n then x m (h, o) else ff.t_bot
 
-let down_pred #f (#ff: functor u#a f) n (x: pred (knot_t ff) ff.other ff.tt) : pred' ff n (k_n ff) =
+let down_pred #f (#ff: functor u#a f) n (x: pred (knot_t ff) ff.other ff.tt) : pred' ff n (k' ff) =
   fun m (h, o) -> x ((| m, h |), o)
 
-let down_up_pred #f (ff: functor u#a f) #n (x: pred' ff n (k_n ff)) :
+let down_up_pred #f (ff: functor u#a f) #n (x: pred' ff n (k' ff)) :
     squash (down_pred n (up_pred n x) == x) =
   pred'_ext _ _ _ (down_pred n (up_pred n x)) x fun m h -> ()
 
@@ -65,11 +65,11 @@ let on_dom_ext #t #s (f g: t ^-> s) (h: (x:t -> squash (f x == g x))) : squash (
 
 let down #f (#ff: functor u#a f) (x: nat & f (pred (knot_t ff) ff.other ff.tt)) : knot_t ff =
   let (n: nat), h = x in
-  (| n, k_n_fold (ff.fmap (down_pred n) h) |)
+  (| n, k'_fold (ff.fmap (down_pred n) h) |)
 
 let up #f (#ff: functor u#a f) (x: knot_t ff) : nat & f (pred (knot_t ff) ff.other ff.tt) =
   let (| n, h |) = x in
-  (n, ff.fmap (up_pred n) (k_n_unfold h))
+  (n, ff.fmap (up_pred n) (k'_unfold h))
 
 let up_down_pred #f (#ff: functor u#a f) (n:nat) (x: pred (knot_t ff) ff.other ff.tt) :
     squash (up_pred n (down_pred n x) == approx n x) =
@@ -81,12 +81,12 @@ let up_down_pred #f (#ff: functor u#a f) (n:nat) (x: pred (knot_t ff) ff.other f
 
 let down_up #f (#ff: functor u#a f) (x: knot_t ff) : squash (down (up x) == x) =
   let (| n, h |) = x in
-  let h = k_n_unfold h in
+  let h = k'_unfold h in
   assert (down (up x))._1 == n;
   assert (up x)._2 == ff.fmap (up_pred n) h;
-  assert k_n_unfold #f #ff #n (down (up x))._2 ==
+  assert k'_unfold #f #ff #n (down (up x))._2 ==
     ff.fmap (down_pred n) (ff.fmap (up_pred n) h);
-  ff.fmap_comp (pred' ff n (k_n ff)) _ (pred' ff n (k_n ff)) (down_pred n) (up_pred n);
+  ff.fmap_comp (pred' ff n (k' ff)) _ (pred' ff n (k' ff)) (down_pred n) (up_pred n);
   assert ff.fmap (down_pred n) (ff.fmap (up_pred n) h) == ff.fmap (compose (down_pred n) (up_pred n)) h;
   on_dom_ext (compose (down_pred n) (up_pred #f #ff n)) id (down_up_pred ff);
   ff.fmap_id _ h;
