@@ -223,7 +223,7 @@ ensures
   OR.on_range (predicate_at t 0.5R preds) (i + 1) (Seq.length preds) **
   later (equiv (Seq.index preds i) p)
 {
-  SLT.in_bounds t _ _;
+  SLT.in_bounds t;
   OR.on_range_get i;
   rewrite (predicate_at t 0.5R preds i)
        as (SLT.pts_to t i #0.5R (Seq.index preds i));
