@@ -17,20 +17,18 @@ let pred'_ext #f (ff: functor u#a f) (n: nat) (knot_t: (m:nat {m<n} -> Type u#(a
   funext (fun m x -> f1 m x) (fun m x -> f2 m x) fun m ->
     funext _ _ fun x -> h m x
 
-// Gadget to control unfolding
-irreducible let irred_true : b:bool{b} = true
-
 let f_pred' #f (ff: functor u#a f) (n: nat) (knot_t: (m:nat {m<n} -> Type u#(a+1))) : Type u#(a+1) =
   f (pred' ff n knot_t)
+
+// Gadget to control unfolding
+irreducible let irred_true : b:bool{b} = true
 
 let rec k' #f (ff: functor u#a f) : nat -> Type u#(a+1) =
   fun n -> if irred_true then f_pred' ff n (k' ff) else (assert False; Type u#a)
 
 let k'_eq #f (ff: functor u#a f) (n: nat) :
     squash (k' ff n == f (pred' ff n (k' ff))) =
-  let g (b: bool{b}) n : Type =
-    if b then f_pred' ff n (k' ff) else (assert False; Type u#a) in
-  assert_norm (g irred_true == k' ff)
+  ()
 
 let k'_unfold #f (#ff: functor u#a f) #n (x: k' ff n) : f (pred' ff n (k' ff)) =
   k'_eq ff n; x
