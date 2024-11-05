@@ -221,7 +221,7 @@ let equiv_comm a b = admit ()
 let equiv_trans a b c = admit ()
 let equiv_elim a b = admit ()
 let equiv_elim_timeless a b = admit ()
-
+let equiv_star_congr p q r = admit()
 //////////////////////////////////////////////////////////////////////////
 // Higher-order ghost state
 //////////////////////////////////////////////////////////////////////////

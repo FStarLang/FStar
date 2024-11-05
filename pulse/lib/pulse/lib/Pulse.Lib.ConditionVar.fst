@@ -309,7 +309,11 @@ requires
 ensures
   equiv (p ** q) r
 {
-  admit()
+  equiv_star_congr p x q;
+  rewrite (equiv x q) as (equiv x q ** equiv (p ** x) (p ** q));
+  equiv_comm (p ** x) (p ** q);
+  equiv_trans (p ** q) (p ** x) r;
+  drop_ (equiv x q)
 }
 
 let istar_preds_preds'_eq
