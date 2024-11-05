@@ -16,7 +16,7 @@ class functor (f: Type u#(a+1) -> Type u#(a+1)) = {
 }
 
 val knot_t #f (ff: functor u#a f) : Type u#(a+1)
-let predicate #f (ff: functor u#a f) = knot_t ff & ff.other -> ff.tt
+let predicate #f (ff: functor u#a f) = knot_t ff & ff.other ^-> ff.tt
 val pack #f (#ff: functor f) : (nat & f (predicate ff)) -> knot_t ff
 val unpack #f (#ff: functor f) : knot_t ff -> (nat & f (predicate ff))
 
