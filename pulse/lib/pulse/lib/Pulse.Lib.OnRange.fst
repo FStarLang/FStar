@@ -78,6 +78,29 @@ let rec on_range_timeless (p:nat -> slprop) (i:nat) (j:nat)
   then ()
   else on_range_timeless p (i + 1) j
 
+let rec on_range_join_eq
+  (i j k: nat)
+  (p: (nat -> slprop))
+: Lemma 
+  (requires i <= j /\ j <= k)
+  (ensures ((on_range p i j ** on_range p j k) == on_range p i k))
+  (decreases (j - i))
+= if i = j 
+  then slprop_equivs ()
+  else ( 
+    calc (==) {
+      on_range p i j ** on_range p j k;
+    (==) {}
+      (p i ** on_range p (i + 1) j) ** on_range p j k;
+    (==) {slprop_equivs()}
+      p i ** (on_range p (i + 1) j ** on_range p j k);
+    (==) { on_range_join_eq (i + 1) j k p }
+      p i ** (on_range p (i + 1) k);
+    (==) { on_range_eq_cons p i k }
+      on_range p i k;
+    }
+  )
+
 ghost
 fn on_range_le
     (p: (nat -> slprop))
@@ -95,8 +118,6 @@ ensures on_range p i j ** pure (i <= j)
     ()
   }
 }
-
-
 
 ghost
 fn on_range_empty
@@ -176,7 +197,7 @@ decreases (j - i)
 
 
 ghost
-fn rec on_range_join
+fn on_range_join
   (i j k: nat)
   (#p: (nat -> slprop))
 requires on_range p i j ** on_range p j k
@@ -184,17 +205,9 @@ ensures on_range p i k
 decreases (j - i)
 {
   on_range_le p #i #j;
-  if (i = j)
-  {
-    rewrite (on_range p i j) as emp;
-  }
-  else
-  {
-    rewrite (on_range p i j) as (p i ** on_range p (i + 1) j);
-    on_range_join (i + 1) j k;
-    on_range_le p #(i + 1) #k;
-    rewrite (p i ** on_range p (i + 1) k) as (on_range p i k);
-  }
+  on_range_le p #j #k;
+  on_range_join_eq i j k p;
+  rewrite (on_range p i j ** on_range p j k) as (on_range p i k);
 }
 
 

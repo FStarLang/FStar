@@ -58,6 +58,13 @@ val on_range_timeless (p:nat -> slprop) (i:nat) (j:nat)
           (ensures timeless (on_range p i j))
           [SMTPat (on_range p i j)]
 
+val on_range_join_eq
+  (i j k: nat)
+  (p: (nat -> slprop))
+: Lemma 
+  (requires i <= j /\ j <= k)
+  (ensures ((on_range p i j ** on_range p j k) == on_range p i k))
+  
 val on_range_le
   (p: (nat -> slprop))
   (#i:nat)
