@@ -612,6 +612,30 @@ let equiv_elim (p q: slprop) : squash (equiv p q `star` p == equiv p q `star` q)
 let equiv_trans (p q r: slprop) : squash (equiv p q `star` equiv q r == equiv p q `star` equiv p r) =
   world_pred_ext (equiv p q `star` equiv q r) (equiv p q `star` equiv p r) fun w -> ()
 
+irreducible [@@"opaque_to_smt"]
+let empty_pulse_heap (w: preworld) : v:preworld { disjoint_worlds w v /\ w == join_worlds w v /\ fst w == fst v } =
+  let v = (fst w, snd (empty (level_ w))) in
+  pulse_heap_sig.sep.join_empty (snd w).pulse_heap;
+  world_ext w (join_worlds w v) (fun _ -> ());
+  v
+
+let equiv_star_congr (p q r: slprop) =
+  let aux (q r: slprop) (n: nat { eq_at n q r }) (w: preworld) =
+    introduce level_ w < n /\ star p q w ==> star p r w with _. (
+      let (w1, w2) = star_elim p q w in
+      eq_at_elim n q r w2;
+      star_intro p r w w1 w2
+    ) in
+  world_pred_ext (equiv q r) (equiv q r `star` equiv (star p q) (star p r)) fun w ->
+    introduce equiv q r w ==> (equiv q r `star` equiv (star p q) (star p r)) w with _. (
+      let w2 = empty_pulse_heap w in
+      world_pred_ext (approx (level_ w + 1) (star p q)) (approx (level_ w + 1) (star p r)) (fun w' ->
+        aux q r (level_ w + 1) w';
+        aux r q (level_ w + 1) w'
+      );
+      star_intro (equiv q r) (equiv (star p q) (star p r)) w w w2
+    )
+
 let timeless_emp () : squash (timeless emp) =
   world_pred_ext (later emp) emp fun w -> ()
 
@@ -940,14 +964,8 @@ let non_pulse_prop (p: slprop) =
 
 let dup_inv_equiv i p : Lemma (inv i p == (inv i p `star` inv i p)) =
   world_pred_ext (inv i p) (inv i p `star` inv i p) fun w ->
-    introduce inv i p w ==> star (inv i p) (inv i p) w with _. (
-      let w2 = (fst w, snd (empty (level_ w))) in
-      assert inv i p w;
-      assert inv i p w2;
-      pulse_heap_sig.sep.join_empty (snd w).pulse_heap;
-      assert disjoint_worlds w w2;
-      world_ext w (join_worlds w w2) (fun a -> ())
-    )
+    introduce inv i p w ==> star (inv i p) (inv i p) w with _.
+      let w2 = empty_pulse_heap w in ()
 
 let invariant_name_identifies_invariant (i: iref) (p q: slprop) (w: preworld { level_ w > 0 }) :
     squash (star (inv i p) (inv i q) w ==> later (equiv p q) w) =
