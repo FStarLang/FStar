@@ -1,0 +1,68 @@
+[
+  "f\u0013Gr·Oû”AâƒÔÒUoB",
+  [
+    [
+      "Bug260.pnat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "125896d6daa06a1c80af0e1cc029281c"
+    ],
+    [
+      "Bug260.__proj__S__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_157a25d7c8423b184ee7d22a138c6995"
+      ],
+      0,
+      "399ec3917a8d214e61cc71d55261318e"
+    ],
+    [
+      "Bug260.validity",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Bug260.pnat__uu___haseq" ],
+      0,
+      "ca87d86da88a0bfb74a0c62d2ef8b1f4"
+    ],
+    [
+      "Bug260.validity'",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Bug260.pnat__uu___haseq" ],
+      0,
+      "2c16a2624f159c3f905001a9d952c046"
+    ],
+    [
+      "Bug260.__proj__VSucc'__item___1",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug260.VSucc_" ],
+      0,
+      "d86b3d75a7ece8227d90472fd80aa06b"
+    ],
+    [
+      "Bug260.validity'_empty",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_9092173dacc7c806816e845a428fbe8f_0",
+        "binder_x_bc3bc53b54e64d3a6235a24efa65ce59_1",
+        "fuel_guarded_inversion_Bug260.validity_",
+        "projection_inverse_Bug260.VSucc__n", "subterm_ordering_Bug260.S"
+      ],
+      0,
+      "b05b0ec77ea44ddc8fd81f0ce57dff6f"
+    ]
+  ]
+]

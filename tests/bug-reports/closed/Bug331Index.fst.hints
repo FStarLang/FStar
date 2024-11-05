@@ -1,0 +1,38 @@
+[
+  "VÝÞ«ï(Ñ2câZ.¢ƒ·^",
+  [
+    [
+      "Bug331Index.list1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "38bb7b0736ceb198c19764f54c033c0e"
+    ],
+    [
+      "Bug331Index.__proj__Cons1__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_a249be582427ca128e548a92980c2eef"
+      ],
+      0,
+      "0e78d16d8814589d55be54445d163da5"
+    ],
+    [
+      "Bug331Index.__proj__Cons1__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_a249be582427ca128e548a92980c2eef"
+      ],
+      0,
+      "4681c6673fee5d92d0a4fa650d2f7ebb"
+    ]
+  ]
+]

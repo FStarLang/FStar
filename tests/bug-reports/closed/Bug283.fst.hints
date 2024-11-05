@@ -1,0 +1,32 @@
+[
+  "'\u0001èò˚ôGxú˚Ñ\u0015\u0010$°\n",
+  [
+    [
+      "Bug283.XOR_Laws",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Bug283.HasEq_block" ],
+      0,
+      "4acad75a2e1438496a9a58bea2dbdd61"
+    ],
+    [
+      "Bug283.test2",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Bug283.HasEq_block" ],
+      0,
+      "9d2916eed4a7e2640193176e2a686117"
+    ],
+    [
+      "Bug283.test2",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Bug283.XOR_Laws" ],
+      0,
+      "cf0fe439c5736bf9c4a8979b3c1cf716"
+    ]
+  ]
+]

@@ -1,18 +1,6 @@
 [
-  "W\u0015å,)¥∫’\u001bxlóR‰\u0012ì",
+  "ö~ùGÇzﬁ7˚\u0016`Œõﬂ˜Q",
   [
-    [
-      "FStar.Tactics.V1.Logic.revert_squash",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8"
-      ],
-      0,
-      "763e204b15402d6db9a4ee192826ff7a"
-    ],
     [
       "FStar.Tactics.V1.Logic.l_revert_all",
       1,
@@ -26,7 +14,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "8bd8796ced0b34af475f581ee6d0f512"
+      "e817e91f7f1e1bb9ab7eb77c06686a31"
     ],
     [
       "FStar.Tactics.V1.Logic.simplify_eq_implication",
@@ -69,30 +57,6 @@
       ],
       0,
       "318c8bfc4ba86ce1325fac728f76bce0"
-    ],
-    [
-      "FStar.Tactics.V1.Logic.__witness",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "cb6afdafba76b175095c405771d22516"
-    ],
-    [
-      "FStar.Tactics.V1.Logic.__forall_inst",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8"
-      ],
-      0,
-      "8572bd3e44cd7045ca90d747a9658990"
     ]
   ]
 ]

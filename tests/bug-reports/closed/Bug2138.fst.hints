@@ -1,0 +1,23 @@
+[
+  "Ã\td\u0002ÕÓEg€J ƒb\u001co¶",
+  [
+    [
+      "Bug2138.x",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Bug2138.t1__uu___haseq" ],
+      0,
+      "70fa6bfd5647f8f5ec3b6f39826da649"
+    ],
+    [
+      "Bug2138.y",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Bug2138.t1__uu___haseq" ],
+      0,
+      "b026fe2954887a1461aebc3401ad3092"
+    ]
+  ]
+]
