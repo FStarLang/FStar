@@ -88,7 +88,7 @@ let pulse_heap_le (a b: pulse_heap_sig.sep.core) : prop =
 
 let istore_val = istore_val_ world_pred
 
-let read_istore (is: istore) a : istore_val = snd (up is) a
+let read_istore (is: istore) a : istore_val = snd (unpack is) a
 let read (w: preworld) a = read_istore (fst w) a
 
 let level_istore (is: istore) : nat = level is
@@ -114,7 +114,7 @@ let world_pred_affine (p: world_pred) : prop =
   forall a b. world_le a b /\ p a ==> p b
 
 let age_istore_to (is: istore) (n: nat) : istore =
-  down (n, snd (up is))
+  pack (n, snd (unpack is))
 
 let age_to_ (w: preworld) (n: nat) : preworld =
   (age_istore_to (fst w) n, snd w)
@@ -152,14 +152,14 @@ let world = w:preworld { world_ok w }
 let read_age_istore_to (is: istore) n a : Lemma (read_istore (age_istore_to is n) a ==
     (map_istore_val (approx n) (read_istore is a)))
     [SMTPat (read_istore (age_istore_to is n) a)] =
-  up_down n (snd (up is))
+  unpack_pack n (snd (unpack is))
 
 let read_age_to_ (w: preworld) n a :
     Lemma (read (age_to_ w n) a == map_istore_val (approx n) (read w a)) =
   ()
 
 let level_age_istore_to_ is n : Lemma (level_istore (age_istore_to is n) == n) [SMTPat (level_istore (age_istore_to is n))] =
-  up_down n (snd (up is))
+  unpack_pack n (snd (unpack is))
 
 let level_age_to_ w n : Lemma (level_ (age_to_ w n) == n) =
   ()
@@ -169,9 +169,9 @@ let age_to (w: world) (n: nat) : world =
 
 let istore_ext (i1: istore) (i2: istore { level_istore i1 == level_istore i2 })
     (h: (a:address -> squash (read_istore i1 a == read_istore i2 a))) : squash (i1 == i2) =
-  f_ext (up i1)._2 (up i2)._2 (fun a -> h a);
-  down_up i1;
-  down_up i2
+  f_ext (unpack i1)._2 (unpack i2)._2 (fun a -> h a);
+  pack_unpack i1;
+  pack_unpack i2
 
 let world_ext (w1: preworld) (w2: preworld { level_ w1 == level_ w2 /\ snd w1 == snd w2 })
     (h: (a: address -> squash (read w1 a == read w2 a))) : squash (w1 == w2) =
@@ -241,19 +241,19 @@ let disjoint_istore_read is0 is1 a :
 
 let mk_istore n (is: address -> istore_val) : istore =
   let f' = F.on_dom address is in
-  down (n, f')
+  pack (n, f')
 
 let level_mk_istore n is : Lemma (level_istore (mk_istore n is) == n) [SMTPat (level_istore (mk_istore n is))] =
   let f' = F.on_dom address is in
-  assert_norm (mk_istore n is == down (n, f'));
-  up_down #_ #functor_heap n f'
+  assert_norm (mk_istore n is == pack (n, f'));
+  unpack_pack #_ #functor_heap n f'
 
 let read_mk_istore n is a :
     Lemma (read_istore (mk_istore n is) a == map_istore_val (approx n) (is a))
       [SMTPat (read_istore (mk_istore n is) a)] =
   let is' = F.on_dom address is in
-  assert_norm (mk_istore n is == down (n, is'));
-  up_down #_ #functor_heap n is';
+  assert_norm (mk_istore n is == pack (n, is'));
+  unpack_pack #_ #functor_heap n is';
   assert_norm (fmap (approx n) is' a == map_istore_val (approx n) (is' a))
 
 let empty_istore n : istore = mk_istore n fun _ -> None
@@ -289,7 +289,7 @@ let join_istore_commutative (is0:istore) (is1:istore { disjoint_istore is0 is1 }
 let approx_read_istore (is: istore) a :
     Lemma (map_istore_val (approx (level_istore is)) (read_istore is a) == read_istore is a)
     [SMTPat (read_istore is a)] =
-  let n, i = up is in down_up is; up_down n i
+  let n, i = unpack is in pack_unpack is; unpack_pack n i
 
 let join_istore_refl (is: istore) : Lemma (disjoint_istore is is /\ join_istore is is == is) =
   istore_ext (join_istore is is) is fun a -> ()
