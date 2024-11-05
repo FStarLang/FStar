@@ -3,7 +3,7 @@ open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 
 let pred' #f (ff: functor u#a f) (n: nat) (knot_t: (m:nat {m<n} -> Type u#(a+1))) : Type u#(a+1) =
-  f:(m:pos{m<n} -> (knot_t m & ff.other) -> ff.tt) { f == (fun m x -> f m x) }
+  f:(m:nat{m<n} -> (knot_t m & ff.other) -> ff.tt) { f == (fun m x -> f m x) }
 
 let funext #t (#s: t->Type) (f1 f2: (x:t -> s x)) (h: (x:t -> squash (f1 x == f2 x))) :
     squash ((fun x -> f1 x) == (fun x -> f2 x)) =
@@ -13,7 +13,7 @@ let funext #t (#s: t->Type) (f1 f2: (x:t -> s x)) (h: (x:t -> squash (f1 x == f2
 
 let pred'_ext #f (ff: functor u#a f) (n: nat) (knot_t: (m:nat {m<n} -> Type u#(a+1)))
     (f1 f2: pred' ff n knot_t)
-    (h: (m:pos{m<n} -> x:(knot_t m & ff.other) -> squash (f1 m x == f2 m x)))
+    (h: (m:nat{m<n} -> x:(knot_t m & ff.other) -> squash (f1 m x == f2 m x)))
     : squash (f1 == f2) =
   funext (fun m x -> f1 m x) (fun m x -> f2 m x) fun m ->
     funext _ _ fun x -> h m x
@@ -56,13 +56,13 @@ let approx' #f (#ff: functor u#a f) (#n: nat) (m: nat { m <= n }) (x: pred' ff n
   fun l h -> x l h
 
 let knot_t #f (ff: functor u#a f) : Type u#(a+1) =
-  n:nat & k_n ff (n+1)
+  n:nat & k_n ff n
 
 let up_pred #f (#ff: functor u#a f) n (x: pred' ff n (k_n ff)) : pred (knot_t ff) ff.other ff.tt =
-  F.on_dom (knot_t ff & ff.other) fun ((|m, h|), o) -> if m+1 < n then x (m+1) (h, o) else ff.t_bot
+  F.on_dom (knot_t ff & ff.other) fun ((|m, h|), o) -> if m < n then x m (h, o) else ff.t_bot
 
 let down_pred #f (#ff: functor u#a f) n (x: pred (knot_t ff) ff.other ff.tt) : pred' ff n (k_n ff) =
-  fun m (h, o) -> x ((| m-1, h |), o)
+  fun m (h, o) -> x ((| m, h |), o)
 
 let down_up_pred #f (ff: functor u#a f) #n (x: pred' ff n (k_n ff)) :
     squash (down_pred n (up_pred n x) == x) =
@@ -78,38 +78,37 @@ let on_dom_ext #t #s (f g: t ^-> s) (h: (x:t -> squash (f x == g x))) : squash (
 
 let down #f (#ff: functor u#a f) (x: nat & f (pred (knot_t ff) ff.other ff.tt)) : knot_t ff =
   let (n: nat), h = x in
-  (| n, k_n_fold (ff.fmap (down_pred (n+1)) h) |)
+  (| n, k_n_fold (ff.fmap (down_pred n) h) |)
 
 let up #f (#ff: functor u#a f) (x: knot_t ff) : nat & f (pred (knot_t ff) ff.other ff.tt) =
   let (| n, h |) = x in
-  (n, ff.fmap (up_pred (n+1)) (k_n_unfold h))
+  (n, ff.fmap (up_pred n) (k_n_unfold h))
 
-let up_down_pred #f (#ff: functor u#a f) (n:pos) (x: pred (knot_t ff) ff.other ff.tt) :
-    squash (up_pred n (down_pred n x) == approx (n-1) x) =
-  on_dom_ext ((up_pred n (down_pred n x))) (approx (n-1) x) fun mho ->
+let up_down_pred #f (#ff: functor u#a f) (n:nat) (x: pred (knot_t ff) ff.other ff.tt) :
+    squash (up_pred n (down_pred n x) == approx n x) =
+  on_dom_ext ((up_pred n (down_pred n x))) (approx n x) fun mho ->
     let ((|m,h|),o) = mho in
     assert up_pred n (down_pred n x) ((|m,h|), o) ==
-      (if m+1 < n then down_pred #f #ff n x (m+1) (h,o) else ff.t_bot);
-    assert up_pred n (down_pred n x) mho == approx (n-1) x mho
+      (if m < n then down_pred #f #ff n x m (h,o) else ff.t_bot);
+    assert up_pred n (down_pred n x) mho == approx n x mho
 
 let down_up #f (#ff: functor u#a f) (x: knot_t ff) : squash (down (up x) == x) =
   let (| n, h |) = x in
   let h = k_n_unfold h in
   assert (down (up x))._1 == n;
-  assert (up x)._2 == ff.fmap (up_pred (n+1)) h;
-  assert k_n_unfold #f #ff #(n+1) (down (up x))._2 ==
-    ff.fmap (down_pred (n+1)) (ff.fmap (up_pred (n+1)) h);
-  ff.fmap_comp (pred' ff (n+1) (k_n ff)) _ (pred' ff (n+1) (k_n ff)) (down_pred (n+1)) (up_pred (n+1));
-  assert ff.fmap (down_pred (n+1)) (ff.fmap (up_pred (n+1)) h) == ff.fmap (compose (down_pred (n+1)) (up_pred (n+1))) h;
-  on_dom_ext (compose (down_pred (n+1)) (up_pred #f #ff (n+1))) id (fun h -> down_up_pred ff h);
+  assert (up x)._2 == ff.fmap (up_pred n) h;
+  assert k_n_unfold #f #ff #n (down (up x))._2 ==
+    ff.fmap (down_pred n) (ff.fmap (up_pred n) h);
+  ff.fmap_comp (pred' ff n (k_n ff)) _ (pred' ff n (k_n ff)) (down_pred n) (up_pred n);
+  assert ff.fmap (down_pred n) (ff.fmap (up_pred n) h) == ff.fmap (compose (down_pred n) (up_pred n)) h;
+  on_dom_ext (compose (down_pred n) (up_pred #f #ff n)) id (down_up_pred ff);
   ff.fmap_id _ h;
   assert ff.fmap id h == h
 
 let up_down #f (#ff: functor u#a f) (n: nat) (h: f (pred (knot_t ff) ff.other ff.tt)) :
     squash (up (down #f #ff (n, h)) == (n, ff.fmap (approx n) h)) =
   assert (up (down #f #ff (n, h)))._1 == n;
-  assert (up (down #f #ff (n, h)))._2 == ff.fmap (up_pred (n+1)) (ff.fmap (down_pred (n+1)) h);
-  ff.fmap_comp _ _ _ (up_pred (n+1)) (down_pred #f #ff (n+1));
-  assert (up (down #f #ff (n, h)))._2 == ff.fmap (compose (up_pred (n+1)) (down_pred (n+1))) h;
-  on_dom_ext (compose (up_pred (n+1)) (down_pred #f #ff (n+1))) (approx n) (fun x -> up_down_pred (n+1) x);
-  ()
+  assert (up (down #f #ff (n, h)))._2 == ff.fmap (up_pred n) (ff.fmap (down_pred n) h);
+  ff.fmap_comp _ _ _ (up_pred n) (down_pred #f #ff n);
+  assert (up (down #f #ff (n, h)))._2 == ff.fmap (compose (up_pred n) (down_pred n)) h;
+  on_dom_ext (compose (up_pred n) (down_pred #f #ff n)) (approx n) (fun x -> up_down_pred n x)
