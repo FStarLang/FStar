@@ -108,27 +108,10 @@ let split_mem (p:slprop) (q:slprop) (m:erased core_mem { interp (p `star` q) m }
     interp p l /\
     interp q r
   }
-= star_equiv p q m;
-  let m1 : erased (core_mem) =
-    FStar.IndefiniteDescription.indefinite_description_tot
-      core_mem
-      (fun m1 -> 
-        exists m2. 
-          disjoint m1 m2 /\
-          reveal m == join m1 m2 /\
-          interp p m1 /\
-          interp q m2)
-  in
-  let m2 : erased (core_mem) =
-    FStar.IndefiniteDescription.indefinite_description_tot
-        core_mem
-        (fun m2 -> 
-            disjoint m1 m2 /\
-            reveal m == join m1 m2 /\
-            interp p m1 /\
-            interp q m2)
-  in
-  m1, m2
+= let w12 = hide (I.star_elim p q (of_core m)) in
+  let w1 = IndefiniteDescription.indefinite_description_tot _ fun w1 -> w1 == fst w12 in
+  let w2 = IndefiniteDescription.indefinite_description_tot _ fun w2 -> w2 == snd w12 in
+  hide (to_core w1), hide (to_core w2)
   
 let intro_star (p q:slprop) (m0 m1:core_mem)
 : Lemma
