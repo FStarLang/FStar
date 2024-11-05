@@ -17,14 +17,6 @@ returns t:table
 ensures is_table t 0
 
 ghost
-fn alloc (t:table) (p:slprop) (#i:nat)
-requires
-  is_table t i
-ensures
-  is_table t (i + 1) **
-  pts_to t i #1.0R p
-
-ghost
 fn update (t:table) 
           (i:nat)
           (p:slprop)
@@ -34,11 +26,19 @@ ensures
   pts_to t i #1.0R p
 
 ghost
-fn in_bounds (t:table) (i:nat) (p:slprop) 
+fn alloc (t:table) (p:slprop) (#i:nat)
 requires
-  is_table t 'n ** pts_to t i #'f p
+  is_table t i
 ensures
-  is_table t 'n ** pts_to t i #'f p ** pure (i < 'n)
+  is_table t (i + 1) **
+  pts_to t i #1.0R p
+
+ghost
+fn in_bounds (t:table) (#i:nat) (#f:perm) (#p:slprop) (#n:nat)
+requires
+  is_table t n ** pts_to t i #f p
+ensures
+  is_table t n ** pts_to t i #f p ** pure (i < n)
 
 ghost
 fn share (t:table) i (f0 f1:perm) (#f:perm) (#p:slprop)
