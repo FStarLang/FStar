@@ -6,8 +6,7 @@ let pred' #f (ff: functor u#a f) (n: nat) (knot_t: (m:nat {m<n} -> Type u#(a+1))
 let f_ext #t #s (f g: restricted_t t s) (h: (x:t -> squash (f x == g x))) : squash (f == g) =
   introduce forall x. f x == g x with h x; extensionality _ _ f g
 
-// Gadget to control unfolding
-irreducible let irred_true : b:bool{b} = true
+irreducible let irred_true : b:bool{b} = true // gadget to control unfolding
 
 let rec k' #f (ff: functor u#a f) : nat -> Type u#(a+1) =
   fun n -> if irred_true then f (pred' ff n (k' ff)) else (assert False; Type u#a)
