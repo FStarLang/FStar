@@ -1617,7 +1617,10 @@ let istore_invariant_bump
       else ( ac_lemmas_ext h; aux (n - 1) ) 
   in
   aux (H2.ghost_ctr m1.big);
-  admit ()
+  assert istore_invariant #h (H2.ghost_ctr m0.big) ex m0.big == istore_invariant (H2.ghost_ctr m1.big) ex m0.big;
+  let rec aux2 (n: nat) : Lemma (istore_invariant #h n ex m0.big == istore_invariant #h n ex m1.big) =
+    if n = 0 then () else aux2 (n-1) in
+  aux2 (H2.ghost_ctr m1.big)
 
 let mem_invariant_bump_aux
     (#h:heap_sig u#a)
@@ -1697,7 +1700,14 @@ let mem_invariant_bump
   introduce inames_ok ex m0 ==> inames_ok ex (bump_ghost_ctr m0 ctx)
   with _ . (
     assert (forall is. inames_ok is m0.big <==> inames_ok is m1.big);
-    admit ()
+    introduce forall (i: ext_iref h { i `GhostSet.mem` ex }). iname_ok h i (bump_ghost_ctr m0 ctx) with (
+      if Inr? i then (
+        assert iname_ok h i m0;
+        assert H2.select_ghost (H2.core_ghost_ref_as_addr (Inr?.v i)) m0.big ==
+          H2.select_ghost (H2.core_ghost_ref_as_addr (Inr?.v i)) m1.big;
+        assert iname_ok h i m1
+      ) else ()
+    )
   )
 
 
