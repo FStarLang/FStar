@@ -3,7 +3,7 @@ module I = PulseCore.IndirectionTheorySepImpl
 open FStar.Ghost
 module PropExt = FStar.PropositionalExtensionality
 
-let mem = I.world
+let mem = I.mem
 
 let timeless_mem_of m = (snd m).timeless_heap
 
@@ -43,8 +43,8 @@ let exists_ext (#a:Type u#a) (p q : a -> slprop)
 
 let sep_laws = I.sep_laws
 
-let disjoint m1 m2 = I.disjoint_worlds m1 m2
-let join m1 m2 = I.join_worlds m1 m2
+let disjoint m1 m2 = I.disjoint_mem m1 m2
+let join m1 m2 = I.join_mem m1 m2
 
 let clear_except_hogs i = (fst i, I.empty_rest)
 
@@ -56,7 +56,7 @@ let disjoint_join_levels i0 i1 = ()
 
 let interp p =
   introduce forall (m0 m1:mem). p m0 /\ disjoint m0 m1 ==> p (join m0 m1) with
-    introduce _ ==> _ with _.  assert I.world_le m0 (join m0 m1);
+    introduce _ ==> _ with _.  assert I.mem_le m0 (join m0 m1);
   p
 
 let update_timeless_mem_id m = ()
@@ -71,8 +71,8 @@ let star_equiv p q m =
       interp q m1
       ==> interp (p `star` q) m
     with introduce _ ==> _ with _. (
-    assert I.disjoint_worlds m0 m1;
-    assert m == I.join_worlds m0 m1
+    assert I.disjoint_mem m0 m1;
+    assert m == I.join_mem m0 m1
   );
   introduce
     interp (p `star` q) m ==>
@@ -240,7 +240,6 @@ let mem_invariant_disjoint (e f:inames) (p0 p1:slprop) (m0 m1:mem) =
   I.hogs_invariant_disjoint' e f p0' p1' m0 m1;
   let m = join_mem m0 m1 in
   let cm = m in
-  let im = I.join_worlds m0 m1 in
   Classical.forall_intro (PM.pulse_heap_sig.sep.join_empty);
   pm_mem_invariant_empty()
 
