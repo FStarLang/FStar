@@ -70,8 +70,6 @@ let functor_heap : functor u#3 invariants = {
   fmap = fmap;
   fmap_id = fmap_id;
   fmap_comp = fmap_comp;
-  tt = prop;
-  t_bot = False;
   other = rest;
 }
 
@@ -90,8 +88,8 @@ let istore_val = istore_val_ world_pred
 let read_istore (is: istore) a : istore_val = unpack is a
 let read (w: preworld) a = read_istore (fst w) a
 
-let level_istore (is: istore) : nat = level is
-let level_ (w: preworld) : nat = level_istore (fst w)
+let level_istore (is: istore) : GTot nat = level is
+let level_ (w: preworld) : GTot nat = level_istore (fst w)
 
 let approx_def n (p: world_pred) w :
     Lemma (approx n p w == (if level_ w >= n then False else p w))
@@ -191,13 +189,13 @@ let age_to_age_to (w: preworld) (m n: nat) :
 
 let age_to_rest (w: world) (n: nat) : Lemma ((age_to w n)._2 == w._2) = ()
 
-let level (w: world) : nat = level_ w
+let level (w: world) : GTot nat = level_ w
 
 let age1_istore (is: istore) : istore =
   if level_istore is > 0 then age_istore_to is (level_istore is - 1) else is
 
-let age1_ (w: preworld) : w':preworld { w' == (age1_istore (fst w), snd w) } =
-  if level_ w > 0 then age_to_ w (level_ w - 1) else w
+let age1_ (w: preworld) : w':preworld { if level_ w > 0 then w' == age_to_ w (level_ w - 1) else w' == w } =
+  (age1_istore (fst w), snd w)
 
 let age1 (w: world) : world = age1_ w
 
@@ -252,7 +250,8 @@ let read_mk_istore n is a :
   assert_norm (fmap (approx n) is' a == map_istore_val (approx n) (is' a))
 
 let empty_istore n : istore = mk_istore n fun _ -> None
-let empty n : world = (empty_istore n, ({ pulse_heap = pulse_heap_sig.sep.empty; saved_credits = 0 } <: rest))
+let empty_rest : rest = { pulse_heap = pulse_heap_sig.sep.empty; saved_credits = 0 }
+let empty n : world = (empty_istore n, empty_rest)
 
 let age_to_empty (m n: nat) : Lemma (age_to (empty n) m == empty m) [SMTPat (age_to (empty n) m)] =
   world_ext (age_to (empty n) m) (empty m) fun a -> read_age_to_ (empty n) m a
@@ -451,6 +450,11 @@ let star_elim (p1 p2: slprop) (w: preworld { star p1 p2 w }) :
     GTot (w':(preworld & preworld) { disjoint_worlds w'._1 w'._2 /\ w == join_worlds w'._1 w'._2 /\ p1 w'._1 /\ p2 w'._2 }) =
   star__elim p1 p2 w
 
+let star_elim' (p1 p2: slprop) (w: world { star p1 p2 w }) :
+    GTot (w':(world & world) { disjoint_worlds w'._1 w'._2 /\ w == join_worlds w'._1 w'._2 /\ p1 w'._1 /\ p2 w'._2 }) =
+  let w1, w2 = star_elim p1 p2 w in
+  w1, w2
+
 let star_intro (p1 p2: slprop) (w w1 w2: preworld) :
     Lemma (requires disjoint_worlds w1 w2 /\ w == join_worlds w1 w2 /\ p1 w1 /\ p2 w2)
       (ensures star p1 p2 w) = ()
@@ -609,7 +613,7 @@ let equiv_trans (p q r: slprop) : squash (equiv p q `star` equiv q r == equiv p 
 
 irreducible [@@"opaque_to_smt"]
 let empty_pulse_heap (w: preworld) : v:preworld { disjoint_worlds w v /\ w == join_worlds w v /\ fst w == fst v } =
-  let v = (fst w, snd (empty (level_ w))) in
+  let v = (fst w, empty_rest) in
   pulse_heap_sig.sep.join_empty (snd w).pulse_heap;
   world_ext w (join_worlds w v) (fun _ -> ());
   v

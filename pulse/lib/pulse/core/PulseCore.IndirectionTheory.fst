@@ -1,7 +1,8 @@
 module PulseCore.IndirectionTheory
+open FStar.Ghost
 
 let pred' #f (ff: functor u#a f) (n: nat) (knot_t: (m:nat {m<n} -> Type u#(a+1))) : Type u#(a+1) =
-  restricted_t (m:nat {m<n}) fun m -> knot_t m & ff.other ^-> ff.tt
+  restricted_t (m:nat {m<n}) fun m -> knot_t m & ff.other ^-> prop
 
 let f_ext #t #s (f g: restricted_t t s) (h: (x:t -> squash (f x == g x))) : squash (f == g) =
   introduce forall x. f x == g x with h x; extensionality _ _ f g
@@ -19,26 +20,26 @@ let k'_unfold #f (#ff: functor u#a f) #n (x: k' ff n) : f (pred' ff n (k' ff)) =
 let k'_fold #f (#ff: functor u#a f) #n (x: f (pred' ff n (k' ff))) : k' ff n =
   k'_eq ff n; x
 
-let knot_t ff = n:nat & k' ff n
+[@@erasable] noeq type knot_t #f (ff: functor f) = { m: nat; h: k' #f ff m }
 
 let unpack_pred #f (#ff: functor u#a f) n (x: pred' ff n (k' ff)) : predicate ff =
-  on_dom (knot_t ff & ff.other) fun ((|m, h|), o) -> if m < n then x m (h, o) else ff.t_bot
+  on_dom (knot_t ff & ff.other) #(fun _ -> prop) fun ({m; h}, o) -> if m < n then x m (h, o) else False
 
 let pack_pred #f (#ff: functor u#a f) n (x: predicate ff) : pred' ff n (k' ff) =
-  on_dom (m:nat {m<n}) fun m -> on_dom _ fun (h, o) -> x ((| m, h |), o)
+  on_dom (m:nat {m<n}) fun m -> on_dom _ fun (h, o) -> x ({ m; h }, o)
 
 let pack_unpack_pred #f (ff: functor u#a f) #n (x: pred' ff n (k' ff)) =
   f_ext (pack_pred n (unpack_pred n x)) x fun m ->
     f_ext (pack_pred n (unpack_pred n x) m) (x m) fun x -> ()
 
-let level #f #ff x = dfst x
-let pack #f #ff n x = (| n, k'_fold (ff.fmap (pack_pred #f #ff n) x) |)
-let unpack #f #ff x = ff.fmap (unpack_pred (dfst x)) (k'_unfold (dsnd x))
+let level #f #ff x = x.m
+let pack #f #ff m x = { m; h = k'_fold (ff.fmap (pack_pred #f #ff m) x) }
+let unpack #f #ff x = ff.fmap (unpack_pred x.m) (k'_unfold x.h)
 
 let unpack_pack_pred #f (#ff: functor u#a f) (n:nat) (x: predicate ff) =
   f_ext ((unpack_pred n (pack_pred n x))) (approx n x) fun _ -> ()
 
-let pack_unpack #f #ff (| n, h |) =
+let pack_unpack #f #ff { m = n; h } =
   let h = k'_unfold h in
   ff.fmap_comp (pred' ff n (k' ff)) _ (pred' ff n (k' ff)) (pack_pred n) (unpack_pred n);
   f_ext (compose (pack_pred n) (unpack_pred #f #ff n)) id (pack_unpack_pred ff);

@@ -200,8 +200,7 @@ let act
 
 let ghost_action_preorder (_:unit)
   : Lemma (FStar.Preorder.preorder_rel is_ghost_action)
-= Mem.ghost_action_preorder ();
-  assert FStar.Preorder.preorder_rel is_ghost_action_istore
+= ()
 
 let return_pre_act
     (#a:Type u#a)

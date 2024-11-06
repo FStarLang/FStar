@@ -44,48 +44,50 @@ let split_mem3 (pp qq rr:slprop) (s:erased mem { interp (pp `star` qq `star` rr)
   let l, m, r = m1, fst <| reveal lr, snd <| reveal lr in
   l, m, r
 
+let update_pulse_mem_join (m: mem) (p1 p2: pulse_mem) :
+  Lemma (requires PM.pulse_heap_sig.sep.disjoint p1 p2)
+    (ensures
+      disjoint (update_pulse_mem m p1) (update_pulse_mem (clear_except_istore m) p2) /\
+      update_pulse_mem m (PM.pulse_heap_sig.sep.join p1 p2) ==
+        join_mem (update_pulse_mem m p1) (update_pulse_mem (clear_except_istore m) p2)) =
+  join_refl m;
+  join_update_pulse_mem m (clear_except_istore m) p1 p2
 
 let pin_frame (p:pm_slprop) (frame:slprop) 
               (w:mem { interpret (lift p `star` frame) w })
-: frame':pm_slprop { PM.interp (p `PM.star` frame')  w.pulse_mem } &
+: frame':pm_slprop { PM.interp (p `PM.star` frame') (pulse_mem_of w) } &
   (q:pm_slprop -> m':pulse_mem ->
     Lemma 
       (requires PM.interp (q `PM.star` frame') m')
-      (ensures interpret (lift q `star` frame) { w with pulse_mem = m'}))
-= let { pulse_mem; istore } = w in
-  let m0, m1 = split_mem (lift p) frame w in
+      (ensures interpret (lift q `star` frame) (update_pulse_mem w m')))
+= let m0, m1 = split_mem (lift p) frame w in
   star_equiv (lift p) frame w;
   let fr (pm:IndirectionTheorySep.pulse_mem)  
     : prop
-    = interp frame { pulse_mem=pm; istore=m1.istore }
+    = interp frame (update_pulse_mem m1 pm)
   in
   let fr_affine ()
   : Lemma (HeapSig.is_affine_mem_prop pm_sep fr)
   = introduce forall s0 s1.
       fr s0 /\ pm_sep.disjoint s0 s1 ==> fr (pm_sep.join s0 s1)
     with introduce _ ==> _
-    with _. ( 
-      let left = { pulse_mem = s0; istore = m1.istore } in
-      let right = { pulse_mem = s1; istore = clear_credits m1.istore } in
-      istore_join_refl m1.istore;
-      assert (disjoint left right);
-      assert (join left right == { pulse_mem = pm_sep.join s0 s1; istore=m1.istore })
-    )
+    with _.
+      update_pulse_mem_join m1 s0 s1
   in
   fr_affine();
   let frame' = PM.pulse_heap_sig.as_slprop fr in
   lift_eq p;
-  assert (PM.pulse_heap_sig.interp p m0.pulse_mem);
-  assert (fr m1.pulse_mem);
+  assert (PM.pulse_heap_sig.interp p (pulse_mem_of m0));
+  assert (fr (pulse_mem_of m1));
   PM.pulse_heap_sig.interp_as fr;
-  assert (PM.pulse_heap_sig.interp frame' m1.pulse_mem);
-  assert (pm_sep.disjoint m0.pulse_mem m1.pulse_mem);
-  assert (pm_sep.join m0.pulse_mem m1.pulse_mem == w.pulse_mem);
-  PM.pulse_heap_sig.star_equiv p frame' w.pulse_mem;
-  assert (PM.interp (p `PM.star` frame') pulse_mem);
+  assert (PM.pulse_heap_sig.interp frame' (pulse_mem_of m1));
+  assert (pm_sep.disjoint (pulse_mem_of m0) (pulse_mem_of m1));
+  assert (pm_sep.join (pulse_mem_of m0) (pulse_mem_of m1) == (pulse_mem_of w));
+  PM.pulse_heap_sig.star_equiv p frame' (pulse_mem_of w);
+  assert (PM.interp (p `PM.star` frame') (pulse_mem_of w));
   introduce forall (q:PM.slprop) (m':_).
       PM.interp (q `PM.star` frame') m' ==>
-      interpret (lift q `star` frame) { w with pulse_mem=m'}
+      interpret (lift q `star` frame) (update_pulse_mem w m')
   with introduce _ ==> _
   with _ . (
     PM.pulse_heap_sig.star_equiv q frame' m';
@@ -97,25 +99,18 @@ let pin_frame (p:pm_slprop) (frame:slprop)
     returns _
     with _ . ( 
       assert (fr m1');
-      let mres = { w with pulse_mem = m'} in
+      let mres = update_pulse_mem w m' in
       introduce exists (ml mr:mem).
         disjoint ml mr /\
         mres == join ml mr /\
         interp (lift q) ml /\
         interp frame mr
-      with ({ pulse_mem=m0'; istore=m0.istore})
-            ({ pulse_mem=m1'; istore=m1.istore })
+      with (update_pulse_mem m0 m0') (update_pulse_mem m1 m1')
       and  (
-        let ml = { pulse_mem=m0'; istore=m0.istore } in
-        let mr = { pulse_mem=m1'; istore=m1.istore } in
-        assert (pm_sep.disjoint m0' m1');
-        assert (pm_sep.join m0' m1' == m');
-        assert (istore_disjoint m0.istore m1.istore);
-        assert (istore_join m0.istore m1.istore == w.istore);
-        assert (w.istore == mres.istore);
-        assert (interp frame mr);
+        let ml = update_pulse_mem m0 m0' in
+        let mr = update_pulse_mem m1 m1' in
         lift_eq q;
-        assert (interp (lift q) ml)
+        join_update_pulse_mem m0 m1 m0' m1'
       );
       star_equiv (lift q) frame mres;
       assert (interp (lift q `star` frame) mres)
@@ -125,29 +120,23 @@ let pin_frame (p:pm_slprop) (frame:slprop)
     FStar.IndefiniteDescription.indefinite_description_tot 
       PM.slprop
       (fun frame' ->
-       PM.interp (p `PM.star` frame') pulse_mem /\
+       PM.interp (p `PM.star` frame') (pulse_mem_of w) /\
         (forall (q:PM.slprop) (m':_).
           PM.interp (q `PM.star` frame') m' ==>
-          interpret (lift q `star` frame) { w with pulse_mem=m'}))
+          interpret (lift q `star` frame) (update_pulse_mem w m')))
   in
   let frame' : PM.slprop = PM.pulse_heap_sig.non_info_slprop frame' in
   (| frame', (fun q m' -> ())|)
 
-let is_ghost_action_istore_refl (i:istore)
-: Lemma (is_ghost_action_istore i i)
-= assert (FStar.Preorder.reflexive is_ghost_action_istore)
-
 let is_ghost_action_refl (m:mem)
 : Lemma (is_ghost_action m m)
-= is_ghost_action_istore_refl m.istore;
-  PM.ghost_action_preorder ()
+= assert FStar.Preorder.reflexive is_ghost_action
 
 let is_ghost_action_trans (m0 m1 m2:mem)
 : Lemma 
   (requires is_ghost_action m0 m1 /\ is_ghost_action m1 m2)
   (ensures is_ghost_action m0 m2)
-= assert (FStar.Preorder.transitive is_ghost_action_istore);
-  PM.ghost_action_preorder ()
+= assert FStar.Preorder.transitive is_ghost_action
 
 let lift_mem_action #a #mg #ex #pre #post
                    (pm_act:PM._pst_action_except a mg (lower_inames ex) pre post)
@@ -158,22 +147,22 @@ let lift_mem_action #a #mg #ex #pre #post
         is_full w0 /\
         interpret (lift pre `star` frame `star` mem_invariant ex w0) w0
       }) -> 
-    let { pulse_mem; istore } = w0 in
+    let pulse_mem = pulse_mem_of w0 in
     calc (==) {
       lift pre `star` frame `star` mem_invariant ex w0;
     (==) { }
       lift pre `star` frame `star` (lift (PM.mem_invariant (lower_inames ex) pulse_mem) `star`
-                                    istore_invariant ex istore);
+                                    istore_invariant ex w0);
     (==) { sep_laws () }
       (lift pre `star` lift (PM.mem_invariant (lower_inames ex) pulse_mem)) `star`
-      (frame `star` istore_invariant ex istore);
+      (frame `star` istore_invariant ex w0);
     (==) { lift_star_eq pre (PM.mem_invariant (lower_inames ex) pulse_mem) }
       lift (pre `PM.star` PM.mem_invariant (lower_inames ex) pulse_mem) `star`
-      (frame `star` istore_invariant ex istore);
+      (frame `star` istore_invariant ex w0);
     };
     let (| frame', restore |) = 
       pin_frame (pre `PM.star` PM.mem_invariant (lower_inames ex) pulse_mem)
-                (frame `star` istore_invariant ex istore)
+                (frame `star` istore_invariant ex w0)
                 w0
     in
     calc (==) {
@@ -190,21 +179,20 @@ let lift_mem_action #a #mg #ex #pre #post
       (post x `PM.star` PM.mem_invariant (lower_inames ex) pulse_mem') `PM.star` frame';
     };
     restore (post x `PM.star` PM.mem_invariant (lower_inames ex) pulse_mem') pulse_mem';
-    let w1 =  { w0 with pulse_mem = pulse_mem' } in
+    let w1 = update_pulse_mem w0 pulse_mem' in
     calc (==) {
       lift (post x `PM.star` PM.mem_invariant (lower_inames ex) pulse_mem') `star`
-      (frame `star` istore_invariant ex istore);
+      (frame `star` istore_invariant ex w0);
     (==) { lift_star_eq (post x) (PM.mem_invariant (lower_inames ex) pulse_mem');
            sep_laws () }
       lift (post x) `star`
       frame `star`
-      (lift (PM.mem_invariant (lower_inames ex) pulse_mem') `star` istore_invariant ex istore);
+      (lift (PM.mem_invariant (lower_inames ex) pulse_mem') `star` istore_invariant ex w0);
     (==) { }
       lift (post x) `star`
       frame `star`
       (mem_invariant ex w1);
     };
-    is_ghost_action_istore_refl w0.istore;
     (x, w1)
 
 

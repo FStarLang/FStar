@@ -3,38 +3,32 @@ module I = PulseCore.IndirectionTheorySepImpl
 open FStar.Ghost
 module PropExt = FStar.PropositionalExtensionality
 
-[@@erasable]
-noeq type istore = {
-  ist: I.okay_istore;
-  saved_credits: erased nat;
-}
+let mem = I.world
 
-let to_core (w: I.world) : mem =
-  { istore = { ist = fst w; saved_credits = (snd w).saved_credits }; pulse_mem = (snd w).pulse_heap }
+let pulse_mem_of m = (snd m).pulse_heap
 
-let of_core (m: mem) : GTot I.world =
-  (m.istore.ist, ({ saved_credits = m.istore.saved_credits; pulse_heap = m.pulse_mem } <: I.rest))
-
-let istore_core i = i
-
-let age1 k =
-  { k with istore = { k.istore with ist = I.age1_istore k.istore.ist } }
+let age1 k = I.age1 k
 
 let slprop = I.slprop
 
-let ilevel k = I.level_istore k.ist
-let level k = I.level_istore k.istore.ist
+let level k = I.level_ k
 
-let level_depends_on_istore_only m = ()
+let credits k = (snd k).saved_credits
 
-let icredits k = k.saved_credits
+let update_pulse_mem m p = (fst m, { snd m with I.pulse_heap = p })
 
-let is_ghost_action_istore i1 i2 = True
-  // i1.saved_credits >= i2.saved_credits /\
-  // i1.freshness_counter <= i2.freshness_counter
+let is_ghost_action =
+  PM.ghost_action_preorder ();
+  fun i1 i2 -> PM.is_ghost_action (pulse_mem_of i1) (pulse_mem_of i2)
 
+let lift_ghost_action m p = ()
+
+let reveal_istore (is: erased I.istore) : I.istore = is
 let update_ghost m1 m2 =
-  { istore = (reveal m2).istore; pulse_mem = PM.pulse_heap_sig.update_ghost m1.pulse_mem (reveal m2).pulse_mem; }
+  (fst m2, {
+    I.saved_credits = (snd m2).saved_credits;
+    I.pulse_heap = PM.pulse_heap_sig.update_ghost (pulse_mem_of m1) (pulse_mem_of m2);
+  })
 
 let emp = I.emp
 let pure = I.pure
@@ -50,22 +44,24 @@ let exists_ext (#a:Type u#a) (p q : a -> slprop)
 
 let sep_laws = I.sep_laws
 
-let istore_disjoint i0 i1 = I.disjoint_istore i0.ist i1.ist
+let disjoint m1 m2 = I.disjoint_worlds m1 m2
+let join m1 m2 = I.join_worlds m1 m2
 
-let istore_join i0 i1 =
-  { ist = I.join_istore i0.ist i1.ist; saved_credits = i0.saved_credits + i1.saved_credits }
+let clear_except_istore i = (fst i, I.empty_rest)
 
-let clear_credits i =
-  { i with saved_credits = 0 }
-
-let istore_join_refl i = I.join_istore_refl i.ist
+let join_refl i =
+  PM.pulse_heap_sig.sep.join_empty (snd i).pulse_heap;
+  I.join_istore_refl (fst i)
 
 let disjoint_join_levels i0 i1 = ()
 
 let interp p =
-  introduce forall (m0 m1:mem). p (of_core m0) /\ disjoint m0 m1 ==> p (of_core (join m0 m1)) with
-    introduce _ ==> _ with _.  assert I.world_le (of_core m0) (of_core (join m0 m1));
-  fun m -> p (of_core m)
+  introduce forall (m0 m1:mem). p m0 /\ disjoint m0 m1 ==> p (join m0 m1) with
+    introduce _ ==> _ with _.  assert I.world_le m0 (join m0 m1);
+  p
+
+let update_pulse_mem_id m = ()
+let join_update_pulse_mem m1 m2 p1 p2 = ()
 
 let star_equiv p q m =
   introduce
@@ -76,10 +72,8 @@ let star_equiv p q m =
       interp q m1
       ==> interp (p `star` q) m
     with introduce _ ==> _ with _. (
-    let w0 = of_core m0 in
-    let w1 = of_core m1 in
-    assert I.disjoint_worlds w0 w1;
-    assert of_core m == I.join_worlds w0 w1
+    assert I.disjoint_worlds m0 m1;
+    assert m == I.join_worlds m0 m1
   );
   introduce
     interp (p `star` q) m ==>
@@ -89,14 +83,14 @@ let star_equiv p q m =
       interp p m0 /\
       interp q m1
     with _. (
-    let w = of_core m in
-    assert I.star p q w;
-    let (w1, w2) = I.star_elim p q w in
-    let m1 = to_core w1 in
-    let m2 = to_core w2 in
+    assert I.star p q m;
+    let (m1, m2) = I.star_elim p q m in
     assert disjoint m1 m2;
-    assert to_core w == join m1 m2
+    assert m == join m1 m2
   )
+
+let erase_pair #t #s (p: erased (t & s)) : erased t & erased s =
+  (hide (fst p), hide (snd p))
 
 let split_mem (p:slprop) (q:slprop) (m:erased mem { interp (p `star` q) m })
 : res:(erased mem & erased mem) {
@@ -106,10 +100,7 @@ let split_mem (p:slprop) (q:slprop) (m:erased mem { interp (p `star` q) m })
     interp p l /\
     interp q r
   }
-= let w12 = hide (I.star_elim p q (of_core m)) in
-  let w1 = IndefiniteDescription.indefinite_description_tot _ fun w1 -> w1 == fst w12 in
-  let w2 = IndefiniteDescription.indefinite_description_tot _ fun w2 -> w2 == snd w12 in
-  hide (to_core w1), hide (to_core w2)
+= erase_pair (I.star_elim' p q m)
   
 let intro_star (p q:slprop) (m0 m1:mem)
 : Lemma
@@ -133,17 +124,17 @@ let iref = I.iref
 let deq_iref = fun x y -> reveal x = reveal y
 let lower_inames i = GhostSet.empty
 
-let istore_inames_ok e m = I.inames_ok e m.ist
-
-let inames_ok_iff e (m: mem) : Lemma (inames_ok e m <==> istore_inames_ok e m.istore) [SMTPat (inames_ok e m)] =
-  ()
+let istore_inames_ok e m = I.inames_ok e (fst m)
 
 let inames_ok_empty m = ()
 let inames_ok_union i j m =
-  assert (I.inames_ok (FStar.GhostSet.union i j) m.istore.ist <==>
-    I.inames_ok i m.istore.ist /\ I.inames_ok j m.istore.ist)
+  assert (I.inames_ok (FStar.GhostSet.union i j) (fst m) <==>
+    I.inames_ok i (fst m) /\ I.inames_ok j (fst m))
 
-let istore_invariant ex i = I.istore_invariant ex i.ist
+let istore_invariant ex i = I.istore_invariant ex (fst i)
+
+let inames_ok_update_pulse_mem m p ex = ()
+let istore_invariant_update_pulse_mem m p ex = ()
 
 let inv i p = I.inv i p
 
@@ -173,13 +164,13 @@ let equiv_star_congr p q r = I.equiv_star_congr p q r
 
 let intro_later p m = ()
 
-let istore_dom m = I.istore_dom m.istore.ist
+let istore_dom m = I.istore_dom (fst m)
 
 let pulse_ghost_action_refl m : Lemma (PM.is_ghost_action m m) [SMTPat (PM.is_ghost_action m m)] =
   PM.pulse_heap_sig.is_ghost_action_preorder ()
 
 let age_mem m =
-  let m': mem = { m with istore = { m.istore with ist = I.age1_istore m.istore.ist } } in
+  let m' = I.age1_ m in
   GhostSet.lemma_equal_intro (istore_dom m) (istore_dom m'); assert istore_dom m == istore_dom m';
   m'
 
@@ -187,18 +178,13 @@ let age_level m = ()
 
 let age_disjoint m0 m1 = ()
 
-let age_hereditary p m =
-  assert of_core (age1 m) == I.age1_ (of_core m)
+let age_hereditary p m = ()
 
 let age_later p m = ()
 
-let spend m =
-  { m with istore = { m.istore with
-    saved_credits = if m.istore.saved_credits > 0 then m.istore.saved_credits - 1 else 0 } }
-
 let spend_mem m =
-  { m with istore = { m.istore with
-    saved_credits = if m.istore.saved_credits > 0 then m.istore.saved_credits - 1 else 0 } }
+  let c = (snd m).saved_credits in
+  (fst m, { snd m with I.saved_credits = if c > 0 then c - 1 else 0 })
 
 let interp_later_credit n m = ()
 
@@ -206,15 +192,15 @@ let spend_lemma m = ()
 
 let spend_disjoint m0 m1 = ()
 
-let buy n m = { m with istore = { m.istore with saved_credits = m.istore.saved_credits + n } }
-let buy_mem n m = { m with istore = { m.istore with saved_credits = m.istore.saved_credits + n } }
+let buy_mem n m =
+  (fst m, { snd m with I.saved_credits = (snd m).saved_credits + n })
 let buy_lemma n m = ()
 let buy_disjoint n m0 m1 = ()
 
-let iname_ok i m = I.iname_ok i m.istore.ist
+let iname_ok i m = I.iname_ok i (fst m)
 let inames_ok_single i p m = ()
 let iname_ok_inames_ok i m = ()
-let read_inv i m = I.read_inv i m.istore.ist
+let read_inv i m = I.read_inv i (fst m)
 let read_inv_equiv i m p = ()
 let read_inv_disjoint i m0 m1 = ()
 
@@ -224,7 +210,7 @@ let single_eq i : Lemma (single i == I.single i) [SMTPat (single i)] =
   assert_norm (single i == I.single i) // why???
 
 let mem_invariant_equiv e m i = 
-  I.istore_invariant_equiv e m.istore.ist i;
+  I.istore_invariant_equiv e (fst m) i;
   sep_laws()
 
 let inames_ok_istore_dom e m = ()
@@ -239,12 +225,6 @@ let inames_ok_update e m0 m1 =
 
 let max x y = if x > y then x else y
 
-let join_mem m0 m1 =
-  { istore = {
-    ist = I.join_istore m0.istore.ist m1.istore.ist;
-    saved_credits = m0.istore.saved_credits + m1.istore.saved_credits;
-  }; pulse_mem = PM.pulse_heap_sig.sep.join m0.pulse_mem m1.pulse_mem }
-
 let inames_ok_disjoint i j mi mj = ()
 
 
@@ -256,14 +236,12 @@ let pm_mem_invariant_empty ()
 
 let mem_invariant_disjoint (e f:inames) (p0 p1:slprop) (m0 m1:mem) =
   sep_laws ();
-  let im0 = of_core m0 in
-  let im1 = of_core m1 in
-  let p0' = (p0 `star` lift (PM.mem_invariant GhostSet.empty m0.pulse_mem)) in
-  let p1' = (p1 `star` lift (PM.mem_invariant GhostSet.empty m1.pulse_mem)) in
-  I.istore_invariant_disjoint' e f p0' p1' im0 im1;
+  let p0' = (p0 `star` lift (PM.mem_invariant GhostSet.empty (pulse_mem_of m0))) in
+  let p1' = (p1 `star` lift (PM.mem_invariant GhostSet.empty (pulse_mem_of m1))) in
+  I.istore_invariant_disjoint' e f p0' p1' m0 m1;
   let m = join_mem m0 m1 in
   let cm = m in
-  let im = I.join_worlds im0 im1 in
+  let im = I.join_worlds m0 m1 in
   Classical.forall_intro (PM.pulse_heap_sig.sep.join_empty);
   pm_mem_invariant_empty()
 
@@ -272,15 +250,15 @@ let mem_invariant_age e m0 m1 =
             interp (mem_invariant e (age_mem m0)) (age1 m1)
   with _ . (
     let m10, m11 =
-      split_mem (lift (PM.mem_invariant GhostSet.empty m0.pulse_mem))
-                (istore_invariant e m0.istore) m1
+      split_mem (lift (PM.mem_invariant GhostSet.empty (pulse_mem_of m0)))
+                (istore_invariant e m0) m1
     in
-    I.istore_invariant_age e m0.istore.ist (of_core m11);
-    age_hereditary (lift (PM.mem_invariant GhostSet.empty m0.pulse_mem)) m10;
-    assert (interp (istore_invariant e (age_mem m0).istore) (age1 m11));
+    I.istore_invariant_age e (fst m0) (m11);
+    age_hereditary (lift (PM.mem_invariant GhostSet.empty (pulse_mem_of m0))) m10;
+    assert (interp (istore_invariant e (age_mem m0)) (age1 m11));
     age_disjoint m10 m11;
-    intro_star (lift (PM.mem_invariant GhostSet.empty m0.pulse_mem))
-                (istore_invariant e (age_mem m0).istore) 
+    intro_star (lift (PM.mem_invariant GhostSet.empty (pulse_mem_of m0)))
+                (istore_invariant e (age_mem m0)) 
                 (age1 m10)
                 (age1 m11)
   )
@@ -297,23 +275,17 @@ let rec mk_fresh (i: iref) (ctx: list iref) :
 
 let fresh_inv p m ctx =
   let f = IndefiniteDescription.indefinite_description_ghost iref fun f ->
-    I.fresh_addr m.istore.ist f in
+    I.fresh_addr (fst m) f in
   let i: iref = mk_fresh f ctx in
-  let m': mem = {
-    istore = {
-      ist = I.fresh_inv p m.istore.ist i;
-      saved_credits = 0;
-    };
-    pulse_mem = PM.pulse_heap_sig.sep.empty;
-  } in
-  Classical.forall_intro (PM.pulse_heap_sig.sep.join_empty);
-  pm_mem_invariant_empty();
+  let m': mem = (I.fresh_inv p (fst m) i, I.empty_rest) in
   let _: squash (inv i p `star` mem_invariant (single i) m' == inv i p) =
+    pm_mem_invariant_empty();
     I.istore_single_invariant (level m) i p;
     sep_laws () in
+  Classical.forall_intro (PM.pulse_heap_sig.sep.join_empty);
   (| i, m' |)
 
 let dup_inv_equiv i p = I.dup_inv_equiv i p
 
 let invariant_name_identifies_invariant i p q m =
-  I.invariant_name_identifies_invariant i p q (of_core m)
+  I.invariant_name_identifies_invariant i p q m
