@@ -218,6 +218,13 @@ let is_ref_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p)
 
 val pts_to (#a:Type u#1) (#p:pcm a) (r:ref a p) (v:a) : slprop
 
+val timeless_pts_to
+    (#a:Type u#1)
+    (#p:pcm a)
+    (r:ref a p)
+    (v:a)
+: Lemma (timeless (pts_to r v))
+
 val pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
 : act (squash (not (is_ref_null r)))
     Ghost
@@ -291,6 +298,14 @@ val gather
 
 val big_pts_to (#a:Type u#2) (#p:pcm a) (r:ref a p) (v:a) : slprop
 
+
+val timeless_big_pts_to
+    (#a:Type u#2)
+    (#p:pcm a)
+    (r:ref a p)
+    (v:a)
+: Lemma (timeless (big_pts_to r v))
+
 val big_pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
 : act (squash (not (is_ref_null r)))
     Ghost
@@ -363,6 +378,14 @@ val big_gather
 ///////////////////////////////////////////////////////////////////
 
 val nb_pts_to (#a:Type u#3) (#p:pcm a) (r:ref a p) (v:a) : slprop
+
+
+val timeless_nb_pts_to
+    (#a:Type u#3)
+    (#p:pcm a)
+    (r:ref a p)
+    (v:a)
+: Lemma (timeless (nb_pts_to r v))
 
 val nb_pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
 : act (squash (not (is_ref_null r)))
@@ -466,6 +489,13 @@ val core_ghost_ref : Type u#0
 let ghost_ref (#a:Type u#a) (p:pcm a) : Type u#0 = core_ghost_ref
 val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
 
+val timeless_ghost_pts_to
+    (#a:Type u#1)
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (v:a)
+: Lemma (timeless (ghost_pts_to r v))
+
 val ghost_alloc
     (#a:Type u#1)
     (#pcm:pcm a)
@@ -517,6 +547,14 @@ val ghost_gather
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
 
 val big_ghost_pts_to (#a:Type u#2) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
+
+
+val timeless_big_ghost_pts_to
+    (#a:Type u#2)
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (v:a)
+: Lemma (timeless (big_ghost_pts_to r v))
 
 val big_ghost_alloc
     (#a:Type)
@@ -570,6 +608,14 @@ val big_ghost_gather
 
 // Non-boxable ghost references
 val nb_ghost_pts_to (#a:Type u#3) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
+
+
+val timeless_nb_ghost_pts_to
+    (#a:Type u#3)
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (v:a)
+: Lemma (timeless (nb_ghost_pts_to r v))
 
 val nb_ghost_alloc
     (#a:Type)

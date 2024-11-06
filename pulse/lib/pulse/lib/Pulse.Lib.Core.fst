@@ -300,7 +300,7 @@ let is_null_core_pcm_ref r = PulseCore.Action.is_core_ref_null r
 
 let pcm_pts_to (#a:Type u#1) (#p:pcm a) (r:pcm_ref p) (v:a) =
   PulseCore.Action.pts_to #a #p r v
-let timeless_pcm_pts_to #a #p r v = admit()
+let timeless_pcm_pts_to #a #p r v = PulseCore.Action.timeless_pts_to #a #p r v
 let pts_to_not_null #a #p r v = A.pts_to_not_null #a #p r v
 
 let alloc
@@ -349,7 +349,7 @@ instance non_informative_ghost_pcm_ref a p = {
 }
 
 let ghost_pcm_pts_to #a #p r v = PulseCore.Action.ghost_pts_to #a #p r v
-let timeless_ghost_pcm_pts_to #a #p r v = admit()
+let timeless_ghost_pcm_pts_to #a #p r v = PulseCore.Action.timeless_ghost_pts_to #a #p r v
 let ghost_alloc = A.ghost_alloc
 let ghost_read = A.ghost_read
 let ghost_write = A.ghost_write
@@ -388,7 +388,7 @@ let return_stt (#a:Type u#a) (x:a) (p:a -> slprop)
 // big refs
 ////////////////////////////////////////////////////////
 let big_pcm_pts_to #a #p r v = PulseCore.Action.big_pts_to #a #p r v
-let timeless_big_pcm_pts_to _ _ = admit()
+let timeless_big_pcm_pts_to #a #p r v = PulseCore.Action.timeless_big_pts_to #a #p r v
 let big_pts_to_not_null #a #p r v = A.big_pts_to_not_null #a #p r v
 
 let big_alloc
@@ -428,7 +428,7 @@ let big_share = A.big_share
 let big_gather = A.big_gather
 
 let big_ghost_pcm_pts_to #a #p r v = PulseCore.Action.big_ghost_pts_to #a #p r v
-let timeless_big_ghost_pcm_pts_to _ _ = admit()
+let timeless_big_ghost_pcm_pts_to #a #p r v = PulseCore.Action.timeless_big_ghost_pts_to #a #p r v
 let big_ghost_alloc = A.big_ghost_alloc
 let big_ghost_read = A.big_ghost_read
 let big_ghost_write = A.big_ghost_write
