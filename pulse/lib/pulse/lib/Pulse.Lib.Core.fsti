@@ -524,19 +524,23 @@ val equiv_elim_timeless (a:slprop { timeless a }) (b: slprop { timeless b }) : s
 val equiv_star_congr (p q r: slprop) : squash (equiv q r == (equiv q r ** equiv (p ** q) (p ** r)))
  
 //////////////////////////////////////////////////////////////////////////
-// Higher-order ghost state
+// Higher-order ghost state: references that can store predicates
 //////////////////////////////////////////////////////////////////////////
 
-// TODO: these are write-once for now, though it's possible to construct fractional permission variables out of this
-[@@erasable] val really_big_ref : Type0
-val really_big_pts_to (x: really_big_ref) (y: slprop) : slprop
-val really_big_alloc (y: slprop) :
-    stt_ghost really_big_ref emp_inames emp fun x -> really_big_pts_to x y
-val really_big_share (x: really_big_ref) (#y: slprop) :
-    stt_ghost unit emp_inames (really_big_pts_to x y) fun _ -> really_big_pts_to x y ** really_big_pts_to x y
+[@@erasable]
+val slprop_ref : Type0
+
+val slprop_ref_pts_to (x: slprop_ref) (y: slprop) : slprop
+
+val slprop_ref_alloc (y: slprop)
+: stt_ghost slprop_ref emp_inames emp fun x -> slprop_ref_pts_to x y
+
+val slprop_ref_share (x: slprop_ref) (#y: slprop)
+: stt_ghost unit emp_inames (slprop_ref_pts_to x y) fun _ -> slprop_ref_pts_to x y ** slprop_ref_pts_to x y
+
 [@@allow_ambiguous]
-val really_big_gather (x: really_big_ref) (#y1 #y2: slprop) :
-    stt_ghost unit emp_inames (really_big_pts_to x y1 ** really_big_pts_to x y2) fun _ -> really_big_pts_to x y1 ** later (equiv y1 y2)
+val slprop_ref_gather (x: slprop_ref) (#y1 #y2: slprop)
+: stt_ghost unit emp_inames (slprop_ref_pts_to x y1 ** slprop_ref_pts_to x y2) fun _ -> slprop_ref_pts_to x y1 ** later (equiv y1 y2)
 
 //////////////////////////////////////////////////////////////////////////
 // Invariants

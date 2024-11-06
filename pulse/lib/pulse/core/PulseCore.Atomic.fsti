@@ -721,3 +721,12 @@ val equiv_trans (a b c:slprop)
 
 val equiv_elim (a b:slprop)
 : stt_ghost unit emp_inames (a ** I.equiv a b) (fun _ -> b)
+
+val slprop_ref_alloc (y: slprop)
+: stt_ghost slprop_ref emp_inames emp fun x -> slprop_ref_pts_to x y
+
+val slprop_ref_share (x:slprop_ref) (y:slprop)
+: stt_ghost unit emp_inames (slprop_ref_pts_to x y) fun _ -> slprop_ref_pts_to x y ** slprop_ref_pts_to x y
+
+val slprop_ref_gather (x:slprop_ref) (y1 y2: slprop)
+: stt_ghost unit emp_inames (slprop_ref_pts_to x y1 ** slprop_ref_pts_to x y2) fun _ -> slprop_ref_pts_to x y1 ** later (I.equiv y1 y2)

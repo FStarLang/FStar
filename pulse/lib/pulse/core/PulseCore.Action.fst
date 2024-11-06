@@ -785,3 +785,9 @@ let equiv_trans (a b c:slprop) =
 
 let equiv_elim (a b:slprop) =
   fun #ictx -> ITA.equiv_elim #ictx a b
+
+let slprop_ref = Sep.slprop_ref
+let slprop_ref_pts_to = Sep.slprop_ref_pts_to
+let slprop_ref_alloc y = fun #ictx -> ITA.slprop_ref_alloc #ictx y
+let slprop_ref_share x y = fun #ictx -> ITA.slprop_ref_share #ictx x y
+let slprop_ref_gather x y1 y2 = fun #ictx -> ITA.slprop_ref_gather #ictx x y1 y2

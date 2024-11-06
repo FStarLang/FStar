@@ -230,11 +230,11 @@ let equiv_star_congr p q r = Sep.equiv_star_congr p q r
 //////////////////////////////////////////////////////////////////////////
 
 // TODO: these are write-once for now, though it's possible to construct fractional permission variables out of this
-let really_big_ref = erased (admit ())
-let really_big_pts_to x y = admit ()
-let really_big_alloc x = admit ()
-let really_big_share x #y = admit ()
-let really_big_gather x #y1 #y2 = admit ()
+let slprop_ref = PulseCore.Action.slprop_ref
+let slprop_ref_pts_to x y = PulseCore.Action.slprop_ref_pts_to x y
+let slprop_ref_alloc x = A.slprop_ref_alloc x
+let slprop_ref_share x #y = A.slprop_ref_share x y
+let slprop_ref_gather x #y1 #y2 = A.slprop_ref_gather x y1 y2
 
 ////////////////////////////////////////////////////////////////////
 // Invariants

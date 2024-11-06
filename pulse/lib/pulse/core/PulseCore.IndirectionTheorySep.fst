@@ -1171,3 +1171,9 @@ let dup_inv_equiv i p =
       let w2 = empty_timeless_heap w in ()
 
 let invariant_name_identifies_invariant i p q w = ()
+
+let slprop_ref = erased <| admit()
+let slprop_ref_pts_to = admit()
+let fresh_slprop_ref = admit()
+let slprop_ref_pts_to_share = admit()
+let slprop_ref_pts_to_gather = admit()

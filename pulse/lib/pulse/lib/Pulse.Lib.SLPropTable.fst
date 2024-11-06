@@ -2,7 +2,7 @@ module Pulse.Lib.SLPropTable
 #lang-pulse
 open Pulse.Lib.Pervasives
 module GT = Pulse.Lib.GhostFractionalTable
-let table = GT.table really_big_ref
+let table = GT.table slprop_ref
 
 instance non_informative_table
 : NonInformative.non_informative table
@@ -16,7 +16,7 @@ let is_table (t:table) (max:nat)
 let pts_to (t:table) (i:nat) (#f:perm) (p:slprop)
 : slprop
 = exists* r.
-    really_big_pts_to r p **
+    slprop_ref_pts_to r p **
     GT.pts_to t i #f r
 
 ghost
@@ -25,7 +25,7 @@ requires emp
 returns t:table
 ensures is_table t 0
 {
-  let t = GT.create #really_big_ref;
+  let t = GT.create #slprop_ref;
   t
 }
 
@@ -40,8 +40,8 @@ ensures
   pts_to t i #1.0R p
 {
   unfold pts_to;
-  drop_ (really_big_pts_to _ _);
-  let r' = really_big_alloc p;
+  drop_ (slprop_ref_pts_to _ _);
+  let r' = slprop_ref_alloc p;
   GT.update t r';
   fold pts_to
 }
@@ -54,7 +54,7 @@ ensures
   is_table t (i + 1) **
   pts_to t i #1.0R p
 {
-  let r = really_big_alloc p;
+  let r = slprop_ref_alloc p;
   GT.alloc t r;
   fold pts_to;
 }
@@ -81,7 +81,7 @@ ensures
 {
   unfold pts_to;
   GT.share t i f0 f1;
-  really_big_share _;
+  slprop_ref_share _;
   fold (pts_to t i #f0 p);
   fold pts_to;
 }
@@ -98,6 +98,6 @@ ensures
   unfold pts_to;
   with r1. assert (GT.pts_to t i #f1 r1);
   GT.gather t i #f0 #f1 #r0 #r1;
-  really_big_gather r0 #p #q;
+  slprop_ref_gather r0 #p #q;
   fold (pts_to t i #(f0 +. f1) p);
 }

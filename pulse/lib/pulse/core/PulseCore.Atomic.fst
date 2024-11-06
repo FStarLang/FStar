@@ -373,3 +373,7 @@ let equiv_refl a = Ghost.hide (A.equiv_refl a)
 let equiv_dup a b = Ghost.hide (A.equiv_dup a b)
 let equiv_trans (a b c:slprop) = Ghost.hide (A.equiv_trans a b c)
 let equiv_elim (a b:slprop) = Ghost.hide (A.equiv_elim a b)
+
+let slprop_ref_alloc y = Ghost.hide (A.slprop_ref_alloc y)
+let slprop_ref_share x y = Ghost.hide (A.slprop_ref_share x y)
+let slprop_ref_gather x y1 y2 = Ghost.hide (A.slprop_ref_gather x y1 y2)
