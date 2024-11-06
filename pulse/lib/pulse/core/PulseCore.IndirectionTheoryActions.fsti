@@ -147,3 +147,12 @@ val equiv_trans #opened_invariants (a b c:slprop)
 
 val equiv_elim #opened_invariants (a b:slprop)
 : ghost_act unit opened_invariants (a `star` equiv a b) (fun _ -> b)
+
+val slprop_ref_alloc #o (y: slprop)
+: ghost_act slprop_ref o emp fun x -> slprop_ref_pts_to x y
+
+val slprop_ref_share #o (x:slprop_ref) (y:slprop)
+: ghost_act unit o (slprop_ref_pts_to x y) fun _ -> slprop_ref_pts_to x y `star` slprop_ref_pts_to x y
+
+val slprop_ref_gather #o (x:slprop_ref) (y1 y2: slprop)
+: ghost_act unit o (slprop_ref_pts_to x y1 `star` slprop_ref_pts_to x y2) fun _ -> slprop_ref_pts_to x y1 `star` later (equiv y1 y2)

@@ -439,15 +439,15 @@ val fresh_slprop_ref
     disjoint m m' /\
     is_ghost_action m (join_mem m m') /\
     timeless_mem_of (join_mem m m') == timeless_mem_of m /\
-    interp (slprop_ref_pts_to i p) m' /\
+    interp (slprop_ref_pts_to i p `star` mem_invariant GhostSet.empty m') m' /\
     hogs_dom m' == GhostSet.empty /\
     timeless_mem_of m' == PM.pulse_heap_sig.sep.empty /\
     credits m' == 0
   }
 
-val slprop_ref_pts_tog_share (x: slprop_ref) (y: slprop)
+val slprop_ref_pts_to_share (x: slprop_ref) (y: slprop)
 : Lemma (slprop_ref_pts_to x y == slprop_ref_pts_to x y `star` slprop_ref_pts_to x y)
 
-val really_big_gather (x: slprop_ref) (y1 y2: slprop) (m:mem)
+val slprop_ref_pts_to_gather (x: slprop_ref) (y1 y2: slprop) (m:mem)
 : Lemma (interp (slprop_ref_pts_to x y1 `star` slprop_ref_pts_to x y2) m ==>
          interp (slprop_ref_pts_to x y1 `star` later (equiv y1 y2)) m)

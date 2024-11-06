@@ -629,3 +629,37 @@ let equiv_elim #o a b
     equiv_elim a b;
     let _, s1 = drop #o (equiv a b) (b `star` frame) s0 in
     (), s1
+
+let slprop_ref_alloc #e p
+= fun frame s0 ->
+    sep_laws();
+    let (| i, s0' |) = fresh_slprop_ref p s0 in
+    let s1 = join_mem s0 s0' in
+    disjoint_join_levels s0 s0';
+    mem_invariant_disjoint e GhostSet.empty (emp `star` frame) (slprop_ref_pts_to i p) s0 s0';
+    assert (GhostSet.union e GhostSet.empty `GhostSet.equal` e);
+    inames_ok_empty s0';
+    inames_ok_disjoint e GhostSet.empty s0 s0';
+    inames_ok_union e GhostSet.empty s1;
+    i, s1
+
+let slprop_ref_share #o x p
+= fun frame s0 ->
+    sep_laws();
+    slprop_ref_pts_to_share x p;
+    is_ghost_action_refl s0;
+    (), s0
+
+let slprop_ref_gather #o x p1 p2
+= fun frame s0 ->
+    sep_laws();
+    let m1, m2 =
+      split_mem
+        (slprop_ref_pts_to x p1 `star` slprop_ref_pts_to x p2)
+        (frame `star` mem_invariant o s0)
+        (hide s0)
+    in
+    slprop_ref_pts_to_gather x p1 p2 m1;
+    intro_star (slprop_ref_pts_to x p1 `star` later (equiv p1 p2)) (frame `star` mem_invariant o s0) m1 m2;
+    is_ghost_action_refl s0;
+    (), s0
