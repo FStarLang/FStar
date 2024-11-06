@@ -9,6 +9,12 @@ type action_kind =
 | ATOMIC
 | BUY
 let maybe_ghost_action (k:action_kind) (m0 m1:mem) = GHOST? k ==> is_ghost_action m0 m1
+let level_decreases_by_spent_credits (m0 m1:mem)
+: prop
+= let l0, c0 = level m0, credits m0 in
+  let l1, c1 = level m1, credits m1 in
+  c1 <= c0 /\ //credits decrease
+  l1 == l0 - (c0 - c1) // and level decreases by the amount of credits spent
 let interpret (p:slprop) (m:mem) = interp p m
 let _ACTION 
   (a:Type u#a)

@@ -23,13 +23,6 @@ let level_at_least_credits (m:mem)
 : GTot bool
 = level m > credits m
 
-let level_decreases_by_spent_credits (m0 m1:mem)
-: prop
-= let l0, c0 = level m0, credits m0 in
-  let l1, c1 = level m1, credits m1 in
-  c1 <= c0 /\ //credits decrease
-  l1 == l0 - (c0 - c1) // and level decreases by the amount of credits spent
-
 val is_ghost_action : p:(mem -> mem -> prop) { FStar.Preorder.preorder_rel p }
 
 val lift_ghost_action (m: mem) (p: pulse_mem) :
@@ -40,7 +33,7 @@ val update_ghost :
       m0:mem ->
       m1:FStar.Ghost.erased mem { is_ghost_action m0 m1 } ->
       m:mem { m == FStar.Ghost.reveal m1 }
-    
+
 let is_full (m:mem) : prop = PM.pulse_heap_sig.full_mem_pred (pulse_mem_of m)
 let full_mem = m:mem { is_full m }
 
@@ -243,7 +236,7 @@ val istore_dom (m:mem) : inames
 val age_mem (m:mem) : m':mem { 
   m' == age1 m /\
   is_ghost_action m m' /\
-  (is_full m ==> is_full m') /\
+  pulse_mem_of m' == pulse_mem_of m /\
   (istore_dom m == istore_dom m')
 }
 val age_level (m:mem)
@@ -266,7 +259,7 @@ val age_later (p:slprop) (m:mem)
 
 val spend_mem (m:mem) : m':mem { 
   is_ghost_action m m' /\
-  (is_full m ==> is_full m') /\
+  pulse_mem_of m' == pulse_mem_of m /\
   (istore_dom m == istore_dom m')
 }
 let spend (m:mem) : mem = spend_mem m
@@ -291,7 +284,7 @@ val spend_disjoint (m0 m1:mem)
 
 val buy_mem (n:FStar.Ghost.erased nat) (m:mem) : m':mem {
   is_ghost_action m m' /\
-  (is_full m ==> is_full m') /\
+  pulse_mem_of m' == pulse_mem_of m /\
   (istore_dom m == istore_dom m')
 }
 let buy (n:nat) (m:mem) : mem = buy_mem n m
@@ -415,7 +408,7 @@ val fresh_inv
     fresh_wrt ctx i /\
     disjoint m m' /\
     is_ghost_action m (join_mem m m') /\
-    (is_full m ==> is_full (join_mem m m')) /\
+    pulse_mem_of (join_mem m m') == pulse_mem_of m /\
     inames_ok (single i) m' /\
     interp (inv i p `star` mem_invariant (single i) m') m' /\
     FStar.GhostSet.disjoint (istore_dom m) (istore_dom m') /\
