@@ -5,19 +5,18 @@ module PM = PulseCore.MemoryAlt
 open FStar.Ghost 
 
 let timeless_mem : Type u#4 = PM.mem u#0
+
 val mem: Type u#4
 val timeless_mem_of: mem -> timeless_mem
+val level (k:mem) : GTot nat
+val credits (k:mem) : GTot nat
+val update_timeless_mem (m: mem) (p: timeless_mem) :
+  n:mem { timeless_mem_of n == p /\ level m == level n /\ credits m == credits n }
+
+[@@erasable] val slprop : Type u#4
 
 val age1 (k:mem) : mem
 
-
-[@@erasable]
-val slprop : Type u#4
-val level (k:mem) : GTot nat
-val credits (k:mem) : GTot nat
-
-val update_timeless_mem (m: mem) (p: timeless_mem) :
-  n:mem { timeless_mem_of n == p /\ level m == level n /\ credits m == credits n }
 
 let level_at_least_credits (m:mem)
 : GTot bool
@@ -169,9 +168,37 @@ val lift_star_eq (p q:pm_slprop) : Lemma (
 //   lift PM.(h_exists #a f) == (exists* (x:a). lift (f x))
 // )
 
+val later (p:slprop) : slprop
+val later_credit (n:nat) : slprop
+
+val later_credit_zero () : squash (later_credit 0 == emp)
+val later_credit_add m n : squash (later_credit (m + n) == later_credit m `star` later_credit n)
+
+let timeless (p: slprop) = later p == p
+val timeless_lift p : squash (timeless (lift p))
+val timeless_pure p : squash (timeless (pure p))
+val timeless_emp () : squash (timeless emp)
+val timeless_later_credit n : squash (timeless (later_credit n))
+val later_star p q : squash (later (star p q) == star (later p) (later q))
+val later_exists #t (f:t->slprop) : squash (later (exists* x. f x) == (exists* x. later (f x)))
+
+val equiv (p q:slprop) : slprop
+val intro_equiv (p: slprop) m : squash (interp (equiv p p) m)
+val equiv_comm (p q: slprop) : squash (equiv p q == equiv q p)
+val equiv_elim p q : squash (equiv p q `star` p == equiv p q `star` q)
+val equiv_trans (p q r: slprop) : squash (equiv p q `star` equiv q r == equiv p q `star` equiv p r)
+val equiv_timeless (a b: slprop) : Lemma (requires timeless a /\ timeless b) (ensures equiv a b == pure (a == b))
+val equiv_star_congr (p q r: slprop) : squash (equiv q r == equiv q r `star` equiv (star p q) (star p r))
+
+val intro_later (p:slprop) (m:mem)
+: Lemma (interp p m ==> interp (later p) m)
+
 (**** Memory invariants *)
 [@@erasable]
 val iref : Type0
+
+val inv (i:iref) (p:slprop) : slprop
+
 val deq_iref : FStar.GhostSet.decide_eq iref
 let inames = FStar.GhostSet.set iref
 val lower_inames (i:inames) : PM.inames
@@ -205,32 +232,6 @@ val hogs_invariant_update_timeless_mem (m: mem) (p: timeless_mem) (ex: inames) :
   Lemma (hogs_invariant ex (update_timeless_mem m p) == hogs_invariant ex m)
     [SMTPat (hogs_invariant ex (update_timeless_mem m p))]
 
-val inv (i:iref) (p:slprop) : slprop
-
-val later (p:slprop) : slprop
-val later_credit (n:nat) : slprop
-
-val later_credit_zero () : squash (later_credit 0 == emp)
-val later_credit_add m n : squash (later_credit (m + n) == later_credit m `star` later_credit n)
-
-let timeless (p: slprop) = later p == p
-val timeless_lift p : squash (timeless (lift p))
-val timeless_pure p : squash (timeless (pure p))
-val timeless_emp () : squash (timeless emp)
-val timeless_later_credit n : squash (timeless (later_credit n))
-val later_star p q : squash (later (star p q) == star (later p) (later q))
-val later_exists #t (f:t->slprop) : squash (later (exists* x. f x) == (exists* x. later (f x)))
-
-val equiv (p q:slprop) : slprop
-val intro_equiv (p: slprop) m : squash (interp (equiv p p) m)
-val equiv_comm (p q: slprop) : squash (equiv p q == equiv q p)
-val equiv_elim p q : squash (equiv p q `star` p == equiv p q `star` q)
-val equiv_trans (p q r: slprop) : squash (equiv p q `star` equiv q r == equiv p q `star` equiv p r)
-val equiv_timeless (a b: slprop) : Lemma (requires timeless a /\ timeless b) (ensures equiv a b == pure (a == b))
-val equiv_star_congr (p q r: slprop) : squash (equiv q r == equiv q r `star` equiv (star p q) (star p r))
-
-val intro_later (p:slprop) (m:mem)
-: Lemma (interp p m ==> interp (later p) m)
 val hogs_dom (m:mem) : inames
 
 val age_mem (m:mem) : m':mem { 
