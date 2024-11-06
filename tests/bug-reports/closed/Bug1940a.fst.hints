@@ -1,0 +1,60 @@
+[
+  "ç\u000f–„î?\u0007EHe«CáƒÔŸ",
+  [
+    [
+      "Bug1940a.length",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug1940a.A",
+        "disc_equation_Bug1940a.B", "fuel_guarded_inversion_Bug1940a.alg",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "6b55078d4b206e3385fd42765c3951df"
+    ],
+    [
+      "Bug1940a.repr_length",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug1940a.A",
+        "disc_equation_Bug1940a.B", "fuel_guarded_inversion_Bug1940a.alg",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "4954da5af5033985f81da46cfd7ee1dd"
+    ],
+    [
+      "Bug1940a.compressed",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug1940a.length",
+        "fuel_guarded_inversion_Bug1940a.alg",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "93f634346af7892320bdb02bbdec4e97"
+    ],
+    [
+      "Bug1940a.repr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Bug1940a.A",
+        "constructor_distinct_Bug1940a.B", "equality_tok_Bug1940a.A@tok",
+        "equality_tok_Bug1940a.B@tok", "equation_Bug1940a.length",
+        "equation_Bug1940a.repr_length",
+        "fuel_guarded_inversion_Bug1940a.alg", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "9a80ae65c0a6db5ac8dc44a83943e11d"
+    ]
+  ]
+]

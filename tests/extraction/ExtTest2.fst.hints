@@ -1,0 +1,23 @@
+[
+  "áÉ25ÊÃÌ§‡\u0007hç≈◊ÀD",
+  [
+    [
+      "ExtTest2.mult",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "ExtTest1_pretyping_a8b5e426a09ec12a88cf341e4c26379c",
+        "binder_x_a8b5e426a09ec12a88cf341e4c26379c_0",
+        "disc_equation_ExtTest1.O", "disc_equation_ExtTest1.S",
+        "equality_tok_ExtTest1.O@tok",
+        "fuel_guarded_inversion_ExtTest1.nnat",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_ExtTest1.S",
+        "typing_tok_ExtTest1.O@tok"
+      ],
+      0,
+      "7005d8653d6f27cf192238a755eb0308"
+    ]
+  ]
+]

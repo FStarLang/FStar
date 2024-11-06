@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "1e35f901cd56879fa6c1f59bf1217914"
+      "4e09a2a2436363f4bc00da6a95e1728c"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_shr2",
@@ -1843,7 +1843,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "d1edb6e6bb362ded0a207291f32ea597"
+      "3b0a622b832c7bcdf7f090906be629e2"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants0",

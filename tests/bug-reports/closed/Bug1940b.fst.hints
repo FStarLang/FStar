@@ -1,0 +1,23 @@
+[
+  "‘cäå}‘#Fr\u0015¡ŸÄÆ9I",
+  [
+    [
+      "Bug1940b.u",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Bug1940b.f", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "339a24dc7418537217324a7604f07a70"
+    ],
+    [
+      "Bug1940b.v",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Bug1940b.g", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "c04fd9034e35989b92a0eb55d5366b19"
+    ]
+  ]
+]

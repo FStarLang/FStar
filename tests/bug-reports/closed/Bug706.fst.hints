@@ -1,0 +1,20 @@
+[
+  "«ÍÎâ“Qxê?5FP\u0006En^",
+  [
+    [
+      "Bug706.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Bug706_interpretation_Tm_arrow_6e9cab30cb0eafb661d768f4364082e9",
+        "equation_Bug706.exnst",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "lemma_FStar.Pervasives.invertOption"
+      ],
+      0,
+      "678a3a948b3d954c91c92447b4a7e5c5"
+    ]
+  ]
+]

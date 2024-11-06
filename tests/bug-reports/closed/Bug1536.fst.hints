@@ -1,0 +1,48 @@
+[
+  "U\u0019–q¶T7Ìÿ©Nœ\u0011j¼\u001c",
+  [
+    [
+      "Bug1536.bind_ex",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Bug1536_interpretation_Tm_arrow_72cdc0c9c0d847eb228998a5a6607da8",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr", "equation_Bug1536.ex",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "projection_inverse_BoxBool_proj_0", "unit_typing"
+      ],
+      0,
+      "ee70ca48bed3e1a48c3bdf8fea3368d0"
+    ],
+    [
+      "Bug1536.ret",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d65d96f27a8f063d93fd7a6b8eacf6c7"
+    ],
+    [
+      "Bug1536.t1",
+      1,
+      2,
+      1,
+      [ "@query", "eq2-interp" ],
+      0,
+      "2b8ed9077719a2f6d032a1764a169e2c"
+    ],
+    [
+      "Bug1536.t2",
+      1,
+      2,
+      1,
+      [ "@query", "eq2-interp" ],
+      0,
+      "76669dca2fe8e25b920be239c5a6befa"
+    ]
+  ]
+]

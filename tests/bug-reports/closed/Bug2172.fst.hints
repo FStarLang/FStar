@@ -1,0 +1,39 @@
+[
+  "\nR\t\u007fúNƒ•Ü\u0013t\u0000¼Ñ\u0012†",
+  [
+    [
+      "Bug2172.test0",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Bug2172.p1", "int_typing",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "3b28c86b18c87bcdd6f0b65bbf4cc819"
+    ],
+    [
+      "Bug2172.test1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug2172.p2",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Minus", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "2458e38b6a865e47d235305ed8ab6250"
+    ],
+    [
+      "Bug2172.uu___0",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Bug2172.p1", "equation_Bug2172.p2" ],
+      0,
+      "a786a83bb08aadf3906b826af7b1c473"
+    ]
+  ]
+]

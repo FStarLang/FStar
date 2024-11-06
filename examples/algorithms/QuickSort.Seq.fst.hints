@@ -71,7 +71,7 @@
         "typing_Prims.int", "well-founded-ordering-on-nat"
       ],
       0,
-      "d170199019af47c8225de7157fda2f5a"
+      "154205c8858cb4aeacbf925dd0f63640"
     ],
     [
       "QuickSort.Seq.partition",
@@ -80,7 +80,7 @@
       0,
       [ "@query" ],
       0,
-      "1591a495da778dab977865e320746839"
+      "aab0cdfe6d6f5d1dea871f2e49ea87c3"
     ],
     [
       "QuickSort.Seq.sort",
@@ -139,7 +139,7 @@
         "typing_FStar.Seq.Properties.mem", "well-founded-ordering-on-nat"
       ],
       0,
-      "a6082d214bc98e876023575b35340909"
+      "d3980955b6b1b57d492da15bef5f69bb"
     ]
   ]
 ]
