@@ -17,7 +17,7 @@ module PulseCore.InstantiatedSemantics
 
 [@@erasable]
 val slprop : Type u#4
-
+val timeless (p:slprop) : prop
 val emp : slprop
 val pure (p:prop) : slprop
 val ( ** ) (p q : slprop) : slprop

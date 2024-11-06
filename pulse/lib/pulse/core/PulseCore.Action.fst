@@ -437,6 +437,10 @@ let later_elim (p:slprop)
 : act unit Ghost emp_inames (later p ** later_credit 1) (fun _ -> p)
 = fun #ictx -> ITA.later_elim ictx p
 
+let later_elim_timeless (p:slprop { timeless p })
+: act unit Ghost emp_inames (later p) (fun _ -> p)
+= fun #ictx -> ITA.later_elim_timeless ictx p
+
 let buy (n:erased nat)
 : stt unit emp (fun _ -> later_credit n)
 = stt_of_action0 (ITA.buy emp_inames n)

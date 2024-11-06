@@ -21,7 +21,8 @@ module F = FStar.FunctionalExtensionality
 open PulseCore.InstantiatedSemantics
 open PulseCore.FractionalPermission
 open PulseCore.Observability
-
+friend PulseCore.InstantiatedSemantics
+module Sep = PulseCore.IndirectionTheorySep
 let equate_by_smt = ()
 let equate_strict = ()
 let equate_syntactic = ()
@@ -29,41 +30,39 @@ let equate_syntactic = ()
 let allow_ambiguous = ()
 
 let slprop = slprop
-assume
-val placeholder : prop
-let timeless p = placeholder
-
-// let slprop4_base = slprop
-// let down4 = id
-// let up4 = id
-// let up4_is_slprop4 = fun _ -> ()
-
-// let slprop3_base = slprop3_base
-// let down3 = down3
-// let up3 = up3
-// let up3_is_slprop3 = up3_is_slprop3
-
-// let slprop2_base = slprop2_base
-// let down2 = down2
-// let up2 = up2
-// let up2_is_slprop2 = up2_is_slprop2
-
-// let slprop1_base = slprop1_base
-// let down1 = down1
-// let up1 = up1
-// let up1_is_slprop1 = up1_is_slprop1
-
-// let slprop_2_is_3 = slprop_2_is_3
-// let slprop_1_is_2 = slprop_1_is_2
+let timeless p = Sep.timeless p
 
 let emp = emp
-let timeless_emp = admit()
+let timeless_emp = Sep.timeless_emp ()
 let pure = pure
-let timeless_pure p = admit()
+let timeless_pure p = Sep.timeless_pure p
 let op_Star_Star = op_Star_Star
-let timeless_star p q = admit()
+let timeless_star p q = Sep.later_star p q
 let op_exists_Star = op_exists_Star
-let timeless_exists #a p = admit()
+let exists_extensional (#a:Type u#a) (p q: a -> slprop)
+  (_:squash (forall x. p x == q x))
+  : Lemma (op_exists_Star p == op_exists_Star q)
+  = introduce forall x. slprop_equiv (p x) (q x)
+    with (
+        slprop_equiv_refl (p x)
+    );
+    I.slprop_equiv_exists p q ()
+let timeless_exists (#a:Type u#a) (p: a -> slprop)
+: Lemma
+    (requires forall x. timeless (p x))
+    (ensures timeless (op_exists_Star p))
+    [SMTPat (timeless (op_exists_Star p))]
+= calc (==) {
+    later (op_exists_Star p);
+  (==) { exists_extensional p (fun x -> p x) () }
+    later (exists* x. p x);
+  (==) { Sep.later_exists p }
+    (exists* x. later (p x));
+  (==) { exists_extensional (fun x -> later (p x)) (fun x -> p x) () }
+    (exists* x. p x);
+  (==) { exists_extensional (fun x -> p x) p () }
+    op_exists_Star p;
+  }
 let slprop_equiv = slprop_equiv
 let elim_slprop_equiv #p #q pf = slprop_equiv_elim p q
 let slprop_post_equiv = slprop_post_equiv
@@ -133,7 +132,7 @@ let slprop_equiv_cong (p1 p2 p3 p4:slprop)
   : slprop_equiv (p1 ** p2) (p3 ** p4)
   = slprop_equiv_elim p1 p3;
     slprop_equiv_elim p2 p4;
-    slprop_equiv_refl _
+    slprop_equiv_refl (p1 ** p2)
 
 let slprop_equiv_ext p1 p2 _ = slprop_equiv_refl p1
 
@@ -200,7 +199,7 @@ let sub_invs_ghost = A.sub_invs_stt_ghost
 //////////////////////////////////////////////////////////////////////////
 
 let later_credit = later_credit
-let timeless_later_credit amt = admit()
+let timeless_later_credit amt = Sep.timeless_later_credit amt
 let later_credit_zero _ = PulseCore.InstantiatedSemantics.later_credit_zero ()
 let later_credit_add a b = PulseCore.InstantiatedSemantics.later_credit_add a b
 let later_credit_buy amt = A.buy amt
@@ -208,7 +207,7 @@ let later_credit_buy amt = A.buy amt
 let later = later
 let later_intro p = A.later_intro p
 let later_elim p = A.later_elim p
-let later_elim_timeless p = admit ()
+let later_elim_timeless p = A.later_elim_timeless p
 
 //////////////////////////////////////////////////////////////////////////
 // Equivalence

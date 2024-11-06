@@ -47,7 +47,7 @@ let state : Sem.state = state0 GhostSet.empty
 
 let slprop = slprop
 let _eq : squash (slprop == state.pred) = ()
-
+let timeless p = Sep.timeless p
 let emp = emp
 
 let pure p = pure p
