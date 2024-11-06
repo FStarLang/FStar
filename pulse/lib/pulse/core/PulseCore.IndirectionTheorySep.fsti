@@ -4,9 +4,9 @@ module T = FStar.Tactics
 module PM = PulseCore.MemoryAlt
 open FStar.Ghost 
 
-let pulse_mem : Type u#4 = PM.mem u#0
+let timeless_mem : Type u#4 = PM.mem u#0
 val mem: Type u#4
-val pulse_mem_of: mem -> pulse_mem
+val timeless_mem_of: mem -> timeless_mem
 
 val age1 (k:mem) : mem
 
@@ -16,8 +16,8 @@ val slprop : Type u#4
 val level (k:mem) : GTot nat
 val credits (k:mem) : GTot nat
 
-val update_pulse_mem (m: mem) (p: pulse_mem) :
-  n:mem { pulse_mem_of n == p /\ level m == level n /\ credits m == credits n }
+val update_timeless_mem (m: mem) (p: timeless_mem) :
+  n:mem { timeless_mem_of n == p /\ level m == level n /\ credits m == credits n }
 
 let level_at_least_credits (m:mem)
 : GTot bool
@@ -25,16 +25,16 @@ let level_at_least_credits (m:mem)
 
 val is_ghost_action : p:(mem -> mem -> prop) { FStar.Preorder.preorder_rel p }
 
-val lift_ghost_action (m: mem) (p: pulse_mem) :
-  Lemma (PM.is_ghost_action (pulse_mem_of m) p <==> is_ghost_action m (update_pulse_mem m p))
-    [SMTPat (is_ghost_action m (update_pulse_mem m p))]
+val lift_ghost_action (m: mem) (p: timeless_mem) :
+  Lemma (PM.is_ghost_action (timeless_mem_of m) p <==> is_ghost_action m (update_timeless_mem m p))
+    [SMTPat (is_ghost_action m (update_timeless_mem m p))]
 
 val update_ghost :
       m0:mem ->
       m1:FStar.Ghost.erased mem { is_ghost_action m0 m1 } ->
       m:mem { m == FStar.Ghost.reveal m1 }
 
-let is_full (m:mem) : prop = PM.pulse_heap_sig.full_mem_pred (pulse_mem_of m)
+let is_full (m:mem) : prop = PM.pulse_heap_sig.full_mem_pred (timeless_mem_of m)
 let full_mem = m:mem { is_full m }
 
 val emp : slprop
@@ -55,13 +55,13 @@ val sep_laws (_:unit) : squash (
 )
 
 val disjoint (m0 m1:mem) : p:prop { p ==>
-    PM.pulse_heap_sig.sep.disjoint (pulse_mem_of m0) (pulse_mem_of m1) /\
+    PM.pulse_heap_sig.sep.disjoint (timeless_mem_of m0) (timeless_mem_of m1) /\
     level m0 == level m1 }
 val join (m0:mem) (m1:mem { disjoint m0 m1 }) :
-  n:mem { pulse_mem_of n == PM.pulse_heap_sig.sep.join (pulse_mem_of m0) (pulse_mem_of m1) }
-val clear_except_istore (i:mem) : mem
+  n:mem { timeless_mem_of n == PM.pulse_heap_sig.sep.join (timeless_mem_of m0) (timeless_mem_of m1) }
+val clear_except_hogs (i:mem) : mem
 val join_refl (i:mem)
-: Lemma (disjoint i (clear_except_istore i) /\ join i (clear_except_istore i) == i)
+: Lemma (disjoint i (clear_except_hogs i) /\ join i (clear_except_hogs i) == i)
 
 val disjoint_join_levels (i0 i1:mem)
 : Lemma 
@@ -79,15 +79,15 @@ let affine_prop (p: mem -> prop) =
 
 val interp (p:slprop) : q:(mem  -> prop) { affine_prop q }
 
-val update_pulse_mem_id (m: mem) :
-  Lemma (update_pulse_mem m (pulse_mem_of m) == m)
-    [SMTPat (update_pulse_mem m (pulse_mem_of m))]
+val update_timeless_mem_id (m: mem) :
+  Lemma (update_timeless_mem m (timeless_mem_of m) == m)
+    [SMTPat (update_timeless_mem m (timeless_mem_of m))]
 
-val join_update_pulse_mem (m1 m2: mem) (p1 p2: pulse_mem) :
+val join_update_timeless_mem (m1 m2: mem) (p1 p2: timeless_mem) :
   Lemma (requires disjoint m1 m2 /\ PM.pulse_heap_sig.sep.disjoint p1 p2)
-    (ensures disjoint (update_pulse_mem m1 p1) (update_pulse_mem m2 p2) /\
-      join_mem (update_pulse_mem m1 p1) (update_pulse_mem m2 p2) ==
-        update_pulse_mem (join_mem m1 m2) (PM.pulse_heap_sig.sep.join p1 p2))
+    (ensures disjoint (update_timeless_mem m1 p1) (update_timeless_mem m2 p2) /\
+      join_mem (update_timeless_mem m1 p1) (update_timeless_mem m2 p2) ==
+        update_timeless_mem (join_mem m1 m2) (PM.pulse_heap_sig.sep.join p1 p2))
 
 val star_equiv :
       p:slprop ->
@@ -154,7 +154,7 @@ val lift (p:pm_slprop) : slprop
 
 val lift_eq (p:PM.slprop)
 : Lemma (forall m. interp (lift p) m ==
-                   PM.pulse_heap_sig.interp p (pulse_mem_of m))
+                   PM.pulse_heap_sig.interp p (timeless_mem_of m))
 
 val lift_emp_eq () : Lemma (
   lift PM.emp == emp
@@ -177,10 +177,10 @@ let inames = FStar.GhostSet.set iref
 val lower_inames (i:inames) : PM.inames
 
 (** This proposition tells us that all the invariants names in [e] are valid in memory [m] *)
-val istore_inames_ok (e:inames) (m:mem) : prop
+val hogs_inames_ok (e:inames) (m:mem) : prop
 let inames_ok (e:inames) (m:mem) : prop
-= HeapSig.inames_ok #PM.pulse_heap_sig (lower_inames e) (pulse_mem_of m) /\
-  istore_inames_ok e m
+= HeapSig.inames_ok #PM.pulse_heap_sig (lower_inames e) (timeless_mem_of m) /\
+  hogs_inames_ok e m
 
 (** The empty set of invariants is always empty *)
 val inames_ok_empty (m:mem)
@@ -191,19 +191,19 @@ val inames_ok_union (i j:inames) (m:mem)
    inames_ok i m /\
    inames_ok j m)
 
-val istore_invariant (ex:inames) (i:mem) : slprop
+val hogs_invariant (ex:inames) (i:mem) : slprop
 
 let mem_invariant (e:inames) (w:mem) : slprop
-=  lift (PM.mem_invariant (lower_inames e) (pulse_mem_of w)) `star`
-   istore_invariant e w
+=  lift (PM.mem_invariant (lower_inames e) (timeless_mem_of w)) `star`
+   hogs_invariant e w
 
-val inames_ok_update_pulse_mem (m: mem) (p: pulse_mem) (ex: inames) :
-  Lemma (inames_ok ex (update_pulse_mem m p) <==> inames_ok ex m)
-    [SMTPat (inames_ok ex (update_pulse_mem m p))]
+val inames_ok_update_timeless_mem (m: mem) (p: timeless_mem) (ex: inames) :
+  Lemma (inames_ok ex (update_timeless_mem m p) <==> inames_ok ex m)
+    [SMTPat (inames_ok ex (update_timeless_mem m p))]
 
-val istore_invariant_update_pulse_mem (m: mem) (p: pulse_mem) (ex: inames) :
-  Lemma (istore_invariant ex (update_pulse_mem m p) == istore_invariant ex m)
-    [SMTPat (istore_invariant ex (update_pulse_mem m p))]
+val hogs_invariant_update_timeless_mem (m: mem) (p: timeless_mem) (ex: inames) :
+  Lemma (hogs_invariant ex (update_timeless_mem m p) == hogs_invariant ex m)
+    [SMTPat (hogs_invariant ex (update_timeless_mem m p))]
 
 val inv (i:iref) (p:slprop) : slprop
 
@@ -231,13 +231,13 @@ val equiv_star_congr (p q r: slprop) : squash (equiv q r == equiv q r `star` equ
 
 val intro_later (p:slprop) (m:mem)
 : Lemma (interp p m ==> interp (later p) m)
-val istore_dom (m:mem) : inames
+val hogs_dom (m:mem) : inames
 
 val age_mem (m:mem) : m':mem { 
   m' == age1 m /\
   is_ghost_action m m' /\
-  pulse_mem_of m' == pulse_mem_of m /\
-  (istore_dom m == istore_dom m')
+  timeless_mem_of m' == timeless_mem_of m /\
+  (hogs_dom m == hogs_dom m')
 }
 val age_level (m:mem)
 : Lemma
@@ -259,8 +259,8 @@ val age_later (p:slprop) (m:mem)
 
 val spend_mem (m:mem) : m':mem { 
   is_ghost_action m m' /\
-  pulse_mem_of m' == pulse_mem_of m /\
-  (istore_dom m == istore_dom m')
+  timeless_mem_of m' == timeless_mem_of m /\
+  (hogs_dom m == hogs_dom m')
 }
 let spend (m:mem) : mem = spend_mem m
 val interp_later_credit (n:nat) (m:mem)
@@ -284,8 +284,8 @@ val spend_disjoint (m0 m1:mem)
 
 val buy_mem (n:FStar.Ghost.erased nat) (m:mem) : m':mem {
   is_ghost_action m m' /\
-  pulse_mem_of m' == pulse_mem_of m /\
-  (istore_dom m == istore_dom m')
+  timeless_mem_of m' == timeless_mem_of m /\
+  (hogs_dom m == hogs_dom m')
 }
 let buy (n:nat) (m:mem) : mem = buy_mem n m
 val buy_lemma (n:nat) (m:mem)
@@ -352,12 +352,12 @@ val mem_invariant_equiv :
            mem_invariant (add_inv e i) m `star` later (read_inv i m)))
 
 
-val inames_ok_istore_dom (e:inames) (m:mem)
-: Lemma (inames_ok e m ==> FStar.GhostSet.subset e (istore_dom m))
+val inames_ok_hogs_dom (e:inames) (m:mem)
+: Lemma (inames_ok e m ==> FStar.GhostSet.subset e (hogs_dom m))
 
 val inames_ok_update (e:inames) (m0 m1:mem)
 : Lemma 
-  (requires istore_dom m0 == istore_dom m1)
+  (requires hogs_dom m0 == hogs_dom m1)
   (ensures inames_ok e m0 <==> inames_ok e m1)
 
 val inames_ok_disjoint (i j:inames) (mi mj:mem)
@@ -373,8 +373,8 @@ val mem_invariant_disjoint (e f:inames) (p0 p1:slprop) (m0 m1:mem)
 : Lemma
   (requires
     disjoint m0 m1 /\
-    FStar.GhostSet.disjoint (istore_dom m0) (istore_dom m1) /\
-    pulse_mem_of m1 == PM.pulse_heap_sig.sep.empty /\
+    FStar.GhostSet.disjoint (hogs_dom m0) (hogs_dom m1) /\
+    timeless_mem_of m1 == PM.pulse_heap_sig.sep.empty /\
     interp (p0 `star` mem_invariant e m0) m0 /\
     interp (p1 `star` mem_invariant f m1) m1)
   (ensures (
@@ -408,11 +408,11 @@ val fresh_inv
     fresh_wrt ctx i /\
     disjoint m m' /\
     is_ghost_action m (join_mem m m') /\
-    pulse_mem_of (join_mem m m') == pulse_mem_of m /\
+    timeless_mem_of (join_mem m m') == timeless_mem_of m /\
     inames_ok (single i) m' /\
     interp (inv i p `star` mem_invariant (single i) m') m' /\
-    FStar.GhostSet.disjoint (istore_dom m) (istore_dom m') /\
-    pulse_mem_of m' == PM.pulse_heap_sig.sep.empty /\
+    FStar.GhostSet.disjoint (hogs_dom m) (hogs_dom m') /\
+    timeless_mem_of m' == PM.pulse_heap_sig.sep.empty /\
     credits m' == 0
   }
 

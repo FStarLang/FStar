@@ -3,9 +3,9 @@ module I = PulseCore.IndirectionTheorySepImpl
 open FStar.Ghost
 module PropExt = FStar.PropositionalExtensionality
 
-let mem = I.world
+let mem = I.mem
 
-let pulse_mem_of m = (snd m).pulse_heap
+let timeless_mem_of m = (snd m).timeless_heap
 
 let age1 k = I.age1 k
 
@@ -15,18 +15,18 @@ let level k = I.level_ k
 
 let credits k = (snd k).saved_credits
 
-let update_pulse_mem m p = (fst m, { snd m with I.pulse_heap = p })
+let update_timeless_mem m p = (fst m, { snd m with I.timeless_heap = p })
 
 let is_ghost_action =
   PM.ghost_action_preorder ();
-  fun i1 i2 -> PM.is_ghost_action (pulse_mem_of i1) (pulse_mem_of i2)
+  fun i1 i2 -> PM.is_ghost_action (timeless_mem_of i1) (timeless_mem_of i2)
 
 let lift_ghost_action m p = ()
 
 let update_ghost m1 m2 =
-  (I.reveal_istore (fst m2), {
+  (I.reveal_hogs (fst m2), {
     I.saved_credits = (snd m2).saved_credits;
-    I.pulse_heap = PM.pulse_heap_sig.update_ghost (pulse_mem_of m1) (pulse_mem_of m2);
+    I.timeless_heap = PM.pulse_heap_sig.update_ghost (timeless_mem_of m1) (timeless_mem_of m2);
   })
 
 let emp = I.emp
@@ -43,24 +43,24 @@ let exists_ext (#a:Type u#a) (p q : a -> slprop)
 
 let sep_laws = I.sep_laws
 
-let disjoint m1 m2 = I.disjoint_worlds m1 m2
-let join m1 m2 = I.join_worlds m1 m2
+let disjoint m1 m2 = I.disjoint_mem m1 m2
+let join m1 m2 = I.join_mem m1 m2
 
-let clear_except_istore i = (fst i, I.empty_rest)
+let clear_except_hogs i = (fst i, I.empty_rest)
 
 let join_refl i =
-  PM.pulse_heap_sig.sep.join_empty (snd i).pulse_heap;
-  I.join_istore_refl (fst i)
+  PM.pulse_heap_sig.sep.join_empty (snd i).timeless_heap;
+  I.join_hogs_refl (fst i)
 
 let disjoint_join_levels i0 i1 = ()
 
 let interp p =
   introduce forall (m0 m1:mem). p m0 /\ disjoint m0 m1 ==> p (join m0 m1) with
-    introduce _ ==> _ with _.  assert I.world_le m0 (join m0 m1);
+    introduce _ ==> _ with _.  assert I.mem_le m0 (join m0 m1);
   p
 
-let update_pulse_mem_id m = ()
-let join_update_pulse_mem m1 m2 p1 p2 = ()
+let update_timeless_mem_id m = ()
+let join_update_timeless_mem m1 m2 p1 p2 = ()
 
 let star_equiv p q m =
   introduce
@@ -71,8 +71,8 @@ let star_equiv p q m =
       interp q m1
       ==> interp (p `star` q) m
     with introduce _ ==> _ with _. (
-    assert I.disjoint_worlds m0 m1;
-    assert m == I.join_worlds m0 m1
+    assert I.disjoint_mem m0 m1;
+    assert m == I.join_mem m0 m1
   );
   introduce
     interp (p `star` q) m ==>
@@ -123,17 +123,17 @@ let iref = I.iref
 let deq_iref = fun x y -> reveal x = reveal y
 let lower_inames i = GhostSet.empty
 
-let istore_inames_ok e m = I.inames_ok e (fst m)
+let hogs_inames_ok e m = I.inames_ok e (fst m)
 
 let inames_ok_empty m = ()
 let inames_ok_union i j m =
   assert (I.inames_ok (FStar.GhostSet.union i j) (fst m) <==>
     I.inames_ok i (fst m) /\ I.inames_ok j (fst m))
 
-let istore_invariant ex i = I.istore_invariant ex (fst i)
+let hogs_invariant ex i = I.hogs_invariant ex (fst i)
 
-let inames_ok_update_pulse_mem m p ex = ()
-let istore_invariant_update_pulse_mem m p ex = ()
+let inames_ok_update_timeless_mem m p ex = ()
+let hogs_invariant_update_timeless_mem m p ex = ()
 
 let inv i p = I.inv i p
 
@@ -163,14 +163,14 @@ let equiv_star_congr p q r = I.equiv_star_congr p q r
 
 let intro_later p m = ()
 
-let istore_dom m = I.istore_dom (fst m)
+let hogs_dom m = I.hogs_dom (fst m)
 
 let pulse_ghost_action_refl m : Lemma (PM.is_ghost_action m m) [SMTPat (PM.is_ghost_action m m)] =
   PM.pulse_heap_sig.is_ghost_action_preorder ()
 
 let age_mem m =
   let m' = I.age1_ m in
-  GhostSet.lemma_equal_intro (istore_dom m) (istore_dom m'); assert istore_dom m == istore_dom m';
+  GhostSet.lemma_equal_intro (hogs_dom m) (hogs_dom m'); assert hogs_dom m == hogs_dom m';
   m'
 
 let age_level m = ()
@@ -209,17 +209,17 @@ let single_eq i : Lemma (single i == I.single i) [SMTPat (single i)] =
   assert_norm (single i == I.single i) // why???
 
 let mem_invariant_equiv e m i = 
-  I.istore_invariant_equiv e (fst m) i;
+  I.hogs_invariant_equiv e (fst m) i;
   sep_laws()
 
-let inames_ok_istore_dom e m = ()
+let inames_ok_hogs_dom e m = ()
 
 let inames_ok_update e m0 m1 =
-  assert forall i. GhostSet.mem i (istore_dom m0) <==> GhostSet.mem i (istore_dom m1)
+  assert forall i. GhostSet.mem i (hogs_dom m0) <==> GhostSet.mem i (hogs_dom m1)
 
-// let pulse_of (m: pulse_mem) : pulse_mem = m
-// let pulse_join_mem (m0: pulse_mem) (m1: pulse_mem { PM.pulse_heap_sig.sep.disjoint (pulse_of m0) (pulse_of m1) }) 
-// : m:pulse_mem { pulse_of m == PM.pulse_heap_sig.sep.join (pulse_of m0) (pulse_of m1) }
+// let pulse_of (m: timeless_mem) : timeless_mem = m
+// let pulse_join_mem (m0: timeless_mem) (m1: timeless_mem { PM.pulse_heap_sig.sep.disjoint (pulse_of m0) (pulse_of m1) }) 
+// : m:timeless_mem { pulse_of m == PM.pulse_heap_sig.sep.join (pulse_of m0) (pulse_of m1) }
 // = PM.pulse_heap_sig.join_mem m0 m1
 
 let max x y = if x > y then x else y
@@ -235,12 +235,11 @@ let pm_mem_invariant_empty ()
 
 let mem_invariant_disjoint (e f:inames) (p0 p1:slprop) (m0 m1:mem) =
   sep_laws ();
-  let p0' = (p0 `star` lift (PM.mem_invariant GhostSet.empty (pulse_mem_of m0))) in
-  let p1' = (p1 `star` lift (PM.mem_invariant GhostSet.empty (pulse_mem_of m1))) in
-  I.istore_invariant_disjoint' e f p0' p1' m0 m1;
+  let p0' = (p0 `star` lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m0))) in
+  let p1' = (p1 `star` lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m1))) in
+  I.hogs_invariant_disjoint' e f p0' p1' m0 m1;
   let m = join_mem m0 m1 in
   let cm = m in
-  let im = I.join_worlds m0 m1 in
   Classical.forall_intro (PM.pulse_heap_sig.sep.join_empty);
   pm_mem_invariant_empty()
 
@@ -249,15 +248,15 @@ let mem_invariant_age e m0 m1 =
             interp (mem_invariant e (age_mem m0)) (age1 m1)
   with _ . (
     let m10, m11 =
-      split_mem (lift (PM.mem_invariant GhostSet.empty (pulse_mem_of m0)))
-                (istore_invariant e m0) m1
+      split_mem (lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m0)))
+                (hogs_invariant e m0) m1
     in
-    I.istore_invariant_age e (fst m0) (m11);
-    age_hereditary (lift (PM.mem_invariant GhostSet.empty (pulse_mem_of m0))) m10;
-    assert (interp (istore_invariant e (age_mem m0)) (age1 m11));
+    I.hogs_invariant_age e (fst m0) (m11);
+    age_hereditary (lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m0))) m10;
+    assert (interp (hogs_invariant e (age_mem m0)) (age1 m11));
     age_disjoint m10 m11;
-    intro_star (lift (PM.mem_invariant GhostSet.empty (pulse_mem_of m0)))
-                (istore_invariant e (age_mem m0)) 
+    intro_star (lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m0)))
+                (hogs_invariant e (age_mem m0)) 
                 (age1 m10)
                 (age1 m11)
   )
@@ -279,7 +278,7 @@ let fresh_inv p m ctx =
   let m': mem = (I.fresh_inv p (fst m) i, I.empty_rest) in
   let _: squash (inv i p `star` mem_invariant (single i) m' == inv i p) =
     pm_mem_invariant_empty();
-    I.istore_single_invariant (level m) i p;
+    I.hogs_single_invariant (level m) i p;
     sep_laws () in
   Classical.forall_intro (PM.pulse_heap_sig.sep.join_empty);
   (| i, m' |)

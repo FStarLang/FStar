@@ -24,7 +24,7 @@ let pm_sep_laws () : squash (
     forall_intro emp_unit
   )
   
-let pm_sep : PulseCore.HeapSig.separable pulse_mem = PM.pulse_heap_sig.sep
+let pm_sep : PulseCore.HeapSig.separable timeless_mem = PM.pulse_heap_sig.sep
 
 // 
 let split_mem3 (pp qq rr:slprop) (s:erased mem { interp (pp `star` qq `star` rr) s })
@@ -44,27 +44,27 @@ let split_mem3 (pp qq rr:slprop) (s:erased mem { interp (pp `star` qq `star` rr)
   let l, m, r = m1, fst <| reveal lr, snd <| reveal lr in
   l, m, r
 
-let update_pulse_mem_join (m: mem) (p1 p2: pulse_mem) :
+let update_timeless_mem_join (m: mem) (p1 p2: timeless_mem) :
   Lemma (requires PM.pulse_heap_sig.sep.disjoint p1 p2)
     (ensures
-      disjoint (update_pulse_mem m p1) (update_pulse_mem (clear_except_istore m) p2) /\
-      update_pulse_mem m (PM.pulse_heap_sig.sep.join p1 p2) ==
-        join_mem (update_pulse_mem m p1) (update_pulse_mem (clear_except_istore m) p2)) =
+      disjoint (update_timeless_mem m p1) (update_timeless_mem (clear_except_hogs m) p2) /\
+      update_timeless_mem m (PM.pulse_heap_sig.sep.join p1 p2) ==
+        join_mem (update_timeless_mem m p1) (update_timeless_mem (clear_except_hogs m) p2)) =
   join_refl m;
-  join_update_pulse_mem m (clear_except_istore m) p1 p2
+  join_update_timeless_mem m (clear_except_hogs m) p1 p2
 
 let pin_frame (p:pm_slprop) (frame:slprop) 
               (w:mem { interpret (lift p `star` frame) w })
-: frame':pm_slprop { PM.interp (p `PM.star` frame') (pulse_mem_of w) } &
-  (q:pm_slprop -> m':pulse_mem ->
+: frame':pm_slprop { PM.interp (p `PM.star` frame') (timeless_mem_of w) } &
+  (q:pm_slprop -> m':timeless_mem ->
     Lemma 
       (requires PM.interp (q `PM.star` frame') m')
-      (ensures interpret (lift q `star` frame) (update_pulse_mem w m')))
+      (ensures interpret (lift q `star` frame) (update_timeless_mem w m')))
 = let m0, m1 = split_mem (lift p) frame w in
   star_equiv (lift p) frame w;
-  let fr (pm:IndirectionTheorySep.pulse_mem)  
+  let fr (pm:IndirectionTheorySep.timeless_mem)  
     : prop
-    = interp frame (update_pulse_mem m1 pm)
+    = interp frame (update_timeless_mem m1 pm)
   in
   let fr_affine ()
   : Lemma (HeapSig.is_affine_mem_prop pm_sep fr)
@@ -72,26 +72,26 @@ let pin_frame (p:pm_slprop) (frame:slprop)
       fr s0 /\ pm_sep.disjoint s0 s1 ==> fr (pm_sep.join s0 s1)
     with introduce _ ==> _
     with _.
-      update_pulse_mem_join m1 s0 s1
+      update_timeless_mem_join m1 s0 s1
   in
   fr_affine();
   let frame' = PM.pulse_heap_sig.as_slprop fr in
   lift_eq p;
-  assert (PM.pulse_heap_sig.interp p (pulse_mem_of m0));
-  assert (fr (pulse_mem_of m1));
+  assert (PM.pulse_heap_sig.interp p (timeless_mem_of m0));
+  assert (fr (timeless_mem_of m1));
   PM.pulse_heap_sig.interp_as fr;
-  assert (PM.pulse_heap_sig.interp frame' (pulse_mem_of m1));
-  assert (pm_sep.disjoint (pulse_mem_of m0) (pulse_mem_of m1));
-  assert (pm_sep.join (pulse_mem_of m0) (pulse_mem_of m1) == (pulse_mem_of w));
-  PM.pulse_heap_sig.star_equiv p frame' (pulse_mem_of w);
-  assert (PM.interp (p `PM.star` frame') (pulse_mem_of w));
+  assert (PM.pulse_heap_sig.interp frame' (timeless_mem_of m1));
+  assert (pm_sep.disjoint (timeless_mem_of m0) (timeless_mem_of m1));
+  assert (pm_sep.join (timeless_mem_of m0) (timeless_mem_of m1) == (timeless_mem_of w));
+  PM.pulse_heap_sig.star_equiv p frame' (timeless_mem_of w);
+  assert (PM.interp (p `PM.star` frame') (timeless_mem_of w));
   introduce forall (q:PM.slprop) (m':_).
       PM.interp (q `PM.star` frame') m' ==>
-      interpret (lift q `star` frame) (update_pulse_mem w m')
+      interpret (lift q `star` frame) (update_timeless_mem w m')
   with introduce _ ==> _
   with _ . (
     PM.pulse_heap_sig.star_equiv q frame' m';
-    eliminate exists (m0' m1':IndirectionTheorySep.pulse_mem).
+    eliminate exists (m0' m1':IndirectionTheorySep.timeless_mem).
         pm_sep.disjoint m0' m1' /\
         m' == pm_sep.join m0' m1' /\
         PM.pulse_heap_sig.interp q m0' /\
@@ -99,18 +99,18 @@ let pin_frame (p:pm_slprop) (frame:slprop)
     returns _
     with _ . ( 
       assert (fr m1');
-      let mres = update_pulse_mem w m' in
+      let mres = update_timeless_mem w m' in
       introduce exists (ml mr:mem).
         disjoint ml mr /\
         mres == join ml mr /\
         interp (lift q) ml /\
         interp frame mr
-      with (update_pulse_mem m0 m0') (update_pulse_mem m1 m1')
+      with (update_timeless_mem m0 m0') (update_timeless_mem m1 m1')
       and  (
-        let ml = update_pulse_mem m0 m0' in
-        let mr = update_pulse_mem m1 m1' in
+        let ml = update_timeless_mem m0 m0' in
+        let mr = update_timeless_mem m1 m1' in
         lift_eq q;
-        join_update_pulse_mem m0 m1 m0' m1'
+        join_update_timeless_mem m0 m1 m0' m1'
       );
       star_equiv (lift q) frame mres;
       assert (interp (lift q `star` frame) mres)
@@ -120,10 +120,10 @@ let pin_frame (p:pm_slprop) (frame:slprop)
     FStar.IndefiniteDescription.indefinite_description_tot 
       PM.slprop
       (fun frame' ->
-       PM.interp (p `PM.star` frame') (pulse_mem_of w) /\
+       PM.interp (p `PM.star` frame') (timeless_mem_of w) /\
         (forall (q:PM.slprop) (m':_).
           PM.interp (q `PM.star` frame') m' ==>
-          interpret (lift q `star` frame) (update_pulse_mem w m')))
+          interpret (lift q `star` frame) (update_timeless_mem w m')))
   in
   let frame' : PM.slprop = PM.pulse_heap_sig.non_info_slprop frame' in
   (| frame', (fun q m' -> ())|)
@@ -147,47 +147,47 @@ let lift_mem_action #a #mg #ex #pre #post
         is_full w0 /\
         interpret (lift pre `star` frame `star` mem_invariant ex w0) w0
       }) -> 
-    let pulse_mem = pulse_mem_of w0 in
+    let timeless_mem = timeless_mem_of w0 in
     calc (==) {
       lift pre `star` frame `star` mem_invariant ex w0;
     (==) { }
-      lift pre `star` frame `star` (lift (PM.mem_invariant (lower_inames ex) pulse_mem) `star`
-                                    istore_invariant ex w0);
+      lift pre `star` frame `star` (lift (PM.mem_invariant (lower_inames ex) timeless_mem) `star`
+                                    hogs_invariant ex w0);
     (==) { sep_laws () }
-      (lift pre `star` lift (PM.mem_invariant (lower_inames ex) pulse_mem)) `star`
-      (frame `star` istore_invariant ex w0);
-    (==) { lift_star_eq pre (PM.mem_invariant (lower_inames ex) pulse_mem) }
-      lift (pre `PM.star` PM.mem_invariant (lower_inames ex) pulse_mem) `star`
-      (frame `star` istore_invariant ex w0);
+      (lift pre `star` lift (PM.mem_invariant (lower_inames ex) timeless_mem)) `star`
+      (frame `star` hogs_invariant ex w0);
+    (==) { lift_star_eq pre (PM.mem_invariant (lower_inames ex) timeless_mem) }
+      lift (pre `PM.star` PM.mem_invariant (lower_inames ex) timeless_mem) `star`
+      (frame `star` hogs_invariant ex w0);
     };
     let (| frame', restore |) = 
-      pin_frame (pre `PM.star` PM.mem_invariant (lower_inames ex) pulse_mem)
-                (frame `star` istore_invariant ex w0)
+      pin_frame (pre `PM.star` PM.mem_invariant (lower_inames ex) timeless_mem)
+                (frame `star` hogs_invariant ex w0)
                 w0
     in
     calc (==) {
       pre `PM.star`
-      PM.mem_invariant (lower_inames ex) pulse_mem `PM.star`
+      PM.mem_invariant (lower_inames ex) timeless_mem `PM.star`
       frame';
     (==) { pm_sep_laws () }
-      pre `PM.star` frame' `PM.star` PM.mem_invariant (lower_inames ex) pulse_mem;
+      pre `PM.star` frame' `PM.star` PM.mem_invariant (lower_inames ex) timeless_mem;
     };
-    let x, pulse_mem' = pm_act frame' pulse_mem in
+    let x, timeless_mem' = pm_act frame' timeless_mem in
     calc (==) {
-      (post x `PM.star` frame' `PM.star` PM.mem_invariant (lower_inames ex) pulse_mem');
+      (post x `PM.star` frame' `PM.star` PM.mem_invariant (lower_inames ex) timeless_mem');
     (==) { pm_sep_laws () }
-      (post x `PM.star` PM.mem_invariant (lower_inames ex) pulse_mem') `PM.star` frame';
+      (post x `PM.star` PM.mem_invariant (lower_inames ex) timeless_mem') `PM.star` frame';
     };
-    restore (post x `PM.star` PM.mem_invariant (lower_inames ex) pulse_mem') pulse_mem';
-    let w1 = update_pulse_mem w0 pulse_mem' in
+    restore (post x `PM.star` PM.mem_invariant (lower_inames ex) timeless_mem') timeless_mem';
+    let w1 = update_timeless_mem w0 timeless_mem' in
     calc (==) {
-      lift (post x `PM.star` PM.mem_invariant (lower_inames ex) pulse_mem') `star`
-      (frame `star` istore_invariant ex w0);
-    (==) { lift_star_eq (post x) (PM.mem_invariant (lower_inames ex) pulse_mem');
+      lift (post x `PM.star` PM.mem_invariant (lower_inames ex) timeless_mem') `star`
+      (frame `star` hogs_invariant ex w0);
+    (==) { lift_star_eq (post x) (PM.mem_invariant (lower_inames ex) timeless_mem');
            sep_laws () }
       lift (post x) `star`
       frame `star`
-      (lift (PM.mem_invariant (lower_inames ex) pulse_mem') `star` istore_invariant ex w0);
+      (lift (PM.mem_invariant (lower_inames ex) timeless_mem') `star` hogs_invariant ex w0);
     (==) { }
       lift (post x) `star`
       frame `star`
@@ -396,8 +396,8 @@ let fresh_invariant (e:inames) (p:slprop) (ctx:FStar.Ghost.erased (list iref))
               s1);
     sep_laws ();
     assert (GhostSet.union e (single i) `GhostSet.equal` (add_inv e i));
-    inames_ok_istore_dom e s0;
-    inames_ok_istore_dom (single i) s0';
+    inames_ok_hogs_dom e s0;
+    inames_ok_hogs_dom (single i) s0';
     assert (~(mem_inv e i));
     assert (interp 
               (inv i p `star`
