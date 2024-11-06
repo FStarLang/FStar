@@ -212,15 +212,19 @@ let later_elim_timeless p = A.later_elim_timeless p
 //////////////////////////////////////////////////////////////////////////
 // Equivalence
 //////////////////////////////////////////////////////////////////////////
-
+let rewrite_eq p q (pf:squash (p == q))
+  : stt_ghost unit emp_inames p (fun _ -> q)
+  = slprop_equiv_elim p q;
+    A.noop q
 let equiv = I.equiv
-let equiv_dup a b = admit ()
-let equiv_refl a = admit ()
-let equiv_comm a b = admit ()
-let equiv_trans a b c = admit ()
-let equiv_elim a b = admit ()
-let equiv_elim_timeless a b = admit ()
-let equiv_star_congr p q r = admit()
+let equiv_dup a b = A.equiv_dup a b
+let equiv_refl a = A.equiv_refl a
+let equiv_comm a b = rewrite_eq (equiv a b) (equiv b a) (Sep.equiv_comm a b)
+let equiv_trans a b c = A.equiv_trans a b c
+let equiv_elim a b = A.equiv_elim a b
+let equiv_elim_timeless a b = 
+  rewrite_eq (equiv a b) (pure (eq2 #slprop a b)) (Sep.equiv_timeless a b)
+let equiv_star_congr p q r = Sep.equiv_star_congr p q r
 //////////////////////////////////////////////////////////////////////////
 // Higher-order ghost state
 //////////////////////////////////////////////////////////////////////////

@@ -135,3 +135,15 @@ val lift_ghost
       (ni_a:PulseCore.HeapSig.non_info a)
       (f:erased (ghost_act a opened_invariants p q))
 : ghost_act a opened_invariants p q
+
+val equiv_refl #opened_invariants (a:slprop)
+: ghost_act unit opened_invariants emp (fun _ -> equiv a a)
+
+val equiv_dup #opened_invariants (a b:slprop)
+: ghost_act unit opened_invariants (equiv a b) (fun _ -> equiv a b `star` equiv a b)
+
+val equiv_trans #opened_invariants (a b c:slprop)
+: ghost_act unit opened_invariants (equiv a b `star` equiv b c) (fun _ -> equiv a c)
+
+val equiv_elim #opened_invariants (a b:slprop)
+: ghost_act unit opened_invariants (a `star` equiv a b) (fun _ -> b)

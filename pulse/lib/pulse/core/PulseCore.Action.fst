@@ -773,3 +773,15 @@ let lift_erased #a ni_a #opens #pre #post f =
       hide (reveal f #ictx)
     in
     ITA.lift_ghost #a #ictx #pre #post ni_a f
+
+let equiv_refl a =
+  fun #ictx -> ITA.equiv_refl #ictx a
+
+let equiv_dup (a b:slprop) =
+  fun #ictx -> ITA.equiv_dup #ictx a b
+
+let equiv_trans (a b c:slprop) =
+  fun #ictx -> ITA.equiv_trans #ictx a b c
+
+let equiv_elim (a b:slprop) =
+  fun #ictx -> ITA.equiv_elim #ictx a b

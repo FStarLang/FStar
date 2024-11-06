@@ -368,3 +368,8 @@ let nb_ghost_share r v0 v1 = Ghost.hide (A.nb_ghost_share r v0 v1)
 let nb_ghost_gather r v0 v1 = Ghost.hide (A.nb_ghost_gather r v0 v1) 
 
 let drop p = Ghost.hide (A.drop p)
+
+let equiv_refl a = Ghost.hide (A.equiv_refl a)
+let equiv_dup a b = Ghost.hide (A.equiv_dup a b)
+let equiv_trans (a b c:slprop) = Ghost.hide (A.equiv_trans a b c)
+let equiv_elim (a b:slprop) = Ghost.hide (A.equiv_elim a b)

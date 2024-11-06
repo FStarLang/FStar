@@ -709,3 +709,15 @@ val nb_ghost_gather
 
 val drop (p:slprop)
 : stt_ghost unit emp_inames p (fun _ -> emp)
+module I = PulseCore.InstantiatedSemantics
+val equiv_refl (a:slprop)
+: stt_ghost unit emp_inames emp (fun _ -> I.equiv a a)
+
+val equiv_dup (a b:slprop)
+: stt_ghost unit emp_inames (I.equiv a b) (fun _ -> I.equiv a b ** I.equiv a b)
+
+val equiv_trans (a b c:slprop)
+: stt_ghost unit emp_inames (I.equiv a b ** I.equiv b c) (fun _ -> I.equiv a c)
+
+val equiv_elim (a b:slprop)
+: stt_ghost unit emp_inames (a ** I.equiv a b) (fun _ -> b)

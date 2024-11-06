@@ -679,3 +679,15 @@ val lift_erased
     (#post:a -> slprop)
     (f:erased (act a Ghost opens pre post))
 : act a Ghost opens pre post
+
+val equiv_refl (a:slprop)
+: act unit Ghost emp_inames emp (fun _ -> equiv a a)
+
+val equiv_dup (a b:slprop)
+: act unit Ghost emp_inames (equiv a b) (fun _ -> equiv a b ** equiv a b)
+
+val equiv_trans (a b c:slprop)
+: act unit Ghost emp_inames (equiv a b ** equiv b c) (fun _ -> equiv a c)
+
+val equiv_elim (a b:slprop)
+: act unit Ghost emp_inames (a ** equiv a b) (fun _ -> b)

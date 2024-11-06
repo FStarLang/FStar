@@ -519,7 +519,7 @@ val equiv_trans a b c : stt_ghost unit emp_inames (equiv a b ** equiv b c) fun _
 val equiv_elim a b : stt_ghost unit emp_inames (a ** equiv a b) fun _ -> b
 
 (* This is true because ghost functions are called on heaps of nonzero level. *)
-val equiv_elim_timeless (a:slprop { timeless a }) (b: slprop { timeless b }) : stt_ghost unit emp_inames (equiv a b) fun _ -> pure (a == b)
+val equiv_elim_timeless (a:slprop { timeless a }) (b: slprop { timeless b }) : stt_ghost unit emp_inames (equiv a b) fun _ -> pure (eq2 #slprop a b)
 
 val equiv_star_congr (p q r: slprop) : squash (equiv q r == (equiv q r ** equiv (p ** q) (p ** r)))
  

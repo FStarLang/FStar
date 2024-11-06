@@ -599,3 +599,33 @@ let lift_ghost
     let res : a = ni_a (hide (fst result)) in
     let s1 : full_mem = update_ghost s0 (hide (snd result)) in
     res, s1
+
+let equiv_refl #o p
+= fun frame s0 ->
+    sep_laws();
+    let m1, m2 = split_mem emp (frame `star` mem_invariant o s0) s0 in
+    intro_equiv p m1;
+    star_equiv (equiv p p) (frame `star` mem_invariant o s0) s0;
+    is_ghost_action_refl s0;
+    (), s0 
+
+let equiv_dup #o a b
+= fun frame s0 ->
+    sep_laws();
+    let _, s1 = equiv_refl #o b (equiv a b `star` frame) s0 in
+    equiv_trans a b b;
+    (), s1
+
+let equiv_trans #o a b c
+= fun frame s0 ->
+    sep_laws();
+    equiv_trans a b c;
+    let _, s1 = drop #o (equiv a b) (equiv a c `star` frame) s0 in
+    (), s1
+
+let equiv_elim #o a b
+= fun frame s0 ->
+    sep_laws();
+    equiv_elim a b;
+    let _, s1 = drop #o (equiv a b) (b `star` frame) s0 in
+    (), s1
