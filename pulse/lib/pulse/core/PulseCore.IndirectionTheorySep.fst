@@ -5,7 +5,7 @@ module PropExt = FStar.PropositionalExtensionality
 
 let mem = I.world
 
-let pulse_mem_of m = (snd m).pulse_heap
+let timeless_mem_of m = (snd m).timeless_heap
 
 let age1 k = I.age1 k
 
@@ -15,18 +15,18 @@ let level k = I.level_ k
 
 let credits k = (snd k).saved_credits
 
-let update_pulse_mem m p = (fst m, { snd m with I.pulse_heap = p })
+let update_timeless_mem m p = (fst m, { snd m with I.timeless_heap = p })
 
 let is_ghost_action =
   PM.ghost_action_preorder ();
-  fun i1 i2 -> PM.is_ghost_action (pulse_mem_of i1) (pulse_mem_of i2)
+  fun i1 i2 -> PM.is_ghost_action (timeless_mem_of i1) (timeless_mem_of i2)
 
 let lift_ghost_action m p = ()
 
 let update_ghost m1 m2 =
   (I.reveal_istore (fst m2), {
     I.saved_credits = (snd m2).saved_credits;
-    I.pulse_heap = PM.pulse_heap_sig.update_ghost (pulse_mem_of m1) (pulse_mem_of m2);
+    I.timeless_heap = PM.pulse_heap_sig.update_ghost (timeless_mem_of m1) (timeless_mem_of m2);
   })
 
 let emp = I.emp
@@ -49,7 +49,7 @@ let join m1 m2 = I.join_worlds m1 m2
 let clear_except_istore i = (fst i, I.empty_rest)
 
 let join_refl i =
-  PM.pulse_heap_sig.sep.join_empty (snd i).pulse_heap;
+  PM.pulse_heap_sig.sep.join_empty (snd i).timeless_heap;
   I.join_istore_refl (fst i)
 
 let disjoint_join_levels i0 i1 = ()
@@ -59,8 +59,8 @@ let interp p =
     introduce _ ==> _ with _.  assert I.world_le m0 (join m0 m1);
   p
 
-let update_pulse_mem_id m = ()
-let join_update_pulse_mem m1 m2 p1 p2 = ()
+let update_timeless_mem_id m = ()
+let join_update_timeless_mem m1 m2 p1 p2 = ()
 
 let star_equiv p q m =
   introduce
@@ -132,8 +132,8 @@ let inames_ok_union i j m =
 
 let istore_invariant ex i = I.istore_invariant ex (fst i)
 
-let inames_ok_update_pulse_mem m p ex = ()
-let istore_invariant_update_pulse_mem m p ex = ()
+let inames_ok_update_timeless_mem m p ex = ()
+let istore_invariant_update_timeless_mem m p ex = ()
 
 let inv i p = I.inv i p
 
@@ -217,9 +217,9 @@ let inames_ok_istore_dom e m = ()
 let inames_ok_update e m0 m1 =
   assert forall i. GhostSet.mem i (istore_dom m0) <==> GhostSet.mem i (istore_dom m1)
 
-// let pulse_of (m: pulse_mem) : pulse_mem = m
-// let pulse_join_mem (m0: pulse_mem) (m1: pulse_mem { PM.pulse_heap_sig.sep.disjoint (pulse_of m0) (pulse_of m1) }) 
-// : m:pulse_mem { pulse_of m == PM.pulse_heap_sig.sep.join (pulse_of m0) (pulse_of m1) }
+// let pulse_of (m: timeless_mem) : timeless_mem = m
+// let pulse_join_mem (m0: timeless_mem) (m1: timeless_mem { PM.pulse_heap_sig.sep.disjoint (pulse_of m0) (pulse_of m1) }) 
+// : m:timeless_mem { pulse_of m == PM.pulse_heap_sig.sep.join (pulse_of m0) (pulse_of m1) }
 // = PM.pulse_heap_sig.join_mem m0 m1
 
 let max x y = if x > y then x else y
@@ -235,8 +235,8 @@ let pm_mem_invariant_empty ()
 
 let mem_invariant_disjoint (e f:inames) (p0 p1:slprop) (m0 m1:mem) =
   sep_laws ();
-  let p0' = (p0 `star` lift (PM.mem_invariant GhostSet.empty (pulse_mem_of m0))) in
-  let p1' = (p1 `star` lift (PM.mem_invariant GhostSet.empty (pulse_mem_of m1))) in
+  let p0' = (p0 `star` lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m0))) in
+  let p1' = (p1 `star` lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m1))) in
   I.istore_invariant_disjoint' e f p0' p1' m0 m1;
   let m = join_mem m0 m1 in
   let cm = m in
@@ -249,14 +249,14 @@ let mem_invariant_age e m0 m1 =
             interp (mem_invariant e (age_mem m0)) (age1 m1)
   with _ . (
     let m10, m11 =
-      split_mem (lift (PM.mem_invariant GhostSet.empty (pulse_mem_of m0)))
+      split_mem (lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m0)))
                 (istore_invariant e m0) m1
     in
     I.istore_invariant_age e (fst m0) (m11);
-    age_hereditary (lift (PM.mem_invariant GhostSet.empty (pulse_mem_of m0))) m10;
+    age_hereditary (lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m0))) m10;
     assert (interp (istore_invariant e (age_mem m0)) (age1 m11));
     age_disjoint m10 m11;
-    intro_star (lift (PM.mem_invariant GhostSet.empty (pulse_mem_of m0)))
+    intro_star (lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m0)))
                 (istore_invariant e (age_mem m0)) 
                 (age1 m10)
                 (age1 m11)

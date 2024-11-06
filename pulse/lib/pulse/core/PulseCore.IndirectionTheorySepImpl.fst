@@ -12,8 +12,8 @@ module IT = PulseCore.IndirectionTheory
 open FStar.Ghost {erased, hide, reveal}
 
 let address = erased nat
-let pulse_mem : Type u#4 = PM.mem u#0
-let pulse_heap_sig : HS.heap_sig u#3 = PM.pulse_heap_sig
+let timeless_mem : Type u#4 = PM.mem u#0
+let timeless_heap_sig : HS.heap_sig u#3 = PM.pulse_heap_sig
 
 [@@erasable]
 noeq type istore_val_ (x: Type u#4) =
@@ -62,7 +62,7 @@ let fmap_comp (a:Type) (b:Type) (c:Type) (b2c:b -> c) (a2b:a -> b)
 
 noeq
 type rest : Type u#4 = {
-  pulse_heap : pulse_heap_sig.mem;
+  timeless_heap : timeless_heap_sig.mem;
   saved_credits : erased nat;
 }
 
@@ -80,8 +80,8 @@ let world_pred : Type u#4 = preworld ^-> prop
 
 let approx n : (world_pred ^-> world_pred) = approx n
 
-let pulse_heap_le (a b: pulse_heap_sig.mem) : prop =
-  exists c. pulse_heap_sig.sep.disjoint a c /\ b == pulse_heap_sig.sep.join a c
+let timeless_heap_le (a b: timeless_heap_sig.mem) : prop =
+  exists c. timeless_heap_sig.sep.disjoint a c /\ b == timeless_heap_sig.sep.join a c
 
 let istore_val = istore_val_ world_pred
 
@@ -104,7 +104,7 @@ let world_le (a b: preworld) : prop =
   let ai, ar = a in
   let bi, br = b in
   istore_le ai bi /\
-  pulse_heap_le ar.pulse_heap br.pulse_heap /\
+  timeless_heap_le ar.timeless_heap br.timeless_heap /\
   ar.saved_credits <= br.saved_credits
 
 let world_pred_affine (p: world_pred) : prop =
@@ -267,7 +267,7 @@ let read_mk_istore (n: erased nat) is a :
   assert_norm (fmap (approx n) is' a == map_istore_val (approx n) (is' a))
 
 let empty_istore n : istore = mk_istore n fun _ -> None
-let empty_rest : rest = { pulse_heap = pulse_heap_sig.sep.empty; saved_credits = 0 }
+let empty_rest : rest = { timeless_heap = timeless_heap_sig.sep.empty; saved_credits = 0 }
 let empty n : world = (empty_istore n, empty_rest)
 
 let age_to_empty (m n: erased nat) : Lemma (age_to (empty n) m == empty m) [SMTPat (age_to (empty n) m)] =
@@ -324,17 +324,17 @@ let istore_le_iff (is1 is2: istore) :
 let disjoint_worlds (w0 w1:preworld)
 : prop 
 = disjoint_istore w0._1 w1._1 /\
-  pulse_heap_sig.sep.disjoint w0._2.pulse_heap w1._2.pulse_heap
+  timeless_heap_sig.sep.disjoint w0._2.timeless_heap w1._2.timeless_heap
 
 let disjoint_world_sym (w0 w1:preworld)
 : Lemma 
   (ensures disjoint_worlds w0 w1 <==> disjoint_worlds w1 w0)
-= pulse_heap_sig.sep.disjoint_sym w0._2.pulse_heap w1._2.pulse_heap
+= timeless_heap_sig.sep.disjoint_sym w0._2.timeless_heap w1._2.timeless_heap
 
 let join_worlds (w0:preworld) (w1:preworld { disjoint_worlds w0 w1 })
 : preworld
 = (join_istore w0._1 w1._1, ({
-    pulse_heap = pulse_heap_sig.sep.join w0._2.pulse_heap w1._2.pulse_heap;
+    timeless_heap = timeless_heap_sig.sep.join w0._2.timeless_heap w1._2.timeless_heap;
     saved_credits = w0._2.saved_credits + w1._2.saved_credits } <: rest))
 
 open FStar.IndefiniteDescription { indefinite_description_ghost, strong_excluded_middle }
@@ -343,13 +343,13 @@ let world_le_iff (w1 w2: preworld) :
     Lemma (world_le w1 w2 <==> exists w3. join_worlds w1 w3 == w2) =
   istore_le_iff (fst w1) (fst w2);
   introduce world_le w1 w2 ==> exists w3. join_worlds w1 w3 == w2 with _. (
-    assert pulse_heap_le (snd w1).pulse_heap (snd w2).pulse_heap;
+    assert timeless_heap_le (snd w1).timeless_heap (snd w2).timeless_heap;
     let ph3 = indefinite_description_ghost _ fun ph3 ->
-      (snd w2).pulse_heap == pulse_heap_sig.sep.join (snd w1).pulse_heap ph3 in
+      (snd w2).timeless_heap == timeless_heap_sig.sep.join (snd w1).timeless_heap ph3 in
     let is3 = indefinite_description_ghost _ fun is3 ->
       fst w2 == join_istore (fst w1) is3 in
     let sc3: nat = (snd w2).saved_credits - (snd w1).saved_credits in
-    let w3: preworld = (is3, ({ pulse_heap = ph3; saved_credits = sc3 } <: rest)) in
+    let w3: preworld = (is3, ({ timeless_heap = ph3; saved_credits = sc3 } <: rest)) in
     assert join_worlds w1 w3 == w2
   )
 
@@ -357,7 +357,7 @@ let join_worlds_commutative (w0:preworld) (w1:preworld { disjoint_worlds w0 w1 }
 : Lemma (disjoint_worlds w1 w0 /\ join_worlds w0 w1 == join_worlds w1 w0)
 = disjoint_world_sym w0 w1;
   join_istore_commutative w0._1 w1._1;
-  pulse_heap_sig.sep.join_commutative w0._2.pulse_heap w1._2.pulse_heap
+  timeless_heap_sig.sep.join_commutative w0._2.timeless_heap w1._2.timeless_heap
 
 let join_worlds_associative
     (w0:preworld)
@@ -370,7 +370,7 @@ let join_worlds_associative
     join_worlds (join_worlds w0 w1) w2
   )
 = join_istore_associative w0._1 w1._1 w2._1;
-  pulse_heap_sig.sep.join_associative w0._2.pulse_heap w1._2.pulse_heap w2._2.pulse_heap
+  timeless_heap_sig.sep.join_associative w0._2.timeless_heap w1._2.timeless_heap w2._2.timeless_heap
 
 let age_to_disjoint_worlds (w1 w2: preworld) n :
     Lemma (requires disjoint_worlds w1 w2)
@@ -485,13 +485,13 @@ let join_istore_empty is : squash (join_istore (empty_istore (level_istore is)) 
   istore_ext (join_istore (empty_istore (level_istore is)) is) is fun a -> ()
 
 let disjoint_empty w : squash (disjoint_worlds w (empty (level_ w)) /\ disjoint_worlds (empty (level_ w)) w) =
-  pulse_heap_sig.sep.join_empty w._2.pulse_heap;
+  timeless_heap_sig.sep.join_empty w._2.timeless_heap;
   disjoint_world_sym w (empty (level_ w))
 
 let join_empty w : squash (disjoint_worlds (empty (level_ w)) w /\ join_worlds (empty (level_ w)) w == w) =
   disjoint_empty w;
-  pulse_heap_sig.sep.join_empty w._2.pulse_heap;
-  pulse_heap_sig.sep.join_commutative w._2.pulse_heap pulse_heap_sig.sep.empty;
+  timeless_heap_sig.sep.join_empty w._2.timeless_heap;
+  timeless_heap_sig.sep.join_commutative w._2.timeless_heap timeless_heap_sig.sep.empty;
   join_istore_empty w._1;
   world_ext (join_worlds (empty (level_ w)) w) w fun a -> ()
 
@@ -524,28 +524,28 @@ let sep_laws (_:unit) : squash (
   introduce forall x. star x emp == x with star_emp x; assert is_unit emp star
 
 let lift (p: PM.slprop) : slprop =
-  F.on_dom preworld fun w -> pulse_heap_sig.interp p ((snd w).pulse_heap)
+  F.on_dom preworld fun w -> timeless_heap_sig.interp p ((snd w).timeless_heap)
 
 let lift_emp_eq () =
   world_pred_ext (lift PM.emp) emp fun w ->
-    pulse_heap_sig.intro_emp (snd w).pulse_heap
+    timeless_heap_sig.intro_emp (snd w).timeless_heap
 
 let lift_pure_eq p =
   world_pred_ext (lift (PM.pure p)) (pure p) fun w ->
-    pulse_heap_sig.pure_interp p (snd w).pulse_heap
+    timeless_heap_sig.pure_interp p (snd w).timeless_heap
 
 let lift_star_eq p q =
   world_pred_ext (lift (PM.star p q)) (star (lift p) (lift q)) fun w ->
-    pulse_heap_sig.star_equiv p q (snd w).pulse_heap;
+    timeless_heap_sig.star_equiv p q (snd w).timeless_heap;
     introduce
-      forall (m0 m1 : pulse_mem).
-          pulse_heap_sig.sep.disjoint m0 m1 /\
-          (snd w).pulse_heap == pulse_heap_sig.sep.join m0 m1 /\
-          pulse_heap_sig.interp p m0 /\
-          pulse_heap_sig.interp q m1
+      forall (m0 m1 : timeless_mem).
+          timeless_heap_sig.sep.disjoint m0 m1 /\
+          (snd w).timeless_heap == timeless_heap_sig.sep.join m0 m1 /\
+          timeless_heap_sig.interp p m0 /\
+          timeless_heap_sig.interp q m1
         ==> star (lift p) (lift q) w with introduce _ ==> _ with _. (
-      let w0: preworld = (fst w, ({ snd w with pulse_heap = m0 } <: rest)) in
-      let w1: preworld = (fst w, ({ pulse_heap = m1; saved_credits = 0 } <: rest)) in
+      let w0: preworld = (fst w, ({ snd w with timeless_heap = m0 } <: rest)) in
+      let w1: preworld = (fst w, ({ timeless_heap = m1; saved_credits = 0 } <: rest)) in
       assert disjoint_worlds w0 w1;
       join_istore_refl (fst w);
       assert join_worlds w0 w1 == w;
@@ -559,7 +559,7 @@ let lift_star_eq p q =
 
 // let lift_exists_eq a f =
 //   world_pred_ext (lift (PM.h_exists f)) (exists* x. lift (f x)) fun w ->
-//     HS.interp_exists #pulse_heap_sig f
+//     HS.interp_exists #timeless_heap_sig f
 
 let later (p: slprop) : slprop =
   introduce forall (w: preworld) (n: erased nat).
@@ -591,9 +591,9 @@ let later_credit_zero () : squash (later_credit 0 == emp) =
 let later_credit_add (m n: nat) : squash (later_credit (m + n) == later_credit m `star` later_credit n) =
   world_pred_ext (later_credit (m+n)) (later_credit m `star` later_credit n) fun w ->
     introduce later_credit (m+n) w ==> (later_credit m `star` later_credit n) w with _. (
-      let w1: preworld = (fst w, ({ saved_credits = (snd w).saved_credits - n; pulse_heap = (snd w).pulse_heap } <: rest)) in
-      let w2: preworld = (fst w, ({ saved_credits = n; pulse_heap = pulse_heap_sig.sep.empty } <: rest)) in
-      pulse_heap_sig.sep.join_empty (snd w).pulse_heap;
+      let w1: preworld = (fst w, ({ saved_credits = (snd w).saved_credits - n; timeless_heap = (snd w).timeless_heap } <: rest)) in
+      let w2: preworld = (fst w, ({ saved_credits = n; timeless_heap = timeless_heap_sig.sep.empty } <: rest)) in
+      timeless_heap_sig.sep.join_empty (snd w).timeless_heap;
       assert disjoint_worlds w1 w2;
       world_ext w (join_worlds w1 w2) fun _ -> ()
     )
@@ -624,9 +624,9 @@ let equiv_trans (p q r: slprop) : squash (equiv p q `star` equiv q r == equiv p 
   world_pred_ext (equiv p q `star` equiv q r) (equiv p q `star` equiv p r) fun w -> ()
 
 irreducible [@@"opaque_to_smt"]
-let empty_pulse_heap (w: preworld) : v:preworld { disjoint_worlds w v /\ w == join_worlds w v /\ fst w == fst v } =
+let empty_timeless_heap (w: preworld) : v:preworld { disjoint_worlds w v /\ w == join_worlds w v /\ fst w == fst v } =
   let v = (fst w, empty_rest) in
-  pulse_heap_sig.sep.join_empty (snd w).pulse_heap;
+  timeless_heap_sig.sep.join_empty (snd w).timeless_heap;
   world_ext w (join_worlds w v) (fun _ -> ());
   v
 
@@ -639,7 +639,7 @@ let equiv_star_congr (p q r: slprop) =
     ) in
   world_pred_ext (equiv q r) (equiv q r `star` equiv (star p q) (star p r)) fun w ->
     introduce equiv q r w ==> (equiv q r `star` equiv (star p q) (star p r)) w with _. (
-      let w2 = empty_pulse_heap w in
+      let w2 = empty_timeless_heap w in
       world_pred_ext (approx (level_ w + 1) (star p q)) (approx (level_ w + 1) (star p r)) (fun w' ->
         aux q r (level_ w + 1) w';
         aux r q (level_ w + 1) w'
@@ -971,13 +971,10 @@ let fresh_inv (p: slprop) (is: okay_istore) (a: iref { None? (read_istore is a) 
   istore_single_invariant (level_istore is) a p;
   is'
 
-let non_pulse_prop (p: slprop) =
-  forall i r1 r2. p (i, r1) <==> p (i, r2)
-
 let dup_inv_equiv i p : Lemma (inv i p == (inv i p `star` inv i p)) =
   world_pred_ext (inv i p) (inv i p `star` inv i p) fun w ->
     introduce inv i p w ==> star (inv i p) (inv i p) w with _.
-      let w2 = empty_pulse_heap w in ()
+      let w2 = empty_timeless_heap w in ()
 
 let invariant_name_identifies_invariant (i: iref) (p q: slprop) (w: preworld { level_ w > 0 }) :
     squash (star (inv i p) (inv i q) w ==> later (equiv p q) w) =
