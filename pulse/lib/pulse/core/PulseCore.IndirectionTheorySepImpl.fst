@@ -110,14 +110,14 @@ let world_le (a b: preworld) : prop =
 let world_pred_affine (p: world_pred) : prop =
   forall a b. world_le a b /\ p a ==> p b
 
-let age_istore_to (is: istore) (n: nat) : istore =
+let age_istore_to (is: istore) (n: erased nat) : istore =
   pack n (unpack is)
 
-let age_to_ (w: preworld) (n: nat) : preworld =
+let age_to_ (w: preworld) (n: erased nat) : preworld =
   (age_istore_to (fst w) n, snd w)
 
 let hereditary (p: world_pred) : prop =
-  forall (w: preworld) (n: nat).
+  forall (w: preworld) (n: erased nat).
     n < level_ w /\ p w ==>
     p (age_to_ w n)
 
@@ -146,22 +146,23 @@ let slprop = p:world_pred { slprop_ok p }
 
 let world = w:preworld { world_ok w }
 
-let read_age_istore_to (is: istore) n a : Lemma (read_istore (age_istore_to is n) a ==
+let read_age_istore_to (is: istore) (n: erased nat) a : Lemma (read_istore (age_istore_to is n) a ==
     (map_istore_val (approx n) (read_istore is a)))
     [SMTPat (read_istore (age_istore_to is n) a)] =
   unpack_pack n (unpack is)
 
-let read_age_to_ (w: preworld) n a :
+let read_age_to_ (w: preworld) (n: erased nat) a :
     Lemma (read (age_to_ w n) a == map_istore_val (approx n) (read w a)) =
   ()
 
-let level_age_istore_to_ is n : Lemma (level_istore (age_istore_to is n) == n) [SMTPat (level_istore (age_istore_to is n))] =
+let level_age_istore_to_ is (n: erased nat) :
+    Lemma (level_istore (age_istore_to is n) == reveal n) [SMTPat (level_istore (age_istore_to is n))] =
   unpack_pack n (unpack is)
 
-let level_age_to_ w n : Lemma (level_ (age_to_ w n) == n) =
+let level_age_to_ w (n: erased nat) : Lemma (level_ (age_to_ w n) == reveal n) =
   ()
 
-let age_to (w: world) (n: nat) : world =
+let age_to (w: world) (n: erased nat) : world =
   age_to_ w n
 
 let istore_ext (i1: istore) (i2: istore { level_istore i1 == level_istore i2 })
@@ -182,17 +183,32 @@ let world_pred_ext (f g: world_pred) (h: (w:preworld -> squash (f w <==> g w))) 
 let approx_approx m n (p: world_pred) : Lemma (approx m (approx n p) == approx (min m n) p) [SMTPat (approx m (approx n p))] =
   world_pred_ext (approx m (approx n p)) (approx (min m n) p) fun w -> ()
 
-let age_to_age_to (w: preworld) (m n: nat) :
+let age_to_age_to (w: preworld) (m n: erased nat) :
     Lemma (requires n <= m) (ensures age_to_ (age_to_ w m) n == age_to_ w n)
       [SMTPat (age_to_ (age_to_ w m) n)] =
   world_ext (age_to_ (age_to_ w m) n) (age_to_ w n) fun a -> ()
 
-let age_to_rest (w: world) (n: nat) : Lemma ((age_to w n)._2 == w._2) = ()
+let age_to_rest (w: world) (n: erased nat) : Lemma ((age_to w n)._2 == w._2) = ()
 
 let level (w: world) : GTot nat = level_ w
 
-let age1_istore (is: istore) : istore =
-  if level_istore is > 0 then age_istore_to is (level_istore is - 1) else is
+irreducible [@@"opaque_to_smt"]
+let reveal_istore (is: erased istore) : is':istore { is' == reveal is } =
+  pack_unpack is;
+  pack (IT.level is) (unpack is)
+
+let approx_read_istore (is: istore) a :
+    Lemma (map_istore_val (approx (level_istore is)) (read_istore is a) == read_istore is a)
+    [SMTPat (read_istore is a)] =
+  pack_unpack is; unpack_pack (level_istore is) (unpack is)
+
+let age1_istore (is: istore) : is':istore { level_istore is == 0 ==> is' == is } =
+  istore_ext (age_istore_to is (level_istore is)) is (fun _ -> ());
+  age_istore_to is (if level_istore is > 0 then level_istore is - 1 else 0)
+
+let istore_ok_age1 (is: istore) :
+    Lemma (requires istore_ok is) (ensures istore_ok (age1_istore is)) [SMTPat (istore_ok (age1_istore is))] =
+  ()
 
 let age1_ (w: preworld) : w':preworld { if level_ w > 0 then w' == age_to_ w (level_ w - 1) else w' == w } =
   (age1_istore (fst w), snd w)
@@ -239,10 +255,11 @@ let disjoint_istore_read is0 is1 a :
 let mk_istore n (is: address -> istore_val) : istore =
   pack n (F.on_dom address is)
 
-let level_mk_istore n is : Lemma (level_istore (mk_istore n is) == n) [SMTPat (level_istore (mk_istore n is))] =
+let level_mk_istore (n: erased nat) is :
+    Lemma (level_istore (mk_istore n is) == reveal n) [SMTPat (level_istore (mk_istore n is))] =
   unpack_pack #_ #functor_heap n (F.on_dom address is)
 
-let read_mk_istore n is a :
+let read_mk_istore (n: erased nat) is a :
     Lemma (read_istore (mk_istore n is) a == map_istore_val (approx n) (is a))
       [SMTPat (read_istore (mk_istore n is) a)] =
   let is' = F.on_dom address is in
@@ -253,7 +270,7 @@ let empty_istore n : istore = mk_istore n fun _ -> None
 let empty_rest : rest = { pulse_heap = pulse_heap_sig.sep.empty; saved_credits = 0 }
 let empty n : world = (empty_istore n, empty_rest)
 
-let age_to_empty (m n: nat) : Lemma (age_to (empty n) m == empty m) [SMTPat (age_to (empty n) m)] =
+let age_to_empty (m n: erased nat) : Lemma (age_to (empty n) m == empty m) [SMTPat (age_to (empty n) m)] =
   world_ext (age_to (empty n) m) (empty m) fun a -> read_age_to_ (empty n) m a
 
 let emp : slprop =
@@ -279,11 +296,6 @@ let read_join_istore (is0:istore) (is1:istore { disjoint_istore is0 is1 }) a :
 let join_istore_commutative (is0:istore) (is1:istore { disjoint_istore is0 is1 }) :
     Lemma (join_istore is0 is1 == join_istore is1 is0) =
   istore_ext (join_istore is0 is1) (join_istore is1 is0) fun a -> ()
-
-let approx_read_istore (is: istore) a :
-    Lemma (map_istore_val (approx (level_istore is)) (read_istore is a) == read_istore is a)
-    [SMTPat (read_istore is a)] =
-  pack_unpack is; unpack_pack (level_istore is) (unpack is)
 
 let join_istore_refl (is: istore) : Lemma (disjoint_istore is is /\ join_istore is is == is) =
   istore_ext (join_istore is is) is fun a -> ()
@@ -550,10 +562,10 @@ let lift_star_eq p q =
 //     HS.interp_exists #pulse_heap_sig f
 
 let later (p: slprop) : slprop =
-  introduce forall (w: preworld) (n: nat).
+  introduce forall (w: preworld) (n: erased nat).
       n < level_ w /\ p (age1_ w) ==>
       p (age1_ (age_to_ w n)) with introduce _ ==> _ with _. (
-    let n' = if n > 0 then n-1 else 0 in
+    let n': erased nat = if n > 0 then n-1 else 0 in
     assert age_to_ (age1_ w) n' == age_to_ w n'
   );
   introduce forall a b. world_le a b /\ p (age1_ a) ==> p (age1_ b) with (
@@ -678,7 +690,8 @@ let rejuvenate1_istore_sep (is is1': istore) (is2': istore { disjoint_istore is1
   join_istore_commutative is1' is2';
   let is2'' = rejuvenate1_istore is is2' in
   assert disjoint_istore is1'' is2'';
-  istore_ext is (join_istore is1'' is2'') (fun a -> ());
+  istore_ext is (join_istore is1'' is2'') (fun a ->
+    assert ~(None? (read_istore is1'' a)) ==> read_istore is a == read_istore is1'' a);
   (is1'', is2'')
 
 let rejuvenate1 (w: preworld) (w': preworld { world_le w' (age1_ w) }) :

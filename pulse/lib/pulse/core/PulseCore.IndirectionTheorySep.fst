@@ -23,9 +23,8 @@ let is_ghost_action =
 
 let lift_ghost_action m p = ()
 
-let reveal_istore (is: erased I.istore) : I.istore = is
 let update_ghost m1 m2 =
-  (fst m2, {
+  (I.reveal_istore (fst m2), {
     I.saved_credits = (snd m2).saved_credits;
     I.pulse_heap = PM.pulse_heap_sig.update_ghost (pulse_mem_of m1) (pulse_mem_of m2);
   })
