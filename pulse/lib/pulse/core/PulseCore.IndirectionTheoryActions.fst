@@ -47,11 +47,11 @@ let split_mem3 (pp qq rr:slprop) (s:erased mem { interp (pp `star` qq `star` rr)
 let update_timeless_mem_join (m: mem) (p1 p2: timeless_mem) :
   Lemma (requires PM.pulse_heap_sig.sep.disjoint p1 p2)
     (ensures
-      disjoint (update_timeless_mem m p1) (update_timeless_mem (clear_except_istore m) p2) /\
+      disjoint (update_timeless_mem m p1) (update_timeless_mem (clear_except_hogs m) p2) /\
       update_timeless_mem m (PM.pulse_heap_sig.sep.join p1 p2) ==
-        join_mem (update_timeless_mem m p1) (update_timeless_mem (clear_except_istore m) p2)) =
+        join_mem (update_timeless_mem m p1) (update_timeless_mem (clear_except_hogs m) p2)) =
   join_refl m;
-  join_update_timeless_mem m (clear_except_istore m) p1 p2
+  join_update_timeless_mem m (clear_except_hogs m) p1 p2
 
 let pin_frame (p:pm_slprop) (frame:slprop) 
               (w:mem { interpret (lift p `star` frame) w })
@@ -152,17 +152,17 @@ let lift_mem_action #a #mg #ex #pre #post
       lift pre `star` frame `star` mem_invariant ex w0;
     (==) { }
       lift pre `star` frame `star` (lift (PM.mem_invariant (lower_inames ex) timeless_mem) `star`
-                                    istore_invariant ex w0);
+                                    hogs_invariant ex w0);
     (==) { sep_laws () }
       (lift pre `star` lift (PM.mem_invariant (lower_inames ex) timeless_mem)) `star`
-      (frame `star` istore_invariant ex w0);
+      (frame `star` hogs_invariant ex w0);
     (==) { lift_star_eq pre (PM.mem_invariant (lower_inames ex) timeless_mem) }
       lift (pre `PM.star` PM.mem_invariant (lower_inames ex) timeless_mem) `star`
-      (frame `star` istore_invariant ex w0);
+      (frame `star` hogs_invariant ex w0);
     };
     let (| frame', restore |) = 
       pin_frame (pre `PM.star` PM.mem_invariant (lower_inames ex) timeless_mem)
-                (frame `star` istore_invariant ex w0)
+                (frame `star` hogs_invariant ex w0)
                 w0
     in
     calc (==) {
@@ -182,12 +182,12 @@ let lift_mem_action #a #mg #ex #pre #post
     let w1 = update_timeless_mem w0 timeless_mem' in
     calc (==) {
       lift (post x `PM.star` PM.mem_invariant (lower_inames ex) timeless_mem') `star`
-      (frame `star` istore_invariant ex w0);
+      (frame `star` hogs_invariant ex w0);
     (==) { lift_star_eq (post x) (PM.mem_invariant (lower_inames ex) timeless_mem');
            sep_laws () }
       lift (post x) `star`
       frame `star`
-      (lift (PM.mem_invariant (lower_inames ex) timeless_mem') `star` istore_invariant ex w0);
+      (lift (PM.mem_invariant (lower_inames ex) timeless_mem') `star` hogs_invariant ex w0);
     (==) { }
       lift (post x) `star`
       frame `star`
@@ -396,8 +396,8 @@ let fresh_invariant (e:inames) (p:slprop) (ctx:FStar.Ghost.erased (list iref))
               s1);
     sep_laws ();
     assert (GhostSet.union e (single i) `GhostSet.equal` (add_inv e i));
-    inames_ok_istore_dom e s0;
-    inames_ok_istore_dom (single i) s0';
+    inames_ok_hogs_dom e s0;
+    inames_ok_hogs_dom (single i) s0';
     assert (~(mem_inv e i));
     assert (interp 
               (inv i p `star`

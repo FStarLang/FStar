@@ -316,19 +316,19 @@ let invariant_of_one_cell
           (cell_pred_post h c)
        | _ -> emp
 
-let rec istore_invariant
+let rec hogs_invariant
          (#h:heap_sig u#a)
          (from:nat)
          (e:iset #h)
          (l:base_heap_mem u#(a + 1))
 : ext_slprop h
 = invariant_of_one_cell from e l `star` 
-  (if from = 0 then emp else istore_invariant (from - 1) e l)
+  (if from = 0 then emp else hogs_invariant (from - 1) e l)
 
 let mem_invariant (#h:heap_sig u#a) (e:iset #h) (m:ext_mem h)
 : ext_slprop h
 = up (h.mem_invariant (down_irefs e) m.small) `star`
-  istore_invariant #h (H2.ghost_ctr m.big) e m.big `star`
+  hogs_invariant #h (H2.ghost_ctr m.big) e m.big `star`
   lift h (H2.base_heap.mem_invariant GhostSet.empty m.big)
 
 let share_gather_equiv #meta (#a:_) (#p:pcm a) (r:ghost_ref a p) (v0:a) (v1:a{composable p v0 v1})
@@ -471,18 +471,18 @@ let iname_ok_ext (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h) (m:ext_mem h)
   | Inl j -> h.inv_iname_ok j (down p) m.small
   | Inr j -> H2.interp_ghost_pts_to j #true #_ #(PA.pcm_agreement #h.slprop) (Some (down p)) m.big
 
-let rec istore_invariant_unchanged (#h:heap_sig u#a)
+let rec hogs_invariant_unchanged (#h:heap_sig u#a)
          (from:nat) 
          (e:iset #h)
          (l:base_heap_mem u#(a + 1))
          (j:ext_iref h { Inl? j \/ iref_as_addr j > from })
 : Lemma
   (ensures
-    istore_invariant #h from e l ==
-    istore_invariant #h from (add_ext_iref j e) l)
+    hogs_invariant #h from e l ==
+    hogs_invariant #h from (add_ext_iref j e) l)
 = if from = 0
   then ()
-  else istore_invariant_unchanged #h (from - 1) e l j
+  else hogs_invariant_unchanged #h (from - 1) e l j
 
 let inv_i_p_property 
       (#h:heap_sig u#a)
@@ -495,13 +495,13 @@ let inv_i_p_property
   is_boxable_ext p
 
 
-let istore_invariant_rest
+let hogs_invariant_rest
          (#h:heap_sig u#a)
          (from:nat)
          (e:iset #h)
          (l:base_heap_mem u#(a + 1))
 : ext_slprop h
-= if from = 0 then emp else istore_invariant (from - 1) e l
+= if from = 0 then emp else hogs_invariant (from - 1) e l
 
 let sl_pure_imp_elim
        (#h:heap_sig u#h)
@@ -562,7 +562,7 @@ let take_invariant_of_one_cell
    invariant_of_one_cell addr (add_ext_iref (addr_as_iref addr) e) l `star` p;
   }
   
-let rec istore_invariant_eq_aux
+let rec hogs_invariant_eq_aux
       (#h:heap_sig u#a)
       (from:nat) 
       (e:iset #h)
@@ -572,32 +572,32 @@ let rec istore_invariant_eq_aux
 : Lemma
   (requires not (i `GhostSet.mem` e))
   (ensures
-    istore_invariant #h from e l ==
-    istore_invariant #h from (add_ext_iref i e) l `star` p)
+    hogs_invariant #h from e l ==
+    hogs_invariant #h from (add_ext_iref i e) l `star` p)
 = if deq_iref (addr_as_iref from) i //iref_as_addr i = from
   then (
     take_invariant_of_one_cell #h from e i p l;
     if from = 0 
     then ( ac_lemmas_ext h )
     else (
-      istore_invariant_unchanged #h (from - 1) e l i;
+      hogs_invariant_unchanged #h (from - 1) e l i;
       ac_lemmas_ext h
     )
   )
   else (
     calc (==) {
-      istore_invariant #h from e l;
+      hogs_invariant #h from e l;
     (==) {}
       invariant_of_one_cell from e l `star`
-      istore_invariant_rest from e l;
+      hogs_invariant_rest from e l;
     (==) { }
       invariant_of_one_cell from (add_ext_iref i e) l `star`
-      istore_invariant_rest from e l;
+      hogs_invariant_rest from e l;
     };
     if from = 0
     then ()
     else ( 
-      istore_invariant_eq_aux (from - 1) e i p l;
+      hogs_invariant_eq_aux (from - 1) e i p l;
       ac_lemmas_ext h
     )
   )
@@ -635,7 +635,7 @@ let inv_boxes_interp
   | Inl _ -> pure_interp (is_boxable_ext p) (m)
   | Inr _ -> inv_interp #h i p m
 
-let istore_invariant_eq
+let hogs_invariant_eq
       (#h:heap_sig u#a)
       (m:ext_mem h)
       (e:iset #h)
@@ -644,9 +644,9 @@ let istore_invariant_eq
 : Lemma
   (requires not (i `GhostSet.mem` e))
   (ensures
-    istore_invariant #h (H2.ghost_ctr m.big) e m.big ==
-    istore_invariant #h (H2.ghost_ctr m.big) (add_ext_iref i e) m.big `star` p)
-= istore_invariant_eq_aux (H2.ghost_ctr m.big) e i p m.big;
+    hogs_invariant #h (H2.ghost_ctr m.big) e m.big ==
+    hogs_invariant #h (H2.ghost_ctr m.big) (add_ext_iref i e) m.big `star` p)
+= hogs_invariant_eq_aux (H2.ghost_ctr m.big) e i p m.big;
   ac_lemmas_ext h
 
 let hmem_invariant_unchanged
@@ -703,16 +703,16 @@ let mem_invariant_equiv_ext_l
     mem_invariant e m;
   (==) { }
     (up (h.mem_invariant (down_irefs e) m.small) `star`
-     istore_invariant #h (ghost_ctr m) e m.big `star`
+     hogs_invariant #h (ghost_ctr m) e m.big `star`
      lift h (H2.base_heap.mem_invariant GhostSet.empty m.big));
-  (==) { istore_invariant_unchanged #h (ghost_ctr m) e m.big i }
+  (==) { hogs_invariant_unchanged #h (ghost_ctr m) e m.big i }
     (up (h.mem_invariant (down_irefs e) m.small) `star`
-      istore_invariant #h (ghost_ctr m) (add_ext_iref i e) m.big `star`
+      hogs_invariant #h (ghost_ctr m) (add_ext_iref i e) m.big `star`
       lift h (H2.base_heap.mem_invariant GhostSet.empty m.big));
   (==) { h.mem_invariant_equiv (down_irefs e) m.small j (down p) }
     (up (h.mem_invariant (add_iref j (down_irefs e)) m.small 
           `h.star` down p)) `star`
-    istore_invariant #h (ghost_ctr m) (add_ext_iref i e) m.big
+    hogs_invariant #h (ghost_ctr m) (add_ext_iref i e) m.big
     `star` 
     lift h (H2.base_heap.mem_invariant GhostSet.empty m.big);
   (==) { assert (GhostSet.equal 
@@ -720,13 +720,13 @@ let mem_invariant_equiv_ext_l
                     (down_irefs (add_ext_iref i e))) }
     (up ((h.mem_invariant (down_irefs (add_ext_iref i e)) m.small 
           `h.star` down p))) `star`
-    istore_invariant #h (ghost_ctr m) (add_ext_iref i e) m.big
+    hogs_invariant #h (ghost_ctr m) (add_ext_iref i e) m.big
       `star` 
     lift h (H2.base_heap.mem_invariant GhostSet.empty m.big);
   (==) { up_star_ext (h.mem_invariant (down_irefs (add_ext_iref i e)) m.small) (down p) }
     (up (h.mem_invariant (down_irefs (add_ext_iref i e)) m.small) `star` up (down p))
      `star`
-    istore_invariant #h (ghost_ctr m) (add_ext_iref i e) m.big `star`
+    hogs_invariant #h (ghost_ctr m) (add_ext_iref i e) m.big `star`
     lift h (H2.base_heap.mem_invariant GhostSet.empty m.big);
   (==) { ac_lemmas_ext h }
     mem_invariant (add_ext_iref i e) m `star` up (down p);
@@ -783,15 +783,15 @@ let mem_invariant_equiv_ext_r_aux
     mem_invariant e m;
   (==) { }
     up (h.mem_invariant (down_irefs e) m.small) `star`
-    istore_invariant #h (ghost_ctr m) e m.big `star`
+    hogs_invariant #h (ghost_ctr m) e m.big `star`
     lift h (H2.base_heap.mem_invariant GhostSet.empty m.big);
   (==) { hmem_invariant_unchanged #h e m.small i }
     up (h.mem_invariant (down_irefs (add_ext_iref i e)) m.small) `star`
-    istore_invariant #h (ghost_ctr m) e m.big `star`
+    hogs_invariant #h (ghost_ctr m) e m.big `star`
     lift h (H2.base_heap.mem_invariant GhostSet.empty m.big);
-  (==) { istore_invariant_eq m e i p }
+  (==) { hogs_invariant_eq m e i p }
     up (h.mem_invariant (down_irefs (add_ext_iref i e)) m.small) `star`
-    (istore_invariant #h (ghost_ctr m) (add_ext_iref i e) m.big `star` p) `star`
+    (hogs_invariant #h (ghost_ctr m) (add_ext_iref i e) m.big `star` p) `star`
     lift h (H2.base_heap.mem_invariant GhostSet.empty m.big);
   (==) { ac_lemmas_ext h }
     mem_invariant (add_ext_iref i e) m `star` p;
@@ -978,19 +978,19 @@ let empty_mem_invariant (#h:heap_sig u#a) (e:GhostSet.set (ext_iref h))
     mem_invariant e m;
   (==) {}
     up (h.mem_invariant (down_irefs e) m.small) `star`
-    istore_invariant #h (H2.ghost_ctr m.big) e m.big `star`
+    hogs_invariant #h (H2.ghost_ctr m.big) e m.big `star`
     lift h (H2.base_heap.mem_invariant GhostSet.empty m.big);
   (==) {h.empty_mem_invariant (down_irefs e); H2.base_heap.empty_mem_invariant GhostSet.empty }
     emp `star`
-    istore_invariant #h (H2.ghost_ctr m.big) e m.big `star`
+    hogs_invariant #h (H2.ghost_ctr m.big) e m.big `star`
     lift h (H2.base_heap.emp);
   (==) { up_emp_ext h }
     emp `star`
-    istore_invariant #h (H2.ghost_ctr m.big) e m.big `star`
+    hogs_invariant #h (H2.ghost_ctr m.big) e m.big `star`
     emp;
   (==) { FStar.Classical.forall_intro (emp_unit #h);
          FStar.Classical.forall_intro_2 (star_commutative #h) }
-    istore_invariant #h (H2.ghost_ctr m.big) e m.big ;    
+    hogs_invariant #h (H2.ghost_ctr m.big) e m.big ;    
   (==) { }
    invariant_of_one_cell 0 e m.big `star` emp;
   (==) {FStar.Classical.forall_intro (emp_unit #h) }
@@ -1231,21 +1231,21 @@ let lift_action_alt
           up pre `star` frame `star` mem_invariant ex m0;
         (==) {} 
           up pre `star` frame `star` (up (h.mem_invariant (down_irefs ex) m0.small) `star`
-                                      istore_invariant #h (ghost_ctr m0) ex (m0.big) `star`
+                                      hogs_invariant #h (ghost_ctr m0) ex (m0.big) `star`
                                       lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big));
         (==) { ac_lemmas_ext h } //_ by (T.mapply (quote (pqrs_pr_qs (extend h)))) }
           (up pre `star` up (h.mem_invariant (down_irefs ex) m0.small)) `star` (
-           frame `star` istore_invariant #h (ghost_ctr m0) (ex) (m0.big) `star`
+           frame `star` hogs_invariant #h (ghost_ctr m0) (ex) (m0.big) `star`
            lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big)
           );
         (==) { () }
           (up (pre `h.star` h.mem_invariant (down_irefs (ex)) m0.small)) `star` (
-           frame `star` istore_invariant #h (ghost_ctr m0) (ex) (m0.big) `star`
+           frame `star` hogs_invariant #h (ghost_ctr m0) (ex) (m0.big) `star`
            lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big)
           );
         (==) { () }
           (up (pre `h.star` h.mem_invariant (down_irefs ex) m0.small)) `star` (
-           frame `star` istore_invariant #h (ghost_ctr m0) (ex) (m0.big) `star`
+           frame `star` hogs_invariant #h (ghost_ctr m0) (ex) (m0.big) `star`
            lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big)
           );
         };
@@ -1254,7 +1254,7 @@ let lift_action_alt
           down_frame
             (pre `h.star` h.mem_invariant (down_irefs ex) m0.small)
             (frame `star` 
-             istore_invariant #h (ghost_ctr m0) (ex) (m0.big) `star`
+             hogs_invariant #h (ghost_ctr m0) (ex) (m0.big) `star`
              lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big))
             m0
         in
@@ -1274,30 +1274,30 @@ let lift_action_alt
         assert (
           interpret #(extend h)
             (up (post x `h.star` h.mem_invariant (down_irefs ex) m1') `star`
-            (frame `star` istore_invariant #h (ghost_ctr m0) (ex) (m0.big) `star`
+            (frame `star` hogs_invariant #h (ghost_ctr m0) (ex) (m0.big) `star`
             lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big)))
           m1
         );
         calc (==) {
           (up (post x `h.star` h.mem_invariant (down_irefs ex) m1') `star`
-            (frame `star` istore_invariant #h (ghost_ctr m0) (ex) (m0.big)
+            (frame `star` hogs_invariant #h (ghost_ctr m0) (ex) (m0.big)
              `star`
             lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big)));
         (==) {}
           (up (post x) `star` up (h.mem_invariant (down_irefs ex) m1')) `star`
-            (frame `star` istore_invariant #h (ghost_ctr m0) (ex) (m0.big)
+            (frame `star` hogs_invariant #h (ghost_ctr m0) (ex) (m0.big)
              `star`
             lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big)
             );
         (==) { ac_lemmas_ext h }
           up (post x) `star` frame `star`
             (up (h.mem_invariant (down_irefs ex) m1') `star` 
-             istore_invariant #h (ghost_ctr m0) (ex) (m0.big) `star`
+             hogs_invariant #h (ghost_ctr m0) (ex) (m0.big) `star`
              lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big));
         (==) {}
           up (post x) `star` frame `star`
             (up (h.mem_invariant (down_irefs (ex)) m1') `star` 
-             istore_invariant #h (ghost_ctr m0) (ex) (m0.big)  `star`
+             hogs_invariant #h (ghost_ctr m0) (ex) (m0.big)  `star`
              lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big));
         (==) { () }
           up (post x) `star` frame `star` (mem_invariant (ex) m1);
@@ -1438,7 +1438,7 @@ let up_emp_alt (h:heap_sig u#a)
 let mem_invariant_rest (#h:heap_sig u#a) (e:iset #h) (m:ext_mem h)
 : ext_slprop h
 = up (h.mem_invariant (down_irefs e) m.small) `star`
-  istore_invariant #h (H2.ghost_ctr m.big) e m.big
+  hogs_invariant #h (H2.ghost_ctr m.big) e m.big
 
 let intro_inv (#h:heap_sig)
               (r:ghost_ref _ (PA.pcm_agreement #h.slprop) { not (H2.core_ghost_ref_is_null r) })
@@ -1462,7 +1462,7 @@ let intro_inv (#h:heap_sig)
     (lift h (H2.ghost_pts_to true r (Some (down p))))
     (inv (Inr r) p)
 #push-options "--fuel 1"
-let rec istore_invariant_frame_after_extend
+let rec hogs_invariant_frame_after_extend
     (#h:heap_sig u#a)
     (ex:inames (extend h))
     (p:boxable (extend h))
@@ -1474,13 +1474,13 @@ let rec istore_invariant_frame_after_extend
   (requires
     H2.single_ghost_allocation true (Some (down p)) r m0.big m1.big)
   (ensures
-    istore_invariant c ex (m1.big) ==
-    istore_invariant c ex (m0.big))
+    hogs_invariant c ex (m1.big) ==
+    hogs_invariant c ex (m0.big))
   (decreases c)
 = if c = 0 then ()
-  else istore_invariant_frame_after_extend ex p r m0 m1 (c - 1)
+  else hogs_invariant_frame_after_extend ex p r m0 m1 (c - 1)
 
-let fold_new_istore_invariant
+let fold_new_hogs_invariant
     (#h:heap_sig u#a)
     (ex:inames (extend h))
     (p:boxable (extend h))
@@ -1493,8 +1493,8 @@ let fold_new_istore_invariant
     inames_ok ex m0)
   (ensures 
     (p `star`
-      istore_invariant #h (H2.ghost_ctr m0.big) ex (m0.big)) ==
-    istore_invariant #h (H2.ghost_ctr m1.big) ex (m1.big))
+      hogs_invariant #h (H2.ghost_ctr m0.big) ex (m0.big)) ==
+    hogs_invariant #h (H2.ghost_ctr m1.big) ex (m1.big))
 = let l1 = m1.big in
   let l0 = m0.big in
   assert (H2.addr_as_core_ghost_ref (H2.ghost_ctr m0.big) == r);
@@ -1503,34 +1503,34 @@ let fold_new_istore_invariant
   let ri : ext_iref h = Inr r in
   assert (not (GhostSet.mem ri ex));
   calc (==) {
-    istore_invariant #h (H2.ghost_ctr m1.big) ex (m1.big);
+    hogs_invariant #h (H2.ghost_ctr m1.big) ex (m1.big);
   (==) {}
     invariant_of_one_cell (H2.ghost_ctr m1.big) ex l1 `star`
-    istore_invariant #h (H2.ghost_ctr m0.big) ex l1;
+    hogs_invariant #h (H2.ghost_ctr m0.big) ex l1;
   (==) { assert (H2.select_ghost (H2.ghost_ctr m1.big) l1 == None);
          ac_lemmas_ext h }
-    istore_invariant #h (H2.ghost_ctr m0.big) ex l1;
+    hogs_invariant #h (H2.ghost_ctr m0.big) ex l1;
   (==) { }
     invariant_of_one_cell (H2.ghost_ctr m0.big) ex l1 `star`
-    istore_invariant_rest (H2.ghost_ctr m0.big) ex l1;
+    hogs_invariant_rest (H2.ghost_ctr m0.big) ex l1;
   (==) { intro_invariant_of_one_cell 
             (H2.ghost_ctr m0.big)
             ex ri p l1 }
     p `star`
-    istore_invariant_rest (H2.ghost_ctr m0.big) ex l1;
+    hogs_invariant_rest (H2.ghost_ctr m0.big) ex l1;
   };
   calc (==) {
-    istore_invariant (H2.ghost_ctr m0.big) ex l0;
+    hogs_invariant (H2.ghost_ctr m0.big) ex l0;
   (==) { }
     invariant_of_one_cell (H2.ghost_ctr m0.big) ex l0 `star`
-    istore_invariant_rest #h (H2.ghost_ctr m0.big) ex l0;
+    hogs_invariant_rest #h (H2.ghost_ctr m0.big) ex l0;
   (==) { ac_lemmas_ext h }
-    istore_invariant_rest #h (H2.ghost_ctr m0.big) ex l0;
+    hogs_invariant_rest #h (H2.ghost_ctr m0.big) ex l0;
   };
   if H2.ghost_ctr m0.big = 0
   then ()
   else (
-    istore_invariant_frame_after_extend
+    hogs_invariant_frame_after_extend
       ex p r m0 m1 (H2.ghost_ctr m0.big - 1)
   )
 #pop-options
@@ -1573,11 +1573,11 @@ let fold_new_invariant
     mem_invariant ex m1;
   (==) { }
     up (h.mem_invariant (down_irefs ex) m0.small) `star`
-    istore_invariant #h (H2.ghost_ctr m1.big) ex (m1.big) `star`
+    hogs_invariant #h (H2.ghost_ctr m1.big) ex (m1.big) `star`
     lift h (H2.base_heap.mem_invariant GhostSet.empty m1.big);
-  (==) {fold_new_istore_invariant ex p r m0 m1 }
+  (==) {fold_new_hogs_invariant ex p r m0 m1 }
     up (h.mem_invariant (down_irefs ex) m0.small) `star`
-    (p `star` istore_invariant #h (H2.ghost_ctr m0.big) ex (m0.big)) `star`
+    (p `star` hogs_invariant #h (H2.ghost_ctr m0.big) ex (m0.big)) `star`
     lift h (H2.base_heap.mem_invariant GhostSet.empty m1.big);
   (==) { ac_lemmas_ext h }
     p `star`
@@ -1595,7 +1595,7 @@ let bump_ghost_ctr (#h:heap_sig u#a) (m:ext_mem h) (ctx:erased nat) =
   { m with big = H2.bump_ghost_ctr m.big ctx }
 
 #push-options "--fuel 1"
-let istore_invariant_bump
+let hogs_invariant_bump
     (#h:heap_sig u#a)
     (ex:inames (extend h))
     (ctx:erased nat)
@@ -1606,19 +1606,19 @@ let istore_invariant_bump
     H2.free_above_ghost_ctr m0.big)
   (ensures 
     (let m1 = bump_ghost_ctr m0 ctx in
-     istore_invariant #h (H2.ghost_ctr m0.big) ex (m0.big) ==
-     istore_invariant #h (H2.ghost_ctr m1.big) ex (m1.big)))
+     hogs_invariant #h (H2.ghost_ctr m0.big) ex (m0.big) ==
+     hogs_invariant #h (H2.ghost_ctr m1.big) ex (m1.big)))
 = let m1 = bump_ghost_ctr m0 ctx in
   let rec aux (n:nat { H2.ghost_ctr m0.big <= n /\ n <= H2.ghost_ctr m1.big })
     : Lemma 
-        (istore_invariant #h (H2.ghost_ctr m0.big) ex (m0.big) ==
-         istore_invariant #h n ex (m0.big))
+        (hogs_invariant #h (H2.ghost_ctr m0.big) ex (m0.big) ==
+         hogs_invariant #h n ex (m0.big))
     = if n = H2.ghost_ctr m0.big then ()
       else ( ac_lemmas_ext h; aux (n - 1) ) 
   in
   aux (H2.ghost_ctr m1.big);
-  assert istore_invariant #h (H2.ghost_ctr m0.big) ex m0.big == istore_invariant (H2.ghost_ctr m1.big) ex m0.big;
-  let rec aux2 (n: nat) : Lemma (istore_invariant #h n ex m0.big == istore_invariant #h n ex m1.big) =
+  assert hogs_invariant #h (H2.ghost_ctr m0.big) ex m0.big == hogs_invariant (H2.ghost_ctr m1.big) ex m0.big;
+  let rec aux2 (n: nat) : Lemma (hogs_invariant #h n ex m0.big == hogs_invariant #h n ex m1.big) =
     if n = 0 then () else aux2 (n-1) in
   aux2 (H2.ghost_ctr m1.big)
 
@@ -1639,7 +1639,7 @@ let mem_invariant_bump_aux
     c == join c0 c1 /\
     interp (
         up (h.mem_invariant (down_irefs ex) m.small) `star`
-        istore_invariant #h (H2.ghost_ctr m.big) ex m.big
+        hogs_invariant #h (H2.ghost_ctr m.big) ex m.big
     ) c0 /\
     interp (lift h (H2.base_heap.mem_invariant GhostSet.empty m.big)) c1
   returns interp (mem_invariant ex m1) c
@@ -1649,14 +1649,14 @@ let mem_invariant_bump_aux
       disjoint c00 c01 /\
       c0 == join c00 c01 /\
       interp (up (h.mem_invariant (down_irefs ex) m.small)) c00  /\
-      interp (istore_invariant #h (H2.ghost_ctr m.big) ex m.big) c01
+      interp (hogs_invariant #h (H2.ghost_ctr m.big) ex m.big) c01
     returns 
         interp (
           up (h.mem_invariant (down_irefs ex) m1.small) `star`
-          istore_invariant #h (H2.ghost_ctr m1.big) ex (m1.big)
+          hogs_invariant #h (H2.ghost_ctr m1.big) ex (m1.big)
         ) c0
     with _ . (
-      istore_invariant_bump ex ctx m c01
+      hogs_invariant_bump ex ctx m c01
     );
    // assert (interpret (H2.base_heap.mem_invariant GhostSet.empty m.big) c1);
     assert (interp (lift h (H2.base_heap.mem_invariant GhostSet.empty m1.big)) c1)
@@ -2108,7 +2108,7 @@ let invariant_of_one_cell_trivial
   | None -> ()
   | Some cell1 -> sl_pure_imp_ext_trivial #h (cell_pred_pre h cell1) (cell_pred_post h cell1)
 
-let istore_invariant_eq_frame
+let hogs_invariant_eq_frame
     (#h:heap_sig u#h)
     (ex:inames (extend h))
     (m0 m1:ext_mem h)
@@ -2119,8 +2119,8 @@ let istore_invariant_eq_frame
     inames_ok ex m0 /\
     H2.free_above_ghost_ctr m0.big)
   (ensures 
-    (istore_invariant #h (H2.ghost_ctr m0.big) ex (m0.big) ==
-     istore_invariant #h (H2.ghost_ctr m1.big) ex (m1.big)) /\
+    (hogs_invariant #h (H2.ghost_ctr m0.big) ex (m0.big) ==
+     hogs_invariant #h (H2.ghost_ctr m1.big) ex (m1.big)) /\
     inames_ok ex m1)
 = assert (inames_ok ex m1);
   let aux0 (c:nat { c <= H2.ghost_ctr m0.big })
@@ -2146,29 +2146,29 @@ let istore_invariant_eq_frame
       )
   in
   let rec aux (c:nat { c <= H2.ghost_ctr m0.big })
-    : Lemma (istore_invariant #h c ex (m0.big)
-             == istore_invariant #h c ex (m1.big))
+    : Lemma (hogs_invariant #h c ex (m0.big)
+             == hogs_invariant #h c ex (m1.big))
     = aux0 c;
       if c = 0 then () else aux (c - 1)
   in
   let rec aux_diff (c:nat { H2.ghost_ctr m0.big <= c /\ c <= H2.ghost_ctr m1.big })
-    : Lemma (istore_invariant #h (H2.ghost_ctr m0.big) ex (m0.big)
-             == istore_invariant #h c ex (m1.big))
+    : Lemma (hogs_invariant #h (H2.ghost_ctr m0.big) ex (m0.big)
+             == hogs_invariant #h c ex (m1.big))
     = if c = H2.ghost_ctr m0.big
       then aux c
       else (
         assert (H2.select_ghost c (m0.big) == None);
         invariant_of_one_cell_trivial #h c ex m1.big;
         calc (==) {
-          istore_invariant #h c ex (m1.big);
+          hogs_invariant #h c ex (m1.big);
         (==) {}
           invariant_of_one_cell #h c ex (m1.big) `star`
-          istore_invariant #h (c - 1) ex (m1.big);
+          hogs_invariant #h (c - 1) ex (m1.big);
         (==) { invariant_of_one_cell_trivial #h c ex m1.big }
           emp `star`
-          istore_invariant #h (c - 1) ex (m1.big);
+          hogs_invariant #h (c - 1) ex (m1.big);
         (==) { ac_lemmas_ext h; aux_diff (c - 1) }
-          istore_invariant #h (H2.ghost_ctr (m0.big)) ex (m0.big);
+          hogs_invariant #h (H2.ghost_ctr (m0.big)) ex (m0.big);
         }
       )
   in
@@ -2250,7 +2250,7 @@ let lift_base_heap_action
           (lift h (post x) `star`
            lift h (H2.base_heap.mem_invariant GhostSet.empty m1')) `star`
           (frame  `star` mem_invariant_rest ex m0);
-        (==) { istore_invariant_eq_frame #h ex m0 m1 }
+        (==) { hogs_invariant_eq_frame #h ex m0 m1 }
           (lift h (post x) `star`
            lift h (H2.base_heap.mem_invariant GhostSet.empty m1')) `star`
           (frame  `star` mem_invariant_rest ex m1);
@@ -2260,7 +2260,7 @@ let lift_base_heap_action
           mem_invariant ex m1;
         };
         h.is_ghost_action_preorder ();
-        istore_invariant_eq_frame ex m0 m1;
+        hogs_invariant_eq_frame ex m0 m1;
         assert (inames_ok ex m1);
         x, m1
 
