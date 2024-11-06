@@ -278,7 +278,7 @@ val pulse_heap_sig : hs:PulseCore.HeapSig.heap_sig u#(a + 3) {
   hs.star == star /\
   // (forall t (f:t->slprop). HeapSig.exists_ #hs f == h_exists f) /\
   pure == hs.pure /\
-  (forall p m. interp p m == hs.interp p (hs.sep.core_of m)) /\
+  (forall p m. interp p m == hs.interp p m) /\
   iref == hs.iref /\
   (forall e m. inames_ok e m == HeapSig.inames_ok #hs e m) /\
   mem_invariant == hs.mem_invariant /\

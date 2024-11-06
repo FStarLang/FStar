@@ -4,7 +4,7 @@ open FStar.Ghost
 open FStar.PCM
 module H = PulseCore.Heap
 val base_heap : heap_sig u#a
-val join_empty_inverse (m0 m1:base_heap.sep.core)
+val join_empty_inverse (m0 m1:base_heap.mem)
 : Lemma 
     (requires base_heap.sep.disjoint m0 m1 /\ base_heap.sep.join m0 m1 == base_heap.sep.empty)
     (ensures m0 == base_heap.sep.empty /\ m1 == base_heap.sep.empty)
@@ -20,17 +20,17 @@ val core_ghost_ref_as_addr_injective (c1:core_ghost_ref)
 val addr_as_core_ghost_ref_injective (a:nat)
 : Lemma 
   (ensures core_ghost_ref_as_addr (addr_as_core_ghost_ref a) == a)
-val select_ghost (i:nat) (m:(base_heap u#a).sep.core) : GTot (option (H.cell u#a))
+val select_ghost (i:nat) (m:(base_heap u#a).mem) : GTot (option (H.cell u#a))
 val ghost_ctr (b:base_heap.mem) : GTot nat
 let free_above_ghost_ctr (m:base_heap.mem)
 : prop
-= forall addr. addr >= ghost_ctr m ==> select_ghost addr (core_of m) == None
+= forall addr. addr >= ghost_ctr m ==> select_ghost addr m == None
 val empty_mem_props () 
 : Lemma (
-    free_above_ghost_ctr base_heap.empty_mem /\
-    ghost_ctr base_heap.empty_mem == 0
+    free_above_ghost_ctr base_heap.sep.empty /\
+    ghost_ctr base_heap.sep.empty == 0
   )
-val mem_invariant_interp (ex:inames base_heap) (h0:base_heap.mem) (h1:base_heap.sep.core)
+val mem_invariant_interp (ex:inames base_heap) (h0:base_heap.mem) (h1:base_heap.mem)
 : Lemma (base_heap.interp (base_heap.mem_invariant ex h0) h1 ==>
          free_above_ghost_ctr h0)
 val inames_ok_trivial (ex:inames base_heap) (h:base_heap.mem)
@@ -38,10 +38,13 @@ val inames_ok_trivial (ex:inames base_heap) (h:base_heap.mem)
 
 val bump_ghost_ctr (m0:base_heap.mem) (x:erased nat)
 : m1:base_heap.mem {
-    core_of m1 == core_of m0 /\
+    (exists m'. m1 == base_heap.sep.join m0 m') /\
+    (forall a. select_ghost a m0 == select_ghost a m1) /\
+    // m1 == m0 /\
     ghost_ctr m1 >= ghost_ctr m0 /\
     ghost_ctr m1 >= x /\
     (forall ex c0 c1. base_heap.interp (base_heap.mem_invariant ex m0) c0 ==> base_heap.interp (base_heap.mem_invariant ex m1) c1) /\
+    (forall is. inames_ok is m0 <==> inames_ok is m1) /\
     base_heap.is_ghost_action m0 m1 /\
     (base_heap.full_mem_pred m0 ==> base_heap.full_mem_pred m1)
   }
@@ -54,7 +57,7 @@ val interp_ghost_pts_to
       (#a:Type u#a)
       (#pcm:FStar.PCM.pcm a)
       (v:a)
-      (h0:(base_heap u#a).sep.core)
+      (h0:(base_heap u#a).mem)
 : Lemma
   (requires base_heap.interp (ghost_pts_to meta #a #pcm i v) h0)
   (ensures (
@@ -90,7 +93,7 @@ let heap_cell_evolves (h0 h1:option H.cell)
 let heaps_preserve_inames (m0 m1:base_heap.mem) =
   ghost_ctr m0 <= ghost_ctr m1 /\
   (forall (addr:nat).
-    heap_cell_evolves (select_ghost addr (core_of m0)) (select_ghost addr (core_of m1)))
+    heap_cell_evolves (select_ghost addr m0) (select_ghost addr m1))
 
 let preserves_inames 
     (#a:Type u#a)
@@ -116,9 +119,9 @@ let single_ghost_allocation
         (h h1:base_heap.mem)
 = (forall (a:nat).
     a <> ghost_ctr h ==>
-    select_ghost a (core_of h) == select_ghost a (core_of h1)) /\
+    select_ghost a h == select_ghost a h1) /\
   ghost_ctr h1 == ghost_ctr h + 1 /\
-  select_ghost (ghost_ctr h) (core_of h1) == Some (H.Ref meta a pcm x) /\
+  select_ghost (ghost_ctr h) h1 == Some (H.Ref meta a pcm x) /\
   addr_as_core_ghost_ref (ghost_ctr h) == r /\
   free_above_ghost_ctr h /\
   free_above_ghost_ctr h1

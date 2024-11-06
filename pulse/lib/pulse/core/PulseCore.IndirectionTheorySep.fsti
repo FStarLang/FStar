@@ -5,40 +5,33 @@ module PM = PulseCore.MemoryAlt
 open FStar.Ghost 
 
 [@@erasable] val istore : Type u#4
-[@@erasable] val core_istore : Type u#4
 let pulse_mem : Type u#4 = PM.mem u#0
-let pulse_core_mem : Type u#4 = PM.pulse_heap_sig.sep.core
 noeq type mem = { istore:istore; pulse_mem:PM.mem u#0 }
-noeq type core_mem = { istore:core_istore; pulse_mem:pulse_core_mem }
-val istore_core (i:istore) : core_istore
-let core_of (m:mem)
-: core_mem
-= { istore = istore_core m.istore; pulse_mem = PM.pulse_heap_sig.sep.core_of m.pulse_mem }
 
-val age1 (k:core_mem) : core_mem
+val age1 (k:mem) : mem
 
 
 [@@erasable]
 val slprop : Type u#4
-val ilevel (_:core_istore) : GTot nat
-val level (k:core_mem) : GTot nat
-val level_depends_on_core_istore_only (m:core_mem) 
+val ilevel (_:istore) : GTot nat
+val level (k:mem) : GTot nat
+val level_depends_on_istore_only (m:mem) 
 : Lemma (level m == ilevel m.istore)
         [SMTPat (level m)]
 
-val icredits (_:core_istore) : GTot nat
-let credits (k:core_mem) : GTot nat = icredits k.istore
+val icredits (_:istore) : GTot nat
+let credits (k:mem) : GTot nat = icredits k.istore
 let level_at_least_credits (m:mem)
 : GTot bool
-= level (core_of m) > credits (core_of m)
+= level m > credits m
 
 let level_decreases_by_spent_credits (m0 m1:mem)
 : prop
-= let l0, c0 = level (core_of m0), credits (core_of m0) in
-  let l1, c1 = level (core_of m1), credits (core_of m1) in
+= let l0, c0 = level m0, credits m0 in
+  let l1, c1 = level m1, credits m1 in
   c1 <= c0 /\ //credits decrease
   l1 == l0 - (c0 - c1) // and level decreases by the amount of credits spent
-let has_credits (m:mem) : GTot bool = credits (core_of m) > 0
+let has_credits (m:mem) : GTot bool = credits m > 0
 
 val is_ghost_action_istore : p:(istore -> istore -> prop) { 
     FStar.Preorder.preorder_rel p 
@@ -73,21 +66,21 @@ val sep_laws (_:unit) : squash (
   )
 )
 
-val istore_disjoint (i0 i1:core_istore) : prop
-val istore_join (i0:core_istore) (i1:core_istore { istore_disjoint i0 i1}) : core_istore
-val clear_credits (i:core_istore) : core_istore
-val istore_join_refl (i:core_istore)
+val istore_disjoint (i0 i1:istore) : prop
+val istore_join (i0:istore) (i1:istore { istore_disjoint i0 i1}) : istore
+val clear_credits (i:istore) : istore
+val istore_join_refl (i:istore)
 : Lemma (istore_disjoint i (clear_credits i) /\ istore_join i (clear_credits i) == i)
-let disjoint (m0 m1:core_mem)
+let disjoint (m0 m1:mem)
 : prop
 = PM.pulse_heap_sig.sep.disjoint m0.pulse_mem m1.pulse_mem /\
   istore_disjoint m0.istore m1.istore
-let join (m0:core_mem) (m1:core_mem { disjoint m0 m1 })
-: core_mem
+let join (m0:mem) (m1:mem { disjoint m0 m1 })
+: mem
 = { pulse_mem = PM.pulse_heap_sig.sep.join m0.pulse_mem m1.pulse_mem;
     istore = istore_join m0.istore m1.istore }
 
-val disjoint_join_levels (i0 i1:core_mem)
+val disjoint_join_levels (i0 i1:mem)
 : Lemma 
   (requires
     disjoint i0 i1)
@@ -96,16 +89,16 @@ val disjoint_join_levels (i0 i1:core_mem)
     level (join i0 i1) == level i0 /\
     credits (join i0 i1) == credits i0 + credits i1)
 
-let affine_prop (p: core_mem -> prop) =
-  forall (m0 m1:core_mem). p m0 /\ disjoint m0 m1 ==> p (join m0 m1)
+let affine_prop (p: mem -> prop) =
+  forall (m0 m1:mem). p m0 /\ disjoint m0 m1 ==> p (join m0 m1)
 
-val interp (p:slprop) : q:(core_mem  -> prop) { affine_prop q }
+val interp (p:slprop) : q:(mem  -> prop) { affine_prop q }
 
 
 val star_equiv :
       p:slprop ->
       q:slprop ->
-      m:core_mem ->
+      m:mem ->
       Lemma (
         interp (p `star` q) m <==> 
       (exists m0 m1. 
@@ -114,8 +107,8 @@ val star_equiv :
           interp p m0 /\
           interp q m1))
 
-val split_mem (p:slprop) (q:slprop) (m:erased core_mem { interp (p `star` q) m })
-: res:(erased core_mem & erased core_mem) {
+val split_mem (p:slprop) (q:slprop) (m:erased mem { interp (p `star` q) m })
+: res:(erased mem & erased mem) {
     let l, r = res in
     disjoint l r /\
     reveal m == join l r /\
@@ -123,20 +116,20 @@ val split_mem (p:slprop) (q:slprop) (m:erased core_mem { interp (p `star` q) m }
     interp q r
 }
 
-val intro_star (p q:slprop) (m0 m1:core_mem)
+val intro_star (p q:slprop) (m0 m1:mem)
 : Lemma
   (requires disjoint m0 m1 /\ interp p m0 /\ interp q m1)
   (ensures interp (p `star` q) (join m0 m1))
 
-val emp_equiv (m:core_mem) : Lemma (interp emp m)
+val emp_equiv (m:mem) : Lemma (interp emp m)
 
 val interp_exists (#a:Type u#a) (p: a -> slprop)
 : Lemma (forall m. interp (op_exists_Star p) m <==> (exists x. interp (p x) m))
 
-val interp_pure (p:prop) (m:core_mem)
+val interp_pure (p:prop) (m:mem)
 : Lemma (interp (pure p) m <==> p)
 
-let destruct_star_l (p q:slprop) (m:core_mem)
+let destruct_star_l (p q:slprop) (m:mem)
 : Lemma (interp (p `star` q) m ==> interp p m)
 = introduce interp (p `star` q) m ==> interp p m
   with _ . (
@@ -154,7 +147,7 @@ let destruct_star_l (p q:slprop) (m:core_mem)
  )
 
 
-let destruct_star (p q:slprop) (m:core_mem)
+let destruct_star (p q:slprop) (m:mem)
 : Lemma
   (requires interp (p `star` q) m)
   (ensures interp p m /\ interp q m)
@@ -237,44 +230,44 @@ val equiv_trans (p q r: slprop) : squash (equiv p q `star` equiv q r == equiv p 
 val equiv_timeless (a b: slprop) : Lemma (requires timeless a /\ timeless b) (ensures equiv a b == pure (a == b))
 val equiv_star_congr (p q r: slprop) : squash (equiv q r == equiv q r `star` equiv (star p q) (star p r))
 
-val intro_later (p:slprop) (m:core_mem)
+val intro_later (p:slprop) (m:mem)
 : Lemma (interp p m ==> interp (later p) m)
 val istore_dom (m:mem) : inames
 
 val age_mem (m:mem) : m':mem { 
-  core_of m' == age1 (core_of m) /\
+  m' == age1 m /\
   is_ghost_action m m' /\
   (is_full m ==> is_full m') /\
   (istore_dom m == istore_dom m')
 }
-val age_level (m:core_mem)
+val age_level (m:mem)
 : Lemma
   (requires level m > 0)
   (ensures level (age1 m) == level m - 1 /\
             credits (age1 m) == credits m)
-val age_disjoint (m0 m1:core_mem)
+val age_disjoint (m0 m1:mem)
 : Lemma
   (requires disjoint m0 m1)
   (ensures 
     disjoint (age1 m0) (age1 m1) /\
     age1 (join m0 m1) == join (age1 m0) (age1 m1))
-val age_hereditary (p:slprop) (m:core_mem)
+val age_hereditary (p:slprop) (m:mem)
 : Lemma (interp p m ==> interp p (age1 m))
-val age_later (p:slprop) (m:core_mem)
+val age_later (p:slprop) (m:mem)
 : Lemma 
   (requires level m > 0)
   (ensures interp (later p) m ==> interp p (age1 m))
 
-val spend (m:core_mem) : core_mem
+val spend (m:mem) : mem
 val spend_mem (m:mem) : m':mem { 
-  core_of m' == spend (core_of m) /\
+  m' == spend m /\
   is_ghost_action m m' /\
   (is_full m ==> is_full m') /\
   (istore_dom m == istore_dom m')
 }
-val interp_later_credit (n:nat) (m:core_mem)
+val interp_later_credit (n:nat) (m:mem)
 : Lemma (interp (later_credit n) m <==> credits m >= n)
-val spend_lemma (m:core_mem)
+val spend_lemma (m:mem)
 : Lemma 
   (requires
     credits m > 0)
@@ -282,7 +275,7 @@ val spend_lemma (m:core_mem)
     let m' = spend m in
     level m' == level m /\
     credits m' == credits m - 1))
-val spend_disjoint (m0 m1:core_mem)
+val spend_disjoint (m0 m1:mem)
 : Lemma
   (requires
     disjoint m0 m1 /\
@@ -291,20 +284,20 @@ val spend_disjoint (m0 m1:core_mem)
     disjoint (spend m0) m1 /\
     spend (join m0 m1) == join (spend m0) m1)
 
-val buy (n:nat) (m:core_mem) : core_mem
+val buy (n:nat) (m:mem) : mem
 val buy_mem (n:FStar.Ghost.erased nat) (m:mem) : m':mem {
-  core_of m' == buy n (core_of m) /\
+  m' == buy n m /\
   is_ghost_action m m' /\
   (is_full m ==> is_full m') /\
   (istore_dom m == istore_dom m')
 }
-val buy_lemma (n:nat) (m:core_mem)
+val buy_lemma (n:nat) (m:mem)
 : Lemma (
   let m' = buy n m in
   level m' == level m /\
   credits m' == credits m + n
 )
-val buy_disjoint (n:nat) (m0 m1:core_mem)
+val buy_disjoint (n:nat) (m0 m1:mem)
 : Lemma
   (requires
     disjoint m0 m1)
@@ -321,18 +314,18 @@ let mem_inv (e:inames) (i:iref)
 : GTot bool
 = GhostSet.mem i e
 
-val iname_ok (i: iref) (m: core_mem) : prop
-val inames_ok_single (i: iref) (p:slprop) (m:core_mem)
+val iname_ok (i: iref) (m: mem) : prop
+val inames_ok_single (i: iref) (p:slprop) (m:mem)
 : Lemma
   (requires interp (inv i p) m)
   (ensures iname_ok i m)
 
 val iname_ok_inames_ok (i:iref) (m:mem)
-: Lemma (inames_ok (single i) m <==> iname_ok i (core_of m))
+: Lemma (inames_ok (single i) m <==> iname_ok i m)
         [SMTPat (inames_ok (single i) m)]
 
-val read_inv (i: iref) (m: core_mem { iname_ok i m }) : slprop
-val read_inv_equiv (i:iref) (m:core_mem { iname_ok i m /\ level m > 0 }) p 
+val read_inv (i: iref) (m: mem { iname_ok i m }) : slprop
+val read_inv_equiv (i:iref) (m:mem { iname_ok i m /\ level m > 0 }) p 
 : Lemma
   (requires 
     interp (inv i p) m)
@@ -341,7 +334,7 @@ val read_inv_equiv (i:iref) (m:core_mem { iname_ok i m /\ level m > 0 }) p
     <==>
     interp (later p) m)
 
-val read_inv_disjoint (i:iref) (m0 m1:core_mem)
+val read_inv_disjoint (i:iref) (m0 m1:mem)
 : Lemma 
   (requires
     disjoint m0 m1 /\
@@ -353,13 +346,13 @@ val read_inv_disjoint (i:iref) (m0 m1:core_mem)
 val mem_invariant_equiv :
       e:inames ->
       m:mem ->
-      i:iref { iname_ok i (core_of m) } ->
+      i:iref { iname_ok i m } ->
       Lemma
         (requires
           ~(mem_inv e i))
         (ensures
           (mem_invariant e m ==
-           mem_invariant (add_inv e i) m `star` later (read_inv i (core_of m))))
+           mem_invariant (add_inv e i) m `star` later (read_inv i m)))
 
 
 val inames_ok_istore_dom (e:inames) (m:mem)
@@ -370,13 +363,13 @@ val inames_ok_update (e:inames) (m0 m1:mem)
   (requires istore_dom m0 == istore_dom m1)
   (ensures inames_ok e m0 <==> inames_ok e m1)
 
-val join_mem (m0:mem) (m1:mem { disjoint (core_of m0) (core_of m1) })
-: m:mem { core_of m == join (core_of m0) (core_of m1) }
+val join_mem (m0:mem) (m1:mem { disjoint m0 m1 })
+: m:mem { m == join m0 m1 }
 
 val inames_ok_disjoint (i j:inames) (mi mj:mem)
 : Lemma
   (requires
-    disjoint (core_of mi) (core_of mj) /\
+    disjoint mi mj /\
     inames_ok i mi /\
     inames_ok j mj)
   (ensures
@@ -385,16 +378,16 @@ val inames_ok_disjoint (i j:inames) (mi mj:mem)
 val mem_invariant_disjoint (e f:inames) (p0 p1:slprop) (m0 m1:mem)
 : Lemma
   (requires
-    disjoint (core_of m0) (core_of m1) /\
+    disjoint m0 m1 /\
     FStar.GhostSet.disjoint (istore_dom m0) (istore_dom m1) /\
-    m1.pulse_mem == PM.pulse_heap_sig.empty_mem /\
-    interp (p0 `star` mem_invariant e m0) (core_of m0) /\
-    interp (p1 `star` mem_invariant f m1) (core_of m1))
+    m1.pulse_mem == PM.pulse_heap_sig.sep.empty /\
+    interp (p0 `star` mem_invariant e m0) m0 /\
+    interp (p1 `star` mem_invariant f m1) m1)
   (ensures (
     let m = join_mem m0 m1 in
-    interp (p0 `star` p1 `star` mem_invariant (FStar.GhostSet.union e f) m) (core_of m)))
+    interp (p0 `star` p1 `star` mem_invariant (FStar.GhostSet.union e f) m) m))
 
-val mem_invariant_age (e:inames) (m0:mem) (m1:core_mem { 1 < level m1 /\ level m1 <= level (core_of m0) })
+val mem_invariant_age (e:inames) (m0:mem) (m1:mem { 1 < level m1 /\ level m1 <= level m0 })
 : Lemma
   (ensures 
     interp (mem_invariant e m0) m1 ==>
@@ -418,16 +411,15 @@ val fresh_inv
     (ctx:FStar.Ghost.erased (list iref))
 : i:iref &
   m':mem { 
-    let c, c' = core_of m, core_of m' in
     fresh_wrt ctx i /\
-    disjoint c c' /\
+    disjoint m m' /\
     is_ghost_action m (join_mem m m') /\
     (is_full m ==> is_full (join_mem m m')) /\
     inames_ok (single i) m' /\
-    interp (inv i p `star` mem_invariant (single i) m') c' /\
+    interp (inv i p `star` mem_invariant (single i) m') m' /\
     FStar.GhostSet.disjoint (istore_dom m) (istore_dom m') /\
-    m'.pulse_mem == PM.pulse_heap_sig.empty_mem /\
-    credits c' == 0
+    m'.pulse_mem == PM.pulse_heap_sig.sep.empty /\
+    credits m' == 0
   }
 
 val dup_inv_equiv :
@@ -435,5 +427,5 @@ val dup_inv_equiv :
     p:slprop ->
     Lemma (inv i p == (inv i p `star` inv i p))
 
-val invariant_name_identifies_invariant (i: iref) (p q: slprop) (m: core_mem { level m > 0 }) :
+val invariant_name_identifies_invariant (i: iref) (p q: slprop) (m: mem { level m > 0 }) :
   Lemma (interp (star (inv i p) (inv i q)) m ==> interp (later (equiv p q)) m)

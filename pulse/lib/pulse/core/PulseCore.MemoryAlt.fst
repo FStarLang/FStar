@@ -190,13 +190,13 @@ let pure_true_emp (_:unit)
 (***** Properties of the separating conjunction *)
 let star_commutative (p1 p2:slprop)
 : Lemma ((p1 `star` p2) `equiv` (p2 `star` p1))
-= sig.star_commutative p1 p2
+= HeapSig.star_commutative p1 p2
 
 let star_associative (p1 p2 p3:slprop)
 : Lemma ((p1 `star` (p2 `star` p3))
           `equiv`
           ((p1 `star` p2) `star` p3))
-= sig.star_associative p1 p2 p3
+= HeapSig.star_associative p1 p2 p3
 
 let star_congruence (p1 p2 p3 p4:slprop)
   : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
@@ -487,8 +487,6 @@ let pulse_heap_sig0 : HeapSig.heap_sig u#(a + 3) = {
   pure_interp=sig.pure_interp;
   pure_true_emp;
   emp_unit;
-  star_commutative;
-  star_associative;
   star_equiv=(fun x y -> sig.star_equiv x y);
   star_congruence=(fun x y -> sig.star_congruence x y);
   iref;
@@ -496,7 +494,7 @@ let pulse_heap_sig0 : HeapSig.heap_sig u#(a + 3) = {
   iref_injectivity=(fun i j p q -> sig.iref_injectivity i j p q);
   iref_injective=(fun i -> sig.iref_injective i);
   mem_invariant_equiv=(fun (e:GhostSet.set iref) (m:mem) (i:iref) p ->
-     assert (sig.interp (inv i p) (sig.sep.core_of m));
+     assert (sig.interp (inv i p) m);
      assert (~(i `GhostSet.mem` e));
      sig.mem_invariant_equiv (down_inames e) m (reveal i) p;
      calc (==) {
@@ -519,8 +517,6 @@ let pulse_heap_sig0 : HeapSig.heap_sig u#(a + 3) = {
   iname_ok=(fun x y -> sig.iname_ok x y);
   inv=inv;
   non_info_iref=(fun x -> reveal x);
-  join_mem=sig.join_mem;
-  empty_mem=sig.empty_mem;
   empty_mem_invariant=(fun e -> sig.empty_mem_invariant (down_inames e));
 }
 let pulse_heap_sig : hs:PulseCore.HeapSig.heap_sig u#(a + 3) {
@@ -532,7 +528,7 @@ let pulse_heap_sig : hs:PulseCore.HeapSig.heap_sig u#(a + 3) {
   hs.star == star /\
   // (forall t (f:t->slprop). HeapSig.exists_ #hs f == h_exists f) /\
   pure == hs.pure /\
-  (forall p m. interp p m == hs.interp p (hs.sep.core_of m)) /\
+  (forall p m. interp p m == hs.interp p m) /\
   iref == hs.iref /\
   (forall e m. inames_ok e m == HeapSig.inames_ok #hs e m) /\
   mem_invariant == hs.mem_invariant /\

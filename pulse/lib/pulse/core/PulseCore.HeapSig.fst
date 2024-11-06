@@ -5,6 +5,47 @@ module H2 = PulseCore.Heap2
 module ST = PulseCore.HoareStateMonad
 module CM = FStar.Algebra.CommMonoid
 
+let star_commutative #h p q =
+  introduce forall c. h.interp (h.star p q) c <==> h.interp (h.star q p) c with (
+    h.star_equiv p q c;
+    h.star_equiv q p c;
+    Classical.forall_intro_2 h.sep.disjoint_sym;
+    Classical.forall_intro_2 h.sep.join_commutative
+  );
+  h.slprop_extensionality (h.star p q) (h.star q p)
+
+let star_associative' (#h: heap_sig) (p q r: h.slprop) (m: h.mem { h.interp (h.star p (h.star q r)) m }) :
+    squash (h.interp (h.star (h.star p q) r) m) =
+  h.star_equiv p (h.star q r) m;
+  let m1 = IndefiniteDescription.indefinite_description_ghost _ fun m1 -> exists m23.
+    h.sep.disjoint m1 m23 /\ m == h.sep.join m1 m23 /\ h.interp p m1 /\ h.interp (h.star q r) m23 in
+  let m23 = IndefiniteDescription.indefinite_description_ghost _ fun m23 ->
+    h.sep.disjoint m1 m23 /\ m == h.sep.join m1 m23 /\ h.interp p m1 /\ h.interp (h.star q r) m23 in
+  h.star_equiv q r m23;
+  let m2 = IndefiniteDescription.indefinite_description_ghost _ fun m2 -> exists m3.
+    h.sep.disjoint m2 m3 /\ m23 == h.sep.join m2 m3 /\ h.interp q m2 /\ h.interp r m3 in
+  let m3 = IndefiniteDescription.indefinite_description_ghost _ fun m3 ->
+    h.sep.disjoint m2 m3 /\ m23 == h.sep.join m2 m3 /\ h.interp q m2 /\ h.interp r m3 in
+  h.sep.join_associative m1 m2 m3;
+  let m12 = h.sep.join m1 m2 in
+  h.star_equiv p q m12;
+  h.star_equiv (h.star p q) r m
+
+let star_associative #h p q r =
+  introduce forall m. h.interp (h.star p (h.star q r)) m <==> h.interp (h.star (h.star p q) r) m with (
+    introduce h.interp (h.star p (h.star q r)) m ==> h.interp (h.star (h.star p q) r) m with _. (
+      star_associative' p q r m
+    );
+    introduce h.interp (h.star (h.star p q) r) m ==> h.interp (h.star p (h.star q r)) m with _. (
+      star_commutative (h.star p q) r;
+      star_commutative p q;
+      star_commutative p (h.star q r);
+      star_commutative q r;
+      star_associative' r q p m
+    )
+  );
+  h.slprop_extensionality (h.star p (h.star q r)) (h.star (h.star p q) r)
+
 let emp_trivial (h:heap_sig u#a)
 : Lemma (forall m. h.interp h.emp m)
 = h.pure_true_emp ();
@@ -36,8 +77,8 @@ let cm_slprop (hs:heap_sig u#h)
 : c:CM.cm (hs.slprop) { c.unit == hs.emp /\ c.mult == hs.star }
 = CM.CM hs.emp
         hs.star
-        (fun x -> hs.emp_unit x; hs.star_commutative x hs.emp)
-        hs.star_associative hs.star_commutative
+        (fun x -> hs.emp_unit x; star_commutative x hs.emp)
+        star_associative star_commutative
 
 let cm_e_slprop (hs:heap_sig u#h) = erase_cm (cm_slprop hs)
 
@@ -47,8 +88,8 @@ let ac_lemmas (h:heap_sig u#a)
     (forall p q. p `h.star` q == q `h.star` p) /\
     (forall p. p `h.star` h.emp == p)
 )
-= FStar.Classical.forall_intro_3 h.star_associative;
-  FStar.Classical.forall_intro_2 h.star_commutative;
+= FStar.Classical.forall_intro_3 (star_associative #h);
+  FStar.Classical.forall_intro_2 (star_commutative #h);
   FStar.Classical.forall_intro h.emp_unit
 
 let frame
@@ -66,10 +107,10 @@ let frame
 let witness_exists_lemma (#h:heap_sig u#h) (#a:Type u#a)
              (p:a -> GTot h.slprop) (frame:h.slprop) (m:h.mem { interpret (exists_ p `h.star` frame) m })
 : x:erased a { interpret (p x `h.star` frame) m }
-= h.star_equiv (exists_ p) frame (core_of m);
+= h.star_equiv (exists_ p) frame m;
   eliminate exists c0 c1.
     h.sep.disjoint c0 c1 /\
-    core_of m == h.sep.join c0 c1 /\
+    m == h.sep.join c0 c1 /\
     h.interp (exists_ p) c0 /\
     h.interp frame c1
   returns (exists (x:a). interpret (p x `h.star` frame) m)
@@ -79,7 +120,7 @@ let witness_exists_lemma (#h:heap_sig u#h) (#a:Type u#a)
         h.interp (p x) c0
     returns _
     with _ . (
-        h.star_equiv (p x) frame (core_of m)
+        h.star_equiv (p x) frame m
     )
   );
   FStar.IndefiniteDescription.indefinite_description_tot a (fun x -> interpret (p x `h.star` frame) m)
@@ -105,9 +146,9 @@ let intro_exists_lemma
       (frame:h.slprop)
       (m:h.mem { interpret (p x `h.star` frame) m })
 : Lemma (interpret (exists_ p `h.star` frame) m)
-= h.star_equiv (p x) frame (core_of m);
+= h.star_equiv (p x) frame m;
   interp_exists p;
-  h.star_equiv (exists_ p) frame (core_of m)
+  h.star_equiv (exists_ p) frame m
 
 let intro_exists
       (#h:heap_sig u#h)
@@ -145,9 +186,9 @@ let lift_h_exists
 let elim_pure_lemma (#h:heap_sig u#h) (p:prop) (frame:h.slprop) 
     (m:h.mem { interpret (h.pure p `h.star` frame) m })
 : Lemma (p /\ interpret (h.emp `h.star` frame) m)
-= h.star_equiv (h.pure p) frame (core_of m);
+= h.star_equiv (h.pure p) frame m;
   FStar.Classical.forall_intro (h.pure_interp p);
-  h.star_equiv h.emp frame (core_of m);
+  h.star_equiv h.emp frame m;
   emp_trivial h
 
 let elim_pure
@@ -164,9 +205,9 @@ let elim_pure
 let intro_pure_lemma (#h:heap_sig u#h) (p:prop) (frame:h.slprop) (pf:squash p)
     (m:h.mem { interpret (h.emp `h.star` frame) m })
 : Lemma (interpret (h.pure p `h.star` frame) m)
-= h.star_equiv h.emp frame (core_of m);
+= h.star_equiv h.emp frame m;
   FStar.Classical.forall_intro (h.pure_interp p);
-  h.star_equiv (h.pure p) frame (core_of m)
+  h.star_equiv (h.pure p) frame m
 
 let intro_pure
       (#h:heap_sig u#h)
@@ -184,8 +225,8 @@ let drop_lemma (#h:heap_sig u#h) (p:h.slprop) (frame:h.slprop)
     (m:h.mem { interpret (p `h.star` frame) m })
 : Lemma (interpret (h.emp `h.star` frame) m)
 = emp_trivial h;
-  h.star_equiv p frame (core_of m);
-  h.star_equiv h.emp frame (core_of m)
+  h.star_equiv p frame m;
+  h.star_equiv h.emp frame m
 
 let drop 
       (#h:heap_sig u#h)
@@ -219,7 +260,7 @@ let lift_ghost
     let x = ni_a x in
     x, m1
 
-let destruct_star_l (#h:heap_sig u#h) (p q:h.slprop) (m:h.sep.core)
+let destruct_star_l (#h:heap_sig u#h) (p q:h.slprop) (m:h.mem)
 : Lemma (h.interp (p `h.star` q) m ==> h.interp p m)
 = introduce h.interp (p `h.star` q) m ==> h.interp p m
   with _ . (
@@ -239,14 +280,14 @@ let destruct_star_l (#h:heap_sig u#h) (p q:h.slprop) (m:h.sep.core)
     )
  )
 
-let destruct_star (#h:heap_sig u#h) (p q:h.slprop) (m:h.sep.core)
+let destruct_star (#h:heap_sig u#h) (p q:h.slprop) (m:h.mem)
 : Lemma (h.interp (p `h.star` q) m ==> h.interp p m /\ h.interp q m)
 = ac_lemmas h;
   destruct_star_l p q m;
   destruct_star_l q p m
 
 
-let intro_pure_frame (#h:heap_sig u#h) (p:h.slprop) (q:prop) (_:squash q) (m:h.sep.core)
+let intro_pure_frame (#h:heap_sig u#h) (p:h.slprop) (q:prop) (_:squash q) (m:h.mem)
 : Lemma
   (requires h.interp p m)
   (ensures h.interp (p `h.star` h.pure q) m)

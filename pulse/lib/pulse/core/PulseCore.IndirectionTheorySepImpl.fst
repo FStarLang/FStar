@@ -13,7 +13,6 @@ open FStar.Ghost {erased, hide, reveal}
 
 let address = erased nat
 let pulse_mem : Type u#4 = PM.mem u#0
-let pulse_core_mem : Type u#4 = PM.pulse_heap_sig.sep.core
 let pulse_heap_sig : HS.heap_sig u#3 = PM.pulse_heap_sig
 
 [@@erasable]
@@ -63,7 +62,7 @@ let fmap_comp (a:Type) (b:Type) (c:Type) (b2c:b -> c) (a2b:a -> b)
 
 noeq
 type rest : Type u#4 = {
-  pulse_heap : pulse_heap_sig.sep.core;
+  pulse_heap : pulse_heap_sig.mem;
   saved_credits : erased nat;
 }
 
@@ -83,7 +82,7 @@ let world_pred : Type u#4 = preworld ^-> prop
 
 let approx n : (world_pred ^-> world_pred) = approx n
 
-let pulse_heap_le (a b: pulse_heap_sig.sep.core) : prop =
+let pulse_heap_le (a b: pulse_heap_sig.mem) : prop =
   exists c. pulse_heap_sig.sep.disjoint a c /\ b == pulse_heap_sig.sep.join a c
 
 let istore_val = istore_val_ world_pred
@@ -523,7 +522,7 @@ let lift_star_eq p q =
   world_pred_ext (lift (PM.star p q)) (star (lift p) (lift q)) fun w ->
     pulse_heap_sig.star_equiv p q (snd w).pulse_heap;
     introduce
-      forall (m0 m1 : pulse_core_mem).
+      forall (m0 m1 : pulse_mem).
           pulse_heap_sig.sep.disjoint m0 m1 /\
           (snd w).pulse_heap == pulse_heap_sig.sep.join m0 m1 /\
           pulse_heap_sig.interp p m0 /\
