@@ -23,7 +23,7 @@ module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
 module GSet = FStar.GhostSet
 
-module T = Pulse.Lib.Task
+module T = NuPool
 open Quicksort.Base
 open Pulse.Lib.Pledge
 
@@ -107,6 +107,7 @@ assume val split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
                (pledge is f (v1 ** v2))
                (fun i -> pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2)
 
+#set-options "--print_implicits"
 
 fn rec quicksort
   (nthr : pos)
@@ -127,8 +128,12 @@ fn rec quicksort
   t_quicksort p a lo hi #lb #rb;
 
   let i = split_pledge _ _;
-  
-  T.teardown_pool' p _;
+
+  T.await_pool p (T.pool_alive #(1.0R /. 2.0R) p);
+
+  T.gather_alive p _;
+
+  T.teardown_pool p;
   redeem_pledge _ _ _;
   drop_ (T.pool_done p)
 }
