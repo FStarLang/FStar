@@ -5,7 +5,7 @@
 # 'include test.mk'.
 
 FSTAR_HOME=../..
-FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS)
+FSTAR_EXE ?= $(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS)
 
 # Tests for which the native tactics used in module named Sample.Test.fst are
 # declared in a corresponding module named Sample.fst
@@ -48,7 +48,7 @@ OTHERFLAGS +=
 all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 
 # .depend:
-# 	$(FSTAR) --dep full $(addsuffix .Test.fst, $(ALL)) --output_deps_to .depend
+# 	$(FSTAR_EXE) --dep full $(addsuffix .Test.fst, $(ALL)) --output_deps_to .depend
 
 # include .depend
 
@@ -56,25 +56,25 @@ all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 .PRECIOUS: %.ml
 
 %.test: %.fst %.ml
-	$(FSTAR) $*.fst --load $*
+	$(FSTAR_EXE) $*.fst --load $*
 	touch $@
 
 %.sep.test: %.fst %.ml
-	$(FSTAR) $*.Test.fst --load $*
+	$(FSTAR_EXE) $*.Test.fst --load $*
 	touch $@
 
 %.ml: %.fst
-	$(FSTAR) $*.fst --cache_checked_modules --codegen Plugin --extract $*
+	$(FSTAR_EXE) $*.fst --cache_checked_modules --codegen Plugin --extract $*
 	touch $@
 
 %.clean:
 	rm -f Registers_List.ml Registers.List.ml Registers_List.cmxs
 
 %.native: %.fst Registers.List.ml
-	$(FSTAR) $*.fst --load Registers.List --warn_error -266
+	$(FSTAR_EXE) $*.fst --load Registers.List --warn_error -266
 
 %.interp: %.fst Registers.List.fst
-	$(FSTAR) $*.fst
+	$(FSTAR_EXE) $*.fst
 
 
 clean:
