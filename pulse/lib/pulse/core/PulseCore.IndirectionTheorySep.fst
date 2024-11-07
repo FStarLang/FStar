@@ -34,86 +34,118 @@ let map_hogs_val #x #y (f: x->y) (v: hogs_val_ x) : hogs_val_ y =
   | Inv p -> Inv (f p)
 
 [@@erasable]
-let invariants (x:Type u#4) : Type u#4 = address ^-> hogs_val_ x
+let hogvs (x:Type u#4) : Type u#4 = address ^-> hogs_val_ x
 
-let fmap #a #b (f:a -> b) 
-: (invariants a ^-> invariants b)
-= F.on_dom (invariants a) fun x ->
-    F.on_dom address fun a ->
-      map_hogs_val f (x a)
+let map_hogvs #a #b (f:a -> b) : (hogvs a ^-> hogvs b) =
+  F.on_dom (hogvs a) fun x -> F.on_dom address fun a -> map_hogs_val f (x a)
+
+noeq type premem_ (x: Type u#4) : Type u#4 = {
+  hogs: hogvs x;
+  saved_credits: erased nat;
+  timeless_heap: timeless_heap_sig.mem;
+}
+
+let map_premem #a #b (f: a->b) : (premem_ a ^-> premem_ b) =
+  F.on_dom (premem_ a) fun m -> { m with hogs = map_hogvs f m.hogs }
 
 let f_ext #t #s (f g: t ^-> s) (h: (x:t -> squash (f x == g x))) : squash (f == g) =
   introduce forall x. f x == g x with h x;
   F.extensionality _ _ f g
 
-let fmap_id (a:Type) (x:invariants a)
-: squash (fmap (id #a) == id #(invariants a))
-= f_ext (fmap (id #a)) (id #(invariants a)) fun x ->
-    f_ext (fmap (id #a) x) (id x) fun _ -> ()
+let map_hogvs_id (a:Type) (x:hogvs a) : squash (map_hogvs (id #a) == id #(hogvs a)) =
+  f_ext (map_hogvs (id #a)) (id #(hogvs a)) fun x ->
+    f_ext (map_hogvs (id #a) x) (id x) fun _ -> ()
 
-
-let fmap_comp (a:Type) (b:Type) (c:Type) (b2c:b -> c) (a2b:a -> b)
-: (squash (compose (fmap b2c) (fmap a2b) ==
-            fmap (compose b2c a2b)))
-= let lhs = compose (fmap b2c) (fmap a2b) in
-  let rhs = fmap (compose b2c a2b) in
+let map_hogvs_comp (a:Type) (b:Type) (c:Type) (b2c:b -> c) (a2b:a -> b)
+: (squash (compose (map_hogvs b2c) (map_hogvs a2b) ==
+            map_hogvs (compose b2c a2b)))
+= let lhs = compose (map_hogvs b2c) (map_hogvs a2b) in
+  let rhs = map_hogvs (compose b2c a2b) in
   f_ext lhs rhs fun x -> f_ext (lhs x) (rhs x) fun _ -> ()
 
-noeq
-type rest : Type u#4 = {
-  timeless_heap : timeless_heap_sig.mem;
-  saved_credits : erased nat;
+let map_premem_id (a:Type) (x:premem_ a) : squash (map_premem (id #a) == id #(premem_ a)) =
+  f_ext (map_premem (id #a)) (id #(premem_ a)) fun x -> map_hogvs_id a x.hogs
+
+let map_premem_comp (a:Type) (b:Type) (c:Type) (b2c:b -> c) (a2b:a -> b)
+: (squash (compose (map_premem b2c) (map_premem a2b) ==
+            map_premem (compose b2c a2b)))
+= let lhs = compose (map_premem b2c) (map_premem a2b) in
+  let rhs = map_premem (compose b2c a2b) in
+  f_ext lhs rhs fun x -> map_hogvs_comp a b c b2c a2b
+
+let functor_heap : functor u#3 premem_ = {
+  fmap = map_premem;
+  fmap_id = map_premem_id;
+  fmap_comp = map_premem_comp;
 }
 
-let functor_heap : functor u#3 invariants = {
-  fmap = fmap;
-  fmap_id = fmap_id;
-  fmap_comp = fmap_comp;
-  other = rest;
-}
+let premem: Type u#4 = knot_t functor_heap
+let mem_pred : Type u#4 = IT.predicate functor_heap
 
-let hogs : Type u#4 = knot_t functor_heap
-
-let premem = hogs & rest
-let mem_pred : Type u#4 = premem ^-> prop
-
-let approx n : (mem_pred ^-> mem_pred) = approx n
+let approx (n: erased nat) : (mem_pred ^-> mem_pred) = approx #_ #functor_heap n
 
 let timeless_heap_le (a b: timeless_heap_sig.mem) : prop =
   exists c. timeless_heap_sig.sep.disjoint a c /\ b == timeless_heap_sig.sep.join a c
 
 let hogs_val = hogs_val_ mem_pred
 
-let read_hogs (is: hogs) a : hogs_val = unpack is a
-let read (w: premem) a = read_hogs (fst w) a
+let read (m: premem) (a: address) : hogs_val = (unpack m).hogs a
 
-let level_hogs (is: hogs) : GTot nat = level is
-let level_ (w: premem) : GTot nat = level_hogs (fst w)
+let level_ (w: premem) : GTot nat = IT.level w
 
-let approx_def n (p: mem_pred) w :
+let credits_ (m: premem) : GTot nat = (unpack m).saved_credits
+let timeless_heap_of (m: premem) = (unpack m).timeless_heap
+
+// This is the essentially the same as `premem_ mem_pred` but SMT patterns utterly fail with that type.
+noeq type premem' : Type u#4 = {
+  hogs: address -> hogs_val;
+  saved_credits: erased nat;
+  timeless_heap: timeless_heap_sig.mem;
+}
+let premem_of' (x: premem') : premem_ mem_pred =
+  { hogs = F.on _ x.hogs; saved_credits = x.saved_credits; timeless_heap = x.timeless_heap }
+let premem'of_ (x: premem_ mem_pred) : premem' =
+  { hogs = x.hogs; saved_credits = x.saved_credits; timeless_heap = x.timeless_heap }
+
+let pack (n: erased nat) (x: premem') : premem = pack n (premem_of' x)
+let unpack (x: premem) : premem' = premem'of_ (unpack x)
+
+let read_pack n x a :
+    Lemma (read (pack n x) a == map_hogs_val (approx n) (x.hogs a))
+      [SMTPat (read (pack n x) a)] =
+  let x' = premem_of' x in
+  unpack_pack n x';
+  assert_norm ((map_premem (approx n) x').hogs a == map_hogs_val (approx n) (x'.hogs a))
+let timeless_heap_of_pack n x :
+    Lemma (timeless_heap_of (pack n x) == x.timeless_heap)
+      [SMTPat (timeless_heap_of (pack n x))] =
+  unpack_pack n (premem_of' x)
+let credits_pack n x :
+    Lemma (credits_ (pack n x) == reveal x.saved_credits)
+      [SMTPat (credits_ (pack n x))] =
+  unpack_pack n (premem_of' x)
+let level_pack n x :
+    Lemma (level_ (pack n x) == reveal n)
+      [SMTPat (IT.level (pack n x))] =
+  unpack_pack n (premem_of' x)
+
+let approx_def (n: erased nat) (p: mem_pred) w :
     Lemma (approx n p w == (if level_ w >= n then False else p w))
       [SMTPat (approx n p w)] =
   assert_norm (approx n p w == (if level_ w >= n then False else p w))
 
-let hogs_le (x y: hogs) : prop =
-  level_hogs x == level_hogs y /\
-  forall a. hogs_val_le (read_hogs x a) (read_hogs y a)
-
 let mem_le (a b: premem) : prop =
-  let ai, ar = a in
-  let bi, br = b in
-  hogs_le ai bi /\
-  timeless_heap_le ar.timeless_heap br.timeless_heap /\
-  ar.saved_credits <= br.saved_credits
+  level_ a == level_ b /\
+  (forall i. hogs_val_le (read a i) (read b i)) /\
+  timeless_heap_le (timeless_heap_of a) (timeless_heap_of b) /\
+  credits_ a <= credits_ b
 
 let mem_pred_affine (p: mem_pred) : prop =
   forall a b. mem_le a b /\ p a ==> p b
 
-let age_hogs_to (is: hogs) (n: erased nat) : hogs =
-  pack n (unpack is)
-
-let age_to_ (w: premem) (n: erased nat) : premem =
-  (age_hogs_to (fst w) n, snd w)
+let age_to_ (m: premem) (n: erased nat) :
+    n:premem { credits_ n == credits_ m /\ timeless_heap_of n == timeless_heap_of m } =
+  pack n (unpack m)
 
 let hereditary (p: mem_pred) : prop =
   forall (w: premem) (n: erased nat).
@@ -122,11 +154,11 @@ let hereditary (p: mem_pred) : prop =
 
 let slprop_ok (p: mem_pred) = hereditary p /\ mem_pred_affine p
 
-let fresh_addr (is: hogs) (a: address) =
-  forall (b: address). b >= a ==> None? (read_hogs is b)
+let fresh_addr (m: premem) (a: address) =
+  forall (b: address). b >= a ==> None? (read m b)
 
-let hogs_bounded (is: hogs) =
-  exists a. fresh_addr is a
+let hogs_bounded (m: premem) =
+  exists a. fresh_addr m a
 
 let hogs_val_ok (v: hogs_val) =
   match v with
@@ -134,57 +166,57 @@ let hogs_val_ok (v: hogs_val) =
   | Pred p -> slprop_ok p
   | Inv p -> slprop_ok p
 
-let hogs_ok (is: hogs) : prop =
-  hogs_bounded is /\
-  forall a. hogs_val_ok (read_hogs is a)
+let hogs_ok (m: premem) : prop =
+  hogs_bounded m /\
+  forall a. hogs_val_ok (read m a)
 
 let mem_ok (w: premem) : prop =
-  hogs_ok (fst w)
+  hogs_ok w
 
 let mem = w:premem { mem_ok w }
 
-let timeless_mem_of m = (snd m).timeless_heap
+let timeless_mem_of m = timeless_heap_of m
 let level (w: mem) : GTot nat = level_ w
-let credits (w: mem) : GTot nat = (snd w).saved_credits
-let update_timeless_mem m p = (fst m, {snd m with timeless_heap = p})
+let credits (w: mem) : GTot nat = credits_ w
+
+let update_timeless_mem m p =
+  pack (level m) { unpack m with timeless_heap = p }
+
+let update_credits m c =
+  pack (level m) { unpack m with saved_credits = c }
 
 let slprop = p:mem_pred { slprop_ok p }
 
-let read_age_hogs_to (is: hogs) (n: erased nat) a : Lemma (read_hogs (age_hogs_to is n) a ==
-    (map_hogs_val (approx n) (read_hogs is a)))
-    [SMTPat (read_hogs (age_hogs_to is n) a)] =
-  unpack_pack n (unpack is)
-
-let read_age_to_ (w: premem) (n: erased nat) a :
-    Lemma (read (age_to_ w n) a == map_hogs_val (approx n) (read w a)) =
+let read_age_to_ (m: premem) (n: erased nat) a :
+    Lemma (read (age_to_ m n) a == (map_hogs_val (approx n) (read m a)))
+    [SMTPat (read (age_to_ m n) a)] =
   ()
 
-let level_age_hogs_to_ is (n: erased nat) :
-    Lemma (level_hogs (age_hogs_to is n) == reveal n) [SMTPat (level_hogs (age_hogs_to is n))] =
-  unpack_pack n (unpack is)
-
-let level_age_to_ w (n: erased nat) : Lemma (level_ (age_to_ w n) == reveal n) =
+let level_age_to_ m (n: erased nat) :
+    Lemma (level_ (age_to_ m n) == reveal n) [SMTPat (level_ (age_to_ m n))] =
   ()
 
-let age_to (w: mem) (n: erased nat) : mem =
-  age_to_ w n
+let approx_read (m: premem) a :
+    Lemma (map_hogs_val (approx (level_ m)) (read m a) == read m a)
+    [SMTPat (read m a)] =
+  pack_unpack m;
+  unpack_pack (level_ m) (premem_of' (unpack m))
 
-let hogs_ext (i1: hogs) (i2: hogs { level_hogs i1 == level_hogs i2 })
-    (h: (a:address -> squash (read_hogs i1 a == read_hogs i2 a))) : squash (i1 == i2) =
-  f_ext (unpack i1) (unpack i2) (fun a -> h a);
-  pack_unpack i1;
-  pack_unpack i2
+let age_to (m: mem) (n: erased nat) : mem =
+  age_to_ m n
 
-let mem_ext (w1: premem) (w2: premem { level_ w1 == level_ w2 /\ snd w1 == snd w2 })
+let mem_ext (w1: premem) (w2: premem { level_ w1 == level_ w2 /\ credits_ w1 == credits_ w2 /\ timeless_heap_of w1 == timeless_heap_of w2 })
     (h: (a: address -> squash (read w1 a == read w2 a))) : squash (w1 == w2) =
-  hogs_ext (fst w1) (fst w2) h
+  pack_unpack w1;
+  pack_unpack w2;
+  f_ext (unpack w1).hogs (unpack w2).hogs fun a -> h a
 
 let mem_pred_ext (f g: mem_pred) (h: (w:premem -> squash (f w <==> g w))) : squash (f == g) =
   f_ext f g fun w ->
     h w;
     PropositionalExtensionality.apply (f w) (g w)
 
-let approx_approx m n (p: mem_pred) : Lemma (approx m (approx n p) == approx (min m n) p) [SMTPat (approx m (approx n p))] =
+let approx_approx (m n: erased nat) (p: mem_pred) : Lemma (approx m (approx n p) == approx (min m n) p) [SMTPat (approx m (approx n p))] =
   mem_pred_ext (approx m (approx n p)) (approx (min m n) p) fun w -> ()
 
 let age_to_age_to (w: premem) (m n: erased nat) :
@@ -192,32 +224,16 @@ let age_to_age_to (w: premem) (m n: erased nat) :
       [SMTPat (age_to_ (age_to_ w m) n)] =
   mem_ext (age_to_ (age_to_ w m) n) (age_to_ w n) fun a -> ()
 
-let age_to_rest (w: mem) (n: erased nat) : Lemma ((age_to w n)._2 == w._2) = ()
-
 irreducible [@@"opaque_to_smt"]
-let reveal_hogs (is: erased hogs) : is':hogs { is' == reveal is } =
-  pack_unpack is;
-  pack (IT.level is) (unpack is)
+let reveal_mem (m: erased premem) (h: timeless_heap_sig.mem { h == timeless_heap_of m }) : m': premem { m' == reveal m } =
+  pack_unpack m;
+  pack (level_ m) { timeless_heap = h; saved_credits = (unpack m).saved_credits; hogs = (unpack m).hogs }
 
-let approx_read_hogs (is: hogs) a :
-    Lemma (map_hogs_val (approx (level_hogs is)) (read_hogs is a) == read_hogs is a)
-    [SMTPat (read_hogs is a)] =
-  pack_unpack is; unpack_pack (level_hogs is) (unpack is)
-
-let age1_hogs (is: hogs) : is':hogs { level_hogs is == 0 ==> is' == is } =
-  hogs_ext (age_hogs_to is (level_hogs is)) is (fun _ -> ());
-  age_hogs_to is (if level_hogs is > 0 then level_hogs is - 1 else 0)
-
-let hogs_ok_age1 (is: hogs) :
-    Lemma (requires hogs_ok is) (ensures hogs_ok (age1_hogs is)) [SMTPat (hogs_ok (age1_hogs is))] =
-  ()
-
-let age1_ (w: premem) : w':premem { if level_ w > 0 then w' == age_to_ w (level_ w - 1) else w' == w } =
-  (age1_hogs (fst w), snd w)
+let age1_ (w: premem) : w':premem { level_ w == 0 ==> w' == w } =
+  mem_ext (age_to_ w (level_ w)) w (fun _ -> ());
+  age_to_ w (if level_ w > 0 then level_ w - 1 else 0)
 
 let age1 (w: mem) : mem = age1_ w
-
-let okay_hogs = is:hogs { hogs_ok is }
 
 let eq_at (n:nat) (t0 t1:mem_pred) =
   approx n t0 == approx n t1
@@ -235,10 +251,8 @@ let is_ghost_action =
 let lift_ghost_action m p = ()
 
 let update_ghost m1 m2 =
-  (reveal_hogs (fst m2), {
-    saved_credits = (snd m2).saved_credits;
-    timeless_heap = PM.pulse_heap_sig.update_ghost (timeless_mem_of m1) (timeless_mem_of m2);
-  })
+  reveal_mem (hide (reveal m2))
+    (PM.pulse_heap_sig.update_ghost (timeless_mem_of m1) (timeless_mem_of m2))
 
 unfold
 let hogs_val_compat (x y: hogs_val) =
@@ -248,36 +262,29 @@ let hogs_val_compat (x y: hogs_val) =
   | Inv p0, Inv p1 -> p0 == p1
   | Inv _, Pred _ | Pred _, Inv _ -> False
 
-let disjoint_hogs (is0 is1:hogs) =
-  level_hogs is0 == level_hogs is1 /\
-  (forall a. hogs_val_compat (read_hogs is0 a) (read_hogs is1 a))
+let disjoint_hogs (is0 is1:premem) =
+  level_ is0 == level_ is1 /\
+  (forall a. hogs_val_compat (read is0 a) (read is1 a))
 
 let disjoint_hogs_read is0 is1 a :
     Lemma (requires disjoint_hogs is0 is1)
-      (ensures hogs_val_compat (read_hogs is0 a) (read_hogs is1 a))
+      (ensures hogs_val_compat (read is0 a) (read is1 a))
       [SMTPatOr [
-        [SMTPat (disjoint_hogs is0 is1); SMTPat (read_hogs is0 a)];
-        [SMTPat (disjoint_hogs is0 is1); SMTPat (read_hogs is1 a)];
+        [SMTPat (disjoint_hogs is0 is1); SMTPat (read is0 a)];
+        [SMTPat (disjoint_hogs is0 is1); SMTPat (read is1 a)];
       ]] =
   ()
 
-let mk_hogs n (is: address -> hogs_val) : hogs =
-  pack n (F.on_dom address is)
+let disjoint_hogs_of_le (m1 m2: premem) :
+    Lemma (requires mem_le m1 m2) (ensures disjoint_hogs m1 m2) =
+  ()
 
-let level_mk_hogs (n: erased nat) is :
-    Lemma (level_hogs (mk_hogs n is) == reveal n) [SMTPat (level_hogs (mk_hogs n is))] =
-  unpack_pack #_ #functor_heap n (F.on_dom address is)
-
-let read_mk_hogs (n: erased nat) is a :
-    Lemma (read_hogs (mk_hogs n is) a == map_hogs_val (approx n) (is a))
-      [SMTPat (read_hogs (mk_hogs n is) a)] =
-  let is' = F.on_dom address is in
-  unpack_pack #_ #functor_heap n is';
-  assert_norm (fmap (approx n) is' a == map_hogs_val (approx n) (is' a))
-
-let empty_hogs n : hogs = mk_hogs n fun _ -> None
-let empty_rest : rest = { timeless_heap = timeless_heap_sig.sep.empty; saved_credits = 0 }
-let empty n : mem = (empty_hogs n, empty_rest)
+let empty n : mem =
+  pack n {
+    timeless_heap = timeless_heap_sig.sep.empty;
+    saved_credits = 0;
+    hogs = (fun _ -> None);
+  }
 
 let age_to_empty (m n: erased nat) : Lemma (age_to (empty n) m == empty m) [SMTPat (age_to (empty n) m)] =
   mem_ext (age_to (empty n) m) (empty m) fun a -> read_age_to_ (empty n) m a
@@ -287,118 +294,83 @@ let emp : slprop =
 
 let pure p : slprop = F.on_dom _ fun w -> p
 
-let join_hogs (is0:hogs) (is1:hogs { disjoint_hogs is0 is1 }) : hogs =
-  mk_hogs (level_hogs is0) fun a ->
-    match read_hogs is0 a, read_hogs is1 a with
-    | None, None -> None
-    | Pred p, _ | _, Pred p -> Pred p
-    | Inv p, _ | _, Inv p -> Inv p
-
-let read_join_hogs (is0:hogs) (is1:hogs { disjoint_hogs is0 is1 }) a :
-  Lemma (read_hogs (join_hogs is0 is1) a ==
-    (match read_hogs is0 a, read_hogs is1 a with
-    | None, None -> None
-    | Pred p, _ | _, Pred p -> Pred (approx (level_hogs is0) p)
-    | Inv p, _ | _, Inv p -> Inv (approx (level_hogs is0) p))) =
-  ()
-
-let join_hogs_commutative (is0:hogs) (is1:hogs { disjoint_hogs is0 is1 }) :
-    Lemma (join_hogs is0 is1 == join_hogs is1 is0) =
-  hogs_ext (join_hogs is0 is1) (join_hogs is1 is0) fun a -> ()
-
-let join_hogs_refl (is: hogs) : Lemma (disjoint_hogs is is /\ join_hogs is is == is) =
-  hogs_ext (join_hogs is is) is fun a -> ()
-
-let join_hogs_associative
-    (is0:hogs)
-    (is1:hogs)
-    (is2:hogs { 
-      disjoint_hogs is1 is2 /\
-      disjoint_hogs is0 (join_hogs is1 is2)
-    })
-: Lemma (
-    disjoint_hogs is0 is1 /\
-    disjoint_hogs (join_hogs is0 is1) is2 /\
-    join_hogs is0 (join_hogs is1 is2) ==
-    join_hogs (join_hogs is0 is1) is2
-  )
-=
-  hogs_ext (join_hogs is0 (join_hogs is1 is2)) (join_hogs (join_hogs is0 is1) is2) fun a -> ()
-
-let hogs_le_iff (is1 is2: hogs) :
-    Lemma (hogs_le is1 is2 <==> exists is3. join_hogs is1 is3 == is2) =
-  introduce hogs_le is1 is2 ==> exists is3. join_hogs is1 is3 == is2 with _.
-    hogs_ext (join_hogs is1 is2) is2 fun _ -> ()
-
 let disjoint_mem (w0 w1:premem)
 : prop 
-= disjoint_hogs w0._1 w1._1 /\
-  timeless_heap_sig.sep.disjoint w0._2.timeless_heap w1._2.timeless_heap
+= disjoint_hogs w0 w1 /\
+  timeless_heap_sig.sep.disjoint (timeless_heap_of w0) (timeless_heap_of w1)
 
-let disjoint_mem_sym (w0 w1:premem)
-: Lemma 
-  (ensures disjoint_mem w0 w1 <==> disjoint_mem w1 w0)
-= timeless_heap_sig.sep.disjoint_sym w0._2.timeless_heap w1._2.timeless_heap
+let join_premem (is0:premem) (is1:premem { disjoint_mem is0 is1 }) =
+  pack (level_ is0) {
+    saved_credits = credits_ is0 + credits_ is1;
+    timeless_heap = timeless_heap_sig.sep.join (timeless_heap_of is0) (timeless_heap_of is1);
+    hogs = on _ (fun a ->
+      match read is0 a, read is1 a with
+      | None, None -> None
+      | Pred p, _ | _, Pred p -> Pred p
+      | Inv p, _ | _, Inv p -> Inv p)
+  }
 
-let join_premem (w0:premem) (w1:premem { disjoint_mem w0 w1 })
-: premem
-= (join_hogs w0._1 w1._1, ({
-    timeless_heap = timeless_heap_sig.sep.join w0._2.timeless_heap w1._2.timeless_heap;
-    saved_credits = w0._2.saved_credits + w1._2.saved_credits } <: rest))
+let read_join_premem (is0:premem) (is1:premem { disjoint_mem is0 is1 }) a :
+  Lemma (read (join_premem is0 is1) a ==
+    (match read is0 a, read is1 a with
+    | None, None -> None
+    | Pred p, _ | _, Pred p -> Pred (approx (level_ is0) p)
+    | Inv p, _ | _, Inv p -> Inv (approx (level_ is0) p))) =
+  ()
+
+let join_premem_commutative (is0:premem) (is1:premem { disjoint_mem is0 is1 }) :
+    Lemma (disjoint_mem is1 is0 /\ join_premem is0 is1 == join_premem is1 is0) =
+  timeless_heap_sig.sep.disjoint_sym (timeless_heap_of is0) (timeless_heap_of is1);
+  timeless_heap_sig.sep.join_commutative (timeless_heap_of is0) (timeless_heap_of is1);
+  mem_ext (join_premem is0 is1) (join_premem is1 is0) fun a -> ()
+
+let join_premem_associative
+    (is0:premem)
+    (is1:premem)
+    (is2:premem { 
+      disjoint_mem is1 is2 /\
+      disjoint_mem is0 (join_premem is1 is2)
+    })
+: Lemma (
+    disjoint_mem is0 is1 /\
+    disjoint_mem (join_premem is0 is1) is2 /\
+    join_premem is0 (join_premem is1 is2) ==
+    join_premem (join_premem is0 is1) is2
+  )
+=
+  timeless_heap_sig.sep.join_associative (timeless_heap_of is0) (timeless_heap_of is1) (timeless_heap_of is2);
+  assert disjoint_mem is0 is1;
+  assert disjoint_mem (join_premem is0 is1) is2;
+  mem_ext (join_premem is0 (join_premem is1 is2)) (join_premem (join_premem is0 is1) is2) (fun a -> ())
 
 open FStar.IndefiniteDescription { indefinite_description_ghost, strong_excluded_middle }
 
 let mem_le_iff (w1 w2: premem) :
     Lemma (mem_le w1 w2 <==> exists w3. join_premem w1 w3 == w2) =
-  hogs_le_iff (fst w1) (fst w2);
   introduce mem_le w1 w2 ==> exists w3. join_premem w1 w3 == w2 with _. (
-    assert timeless_heap_le (snd w1).timeless_heap (snd w2).timeless_heap;
+    assert timeless_heap_le (timeless_heap_of w1) (timeless_heap_of w2);
     let ph3 = indefinite_description_ghost _ fun ph3 ->
-      (snd w2).timeless_heap == timeless_heap_sig.sep.join (snd w1).timeless_heap ph3 in
-    let is3 = indefinite_description_ghost _ fun is3 ->
-      fst w2 == join_hogs (fst w1) is3 in
-    let sc3: nat = (snd w2).saved_credits - (snd w1).saved_credits in
-    let w3: premem = (is3, ({ timeless_heap = ph3; saved_credits = sc3 } <: rest)) in
-    assert join_premem w1 w3 == w2
+      (timeless_heap_of w2) == timeless_heap_sig.sep.join (timeless_heap_of w1) ph3 in
+    let sc3: nat = credits_ w2 - credits_ w1 in
+    let w3 = pack (level_ w2) {
+      timeless_heap = ph3;
+      saved_credits = sc3;
+      hogs = (fun a -> read w2 a);
+    } in
+    mem_ext (join_premem w1 w3) w2 fun a -> ()
   )
-
-let join_premem_commutative (w0:premem) (w1:premem { disjoint_mem w0 w1 })
-: Lemma (disjoint_mem w1 w0 /\ join_premem w0 w1 == join_premem w1 w0)
-= disjoint_mem_sym w0 w1;
-  join_hogs_commutative w0._1 w1._1;
-  timeless_heap_sig.sep.join_commutative w0._2.timeless_heap w1._2.timeless_heap
-
-let join_premem_associative
-    (w0:premem)
-    (w1:premem)
-    (w2:premem { disjoint_mem w1 w2 /\ disjoint_mem w0 (join_premem w1 w2) })
-: Lemma (
-    disjoint_mem w0 w1 /\
-    disjoint_mem (join_premem w0 w1) w2 /\
-    join_premem w0 (join_premem w1 w2) ==
-    join_premem (join_premem w0 w1) w2
-  )
-= join_hogs_associative w0._1 w1._1 w2._1;
-  timeless_heap_sig.sep.join_associative w0._2.timeless_heap w1._2.timeless_heap w2._2.timeless_heap
 
 let age_to_disjoint_mem (w1 w2: premem) n :
     Lemma (requires disjoint_mem w1 w2)
       (ensures disjoint_mem (age_to_ w1 n) (age_to_ w2 n)) =
   ()
 
-let age_to_hogs_join (i1 i2: hogs) n :
-    Lemma (requires disjoint_hogs i1 i2)
-      (ensures disjoint_hogs (age_hogs_to i1 n) (age_hogs_to i2 n) /\
-        age_hogs_to (join_hogs i1 i2) n == join_hogs (age_hogs_to i1 n) (age_hogs_to i2 n))
-    [SMTPat (age_hogs_to (join_hogs i1 i2) n)] =
-  hogs_ext (age_hogs_to (join_hogs i1 i2) n) (join_hogs (age_hogs_to i1 n) (age_hogs_to i2 n)) fun a -> ()
-
 let age_to_join (w1 w2: premem) n :
     Lemma (requires disjoint_mem w1 w2)
       (ensures disjoint_mem (age_to_ w1 n) (age_to_ w2 n) /\
         age_to_ (join_premem w1 w2) n == join_premem (age_to_ w1 n) (age_to_ w2 n))
     [SMTPat (age_to_ (join_premem w1 w2) n)] =
-  ()
+  mem_ext (age_to_ (join_premem w1 w2) n) (join_premem (age_to_ w1 n) (age_to_ w2 n)) fun a -> ()
 
 let star_ (p1 p2: mem_pred) : mem_pred =
   F.on_dom premem #(fun _ -> prop)
@@ -424,8 +396,7 @@ let star__intro (p1 p2: mem_pred) (w w1 w2: premem) :
 
 let star__commutative (p1 p2:mem_pred)
 : Lemma (p1 `star_` p2 == p2 `star_` p1)
-= FStar.Classical.forall_intro_2 disjoint_mem_sym;
-  FStar.Classical.forall_intro_2 join_premem_commutative;
+= FStar.Classical.forall_intro_2 join_premem_commutative;
   mem_pred_ext (p1 `star_` p2) (p2 `star_` p1) fun w -> ()
 
 let star__assoc (x y z:mem_pred)
@@ -488,20 +459,14 @@ let star_assoc (x y z:slprop)
 : Lemma (star x (star y z) == star (star x y) z)
 = star__assoc x y z
 
-let disjoint_hogs_empty is : squash (disjoint_hogs (empty_hogs (level_hogs is)) is) = ()
-
-let join_hogs_empty is : squash (join_hogs (empty_hogs (level_hogs is)) is == is) =
-  hogs_ext (join_hogs (empty_hogs (level_hogs is)) is) is fun a -> ()
-
 let disjoint_empty w : squash (disjoint_mem w (empty (level_ w)) /\ disjoint_mem (empty (level_ w)) w) =
-  timeless_heap_sig.sep.join_empty w._2.timeless_heap;
-  disjoint_mem_sym w (empty (level_ w))
+  timeless_heap_sig.sep.join_empty (timeless_heap_of w);
+  join_premem_commutative w (empty (level_ w))
 
 let join_empty w : squash (disjoint_mem (empty (level_ w)) w /\ join_premem (empty (level_ w)) w == w) =
   disjoint_empty w;
-  timeless_heap_sig.sep.join_empty w._2.timeless_heap;
-  timeless_heap_sig.sep.join_commutative w._2.timeless_heap timeless_heap_sig.sep.empty;
-  join_hogs_empty w._1;
+  timeless_heap_sig.sep.join_empty (timeless_heap_of w);
+  timeless_heap_sig.sep.join_commutative (timeless_heap_of w) timeless_heap_sig.sep.empty;
   mem_ext (join_premem (empty (level_ w)) w) w fun a -> ()
 
 let star_emp (x: slprop) : squash (star x emp == x) =
@@ -538,10 +503,10 @@ let sep_laws (_:unit) : squash (
 let disjoint m0 m1 = disjoint_mem m0 m1
 let join m0 m1 = join_premem m0 m1
 
-let clear_except_hogs i = (fst i, empty_rest)
+let clear_except_hogs i = pack (level_ i) { unpack i with saved_credits = 0; timeless_heap = timeless_heap_sig.sep.empty }
 let join_refl i =
-  PM.pulse_heap_sig.sep.join_empty (snd i).timeless_heap;
-  join_hogs_refl (fst i)
+  PM.pulse_heap_sig.sep.join_empty (timeless_heap_of i);
+  mem_ext i (join i (clear_except_hogs i)) fun _ -> ()
 
 let disjoint_join_levels i0 i1 = ()
 
@@ -550,8 +515,12 @@ let interp p =
     introduce _ ==> _ with _.  assert mem_le m0 (join m0 m1);
   p
 
-let update_timeless_mem_id m = ()
-let join_update_timeless_mem m1 m2 p1 p2 = ()
+let update_timeless_mem_id m =
+  mem_ext (update_timeless_mem m (timeless_mem_of m)) m fun _ -> ()
+let join_update_timeless_mem m1 m2 p1 p2 =
+  mem_ext (join_mem (update_timeless_mem m1 p1) (update_timeless_mem m2 p2))
+        (update_timeless_mem (join_mem m1 m2) (PM.pulse_heap_sig.sep.join p1 p2))
+    fun _ -> ()
 
 let star_equiv p q m =
   introduce
@@ -605,33 +574,33 @@ let interp_exists p = ()
 let interp_pure p m = ()
 
 let lift (p: PM.slprop) : slprop =
-  F.on_dom premem fun w -> timeless_heap_sig.interp p ((snd w).timeless_heap)
+  F.on_dom premem fun w -> timeless_heap_sig.interp p (timeless_heap_of w)
 
 let lift_eq p = ()
 
 let lift_emp_eq () =
   mem_pred_ext (lift PM.emp) emp fun w ->
-    timeless_heap_sig.intro_emp (snd w).timeless_heap
+    timeless_heap_sig.intro_emp (timeless_heap_of w)
 
 let lift_pure_eq p =
   mem_pred_ext (lift (PM.pure p)) (pure p) fun w ->
-    timeless_heap_sig.pure_interp p (snd w).timeless_heap
+    timeless_heap_sig.pure_interp p (timeless_heap_of w)
 
 let lift_star_eq p q =
   mem_pred_ext (lift (PM.star p q)) (star (lift p) (lift q)) fun w ->
-    timeless_heap_sig.star_equiv p q (snd w).timeless_heap;
+    timeless_heap_sig.star_equiv p q (timeless_heap_of w);
     introduce
       forall (m0 m1 : timeless_mem).
           timeless_heap_sig.sep.disjoint m0 m1 /\
-          (snd w).timeless_heap == timeless_heap_sig.sep.join m0 m1 /\
+          (timeless_heap_of w) == timeless_heap_sig.sep.join m0 m1 /\
           timeless_heap_sig.interp p m0 /\
           timeless_heap_sig.interp q m1
         ==> star (lift p) (lift q) w with introduce _ ==> _ with _. (
-      let w0: premem = (fst w, ({ snd w with timeless_heap = m0 } <: rest)) in
-      let w1: premem = (fst w, ({ timeless_heap = m1; saved_credits = 0 } <: rest)) in
+      let w0 = pack (level_ w) { unpack w with timeless_heap = m0 } in
+      let w1 = pack (level_ w) { unpack w with timeless_heap = m1; saved_credits = 0 } in
       assert disjoint_mem w0 w1;
-      join_hogs_refl (fst w);
-      assert join_premem w0 w1 == w;
+      // join_refl (fst w);
+      mem_ext (join_premem w0 w1) w (fun _ -> ());
       assert lift p w0;
       assert lift q w1;
       ()
@@ -639,10 +608,6 @@ let lift_star_eq p q =
     introduce star (lift p) (lift q) w ==> lift (PM.star p q) w with _.
       let (w1, w2) = star_elim (lift p) (lift q) w in
       ()
-
-// let lift_exists_eq a f =
-//   mem_pred_ext (lift (PM.h_exists f)) (exists* x. lift (f x)) fun w ->
-//     HS.interp_exists #timeless_heap_sig f
 
 let later (p: slprop) : slprop =
   introduce forall (w: premem) (n: erased nat).
@@ -658,7 +623,7 @@ let later (p: slprop) : slprop =
   F.on_dom premem fun w -> p (age1_ w)
 
 let later_credit (n: nat) : slprop =
-  F.on_dom premem #(fun _ -> prop) fun w -> (snd w).saved_credits >= n
+  F.on_dom premem #(fun _ -> prop) fun w -> credits_ w >= n
 
 let later_credit_zero () : squash (later_credit 0 == emp) =
   mem_pred_ext (later_credit 0) emp fun _ -> ()
@@ -666,12 +631,14 @@ let later_credit_zero () : squash (later_credit 0 == emp) =
 let later_credit_add (m n: nat) : squash (later_credit (m + n) == later_credit m `star` later_credit n) =
   mem_pred_ext (later_credit (m+n)) (later_credit m `star` later_credit n) fun w ->
     introduce later_credit (m+n) w ==> (later_credit m `star` later_credit n) w with _. (
-      let w1: premem = (fst w, ({ saved_credits = (snd w).saved_credits - n; timeless_heap = (snd w).timeless_heap } <: rest)) in
-      let w2: premem = (fst w, ({ saved_credits = n; timeless_heap = timeless_heap_sig.sep.empty } <: rest)) in
-      timeless_heap_sig.sep.join_empty (snd w).timeless_heap;
+      let w1 = pack (level_ w) { unpack w with saved_credits = credits_ w - n } in
+      let w2 = pack (level_ w) { unpack w with saved_credits = n; timeless_heap = timeless_heap_sig.sep.empty } in
+      timeless_heap_sig.sep.join_empty (timeless_heap_of w);
       assert disjoint_mem w1 w2;
       mem_ext w (join_premem w1 w2) fun _ -> ()
-    )
+    );
+    introduce (later_credit m `star` later_credit n) w ==> later_credit (m+n) w with _.
+      let (w1, w2) = star_elim (later_credit m) (later_credit n) w in ()
 
 let timeless_lift (p: PM.slprop) : squash (timeless (lift p)) =
   mem_pred_ext (later (lift p)) (lift p) fun w -> ()
@@ -685,32 +652,24 @@ let timeless_emp () : squash (timeless emp) =
 let timeless_later_credit n : squash (timeless (later_credit n)) =
   mem_pred_ext (later (later_credit n)) (later_credit n) fun w -> ()
 
-let rejuvenate1_hogs (is: hogs) (is': hogs { hogs_le is' (age1_hogs is) }) :
-    is'':hogs { age1_hogs is'' == is' /\ hogs_le is'' is } =
-  let is'' = mk_hogs (level_hogs is) fun a -> if None? (read_hogs is' a) then None else read_hogs is a in
-  hogs_ext (age1_hogs is'') is' (fun a -> ());
-  is''
+let rejuvenate1 (m: premem) (m': premem { mem_le m' (age1_ m) }) :
+    m'':premem { age1_ m'' == m' /\ mem_le m'' m } =
+  pack (level_ m) {
+    saved_credits = credits_ m';
+    timeless_heap = timeless_heap_of m';
+    hogs = (fun a -> if None? (read m' a) then None else read m a)
+  }
 
-let rejuvenate1_hogs_sep (is is1': hogs) (is2': hogs { disjoint_hogs is1' is2' /\ age1_hogs is == join_hogs is1' is2' }) :
-    is'':(hogs&hogs) { age1_hogs is''._1 == is1' /\ age1_hogs is''._2 == is2'
-      /\ disjoint_hogs is''._1 is''._2 /\ is == join_hogs is''._1 is''._2 } =
-  let is1'' = rejuvenate1_hogs is is1' in
-  join_hogs_commutative is1' is2';
-  let is2'' = rejuvenate1_hogs is is2' in
-  assert disjoint_hogs is1'' is2'';
-  hogs_ext is (join_hogs is1'' is2'') (fun a ->
-    assert ~(None? (read_hogs is1'' a)) ==> read_hogs is a == read_hogs is1'' a);
-  (is1'', is2'')
-
-let rejuvenate1 (w: premem) (w': premem { mem_le w' (age1_ w) }) :
-    w'':premem { age1_ w'' == w' /\ mem_le w'' w /\ snd w'' == snd w' } =
-  (rejuvenate1_hogs (fst w) (fst w'), snd w')
-
-let rejuvenate1_sep (w w1': premem) (w2': premem { disjoint_mem w1' w2' /\ age1_ w == join_premem w1' w2' }) :
-    w'':(premem&premem) { age1_ w''._1 == w1' /\ age1_ w''._2 == w2'
-      /\ disjoint_mem w''._1 w''._2 /\ w == join_premem w''._1 w''._2 } =
-  let (is1'', is2'') = rejuvenate1_hogs_sep (fst w) (fst w1') (fst w2') in
-  ((is1'', snd w1'), (is2'', snd w2'))
+let rejuvenate1_sep (m m1': premem) (m2': premem { disjoint_mem m1' m2' /\ age1_ m == join_premem m1' m2' }) :
+    m'':(premem&premem) { age1_ m''._1 == m1' /\ age1_ m''._2 == m2'
+      /\ disjoint_mem m''._1 m''._2 /\ m == join_premem m''._1 m''._2 } =
+  let m1'' = rejuvenate1 m m1' in
+  join_premem_commutative m1' m2';
+  let m2'' = rejuvenate1 m m2' in
+  assert disjoint_mem m1'' m2'';
+  mem_ext m (join_premem m1'' m2'') (fun a ->
+    assert ~(None? (read m1'' a)) ==> read m a == read m1'' a);
+  (m1'', m2'')
 
 let later_star (p q: slprop) : squash (later (star p q) == star (later p) (later q)) =
   mem_pred_ext (later (star p q)) (star (later p) (later q)) fun w ->
@@ -749,9 +708,13 @@ let equiv_trans (p q r: slprop) : squash (equiv p q `star` equiv q r == equiv p 
   mem_pred_ext (equiv p q `star` equiv q r) (equiv p q `star` equiv p r) fun w -> ()
 
 irreducible [@@"opaque_to_smt"]
-let empty_timeless_heap (w: premem) : v:premem { disjoint_mem w v /\ w == join_premem w v /\ fst w == fst v } =
-  let v = (fst w, empty_rest) in
-  timeless_heap_sig.sep.join_empty (snd w).timeless_heap;
+let empty_timeless_heap (w: premem) : v:premem { disjoint_mem w v /\ w == join_premem w v /\ (forall a. read v a == read w a) } =
+  let v = pack (level_ w) {
+    saved_credits = 0;
+    timeless_heap = timeless_heap_sig.sep.empty;
+    hogs = (fun a -> read w a);
+  } in
+  timeless_heap_sig.sep.join_empty (timeless_heap_of w);
   mem_ext w (join_premem w v) (fun _ -> ());
   v
 
@@ -803,13 +766,11 @@ let intro_later p m = ()
 
 let iref = address
 
-let inv_prop (i:iref) (p:slprop) (is:hogs) : prop =
-  exists p'.
-    read_hogs is i == Inv p' /\
-    eq_at (level_hogs is) p p'
-
 let inv (i:iref) (p:slprop) : slprop =
-  F.on_dom premem #(fun _ -> prop) fun w -> inv_prop i p (fst w)
+  F.on_dom premem #(fun _ -> prop) fun m ->
+    exists p'.
+      read m i == Inv p' /\
+      eq_at (level_ m) p p'
 
 let deq_iref = fun x y -> reveal x = reveal y
 
@@ -818,19 +779,17 @@ module GS = FStar.GhostSet
 
 let lower_inames i = GS.empty
 
-let hogs_iname_ok (i: iref) (is: hogs) =
-  Inv? (read_hogs is i)
+let hogs_iname_ok (i: iref) (is: premem) =
+  Inv? (read is i)
 
-let hogs_inames_ok' (e: inames) (is: hogs) : prop =
+let hogs_inames_ok (e: inames) (is: premem) : prop =
   forall a. GS.mem a e ==> hogs_iname_ok a is
-
-let hogs_inames_ok e m = hogs_inames_ok' e (fst m)
 
 let inames_ok_empty m = ()
 let inames_ok_union i j m =
   assert (hogs_inames_ok (GS.union i j) m <==> hogs_inames_ok i m /\ hogs_inames_ok j m)
 
-let rec hogs_invariant_ (ex: inames) (is: okay_hogs) (f: address) : slprop =
+let rec hogs_invariant_ (ex: inames) (is: mem) (f: address) : slprop =
   if reveal f = 0 then
     emp
   else
@@ -838,11 +797,11 @@ let rec hogs_invariant_ (ex: inames) (is: okay_hogs) (f: address) : slprop =
     if GS.mem f' ex then
       hogs_invariant_ ex is f'
     else
-      match read_hogs is f' with
+      match read is f' with
       | Inv p -> later p `star` hogs_invariant_ ex is f'
       | _ -> hogs_invariant_ ex is f'
 
-let rec hogs_invariant__congr (ex: inames) (m: okay_hogs) (f1 f2: (f:address { fresh_addr m f })) :
+let rec hogs_invariant__congr (ex: inames) (m: mem) (f1 f2: (f:address { fresh_addr m f })) :
     Lemma (ensures hogs_invariant_ ex m f1 == hogs_invariant_ ex m f2) (decreases f1+f2+f2) =
   if f1 < f2 then
     hogs_invariant__congr ex m f2 f1
@@ -851,21 +810,17 @@ let rec hogs_invariant__congr (ex: inames) (m: okay_hogs) (f1 f2: (f:address { f
   else
     ()
 
-[@@"opaque_to_smt"] irreducible let some_fresh_addr (is: okay_hogs) : a:address { fresh_addr is a } =
+[@@"opaque_to_smt"] irreducible let some_fresh_addr (is: mem) : a:address { fresh_addr is a } =
   indefinite_description_ghost address fun a -> fresh_addr is a
 
-let hogs_invariant' (ex: inames) (is: okay_hogs) : slprop =
+let hogs_invariant (ex: inames) (is: mem) : slprop =
   hogs_invariant_ ex is (some_fresh_addr is)
-
-let hogs_invariant ex m = hogs_invariant' ex (fst m)
 
 let inames_ok_update_timeless_mem m p ex = ()
 let hogs_invariant_update_timeless_mem m p ex = ()
 
-let hogs_dom' (is: hogs) : inames =
-  GS.comprehend fun a -> Inv? (read_hogs is a)
-
-let hogs_dom m = hogs_dom' (fst m)
+let hogs_dom (is: premem) : inames =
+  GS.comprehend fun a -> Inv? (read is a)
 
 let age_mem m =
   let m' = age1 m in
@@ -879,35 +834,38 @@ let age_hereditary m0 m1 = ()
 let age_later m0 m1 = ()
 
 let spend_mem m =
-  let c = (snd m).saved_credits in
   PM.ghost_action_preorder ();
-  (fst m, { snd m with saved_credits = if c > 0 then c - 1 else 0 })
+  pack (level m) {
+    unpack m with
+    saved_credits = if credits_ m > 0 then credits_ m - 1 else 0;
+  }
 let interp_later_credit n m = ()
 let spend_lemma m = ()
 let spend_disjoint m0 m1 = ()
 
 let buy_mem n m =
   PM.ghost_action_preorder ();
-  (fst m, { snd m with saved_credits = (snd m).saved_credits + n })
+  pack (level m) {
+    unpack m with
+    saved_credits = credits_ m + n;
+  }
 let buy_lemma n m = ()
 let buy_disjoint n m0 m1 = ()
 
-let iname_ok i m = hogs_iname_ok i (fst m)
+let iname_ok i m = hogs_iname_ok i m
 let inames_ok_single i p m = ()
 let iname_ok_inames_ok i m = ()
 
-let read_inv' (i: iref) (is: okay_hogs { hogs_iname_ok i is }) : slprop =
-  let Inv p = read_hogs is i in p
-
-let read_inv i m = read_inv' i (fst m)
+let read_inv (i: iref) (is: mem { hogs_iname_ok i is }) : slprop =
+  let Inv p = read is i in p
 
 let read_inv_equiv i m p = ()
 let read_inv_disjoint i m0 m1 = ()
 
-let rec hogs_invariant__equiv (ex: inames) (m: okay_hogs) (i:iref { hogs_iname_ok i m /\ ~(GS.mem i ex) }) (f: address) :
+let rec hogs_invariant__equiv (ex: inames) (m: mem) (i:iref { hogs_iname_ok i m /\ ~(GS.mem i ex) }) (f: address) :
     Lemma (hogs_invariant_ ex m f ==
       (if i < f then
-        hogs_invariant_ (add_inv ex i) m f `star` later (read_inv' i m)
+        hogs_invariant_ (add_inv ex i) m f `star` later (read_inv i m)
       else
         hogs_invariant_ (add_inv ex i) m f)) =
   if reveal f = 0 then
@@ -918,17 +876,17 @@ let rec hogs_invariant__equiv (ex: inames) (m: okay_hogs) (i:iref { hogs_iname_o
     if GS.mem f' ex then
       ()
     else
-      match read_hogs m f' with
+      match read m f' with
       | Inv p -> sep_laws ()
       | _ -> ()
 
-let hogs_invariant_equiv (ex: inames) (m: okay_hogs) (i:iref { hogs_iname_ok i m /\ ~(GS.mem i ex) }) :
-    Lemma (hogs_invariant' ex m ==
-      hogs_invariant' (add_inv ex i) m `star` later (read_inv' i m)) =
+let hogs_invariant_equiv (ex: inames) (m: mem) (i:iref { hogs_iname_ok i m /\ ~(GS.mem i ex) }) :
+    Lemma (hogs_invariant ex m ==
+      hogs_invariant (add_inv ex i) m `star` later (read_inv i m)) =
   hogs_invariant__equiv ex m i (some_fresh_addr m)
 
 let mem_invariant_equiv e m i = 
-  hogs_invariant_equiv e (fst m) i;
+  hogs_invariant_equiv e m i;
   sep_laws()
 
 let inames_ok_hogs_dom e m = ()
@@ -936,9 +894,9 @@ let inames_ok_hogs_dom e m = ()
 let inames_ok_update e m0 m1 =
   assert forall i. GS.mem i (hogs_dom m0) <==> GS.mem i (hogs_dom m1)
 
-let rec hogs_invariant__age (e:inames) (is: okay_hogs { level_hogs is > 0 }) (f: address) :
-    Lemma (forall w. 1 < level_ w /\ level_ w <= level_hogs is /\ hogs_invariant_ e is f w ==>
-        hogs_invariant_ e (age1_hogs is) f (age1_ w)) =
+let rec hogs_invariant__age (e:inames) (is: mem { level_ is > 0 }) (f: address) :
+    Lemma (forall w. 1 < level_ w /\ level_ w <= level_ is /\ hogs_invariant_ e is f w ==>
+        hogs_invariant_ e (age1_ is) f (age1_ w)) =
   if reveal f = 0 then
     ()
   else
@@ -947,42 +905,42 @@ let rec hogs_invariant__age (e:inames) (is: okay_hogs { level_hogs is > 0 }) (f:
     if GS.mem f' e then
       ()
     else
-      match read_hogs is f' with
+      match read is f' with
       | Inv p ->
-        let Inv p' = read_hogs (age1_hogs is) f' in
-        assert eq_at (level_hogs is - 1) p p';
-        introduce forall (w:premem { 1 < level_ w /\ level_ w <= level_hogs is /\ hogs_invariant_ e is f w }).
-            hogs_invariant_ e (age1_hogs is) f (age1_ w) with (
+        let Inv p' = read (age1_ is) f' in
+        assert eq_at (level_ is - 1) p p';
+        introduce forall (w:premem { 1 < level_ w /\ level_ w <= level_ is /\ hogs_invariant_ e is f w }).
+            hogs_invariant_ e (age1_ is) f (age1_ w) with (
           let (w1, w2) = star_elim (later p) (hogs_invariant_ e is f') w in
-          assert hogs_invariant_ e (age1_hogs is) f' (age1_ w2);
+          assert hogs_invariant_ e (age1_ is) f' (age1_ w2);
           assert p (age1_ w1);
-          eq_at_elim (level_hogs is - 1) p p' (age1_ (age1_ w1));
-          star_intro (later (later p')) (later (hogs_invariant_ e (age1_hogs is) f')) w w1 w2;
-          later_star (later p') (hogs_invariant_ e (age1_hogs is) f');
-          assert (later p' `star` hogs_invariant_ e (age1_hogs is) f') (age1_ w)
+          eq_at_elim (level_ is - 1) p p' (age1_ (age1_ w1));
+          star_intro (later (later p')) (later (hogs_invariant_ e (age1_ is) f')) w w1 w2;
+          later_star (later p') (hogs_invariant_ e (age1_ is) f');
+          assert (later p' `star` hogs_invariant_ e (age1_ is) f') (age1_ w)
         )
       | _ ->
         ()
 
-let hogs_invariant_age (e:inames) (is: okay_hogs { level_hogs is > 0 })
-    (w: premem { 1 < level_ w /\ level_ w <= level_hogs is }) :
-    Lemma (hogs_invariant' e is w ==> hogs_invariant' e (age1_hogs is) (age1_ w)) =
-  introduce hogs_invariant' e is w ==> hogs_invariant' e (age1_hogs is) (age1_ w) with _. (
+let hogs_invariant_age (e:inames) (is: mem { level_ is > 0 })
+    (w: premem { 1 < level_ w /\ level_ w <= level_ is }) :
+    Lemma (hogs_invariant e is w ==> hogs_invariant e (age1_ is) (age1_ w)) =
+  introduce hogs_invariant e is w ==> hogs_invariant e (age1_ is) (age1_ w) with _. (
     hogs_invariant__age e is (some_fresh_addr is);
-    hogs_invariant__congr e (age1_hogs is) (some_fresh_addr is) (some_fresh_addr (age1_hogs is))
+    hogs_invariant__congr e (age1_ is) (some_fresh_addr is) (some_fresh_addr (age1_ is))
   )
 
 let gs_disjoint_elim #t (a: GS.set t) (b: GS.set t { GS.disjoint a b }) (x: t { GS.mem x a }) :
     Lemma (~(GS.mem x b)) =
   ()
 
-let rec hogs_invariant__disjoint (e1 e2:inames) (m1 m2:okay_hogs) (f: iref) :
+let rec hogs_invariant__disjoint (e1 e2:inames) (m1 m2:mem) (f: iref) :
     Lemma (requires
-      disjoint_hogs m1 m2 /\
-      GS.disjoint (hogs_dom' m1) (hogs_dom' m2) /\
-      GS.disjoint e1 (hogs_dom' m2) /\ GS.disjoint e2 (hogs_dom' m1))
+      disjoint m1 m2 /\
+      GS.disjoint (hogs_dom m1) (hogs_dom m2) /\
+      GS.disjoint e1 (hogs_dom m2) /\ GS.disjoint e2 (hogs_dom m1))
     (ensures 
-      hogs_invariant_ (GS.union e1 e2) (join_hogs m1 m2) f ==
+      hogs_invariant_ (GS.union e1 e2) (join m1 m2) f ==
         hogs_invariant_ e1 m1 f `star` hogs_invariant_ e2 m2 f) =
   if reveal f = 0 then
     sep_laws ()
@@ -992,33 +950,33 @@ let rec hogs_invariant__disjoint (e1 e2:inames) (m1 m2:okay_hogs) (f: iref) :
     if GS.mem f' (GS.union e1 e2) then
       ()
     else
-      match read_hogs (join_hogs m1 m2) f' with
+      match read (join m1 m2) f' with
       | Inv p -> 
-        if Inv? (read_hogs m1 f') then (
-          gs_disjoint_elim (hogs_dom' m1) (hogs_dom' m2) f';
+        if Inv? (read m1 f') then (
+          gs_disjoint_elim (hogs_dom m1) (hogs_dom m2) f';
           sep_laws ()
-        ) else if Inv? (read_hogs m2 f') then (
-          gs_disjoint_elim (hogs_dom' m2) (hogs_dom' m1) f';
+        ) else if Inv? (read m2 f') then (
+          gs_disjoint_elim (hogs_dom m2) (hogs_dom m1) f';
           sep_laws ()
         ) else
           assert False
       | _ -> ()
 
-let hogs_invariant_disjoint (e1 e2:inames) (m1 m2:okay_hogs) :
+let hogs_invariant_disjoint (e1 e2:inames) (m1 m2:mem) :
     Lemma (requires
-      disjoint_hogs m1 m2 /\
-      GS.disjoint (hogs_dom' m1) (hogs_dom' m2) /\
-      GS.disjoint e1 (hogs_dom' m2) /\ GS.disjoint e2 (hogs_dom' m1))
+      disjoint m1 m2 /\
+      GS.disjoint (hogs_dom m1) (hogs_dom m2) /\
+      GS.disjoint e1 (hogs_dom m2) /\ GS.disjoint e2 (hogs_dom m1))
     (ensures 
-      hogs_invariant' (GS.union e1 e2) (join_hogs m1 m2) ==
-        hogs_invariant' e1 m1 `star` hogs_invariant' e2 m2) =
-  let m = join_hogs m1 m2 in
+      hogs_invariant (GS.union e1 e2) (join m1 m2) ==
+        hogs_invariant e1 m1 `star` hogs_invariant e2 m2) =
+  let m = join m1 m2 in
   hogs_invariant__congr e1 m1 (some_fresh_addr m1) (some_fresh_addr m);
   hogs_invariant__congr e2 m2 (some_fresh_addr m2) (some_fresh_addr m);
   hogs_invariant__disjoint e1 e2 m1 m2 (some_fresh_addr m)
 
 let rec hogs_invariant__mono (ex1: inames) (ex2: inames)
-    (m: okay_hogs { forall i. GS.mem i (hogs_dom' m) /\ GS.mem i ex1 ==> GS.mem i ex2 })
+    (m: mem { forall i. GS.mem i (hogs_dom m) /\ GS.mem i ex1 ==> GS.mem i ex2 })
     (f: address) (w: premem) :
     squash (hogs_invariant_ ex1 m f w ==> hogs_invariant_ ex2 m f w) =
   introduce _ ==> _ with _.
@@ -1029,7 +987,7 @@ let rec hogs_invariant__mono (ex1: inames) (ex2: inames)
     if GS.mem f' ex1 then
       hogs_invariant__mono ex1 ex2 m f' w
     else
-      match read_hogs m f' with
+      match read m f' with
       | Inv p ->
         let (w1, w2) = star_elim (later p) (hogs_invariant_ ex1 m f') w in
         hogs_invariant__mono ex1 ex2 m f' w2;
@@ -1039,9 +997,9 @@ let rec hogs_invariant__mono (ex1: inames) (ex2: inames)
         hogs_invariant__mono ex1 ex2 m f' w
 
 let hogs_invariant_mono (ex1: inames) (ex2: inames)
-    (m: okay_hogs { forall i. GS.mem i (hogs_dom' m) /\ GS.mem i ex1 ==> GS.mem i ex2 })
+    (m: mem { forall i. GS.mem i (hogs_dom m) /\ GS.mem i ex1 ==> GS.mem i ex2 })
     (w: premem) :
-    squash (hogs_invariant' ex1 m w ==> hogs_invariant' ex2 m w) =
+    squash (hogs_invariant ex1 m w ==> hogs_invariant ex2 m w) =
   hogs_invariant__mono ex1 ex2 m (some_fresh_addr m) w
 
 let gs_diff #t (a b: GS.set t) : GS.set t =
@@ -1050,35 +1008,35 @@ let gs_diff #t (a b: GS.set t) : GS.set t =
 let hogs_invariant_disjoint' (e f:inames) (p0 p1:slprop) (m0 m1:mem) :
     Lemma (requires
       disjoint_mem m0 m1 /\
-      GS.disjoint (hogs_dom' (fst m0)) (hogs_dom' (fst m1)) /\
-      (p0 `star` hogs_invariant' e (fst m0)) m0 /\
-      (p1 `star` hogs_invariant' f (fst m1)) m1)
+      GS.disjoint (hogs_dom m0) (hogs_dom m1) /\
+      (p0 `star` hogs_invariant e m0) m0 /\
+      (p1 `star` hogs_invariant f m1) m1)
     (ensures (
       let m = join_premem m0 m1 in
-      (p0 `star` p1 `star` hogs_invariant' (GS.union e f) (fst m)) m)) =
-  let e' = gs_diff e (hogs_dom' (fst m1)) in
-  let _ : squash ((p0 `star` hogs_invariant' e' (fst m0)) m0) =
-    let (w1, w2) = star_elim p0 (hogs_invariant' e (fst m0)) m0 in
-    hogs_invariant_mono e e' (fst m0) w2;
-    star_intro p0 (hogs_invariant' e' (fst m0)) m0 w1 w2 in
-  let f' = gs_diff f (hogs_dom' (fst m0)) in
-  let _ : squash ((p1 `star` hogs_invariant' f' (fst m1)) m1) =
-    let (w1, w2) = star_elim p1 (hogs_invariant' f (fst m1)) m1 in
-    hogs_invariant_mono f f' (fst m1) w2;
-    star_intro p1 (hogs_invariant' f' (fst m1)) m1 w1 w2 in
-  hogs_invariant_disjoint e' f' (fst m0) (fst m1);
+      (p0 `star` p1 `star` hogs_invariant (GS.union e f) m) m)) =
+  let e' = gs_diff e (hogs_dom m1) in
+  let _ : squash ((p0 `star` hogs_invariant e' m0) m0) =
+    let (w1, w2) = star_elim p0 (hogs_invariant e m0) m0 in
+    hogs_invariant_mono e e' m0 w2;
+    star_intro p0 (hogs_invariant e' m0) m0 w1 w2 in
+  let f' = gs_diff f (hogs_dom m0) in
+  let _ : squash ((p1 `star` hogs_invariant f' m1) m1) =
+    let (w1, w2) = star_elim p1 (hogs_invariant f m1) m1 in
+    hogs_invariant_mono f f' m1 w2;
+    star_intro p1 (hogs_invariant f' m1) m1 w1 w2 in
+  hogs_invariant_disjoint e' f' m0 m1;
   let g = GS.union e' f' in
   let m: mem = join_premem m0 m1 in
   star_intro
-    (p0 `star` hogs_invariant' e' (fst m0)) (p1 `star` hogs_invariant' f' (fst m1))
+    (p0 `star` hogs_invariant e' m0) (p1 `star` hogs_invariant f' m1)
     m m0 m1;
   let _ : squash (
-    (p0 `star` hogs_invariant' e' (fst m0)) `star` (p1 `star` hogs_invariant' f' (fst m1)) ==
-    (p0 `star` p1) `star` (hogs_invariant' (GS.union e' f') (fst m))
+    (p0 `star` hogs_invariant e' m0) `star` (p1 `star` hogs_invariant f' m1) ==
+    (p0 `star` p1) `star` (hogs_invariant (GS.union e' f') m)
   ) = sep_laws () in
-  let (w1, w2) = star_elim (p0 `star` p1) (hogs_invariant' (GS.union e' f') (fst m)) m in
-  hogs_invariant_mono (GS.union e' f') (GS.union e f) (fst m) w2;
-  star_intro (p0 `star` p1) (hogs_invariant' (GS.union e f) (fst m)) m w1 w2
+  let (w1, w2) = star_elim (p0 `star` p1) (hogs_invariant (GS.union e' f') m) m in
+  hogs_invariant_mono (GS.union e' f') (GS.union e f) m w2;
+  star_intro (p0 `star` p1) (hogs_invariant (GS.union e f) m) m w1 w2
 
 let inames_ok_disjoint i j mi mj = ()
 
@@ -1106,7 +1064,7 @@ let mem_invariant_age e m0 m1 =
       split_mem (lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m0)))
                 (hogs_invariant e m0) m1
     in
-    hogs_invariant_age e (fst m0) (m11);
+    hogs_invariant_age e m0 (m11);
     age_hereditary (lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m0))) m10;
     assert (interp (hogs_invariant e (age_mem m0)) (age1 m11));
     age_disjoint m10 m11;
@@ -1120,10 +1078,12 @@ let mem_invariant_spend e m = ()
 
 let mem_invariant_buy e n m = ()
 
-let hogs_single n (a: iref) (p: slprop) : okay_hogs =
-  let is = mk_hogs n fun b -> if reveal a = reveal b then Inv p else None in
-  assert fresh_addr is (a + 1);
-  is
+let hogs_single n (a: iref) (p: slprop) : mem =
+  pack n {
+    saved_credits = 0;
+    timeless_heap = timeless_heap_sig.sep.empty;
+    hogs = (fun b -> if reveal a = reveal b then Inv p else None)
+  }
 
 let rec hogs_single_invariant_ n a p f : squash (hogs_invariant_ (single a) (hogs_single n a p) f == emp) =
   if reveal f = 0 then
@@ -1131,18 +1091,18 @@ let rec hogs_single_invariant_ n a p f : squash (hogs_invariant_ (single a) (hog
   else
     hogs_single_invariant_ n a p (f - 1)
 
-let hogs_single_invariant n a p : Lemma (hogs_invariant' (single a) (hogs_single n a p) == emp) =
+let hogs_single_invariant n a p : Lemma (hogs_invariant (single a) (hogs_single n a p) == emp) =
   hogs_single_invariant_ n a p (some_fresh_addr (hogs_single n a p))
 
-let hogs_fresh_inv (p: slprop) (is: okay_hogs) (a: iref { None? (read_hogs is a) }) :
-    is':okay_hogs {
+let hogs_fresh_inv (p: slprop) (is: mem) (a: iref { None? (read is a) }) :
+    is':mem {
       disjoint_hogs is is' /\
-      inv_prop a p is' /\
-      hogs_invariant' (single a) is' == emp /\
-      GS.disjoint (hogs_dom' is) (hogs_dom' is')
+      inv a p is' /\
+      hogs_invariant (single a) is' == emp /\
+      GS.disjoint (hogs_dom is) (hogs_dom is')
     } =
-  let is' = hogs_single (level_hogs is) a p in
-  hogs_single_invariant (level_hogs is) a p;
+  let is' = hogs_single (level_ is) a p in
+  hogs_single_invariant (level_ is) a p;
   is'
 
 let max x y = if x > y then x else y
@@ -1154,9 +1114,9 @@ let rec mk_fresh (i: iref) (ctx: list iref) :
 
 let fresh_inv p m ctx =
   let f = IndefiniteDescription.indefinite_description_ghost iref fun f ->
-    fresh_addr (fst m) f in
+    fresh_addr m f in
   let i: iref = mk_fresh f ctx in
-  let m': mem = (hogs_fresh_inv p (fst m) i, empty_rest) in
+  let m': mem = hogs_fresh_inv p m i in
   let _: squash (inv i p `star` mem_invariant (single i) m' == inv i p) =
     pm_mem_invariant_empty();
     hogs_single_invariant (level m) i p;
@@ -1168,7 +1128,9 @@ let fresh_inv p m ctx =
 let dup_inv_equiv i p =
   mem_pred_ext (inv i p) (inv i p `star` inv i p) fun w ->
     introduce inv i p w ==> star (inv i p) (inv i p) w with _.
-      let w2 = empty_timeless_heap w in ()
+      (let w2 = empty_timeless_heap w in ());
+    introduce star (inv i p) (inv i p) w ==> inv i p w with _.
+      let (w1, w2) = star_elim (inv i p) (inv i p) w in ()
 
 let invariant_name_identifies_invariant i p q w = ()
 

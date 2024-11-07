@@ -1,7 +1,7 @@
 module PulseCore.IndirectionTheory
 
 let pred' #f (ff: functor u#a f) (n: nat) (knot_t: (m:nat {m<n} -> Type u#(a+1))) : Type u#(a+1) =
-  restricted_t (m:nat {m<n}) fun m -> knot_t m & ff.other ^-> prop
+  restricted_t (m:nat {m<n}) fun m -> knot_t m ^-> prop
 
 let f_ext #t #s (f g: restricted_t t s) (h: (x:t -> squash (f x == g x))) : squash (f == g) =
   introduce forall x. f x == g x with h x; extensionality _ _ f g
@@ -22,10 +22,10 @@ let k'_fold #f (#ff: functor u#a f) (#n: Ghost.erased nat) (x: f (pred' ff n (k'
 type knot_t #f (ff: functor f) = m: Ghost.erased nat & k' #f ff m
 
 let unpack_pred #f (#ff: functor u#a f) n (x: pred' ff n (k' ff)) : predicate ff =
-  on_dom (knot_t ff & ff.other) #(fun _ -> prop) fun ((|m, h|), o) -> if m < n then x m (h, o) else False
+  on_dom (knot_t ff) #(fun _ -> prop) fun (|m, h|) -> if m < n then x m h else False
 
 let pack_pred #f (#ff: functor u#a f) n (x: predicate ff) : pred' ff n (k' ff) =
-  on_dom (m:nat {m<n}) fun m -> on_dom _ fun (h, o) -> x ((| Ghost.hide m, h |), o)
+  on_dom (m:nat {m<n}) fun m -> on_dom _ fun h -> x (| Ghost.hide m, h |)
 
 let pack_unpack_pred #f (ff: functor u#a f) #n (x: pred' ff n (k' ff)) =
   f_ext (pack_pred n (unpack_pred n x)) x fun m ->
