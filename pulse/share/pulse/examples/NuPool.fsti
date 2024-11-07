@@ -40,7 +40,6 @@ fn spawn_
   (#post : slprop)
   (f : unit -> stt unit (pre) (fun _ -> post))
   requires pool_alive #pf p ** pre
-  returns h : handle
   ensures pool_alive #pf p ** pledge [] (pool_done p) post
 
 fn await
