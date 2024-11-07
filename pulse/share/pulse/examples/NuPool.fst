@@ -7,7 +7,6 @@ open FStar.Tactics
 open FStar.Preorder
 open Pulse.Lib.Pledge
 open Pulse.Lib.Trade
-open Pulse.Lib.InvList
 open Pulse.Class.Duplicable
 
 open Pulse.Lib.SpinLock
@@ -344,7 +343,6 @@ fn rec extract_state_pred
        ** trade (state_pred t.pre t.post t.h) (all_state_pred ts) // trade to put things back together
   decreases ts
 {
-  open Pulse.Lib.InvList;
   match ts {
     Nil -> {
       unreachable ()
