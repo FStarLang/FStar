@@ -105,6 +105,7 @@ val split_mem (p:slprop) (q:slprop) (m:erased mem { interp (p `star` q) m })
     let l, r = res in
     disjoint l r /\
     reveal m == join l r /\
+    level l == level m /\ level r == level m /\
     interp p l /\
     interp q r
 }
