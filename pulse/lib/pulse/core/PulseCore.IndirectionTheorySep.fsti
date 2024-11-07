@@ -448,6 +448,6 @@ val fresh_slprop_ref
 val slprop_ref_pts_to_share (x: slprop_ref) (y: slprop)
 : Lemma (slprop_ref_pts_to x y == slprop_ref_pts_to x y `star` slprop_ref_pts_to x y)
 
-val slprop_ref_pts_to_gather (x: slprop_ref) (y1 y2: slprop) (m:mem)
+val slprop_ref_pts_to_gather (x: slprop_ref) (y1 y2: slprop) (m:mem { level m > 0 })
 : Lemma (interp (slprop_ref_pts_to x y1 `star` slprop_ref_pts_to x y2) m ==>
          interp (slprop_ref_pts_to x y1 `star` later (equiv y1 y2)) m)
