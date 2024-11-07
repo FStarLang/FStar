@@ -1,5 +1,7 @@
 module NuPool
 
+#lang-pulse
+
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Pledge
 module T = FStar.Tactics.V2
@@ -10,71 +12,74 @@ val pool_alive (#[T.exact (`1.0R)] f : perm) (p:pool) : slprop
 
 val joinable (p: pool) (post: slprop) (h: handle) : slprop
 
-val spawn
+fn spawn
   (p: pool)
   (#pf: perm)
   (#pre: slprop)
   (#post: slprop)
   (f : unit -> stt unit pre (fun _ -> post))
-  : stt handle (pool_alive #pf p ** pre)
-               (fun h -> pool_alive #pf p ** joinable p post h)
+  requires pool_alive #pf p ** pre
+  returns h : handle
+  ensures pool_alive #pf p ** joinable p post h
 
 val pool_done (p:pool) : slprop
 
-val disown
+ghost
+fn disown
   (#p : pool)
   (#post : slprop)
   (h : handle)
-  : stt_ghost unit [] (joinable p post h)
-                   (fun _ -> pledge [] (pool_done p) post)
+  requires joinable p post h
+  ensures  pledge [] (pool_done p) post
 
 (* spawn + disown *)
-val spawn_
+fn spawn_
   (p: pool)
   (#pf : perm)
   (#pre : slprop)
   (#post : slprop)
   (f : unit -> stt unit (pre) (fun _ -> post))
-  : stt unit (pool_alive #pf p ** pre)
-             (fun _ -> pool_alive #pf p ** pledge [] (pool_done p) (post))
+  requires pool_alive #pf p ** pre
+  returns h : handle
+  ensures pool_alive #pf p ** pledge [] (pool_done p) post
 
-val await
+fn await
   (#p: pool)
   (#post : slprop)
   (h : handle)
   (#f : perm)
-  : stt unit (pool_alive #f p ** joinable p post h)
-             (fun _ -> pool_alive #f p ** post)
+  requires pool_alive #f p ** joinable p post h
+  ensures pool_alive #f p ** post
 
-val await_pool
+fn await_pool
   (p:pool)
   (#is:inames)
   (#f:perm)
   (q : slprop)
-  : stt unit (pool_alive #f p ** pledge is (pool_done p) q)
-             (fun _ -> pool_alive #f p ** q)
+  requires pool_alive #f p ** pledge is (pool_done p) q
+  ensures pool_alive #f p ** q
 
-val teardown_pool
+fn teardown_pool
   (p:pool)
-  : stt unit (pool_alive p)
-             (fun _ -> pool_done p)
+  requires pool_alive p
+  ensures pool_done p
 
-val share_alive
-  (p:pool)
-  (e:perm)
-  : stt_ghost unit []
-              (pool_alive #e p)
-              (fun () -> pool_alive #(e /. 2.0R) p ** pool_alive #(e /. 2.0R) p)
-
-val gather_alive
+ghost
+fn share_alive
   (p:pool)
   (e:perm)
-  : stt_ghost unit []
-              (pool_alive #(e /. 2.0R) p ** pool_alive #(e /. 2.0R) p)
-              (fun () -> pool_alive #e p)
+  requires pool_alive #e p
+  ensures pool_alive #(e /. 2.0R) p ** pool_alive #(e /. 2.0R) p
 
-val setup_pool
+ghost
+fn gather_alive
+  (p:pool)
+  (e:perm)
+  requires pool_alive #(e /. 2.0R) p ** pool_alive #(e /. 2.0R) p
+  ensures pool_alive #e p
+
+fn setup_pool
   (n: pos)
-  : stt pool
-         emp
-         (fun p -> pool_alive p)
+  requires emp
+  returns p : pool
+  ensures pool_alive p
