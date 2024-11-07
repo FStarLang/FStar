@@ -105,8 +105,14 @@ fn squash_pledge' (is1 is2 is:inames) (f:slprop) (v1:slprop)
            pledge is1 f (pledge is2 f v1)
   ensures pledge is f v1
 
-// This is not ghost as it must buy some later credits.
+ghost
+fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
+  requires pledge is f (v1 ** v2) ** later_credit 2
+  returns i : iname
+  ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2 ** pure (not (mem_inv is i))
+
+// This is not ghost as it buys the later credits.
 fn split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   requires pledge is f (v1 ** v2)
-  returns i : (i : iname { not (mem_inv is i) })
-  ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2
+  returns i : iname
+  ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2 ** pure (not (mem_inv is i))

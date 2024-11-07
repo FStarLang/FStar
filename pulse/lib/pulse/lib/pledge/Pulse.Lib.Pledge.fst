@@ -473,15 +473,15 @@ fn elim_body_r
   drop_ (inv i (inv_p is f v1 v2 r1 r2));
 }
 
-
-fn split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
+ghost
+fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   // requires pledge is f (v1 ** v2)
   // returns r : (e : inames_elem { not (mem_inv (inames_names is) (snd e)) })
   // ensures pledge (add_one r is) f v1 ** pledge (add_one r is) f v2
   // opens (inames_names is)
-  requires pledge is f (v1 ** v2)
-  returns i : (i : iname { not (mem_inv is i) })
-  ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2
+  requires pledge is f (v1 ** v2) ** later_credit 2
+  returns i : iname
+  ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2 ** pure (not (mem_inv is i))
 {
   let r1 = GR.alloc false;
   let r2 = GR.alloc false;
@@ -498,8 +498,11 @@ fn split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
 
   let is' = add_inv is i;
 
-  later_credit_buy 1;
-  later_credit_buy 1;
+  later_credit_add 1 1;
+  rewrite
+    later_credit 2
+  as
+    later_credit 1 ** later_credit 1;
 
   make_pledge
     is'
@@ -520,6 +523,16 @@ fn split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   as
     add_inv is i;
 
+  i
+}
+
+fn split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
+  requires pledge is f (v1 ** v2)
+  returns i : iname
+  ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2 ** pure (not (mem_inv is i))
+{
+  later_credit_buy 2;
+  let i = ghost_split_pledge #is #f v1 v2;
   i
 }
 
