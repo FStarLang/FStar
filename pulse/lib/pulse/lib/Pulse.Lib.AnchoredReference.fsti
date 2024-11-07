@@ -41,22 +41,14 @@ val pts_to
   (#a:Type) (#p:_) (#anc:_)
   (r:ref a p anc)
   (#[T.exact (`1.0R)] p:perm)
-  (n:a) : slprop
-
-val is_small_pts_to
-  (#a:Type) (#p:_) (#anc:_)
-  (r:ref a p anc)
-  (#p:perm)
-  (n:a) :
-  Lemma (is_storable1 (pts_to r #p n))
-        [SMTPat (pts_to r #p n)]
+  (n:a) : (v:slprop { timeless v })
 
 val anchored
   (#a:Type)
   (#p:_)
   (#anc:_)
   (r:ref a p anc)
-  (n:a) : (v:slprop{is_storable v})
+  (n:a) : (v:slprop{timeless v})
 
 val alloc (#a:Type) (x:a) (#p:_) (#anc:anchor_rel p)
   : stt_ghost (ref a p anc) [] (pure (anc x x)) (fun r -> pts_to_full r x)
@@ -114,6 +106,11 @@ val recall_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) 
 
 val snapshot (#a:Type) (#p:_) (#anc:_) (r : ref a p anc) (v:a)
   : slprop
+
+val dup_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
+  : stt_ghost unit []
+        (snapshot r v)
+        (fun _ -> snapshot r v ** snapshot r v)
 
 val take_snapshot (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
   : stt_ghost unit []

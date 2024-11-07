@@ -12,6 +12,7 @@ open Pulse.Class.Duplicable
 
 open Pulse.Lib.SpinLock
 
+module RTC   = FStar.ReflexiveTransitiveClosure
 module FRAP  = Pulse.Lib.FractionalAnchoredPreorder
 module AR    = Pulse.Lib.AnchoredReference
 module Big   = Pulse.Lib.BigReference
@@ -70,13 +71,13 @@ type handle : Type0 = {
   g_state : AR.ref task_state p_st anchor_rel; (* these two refs are kept in sync *)
 }
 
-let up (x: really_big_ref) : slprop =
-  exists* v. really_big_pts_to x v ** v
+let up (x: slprop_ref) : slprop =
+  exists* v. slprop_ref_pts_to x v ** v
 
 noeq
 type task_t : Type0 = {
-  pre :  really_big_ref;
-  post : really_big_ref;
+  pre :  slprop_ref;
+  post : slprop_ref;
 
   h : handle;
 
@@ -85,8 +86,8 @@ type task_t : Type0 = {
 }
 
 let state_pred
-  (pre : really_big_ref)
-  (post : really_big_ref)
+  (pre : slprop_ref)
+  (post : slprop_ref)
   (h : handle)
 : slprop =
   exists* (v_state : task_state).
@@ -102,8 +103,8 @@ let task_type (pre post : slprop) : Type0 =
   unit -> stt unit pre (fun _ -> post)
 
 let task_thunk_typing_core (t : task_t) (pre post: slprop) : slprop =
-  really_big_pts_to t.pre pre **
-  really_big_pts_to t.post post **
+  slprop_ref_pts_to t.pre pre **
+  slprop_ref_pts_to t.post post **
   pure (Dyn.dyn_has_ty t.thunk (task_type pre post))
 
 let task_thunk_typing (t : task_t) : slprop =
@@ -116,8 +117,8 @@ ghost fn task_thunk_typing_dup t
   unfold task_thunk_typing t;
   with pre post. assert task_thunk_typing_core t pre post;
   unfold task_thunk_typing_core t pre post;
-  really_big_share t.pre;
-  really_big_share t.post;
+  slprop_ref_share t.pre;
+  slprop_ref_share t.post;
   fold task_thunk_typing_core t pre post;
   fold task_thunk_typing_core t pre post;
   fold task_thunk_typing t;
@@ -173,10 +174,15 @@ let list_preorder #a
 let list_anchor : FRAP.anchor_rel list_preorder = fun x y -> list_preorder x y /\ True
 
 let list_preorder_mono_memP (#a:Type) (x:a) (l1 l2:list a)
-  : Lemma (requires List.memP x l1 /\ list_preorder l1 l2)
-          (ensures List.memP x l2)
-          [SMTPat (list_preorder l1 l2); SMTPat (List.memP x l1)]
-      = admit()
+: Lemma
+  (requires List.memP x l1 /\ list_preorder l1 l2)
+  (ensures List.memP x l2)
+  [SMTPat (list_preorder l1 l2); SMTPat (List.memP x l1)]
+= RTC.induct
+    list_extension
+    (fun l1 l2 -> List.memP x l1 ==> List.memP x l2)
+    (fun _ -> ()) (fun _ _ -> ()) (fun _ _ _ -> ())
+    l1 l2 ()
 
 let lock_inv
   (runnable   : ref (list task_t))
@@ -393,7 +399,7 @@ let joinable
 
 ghost
 fn intro_state_pred
-  (pre post : really_big_ref)
+  (pre post : slprop_ref)
   (h : handle)
   (v_state : task_state {~(Running? v_state)})
   requires
@@ -407,7 +413,7 @@ fn intro_state_pred
 
 ghost
 fn intro_state_pred_Running
-  (pre post : really_big_ref)
+  (pre post : slprop_ref)
   (h : handle)
   requires
     pts_to h.state #0.5R Running **
@@ -422,7 +428,7 @@ fn intro_state_pred_Running
 
 ghost
 fn elim_state_pred
-  (pre post : really_big_ref)
+  (pre post : slprop_ref)
   (h : handle)
   requires state_pred pre post h
   returns v_state : erased (task_state)
@@ -436,30 +442,30 @@ fn elim_state_pred
   hide v_state
 }
 
-instance duplicable_really_big_pts_to x y : duplicable (really_big_pts_to x y) = {
-  dup_f = (fun _ -> really_big_share x #y)
+instance duplicable_slprop_ref_pts_to x y : duplicable (slprop_ref_pts_to x y) = {
+  dup_f = (fun _ -> slprop_ref_share x #y)
 }
 
-ghost fn gtrade_up (x: really_big_ref) (y: slprop)
-  requires really_big_pts_to x y
+ghost fn gtrade_up (x: slprop_ref) (y: slprop)
+  requires slprop_ref_pts_to x y
   ensures gtrade (up x ** later_credit 1) y
 {
   ghost fn aux ()
-    requires really_big_pts_to x y ** (up x ** later_credit 1)
+    requires slprop_ref_pts_to x y ** (up x ** later_credit 1)
     ensures y
   {
     unfold up x;
-    really_big_gather _;
+    slprop_ref_gather _;
     later_elim _;
     equiv_comm _ _;
     equiv_elim _ _;
-    drop_ (really_big_pts_to _ _);
+    drop_ (slprop_ref_pts_to _ _);
   };
   gtrade_intro _ _ _ aux;
 }
 
-instance non_informative_really_big_ref : Pulse.Lib.NonInformative.non_informative really_big_ref =
-  { reveal = (fun (x: erased really_big_ref) -> reveal x) }
+instance non_informative_slprop_ref : Pulse.Lib.NonInformative.non_informative slprop_ref =
+  { reveal = (fun (x: erased slprop_ref) -> reveal x) }
 
 fn spawn (p:pool)
     (#pf:perm)
@@ -481,16 +487,16 @@ fn spawn (p:pool)
     state = r_task_st;
     g_state = gr_task_st;
   };
-  let pre_ref = really_big_alloc pre;
-  let post_ref = really_big_alloc post;
+  let pre_ref = slprop_ref_alloc pre;
+  let post_ref = slprop_ref_alloc post;
   let task : task_t = {
     h = handle;
     pre = pre_ref;
     post = post_ref;
     thunk = Dyn.mkdyn f;
   };
-  dup (really_big_pts_to post_ref post) ();
-  dup (really_big_pts_to pre_ref pre) ();
+  dup (slprop_ref_pts_to post_ref post) ();
+  dup (slprop_ref_pts_to pre_ref pre) ();
   fold task_thunk_typing_core task pre post;
   fold task_thunk_typing task;
   
@@ -737,7 +743,7 @@ instance dup_snapshot
   // TODO: implement in AR module, or tweak
   // take_snapshot to provide a snapshot of a possibly
   // "older" value. In that case this is easy to implement.
-  dup_f = admit();
+  dup_f = (fun _ -> AR.dup_snapshot r);
 }
 
 ghost
@@ -1132,14 +1138,14 @@ fn perf_work (t : task_t)
   with pre post. assert task_thunk_typing_core t pre post;
   unfold task_thunk_typing_core;
   unfold up;
-  really_big_gather t.pre #_ #pre;
+  slprop_ref_gather t.pre #_ #pre;
   later_credit_buy 1; later_elim _;
   equiv_elim _ _;
   assert pure (Dyn.dyn_has_ty t.thunk (task_type pre post));
   undyn pre post t.thunk;
 
   fold up t.post; // ????
-  drop_ (really_big_pts_to _ _);
+  drop_ (slprop_ref_pts_to _ _);
 }
 fn put_back_result (p:pool) #f (t : task_t)
   requires pool_alive #f p **
