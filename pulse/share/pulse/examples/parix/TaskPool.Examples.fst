@@ -19,14 +19,12 @@ module TaskPool.Examples
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Pledge
-open Pulse.Lib.Task
+open NuPool
 
 assume
 val qsv : nat -> slprop
 assume
 val qsc : n:nat -> stt unit emp (fun _ -> qsv n)
-
-let spawn_ #pre #post p f = spawn_ #pre #post p #1.0R f
 
 
 fn qs (n:nat)
@@ -100,10 +98,11 @@ fn qsh (n:nat)
 
 
 
-fn qs12_par (p:pool)
-  requires pool_alive p
+#set-options "--print_implicits"
+fn qs12_par (#e:perm) (p:pool)
+  requires pool_alive #e p
   returns _:unit
-  ensures pool_alive p ** pledge emp_inames (pool_done p) (qsv 1) ** pledge emp_inames (pool_done p) (qsv 2)
+  ensures pool_alive #e p ** pledge emp_inames (pool_done p) (qsv 1) ** pledge emp_inames (pool_done p) (qsv 2)
   {
     spawn_ p (fun () -> qsc 1);
     spawn_ p (fun () -> qsc 2);
@@ -111,22 +110,22 @@ fn qs12_par (p:pool)
   }
 
 
-[@@expect_failure]
-
 fn qsh_par (n:nat)
   requires emp
   returns _:unit
   ensures qsv 1 ** qsv 2 ** qsv 3 ** qsv 4
 {
   let p = setup_pool 42;
-  spawn p (fun () -> qs12_par p);
+  share_alive p _;
+  spawn_ p (fun () -> qs12_par p);
   (* Ah! This cannot work right now since we need to share part
   of the pool_alive slprop to the spawned task, so we have
   to index pool_alive with a permission, and allow
   share/gather. *)
   
-  spawn p (fun () -> qsc 3);
-  spawn p (fun () -> qsc 4);
+  spawn_ p (fun () -> qsc 3);
+  spawn_ p (fun () -> qsc 4);
+  admit();
   teardown_pool p;
   redeem_pledge (pool_done p) (qsv 1)
   redeem_pledge (pool_done p) (qsv 2);
