@@ -21,12 +21,6 @@ open Pulse.Lib.Pervasives
 
 val pledge (is:inames) (f:slprop) (v:slprop) : slprop
 
-(* A ghost step to rewrite the context, running under invlist is. *)
-// let ustep (is:invlist) (p q : slprop)
-//   = unit -> stt_ghost unit (invlist_names is) (invlist_inv is ** p) (fun _ -> invlist_inv is ** q)
-// let ustep0 (p q : slprop)
-//   = unit -> stt_ghost unit emp_inames p (fun _ -> q)
-
 unfold
 let pledge0 (f:slprop) (v:slprop) : slprop = pledge emp_inames f v
 
