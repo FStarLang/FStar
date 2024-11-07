@@ -41,9 +41,9 @@ let mk_ht
   : ht_t k v
   = { sz; hashf; contents; }
 
-let models_is_slprop2 #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt)
-  : Lemma (is_slprop2 (models ht pht))
-          [SMTPat (is_slprop2 (models ht pht))] = ()
+let models_timeless #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt)
+  : Lemma (timeless (models ht pht))
+          [SMTPat (timeless (models ht pht))] = ()
 
 
 fn alloc

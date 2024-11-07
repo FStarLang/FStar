@@ -96,13 +96,13 @@ ensures exists* v. pts_to x v
 
 
 //lock_inv$
-let contributions (left right: GR.ref int) (i v:int) : v:slprop { is_slprop3 v }=
+let contributions (left right: GR.ref int) (i v:int) : timeless_slprop =
   exists* (vl vr:int).
     GR.pts_to left #0.5R vl **
     GR.pts_to right #0.5R vr **
     pure (v == i + vl + vr)
 
-let lock_inv (x:ref int) (init:int) (left right:GR.ref int) : v:slprop { is_slprop3 v } =
+let lock_inv (x:ref int) (init:int) (left right:GR.ref int) : timeless_slprop =
   exists* v. 
     pts_to x v **
     contributions left right init v
@@ -558,11 +558,11 @@ fn gather (r:ghost_pcm_ref pcm) (#n1 #n2:int1) (#v1 #v2:int1)
 }
 
 
-let lock_inv_ghost (ghost_r:ghost_pcm_ref pcm) (n:int) : v:slprop { is_slprop3 v } =
+let lock_inv_ghost (ghost_r:ghost_pcm_ref pcm) (n:int) : timeless_slprop =
   exists* n1 n2. ghost_pcm_pts_to ghost_r (half n1, half n2) **
                  pure (n == U.downgrade_val n1 + U.downgrade_val n2)
 
-let lock_inv_pcm (r:ref int) (ghost_r:ghost_pcm_ref pcm) : v:slprop { is_slprop3 v } =
+let lock_inv_pcm (r:ref int) (ghost_r:ghost_pcm_ref pcm) : timeless_slprop =
   exists* n. pts_to r n ** lock_inv_ghost ghost_r n
 
 let t1_perm (ghost_r:ghost_pcm_ref pcm) (n:int1) (t1:bool) =

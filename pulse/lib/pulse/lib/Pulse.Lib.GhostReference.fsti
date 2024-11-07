@@ -38,9 +38,9 @@ instance has_pts_to_ref (a:Type) : has_pts_to (ref a) a = {
   pts_to = (fun r #f v -> pts_to r #f v);
 }
 
-val pts_to_is_slprop2 (#a:Type) (r:ref a) (p:perm) (x:a)
-  : Lemma (is_slprop2 (pts_to r #p x))
-          [SMTPat (is_slprop2 (pts_to r #p x))]
+val pts_to_timeless (#a:Type) (r:ref a) (p:perm) (x:a)
+  : Lemma (timeless (pts_to r #p x))
+          [SMTPat (timeless (pts_to r #p x))]
 
 val alloc (#a:Type) (x:a)
   : stt_ghost (ref a) emp_inames emp (fun r -> pts_to r x)

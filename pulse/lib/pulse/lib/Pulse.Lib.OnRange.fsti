@@ -53,16 +53,18 @@ val on_range_frame (p q:nat -> slprop) (i j:nat)
   (requires forall k. i <= k /\ k < j ==> p k == q k)
   (ensures on_range p i j == on_range q i j)
 
-val on_range_is_slprop2 (p:nat -> slprop) (i:nat) (j:nat)
-  : Lemma (requires forall k. (i <= k /\ k < j) ==> is_slprop2 (p k))
-          (ensures is_slprop2 (on_range p i j))
+val on_range_timeless (p:nat -> slprop) (i:nat) (j:nat)
+  : Lemma (requires forall k. (i <= k /\ k < j) ==> timeless (p k))
+          (ensures timeless (on_range p i j))
           [SMTPat (on_range p i j)]
 
-val on_range_is_slprop3 (p:nat -> slprop) (i:nat) (j:nat)
-  : Lemma (requires forall k. (i <= k /\ k < j) ==> is_slprop3 (p k))
-          (ensures is_slprop3 (on_range p i j))
-          [SMTPat (on_range p i j)]
-
+val on_range_join_eq
+  (i j k: nat)
+  (p: (nat -> slprop))
+: Lemma 
+  (requires i <= j /\ j <= k)
+  (ensures ((on_range p i j ** on_range p j k) == on_range p i k))
+  
 val on_range_le
   (p: (nat -> slprop))
   (#i:nat)

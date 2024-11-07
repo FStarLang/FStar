@@ -39,7 +39,7 @@ let increases : preorder int = fun x y -> b2t (x <= y)
 let mctr = MR.mref increases
 
 let inv_core (x:B.box int) (mr:MR.mref increases)
-: slprop2
+: slprop
 = exists* j. B.pts_to x j ** MR.pts_to mr #1.0R j
 
 fn new_counter ()

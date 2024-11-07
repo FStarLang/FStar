@@ -28,9 +28,9 @@ val pts_to
   (#[T.exact (`1.0R)] p:perm)
   (n:a) : slprop
 
-val pts_to_is_slprop3 (#a:Type) (r:ref a) (p:perm) (x:a)
-  : Lemma (is_slprop3 (pts_to r #p x))
-          [SMTPat (is_slprop3 (pts_to r #p x))]
+val pts_to_is_timeless (#a:Type) (r:ref a) (p:perm) (x:a)
+  : Lemma (timeless (pts_to r #p x))
+          [SMTPat (timeless (pts_to r #p x))]
 
 val alloc (#a:Type) (x:a)
   : stt (ref a) emp (fun r -> pts_to r x)

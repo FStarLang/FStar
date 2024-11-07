@@ -26,7 +26,7 @@ assume val done : ref bool
 assume val res : ref (option int)
 assume val claimed : GR.ref bool
 
-let inv_p : storable =
+let inv_p : timeless_slprop =
   exists* (v_done:bool) (v_res:option int) (v_claimed:bool).
        pts_to done #0.5R v_done
     ** pts_to res #0.5R v_res
@@ -65,7 +65,7 @@ fn proof
    opens [i]
 {
   with_invariants i {
-    later_elim_storable _;
+    later_elim_timeless _;
     unfold inv_p;
     with (v_done : bool) v_res v_claimed.
       assert (pts_to done #0.5R v_done

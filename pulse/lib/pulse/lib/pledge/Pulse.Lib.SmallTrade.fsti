@@ -26,13 +26,13 @@ val trade :
   (concl:slprop) ->
   slprop
 
-val trade_is_slprop2 (#is:inames) (hyp concl:slprop)
-  : Lemma (is_slprop2 (trade #is hyp concl))
+val trade_is_timeless (#is:inames) (hyp concl:slprop)
+  : Lemma (timeless (trade #is hyp concl))
 
 val intro_trade
   (#is:inames)
   (hyp concl:slprop)
-  (extra:slprop { is_slprop2 extra })
+  (extra:slprop { timeless extra })
   (f_elim:unit -> (
     stt_ghost unit is
     (extra ** hyp)

@@ -23,7 +23,7 @@ noeq
 type code : Type u#4 = {
   t    : Type u#2;
   emp  : t;
-  up   : t -> slprop3;
+  up   : t -> slprop;
   laws : squash ( up emp == Pulse.Lib.Pervasives.emp )
 }
 
@@ -60,7 +60,7 @@ val cvinv #c (cv:cvar_t c) (p:slprop) : slprop
 val dup_cvinv #c (cv:cvar_t c) (#p:slprop)
 : stt_ghost unit emp_inames (cvinv cv p) (fun _ -> cvinv cv p ** cvinv cv p)
 
-val send_core #c (cv:cvar_t c) : slprop3
+val send_core #c (cv:cvar_t c) : slprop
 
 val decompose_send #c (cv:cvar_t c) (p:slprop)
 : stt_ghost unit emp_inames (send cv p) (fun _ -> cvinv cv p ** send_core cv)
@@ -69,7 +69,7 @@ val recompose_send #c (cv:cvar_t c) (p:slprop)
 : stt_ghost unit emp_inames (cvinv cv p ** send_core cv) (fun _ -> send cv p)
 
 val recv_core #c (cv:cvar_t c) (q:slprop)
-: slprop3
+: slprop
 
 val decompose_recv #c (cv:cvar_t c) (p:slprop)
 : stt_ghost unit emp_inames 

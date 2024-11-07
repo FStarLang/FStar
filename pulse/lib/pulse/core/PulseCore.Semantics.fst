@@ -16,13 +16,14 @@
 module PulseCore.Semantics
 
 module U = FStar.Universe
-module P = PulseCore.HoareStateMonad
-module NP = PulseCore.NondeterministicHoareStateMonad
+module ST = PulseCore.HoareStateMonad
+module NST = PulseCore.NondeterministicHoareStateMonad
+module PNST = PulseCore.PartialNondeterministicHoareStateMonad
 module F = FStar.FunctionalExtensionality
 
-// open FStar.Preorder
+open FStar.Ghost
 open FStar.FunctionalExtensionality
-open PulseCore.NondeterministicHoareStateMonad
+open PulseCore.PartialNondeterministicHoareStateMonad
 
 /// We start by defining some basic notions for a commutative monoid.
 ///
@@ -59,9 +60,9 @@ type state : Type u#(s + 1)= {
   emp: pred;
   star: pred -> pred -> pred;
   interp: pred -> s -> prop;
-  // evolves: FStar.Preorder.preorder (s:s { is_full_mem s });
   invariant: s -> pred;
-  laws: squash (associative star /\ commutative star /\ is_unit emp star)
+  laws: squash (associative star /\ commutative star /\ is_unit emp star);
+  can_step: s -> FStar.Ghost.erased bool;
 }
 
 let full_mem (st:state u#s) : Type u#s = m:st.s { st.is_full_mem m }
@@ -74,22 +75,31 @@ let post (s:state) a = a ^-> s.pred
     npst_sep provides separation-logic specifications for those computations.
     pst_sep is analogous, except computation in pst_sep are also total
  **)
-let pst_sep_aux (st:state)
+let st_sep_aux (st:state)
                 (aux:full_mem st -> prop) 
                 (inv:full_mem st -> st.pred)
                 (a:Type)
                 (pre:st.pred)
                 (post:a -> st.pred) =
-  P.st #(full_mem st) a
-    (fun s0 -> aux s0 /\ st.interp (pre `st.star` inv s0) s0 )
+  ST.st #(full_mem st) a
+    (fun s0 -> FStar.Ghost.reveal (st.can_step s0) /\ aux s0 /\ st.interp (pre `st.star` inv s0) s0 )
     (fun _ x s1 -> aux s1 /\ st.interp (post x `st.star` inv s1) s1)
      
-let pst_sep st a pre post = pst_sep_aux st (fun _ -> True) st.invariant a pre post
+let st_sep st a pre post = st_sep_aux st (fun _ -> True) st.invariant a pre post
 
-let npst_sep (st:state u#s) (a:Type u#a) (pre:st.pred) (post:a -> st.pred) =
-  nst #(full_mem st) a
+let nst_sep (st:state u#s) (a:Type u#a) (pre:st.pred) (post:a -> st.pred) =
+  NST.nst #(full_mem st) a
     (fun s0 -> st.interp (pre `st.star` st.invariant s0) s0 )
     (fun _ x s1 -> st.interp (post x `st.star` st.invariant s1) s1)
+
+let pnst_sep_aux (st:state u#s) (guard:st.s -> FStar.Ghost.erased bool) (a:Type u#a) (pre:st.pred) (post:a -> st.pred) =
+  PNST.pnst #(full_mem st) a
+    (fun s0 -> FStar.Ghost.reveal (guard s0) /\ st.interp (pre `st.star` st.invariant s0) s0 )
+    (fun _ x s1 -> st.interp (post x `st.star` st.invariant s1) s1)
+
+let pnst_sep_can_step (st:state) = pnst_sep_aux st st.can_step
+
+let pnst_sep (st:state) = pnst_sep_aux st (fun _ -> true)
 
 
 (** [action c s]: atomic actions are, intuitively, single steps of
@@ -107,8 +117,8 @@ type action (st:state u#s) (a:Type u#a) : Type u#(max a s) = {
   post: post st a;
   step: (
     frame:st.pred ->
-    pst_sep st a (st.star pre frame) 
-                 (fun x -> st.star (post x) frame)
+    st_sep st a (st.star pre frame) 
+                (fun x -> st.star (post x) frame)
   )
  }
   
@@ -186,7 +196,7 @@ let rec step
     (#q:post st a)
     (f:m a p q)
     (frame:st.pred)
-: Tot (npst_sep st
+: Tot (pnst_sep_can_step st
         (step_result a q frame)
         (p `st.star` frame)
         (fun x -> Step?.next x `st.star` frame))
@@ -196,19 +206,19 @@ let rec step
     weaken <| return <| Step (q x) (Ret x)
   | Act f k ->
     let k (x:_) 
-    : Dv (npst_sep st (step_result a q frame)
+    : Dv (pnst_sep st (step_result a q frame)
                     (f.post x `st.star` frame)
                     (fun v -> Step?.next v `st.star` frame))
     = let n : m a (f.post x) q = k x in
       weaken (return (Step _ n))
     in
-    weaken <| bind (lift <| f.step frame) k
+    weaken <| bind (PNST.lift <| (NST.lift <| f.step frame)) k
   | Par #_ #pre0 #post0 (Ret x0) #pre1 #post1 (Ret x1) #a #post k ->
     weaken <| return <| Step _ k
   | Par #_ #pre0 #post0 m0 #pre1 #post1 m1 #a #postk k ->
     let q : post st a = coerce_eq () q in
     let choose (b:bool)
-    : npst_sep st
+    : pnst_sep_can_step st
         (step_result a q frame)
         (p `st.star` frame)
         (fun x -> (Step?.next x `st.star` frame))
@@ -220,7 +230,19 @@ let rec step
            bind (step m1 (pre0 `st.star` frame))
                 (fun x -> return <| Step _ <| Par m0 (Step?.m x) k) 
     in
-    weaken <| bind (flip()) choose 
+    weaken <| bind (lift <| NST.flip()) choose 
+
+let rec decide_guard
+      (#st:state u#s)
+      (#pre:st.pred)
+      (#a:Type u#a) 
+      (#post:post st a)
+      (guard: st.s -> erased bool)
+      (f:unit -> Dv (pnst_sep_aux st guard a pre post))
+: Dv (pnst_sep st a pre post)
+= //a trivial model
+  decide_guard guard f
+  //Though, operationally we'd run `f ()`
 
 (** The main partial correctness result:
  *    m computations can be interpreted into nmst_sep computations 
@@ -230,17 +252,21 @@ let rec run (#st:state u#s)
             (#a:Type u#a) 
             (#post:post st a)
             (f:m a pre post)
-: Dv (npst_sep st a pre post)
+: Dv (pnst_sep st a pre post)
 = match f with
   | Ret x -> 
     weaken <| return x
   | _ ->
     let k (s:step_result a post st.emp)
-    : Dv (npst_sep st a (Step?.next s) post)
+    : Dv (pnst_sep st a (Step?.next s) post)
     = let Step _ f = s in
       run f
     in
-    weaken <| bind (step f st.emp) k
+    let step_and_continue 
+      : pnst_sep_can_step st a pre post
+      = weaken <| bind (step f st.emp) k
+    in
+    decide_guard st.can_step (fun _ -> step_and_continue)
 
 let ctr = nat
 let tape = ctr -> bool
@@ -274,9 +300,9 @@ let raise_action
       pre = a.pre;
       post = F.on_dom _ (fun (x:U.raise_t u#a u#(max a b) t) -> a.post (U.downgrade_val x));
       step = (fun frame ->
-               P.weaken <|
-               P.bind (a.step frame) <|
-               (fun x -> P.return <| U.raise_val u#a u#(max a b) x))
+               ST.weaken <|
+               ST.bind (a.step frame) <|
+               (fun x -> ST.return <| U.raise_val u#a u#(max a b) x))
    }
 
 let act
@@ -379,7 +405,7 @@ let frame_action (#st:state u#s) (#a:Type u#act)
 : g:action st a { g.post == F.on_dom a (fun x -> f.post x `st.star` frame) /\
                   g.pre == f.pre `st.star` frame }
 = let step (fr:st.pred) 
-    : pst_sep st a 
+    : st_sep st a 
       ((f.pre `st.star` frame) `st.star` fr)
       (F.on_dom a (fun x -> (f.post x `st.star` frame) `st.star` fr))
     = f.step (frame `st.star` fr)

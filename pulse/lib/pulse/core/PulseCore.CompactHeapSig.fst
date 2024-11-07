@@ -162,21 +162,20 @@ let full_mem (s:slsig) = m:s.mem { s.memory.pcm_class.p.refine (heap_of m) }
 
 let separable_of_pcm (a:Type u#a) (p:pcm a)
 : separable a
-= let core = a in
-  let empty = p.p.one in
+= let empty = p.p.one in
   let disjoint = p.p.composable in
   let join = p.p.op in
   let disjoint_sym :
-    m0:core ->
-    m1:core ->
+    m0:a ->
+    m1:a ->
     Lemma (disjoint m0 m1 <==> disjoint m1 m0)
     = fun m0 m1 -> ()
   in
-  let join_commutative (m0:core) (m1:core { disjoint m0 m1 })
+  let join_commutative (m0:a) (m1:a { disjoint m0 m1 })
   : Lemma (disjoint_sym m0 m1; join m0 m1 == join m1 m0)
   = p.comm m0 m1
   in
-  let disjoint_join (m0:core) (m1:core) (m2:core)
+  let disjoint_join (m0:a) (m1:a) (m2:a)
   : Lemma (
       disjoint m1 m2 /\
       disjoint m0 (join m1 m2) ==>
@@ -197,22 +196,22 @@ let separable_of_pcm (a:Type u#a) (p:pcm a)
       join_commutative m2 m0
     )
   in
-  let join_associative (m0:core) (m1:core) (m2:core { disjoint m1 m2 /\ disjoint m0 (join m1 m2) } )
+  let join_associative (m0:a) (m1:a) (m2:a { disjoint m1 m2 /\ disjoint m0 (join m1 m2) } )
   : Lemma (disjoint m0 m1 /\
            disjoint (join m0 m1) m2 /\
            join m0 (join m1 m2) == join (join m0 m1) m2)
   = p.assoc m0 m1 m2
   in
-  let join_empty (m0:core)
+  let join_empty (m0:a)
   : Lemma (disjoint m0 empty /\ join m0 empty == m0)
   = p.is_unit m0
   in
-  { core; core_of=(fun m -> m); empty; disjoint; join; disjoint_sym; join_commutative; disjoint_join; join_associative; join_empty }
+  { empty; disjoint; join; disjoint_sym; join_commutative; disjoint_join; join_associative; join_empty }
 
 let pcm_of_separable (a:Type u#a) (p:separable a)
-: pcm p.core
+: pcm a
 = FStar.Classical.forall_intro_2 p.disjoint_sym;
-  let pp : pcm' p.core = { composable=p.disjoint; op=p.join; one=p.empty } in
+  let pp : pcm' a = { composable=p.disjoint; op=p.join; one=p.empty } in
   let assoc_r : FStar.PCM.lem_assoc_r pp =
     fun x y z ->
       assert (pp.composable x y);

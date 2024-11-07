@@ -62,7 +62,7 @@ fn lock_alive (#v:slprop) (l:lock v)
     returns _:unit
     ensures later (exists* (p:perm). L.lock_active #p l.l) **
             (exists* (p:perm). L.lock_active #p l.l) {
-    later_elim_storable _;
+    later_elim_timeless _;
     L.share_lock_active l.l;
     later_intro (exists* (p:perm). L.lock_active #p l.l);
   };

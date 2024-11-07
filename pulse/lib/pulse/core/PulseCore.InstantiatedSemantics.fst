@@ -16,11 +16,12 @@
 module PulseCore.InstantiatedSemantics
 
 module Sem = PulseCore.Semantics
-module Mem = PulseCore.MemoryAlt
+module Sep = PulseCore.IndirectionTheorySep
+module ITA = PulseCore.IndirectionTheoryActions
 module U = FStar.Universe
 module F = FStar.FunctionalExtensionality
 
-open PulseCore.MemoryAlt
+open PulseCore.IndirectionTheorySep
 
 let laws ()
 : squash (
@@ -28,99 +29,35 @@ let laws ()
     Sem.commutative star /\
     Sem.is_unit emp star
   )
-= let equiv_eq (x y:slprop)
-    : Lemma (x `equiv` y <==> x == y)
-          [SMTPat (x `equiv` y)]
-    = introduce x `equiv` y ==> x == y
-      with _h . slprop_extensionality x y
-  in
-  let _ : squash (Sem.associative star) =
-    introduce 
-        forall x y z. 
-            ((x `star` y) `star` z) ==
-            (x `star` (y `star` z))
-    with star_associative x y z
-  in
-  let _ : squash (Sem.commutative star) = 
-    introduce 
-        forall x y.
-            x `star` y == y `star` x
-        with star_commutative x y
-  in
-  let _ : squash (Sem.is_unit emp star) =
-    introduce
-        forall x.
-            (x `star` emp) == x /\
-            (emp `star` x) == x
-        with emp_unit x
-  in
-  ()
+= Sep.sep_laws()
 
 let state0 (e:inames) : Sem.state u#4 = {
-    // max_act = U.raise_t u#0 u#100 unit;
-    s = mem u#0;
-    is_full_mem = full_mem_pred;
+    s = Sep.mem;
+    is_full_mem = Sep.is_full;
     pred = slprop;
     emp = emp;
     star = star;
-    interp = interp;
-    // evolves = mem_evolves;
+    interp = ITA.interpret;
     invariant = mem_invariant e;
-    laws = laws ()
+    laws = laws ();
+    can_step = (fun x -> Sep.level_at_least_credits x)
 }
 
 let state : Sem.state = state0 GhostSet.empty
 
 let slprop = slprop
 let _eq : squash (slprop == state.pred) = ()
-
-let slprop3_base = slprop3_base
-let cm_slprop3 = cm_slprop3
-let down3 = down3
-let up3 = up3
-let up3_is_slprop3 = up3_is_slprop3
-
-let slprop2_base = slprop2_base
-let cm_slprop2 = cm_slprop2
-let down2 = down2
-let up2 = up2
-let up2_is_slprop2 = up2_is_slprop2
-
-let slprop1_base = slprop1_base
-let cm_slprop1 = cm_slprop1
-let down1 = down1
-let up1 = up1
-let up1_is_slprop1 = up1_is_slprop1
-let slprop_1_is_2 (s:slprop)
-  : Lemma (is_slprop1 s ==> is_slprop2 s)
-  = slprop_1_is_2 s
-
-let slprop_2_is_3 (s:slprop)
-  : Lemma (is_slprop2 s ==> is_slprop3 s)
-  = slprop_2_is_3 s
+let timeless p = Sep.timeless p
 let emp = emp
 
 let pure p = pure p
-let ( ** ) p q = p `star` q
-let ( exists* ) #a p = h_exists (F.on_dom a p)
-
-let slprop3_star p q = slprop3_star_congruence p q
-let slprop3_exists #a p = slprop3_exists_congruence #a (F.on_dom a p)
-let slprop2_star p q = slprop2_star_congruence p q
-let slprop2_exists #a p = slprop2_exists_congruence #a (F.on_dom a p)
-let slprop1_star p q = slprop1_star_congruence p q
-let slprop1_exists #a p = slprop1_exists_congruence #a (F.on_dom a p)
-
-let up3_emp    = up3_emp
-let down3_emp  = down3_emp
-let up3_star   = up3_star
-let down3_star = down3_star
-
-let up2_emp    = up2_emp
-let down2_emp  = down2_emp
-let up2_star   = up2_star
-let down2_star = down2_star
-
+let op_Star_Star = star
+let op_exists_Star #a p = op_exists_Star #a p
+let later_credit = later_credit
+let later = later
+let equiv = equiv
+let later_credit_add n m = later_credit_add n m
+let later_credit_zero () = later_credit_zero()
 let iref = iref
 let inv i p = inv i p
 
@@ -128,17 +65,19 @@ let prop_squash_idem (p:prop)
   : Tot (squash (p == squash p))
   = FStar.PropositionalExtensionality.apply p (squash p)
 
-let slprop_equiv p q = Mem.equiv p q
+let slprop_equiv p q = p == q
+
+let return_slprop_equiv (p q:slprop) (_:squash (p == q))
+: slprop_equiv p q
+= FStar.Squash.join_squash #(equals p p) ()
 
 let unsquash (p:squash (slprop_equiv 'p 'q)) : slprop_equiv 'p 'q =
     prop_squash_idem (slprop_equiv 'p 'q);
     coerce_eq () p
     
-let slprop_equiv_refl p = unsquash ()
+let slprop_equiv_refl p = return_slprop_equiv p p ()
     
-let slprop_equiv_elim p q =
-    introduce (p `slprop_equiv` q) ==> p==q
-    with _ . Mem.slprop_extensionality p q
+let slprop_equiv_elim p q = ()
 
 let slprop_equiv_unit p = unsquash ()
 let slprop_equiv_comm p1 p2 = unsquash ()
@@ -148,23 +87,10 @@ let slprop_equiv_exists
     (#a:Type)
     (p q: a -> slprop)
     (_:squash (forall x. slprop_equiv (p x) (q x)))
-= introduce forall x. p x == q x
-  with slprop_equiv_elim (p x) (q x);
-  F.extensionality _ _ p q;
-  let pf : squash (eq2 #(F.arrow a (fun _ -> slprop))
-                        (F.on_dom a p)
-                        (F.on_dom a q)) = ()
-  in
-  let pf' : squash (eq2 #(F.arrow a (fun _ -> MemoryAlt.slprop))
-                        (F.on_dom a p)
-                        (F.on_dom a q)) = pf
-  in
-  let x : squash (op_exists_Star p == op_exists_Star q) = _ by (
-      T.norm [delta_only [`%op_exists_Star; `%F.on_dom; `%slprop]; unascribe];
-      let bnd = T.nth_var (-1) in
-      T.grewrite_eq bnd
-  ) in
-  unsquash x
+= assert (F.feq p q);
+  assert (F.feq (F.on_dom a p) (F.on_dom a q));
+  Sep.exists_ext p q;
+  return_slprop_equiv (op_exists_Star p) (op_exists_Star q) ()
 
 (* The type of general-purpose computations *)
 let lower (t:Type u#a) : Type0 = unit -> Dv t

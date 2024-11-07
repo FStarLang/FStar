@@ -15,7 +15,6 @@
 *)
 
 module PulseCore.NondeterministicHoareStateMonad
-
 open PulseCore.HoareStateMonad
 
 let req_t (s:Type) = s -> prop
@@ -26,13 +25,13 @@ val nst
     (a:Type u#a)
     (pre:req_t s)
     (post:ens_t s a)
-: Type0
+: Type u#(max a s)
 
 val repr #s #a #pre #post (f:nst #s a pre post) :
   s0:s { pre s0 } ->
   (nat -> bool) ->
   nat ->
-  Dv (res:(a & s & nat) {
+  (res:(a & s & nat) {
     post s0 res._1 res._2
   })
 
@@ -53,7 +52,7 @@ val bind
       (#req_g:a -> req_t s)
       (#ens_g:a -> ens_t s b)
       (f:nst a req_f ens_f)
-      (g:(x:a -> Dv (nst b (req_g x) (ens_g x))))
+      (g:(x:a -> nst b (req_g x) (ens_g x)))
 : nst b
   (fun s0 -> req_f s0 /\ (forall x s1. ens_f s0 x s1 ==> (req_g x) s1))
   (fun s0 r s2 -> req_f s0 /\ (exists x s1. ens_f s0 x s1 /\ (req_g x) s1 /\ (ens_g x) s1 r s2))

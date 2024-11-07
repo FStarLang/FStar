@@ -73,7 +73,7 @@ val lock_alive_inj (l:lock) (#p1 #p2 : perm) (#v1 #v2 : slprop)
 
 val iname_of (l:lock) : iname
 val iname_v_of (l:lock) (v:slprop) : slprop
-val lock_active (#[T.exact (`1.0R)] p:perm) (l:lock) : v:slprop { is_slprop2 v }
+val lock_active (#[T.exact (`1.0R)] p:perm) (l:lock) : v:slprop { timeless v }
 
 val share_lock_active (#p:perm) (l:lock)
   : stt_ghost unit emp_inames

@@ -38,7 +38,7 @@ let cinv_vp c v = cinv_vp_aux c.r v
 
 let active c p = pts_to c.r #(p /. 2.0R) true
 
-let active_is_slprop2 p c = ()
+let active_timeless p c = ()
 
 let iname_of c = c.i
 

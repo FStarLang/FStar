@@ -25,7 +25,7 @@ let increases : preorder int = fun x y -> b2t (x <= y)
 let mctr = MR.mref increases
 
 let inv_core (x:B.box int) (mr:MR.mref increases)
-: slprop2
+: timeless_slprop
 = exists* j. B.pts_to x j ** MR.pts_to mr #1.0R j
 
 fn new_counter ()
@@ -45,7 +45,7 @@ ensures c.inv 0
     ensures (inv ii (inv_core x mr) ** MR.snapshot mr j) ** pure (i < j)
     {
         with_invariants ii {
-            later_elim_storable _;
+            later_elim_timeless _;
             unfold inv_core;
             let res = incr_atomic_box x;
             MR.recall_snapshot mr;
