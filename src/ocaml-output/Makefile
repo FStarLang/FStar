@@ -83,6 +83,7 @@ install-sides:
 	@# ucontrib is needed by examples/crypto
 	$(call install_dir,examples,share/fstar/examples)
 	$(call install_dir,ucontrib,share/fstar/contrib)
+	$(call install_dir,mk,share/fstar/mk)
 	@# Then the tutorial
 ifeq ($(MADOKO),Madoko)
 	@# Build the tutorial first
