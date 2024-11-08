@@ -278,15 +278,6 @@ ensures pts_to a (Seq.upd s (SZ.v i) v)
 
 let op_Array_Assignment = write
 
-(*
-let frame_preserving_upd_one (#elt:Type) (n:erased nat) (s:erased (Seq.seq elt) { Seq.length s == reveal n })
- : FStar.PCM.frame_preserving_upd (PA.pcm elt n)
-      (mk_carrier n 0 s 1.0R)
-      (PA.one #elt #n)
-= fun _ -> admit(); (PA.one #elt #n) 
- *)
-
-
 fn free'
     (#elt: Type)
     (a: array elt)
