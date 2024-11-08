@@ -171,7 +171,11 @@ let list_preorder #a
   = FStar.ReflexiveTransitiveClosure.closure list_extension
 
 let list_anchor : FRAP.anchor_rel list_preorder = fun x y -> list_preorder x y /\ True
-
+let list_anchor_refl (x:list task_t)
+: Lemma (list_anchor x x)
+        [SMTPat (list_anchor x x)]
+= assert (list_anchor x x)
+    by (T.norm [delta_only [`%list_anchor]; simplify])
 let list_preorder_mono_memP (#a:Type) (x:a) (l1 l2:list a)
 : Lemma
   (requires List.memP x l1 /\ list_preorder l1 l2)
@@ -514,7 +518,7 @@ fn spawn (p:pool)
   rewrite each gr_task_st as task.h.g_state;
   assert (AR.anchored task.h.g_state Ready);
 
-  AR.take_snapshot' p.g_runnable;
+  AR.take_snapshot_full p.g_runnable;
 
   gtrade_up task.post post;
   assert (pure (List.memP task (task :: v_runnable)));
@@ -700,14 +704,14 @@ fn unfold_all_tasks_done_cons (t : task_t) (ts : list task_t)
            all_tasks_done ts
 {
   // This should not be so hard.
-  rewrite_by
+  rewrite
     (all_tasks_done (t :: ts))
+  as
     ((exists* (st : task_state).
       pure (st == Done \/ st == Claimed) **
       AR.snapshot t.h.g_state st) **
       all_tasks_done ts)
-    helper_tac
-    ();
+  by (helper_tac ());
   with st. assert AR.snapshot t.h.g_state st;
   st
 }
@@ -721,14 +725,14 @@ fn fold_all_tasks_done_cons (t : task_t) (ts : list task_t)
   ensures  all_tasks_done (t :: ts)
 {
   // This should not be so hard.
-  rewrite_by
+  rewrite
     ((exists* (st : task_state).
       pure (st == Done \/ st == Claimed) **
       AR.snapshot t.h.g_state st) **
       all_tasks_done ts)
+  as
     (all_tasks_done (t :: ts))
-    helper_tac
-    ();
+  by (helper_tac())
 }
 
 instance dup_snapshot
@@ -1094,7 +1098,7 @@ fn rec grab_work' (p:pool)
   let v_runnable = !p.runnable;
   let topt = grab_work'' p v_runnable;
 
-  AR.take_snapshot' p.g_runnable;
+  AR.take_snapshot_full p.g_runnable;
 
   (* If Some, the task is spotted *)
   ghost fn spot (t:task_t)

@@ -491,13 +491,20 @@ let avalue_owns_anchored (#v:Type)
       None? (snd (avalue_perm m))
 
 /// [v1] is compatible with (i.e., not too far from) any anchor of [v0]
+let compat_with_any_anchor_of_val (#v:Type)
+                              (#p:preorder v)
+                              (anchors:anchor_rel p)
+                              (v1:v)
+                              (v0:v)
+  = forall (anchor:v). anchor `anchors` v0 ==>
+                  anchor `anchors` v1
+
 let compat_with_any_anchor_of (#v:Type)
                               (#p:preorder v)
                               (#anchors:anchor_rel p)
                               (v1:v)
                               (v0:avalue anchors)
-  = forall (anchor:v). anchor `anchors` curval (avalue_val v0) ==>
-                  anchor `anchors` v1
+= compat_with_any_anchor_of_val anchors v1 (curval (avalue_val v0))
 
 /// An anchored update: Update the value, but leave the permission
 /// unchanged Only possible if the new value is compatible with any
@@ -618,3 +625,194 @@ let anchored_snapshot_lemma (#v:Type)
             compose_avalue owned anchor == a))
   = ()
 
+
+let fractional_ownership_maybe_with_anchor
+  (#a:Type) (#p:preorder a) (#anc:anchor_rel p)
+  (q:perm)
+  (n:a)
+  (with_anchor:bool)
+  (anchor_current:bool)
+  (k:knowledge anc)
+: prop
+= Owns? k /\ (
+  let Owns ((perm,anc), hist) = k in
+  (with_anchor <==> Some? anc) /\
+  (anchor_current ==> (anc == Some n)) /\
+  (perm == Some q) /\
+  q <=. 1.0R /\
+  curval hist == n
+)
+
+let half_frac #a #p (#anc:anchor_rel p)
+      (f:perm) (n:a) 
+      (k:knowledge anc { fractional_ownership_maybe_with_anchor f n false false k })
+: res:knowledge anc {
+    fractional_ownership_maybe_with_anchor (f /. 2.0R) n false false res /\
+    composable res res /\
+    compose res res == k
+}
+= let Owns av = k in
+  let (Some _, anc), v = av in
+  let half_perm = (Some (f /. 2.0R), anc) in
+  let half = (half_perm, v) in
+  Owns half
+
+let gather_frac #a #p (#anc:anchor_rel p)
+    (f0 f1:perm) (n0 n1:a) 
+    (k0:knowledge anc { fractional_ownership_maybe_with_anchor f0 n0 false false k0 })
+    (k1:knowledge anc { fractional_ownership_maybe_with_anchor f1 n1 false false k1 /\ composable k0 k1 })
+: Lemma (
+    let k = compose k0 k1 in
+    fractional_ownership_maybe_with_anchor (f0 +. f1) n0 false false k /\
+    n0 == n1
+)
+= ()
+
+let update_knowledge #a #p (#anc:anchor_rel p)
+    (n0:a) 
+    (n1:a {
+      p n0 n1 /\
+      n1 `compat_with_any_anchor_of_val anc` n0
+    })
+    (k0:knowledge anc { fractional_ownership_maybe_with_anchor 1.0R n0 false false k0 })
+: k1:knowledge anc {
+    fractional_ownership_maybe_with_anchor 1.0R n1 false false k1
+  }
+= let Owns m = k0 in
+  Owns (avalue_update_anchored_value m n1)
+
+let update_ownership #a #p (#anc:anchor_rel p)
+    (n0:a) 
+    (n1:a {
+      p n0 n1 /\
+      n1 `compat_with_any_anchor_of_val anc` n0
+    })
+    (k0:knowledge anc { fractional_ownership_maybe_with_anchor 1.0R n0 false false k0 })
+: frame_preserving_upd pcm k0 (update_knowledge n0 n1 k0)
+= let Owns m0 = k0 in
+  let fpupd = update_anchored_value m0 n1 in
+  fpupd
+
+let update_full_knowledge #a #p (#anc:anchor_rel p)
+    (n0:a) 
+    (n1:a {
+      p n0 n1 /\
+      anc n1 n1
+    })
+    (anchor_current:bool)
+    (k0:knowledge anc { fractional_ownership_maybe_with_anchor 1.0R n0 true anchor_current k0 })
+: k1:knowledge anc {
+    fractional_ownership_maybe_with_anchor 1.0R n1 true true k1
+  }
+= let Owns m = k0 in
+  Owns (avalue_update_value m n1)
+
+let update_full_ownership #a #p (#anc:anchor_rel p)
+    (n0:a) 
+    (n1:a {
+      p n0 n1 /\
+      anc n1 n1
+    })
+    (anchor_current:bool)
+    (k0:knowledge anc { fractional_ownership_maybe_with_anchor 1.0R n0 true anchor_current k0 })
+: frame_preserving_upd pcm k0 (update_full_knowledge n0 n1 anchor_current k0)
+= let Owns m0 = k0 in
+  let fpupd = update_value m0 n1 in
+  fpupd
+
+let owns_only_anchor
+  (#a:Type) (#p:preorder a) (#anc:anchor_rel p)
+  (n:a)
+  (k:knowledge anc)
+: prop
+= Owns? k /\ (
+    let Owns av = k in
+    let (frac, anc), hist = av in
+    frac == None /\
+    anc == Some n
+  )
+
+let anchored_at
+  (#a:Type) (#p:preorder a) (#anc:anchor_rel p)
+  (n:a)
+  (k:knowledge anc)
+: prop
+= Owns? k /\ (
+    let Owns av = k in
+    let (frac, anc), hist = av in
+    anc == Some n
+  )
+
+let leave_anchor #a #p (#anc:anchor_rel p)
+      (f:perm) (n:a)
+      (has_anchor anchor_current:bool)
+      (k:knowledge anc { fractional_ownership_maybe_with_anchor f n has_anchor anchor_current k })
+: res:knowledge anc {
+    fractional_ownership_maybe_with_anchor f n false false res
+  }
+= let Owns av = k in
+  let (Some f, anc), v = av in
+  let fst = (Some f, None), v in
+  Owns fst
+
+let take_anchor #a #p (#anc:anchor_rel p)
+      (f:perm) (n:a) 
+      (has_anchor anchor_current:bool)
+      (k:knowledge anc { fractional_ownership_maybe_with_anchor f n has_anchor anchor_current k /\ anc n n })
+: res:knowledge anc {
+    owns_only_anchor n res
+}
+= let Owns av = k in
+  let (Some f, anc), v = av in
+  let snd = (None, Some n), v in
+  Owns snd
+
+let share_anchor #a #p (#anc:anchor_rel p)
+      (f:perm) (n:a) 
+      (k:knowledge anc { fractional_ownership_maybe_with_anchor f n true true k })
+: Lemma (
+    let k1 = leave_anchor f n true true k in
+    let k2 = take_anchor f n true true k in
+    composable k1 k2 /\
+    compose k1 k2 == k
+)
+= ()
+
+let gather_anchor #a #p (#anc:anchor_rel p)
+      (f:perm) (n0 n1:a) 
+      (k0:knowledge anc { fractional_ownership_maybe_with_anchor f n0 false false k0 })
+      (k1:knowledge anc { owns_only_anchor n1 k1 /\ composable k0 k1 })
+: Lemma (
+    let k = compose k0 k1 in
+    fractional_ownership_maybe_with_anchor f n0 true false k /\
+    anchored_at n1 k /\
+    anc n1 n0
+)
+= ()
+
+let snapshot_pred 
+  (#a:Type) (#p:preorder a) (#anc:anchor_rel p)
+  (n:a)
+  (k:knowledge anc)
+: prop
+= Owns? k /\ (
+    let Owns ((frac, anc), hist) = k in
+    frac == None /\
+    anc == None /\
+    curval hist == n
+)
+
+let snapshot_knowledge (#a:Type) (#p:preorder a) (#anc:anchor_rel p)
+  (k:knowledge anc { Owns? k })
+: knowledge anc
+= let Owns m = k in
+  Owns (snapshot m)
+
+// let snapshot_compose #a #p (#anc:anchor_rel p)
+//   (k:knowledge anc { O
+//    })
+// : Lemma (
+//     composable k (snapshot_knowledge k) /\
+//     compose k (snapshot_knowledge k) == k
+// )
+// = ()

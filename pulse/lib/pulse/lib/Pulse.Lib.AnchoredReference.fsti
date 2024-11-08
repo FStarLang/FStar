@@ -35,38 +35,29 @@ val pts_to_full
   (#a:Type) (#p:_) (#anc:_)
   (r:ref a p anc)
   (#[T.exact (`1.0R)] p:perm)
-  (n:a) : slprop
+  (n:a)
+: p:slprop { timeless p }
 
 val pts_to
   (#a:Type) (#p:_) (#anc:_)
   (r:ref a p anc)
   (#[T.exact (`1.0R)] p:perm)
-  (n:a) : (v:slprop { timeless v })
+  (n:a)
+: p:slprop { timeless p }
 
 val anchored
   (#a:Type)
   (#p:_)
   (#anc:_)
   (r:ref a p anc)
-  (n:a) : (v:slprop{timeless v})
+  (n:a)
+: p:slprop{ timeless p }
+
+val snapshot (#a:Type) (#p:_) (#anc:_) (r : ref a p anc) (v:a)
+: p:slprop { timeless p }
 
 val alloc (#a:Type) (x:a) (#p:_) (#anc:anchor_rel p)
   : stt_ghost (ref a p anc) [] (pure (anc x x)) (fun r -> pts_to_full r x)
-
-val read (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#f:perm) (#v:erased a)
-  : stt_ghost (w:a{p v w}) []
-        (pts_to r #f v)
-        (fun w -> pts_to r #f w)
-
-val read' (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#f:perm) (#v:erased a)
-  : stt_ghost (erased (w:a{p v w})) []
-        (pts_to r #f v)
-        (fun w -> pts_to r #f w)
-
-val read_full' (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#f:perm) (#v:erased a)
-  : stt_ghost (erased (w:a{p v w})) []
-        (pts_to_full r #f v)
-        (fun w -> pts_to_full r #f w)
 
 val share (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#f: perm) (#v:erased a)
   : stt_ghost unit []
@@ -86,7 +77,7 @@ val write (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#v:erased a) (w : erased a)
 
 val write_full (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#v:erased a) (w : erased a)
   : stt_ghost unit []
-        (pts_to_full r v ** pure (p v w /\ True))
+        (pts_to_full r v ** pure (p v w /\ anc w w))
         (fun _ -> pts_to_full r w)
 
 val drop_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
@@ -96,7 +87,7 @@ val drop_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
 
 val lift_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (va:a)
   : stt_ghost unit []
-        (pts_to r v ** anchored r va)
+        (pts_to r v ** anchored r va ** pure (anc v v))
         (fun _ -> pts_to_full r v ** pure (anc va v /\ True))
 
 val recall_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (va:a) (#f:perm)
@@ -104,8 +95,6 @@ val recall_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) 
         (pts_to r #f v ** anchored r va)
         (fun _ -> pts_to r #f v ** anchored r va ** pure (anc va v))
 
-val snapshot (#a:Type) (#p:_) (#anc:_) (r : ref a p anc) (v:a)
-  : slprop
 
 val dup_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
   : stt_ghost unit []
@@ -117,7 +106,7 @@ val take_snapshot (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p an
         (pts_to r #f v)
         (fun _ -> pts_to r #f v ** snapshot r v)
 
-val take_snapshot' (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
+val take_snapshot_full (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
   : stt_ghost unit []
         (pts_to_full r #f v)
         (fun _ -> pts_to_full r #f v ** snapshot r v)
