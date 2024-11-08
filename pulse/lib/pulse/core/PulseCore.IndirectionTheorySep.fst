@@ -799,8 +799,10 @@ let lower_inames i = GS.empty
 let hogs_iname_ok (i: iref) (is: premem) =
   Inv? (read is i)
 
-let hogs_inames_ok (e: inames) (is: premem) : prop =
+let hogs_inames_ok_internal (e: inames) (is: premem) : prop =
   forall a. GS.mem a e ==> hogs_iname_ok a is
+let hogs_inames_ok (e: inames) (is: mem) : prop =
+  hogs_inames_ok_internal e is
 
 let inames_ok_empty m = ()
 let inames_ok_union i j m =
@@ -1157,17 +1159,32 @@ let hogs_fresh_inv (p: slprop) (is: mem) (a: iref { None? (read is a) }) :
   hogs_single_invariant (level_ is) a p;
   is'
 
-let max x y = if x > y then x else y
-let rec mk_fresh (i: iref) (ctx: list iref) :
-    Tot (j:iref { j >= i /\ fresh_wrt ctx j }) (decreases ctx) =
-  match ctx with
-  | [] -> i
-  | c::cs -> mk_fresh (max i (c+1)) cs
+let inames_live (e:inames) : slprop =
+  F.on_dom premem #(fun _ -> prop) fun m ->
+    hogs_inames_ok_internal e m
+let inames_live_empty () : squash (inames_live GS.empty == emp) =
+  mem_pred_ext (inames_live GS.empty) emp fun w -> ()
+let inames_live_union (e1 e2:inames) 
+: Lemma (inames_live (GhostSet.union e1 e2) == inames_live e1 `star` inames_live e2)
+= mem_pred_ext (inames_live (GhostSet.union e1 e2)) (inames_live e1 `star` inames_live e2) fun w ->
+    introduce inames_live (GhostSet.union e1 e2) w ==> star (inames_live e1) (inames_live e2) w with _.
+      (let w2 = empty_timeless_heap w in ());
+    introduce star (inames_live e1) (inames_live e2) w ==> inames_live (GhostSet.union e1 e2) w with _.
+      let (w1, w2) = star_elim (inames_live e1) (inames_live e2) w in ()
+let inames_live_inv (i:iref) (p:slprop) (m:mem)
+: Lemma ((inv i p) m ==> inames_live (FStar.GhostSet.singleton deq_iref i) m)
+= ()
+
+// let max x y = if x > y then x else y
+// let rec mk_fresh (i: iref) (ctx: list iref) :
+//     Tot (j:iref { j >= i /\ fresh_wrt ctx j }) (decreases ctx) =
+//   match ctx with
+//   | [] -> i
+//   | c::cs -> mk_fresh (max i (c+1)) cs
 
 let fresh_inv p m ctx =
-  let f = IndefiniteDescription.indefinite_description_ghost iref fun f ->
+  let i = IndefiniteDescription.indefinite_description_ghost iref fun f ->
     fresh_addr m f in
-  let i: iref = mk_fresh f ctx in
   let m': mem = hogs_fresh_inv p m i in
   let _: squash (inv i p `star` mem_invariant (single i) m' == inv i p) =
     pm_mem_invariant_empty();

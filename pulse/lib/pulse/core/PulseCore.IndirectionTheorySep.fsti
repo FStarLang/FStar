@@ -396,17 +396,18 @@ val mem_invariant_buy (e:inames) (n:nat) (m:mem)
 : Lemma
   (ensures mem_invariant e m == mem_invariant e (buy_mem n m))
 
-let fresh_wrt (ctx:list iref)
-              (i:iref)
-  = forall i'. List.Tot.memP i' ctx ==> i' =!= i
+val inames_live (e:inames) : slprop
+val inames_live_empty () : squash (inames_live GhostSet.empty == emp)
+val inames_live_union (i j:inames) : squash (inames_live (GhostSet.union i j) == inames_live i `star` inames_live j)
+val inames_live_inv (i:iref) (p:slprop) (m:mem) : squash (interp (inv i p) m ==> interp (inames_live (single i)) m)
 
 val fresh_inv
     (p:slprop)
     (m:mem)
-    (ctx:FStar.Ghost.erased (list iref))
+    (ctx:inames { interp (inames_live ctx) m })
 : i:iref &
   m':mem { 
-    fresh_wrt ctx i /\
+    not (GhostSet.mem i ctx) /\
     disjoint m m' /\
     is_ghost_action m (join_mem m m') /\
     timeless_mem_of (join_mem m m') == timeless_mem_of m /\
