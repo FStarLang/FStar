@@ -1,6 +1,5 @@
 module PulseCore.IndirectionTheorySep
 module F = FStar.FunctionalExtensionality
-module T = FStar.Tactics
 module PM = PulseCore.MemoryAlt
 open FStar.Ghost 
 

@@ -2,12 +2,8 @@ module PulseCore.IndirectionTheorySep
 open PulseCore.IndirectionTheory
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
-module T = FStar.Tactics
 module PM = PulseCore.MemoryAlt
-module RTC = FStar.ReflexiveTransitiveClosure
 module HS = PulseCore.HeapSig
-module E = PulseCore.HeapExtension
-module B = PulseCore.BaseHeapSig
 module IT = PulseCore.IndirectionTheory
 open FStar.Ghost {erased, hide, reveal}
 
@@ -680,7 +676,7 @@ let rejuvenate1 (m: premem) (m': premem { mem_le m' (age1_ m) }) :
   mem_ext (age1_ m'') m' (fun _ -> ());
   m''
 
-#push-options "--z3rlimit 20"
+#push-options "--z3rlimit 30"
 let rejuvenate1_sep (m m1': premem) (m2': premem { disjoint_mem m1' m2' /\ age1_ m == join_premem m1' m2' }) :
     m'':(premem&premem) { age1_ m''._1 == m1' /\ age1_ m''._2 == m2'
       /\ disjoint_mem m''._1 m''._2 /\ m == join_premem m''._1 m''._2 } =
