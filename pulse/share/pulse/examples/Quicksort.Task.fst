@@ -100,15 +100,6 @@ fn rec t_quicksort
   }
 }
 
-
-assume val split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
-  : stt_atomic iname
-               is
-               (pledge is f (v1 ** v2))
-               (fun i -> pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2)
-
-#set-options "--print_implicits"
-
 fn rec quicksort
   (nthr : pos)
   (a : A.array int)
@@ -127,14 +118,14 @@ fn rec quicksort
 
   t_quicksort p a lo hi #lb #rb;
 
-  let i = split_pledge _ _;
+  // let i = split_pledge _ _;
 
-  T.await_pool p (T.pool_alive #(1.0R /. 2.0R) p);
+  T.await_pool p (T.pool_alive #(1.0R /. 2.0R) p ** _);
 
   T.gather_alive p _;
 
   T.teardown_pool p;
-  redeem_pledge _ _ _;
+  // redeem_pledge _ _ _;
   drop_ (T.pool_done p)
 }
 
