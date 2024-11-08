@@ -39,19 +39,6 @@ let lock_inv r p : slprop = exists* v. Box.pts_to r v ** (maybe (v = 0ul) p)
 let protects l p = inv l.i (lock_inv l.r p)
 
 
-atomic
-fn mk_lock (r:Box.box U32.t) (i:iname) #p
-requires inv i (lock_inv r p)
-returns l:lock
-ensures protects l p
-{
-  let res = {r;i};
-  rewrite each r as res.r, i as res.i; (* proof hint *)
-  res
-}
-
-
-
 fn create (p:slprop)
 requires p
 returns l:lock
@@ -59,7 +46,7 @@ ensures protects l p
 {
    let r = Box.alloc 0ul; 
    let i = new_invariant (lock_inv r p);
-   mk_lock r i
+   ({r; i} <: lock)
 }
 
 
