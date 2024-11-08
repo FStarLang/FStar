@@ -23,7 +23,7 @@ module G = FStar.Ghost
 module Set = FStar.Set
 module T = FStar.Tactics.V2
 open Pulse.Lib.Dv {}
-open FStar.ExtractAs {}
+open FStar.ExtractAs
 
 (* This attribute can be used on the indexes of a slprop
    to instruct the checker to call the SMT solver to relate
@@ -492,6 +492,7 @@ val later_credit_zero ()
 val later_credit_add (a b: nat)
 : Lemma (later_credit (a + b) == later_credit a ** later_credit b)
 
+inline_for_extraction [@@extract_as (`(fun (amt: nat) -> ()))]
 val later_credit_buy (amt: nat)
 : stt unit emp fun _ -> later_credit amt
 
