@@ -15,12 +15,12 @@
 *)
 
 module Pulse.Lib.AnchoredReference
-
-open Pulse.Lib.Core
+open Pulse.Lib.Pervasives
 open PulseCore.FractionalPermission
 open FStar.Ghost
 open FStar.Preorder
 open Pulse.Lib.FractionalAnchoredPreorder
+#lang-pulse
 
 module U32 = FStar.UInt32
 module T = FStar.Tactics
@@ -56,62 +56,65 @@ val anchored
 val snapshot (#a:Type) (#p:_) (#anc:_) (r : ref a p anc) (v:a)
 : p:slprop { timeless p }
 
-val alloc (#a:Type) (x:a) (#p:_) (#anc:anchor_rel p)
-  : stt_ghost (ref a p anc) [] (pure (anc x x)) (fun r -> pts_to_full r x)
 
-val share (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#f: perm) (#v:erased a)
-  : stt_ghost unit []
-        (pts_to r #f v)
-        (fun _ -> pts_to r #(f /. 2.0R) v ** pts_to r #(f /. 2.0R) v)
+ghost
+fn alloc (#a:Type) (x:a) (#p:_) (#anc:anchor_rel p)
+requires pure (anc x x)
+returns r:ref a p anc
+ensures pts_to_full r x
+
+ghost
+fn share (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#f: perm) (#v:erased a)
+requires pts_to r #f v
+ensures  pts_to r #(f /. 2.0R) v ** pts_to r #(f /. 2.0R) v
 
 [@@allow_ambiguous]
-val gather (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#v1 #v2:erased a) (#f1 #f2: perm)
-  : stt_ghost unit []
-        (pts_to r #f1 v1 ** pts_to r #f2 v2)
-        (fun _ -> pts_to r #(f1 +. f2) v1 ** pure (v1 == v2))
+ghost
+fn gather (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#v1 #v2:erased a) (#f1 #f2: perm)
+requires pts_to r #f1 v1 ** pts_to r #f2 v2
+ensures pts_to r #(f1 +. f2) v1 ** pure (v1 == v2)
 
-val write (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#v:erased a) (w : erased a)
-  : stt_ghost unit []
-        (pts_to r v ** pure (p v w /\ (forall anchor. anc anchor v ==> anc anchor w)))
-        (fun _ -> pts_to r w)
+ghost
+fn write (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#v:erased a) (w : erased a)
+requires pts_to r v ** pure (p v w /\ (forall anchor. anc anchor v ==> anc anchor w))
+ensures pts_to r w
 
-val write_full (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#v:erased a) (w : erased a)
-  : stt_ghost unit []
-        (pts_to_full r v ** pure (p v w /\ anc w w))
-        (fun _ -> pts_to_full r w)
+ghost
+fn write_full (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#v:erased a) (w : erased a)
+requires pts_to_full r v ** pure (p v w /\ anc w w)
+ensures pts_to_full r w
 
-val drop_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
-  : stt_ghost unit []
-        (pts_to_full r v)
-        (fun _ -> pts_to r v ** anchored r v)
+ghost
+fn drop_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
+requires pts_to_full r v
+ensures pts_to r v ** anchored r v
 
-val lift_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (va:a)
-  : stt_ghost unit []
-        (pts_to r v ** anchored r va ** pure (anc v v))
-        (fun _ -> pts_to_full r v ** pure (anc va v /\ True))
+ghost
+fn lift_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (va:a)
+requires pts_to r v ** anchored r va ** pure (anc v v)
+ensures pts_to_full r v ** pure (anc va v /\ True)
 
-val recall_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (va:a) (#f:perm)
-  : stt_ghost unit []
-        (pts_to r #f v ** anchored r va)
-        (fun _ -> pts_to r #f v ** anchored r va ** pure (anc va v))
+ghost
+fn recall_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (va:a) (#f:perm)
+requires pts_to r #f v ** anchored r va
+ensures pts_to r #f v ** anchored r va ** pure (anc va v)
 
+ghost
+fn dup_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
+requires snapshot r v
+ensures snapshot r v ** snapshot r v
 
-val dup_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
-  : stt_ghost unit []
-        (snapshot r v)
-        (fun _ -> snapshot r v ** snapshot r v)
+ghost
+fn take_snapshot (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
+requires pts_to r #f v
+ensures pts_to r #f v ** snapshot r v
 
-val take_snapshot (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
-  : stt_ghost unit []
-        (pts_to r #f v)
-        (fun _ -> pts_to r #f v ** snapshot r v)
+ghost
+fn take_snapshot_full (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
+requires pts_to_full r #f v
+ensures pts_to_full r #f v ** snapshot r v
 
-val take_snapshot_full (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
-  : stt_ghost unit []
-        (pts_to_full r #f v)
-        (fun _ -> pts_to_full r #f v ** snapshot r v)
-
-val recall_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) #f (#v0 #v:a)
-  : stt_ghost unit []
-        (pts_to r #f v ** snapshot r v0)
-        (fun _ -> pts_to r #f v ** snapshot r v0 ** pure (p v0 v /\ True))
+ghost
+fn recall_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) #f (#v0 #v:a)
+requires pts_to r #f v ** snapshot r v0
+ensures pts_to r #f v ** snapshot r v0 ** pure (p v0 v /\ True)

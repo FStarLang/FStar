@@ -807,12 +807,3 @@ let snapshot_knowledge (#a:Type) (#p:preorder a) (#anc:anchor_rel p)
 : knowledge anc
 = let Owns m = k in
   Owns (snapshot m)
-
-// let snapshot_compose #a #p (#anc:anchor_rel p)
-//   (k:knowledge anc { O
-//    })
-// : Lemma (
-//     composable k (snapshot_knowledge k) /\
-//     compose k (snapshot_knowledge k) == k
-// )
-// = ()
