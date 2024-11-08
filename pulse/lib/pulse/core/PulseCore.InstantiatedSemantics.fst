@@ -45,7 +45,6 @@ let state0 (e:inames) : Sem.state u#4 = {
 
 let state : Sem.state = state0 GhostSet.empty
 
-let slprop = slprop
 let _eq : squash (slprop == state.pred) = ()
 let timeless p = Sep.timeless p
 let emp = emp

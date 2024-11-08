@@ -397,7 +397,7 @@ val mem_invariant_buy (e:inames) (n:nat) (m:mem)
   (ensures mem_invariant e m == mem_invariant e (buy_mem n m))
 
 val inames_live (e:inames) : slprop
-val inames_live_empty () : squash (inames_live GhostSet.empty == emp)
+val inames_live_empty () : squash (emp == inames_live GhostSet.empty)
 val inames_live_union (i j:inames) : squash (inames_live (GhostSet.union i j) == inames_live i `star` inames_live j)
 val inames_live_inv (i:iref) (p:slprop) (m:mem) : squash (interp (inv i p) m ==> interp (inames_live (single i)) m)
 

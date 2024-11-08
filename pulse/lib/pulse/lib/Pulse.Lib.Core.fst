@@ -140,7 +140,7 @@ let slprop_equiv_ext p1 p2 _ = slprop_equiv_refl p1
 module Act = PulseCore.Action
 
 let iname = Act.iref
-let deq_iname = Act.deq_iref
+let deq_iname = Sep.deq_iref
 instance non_informative_iname = {
   reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer iname;
 }
@@ -151,6 +151,7 @@ let join_emp is =
   GhostSet.lemma_equal_intro (join_inames emp_inames is) is
 
 let inv i p = Act.(inv i p)
+let inames_live = Sep.inames_live
 let add_already_there i is = GhostSet.lemma_equal_intro (add_inv is i) is
 
 ////////////////////////////////////////////////////////////////////
@@ -241,9 +242,11 @@ let slprop_ref_gather x #y1 #y2 = A.slprop_ref_gather x y1 y2
 ////////////////////////////////////////////////////////////////////
 let dup_inv = A.dup_inv
 let new_invariant = A.new_invariant
-let fresh_wrt = PulseCore.Action.fresh_wrt
-let fresh_wrt_def i c = ()
 let fresh_invariant = A.fresh_invariant
+let inames_live_inv = A.inames_live_inv
+let inames_live_empty _ = rewrite_eq emp (inames_live emp_inames) (Sep.inames_live_empty ())
+let share_inames_live i j = rewrite_eq (inames_live (GhostSet.union i j)) (inames_live i ** inames_live j) (Sep.inames_live_union i j)
+let gather_inames_live i j = rewrite_eq (inames_live i ** inames_live j) (inames_live (GhostSet.union i j)) (Sep.inames_live_union i j)
 let with_invariant = A.with_invariant
 let with_invariant_g = A.with_invariant_g
 let invariant_name_identifies_invariant #p #q i j = A.invariant_name_identifies_invariant p q i j

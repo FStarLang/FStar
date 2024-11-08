@@ -19,7 +19,7 @@ module PulseCore.Action
 module S = FStar.Set
 module I = PulseCore.InstantiatedSemantics
 module PP = PulseCore.Preorder
-
+module Sep = PulseCore.IndirectionTheorySep
 open FStar.PCM
 open FStar.Ghost
 
@@ -34,10 +34,9 @@ let ( ^^ ) (r1 r2 : reifiability) : reifiability =
   else Atomic
 
 [@@ erasable]
-val iref : Type0
-val deq_iref : FStar.GhostSet.decide_eq iref
-let inames = FStar.GhostSet.set iref
-let singleton (i:iref) : inames = GhostSet.singleton deq_iref i
+let iref : Type0 = Sep.iref
+let inames = Sep.inames
+let singleton (i:iref) : inames = Sep.single i
 let emp_inames : inames = GhostSet.empty
 
 let join_inames (is1 is2 : inames) : inames =
@@ -148,13 +147,11 @@ val dup_inv (i:iref) (p:slprop)
 val new_invariant (p:slprop)
 : act iref Ghost emp_inames p (fun i -> inv i p)
 
-let fresh_wrt (i:iref)
-              (ctx:list iref)
-: prop
-= forall i'. List.Tot.memP i' ctx ==> i' =!= i
+val fresh_invariant (ctx:inames) (p:slprop)
+: act (i:iref { ~(GhostSet.mem i ctx) }) Ghost emp_inames (p ** Sep.inames_live ctx) (fun i -> inv i p ** Sep.inames_live ctx)
 
-val fresh_invariant (ctx:list iref) (p:slprop)
-: act (i:iref { i `fresh_wrt` ctx }) Ghost emp_inames p (fun i -> inv i p)
+val inames_live_inv (i:iref) (p:slprop)
+: act unit Ghost emp_inames (inv i p) (fun _ -> inv i p ** Sep.inames_live (singleton i))
 
 val with_invariant
     (#a:Type)
@@ -166,17 +163,6 @@ val with_invariant
     (i:iref { not (mem_inv f_opens i) })
     (f:unit -> act a r f_opens (later p ** fp) (fun x -> later p ** fp' x))
 : act a r (add_inv f_opens i) ((inv i p) ** fp) (fun x -> (inv i p) ** fp' x)
-
-// val distinct_invariants_have_distinct_names
-//     (#p:slprop)
-//     (#q:slprop)
-//     (i j:iref)
-//     (_:squash (p =!= q))
-// : act (squash (i =!= j))
-//       Ghost
-//       emp_inames 
-//       ((inv i p) ** (inv j q))
-//       (fun _ -> (inv i p) ** (inv j q))
 
 val invariant_name_identifies_invariant
       (p q:slprop)

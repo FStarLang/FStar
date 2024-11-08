@@ -14,9 +14,9 @@
    limitations under the License.
 *)
 module PulseCore.InstantiatedSemantics
-
+open PulseCore.IndirectionTheorySep
 [@@erasable]
-val slprop : Type u#4
+let slprop : Type u#4 = slprop
 val timeless (p:slprop) : prop
 val emp : slprop
 val pure (p:prop) : slprop

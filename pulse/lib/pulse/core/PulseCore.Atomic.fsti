@@ -21,7 +21,7 @@ open FStar.Ghost
 open PulseCore.InstantiatedSemantics
 open PulseCore.Action
 open PulseCore.Observability
-
+module Sep = PulseCore.IndirectionTheorySep
 (* stt_unobservable a opens pre post: The type of a pulse computation
    that when run in a state satisfying `pre`
    takes an unobservable atomic step
@@ -253,11 +253,14 @@ val dup_inv (i:iref) (p:slprop)
 val new_invariant (p:slprop)
   : stt_ghost iref emp_inames p (fun i -> inv i p)
 
-val fresh_invariant (ctx:list iref) (p:slprop)
-: stt_ghost (i:iref { i `fresh_wrt` ctx })
+val fresh_invariant (ctx:inames) (p:slprop)
+: stt_ghost (i:iref { ~(i `GhostSet.mem` ctx) })
             emp_inames
-            p
-            (fun i -> inv i p)
+            (p ** Sep.inames_live ctx)
+            (fun i -> inv i p ** Sep.inames_live ctx)
+
+val inames_live_inv (i:iref) (p:slprop)
+: stt_ghost unit emp_inames (inv i p) (fun _ -> inv i p ** Sep.inames_live (singleton i))
 
 val with_invariant
     (#a:Type)

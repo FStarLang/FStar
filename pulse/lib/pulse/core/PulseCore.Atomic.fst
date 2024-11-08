@@ -290,6 +290,8 @@ let new_invariant (p:slprop)
 
 let fresh_invariant ctx p = A.fresh_invariant ctx p
 
+let inames_live_inv (i:iref) (p:slprop) = A.inames_live_inv i p
+
 let with_invariant #a #fp #fp' #f_opens #p i $f =
   A.with_invariant i f
 

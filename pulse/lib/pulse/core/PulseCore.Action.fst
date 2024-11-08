@@ -131,50 +131,6 @@ let stt_of_action3 (#a:Type u#3) #ak #pre #post (m:ITA._act_except a ak GhostSet
 
 let maybe_ghost (r:reifiability) = r = Ghost
 
-// let pre_act
-//     (a:Type u#a)
-//     (r:reifiability)
-//     (opens:inames)
-//     (pre:slprop)
-//     (post:a -> slprop)
-// = Mem._pst_action_except a (maybe_ghost r) opens pre post
-
-// let force 
-//     #a (#r:reifiability)
-//     (#opens:inames) (#pre:slprop) (#post:a -> slprop)    
-//     (f:pre_act a r opens pre post)
-// : Mem._pst_action_except a (maybe_ghost r) opens pre post
-// = f
-
-// let mem_action_as_action
-//         (#a:Type u#a)
-//         (#except:inames)
-//         (#req:slprop)
-//         (#ens: a -> slprop)
-//         (act:Mem.pst_action_except a except req ens)
-// : action a except req ens
-// = act
-
-// let mem_pst_action_as_action
-//         (#a:Type u#a)
-//         (#except:inames)
-//         (#req:slprop)
-//         (#ens: a -> slprop)
-//         (act:Mem.pst_action_except a except req ens)
-// : action a except req ens
-// = act
-
-// let action_of_pre_act
-//     (#a:Type u#a)
-//     (#r:reifiability)
-//     (#opens:inames)
-//     (#pre:slprop)
-//     (#post:a -> slprop)
-//     (f:pre_act a r opens pre post)
-// : action a opens pre post
-// = f
-
-let iref = iref
 let deq_iref = deq_iref
 
 let as_action_kind : reifiability -> ITA.action_kind = function
@@ -414,6 +370,9 @@ let exists_equiv (#a:_) (#p:a -> slprop)
  
 module T = FStar.Tactics
 let fresh_invariant ctx p = fun #ictx -> ITA.fresh_invariant ictx p ctx
+
+let inames_live_inv (i:iref) (p:slprop) = fun #ictx -> ITA.inames_live_inv ictx i p
+
 let with_invariant #a #r #fp #fp' #f_opens #p i f =
   fun #ictx ->
   let f : act a r f_opens (later p `star` fp) (fun x -> later p `star` fp' x) = f () in

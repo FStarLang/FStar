@@ -179,7 +179,7 @@ let (/!) (is1 is2 : inames) : Type0 =
   GhostSet.disjoint is1 is2
 
 val inv (i:iname) (p:slprop) : slprop
-
+val inames_live (inames:inames) : slprop
 let mem_iname (e:inames) (i:iname) : erased bool = elift2 (fun e i -> GhostSet.mem i e) e i
 let mem_inv (e:inames) (i:iname) : GTot bool = mem_iname e i
 
@@ -553,22 +553,22 @@ val dup_inv (i:iname) (p:slprop)
 val new_invariant (p:slprop)
 : stt_ghost iname emp_inames p (fun i -> inv i p)
 
-// val new_storable_invariant (p:slprop2)
-// : stt_ghost (i:iname { storable_iname i }) emp_inames p (fun i -> inv i p)
-
-val fresh_wrt (i:iname) (c:list iname)
-: prop
-
-val fresh_wrt_def (i:iname) (c:list iname)
-: Lemma
-    (fresh_wrt i c <==>
-    (forall i'. List.Tot.memP i' c ==> i' =!= i))
-    [SMTPat (fresh_wrt i c)]
-
 val fresh_invariant
-    (ctx:list iname)
+    (ctx:inames)
     (p:slprop)
-: stt_ghost (i:iname { i `fresh_wrt` ctx }) emp_inames p (fun i -> inv i p)
+: stt_ghost (i:iname { ~(i `GhostSet.mem` ctx) }) emp_inames (p ** inames_live ctx) (fun i -> inv i p ** inames_live ctx)
+
+val inames_live_inv (i:iname) (p:slprop)
+: stt_ghost unit emp_inames (inv i p) fun _ -> inv i p ** inames_live (single i)
+
+val inames_live_empty ()
+: stt_ghost unit emp_inames emp fun _ -> inames_live emp_inames
+
+val share_inames_live (i j:inames)
+: stt_ghost unit emp_inames (inames_live (GhostSet.union i j)) fun _ -> inames_live i ** inames_live j
+
+val gather_inames_live (i j:inames)
+: stt_ghost unit emp_inames (inames_live i ** inames_live j) fun _ -> inames_live (GhostSet.union i j)
 
 val with_invariant
     (#a:Type)
