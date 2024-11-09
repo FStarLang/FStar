@@ -21,12 +21,17 @@ open Pulse.Lib.Pervasives
 
 val pledge (is:inames) (f:slprop) (v:slprop) : slprop
 
+ghost
+fn pledge_inames_live (is:inames) (f p:slprop)
+requires pledge is f p
+ensures inames_live is ** pledge is f p
+
 unfold
 let pledge0 (f:slprop) (v:slprop) : slprop = pledge emp_inames f v
 
 ghost
 fn pledge_sub_inv (is1:inames) (is2:inames { inames_subset is1 is2 }) (f v:slprop)
-  requires pledge is1 f v
+  requires pledge is1 f v ** inames_live is2
   ensures pledge is2 f v
 
 (* Anything that holds now holds in the future too. *)
@@ -38,7 +43,7 @@ fn return_pledge (f v:slprop)
 ghost
 fn make_pledge (is:inames) (f:slprop) (v:slprop) (extra:slprop)
   (k:unit -> stt_ghost unit is (f ** extra) (fun _ -> f ** v))
-  requires extra
+  requires extra ** inames_live is
   ensures pledge is f v
 
 ghost
@@ -95,8 +100,10 @@ fn join_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
 a join defined yet. *)
 ghost
 fn squash_pledge' (is1 is2 is:inames) (f:slprop) (v1:slprop)
-  requires pure (inames_subset is1 is) ** pure (inames_subset is2 is) **
-           pledge is1 f (pledge is2 f v1)
+  requires pure (inames_subset is1 is) ** 
+           pure (inames_subset is2 is) **
+           pledge is1 f (pledge is2 f v1) **
+           inames_live is
   ensures pledge is f v1
 
 ghost

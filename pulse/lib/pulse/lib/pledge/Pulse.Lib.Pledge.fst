@@ -30,10 +30,31 @@ let slprop_equiv_refl_eq (v1 v2 : slprop) (_ : squash (v1 == v2)) : slprop_equiv
 let __tac () : Tac unit =
   apply (`slprop_equiv_refl_eq)
 
-let pledge is f v = (==>*) #is f (f ** v)
+let pledge is f v = inames_live is ** trade #is f (f ** v)
 
-let pledge_sub_inv is1 is2 (f:slprop) (v:slprop) = trade_sub_inv _ _
 
+ghost
+fn pledge_inames_live (is:inames) (f p:slprop)
+requires pledge is f p
+ensures inames_live is ** pledge is f p
+{
+  unfold pledge;
+  dup_inames_live is;
+  fold pledge;
+}
+
+ghost
+fn pledge_sub_inv (is1:inames) (is2:inames { inames_subset is1 is2 })(f:slprop) (v:slprop)
+requires pledge is1 f v ** inames_live is2
+ensures pledge is2 f v
+{
+  unfold pledge;
+  trade_sub_inv #is1 #is2 _ _;
+  gather_inames_live is1 is2;
+  GhostSet.lemma_equal_intro (GhostSet.union is1 is2) is2;
+  rewrite (inames_live (GhostSet.union is1 is2)) as inames_live is2;
+  fold pledge;
+} 
 
 ghost
 fn return_pledge (f v : slprop)
@@ -48,17 +69,17 @@ fn return_pledge (f v : slprop)
     ()
   };
   intro_trade #emp_inames f (f ** v) v aux;
-  fold ((==>*) #emp_inames f (f ** v));
+  fold (trade #emp_inames f (f ** v));
+  inames_live_empty ();
   fold pledge;
 }
-
 
 
 ghost
 fn make_pledge
   (is:inames) (f v extra:slprop)
   (k:unit -> stt_ghost unit is (f ** extra) (fun _ -> f ** v))
-  requires extra
+  requires extra ** inames_live is
   ensures pledge is f v
 {
   ghost
@@ -71,11 +92,20 @@ fn make_pledge
   };
 
   intro_trade #is f (f ** v) extra aux;
-  fold ((==>*) #is f (f ** v));
   fold pledge;
 }
 
 
+
+ghost
+fn redeem_pledge_aux (is:inames) (f v:slprop)
+  requires f ** pledge is f v
+  ensures f ** v ** inames_live is
+  opens is
+{
+  unfold pledge;
+  elim_trade #is f (f ** v);
+}
 
 ghost
 fn redeem_pledge (is:inames) (f v:slprop)
@@ -83,27 +113,10 @@ fn redeem_pledge (is:inames) (f v:slprop)
   ensures f ** v
   opens is
 {
-  unfold pledge;
-  unfold ((==>*) #is f (f ** v));
-  elim_trade #is f (f ** v);
+  redeem_pledge_aux is f v;
+  drop_ (inames_live is)
 }
 
-
-// 
-// ghost
-// fn pledge_invs_aux (is:inames) (f:slprop) (v:slprop)
-//   requires pledge is f v
-//   ensures pledge is f v ** inames_inv is
-// {
-//   unfold pledge;
-//   unfold ((==>*) #is f (f ** v));
-//   trade_invs ();
-//   fold ((==>*) #is f (f ** v));
-//   fold pledge
-// }
-// 
-
-// let pledge_invs = pledge_invs_aux
 
 
 ghost
@@ -120,6 +133,7 @@ fn squash_pledge (is:inames) (f:slprop) (v1:slprop)
     redeem_pledge is f (pledge is f v1);
     redeem_pledge is f v1
   };
+  pledge_inames_live is f (pledge is f v1);
   make_pledge is f v1 (pledge is f (pledge is f v1)) aux
 }
 
@@ -144,6 +158,7 @@ fn bind_pledge
     k ()
   };
 
+  pledge_inames_live is f v1;
   make_pledge is f (pledge is f v2) (extra ** pledge is f v1) aux;
   squash_pledge is f v2
 }
@@ -190,7 +205,7 @@ fn rewrite_pledge_full
     redeem_pledge is f v1;
     k ()
   };
-  
+  pledge_inames_live is f v1;
   make_pledge is f v2 (pledge is f v1) aux;
 }
 
@@ -235,7 +250,7 @@ fn join_pledge
     redeem_pledge is f v1;
     redeem_pledge is f v2;
   };
-  
+  pledge_inames_live is f v1;
   make_pledge is f (v1 ** v2) (pledge is f v1 ** pledge is f v2) aux;
 }
 
@@ -247,7 +262,8 @@ fn squash_pledge'
   (f v1:slprop)
   requires pure (inames_subset is1 is) **
            pure (inames_subset is2 is) **
-           pledge is1 f (pledge is2 f v1)
+           pledge is1 f (pledge is2 f v1) **
+           inames_live is
   ensures pledge is f v1
 {
   ghost
@@ -259,7 +275,6 @@ fn squash_pledge'
     redeem_pledge is1 f (pledge is2 f v1);
     redeem_pledge is2 f v1
   };
-  
   make_pledge is f v1 (pledge is1 f (pledge is2 f v1)) aux
 }
 
@@ -483,6 +498,7 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   returns i : iname
   ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2 ** pure (not (mem_inv is i))
 {
+  pledge_inames_live is f (v1 ** v2);
   let r1 = GR.alloc false;
   let r2 = GR.alloc false;
   GR.share2 r1;
@@ -490,14 +506,17 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   
   fold (inv_p' is f v1 v2 r1 r2 false false);
   fold inv_p;
-
-  let i = new_invariant (inv_p is f v1 v2 r1 r2);
+  let i = fresh_invariant is (inv_p is f v1 v2 r1 r2);
+  inames_live_inv i (inv_p is f v1 v2 r1 r2);
+  gather_inames_live is (single i);
   Pulse.Class.Duplicable.dup (inv i (inv_p is f v1 v2 r1 r2)) ();
   // FIXME: should follow from freshness
-  assume_ (pure (not (mem_inv is i)));
+  // assume_ (pure (not (mem_inv is i)));
 
   let is' = add_inv is i;
-
+  GhostSet.lemma_equal_intro (GhostSet.union is (single i)) is';
+  rewrite (inames_live (GhostSet.union is (single i))) as (inames_live is');
+  dup_inames_live is';
   later_credit_add 1 1;
   rewrite
     later_credit 2
