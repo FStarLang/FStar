@@ -6,7 +6,7 @@ include Pulse.Lib.Sort.Merge.Spec
 include Pulse.Lib.Array
 
 module SM = Pulse.Lib.SeqMatch.Util
-module AS = Pulse.Lib.ArraySwap
+module AS = Pulse.Lib.Swap.Array
 module SZ = FStar.SizeT
 module R = Pulse.Lib.Reference
 module Trade = Pulse.Lib.Trade.Util

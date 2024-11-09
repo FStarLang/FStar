@@ -14,10 +14,10 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.ArraySwap
+module Pulse.Lib.Swap.Array
 #lang-pulse
 module R = Pulse.Lib.Reference
-module Prf = Pulse.Lib.ArraySwap.Proof
+module Prf = Pulse.Lib.Swap.Spec
 #set-options "--fuel 2 --ifuel 1"
 #restart-solver
 

@@ -1,4 +1,4 @@
-module Pulse.Lib.ArraySwap.Proof
+module Pulse.Lib.Swap.Spec
 open FStar.Math.Lemmas
 open FStar.Mul
 
