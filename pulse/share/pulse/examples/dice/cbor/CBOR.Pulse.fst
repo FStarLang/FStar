@@ -631,7 +631,7 @@ ensures
 
 
 module SM = Pulse.Lib.SeqMatch
-module AS = Pulse.Lib.ArraySwap
+module AS = Pulse.Lib.Swap.Array
 
 let cbor_map_sort_merge_invariant_prop
     (lo: SZ.t)
