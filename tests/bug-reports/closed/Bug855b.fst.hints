@@ -1,0 +1,69 @@
+[
+  "¶ÇO,\u0007¤ŠU¶qG®\u007f[Y\u0010",
+  [
+    [
+      "Bug855b.wf_Q",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
+      ],
+      0,
+      "81a4b7ccaf1b9c58a4a4c1bc89b3d202"
+    ],
+    [
+      "Bug855b.__proj__Q_Cons__item__h",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
+      ],
+      0,
+      "a80562b97e2595f070a9e622e0810b1c"
+    ],
+    [
+      "Bug855b.__proj__Q_Cons__item__h",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
+      ],
+      0,
+      "3a14c0f7e449c8f2bae28b62c49f6582"
+    ],
+    [
+      "Bug855b.main",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.HyperStack.ST.equal_stack_domains",
+        "equation_FStar.Monotonic.Heap.equal_dom", "equation_Prims.eqtype",
+        "function_token_typing_Prims.__cache_version_number__",
+        "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_b913a3f691ca99086652e0a655e72f17",
+        "typing_FStar.Seq.Base.empty", "typing_Prims.int"
+      ],
+      0,
+      "85fda7488a9b5883c3fe74b8b722f612"
+    ]
+  ]
+]

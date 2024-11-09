@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_TestSealed.is_sealed", "true_interp" ],
       0,
-      "87a2200fff8f7236c1168ac0e5ffccc3"
+      "76729adb5df21368b967c7cc895d8018"
     ],
     [
       "TestSealed.test1_auto",
@@ -52,7 +52,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "269f52862b2b2f6a1f1295bef97c8320"
+      "d4dc636d1d544d0e8b0dec24e56b602b"
     ],
     [
       "TestSealed.sealnat_auto",

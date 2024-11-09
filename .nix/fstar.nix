@@ -13,6 +13,7 @@ stdenv.mkDerivation {
     "examples.*"
     "src(/ocaml-output(/Makefile)?)?"
     "ucontrib.*"
+    "mk.*"
   ];
 
   dontBuild = true;

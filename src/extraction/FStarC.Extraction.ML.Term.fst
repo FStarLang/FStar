@@ -689,7 +689,26 @@ let head_of_type_is_extract_as_impure_effect g t =
   | Tm_fvar fv -> has_extract_as_impure_effect g fv
   | _ -> false
 
-let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
+exception NotSupportedByExtension
+let translate_typ_t = g:uenv -> t:term -> mlty
+
+(* See below for register_pre_translate_typ *)
+let ref_translate_term_to_mlty : ref translate_typ_t =
+  BU.mk_ref (fun _ _ -> raise NotSupportedByExtension)
+
+let translate_term_to_mlty (g:uenv) (t0:term) : mlty =
+  !ref_translate_term_to_mlty g t0
+
+let register_pre_translate_typ (f : translate_typ_t) : unit =
+  let before = !ref_translate_term_to_mlty in
+  let after g t =
+    try
+      f g t
+    with NotSupportedByExtension -> before g t
+  in
+  ref_translate_term_to_mlty := after
+
+let rec translate_term_to_mlty' (g:uenv) (t0:term) : mlty =
     let arg_as_mlty (g:uenv) (a, _) : mlty =
         if is_type g a //This is just an optimization; we could in principle always emit MLTY_Erased, at the expense of more magics
         then translate_term_to_mlty g a
@@ -831,7 +850,6 @@ and binders_as_ml_binders (g:uenv) (bs:binders) : list (mlident & mlty) & uenv =
 let term_as_mlty g t0 =
     let t = N.normalize extraction_norm_steps (tcenv_of_uenv g) t0 in
     translate_term_to_mlty g t
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 (********************************************************************************************)
@@ -1173,6 +1191,20 @@ let maybe_promote_effect ml_e tag t =
     | E_PURE, MLTY_Erased -> ml_unit, E_PURE
     | _ -> ml_e, tag
 
+let translate_t = g:uenv -> t:term -> mlexpr & e_tag & mlty
+let ref_term_as_mlexpr : ref translate_t =
+  BU.mk_ref (fun _ _ -> raise NotSupportedByExtension)
+
+// An "after" pass does not make much sense... since term_as_mlexpr' here
+// (the default one) catches everything.
+let register_pre_translate (f : translate_t) : unit =
+  let before = !ref_term_as_mlexpr in
+  let after g t =
+    try
+      f g t
+    with NotSupportedByExtension -> before g t
+  in
+  ref_term_as_mlexpr := after
 
 type lb_sig =
     lbname //just lbname returned back
@@ -1343,7 +1375,7 @@ and check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr & mlty
              maybe_coerce e.pos g ml_e t ty, ty
 
 and term_as_mlexpr (g:uenv) (e:term) : (mlexpr & e_tag & mlty) =
-    let e, f, t = term_as_mlexpr' g e in
+    let e, f, t = !ref_term_as_mlexpr g e in
     let e, f = maybe_promote_effect e f t in
     e, f, t
 
@@ -1850,7 +1882,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
               Tm_let {lbs=(false, [lb]); body}
            in
            let top = {top with n = maybe_rewritten_let } in
-           term_as_mlexpr' g top
+           term_as_mlexpr g top
 
         | Tm_let {lbs=(is_rec, lbs); body=e'} ->
           let top_level = is_top_level lbs in
@@ -2082,3 +2114,6 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
                mllb_add_unit=false;
                mllb_def=discrBody;
                print_typ=false}] ) |> mk_mlmodule1
+
+let _ = register_pre_translate term_as_mlexpr'
+let _ = register_pre_translate_typ translate_term_to_mlty'

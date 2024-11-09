@@ -1,0 +1,38 @@
+[
+  "ŽCæ¸VJúâ°bðG#;g\u001f",
+  [
+    [
+      "Bug3320.t__A__payload",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "49349c8ec4b292f761a0fdbf5bbbf690"
+    ],
+    [
+      "Bug3320.__proj__A__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0fa045e1931041b42a01d92fcb78b650"
+      ],
+      0,
+      "8bd8368a71b77cd4fd35c71abfdfca30"
+    ],
+    [
+      "Bug3320.__proj__B__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_745abfe0cfddd6446af4383f8a24e442"
+      ],
+      0,
+      "cd23e0172433fee093d2e1a83941e294"
+    ]
+  ]
+]

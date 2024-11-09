@@ -1173,7 +1173,34 @@ let (head_of_type_is_extract_as_impure_effect :
            | FStarC_Syntax_Syntax.Tm_fvar fv ->
                has_extract_as_impure_effect g fv
            | uu___3 -> false)
-let rec (translate_term_to_mlty :
+exception NotSupportedByExtension 
+let (uu___is_NotSupportedByExtension : Prims.exn -> Prims.bool) =
+  fun projectee ->
+    match projectee with | NotSupportedByExtension -> true | uu___ -> false
+type translate_typ_t =
+  FStarC_Extraction_ML_UEnv.uenv ->
+    FStarC_Syntax_Syntax.term -> FStarC_Extraction_ML_Syntax.mlty
+let (ref_translate_term_to_mlty : translate_typ_t FStarC_Compiler_Effect.ref)
+  =
+  FStarC_Compiler_Util.mk_ref
+    (fun uu___ ->
+       fun uu___1 -> FStarC_Compiler_Effect.raise NotSupportedByExtension)
+let (translate_term_to_mlty :
+  FStarC_Extraction_ML_UEnv.uenv ->
+    FStarC_Syntax_Syntax.term -> FStarC_Extraction_ML_Syntax.mlty)
+  =
+  fun g ->
+    fun t0 ->
+      let uu___ = FStarC_Compiler_Effect.op_Bang ref_translate_term_to_mlty in
+      uu___ g t0
+let (register_pre_translate_typ : translate_typ_t -> unit) =
+  fun f ->
+    let before = FStarC_Compiler_Effect.op_Bang ref_translate_term_to_mlty in
+    let after g t =
+      try (fun uu___ -> match () with | () -> f g t) ()
+      with | NotSupportedByExtension -> before g t in
+    FStarC_Compiler_Effect.op_Colon_Equals ref_translate_term_to_mlty after
+let rec (translate_term_to_mlty' :
   FStarC_Extraction_ML_UEnv.uenv ->
     FStarC_Syntax_Syntax.term -> FStarC_Extraction_ML_Syntax.mlty)
   =
@@ -2188,6 +2215,22 @@ let (maybe_promote_effect :
             (FStarC_Extraction_ML_Syntax.ml_unit,
               FStarC_Extraction_ML_Syntax.E_PURE)
         | uu___ -> (ml_e, tag)
+type translate_t =
+  FStarC_Extraction_ML_UEnv.uenv ->
+    FStarC_Syntax_Syntax.term ->
+      (FStarC_Extraction_ML_Syntax.mlexpr * FStarC_Extraction_ML_Syntax.e_tag
+        * FStarC_Extraction_ML_Syntax.mlty)
+let (ref_term_as_mlexpr : translate_t FStarC_Compiler_Effect.ref) =
+  FStarC_Compiler_Util.mk_ref
+    (fun uu___ ->
+       fun uu___1 -> FStarC_Compiler_Effect.raise NotSupportedByExtension)
+let (register_pre_translate : translate_t -> unit) =
+  fun f ->
+    let before = FStarC_Compiler_Effect.op_Bang ref_term_as_mlexpr in
+    let after g t =
+      try (fun uu___ -> match () with | () -> f g t) ()
+      with | NotSupportedByExtension -> before g t in
+    FStarC_Compiler_Effect.op_Colon_Equals ref_term_as_mlexpr after
 type lb_sig =
   (FStarC_Syntax_Syntax.lbname * FStarC_Extraction_ML_Syntax.e_tag *
     (FStarC_Syntax_Syntax.typ * (FStarC_Syntax_Syntax.binders *
@@ -2682,7 +2725,9 @@ and (term_as_mlexpr :
   =
   fun g ->
     fun e ->
-      let uu___ = term_as_mlexpr' g e in
+      let uu___ =
+        let uu___1 = FStarC_Compiler_Effect.op_Bang ref_term_as_mlexpr in
+        uu___1 g e in
       match uu___ with
       | (e1, f, t) ->
           let uu___1 = maybe_promote_effect e1 f t in
@@ -3945,7 +3990,7 @@ and (term_as_mlexpr' :
                     FStarC_Syntax_Syntax.hash_code =
                       (top1.FStarC_Syntax_Syntax.hash_code)
                   } in
-                term_as_mlexpr' g top2)
+                term_as_mlexpr g top2)
        | FStarC_Syntax_Syntax.Tm_let
            { FStarC_Syntax_Syntax.lbs = (is_rec, lbs);
              FStarC_Syntax_Syntax.body1 = e';_}
@@ -4598,3 +4643,5 @@ let (ind_discriminator_body :
                                      FStarC_Extraction_ML_Syntax.print_typ =
                                        false
                                    }])))))
+let (uu___0 : unit) = register_pre_translate term_as_mlexpr'
+let (uu___1 : unit) = register_pre_translate_typ translate_term_to_mlty'

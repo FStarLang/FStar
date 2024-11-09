@@ -1,0 +1,18 @@
+[
+  "•õﬁ ;cåÜ6˛fèÀ\u0011ƒ'",
+  [
+    [
+      "Bug589.h",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "7558647906e0a48cbf8c7b10fcce202d"
+    ]
+  ]
+]

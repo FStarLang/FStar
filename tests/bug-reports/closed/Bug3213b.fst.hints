@@ -1,0 +1,40 @@
+[
+  "‰}¬$‘‘Ò\u0003O”{yT¿¢t",
+  [
+    [
+      "Bug3213b.forall_elim",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d02701db255806bb0a74d705659c9500"
+    ],
+    [
+      "Bug3213b.eq_fun",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
+      ],
+      0,
+      "a276d844ea445e452d7669b3aae227e0"
+    ],
+    [
+      "Bug3213b.bad2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "false_interp",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "true_interp"
+      ],
+      0,
+      "0ac03443aaf4a5340a40834244e9da0d"
+    ]
+  ]
+]

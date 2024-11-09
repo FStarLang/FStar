@@ -27,6 +27,20 @@ type _closure (#a:Type u#a) (r:binrel u#a u#r a) : a -> a -> Type u#(max a r) =
 let _closure0 (#a:Type) (r:binrel a) (x y: a) : prop =
   squash (_closure r x y)
 
+let rec induct_ (#a:Type) (r:binrel a) (p: a -> a -> prop)
+               (f_refl: (x:a -> squash (p x x)))
+               (f_step: (x:a -> y:a { r x y } -> squash (p x y)))
+               (f_closure: (x:a -> y:a -> z:a { p x y /\ p y z } -> squash (p x z)))
+               (x:a) (y:a) (xy:_closure r x y)
+: Tot (squash (p x y)) (decreases xy)
+= match xy with
+  | Refl x -> f_refl x
+  | Step x y _ -> f_step x y
+  | Closure x y z xy yz ->
+    let p1 = induct_ r p f_refl f_step f_closure x y xy in
+    let p2 = induct_ r p f_refl f_step f_closure y z yz in
+    f_closure x y z
+
 let get_squash (#a:Type) (r:binrel a) (x:a) (y:a{_closure0 r x y})
   : Tot (squash (_closure r x y))
   = assert_norm (_closure0 r x y ==> squash (_closure r x y))
@@ -159,3 +173,13 @@ let stable_on_closure #a r p hr =
      let xy = intro () in
      let xy : _closure r x y = unquote (binding_to_term xy) in
      exact (quote (_stable_on_closure r p hr x y xy (Squash.get_proof _))))
+
+let induct
+      (#a:Type) (r:binrel a) (p: a -> a -> prop)
+      (f_refl: (x:a -> squash (p x x)))
+      (f_step: (x:a -> y:a { r x y } -> squash (p x y)))
+      (f_closure: (x:a -> y:a -> z:a { p x y /\ p y z } -> squash (p x z)))
+      (x:a) (y:a) (xy:squash (closure r x y))
+: squash (p x y)
+= let xy = FStar.Squash.join_squash #(_closure r x y) xy in
+  FStar.Squash.bind_squash xy (induct_ r p f_refl f_step f_closure x y)

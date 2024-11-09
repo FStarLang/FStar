@@ -1,0 +1,20 @@
+[
+  "^GeÂ\u0014kËb6w%i;í\u0000Ú",
+  [
+    [
+      "Bug380_2.single_inhabitant_and",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Bug380_2.single_inhabitant", "equation_Prims.l_and",
+        "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "unit_inversion"
+      ],
+      0,
+      "d6509c97af153c1c2fc2ef1c8e238ad9"
+    ]
+  ]
+]

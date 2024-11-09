@@ -17,7 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c424a7f67d5e7a1668616fd49cd142ba"
+      "a0920e56fd8bc787724ea52a1771a9b1"
     ],
     [
       "Lib.Exponentiation.Definition.pow_neg",
