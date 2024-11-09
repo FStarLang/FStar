@@ -15,14 +15,16 @@ let hogs_val = hogs_val_ mem_pred
 let approx_approx (m n: erased nat) (p: mem_pred) : Lemma (approx m (approx n p) == approx (min m n) p) [SMTPat (approx m (approx n p))] =
   mem_pred_ext (approx m (approx n p)) (approx (min m n) p) fun w -> ()
 
-[@@"opaque_to_smt"]
-let mem_le (a b: premem) : prop =
+let mem_le' (a b: premem) : prop =
   level_ a == level_ b /\
   (forall i. hogs_val_le (read a i) (read b i)) /\
   timeless_heap_le (timeless_heap_of a) (timeless_heap_of b) /\
   credits_ a <= credits_ b
 
-let mem_pred_affine (p: mem_pred) : prop =
+[@@"opaque_to_smt"] let mem_le = mem_le'
+let reveal_mem_le () : squash (mem_le == mem_le') = reveal_opaque (`%mem_le) mem_le
+
+let mem_pred_affine (p: premem -> prop) : prop =
   forall a b. mem_le a b /\ p a ==> p b
 
 let max x y = if x > y then x else y
@@ -36,10 +38,13 @@ let age1_ (w: premem) : w':premem { level_ w == 0 ==> w' == w } =
   mem_ext (age_to_ w (level_ w)) w (fun _ -> ());
   age_to_ w (max 0 (level_ w - 1))
 
-let hereditary (p: mem_pred) : prop =
+let hereditary (p: premem -> prop) : prop =
   forall h. p h ==> p (age1_ h)
 
-let slprop_ok (p: mem_pred) = hereditary p /\ mem_pred_affine p
+let slprop_ok' (p: premem -> prop) : prop = hereditary p /\ mem_pred_affine p
+[@@"opaque_to_smt"] let slprop_ok : mem_pred -> prop = slprop_ok'
+let reveal_slprop_ok () : squash (forall (p: mem_pred).  slprop_ok p == slprop_ok' p) =
+  reveal_opaque (`%slprop_ok) slprop_ok
 
 let fresh_addr (m: premem) (a: address) =
   forall (b: address). b >= a ==> None? (read m b)
@@ -79,9 +84,11 @@ let update_credits m c =
   pack (level m) { unpack m with saved_credits = c }
 
 let slprop = p:mem_pred { slprop_ok p }
+let mk_slprop (p: premem -> prop { slprop_ok' p }) : slprop =
+  reveal_slprop_ok (); F.on_dom _ p
 
 let age_to (m: mem) (n: erased nat) : mem =
-  reveal_opaque (`%mem_le) mem_le;
+  reveal_mem_le (); reveal_slprop_ok ();
   age_to_ m n
 
 irreducible [@@"opaque_to_smt"]
@@ -95,7 +102,7 @@ let reveal_mem (m: erased premem) (h: timeless_heap_sig.mem { h == timeless_heap
   m'
 
 let age1 (w: mem) : mem =
-  reveal_opaque (`%mem_le) mem_le;
+  reveal_mem_le (); reveal_slprop_ok ();
   age1_ w
 
 let eq_at (n:nat) (t0 t1:mem_pred) =
@@ -139,7 +146,7 @@ let disjoint_hogs_read is0 is1 a :
 
 let disjoint_hogs_of_le (m1 m2: premem) :
     Lemma (requires mem_le m1 m2) (ensures disjoint_hogs m1 m2) =
-  reveal_opaque (`%mem_le) mem_le
+  reveal_mem_le ()
 
 let empty n : mem =
   pack n {
@@ -152,9 +159,10 @@ let age_to_empty (m n: erased nat) : Lemma (age_to (empty n) m == empty m) [SMTP
   mem_ext (age_to (empty n) m) (empty m) fun a -> read_age_to_ (empty n) m a
 
 let emp : slprop =
-  F.on_dom premem #(fun _ -> prop) fun w -> True
+  mk_slprop fun w -> True
 
-let pure p : slprop = F.on_dom _ fun w -> p
+let pure p : slprop =
+  mk_slprop fun w -> p
 
 let disjoint_mem (w0 w1:premem)
 : prop 
@@ -211,7 +219,7 @@ open FStar.IndefiniteDescription { indefinite_description_ghost, strong_excluded
 
 let mem_le_iff (w1 w2: premem) :
     Lemma (mem_le w1 w2 <==> exists w3. join_premem w1 w3 == w2) =
-  reveal_opaque (`%mem_le) mem_le;
+  reveal_mem_le ();
   introduce mem_le w1 w2 ==> exists w3. join_premem w1 w3 == w2 with _. (
     assert timeless_heap_le (timeless_heap_of w1) (timeless_heap_of w2);
     let ph3 = indefinite_description_ghost _ fun ph3 ->
@@ -297,6 +305,7 @@ let star__assoc (x y z:mem_pred)
     assert star_ (star_ x y) z == star_ z (star_ y x)
 
 let star (p1 p2:slprop) : slprop =
+  reveal_slprop_ok ();
   introduce forall a b. mem_le a b /\ star_ p1 p2 a ==> star_ p1 p2 b with introduce _ ==> _ with _. (
     mem_le_iff a b;
     let c = indefinite_description_ghost _ fun c -> b == join_premem a c in
@@ -323,12 +332,10 @@ let star_elim (p1 p2: slprop) (w: premem { star p1 p2 w }) :
     GTot (w':(premem & premem) { disjoint_mem w'._1 w'._2 /\ w == join_premem w'._1 w'._2 /\ p1 w'._1 /\ p2 w'._2 }) =
   star__elim p1 p2 w
 
-#push-options "--split_queries always"
 let star_elim' (p1 p2: slprop) (w: mem { star p1 p2 w }) :
     GTot (w':(mem & mem) { disjoint_mem w'._1 w'._2 /\ w == join_premem w'._1 w'._2 /\ p1 w'._1 /\ p2 w'._2 }) =
   let w1, w2 = star_elim p1 p2 w in
   w1, w2
-#pop-options
 
 let star_intro (p1 p2: slprop) (w w1 w2: premem) :
     Lemma (requires disjoint_mem w1 w2 /\ w == join_premem w1 w2 /\ p1 w1 /\ p2 w2)
@@ -363,10 +370,12 @@ let star_emp (x: slprop) : squash (star x emp == x) =
     );
     introduce star x emp w ==> x w with _. (
       let (w1, w2) = star_elim x emp w in
+      reveal_slprop_ok ();
       mem_le_iff w1 w
     )
 
 let (exists*) #a f =
+  reveal_slprop_ok ();
   F.on_dom premem #(fun _ -> prop) fun w ->
     exists (x:a). f x w
 
@@ -405,8 +414,10 @@ let join_refl m = ()
 let disjoint_join_levels i0 i1 = ()
 
 let interp p =
-  introduce forall (m0 m1:mem). p m0 /\ disjoint m0 m1 ==> p (join m0 m1) with
-    introduce _ ==> _ with _.  mem_le_iff m0 (join m0 m1);
+  introduce forall (m0 m1:mem). p m0 /\ disjoint m0 m1 ==> p (join m0 m1) with (
+    reveal_slprop_ok ();
+    introduce _ ==> _ with _.  mem_le_iff m0 (join m0 m1)
+  );
   p
 
 let update_timeless_mem_id m =
@@ -470,8 +481,8 @@ let interp_exists p = ()
 let interp_pure p m = ()
 
 let lift (p: PM.slprop) : slprop =
-  reveal_opaque (`%mem_le) mem_le;
-  F.on_dom premem fun w -> timeless_heap_sig.interp p (timeless_heap_of w)
+  reveal_mem_le ();
+  mk_slprop fun w -> timeless_heap_sig.interp p (timeless_heap_of w)
 
 let lift_eq p = ()
 
@@ -506,15 +517,16 @@ let lift_star_eq p q =
       ()
 
 let later (p: slprop) : slprop =
+  reveal_slprop_ok ();
   introduce forall a b. mem_le a b /\ p (age1_ a) ==> p (age1_ b) with (
     mem_le_iff a b;
     mem_le_iff (age1_ a) (age1_ b)
   );
-  F.on_dom premem fun w -> p (age1_ w)
+  mk_slprop fun w -> p (age1_ w)
 
 let later_credit (n: nat) : slprop =
-  reveal_opaque (`%mem_le) mem_le;
-  F.on_dom premem #(fun _ -> prop) fun w -> credits_ w >= n
+  reveal_mem_le ();
+  mk_slprop fun w -> credits_ w >= n
 
 let later_credit_zero () : squash (later_credit 0 == emp) =
   mem_pred_ext (later_credit 0) emp fun _ -> ()
@@ -546,7 +558,7 @@ let timeless_later_credit n : squash (timeless (later_credit n)) =
 irreducible
 let rejuvenate1 (m: premem) (m': premem { mem_le m' (age1_ m) }) :
     m'':premem { age1_ m'' == m' /\ mem_le m'' m } =
-  reveal_opaque (`%mem_le) mem_le;
+  reveal_mem_le ();
   let m'' = pack (level_ m) {
     saved_credits = credits_ m';
     timeless_heap = timeless_heap_of m';
@@ -560,7 +572,7 @@ irreducible
 let rejuvenate1_sep (m m1': premem) (m2': premem { disjoint_mem m1' m2' /\ age1_ m == join_premem m1' m2' }) :
     m'':(premem&premem) { age1_ m''._1 == m1' /\ age1_ m''._2 == m2'
       /\ disjoint_mem m''._1 m''._2 /\ m == join_premem m''._1 m''._2 } =
-  reveal_opaque (`%mem_le) mem_le;
+  reveal_mem_le ();
   let m1'' = rejuvenate1 m m1' in
   join_premem_commutative m1' m2';
   let m2'' = rejuvenate1 m m2' in
@@ -585,8 +597,8 @@ let later_exists #t (f:t->slprop) : squash (later (exists* x. f x) == (exists* x
   mem_pred_ext (later (exists* x. f x)) (exists* x. later (f x)) fun w -> ()
 
 let equiv p q : slprop =
-  reveal_opaque (`%mem_le) mem_le;
-  F.on_dom premem #(fun _ -> prop) fun w -> eq_at (level_ w + 1) p q
+  reveal_mem_le ();
+  mk_slprop fun w -> eq_at (level_ w + 1) p q
 
 let eq_at_elim n (p q: mem_pred) (w: premem) :
     Lemma (requires eq_at n p q /\ level_ w < n) (ensures p w <==> q w) =
@@ -603,6 +615,7 @@ let interp_equiv_star (p q r: slprop) m :
   introduce star (equiv p q) r m ==> equiv p q m /\ r m with _. (
     let (m1, m2) = star_elim (equiv p q) r m in
     join_premem_commutative m1 m2;
+    reveal_slprop_ok ();
     mem_le_iff m2 m
   );
   introduce equiv p q m /\ r m ==> star (equiv p q) r m with _. (
@@ -659,13 +672,13 @@ let equiv_star_congr (p q r: slprop) =
 let age_to_zero (w: premem { level_ w == 0 }) : Lemma (age_to_ w 0 == w) [SMTPat (age_to_ w 0)] =
   mem_ext (age_to_ w 0) w fun i -> ()
 
-let intro_later p m = ()
+let intro_later p m = reveal_slprop_ok ()
 
 let iref = address
 
 let inv (i:iref) (p:slprop) : slprop =
-  reveal_opaque (`%mem_le) mem_le;
-  F.on_dom premem #(fun _ -> prop) fun m ->
+  reveal_mem_le ();
+  mk_slprop fun m ->
     exists p'.
       read m i == Inv p' /\
       eq_at (level_ m) p p'
@@ -746,7 +759,7 @@ let age_mem m =
 
 let age_level m = ()
 let age_disjoint m0 m1 = ()
-let age_hereditary m0 m1 = ()
+let age_hereditary m0 m1 = reveal_slprop_ok ()
 let age_later m0 m1 = ()
 
 let spend_mem m =
@@ -839,6 +852,7 @@ let rec hogs_invariant__age (e:inames) (is: mem { level_ is > 0 }) (f: address) 
           assert hogs_invariant_ e (age1 is) f' (age1_ w2);
           assert p (age1_ w1);
           eq_at_elim (level_ is - 1) p p' (age1_ (age1_ w1));
+          reveal_slprop_ok ();
           star_intro (later (later p')) (later (hogs_invariant_ e (age1 is) f')) w w1 w2;
           later_star (later p') (hogs_invariant_ e (age1 is) f');
           assert (later p' `star` hogs_invariant_ e (age1 is) f') (age1_ w)
@@ -921,6 +935,7 @@ let rec hogs_invariant__mono (ex1: inames) (ex2: inames)
         hogs_invariant__mono ex1 ex2 m f' w2;
         join_premem_commutative w1 w2;
         mem_le_iff w2 w;
+        reveal_slprop_ok ();
         star_intro (later p) (hogs_invariant_ ex2 m f') w w1 w2
       | _ ->
         hogs_invariant__mono ex1 ex2 m f' w
@@ -1019,7 +1034,7 @@ let hogs_single n (a: iref) (p: slprop) : mem =
     hogs = (fun b -> if reveal a = reveal b then Inv p else None)
   } in
   assert fresh_addr m (a+1);
-  reveal_opaque (`%mem_le) mem_le;
+  reveal_mem_le (); reveal_slprop_ok ();
   m
 
 let rec hogs_single_invariant_ n a p f : squash (hogs_invariant_ (single a) (hogs_single n a p) f == emp) =
@@ -1043,14 +1058,13 @@ let hogs_fresh_inv (p: slprop) (is: mem) (a: iref { None? (read is a) }) :
   is'
 
 let inames_live (e:inames) : slprop =
-  reveal_opaque (`%mem_le) mem_le;
-  F.on_dom premem #(fun _ -> prop) fun m ->
+  reveal_mem_le ();
+  mk_slprop fun m ->
     hogs_inames_ok_internal e m
 
 let inames_live_empty () : squash (inames_live GS.empty == emp) =
   mem_pred_ext (inames_live GS.empty) emp fun w -> ()
 
-#push-options "--split_queries always"
 let inames_live_union (e1 e2:inames) 
 : Lemma (inames_live (GS.union e1 e2) == inames_live e1 `star` inames_live e2)
 = mem_pred_ext (inames_live (GS.union e1 e2)) (inames_live e1 `star` inames_live e2) fun w ->
@@ -1061,7 +1075,6 @@ let inames_live_union (e1 e2:inames)
         assert inames_live e1 w;
         assert inames_live e2 w
       )
-#pop-options
 
 let inames_live_inv (i:iref) (p:slprop) (m:mem)
 : Lemma ((inv i p) m ==> inames_live (FStar.GhostSet.singleton deq_iref i) m)
@@ -1094,8 +1107,8 @@ let invariant_name_identifies_invariant i p q m =
 let slprop_ref = address
 
 let slprop_ref_pts_to x y =
-  reveal_opaque (`%mem_le) mem_le;
-  F.on_dom premem #(fun _ -> prop) fun m ->
+  reveal_mem_le ();
+  mk_slprop fun m ->
     exists y'.
       read m x == Pred y' /\
       eq_at (level_ m) y y'
@@ -1107,7 +1120,7 @@ let single_slprop_pts_to n (i: slprop_ref) (p: slprop) : mem =
     hogs = (fun a -> if reveal a = reveal i then Pred p else None);
   } in
   assert fresh_addr m (i+1);
-  reveal_opaque (`%mem_le) mem_le;
+  reveal_mem_le (); reveal_slprop_ok ();
   m
 
 let rec hogs_invariant__single_slprop_pts_to ex (n: nat) i p f :
