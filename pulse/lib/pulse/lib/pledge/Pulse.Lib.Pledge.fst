@@ -510,8 +510,6 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   inames_live_inv i (inv_p is f v1 v2 r1 r2);
   gather_inames_live is (single i);
   Pulse.Class.Duplicable.dup (inv i (inv_p is f v1 v2 r1 r2)) ();
-  // FIXME: should follow from freshness
-  // assume_ (pure (not (mem_inv is i)));
 
   let is' = add_inv is i;
   GhostSet.lemma_equal_intro (GhostSet.union is (single i)) is';

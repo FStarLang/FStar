@@ -387,10 +387,8 @@ let fresh_invariant (e:inames) (p:slprop) (ctx:inames)
 : ghost_act (i:iref{~(GhostSet.mem i ctx)}) e (p `star` inames_live ctx) (fun i -> inv i p `star` inames_live ctx)
 = fun frame s0 ->
     sep_laws();
-    // assert (interp (inames_live ctx `star` (p `star` frame `star` mem_invariant e s0) s0));
     destruct_star_l (inames_live ctx) (p `star` frame `star` mem_invariant e s0) s0;
     let (| i, s0' |) = fresh_inv p s0 ctx in
-    // admit();
     let s1 = join_mem s0 s0' in
     disjoint_join_levels s0 s0';
     mem_invariant_disjoint e (single i) ((p `star` inames_live ctx) `star` frame) (inv i p) s0 s0';
