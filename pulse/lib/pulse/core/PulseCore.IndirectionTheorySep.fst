@@ -232,12 +232,13 @@ let age_to_join (w1 w2: premem) n :
     [SMTPat (age_to_ (join_premem w1 w2) n)] =
   mem_ext (age_to_ (join_premem w1 w2) n) (join_premem (age_to_ w1 n) (age_to_ w2 n)) fun a -> ()
 
+[@@"opaque_to_smt"]
 let star_ (p1 p2: mem_pred) : mem_pred =
   F.on_dom premem #(fun _ -> prop)
     fun w -> (exists w1 w2.
       disjoint_mem w1 w2 /\ w == join_premem w1 w2 /\ p1 w1 /\ p2 w2)
 
-[@@"opaque_to_smt"] irreducible
+irreducible
 let indefinite_description_ghost2 (a b: Type) (p: (a -> b -> prop) { exists x y. p x y })
   : GTot (x: (a&b) { p x._1 x._2 }) =
   let x = indefinite_description_ghost a fun x -> exists y. p x y in
@@ -246,18 +247,28 @@ let indefinite_description_ghost2 (a b: Type) (p: (a -> b -> prop) { exists x y.
 
 let star__elim (p1 p2: mem_pred) (w: premem { star_ p1 p2 w }) :
     GTot (w':(premem & premem) { disjoint_mem w'._1 w'._2 /\ w == join_premem w'._1 w'._2 /\ p1 w'._1 /\ p2 w'._2 }) =
+  reveal_opaque (`%star_) (star_ p1 p2);
   indefinite_description_ghost2 _ _ fun w1 w2 -> 
     disjoint_mem w1 w2 /\ w == join_premem w1 w2 /\ p1 w1 /\ p2 w2 
 
 let star__intro (p1 p2: mem_pred) (w w1 w2: premem) :
     Lemma (requires disjoint_mem w1 w2 /\ w == join_premem w1 w2 /\ p1 w1 /\ p2 w2)
       (ensures star_ p1 p2 w) =
-  ()
+  reveal_opaque (`%star_) (star_ p1 p2)
 
 let star__commutative (p1 p2:mem_pred)
 : Lemma (p1 `star_` p2 == p2 `star_` p1)
-= FStar.Classical.forall_intro_2 join_premem_commutative;
-  mem_pred_ext (p1 `star_` p2) (p2 `star_` p1) fun w -> ()
+= mem_pred_ext (p1 `star_` p2) (p2 `star_` p1) fun w ->
+    introduce star_ p1 p2 w ==> star_ p2 p1 w with _. (
+      let (w1, w2) = star__elim p1 p2 w in
+      join_premem_commutative w1 w2;
+      star__intro p2 p1 w w2 w1
+    );
+    introduce star_ p2 p1 w ==> star_ p1 p2 w with _. (
+      let (w2, w1) = star__elim p2 p1 w in
+      join_premem_commutative w2 w1;
+      star__intro p1 p2 w w1 w2
+    )
 
 let star__assoc (x y z:mem_pred)
 : Lemma (star_ x (star_ y z) == star_ (star_ x y) z)
@@ -267,9 +278,9 @@ let star__assoc (x y z:mem_pred)
     let (w2, w3) = star__elim y z w23 in
     join_premem_associative w1 w2 w3;
     let w12 = join_premem w1 w2 in
-    assert star_ x y w12;
+    star__intro x y w12 w1 w2;
     let w' = join_premem w12 w3 in
-    assert star_ (star_ x y) z w';
+    star__intro (star_ x y) z w' w12 w3;
     assert w == w'
   );
   mem_pred_ext (star_ x (star_ y z)) (star_ (star_ x y) z) fun w ->
@@ -294,7 +305,12 @@ let star (p1 p2:slprop) : slprop =
     assert b == join_premem (join_premem a1 c) a2;
     mem_le_iff a1 (join_premem a1 c);
     assert mem_le a1 (join_premem a1 c);
-    assert p1 (join_premem a1 c)
+    assert p1 (join_premem a1 c);
+    star__intro p1 p2 b (join_premem a1 c) a2
+  );
+  introduce forall a. star_ p1 p2 a ==> star_ p1 p2 (age1_ a) with introduce _ ==> _ with _. (
+    let (a1, a2) = star__elim p1 p2 a in
+    star__intro p1 p2 (age1_ a) (age1_ a1) (age1_ a2)
   );
   star_ p1 p2
 
@@ -302,14 +318,17 @@ let star_elim (p1 p2: slprop) (w: premem { star p1 p2 w }) :
     GTot (w':(premem & premem) { disjoint_mem w'._1 w'._2 /\ w == join_premem w'._1 w'._2 /\ p1 w'._1 /\ p2 w'._2 }) =
   star__elim p1 p2 w
 
+#push-options "--split_queries always"
 let star_elim' (p1 p2: slprop) (w: mem { star p1 p2 w }) :
     GTot (w':(mem & mem) { disjoint_mem w'._1 w'._2 /\ w == join_premem w'._1 w'._2 /\ p1 w'._1 /\ p2 w'._2 }) =
   let w1, w2 = star_elim p1 p2 w in
   w1, w2
+#pop-options
 
 let star_intro (p1 p2: slprop) (w w1 w2: premem) :
     Lemma (requires disjoint_mem w1 w2 /\ w == join_premem w1 w2 /\ p1 w1 /\ p2 w2)
-      (ensures star p1 p2 w) = ()
+      (ensures star p1 p2 w) =
+  star__intro p1 p2 w w1 w2
 
 let star_commutative (p1 p2:slprop)
 : Lemma (p1 `star` p2 == p2 `star` p1)
@@ -334,7 +353,8 @@ let star_emp (x: slprop) : squash (star x emp == x) =
     introduce x w ==> star x emp w with _. (
       let w2 = empty (level_ w) in
       join_empty w;
-      join_premem_commutative w2 w
+      join_premem_commutative w2 w;
+      star__intro x emp w w w2
     );
     introduce star x emp w ==> x w with _. (
       let (w1, w2) = star_elim x emp w in
@@ -363,19 +383,19 @@ let sep_laws (_:unit) : squash (
 let disjoint m0 m1 = disjoint_mem m0 m1
 let join m0 m1 = join_premem m0 m1
 
-let clear_except_hogs_ (m: premem) : premem =
-  pack (level_ m) {
-    unpack m with
+irreducible
+let clear_except_hogs_ (w: premem) : v:premem { disjoint_mem w v /\ w == join_premem w v /\ (forall a. read v a == read w a) } =
+  let v = pack (level_ w) {
     saved_credits = 0;
-    timeless_heap = timeless_heap_sig.sep.empty
-  }
-let join_refl_ (m: premem) :
-    squash (disjoint_mem m (clear_except_hogs_ m) /\ join_premem m (clear_except_hogs_ m) == m) =
-  timeless_heap_sig.sep.join_empty (timeless_heap_of m);
-  mem_ext m (join_premem m (clear_except_hogs_ m)) fun _ -> ()
+    timeless_heap = timeless_heap_sig.sep.empty;
+    hogs = (fun a -> read w a);
+  } in
+  timeless_heap_sig.sep.join_empty (timeless_heap_of w);
+  mem_ext w (join_premem w v) (fun _ -> ());
+  v
 
 let clear_except_hogs m = clear_except_hogs_ m
-let join_refl m = join_refl_ m
+let join_refl m = ()
 
 let disjoint_join_levels i0 i1 = ()
 
@@ -391,7 +411,6 @@ let join_update_timeless_mem m1 m2 p1 p2 =
         (update_timeless_mem (join_mem m1 m2) (PM.pulse_heap_sig.sep.join p1 p2))
     fun _ -> ()
 
-#push-options "--split_queries always"
 let star_equiv p q m =
   introduce
     forall m0 m1. 
@@ -401,8 +420,7 @@ let star_equiv p q m =
       interp q m1
       ==> interp (p `star` q) m
     with introduce _ ==> _ with _. (
-    assert disjoint_mem m0 m1;
-    assert m == join_mem m0 m1
+    star_intro p q m m0 m1
   );
   introduce
     interp (p `star` q) m ==>
@@ -412,12 +430,7 @@ let star_equiv p q m =
       interp p m0 /\
       interp q m1
     with _. (
-    assert star p q m;
     let (m1, m2) = star_elim p q m in
-    assert disjoint m1 m2;
-    assert m == join m1 m2;
-    assert interp p m1;
-    assert interp q m2;
     introduce exists m0 m1. 
       disjoint m0 m1 /\
       m == join m0 m1 /\
@@ -425,7 +438,6 @@ let star_equiv p q m =
       interp q m1
     with m1 m2 and ()
   )
-#pop-options
 
 let erase_pair #t #s (p: erased (t & s)) : erased t & erased s =
   (hide (fst p), hide (snd p))
@@ -478,11 +490,10 @@ let lift_star_eq p q =
       let w0 = pack (level_ w) { unpack w with timeless_heap = m0 } in
       let w1 = pack (level_ w) { unpack w with timeless_heap = m1; saved_credits = 0 } in
       assert disjoint_mem w0 w1;
-      // join_refl (fst w);
       mem_ext (join_premem w0 w1) w (fun _ -> ());
       assert lift p w0;
       assert lift q w1;
-      ()
+      star_intro (lift p) (lift q) w w0 w1
     );
     introduce star (lift p) (lift q) w ==> lift (PM.star p q) w with _.
       let (w1, w2) = star_elim (lift p) (lift q) w in
@@ -501,19 +512,17 @@ let later_credit (n: nat) : slprop =
 let later_credit_zero () : squash (later_credit 0 == emp) =
   mem_pred_ext (later_credit 0) emp fun _ -> ()
 
-#push-options "--split_queries always"
 let later_credit_add (m n: nat) : squash (later_credit (m + n) == later_credit m `star` later_credit n) =
   mem_pred_ext (later_credit (m+n)) (later_credit m `star` later_credit n) fun w ->
     introduce later_credit (m+n) w ==> (later_credit m `star` later_credit n) w with _. (
       let w1 = pack (level_ w) { unpack w with saved_credits = credits_ w - n } in
       let w2 = pack (level_ w) { unpack w with saved_credits = n; timeless_heap = timeless_heap_sig.sep.empty } in
       timeless_heap_sig.sep.join_empty (timeless_heap_of w);
-      assert disjoint_mem w1 w2;
-      mem_ext w (join_premem w1 w2) fun _ -> ()
+      mem_ext w (join_premem w1 w2) (fun _ -> ());
+      star_intro (later_credit m) (later_credit n) w w1 w2
     );
     introduce (later_credit m `star` later_credit n) w ==> later_credit (m+n) w with _.
       let (w1, w2) = star_elim (later_credit m) (later_credit n) w in ()
-#pop-options
 
 let timeless_lift (p: PM.slprop) : squash (timeless (lift p)) =
   mem_pred_ext (later (lift p)) (lift p) fun w -> ()
@@ -576,28 +585,26 @@ let intro_equiv p m = ()
 let equiv_comm (p q: slprop) : squash (equiv p q == equiv q p) =
   mem_pred_ext (equiv p q) (equiv q p) fun _ -> ()
 
+let interp_equiv_star (p q r: slprop) m :
+    Lemma (star (equiv p q) r m <==> equiv p q m /\ r m)
+      [SMTPat (star (equiv p q) r m)] =
+  introduce star (equiv p q) r m ==> equiv p q m /\ r m with _. (
+    let (m1, m2) = star_elim (equiv p q) r m in
+    join_premem_commutative m1 m2;
+    assert mem_le m2 m
+  );
+  introduce equiv p q m /\ r m ==> star (equiv p q) r m with _. (
+    join_empty m;
+    star_intro (equiv p q) r m (empty (level_ m)) m
+  )
+
 let equiv_elim (p q: slprop) : squash (equiv p q `star` p == equiv p q `star` q) =
-  let aux (p q: slprop) (w: premem) =
-    introduce (equiv p q `star` p) w ==> (equiv p q `star` q) w with _. (
-      let (w1, w2) = star_elim (equiv p q) p w in
-      eq_at_elim (level_ w + 1) p q w2
-    ) in
-  mem_pred_ext (equiv p q `star` p) (equiv p q `star` q) fun w ->
-    equiv_comm p q; aux p q w; aux q p w
+  mem_pred_ext (equiv p q `star` p) (equiv p q `star` q) fun m ->
+    introduce equiv p q m ==> (p m <==> q m) with _.
+      eq_at_elim (level_ m + 1) p q m
 
 let equiv_trans (p q r: slprop) : squash (equiv p q `star` equiv q r == equiv p q `star` equiv p r) =
   mem_pred_ext (equiv p q `star` equiv q r) (equiv p q `star` equiv p r) fun w -> ()
-
-irreducible [@@"opaque_to_smt"]
-let empty_timeless_heap (w: premem) : v:premem { disjoint_mem w v /\ w == join_premem w v /\ (forall a. read v a == read w a) } =
-  let v = pack (level_ w) {
-    saved_credits = 0;
-    timeless_heap = timeless_heap_sig.sep.empty;
-    hogs = (fun a -> read w a);
-  } in
-  timeless_heap_sig.sep.join_empty (timeless_heap_of w);
-  mem_ext w (join_premem w v) (fun _ -> ());
-  v
 
 let rec timeless_interp (a: slprop { timeless a }) (w: premem) :
     Lemma (ensures a w <==> a (age_to_ w 0)) (decreases level_ w) =
@@ -630,17 +637,12 @@ let equiv_star_congr (p q r: slprop) =
       eq_at_elim n q r w2;
       star_intro p r w w1 w2
     ) in
-  mem_pred_ext (equiv q r) (equiv q r `star` equiv (star p q) (star p r)) fun w ->
-    introduce equiv q r w ==> (equiv q r `star` equiv (star p q) (star p r)) w with _. (
-      let w2 = empty_timeless_heap w in
-      mem_pred_ext (approx (level_ w + 1) (star p q)) (approx (level_ w + 1) (star p r)) (fun w' ->
-        aux q r (level_ w + 1) w';
-        aux r q (level_ w + 1) w'
-      );
-      star_intro (equiv q r) (equiv (star p q) (star p r)) w w w2
-    );
-    introduce (equiv q r `star` equiv (star p q) (star p r)) w ==> equiv q r w with _.
-      let w1, _ = star_elim (equiv q r) (equiv (star p q) (star p r)) w in ()
+  mem_pred_ext (equiv q r) (equiv q r `star` equiv (star p q) (star p r)) fun m ->
+    introduce equiv q r m ==> equiv (star p q) (star p r) m with _.
+      mem_pred_ext (approx (level_ m + 1) (star p q)) (approx (level_ m + 1) (star p r)) (fun m' ->
+        aux q r (level_ m + 1) m';
+        aux r q (level_ m + 1) m'
+      )
 
 let age_to_zero (w: premem { level_ w == 0 }) : Lemma (age_to_ w 0 == w) [SMTPat (age_to_ w 0)] =
   mem_ext (age_to_ w 0) w fun i -> ()
@@ -905,7 +907,8 @@ let rec hogs_invariant__mono (ex1: inames) (ex2: inames)
         let (w1, w2) = star_elim (later p) (hogs_invariant_ ex1 m f') w in
         hogs_invariant__mono ex1 ex2 m f' w2;
         join_premem_commutative w1 w2;
-        assert mem_le w2 w
+        assert mem_le w2 w;
+        star_intro (later p) (hogs_invariant_ ex2 m f') w w1 w2
       | _ ->
         hogs_invariant__mono ex1 ex2 m f' w
 #pop-options
@@ -1037,7 +1040,7 @@ let inames_live_union (e1 e2:inames)
 : Lemma (inames_live (GS.union e1 e2) == inames_live e1 `star` inames_live e2)
 = mem_pred_ext (inames_live (GS.union e1 e2)) (inames_live e1 `star` inames_live e2) fun w ->
     introduce inames_live (GS.union e1 e2) w ==> star (inames_live e1) (inames_live e2) w with _.
-      (let w2 = empty_timeless_heap w in ());
+      star_intro (inames_live e1) (inames_live e2) w w (clear_except_hogs_ w);
     introduce star (inames_live e1) (inames_live e2) w ==> inames_live (GS.union e1 e2) w with _.
       let (w1, w2) = star_elim (inames_live e1) (inames_live e2) w in (
         assert inames_live e1 w;
@@ -1064,7 +1067,7 @@ let fresh_inv p m ctx =
 let dup_inv_equiv i p =
   mem_pred_ext (inv i p) (inv i p `star` inv i p) fun w ->
     introduce inv i p w ==> star (inv i p) (inv i p) w with _.
-      (let w2 = empty_timeless_heap w in ());
+      star_intro (inv i p) (inv i p) w w (clear_except_hogs_ w);
     introduce star (inv i p) (inv i p) w ==> inv i p w with _.
       let (w1, w2) = star_elim (inv i p) (inv i p) w in ()
 
@@ -1127,17 +1130,13 @@ let fresh_slprop_ref p m =
 
 let slprop_ref_pts_to_share x y =
   mem_pred_ext (slprop_ref_pts_to x y) (slprop_ref_pts_to x y `star` slprop_ref_pts_to x y) fun m ->
-    introduce slprop_ref_pts_to x y m ==> (slprop_ref_pts_to x y `star` slprop_ref_pts_to x y) m with _. (
-      let m2 = clear_except_hogs_ m in
-      assert slprop_ref_pts_to x y m2;
-      join_refl_ m
-    );
+    introduce slprop_ref_pts_to x y m ==> (slprop_ref_pts_to x y `star` slprop_ref_pts_to x y) m with _.
+      star_intro (slprop_ref_pts_to x y) (slprop_ref_pts_to x y) m m (clear_except_hogs_ m);
     introduce (slprop_ref_pts_to x y `star` slprop_ref_pts_to x y) m ==> slprop_ref_pts_to x y m with _.
       let (m1, m2) = star_elim (slprop_ref_pts_to x y) (slprop_ref_pts_to x y) m in ()
 
 let slprop_ref_pts_to_gather x y1 y2 m =
   introduce interp (slprop_ref_pts_to x y1 `star` slprop_ref_pts_to x y2) m ==>
-      interp (slprop_ref_pts_to x y1 `star` later (equiv y1 y2)) m with _. (
+      interp (slprop_ref_pts_to x y1 `star` later (equiv y1 y2)) m with _.
     let (m1, m2) = star_elim (slprop_ref_pts_to x y1) (slprop_ref_pts_to x y2) m in
-    assert later (equiv y1 y2) m2
-  )
+    star_intro (slprop_ref_pts_to x y1) (later (equiv y1 y2)) m m1 m2
