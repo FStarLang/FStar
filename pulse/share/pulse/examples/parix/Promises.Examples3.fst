@@ -148,7 +148,8 @@ fn setup (_:unit)
   fold inv_p;
   
   let i = new_invariant inv_p;
-
+  inames_live_inv i inv_p;
+  GhostSet.lemma_equal_intro (add_inv emp_inames i) (single i);
   make_pledge
     (add_inv emp_inames i)
     (pts_to done #0.5R true) //f
