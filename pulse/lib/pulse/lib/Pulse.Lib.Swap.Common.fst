@@ -60,3 +60,10 @@ let impl_jump
   if (idx `SZ.sub` lb) `SZ.gte` nl
   then idx `SZ.sub` nl
   else idx `SZ.add` (mb `SZ.sub` lb)
+
+let seq_slice_full
+  (#t: Type)
+  (s: Seq.seq t)
+: Lemma
+  (s == Seq.slice s 0 (Seq.length s))
+= assert (s `Seq.equal` Seq.slice s 0 (Seq.length s))

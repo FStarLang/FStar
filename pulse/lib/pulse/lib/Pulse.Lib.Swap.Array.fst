@@ -118,13 +118,6 @@ fn array_swap_aux(#t: Type0) (a: A.array t) (lb: SZ.t) (rb: SZ.t) (mb: (mb: SZ.t
 
 #pop-options
 
-let seq_slice_full
-  (#t: Type)
-  (s: Seq.seq t)
-: Lemma
-  (s == Seq.slice s 0 (Seq.length s))
-= assert (s `Seq.equal` Seq.slice s 0 (Seq.length s))
-
 let intro_array_swap_post1 (lb rb mb:SZ.t) (mb':SZ.t)
   : Lemma (requires SZ.v lb <= SZ.v mb /\ SZ.v mb <= SZ.v rb /\ lb == mb /\ mb' == rb)
           (ensures array_swap_post lb rb mb mb') = ()
