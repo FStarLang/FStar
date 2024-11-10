@@ -38,6 +38,12 @@ let lock_inv r p : slprop = exists* v. Box.pts_to r v ** (maybe (v = 0ul) p)
 [@@pulse_unfold]
 let protects l p = inv l.i (lock_inv l.r p)
 
+fn dup (l:lock) (p:slprop)
+requires protects l p
+ensures protects l p ** protects l p
+{
+  dup_inv l.i (lock_inv l.r p);
+}
 
 fn create (p:slprop)
 requires p
@@ -46,7 +52,7 @@ ensures protects l p
 {
    let r = Box.alloc 0ul; 
    let i = new_invariant (lock_inv r p);
-   ({r; i} <: lock)
+   ({r; i})
 }
 
 
@@ -64,7 +70,6 @@ ensures protects l p
     later_intro (lock_inv l.r p);
   }
 }
-
 
 
 fn rec acquire #p (l:lock)
