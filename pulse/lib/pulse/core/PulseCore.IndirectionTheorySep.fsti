@@ -164,9 +164,6 @@ val lift_pure_eq (p:prop) : Lemma (
 val lift_star_eq (p q:pm_slprop) : Lemma (
   lift (PM.star p q) == star (lift p) (lift q)
 )
-// val lift_exists_eq (a:Type u#4) (f:a -> pm_slprop) : Lemma (
-//   lift PM.(h_exists #a f) == (exists* (x:a). lift (f x))
-// )
 
 val later (p:slprop) : slprop
 val later_credit (n:nat) : slprop

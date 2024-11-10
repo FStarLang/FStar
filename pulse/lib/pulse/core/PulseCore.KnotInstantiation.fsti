@@ -72,9 +72,6 @@ val mem_ext (w1: premem) (w2: premem { level_ w1 == level_ w2 /\ credits_ w1 == 
 
 val mem_pred_ext (f g: mem_pred) (h: (w:premem -> squash (f w <==> g w))) : squash (f == g)
 
-// let approx_approx (m n: erased nat) (p: mem_pred) : Lemma (approx m (approx n p) == approx (min m n) p) [SMTPat (approx m (approx n p))] =
-//   mem_pred_ext (approx m (approx n p)) (approx (min m n) p) fun w -> ()
-
 val approx_read (m: premem) a :
     Lemma (map_hogs_val (approx (level_ m)) (read m a) == read m a)
     [SMTPat (read m a)]
