@@ -193,7 +193,6 @@ let lift_mem_action #a #mg #ex #pre #post
       frame `star`
       (mem_invariant ex w1);
     };
-    // assume (is_full w1);
     (x, w1)
 
 
