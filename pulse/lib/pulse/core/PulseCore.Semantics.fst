@@ -62,7 +62,6 @@ type state : Type u#(s + 1)= {
   interp: pred -> s -> prop;
   invariant: s -> pred;
   laws: squash (associative star /\ commutative star /\ is_unit emp star);
-  can_step: s -> FStar.Ghost.erased bool;
 }
 
 let full_mem (st:state u#s) : Type u#s = m:st.s { st.is_full_mem m }
@@ -76,30 +75,25 @@ let post (s:state) a = a ^-> s.pred
     pst_sep is analogous, except computation in pst_sep are also total
  **)
 let st_sep_aux (st:state)
-                (aux:full_mem st -> prop) 
-                (inv:full_mem st -> st.pred)
-                (a:Type)
-                (pre:st.pred)
-                (post:a -> st.pred) =
+               (inv:full_mem st -> st.pred)
+               (a:Type)
+               (pre:st.pred)
+               (post:a -> st.pred) =
   ST.st #(full_mem st) a
-    (fun s0 -> FStar.Ghost.reveal (st.can_step s0) /\ aux s0 /\ st.interp (pre `st.star` inv s0) s0 )
-    (fun _ x s1 -> aux s1 /\ st.interp (post x `st.star` inv s1) s1)
+    (fun s0 -> st.interp (pre `st.star` inv s0) s0 )
+    (fun _ x s1 -> st.interp (post x `st.star` inv s1) s1)
      
-let st_sep st a pre post = st_sep_aux st (fun _ -> True) st.invariant a pre post
+let st_sep st a pre post = st_sep_aux st st.invariant a pre post
 
 let nst_sep (st:state u#s) (a:Type u#a) (pre:st.pred) (post:a -> st.pred) =
   NST.nst #(full_mem st) a
     (fun s0 -> st.interp (pre `st.star` st.invariant s0) s0 )
     (fun _ x s1 -> st.interp (post x `st.star` st.invariant s1) s1)
 
-let pnst_sep_aux (st:state u#s) (guard:st.s -> FStar.Ghost.erased bool) (a:Type u#a) (pre:st.pred) (post:a -> st.pred) =
+let pnst_sep (st:state u#s) (a:Type u#a) (pre:st.pred) (post:a -> st.pred) =
   PNST.pnst #(full_mem st) a
-    (fun s0 -> FStar.Ghost.reveal (guard s0) /\ st.interp (pre `st.star` st.invariant s0) s0 )
+    (fun s0 -> st.interp (pre `st.star` st.invariant s0) s0 )
     (fun _ x s1 -> st.interp (post x `st.star` st.invariant s1) s1)
-
-let pnst_sep_can_step (st:state) = pnst_sep_aux st st.can_step
-
-let pnst_sep (st:state) = pnst_sep_aux st (fun _ -> true)
 
 
 (** [action c s]: atomic actions are, intuitively, single steps of
@@ -196,7 +190,7 @@ let rec step
     (#q:post st a)
     (f:m a p q)
     (frame:st.pred)
-: Tot (pnst_sep_can_step st
+: Tot (pnst_sep st
         (step_result a q frame)
         (p `st.star` frame)
         (fun x -> Step?.next x `st.star` frame))
@@ -218,7 +212,7 @@ let rec step
   | Par #_ #pre0 #post0 m0 #pre1 #post1 m1 #a #postk k ->
     let q : post st a = coerce_eq () q in
     let choose (b:bool)
-    : pnst_sep_can_step st
+    : pnst_sep st
         (step_result a q frame)
         (p `st.star` frame)
         (fun x -> (Step?.next x `st.star` frame))
@@ -232,17 +226,6 @@ let rec step
     in
     weaken <| bind (lift <| NST.flip()) choose 
 
-let rec decide_guard
-      (#st:state u#s)
-      (#pre:st.pred)
-      (#a:Type u#a) 
-      (#post:post st a)
-      (guard: st.s -> erased bool)
-      (f:unit -> Dv (pnst_sep_aux st guard a pre post))
-: Dv (pnst_sep st a pre post)
-= //a trivial model
-  decide_guard guard f
-  //Though, operationally we'd run `f ()`
 
 (** The main partial correctness result:
  *    m computations can be interpreted into nmst_sep computations 
@@ -262,12 +245,8 @@ let rec run (#st:state u#s)
     = let Step _ f = s in
       run f
     in
-    let step_and_continue 
-      : pnst_sep_can_step st a pre post
-      = weaken <| bind (step f st.emp) k
-    in
-    decide_guard st.can_step (fun _ -> step_and_continue)
-
+    weaken <| bind (step f st.emp) k
+    
 let ctr = nat
 let tape = ctr -> bool
 (** The main partial correctness result:

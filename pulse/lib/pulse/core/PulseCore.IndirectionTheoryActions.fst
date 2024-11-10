@@ -193,6 +193,7 @@ let lift_mem_action #a #mg #ex #pre #post
       frame `star`
       (mem_invariant ex w1);
     };
+    // assume (is_full w1);
     (x, w1)
 
 
@@ -302,7 +303,7 @@ let later_elim_timeless (e:inames) (p:slprop { timeless p })
     (), s0
 
 let buy (e:inames) (n:FStar.Ghost.erased nat)
-: buy_act unit e emp (fun _ -> later_credit n)
+: buy_act (erased bool) e emp (fun b -> if b then later_credit n else emp)
 = fun frame s0 ->
     sep_laws();
     let m0, m1 = split_mem emp (frame `star` mem_invariant e s0) s0 in
@@ -318,8 +319,26 @@ let buy (e:inames) (n:FStar.Ghost.erased nat)
     assert (reveal m' == s1);
     mem_invariant_buy e n s0;
     inames_ok_update e s0 s1;
-    (), s1
-
+    let ok : erased bool = level_at_least_credits s1 in
+    let s : (s:erased mem {
+      is_ghost_action s0 s /\
+      is_full s /\
+      interp 
+        ((if ok then later_credit n else emp) `star`
+         frame `star`
+         mem_invariant e s) s
+    })
+    = if ok
+      then (
+        hide s1
+      )
+      else (
+        is_ghost_action_refl s0;
+        hide s0
+      )
+    in
+    let s1 = update_ghost s0 s in
+    ok, s1
 
 let dup_inv (e:inames) (i:iref) (p:slprop)
 : ghost_act unit e 

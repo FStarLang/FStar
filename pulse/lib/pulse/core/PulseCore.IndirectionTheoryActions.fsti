@@ -61,7 +61,7 @@ val later_elim_timeless (e:inames) (p:slprop { timeless p })
 : ghost_act unit e (later p) (fun _ -> p)
 
 val buy (e:inames) (n:FStar.Ghost.erased nat)
-: buy_act unit e emp (fun _ -> later_credit n)
+: buy_act (FStar.Ghost.erased bool) e emp (fun b -> if b then later_credit n else emp)
 
 val dup_inv (e:inames) (i:iref) (p:slprop)
 : ghost_act unit e 

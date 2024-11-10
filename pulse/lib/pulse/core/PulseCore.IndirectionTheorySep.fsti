@@ -32,8 +32,11 @@ val update_ghost :
       m1:FStar.Ghost.erased mem { is_ghost_action m0 m1 } ->
       m:mem { m == FStar.Ghost.reveal m1 }
 
-let is_full (m:mem) : prop = PM.pulse_heap_sig.full_mem_pred (timeless_mem_of m)
-let full_mem = m:mem { is_full m }
+let is_full (m:mem) 
+: prop
+= PM.pulse_heap_sig.full_mem_pred (timeless_mem_of m) /\
+  level_at_least_credits m
+let full_mem = m:mem { is_full m  }
 
 val emp : slprop
 val pure (p:prop) : slprop

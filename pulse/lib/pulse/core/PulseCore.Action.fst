@@ -399,10 +399,27 @@ let later_elim_timeless (p:slprop { timeless p })
 : act unit Ghost emp_inames (later p) (fun _ -> p)
 = fun #ictx -> ITA.later_elim_timeless ictx p
 
-let buy (n:erased nat)
-: stt unit emp (fun _ -> later_credit n)
+let maybe_p (p:slprop) (b:erased bool) : slprop = if b then p else emp
+
+let buy_alt (n:nat)
+: stt (erased bool) emp (maybe_p (later_credit n))
 = stt_of_action0 (ITA.buy emp_inames n)
 
+let rec reveal_div #t (b:erased bool) (k: squash (reveal b == true) -> t) : Dv t = 
+  reveal_div b k
+
+let buy (n:nat)
+: stt unit emp (fun _ -> later_credit n)
+= I.bind #(erased bool) 
+       #unit
+       #emp 
+       #(maybe_p (later_credit n)) 
+       #(fun _ -> later_credit n)
+       (buy_alt n) 
+       (fun (b:erased bool) ->
+        I.hide_div (fun _ -> 
+          reveal_div b (fun _ -> 
+          coerce_eq () <| I.return #unit () (fun _ -> later_credit n))))
 ///////////////////////////////////////////////////////////////////
 // Core operations on references
 ///////////////////////////////////////////////////////////////////

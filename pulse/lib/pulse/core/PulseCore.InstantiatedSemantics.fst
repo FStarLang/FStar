@@ -40,7 +40,7 @@ let state0 (e:inames) : Sem.state u#4 = {
     interp = ITA.interpret;
     invariant = mem_invariant e;
     laws = laws ();
-    can_step = (fun x -> Sep.level_at_least_credits x)
+    // can_step = (fun x -> Sep.level_at_least_credits x)
 }
 
 let state : Sem.state = state0 GhostSet.empty
