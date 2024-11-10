@@ -401,7 +401,7 @@ let later_elim_timeless (p:slprop { timeless p })
 
 let maybe_p (p:slprop) (b:erased bool) : slprop = if b then p else emp
 
-let buy_alt (n:nat)
+let maybe_buy (n:nat)
 : stt (erased bool) emp (maybe_p (later_credit n))
 = stt_of_action0 (ITA.buy emp_inames n)
 
@@ -410,16 +410,12 @@ let rec reveal_div #t (b:erased bool) (k: squash (reveal b == true) -> t) : Dv t
 
 let buy (n:nat)
 : stt unit emp (fun _ -> later_credit n)
-= I.bind #(erased bool) 
-       #unit
-       #emp 
-       #(maybe_p (later_credit n)) 
-       #(fun _ -> later_credit n)
-       (buy_alt n) 
+= I.bind 
+       (maybe_buy n) 
        (fun (b:erased bool) ->
         I.hide_div (fun _ -> 
           reveal_div b (fun _ -> 
-          coerce_eq () <| I.return #unit () (fun _ -> later_credit n))))
+          coerce_eq () <| I.return () (fun _ -> later_credit n))))
 ///////////////////////////////////////////////////////////////////
 // Core operations on references
 ///////////////////////////////////////////////////////////////////
