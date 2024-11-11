@@ -256,8 +256,7 @@ val age_hereditary (p:slprop) (m:mem)
 : Lemma (interp p m ==> interp p (age1 m))
 val age_later (p:slprop) (m:mem)
 : Lemma 
-  (requires level m > 0)
-  (ensures interp (later p) m ==> interp p (age1 m))
+  (interp (later p) m <==> interp p (age1 m))
 
 val spend_mem (m:mem) : m':mem { 
   is_ghost_action m m' /\
