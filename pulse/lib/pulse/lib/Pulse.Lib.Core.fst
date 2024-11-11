@@ -209,6 +209,8 @@ let later = later
 let later_intro p = A.later_intro p
 let later_elim p = A.later_elim p
 let later_elim_timeless p = A.later_elim_timeless p
+let later_star = Sep.later_star
+let later_exists = Sep.later_exists
 
 //////////////////////////////////////////////////////////////////////////
 // Equivalence
@@ -226,6 +228,7 @@ let equiv_elim a b = A.equiv_elim a b
 let equiv_elim_timeless a b = 
   rewrite_eq (equiv a b) (pure (eq2 #slprop a b)) (Sep.equiv_timeless a b)
 let equiv_star_congr p q r = Sep.equiv_star_congr p q r
+let later_equiv = Sep.later_equiv
 //////////////////////////////////////////////////////////////////////////
 // Higher-order ghost state
 //////////////////////////////////////////////////////////////////////////

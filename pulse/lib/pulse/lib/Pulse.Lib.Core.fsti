@@ -502,8 +502,10 @@ val later (p: slprop) : slprop
 val later_intro (p: slprop) : stt_ghost unit emp_inames p fun _ -> later p
 val later_elim (p: slprop) : stt_ghost unit emp_inames (later p ** later_credit 1) fun _ -> p
 
-(* This is true because ghost functions are called on heaps of nonzero level. *)
 val later_elim_timeless (p: slprop { timeless p }) : stt_ghost unit emp_inames (later p) fun _ -> p
+
+val later_star p q : squash (later (p ** q) == later p ** later q)
+val later_exists #t (f:t->slprop) : squash (later (exists* x. f x) == (exists* x. later (f x)))
 
 //////////////////////////////////////////////////////////////////////////
 // Equivalence
@@ -519,10 +521,11 @@ val equiv_trans a b c : stt_ghost unit emp_inames (equiv a b ** equiv b c) fun _
 
 val equiv_elim a b : stt_ghost unit emp_inames (a ** equiv a b) fun _ -> b
 
-(* This is true because ghost functions are called on heaps of nonzero level. *)
 val equiv_elim_timeless (a:slprop { timeless a }) (b: slprop { timeless b }) : stt_ghost unit emp_inames (equiv a b) fun _ -> pure (eq2 #slprop a b)
 
 val equiv_star_congr (p q r: slprop) : squash (equiv q r == (equiv q r ** equiv (p ** q) (p ** r)))
+
+val later_equiv (p q: slprop) : squash (later (equiv p q) == equiv (later p) (later q))
  
 //////////////////////////////////////////////////////////////////////////
 // Higher-order ghost state: references that can store predicates
