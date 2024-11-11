@@ -77,26 +77,6 @@ let gst : Global.gvar #(gref & mutex (option st)) (fun x -> gvar_p x) =
 
 let trace_ref = fst (Global.read_gvar_ghost gst)
 
-fn unpack_gst ()
-  requires emp
-  returns m:mutex (option st)
-  ensures mutex_live m (dpe_inv trace_ref) **
-          pure (m == snd (Global.read_gvar_ghost gst))
-{
-    let r = Global.read_gvar gst;
-    let m = snd r;
-    rewrite (gvar_p r) as (mutex_live m (dpe_inv trace_ref));
-    m
-}
-
-fn pack_gst (m:mutex (option st))
-  requires mutex_live m (dpe_inv trace_ref) **
-           pure (m == snd (Global.read_gvar_ghost gst))
-  ensures emp
-{
-    drop_ (mutex_live m (dpe_inv trace_ref))
-}
-
 //
 // DPE API implementation
 //
@@ -398,37 +378,14 @@ fn maybe_mk_session_tbl (sopt:option st)
   }
 }
 
-
-
-// ghost
-// fn to_dpe_inv_trace_ref (#s:option st) ()
-//   requires dpe_inv (fst (read_gvar_ghost gst)) s
-//   ensures dpe_inv trace_ref s
-// {
-//   rewrite (dpe_inv (Mkdtuple2?._1 gst) s) as
-//           (dpe_inv trace_ref s)
-// }
-
-
-
-// ghost
-// fn from_dpe_inv_trace_ref (#s:option st) ()
-//   requires dpe_inv trace_ref s
-//   ensures dpe_inv (Mkdtuple2?._1 gst) s
-// {
-//   rewrite (dpe_inv trace_ref s) as
-//           (dpe_inv (Mkdtuple2?._1 gst) s)
-// }
-
-
 fn open_session ()
   requires emp
   returns r:(option sid_t)
   ensures open_session_client_perm r
 {
-  let m = unpack_gst ();
-  let mg = M.lock m;
-
+  let r = Global.read_gvar gst;
+  rewrite (gvar_p r) as (mutex_live (snd (Global.read_gvar_ghost gst)) (dpe_inv trace_ref));
+  let mg = M.lock (snd r);
   let sopt = M.replace #(option st) mg None;
 
   let s = maybe_mk_session_tbl sopt;
@@ -440,9 +397,9 @@ fn open_session ()
     snd ret as sid_opt;
   mg := Some s;
 
-  M.unlock m mg;
-  pack_gst m;
-  
+  M.unlock (snd r) mg;
+  drop_ (mutex_live (snd r) (dpe_inv trace_ref));
+
   sid_opt
 }
 
@@ -525,8 +482,9 @@ fn replace_session
   ensures session_state_related r (current_state t) **
           sid_pts_to trace_ref sid (next_trace t gsst)
 {
-  let m = unpack_gst ();
-  let mg = M.lock m;
+  let r = Global.read_gvar gst;
+  rewrite (gvar_p r) as (mutex_live (snd (Global.read_gvar_ghost gst)) (dpe_inv trace_ref));
+  let mg = M.lock (snd r);
 
   let sopt = M.replace mg None;
   match sopt {
@@ -592,9 +550,9 @@ fn replace_session
               tbl as s.st_tbl;
             fold (dpe_inv trace_ref (Some s));
             mg := Some s;
-
-            M.unlock m mg;
-            pack_gst m;
+            
+            M.unlock (snd r) mg;
+            drop_ (mutex_live (snd r) (dpe_inv trace_ref));
 
             st
           }
@@ -1551,4 +1509,3 @@ fn get_profile ()
     (*supports_unseal_policy=*)false// irrelevant by supports_sealing
     (*unseal_policy_format=*)"" // irrelevant by supports_unseal_policy 
 }
-

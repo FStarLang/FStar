@@ -198,6 +198,9 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
     when S.string_of_mlpath p = "Pulse.Lib.Mutex.mutex" ||
          S.string_of_mlpath p = "Pulse.Lib.MutexToken.mutex" ->
     arg |> extract_mlty g |> mk_mutex_typ
+  | S.MLTY_Named (arg::_, p)
+    when S.string_of_mlpath p = "Pulse.Lib.GlobalVar.gvar" ->
+    arg |> extract_mlty g
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "FStar.Pervasives.Native.option" ->
     arg |> extract_mlty g |> mk_option_typ
@@ -739,8 +742,12 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     Expr_while {expr_while_cond; expr_while_body}
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, _::e::_)
-    when S.string_of_mlpath p = "DPE.run_stt" ->  // TODO: FIXME
-    extract_mlexpr g e
+    when S.string_of_mlpath p = "Pulse.Lib.GlobalVar.mk_gvar" ->
+    mk_call (extract_mlexpr g e) [Expr_lit (Lit_unit)]
+    
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, _::e::_)
+    when S.string_of_mlpath p = "Pulse.Lib.GlobalVar.read_gvar" ->
+    mk_reference_expr false (extract_mlexpr g e)
 
   | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
   | S.MLE_App ({expr=S.MLE_Name p}, _)
