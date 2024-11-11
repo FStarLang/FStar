@@ -631,6 +631,30 @@ let equiv_elim (p q: slprop) : squash (equiv p q `star` p == equiv p q `star` q)
 let equiv_trans (p q r: slprop) : squash (equiv p q `star` equiv q r == equiv p q `star` equiv p r) =
   mem_pred_ext (equiv p q `star` equiv q r) (equiv p q `star` equiv p r) fun w -> ()
 
+let later_equiv (p q: slprop) =
+  mem_pred_ext (later (equiv p q)) (equiv (later p) (later q)) fun m ->
+    introduce later (equiv p q) m ==> equiv (later p) (later q) m with _. (
+      mem_pred_ext (approx (level_ m + 1) (later p)) (approx (level_ m + 1) (later q)) fun m' ->
+        if level_ m' >= level_ m + 1 then () else
+          if level_ m = 0 then
+            eq_at_elim 1 p q m'
+          else
+            eq_at_elim (level_ m) p q (age1_ m')
+    );
+    introduce equiv (later p) (later q) m ==> later (equiv p q) m with _. (
+      if level_ m = 0 then
+        mem_pred_ext (approx 1 p) (approx 1 q) fun m' ->
+          if level_ m' >= 1 then () else
+            eq_at_elim 1 (later p) (later q) m'
+      else
+        mem_pred_ext (approx (level_ m) p) (approx (level_ m) q) fun m' ->
+          if level_ m' >= level_ m then () else (
+            let m'': premem = age_to_ m' (level_ m' + 1) in
+            mem_ext (age1_ m'') m' (fun a -> ());
+            eq_at_elim (level_ m + 1) (later p) (later q) m''
+          )
+    )
+
 let rec timeless_interp (a: slprop { timeless a }) (w: premem) :
     Lemma (ensures a w <==> a (age_to_ w 0)) (decreases level_ w) =
   if level_ w = 0 then () else timeless_interp a (age1_ w)
@@ -645,10 +669,7 @@ let timeless_ext (a b: (p:slprop {timeless p})) (h: (w: premem { level_ w == 0 }
 let equiv_timeless (a b: slprop) :
     Lemma (requires timeless a /\ timeless b)
       (ensures timeless (equiv a b) /\ equiv a b == pure (a == b)) =
-  mem_pred_ext (equiv a b) (later (equiv a b)) (fun w ->
-    introduce equiv a b (age1_ w) ==> equiv a b w with _.
-      mem_pred_ext (approx (level_ w + 1) a) (approx (level_ w + 1) b) fun w' ->
-        assert approx (level_ w) a (age1_ w') <==> approx (level_ w) b (age1_ w'));
+  later_equiv a b;
   timeless_pure (a == b);
   timeless_ext (equiv a b) (pure (a == b)) fun w ->
     introduce equiv a b w ==> a == b with _.
