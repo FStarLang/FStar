@@ -35,6 +35,7 @@ let lock_inv_aux (r:B.box U32.t) (gr:GR.ref U32.t) (v:slprop) : slprop  =
 let lock_inv (r:B.box U32.t) (gr:GR.ref U32.t) (v:slprop) : slprop =
   lock_inv_aux r gr v
 
+[@@CAbstractStruct]
 noeq
 type lock = {
   r : B.box U32.t;

@@ -254,11 +254,8 @@ let rec (extract_mlty :
           let uu___ = extract_mlty g arg in
           Pulse2Rust_Rust_Syntax.mk_vec_typ uu___
       | FStarC_Extraction_ML_Syntax.MLTY_Named (arg::uu___, p) when
-          (let uu___1 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___1 = "Pulse.Lib.Mutex.mutex") ||
-            (let uu___1 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___1 = "Pulse.Lib.MutexToken.mutex")
-          ->
+          let uu___1 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___1 = "Pulse.Lib.Mutex.mutex" ->
           let uu___1 = extract_mlty g arg in
           Pulse2Rust_Rust_Syntax.mk_mutex_typ uu___1
       | FStarC_Extraction_ML_Syntax.MLTY_Named (arg::uu___, p) when
@@ -728,20 +725,15 @@ let rec (lb_init_and_def :
                    FStarC_Extraction_ML_Syntax.loc = uu___5;_},
                  uu___6)
                 ->
-                (((let uu___7 =
-                     FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-                   uu___7 = "Pulse.Lib.Vec.alloc") ||
-                    (let uu___7 =
-                       FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-                     uu___7 = "Pulse.Lib.Box.alloc"))
-                   ||
+                ((let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+                  uu___7 = "Pulse.Lib.Vec.alloc") ||
                    (let uu___7 =
                       FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-                    uu___7 = "Pulse.Lib.Mutex.lock"))
+                    uu___7 = "Pulse.Lib.Box.alloc"))
                   ||
                   (let uu___7 =
                      FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-                   uu___7 = "Pulse.Lib.MutexToken.lock")
+                   uu___7 = "Pulse.Lib.Mutex.lock")
             | uu___1 -> false in
           let uu___1 =
             let uu___2 =
@@ -980,25 +972,20 @@ and (extract_mlexpr :
              FStarC_Extraction_ML_Syntax.loc = uu___4;_},
            e1::e2::uu___5::[])
           when
-          (((let uu___6 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___6 = "Pulse.Lib.Reference.op_Colon_Equals") ||
-              (let uu___6 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-               uu___6 = "Pulse.Lib.Box.op_Colon_Equals"))
-             ||
+          ((let uu___6 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___6 = "Pulse.Lib.Reference.op_Colon_Equals") ||
              (let uu___6 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-              uu___6 = "Pulse.Lib.Mutex.op_Colon_Equals"))
+              uu___6 = "Pulse.Lib.Box.op_Colon_Equals"))
             ||
             (let uu___6 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___6 = "Pulse.Lib.MutexToken.op_Colon_Equals")
+             uu___6 = "Pulse.Lib.Mutex.op_Colon_Equals")
           ->
           let e11 = extract_mlexpr g e1 in
           let e21 = extract_mlexpr g e2 in
           let b = type_of g e11 in
           let is_mutex_guard =
-            (let uu___6 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___6 = "Pulse.Lib.Mutex.op_Colon_Equals") ||
-              (let uu___6 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-               uu___6 = "Pulse.Lib.MutexToken.op_Colon_Equals") in
+            let uu___6 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___6 = "Pulse.Lib.Mutex.op_Colon_Equals" in
           if is_mutex_guard || (Prims.op_Negation b)
           then Pulse2Rust_Rust_Syntax.mk_ref_assign e11 e21
           else Pulse2Rust_Rust_Syntax.mk_assign e11 e21
@@ -1016,24 +1003,19 @@ and (extract_mlexpr :
              FStarC_Extraction_ML_Syntax.loc = uu___4;_},
            e1::uu___5::uu___6::[])
           when
-          (((let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___7 = "Pulse.Lib.Reference.op_Bang") ||
-              (let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-               uu___7 = "Pulse.Lib.Box.op_Bang"))
-             ||
+          ((let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___7 = "Pulse.Lib.Reference.op_Bang") ||
              (let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-              uu___7 = "Pulse.Lib.Mutex.op_Bang"))
+              uu___7 = "Pulse.Lib.Box.op_Bang"))
             ||
             (let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___7 = "Pulse.Lib.MutexToken.op_Bang")
+             uu___7 = "Pulse.Lib.Mutex.op_Bang")
           ->
           let e2 = extract_mlexpr g e1 in
           let b = type_of g e2 in
           let is_mutex_guard =
-            (let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___7 = "Pulse.Lib.Mutex.op_Bang") ||
-              (let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-               uu___7 = "Pulse.Lib.MutexToken.op_Bang") in
+            let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___7 = "Pulse.Lib.Mutex.op_Bang" in
           if is_mutex_guard || (Prims.op_Negation b)
           then Pulse2Rust_Rust_Syntax.mk_ref_read e2
           else e2
@@ -1408,11 +1390,8 @@ and (extract_mlexpr :
              FStarC_Extraction_ML_Syntax.loc = uu___4;_},
            uu___5::e1::uu___6)
           when
-          (let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___7 = "Pulse.Lib.Mutex.new_mutex") ||
-            (let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___7 = "Pulse.Lib.MutexToken.new_mutex")
-          ->
+          let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___7 = "Pulse.Lib.Mutex.new_mutex" ->
           let e2 = extract_mlexpr g e1 in
           Pulse2Rust_Rust_Syntax.mk_new_mutex e2
       | FStarC_Extraction_ML_Syntax.MLE_App
@@ -1429,11 +1408,8 @@ and (extract_mlexpr :
              FStarC_Extraction_ML_Syntax.loc = uu___4;_},
            uu___5::uu___6::e1::uu___7)
           when
-          (let uu___8 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___8 = "Pulse.Lib.Mutex.lock") ||
-            (let uu___8 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___8 = "Pulse.Lib.MutexToken.lock")
-          ->
+          let uu___8 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___8 = "Pulse.Lib.Mutex.lock" ->
           let e2 = extract_mlexpr g e1 in
           Pulse2Rust_Rust_Syntax.mk_lock_mutex e2
       | FStarC_Extraction_ML_Syntax.MLE_App
@@ -1450,11 +1426,8 @@ and (extract_mlexpr :
              FStarC_Extraction_ML_Syntax.loc = uu___4;_},
            uu___5::e1::uu___6)
           when
-          (let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___7 = "Pulse.Lib.Mutex.lock") ||
-            (let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___7 = "Pulse.Lib.MutexToken.lock")
-          ->
+          let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___7 = "Pulse.Lib.Mutex.lock" ->
           let e2 = extract_mlexpr g e1 in
           Pulse2Rust_Rust_Syntax.mk_lock_mutex e2
       | FStarC_Extraction_ML_Syntax.MLE_App
@@ -1471,11 +1444,8 @@ and (extract_mlexpr :
              FStarC_Extraction_ML_Syntax.loc = uu___4;_},
            uu___5::uu___6::uu___7::e1::uu___8)
           when
-          (let uu___9 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___9 = "Pulse.Lib.Mutex.unlock") ||
-            (let uu___9 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___9 = "Pulse.Lib.MutexToken.unlock")
-          ->
+          let uu___9 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___9 = "Pulse.Lib.Mutex.unlock" ->
           let e2 = extract_mlexpr g e1 in
           Pulse2Rust_Rust_Syntax.mk_unlock_mutex e2
       | FStarC_Extraction_ML_Syntax.MLE_App
@@ -1492,11 +1462,8 @@ and (extract_mlexpr :
              FStarC_Extraction_ML_Syntax.loc = uu___4;_},
            uu___5::uu___6::e1::uu___7)
           when
-          (let uu___8 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___8 = "Pulse.Lib.Mutex.unlock") ||
-            (let uu___8 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___8 = "Pulse.Lib.MutexToken.unlock")
-          ->
+          let uu___8 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___8 = "Pulse.Lib.Mutex.unlock" ->
           let e2 = extract_mlexpr g e1 in
           Pulse2Rust_Rust_Syntax.mk_unlock_mutex e2
       | FStarC_Extraction_ML_Syntax.MLE_App
@@ -1513,11 +1480,8 @@ and (extract_mlexpr :
              FStarC_Extraction_ML_Syntax.loc = uu___3;_},
            e_mg::e_x::uu___4)
           when
-          (let uu___5 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___5 = "Pulse.Lib.Mutex.replace") ||
-            (let uu___5 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___5 = "Pulse.Lib.MutexToken.replace")
-          ->
+          let uu___5 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___5 = "Pulse.Lib.Mutex.replace" ->
           let is_mut = true in
           let uu___5 = extract_mlty g a in
           let uu___6 =

@@ -9,21 +9,21 @@ Pulse_Lib_SpinLock_lock Pulse_Lib_SpinLock_new_lock(void)
   assert(l);
   int r = pthread_mutex_init(l, NULL);
   assert (r ==0);
-  return l;
+  return ((Pulse_Lib_SpinLock_lock) { .mutex = l });
 }
 
 void Pulse_Lib_SpinLock_acquire(Pulse_Lib_SpinLock_lock l)
 {
-  pthread_mutex_lock(l);
+  pthread_mutex_lock(l.mutex);
 }
 
 void Pulse_Lib_SpinLock_release(Pulse_Lib_SpinLock_lock l)
 {
-  pthread_mutex_unlock(l);
+  pthread_mutex_unlock(l.mutex);
 }
 
 void Pulse_Lib_SpinLock_free(Pulse_Lib_SpinLock_lock l)
 {
-  pthread_mutex_destroy(l);
-  free(l);
+  pthread_mutex_destroy(l.mutex);
+  free(l.mutex);
 }
