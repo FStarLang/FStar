@@ -22,16 +22,16 @@ KRML ?= $(KRML_HOME)/krml
 
 .PHONY: extract
 extract: $(ALL_KRML_FILES)
-	$(KRML) -skip-compilation -ccopt -Wno-unused-variable -bundle 'HACL=EverCrypt.\*,Spec.Hash.Definitions' -bundle 'DPE=*' -library Pulse.Lib.Primitives,Pulse.Lib.SpinLockToken,L0Core -add-include '"Pulse_Lib_SpinLockToken.h"' -add-include '"EverCrypt_Base.h"' -warn-error @4+9 -tmpdir $(OUTPUT_DIRECTORY) $^
+	$(KRML) -skip-compilation -ccopt -Wno-unused-variable -bundle 'HACL=EverCrypt.\*,Spec.Hash.Definitions' -bundle 'DPE=*' -library Pulse.Lib.Primitives,Pulse.Lib.SpinLock,L0Core -add-include '"Pulse_Lib_SpinLock.h"' -add-include '"EverCrypt_Base.h"' -warn-error @4+9 -tmpdir $(OUTPUT_DIRECTORY) $^
 
 .PHONY: test
 test: extract
 	cp $(CURDIR)/external/c/hacl/* $(OUTPUT_DIRECTORY)
-	+$(MAKE) -C $(OUTPUT_DIRECTORY) -f Makefile.basic Pulse_Lib_SpinLockToken.o DPE.o HACL.o
+	+$(MAKE) -C $(OUTPUT_DIRECTORY) -f Makefile.basic Pulse_Lib_SpinLock.o DPE.o HACL.o
 ifneq (,$(HACL_HOME))
 	+$(MAKE) -C $(OUTPUT_DIRECTORY) -f Makefile.basic clean
 	+$(MAKE) -C $(HACL_HOME)/dist/gcc-compatible Makefile.config
-	+$(MAKE) -C $(OUTPUT_DIRECTORY) -f Makefile.basic USER_CFLAGS='-I $(HACL_HOME)/dist/gcc-compatible -mavx' Pulse_Lib_SpinLockToken.o DPE.o HACL.o
+	+$(MAKE) -C $(OUTPUT_DIRECTORY) -f Makefile.basic USER_CFLAGS='-I $(HACL_HOME)/dist/gcc-compatible -mavx' Pulse_Lib_SpinLock.o DPE.o HACL.o
 	+$(MAKE) -C $(OUTPUT_DIRECTORY) -f Makefile.basic clean
-	+$(MAKE) -C $(OUTPUT_DIRECTORY) -f Makefile.basic USER_CFLAGS='-I $(HACL_HOME)/dist/gcc-compatible -mavx -mavx2' Pulse_Lib_SpinLockToken.o DPE.o HACL.o
+	+$(MAKE) -C $(OUTPUT_DIRECTORY) -f Makefile.basic USER_CFLAGS='-I $(HACL_HOME)/dist/gcc-compatible -mavx -mavx2' Pulse_Lib_SpinLock.o DPE.o HACL.o
 endif

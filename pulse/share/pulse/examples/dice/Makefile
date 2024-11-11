@@ -7,6 +7,8 @@ INCLUDE_PATHS += cbor
 #/Pulse.Lib.HashTable.fst
 FSTAR_OPTIONS += --warn_error -342
 FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
+
+.PHONY: all test-c
 all: verify
 
 include $(PULSE_HOME)/share/pulse/Makefile.include

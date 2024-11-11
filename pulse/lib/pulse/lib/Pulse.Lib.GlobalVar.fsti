@@ -17,12 +17,19 @@
 module Pulse.Lib.GlobalVar
 
 open Pulse.Lib.Pervasives
+open FStar.ExtractAs
 
+inline_for_extraction [@@extract_as (`(fun (#a: Type0) (p: a->slprop) -> a))]
 val gvar (#a:Type0) (p:a -> slprop) : Type0
+
 //
 // TODO: add a duplicable precondition to mk_gvar
 //
+inline_for_extraction [@@extract_as (`(fun (#a: Type0) (#p: a->slprop) (init: unit -> Dv unit) -> init ()))]
 val mk_gvar (#a:Type0) (#p:a -> slprop) (init:unit -> stt a emp p) : gvar p
+
 val read_gvar_ghost (#a:Type0) (#p:a -> slprop) (x:gvar p) : GTot a
+
+inline_for_extraction [@@extract_as (`(fun (#a: Type0) (#p: a->slprop) (x: gvar p) -> x))]
 val read_gvar (#a:Type0) (#p:a -> slprop) (x:gvar p)
   : stt a emp (fun r -> p r ** pure (r == read_gvar_ghost x))
