@@ -38,6 +38,7 @@ module V = Pulse.Lib.Vec
 module R = Pulse.Lib.Reference
 module HT = Pulse.Lib.HashTable
 module PHT = Pulse.Lib.HashTable.Spec
+module Global = Pulse.Lib.GlobalVar
 
 open PulseCore.Preorder
 open Pulse.Lib.OnRange
@@ -46,22 +47,10 @@ open Pulse.Lib.HashTable
 open Pulse.Lib.Mutex
 open Pulse.Class.PtsTo
 
-// We assume a combinator to run pulse computations for initialization of top-level state, it gets primitive support in extraction
-assume val run_stt (#a:Type) (#post:a -> slprop) (f:stt a emp post) : a
-
 // We assume this code will be executed on a machine where u32 fits the word size
 assume SZ_fits_u32 : SZ.fits_u32
 
 let sid_hash (s:sid_t) : SZ.t = SZ.uint16_to_sizet s
-
-assume val gvar (#a:Type0) (p:a -> slprop) : Type0
-//
-// TODO: add a duplicable precondition to mk_gvar
-//
-assume val mk_gvar #a #p (init:unit -> stt a emp p) : gvar p
-assume val read_gvar_ghost (#a:Type0) (#p:a -> slprop) (x:gvar p) : GTot a
-assume val read_gvar #a #p (x:gvar p)
-  : stt a emp (fun r -> p r ** pure (r == read_gvar_ghost x))
 
 let gvar_p : (gref & mutex (option st)) -> slprop =
   fun x -> mutex_live (snd x) (dpe_inv (fst x))
@@ -83,23 +72,26 @@ fn initialize_global_state ()
   x
 }
 
-let gst : gvar #(gref & mutex (option st)) (fun x -> gvar_p x) = mk_gvar initialize_global_state
+let gst : Global.gvar #(gref & mutex (option st)) (fun x -> gvar_p x) =
+  Global.mk_gvar initialize_global_state
 
-let trace_ref = fst (read_gvar_ghost gst)
+let trace_ref = fst (Global.read_gvar_ghost gst)
 
 fn unpack_gst ()
   requires emp
   returns m:mutex (option st)
-  ensures mutex_live m (dpe_inv trace_ref) ** pure (m == snd (read_gvar_ghost gst))
+  ensures mutex_live m (dpe_inv trace_ref) **
+          pure (m == snd (Global.read_gvar_ghost gst))
 {
-    let r = read_gvar gst;
+    let r = Global.read_gvar gst;
     let m = snd r;
     rewrite (gvar_p r) as (mutex_live m (dpe_inv trace_ref));
     m
 }
 
 fn pack_gst (m:mutex (option st))
-  requires mutex_live m (dpe_inv trace_ref) ** pure (m == snd (read_gvar_ghost gst))
+  requires mutex_live m (dpe_inv trace_ref) **
+           pure (m == snd (Global.read_gvar_ghost gst))
   ensures emp
 {
     drop_ (mutex_live m (dpe_inv trace_ref))
