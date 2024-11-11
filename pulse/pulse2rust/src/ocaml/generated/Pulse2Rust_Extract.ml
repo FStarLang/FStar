@@ -261,6 +261,9 @@ let rec (extract_mlty :
           ->
           let uu___1 = extract_mlty g arg in
           Pulse2Rust_Rust_Syntax.mk_mutex_typ uu___1
+      | FStarC_Extraction_ML_Syntax.MLTY_Named (arg::uu___, p) when
+          let uu___1 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___1 = "Pulse.Lib.GlobalVar.gvar" -> extract_mlty g arg
       | FStarC_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
           let uu___ = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "FStar.Pervasives.Native.option" ->
@@ -1586,7 +1589,28 @@ and (extract_mlexpr :
            uu___5::e1::uu___6)
           when
           let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___7 = "DPE.run_stt" -> extract_mlexpr g e1
+          uu___7 = "Pulse.Lib.GlobalVar.mk_gvar" ->
+          let uu___7 = extract_mlexpr g e1 in
+          Pulse2Rust_Rust_Syntax.mk_call uu___7
+            [Pulse2Rust_Rust_Syntax.Expr_lit Pulse2Rust_Rust_Syntax.Lit_unit]
+      | FStarC_Extraction_ML_Syntax.MLE_App
+          ({
+             FStarC_Extraction_ML_Syntax.expr =
+               FStarC_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStarC_Extraction_ML_Syntax.expr =
+                    FStarC_Extraction_ML_Syntax.MLE_Name p;
+                  FStarC_Extraction_ML_Syntax.mlty = uu___;
+                  FStarC_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2);
+             FStarC_Extraction_ML_Syntax.mlty = uu___3;
+             FStarC_Extraction_ML_Syntax.loc = uu___4;_},
+           uu___5::e1::uu___6)
+          when
+          let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___7 = "Pulse.Lib.GlobalVar.read_gvar" ->
+          let uu___7 = extract_mlexpr g e1 in
+          Pulse2Rust_Rust_Syntax.mk_reference_expr false uu___7
       | FStarC_Extraction_ML_Syntax.MLE_App
           ({
              FStarC_Extraction_ML_Syntax.expr =
