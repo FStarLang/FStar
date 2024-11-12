@@ -291,7 +291,6 @@ let later_elim (e:inames) (p:slprop)
     mem_invariant_spend e s1;
     inames_ok_update e s0 s2;
     assert (inames_ok e s0 <==> inames_ok e s2);
-    assert (level_decreases_by_spent_credits s0 s2);
     assert (is_full s2);
     (), s2
 
@@ -436,7 +435,6 @@ let fresh_invariant (e:inames) (p:slprop) (ctx:inames)
     assert (is_full s1);
     disjoint_join_levels s0 s0';
     assert (level s0 == level s0');
-    assert (level_decreases_by_spent_credits s0 s1);
     i, s1
 
 let new_invariant (e:inames) (p:slprop)

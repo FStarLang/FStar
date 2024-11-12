@@ -11,11 +11,6 @@ type action_kind =
 
 let maybe_ghost_action (k:action_kind) (m0 m1:mem) = GHOST? k ==> is_ghost_action m0 m1
 
-let level_decreases_by_spent_credits (m0 m1:mem)
-: prop
-= credits m1 <= credits m0 /\ //credits decrease
-  level m1 - credits m1 == level m0 - credits m0 // and level decreases by the amount of credits spent
-
 let _ACTION 
   (a:Type u#a)
   (ak:action_kind)
