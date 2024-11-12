@@ -85,11 +85,6 @@ let st_sep_aux (st:state)
      
 let st_sep st a pre post = st_sep_aux st st.invariant a pre post
 
-let nst_sep (st:state u#s) (a:Type u#a) (pre:st.pred) (post:a -> st.pred) =
-  NST.nst #(full_mem st) a
-    (fun s0 -> st.interp (pre `st.star` st.invariant s0) s0 )
-    (fun _ x s1 -> st.interp (post x `st.star` st.invariant s1) s1)
-
 let pnst_sep (st:state u#s) (a:Type u#a) (pre:st.pred) (post:a -> st.pred) =
   PNST.pnst #(full_mem st) a
     (fun s0 -> st.interp (pre `st.star` st.invariant s0) s0 )
