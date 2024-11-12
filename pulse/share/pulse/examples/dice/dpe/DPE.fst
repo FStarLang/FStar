@@ -46,20 +46,46 @@ open Pulse.Lib.HashTable.Type
 open Pulse.Lib.HashTable
 open Pulse.Lib.Mutex
 open Pulse.Class.PtsTo
-
+open Pulse.Lib.Trade
 // We assume this code will be executed on a machine where u32 fits the word size
 assume SZ_fits_u32 : SZ.fits_u32
 
 let sid_hash (s:sid_t) : SZ.t = SZ.uint16_to_sizet s
 
 let gvar_p : (gref & mutex (option st)) -> slprop =
-  fun x -> mutex_live (snd x) (dpe_inv (fst x))
+  fun x -> exists* p. mutex_live (snd x) #p (dpe_inv (fst x))
+
+ghost
+fn dup_gvar_p (x:(gref & mutex (option st)))
+requires emp
+ensures trade (gvar_p x) (gvar_p x ** gvar_p x)
+{
+  ghost
+  fn dup ()
+  requires emp ** gvar_p x
+  ensures gvar_p x ** gvar_p x
+  {
+    unfold gvar_p;
+    Pulse.Lib.Mutex.share (snd x);
+    fold (gvar_p x);
+    fold (gvar_p x)
+  };
+  Pulse.Lib.Trade.intro_trade _ _ emp dup
+}
+
+ghost
+fn drop_mutex_live (#a:Type0) (m:mutex a) (#p:perm) (v:a -> slprop)
+requires mutex_live m #p v
+ensures emp
+{
+  drop_ _;
+}
 
 [@@ Rust_const_fn]
 fn initialize_global_state ()
   requires emp
   returns x:(gref & mutex (option st))
-  ensures gvar_p x
+  ensures gvar_p x ** trade (gvar_p x) (gvar_p x ** gvar_p x)
 {
   let r = ghost_alloc #_ #pcm all_sids_unused;
   with _v. rewrite (ghost_pcm_pts_to r (G.reveal (G.hide _v))) as
@@ -67,12 +93,12 @@ fn initialize_global_state ()
   fold (dpe_inv r None);
   let m = new_mutex (dpe_inv r) None;
   let x = r, m;
-  rewrite (mutex_live m (dpe_inv r)) as
-          (gvar_p x);
+  fold (gvar_p x);
+  dup_gvar_p x;
   x
 }
 
-let gst : Global.gvar #(gref & mutex (option st)) (fun x -> gvar_p x) =
+let gst : Global.gvar #(gref & mutex (option st)) gvar_p =
   Global.mk_gvar initialize_global_state
 
 let trace_ref = fst (Global.read_gvar_ghost gst)
@@ -384,7 +410,7 @@ fn open_session ()
   ensures open_session_client_perm r
 {
   let r = Global.read_gvar gst;
-  rewrite (gvar_p r) as (mutex_live (snd (Global.read_gvar_ghost gst)) (dpe_inv trace_ref));
+  unfold (gvar_p r);
   let mg = M.lock (snd r);
   let sopt = M.replace #(option st) mg None;
 
@@ -398,7 +424,7 @@ fn open_session ()
   mg := Some s;
 
   M.unlock (snd r) mg;
-  drop_ (mutex_live (snd r) (dpe_inv trace_ref));
+  drop_mutex_live _ (dpe_inv (fst r));
 
   sid_opt
 }
@@ -483,7 +509,7 @@ fn replace_session
           sid_pts_to trace_ref sid (next_trace t gsst)
 {
   let r = Global.read_gvar gst;
-  rewrite (gvar_p r) as (mutex_live (snd (Global.read_gvar_ghost gst)) (dpe_inv trace_ref));
+  unfold (gvar_p r);
   let mg = M.lock (snd r);
 
   let sopt = M.replace mg None;
@@ -552,7 +578,7 @@ fn replace_session
             mg := Some s;
             
             M.unlock (snd r) mg;
-            drop_ (mutex_live (snd r) (dpe_inv trace_ref));
+            drop_mutex_live (snd r) (dpe_inv trace_ref);
 
             st
           }
