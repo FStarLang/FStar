@@ -36,7 +36,7 @@ val seq_list_match
 : Tot slprop
 
 val seq_list_match_nil_intro
-  (#t #t': Type)
+  (#t #t': Type0)
   (c: Seq.seq t)
   (v: list t')
   (item_match: (t -> (v': t' { v' << v }) -> slprop))
@@ -46,16 +46,19 @@ val seq_list_match_nil_intro
     (fun _ -> seq_list_match c v item_match)
 
 val seq_list_match_nil_elim
-  (#t #t': Type)
+  (#t #t': Type0)
   (c: Seq.seq t)
   (v: list t')
   (item_match: (t -> (v': t' { v' << v }) -> slprop))
 : stt_ghost unit emp_inames
     (seq_list_match c v item_match ** pure (
+      c `Seq.equal` Seq.empty \/
+      Nil? v
+    ))
+    (fun _ -> pure (
       c `Seq.equal` Seq.empty /\
       Nil? v
     ))
-    (fun _ -> emp)
 
 let list_cons_precedes
   (#t: Type)
@@ -68,7 +71,7 @@ let list_cons_precedes
   assert (List.Tot.tl (a :: q) << (a :: q))
 
 val seq_list_match_cons_intro
-  (#t #t': Type)
+  (#t #t': Type0)
   (a: t)
   (a' : t')
   (c: Seq.seq t)
@@ -79,7 +82,7 @@ val seq_list_match_cons_intro
     (fun _ -> seq_list_match (Seq.cons a c) (a' :: v) item_match)
 
 val seq_list_match_cons_elim
-  (#t #t': Type)
+  (#t #t': Type0)
   (c: Seq.seq t)
   (v: list t' { Cons? v \/ Seq.length c > 0 })
   (item_match: (t -> (v': t' { v' << v }) -> slprop))
@@ -91,7 +94,7 @@ val seq_list_match_cons_elim
 
 // this one cannot be proven with seq_seq_match because of the << refinement in the type of item_match
 val seq_list_match_weaken
-  (#t #t': Type)
+  (#t #t': Type0)
   (c: Seq.seq t)
   (v: list t')
   (item_match1 item_match2: (t -> (v': t' { v' << v }) -> slprop))
@@ -121,7 +124,7 @@ val seq_seq_match
 : Tot slprop
 
 val seq_seq_match_length
-  (#t1 #t2: Type)
+  (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
   (s1: Seq.seq t1)
   (s2: Seq.seq t2)
@@ -131,7 +134,7 @@ val seq_seq_match_length
     (fun _ -> seq_seq_match p s1 s2 i j ** pure (i <= j /\ (i == j \/ (j <= Seq.length s1 /\ j <= Seq.length s2))))
 
 val seq_seq_match_weaken
-  (#t1 #t2: Type)
+  (#t1 #t2: Type0)
   (p p': t1 -> t2 -> slprop)
   (w: ((x1: t1) -> (x2: t2) -> stt_ghost unit emp_inames
     (p x1 x2) (fun _ -> p' x1 x2)
@@ -151,7 +154,7 @@ val seq_seq_match_weaken
     (fun _ -> seq_seq_match p' c1' c2' i j)
 
 val seq_seq_match_weaken_with_implies
-  (#t1 #t2: Type)
+  (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
   (c1 c1': Seq.seq t1)
   (c2 c2': Seq.seq t2)
@@ -172,7 +175,7 @@ val seq_seq_match_weaken_with_implies
 (* Going between `seq_list_match` and `seq_seq_match` *)
 
 val seq_seq_match_seq_list_match
-  (#t1 #t2: Type)
+  (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
   (c: Seq.seq t1)
   (l: list t2)
@@ -183,7 +186,7 @@ val seq_seq_match_seq_list_match
     (fun _ -> seq_list_match c l p)
 
 val seq_list_match_seq_seq_match
-  (#t1 #t2: Type)
+  (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
   (c: Seq.seq t1)
   (l: list t2)
@@ -194,7 +197,7 @@ val seq_list_match_seq_seq_match
     ))
 
 val seq_seq_match_seq_list_match_with_implies
-  (#t1 #t2: Type)
+  (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
   (c: Seq.seq t1)
   (l: list t2)
@@ -205,7 +208,7 @@ val seq_seq_match_seq_list_match_with_implies
     (fun _ -> seq_list_match c l p ** (seq_list_match c l p @==> seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l)))
 
 val seq_list_match_seq_seq_match_with_implies
-  (#t1 #t2: Type)
+  (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
   (c: Seq.seq t1)
   (l: list t2)
@@ -216,7 +219,7 @@ val seq_list_match_seq_seq_match_with_implies
     ))
 
 val seq_list_match_length
-  (#t1 #t2: Type)
+  (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
   (c: Seq.seq t1)
   (l: list t2)
@@ -227,7 +230,7 @@ val seq_list_match_length
     ))
 
 val seq_list_match_index
-  (#t1 #t2: Type)
+  (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
   (s1: Seq.seq t1)
   (s2: list t2)
@@ -350,7 +353,7 @@ let item_match_option
   | Some x2' -> p x1 x2'
 
 val seq_seq_match_item_match_option_elim
-  (#t1 #t2: Type)
+  (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
   (s1: Seq.seq t1)
   (s2: Seq.seq t2)
@@ -360,7 +363,7 @@ val seq_seq_match_item_match_option_elim
     (fun _ -> seq_seq_match p s1 s2 i j)
 
 val seq_seq_match_item_match_option_intro
-  (#t1 #t2: Type)
+  (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
   (s1: Seq.seq t1)
   (s2: Seq.seq t2)
@@ -370,7 +373,7 @@ val seq_seq_match_item_match_option_intro
     (fun _ -> seq_seq_match (item_match_option p) s1 (seq_map Some s2) i j)
 
 val seq_seq_match_item_match_option_init
-  (#t1 #t2: Type)
+  (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
   (s: Seq.seq t1)
 : stt_ghost unit emp_inames
@@ -378,7 +381,7 @@ val seq_seq_match_item_match_option_init
     (fun _ -> seq_seq_match (item_match_option p) s (Seq.create (Seq.length s) None) 0 (Seq.length s))
 
 val seq_seq_match_upd
-  (#t1 #t2: Type)
+  (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
   (s1: Seq.seq t1)
   (s2: Seq.seq t2)
@@ -392,17 +395,19 @@ val seq_seq_match_upd
     emp_inames
     (seq_seq_match p s1 s2 i k ** p x1 x2)
     (fun _ -> 
-      seq_seq_match p (Seq.upd s1 j x1) (Seq.upd s2 j x2) i k
+      seq_seq_match p (Seq.upd s1 j x1) (Seq.upd s2 j x2) i k **
+      p (Seq.index s1 j) (Seq.index s2 j) // retrieve the occurrence before update
     )
     
-val seq_seq_match_item_match_option_upd
-  (#t1 #t2: Type)
+val seq_seq_match_item_match_option_upd_none
+  (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
   (s1: Seq.seq t1)
   (s2: Seq.seq (option t2))
   (i j: nat)
   (k: nat {
-    i <= j /\ j < k
+    i <= j /\ j < k /\ 
+    (j < Seq.length s2 ==> None? (Seq.index s2 j)) // condition necessary to avoid resource leakage
   })
   (x1: t1)
   (x2: t2)
@@ -414,7 +419,7 @@ val seq_seq_match_item_match_option_upd
     )
 
 val seq_seq_match_item_match_option_index
-  (#t1 #t2: Type)
+  (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
   (s1: Seq.seq t1)
   (s2: Seq.seq (option t2))
@@ -430,3 +435,30 @@ val seq_seq_match_item_match_option_index
       seq_seq_match (item_match_option p) s1 (Seq.upd s2 j None) i k **
       p (Seq.index s1 j) (Some?.v (Seq.index s2 j))
     )
+
+ghost fn seq_seq_match_item_match_option_upd_some
+  (#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq (option t2))
+  (i j: nat)
+  (k: nat {
+    i <= j /\ j < k /\ 
+    (j < Seq.length s2 ==> Some? (Seq.index s2 j))
+  })
+  (x1: t1)
+  (x2: t2)
+requires
+    (seq_seq_match (item_match_option p) s1 s2 i k ** p x1 x2)
+returns res: squash (j < Seq.length s1 /\ j < Seq.length s2 /\ Some? (Seq.index s2 j))
+ensures
+    (
+      seq_seq_match (item_match_option p) (Seq.upd s1 j x1) (Seq.upd s2 j (Some x2)) i k **
+      p (Seq.index s1 j) (Some?.v (Seq.index s2 j))      
+    )
+{
+  seq_seq_match_item_match_option_index p s1 s2 i j k;
+  seq_seq_match_item_match_option_upd_none p s1 (Seq.upd s2 j None) i j k x1 x2;
+  assert (pure (Seq.upd (Seq.upd s2 j None) j (Some x2) `Seq.equal` Seq.upd s2 j (Some x2)));
+  ()
+}
