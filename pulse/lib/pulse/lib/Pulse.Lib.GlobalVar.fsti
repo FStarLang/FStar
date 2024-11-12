@@ -21,9 +21,6 @@ open FStar.ExtractAs
 open Pulse.Lib.Trade
 val gvar (#a:Type0) (p:a -> slprop) : Type0
 
-//
-// TODO: add a duplicable precondition to mk_gvar
-//
 val mk_gvar
       (#a:Type0)
       (#p:a -> slprop) 
