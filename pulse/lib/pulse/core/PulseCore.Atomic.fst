@@ -312,7 +312,6 @@ let with_invariant_g #a #fp #fp' #f_opens #p i $f =
 let invariant_name_identifies_invariant p q i j = Ghost.hide (A.invariant_name_identifies_invariant p q i)
 let later_intro p = Ghost.hide (A.later_intro p)
 let later_elim p = Ghost.hide (A.later_elim p)
-let later_elim_timeless p = Ghost.hide (A.later_elim_timeless p)
 let buy = A.buy
 
 let pts_to_not_null #a #p r v = Ghost.hide (A.pts_to_not_null #a #p r v)

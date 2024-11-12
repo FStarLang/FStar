@@ -295,12 +295,6 @@ let later_elim (e:inames) (p:slprop)
     assert (is_full s2);
     (), s2
 
-let later_elim_timeless (e:inames) (p:slprop { timeless p })
-: ghost_act unit e (later p) (fun _ -> p)
-= fun frame s0 ->
-    is_ghost_action_refl s0;
-    (), s0
-
 let buy (e:inames) (n:FStar.Ghost.erased nat)
 : buy_act (erased bool) e emp (fun b -> if b then later_credit n else emp)
 = fun frame s0 ->

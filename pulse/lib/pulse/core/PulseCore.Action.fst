@@ -395,10 +395,6 @@ let later_elim (p:slprop)
 : act unit Ghost emp_inames (later p ** later_credit 1) (fun _ -> p)
 = fun #ictx -> ITA.later_elim ictx p
 
-let later_elim_timeless (p:slprop { timeless p })
-: act unit Ghost emp_inames (later p) (fun _ -> p)
-= fun #ictx -> ITA.later_elim_timeless ictx p
-
 let maybe_p (p:slprop) (b:erased bool) : slprop = if b then p else emp
 
 let maybe_buy (n:nat)

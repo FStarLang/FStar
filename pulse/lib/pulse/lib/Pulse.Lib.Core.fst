@@ -208,7 +208,7 @@ let later_credit_buy amt = A.buy amt
 let later = later
 let later_intro p = A.later_intro p
 let later_elim p = A.later_elim p
-let later_elim_timeless p = A.later_elim_timeless p
+let timeless_iff p = ()
 let later_star = Sep.later_star
 let later_exists = Sep.later_exists
 
