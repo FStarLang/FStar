@@ -187,3 +187,20 @@ fn elim_hyp_r (p q r:slprop)
     elim _ _;
 }
 
+ghost
+fn rewrite_with_stick
+  (p1 p2: slprop)
+  requires p1 ** pure (p1 == p2)
+  ensures p2 ** (p2 @==> p1)
+{
+  rewrite p1 as p2;
+  ghost
+  fn aux
+    (_: unit)
+    requires emp ** p2
+    ensures p1
+  {
+    rewrite p2 as p1
+  };
+  intro_stick _ _ _ aux
+}
