@@ -54,12 +54,12 @@ let update_timeless_mem_join (m: mem) (p1 p2: timeless_mem) :
   join_update_timeless_mem m (clear_except_hogs m) p1 p2
 
 let pin_frame (p:pm_slprop) (frame:slprop) 
-              (w:mem { interpret (lift p `star` frame) w })
+              (w:mem { interp (lift p `star` frame) w })
 : frame':pm_slprop { PM.interp (p `PM.star` frame') (timeless_mem_of w) } &
   (q:pm_slprop -> m':timeless_mem ->
     Lemma 
       (requires PM.interp (q `PM.star` frame') m')
-      (ensures interpret (lift q `star` frame) (update_timeless_mem w m')))
+      (ensures interp (lift q `star` frame) (update_timeless_mem w m')))
 = let m0, m1 = split_mem (lift p) frame w in
   star_equiv (lift p) frame w;
   let fr (pm:IndirectionTheorySep.timeless_mem)  
@@ -87,7 +87,7 @@ let pin_frame (p:pm_slprop) (frame:slprop)
   assert (PM.interp (p `PM.star` frame') (timeless_mem_of w));
   introduce forall (q:PM.slprop) (m':_).
       PM.interp (q `PM.star` frame') m' ==>
-      interpret (lift q `star` frame) (update_timeless_mem w m')
+      interp (lift q `star` frame) (update_timeless_mem w m')
   with introduce _ ==> _
   with _ . (
     PM.pulse_heap_sig.star_equiv q frame' m';
@@ -123,7 +123,7 @@ let pin_frame (p:pm_slprop) (frame:slprop)
        PM.interp (p `PM.star` frame') (timeless_mem_of w) /\
         (forall (q:PM.slprop) (m':_).
           PM.interp (q `PM.star` frame') m' ==>
-          interpret (lift q `star` frame) (update_timeless_mem w m')))
+          interp (lift q `star` frame) (update_timeless_mem w m')))
   in
   let frame' : PM.slprop = PM.pulse_heap_sig.non_info_slprop frame' in
   (| frame', (fun q m' -> ())|)
@@ -145,7 +145,7 @@ let lift_mem_action #a #mg #ex #pre #post
       (w0:mem {
         inames_ok ex w0 /\
         is_full w0 /\
-        interpret (lift pre `star` frame `star` mem_invariant ex w0) w0
+        interp (lift pre `star` frame `star` mem_invariant ex w0) w0
       }) -> 
     let timeless_mem = timeless_mem_of w0 in
     calc (==) {
@@ -554,7 +554,7 @@ let witness_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
     let x =
       FStar.IndefiniteDescription.indefinite_description_tot
         a 
-        (fun x -> interpret (p x `star` (frame `star` mem_invariant opened_invariants s0)) s0)
+        (fun x -> interp (p x `star` (frame `star` mem_invariant opened_invariants s0)) s0)
     in
     is_ghost_action_refl s0;
     x, s0

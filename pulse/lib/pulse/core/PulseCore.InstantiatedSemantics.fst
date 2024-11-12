@@ -37,7 +37,7 @@ let state0 (e:inames) : Sem.state u#4 = {
     pred = slprop;
     emp = emp;
     star = star;
-    interp = ITA.interpret;
+    interp;
     invariant = mem_invariant e;
     laws = laws ();
 }

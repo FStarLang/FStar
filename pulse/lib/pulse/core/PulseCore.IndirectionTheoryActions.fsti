@@ -15,7 +15,6 @@ let level_decreases_by_spent_credits (m0 m1:mem)
   let l1, c1 = level m1, credits m1 in
   c1 <= c0 /\ //credits decrease
   l1 == l0 - (c0 - c1) // and level decreases by the amount of credits spent
-let interpret (p:slprop) (m:mem) = interp p m
 let _ACTION 
   (a:Type u#a)
   (ak:action_kind)
@@ -26,12 +25,12 @@ let _ACTION
 = HST.st #full_mem a
     (requires fun m0 ->
         inames_ok except m0 /\
-        interpret (expects `star` frame `star` mem_invariant except m0) m0)
+        interp (expects `star` frame `star` mem_invariant except m0) m0)
     (ensures fun m0 x m1 ->
         maybe_ghost_action ak m0 m1 /\
         inames_ok except m1 /\
         (not (BUY? ak) ==> level_decreases_by_spent_credits m0 m1) /\
-        interpret (provides x `star` frame `star` mem_invariant except m1) m1 )
+        interp (provides x `star` frame `star` mem_invariant except m1) m1 )
 
 let _act_except 
     (a:Type u#a)
