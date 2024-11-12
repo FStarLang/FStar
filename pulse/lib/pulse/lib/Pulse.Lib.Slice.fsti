@@ -97,11 +97,9 @@ val is_split_timeless (#t: Type) (s: slice t) (left: slice t) (right: slice t)
   : Lemma (timeless (is_split s left right))
           [SMTPat (timeless (is_split s left right))]
 
-noeq type slice_pair (t: Type) = | SlicePair: (fst: slice t) -> (snd: slice t) -> slice_pair t
-
-val split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t) (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v }) : stt (slice_pair t)
+val split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t) (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v }) : stt (slice t & slice t)
     (requires pts_to s #p v)
-    (ensures fun (SlicePair s1 s2) ->
+    (ensures fun (s1, s2) ->
       pts_to s1 #p (Seq.slice v 0 (SZ.v i)) **
       pts_to s2 #p (Seq.slice v (SZ.v i) (Seq.length v)) **
       is_split s s1 s2)

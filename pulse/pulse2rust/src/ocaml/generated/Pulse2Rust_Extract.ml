@@ -583,14 +583,6 @@ let rec (extract_mlpattern_to_pat :
            | (g1, ps1) ->
                let uu___1 = Pulse2Rust_Rust_Syntax.mk_pat_tuple ps1 in
                (g1, uu___1))
-      | FStarC_Extraction_ML_Syntax.MLP_CTor (p1, ps) when
-          (FStar_Pervasives_Native.snd p1) = "SlicePair" ->
-          let uu___ =
-            FStarC_Compiler_List.fold_left_map extract_mlpattern_to_pat g ps in
-          (match uu___ with
-           | (g1, ps1) ->
-               let uu___1 = Pulse2Rust_Rust_Syntax.mk_pat_tuple ps1 in
-               (g1, uu___1))
       | FStarC_Extraction_ML_Syntax.MLP_CTor (p1, ps) ->
           let uu___ =
             FStarC_Compiler_List.fold_left_map extract_mlpattern_to_pat g ps in
