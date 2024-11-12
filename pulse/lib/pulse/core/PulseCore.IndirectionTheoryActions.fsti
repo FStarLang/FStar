@@ -81,7 +81,7 @@ val with_invariant (#a:Type)
                    (#fp':a -> slprop)
                    (#opened_invariants:inames)
                    (#p:slprop)
-                   (#ak:action_kind {not (BUY? ak)})
+                   (#ak:action_kind)
                    (i:iref{not (mem_inv opened_invariants i)})
                    (f:_act_except a ak
                         (add_inv opened_invariants i) 
