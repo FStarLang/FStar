@@ -8,7 +8,6 @@ open PulseCore.IndirectionTheorySep
 type action_kind =
 | GHOST
 | ATOMIC
-| BUY
 
 let maybe_ghost_action (k:action_kind) (m0 m1:mem) = GHOST? k ==> is_ghost_action m0 m1
 
@@ -31,7 +30,7 @@ let _ACTION
     (ensures fun m0 x m1 ->
         maybe_ghost_action ak m0 m1 /\
         inames_ok except m1 /\
-        (not (BUY? ak) ==> level_decreases_by_spent_credits m0 m1) /\
+        (GHOST? ak ==> level_decreases_by_spent_credits m0 m1) /\
         interp (provides x `star` frame `star` mem_invariant except m1) m1 )
 
 let _act_except 
@@ -44,7 +43,7 @@ let _act_except
  = frame:slprop -> _ACTION a ak except expects provides frame
 let ghost_act a = _act_except a GHOST
 let act a = _act_except a ATOMIC
-let buy_act a = _act_except a BUY
+let buy_act a = _act_except a ATOMIC
 
 val lift_mem_action #a #mg #ex #pre #post
                    (_:PM._pst_action_except a mg (lower_inames ex) pre post)
