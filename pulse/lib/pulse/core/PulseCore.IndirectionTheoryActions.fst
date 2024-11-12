@@ -311,7 +311,7 @@ let buy (e:inames) (n:FStar.Ghost.erased nat)
     assert (reveal m' == s1);
     mem_invariant_buy e n s0;
     inames_ok_update e s0 s1;
-    let ok : erased bool = level_at_least_credits s1 in
+    let ok : erased bool = level s1 > credits s1 in
     let s : (s:erased mem {
       is_ghost_action s0 s /\
       is_full s /\

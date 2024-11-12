@@ -17,10 +17,6 @@ val update_timeless_mem (m: mem) (p: timeless_mem) :
 val age1 (k:mem) : mem
 
 
-let level_at_least_credits (m:mem)
-: GTot bool
-= level m > credits m
-
 val is_ghost_action : p:(mem -> mem -> prop) { FStar.Preorder.preorder_rel p }
 
 val lift_ghost_action (m: mem) (p: timeless_mem) :
@@ -35,7 +31,7 @@ val update_ghost :
 let is_full (m:mem) 
 : prop
 = PM.pulse_heap_sig.full_mem_pred (timeless_mem_of m) /\
-  level_at_least_credits m
+  level m > credits m
 let full_mem = m:mem { is_full m  }
 
 val emp : slprop
