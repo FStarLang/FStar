@@ -30,7 +30,6 @@ let _ACTION
     (ensures fun m0 x m1 ->
         maybe_ghost_action ak m0 m1 /\
         inames_ok except m1 /\
-        (GHOST? ak ==> level_decreases_by_spent_credits m0 m1) /\
         interp (provides x `star` frame `star` mem_invariant except m1) m1 )
 
 let _act_except 
