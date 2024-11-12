@@ -64,8 +64,7 @@ ensures
     }
     Cons a q -> {
       unfold (seq_list_match c (a :: q) item_match);
-      fold (seq_list_match c (a :: q) item_match);
-      rewrite (seq_list_match c (a :: q) item_match) as emp // by contradiction
+      unreachable()
     }
   }
 }
@@ -102,12 +101,7 @@ ensures
 {
   if (Seq.length c = 0 || Nil? v) {
     seq_list_match_nil_elim c v item_match;
-    let res : squash (Cons? v /\ Seq.length c > 0) = (); // by contradiction
-    rewrite emp as (
-      item_match (Seq.head c) (List.Tot.hd v) **
-      seq_list_match (Seq.tail c) (List.Tot.tl v) item_match      
-    ); // by contradiction
-    res
+    unreachable()
   } else {
     let res : squash (Cons? v /\ Seq.length c > 0) = ();
     unfold (seq_list_match c (List.Tot.hd v :: List.Tot.tl v) item_match);
@@ -238,10 +232,7 @@ ensures
         (seq_seq_match_item p s1 s2 (j - 1))
         as
         (pure False);
-      rewrite
-        (on_range (seq_seq_match_item p s1 s2) i (j - 1))
-        as
-        (seq_seq_match p s1 s2 i j); // by contradiction
+      unreachable()
     }
   }
 }
@@ -375,10 +366,7 @@ ensures
         (seq_seq_match_item p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)) k)
         as
         (pure False);
-      rewrite
-        emp
-        as
-        (seq_seq_match_item p c l (k + delta)) // by contradiction
+      unreachable()
     }
   };
   on_range_weaken_and_shift
@@ -429,10 +417,7 @@ ensures
           (seq_seq_match_item p c l k)
           as
           (pure False);
-        rewrite
-          emp
-          as
-          (seq_seq_match_item p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)) (k + (0 - delta))) // by contradiction
+        unreachable()
       }
   };
   on_range_weaken_and_shift
