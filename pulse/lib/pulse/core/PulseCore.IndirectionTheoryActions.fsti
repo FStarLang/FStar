@@ -9,8 +9,6 @@ type action_kind =
 | GHOST
 | ATOMIC
 
-let maybe_ghost_action (k:action_kind) (m0 m1:mem) = GHOST? k ==> is_ghost_action m0 m1
-
 let _ACTION 
   (a:Type u#a)
   (ak:action_kind)
@@ -23,7 +21,7 @@ let _ACTION
         inames_ok except m0 /\
         interp (expects `star` frame `star` mem_invariant except m0) m0)
     (ensures fun m0 x m1 ->
-        maybe_ghost_action ak m0 m1 /\
+        (GHOST? ak ==> is_ghost_action m0 m1) /\
         inames_ok except m1 /\
         interp (provides x `star` frame `star` mem_invariant except m1) m1 )
 
@@ -37,7 +35,6 @@ let _act_except
  = frame:slprop -> _ACTION a ak except expects provides frame
 let ghost_act a = _act_except a GHOST
 let act a = _act_except a ATOMIC
-let buy_act a = _act_except a ATOMIC
 
 val lift_mem_action #a #mg #ex #pre #post
                    (_:PM._pst_action_except a mg (lower_inames ex) pre post)
@@ -51,7 +48,7 @@ val later_elim (e:inames) (p:slprop)
 : ghost_act unit e (later p `star` later_credit 1) (fun _ -> p)
 
 val buy (e:inames) (n:FStar.Ghost.erased nat)
-: buy_act (FStar.Ghost.erased bool) e emp (fun b -> if b then later_credit n else emp)
+: act (FStar.Ghost.erased bool) e emp (fun b -> if b then later_credit n else emp)
 
 val dup_inv (e:inames) (i:iref) (p:slprop)
 : ghost_act unit e 

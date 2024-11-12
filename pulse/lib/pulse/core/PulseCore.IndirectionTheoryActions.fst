@@ -295,7 +295,7 @@ let later_elim (e:inames) (p:slprop)
     (), s2
 
 let buy (e:inames) (n:FStar.Ghost.erased nat)
-: buy_act (erased bool) e emp (fun b -> if b then later_credit n else emp)
+: act (erased bool) e emp (fun b -> if b then later_credit n else emp)
 = fun frame s0 ->
     sep_laws();
     let m0, m1 = split_mem emp (frame `star` mem_invariant e s0) s0 in
