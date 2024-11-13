@@ -55,7 +55,6 @@ let is_unit #a (x:a) (f:a -> a -> a) =
 noeq
 type state : Type u#(s + 1)= {
   s:Type u#s;
-  is_full_mem: s -> prop;
   pred:Type u#s;
   emp: pred;
   star: pred -> pred -> pred;
@@ -64,7 +63,7 @@ type state : Type u#(s + 1)= {
   laws: squash (associative star /\ commutative star /\ is_unit emp star);
 }
 
-let full_mem (st:state u#s) : Type u#s = m:st.s { st.is_full_mem m }
+let full_mem (st:state u#s) : Type u#s = st.s
 
 (** [post a c] is a postcondition on [a]-typed result *)
 let post (s:state) a = a ^-> s.pred
