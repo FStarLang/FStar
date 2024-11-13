@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.ConditionVar
+#lang-pulse
 open Pulse.Lib.Pervasives
 val cvar_t : Type0
 
@@ -24,15 +25,27 @@ val send (c:cvar_t) (p:slprop) : slprop
 
 val recv (c:cvar_t) (p:slprop) : slprop
 
-val create (p:slprop2)
-: stt cvar_t emp (fun b -> send b p ** recv b p)
+fn create (p:slprop)
+requires emp
+returns c:cvar_t
+ensures send c p ** recv c p
 
-val signal (b:cvar_t) (#p:slprop)
-: stt unit (send b p ** p) (fun _ -> emp)
+atomic
+fn signal_atomic (c:cvar_t) (#p:slprop)
+requires send c p ** p ** later_credit 1
+ensures emp
+opens [ inv_name c ]
 
-val wait (b:cvar_t) (#p:slprop)
-: stt unit (recv b p) (fun _ -> p)
+fn signal (c:cvar_t) (#p:slprop)
+requires send c p ** p
+ensures emp
 
-val split (b:cvar_t) (#p #q:slprop2)
-: stt_ghost unit (add_inv emp_inames (inv_name b))
-  (recv b (p ** q)) (fun _ -> recv b p ** recv b q)
+fn wait (b:cvar_t) (#p:slprop)
+requires recv b p
+ensures p
+
+ghost
+fn split (b:cvar_t) (#p #q:slprop)
+requires recv b (p ** q) ** later_credit 2
+ensures recv b p ** recv b q
+opens [ inv_name b ]

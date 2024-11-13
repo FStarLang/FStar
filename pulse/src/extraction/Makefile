@@ -13,7 +13,7 @@ OUTPUT_DIRECTORY = $(CURDIR)/../ocaml/plugin/generated
 FSTAR_BOOT_OPTIONS += --MLish_effect FStarC.Compiler.Effect
 FSTAR_C=$(RUNLIM) $(FSTAR_EXE) $(SIL) $(FSTAR_BOOT_OPTIONS)
 
-EXTRACT_FILES=ExtractPulse.ml ExtractPulseC.ml
+EXTRACT_FILES=ExtractPulse.ml ExtractPulseC.ml ExtractPulseOCaml.ml
 extract: $(addprefix $(OUTPUT_DIRECTORY)/,$(EXTRACT_FILES))
 
 # And then, in a separate invocation, from each .checked.lax we

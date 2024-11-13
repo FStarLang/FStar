@@ -5,6 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
+       http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,18 +14,20 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.InvToken
+module Pulse.Lib.GlobalVar
 
 open Pulse.Lib.Pervasives
+open FStar.ExtractAs
+open Pulse.Lib.Trade
+val gvar (#a:Type0) (p:a -> slprop) : Type0
 
-val token (i:iname) (p:slprop) : Type u#4
+val mk_gvar
+      (#a:Type0)
+      (#p:a -> slprop) 
+      (init:unit -> stt a emp (fun x -> p x ** (trade (p x) (p x ** p x))))
+: gvar p
 
-val witness (i:iname) (#p:slprop)
-  : stt (token i p)
-        (requires inv i p)
-        (ensures fun _ -> emp)
+val read_gvar_ghost (#a:Type0) (#p:a -> slprop) (x:gvar p) : GTot a
 
-val recall (#i:iname) (#p:slprop) (t:token i p)
-  : stt unit
-        (requires emp)
-        (ensures fun _ -> inv i p)
+val read_gvar (#a:Type0) (#p:a -> slprop) (x:gvar p)
+  : stt a emp (fun r -> p r ** pure (r == read_gvar_ghost x))

@@ -21,7 +21,8 @@ module F = FStar.FunctionalExtensionality
 open PulseCore.InstantiatedSemantics
 open PulseCore.FractionalPermission
 open PulseCore.Observability
-
+friend PulseCore.InstantiatedSemantics
+module Sep = PulseCore.IndirectionTheorySep
 let equate_by_smt = ()
 let equate_strict = ()
 let equate_syntactic = ()
@@ -29,50 +30,39 @@ let equate_syntactic = ()
 let allow_ambiguous = ()
 
 let slprop = slprop
-
-let slprop4_base = slprop
-let down4 = id
-let up4 = id
-let up4_is_slprop4 = fun _ -> ()
-
-let slprop3_base = slprop3_base
-let down3 = down3
-let up3 = up3
-let up3_is_slprop3 = up3_is_slprop3
-
-let slprop2_base = slprop2_base
-let down2 = down2
-let up2 = up2
-let up2_is_slprop2 = up2_is_slprop2
-
-let slprop1_base = slprop1_base
-let down1 = down1
-let up1 = up1
-let up1_is_slprop1 = up1_is_slprop1
-
-let slprop_2_is_3 = slprop_2_is_3
-let slprop_1_is_2 = slprop_1_is_2
+let timeless p = Sep.timeless p
 
 let emp = emp
-let emp_is_slprop2 = ()
+let timeless_emp = Sep.timeless_emp ()
 let pure = pure
-let pure_is_slprop2 p = ()
+let timeless_pure p = Sep.timeless_pure p
 let op_Star_Star = op_Star_Star
-let slprop3_star p q = slprop3_star p q
-let slprop2_star p q = slprop2_star p q
-let slprop1_star p q = slprop1_star p q
+let timeless_star p q = Sep.later_star p q
 let op_exists_Star = op_exists_Star
-let slprop3_exists #a p = slprop3_exists #a p
-let slprop2_exists #a p = slprop2_exists #a p
-let slprop1_exists #a p = slprop1_exists #a p
-let up3_emp    = up3_emp
-let down3_emp  = down3_emp
-let up3_star   = up3_star
-let down3_star = down3_star
-let up2_emp    = up2_emp
-let down2_emp  = down2_emp
-let up2_star   = up2_star
-let down2_star = down2_star
+let exists_extensional (#a:Type u#a) (p q: a -> slprop)
+  (_:squash (forall x. p x == q x))
+  : Lemma (op_exists_Star p == op_exists_Star q)
+  = introduce forall x. slprop_equiv (p x) (q x)
+    with (
+        slprop_equiv_refl (p x)
+    );
+    I.slprop_equiv_exists p q ()
+let timeless_exists (#a:Type u#a) (p: a -> slprop)
+: Lemma
+    (requires forall x. timeless (p x))
+    (ensures timeless (op_exists_Star p))
+    [SMTPat (timeless (op_exists_Star p))]
+= calc (==) {
+    later (op_exists_Star p);
+  (==) { exists_extensional p (fun x -> p x) () }
+    later (exists* x. p x);
+  (==) { Sep.later_exists p }
+    (exists* x. later (p x));
+  (==) { exists_extensional (fun x -> later (p x)) (fun x -> p x) () }
+    (exists* x. p x);
+  (==) { exists_extensional (fun x -> p x) p () }
+    op_exists_Star p;
+  }
 let slprop_equiv = slprop_equiv
 let elim_slprop_equiv #p #q pf = slprop_equiv_elim p q
 let slprop_post_equiv = slprop_post_equiv
@@ -142,7 +132,7 @@ let slprop_equiv_cong (p1 p2 p3 p4:slprop)
   : slprop_equiv (p1 ** p2) (p3 ** p4)
   = slprop_equiv_elim p1 p3;
     slprop_equiv_elim p2 p4;
-    slprop_equiv_refl _
+    slprop_equiv_refl (p1 ** p2)
 
 let slprop_equiv_ext p1 p2 _ = slprop_equiv_refl p1
 
@@ -150,8 +140,7 @@ let slprop_equiv_ext p1 p2 _ = slprop_equiv_refl p1
 module Act = PulseCore.Action
 
 let iname = Act.iref
-let storable_iname = Act.storable_iref
-let deq_iname = Act.deq_iref
+let deq_iname = Sep.deq_iref
 instance non_informative_iname = {
   reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer iname;
 }
@@ -162,7 +151,7 @@ let join_emp is =
   GhostSet.lemma_equal_intro (join_inames emp_inames is) is
 
 let inv i p = Act.(inv i p)
-let storable_inv i p = Act.storable_inv i p
+let inames_live = Sep.inames_live
 let add_already_there i is = GhostSet.lemma_equal_intro (add_inv is i) is
 
 ////////////////////////////////////////////////////////////////////
@@ -206,18 +195,63 @@ let frame_ghost = A.frame_ghost
 let sub_ghost = A.sub_ghost
 let sub_invs_ghost = A.sub_invs_stt_ghost
 
+//////////////////////////////////////////////////////////////////////////
+// Later
+//////////////////////////////////////////////////////////////////////////
+
+let later_credit = later_credit
+let timeless_later_credit amt = Sep.timeless_later_credit amt
+let later_credit_zero _ = PulseCore.InstantiatedSemantics.later_credit_zero ()
+let later_credit_add a b = PulseCore.InstantiatedSemantics.later_credit_add a b
+let later_credit_buy amt = A.buy amt
+
+let later = later
+let later_intro p = A.later_intro p
+let later_elim p = A.later_elim p
+let timeless_iff p = ()
+let later_star = Sep.later_star
+let later_exists = Sep.later_exists
+
+//////////////////////////////////////////////////////////////////////////
+// Equivalence
+//////////////////////////////////////////////////////////////////////////
+let rewrite_eq p q (pf:squash (p == q))
+  : stt_ghost unit emp_inames p (fun _ -> q)
+  = slprop_equiv_elim p q;
+    A.noop q
+let equiv = I.equiv
+let equiv_dup a b = A.equiv_dup a b
+let equiv_refl a = A.equiv_refl a
+let equiv_comm a b = rewrite_eq (equiv a b) (equiv b a) (Sep.equiv_comm a b)
+let equiv_trans a b c = A.equiv_trans a b c
+let equiv_elim a b = A.equiv_elim a b
+let equiv_elim_timeless a b = 
+  rewrite_eq (equiv a b) (pure (eq2 #slprop a b)) (Sep.equiv_timeless a b)
+let equiv_star_congr p q r = Sep.equiv_star_congr p q r
+let later_equiv = Sep.later_equiv
+//////////////////////////////////////////////////////////////////////////
+// Higher-order ghost state
+//////////////////////////////////////////////////////////////////////////
+
+// TODO: these are write-once for now, though it's possible to construct fractional permission variables out of this
+let slprop_ref = PulseCore.Action.slprop_ref
+let slprop_ref_pts_to x y = PulseCore.Action.slprop_ref_pts_to x y
+let slprop_ref_alloc x = A.slprop_ref_alloc x
+let slprop_ref_share x #y = A.slprop_ref_share x y
+let slprop_ref_gather x #y1 #y2 = A.slprop_ref_gather x y1 y2
+
 ////////////////////////////////////////////////////////////////////
 // Invariants
 ////////////////////////////////////////////////////////////////////
 let dup_inv = A.dup_inv
 let new_invariant = A.new_invariant
-let new_storable_invariant = A.new_storable_invariant
-let fresh_wrt = PulseCore.Action.fresh_wrt
-let fresh_wrt_def i c = ()
 let fresh_invariant = A.fresh_invariant
+let inames_live_inv = A.inames_live_inv
+let inames_live_empty _ = rewrite_eq emp (inames_live emp_inames) (Sep.inames_live_empty ())
+let share_inames_live i j = rewrite_eq (inames_live (GhostSet.union i j)) (inames_live i ** inames_live j) (Sep.inames_live_union i j)
+let gather_inames_live i j = rewrite_eq (inames_live i ** inames_live j) (inames_live (GhostSet.union i j)) (Sep.inames_live_union i j)
 let with_invariant = A.with_invariant
 let with_invariant_g = A.with_invariant_g
-let distinct_invariants_have_distinct_names #p #q i j _ = A.distinct_invariants_have_distinct_names #p #q i j _
 let invariant_name_identifies_invariant #p #q i j = A.invariant_name_identifies_invariant p q i j
 
 //////////////////////////////////////////////////////////////////////////
@@ -276,7 +310,7 @@ let is_null_core_pcm_ref r = PulseCore.Action.is_core_ref_null r
 
 let pcm_pts_to (#a:Type u#1) (#p:pcm a) (r:pcm_ref p) (v:a) =
   PulseCore.Action.pts_to #a #p r v
-let is_slprop2_pcm_pts_to #a #p r v = ()
+let timeless_pcm_pts_to #a #p r v = PulseCore.Action.timeless_pts_to #a #p r v
 let pts_to_not_null #a #p r v = A.pts_to_not_null #a #p r v
 
 let alloc
@@ -325,7 +359,7 @@ instance non_informative_ghost_pcm_ref a p = {
 }
 
 let ghost_pcm_pts_to #a #p r v = PulseCore.Action.ghost_pts_to #a #p r v
-let is_slprop2_ghost_pcm_pts_to #a #p r v = ()
+let timeless_ghost_pcm_pts_to #a #p r v = PulseCore.Action.timeless_ghost_pts_to #a #p r v
 let ghost_alloc = A.ghost_alloc
 let ghost_read = A.ghost_read
 let ghost_write = A.ghost_write
@@ -364,7 +398,7 @@ let return_stt (#a:Type u#a) (x:a) (p:a -> slprop)
 // big refs
 ////////////////////////////////////////////////////////
 let big_pcm_pts_to #a #p r v = PulseCore.Action.big_pts_to #a #p r v
-let is_slprop3_big_pcm_pts_to _ _ = ()
+let timeless_big_pcm_pts_to #a #p r v = PulseCore.Action.timeless_big_pts_to #a #p r v
 let big_pts_to_not_null #a #p r v = A.big_pts_to_not_null #a #p r v
 
 let big_alloc
@@ -404,61 +438,12 @@ let big_share = A.big_share
 let big_gather = A.big_gather
 
 let big_ghost_pcm_pts_to #a #p r v = PulseCore.Action.big_ghost_pts_to #a #p r v
-let is_slprop3_big_ghost_pcm_pts_to _ _ = ()
+let timeless_big_ghost_pcm_pts_to #a #p r v = PulseCore.Action.timeless_big_ghost_pts_to #a #p r v
 let big_ghost_alloc = A.big_ghost_alloc
 let big_ghost_read = A.big_ghost_read
 let big_ghost_write = A.big_ghost_write
 let big_ghost_share = A.big_ghost_share
 let big_ghost_gather = A.big_ghost_gather
-
-////////////////////////////////////////////////////////
-// non-boxable refs
-////////////////////////////////////////////////////////
-let nb_pcm_pts_to #a #p r v = PulseCore.Action.nb_pts_to #a #p r v
-let nb_pts_to_not_null #a #p r v = A.nb_pts_to_not_null #a #p r v
-
-let nb_alloc
-    (#a:Type)
-    (#pcm:pcm a)
-    (x:a{pcm.refine x})
-: stt (pcm_ref pcm)
-    emp
-    (fun r -> nb_pcm_pts_to r x)
-= A.lift_atomic0 (A.nb_alloc #a #pcm x)
-
-let nb_read
-    (#a:Type u#3)
-    (#p:pcm a)
-    (r:pcm_ref p)
-    (x:erased a)
-    (f:(v:a{compatible p x v}
-        -> GTot (y:a{compatible p y v /\
-                     FStar.PCM.frame_compatible p x v y})))
-: stt (v:a{compatible p x v /\ p.refine v})
-    (nb_pcm_pts_to r x)
-    (fun v -> nb_pcm_pts_to r (f v))
-= A.lift_atomic3 (A.nb_read #a #p r x f)
-
-let nb_write
-    (#a:Type)
-    (#p:pcm a)
-    (r:pcm_ref p)
-    (x y:Ghost.erased a)
-    (f:FStar.PCM.frame_preserving_upd p x y)
-: stt unit
-    (nb_pcm_pts_to r x)
-    (fun _ -> nb_pcm_pts_to r y)
-= A.lift_atomic0 (A.nb_write r x y f)
-
-let nb_share = A.nb_share
-let nb_gather = A.nb_gather
-
-let nb_ghost_pcm_pts_to #a #p r v = PulseCore.Action.nb_ghost_pts_to #a #p r v
-let nb_ghost_alloc = A.nb_ghost_alloc
-let nb_ghost_read = A.nb_ghost_read
-let nb_ghost_write = A.nb_ghost_write
-let nb_ghost_share = A.nb_ghost_share
-let nb_ghost_gather = A.nb_ghost_gather
 
 let as_atomic #a pre post (e:stt a pre post) = admit () // intentional since it is an assumption
 

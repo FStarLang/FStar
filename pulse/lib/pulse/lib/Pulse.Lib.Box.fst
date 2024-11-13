@@ -27,7 +27,7 @@ type box a = | B : r:R.ref a -> box a
 
 let pts_to b #p v = R.pts_to b.r #p v
 
-let pts_to_is_slprop2 _ _ _ = ()
+let pts_to_timeless _ _ _ = ()
 
 fn alloc (#a:Type0) (x:a)
   requires emp

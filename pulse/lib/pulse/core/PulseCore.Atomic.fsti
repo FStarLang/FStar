@@ -21,7 +21,7 @@ open FStar.Ghost
 open PulseCore.InstantiatedSemantics
 open PulseCore.Action
 open PulseCore.Observability
-
+module Sep = PulseCore.IndirectionTheorySep
 (* stt_unobservable a opens pre post: The type of a pulse computation
    that when run in a state satisfying `pre`
    takes an unobservable atomic step
@@ -250,17 +250,17 @@ val ghost_reveal (a:Type) (x:erased a)
 val dup_inv (i:iref) (p:slprop)
   : stt_ghost unit emp_inames (inv i p) (fun _ -> (inv i p) ** (inv i p))
 
-val new_invariant (p:slprop3)
+val new_invariant (p:slprop)
   : stt_ghost iref emp_inames p (fun i -> inv i p)
 
-val new_storable_invariant (p:slprop2)
-  : stt_ghost (i:iref { storable_iref i }) emp_inames p (fun i -> inv i p)
-
-val fresh_invariant (ctx:list iref) (p:slprop3)
-: stt_ghost (i:iref { i `fresh_wrt` ctx })
+val fresh_invariant (ctx:inames) (p:slprop)
+: stt_ghost (i:iref { ~(i `GhostSet.mem` ctx) })
             emp_inames
-            p
-            (fun i -> inv i p)
+            (p ** Sep.inames_live ctx)
+            (fun i -> inv i p ** Sep.inames_live ctx)
+
+val inames_live_inv (i:iref) (p:slprop)
+: stt_ghost unit emp_inames (inv i p) (fun _ -> inv i p ** Sep.inames_live (singleton i))
 
 val with_invariant
     (#a:Type)
@@ -271,8 +271,8 @@ val with_invariant
     (#p:slprop)
     (i:iref { not (mem_inv f_opens i) })
     ($f:unit -> stt_atomic a #obs f_opens
-                           (p ** fp)
-                           (fun x -> p ** fp' x))
+                           (later p ** fp)
+                           (fun x -> later p ** fp' x))
 : stt_atomic a #obs (add_inv f_opens i) ((inv i p) ** fp) (fun x -> (inv i p) ** fp' x)
 
 val with_invariant_g
@@ -283,29 +283,41 @@ val with_invariant_g
     (#p:slprop)
     (i:iref { not (mem_inv f_opens i) })
     ($f:unit -> stt_ghost a f_opens
-                            (p ** fp)
-                            (fun x -> p ** fp' x))
+                            (later p ** fp)
+                            (fun x -> later p ** fp' x))
 : stt_ghost a (add_inv f_opens i) ((inv i p) ** fp) (fun x -> (inv i p) ** fp' x)
 
-val distinct_invariants_have_distinct_names
-    (#p #q:slprop)
-    (i j:iref)
-    (_:squash (p =!= q))
-: stt_ghost
-    (squash (i =!= j))
-    emp_inames
-    ((inv i p) ** (inv j q))
-    (fun _ -> (inv i p) ** (inv j q))
+// val distinct_invariants_have_distinct_names
+//     (#p #q:slprop)
+//     (i j:iref)
+//     (_:squash (p =!= q))
+// : stt_ghost
+//     (squash (i =!= j))
+//     emp_inames
+//     ((inv i p) ** (inv j q))
+//     (fun _ -> (inv i p) ** (inv j q))
 
 val invariant_name_identifies_invariant
       (p q:slprop)
       (i:iref)
       (j:iref { i == j })
 : stt_ghost
-    (squash (p == q))
+    unit
     emp_inames
-    ((inv i p) ** (inv j q))
-    (fun _ -> (inv i p) ** (inv j q))
+    (inv i p ** inv j q)
+    (fun _ -> inv i p ** inv j q ** later (InstantiatedSemantics.equiv p q))
+
+////////////////////////////////////////////////////////////////////////
+// later and credits
+////////////////////////////////////////////////////////////////////////
+val later_intro (p:slprop)
+: stt_ghost unit emp_inames p (fun _ -> later p)
+
+val later_elim (p:slprop)
+: stt_ghost unit emp_inames (later p ** later_credit 1) (fun _ -> p)
+
+val buy (n:nat)
+: stt unit emp (fun _ -> later_credit n)
 
 ////////////////////////////////////////////////////////////////////////
 // References
@@ -697,3 +709,24 @@ val nb_ghost_gather
 
 val drop (p:slprop)
 : stt_ghost unit emp_inames p (fun _ -> emp)
+module I = PulseCore.InstantiatedSemantics
+val equiv_refl (a:slprop)
+: stt_ghost unit emp_inames emp (fun _ -> I.equiv a a)
+
+val equiv_dup (a b:slprop)
+: stt_ghost unit emp_inames (I.equiv a b) (fun _ -> I.equiv a b ** I.equiv a b)
+
+val equiv_trans (a b c:slprop)
+: stt_ghost unit emp_inames (I.equiv a b ** I.equiv b c) (fun _ -> I.equiv a c)
+
+val equiv_elim (a b:slprop)
+: stt_ghost unit emp_inames (a ** I.equiv a b) (fun _ -> b)
+
+val slprop_ref_alloc (y: slprop)
+: stt_ghost slprop_ref emp_inames emp fun x -> slprop_ref_pts_to x y
+
+val slprop_ref_share (x:slprop_ref) (y:slprop)
+: stt_ghost unit emp_inames (slprop_ref_pts_to x y) fun _ -> slprop_ref_pts_to x y ** slprop_ref_pts_to x y
+
+val slprop_ref_gather (x:slprop_ref) (y1 y2: slprop)
+: stt_ghost unit emp_inames (slprop_ref_pts_to x y1 ** slprop_ref_pts_to x y2) fun _ -> slprop_ref_pts_to x y1 ** later (I.equiv y1 y2)

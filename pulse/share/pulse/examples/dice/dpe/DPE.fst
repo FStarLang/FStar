@@ -32,47 +32,76 @@ module U32 = FStar.UInt32
 module PP = PulseCore.Preorder
 module PM = Pulse.Lib.PCMMap
 module FP = Pulse.Lib.PCM.FractionalPreorder
-module M = Pulse.Lib.MutexToken
+module M = Pulse.Lib.Mutex
 module A = Pulse.Lib.Array
 module V = Pulse.Lib.Vec
 module R = Pulse.Lib.Reference
 module HT = Pulse.Lib.HashTable
 module PHT = Pulse.Lib.HashTable.Spec
+module Global = Pulse.Lib.GlobalVar
 
 open PulseCore.Preorder
 open Pulse.Lib.OnRange
 open Pulse.Lib.HashTable.Type
 open Pulse.Lib.HashTable
-open Pulse.Lib.MutexToken
+open Pulse.Lib.Mutex
 open Pulse.Class.PtsTo
-
-// We assume a combinator to run pulse computations for initialization of top-level state, it gets primitive support in extraction
-assume val run_stt (#a:Type) (#post:a -> slprop) (f:stt a emp post) : a
-
+open Pulse.Lib.Trade
 // We assume this code will be executed on a machine where u32 fits the word size
 assume SZ_fits_u32 : SZ.fits_u32
 
 let sid_hash (s:sid_t) : SZ.t = SZ.uint16_to_sizet s
 
-[@@ Rust_const_fn]
+let gvar_p : (gref & mutex (option st)) -> slprop =
+  fun x -> exists* p. mutex_live (snd x) #p (dpe_inv (fst x))
 
+ghost
+fn dup_gvar_p (x:(gref & mutex (option st)))
+requires emp
+ensures trade (gvar_p x) (gvar_p x ** gvar_p x)
+{
+  ghost
+  fn dup ()
+  requires emp ** gvar_p x
+  ensures gvar_p x ** gvar_p x
+  {
+    unfold gvar_p;
+    Pulse.Lib.Mutex.share (snd x);
+    fold (gvar_p x);
+    fold (gvar_p x)
+  };
+  Pulse.Lib.Trade.intro_trade _ _ emp dup
+}
+
+ghost
+fn drop_mutex_live (#a:Type0) (m:mutex a) (#p:perm) (v:a -> slprop)
+requires mutex_live m #p v
+ensures emp
+{
+  drop_ _;
+}
+
+[@@ Rust_const_fn]
 fn initialize_global_state ()
   requires emp
-  returns b:(r:gref & mutex (dpe_inv r))
-  ensures emp
+  returns x:(gref & mutex (option st))
+  ensures gvar_p x ** trade (gvar_p x) (gvar_p x ** gvar_p x)
 {
   let r = ghost_alloc #_ #pcm all_sids_unused;
   with _v. rewrite (ghost_pcm_pts_to r (G.reveal (G.hide _v))) as
                    (ghost_pcm_pts_to r _v);
   fold (dpe_inv r None);
   let m = new_mutex (dpe_inv r) None;
-  ((| r, m |) <: (r:gref & mutex (dpe_inv r)))
+  let x = r, m;
+  fold (gvar_p x);
+  dup_gvar_p x;
+  x
 }
 
+let gst : Global.gvar #(gref & mutex (option st)) gvar_p =
+  Global.mk_gvar initialize_global_state
 
-let gst : (r:gref & mutex (dpe_inv r)) = run_stt (initialize_global_state ())
-
-let trace_ref = dfst gst
+let trace_ref = fst (Global.read_gvar_ghost gst)
 
 //
 // DPE API implementation
@@ -375,38 +404,14 @@ fn maybe_mk_session_tbl (sopt:option st)
   }
 }
 
-
-
-ghost
-fn to_dpe_inv_trace_ref (#s:option st) ()
-  requires dpe_inv (Mkdtuple2?._1 gst) s
-  ensures dpe_inv trace_ref s
-{
-  rewrite (dpe_inv (Mkdtuple2?._1 gst) s) as
-          (dpe_inv trace_ref s)
-}
-
-
-
-ghost
-fn from_dpe_inv_trace_ref (#s:option st) ()
-  requires dpe_inv trace_ref s
-  ensures dpe_inv (Mkdtuple2?._1 gst) s
-{
-  rewrite (dpe_inv trace_ref s) as
-          (dpe_inv (Mkdtuple2?._1 gst) s)
-}
-
-
-
 fn open_session ()
   requires emp
   returns r:(option sid_t)
   ensures open_session_client_perm r
 {
-  let mg = M.lock (dsnd gst);
-  to_dpe_inv_trace_ref ();
-
+  let r = Global.read_gvar gst;
+  unfold (gvar_p r);
+  let mg = M.lock (snd r);
   let sopt = M.replace #(option st) mg None;
 
   let s = maybe_mk_session_tbl sopt;
@@ -418,15 +423,14 @@ fn open_session ()
     snd ret as sid_opt;
   mg := Some s;
 
-  from_dpe_inv_trace_ref ();
-  M.unlock (dsnd gst) mg;
-  
+  M.unlock (snd r) mg;
+  drop_mutex_live _ (dpe_inv (fst r));
+
   sid_opt
 }
 
 
 [@@allow_ambiguous]
-
 ghost
 fn gather_sid_pts_to (sid:sid_t) (#t0 #t1:trace)
   requires sid_pts_to trace_ref sid t0 **
@@ -504,8 +508,9 @@ fn replace_session
   ensures session_state_related r (current_state t) **
           sid_pts_to trace_ref sid (next_trace t gsst)
 {
-  let mg = M.lock (dsnd gst);
-  to_dpe_inv_trace_ref ();
+  let r = Global.read_gvar gst;
+  unfold (gvar_p r);
+  let mg = M.lock (snd r);
 
   let sopt = M.replace mg None;
   match sopt {
@@ -571,9 +576,9 @@ fn replace_session
               tbl as s.st_tbl;
             fold (dpe_inv trace_ref (Some s));
             mg := Some s;
-
-            from_dpe_inv_trace_ref ();
-            M.unlock (dsnd gst) mg;
+            
+            M.unlock (snd r) mg;
+            drop_mutex_live (snd r) (dpe_inv trace_ref);
 
             st
           }
@@ -1530,4 +1535,3 @@ fn get_profile ()
     (*supports_unseal_policy=*)false// irrelevant by supports_sealing
     (*unseal_policy_format=*)"" // irrelevant by supports_unseal_policy 
 }
-

@@ -37,6 +37,10 @@ let (pulse_translate_type_without_decay :
           let uu___ =
             FStarC_Extraction_Krml.translate_type_without_decay env arg in
           FStarC_Extraction_Krml.TBuf uu___
+      | FStarC_Extraction_ML_Syntax.MLTY_Named (arg::uu___::[], p) when
+          let uu___1 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___1 = "Pulse.Lib.GlobalVar.gvar" ->
+          FStarC_Extraction_Krml.translate_type_without_decay env arg
       | uu___ ->
           FStarC_Compiler_Effect.raise
             FStarC_Extraction_Krml.NotSupportedByKrmlExtension
@@ -570,6 +574,48 @@ let (pulse_translate_expr : FStarC_Extraction_Krml.translate_expr_t) =
            when
            let uu___6 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
            uu___6 = "Pulse.Lib.Box.box_to_ref" -> cb b
+       | FStarC_Extraction_ML_Syntax.MLE_App
+           ({
+              FStarC_Extraction_ML_Syntax.expr =
+                FStarC_Extraction_ML_Syntax.MLE_TApp
+                ({
+                   FStarC_Extraction_ML_Syntax.expr =
+                     FStarC_Extraction_ML_Syntax.MLE_Name p;
+                   FStarC_Extraction_ML_Syntax.mlty = uu___1;
+                   FStarC_Extraction_ML_Syntax.loc = uu___2;_},
+                 uu___3);
+              FStarC_Extraction_ML_Syntax.mlty = uu___4;
+              FStarC_Extraction_ML_Syntax.loc = uu___5;_},
+            _post::init::[])
+           when
+           let uu___6 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___6 = "Pulse.Lib.GlobalVar.mk_gvar" ->
+           cb
+             {
+               FStarC_Extraction_ML_Syntax.expr =
+                 (FStarC_Extraction_ML_Syntax.MLE_App
+                    (init, [FStarC_Extraction_ML_Syntax.ml_unit]));
+               FStarC_Extraction_ML_Syntax.mlty =
+                 (init.FStarC_Extraction_ML_Syntax.mlty);
+               FStarC_Extraction_ML_Syntax.loc =
+                 (init.FStarC_Extraction_ML_Syntax.loc)
+             }
+       | FStarC_Extraction_ML_Syntax.MLE_App
+           ({
+              FStarC_Extraction_ML_Syntax.expr =
+                FStarC_Extraction_ML_Syntax.MLE_TApp
+                ({
+                   FStarC_Extraction_ML_Syntax.expr =
+                     FStarC_Extraction_ML_Syntax.MLE_Name p;
+                   FStarC_Extraction_ML_Syntax.mlty = uu___1;
+                   FStarC_Extraction_ML_Syntax.loc = uu___2;_},
+                 uu___3);
+              FStarC_Extraction_ML_Syntax.mlty = uu___4;
+              FStarC_Extraction_ML_Syntax.loc = uu___5;_},
+            _post::x::[])
+           when
+           let uu___6 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___6 = "Pulse.Lib.GlobalVar.read_gvar" -> cb x
        | FStarC_Extraction_ML_Syntax.MLE_App
            ({
               FStarC_Extraction_ML_Syntax.expr =

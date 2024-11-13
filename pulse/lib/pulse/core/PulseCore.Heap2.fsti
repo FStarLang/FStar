@@ -421,6 +421,7 @@ let select_either (t:tag) (i:nat) (h:heap) : GTot (option H.cell) =
   | CONCRETE -> select i h
   | GHOST -> select_ghost i h
 val free_above_addr (t:tag) (h:heap u#a) (a:nat) : prop
+val free_above_empty (t:tag) : Lemma (free_above_addr t (empty_heap u#a) 0)
 val reveal_free_above_addr (t:tag) (h:heap u#a) (a:nat)
 : Lemma (free_above_addr t h a <==>
         (forall i. i >= a ==> None? (select_either t i h)))

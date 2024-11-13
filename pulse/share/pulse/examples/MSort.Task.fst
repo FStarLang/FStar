@@ -22,7 +22,7 @@ module S = FStar.Seq
 module SZ = FStar.SizeT
 open MSort.SeqLemmas
 open MSort.Base
-open Pulse.Lib.Task
+open NuPool
 
 
 fn rec t_msort_par
@@ -51,8 +51,8 @@ fn rec t_msort_par
 
     let h = spawn p #(f /. 2.0R) (fun () -> t_msort_par p (f /. 2.0R) a lo mid s1);
     t_msort_par p (f /. 2.0R) a mid hi s2;
-    join h;
-    
+    await h;
+
     gather_alive p f;
 
     merge_impl a lo mid hi () (sort s1) (sort s2);

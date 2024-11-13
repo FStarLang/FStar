@@ -36,12 +36,14 @@ assume val f () : stt_atomic unit emp_inames (p ** q) (fun _ -> p ** r)
 
 atomic
 fn g (i:iname)
-  requires inv i p ** q
+  requires inv i p ** q ** later_credit 1
   ensures  r ** inv i p
   opens [i]
 {
   with_invariants i {
-    f ()
+    later_elim _;
+    f ();
+    later_intro p;
   }
 }
 
@@ -52,12 +54,14 @@ to normalize away. *)
 
 atomic
 fn g2 (i:iname)
-  requires inv i p ** q
+  requires inv i p ** q ** later_credit 1
   ensures  r ** inv i p
   opens [i]
 {
   with_invariants i {
-    f ()
+    later_elim _;
+    f ();
+    later_intro p;
   }
 }
 
@@ -68,12 +72,14 @@ assume val f_ghost () : stt_ghost unit emp_inames (p ** q) (fun _ -> p ** r)
 
 ghost
 fn g_ghost (i:iname)
-  requires (inv i p ** q)
+  requires (inv i p ** q ** later_credit 1)
   ensures (r ** inv i p)
   opens [i]
 {
   with_invariants i {
-    f_ghost ()
+    later_elim _;
+    f_ghost ();
+    later_intro p;
   }
 }
 
@@ -118,9 +124,11 @@ fn test2 ()
   let i = new_invariant (exists* v. pts_to r v);
   with_invariants i
     returns _:unit
-    ensures (exists* v. pts_to r v)
+    ensures later (exists* v. pts_to r v)
     opens [i] {
+      later_elim_timeless _;
       atomic_write_int r 1;
+      later_intro (exists* v. pts_to r v);
   };
   drop_ (inv i _)
 }
@@ -137,8 +145,10 @@ fn test3 ()
   let i = new_invariant (exists* v. pts_to r v);
   with_invariants i
     returns _:unit
-    ensures emp {
+    ensures later (exists* v. pts_to r v) {
+      later_elim_storable _;
       r := 1;
+      later_intro (exists* v. pts_to r v);
   };
   drop_ (inv i _)
 }
@@ -224,7 +234,7 @@ fn t2 ()
   let j = new_invariant emp;
   with_invariants j 
     returns _:unit
-    ensures emp {
+    ensures later emp {
     ()
   };
   drop_ (inv j _);
@@ -240,18 +250,21 @@ let folded_inv (i:iname) = inv i p
 
 atomic
 fn test_returns0 (i:iname) (b:bool)
-  requires folded_inv i
+  requires folded_inv i ** later_credit 1
   ensures folded_inv i ** q
   opens [i]
 {
   unfold folded_inv i;
   with_invariants i
     returns _:unit
-    ensures p ** q {
+    ensures later p ** q {
+    later_elim _;
     if b {
-      p_to_q ()
+      p_to_q ();
+      later_intro p;
     } else {
-      ghost_p_to_q ()
+      ghost_p_to_q ();
+      later_intro p;
     }
   };
   fold folded_inv i
@@ -261,15 +274,17 @@ fn test_returns0 (i:iname) (b:bool)
 
 ghost
 fn test_returns1 (i:iname)
-  requires folded_inv i
+  requires folded_inv i ** later_credit 1
   ensures folded_inv i ** q
   opens [i]
 {
   unfold folded_inv i;
   with_invariants i
     returns _:unit
-    ensures p ** q {
-    ghost_p_to_q ()
+    ensures later p ** q {
+    later_elim _;
+    ghost_p_to_q ();
+    later_intro p;
   };
   fold folded_inv i
 }
@@ -284,15 +299,17 @@ let pp = p
 
 ghost
 fn test_returns2 (i:iname)
-  requires folded_inv i
+  requires folded_inv i ** later_credit 1
   ensures folded_inv i ** q
   opens [i]
 {
   unfold folded_inv i;
   with_invariants i
     returns _:unit
-    ensures pp ** q {
-    ghost_p_to_q ()
+    ensures later pp ** q {
+    later_elim _;
+    ghost_p_to_q ();
+    later_intro pp;
   };
   fold folded_inv i
 }

@@ -116,7 +116,10 @@ returns _:U32.t
 ensures inv i (pts_to x 1ul)
 {
     with_invariants i {
-        read_atomic x;
+        later_elim_timeless _;
+        let r = read_atomic x;
+        later_intro (pts_to x 1ul);
+        r
     }
 }
 
@@ -129,9 +132,12 @@ ensures inv i (pts_to x 0ul) ** pts_to y 0ul
     let n = 
         with_invariants i
         returns r:U32.t
-        ensures pts_to x 0ul ** pure (r == 0ul) ** pts_to y 'w
+        ensures later (pts_to x 0ul) ** pure (r == 0ul) ** pts_to y 'w
         opens [i] {
-            read_atomic x
+            later_elim_timeless _;
+            let r = read_atomic x;
+            later_intro (pts_to x 0ul);
+            r
         };
     y := n;
 }

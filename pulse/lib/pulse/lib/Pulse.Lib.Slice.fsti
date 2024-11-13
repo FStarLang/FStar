@@ -26,9 +26,9 @@ val len (#t: Type) : slice t -> SZ.t
 
 instance val has_pts_to_slice (t: Type u#0) : has_pts_to (slice t) (Seq.seq t)
 
-val pts_to_is_slprop2 (#a:Type) (x:slice a) (p:perm) (s:Seq.seq a)
-  : Lemma (is_slprop2 (pts_to x #p s))
-          [SMTPat (is_slprop2 (pts_to x #p s))]
+val pts_to_timeless (#a:Type) (x:slice a) (p:perm) (s:Seq.seq a)
+  : Lemma (timeless (pts_to x #p s))
+          [SMTPat (timeless (pts_to x #p s))]
 
 val pts_to_len (#t: Type) (s: slice t) (#p: perm) (#v: Seq.seq t) : stt_ghost unit emp_inames
     (pts_to s #p v)
@@ -93,9 +93,9 @@ val gather
 
 val is_split (#t: Type) (s: slice t) (left: slice t) (right: slice t) : slprop
 
-val is_split_is_slprop2 (#t: Type) (s: slice t) (left: slice t) (right: slice t)
-  : Lemma (is_slprop2 (is_split s left right))
-          [SMTPat (is_slprop2 (is_split s left right))]
+val is_split_timeless (#t: Type) (s: slice t) (left: slice t) (right: slice t)
+  : Lemma (timeless (is_split s left right))
+          [SMTPat (timeless (is_split s left right))]
 
 val split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t) (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v }) : stt (slice t & slice t)
     (requires pts_to s #p v)

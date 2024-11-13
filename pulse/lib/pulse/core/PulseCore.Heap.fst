@@ -719,6 +719,8 @@ let heap_evolves : FStar.Preorder.preorder full_heap =
 let free_above_addr h a =
   forall (i:nat). i >= a ==> h i == None
 
+let free_above_empty () = ()
+
 let interp_free_above (h:heap u#a) (a:nat)
 : Lemma (free_above_addr h a <==> (forall i. i >= a ==> select i h == None))
 = ()

@@ -190,13 +190,13 @@ let pure_true_emp (_:unit)
 (***** Properties of the separating conjunction *)
 let star_commutative (p1 p2:slprop)
 : Lemma ((p1 `star` p2) `equiv` (p2 `star` p1))
-= sig.star_commutative p1 p2
+= HeapSig.star_commutative p1 p2
 
 let star_associative (p1 p2 p3:slprop)
 : Lemma ((p1 `star` (p2 `star` p3))
           `equiv`
           ((p1 `star` p2) `star` p3))
-= sig.star_associative p1 p2 p3
+= HeapSig.star_associative p1 p2 p3
 
 let star_congruence (p1 p2 p3 p4:slprop)
   : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
@@ -461,7 +461,88 @@ let reveal_iref (i:iref) : sig.iref =
   let x : erased (sig.iref) = hide (reveal i) in
   sig.non_info_iref x
 
+let pulse_sep_sig : HeapSig.separable mem = sig.sep
 let inv (i:iref) (p:slprop u#a) : slprop u#a = sig.inv (reveal_iref i) p
+let pulse_heap_sig0 : HeapSig.heap_sig u#(a + 3) = {
+  mem=mem u#a;
+  sep = sig.sep;
+  full_mem_pred;
+  is_ghost_action = sig.is_ghost_action;
+  is_ghost_action_preorder = sig.is_ghost_action_preorder;
+  update_ghost = sig.update_ghost;
+  slprop;
+  interp=(fun x -> sig.interp x); 
+  as_slprop=(fun x -> sig.as_slprop x);
+  interp_as=sig.interp_as;
+  slprop_extensionality=(fun x y -> sig.slprop_extensionality x y);
+  non_info_slprop = (fun (x:erased slprop) -> reveal x);
+  bprop = sig.bprop;
+  up = (fun x -> sig.up x);
+  down = (fun x -> sig.down (sig.non_info_slprop x));
+  up_down = sig.up_down;
+  emp;
+  pure;
+  star;
+  intro_emp=sig.intro_emp;
+  pure_interp=sig.pure_interp;
+  pure_true_emp;
+  emp_unit;
+  star_equiv=(fun x y -> sig.star_equiv x y);
+  star_congruence=(fun x y -> sig.star_congruence x y);
+  iref;
+  deq_iref;
+  iref_injectivity=(fun i j p q -> sig.iref_injectivity i j p q);
+  iref_injective=(fun i -> sig.iref_injective i);
+  mem_invariant_equiv=(fun (e:GhostSet.set iref) (m:mem) (i:iref) p ->
+     assert (sig.interp (inv i p) m);
+     assert (~(i `GhostSet.mem` e));
+     sig.mem_invariant_equiv (down_inames e) m (reveal i) p;
+     calc (==) {
+      reveal <| mem_invariant e m;
+      (==) {}
+      sig.mem_invariant (down_inames e) m;
+      (==) {}
+      sig.mem_invariant (HeapSig.add sig.deq_iref (reveal i) (down_inames e)) m `sig.star` p;
+      (==) { 
+        assert (FStar.GhostSet.equal 
+                  (down_inames (HeapSig.add deq_iref i e))
+                  (HeapSig.add sig.deq_iref (reveal i) (down_inames e)))
+           }
+      reveal <| (mem_invariant (HeapSig.add deq_iref i e) m `star` p);
+     }
+  );
+  inv_iname_ok=(fun i p -> sig.inv_iname_ok i p);
+  mem_invariant;
+  dup_inv_equiv=(fun i p -> sig.dup_inv_equiv i p);
+  iname_ok=(fun x y -> sig.iname_ok x y);
+  inv=inv;
+  non_info_iref=(fun x -> reveal x);
+  empty_mem_invariant=(fun e -> sig.empty_mem_invariant (down_inames e));
+}
+let pulse_heap_sig : hs:PulseCore.HeapSig.heap_sig u#(a + 3) {
+// val pulse_heap_sig_properties () : squash (
+  // let hs = pulse_heap_sig in
+  hs.mem == mem /\
+  hs.slprop == slprop /\
+  hs.emp == emp /\
+  hs.star == star /\
+  // (forall t (f:t->slprop). HeapSig.exists_ #hs f == h_exists f) /\
+  pure == hs.pure /\
+  (forall p m. interp p m == hs.interp p m) /\
+  iref == hs.iref /\
+  (forall e m. inames_ok e m == HeapSig.inames_ok #hs e m) /\
+  mem_invariant == hs.mem_invariant /\
+  (forall m1 m2. is_ghost_action m1 m2 == hs.is_ghost_action m1 m2) /\
+  full_mem_pred == hs.full_mem_pred
+}
+= let hs = pulse_heap_sig0 u#a in
+  introduce forall e m. inames_ok e m == HeapSig.inames_ok #hs e m
+  with (
+    FStar.PropositionalExtensionality.apply
+      (inames_ok e m)
+      (HeapSig.inames_ok #hs e m)
+  );
+  hs
 
 let storable_inv (i:iref { storable_iref i }) (p:slprop { is_slprop3 p })
 : Lemma (is_slprop3 (inv i p))

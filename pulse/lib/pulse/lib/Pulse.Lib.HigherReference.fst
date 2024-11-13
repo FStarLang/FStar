@@ -24,7 +24,7 @@ open Pulse.Lib.PCM.Fraction
 let ref (a:Type u#1) = pcm_ref (pcm_frac #a)
 let pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a)
 = pcm_pts_to r (Some (n, p)) ** pure (perm_ok p)
-let pts_to_is_slprop2 _ _ _ = ()
+let pts_to_timeless _ _ _ = ()
 
 
 

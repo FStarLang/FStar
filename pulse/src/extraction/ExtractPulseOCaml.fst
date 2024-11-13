@@ -1,0 +1,169 @@
+module ExtractPulseOCaml
+
+(* This module implements a simple extraction to ocaml, without
+relying on fstar.lib. Integer types (both bounded and unbounded) become
+OCaml's `int`. So, this is not sound wrt overflow, but it allows us to
+extract Quicksort.Task simply, without needing to build fstar.lib in
+OCaml 5. (We could.. but the compiled fstar.lib that F* comes with
+is in OCaml 4.X, so we'd need more build logic.) *)
+
+open FStarC.Compiler.Effect
+open FStarC.Compiler.List
+open FStarC
+open FStarC.Compiler
+open FStarC.Compiler.Util
+open FStarC.Extraction
+open FStarC.Extraction.ML
+open FStarC.Extraction.ML.Syntax
+open FStarC.Const
+open FStarC.BaseTypes
+
+module BU = FStarC.Compiler.Util
+module FC = FStarC.Const
+
+open FStarC.Class.Show
+
+open FStarC.Syntax.Syntax
+open FStarC.Extraction.ML.UEnv
+open FStarC.Extraction.ML.Term
+
+module SS = FStarC.Syntax.Subst
+module S = FStarC.Syntax.Syntax
+module U = FStarC.Syntax.Util
+module Ident = FStarC.Ident
+
+let dbg = Debug.get_toggle "extraction"
+
+let hua (t:term) : option (S.fv & list S.universe & S.args) =
+  let t = U.unmeta t in
+  let hd, args = U.head_and_args_full t in
+  let hd = U.unmeta hd in
+  match (SS.compress hd).n with
+  | Tm_fvar fv -> Some (fv, [], args)
+  | Tm_uinst ({ n = Tm_fvar fv }, us) -> Some (fv, us, args)
+  | _ -> None
+
+let tr_typ (g:uenv) (t:term) : mlty =
+  (* Only enabled with an extension flag *)
+  if Options.Ext.get "pulse:extract_ocaml_bare" = "" then
+    raise NotSupportedByExtension;
+  let cb = FStarC.Extraction.ML.Term.term_as_mlty in
+  let hua = hua t in
+  if None? hua then
+    raise NotSupportedByExtension;
+  let Some (fv, us, args) = hua in
+  // if !dbg then BU.print1 "GGG checking typ %s\n" (show hua);
+  match fv, us, args with
+  | _, _, [(t, _)] when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Array.Core.array") ->
+    MLTY_Named ([cb g t], ([], "array"))
+
+  | _, _, [(t, _)] when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Reference.ref") ->
+    MLTY_Named ([cb g t], ([], "ref"))
+
+  | _, _, [] when S.fv_eq_lid fv (Ident.lid_of_str "FStar.SizeT.t") -> MLTY_Named ([], ([], "int"))
+  | _, _, [] when S.fv_eq_lid fv (Ident.lid_of_str "Prims.nat") -> MLTY_Named ([], ([], "int"))
+  | _, _, [] when S.fv_eq_lid fv (Ident.lid_of_str "Prims.int") -> MLTY_Named ([], ([], "int"))
+
+  | _ -> 
+    raise NotSupportedByExtension
+
+let tr_expr (g:uenv) (t:term) : mlexpr & e_tag & mlty =
+  (* Only enabled with an extension flag *)
+  if Options.Ext.get "pulse:extract_ocaml_bare" = "" then
+    raise NotSupportedByExtension;
+  let cb = FStarC.Extraction.ML.Term.term_as_mlexpr in
+  let hua = hua t in
+  if None? hua then
+    raise NotSupportedByExtension;
+  let Some (fv, us, args) = hua in
+  // if !dbg then BU.print1 "GGG checking expr %s\n" (show hua);
+  match fv, us, args with
+  | _, _, [(x, _)]
+      when S.fv_eq_lid fv (Ident.lid_of_str "FStar.SizeT.uint_to_t") ->
+    cb g x
+
+  (* Pulse.Lib.Reference *)
+  | _, _, [(t, _); (v0, None)]
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Reference.alloc") ->
+    let mlty = term_as_mlty g t in
+    let bang = with_ty ml_unit_ty <| MLE_Var "ref" in
+    let e = with_ty mlty <| MLE_App (bang, [(cb g v0)._1]) in
+    e, E_PURE, mlty
+
+  | _, _, [(t, _); (v0, None)]
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Reference.free") ->
+    (* We translate 'free' as no-ops in OCaml. *)
+    ml_unit, E_PURE, ml_unit_ty
+
+  | _, _, [(t, _); (r, None); _n; _p]
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Reference.op_Bang") ->
+    let mlty = term_as_mlty g t in
+    let bang = with_ty ml_unit_ty <| MLE_Var "!" in
+    let e = with_ty mlty <| MLE_App (bang, [(cb g r)._1]) in
+    e, E_PURE, mlty
+
+  | _, _, [(t, _); (r, None); (x, None); _n]
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Reference.op_Colon_Equals") ->
+    let mlty = term_as_mlty g t in
+    let bang = with_ty ml_unit_ty <| MLE_Var "(:=)" in
+    let e = with_ty mlty <| MLE_App (bang, [(cb g r)._1; (cb g x)._1]) in
+    e, E_PURE, mlty
+
+  | _, _, [(t, _); (x, None); (sz, None)]
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Array.Core.alloc") ->
+    let mlty = term_as_mlty g t in
+    let bang = with_ty ml_unit_ty <| MLE_Var "Array.make" in
+    let e = with_ty mlty <| MLE_App (bang, [(cb g sz)._1; (cb g x)._1]) in
+    e, E_PURE, mlty
+
+  (* TWO VARIANTS *)
+  | _, _, [(t, _); (a, None); (i, None); _p; _s]
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Array.Core.op_Array_Access") ->
+    let mlty = term_as_mlty g t in
+    let bang = with_ty ml_unit_ty <| MLE_Var "Array.get" in
+    let a = (cb g a)._1 in
+    // let i = U.mk_app (S.fvar (Ident.lid_of_str "FStar.SizeT.v") None) [S.as_arg i] in
+    let i = (cb g i)._1 in
+    // let i = with_ty ml_unit_ty <| MLE_App ((with_ty ml_unit_ty <| MLE_Var "Z.to_int"), [i]) in
+    let e = with_ty mlty <| MLE_App (bang, [a; i]) in
+    e, E_PURE, mlty
+  | _, _, [(t, _); (a, None); (i, None); _l; _r; _p; _s]
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Array.Core.pts_to_range_index") ->
+    let mlty = term_as_mlty g t in
+    let bang = with_ty ml_unit_ty <| MLE_Var "Array.get" in
+    let a = (cb g a)._1 in
+    // let i = U.mk_app (S.fvar (Ident.lid_of_str "FStar.SizeT.v") None) [S.as_arg i] in
+    let i = (cb g i)._1 in
+    // let i = with_ty ml_unit_ty <| MLE_App ((with_ty ml_unit_ty <| MLE_Var "Z.to_int"), [i]) in
+    let e = with_ty mlty <| MLE_App (bang, [a; i]) in
+    e, E_PURE, mlty
+
+  (* TWO VARIANTS *)
+  | _, _, [(t, _); (a, None); (i, None); (v, None); _s]
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Array.Core.op_Array_Assignment") ->
+    let mlty = term_as_mlty g t in
+    let bang = with_ty ml_unit_ty <| MLE_Var "Array.set" in
+    let a = (cb g a)._1 in
+    // let i = U.mk_app (S.fvar (Ident.lid_of_str "FStar.SizeT.v") None) [S.as_arg i] in
+    let i = (cb g i)._1 in
+    // let i = with_ty ml_unit_ty <| MLE_App ((with_ty ml_unit_ty <| MLE_Var "Z.to_int"), [i]) in
+    let v = (cb g v)._1 in
+    let e = with_ty mlty <| MLE_App (bang, [a; i; v]) in
+    e, E_PURE, mlty
+  | _, _, [(t, _); (a, None); (i, None); (v, None); _l; _r; _s]
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Array.Core.pts_to_range_upd") ->
+    let mlty = term_as_mlty g t in
+    let bang = with_ty ml_unit_ty <| MLE_Var "Array.set" in
+    let a = (cb g a)._1 in
+    // let i = U.mk_app (S.fvar (Ident.lid_of_str "FStar.SizeT.v") None) [S.as_arg i] in
+    let i = (cb g i)._1 in
+    // let i = with_ty ml_unit_ty <| MLE_App ((with_ty ml_unit_ty <| MLE_Var "Z.to_int"), [i]) in
+    let v = (cb g v)._1 in
+    let e = with_ty mlty <| MLE_App (bang, [a; i; v]) in
+    e, E_PURE, mlty
+
+  | _ -> 
+    raise NotSupportedByExtension
+
+let _ = register_pre_translate_typ tr_typ
+let _ = register_pre_translate tr_expr

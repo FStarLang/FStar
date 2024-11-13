@@ -53,7 +53,7 @@ ghost fn fold_pts_to #t (s: slice t) #p v
     as pts_to s #p v;
 }
 
-let pts_to_is_slprop2 x p v = ()
+let pts_to_timeless x p v = ()
 
 ghost
 fn pts_to_len (#t: Type) (s: slice t) (#p: perm) (#v: Seq.seq t)
@@ -170,7 +170,7 @@ let is_split #t s s1 s2 =
         SZ.v s.len == SZ.v s1.len + SZ.v s2.len
     )
 
-let is_split_is_slprop2 s s1 s2 = ()
+let is_split_timeless s s1 s2 = ()
 
 fn split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t)
     (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v })

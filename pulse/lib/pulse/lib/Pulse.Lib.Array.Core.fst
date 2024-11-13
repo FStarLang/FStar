@@ -56,7 +56,7 @@ let pts_to #a
     (v:FStar.Seq.seq a)
 = H.pts_to r #p (raise_seq v)
 
-let pts_to_is_slprop2 _ _ _ = ()
+let pts_to_timeless _ _ _ = ()
 
 
 ghost
@@ -186,7 +186,7 @@ let pts_to_range
 : slprop
 = H.pts_to_range x i j #p (raise_seq s)
 
-let pts_to_range_is_slprop2 _ _ _ _ _ = ()
+let pts_to_range_timeless _ _ _ _ _ = ()
 
 
 ghost

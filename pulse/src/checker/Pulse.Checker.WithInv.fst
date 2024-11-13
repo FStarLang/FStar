@@ -192,7 +192,7 @@ let atomic_or_ghost_with_inames_and_pre_post
     C_STGhost inames { s with pre; post }
 
 //
-// Given a post that may have a p in it,
+// Given a post that may have a later p in it,
 //   the function transforms it into inv i p ** <the frame>
 //
 // As with find_inv, it is doing structural matching for now
@@ -209,7 +209,7 @@ let rec __withinv_post (#g:env) (#p:term) (#i:term) (#post:term)
   : T.Tac (option (post':term &
                    tot_typing g post' tm_slprop)) =
   
-  if eq_tm post p
+  if eq_tm post (tm_later p)
   then Some (| tm_inv i p, magic () |)  // i:iname, p:slprop, get typing of inv i p
   else match inspect_term post with
        | Tm_Star l r ->
@@ -291,8 +291,8 @@ let check0
         match res with
         | None ->
           fail_doc g (Some (FStar.Reflection.range_of_term post)) [
-            prefix 2 1 (text "Cannot find invariant slprop")
-              (pp p) ^/^
+            prefix 2 1 (text "Cannot find invariant")
+              (pp (tm_later p)) ^/^
             text "in the with_invariants annotated postcondition."
           ]
         | Some (| post', post'_typing |) ->
@@ -316,7 +316,7 @@ let check0
   for better errors. *)
   let body_range = body.range in
 
-  let pre_body : slprop = tm_star p pre_frame in
+  let pre_body : slprop = tm_star (tm_later p) pre_frame in
   //
   // we know tm_inv i p is well-typed,
   // so p is well-typed
@@ -359,7 +359,7 @@ let check0
          (FStar.Printf.sprintf "Inconsistent slprops for iname %s in pre (%s) and post (%s)"
             (show i) (show p) (show p'));
   assert (p == p');
-  let post_body = tm_star p post_frame in
+  let post_body = tm_star (tm_later p) post_frame in
   
   let (| opens, opens_typing |) 
     : t:term & tot_typing g t tm_inames 
@@ -405,8 +405,8 @@ let check0
   in
 
   assert (comp_inames c_body == opens_remove_i);
-  assert (comp_pre c_body == tm_star p pre_frame);
-  assert (comp_post c_body == tm_star p post_frame);
+  assert (comp_pre c_body == tm_star (tm_later p) pre_frame);
+  assert (comp_post c_body == tm_star (tm_later p) post_frame);
 
   let c_out = atomic_or_ghost_with_inames_and_pre_post c_body
     (tm_add_inv (comp_inames c_body) i)
@@ -428,7 +428,7 @@ let check0
       (tm_star (tm_inv i p) pre_frame)
       (tm_star (tm_inv i p) post_frame) in
     
-    assert (add_frame_l c p == c_body);
+    assert (add_frame_later_l c p == c_body);
     assert (comp_with_inv c i p == c_out_eq);
     let d : st_typing _ _ c_out_eq =
       T_WithInv _ i p _ c (magic ()) (magic ()) body_typing tok in
