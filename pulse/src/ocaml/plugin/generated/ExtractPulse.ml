@@ -586,7 +586,7 @@ let (pulse_translate_expr : FStarC_Extraction_Krml.translate_expr_t) =
                  uu___3);
               FStarC_Extraction_ML_Syntax.mlty = uu___4;
               FStarC_Extraction_ML_Syntax.loc = uu___5;_},
-            _post::init::[])
+            _post::_dup::init::[])
            when
            let uu___6 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
            uu___6 = "Pulse.Lib.GlobalVar.mk_gvar" ->
