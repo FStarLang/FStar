@@ -20,7 +20,7 @@ include common.mk
 .DEFAULT_GOAL := all
 
 # Set a default FSTAR_EXE for most clients.
-FSTAR_EXE ?= $(FSTAR_ROOT)/bin/fstar.exe
+FSTAR_EXE ?= $(FSTAR_HOME)/bin/fstar.exe
 FSTAR_EXE := $(abspath $(FSTAR_EXE))
 export FSTAR_EXE
 

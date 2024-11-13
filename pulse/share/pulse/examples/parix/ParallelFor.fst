@@ -19,7 +19,7 @@ module ParallelFor
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Fixpoints
-open NuPool
+open Pulse.Lib.Task
 open FStar.Real
 open Pulse.Lib.Pledge
 open Pulse.Lib.OnRange

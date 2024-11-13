@@ -23,7 +23,7 @@ module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
 module GSet = FStar.GhostSet
 
-module T = NuPool
+module T = Pulse.Lib.Task
 open Quicksort.Base
 open Pulse.Lib.Pledge
 

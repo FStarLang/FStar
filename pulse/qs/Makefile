@@ -5,15 +5,19 @@ OTHERFLAGS += --ext pulse:extract_ocaml_bare
 DEPFLAGS += --extract '-*'
 DEPFLAGS += --extract +Quicksort
 DEPFLAGS += --extract +Pulse.Lib.Dv
-# DEPFLAGS += --extract +NuPool
+# DEPFLAGS += --extract +Pulse.Lib.Task
 # DEPFLAGS += --extract +Pulse.Class.Duplicable
 # DEPFLAGS += --extract +FStar.Dyn # wrong. it's int FStarC_Dyn.ml
 
 include fstar.mk
-all: _output/Quicksort_Task.exe
 
-_output/Quicksort_Task.exe: $(ALL_ML_FILES)
-	eval $$(OPAMSWITCH=5.1.1 opam env) && /home/guido/.opam/5.1.1/bin/dune build --root=dune
+.PHONY: all
+all: run
 
-run:
+.PHONY: dune
+dune: $(ALL_ML_FILES)
+	opam exec --switch=5.1.1 -- dune build --root=dune
+
+.PHONY: run
+run: dune
 	./dune/_build/default/driver.exe
