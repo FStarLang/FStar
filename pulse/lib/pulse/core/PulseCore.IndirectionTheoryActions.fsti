@@ -64,8 +64,8 @@ val later_intro (e:inames) (p:slprop)
 val later_elim (e:inames) (p:slprop) 
 : ghost_act unit e (later p `star` later_credit 1) (fun _ -> p)
 
-val buy (e:inames) (n:nat)
-: act (PE.erased bool) e emp (fun b -> if PE.reveal b then later_credit n else emp)
+val buy (e:inames)
+: act (PE.erased bool) e emp (fun b -> if PE.reveal b then later_credit 1 else emp)
 
 val dup_inv (e:inames) (i:iref) (p:slprop)
 : ghost_act unit e 
