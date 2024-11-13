@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module NuPool
+module Pulse.Lib.Task
 #lang-pulse
 
 open Pulse.Lib.Pervasives

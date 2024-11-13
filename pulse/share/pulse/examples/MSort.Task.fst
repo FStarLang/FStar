@@ -22,7 +22,7 @@ module S = FStar.Seq
 module SZ = FStar.SizeT
 open MSort.SeqLemmas
 open MSort.Base
-open NuPool
+open Pulse.Lib.Task
 
 
 fn rec t_msort_par
