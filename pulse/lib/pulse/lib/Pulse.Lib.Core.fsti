@@ -229,16 +229,10 @@ val frame_stt
   (e:stt a pre post)
 : stt a (pre ** frame) (fun x -> post x ** frame)
 
-val par_stt
-  (#preL:slprop)
-  (#postL:slprop) 
-  (#preR:slprop)
-  (#postR:slprop)
-  (f:stt unit preL (fun _ -> postL))
-  (g:stt unit preR (fun _ -> postR))
-: stt unit
-      (preL ** preR)
-      (fun _ -> postL ** postR)
+val fork
+  (#pre:slprop)
+  (f:unit -> stt unit pre (fun _ -> emp))
+: stt unit pre (fun _ -> emp)
 
 val sub_stt (#a:Type u#a)
             (#pre1:slprop)

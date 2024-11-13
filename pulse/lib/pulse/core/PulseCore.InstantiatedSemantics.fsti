@@ -113,10 +113,8 @@ val sub (#a:Type u#a)
         (e:stt a pre1 post1)
 : stt a pre2 post2
 
-val par (#p0 #q0 #p1 #q1:_)
-        (f0:stt unit p0 (fun _ -> q0))
-        (f1:stt unit p1 (fun _ -> q1))
-: stt unit (p0 ** p1) (fun _ -> q0 ** q1)
+val fork #p0 (f0:stt unit p0 (fun _ -> emp))
+: stt unit p0 (fun _ -> emp)
 
 val hide_div #a #pre #post (f:unit -> Dv (stt a pre post))
 : stt a pre post

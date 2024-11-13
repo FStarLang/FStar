@@ -42,12 +42,10 @@ let is_unit #a (x:a) (f:a -> a -> a) =
 (**
  * A state typeclass:
  *  - [s] is the type of states
- *  - [is_full_mem] a refinement on states to the entire heap used at runtime
  *  - [pred] is the type of state assertions
  *  - [emp] is the empty state assertion
  *  - [star] is the separating conjunction of state assertions
  *  - [interp p s] is the interpretation of a state assertion [p] in a state [s]
- *  - [evolves] is a preorder on states, constraining how it evolves
  *  - [invariant] is an internal invariant that a caller can instantiate and is maintained
  *                by every action and the semantics as a whole
  *  - [laws] state that {pred, emp, star} are a commutative monoid
@@ -122,7 +120,7 @@ let as_post (#st:state u#s) (#a:Type u#a) (p:st.pred)
  *  pre- and post-conditions so that we can do proofs
  *  intrinsically.
  *
- *  Universe-polymorphic im both the state and result type
+ *  Universe-polymorphic in both the state and result type
  *
  *)
 noeq
@@ -139,17 +137,14 @@ type m (#st:state u#s) : (a:Type u#a) -> st.pred -> post st a -> Type u#(max (ac
       f:action st b ->
       k:(x:b -> Dv (m a (f.post x) post)) ->
       m a f.pre post
-  | Par:
+  | Par: // runs m0 concurrently without waiting for it
       #pre0:_ ->
-      #post0:_ ->
-      m0:m (U.raise_t unit) pre0 (as_post post0) ->
-      #pre1:_ ->
-      #post1:_ ->
-      m1:m (U.raise_t unit) pre1 (as_post post1) ->
-      #a:_ ->
-      #post:_ ->
-      k:m a (st.star post0 post1) post ->
-      m a (st.star pre0 pre1) post
+      m0:m (U.raise_t unit) pre0 (as_post #st st.emp) ->
+      #a:Type u#a ->
+      #pre:_ ->
+      #post:post st a ->
+      k:m a pre post ->
+      m a (pre0 `st.star` pre) post
 
 /// The semantics comes in two levels:
 ///
@@ -201,9 +196,9 @@ let rec step
       weaken (return (Step _ n))
     in
     weaken <| bind (PNST.lift <| (NST.lift <| f.step frame)) k
-  | Par #_ #pre0 #post0 (Ret x0) #pre1 #post1 (Ret x1) #a #post k ->
-    weaken <| return <| Step _ k
-  | Par #_ #pre0 #post0 m0 #pre1 #post1 m1 #a #postk k ->
+  | Par #_ #pre0 (Ret x0) #a #pre #post k ->
+    weaken <| return <| Step pre k
+  | Par #_ #pre0 m0 #a #prek #postk k ->
     let q : post st a = coerce_eq () q in
     let choose (b:bool)
     : pnst_sep st
@@ -212,11 +207,11 @@ let rec step
         (fun x -> (Step?.next x `st.star` frame))
     = if b
       then weaken <| 
-           bind (step m0 (pre1 `st.star` frame))
-                (fun x -> return <| Step _ <| Par (Step?.m x) m1 k)
+           bind (step m0 (prek `st.star` frame))
+                (fun x -> return <| Step _ <| Par (Step?.m x) k)
       else weaken <| 
-           bind (step m1 (pre0 `st.star` frame))
-                (fun x -> return <| Step _ <| Par m0 (Step?.m x) k) 
+           bind (step k (pre0 `st.star` frame))
+                (fun x -> return <| Step _ <| Par m0 (Step?.m x))
     in
     weaken <| bind (lift <| NST.flip()) choose 
 
@@ -303,17 +298,12 @@ let rec mbind
     | Ret x -> g x
     | Act act k ->
       Act act (fun x -> mbind (k x) g)
-    | Par #_ #pre0 #post0 ml
-             #pre1 #post1 mr
-             #postk k ->
-      let k : m b (post0 `st.star` post1) r = mbind k g in
-      let ml' : m (U.raise_t u#0 u#b unit) pre0 (as_post post0) =
-         mbind ml (fun _ -> Ret #_ #(U.raise_t u#0 u#b unit) #(as_post post0) (U.raise_val u#0 u#b ()))
+    | Par #_ #pre0 ml #_ #prek #postk k ->
+      let k : m b prek r = mbind k g in
+      let ml' : m (U.raise_t u#0 u#b unit) pre0 (as_post st.emp) =
+         mbind ml (fun _ -> Ret #_ #(U.raise_t u#0 u#b unit) #(as_post st.emp) (U.raise_val u#0 u#b ()))
       in
-      let mr' : m (U.raise_t u#0 u#b unit) pre1 (as_post post1) =
-         mbind mr (fun _ -> Ret #_ #(U.raise_t u#0 u#b unit) #(as_post post1) (U.raise_val u#0 u#b ()))
-      in
-      Par ml' mr' k
+      Par ml' k
 
 let act_as_m0
     (#st:state u#s)
@@ -401,29 +391,19 @@ let rec frame (#st:state u#s)
      | Ret x -> Ret x
      | Act f k ->
        Act (frame_action f fr) (fun x -> frame fr (k x))
-     | Par #_ #pre0 #post0 m0 #pre1 #post1 m1 #postk k ->
-       let m0'
-         : m (U.raise_t u#0 u#a unit) (pre0 `st.star` fr) 
-             (F.on_dom _ (fun x -> (as_post post0) x `st.star` fr))
-         = frame fr m0 in
-       let m0'
-         : m (U.raise_t u#0 u#a unit) (pre0 `st.star` fr) (as_post (post0 `st.star` fr))
-         = m0'
-       in
+     | Par #_ #pre0 m0 #_ #prek #postk k ->
        let k' = frame fr k in
-       Par m0' m1 k'
+       Par m0 k'
 
 (**
- * [par]: Parallel composition
+ * [fork]: Parallel execution using fork
  * Works by just using the `Par` node and `Ret` as its continuation
  **)
-let par (#st:state u#s)
-        #p0 #q0 (m0:m unit p0 (as_post q0))
-        #p1 #q1 (m1:m unit p1 (as_post q1))
- : Dv (m u#s u#0 u#act unit (p0 `st.star` p1) (as_post (q0 `st.star` q1)))
- = let m0' = mbind m0 (fun _ -> Ret #_ #_ #(as_post q0) (U.raise_val u#0 u#0 ())) in
-   let m1' = mbind m1 (fun _ -> Ret #_ #_ #(as_post q1) (U.raise_val u#0 u#0 ())) in
-   Par m0' m1' (Ret ())
+let fork (#st:state u#s)
+        #p0 (m0:m unit p0 (as_post st.emp))
+ : Dv (m u#s u#0 u#act unit p0 (as_post st.emp))
+ = let m0' = mbind m0 (fun _ -> Ret #st #_ #(as_post st.emp) (U.raise_val ())) in
+   Par m0' (Ret ())
 
 let conv (#st:state u#s) (a:Type u#a)
          (#p:st.pred)

@@ -142,7 +142,7 @@ let sub (#a:Type u#a)
 : stt a pre2 post2
 = coerce_eq (conv pre1 pre2 post1 post2 pf1 pf2) e
 
-let par f0 f1 = fun _ -> Sem.par (f0 ()) (f1 ())
+let fork f0 = fun _ -> Sem.fork (f0 ())
 
 let hide_div #a #pre #post (f:unit -> Dv (stt a pre post))
 : stt a pre post
