@@ -1437,13 +1437,13 @@ fn gather_alive
   fold (pool_alive #f p);
 }
 
-
-(* Very basic model of a thread fork *)
-assume
-val fork
-  (#p #q : slprop)
-  (f : unit -> stt unit p (fun _ -> q))
-  : stt unit p (fun _ -> emp)
+fn worker_thread (#f:perm) (p : pool)
+  requires pool_alive #f p
+  ensures emp
+{
+  worker p;
+  drop_ (pool_alive #f p)
+}
 
 fn spawn_worker
   (p:pool)
@@ -1451,7 +1451,7 @@ fn spawn_worker
   requires pool_alive #f p
   ensures  emp
 {
-  fork (fun () -> worker #f p)
+  fork (fun () -> worker_thread #f p)
 }
 
 fn rec spawn_workers
