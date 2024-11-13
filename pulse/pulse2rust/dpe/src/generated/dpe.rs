@@ -32,8 +32,7 @@ pub const fn initialize_global_state(
     uu___: (),
 ) -> ((), std::sync::Mutex<std::option::Option<super::dpe::st>>) {
     let m = std::sync::Mutex::new(None);
-    let x = ((), m);
-    x
+    ((), m)
 }
 pub static gst: ((), std::sync::Mutex<std::option::Option<super::dpe::st>>) = super::dpe::initialize_global_state(());
 pub fn safe_incr(i: u16) -> std::option::Option<u16> {

@@ -17,14 +17,17 @@
 module Pulse.Lib.GlobalVar
 
 open Pulse.Lib.Pervasives
+open Pulse.Class.Duplicable
 open FStar.ExtractAs
 open Pulse.Lib.Trade
+
 val gvar (#a:Type0) (p:a -> slprop) : Type0
 
 val mk_gvar
       (#a:Type0)
       (#p:a -> slprop) 
-      (init:unit -> stt a emp (fun x -> p x ** (trade (p x) (p x ** p x))))
+      {| (x:a -> duplicable (p x)) |}
+      (init:unit -> stt a emp (fun x -> p x))
 : gvar p
 
 val read_gvar_ghost (#a:Type0) (#p:a -> slprop) (x:gvar p) : GTot a
