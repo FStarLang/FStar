@@ -1,5 +1,5 @@
 (*
-   Copyright 2023 Microsoft Research
+   Copyright 2024 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,23 +14,20 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.GlobalVar
+module PulseCore.PotentiallyErased
 
-open Pulse.Lib.Pervasives
-open Pulse.Class.Duplicable
-open FStar.ExtractAs
-open Pulse.Lib.Trade
+irreducible let is_erased: bool = true
 
-val gvar (#a:Type0) (p:a -> slprop) : Type0
+let erased t = if is_erased then Ghost.erased t else t
+let reveal x = if is_erased then Ghost.reveal x else x
+let hide x = if is_erased then Ghost.hide x else x
+let bind #t #s x f = if is_erased then Ghost.hide (Ghost.reveal #s (f (Ghost.reveal x))) else f x
 
-val mk_gvar
-      (#a:Type0)
-      (#p:a -> slprop) 
-      {| (x:a -> duplicable (p x)) |}
-      (init:unit -> stt a emp (fun x -> p x))
-: gvar p
-
-val read_gvar_ghost (#a:Type0) (#p:a -> slprop) (x:gvar p) : GTot a
-
-val read_gvar (#a:Type0) (#p:a -> slprop) (x:gvar p)
-  : stt a emp (fun r -> p r ** pure (r == read_gvar_ghost x))
+let rec observe_bool b kif kelse =
+  if is_erased then
+    observe_bool b kif kelse
+  else
+    if coerce_eq () b then
+      kif ()
+    else
+      kelse ()

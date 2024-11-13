@@ -727,7 +727,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let expr_while_body = extract_mlexpr_to_stmts g body in
     Expr_while {expr_while_cond; expr_while_body}
 
-  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, _::e::_)
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, _::_::e::_)
     when S.string_of_mlpath p = "Pulse.Lib.GlobalVar.mk_gvar" ->
     mk_call (extract_mlexpr g e) [Expr_lit (Lit_unit)]
     

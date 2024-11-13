@@ -1,6 +1,23 @@
+(*
+   Copyright 2024 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module PulseCore.IndirectionTheorySep
 module F = FStar.FunctionalExtensionality
 module PM = PulseCore.MemoryAlt
+module PE = PulseCore.PotentiallyErased
 open FStar.Ghost 
 
 let timeless_mem : Type u#4 = PM.mem u#0
@@ -32,7 +49,8 @@ let is_full (m:mem)
 : prop
 = PM.pulse_heap_sig.full_mem_pred (timeless_mem_of m) /\
   level m > credits m
-let full_mem = m:mem { is_full m  }
+
+noeq type full_mem = { m: m:mem { is_full m }; fuel: fuel:PE.erased nat { PE.reveal fuel == level m - credits m } }
 
 val emp : slprop
 val pure (p:prop) : slprop

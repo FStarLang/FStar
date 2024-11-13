@@ -46,6 +46,7 @@ open Pulse.Lib.HashTable.Type
 open Pulse.Lib.HashTable
 open Pulse.Lib.Mutex
 open Pulse.Class.PtsTo
+open Pulse.Class.Duplicable
 open Pulse.Lib.Trade
 // We assume this code will be executed on a machine where u32 fits the word size
 assume SZ_fits_u32 : SZ.fits_u32
@@ -57,21 +58,16 @@ let gvar_p : (gref & mutex (option st)) -> slprop =
 
 ghost
 fn dup_gvar_p (x:(gref & mutex (option st)))
-requires emp
-ensures trade (gvar_p x) (gvar_p x ** gvar_p x)
-{
-  ghost
-  fn dup ()
-  requires emp ** gvar_p x
+  requires gvar_p x
   ensures gvar_p x ** gvar_p x
-  {
-    unfold gvar_p;
-    Pulse.Lib.Mutex.share (snd x);
-    fold (gvar_p x);
-    fold (gvar_p x)
-  };
-  Pulse.Lib.Trade.intro_trade _ _ emp dup
+{
+  unfold gvar_p;
+  Pulse.Lib.Mutex.share (snd x);
+  fold (gvar_p x);
+  fold (gvar_p x)
 }
+
+instance duplicable_gvar x : duplicable (gvar_p x) = { dup_f = fun _ -> dup_gvar_p x }
 
 ghost
 fn drop_mutex_live (#a:Type0) (m:mutex a) (#p:perm) (v:a -> slprop)
@@ -85,17 +81,15 @@ ensures emp
 fn initialize_global_state ()
   requires emp
   returns x:(gref & mutex (option st))
-  ensures gvar_p x ** trade (gvar_p x) (gvar_p x ** gvar_p x)
+  ensures gvar_p x
 {
   let r = ghost_alloc #_ #pcm all_sids_unused;
   with _v. rewrite (ghost_pcm_pts_to r (G.reveal (G.hide _v))) as
                    (ghost_pcm_pts_to r _v);
   fold (dpe_inv r None);
   let m = new_mutex (dpe_inv r) None;
-  let x = r, m;
-  fold (gvar_p x);
-  dup_gvar_p x;
-  x
+  fold (gvar_p (r, m));
+  (r, m)
 }
 
 let gst : Global.gvar #(gref & mutex (option st)) gvar_p =

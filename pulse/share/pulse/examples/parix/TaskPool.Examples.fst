@@ -19,7 +19,7 @@ module TaskPool.Examples
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Pledge
-open NuPool
+open Pulse.Lib.Task
 
 assume
 val qsv : nat -> slprop

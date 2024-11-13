@@ -32,13 +32,12 @@ let laws ()
 = Sep.sep_laws()
 
 let state0 (e:inames) : Sem.state u#4 = {
-    s = Sep.mem;
-    is_full_mem = Sep.is_full;
+    s = Sep.full_mem;
     pred = slprop;
     emp = emp;
     star = star;
-    interp;
-    invariant = mem_invariant e;
+    interp = (fun p m -> interp p m.m);
+    invariant = (fun m -> mem_invariant e m.m);
     laws = laws ();
 }
 

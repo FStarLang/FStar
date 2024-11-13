@@ -1,5 +1,5 @@
 (*
-   Copyright 2023 Microsoft Research
+   Copyright 2024 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,23 +14,17 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.GlobalVar
+module PulseCore.PotentiallyErased
 
-open Pulse.Lib.Pervasives
-open Pulse.Class.Duplicable
-open FStar.ExtractAs
-open Pulse.Lib.Trade
+val erased : Type u#a -> Type u#a
+val reveal #t : erased t -> GTot t
+val hide #t (x: t) : y:erased t { reveal y == x }
+val bind #t #s (x: erased t) (f: t->erased s) : y: erased s { y == f (reveal x) }
 
-val gvar (#a:Type0) (p:a -> slprop) : Type0
+val observe_bool #t (b: erased bool) :
+  (squash (reveal b) -> Dv t) ->
+  (squash (not (reveal b)) -> Dv t) ->
+  Dv t
 
-val mk_gvar
-      (#a:Type0)
-      (#p:a -> slprop) 
-      {| (x:a -> duplicable (p x)) |}
-      (init:unit -> stt a emp (fun x -> p x))
-: gvar p
-
-val read_gvar_ghost (#a:Type0) (#p:a -> slprop) (x:gvar p) : GTot a
-
-val read_gvar (#a:Type0) (#p:a -> slprop) (x:gvar p)
-  : stt a emp (fun r -> p r ** pure (r == read_gvar_ghost x))
+irreducible let map #t #s (f: t->s) (x: erased t) : y: erased s { reveal y == f (reveal x) } =
+  bind x fun x -> hide (f x)

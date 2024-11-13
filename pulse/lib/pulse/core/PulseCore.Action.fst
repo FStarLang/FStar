@@ -23,6 +23,7 @@ module Mem = PulseCore.MemoryAlt
 module I = PulseCore.InstantiatedSemantics
 module F = FStar.FunctionalExtensionality
 module ST = PulseCore.HoareStateMonad
+module PE = PulseCore.PotentiallyErased
 module Set = FStar.GhostSet
 friend PulseCore.InstantiatedSemantics
 
@@ -395,23 +396,18 @@ let later_elim (p:slprop)
 : act unit Ghost emp_inames (later p ** later_credit 1) (fun _ -> p)
 = fun #ictx -> ITA.later_elim ictx p
 
-let maybe_p (p:slprop) (b:erased bool) : slprop = if b then p else emp
-
-let maybe_buy (n:nat)
-: stt (erased bool) emp (maybe_p (later_credit n))
-= stt_of_action0 (ITA.buy emp_inames n)
-
-let rec reveal_div #t (b:erased bool) (k: squash (reveal b == true) -> t) : Dv t = 
-  reveal_div b k
+let rec loop #t () : Dv t = loop ()
 
 let buy (n:nat)
 : stt unit emp (fun _ -> later_credit n)
 = I.bind 
-       (maybe_buy n) 
-       (fun (b:erased bool) ->
+       (stt_of_action0 (ITA.buy emp_inames n)) 
+       (fun b ->
         I.hide_div (fun _ -> 
-          reveal_div b (fun _ -> 
-          coerce_eq () <| I.return () (fun _ -> later_credit n))))
+          PE.observe_bool b
+            (fun _ -> coerce_eq () <| I.return () (fun _ -> later_credit n))
+            (fun _ -> loop ())))
+
 ///////////////////////////////////////////////////////////////////
 // Core operations on references
 ///////////////////////////////////////////////////////////////////

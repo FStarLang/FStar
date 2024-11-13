@@ -1,3 +1,18 @@
+(*
+   Copyright 2024 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module PulseCore.IndirectionTheoryActions
 module F = FStar.FunctionalExtensionality
 module T = FStar.Tactics
@@ -141,12 +156,8 @@ let is_ghost_action_trans (m0 m1 m2:mem)
 let lift_mem_action #a #mg #ex #pre #post
                    (pm_act:PM._pst_action_except a mg (lower_inames ex) pre post)
 : _act_except a (if mg then GHOST else ATOMIC) ex (lift pre) (fun x -> lift (post x))
-= fun frame 
-      (w0:mem {
-        inames_ok ex w0 /\
-        is_full w0 /\
-        interp (lift pre `star` frame `star` mem_invariant ex w0) w0
-      }) -> 
+= fun frame fm0 -> 
+    let w0 = fm0.m in
     let timeless_mem = timeless_mem_of w0 in
     calc (==) {
       lift pre `star` frame `star` mem_invariant ex w0;
@@ -193,23 +204,25 @@ let lift_mem_action #a #mg #ex #pre #post
       frame `star`
       (mem_invariant ex w1);
     };
-    (x, w1)
+    (x, { m=w1; fuel = fm0.fuel })
 
 
 let later_intro (e:inames) (p:slprop)
 : ghost_act unit e p (fun _ -> later p)
-= fun frame s0 ->
+= fun frame s0' ->
+    let s0 = s0'.m in
     let open FStar.Ghost in
     sep_laws();
     let m0, m1 = split_mem p (frame `star` mem_invariant e s0) s0 in
     intro_later p m0;
     star_equiv (later p) (frame `star` mem_invariant e s0) s0;
     is_ghost_action_refl s0;
-    (), s0
+    (), s0'
 
 let later_elim (e:inames) (p:slprop) 
 : ghost_act unit e (later p `star` later_credit 1) (fun _ -> p)
-= fun frame s0 ->
+= fun frame fm0 ->
+    let s0 = fm0.m in
     let open FStar.Ghost in
     sep_laws();
     let m1, m2, m3 = split_mem3 (later_credit 1) (later p) (frame `star` mem_invariant e s0) s0 in
@@ -292,11 +305,12 @@ let later_elim (e:inames) (p:slprop)
     inames_ok_update e s0 s2;
     assert (inames_ok e s0 <==> inames_ok e s2);
     assert (is_full s2);
-    (), s2
+    (), { m = s2; fuel = fm0.fuel }
 
-let buy (e:inames) (n:FStar.Ghost.erased nat)
-: act (erased bool) e emp (fun b -> if b then later_credit n else emp)
-= fun frame s0 ->
+let buy (e:inames) (n:nat)
+: act (PE.erased bool) e emp (fun b -> if PE.reveal b then later_credit n else emp)
+= fun frame fm0 ->
+    let s0 = fm0.m in
     sep_laws();
     let m0, m1 = split_mem emp (frame `star` mem_invariant e s0) s0 in
     let m0' : erased mem = buy n m0 in
@@ -308,19 +322,22 @@ let buy (e:inames) (n:FStar.Ghost.erased nat)
     intro_star (later_credit n) (frame `star` mem_invariant e s0) m0' m1;
     let m' : erased mem = join m0' m1 in
     let s1 = buy_mem n s0 in
+    buy_lemma n s0;
     assert (reveal m' == s1);
+    assert level s1 == level s0;
     mem_invariant_buy e n s0;
     inames_ok_update e s0 s1;
-    let ok : erased bool = level s1 > credits s1 in
+    let ok : PE.erased bool = PE.map #nat (fun hr -> hr > n) fm0.fuel (*level s1 > credits s1*) in
+    assert PE.reveal ok <==> (level s1 > credits s1);
     let s : (s:erased mem {
       is_ghost_action s0 s /\
       is_full s /\
       interp 
-        ((if ok then later_credit n else emp) `star`
+        ((if PE.reveal ok then later_credit n else emp) `star`
          frame `star`
          mem_invariant e s) s
     })
-    = if ok
+    = if PE.reveal ok
       then (
         hide s1
       )
@@ -330,7 +347,7 @@ let buy (e:inames) (n:FStar.Ghost.erased nat)
       )
     in
     let s1 = update_ghost s0 s in
-    ok, s1
+    ok, { m=s1; fuel=PE.map #nat #nat (fun hr -> if hr > n then hr - n else hr) fm0.fuel }
 
 let dup_inv (e:inames) (i:iref) (p:slprop)
 : ghost_act unit e 
@@ -339,7 +356,7 @@ let dup_inv (e:inames) (i:iref) (p:slprop)
 = fun frame s0 ->
     sep_laws();
     dup_inv_equiv i p;
-    is_ghost_action_refl s0;
+    is_ghost_action_refl s0.m;
     (), s0
 
 let intro_read_inv (i:iref) (p frame:slprop) (m:mem)
@@ -396,7 +413,8 @@ let intro_read_inv_later (i:iref) (p frame:slprop) (m:mem)
 
 let fresh_invariant (e:inames) (p:slprop) (ctx:inames)
 : ghost_act (i:iref{~(GhostSet.mem i ctx)}) e (p `star` inames_live ctx) (fun i -> inv i p `star` inames_live ctx)
-= fun frame s0 ->
+= fun frame fm0 ->
+    let s0 = fm0.m in
     sep_laws();
     destruct_star_l (inames_live ctx) (p `star` frame `star` mem_invariant e s0) s0;
     let (| i, s0' |) = fresh_inv p s0 ctx in
@@ -435,7 +453,7 @@ let fresh_invariant (e:inames) (p:slprop) (ctx:inames)
     assert (is_full s1);
     disjoint_join_levels s0 s0';
     assert (level s0 == level s0');
-    i, s1
+    i, { fm0 with m=s1 }
 
 let new_invariant (e:inames) (p:slprop)
 : ghost_act iref e p (fun i -> inv i p)
@@ -446,14 +464,15 @@ let new_invariant (e:inames) (p:slprop)
 
 let inames_live_inv (e:inames) (i:iref) (p:slprop)
 : ghost_act unit e (inv i p) (fun _ -> inv i p `star` inames_live (single i))
-= fun frame s0 ->
+= fun frame fm0 ->
+    let s0 = fm0.m in
     sep_laws();
     dup_inv_equiv i p;
     let m0, rest = split_mem (inv i p) (inv i p `star` frame `star` mem_invariant e s0) s0 in
     inames_live_inv i p m0;
     intro_star (inames_live (single i)) (inv i p `star` frame `star` mem_invariant e s0) m0 rest;
     is_ghost_action_refl s0;
-    (), s0
+    (), fm0
 
 let iname_ok_frame (i:iref) (p:slprop) (frame:slprop) (m:mem)
 : Lemma
@@ -476,7 +495,8 @@ let with_invariant (#a:Type)
 : _act_except a ak opened_invariants 
       (inv i p `star` fp)
       (fun x -> inv i p `star` fp' x)
-= fun frame s0 ->
+= fun frame fm0 ->
+    let s0 = fm0.m in
     sep_laws();
     iname_ok_frame i p (fp `star` frame `star` mem_invariant opened_invariants s0) s0;
     assert (iname_ok i s0);
@@ -491,7 +511,8 @@ let with_invariant (#a:Type)
                     `star` (frame `star` inv i p)
                     `star` mem_invariant (add_inv opened_invariants i) s0)
                     s0);
-    let x, s1 = f (frame `star` inv i p) s0 in
+    let x, fm1 = f (frame `star` inv i p) fm0 in
+    let s1 = fm1.m in
     inames_ok_union (single i) opened_invariants s1;
     assert (inames_ok (single i) s1);
     assert (iname_ok i s1);
@@ -506,10 +527,11 @@ let with_invariant (#a:Type)
                     `star` mem_invariant opened_invariants s1)
                     s1);
     inames_ok_union (single i) opened_invariants s1;
-    x, s1
+    x, fm1
 
 let invariant_name_identifies_invariant e i p q
-= fun frame s0 ->
+= fun frame fm0 ->
+    let s0 = fm0.m in
     sep_laws();
     dup_inv_equiv i p;
     dup_inv_equiv i q;
@@ -524,7 +546,7 @@ let invariant_name_identifies_invariant e i p q
                (inv i p `star` inv i q `star` frame `star` mem_invariant e s0)
                m0 m1;
     is_ghost_action_refl s0;
-    (), s0
+    (), fm0
 
 let frame (#a:Type)
           (#ak:action_kind)
@@ -540,7 +562,8 @@ let witness_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
 : ghost_act (erased a) opened_invariants
            (op_exists_Star p)
            (fun x -> p x)
-= fun frame s0 ->
+= fun frame fm0 ->
+    let s0 = fm0.m in
     sep_laws();
     let m1, m2 = split_mem (op_exists_Star p) (frame `star` mem_invariant opened_invariants s0) s0 in 
     interp_exists p;
@@ -555,64 +578,70 @@ let witness_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
         (fun x -> interp (p x `star` (frame `star` mem_invariant opened_invariants s0)) s0)
     in
     is_ghost_action_refl s0;
-    x, s0
+    x, fm0
 
 let intro_exists (#opened_invariants:_) (#a:_) (p:a -> slprop) (x:erased a)
 : ghost_act unit opened_invariants
   (p x)
   (fun _ -> op_exists_Star p)
-= fun frame s0 ->
+= fun frame fm0 ->
+    let s0 = fm0.m in
     sep_laws();
     let m1, m2 = split_mem (p x) (frame `star` mem_invariant opened_invariants s0) s0 in
     interp_exists p;
     star_equiv (op_exists_Star p) (frame `star` mem_invariant opened_invariants s0) s0;
     is_ghost_action_refl s0;
-    (), s0
+    (), fm0
 
 let raise_exists (#opened_invariants:_) (#a:Type u#a) (p:a -> slprop)
 : ghost_act unit opened_invariants
     (op_exists_Star p)
     (fun _a -> op_exists_Star #(U.raise_t u#a u#b a) (U.lift_dom u#a u#_ u#b p))
-= fun frame s0 ->
-    let x, s1 = witness_exists #opened_invariants #a p frame s0 in
+= fun frame fm0 ->
+    let s0 = fm0.m in
+    let x, fm1 = witness_exists #opened_invariants #a p frame fm0 in
+    let s1 = fm1.m in
     sep_laws();
     let m1, m2 = split_mem (p x) (frame `star` mem_invariant opened_invariants s1) s1 in
     assert (interp ((U.lift_dom p) (U.raise_val u#a u#b (reveal x))) m1);
     interp_exists (U.lift_dom u#a u#_ u#b p);
     assert (interp (op_exists_Star #(U.raise_t u#a u#b a) (U.lift_dom p)) m1);
     star_equiv (op_exists_Star #(U.raise_t u#a u#b a) (U.lift_dom p)) (frame `star` mem_invariant opened_invariants s1) s1;
-    (), s1
+    (), fm1
 
 let elim_pure (#opened_invariants:_) (p:prop)
 : ghost_act (u:unit{p}) opened_invariants (pure p) (fun _ -> emp)
-= fun frame s0 ->
+= fun frame fm0 ->
+    let s0 = fm0.m in
     sep_laws();
     let m1, m2 = split_mem (pure p) (frame `star` mem_invariant opened_invariants s0) s0 in
     interp_pure p m1;
     emp_equiv m1;
     star_equiv emp (frame `star` mem_invariant opened_invariants s0) s0;
     is_ghost_action_refl s0;
-    (), s0
+    (), fm0
 
 let intro_pure (#opened_invariants:_) (p:prop) (_:squash p)
 : ghost_act unit opened_invariants emp (fun _ -> pure p)
-= fun frame s0 -> 
+= fun frame fm0 -> 
+    let s0 = fm0.m in
     sep_laws();
     let m1, m2 = split_mem emp (frame `star` mem_invariant opened_invariants s0) s0 in
     interp_pure p m1;
     star_equiv (pure p) (frame `star` mem_invariant opened_invariants s0) s0;
     is_ghost_action_refl s0;
-    (), s0
+    (), fm0
 
 let drop (#opened_invariants:_) (p:slprop)
 : ghost_act unit opened_invariants p (fun _ -> emp)
-= fun frame s0 -> 
+= fun frame fm0 -> 
+    let s0 = fm0.m in
     sep_laws();
     let m1, m2 = split_mem p (frame `star` mem_invariant opened_invariants s0) s0 in
     emp_equiv m1;
     star_equiv emp (frame `star` mem_invariant opened_invariants s0) s0;
     is_ghost_action_refl s0;
-    (), s0
+    (), fm0
 
 let lift_ghost
       (#a:Type)
@@ -620,20 +649,21 @@ let lift_ghost
       (ni_a:HeapSig.non_info a)
       (f:erased (ghost_act a opened_invariants p q))
 : ghost_act a opened_invariants p q
-= fun frame s0 ->
-    let result : erased (a & full_mem) = hide ((reveal f) frame s0) in
+= fun frame fm0 ->
+    let result : erased (a & full_mem) = hide ((reveal f) frame fm0) in
     let res : a = ni_a (hide (fst result)) in
-    let s1 : full_mem = update_ghost s0 (hide (snd result)) in
-    res, s1
+    let m = update_ghost fm0.m (hide (snd result).m) in
+    res, { fm0 with m }
 
 let equiv_refl #o p
-= fun frame s0 ->
+= fun frame fm0 ->
+    let s0 = fm0.m in
     sep_laws();
     let m1, m2 = split_mem emp (frame `star` mem_invariant o s0) s0 in
     intro_equiv p m1;
     star_equiv (equiv p p) (frame `star` mem_invariant o s0) s0;
     is_ghost_action_refl s0;
-    (), s0 
+    (), fm0
 
 let equiv_dup #o a b
 = fun frame s0 ->
@@ -657,7 +687,8 @@ let equiv_elim #o a b
     (), s1
 
 let slprop_ref_alloc #e p
-= fun frame s0 ->
+= fun frame fm0 ->
+    let s0 = fm0.m in
     sep_laws();
     let (| i, s0' |) = fresh_slprop_ref p s0 in
     let s1 = join_mem s0 s0' in
@@ -667,17 +698,19 @@ let slprop_ref_alloc #e p
     inames_ok_empty s0';
     inames_ok_disjoint e GhostSet.empty s0 s0';
     inames_ok_union e GhostSet.empty s1;
-    i, s1
+    i, {fm0 with m=s1}
 
 let slprop_ref_share #o x p
-= fun frame s0 ->
+= fun frame fm0 ->
+    let s0 = fm0.m in
     sep_laws();
     slprop_ref_pts_to_share x p;
     is_ghost_action_refl s0;
-    (), s0
+    (), fm0
 
 let slprop_ref_gather #o x p1 p2
-= fun frame s0 ->
+= fun frame fm0 ->
+    let s0 = fm0.m in
     sep_laws();
     let m1, m2 =
       split_mem
@@ -688,4 +721,4 @@ let slprop_ref_gather #o x p1 p2
     slprop_ref_pts_to_gather x p1 p2 m1;
     intro_star (slprop_ref_pts_to x p1 `star` later (equiv p1 p2)) (frame `star` mem_invariant o s0) m1 m2;
     is_ghost_action_refl s0;
-    (), s0
+    (), fm0

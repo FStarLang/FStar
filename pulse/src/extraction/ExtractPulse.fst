@@ -157,7 +157,7 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     when string_of_mlpath p = "Pulse.Lib.Box.box_to_ref" ->
     cb b
   
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _post; init ])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _post; _dup; init ])
     when string_of_mlpath p = "Pulse.Lib.GlobalVar.mk_gvar" ->
     cb { init with expr = MLE_App (init, [ml_unit]) }
   

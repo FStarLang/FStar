@@ -1542,12 +1542,12 @@ and (extract_mlexpr :
                 uu___2);
              FStarC_Extraction_ML_Syntax.mlty = uu___3;
              FStarC_Extraction_ML_Syntax.loc = uu___4;_},
-           uu___5::e1::uu___6)
+           uu___5::uu___6::e1::uu___7)
           when
-          let uu___7 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___7 = "Pulse.Lib.GlobalVar.mk_gvar" ->
-          let uu___7 = extract_mlexpr g e1 in
-          Pulse2Rust_Rust_Syntax.mk_call uu___7
+          let uu___8 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___8 = "Pulse.Lib.GlobalVar.mk_gvar" ->
+          let uu___8 = extract_mlexpr g e1 in
+          Pulse2Rust_Rust_Syntax.mk_call uu___8
             [Pulse2Rust_Rust_Syntax.Expr_lit Pulse2Rust_Rust_Syntax.Lit_unit]
       | FStarC_Extraction_ML_Syntax.MLE_App
           ({
