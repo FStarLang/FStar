@@ -307,12 +307,13 @@ let later_elim (e:inames) (p:slprop)
     assert (is_full s2);
     (), { m = s2; fuel = fm0.fuel }
 
-let buy (e:inames) (n:nat)
-: act (PE.erased bool) e emp (fun b -> if PE.reveal b then later_credit n else emp)
+let buy (e:inames)
+: act (PE.erased bool) e emp (fun b -> if PE.reveal b then later_credit 1 else emp)
 = fun frame fm0 ->
     let s0 = fm0.m in
     sep_laws();
     let m0, m1 = split_mem emp (frame `star` mem_invariant e s0) s0 in
+    let n = 1 in
     let m0' : erased mem = buy n m0 in
     buy_lemma n m0;
     interp_later_credit n m0';
