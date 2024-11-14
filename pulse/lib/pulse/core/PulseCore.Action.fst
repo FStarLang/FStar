@@ -398,31 +398,14 @@ let later_elim (p:slprop)
 
 let rec loop #t () : Dv t = loop ()
 
-let rec buy (n:nat)
-: stt unit emp (fun _ -> later_credit n)
-= if n = 0 then (
-    later_credit_zero ();
-    slprop_equiv_refl (later_credit 0);
-    let h : slprop_post_equiv (fun () -> later_credit 0) (fun () -> later_credit n) =
-      IndefiniteDescription.elim_squash () in
-    I.sub emp (fun () -> later_credit n) () h <|
-      I.return () (fun () -> later_credit 0)
-  ) else
-    I.bind 
-       (stt_of_action0 (ITA.buy emp_inames)) 
-       (fun b ->
-          I.bind (I.frame (if PE.reveal b then later_credit 1 else emp) (buy (n-1))) fun _ ->
-            I.hide_div (fun _ -> 
-              PE.observe_bool b
-                (fun _ ->
-                  let h : slprop_post_equiv (fun () -> later_credit n) (fun () -> later_credit n) =
-                    IndefiniteDescription.elim_squash () in
-                  later_credit_add (n-1) 1;
-                  slprop_equiv_refl (later_credit n);
-                  I.sub (later_credit (n-1) ** (if PE.reveal b then later_credit 1 else emp)) _ _ h <|
-                    I.return () (fun _ -> later_credit n)
-                )
-                (fun _ -> loop ())))
+let buy1 ()
+: stt unit emp (fun _ -> later_credit 1)
+= I.bind 
+    (stt_of_action0 (ITA.buy emp_inames)) 
+    fun b -> I.hide_div fun _ -> 
+      PE.observe_bool b
+        (fun _ -> coerce_eq () <| I.return () fun _ -> later_credit 1)
+        (fun _ -> loop ())
 
 ///////////////////////////////////////////////////////////////////
 // Core operations on references

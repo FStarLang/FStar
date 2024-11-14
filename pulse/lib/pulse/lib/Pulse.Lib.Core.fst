@@ -203,7 +203,16 @@ let later_credit = later_credit
 let timeless_later_credit amt = Sep.timeless_later_credit amt
 let later_credit_zero _ = PulseCore.InstantiatedSemantics.later_credit_zero ()
 let later_credit_add a b = PulseCore.InstantiatedSemantics.later_credit_add a b
-let later_credit_buy amt = A.buy amt
+
+let rec later_credit_buy n =
+  if n = 0 then
+    (later_credit_zero (); coerce_eq () <| return_stt_noeq () fun _ -> later_credit n)
+  else
+    bind_stt (A.buy1 ()) fun _ ->
+      slprop_equiv_unit (later_credit 1); slprop_equiv_elim (emp ** later_credit 1) (later_credit 1);
+      coerce_eq () <| bind_stt #unit #unit #_ #_ #(fun _ -> later_credit n) (frame (later_credit 1) (later_credit_buy (n-1))) fun _ ->
+        later_credit_add (n-1) 1;
+        coerce_eq () <| return_stt_noeq () fun _ -> later_credit n
 
 let later = later
 let later_intro p = A.later_intro p
