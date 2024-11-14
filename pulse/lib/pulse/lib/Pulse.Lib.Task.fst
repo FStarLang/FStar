@@ -789,7 +789,7 @@ fn rec all_tasks_done_inst (t : task_t) (ts : list task_t)
         fold_all_tasks_done_cons t' ts' st;
       }
     }
-  }
+  } 
 }
 
 let pool_done (p : pool) : slprop =
@@ -1209,7 +1209,7 @@ fn put_back_result (p:pool) #f (t : task_t)
   fold (pool_alive #f p);
 }
 
-fn rec worker (#f:perm) (p : pool)
+fn do_work_once (#f:perm) (p : pool)
   requires pool_alive #f p
   ensures  pool_alive #f p
 {
@@ -1218,19 +1218,49 @@ fn rec worker (#f:perm) (p : pool)
     None -> {
       rewrite (if Some? topt then up (Some?.v topt).pre else emp)
            as emp;
-      worker p
     }
     Some t -> {
       rewrite each topt as Some t;
       get_vopt #task_t #t ();
-      (* sigh *)
-      rewrite (fun t -> up t.pre ** pts_to t.h.state #0.5R Running ** task_spotted p t ** task_thunk_typing t) t
-           as up t.pre ** pts_to t.h.state #0.5R Running ** task_spotted p t ** task_thunk_typing t;
       perf_work t;
-      put_back_result p t;
-      worker p
+      put_back_result p t
     }
   }
+}
+
+
+fn rec worker (#f:perm) (p : pool)
+  requires pool_alive #f p
+  ensures  pool_alive #f p
+{
+  do_work_once #f p;
+  worker p
+}
+
+// Await with a bit of helping
+fn await_help
+         (#p:pool)
+         (#post : slprop)
+         (h : handle)
+         (#f:perm)
+  requires pool_alive #f p ** joinable p post h
+  ensures  pool_alive #f p ** post
+{
+  let mut done = false;
+  while (let v = !done; (not v))
+    invariant b.
+      exists* v_done.
+        pool_alive #f p **
+        pts_to done v_done **
+        (if v_done then post else joinable p post h) **
+        pure (b == not v_done)
+  {
+    let b = try_await #p #post h #f;
+    done := b;
+    if (not b) {
+      do_work_once #f p;
+    }
+  };
 }
 
 let ite (b:bool) (p q : slprop) : slprop =
