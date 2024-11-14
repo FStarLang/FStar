@@ -200,6 +200,35 @@ fn split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t)
 }
 
 ghost
+fn ghost_split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t)
+    (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v })
+  requires pts_to s #p v
+  returns res : Ghost.erased (slice t & slice t)
+  ensures
+    (
+    pts_to (fst res) #p (Seq.slice v 0 (SZ.v i)) **
+    pts_to (snd res) #p (Seq.slice v (SZ.v i) (Seq.length v)) **
+    is_split s (fst res) (snd res)
+  )
+{
+    unfold_pts_to s #p v;
+    Seq.lemma_split v (SZ.v i);
+    let elt' = AP.ghost_split s.elt #p i;
+    let s1 = {
+        elt = s.elt;
+        len = i;
+    };
+    fold_pts_to s1 #p (Seq.slice v 0 (SZ.v i));
+    let s2 = {
+        elt = elt';
+        len = s.len `SZ.sub` i;
+    };
+    fold_pts_to s2 #p (Seq.slice v (SZ.v i) (Seq.length v));
+    fold (is_split s s1 s2);
+    (s1, s2)
+}
+
+ghost
 fn join (#t: Type) (s1: slice t) (#p: perm) (#v1: Seq.seq t) (s2: slice t) (#v2: Seq.seq t) (s: slice t)
     requires pts_to s1 #p v1 ** pts_to s2 #p v2 ** is_split s s1 s2
     ensures pts_to s #p (Seq.append v1 v2)
