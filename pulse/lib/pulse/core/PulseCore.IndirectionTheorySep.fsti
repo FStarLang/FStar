@@ -17,7 +17,6 @@
 module PulseCore.IndirectionTheorySep
 module F = FStar.FunctionalExtensionality
 module PM = PulseCore.MemoryAlt
-module PE = PulseCore.PotentiallyErased
 open FStar.Ghost 
 
 let timeless_mem : Type u#4 = PM.mem u#0
@@ -49,8 +48,7 @@ let is_full (m:mem)
 : prop
 = PM.pulse_heap_sig.full_mem_pred (timeless_mem_of m) /\
   level m > credits m
-
-noeq type full_mem = { m: m:mem { is_full m }; fuel: fuel:PE.erased nat { PE.reveal fuel == level m - credits m } }
+let full_mem = m:mem { is_full m  }
 
 val emp : slprop
 val pure (p:prop) : slprop
