@@ -66,15 +66,25 @@ val return
     (x:a)
 : act a r emp_inames (post x) post
 
-val bind
+val bind_ghost
      (#a:Type u#a)
      (#b:Type u#b)
-     (#r:reifiability)
      (#opens:inames)
      (#pre1 #post1 #post2:_)
-     (f:act a r opens pre1 post1)
-     (g:(x:a -> act b r opens (post1 x) post2))
-: act b r opens pre1 post2
+     (f:act a Ghost opens pre1 post1)
+     (g:(x:a -> act b Ghost opens (post1 x) post2))
+: act b Ghost opens pre1 post2
+
+val bind_atomic
+     (#a:Type u#a)
+     (#b:Type u#b)
+     (#r1: reifiability)
+     (#r2: reifiability { r1 == Ghost \/ r2 == Ghost })
+     (#opens:inames)
+     (#pre1 #post1 #post2:_)
+     (f:act a r1 opens pre1 post1)
+     (g:(x:a -> act b r2 opens (post1 x) post2))
+: act b Atomic opens pre1 post2
 
 val frame
      (#a:Type u#a)

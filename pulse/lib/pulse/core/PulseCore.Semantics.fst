@@ -53,6 +53,8 @@ let is_unit #a (x:a) (f:a -> a -> a) =
 noeq
 type state : Type u#(s + 1)= {
   s:Type u#s;
+  is_full_mem: s -> prop;
+  fuel: s -> GTot int;
   pred:Type u#s;
   emp: pred;
   star: pred -> pred -> pred;
@@ -61,7 +63,7 @@ type state : Type u#(s + 1)= {
   laws: squash (associative star /\ commutative star /\ is_unit emp star);
 }
 
-let full_mem (st:state u#s) : Type u#s = st.s
+let full_mem (st:state u#s) : Type u#s = m:st.s { st.is_full_mem m }
 
 (** [post a c] is a postcondition on [a]-typed result *)
 let post (s:state) a = a ^-> s.pred
@@ -77,15 +79,15 @@ let st_sep_aux (st:state)
                (pre:st.pred)
                (post:a -> st.pred) =
   ST.st #(full_mem st) a
-    (fun s0 -> st.interp (pre `st.star` inv s0) s0 )
-    (fun _ x s1 -> st.interp (post x `st.star` inv s1) s1)
+    (fun s0 -> st.fuel s0 > 0 /\ st.interp (pre `st.star` inv s0) s0 )
+    (fun s0 x s1 -> st.fuel s0 - st.fuel s1 <= 1 /\ st.interp (post x `st.star` inv s1) s1)
      
 let st_sep st a pre post = st_sep_aux st st.invariant a pre post
 
-let pnst_sep (st:state u#s) (a:Type u#a) (pre:st.pred) (post:a -> st.pred) =
+let pnst_sep (st:state u#s) (a:Type u#a) (prefuel postfuel: nat) (pre:st.pred) (post:a -> st.pred) =
   PNST.pnst #(full_mem st) a
-    (fun s0 -> st.interp (pre `st.star` st.invariant s0) s0 )
-    (fun _ x s1 -> st.interp (post x `st.star` st.invariant s1) s1)
+    (fun s0 -> st.fuel s0 >= prefuel /\ st.interp (pre `st.star` st.invariant s0) s0 )
+    (fun _ x s1 -> st.fuel s1 >= postfuel /\ st.interp (post x `st.star` st.invariant s1) s1)
 
 
 (** [action c s]: atomic actions are, intuitively, single steps of
@@ -179,8 +181,10 @@ let rec step
     (#q:post st a)
     (f:m a p q)
     (frame:st.pred)
+    (fuel: erased pos)
 : Tot (pnst_sep st
         (step_result a q frame)
+        fuel (fuel - 1)
         (p `st.star` frame)
         (fun x -> Step?.next x `st.star` frame))
       (decreases f)
@@ -189,7 +193,7 @@ let rec step
     weaken <| return <| Step (q x) (Ret x)
   | Act f k ->
     let k (x:_) 
-    : Dv (pnst_sep st (step_result a q frame)
+    : Dv (pnst_sep st (step_result a q frame) (fuel-1) (fuel-1)
                     (f.post x `st.star` frame)
                     (fun v -> Step?.next v `st.star` frame))
     = let n : m a (f.post x) q = k x in
@@ -202,19 +206,20 @@ let rec step
     let q : post st a = coerce_eq () q in
     let choose (b:bool)
     : pnst_sep st
-        (step_result a q frame)
+        (step_result a q frame) fuel (fuel-1)
         (p `st.star` frame)
         (fun x -> (Step?.next x `st.star` frame))
     = if b
       then weaken <| 
-           bind (step m0 (prek `st.star` frame))
+           bind (step m0 (prek `st.star` frame) fuel)
                 (fun x -> return <| Step _ <| Par (Step?.m x) k)
       else weaken <| 
-           bind (step k (pre0 `st.star` frame))
+           bind (step k (pre0 `st.star` frame) fuel)
                 (fun x -> return <| Step _ <| Par m0 (Step?.m x))
     in
     weaken <| bind (lift <| NST.flip()) choose 
 
+let rec loop #t () : Dv t = loop ()
 
 (** The main partial correctness result:
  *    m computations can be interpreted into nmst_sep computations 
@@ -224,20 +229,21 @@ let rec run (#st:state u#s)
             (#a:Type u#a) 
             (#post:post st a)
             (f:m a pre post)
-: Dv (pnst_sep st a pre post)
+            (fuel: nat)
+: Dv (pnst_sep st a fuel 0 pre post)
 = match f with
   | Ret x -> 
     weaken <| return x
   | _ ->
+    if fuel = 0 then loop () else
     let k (s:step_result a post st.emp)
-    : Dv (pnst_sep st a (Step?.next s) post)
+    : Dv (pnst_sep st a (fuel - 1) 0 (Step?.next s) post)
     = let Step _ f = s in
-      run f
+      run f _
     in
-    weaken <| bind (step f st.emp) k
+    weaken <| bind (step f st.emp fuel) k
     
-let ctr = nat
-let tape = ctr -> bool
+let tape = nat -> bool
 (** The main partial correctness result:
  *    m computations can be interpreted into nmst_sep computations 
  *)    
@@ -248,9 +254,9 @@ let run_alt (#st:state u#s)
             (f:m a pre post)
             (s0:full_mem st { st.interp (st.star pre (st.invariant s0)) s0 })
             (t:tape)
-            (ctr:ctr)
+            (fuel: nat { st.fuel s0 >= fuel })
 : Dv (res:(a & full_mem st) { st.interp (st.star (post res._1) (st.invariant res._2)) res._2 })
-= let (x, s, _) = repr (run f) s0 t ctr in
+= let (x, s, _) = repr (run f fuel) s0 t 0 in
   (x, s)
 
 
