@@ -95,9 +95,9 @@ let bind_atomic
     (e1:stt_atomic a #obs1 opens pre1 post1)
     (e2:(x:a -> stt_atomic b #obs2 opens (post1 x) post2))
 = match r_of_obs obs1, r_of_obs obs2 with
-  | Ghost, Ghost -> A.bind e1 e2
-  | Ghost, _ -> A.bind (A.lift_ghost_atomic e1) e2
-  | _, Ghost -> A.bind e1 (fun x -> A.lift_ghost_atomic (e2 x))
+  | Ghost, Ghost -> A.bind_ghost e1 e2
+  | Ghost, _ -> A.bind_atomic e1 e2
+  | _, Ghost -> A.bind_atomic e1 e2
 
 let lift_observability
     (#a:Type u#a)
@@ -205,7 +205,7 @@ let bind_ghost
 : stt_ghost b opens pre1 post2
 = let e1 = Ghost.reveal e1 in
   let e2 = FStar.Ghost.Pull.pull (fun (x:a) -> Ghost.reveal (e2 x)) in
-  Ghost.hide (A.bind e1 e2)
+  Ghost.hide (A.bind_ghost e1 e2)
 
 let lift_ghost_neutral
     (#a:Type u#a)
@@ -312,7 +312,7 @@ let with_invariant_g #a #fp #fp' #f_opens #p i $f =
 let invariant_name_identifies_invariant p q i j = Ghost.hide (A.invariant_name_identifies_invariant p q i)
 let later_intro p = Ghost.hide (A.later_intro p)
 let later_elim p = Ghost.hide (A.later_elim p)
-let buy = A.buy
+let buy1 = A.buy1
 
 let pts_to_not_null #a #p r v = Ghost.hide (A.pts_to_not_null #a #p r v)
 let alloc #a #pcm x = A.alloc x

@@ -25,6 +25,7 @@ val mem: Type u#4
 val timeless_mem_of: mem -> timeless_mem
 val level (k:mem) : GTot nat
 val credits (k:mem) : GTot nat
+let budget (m: mem) : GTot int = level m - credits m - 1
 val update_timeless_mem (m: mem) (p: timeless_mem) :
   n:mem { timeless_mem_of n == p /\ level m == level n /\ credits m == credits n }
 
@@ -46,8 +47,7 @@ val update_ghost :
 
 let is_full (m:mem) 
 : prop
-= PM.pulse_heap_sig.full_mem_pred (timeless_mem_of m) /\
-  level m > credits m
+= PM.pulse_heap_sig.full_mem_pred (timeless_mem_of m)
 let full_mem = m:mem { is_full m  }
 
 val emp : slprop
@@ -295,26 +295,6 @@ val spend_disjoint (m0 m1:mem)
     disjoint (spend m0) m1 /\
     spend (join m0 m1) == join (spend m0) m1)
 
-val buy_mem (n:FStar.Ghost.erased nat) (m:mem) : m':mem {
-  is_ghost_action m m' /\
-  timeless_mem_of m' == timeless_mem_of m /\
-  (hogs_dom m == hogs_dom m')
-}
-let buy (n:nat) (m:mem) : mem = buy_mem n m
-val buy_lemma (n:nat) (m:mem)
-: Lemma (
-  let m' = buy n m in
-  level m' == level m /\
-  credits m' == credits m + n
-)
-val buy_disjoint (n:nat) (m0 m1:mem)
-: Lemma
-  (requires
-    disjoint m0 m1)
-  (ensures
-    disjoint (buy n m0) m1 /\
-    buy n (join m0 m1) == join (buy n m0) m1)
-
 let single (i:iref) : inames = FStar.GhostSet.singleton deq_iref i
 let add_inv (e:inames) (i:iref)
 : inames
@@ -404,9 +384,14 @@ val mem_invariant_spend (e:inames) (m:mem)
 : Lemma
   (ensures mem_invariant e m == mem_invariant e (spend_mem m))
 
-val mem_invariant_buy (e:inames) (n:nat) (m:mem)
-: Lemma
-  (ensures mem_invariant e m == mem_invariant e (buy_mem n m))
+val buy1_mem (m: mem { budget m > 0 }) : m': mem {
+  credits m' == 1 /\
+  disjoint m' m /\
+  (forall e. mem_invariant e m == mem_invariant e (join_mem m' m)) /\
+  (forall e. inames_ok e m <==> inames_ok e (join_mem m' m)) /\
+  (is_full m ==> is_full (join_mem m' m)) /\
+  is_ghost_action m (join_mem m' m)
+}
 
 val inames_live (e:inames) : slprop
 val inames_live_empty () : squash (emp == inames_live GhostSet.empty)

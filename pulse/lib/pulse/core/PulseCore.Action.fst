@@ -181,27 +181,14 @@ let bind_pre_act_ghost
 let bind_pre_act_atomic
      (#a:Type u#a)
      (#b:Type u#b)
+     (#r1: reifiability)
+     (#r2: reifiability { r1 == Ghost \/ r2 == Ghost })
      (#except:inames)
      (#pre1 #post1 #post2:_)
-     (f:pre_act a Atomic except pre1 post1)
-     (g:(x:a -> pre_act b Atomic except (post1 x) post2))
+     (f:pre_act a r1 except pre1 post1)
+     (g:(x:a -> pre_act b r2 except (post1 x) post2))
 : pre_act b Atomic except pre1 post2
 = fun frame -> ST.bind (f frame) (fun x -> g x frame)
-
-let bind_pre_act
-     (#a:Type u#a)
-     (#b:Type u#b)
-     (#r:reifiability)
-     (#except:inames)
-     (#pre1 #post1 #post2:_)
-     (f:pre_act a r except pre1 post1)
-     (g:(x:a -> pre_act b r except (post1 x) post2))
-: pre_act b r except pre1 post2
-= match r with
-  | Ghost -> 
-    bind_pre_act_ghost #a #b #except #pre1 #post1 #post2 f g
-  | Atomic ->
-    bind_pre_act_atomic #a #b #except #pre1 #post1 #post2 f g
 
 let frame_pre_act_ghost
      (#a:Type u#a)
@@ -250,16 +237,27 @@ let return
 : act a r emp_inames (post x) post
 = fun #ictx -> return_pre_act #a #ictx #post x
 
-let bind
+let bind_ghost
      (#a:Type u#a)
      (#b:Type u#b)
-     (#r:reifiability)
      (#opens:inames)
      (#pre1 #post1 #post2:_)
-     (f:act a r opens pre1 post1)
-     (g:(x:a -> act b r opens (post1 x) post2))
-: act b r opens pre1 post2
-= fun #ictx -> bind_pre_act #a #b #r #ictx #pre1 #post1 #post2 (f #ictx) (fun x -> g x #ictx)
+     (f:act a Ghost opens pre1 post1)
+     (g:(x:a -> act b Ghost opens (post1 x) post2))
+: act b Ghost opens pre1 post2
+= fun #ictx -> bind_pre_act_ghost #a #b #ictx #pre1 #post1 #post2 (f #ictx) (fun x -> g x #ictx)
+
+let bind_atomic
+     (#a:Type u#a)
+     (#b:Type u#b)
+     (#r1: reifiability)
+     (#r2: reifiability { r1 == Ghost \/ r2 == Ghost })
+     (#opens:inames)
+     (#pre1 #post1 #post2:_)
+     (f:act a r1 opens pre1 post1)
+     (g:(x:a -> act b r2 opens (post1 x) post2))
+: act b Atomic opens pre1 post2
+= fun #ictx -> bind_pre_act_atomic #a #b #r1 #r2 #ictx #pre1 #post1 #post2 (f #ictx) (fun x -> g x #ictx)
 
 let frame
      (#a:Type u#a)
@@ -395,23 +393,10 @@ let later_elim (p:slprop)
 : act unit Ghost emp_inames (later p ** later_credit 1) (fun _ -> p)
 = fun #ictx -> ITA.later_elim ictx p
 
-let maybe_p (p:slprop) (b:erased bool) : slprop = if b then p else emp
+let buy1 ()
+: stt unit emp (fun _ -> later_credit 1)
+= stt_of_action0 (ITA.buy emp_inames)
 
-let maybe_buy (n:nat)
-: stt (erased bool) emp (maybe_p (later_credit n))
-= stt_of_action0 (ITA.buy emp_inames n)
-
-let rec reveal_div #t (b:erased bool) (k: squash (reveal b == true) -> t) : Dv t = 
-  reveal_div b k
-
-let buy (n:nat)
-: stt unit emp (fun _ -> later_credit n)
-= I.bind 
-       (maybe_buy n) 
-       (fun (b:erased bool) ->
-        I.hide_div (fun _ -> 
-          reveal_div b (fun _ -> 
-          coerce_eq () <| I.return () (fun _ -> later_credit n))))
 ///////////////////////////////////////////////////////////////////
 // Core operations on references
 ///////////////////////////////////////////////////////////////////

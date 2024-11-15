@@ -18,10 +18,12 @@ let _ACTION
   (frame:slprop)
 = HST.st #full_mem a
     (requires fun m0 ->
+        budget m0 >= 0 /\ (ATOMIC? ak ==> budget m0 > 0) /\
         inames_ok except m0 /\
         interp (expects `star` frame `star` mem_invariant except m0) m0)
     (ensures fun m0 x m1 ->
-        (GHOST? ak ==> is_ghost_action m0 m1) /\
+        budget m0 - budget m1 <= 1 /\
+        (GHOST? ak ==> is_ghost_action m0 m1 /\ budget m0 == budget m1) /\
         inames_ok except m1 /\
         interp (provides x `star` frame `star` mem_invariant except m1) m1 )
 
@@ -47,8 +49,8 @@ val later_intro (e:inames) (p:slprop)
 val later_elim (e:inames) (p:slprop) 
 : ghost_act unit e (later p `star` later_credit 1) (fun _ -> p)
 
-val buy (e:inames) (n:FStar.Ghost.erased nat)
-: act (FStar.Ghost.erased bool) e emp (fun b -> if b then later_credit n else emp)
+val buy (e:inames)
+: act unit e emp (fun _ -> later_credit 1)
 
 val dup_inv (e:inames) (i:iref) (p:slprop)
 : ghost_act unit e 

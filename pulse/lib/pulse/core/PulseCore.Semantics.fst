@@ -42,12 +42,11 @@ let is_unit #a (x:a) (f:a -> a -> a) =
 (**
  * A state typeclass:
  *  - [s] is the type of states
- *  - [is_full_mem] a refinement on states to the entire heap used at runtime
+ *  - [budget] is the amount of fuel needed to run actions on [s]
  *  - [pred] is the type of state assertions
  *  - [emp] is the empty state assertion
  *  - [star] is the separating conjunction of state assertions
  *  - [interp p s] is the interpretation of a state assertion [p] in a state [s]
- *  - [evolves] is a preorder on states, constraining how it evolves
  *  - [invariant] is an internal invariant that a caller can instantiate and is maintained
  *                by every action and the semantics as a whole
  *  - [laws] state that {pred, emp, star} are a commutative monoid
@@ -55,7 +54,7 @@ let is_unit #a (x:a) (f:a -> a -> a) =
 noeq
 type state : Type u#(s + 1)= {
   s:Type u#s;
-  is_full_mem: s -> prop;
+  budget: s -> GTot int;
   pred:Type u#s;
   emp: pred;
   star: pred -> pred -> pred;
@@ -63,8 +62,6 @@ type state : Type u#(s + 1)= {
   invariant: s -> pred;
   laws: squash (associative star /\ commutative star /\ is_unit emp star);
 }
-
-let full_mem (st:state u#s) : Type u#s = m:st.s { st.is_full_mem m }
 
 (** [post a c] is a postcondition on [a]-typed result *)
 let post (s:state) a = a ^-> s.pred
@@ -75,20 +72,20 @@ let post (s:state) a = a ^-> s.pred
     pst_sep is analogous, except computation in pst_sep are also total
  **)
 let st_sep_aux (st:state)
-               (inv:full_mem st -> st.pred)
+               (inv:st.s -> st.pred)
                (a:Type)
                (pre:st.pred)
                (post:a -> st.pred) =
-  ST.st #(full_mem st) a
-    (fun s0 -> st.interp (pre `st.star` inv s0) s0 )
-    (fun _ x s1 -> st.interp (post x `st.star` inv s1) s1)
+  ST.st #(st.s) a
+    (fun s0 -> st.budget s0 > 0 /\ st.interp (pre `st.star` inv s0) s0 )
+    (fun s0 x s1 -> st.budget s0 - st.budget s1 <= 1 /\ st.interp (post x `st.star` inv s1) s1)
      
 let st_sep st a pre post = st_sep_aux st st.invariant a pre post
 
-let pnst_sep (st:state u#s) (a:Type u#a) (pre:st.pred) (post:a -> st.pred) =
-  PNST.pnst #(full_mem st) a
-    (fun s0 -> st.interp (pre `st.star` st.invariant s0) s0 )
-    (fun _ x s1 -> st.interp (post x `st.star` st.invariant s1) s1)
+let pnst_sep (st:state u#s) (a:Type u#a) (prefuel postfuel: nat) (pre:st.pred) (post:a -> st.pred) =
+  PNST.pnst #(st.s) a
+    (fun s0 -> st.budget s0 >= prefuel /\ st.interp (pre `st.star` st.invariant s0) s0 )
+    (fun _ x s1 -> st.budget s1 >= postfuel /\ st.interp (post x `st.star` st.invariant s1) s1)
 
 
 (** [action c s]: atomic actions are, intuitively, single steps of
@@ -123,7 +120,7 @@ let as_post (#st:state u#s) (#a:Type u#a) (p:st.pred)
  *  pre- and post-conditions so that we can do proofs
  *  intrinsically.
  *
- *  Universe-polymorphic im both the state and result type
+ *  Universe-polymorphic in both the state and result type
  *
  *)
 noeq
@@ -140,17 +137,14 @@ type m (#st:state u#s) : (a:Type u#a) -> st.pred -> post st a -> Type u#(max (ac
       f:action st b ->
       k:(x:b -> Dv (m a (f.post x) post)) ->
       m a f.pre post
-  | Par:
+  | Par: // runs m0 concurrently without waiting for it
       #pre0:_ ->
-      #post0:_ ->
-      m0:m (U.raise_t unit) pre0 (as_post post0) ->
-      #pre1:_ ->
-      #post1:_ ->
-      m1:m (U.raise_t unit) pre1 (as_post post1) ->
-      #a:_ ->
-      #post:_ ->
-      k:m a (st.star post0 post1) post ->
-      m a (st.star pre0 pre1) post
+      m0:m (U.raise_t unit) pre0 (as_post #st st.emp) ->
+      #a:Type u#a ->
+      #pre:_ ->
+      #post:post st a ->
+      k:m a pre post ->
+      m a (pre0 `st.star` pre) post
 
 /// The semantics comes in two levels:
 ///
@@ -185,8 +179,10 @@ let rec step
     (#q:post st a)
     (f:m a p q)
     (frame:st.pred)
+    (fuel: erased pos)
 : Tot (pnst_sep st
         (step_result a q frame)
+        fuel (fuel - 1)
         (p `st.star` frame)
         (fun x -> Step?.next x `st.star` frame))
       (decreases f)
@@ -195,32 +191,33 @@ let rec step
     weaken <| return <| Step (q x) (Ret x)
   | Act f k ->
     let k (x:_) 
-    : Dv (pnst_sep st (step_result a q frame)
+    : Dv (pnst_sep st (step_result a q frame) (fuel-1) (fuel-1)
                     (f.post x `st.star` frame)
                     (fun v -> Step?.next v `st.star` frame))
     = let n : m a (f.post x) q = k x in
       weaken (return (Step _ n))
     in
     weaken <| bind (PNST.lift <| (NST.lift <| f.step frame)) k
-  | Par #_ #pre0 #post0 (Ret x0) #pre1 #post1 (Ret x1) #a #post k ->
-    weaken <| return <| Step _ k
-  | Par #_ #pre0 #post0 m0 #pre1 #post1 m1 #a #postk k ->
+  | Par #_ #pre0 (Ret x0) #a #pre #post k ->
+    weaken <| return <| Step pre k
+  | Par #_ #pre0 m0 #a #prek #postk k ->
     let q : post st a = coerce_eq () q in
     let choose (b:bool)
     : pnst_sep st
-        (step_result a q frame)
+        (step_result a q frame) fuel (fuel-1)
         (p `st.star` frame)
         (fun x -> (Step?.next x `st.star` frame))
     = if b
       then weaken <| 
-           bind (step m0 (pre1 `st.star` frame))
-                (fun x -> return <| Step _ <| Par (Step?.m x) m1 k)
+           bind (step m0 (prek `st.star` frame) fuel)
+                (fun x -> return <| Step _ <| Par (Step?.m x) k)
       else weaken <| 
-           bind (step m1 (pre0 `st.star` frame))
-                (fun x -> return <| Step _ <| Par m0 (Step?.m x) k) 
+           bind (step k (pre0 `st.star` frame) fuel)
+                (fun x -> return <| Step _ <| Par m0 (Step?.m x))
     in
     weaken <| bind (lift <| NST.flip()) choose 
 
+let rec loop #t () : Dv t = loop ()
 
 (** The main partial correctness result:
  *    m computations can be interpreted into nmst_sep computations 
@@ -230,20 +227,21 @@ let rec run (#st:state u#s)
             (#a:Type u#a) 
             (#post:post st a)
             (f:m a pre post)
-: Dv (pnst_sep st a pre post)
+            (fuel: nat)
+: Dv (pnst_sep st a fuel 0 pre post)
 = match f with
   | Ret x -> 
     weaken <| return x
   | _ ->
+    if fuel = 0 then loop () else
     let k (s:step_result a post st.emp)
-    : Dv (pnst_sep st a (Step?.next s) post)
+    : Dv (pnst_sep st a (fuel - 1) 0 (Step?.next s) post)
     = let Step _ f = s in
-      run f
+      run f _
     in
-    weaken <| bind (step f st.emp) k
+    weaken <| bind (step f st.emp fuel) k
     
-let ctr = nat
-let tape = ctr -> bool
+let tape = nat -> bool
 (** The main partial correctness result:
  *    m computations can be interpreted into nmst_sep computations 
  *)    
@@ -252,11 +250,11 @@ let run_alt (#st:state u#s)
             (#a:Type u#a) 
             (#post:post st a)
             (f:m a pre post)
-            (s0:full_mem st { st.interp (st.star pre (st.invariant s0)) s0 })
+            (s0:st.s { st.interp (st.star pre (st.invariant s0)) s0 })
             (t:tape)
-            (ctr:ctr)
-: Dv (res:(a & full_mem st) { st.interp (st.star (post res._1) (st.invariant res._2)) res._2 })
-= let (x, s, _) = repr (run f) s0 t ctr in
+            (fuel: nat { st.budget s0 >= fuel })
+: Dv (res:(a & st.s) { st.interp (st.star (post res._1) (st.invariant res._2)) res._2 })
+= let (x, s, _) = repr (run f fuel) s0 t 0 in
   (x, s)
 
 
@@ -304,17 +302,12 @@ let rec mbind
     | Ret x -> g x
     | Act act k ->
       Act act (fun x -> mbind (k x) g)
-    | Par #_ #pre0 #post0 ml
-             #pre1 #post1 mr
-             #postk k ->
-      let k : m b (post0 `st.star` post1) r = mbind k g in
-      let ml' : m (U.raise_t u#0 u#b unit) pre0 (as_post post0) =
-         mbind ml (fun _ -> Ret #_ #(U.raise_t u#0 u#b unit) #(as_post post0) (U.raise_val u#0 u#b ()))
+    | Par #_ #pre0 ml #_ #prek #postk k ->
+      let k : m b prek r = mbind k g in
+      let ml' : m (U.raise_t u#0 u#b unit) pre0 (as_post st.emp) =
+         mbind ml (fun _ -> Ret #_ #(U.raise_t u#0 u#b unit) #(as_post st.emp) (U.raise_val u#0 u#b ()))
       in
-      let mr' : m (U.raise_t u#0 u#b unit) pre1 (as_post post1) =
-         mbind mr (fun _ -> Ret #_ #(U.raise_t u#0 u#b unit) #(as_post post1) (U.raise_val u#0 u#b ()))
-      in
-      Par ml' mr' k
+      Par ml' k
 
 let act_as_m0
     (#st:state u#s)
@@ -402,29 +395,19 @@ let rec frame (#st:state u#s)
      | Ret x -> Ret x
      | Act f k ->
        Act (frame_action f fr) (fun x -> frame fr (k x))
-     | Par #_ #pre0 #post0 m0 #pre1 #post1 m1 #postk k ->
-       let m0'
-         : m (U.raise_t u#0 u#a unit) (pre0 `st.star` fr) 
-             (F.on_dom _ (fun x -> (as_post post0) x `st.star` fr))
-         = frame fr m0 in
-       let m0'
-         : m (U.raise_t u#0 u#a unit) (pre0 `st.star` fr) (as_post (post0 `st.star` fr))
-         = m0'
-       in
+     | Par #_ #pre0 m0 #_ #prek #postk k ->
        let k' = frame fr k in
-       Par m0' m1 k'
+       Par m0 k'
 
 (**
- * [par]: Parallel composition
+ * [fork]: Parallel execution using fork
  * Works by just using the `Par` node and `Ret` as its continuation
  **)
-let par (#st:state u#s)
-        #p0 #q0 (m0:m unit p0 (as_post q0))
-        #p1 #q1 (m1:m unit p1 (as_post q1))
- : Dv (m u#s u#0 u#act unit (p0 `st.star` p1) (as_post (q0 `st.star` q1)))
- = let m0' = mbind m0 (fun _ -> Ret #_ #_ #(as_post q0) (U.raise_val u#0 u#0 ())) in
-   let m1' = mbind m1 (fun _ -> Ret #_ #_ #(as_post q1) (U.raise_val u#0 u#0 ())) in
-   Par m0' m1' (Ret ())
+let fork (#st:state u#s)
+        #p0 (m0:m unit p0 (as_post st.emp))
+ : Dv (m u#s u#0 u#act unit p0 (as_post st.emp))
+ = let m0' = mbind m0 (fun _ -> Ret #st #_ #(as_post st.emp) (U.raise_val ())) in
+   Par m0' (Ret ())
 
 let conv (#st:state u#s) (a:Type u#a)
          (#p:st.pred)

@@ -813,18 +813,6 @@ let spend_lemma m = ()
 let spend_disjoint m0 m1 =
   mem_ext (spend (join m0 m1)) (join (spend m0) m1) fun _ -> ()
 
-let buy_mem n m =
-  PM.ghost_action_preorder ();
-  let m' = pack (level m) {
-    unpack m with
-    saved_credits = credits_ m + n;
-  } in
-  GS.lemma_equal_intro (hogs_dom m) (hogs_dom m');
-  m'
-let buy_lemma n m = ()
-let buy_disjoint n m0 m1 =
-  mem_ext (buy n (join m0 m1)) (join (buy n m0) m1) fun _ -> ()
-
 let iname_ok i m = hogs_iname_ok i m
 let inames_ok_single i p m = ()
 let iname_ok_inames_ok i m = ()
@@ -1061,9 +1049,6 @@ let mem_invariant_age e m0 m1 =
 let mem_invariant_spend e m =
   hogs_invariant_congr2 e m (spend m)
 
-let mem_invariant_buy e n m =
-  hogs_invariant_congr2 e m (buy n m)
-
 let hogs_single n (a: iref) (p: slprop) : mem =
   let m = pack n {
     saved_credits = 0;
@@ -1093,6 +1078,14 @@ let hogs_fresh_inv (p: slprop) (is: mem) (a: iref { None? (read is a) }) :
   let is' = hogs_single (level_ is) a p in
   hogs_single_invariant (level_ is) a p;
   is'
+
+let buy1_mem m =
+  PM.ghost_action_preorder ();
+  join_empty m;
+  let m' = update_credits (empty (level m)) 1 in
+  introduce forall (e: inames). mem_invariant e m == mem_invariant e (join_mem m' m) with
+    hogs_invariant_congr2 e m (join_mem m' m);
+  m'
 
 let inames_live (e:inames) : slprop =
   reveal_mem_le ();
