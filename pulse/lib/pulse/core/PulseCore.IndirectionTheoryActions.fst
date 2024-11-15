@@ -310,43 +310,15 @@ let later_elim (e:inames) (p:slprop)
     (), s2
 
 let buy (e:inames)
-: act (erased bool) e emp (fun b -> if b then later_credit 1 else emp)
-= fun frame s0 ->
-    sep_laws();
-    let m0, m1 = split_mem emp (frame `star` mem_invariant e s0) s0 in
-    let n = 1 in
-    let m0' : erased mem = buy n m0 in
-    buy_lemma n m0;
-    interp_later_credit n m0';
-    assert (interp (later_credit n) m0');
-    buy_disjoint n m0 m1;
-    assert (disjoint m0' m1);
-    intro_star (later_credit n) (frame `star` mem_invariant e s0) m0' m1;
-    let m' : erased mem = join m0' m1 in
-    let s1 = buy_mem n s0 in
-    assert (reveal m' == s1);
-    mem_invariant_buy e n s0;
-    inames_ok_update e s0 s1;
-    let ok : erased bool = level s1 > credits s1 in
-    let s : (s:erased mem {
-      is_ghost_action s0 s /\
-      is_full s /\
-      interp 
-        ((if ok then later_credit n else emp) `star`
-         frame `star`
-         mem_invariant e s) s
-    })
-    = if ok
-      then (
-        hide s1
-      )
-      else (
-        is_ghost_action_refl s0;
-        hide s0
-      )
-    in
-    let s1 = update_ghost s0 s in
-    ok, s1
+: act unit e emp (fun _ -> later_credit 1)
+= fun frame m0 -> (
+    let m1 = buy1_mem m0 in
+    interp_later_credit 1 m1;
+    intro_star (later_credit 1) (emp `star` frame `star` mem_invariant e m0) m1 m0;
+    disjoint_join_levels m1 m0;
+    sep_laws ();
+    (), join_mem m1 m0
+)
 
 let dup_inv (e:inames) (i:iref) (p:slprop)
 : ghost_act unit e 
