@@ -25,7 +25,7 @@ val mem: Type u#4
 val timeless_mem_of: mem -> timeless_mem
 val level (k:mem) : GTot nat
 val credits (k:mem) : GTot nat
-let fuel (m: mem) : GTot int = level m - credits m - 1
+let budget (m: mem) : GTot int = level m - credits m - 1
 val update_timeless_mem (m: mem) (p: timeless_mem) :
   n:mem { timeless_mem_of n == p /\ level m == level n /\ credits m == credits n }
 
@@ -384,7 +384,7 @@ val mem_invariant_spend (e:inames) (m:mem)
 : Lemma
   (ensures mem_invariant e m == mem_invariant e (spend_mem m))
 
-val buy1_mem (m: mem { fuel m > 0 }) : m': mem {
+val buy1_mem (m: mem { budget m > 0 }) : m': mem {
   credits m' == 1 /\
   disjoint m' m /\
   (forall e. mem_invariant e m == mem_invariant e (join_mem m' m)) /\

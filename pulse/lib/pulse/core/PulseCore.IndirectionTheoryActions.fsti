@@ -18,12 +18,12 @@ let _ACTION
   (frame:slprop)
 = HST.st #full_mem a
     (requires fun m0 ->
-        fuel m0 >= 0 /\ (ATOMIC? ak ==> fuel m0 > 0) /\
+        budget m0 >= 0 /\ (ATOMIC? ak ==> budget m0 > 0) /\
         inames_ok except m0 /\
         interp (expects `star` frame `star` mem_invariant except m0) m0)
     (ensures fun m0 x m1 ->
-        fuel m0 - fuel m1 <= 1 /\
-        (GHOST? ak ==> is_ghost_action m0 m1 /\ fuel m0 == fuel m1) /\
+        budget m0 - budget m1 <= 1 /\
+        (GHOST? ak ==> is_ghost_action m0 m1 /\ budget m0 == budget m1) /\
         inames_ok except m1 /\
         interp (provides x `star` frame `star` mem_invariant except m1) m1 )
 
