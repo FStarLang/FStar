@@ -32,9 +32,8 @@ let laws ()
 = Sep.sep_laws()
 
 let state0 (e:inames) : Sem.state u#4 = {
-    s = Sep.mem;
-    is_full_mem = Sep.is_full;
-    fuel = Sep.fuel;
+    s = Sep.full_mem;
+    budget = Sep.budget;
     pred = slprop;
     emp = emp;
     star = star;

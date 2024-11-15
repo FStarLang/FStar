@@ -42,6 +42,7 @@ let is_unit #a (x:a) (f:a -> a -> a) =
 (**
  * A state typeclass:
  *  - [s] is the type of states
+ *  - [budget] is the amount of fuel needed to run actions on [s]
  *  - [pred] is the type of state assertions
  *  - [emp] is the empty state assertion
  *  - [star] is the separating conjunction of state assertions
@@ -53,8 +54,7 @@ let is_unit #a (x:a) (f:a -> a -> a) =
 noeq
 type state : Type u#(s + 1)= {
   s:Type u#s;
-  is_full_mem: s -> prop;
-  fuel: s -> GTot int;
+  budget: s -> GTot int;
   pred:Type u#s;
   emp: pred;
   star: pred -> pred -> pred;
@@ -62,8 +62,6 @@ type state : Type u#(s + 1)= {
   invariant: s -> pred;
   laws: squash (associative star /\ commutative star /\ is_unit emp star);
 }
-
-let full_mem (st:state u#s) : Type u#s = m:st.s { st.is_full_mem m }
 
 (** [post a c] is a postcondition on [a]-typed result *)
 let post (s:state) a = a ^-> s.pred
@@ -74,20 +72,20 @@ let post (s:state) a = a ^-> s.pred
     pst_sep is analogous, except computation in pst_sep are also total
  **)
 let st_sep_aux (st:state)
-               (inv:full_mem st -> st.pred)
+               (inv:st.s -> st.pred)
                (a:Type)
                (pre:st.pred)
                (post:a -> st.pred) =
-  ST.st #(full_mem st) a
-    (fun s0 -> st.fuel s0 > 0 /\ st.interp (pre `st.star` inv s0) s0 )
-    (fun s0 x s1 -> st.fuel s0 - st.fuel s1 <= 1 /\ st.interp (post x `st.star` inv s1) s1)
+  ST.st #(st.s) a
+    (fun s0 -> st.budget s0 > 0 /\ st.interp (pre `st.star` inv s0) s0 )
+    (fun s0 x s1 -> st.budget s0 - st.budget s1 <= 1 /\ st.interp (post x `st.star` inv s1) s1)
      
 let st_sep st a pre post = st_sep_aux st st.invariant a pre post
 
 let pnst_sep (st:state u#s) (a:Type u#a) (prefuel postfuel: nat) (pre:st.pred) (post:a -> st.pred) =
-  PNST.pnst #(full_mem st) a
-    (fun s0 -> st.fuel s0 >= prefuel /\ st.interp (pre `st.star` st.invariant s0) s0 )
-    (fun _ x s1 -> st.fuel s1 >= postfuel /\ st.interp (post x `st.star` st.invariant s1) s1)
+  PNST.pnst #(st.s) a
+    (fun s0 -> st.budget s0 >= prefuel /\ st.interp (pre `st.star` st.invariant s0) s0 )
+    (fun _ x s1 -> st.budget s1 >= postfuel /\ st.interp (post x `st.star` st.invariant s1) s1)
 
 
 (** [action c s]: atomic actions are, intuitively, single steps of
@@ -252,10 +250,10 @@ let run_alt (#st:state u#s)
             (#a:Type u#a) 
             (#post:post st a)
             (f:m a pre post)
-            (s0:full_mem st { st.interp (st.star pre (st.invariant s0)) s0 })
+            (s0:st.s { st.interp (st.star pre (st.invariant s0)) s0 })
             (t:tape)
-            (fuel: nat { st.fuel s0 >= fuel })
-: Dv (res:(a & full_mem st) { st.interp (st.star (post res._1) (st.invariant res._2)) res._2 })
+            (fuel: nat { st.budget s0 >= fuel })
+: Dv (res:(a & st.s) { st.interp (st.star (post res._1) (st.invariant res._2)) res._2 })
 = let (x, s, _) = repr (run f fuel) s0 t 0 in
   (x, s)
 
