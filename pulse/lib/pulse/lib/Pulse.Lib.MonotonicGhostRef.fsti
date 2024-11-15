@@ -21,13 +21,22 @@ val pts_to (#t:Type)
            (r:mref p)
            (#f:perm)
            (v:t)
-: slprop2
+: slprop
+
+val pts_to_is_timeless (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (v:t)
+: Lemma (timeless (pts_to r #f v))
+        [SMTPat (timeless (pts_to r #f v))]
 
 val snapshot (#t:Type)
              (#p:preorder t) 
              (r:mref p)
              (v:t)
-: slprop2
+: slprop
+
+val snapshot_is_timeless (#t:Type) (#p:preorder t) (r:mref p) (v:t)
+: Lemma (timeless (snapshot r v))
+        [SMTPat (timeless (snapshot r v))]
+
   
 ghost
 fn alloc (#t:Type0) (#p:preorder t) (v:t)

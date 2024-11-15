@@ -136,7 +136,7 @@ let pts_to (#elt: Type u#1) (a: array elt) (#p: perm) (s: Seq.seq elt) : Tot slp
     Seq.length s == length a
   )
 
-let pts_to_is_slprop2 _ _ _ = ()
+let pts_to_timeless _ _ _ = ()
 
 let mk_array
     (#elt: Type u#1)
@@ -277,15 +277,6 @@ ensures pts_to a (Seq.upd s (SZ.v i) v)
 }
 
 let op_Array_Assignment = write
-
-(*
-let frame_preserving_upd_one (#elt:Type) (n:erased nat) (s:erased (Seq.seq elt) { Seq.length s == reveal n })
- : FStar.PCM.frame_preserving_upd (PA.pcm elt n)
-      (mk_carrier n 0 s 1.0R)
-      (PA.one #elt #n)
-= fun _ -> admit(); (PA.one #elt #n) 
- *)
-
 
 fn free'
     (#elt: Type)
@@ -516,17 +507,17 @@ let pts_to_range
 : slprop
 = exists* (q:in_bounds i j x). pts_to (array_slice x i j) #p s ** token q
 
-let pts_to_range_is_slprop2 (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
-  : Lemma (is_slprop2 (pts_to_range x i j #p s))
-          [SMTPat (is_slprop2 (pts_to_range x i j #p s))]
+let pts_to_range_timeless (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
+  : Lemma (timeless (pts_to_range x i j #p s))
+          [SMTPat (timeless (pts_to_range x i j #p s))]
   =
-    let aux (q:in_bounds i j x) : Lemma (is_slprop2 (pts_to (array_slice x i j) #p s ** token q))
-    =
-      ()
+    let aux (q:in_bounds i j x)
+      : Lemma (timeless (pts_to (array_slice x i j) #p s ** token q))
+    = ()
     in
     Classical.forall_intro aux;
     assert_norm (pts_to_range x i j #p s == (exists* (q:in_bounds i j x). pts_to (array_slice x i j) #p s ** token q));
-    slprop2_exists (fun (q: in_bounds i j x) -> pts_to (array_slice x i j) #p s ** token q)
+    timeless_exists (fun (q: in_bounds i j x) -> pts_to (array_slice x i j) #p s ** token q)
 
 
 ghost

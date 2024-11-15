@@ -25,7 +25,7 @@ module B = Pulse.Lib.Box
 module GR = Pulse.Lib.GhostReference
 module CInv = Pulse.Lib.CancellableInvariant
 
-let lock_inv_aux (r:B.box U32.t) (gr:GR.ref U32.t) (v:slprop) : (w:slprop { is_storable v ==> is_storable w })  =
+let lock_inv_aux (r:B.box U32.t) (gr:GR.ref U32.t) (v:slprop) : slprop  =
   exists* i p. pts_to r #1.0R i **
                pts_to gr #p i **
                (if i = 0ul then v else emp) **
@@ -35,9 +35,7 @@ let lock_inv_aux (r:B.box U32.t) (gr:GR.ref U32.t) (v:slprop) : (w:slprop { is_s
 let lock_inv (r:B.box U32.t) (gr:GR.ref U32.t) (v:slprop) : slprop =
   lock_inv_aux r gr v
 
-let is_storable_lock_inv (r:B.box U32.t) (gr:GR.ref U32.t) (v:slprop)
-  : Lemma (is_storable v ==> is_storable (lock_inv r gr v)) = ()
-
+[@@CAbstractStruct]
 noeq
 type lock = {
   r : B.box U32.t;
@@ -51,7 +49,7 @@ let lock_alive l #p v =
 let lock_acquired l = pts_to l.gr #0.5R 1ul
 
 
-fn new_lock (v:slprop { is_storable v })
+fn new_lock (v:slprop)
   requires v
   returns l:lock
   ensures lock_alive l v
@@ -61,7 +59,6 @@ fn new_lock (v:slprop { is_storable v })
   rewrite v as (if 0ul = 0ul then v else emp);
   fold (lock_inv_aux r gr v);
   fold (lock_inv r gr v);
-  is_storable_lock_inv r gr v;
   let i = new_cancellable_invariant (lock_inv r gr v);
   let l = { r; gr; i };
   rewrite each r as l.r;
@@ -78,12 +75,14 @@ fn rec acquire (#v:slprop) (#p:perm) (l:lock)
   ensures v **  lock_alive l #p v ** lock_acquired l
 {
   unfold (lock_alive l #p v);
+  later_credit_buy 1;
   let b =
     with_invariants (CInv.iname_of l.i)
       returns b:bool
-      ensures cinv_vp l.i (lock_inv l.r l.gr v) **
+      ensures later (cinv_vp l.i (lock_inv l.r l.gr v)) **
               active l.i p **
               (if b then v ** pts_to l.gr #0.5R 1ul else emp) {
+      later_elim _;
       unpack_cinv_vp l.i;
       unfold lock_inv;
       unfold lock_inv_aux;
@@ -104,6 +103,7 @@ fn rec acquire (#v:slprop) (#p:perm) (l:lock)
         let b = true;
         rewrite (v ** pts_to l.gr #0.5R 1ul)
              as (if b then v ** pts_to l.gr #0.5R 1ul else emp);
+        later_intro (CInv.cinv_vp l.i (lock_inv l.r l.gr v));
         b
       } else {
         elim_cond_false _ _ _;
@@ -115,6 +115,7 @@ fn rec acquire (#v:slprop) (#p:perm) (l:lock)
         let b = false;
         rewrite emp as
                 (if b then v ** pts_to l.gr #0.5R 1ul else emp);
+        later_intro (CInv.cinv_vp l.i (lock_inv l.r l.gr v));
         b
       }
     };
@@ -137,10 +138,12 @@ fn release (#v:slprop) (#p:perm) (l:lock)
   unfold (lock_alive l #p v);
   unfold (lock_acquired l);
 
+  later_credit_buy 1;
   with_invariants (CInv.iname_of l.i)
     returns _:unit
-    ensures cinv_vp l.i (lock_inv l.r l.gr v) **
+    ensures later (cinv_vp l.i (lock_inv l.r l.gr v)) **
             active l.i p {
+    later_elim _;
     unpack_cinv_vp l.i;
     unfold (lock_inv l.r l.gr v);
     unfold (lock_inv_aux l.r l.gr v);
@@ -152,6 +155,7 @@ fn release (#v:slprop) (#p:perm) (l:lock)
     fold (lock_inv_aux l.r l.gr v);
     fold (lock_inv l.r l.gr v);
     pack_cinv_vp l.i;
+    later_intro (cinv_vp l.i (lock_inv l.r l.gr v));
   };
 
   fold (lock_alive l #p v)
@@ -197,6 +201,7 @@ fn free (#v:slprop) (l:lock)
 {
   unfold (lock_alive l #1.0R v);
   unfold (lock_acquired l);
+  later_credit_buy 1;
   cancel l.i;
   unfold (lock_inv l.r l.gr v);
   unfold (lock_inv_aux l.r l.gr v);
@@ -216,17 +221,12 @@ fn lock_alive_inj
 {
   unfold (lock_alive l #p1 v1);
   unfold (lock_alive l #p2 v2);
-  invariant_name_identifies_invariant
-    (CInv.iname_of l.i) (CInv.iname_of l.i);
-  assert (
-    pure (
-      cinv_vp l.i (lock_inv l.r l.gr v1)
-      ==
-      cinv_vp l.i (lock_inv l.r l.gr v2)
-    )
-  );
+  dup_inv (CInv.iname_of l.i) (CInv.cinv_vp l.i (lock_inv l.r l.gr v1));
   fold (lock_alive l #p1 v1);
   fold (lock_alive l #p2 v1);
+  drop_ (inv _ _);
+  // TODO: we could also prove from, but that requires a significant amount of congruence lemmas about equiv
+  // invariant_name_identifies_invariant (CInv.iname_of l.i) (CInv.iname_of l.i);
 }
 
 

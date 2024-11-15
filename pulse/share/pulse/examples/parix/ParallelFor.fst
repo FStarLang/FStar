@@ -222,7 +222,8 @@ fn spawned_f_i
   requires emp ** (pre i ** pool_alive #e p)
   ensures emp ** (pledge emp_inames (pool_done p) (post i) ** pool_alive #e p)
 {
-  spawn_ #(pre i) #(post i) p #e (fun () -> f i)
+  let _h = spawn_ p #e #(pre i) #(post i) (fun () -> f i);
+  ()
 }
 
 
@@ -308,7 +309,8 @@ fn spawned_f_i_alt
   requires pool_alive p ** pre i
   ensures pool_alive p ** pledge emp_inames (pool_done p) (post i)
 {
-  spawn_ #(pre i) #(post i) p #1.0R (fun () -> f i)
+  let _h = spawn_ p #1.0R #(pre i) #(post i) (fun () -> f i);
+  ()
 }
 
 
@@ -470,16 +472,16 @@ fn rec h_for_task
 
     on_range_split mid;
 
-    spawn_ #(pool_alive #((e /. 2.0R) /. 2.0R) p ** on_range pre lo mid)
-            #(pledge emp_inames (pool_done p) (on_range post lo mid))
-            p
+    spawn_ p
             #(e /. 2.0R)
+            #(pool_alive #((e /. 2.0R) /. 2.0R) p ** on_range pre lo mid)
+            #(pledge emp_inames (pool_done p) (on_range post lo mid))
             (h_for_task p ((e /. 2.0R) /. 2.0R) pre post f lo mid);
 
-    spawn_ #(pool_alive #((e /. 2.0R) /. 2.0R) p ** on_range pre mid hi)
-            #(pledge emp_inames (pool_done p) (on_range post mid hi))
-            p
+    spawn_ p
             #(e /. 2.0R)
+            #(pool_alive #((e /. 2.0R) /. 2.0R) p ** on_range pre mid hi)
+            #(pledge emp_inames (pool_done p) (on_range post mid hi))
             (h_for_task p ((e /. 2.0R) /. 2.0R) pre post f mid hi);
 
     (* We get this complicated pledge emp_inames from the spawns above. We can
@@ -540,10 +542,10 @@ parallel_for_hier
     assert (pool_alive #0.5R p ** pool_alive #0.5R p);
 
 
-    spawn_ #(pool_alive #0.5R p ** on_range pre 0 n)
-            #(pledge emp_inames (pool_done p) (on_range post 0 n))
-            p
+    spawn_ p
             #0.5R
+            #(pool_alive #0.5R p ** on_range pre 0 n)
+            #(pledge emp_inames (pool_done p) (on_range post 0 n))
             (h_for_task p 0.5R pre post f 0 n);
 
     (* We get this complicated pledge emp_inames from the spawn above. We can

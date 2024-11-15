@@ -577,7 +577,7 @@ let mk_sub_stt_ghost (u:R.universe) (a pre1 pre2 post1 post2 e:R.term)  =
 
 let mk_par (u:R.universe) (aL aR preL postL preR postR eL eR:R.term) =
   let open R in
-  let lid = mk_pulse_lib_core_lid "par_stt" in
+  let lid = ["Pulse"; "Lib"; "Par"; "par_stt"] in
   let t = pack_ln (Tv_UInst (R.pack_fv lid) [u]) in
   let t = pack_ln (Tv_App t (aL, Q_Implicit)) in
   let t = pack_ln (Tv_App t (aR, Q_Implicit)) in
@@ -733,6 +733,7 @@ let mk_observability_lid l = ["PulseCore"; "Observability"; l]
 let observable_lid = mk_observability_lid "Observable"
 let neutral_lid = mk_observability_lid "Neutral"
 
+let later_lid = mk_pulse_lib_core_lid "later"
 let iname_lid = mk_pulse_lib_core_lid "iname"
 let inames_lid = mk_pulse_lib_core_lid "inames"
 let inv_lid = mk_pulse_lib_core_lid "inv"

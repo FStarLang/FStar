@@ -26,7 +26,7 @@ assume val done : ref bool
 assume val res : ref (option int)
 assume val claimed : GR.ref bool
 
-let inv_p : v:slprop { is_slprop3 v } =
+let inv_p : timeless_slprop =
   exists* (v_done:bool) (v_res:option int) (v_claimed:bool).
        pts_to done #0.5R v_done
     ** pts_to res #0.5R v_res
@@ -65,6 +65,7 @@ fn proof
    opens [i]
 {
   with_invariants i {
+    later_elim_timeless _;
     unfold inv_p;
     with (v_done : bool) v_res v_claimed.
       assert (pts_to done #0.5R v_done
@@ -110,6 +111,8 @@ fn proof
     
     drop_ (pts_to claimed #0.5R true);
 
+    later_intro inv_p;
+
     ()
   }
 }
@@ -145,7 +148,8 @@ fn setup (_:unit)
   fold inv_p;
   
   let i = new_invariant inv_p;
-
+  inames_live_inv i inv_p;
+  GhostSet.lemma_equal_intro (add_inv emp_inames i) (single i);
   make_pledge
     (add_inv emp_inames i)
     (pts_to done #0.5R true) //f
@@ -164,6 +168,7 @@ fn worker (i : iname) (_:unit)
    ensures  inv i inv_p ** pts_to done #0.5R true
 {
   with_invariants i {
+    later_elim_storable _;
     unfold inv_p;
     with v_done v_res v_claimed.
       assert (pts_to done #0.5R v_done

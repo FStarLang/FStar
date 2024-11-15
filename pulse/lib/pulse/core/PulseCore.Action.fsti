@@ -19,7 +19,7 @@ module PulseCore.Action
 module S = FStar.Set
 module I = PulseCore.InstantiatedSemantics
 module PP = PulseCore.Preorder
-
+module Sep = PulseCore.IndirectionTheorySep
 open FStar.PCM
 open FStar.Ghost
 
@@ -27,18 +27,16 @@ open PulseCore.InstantiatedSemantics
 
 type reifiability =
  | Ghost
- | Reifiable
+ | Atomic
 
 let ( ^^ ) (r1 r2 : reifiability) : reifiability =
   if r1 = r2 then r1
-  else Reifiable
+  else Atomic
 
 [@@ erasable]
-val iref : Type0
-val storable_iref (i:iref) : GTot bool
-val deq_iref : FStar.GhostSet.decide_eq iref
-let inames = FStar.GhostSet.set iref
-let singleton (i:iref) : inames = GhostSet.singleton deq_iref i
+let iref : Type0 = Sep.iref
+let inames = Sep.inames
+let singleton (i:iref) : inames = Sep.single i
 let emp_inames : inames = GhostSet.empty
 
 let join_inames (is1 is2 : inames) : inames =
@@ -68,15 +66,25 @@ val return
     (x:a)
 : act a r emp_inames (post x) post
 
-val bind
+val bind_ghost
      (#a:Type u#a)
      (#b:Type u#b)
-     (#r:reifiability)
      (#opens:inames)
      (#pre1 #post1 #post2:_)
-     (f:act a r opens pre1 post1)
-     (g:(x:a -> act b r opens (post1 x) post2))
-: act b r opens pre1 post2
+     (f:act a Ghost opens pre1 post1)
+     (g:(x:a -> act b Ghost opens (post1 x) post2))
+: act b Ghost opens pre1 post2
+
+val bind_atomic
+     (#a:Type u#a)
+     (#b:Type u#b)
+     (#r1: reifiability)
+     (#r2: reifiability { r1 == Ghost \/ r2 == Ghost })
+     (#opens:inames)
+     (#pre1 #post1 #post2:_)
+     (f:act a r1 opens pre1 post1)
+     (g:(x:a -> act b r2 opens (post1 x) post2))
+: act b Atomic opens pre1 post2
 
 val frame
      (#a:Type u#a)
@@ -86,13 +94,13 @@ val frame
      (f:act a r opens pre post)
 : act a r opens (pre ** frame) (fun x -> post x ** frame)
 
-val lift_ghost_reifiable
+val lift_ghost_atomic
     (#a:Type)
     (#pre:slprop)
     (#post:a -> slprop)
     (#opens:inames)
     (f:act a Ghost opens pre post)
-: act a Reifiable opens pre post
+: act a Atomic opens pre post
 
 val weaken 
     (#a:Type)
@@ -142,31 +150,18 @@ let add_inv (e:inames) (i:iref) : inames = GhostSet.union (singleton i) e
 let mem_inv (e:inames) (i:iref) : GTot bool = GhostSet.mem i e
 
 val inv (i:iref) (p:slprop) : slprop
-val storable_inv (i:iref { storable_iref i }) (p:slprop3)
-: Lemma (is_slprop3 (inv i p))
-let live (i:iref) = exists* (p:slprop). inv i p
-
-let rec all_live (ctx:list iref) =
-  match ctx with
-  | [] -> emp
-  | hd::tl -> live hd ** all_live tl
 
 val dup_inv (i:iref) (p:slprop)
   : act unit Ghost emp_inames (inv i p) (fun _ -> (inv i p) ** (inv i p))
 
-val new_invariant (p:slprop3)
+val new_invariant (p:slprop)
 : act iref Ghost emp_inames p (fun i -> inv i p)
 
-val new_storable_invariant (p:slprop2)
-: act (i:iref{storable_iref i}) Ghost emp_inames p (fun i -> inv i p)
+val fresh_invariant (ctx:inames) (p:slprop)
+: act (i:iref { ~(GhostSet.mem i ctx) }) Ghost emp_inames (p ** Sep.inames_live ctx) (fun i -> inv i p ** Sep.inames_live ctx)
 
-let fresh_wrt (i:iref)
-              (ctx:list iref)
-: prop
-= forall i'. List.Tot.memP i' ctx ==> i' =!= i
-
-val fresh_invariant (ctx:list iref) (p:slprop3)
-: act (i:iref { i `fresh_wrt` ctx }) Ghost emp_inames p (fun i -> inv i p)
+val inames_live_inv (i:iref) (p:slprop)
+: act unit Ghost emp_inames (inv i p) (fun _ -> inv i p ** Sep.inames_live (singleton i))
 
 val with_invariant
     (#a:Type)
@@ -176,30 +171,29 @@ val with_invariant
     (#f_opens:inames)
     (#p:slprop)
     (i:iref { not (mem_inv f_opens i) })
-    (f:unit -> act a r f_opens (p ** fp) (fun x -> p ** fp' x))
+    (f:unit -> act a r f_opens (later p ** fp) (fun x -> later p ** fp' x))
 : act a r (add_inv f_opens i) ((inv i p) ** fp) (fun x -> (inv i p) ** fp' x)
-
-val distinct_invariants_have_distinct_names
-    (#p:slprop)
-    (#q:slprop)
-    (i j:iref)
-    (_:squash (p =!= q))
-: act (squash (i =!= j))
-      Ghost
-      emp_inames 
-      ((inv i p) ** (inv j q))
-      (fun _ -> (inv i p) ** (inv j q))
 
 val invariant_name_identifies_invariant
       (p q:slprop)
       (i:iref)
-      (j:iref { i == j })
-: act (squash (p == q))
+: act unit
       Ghost
       emp_inames
-      ((inv i p) ** (inv j q))
-      (fun _ -> (inv i p) ** (inv j q))
+      (inv i p ** inv i q)
+      (fun _ -> inv i p ** inv i q ** later (equiv p q))
 
+////////////////////////////////////////////////////////////////////////
+// later and credits
+////////////////////////////////////////////////////////////////////////
+val later_intro (p:slprop)
+: act unit Ghost emp_inames p (fun _ -> later p)
+
+val later_elim (p:slprop)
+: act unit Ghost emp_inames (later p ** later_credit 1) (fun _ -> p)
+
+val buy1 ()
+: stt unit emp (fun _ -> later_credit 1)
 
 ////////////////////////////////////////////////////////////////////////
 // References
@@ -215,7 +209,14 @@ let is_ref_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p)
 : b:bool { b <==> r == ref_null p }
 = is_core_ref_null r
 
-val pts_to (#a:Type u#1) (#p:pcm a) (r:ref a p) (v:a) : slprop2
+val pts_to (#a:Type u#1) (#p:pcm a) (r:ref a p) (v:a) : slprop
+
+val timeless_pts_to
+    (#a:Type u#1)
+    (#p:pcm a)
+    (r:ref a p)
+    (v:a)
+: Lemma (timeless (pts_to r v))
 
 val pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
 : act (squash (not (is_ref_null r)))
@@ -229,7 +230,7 @@ val alloc
     (#pcm:pcm a)
     (x:a{pcm.refine x})
 : act (ref a pcm)
-      Reifiable
+      Atomic
       emp_inames
       emp
       (fun r -> pts_to r x)
@@ -243,7 +244,7 @@ val read
         -> GTot (y:a{compatible p y v /\
                      FStar.PCM.frame_compatible p x v y})))
 : act (v:a{compatible p x v /\ p.refine v})
-      Reifiable
+      Atomic
       emp_inames
       (pts_to r x)
       (fun v -> pts_to r (f v))
@@ -255,7 +256,7 @@ val write
     (x y:Ghost.erased a)
     (f:FStar.PCM.frame_preserving_upd p x y)
 : act unit
-    Reifiable
+    Atomic
     emp_inames
     (pts_to r x)
     (fun _ -> pts_to r y)
@@ -288,7 +289,15 @@ val gather
 // Big references
 ///////////////////////////////////////////////////////////////////
 
-val big_pts_to (#a:Type u#2) (#p:pcm a) (r:ref a p) (v:a) : slprop3
+val big_pts_to (#a:Type u#2) (#p:pcm a) (r:ref a p) (v:a) : slprop
+
+
+val timeless_big_pts_to
+    (#a:Type u#2)
+    (#p:pcm a)
+    (r:ref a p)
+    (v:a)
+: Lemma (timeless (big_pts_to r v))
 
 val big_pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
 : act (squash (not (is_ref_null r)))
@@ -302,7 +311,7 @@ val big_alloc
     (#pcm:pcm a)
     (x:a{pcm.refine x})
 : act (ref a pcm)
-      Reifiable
+      Atomic
       emp_inames
       emp
       (fun r -> big_pts_to r x)
@@ -316,7 +325,7 @@ val big_read
         -> GTot (y:a{compatible p y v /\
                      FStar.PCM.frame_compatible p x v y})))
 : act (v:a{compatible p x v /\ p.refine v})
-      Reifiable
+      Atomic
       emp_inames
       (big_pts_to r x)
       (fun v -> big_pts_to r (f v))
@@ -328,7 +337,7 @@ val big_write
     (x y:Ghost.erased a)
     (f:FStar.PCM.frame_preserving_upd p x y)
 : act unit
-    Reifiable
+    Atomic
     emp_inames
     (big_pts_to r x)
     (fun _ -> big_pts_to r y)
@@ -363,6 +372,14 @@ val big_gather
 
 val nb_pts_to (#a:Type u#3) (#p:pcm a) (r:ref a p) (v:a) : slprop
 
+
+val timeless_nb_pts_to
+    (#a:Type u#3)
+    (#p:pcm a)
+    (r:ref a p)
+    (v:a)
+: Lemma (timeless (nb_pts_to r v))
+
 val nb_pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
 : act (squash (not (is_ref_null r)))
     Ghost
@@ -375,7 +392,7 @@ val nb_alloc
     (#pcm:pcm a)
     (x:a{pcm.refine x})
 : act (ref a pcm)
-      Reifiable
+      Atomic
       emp_inames
       emp
       (fun r -> nb_pts_to r x)
@@ -389,7 +406,7 @@ val nb_read
         -> GTot (y:a{compatible p y v /\
                      FStar.PCM.frame_compatible p x v y})))
 : act (v:a{compatible p x v /\ p.refine v})
-      Reifiable
+      Atomic
       emp_inames
       (nb_pts_to r x)
       (fun v -> nb_pts_to r (f v))
@@ -401,7 +418,7 @@ val nb_write
     (x y:Ghost.erased a)
     (f:FStar.PCM.frame_preserving_upd p x y)
 : act unit
-    Reifiable
+    Atomic
     emp_inames
     (nb_pts_to r x)
     (fun _ -> nb_pts_to r y)
@@ -463,7 +480,14 @@ val drop (p:slprop)
 [@@erasable]
 val core_ghost_ref : Type u#0
 let ghost_ref (#a:Type u#a) (p:pcm a) : Type u#0 = core_ghost_ref
-val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop2
+val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
+
+val timeless_ghost_pts_to
+    (#a:Type u#1)
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (v:a)
+: Lemma (timeless (ghost_pts_to r v))
 
 val ghost_alloc
     (#a:Type u#1)
@@ -515,7 +539,15 @@ val ghost_gather
     (ghost_pts_to r v0 ** ghost_pts_to r v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
 
-val big_ghost_pts_to (#a:Type u#2) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop3
+val big_ghost_pts_to (#a:Type u#2) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
+
+
+val timeless_big_ghost_pts_to
+    (#a:Type u#2)
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (v:a)
+: Lemma (timeless (big_ghost_pts_to r v))
 
 val big_ghost_alloc
     (#a:Type)
@@ -569,6 +601,14 @@ val big_ghost_gather
 
 // Non-boxable ghost references
 val nb_ghost_pts_to (#a:Type u#3) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
+
+
+val timeless_nb_ghost_pts_to
+    (#a:Type u#3)
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (v:a)
+: Lemma (timeless (nb_ghost_pts_to r v))
 
 val nb_ghost_alloc
     (#a:Type)
@@ -632,3 +672,30 @@ val lift_erased
     (#post:a -> slprop)
     (f:erased (act a Ghost opens pre post))
 : act a Ghost opens pre post
+
+val equiv_refl (a:slprop)
+: act unit Ghost emp_inames emp (fun _ -> equiv a a)
+
+val equiv_dup (a b:slprop)
+: act unit Ghost emp_inames (equiv a b) (fun _ -> equiv a b ** equiv a b)
+
+val equiv_trans (a b c:slprop)
+: act unit Ghost emp_inames (equiv a b ** equiv b c) (fun _ -> equiv a c)
+
+val equiv_elim (a b:slprop)
+: act unit Ghost emp_inames (a ** equiv a b) (fun _ -> b)
+
+/// slprop_refs
+[@@erasable]
+val slprop_ref : Type0
+
+val slprop_ref_pts_to (x: slprop_ref) (y: slprop) : slprop
+
+val slprop_ref_alloc (y: slprop)
+: act slprop_ref Ghost emp_inames emp fun x -> slprop_ref_pts_to x y
+
+val slprop_ref_share (x:slprop_ref) (y:slprop)
+: act unit Ghost emp_inames (slprop_ref_pts_to x y) fun _ -> slprop_ref_pts_to x y ** slprop_ref_pts_to x y
+
+val slprop_ref_gather (x:slprop_ref) (y1 y2: slprop)
+: act unit Ghost emp_inames (slprop_ref_pts_to x y1 ** slprop_ref_pts_to x y2) fun _ -> slprop_ref_pts_to x y1 ** later (I.equiv y1 y2)

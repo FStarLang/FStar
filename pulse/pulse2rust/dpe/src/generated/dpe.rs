@@ -25,9 +25,6 @@ pub struct st {
     pub st_ctr: super::dpe::sid_t,
     pub st_tbl: super::dpe::ht_t,
 }
-pub fn run_stt<A>(post: (), f: A) -> A {
-    panic!()
-}
 pub fn sid_hash(s: super::dpe::sid_t) -> usize {
     s as usize
 }
@@ -102,7 +99,8 @@ pub fn maybe_mk_session_tbl(
     }
 }
 pub fn open_session(uu___: ()) -> std::option::Option<super::dpe::sid_t> {
-    let mut mg = super::dpe::gst.1.lock().unwrap();
+    let r = &super::dpe::gst;
+    let mut mg = r.1.lock().unwrap();
     let sopt = std::mem::replace::<std::option::Option<super::dpe::st>>(&mut mg, None);
     let s = super::dpe::maybe_mk_session_tbl(sopt);
     let ret = super::dpe::__open_session(s);
@@ -118,7 +116,8 @@ pub fn replace_session(
     sst: super::dpe::session_state,
     gsst: (),
 ) -> super::dpe::session_state {
-    let mut mg = super::dpe::gst.1.lock().unwrap();
+    let r = &super::dpe::gst;
+    let mut mg = r.1.lock().unwrap();
     let sopt = std::mem::replace::<std::option::Option<super::dpe::st>>(&mut mg, None);
     match sopt {
         None => panic!(),

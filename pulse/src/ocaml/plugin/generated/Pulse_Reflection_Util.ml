@@ -1703,7 +1703,7 @@ let (mk_par :
               fun postR ->
                 fun eL ->
                   fun eR ->
-                    let lid = mk_pulse_lib_core_lid "par_stt" in
+                    let lid = ["Pulse"; "Lib"; "Par"; "par_stt"] in
                     let t =
                       FStarC_Reflection_V2_Builtins.pack_ln
                         (FStarC_Reflection_V2_Data.Tv_UInst
@@ -2154,6 +2154,7 @@ let (mk_observability_lid : Prims.string -> Prims.string Prims.list) =
 let (observable_lid : Prims.string Prims.list) =
   mk_observability_lid "Observable"
 let (neutral_lid : Prims.string Prims.list) = mk_observability_lid "Neutral"
+let (later_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "later"
 let (iname_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "iname"
 let (inames_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "inames"
 let (inv_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "inv"

@@ -49,9 +49,9 @@ instance has_pts_to_vec (a:Type u#0) : has_pts_to (vec a) (Seq.seq a) = { pts_to
 [@@pulse_unfold]
 instance has_pts_to_lvec (a:Type u#0) (n : nat) : has_pts_to (lvec a n) (Seq.seq a) = { pts_to; }
 
-val pts_to_is_slprop2 (#a:Type0) (v:vec a) (p:perm) (s:Seq.seq a)
-  : Lemma (is_slprop2 (pts_to v #p s))
-          [SMTPat (is_slprop2 (pts_to v #p s))]
+val pts_to_timeless (#a:Type0) (v:vec a) (p:perm) (s:Seq.seq a)
+  : Lemma (timeless (pts_to v #p s))
+          [SMTPat (timeless (pts_to v #p s))]
 
 val pts_to_len (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
   : stt_ghost unit emp_inames

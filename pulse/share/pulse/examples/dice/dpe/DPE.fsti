@@ -283,7 +283,7 @@ type pht_t = PHT.pht_t sid_t session_state
 // Towards the global state invariant
 //
 
-let session_state_related (s:session_state) (gs:g_session_state) : v:slprop { is_slprop2 v } =
+let session_state_related (s:session_state) (gs:g_session_state) : slprop =
   match s, gs with
   | SessionStart, G_SessionStart
   | InUse, G_InUse _
@@ -297,7 +297,7 @@ let session_state_related (s:session_state) (gs:g_session_state) : v:slprop { is
 //
 // Invariant for sessions that have been started
 //
-let session_state_perm (r:gref) (pht:pht_t) (sid:sid_t) : v:slprop { is_slprop2 v } =
+let session_state_perm (r:gref) (pht:pht_t) (sid:sid_t) : slprop =
   exists* (s:session_state) (t:trace).
     pure (PHT.lookup pht sid == Some s) **
     sid_pts_to r sid t **
@@ -348,10 +348,6 @@ let dpe_inv (r:gref) (s:option st) : slprop =
     //
     (exists* pht. models s.st_tbl pht **
                   on_range (session_perm r pht) 0 (U16.v s.st_ctr))
-
-let inv_is_slprop2 (r:gref) (s:option st)
-  : Lemma (is_slprop2 (dpe_inv r s))
-          [SMTPat (is_slprop2 (dpe_inv r s))] = ()
 
 val trace_ref : gref
 

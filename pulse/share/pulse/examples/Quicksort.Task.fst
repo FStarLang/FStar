@@ -30,6 +30,9 @@ open Pulse.Lib.Pledge
 let quicksort_post a lo hi s0 lb rb : slprop =
   exists* s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb s0 s))
 
+let p31 (x,y,z) = x
+let p32 (x,y,z) = y
+let p33 (x,y,z) = z
 
 fn rec t_quicksort
   (p : T.pool)
@@ -51,15 +54,15 @@ fn rec t_quicksort
   if (lo < hi - 1)
   {
     let r = partition_wrapper a lo hi lb rb;
-    let pivot = r._3;
+    let pivot = p33 r;
     with s1. assert (A.pts_to_range a lo r._1 s1);
     with s2. assert (A.pts_to_range a r._1 r._2 s2);
     with s3. assert (A.pts_to_range a r._2 hi s3);
 
     T.share_alive p f;
 
-    T.spawn_ p #(f /. 2.0R) (fun () -> t_quicksort p #(f /. 2.0R) a lo r._1 #lb #pivot);
-    t_quicksort p #(f /. 2.0R) a r._2 hi #pivot #rb;
+    T.spawn_ p #(f /. 2.0R) (fun () -> t_quicksort p #(f /. 2.0R) a lo (p31 r) #lb #pivot);
+    t_quicksort p #(f /. 2.0R) a (p32 r) hi #pivot #rb;
     
     return_pledge (T.pool_done p) (A.pts_to_range a r._1 r._2 s2);
     squash_pledge _ _ _;
@@ -100,14 +103,6 @@ fn rec t_quicksort
   }
 }
 
-
-assume val split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
-  : stt_atomic iname
-               is
-               (pledge is f (v1 ** v2))
-               (fun i -> pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2)
-
-
 fn rec quicksort
   (nthr : pos)
   (a : A.array int)
@@ -126,10 +121,14 @@ fn rec quicksort
 
   t_quicksort p a lo hi #lb #rb;
 
-  let i = split_pledge _ _;
-  
-  T.teardown_pool' p _;
-  redeem_pledge _ _ _;
+  // let i = split_pledge _ _;
+
+  T.await_pool p (T.pool_alive #(1.0R /. 2.0R) p ** _);
+
+  T.gather_alive p _;
+
+  T.teardown_pool p;
+  // redeem_pledge _ _ _;
   drop_ (T.pool_done p)
 }
 

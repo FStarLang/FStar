@@ -23,7 +23,7 @@ open Pulse.Lib.Pervasives
 
 module T = FStar.Tactics
 
-type small_slprop = v:slprop { is_slprop2 v }
+type small_slprop = v:slprop { timeless v }
 
 let trade_elim_t (is:inames) (hyp:slprop) (extra:small_slprop) (concl:slprop) : Type u#4 =
   unit -> stt_ghost unit is (extra ** hyp) (fun _ -> concl)
@@ -36,15 +36,15 @@ let __trade (#is:inames) (hyp concl:slprop) : small_slprop =
 
 let trade #is hyp concl : slprop = __trade #is hyp concl
 
-let trade_is_slprop2 (#is:inames) (hyp concl:slprop)
-  : Lemma (is_slprop2 (trade #is hyp concl)) = ()
+let trade_is_timeless (#is:inames) (hyp concl:slprop)
+  : Lemma (timeless (trade #is hyp concl)) = ()
 
 
 ghost
 fn intro_trade
   (#is:inames)
   (hyp concl:slprop)
-  (extra:slprop { is_slprop2 extra })
+  (extra:slprop { timeless extra })
   (f_elim:unit -> (
     stt_ghost unit is
     (extra ** hyp)
@@ -182,7 +182,7 @@ fn trade_compose
     elim_trade #os p _;
     elim_trade #os _ _;
   };
-  slprop2_star (trade #os p q) (trade #os q r);
+  timeless_star (trade #os p q) (trade #os q r);
   intro_trade #os p r (trade #os p q ** trade #os q r) aux;
 }
 

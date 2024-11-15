@@ -21,7 +21,7 @@ open Pulse.Lib.BigReference
 
 module B = Pulse.Lib.BigReference
 module L = Pulse.Lib.SpinLock
-
+(*
 let thunk (p q : slprop2_base) = unit -> stt unit (up2 p) (fun _ -> up2 q)
 let closure = (p:slprop2_base & q:slprop2_base & thunk p q)
 let closure_list = B.ref (list closure)
@@ -184,3 +184,4 @@ ensures emp
   }
 }
 
+*)

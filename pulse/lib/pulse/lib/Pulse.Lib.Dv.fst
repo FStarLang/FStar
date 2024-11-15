@@ -16,6 +16,9 @@
 
 module Pulse.Lib.Dv
 
-let while_ cond body = ()
-let par f1 f2 = ()
+let rec while_ cond body =
+  if cond ()
+  then (body (); while_ cond body)
+  else ()
+let par f1 f2 = magic()
 let rec unreachable t () = unreachable t ()

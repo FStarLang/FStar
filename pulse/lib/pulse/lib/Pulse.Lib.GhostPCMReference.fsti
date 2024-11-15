@@ -11,8 +11,16 @@ val pts_to
     (#p:pcm a)
     (r:gref p)
     (v:a)
-: slprop2
+: slprop
 
+val pts_to_is_timeless
+    (#a:Type u#0)
+    (#p:pcm a)
+    (r:gref p)
+    (v:a)
+: Lemma (timeless (pts_to r v))
+        [SMTPat (timeless (pts_to r v))]
+        
 val alloc
     (#a:Type u#0)
     (#pcm:pcm a)

@@ -42,7 +42,7 @@ fn make_pledge
   (#is:inames)
   (f v extra:slprop)
   (k:unit -> stt_ghost unit is (f ** extra) (fun _ -> f ** v))
-  requires extra
+  requires extra ** inames_live is
   ensures pledge f v
 {
   P.make_pledge is f v extra k;
@@ -80,6 +80,10 @@ fn join_pledge (#f v1 v2:slprop)
   unfold (pledge f v2);
   with is1. assert (P.pledge is1 f v1);
   with is2. assert (P.pledge is2 f v2);
+  P.pledge_inames_live is1 f v1;
+  P.pledge_inames_live is2 f v2;
+  gather_inames_live is1 is2;
+  dup_inames_live (join_inames is1 is2);
   P.pledge_sub_inv is1 (join_inames is1 is2) f v1;
   P.pledge_sub_inv is2 (join_inames is1 is2) f v2;
   P.join_pledge #(join_inames is1 is2) #f v1 v2;
@@ -93,11 +97,13 @@ fn rewrite_pledge
   (#f v1 v2:slprop)
   (#is_k:inames)
   (k:unit -> stt_ghost unit is_k v1 (fun _ -> v2))
-  requires pledge f v1
+  requires pledge f v1 ** inames_live is_k
   ensures pledge f v2
 {
   unfold pledge;
   with is. assert (P.pledge is f v1);
+  P.pledge_inames_live is f v1;
+  gather_inames_live is is_k;
   P.pledge_sub_inv is (join_inames is is_k) f v1;
   P.rewrite_pledge #(join_inames is is_k) #f v1 v2 #is_k k;
   fold pledge

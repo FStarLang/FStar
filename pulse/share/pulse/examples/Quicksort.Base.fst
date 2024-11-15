@@ -28,7 +28,7 @@ Quicksort.Task. *)
 
 let nat_smaller (n: nat) = i:nat{i < n}
 
-let seq_swap (#a: Type) (s: Seq.seq a) (i j: nat_smaller (Seq.length s)) =
+let seq_swap (#a: Type) (s: Seq.seq a) (i j: nat_smaller (Seq.length s)) : GTot _ =
   Seq.swap s j i
 
 let larger_than (s: Seq.seq int) (lb: int)

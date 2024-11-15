@@ -22,7 +22,20 @@ module U32 = FStar.UInt32
 inline_for_extraction
 let zero () = 0ul
 
-
+fn test_invariants_and_later ()
+  requires emp
+  ensures emp
+{
+  let i = new_invariant emp;
+  later_credit_buy 1;
+  with_invariants i
+    returns _: unit
+    ensures later emp {
+    later_elim emp;
+    later_intro emp;
+  };
+  drop_ (inv i emp);
+}
 
 fn test_read_write (x:ref U32.t)
   requires pts_to x 'n

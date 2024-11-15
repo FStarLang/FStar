@@ -30,10 +30,31 @@ let slprop_equiv_refl_eq (v1 v2 : slprop) (_ : squash (v1 == v2)) : slprop_equiv
 let __tac () : Tac unit =
   apply (`slprop_equiv_refl_eq)
 
-let pledge is f v = (==>*) #is f (f ** v)
+let pledge is f v = inames_live is ** trade #is f (f ** v)
 
-let pledge_sub_inv is1 is2 (f:slprop) (v:slprop) = trade_sub_inv _ _
 
+ghost
+fn pledge_inames_live (is:inames) (f p:slprop)
+requires pledge is f p
+ensures inames_live is ** pledge is f p
+{
+  unfold pledge;
+  dup_inames_live is;
+  fold pledge;
+}
+
+ghost
+fn pledge_sub_inv (is1:inames) (is2:inames { inames_subset is1 is2 })(f:slprop) (v:slprop)
+requires pledge is1 f v ** inames_live is2
+ensures pledge is2 f v
+{
+  unfold pledge;
+  trade_sub_inv #is1 #is2 _ _;
+  gather_inames_live is1 is2;
+  GhostSet.lemma_equal_intro (GhostSet.union is1 is2) is2;
+  rewrite (inames_live (GhostSet.union is1 is2)) as inames_live is2;
+  fold pledge;
+} 
 
 ghost
 fn return_pledge (f v : slprop)
@@ -48,17 +69,17 @@ fn return_pledge (f v : slprop)
     ()
   };
   intro_trade #emp_inames f (f ** v) v aux;
-  fold ((==>*) #emp_inames f (f ** v));
+  fold (trade #emp_inames f (f ** v));
+  inames_live_empty ();
   fold pledge;
 }
-
 
 
 ghost
 fn make_pledge
   (is:inames) (f v extra:slprop)
   (k:unit -> stt_ghost unit is (f ** extra) (fun _ -> f ** v))
-  requires extra
+  requires extra ** inames_live is
   ensures pledge is f v
 {
   ghost
@@ -71,11 +92,20 @@ fn make_pledge
   };
 
   intro_trade #is f (f ** v) extra aux;
-  fold ((==>*) #is f (f ** v));
   fold pledge;
 }
 
 
+
+ghost
+fn redeem_pledge_aux (is:inames) (f v:slprop)
+  requires f ** pledge is f v
+  ensures f ** v ** inames_live is
+  opens is
+{
+  unfold pledge;
+  elim_trade #is f (f ** v);
+}
 
 ghost
 fn redeem_pledge (is:inames) (f v:slprop)
@@ -83,27 +113,10 @@ fn redeem_pledge (is:inames) (f v:slprop)
   ensures f ** v
   opens is
 {
-  unfold pledge;
-  unfold ((==>*) #is f (f ** v));
-  elim_trade #is f (f ** v);
+  redeem_pledge_aux is f v;
+  drop_ (inames_live is)
 }
 
-
-// 
-// ghost
-// fn pledge_invs_aux (is:invlist) (f:slprop) (v:slprop)
-//   requires pledge is f v
-//   ensures pledge is f v ** invlist_inv is
-// {
-//   unfold pledge;
-//   unfold ((==>*) #is f (f ** v));
-//   trade_invs ();
-//   fold ((==>*) #is f (f ** v));
-//   fold pledge
-// }
-// 
-
-// let pledge_invs = pledge_invs_aux
 
 
 ghost
@@ -120,6 +133,7 @@ fn squash_pledge (is:inames) (f:slprop) (v1:slprop)
     redeem_pledge is f (pledge is f v1);
     redeem_pledge is f v1
   };
+  pledge_inames_live is f (pledge is f v1);
   make_pledge is f v1 (pledge is f (pledge is f v1)) aux
 }
 
@@ -144,6 +158,7 @@ fn bind_pledge
     k ()
   };
 
+  pledge_inames_live is f v1;
   make_pledge is f (pledge is f v2) (extra ** pledge is f v1) aux;
   squash_pledge is f v2
 }
@@ -190,7 +205,7 @@ fn rewrite_pledge_full
     redeem_pledge is f v1;
     k ()
   };
-  
+  pledge_inames_live is f v1;
   make_pledge is f v2 (pledge is f v1) aux;
 }
 
@@ -235,7 +250,7 @@ fn join_pledge
     redeem_pledge is f v1;
     redeem_pledge is f v2;
   };
-  
+  pledge_inames_live is f v1;
   make_pledge is f (v1 ** v2) (pledge is f v1 ** pledge is f v2) aux;
 }
 
@@ -247,7 +262,8 @@ fn squash_pledge'
   (f v1:slprop)
   requires pure (inames_subset is1 is) **
            pure (inames_subset is2 is) **
-           pledge is1 f (pledge is2 f v1)
+           pledge is1 f (pledge is2 f v1) **
+           inames_live is
   ensures pledge is f v1
 {
   ghost
@@ -259,7 +275,6 @@ fn squash_pledge'
     redeem_pledge is1 f (pledge is2 f v1);
     redeem_pledge is2 f v1
   };
-  
   make_pledge is f v1 (pledge is1 f (pledge is2 f v1)) aux
 }
 
@@ -270,196 +285,272 @@ fn squash_pledge'
 
 (* A big chunk follows for split_pledge *)
 
-// let inv_p' (is:invlist) (f v1 v2 : slprop) (r1 r2 : GR.ref bool) (b1 b2 : bool) =
-//      GR.pts_to r1 #0.5R b1
-//   ** GR.pts_to r2 #0.5R b2
-//   ** (match b1, b2 with
-//       | false, false -> pledge is f (v1 ** v2)
-//       | false, true -> v1
-//       | true, false -> v2
-//       | true, true -> emp)
+let inv_p' (is:inames) (f v1 v2 : slprop) (r1 r2 : GR.ref bool) (b1 b2 : bool) =
+     GR.pts_to r1 #0.5R b1
+  ** GR.pts_to r2 #0.5R b2
+  ** (match b1, b2 with
+      | false, false -> pledge is f (v1 ** v2)
+      | false, true -> v1
+      | true, false -> v2
+      | true, true -> emp)
 
-// let inv_p (is:invlist) (f v1 v2 : slprop) (r1 r2 : GR.ref bool) : slprop =
-//   exists* b1 b2. inv_p' is f v1 v2 r1 r2 b1 b2
+let inv_p (is:inames) (f v1 v2 : slprop) (r1 r2 : GR.ref bool) : slprop =
+  exists* b1 b2. inv_p' is f v1 v2 r1 r2 b1 b2
 
-// 
-// ghost
-// fn elim_body_l
-//   (#is:invlist) (#f:slprop) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
-//   ()
-//   requires (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** GR.pts_to r1 #0.5R false)
-//   ensures  (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** v1)
-//   opens (invlist_names is)
-// {
-//   open Pulse.Lib.GhostReference;
-//   unfold inv_p;
-//   unfold inv_p';
 
-//   gather2 r1;
+ghost
+fn do_elim_body_l
+  (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
+  ()
+  requires inv_p is f v1 v2 r1 r2 ** f ** GR.pts_to r1 #0.5R false
+  ensures  inv_p is f v1 v2 r1 r2 ** f ** v1
+  opens is
+{
+  open Pulse.Lib.GhostReference;
+  unfold inv_p;
+  unfold inv_p';
 
-//   let b1 = !r1;
-//   let b2 = !r2;
+  gather2 r1;
 
-//   let b1 : bool = reveal b1;
-//   let b2 : bool = reveal b2;
+  let b1 = !r1;
+  let b2 = !r2;
 
-//   if b2 {
-//     (* The "easy" case: the big pledge has already been claimed
-//     by the other subpledge, so we just extract our resource. *)
-//     assert (pts_to r1 false);
-//     r1 := true;
-//     rewrite emp ** (match false, true with
-//               | false, false -> pledge is f (v1 ** v2)
-//               | false, true -> v1
-//               | true, false -> v2
-//               | true, true -> emp)
-//         as (match true, true with
-//               | false, false -> pledge is f (v1 ** v2)
-//               | false, true -> v1
-//               | true, false -> v2
-//               | true, true -> emp) ** v1;
+  let b1 : bool = reveal b1;
+  let b2 : bool = reveal b2;
 
-//     (* This should just disappear when we start normalizing
-//     the context. *)
-//     rewrite (match true, true with
-//               | false, false -> pledge is f (v1 ** v2)
-//               | false, true -> v1
-//               | true, false -> v2
-//               | true, true -> emp)
-//         as emp;
+  if b2 {
+    (* The "easy" case: the big pledge has already been claimed
+    by the other subpledge, so we just extract our resource. *)
+    assert (pts_to r1 false);
+    r1 := true;
+    rewrite emp ** (match false, true with
+              | false, false -> pledge is f (v1 ** v2)
+              | false, true -> v1
+              | true, false -> v2
+              | true, true -> emp)
+        as (match true, true with
+              | false, false -> pledge is f (v1 ** v2)
+              | false, true -> v1
+              | true, false -> v2
+              | true, true -> emp) ** v1;
 
-//     share2 #_ r1;
-//     fold (inv_p' is f v1 v2 r1 r2 true true);
-//     fold inv_p;
-//     assert (f ** v1 ** inv_p is f v1 v2 r1 r2);
-//     drop_ (pts_to r1 #0.5R true);
-//   } else {
-//     (* The "hard" case: the big pledge has not been claimed.
-//     Claim it, split it, and store the leftover in the invariant. *)
-//     assert (pts_to r1 false);
+    (* This should just disappear when we start normalizing
+    the context. *)
+    rewrite (match true, true with
+              | false, false -> pledge is f (v1 ** v2)
+              | false, true -> v1
+              | true, false -> v2
+              | true, true -> emp)
+        as emp;
 
-//     rewrite (match false, false with
-//               | false, false -> pledge is f (v1 ** v2)
-//               | false, true -> v1
-//               | true, false -> v2
-//               | true, true -> emp)
-//         as pledge is f (v1 ** v2);
+    share2 #_ r1;
+    fold (inv_p' is f v1 v2 r1 r2 true true);
+    fold inv_p;
+    assert (f ** v1 ** inv_p is f v1 v2 r1 r2);
+    drop_ (pts_to r1 #0.5R true);
+  } else {
+    (* The "hard" case: the big pledge has not been claimed.
+    Claim it, split it, and store the leftover in the invariant. *)
+    assert (pts_to r1 false);
 
-//     redeem_pledge is f (v1 ** v2);
+    rewrite (match false, false with
+              | false, false -> pledge is f (v1 ** v2)
+              | false, true -> v1
+              | true, false -> v2
+              | true, true -> emp)
+        as pledge is f (v1 ** v2);
 
-//     r1 := true;
+    redeem_pledge is f (v1 ** v2);
 
-//     share2 r1;
+    r1 := true;
 
-//     fold (inv_p' is f v1 v2 r1 r2 true false);
-//     fold inv_p;
-//     assert (f ** v1 ** inv_p is f v1 v2 r1 r2);
-//     drop_ (pts_to r1 #0.5R true);
-//     drop_ (invlist_inv _)
-//   }
-// }
-// 
+    share2 r1;
 
-// 
-// ghost
-// fn flip_invp
-//   (is:invlist) (f:slprop) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
-//   requires inv_p is f v1 v2 r1 r2
-//   ensures  inv_p is f v2 v1 r2 r1
-// {
-//   unfold inv_p;
+    fold (inv_p' is f v1 v2 r1 r2 true false);
+    fold inv_p;
+    assert (f ** v1 ** inv_p is f v1 v2 r1 r2);
+    drop_ (pts_to r1 #0.5R true);
+  }
+}
 
-//   with b1 b2. assert (inv_p' is f v1 v2 r1 r2 b1 b2);
+#set-options "--print_implicits"
 
-//   unfold inv_p';
+ghost
+fn elim_body_l1
+  (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
+  ()
+  requires f ** (GR.pts_to r1 #0.5R false ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2)) ** pure (not (mem_inv is i))
+  ensures  f ** v1 ** inv i (inv_p is f v1 v2 r1 r2)
+  opens add_inv is i
+{
+  open Pulse.Lib.GhostReference;
+  assert (pure (not (mem_inv is i)));
+  with_invariants i
+  {
+    later_elim _;
+    do_elim_body_l #is #f v1 v2 r1 r2 ();
+    later_intro (inv_p is f v1 v2 r1 r2);
+  };
+}
 
-//   (* This is now true with PulseCore. *)
-//   let _ = elim_slprop_equiv (slprop_equiv_comm v1 v2);
-//   assert (pure (v1 ** v2 == v2 ** v1));
+ghost
+fn elim_body_l
+  (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
+  ()
+  requires f ** (GR.pts_to r1 #0.5R false ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
+  ensures  f ** v1
+  opens add_inv is i
+{
+  elim_body_l1 #is #f i v1 v2 r1 r2 ();
+  drop_ (inv i (inv_p is f v1 v2 r1 r2));
+  (* I couldn't make this work with an (annotated) with_invariants and
+  then a drop, so I used an auxiliary _l1 function. *)
+}
 
-//   rewrite_by
-//      (match b1, b2 with
-//       | false, false -> pledge is f (v1 ** v2)
-//       | false, true -> v1
-//       | true, false -> v2
-//       | true, true -> emp)
-//      (match b2, b1 with
-//       | false, false -> pledge is f (v2 ** v1)
-//       | false, true -> v2
-//       | true, false -> v1
-//       | true, true -> emp)
-//     __tac
-//     ();
 
-//   fold (inv_p' is f v2 v1 r2 r1 b2 b1);
-//   fold inv_p;
-// }
-// 
+ghost
+fn flip_invp
+  (is:inames) (f:slprop) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
+  requires inv_p is f v1 v2 r1 r2
+  ensures  inv_p is f v2 v1 r2 r1
+{
+  unfold inv_p;
 
-// 
+  with b1 b2. assert (inv_p' is f v1 v2 r1 r2 b1 b2);
+
+  unfold inv_p';
+
+  (* This is now true with PulseCore. *)
+  let _ = elim_slprop_equiv (slprop_equiv_comm v1 v2);
+  assert (pure (v1 ** v2 == v2 ** v1));
+
+  rewrite
+     (match b1, b2 with
+      | false, false -> pledge is f (v1 ** v2)
+      | false, true -> v1
+      | true, false -> v2
+      | true, true -> emp)
+  as
+     (match b2, b1 with
+      | false, false -> pledge is f (v2 ** v1)
+      | false, true -> v2
+      | true, false -> v1
+      | true, true -> emp)
+    by __tac ();
+
+  fold (inv_p' is f v2 v1 r2 r1 b2 b1);
+  fold inv_p;
+}
+
+
 // ghost
 // fn elim_body_r
-//   (#is:invlist) (#f:slprop) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
+//   (#is:inames) (#f:slprop) (i : iname{not (mem_inv is i)}) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
 //   ()
-//   requires (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** GR.pts_to r2 #0.5R false)
-//   ensures  (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** v2)
-//   opens (invlist_names is)
+//   requires f ** (GR.pts_to r2 #0.5R false ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2))
+//   ensures  f ** v2 ** inv i (inv_p is f v1 v2 r1 r2)
+//   opens add_inv is i
 // {
-//   flip_invp is f v1 v2 r1 r2;
-//   elim_body_l #is #f v2 v1 r2 r1 ();
-//   flip_invp is f v2 v1 r2 r1;
+//   // flip_invp is f v1 v2 r1 r2;
+//   // elim_body_l #is #f v2 v1 r2 r1 ();
+//   // flip_invp is f v2 v1 r2 r1;
 // }
-// 
 
-// 
-// ghost
-// fn __split_pledge (#is:invlist) (#f:slprop) (v1:slprop) (v2:slprop)
-//   requires pledge is f (v1 ** v2)
-//   returns r : (e : invlist_elem { not (mem_inv (invlist_names is) (snd e)) })
-//   ensures pledge (add_one r is) f v1 ** pledge (add_one r is) f v2
-//   opens (invlist_names is)
-// {
-//   let r1 = GR.alloc false;
-//   let r2 = GR.alloc false;
-//   GR.share2 r1;
-//   GR.share2 r2;
+ghost
+fn elim_body_r1
+  (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
+  ()
+  requires f ** (GR.pts_to r2 #0.5R false ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
+  ensures  f ** v2 ** inv i (inv_p is f v1 v2 r1 r2)
+  opens add_inv is i
+{
+  open Pulse.Lib.GhostReference;
+  assert (pure (not (mem_inv is i)));
+  with_invariants i
+  {
+    later_elim _;
+    flip_invp is f v1 v2 r1 r2;
+    do_elim_body_l #is #f v2 v1 r2 r1 ();
+    flip_invp is f v2 v1 r2 r1;
+    later_intro (inv_p is f v1 v2 r1 r2);
+  };
+}
+
+ghost
+fn elim_body_r
+  (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
+  ()
+  requires f ** (GR.pts_to r2 #0.5R false ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
+  ensures  f ** v2
+  opens add_inv is i
+{
+  elim_body_r1 #is #f i v1 v2 r1 r2 ();
+  drop_ (inv i (inv_p is f v1 v2 r1 r2));
+}
+
+ghost
+fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
+  // requires pledge is f (v1 ** v2)
+  // returns r : (e : inames_elem { not (mem_inv (inames_names is) (snd e)) })
+  // ensures pledge (add_one r is) f v1 ** pledge (add_one r is) f v2
+  // opens (inames_names is)
+  requires pledge is f (v1 ** v2) ** later_credit 2
+  returns i : iname
+  ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2 ** pure (not (mem_inv is i))
+{
+  pledge_inames_live is f (v1 ** v2);
+  let r1 = GR.alloc false;
+  let r2 = GR.alloc false;
+  GR.share2 r1;
+  GR.share2 r2;
   
-//   fold (inv_p' is f v1 v2 r1 r2 false false);
-//   fold inv_p;
+  fold (inv_p' is f v1 v2 r1 r2 false false);
+  fold inv_p;
+  let i = fresh_invariant is (inv_p is f v1 v2 r1 r2);
+  inames_live_inv i (inv_p is f v1 v2 r1 r2);
+  gather_inames_live is (single i);
+  Pulse.Class.Duplicable.dup (inv i (inv_p is f v1 v2 r1 r2)) ();
 
-//   let i = new_invariant (inv_p is f v1 v2 r1 r2);
-//   // FIXME: should follow from freshness
-//   assume_ (pure (not (mem_inv (invlist_names is) i)));
-  
-//   // let pi : invlist_elem = Mkdtuple2 #slprop #(fun p -> inv p) (inv_p is f v1 v2 r1 r2) i;
+  let is' = add_inv is i;
+  GhostSet.lemma_equal_intro (GhostSet.union is (single i)) is';
+  rewrite (inames_live (GhostSet.union is (single i))) as (inames_live is');
+  dup_inames_live is';
+  later_credit_add 1 1;
+  rewrite
+    later_credit 2
+  as
+    later_credit 1 ** later_credit 1;
 
-//   // let is' : invlist = add_one pi is;
+  make_pledge
+    is'
+    f
+    v1
+    (GR.pts_to r1 #0.5R false ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
+    (elim_body_l #is #f i v1 v2 r1 r2);
 
-//   admit ()
+  make_pledge
+    is'
+    f
+    v2
+    (GR.pts_to r2 #0.5R false ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
+    (elim_body_r #is #f i v1 v2 r1 r2);
 
-//   // make_pledge
-//   //   is'
-//   //   f
-//   //   v1
-//   //   (GR.pts_to r1 #0.5R false)
-//   //   (elim_body_l #is #f v1 v2 r1 r2);
+  rewrite each
+    is'
+  as
+    add_inv is i;
 
-//   // make_pledge
-//   //   is'
-//   //   f
-//   //   v2
-//   //   (GR.pts_to r2 #0.5R false)
-//   //   (elim_body_r #is #f v1 v2 r1 r2);
+  i
+}
 
-//   // rewrite each
-//   //   is'
-//   // as
-//   //   add_one pi is;
+fn split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
+  requires pledge is f (v1 ** v2)
+  returns i : iname
+  ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2 ** pure (not (mem_inv is i))
+{
+  later_credit_buy 2;
+  let i = ghost_split_pledge #is #f v1 v2;
+  i
+}
 
-//   // pi
-// }
-// 
-
-// let split_pledge = __split_pledge
-
-// (* /split_pledge *)
+(* /split_pledge *)

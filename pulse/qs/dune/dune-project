@@ -1,0 +1,7 @@
+(lang dune 3.8)
+(name qsort)
+
+(package
+  (name qsort)
+  (synopsis "An example F* application")
+)

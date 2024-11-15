@@ -27,7 +27,7 @@ module U32 = FStar.UInt32
 let maybe (b:bool) (p:slprop) =
   if b then p else emp
 
-let lock_inv (r:B.box U32.t) (p:slprop) : v:slprop { is_storable p ==> is_storable v } =
+let lock_inv (r:B.box U32.t) (p:slprop) : slprop =
   exists* v. B.pts_to r v ** maybe (v = 0ul) p
 
 noeq
@@ -54,7 +54,7 @@ fn dup_lock_alive (l:lock) (p:slprop)
 
 
  //new_lock$
-fn new_lock (p:slprop { is_storable p })
+fn new_lock (p:slprop)
 requires p
 returns l:lock
 ensures lock_alive l p
@@ -80,11 +80,13 @@ ensures lock_alive l p ** p
 //acquire_body$
 {
   unfold lock_alive;
+  later_credit_buy 1;
   let b = 
     with_invariants l.i
       returns b:bool
-      ensures lock_inv l.r p ** maybe b p
+      ensures later (lock_inv l.r p) ** maybe b p
       opens [l.i] {
+      later_elim _;
       unfold lock_inv;
       let b = cas_box l.r 0ul 1ul;
       if b
@@ -95,6 +97,7 @@ ensures lock_alive l p ** p
         rewrite (maybe false p) as (maybe (1ul = 0ul) p);
         fold (lock_inv l.r p);
         fold (maybe true p);
+        later_intro (lock_inv l.r p);
         true
       }
       else
@@ -102,6 +105,7 @@ ensures lock_alive l p ** p
         elim_cond_false _ _ _;
         fold (lock_inv l.r p);
         fold (maybe false p);
+        later_intro (lock_inv l.r p);
         false
       }
     };
@@ -117,15 +121,18 @@ requires lock_alive l p ** p
 ensures lock_alive l p
 {
   unfold lock_alive;
+  later_credit_buy 1;
   with_invariants l.i
     returns _:unit
-    ensures lock_inv l.r p
+    ensures later (lock_inv l.r p)
     opens [l.i] {
+    later_elim _;
     unfold lock_inv;
     write_atomic_box l.r 0ul;
     drop_ (maybe _ _); //double release
     fold (maybe (0ul = 0ul) p);
     fold (lock_inv l.r p);
+    later_intro (lock_inv l.r p);
   };
   fold lock_alive
 }

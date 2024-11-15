@@ -18,29 +18,27 @@ let add (#a:Type) (f:Set.decide_eq a) (x:a) (y:Set.set a) = Set.union (Set.singl
 
 noeq
 type separable (mem:Type u#a) = {
-  core: Type u#a;
-  core_of: mem -> core;
-  empty : core;
-  disjoint : core -> core -> prop;
+  empty : mem;
+  disjoint : mem -> mem -> prop;
   join : (
-    m0:core ->
-    m1:core { disjoint m0 m1 } ->
-    core
+    m0:mem ->
+    m1:mem { disjoint m0 m1 } ->
+    mem
   );
   disjoint_sym : (
-    m0:core ->
-    m1:core ->
+    m0:mem ->
+    m1:mem ->
     Lemma (disjoint m0 m1 <==> disjoint m1 m0)
   );
   join_commutative : (
-    m0:core ->
-    m1:core { disjoint m0 m1 } ->
+    m0:mem ->
+    m1:mem { disjoint m0 m1 } ->
     Lemma (disjoint_sym m0 m1; join m0 m1 == join m1 m0)
   );
   disjoint_join : (
-    m0:core ->
-    m1:core ->
-    m2:core ->
+    m0:mem ->
+    m1:mem ->
+    m2:mem ->
     Lemma (
       disjoint m1 m2 /\
       disjoint m0 (join m1 m2) ==>
@@ -50,26 +48,26 @@ type separable (mem:Type u#a) = {
         disjoint (join m0 m2) m1)
   );
   join_associative : (
-    m0:core ->
-    m1:core ->
-    m2:core { disjoint m1 m2 /\ disjoint m0 (join m1 m2) } ->
+    m0:mem ->
+    m1:mem ->
+    m2:mem { disjoint m1 m2 /\ disjoint m0 (join m1 m2) } ->
     Lemma (disjoint m0 m1 /\
            disjoint (join m0 m1) m2 /\
            join m0 (join m1 m2) == join (join m0 m1) m2)
   );
   join_empty : (
-    m0:core ->
+    m0:mem ->
     Lemma (disjoint m0 empty /\ join m0 empty == m0)
   );
 }
 
-let is_affine_mem_prop (#m:Type u#a) (sep:separable m) (p:sep.core -> prop)
+let is_affine_mem_prop (#m:Type u#a) (sep:separable m) (p:m -> prop)
 : prop
-= forall (m0 m1:sep.core). p m0 /\ sep.disjoint m0 m1 ==> p (sep.join m0 m1)
+= forall (m0 m1:m). p m0 /\ sep.disjoint m0 m1 ==> p (sep.join m0 m1)
 
 let affine_mem_prop (#m:Type u#a) (sep:separable m)
 : Type u#(max 1 a)
-= p:(sep.core -> prop){ is_affine_mem_prop sep p }
+= p:(m -> prop){ is_affine_mem_prop sep p }
 
 noeq
 type heap_sig : Type u#(a + 2) = {
@@ -113,12 +111,12 @@ type heap_sig : Type u#(a + 2) = {
     pure : prop -> slprop;
     star : slprop -> slprop -> slprop;
     intro_emp: (
-      c:sep.core ->
+      c:mem ->
       Lemma (interp emp c)
     );
     pure_interp: (
       p:prop ->
-      c:sep.core ->
+      c:mem ->
       Lemma (interp (pure p) c == p)
     );
     pure_true_emp: (
@@ -129,21 +127,21 @@ type heap_sig : Type u#(a + 2) = {
       p:slprop ->
       Lemma (p == (p `star` emp))
     );
-    star_commutative: (
-      p:slprop ->
-      q:slprop ->
-      Lemma (p `star` q == q `star` p)
-    );
-    star_associative: (
-      p:slprop ->
-      q:slprop ->
-      r:slprop ->
-      Lemma (p `star` (q `star` r) == (p `star` q) `star` r)
-    );
+    // star_commutative: (
+    //   p:slprop ->
+    //   q:slprop ->
+    //   Lemma (p `star` q == q `star` p)
+    // );
+    // star_associative: (
+    //   p:slprop ->
+    //   q:slprop ->
+    //   r:slprop ->
+    //   Lemma (p `star` (q `star` r) == (p `star` q) `star` r)
+    // );
     star_equiv: (
       p:slprop ->
       q:slprop ->
-      m:sep.core ->
+      m:mem ->
       Lemma (
         interp (p `star` q) m <==> 
         (exists m0 m1. 
@@ -192,7 +190,7 @@ type heap_sig : Type u#(a + 2) = {
       p:slprop ->
       m:mem ->
       Lemma 
-        (requires interp (inv i p) (sep.core_of m))
+        (requires interp (inv i p) m)
         (ensures iname_ok i m)
     );
     mem_invariant_equiv : (
@@ -202,7 +200,7 @@ type heap_sig : Type u#(a + 2) = {
       p:slprop ->
       Lemma 
         (requires
-          interp (inv i p) (sep.core_of m) /\
+          interp (inv i p) m /\
           ~(i `Set.mem` e))
         (ensures
           mem_invariant e m ==
@@ -219,13 +217,18 @@ type heap_sig : Type u#(a + 2) = {
        (requires
           iref_injective i /\
           iref_injective j /\
-          interp (inv i p) (sep.core_of m) /\
-          interp (inv j q) (sep.core_of m))
+          interp (inv i p) m /\
+          interp (inv j q) m)
        (ensures
          (p =!= q ==> i =!= j) /\
          (i==j ==> p == q))
     );
+    empty_mem_invariant : (e:Set.set iref -> Lemma (mem_invariant e sep.empty == emp))
 }
+
+val star_commutative (#h: heap_sig) (p q: h.slprop) : Lemma (p `h.star` q == q `h.star` p)
+val star_associative (#h: heap_sig) (p q r: h.slprop) : Lemma (p `h.star` (q `h.star` r) == (p `h.star` q) `h.star` r)
+
 let add_iref (#h:heap_sig) (i:h.iref) (s:GhostSet.set h.iref) = add h.deq_iref i s
 val emp_trivial (h:heap_sig u#a)
 : Lemma (forall m. h.interp h.emp m)
@@ -233,11 +236,7 @@ val emp_trivial (h:heap_sig u#a)
 let is_boxable (#h:heap_sig u#a) (p:h.slprop) : prop = h.up (h.down p) == p 
 let boxable (h:heap_sig u#a) = p:h.slprop { is_boxable p }
 
-let core_of (#h:heap_sig) (m:h.mem)
-: h.sep.core
-= h.sep.core_of m
-
-let interpret (#h:heap_sig u#h) (p:h.slprop) : h.mem -> prop = fun m -> h.interp p (h.sep.core_of m)
+let interpret (#h:heap_sig u#h) (p:h.slprop) : h.mem -> prop = fun m -> h.interp p m
 let inames (hs:heap_sig u#h) = Set.set hs.iref
 let inames_ok (#hs:heap_sig u#h) (is:inames hs) (m:hs.mem)
 : prop
@@ -399,10 +398,10 @@ val lift_ghost
       (f:erased (ghost_action_except h a opened_invariants p q))
 : ghost_action_except h a opened_invariants p q
 
-val destruct_star (#h:heap_sig u#h) (p q:h.slprop) (m:h.sep.core)
+val destruct_star (#h:heap_sig u#h) (p q:h.slprop) (m:h.mem)
 : Lemma (h.interp (p `h.star` q) m ==> h.interp p m /\ h.interp q m)
 
-val intro_pure_frame (#h:heap_sig u#h) (p:h.slprop) (q:prop) (_:squash q) (m:h.sep.core)
+val intro_pure_frame (#h:heap_sig u#h) (p:h.slprop) (q:prop) (_:squash q) (m:h.mem)
 : Lemma
   (requires h.interp p m)
   (ensures h.interp (p `h.star` h.pure q) m)

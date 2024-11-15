@@ -5,6 +5,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
+       http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,25 +14,23 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.SpinLockToken
+module Pulse.Lib.GlobalVar
 
 open Pulse.Lib.Pervasives
+open Pulse.Class.Duplicable
+open FStar.ExtractAs
+open Pulse.Lib.Trade
 
-val lock (v:slprop) : Type u#4
+val gvar (#a:Type0) (p:a -> slprop) : Type0
 
-val new_lock (v:slprop { is_storable v })
-  : stt (lock v)
-        (requires v)
-        (ensures fun _ -> emp)
+val mk_gvar
+      (#a:Type0)
+      (#p:a -> slprop) 
+      {| (x:a -> duplicable (p x)) |}
+      (init:unit -> stt a emp (fun x -> p x))
+: gvar p
 
-val lock_acquired (#v:slprop) (l:lock v) : slprop
+val read_gvar_ghost (#a:Type0) (#p:a -> slprop) (x:gvar p) : GTot a
 
-val acquire (#v:slprop) (l:lock v)
-  : stt unit
-        (requires emp)
-        (ensures fun _ -> v ** lock_acquired l)
-       
-val release (#v:slprop) (l:lock v)
-  : stt unit
-        (requires v ** lock_acquired l)
-        (ensures fun _ -> emp)
+val read_gvar (#a:Type0) (#p:a -> slprop) (x:gvar p)
+  : stt a emp (fun r -> p r ** pure (r == read_gvar_ghost x))

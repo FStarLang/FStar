@@ -53,7 +53,7 @@ ghost fn fold_pts_to #t (s: slice t) #p v
     as pts_to s #p v;
 }
 
-let pts_to_is_slprop2 x p v = ()
+let pts_to_timeless x p v = ()
 
 ghost
 fn pts_to_len (#t: Type) (s: slice t) (#p: perm) (#v: Seq.seq t)
@@ -170,7 +170,7 @@ let is_split #t s s1 s2 =
         SZ.v s.len == SZ.v s1.len + SZ.v s2.len
     )
 
-let is_split_is_slprop2 s s1 s2 = ()
+let is_split_timeless s s1 s2 = ()
 
 fn split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t)
     (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v })
@@ -185,6 +185,35 @@ fn split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t)
     unfold_pts_to s #p v;
     Seq.lemma_split v (SZ.v i);
     let elt' = AP.split s.elt #p i;
+    let s1 = {
+        elt = s.elt;
+        len = i;
+    };
+    fold_pts_to s1 #p (Seq.slice v 0 (SZ.v i));
+    let s2 = {
+        elt = elt';
+        len = s.len `SZ.sub` i;
+    };
+    fold_pts_to s2 #p (Seq.slice v (SZ.v i) (Seq.length v));
+    fold (is_split s s1 s2);
+    (s1, s2)
+}
+
+ghost
+fn ghost_split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t)
+    (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v })
+  requires pts_to s #p v
+  returns res : Ghost.erased (slice t & slice t)
+  ensures
+    (
+    pts_to (fst res) #p (Seq.slice v 0 (SZ.v i)) **
+    pts_to (snd res) #p (Seq.slice v (SZ.v i) (Seq.length v)) **
+    is_split s (fst res) (snd res)
+  )
+{
+    unfold_pts_to s #p v;
+    Seq.lemma_split v (SZ.v i);
+    let elt' = AP.ghost_split s.elt #p i;
     let s1 = {
         elt = s.elt;
         len = i;

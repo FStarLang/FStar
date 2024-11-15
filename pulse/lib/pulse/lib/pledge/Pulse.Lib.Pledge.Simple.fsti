@@ -38,7 +38,7 @@ val return_pledge (f v:slprop)
 (* The function proving a pledge can use any invariants. *)
 val make_pledge (#is:inames) (f v extra:slprop)
   (k:unit -> stt_ghost unit is (f ** extra) (fun _ -> f ** v))
-  : stt_ghost unit emp_inames extra (fun _ -> pledge f v)
+  : stt_ghost unit emp_inames (extra ** inames_live is) (fun _ -> pledge f v)
 
 (* Redeem is stateful in this simple variant, which is what
 allows to ignore the opened invariants. *)
@@ -74,5 +74,5 @@ val rewrite_pledge (#f v1 v2:slprop)
   (#is_k:inames)
   (k:unit -> stt_ghost unit is_k v1 (fun _ -> v2))
   : stt_ghost unit emp_inames
-      (pledge f v1)
+      (pledge f v1 ** inames_live is_k)
       (fun _ -> pledge f v2)

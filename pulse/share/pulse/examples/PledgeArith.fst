@@ -20,7 +20,6 @@ module PledgeArith
 (* automation wishlist for pledges *)
 
 open Pulse.Lib.Pervasives
-module T = Pulse.Lib.Task
 open Pulse.Lib.Pledge
 
 

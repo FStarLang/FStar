@@ -1,10 +1,11 @@
 (*
-   Copyright 2023 Microsoft Research
+   Copyright 2024 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
+       http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,19 +13,16 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+module Pulse.Lib.Par
+open Pulse.Lib.Core
 
-module Pulse.Lib.InvToken
-
-open Pulse.Lib.Pervasives
-
-val token (i:iname) (p:slprop) : Type u#4
-
-val witness (i:iname) (#p:slprop)
-  : stt (token i p)
-        (requires inv i p)
-        (ensures fun _ -> emp)
-
-val recall (#i:iname) (#p:slprop) (t:token i p)
-  : stt unit
-        (requires emp)
-        (ensures fun _ -> inv i p)
+val par_stt
+  (#preL:slprop)
+  (#postL:slprop)
+  (#preR:slprop)
+  (#postR:slprop)
+  (f:stt unit preL (fun _ -> postL))
+  (g:stt unit preR (fun _ -> postR))
+: stt unit
+      (preL ** preR)
+      (fun _ -> postL ** postR)

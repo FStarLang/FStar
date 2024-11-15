@@ -199,3 +199,14 @@ type rust_extraction_attr =
   | Rust_generics_bounds : list string -> rust_extraction_attr
   | Rust_derive : string -> rust_extraction_attr
   | Rust_mut_binder
+
+
+ghost
+fn dup_inames_live (is:inames)
+  requires inames_live is
+  ensures inames_live is ** inames_live is
+{
+  GhostSet.lemma_equal_intro is (GhostSet.union is is);
+  rewrite inames_live is as inames_live (GhostSet.union is is);
+  share_inames_live is is;
+}

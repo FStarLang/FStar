@@ -96,13 +96,13 @@ ensures exists* v. pts_to x v
 
 
 //lock_inv$
-let contributions (left right: GR.ref int) (i v:int) : v:slprop { is_slprop3 v }=
+let contributions (left right: GR.ref int) (i v:int) : timeless_slprop =
   exists* (vl vr:int).
     GR.pts_to left #0.5R vl **
     GR.pts_to right #0.5R vr **
     pure (v == i + vl + vr)
 
-let lock_inv (x:ref int) (init:int) (left right:GR.ref int) : v:slprop { is_slprop3 v } =
+let lock_inv (x:ref int) (init:int) (left right:GR.ref int) : timeless_slprop =
   exists* v. 
     pts_to x v **
     contributions left right init v
@@ -324,16 +324,18 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
   //incr_atomic_body_read$
   atomic
   fn read ()
-  requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
+  requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p ** later_credit 1
   returns v:int
   ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
   opens [C.iname_of c]
   {
     with_invariants (C.iname_of c)
     {
+        later_elim _;
         C.unpack_cinv_vp #p c;
         let v = atomic_read x;
         C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
+        later_intro (C.cinv_vp c (exists* v. pts_to x v ** refine v));
         v
     }
   };
@@ -353,15 +355,18 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
     C.active c p **
     cond b (aspec 'i) (aspec ('i + 1))
   {
+    later_credit_buy 1;
     let v = read ();
+    later_credit_buy 1;
     let next = 
       with_invariants (C.iname_of c)
       returns b1:bool
-      ensures C.cinv_vp c (exists* v. pts_to x v ** refine v)
+      ensures later (C.cinv_vp c (exists* v. pts_to x v ** refine v))
           ** cond b1 (aspec 'i) (aspec ('i + 1))
           ** pts_to continue true
           ** C.active c p
       {
+        later_elim _;
         C.unpack_cinv_vp c;
         unfold cond;
         let b = cas x v (v + 1);
@@ -372,6 +377,7 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
           f vv _;
           C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
           fold (cond false (aspec 'i) (aspec ('i + 1)));
+          later_intro (C.cinv_vp c (exists* v. pts_to x v ** refine v));
           false
         }
         else
@@ -379,6 +385,7 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
           unfold cond;
           C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
           fold (cond true (aspec 'i) (aspec ('i + 1)));
+          later_intro (C.cinv_vp c (exists* v. pts_to x v ** refine v));
           true
         }
       };
@@ -446,6 +453,7 @@ ensures pts_to x ('i + 2)
         (fun _ -> incr_atomic x c (step right false));
     
     C.gather2 c;
+    later_credit_buy 1;
     C.cancel c;
     unfold contributions;
     GR.gather left;
@@ -550,11 +558,11 @@ fn gather (r:ghost_pcm_ref pcm) (#n1 #n2:int1) (#v1 #v2:int1)
 }
 
 
-let lock_inv_ghost (ghost_r:ghost_pcm_ref pcm) (n:int) : v:slprop { is_slprop3 v } =
+let lock_inv_ghost (ghost_r:ghost_pcm_ref pcm) (n:int) : timeless_slprop =
   exists* n1 n2. ghost_pcm_pts_to ghost_r (half n1, half n2) **
                  pure (n == U.downgrade_val n1 + U.downgrade_val n2)
 
-let lock_inv_pcm (r:ref int) (ghost_r:ghost_pcm_ref pcm) : v:slprop { is_slprop3 v } =
+let lock_inv_pcm (r:ref int) (ghost_r:ghost_pcm_ref pcm) : timeless_slprop =
   exists* n. pts_to r n ** lock_inv_ghost ghost_r n
 
 let t1_perm (ghost_r:ghost_pcm_ref pcm) (n:int1) (t1:bool) =

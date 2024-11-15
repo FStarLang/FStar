@@ -46,6 +46,9 @@ let pulse_translate_type_without_decay : translate_type_without_decay_t = fun en
      p = "Pulse.Lib.Box.box")
     ->
       TBuf (translate_type_without_decay env arg)
+  
+  | MLTY_Named ([arg; _], p) when Syntax.string_of_mlpath p = "Pulse.Lib.GlobalVar.gvar" ->
+      translate_type_without_decay env arg
 
   | _ -> raise NotSupportedByKrmlExtension
 
@@ -153,6 +156,14 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ b ])
     when string_of_mlpath p = "Pulse.Lib.Box.box_to_ref" ->
     cb b
+  
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _post; _dup; init ])
+    when string_of_mlpath p = "Pulse.Lib.GlobalVar.mk_gvar" ->
+    cb { init with expr = MLE_App (init, [ml_unit]) }
+  
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _post; x ])
+    when string_of_mlpath p = "Pulse.Lib.GlobalVar.read_gvar" ->
+    cb x
 
   // FIXME: What should we do with DPE.run_stt? Pulse2Rust has a similar ad-hoc rule
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _post; body ])

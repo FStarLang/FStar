@@ -601,7 +601,8 @@ let rec (st_typing_weakening :
                   ->
                   let uu___5 =
                     st_typing_weakening g g' uu___3
-                      (Pulse_Typing.add_frame_l uu___4 uu___2) body_typing g1 in
+                      (Pulse_Typing.add_frame_later_l uu___4 uu___2)
+                      body_typing g1 in
                   Pulse_Typing.T_WithInv
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), uu___1, uu___2,
