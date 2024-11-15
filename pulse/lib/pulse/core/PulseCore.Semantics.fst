@@ -235,7 +235,7 @@ let rec run (#st:state u#s)
   | Ret x -> 
     weaken <| return x
   | _ ->
-    if fuel < 2 then loop () else
+    if fuel = 0 then loop () else
     let k (s:step_result a post st.emp)
     : Dv (pnst_sep st a (fuel - 1) 0 (Step?.next s) post)
     = let Step _ f = s in
