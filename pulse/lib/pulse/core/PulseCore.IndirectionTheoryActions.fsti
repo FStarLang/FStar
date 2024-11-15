@@ -1,24 +1,7 @@
-(*
-   Copyright 2024 Microsoft Research
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*)
-
 module PulseCore.IndirectionTheoryActions
 module F = FStar.FunctionalExtensionality
 module T = FStar.Tactics
 module PM = PulseCore.MemoryAlt
-module PE = PulseCore.PotentiallyErased
 module HST = PulseCore.HoareStateMonad
 open PulseCore.IndirectionTheorySep
 
@@ -35,12 +18,14 @@ let _ACTION
   (frame:slprop)
 = HST.st #full_mem a
     (requires fun m0 ->
-        inames_ok except m0.m /\
-        interp (expects `star` frame `star` mem_invariant except m0.m) m0.m)
+        fuel m0 >= 0 /\ (ATOMIC? ak ==> fuel m0 > 0) /\
+        inames_ok except m0 /\
+        interp (expects `star` frame `star` mem_invariant except m0) m0)
     (ensures fun m0 x m1 ->
-        (GHOST? ak ==> is_ghost_action m0.m m1.m /\ m0.fuel == m1.fuel) /\
-        inames_ok except m1.m /\
-        interp (provides x `star` frame `star` mem_invariant except m1.m) m1.m )
+        fuel m0 - fuel m1 <= 1 /\
+        (GHOST? ak ==> is_ghost_action m0 m1 /\ fuel m0 == fuel m1) /\
+        inames_ok except m1 /\
+        interp (provides x `star` frame `star` mem_invariant except m1) m1 )
 
 let _act_except 
     (a:Type u#a)
@@ -65,7 +50,7 @@ val later_elim (e:inames) (p:slprop)
 : ghost_act unit e (later p `star` later_credit 1) (fun _ -> p)
 
 val buy (e:inames)
-: act (PE.erased bool) e emp (fun b -> if PE.reveal b then later_credit 1 else emp)
+: act unit e emp (fun _ -> later_credit 1)
 
 val dup_inv (e:inames) (i:iref) (p:slprop)
 : ghost_act unit e 
