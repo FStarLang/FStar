@@ -30,7 +30,7 @@ without modifying the pointer.
 Use `Pulse.Lib.Slice.slice` instead when possible.
 *)
 
-val ptr : Type0 -> Type0
+val ptr ([@@@strictly_positive] elt: Type0) : Type0
 
 val base #t (p: ptr t) : GTot (A.array t)
 val offset #t (p: ptr t) : GTot nat

@@ -20,7 +20,7 @@ open Pulse.Lib.Pervasives
 module SZ = FStar.SizeT
 module A = Pulse.Lib.Array
 
-val slice : Type0 -> Type0
+val slice ([@@@strictly_positive] elt: Type0) : Type0
 
 val len (#t: Type) : slice t -> SZ.t
 

@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.ArraySwap
+module Pulse.Lib.Swap.Array
 open Pulse.Lib.Pervasives
 module SZ = FStar.SizeT
 module A = Pulse.Lib.Array
