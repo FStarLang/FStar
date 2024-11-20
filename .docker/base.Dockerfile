@@ -8,8 +8,8 @@
 # and it is copied into the home directory on the image. CI jobs
 # will NOT use this file.
 
-# We always try to build against the most current ubuntu image.
-FROM ubuntu:latest
+# FIXME: z3.4.8.5-1 can no longer be installed on Ubuntu 24.04 because python3-distutils disappeared, and the z3 opam package has not been fixed for version 4.8.5, and 23.10 and all prior non-LTS are now EOL. Reverting to the previous LTS
+FROM ubuntu:22.04
 
 RUN apt-get update
 
