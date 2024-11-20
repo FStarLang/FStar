@@ -1,0 +1,14 @@
+>> Got issues: [
+* Error 93 at Bug3232b.fst(8,0-8,12):
+  - Inconsistent qualifier annotations on Bug3232b.f
+  - Expected '[inline_for_extraction]' got '[noextract, inline_for_extraction]'
+  - Only in definition: '[noextract]'
+
+>>]
+* Warning 240 at Bug3232b.fst(4,4-4,5):
+  - Bug3232b.f is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at Bug3232b.fst(8,0-8,12):
+  - Missing definitions in module Bug3232b: f
+

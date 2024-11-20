@@ -18,7 +18,7 @@ module FStar.Math.Lemmas
 open FStar.Mul
 open FStar.Math.Lib
 
-#push-options "--fuel 0 --ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 
 (* Lemma: definition of Euclidean division *)
 let euclidean_div_axiom a b = ()

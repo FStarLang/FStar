@@ -9,30 +9,17 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_e8ffb7d227a1bbf69407a8d2ad2c4c83",
-        "assumption_FStar.Pervasives.__internal_ocaml_attributes__uu___haseq",
-        "constructor_distinct_Tm_unit", "equality_tok_Prims.T@tok",
-        "equation_Prims.eqtype", "equation_Prims.l_True",
-        "equation_Prims.logical", "equation_Prims.squash",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "constructor_distinct_Prims.int", "constructor_distinct_Prims.unit",
+        "equation_Prims.eqtype",
         "equation_PropositionalExtensionalityInconsistent.propExt_Type",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int",
-        "function_token_typing_Prims.l_True",
-        "function_token_typing_Prims.unit",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "haseqTm_refine_564db2f0aa0878b4d96c60508be3dd36",
-        "haseqTm_refine_f1ecc6ab6882a651504f328937700647", "int_inversion",
-        "kinding_FStar.Pervasives.__internal_ocaml_attributes@tok",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "int_inversion",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_kinding_Tm_refine_564db2f0aa0878b4d96c60508be3dd36",
-        "refinement_kinding_Tm_refine_f1ecc6ab6882a651504f328937700647",
-        "true_interp", "typing_Prims.hasEq", "typing_tok_Prims.T@tok",
-        "unit_inversion"
+        "typing_Prims.int", "typing_Prims.unit", "unit_typing"
       ],
       0,
-      "b8356c0a5fe3218816d852082b20ef30"
+      "e3f3a1135a69560af9e25b51448f7f20"
     ],
     [
       "PropositionalExtensionalityInconsistent.propExt_sub_singleton_inconsistent",
@@ -47,14 +34,14 @@
         "equation_Prims.logical", "equation_Prims.squash",
         "equation_PropositionalExtensionalityInconsistent.propExt_sub_singleton",
         "equation_PropositionalExtensionalityInconsistent.sub_singleton",
-        "fuel_guarded_inversion_Prims.trivial",
-        "function_token_typing_Prims.l_True", "kinding_Prims.trivial@tok",
+        "fuel_guarded_inversion_Prims.trivial", "kinding_Prims.trivial@tok",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_a5a4b976760c8ff6c395fec345e05f6d",
-        "true_interp", "typing_tok_Prims.T@tok", "unit_inversion"
+        "true_interp", "typing_Prims.l_True", "typing_tok_Prims.T@tok",
+        "unit_inversion"
       ],
       0,
-      "822e87a23ed536d9319e79ced8321214"
+      "de6cb4433503d990934f39202577bcdc"
     ],
     [
       "PropositionalExtensionalityInconsistent.predExt_Type_inconsistent",
@@ -65,6 +52,7 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_e8ffb7d227a1bbf69407a8d2ad2c4c83",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "constructor_distinct_Prims.trivial",
         "constructor_distinct_Prims.unit", "equality_tok_Prims.T@tok",
         "equation_PropositionalExtensionalityInconsistent.peq",
@@ -74,7 +62,7 @@
         "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "161428762926cd866899cd9219202c47"
+      "e617efb6f2a1a281933e8947474b4c1b"
     ],
     [
       "PropositionalExtensionalityInconsistent.predExt_ss_inconsistent",
@@ -85,6 +73,7 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_e8ffb7d227a1bbf69407a8d2ad2c4c83",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "constructor_distinct_Prims.trivial",
         "constructor_distinct_Prims.unit", "equality_tok_Prims.T@tok",
         "equation_PropositionalExtensionalityInconsistent.peq_ss",
@@ -95,7 +84,7 @@
         "typing_tok_Prims.T@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "10b02a1c21fc390ad1205b69ac89ab57"
+      "0c97ecd83aeb384c2b44f5035ac58f49"
     ]
   ]
 ]

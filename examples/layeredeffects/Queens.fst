@@ -14,7 +14,10 @@ let quit = geneff quitOp
 
 (* But... we should be careful since if we make a typo above we could become
 inconsistent, so we add a sanity check. *)
+#push-options "--ext 'context_pruning='"
+//disable context pruning so that we really get Z3 to explore all assertions for inconsistency
 [@@expect_failure] let _ = assert False
+#pop-options
 
 type board = list int
 

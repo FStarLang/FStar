@@ -17,7 +17,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "048ea1f54eb4045497495cb69fd53fb3"
+      "4dd3a18cfd2adc929ddaf3523965732a"
     ],
     [
       "OPLSS.Log.contains_h_stable",
@@ -54,7 +54,7 @@
         "typing_OPLSS.Log.has"
       ],
       0,
-      "86cc066f0e5b360479128ff11f620efc"
+      "3f65ea53d72ccdabff6888d26829f100"
     ],
     [
       "OPLSS.Log.intro_contains_h",
@@ -70,7 +70,7 @@
         "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55"
       ],
       0,
-      "51454cdd4828211ffe36ed6e0690f349"
+      "0405a24afed9503711ccdefaef37b2e0"
     ],
     [
       "OPLSS.Log.snoc_grows_contains",
@@ -101,7 +101,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "81188297b5d71fc0eba4c98d83a07716"
+      "a60d71c9fe4efdb15d37921fb086c1c4"
     ],
     [
       "OPLSS.Log.contains",
@@ -110,7 +110,7 @@
       1,
       [ "@query" ],
       0,
-      "bf877b9a2fc51542c875728a18e73046"
+      "825bd47ba2bd87df88edbff575bd50d0"
     ],
     [
       "OPLSS.Log.contains_now",
@@ -130,7 +130,7 @@
         "refinement_interpretation_Tm_refine_a626d06952ec967701441b4547090388"
       ],
       0,
-      "336cb3f33eeaffc22d25db07827aaa88"
+      "5ae89948946caa44b8c791930a8f40b5"
     ],
     [
       "OPLSS.Log.contains_now_e",
@@ -153,7 +153,7 @@
         "refinement_interpretation_Tm_refine_dbdc7fc085ee146f1b32ec00b1e53d18"
       ],
       0,
-      "9b3f00d2bb0606600244124ba394a06d"
+      "0144e1dc4aa58b19c7b4e8cbbaa61e3b"
     ],
     [
       "OPLSS.Log.new_log",
@@ -180,8 +180,7 @@
         "equation_FStar.Monotonic.HyperStack.upd",
         "equation_LowStar.Monotonic.Buffer.fresh_loc",
         "equation_OPLSS.Log.grows", "equation_OPLSS.Log.t",
-        "equation_Prims.eqtype",
-        "function_token_typing_FStar.Monotonic.Heap.heap", "int_inversion",
+        "equation_Prims.eqtype", "int_inversion",
         "lemma_FStar.Map.lemma_ContainsDom", "lemma_FStar.Map.lemma_SelUpd1",
         "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
         "lemma_FStar.Monotonic.Heap.lemma_upd_contains",
@@ -198,7 +197,8 @@
         "refinement_interpretation_Tm_refine_b913a3f691ca99086652e0a655e72f17",
         "refinement_interpretation_Tm_refine_f759b00d0ea3017d744ed132c2ce48f4",
         "typing_FStar.Map.contains", "typing_FStar.Map.sel",
-        "typing_FStar.Map.upd", "typing_FStar.Monotonic.Heap.upd",
+        "typing_FStar.Map.upd", "typing_FStar.Monotonic.Heap.heap",
+        "typing_FStar.Monotonic.Heap.upd",
         "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperHeap.rid_freeable",
         "typing_FStar.Monotonic.HyperHeap.root",
@@ -210,7 +210,7 @@
         "typing_OPLSS.Log.grows"
       ],
       0,
-      "2ef03d59a26baa4aa35d3a1906d3a316"
+      "f2f959259b980acdfa4063827446ab0d"
     ],
     [
       "OPLSS.Log.add",
@@ -239,7 +239,6 @@
         "equation_OPLSS.Log.has", "equation_OPLSS.Log.t",
         "equation_Prims.eqtype", "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mreference_",
-        "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_OPLSS.Log.grows", "int_inversion",
         "int_typing",
         "interpretation_Tm_abs_2b34c3921953c0a53b122a0054a0f2bb",
@@ -269,7 +268,8 @@
         "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
         "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55",
         "typing_FStar.Map.contains", "typing_FStar.Map.sel",
-        "typing_FStar.Map.upd", "typing_FStar.Monotonic.Heap.upd",
+        "typing_FStar.Map.upd", "typing_FStar.Monotonic.Heap.heap",
+        "typing_FStar.Monotonic.Heap.upd",
         "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperHeap.rid_freeable",
         "typing_FStar.Monotonic.HyperStack.as_ref",
@@ -284,7 +284,7 @@
         "typing_OPLSS.Log.has"
       ],
       0,
-      "abb025e78ed7dc5a6946c4e3ad1f8318"
+      "0d7ab33e615f0aac6b92baad1e3cf217"
     ],
     [
       "OPLSS.Log.index_mem",
@@ -327,7 +327,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "00411de2df37c7e9e040ac36d49a3f54"
+      "9646ba04f96d8c4ae721f8ff3fc974d6"
     ],
     [
       "OPLSS.Log.find",
@@ -381,7 +381,7 @@
         "typing_OPLSS.Log.grows"
       ],
       0,
-      "9e0edd4098a9391b6437ecf382dd530e"
+      "ee6d65a04935dd68a7fbac76c00b317e"
     ]
   ]
 ]

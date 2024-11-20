@@ -1,5 +1,5 @@
 { batteries, buildDunePackage, includeBinaryAnnotations ? false
-, installShellFiles, lib, makeWrapper, menhir, menhirLib, memtrace, ocaml
+, installShellFiles, lib, makeWrapper, menhir, menhirLib, memtrace, mtime, ocaml
 , pprint, ppxlib, ppx_deriving, ppx_deriving_yojson, process, removeReferencesTo
 , sedlex, stdint, version, yojson, zarith }:
 
@@ -32,6 +32,7 @@ buildDunePackage {
     yojson
     zarith
     memtrace
+    mtime
   ];
 
   enableParallelBuilding = true;
@@ -48,7 +49,7 @@ buildDunePackage {
   else ''
     # Binary annotations are useful only for nice IDE integration while developping OCaml programs that depend on the F* library
     # Meanwhile, they add a dependency to the OCaml compiler and are thus removed by default
-    rm $out/lib/ocaml/${ocaml.version}/site-lib/fstar/lib/*.cmt
+    rm -f $out/lib/ocaml/${ocaml.version}/site-lib/fstar/lib/*.cmt
   '');
 
   FSTAR_COMMIT = version;

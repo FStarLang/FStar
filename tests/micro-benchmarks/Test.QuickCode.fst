@@ -50,7 +50,7 @@ let upd (r:reg_file) (x:int) (v:int) = fun y -> if x=y then v else sel r y
 ////////////////////////////////////////////////////////////////////////////////
 //#reset-options "--z3rlimit 10 --admit_smt_queries true"
 
-#set-options "--debug NBE"
+(* #set-options "--debug NBE" *)
 //#set-options "--debug print_normalized_terms,NBE"
 
 noeq type state = {
@@ -96,7 +96,7 @@ let wp_compute_ghash_incremental (x:int) (s0:state) (k:(state -> Type0)) : Type0
   (k sM)
 
 //#reset-options "--z3rlimit 10 --debug NBE --debug SMTQuery"
-#reset-options "--z3rlimit 10 --admit_smt_queries true --debug SMTQuery"
+#push-options "--z3rlimit 10 --admit_smt_queries true"
 
 let lemma_gcm_core (s0:state) (x:int) : Lemma True =
   let k s =
@@ -170,5 +170,4 @@ let lemma_gcm_core (s0:state) (x:int) : Lemma True =
 
   assert (normal (k s0))
 
-
-
+#pop-options

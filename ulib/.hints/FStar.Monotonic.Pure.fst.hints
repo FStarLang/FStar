@@ -1,0 +1,76 @@
+[
+  "ã+\bÔ\u0000 ØX<+\u001b\u0015<3Å_",
+  [
+    [
+      "FStar.Monotonic.Pure.elim_pure_wp_monotonicity",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pure_wp",
+        "equation_Prims.pure_wp_monotonic0",
+        "function_token_typing_Prims.pure_wp_monotonic",
+        "refinement_interpretation_Tm_refine_15e0beb75f7033bad5fae236999feebe",
+        "token_correspondence_Prims.pure_wp_monotonic0"
+      ],
+      0,
+      "a8ea87a82776d108546eb7d1e157b170"
+    ],
+    [
+      "FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pure_wp",
+        "equation_Prims.pure_wp_monotonic0",
+        "function_token_typing_Prims.pure_wp_monotonic",
+        "refinement_interpretation_Tm_refine_15e0beb75f7033bad5fae236999feebe",
+        "token_correspondence_Prims.pure_wp_monotonic0"
+      ],
+      0,
+      "d3f070d57ae1c44dc2835d163347a45a"
+    ],
+    [
+      "FStar.Monotonic.Pure.intro_pure_wp_monotonicity",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Prims.pure_wp_monotonic0",
+        "function_token_typing_Prims.pure_wp_monotonic",
+        "token_correspondence_Prims.pure_wp_monotonic0"
+      ],
+      0,
+      "8a451eaf184c0e1791252cb6dbeb3d2d"
+    ],
+    [
+      "FStar.Monotonic.Pure.as_pure_wp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5513bf237a404138b31e402a0c8b9350"
+    ],
+    [
+      "FStar.Monotonic.Pure.elim_pure",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "eq2-interp", "equation_Prims.l_True", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_",
+        "interpretation_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec",
+        "l_imp-interp", "l_quant_interp_904a74cfe3507104488fdcb4d014247a",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec"
+      ],
+      0,
+      "2a735d3fb9d0a7caacf575f979b96a8c"
+    ]
+  ]
+]

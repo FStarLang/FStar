@@ -16,7 +16,7 @@
 module FStar.Tactics.Canon
 
 open FStar.Reflection.V2
-open FStar.Tactics.V2
+open FStar.Tactics.V2.Bare
 open FStar.Reflection.V2.Arith
 open FStar.Mul
 module O = FStar.Order
@@ -175,6 +175,5 @@ let canon_point_entry () : Tac unit =
     | _ ->
         fail ("impossible: " ^ term_to_string g)
 
-[@@plugin]
 let canon () : Tac unit =
     pointwise canon_point_entry

@@ -1,9 +1,0 @@
->> Got issues: [
-* Error 66 at Bug2010.fst(6,66-6,67):
-  - Failed to resolve implicit argument ?14
-    of type Prims.nat
-    introduced for user-provided implicit term at Bug2010.fst(6,66-6,67)
-
->>]
-Verified module: Bug2010
-All verification conditions discharged successfully

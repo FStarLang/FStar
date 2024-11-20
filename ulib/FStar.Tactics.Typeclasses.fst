@@ -264,14 +264,9 @@ let rec tcresolve' (st:st_t) : Tac unit =
        local st g tcresolve' <|>
        global st g tcresolve') ()
 
-let rec concatMap (f : 'a -> Tac (list 'b)) (l : list 'a) : Tac (list 'b) =
-  match l with
-  | [] -> []
-  | x::xs -> f x @ concatMap f xs
-
 [@@plugin]
 let tcresolve () : Tac unit =
-    let open FStar.Stubs.Pprint in
+    let open FStar.Pprint in
     debug (fun () -> dump ""; "tcresolve entry point");
     norm [];
     let w = cur_witness () in
@@ -284,8 +279,8 @@ let tcresolve () : Tac unit =
     // TODO: turn this into a hash map per class, ideally one that can be
     // persisted across calss.
     let glb = lookup_attr_ses (`tcinstance) (cur_env ()) in
-    let glb = glb |> concatMap (fun se ->
-              sigelt_name se |> concatMap (fun fv -> [(se, fv)])
+    let glb = glb |> Tactics.Util.concatMap (fun se ->
+              sigelt_name se |> Tactics.Util.concatMap (fun fv -> [(se, fv)])
     )
     in
     let st0 = {
@@ -298,11 +293,10 @@ let tcresolve () : Tac unit =
       debug (fun () -> "Solved to:\n\t" ^ term_to_string w)
     with
     | NoInst ->
-      let open FStar.Stubs.Pprint in
+      let open FStar.Pprint in
       fail_doc [
-        text "Typeclass resolution failed.";
-        prefix 2 1 (text "Could not solve constraint")
-          (term_to_doc (cur_goal ()));
+        prefix 2 1 (text "Could not solve typeclass constraint")
+          (bquotes (term_to_doc (cur_goal ())));
       ]
     | TacticFailure (msg,r) ->
       fail_doc_at ([text "Typeclass resolution failed."] @ msg) r
@@ -396,7 +390,7 @@ let mk_class (nm:string) : Tac decls =
           | Sg_Let {lbs} -> lookup_lb lbs proj_name
           | _ -> fail "mk_class: proj not Sg_Let?"
       in
-      (* print ("proj_ty = " ^ term_to_string proj_lb.lb_typ); *)
+      debug (fun () -> "proj_ty = " ^ term_to_string proj_lb.lb_typ);
 
       let ty =
         let bs, cod = collect_arr_bs proj_lb.lb_typ in

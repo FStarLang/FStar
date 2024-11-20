@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "1fad535d12f3428787236a18f7a8f265"
+      "88812c3bca3152b816ee38b998b0bb90"
     ],
     [
       "X64.Vale.Decls.va_op_reg_operand_reg",
@@ -22,7 +22,7 @@
         "projection_inverse_X64.Machine_s.OReg_r"
       ],
       0,
-      "a7890d626a44f45d0fb60d3c79c64516"
+      "82e5d824b57cf6f4d340b3a624cfa72e"
     ],
     [
       "X64.Vale.Decls.va_op_dst_operand_reg",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_2ef22b5edaec67adad91f2b28dd82703"
       ],
       0,
-      "9c31a79b3ff82eb4ca748ce2c5de6944"
+      "28e7fd10cb29d4486096870ad50b1c27"
     ],
     [
       "X64.Vale.Decls.va_update_operand",
@@ -57,7 +57,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "b838d3ff0408ee8f4aebce1efad665c3"
+      "f0939cb6ebaa17927445a6ff194b5a18"
     ],
     [
       "X64.Vale.Decls.va_ensure",
@@ -66,7 +66,7 @@
       0,
       [ "@query" ],
       0,
-      "71fc4806722f66aa621970088fc19474"
+      "3d80b57f1231333b529a1cdd6ab55005"
     ],
     [
       "X64.Vale.Decls.lemma_cmp_ne",
@@ -76,13 +76,13 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_X64.Machine_s.nat64",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "haseqTm_refine_a608a89bbc0a207d5920d37d906f7f40",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "99ff78c2bae1daee4a0c9116bb84afe4"
+      "cd57fa09813c732841fc2e09b5d14834"
     ],
     [
       "X64.Vale.Decls.va_lemma_whileTrue",
@@ -91,7 +91,7 @@
       0,
       [ "@query" ],
       0,
-      "bb6d72218f2970baa0f4df256f08d9bf"
+      "d8b47ac1c7c3c9b615396cfc452d4bc2"
     ],
     [
       "X64.Vale.Decls.reveal_logand128",
@@ -114,7 +114,7 @@
         "refinement_interpretation_Tm_refine_758ff42440a58a30c095e911b9c96f61"
       ],
       0,
-      "09a571c0eef17deb8af36a07e9b58650"
+      "9c457f9a73e3d36f3eea09217e26efd8"
     ]
   ]
 ]

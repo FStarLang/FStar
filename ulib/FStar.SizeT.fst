@@ -63,6 +63,7 @@ let uint16_to_sizet x = uint_to_t (U16.v x)
 let uint32_to_sizet x = uint_to_t (U32.v x)
 let uint64_to_sizet x = uint_to_t (U64.v x)
 let sizet_to_uint32 x = FStar.Int.Cast.uint64_to_uint32 (Sz?.x x)
+let sizet_to_uint64 x = (Sz?.x x)
 
 let fits_lte x y = ()
 

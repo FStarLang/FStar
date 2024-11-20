@@ -1,28 +1,20 @@
-include ../Makefile.common
+OTHERFLAGS += --warn_error -282 --ext fstar:no_absolute_paths
+NOVERIFY=1
+FSTAR_ROOT ?= ../../..
+include $(FSTAR_ROOT)/mk/test.mk
 
-FSTAR:=${FSTAR_HOME}/bin/fstar.exe $(SMT) --ide --warn_error -282 --ext fstar:no_absolute_paths
+JSON_CLEANUP=python ../cleanup.py
 
-# Feed .in to F* and record output as .out.  Output is passed through cleanup.py
+# Feed .in to F* and record output as .ideout.  Output is passed through cleanup.py
 # to ensure that the output is deterministic by pretty-printing JSON messages
 # (otherwise the order of fields in JSON dictionaries might vary across runs)
-# We turn off the .checked file cache so we don't get any races in CI
-# because we don't track dependency information.
-%.out: %.in $(FSTAR_HOME)/bin/fstar.exe
+$(OUTPUT_DIR)/%.ideout: %.in
 	$(call msg, "OUT_IDE", $<)
-	$(Q)$(eval FST := $(firstword $(subst ., ,$<)))
-	$(Q)$(FSTAR) --cache_off "$(realpath ${FST}.fst)" < "$<" | $(JSON_CLEANUP) "$@"
+	$(eval FST := $(firstword $(subst ., ,$<)))
+	$(FSTAR) --ide --silent "$(realpath ${FST}.fst)" < "$<" | $(JSON_CLEANUP) "$@"
 
 # The Harness.* tests for the push-partial-checked-file request require Harness.fst.checked
-Harness.%.out: Harness.%.in $(FSTAR_HOME)/bin/fstar.exe Harness.fst.checked
+$(OUTPUT_DIR)/Harness.%.ideout: Harness.%.in $(CACHE_DIR)/Harness.fst.checked
 	$(call msg, "OUT_IDE", $<)
 	$(Q)$(eval FST := $(firstword $(subst ., ,$<)))
-	$(Q)$(FSTAR) "$(realpath ${FST}.fst)" < "$<" | $(JSON_CLEANUP) "$@"
-
-%.checked: %
-	$(call msg, "CHECK", $<)
-	$(Q)$(FSTAR_HOME)/bin/fstar.exe $(SMT) --cache_checked_modules --silent $<
-
-.depend:
-	$(call msg, "DEPEND")
-	$(Q)$(FSTAR) --dep full $(wildcard *.fst *.fsti) > .depend
-include .depend
+	$(Q)$(FSTAR) --ide "$(realpath ${FST}.fst)" < "$<" | $(JSON_CLEANUP) "$@"

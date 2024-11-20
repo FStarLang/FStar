@@ -1,0 +1,33 @@
+>> Got issues: [
+* Error 19 at NegativeTests.False.fst(23,13-23,33):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also Prims.fst(459,77-459,89)
+
+>>]
+>> Got issues: [
+* Error 12 at NegativeTests.False.fst(30,18-30,41):
+  - Expected type Prims.l_True \/ Prims.l_True
+    but Prims.Left Prims.T
+    has type Prims.sum (*?u1*) _ Prims.l_True
+
+* Error 12 at NegativeTests.False.fst(30,42-30,66):
+  - Expected type Prims.l_True \/ Prims.l_True
+    but Prims.Right Prims.T
+    has type Prims.sum Prims.l_True (*?u6*) _
+
+>>]
+* Warning 240 at NegativeTests.False.fst(21,4-21,7):
+  - NegativeTests.False.bar is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.False.fst(28,4-28,10):
+  - NegativeTests.False.absurd is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.False.fst(30,0-30,66):
+  - Missing definitions in module NegativeTests.False:
+      absurd
+      bar
+

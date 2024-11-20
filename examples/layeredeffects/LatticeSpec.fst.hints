@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
       ],
       0,
-      "a4089744603550bd0827b16933cff929"
+      "a0c96dee7064902a9822e04ce7a7596b"
     ],
     [
       "LatticeSpec.interp",
@@ -20,7 +20,7 @@
       1,
       [ "@query", "assumption_LatticeSpec.eff_label__uu___haseq" ],
       0,
-      "c2a69bf2d3a5becac44ce66e68099eda"
+      "47d8aee61dcd8f63aa7a5bb707ef3e4f"
     ],
     [
       "LatticeSpec.interp_at",
@@ -42,8 +42,8 @@
         "binder_x_7950bf568263142fae2ec39718ca63a7_1",
         "binder_x_8a66b87a330eac804e3702e6fd6f80f2_2", "bool_inversion",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_typing_intro_LatticeSpec.WR@tok", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equality_tok_LatticeSpec.EXN@tok",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_LatticeSpec.EXN@tok",
         "equality_tok_LatticeSpec.RD@tok", "equality_tok_LatticeSpec.WR@tok",
         "equation_FStar.List.Tot.Base.op_At", "equation_LatticeSpec.annot",
         "equation_LatticeSpec.interp", "equation_Prims.eqtype",
@@ -68,7 +68,7 @@
         "typing_tok_LatticeSpec.WR@tok"
       ],
       0,
-      "c276aa8423d6bef88c11a63a27d23af0"
+      "f143891bafdaa76eb2770fffa15d99b6"
     ],
     [
       "LatticeSpec.sublist",
@@ -77,7 +77,7 @@
       1,
       [ "@query", "assumption_LatticeSpec.eff_label__uu___haseq" ],
       0,
-      "1511b1229baf4d42d4453ab95d6c2d3a"
+      "998a70594b0fae38092e7b5bd89c004b"
     ],
     [
       "LatticeSpec.sublist_refl",
@@ -86,7 +86,7 @@
       1,
       [ "@query", "equation_LatticeSpec.sublist" ],
       0,
-      "2bff438128f4210f1065cd7a1ed9b451"
+      "ce0d255e8929e3a50cdfa58e20cd8995"
     ],
     [
       "LatticeSpec.interp_sublist",
@@ -102,10 +102,10 @@
         "binder_x_7950bf568263142fae2ec39718ca63a7_0",
         "binder_x_7950bf568263142fae2ec39718ca63a7_1",
         "binder_x_8a66b87a330eac804e3702e6fd6f80f2_2", "bool_inversion",
-        "constructor_distinct_Prims.Cons",
-        "data_typing_intro_LatticeSpec.WR@tok", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equation_LatticeSpec.interp",
-        "equation_LatticeSpec.sublist", "equation_Prims.eqtype",
+        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_LatticeSpec.WR@tok",
+        "equation_LatticeSpec.interp", "equation_LatticeSpec.sublist",
+        "equation_Prims.eqtype",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "interpretation_Tm_abs_8bac02395235ec15fae59220f77c40bd",
@@ -117,10 +117,10 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_LatticeSpec.interp",
-        "typing_FStar.List.Tot.Base.mem"
+        "typing_FStar.List.Tot.Base.mem", "typing_tok_LatticeSpec.WR@tok"
       ],
       0,
-      "027f3e369d7976e79b96a4b2deb276e6"
+      "c8b637287d07e8041ce3dc35e2530f7a"
     ],
     [
       "LatticeSpec.sublist_at",
@@ -138,9 +138,10 @@
         "binder_x_7950bf568263142fae2ec39718ca63a7_0",
         "binder_x_7950bf568263142fae2ec39718ca63a7_1", "bool_inversion",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_typing_intro_LatticeSpec.WR@tok", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equation_FStar.List.Tot.Base.op_At",
-        "equation_LatticeSpec.sublist", "equation_Prims.eqtype",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_LatticeSpec.WR@tok",
+        "equation_FStar.List.Tot.Base.op_At", "equation_LatticeSpec.sublist",
+        "equation_Prims.eqtype",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "fuel_guarded_inversion_LatticeSpec.eff_label",
@@ -153,10 +154,10 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.mem",
-        "typing_FStar.List.Tot.Base.op_At"
+        "typing_FStar.List.Tot.Base.op_At", "typing_tok_LatticeSpec.WR@tok"
       ],
       0,
-      "3c7cf44cc8089ca2807d7429c73d81c3"
+      "fa4cbd1ee378baf78721b4792047a95f"
     ],
     [
       "LatticeSpec.return",
@@ -181,7 +182,7 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v"
       ],
       0,
-      "a0968214ddf3fd5af27919f79ae07d08"
+      "0d94d1fe71b0530083727c3c3f75aaae"
     ],
     [
       "LatticeSpec.bind",
@@ -196,14 +197,13 @@
         "LatticeSpec_interpretation_Tm_arrow_1daa04d392f7c76712e4edfea0bc0f73",
         "LatticeSpec_interpretation_Tm_arrow_47a6f6a0597b58cafa402d51060429eb",
         "LatticeSpec_interpretation_Tm_arrow_a2a7f66b90209a82957f7dfa88039cd2",
+        "LatticeSpec_interpretation_Tm_arrow_c5343ea32846b28a933261a8b2a4af25",
         "LatticeSpec_interpretation_Tm_arrow_c6ce43fcce0a4c3af1b3dd25e21bee7c",
-        "LatticeSpec_interpretation_Tm_arrow_d7144e9cbc7ffde09322d5ce2832c7d6",
         "LatticeSpec_pretyping_8a66b87a330eac804e3702e6fd6f80f2",
         "assumption_LatticeSpec.eff_label__uu___haseq", "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Tm_unit",
         "data_elim_FStar.Pervasives.Native.Some",
-        "data_typing_intro_LatticeSpec.WR@tok",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equality_tok_LatticeSpec.EXN@tok",
@@ -220,16 +220,12 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_LatticeSpec.interp",
-        "function_token_typing_LatticeSpec.state", "int_inversion",
-        "interpretation_Tm_abs_1f904173b64c504f774cd161f3e738e6",
+        "function_token_typing_LatticeSpec.interp", "int_inversion",
         "interpretation_Tm_abs_216ec4598ed36889d15032576f3222f6",
+        "interpretation_Tm_abs_6b9db6236236adce6776dcd020bfe22d",
         "interpretation_Tm_abs_8bac02395235ec15fae59220f77c40bd",
-        "interpretation_Tm_abs_a17d5eb1b6162804c7f49fb6928e06d4",
         "kinding_FStar.Pervasives.Native.option@tok",
-        "kinding_LatticeSpec.eff_label@tok", "l_and-interp", "l_or-interp",
-        "l_quant_interp_adba06fecb33840b34231b7c096388e8",
-        "l_quant_interp_c33077350e19200977e07a303491061c",
+        "kinding_LatticeSpec.eff_label@tok", "l_and-interp",
         "l_quant_interp_d32c14f51293b927e87ca0bd04e29586",
         "lemma_FStar.List.Tot.Properties.append_l_nil",
         "lemma_FStar.Pervasives.invertOption", "lemma_LatticeSpec.interp_at",
@@ -241,9 +237,9 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Tm_refine_22e2a8ea358b70b93e3f5435247aa3e7",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_4de6044574d5ede2a85bb389d295252a",
         "refinement_interpretation_Tm_refine_72c2637aff0fabecefa998cd005a3a50",
         "refinement_interpretation_Tm_refine_891a171fa58da3b599c98c433e2eaeed",
-        "refinement_interpretation_Tm_refine_8aeeed4b412e16972716ee7928a2df33",
         "refinement_interpretation_Tm_refine_9db7ab675d068fb66da7bad0a683ab50",
         "refinement_interpretation_Tm_refine_d27886807ce70970cab4a3c274e3acac",
         "token_correspondence_LatticeSpec.interp",
@@ -251,12 +247,13 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
         "typing_FStar.Pervasives.Native.fst",
         "typing_FStar.Pervasives.Native.snd", "typing_LatticeSpec.interp",
-        "typing_Tm_abs_1f904173b64c504f774cd161f3e738e6",
+        "typing_LatticeSpec.state",
+        "typing_Tm_abs_6b9db6236236adce6776dcd020bfe22d",
         "typing_tok_LatticeSpec.EXN@tok", "typing_tok_LatticeSpec.RD@tok",
         "typing_tok_LatticeSpec.WR@tok"
       ],
       0,
-      "09ba07707bd84badd9f3c4bb25504bea"
+      "25be5b4331e22764db15413b2e16df26"
     ],
     [
       "LatticeSpec.subcomp",
@@ -270,7 +267,6 @@
         "LatticeSpec_interpretation_Tm_arrow_47a6f6a0597b58cafa402d51060429eb",
         "LatticeSpec_pretyping_8a66b87a330eac804e3702e6fd6f80f2",
         "assumption_LatticeSpec.eff_label__uu___haseq", "bool_inversion",
-        "data_typing_intro_LatticeSpec.WR@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equality_tok_LatticeSpec.EXN@tok",
         "equality_tok_LatticeSpec.RD@tok", "equality_tok_LatticeSpec.WR@tok",
@@ -279,8 +275,7 @@
         "equation_LatticeSpec.state", "equation_LatticeSpec.sublist",
         "equation_Prims.eqtype",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_LatticeSpec.state", "int_inversion",
+        "fuel_guarded_inversion_Prims.list", "int_inversion",
         "interpretation_Tm_abs_8bac02395235ec15fae59220f77c40bd",
         "kinding_FStar.Pervasives.Native.option@tok",
         "kinding_LatticeSpec.eff_label@tok",
@@ -291,11 +286,11 @@
         "typing_FStar.List.Tot.Base.mem",
         "typing_FStar.Pervasives.Native.fst",
         "typing_FStar.Pervasives.Native.snd", "typing_LatticeSpec.interp",
-        "typing_tok_LatticeSpec.EXN@tok", "typing_tok_LatticeSpec.RD@tok",
-        "typing_tok_LatticeSpec.WR@tok"
+        "typing_LatticeSpec.state", "typing_tok_LatticeSpec.EXN@tok",
+        "typing_tok_LatticeSpec.RD@tok", "typing_tok_LatticeSpec.WR@tok"
       ],
       0,
-      "5c94d7d0142c735aecf4cf94723a71d9"
+      "3d026bd4546bf1d21be96b9a81ac352c"
     ],
     [
       "LatticeSpec.EFF",
@@ -304,7 +299,7 @@
       1,
       [ "@query" ],
       0,
-      "75a8038cec1a1d28cfd2a0f03b59ae43"
+      "dc136cc986cb0a1b35428b46be897f16"
     ],
     [
       "LatticeSpec.EFF",
@@ -317,7 +312,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "7d2b0b13943ef16e07b6028a09a973a4"
+      "c7933290980719a0f8da8e28fd990757"
     ],
     [
       "LatticeSpec.EFF",
@@ -329,7 +324,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "bdc9a3ac0322fc3fe40c7bca1afba8ea"
+      "ae97f720de4ad0f55cbc259848d84b83"
     ],
     [
       "LatticeSpec.post_of_wp",
@@ -338,7 +333,7 @@
       1,
       [ "@query" ],
       0,
-      "e96267794e463aacd83f3f0b8d1b70c9"
+      "af567af532780471765d4976133f7ce7"
     ],
     [
       "LatticeSpec.lift_pure_eff",
@@ -356,8 +351,7 @@
         "equation_LatticeSpec.abides", "equation_LatticeSpec.state",
         "equation_Prims.l_Forall", "equation_Prims.l_True",
         "equation_Prims.logical", "equation_Prims.pure_post",
-        "equation_Prims.pure_post_", "function_token_typing_Prims.l_True",
-        "int_inversion",
+        "equation_Prims.pure_post_", "int_inversion",
         "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
         "interpretation_Tm_abs_832bd0d1793086c3e8dff9081e821cce",
         "interpretation_Tm_abs_8a1f4d0e1ba7670c76332a8022e9258a",
@@ -374,12 +368,13 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Tm_refine_c64db2df053c9bf50242592c06886fc5",
+        "typing_Prims.l_True",
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
         "typing_Tm_abs_832bd0d1793086c3e8dff9081e821cce",
         "typing_Tm_abs_8a1f4d0e1ba7670c76332a8022e9258a"
       ],
       0,
-      "314920da6dfc3adace6a21503f4e6486"
+      "0d3305593d757b0ebb73fa81b2de94f4"
     ],
     [
       "LatticeSpec._get",
@@ -393,11 +388,10 @@
         "assumption_LatticeSpec.eff_label__uu___haseq",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons",
-        "data_typing_intro_LatticeSpec.WR@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "equality_tok_LatticeSpec.RD@tok",
+        "equality_tok_LatticeSpec.RD@tok", "equality_tok_LatticeSpec.WR@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
         "equation_LatticeSpec.abides", "equation_LatticeSpec.interp",
@@ -418,10 +412,10 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_tok_LatticeSpec.RD@tok"
+        "typing_tok_LatticeSpec.RD@tok", "typing_tok_LatticeSpec.WR@tok"
       ],
       0,
-      "8e77ee427bc672530939e3e6de984da2"
+      "acc6df0c02b2c5b0d29e1412f3a80257"
     ],
     [
       "LatticeSpec._put",
@@ -432,11 +426,11 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@query", "LatticeSpec_pretyping_8a66b87a330eac804e3702e6fd6f80f2",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "assumption_LatticeSpec.eff_label__uu___haseq",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons",
         "data_typing_intro_FStar.Pervasives.Native.Some@tok",
-        "data_typing_intro_LatticeSpec.WR@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
         "disc_equation_FStar.Pervasives.Native.None",
@@ -444,11 +438,10 @@
         "equality_tok_LatticeSpec.WR@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
-        "equation_FStar.Pervasives.pattern", "equation_LatticeSpec.abides",
-        "equation_LatticeSpec.interp", "equation_LatticeSpec.state",
-        "equation_Prims.eqtype",
+        "equation_LatticeSpec.abides", "equation_LatticeSpec.interp",
+        "equation_LatticeSpec.state", "equation_Prims.eqtype",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "function_token_typing_FStar.Pervasives.pattern", "int_inversion",
+        "int_inversion",
         "interpretation_Tm_abs_22b40eebddf0ccf4981baa41621c0865",
         "interpretation_Tm_abs_8bac02395235ec15fae59220f77c40bd",
         "kinding_LatticeSpec.eff_label@tok",
@@ -464,10 +457,10 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_tok_LatticeSpec.WR@tok", "unit_typing"
+        "typing_Prims.unit", "typing_tok_LatticeSpec.WR@tok", "unit_typing"
       ],
       0,
-      "6c444a18f1e6bec235999dc857bac4f3"
+      "f1d3fc6ddd26760f014f0b71d8081c21"
     ],
     [
       "LatticeSpec.put",
@@ -476,7 +469,7 @@
       1,
       [ "@query", "equation_LatticeSpec.abides" ],
       0,
-      "f44c26e44df4852dbfdde8875cf6dd02"
+      "8a8114b12c3f006fb92dab21a775c3ec"
     ],
     [
       "LatticeSpec._raise",
@@ -493,17 +486,17 @@
         "assumption_LatticeSpec.eff_label__uu___haseq",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Prims.Cons",
-        "data_typing_intro_LatticeSpec.WR@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
         "disc_equation_FStar.Pervasives.Native.None", "eq2-interp",
         "equality_tok_LatticeSpec.EXN@tok",
+        "equality_tok_LatticeSpec.WR@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
         "equation_LatticeSpec.abides", "equation_LatticeSpec.interp",
         "equation_LatticeSpec.state", "equation_Prims.eqtype",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "function_token_typing_LatticeSpec.state", "int_inversion",
+        "int_inversion",
         "interpretation_Tm_abs_3f3f3de84dece399017889375153fc56",
         "interpretation_Tm_abs_8bac02395235ec15fae59220f77c40bd",
         "interpretation_Tm_abs_8d9219654969e04b32e6c2605492b421",
@@ -524,10 +517,11 @@
         "refinement_interpretation_Tm_refine_891a171fa58da3b599c98c433e2eaeed",
         "refinement_interpretation_Tm_refine_d27886807ce70970cab4a3c274e3acac",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
-        "typing_tok_LatticeSpec.EXN@tok"
+        "typing_LatticeSpec.state", "typing_tok_LatticeSpec.EXN@tok",
+        "typing_tok_LatticeSpec.WR@tok"
       ],
       0,
-      "a77de1a8696676037530e0569555e29c"
+      "ccbfa04b2ce112833b7f698c8daf45c4"
     ],
     [
       "LatticeSpec.test0",
@@ -554,7 +548,7 @@
         "typing_tok_LatticeSpec.RD@tok"
       ],
       0,
-      "318333a35754378b72006a191ad79e8b"
+      "c115bdb1dd614595814620e4e5772170"
     ],
     [
       "LatticeSpec.test1",
@@ -564,10 +558,8 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "@query", "LatticeSpec_pretyping_8a66b87a330eac804e3702e6fd6f80f2",
-        "assumption_LatticeSpec.eff_label__uu___haseq",
-        "constructor_distinct_Prims.Cons", "data_elim_Prims.Cons",
-        "data_typing_intro_LatticeSpec.WR@tok",
+        "@query", "assumption_LatticeSpec.eff_label__uu___haseq",
+        "constructor_distinct_Prims.Cons",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
         "equality_tok_LatticeSpec.EXN@tok",
@@ -583,7 +575,7 @@
         "typing_tok_LatticeSpec.RD@tok", "typing_tok_LatticeSpec.WR@tok"
       ],
       0,
-      "1cca7a52c0602bdc006449c6a8e1bd54"
+      "8c65bcab1a6ce255851577339e7a3461"
     ],
     [
       "LatticeSpec.sublist_at_self",
@@ -597,7 +589,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "1ca868376975539e4f048b007d4c8fed"
+      "c607e7c958e0f1f7decd97c5beb73440"
     ],
     [
       "LatticeSpec.labpoly",
@@ -605,12 +597,13 @@
       2,
       1,
       [
-        "@query", "kinding_LatticeSpec.eff_label@tok",
+        "@query", "equation_FStar.List.Tot.Base.op_At",
+        "kinding_LatticeSpec.eff_label@tok",
         "lemma_FStar.List.Tot.Properties.append_l_nil",
         "lemma_LatticeSpec.sublist_at_self"
       ],
       0,
-      "efb512a28d9b0a2a7bf8ecf42549208d"
+      "8a03cf6799fbf306bcfeb939b809efb6"
     ],
     [
       "LatticeSpec.catch0",
@@ -625,7 +618,6 @@
         "LatticeSpec_interpretation_Tm_arrow_18fd99887a6f6bf9d46fa597c6112740",
         "LatticeSpec_interpretation_Tm_arrow_47a6f6a0597b58cafa402d51060429eb",
         "LatticeSpec_interpretation_Tm_arrow_c6ce43fcce0a4c3af1b3dd25e21bee7c",
-        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
         "assumption_LatticeSpec.eff_label__uu___haseq", "bool_inversion",
         "constructor_distinct_BoxString",
         "constructor_distinct_FStar.Pervasives.Native.Some",
@@ -648,7 +640,7 @@
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_LatticeSpec.state", "int_inversion",
+        "int_inversion",
         "interpretation_Tm_abs_5f1695dfb94fc63ba4b1c1ee4e4bd451",
         "interpretation_Tm_abs_8bac02395235ec15fae59220f77c40bd",
         "interpretation_Tm_abs_dd12a11c989540a200821b0f480f6de0",
@@ -667,16 +659,17 @@
         "refinement_interpretation_Tm_refine_72c2637aff0fabecefa998cd005a3a50",
         "refinement_interpretation_Tm_refine_891a171fa58da3b599c98c433e2eaeed",
         "refinement_interpretation_Tm_refine_d27886807ce70970cab4a3c274e3acac",
-        "string_typing", "true_interp",
+        "true_interp",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
         "typing_FStar.Pervasives.Native.fst",
         "typing_FStar.Pervasives.Native.snd", "typing_LatticeSpec.interp",
+        "typing_LatticeSpec.state",
         "typing_Tm_abs_dd12a11c989540a200821b0f480f6de0",
         "typing_tok_LatticeSpec.EXN@tok", "typing_tok_LatticeSpec.RD@tok",
         "typing_tok_LatticeSpec.WR@tok"
       ],
       0,
-      "b39be833db5ac779b2df51e7a34ce0d4"
+      "c540e53db2118ebc6439b192396d0692"
     ],
     [
       "LatticeSpec.g",
@@ -696,7 +689,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "dd1d8f1e8cea069cb9cb5a085c92e947"
+      "427cc951ee5d2ec2bed207c5529dc4b2"
     ],
     [
       "LatticeSpec.test_catch",
@@ -708,7 +701,6 @@
         "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "@query", "LatticeSpec_pretyping_8a66b87a330eac804e3702e6fd6f80f2",
         "constructor_distinct_Prims.Nil", "data_elim_Prims.Cons",
-        "data_typing_intro_LatticeSpec.WR@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
         "equality_tok_LatticeSpec.EXN@tok",
@@ -720,7 +712,7 @@
         "typing_tok_LatticeSpec.EXN@tok", "typing_tok_LatticeSpec.WR@tok"
       ],
       0,
-      "fe926f1ed5eaa9ee3267fc4953515f1c"
+      "f88625d43d9bfa20c6f5ea23d8f9e8c1"
     ],
     [
       "LatticeSpec.test_catch2",
@@ -732,7 +724,6 @@
         "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "@query", "LatticeSpec_pretyping_8a66b87a330eac804e3702e6fd6f80f2",
         "constructor_distinct_Prims.Nil", "data_elim_Prims.Cons",
-        "data_typing_intro_LatticeSpec.WR@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
         "equality_tok_LatticeSpec.EXN@tok",
@@ -744,7 +735,7 @@
         "typing_tok_LatticeSpec.EXN@tok", "typing_tok_LatticeSpec.WR@tok"
       ],
       0,
-      "c6987f2c10b2f1d2fe2a173f5998ce3f"
+      "bf3e515a797445bcbbc05ce59c187713"
     ]
   ]
 ]

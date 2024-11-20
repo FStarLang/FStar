@@ -13,3 +13,5 @@ let main () =
       failwith "'A' must be 65ul";
     print_string "correct\n";
     0
+
+let _ = main ()

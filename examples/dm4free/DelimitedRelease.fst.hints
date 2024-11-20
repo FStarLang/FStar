@@ -11,13 +11,14 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_Prims.eqtype",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int", "int_inversion", "int_typing",
+        "int_inversion", "int_typing",
         "lemma_FStar.DM4F.Heap.upd_contains_a_well_typed",
         "primitive_Prims.op_Subtraction",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "feea321fa4fde95a5cb09ddba3929b41"
+      "5966ed5c7c0da891973eb464f3b5ab25"
     ],
     [
       "DelimitedRelease.addr_set",
@@ -26,12 +27,13 @@
       0,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "53f219a47dd24e9cda2c9ae39fbd0a74"
+      "98ee8eeac22007fb5cb5e9653e36837b"
     ],
     [
       "DelimitedRelease.delimited_release_wallet",
@@ -45,6 +47,7 @@
         "FStar.DM4F.Heap.ST.__proj__STATE__item__put_equality",
         "FStar.DM4F.Heap.ST_interpretation_Tm_arrow_3b04e6e179fe4fabe28fe13ac21d6cec",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_DelimitedRelease.heap_equiv_on",
         "equation_DelimitedRelease.wallet",
         "equation_FStar.DM4F.Heap.ST.op_Bang",
@@ -53,7 +56,6 @@
         "equation_FStar.DM4F.Heap.ST.write", "equation_Prims.eqtype",
         "equation_Prims.nat",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "int_typing",
         "interpretation_Tm_abs_33ca3e15ccdbf81acba6953928f085d6",
@@ -81,10 +83,11 @@
         "token_correspondence_FStar.DM4F.Heap.ST.read",
         "token_correspondence_FStar.DM4F.Heap.ST.write",
         "typing_DelimitedRelease.wallet", "typing_FStar.DM4F.Heap.ST.read",
-        "typing_FStar.DM4F.Heap.upd_tot", "unit_inversion"
+        "typing_FStar.DM4F.Heap.upd_tot", "typing_Prims.int",
+        "unit_inversion", "unit_typing"
       ],
       0,
-      "a6861baa445efd5fdf7c352e5d76c5c1"
+      "d9ee65c8824087a16be46f0d54040185"
     ]
   ]
 ]

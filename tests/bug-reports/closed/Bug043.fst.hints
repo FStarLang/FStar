@@ -1,0 +1,26 @@
+[
+  "¨ñoüxŠUËdW<W‚¡ú",
+  [
+    [
+      "Bug043.nat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f9a3e076f1089384dff1b9da7829e0ed"
+    ],
+    [
+      "Bug043.__proj__S__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e9b75321b1c0b82fe3be1f811b1a5f79"
+      ],
+      0,
+      "f5b11085be9c5fb304b90c321cbb2011"
+    ]
+  ]
+]

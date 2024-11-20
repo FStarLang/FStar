@@ -18,8 +18,6 @@
         "equation_FStar.Stubs.Reflection.Types.typ",
         "equation_FStar.Stubs.Tactics.Types.issues", "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
-        "function_token_typing_FStar.Stubs.Tactics.Types.issues",
-        "function_token_typing_Prims.string",
         "kinding_FStar.Pervasives.Native.option@tok",
         "lemma_FStar.Pervasives.invertOption",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
@@ -27,10 +25,11 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
         "typing_FStar.Stubs.Reflection.V2.Builtins.pack_fv",
         "typing_FStar.Stubs.Reflection.V2.Builtins.pack_ln",
-        "typing_FStar.Stubs.Tactics.Types.equiv_token"
+        "typing_FStar.Stubs.Tactics.Types.equiv_token",
+        "typing_FStar.Stubs.Tactics.Types.issues", "typing_Prims.string"
       ],
       0,
-      "5f0c7a918c7d4917f1a0097981951d40"
+      "cbf94f26c6a200444307a4f9b9705818"
     ],
     [
       "PulseBug100.uu___0",
@@ -49,8 +48,6 @@
         "equation_FStar.Stubs.Reflection.Types.typ",
         "equation_FStar.Stubs.Tactics.Types.issues", "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
-        "function_token_typing_FStar.Stubs.Tactics.Types.issues",
-        "function_token_typing_Prims.string",
         "kinding_FStar.Pervasives.Native.option@tok",
         "lemma_FStar.Pervasives.invertOption",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
@@ -58,13 +55,14 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
         "typing_FStar.Stubs.Reflection.V2.Builtins.pack_fv",
         "typing_FStar.Stubs.Reflection.V2.Builtins.pack_ln",
-        "typing_FStar.Stubs.Tactics.Types.equiv_token"
+        "typing_FStar.Stubs.Tactics.Types.equiv_token",
+        "typing_FStar.Stubs.Tactics.Types.issues", "typing_Prims.string"
       ],
       0,
-      "32f7c2154560705d89d0786cc976581d"
+      "a5d3b86ff82c8e43da6c25a044772896"
     ],
     [
-      "PulseBug100.uu___11",
+      "PulseBug100.uu___1",
       1,
       2,
       1,
@@ -80,8 +78,6 @@
         "equation_FStar.Stubs.Reflection.Types.typ",
         "equation_FStar.Stubs.Tactics.Types.issues", "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
-        "function_token_typing_FStar.Stubs.Tactics.Types.issues",
-        "function_token_typing_Prims.string",
         "kinding_FStar.Pervasives.Native.option@tok",
         "lemma_FStar.Pervasives.invertOption",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
@@ -89,13 +85,14 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
         "typing_FStar.Stubs.Reflection.V2.Builtins.pack_fv",
         "typing_FStar.Stubs.Reflection.V2.Builtins.pack_ln",
-        "typing_FStar.Stubs.Tactics.Types.equiv_token"
+        "typing_FStar.Stubs.Tactics.Types.equiv_token",
+        "typing_FStar.Stubs.Tactics.Types.issues", "typing_Prims.string"
       ],
       0,
-      "20855f4e6a51c0853e9761688e617701"
+      "9b79c16f01ab3c1e8b2f151d6fc9602f"
     ],
     [
-      "PulseBug100.uu___11",
+      "PulseBug100.uu___1",
       2,
       2,
       1,
@@ -111,8 +108,6 @@
         "equation_FStar.Stubs.Reflection.Types.typ",
         "equation_FStar.Stubs.Tactics.Types.issues", "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
-        "function_token_typing_FStar.Stubs.Tactics.Types.issues",
-        "function_token_typing_Prims.string",
         "kinding_FStar.Pervasives.Native.option@tok",
         "lemma_FStar.Pervasives.invertOption",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
@@ -120,10 +115,11 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
         "typing_FStar.Stubs.Reflection.V2.Builtins.pack_fv",
         "typing_FStar.Stubs.Reflection.V2.Builtins.pack_ln",
-        "typing_FStar.Stubs.Tactics.Types.equiv_token"
+        "typing_FStar.Stubs.Tactics.Types.equiv_token",
+        "typing_FStar.Stubs.Tactics.Types.issues", "typing_Prims.string"
       ],
       0,
-      "feea3b18fa99025a3728b0db64c93596"
+      "e0fea4b76b24ac67e059d22894195730"
     ]
   ]
 ]

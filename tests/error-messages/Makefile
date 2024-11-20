@@ -1,6 +1,5 @@
-FSTAR_HOME=../..
-
-FSTAR_FILES=$(wildcard *.fst)
+FSTAR_ROOT ?= ../..
+include $(FSTAR_ROOT)/mk/test.mk
 
 # This so that we don't get warnings about:
 # 241: "unable to load checked file"
@@ -8,53 +7,39 @@ FSTAR_FILES=$(wildcard *.fst)
 # 333: "unable to read hints"
 OTHERFLAGS+=--warn_error -241-247-333-274+240
 
-# Sorry, without this we can get noise in error locations.
-# See issue #1993. Also, warnings from dependencies would
-# pollute the output.
-OTHERFLAGS+=--already_cached 'Prims FStar'
-
 # Remove --query_stats and --hint_info from this subdir, since
 # they output timing info.
 OTHERFLAGS := $(filter-out --query_stats, $(OTHERFLAGS))
 OTHERFLAGS := $(filter-out --hint_info, $(OTHERFLAGS))
+OTHERFLAGS += --ext fstar:no_absolute_paths
 
-check-all: $(addsuffix .check, $(FSTAR_FILES))
-all: check-all
+# Make sure we are silent
+OTHERFLAGS += --silent
 
 # For these tests, we check that the resugared output
-# matches the expected file.
-Bug1997.fst.output: OTHERFLAGS+=--dump_module Bug1997
-Bug2820.fst.output: OTHERFLAGS+=--dump_module Bug2820
-Bug3145.fst.output: OTHERFLAGS+=--dump_module Bug3145
-Bug3227.fst.output: OTHERFLAGS+=--dump_module Bug3227
-Bug3292.fst.output: OTHERFLAGS+=--dump_module Bug3292
-CalcImpl.fst.output: OTHERFLAGS+=--dump_module CalcImpl
-DTuples.fst.output: OTHERFLAGS+=--dump_module DTuples
-SeqLit.fst.output: OTHERFLAGS+=--dump_module SeqLit
-
-include $(FSTAR_HOME)/examples/Makefile.common
-
-%.check: %.expected %.output
-	$(Q)diff -u --strip-trailing-cr $^
-	$(Q)touch $@
-
-%.accept: %.output
-	$(Q)cp $< $(patsubst %.output,%.expected,$<)
-
-clean:
-	$(call msg, "CLEAN", $<)
-	$(Q)rm -f .depend
-	$(Q)rm -f *.check
-	$(Q)rm -f *.output
-	$(Q)rm -rf _output
-	$(Q)rm -rf _cache
-
-accept: $(addsuffix .accept, $(FSTAR_FILES))
-
-.PHONY: %.check
-
-# Re-do all tests
-re: clean all
-
-# Keep the output files so we can look at them easily
-.SECONDARY: $(patsubst %,%.output,$(FSTAR_FILES))
+# matches the expected file. We have to repeat the lines for
+# json_output, sadly.
+$(OUTPUT_DIR)/Bug1997.fst.json_output  : OTHERFLAGS+=--dump_module Bug1997
+$(OUTPUT_DIR)/Bug1997.fst.output       : OTHERFLAGS+=--dump_module Bug1997
+$(OUTPUT_DIR)/Bug2820.fst.json_output  : OTHERFLAGS+=--dump_module Bug2820
+$(OUTPUT_DIR)/Bug2820.fst.output       : OTHERFLAGS+=--dump_module Bug2820
+$(OUTPUT_DIR)/Bug3145.fst.json_output  : OTHERFLAGS+=--dump_module Bug3145
+$(OUTPUT_DIR)/Bug3145.fst.output       : OTHERFLAGS+=--dump_module Bug3145
+$(OUTPUT_DIR)/Bug3227.fst.json_output  : OTHERFLAGS+=--dump_module Bug3227
+$(OUTPUT_DIR)/Bug3227.fst.output       : OTHERFLAGS+=--dump_module Bug3227
+$(OUTPUT_DIR)/Bug3292.fst.json_output  : OTHERFLAGS+=--dump_module Bug3292
+$(OUTPUT_DIR)/Bug3292.fst.output       : OTHERFLAGS+=--dump_module Bug3292
+$(OUTPUT_DIR)/Bug3530.fst.json_output  : OTHERFLAGS+=--dump_module Bug3530
+$(OUTPUT_DIR)/Bug3530.fst.output       : OTHERFLAGS+=--dump_module Bug3530
+$(OUTPUT_DIR)/CalcImpl.fst.json_output : OTHERFLAGS+=--dump_module CalcImpl
+$(OUTPUT_DIR)/CalcImpl.fst.output      : OTHERFLAGS+=--dump_module CalcImpl
+$(OUTPUT_DIR)/DTuples.fst.json_output  : OTHERFLAGS+=--dump_module DTuples
+$(OUTPUT_DIR)/DTuples.fst.output       : OTHERFLAGS+=--dump_module DTuples
+$(OUTPUT_DIR)/SeqLit.fst.json_output   : OTHERFLAGS+=--dump_module SeqLit
+$(OUTPUT_DIR)/SeqLit.fst.output        : OTHERFLAGS+=--dump_module SeqLit
+$(OUTPUT_DIR)/PatImps.fst.json_output  : OTHERFLAGS+=--dump_module PatImps
+$(OUTPUT_DIR)/PatImps.fst.output       : OTHERFLAGS+=--dump_module PatImps
+$(OUTPUT_DIR)/TuplePat.fst.json_output : OTHERFLAGS+=--dump_module TuplePat
+$(OUTPUT_DIR)/TuplePat.fst.output      : OTHERFLAGS+=--dump_module TuplePat
+$(OUTPUT_DIR)/Monoid.fst.json_output   : OTHERFLAGS+=--dump_module Monoid
+$(OUTPUT_DIR)/Monoid.fst.output        : OTHERFLAGS+=--dump_module Monoid

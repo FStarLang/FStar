@@ -1,5 +1,5 @@
 [
-  "d5áá…~³Ío]øÝ\r)õ\b",
+  "U\u001b»2J3l‘Ï¹ ®õÖ\u0003t",
   [
     [
       "TestCasts.main",
@@ -21,26 +21,29 @@
         "equation_with_fuel_Prims.pow2.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.result", "int_inversion",
         "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Minus", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Minus",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_3cf334ef18b786b10503183e1612e31a",
+        "refinement_interpretation_Tm_refine_48f9ac257d29128f5b2e6782f5287af5",
+        "refinement_interpretation_Tm_refine_522ab1248dd490260a473b54207b5088",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
-        "refinement_interpretation_Tm_refine_7e73d04fcd449f9644363a5c0704236d",
-        "refinement_interpretation_Tm_refine_c03f150e970b21be9cb7812c46e8b1a7",
         "refinement_interpretation_Tm_refine_c156ecc6eab05d1687a383ef171435eb",
-        "refinement_interpretation_Tm_refine_df14048dc4c96f9301f7cfed10a5bbe2",
+        "refinement_interpretation_Tm_refine_da74c01342e00742523519bc745a6a15",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
-        "refinement_interpretation_Tm_refine_f8efbdf92d287ec89005e58384d48836",
         "token_correspondence_Prims.pow2.fuel_instrumented",
-        "typing_FStar.Int32.v", "typing_FStar.UInt16.v",
+        "typing_FStar.Int.fits", "typing_FStar.Int.max_int",
+        "typing_FStar.Int32.v", "typing_FStar.UInt.fits",
+        "typing_FStar.UInt.max_int", "typing_FStar.UInt16.v",
         "typing_FStar.UInt32.v", "typing_FStar.UInt64.v",
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "f5eaae98d7872960739eb410e05077f6"
+      "8e8674f6c4787076eda60f38612d8697"
     ]
   ]
 ]

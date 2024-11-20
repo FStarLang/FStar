@@ -97,3 +97,5 @@ let main () : ML int =
 
     print_string "correct\n";
     0
+
+let _ = main ()

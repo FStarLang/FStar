@@ -19,15 +19,14 @@ Every tactic primitive, i.e., those built into the compiler
 *)
 module FStar.Stubs.Tactics.V1.Builtins
 
-open FStar.VConfig
+open FStar.Stubs.VConfig
 open FStar.Stubs.Reflection.V1.Builtins
 open FStar.Stubs.Reflection.Types
 open FStar.Stubs.Reflection.V1.Data
 open FStar.Reflection.Const
 open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.Types
-
-include FStar.Tactics.Unseal
+include FStar.Stubs.Tactics.Unseal
 
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)

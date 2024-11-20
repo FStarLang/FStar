@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2024.08.14~dev"
+version: "2024.11.08~dev"
 maintainer: "taramana@microsoft.com"
 authors: "Nik Swamy <nswamy@microsoft.com>,Jonathan Protzenko <protz@microsoft.com>,Tahina Ramananandro <taramana@microsoft.com>"
 homepage: "http://fstar-lang.org"
@@ -10,10 +10,11 @@ depends: [
   "zarith"
   "stdint"
   "yojson"
-  "dune" {build & >= "3.2.0"}
+  "dune" {build & >= "3.8.0"}
   "memtrace"
   "menhirLib"
   "menhir" {build & >= "2.1"}
+  "mtime"
   "pprint"
   "sedlex"
   "ppxlib" {>= "0.27.0"}

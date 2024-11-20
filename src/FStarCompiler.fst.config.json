@@ -1,7 +1,8 @@
 {
-  "fstar_exe": "fstar.exe",
+  "fstar_exe": "../bin/fstar.exe",
   "options": [
     "--MLish",
+    "--MLish_effect", "FStarC.Compiler.Effect",
     "--lax",
     "--cache_dir",
     ".cache.boot",
@@ -21,6 +22,7 @@
     "reflection",
     "smtencoding",
     "syntax",
+    "syntax/print",
     "tactics",
     "tosyntax",
     "typechecker",

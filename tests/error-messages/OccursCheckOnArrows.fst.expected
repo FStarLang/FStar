@@ -1,8 +1,0 @@
->> Got issues: [
-* Error 54 at OccursCheckOnArrows.fst(18,15-18,16):
-  - _: (*?u5*) _ -> (*?u4*) _ is not a subtype of the expected type (*?u5*) _
-  - See also OccursCheckOnArrows.fst(18,9-18,10)
-
->>]
-Verified module: OccursCheckOnArrows
-All verification conditions discharged successfully

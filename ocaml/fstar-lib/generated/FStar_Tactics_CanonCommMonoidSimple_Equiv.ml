@@ -1,7 +1,7 @@
 open Prims
 let (term_eq :
-  FStar_Reflection_Types.term -> FStar_Reflection_Types.term -> Prims.bool) =
-  FStar_Reflection_TermEq_Simple.term_eq
+  FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term -> Prims.bool)
+  = FStar_Reflection_TermEq_Simple.term_eq
 type atom = Prims.int
 type exp =
   | Unit 
@@ -135,6 +135,7 @@ let (fatom :
   fun t ->
     fun ts ->
       fun am ->
+        let uu___ = where t ts in
         FStar_Tactics_Effect.tac_bind
           (FStar_Sealed.seal
              (Obj.magic
@@ -148,19 +149,23 @@ let (fatom :
                    "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                    (Prims.of_int (279)) (Prims.of_int (2))
                    (Prims.of_int (284)) (Prims.of_int (47)))))
-          (Obj.magic (where t ts))
-          (fun uu___ ->
-             (fun uu___ ->
-                match uu___ with
+          (Obj.magic uu___)
+          (fun uu___1 ->
+             (fun uu___1 ->
+                match uu___1 with
                 | FStar_Pervasives_Native.Some v ->
                     Obj.magic
                       (Obj.repr
                          (FStar_Tactics_Effect.lift_div_tac
-                            (fun uu___1 -> ((Atom v), ts, am))))
+                            (fun uu___2 -> ((Atom v), ts, am))))
                 | FStar_Pervasives_Native.None ->
                     Obj.magic
                       (Obj.repr
-                         (FStar_Tactics_Effect.tac_bind
+                         (let uu___2 =
+                            Obj.magic
+                              (FStar_Tactics_Effect.lift_div_tac
+                                 (fun uu___3 -> FStar_List_Tot_Base.length ts)) in
+                          FStar_Tactics_Effect.tac_bind
                             (FStar_Sealed.seal
                                (Obj.magic
                                   (FStar_Range.mk_range
@@ -173,10 +178,13 @@ let (fatom :
                                      "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                                      (Prims.of_int (282)) (Prims.of_int (29))
                                      (Prims.of_int (284)) (Prims.of_int (47)))))
-                            (FStar_Tactics_Effect.lift_div_tac
-                               (fun uu___1 -> FStar_List_Tot_Base.length ts))
-                            (fun uu___1 ->
+                            (Obj.magic uu___2)
+                            (fun uu___3 ->
                                (fun vfresh ->
+                                  let uu___3 =
+                                    FStar_Tactics_V2_Derived.norm_term
+                                      [FStar_Pervasives.iota;
+                                      FStar_Pervasives.zeta] t in
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
                                        (FStar_Sealed.seal
@@ -195,18 +203,15 @@ let (fatom :
                                                 (Prims.of_int (4))
                                                 (Prims.of_int (284))
                                                 (Prims.of_int (47)))))
-                                       (Obj.magic
-                                          (FStar_Tactics_V2_Derived.norm_term
-                                             [FStar_Pervasives.iota;
-                                             FStar_Pervasives.zeta] t))
+                                       (Obj.magic uu___3)
                                        (fun t1 ->
                                           FStar_Tactics_Effect.lift_div_tac
-                                            (fun uu___1 ->
+                                            (fun uu___4 ->
                                                ((Atom vfresh),
                                                  (FStar_List_Tot_Base.op_At
                                                     ts [t1]),
                                                  (update vfresh t1 am))))))
-                                 uu___1)))) uu___)
+                                 uu___3)))) uu___1)
 let rec (reification_aux :
   FStar_Tactics_NamedView.term Prims.list ->
     FStar_Tactics_NamedView.term amap ->
@@ -222,6 +227,7 @@ let rec (reification_aux :
       fun mult ->
         fun unit ->
           fun t ->
+            let uu___ = FStar_Tactics_V2_SyntaxHelpers.collect_app t in
             FStar_Tactics_Effect.tac_bind
               (FStar_Sealed.seal
                  (Obj.magic
@@ -235,11 +241,30 @@ let rec (reification_aux :
                        "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                        (Prims.of_int (288)) (Prims.of_int (82))
                        (Prims.of_int (300)) (Prims.of_int (22)))))
-              (Obj.magic (FStar_Tactics_V2_SyntaxHelpers.collect_app t))
-              (fun uu___ ->
-                 (fun uu___ ->
-                    match uu___ with
+              (Obj.magic uu___)
+              (fun uu___1 ->
+                 (fun uu___1 ->
+                    match uu___1 with
                     | (hd, tl) ->
+                        let uu___2 =
+                          let uu___3 = FStar_Tactics_NamedView.inspect hd in
+                          FStar_Tactics_Effect.tac_bind
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
+                                     (Prims.of_int (290)) (Prims.of_int (8))
+                                     (Prims.of_int (290)) (Prims.of_int (18)))))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
+                                     (Prims.of_int (290)) (Prims.of_int (8))
+                                     (Prims.of_int (290)) (Prims.of_int (22)))))
+                            (Obj.magic uu___3)
+                            (fun uu___4 ->
+                               FStar_Tactics_Effect.lift_div_tac
+                                 (fun uu___5 -> (uu___4, tl))) in
                         Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Sealed.seal
@@ -256,37 +281,15 @@ let rec (reification_aux :
                                       (Prims.of_int (290)) (Prims.of_int (2))
                                       (Prims.of_int (300))
                                       (Prims.of_int (22)))))
-                             (Obj.magic
-                                (FStar_Tactics_Effect.tac_bind
-                                   (FStar_Sealed.seal
-                                      (Obj.magic
-                                         (FStar_Range.mk_range
-                                            "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
-                                            (Prims.of_int (290))
-                                            (Prims.of_int (8))
-                                            (Prims.of_int (290))
-                                            (Prims.of_int (18)))))
-                                   (FStar_Sealed.seal
-                                      (Obj.magic
-                                         (FStar_Range.mk_range
-                                            "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
-                                            (Prims.of_int (290))
-                                            (Prims.of_int (8))
-                                            (Prims.of_int (290))
-                                            (Prims.of_int (22)))))
-                                   (Obj.magic
-                                      (FStar_Tactics_NamedView.inspect hd))
-                                   (fun uu___1 ->
-                                      FStar_Tactics_Effect.lift_div_tac
-                                        (fun uu___2 -> (uu___1, tl)))))
-                             (fun uu___1 ->
-                                (fun uu___1 ->
-                                   match uu___1 with
+                             (Obj.magic uu___2)
+                             (fun uu___3 ->
+                                (fun uu___3 ->
+                                   match uu___3 with
                                    | (FStar_Tactics_NamedView.Tv_FVar fv,
                                       (t1,
-                                       FStar_Reflection_V2_Data.Q_Explicit)::
+                                       FStarC_Reflection_V2_Data.Q_Explicit)::
                                       (t2,
-                                       FStar_Reflection_V2_Data.Q_Explicit)::[])
+                                       FStarC_Reflection_V2_Data.Q_Explicit)::[])
                                        ->
                                        Obj.magic
                                          (Obj.repr
@@ -296,6 +299,9 @@ let rec (reification_aux :
                                                     (FStar_Tactics_NamedView.Tv_FVar
                                                        fv)) mult
                                              then
+                                               let uu___4 =
+                                                 reification_aux ts am mult
+                                                   unit t1 in
                                                FStar_Tactics_Effect.tac_bind
                                                  (FStar_Sealed.seal
                                                     (Obj.magic
@@ -313,13 +319,15 @@ let rec (reification_aux :
                                                           (Prims.of_int (9))
                                                           (Prims.of_int (295))
                                                           (Prims.of_int (31)))))
-                                                 (Obj.magic
-                                                    (reification_aux ts am
-                                                       mult unit t1))
-                                                 (fun uu___2 ->
-                                                    (fun uu___2 ->
-                                                       match uu___2 with
+                                                 (Obj.magic uu___4)
+                                                 (fun uu___5 ->
+                                                    (fun uu___5 ->
+                                                       match uu___5 with
                                                        | (e1, ts1, am1) ->
+                                                           let uu___6 =
+                                                             reification_aux
+                                                               ts1 am1 mult
+                                                               unit t2 in
                                                            Obj.magic
                                                              (FStar_Tactics_Effect.tac_bind
                                                                 (FStar_Sealed.seal
@@ -339,16 +347,13 @@ let rec (reification_aux :
                                                                     (Prims.of_int (295))
                                                                     (Prims.of_int (30)))))
                                                                 (Obj.magic
-                                                                   (reification_aux
-                                                                    ts1 am1
-                                                                    mult unit
-                                                                    t2))
-                                                                (fun uu___3
+                                                                   uu___6)
+                                                                (fun uu___7
                                                                    ->
                                                                    FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___4 ->
-                                                                    match uu___3
+                                                                    uu___8 ->
+                                                                    match uu___7
                                                                     with
                                                                     | 
                                                                     (e2, ts2,
@@ -356,19 +361,19 @@ let rec (reification_aux :
                                                                     ((Mult
                                                                     (e1, e2)),
                                                                     ts2, am2)))))
-                                                      uu___2)
+                                                      uu___5)
                                              else fatom t ts am))
-                                   | (uu___2, uu___3) ->
+                                   | (uu___4, uu___5) ->
                                        Obj.magic
                                          (Obj.repr
                                             (if term_eq t unit
                                              then
                                                Obj.repr
                                                  (FStar_Tactics_Effect.lift_div_tac
-                                                    (fun uu___4 ->
+                                                    (fun uu___6 ->
                                                        (Unit, ts, am)))
                                              else Obj.repr (fatom t ts am))))
-                                  uu___1))) uu___)
+                                  uu___3))) uu___1)
 let (reification :
   FStar_Tactics_NamedView.term ->
     FStar_Tactics_NamedView.term ->
@@ -384,6 +389,22 @@ let (reification :
       fun ts ->
         fun am ->
           fun t ->
+            let uu___ =
+              FStar_Tactics_V2_Derived.norm_term
+                [FStar_Pervasives.iota;
+                FStar_Pervasives.zeta;
+                FStar_Pervasives.delta]
+                (FStarC_Reflection_V2_Builtins.pack_ln
+                   (FStarC_Reflection_V2_Data.Tv_App
+                      ((FStarC_Reflection_V2_Builtins.pack_ln
+                          (FStarC_Reflection_V2_Data.Tv_FVar
+                             (FStarC_Reflection_V2_Builtins.pack_fv
+                                ["FStar";
+                                "Algebra";
+                                "CommMonoid";
+                                "Equiv";
+                                "__proj__CM__item__mult"]))),
+                        (m, FStarC_Reflection_V2_Data.Q_Explicit)))) in
             FStar_Tactics_Effect.tac_bind
               (FStar_Sealed.seal
                  (Obj.magic
@@ -397,24 +418,25 @@ let (reification :
                        "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                        (Prims.of_int (304)) (Prims.of_int (63))
                        (Prims.of_int (307)) (Prims.of_int (35)))))
-              (Obj.magic
-                 (FStar_Tactics_V2_Derived.norm_term
-                    [FStar_Pervasives.iota;
-                    FStar_Pervasives.zeta;
-                    FStar_Pervasives.delta]
-                    (FStar_Reflection_V2_Builtins.pack_ln
-                       (FStar_Reflection_V2_Data.Tv_App
-                          ((FStar_Reflection_V2_Builtins.pack_ln
-                              (FStar_Reflection_V2_Data.Tv_FVar
-                                 (FStar_Reflection_V2_Builtins.pack_fv
-                                    ["FStar";
-                                    "Algebra";
-                                    "CommMonoid";
-                                    "Equiv";
-                                    "__proj__CM__item__mult"]))),
-                            (m, FStar_Reflection_V2_Data.Q_Explicit))))))
-              (fun uu___ ->
+              (Obj.magic uu___)
+              (fun uu___1 ->
                  (fun mult ->
+                    let uu___1 =
+                      FStar_Tactics_V2_Derived.norm_term
+                        [FStar_Pervasives.iota;
+                        FStar_Pervasives.zeta;
+                        FStar_Pervasives.delta]
+                        (FStarC_Reflection_V2_Builtins.pack_ln
+                           (FStarC_Reflection_V2_Data.Tv_App
+                              ((FStarC_Reflection_V2_Builtins.pack_ln
+                                  (FStarC_Reflection_V2_Data.Tv_FVar
+                                     (FStarC_Reflection_V2_Builtins.pack_fv
+                                        ["FStar";
+                                        "Algebra";
+                                        "CommMonoid";
+                                        "Equiv";
+                                        "__proj__CM__item__unit"]))),
+                                (m, FStarC_Reflection_V2_Data.Q_Explicit)))) in
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
                          (FStar_Sealed.seal
@@ -429,25 +451,13 @@ let (reification :
                                   "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                                   (Prims.of_int (305)) (Prims.of_int (63))
                                   (Prims.of_int (307)) (Prims.of_int (35)))))
-                         (Obj.magic
-                            (FStar_Tactics_V2_Derived.norm_term
-                               [FStar_Pervasives.iota;
-                               FStar_Pervasives.zeta;
-                               FStar_Pervasives.delta]
-                               (FStar_Reflection_V2_Builtins.pack_ln
-                                  (FStar_Reflection_V2_Data.Tv_App
-                                     ((FStar_Reflection_V2_Builtins.pack_ln
-                                         (FStar_Reflection_V2_Data.Tv_FVar
-                                            (FStar_Reflection_V2_Builtins.pack_fv
-                                               ["FStar";
-                                               "Algebra";
-                                               "CommMonoid";
-                                               "Equiv";
-                                               "__proj__CM__item__unit"]))),
-                                       (m,
-                                         FStar_Reflection_V2_Data.Q_Explicit))))))
-                         (fun uu___ ->
+                         (Obj.magic uu___1)
+                         (fun uu___2 ->
                             (fun unit ->
+                               let uu___2 =
+                                 FStar_Tactics_V2_Derived.norm_term
+                                   [FStar_Pervasives.iota;
+                                   FStar_Pervasives.zeta] t in
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (FStar_Sealed.seal
@@ -466,15 +476,13 @@ let (reification :
                                              (Prims.of_int (2))
                                              (Prims.of_int (307))
                                              (Prims.of_int (35)))))
-                                    (Obj.magic
-                                       (FStar_Tactics_V2_Derived.norm_term
-                                          [FStar_Pervasives.iota;
-                                          FStar_Pervasives.zeta] t))
-                                    (fun uu___ ->
+                                    (Obj.magic uu___2)
+                                    (fun uu___3 ->
                                        (fun t1 ->
                                           Obj.magic
                                             (reification_aux ts am mult unit
-                                               t1)) uu___))) uu___))) uu___)
+                                               t1)) uu___3))) uu___2)))
+                   uu___1)
 let rec (repeat_cong_right_identity :
   FStar_Tactics_NamedView.term ->
     FStar_Tactics_NamedView.term ->
@@ -485,15 +493,28 @@ let rec (repeat_cong_right_identity :
       FStar_Tactics_V2_Derived.or_else
         (fun uu___ ->
            FStar_Tactics_V2_Derived.apply_lemma
-             (FStar_Reflection_V2_Builtins.pack_ln
-                (FStar_Reflection_V2_Data.Tv_FVar
-                   (FStar_Reflection_V2_Builtins.pack_fv
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
                       ["FStar";
                       "Algebra";
                       "CommMonoid";
                       "Equiv";
                       "right_identity"]))))
         (fun uu___ ->
+           let uu___1 =
+             FStar_Tactics_V2_Derived.apply_lemma
+               (FStarC_Reflection_V2_Builtins.pack_ln
+                  (FStarC_Reflection_V2_Data.Tv_App
+                     ((FStarC_Reflection_V2_Builtins.pack_ln
+                         (FStarC_Reflection_V2_Data.Tv_FVar
+                            (FStarC_Reflection_V2_Builtins.pack_fv
+                               ["FStar";
+                               "Algebra";
+                               "CommMonoid";
+                               "Equiv";
+                               "__proj__CM__item__congruence"]))),
+                       (m, FStarC_Reflection_V2_Data.Q_Explicit)))) in
            FStar_Tactics_Effect.tac_bind
              (FStar_Sealed.seal
                 (Obj.magic
@@ -507,21 +528,10 @@ let rec (repeat_cong_right_identity :
                       "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                       (Prims.of_int (312)) (Prims.of_int (20))
                       (Prims.of_int (314)) (Prims.of_int (51)))))
-             (Obj.magic
-                (FStar_Tactics_V2_Derived.apply_lemma
-                   (FStar_Reflection_V2_Builtins.pack_ln
-                      (FStar_Reflection_V2_Data.Tv_App
-                         ((FStar_Reflection_V2_Builtins.pack_ln
-                             (FStar_Reflection_V2_Data.Tv_FVar
-                                (FStar_Reflection_V2_Builtins.pack_fv
-                                   ["FStar";
-                                   "Algebra";
-                                   "CommMonoid";
-                                   "Equiv";
-                                   "__proj__CM__item__congruence"]))),
-                           (m, FStar_Reflection_V2_Data.Q_Explicit))))))
-             (fun uu___1 ->
-                (fun uu___1 ->
+             (Obj.magic uu___1)
+             (fun uu___2 ->
+                (fun uu___2 ->
+                   let uu___3 = FStar_Tactics_V2_Logic.split () in
                    Obj.magic
                      (FStar_Tactics_Effect.tac_bind
                         (FStar_Sealed.seal
@@ -536,9 +546,23 @@ let rec (repeat_cong_right_identity :
                                  "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                                  (Prims.of_int (313)) (Prims.of_int (20))
                                  (Prims.of_int (314)) (Prims.of_int (51)))))
-                        (Obj.magic (FStar_Tactics_V2_Logic.split ()))
-                        (fun uu___2 ->
-                           (fun uu___2 ->
+                        (Obj.magic uu___3)
+                        (fun uu___4 ->
+                           (fun uu___4 ->
+                              let uu___5 =
+                                FStar_Tactics_V2_Derived.apply_lemma
+                                  (FStarC_Reflection_V2_Builtins.pack_ln
+                                     (FStarC_Reflection_V2_Data.Tv_App
+                                        ((FStarC_Reflection_V2_Builtins.pack_ln
+                                            (FStarC_Reflection_V2_Data.Tv_FVar
+                                               (FStarC_Reflection_V2_Builtins.pack_fv
+                                                  ["FStar";
+                                                  "Algebra";
+                                                  "CommMonoid";
+                                                  "Equiv";
+                                                  "__proj__EQ__item__reflexivity"]))),
+                                          (eq,
+                                            FStarC_Reflection_V2_Data.Q_Explicit)))) in
                               Obj.magic
                                 (FStar_Tactics_Effect.tac_bind
                                    (FStar_Sealed.seal
@@ -557,25 +581,12 @@ let rec (repeat_cong_right_identity :
                                             (Prims.of_int (20))
                                             (Prims.of_int (314))
                                             (Prims.of_int (51)))))
-                                   (Obj.magic
-                                      (FStar_Tactics_V2_Derived.apply_lemma
-                                         (FStar_Reflection_V2_Builtins.pack_ln
-                                            (FStar_Reflection_V2_Data.Tv_App
-                                               ((FStar_Reflection_V2_Builtins.pack_ln
-                                                   (FStar_Reflection_V2_Data.Tv_FVar
-                                                      (FStar_Reflection_V2_Builtins.pack_fv
-                                                         ["FStar";
-                                                         "Algebra";
-                                                         "CommMonoid";
-                                                         "Equiv";
-                                                         "__proj__EQ__item__reflexivity"]))),
-                                                 (eq,
-                                                   FStar_Reflection_V2_Data.Q_Explicit))))))
-                                   (fun uu___3 ->
-                                      (fun uu___3 ->
+                                   (Obj.magic uu___5)
+                                   (fun uu___6 ->
+                                      (fun uu___6 ->
                                          Obj.magic
                                            (repeat_cong_right_identity eq m))
-                                        uu___3))) uu___2))) uu___1))
+                                        uu___6))) uu___4))) uu___2))
 let rec (convert_map :
   (atom * FStar_Tactics_NamedView.term) Prims.list ->
     FStar_Tactics_NamedView.term)
@@ -583,41 +594,41 @@ let rec (convert_map :
   fun m ->
     match m with
     | [] ->
-        FStar_Reflection_V2_Builtins.pack_ln
-          (FStar_Reflection_V2_Data.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv ["Prims"; "Nil"]))
+        FStarC_Reflection_V2_Builtins.pack_ln
+          (FStarC_Reflection_V2_Data.Tv_FVar
+             (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "Nil"]))
     | (a, t)::ps ->
         let a1 =
           FStar_Tactics_NamedView.pack
             (FStar_Tactics_NamedView.Tv_Const
-               (FStar_Reflection_V2_Data.C_Int a)) in
+               (FStarC_Reflection_V2_Data.C_Int a)) in
         let uu___ = convert_map ps in
         let uu___1 = t in
         let uu___2 = a1 in
-        FStar_Reflection_V2_Builtins.pack_ln
-          (FStar_Reflection_V2_Data.Tv_App
-             ((FStar_Reflection_V2_Builtins.pack_ln
-                 (FStar_Reflection_V2_Data.Tv_App
-                    ((FStar_Reflection_V2_Builtins.pack_ln
-                        (FStar_Reflection_V2_Data.Tv_FVar
-                           (FStar_Reflection_V2_Builtins.pack_fv
+        FStarC_Reflection_V2_Builtins.pack_ln
+          (FStarC_Reflection_V2_Data.Tv_App
+             ((FStarC_Reflection_V2_Builtins.pack_ln
+                 (FStarC_Reflection_V2_Data.Tv_App
+                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                        (FStarC_Reflection_V2_Data.Tv_FVar
+                           (FStarC_Reflection_V2_Builtins.pack_fv
                               ["Prims"; "Cons"]))),
-                      ((FStar_Reflection_V2_Builtins.pack_ln
-                          (FStar_Reflection_V2_Data.Tv_App
-                             ((FStar_Reflection_V2_Builtins.pack_ln
-                                 (FStar_Reflection_V2_Data.Tv_App
-                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                        (FStar_Reflection_V2_Data.Tv_FVar
-                                           (FStar_Reflection_V2_Builtins.pack_fv
+                      ((FStarC_Reflection_V2_Builtins.pack_ln
+                          (FStarC_Reflection_V2_Data.Tv_App
+                             ((FStarC_Reflection_V2_Builtins.pack_ln
+                                 (FStarC_Reflection_V2_Data.Tv_App
+                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                        (FStarC_Reflection_V2_Data.Tv_FVar
+                                           (FStarC_Reflection_V2_Builtins.pack_fv
                                               ["FStar";
                                               "Pervasives";
                                               "Native";
                                               "Mktuple2"]))),
                                       (uu___2,
-                                        FStar_Reflection_V2_Data.Q_Explicit)))),
-                               (uu___1, FStar_Reflection_V2_Data.Q_Explicit)))),
-                        FStar_Reflection_V2_Data.Q_Explicit)))),
-               (uu___, FStar_Reflection_V2_Data.Q_Explicit)))
+                                        FStarC_Reflection_V2_Data.Q_Explicit)))),
+                               (uu___1, FStarC_Reflection_V2_Data.Q_Explicit)))),
+                        FStarC_Reflection_V2_Data.Q_Explicit)))),
+               (uu___, FStarC_Reflection_V2_Data.Q_Explicit)))
 let (convert_am :
   FStar_Tactics_NamedView.term amap -> FStar_Tactics_NamedView.term) =
   fun am ->
@@ -626,23 +637,23 @@ let (convert_am :
     | (map, def) ->
         let uu___1 = def in
         let uu___2 = convert_map map in
-        FStar_Reflection_V2_Builtins.pack_ln
-          (FStar_Reflection_V2_Data.Tv_App
-             ((FStar_Reflection_V2_Builtins.pack_ln
-                 (FStar_Reflection_V2_Data.Tv_App
-                    ((FStar_Reflection_V2_Builtins.pack_ln
-                        (FStar_Reflection_V2_Data.Tv_FVar
-                           (FStar_Reflection_V2_Builtins.pack_fv
+        FStarC_Reflection_V2_Builtins.pack_ln
+          (FStarC_Reflection_V2_Data.Tv_App
+             ((FStarC_Reflection_V2_Builtins.pack_ln
+                 (FStarC_Reflection_V2_Data.Tv_App
+                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                        (FStarC_Reflection_V2_Data.Tv_FVar
+                           (FStarC_Reflection_V2_Builtins.pack_fv
                               ["FStar"; "Pervasives"; "Native"; "Mktuple2"]))),
-                      (uu___2, FStar_Reflection_V2_Data.Q_Explicit)))),
-               (uu___1, FStar_Reflection_V2_Data.Q_Explicit)))
+                      (uu___2, FStarC_Reflection_V2_Data.Q_Explicit)))),
+               (uu___1, FStarC_Reflection_V2_Data.Q_Explicit)))
 let rec (quote_exp : exp -> FStar_Tactics_NamedView.term) =
   fun e ->
     match e with
     | Unit ->
-        FStar_Reflection_V2_Builtins.pack_ln
-          (FStar_Reflection_V2_Data.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv
+        FStarC_Reflection_V2_Builtins.pack_ln
+          (FStarC_Reflection_V2_Data.Tv_FVar
+             (FStarC_Reflection_V2_Builtins.pack_fv
                 ["FStar";
                 "Tactics";
                 "CanonCommMonoidSimple";
@@ -651,35 +662,36 @@ let rec (quote_exp : exp -> FStar_Tactics_NamedView.term) =
     | Mult (e1, e2) ->
         let uu___ = quote_exp e2 in
         let uu___1 = quote_exp e1 in
-        FStar_Reflection_V2_Builtins.pack_ln
-          (FStar_Reflection_V2_Data.Tv_App
-             ((FStar_Reflection_V2_Builtins.pack_ln
-                 (FStar_Reflection_V2_Data.Tv_App
-                    ((FStar_Reflection_V2_Builtins.pack_ln
-                        (FStar_Reflection_V2_Data.Tv_FVar
-                           (FStar_Reflection_V2_Builtins.pack_fv
+        FStarC_Reflection_V2_Builtins.pack_ln
+          (FStarC_Reflection_V2_Data.Tv_App
+             ((FStarC_Reflection_V2_Builtins.pack_ln
+                 (FStarC_Reflection_V2_Data.Tv_App
+                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                        (FStarC_Reflection_V2_Data.Tv_FVar
+                           (FStarC_Reflection_V2_Builtins.pack_fv
                               ["FStar";
                               "Tactics";
                               "CanonCommMonoidSimple";
                               "Equiv";
                               "Mult"]))),
-                      (uu___1, FStar_Reflection_V2_Data.Q_Explicit)))),
-               (uu___, FStar_Reflection_V2_Data.Q_Explicit)))
+                      (uu___1, FStarC_Reflection_V2_Data.Q_Explicit)))),
+               (uu___, FStarC_Reflection_V2_Data.Q_Explicit)))
     | Atom n ->
         let nt =
           FStar_Tactics_NamedView.pack
             (FStar_Tactics_NamedView.Tv_Const
-               (FStar_Reflection_V2_Data.C_Int n)) in
-        FStar_Reflection_V2_Builtins.pack_ln
-          (FStar_Reflection_V2_Data.Tv_App
-             ((FStar_Reflection_V2_Builtins.pack_ln
-                 (FStar_Reflection_V2_Data.Tv_FVar
-                    (FStar_Reflection_V2_Builtins.pack_fv
+               (FStarC_Reflection_V2_Data.C_Int n)) in
+        FStarC_Reflection_V2_Builtins.pack_ln
+          (FStarC_Reflection_V2_Data.Tv_App
+             ((FStarC_Reflection_V2_Builtins.pack_ln
+                 (FStarC_Reflection_V2_Data.Tv_FVar
+                    (FStarC_Reflection_V2_Builtins.pack_fv
                        ["FStar";
                        "Tactics";
                        "CanonCommMonoidSimple";
                        "Equiv";
-                       "Atom"]))), (nt, FStar_Reflection_V2_Data.Q_Explicit)))
+                       "Atom"]))),
+               (nt, FStarC_Reflection_V2_Data.Q_Explicit)))
 let (canon_lhs_rhs :
   FStar_Tactics_NamedView.term ->
     FStar_Tactics_NamedView.term ->
@@ -691,6 +703,22 @@ let (canon_lhs_rhs :
     fun m ->
       fun lhs ->
         fun rhs ->
+          let uu___ =
+            FStar_Tactics_V2_Derived.norm_term
+              [FStar_Pervasives.iota;
+              FStar_Pervasives.zeta;
+              FStar_Pervasives.delta]
+              (FStarC_Reflection_V2_Builtins.pack_ln
+                 (FStarC_Reflection_V2_Data.Tv_App
+                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                        (FStarC_Reflection_V2_Data.Tv_FVar
+                           (FStarC_Reflection_V2_Builtins.pack_fv
+                              ["FStar";
+                              "Algebra";
+                              "CommMonoid";
+                              "Equiv";
+                              "__proj__CM__item__unit"]))),
+                      (m, FStarC_Reflection_V2_Data.Q_Explicit)))) in
           FStar_Tactics_Effect.tac_bind
             (FStar_Sealed.seal
                (Obj.magic
@@ -704,24 +732,13 @@ let (canon_lhs_rhs :
                      "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                      (Prims.of_int (341)) (Prims.of_int (64))
                      (Prims.of_int (370)) (Prims.of_int (52)))))
-            (Obj.magic
-               (FStar_Tactics_V2_Derived.norm_term
-                  [FStar_Pervasives.iota;
-                  FStar_Pervasives.zeta;
-                  FStar_Pervasives.delta]
-                  (FStar_Reflection_V2_Builtins.pack_ln
-                     (FStar_Reflection_V2_Data.Tv_App
-                        ((FStar_Reflection_V2_Builtins.pack_ln
-                            (FStar_Reflection_V2_Data.Tv_FVar
-                               (FStar_Reflection_V2_Builtins.pack_fv
-                                  ["FStar";
-                                  "Algebra";
-                                  "CommMonoid";
-                                  "Equiv";
-                                  "__proj__CM__item__unit"]))),
-                          (m, FStar_Reflection_V2_Data.Q_Explicit))))))
-            (fun uu___ ->
+            (Obj.magic uu___)
+            (fun uu___1 ->
                (fun m_unit ->
+                  let uu___1 =
+                    Obj.magic
+                      (FStar_Tactics_Effect.lift_div_tac
+                         (fun uu___2 -> const m_unit)) in
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Sealed.seal
@@ -736,10 +753,10 @@ let (canon_lhs_rhs :
                                 "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                                 (Prims.of_int (342)) (Prims.of_int (26))
                                 (Prims.of_int (370)) (Prims.of_int (52)))))
-                       (FStar_Tactics_Effect.lift_div_tac
-                          (fun uu___ -> const m_unit))
-                       (fun uu___ ->
+                       (Obj.magic uu___1)
+                       (fun uu___2 ->
                           (fun am ->
+                             let uu___2 = reification eq m [] am lhs in
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Sealed.seal
@@ -758,11 +775,13 @@ let (canon_lhs_rhs :
                                            (Prims.of_int (26))
                                            (Prims.of_int (370))
                                            (Prims.of_int (52)))))
-                                  (Obj.magic (reification eq m [] am lhs))
-                                  (fun uu___ ->
-                                     (fun uu___ ->
-                                        match uu___ with
+                                  (Obj.magic uu___2)
+                                  (fun uu___3 ->
+                                     (fun uu___3 ->
+                                        match uu___3 with
                                         | (r1, ts, am1) ->
+                                            let uu___4 =
+                                              reification eq m ts am1 rhs in
                                             Obj.magic
                                               (FStar_Tactics_Effect.tac_bind
                                                  (FStar_Sealed.seal
@@ -781,13 +800,18 @@ let (canon_lhs_rhs :
                                                           (Prims.of_int (50))
                                                           (Prims.of_int (370))
                                                           (Prims.of_int (52)))))
-                                                 (Obj.magic
-                                                    (reification eq m ts am1
-                                                       rhs))
-                                                 (fun uu___1 ->
-                                                    (fun uu___1 ->
-                                                       match uu___1 with
-                                                       | (r2, uu___2, am2) ->
+                                                 (Obj.magic uu___4)
+                                                 (fun uu___5 ->
+                                                    (fun uu___5 ->
+                                                       match uu___5 with
+                                                       | (r2, uu___6, am2) ->
+                                                           let uu___7 =
+                                                             Obj.magic
+                                                               (FStar_Tactics_Effect.lift_div_tac
+                                                                  (fun uu___8
+                                                                    ->
+                                                                    convert_am
+                                                                    am2)) in
                                                            Obj.magic
                                                              (FStar_Tactics_Effect.tac_bind
                                                                 (FStar_Sealed.seal
@@ -806,15 +830,20 @@ let (canon_lhs_rhs :
                                                                     (Prims.of_int (27))
                                                                     (Prims.of_int (370))
                                                                     (Prims.of_int (52)))))
-                                                                (FStar_Tactics_Effect.lift_div_tac
-                                                                   (fun
-                                                                    uu___3 ->
-                                                                    convert_am
-                                                                    am2))
-                                                                (fun uu___3
+                                                                (Obj.magic
+                                                                   uu___7)
+                                                                (fun uu___8
                                                                    ->
                                                                    (fun am3
                                                                     ->
+                                                                    let uu___8
+                                                                    =
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___9 ->
+                                                                    quote_exp
+                                                                    r1)) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -833,15 +862,21 @@ let (canon_lhs_rhs :
                                                                     (Prims.of_int (26))
                                                                     (Prims.of_int (370))
                                                                     (Prims.of_int (52)))))
-                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    (Obj.magic
+                                                                    uu___8)
                                                                     (fun
-                                                                    uu___3 ->
-                                                                    quote_exp
-                                                                    r1))
-                                                                    (fun
-                                                                    uu___3 ->
+                                                                    uu___9 ->
                                                                     (fun r11
                                                                     ->
+                                                                    let uu___9
+                                                                    =
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___10
+                                                                    ->
+                                                                    quote_exp
+                                                                    r2)) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -860,15 +895,82 @@ let (canon_lhs_rhs :
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (370))
                                                                     (Prims.of_int (52)))))
-                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    (Obj.magic
+                                                                    uu___9)
                                                                     (fun
-                                                                    uu___3 ->
-                                                                    quote_exp
-                                                                    r2))
-                                                                    (fun
-                                                                    uu___3 ->
+                                                                    uu___10
+                                                                    ->
                                                                     (fun r21
                                                                     ->
+                                                                    let uu___10
+                                                                    =
+                                                                    FStar_Tactics_V2_Derived.change_sq
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                    ["FStar";
+                                                                    "Algebra";
+                                                                    "CommMonoid";
+                                                                    "Equiv";
+                                                                    "__proj__EQ__item__eq"]))),
+                                                                    (eq,
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))),
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                    ["FStar";
+                                                                    "Tactics";
+                                                                    "CanonCommMonoidSimple";
+                                                                    "Equiv";
+                                                                    "mdenote"]))),
+                                                                    (eq,
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))),
+                                                                    (m,
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))),
+                                                                    (am3,
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))),
+                                                                    (r11,
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))),
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))),
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                    ["FStar";
+                                                                    "Tactics";
+                                                                    "CanonCommMonoidSimple";
+                                                                    "Equiv";
+                                                                    "mdenote"]))),
+                                                                    (eq,
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))),
+                                                                    (m,
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))),
+                                                                    (am3,
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))),
+                                                                    (r21,
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))),
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -888,77 +990,24 @@ let (canon_lhs_rhs :
                                                                     (Prims.of_int (370))
                                                                     (Prims.of_int (52)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_V2_Derived.change_sq
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Algebra";
-                                                                    "CommMonoid";
-                                                                    "Equiv";
-                                                                    "__proj__EQ__item__eq"]))),
-                                                                    (eq,
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    uu___10)
+                                                                    (fun
+                                                                    uu___11
+                                                                    ->
+                                                                    (fun
+                                                                    uu___11
+                                                                    ->
+                                                                    let uu___12
+                                                                    =
+                                                                    FStar_Tactics_V2_Derived.apply
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "CanonCommMonoidSimple";
                                                                     "Equiv";
-                                                                    "mdenote"]))),
-                                                                    (eq,
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
-                                                                    (m,
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
-                                                                    (am3,
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
-                                                                    (r11,
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Tactics";
-                                                                    "CanonCommMonoidSimple";
-                                                                    "Equiv";
-                                                                    "mdenote"]))),
-                                                                    (eq,
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
-                                                                    (m,
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
-                                                                    (am3,
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
-                                                                    (r21,
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
-                                                                    FStar_Reflection_V2_Data.Q_Explicit))))))
-                                                                    (fun
-                                                                    uu___3 ->
-                                                                    (fun
-                                                                    uu___3 ->
+                                                                    "monoid_reflect"]))) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -978,19 +1027,34 @@ let (canon_lhs_rhs :
                                                                     (Prims.of_int (370))
                                                                     (Prims.of_int (52)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_V2_Derived.apply
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Tactics";
-                                                                    "CanonCommMonoidSimple";
-                                                                    "Equiv";
-                                                                    "monoid_reflect"])))))
+                                                                    uu___12)
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___13
+                                                                    ->
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___13
+                                                                    ->
+                                                                    let uu___14
+                                                                    =
+                                                                    FStarC_Tactics_V2_Builtins.norm
+                                                                    [FStar_Pervasives.iota;
+                                                                    FStar_Pervasives.zeta;
+                                                                    FStar_Pervasives.delta_only
+                                                                    ["FStar.Tactics.CanonCommMonoidSimple.Equiv.canon";
+                                                                    "FStar.Tactics.CanonCommMonoidSimple.Equiv.xsdenote";
+                                                                    "FStar.Tactics.CanonCommMonoidSimple.Equiv.flatten";
+                                                                    "FStar.Tactics.CanonCommMonoidSimple.Equiv.sort";
+                                                                    "FStar.Tactics.CanonCommMonoidSimple.Equiv.select";
+                                                                    "FStar.List.Tot.Base.assoc";
+                                                                    "FStar.Pervasives.Native.fst";
+                                                                    "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
+                                                                    "FStar.List.Tot.Base.op_At";
+                                                                    "FStar.List.Tot.Base.append";
+                                                                    "FStar.List.Tot.Base.sortWith";
+                                                                    "FStar.List.Tot.Base.partition";
+                                                                    "FStar.List.Tot.Base.bool_of_compare";
+                                                                    "FStar.List.Tot.Base.compare_of_bool"];
+                                                                    FStar_Pervasives.primops] in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1010,58 +1074,44 @@ let (canon_lhs_rhs :
                                                                     (Prims.of_int (370))
                                                                     (Prims.of_int (52)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_V2_Builtins.norm
-                                                                    [FStar_Pervasives.iota;
-                                                                    FStar_Pervasives.zeta;
-                                                                    FStar_Pervasives.delta_only
-                                                                    ["FStar.Tactics.CanonCommMonoidSimple.Equiv.canon";
-                                                                    "FStar.Tactics.CanonCommMonoidSimple.Equiv.xsdenote";
-                                                                    "FStar.Tactics.CanonCommMonoidSimple.Equiv.flatten";
-                                                                    "FStar.Tactics.CanonCommMonoidSimple.Equiv.sort";
-                                                                    "FStar.Tactics.CanonCommMonoidSimple.Equiv.select";
-                                                                    "FStar.List.Tot.Base.assoc";
-                                                                    "FStar.Pervasives.Native.fst";
-                                                                    "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
-                                                                    "FStar.List.Tot.Base.op_At";
-                                                                    "FStar.List.Tot.Base.append";
-                                                                    "FStar.List.Tot.Base.sortWith";
-                                                                    "FStar.List.Tot.Base.partition";
-                                                                    "FStar.List.Tot.Base.bool_of_compare";
-                                                                    "FStar.List.Tot.Base.compare_of_bool"];
-                                                                    FStar_Pervasives.primops]))
+                                                                    uu___14)
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___15
+                                                                    ->
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___15
+                                                                    ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Derived.or_else
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___16
+                                                                    ->
                                                                     FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_App
-                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Algebra";
                                                                     "CommMonoid";
                                                                     "Equiv";
                                                                     "__proj__EQ__item__reflexivity"]))),
                                                                     (eq,
-                                                                    FStar_Reflection_V2_Data.Q_Explicit)))))
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit)))))
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___16
+                                                                    ->
                                                                     repeat_cong_right_identity
                                                                     eq m)))
-                                                                    uu___5)))
-                                                                    uu___4)))
-                                                                    uu___3)))
-                                                                    uu___3)))
-                                                                    uu___3)))
-                                                                    uu___3)))
-                                                      uu___1))) uu___)))
-                            uu___))) uu___)
+                                                                    uu___15)))
+                                                                    uu___13)))
+                                                                    uu___11)))
+                                                                    uu___10)))
+                                                                    uu___9)))
+                                                                    uu___8)))
+                                                      uu___5))) uu___3)))
+                            uu___2))) uu___1)
 let (canon_monoid :
   FStar_Tactics_NamedView.term ->
     FStar_Tactics_NamedView.term ->
@@ -1069,6 +1119,9 @@ let (canon_monoid :
   =
   fun eq ->
     fun m ->
+      let uu___ =
+        FStarC_Tactics_V2_Builtins.norm
+          [FStar_Pervasives.iota; FStar_Pervasives.zeta] in
       FStar_Tactics_Effect.tac_bind
         (FStar_Sealed.seal
            (Obj.magic
@@ -1082,11 +1135,10 @@ let (canon_monoid :
                  "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                  (Prims.of_int (374)) (Prims.of_int (20))
                  (Prims.of_int (392)) (Prims.of_int (68)))))
-        (Obj.magic
-           (FStar_Tactics_V2_Builtins.norm
-              [FStar_Pervasives.iota; FStar_Pervasives.zeta]))
-        (fun uu___ ->
-           (fun uu___ ->
+        (Obj.magic uu___)
+        (fun uu___1 ->
+           (fun uu___1 ->
+              let uu___2 = FStar_Tactics_V2_Derived.cur_goal () in
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Sealed.seal
@@ -1101,9 +1153,11 @@ let (canon_monoid :
                             "FStar.Tactics.CanonCommMonoidSimple.Equiv.fst"
                             (Prims.of_int (375)) (Prims.of_int (24))
                             (Prims.of_int (392)) (Prims.of_int (68)))))
-                   (Obj.magic (FStar_Tactics_V2_Derived.cur_goal ()))
-                   (fun uu___1 ->
+                   (Obj.magic uu___2)
+                   (fun uu___3 ->
                       (fun t ->
+                         let uu___3 =
+                           FStar_Tactics_V2_SyntaxHelpers.collect_app t in
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
                               (FStar_Sealed.seal
@@ -1122,18 +1176,19 @@ let (canon_monoid :
                                        (Prims.of_int (24))
                                        (Prims.of_int (392))
                                        (Prims.of_int (68)))))
-                              (Obj.magic
-                                 (FStar_Tactics_V2_SyntaxHelpers.collect_app
-                                    t))
-                              (fun uu___1 ->
-                                 (fun uu___1 ->
-                                    match uu___1 with
+                              (Obj.magic uu___3)
+                              (fun uu___4 ->
+                                 (fun uu___4 ->
+                                    match uu___4 with
                                     | (sq, rel_xy) ->
                                         (match rel_xy with
-                                         | (rel_xy1, uu___2)::[] ->
+                                         | (rel_xy1, uu___5)::[] ->
                                              Obj.magic
                                                (Obj.repr
-                                                  (FStar_Tactics_Effect.tac_bind
+                                                  (let uu___6 =
+                                                     FStar_Tactics_V2_SyntaxHelpers.collect_app
+                                                       rel_xy1 in
+                                                   FStar_Tactics_Effect.tac_bind
                                                      (FStar_Sealed.seal
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
@@ -1150,12 +1205,10 @@ let (canon_monoid :
                                                               (Prims.of_int (21))
                                                               (Prims.of_int (391))
                                                               (Prims.of_int (6)))))
-                                                     (Obj.magic
-                                                        (FStar_Tactics_V2_SyntaxHelpers.collect_app
-                                                           rel_xy1))
-                                                     (fun uu___3 ->
-                                                        (fun uu___3 ->
-                                                           match uu___3 with
+                                                     (Obj.magic uu___6)
+                                                     (fun uu___7 ->
+                                                        (fun uu___7 ->
+                                                           match uu___7 with
                                                            | (rel, xy) ->
                                                                if
                                                                  (FStar_List_Tot_Base.length
@@ -1179,16 +1232,16 @@ let (canon_monoid :
                                                                     with
                                                                     | 
                                                                     ((lhs,
-                                                                    FStar_Reflection_V2_Data.Q_Explicit),
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit),
                                                                     (rhs,
-                                                                    FStar_Reflection_V2_Data.Q_Explicit))
+                                                                    FStarC_Reflection_V2_Data.Q_Explicit))
                                                                     ->
                                                                     Obj.repr
                                                                     (canon_lhs_rhs
                                                                     eq m lhs
                                                                     rhs)
                                                                     | 
-                                                                    uu___4 ->
+                                                                    uu___8 ->
                                                                     Obj.repr
                                                                     (FStar_Tactics_V2_Derived.fail
                                                                     "Goal should have been an application of a binary relation to 2 explicit arguments")))
@@ -1197,24 +1250,24 @@ let (canon_monoid :
                                                                    (Obj.repr
                                                                     (FStar_Tactics_V2_Derived.fail
                                                                     "Goal should have been an application of a binary relation to n implicit and 2 explicit arguments")))
-                                                          uu___3)))
-                                         | uu___2 ->
+                                                          uu___7)))
+                                         | uu___5 ->
                                              Obj.magic
                                                (Obj.repr
                                                   (FStar_Tactics_V2_Derived.fail
                                                      "Goal should be squash applied to a binary relation"))))
-                                   uu___1))) uu___1))) uu___)
+                                   uu___4))) uu___3))) uu___1)
 let _ =
-  FStar_Tactics_Native.register_tactic
+  FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.CanonCommMonoidSimple.Equiv.canon_monoid"
     (Prims.of_int (3))
     (fun psc ->
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_InterpFuns.mk_tactic_interpretation_2
+             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2
                "FStar.Tactics.CanonCommMonoidSimple.Equiv.canon_monoid (plugin)"
-               (FStar_Tactics_Native.from_tactic_2 canon_monoid)
-               FStar_Reflection_V2_Embeddings.e_term
-               FStar_Reflection_V2_Embeddings.e_term
-               FStar_Syntax_Embeddings.e_unit psc ncb us args)
+               (FStarC_Tactics_Native.from_tactic_2 canon_monoid)
+               FStarC_Reflection_V2_Embeddings.e_term
+               FStarC_Reflection_V2_Embeddings.e_term
+               FStarC_Syntax_Embeddings.e_unit psc ncb us args)

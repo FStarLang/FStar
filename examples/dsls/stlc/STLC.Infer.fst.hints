@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_67dd0c8a36eaf642ae0fc764a3b385e4"
       ],
       0,
-      "39c9162335843be89dfd0dfcd7143d05"
+      "8fb98a0e8670666d5eabc59af6315277"
     ],
     [
       "STLC.Infer.__proj__EVar__item___0",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_10f5db85a110b66ccb5055c6ad6b968a"
       ],
       0,
-      "d992916932a130b69b1b27f0fac89aac"
+      "1192770fee236a8e0617d2b87d021943"
     ],
     [
       "STLC.Infer.__proj__ELam__item___0",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_77e8f911aba7f63a6e07ac80f3ab2530"
       ],
       0,
-      "860160ba65db4d7dc3723ccdccc11c07"
+      "56db12b3a03a6c43f9fb0c370bd58a60"
     ],
     [
       "STLC.Infer.__proj__ELam__item___1",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_77e8f911aba7f63a6e07ac80f3ab2530"
       ],
       0,
-      "3f0f0b9d18e687368f898a0750ea2e4f"
+      "df2b78a08b7324c7ae1cfed1dd4602de"
     ],
     [
       "STLC.Infer.__proj__EApp__item___0",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Tm_refine_ab6d475508fc8c19b7a29918cef42c03"
       ],
       0,
-      "94e0bdefafd4772f5df29f7776fd0c86"
+      "4a60947bbe412e774a8b6ba25ec674b4"
     ],
     [
       "STLC.Infer.__proj__EApp__item___1",
@@ -71,7 +71,7 @@
         "refinement_interpretation_Tm_refine_ab6d475508fc8c19b7a29918cef42c03"
       ],
       0,
-      "1c29d2e614ed6bc15ec8301271bd1d80"
+      "e0abf4d3eb75c6f7ff95d0ea550d337f"
     ],
     [
       "STLC.Infer.open_exp'",
@@ -87,17 +87,16 @@
         "disc_equation_STLC.Infer.EVar", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_STLC.Core.index",
         "fuel_guarded_inversion_STLC.Infer.stlc_exp",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "subterm_ordering_STLC.Infer.EApp",
-        "subterm_ordering_STLC.Infer.ELam"
+        "subterm_ordering_STLC.Infer.ELam", "typing_Prims.int"
       ],
       0,
-      "dc688e981837251789ca1151ea969213"
+      "22878595bd0f2760019c64403ac025b5"
     ],
     [
       "STLC.Infer.close_exp'",
@@ -113,17 +112,16 @@
         "disc_equation_STLC.Infer.EVar", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_STLC.Core.var",
         "fuel_guarded_inversion_STLC.Infer.stlc_exp",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "subterm_ordering_STLC.Infer.EApp",
-        "subterm_ordering_STLC.Infer.ELam"
+        "subterm_ordering_STLC.Infer.ELam", "typing_Prims.int"
       ],
       0,
-      "29a52aae12355f782cb0ff14c9a55548"
+      "61d1af977af51f37b3b0f70f7d324c9a"
     ],
     [
       "STLC.Infer.infer",
@@ -131,16 +129,19 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_STLC.Infer.EApp",
-        "disc_equation_STLC.Infer.EBVar", "disc_equation_STLC.Infer.ELam",
-        "disc_equation_STLC.Infer.EUnit", "disc_equation_STLC.Infer.EVar",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "disc_equation_STLC.Infer.EApp", "disc_equation_STLC.Infer.EBVar",
+        "disc_equation_STLC.Infer.ELam", "disc_equation_STLC.Infer.EUnit",
+        "disc_equation_STLC.Infer.EVar",
         "fuel_guarded_inversion_STLC.Infer.stlc_exp",
-        "function_token_typing_FStar.Stubs.Reflection.Types.term",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0", "typing_STLC.Core.lookup"
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Stubs.Reflection.Types.term",
+        "typing_STLC.Core.lookup", "unit_typing"
       ],
       0,
-      "aa1f75380d983a82a87d0131b83dcdcb"
+      "4d4a891122828840cdd93055611c3777"
     ],
     [
       "STLC.Infer.elab_core",
@@ -155,7 +156,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "f79aa5ef63e2de982296a8cc8144ae39"
+      "01c311b3e6ddf59dc67f23597b9f8f79"
     ],
     [
       "STLC.Infer.main",
@@ -170,7 +171,7 @@
         "typing_tok_STLC.Core.EUnit@tok"
       ],
       0,
-      "e98205f5e9be7682bf639edfe5d7efb5"
+      "8c553fbd2bd392d11573683b8f6327cf"
     ]
   ]
 ]

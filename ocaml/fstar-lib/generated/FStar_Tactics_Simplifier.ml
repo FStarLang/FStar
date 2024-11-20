@@ -2,22 +2,23 @@ open Prims
 let (tiff : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_V2_Derived.apply_lemma
-      (FStar_Reflection_V2_Builtins.pack_ln
-         (FStar_Reflection_V2_Data.Tv_FVar
-            (FStar_Reflection_V2_Builtins.pack_fv
+      (FStarC_Reflection_V2_Builtins.pack_ln
+         (FStarC_Reflection_V2_Data.Tv_FVar
+            (FStarC_Reflection_V2_Builtins.pack_fv
                ["FStar"; "Tactics"; "Simplifier"; "lem_iff_refl"])))
 let (step : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_V2_Derived.apply_lemma
-      (FStar_Reflection_V2_Builtins.pack_ln
-         (FStar_Reflection_V2_Data.Tv_FVar
-            (FStar_Reflection_V2_Builtins.pack_fv
+      (FStarC_Reflection_V2_Builtins.pack_ln
+         (FStarC_Reflection_V2_Data.Tv_FVar
+            (FStarC_Reflection_V2_Builtins.pack_fv
                ["FStar"; "Tactics"; "Simplifier"; "lem_iff_trans"])))
 let (is_true :
   FStar_Tactics_NamedView.term ->
     (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun t ->
+    let uu___ = FStar_Reflection_V2_Formula.term_as_formula' t in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -28,19 +29,19 @@ let (is_true :
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
                (Prims.of_int (159)) (Prims.of_int (10)) (Prims.of_int (172))
-               (Prims.of_int (14)))))
-      (Obj.magic (FStar_Reflection_V2_Formula.term_as_formula' t))
-      (fun uu___ ->
-         (fun uu___ ->
-            match uu___ with
+               (Prims.of_int (14))))) (Obj.magic uu___)
+      (fun uu___1 ->
+         (fun uu___1 ->
+            match uu___1 with
             | FStar_Reflection_V2_Formula.True_ ->
                 Obj.magic
                   (Obj.repr
-                     (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> true)))
-            | uu___1 ->
+                     (FStar_Tactics_Effect.lift_div_tac (fun uu___2 -> true)))
+            | uu___2 ->
                 Obj.magic
                   (Obj.repr
-                     (FStar_Tactics_Effect.tac_bind
+                     (let uu___3 = FStar_Tactics_NamedView.inspect t in
+                      FStar_Tactics_Effect.tac_bind
                         (FStar_Sealed.seal
                            (Obj.magic
                               (FStar_Range.mk_range
@@ -53,14 +54,16 @@ let (is_true :
                                  "FStar.Tactics.Simplifier.fst"
                                  (Prims.of_int (161)) (Prims.of_int (17))
                                  (Prims.of_int (171)) (Prims.of_int (23)))))
-                        (Obj.magic (FStar_Tactics_NamedView.inspect t))
-                        (fun uu___2 ->
-                           (fun uu___2 ->
-                              match uu___2 with
+                        (Obj.magic uu___3)
+                        (fun uu___4 ->
+                           (fun uu___4 ->
+                              match uu___4 with
                               | FStar_Tactics_NamedView.Tv_App (l, r) ->
                                   Obj.magic
                                     (Obj.repr
-                                       (FStar_Tactics_Effect.tac_bind
+                                       (let uu___5 =
+                                          FStar_Tactics_NamedView.inspect l in
+                                        FStar_Tactics_Effect.tac_bind
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
@@ -77,17 +80,18 @@ let (is_true :
                                                    (Prims.of_int (18))
                                                    (Prims.of_int (169))
                                                    (Prims.of_int (24)))))
-                                          (Obj.magic
-                                             (FStar_Tactics_NamedView.inspect
-                                                l))
-                                          (fun uu___3 ->
-                                             (fun uu___3 ->
-                                                match uu___3 with
+                                          (Obj.magic uu___5)
+                                          (fun uu___6 ->
+                                             (fun uu___6 ->
+                                                match uu___6 with
                                                 | FStar_Tactics_NamedView.Tv_Abs
                                                     (b, t1) ->
                                                     Obj.magic
                                                       (Obj.repr
-                                                         (FStar_Tactics_Effect.tac_bind
+                                                         (let uu___7 =
+                                                            FStar_Reflection_V2_Formula.term_as_formula'
+                                                              t1 in
+                                                          FStar_Tactics_Effect.tac_bind
                                                             (FStar_Sealed.seal
                                                                (Obj.magic
                                                                   (FStar_Range.mk_range
@@ -104,39 +108,38 @@ let (is_true :
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (167))
                                                                     (Prims.of_int (28)))))
-                                                            (Obj.magic
-                                                               (FStar_Reflection_V2_Formula.term_as_formula'
-                                                                  t1))
-                                                            (fun uu___4 ->
+                                                            (Obj.magic uu___7)
+                                                            (fun uu___8 ->
                                                                FStar_Tactics_Effect.lift_div_tac
-                                                                 (fun uu___5
+                                                                 (fun uu___9
                                                                     ->
-                                                                    match uu___4
+                                                                    match uu___8
                                                                     with
                                                                     | 
                                                                     FStar_Reflection_V2_Formula.True_
                                                                     -> true
                                                                     | 
-                                                                    uu___6 ->
-                                                                    false))))
-                                                | uu___4 ->
+                                                                    uu___10
+                                                                    -> false))))
+                                                | uu___7 ->
                                                     Obj.magic
                                                       (Obj.repr
                                                          (FStar_Tactics_Effect.lift_div_tac
-                                                            (fun uu___5 ->
+                                                            (fun uu___8 ->
                                                                false))))
-                                               uu___3)))
-                              | uu___3 ->
+                                               uu___6)))
+                              | uu___5 ->
                                   Obj.magic
                                     (Obj.repr
                                        (FStar_Tactics_Effect.lift_div_tac
-                                          (fun uu___4 -> false)))) uu___2))))
-           uu___)
+                                          (fun uu___6 -> false)))) uu___4))))
+           uu___1)
 let (is_false :
   FStar_Tactics_NamedView.term ->
     (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun t ->
+    let uu___ = FStar_Reflection_V2_Formula.term_as_formula' t in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -147,19 +150,19 @@ let (is_false :
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
                (Prims.of_int (177)) (Prims.of_int (10)) (Prims.of_int (190))
-               (Prims.of_int (14)))))
-      (Obj.magic (FStar_Reflection_V2_Formula.term_as_formula' t))
-      (fun uu___ ->
-         (fun uu___ ->
-            match uu___ with
+               (Prims.of_int (14))))) (Obj.magic uu___)
+      (fun uu___1 ->
+         (fun uu___1 ->
+            match uu___1 with
             | FStar_Reflection_V2_Formula.False_ ->
                 Obj.magic
                   (Obj.repr
-                     (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> true)))
-            | uu___1 ->
+                     (FStar_Tactics_Effect.lift_div_tac (fun uu___2 -> true)))
+            | uu___2 ->
                 Obj.magic
                   (Obj.repr
-                     (FStar_Tactics_Effect.tac_bind
+                     (let uu___3 = FStar_Tactics_NamedView.inspect t in
+                      FStar_Tactics_Effect.tac_bind
                         (FStar_Sealed.seal
                            (Obj.magic
                               (FStar_Range.mk_range
@@ -172,14 +175,16 @@ let (is_false :
                                  "FStar.Tactics.Simplifier.fst"
                                  (Prims.of_int (179)) (Prims.of_int (17))
                                  (Prims.of_int (189)) (Prims.of_int (23)))))
-                        (Obj.magic (FStar_Tactics_NamedView.inspect t))
-                        (fun uu___2 ->
-                           (fun uu___2 ->
-                              match uu___2 with
+                        (Obj.magic uu___3)
+                        (fun uu___4 ->
+                           (fun uu___4 ->
+                              match uu___4 with
                               | FStar_Tactics_NamedView.Tv_App (l, r) ->
                                   Obj.magic
                                     (Obj.repr
-                                       (FStar_Tactics_Effect.tac_bind
+                                       (let uu___5 =
+                                          FStar_Tactics_NamedView.inspect l in
+                                        FStar_Tactics_Effect.tac_bind
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
@@ -196,17 +201,18 @@ let (is_false :
                                                    (Prims.of_int (18))
                                                    (Prims.of_int (187))
                                                    (Prims.of_int (24)))))
-                                          (Obj.magic
-                                             (FStar_Tactics_NamedView.inspect
-                                                l))
-                                          (fun uu___3 ->
-                                             (fun uu___3 ->
-                                                match uu___3 with
+                                          (Obj.magic uu___5)
+                                          (fun uu___6 ->
+                                             (fun uu___6 ->
+                                                match uu___6 with
                                                 | FStar_Tactics_NamedView.Tv_Abs
                                                     (b, t1) ->
                                                     Obj.magic
                                                       (Obj.repr
-                                                         (FStar_Tactics_Effect.tac_bind
+                                                         (let uu___7 =
+                                                            FStar_Reflection_V2_Formula.term_as_formula'
+                                                              t1 in
+                                                          FStar_Tactics_Effect.tac_bind
                                                             (FStar_Sealed.seal
                                                                (Obj.magic
                                                                   (FStar_Range.mk_range
@@ -223,36 +229,35 @@ let (is_false :
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (185))
                                                                     (Prims.of_int (28)))))
-                                                            (Obj.magic
-                                                               (FStar_Reflection_V2_Formula.term_as_formula'
-                                                                  t1))
-                                                            (fun uu___4 ->
+                                                            (Obj.magic uu___7)
+                                                            (fun uu___8 ->
                                                                FStar_Tactics_Effect.lift_div_tac
-                                                                 (fun uu___5
+                                                                 (fun uu___9
                                                                     ->
-                                                                    match uu___4
+                                                                    match uu___8
                                                                     with
                                                                     | 
                                                                     FStar_Reflection_V2_Formula.False_
                                                                     -> true
                                                                     | 
-                                                                    uu___6 ->
-                                                                    false))))
-                                                | uu___4 ->
+                                                                    uu___10
+                                                                    -> false))))
+                                                | uu___7 ->
                                                     Obj.magic
                                                       (Obj.repr
                                                          (FStar_Tactics_Effect.lift_div_tac
-                                                            (fun uu___5 ->
+                                                            (fun uu___8 ->
                                                                false))))
-                                               uu___3)))
-                              | uu___3 ->
+                                               uu___6)))
+                              | uu___5 ->
                                   Obj.magic
                                     (Obj.repr
                                        (FStar_Tactics_Effect.lift_div_tac
-                                          (fun uu___4 -> false)))) uu___2))))
-           uu___)
+                                          (fun uu___6 -> false)))) uu___4))))
+           uu___1)
 let (inhabit : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
+    let uu___1 = FStar_Tactics_V2_Derived.cur_goal () in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -263,10 +268,10 @@ let (inhabit : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
                (Prims.of_int (196)) (Prims.of_int (4)) (Prims.of_int (203))
-               (Prims.of_int (18)))))
-      (Obj.magic (FStar_Tactics_V2_Derived.cur_goal ()))
-      (fun uu___1 ->
+               (Prims.of_int (18))))) (Obj.magic uu___1)
+      (fun uu___2 ->
          (fun t ->
+            let uu___2 = FStar_Tactics_NamedView.inspect t in
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
                  (FStar_Sealed.seal
@@ -279,14 +284,20 @@ let (inhabit : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                        (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
                           (Prims.of_int (196)) (Prims.of_int (4))
                           (Prims.of_int (203)) (Prims.of_int (18)))))
-                 (Obj.magic (FStar_Tactics_NamedView.inspect t))
-                 (fun uu___1 ->
-                    (fun uu___1 ->
-                       match uu___1 with
+                 (Obj.magic uu___2)
+                 (fun uu___3 ->
+                    (fun uu___3 ->
+                       match uu___3 with
                        | FStar_Tactics_NamedView.Tv_FVar fv ->
                            Obj.magic
                              (Obj.repr
-                                (FStar_Tactics_Effect.tac_bind
+                                (let uu___4 =
+                                   Obj.magic
+                                     (FStar_Tactics_Effect.lift_div_tac
+                                        (fun uu___5 ->
+                                           FStarC_Reflection_V2_Builtins.inspect_fv
+                                             fv)) in
+                                 FStar_Tactics_Effect.tac_bind
                                    (FStar_Sealed.seal
                                       (Obj.magic
                                          (FStar_Range.mk_range
@@ -303,11 +314,8 @@ let (inhabit : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                             (Prims.of_int (13))
                                             (Prims.of_int (202))
                                             (Prims.of_int (20)))))
-                                   (FStar_Tactics_Effect.lift_div_tac
-                                      (fun uu___2 ->
-                                         FStar_Reflection_V2_Builtins.inspect_fv
-                                           fv))
-                                   (fun uu___2 ->
+                                   (Obj.magic uu___4)
+                                   (fun uu___5 ->
                                       (fun qn ->
                                          if
                                            qn =
@@ -316,9 +324,9 @@ let (inhabit : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                            Obj.magic
                                              (Obj.repr
                                                 (FStar_Tactics_V2_Derived.exact
-                                                   (FStar_Reflection_V2_Builtins.pack_ln
-                                                      (FStar_Reflection_V2_Data.Tv_Const
-                                                         (FStar_Reflection_V2_Data.C_Int
+                                                   (FStarC_Reflection_V2_Builtins.pack_ln
+                                                      (FStarC_Reflection_V2_Data.Tv_Const
+                                                         (FStarC_Reflection_V2_Data.C_Int
                                                             (Prims.of_int (42)))))))
                                          else
                                            Obj.magic
@@ -329,9 +337,9 @@ let (inhabit : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                  then
                                                    Obj.repr
                                                      (FStar_Tactics_V2_Derived.exact
-                                                        (FStar_Reflection_V2_Builtins.pack_ln
-                                                           (FStar_Reflection_V2_Data.Tv_Const
-                                                              FStar_Reflection_V2_Data.C_True)))
+                                                        (FStarC_Reflection_V2_Builtins.pack_ln
+                                                           (FStarC_Reflection_V2_Data.Tv_Const
+                                                              FStarC_Reflection_V2_Data.C_True)))
                                                  else
                                                    Obj.repr
                                                      (if
@@ -340,20 +348,21 @@ let (inhabit : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                       then
                                                         Obj.repr
                                                           (FStar_Tactics_V2_Derived.exact
-                                                             (FStar_Reflection_V2_Builtins.pack_ln
-                                                                (FStar_Reflection_V2_Data.Tv_Const
-                                                                   FStar_Reflection_V2_Data.C_Unit)))
+                                                             (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                (FStarC_Reflection_V2_Data.Tv_Const
+                                                                   FStarC_Reflection_V2_Data.C_Unit)))
                                                       else
                                                         Obj.repr
                                                           (FStar_Tactics_V2_Derived.fail
-                                                             ""))))) uu___2)))
-                       | uu___2 ->
+                                                             ""))))) uu___5)))
+                       | uu___4 ->
                            Obj.magic
                              (Obj.repr (FStar_Tactics_V2_Derived.fail "")))
-                      uu___1))) uu___1)
+                      uu___3))) uu___2)
 let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
+    let uu___1 = recurse () in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -364,9 +373,10 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
                (Prims.of_int (210)) (Prims.of_int (4)) (Prims.of_int (264))
-               (Prims.of_int (81))))) (Obj.magic (recurse ()))
-      (fun uu___1 ->
-         (fun uu___1 ->
+               (Prims.of_int (81))))) (Obj.magic uu___1)
+      (fun uu___2 ->
+         (fun uu___2 ->
+            let uu___3 = FStarC_Tactics_V2_Builtins.norm [] in
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
                  (FStar_Sealed.seal
@@ -379,9 +389,10 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                        (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
                           (Prims.of_int (210)) (Prims.of_int (12))
                           (Prims.of_int (264)) (Prims.of_int (81)))))
-                 (Obj.magic (FStar_Tactics_V2_Builtins.norm []))
-                 (fun uu___2 ->
-                    (fun uu___2 ->
+                 (Obj.magic uu___3)
+                 (fun uu___4 ->
+                    (fun uu___4 ->
+                       let uu___5 = FStar_Tactics_V2_Derived.cur_goal () in
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
                             (FStar_Sealed.seal
@@ -396,9 +407,12 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                      "FStar.Tactics.Simplifier.fst"
                                      (Prims.of_int (211)) (Prims.of_int (26))
                                      (Prims.of_int (264)) (Prims.of_int (81)))))
-                            (Obj.magic (FStar_Tactics_V2_Derived.cur_goal ()))
-                            (fun uu___3 ->
+                            (Obj.magic uu___5)
+                            (fun uu___6 ->
                                (fun g ->
+                                  let uu___6 =
+                                    FStar_Reflection_V2_Formula.term_as_formula
+                                      g in
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
                                        (FStar_Sealed.seal
@@ -417,17 +431,18 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                 (Prims.of_int (4))
                                                 (Prims.of_int (264))
                                                 (Prims.of_int (81)))))
-                                       (Obj.magic
-                                          (FStar_Reflection_V2_Formula.term_as_formula
-                                             g))
-                                       (fun uu___3 ->
+                                       (Obj.magic uu___6)
+                                       (fun uu___7 ->
                                           (fun f ->
                                              match f with
                                              | FStar_Reflection_V2_Formula.Iff
                                                  (l, r) ->
                                                  Obj.magic
                                                    (Obj.repr
-                                                      (FStar_Tactics_Effect.tac_bind
+                                                      (let uu___7 =
+                                                         FStar_Reflection_V2_Formula.term_as_formula'
+                                                           l in
+                                                       FStar_Tactics_Effect.tac_bind
                                                          (FStar_Sealed.seal
                                                             (Obj.magic
                                                                (FStar_Range.mk_range
@@ -444,15 +459,16 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                   (Prims.of_int (14))
                                                                   (Prims.of_int (262))
                                                                   (Prims.of_int (22)))))
-                                                         (Obj.magic
-                                                            (FStar_Reflection_V2_Formula.term_as_formula'
-                                                               l))
-                                                         (fun uu___3 ->
-                                                            (fun uu___3 ->
-                                                               match uu___3
+                                                         (Obj.magic uu___7)
+                                                         (fun uu___8 ->
+                                                            (fun uu___8 ->
+                                                               match uu___8
                                                                with
                                                                | FStar_Reflection_V2_Formula.And
                                                                    (p, q) ->
+                                                                   let uu___9
+                                                                    =
+                                                                    is_true p in
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -472,24 +488,29 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (221))
                                                                     (Prims.of_int (24)))))
                                                                     (Obj.magic
-                                                                    (is_true
-                                                                    p))
+                                                                    uu___9)
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___10
+                                                                    ->
                                                                     (fun
-                                                                    uu___4 ->
-                                                                    if uu___4
+                                                                    uu___10
+                                                                    ->
+                                                                    if
+                                                                    uu___10
                                                                     then
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Simplifier";
                                                                     "lem_true_and_p"]))))
                                                                     else
+                                                                    (let uu___12
+                                                                    =
+                                                                    is_true q in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -509,24 +530,30 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (221))
                                                                     (Prims.of_int (24)))))
                                                                     (Obj.magic
-                                                                    (is_true
-                                                                    q))
+                                                                    uu___12)
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___13
+                                                                    ->
                                                                     (fun
-                                                                    uu___6 ->
-                                                                    if uu___6
+                                                                    uu___13
+                                                                    ->
+                                                                    if
+                                                                    uu___13
                                                                     then
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Simplifier";
                                                                     "lem_p_and_true"]))))
                                                                     else
+                                                                    (let uu___15
+                                                                    =
+                                                                    is_false
+                                                                    p in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -546,24 +573,30 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (221))
                                                                     (Prims.of_int (24)))))
                                                                     (Obj.magic
-                                                                    (is_false
-                                                                    p))
+                                                                    uu___15)
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___16
+                                                                    ->
                                                                     (fun
-                                                                    uu___8 ->
-                                                                    if uu___8
+                                                                    uu___16
+                                                                    ->
+                                                                    if
+                                                                    uu___16
                                                                     then
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Simplifier";
                                                                     "lem_false_and_p"]))))
                                                                     else
+                                                                    (let uu___18
+                                                                    =
+                                                                    is_false
+                                                                    q in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -583,22 +616,21 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (221))
                                                                     (Prims.of_int (24)))))
                                                                     (Obj.magic
-                                                                    (is_false
-                                                                    q))
+                                                                    uu___18)
                                                                     (fun
-                                                                    uu___10
+                                                                    uu___19
                                                                     ->
                                                                     (fun
-                                                                    uu___10
+                                                                    uu___19
                                                                     ->
                                                                     if
-                                                                    uu___10
+                                                                    uu___19
                                                                     then
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Simplifier";
@@ -606,12 +638,15 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (tiff ()))
-                                                                    uu___10)))
-                                                                    uu___8)))
-                                                                    uu___6)))
-                                                                    uu___4))
+                                                                    uu___19))))
+                                                                    uu___16))))
+                                                                    uu___13))))
+                                                                    uu___10))
                                                                | FStar_Reflection_V2_Formula.Or
                                                                    (p, q) ->
+                                                                   let uu___9
+                                                                    =
+                                                                    is_true p in
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -631,119 +666,7 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (228))
                                                                     (Prims.of_int (24)))))
                                                                     (Obj.magic
-                                                                    (is_true
-                                                                    p))
-                                                                    (fun
-                                                                    uu___4 ->
-                                                                    (fun
-                                                                    uu___4 ->
-                                                                    if uu___4
-                                                                    then
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Tactics";
-                                                                    "Simplifier";
-                                                                    "lem_true_or_p"]))))
-                                                                    else
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.Tactics.Simplifier.fst"
-                                                                    (Prims.of_int (225))
-                                                                    (Prims.of_int (20))
-                                                                    (Prims.of_int (225))
-                                                                    (Prims.of_int (29)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.Tactics.Simplifier.fst"
-                                                                    (Prims.of_int (225))
-                                                                    (Prims.of_int (17))
-                                                                    (Prims.of_int (228))
-                                                                    (Prims.of_int (24)))))
-                                                                    (Obj.magic
-                                                                    (is_true
-                                                                    q))
-                                                                    (fun
-                                                                    uu___6 ->
-                                                                    (fun
-                                                                    uu___6 ->
-                                                                    if uu___6
-                                                                    then
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Tactics";
-                                                                    "Simplifier";
-                                                                    "lem_p_or_true"]))))
-                                                                    else
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.Tactics.Simplifier.fst"
-                                                                    (Prims.of_int (226))
-                                                                    (Prims.of_int (20))
-                                                                    (Prims.of_int (226))
-                                                                    (Prims.of_int (30)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.Tactics.Simplifier.fst"
-                                                                    (Prims.of_int (226))
-                                                                    (Prims.of_int (17))
-                                                                    (Prims.of_int (228))
-                                                                    (Prims.of_int (24)))))
-                                                                    (Obj.magic
-                                                                    (is_false
-                                                                    p))
-                                                                    (fun
-                                                                    uu___8 ->
-                                                                    (fun
-                                                                    uu___8 ->
-                                                                    if uu___8
-                                                                    then
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Tactics";
-                                                                    "Simplifier";
-                                                                    "lem_false_or_p"]))))
-                                                                    else
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.Tactics.Simplifier.fst"
-                                                                    (Prims.of_int (227))
-                                                                    (Prims.of_int (20))
-                                                                    (Prims.of_int (227))
-                                                                    (Prims.of_int (30)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.Tactics.Simplifier.fst"
-                                                                    (Prims.of_int (227))
-                                                                    (Prims.of_int (17))
-                                                                    (Prims.of_int (228))
-                                                                    (Prims.of_int (24)))))
-                                                                    (Obj.magic
-                                                                    (is_false
-                                                                    q))
+                                                                    uu___9)
                                                                     (fun
                                                                     uu___10
                                                                     ->
@@ -755,9 +678,137 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     then
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                    ["FStar";
+                                                                    "Tactics";
+                                                                    "Simplifier";
+                                                                    "lem_true_or_p"]))))
+                                                                    else
+                                                                    (let uu___12
+                                                                    =
+                                                                    is_true q in
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (225))
+                                                                    (Prims.of_int (20))
+                                                                    (Prims.of_int (225))
+                                                                    (Prims.of_int (29)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (225))
+                                                                    (Prims.of_int (17))
+                                                                    (Prims.of_int (228))
+                                                                    (Prims.of_int (24)))))
+                                                                    (Obj.magic
+                                                                    uu___12)
+                                                                    (fun
+                                                                    uu___13
+                                                                    ->
+                                                                    (fun
+                                                                    uu___13
+                                                                    ->
+                                                                    if
+                                                                    uu___13
+                                                                    then
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_V2_Derived.apply_lemma
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                    ["FStar";
+                                                                    "Tactics";
+                                                                    "Simplifier";
+                                                                    "lem_p_or_true"]))))
+                                                                    else
+                                                                    (let uu___15
+                                                                    =
+                                                                    is_false
+                                                                    p in
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (226))
+                                                                    (Prims.of_int (20))
+                                                                    (Prims.of_int (226))
+                                                                    (Prims.of_int (30)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (226))
+                                                                    (Prims.of_int (17))
+                                                                    (Prims.of_int (228))
+                                                                    (Prims.of_int (24)))))
+                                                                    (Obj.magic
+                                                                    uu___15)
+                                                                    (fun
+                                                                    uu___16
+                                                                    ->
+                                                                    (fun
+                                                                    uu___16
+                                                                    ->
+                                                                    if
+                                                                    uu___16
+                                                                    then
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_V2_Derived.apply_lemma
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                    ["FStar";
+                                                                    "Tactics";
+                                                                    "Simplifier";
+                                                                    "lem_false_or_p"]))))
+                                                                    else
+                                                                    (let uu___18
+                                                                    =
+                                                                    is_false
+                                                                    q in
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (227))
+                                                                    (Prims.of_int (20))
+                                                                    (Prims.of_int (227))
+                                                                    (Prims.of_int (30)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (227))
+                                                                    (Prims.of_int (17))
+                                                                    (Prims.of_int (228))
+                                                                    (Prims.of_int (24)))))
+                                                                    (Obj.magic
+                                                                    uu___18)
+                                                                    (fun
+                                                                    uu___19
+                                                                    ->
+                                                                    (fun
+                                                                    uu___19
+                                                                    ->
+                                                                    if
+                                                                    uu___19
+                                                                    then
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_V2_Derived.apply_lemma
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Simplifier";
@@ -765,12 +816,15 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (tiff ()))
-                                                                    uu___10)))
-                                                                    uu___8)))
-                                                                    uu___6)))
-                                                                    uu___4))
+                                                                    uu___19))))
+                                                                    uu___16))))
+                                                                    uu___13))))
+                                                                    uu___10))
                                                                | FStar_Reflection_V2_Formula.Implies
                                                                    (p, q) ->
+                                                                   let uu___9
+                                                                    =
+                                                                    is_true p in
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -790,24 +844,29 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (234))
                                                                     (Prims.of_int (24)))))
                                                                     (Obj.magic
-                                                                    (is_true
-                                                                    p))
+                                                                    uu___9)
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___10
+                                                                    ->
                                                                     (fun
-                                                                    uu___4 ->
-                                                                    if uu___4
+                                                                    uu___10
+                                                                    ->
+                                                                    if
+                                                                    uu___10
                                                                     then
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Simplifier";
                                                                     "lem_true_imp_p"]))))
                                                                     else
+                                                                    (let uu___12
+                                                                    =
+                                                                    is_true q in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -827,24 +886,30 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (234))
                                                                     (Prims.of_int (24)))))
                                                                     (Obj.magic
-                                                                    (is_true
-                                                                    q))
+                                                                    uu___12)
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___13
+                                                                    ->
                                                                     (fun
-                                                                    uu___6 ->
-                                                                    if uu___6
+                                                                    uu___13
+                                                                    ->
+                                                                    if
+                                                                    uu___13
                                                                     then
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Simplifier";
                                                                     "lem_p_imp_true"]))))
                                                                     else
+                                                                    (let uu___15
+                                                                    =
+                                                                    is_false
+                                                                    p in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -864,19 +929,21 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (234))
                                                                     (Prims.of_int (24)))))
                                                                     (Obj.magic
-                                                                    (is_false
-                                                                    p))
+                                                                    uu___15)
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___16
+                                                                    ->
                                                                     (fun
-                                                                    uu___8 ->
-                                                                    if uu___8
+                                                                    uu___16
+                                                                    ->
+                                                                    if
+                                                                    uu___16
                                                                     then
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Simplifier";
@@ -884,13 +951,16 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (tiff ()))
-                                                                    uu___8)))
-                                                                    uu___6)))
-                                                                    uu___4))
+                                                                    uu___16))))
+                                                                    uu___13))))
+                                                                    uu___10))
                                                                | FStar_Reflection_V2_Formula.Forall
                                                                    (_b,
                                                                     _sort, p)
                                                                    ->
+                                                                   let uu___9
+                                                                    =
+                                                                    is_true p in
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -910,24 +980,30 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (239))
                                                                     (Prims.of_int (24)))))
                                                                     (Obj.magic
-                                                                    (is_true
-                                                                    p))
+                                                                    uu___9)
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___10
+                                                                    ->
                                                                     (fun
-                                                                    uu___4 ->
-                                                                    if uu___4
+                                                                    uu___10
+                                                                    ->
+                                                                    if
+                                                                    uu___10
                                                                     then
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Simplifier";
                                                                     "lem_fa_true"]))))
                                                                     else
+                                                                    (let uu___12
+                                                                    =
+                                                                    is_false
+                                                                    p in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -947,18 +1023,31 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (239))
                                                                     (Prims.of_int (24)))))
                                                                     (Obj.magic
-                                                                    (is_false
-                                                                    p))
+                                                                    uu___12)
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___13
+                                                                    ->
                                                                     (fun
-                                                                    uu___6 ->
-                                                                    if uu___6
+                                                                    uu___13
+                                                                    ->
+                                                                    if
+                                                                    uu___13
                                                                     then
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Derived.or_else
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___14
+                                                                    ->
+                                                                    let uu___15
+                                                                    =
+                                                                    FStar_Tactics_V2_Derived.apply_lemma
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                    ["FStar";
+                                                                    "Tactics";
+                                                                    "Simplifier";
+                                                                    "lem_fa_false"]))) in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -977,32 +1066,31 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (238))
                                                                     (Prims.of_int (94)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Tactics";
-                                                                    "Simplifier";
-                                                                    "lem_fa_false"])))))
+                                                                    uu___15)
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___16
+                                                                    ->
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___16
+                                                                    ->
                                                                     Obj.magic
                                                                     (inhabit
                                                                     ()))
-                                                                    uu___8))
+                                                                    uu___16))
                                                                     tiff)
                                                                     else
                                                                     Obj.magic
                                                                     (tiff ()))
-                                                                    uu___6)))
-                                                                    uu___4))
+                                                                    uu___13))))
+                                                                    uu___10))
                                                                | FStar_Reflection_V2_Formula.Exists
                                                                    (_b,
                                                                     _sort, p)
                                                                    ->
+                                                                   let uu___9
+                                                                    =
+                                                                    is_false
+                                                                    p in
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1022,24 +1110,29 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (244))
                                                                     (Prims.of_int (24)))))
                                                                     (Obj.magic
-                                                                    (is_false
-                                                                    p))
+                                                                    uu___9)
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___10
+                                                                    ->
                                                                     (fun
-                                                                    uu___4 ->
-                                                                    if uu___4
+                                                                    uu___10
+                                                                    ->
+                                                                    if
+                                                                    uu___10
                                                                     then
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Simplifier";
                                                                     "lem_ex_false"]))))
                                                                     else
+                                                                    (let uu___12
+                                                                    =
+                                                                    is_true p in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1059,18 +1152,31 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (244))
                                                                     (Prims.of_int (24)))))
                                                                     (Obj.magic
-                                                                    (is_true
-                                                                    p))
+                                                                    uu___12)
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___13
+                                                                    ->
                                                                     (fun
-                                                                    uu___6 ->
-                                                                    if uu___6
+                                                                    uu___13
+                                                                    ->
+                                                                    if
+                                                                    uu___13
                                                                     then
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Derived.or_else
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___14
+                                                                    ->
+                                                                    let uu___15
+                                                                    =
+                                                                    FStar_Tactics_V2_Derived.apply_lemma
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                    ["FStar";
+                                                                    "Tactics";
+                                                                    "Simplifier";
+                                                                    "lem_ex_true"]))) in
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -1089,30 +1195,28 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (243))
                                                                     (Prims.of_int (93)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Tactics";
-                                                                    "Simplifier";
-                                                                    "lem_ex_true"])))))
+                                                                    uu___15)
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___16
+                                                                    ->
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___16
+                                                                    ->
                                                                     Obj.magic
                                                                     (inhabit
                                                                     ()))
-                                                                    uu___8))
+                                                                    uu___16))
                                                                     tiff)
                                                                     else
                                                                     Obj.magic
                                                                     (tiff ()))
-                                                                    uu___6)))
-                                                                    uu___4))
+                                                                    uu___13))))
+                                                                    uu___10))
                                                                | FStar_Reflection_V2_Formula.Not
                                                                    p ->
+                                                                   let uu___9
+                                                                    =
+                                                                    is_true p in
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1132,24 +1236,30 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (249))
                                                                     (Prims.of_int (24)))))
                                                                     (Obj.magic
-                                                                    (is_true
-                                                                    p))
+                                                                    uu___9)
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___10
+                                                                    ->
                                                                     (fun
-                                                                    uu___4 ->
-                                                                    if uu___4
+                                                                    uu___10
+                                                                    ->
+                                                                    if
+                                                                    uu___10
                                                                     then
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Simplifier";
                                                                     "lem_neg_true"]))))
                                                                     else
+                                                                    (let uu___12
+                                                                    =
+                                                                    is_false
+                                                                    p in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1169,19 +1279,21 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (249))
                                                                     (Prims.of_int (24)))))
                                                                     (Obj.magic
-                                                                    (is_false
-                                                                    p))
+                                                                    uu___12)
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___13
+                                                                    ->
                                                                     (fun
-                                                                    uu___6 ->
-                                                                    if uu___6
+                                                                    uu___13
+                                                                    ->
+                                                                    if
+                                                                    uu___13
                                                                     then
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Simplifier";
@@ -1189,10 +1301,13 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     else
                                                                     Obj.magic
                                                                     (tiff ()))
-                                                                    uu___6)))
-                                                                    uu___4))
+                                                                    uu___13))))
+                                                                    uu___10))
                                                                | FStar_Reflection_V2_Formula.Iff
                                                                    (p, q) ->
+                                                                   let uu___9
+                                                                    = 
+                                                                    step () in
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1212,11 +1327,190 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (260))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
-                                                                    (step ()))
+                                                                    uu___9)
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___10
+                                                                    ->
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___10
+                                                                    ->
+                                                                    let uu___11
+                                                                    =
+                                                                    let uu___12
+                                                                    =
+                                                                    is_true p in
+                                                                    FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (20))
+                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (29)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (17))
+                                                                    (Prims.of_int (259))
+                                                                    (Prims.of_int (24)))))
+                                                                    (Obj.magic
+                                                                    uu___12)
+                                                                    (fun
+                                                                    uu___13
+                                                                    ->
+                                                                    (fun
+                                                                    uu___13
+                                                                    ->
+                                                                    if
+                                                                    uu___13
+                                                                    then
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_V2_Derived.apply_lemma
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                    ["FStar";
+                                                                    "Tactics";
+                                                                    "Simplifier";
+                                                                    "lem_true_iff_p"]))))
+                                                                    else
+                                                                    (let uu___15
+                                                                    =
+                                                                    is_true q in
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (20))
+                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (29)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (17))
+                                                                    (Prims.of_int (259))
+                                                                    (Prims.of_int (24)))))
+                                                                    (Obj.magic
+                                                                    uu___15)
+                                                                    (fun
+                                                                    uu___16
+                                                                    ->
+                                                                    (fun
+                                                                    uu___16
+                                                                    ->
+                                                                    if
+                                                                    uu___16
+                                                                    then
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_V2_Derived.apply_lemma
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                    ["FStar";
+                                                                    "Tactics";
+                                                                    "Simplifier";
+                                                                    "lem_p_iff_true"]))))
+                                                                    else
+                                                                    (let uu___18
+                                                                    =
+                                                                    is_false
+                                                                    p in
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (257))
+                                                                    (Prims.of_int (20))
+                                                                    (Prims.of_int (257))
+                                                                    (Prims.of_int (30)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (257))
+                                                                    (Prims.of_int (17))
+                                                                    (Prims.of_int (259))
+                                                                    (Prims.of_int (24)))))
+                                                                    (Obj.magic
+                                                                    uu___18)
+                                                                    (fun
+                                                                    uu___19
+                                                                    ->
+                                                                    (fun
+                                                                    uu___19
+                                                                    ->
+                                                                    if
+                                                                    uu___19
+                                                                    then
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_V2_Derived.apply_lemma
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                    ["FStar";
+                                                                    "Tactics";
+                                                                    "Simplifier";
+                                                                    "lem_false_iff_p"]))))
+                                                                    else
+                                                                    (let uu___21
+                                                                    =
+                                                                    is_false
+                                                                    q in
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (258))
+                                                                    (Prims.of_int (20))
+                                                                    (Prims.of_int (258))
+                                                                    (Prims.of_int (30)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Simplifier.fst"
+                                                                    (Prims.of_int (258))
+                                                                    (Prims.of_int (17))
+                                                                    (Prims.of_int (259))
+                                                                    (Prims.of_int (24)))))
+                                                                    (Obj.magic
+                                                                    uu___21)
+                                                                    (fun
+                                                                    uu___22
+                                                                    ->
+                                                                    (fun
+                                                                    uu___22
+                                                                    ->
+                                                                    if
+                                                                    uu___22
+                                                                    then
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_V2_Derived.apply_lemma
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                    ["FStar";
+                                                                    "Tactics";
+                                                                    "Simplifier";
+                                                                    "lem_p_iff_false"]))))
+                                                                    else
+                                                                    Obj.magic
+                                                                    (tiff ()))
+                                                                    uu___22))))
+                                                                    uu___19))))
+                                                                    uu___16))))
+                                                                    uu___13) in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1236,184 +1530,32 @@ let rec (simplify_point : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                                                     (Prims.of_int (260))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.Tactics.Simplifier.fst"
-                                                                    (Prims.of_int (255))
-                                                                    (Prims.of_int (20))
-                                                                    (Prims.of_int (255))
-                                                                    (Prims.of_int (29)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.Tactics.Simplifier.fst"
-                                                                    (Prims.of_int (255))
-                                                                    (Prims.of_int (17))
-                                                                    (Prims.of_int (259))
-                                                                    (Prims.of_int (24)))))
-                                                                    (Obj.magic
-                                                                    (is_true
-                                                                    p))
+                                                                    uu___11)
                                                                     (fun
-                                                                    uu___5 ->
-                                                                    (fun
-                                                                    uu___5 ->
-                                                                    if uu___5
-                                                                    then
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Tactics";
-                                                                    "Simplifier";
-                                                                    "lem_true_iff_p"]))))
-                                                                    else
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.Tactics.Simplifier.fst"
-                                                                    (Prims.of_int (256))
-                                                                    (Prims.of_int (20))
-                                                                    (Prims.of_int (256))
-                                                                    (Prims.of_int (29)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.Tactics.Simplifier.fst"
-                                                                    (Prims.of_int (256))
-                                                                    (Prims.of_int (17))
-                                                                    (Prims.of_int (259))
-                                                                    (Prims.of_int (24)))))
-                                                                    (Obj.magic
-                                                                    (is_true
-                                                                    q))
-                                                                    (fun
-                                                                    uu___7 ->
-                                                                    (fun
-                                                                    uu___7 ->
-                                                                    if uu___7
-                                                                    then
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Tactics";
-                                                                    "Simplifier";
-                                                                    "lem_p_iff_true"]))))
-                                                                    else
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.Tactics.Simplifier.fst"
-                                                                    (Prims.of_int (257))
-                                                                    (Prims.of_int (20))
-                                                                    (Prims.of_int (257))
-                                                                    (Prims.of_int (30)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.Tactics.Simplifier.fst"
-                                                                    (Prims.of_int (257))
-                                                                    (Prims.of_int (17))
-                                                                    (Prims.of_int (259))
-                                                                    (Prims.of_int (24)))))
-                                                                    (Obj.magic
-                                                                    (is_false
-                                                                    p))
-                                                                    (fun
-                                                                    uu___9 ->
-                                                                    (fun
-                                                                    uu___9 ->
-                                                                    if uu___9
-                                                                    then
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Tactics";
-                                                                    "Simplifier";
-                                                                    "lem_false_iff_p"]))))
-                                                                    else
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.Tactics.Simplifier.fst"
-                                                                    (Prims.of_int (258))
-                                                                    (Prims.of_int (20))
-                                                                    (Prims.of_int (258))
-                                                                    (Prims.of_int (30)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.Tactics.Simplifier.fst"
-                                                                    (Prims.of_int (258))
-                                                                    (Prims.of_int (17))
-                                                                    (Prims.of_int (259))
-                                                                    (Prims.of_int (24)))))
-                                                                    (Obj.magic
-                                                                    (is_false
-                                                                    q))
-                                                                    (fun
-                                                                    uu___11
+                                                                    uu___12
                                                                     ->
                                                                     (fun
-                                                                    uu___11
+                                                                    uu___12
                                                                     ->
-                                                                    if
-                                                                    uu___11
-                                                                    then
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Tactics";
-                                                                    "Simplifier";
-                                                                    "lem_p_iff_false"]))))
-                                                                    else
-                                                                    Obj.magic
-                                                                    (tiff ()))
-                                                                    uu___11)))
-                                                                    uu___9)))
-                                                                    uu___7)))
-                                                                    uu___5)))
-                                                                    (fun
-                                                                    uu___5 ->
-                                                                    (fun
-                                                                    uu___5 ->
                                                                     Obj.magic
                                                                     (simplify_point
                                                                     ()))
-                                                                    uu___5)))
-                                                                    uu___4))
-                                                               | uu___4 ->
+                                                                    uu___12)))
+                                                                    uu___10))
+                                                               | uu___9 ->
                                                                    Obj.magic
                                                                     (tiff ()))
-                                                              uu___3)))
-                                             | uu___3 ->
+                                                              uu___8)))
+                                             | uu___7 ->
                                                  Obj.magic
                                                    (Obj.repr
                                                       (FStar_Tactics_V2_Derived.fail
                                                          "simplify_point: failed precondition: goal should be `g <==> ?u`")))
-                                            uu___3))) uu___3))) uu___2)))
-           uu___1)
+                                            uu___7))) uu___6))) uu___4)))
+           uu___2)
 and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
+    let uu___1 = step () in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -1424,9 +1566,10 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
                (Prims.of_int (268)) (Prims.of_int (4)) (Prims.of_int (302))
-               (Prims.of_int (74))))) (Obj.magic (step ()))
-      (fun uu___1 ->
-         (fun uu___1 ->
+               (Prims.of_int (74))))) (Obj.magic uu___1)
+      (fun uu___2 ->
+         (fun uu___2 ->
+            let uu___3 = FStarC_Tactics_V2_Builtins.norm [] in
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
                  (FStar_Sealed.seal
@@ -1439,9 +1582,10 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                        (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
                           (Prims.of_int (268)) (Prims.of_int (12))
                           (Prims.of_int (302)) (Prims.of_int (74)))))
-                 (Obj.magic (FStar_Tactics_V2_Builtins.norm []))
-                 (fun uu___2 ->
-                    (fun uu___2 ->
+                 (Obj.magic uu___3)
+                 (fun uu___4 ->
+                    (fun uu___4 ->
+                       let uu___5 = FStar_Tactics_V2_Derived.cur_goal () in
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
                             (FStar_Sealed.seal
@@ -1456,9 +1600,12 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                      "FStar.Tactics.Simplifier.fst"
                                      (Prims.of_int (269)) (Prims.of_int (26))
                                      (Prims.of_int (302)) (Prims.of_int (74)))))
-                            (Obj.magic (FStar_Tactics_V2_Derived.cur_goal ()))
-                            (fun uu___3 ->
+                            (Obj.magic uu___5)
+                            (fun uu___6 ->
                                (fun g ->
+                                  let uu___6 =
+                                    FStar_Reflection_V2_Formula.term_as_formula
+                                      g in
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
                                        (FStar_Sealed.seal
@@ -1477,17 +1624,18 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                 (Prims.of_int (4))
                                                 (Prims.of_int (302))
                                                 (Prims.of_int (74)))))
-                                       (Obj.magic
-                                          (FStar_Reflection_V2_Formula.term_as_formula
-                                             g))
-                                       (fun uu___3 ->
+                                       (Obj.magic uu___6)
+                                       (fun uu___7 ->
                                           (fun f ->
                                              match f with
                                              | FStar_Reflection_V2_Formula.Iff
                                                  (l, r) ->
                                                  Obj.magic
                                                    (Obj.repr
-                                                      (FStar_Tactics_Effect.tac_bind
+                                                      (let uu___7 =
+                                                         FStar_Reflection_V2_Formula.term_as_formula'
+                                                           l in
+                                                       FStar_Tactics_Effect.tac_bind
                                                          (FStar_Sealed.seal
                                                             (Obj.magic
                                                                (FStar_Range.mk_range
@@ -1504,69 +1652,80 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                   (Prims.of_int (14))
                                                                   (Prims.of_int (300))
                                                                   (Prims.of_int (22)))))
-                                                         (Obj.magic
-                                                            (FStar_Reflection_V2_Formula.term_as_formula'
-                                                               l))
-                                                         (fun uu___3 ->
-                                                            (fun uu___3 ->
-                                                               match uu___3
+                                                         (Obj.magic uu___7)
+                                                         (fun uu___8 ->
+                                                            (fun uu___8 ->
+                                                               match uu___8
                                                                with
                                                                | FStar_Reflection_V2_Formula.And
-                                                                   (uu___4,
-                                                                    uu___5)
+                                                                   (uu___9,
+                                                                    uu___10)
                                                                    ->
                                                                    Obj.magic
                                                                     (FStar_Tactics_V2_Derived.seq
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___11
+                                                                    ->
                                                                     FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Simplifier";
                                                                     "and_cong"]))))
                                                                     simplify_point)
                                                                | FStar_Reflection_V2_Formula.Or
-                                                                   (uu___4,
-                                                                    uu___5)
+                                                                   (uu___9,
+                                                                    uu___10)
                                                                    ->
                                                                    Obj.magic
                                                                     (FStar_Tactics_V2_Derived.seq
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___11
+                                                                    ->
                                                                     FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Simplifier";
                                                                     "or_cong"]))))
                                                                     simplify_point)
                                                                | FStar_Reflection_V2_Formula.Implies
-                                                                   (uu___4,
-                                                                    uu___5)
+                                                                   (uu___9,
+                                                                    uu___10)
                                                                    ->
                                                                    Obj.magic
                                                                     (FStar_Tactics_V2_Derived.seq
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___11
+                                                                    ->
                                                                     FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Simplifier";
                                                                     "imp_cong"]))))
                                                                     simplify_point)
                                                                | FStar_Reflection_V2_Formula.Forall
-                                                                   (uu___4,
-                                                                    uu___5,
-                                                                    uu___6)
+                                                                   (uu___9,
+                                                                    uu___10,
+                                                                    uu___11)
                                                                    ->
+                                                                   let uu___12
+                                                                    =
+                                                                    FStar_Tactics_V2_Derived.apply_lemma
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                    ["FStar";
+                                                                    "Tactics";
+                                                                    "Simplifier";
+                                                                    "fa_cong"]))) in
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1586,18 +1745,17 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     (Prims.of_int (286))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Tactics";
-                                                                    "Simplifier";
-                                                                    "fa_cong"])))))
+                                                                    uu___12)
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___13
+                                                                    ->
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___13
+                                                                    ->
+                                                                    let uu___14
+                                                                    =
+                                                                    FStarC_Tactics_V2_Builtins.intro
+                                                                    () in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1617,22 +1775,33 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     (Prims.of_int (286))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_V2_Builtins.intro
-                                                                    ()))
+                                                                    uu___14)
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___15
+                                                                    ->
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___15
+                                                                    ->
                                                                     Obj.magic
                                                                     (simplify_point
                                                                     ()))
-                                                                    uu___8)))
-                                                                    uu___7))
+                                                                    uu___15)))
+                                                                    uu___13))
                                                                | FStar_Reflection_V2_Formula.Exists
-                                                                   (uu___4,
-                                                                    uu___5,
-                                                                    uu___6)
+                                                                   (uu___9,
+                                                                    uu___10,
+                                                                    uu___11)
                                                                    ->
+                                                                   let uu___12
+                                                                    =
+                                                                    FStar_Tactics_V2_Derived.apply_lemma
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                    ["FStar";
+                                                                    "Tactics";
+                                                                    "Simplifier";
+                                                                    "ex_cong"]))) in
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1652,18 +1821,17 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     (Prims.of_int (291))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Tactics";
-                                                                    "Simplifier";
-                                                                    "ex_cong"])))))
+                                                                    uu___12)
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___13
+                                                                    ->
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___13
+                                                                    ->
+                                                                    let uu___14
+                                                                    =
+                                                                    FStarC_Tactics_V2_Builtins.intro
+                                                                    () in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1683,19 +1851,30 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     (Prims.of_int (291))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_V2_Builtins.intro
-                                                                    ()))
+                                                                    uu___14)
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___15
+                                                                    ->
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___15
+                                                                    ->
                                                                     Obj.magic
                                                                     (simplify_point
                                                                     ()))
-                                                                    uu___8)))
-                                                                    uu___7))
+                                                                    uu___15)))
+                                                                    uu___13))
                                                                | FStar_Reflection_V2_Formula.Not
-                                                                   uu___4 ->
+                                                                   uu___9 ->
+                                                                   let uu___10
+                                                                    =
+                                                                    FStar_Tactics_V2_Derived.apply_lemma
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                    ["FStar";
+                                                                    "Tactics";
+                                                                    "Simplifier";
+                                                                    "neg_cong"]))) in
                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1715,52 +1894,54 @@ and (recurse : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     (Prims.of_int (295))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Tactics";
-                                                                    "Simplifier";
-                                                                    "neg_cong"])))))
+                                                                    uu___10)
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___11
+                                                                    ->
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___11
+                                                                    ->
                                                                     Obj.magic
                                                                     (simplify_point
                                                                     ()))
-                                                                    uu___5))
+                                                                    uu___11))
                                                                | FStar_Reflection_V2_Formula.Iff
-                                                                   (uu___4,
-                                                                    uu___5)
+                                                                   (uu___9,
+                                                                    uu___10)
                                                                    ->
                                                                    Obj.magic
                                                                     (FStar_Tactics_V2_Derived.seq
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___11
+                                                                    ->
                                                                     FStar_Tactics_V2_Derived.apply_lemma
-                                                                    (FStar_Reflection_V2_Builtins.pack_ln
-                                                                    (FStar_Reflection_V2_Data.Tv_FVar
-                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    (FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                                    (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
                                                                     "Simplifier";
                                                                     "iff_cong"]))))
                                                                     simplify_point)
-                                                               | uu___4 ->
+                                                               | uu___9 ->
                                                                    Obj.magic
                                                                     (tiff ()))
-                                                              uu___3)))
-                                             | uu___3 ->
+                                                              uu___8)))
+                                             | uu___7 ->
                                                  Obj.magic
                                                    (Obj.repr
                                                       (FStar_Tactics_V2_Derived.fail
                                                          "recurse: failed precondition: goal should be `g <==> ?u`")))
-                                            uu___3))) uu___3))) uu___2)))
-           uu___1)
+                                            uu___7))) uu___6))) uu___4)))
+           uu___2)
 let (simplify : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
+    let uu___1 =
+      FStar_Tactics_V2_Derived.apply_lemma
+        (FStarC_Reflection_V2_Builtins.pack_ln
+           (FStarC_Reflection_V2_Data.Tv_FVar
+              (FStarC_Reflection_V2_Builtins.pack_fv
+                 ["FStar"; "Tactics"; "Simplifier"; "equiv"]))) in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -1771,11 +1952,5 @@ let (simplify : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.Simplifier.fst"
                (Prims.of_int (309)) (Prims.of_int (4)) (Prims.of_int (309))
-               (Prims.of_int (21)))))
-      (Obj.magic
-         (FStar_Tactics_V2_Derived.apply_lemma
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_FVar
-                  (FStar_Reflection_V2_Builtins.pack_fv
-                     ["FStar"; "Tactics"; "Simplifier"; "equiv"])))))
-      (fun uu___1 -> (fun uu___1 -> Obj.magic (simplify_point ())) uu___1)
+               (Prims.of_int (21))))) (Obj.magic uu___1)
+      (fun uu___2 -> (fun uu___2 -> Obj.magic (simplify_point ())) uu___2)

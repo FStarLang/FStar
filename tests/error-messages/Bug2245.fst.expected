@@ -1,9 +1,0 @@
->> Got issues: [
-* Error 189 at Bug2245.fst(6,23-6,24):
-  - Expected expression of type (Prims.int & Prims.int) & Prims.int
-    got expression a
-    of type Prims.int & Prims.int & Prims.int
-
->>]
-Verified module: Bug2245
-All verification conditions discharged successfully

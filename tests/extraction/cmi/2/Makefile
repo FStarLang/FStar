@@ -7,17 +7,8 @@
 ### lack implementations
 ################################################################################
 
-# This is needed because ../Makefile.common includes
-# ../../../Makefile.common, but GNU Make does not support chained
-# includes with relative paths
-FSTAR_EXAMPLES = $(realpath ../../../../examples)
+FSTAR_ROOT ?= ../../../..
+OTHERFLAGS += --cmi
+include $(FSTAR_ROOT)/mk/test.mk
 
-ROOTS=Test.fst
-EXTRACT=Test
-
-all: test
-
-include ../Makefile.common
-
-test: Test.ml
-	egrep M.f $^ | egrep -q -v magic  #test that there is no magic in the call to M.f; fragile
+# Test.ml.expected should not contain a magic.

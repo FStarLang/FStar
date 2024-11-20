@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "c2a6c09d15e201e7e40a8ba7acf3ec78"
+      "75c8f28b4c220b3019c670b55b168927"
     ],
     [
       "TestBV.test2",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "3793376c449e82f955386b5b3ee81d65"
+      "930ccc4eef68b222fd78e6638b196cdd"
     ],
     [
       "TestBV.test3",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "07bbf91a36488897665bb14690d2f768"
+      "b48d780d6fe6c04b5c4bf1bb57c71577"
     ],
     [
       "TestBV.test4",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "4fe4c93b18ff514f14a834fbf50a463a"
+      "c7526dc0e33929449a643598c1784b0c"
     ],
     [
       "TestBV.test5",
@@ -44,7 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "b6686f7a7ea4dfe35c36c3a5a3b6fcfc"
+      "aaeb7330fab1f20d2ca9f6d86a6ca213"
     ],
     [
       "TestBV.v64_eq",
@@ -53,7 +53,7 @@
       1,
       [ "@query", "lemma_FStar.UInt64.uv_inv" ],
       0,
-      "91c36a0f74bfc20f7cc640cd9d954439"
+      "79c600192d447d476490331a6bb6c0f0"
     ],
     [
       "TestBV.unfold_logand64",
@@ -66,7 +66,7 @@
         "typing_FStar.UInt64.logand"
       ],
       0,
-      "10921e28b5c094a4382b285b2c779970"
+      "0b011838b6418371846a46091c9521b5"
     ],
     [
       "TestBV.unfold_logor64",
@@ -79,7 +79,7 @@
         "typing_FStar.UInt64.logor"
       ],
       0,
-      "429186df95bff97ce09bead4087ead42"
+      "9f01664d3c858d7a6e6f15c1408b3929"
     ],
     [
       "TestBV.unfold_logxor64",
@@ -92,25 +92,25 @@
         "typing_FStar.UInt64.logxor"
       ],
       0,
-      "b9990bf699c3d58e19eb111705a3429c"
+      "6e572fb4ec5cb68fadccad4ca277102e"
     ],
     [
       "TestBV.test6",
       1,
       2,
       1,
-      [ "@query", "true_interp" ],
+      [ "@query" ],
       0,
-      "1393dfd198960c5b954eece4b1ab4ad2"
+      "647cd23825f1c796d69b566d19b48e47"
     ],
     [
       "TestBV.test7",
       1,
       2,
       1,
-      [ "@query", "true_interp" ],
+      [ "@query" ],
       0,
-      "63afbe8deeb53a3ae7b976628e0ccdc2"
+      "fde33eeef9f7c50027d98786f9a83c04"
     ]
   ]
 ]

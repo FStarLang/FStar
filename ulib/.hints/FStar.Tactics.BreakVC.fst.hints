@@ -1,0 +1,52 @@
+[
+  "ó¨\u000eyˆÀ†Ù'¥Uª Œ‹Ú",
+  [
+    [
+      "FStar.Tactics.BreakVC.mono_lem",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Stubs.Tactics.Result.Success@tok",
+        "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.unit", "unit_typing"
+      ],
+      0,
+      "79e83b5d91dfa18b20e049dc9e96a8b6"
+    ],
+    [
+      "FStar.Tactics.BreakVC.squash_p_impl_p",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "31ace19121d6e60588db5abd459f864d"
+    ],
+    [
+      "FStar.Tactics.BreakVC.aux",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Tactics.BreakVC.op_Equals_Equals_Greater_Greater",
+        "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "6d2ca1a056e8e61ace868e69d6070e51"
+    ],
+    [
+      "FStar.Tactics.BreakVC.break_vc",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
+      0,
+      "257a18a8012a0e19a594c2277eecfa4e"
+    ]
+  ]
+]

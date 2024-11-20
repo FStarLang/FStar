@@ -1,0 +1,551 @@
+Module after desugaring:
+module Monoid
+Declarations: [
+let right_unitality_lemma m u15 mult = forall (x: m). mult x u15 == x
+let left_unitality_lemma m u15 mult = forall (x: m). mult u15 x == x
+let associativity_lemma m mult = forall (x: m) (y: m) (z: m). mult (mult x y) z == mult x (mult y z)
+unopteq
+type monoid (m: Type) =
+  | Monoid :
+      unit: m ->
+      mult: (_: m -> _: m -> m) ->
+      right_unitality: Prims.squash (Monoid.right_unitality_lemma m unit mult) ->
+      left_unitality: Prims.squash (Monoid.left_unitality_lemma m unit mult) ->
+      associativity: Prims.squash (Monoid.associativity_lemma m mult)
+    -> Monoid.monoid m
+
+
+
+
+
+
+
+
+
+
+
+let intro_monoid m u15 mult = Monoid.Monoid u15 mult () () () <: Prims.Pure (Monoid.monoid m)
+let nat_plus_monoid =
+  let add x y = x + y <: Prims.nat in
+  Monoid.intro_monoid Prims.nat 0 add
+let int_plus_monoid = Monoid.intro_monoid Prims.int 0 Prims.op_Addition
+let conjunction_monoid =
+  let u14 = FStar.Pervasives.singleton Prims.l_True in
+  let mult p q = p /\ q <: Prims.prop in
+  let left_unitality_helper p =
+    (assert (mult u14 p <==> p);
+      FStar.PropositionalExtensionality.apply (mult u14 p) p)
+    <:
+    FStar.Pervasives.Lemma (ensures mult u14 p == p)
+  in
+  let right_unitality_helper p =
+    (assert (mult p u14 <==> p);
+      FStar.PropositionalExtensionality.apply (mult p u14) p)
+    <:
+    FStar.Pervasives.Lemma (ensures mult p u14 == p)
+  in
+  let associativity_helper p1 p2 p3 =
+    (assert (mult (mult p1 p2) p3 <==> mult p1 (mult p2 p3));
+      FStar.PropositionalExtensionality.apply (mult (mult p1 p2) p3) (mult p1 (mult p2 p3)))
+    <:
+    FStar.Pervasives.Lemma (ensures mult (mult p1 p2) p3 == mult p1 (mult p2 p3))
+  in
+  FStar.Classical.forall_intro right_unitality_helper;
+  assert (Monoid.right_unitality_lemma Prims.prop u14 mult);
+  FStar.Classical.forall_intro left_unitality_helper;
+  assert (Monoid.left_unitality_lemma Prims.prop u14 mult);
+  FStar.Classical.forall_intro_3 associativity_helper;
+  assert (Monoid.associativity_lemma Prims.prop mult);
+  Monoid.intro_monoid Prims.prop u14 mult
+let disjunction_monoid =
+  let u14 = FStar.Pervasives.singleton Prims.l_False in
+  let mult p q = p \/ q <: Prims.prop in
+  let left_unitality_helper p =
+    (assert (mult u14 p <==> p);
+      FStar.PropositionalExtensionality.apply (mult u14 p) p)
+    <:
+    FStar.Pervasives.Lemma (ensures mult u14 p == p)
+  in
+  let right_unitality_helper p =
+    (assert (mult p u14 <==> p);
+      FStar.PropositionalExtensionality.apply (mult p u14) p)
+    <:
+    FStar.Pervasives.Lemma (ensures mult p u14 == p)
+  in
+  let associativity_helper p1 p2 p3 =
+    (assert (mult (mult p1 p2) p3 <==> mult p1 (mult p2 p3));
+      FStar.PropositionalExtensionality.apply (mult (mult p1 p2) p3) (mult p1 (mult p2 p3)))
+    <:
+    FStar.Pervasives.Lemma (ensures mult (mult p1 p2) p3 == mult p1 (mult p2 p3))
+  in
+  FStar.Classical.forall_intro right_unitality_helper;
+  assert (Monoid.right_unitality_lemma Prims.prop u14 mult);
+  FStar.Classical.forall_intro left_unitality_helper;
+  assert (Monoid.left_unitality_lemma Prims.prop u14 mult);
+  FStar.Classical.forall_intro_3 associativity_helper;
+  assert (Monoid.associativity_lemma Prims.prop mult);
+  Monoid.intro_monoid Prims.prop u14 mult
+let bool_and_monoid =
+  let and_ b1 b2 = b1 && b2 in
+  Monoid.intro_monoid Prims.bool true and_
+let bool_or_monoid =
+  let or_ b1 b2 = b1 || b2 in
+  Monoid.intro_monoid Prims.bool false or_
+let bool_xor_monoid =
+  let xor b1 b2 = (b1 || b2) && Prims.op_Negation (b1 && b2) in
+  Monoid.intro_monoid Prims.bool false xor
+let lift_monoid_option m =
+  (let mult x y =
+      match x, y with
+      | FStar.Pervasives.Native.Some x0, FStar.Pervasives.Native.Some y0 ->
+        FStar.Pervasives.Native.Some (mult m x0 y0)
+      | _, _ -> FStar.Pervasives.Native.None
+    in
+    Monoid.intro_monoid (FStar.Pervasives.Native.option a)
+      (FStar.Pervasives.Native.Some (unit m))
+      mult)
+  <:
+  Monoid.monoid (FStar.Pervasives.Native.option a)
+let monoid_morphism_unit_lemma f ma mb = f ma.unit == mb.unit
+let monoid_morphism_mult_lemma f ma mb =
+  forall (x: a) (y: a). mb.mult (f x) (f y) == f (ma.mult x y)
+type monoid_morphism (f: (_: a -> b)) (ma: Monoid.monoid a) (mb: Monoid.monoid b) =
+  | MonoidMorphism :
+      unit: Prims.squash (Monoid.monoid_morphism_unit_lemma f ma mb) ->
+      mult: Prims.squash (Monoid.monoid_morphism_mult_lemma f ma mb)
+    -> Monoid.monoid_morphism f ma mb
+
+
+
+
+
+let intro_monoid_morphism f ma mb =
+  Monoid.MonoidMorphism () () <: Prims.Pure (Monoid.monoid_morphism f ma mb)
+let embed_nat_int n = n <: Prims.int
+private
+let _ =
+  Monoid.intro_monoid_morphism Monoid.embed_nat_int Monoid.nat_plus_monoid Monoid.int_plus_monoid
+let neg p = ~p <: Prims.prop
+private
+let _ =
+  assert (Monoid.neg Prims.l_True <==> Prims.l_False);
+  FStar.PropositionalExtensionality.apply (Monoid.neg Prims.l_True) Prims.l_False;
+  let mult_lemma_helper p q =
+    (assert (Monoid.neg (p /\ q) <==> Monoid.neg p \/ Monoid.neg q);
+      FStar.PropositionalExtensionality.apply (Monoid.neg (p /\ q)) (Monoid.neg p \/ Monoid.neg q))
+    <:
+    FStar.Pervasives.Lemma (ensures Monoid.neg (p /\ q) == (Monoid.neg p \/ Monoid.neg q))
+  in
+  FStar.Classical.forall_intro_2 mult_lemma_helper;
+  Monoid.intro_monoid_morphism Monoid.neg Monoid.conjunction_monoid Monoid.disjunction_monoid
+private
+let _ =
+  assert (Monoid.neg Prims.l_False <==> Prims.l_True);
+  FStar.PropositionalExtensionality.apply (Monoid.neg Prims.l_False) Prims.l_True;
+  let mult_lemma_helper p q =
+    (assert (Monoid.neg (p \/ q) <==> Monoid.neg p /\ Monoid.neg q);
+      FStar.PropositionalExtensionality.apply (Monoid.neg (p \/ q)) (Monoid.neg p /\ Monoid.neg q))
+    <:
+    FStar.Pervasives.Lemma (ensures Monoid.neg (p \/ q) == Monoid.neg p /\ Monoid.neg q)
+  in
+  FStar.Classical.forall_intro_2 mult_lemma_helper;
+  Monoid.intro_monoid_morphism Monoid.neg Monoid.disjunction_monoid Monoid.conjunction_monoid
+let mult_act_lemma m a mult act =
+  forall (x: m) (x': m) (y: a). act (mult x x') y == act x (act x' y)
+let unit_act_lemma m a u16 act = forall (y: a). act u16 y == y
+unopteq
+type left_action (mm: Monoid.monoid m) (a: Type) =
+  | LAct :
+      act: (_: m -> _: a -> a) ->
+      mult_lemma: Prims.squash (Monoid.mult_act_lemma m a mm.mult act) ->
+      unit_lemma: Prims.squash (Monoid.unit_act_lemma m a mm.unit act)
+    -> Monoid.left_action mm a
+
+
+
+
+
+
+
+let left_action_morphism f mf la lb = forall (g: ma) (x: a). lb.act (mf g) (f x) == f (la.act g x)
+]
+
+Module before type checking:
+module Monoid
+Declarations: [
+let right_unitality_lemma m u15 mult = forall (x: m). mult x u15 == x
+let left_unitality_lemma m u15 mult = forall (x: m). mult u15 x == x
+let associativity_lemma m mult = forall (x: m) (y: m) (z: m). mult (mult x y) z == mult x (mult y z)
+unopteq
+type monoid (m: Type) =
+  | Monoid :
+      unit: m ->
+      mult: (_: m -> _: m -> m) ->
+      right_unitality: Prims.squash (Monoid.right_unitality_lemma m unit mult) ->
+      left_unitality: Prims.squash (Monoid.left_unitality_lemma m unit mult) ->
+      associativity: Prims.squash (Monoid.associativity_lemma m mult)
+    -> Monoid.monoid m
+
+
+
+
+
+
+
+
+
+
+
+let intro_monoid m u15 mult = Monoid.Monoid u15 mult () () () <: Prims.Pure (Monoid.monoid m)
+let nat_plus_monoid =
+  let add x y = x + y <: Prims.nat in
+  Monoid.intro_monoid Prims.nat 0 add
+let int_plus_monoid = Monoid.intro_monoid Prims.int 0 Prims.op_Addition
+let conjunction_monoid =
+  let u14 = FStar.Pervasives.singleton Prims.l_True in
+  let mult p q = p /\ q <: Prims.prop in
+  let left_unitality_helper p =
+    (assert (mult u14 p <==> p);
+      FStar.PropositionalExtensionality.apply (mult u14 p) p)
+    <:
+    FStar.Pervasives.Lemma (ensures mult u14 p == p)
+  in
+  let right_unitality_helper p =
+    (assert (mult p u14 <==> p);
+      FStar.PropositionalExtensionality.apply (mult p u14) p)
+    <:
+    FStar.Pervasives.Lemma (ensures mult p u14 == p)
+  in
+  let associativity_helper p1 p2 p3 =
+    (assert (mult (mult p1 p2) p3 <==> mult p1 (mult p2 p3));
+      FStar.PropositionalExtensionality.apply (mult (mult p1 p2) p3) (mult p1 (mult p2 p3)))
+    <:
+    FStar.Pervasives.Lemma (ensures mult (mult p1 p2) p3 == mult p1 (mult p2 p3))
+  in
+  FStar.Classical.forall_intro right_unitality_helper;
+  assert (Monoid.right_unitality_lemma Prims.prop u14 mult);
+  FStar.Classical.forall_intro left_unitality_helper;
+  assert (Monoid.left_unitality_lemma Prims.prop u14 mult);
+  FStar.Classical.forall_intro_3 associativity_helper;
+  assert (Monoid.associativity_lemma Prims.prop mult);
+  Monoid.intro_monoid Prims.prop u14 mult
+let disjunction_monoid =
+  let u14 = FStar.Pervasives.singleton Prims.l_False in
+  let mult p q = p \/ q <: Prims.prop in
+  let left_unitality_helper p =
+    (assert (mult u14 p <==> p);
+      FStar.PropositionalExtensionality.apply (mult u14 p) p)
+    <:
+    FStar.Pervasives.Lemma (ensures mult u14 p == p)
+  in
+  let right_unitality_helper p =
+    (assert (mult p u14 <==> p);
+      FStar.PropositionalExtensionality.apply (mult p u14) p)
+    <:
+    FStar.Pervasives.Lemma (ensures mult p u14 == p)
+  in
+  let associativity_helper p1 p2 p3 =
+    (assert (mult (mult p1 p2) p3 <==> mult p1 (mult p2 p3));
+      FStar.PropositionalExtensionality.apply (mult (mult p1 p2) p3) (mult p1 (mult p2 p3)))
+    <:
+    FStar.Pervasives.Lemma (ensures mult (mult p1 p2) p3 == mult p1 (mult p2 p3))
+  in
+  FStar.Classical.forall_intro right_unitality_helper;
+  assert (Monoid.right_unitality_lemma Prims.prop u14 mult);
+  FStar.Classical.forall_intro left_unitality_helper;
+  assert (Monoid.left_unitality_lemma Prims.prop u14 mult);
+  FStar.Classical.forall_intro_3 associativity_helper;
+  assert (Monoid.associativity_lemma Prims.prop mult);
+  Monoid.intro_monoid Prims.prop u14 mult
+let bool_and_monoid =
+  let and_ b1 b2 = b1 && b2 in
+  Monoid.intro_monoid Prims.bool true and_
+let bool_or_monoid =
+  let or_ b1 b2 = b1 || b2 in
+  Monoid.intro_monoid Prims.bool false or_
+let bool_xor_monoid =
+  let xor b1 b2 = (b1 || b2) && Prims.op_Negation (b1 && b2) in
+  Monoid.intro_monoid Prims.bool false xor
+let lift_monoid_option m =
+  (let mult x y =
+      match x, y with
+      | FStar.Pervasives.Native.Some x0, FStar.Pervasives.Native.Some y0 ->
+        FStar.Pervasives.Native.Some (mult m x0 y0)
+      | _, _ -> FStar.Pervasives.Native.None
+    in
+    Monoid.intro_monoid (FStar.Pervasives.Native.option a)
+      (FStar.Pervasives.Native.Some (unit m))
+      mult)
+  <:
+  Monoid.monoid (FStar.Pervasives.Native.option a)
+let monoid_morphism_unit_lemma f ma mb = f ma.unit == mb.unit
+let monoid_morphism_mult_lemma f ma mb =
+  forall (x: a) (y: a). mb.mult (f x) (f y) == f (ma.mult x y)
+type monoid_morphism (f: (_: a -> b)) (ma: Monoid.monoid a) (mb: Monoid.monoid b) =
+  | MonoidMorphism :
+      unit: Prims.squash (Monoid.monoid_morphism_unit_lemma f ma mb) ->
+      mult: Prims.squash (Monoid.monoid_morphism_mult_lemma f ma mb)
+    -> Monoid.monoid_morphism f ma mb
+
+
+
+
+
+let intro_monoid_morphism f ma mb =
+  Monoid.MonoidMorphism () () <: Prims.Pure (Monoid.monoid_morphism f ma mb)
+let embed_nat_int n = n <: Prims.int
+private
+let _ =
+  Monoid.intro_monoid_morphism Monoid.embed_nat_int Monoid.nat_plus_monoid Monoid.int_plus_monoid
+let neg p = ~p <: Prims.prop
+private
+let _ =
+  assert (Monoid.neg Prims.l_True <==> Prims.l_False);
+  FStar.PropositionalExtensionality.apply (Monoid.neg Prims.l_True) Prims.l_False;
+  let mult_lemma_helper p q =
+    (assert (Monoid.neg (p /\ q) <==> Monoid.neg p \/ Monoid.neg q);
+      FStar.PropositionalExtensionality.apply (Monoid.neg (p /\ q)) (Monoid.neg p \/ Monoid.neg q))
+    <:
+    FStar.Pervasives.Lemma (ensures Monoid.neg (p /\ q) == (Monoid.neg p \/ Monoid.neg q))
+  in
+  FStar.Classical.forall_intro_2 mult_lemma_helper;
+  Monoid.intro_monoid_morphism Monoid.neg Monoid.conjunction_monoid Monoid.disjunction_monoid
+private
+let _ =
+  assert (Monoid.neg Prims.l_False <==> Prims.l_True);
+  FStar.PropositionalExtensionality.apply (Monoid.neg Prims.l_False) Prims.l_True;
+  let mult_lemma_helper p q =
+    (assert (Monoid.neg (p \/ q) <==> Monoid.neg p /\ Monoid.neg q);
+      FStar.PropositionalExtensionality.apply (Monoid.neg (p \/ q)) (Monoid.neg p /\ Monoid.neg q))
+    <:
+    FStar.Pervasives.Lemma (ensures Monoid.neg (p \/ q) == Monoid.neg p /\ Monoid.neg q)
+  in
+  FStar.Classical.forall_intro_2 mult_lemma_helper;
+  Monoid.intro_monoid_morphism Monoid.neg Monoid.disjunction_monoid Monoid.conjunction_monoid
+let mult_act_lemma m a mult act =
+  forall (x: m) (x': m) (y: a). act (mult x x') y == act x (act x' y)
+let unit_act_lemma m a u16 act = forall (y: a). act u16 y == y
+unopteq
+type left_action (mm: Monoid.monoid m) (a: Type) =
+  | LAct :
+      act: (_: m -> _: a -> a) ->
+      mult_lemma: Prims.squash (Monoid.mult_act_lemma m a mm.mult act) ->
+      unit_lemma: Prims.squash (Monoid.unit_act_lemma m a mm.unit act)
+    -> Monoid.left_action mm a
+
+
+
+
+
+
+
+let left_action_morphism f mf la lb = forall (g: ma) (x: a). lb.act (mf g) (f x) == f (la.act g x)
+]
+
+Module after type checking:
+module Monoid
+Declarations: [
+let right_unitality_lemma m u466 mult = forall (x: m). mult x u466 == x
+let left_unitality_lemma m u466 mult = forall (x: m). mult u466 x == x
+let associativity_lemma m mult = forall (x: m) (y: m) (z: m). mult (mult x y) z == mult x (mult y z)
+unopteq
+type monoid (m: Type) =
+  | Monoid :
+      unit: m ->
+      mult: (_: m -> _: m -> m) ->
+      right_unitality: Prims.squash (Monoid.right_unitality_lemma m unit mult) ->
+      left_unitality: Prims.squash (Monoid.left_unitality_lemma m unit mult) ->
+      associativity: Prims.squash (Monoid.associativity_lemma m mult)
+    -> Monoid.monoid m
+val monoid__uu___haseq: Prims.l_True /\
+(forall (m: Type). {:pattern Prims.hasEq (Monoid.monoid m)}
+    Prims.l_True /\
+    (forall (unit: m)
+        (mult: (_: m -> _: m -> m))
+        (right_unitality: Prims.squash (Monoid.right_unitality_lemma m unit mult))
+        (left_unitality: Prims.squash (Monoid.left_unitality_lemma m unit mult))
+        (associativity: Prims.squash (Monoid.associativity_lemma m mult)).
+        Prims.l_True /\ Prims.hasEq m /\ Prims.hasEq (_: m -> _: m -> m) /\
+        Prims.hasEq (Prims.squash (Monoid.right_unitality_lemma m unit mult)) /\
+        Prims.hasEq (Prims.squash (Monoid.left_unitality_lemma m unit mult)) /\
+        Prims.hasEq (Prims.squash (Monoid.associativity_lemma m mult))) ==>
+    Prims.hasEq (Monoid.monoid m))
+
+
+
+
+
+
+
+
+
+
+
+
+let intro_monoid m u466 mult = Monoid.Monoid u466 mult () () () <: Prims.Pure (Monoid.monoid m)
+let nat_plus_monoid =
+  let add x y = x + y <: Prims.nat in
+  Monoid.intro_monoid Prims.nat 0 add
+let int_plus_monoid = Monoid.intro_monoid Prims.int 0 Prims.op_Addition
+let conjunction_monoid =
+  let u464 = FStar.Pervasives.singleton Prims.l_True in
+  let mult p q = p /\ q <: Prims.prop in
+  let left_unitality_helper p =
+    (assert (mult u464 p <==> p);
+      FStar.PropositionalExtensionality.apply (mult u464 p) p)
+    <:
+    FStar.Pervasives.Lemma (ensures mult u464 p == p)
+  in
+  let right_unitality_helper p =
+    (assert (mult p u464 <==> p);
+      FStar.PropositionalExtensionality.apply (mult p u464) p)
+    <:
+    FStar.Pervasives.Lemma (ensures mult p u464 == p)
+  in
+  let associativity_helper p1 p2 p3 =
+    (assert (mult (mult p1 p2) p3 <==> mult p1 (mult p2 p3));
+      FStar.PropositionalExtensionality.apply (mult (mult p1 p2) p3) (mult p1 (mult p2 p3)))
+    <:
+    FStar.Pervasives.Lemma (ensures mult (mult p1 p2) p3 == mult p1 (mult p2 p3))
+  in
+  FStar.Classical.forall_intro right_unitality_helper;
+  assert (Monoid.right_unitality_lemma Prims.prop u464 mult);
+  FStar.Classical.forall_intro left_unitality_helper;
+  assert (Monoid.left_unitality_lemma Prims.prop u464 mult);
+  FStar.Classical.forall_intro_3 associativity_helper;
+  assert (Monoid.associativity_lemma Prims.prop mult);
+  Monoid.intro_monoid Prims.prop u464 mult
+let disjunction_monoid =
+  let u464 = FStar.Pervasives.singleton Prims.l_False in
+  let mult p q = p \/ q <: Prims.prop in
+  let left_unitality_helper p =
+    (assert (mult u464 p <==> p);
+      FStar.PropositionalExtensionality.apply (mult u464 p) p)
+    <:
+    FStar.Pervasives.Lemma (ensures mult u464 p == p)
+  in
+  let right_unitality_helper p =
+    (assert (mult p u464 <==> p);
+      FStar.PropositionalExtensionality.apply (mult p u464) p)
+    <:
+    FStar.Pervasives.Lemma (ensures mult p u464 == p)
+  in
+  let associativity_helper p1 p2 p3 =
+    (assert (mult (mult p1 p2) p3 <==> mult p1 (mult p2 p3));
+      FStar.PropositionalExtensionality.apply (mult (mult p1 p2) p3) (mult p1 (mult p2 p3)))
+    <:
+    FStar.Pervasives.Lemma (ensures mult (mult p1 p2) p3 == mult p1 (mult p2 p3))
+  in
+  FStar.Classical.forall_intro right_unitality_helper;
+  assert (Monoid.right_unitality_lemma Prims.prop u464 mult);
+  FStar.Classical.forall_intro left_unitality_helper;
+  assert (Monoid.left_unitality_lemma Prims.prop u464 mult);
+  FStar.Classical.forall_intro_3 associativity_helper;
+  assert (Monoid.associativity_lemma Prims.prop mult);
+  Monoid.intro_monoid Prims.prop u464 mult
+let bool_and_monoid =
+  let and_ b1 b2 = b1 && b2 in
+  Monoid.intro_monoid Prims.bool true and_
+let bool_or_monoid =
+  let or_ b1 b2 = b1 || b2 in
+  Monoid.intro_monoid Prims.bool false or_
+let bool_xor_monoid =
+  let xor b1 b2 = (b1 || b2) && Prims.op_Negation (b1 && b2) in
+  Monoid.intro_monoid Prims.bool false xor
+let lift_monoid_option m =
+  (let mult x y =
+      (match x, y with
+        | FStar.Pervasives.Native.Some x0, FStar.Pervasives.Native.Some y0 ->
+          FStar.Pervasives.Native.Some (m.mult x0 y0)
+        | _, _ -> FStar.Pervasives.Native.None)
+      <:
+      FStar.Pervasives.Native.option a
+    in
+    Monoid.intro_monoid (FStar.Pervasives.Native.option a)
+      (FStar.Pervasives.Native.Some m.unit)
+      mult)
+  <:
+  Monoid.monoid (FStar.Pervasives.Native.option a)
+let monoid_morphism_unit_lemma f ma mb = f ma.unit == mb.unit
+let monoid_morphism_mult_lemma f ma mb =
+  forall (x: a) (y: a). mb.mult (f x) (f y) == f (ma.mult x y)
+type monoid_morphism (f: (_: a -> b)) (ma: Monoid.monoid a) (mb: Monoid.monoid b) =
+  | MonoidMorphism :
+      unit: Prims.squash (Monoid.monoid_morphism_unit_lemma f ma mb) ->
+      mult: Prims.squash (Monoid.monoid_morphism_mult_lemma f ma mb)
+    -> Monoid.monoid_morphism f ma mb
+val monoid_morphism__uu___haseq: forall (a: Type)
+  (b: Type)
+  (f: (_: a -> b))
+  (ma: Monoid.monoid a)
+  (mb: Monoid.monoid b).
+  {:pattern Prims.hasEq (Monoid.monoid_morphism f ma mb)}
+  Prims.l_True /\ Prims.hasEq a /\ Prims.hasEq b ==> Prims.hasEq (Monoid.monoid_morphism f ma mb)
+
+
+
+
+
+
+let intro_monoid_morphism f ma mb =
+  Monoid.MonoidMorphism () () <: Prims.Pure (Monoid.monoid_morphism f ma mb)
+let embed_nat_int n = n <: Prims.int
+private
+let _ =
+  Monoid.intro_monoid_morphism Monoid.embed_nat_int Monoid.nat_plus_monoid Monoid.int_plus_monoid
+let neg p = ~p <: Prims.prop
+private
+let _ =
+  assert (Monoid.neg Prims.l_True <==> Prims.l_False);
+  FStar.PropositionalExtensionality.apply (Monoid.neg Prims.l_True) Prims.l_False;
+  let mult_lemma_helper p q =
+    (assert (Monoid.neg (p /\ q) <==> Monoid.neg p \/ Monoid.neg q);
+      FStar.PropositionalExtensionality.apply (Monoid.neg (p /\ q)) (Monoid.neg p \/ Monoid.neg q))
+    <:
+    FStar.Pervasives.Lemma (ensures Monoid.neg (p /\ q) == (Monoid.neg p \/ Monoid.neg q))
+  in
+  FStar.Classical.forall_intro_2 mult_lemma_helper;
+  Monoid.intro_monoid_morphism Monoid.neg Monoid.conjunction_monoid Monoid.disjunction_monoid
+private
+let _ =
+  assert (Monoid.neg Prims.l_False <==> Prims.l_True);
+  FStar.PropositionalExtensionality.apply (Monoid.neg Prims.l_False) Prims.l_True;
+  let mult_lemma_helper p q =
+    (assert (Monoid.neg (p \/ q) <==> Monoid.neg p /\ Monoid.neg q);
+      FStar.PropositionalExtensionality.apply (Monoid.neg (p \/ q)) (Monoid.neg p /\ Monoid.neg q))
+    <:
+    FStar.Pervasives.Lemma (ensures Monoid.neg (p \/ q) == Monoid.neg p /\ Monoid.neg q)
+  in
+  FStar.Classical.forall_intro_2 mult_lemma_helper;
+  Monoid.intro_monoid_morphism Monoid.neg Monoid.disjunction_monoid Monoid.conjunction_monoid
+let mult_act_lemma m a mult act =
+  forall (x: m) (x': m) (y: a). act (mult x x') y == act x (act x' y)
+let unit_act_lemma m a u468 act = forall (y: a). act u468 y == y
+unopteq
+type left_action (mm: Monoid.monoid m) (a: Type) =
+  | LAct :
+      act: (_: m -> _: a -> a) ->
+      mult_lemma: Prims.squash (Monoid.mult_act_lemma m a mm.mult act) ->
+      unit_lemma: Prims.squash (Monoid.unit_act_lemma m a mm.unit act)
+    -> Monoid.left_action mm a
+val left_action__uu___haseq: Prims.l_True /\
+(forall (m: Type) (mm: Monoid.monoid m) (a: Type). {:pattern Prims.hasEq (Monoid.left_action mm a)}
+    Prims.l_True /\
+    (forall (act: (_: m -> _: a -> a))
+        (mult_lemma: Prims.squash (Monoid.mult_act_lemma m a mm.mult act))
+        (unit_lemma: Prims.squash (Monoid.unit_act_lemma m a mm.unit act)).
+        Prims.l_True /\ Prims.hasEq (_: m -> _: a -> a) /\
+        Prims.hasEq (Prims.squash (Monoid.mult_act_lemma m a mm.mult act)) /\
+        Prims.hasEq (Prims.squash (Monoid.unit_act_lemma m a mm.unit act))) ==>
+    Prims.hasEq (Monoid.left_action mm a))
+
+
+
+
+
+
+
+
+let left_action_morphism f mf la lb = forall (g: ma) (x: a). lb.act (mf g) (f x) == f (la.act g x)
+]
+

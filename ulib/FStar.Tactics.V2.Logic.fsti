@@ -153,6 +153,8 @@ val skolem () : Tac (list (list binding & binding))
 [@@plugin]
 val easy_fill () : Tac unit
 
+(* We mark this as a plugin so it can reduce. Some kind of 'transparent' attribute
+would be better. `inline_for_extraction` is almost that? *)
 [@@plugin]
 val easy : #a:Type -> (#[easy_fill ()] _ : a) -> a
 

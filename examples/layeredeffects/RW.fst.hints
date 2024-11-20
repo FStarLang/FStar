@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
       ],
       0,
-      "c4f54b4b4dfce10e1634cb8086a84398"
+      "c9794ce799bbacd7d59ae1775512a172"
     ],
     [
       "RW.ro_sanity_check",
@@ -24,7 +24,7 @@
         "l_and-interp"
       ],
       0,
-      "d60822a118b39e3d6a20b1d29b6cdeb1"
+      "6d566625b8e77e18114affdb343d66e4"
     ],
     [
       "RW.return",
@@ -40,7 +40,7 @@
         "l_and-interp", "token_correspondence_RW.real_post"
       ],
       0,
-      "d9063ce818b056ce73b514e2602f0d27"
+      "6129195e26baa26c58084869b5d6c6f8"
     ],
     [
       "RW.bind",
@@ -51,8 +51,7 @@
         "@MaxIFuel_assumption", "@query",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "eq2-interp",
-        "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
+        "eq2-interp", "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
         "equation_Prims.eq2", "equation_Prims.l_Exists", "equation_RW.join",
         "equation_RW.real_post", "fuel_guarded_inversion_RW.idx",
         "interpretation_Tm_abs_1137fa680ad9059407102e1a08218552",
@@ -63,10 +62,10 @@
         "refinement_interpretation_Tm_refine_bdbb66237acf10f9d702cf5833c518a6",
         "refinement_interpretation_Tm_refine_c7a49ccd656655cad5daf75eb4fe44f9",
         "refinement_interpretation_Tm_refine_f0433b057c0ce717495f8b201c9678b0",
-        "token_correspondence_RW.real_post"
+        "token_correspondence_RW.real_post", "typing_tok_RW.RW@tok"
       ],
       0,
-      "acfe3100af1f47cebfab0b25c4fcffca"
+      "f5273e7f2b83642ed7ebb4059fb40c2a"
     ],
     [
       "RW.rwi_subtype",
@@ -77,8 +76,7 @@
         "@MaxIFuel_assumption", "@query",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "eq2-interp",
-        "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
+        "eq2-interp", "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
         "equation_Prims.eq2", "equation_RW.join", "equation_RW.real_post",
         "fuel_guarded_inversion_RW.idx",
         "interpretation_Tm_abs_1137fa680ad9059407102e1a08218552",
@@ -88,10 +86,10 @@
         "l_and-interp", "l_quant_interp_153f356cb666a0bee4c88008acca1bee",
         "l_quant_interp_fda8b30e41b2e1a898893a42123cdde8",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "token_correspondence_RW.real_post"
+        "token_correspondence_RW.real_post", "typing_tok_RW.RW@tok"
       ],
       0,
-      "b3bc794feaf2c6ff2ce284d59bc06451"
+      "e14ad6733d372069d261265fb0dd3b3c"
     ],
     [
       "RW.subcomp",
@@ -102,7 +100,7 @@
         "@MaxIFuel_assumption", "@query",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "eq2-interp", "equation_Prims.eq2",
+        "eq2-interp", "equality_tok_RW.RW@tok", "equation_Prims.eq2",
         "equation_RW.flows", "equation_RW.post_leq", "equation_RW.pre_leq",
         "equation_RW.real_post", "false_interp",
         "fuel_guarded_inversion_RW.idx",
@@ -111,13 +109,13 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Tm_refine_bdbb66237acf10f9d702cf5833c518a6",
-        "token_correspondence_RW.real_post"
+        "token_correspondence_RW.real_post", "typing_tok_RW.RW@tok"
       ],
       0,
-      "76c1be0c3d561ab9d7330c6c7906e376"
+      "94da341e63cc4bb1221a5ab321dee981"
     ],
     [
-      "RW.RWI", 1, 2, 1, [ "@query" ], 0, "d78daf37e8eee7830d07728f4024e153"
+      "RW.RWI", 1, 2, 1, [ "@query" ], 0, "8d466e703a22ba5494db41a0dd6addb7"
     ],
     [
       "RW.RWI",
@@ -128,20 +126,19 @@
         "@MaxIFuel_assumption", "@query",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63", "bool_inversion",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "equality_tok_RW.RW@tok",
-        "equation_Prims.squash", "equation_RW.flows", "equation_RW.join",
-        "equation_RW.post_leq", "equation_RW.pre_leq",
-        "fuel_guarded_inversion_RW.idx",
+        "equality_tok_RW.RW@tok", "equation_Prims.squash",
+        "equation_RW.flows", "equation_RW.join", "equation_RW.post_leq",
+        "equation_RW.pre_leq", "fuel_guarded_inversion_RW.idx",
         "interpretation_Tm_abs_50e1acfe4eaa3511ef81d7871ee8b8a9",
         "interpretation_Tm_abs_a682e99eeb3f1d6cab991882ef5b466a",
         "l_and-interp", "l_imp-interp", "l_not-interp",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "true_interp"
+        "true_interp", "typing_tok_RW.RW@tok"
       ],
       0,
-      "ac1386f7c266807e5120abd5ea9d77cf"
+      "9d8b1a1f5e17add8b8eff3632d0d8411"
     ],
     [
       "RW.RWI",
@@ -152,20 +149,19 @@
         "@MaxIFuel_assumption", "@query",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63", "b2t_def",
         "bool_inversion", "constructor_distinct_RW.RO",
-        "constructor_distinct_RW.RW", "data_typing_intro_RW.RW@tok",
-        "equality_tok_RW.RW@tok", "equation_RW.flows", "equation_RW.join",
-        "equation_RW.post_leq", "equation_RW.pre_leq",
-        "fuel_guarded_inversion_RW.idx",
+        "constructor_distinct_RW.RW", "equality_tok_RW.RW@tok",
+        "equation_RW.flows", "equation_RW.join", "equation_RW.post_leq",
+        "equation_RW.pre_leq", "fuel_guarded_inversion_RW.idx",
         "interpretation_Tm_abs_50e1acfe4eaa3511ef81d7871ee8b8a9",
         "interpretation_Tm_abs_a682e99eeb3f1d6cab991882ef5b466a",
         "l_and-interp", "l_imp-interp", "l_not-interp",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4",
-        "true_interp"
+        "true_interp", "typing_tok_RW.RW@tok"
       ],
       0,
-      "36b3e0190bd40ea13cbca323a7de2b57"
+      "ab748d6cde68dfe8ac4fc6765b143c1f"
     ],
     [
       "RW.lift_pure_rwi",
@@ -182,7 +178,6 @@
         "equation_Prims.eq2", "equation_Prims.l_True",
         "equation_Prims.logical", "equation_Prims.pure_post",
         "equation_Prims.pure_post_", "equation_RW.real_post",
-        "function_token_typing_Prims.l_True",
         "interpretation_Tm_abs_1137fa680ad9059407102e1a08218552",
         "interpretation_Tm_abs_57a70f28d43ecade538b216cb737b4a1",
         "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
@@ -197,6 +192,7 @@
         "refinement_interpretation_Tm_refine_9d7e1da4c8ccc98f1562bffecfa030b6",
         "refinement_interpretation_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "token_correspondence_RW.real_post", "true_interp",
+        "typing_Prims.l_True",
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
         "typing_Tm_abs_6ffc06f5d789cf42c73d4f163a977cc0",
         "typing_Tm_abs_735bfa0400a12573ed48312f042e45e7",
@@ -204,7 +200,7 @@
         "typing_Tm_abs_e5f9da69b4e622fc8b88c80c57775066", "unit_typing"
       ],
       0,
-      "a3f41443728b4603f37b682b24417889"
+      "b959f4fe8a7548517b833addcedb6850"
     ],
     [
       "RW.test_rrr",
@@ -214,11 +210,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63", "bool_inversion",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "eq2-interp",
-        "equality_tok_RW.RO@tok", "equation_Prims.eq2", "equation_RW.flows",
-        "equation_RW.join", "equation_RW.post_leq", "equation_RW.pre_leq",
+        "eq2-interp", "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
+        "equation_Prims.eq2", "equation_RW.flows", "equation_RW.join",
+        "equation_RW.post_leq", "equation_RW.pre_leq",
         "equation_RW.real_post",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion",
@@ -233,11 +230,11 @@
         "l_quant_interp_977cf6a55d4a5282600dc2340f5ef5dd",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "token_correspondence_RW.real_post", "true_interp", "unit_inversion",
-        "unit_typing"
+        "token_correspondence_RW.real_post", "true_interp",
+        "typing_tok_RW.RW@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "9b8be6b91e236a1eb401bf233920d3ea"
+      "1673e102e999c0722d8eb14d1ef99624"
     ],
     [
       "RW.test_rrw",
@@ -248,12 +245,12 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63", "b2t_def",
         "bool_inversion", "constructor_distinct_RW.RO",
-        "constructor_distinct_RW.RW", "data_typing_intro_RW.RW@tok",
-        "eq2-interp", "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
-        "equation_Prims.eq2", "equation_RW.flows", "equation_RW.join",
-        "equation_RW.post_leq", "equation_RW.pre_leq",
+        "constructor_distinct_RW.RW", "eq2-interp", "equality_tok_RW.RO@tok",
+        "equality_tok_RW.RW@tok", "equation_Prims.eq2", "equation_RW.flows",
+        "equation_RW.join", "equation_RW.post_leq", "equation_RW.pre_leq",
         "equation_RW.real_post", "fuel_guarded_inversion_RW.idx",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion",
@@ -270,10 +267,11 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "token_correspondence_RW.real_post", "true_interp", "typing_RW.join",
-        "typing_tok_RW.RO@tok", "unit_inversion"
+        "typing_tok_RW.RO@tok", "typing_tok_RW.RW@tok", "unit_inversion",
+        "unit_typing"
       ],
       0,
-      "9664101fe68c4aa5af357579e45f0e0b"
+      "7e3fe91fa38824955c9b738bffd750dc"
     ],
     [
       "RW.test_rww",
@@ -284,13 +282,13 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63", "b2t_def",
         "bool_inversion", "constructor_distinct_RW.RO",
-        "constructor_distinct_RW.RW", "data_typing_intro_RW.RW@tok",
-        "eq2-interp", "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
-        "equation_RW.flows", "equation_RW.join", "equation_RW.post_leq",
-        "equation_RW.pre_leq", "equation_RW.real_post",
-        "fuel_guarded_inversion_RW.idx",
+        "constructor_distinct_RW.RW", "eq2-interp", "equality_tok_RW.RO@tok",
+        "equality_tok_RW.RW@tok", "equation_RW.flows", "equation_RW.join",
+        "equation_RW.post_leq", "equation_RW.pre_leq",
+        "equation_RW.real_post", "fuel_guarded_inversion_RW.idx",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion",
         "interpretation_Tm_abs_1137fa680ad9059407102e1a08218552",
@@ -306,10 +304,11 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "token_correspondence_RW.real_post", "true_interp", "typing_RW.join",
-        "typing_tok_RW.RO@tok", "typing_tok_RW.RW@tok", "unit_inversion"
+        "typing_tok_RW.RO@tok", "typing_tok_RW.RW@tok", "unit_inversion",
+        "unit_typing"
       ],
       0,
-      "480ab5f034a9f992650ee3d761a7cd94"
+      "1969eab071a0bec5bab410ff7a670aa4"
     ],
     [
       "RW.test_wrw",
@@ -319,10 +318,10 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63", "bool_inversion",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "eq2-interp",
-        "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
+        "eq2-interp", "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
         "equation_RW.flows", "equation_RW.join", "equation_RW.post_leq",
         "equation_RW.pre_leq", "equation_RW.real_post",
         "fuel_guarded_inversion_RW.idx",
@@ -340,10 +339,11 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "token_correspondence_RW.real_post", "true_interp", "typing_RW.join",
-        "typing_tok_RW.RO@tok", "typing_tok_RW.RW@tok", "unit_inversion"
+        "typing_tok_RW.RO@tok", "typing_tok_RW.RW@tok", "unit_inversion",
+        "unit_typing"
       ],
       0,
-      "6c36bbc465f1913e7c90bd247b056163"
+      "39f5cc256889763ec1a36008d43c0669"
     ],
     [
       "RW.test_www",
@@ -354,13 +354,13 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63", "b2t_def",
         "bool_inversion", "constructor_distinct_RW.RO",
-        "constructor_distinct_RW.RW", "data_typing_intro_RW.RW@tok",
-        "eq2-interp", "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
-        "equation_RW.flows", "equation_RW.join", "equation_RW.post_leq",
-        "equation_RW.pre_leq", "equation_RW.real_post",
-        "fuel_guarded_inversion_RW.idx",
+        "constructor_distinct_RW.RW", "eq2-interp", "equality_tok_RW.RO@tok",
+        "equality_tok_RW.RW@tok", "equation_RW.flows", "equation_RW.join",
+        "equation_RW.post_leq", "equation_RW.pre_leq",
+        "equation_RW.real_post", "fuel_guarded_inversion_RW.idx",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion",
         "interpretation_Tm_abs_1137fa680ad9059407102e1a08218552",
@@ -376,10 +376,11 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "token_correspondence_RW.real_post", "true_interp", "typing_RW.join",
-        "typing_tok_RW.RO@tok", "typing_tok_RW.RW@tok", "unit_inversion"
+        "typing_tok_RW.RO@tok", "typing_tok_RW.RW@tok", "unit_inversion",
+        "unit_typing"
       ],
       0,
-      "b87c7eb9042489253da4025ce7cc92e4"
+      "c3cdd1a1f784179b9fd136422eb2e5bc"
     ],
     [
       "RW.map",
@@ -390,8 +391,8 @@
         "@MaxIFuel_assumption", "@query",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63", "b2t_def",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equality_tok_RW.RO@tok",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
         "equation_Prims.l_False", "equation_RW.flows", "equation_RW.join",
         "equation_RW.post_leq", "equation_RW.pre_leq",
         "fuel_guarded_inversion_Prims.list",
@@ -402,10 +403,10 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "true_interp"
+        "true_interp", "typing_tok_RW.RW@tok"
       ],
       0,
-      "7430f209b2b298fab7636885aff9c6f3"
+      "2f58f8c38772d5c181b29fb27400fad1"
     ],
     [
       "RW.app",
@@ -416,15 +417,15 @@
         "@MaxIFuel_assumption", "@query",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "equation_RW.flows",
+        "equality_tok_RW.RW@tok", "equation_RW.flows",
         "equation_RW.post_leq", "equation_RW.pre_leq",
         "fuel_guarded_inversion_RW.idx",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "true_interp"
+        "true_interp", "typing_tok_RW.RW@tok"
       ],
       0,
-      "2a6b85678c3f5c084a591636260e5e22"
+      "8eec9b7e7e848b1113ba38e1fcfbc6e4"
     ],
     [
       "RW.appn",
@@ -435,7 +436,7 @@
         "@MaxIFuel_assumption", "@query",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "equality_tok_RW.RO@tok",
+        "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
         "equation_Prims.nat", "equation_RW.flows", "equation_RW.join",
         "equation_RW.post_leq", "equation_RW.pre_leq", "false_interp",
         "fuel_guarded_inversion_RW.idx", "int_inversion",
@@ -446,10 +447,11 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "true_interp", "typing_RW.join", "typing_tok_RW.RO@tok"
+        "true_interp", "typing_RW.join", "typing_tok_RW.RO@tok",
+        "typing_tok_RW.RW@tok"
       ],
       0,
-      "c4e27e2e6d71c7cb657338d296d518e7"
+      "6ae938df5b0ce85d661badf3cd9dc9e5"
     ],
     [
       "RW.labs0",
@@ -461,7 +463,7 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63", "b2t_def",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "equality_tok_RW.RO@tok",
+        "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
         "equation_RW.flows", "equation_RW.post_leq", "equation_RW.pre_leq",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion",
@@ -474,10 +476,10 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "true_interp"
+        "true_interp", "typing_tok_RW.RW@tok"
       ],
       0,
-      "fa868d3c4f3419322b8eff70b21a0823"
+      "b2ce7a3040eb202a4daf6a8d29b4a5d4"
     ],
     [
       "RW.labs",
@@ -488,7 +490,7 @@
         "@MaxIFuel_assumption", "@query",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "equality_tok_RW.RO@tok",
+        "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
         "equation_Prims.nat", "equation_RW.flows", "equation_RW.post_leq",
         "equation_RW.pre_leq", "int_inversion",
         "interpretation_Tm_abs_95813b54fa7dc2c1f578ab72ce1a1f93",
@@ -498,10 +500,10 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "true_interp"
+        "true_interp", "typing_tok_RW.RW@tok"
       ],
       0,
-      "d208eb5e65347c9c2d93dd24afccaf87"
+      "c9bb49aa7f30b2f169b4f56127abc083"
     ],
     [
       "RW.rwi_assert",
@@ -509,16 +511,18 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "constructor_distinct_RW.RO",
-        "eq2-interp", "equality_tok_RW.RO@tok", "equation_RW.real_post",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "constructor_distinct_RW.RO", "eq2-interp", "equality_tok_RW.RO@tok",
+        "equation_RW.real_post",
         "interpretation_Tm_abs_1137fa680ad9059407102e1a08218552",
         "interpretation_Tm_abs_e67bf20e3dc4cc1f86230ecaf2f29bb5",
         "l_and-interp",
         "refinement_interpretation_Tm_refine_d5775607effc5aa56205d898659fe13a",
-        "token_correspondence_RW.real_post", "unit_inversion"
+        "token_correspondence_RW.real_post", "unit_inversion", "unit_typing"
       ],
       0,
-      "27c558d5c48a886300915b0e55873081"
+      "cf00dfab13f53135cd44e477ca239411"
     ],
     [
       "RW.rwi_assume",
@@ -526,15 +530,17 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "constructor_distinct_RW.RO",
-        "eq2-interp", "equality_tok_RW.RO@tok", "equation_Prims.eq2",
-        "equation_RW.real_post",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "constructor_distinct_RW.RO", "eq2-interp", "equality_tok_RW.RO@tok",
+        "equation_Prims.eq2", "equation_RW.real_post",
         "interpretation_Tm_abs_1137fa680ad9059407102e1a08218552",
         "interpretation_Tm_abs_860119f29022a36e41997920025ea616",
-        "l_and-interp", "token_correspondence_RW.real_post", "unit_inversion"
+        "l_and-interp", "token_correspondence_RW.real_post",
+        "unit_inversion", "unit_typing"
       ],
       0,
-      "44070123facaeab45f4ed106e5070145"
+      "823bd652ae5101e50f1152770b0225d9"
     ],
     [
       "RW.test_abs0",
@@ -546,9 +552,9 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63", "b2t_def",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "eq2-interp",
-        "equality_tok_RW.RO@tok", "equation_Prims.eq2", "equation_RW.flows",
-        "equation_RW.join", "equation_RW.post_leq", "equation_RW.pre_leq",
+        "eq2-interp", "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
+        "equation_Prims.eq2", "equation_RW.flows", "equation_RW.join",
+        "equation_RW.post_leq", "equation_RW.pre_leq",
         "equation_RW.real_post",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion",
@@ -561,10 +567,11 @@
         "primitive_Prims.op_GreaterThanOrEqual",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "token_correspondence_RW.real_post", "true_interp"
+        "token_correspondence_RW.real_post", "true_interp",
+        "typing_tok_RW.RW@tok"
       ],
       0,
-      "03d9a1988dc05c073c51c0a96185219a"
+      "13205a1efed297ad9732e5d9ccb03429"
     ],
     [
       "RW.test_abs0'",
@@ -576,7 +583,7 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63", "b2t_def",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "equality_tok_RW.RO@tok",
+        "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
         "equation_Prims.eq2", "equation_Prims.nat", "equation_RW.flows",
         "equation_RW.join", "equation_RW.post_leq", "equation_RW.pre_leq",
         "equation_RW.real_post",
@@ -591,10 +598,11 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "token_correspondence_RW.real_post", "true_interp"
+        "token_correspondence_RW.real_post", "true_interp",
+        "typing_tok_RW.RW@tok"
       ],
       0,
-      "2d8ecb1f29872267fcb07fde82f73a43"
+      "2eb21704bb8906c605d789bf1819a6d7"
     ],
     [
       "RW.test_abs",
@@ -602,18 +610,19 @@
       2,
       1,
       [
-        "@query", "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63",
+        "@MaxIFuel_assumption", "@query",
+        "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "equality_tok_RW.RO@tok",
+        "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
         "equation_Prims.nat", "equation_RW.flows", "equation_RW.join",
         "equation_RW.post_leq", "equation_RW.pre_leq",
         "interpretation_Tm_abs_98ed89c14d2f5eaa7a646b54abde6398",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "true_interp"
+        "true_interp", "typing_tok_RW.RW@tok"
       ],
       0,
-      "61301bb4efb26cd0b4d87831fe10e2ca"
+      "19ffbedf680f0ce16cd2f83c7e00c4a1"
     ],
     [
       "RW.get_indexed",
@@ -628,7 +637,7 @@
         "l_and-interp", "token_correspondence_RW.real_post"
       ],
       0,
-      "50ba909a5551a13b40ed6249babb2c88"
+      "d392fb443a98bf4bf3dfe091e23229b7"
     ],
     [
       "RW.get_r",
@@ -644,7 +653,7 @@
         "l_and-interp", "token_correspondence_RW.real_post"
       ],
       0,
-      "19f1e29d8f9a03b4533a88d8c69aca62"
+      "771853fed934f0b7cdb55ab601645b80"
     ],
     [
       "RW.test_state_eq_rrr",
@@ -656,9 +665,9 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "eq2-interp",
-        "equality_tok_RW.RO@tok", "equation_Prims.eq2", "equation_RW.flows",
-        "equation_RW.join", "equation_RW.post_leq", "equation_RW.pre_leq",
+        "eq2-interp", "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
+        "equation_Prims.eq2", "equation_RW.flows", "equation_RW.join",
+        "equation_RW.post_leq", "equation_RW.pre_leq",
         "equation_RW.real_post",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion",
@@ -669,10 +678,11 @@
         "l_and-interp", "l_quant_interp_7b78a53c82a4b8a7c312f8063573fbe1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "token_correspondence_RW.real_post", "true_interp"
+        "token_correspondence_RW.real_post", "true_interp",
+        "typing_tok_RW.RW@tok"
       ],
       0,
-      "4bfbbaf80dd6b841aced5fcd00626379"
+      "6138cfc02d3a4ac1b1cd48f0d902f7a5"
     ],
     [
       "RW.test_state_eq_rrw",
@@ -684,8 +694,7 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "eq2-interp",
-        "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
+        "eq2-interp", "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
         "equation_Prims.eq2", "equation_RW.flows", "equation_RW.join",
         "equation_RW.post_leq", "equation_RW.pre_leq",
         "equation_RW.real_post",
@@ -697,10 +706,11 @@
         "interpretation_Tm_abs_ed75920970fe97939123d30eaa58e134",
         "l_and-interp", "l_quant_interp_7b78a53c82a4b8a7c312f8063573fbe1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "token_correspondence_RW.real_post", "true_interp"
+        "token_correspondence_RW.real_post", "true_interp",
+        "typing_tok_RW.RW@tok"
       ],
       0,
-      "2f8cc14863cfaa7d6b106ec54ebef851"
+      "71d406204c0731c2dc28227789ac44f5"
     ],
     [
       "RW.test_state_eq_rww",
@@ -712,8 +722,7 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "eq2-interp",
-        "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
+        "eq2-interp", "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
         "equation_Prims.eq2", "equation_RW.flows", "equation_RW.join",
         "equation_RW.post_leq", "equation_RW.pre_leq",
         "equation_RW.real_post",
@@ -725,10 +734,11 @@
         "interpretation_Tm_abs_ed75920970fe97939123d30eaa58e134",
         "l_and-interp", "l_quant_interp_a32cc1a0d0ea90cb3146e48dff25aac5",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "token_correspondence_RW.real_post", "true_interp"
+        "token_correspondence_RW.real_post", "true_interp",
+        "typing_tok_RW.RW@tok"
       ],
       0,
-      "8a5369dd555526d2a7c6d12aca4f7789"
+      "1ef0908d900945ee35415e01551c3df6"
     ],
     [
       "RW.test_state_eq_www",
@@ -740,16 +750,16 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63",
         "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "equality_tok_RW.RO@tok",
-        "equality_tok_RW.RW@tok", "equation_RW.flows", "equation_RW.join",
-        "equation_RW.post_leq", "equation_RW.pre_leq",
+        "equality_tok_RW.RO@tok", "equality_tok_RW.RW@tok",
+        "equation_RW.flows", "equation_RW.join", "equation_RW.post_leq",
+        "equation_RW.pre_leq",
         "function_token_typing_Prims.__cache_version_number__",
         "interpretation_Tm_abs_36d7870762ca69b049e162c2ec3f9586",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "true_interp"
+        "true_interp", "typing_tok_RW.RW@tok"
       ],
       0,
-      "e2821e01c27e81572db84a2e5e5e54e1"
+      "c83a3b27184f6d5a006353738a9389a6"
     ],
     [
       "RW.makero",
@@ -768,7 +778,7 @@
         "token_correspondence_RW.real_post"
       ],
       0,
-      "2d8411f0d7e73b2e980c3baba8c8c216"
+      "c643824a1651104e51494421aebe3840"
     ]
   ]
 ]

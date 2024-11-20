@@ -8,12 +8,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "7137531f0291f2284af3935410eea62a"
+      "f56d5c8c331f254c3e281a940a24922e"
     ],
     [
       "Definitions.__proj__AType1__item__a1",
@@ -25,7 +26,7 @@
         "refinement_interpretation_Tm_refine_c7b78031a083619f4ae5429fef7d7717"
       ],
       0,
-      "b2a273b9117f1a1aa5059886ccacf1d4"
+      "df35b91f907c0b95b4b93b37217b09fd"
     ],
     [
       "Definitions.__proj__AType1__item__a2",
@@ -37,7 +38,7 @@
         "refinement_interpretation_Tm_refine_c7b78031a083619f4ae5429fef7d7717"
       ],
       0,
-      "e3fe4cc465ecb85fd7bd1d21a29d3a5b"
+      "0d1025f45bd3011fdff23b6169e760c7"
     ],
     [
       "Definitions.__proj__AType2__item___0",
@@ -49,7 +50,7 @@
         "refinement_interpretation_Tm_refine_1e414ee7a2835faab22ca2996434cb14"
       ],
       0,
-      "9e94fdeb8ed3f700ac250085efc31abd"
+      "2211f6c80afebce8fed702ae18569b1f"
     ],
     [
       "Definitions.__proj__AType3__item___0",
@@ -61,7 +62,7 @@
         "refinement_interpretation_Tm_refine_8c57e72841e0abb0396be75a33c2f19a"
       ],
       0,
-      "6a67d6d59493699532a2eb1d85e4e00a"
+      "971b150d67e89d5695bdcfe8ed87981d"
     ],
     [
       "Definitions.__proj__BType2__item___0",
@@ -73,7 +74,7 @@
         "refinement_interpretation_Tm_refine_56db4283df581c1b775cbff0cbc2087a"
       ],
       0,
-      "e0da715f8a44b9d45511e5b7e2caf485"
+      "c39a628e34f14333d5b5e8d8e8566a5c"
     ],
     [
       "Definitions.__proj__BType3__item___0",
@@ -85,7 +86,7 @@
         "refinement_interpretation_Tm_refine_e1eeea49459d45bd1c3e7944e83e335f"
       ],
       0,
-      "36a92a56ad5cc6f3cbdb662688bdb5ba"
+      "e18ac9fe2e7ebd6b7de44f2b67a6e108"
     ],
     [
       "Definitions.a_record",
@@ -94,7 +95,7 @@
       1,
       [ "@query", "assumption_Definitions.a_type__uu___haseq" ],
       0,
-      "0b4dff246c42604b5be2bf911a036f07"
+      "88a8e1e6b22f9513bb137cacefcdb87c"
     ]
   ]
 ]

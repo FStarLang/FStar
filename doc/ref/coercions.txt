@@ -1,0 +1,71 @@
+F* inserts coercions between some types to make programming more
+convenient. Some coercions are very primitive, like `hide/reveal` for
+erased, or `b2t : bool -> prop`.
+
+F* also supports a @@coercion attribute that can be attached to
+top-level function definitions to register them as coercions. These
+functions are automatically inserted by the (phase1) typechecker when
+there is a type mismatch between actual and expected types, and a
+registered coercion could "solve" it, in the sense that the function
+goes from the actual type to the expected type.
+
+The shape of a user-defined coercion must be a function from a named
+type (possibly with arugments) into another named type (possibly with
+arguments). A simple example is
+
+	(* ulib/FStar.Tactics.V2.SyntaxCoercions.fst*)
+	[@@coercion]
+	let binder_to_term (b : binder) : Tot term = ...
+
+This will kick in whenever a term is expected and a binder is used, as in
+an `exact b` tactic call.
+
+Coercions can also have effects. The typechecker (currently) has no
+notion of expected effect so the coercion will kick in and possibly bump
+the effect, but they are checked safely. Example:
+
+	(* ulib/FStar.Stubs.Tactics.V1.Builtins.fsti *)
+	[@@coercion]
+	val inspect : term -> Tac term_view   
+
+Then
+
+	let f (t:term) : Tac bool = Tv_FVar? t
+
+works by inserting the coercion around `t`. Using `Tot` instead of `Tac`
+will raise an error (which could likely be more helpful by letting the
+user know there's a coercion involved).
+
+They will also trigger on the scrutinee of a match if the patterns imply
+an expected type, so:
+
+	let f (t:term) : Tac bool =
+	  match f with
+	  | Tv_FVar _ -> true
+	  | _ -> false
+
+will also work.
+
+Coercions can also have arguments and the types can be indexed. E.g.
+(from tests/coercions/IntBV.fst):
+
+	[@@coercion]
+	let int_to_bv1 (#n : pos) (x : int) : Pure (BV.bv_t n) (requires fits x n) (ensures fun _ -> True) = BV.int2bv x
+
+	let test1 : BV.bv_t 2 = 1
+	let test2 : BV.bv_t 3 = 1   
+
+All of the implicits expected to be solvd by unification. FIXME: if they
+are not implicit, this gives bad errors.
+
+The logic is in FStar.TypeChecker.Util/maybe_coerce_lc.
+User defined coercions are looked up in find_coercion.
+Using --debug Coercions prints some information.
+
+TODO: 
+- Can the various .v of every integer be made coercions? One downside
+is that this function is not ghost, and we usually do not want it inserted
+in executable code. Can some coercions be enabled only in ghost contexts?
+- Can b2t, hide/reveal also be user-defined? IIRC hide/reveal is primitive
+since it allows for better triggering by checking if types are erased or not,
+but this may no longer be true.

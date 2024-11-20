@@ -418,7 +418,7 @@ let eq2_eq #a (eq:CE.equiv a) (x y:a)
   = eq.reflexivity x
 
 (* The sequence indexing lemmas make this quite fiddly *)
-#push-options "--z3rlimit_factor 2 --fuel 1 --ifuel 0"
+#push-options "--z3rlimit_factor 2 --fuel 1 --ifuel 0" 
 let rec foldm_snoc_perm #a #eq m s0 s1 p
   : Lemma
     (ensures eq.eq (foldm_snoc m s0) (foldm_snoc m s1))
@@ -433,8 +433,11 @@ let rec foldm_snoc_perm #a #eq m s0 s1 p
     else (
       let n0 = Seq.length s0 - 1 in
       let prefix, last = Seq.un_snoc s0 in
-      let prefix', suffix' = Seq.split s1 (p n0) in
-      let last', suffix' = Seq.head suffix', Seq.tail suffix' in
+      let prefix', suffix0 = Seq.split s1 (p n0) in
+      assert (Seq.equal s1 (Seq.append prefix' suffix0));
+      let last', suffix' = Seq.head suffix0, Seq.tail suffix0 in
+      assert (Seq.cons last' suffix' `Seq.equal` suffix0);
+      assert (s1 `Seq.equal` Seq.append prefix' (Seq.cons last' suffix'));
       let s1' = snd (remove_i s1 (p n0)) in
       let p' : seqperm prefix s1' = shift_perm s0 s1 () p in
       assert (last == last');
@@ -442,8 +445,7 @@ let rec foldm_snoc_perm #a #eq m s0 s1 p
       (eq.eq)
       {
         foldm_snoc m s1;
-        (eq.eq) { assert (s1 `Seq.equal` Seq.append prefix' (Seq.cons last' suffix'));
-                  eq2_eq eq (foldm_snoc m s1)
+        (eq.eq) { eq2_eq eq (foldm_snoc m s1)
                             (foldm_snoc m (Seq.append prefix' (Seq.cons last' suffix'))) }
         foldm_snoc m (Seq.append prefix' (Seq.cons last' suffix'));
         (eq.eq) { foldm_snoc3 m prefix' last' suffix' }

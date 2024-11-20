@@ -20,7 +20,7 @@ open FStar.Reflection.Const
 open FStar.Stubs.Reflection.V2.Builtins
 open FStar.Stubs.Reflection.V2.Data
 open FStar.Order
-open FStar.VConfig
+open FStar.Stubs.VConfig
 open FStar.Reflection.V2.Collect
 
 let type_of_binder (b : binder) : typ =

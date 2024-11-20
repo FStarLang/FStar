@@ -1,6 +1,6 @@
 module FStar.Tactics.CheckLN
 
-open FStar.Tactics.V2
+open FStar.Tactics.V2.Bare
 
 (* Checks if a term is locally nameless. *)
 [@@plugin]

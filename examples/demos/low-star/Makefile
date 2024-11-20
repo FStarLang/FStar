@@ -1,33 +1,14 @@
-include ../../Makefile.include
-FSTAR_FILES := Demo.fst
-FSTAR_FLAGS +=--cache_checked_modules --use_hints --use_hint_hashes $(OTHERFLAGS)
-FSTAR := $(FSTAR) $(FSTAR_FLAGS)
+FSTAR_ROOT ?= ../../..
+include $(FSTAR_ROOT)/mk/test.mk
 
-all: $(addsuffix .checked, $(FSTAR_FILES))
-
-.depend:
-	$(FSTAR) --dep full $(FSTAR_FILES) > .depend
-
-depend: .depend
-
--include .depend
-
-%.checked:
-	$(FSTAR) $<
-	touch -c $@
-
-%.fst-in:
-	@echo $(FSTAR_FLAGS) --max_fuel 0 --max_ifuel 0
-
-wc:
-	wc -l prims.fst $(ALL)
-
+ifneq ($(KRML_HOME),)
+KRML = $(KRML_HOME)/krml
+else
+KRML = krml
+endif
 
 extract:
-	@krml -skip-compilation Demo.fst -tmpdir out | grep "wrote out"
+	$(KRML) -skip-compilation Demo.fst -tmpdir $(OUTPUT_DIR) | grep "wrote out"
 
 extract-tailcalls:
-	@krml -skip-compilation -ftail-calls Demo.fst -tmpdir out | grep "wrote out"
-
-clean:
-	rm -rf *.c *.h *~ *.checked *.checked.lax *.krml .depend out
+	$(KRML) -skip-compilation -ftail-calls Demo.fst -tmpdir $(OUTPUT_DIR) | grep "wrote out"

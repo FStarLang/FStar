@@ -1,0 +1,16 @@
+>> Got issues: [
+* Error 118 at RecordFields.fst(8,29-8,30):
+  - Field 'd' is redundant for type RecordFields.r
+
+>>]
+>> Got issues: [
+* Error 118 at RecordFields.fst(11,14-11,22):
+  - Missing fields for record type 'RecordFields.r': 'c'
+
+>>]
+>> Got issues: [
+* Error 118 at RecordFields.fst(14,24-14,25):
+  - Field 'd' is redundant for type RecordFields.r
+  - Missing fields: 'c'
+
+>>]

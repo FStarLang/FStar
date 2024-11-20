@@ -2,7 +2,7 @@ module FStar.Tactics.SMT
 
 open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.V2.Builtins
-open FStar.VConfig
+open FStar.Stubs.VConfig
 
 (* Alias to just use the current vconfig *)
 let smt_sync () : Tac unit = t_smt_sync (get_vconfig ())

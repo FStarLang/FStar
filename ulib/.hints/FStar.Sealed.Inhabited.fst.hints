@@ -1,0 +1,25 @@
+[
+  "\u0019ô¸¹®&`¬\u0014Ž5¬3óR",
+  [
+    [
+      "FStar.Sealed.Inhabited.seal",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Sealed.Inhabited.is_sealed", "true_interp"
+      ],
+      0,
+      "29be5aebf3b117672b8d5955ac201bc9"
+    ],
+    [
+      "FStar.Sealed.Inhabited.sealed_singleton",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5486c10af582765120374607cbb19a88"
+    ]
+  ]
+]

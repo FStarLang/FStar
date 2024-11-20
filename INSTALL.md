@@ -80,7 +80,7 @@ need to perform the following step before your first use:
         $ fstar.exe --version
         F* 0.9.8.0~dev
         platform=Linux_x86_64
-        compiler=OCaml 4.12.0
+        compiler=OCaml 4.14.0
         date=yyyy-mm-ddThh:nn:ss+02:00
         commit=xxxxxxxx
         $ z3 --version
@@ -209,7 +209,7 @@ The steps require a working OCaml setup. OCaml version 4.14.X should work.
   ```sh
   $ opam update
   $ opam switch list-available
-  $ opam switch create ocaml-variants.4.12.0+mingw64c
+  $ opam switch create ocaml-variants.4.14.0+mingw64c
   ```
 
 3. Afterwards you can install the `depext` and `depext-cygwinports` packages,

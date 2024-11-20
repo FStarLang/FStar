@@ -1,8 +1,8 @@
 # You should include this Makefile in your Makefile to make sure you remain
 # future-proof w.r.t. realized modules!
 
-FSTAR_REALIZED_MODULES=All Buffer Bytes Char CommonST Constructive Dyn Float Ghost Heap Monotonic.Heap \
-	HyperStack.All HyperStack.ST HyperStack.IO Int16 Int32 Int64 Int8 IO \
+FSTAR_REALIZED_MODULES=Buffer Bytes Char CommonST Constructive Dyn Float Ghost Heap Monotonic.Heap \
+	HyperStack.All HyperStack.ST HyperStack.IO Int16 Int32 Int64 Int8 \
 	List List.Tot.Base Mul Option Pervasives.Native ST Exn String \
 	UInt16 UInt32 UInt64 UInt8 \
 	Pointer.Derived1 Pointer.Derived2 \
@@ -17,5 +17,4 @@ FSTAR_REALIZED_MODULES=All Buffer Bytes Char CommonST Constructive Dyn Float Gho
 NOEXTRACT_STEEL_MODULES = -FStar.MSTTotal -FStar.MST -FStar.NMSTTotal -FStar.NMST
 
 NOEXTRACT_MODULES:=$(addprefix -FStar., $(FSTAR_REALIZED_MODULES) Printf) \
-  -FStar.ModifiesGen \
   -LowStar.Printf +FStar.List.Pure.Base +FStar.List.Tot.Properties +FStar.Int.Cast.Full $(NOEXTRACT_STEEL_MODULES)

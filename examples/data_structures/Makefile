@@ -1,23 +1,29 @@
-FSTAR_FILES = $(wildcard *.fst)
+FSTAR_ROOT ?= ../..
+include $(FSTAR_ROOT)/mk/test.mk
 
-all: verify-all
+all: $(OUTPUT_DIR)/RBTreeIntrinsic_patched.exe
 
-include ../Makefile.common
+# EXTRACT = RBTreeIntrinsic
 
-verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))
+# OCAML_DEFAULT_FLAGS += -I $(OUTPUT_DIR) -w -31
 
-EXTRACT = RBTreeIntrinsic
+# $(OUTPUT_DIR)/test.exe: $(OUTPUT_DIR)/$(EXTRACT).ml
+# 	@echo 'let _ = test()' >> $^
+# 	$(FSTAR_EXE) --ocamlopt $^ -o $@
 
-OCAML_DEFAULT_FLAGS += -I $(OUTPUT_DIRECTORY) -w -31
+%.run: $(OUTPUT_DIR)/%.exe
+	$(call msg, "RUN", $<)
+	./$<
+	touch $@
 
-$(OUTPUT_DIRECTORY)/test.exe: $(OUTPUT_DIRECTORY)/$(EXTRACT).ml | $(OUTPUT_DIRECTORY)
-	@echo 'let _ = test()' >> $^
-	$(OCAMLC) -o $(OUTPUT_DIRECTORY)/test.exe $^
+$(OUTPUT_DIR)/%.exe: $(OUTPUT_DIR)/%.ml
+	$(call msg, "OCAMLOPT", $<)
+	$(FSTAR_EXE) --ocamlopt $< -o $@
 
-test: $(OUTPUT_DIRECTORY)/test.exe
-	$(OUTPUT_DIRECTORY)/test.exe
+$(OUTPUT_DIR)/%.ml: %.fst
+	$(call msg, "EXTRACT", $<)
+	$(FSTAR) --codegen OCaml --extract $(basename $@) $<
 
-clean:
-	rm -rf $(OUTPUT_DIRECTORY) $(CACHE_DIR) .depend
-
-.PHONY: depend verify-all test clean
+$(OUTPUT_DIR)/RBTreeIntrinsic_patched.ml: $(OUTPUT_DIR)/RBTreeIntrinsic.ml
+	cp -f $< $@
+	echo 'let _ = test()' >> $@

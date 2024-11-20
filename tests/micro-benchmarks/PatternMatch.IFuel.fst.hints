@@ -8,12 +8,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "function_token_typing_Prims.unit",
         "haseqTm_refine_e7d41982900b2dd4d6861990564b9454",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.unit"
       ],
       0,
-      "da40d2ac59728c119cee72957ac3fc77"
+      "74d180a550d89b562c1a16643f33eb00"
     ],
     [
       "PatternMatch.IFuel.m_and_proof",
@@ -22,7 +22,7 @@
       1,
       [ "@query", "assumption_PatternMatch.IFuel.proof__uu___haseq" ],
       0,
-      "a4be2a47a7f607e042eccbab233f328b"
+      "77c5a5ff219953c2960e24f8af32643b"
     ],
     [
       "PatternMatch.IFuel.test2",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_e7d41982900b2dd4d6861990564b9454"
       ],
       0,
-      "5512a9f074719f2ddecfac63e9d9cbb4"
+      "ca20df0f0837dfda446c346853b24f02"
     ],
     [
       "PatternMatch.IFuel.test3",
@@ -48,7 +48,7 @@
         "refinement_interpretation_Tm_refine_e7d41982900b2dd4d6861990564b9454"
       ],
       0,
-      "ba22245b264164af7476237a48897540"
+      "8fd82364e835de7d9a071ee74122b3f6"
     ]
   ]
 ]

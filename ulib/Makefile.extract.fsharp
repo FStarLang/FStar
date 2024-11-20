@@ -30,13 +30,15 @@ MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --warn_error @241 --cache_checked_modules --odir
 
 # And then, in a separate invocation, from each .checked file we
 # extract an .fs file
+# NOTE: The comma below is to prevent expansion of the wildcard in Windows
+# EVEN WITH THE SINGLE QUOTES. Do not remove. See https://github.com/FStarLang/FStar/pull/3421.
 $(OUTPUT_DIRECTORY)/%.fs:
 	$(MY_FSTAR) --already_cached '*,' $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
 
 .depend.extract.fsharp:
 	$(call msg, "DEPEND")
 	true $(shell rm -f .depend.extract.fsharp.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> .depend.extract.fsharp.rsp))
-	$(Q)$(MY_FSTAR) --extract 'FSharp:*;OCaml:None;krml:None' --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @.depend.extract.fsharp.rsp --output_deps_to .depend.extract.fsharp
+	$(Q)$(MY_FSTAR) --extract 'FSharp:*;OCaml:None;krml:None' --dep full $(EXTRACT_MODULES) @.depend.extract.fsharp.rsp --output_deps_to .depend.extract.fsharp
 
 depend.extract.fsharp: .depend.extract.fsharp
 

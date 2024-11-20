@@ -14,7 +14,7 @@ let term_eq = FStar.Reflection.TermEq.Simple.term_eq
 /// Effectful term analysis: retrieve information about an effectful term, including
 /// its return type, its arguments, its correctly instantiated pre/postcondition, etc.
 
-#push-options "--z3rlimit 15 --fuel 0 --ifuel 1"
+#set-options "--z3rlimit 15 --fuel 0 --ifuel 1"
 
 
 (*** Effectful term analysis *)

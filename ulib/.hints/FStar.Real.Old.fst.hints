@@ -1,0 +1,631 @@
+[
+  "@Afçø¯õ¸#Œì%——=‘",
+  [
+    [
+      "FStar.Real.Old.op_Slash_Dot",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d64065d054cab0a7031d392091f52b81"
+    ],
+    [
+      "FStar.Real.Old.op_Equals_Dot",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_82707a6e3d48caa257bb4bddb01d7d73"
+      ],
+      0,
+      "4d5ce01503f78cd876a7a8a95060a0e7"
+    ],
+    [
+      "FStar.Real.Old.op_Greater_Dot",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_36e65d9df8cb5d80f422959d61e76338"
+      ],
+      0,
+      "7a9d9c6ee6c61a6c6c881454d172ab47"
+    ],
+    [
+      "FStar.Real.Old.op_Greater_Equals_Dot",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9d5b0e12c1911ef3cd01e3a278abed2c"
+      ],
+      0,
+      "d052feb97348d2a4c1783c00fa5731b8"
+    ],
+    [
+      "FStar.Real.Old.op_Less_Dot",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_62f59fd12cd6da34b56750a5ce8aa603"
+      ],
+      0,
+      "88914079feea609c3c5205963f7173f4"
+    ],
+    [
+      "FStar.Real.Old.op_Less_Equals_Dot",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9c5c6b5c432ada31f32fbd13750a486b"
+      ],
+      0,
+      "59e318bf08f1577b831a0abb381f8be3"
+    ],
+    [
+      "FStar.Real.Old.n_over_n2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_FStar.Real.Old.op_Less_Greater_Dot",
+        "equation_FStar.Real.Old.real", "projection_inverse_BoxReal_proj_0",
+        "real_inversion", "real_typing",
+        "refinement_interpretation_Tm_refine_12336e66c44fa5fa973cc97a29909632",
+        "refinement_interpretation_Tm_refine_367b67960e8bd875c3ae8012295ce439",
+        "typing_FStar.Real.Old.op_Less_Greater_Dot", "typing_FStar.Real.real"
+      ],
+      0,
+      "df07c6be8d2e377dd4b2934775c1f80e"
+    ],
+    [
+      "FStar.Real.Old.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Greater_Dot",
+        "equation_FStar.Real.Old.real", "equation_FStar.Real.one",
+        "equation_FStar.Real.two", "primitive_FStar.Real.op_Greater_Dot",
+        "projection_inverse_BoxReal_proj_0",
+        "refinement_interpretation_Tm_refine_5ce20db8e0ec34e22cc54bef735bde4a",
+        "typing_FStar.Real.Old.op_Greater_Dot", "typing_FStar.Real.one",
+        "typing_FStar.Real.two"
+      ],
+      0,
+      "5f7f84ce9841ec93ffa23e3fc7fe5081"
+    ],
+    [
+      "FStar.Real.Old.test1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Equals_Dot",
+        "equation_FStar.Real.Old.real", "equation_FStar.Real.one",
+        "real_typing",
+        "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
+        "typing_FStar.Real.Old.op_Equals_Dot", "typing_FStar.Real.one"
+      ],
+      0,
+      "59ed383204405bdf1e343502b97e3ca6"
+    ],
+    [
+      "FStar.Real.Old.test_lt1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Less_Dot",
+        "equation_FStar.Real.Old.real", "primitive_FStar.Real.op_Less_Dot",
+        "projection_inverse_BoxReal_proj_0", "real_typing",
+        "refinement_interpretation_Tm_refine_8ab12b366f99e69ad390d4ad0513740f",
+        "typing_FStar.Real.Old.op_Less_Dot"
+      ],
+      0,
+      "f81f42b5d4bce2dcf30afd3e636e0f94"
+    ],
+    [
+      "FStar.Real.Old.test_lt2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Less_Dot",
+        "equation_FStar.Real.Old.real", "primitive_FStar.Real.op_Less_Dot",
+        "real_typing",
+        "refinement_interpretation_Tm_refine_8ab12b366f99e69ad390d4ad0513740f",
+        "typing_FStar.Real.Old.op_Less_Dot"
+      ],
+      0,
+      "e38c81e6fb4785c0ac76007ead28b970"
+    ],
+    [
+      "FStar.Real.Old.test_lt3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Less_Dot",
+        "equation_FStar.Real.Old.real", "primitive_FStar.Real.op_Less_Dot",
+        "projection_inverse_BoxReal_proj_0", "real_typing",
+        "refinement_interpretation_Tm_refine_8ab12b366f99e69ad390d4ad0513740f",
+        "typing_FStar.Real.Old.op_Less_Dot"
+      ],
+      0,
+      "a8e0c062ee6d5bcfa4eee1e4c8a4bb93"
+    ],
+    [
+      "FStar.Real.Old.test_le1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Less_Equals_Dot",
+        "equation_FStar.Real.Old.real",
+        "primitive_FStar.Real.op_Less_Equals_Dot",
+        "projection_inverse_BoxReal_proj_0", "real_typing",
+        "refinement_interpretation_Tm_refine_126208573a4e634bed010c7650eac76c",
+        "typing_FStar.Real.Old.op_Less_Equals_Dot"
+      ],
+      0,
+      "33940e1564d5ba85536396dcb68f6b19"
+    ],
+    [
+      "FStar.Real.Old.test_le2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Less_Equals_Dot",
+        "equation_FStar.Real.Old.real",
+        "primitive_FStar.Real.op_Less_Equals_Dot", "real_typing",
+        "refinement_interpretation_Tm_refine_126208573a4e634bed010c7650eac76c",
+        "typing_FStar.Real.Old.op_Less_Equals_Dot"
+      ],
+      0,
+      "8b37f48eb568bb20f72255de01e0cdce"
+    ],
+    [
+      "FStar.Real.Old.test_le3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Less_Equals_Dot",
+        "equation_FStar.Real.Old.real",
+        "primitive_FStar.Real.op_Less_Equals_Dot",
+        "projection_inverse_BoxReal_proj_0", "real_typing",
+        "refinement_interpretation_Tm_refine_126208573a4e634bed010c7650eac76c",
+        "typing_FStar.Real.Old.op_Less_Equals_Dot"
+      ],
+      0,
+      "f685871429f82932ed016b20b40e6d1d"
+    ],
+    [
+      "FStar.Real.Old.test_gt1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Greater_Dot",
+        "equation_FStar.Real.Old.real",
+        "primitive_FStar.Real.op_Greater_Dot",
+        "projection_inverse_BoxReal_proj_0", "real_typing",
+        "refinement_interpretation_Tm_refine_5ce20db8e0ec34e22cc54bef735bde4a",
+        "typing_FStar.Real.Old.op_Greater_Dot"
+      ],
+      0,
+      "d7c69e8c87c284c79eddf86f2df9539f"
+    ],
+    [
+      "FStar.Real.Old.test_gt2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Greater_Dot",
+        "equation_FStar.Real.Old.real",
+        "primitive_FStar.Real.op_Greater_Dot", "real_typing",
+        "refinement_interpretation_Tm_refine_5ce20db8e0ec34e22cc54bef735bde4a",
+        "typing_FStar.Real.Old.op_Greater_Dot"
+      ],
+      0,
+      "04f78cd2016cac2afda2b026890846b6"
+    ],
+    [
+      "FStar.Real.Old.test_gt3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Greater_Dot",
+        "equation_FStar.Real.Old.real",
+        "primitive_FStar.Real.op_Greater_Dot",
+        "projection_inverse_BoxReal_proj_0", "real_typing",
+        "refinement_interpretation_Tm_refine_5ce20db8e0ec34e22cc54bef735bde4a",
+        "typing_FStar.Real.Old.op_Greater_Dot"
+      ],
+      0,
+      "790c1c2369d2a3b6e264c6398c618a59"
+    ],
+    [
+      "FStar.Real.Old.test_ge1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Greater_Equals_Dot",
+        "equation_FStar.Real.Old.real",
+        "primitive_FStar.Real.op_Greater_Equals_Dot",
+        "projection_inverse_BoxReal_proj_0", "real_typing",
+        "refinement_interpretation_Tm_refine_469c5798e301fcd3bb69fd6c07bcbabd",
+        "typing_FStar.Real.Old.op_Greater_Equals_Dot"
+      ],
+      0,
+      "398192585de0fad2468828e89bee6584"
+    ],
+    [
+      "FStar.Real.Old.test_ge2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Greater_Equals_Dot",
+        "equation_FStar.Real.Old.real",
+        "primitive_FStar.Real.op_Greater_Equals_Dot", "real_typing",
+        "refinement_interpretation_Tm_refine_469c5798e301fcd3bb69fd6c07bcbabd",
+        "typing_FStar.Real.Old.op_Greater_Equals_Dot"
+      ],
+      0,
+      "b3bff97c07c2aadeaffd461e497333e4"
+    ],
+    [
+      "FStar.Real.Old.test_ge3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Greater_Equals_Dot",
+        "equation_FStar.Real.Old.real",
+        "primitive_FStar.Real.op_Greater_Equals_Dot",
+        "projection_inverse_BoxReal_proj_0", "real_typing",
+        "refinement_interpretation_Tm_refine_469c5798e301fcd3bb69fd6c07bcbabd",
+        "typing_FStar.Real.Old.op_Greater_Equals_Dot"
+      ],
+      0,
+      "a03ec8f7d830ec56ce6c5607dc7574d6"
+    ],
+    [
+      "FStar.Real.Old.test_add_eq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Equals_Dot",
+        "equation_FStar.Real.Old.real", "real_typing",
+        "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
+        "typing_FStar.Real.Old.op_Equals_Dot"
+      ],
+      0,
+      "10efaf830d3ab51ff4908d684d92d82c"
+    ],
+    [
+      "FStar.Real.Old.test_add_eq'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Equals_Dot",
+        "equation_FStar.Real.Old.real", "real_typing",
+        "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
+        "typing_FStar.Real.Old.op_Equals_Dot"
+      ],
+      0,
+      "f0c345b68fff79bc5a14f41062b6557a"
+    ],
+    [
+      "FStar.Real.Old.test_add_lt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Less_Dot",
+        "equation_FStar.Real.Old.real", "primitive_FStar.Real.op_Less_Dot",
+        "projection_inverse_BoxReal_proj_0", "real_typing",
+        "refinement_interpretation_Tm_refine_8ab12b366f99e69ad390d4ad0513740f",
+        "typing_FStar.Real.Old.op_Less_Dot"
+      ],
+      0,
+      "55b2f61738faa02b1e6fc49d6460c021"
+    ],
+    [
+      "FStar.Real.Old.test_mul_eq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Equals_Dot",
+        "equation_FStar.Real.Old.real", "real_typing",
+        "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
+        "typing_FStar.Real.Old.op_Equals_Dot"
+      ],
+      0,
+      "a9eddab18f7dbde8b8aa5e699ac7aa4f"
+    ],
+    [
+      "FStar.Real.Old.test_mul_lt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Less_Dot",
+        "equation_FStar.Real.Old.real", "primitive_FStar.Real.op_Less_Dot",
+        "projection_inverse_BoxReal_proj_0", "real_typing",
+        "refinement_interpretation_Tm_refine_8ab12b366f99e69ad390d4ad0513740f",
+        "typing_FStar.Real.Old.op_Less_Dot"
+      ],
+      0,
+      "aa7a3729ec7f85bbc74f2b71bade6f39"
+    ],
+    [
+      "FStar.Real.Old.test_div_eq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f59d3b9f4058daccf50d8815821750b5"
+      ],
+      0,
+      "03d389a2279a81131d5430bab718df73"
+    ],
+    [
+      "FStar.Real.Old.test_div_lt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Real.Old.real",
+        "primitive_FStar.Real.op_Less_Dot",
+        "projection_inverse_BoxReal_proj_0", "real_typing",
+        "refinement_interpretation_Tm_refine_8ab12b366f99e69ad390d4ad0513740f",
+        "typing_FStar.Real.Old.op_Less_Dot"
+      ],
+      0,
+      "99a7f656eb927a378ff44c4a5e9515e1"
+    ],
+    [
+      "FStar.Real.Old.test_sqrt_2_mul",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Real.two",
+        "primitive_FStar.Real.op_Star_Dot",
+        "projection_inverse_BoxReal_proj_0",
+        "refinement_interpretation_Tm_refine_724b3567cc043f81c2fc07ed69fc406d",
+        "typing_FStar.Real.sqrt_2"
+      ],
+      0,
+      "04eee430b9e221d09f23c84eddf2377c"
+    ],
+    [
+      "FStar.Real.Old.test_sqrt_2_scale",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Real.two",
+        "primitive_FStar.Real.op_Greater_Equals_Dot",
+        "projection_inverse_BoxReal_proj_0",
+        "refinement_interpretation_Tm_refine_16721e87b71ed56e57250962e4ed1730",
+        "refinement_interpretation_Tm_refine_724b3567cc043f81c2fc07ed69fc406d",
+        "refinement_interpretation_Tm_refine_cb6a0c655883ad2f0b6c096a95c9e99a",
+        "typing_FStar.Real.sqrt_2"
+      ],
+      0,
+      "fb24edff6da2b14f42b2e5eb8abc2fb7"
+    ],
+    [
+      "FStar.Real.Old.add_id_l",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Equals_Dot",
+        "equation_FStar.Real.Old.real", "real_inversion", "real_typing",
+        "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
+        "typing_FStar.Real.Old.op_Equals_Dot"
+      ],
+      0,
+      "4df7e581d19f10ec67c185ba4ad6efe7"
+    ],
+    [
+      "FStar.Real.Old.add_id_r",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Equals_Dot",
+        "equation_FStar.Real.Old.real", "real_inversion", "real_typing",
+        "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
+        "typing_FStar.Real.Old.op_Equals_Dot"
+      ],
+      0,
+      "5168817360b38750b4e637101d2cb456"
+    ],
+    [
+      "FStar.Real.Old.mul_nil_l",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Equals_Dot",
+        "equation_FStar.Real.Old.real", "real_typing",
+        "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
+        "typing_FStar.Real.Old.op_Equals_Dot"
+      ],
+      0,
+      "57fcfe7b4340effd93209a884490436e"
+    ],
+    [
+      "FStar.Real.Old.mul_nil_r",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Equals_Dot",
+        "equation_FStar.Real.Old.real", "real_typing",
+        "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
+        "typing_FStar.Real.Old.op_Equals_Dot"
+      ],
+      0,
+      "ed73ba5b123a3c1e407aa46ae0381433"
+    ],
+    [
+      "FStar.Real.Old.mul_id_l",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Equals_Dot",
+        "equation_FStar.Real.Old.real", "real_inversion", "real_typing",
+        "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
+        "typing_FStar.Real.Old.op_Equals_Dot"
+      ],
+      0,
+      "5b7dbfcf785e027b1128cc4fdaea3a56"
+    ],
+    [
+      "FStar.Real.Old.mul_id_r",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Equals_Dot",
+        "equation_FStar.Real.Old.real", "real_inversion", "real_typing",
+        "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
+        "typing_FStar.Real.Old.op_Equals_Dot"
+      ],
+      0,
+      "a7901e012d9202ea7cf6bd48a3d8d147"
+    ],
+    [
+      "FStar.Real.Old.add_comm",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Equals_Dot",
+        "equation_FStar.Real.Old.real", "real_typing",
+        "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
+        "typing_FStar.Real.Old.op_Equals_Dot"
+      ],
+      0,
+      "3b01f7002cd1d30ab51d1ca4a4d61001"
+    ],
+    [
+      "FStar.Real.Old.add_assoc",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Equals_Dot",
+        "equation_FStar.Real.Old.real", "real_typing",
+        "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
+        "typing_FStar.Real.Old.op_Equals_Dot"
+      ],
+      0,
+      "e94890382993ded3ec43bbcb78e3ca2b"
+    ],
+    [
+      "FStar.Real.Old.mul_comm",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Equals_Dot",
+        "equation_FStar.Real.Old.real", "projection_inverse_BoxReal_proj_0",
+        "real_typing",
+        "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
+        "typing_FStar.Real.Old.op_Equals_Dot"
+      ],
+      0,
+      "46e2be20bb6467acdd086959499dcf1c"
+    ],
+    [
+      "FStar.Real.Old.mul_assoc",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Equals_Dot",
+        "equation_FStar.Real.Old.real", "projection_inverse_BoxReal_proj_0",
+        "real_typing",
+        "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
+        "typing_FStar.Real.Old.op_Equals_Dot"
+      ],
+      0,
+      "32b4855f43306ef0384cd8fc883d42cb"
+    ],
+    [
+      "FStar.Real.Old.mul_dist",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Real.Old.op_Equals_Dot",
+        "equation_FStar.Real.Old.real", "real_typing",
+        "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
+        "typing_FStar.Real.Old.op_Equals_Dot"
+      ],
+      0,
+      "210944f53b990f7013f21d553ee38e78"
+    ]
+  ]
+]

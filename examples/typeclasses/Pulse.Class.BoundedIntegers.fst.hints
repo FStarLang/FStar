@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_a294b8994119cf8a575f0a71df6575a3"
       ],
       0,
-      "af37673521572c26a4b0a1cf99f2daeb"
+      "ad21563415d00c9915f7d5a69e4c6567"
     ],
     [
       "Pulse.Class.BoundedIntegers.__proj__Mkbounded_int__item__op_Percent",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_362849aac9a21015707b98540ff7ba05"
       ],
       0,
-      "28fae225e2c7d5985e7d0adcad522b13"
+      "f77611d833d34fe39712583af7eda0d7"
     ],
     [
       "Pulse.Class.BoundedIntegers.__proj__Mkbounded_int__item__op_Percent",
@@ -48,7 +48,7 @@
         "unit_inversion"
       ],
       0,
-      "08fcdc7abc1036a62904faa6afadf32f"
+      "88cc6738820ac828d08f3e3b21bfda42"
     ],
     [
       "Pulse.Class.BoundedIntegers.op_Percent",
@@ -71,7 +71,7 @@
         "unit_inversion"
       ],
       0,
-      "551da943e949a5ea4bcdef16a0cd3105"
+      "3631c17f6ffc7e42bc8907615136b9a2"
     ],
     [
       "Pulse.Class.BoundedIntegers.bounded_int_int",
@@ -80,7 +80,7 @@
       1,
       [ "@query" ],
       0,
-      "60f9561f93a9f8c93cb8b76a2cdacd09"
+      "fe48922ef8fc0f27d05efb4caaf63162"
     ],
     [
       "Pulse.Class.BoundedIntegers.safe_add",
@@ -111,7 +111,7 @@
         "function_token_typing_Pulse.Class.BoundedIntegers.max_bound",
         "int_typing",
         "interpretation_Tm_abs_505c9b700f5dda804797fc6511aa37e2",
-        "interpretation_Tm_abs_82e749468782baff38492e64afea52df",
+        "interpretation_Tm_abs_9526f9b86538a09423bf79a8b2d28a7b",
         "interpretation_Tm_abs_d2b36eee66dd8372042cd1c49358f9dc",
         "interpretation_Tm_abs_d5877b1288b93e8d3523f2652f6bfc84",
         "interpretation_Tm_abs_e55f1efb8e787e6fd29c4794771ae0d5",
@@ -147,7 +147,7 @@
         "typing_Pulse.Class.BoundedIntegers.bounded_from_bounded_unsigned"
       ],
       0,
-      "fb81414f83035b72db29e75a6ec7b78d"
+      "012b10e23ee3c30efd9eedf085387882"
     ],
     [
       "Pulse.Class.BoundedIntegers.safe_mod",
@@ -175,7 +175,7 @@
         "function_token_typing_Prims.__cache_version_number__", "int_typing",
         "interpretation_Tm_abs_3ac41043f5916fda181399393c3d8ba1",
         "interpretation_Tm_abs_638c2b0f106355f5884ec0cc8cc19772",
-        "interpretation_Tm_abs_82e749468782baff38492e64afea52df",
+        "interpretation_Tm_abs_9526f9b86538a09423bf79a8b2d28a7b",
         "interpretation_Tm_abs_d2b36eee66dd8372042cd1c49358f9dc",
         "interpretation_Tm_abs_e55f1efb8e787e6fd29c4794771ae0d5",
         "interpretation_Tm_abs_ed0b4d808e3623f25f893f01478211b1",
@@ -209,7 +209,7 @@
         "typing_Pulse.Class.BoundedIntegers.bounded_from_bounded_unsigned"
       ],
       0,
-      "eb03f7e87d7cd1e86bac4468c74f3342"
+      "057008b1596ffbcdb0d2ddfb4813b66f"
     ],
     [
       "Pulse.Class.BoundedIntegers.add",
@@ -236,7 +236,7 @@
         "token_correspondence_Pulse.Class.BoundedIntegers.v"
       ],
       0,
-      "55edcce023b2ccabe90fb3849080bf01"
+      "3d619b1e2144586a324861cd5e3bcf5f"
     ],
     [
       "Pulse.Class.BoundedIntegers.add",
@@ -253,7 +253,7 @@
         "true_interp"
       ],
       0,
-      "acb74d5f08ffadcdbf3dfe07f40abd03"
+      "4f8cb78f999e31e61c7c3523842f75f5"
     ],
     [
       "Pulse.Class.BoundedIntegers.add3",
@@ -288,7 +288,7 @@
         "token_correspondence_Pulse.Class.BoundedIntegers.v"
       ],
       0,
-      "df62a46ed7451f7f01c5286441593e02"
+      "e1f02f010e2c1fa04ecaa3b460d5f761"
     ],
     [
       "Pulse.Class.BoundedIntegers.add3",
@@ -319,7 +319,7 @@
         "token_correspondence_Pulse.Class.BoundedIntegers.v", "true_interp"
       ],
       0,
-      "b5fbee5cfb343d52b6e769b147e9f0c8"
+      "2cf7d7094e23603617e87a707c15ba48"
     ],
     [
       "Pulse.Class.BoundedIntegers.add3_alt",
@@ -346,7 +346,7 @@
         "token_correspondence_Pulse.Class.BoundedIntegers.v"
       ],
       0,
-      "e3829d2119c0aad04daa9a1f7ba063e6"
+      "8a2e27851a765b5d1305e8c5bae34efe"
     ],
     [
       "Pulse.Class.BoundedIntegers.add3_alt",
@@ -377,7 +377,7 @@
         "token_correspondence_Pulse.Class.BoundedIntegers.v", "true_interp"
       ],
       0,
-      "c6d6d85fe9ca19d9fdc78c3beb09aab9"
+      "2cf7d7094e23603617e87a707c15ba48"
     ],
     [
       "Pulse.Class.BoundedIntegers.bounded_int_u32",
@@ -389,24 +389,23 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Pulse.Class.BoundedIntegers_interpretation_Tm_arrow_0ecb6df2a5685a8d0605ac13061a9684",
-        "Pulse.Class.BoundedIntegers_interpretation_Tm_arrow_b84a24e323b3209fbcac1b5ac470a556",
+        "Pulse.Class.BoundedIntegers_interpretation_Tm_arrow_4e06c0d9f21510c76cc9a4373093e200",
         "b2t_def", "bool_inversion", "bool_typing",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.lt",
-        "equation_FStar.UInt.lte", "equation_FStar.UInt.max_int",
-        "equation_FStar.UInt.min_int", "equation_FStar.UInt.mod",
-        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt32.lt", "equation_FStar.UInt32.lte",
-        "equation_Prims.nat",
+        "equation_FStar.Pervasives.id", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.lt", "equation_FStar.UInt.lte",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.mod", "equation_FStar.UInt.size",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.lt",
+        "equation_FStar.UInt32.lte", "equation_Prims.nat",
         "equation_Pulse.Class.BoundedIntegers.bounded_int_int",
         "equation_Pulse.Class.BoundedIntegers.op_Less",
         "equation_Pulse.Class.BoundedIntegers.op_Less_Equals",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing",
-        "interpretation_Tm_abs_82e749468782baff38492e64afea52df",
+        "interpretation_Tm_abs_9526f9b86538a09423bf79a8b2d28a7b",
+        "interpretation_Tm_abs_d68e5199f008f106619036deee889e9a",
         "interpretation_Tm_abs_e6649eba6390f90be22ea1a9dce6d496",
         "interpretation_Tm_abs_f4d32f3d705308e5f1a270cda9a29727",
-        "interpretation_Tm_abs_ff7cb3bc3f98798e4c311a208e473b7e",
         "lemma_FStar.UInt.pow2_values", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Division",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
@@ -417,17 +416,16 @@
         "projection_inverse_Pulse.Class.BoundedIntegers.Mkbounded_int_op_Less",
         "projection_inverse_Pulse.Class.BoundedIntegers.Mkbounded_int_op_Less_Equals",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_b87295cfb0108f11c92ba4a990efffc7",
+        "refinement_interpretation_Tm_refine_7d5d464f1bd9167923b3673db6d066b9",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
-        "refinement_interpretation_Tm_refine_fd4d23c9bc96e098f33825748d153c04",
+        "token_correspondence_FStar.Pervasives.id",
         "token_correspondence_Pulse.Class.BoundedIntegers.op_Less",
         "token_correspondence_Pulse.Class.BoundedIntegers.op_Less_Equals",
         "typing_FStar.UInt.fits", "typing_FStar.UInt32.v",
-        "typing_Tm_abs_82e749468782baff38492e64afea52df",
-        "typing_Tm_abs_ff7cb3bc3f98798e4c311a208e473b7e"
+        "typing_Tm_abs_9526f9b86538a09423bf79a8b2d28a7b"
       ],
       0,
-      "45513749b023bab573b14d21a21e3fc0"
+      "f3d5842615c6fbe2d8e22fa46f6d105a"
     ],
     [
       "Pulse.Class.BoundedIntegers.bounded_unsigned_u32",
@@ -439,15 +437,16 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "FStar.UInt32_pretyping_2ab3c8ba2d08b0172817fc70b5994868",
+        "Prims_interpretation_Tm_arrow_99724436653747ac6f5a6a00c64ff8bc",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Pulse.Class.BoundedIntegers_interpretation_Tm_arrow_0ecb6df2a5685a8d0605ac13061a9684",
         "Pulse.Class.BoundedIntegers_interpretation_Tm_ghost_arrow_755c79c2bc580d8b4fb5156ea583813e",
         "Pulse.Class.BoundedIntegers_interpretation_Tm_ghost_arrow_d16b792c8388af6cbe3d3e4ea5d87ced",
         "b2t_def", "bool_inversion", "bool_typing",
         "data_elim_Pulse.Class.BoundedIntegers.Mkbounded_int",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
-        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
-        "equation_FStar.UInt.uint_t", "equation_Prims.nat",
+        "equation_FStar.Pervasives.id", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_Prims.eqtype", "equation_Prims.nat",
         "equation_Pulse.Class.BoundedIntegers.bounded_int_int",
         "equation_Pulse.Class.BoundedIntegers.bounded_int_u32",
         "equation_Pulse.Class.BoundedIntegers.fits",
@@ -455,17 +454,18 @@
         "equation_Pulse.Class.BoundedIntegers.op_Less",
         "equation_Pulse.Class.BoundedIntegers.op_Less_Equals",
         "equation_Pulse.Class.BoundedIntegers.v",
+        "function_token_typing_FStar.Pervasives.id",
         "function_token_typing_FStar.UInt32.uint_to_t",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing",
         "interpretation_Tm_abs_640ea0d2a5785c2bf69170bf394ad9c4",
-        "interpretation_Tm_abs_82e749468782baff38492e64afea52df",
+        "interpretation_Tm_abs_9526f9b86538a09423bf79a8b2d28a7b",
         "interpretation_Tm_abs_a8cddb33fae8264dd0fec582745dd7d6",
         "interpretation_Tm_abs_d2b36eee66dd8372042cd1c49358f9dc",
+        "interpretation_Tm_abs_d68e5199f008f106619036deee889e9a",
         "interpretation_Tm_abs_e6649eba6390f90be22ea1a9dce6d496",
         "interpretation_Tm_abs_f4d32f3d705308e5f1a270cda9a29727",
         "interpretation_Tm_abs_faa1351076bca4f1d410c09beaffa289",
-        "interpretation_Tm_abs_ff7cb3bc3f98798e4c311a208e473b7e",
         "l_and-interp", "lemma_FStar.UInt.pow2_values",
         "lemma_FStar.UInt32.vu_inv", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
@@ -477,21 +477,22 @@
         "projection_inverse_Pulse.Class.BoundedIntegers.Mkbounded_int_op_Less_Equals",
         "projection_inverse_Pulse.Class.BoundedIntegers.Mkbounded_int_v",
         "refinement_interpretation_Tm_refine_2c9509c4fdf356ea8b390762a509ebbb",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_9b6814fd42e45bedf339f7a6d66952ad",
-        "refinement_interpretation_Tm_refine_b87295cfb0108f11c92ba4a990efffc7",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "token_correspondence_FStar.Pervasives.id",
         "token_correspondence_Pulse.Class.BoundedIntegers.fits",
         "token_correspondence_Pulse.Class.BoundedIntegers.op_Less",
         "token_correspondence_Pulse.Class.BoundedIntegers.op_Less_Equals",
         "token_correspondence_Pulse.Class.BoundedIntegers.v",
         "typing_FStar.UInt.fits", "typing_FStar.UInt32.v",
+        "typing_Prims.int",
         "typing_Pulse.Class.BoundedIntegers.bounded_int_u32",
-        "typing_Tm_abs_640ea0d2a5785c2bf69170bf394ad9c4",
-        "typing_Tm_abs_82e749468782baff38492e64afea52df"
+        "typing_Tm_abs_640ea0d2a5785c2bf69170bf394ad9c4"
       ],
       0,
-      "248494a55937a799212cc0d3f8cb8fe0"
+      "6446c6356ea131449ace7f208342b8e1"
     ],
     [
       "Pulse.Class.BoundedIntegers.bounded_int_u64",
@@ -503,19 +504,19 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Pulse.Class.BoundedIntegers_interpretation_Tm_arrow_0ecb6df2a5685a8d0605ac13061a9684",
+        "Pulse.Class.BoundedIntegers_interpretation_Tm_arrow_4e06c0d9f21510c76cc9a4373093e200",
         "b2t_def", "bool_inversion", "bool_typing",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.lt",
-        "equation_FStar.UInt.lte", "equation_FStar.UInt.max_int",
-        "equation_FStar.UInt.min_int", "equation_FStar.UInt.mod",
-        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt64.lt", "equation_FStar.UInt64.lte",
-        "equation_Prims.nat",
+        "equation_FStar.Pervasives.id", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.lt", "equation_FStar.UInt.lte",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.mod", "equation_FStar.UInt.size",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt64.lt",
+        "equation_FStar.UInt64.lte", "equation_Prims.nat",
         "equation_Pulse.Class.BoundedIntegers.bounded_int_int",
         "equation_Pulse.Class.BoundedIntegers.op_Less_Equals",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing",
-        "interpretation_Tm_abs_82e749468782baff38492e64afea52df",
+        "interpretation_Tm_abs_9526f9b86538a09423bf79a8b2d28a7b",
         "interpretation_Tm_abs_f4d32f3d705308e5f1a270cda9a29727",
         "lemma_FStar.UInt.pow2_values", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Division",
@@ -525,14 +526,15 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Pulse.Class.BoundedIntegers.Mkbounded_int_op_Less_Equals",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_b87295cfb0108f11c92ba4a990efffc7",
+        "refinement_interpretation_Tm_refine_7d5d464f1bd9167923b3673db6d066b9",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "token_correspondence_FStar.Pervasives.id",
         "token_correspondence_Pulse.Class.BoundedIntegers.op_Less_Equals",
         "typing_FStar.UInt.max_int", "typing_FStar.UInt64.v",
-        "typing_Tm_abs_82e749468782baff38492e64afea52df"
+        "typing_Tm_abs_9526f9b86538a09423bf79a8b2d28a7b"
       ],
       0,
-      "f8c7a49d451716ae45c9761b5f63046d"
+      "f70718ea023b0da71a587ac6e1dbce88"
     ],
     [
       "Pulse.Class.BoundedIntegers.bounded_unsigned_u64",
@@ -545,32 +547,33 @@
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "FStar.UInt64_pretyping_0a6d0526dc068d94bc7967094b2dd513",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Pulse.Class.BoundedIntegers_interpretation_Tm_arrow_0ecb6df2a5685a8d0605ac13061a9684",
-        "Pulse.Class.BoundedIntegers_interpretation_Tm_ghost_arrow_907a75c0b80b0310256a775327765977",
+        "Pulse.Class.BoundedIntegers_interpretation_Tm_arrow_4e06c0d9f21510c76cc9a4373093e200",
         "Pulse.Class.BoundedIntegers_interpretation_Tm_ghost_arrow_d16b792c8388af6cbe3d3e4ea5d87ced",
         "b2t_def", "bool_inversion", "bool_typing",
         "data_elim_Pulse.Class.BoundedIntegers.Mkbounded_int",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
-        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
-        "equation_FStar.UInt.uint_t", "equation_Prims.nat",
+        "equation_FStar.Pervasives.id", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_Prims.nat",
         "equation_Pulse.Class.BoundedIntegers.bounded_int_int",
         "equation_Pulse.Class.BoundedIntegers.bounded_int_u64",
         "equation_Pulse.Class.BoundedIntegers.fits",
         "equation_Pulse.Class.BoundedIntegers.fits_t",
         "equation_Pulse.Class.BoundedIntegers.op_Less_Equals",
         "equation_Pulse.Class.BoundedIntegers.v",
+        "equation_with_fuel_Prims.pow2.fuel_instrumented",
         "function_token_typing_FStar.UInt64.uint_to_t",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing",
         "interpretation_Tm_abs_3a550d7fc388328ce7824cdc5c854d83",
-        "interpretation_Tm_abs_82e749468782baff38492e64afea52df",
+        "interpretation_Tm_abs_9526f9b86538a09423bf79a8b2d28a7b",
         "interpretation_Tm_abs_b264ffbb62cdda235d25000972d6bc9e",
         "interpretation_Tm_abs_d2b36eee66dd8372042cd1c49358f9dc",
         "interpretation_Tm_abs_f4d32f3d705308e5f1a270cda9a29727",
         "interpretation_Tm_abs_faa1351076bca4f1d410c09beaffa289",
         "l_and-interp", "lemma_FStar.UInt.pow2_values",
         "lemma_FStar.UInt64.vu_inv", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -579,19 +582,18 @@
         "projection_inverse_Pulse.Class.BoundedIntegers.Mkbounded_int_v",
         "refinement_interpretation_Tm_refine_2c9509c4fdf356ea8b390762a509ebbb",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_7d5d464f1bd9167923b3673db6d066b9",
         "refinement_interpretation_Tm_refine_9b6814fd42e45bedf339f7a6d66952ad",
-        "refinement_interpretation_Tm_refine_b87295cfb0108f11c92ba4a990efffc7",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
         "token_correspondence_Pulse.Class.BoundedIntegers.fits",
         "token_correspondence_Pulse.Class.BoundedIntegers.op_Less_Equals",
         "token_correspondence_Pulse.Class.BoundedIntegers.v",
         "typing_FStar.UInt.fits", "typing_FStar.UInt64.v",
         "typing_Pulse.Class.BoundedIntegers.bounded_int_u64",
-        "typing_Tm_abs_82e749468782baff38492e64afea52df",
-        "typing_Tm_abs_b264ffbb62cdda235d25000972d6bc9e"
+        "typing_Tm_abs_9526f9b86538a09423bf79a8b2d28a7b"
       ],
       0,
-      "fb76c69de9163dd15c621e6416cbe67b"
+      "855da424196e5ed52f74bdf7ac710104"
     ],
     [
       "Pulse.Class.BoundedIntegers.add_u32",
@@ -618,7 +620,7 @@
         "token_correspondence_Pulse.Class.BoundedIntegers.v"
       ],
       0,
-      "00aa0787b445b51f5936be3bd67b89c7"
+      "4293b936b82c2e457a8428fbf15f4564"
     ],
     [
       "Pulse.Class.BoundedIntegers.add_u32",
@@ -635,7 +637,7 @@
         "true_interp"
       ],
       0,
-      "6f4ef61f270dc14c4fb4099eeb748fc1"
+      "a032aa9b34cbdfa34c052e08948dc1ca"
     ],
     [
       "Pulse.Class.BoundedIntegers.sub_u32",
@@ -662,7 +664,7 @@
         "token_correspondence_Pulse.Class.BoundedIntegers.v"
       ],
       0,
-      "452d2cc2b061bc82202418b75e94b283"
+      "41a8d26ad2361d934e56307bc8c607c1"
     ],
     [
       "Pulse.Class.BoundedIntegers.sub_u32",
@@ -679,7 +681,7 @@
         "true_interp"
       ],
       0,
-      "c081d6a7df94fd1092b52c17b674dac5"
+      "4db84a8fad9befb780a71b284901f00a"
     ],
     [
       "Pulse.Class.BoundedIntegers.add_nat_1",
@@ -696,7 +698,7 @@
         "true_interp"
       ],
       0,
-      "750e5c45513b8abffd2ddaf053090fa7"
+      "dd1e25650a197a7ed83a16f217531158"
     ],
     [
       "Pulse.Class.BoundedIntegers.bounded_int_nat",
@@ -707,19 +709,19 @@
         "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.eqtype",
         "equation_Pulse.Class.BoundedIntegers.fits_t",
         "equation_Pulse.Class.BoundedIntegers.nat_as_int",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_2c9509c4fdf356ea8b390762a509ebbb",
         "interpretation_Tm_abs_49832691c8e834c9b5f114e3af28e84b",
         "primitive_Prims.op_Addition",
         "primitive_Prims.op_GreaterThanOrEqual",
-        "primitive_Prims.op_Modulus", "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_2c9509c4fdf356ea8b390762a509ebbb",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "bfed8c0768f6e65cb19998932f027b1f"
+      "c87c43e5f8b5a9498fbcb5368feddc8c"
     ],
     [
       "Pulse.Class.BoundedIntegers.add_nat",
@@ -731,7 +733,6 @@
         "equation_Prims.nat",
         "equation_Pulse.Class.BoundedIntegers.bounded_int_nat",
         "equation_Pulse.Class.BoundedIntegers.nat_as_int",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "interpretation_Tm_abs_49832691c8e834c9b5f114e3af28e84b",
         "primitive_Prims.op_Addition",
@@ -746,10 +747,11 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "token_correspondence_Pulse.Class.BoundedIntegers.__proj__Mkbounded_int__item__fits",
         "token_correspondence_Pulse.Class.BoundedIntegers.__proj__Mkbounded_int__item__v",
-        "token_correspondence_Pulse.Class.BoundedIntegers.nat_as_int"
+        "token_correspondence_Pulse.Class.BoundedIntegers.nat_as_int",
+        "typing_Prims.int"
       ],
       0,
-      "c2d922ef1e81adf47d2bcc29f33f0da7"
+      "f4a9a221a2caeebcf739de8979d2ed6a"
     ],
     [
       "Pulse.Class.BoundedIntegers.bounded_int_pos",
@@ -760,18 +762,18 @@
         "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.eqtype",
         "equation_Pulse.Class.BoundedIntegers.fits_t",
         "equation_Pulse.Class.BoundedIntegers.pos_as_int",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_2c9509c4fdf356ea8b390762a509ebbb",
         "interpretation_Tm_abs_a0c0e02f00d0e81415acba0445b8261b",
         "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
-        "primitive_Prims.op_Modulus", "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_2c9509c4fdf356ea8b390762a509ebbb",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "26c99a1774438278b65ff9adc9712c96"
+      "feac0fc1419adb5f2af94cfaa5907139"
     ],
     [
       "Pulse.Class.BoundedIntegers.bounded_int_size_t",
@@ -792,7 +794,7 @@
         "typing_FStar.SizeT.v"
       ],
       0,
-      "e66edf0ce51041fce6179dcd0d2714f9"
+      "2729c361cf105cb214a2edc32a19bf04"
     ],
     [
       "Pulse.Class.BoundedIntegers.bounded_unsigned_size_t",
@@ -812,7 +814,7 @@
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing",
         "interpretation_Tm_abs_63fb2cefe8a09ad45caa8eb2d2cf7613",
-        "interpretation_Tm_abs_82e749468782baff38492e64afea52df",
+        "interpretation_Tm_abs_9526f9b86538a09423bf79a8b2d28a7b",
         "interpretation_Tm_abs_d2b36eee66dd8372042cd1c49358f9dc",
         "interpretation_Tm_abs_efe372ce3e9de26e7779d8bc6ea105c3",
         "interpretation_Tm_abs_f4d32f3d705308e5f1a270cda9a29727",
@@ -835,7 +837,7 @@
         "typing_Pulse.Class.BoundedIntegers.bounded_int_size_t"
       ],
       0,
-      "a35a0f2a19ad4f2ff28bd6f645182930"
+      "a4718c6e135ad6f339b5cfaf4c59e185"
     ],
     [
       "Pulse.Class.BoundedIntegers.size_t_plus_one",
@@ -878,7 +880,7 @@
         "typing_Pulse.Class.BoundedIntegers.bounded_int_size_t"
       ],
       0,
-      "c150fa514ac6fcaa52ffb483570a0a10"
+      "b211122a29e514e808250023ea99caa7"
     ]
   ]
 ]

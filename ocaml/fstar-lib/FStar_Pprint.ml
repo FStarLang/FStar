@@ -14,6 +14,14 @@
    limitations under the License.
 *)
 
+(* NOTE!!! This is a copy of FStarC_Pprint that is exposed to applications
+via the library, without needing to link against compiler modules. The compiler
+itself could also use this but there are some issues with effect polymorphism
+(e.g. flow_map would need two versions, and having the ML one in the ulib module
+would introduce a lot of dependencies) and also would need to have a single definition
+of `float` (the compiler defines its own, though this is probably unneeded and can
+be removed). *)
+
 (*  prettyprint.fsti's OCaml implementation is just a thin wrapper around
     Francois Pottier's pprint package. *)
 include PPrint
@@ -82,7 +90,6 @@ let pretty_out_channel rfrac width doc ch =
     PPrint.ToChannel.pretty rfrac (Z.to_int width) ch doc;
     flush ch
 
-(* A simple renderer, with some default values. This is
-   exposed to userspace in FStar.Stubs.Pprint. *)
+(* A simple renderer, with some default values. *)
 let render (doc:document) : string =
     pretty_string 1.0 (Z.of_int 80) doc

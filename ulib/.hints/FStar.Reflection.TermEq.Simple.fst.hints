@@ -1,0 +1,33 @@
+[
+  "À#uÁ◊2º¬çÍÿS\u0006cıW",
+  [
+    [
+      "FStar.Reflection.TermEq.Simple.term_eq_ok",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Reflection.TermEq.Simple.term_eq",
+        "refinement_interpretation_Tm_refine_da8048236680add2b0dd36d0c7a3306a",
+        "typing_FStar.Reflection.TermEq.term_eq"
+      ],
+      0,
+      "4e5733929a3a16abd362f6820782105d"
+    ],
+    [
+      "FStar.Reflection.TermEq.Simple.univ_eq_ok",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Reflection.TermEq.Simple.univ_eq",
+        "refinement_interpretation_Tm_refine_da8048236680add2b0dd36d0c7a3306a",
+        "typing_FStar.Reflection.TermEq.univ_eq"
+      ],
+      0,
+      "dd35d5a88ec14feda3d2ecb7b9fe0225"
+    ]
+  ]
+]

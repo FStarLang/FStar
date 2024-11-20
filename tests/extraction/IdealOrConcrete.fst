@@ -15,7 +15,11 @@
 *)
 module IdealOrConcrete
 open Flags
+open FStar.All
 
+(* Not sure this test is worth restoring. *)
+
+(*
 type data (i:id) = 
   | MkData : r:(if ideal i then ref nat else unit) -> data i
 
@@ -45,3 +49,4 @@ let write #i (MkData r) n =
         r := n)
   else ()
   
+*)

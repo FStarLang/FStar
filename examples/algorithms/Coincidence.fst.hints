@@ -16,7 +16,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b82af0a8de05b54c339e6ad540488def"
+      "2e979ba10d8505c66003a6134856fc37"
     ],
     [
       "Coincidence.sorted",
@@ -29,7 +29,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1ee8f0497d7be4abd3e930fc51a94615"
+      "7a6507fe07ecf4ec4b84540473260cd2"
     ],
     [
       "Coincidence.lemma1",
@@ -42,12 +42,12 @@
         "assumption_Prims.list__uu___haseq", "disc_equation_Prims.Cons",
         "equation_Prims.eqtype", "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "448b14dd8c8a0818c2ef7d44dc234584"
+      "a05ce96e357fc1489b89b65627e584cf"
     ],
     [
       "Coincidence.lemma1",
@@ -77,7 +77,7 @@
         "typing_Coincidence.sorted"
       ],
       0,
-      "b30576e28ccb244645c8e0e843c61d65"
+      "4f31fcb106a7f0f943cd8943cfdca112"
     ],
     [
       "Coincidence.lemma1",
@@ -90,13 +90,13 @@
         "assumption_Prims.list__uu___haseq", "disc_equation_Prims.Cons",
         "equation_Prims.eqtype", "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_cdae7b8fcc0565e8f6ddc155d60cc9a5"
+        "refinement_interpretation_Tm_refine_5a85b56fd8f9cf98d38df0db54be5673",
+        "typing_Prims.int"
       ],
       0,
-      "755d69be0cfe70af0556a8cc5aee4af5"
+      "4244906e3f1814fe45bd84e3d3f13644"
     ],
     [
       "Coincidence.coincidence",
@@ -109,12 +109,10 @@
         "@fuel_correspondence_Coincidence.sorted.fuel_instrumented",
         "@fuel_irrelevance_Coincidence.mem.fuel_instrumented",
         "@fuel_irrelevance_Coincidence.sorted.fuel_instrumented", "@query",
-        "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_9196bb3ba9d8f2ebbf8fc41c3ae89bb6_0",
         "binder_x_9196bb3ba9d8f2ebbf8fc41c3ae89bb6_1", "bool_inversion",
-        "constructor_distinct_Prims.Cons", "data_elim_Prims.Cons",
-        "disc_equation_Prims.Cons",
+        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
         "equation_with_fuel_Coincidence.mem.fuel_instrumented",
         "equation_with_fuel_Coincidence.sorted.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
@@ -138,7 +136,7 @@
         "typing_Coincidence.mem"
       ],
       0,
-      "ba41fa316b1aa6df93a65e4a1ecd5d08"
+      "83f23739f528dc5a3ba0a0203115fefd"
     ]
   ]
 ]

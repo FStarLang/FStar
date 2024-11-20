@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "40fbac45465277f2d45761816546b5b5"
+      "f460d2a060a568cd8fa33fdd011b1fc8"
     ],
     [
       "TestGhost.i",
@@ -17,11 +17,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "function_token_typing_Prims.int", "lemma_FStar.Ghost.hide_reveal",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "lemma_FStar.Ghost.hide_reveal",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "673957734f71a70dc929c83fabd1ba03"
+      "f9cdfd0ab1161322ab5592eb8e11f375"
     ]
   ]
 ]

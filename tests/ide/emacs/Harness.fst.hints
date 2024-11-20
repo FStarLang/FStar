@@ -1,0 +1,33 @@
+[
+  "iý\u0019Z\n<[@qôéË\"Î\u0010=",
+  [
+    [
+      "Harness.aux",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Harness.bar",
+        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Multiply",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_f4158565f08bf6e3accc1e5146daab52"
+      ],
+      0,
+      "1ece735969c0559ed0ed1ffd87080ef2"
+    ],
+    [
+      "Harness.always_foo",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Harness.foo",
+        "equation_Prims.nat", "int_inversion",
+        "refinement_interpretation_Tm_refine_32a45a095aa8e270a4bc0b361ef4084d",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "eb22265f67add85a50b21b0e68e0692e"
+    ]
+  ]
+]

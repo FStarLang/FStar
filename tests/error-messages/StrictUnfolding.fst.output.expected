@@ -1,0 +1,8 @@
+>> Got issues: [
+* Error 19 at StrictUnfolding.fst(50,2-50,8):
+  - Could not prove goal #1
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also StrictUnfolding.fst(50,48-50,72)
+
+>>]

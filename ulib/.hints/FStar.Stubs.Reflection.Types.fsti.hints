@@ -1,0 +1,19 @@
+[
+  "\u00011‘Ê…ÈÇ–µ\u0002≤æY\u0016)Œ",
+  [
+    [
+      "FStar.Stubs.Reflection.Types.name",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.string"
+      ],
+      0,
+      "8504db90075e8bed876a64d2b88daa80"
+    ]
+  ]
+]

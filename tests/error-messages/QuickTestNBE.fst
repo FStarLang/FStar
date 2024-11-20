@@ -126,12 +126,9 @@ let va_qcode_Test2 : (quickCode unit) =
     ))
   )
 
-#push-options "--print_expected_failures"
-//#push-options "--debug SMTQuery --ugly --print_implicits"
 [@@expect_failure [19]]
 let va_lemma_Test2 (va_s0:vale_state) =
   wp_sound_code_norm
     va_qcode_Test2
     va_s0
     (fun va_s0 va_sM va_g -> True)
-

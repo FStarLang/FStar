@@ -20,9 +20,7 @@
         "equation_FStar.Stubs.Reflection.Types.name",
         "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
-        "function_token_typing_FStar.Stubs.Reflection.Types.sigelt",
-        "function_token_typing_Prims.string",
-        "kinding_FStar.VConfig.vconfig@tok",
+        "kinding_FStar.Stubs.VConfig.vconfig@tok",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
@@ -32,12 +30,13 @@
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
         "projection_inverse_FStar.Stubs.Tactics.Result.Success_v",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "string_typing",
+        "string_typing", "typing_FStar.Stubs.Reflection.Types.sigelt",
         "typing_FStar.Stubs.Reflection.V2.Builtins.lookup_typ",
-        "typing_FStar.Stubs.Reflection.V2.Builtins.sigelt_opts"
+        "typing_FStar.Stubs.Reflection.V2.Builtins.sigelt_opts",
+        "typing_Prims.string"
       ],
       0,
-      "16251837f8122e4230ede97d1f59637d"
+      "04276c2d2425183cc16af1d73c90c1fc"
     ]
   ]
 ]

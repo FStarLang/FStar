@@ -1,0 +1,54 @@
+>> Got issues: [
+* Error 162 at Erasable.fst(6,0-8,17):
+  - Incompatible attributes and qualifiers: erasable types do not support
+    decidable equality and must be marked `noeq`.
+
+>>]
+>> Got issues: [
+* Error 34 at Erasable.fst(18,2-20,15):
+  - Computed type Prims.int
+    and effect Prims.GHOST
+    is not compatible with the annotated type Prims.int
+    and effect Tot
+
+>>]
+>> Got issues: [
+* Error 34 at Erasable.fst(28,42-28,52):
+  - Computed type Prims.int
+    and effect GTot
+    is not compatible with the annotated type Prims.int
+    and effect Tot
+
+>>]
+>> Got issues: [
+* Error 162 at Erasable.fst(41,12-41,15):
+  - Illegal attribute: the `erasable` attribute is only permitted on inductive
+    type definitions and abbreviations for non-informative types.
+  - The term Prims.nat is considered informative.
+
+>>]
+>> Got issues: [
+* Error 162 at Erasable.fst(52,0-52,17):
+  - Mismatch of attributes between declaration and definition.
+  - Declaration is marked `erasable` but the definition is not.
+
+>>]
+>> Got issues: [
+* Error 162 at Erasable.fst(59,0-59,29):
+  - Mismatch of attributes between declaration and definition.
+  - Declaration is marked `erasable` but the definition is not.
+
+>>]
+* Warning 240 at Erasable.fst(49,4-49,11):
+  - Erasable.e_nat_2 is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at Erasable.fst(56,4-56,11):
+  - Erasable.e_nat_3 is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at Erasable.fst(73,0-73,19):
+  - Missing definitions in module Erasable:
+      e_nat_2
+      e_nat_3
+

@@ -19,7 +19,7 @@ Every tactic primitive, i.e., those built into the compiler
 *)
 module FStar.Stubs.Tactics.V2.Builtins
 
-open FStar.VConfig
+open FStar.Stubs.VConfig
 open FStar.Stubs.Reflection.Types
 open FStar.Reflection.Const
 open FStar.Stubs.Reflection.V2.Data
@@ -27,8 +27,7 @@ open FStar.Stubs.Reflection.V2.Builtins
 open FStar.Tactics.Effect
 open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.Types
-
-include FStar.Tactics.Unseal
+include FStar.Stubs.Tactics.Unseal
 
 (** Resolve unification variable indirections at the top of the term. *)
 val compress : term -> Tac term
@@ -108,6 +107,15 @@ FStar.Tactics.Logic for that.
 *)
 val intro : unit -> Tac binding
 
+(** Like [intro] but pushes many binders at once. The goal has to be
+a literal arrow, we will not normalize it nor unfold it. This can be
+faster than repeatedly calling intros, and furthermore it will solve the
+witness to a flat abstraction instead of many nested ones.
+
+[max] is an upper bound on the amount of binders this will introduce,
+only considered when [max >= 0] (so use [-1] for no limit). *)
+val intros (max:int) : Tac (list binding)
+
 (** Similar to intros, but allows to build a recursive function.
 Currently broken (c.f. issue #1103)
 *)
@@ -141,6 +149,10 @@ val clear : binding -> Tac unit
 (** If [b] is a binding of type [v == r], [rewrite b] will rewrite the
 variable [v] for [r] everywhere in the current goal type and witness. *)
 val rewrite : binding -> Tac unit
+
+(** [grewrite t1 t2] will rewrite [t1] anywhere it appears in the goal
+for [t2]. It will add a goal (after the current one) for [t1 == t2]. *)
+val grewrite (t1 t2 : term) : Tac unit
 
 (** First boolean is whether to attempt to introduce a refinement
 before solving. In that case, a goal for the refinement formula will be
@@ -415,11 +427,11 @@ val comp_to_string : comp -> Tac string
 
 (** Like term_to_string, but returns an unrendered pretty-printing
 document *)
-val term_to_doc : term -> Tac Stubs.Pprint.document
+val term_to_doc : term -> Tac Pprint.document
 
 (** Like comp_to_string, but returns an unrendered pretty-printing
 document *)
-val comp_to_doc : comp -> Tac Stubs.Pprint.document
+val comp_to_doc : comp -> Tac Pprint.document
 
 (** Print a source range as a string *)
 val range_to_string : range -> Tac string

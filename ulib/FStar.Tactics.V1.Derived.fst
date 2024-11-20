@@ -23,7 +23,7 @@ open FStar.Stubs.Tactics.Result
 open FStar.Tactics.Util
 open FStar.Stubs.Tactics.V1.Builtins
 open FStar.Tactics.V1.SyntaxHelpers
-open FStar.VConfig
+open FStar.Stubs.VConfig
 include FStar.Tactics.Names
 
 module L = FStar.List.Tot.Base

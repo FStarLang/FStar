@@ -1,0 +1,273 @@
+[
+  "TÓÖîð«\u001bM9dE\u001c½°†\u0018",
+  [
+    [
+      "FStar.Classical.give_witness",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "6c116f69289fea2e4f67f6d5420e8451"
+    ],
+    [
+      "FStar.Classical.give_witness_from_squash",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "4d25b1c8d0c0ea89dd6e3ad047becef4"
+    ],
+    [
+      "FStar.Classical.get_squashed",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "f3fc2178ecea01a6544b3baac18db086"
+    ],
+    [
+      "FStar.Classical.get_equality",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.eq2" ],
+      0,
+      "7e863780524c0ede59f14cdc48d619a9"
+    ],
+    [
+      "FStar.Classical.impl_intro",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fb4bd36a7e4e721d21f424fd0521bc6c"
+    ],
+    [
+      "FStar.Classical.move_requires",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
+        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.sum",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "9b7334cbfcee116f8a0ec3b788d03b35"
+    ],
+    [
+      "FStar.Classical.impl_intro_gen",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "248915200bc01f75fcbbc8f6484bc3ae"
+    ],
+    [
+      "FStar.Classical.impl_intro_gen",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "389dc19f095f343ed5b72b59d579e13c"
+    ],
+    [
+      "FStar.Classical.impl_intro_gen",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "9ee2168dcf8d93962ee440efb071d605"
+    ],
+    [
+      "FStar.Classical.get_forall",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0193753692c8c8711c4b89a94ca6c233"
+    ],
+    [
+      "FStar.Classical.forall_intro_gtot",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3d25188ce30bdcb997f22982986e58ae"
+    ],
+    [
+      "FStar.Classical.lemma_forall_intro_gtot",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b2e9c51a4523a1e686f07412a0d35760"
+    ],
+    [
+      "FStar.Classical.gtot_to_lemma",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "945db7fe04c453ea019734e536db3f99"
+    ],
+    [
+      "FStar.Classical.forall_intro",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7591de72f344266c0460554159a0f8c8"
+    ],
+    [
+      "FStar.Classical.forall_impl_intro",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c7e563e880c971caabfa95328a5a8bbd"
+    ],
+    [
+      "FStar.Classical.ghost_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
+        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.sum",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "8b80f409a0eadc1aa499a01b7ca08738"
+    ],
+    [
+      "FStar.Classical.exists_intro",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9c03ca2d72311103c8057cb75125ea63"
+    ],
+    [
+      "FStar.Classical.exists_intro_not_all_not",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.l_False", "equation_Prims.l_imp",
+        "equation_Prims.l_not", "equation_Prims.squash", "false_interp",
+        "refinement_interpretation_Tm_refine_2d33f25c272b786939e0cf2a5c695c42",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "unit_typing"
+      ],
+      0,
+      "8c3a2c748a26b634ba127f9620fefbd9"
+    ],
+    [
+      "FStar.Classical.forall_to_exists",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9aa7a0d70d6b8e3f43ed6b7e64e6b737"
+    ],
+    [
+      "FStar.Classical.forall_to_exists_2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "901b737e5385ae965753a6cce361884f"
+    ],
+    [
+      "FStar.Classical.exists_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "cf803d398365980ad7e4b316bae0ab02"
+    ],
+    [
+      "FStar.Classical.or_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "bd2ae7e134a02deca9f608e994a8559d"
+    ],
+    [
+      "FStar.Classical.or_elim",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "9dbb34b309d74f31dc666ebf7ebc0733"
+    ],
+    [
+      "FStar.Classical.or_elim",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "772d385fd6fadf5035b48630a30407bd"
+    ],
+    [
+      "FStar.Classical.excluded_middle",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fab24e13a7774453d1234abc3db35d19"
+    ]
+  ]
+]

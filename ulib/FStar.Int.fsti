@@ -183,8 +183,6 @@ let gte #n (a:int_t n) (b:int_t n) : Tot bool = a >= b
 let lt #n (a:int_t n) (b:int_t n) : Tot bool = a < b
 let lte #n (a:int_t n) (b:int_t n) : Tot bool = a <= b
 
-#push-options "--initial_fuel 1 --max_fuel 1"
-
 /// Casts
 
 let to_uint (#n:pos) (x:int_t n) : Tot (UInt.uint_t n) = 

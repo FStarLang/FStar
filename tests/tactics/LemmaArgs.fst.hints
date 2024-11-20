@@ -11,16 +11,16 @@
         "refinement_interpretation_Tm_refine_b80473856ccf72c395276ef95e2db4d6"
       ],
       0,
-      "16840ed7658f53b06afdf690939068ff"
+      "d06fe7ac618d3f2e6e2100d53ef8c75e"
     ],
     [
       "LemmaArgs.example0",
       1,
       2,
       1,
-      [ "@query", "true_interp" ],
+      [ "@query" ],
       0,
-      "5882d74739e191431f16968ab390af1b"
+      "d138519a0e4a1b89520bcd68115b1194"
     ],
     [
       "LemmaArgs.example0",
@@ -32,16 +32,16 @@
         "refinement_interpretation_Tm_refine_db815536b8c60a25cb27b439971d8826"
       ],
       0,
-      "2078bf8d14979c9d27e0a5dc4371ddd1"
+      "2b0afc980da0ac746c4736a49c727d53"
     ],
     [
       "LemmaArgs.example1",
       1,
       2,
       1,
-      [ "@query", "true_interp" ],
+      [ "@query" ],
       0,
-      "dd1a30b4b122434b9615d3e4b4157921"
+      "6d3daafc1c28eac9dcccbbb31c22618b"
     ]
   ]
 ]

@@ -9,11 +9,10 @@
       [
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_519d6c8ad121abd4794050901c2e145e",
-        "refinement_interpretation_Tm_refine_fd0c520ca043d65b8667158c64ea0acc",
-        "true_interp"
+        "refinement_interpretation_Tm_refine_fd0c520ca043d65b8667158c64ea0acc"
       ],
       0,
-      "4c6a28e9533ca1773fda770c8181610f"
+      "7f40675abd3d9d68e79da168f53b3893"
     ],
     [
       "Neg.c3",
@@ -22,7 +21,7 @@
       1,
       [ "@query", "equation_Neg.xi" ],
       0,
-      "355ea91c54a9dee813876c38aaaf5dc2"
+      "2b423649f09f503c7827ddb94c7cd374"
     ]
   ]
 ]

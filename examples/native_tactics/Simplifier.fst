@@ -132,3 +132,5 @@ let _ = assert ((exists (x:int). True) <==> True)
             by test_simplify ()
 let _ = assert ((forall (x:int). False) <==> False)
             by test_simplify ()
+
+#pop-options

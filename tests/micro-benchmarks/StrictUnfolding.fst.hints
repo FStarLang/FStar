@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_4d5241eb6fe198666a8101195bbd4a2a"
       ],
       0,
-      "6d1c741237144aa5528eda50de442ba8"
+      "c30073a681e6c5b6210553723e68a525"
     ],
     [
       "StrictUnfolding.test1",
@@ -28,7 +28,7 @@
         "refinement_interpretation_Tm_refine_88b070fdaa2704b0d1fcf1ddd6ee47eb"
       ],
       0,
-      "cc8908f5e4f78b984851f93f1b1fc5b3"
+      "b1656cfdd36a6a407196790f34e734e8"
     ],
     [
       "StrictUnfolding.test2",
@@ -40,10 +40,10 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
-        "projection_inverse_FStar.Pervasives.Native.Some_v", "true_interp"
+        "projection_inverse_FStar.Pervasives.Native.Some_v"
       ],
       0,
-      "6f5edfa86f15c164cc256b44bea3d50a"
+      "7bb8c949521fe325448bf5ea073f89a3"
     ],
     [
       "StrictUnfolding.test_integer_generic",
@@ -54,20 +54,10 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.Integers_pretyping_6ad08c58c10cb742e34ff2d7d8900d61",
         "b2t_def", "constructor_distinct_FStar.Integers.Signed",
-        "constructor_distinct_FStar.Integers.Unsigned",
-        "constructor_distinct_FStar.Integers.W128",
-        "constructor_distinct_FStar.Integers.W16",
-        "constructor_distinct_FStar.Integers.W32",
-        "constructor_distinct_FStar.Integers.W64",
-        "constructor_distinct_FStar.Integers.W8",
         "constructor_distinct_FStar.Integers.Winfinite",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Tm_unit", "data_elim_FStar.Integers.Unsigned",
-        "equality_tok_FStar.Integers.W128@tok",
-        "equality_tok_FStar.Integers.W16@tok",
-        "equality_tok_FStar.Integers.W32@tok",
-        "equality_tok_FStar.Integers.W64@tok",
-        "equality_tok_FStar.Integers.W8@tok",
+        "data_elim_FStar.Pervasives.Native.Some",
         "equality_tok_FStar.Integers.Winfinite@tok",
         "equation_FStar.Int.fits", "equation_FStar.Int.size",
         "equation_FStar.Integers.fixed_width",
@@ -82,8 +72,8 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "int_inversion", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Integers.Signed__0",
-        "projection_inverse_FStar.Integers.Unsigned__0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
@@ -110,25 +100,25 @@
         "typing_FStar.UInt8.add"
       ],
       0,
-      "561a000b76960d01b84c6f86f4552538"
+      "20bfb04cd17522eb29cbc13d899a6ccc"
     ],
     [
       "StrictUnfolding.test_integer_generic_wo_fstar_integers",
       1,
       2,
       1,
-      [ "@query", "true_interp" ],
+      [ "@query" ],
       0,
-      "f546bdcab68ceba3cd57c5b125363c0f"
+      "571d556854adc973491a85ca7cdf16b1"
     ],
     [
       "StrictUnfolding.test_int_64",
       1,
       2,
       1,
-      [ "@query", "true_interp" ],
+      [ "@query" ],
       0,
-      "ae757434dfab2ce24f17556492e1a5b5"
+      "22bae8b7b5189e5decd7a1cb04cb2020"
     ],
     [
       "StrictUnfolding.test_int_64",
@@ -141,7 +131,7 @@
         "typing_FStar.UInt64.add"
       ],
       0,
-      "e27b0b487b420a23bf7282080254a95f"
+      "119f44df17a23211c05726b1338ac652"
     ],
     [
       "StrictUnfolding.test_extraction_generic",
@@ -150,7 +140,7 @@
       1,
       [ "@query" ],
       0,
-      "45c31ba88d06705099f264957299cc9c"
+      "ad284f415fbac056f1290a1a4cd5882c"
     ],
     [
       "StrictUnfolding.test_extraction_specific",
@@ -159,7 +149,7 @@
       1,
       [ "@query" ],
       0,
-      "3893c6edcd6994fb8e98c82eaa61dfad"
+      "62f73b0de86c949e4fed94520497e5ca"
     ],
     [
       "StrictUnfolding.f",
@@ -174,7 +164,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "a007921213e975964eb7c1333c3ab6c9"
+      "28ac5569a2d01b21137637f685642f64"
     ]
   ]
 ]

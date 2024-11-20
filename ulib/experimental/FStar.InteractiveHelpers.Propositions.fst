@@ -17,7 +17,7 @@ let term_eq = FStar.Reflection.TermEq.Simple.term_eq
 /// [> let z = x / y in // term of interest
 /// [> assert(...); // post assertion
 
-#push-options "--z3rlimit 15 --fuel 0 --ifuel 1"
+#set-options "--z3rlimit 15 --fuel 0 --ifuel 1"
 
 /// Analyze a term to retrieve its effectful information
 

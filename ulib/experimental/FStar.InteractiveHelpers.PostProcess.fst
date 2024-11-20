@@ -13,7 +13,7 @@ open FStar.InteractiveHelpers.Output
 /// information from the context and generate output which can be exploited
 /// on the IDE side.
 
-#push-options "--z3rlimit 15 --fuel 0 --ifuel 1" 
+#set-options "--z3rlimit 15 --fuel 0 --ifuel 1"
 
 (*** General utilities *)
 /// We declare some identifiers that we will use to guide the meta processing

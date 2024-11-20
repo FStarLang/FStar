@@ -1,0 +1,62 @@
+[
+  "ö~ùGÇzﬁ7˚\u0016`Œõﬂ˜Q",
+  [
+    [
+      "FStar.Tactics.V1.Logic.l_revert_all",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil",
+        "equation_FStar.Stubs.Reflection.Types.binders",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "e817e91f7f1e1bb9ab7eb77c06686a31"
+    ],
+    [
+      "FStar.Tactics.V1.Logic.simplify_eq_implication",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.V1.Formula_pretyping_87b8b9a1f6a242dcadd000024a8e0d5e",
+        "data_elim_FStar.Stubs.Tactics.Result.Success",
+        "equality_tok_FStar.Reflection.V1.Formula.True_@tok",
+        "equation_FStar.Stubs.Reflection.Types.typ",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_FStar.Reflection.V1.Formula.formula@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Stubs.Reflection.Types.term",
+        "typing_tok_FStar.Reflection.V1.Formula.True_@tok"
+      ],
+      0,
+      "688dbf04cd3165b847291d871531644f"
+    ],
+    [
+      "FStar.Tactics.V1.Logic.unfold_definition_and_simplify_eq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.V1.Formula_pretyping_87b8b9a1f6a242dcadd000024a8e0d5e",
+        "data_elim_FStar.Stubs.Tactics.Result.Success",
+        "equality_tok_FStar.Reflection.V1.Formula.True_@tok",
+        "equation_FStar.Stubs.Reflection.Types.typ",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_FStar.Reflection.V1.Formula.formula@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Stubs.Reflection.Types.term",
+        "typing_tok_FStar.Reflection.V1.Formula.True_@tok"
+      ],
+      0,
+      "318c8bfc4ba86ce1325fac728f76bce0"
+    ]
+  ]
+]

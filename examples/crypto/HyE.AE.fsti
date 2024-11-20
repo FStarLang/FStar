@@ -32,6 +32,7 @@ let ivsize = aeadRealIVSize AES_128_GCM
 let keysize = aeadKeySize AES_128_GCM
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 type msg = Plain.t
+[@@do_not_unrefine]
 type cipher = b:bytes{B.length b >= ivsize}
 (* MK: minimal cipher length twice blocksize? *)
 

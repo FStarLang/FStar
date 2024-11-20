@@ -2,8 +2,8 @@ module ND
 
 (* An effect for (demonic) nondeterminism via lists. *)
 
-open FStar.List.Tot
 open FStar.Tactics.V2
+open FStar.List.Tot
 open FStar.Calc
 
 open FStar.FunctionalExtensionality

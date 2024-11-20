@@ -1,0 +1,3 @@
+{"query":"full-buffer","args":{"kind":"verify-to-position","with-symbols":false,"code":"module BugGensymUnderscore\nlet _ = 0\nlet _ = 1\nlet _ = 2\nlet _ = 3","line":0,"column":0,"to-position":{"line":4,"column":9}},"query-id":"2"}
+{"query":"full-buffer","args":{"kind":"verify-to-position","with-symbols":false,"code":"module BugGensymUnderscore\nlet _ = 0\nlet _ = 1\nlet _ = 2\nlet _ = 3","line":0,"column":0,"to-position":{"line":5,"column":9}},"query-id":"3"}
+{"query":"full-buffer","args":{"kind":"verify-to-position","with-symbols":false,"code":"module BugGensymUnderscore\nlet _ = 0\nlet _ = 1\nlet _ = 2\nlet _ = 3\nlet _ = 4","line":0,"column":0,"to-position":{"line":6,"column":9}},"query-id":"13"}

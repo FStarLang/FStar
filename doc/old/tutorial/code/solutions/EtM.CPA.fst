@@ -37,6 +37,7 @@ let ivsize = blockSize AES_128_CBC
 let keysize = 16
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 type msg = plain
+[@@do_not_unrefine]
 type cipher = b:bytes{B.length b >= ivsize}
 (* MK: minimal cipher length twice blocksize? *)
 

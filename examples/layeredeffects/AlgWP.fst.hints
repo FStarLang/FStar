@@ -1,5 +1,5 @@
 [
-  "Øé!p/>S…¼}Xé,ð÷h",
+  "U ½¡Ð…ÝÕ¬Ûæ\f©\u0007¢ù",
   [
     [
       "AlgWP.noops",
@@ -10,13 +10,14 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
         "@query", "constructor_distinct_Prims.Nil",
-        "data_typing_intro_Prims.Nil@tok", "equation_Alg.sublist",
+        "data_typing_intro_Prims.Nil@tok", "equation_Alg.ops",
+        "equation_Alg.sublist",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
         "false_interp", "kinding_Alg.op@tok",
         "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "432385006458062636f60272e34d42c1"
+      "a2031a00ce073f00d94b40063c8f5d1b"
     ],
     [
       "AlgWP.sublist_at_const",
@@ -32,8 +33,8 @@
         "binder_x_2c708472cc7aaa93ae33ac1645cbd44e_0",
         "binder_x_2c708472cc7aaa93ae33ac1645cbd44e_1",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_typing_intro_Alg.Write@tok", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equation_Alg.ops",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Alg.Write@tok", "equation_Alg.ops",
         "equation_Alg.sublist", "equation_FStar.List.Tot.Base.op_At",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
@@ -43,10 +44,10 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "subterm_ordering_Prims.Cons"
+        "subterm_ordering_Prims.Cons", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "680adfcb32b953ff557f0df80f83784a"
+      "8bc77322dfbc1a63a01ed3e1b4eec0c4"
     ],
     [
       "AlgWP.op_At_At",
@@ -62,7 +63,7 @@
         "refinement_interpretation_Tm_refine_cf45f80424129a94bdf69f00a86d8bf7"
       ],
       0,
-      "62170bc425f4b01dab2582da70683ee2"
+      "d69f57fbd912b8fff704a984c3c41306"
     ],
     [
       "AlgWP.rwtree_help",
@@ -76,8 +77,7 @@
         "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
         "@query", "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_elim_Prims.Cons", "data_typing_intro_Alg.Write@tok",
-        "data_typing_intro_Prims.Cons@tok",
+        "data_elim_Prims.Cons", "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "eq2-interp",
         "equality_tok_Alg.Raise@tok", "equality_tok_Alg.Read@tok",
         "equality_tok_Alg.Write@tok", "equation_Alg.ops",
@@ -96,7 +96,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "a2f378d58936ab71d648bb9a479d9594"
+      "4d5fcb7feb85fb882ee56cca37f58d40"
     ],
     [
       "AlgWP.return_wp",
@@ -108,7 +108,7 @@
         "interpretation_Tm_abs_8fefa78b9304fa89f906a877711a1b75"
       ],
       0,
-      "51497ab3b8b582bfb11b6100e005aa2f"
+      "a4ae2707985372d4adedaf3d59e3bad1"
     ],
     [
       "AlgWP.bind_wp",
@@ -130,7 +130,7 @@
         "typing_Tm_abs_4945add4b777273a809fc4cf8035e3b7"
       ],
       0,
-      "d5e03e37bc8d01844d05f1010f1a3b80"
+      "286cd8086450ab929a0ae869299d473f"
     ],
     [
       "AlgWP.read_wp",
@@ -142,7 +142,7 @@
         "interpretation_Tm_abs_065d9e2b9fd3163c64bf757897f26553"
       ],
       0,
-      "2f37dce47a18a3118b9d0f75a155ba4e"
+      "cafdbaaca3c9609f6b4252a26dcf2f4f"
     ],
     [
       "AlgWP.write_wp",
@@ -155,7 +155,7 @@
         "unit_typing"
       ],
       0,
-      "9560d7aac195503e526b42fbaa3705b8"
+      "1a2afb639b3e7da7a0f43dd82f06b97c"
     ],
     [
       "AlgWP.interp_as_wp",
@@ -195,7 +195,7 @@
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "59a2995587575baef2f25b281cad4574"
+      "731cbf0e7158109040e2d2930f92ed5d"
     ],
     [
       "AlgWP.interp_as_wp2",
@@ -211,7 +211,6 @@
         "@query", "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
         "constructor_distinct_Alg.Read", "constructor_distinct_Alg.Write",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Alg.Read",
         "disc_equation_Alg.Write", "eq2-interp", "equality_tok_Alg.Read@tok",
@@ -233,7 +232,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "85e68d50cc574cfa5bb41d2d1cb6b408"
+      "0690b9e55f01e911b012faea6a770945"
     ],
     [
       "AlgWP.interp_ret",
@@ -254,7 +253,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "3aa20b60bba504b9f6b2645bc42ea3b9"
+      "f8bb4fea81ef2e46331cd6a611d27e57"
     ],
     [
       "AlgWP.interp_ret",
@@ -268,7 +267,6 @@
         "@query", "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
         "constructor_distinct_Alg.Return",
         "data_typing_intro_Alg.Return@tok",
-        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equality_tok_Alg.Read@tok",
         "equality_tok_Alg.Write@tok", "equation_Alg.ops",
@@ -283,7 +281,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "424f1a2b8c7e7696167589e6cecf6fbd"
+      "8a12b437be1863c452972b9db8f0be6a"
     ],
     [
       "AlgWP.interp_ret'",
@@ -304,7 +302,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "5dbc5e51f0aaf6579ac26e674ddf95fc"
+      "be58a60c18100596d8e45ef94277042f"
     ],
     [
       "AlgWP.interp_ret'",
@@ -317,7 +315,6 @@
         "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
         "constructor_distinct_Alg.Return",
         "data_typing_intro_Alg.Return@tok",
-        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equality_tok_Alg.Read@tok",
         "equality_tok_Alg.Write@tok", "equation_Alg.ops",
@@ -327,7 +324,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "da6ab43260411e235b20b510291ffc5a"
+      "92bf5ebbd5af1c821cbd258e61692d7e"
     ],
     [
       "AlgWP.bind_preserves_mon",
@@ -349,7 +346,7 @@
         "typing_Tm_abs_4945add4b777273a809fc4cf8035e3b7"
       ],
       0,
-      "9ff0287fb89f9f4a79a7403816907342"
+      "eac16901482b7c2f4ab4eb29374ddd6d"
     ],
     [
       "AlgWP.interp_monotonic",
@@ -371,7 +368,6 @@
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Alg.Read", "constructor_distinct_Alg.Return",
         "constructor_distinct_Alg.Write", "data_elim_Alg.Op",
-        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Alg.Op",
         "disc_equation_Alg.Read", "disc_equation_Alg.Return",
@@ -404,7 +400,7 @@
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "c1dce0fa5f51e074892bf18295492791"
+      "089a7425f7a179af9ed24f062758f949"
     ],
     [
       "AlgWP.interp_monotonic",
@@ -420,13 +416,13 @@
         "equality_tok_Alg.Write@tok", "equation_Alg.ops",
         "equation_Alg.tree", "equation_AlgWP.rwtree", "kinding_Alg.op@tok",
         "lemma_Alg.abides_sublist",
+        "refinement_interpretation_Tm_refine_1b6583657d80f3ca7562987806102c33",
         "refinement_interpretation_Tm_refine_31cc90dcf4dccbb40dfbf6c2bed95232",
         "refinement_interpretation_Tm_refine_cf45f80424129a94bdf69f00a86d8bf7",
-        "refinement_interpretation_Tm_refine_f745f57513b1c09d7a2de935292357ed",
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "d897e01089f0e340d9561acc3edaa5cf"
+      "5fc84860c542d5d18b529272e900855d"
     ],
     [
       "AlgWP.elim_str",
@@ -441,7 +437,7 @@
         "token_correspondence_AlgWP.op_Less_Less_Equals"
       ],
       0,
-      "99b46d25ca9cd5afa99d9adc914ae176"
+      "7e37681bfaee8a36c84cb63a5d7b9c3d"
     ],
     [
       "AlgWP.interp_morph",
@@ -481,18 +477,18 @@
         "constructor_distinct_Alg.Op", "constructor_distinct_Alg.Read",
         "constructor_distinct_Alg.Return", "constructor_distinct_Alg.Write",
         "constructor_distinct_Prims.Nil", "constructor_distinct_Prims.unit",
-        "data_elim_Alg.Op", "data_typing_intro_Alg.Write@tok",
+        "constructor_distinct_Tm_unit", "data_elim_Alg.Op",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Alg.Op",
         "disc_equation_Alg.Read", "disc_equation_Alg.Return",
         "disc_equation_Alg.Write", "equality_tok_Alg.Read@tok",
         "equality_tok_Alg.Write@tok", "equation_Alg.bind",
-        "equation_Alg.handle_tree", "equation_Alg.op_out",
-        "equation_Alg.ops", "equation_Alg.state", "equation_Alg.tree",
-        "equation_AlgWP.op_At_At", "equation_AlgWP.rwops",
-        "equation_AlgWP.rwtree", "equation_AlgWP.st_wp",
-        "equation_AlgWP.st_wp0", "equation_AlgWP.tbind",
-        "equation_FStar.List.Tot.Base.op_At",
+        "equation_Alg.handle_tree", "equation_Alg.op_inp",
+        "equation_Alg.op_out", "equation_Alg.ops", "equation_Alg.state",
+        "equation_Alg.tree", "equation_AlgWP.op_At_At",
+        "equation_AlgWP.rwops", "equation_AlgWP.rwtree",
+        "equation_AlgWP.st_wp", "equation_AlgWP.st_wp0",
+        "equation_AlgWP.tbind", "equation_FStar.List.Tot.Base.op_At",
         "equation_with_fuel_Alg.abides.fuel_instrumented",
         "equation_with_fuel_Alg.fold_with.fuel_instrumented",
         "equation_with_fuel_AlgWP.interp_as_wp.fuel_instrumented",
@@ -534,7 +530,7 @@
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "bffb9c97f6f0e722c15ffcaaf727d970"
+      "ba418d13d777cceda0f1af5d81d89e50"
     ],
     [
       "AlgWP.interp_morph",
@@ -547,7 +543,6 @@
         "@fuel_irrelevance_Alg.abides.fuel_instrumented", "@query",
         "AlgWP_interpretation_Tm_arrow_416b90b8ec22511ad1bf842825f0b727",
         "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
-        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equality_tok_Alg.Read@tok",
         "equality_tok_Alg.Write@tok", "equation_Alg.ops",
@@ -562,7 +557,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "45d8b909e09f732f7db7bdcd6314e847"
+      "1eb8927a892c1d33b57a3568cb8e91a2"
     ],
     [
       "AlgWP.interp_bind",
@@ -575,7 +570,6 @@
         "@fuel_irrelevance_Alg.abides.fuel_instrumented", "@query",
         "AlgWP_interpretation_Tm_arrow_416b90b8ec22511ad1bf842825f0b727",
         "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
-        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equality_tok_Alg.Read@tok",
         "equality_tok_Alg.Write@tok", "equation_Alg.ops",
@@ -590,7 +584,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "f2f700f73f07877915df71fbcc4d5699"
+      "4dbf92322e9060f2b0b77f710eb4ed8d"
     ],
     [
       "AlgWP.interp_bind",
@@ -607,7 +601,6 @@
         "AlgWP_interpretation_Tm_arrow_c1793e640e3fcdc25595ab3cf27199ac",
         "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equality_tok_Alg.Read@tok",
         "equality_tok_Alg.Write@tok", "equation_Alg.ops",
@@ -640,7 +633,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "fe290bea53874657c79913733a563fd6"
+      "7dad8c2debbe0df495006592f9fbf4f2"
     ],
     [
       "AlgWP.repr",
@@ -661,7 +654,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "ac8c8658707bab4b2ab82aabba7a47bf"
+      "91f8c4b549218aff12461a16a9ce0781"
     ],
     [
       "AlgWP.return",
@@ -675,17 +668,17 @@
         "@query", "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
         "constructor_distinct_Alg.Return", "constructor_distinct_Prims.Nil",
         "data_typing_intro_Alg.Return@tok",
-        "data_typing_intro_Alg.Write@tok", "data_typing_intro_Prims.Nil@tok",
+        "data_typing_intro_Prims.Nil@tok", "equality_tok_Alg.Write@tok",
         "equation_Alg.ops", "equation_Alg.sublist", "equation_AlgWP.noops",
         "equation_with_fuel_Alg.abides.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
         "false_interp", "kinding_Alg.op@tok",
         "projection_inverse_Alg.Return__0",
         "projection_inverse_Alg.Return_a", "projection_inverse_Prims.Nil_a",
-        "true_interp"
+        "true_interp", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "06388416f8caf5e5e221de8d8b46df3a"
+      "c90f720d6f70db852dedd0c845cd2f29"
     ],
     [
       "AlgWP.bind",
@@ -703,7 +696,7 @@
         "token_correspondence_AlgWP.op_Less_Less_Equals"
       ],
       0,
-      "5935b828a20bcccea71743dc6546847a"
+      "070cfe9e605b253a51acc6613f28f76a"
     ],
     [
       "AlgWP.subcomp",
@@ -722,7 +715,7 @@
         "refinement_interpretation_Tm_refine_cf45f80424129a94bdf69f00a86d8bf7"
       ],
       0,
-      "95ecc1e07cd24b0fd687fb6cbff13497"
+      "2b62d85252569189ddd3910c16ef8ec3"
     ],
     [
       "AlgWP.AlgWP",
@@ -731,7 +724,7 @@
       1,
       [ "@query" ],
       0,
-      "b8efb0f2c275d117046e903ca50b32f3"
+      "5fd293c563d7147e1b26ee151bf91e28"
     ],
     [
       "AlgWP.AlgWP",
@@ -747,7 +740,7 @@
         "refinement_interpretation_Tm_refine_cf45f80424129a94bdf69f00a86d8bf7"
       ],
       0,
-      "75526c15e6573a3fbb1bae04225eb29d"
+      "fb9cd277e349dc5cb43c16eb8baaf6b1"
     ],
     [
       "AlgWP.AlgWP",
@@ -762,7 +755,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "d977f6aa0164c1364474ea83f3562c3e"
+      "f0ecef5a758c2780edfc29c7ffd22b5b"
     ],
     [
       "AlgWP.get",
@@ -783,7 +776,6 @@
         "constructor_distinct_Alg.Op", "constructor_distinct_Alg.Read",
         "constructor_distinct_Alg.Return", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil", "data_typing_intro_Alg.Op@tok",
-        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "eq2-interp",
         "equality_tok_Alg.Read@tok", "equality_tok_Alg.Return@tok",
@@ -798,7 +790,7 @@
         "false_interp",
         "fuel_token_correspondence_AlgWP.interp_as_wp.fuel_instrumented_token",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int", "int_inversion",
+        "int_inversion",
         "interpretation_Tm_abs_7ba6353ba1a147d2926e23e183ab88c4",
         "interpretation_Tm_abs_e0424c476dc6010dc8b4c055f7ed9483",
         "kinding_Alg.op@tok", "l_and-interp", "l_or-interp",
@@ -814,12 +806,12 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "token_correspondence_AlgWP.interp_as_wp",
         "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
-        "true_interp", "typing_tok_Alg.Read@tok",
+        "true_interp", "typing_Prims.int", "typing_tok_Alg.Read@tok",
         "typing_tok_Alg.Return@tok", "typing_tok_Alg.Write@tok",
         "unit_typing"
       ],
       0,
-      "3013acb330a2eaa59e2cdc287780b054"
+      "b54be472eb294518f9db88e8c28a4936"
     ],
     [
       "AlgWP.put",
@@ -835,22 +827,22 @@
         "Alg_interpretation_Tm_arrow_250e0001130ab2481db3bacccc1cd268",
         "Alg_interpretation_Tm_arrow_f1ae6ecfd8e8ddd103bda6ebcf40e312",
         "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "constructor_distinct_Alg.Op", "constructor_distinct_Alg.Read",
         "constructor_distinct_Alg.Return", "constructor_distinct_Alg.Write",
         "constructor_distinct_Prims.Cons", "data_elim_Prims.Cons",
         "data_typing_intro_Alg.Op@tok", "data_typing_intro_Alg.Read@tok",
-        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "eq2-interp",
         "equality_tok_Alg.Read@tok", "equality_tok_Alg.Return@tok",
         "equality_tok_Alg.Write@tok", "equation_Alg.op_inp",
         "equation_Alg.op_out", "equation_Alg.ops", "equation_Alg.state",
-        "equation_Alg.tree", "equation_FStar.Pervasives.pattern",
+        "equation_Alg.tree", "equation_Prims.eqtype",
         "equation_with_fuel_Alg.abides.fuel_instrumented",
         "equation_with_fuel_AlgWP.interp_as_wp.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
         "fuel_token_correspondence_AlgWP.interp_as_wp.fuel_instrumented_token",
-        "function_token_typing_FStar.Pervasives.pattern", "int_inversion",
+        "int_inversion",
         "interpretation_Tm_abs_b08defe3c519b7a8799979d37addb094",
         "interpretation_Tm_abs_e0424c476dc6010dc8b4c055f7ed9483",
         "kinding_Alg.op@tok", "l_and-interp", "l_or-interp",
@@ -863,13 +855,15 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_Tm_refine_31cc90dcf4dccbb40dfbf6c2bed95232",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "token_correspondence_AlgWP.interp_as_wp", "true_interp",
-        "typing_FStar.List.Tot.Base.op_At", "typing_tok_Alg.Read@tok",
+        "typing_Alg.op_out", "typing_FStar.List.Tot.Base.op_At",
+        "typing_Prims.unit", "typing_tok_Alg.Read@tok",
         "typing_tok_Alg.Return@tok", "typing_tok_Alg.Write@tok",
         "unit_typing"
       ],
       0,
-      "ada39c947482eefe9f3a639df0937d2b"
+      "b6c7bc03e3e28f21b02521b4d773a1b7"
     ],
     [
       "AlgWP.lift_pure_wp",
@@ -889,7 +883,7 @@
         "typing_Tm_abs_4d919759bceafc48670cf8103fc4eaae"
       ],
       0,
-      "56ed751efdf262c1b540ed9959b2c7d4"
+      "49388db15c0d503c1587786f6fc1b418"
     ],
     [
       "AlgWP.lift_pure_algwp",
@@ -900,14 +894,13 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Alg.abides.fuel_instrumented",
         "@fuel_correspondence_AlgWP.interp_as_wp.fuel_instrumented",
-        "@query", "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
+        "@query",
         "FStar.Monotonic.Pure_interpretation_Tm_arrow_61bb9550f39772f18eaab129c43c3788",
         "FStar.Monotonic.Pure_interpretation_Tm_arrow_c4804ca26ade2f3859400eebcb37ddbd",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
         "constructor_distinct_Alg.Return",
         "data_typing_intro_Alg.Return@tok",
-        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok", "eq2-interp",
         "equality_tok_Alg.Read@tok", "equality_tok_Alg.Write@tok",
         "equation_Alg.ops", "equation_Alg.tree", "equation_AlgWP.noops",
@@ -916,7 +909,6 @@
         "equation_Prims.pure_post", "equation_Prims.pure_post_",
         "equation_with_fuel_Alg.abides.fuel_instrumented",
         "equation_with_fuel_AlgWP.interp_as_wp.fuel_instrumented",
-        "function_token_typing_Prims.l_True",
         "interpretation_Tm_abs_4d919759bceafc48670cf8103fc4eaae",
         "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
         "interpretation_Tm_abs_68b669d1ea097667facfc7d92bff75c8",
@@ -932,7 +924,7 @@
         "refinement_interpretation_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "refinement_interpretation_Tm_refine_cf45f80424129a94bdf69f00a86d8bf7",
         "token_correspondence_AlgWP.interp_as_wp", "true_interp",
-        "typing_AlgWP.noops",
+        "typing_AlgWP.noops", "typing_Prims.l_True",
         "typing_Tm_abs_4d919759bceafc48670cf8103fc4eaae",
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
         "typing_Tm_abs_68b669d1ea097667facfc7d92bff75c8",
@@ -941,16 +933,10 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok", "unit_typing"
       ],
       0,
-      "a579b8ee4592f61ad4151509967e2155"
+      "e5412b730f4f5ac337a5ebf5709bb5f5"
     ],
     [
-      "AlgWP.62931",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "d15e4d14a53317db275576587e4d330e"
+      "AlgWP.0", 1, 2, 1, [ "@query" ], 0, "997fde751a7331e1623bcd5e53741128"
     ],
     [
       "AlgWP.addx",
@@ -960,8 +946,8 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
-        "data_elim_Prims.Cons", "data_typing_intro_Alg.Write@tok",
-        "data_typing_intro_Prims.Cons@tok",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_elim_Prims.Cons", "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equality_tok_Alg.Read@tok",
         "equality_tok_Alg.Write@tok", "equation_Alg.ops",
         "equation_Alg.state", "equation_Alg.sublist",
@@ -973,7 +959,7 @@
         "typing_tok_Alg.Write@tok", "unit_typing"
       ],
       0,
-      "241b1d2c1169bad45fc50839e567674b"
+      "a27a367e93e0890b407ef07d2d726ab8"
     ],
     [
       "AlgWP.addx",
@@ -989,7 +975,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "aee077cd14dae11b49a57810dbdb2a08"
+      "0bd455bfa338e880023f0741dde6a5d8"
     ],
     [
       "AlgWP.add_via_state",
@@ -1003,7 +989,6 @@
         "@query", "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_54e38bdd456bab4cdb32b5d540c2274c",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok", "equality_tok_Alg.Read@tok",
         "equality_tok_Alg.Write@tok", "equation_Alg.ops",
         "equation_Alg.sublist", "equation_AlgWP.noops",
@@ -1020,7 +1005,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "f570a4a10e9ae5ba904470bf7a8c1c72"
+      "9b7406d6157ef72033c14b8dc244e781"
     ],
     [
       "AlgWP.add_via_state",
@@ -1036,7 +1021,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "b27251cba78e9cc34ccbfe0fdbe7847e"
+      "004cabaa98b9d38de22249ec4387e021"
     ],
     [
       "AlgWP.add_via_state",
@@ -1050,7 +1035,6 @@
         "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
         "@query", "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equality_tok_Alg.Read@tok",
         "equality_tok_Alg.Write@tok", "equation_Alg.ops",
@@ -1065,7 +1049,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "0e753d599187faa5911a8156a0a71b48"
+      "ca4fb498b2485bc47804a04d6c142def"
     ],
     [
       "AlgWP.add_via_state",
@@ -1076,7 +1060,6 @@
         "@MaxIFuel_assumption", "@query",
         "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
         "data_elim_Prims.Cons", "data_typing_intro_Alg.Read@tok",
-        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equality_tok_Alg.Read@tok",
         "equality_tok_Alg.Write@tok", "equation_Alg.ops",
@@ -1085,7 +1068,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "345b48c080a997ee39c5ec6cd40e349c"
+      "d3934e7ee617c21bbc4cddee75f3a2ed"
     ],
     [
       "AlgWP.add_via_state",
@@ -1096,7 +1079,6 @@
         "@MaxIFuel_assumption", "@query",
         "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
         "data_elim_Prims.Cons", "data_typing_intro_Alg.Read@tok",
-        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equality_tok_Alg.Read@tok",
         "equality_tok_Alg.Write@tok", "equation_Alg.ops",
@@ -1105,7 +1087,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "7a3ce68227315ac80ac393ea4bf32b76"
+      "5366361448412994d76c4dd91a842302"
     ],
     [
       "AlgWP.interp_sem",
@@ -1127,17 +1109,17 @@
         "binder_x_09643a9c429aeb985d7e45b259cd113b_3",
         "binder_x_e727a72254f4de687e89c50784c9ac6f_2",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
-        "constructor_distinct_Alg.Op", "constructor_distinct_Alg.Read",
-        "constructor_distinct_Alg.Return", "constructor_distinct_Alg.Write",
-        "data_elim_Alg.Op", "data_elim_Alg.Return",
+        "constructor_distinct_Alg.Read", "constructor_distinct_Alg.Return",
+        "constructor_distinct_Alg.Write", "data_elim_Alg.Op",
+        "data_elim_Alg.Return",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Alg.Op",
         "disc_equation_Alg.Read", "disc_equation_Alg.Return",
         "disc_equation_Alg.Write", "equality_tok_Alg.Read@tok",
-        "equality_tok_Alg.Write@tok", "equation_Alg.op_inp",
-        "equation_Alg.op_out", "equation_Alg.ops", "equation_Alg.state",
-        "equation_Alg.sublist", "equation_Alg.tree", "equation_AlgWP.rwtree",
+        "equality_tok_Alg.Write@tok", "equation_Alg.op_out",
+        "equation_Alg.ops", "equation_Alg.state", "equation_Alg.sublist",
+        "equation_Alg.tree", "equation_AlgWP.rwtree",
         "equation_AlgWP.st_monotonic", "equation_AlgWP.st_wp",
         "equation_Prims.eqtype", "equation_Prims.l_True",
         "equation_Prims.logical", "equation_Prims.pure_post",
@@ -1145,9 +1127,9 @@
         "equation_with_fuel_Alg.abides.fuel_instrumented",
         "equation_with_fuel_AlgWP.interp_as_wp.fuel_instrumented",
         "fuel_guarded_inversion_Alg.tree0",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_token_correspondence_AlgWP.interp_as_wp.fuel_instrumented_token",
-        "function_token_typing_AlgWP.interp_as_wp",
-        "function_token_typing_Prims.int", "int_inversion",
+        "function_token_typing_AlgWP.interp_as_wp", "int_inversion",
         "interpretation_Tm_abs_7ba6353ba1a147d2926e23e183ab88c4",
         "interpretation_Tm_abs_b08defe3c519b7a8799979d37addb094",
         "interpretation_Tm_abs_e0424c476dc6010dc8b4c055f7ed9483",
@@ -1155,8 +1137,6 @@
         "l_quant_interp_cd66cb9dd6e7f7baed4d4a889c722b71",
         "lemma_AlgWP.rwtree_help", "proj_equation_Alg.Op_i",
         "proj_equation_Alg.Op_k", "proj_equation_Alg.Op_op",
-        "projection_inverse_Alg.Op_a", "projection_inverse_Alg.Op_i",
-        "projection_inverse_Alg.Op_k", "projection_inverse_Alg.Op_op",
         "projection_inverse_Alg.Return__0",
         "projection_inverse_Alg.Return_a",
         "projection_inverse_BoxBool_proj_0",
@@ -1167,12 +1147,12 @@
         "refinement_interpretation_Tm_refine_cf45f80424129a94bdf69f00a86d8bf7",
         "token_correspondence_Alg.__proj__Op__item__k",
         "token_correspondence_AlgWP.interp_as_wp", "true_interp",
-        "typing_Alg.op_inp", "typing_tok_Alg.Read@tok",
+        "typing_Prims.int", "typing_tok_Alg.Read@tok",
         "typing_tok_Alg.Write@tok", "unit_typing",
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "6bde8372273a1ab915693fd7c898040e"
+      "306e3f8375ce0d331b7ca40c6e6d548d"
     ],
     [
       "AlgWP.interp_sem",
@@ -1198,17 +1178,18 @@
         "fuel_guarded_inversion_Alg.tree0",
         "function_token_typing_AlgWP.interp_as_wp",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int", "int_inversion",
+        "int_inversion",
         "interpretation_Tm_abs_e0424c476dc6010dc8b4c055f7ed9483",
         "refinement_interpretation_Tm_refine_31cc90dcf4dccbb40dfbf6c2bed95232",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_5f7ead8d5657851cd3be657ea0ce12ea",
-        "refinement_interpretation_Tm_refine_74306209ce350891c53266e4ea887241",
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "token_correspondence_AlgWP.interp_as_wp", "true_interp"
+        "refinement_interpretation_Tm_refine_ee6adb0e578fc69b98a895990e196554",
+        "token_correspondence_AlgWP.interp_as_wp", "true_interp",
+        "typing_Prims.int"
       ],
       0,
-      "0504440ae24e454126a1f2b7d87cc055"
+      "833cfabfe4f9691a96d22c69da369c7c"
     ],
     [
       "AlgWP.quotient_ro",
@@ -1230,7 +1211,7 @@
         "typing_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048"
       ],
       0,
-      "1ac4502aacab6bb23d1bd8bb1f4beca8"
+      "a68d8c031b53e036b074393b92718e33"
     ],
     [
       "AlgWP.sanity_1",
@@ -1238,7 +1219,8 @@
       2,
       1,
       [
-        "@query", "eq2-interp", "equation_AlgWP.quotient_ro",
+        "@query", "eq2-interp", "equation_Alg.state",
+        "equation_AlgWP.quotient_ro",
         "interpretation_Tm_abs_065d9e2b9fd3163c64bf757897f26553",
         "interpretation_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048",
         "interpretation_Tm_abs_b60310853fa0ff833a2271ce5097bd1b",
@@ -1248,7 +1230,7 @@
         "token_correspondence_AlgWP.quotient_ro"
       ],
       0,
-      "610f3cfac85462cc10bc66159c983323"
+      "f09c99312ca62667a754d11e12a85a05"
     ],
     [
       "AlgWP.sanity_2",
@@ -1267,7 +1249,7 @@
         "token_correspondence_AlgWP.quotient_ro"
       ],
       0,
-      "d4cba2872d8e16bf8586b483482c7eb5"
+      "801c842dfe81cc798c889c6f2b1a02a7"
     ],
     [
       "AlgWP.interp_ro",
@@ -1310,8 +1292,7 @@
         "false_interp", "fuel_guarded_inversion_Alg.tree0",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_token_correspondence_AlgWP.interp_as_wp.fuel_instrumented_token",
-        "function_token_typing_AlgWP.quotient_ro",
-        "function_token_typing_Prims.int", "int_inversion",
+        "function_token_typing_AlgWP.quotient_ro", "int_inversion",
         "interpretation_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048",
         "interpretation_Tm_abs_7ba6353ba1a147d2926e23e183ab88c4",
         "interpretation_Tm_abs_b60310853fa0ff833a2271ce5097bd1b",
@@ -1336,11 +1317,12 @@
         "token_correspondence_AlgWP.quotient_ro",
         "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "true_interp", "typing_FStar.List.Tot.Base.op_At",
-        "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok",
+        "typing_Prims.int", "typing_tok_Alg.Read@tok",
+        "typing_tok_Alg.Write@tok",
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "2e2256b2d55bf319e03fd950413cc3a8"
+      "1a2cfe13e894b0b80913d1a5b025a1c7"
     ],
     [
       "AlgWP.interp_ro",
@@ -1360,7 +1342,7 @@
         "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_elim_Alg.Return", "data_typing_intro_Alg.Write@tok",
+        "data_elim_Alg.Return",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "eq2-interp",
@@ -1380,7 +1362,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_AlgWP.quotient_ro",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int", "int_inversion",
+        "int_inversion",
         "interpretation_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048",
         "interpretation_Tm_abs_b60310853fa0ff833a2271ce5097bd1b",
         "interpretation_Tm_abs_e0424c476dc6010dc8b4c055f7ed9483",
@@ -1395,13 +1377,14 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_5f7ead8d5657851cd3be657ea0ce12ea",
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Tm_refine_ca22b278005772e6d87ca5f34896d164",
+        "refinement_interpretation_Tm_refine_b391912a6dd0d2ba2dae8ba8edda5111",
         "token_correspondence_AlgWP.quotient_ro",
         "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
-        "true_interp", "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
+        "true_interp", "typing_Prims.int", "typing_tok_Alg.Read@tok",
+        "typing_tok_Alg.Write@tok"
       ],
       0,
-      "b1af143bdb6cfd378c9b122dbc041d10"
+      "5d343d58e2967b9537697a8be8982ffb"
     ],
     [
       "AlgWP.st_soundness_aux",
@@ -1428,16 +1411,17 @@
         "fuel_guarded_inversion_Alg.tree0",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int", "kinding_Alg.op@tok",
+        "kinding_Alg.op@tok",
         "refinement_interpretation_Tm_refine_31cc90dcf4dccbb40dfbf6c2bed95232",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_5f7ead8d5657851cd3be657ea0ce12ea",
         "refinement_interpretation_Tm_refine_64f4c698c6895e0a55dd6540882d3251",
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "true_interp", "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
+        "true_interp", "typing_Prims.int", "typing_tok_Alg.Read@tok",
+        "typing_tok_Alg.Write@tok"
       ],
       0,
-      "e1f28610e8b1080a3afa5470094b5796"
+      "8191c5ad386b0cd752d784ca40f974ec"
     ],
     [
       "AlgWP.st_soundness_aux",
@@ -1446,7 +1430,7 @@
       1,
       [ "@query", "equation_Alg.sublist" ],
       0,
-      "8409c1dd978eb12221858ea7d291573a"
+      "32de58e509f2565a02f3bc72018d646c"
     ],
     [
       "AlgWP.st_soundness",
@@ -1463,14 +1447,14 @@
         "equation_Prims.l_True", "equation_Prims.logical",
         "equation_Prims.pure_post", "equation_Prims.pure_post_",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Prims.int", "int_inversion",
+        "int_inversion",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_5f7ead8d5657851cd3be657ea0ce12ea",
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "true_interp"
+        "true_interp", "typing_Prims.int"
       ],
       0,
-      "23ea9c7cc1e9df4a69dcd67aaa2f3d01"
+      "386bbaebf94ad6f24724ad6c6d9daf25"
     ],
     [
       "AlgWP.st_soundness",
@@ -1479,7 +1463,7 @@
       1,
       [ "@query", "equation_Alg.sublist" ],
       0,
-      "ce1e0aabf4a16278bc959166f18406ac"
+      "43ae753af8d7ec469c80f42f89cf6c02"
     ],
     [
       "AlgWP.ro_soundness_aux",
@@ -1499,7 +1483,7 @@
         "equation_Prims.logical", "fuel_guarded_inversion_Alg.tree0",
         "function_token_typing_AlgWP.interp_as_wp",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int", "int_inversion",
+        "int_inversion",
         "interpretation_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048",
         "interpretation_Tm_abs_b60310853fa0ff833a2271ce5097bd1b",
         "l_imp-interp",
@@ -1509,11 +1493,11 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_5f7ead8d5657851cd3be657ea0ce12ea",
         "refinement_interpretation_Tm_refine_64f4c698c6895e0a55dd6540882d3251",
-        "token_correspondence_AlgWP.quotient_ro",
+        "token_correspondence_AlgWP.quotient_ro", "typing_Prims.int",
         "typing_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048"
       ],
       0,
-      "fd6d02adfddb185e945dc40870b12b51"
+      "21d8ac40cc4a10a5915557bee215f27e"
     ],
     [
       "AlgWP.ro_soundness_aux",
@@ -1529,7 +1513,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "72b1ed8bafa3a1b2da45192a4728ba88"
+      "6e3bcb548f5a5637ef749f12a41b9ab4"
     ],
     [
       "AlgWP.ro_soundness",
@@ -1543,8 +1527,7 @@
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "equation_Alg.state", "equation_AlgWP.quotient_ro",
         "equation_AlgWP.st_monotonic", "equation_AlgWP.st_wp",
-        "equation_Prims.eqtype", "equation_Prims.logical",
-        "function_token_typing_Prims.int", "int_inversion",
+        "equation_Prims.eqtype", "equation_Prims.logical", "int_inversion",
         "interpretation_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048",
         "interpretation_Tm_abs_b60310853fa0ff833a2271ce5097bd1b",
         "l_imp-interp",
@@ -1552,11 +1535,11 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_5f7ead8d5657851cd3be657ea0ce12ea",
-        "token_correspondence_AlgWP.quotient_ro",
+        "token_correspondence_AlgWP.quotient_ro", "typing_Prims.int",
         "typing_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048"
       ],
       0,
-      "7f70fd6ab53970d9506080fa3040bb89"
+      "b29fea3efa99d720b29fba1dae7e03ba"
     ],
     [
       "AlgWP.ro_soundness",
@@ -1572,7 +1555,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "f7adbb39ef17ce83e069a0d9897443f7"
+      "447b2f3be9cafadd0e77fdc3e87e70ef"
     ],
     [
       "AlgWP.ro_soundness_pre_post",
@@ -1586,8 +1569,7 @@
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "eq2-interp", "equation_Alg.state", "equation_AlgWP.quotient_ro",
         "equation_AlgWP.st_monotonic", "equation_AlgWP.st_wp",
-        "equation_Prims.eqtype", "equation_Prims.logical",
-        "function_token_typing_Prims.int", "int_inversion",
+        "equation_Prims.eqtype", "equation_Prims.logical", "int_inversion",
         "interpretation_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048",
         "interpretation_Tm_abs_b60310853fa0ff833a2271ce5097bd1b",
         "l_imp-interp",
@@ -1595,12 +1577,12 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_5f7ead8d5657851cd3be657ea0ce12ea",
-        "token_correspondence_AlgWP.quotient_ro",
+        "token_correspondence_AlgWP.quotient_ro", "typing_Prims.int",
         "typing_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048",
         "typing_Tm_abs_7540bb8f3ba6ce2d3430b53f23449e9f"
       ],
       0,
-      "444948591b4d2a0659d748823a40d969"
+      "aef5c30afce4819de7c1f1021a7c4da6"
     ],
     [
       "AlgWP.ro_soundness_pre_post",
@@ -1616,7 +1598,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "0df717e715985836d30e315ba057bf4f"
+      "447b2f3be9cafadd0e77fdc3e87e70ef"
     ],
     [
       "AlgWP.bind_ro",
@@ -1644,7 +1626,7 @@
         "typing_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048"
       ],
       0,
-      "05a0d46c011596afa36be8c2cf8358c2"
+      "ae3d258a37efb134a72f47343d60231c"
     ],
     [
       "AlgWP.quot_mono",
@@ -1659,7 +1641,7 @@
         "typing_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048"
       ],
       0,
-      "b82949b11fc1bf3353f942063191b4a0"
+      "12d1742751fee83113fe09b5449b670b"
     ],
     [
       "AlgWP.ro_tree_wp",
@@ -1723,7 +1705,7 @@
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "41e22607368acf663b5c80cc89d4e62f"
+      "157a9e4824633c0077cf04aa67ef7a8b"
     ],
     [
       "AlgWP.ro_tree_wp",
@@ -1740,11 +1722,11 @@
         "equation_Alg.tree", "kinding_Alg.op@tok", "lemma_Alg.abides_app",
         "lemma_Alg.append_single",
         "refinement_interpretation_Tm_refine_31cc90dcf4dccbb40dfbf6c2bed95232",
-        "refinement_interpretation_Tm_refine_43fa96ced0ec2c567d33f1fef08d15c0",
+        "refinement_interpretation_Tm_refine_91216f47ecf2e8b60715dffe28420a94",
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "239de84d61fcac0222a8996e88bedda0"
+      "1b69a465d8175316e05f62eb9801a4b6"
     ],
     [
       "AlgWP.quot_tree",
@@ -1776,7 +1758,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "aad90bb2d03083aca7540174c4ed963d"
+      "1d48e97f3dd0e55fc5806a5e7dc390ea"
     ],
     [
       "AlgWP.quot_tree",
@@ -1792,7 +1774,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "a05dd4dc4393666607b95ffad0681645"
+      "6e3bcb548f5a5637ef749f12a41b9ab4"
     ],
     [
       "AlgWP.quot",
@@ -1805,7 +1787,6 @@
         "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
         "@query", "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equality_tok_Alg.Read@tok",
         "equality_tok_Alg.Write@tok", "equation_Alg.ops",
@@ -1820,7 +1801,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "30bf540b63235107fdbd812cca1b4d98"
+      "9b854c06f3e6b52e6647c2c023526bb9"
     ],
     [
       "AlgWP.quot",
@@ -1836,7 +1817,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "fb6c05f9966ae552bbdfb04ad1f5654c"
+      "447b2f3be9cafadd0e77fdc3e87e70ef"
     ],
     [
       "AlgWP.AlgPP",
@@ -1850,7 +1831,7 @@
         "l_and-interp", "l_quant_interp_45e36f2117295ee7f73ce1b0d916cb62"
       ],
       0,
-      "56ec98f40fcdd65fadbdbd084cf78182"
+      "025109e3ebb07ac2fb9867523fa37628"
     ],
     [
       "AlgWP.quotPP",
@@ -1864,7 +1845,6 @@
         "@query", "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "eq2-interp",
         "equality_tok_Alg.Read@tok", "equality_tok_Alg.Write@tok",
@@ -1895,7 +1875,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "98986fb9394d59bb5c0bfe9619bb2129"
+      "c260316d8c7bf803e75d156e247c7643"
     ],
     [
       "AlgWP.quotPP",
@@ -1911,7 +1891,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "e8108cf4d9a35780ed4a7339b82dc968"
+      "15c588696e7e82dc3810f57c6df4d81a"
     ],
     [
       "AlgWP.quotPP",
@@ -1927,7 +1907,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "df7771da3648cd1de5c3c2b93146d7ed"
+      "3750cd0eed017b9dddd89d4834a4f745"
     ],
     [
       "AlgWP.quotPP",
@@ -1943,7 +1923,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "df7771da3648cd1de5c3c2b93146d7ed"
+      "3750cd0eed017b9dddd89d4834a4f745"
     ],
     [
       "AlgWP.quotPP",
@@ -1959,7 +1939,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "29881e1b463e3201ba10da6ac42cd5b5"
+      "bc937ddc55fa0dd1c40ecc06e53a0aaa"
     ],
     [
       "AlgWP.null",
@@ -1976,7 +1956,7 @@
         "l_quant_interp_f286e8acaee32f5b1e7a843dd5baeebc"
       ],
       0,
-      "4721c68752cd64ed917a97998eb2420b"
+      "93239540ad7b4ae5b62d0f58b6bd610a"
     ],
     [
       "AlgWP.null_ro1",
@@ -1990,7 +1970,7 @@
         "l_quant_interp_310ec8932244318b9ea0b5bdb7e6eb13"
       ],
       0,
-      "fe343ff2d556558ad1207aae2bd8c2e2"
+      "74050046435e55e06ceea83c15511879"
     ],
     [
       "AlgWP.null_equiv_sanity",
@@ -2008,7 +1988,7 @@
         "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int", "int_inversion",
+        "int_inversion",
         "interpretation_Tm_abs_08f436099b7cd62a147d11d216dfacce",
         "interpretation_Tm_abs_6e196f8f0076385ddf9b17d71ba4e048",
         "interpretation_Tm_abs_b60310853fa0ff833a2271ce5097bd1b",
@@ -2017,10 +1997,11 @@
         "l_quant_interp_f286e8acaee32f5b1e7a843dd5baeebc",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "5b224cfc342256e1b7539b85252cc2c2"
+      "985a24aa4a0f3697b555f58a867be289"
     ],
     [
       "AlgWP.bind_null_ro",
@@ -2045,7 +2026,7 @@
         "typing_Tm_abs_4945add4b777273a809fc4cf8035e3b7"
       ],
       0,
-      "65a290b26eeb64b5cf839e71868649fb"
+      "a683f6a80fdda963d857d0646f9c1d06"
     ],
     [
       "AlgWP.null_ro_tree_wp",
@@ -2084,7 +2065,7 @@
         "false_interp", "fuel_guarded_inversion_Alg.tree0",
         "fuel_token_correspondence_AlgWP.interp_as_wp.fuel_instrumented_token",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int", "int_inversion", "int_typing",
+        "int_inversion", "int_typing",
         "interpretation_Tm_abs_159f863c5bc4ba776b34f8a4a3e90a31",
         "interpretation_Tm_abs_648c0d5c3259eefb3098bbf6bcfae364",
         "interpretation_Tm_abs_7ba6353ba1a147d2926e23e183ab88c4",
@@ -2107,11 +2088,12 @@
         "token_correspondence_AlgWP.interp_as_wp",
         "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "typing_Alg.op_out", "typing_FStar.List.Tot.Base.op_At",
-        "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok",
+        "typing_Prims.int", "typing_tok_Alg.Read@tok",
+        "typing_tok_Alg.Write@tok",
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "32e409124acd341071f1555fb1e8009f"
+      "74d26eeef4d7554ee3805fb935d91ddc"
     ],
     [
       "AlgWP.null_ro_tree_wp",
@@ -2127,12 +2109,12 @@
         "equality_tok_Alg.Write@tok", "equation_Alg.ops",
         "equation_Alg.tree", "kinding_Alg.op@tok", "lemma_Alg.abides_app",
         "lemma_Alg.append_single",
-        "refinement_interpretation_Tm_refine_09aa796960e91243f60e1c658f82f642",
         "refinement_interpretation_Tm_refine_31cc90dcf4dccbb40dfbf6c2bed95232",
+        "refinement_interpretation_Tm_refine_baf4c6ee229c1becab1fb51698f2b8bd",
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "7ee082df32f87071bb95e717d30d5190"
+      "d58c20f86a1d9e3a59036681ee058d78"
     ],
     [
       "AlgWP.__tree_handle_into_ro",
@@ -2185,7 +2167,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok", "unit_typing"
       ],
       0,
-      "ada1468a3f56e45266a57a58c2c8178c"
+      "7949bfc00380d366882d58f3a4174a36"
     ],
     [
       "AlgWP.__tree_handle_into_ro",
@@ -2206,7 +2188,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "750d7331f07142af6410420aff6930d3"
+      "2602f14f51ee1c80479ef1777926ab1a"
     ],
     [
       "AlgWP.handle_into_ro",
@@ -2227,7 +2209,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "2af2c835045a389fefec3e1dcf6215cd"
+      "de7f5d01e0178a184e56d1f721a4d58b"
     ],
     [
       "AlgWP.ignore_writes",
@@ -2241,8 +2223,7 @@
         "FStar.List.Tot.Base_interpretation_Tm_arrow_54e38bdd456bab4cdb32b5d540c2274c",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "constructor_distinct_Prims.Nil",
-        "data_elim_FStar.Pervasives.Native.Mktuple2",
-        "data_typing_intro_Alg.Write@tok", "eq2-interp",
+        "data_elim_FStar.Pervasives.Native.Mktuple2", "eq2-interp",
         "equality_tok_Alg.Write@tok", "equation_Alg.ops",
         "equation_Alg.state", "equation_Alg.sublist", "equation_AlgWP.noops",
         "equation_AlgWP.null", "equation_AlgWP.null_ro",
@@ -2269,7 +2250,7 @@
         "typing_FStar.List.Tot.Base.op_At", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "1024265ae05e8e1daa0ae92ce4247d48"
+      "99335ec413cb0c8eeef5e8e7c872b75d"
     ],
     [
       "AlgWP.ignore_writes",
@@ -2290,7 +2271,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "fcd3a05ece208a093d4a3871684ae1e4"
+      "a9ef68101eeb1e206b84ae162844df20"
     ]
   ]
 ]

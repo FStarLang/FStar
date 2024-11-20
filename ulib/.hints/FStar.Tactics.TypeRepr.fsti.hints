@@ -1,0 +1,17 @@
+[
+  "qP\u001eIK\u0005‰\"ÿ\u0015æ»5_÷Ž",
+  [
+    [
+      "FStar.Tactics.TypeRepr.empty_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_Prims.empty"
+      ],
+      0,
+      "1bb9a708015645f863fa6974c6c5be53"
+    ]
+  ]
+]

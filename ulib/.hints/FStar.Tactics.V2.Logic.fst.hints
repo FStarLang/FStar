@@ -1,0 +1,64 @@
+[
+  "šÏ§\u000f\u0006Ì…~f¸a5Ò¬ƒØ",
+  [
+    [
+      "FStar.Tactics.V2.Logic.l_revert_all",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil",
+        "equation_FStar.Tactics.NamedView.binding",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "6b194492d5c524c6d7a6bc99e3a865fd"
+    ],
+    [
+      "FStar.Tactics.V2.Logic.simplify_eq_implication",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.V2.Formula_pretyping_a139a58227e3de46f2dffe5b09a40575",
+        "data_elim_FStar.Stubs.Tactics.Result.Success",
+        "equality_tok_FStar.Reflection.V2.Formula.True_@tok",
+        "equation_FStar.Stubs.Reflection.Types.typ",
+        "equation_FStar.Tactics.NamedView.term",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_FStar.Reflection.V2.Formula.formula@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Stubs.Reflection.Types.term",
+        "typing_tok_FStar.Reflection.V2.Formula.True_@tok"
+      ],
+      0,
+      "52fb30e3ce45201a860816ccfa4f9302"
+    ],
+    [
+      "FStar.Tactics.V2.Logic.unfold_definition_and_simplify_eq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.V2.Formula_pretyping_a139a58227e3de46f2dffe5b09a40575",
+        "data_elim_FStar.Stubs.Tactics.Result.Success",
+        "equality_tok_FStar.Reflection.V2.Formula.True_@tok",
+        "equation_FStar.Stubs.Reflection.Types.typ",
+        "equation_FStar.Tactics.NamedView.term",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_FStar.Reflection.V2.Formula.formula@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Stubs.Reflection.Types.term",
+        "typing_tok_FStar.Reflection.V2.Formula.True_@tok"
+      ],
+      0,
+      "2a77058052f8e56aba90db643ca4494b"
+    ]
+  ]
+]

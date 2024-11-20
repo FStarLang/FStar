@@ -1170,6 +1170,7 @@ val blit: #t:Type
         Seq.slice (as_seq h0 b) 0 (v idx_b)
       /\ Seq.slice (as_seq h1 b) (v idx_b+v len) (length b) ==
         Seq.slice (as_seq h0 b) (v idx_b+v len) (length b) ))
+#restart-solver
 let rec blit #t a idx_a b idx_b len =
   let h0 = HST.get () in
   if len =^ 0ul then ()

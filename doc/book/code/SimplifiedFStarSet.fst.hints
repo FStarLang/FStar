@@ -9,12 +9,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "defn_equation_FStar.FunctionalExtensionality.feq",
-        "equation_Prims.l_Forall", "equation_Prims.squash",
-        "equation_Prims.subtype_of",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "equation_FStar.FunctionalExtensionality.restricted_t",
+        "equation_Prims.eqtype", "equation_SimplifiedFStarSet.set",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_7e4a6c5999db731b5d17d0418dfeea3e",
+        "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
       ],
       0,
-      "4f5419e29b745c6eb536b7801347be26"
+      "f194e9d81f3ac35b6f49b0f541484845"
     ],
     [
       "SimplifiedFStarSet.mem_empty",
@@ -37,7 +39,7 @@
         "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
       ],
       0,
-      "de438577d812422a5add204e0bb6bc4c"
+      "4cc9111daca4346b27ce43507eaea943"
     ],
     [
       "SimplifiedFStarSet.mem_singleton",
@@ -60,7 +62,7 @@
         "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
       ],
       0,
-      "cbe6f417c10ba626ae7e893c4d1c5e41"
+      "c9fb886a8fb8ad3b3491f4265a4b98dd"
     ],
     [
       "SimplifiedFStarSet.mem_union",
@@ -82,7 +84,7 @@
         "typing_Tm_abs_7a5911b2344bd347a4c522edac0401df"
       ],
       0,
-      "cab73fe997cd39d6e769ff4ca83cca55"
+      "e17a4a7fb88fc73f048405723010e598"
     ],
     [
       "SimplifiedFStarSet.mem_intersect",
@@ -104,7 +106,7 @@
         "typing_Tm_abs_920217650fd17cad0a0f1ea71d8a3e64"
       ],
       0,
-      "496a803e23f6ab2ff76485d143a77d91"
+      "930bdc3c44aaf72fb0758a0c01a82b35"
     ],
     [
       "SimplifiedFStarSet.mem_complement",
@@ -126,7 +128,7 @@
         "typing_Tm_abs_e818836335067047224d0c19c4cabb2d"
       ],
       0,
-      "7e64e567a992605a32dc425a8fcb8ed8"
+      "c85c15d9dd38ddeb1a8465af7f8e9868"
     ],
     [
       "SimplifiedFStarSet.equal_intro",
@@ -139,7 +141,7 @@
         "equation_SimplifiedFStarSet.mem"
       ],
       0,
-      "e84d2802f242529e1b7d9d2389333722"
+      "e94c5536014a41e273f4c3bc86d6e160"
     ],
     [
       "SimplifiedFStarSet.equal_elim",
@@ -158,7 +160,7 @@
         "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
       ],
       0,
-      "3081727d8a72a61efd2a6c0c53d4b245"
+      "a21f128ddac5bc534e156b205467aa4e"
     ]
   ]
 ]

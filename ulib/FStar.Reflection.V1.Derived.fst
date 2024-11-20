@@ -20,7 +20,7 @@ open FStar.Reflection.Const
 open FStar.Stubs.Reflection.V1.Builtins
 open FStar.Stubs.Reflection.V1.Data
 open FStar.Order
-open FStar.VConfig
+open FStar.Stubs.VConfig
 
 let bv_of_binder (b : binder) : bv = (inspect_binder b).binder_bv
 

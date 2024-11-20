@@ -13,7 +13,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "54b6c28155d968e65efe9a3ae8580f59"
+      "537c752b2dcf163af3447e2e202a1fdd"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -22,12 +22,10 @@
       1,
       [
         "@query", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_Multiply",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0"
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "bfd1d9d05512dd13626761ac6e43943c"
+      "aa2dee40bc3931fd0e3fe5b235d3ea0d"
     ]
   ]
 ]

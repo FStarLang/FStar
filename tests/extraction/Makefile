@@ -1,30 +1,51 @@
-FSTAR_EXAMPLES=$(realpath ../../examples)
-include $(FSTAR_EXAMPLES)/Makefile.include
-include $(FSTAR_ULIB)/ml/Makefile.include
+FSTAR_ROOT ?= ../..
 
-all: eta_expand inline_let all_cmi
+SUBDIRS += cmi
 
-eta_expand: out Eta_expand.fst
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Eta_expand.fst
-	$(OCAMLOPT) out/Eta_expand.ml -o Eta_expand.exe
-	./Eta_expand.exe
-	@touch $@
+RUN += Eta_expand.fst
+RUN += Div.fst
+RUN += ExtractAs.fst
+RUN += InlineLet.fst
 
-inline_let: InlineLet.fst
-	$(FSTAR) --codegen OCaml InlineLet.fst
-	egrep -A 10 test InlineLet.ml | grep -qs "17"
-	@touch $@
+include $(FSTAR_ROOT)/mk/test.mk
 
-all_cmi:
-	+$(MAKE) -C cmi all
+# Overriding the default rule for this one. We need to wrap this in a timeout.
+$(OUTPUT_DIR)/Div.out: $(OUTPUT_DIR)/Div.exe
+	$(call msg,TIMEOUT,$<)
+	$(Q)timeout 1 $(OUTPUT_DIR)/Div.exe ; \
+	  RC=$$? ;\
+	  if ! [ $$RC -eq 124 ]; then echo "ERROR: Div.exe terminated!?!?!"; false; fi
+	$(Q)touch $@
 
-out:
-	mkdir -p out
+# all: inline_let all_cmi Eta_expand.test Div.test ExtractAs.test
 
-clean:
-	rm -rf out
-	rm -f *.exe
-	rm -f *~
-	rm -f eta_expand
-	rm -f inline_let
+# %.exe: %.fst
+#         $(FSTAR) --codegen OCaml $<
+#         $(OCAMLOPT) -package fstar.lib -linkpkg $(OUTPUT_DIR)/$(patsubst %.fst,%.ml,$<) -o $@
 
+# %.test: %.exe
+#         $(call msg,RUN,$<)
+#         $(Q)./$<
+#         $(Q)touch $@
+
+# Div.test: Div.exe
+#         $(call msg,TIMEOUT,$<)
+#         $(Q)timeout 1 ./Div.exe ; \
+#           RC=$$? ;\
+#           if ! [ $$RC -eq 124 ]; then echo "ERROR: Div.exe terminated!?!?!"; false; fi
+#         $(Q)touch $@
+
+# inline_let: InlineLet.fst
+#         $(FSTAR) --codegen OCaml InlineLet.fst
+#         egrep -A 10 test $(OUTPUT_DIR)/InlineLet.ml | grep -qs "17"
+#         @touch $@
+
+# all_cmi:
+#         +$(MAKE) -C cmi all
+
+# clean:
+#         rm -rf out
+#         rm -f *.exe
+#         rm -f *~
+#         rm -f *.exe *.test
+#         rm -f inline_let

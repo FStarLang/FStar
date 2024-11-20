@@ -11,7 +11,7 @@
         "@fuel_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
         "@query",
         "FStar.Char_interpretation_Tm_arrow_edb4339633bae2b96af63b0dbac8e538",
-        "FStar.Classical_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
+        "FStar.List.Tot.Base_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "constructor_distinct_Prims.Nil", "data_typing_intro_Prims.Nil@tok",
         "equation_FStar.String.char", "equation_Prims.eqtype",
         "equation_Prims.nat",
@@ -23,7 +23,7 @@
         "typing_FStar.Char.char"
       ],
       0,
-      "d3acd1844af4665638f8e61a8a9e27a6"
+      "8b2056ef4d8aaa6f836ac63dd577ce96"
     ],
     [
       "StringNormalization.uu___4",
@@ -32,7 +32,7 @@
       1,
       [ "@query", "equation_FStar.String.char" ],
       0,
-      "cf76a2127a5cb39836d7b1cc412b84b8"
+      "2ed2757779c130c8c86a0792d5854d68"
     ],
     [
       "StringNormalization.uu___5",
@@ -45,7 +45,7 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "FStar.Char_interpretation_Tm_arrow_edb4339633bae2b96af63b0dbac8e538",
-        "FStar.Classical_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
+        "FStar.List.Tot.Base_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "b2t_def", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil", "data_elim_Prims.Cons",
         "data_typing_intro_Prims.Cons@tok",
@@ -79,7 +79,7 @@
         "typing_FStar.UInt32.uint_to_t", "typing_FStar.UInt32.v"
       ],
       0,
-      "160324c38760fa0a4fa4b114209fcdca"
+      "1a1f6af70cee94fd005d6ba0943186bf"
     ],
     [
       "StringNormalization.uu___28",
@@ -88,16 +88,16 @@
       1,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "ccd4eb756c90ad1d7bb4d09907f91281"
+      "3edf1eb9d7c1f0f8665df24b34ac1afc"
     ],
     [
-      "StringNormalization.uu___32",
+      "StringNormalization.uu___31",
       1,
       2,
       1,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "09f11bae5079246527d6411a752735bb"
+      "2336c82a360ce66f272e137e7e76eabd"
     ]
   ]
 ]

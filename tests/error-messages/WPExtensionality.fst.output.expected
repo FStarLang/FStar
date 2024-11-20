@@ -1,0 +1,8 @@
+>> Got issues: [
+* Error 19 at WPExtensionality.fst(61,3-61,34):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also Prims.fst(451,90-451,102)
+
+>>]

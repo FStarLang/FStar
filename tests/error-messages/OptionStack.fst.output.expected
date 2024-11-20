@@ -1,0 +1,32 @@
+>> Got issues: [
+* Error 19 at OptionStack.fst(21,9-21,15):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also OptionStack.fst(21,16-21,21)
+
+>>]
+>> Got issues: [
+* Error 19 at OptionStack.fst(24,9-24,15):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also OptionStack.fst(24,16-24,21)
+
+>>]
+>> Got issues: [
+* Error 19 at OptionStack.fst(27,9-27,15):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also OptionStack.fst(27,16-27,21)
+
+>>]
+>> Got issues: [
+* Error 19 at OptionStack.fst(39,9-39,15):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also OptionStack.fst(39,16-39,21)
+
+>>]

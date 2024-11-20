@@ -19,7 +19,7 @@
         "token_correspondence_FStar.DM4F.MonadLaws.return_st"
       ],
       0,
-      "4184725aeb1c86a0f287745e90ddefa1"
+      "a55c7ee636e0c84e7581517d890335f6"
     ],
     [
       "FStar.DM4F.MonadLaws.left_unit_st",
@@ -36,7 +36,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "1487a618085472fe2d410326ca5e5081"
+      "eba4a8af631cc4c8d09fe691f6b34159"
     ],
     [
       "FStar.DM4F.MonadLaws.assoc_st",
@@ -50,7 +50,7 @@
         "interpretation_Tm_abs_7706f980135a89a687c904d968136d5b"
       ],
       0,
-      "4723f1adfdbe3e89dbd7cb25452eaf2b"
+      "9e1dceaed7bff3ee55d60fc7dcbdc015"
     ],
     [
       "FStar.DM4F.MonadLaws.bind_ifc",
@@ -62,16 +62,17 @@
         "FStar.DM4F.MonadLaws_interpretation_Tm_arrow_03d7c8f404a3f17a41fbd38d1795a79e",
         "FStar.DM4F.MonadLaws_interpretation_Tm_arrow_05275a1cf51d299be9159781d6b8228d",
         "FStar.DM4F.MonadLaws_pretyping_eb5d41e13bf746cc49f141ba21a8c7a8",
-        "data_typing_intro_FStar.DM4F.MonadLaws.High@tok",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
+        "equality_tok_FStar.DM4F.MonadLaws.Low@tok",
         "equation_FStar.DM4F.MonadLaws.ifc",
         "kinding_FStar.DM4F.MonadLaws.label@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "lemma_FStar.Pervasives.invertOption"
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_tok_FStar.DM4F.MonadLaws.Low@tok"
       ],
       0,
-      "60d883be8cdd8d5874b51738c5550845"
+      "275d5b894a675050de8726ad809945c0"
     ],
     [
       "FStar.DM4F.MonadLaws.left_unit",
@@ -85,7 +86,7 @@
         "FStar.DM4F.MonadLaws_pretyping_eb5d41e13bf746cc49f141ba21a8c7a8",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "data_elim_FStar.Pervasives.Native.Some",
-        "data_typing_intro_FStar.DM4F.MonadLaws.High@tok",
+        "equality_tok_FStar.DM4F.MonadLaws.Low@tok",
         "equation_FStar.DM4F.MonadLaws.bind_ifc",
         "equation_FStar.DM4F.MonadLaws.ifc",
         "equation_FStar.DM4F.MonadLaws.return_ifc",
@@ -100,10 +101,11 @@
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "typing_FStar.DM4F.MonadLaws.bind_ifc",
-        "typing_FStar.DM4F.MonadLaws.return_ifc"
+        "typing_FStar.DM4F.MonadLaws.return_ifc",
+        "typing_tok_FStar.DM4F.MonadLaws.Low@tok"
       ],
       0,
-      "a50156b5ce53fb69088149ab3c7895b9"
+      "5a2259cbbedee058bf7821601c070821"
     ],
     [
       "FStar.DM4F.MonadLaws.right_unit",
@@ -115,9 +117,9 @@
         "FStar.DM4F.MonadLaws_interpretation_Tm_arrow_05275a1cf51d299be9159781d6b8228d",
         "FStar.DM4F.MonadLaws_pretyping_eb5d41e13bf746cc49f141ba21a8c7a8",
         "data_elim_FStar.Pervasives.Native.Some",
-        "data_typing_intro_FStar.DM4F.MonadLaws.High@tok",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
+        "equality_tok_FStar.DM4F.MonadLaws.Low@tok",
         "equation_FStar.DM4F.MonadLaws.bind_ifc",
         "equation_FStar.DM4F.MonadLaws.ifc",
         "equation_FStar.DM4F.MonadLaws.return_ifc",
@@ -130,10 +132,11 @@
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
-        "token_correspondence_FStar.DM4F.MonadLaws.return_ifc"
+        "token_correspondence_FStar.DM4F.MonadLaws.return_ifc",
+        "typing_tok_FStar.DM4F.MonadLaws.Low@tok"
       ],
       0,
-      "2cf1fe0c385b822ed0a8e7affc5f5748"
+      "2e3d8b478e11fbbb0d28c31f3cec490d"
     ],
     [
       "FStar.DM4F.MonadLaws.associativity",
@@ -148,7 +151,6 @@
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Tm_unit",
         "data_elim_FStar.Pervasives.Native.Some",
-        "data_typing_intro_FStar.DM4F.MonadLaws.High@tok",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equality_tok_FStar.DM4F.MonadLaws.High@tok",
@@ -175,7 +177,7 @@
         "typing_tok_FStar.DM4F.MonadLaws.Low@tok"
       ],
       0,
-      "50da1e96c2ab18bb084e73481dc3edfe"
+      "6b65e9a95324ba3b12a092321f1796a3"
     ]
   ]
 ]

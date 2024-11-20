@@ -1,0 +1,112 @@
+[
+  "ÙÑ\u0013© ê8Ñ\u0004ªΩÁ&À…t",
+  [
+    [
+      "Arith.test1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d30c82fc871c7918918f6194cdc96030"
+    ],
+    [
+      "Arith.test2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e0dabeaaa158b7c08db7f62f583a0a0a"
+    ],
+    [
+      "Arith.test3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "665cbd818059264d557c4e79e22e53de"
+    ],
+    [
+      "Arith.test4",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "7de3a9b85b1cfbe0e2025d9a1cd8f5d4"
+    ],
+    [
+      "Arith.test5",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "64616a3f216a404f806ff73c2300966b"
+    ],
+    [
+      "Arith.test6",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "eb17bdfdd7932ecb12aeb5225e38b09d"
+    ],
+    [
+      "Arith.test7",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e57cb5403e836996f2653723179a8ac4"
+    ],
+    [
+      "Arith.test8",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ada69bd4e63e5862425a457115e192c8"
+    ],
+    [
+      "Arith.test9",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d14e3f2e0b232d31c829b3bf9b1d05d0"
+    ],
+    [
+      "Arith.test10",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "388fbbb7e4490d9aae6db9f06a80f64c"
+    ],
+    [
+      "Arith.test11",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "558565a2d6b86450eba8cc199fed59c4"
+    ]
+  ]
+]

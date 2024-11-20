@@ -1,0 +1,29 @@
+[
+  "\u0019seˇáÍtXè 9˛\u001fñﬂ€",
+  [
+    [
+      "Bug1799.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_fd129bc9040d5707bb6dca327be6f10c"
+      ],
+      0,
+      "cfacfda697510462f5e470d73ccd5618"
+    ],
+    [
+      "Bug1799.test'",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Bug1799.op_Less_Equals_Equals", "l_and-interp",
+        "l_or-interp"
+      ],
+      0,
+      "f0d9f297b5159d106cb7af0eca846bad"
+    ]
+  ]
+]

@@ -1,0 +1,39 @@
+[
+  "hû$\u0011n…\u0005ûÌfËƒò¢f\u0014",
+  [
+    [
+      "Bug052.trivial_a",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Addition" ],
+      0,
+      "19d50cfa92453b95104b6ceb99de9ff4"
+    ],
+    [
+      "Bug052.use_fact_and_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "f3dd3e77441d8c7b18a71142db7c98cf"
+    ],
+    [
+      "Bug052.test",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Bug052.use_fact_and_lemma",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "21b2c995dd84692f03028ae659490b94"
+    ]
+  ]
+]

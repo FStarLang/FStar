@@ -1,0 +1,29 @@
+[
+  "¯.È\u0000Ï\u00178\u0003(<RÎMá\u001bí",
+  [
+    [
+      "FStar.Cardinality.Cantor.no_surj_powerset",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Functions.is_surj",
+        "equation_FStar.Functions.powerset",
+        "interpretation_Tm_abs_1e5b770def8333f43ca8204dd6cb12ac",
+        "primitive_Prims.op_Negation", "projection_inverse_BoxBool_proj_0",
+        "typing_Tm_abs_1e5b770def8333f43ca8204dd6cb12ac"
+      ],
+      0,
+      "2bf56c6f86926d06908ceccd7ebbbc41"
+    ],
+    [
+      "FStar.Cardinality.Cantor.no_inj_powerset",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9e207b8bce1c716c5eee5cf72678233a"
+    ]
+  ]
+]

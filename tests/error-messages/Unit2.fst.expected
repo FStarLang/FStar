@@ -1,9 +1,0 @@
->> Got issues: [
-* Error 19 at Unit2.fst(37,21-38,60):
-  - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
-
->>]
-Verified module: Unit2
-All verification conditions discharged successfully

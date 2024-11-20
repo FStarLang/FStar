@@ -44,7 +44,7 @@ clean: clean_checked
 	$(Q)rm -f .depend.*
 	$(Q)rm -f *.checked.lax .cache/*.checked.lax
 
-DOC_FILES=prims.fst FStar.Pervasives.Native.fst FStar.Pervasives.fst \
+DOC_FILES=Prims.fst FStar.Pervasives.Native.fst FStar.Pervasives.fst \
 	  FStar.Squash.fsti FStar.Classical.fsti FStar.BigOps.fsti \
 	  FStar.BitVector.fst FStar.BV.fsti \
 	  FStar.Char.fsti FStar.Date.fsti FStar.DependentMap.fsti \

@@ -1,0 +1,74 @@
+[
+  "–Zä\nX'|\u0001ö;þ:èt_‘",
+  [
+    [
+      "FStar.Tactics.V2.SyntaxHelpers.mk_arr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "74c39a387246c574d250cc12d515ccbe"
+    ],
+    [
+      "FStar.Tactics.V2.SyntaxHelpers.mk_tot_arr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "fcd5035e7e3c110d926e92b4dbd1e074"
+    ],
+    [
+      "FStar.Tactics.V2.SyntaxHelpers.lookup_lb",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.find.fuel_instrumented",
+        "@query",
+        "FStar.List.Tot.Base_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
+        "FStar.Tactics.V2.SyntaxHelpers_interpretation_Tm_arrow_374c03c1cfa24243255001ac8638abdc",
+        "constructor_distinct_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_with_fuel_FStar.List.Tot.Base.find.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "fuel_guarded_inversion_Prims.list",
+        "kinding_FStar.Tactics.NamedView.letbinding@tok",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
+        "typing_FStar.List.Tot.Base.find",
+        "typing_Tm_abs_f4aa8a467a2f41ff52ecf3ce76839661"
+      ],
+      0,
+      "afa97bfdf4b5b74a3c294333968b8487"
+    ],
+    [
+      "FStar.Tactics.V2.SyntaxHelpers.inspect_unascribe",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.NamedView.Tv_AscribedC",
+        "disc_equation_FStar.Tactics.NamedView.Tv_AscribedT",
+        "equation_FStar.Tactics.NamedView.notAscription",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Negation",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "b57b7a304c9ba387b863aa5b7e594279"
+    ]
+  ]
+]

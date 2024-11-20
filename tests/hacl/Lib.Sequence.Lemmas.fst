@@ -7,7 +7,7 @@ open Lib.Sequence
 #set-options "--z3rlimit 30 --max_fuel 0 --max_ifuel 0 \
   --using_facts_from '-* +Prims +FStar.Pervasives +FStar.Math.Lemmas +FStar.Seq \
     +Lib.IntTypes +Lib.Sequence +Lib.Sequence.Lemmas +Lib.LoopCombinators'"
-
+#set-options "--z3refresh"
 
 let rec repeati_extensionality #a n f g acc0 =
   if n = 0 then begin
@@ -514,7 +514,7 @@ let repeat_blocks_is_repeat_gen_blocks #a #b #c hi blocksize inp f l acc0 =
     repeat_gen_blocks_multi blocksize 0 hi nb blocks (Loops.fixed_a b) (Loops.fixed_i f) acc0;
     }
 
-
+#restart-solver
 let repeat_blocks_multi_split #a #b blocksize len0 inp f acc0 =
   let len = length inp in
   let len1 = len - len0 in
