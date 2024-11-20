@@ -1,6 +1,6 @@
 # For check-world workflow, should be coallesced to the other base.
 # This could definitely use a big cleanup too.
-FROM ubuntu:23.10
+FROM ubuntu:latest
 
 RUN apt-get update
 
