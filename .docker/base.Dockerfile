@@ -9,8 +9,7 @@
 # will NOT use this file.
 
 # We always try to build against the most current ubuntu image.
-# FIXME: Broken with 24.04, fixing it to 23.10 so we can keep working
-FROM ubuntu:23.10
+FROM ubuntu:latest
 
 RUN apt-get update
 
