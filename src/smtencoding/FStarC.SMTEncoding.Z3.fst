@@ -70,8 +70,11 @@ let z3_exe : unit -> string =
     find_or (Options.z3_version()) (fun version ->
       let path =
         let z3_v = Platform.exe ("z3-" ^ version) in
+        let local_z3 = Platform.exe (FStarC.Find.fstar_bin_directory ^ "/" ^ "z3-fstar-" ^ version) in
         let smto = Options.smt () in
+
         if Some? smto then Some?.v smto
+        else if BU.file_exists local_z3 then local_z3
         else if inpath z3_v then z3_v
         else Platform.exe "z3"
       in
