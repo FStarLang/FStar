@@ -62,6 +62,7 @@ diag "*** Test the binary package"
 # we build F*) and one for the package (from where we test the
 # obtained binary). FSTAR_HOME is the latter.
 export FSTAR_HOME="$PWD"
+export FSTAR_ROOT="$PWD"/share/fstar
 
 # We need to add the bin subdirectory to the PATH,
 # to make z3 reachable
@@ -78,6 +79,9 @@ diag "-- Verify all examples --"
 if [[ -z "$CI_THREADS" ]] ; then
     CI_THREADS=1
 fi
+
+# NB: This relies on FSTAR_ROOT being set (to the share directory of the package)
+# in order to find the relevant Makefiles.
 make -j "$CI_THREADS" -C /tmp/fstar_examples HAS_OCAML= && make -j "$CI_THREADS" -C /tmp/fstar_doc/old/tutorial HAS_OCAMLFIND= regressions
 if [ $? -ne 0 ]; then
     echo -e "* ${RED}FAIL!${NC} for all examples - make returned $?"
