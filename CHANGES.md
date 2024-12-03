@@ -872,7 +872,7 @@ Date:   Mon Apr 30 16:57:21 2018 -0700
   abstract alias for a 21 bit integer represented within a
   FStar.UInt32.t.
 
-* ucontrib/Platform/fst/*: These modules are deprecated. Their
+* contrib/Platform/fst/*: These modules are deprecated. Their
   functionality is now moved to FStar.Bytes, FStar.Error, FStar.Tcp,
   FStar.Udp, and FStar.Date.
 

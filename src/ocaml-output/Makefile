@@ -80,10 +80,12 @@ install:
 .PHONY: install-sides
 install-sides:
 	@# Then the examples (those now work from any F* installation flavor, sources, binary package or opam)
-	@# ucontrib is needed by examples/crypto
+	@# contrib is needed by examples/crypto
 	$(call install_dir,examples,share/fstar/examples)
-	$(call install_dir,ucontrib,share/fstar/contrib)
+	$(call install_dir,contrib,share/fstar/contrib)
 	$(call install_dir,mk,share/fstar/mk)
+	@echo '# This line added only for the binary package, to use the fstar.exe in the package' >> $(PREFIX)/share/fstar/mk/test.mk
+	@echo 'FSTAR_EXE := $$(abspath $$(FSTAR_ROOT)/../../bin/fstar.exe)' >> $(PREFIX)/share/fstar/mk/test.mk
 	@# Then the tutorial
 ifeq ($(MADOKO),Madoko)
 	@# Build the tutorial first
