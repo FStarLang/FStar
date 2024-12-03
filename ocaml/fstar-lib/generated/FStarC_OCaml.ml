@@ -12,29 +12,21 @@ let (shellescape : Prims.string -> Prims.string) =
 let (new_ocamlpath : unit -> Prims.string) =
   fun uu___ ->
     let ocamldir = FStarC_Find.locate_ocaml () in
+    let sep =
+      match FStarC_Platform.system with
+      | FStarC_Platform.Windows -> ";"
+      | FStarC_Platform.Posix -> ":" in
     let old_ocamlpath =
       let uu___1 =
         FStarC_Compiler_Util.expand_environment_variable "OCAMLPATH" in
       FStarC_Compiler_Util.dflt "" uu___1 in
     let new_ocamlpath1 =
-      Prims.strcat ocamldir (Prims.strcat ":" old_ocamlpath) in
+      Prims.strcat ocamldir (Prims.strcat sep old_ocamlpath) in
     new_ocamlpath1
 let exec_in_ocamlenv : 'a . Prims.string -> Prims.string Prims.list -> 'a =
   fun cmd ->
     fun args ->
       let new_ocamlpath1 = new_ocamlpath () in
-      if FStarC_Platform.system = FStarC_Platform.Windows
-      then
-        (let uu___1 =
-           let uu___2 =
-             FStarC_Errors_Msg.text
-               "--ocamlenv is not supported on Windows (yet?)" in
-           [uu___2] in
-         FStarC_Errors.raise_error0
-           FStarC_Errors_Codes.Fatal_OptionsNotCompatible ()
-           (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-           (Obj.magic uu___1))
-      else ();
       FStarC_Compiler_Util.putenv "OCAMLPATH" new_ocamlpath1;
       FStarC_Compiler_Util.execvp cmd (cmd :: args);
       failwith "execvp failed"
