@@ -12,7 +12,7 @@ stdenv.mkDerivation {
     "doc.*"
     "examples.*"
     "src(/ocaml-output(/Makefile)?)?"
-    "ucontrib.*"
+    "contrib.*"
     "mk.*"
   ];
 
