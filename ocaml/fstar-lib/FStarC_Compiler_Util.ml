@@ -1172,3 +1172,8 @@ let array_index (l:'a FStar_ImmutableArray_Base.t) (i:Z.t) = FStar_ImmutableArra
 
 let putenv k v = Unix.putenv k v
 let execvp c args = Unix.execvp c (Array.of_list args)
+
+let exn_is_enoent (e:exn) : bool =
+  match e with
+  | Unix.Unix_error (Unix.ENOENT, _, _) -> true
+  | _ -> false

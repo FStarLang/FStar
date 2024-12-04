@@ -190,6 +190,14 @@ let warn_handler (suf:Errors.error_message) (s:string) : unit =
      blank 2 ^^ align (dquotes (arbitrary_string s));
     ] @ suf)
 
+let install_suggestion : Pprint.document =
+  let open FStarC.Errors.Msg in
+  let open FStarC.Pprint in
+  prefix 4 1 (text "Please download the correct version of Z3 from")
+             (url z3url) ^/^
+    group (text "and install it into your $PATH as" ^/^ squotes
+      (doc_of_string (Platform.exe ("z3-" ^ Options.z3_version  ()))) ^^ dot)
+
 (* Talk to the process to see if it's the correct version of Z3
 (i.e. the one in the optionstate). Also check that it indeed is Z3. By
 default, each of these generates an error, but they can be downgraded
@@ -224,10 +232,7 @@ let check_z3version (p:proc) : unit =
     Errors.log_issue0 Errors.Warning_SolverMismatch [
       text (BU.format3 "Unexpected Z3 version for '%s': expected '%s', got '%s'."
                   (proc_prog p) ver_conf ver_found);
-      prefix 4 1 (text "Please download the correct version of Z3 from")
-                 (url z3url) ^/^
-        group (text "and install it into your $PATH as" ^/^ squotes
-          (doc_of_string (Platform.exe ("z3-" ^ Options.z3_version  ()))) ^^ dot);
+      install_suggestion;
     ];
     Errors.stop_if_err(); (* stop now if this was a hard error *)
     _already_warned_version_mismatch := true
@@ -239,6 +244,16 @@ let new_z3proc (id:string) (cmd_and_args : string & list string) : BU.proc =
       try
         BU.start_process id (fst cmd_and_args) (snd cmd_and_args) (fun s -> s = "Done!")
       with
+      | e when BU.exn_is_enoent e ->
+        let open FStarC.Pprint in
+        let open FStarC.Errors.Msg in
+        Errors.raise_error0 Errors.Error_Z3InvocationError [
+          text "Z3 solver not found.";
+          prefix 2 1 (text "Required version:")
+            (text (Options.z3_version ()));
+          install_suggestion;
+        ]
+
       | e ->
         let open FStarC.Pprint in
         let open FStarC.Errors.Msg in
