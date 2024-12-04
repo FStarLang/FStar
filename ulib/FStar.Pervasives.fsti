@@ -328,8 +328,9 @@ val normalize_spec (a: Type0) : Lemma (normalize a == a)
 val norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x)
 
 (** Use the following to expose an ["opaque_to_smt"] definition to the
-    solver as: [reveal_opaque (`%defn) defn] *)
-let reveal_opaque (s: string) = norm_spec [delta_only [s]]
+    solver as: [reveal_opaque (`%defn) defn]. NB: zeta is needed in
+    the case where the definition is recursive. *)
+let reveal_opaque (s: string) = norm_spec [delta_only [s]; zeta]
 
 (** Wrappers over pure wp combinators that return a pure_wp type
     (with monotonicity refinement) *)
