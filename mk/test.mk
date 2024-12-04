@@ -155,6 +155,15 @@ ifeq ($(NOVERIFY),)
 all: __verify
 endif
 
+HAS_OCAML ?= 1
+# We assume we have ocaml, unless HAS_OCAML= was given as an argument
+# to make (this is done by binary package CI). If we don't have ocaml,
+# we don't try to build or run programs.
+ifeq (,$(HAS_OCAML))
+NORUN := 1
+NOBUILD := 1
+endif
+
 # clean
 SUBDIRS_CLEAN += $(SUBDIRS)
 clean: $(addsuffix .__clean, $(SUBDIRS_CLEAN))

@@ -400,3 +400,5 @@ val array_index (s:FStar.ImmutableArray.Base.t 'a) (i:FStarC.BigInt.t) : 'a
 
 val putenv : string -> string -> unit
 val execvp : string -> list string -> unit // will return only on error
+
+val exn_is_enoent (e:exn) : bool
