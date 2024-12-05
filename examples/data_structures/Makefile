@@ -1,7 +1,11 @@
 FSTAR_ROOT ?= ../..
 include $(FSTAR_ROOT)/mk/test.mk
 
+HAS_OCAML ?= 1
+
+ifneq (,$(HAS_OCAML))
 all: $(OUTPUT_DIR)/RBTreeIntrinsic_patched.exe
+endif
 
 # EXTRACT = RBTreeIntrinsic
 

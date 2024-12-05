@@ -40,7 +40,11 @@ SUBDIRS += verifythis
 # SUBDIRS_CLEAN += hello
 SUBDIRS_ALL += dependencies
 SUBDIRS_CLEAN += dependencies
+
+HAS_OCAML ?= 1
+ifneq (,$(HAS_OCAML))
 SUBDIRS_ALL += native_tactics
+endif
 SUBDIRS_CLEAN += native_tactics
 
 FSTAR_ROOT ?= ..
