@@ -1,5 +1,5 @@
 [
-  "ìæ\u0006VU%¢\u000fî­œY#2'\u001a",
+  "\u000f€aM_©T\u0018êæ\u0011_ÁêðÎ",
   [
     [
       "FStar.Tactics.TypeRepr.empty_elim",
@@ -11,7 +11,7 @@
         "fuel_guarded_inversion_Prims.empty"
       ],
       0,
-      "cac98320d9342fdfa842ca426c758899"
+      "65d2b90ba76cc2addab8ec8f83251e82"
     ],
     [
       "FStar.Tactics.TypeRepr.get_inductive_typ",
@@ -35,7 +35,7 @@
         "typing_FStar.Stubs.Reflection.V2.Builtins.lookup_typ"
       ],
       0,
-      "a6da83d104c3c0e27e35038a6fb4224b"
+      "bfacc9c28095d3a96e38de4a0a1b5478"
     ],
     [
       "FStar.Tactics.TypeRepr.get_apply_tuple",

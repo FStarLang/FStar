@@ -738,7 +738,7 @@ let rec tc_term env e =
           (tag_of (SS.compress e))
           (print_expected_ty_str env);
 
-    let r, ms = BU.record_time (fun () ->
+    let r, ms = BU.record_time_ms (fun () ->
                     tc_maybe_toplevel_term ({env with top_level=false}) e) in
     if Debug.medium () then begin
         BU.print4 "(%s) } tc_term of %s (%s) took %sms\n" (Range.string_of_range <| Env.get_range env)
@@ -4195,11 +4195,14 @@ and build_let_rec_env _top_level env lbs : list letbinding & env_t & guard_t =
      // TODO: There's a similar error in check_let_recs, would be nice
      // to remove this one.
      if List.isEmpty formals || List.isEmpty actuals then
-       raise_error lbtyp Errors.Fatal_RecursiveFunctionLiteral // TODO: GM: maybe point to the one that's actually empty?
-                    (BU.format3 "Only function literals with arrow types can be defined recursively; got (%s) %s : %s"
+       // TODO: GM: maybe point to the one that's actually empty?
+       raise_error lbtyp Errors.Fatal_RecursiveFunctionLiteral [
+         text "Only function literals with arrow types can be defined recursively.";
+         text <| (BU.format3 "Got (%s) %s : %s"
                                (tag_of lbdef)
                                (show lbdef)
                                (show lbtyp));
+       ];
 
      let nformals = List.length formals in
 
@@ -4266,12 +4269,13 @@ and check_let_recs env lbts =
         let bs, t, lcomp = abs_formals lb.lbdef in
         //see issue #1017
         match bs with
-        | [] -> raise_error (S.range_of_lbname lb.lbname) 
-                            Errors.Fatal_RecursiveFunctionLiteral
-                            (BU.format2
-                            "Only function literals may be defined recursively; %s is defined to be %s"
+        | [] ->
+          raise_error (S.range_of_lbname lb.lbname) Errors.Fatal_RecursiveFunctionLiteral [
+            text "Only function literals may be defined recursively.";
+            text <| (BU.format2 "%s is defined to be %s"
                                (show lb.lbname)
-                               (show lb.lbdef))
+                               (show lb.lbdef));
+          ]
         | _ -> ();
 
         (* HACK ALERT: arity

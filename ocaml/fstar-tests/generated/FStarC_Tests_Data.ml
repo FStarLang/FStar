@@ -48,7 +48,7 @@ let (run_all : unit -> unit) =
   fun uu___ ->
     FStarC_Compiler_Util.print_string "data tests\n";
     (let uu___2 =
-       FStarC_Compiler_Util.record_time
+       FStarC_Compiler_Util.record_time_ms
          (fun uu___3 ->
             let uu___4 =
               Obj.magic
@@ -65,7 +65,7 @@ let (run_all : unit -> unit) =
              FStarC_Class_Show.show FStarC_Class_Show.showable_int ms in
            FStarC_Compiler_Util.print1 "FlatSet insert: %s\n" uu___4);
           (let uu___4 =
-             FStarC_Compiler_Util.record_time
+             FStarC_Compiler_Util.record_time_ms
                (fun uu___5 ->
                   all_mem nn
                     (FStarC_Compiler_FlatSet.setlike_flat_set
@@ -76,7 +76,7 @@ let (run_all : unit -> unit) =
                    FStarC_Class_Show.show FStarC_Class_Show.showable_int ms1 in
                  FStarC_Compiler_Util.print1 "FlatSet all_mem: %s\n" uu___6);
                 (let uu___6 =
-                   FStarC_Compiler_Util.record_time
+                   FStarC_Compiler_Util.record_time_ms
                      (fun uu___7 ->
                         all_remove nn
                           (FStarC_Compiler_FlatSet.setlike_flat_set
@@ -102,7 +102,7 @@ let (run_all : unit -> unit) =
                        then failwith "FlatSet all_remove failed"
                        else ());
                       (let uu___10 =
-                         FStarC_Compiler_Util.record_time
+                         FStarC_Compiler_Util.record_time_ms
                            (fun uu___11 ->
                               let uu___12 =
                                 Obj.magic
@@ -121,7 +121,7 @@ let (run_all : unit -> unit) =
                              FStarC_Compiler_Util.print1 "RBSet insert: %s\n"
                                uu___12);
                             (let uu___12 =
-                               FStarC_Compiler_Util.record_time
+                               FStarC_Compiler_Util.record_time_ms
                                  (fun uu___13 ->
                                     all_mem nn
                                       (FStarC_Compiler_RBSet.setlike_rbset
@@ -134,7 +134,7 @@ let (run_all : unit -> unit) =
                                    FStarC_Compiler_Util.print1
                                      "RBSet all_mem: %s\n" uu___14);
                                   (let uu___14 =
-                                     FStarC_Compiler_Util.record_time
+                                     FStarC_Compiler_Util.record_time_ms
                                        (fun uu___15 ->
                                           all_remove nn
                                             (FStarC_Compiler_RBSet.setlike_rbset

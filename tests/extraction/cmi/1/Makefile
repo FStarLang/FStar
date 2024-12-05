@@ -11,10 +11,4 @@ FSTAR_ROOT ?= ../../../..
 OTHERFLAGS += --cmi
 include $(FSTAR_ROOT)/mk/test.mk
 
-all: test
-
-$(OUTPUT_DIR)/%.ml: %.fst.checked
-	$(FSTAR) --codegen OCaml --extract $* $*.fst
-
-test: $(OUTPUT_DIR)/B.ml
-	egrep test_function $< | egrep -q -v A.id #test that A.id is inlined
+# There should not be a call to A.id in B.ml.expected.

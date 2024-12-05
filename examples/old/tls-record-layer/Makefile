@@ -328,7 +328,7 @@ ocaml-test.exe: ocaml-test-extract
 	$(OCAMLOPT) -I tmp -I crypto/ml -I $(AEAD_ODIR) $(OCAML_FILES) -o ocaml-test.exe
 	./ocaml-test.exe
 
-OPENSSL_HOME=../../ucontrib/CoreCrypto/ml/openssl
+OPENSSL_HOME=../../contrib/CoreCrypto/ml/openssl
 #OPENSSL_HOME=/usr/local/Cellar/openssl\@1.1/1.1.0c
 #CC=gcc-6 
 

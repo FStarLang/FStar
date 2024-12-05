@@ -171,7 +171,7 @@ let rec extract_meta x : option meta =
                     false x FStarC.Parser.Const.remove_unused_type_parameters_lid)
        with
        | None -> None
-       | Some l -> Some (RemoveUnusedTypeParameters (l, S.range_of_fv fv))
+       | Some (l, _rng) -> Some (RemoveUnusedTypeParameters (l, S.range_of_fv fv))
        end
     | _ -> None
 
@@ -360,8 +360,8 @@ let extract_typ_abbrev env quals attrs lb
         in
         tcenv, as_pair def_typ
     in
-    let lbtyp = FStarC.TypeChecker.Normalize.normalize [Env.Beta;Env.UnfoldUntil delta_constant; Env.ForExtraction] tcenv lbtyp in
-    //eta expansion is important; see issue #490
+    let lbtyp = FStarC.TypeChecker.Normalize.normalize [Env.Beta;Env.UnfoldUntil delta_constant; Env.ForExtraction; Env.Unrefine; Env.Unascribe ] tcenv lbtyp in
+    //eta expansion is important; see issue #490, including unrefining and unascribing
     let lbdef = FStarC.TypeChecker.Normalize.eta_expand_with_type tcenv lbdef lbtyp in
     let fv = right lb.lbname in
     let lid = fv.fv_name.v in

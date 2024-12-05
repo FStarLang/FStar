@@ -16,6 +16,7 @@
 module FStarC.OCaml
 
 open FStarC
+open FStar.List.Tot.Base
 open FStarC.Compiler
 open FStarC.Compiler.Effect
 
@@ -29,34 +30,41 @@ let shellescape (s:string) : string =
 
 let new_ocamlpath () : string =
   let ocamldir = Find.locate_ocaml () in
+  let sep = match Platform.system with
+    | Platform.Windows -> ";"
+    | Platform.Posix -> ":"
+  in
   let old_ocamlpath = Util.dflt "" (Util.expand_environment_variable "OCAMLPATH") in
-  let new_ocamlpath = ocamldir ^ ":" ^ old_ocamlpath in
+  let new_ocamlpath = ocamldir ^ sep ^ old_ocamlpath in
   new_ocamlpath
 
 let exec_in_ocamlenv #a (cmd : string) (args : list string) : a =
   let new_ocamlpath = new_ocamlpath () in
-  if Platform.system = Platform.Windows then (
-    Errors.raise_error0 Errors.Fatal_OptionsNotCompatible [
-      Errors.text "--ocamlenv is not supported on Windows (yet?)"
-    ]
-  );
   (* Update OCAMLPATH and run (exec) the command *)
   Util.putenv "OCAMLPATH" new_ocamlpath;
   Util.execvp cmd (cmd :: args);
   failwith "execvp failed"
 
+let app_lib = "fstar.lib"
+let plugin_lib = "fstar.lib"
+
 (* OCaml Warning 8: this pattern-matching is not exhaustive.
 This is usually benign as we check for exhaustivenss via SMT. *)
+let wstr = "-8"
+
+let common_args =
+  "-w" :: wstr ::
+  "-thread" ::
+  []
 
 let exec_ocamlc args =
   exec_in_ocamlenv "ocamlfind"
-    ("c" :: "-w" :: "-8" :: "-linkpkg" :: "-package" :: "fstar.lib" :: args)
+    ("c" :: common_args @ "-linkpkg" :: "-package" :: app_lib :: args)
 
 let exec_ocamlopt args =
   exec_in_ocamlenv "ocamlfind"
-    ("opt" :: "-w" :: "-8" :: "-linkpkg" :: "-package" :: "fstar.lib" :: args)
+    ("opt" :: common_args @ "-linkpkg" :: "-package" :: app_lib :: args)
 
 let exec_ocamlopt_plugin args =
   exec_in_ocamlenv "ocamlfind"
-    ("opt" :: "-w" :: "-8" :: "-shared" :: "-package" :: "fstar.lib" ::
-    args)
+    ("opt" :: common_args @ "-shared" :: "-package" :: plugin_lib :: args)

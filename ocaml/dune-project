@@ -1,4 +1,10 @@
 (lang dune 3.2)
+; ^ Before changing this, consider that we need a version
+; that we can use to build Linux, Windows, and MacOS packages.
+; In particular our current Windows runner is limited to Dune 3.5.
+; Changes here may pass normal CI, but later fail when trying to do
+; a release, so *make sure* to test it manually.
+
 (name fstar)
 (generate_opam_files false)
 (using menhir 2.1)

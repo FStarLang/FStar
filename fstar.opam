@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2024.09.05~dev"
+version: "2024.12.03~dev"
 maintainer: "taramana@microsoft.com"
 authors: "Nik Swamy <nswamy@microsoft.com>,Jonathan Protzenko <protz@microsoft.com>,Tahina Ramananandro <taramana@microsoft.com>"
 homepage: "http://fstar-lang.org"
@@ -14,6 +14,7 @@ depends: [
   "memtrace"
   "menhirLib"
   "menhir" {build & >= "2.1"}
+  "mtime"
   "pprint"
   "sedlex"
   "ppxlib" {>= "0.27.0"}

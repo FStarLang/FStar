@@ -5,14 +5,7 @@ include $(FSTAR_ROOT)/mk/test.mk
 # We should make it so in the library and just remove this, along
 # with its hacks.
 
-.PHONY: %.native %.interpreted
-.PRECIOUS: %.fst.checked %.ml %.cmxs
-
-all: CanonCommSemiring.interpreted CanonCommSemiring.native
-
-%.fst.checked: %.fst
-	$(call msg, "CHECK", $<)
-	$(FSTAR) --cache_checked_modules $*.fst
+all: $(OUTPUT_DIR)/CanonCommSemiring.interpreted $(OUTPUT_DIR)/CanonCommSemiring.native
 
 # NOTE: This is overriding the default rule in test.mk.
 # If you add explicit dependencies here, it will fall back to the default rule.
@@ -21,22 +14,18 @@ $(OUTPUT_DIR)/%.ml:
 	$(FSTAR) --codegen Plugin --extract $* $*.fst
 	cat $*.ml.fixup >> $@
 
-%.cmxs: %.ml
+$(OUTPUT_DIR)/%.cmxs: $(OUTPUT_DIR)/%.ml
 	$(call msg, "OCAMLOPT", $<)
-	$(FSTAR_EXE) --ocamlopt_plugin -o $@ $*.ml
+	$(FSTAR_EXE) --ocamlopt_plugin -o $@ $<
 
 # REMARK: --load will compile $*.ml if $*.cmxs does not exist, but we
 # compile it before and use --load_cmxs
-%.native: $(OUTPUT_DIR)/%.cmxs %.fst %.Test.fst
+$(OUTPUT_DIR)/%.native: $(OUTPUT_DIR)/%.cmxs %.fst %.Test.fst
 	$(call msg, "CHECK NATIVE", $<)
 	$(FSTAR) --load_cmxs $* $*.Test.fst
 	@touch $@
 
-%.interpreted: %.fst.checked %.Test.fst
+$(OUTPUT_DIR)/%.interpreted: $(CACHE_DIR)/%.fst.checked %.Test.fst
 	$(call msg, "CHECK INTERP", $<)
 	$(FSTAR) $*.Test.fst
 	@touch $@
-
-clean:
-	rm -f *.checked *.ml *.o *.cm[ix] *.cmxs *~
-	rm -rf $(CACHE_DIR) $(OUTPUT_DIR)

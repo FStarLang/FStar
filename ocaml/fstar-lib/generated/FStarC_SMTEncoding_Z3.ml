@@ -140,12 +140,19 @@ let (z3_exe : unit -> Prims.string) =
       (fun version ->
          let path =
            let z3_v = FStarC_Platform.exe (Prims.strcat "z3-" version) in
+           let local_z3 =
+             FStarC_Platform.exe
+               (Prims.strcat FStarC_Find.fstar_bin_directory
+                  (Prims.strcat "/" (Prims.strcat "z3-fstar-" version))) in
            let smto = FStarC_Options.smt () in
            if FStar_Pervasives_Native.uu___is_Some smto
            then FStar_Pervasives_Native.__proj__Some__item__v smto
            else
-             (let uu___3 = inpath z3_v in
-              if uu___3 then z3_v else FStarC_Platform.exe "z3") in
+             if FStarC_Compiler_Util.file_exists local_z3
+             then local_z3
+             else
+               (let uu___4 = inpath z3_v in
+                if uu___4 then z3_v else FStarC_Platform.exe "z3") in
          (let uu___3 = FStarC_Compiler_Debug.any () in
           if uu___3
           then FStarC_Compiler_Util.print1 "Chosen Z3 executable: %s\n" path
@@ -308,6 +315,29 @@ let (warn_handler : FStarC_Errors_Msg.error_message -> Prims.string -> unit)
       FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_UnexpectedZ3Output
         () (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
         (Obj.magic uu___)
+let (install_suggestion : FStarC_Pprint.document) =
+  let uu___ =
+    let uu___1 =
+      FStarC_Errors_Msg.text "Please download the correct version of Z3 from" in
+    let uu___2 = FStarC_Pprint.url z3url in
+    FStarC_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___1 uu___2 in
+  let uu___1 =
+    let uu___2 =
+      let uu___3 = FStarC_Errors_Msg.text "and install it into your $PATH as" in
+      let uu___4 =
+        let uu___5 =
+          let uu___6 =
+            let uu___7 =
+              let uu___8 =
+                let uu___9 = FStarC_Options.z3_version () in
+                Prims.strcat "z3-" uu___9 in
+              FStarC_Platform.exe uu___8 in
+            FStarC_Pprint.doc_of_string uu___7 in
+          FStarC_Pprint.squotes uu___6 in
+        FStarC_Pprint.op_Hat_Hat uu___5 FStarC_Pprint.dot in
+      FStarC_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
+    FStarC_Pprint.group uu___2 in
+  FStarC_Pprint.op_Hat_Slash_Hat uu___ uu___1
 let (check_z3version : FStarC_Compiler_Util.proc -> unit) =
   fun p ->
     let getinfo arg =
@@ -378,36 +408,7 @@ let (check_z3version : FStarC_Compiler_Util.proc -> unit) =
                  "Unexpected Z3 version for '%s': expected '%s', got '%s'."
                  uu___7 ver_conf ver_found in
              FStarC_Errors_Msg.text uu___6 in
-           let uu___6 =
-             let uu___7 =
-               let uu___8 =
-                 let uu___9 =
-                   FStarC_Errors_Msg.text
-                     "Please download the correct version of Z3 from" in
-                 let uu___10 = FStarC_Pprint.url z3url in
-                 FStarC_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___9
-                   uu___10 in
-               let uu___9 =
-                 let uu___10 =
-                   let uu___11 =
-                     FStarC_Errors_Msg.text
-                       "and install it into your $PATH as" in
-                   let uu___12 =
-                     let uu___13 =
-                       let uu___14 =
-                         let uu___15 =
-                           let uu___16 =
-                             let uu___17 = FStarC_Options.z3_version () in
-                             Prims.strcat "z3-" uu___17 in
-                           FStarC_Platform.exe uu___16 in
-                         FStarC_Pprint.doc_of_string uu___15 in
-                       FStarC_Pprint.squotes uu___14 in
-                     FStarC_Pprint.op_Hat_Hat uu___13 FStarC_Pprint.dot in
-                   FStarC_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
-                 FStarC_Pprint.group uu___10 in
-               FStarC_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-             [uu___7] in
-           uu___5 :: uu___6 in
+           [uu___5; install_suggestion] in
          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_SolverMismatch
            () (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
            (Obj.magic uu___4));
@@ -432,34 +433,54 @@ let (new_z3proc :
                    (fun s -> s = "Done!")) ()
         with
         | uu___ ->
-            let uu___1 =
-              let uu___2 =
-                FStarC_Errors_Msg.text "Could not start SMT solver process." in
-              let uu___3 =
-                let uu___4 =
-                  let uu___5 = FStarC_Errors_Msg.text "Command:" in
-                  let uu___6 =
-                    let uu___7 =
-                      FStarC_Pprint.arbitrary_string
-                        (FStar_Pervasives_Native.fst cmd_and_args) in
-                    FStarC_Pprint.squotes uu___7 in
-                  FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
-                    uu___5 uu___6 in
-                let uu___5 =
-                  let uu___6 =
-                    let uu___7 = FStarC_Errors_Msg.text "Exception:" in
-                    let uu___8 =
-                      let uu___9 = FStarC_Compiler_Util.print_exn uu___ in
-                      FStarC_Pprint.arbitrary_string uu___9 in
+            if FStarC_Compiler_Util.exn_is_enoent uu___
+            then
+              let uu___1 =
+                let uu___2 = FStarC_Errors_Msg.text "Z3 solver not found." in
+                let uu___3 =
+                  let uu___4 =
+                    let uu___5 = FStarC_Errors_Msg.text "Required version:" in
+                    let uu___6 =
+                      let uu___7 = FStarC_Options.z3_version () in
+                      FStarC_Errors_Msg.text uu___7 in
                     FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
-                      uu___7 uu___8 in
-                  [uu___6] in
-                uu___4 :: uu___5 in
-              uu___2 :: uu___3 in
-            FStarC_Errors.raise_error0
-              FStarC_Errors_Codes.Error_Z3InvocationError ()
-              (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-              (Obj.magic uu___1) in
+                      uu___5 uu___6 in
+                  [uu___4; install_suggestion] in
+                uu___2 :: uu___3 in
+              FStarC_Errors.raise_error0
+                FStarC_Errors_Codes.Error_Z3InvocationError ()
+                (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                (Obj.magic uu___1)
+            else
+              (let uu___1 =
+                 let uu___2 =
+                   FStarC_Errors_Msg.text
+                     "Could not start SMT solver process." in
+                 let uu___3 =
+                   let uu___4 =
+                     let uu___5 = FStarC_Errors_Msg.text "Command:" in
+                     let uu___6 =
+                       let uu___7 =
+                         FStarC_Pprint.arbitrary_string
+                           (FStar_Pervasives_Native.fst cmd_and_args) in
+                       FStarC_Pprint.squotes uu___7 in
+                     FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                       uu___5 uu___6 in
+                   let uu___5 =
+                     let uu___6 =
+                       let uu___7 = FStarC_Errors_Msg.text "Exception:" in
+                       let uu___8 =
+                         let uu___9 = FStarC_Compiler_Util.print_exn uu___ in
+                         FStarC_Pprint.arbitrary_string uu___9 in
+                       FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                         uu___7 uu___8 in
+                     [uu___6] in
+                   uu___4 :: uu___5 in
+                 uu___2 :: uu___3 in
+               FStarC_Errors.raise_error0
+                 FStarC_Errors_Codes.Error_Z3InvocationError ()
+                 (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                 (Obj.magic uu___1)) in
       check_z3version proc; proc
 let (new_z3proc_with_id :
   (Prims.string * Prims.string Prims.list) -> FStarC_Compiler_Util.proc) =
@@ -1292,7 +1313,7 @@ let (z3_job :
                          (fun uu___3 ->
                             match () with
                             | () ->
-                                FStarC_Compiler_Util.record_time
+                                FStarC_Compiler_Util.record_time_ms
                                   (fun uu___4 ->
                                      doZ3Exe log_file r fresh input
                                        label_messages queryid)) ()

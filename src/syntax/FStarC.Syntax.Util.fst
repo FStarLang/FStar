@@ -1810,8 +1810,8 @@ let destruct_lemma_with_smt_patterns (t:term)
         Errors.raise_error p Errors.Error_IllSMTPat [
             prefix 2 1 (text "Not an atomic SMT pattern:")
               (ttd p);
-            text "Patterns on lemmas must be a list of simple SMTPat's;\
-                  or a single SMTPatOr containing a list;\
+            text "Patterns on lemmas must be a list of simple SMTPat's; \
+                  or a single SMTPatOr containing a list \
                   of lists of patterns."
           ]
     in

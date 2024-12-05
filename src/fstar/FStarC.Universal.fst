@@ -381,7 +381,7 @@ let tc_one_file
     | Some tgt ->
       if not (Options.should_extract (string_of_lid tcmod.name) tgt)
       then None, 0
-      else FStarC.Compiler.Util.record_time (fun () ->
+      else FStarC.Compiler.Util.record_time_ms (fun () ->
             with_env env (fun env ->
               let _, defs = FStarC.Extraction.ML.Modul.extract env tcmod in
               defs)
@@ -391,14 +391,18 @@ let tc_one_file
       if Options.codegen() = None
       then env, 0
       else
-        FStarC.Compiler.Util.record_time (fun () ->
+        FStarC.Compiler.Util.record_time_ms (fun () ->
             let env, _ = with_env env (fun env ->
                   FStarC.Extraction.ML.Modul.extract_iface env tcmod) in
             env
           )
   in
   let tc_source_file () =
-      let fmod, env = parse env pre_fn fn in
+      let fmod, env = 
+        Profiling.profile (fun () -> parse env pre_fn fn)
+                          (Some (Parser.Dep.module_name_of_file fn))
+                          "FStarC.Universal.tc_source_file.parse"  
+      in
       let mii = FStarC.Syntax.DsEnv.inclusion_info (tcenv_of_uenv env).dsenv fmod.name in
       let check_mod () =
           let check env =
@@ -422,7 +426,7 @@ let tc_one_file
           let ((tcmod, smt_decls), env) =
             Profiling.profile (fun () -> check env)
                               (Some (string_of_lid fmod.name))
-                              "FStarC.Universal.tc_source_file"
+                              "FStarC.Universal.tc_source_file.check"
           in
 
           let tc_time = 0 in

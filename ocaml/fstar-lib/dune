@@ -13,6 +13,7 @@
     pprint
     process
     sedlex
+    mtime.clock.os
  )
  (modes native byte)
  (wrapped false)

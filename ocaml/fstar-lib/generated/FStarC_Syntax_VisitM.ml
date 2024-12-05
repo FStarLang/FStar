@@ -2080,6 +2080,7 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
                                         })))) uu___2))) uu___1)
       | FStarC_Syntax_Syntax.Sig_fail
           { FStarC_Syntax_Syntax.errs = errs;
+            FStarC_Syntax_Syntax.rng1 = rng;
             FStarC_Syntax_Syntax.fail_in_lax = fail_in_lax;
             FStarC_Syntax_Syntax.ses1 = ses;_}
           ->
@@ -2097,6 +2098,7 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
                           (FStarC_Syntax_Syntax.Sig_fail
                              {
                                FStarC_Syntax_Syntax.errs = errs;
+                               FStarC_Syntax_Syntax.rng1 = rng;
                                FStarC_Syntax_Syntax.fail_in_lax = fail_in_lax;
                                FStarC_Syntax_Syntax.ses1 = ses1
                              })))) uu___1)

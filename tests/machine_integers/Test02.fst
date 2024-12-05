@@ -35,3 +35,5 @@ let main () =
 
     print_string "correct\n";
     0
+
+let _ = main ()

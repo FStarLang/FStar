@@ -1354,18 +1354,20 @@ let rec (sigelt_to_string : FStarC_Syntax_Syntax.sigelt -> Prims.string) =
           Prims.strcat "(* Sig_bundle *)" uu___1
       | FStarC_Syntax_Syntax.Sig_fail
           { FStarC_Syntax_Syntax.errs = errs;
+            FStarC_Syntax_Syntax.rng1 = uu___;
             FStarC_Syntax_Syntax.fail_in_lax = lax;
             FStarC_Syntax_Syntax.ses1 = ses;_}
           ->
-          let uu___ = FStarC_Compiler_Util.string_of_bool lax in
-          let uu___1 =
+          let uu___1 = FStarC_Compiler_Util.string_of_bool lax in
+          let uu___2 =
             (FStarC_Common.string_of_list ())
               FStarC_Compiler_Util.string_of_int errs in
-          let uu___2 =
-            let uu___3 = FStarC_Compiler_List.map sigelt_to_string ses in
-            FStarC_Compiler_String.concat "\n" uu___3 in
+          let uu___3 =
+            let uu___4 = FStarC_Compiler_List.map sigelt_to_string ses in
+            FStarC_Compiler_String.concat "\n" uu___4 in
           FStarC_Compiler_Util.format3
-            "(* Sig_fail %s %s *)\n%s\n(* / Sig_fail*)\n" uu___ uu___1 uu___2
+            "(* Sig_fail %s %s *)\n%s\n(* / Sig_fail*)\n" uu___1 uu___2
+            uu___3
       | FStarC_Syntax_Syntax.Sig_new_effect ed ->
           let uu___ =
             let uu___1 = FStarC_Syntax_Util.is_dm4f ed in

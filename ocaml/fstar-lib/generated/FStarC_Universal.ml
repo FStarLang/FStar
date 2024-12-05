@@ -1150,7 +1150,7 @@ let (tc_one_file :
                  if uu___2
                  then (FStar_Pervasives_Native.None, Prims.int_zero)
                  else
-                   FStarC_Compiler_Util.record_time
+                   FStarC_Compiler_Util.record_time_ms
                      (fun uu___4 ->
                         with_env env1
                           (fun env2 ->
@@ -1164,7 +1164,7 @@ let (tc_one_file :
              if uu___1
              then (env1, Prims.int_zero)
              else
-               FStarC_Compiler_Util.record_time
+               FStarC_Compiler_Util.record_time_ms
                  (fun uu___3 ->
                     let uu___4 =
                       with_env env1
@@ -1173,7 +1173,12 @@ let (tc_one_file :
                              tcmod) in
                     match uu___4 with | (env2, uu___5) -> env2) in
            let tc_source_file uu___1 =
-             let uu___2 = parse env pre_fn fn in
+             let uu___2 =
+               let uu___3 =
+                 let uu___4 = FStarC_Parser_Dep.module_name_of_file fn in
+                 FStar_Pervasives_Native.Some uu___4 in
+               FStarC_Profiling.profile (fun uu___4 -> parse env pre_fn fn)
+                 uu___3 "FStarC.Universal.tc_source_file.parse" in
              match uu___2 with
              | (fmod, env1) ->
                  let mii =
@@ -1223,7 +1228,7 @@ let (tc_one_file :
                            fmod.FStarC_Syntax_Syntax.name in
                        FStar_Pervasives_Native.Some uu___6 in
                      FStarC_Profiling.profile (fun uu___6 -> check env1)
-                       uu___5 "FStarC.Universal.tc_source_file" in
+                       uu___5 "FStarC.Universal.tc_source_file.check" in
                    match uu___4 with
                    | ((tcmod, smt_decls), env2) ->
                        let tc_time = Prims.int_zero in

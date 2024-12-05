@@ -163,3 +163,5 @@ let main () : ML int =
     test_i8 ();
     print_string "correct\n";
     0
+
+let _ = main ()

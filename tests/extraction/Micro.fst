@@ -39,11 +39,11 @@ assume
 val f4 : nat -> GTot nat
 let h4 (#a:Type) (x:nat) : GTot nat = f4 x
 
-assume
-val f5 : nat -> Dv bool
-#set-options "--admit_smt_queries true"
-let h5 (x:nat) = f5 x && f5 x
-#reset-options
+(* assume *)
+(* val f5 : nat -> Dv bool *)
+(* #set-options "--admit_smt_queries true" *)
+(* let h5 (x:nat) = f5 x && f5 x *)
+(* #reset-options *)
 
 assume
 val f6 : string -> Dv string
@@ -77,6 +77,7 @@ assume val g11: int -> Dv int
 let test11 (x:int) =
   let y = g11 x in
   let z = f11 y in
+  admit();
   assert (z == y)
 
 

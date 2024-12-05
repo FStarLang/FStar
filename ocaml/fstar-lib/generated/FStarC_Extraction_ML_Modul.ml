@@ -326,7 +326,7 @@ let rec (extract_meta :
                   (match uu___5 with
                    | FStar_Pervasives_Native.None ->
                        FStar_Pervasives_Native.None
-                   | FStar_Pervasives_Native.Some l ->
+                   | FStar_Pervasives_Native.Some (l, _rng) ->
                        let uu___6 =
                          let uu___7 =
                            let uu___8 = FStarC_Syntax_Syntax.range_of_fv fv in
@@ -800,7 +800,9 @@ let (extract_typ_abbrev :
                   [FStarC_TypeChecker_Env.Beta;
                   FStarC_TypeChecker_Env.UnfoldUntil
                     FStarC_Syntax_Syntax.delta_constant;
-                  FStarC_TypeChecker_Env.ForExtraction] tcenv lbtyp in
+                  FStarC_TypeChecker_Env.ForExtraction;
+                  FStarC_TypeChecker_Env.Unrefine;
+                  FStarC_TypeChecker_Env.Unascribe] tcenv lbtyp in
               let lbdef1 =
                 FStarC_TypeChecker_Normalize.eta_expand_with_type tcenv lbdef
                   lbtyp1 in

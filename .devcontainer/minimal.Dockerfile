@@ -1,4 +1,5 @@
-FROM ubuntu:23.10
+# FIXME: z3.4.8.5-1 can no longer be installed on Ubuntu 24.04 because python3-distutils disappeared, and the z3 opam package has not been fixed for version 4.8.5, and 23.10 and all prior non-LTS are now EOL. Reverting to the previous LTS
+FROM ubuntu:22.04
 
 SHELL ["/bin/bash", "-c"]
 
@@ -46,7 +47,7 @@ ARG OCAML_VERSION=4.14.0
 RUN opam init --compiler=$OCAML_VERSION --disable-sandboxing
 RUN opam option depext-run-installs=true
 ENV OPAMYES=1
-RUN opam install --yes batteries zarith stdint yojson dune menhir menhirLib pprint sedlex ppxlib process ppx_deriving ppx_deriving_yojson memtrace
+RUN opam install --yes batteries zarith stdint yojson dune menhir menhirLib mtime pprint sedlex ppxlib process ppx_deriving ppx_deriving_yojson memtrace
 
 # Get compiled Z3
 RUN wget -nv https://github.com/Z3Prover/z3/releases/download/Z3-4.8.5/z3-4.8.5-x64-ubuntu-16.04.zip \
