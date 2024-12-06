@@ -22,6 +22,7 @@ type norm_step =
   | Reify 
   | NormDebug 
   | UnfoldOnly of Prims.string Prims.list 
+  | UnfoldOnce of Prims.string Prims.list 
   | UnfoldFully of Prims.string Prims.list 
   | UnfoldAttr of Prims.string Prims.list 
   | UnfoldQual of Prims.string Prims.list 
@@ -55,6 +56,11 @@ let (uu___is_UnfoldOnly : norm_step -> Prims.bool) =
     match projectee with | UnfoldOnly _0 -> true | uu___ -> false
 let (__proj__UnfoldOnly__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee -> match projectee with | UnfoldOnly _0 -> _0
+let (uu___is_UnfoldOnce : norm_step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldOnce _0 -> true | uu___ -> false
+let (__proj__UnfoldOnce__item___0 : norm_step -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | UnfoldOnce _0 -> _0
 let (uu___is_UnfoldFully : norm_step -> Prims.bool) =
   fun projectee ->
     match projectee with | UnfoldFully _0 -> true | uu___ -> false
@@ -93,6 +99,8 @@ let (nbe : norm_step) = NBE
 let (reify_ : norm_step) = Reify
 let (delta_only : Prims.string Prims.list -> norm_step) =
   fun s -> UnfoldOnly s
+let (delta_once : Prims.string Prims.list -> norm_step) =
+  fun s -> UnfoldOnce s
 let (delta_fully : Prims.string Prims.list -> norm_step) =
   fun s -> UnfoldFully s
 let (delta_attr : Prims.string Prims.list -> norm_step) =

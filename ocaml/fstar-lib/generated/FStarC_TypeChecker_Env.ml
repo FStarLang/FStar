@@ -13,6 +13,7 @@ type step =
   | DoNotUnfoldPureLets 
   | UnfoldUntil of FStarC_Syntax_Syntax.delta_depth 
   | UnfoldOnly of FStarC_Ident.lid Prims.list 
+  | UnfoldOnce of FStarC_Ident.lid Prims.list 
   | UnfoldFully of FStarC_Ident.lid Prims.list 
   | UnfoldAttr of FStarC_Ident.lid Prims.list 
   | UnfoldQual of Prims.string Prims.list 
@@ -71,6 +72,11 @@ let (uu___is_UnfoldOnly : step -> Prims.bool) =
     match projectee with | UnfoldOnly _0 -> true | uu___ -> false
 let (__proj__UnfoldOnly__item___0 : step -> FStarC_Ident.lid Prims.list) =
   fun projectee -> match projectee with | UnfoldOnly _0 -> _0
+let (uu___is_UnfoldOnce : step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldOnce _0 -> true | uu___ -> false
+let (__proj__UnfoldOnce__item___0 : step -> FStarC_Ident.lid Prims.list) =
+  fun projectee -> match projectee with | UnfoldOnce _0 -> _0
 let (uu___is_UnfoldFully : step -> Prims.bool) =
   fun projectee ->
     match projectee with | UnfoldFully _0 -> true | uu___ -> false
