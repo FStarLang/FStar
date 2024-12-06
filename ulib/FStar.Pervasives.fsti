@@ -217,6 +217,13 @@ val reify_ : norm_step
     list. Each string is a fully qualified name like [A.M.f] *)
 val delta_only (s: list string) : Tot norm_step
 
+(** Like [delta_only], unfold only the definitions in this list,
+but do so only once. This is useful for a controlled unfolding
+of recursive definitions. NOTE: if there are many occurrences
+of a variable in this list, it is unspecified which one will
+be unfolded (currently it depends on normalization order). *)
+val delta_once (s: list string) : Tot norm_step
+
 (** Unfold definitions for only the names in the given list, but
     unfold each definition encountered after unfolding as well.
 
