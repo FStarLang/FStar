@@ -28,8 +28,12 @@ let exec_in_ocamlenv : 'a . Prims.string -> Prims.string Prims.list -> 'a =
     fun args ->
       let new_ocamlpath1 = new_ocamlpath () in
       FStarC_Compiler_Util.putenv "OCAMLPATH" new_ocamlpath1;
-      FStarC_Compiler_Util.execvp cmd (cmd :: args);
-      failwith "execvp failed"
+      (let pid = FStarC_Compiler_Util.create_process cmd (cmd :: args) in
+       let rc = FStarC_Compiler_Util.waitpid pid in
+       match rc with
+       | FStar_Pervasives.Inl rc1 -> FStarC_Compiler_Effect.exit rc1
+       | FStar_Pervasives.Inr uu___1 ->
+           FStarC_Compiler_Effect.exit Prims.int_one)
 let (app_lib : Prims.string) = "fstar.lib"
 let (plugin_lib : Prims.string) = "fstar.lib"
 let (wstr : Prims.string) = "-8"
