@@ -1171,7 +1171,16 @@ let array_length (l:'a FStar_ImmutableArray_Base.t) = FStar_ImmutableArray_Base.
 let array_index (l:'a FStar_ImmutableArray_Base.t) (i:Z.t) = FStar_ImmutableArray_Base.index l i
 
 let putenv k v = Unix.putenv k v
-let execvp c args = Unix.execvp c (Array.of_list args)
+let create_process (prog:string) (args:string list) : Z.t =
+  let pid = Unix.create_process prog (Array.of_list args) Unix.stdin Unix.stdout Unix.stderr in
+  Z.of_int pid
+
+let waitpid (pid:Z.t) : (Z.t, Z.t) FStar_Pervasives.either =
+  let pid, s = Unix.waitpid [] (Z.to_int pid) in
+  match s with
+  | WEXITED rc -> FStar_Pervasives.Inl (Z.of_int rc)
+  | WSIGNALED rc -> FStar_Pervasives.Inr (Z.of_int rc)
+  | WSTOPPED _ -> failwith "waitpid: unexpected WSTOPPED, should not happen with empty flags"
 
 let exn_is_enoent (e:exn) : bool =
   match e with

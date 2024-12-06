@@ -40,10 +40,13 @@ let new_ocamlpath () : string =
 
 let exec_in_ocamlenv #a (cmd : string) (args : list string) : a =
   let new_ocamlpath = new_ocamlpath () in
-  (* Update OCAMLPATH and run (exec) the command *)
+  (* Update OCAMLPATH and run the command *)
   Util.putenv "OCAMLPATH" new_ocamlpath;
-  Util.execvp cmd (cmd :: args);
-  failwith "execvp failed"
+  let pid = Util.create_process cmd (cmd :: args) in
+  let rc = Util.waitpid pid in
+  match rc with
+  | Inl rc -> exit rc
+  | Inr _ -> exit 1
 
 let app_lib = "fstar.lib"
 let plugin_lib = "fstar.lib"
