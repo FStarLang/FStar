@@ -9,14 +9,6 @@ RUN += InlineLet.fst
 
 include $(FSTAR_ROOT)/mk/test.mk
 
-# Overriding the default rule for this one. We need to wrap this in a timeout.
-$(OUTPUT_DIR)/Div.out: $(OUTPUT_DIR)/Div.exe
-	$(call msg,TIMEOUT,$<)
-	$(Q)timeout 1 $(OUTPUT_DIR)/Div.exe ; \
-	  RC=$$? ;\
-	  if ! [ $$RC -eq 124 ]; then echo "ERROR: Div.exe terminated!?!?!"; false; fi
-	$(Q)touch $@
-
 # all: inline_let all_cmi Eta_expand.test Div.test ExtractAs.test
 
 # %.exe: %.fst
