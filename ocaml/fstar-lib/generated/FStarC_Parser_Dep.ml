@@ -370,41 +370,33 @@ type deps =
   file_system_map: files_for_module_name ;
   cmd_line_files: file_name Prims.list ;
   all_files: file_name Prims.list ;
-  interfaces_with_inlining: module_name Prims.list ;
   parse_results: parsing_data FStarC_Compiler_Util.smap }
 let (__proj__Mkdeps__item__dep_graph : deps -> dependence_graph) =
   fun projectee ->
     match projectee with
     | { dep_graph; file_system_map; cmd_line_files; all_files;
-        interfaces_with_inlining; parse_results;_} -> dep_graph
+        parse_results;_} -> dep_graph
 let (__proj__Mkdeps__item__file_system_map : deps -> files_for_module_name) =
   fun projectee ->
     match projectee with
     | { dep_graph; file_system_map; cmd_line_files; all_files;
-        interfaces_with_inlining; parse_results;_} -> file_system_map
+        parse_results;_} -> file_system_map
 let (__proj__Mkdeps__item__cmd_line_files : deps -> file_name Prims.list) =
   fun projectee ->
     match projectee with
     | { dep_graph; file_system_map; cmd_line_files; all_files;
-        interfaces_with_inlining; parse_results;_} -> cmd_line_files
+        parse_results;_} -> cmd_line_files
 let (__proj__Mkdeps__item__all_files : deps -> file_name Prims.list) =
   fun projectee ->
     match projectee with
     | { dep_graph; file_system_map; cmd_line_files; all_files;
-        interfaces_with_inlining; parse_results;_} -> all_files
-let (__proj__Mkdeps__item__interfaces_with_inlining :
-  deps -> module_name Prims.list) =
-  fun projectee ->
-    match projectee with
-    | { dep_graph; file_system_map; cmd_line_files; all_files;
-        interfaces_with_inlining; parse_results;_} ->
-        interfaces_with_inlining
+        parse_results;_} -> all_files
 let (__proj__Mkdeps__item__parse_results :
   deps -> parsing_data FStarC_Compiler_Util.smap) =
   fun projectee ->
     match projectee with
     | { dep_graph; file_system_map; cmd_line_files; all_files;
-        interfaces_with_inlining; parse_results;_} -> parse_results
+        parse_results;_} -> parse_results
 let (deps_try_find :
   dependence_graph -> Prims.string -> dep_node FStar_Pervasives_Native.option)
   =
@@ -427,28 +419,25 @@ let (mk_deps :
     files_for_module_name ->
       file_name Prims.list ->
         file_name Prims.list ->
-          module_name Prims.list ->
-            parsing_data FStarC_Compiler_Util.smap -> deps)
+          parsing_data FStarC_Compiler_Util.smap -> deps)
   =
   fun dg ->
     fun fs ->
       fun c ->
         fun a ->
-          fun i ->
-            fun pr ->
-              {
-                dep_graph = dg;
-                file_system_map = fs;
-                cmd_line_files = c;
-                all_files = a;
-                interfaces_with_inlining = i;
-                parse_results = pr
-              }
+          fun pr ->
+            {
+              dep_graph = dg;
+              file_system_map = fs;
+              cmd_line_files = c;
+              all_files = a;
+              parse_results = pr
+            }
 let (empty_deps : deps) =
   let uu___ = deps_empty () in
   let uu___1 = FStarC_Compiler_Util.smap_create Prims.int_zero in
   let uu___2 = FStarC_Compiler_Util.smap_create Prims.int_zero in
-  mk_deps uu___ uu___1 [] [] [] uu___2
+  mk_deps uu___ uu___1 [] [] uu___2
 let (module_name_of_dep : dependence -> module_name) =
   fun uu___ ->
     match uu___ with
@@ -515,6 +504,11 @@ let (has_implementation : files_for_module_name -> module_name -> Prims.bool)
     fun key ->
       let uu___ = implementation_of_internal file_system_map key in
       FStarC_Compiler_Option.isSome uu___
+let (interfaces_with_inlining : deps -> module_name -> Prims.bool) =
+  fun deps1 ->
+    fun m ->
+      let uu___ = FStarC_Options.cmi () in
+      if uu___ then has_interface deps1.file_system_map m else false
 let (cache_file_name : Prims.string -> Prims.string) =
   let checked_file_and_exists_flag fn =
     let cache_fn =
@@ -1948,7 +1942,7 @@ let (dep_graph_copy : dependence_graph -> dependence_graph) =
     match uu___ with
     | Deps g -> let uu___1 = FStarC_Compiler_Util.smap_copy g in Deps uu___1
 let (widen_deps :
-  module_name Prims.list ->
+  (Prims.string -> Prims.bool) ->
     dependence_graph ->
       files_for_module_name -> Prims.bool -> (Prims.bool * dependence_graph))
   =
@@ -1968,7 +1962,7 @@ let (widen_deps :
                        (fun d ->
                           match d with
                           | PreferInterface m when
-                              (FStarC_Compiler_List.contains m friends1) &&
+                              (friends1 m) &&
                                 (has_implementation file_system_map m)
                               ->
                               (FStarC_Compiler_Effect.op_Colon_Equals
@@ -1989,7 +1983,7 @@ let (widen_deps :
 let (topological_dependences_of' :
   files_for_module_name ->
     dependence_graph ->
-      Prims.string Prims.list ->
+      (Prims.string -> Prims.bool) ->
         file_name Prims.list ->
           Prims.bool -> (file_name Prims.list * Prims.bool))
   =
@@ -2067,14 +2061,14 @@ let (topological_dependences_of' :
                         FStarC_Compiler_Util.remove_dups
                           (fun x -> fun y -> x = y) friends1 in
                       FStarC_Compiler_String.concat ", " uu___4 in
-                    FStarC_Compiler_Util.print3
-                      "Phase1 complete:\n\tall_files = %s\n\tall_friends=%s\n\tinterfaces_with_inlining=%s\n"
+                    FStarC_Compiler_Util.print2
+                      "Phase1 complete:\n\tall_files = %s\n\tall_friends=%s\n"
                       (FStarC_Compiler_String.concat ", " all_files_0) uu___3
-                      (FStarC_Compiler_String.concat ", "
-                         interfaces_needing_inlining)
                   else ());
                  (let uu___2 =
-                    widen_deps friends1 dep_graph file_system_map widened in
+                    widen_deps
+                      (fun m -> FStarC_Compiler_List.contains m friends1)
+                      dep_graph file_system_map widened in
                   match uu___2 with
                   | (widened1, dep_graph1) ->
                       let uu___3 =
@@ -2099,7 +2093,8 @@ let (topological_dependences_of' :
 let (phase1 :
   files_for_module_name ->
     dependence_graph ->
-      module_name Prims.list -> Prims.bool -> (Prims.bool * dependence_graph))
+      (Prims.string -> Prims.bool) ->
+        Prims.bool -> (Prims.bool * dependence_graph))
   =
   fun file_system_map ->
     fun dep_graph ->
@@ -2121,7 +2116,7 @@ let (phase1 :
 let (topological_dependences_of :
   files_for_module_name ->
     dependence_graph ->
-      Prims.string Prims.list ->
+      (Prims.string -> Prims.bool) ->
         file_name Prims.list ->
           Prims.bool -> (file_name Prims.list * Prims.bool))
   =
@@ -2341,29 +2336,20 @@ let (collect :
          (fun f ->
             let m = lowercase_module_name f in
             FStarC_Options.add_verify_module m) all_cmd_line_files2;
-       (let inlining_ifaces =
-          FStarC_Compiler_Effect.op_Bang interfaces_needing_inlining in
-        let uu___3 =
+       (let uu___3 =
           profile
             (fun uu___4 ->
                let uu___5 =
                  let uu___6 = FStarC_Options.codegen () in
                  uu___6 <> FStar_Pervasives_Native.None in
                topological_dependences_of file_system_map dep_graph
-                 inlining_ifaces all_cmd_line_files2 uu___5)
+                 (has_interface file_system_map) all_cmd_line_files2 uu___5)
             "FStarC.Parser.Dep.topological_dependences_of" in
         match uu___3 with
         | (all_files, uu___4) ->
-            ((let uu___6 = FStarC_Compiler_Effect.op_Bang dbg in
-              if uu___6
-              then
-                FStarC_Compiler_Util.print1
-                  "Interfaces needing inlining: %s\n"
-                  (FStarC_Compiler_String.concat ", " inlining_ifaces)
-              else ());
-             (all_files,
-               (mk_deps dep_graph file_system_map all_cmd_line_files2
-                  all_files inlining_ifaces parse_results)))))
+            (all_files,
+              (mk_deps dep_graph file_system_map all_cmd_line_files2
+                 all_files parse_results))))
 let (deps_of : deps -> Prims.string -> Prims.string Prims.list) =
   fun deps1 ->
     fun f ->
@@ -2572,7 +2558,7 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
       let cache_file f = let uu___ = cache_file_name f in norm_path uu___ in
       let uu___ =
         phase1 deps1.file_system_map deps1.dep_graph
-          deps1.interfaces_with_inlining true in
+          (interfaces_with_inlining deps1) true in
       match uu___ with
       | (widened, dep_graph) ->
           let all_checked_files =
@@ -2674,7 +2660,7 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
                                   let uu___6 = dep_graph_copy dep_graph in
                                   topological_dependences_of'
                                     deps1.file_system_map uu___6
-                                    deps1.interfaces_with_inlining
+                                    (interfaces_with_inlining deps1)
                                     [file_name1] widened)
                                "FStarC.Parser.Dep.topological_dependences_of_2"
                            else
