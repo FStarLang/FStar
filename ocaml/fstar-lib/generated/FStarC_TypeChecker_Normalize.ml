@@ -917,6 +917,8 @@ let (reduce_equality :
                   (FStarC_TypeChecker_Cfg.default_steps.FStarC_TypeChecker_Cfg.unfold_until);
                 FStarC_TypeChecker_Cfg.unfold_only =
                   (FStarC_TypeChecker_Cfg.default_steps.FStarC_TypeChecker_Cfg.unfold_only);
+                FStarC_TypeChecker_Cfg.unfold_once =
+                  (FStarC_TypeChecker_Cfg.default_steps.FStarC_TypeChecker_Cfg.unfold_once);
                 FStarC_TypeChecker_Cfg.unfold_fully =
                   (FStarC_TypeChecker_Cfg.default_steps.FStarC_TypeChecker_Cfg.unfold_fully);
                 FStarC_TypeChecker_Cfg.unfold_attr =
@@ -1321,6 +1323,113 @@ let (decide_unfolding :
           | FStarC_TypeChecker_Normalize_Unfolding.Should_unfold_yes ->
               FStar_Pervasives_Native.Some
                 (FStar_Pervasives_Native.None, stack1)
+          | FStarC_TypeChecker_Normalize_Unfolding.Should_unfold_once ->
+              let uu___ =
+                (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once in
+              (match uu___ with
+               | FStar_Pervasives_Native.Some once ->
+                   let cfg' =
+                     let uu___1 =
+                       let uu___2 = cfg.FStarC_TypeChecker_Cfg.steps in
+                       let uu___3 =
+                         let uu___4 =
+                           FStarC_Compiler_List.filter
+                             (fun lid ->
+                                let uu___5 =
+                                  FStarC_Syntax_Syntax.fv_eq_lid fv lid in
+                                Prims.op_Negation uu___5) once in
+                         FStar_Pervasives_Native.Some uu___4 in
+                       {
+                         FStarC_TypeChecker_Cfg.beta =
+                           (uu___2.FStarC_TypeChecker_Cfg.beta);
+                         FStarC_TypeChecker_Cfg.iota =
+                           (uu___2.FStarC_TypeChecker_Cfg.iota);
+                         FStarC_TypeChecker_Cfg.zeta =
+                           (uu___2.FStarC_TypeChecker_Cfg.zeta);
+                         FStarC_TypeChecker_Cfg.zeta_full =
+                           (uu___2.FStarC_TypeChecker_Cfg.zeta_full);
+                         FStarC_TypeChecker_Cfg.weak =
+                           (uu___2.FStarC_TypeChecker_Cfg.weak);
+                         FStarC_TypeChecker_Cfg.hnf =
+                           (uu___2.FStarC_TypeChecker_Cfg.hnf);
+                         FStarC_TypeChecker_Cfg.primops =
+                           (uu___2.FStarC_TypeChecker_Cfg.primops);
+                         FStarC_TypeChecker_Cfg.do_not_unfold_pure_lets =
+                           (uu___2.FStarC_TypeChecker_Cfg.do_not_unfold_pure_lets);
+                         FStarC_TypeChecker_Cfg.unfold_until =
+                           (uu___2.FStarC_TypeChecker_Cfg.unfold_until);
+                         FStarC_TypeChecker_Cfg.unfold_only =
+                           (uu___2.FStarC_TypeChecker_Cfg.unfold_only);
+                         FStarC_TypeChecker_Cfg.unfold_once = uu___3;
+                         FStarC_TypeChecker_Cfg.unfold_fully =
+                           (uu___2.FStarC_TypeChecker_Cfg.unfold_fully);
+                         FStarC_TypeChecker_Cfg.unfold_attr =
+                           (uu___2.FStarC_TypeChecker_Cfg.unfold_attr);
+                         FStarC_TypeChecker_Cfg.unfold_qual =
+                           (uu___2.FStarC_TypeChecker_Cfg.unfold_qual);
+                         FStarC_TypeChecker_Cfg.unfold_namespace =
+                           (uu___2.FStarC_TypeChecker_Cfg.unfold_namespace);
+                         FStarC_TypeChecker_Cfg.dont_unfold_attr =
+                           (uu___2.FStarC_TypeChecker_Cfg.dont_unfold_attr);
+                         FStarC_TypeChecker_Cfg.pure_subterms_within_computations
+                           =
+                           (uu___2.FStarC_TypeChecker_Cfg.pure_subterms_within_computations);
+                         FStarC_TypeChecker_Cfg.simplify =
+                           (uu___2.FStarC_TypeChecker_Cfg.simplify);
+                         FStarC_TypeChecker_Cfg.erase_universes =
+                           (uu___2.FStarC_TypeChecker_Cfg.erase_universes);
+                         FStarC_TypeChecker_Cfg.allow_unbound_universes =
+                           (uu___2.FStarC_TypeChecker_Cfg.allow_unbound_universes);
+                         FStarC_TypeChecker_Cfg.reify_ =
+                           (uu___2.FStarC_TypeChecker_Cfg.reify_);
+                         FStarC_TypeChecker_Cfg.compress_uvars =
+                           (uu___2.FStarC_TypeChecker_Cfg.compress_uvars);
+                         FStarC_TypeChecker_Cfg.no_full_norm =
+                           (uu___2.FStarC_TypeChecker_Cfg.no_full_norm);
+                         FStarC_TypeChecker_Cfg.check_no_uvars =
+                           (uu___2.FStarC_TypeChecker_Cfg.check_no_uvars);
+                         FStarC_TypeChecker_Cfg.unmeta =
+                           (uu___2.FStarC_TypeChecker_Cfg.unmeta);
+                         FStarC_TypeChecker_Cfg.unascribe =
+                           (uu___2.FStarC_TypeChecker_Cfg.unascribe);
+                         FStarC_TypeChecker_Cfg.in_full_norm_request =
+                           (uu___2.FStarC_TypeChecker_Cfg.in_full_norm_request);
+                         FStarC_TypeChecker_Cfg.weakly_reduce_scrutinee =
+                           (uu___2.FStarC_TypeChecker_Cfg.weakly_reduce_scrutinee);
+                         FStarC_TypeChecker_Cfg.nbe_step =
+                           (uu___2.FStarC_TypeChecker_Cfg.nbe_step);
+                         FStarC_TypeChecker_Cfg.for_extraction =
+                           (uu___2.FStarC_TypeChecker_Cfg.for_extraction);
+                         FStarC_TypeChecker_Cfg.unrefine =
+                           (uu___2.FStarC_TypeChecker_Cfg.unrefine);
+                         FStarC_TypeChecker_Cfg.default_univs_to_zero =
+                           (uu___2.FStarC_TypeChecker_Cfg.default_univs_to_zero);
+                         FStarC_TypeChecker_Cfg.tactics =
+                           (uu___2.FStarC_TypeChecker_Cfg.tactics)
+                       } in
+                     {
+                       FStarC_TypeChecker_Cfg.steps = uu___1;
+                       FStarC_TypeChecker_Cfg.tcenv =
+                         (cfg.FStarC_TypeChecker_Cfg.tcenv);
+                       FStarC_TypeChecker_Cfg.debug =
+                         (cfg.FStarC_TypeChecker_Cfg.debug);
+                       FStarC_TypeChecker_Cfg.delta_level =
+                         (cfg.FStarC_TypeChecker_Cfg.delta_level);
+                       FStarC_TypeChecker_Cfg.primitive_steps =
+                         (cfg.FStarC_TypeChecker_Cfg.primitive_steps);
+                       FStarC_TypeChecker_Cfg.strong =
+                         (cfg.FStarC_TypeChecker_Cfg.strong);
+                       FStarC_TypeChecker_Cfg.memoize_lazy =
+                         (cfg.FStarC_TypeChecker_Cfg.memoize_lazy);
+                       FStarC_TypeChecker_Cfg.normalize_pure_lets =
+                         (cfg.FStarC_TypeChecker_Cfg.normalize_pure_lets);
+                       FStarC_TypeChecker_Cfg.reifying =
+                         (cfg.FStarC_TypeChecker_Cfg.reifying);
+                       FStarC_TypeChecker_Cfg.compat_memo_ignore_cfg =
+                         (cfg.FStarC_TypeChecker_Cfg.compat_memo_ignore_cfg)
+                     } in
+                   FStar_Pervasives_Native.Some
+                     ((FStar_Pervasives_Native.Some cfg'), stack1))
           | FStarC_TypeChecker_Normalize_Unfolding.Should_unfold_fully ->
               let cfg' =
                 {
@@ -1348,6 +1457,8 @@ let (decide_unfolding :
                             FStarC_Syntax_Syntax.delta_constant);
                        FStarC_TypeChecker_Cfg.unfold_only =
                          FStar_Pervasives_Native.None;
+                       FStarC_TypeChecker_Cfg.unfold_once =
+                         (uu___.FStarC_TypeChecker_Cfg.unfold_once);
                        FStarC_TypeChecker_Cfg.unfold_fully =
                          FStar_Pervasives_Native.None;
                        FStarC_TypeChecker_Cfg.unfold_attr =
@@ -2305,6 +2416,8 @@ let rec (norm :
                             (uu___3.FStarC_TypeChecker_Cfg.unfold_until);
                           FStarC_TypeChecker_Cfg.unfold_only =
                             FStar_Pervasives_Native.None;
+                          FStarC_TypeChecker_Cfg.unfold_once =
+                            (uu___3.FStarC_TypeChecker_Cfg.unfold_once);
                           FStarC_TypeChecker_Cfg.unfold_fully =
                             FStar_Pervasives_Native.None;
                           FStarC_TypeChecker_Cfg.unfold_attr =
@@ -2515,6 +2628,8 @@ let rec (norm :
                                (uu___6.FStarC_TypeChecker_Cfg.unfold_until);
                              FStarC_TypeChecker_Cfg.unfold_only =
                                (uu___6.FStarC_TypeChecker_Cfg.unfold_only);
+                             FStarC_TypeChecker_Cfg.unfold_once =
+                               (uu___6.FStarC_TypeChecker_Cfg.unfold_once);
                              FStarC_TypeChecker_Cfg.unfold_fully =
                                (uu___6.FStarC_TypeChecker_Cfg.unfold_fully);
                              FStarC_TypeChecker_Cfg.unfold_attr =
@@ -3180,6 +3295,8 @@ let rec (norm :
                             (uu___2.FStarC_TypeChecker_Cfg.unfold_until);
                           FStarC_TypeChecker_Cfg.unfold_only =
                             (uu___2.FStarC_TypeChecker_Cfg.unfold_only);
+                          FStarC_TypeChecker_Cfg.unfold_once =
+                            (uu___2.FStarC_TypeChecker_Cfg.unfold_once);
                           FStarC_TypeChecker_Cfg.unfold_fully =
                             (uu___2.FStarC_TypeChecker_Cfg.unfold_fully);
                           FStarC_TypeChecker_Cfg.unfold_attr =
@@ -7043,6 +7160,8 @@ and (do_rebuild :
                               FStar_Pervasives_Native.None;
                             FStarC_TypeChecker_Cfg.unfold_only =
                               FStar_Pervasives_Native.None;
+                            FStarC_TypeChecker_Cfg.unfold_once =
+                              (uu___4.FStarC_TypeChecker_Cfg.unfold_once);
                             FStarC_TypeChecker_Cfg.unfold_fully =
                               (uu___4.FStarC_TypeChecker_Cfg.unfold_fully);
                             FStarC_TypeChecker_Cfg.unfold_attr =
@@ -7299,6 +7418,8 @@ and (do_rebuild :
                                         (uu___7.FStarC_TypeChecker_Cfg.unfold_until);
                                       FStarC_TypeChecker_Cfg.unfold_only =
                                         (uu___7.FStarC_TypeChecker_Cfg.unfold_only);
+                                      FStarC_TypeChecker_Cfg.unfold_once =
+                                        (uu___7.FStarC_TypeChecker_Cfg.unfold_once);
                                       FStarC_TypeChecker_Cfg.unfold_fully =
                                         (uu___7.FStarC_TypeChecker_Cfg.unfold_fully);
                                       FStarC_TypeChecker_Cfg.unfold_attr =

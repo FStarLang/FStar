@@ -189,6 +189,8 @@ let (zeta_false : config -> config) =
                  (uu___.FStarC_TypeChecker_Cfg.unfold_until);
                FStarC_TypeChecker_Cfg.unfold_only =
                  (uu___.FStarC_TypeChecker_Cfg.unfold_only);
+               FStarC_TypeChecker_Cfg.unfold_once =
+                 (uu___.FStarC_TypeChecker_Cfg.unfold_once);
                FStarC_TypeChecker_Cfg.unfold_fully =
                  (uu___.FStarC_TypeChecker_Cfg.unfold_fully);
                FStarC_TypeChecker_Cfg.unfold_attr =
@@ -3370,6 +3372,8 @@ let (normalize :
                      (uu___.FStarC_TypeChecker_Cfg.unfold_until);
                    FStarC_TypeChecker_Cfg.unfold_only =
                      (uu___.FStarC_TypeChecker_Cfg.unfold_only);
+                   FStarC_TypeChecker_Cfg.unfold_once =
+                     (uu___.FStarC_TypeChecker_Cfg.unfold_once);
                    FStarC_TypeChecker_Cfg.unfold_fully =
                      (uu___.FStarC_TypeChecker_Cfg.unfold_fully);
                    FStarC_TypeChecker_Cfg.unfold_attr =
@@ -3488,6 +3492,8 @@ let (normalize_for_unit_test :
                    (uu___.FStarC_TypeChecker_Cfg.unfold_until);
                  FStarC_TypeChecker_Cfg.unfold_only =
                    (uu___.FStarC_TypeChecker_Cfg.unfold_only);
+                 FStarC_TypeChecker_Cfg.unfold_once =
+                   (uu___.FStarC_TypeChecker_Cfg.unfold_once);
                  FStarC_TypeChecker_Cfg.unfold_fully =
                    (uu___.FStarC_TypeChecker_Cfg.unfold_fully);
                  FStarC_TypeChecker_Cfg.unfold_attr =

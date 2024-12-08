@@ -798,6 +798,7 @@ let steps_Iota          = tconst PC.steps_iota
 let steps_Reify         = tconst PC.steps_reify
 let steps_NormDebug     = tconst PC.steps_norm_debug
 let steps_UnfoldOnly    = tconst PC.steps_unfoldonly
+let steps_UnfoldOnce    = tconst PC.steps_unfoldonce
 let steps_UnfoldFully   = tconst PC.steps_unfoldonly
 let steps_UnfoldAttr    = tconst PC.steps_unfoldattr
 let steps_UnfoldQual    = tconst PC.steps_unfoldqual
@@ -847,6 +848,9 @@ let e_norm_step : embedding Pervasives.norm_step =
                     steps_NormDebug
                 | UnfoldOnly l ->
                     S.mk_Tm_app steps_UnfoldOnly [S.as_arg (embed l rng None norm)]
+                                rng
+                | UnfoldOnce l ->
+                    S.mk_Tm_app steps_UnfoldOnce [S.as_arg (embed l rng None norm)]
                                 rng
                 | UnfoldFully l ->
                     S.mk_Tm_app steps_UnfoldFully [S.as_arg (embed l rng None norm)]
@@ -902,6 +906,9 @@ let e_norm_step : embedding Pervasives.norm_step =
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->
                     BU.bind_opt (try_unembed l norm) (fun ss ->
                     Some <| UnfoldOnly ss)
+                | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonce ->
+                    BU.bind_opt (try_unembed l norm) (fun ss ->
+                    Some <| UnfoldOnce ss)
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldfully ->
                     BU.bind_opt (try_unembed l norm) (fun ss ->
                     Some <| UnfoldFully ss)

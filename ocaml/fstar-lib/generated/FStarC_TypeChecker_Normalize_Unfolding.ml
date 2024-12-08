@@ -4,6 +4,7 @@ let (plugin_unfold_warn_ctr : Prims.int FStarC_Compiler_Effect.ref) =
 type should_unfold_res =
   | Should_unfold_no 
   | Should_unfold_yes 
+  | Should_unfold_once 
   | Should_unfold_fully 
   | Should_unfold_reify 
 let (uu___is_Should_unfold_no : should_unfold_res -> Prims.bool) =
@@ -12,6 +13,9 @@ let (uu___is_Should_unfold_no : should_unfold_res -> Prims.bool) =
 let (uu___is_Should_unfold_yes : should_unfold_res -> Prims.bool) =
   fun projectee ->
     match projectee with | Should_unfold_yes -> true | uu___ -> false
+let (uu___is_Should_unfold_once : should_unfold_res -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Should_unfold_once -> true | uu___ -> false
 let (uu___is_Should_unfold_fully : should_unfold_res -> Prims.bool) =
   fun projectee ->
     match projectee with | Should_unfold_fully -> true | uu___ -> false
@@ -38,10 +42,11 @@ let (should_unfold :
             match uu___ with
             | FStar_Pervasives_Native.None -> []
             | FStar_Pervasives_Native.Some quals1 -> quals1 in
-          let yes = (true, false, false) in
-          let no = (false, false, false) in
-          let fully = (true, true, false) in
-          let reif = (true, false, true) in
+          let yes = (true, false, false, false) in
+          let no = (false, false, false, false) in
+          let fully = (true, true, false, false) in
+          let reif = (true, false, true, false) in
+          let once = (true, false, false, true) in
           let yesno b = if b then yes else no in
           let fullyno b = if b then fully else no in
           let comb_or l =
@@ -49,8 +54,9 @@ let (should_unfold :
               (fun uu___ ->
                  fun uu___1 ->
                    match (uu___, uu___1) with
-                   | ((a, b, c), (x, y, z)) -> ((a || x), (b || y), (c || z)))
-              l (false, false, false) in
+                   | ((a, b, c, d), (x, y, z, w)) ->
+                       ((a || x), (b || y), (c || z), (d || w))) l
+              (false, false, false, false) in
           let default_unfolding uu___ =
             FStarC_TypeChecker_Cfg.log_unfolding cfg
               (fun uu___2 ->
@@ -85,8 +91,11 @@ let (should_unfold :
                           uu___4 l) cfg.FStarC_TypeChecker_Cfg.delta_level in
              yesno uu___2) in
           let selective_unfold =
-            ((((FStar_Pervasives_Native.uu___is_Some
-                  (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_only)
+            (((((FStar_Pervasives_Native.uu___is_Some
+                   (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_only)
+                  ||
+                  (FStar_Pervasives_Native.uu___is_Some
+                     (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once))
                  ||
                  (FStar_Pervasives_Native.uu___is_Some
                     (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_fully))
@@ -151,6 +160,20 @@ let (should_unfold :
                            FStarC_Compiler_Util.print_string
                              " >> HasMaskedEffect, not unfolding\n");
                       no)
+                 | (uu___, true) when
+                     (FStar_Pervasives_Native.uu___is_Some
+                        (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once)
+                       &&
+                       (FStarC_Compiler_Util.for_some
+                          (FStarC_Syntax_Syntax.fv_eq_lid fv)
+                          (FStar_Pervasives_Native.__proj__Some__item__v
+                             (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once))
+                     ->
+                     (FStarC_TypeChecker_Cfg.log_unfolding cfg
+                        (fun uu___2 ->
+                           FStarC_Compiler_Util.print_string
+                             " >> UnfoldOnce\n");
+                      once)
                  | (FStar_Pervasives_Native.Some
                     (FStar_Pervasives.Inr
                      ({
@@ -309,7 +332,8 @@ let (should_unfold :
                    FStarC_Compiler_Range_Ops.showable_range uu___4 in
                let uu___4 =
                  FStarC_Class_Show.show
-                   (FStarC_Class_Show.show_tuple3
+                   (FStarC_Class_Show.show_tuple4
+                      FStarC_Class_Show.showable_bool
                       FStarC_Class_Show.showable_bool
                       FStarC_Class_Show.showable_bool
                       FStarC_Class_Show.showable_bool) res in
@@ -318,15 +342,17 @@ let (should_unfold :
                  uu___3 uu___4);
           (let r =
              match res with
-             | (false, uu___1, uu___2) -> Should_unfold_no
-             | (true, false, false) -> Should_unfold_yes
-             | (true, true, false) -> Should_unfold_fully
-             | (true, false, true) -> Should_unfold_reify
+             | (false, uu___1, uu___2, uu___3) -> Should_unfold_no
+             | (true, false, false, false) -> Should_unfold_yes
+             | (true, false, false, true) -> Should_unfold_once
+             | (true, true, false, false) -> Should_unfold_fully
+             | (true, false, true, false) -> Should_unfold_reify
              | uu___1 ->
                  let uu___2 =
                    let uu___3 =
                      FStarC_Class_Show.show
-                       (FStarC_Class_Show.show_tuple3
+                       (FStarC_Class_Show.show_tuple4
+                          FStarC_Class_Show.showable_bool
                           FStarC_Class_Show.showable_bool
                           FStarC_Class_Show.showable_bool
                           FStarC_Class_Show.showable_bool) res in
