@@ -74,8 +74,6 @@ EXTRACT_NS += -FStar.BufferNG
 EXTRACT_NS += -FStar.TaggedUnion
 EXTRACT_NS += -FStar.Bytes
 EXTRACT_NS += -FStar.Util
-EXTRACT_NS += -FStar.Tactics
-EXTRACT_NS += -FStar.Reflection
 EXTRACT_NS += -FStar.InteractiveHelpers
 EXTRACT_NS += -FStar.Class
 EXTRACT_NS += -FStar.Vector.Base
@@ -93,6 +91,10 @@ EXTRACT_NS += -FStar.Sealed
 EXTRACT_NS += +FStar.List.Pure.Base
 EXTRACT_NS += +FStar.List.Tot.Properties
 EXTRACT_NS += +FStar.Int.Cast.Full
+
+# Note: the pluginlib rules will enable these.
+EXTRACT_NS += -FStar.Tactics
+EXTRACT_NS += -FStar.Reflection
 
 FSTAR := $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 
