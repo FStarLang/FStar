@@ -1905,7 +1905,7 @@ let dll_remove_node (#t:Type) (d:dll t) (e:pointer (node t)) :
 
 #reset-options
 
-#set-options "--z3rlimit 10 --max_fuel 2 --max_ifuel 1"
+#set-options "--z3rlimit 100 --max_fuel 2 --max_ifuel 1"
 
 let dll_append (#t:Type) (d1 d2:dll t) :
   StackInline (dll t)

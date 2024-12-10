@@ -37,7 +37,6 @@ let test_div_lt = assert (8.0R /. 2.0R <. 5.0R)
 
 let test_sqrt_2_mul = assert (sqrt_2 *. sqrt_2 == 2.0R)
 
-[@@expect_failure] // should hopefully work...
 let test_sqrt_2_add = assert (sqrt_2 >. 1.0R)
 
 let test_sqrt_2_add_explicit =
