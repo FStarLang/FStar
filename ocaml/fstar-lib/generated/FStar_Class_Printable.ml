@@ -260,3 +260,20 @@ let printable_seq : 'b . 'b printable -> 'b FStar_Seq_Base.seq printable =
                 (FStar_String.concat "; "
                    (FStar_Seq_Base.seq_to_list strings_of_b)) ">"))
     }
+let (printable_float : FStar_Float.float printable) =
+  { to_string = (fun f -> "#float") }
+let (printable_double : FStar_Float.double printable) =
+  { to_string = (fun d -> "#double") }
+let printable_array :
+  'a . 'a printable -> 'a FStar_ImmutableArray_Base.t printable =
+  fun b ->
+    {
+      to_string =
+        (fun a1 ->
+           let l = FStar_ImmutableArray.to_list a1 in
+           let ss = FStar_List_Tot_Base.map (to_string b) l in
+           Prims.strcat "|["
+             (Prims.strcat (FStar_String.concat "; " ss) "]|"))
+    }
+let (printable_char_code : FStar_Char.char_code printable) =
+  { to_string = (fun cc -> FStar_UInt32.to_string cc) }
