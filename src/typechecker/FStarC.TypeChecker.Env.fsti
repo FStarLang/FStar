@@ -44,6 +44,7 @@ type step =
   | DoNotUnfoldPureLets
   | UnfoldUntil of delta_depth
   | UnfoldOnly  of list FStarC.Ident.lid
+  | UnfoldOnce  of list FStarC.Ident.lid
   | UnfoldFully of list FStarC.Ident.lid
   | UnfoldAttr  of list FStarC.Ident.lid
   | UnfoldQual  of list string

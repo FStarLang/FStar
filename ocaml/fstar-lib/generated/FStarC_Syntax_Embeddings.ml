@@ -1814,6 +1814,8 @@ let (steps_NormDebug : FStarC_Syntax_Syntax.term) =
   FStarC_Syntax_Syntax.tconst FStarC_Parser_Const.steps_norm_debug
 let (steps_UnfoldOnly : FStarC_Syntax_Syntax.term) =
   FStarC_Syntax_Syntax.tconst FStarC_Parser_Const.steps_unfoldonly
+let (steps_UnfoldOnce : FStarC_Syntax_Syntax.term) =
+  FStarC_Syntax_Syntax.tconst FStarC_Parser_Const.steps_unfoldonce
 let (steps_UnfoldFully : FStarC_Syntax_Syntax.term) =
   FStarC_Syntax_Syntax.tconst FStarC_Parser_Const.steps_unfoldonly
 let (steps_UnfoldAttr : FStarC_Syntax_Syntax.term) =
@@ -1865,6 +1867,16 @@ let (e_norm_step :
                  FStarC_Syntax_Syntax.as_arg uu___3 in
                [uu___2] in
              FStarC_Syntax_Syntax.mk_Tm_app steps_UnfoldOnly uu___1 rng
+         | FStar_Pervasives.UnfoldOnce l ->
+             let uu___1 =
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 =
+                     FStarC_Syntax_Embeddings_Base.embed e_string_list l in
+                   uu___4 rng FStar_Pervasives_Native.None norm in
+                 FStarC_Syntax_Syntax.as_arg uu___3 in
+               [uu___2] in
+             FStarC_Syntax_Syntax.mk_Tm_app steps_UnfoldOnce uu___1 rng
          | FStar_Pervasives.UnfoldFully l ->
              let uu___1 =
                let uu___2 =
@@ -1980,6 +1992,17 @@ let (e_norm_step :
                     (fun ss ->
                        FStar_Pervasives_Native.Some
                          (FStar_Pervasives.UnfoldOnly ss))
+              | (FStarC_Syntax_Syntax.Tm_fvar fv, (l, uu___2)::[]) when
+                  FStarC_Syntax_Syntax.fv_eq_lid fv
+                    FStarC_Parser_Const.steps_unfoldonce
+                  ->
+                  let uu___3 =
+                    FStarC_Syntax_Embeddings_Base.try_unembed e_string_list l
+                      norm in
+                  FStarC_Compiler_Util.bind_opt uu___3
+                    (fun ss ->
+                       FStar_Pervasives_Native.Some
+                         (FStar_Pervasives.UnfoldOnce ss))
               | (FStarC_Syntax_Syntax.Tm_fvar fv, (l, uu___2)::[]) when
                   FStarC_Syntax_Syntax.fv_eq_lid fv
                     FStarC_Parser_Const.steps_unfoldfully
