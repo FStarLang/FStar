@@ -433,8 +433,10 @@ let rec compact_preserves_keys (q:forest)
 let insert_repr x q s =
   carry_repr 1 q (Internal Leaf x Leaf) s (ms_singleton x)
 
+#push-options "--z3rlimit_factor 10"
 let merge_repr p q sp sq =
   join_repr 1 p q Leaf sp sq ms_empty
+#pop-options
 
 /// Towards proof of delete correctness
 
@@ -628,6 +630,7 @@ let rec find_max_is_max (d:pos) (kopt:option key_t) (q:forest)
       find_max_is_max (d + 1) (Some k) tl;
       find_max_some_is_some k tl
 
+#push-options "--z3rlimit_factor 4"
 let delete_max_some_repr p pl k q ql =
   match find_max None p with
   | None -> ()
@@ -642,3 +645,4 @@ let delete_max_some_repr p pl k q ql =
     compact_preserves_keys r;
     assert (permutation pl (ms_append (ms_singleton k) ql));
     find_max_is_max 1 None p
+#pop-options
