@@ -937,7 +937,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               match decide_unfolding cfg stack fv qninfo with
               | Some (None, stack) -> do_unfold_fv cfg stack t qninfo fv
               | Some (Some cfg, stack) ->
-                do_unfold_fv cfg [] t qninfo fv |> rebuild cfg empty_env stack
+                do_unfold_fv cfg stack t qninfo fv
               | None -> rebuild cfg empty_env stack t
             end
 

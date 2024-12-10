@@ -290,7 +290,12 @@ let x_yz_to_y_xz #a #eq (m:CE.cm a eq) (x y z:a)
       y `m.mult` (x `m.mult` z);
     }
 
-#push-options "--fuel 1 --ifuel 0 --z3rlimit_factor 2"
+let lemma_un_snoc_append (#a:Type) (s1 : seq a) (s2 : seq a {Seq.length s2 <> 0})
+  : Lemma (fst (Seq.un_snoc (append s1 s2)) == append s1 (fst (Seq.un_snoc s2)))
+  = assert (Seq.equal (fst (Seq.un_snoc (append s1 s2)))
+                      (append s1 (fst (Seq.un_snoc s2))))
+
+#push-options "--fuel 1 --ifuel 0"
 let rec foldm_snoc_append #a #eq (m:CE.cm a eq) (s1 s2: seq a)
   : Lemma
     (ensures eq.eq (foldm_snoc m (append s1 s2))
@@ -308,7 +313,10 @@ let rec foldm_snoc_append #a #eq (m:CE.cm a eq) (s1 s2: seq a)
         (eq.eq) { assert (Seq.equal (append s1 s2)
                          (Seq.snoc (append s1 s2') last)) }
         foldm_snoc m (Seq.snoc (append s1 s2') last);
-        (eq.eq) { assert (Seq.equal (fst (Seq.un_snoc (append s1 s2))) (append s1 s2')) }
+        (eq.eq) {
+          lemma_un_snoc_append s1 s2;
+          assert (Seq.equal (fst (Seq.un_snoc (append s1 s2))) (append s1 s2'))
+        }
 
         m.mult last (foldm_snoc m (append s1 s2'));
         (eq.eq) { foldm_snoc_append m s1 s2';

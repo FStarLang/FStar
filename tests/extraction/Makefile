@@ -3,7 +3,14 @@ FSTAR_ROOT ?= ../..
 SUBDIRS += cmi
 
 RUN += Eta_expand.fst
+
+# The Div test is based on testing a non-terminating program and
+# sending it a signal to interrupt it, which is not well-supported on
+# Windows.
+ifneq ($(OS),Windows_NT)
 RUN += Div.fst
+endif
+
 RUN += ExtractAs.fst
 RUN += InlineLet.fst
 

@@ -2233,8 +2233,7 @@ let rec (norm :
                          do_unfold_fv cfg stack3 t1 qninfo fv
                      | FStar_Pervasives_Native.Some
                          (FStar_Pervasives_Native.Some cfg1, stack3) ->
-                         let uu___5 = do_unfold_fv cfg1 [] t1 qninfo fv in
-                         rebuild cfg1 empty_env stack3 uu___5
+                         do_unfold_fv cfg1 stack3 t1 qninfo fv
                      | FStar_Pervasives_Native.None ->
                          rebuild cfg empty_env stack2 t1))
            | FStarC_Syntax_Syntax.Tm_quoted (qt, qi) ->
