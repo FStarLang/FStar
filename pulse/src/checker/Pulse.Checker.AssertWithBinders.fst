@@ -310,7 +310,8 @@ let check_renaming
                 source = Sealed.seal false;
       }
   )
-
+#restart-solver
+#push-options "--z3rlimit_factor 2 --fuel 0 --ifuel 1"
 let check_wild
       (g:env)
       (pre:term)
@@ -358,7 +359,7 @@ let check_wild
         )
       in
       peel_binders k ex
-
+#pop-options
 //
 // v is a partially applied slprop with type t
 // add uvars for the remaining arguments

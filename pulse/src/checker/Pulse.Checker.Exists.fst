@@ -40,7 +40,8 @@ let terms_to_string (t:list term)
   : T.Tac string 
   = String.concat "\n" (T.map Pulse.Syntax.Printer.term_to_string t)
 
-#push-options "--z3rlimit_factor 2 --fuel 0 --ifuel 1"
+#push-options "--z3rlimit_factor 8 --fuel 0 --ifuel 1"
+#restart-solver
 let check_elim_exists
   (g:env)
   (pre:term)
@@ -94,7 +95,8 @@ let check_elim_exists
             (P.univ_to_string u') (P.univ_to_string u))
 #pop-options
 
-#push-options "--z3rlimit_factor 2 --fuel 2 --ifuel 1"
+#push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 1"
+#restart-solver
 let check_intro_exists
   (g:env)
   (pre:term)

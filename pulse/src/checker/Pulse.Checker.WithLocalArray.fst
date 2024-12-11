@@ -70,11 +70,12 @@ let is_annotated_type_array (t:term) : option term =
 
   | _ -> None
 
-#push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
+#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 1 --split_queries no"
 let head_range (t:st_term {Tm_WithLocalArray? t.term}) : range =
   let Tm_WithLocalArray { initializer } = t.term in
   Pulse.RuntimeUtils.range_of_term initializer
-
+#restart-solver
+#push-options "--query_stats"
 let check
   (g:env)
   (pre:term)
@@ -171,3 +172,4 @@ let check
             c_typing
             body_typing in
           checker_result_for_st_typing (| _, _, d |) res_ppname
+#pop-options
