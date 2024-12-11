@@ -101,6 +101,8 @@ def check_one_fragment(file_lines, json_objects, from_line):
 # A function to validate the response from F* interactive mode
 def validate_response(response, file_contents):
     file_lines = file_contents.splitlines()
+    # print(f"Validating response")
+    # print(f"Response: {response}")
     # parse the each line of the response into a JSON object
     # if the line is not valid JSON, print an error message and exit
     # store the JSON objects in a list
@@ -253,7 +255,7 @@ def test_file(filepath):
     # print the request to the console for debugging
     # print(request)
     # Run fstar on the file with the request as stdin
-    p = subprocess.run([fstar, "--admit_smt_queries", "true", "--ide", file], input=request, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.run([fstar, "--z3version", "4.13.3", "--admit_smt_queries", "true", "--ide", file], input=request, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     # Read the response from stdout
     response = p.stdout
     # Print the response to the console for debugging

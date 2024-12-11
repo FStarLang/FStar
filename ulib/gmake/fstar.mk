@@ -1,7 +1,7 @@
 HINTS_ENABLED?=--use_hints
 WARN_ERROR=
 OTHERFLAGS+=$(WARN_ERROR)
-
+OTHERFLAGS+=--z3version 4.13.3
 ifdef Z3
 OTHERFLAGS+=--smt $(Z3)
 endif

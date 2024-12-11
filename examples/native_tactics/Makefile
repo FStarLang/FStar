@@ -5,7 +5,9 @@
 # 'include test.mk'.
 
 FSTAR_HOME=../..
-FSTAR_EXE ?= $(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS)
+OTHERFLAGS += --z3version 4.13.3
+FSTAR_EXE ?= $(FSTAR_HOME)/bin/fstar.exe
+MY_FSTAR_EXE=$(FSTAR_EXE) $(OTHERFLAGS)
 
 # Tests for which the native tactics used in module named Sample.Test.fst are
 # declared in a corresponding module named Sample.fst
@@ -43,8 +45,6 @@ ALL=Apply\
     Tutorial\
     Unify
 
-OTHERFLAGS +=
-
 all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 
 # .depend:
@@ -56,25 +56,25 @@ all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 .PRECIOUS: %.ml
 
 %.test: %.fst %.ml
-	$(FSTAR_EXE) $*.fst --load $*
+	$(MY_FSTAR_EXE) $*.fst --load $*
 	touch $@
 
 %.sep.test: %.fst %.ml
-	$(FSTAR_EXE) $*.Test.fst --load $*
+	$(MY_FSTAR_EXE) $*.Test.fst --load $*
 	touch $@
 
 %.ml: %.fst
-	$(FSTAR_EXE) $*.fst --cache_checked_modules --codegen Plugin --extract $*
+	$(MY_FSTAR_EXE) $*.fst --cache_checked_modules --codegen Plugin --extract $*
 	touch $@
 
 %.clean:
 	rm -f Registers_List.ml Registers.List.ml Registers_List.cmxs
 
 %.native: %.fst Registers.List.ml
-	$(FSTAR_EXE) $*.fst --load Registers.List --warn_error -266
+	$(MY_FSTAR_EXE) $*.fst --load Registers.List --warn_error -266
 
 %.interp: %.fst Registers.List.fst
-	$(FSTAR_EXE) $*.fst
+	$(MY_FSTAR_EXE) $*.fst
 
 
 clean:

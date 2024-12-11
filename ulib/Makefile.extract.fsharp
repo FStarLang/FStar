@@ -26,6 +26,8 @@ OUTPUT_DIRECTORY=fs/extracted
 
 CODEGEN ?= FSharp
 
+OTHERFLAGS += --z3version 4.13.3
+
 MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --warn_error @241 --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache
 
 # And then, in a separate invocation, from each .checked file we
