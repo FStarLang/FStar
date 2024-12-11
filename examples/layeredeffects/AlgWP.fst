@@ -11,6 +11,7 @@ module FE = FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 module W = FStar.WellFounded
 module T = FStar.Tactics.V2
+// #show-options
 module ID5 = ID5
 open Alg
 
@@ -137,7 +138,7 @@ let elim_str #a (w1 w2 : st_wp a) (p : (a & state -> Type0)) (s0:state)
 
 (* Takes a while, known to fail sporadically *)
 #restart-solver
-#push-options "--retry 10 --z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 4 --retry 10"
 let rec interp_morph #a #b #l1 #l2 (c : rwtree a l1) (f : a -> rwtree b l2) (p:_) (s0:_)
   : Lemma (interp_as_wp c s0 (fun (y, s1) -> interp_as_wp (f y) s1 p)
                       == interp_as_wp (tbind #_ #_ #l1 #l2 c f) s0 p)

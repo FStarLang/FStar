@@ -563,8 +563,8 @@ let prev_node d n =
 /// code. The rest of this interface lets you talk about these
 /// operations easily.
 
-#set-options "--z3rlimit 20 --max_fuel 2 --max_ifuel 1"
-
+#set-options "--z3rlimit 200 --max_fuel 2 --max_ifuel 1"
+#restart-solver
 let dll_insert_at_head #t d n =
   let h00 = HST.get () in
   HST.push_frame ();
@@ -580,8 +580,8 @@ let dll_insert_at_head #t d n =
 
 #reset-options
 
-#set-options "--z3rlimit 40 --max_fuel 2 --max_ifuel 1"
-
+#set-options "--z3rlimit 400 --max_fuel 2 --max_ifuel 1"
+#restart-solver
 let dll_insert_at_tail #t d n =
   let h00 = HST.get () in
   HST.push_frame ();
