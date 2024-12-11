@@ -7,7 +7,9 @@
     "--warn_error", 
     "-249",
     "--ext",
-    "context_pruning"
+    "context_pruning",
+    "--z3version",
+    "4.13.3"
   ],
   "include_dirs": [
     "../../../lib/pulse",

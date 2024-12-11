@@ -19,7 +19,7 @@ else
 USE_HINTS:=
 endif
 
-FSTAR_OPTIONS += $(USE_HINTS) --ext context_pruning
+FSTAR_OPTIONS += $(USE_HINTS) --ext context_pruning --z3version 4.13.3
 
 # A place to put all build artifacts
 ifneq (,$(OUTPUT_DIRECTORY))
