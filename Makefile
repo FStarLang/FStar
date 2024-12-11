@@ -248,6 +248,10 @@ do-install: _force
 	# Install fstar.exe, application library, and plugin library
 	cp -r $(BROOT)/out -T $(PREFIX)
 
+install: 2
+install: BROOT=stage2
+install: do-install
+
 do-src-install: _force
 	$(call bold_msg, "SRC INSTALL", $(PREFIX))
 	# Install OCaml sources only
