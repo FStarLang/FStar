@@ -11,7 +11,7 @@ Hello.test: Hello.exe Hello.byte
 	./Hello.byte | grep "Hello F\*!"
 
 %.ml: %.fst
-	$(FSTAR) --codegen OCaml $< --extract $*
+	$(FSTAR) --codegen OCaml $< --extract $* --z3version 4.13.3
 
 %.exe: %.ml
 	$(FSTAR) --ocamlopt $< -o $@

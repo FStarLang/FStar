@@ -1,7 +1,7 @@
 # Test the 'include' functionality
 
 # Do not warn about missing checked files in these tests.
-OTHERFLAGS += --warn_error -241
+OTHERFLAGS += --warn_error -241 --z3version 4.13.3
 
 POSTESTS=$(wildcard *.pos)
 POSTARGETS=$(addsuffix .pver,$(POSTESTS))

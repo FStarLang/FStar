@@ -4,7 +4,7 @@ FSTAR_EXE ?= ../../bin/fstar.exe
 all: run
 
 Hello.ml: Hello.fst
-	$(FSTAR_EXE) --codegen OCaml Hello.fst --extract Hello
+	$(FSTAR_EXE) --codegen OCaml Hello.fst --extract Hello --z3version 4.13.3
 
 bin/hello.exe: Hello.ml
 	$(FSTAR_EXE) --ocamlenv dune build @install --profile=release
