@@ -511,6 +511,8 @@ let pts_to_compatible_fwd (#meta:bool)
               pts_to_cell meta pcm v1 c1 /\
               c == join_cells c0 c1)
 
+#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 1"
+#restart-solver
 let pts_to_compatible_bk 
       (#meta:bool)
       (#a:Type u#a)
@@ -537,7 +539,7 @@ let pts_to_compatible_bk
            composable pcm v01 frame /\
            op pcm frame v01 == v)
         (ensures
-           exists m0 m1.
+           exists m0 m1.{:pattern (disjoint m0 m1)}
              interp (pts_to meta x v0) m0 /\
              interp (pts_to meta x v1) m1 /\
              disjoint m0 m1 /\
@@ -563,9 +565,17 @@ let pts_to_compatible_bk
         assert (c == join_cells c0 c1);
         let m0 = update_addr empty_heap addr c0 in
         let m1 = update_addr m addr c1 in
-        assert (disjoint m0 m1) //fire the existential
+        assert (disjoint m0 m1); //fire the existential
+        assert (
+          interp (pts_to meta x v0) m0 /\
+          interp (pts_to meta x v1) m1 /\
+          disjoint m0 m1 /\
+          m `mem_equiv` join m0 m1
+        );
+        ()
     in
     ()
+#pop-options
 
 let pts_to_compatible (#meta:bool)
                       (#a:Type u#a)

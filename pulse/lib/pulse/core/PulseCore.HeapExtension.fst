@@ -1662,6 +1662,7 @@ let mem_invariant_bump_aux
     assert (interp (lift h (H2.base_heap.mem_invariant GhostSet.empty m1.big)) c1)
   ) 
 
+#push-options "--split_queries always"
 let mem_invariant_bump 
     (#h:heap_sig u#a)
     (ex:inames (extend h))
@@ -1709,7 +1710,7 @@ let mem_invariant_bump
       ) else ()
     )
   )
-
+#pop-options
 
 let is_ghost_action_trans
     (#h:heap_sig u#a)
@@ -1721,7 +1722,8 @@ let is_ghost_action_trans
   (ensures is_ghost_action h m0 m2)
 = (extend h).is_ghost_action_preorder ()
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 10 --split_queries no --query_stats"
+#restart-solver
 let new_invariant_alt
     (#h:heap_sig u#a)
     (ex:inames (extend h))
@@ -1735,8 +1737,9 @@ let new_invariant_alt
 = fun (frame:ext_slprop h) m00 ->
     let m0:ext_mem h = m00 in
     mem_invariant_bump ex ctx m00 (p `star` frame);
-    let m0 = bump_ghost_ctr m00 ctx in
-    calc (==) {
+    let m0 : ext_mem h = bump_ghost_ctr m00 ctx in
+    assert (H2.ghost_ctr m0.big >= ctx);
+    calc (==) { 
       p `star` frame `star` mem_invariant ex m0;
     (==) { ac_lemmas_ext h }
       (emp `star` lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big)) `star`
@@ -1774,6 +1777,9 @@ let new_invariant_alt
       (Some (down p))
       frame'
       m0.big;
+    assert (H2.addr_as_core_ghost_ref (H2.ghost_ctr m0.big) == r);
+    H2.addr_as_core_ghost_ref_injective (H2.ghost_ctr m0.big);
+    assert (H2.core_ghost_ref_as_addr r == H2.ghost_ctr m0.big);
     calc (==) {
       H2.ghost_pts_to true r (Some (down p)) `H2.base_heap.star`
       frame' `H2.base_heap.star`
@@ -1818,7 +1824,6 @@ let new_invariant_alt
     is_ghost_action_trans m00 m0 m1;
     let i : ext_iref h = Inr r in
     assert (iref_as_addr #h i >= ctx);
-//    let i : (i:iiref h { iname_index #h i >= ctx /\ iiref_not_null #h i }) = i in
     i, m1
 #pop-options
 
@@ -2108,6 +2113,8 @@ let invariant_of_one_cell_trivial
   | None -> ()
   | Some cell1 -> sl_pure_imp_ext_trivial #h (cell_pred_pre h cell1) (cell_pred_post h cell1)
 
+#push-options "--query_stats --z3rlimit_factor 2"
+#restart-solver
 let hogs_invariant_eq_frame
     (#h:heap_sig u#h)
     (ex:inames (extend h))

@@ -150,7 +150,6 @@ fn gather_v (r:gref)
 //
 // Corresponding share, with a Map.equal proof in the precondition
 //
-
 ghost
 fn share_ (r:gref)
   (v v0 v1:pcm_t)
@@ -173,6 +172,8 @@ noextract
 let half (t0:trace) = Some #perm 0.5R, t0
 
 
+#restart-solver
+#push-options "--z3rlimit_factor 2"
 ghost
 fn upd_sid_pts_to
   (r:gref) (sid:sid_t)
@@ -217,7 +218,7 @@ fn upd_sid_pts_to
   fold (sid_pts_to r sid (next_trace t0 s));
   fold (sid_pts_to r sid (next_trace t0 s));
 }
-
+#pop-options
 
 let safe_incr (i:U16.t)
   : r:option U16.t { Some? r ==> (U16.v (Some?.v r) == U16.v i + 1) } =
@@ -492,15 +493,18 @@ fn replace_session
   (sid:sid_t)
   (t:G.erased trace)
   (sst:session_state)
-  (gsst:g_session_state { valid_transition t gsst})
-
+  (gsst:g_session_state)
   requires sid_pts_to trace_ref sid t **
-           session_state_related sst gsst
+           session_state_related sst gsst **
+           pure (valid_transition t gsst)
 
   returns r:session_state
 
-  ensures session_state_related r (current_state t) **
-          sid_pts_to trace_ref sid (next_trace t gsst)
+  ensures
+    exists* tr.
+      session_state_related r (current_state t) **
+      sid_pts_to trace_ref sid tr **
+      pure(valid_transition t gsst /\ tr == next_trace t gsst)
 {
   let r = Global.read_gvar gst;
   unfold (gvar_p r);
@@ -1099,8 +1103,8 @@ fn rewrite_session_state_related_available
 }
 
 
-#push-options "--fuel 2 --ifuel 2 --split_queries no"
-
+#push-options "--fuel 2 --ifuel 2 --split_queries no --z3rlimit_factor 4"
+#restart-solver
 fn derive_child (sid:sid_t)
   (t:G.erased trace)
   (record:record_t)
@@ -1211,7 +1215,7 @@ fn derive_child (sid:sid_t)
     }
   }
 }
-
+#pop-options
 
 
 fn destroy_session_state (s:session_state) (t:G.erased trace)
