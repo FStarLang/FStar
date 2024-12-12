@@ -70,6 +70,9 @@ jobs:
         with:
           name: karamel
 
+      # node is needed for the tests.
+      - uses: actions/setup-node@v4
+
       - name: Test
         run: make -C karamel -skj$(nproc) test
 
