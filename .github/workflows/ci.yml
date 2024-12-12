@@ -50,6 +50,12 @@ jobs:
           path: fstar-ci-stage1-src.tar.gz
           name: fstar-ci-stage1-src.tar.gz
           retention-days: 3
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: fstar-repo
+          path: .
+          extra: --exclude=./stage*/dune/_build
+          hometag: FSTAR
 
       # FIXME: Ideally, we could upload the artifacts as soon as each of
       # them is created, and start the subsequent jobs at that instant too.

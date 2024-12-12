@@ -151,28 +151,11 @@ jobs:
           repository: mtzguido/pulse
           ref: dev
 
-      # - uses: actions/download-artifact@v4
-      #   with:
-      #     name: fstar-ci.tar.gz
-      # - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
-      # - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
-
       # Since pulse needs F* internal build files, we can't use
-      # binary nor source packages. So we just re-checkout the repo,
-      # build a stage 2 admitting all queries (still slow)
-      # and then build pulse.
-
-      - name: Checkout
-        uses: actions/checkout@master
+      # binary nor source packages. So we get the whole repo.
+      - uses: mtzguido/gci-download@master
         with:
-          path: FStar/
-
-      - name: Build stage 2 F*
-        run: make -C FStar -skj$(nproc) 2 ADMIT=1
-      - run: |
-          echo "FSTAR_EXE=$(pwd)/FStar/out/bin/fstar.exe" >> $GITHUB_ENV
-          # Pulse needs an FSTAR_HOME too
-          echo "FSTAR_HOME=$(pwd)/FStar" >> $GITHUB_ENV
+          name: fstar-repo
 
       - name: Build (after setting up cargo env)
         run: . $HOME/.cargo/env && make -C pulse -skj$(nproc)
@@ -194,11 +177,11 @@ jobs:
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
-      - uses: actions/download-artifact@v4
+      # Since pulse needs F* internal build files, we can't use
+      # binary nor source packages. So we get the whole repo.
+      - uses: mtzguido/gci-download@master
         with:
-          name: fstar-ci.tar.gz
-      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
-      - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
+          name: fstar-repo
 
       - uses: mtzguido/gci-download@master
         with:
@@ -209,7 +192,7 @@ jobs:
           name: pulse
 
       - name: Test
-        run: make -C pulse -skj$(nproc) test
+        run: . $HOME/.cargo/env && make -C pulse -skj$(nproc) test
 
   build-hacl:
     # runs-on: [self-hosted, linux, big] # using a faster runner
