@@ -24,7 +24,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7dfd71b62bed91c3f1966589762d2729"
+      "f6d6755d6d201d4f927af9d00016135b"
     ],
     [
       "LeftistHeap.sorted",
@@ -37,7 +37,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d767e697f93ebec9f41a18db2cf4e0ae"
+      "999e6e3326d0180e6cfb3b9d78c52cd2"
     ],
     [
       "LeftistHeap.empty",

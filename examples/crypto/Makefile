@@ -1,8 +1,8 @@
 FSTAR_ROOT ?= ../..
 include $(FSTAR_ROOT)/mk/test.mk
 
-OTHERFLAGS += --include $(FSTAR_ROOT)/ucontrib/Platform/fst
-OTHERFLAGS += --include $(FSTAR_ROOT)/ucontrib/CoreCrypto/fst
+OTHERFLAGS += --include $(FSTAR_ROOT)/contrib/Platform/fst
+OTHERFLAGS += --include $(FSTAR_ROOT)/contrib/CoreCrypto/fst
 
 all: # RPC.ml CntProtocol.ml
 

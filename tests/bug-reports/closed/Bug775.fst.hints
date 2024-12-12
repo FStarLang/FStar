@@ -1,0 +1,50 @@
+[
+  "ò{5ö¬°\u001dä¤w¡Ç\u001dï€)",
+  [
+    [
+      "Bug775.bind_sats_prop",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "6e12721ddd76d3e74c8b1369eddc741b"
+    ],
+    [
+      "Bug775.bind_sats_prop",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Bug775_interpretation_Tm_arrow_62ba1b145172d267c66bbaf3d41cdfd3",
+        "equation_Bug775.sats_prop", "equation_Prims.nat", "int_inversion",
+        "int_typing",
+        "interpretation_Tm_abs_ad96e00290ce1ac0661900053a93e3ab",
+        "l_quant_interp_d094aa1f1797f951cf77b187d7f96af1",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_fc10d9f1fb97e65c289ff0efe5951722"
+      ],
+      0,
+      "d20caf6f0952d9f693ad9370132b0b0b"
+    ],
+    [
+      "Bug775.bind_sats_prop",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "927019ba79a5c537ebbbe42e2bdd15d1"
+    ]
+  ]
+]

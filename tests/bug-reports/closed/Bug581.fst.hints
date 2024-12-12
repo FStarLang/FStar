@@ -1,0 +1,19 @@
+[
+  "XÊ'S’.¦$ÿoîPaøá¼",
+  [
+    [
+      "Bug581.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.V@tok", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
+      ],
+      0,
+      "aed7d122c079c858ad59a8e50004525b"
+    ]
+  ]
+]

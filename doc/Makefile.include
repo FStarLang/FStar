@@ -2,7 +2,7 @@
 
 ifdef FSTAR_HOME
    FSTAR_ULIB=$(shell if test -d $(FSTAR_HOME)/ulib ; then echo $(FSTAR_HOME)/ulib ; else echo $(FSTAR_HOME)/lib/fstar ; fi)
-   FSTAR_CONTRIB=$(shell if test -d $(FSTAR_HOME)/ucontrib ; then echo $(FSTAR_HOME)/ucontrib ; else echo $(FSTAR_HOME)/share/fstar/contrib ; fi)
+   FSTAR_CONTRIB=$(shell if test -d $(FSTAR_HOME)/contrib ; then echo $(FSTAR_HOME)/contrib ; else echo $(FSTAR_HOME)/share/fstar/contrib ; fi)
 else
    # fstar.exe assumed to be in some bin/ directory
    # included in the PATH (e.g. opam package, /usr or /usr/local)

@@ -398,5 +398,10 @@ val print_array (f: 'a -> string) (s:FStar.ImmutableArray.Base.t 'a) : string
 val array_length (s:FStar.ImmutableArray.Base.t 'a) : FStarC.BigInt.t
 val array_index (s:FStar.ImmutableArray.Base.t 'a) (i:FStarC.BigInt.t) : 'a
 
+(* From OCaml's Unix module (simplified).
+NOTE: execv and friends are evil on Windows, do not use them. *)
 val putenv : string -> string -> unit
-val execvp : string -> list string -> unit // will return only on error
+val create_process : prog:string -> args:(list string) -> (*pid:*)int
+val waitpid : pid:int -> (either int int) // Inl: exited, Inr: killed by signal
+
+val exn_is_enoent (e:exn) : bool

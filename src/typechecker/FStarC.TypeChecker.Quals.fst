@@ -247,17 +247,17 @@ let check_must_erase_attribute env se =
                let has_attr = Env.fv_has_attr env lbname C.must_erase_for_extraction_attr in
                if must_erase && not has_attr
                then log_issue lbname Error_MustEraseMissing [
-                        text (BU.format2 "Values of type `%s` will be erased during extraction, \
-                               but its interface hides this fact. Add the `must_erase_for_extraction` \
-                               attribute to the `val %s` declaration for this symbol in the interface"
-                               (show lbname) (show lbname));
+                        text (BU.format1 "Values of type `%s` will be erased during extraction, \
+                               but its interface hides this fact." (show lbname));
+                        text (BU.format1 "Add the `must_erase_for_extraction` \
+                               attribute to the `val %s` declaration for this symbol in the interface" (show lbname));
                       ]
                else if has_attr && not must_erase
                then log_issue lbname Error_MustEraseMissing [
                         text (BU.format1 "Values of type `%s` cannot be erased during extraction, \
-                               but the `must_erase_for_extraction` attribute claims that it can. \
-                               Please remove the attribute."
+                               but the `must_erase_for_extraction` attribute claims that it can."
                                (show lbname));
+                        text "Please remove the attribute.";
                       ])
   end
   | _ -> ()

@@ -551,14 +551,23 @@ let (check_must_erase_attribute :
                                   let uu___6 =
                                     FStarC_Class_Show.show
                                       FStarC_Syntax_Print.showable_fv lbname in
-                                  let uu___7 =
-                                    FStarC_Class_Show.show
-                                      FStarC_Syntax_Print.showable_fv lbname in
-                                  FStarC_Compiler_Util.format2
-                                    "Values of type `%s` will be erased during extraction, but its interface hides this fact. Add the `must_erase_for_extraction` attribute to the `val %s` declaration for this symbol in the interface"
-                                    uu___6 uu___7 in
+                                  FStarC_Compiler_Util.format1
+                                    "Values of type `%s` will be erased during extraction, but its interface hides this fact."
+                                    uu___6 in
                                 FStarC_Errors_Msg.text uu___5 in
-                              [uu___4] in
+                              let uu___5 =
+                                let uu___6 =
+                                  let uu___7 =
+                                    let uu___8 =
+                                      FStarC_Class_Show.show
+                                        FStarC_Syntax_Print.showable_fv
+                                        lbname in
+                                    FStarC_Compiler_Util.format1
+                                      "Add the `must_erase_for_extraction` attribute to the `val %s` declaration for this symbol in the interface"
+                                      uu___8 in
+                                  FStarC_Errors_Msg.text uu___7 in
+                                [uu___6] in
+                              uu___4 :: uu___5 in
                             FStarC_Errors.log_issue
                               FStarC_Syntax_Syntax.hasRange_fv lbname
                               FStarC_Errors_Codes.Error_MustEraseMissing ()
@@ -576,10 +585,15 @@ let (check_must_erase_attribute :
                                          FStarC_Syntax_Print.showable_fv
                                          lbname in
                                      FStarC_Compiler_Util.format1
-                                       "Values of type `%s` cannot be erased during extraction, but the `must_erase_for_extraction` attribute claims that it can. Please remove the attribute."
+                                       "Values of type `%s` cannot be erased during extraction, but the `must_erase_for_extraction` attribute claims that it can."
                                        uu___7 in
                                    FStarC_Errors_Msg.text uu___6 in
-                                 [uu___5] in
+                                 let uu___6 =
+                                   let uu___7 =
+                                     FStarC_Errors_Msg.text
+                                       "Please remove the attribute." in
+                                   [uu___7] in
+                                 uu___5 :: uu___6 in
                                FStarC_Errors.log_issue
                                  FStarC_Syntax_Syntax.hasRange_fv lbname
                                  FStarC_Errors_Codes.Error_MustEraseMissing
