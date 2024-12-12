@@ -97,6 +97,68 @@ ensures    (A.pts_to a #p v)
     AP.to_array s.elt a
 }
 
+let arrayptr_to_slice
+  #t a s
+= pure (s.elt == a)
+
+fn arrayptr_to_slice_intro
+  (#t: Type) (a: AP.ptr t) (#p: perm) (alen: SZ.t) (#v: Ghost.erased (Seq.seq t))
+  requires
+    (pts_to a #p v ** pure (SZ.v alen == Seq.length v))
+  returns s: slice t
+  ensures
+    (pts_to s #p v ** arrayptr_to_slice a s)
+{
+  let s : slice t = {
+    elt = a;
+    len = alen;
+  };
+  fold_pts_to s #p v;
+  fold arrayptr_to_slice a s;
+  s
+}
+
+ghost
+fn arrayptr_to_slice_elim
+  (#t: Type) (s: slice t) (#p: perm) (#v: Seq.seq t) (#a: AP.ptr t)
+requires
+  (pts_to s #p v ** arrayptr_to_slice a s)
+ensures
+  (pts_to a #p v)
+{
+  unfold (arrayptr_to_slice a s);
+  unfold_pts_to s #p v;
+}
+
+let slice_to_arrayptr
+  #t s a
+= pure (s.elt == a)
+
+fn slice_to_arrayptr_intro
+  (#t: Type) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t))
+requires
+  (pts_to s #p v)
+returns a: AP.ptr t
+ensures
+  (pts_to a #p v ** slice_to_arrayptr s a)
+{
+  unfold_pts_to s #p v;
+  fold (slice_to_arrayptr s s.elt);
+  s.elt
+}
+
+ghost
+fn slice_to_arrayptr_elim
+  (#t: Type) (a: AP.ptr t) (#p: perm) (#v: Seq.seq t) (#s: slice t)
+requires
+  (pts_to a #p v ** slice_to_arrayptr s a ** pure (Seq.length v == SZ.v (len s)))
+ensures
+  (pts_to s #p v)
+{
+  unfold (slice_to_arrayptr s a);
+  fold_pts_to s #p v
+}
+
 fn op_Array_Access
         (#t: Type)
         (a: slice t)
