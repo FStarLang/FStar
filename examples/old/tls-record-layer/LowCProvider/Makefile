@@ -1,5 +1,5 @@
 FSTAR_HOME = ../../..
-CONTRIB=ucontrib
+CONTRIB=contrib
 PLATFORM = $(FSTAR_HOME)/$(CONTRIB)/Platform/ml
 CORECRYPTO = $(FSTAR_HOME)/$(CONTRIB)/CoreCrypto/ml
 INCLUDE=-package batteries,zarith -I $(PLATFORM) -I $(CORECRYPTO)

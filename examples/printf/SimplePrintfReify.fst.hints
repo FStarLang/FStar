@@ -91,7 +91,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__hd"
       ],
       0,
-      "7f9f4a390873f44be4c96c51f88df677"
+      "1ea16e4ed4613107a0351183033b3e95"
     ],
     [
       "SimplePrintfReify.string_of_dirs",
@@ -143,7 +143,7 @@
         "typing_Tm_abs_aee5879834d5566ee666fa8e98126225"
       ],
       0,
-      "7c62903c75db5503ee85f31c34ef9f07"
+      "640d0e106a8083490c2704ccc61d908a"
     ],
     [
       "SimplePrintfReify.parse_format",
@@ -169,7 +169,7 @@
         "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "cdff66a2e25b69c81ac7302c5b4de516"
+      "6c54c49eca1bbaa0d76903b0695dbd42"
     ],
     [
       "SimplePrintfReify.sprintf",
@@ -339,7 +339,7 @@
         "kinding_Prims.list@tok", "kinding_SimplePrintfReify.dir@tok"
       ],
       0,
-      "77b78cc9c66bc36a447f82bac1bab78e"
+      "d485beb7bfe6010d877ead94545cc4d3"
     ]
   ]
 ]

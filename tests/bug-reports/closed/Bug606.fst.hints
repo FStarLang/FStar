@@ -1,0 +1,146 @@
+[
+  "ÜlaÇ›ÆFú.\u0012”‡ùÕﬁ+",
+  [
+    [
+      "Bug606.f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_15940b4538ea6e727af084f10407ad60_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Bug606.list", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "da6d3fc8683554d56235eb7f828c5eb8"
+    ],
+    [
+      "Bug606.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_15940b4538ea6e727af084f10407ad60_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Bug606.list", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "7dc725bde2cfe6d2c7641cb9ccf604ac"
+    ],
+    [
+      "Bug606.f_eq_g",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Bug606.f.fuel_instrumented",
+        "@fuel_correspondence_Bug606.g.fuel_instrumented",
+        "@fuel_irrelevance_Bug606.f.fuel_instrumented",
+        "@fuel_irrelevance_Bug606.g.fuel_instrumented", "@query",
+        "binder_x_15940b4538ea6e727af084f10407ad60_0",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Bug606.list",
+        "equation_with_fuel_Bug606.f.fuel_instrumented",
+        "equation_with_fuel_Bug606.g.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "8c7089eb0256544a80fb4efd9a91592d"
+    ],
+    [
+      "Bug606.h",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_Bug606.f.fuel_instrumented",
+        "@fuel_correspondence_Bug606.g.fuel_instrumented",
+        "@fuel_irrelevance_Bug606.f.fuel_instrumented",
+        "@fuel_irrelevance_Bug606.g.fuel_instrumented", "@query",
+        "lemma_Bug606.f_eq_g"
+      ],
+      0,
+      "ed3ce72055add1f4098c07e320b8fe37"
+    ],
+    [
+      "Bug606.uint64_to_uint32",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7e5ca0c1df1500afee9b0709af2ba8e2"
+    ],
+    [
+      "Bug606.uint64_to_uint32",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Bug606.n",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.size",
+        "equation_FStar.UInt.uint_t", "int_inversion",
+        "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_3ef4a51931da44c64f612b2a96bb7412",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "typing_FStar.UInt64.v"
+      ],
+      0,
+      "3c2e92ff8ed6cbf2421ea02ea3539a30"
+    ],
+    [
+      "Bug606.uint64_to_uint32",
+      3,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a6cded31fedca68f2a9283c9f486dc72"
+    ],
+    [
+      "Bug606.uint64_to_uint32'",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "32ca5340d4bd3af2df6b009d29e2c08d"
+    ],
+    [
+      "Bug606.uint64_to_uint32'",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Bug606.n",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.size",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_3ef4a51931da44c64f612b2a96bb7412"
+      ],
+      0,
+      "1df55c549c3a2f20a5b23560d02d252c"
+    ],
+    [
+      "Bug606.uint64_to_uint32'",
+      3,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a6cded31fedca68f2a9283c9f486dc72"
+    ]
+  ]
+]

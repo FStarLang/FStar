@@ -8,6 +8,7 @@ module Sedlexing = FStarC_Sedlexing
 module L = Sedlexing
 module E = FStarC_Errors
 module Codes = FStarC_Errors_Codes
+module BU = FStarC_Compiler_Util
 
 let ba_of_string s = Array.init (String.length s) (fun i -> Char.code (String.get s i))
 let array_trim_both a n m = Array.sub a n (Array.length a - n - m)
@@ -471,8 +472,9 @@ match%sedlex lexbuf with
  | "#pop-options" -> PRAGMA_POP_OPTIONS
  | "#restart-solver" -> PRAGMA_RESTART_SOLVER
  | "#print-effects-graph" -> PRAGMA_PRINT_EFFECTS_GRAPH
- | "__SOURCE_FILE__" -> STRING (L.source_file lexbuf)
+ | "__SOURCE_FILE__" -> STRING (BU.basename (L.source_file lexbuf))
  | "__LINE__" -> INT (string_of_int (L.current_line lexbuf), false)
+ | "__FILELINE__"   -> STRING (BU.basename (L.source_file lexbuf) ^ "(" ^ (string_of_int (L.current_line lexbuf)) ^ ")")
 
  | Plus anywhite -> token lexbuf
  | newline -> L.new_line lexbuf; token lexbuf
@@ -548,7 +550,7 @@ match%sedlex lexbuf with
  | ";;" -> SEMICOLON_OP None
 
  | ident -> let id = L.lexeme lexbuf in
-   if FStarC_Compiler_Util.starts_with id FStarC_Ident.reserved_prefix
+   if BU.starts_with id FStarC_Ident.reserved_prefix
    then FStarC_Errors.raise_error_text (current_range lexbuf) Codes.Fatal_ReservedPrefix
                      (FStarC_Ident.reserved_prefix  ^ " is a reserved prefix for an identifier");
    Hashtbl.find_option keywords id |> Option.default (IDENT id)

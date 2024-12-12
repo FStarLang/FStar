@@ -1,0 +1,101 @@
+[
+  "v~í °pül\u0004≤\\JºE§«",
+  [
+    [
+      "Bug1595.__proj__CalcRefl__item__x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0d210bce4d0a1cb53e8b9752eeac3ff1"
+      ],
+      0,
+      "0b3a6995f05960829d1f056971ebebbb"
+    ],
+    [
+      "Bug1595.__proj__CalcStep__item__rs",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_901b78fb58b641c2f5af6e1570fc6161"
+      ],
+      0,
+      "a085c84f10f8735a065e1ea4ff27a707"
+    ],
+    [
+      "Bug1595.__proj__CalcStep__item__p",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_901b78fb58b641c2f5af6e1570fc6161"
+      ],
+      0,
+      "51d3834a776c6bcf7e99b943b4d62e4e"
+    ],
+    [
+      "Bug1595.__proj__CalcStep__item__x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_901b78fb58b641c2f5af6e1570fc6161"
+      ],
+      0,
+      "29a97d5435604764b57f9c606daecf3c"
+    ],
+    [
+      "Bug1595.__proj__CalcStep__item__y",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_901b78fb58b641c2f5af6e1570fc6161"
+      ],
+      0,
+      "10d6522aa79e7d0d8cb11f4a0e0e0c97"
+    ],
+    [
+      "Bug1595.__proj__CalcStep__item__z",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_901b78fb58b641c2f5af6e1570fc6161"
+      ],
+      0,
+      "21a1884304db261f7db08f55cd59d3b3"
+    ],
+    [
+      "Bug1595.__proj__CalcStep__item___5",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Bug1595.CalcStep",
+        "refinement_interpretation_Tm_refine_901b78fb58b641c2f5af6e1570fc6161"
+      ],
+      0,
+      "e51de8d655f96abc8f0ce27be36dc4d7"
+    ],
+    [
+      "Bug1595.__proj__CalcStep__item___6",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Bug1595.CalcStep",
+        "refinement_interpretation_Tm_refine_901b78fb58b641c2f5af6e1570fc6161"
+      ],
+      0,
+      "ff38e86ed5cb46955d53c41842229a4e"
+    ]
+  ]
+]

@@ -20,7 +20,7 @@
         "equation_FStar.Stubs.Reflection.Types.name",
         "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
-        "kinding_FStar.VConfig.vconfig@tok",
+        "kinding_FStar.Stubs.VConfig.vconfig@tok",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
@@ -36,7 +36,7 @@
         "typing_Prims.string"
       ],
       0,
-      "1be7e013636a41a2737e3acdb6a51eb7"
+      "04276c2d2425183cc16af1d73c90c1fc"
     ]
   ]
 ]

@@ -136,7 +136,7 @@
         "subterm_ordering_StackMachine.Binop"
       ],
       0,
-      "3dccfd8dc3d50b8aa54ae153f06641e0"
+      "d1f29e2727d142e5cc8302a72b391ec4"
     ],
     [
       "StackMachine.instr",
@@ -210,7 +210,7 @@
         "typing_StackMachine.instrDenote", "typing_StackMachine.stack"
       ],
       0,
-      "866462a5413a46bca578d493e7a06677"
+      "de11a50831ac84e0a32e94976a0ddda1"
     ],
     [
       "StackMachine.compile",
@@ -228,7 +228,7 @@
         "subterm_ordering_StackMachine.Binop"
       ],
       0,
-      "684f67be69c77609ea57a8de46a697b5"
+      "59184cf9655bb210facbc38cd7654672"
     ],
     [
       "StackMachine.app_assoc_reverse",
@@ -319,7 +319,7 @@
         "projection_inverse_StackMachine.IBinop__0",
         "projection_inverse_StackMachine.IConst__0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_5bc7dc4f72fe71559ba60b0afd7f3ae3",
+        "refinement_interpretation_Tm_refine_aebc81e2e13c139d05837b86cc180b74",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "subterm_ordering_StackMachine.Binop",
         "typing_FStar.List.Tot.Base.op_At", "typing_Prims.int",
@@ -328,7 +328,7 @@
         "unit_typing"
       ],
       0,
-      "f780087f4213ae3653df81aa03a5d571"
+      "158e6b341543be899c98470784a6e467"
     ],
     [
       "StackMachine.compile_correct'",
@@ -346,7 +346,7 @@
         "typing_Prims.int", "typing_StackMachine.stack"
       ],
       0,
-      "d1bacde4acb03ec5fe5dca31b9030d1b"
+      "c46d8fe56577d6e3346f610b43a7cea7"
     ],
     [
       "StackMachine.app_nil_end",
@@ -604,7 +604,7 @@
         "subterm_ordering_StackMachine.TBinop"
       ],
       0,
-      "61939dbf93ee10802e9b7c41d719a93f"
+      "5a1614229478300793691d46faa1fb7a"
     ],
     [
       "StackMachine.tinstr",
@@ -840,7 +840,7 @@
         "typing_tok_StackMachine.Nat@tok"
       ],
       0,
-      "749f422661955852a7dfa3bca6596dbc"
+      "3520eb3b9abfd96d303a95caebfc1e60"
     ],
     [
       "StackMachine.tinstrDenote",
@@ -895,7 +895,7 @@
         "typing_tok_StackMachine.Nat@tok"
       ],
       0,
-      "621b3d9fff47a8ab5674ff907cc9679c"
+      "3c92ffbbd2a3b28689d12f69d17acf07"
     ],
     [
       "StackMachine.tprogDenote",
@@ -913,7 +913,7 @@
         "subterm_ordering_StackMachine.TCons"
       ],
       0,
-      "37f14d7dbd597e11dbe5953c4c87b65b"
+      "57a7832f68bc1d6ee0e0d0d3d01c5bea"
     ],
     [
       "StackMachine.tconcat",
@@ -931,7 +931,7 @@
         "subterm_ordering_StackMachine.TCons"
       ],
       0,
-      "787c0454e85df769390f2637253fe390"
+      "b6414c61275b2126009c0f6a9330e2b7"
     ],
     [
       "StackMachine.tcompile",
@@ -951,7 +951,7 @@
         "subterm_ordering_StackMachine.TBinop"
       ],
       0,
-      "f2fb96b673f367c8e44cfa2e6889cf1d"
+      "75aad64d234762b13c8694c3d9cb22c7"
     ],
     [
       "StackMachine.tconcat_correct",
@@ -986,7 +986,7 @@
         "subterm_ordering_StackMachine.TCons", "typing_StackMachine.tconcat"
       ],
       0,
-      "b8cf5ca4216423f3c38c7dbfd09ead55"
+      "25ceebeb6177f40cdc5808fb2992bf45"
     ],
     [
       "StackMachine.tcompile_correct'",
@@ -1068,7 +1068,7 @@
         "projection_inverse_StackMachine.TiBinop_s",
         "projection_inverse_StackMachine.TiNConst__1",
         "projection_inverse_StackMachine.TiNConst_s",
-        "refinement_interpretation_Tm_refine_c64fda410e510fa03460ff98402e764b",
+        "refinement_interpretation_Tm_refine_2792b7e0bc0197bfd71e1499c3a26653",
         "subterm_ordering_StackMachine.TBinop",
         "token_correspondence_StackMachine.tcompile.fuel_instrumented",
         "typing_StackMachine.tcompile", "typing_StackMachine.tconcat",
@@ -1077,7 +1077,7 @@
         "typing_tok_StackMachine.Bool@tok", "typing_tok_StackMachine.Nat@tok"
       ],
       0,
-      "8a36b7b76448845eff98f3d4483ad549"
+      "77fa2a277b45846722c8fbcf6d2c1e61"
     ]
   ]
 ]
