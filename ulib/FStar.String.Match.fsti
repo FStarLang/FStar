@@ -26,7 +26,7 @@ val first_diff (s1 s2: string) :
    Tot (o : (option (pos: nat{pos <= (min (strlen s1) (strlen s2))})) {
              (None? o ==> strlen s1 = strlen s2 /\ streq_upto s1 s2 (strlen s1)) /\
              (Some? o ==> 
-               streq_upto_min s1 s2 ((Some?.v o) - 1) /\
+               streq_upto_min s1 s2 (Some?.v o) /\
               (((Some?.v o) = strlen s1  \/ (Some?.v o) = strlen s2) /\ strlen s1 <> strlen s2)
               \/
               (((Some?.v o) < strlen s1 /\ (Some?.v o) < strlen s2) /\
