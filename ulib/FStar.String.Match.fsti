@@ -56,4 +56,3 @@ val first_diff_strlen_neq (s1 s2 : string) :
 
 val first_diff_neq_some (s1 s2 : string) :
  Lemma (s1 <> s2 ==> Some? (first_diff s1 s2))
-

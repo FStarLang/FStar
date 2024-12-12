@@ -24,7 +24,7 @@ let streq_upto s1 s2 (pos: nat) =
    (forall (i: nat{i < pos}). index s1 i = index s2 i))
 
 let streq_upto_min s1 s2 (pos: int{pos < (min (strlen s1) (strlen s2))}) =
-  (forall (i: nat{i < (pos - 1)}). index s1 i = index s2 i)
+  (forall (i: nat{i < pos}). index s1 i = index s2 i)
 
 ///  The boolean form of streq.
 
