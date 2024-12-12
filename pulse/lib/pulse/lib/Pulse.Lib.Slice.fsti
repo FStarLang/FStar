@@ -44,6 +44,42 @@ val to_array (#t: Type) (s: slice t) (#p: perm) (#v: Seq.seq t) (#a: array t) : 
     (pts_to s #p v ** is_from_array a s)
     (fun _ -> A.pts_to a #p v)
 
+(* BEGIN C only: conversions to/from Pulse.Lib.ArrayPtr. Those are
+   meant to design "clean" C APIs without the need to monomorphize
+   the slice type in the extracted .h file. *)
+
+module AP = Pulse.Lib.ArrayPtr
+
+val arrayptr_to_slice
+  (#t: Type)
+  (a: AP.ptr t)
+  (s: slice t)
+: slprop
+
+val arrayptr_to_slice_intro (#t: Type) (a: AP.ptr t) (#p: perm) (alen: SZ.t) (#v: Ghost.erased (Seq.seq t)) : stt (slice t)
+    (pts_to a #p v ** pure (SZ.v alen == Seq.length v))
+    (fun s -> pts_to s #p v ** arrayptr_to_slice a s)
+
+val arrayptr_to_slice_elim (#t: Type) (s: slice t) (#p: perm) (#v: Seq.seq t) (#a: AP.ptr t) : stt_ghost unit emp_inames
+    (pts_to s #p v ** arrayptr_to_slice a s)
+    (fun _ -> pts_to a #p v)
+
+val slice_to_arrayptr
+  (#t: Type)
+  (s: slice t)
+  (a: AP.ptr t)
+: slprop
+
+val slice_to_arrayptr_intro (#t: Type) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) : stt (AP.ptr t)
+    (pts_to s #p v)
+    (fun a -> pts_to a #p v ** slice_to_arrayptr s a)
+
+val slice_to_arrayptr_elim (#t: Type) (a: AP.ptr t) (#p: perm) (#v: Seq.seq t) (#s: slice t) : stt_ghost unit emp_inames
+    (pts_to a #p v ** slice_to_arrayptr s a ** pure (Seq.length v == SZ.v (len s)))
+    (fun _ -> pts_to s #p v)
+
+(* END C only *)
+
 (* Written x.(i) *)
 val op_Array_Access
         (#t: Type)
