@@ -282,13 +282,6 @@ type bgproc = {
     ctxt:     SolverState.solver_state;
 }
 
-let cmd_and_args_to_string cmd_and_args =
-  String.concat "" [
-   "cmd="; (fst cmd_and_args);
-   " args=["; (String.concat ", " (snd cmd_and_args));
-   "]"
-    ]
-
 (* the current background process is stored in the_z3proc
    the params with which it was started are stored in the_z3proc_params
    refresh will kill and restart the process if the params changed or
@@ -303,6 +296,10 @@ let bg_z3_proc =
     // just to be safe: the executable name in the_z3proc_params should
     // be enough to distinguish between the different executables.
     let make_new_z3_proc cmd_and_args =
+      if Options.hint_info () then
+        BU.print2 "Creating new z3proc (cmd=[%s], version=[%s])\n"
+          (show cmd_and_args)
+          (show (Options.z3_version ()));
       the_z3proc := Some (new_z3proc_with_id cmd_and_args);
       the_z3proc_params := Some cmd_and_args;
       the_z3proc_ask_count := 0 in
@@ -318,38 +315,21 @@ let bg_z3_proc =
     in
     let maybe_kill_z3proc () =
       if !the_z3proc <> None then begin
+        let old_params = must (!the_z3proc_params) in
+        let old_version = !the_z3proc_version in
+
+        if Options.hint_info () then
+          BU.print2 "Killing old z3proc (ask_count=%s, old_cmd=[%s])\n"
+            (show !the_z3proc_ask_count)
+            (show old_params);
+
          BU.kill_process (must (!the_z3proc));
+         the_z3proc_ask_count := 0;
          the_z3proc := None
       end
     in
     let refresh () =
-        let next_params = z3_cmd_and_args () in
-        let old_params = must (!the_z3proc_params) in
-
-        let old_version = !the_z3proc_version in
-        let next_version = Options.z3_version () in
-
-        (* We only refresh the solver if we have used it at all, or if the
-        parameters/version must be changed. We also force a refresh if log_queries is
-        on. I (GM 2023/07/23) think this might have been for making sure we get
-        a new file after checking a dependency, and that it might not be needed
-        now. However it's not a big performance hit, and it's only when logging
-        queries, so I'm maintaining this. *)
-        if Options.log_queries() ||
-           (!the_z3proc_ask_count > 0) ||
-           old_params <> next_params ||
-           old_version <> next_version
-        then begin
-          maybe_kill_z3proc();
-          if Options.query_stats()
-          then begin
-             BU.print3 "Refreshing the z3proc (ask_count=%s old=[%s] new=[%s])\n"
-               (BU.string_of_int !the_z3proc_ask_count)
-               (cmd_and_args_to_string old_params)
-               (cmd_and_args_to_string next_params)
-          end;
-          make_new_z3_proc next_params
-        end;
+        maybe_kill_z3proc ();
         query_logging.close_log()
     in
     let restart () =
