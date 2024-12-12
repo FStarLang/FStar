@@ -521,16 +521,6 @@ let (__proj__Mkbgproc__item__ctxt :
   bgproc -> FStarC_SMTEncoding_SolverState.solver_state) =
   fun projectee ->
     match projectee with | { ask; refresh; restart; version; ctxt;_} -> ctxt
-let (cmd_and_args_to_string :
-  (Prims.string * Prims.string Prims.list) -> Prims.string) =
-  fun cmd_and_args ->
-    FStarC_Compiler_String.concat ""
-      ["cmd=";
-      FStar_Pervasives_Native.fst cmd_and_args;
-      " args=[";
-      FStarC_Compiler_String.concat ", "
-        (FStar_Pervasives_Native.snd cmd_and_args);
-      "]"]
 let (bg_z3_proc : bgproc FStarC_Compiler_Effect.ref) =
   let the_z3proc = FStarC_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let the_z3proc_params =
@@ -538,10 +528,24 @@ let (bg_z3_proc : bgproc FStarC_Compiler_Effect.ref) =
   let the_z3proc_ask_count = FStarC_Compiler_Util.mk_ref Prims.int_zero in
   let the_z3proc_version = FStarC_Compiler_Util.mk_ref "" in
   let make_new_z3_proc cmd_and_args =
-    (let uu___1 =
-       let uu___2 = new_z3proc_with_id cmd_and_args in
-       FStar_Pervasives_Native.Some uu___2 in
-     FStarC_Compiler_Effect.op_Colon_Equals the_z3proc uu___1);
+    (let uu___1 = FStarC_Options.hint_info () in
+     if uu___1
+     then
+       let uu___2 =
+         FStarC_Class_Show.show
+           (FStarC_Class_Show.show_tuple2 FStarC_Class_Show.showable_string
+              (FStarC_Class_Show.show_list FStarC_Class_Show.showable_string))
+           cmd_and_args in
+       let uu___3 =
+         let uu___4 = FStarC_Options.z3_version () in
+         FStarC_Class_Show.show FStarC_Class_Show.showable_string uu___4 in
+       FStarC_Compiler_Util.print2
+         "Creating new z3proc (cmd=[%s], version=[%s])\n" uu___2 uu___3
+     else ());
+    (let uu___2 =
+       let uu___3 = new_z3proc_with_id cmd_and_args in
+       FStar_Pervasives_Native.Some uu___3 in
+     FStarC_Compiler_Effect.op_Colon_Equals the_z3proc uu___2);
     FStarC_Compiler_Effect.op_Colon_Equals the_z3proc_params
       (FStar_Pervasives_Native.Some cmd_and_args);
     FStarC_Compiler_Effect.op_Colon_Equals the_z3proc_ask_count
@@ -569,44 +573,36 @@ let (bg_z3_proc : bgproc FStarC_Compiler_Effect.ref) =
        uu___3 <> FStar_Pervasives_Native.None in
      if uu___2
      then
-       ((let uu___4 =
-           let uu___5 = FStarC_Compiler_Effect.op_Bang the_z3proc in
-           FStarC_Compiler_Util.must uu___5 in
-         FStarC_Compiler_Util.kill_process uu___4);
+       let old_params =
+         let uu___3 = FStarC_Compiler_Effect.op_Bang the_z3proc_params in
+         FStarC_Compiler_Util.must uu___3 in
+       let old_version = FStarC_Compiler_Effect.op_Bang the_z3proc_version in
+       ((let uu___4 = FStarC_Options.hint_info () in
+         if uu___4
+         then
+           let uu___5 =
+             let uu___6 = FStarC_Compiler_Effect.op_Bang the_z3proc_ask_count in
+             FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___6 in
+           let uu___6 =
+             FStarC_Class_Show.show
+               (FStarC_Class_Show.show_tuple2
+                  FStarC_Class_Show.showable_string
+                  (FStarC_Class_Show.show_list
+                     FStarC_Class_Show.showable_string)) old_params in
+           FStarC_Compiler_Util.print2
+             "Killing old z3proc (ask_count=%s, old_cmd=[%s])\n" uu___5
+             uu___6
+         else ());
+        (let uu___5 =
+           let uu___6 = FStarC_Compiler_Effect.op_Bang the_z3proc in
+           FStarC_Compiler_Util.must uu___6 in
+         FStarC_Compiler_Util.kill_process uu___5);
+        FStarC_Compiler_Effect.op_Colon_Equals the_z3proc_ask_count
+          Prims.int_zero;
         FStarC_Compiler_Effect.op_Colon_Equals the_z3proc
           FStar_Pervasives_Native.None)
      else () in
-   let refresh uu___1 =
-     let next_params = z3_cmd_and_args () in
-     let old_params =
-       let uu___2 = FStarC_Compiler_Effect.op_Bang the_z3proc_params in
-       FStarC_Compiler_Util.must uu___2 in
-     let old_version = FStarC_Compiler_Effect.op_Bang the_z3proc_version in
-     let next_version = FStarC_Options.z3_version () in
-     (let uu___3 =
-        (((FStarC_Options.log_queries ()) ||
-            (let uu___4 = FStarC_Compiler_Effect.op_Bang the_z3proc_ask_count in
-             uu___4 > Prims.int_zero))
-           || (old_params <> next_params))
-          || (old_version <> next_version) in
-      if uu___3
-      then
-        (maybe_kill_z3proc ();
-         (let uu___6 = FStarC_Options.query_stats () in
-          if uu___6
-          then
-            let uu___7 =
-              let uu___8 =
-                FStarC_Compiler_Effect.op_Bang the_z3proc_ask_count in
-              FStarC_Compiler_Util.string_of_int uu___8 in
-            FStarC_Compiler_Util.print3
-              "Refreshing the z3proc (ask_count=%s old=[%s] new=[%s])\n"
-              uu___7 (cmd_and_args_to_string old_params)
-              (cmd_and_args_to_string next_params)
-          else ());
-         make_new_z3_proc next_params)
-      else ());
-     query_logging.close_log () in
+   let refresh uu___1 = maybe_kill_z3proc (); query_logging.close_log () in
    let restart uu___1 =
      maybe_kill_z3proc ();
      query_logging.close_log ();

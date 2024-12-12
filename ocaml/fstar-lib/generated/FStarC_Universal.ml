@@ -1357,14 +1357,8 @@ let (tc_one_file :
                        "Module after type checking:\n%s\n" uu___4
                    else ());
                   (let extend_tcenv tcmod1 tcenv =
-                     (let uu___4 =
-                        let uu___5 = FStarC_Options.lax () in
-                        Prims.op_Negation uu___5 in
-                      if uu___4
-                      then
-                        FStarC_SMTEncoding_Z3.refresh
-                          FStar_Pervasives_Native.None
-                      else ());
+                     FStarC_SMTEncoding_Z3.refresh
+                       FStar_Pervasives_Native.None;
                      (let uu___4 =
                         let uu___5 =
                           FStarC_ToSyntax_ToSyntax.add_modul_to_env tcmod1
