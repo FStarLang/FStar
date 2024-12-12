@@ -57,10 +57,10 @@ let fp_pcm' (#a:Type) (p:preorder a) : pcm' (pcm_carrier p) = {
 let fp_lem_commutative (#a:Type) (p:preorder a) : lem_commutative (fp_pcm' p) =
   fun _ _ -> ()
 
+#push-options "--z3rlimit_factor 4"
 let fp_lem_assoc_l (#a:Type) (p:preorder a) : lem_assoc_l (fp_pcm' p) =
   fun _ _ _ -> ()
 
-#push-options "--z3rlimit_factor 4"
 let fp_lem_assoc_r (#a:Type) (p:preorder a) : lem_assoc_r (fp_pcm' p) =
   fun _ _ _ -> ()
 #pop-options

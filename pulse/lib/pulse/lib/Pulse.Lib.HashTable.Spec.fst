@@ -543,7 +543,8 @@ let not_full #kt #vt (r:repr_t kt vt) : Type0 =
   exists i. ~(Used? (r @@ i ))
 
 #set-options "--split_queries always"
-
+#restart-solver
+#push-options "--z3rlimit_factor 4"
 let rec insert_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt)) 
   (repr : repr_t_sz kt vt sz{pht_models spec repr /\ not_full repr}) (k : kt) (v : vt) 
   (off:nat{off <= sz})
@@ -611,6 +612,7 @@ let rec insert_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
           (**)lemma_zombie_upd spec repr off k v;
           upd_ repr idx k v
         )
+#pop-options
 
 let insert_repr #kt #vt #sz
                 (#spec : erased (spec_t kt vt))
