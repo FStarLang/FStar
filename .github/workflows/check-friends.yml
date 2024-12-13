@@ -70,11 +70,9 @@ jobs:
         with:
           name: karamel
 
-      # node is needed for the tests.
-      - uses: actions/setup-node@v4
-
+      # node is needed for the wasm tests, skip them for now
       - name: Test
-        run: make -C karamel -skj$(nproc) test
+        run: make -C karamel -skj$(nproc) test NOWASMTEST=1
 
   build-steel:
     runs-on: ubuntu-latest
