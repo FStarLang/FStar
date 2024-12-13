@@ -190,13 +190,13 @@ let warn_handler (suf:Errors.error_message) (s:string) : unit =
      blank 2 ^^ align (dquotes (arbitrary_string s));
     ] @ suf)
 
-let install_suggestion : Pprint.document =
+let install_suggestion (v : string) : Pprint.document =
   let open FStarC.Errors.Msg in
   let open FStarC.Pprint in
-  prefix 4 1 (text "Please download the correct version of Z3 from")
+  prefix 4 1 (text <| BU.format1 "Please download version %s of Z3 from" v)
              (url z3url) ^/^
     group (text "and install it into your $PATH as" ^/^ squotes
-      (doc_of_string (Platform.exe ("z3-" ^ Options.z3_version  ()))) ^^ dot)
+      (doc_of_string (Platform.exe ("z3-" ^ v))) ^^ dot)
 
 (* Talk to the process to see if it's the correct version of Z3
 (i.e. the one in the optionstate). Also check that it indeed is Z3. By
@@ -216,12 +216,11 @@ let check_z3version (p:proc) : unit =
   in
   let name = getinfo "name" in
   if name <> "Z3" && not (!_already_warned_solver_mismatch) then (
-    Errors.log_issue0 Errors.Warning_SolverMismatch
-      (BU.format3 "Unexpected SMT solver: expected to be talking to Z3, got %s.\n\
-                  Please download the correct version of Z3 from %s\n\
-                  and install it into your $PATH as `%s'."
-        name
-        z3url (Platform.exe ("z3-" ^ Options.z3_version  ())));
+    let open FStarC.Errors.Msg in
+    Errors.log_issue0 Errors.Warning_SolverMismatch [
+      text <| BU.format1 "Unexpected SMT solver: expected to be talking to Z3, got %s." name;
+      install_suggestion (Options.z3_version ());
+    ];
     _already_warned_solver_mismatch := true
   );
   let ver_found : string = BU.trim_string (List.hd (BU.split (getinfo "version") "-")) in
@@ -229,10 +228,11 @@ let check_z3version (p:proc) : unit =
   if ver_conf <> ver_found && not (!_already_warned_version_mismatch) then (
     let open FStarC.Errors in
     let open FStarC.Pprint in
+    let open FStarC.Errors.Msg in
     Errors.log_issue0 Errors.Warning_SolverMismatch [
       text (BU.format3 "Unexpected Z3 version for '%s': expected '%s', got '%s'."
                   (proc_prog p) ver_conf ver_found);
-      install_suggestion;
+      (install_suggestion ver_conf);
     ];
     Errors.stop_if_err(); (* stop now if this was a hard error *)
     _already_warned_version_mismatch := true
@@ -251,7 +251,7 @@ let new_z3proc (id:string) (cmd_and_args : string & list string) : BU.proc =
           text "Z3 solver not found.";
           prefix 2 1 (text "Required version:")
             (text (Options.z3_version ()));
-          install_suggestion;
+          install_suggestion (Options.z3_version ());
         ]
 
       | e ->
