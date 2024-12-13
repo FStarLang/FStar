@@ -61,6 +61,8 @@ jobs:
       # blow up the size of this artifact.
       - run: rm -f FStar/fstar-ci*.tar.gz
       - run: make 2
+        working-directory: FStar
+
       - uses: mtzguido/gci-upload@master
         with:
           name: fstar-repo
