@@ -37,9 +37,7 @@ RUN apt-get install -y --no-install-recommends \
       opam \
       && apt-get clean -y
 
-# Install the Z3 versions we want to use in CI (4.8.5, 4.13.3). Note: we
-# currently also have 4.8.5 in the opam switch, as it is a dependency of
-# in fstar.opam, but that should be removed.
+# Install the relevant Z3 versions.
 COPY ./bin/get_fstar_z3.sh /usr/local/bin
 RUN get_fstar_z3.sh /usr/local/bin
 
