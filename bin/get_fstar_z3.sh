@@ -63,7 +63,7 @@ mkdir -p "$dest_dir"
 
 for z3_ver in 4.8.5 4.13.3; do
   key="$kernel-$arch-$z3_ver"
-  url="${release_url[$key]}"
+  url="${release_url[$key]:-}"
 
   destination_file_name="$dest_dir/z3-$z3_ver"
   if [ "$kernel" = Windows ]; then destination_file_name="$destination_file_name.exe"; fi

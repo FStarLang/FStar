@@ -5,7 +5,7 @@ let
   z3_4_13_3 = callPackage (import ./z3_4_13_3.nix) {};
 in
 stdenv.mkDerivation {
-  name = "fstar-z3";
+  pname = "fstar-z3";
   version = "1";
 
   dontUnpack = true;
