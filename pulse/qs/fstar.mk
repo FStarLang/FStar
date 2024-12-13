@@ -29,6 +29,7 @@ HINTS_ENABLED?=--use_hints
 # This warning is really useless.
 OTHERFLAGS += --warn_error -321
 OTHERFLAGS += --ext context_pruning
+OTHERFLAGS += --z3version 4.13.3
 
 # Set ADMIT=1 to admit queries
 ADMIT ?=

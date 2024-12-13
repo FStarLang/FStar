@@ -289,7 +289,7 @@ let open_ascription (c:comp_ascription) (nv:nvar) : comp_ascription =
 let close_ascription (c:comp_ascription) (nv:nvar) : comp_ascription =
   subst_ascription c [RT.ND (snd nv) 0]
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 8 --fuel 0 --ifuel 1 --split_queries no"
 let rec check_abs_core
   (g:env)
   (t:st_term{Tm_Abs? t.term})

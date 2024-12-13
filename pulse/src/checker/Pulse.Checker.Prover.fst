@@ -94,7 +94,7 @@ let rec collect_pures (g:env) (l:list slprop)
     match inspect_term hd with
     | Tm_Pure _ -> (| hd::pures, rest, RU.magic #(slprop_equiv _ _ _) () |)
     | _ -> (| pures, hd::rest, RU.magic #(slprop_equiv _ _ _) () |)
-
+#push-options "--fuel 0"
 let rec prove_pures #preamble (pst:prover_state preamble)
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
                                         is_terminal pst' }) =
@@ -291,7 +291,7 @@ let prover_iteration
     P "match_full"        Match.match_full;
   ]
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 6 --ifuel 2"
 let rec prover
   (#preamble:_)
   (pst0:prover_state preamble)
@@ -368,7 +368,7 @@ let rec prover
                 // several error locations worse.
                 fail_doc pst.pg None msg
 #pop-options
-
+#pop-options
 let rec get_q_at_hd (g:env) (l:list slprop) (q:slprop { L.existsb (fun v -> eq_tm v q) l })
   : l':list slprop &
     slprop_equiv g (list_as_slprop l) (q * list_as_slprop l') =
@@ -505,7 +505,8 @@ let typing_canon #g #t (#c:comp_st) (d:st_typing g t c) : st_typing g t (canon_p
   assume false;
   d
 
-#push-options "--z3rlimit_factor 8 --fuel 0 --ifuel 1 --retry 5"
+#push-options "--z3rlimit_factor 8 --fuel 0 --ifuel 2 --split_queries no"
+#restart-solver
 let try_frame_pre_uvs
   (allow_ambiguous : bool)
   (#g:env) (#ctxt:slprop) (ctxt_typing:tot_typing g ctxt tm_slprop)
@@ -525,7 +526,6 @@ let try_frame_pre_uvs
 
   let d : st_typing (push_env g1 uvs) t c =
     Metatheory.st_typing_weakening g uvs t c d g1 in
-
   assert (comp_pre (PS.nt_subst_comp c nts) == PS.nt_subst_term (comp_pre c) nts);
   let t = PS.nt_subst_st_term t nts in
   let c = PS.nt_subst_comp c nts in
@@ -586,7 +586,13 @@ let try_frame_pre_uvs
   // then the remaining_ctxt typing should come from the prover state
   //   TODO: add it there
   // and then ctxt' is just their `*`
-  (| x, g2, (| comp_u c, ty, d_ty |), (| ctxt', RU.magic #(tot_typing _ _ _) () |), k |)
+
+  let t : (u:universe & t:typ & universe_of g2 t u) = (| comp_u c, ty, d_ty |) in
+  let ctxt' : (ctxt':slprop & tot_typing g2 ctxt' tm_slprop) = (| ctxt', RU.magic #(tot_typing _ _ _) () |) in
+  let k : continuation_elaborator g ctxt g2 (dfst ctxt') = k in
+  assert_spinoff (lookup g2 x == Some ty);
+  assert_spinoff (checker_result_inv g None x g2 t ctxt');
+  (| x, g2, t, ctxt', k |)
 #pop-options
 
 let try_frame_pre

@@ -583,7 +583,8 @@ let rejuvenate1 (m: premem) (m': premem { mem_le m' (age1_ m) }) :
   mem_ext (age1_ m'') m' (fun _ -> ());
   m''
 
-#push-options "--z3rlimit 30"
+#push-options "--z3rlimit 60 --query_stats"
+#restart-solver
 irreducible
 let rejuvenate1_sep (m m1': premem) (m2': premem { disjoint_mem m1' m2' /\ age1_ m == join_premem m1' m2' }) :
     m'':(premem&premem) { age1_ m''._1 == m1' /\ age1_ m''._2 == m2'
@@ -1110,6 +1111,8 @@ let inames_live_inv (i:iref) (p:slprop) (m:mem)
 : Lemma ((inv i p) m ==> inames_live (FStar.GhostSet.singleton deq_iref i) m)
 = ()
 
+#push-options "--fuel 0 --ifuel 0"
+#restart-solver
 let fresh_inv p m ctx =
   let i = IndefiniteDescription.indefinite_description_ghost iref fun f ->
     fresh_addr m f in
@@ -1121,6 +1124,7 @@ let fresh_inv p m ctx =
   Classical.forall_intro (PM.pulse_heap_sig.sep.join_empty);
   PM.ghost_action_preorder ();
   (| i, m' |)
+#pop-options
 
 let dup_inv_equiv i p =
   mem_pred_ext (inv i p) (inv i p `star` inv i p) fun w ->

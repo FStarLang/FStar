@@ -203,6 +203,14 @@ fn swap (a: A.array int) (i j: nat) (#l:nat{l <= i /\ l <= j}) (#r:nat{i < r /\ 
 }
 
 
+let partition_pred (s:Seq.seq int) (lo hi:nat) (r: (nat & nat & int))
+: prop
+= forall (k:nat). {:pattern (Seq.index s k)}
+   k < Seq.length s ==> (
+    let kk = k + lo in
+    (lo <= kk /\ kk < r._1 ==> Seq.index s k < r._3) /\
+    (r._1 <= kk /\ kk < r._2  ==> Seq.index s k == r._3) /\
+    (r._2 <= kk /\ kk < hi    ==> Seq.index s k >  r._3))
 
 fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
   (lb rb: erased int)
@@ -222,9 +230,7 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
       Seq.length s = hi - lo /\ Seq.length s0 = hi - lo
       /\ lo <= r._1 /\ r._1 < r._2 /\ r._2 <= hi /\ hi <= A.length a
       /\ lb <= r._3 /\ r._3 <= rb
-      /\ (forall (k: nat).   lo <= k /\ k < r._1  ==> Seq.index s (k - lo) <  r._3)
-      /\ (forall (k: nat). r._1 <= k /\ k < r._2  ==> Seq.index s (k - lo) == r._3)
-      /\ (forall (k: nat). r._2 <= k /\ k < hi    ==> Seq.index s (k - lo) >  r._3)
+      /\ partition_pred s lo hi r
       /\ between_bounds s lb rb
       /\ permutation s0 s
     )
@@ -247,13 +253,11 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
         lb <= pivot /\ pivot <= rb /\
         Seq.length s = hi - lo /\
         Seq.index s (hi - 1 - lo) = pivot
-        /\ (forall (l: nat). lo <= l /\ l < vi ==> Seq.index s (l - lo) <  pivot)
-        /\ (forall (l: nat). vi <= l /\ l < vj ==> Seq.index s (l - lo) == pivot)
-        /\ (forall (l: nat). vj <= l /\ l < vk ==> Seq.index s (l - lo) >  pivot)
+        /\ partition_pred s lo vk (vi, vj, pivot)
         /\ permutation s0 s
         /\ between_bounds s lb rb
       ))
-  {
+  { 
     let vk = !k;
     let ak = a.(SZ.uint_to_t vk);
     if (ak < pivot) {

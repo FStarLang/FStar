@@ -28,7 +28,7 @@ module P = Pulse.Syntax.Printer
 module RT = FStar.Reflection.Typing
 module MT = Pulse.Typing.Metatheory
 
-#push-options "--z3rlimit_factor 2 --split_queries no"
+#push-options "--z3rlimit_factor 4 --split_queries no"
 let check
   (g:env)
   (pre:term)

@@ -6,7 +6,11 @@
     "--MLish",
     "--MLish_effect", "FStarC.Compiler.Effect",
     "--cache_dir",
-    "${FSTAR_HOME}/src/.cache.boot"
+    "${FSTAR_HOME}/src/.cache.boot",
+    "--z3version",
+    "4.13.3",
+    "--ext",
+    "context_pruning"
   ],
   "include_dirs": [
     ".",
