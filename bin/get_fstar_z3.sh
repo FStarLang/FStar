@@ -19,7 +19,7 @@ release_url["Linux-x86_64-4.13.3"]="https://github.com/Z3Prover/z3/releases/down
 release_url["Linux-aarch64-4.13.3"]="https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-arm64-glibc-2.34.zip"
 release_url["Darwin-x86_64-4.13.3"]="https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-osx-13.7.zip"
 release_url["Darwin-aarch64-4.13.3"]="https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-arm64-osx-13.7.zip"
-release_url["Windows-x86_64-4.13.3"]="https://github.com/Z3Prover/z3/releases/download/Z3-4.8.5/z3-4.8.5-x64-win.zip"
+release_url["Windows-x86_64-4.13.3"]="https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-win.zip"
 
 trap "exit 1" HUP INT PIPE QUIT TERM
 cleanup() {
