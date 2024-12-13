@@ -44,7 +44,7 @@ check_lib: install_bin install_lib
 	  OUTPUT_DIR=none \
 	  $(MAKE) -f mk/lib.mk verify
 	# No need for the depend file
-	rm out/lib/fstar/.checked/dependlib
+	rm -f out/lib/fstar/.checked/.dependlib
 
 clean: _force
 	dune clean $(FSTAR_DUNE_OPTIONS) --root=dune

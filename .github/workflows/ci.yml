@@ -210,7 +210,7 @@ jobs:
       - run: sed -i '/"z3"/d' fstar.opam
 
       - run: opam install . --deps-only --with-test
-      - run: eval $(opam env) && make -j$(nproc)
+      - run: eval $(opam env) && make -kj$(nproc)
 
       - name: Smoke test
         run: |
