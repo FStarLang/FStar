@@ -33,6 +33,7 @@ jobs:
         run: make -skj$(nproc) all-packages FSTAR_VERSION=ci ADMIT=1
         working-directory: FStar
 
+      # Upload the archives.
       - uses: actions/upload-artifact@v4
         with:
           path: FStar/fstar-ci.tar.gz
@@ -53,6 +54,13 @@ jobs:
           path: FStar/fstar-ci-stage1-src.tar.gz
           name: fstar-ci-stage1-src.tar.gz
           retention-days: 3
+
+      # Upload full repo too, for Pulse. Note: we explicitly run
+      # 'make 2' at this point to generate the out/ directory, as the previous
+      # targets do not. Also, remove the previous archives so they don't
+      # blow up the size of this artifact.
+      - run: rm -f FStar/fstar-ci*.tar.gz
+      - run: make 2
       - uses: mtzguido/gci-upload@master
         with:
           name: fstar-repo
