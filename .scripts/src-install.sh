@@ -35,3 +35,6 @@ rsync -r --copy-links                   \
 
 cp fstar.opam "${PREFIX}/fstar.opam"
 cp mk/src_package_mk.mk "${PREFIX}/Makefile"
+mkdir "${PREFIX}/mk"
+cp mk/lib.mk "${PREFIX}/mk/lib.mk"
+cp mk/common.mk "${PREFIX}/mk/common.mk"

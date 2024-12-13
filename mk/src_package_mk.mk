@@ -17,42 +17,37 @@ FSTAR_DUNE_BUILD_OPTIONS := $(FSTAR_DUNE_OPTIONS)
 .PHONY: _force
 _force:
 
-fstar-bare: bare/bin/fstar.exe
-bare/bin/fstar.exe: _force
-	dune build $(FSTAR_DUNE_BUILD_OPTIONS) --root=bare
-	dune install --root=bare --prefix=$(CURDIR)/out fstar-guts
-	dune install --root=bare --prefix=$(CURDIR)/out fstarc-bare
+build:
+	dune build --root=dune $(FSTAR_DUNE_BUILD_OPTIONS)
+	
+install_bin: build
+	rm -rf $(CURDIR)/out
+	dune install --root=dune --prefix=$(CURDIR)/out
 
-fstar: full/bin/fstar.exe
-full/bin/fstar.exe: fstar-bare _force
-	env OCAMLPATH="$(CURDIR)/out/lib" \
-	  dune build --root=full $(FSTAR_DUNE_BUILD_OPTIONS)
-	dune install --root=full --prefix=$(CURDIR)/out
+install_lib:
 	# Install library (cp -u: don't copy unless newer)
 	mkdir -p out/ulib
-	cp -u -t out/ulib ulib/*.fst
-	cp -u -t out/ulib ulib/*.fsti
-	cp -u -t out/ulib ulib/fstar.include
-	cp -u -r -t out/ulib ulib/experimental
-	cp -u -r -t out/ulib ulib/legacy
+	cp -t out/lib/fstar ulib/*.fst
+	cp -t out/lib/fstar ulib/*.fsti
+	cp -t out/lib/fstar ulib/fstar.include
+	cp -r -t out/lib/fstar ulib/experimental
+	cp -r -t out/lib/fstar ulib/legacy
 
-fstarlib: _force
-	dune build   --root=fstarlib $(FSTAR_DUNE_BUILD_OPTIONS)
-	dune install --root=fstarlib --prefix=$(CURDIR)/out
-	# Install checked files for the library
-	mkdir -p out/ulib/.cache
-
-fstar-pluginlib: fstarlib _force
-	env OCAMLPATH="$(CURDIR)/out/lib" \
-	  dune build --root=fstar-pluginlib $(FSTAR_DUNE_BUILD_OPTIONS)
-	dune install --root=fstar-pluginlib --prefix=$(CURDIR)/out
+check_lib: install_bin install_lib
+	mkdir -p out/lib/fstar/.checked
+	env \
+	  SRC=ulib/ \
+	  FSTAR_EXE=out/bin/fstar.exe \
+	  CACHE_DIR=out/lib/fstar/.checked \
+	  TAG=lib \
+	  CODEGEN=none \
+	  OUTPUT_DIR=none \
+	  $(MAKE) -f mk/lib.mk verify
+	# No need for the depend file
+	rm out/lib/fstar/.checked/dependlib
 
 clean: _force
-	dune clean $(FSTAR_DUNE_OPTIONS) --root=bare
-	dune clean $(FSTAR_DUNE_OPTIONS) --root=full
-	dune clean $(FSTAR_DUNE_OPTIONS) --root=fstarlib
-	dune clean $(FSTAR_DUNE_OPTIONS) --root=fstar-pluginlib
-	rm -rf inst
-	rm -rf out
+	dune clean $(FSTAR_DUNE_OPTIONS) --root=dune
+	rm -rf $(CURDIR)/out
 
-all: fstar fstarlib fstar-pluginlib
+all: check_lib
