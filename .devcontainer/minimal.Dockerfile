@@ -17,6 +17,7 @@ RUN apt-get update \
       python3 \
       python-is-python3 \
       libgmp-dev \
+      pkg-config \
       opam \
     && apt-get clean -y
 # FIXME: libgmp-dev should be installed automatically by opam,
@@ -47,11 +48,12 @@ RUN wget -nv https://download.visualstudio.microsoft.com/download/pr/cd0d0a4d-2a
     rm -f dotnet-sdk*.tar.gz
 
 # Install OCaml
-ARG OCAML_VERSION=4.14.0
+ARG OCAML_VERSION=4.14.2
 RUN opam init --compiler=$OCAML_VERSION --disable-sandboxing
 RUN opam option depext-run-installs=true
 ENV OPAMYES=1
-RUN opam install --yes batteries zarith stdint yojson dune menhir menhirLib mtime pprint sedlex ppxlib process ppx_deriving ppx_deriving_yojson memtrace
+COPY ./fstar.opam .
+RUN opam install --deps-only . && rm fstar.opam
 
 WORKDIR $HOME
 

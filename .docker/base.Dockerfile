@@ -33,6 +33,7 @@ RUN apt-get install -y --no-install-recommends \
       sudo \
       python3 \
       python-is-python3 \
+      pkg-config \
       opam \
       && apt-get clean -y
 
