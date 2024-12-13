@@ -39,16 +39,8 @@ RUN apt-get install -y --no-install-recommends \
 # Install the Z3 versions we want to use in CI (4.8.5, 4.13.3). Note: we
 # currently also have 4.8.5 in the opam switch, as it is a dependency of
 # in fstar.opam, but that should be removed.
-
-RUN wget -nv https://github.com/Z3Prover/z3/releases/download/Z3-4.8.5/z3-4.8.5-x64-ubuntu-16.04.zip \
- && unzip z3-4.8.5-x64-ubuntu-16.04.zip \
- && cp z3-4.8.5-x64-ubuntu-16.04/bin/z3 /usr/local/bin/z3-4.8.5 \
- && rm -r z3-4.8.5-*
-
-RUN wget -nv https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-glibc-2.35.zip \
- && unzip z3-4.13.3-x64-glibc-2.35 \
- && cp z3-4.13.3-x64-glibc-2.35/bin/z3 /usr/local/bin/z3-4.13.3 \
- && rm -r z3-4.13.3-*
+COPY ./bin/get_fstar_z3.sh /usr/local/bin
+RUN get_fstar_z3.sh /usr/local/bin
 
 # Create a new user and give them sudo rights
 # NOTE: we give them the name "opam" to keep compatibility with
