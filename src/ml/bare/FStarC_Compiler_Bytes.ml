@@ -12,7 +12,7 @@ let f_encode f (b:bytes) = String.concat "" (Array.to_list (Array.map f b))
 let length (b:bytes) = BatArray.length b
 let get (b:bytes) n = Z.of_int (BatArray.get b (Z.to_int n))
 let make (f : _ -> Z.t) n = BatArray.init (Z.to_int n) (fun i -> Z.to_int (f (Z.of_int i)))
-let zero_create n : bytes = BatArray.create n 0
+let zero_create n : bytes = BatArray.make n 0
 
 let sub ( b:bytes) s l = BatArray.sub b s l
 let set = BatArray.set

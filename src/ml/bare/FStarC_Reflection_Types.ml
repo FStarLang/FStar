@@ -1,6 +1,6 @@
-(* TODO: make this an F* module, no need to drop to OCaml for this *)
+open FStar_All
 
-(* Used externally. *)
+(* TODO: make this an F* module, no need to drop to OCaml for this *)
 
 type binder  = FStarC_Syntax_Syntax.binder
 type bv      = FStarC_Syntax_Syntax.bv
