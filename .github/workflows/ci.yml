@@ -26,34 +26,37 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          path: FStar
 
       - name: Produce all artifacts
         run: make -skj$(nproc) all-packages FSTAR_VERSION=ci
+        working-directory: FStar
 
       - uses: actions/upload-artifact@v4
         with:
-          path: fstar-ci.tar.gz
+          path: FStar/fstar-ci.tar.gz
           name: fstar-ci.tar.gz
           retention-days: 3
       - uses: actions/upload-artifact@v4
         with:
-          path: fstar-ci-stage1.tar.gz
+          path: FStar/fstar-ci-stage1.tar.gz
           name: fstar-ci-stage1.tar.gz
           retention-days: 3
       - uses: actions/upload-artifact@v4
         with:
-          path: fstar-ci-src.tar.gz
+          path: FStar/fstar-ci-src.tar.gz
           name: fstar-ci-src.tar.gz
           retention-days: 3
       - uses: actions/upload-artifact@v4
         with:
-          path: fstar-ci-stage1-src.tar.gz
+          path: FStar/fstar-ci-stage1-src.tar.gz
           name: fstar-ci-stage1-src.tar.gz
           retention-days: 3
       - uses: mtzguido/gci-upload@master
         with:
           name: fstar-repo
-          path: .
+          path: FStar
           extra: --exclude=./stage*/dune/_build
           hometag: FSTAR
 
