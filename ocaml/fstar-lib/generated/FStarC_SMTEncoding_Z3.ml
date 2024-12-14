@@ -315,29 +315,30 @@ let (warn_handler : FStarC_Errors_Msg.error_message -> Prims.string -> unit)
       FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_UnexpectedZ3Output
         () (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
         (Obj.magic uu___)
-let (install_suggestion : FStarC_Pprint.document) =
-  let uu___ =
+let (install_suggestion : Prims.string -> FStarC_Pprint.document) =
+  fun v ->
+    let uu___ =
+      let uu___1 =
+        let uu___2 =
+          FStarC_Compiler_Util.format1
+            "Please download version %s of Z3 from" v in
+        FStarC_Errors_Msg.text uu___2 in
+      let uu___2 = FStarC_Pprint.url z3url in
+      FStarC_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___1 uu___2 in
     let uu___1 =
-      FStarC_Errors_Msg.text "Please download the correct version of Z3 from" in
-    let uu___2 = FStarC_Pprint.url z3url in
-    FStarC_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___1 uu___2 in
-  let uu___1 =
-    let uu___2 =
-      let uu___3 = FStarC_Errors_Msg.text "and install it into your $PATH as" in
-      let uu___4 =
-        let uu___5 =
-          let uu___6 =
-            let uu___7 =
-              let uu___8 =
-                let uu___9 = FStarC_Options.z3_version () in
-                Prims.strcat "z3-" uu___9 in
-              FStarC_Platform.exe uu___8 in
-            FStarC_Pprint.doc_of_string uu___7 in
-          FStarC_Pprint.squotes uu___6 in
-        FStarC_Pprint.op_Hat_Hat uu___5 FStarC_Pprint.dot in
-      FStarC_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
-    FStarC_Pprint.group uu___2 in
-  FStarC_Pprint.op_Hat_Slash_Hat uu___ uu___1
+      let uu___2 =
+        let uu___3 =
+          FStarC_Errors_Msg.text "and install it into your $PATH as" in
+        let uu___4 =
+          let uu___5 =
+            let uu___6 =
+              let uu___7 = FStarC_Platform.exe (Prims.strcat "z3-" v) in
+              FStarC_Pprint.doc_of_string uu___7 in
+            FStarC_Pprint.squotes uu___6 in
+          FStarC_Pprint.op_Hat_Hat uu___5 FStarC_Pprint.dot in
+        FStarC_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
+      FStarC_Pprint.group uu___2 in
+    FStarC_Pprint.op_Hat_Slash_Hat uu___ uu___1
 let (check_z3version : FStarC_Compiler_Util.proc -> unit) =
   fun p ->
     let getinfo arg =
@@ -371,14 +372,18 @@ let (check_z3version : FStarC_Compiler_Util.proc -> unit) =
        ((let uu___3 =
            let uu___4 =
              let uu___5 =
-               let uu___6 = FStarC_Options.z3_version () in
-               Prims.strcat "z3-" uu___6 in
-             FStarC_Platform.exe uu___5 in
-           FStarC_Compiler_Util.format3
-             "Unexpected SMT solver: expected to be talking to Z3, got %s.\nPlease download the correct version of Z3 from %s\nand install it into your $PATH as `%s'."
-             name z3url uu___4 in
+               FStarC_Compiler_Util.format1
+                 "Unexpected SMT solver: expected to be talking to Z3, got %s."
+                 name in
+             FStarC_Errors_Msg.text uu___5 in
+           let uu___5 =
+             let uu___6 =
+               let uu___7 = FStarC_Options.z3_version () in
+               install_suggestion uu___7 in
+             [uu___6] in
+           uu___4 :: uu___5 in
          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_SolverMismatch
-           () (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+           () (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
            (Obj.magic uu___3));
         FStarC_Compiler_Effect.op_Colon_Equals
           _already_warned_solver_mismatch true)
@@ -408,7 +413,8 @@ let (check_z3version : FStarC_Compiler_Util.proc -> unit) =
                  "Unexpected Z3 version for '%s': expected '%s', got '%s'."
                  uu___7 ver_conf ver_found in
              FStarC_Errors_Msg.text uu___6 in
-           [uu___5; install_suggestion] in
+           let uu___6 = let uu___7 = install_suggestion ver_conf in [uu___7] in
+           uu___5 :: uu___6 in
          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_SolverMismatch
            () (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
            (Obj.magic uu___4));
@@ -445,7 +451,12 @@ let (new_z3proc :
                       FStarC_Errors_Msg.text uu___7 in
                     FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
                       uu___5 uu___6 in
-                  [uu___4; install_suggestion] in
+                  let uu___5 =
+                    let uu___6 =
+                      let uu___7 = FStarC_Options.z3_version () in
+                      install_suggestion uu___7 in
+                    [uu___6] in
+                  uu___4 :: uu___5 in
                 uu___2 :: uu___3 in
               FStarC_Errors.raise_error0
                 FStarC_Errors_Codes.Error_Z3InvocationError ()
