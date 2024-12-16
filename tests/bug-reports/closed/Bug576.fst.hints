@@ -1,0 +1,61 @@
+[
+  "¡ú≠\u0002√CÇ∫WeêQ\u0001q‚∂",
+  [
+    [
+      "Bug576.exp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8428d5a2a1a43fd4eb540e88a68b8b3e"
+    ],
+    [
+      "Bug576.__proj__ELam__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bf8bdd7f186384e1cd813939555bd09c"
+      ],
+      0,
+      "0d9f9517b95598ec7afcfe8f9c580b53"
+    ],
+    [
+      "Bug576.appears_free_in",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Bug576_pretyping_c1fe61b09e6e5dfaec8ce6b0026dc878",
+        "binder_x_c1fe61b09e6e5dfaec8ce6b0026dc878_0",
+        "disc_equation_Bug576.ELam", "disc_equation_Bug576.EVar",
+        "equality_tok_Bug576.EVar@tok", "fuel_guarded_inversion_Bug576.exp",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Bug576.ELam",
+        "typing_tok_Bug576.EVar@tok"
+      ],
+      0,
+      "3397feb07a67b0fd0ee04d0a10faf7e6"
+    ],
+    [
+      "Bug576.subst_closed",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Bug576.appears_free_in.fuel_instrumented",
+        "@query", "binder_x_c1fe61b09e6e5dfaec8ce6b0026dc878_0",
+        "bool_inversion", "disc_equation_Bug576.ELam",
+        "equation_Bug576.closed",
+        "equation_with_fuel_Bug576.appears_free_in.fuel_instrumented",
+        "fuel_guarded_inversion_Bug576.exp", "primitive_Prims.op_Negation",
+        "projection_inverse_BoxBool_proj_0", "typing_Bug576.closed"
+      ],
+      0,
+      "b8949dc2cb647151b00da17eacbfa4c2"
+    ]
+  ]
+]

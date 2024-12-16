@@ -28,7 +28,7 @@
         "string_inversion", "string_typing", "unit_inversion", "unit_typing"
       ],
       0,
-      "1b6d356df7ccab7717fb85868cad8a3c"
+      "430b7747483635adbf5b445d61ffd7df"
     ],
     [
       "FStar.InteractiveHelpers.PostProcess.find_focused_term_in_current_goal",
@@ -258,18 +258,15 @@
         "FStar.InteractiveHelpers.ExploreTerm_pretyping_5d9bce3f5e2fea0f23b7bfab7666d590",
         "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Stubs.Tactics.Result.Failed",
         "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
         "data_elim_FStar.InteractiveHelpers.Effectful.Mkeffect_info",
         "data_elim_FStar.Stubs.Tactics.Result.Success",
-        "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.InteractiveHelpers.Propositions.proposition",
         "fuel_guarded_inversion_FStar.InteractiveHelpers.Effectful.effect_info",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
         "projection_inverse_FStar.Stubs.Tactics.Result.Failed_exn",
         "projection_inverse_FStar.Stubs.Tactics.Result.Failed_ps",
@@ -367,7 +364,7 @@
         "unit_typing"
       ],
       0,
-      "2df80ff21306ff49dcaeed47f145fc41"
+      "7564e6a70579ba761f579e7208f870cd"
     ]
   ]
 ]

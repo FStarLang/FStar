@@ -1,0 +1,30 @@
+[
+  "\u001fÒ¯?þ\t\u00066RntHïZ—z",
+  [
+    [
+      "Bug210b.acc_inv",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "subterm_ordering_Bug210b.AccIntro"
+      ],
+      0,
+      "b35cec32a67db8b457cf63178c874fd6"
+    ],
+    [
+      "Bug210b.fix_F",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_a1ab9ed073dedeffdcecc0772c114d05_4",
+        "equation_Bug210b.acc_inv", "fuel_guarded_inversion_Bug210b.acc",
+        "subterm_ordering_Bug210b.AccIntro"
+      ],
+      0,
+      "19e2f1bc4904281883ef15b0cc2c7732"
+    ]
+  ]
+]

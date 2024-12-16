@@ -1,0 +1,30 @@
+[
+  "-ši(Ž8\u0012Mô\u0002z±rê¯&",
+  [
+    [
+      "Bug210.acc_inv",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "subterm_ordering_Bug210.AccIntro"
+      ],
+      0,
+      "c0b5aeea8777aa9c3dc253f19588d844"
+    ],
+    [
+      "Bug210.fix_F",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_d5da262be2c963098da7b0542387dab4_4",
+        "equation_Bug210.acc_inv", "fuel_guarded_inversion_Bug210.acc",
+        "subterm_ordering_Bug210.AccIntro"
+      ],
+      0,
+      "7c04bf36baee885dae0cd8acbd051d49"
+    ]
+  ]
+]

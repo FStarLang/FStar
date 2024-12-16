@@ -45,7 +45,7 @@
         "typing_Prims.int"
       ],
       0,
-      "6ba79ca34fb27bd8bf79adcd7a2f2bac"
+      "4e7f26791174c9c89402c340ed978996"
     ],
     [
       "InsertionSort.insert_implicit",
@@ -87,7 +87,7 @@
         "typing_IntSort.sorted", "typing_Prims.int"
       ],
       0,
-      "1ec70724b162786613eedb8933ec49a4"
+      "2783befa972a374ed9d7b762786f9f13"
     ],
     [
       "InsertionSort.sort",
@@ -122,7 +122,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.int"
       ],
       0,
-      "0ad65e9d133b716c99a1309668e7f406"
+      "63c4b09e0c40e15dfe6e378b19d4a3e0"
     ]
   ]
 ]

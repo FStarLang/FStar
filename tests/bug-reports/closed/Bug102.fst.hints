@@ -1,0 +1,41 @@
+[
+  "©\t◊\u001e\u00106CÒ≠$≈5°ùZ”",
+  [
+    [
+      "Bug102.__proj__Hst__item__pre",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug102.Hst" ],
+      0,
+      "a8299f4dda66f488e57120c1eb13a8fd"
+    ],
+    [
+      "Bug102.__proj__Hst__item__post",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug102.Hst" ],
+      0,
+      "e38c3ba0f8fac30a2ad8558c79bb4a5c"
+    ],
+    [
+      "Bug102.__proj__Hst__item__e",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug102.Hst" ],
+      0,
+      "282154faa12986437039b3c8930cc4c8"
+    ],
+    [
+      "Bug102.__proj__Hst__item___5",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug102.Hst" ],
+      0,
+      "46e010ce9850683e6f34380f1bfb5210"
+    ]
+  ]
+]

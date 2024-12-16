@@ -758,3 +758,51 @@ jobs:
         run: |
           nix flake update --update-input fstar-flake --override-input fstar-flake "github:${{github.repository}}?rev=${{github.sha}}"
           nix flake check
+
+  build-cbor:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs:
+      - build-fstar
+      - build-krml
+      - build-pulse
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      # Install rust toolchain
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: pulse
+
+      - name: Checkout everparse (cbor branch)
+        uses: actions/checkout@master
+        with:
+          path: everparse/
+          ref: taramana_cbor
+          repository: project-everest/everparse
+
+      - name: Build
+        run: |
+          make -C everparse -skj$(nproc)
+
+      - name: Test
+        run: |
+          make -C everparse -skj$(nproc) cbor-det-rust-test
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: everparse-cbor
+          path: everparse

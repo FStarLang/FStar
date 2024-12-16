@@ -55,14 +55,15 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
              | Eager_unfolding_only -> true
              | Unfold l -> Common.delta_depth_greater_than (Env.delta_depth_of_fv cfg.tcenv fv) l))
     in
-    let res =
-    match qninfo,
-          cfg.steps.unfold_only,
-          cfg.steps.unfold_fully,
-          cfg.steps.unfold_attr,
-          cfg.steps.unfold_qual,
-          cfg.steps.unfold_namespace
-    with
+    let selective_unfold =
+      Some? cfg.steps.unfold_only ||
+      Some? cfg.steps.unfold_fully ||
+      Some? cfg.steps.unfold_attr ||
+      Some? cfg.steps.unfold_qual ||
+      Some? cfg.steps.unfold_namespace
+    in
+    let res : bool & bool & bool =
+    match qninfo, selective_unfold with
     // We unfold dm4f actions if and only if we are reifying
     | _ when Env.qninfo_is_action qninfo ->
         let b = should_reify cfg in
@@ -77,23 +78,19 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         no
 
     // Don't unfold HasMaskedEffect
-    | Some (Inr ({sigquals=qs; sigel=Sig_let {lbs=(is_rec, _)}}, _), _), _, _, _, _, _ when
+    | Some (Inr ({sigquals=qs; sigel=Sig_let {lbs=(is_rec, _)}}, _), _), _ when
             List.contains HasMaskedEffect qs ->
         log_unfolding cfg (fun () -> BU.print_string " >> HasMaskedEffect, not unfolding\n");
         no
 
     // Recursive lets may only be unfolded when Zeta is on
-    | Some (Inr ({sigquals=qs; sigel=Sig_let {lbs=(is_rec, _)}}, _), _), _, _, _, _, _ when
+    | Some (Inr ({sigquals=qs; sigel=Sig_let {lbs=(is_rec, _)}}, _), _), _ when
             is_rec && not cfg.steps.zeta && not cfg.steps.zeta_full ->
         log_unfolding cfg (fun () -> BU.print_string " >> It's a recursive definition but we're not doing Zeta, not unfolding\n");
         no
 
     // We're doing selectively unfolding, assume it to not unfold unless it meets the criteria
-    | _, Some _, _, _, _, _
-    | _, _, Some _, _, _, _
-    | _, _, _, Some _, _, _
-    | _, _, _, _, Some _, _
-    | _, _, _, _, _, Some _ ->
+    | _, true ->
         log_unfolding cfg (fun () -> BU.print1 "should_unfold: Reached a %s with selective unfolding\n"
                                                (show fv));
         // How does the following code work?
@@ -147,11 +144,10 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     // do not unfold.
     // NB: Using specific attributes like UnfoldOnly will override this. This gives more
     // control to the user if they *really* want to unfold one of these.
-    | _, _, _, _, _, _ when Some? cfg.steps.dont_unfold_attr
+    | _ when Some? cfg.steps.dont_unfold_attr
       && List.existsb (fun fa -> U.has_attribute attrs fa) (Some?.v cfg.steps.dont_unfold_attr) ->
         log_unfolding cfg (fun () -> BU.print_string " >> forbidden by attribute, not unfolding\n");
         no
-
 
     // Nothing special, just check the depth
     | _ ->

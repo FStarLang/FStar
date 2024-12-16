@@ -20,7 +20,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ea4279637da8e07688c252cf6f3d3a0b"
+      "34dca6208dc52e8fd53562cd92afdf38"
     ],
     [
       "Loops.sum_up_eq",
@@ -81,7 +81,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "5d8beb6f4d3125d51acfa47c01a518af"
+      "4f5ba8b871b74c9e8e7c37d90da4cf95"
     ],
     [
       "Loops.sum_up_eq",
@@ -90,11 +90,11 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_13656f161e04e04a964ce2150bf9a932",
-        "refinement_interpretation_Tm_refine_9073a13f8a9480d1df752d719746198d"
+        "refinement_interpretation_Tm_refine_9073a13f8a9480d1df752d719746198d",
+        "refinement_interpretation_Tm_refine_d3d78d0fb6ab5191dde0f43fa5228482"
       ],
       0,
-      "5fad85f491274471daabe0799a341b79"
+      "1877d2b35c73944d49740d7dfe992f43"
     ],
     [
       "Loops.sum_up_commute",
@@ -174,11 +174,11 @@
         "lemma_FStar.DM4F.Heap.upd_contains_a_well_typed",
         "primitive_Prims.op_Addition",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_74654fdf7a9045f251f81af01594e752",
+        "refinement_interpretation_Tm_refine_fc8ad4ac8cfe280967774f9bc4aa355a",
         "typing_Prims.int"
       ],
       0,
-      "cbf781b9f78203d0a16d20686caf3426"
+      "dd5913ca915d6494e1256cb0ac985151"
     ],
     [
       "Loops.sum_dn",
@@ -199,7 +199,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6486bd85587c46099962bcc37eb7c0b5"
+      "063a1bb1d0b32e16e97ed1877509572d"
     ],
     [
       "Loops.sum_dn_eq",
@@ -260,7 +260,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "ea1e50de844e47dbf716d52da675fb71"
+      "09252f2fc208fb481e3e6fe82277197d"
     ],
     [
       "Loops.sum_dn_eq",
@@ -269,11 +269,11 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_536628ac1d0462380721de6e3f431ccf",
-        "refinement_interpretation_Tm_refine_9073a13f8a9480d1df752d719746198d"
+        "refinement_interpretation_Tm_refine_9073a13f8a9480d1df752d719746198d",
+        "refinement_interpretation_Tm_refine_cf867e8fed1952bed7dba6c043564cc6"
       ],
       0,
-      "4383707d8edec6a38c406c7785e24a8d"
+      "d1331df0da7c75aa30ad17727fc08a56"
     ],
     [
       "Loops.sum_dn_commute",
@@ -353,11 +353,11 @@
         "lemma_FStar.DM4F.Heap.upd_contains_a_well_typed",
         "primitive_Prims.op_Addition",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_7266e3ad2775e81a61f9d1dad129ce94",
+        "refinement_interpretation_Tm_refine_ee17448108370ce46aad0f594c4edb79",
         "typing_Prims.int"
       ],
       0,
-      "e5c21eea2dc390f124e64dc38012f64d"
+      "2a512d0274974c1a16e2fae1c4a3d006"
     ],
     [
       "Loops.sum_up_dn_aux",
@@ -443,11 +443,11 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_72ffcbdb7a7dbf1acd542d96c7babf51",
-        "refinement_interpretation_Tm_refine_fa30d434be2e70f5a5d992842aeeb69a"
+        "refinement_interpretation_Tm_refine_6ae8653fc9f4b720b0b7ac36853fc840",
+        "refinement_interpretation_Tm_refine_72ffcbdb7a7dbf1acd542d96c7babf51"
       ],
       0,
-      "c5ef653534969642c32175f738ebdf78"
+      "4a95f894b8cd213d7f2ede2552caaa93"
     ],
     [
       "Loops.equiv_sum_up_dn",

@@ -800,7 +800,9 @@ let (extract_typ_abbrev :
                   [FStarC_TypeChecker_Env.Beta;
                   FStarC_TypeChecker_Env.UnfoldUntil
                     FStarC_Syntax_Syntax.delta_constant;
-                  FStarC_TypeChecker_Env.ForExtraction] tcenv lbtyp in
+                  FStarC_TypeChecker_Env.ForExtraction;
+                  FStarC_TypeChecker_Env.Unrefine;
+                  FStarC_TypeChecker_Env.Unascribe] tcenv lbtyp in
               let lbdef1 =
                 FStarC_TypeChecker_Normalize.eta_expand_with_type tcenv lbdef
                   lbtyp1 in

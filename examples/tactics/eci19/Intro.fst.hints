@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "15ba33c6b8ccdc1660d1851a7a67ab99"
+      "38f85a29a62501d50aed6b5cfef91ebd"
     ],
     [
       "Intro.triang",
@@ -30,7 +30,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "955593458fbd1b4f97d10e845e152c65"
+      "4d7ebd24efb685fc199cb4c47c1470c9"
     ],
     [
       "Intro.triang_aux",
@@ -70,7 +70,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2846c6ddaf4f2a77874709a9d9fc9225"
+      "f271d35928c781f479c5aa30f03d7062"
     ],
     [
       "Intro.prod_even",

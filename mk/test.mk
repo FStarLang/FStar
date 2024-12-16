@@ -45,7 +45,7 @@ OUTPUT_DIR ?= _output
 CACHE_DIR ?= _cache
 
 FSTAR = $(FSTAR_EXE) $(SIL) 				\
-	--cache_checked_modules				\
+	$(if $(NO_WRITE_CHECKED),,--cache_checked_modules)		\
 	--odir $(OUTPUT_DIR)				\
 	--cache_dir $(CACHE_DIR)			\
 	--already_cached Prims,FStar			\
@@ -78,18 +78,22 @@ endif
 	$(FSTAR) $<
 	touch -c $@
 
+$(OUTPUT_DIR)/%.fst.output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fst.output: %.fst
 	$(call msg, "OUTPUT", $(basename $(notdir $@)))
 	$(FSTAR) --message_format human -f --print_expected_failures $< >$@ 2>&1
 
+$(OUTPUT_DIR)/%.fsti.output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fsti.output: %.fsti
 	$(call msg, "OUTPUT", $(basename $(notdir $@)))
 	$(FSTAR) --message_format human -f --print_expected_failures $< >$@ 2>&1
 
+$(OUTPUT_DIR)/%.fst.json_output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fst.json_output: %.fst
 	$(call msg, "JSONOUT", $(basename $(notdir $@)))
 	$(FSTAR) --message_format json -f --print_expected_failures $< >$@ 2>&1
 
+$(OUTPUT_DIR)/%.fsti.json_output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fsti.json_output: %.fsti
 	$(call msg, "JSONOUT", $(basename $(notdir $@)))
 	$(FSTAR) --message_format json -f --print_expected_failures $< >$@ 2>&1
@@ -149,6 +153,15 @@ verify: $(addsuffix .__verify, $(SUBDIRS_VERIFY))
 verify: __verify
 ifeq ($(NOVERIFY),)
 all: __verify
+endif
+
+HAS_OCAML ?= 1
+# We assume we have ocaml, unless HAS_OCAML= was given as an argument
+# to make (this is done by binary package CI). If we don't have ocaml,
+# we don't try to build or run programs.
+ifeq (,$(HAS_OCAML))
+NORUN := 1
+NOBUILD := 1
 endif
 
 # clean

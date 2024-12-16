@@ -70,7 +70,11 @@ val ask: r:Range.range
        -> core:option U.unsat_core
        -> z3result
 
+(* This will make sure the solver is in a fresh state, potentially
+killing the current process. A new process will *not* be started
+until we actually need to perform a query. *)
 val refresh: option SolverState.using_facts_from_setting -> unit
+
 val push : msg:string -> unit
 val pop : msg:string -> unit
 val snapshot : string -> int

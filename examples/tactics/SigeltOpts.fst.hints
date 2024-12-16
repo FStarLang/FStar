@@ -24,7 +24,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_Prims.int"
       ],
       0,
-      "f8cf645317c15310c0fe62c1738ab3f4"
+      "9e2f9cb423e2ed018bf92ecc2bd967e1"
     ],
     [
       "SigeltOpts.tau",
@@ -45,7 +45,7 @@
         "equation_FStar.Stubs.Reflection.Types.name",
         "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
-        "kinding_FStar.VConfig.vconfig@tok",
+        "kinding_FStar.Stubs.VConfig.vconfig@tok",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
@@ -61,7 +61,7 @@
         "typing_Prims.string"
       ],
       0,
-      "80657ea303821bc2370406cf52229345"
+      "2005150c47229bcf38bcafa90958ebcb"
     ],
     [
       "SigeltOpts.blah",

@@ -1,0 +1,49 @@
+[
+  "∞®;e·Ò‚#ûA¨ı-‚çn",
+  [
+    [
+      "Bug579.typing",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b2b9eaf945ab2e0ca0bff85c9b9126a8"
+    ],
+    [
+      "Bug579.__proj__TyEqu__item__ht",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug579.TyEqu" ],
+      0,
+      "996f3f19d4164622e19455ed506b8125"
+    ],
+    [
+      "Bug579.progress'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_1f4e0e649899230b6279be707e3f85f4_2",
+        "data_elim_Bug579.TyEqu", "subterm_ordering_Bug579.TyEqu"
+      ],
+      0,
+      "4a7b318aa3711d7cd2139f6079e74ab1"
+    ],
+    [
+      "Bug579.progress",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_1f4e0e649899230b6279be707e3f85f4_2",
+        "data_elim_Bug579.TyEqu", "subterm_ordering_Bug579.TyEqu"
+      ],
+      0,
+      "40e8e24a6947a77a140b557d931b1e6d"
+    ]
+  ]
+]
