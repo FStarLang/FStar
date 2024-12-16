@@ -15,6 +15,8 @@ FSTAR_FILES+=$(wildcard *.fst *.fsti)
 FSTAR_FILES+=$(wildcard experimental/*.fst experimental/*.fsti)
 FSTAR_FILES:=$(filter-out $(NOEXTRACT_FILES), $(FSTAR_FILES))
 
+OTHERFLAGS += --z3version 4.13.3
+
 CODEGEN = Plugin
 MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(OTHERFLAGS) --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache --warn_error @241
 EXTRACT_MODULES=--extract '* $(NOEXTRACT_MODULES)'

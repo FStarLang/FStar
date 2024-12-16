@@ -21,7 +21,7 @@ ROOTS     = Test.fst
 HINT_DIR  = hints
 
 FSTAR_FLAGS = $(OTHERFLAGS) --cmi --odir $(OUT_DIR) --cache_dir $(CACHE_DIR) \
-  --cache_checked_modules --already_cached 'Prims FStar'
+  --cache_checked_modules --already_cached 'Prims FStar' --z3version 4.13.3
 
 # Run with ENABLE_HINTS= to disable
 ENABLE_HINTS ?= --use_hints

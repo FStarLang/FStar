@@ -34,6 +34,7 @@ WITH_CACHE_DIR=--cache_dir .cache --hint_dir .hints
 # 330 -> experimental feature
 # 247 -> did not write checked file
 OTHERFLAGS+=--warn_error @271-330@247 --ext context_pruning
+OTHERFLAGS += --z3version 4.13.3
 
 include $(FSTAR_HOME)/.common.mk
 include gmake/z3.mk

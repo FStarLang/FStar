@@ -17,6 +17,7 @@ RUN apt-get update \
       python3 \
       python-is-python3 \
       libgmp-dev \
+      pkg-config \
       opam \
     && apt-get clean -y
 # FIXME: libgmp-dev should be installed automatically by opam,
@@ -34,6 +35,10 @@ RUN mkdir -p $HOME/bin
 # Make sure ~/bin is in the PATH
 RUN echo 'export PATH=$HOME/bin:$PATH' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
 
+# Install Z3
+COPY ./bin/get_fstar_z3.sh /usr/local/bin
+RUN get_fstar_z3.sh ~/bin
+
 # Install dotnet
 ENV DOTNET_ROOT /home/$USER/dotnet
 RUN wget -nv https://download.visualstudio.microsoft.com/download/pr/cd0d0a4d-2a6a-4d0d-b42e-dfd3b880e222/008a93f83aba6d1acf75ded3d2cfba24/dotnet-sdk-6.0.400-linux-x64.tar.gz && \
@@ -43,17 +48,12 @@ RUN wget -nv https://download.visualstudio.microsoft.com/download/pr/cd0d0a4d-2a
     rm -f dotnet-sdk*.tar.gz
 
 # Install OCaml
-ARG OCAML_VERSION=4.14.0
+ARG OCAML_VERSION=4.14.2
 RUN opam init --compiler=$OCAML_VERSION --disable-sandboxing
 RUN opam option depext-run-installs=true
 ENV OPAMYES=1
-RUN opam install --yes batteries zarith stdint yojson dune menhir menhirLib mtime pprint sedlex ppxlib process ppx_deriving ppx_deriving_yojson memtrace
-
-# Get compiled Z3
-RUN wget -nv https://github.com/Z3Prover/z3/releases/download/Z3-4.8.5/z3-4.8.5-x64-ubuntu-16.04.zip \
- && unzip z3-4.8.5-x64-ubuntu-16.04.zip \
- && cp z3-4.8.5-x64-ubuntu-16.04/bin/z3 $HOME/bin/z3 \
- && rm -r z3-4.8.5-*
+COPY ./fstar.opam .
+RUN opam install --deps-only . && rm fstar.opam
 
 WORKDIR $HOME
 
