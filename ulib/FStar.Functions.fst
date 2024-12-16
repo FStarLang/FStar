@@ -10,6 +10,11 @@ let surj_comp (#a #b #c : _) (f : a -> b) (g : b -> c)
           (ensures is_surj (fun x -> g (f x)))
   = ()
 
+let bij_comp (#a #b #c : _) (f : a -> b) (g : b -> c) :
+ Lemma (requires is_bij f /\ is_bij g)
+       (ensures is_bij (fun x -> g (f x)))
+= ()
+
 let lem_surj (#a #b : _) (f : a -> b) (y : b)
   : Lemma (requires is_surj f) (ensures in_image f y)
   = ()
