@@ -1,21 +1,21 @@
 module FStar.Functions
 
-let inj_comp (#a #b #c : _) (f : a -> b) (g : b -> c)
+let inj_comp (#a #b #c : _) (f : a -> GTot b) (g : b -> GTot c)
   : Lemma (requires is_inj f /\ is_inj g)
           (ensures is_inj (fun x -> g (f x)))
   = ()
 
-let surj_comp (#a #b #c : _) (f : a -> b) (g : b -> c)
+let surj_comp (#a #b #c : _) (f : a -> GTot b) (g : b -> GTot c)
   : Lemma (requires is_surj f /\ is_surj g)
           (ensures is_surj (fun x -> g (f x)))
   = ()
 
-let bij_comp (#a #b #c : _) (f : a -> b) (g : b -> c) :
+let bij_comp (#a #b #c : _) (f : a -> GTot b) (g : b -> GTot c) :
  Lemma (requires is_bij f /\ is_bij g)
        (ensures is_bij (fun x -> g (f x)))
 = ()
 
-let lem_surj (#a #b : _) (f : a -> b) (y : b)
+let lem_surj (#a #b : _) (f : a -> GTot b) (y : b)
   : Lemma (requires is_surj f) (ensures in_image f y)
   = ()
 
@@ -30,11 +30,11 @@ let inverse_of_bij #a #b f =
     assert (g0 (f x) == x)
   in
   Classical.forall_intro aux;
-  Ghost.Pull.pull g0
+  g0
 
 let inverse_of_inj #a #b f def =
   (* f is a bijection into its image, obtain its inverse *)
-  let f' : a -> image_of f = fun x -> f x in
+  let f' : a -> GTot (image_of f) = fun x -> f x in
   let g_partial = inverse_of_bij #a #(image_of f) f' in
   (* extend the inverse to the full domain b *)
   let g : b -> GTot a =
@@ -43,4 +43,4 @@ let inverse_of_inj #a #b f def =
       then g_partial y
       else def
   in
-  Ghost.Pull.pull g
+  g

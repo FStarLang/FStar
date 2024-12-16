@@ -6,8 +6,8 @@ open FStar.Cardinality.Cantor
 (* This type is an injection of all powersets of Type u (i.e. Type u -> bool
 functions) into Type (u+1) *)
 noeq
-type type_powerset : (Type u#a -> bool) -> Type u#(max (a+1) b) =
-  | Mk : f:(Type u#a -> bool) -> type_powerset f
+type type_powerset : (Type u#a -> GTot bool) -> Type u#(max (a+1) b) =
+  | Mk : f:(Type u#a -> GTot bool) -> type_powerset f
 
 let aux_inj_type_powerset (f1 f2 : powerset (Type u#a))
   : Lemma (requires type_powerset u#a u#b f1 == type_powerset u#a u#b f2)
