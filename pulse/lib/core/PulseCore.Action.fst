@@ -232,9 +232,10 @@ let lift_pre_act_ghost
 let return 
     (#a:Type u#a)
     (#r:reifiability)
+    #opens
     (#post:a -> slprop)
     (x:a)
-: act a r emp_inames (post x) post
+: act a r opens (post x) post
 = fun #ictx -> return_pre_act #a #ictx #post x
 
 let bind_ghost

@@ -342,27 +342,22 @@ let rec t_array3_rec
 noeq
 type map_group_entry (b: option Cbor.raw_data_item) = | MapGroupEntry: (fst: bounded_typ_gen b) -> (snd: bounded_typ_gen b) -> map_group_entry b
 
-module Pull = FStar.Ghost.Pull
-
-noextract
-let opt_map_entry_bounded'
-  (b: option Cbor.raw_data_item)
-  (x: (Cbor.raw_data_item & Cbor.raw_data_item))
-: GTot bool
-= FStar.StrongExcludedMiddle.strong_excluded_middle (opt_precedes x b)
+let for_all #t (p: t -> prop) (xs: list t) =
+  forall x. List.Tot.memP x xs ==> p x
 
 let opt_map_entry_bounded
   (b: option Cbor.raw_data_item)
-: GTot ((Cbor.raw_data_item & Cbor.raw_data_item) -> bool)
-= Pull.pull (opt_map_entry_bounded' b)
+  (x: (Cbor.raw_data_item & Cbor.raw_data_item))
+: prop
+= opt_precedes x b
 
 let rec opt_precedes_map_for_all_opt_map_entry_bounded
   (b: option Cbor.raw_data_item)
   (l: list (Cbor.raw_data_item & Cbor.raw_data_item))
 : Lemma
   (requires (opt_precedes l b))
-  (ensures (List.Tot.for_all (opt_map_entry_bounded b) l))
-  [SMTPat (List.Tot.for_all (opt_map_entry_bounded b) l)]
+  (ensures (for_all (opt_map_entry_bounded b) l))
+  [SMTPat (for_all (opt_map_entry_bounded b) l)]
 = match l with
   | [] -> ()
   | _ :: q -> opt_precedes_map_for_all_opt_map_entry_bounded b q
@@ -370,7 +365,7 @@ let rec opt_precedes_map_for_all_opt_map_entry_bounded
 let matches_map_group_entry
   (#b: option Cbor.raw_data_item)
   (ge: map_group_entry b)
-  (x: (Cbor.raw_data_item & Cbor.raw_data_item) { opt_map_entry_bounded b x == true })
+  (x: (Cbor.raw_data_item & Cbor.raw_data_item) { opt_map_entry_bounded b x })
 : GTot bool
 = ge.fst (fst x) && ge.snd (snd x)
 
@@ -432,12 +427,12 @@ let map_group_cons_zero_or_more #b (ge: map_group_entry b) (cut: bool) (g: map_g
 val matches_map_group
   (#b: option Cbor.raw_data_item)
   (m: map_group b)
-  (x: list (Cbor.raw_data_item & Cbor.raw_data_item) {List.Tot.for_all (opt_map_entry_bounded b) x })
+  (x: list (Cbor.raw_data_item & Cbor.raw_data_item) {for_all (opt_map_entry_bounded b) x })
 : GTot bool
 
 val matches_map_group_empty
   (b: option Cbor.raw_data_item)
-  (x: list (Cbor.raw_data_item & Cbor.raw_data_item) { List.Tot.for_all (opt_map_entry_bounded b) x })
+  (x: list (Cbor.raw_data_item & Cbor.raw_data_item) { for_all (opt_map_entry_bounded b) x })
 : Lemma
   (ensures (matches_map_group (map_group_empty #b) x == Nil? x))
   [SMTPat (matches_map_group (map_group_empty #b) x)]
@@ -482,32 +477,13 @@ let map_group_ignore_restricted_entries
       zero_or_one = [];
   }
 
-let pull_rel
-  (#t1 #t2: Type)
-  (r: t1 -> t2 -> prop)
-  (x1: t1)
-: GTot ((x2: t2) -> Tot bool)
-= Pull.pull (fun x2 -> FStar.StrongExcludedMiddle.strong_excluded_middle (r x1 x2))
-
-let list_ghost_forall_exists_body
-  (#t1 #t2: Type)
-  (r: t1 -> t2 -> prop)
-  (l2: list t2)
-: GTot (t1 -> bool)
-= Pull.pull (fun x1 -> List.Tot.existsb
-    (pull_rel r x1)
-    l2
-  )
-
 let list_ghost_forall_exists
   (#t1 #t2: Type)
   (r: t1 -> t2 -> prop)
   (l1: list t1)
   (l2: list t2)
-: GTot bool
-= List.Tot.for_all
-    (list_ghost_forall_exists_body r l2)
-    l1
+: prop
+= forall x. List.Tot.memP x l1 ==> exists y. List.Tot.memP y l2 /\ r x y
 
 noextract
 let matches_map_group_entry'
@@ -520,7 +496,7 @@ let matches_map_group_entry'
 val matches_map_group_no_restricted
   (#b: _)
   (g: map_group b)
-  (x: list (Cbor.raw_data_item & Cbor.raw_data_item) { List.Tot.for_all (opt_map_entry_bounded b) x })
+  (x: list (Cbor.raw_data_item & Cbor.raw_data_item) { for_all (opt_map_entry_bounded b) x })
 : Lemma
   (requires (
     Nil? g.one /\
@@ -533,14 +509,13 @@ val matches_map_group_no_restricted
 
 let rec list_ghost_forall2
   (#t1 #t2: Type)
-  (f: t1 -> t2 -> GTot prop)
+  (f: t1 -> t2 -> prop)
   (l1: list t1)
   (l2: list t2)
-: GTot bool
-  (decreases l1)
+: prop
 = match l1, l2 with
   | [], [] -> true
-  | a1 :: q1, a2 :: q2 -> FStar.StrongExcludedMiddle.strong_excluded_middle (f a1 a2) && list_ghost_forall2 f q1 q2
+  | a1 :: q1, a2 :: q2 -> f a1 a2 /\ list_ghost_forall2 f q1 q2
   | _ -> false
 
 val list_ghost_forall_exists_is_sub_map_group_entry_of_refl
@@ -553,10 +528,10 @@ val list_ghost_forall_exists_is_sub_map_group_entry_of_refl
 let map_group_included_zero_or_more
   #b
   (small large: map_group b)
-: GTot bool
-= list_ghost_forall_exists is_sub_map_group_entry_of small.one large.zero_or_more &&
-  list_ghost_forall_exists is_sub_map_group_entry_of small.zero_or_one large.zero_or_more &&
-  list_ghost_forall_exists is_sub_map_group_entry_of small.zero_or_more large.zero_or_more &&
+: prop
+= list_ghost_forall_exists is_sub_map_group_entry_of small.one large.zero_or_more /\
+  list_ghost_forall_exists is_sub_map_group_entry_of small.zero_or_one large.zero_or_more /\
+  list_ghost_forall_exists is_sub_map_group_entry_of small.zero_or_more large.zero_or_more /\
   Nil? large.one
 
 val map_group_included_zero_or_more_correct
@@ -595,9 +570,9 @@ let map_group_ignore_restricted_entries_no_one_equiv
 let map_group_included_pointwise
   #b
   (small large: map_group b)
-: GTot bool
-= list_ghost_forall2 is_sub_map_group_entry_of small.one large.one &&
-  list_ghost_forall2 is_sub_map_group_entry_of small.zero_or_one large.zero_or_one &&
+: prop
+= list_ghost_forall2 is_sub_map_group_entry_of small.one large.one /\
+  list_ghost_forall2 is_sub_map_group_entry_of small.zero_or_one large.zero_or_one /\
   list_ghost_forall2 is_sub_map_group_entry_of small.zero_or_more large.zero_or_more
 
 val map_group_included_pointwise_correct
@@ -657,18 +632,12 @@ let rec list_for_all_filter_invariant
   | [] -> ()
   | _ :: q -> list_for_all_filter_invariant p f q
 
-let map_key_neq'
-  (#t1 t2: Type)
-  (k: t1)
-  (x: (t1 & t2))
-: GTot bool
-= FStar.StrongExcludedMiddle.strong_excluded_middle (~ (fst x == k))
-
 let map_key_neq
   (#t1 t2: Type)
   (k: t1)
-: GTot ((t1 & t2) -> bool)
-= Pull.pull (map_key_neq' t2 k)
+  (x: (t1 & t2))
+: prop
+= ~ (fst x == k)
 
 let map_group_entry_for
   #b
@@ -703,14 +672,26 @@ let rec list_assoc_none_for_all_map_key_neq
   (l: list (Cbor.raw_data_item & Cbor.raw_data_item))
 : Lemma
   (requires (None? (Cbor.list_ghost_assoc k l)))
-  (ensures (List.Tot.for_all (map_key_neq _ k) l == true))
+  (ensures for_all (map_key_neq _ k) l)
 = match l with
   | [] -> ()
   | _ :: q -> list_assoc_none_for_all_map_key_neq k q
 
+let rec filter_ghost #t (p: t->prop) (xs: list t) : GTot (list t) =
+  match xs with
+  | [] -> []
+  | x::xs -> if StrongExcludedMiddle.strong_excluded_middle (p x) then x::filter_ghost p xs else filter_ghost p xs
+
+let rec memP_filter_ghost #t (p: t->prop) (xs: list t) (y: t) :
+    Lemma (List.Tot.memP y (filter_ghost p xs) <==> (p y /\ List.Tot.memP y xs))
+      [SMTPat (List.Tot.memP y (filter_ghost p xs))] =
+  match xs with
+  | [] -> ()
+  | x::xs -> memP_filter_ghost p xs y
+
 val matches_map_group_map_group_cons_zero_or_one_no_repeats
    (#b: _) (k: Cbor.raw_data_item) (ty: bounded_typ_gen b) (g: map_group b)
-   (x: list (Cbor.raw_data_item & Cbor.raw_data_item) { List.Tot.for_all (opt_map_entry_bounded b) x })
+   (x: list (Cbor.raw_data_item & Cbor.raw_data_item) { for_all (opt_map_entry_bounded b) x })
 : Lemma
   (requires (List.Tot.no_repeats_p (List.Tot.map fst x)))
   (ensures (
@@ -721,13 +702,13 @@ val matches_map_group_map_group_cons_zero_or_one_no_repeats
     matches_map_group (map_group_cons_zero_or_one (map_group_entry_for k ty) true g) x ==
     begin match Cbor.list_ghost_assoc k x with
     | None -> matches_map_group g x
-    | Some y -> ty y && matches_map_group g (List.Tot.filter (map_key_neq _ k) x)
+    | Some y -> ty y && matches_map_group g (filter_ghost (map_key_neq _ k) x)
     end
   ))
 
 val matches_map_group_map_group_cons_one_no_repeats
    (#b: _) (k: Cbor.raw_data_item) (ty: bounded_typ_gen b) (g: map_group b)
-   (x: list (Cbor.raw_data_item & Cbor.raw_data_item) { List.Tot.for_all (opt_map_entry_bounded b) x })
+   (x: list (Cbor.raw_data_item & Cbor.raw_data_item) { for_all (opt_map_entry_bounded b) x })
 : Lemma
   (requires (List.Tot.no_repeats_p (List.Tot.map fst x)))
   (ensures (
@@ -738,42 +719,42 @@ val matches_map_group_map_group_cons_one_no_repeats
     matches_map_group (map_group_cons_one (map_group_entry_for k ty) true g) x ==
     begin match Cbor.list_ghost_assoc k x with
     | None -> false
-    | Some y -> ty y && matches_map_group g (List.Tot.filter (map_key_neq _ k) x)
+    | Some y -> ty y && matches_map_group g (filter_ghost (map_key_neq _ k) x)
     end
   ))
 
 val matches_map_group_map_group_cons_zero_or_one_deterministically_encoded_cbor_map_key_order
    (#b: _) (k: Cbor.raw_data_item) (ty: bounded_typ_gen b) (g: map_group b)
-   (x: list (Cbor.raw_data_item & Cbor.raw_data_item) { List.Tot.for_all (opt_map_entry_bounded b) x })
+   (x: list (Cbor.raw_data_item & Cbor.raw_data_item) { for_all (opt_map_entry_bounded b) x })
 : Lemma
   (requires (List.Tot.sorted (Cbor.map_entry_order Cbor.deterministically_encoded_cbor_map_key_order _) x))
   (ensures (
     begin match Cbor.list_ghost_assoc k x with
     | None -> True
-    | Some y -> opt_precedes y b /\ List.Tot.sorted (Cbor.map_entry_order Cbor.deterministically_encoded_cbor_map_key_order _) (List.Tot.filter (map_key_neq _ k) x)
+    | Some y -> opt_precedes y b /\ List.Tot.sorted (Cbor.map_entry_order Cbor.deterministically_encoded_cbor_map_key_order _) (filter_ghost (map_key_neq _ k) x)
     end /\
     matches_map_group (map_group_cons_zero_or_one (map_group_entry_for k ty) true g) x ==
     begin match Cbor.list_ghost_assoc k x with
     | None -> matches_map_group g x
-    | Some y -> ty y && matches_map_group g (List.Tot.filter (map_key_neq _ k) x)
+    | Some y -> ty y && matches_map_group g (filter_ghost (map_key_neq _ k) x)
     end
   ))
   [SMTPat (matches_map_group (map_group_cons_zero_or_one (map_group_entry_for k ty) true g) x)]
 
 val matches_map_group_map_group_cons_one_deterministically_encoded_cbor_map_key_order
    (#b: _) (k: Cbor.raw_data_item) (ty: bounded_typ_gen b) (g: map_group b)
-   (x: list (Cbor.raw_data_item & Cbor.raw_data_item) { List.Tot.for_all (opt_map_entry_bounded b) x })
+   (x: list (Cbor.raw_data_item & Cbor.raw_data_item) { for_all (opt_map_entry_bounded b) x })
 : Lemma
   (requires (List.Tot.sorted (Cbor.map_entry_order Cbor.deterministically_encoded_cbor_map_key_order _) x))
   (ensures (
     begin match Cbor.list_ghost_assoc k x with
     | None -> True
-    | Some y -> opt_precedes y b /\ List.Tot.sorted (Cbor.map_entry_order Cbor.deterministically_encoded_cbor_map_key_order _) (List.Tot.filter (map_key_neq _ k) x)
+    | Some y -> opt_precedes y b /\ List.Tot.sorted (Cbor.map_entry_order Cbor.deterministically_encoded_cbor_map_key_order _) (filter_ghost (map_key_neq _ k) x)
     end /\
     matches_map_group (map_group_cons_one (map_group_entry_for k ty) true g) x ==
     begin match Cbor.list_ghost_assoc k x with
     | None -> false
-    | Some y -> ty y && matches_map_group g (List.Tot.filter (map_key_neq _ k) x)
+    | Some y -> ty y && matches_map_group g (filter_ghost (map_key_neq _ k) x)
     end
   ))
   [SMTPat (matches_map_group (map_group_cons_one (map_group_entry_for k ty) true g) x)]

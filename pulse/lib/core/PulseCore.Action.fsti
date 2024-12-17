@@ -62,9 +62,10 @@ val act
 val return 
     (#a:Type u#a)
     (#r:_)
+    #opens
     (#post:a -> slprop)
     (x:a)
-: act a r emp_inames (post x) post
+: act a r opens (post x) post
 
 val bind_ghost
      (#a:Type u#a)
