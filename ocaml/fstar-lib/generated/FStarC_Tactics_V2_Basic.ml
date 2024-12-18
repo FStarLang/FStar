@@ -4298,8 +4298,7 @@ let (t_apply :
                                                                     ->
                                                                     let uu___13
                                                                     =
-                                                                    (FStarC_Common.string_of_list
-                                                                    ())
+                                                                    FStarC_Common.string_of_list
                                                                     (fun
                                                                     uu___14
                                                                     ->

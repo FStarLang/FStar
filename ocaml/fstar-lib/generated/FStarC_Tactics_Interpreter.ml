@@ -1017,7 +1017,7 @@ let run_unembedded_tactic_on_ps :
                            if uu___6
                            then
                              let uu___7 =
-                               (FStarC_Common.string_of_list ())
+                               FStarC_Common.string_of_list
                                  (fun imp ->
                                     FStarC_Class_Show.show
                                       FStarC_Syntax_Print.showable_ctxu

@@ -12,7 +12,7 @@ let (showable_int : Prims.int showable) = { show = Prims.string_of_int }
 let (showable_string : Prims.string showable) =
   { show = (fun x -> Prims.strcat "\"" (Prims.strcat x "\"")) }
 let show_list : 'a . 'a showable -> 'a Prims.list showable =
-  fun uu___ -> { show = ((FStarC_Common.string_of_list ()) (show uu___)) }
+  fun uu___ -> { show = (FStarC_Common.string_of_list (show uu___)) }
 let show_option :
   'a . 'a showable -> 'a FStar_Pervasives_Native.option showable =
   fun uu___ -> { show = (FStarC_Common.string_of_option (show uu___)) }

@@ -281,7 +281,7 @@ let rec (term_to_string : FStarC_Syntax_Syntax.term -> Prims.string) =
               | FStarC_Syntax_Syntax.Quote_static ->
                   let uu___1 = term_to_string tm in
                   let uu___2 =
-                    (FStarC_Common.string_of_list ()) term_to_string
+                    FStarC_Common.string_of_list term_to_string
                       (FStar_Pervasives_Native.snd
                          qi.FStarC_Syntax_Syntax.antiquotations) in
                   FStarC_Compiler_Util.format2 "`(%s)%s" uu___1 uu___2
@@ -1018,7 +1018,7 @@ and (cflag_to_string : FStarC_Syntax_Syntax.cflag -> Prims.string) =
     | FStarC_Syntax_Syntax.DECREASES uu___ -> ""
 and (cflags_to_string :
   FStarC_Syntax_Syntax.cflag Prims.list -> Prims.string) =
-  fun fs -> (FStarC_Common.string_of_list ()) cflag_to_string fs
+  fun fs -> FStarC_Common.string_of_list cflag_to_string fs
 and (formula_to_string :
   FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax -> Prims.string) =
   fun phi -> term_to_string phi
@@ -1360,8 +1360,8 @@ let rec (sigelt_to_string : FStarC_Syntax_Syntax.sigelt -> Prims.string) =
           ->
           let uu___1 = FStarC_Compiler_Util.string_of_bool lax in
           let uu___2 =
-            (FStarC_Common.string_of_list ())
-              FStarC_Compiler_Util.string_of_int errs in
+            FStarC_Common.string_of_list FStarC_Compiler_Util.string_of_int
+              errs in
           let uu___3 =
             let uu___4 = FStarC_Compiler_List.map sigelt_to_string ses in
             FStarC_Compiler_String.concat "\n" uu___4 in
