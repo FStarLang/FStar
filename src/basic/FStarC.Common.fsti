@@ -21,13 +21,6 @@ open FStarC.Compiler.Effect
 module List = FStarC.Compiler.List
 module BU = FStarC.Compiler.Util
 
-//try to convert filename passed from the editor to mixed path
-//that works on both cygwin and native windows
-//noop if not on cygwin
-//on cygwin emacs this is required
-// NOTE: Will likely be removed soon. F* should not do path translation.
-val try_convert_file_name_to_mixed (fn : string) : string
-
 val snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b)
 
 val rollback (pop: unit -> 'a) (stackref: ref (list 'c)) (depth: option int) : 'a
