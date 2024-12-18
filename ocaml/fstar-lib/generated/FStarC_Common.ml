@@ -93,13 +93,11 @@ let __string_of_list :
              FStarC_Compiler_Util.string_builder_append strb "]";
              FStarC_Compiler_Util.string_of_string_builder strb)
 let string_of_list :
-  'uuuuu .
-    unit -> ('uuuuu -> Prims.string) -> 'uuuuu Prims.list -> Prims.string
-  = fun uu___ -> __string_of_list ", "
+  'a . ('a -> Prims.string) -> 'a Prims.list -> Prims.string =
+  fun f -> fun l -> __string_of_list ", " f l
 let string_of_list' :
-  'uuuuu .
-    unit -> ('uuuuu -> Prims.string) -> 'uuuuu Prims.list -> Prims.string
-  = fun uu___ -> __string_of_list "; "
+  'a . ('a -> Prims.string) -> 'a Prims.list -> Prims.string =
+  fun f -> fun l -> __string_of_list "; " f l
 let list_of_option : 'a . 'a FStar_Pervasives_Native.option -> 'a Prims.list
   =
   fun o ->
@@ -107,9 +105,8 @@ let list_of_option : 'a . 'a FStar_Pervasives_Native.option -> 'a Prims.list
     | FStar_Pervasives_Native.None -> []
     | FStar_Pervasives_Native.Some x -> [x]
 let string_of_option :
-  'uuuuu .
-    ('uuuuu -> Prims.string) ->
-      'uuuuu FStar_Pervasives_Native.option -> Prims.string
+  'a .
+    ('a -> Prims.string) -> 'a FStar_Pervasives_Native.option -> Prims.string
   =
   fun f ->
     fun uu___ ->
@@ -163,22 +160,21 @@ let rec eq_list :
         | (uu___, []) -> false
         | (x1::t1, x2::t2) -> (f x1 x2) && (eq_list f t1 t2)
 let psmap_to_list :
-  'uuuuu .
-    'uuuuu FStarC_Compiler_Util.psmap -> (Prims.string * 'uuuuu) Prims.list
-  =
+  'a . 'a FStarC_Compiler_Util.psmap -> (Prims.string * 'a) Prims.list =
   fun m ->
     FStarC_Compiler_Util.psmap_fold m
-      (fun k -> fun v -> fun a -> (k, v) :: a) []
+      (fun k -> fun v -> fun a1 -> (k, v) :: a1) []
 let psmap_keys :
-  'uuuuu . 'uuuuu FStarC_Compiler_Util.psmap -> Prims.string Prims.list =
+  'a . 'a FStarC_Compiler_Util.psmap -> Prims.string Prims.list =
   fun m ->
-    FStarC_Compiler_Util.psmap_fold m (fun k -> fun v -> fun a -> k :: a) []
-let psmap_values :
-  'uuuuu . 'uuuuu FStarC_Compiler_Util.psmap -> 'uuuuu Prims.list =
+    FStarC_Compiler_Util.psmap_fold m (fun k -> fun v -> fun a1 -> k :: a1)
+      []
+let psmap_values : 'a . 'a FStarC_Compiler_Util.psmap -> 'a Prims.list =
   fun m ->
-    FStarC_Compiler_Util.psmap_fold m (fun k -> fun v -> fun a -> v :: a) []
-let option_to_list :
-  'uuuuu . 'uuuuu FStar_Pervasives_Native.option -> 'uuuuu Prims.list =
+    FStarC_Compiler_Util.psmap_fold m (fun k -> fun v -> fun a1 -> v :: a1)
+      []
+let option_to_list : 'a . 'a FStar_Pervasives_Native.option -> 'a Prims.list
+  =
   fun uu___ ->
     match uu___ with
     | FStar_Pervasives_Native.None -> []

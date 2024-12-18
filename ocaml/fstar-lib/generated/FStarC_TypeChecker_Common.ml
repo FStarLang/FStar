@@ -595,7 +595,7 @@ let (implicits_to_string : implicits -> Prims.string) =
     let imp_to_string i =
       FStarC_Class_Show.show FStarC_Syntax_Print.showable_uvar
         (i.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head in
-    (FStarC_Common.string_of_list ()) imp_to_string imps
+    FStarC_Common.string_of_list imp_to_string imps
 type implicits_t = implicit FStarC_Compiler_CList.t
 type guard_t =
   {

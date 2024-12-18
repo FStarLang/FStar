@@ -1182,7 +1182,7 @@ let (uvi_to_string : FStarC_TypeChecker_Env.env -> uvi -> Prims.string) =
 let (uvis_to_string :
   FStarC_TypeChecker_Env.env -> uvi Prims.list -> Prims.string) =
   fun env ->
-    fun uvis -> (FStarC_Common.string_of_list ()) (uvi_to_string env) uvis
+    fun uvis -> FStarC_Common.string_of_list (uvi_to_string env) uvis
 let (empty_worklist : FStarC_TypeChecker_Env.env -> worklist) =
   fun env ->
     let uu___ =
@@ -8862,8 +8862,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                                                    FStarC_Compiler_Util.string_of_bool
                                                      wl3.smt_ok in
                                                  let uu___13 =
-                                                   (FStarC_Common.string_of_list
-                                                      ())
+                                                   FStarC_Common.string_of_list
                                                      (prob_to_string env)
                                                      subprobs in
                                                  FStarC_Compiler_Util.print2
@@ -14423,7 +14422,7 @@ let (solve_and_commit :
        if uu___1
        then
          let uu___2 =
-           (FStarC_Common.string_of_list ())
+           FStarC_Common.string_of_list
              (fun p -> FStarC_Compiler_Util.string_of_int (p_pid p))
              wl.attempting in
          FStarC_Compiler_Util.print1 "solving problems %s {\n" uu___2
