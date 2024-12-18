@@ -1,0 +1,86 @@
+.PHONY: indent extra
+
+all: nuget
+
+ifndef FSTAR_HOME
+  FSTAR_EXE := $(shell which fstar.exe)
+  ifeq ($(FSTAR_EXE),)
+    # assuming F* source directory
+    FSTAR_HOME=..
+    FSTAR_EXE := $(FSTAR_HOME)/bin/fstar.exe
+  else
+    FSTAR_HOME=$(dir $(FSTAR_EXE))/..
+  endif
+  export FSTAR_HOME
+endif
+FSTAR_ULIB=$(shell if test -d $(FSTAR_HOME)/ulib ; then echo $(FSTAR_HOME)/ulib ; else echo $(FSTAR_HOME)/lib/fstar ; fi)
+include $(FSTAR_ULIB)/ml/Makefile.realized
+include $(FSTAR_ULIB)/gmake/z3.mk
+include $(FSTAR_ULIB)/gmake/fstar.mk
+
+FSTAR_FILES:=$(wildcard *.fst *.fsti) \
+	     $(wildcard experimental/*fst experimental/*fsti)
+EXTRACT_MODULES=--extract '* $(NOEXTRACT_MODULES)'
+
+OUTPUT_DIRECTORY=fs/extracted
+
+CODEGEN ?= FSharp
+
+MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --warn_error @241 --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache
+
+# And then, in a separate invocation, from each .checked file we
+# extract an .fs file
+# NOTE: The comma below is to prevent expansion of the wildcard in Windows
+# EVEN WITH THE SINGLE QUOTES. Do not remove. See https://github.com/FStarLang/FStar/pull/3421.
+$(OUTPUT_DIRECTORY)/%.fs:
+	$(MY_FSTAR) --already_cached '*,' $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
+
+.depend.extract.fsharp:
+	$(call msg, "DEPEND")
+	true $(shell rm -f .depend.extract.fsharp.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> .depend.extract.fsharp.rsp))
+	$(Q)$(MY_FSTAR) --extract 'FSharp:*;OCaml:None;krml:None' --dep full $(EXTRACT_MODULES) @.depend.extract.fsharp.rsp --output_deps_to .depend.extract.fsharp
+
+depend.extract.fsharp: .depend.extract.fsharp
+
+include .depend.extract.fsharp
+
+FS_FILES= \
+	FStar_Pervasives.fs \
+	FStar_Preorder.fs \
+	FStar_Squash.fs \
+	FStar_Classical.fs \
+	FStar_FunctionalExtensionality.fs \
+	FStar_StrongExcludedMiddle.fs \
+	FStar_PropositionalExtensionality.fs \
+	FStar_PredicateExtensionality.fs \
+	FStar_List_Tot_Properties.fs \
+	FStar_Monotonic_HyperHeap.fs \
+	FStar_Monotonic_HyperStack.fs \
+	FStar_Monotonic_Witnessed.fs \
+	FStar_Monotonic_Map.fs \
+	FStar_HyperStack.fs \
+	FStar_Seq_Base.fs \
+	FStar_Seq_Properties.fs \
+	FStar_Seq.fs \
+	FStar_Calc.fs \
+	FStar_Math_Lib.fs \
+	FStar_Math_Lemmas.fs \
+	FStar_BitVector.fs \
+	FStar_UInt.fs \
+	FStar_Int.fs \
+	FStar_Int_Cast.fs \
+	FStar_UInt128.fs \
+	FStar_BigOps.fs \
+	FStar_Int128.fs \
+	FStar_Integers.fs \
+	FStar_Ref.fs
+
+all-fs: $(addprefix $(OUTPUT_DIRECTORY)/, $(FS_FILES))
+
+.PHONY: all-fs nuget dll
+
+dll: all-fs
+	+$(MAKE) -C fs/VS build
+
+nuget: dll
+	+$(MAKE) -C fs/VS all

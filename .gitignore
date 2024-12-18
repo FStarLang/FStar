@@ -1,3 +1,11 @@
+/stage1/out
+/stage2/out
+/out
+/fstar*.tar.gz
+/_pak*
+/_srcpak*
+# ^ build output
+
 *~
 .#*
 \#*\#
@@ -101,3 +109,6 @@ nuget/
 
 # devcontainer temp files
 /.devcontainer_build.log
+
+
+stage3
