@@ -127,7 +127,18 @@ let module_name_of_file f =
     | Some longname ->
       longname
     | None ->
-      raise_error0 Errors.Fatal_NotValidFStarFile (Util.format1 "Not a valid FStar file: '%s'" f)
+      raise_error0 Errors.Fatal_NotValidFStarFile (
+        [ text <| Util.format1 "Not a valid FStar file: '%s'" f; ] @
+        (if Platform.system = Platform.Windows && f = ".." then [
+          text <| "Note: In Windows-compiled versions of F*, a literal
+          asterisk as argument will be expanded to a list of files,
+          **even if quoted**. It is possible you provided such an
+          argument which got expanded to the list of all files in this
+          directory, causing spurious arguments that F* attempts to interpret as files.";
+          text <| "Hint: did you perhaps pass --already_cached '*' or similar? You can add
+          a comma (',*') to prevent the expansion and retain the behavior.";
+        ] else [])
+      )
 
 (* In public interface *)
 let lowercase_module_name f = String.lowercase (module_name_of_file f)
