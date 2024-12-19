@@ -18,7 +18,7 @@ let no_surj_powerset (a : Type) (f : a -> powerset a) : Lemma (~(is_surj f)) =
 
 let no_inj_powerset (a : Type) (f : powerset a -> a) : Lemma (~(is_inj f)) =
   let aux () : Lemma (requires is_inj f) (ensures False) =
-    let g : a -> powerset a = inverse_of_inj f (fun _ -> false) in
+    let g : a -> GTot (powerset a) = inverse_of_inj f (fun _ -> false) in
     no_surj_powerset a g
   in
   Classical.move_requires aux ()
