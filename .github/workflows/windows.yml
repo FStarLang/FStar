@@ -7,7 +7,7 @@ jobs:
 
   build-windows:
 
-    runs-on: [self-hosted, Windows, X64]
+    runs-on: [self-hosted, Windows, X64, opam-2-3]
 
     steps:
     - name: Check out repo        
@@ -16,11 +16,11 @@ jobs:
     - name: Build a package
       shell: C:\cygwin64\bin\bash.exe --login '{0}'
       run: |
-          make -C $GITHUB_WORKSPACE -j package && echo "There is a CR at the end of this line"
+        eval $(opam env) && CC=x86_64-w64-mingw32-gcc.exe make -C $GITHUB_WORKSPACE -j package && echo "There is a CR at the end of this line"
     - name: Test the package
       shell: C:\cygwin64\bin\bash.exe --login '{0}'
       run: |
-        env CI_THREADS=24 $GITHUB_WORKSPACE/.scripts/test_package.sh && echo "There is a CR at the end of this line"
+        eval $(opam env) && CC=x86_64-w64-mingw32-gcc.exe CI_THREADS=24 $GITHUB_WORKSPACE/.scripts/test_package.sh && echo "There is a CR at the end of this line"
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
