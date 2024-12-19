@@ -58,7 +58,7 @@ jobs:
 
     needs: build-linux
 
-    runs-on: [self-hosted, Windows, X64]
+    runs-on: [self-hosted, Windows, X64, opam-2-3]
 
     steps:
     - name: Check out repo        
@@ -67,6 +67,6 @@ jobs:
     - name: Package and release FStar
       shell: C:\cygwin64\bin\bash.exe --login '{0}'
       run: |
-        FSTAR_COMMIT=$GITHUB_SHA CI_THREADS=24 $GITHUB_WORKSPACE/.scripts/release.sh && echo "There is a CR at the end of this line"
+        eval $(opam env) && CC=x86_64-w64-mingw32-gcc.exe FSTAR_COMMIT=$GITHUB_SHA CI_THREADS=24 $GITHUB_WORKSPACE/.scripts/release.sh && echo "There is a CR at the end of this line"
       env:
         GH_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
