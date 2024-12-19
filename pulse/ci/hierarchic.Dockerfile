@@ -20,13 +20,13 @@ ARG opamthreads=24
 # Install Karamel
 ENV KRML_HOME $HOME/pulse_tools/karamel
 RUN mkdir -p $HOME/pulse_tools && \
-    git clone --branch $(jq -c -r '.RepoVersions.karamel' $HOME/pulse/src/ci/config.json || echo master) https://github.com/FStarLang/karamel $KRML_HOME && \
+    git clone --branch $(jq -c -r '.RepoVersions.karamel' $HOME/pulse/ci/config.json || echo master) https://github.com/FStarLang/karamel $KRML_HOME && \
     eval $(opam env) && $KRML_HOME/.docker/build/install-other-deps.sh && \
     env OTHERFLAGS='--admit_smt_queries true' make -C $KRML_HOME -j $opamthreads
 
 # Pulse CI proper
 ARG PULSE_NIGHTLY_CI
 ARG OTHERFLAGS
-RUN eval $(opam env) && . "$HOME/.cargo/env" && env PULSE_NIGHTLY_CI="$PULSE_NIGHTLY_CI" make -k -j $opamthreads -C $HOME/pulse/src ci
+RUN eval $(opam env) && . "$HOME/.cargo/env" && env PULSE_NIGHTLY_CI="$PULSE_NIGHTLY_CI" make -k -j $opamthreads -C $HOME/pulse ci
 
 ENV PULSE_HOME $HOME/pulse

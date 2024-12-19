@@ -13,8 +13,8 @@ jobs:
       - name: Build Pulse and its dependencies
         run: |
           ci_docker_image_tag=pulse:local-binary-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
-          docker buildx build --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f src/ci/package.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg opamthreads=$(nproc) .
-          docker run $ci_docker_image_tag /bin/bash -c 'cat $PULSE_HOME/src/ci/pulse.tar.gz || true' > pulse.tar.gz
+          docker buildx build --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f ci/package.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg opamthreads=$(nproc) .
+          docker run $ci_docker_image_tag /bin/bash -c 'cat $PULSE_HOME/ci/pulse.tar.gz || true' > pulse.tar.gz
           gunzip pulse.tar.gz
         env:
           DZOMO_GITHUB_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}

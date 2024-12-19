@@ -1,8 +1,10 @@
-type context = ((string * FStar_Range.range option) list) FStar_Sealed.sealed
-let extend_context (s:string) (r:FStar_Range.range option) (c:context) = (s,r)::c
-module T = FStar_Tactics_Effect
+type context = ((string * FStarC_Compiler_Range.range option) list) (* FStar_Sealed.sealed *)
+let extend_context (s:string) (r:FStarC_Compiler_Range.range option) (c:context) = (s,r)::c
 module TR = FStarC_Tactics_Result
-type 'a utac = ('a, unit) T.tac_repr 
+
+type ('a,'wp) tac_repr = FStarC_Tactics_Types.proofstate -> 'a TR.__result
+type 'a utac = ('a, unit) tac_repr 
+
 let ctxt_elt_as_string (s, r) =
     match r with
     | None -> s
@@ -21,7 +23,7 @@ let rec with_context (c:context) (f: unit -> 'a utac) : 'a utac =
     | sr::tl ->
       with_context tl (fun _ ps ->
       FStarC_Errors.with_ctx (ctxt_elt_as_string sr) (fun _ -> f () ps)) ps
-let with_error_bound (r:FStar_Range.range) (f: unit -> 'a utac) : 'a utac =
+let with_error_bound (r:FStarC_Compiler_Range.range) (f: unit -> 'a utac) : 'a utac =
   fun ps ->
     FStarC_Errors.with_error_bound r (fun _ -> f () ps)
 let disable_admit_smt_queries (f: unit -> 'a utac) : 'a utac =
@@ -48,21 +50,21 @@ let debug_at_level (g:FStarC_Reflection_Types.env) (s:string) =
   !r
 
 let next_id () = FStarC_GenSym.next_id ()
-let bv_set_range (bv:FStarC_Syntax_Syntax.bv) (r:FStar_Range.range) = FStarC_Syntax_Syntax.set_range_of_bv bv r
+let bv_set_range (bv:FStarC_Syntax_Syntax.bv) (r:FStarC_Compiler_Range.range) = FStarC_Syntax_Syntax.set_range_of_bv bv r
 let bv_range (bv:FStarC_Syntax_Syntax.bv) = FStarC_Syntax_Syntax.range_of_bv bv
-let binder_set_range (b:FStarC_Syntax_Syntax.binder) (r:FStar_Range.range) =
+let binder_set_range (b:FStarC_Syntax_Syntax.binder) (r:FStarC_Compiler_Range.range) =
     { b with FStarC_Syntax_Syntax.binder_bv = (bv_set_range b.FStarC_Syntax_Syntax.binder_bv r) }
 let binder_range (b:FStarC_Syntax_Syntax.binder) = bv_range b.FStarC_Syntax_Syntax.binder_bv
-let start_of_range (r:FStar_Range.range) =
+let start_of_range (r:FStarC_Compiler_Range.range) =
   let open FStarC_Compiler_Range in
   mk_range (file_of_range r) (start_of_range r) (start_of_range r)
-  let set_range (t:FStarC_Syntax_Syntax.term) (r:FStar_Range.range) = { t with FStarC_Syntax_Syntax.pos = r}
-let set_use_range (t:FStarC_Syntax_Syntax.term) (r:FStar_Range.range) = FStarC_Syntax_Subst.set_use_range r t
+  let set_range (t:FStarC_Syntax_Syntax.term) (r:FStarC_Compiler_Range.range) = { t with FStarC_Syntax_Syntax.pos = r}
+let set_use_range (t:FStarC_Syntax_Syntax.term) (r:FStarC_Compiler_Range.range) = FStarC_Syntax_Subst.set_use_range r t
 let error_code_uninstantiated_variable () = FStarC_Errors.errno FStarC_Errors_Codes.Error_UninstantiatedUnificationVarInTactic
-let is_range_zero (r:FStar_Range.range) = r = FStar_Range.range_0
-let union_ranges (r0:FStar_Range.range) (r1:FStar_Range.range) = FStarC_Compiler_Range.union_ranges r0 r1
+let is_range_zero (r:FStarC_Compiler_Range.range) = r = FStarC_Compiler_Range.dummyRange
+let union_ranges (r0:FStarC_Compiler_Range.range) (r1:FStarC_Compiler_Range.range) = FStarC_Compiler_Range.union_ranges r0 r1
 let range_of_term (t:FStarC_Syntax_Syntax.term) = t.FStarC_Syntax_Syntax.pos
-let env_set_range (e:FStarC_Reflection_Types.env) (r:FStar_Range.range) =
+let env_set_range (e:FStarC_Reflection_Types.env) (r:FStarC_Compiler_Range.range) =
    FStarC_TypeChecker_Env.set_range e r
 
 let is_pulse_option_set (x:string) : bool =

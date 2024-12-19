@@ -11,7 +11,7 @@ ADD --chown=opam:opam ./ pulse/
 RUN sudo apt-get update && \
     sudo apt-get install --yes --no-install-recommends jq && \
     opam depext conf-gmp z3.4.8.5-1 conf-m4 && \
-    git clone --branch $(jq -c -r '.RepoVersions.fstar' pulse/src/ci/config.json || echo master) https://github.com/FStarLang/FStar FStar && \
+    git clone --branch $(jq -c -r '.RepoVersions.fstar' pulse/ci/config.json || echo master) https://github.com/FStarLang/FStar FStar && \
     opam install -j $opamthreads -v -v -v FStar/fstar.opam && \
     rm -rf FStar
 

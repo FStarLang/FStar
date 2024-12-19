@@ -1,0 +1,20 @@
+(include_subdirs unqualified)
+(library
+ (name pulse)
+ (public_name pulse)
+ (libraries
+    fstar.lib
+ )
+ ; Consider using private modules here? If all we want to provide is the
+ ; plugin, there's no need to provide cmi/cmt/cmx for every internal
+ ; module. But, I don't see a way to mark them all private without
+ ; explicitly listing all of them here.
+ ; (private_modules Pulse_Util)
+ (modes native)
+ (wrapped false)
+ (flags (:standard -w -A))
+)
+
+(menhir
+ (modules ml/pulseparser ml/FStarC_Parser_Parse)
+ (merge_into Pulse_FStar_Parser))

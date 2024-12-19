@@ -28,9 +28,9 @@ jobs:
     - name: Package Pulse
       run: |
         source pulse/.github/env.sh
-        pulse/src/ci/package.sh -j
+        pulse/ci/package.sh -j
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
         name: pulse-Darwin_x86_64.tar.gz
-        path: pulse/src/ci/pulse.tar.gz
+        path: pulse/ci/pulse.tar.gz

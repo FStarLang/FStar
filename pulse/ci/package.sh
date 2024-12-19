@@ -61,8 +61,8 @@ $cp -r $KRML_HOME/krmllib $fstar_package_dir/
 $cp -r $KRML_HOME/include $fstar_package_dir/
 $cp -r $KRML_HOME/misc $fstar_package_dir/
 
-# assume current directory is $PULSE_HOME/src/ci
-export PULSE_HOME=$(fixpath $(cd ../.. && pwd))
+# assume current directory is $PULSE_HOME/ci
+export PULSE_HOME=$(fixpath $(cd .. && pwd))
 
 # use the package to build Pulse
 export FSTAR_HOME="$fstar_package_dir"

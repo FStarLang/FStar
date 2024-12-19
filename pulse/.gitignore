@@ -17,3 +17,7 @@ LICENSE-z3.txt
 
 # Created by CI
 BUILDLOG
+
+out
+_output
+_cache

@@ -1,19 +1,32 @@
-PULSE_HOME ?= ../..
-PULSE_EXAMPLES_ROOT ?= $(PULSE_HOME)/share/pulse/examples
+PULSE_ROOT ?= ../..
+OUTPUT_DIR=_output
+CACHE_DIR=_cache
+CODEGEN=Extension
+TAG=pulse2rust
 
-SRC_DIRS := $(addprefix $(PULSE_EXAMPLES_ROOT)/,. by-example dice/external dice/external/hacl dice/external/l0 dice/dpe dice/engine dice/l0)
-ifneq (,$(wildcard $(PULSE_EXAMPLES_ROOT)/dice/_output/cache))
-SRC_DIRS += $(PULSE_EXAMPLES_ROOT)/dice/_output/cache
-endif
-# ifneq (,$(wildcard $(PULSE_EXAMPLES_ROOT)/dice/common/hacl-c/_output/cache))
-# SRC_DIRS += $(PULSE_EXAMPLES_ROOT)/dice/common/hacl-c/_output/cache
-# endif
-ifneq (,$(wildcard $(PULSE_EXAMPLES_ROOT)/_output/cache))
-SRC_DIRS += $(PULSE_EXAMPLES_ROOT)/_output/cache
-endif
-OUTPUT_DIRECTORY := _output
-CACHE_DIRECTORY := $(OUTPUT_DIRECTORY)/cache
-FSTAR_OPTIONS += --warn_error -342 --cmi
+NO_OCAML := 1
+
+PULSE_EXAMPLES_ROOT ?= $(PULSE_ROOT)/share/pulse/examples
+SRC:=$(PULSE_EXAMPLES_ROOT) # Actually does not matter much
+
+SRC_DIRS := $(addprefix $(PULSE_EXAMPLES_ROOT)/,. by-example dice/cbor dice/external dice/external/hacl dice/external/l0 dice/dpe dice/engine dice/l0)
+
+# I don't like this
+OTHERFLAGS += $(addprefix --include ,$(SRC_DIRS))
+
+ROOTS = -d # hehe
+
+OTHERFLAGS += --include $(PULSE_EXAMPLES_ROOT)/_cache
+OTHERFLAGS += --include $(PULSE_EXAMPLES_ROOT)/by-example/_cache
+OTHERFLAGS += --include $(PULSE_EXAMPLES_ROOT)/dice/_cache
+OTHERFLAGS += --include $(PULSE_EXAMPLES_ROOT)/dice/common/hacl-c/_cache
+
+OTHERFLAGS += --warn_error -342 --cmi
+OTHERFLAGS += --include $(PULSE_ROOT)/out/lib/pulse
+
+include $(PULSE_ROOT)/mk/boot.mk
+
+.DEFAULT_GOAL := all
 
 MAIN=../main.exe
 RUST_SRC_DIR=src
@@ -23,7 +36,6 @@ DPE_OUTPUT_DIR=../dpe/src/generated
 .PHONY: all
 all: test dpe
 
-include $(PULSE_HOME)/share/pulse/Makefile.include
 
 FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
 
@@ -35,7 +47,7 @@ FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Pulse +Pulse.Cl
 # currently two modes:
 #
 # * share/pulse/examples/dice/Makefile produces the DICE .checked
-#   files in a single directory, _output/cache, but it assumes (with
+#   files in a single directory, _cache, but it assumes (with
 #   --already_cached) that the .checked files from the Pulse standard
 #   library already exist somewhere else.
 #
@@ -62,25 +74,25 @@ FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Pulse +Pulse.Cl
 # files. If so, then this %.ast rule will be generic and can move to
 # share/pulse/Makefile.include-base.
 
-$(OUTPUT_DIRECTORY)/%.ast:
+$(OUTPUT_DIR)/%.ast:
 		$(FSTAR) --admit_smt_queries true --codegen Extension $(subst .ast,.fst, $(subst _,., $(notdir $@))) --extract_module $(basename $(subst .ast,.fst, $(subst _,., $(notdir $@))))
 
-$(RUST_SRC_DIR)/pulsetutorial_array.rs: $(OUTPUT_DIRECTORY)/PulseTutorial_Array.ast
+$(RUST_SRC_DIR)/pulsetutorial_array.rs: $(OUTPUT_DIR)/PulseTutorial_Array.ast
 	$(MAIN) -odir $(RUST_SRC_DIR) $+
 
-$(RUST_SRC_DIR)/pulsetutorial_loops.rs: $(OUTPUT_DIRECTORY)/PulseTutorial_Loops.ast
+$(RUST_SRC_DIR)/pulsetutorial_loops.rs: $(OUTPUT_DIR)/PulseTutorial_Loops.ast
 	$(MAIN) -odir $(RUST_SRC_DIR) $+
 
-$(RUST_SRC_DIR)/pulsetutorial_algorithms.rs: $(OUTPUT_DIRECTORY)/PulseTutorial_Algorithms.ast
+$(RUST_SRC_DIR)/pulsetutorial_algorithms.rs: $(OUTPUT_DIR)/PulseTutorial_Algorithms.ast
 	$(MAIN) -odir $(RUST_SRC_DIR) $+
 
-$(RUST_SRC_DIR)/example_slice.rs: $(OUTPUT_DIRECTORY)/Example_Slice.ast
+$(RUST_SRC_DIR)/example_slice.rs: $(OUTPUT_DIR)/Example_Slice.ast
 	$(MAIN) -odir $(RUST_SRC_DIR) $+
 
 %.rlib: %.rs
 	rustc --crate-type rlib -o $@ $+
 
-DPE_FILES = $(addprefix $(OUTPUT_DIRECTORY)/, \
+DPE_FILES = $(addprefix $(OUTPUT_DIR)/, \
 	EngineTypes.ast \
 	EngineCore.ast \
 	HACL.ast \

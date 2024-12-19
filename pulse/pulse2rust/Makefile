@@ -1,10 +1,13 @@
+PULSE_ROOT ?= ..
+include $(PULSE_ROOT)/mk/locate.mk
+
 .PHONY: all
 all: build
-	+$(MAKE) test
+	# +$(MAKE) test
 
 .PHONY: build
 build: rustlib extract
-	export OCAMLPATH=$(FSTAR_HOME)/lib && cd src/ocaml && dune build
+	eval $$($(FSTAR_EXE) --ocamlenv) && cd src/ocaml && dune build
 	cp -f src/_build/default/ocaml/main.exe .
 
 .PHONY: rustlib
@@ -13,7 +16,7 @@ rustlib:
 
 .PHONY: extract
 extract:
-	+$(MAKE) -C src extract
+	+$(MAKE) -C src ocaml
 
 .PHONY: test
 test:

@@ -15,10 +15,10 @@ the following cases:
 In all cases, a Pulse installation (or the Pulse repository clone) is
 laid out as follows:
 
-* in `lib/pulse`:
-  * the theoretical foundations of Pulse, in `core` (namespace `PulseCore`)
-  * the interface powering the Pulse DSL, `Pulse.Main.fsti`
-  * the Pulse standard library, in `lib` (namespace `Pulse.Lib`), with
+* in `lib/`:
+  * the theoretical foundations of Pulse, in `core/` (namespace `PulseCore`)
+  * the interface powering the Pulse DSL, `common/Pulse.Main.fsti`
+  * the Pulse standard library, in `pulse/` (namespace `Pulse.Lib`), with
     some subdirectories for typeclasses (in `class`, namespace
     `Pulse.Class`) and pledges (in `pledge`), and for the OCaml
     runtime implementation of Pulse references, etc. (in `ml`)
@@ -39,7 +39,7 @@ toolchain.
 
 ## Prerequisites
 
-* Z3 4.8.5 exactly
+* Z3 4.13.3 (exactly this version)
 * OCaml 4.10 or higher
 * GNU Make
 * A GCC-compatible compiler

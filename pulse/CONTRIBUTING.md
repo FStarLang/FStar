@@ -152,14 +152,14 @@ examples. Alternatively, you can run `make -j test` from the Pulse root
 directory, which will build Pulse beforehand.
 
 If you have Docker, you can run `docker build -f
-src/ci/opam.Dockerfile .` to test the opam installation of Pulse
+ci/opam.Dockerfile .` to test the opam installation of Pulse
 (including all dependencies.) This will also verify all examples and
 tests, by moving them outside of the Pulse directory hierarchy
 beforehand, to make sure that the location of those examples does not
 need to depend on the location of Pulse.
 
-Finally, you can run `make -j -C src ci` to re-extract, recompile and
+Finally, you can run `make -j ci` to re-extract, recompile and
 re-test everything. This rule also checks that the re-extracted
 snapshot is no newer than the current snapshot. If you have Docker,
-you can run the `ci` rule with `docker build -f src/ci/ci.Dockerfile
+you can run the `ci` rule with `docker build -f ci/ci.Dockerfile
 .` which will also install all dependencies automatically.
