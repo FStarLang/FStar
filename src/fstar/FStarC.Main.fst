@@ -166,9 +166,6 @@ let go_normal () =
 
     (* --print: Emit files in canonical source syntax *)
     | Success when Options.print () || Options.print_in_place () ->
-      if not Platform.is_fstar_compiler_using_ocaml then
-        failwith "You seem to be using the F#-generated version of the compiler ; \o
-                   reindenting is not known to work yet with this version";
       let printing_mode =
         if Options.print ()
         then Prettyprint.FromTempToStdout
