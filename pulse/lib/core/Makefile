@@ -1,4 +1,4 @@
-PULSE_HOME ?= ../../..
+PULSE_HOME ?= ../..
 
 all: verify
 
