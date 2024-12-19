@@ -35,5 +35,3 @@
   - Raised within Tactics.refl_instantiate_implicits
 
 >>]
-Verified module: Bug.DesugaringError
-All verification conditions discharged successfully
