@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2018 Microsoft Research
+   Copyright 2008-2024 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStar.Squash
+open FStar.IndefiniteDescription
 
 (* This file shows that there is another natural model for some of the
    squash things; for this one it doesn't seem to harm importing this
@@ -21,9 +22,11 @@ module FStar.Squash
 
 let return_squash (#a:Type) x = ()
 
-let bind_squash (#a:Type) (#b:Type) f g = admit()
+let bind_squash (#a:Type) (#b:Type) f g =
+    g (elim_squash f)
 
-let push_squash (#a:Type) (#b:(a->Type)) f = admit()
+let push_squash (#a:Type) (#b:(a->Type)) f =
+    return_squash fun x -> elim_squash (f x)
 
 let get_proof (p:Type) = ()
 
