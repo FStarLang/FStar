@@ -34,15 +34,16 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
       | None -> []
       | Some quals -> quals
     in
-    (* unfold or not, fully or not, reified or not *)
-    let yes   = true  , false , false in
-    let no    = false , false , false in
-    let fully = true  , true  , false in
-    let reif  = true  , false , true in
+    (* unfold or not, fully or not, reified or not, only once or not *)
+    let yes   = true  , false , false, false in
+    let no    = false , false , false, false in
+    let fully = true  , true  , false, false in
+    let reif  = true  , false , true,  false  in
+    let once  = true  , false , false, true in
 
     let yesno b = if b then yes else no in
     let fullyno b = if b then fully else no in
-    let comb_or l = List.fold_right (fun (a,b,c) (x,y,z) -> (a||x, b||y, c||z)) l (false, false, false) in
+    let comb_or l = List.fold_right (fun (a,b,c,d) (x,y,z,w) -> (a||x, b||y, c||z, d||w)) l (false, false, false, false) in
 
     let default_unfolding () =
         log_unfolding cfg (fun () -> BU.print3 "should_unfold: Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
@@ -57,12 +58,13 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     in
     let selective_unfold =
       Some? cfg.steps.unfold_only ||
+      Some? cfg.steps.unfold_once ||
       Some? cfg.steps.unfold_fully ||
       Some? cfg.steps.unfold_attr ||
       Some? cfg.steps.unfold_qual ||
       Some? cfg.steps.unfold_namespace
     in
-    let res : bool & bool & bool =
+    let res : bool & bool & bool & bool =
     match qninfo, selective_unfold with
     // We unfold dm4f actions if and only if we are reifying
     | _ when Env.qninfo_is_action qninfo ->
@@ -82,6 +84,11 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
             List.contains HasMaskedEffect qs ->
         log_unfolding cfg (fun () -> BU.print_string " >> HasMaskedEffect, not unfolding\n");
         no
+
+    // Unfoldonce. NB: this is before the zeta case, so we unfold even if zeta is off
+    | _, true when Some? cfg.steps.unfold_once && BU.for_some (fv_eq_lid fv) (Some?.v cfg.steps.unfold_once) ->
+        log_unfolding cfg (fun () -> BU.print_string " >> UnfoldOnce\n");
+        once
 
     // Recursive lets may only be unfolded when Zeta is on
     | Some (Inr ({sigquals=qs; sigel=Sig_let {lbs=(is_rec, _)}}, _), _), _ when
@@ -160,10 +167,11 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
                     );
     let r =
       match res with
-      | false, _, _ -> Should_unfold_no
-      | true, false, false -> Should_unfold_yes
-      | true, true, false -> Should_unfold_fully
-      | true, false, true -> Should_unfold_reify
+      | false, _, _, _ -> Should_unfold_no
+      | true, false, false, false -> Should_unfold_yes
+      | true, false, false, true -> Should_unfold_once
+      | true, true, false, false -> Should_unfold_fully
+      | true, false, true, false -> Should_unfold_reify
       | _ ->
         failwith <| BU.format1 "Unexpected unfolding result: %s" (show res)
     in

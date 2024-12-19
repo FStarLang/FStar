@@ -57,6 +57,7 @@ type norm_step =
   | Reify // Reify effectful definitions into their representations
   | NormDebug // Turn on debugging for this call
   | UnfoldOnly : list string -> norm_step // Unlike Delta, unfold definitions for only the given
+  | UnfoldOnce : list string -> norm_step
   // names, each string is a fully qualified name
   // like `A.M.f`
   // idem
@@ -102,6 +103,9 @@ let reify_ = Reify
 
 irreducible
 let delta_only s = UnfoldOnly s
+
+irreducible
+let delta_once s = UnfoldOnce s
 
 irreducible
 let delta_fully s = UnfoldFully s
