@@ -106,7 +106,7 @@ let init_once () : unit =
   tcenv_ref := Some env
 
 let _ =
-  FStarC.Main.setup_hooks();
+  FStarC.Hooks.setup_hooks();
   init_once()
 
 let init () =
@@ -178,7 +178,7 @@ let pars_and_tc_fragment (s:string) =
         | e when not ((Options.trace_error())) -> raise e
 
 let test_hashes () =
-  FStarC.Main.process_args () |> ignore; //set options
+  Options.parse_cmd_line () |> ignore; //set options
   let _ = pars_and_tc_fragment "type unary_nat = | U0 | US of unary_nat" in
   let test_one_hash (n:int) =
     let rec aux n =
