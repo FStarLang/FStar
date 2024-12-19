@@ -25,7 +25,7 @@ OCaml. Also, we need the ml implementation for the library modules we
 use. We take these from ulib/ml/app (the directory for ml files of the
 application library).
 
-NOTE: this last inclusion is acctualy not right, we should take this
+NOTE: this last inclusion is actually not right, we should take this
 from stage0, but stage0 (today) does not provide a directory with the ml
 files for it. In fact it does not provide an application library at all.
 
