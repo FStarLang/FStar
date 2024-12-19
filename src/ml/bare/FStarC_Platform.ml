@@ -13,3 +13,5 @@ let exe name =
     name
   else
     name^".exe"
+
+let is_cygwin = Sys.cygwin
