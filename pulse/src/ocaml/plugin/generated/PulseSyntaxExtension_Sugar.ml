@@ -880,8 +880,7 @@ let rec (stmt_to_string : stmt -> Prims.string) =
               let uu___5 =
                 let uu___6 =
                   let uu___7 =
-                    (FStarC_Common.string_of_list ()) branch_to_string
-                      branches in
+                    FStarC_Common.string_of_list branch_to_string branches in
                   ("branches", uu___7) in
                 [uu___6] in
               uu___4 :: uu___5 in
@@ -921,7 +920,7 @@ let rec (stmt_to_string : stmt -> Prims.string) =
             let uu___3 =
               let uu___4 =
                 let uu___5 =
-                  (FStarC_Common.string_of_list ())
+                  FStarC_Common.string_of_list
                     (FStarC_Class_Show.show showable_a_term) witnesses in
                 ("witnesses", uu___5) in
               [uu___4] in
@@ -992,7 +991,7 @@ let rec (stmt_to_string : stmt -> Prims.string) =
           let uu___1 =
             let uu___2 =
               let uu___3 =
-                (FStarC_Common.string_of_list ())
+                FStarC_Common.string_of_list
                   (FStarC_Class_Show.show showable_a_term) names in
               ("names", uu___3) in
             let uu___3 =
