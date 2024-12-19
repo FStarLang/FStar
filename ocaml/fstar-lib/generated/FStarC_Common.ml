@@ -1,31 +1,4 @@
 open Prims
-let (has_cygpath : Prims.bool) =
-  try
-    (fun uu___ ->
-       match () with
-       | () ->
-           let t_out =
-             FStarC_Compiler_Util.run_process "has_cygpath" "which"
-               ["cygpath"] FStar_Pervasives_Native.None in
-           (FStarC_Compiler_Util.trim_string t_out) = "/usr/bin/cygpath") ()
-  with | uu___ -> false
-let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
-  let cache = FStarC_Compiler_Util.smap_create (Prims.of_int (20)) in
-  fun s ->
-    if has_cygpath && (FStarC_Compiler_Util.starts_with s "/")
-    then
-      let uu___ = FStarC_Compiler_Util.smap_try_find cache s in
-      match uu___ with
-      | FStar_Pervasives_Native.Some s1 -> s1
-      | FStar_Pervasives_Native.None ->
-          let label = "try_convert_file_name_to_mixed" in
-          let out =
-            let uu___1 =
-              FStarC_Compiler_Util.run_process label "cygpath" ["-m"; s]
-                FStar_Pervasives_Native.None in
-            FStarC_Compiler_Util.trim_string uu___1 in
-          (FStarC_Compiler_Util.smap_add cache s out; out)
-    else s
 let snapshot :
   'a 'b 'c .
     ('a -> 'b) ->
