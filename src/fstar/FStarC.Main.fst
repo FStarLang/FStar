@@ -303,6 +303,7 @@ let go () =
     OCaml.exec_ocamlopt_plugin rest
 
   | _ -> go_normal ()
+
 let handle_error e =
     if FStarC.Errors.handleable e then
       FStarC.Errors.err_exn e;
@@ -313,8 +314,20 @@ let handle_error e =
     cleanup();
     report_errors []
 
+(* Perform some self-checks to see if we should warn or error out immediately. *)
+let self_check () =
+  (* We are not testing Cygwin builds at all, so warn the user about this. *)
+  if Platform.is_cygwin && None? (expand_environment_variable "FSTAR_CYGWIN") then begin
+    Util.print_error "F* is not officially supported on Cygwin, you may experience many issues.\n\
+                      You can instead use a native Windows build of F* (e.g. compiled with MinGW).\n\
+                      To go ahead at your own risk, set the environment variable FSTAR_CYGWIN to 1.\n";
+    exit 1
+  end;
+  ()
+
 let main () =
   try
+    self_check ();
     Hooks.setup_hooks ();
     let _, time = Util.record_time_ms go in
     if FStarC.Options.query_stats()
