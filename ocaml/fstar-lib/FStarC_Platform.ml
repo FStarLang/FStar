@@ -13,5 +13,3 @@ let exe name =
     name
   else
     name^".exe"
-
-let is_fstar_compiler_using_ocaml = true
