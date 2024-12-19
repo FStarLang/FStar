@@ -451,7 +451,7 @@ let rec (option_val_to_string : option_val -> Prims.string) =
         let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
         FStarC_Compiler_String.op_Hat "Int " uu___
     | List vs ->
-        let uu___ = (FStarC_Common.string_of_list ()) option_val_to_string vs in
+        let uu___ = FStarC_Common.string_of_list option_val_to_string vs in
         FStarC_Compiler_String.op_Hat "List " uu___
     | Unset -> "Unset"
 let (showable_option_val : option_val FStarC_Class_Show.showable) =

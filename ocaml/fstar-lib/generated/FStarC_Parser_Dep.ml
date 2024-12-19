@@ -143,10 +143,31 @@ let (module_name_of_file : Prims.string -> Prims.string) =
     | FStar_Pervasives_Native.Some longname -> longname
     | FStar_Pervasives_Native.None ->
         let uu___1 =
-          FStarC_Compiler_Util.format1 "Not a valid FStar file: '%s'" f in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                FStarC_Compiler_Util.format1 "Not a valid FStar file: '%s'" f in
+              FStarC_Errors_Msg.text uu___4 in
+            [uu___3] in
+          let uu___3 =
+            if
+              (FStarC_Platform.system = FStarC_Platform.Windows) &&
+                (f = "..")
+            then
+              let uu___4 =
+                FStarC_Errors_Msg.text
+                  "Note: In Windows-compiled versions of F*, a literal\n          asterisk as argument will be expanded to a list of files,\n          **even if quoted**. It is possible you provided such an\n          argument which got expanded to the list of all files in this\n          directory, causing spurious arguments that F* attempts to interpret as files." in
+              let uu___5 =
+                let uu___6 =
+                  FStarC_Errors_Msg.text
+                    "Hint: did you perhaps pass --already_cached '*' or similar? You can add\n          a comma (',*') to prevent the expansion and retain the behavior." in
+                [uu___6] in
+              uu___4 :: uu___5
+            else [] in
+          FStarC_Compiler_List.op_At uu___2 uu___3 in
         FStarC_Errors.raise_error0
           FStarC_Errors_Codes.Fatal_NotValidFStarFile ()
-          (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+          (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
           (Obj.magic uu___1)
 let (lowercase_module_name : Prims.string -> Prims.string) =
   fun f ->
