@@ -55,7 +55,7 @@ lib-core: lib-common .force
 lib-pulse: plugin lib-common .force
 	$(MAKE) -f mk/lib-pulse.mk
 
-local-install: PREFIX=$(CURDIR)/out
+local-install: override PREFIX=$(CURDIR)/out
 local-install: do-install
 
 .PHONY: do-install
