@@ -7,7 +7,8 @@ For documentation on how to use Pulse, see https://fstar-lang.org/tutorial/book/
 This repository has been designed to closely follow the Filesystem
 Hierarchy Standard (FHS), so that it can be used the same way in all
 the following cases:
-* direct use of the Pulse repository clone
+* direct use of the Pulse repository clone: after building (with `make`),
+  Pulse is installed in the out/ directory
 * installation into a FHS-like hierarchy (e.g. `/usr/local`)
 * installation as an _opam_ package, using the _opam_ package manager for
   OCaml
