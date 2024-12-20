@@ -11,7 +11,7 @@ FSTAR_DEFAULT_GOAL ?= build
 .DEFAULT_GOAL := $(FSTAR_DEFAULT_GOAL)
 
 all-packages: package-1 package-2 package-src-1 package-src-2
-all: stage3-bare all-packages
+all: stage3-bare all-packages lib-fsharp
 
 ### STAGES
 
@@ -196,6 +196,26 @@ $(FSTAR2_FULL_EXE): $(FSTAR2_FULL_EXE).src _force
 	$(call bold_msg, "BUILD", "STAGE 2 PLUGLIB")
 	$(MAKE) -C stage2/ libplugin FSTAR_DUNE_RELEASE=1
 
+# F# library, from stage 2.
+lib-fsharp.src: $(FSTAR2_FULL_EXE) 2.alib.src _force
+	# NB: shares checked files from 2.alib.src,
+	# hence the dependency, though it is not quite precise.
+	$(call bold_msg, "EXTRACT", "FSHARP LIB")
+	# Note: FStar.Map and FStar.Set are special-cased
+	env \
+	  SRC=ulib/ \
+	  FSTAR_EXE=$(FSTAR2_FULL_EXE) \
+	  CACHE_DIR=stage2/ulib.checked/ \
+	  OUTPUT_DIR=fsharp/extracted/ \
+	  CODEGEN=FSharp \
+	  TAG=fsharplib \
+	  DEPFLAGS='--extract -FStar.Map,-FStar.Set' \
+	  $(MAKE) -f mk/lib.mk all-fs
+
+.PHONY: lib-fsharp
+lib-fsharp: lib-fsharp.src
+	$(MAKE) -C fsharp/VS all
+
 # Stage 3 is different, we don't build it, we just check that the
 # extracted OCaml files coincide exactly with stage2. We also do not
 # extract the plugins, as is stage2/fstarc and stage3/fstarc coincide,
@@ -316,7 +336,7 @@ examples: _force
 
 ci: _force
 	+$(MAKE) 2
-	+$(MAKE) test
+	+$(MAKE) test lib-fsharp
 
 do-save: _force
 	$(call bold_msg,"SAVE", "$(FROM)  -->  $(TO)")
