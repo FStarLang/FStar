@@ -118,4 +118,5 @@ pulse2rust: lib-pulse plugin
 ci: all test
 
 .PHONY: install
+install: PREFIX ?= /usr/local
 install: do-install
