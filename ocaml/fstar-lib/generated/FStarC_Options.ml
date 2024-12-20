@@ -149,7 +149,7 @@ let (as_string : option_val -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | String b -> b
-    | Path b -> FStarC_Common.try_convert_file_name_to_mixed b
+    | Path b -> b
     | uu___1 -> failwith "Impos: expected String"
 let (as_list' : option_val -> option_val Prims.list) =
   fun uu___ ->
@@ -4146,11 +4146,7 @@ let (parse_cmd_line :
         (parse_filename_arg all_specs_getopt true) in
     let res1 =
       if res = FStarC_Getopt.Success then set_error_flags () else res in
-    let uu___3 =
-      let uu___4 = FStarC_Compiler_Effect.op_Bang file_list_ in
-      FStarC_Compiler_List.map FStarC_Common.try_convert_file_name_to_mixed
-        uu___4 in
-    (res1, uu___3)
+    let uu___3 = FStarC_Compiler_Effect.op_Bang file_list_ in (res1, uu___3)
 let (file_list : unit -> Prims.string Prims.list) =
   fun uu___ -> FStarC_Compiler_Effect.op_Bang file_list_
 let (restore_cmd_line_options :

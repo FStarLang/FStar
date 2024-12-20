@@ -184,19 +184,12 @@ let (go_normal : unit -> unit) =
           | FStarC_Getopt.Success when
               (FStarC_Options.print ()) || (FStarC_Options.print_in_place ())
               ->
-              (if
-                 Prims.op_Negation
-                   FStarC_Platform.is_fstar_compiler_using_ocaml
-               then
-                 failwith
-                   "You seem to be using the F#-generated version of the compiler ; \\o\n                   reindenting is not known to work yet with this version"
-               else ();
-               (let printing_mode =
-                  let uu___4 = FStarC_Options.print () in
-                  if uu___4
-                  then FStarC_Prettyprint.FromTempToStdout
-                  else FStarC_Prettyprint.FromTempToFile in
-                FStarC_Prettyprint.generate printing_mode filenames))
+              let printing_mode =
+                let uu___3 = FStarC_Options.print () in
+                if uu___3
+                then FStarC_Prettyprint.FromTempToStdout
+                else FStarC_Prettyprint.FromTempToFile in
+              FStarC_Prettyprint.generate printing_mode filenames
           | FStarC_Getopt.Success when
               let uu___3 = FStarC_Options.read_checked_file () in
               FStar_Pervasives_Native.uu___is_Some uu___3 ->
@@ -411,79 +404,6 @@ let (go : unit -> unit) =
     | uu___1::"--ocamlopt_plugin"::rest ->
         FStarC_OCaml.exec_ocamlopt_plugin rest
     | uu___1 -> go_normal ()
-let (lazy_chooser :
-  FStarC_Syntax_Syntax.lazy_kind ->
-    FStarC_Syntax_Syntax.lazyinfo -> FStarC_Syntax_Syntax.term)
-  =
-  fun k ->
-    fun i ->
-      match k with
-      | FStarC_Syntax_Syntax.BadLazy ->
-          failwith "lazy chooser: got a BadLazy"
-      | FStarC_Syntax_Syntax.Lazy_bv ->
-          FStarC_Reflection_V2_Embeddings.unfold_lazy_bv i
-      | FStarC_Syntax_Syntax.Lazy_namedv ->
-          FStarC_Reflection_V2_Embeddings.unfold_lazy_namedv i
-      | FStarC_Syntax_Syntax.Lazy_binder ->
-          FStarC_Reflection_V2_Embeddings.unfold_lazy_binder i
-      | FStarC_Syntax_Syntax.Lazy_letbinding ->
-          FStarC_Reflection_V2_Embeddings.unfold_lazy_letbinding i
-      | FStarC_Syntax_Syntax.Lazy_optionstate ->
-          FStarC_Reflection_V2_Embeddings.unfold_lazy_optionstate i
-      | FStarC_Syntax_Syntax.Lazy_fvar ->
-          FStarC_Reflection_V2_Embeddings.unfold_lazy_fvar i
-      | FStarC_Syntax_Syntax.Lazy_comp ->
-          FStarC_Reflection_V2_Embeddings.unfold_lazy_comp i
-      | FStarC_Syntax_Syntax.Lazy_env ->
-          FStarC_Reflection_V2_Embeddings.unfold_lazy_env i
-      | FStarC_Syntax_Syntax.Lazy_sigelt ->
-          FStarC_Reflection_V2_Embeddings.unfold_lazy_sigelt i
-      | FStarC_Syntax_Syntax.Lazy_universe ->
-          FStarC_Reflection_V2_Embeddings.unfold_lazy_universe i
-      | FStarC_Syntax_Syntax.Lazy_proofstate ->
-          FStarC_Tactics_Embedding.unfold_lazy_proofstate i
-      | FStarC_Syntax_Syntax.Lazy_goal ->
-          FStarC_Tactics_Embedding.unfold_lazy_goal i
-      | FStarC_Syntax_Syntax.Lazy_doc ->
-          FStarC_Reflection_V2_Embeddings.unfold_lazy_doc i
-      | FStarC_Syntax_Syntax.Lazy_uvar ->
-          FStarC_Syntax_Util.exp_string "((uvar))"
-      | FStarC_Syntax_Syntax.Lazy_universe_uvar ->
-          FStarC_Syntax_Util.exp_string "((universe_uvar))"
-      | FStarC_Syntax_Syntax.Lazy_issue ->
-          FStarC_Syntax_Util.exp_string "((issue))"
-      | FStarC_Syntax_Syntax.Lazy_ident ->
-          FStarC_Syntax_Util.exp_string "((ident))"
-      | FStarC_Syntax_Syntax.Lazy_tref ->
-          FStarC_Syntax_Util.exp_string "((tref))"
-      | FStarC_Syntax_Syntax.Lazy_embedding (uu___, t) ->
-          FStarC_Thunk.force t
-      | FStarC_Syntax_Syntax.Lazy_extension s ->
-          let uu___ = FStarC_Compiler_Util.format1 "((extension %s))" s in
-          FStarC_Syntax_Util.exp_string uu___
-let (setup_hooks : unit -> unit) =
-  fun uu___ ->
-    FStarC_Compiler_Effect.op_Colon_Equals
-      FStarC_Syntax_DsEnv.ugly_sigelt_to_string_hook
-      (FStarC_Class_Show.show FStarC_Syntax_Print.showable_sigelt);
-    FStarC_Errors.set_parse_warn_error FStarC_Parser_ParseIt.parse_warn_error;
-    FStarC_Compiler_Effect.op_Colon_Equals FStarC_Syntax_Syntax.lazy_chooser
-      (FStar_Pervasives_Native.Some lazy_chooser);
-    FStarC_Compiler_Effect.op_Colon_Equals FStarC_Syntax_Util.tts_f
-      (FStar_Pervasives_Native.Some
-         (FStarC_Class_Show.show FStarC_Syntax_Print.showable_term));
-    FStarC_Compiler_Effect.op_Colon_Equals FStarC_Syntax_Util.ttd_f
-      (FStar_Pervasives_Native.Some
-         (FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term));
-    FStarC_Compiler_Effect.op_Colon_Equals
-      FStarC_TypeChecker_Normalize.unembed_binder_knot
-      (FStar_Pervasives_Native.Some FStarC_Reflection_V2_Embeddings.e_binder);
-    FStarC_Compiler_List.iter
-      FStarC_Tactics_Interpreter.register_tactic_primitive_step
-      FStarC_Tactics_V1_Primops.ops;
-    FStarC_Compiler_List.iter
-      FStarC_Tactics_Interpreter.register_tactic_primitive_step
-      FStarC_Tactics_V2_Primops.ops
 let (handle_error : Prims.exn -> unit) =
   fun e ->
     (let uu___1 = FStarC_Errors.handleable e in
@@ -507,25 +427,39 @@ let (handle_error : Prims.exn -> unit) =
         else ()));
     cleanup ();
     report_errors []
+let (self_check : unit -> unit) =
+  fun uu___ ->
+    let uu___2 =
+      FStarC_Platform.is_cygwin &&
+        (let uu___3 =
+           FStarC_Compiler_Util.expand_environment_variable "FSTAR_CYGWIN" in
+         FStar_Pervasives_Native.uu___is_None uu___3) in
+    if uu___2
+    then
+      (FStarC_Compiler_Util.print_error
+         "F* is not officially supported on Cygwin, you may experience many issues.\nYou can instead use a native Windows build of F* (e.g. compiled with MinGW).\nTo go ahead at your own risk, set the environment variable FSTAR_CYGWIN to 1.\n";
+       FStarC_Compiler_Effect.exit Prims.int_one)
+    else ()
 let main : 'uuuuu . unit -> 'uuuuu =
   fun uu___ ->
     try
       (fun uu___1 ->
          match () with
          | () ->
-             (setup_hooks ();
-              (let uu___3 = FStarC_Compiler_Util.record_time_ms go in
-               match uu___3 with
-               | (uu___4, time) ->
-                   ((let uu___6 = FStarC_Options.query_stats () in
-                     if uu___6
+             (self_check ();
+              FStarC_Hooks.setup_hooks ();
+              (let uu___4 = FStarC_Compiler_Util.record_time_ms go in
+               match uu___4 with
+               | (uu___5, time) ->
+                   ((let uu___7 = FStarC_Options.query_stats () in
+                     if uu___7
                      then
-                       let uu___7 = FStarC_Compiler_Util.string_of_int time in
-                       let uu___8 =
-                         let uu___9 = FStarC_Getopt.cmdline () in
-                         FStarC_Compiler_String.concat " " uu___9 in
+                       let uu___8 = FStarC_Compiler_Util.string_of_int time in
+                       let uu___9 =
+                         let uu___10 = FStarC_Getopt.cmdline () in
+                         FStarC_Compiler_String.concat " " uu___10 in
                        FStarC_Compiler_Util.print2_error
-                         "TOTAL TIME %s ms: %s\n" uu___7 uu___8
+                         "TOTAL TIME %s ms: %s\n" uu___8 uu___9
                      else ());
                     cleanup ();
                     FStarC_Compiler_Effect.exit Prims.int_zero)))) ()

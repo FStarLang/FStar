@@ -71,7 +71,7 @@ let (unify :
             fun check ->
               (let uu___1 = FStarC_Compiler_Util.string_of_int i in
                FStarC_Compiler_Util.print1 "%s ..." uu___1);
-              (let uu___2 = FStarC_Main.process_args () in ());
+              (let uu___2 = FStarC_Options.parse_cmd_line () in ());
               (let uu___3 =
                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term x in
                let uu___4 =
@@ -162,7 +162,7 @@ let (check_core :
       fun guard_ok ->
         fun x ->
           fun y ->
-            (let uu___1 = FStarC_Main.process_args () in ());
+            (let uu___1 = FStarC_Options.parse_cmd_line () in ());
             (let env = tcenv () in
              let res =
                if subtyping
@@ -199,7 +199,7 @@ let (check_core_typing :
   fun i ->
     fun e ->
       fun t ->
-        (let uu___1 = FStarC_Main.process_args () in ());
+        (let uu___1 = FStarC_Options.parse_cmd_line () in ());
         (let env = tcenv () in
          (let uu___2 = FStarC_TypeChecker_Core.check_term env e t true in
           match uu___2 with
@@ -299,7 +299,7 @@ let (run_all : unit -> Prims.bool) =
                "(forall (x:int). (forall (y:int). (forall (z:int). y==z)))" in
            FStarC_TypeChecker_Common.NonTrivial uu___15 in
          unify1 (Prims.of_int (8)) [] uu___12 uu___13 uu___14);
-        (let uu___13 = FStarC_Main.process_args () in ());
+        (let uu___13 = FStarC_Options.parse_cmd_line () in ());
         (let uu___13 =
            let uu___14 =
              FStarC_Tests_Pars.tc "fun (u:Type0 -> Type0) (x:Type0) -> u x" in

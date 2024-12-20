@@ -152,9 +152,6 @@ let go_normal () =
 
     (* --print: Emit files in canonical source syntax *)
     | Success when Options.print () || Options.print_in_place () ->
-      if not Platform.is_fstar_compiler_using_ocaml then
-        failwith "You seem to be using the F#-generated version of the compiler ; \o
-                   reindenting is not known to work yet with this version";
       let printing_mode =
         if Options.print ()
         then Prettyprint.FromTempToStdout
@@ -307,48 +304,6 @@ let go () =
 
   | _ -> go_normal ()
 
-(* This is pretty awful. Now that we have Lazy_embedding, we can get rid of this table. *)
-let lazy_chooser (k:Syntax.Syntax.lazy_kind) (i:Syntax.Syntax.lazyinfo) : Syntax.Syntax.term
-  = match k with
-    (* TODO: explain *)
-    | FStarC.Syntax.Syntax.BadLazy               -> failwith "lazy chooser: got a BadLazy"
-    | FStarC.Syntax.Syntax.Lazy_bv               -> RE.unfold_lazy_bv          i
-    | FStarC.Syntax.Syntax.Lazy_namedv           -> RE.unfold_lazy_namedv      i
-    | FStarC.Syntax.Syntax.Lazy_binder           -> RE.unfold_lazy_binder      i
-    | FStarC.Syntax.Syntax.Lazy_letbinding       -> RE.unfold_lazy_letbinding  i
-    | FStarC.Syntax.Syntax.Lazy_optionstate      -> RE.unfold_lazy_optionstate i
-    | FStarC.Syntax.Syntax.Lazy_fvar             -> RE.unfold_lazy_fvar        i
-    | FStarC.Syntax.Syntax.Lazy_comp             -> RE.unfold_lazy_comp        i
-    | FStarC.Syntax.Syntax.Lazy_env              -> RE.unfold_lazy_env         i
-    | FStarC.Syntax.Syntax.Lazy_sigelt           -> RE.unfold_lazy_sigelt      i
-    | FStarC.Syntax.Syntax.Lazy_universe         -> RE.unfold_lazy_universe    i
-
-    | FStarC.Syntax.Syntax.Lazy_proofstate       -> Tactics.Embedding.unfold_lazy_proofstate i
-    | FStarC.Syntax.Syntax.Lazy_goal             -> Tactics.Embedding.unfold_lazy_goal i
-
-    | FStarC.Syntax.Syntax.Lazy_doc              -> RE.unfold_lazy_doc i
-
-    | FStarC.Syntax.Syntax.Lazy_uvar             -> FStarC.Syntax.Util.exp_string "((uvar))"
-    | FStarC.Syntax.Syntax.Lazy_universe_uvar    -> FStarC.Syntax.Util.exp_string "((universe_uvar))"
-    | FStarC.Syntax.Syntax.Lazy_issue            -> FStarC.Syntax.Util.exp_string "((issue))"
-    | FStarC.Syntax.Syntax.Lazy_ident            -> FStarC.Syntax.Util.exp_string "((ident))"
-    | FStarC.Syntax.Syntax.Lazy_tref             -> FStarC.Syntax.Util.exp_string "((tref))"
-
-    | FStarC.Syntax.Syntax.Lazy_embedding (_, t) -> Thunk.force t
-    | FStarC.Syntax.Syntax.Lazy_extension s      -> FStarC.Syntax.Util.exp_string (format1 "((extension %s))" s)
-
-// This is called directly by the Javascript port (it doesn't call Main)
-let setup_hooks () =
-    FStarC.Syntax.DsEnv.ugly_sigelt_to_string_hook := show;
-    FStarC.Errors.set_parse_warn_error FStarC.Parser.ParseIt.parse_warn_error;
-    FStarC.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
-    FStarC.Syntax.Util.tts_f := Some show;
-    FStarC.Syntax.Util.ttd_f := Some Class.PP.pp;
-    FStarC.TypeChecker.Normalize.unembed_binder_knot := Some RE.e_binder;
-    List.iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V1.Primops.ops;
-    List.iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V2.Primops.ops;
-    ()
-
 let handle_error e =
     if FStarC.Errors.handleable e then
       FStarC.Errors.err_exn e;
@@ -359,9 +314,21 @@ let handle_error e =
     cleanup();
     report_errors []
 
+(* Perform some self-checks to see if we should warn or error out immediately. *)
+let self_check () =
+  (* We are not testing Cygwin builds at all, so warn the user about this. *)
+  if Platform.is_cygwin && None? (expand_environment_variable "FSTAR_CYGWIN") then begin
+    Util.print_error "F* is not officially supported on Cygwin, you may experience many issues.\n\
+                      You can instead use a native Windows build of F* (e.g. compiled with MinGW).\n\
+                      To go ahead at your own risk, set the environment variable FSTAR_CYGWIN to 1.\n";
+    exit 1
+  end;
+  ()
+
 let main () =
   try
-    setup_hooks ();
+    self_check ();
+    Hooks.setup_hooks ();
     let _, time = Util.record_time_ms go in
     if FStarC.Options.query_stats()
     then Util.print2_error "TOTAL TIME %s ms: %s\n"

@@ -258,7 +258,7 @@ let run_either i r expected normalizer =
 //    force_term r;
     BU.print1 "%s: ... \n\n" (BU.string_of_int i);
     let tcenv = Pars.init() in
-    FStarC.Main.process_args() |> ignore; //set the command line args for debugging
+    Options.parse_cmd_line() |> ignore; //set the command line args for debugging
     let x = normalizer tcenv r in
     Options.init(); //reset them
     Options.set_option "print_universes" (Options.Bool true);

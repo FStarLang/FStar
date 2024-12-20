@@ -315,7 +315,7 @@ let (init_once : unit -> unit) =
                 FStarC_TypeChecker_Env.set_current_module env3 test_lid in
               FStarC_Compiler_Effect.op_Colon_Equals tcenv_ref
                 (FStar_Pervasives_Native.Some env4)))
-let (uu___0 : unit) = FStarC_Main.setup_hooks (); init_once ()
+let (uu___0 : unit) = FStarC_Hooks.setup_hooks (); init_once ()
 let (init : unit -> FStarC_TypeChecker_Env.env) =
   fun uu___ ->
     let uu___1 = FStarC_Compiler_Effect.op_Bang tcenv_ref in
@@ -647,7 +647,7 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
              else Obj.magic (Obj.repr (failwith "unreachable")))) uu___1)
 let (test_hashes : unit -> unit) =
   fun uu___ ->
-    (let uu___2 = FStarC_Main.process_args () in ());
+    (let uu___2 = FStarC_Options.parse_cmd_line () in ());
     pars_and_tc_fragment "type unary_nat = | U0 | US of unary_nat";
     (let test_one_hash n =
        let rec aux n1 =
