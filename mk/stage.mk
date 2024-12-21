@@ -48,7 +48,6 @@ clean: _force
 install: fstarc-bare fstarc-full libapp libplugin
 	# Seems to need one final build?
 	dune build $(FSTAR_DUNE_BUILD_OPTIONS) --root=dune
-	rm -rf out
 	dune install $(FSTAR_DUNE_OPTIONS) --root=dune --prefix=$(CURDIR)/out
 	# Install library (cp -u: don't copy unless newer)
 	cp -u -t out/lib/fstar ulib/*.fst
@@ -57,6 +56,6 @@ install: fstarc-bare fstarc-full libapp libplugin
 	cp -u -r -t out/lib/fstar ulib/experimental
 	cp -u -r -t out/lib/fstar ulib/legacy
 	# Install checked files for the library
-	mkdir out/lib/fstar/.checked
+	mkdir -p out/lib/fstar/.checked
 	cp -u -r -t out/lib/fstar/.checked ulib.checked/*
 	# Should we make sure checked files have newer timestamp?
