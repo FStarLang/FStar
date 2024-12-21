@@ -52,7 +52,8 @@ jobs:
     #     pak:
     #       - fstar-ci.tar.gz
     #       - fstar-ci-stage1.tar.gz
-    runs-on: [self-hosted, linux, X64] # self-hosted so we use fast runners
+    # runs-on: [self-hosted, linux, X64] # self-hosted so we use fast runners
+    runs-on: ubuntu-latest
     container: mtzguido/dev-base
     steps:
       - name: Cleanup
