@@ -15,7 +15,8 @@ jobs:
     # files and compiled versions of fstar_lib and fstar_plugin_lib.
     # Also, we build a full stage 1 compiler and its libraries, and
     # make all possible artifacts.
-    runs-on: [self-hosted, linux, X64] # self-hosted so we use fast runners
+    # runs-on: [self-hosted, linux, X64] # self-hosted so we use fast runners
+    runs-on: ubuntu-latest
     container: mtzguido/dev-base
     steps:
       - name: Cleanup
