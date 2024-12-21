@@ -324,14 +324,33 @@ package-src-2: $(FSTAR2_FULL_EXE).src 2.alib.src 2.plib.src _force
 package: package-2
 package-src: package-src-2
 
-test: unit-tests examples
+test: test-2
 
-unit-tests: FSTAR_EXE=$(abspath out/bin/fstar.exe)
-unit-tests: _force
+test-1: override FSTAR_EXE := $(abspath stage1/out/bin/fstar.exe)
+test-1: stage1
+	$(MAKE) _test FSTAR_EXE=$(FSTAR_EXE)
+
+test-2: override FSTAR_EXE := $(abspath stage2/out/bin/fstar.exe)
+test-2: stage2
+	$(MAKE) _test FSTAR_EXE=$(FSTAR_EXE)
+
+unit-tests: override FSTAR_EXE := $(abspath stage2/out/bin/fstar.exe)
+unit-tests: _unit-tests
+
+# Use directly only at your own risk.
+_test: FSTAR_EXE ?= $(abspath out/bin/fstar.exe)
+_test: _unit-tests _examples
+
+need_fstar_exe:
+	if [ -z "$(FSTAR_EXE)" ]; then \
+		echo "This rule needs FSTAR_EXE defined."; \
+		false; \
+	fi
+
+_unit-tests: need_fstar_exe _force
 	+$(MAKE) -C tests all FSTAR_EXE=$(FSTAR_EXE)
 
-examples: FSTAR_EXE=$(abspath out/bin/fstar.exe)
-examples: _force
+_examples: need_fstar_exe _force
 	+$(MAKE) -C examples all FSTAR_EXE=$(FSTAR_EXE)
 
 ci: _force
@@ -462,7 +481,7 @@ distclean: clean
 help:
 	echo "Main rules:"
 	echo "  build              build the compiler and libraries, and install it in out/"
-	echo "  test               run internal tests and examples"
+	echo "  test               run internal tests and examples (implies build)"
 	echo "  package            build a binary package"
 	echo "  src-archive        build an OCaml source package"
 	echo "  clean              clean everything except built packages"
