@@ -11,15 +11,28 @@ case "$arch" in
   arm64) arch=aarch64 ;;
 esac
 
-declare -A release_url
-release_url["Linux-x86_64-4.8.5"]="https://github.com/Z3Prover/z3/releases/download/Z3-4.8.5/z3-4.8.5-x64-ubuntu-16.04.zip"
-release_url["Darwin-x86_64-4.8.5"]="https://github.com/Z3Prover/z3/releases/download/Z3-4.8.5/z3-4.8.5-x64-osx-10.14.2.zip"
-release_url["Windows-x86_64-4.8.5"]="https://github.com/Z3Prover/z3/releases/download/Z3-4.8.5/z3-4.8.5-x64-win.zip"
-release_url["Linux-x86_64-4.13.3"]="https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-glibc-2.35.zip"
-release_url["Linux-aarch64-4.13.3"]="https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-arm64-glibc-2.34.zip"
-release_url["Darwin-x86_64-4.13.3"]="https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-osx-13.7.zip"
-release_url["Darwin-aarch64-4.13.3"]="https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-arm64-osx-13.7.zip"
-release_url["Windows-x86_64-4.13.3"]="https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-win.zip"
+release_url=(
+  "Linux-x86_64-4.8.5":"https://github.com/Z3Prover/z3/releases/download/Z3-4.8.5/z3-4.8.5-x64-ubuntu-16.04.zip"
+  "Darwin-x86_64-4.8.5":"https://github.com/Z3Prover/z3/releases/download/Z3-4.8.5/z3-4.8.5-x64-osx-10.14.2.zip"
+  "Windows-x86_64-4.8.5":"https://github.com/Z3Prover/z3/releases/download/Z3-4.8.5/z3-4.8.5-x64-win.zip"
+  "Linux-x86_64-4.13.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-glibc-2.35.zip"
+  "Linux-aarch64-4.13.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-arm64-glibc-2.34.zip"
+  "Darwin-x86_64-4.13.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-osx-13.7.zip"
+  "Darwin-aarch64-4.13.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-arm64-osx-13.7.zip"
+  "Windows-x86_64-4.13.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-win.zip"
+)
+
+get_url() {
+  local key elem
+  key="$1"
+
+  for elem in "${release_url[@]}"; do
+    if [ "${elem%%:*}" = "$key" ]; then
+      echo -n "${elem#*:}"
+      break
+    fi
+  done
+}
 
 trap "exit 1" HUP INT PIPE QUIT TERM
 cleanup() {
@@ -30,6 +43,7 @@ cleanup() {
 trap "cleanup" EXIT
 
 download_z3() {
+  local url version destination_file_name base_name z3_path
   url="$1"
   version="$2"
   destination_file_name="$3"
@@ -63,7 +77,7 @@ mkdir -p "$dest_dir"
 
 for z3_ver in 4.8.5 4.13.3; do
   key="$kernel-$arch-$z3_ver"
-  url="${release_url[$key]:-}"
+  url="$(get_url "$key")"
 
   destination_file_name="$dest_dir/z3-$z3_ver"
   if [ "$kernel" = Windows ]; then destination_file_name="$destination_file_name.exe"; fi
