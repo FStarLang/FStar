@@ -1,4 +1,4 @@
-OTHERFLAGS += --include ../lib
+OTHERFLAGS += --include ../out/lib/pulse
 OTHERFLAGS += --include ../share/pulse/examples
 OTHERFLAGS += --ext pulse:extract_ocaml_bare
 
@@ -12,11 +12,14 @@ DEPFLAGS += --extract +Pulse.Lib.Dv
 include fstar.mk
 
 .PHONY: all
-all: run
+all: dune
 
 .PHONY: dune
 dune: $(ALL_ML_FILES)
 	opam exec --switch=5.1.1 -- dune build --root=dune
+
+.PHONY: test
+test: run
 
 .PHONY: run
 run: dune

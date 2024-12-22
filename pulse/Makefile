@@ -18,6 +18,7 @@ endif
 all: local-install # build plugin and library, and install in out/
 all: lib-core      # also check implentation files in core
 all: pulse2rust    # and pulse2rust tool
+all: qs            # build quicksort example
 
 .PHONY: .force
 .force:
@@ -107,7 +108,11 @@ test-pulse2rust: test-share # test-pulse2rust uses .checked files from share/
 	+$(MAKE) -C pulse2rust test
 
 .PHONY: test
-test: test-pulse test-share test-pulse2rust
+test: test-pulse test-share test-pulse2rust test-qs
+
+.PHONY: test-qs
+test-qs:
+	$(MAKE) -C qs test
 
 .PHONY: pulse2rust
 pulse2rust: lib-pulse plugin
