@@ -9,7 +9,7 @@ CODEGEN := Plugin
 ROOTS := $(shell find $(SRC) -name '*.fst' -o -name '*.fsti')
 FSTAR_OPTIONS += --include $(FSTAR_HOME)/src
 FSTAR_OPTIONS += --include $(FSTAR_HOME)/src/.cache.boot
-EXTRACT += --extract '-*,+ExtractPulse,+ExtractPulseC'
+EXTRACT += --extract '-*,+ExtractPulse,+ExtractPulseC,+ExtractPulseOCaml'
 FSTAR_OPTIONS += --lax --MLish --MLish_effect FStarC.Compiler.Effect
 
 DEPFLAGS += --already_cached 'FStarC'
