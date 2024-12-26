@@ -65,6 +65,15 @@ for z3_ver in 4.8.5 4.13.3; do
   key="$kernel-$arch-$z3_ver"
   url="${release_url[$key]:-}"
 
+  if [[ "$key" == "Darwin-aarch64-4.8.5" ]]; then
+    # NOTE: The is no ARM build of Z3 4.8.5 in the releases page, but
+    # the x64 build works fine in MacOS using Rosetta, so we can just download
+    # that. However make sure to print out a message to let the user know.
+    echo ">>> NOTE! This script will install an x64 version of Z3 4.8.5."
+    echo ">>> Make sure Rosetta 2 is installed in your system so it can be run."
+    url="${release_url["Darwin-x86_64-4.8.5"]}"
+  fi
+
   destination_file_name="$dest_dir/z3-$z3_ver"
   if [[ "$kernel" = Windows ]]; then destination_file_name="$destination_file_name.exe"; fi
 
