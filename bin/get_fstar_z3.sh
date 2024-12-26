@@ -30,18 +30,18 @@ cleanup() {
 trap "cleanup" EXIT
 
 download_z3() {
-  url="$1"
-  version="$2"
-  destination_file_name="$3"
+  local url="$1"
+  local version="$2"
+  local destination_file_name="$3"
 
   if [ -z "${tmp_dir:-}" ]; then
     tmp_dir="$(mktemp -d --tmpdir get_fstar_z3.XXXXXXX)"
   fi
 
   echo ">>> Downloading Z3 $version from $url ..."
-  base_name="$(basename "$url")"
+  local base_name="$(basename "$url")"
 
-  z3_path="${base_name%.zip}/bin/z3"
+  local z3_path="${base_name%.zip}/bin/z3"
   if [ "$kernel" = Windows ]; then z3_path="$z3_path.exe"; fi
 
   pushd "$tmp_dir"
@@ -66,11 +66,11 @@ for z3_ver in 4.8.5 4.13.3; do
   url="${release_url[$key]:-}"
 
   destination_file_name="$dest_dir/z3-$z3_ver"
-  if [ "$kernel" = Windows ]; then destination_file_name="$destination_file_name.exe"; fi
+  if [[ "$kernel" = Windows ]]; then destination_file_name="$destination_file_name.exe"; fi
 
-  if [ -f "$destination_file_name" ]; then
+  if [[ -f "$destination_file_name" ]]; then
     echo ">>> Z3 $z3_ver already downloaded to $destination_file_name"
-  elif [ -z "$url" ]; then
+  elif [[ -z "$url" ]]; then
     echo ">>> Z3 $z3_ver not available for this architecture, skipping..."
   else
     download_z3 "$url" "$z3_ver" "$destination_file_name"
