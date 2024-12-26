@@ -629,6 +629,7 @@ let insert_repr #kt #vt #sz
   let res = insert_repr_walk #kt #vt #sz #spec repr k v 0 cidx () () in
   res
 
+#push-options "--z3rlimit_factor 2"
 let rec delete_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt)) 
   (repr : repr_t_sz kt vt sz{pht_models spec repr}) (k : kt)
   (off:nat{off <= sz}) (cidx:nat{cidx = canonical_index k repr})
@@ -657,6 +658,7 @@ let rec delete_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
     | Clean -> repr
 
     | Zombie -> delete_repr_walk #kt #vt #sz #spec repr k (off+1) cidx () ()
+#pop-options
 
 let delete_repr #kt #vt #sz (#spec : erased (spec_t kt vt))
               (repr : repr_t_sz kt vt sz{pht_models spec repr})
