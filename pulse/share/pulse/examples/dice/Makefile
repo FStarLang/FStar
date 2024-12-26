@@ -11,9 +11,6 @@
 
 # include $(PULSE_HOME)/share/pulse/Makefile.include
 
-# .PHONY: test-c
-# test-c: verify
-#         +$(MAKE) -f c.Makefile
 
 
 # NOTE!!!!: no subdirs, we just rely on fstar.include
@@ -29,3 +26,11 @@ FSTAR_FILES != find . -name '*.fst' -o -name '*.fsti'
 
 PULSE_ROOT ?= ../../../..
 include $(PULSE_ROOT)/mk/test.mk
+
+# Extra test, after verifying
+.PHONY: test-c
+test-c: verify
+	+$(MAKE) -f c.Makefile
+
+# Add a dependency for 'all'
+all: test-c
