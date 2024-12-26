@@ -111,7 +111,7 @@ test-pulse2rust: test-share # test-pulse2rust uses .checked files from share/
 test: test-pulse test-share test-pulse2rust test-qs
 
 .PHONY: test-qs
-test-qs:
+test-qs: local-install
 	$(MAKE) -C qs test
 
 .PHONY: pulse2rust
