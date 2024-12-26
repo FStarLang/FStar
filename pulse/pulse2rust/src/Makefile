@@ -5,10 +5,10 @@ TAG := pulse2rust
 SRC := .
 CACHE_DIR := _cache
 OUTPUT_DIR := ocaml/generated
-CODEGEN := Plugin
+CODEGEN := PluginNoLib
 ROOTS := $(shell find $(SRC) -name '*.fst' -o -name '*.fsti')
 FSTAR_OPTIONS += --include $(FSTAR_HOME)/src
-FSTAR_OPTIONS += --include $(FSTAR_HOME)/src/.cache.boot
+FSTAR_OPTIONS += --include $(FSTAR_HOME)/stage2/fstarc.checked
 EXTRACT += --extract '-*,+Pulse2Rust'
 FSTAR_OPTIONS += --lax --MLish --MLish_effect FStarC.Compiler.Effect
 

@@ -5,13 +5,13 @@ TAG := syntax_extension
 SRC := src/syntax_extension
 CACHE_DIR := build/$(TAG).checked
 OUTPUT_DIR := build/$(TAG).ml
-CODEGEN := Plugin
+CODEGEN := PluginNoLib
 ROOTS := $(shell find $(SRC) -name '*.fst' -o -name '*.fsti')
 FSTAR_OPTIONS += --include $(FSTAR_HOME)/src
-FSTAR_OPTIONS += --include $(FSTAR_HOME)/src/.cache.boot
+FSTAR_OPTIONS += --include $(FSTAR_HOME)/stage2/fstarc.checked
 EXTRACT += --extract '-*,+PulseSyntaxExtension'
 FSTAR_OPTIONS += --lax --MLish --MLish_effect FStarC.Compiler.Effect
 
-DEPFLAGS += --already_cached 'FStarC'
+DEPFLAGS += --already_cached 'Prims,FStarC'
 
 include $(PULSE_ROOT)/mk/boot.mk

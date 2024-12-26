@@ -2,7 +2,7 @@
 
 (executable
  (name main)
- (libraries batteries fstar.lib menhirLib)
+ (libraries batteries fstar.pluginlib menhirLib)
  (foreign_archives rustast_bindings)
  (flags (:standard -w -27-33-8-26))
 )

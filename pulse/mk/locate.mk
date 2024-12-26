@@ -6,7 +6,7 @@ endif
 
 ifeq ($(FSTAR_EXE),)
 ifneq ($(FSTAR_HOME),)
-FSTAR_EXE := $(FSTAR_HOME)/bin/fstar.exe
+FSTAR_EXE := $(FSTAR_HOME)/out/bin/fstar.exe
 endif
 endif
 
