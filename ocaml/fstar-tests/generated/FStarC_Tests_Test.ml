@@ -18,7 +18,7 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
                         (FStarC_Compiler_Util.print_error msg;
                          FStarC_Compiler_Effect.exit Prims.int_one)
                     | FStarC_Getopt.Empty ->
-                        (FStarC_Main.setup_hooks ();
+                        (FStarC_Hooks.setup_hooks ();
                          (let uu___5 = FStarC_Tests_Pars.init () in ());
                          FStarC_Tests_Pars.parse_incremental_decls ();
                          FStarC_Tests_Pars.parse_incremental_decls_use_lang
@@ -36,7 +36,7 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
                           else ();
                           FStarC_Compiler_Effect.exit Prims.int_zero))
                     | FStarC_Getopt.Success ->
-                        (FStarC_Main.setup_hooks ();
+                        (FStarC_Hooks.setup_hooks ();
                          (let uu___5 = FStarC_Tests_Pars.init () in ());
                          FStarC_Tests_Pars.parse_incremental_decls ();
                          FStarC_Tests_Pars.parse_incremental_decls_use_lang

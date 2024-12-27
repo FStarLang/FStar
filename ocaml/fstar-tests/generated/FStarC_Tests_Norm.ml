@@ -1263,7 +1263,7 @@ let run_either :
           (let uu___1 = FStarC_Compiler_Util.string_of_int i in
            FStarC_Compiler_Util.print1 "%s: ... \n\n" uu___1);
           (let tcenv = FStarC_Tests_Pars.init () in
-           (let uu___2 = FStarC_Main.process_args () in ());
+           (let uu___2 = FStarC_Options.parse_cmd_line () in ());
            (let x = normalizer tcenv r in
             FStarC_Options.init ();
             FStarC_Options.set_option "print_universes"
