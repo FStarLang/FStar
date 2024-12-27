@@ -1,3 +1,17 @@
+(* IMPORTANT!
+
+This file is copied from the F* repo almost verbatim, but
+requires a few changes. Since in the F* build the compiler
+are within the same project, there is no need to `open Fstarcompiler`
+(like above) or qualify some modules, so those changes are manually
+applied here.
+
+Note that `open Fstarcompiler` should be enough, except that it does
+not apply for the interface of the parser, namely the types of
+tokens (see https://gallium.inria.fr/~fpottier/menhir/manual.html#sec9).
+So there also a few explicit module qualifications in the file.
+*)
+
 %{
 (*
  Menhir reports the following warnings:
