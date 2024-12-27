@@ -16,10 +16,15 @@ OTHERFLAGS += $(addprefix --include ,$(SRC_DIRS))
 
 ROOTS = -d # hehe
 
+# NOTE: The rules below extract several example files into rust,
+# so make sure we have their sources and checked files in the include
+# path.
 OTHERFLAGS += --include $(PULSE_EXAMPLES_ROOT)/_cache
 OTHERFLAGS += --include $(PULSE_EXAMPLES_ROOT)/by-example/_cache
 OTHERFLAGS += --include $(PULSE_EXAMPLES_ROOT)/dice/_cache
 OTHERFLAGS += --include $(PULSE_EXAMPLES_ROOT)/dice/common/hacl-c/_cache
+OTHERFLAGS += --include $(PULSE_ROOT)/test
+OTHERFLAGS += --include $(PULSE_ROOT)/test/_cache
 
 OTHERFLAGS += --warn_error -342 --cmi
 OTHERFLAGS += --include $(PULSE_ROOT)/out/lib/pulse
