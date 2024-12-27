@@ -19,7 +19,7 @@ include $(PULSE_ROOT)/mk/boot.mk
 
 KRML ?= $(KRML_HOME)/krml
 
-myall: test
+myall: verify test
 
 extract: $(ALL_KRML_FILES)
 	$(call msg, "KRML")

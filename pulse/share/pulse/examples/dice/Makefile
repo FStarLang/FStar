@@ -1,36 +1,16 @@
-# PULSE_HOME ?= ../../../..
-# PULSE_EXAMPLES_ROOT = $(PULSE_HOME)/share/pulse/examples
-# OUTPUT_DIRECTORY=_output
-# CACHE_DIRECTORY=$(OUTPUT_DIRECTORY)/cache
-# SRC_DIRS = dpe engine l0 external external/hacl external/l0
-# INCLUDE_PATHS += cbor
-# #/Pulse.Lib.HashTable.fst
-# FSTAR_OPTIONS += --warn_error -342
-# FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
-# all: verify
-
-# include $(PULSE_HOME)/share/pulse/Makefile.include
-
-
-
-# NOTE!!!!: no subdirs, we just rely on fstar.include
-# Otherwise we need to state cross-dependencies in each of them,
-# SUBDIRS += cbor
-# SUBDIRS += dpe
-# SUBDIRS += engine
-# SUBDIRS += l0
-# SUBDIRS += external
-
-# Start dep analysis from every file under here.
 FSTAR_FILES != find . -name '*.fst' -o -name '*.fsti'
 
 PULSE_ROOT ?= ../../../..
 include $(PULSE_ROOT)/mk/test.mk
 
-# Extra test, after verifying
+# Extra tests
 .PHONY: test-c
-test-c: verify
+test-c: verify # reuses cache, needs to run after verify
 	+$(MAKE) -f c.Makefile
 
+.PHONY: test-cbor
+test-cbor:
+	+$(MAKE) -C cbor
+
 # Add a dependency for 'all'
-all: test-c
+all: test-c test-cbor
