@@ -8,8 +8,6 @@
 	"include_dirs": [
 		"c",
 		"core",
-		"lib",
-		"lib/class",
-		"lib/pledge"
+		"lib"
 	]
 }

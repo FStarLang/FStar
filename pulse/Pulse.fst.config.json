@@ -6,11 +6,7 @@
     "--z3version", "4.13.3"
   ],
   "include_dirs": [
-    "lib/pulse",
-    "lib/pulse/core",
-    "lib/pulse/lib",
-    "lib/pulse/lib/pledge",
-    "lib/pulse/lib/class",
+    "lib",
     "share/pulse/examples",
     "share/pulse/examples/bug-reports",
     "share/pulse/examples/by-example",
