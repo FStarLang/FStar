@@ -93,6 +93,14 @@ $(OUTPUT_DIR)/$(subst .,_,%).fs:
 	$(call msg, "EXTRACT FS", $(basename $(notdir $@)))
 	$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen FSharp --extract_module $(subst .fst.checked,,$(notdir $<))
 
+$(OUTPUT_DIR)/$(subst .,_,%).krml:
+	$(call msg, "EXTRACT", $(basename $(notdir $@)))
+	$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen krml --extract_module $(subst .fst.checked,,$(notdir $<))
+
+$(OUTPUT_DIR)/%.c: $(OUTPUT_DIR)/%.krml
+	$(call msg, "KRML", $(basename $(notdir $@)))
+	$(KRML_EXE) -header=$(PULSE_ROOT)/mk/krmlheader -bundle $*=* -skip-linking $+ -tmpdir $(OUTPUT_DIR)
+
 # No FSharp compilation in these makefiles, sorry.
 $(OUTPUT_DIR)/%.exe: $(OUTPUT_DIR)/%.ml
 	$(call msg, "OCAMLOPT", $(basename $(notdir $<)))
@@ -150,6 +158,7 @@ __clean:
 clean: __clean
 
 __extract: $(patsubst %.fst,$(OUTPUT_DIR)/%.ml,$(EXTRACT))
+__extract: $(patsubst %.fst,$(OUTPUT_DIR)/%.c,$(EXTRACT_C))
 extract: __extract
 ifeq ($(NOEXTRACT),)
 all: __extract
