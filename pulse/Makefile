@@ -10,15 +10,18 @@ ifeq (3.81,$(MAKE_VERSION))
     install make, then invoke gmake instead of make)
 endif
 
-# NOTE: this default goal will not build pulse2rust or check the
-# implementations files of PulseCore (lib/core). Use `make all` for that.
-.DEFAULT_GOAL := local-install
+# NOTE: this default goal will not build pulse2rust. We do check
+# PulseCore implementation files (lib/core) by choice, but that could be
+# omitted. Use `make all` to build all of this plus pulse2rust.
+.DEFAULT_GOAL := default
+
+.PHONY: default
+default: local-install lib-core
 
 .PHONY: all
 all: local-install # build plugin and library, and install in out/
 all: lib-core      # also check implentation files in core
 all: pulse2rust    # and pulse2rust tool
-all: qs            # build quicksort example
 
 .PHONY: .force
 .force:
