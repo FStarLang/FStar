@@ -279,14 +279,14 @@ do-src-install: _force
 	# Install OCaml sources only
 	.scripts/src-install.sh "$(BROOT)" "$(PREFIX)"
 
-archive: _force
+__do-archive: _force
 	rm -rf $(PREFIX)
 	$(MAKE) do-install
 	$(call bold_msg, "ARCHIVE", $(ARCHIVE))
 	tar czf $(ARCHIVE) -h -C $(PREFIX) .
 	rm -rf $(PREFIX)
 
-src-archive: _force
+__do-src-archive: _force
 	rm -rf $(PREFIX)
 	$(MAKE) do-src-install
 	$(call bold_msg, "SRC ARCHIVE", $(ARCHIVE))
@@ -298,28 +298,28 @@ package-1: $(INSTALLED_FSTAR1_FULL_EXE) _force
 	  PREFIX=_pak1/ \
 	  BROOT=stage1/ \
 	  ARCHIVE=fstar-$(FSTAR_VERSION)-stage1.tar.gz \
-	  $(MAKE) archive
+	  $(MAKE) __do-archive
 
 package-2: $(INSTALLED_FSTAR2_FULL_EXE) _force
 	env \
 	  PREFIX=_pak2/ \
 	  BROOT=stage2/ \
 	  ARCHIVE=fstar-$(FSTAR_VERSION).tar.gz \
-	  $(MAKE) archive
+	  $(MAKE) __do-archive
 
 package-src-1: $(FSTAR1_FULL_EXE).src 1.alib.src 1.plib.src _force
 	env \
 	  PREFIX=_srcpak1/ \
 	  BROOT=stage1/ \
 	  ARCHIVE=fstar-$(FSTAR_VERSION)-stage1-src.tar.gz \
-	  $(MAKE) src-archive
+	  $(MAKE) __do-src-archive
 
 package-src-2: $(FSTAR2_FULL_EXE).src 2.alib.src 2.plib.src _force
 	env \
 	  PREFIX=_srcpak2/ \
 	  BROOT=stage2/ \
 	  ARCHIVE=fstar-$(FSTAR_VERSION)-src.tar.gz \
-	  $(MAKE) src-archive
+	  $(MAKE) __do-src-archive
 
 package: package-2
 package-src: package-src-2
@@ -499,8 +499,8 @@ help:
 	echo "  2 (= build)        stage2 + set the out/ symlink"
 	echo "  package-1          create a binary tar.gz for the stage 1 build"
 	echo "  package-2          create a binary tar.gz for the stage 2 build (= package)"
-	echo "  src-archive-1      create an OCaml source distribution for the stage 1 build"
-	echo "  src-archive-2      create an OCaml source distribution for the stage 2 build (= src-archive)"
+	echo "  package-src-1      create an OCaml source distribution for the stage 1 build"
+	echo "  package-src-2      create an OCaml source distribution for the stage 2 build (= package-src)"
 	echo "  all-packages       build the four previous rules"
 	echo "  clean-depend       remove all .depend files, useful when files change name"
 	echo "  trim               clean some buildfiles, but retain any installed F* in out"
