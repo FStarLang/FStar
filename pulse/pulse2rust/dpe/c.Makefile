@@ -13,7 +13,6 @@ OUTPUT_DIR=_output
 CACHE_DIR=cache
 DICE_DIR=$(PULSE_ROOT)/share/pulse/examples/dice/
 INCLUDE_PATHS += $(DICE_DIR)/external $(DICE_DIR)/dpe $(DICE_DIR)/engine $(DICE_DIR)/l0 $(DICE_DIR)/external/hacl $(DICE_DIR)/external/l0
-INCLUDE_PATHS += $(PULSE_HOME)/lib
 INCLUDE_PATHS += $(PULSE_HOME)/out/lib/pulse
 ROOTS := $(DICE_DIR)/dpe/DPE.fst
 # ALREADY_CACHED_LIST = *,-HACL,-EverCrypt,-Spec.Hash.Definitions,-L0Core
