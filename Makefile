@@ -483,7 +483,7 @@ help:
 	echo "  build              build the compiler and libraries, and install it in out/"
 	echo "  test               run internal tests and examples (implies build)"
 	echo "  package            build a binary package"
-	echo "  src-archive        build an OCaml source package"
+	echo "  package-src        build an OCaml source package"
 	echo "  clean              clean everything except built packages"
 	echo
 	echo "Optional arguments:"
