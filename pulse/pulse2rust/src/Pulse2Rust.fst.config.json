@@ -4,6 +4,7 @@
     "--query_cache",
     "--lax",
     "--MLish",
+    "--MLish_effect", "FStarC.Compiler.Effect",
     "--cache_dir",
     "${FSTAR_HOME}/src/.cache.boot",
     "--z3version",
