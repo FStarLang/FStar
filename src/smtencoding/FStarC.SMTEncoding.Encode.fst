@@ -664,16 +664,16 @@ let encode_top_level_val uninterpreted env us fv t quals =
                 [Env.Eager_unfolding;
                  Env.Simplify;
                  Env.AllowUnboundUniverses;
-                 Env.EraseUniverses;
                  Env.Exclude Env.Zeta]
                  env.tcenv t
-      else norm_before_encoding_us env us t
+      else norm_before_encoding env t
     in
-    // if !dbg_SMTEncoding
-    // then BU.print3 "Encoding top-level val %s : %s\Normalized to is %s\n"
-    //        (show fv)
-    //        (show t)
-    //        (show tt);
+    if !dbg_SMTEncoding
+    then BU.print4 "Encoding top-level val %s %s : %s\Normalized to is %s\n"
+           (show fv)
+           (show us)
+           (show t)
+           (show tt);
     let decls, env = encode_free_var uninterpreted env fv us t tt quals in
     if U.is_smt_lemma t
     then decls@encode_smt_lemma env fv tt, env
@@ -682,9 +682,10 @@ let encode_top_level_val uninterpreted env us fv t quals =
 let encode_top_level_vals env bindings quals =
   let decls, env =
     bindings |> List.fold_left (fun (decls, env) lb ->
-        let us, t = SS.open_univ_vars lb.lbunivs lb.lbtyp in
-        let decls', env = encode_top_level_val false env lb.lbunivs (BU.right lb.lbname) t quals in
-        List.rev_append decls' decls, env) ([], env)
+        let env', us, [t] = Env.open_universes_in env.tcenv lb.lbunivs [lb.lbtyp] in
+        let env' = { env with tcenv = env' } in
+        let decls', env' = encode_top_level_val false env' us (BU.right lb.lbname) t quals in
+        List.rev_append decls' decls, env') ([], env)
   in
   List.rev decls, env
 
@@ -809,13 +810,14 @@ let encode_top_level_let :
             (* some, but not all are lemmas; impossible *)
             if U.is_lemma lb.lbtyp then raise Let_rec_unencodeable;
             let us, t = SS.open_univ_vars lb.lbunivs lb.lbtyp in
+            let env = { env with tcenv = Env.push_univ_vars env.tcenv us } in
             (* #2894: If this is a recursive definition, make sure to unfold the type
             until the arrow structure is evident (we use whnf for it). Otherwise
             there will be thunking inconsistencies in the encoding. *)
             let t_norm =
               if is_rec
-              then N.unfold_whnf' [Env.AllowUnboundUniverses] env.tcenv lb.lbtyp
-              else norm_before_encoding env lb.lbtyp
+              then N.unfold_whnf' [Env.AllowUnboundUniverses] env.tcenv t
+              else norm_before_encoding env t
             in
             (* We are declaring the top_level_let with t_norm which might contain *)
             (* non-reified reifiable computation type. *)
@@ -1070,7 +1072,7 @@ let encode_top_level_let :
                   //should never appear in a goal (see Bug1750.fst, test_currying)
                   let guards = List.map (fun _ -> mkTrue) vars in
                   let tot_fun_axioms =
-                    EncodeTerm.isTotFun_axioms rng head vars guards (U.is_pure_comp tres_comp)
+                    EncodeTerm.isTotFun_axioms rng head [] vars guards (U.is_pure_comp tres_comp)
                   in
                   match univ_vars with
                   | [] -> tot_fun_axioms
@@ -1159,6 +1161,12 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
 = let Sig_inductive_typ
         { lid=t; us=universe_names; params=tps;
           t=k; ds=datas; injective_type_params } = se.sigel in 
+  let usubst, uvs = SS.univ_var_opening universe_names in
+  let env = { env with tcenv = Env.push_univ_vars env.tcenv uvs } in
+  let tps = SS.subst_binders usubst tps in
+  let k = SS.subst (SS.shift_subst (List.length tps) usubst) k in
+  let univ_vars, univ_terms = List.map EncodeTerm.encode_univ_name uvs |> List.unzip in
+  let univ_arity = List.map (fun _ -> univ_sort) univ_vars in
   let t_lid = t in
   let tcenv = env.tcenv in
   let quals = se.sigquals in
@@ -1209,7 +1217,7 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
           mkForall
             (Ident.range_of_lid t) 
             ([[xx_has_type_sfuel]],
-             add_fuel (mk_fv (ffsym, Fuel_sort)) (mk_fv (xxsym, Term_sort)::vars),
+             add_fuel (mk_fv (ffsym, Fuel_sort)) (mk_fv (xxsym, Term_sort)::univ_vars@vars),
             mkImp(xx_has_type_sfuel, data_ax)),
             Some "inversion axiom", //this name matters! see Sig_bundle case near line 1493
             (varops.mk_unique ("fuel_guarded_inversion_"^(string_of_lid t))))
@@ -1230,9 +1238,9 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
   let vars, guards, env', binder_decls, _ = encode_binders None formals env in
   let arity = List.length vars in
   let tname, ttok, env = new_term_constant_and_tok_from_lid env t arity in
-  let ttok_tm = mkApp(ttok, []) in
+  let ttok_tm = mkApp(ttok, univ_terms) in
   let guard = mk_and_l guards in
-  let tapp = mkApp(tname, List.map mkFreeV vars) in //arity ok
+  let tapp = mkApp(tname, List.map mkFreeV (univ_vars@vars)) in //arity ok
   let decls, env =
     //See: https://github.com/FStarLang/FStar/commit/b75225bfbe427c8aef5b59f70ff6d79aa014f0b4
     //See: https://github.com/FStarLang/FStar/issues/349
@@ -1240,7 +1248,7 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
       constructor_or_logic_type_decl
         {
           constr_name = tname;
-          constr_fields = vars |> List.map (fun fv -> {field_name=tname^fv_name fv; field_sort=fv_sort fv; field_projectible=false}) ;
+          constr_fields = univ_vars@vars |> List.map (fun fv -> {field_name=tname^fv_name fv; field_sort=fv_sort fv; field_projectible=false}) ;
           //The field_projectible=false above is extremely important; it makes sure that type-formers are not injective
           constr_sort=Term_sort;
           constr_id=Some (varops.next_id());
@@ -1251,14 +1259,14 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
       match vars with
       | [] -> [], push_free_var env t arity tname (Some <| mkApp(tname, []))
       | _ ->
-        let ttok_decl = Term.DeclFun(ttok, [], Term_sort, Some "token") in
-        let ttok_fresh = Term.fresh_token (ttok_tm, [], Term_sort) (varops.next_id()) in
+        let ttok_decl = Term.DeclFun(ttok, List.map fv_sort univ_vars, Term_sort, Some "token") in
+        let ttok_fresh = Term.fresh_token (ttok_tm, univ_vars, Term_sort) (varops.next_id()) in
         let ttok_app = mk_Apply ttok_tm vars in
         let pats = [[ttok_app]; [tapp]] in
         // These patterns allow rewriting (ApplyT T@tok args) to (T args) and vice versa
         // This seems necessary for some proofs, but the bidirectional rewriting may be inefficient
         let name_tok_corr =
-          Util.mkAssume(mkForall' (Ident.range_of_lid t) (pats, None, vars, mkEq(ttok_app, tapp)),
+          Util.mkAssume(mkForall' (Ident.range_of_lid t) (pats, None, univ_vars@vars, mkEq(ttok_app, tapp)),
                         Some "name-token correspondence",
                         ("token_correspondence_"^ttok)) in
         [ttok_decl; ttok_fresh; name_tok_corr], env
@@ -1269,19 +1277,21 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
     let k, decls = encode_term_pred None res env' tapp in
     let karr =
       if List.length formals > 0
-      then [Util.mkAssume(mk_tester "Tm_arrow" (mk_PreType ttok_tm), Some "kinding", ("pre_kinding_"^ttok))]
+      then [Util.mkAssume(
+          mkForall (Ident.range_of_lid t) ([[ttok_tm]], univ_vars, mk_tester "Tm_arrow" (mk_PreType ttok_tm)),
+          Some "kinding", ("pre_kinding_"^ttok))]
       else []
     in
     let rng = Ident.range_of_lid t in
-    let tot_fun_axioms = EncodeTerm.isTotFun_axioms rng ttok_tm vars (List.map (fun _ -> mkTrue) vars) true in
-    decls@(karr@[Util.mkAssume(mkAnd(tot_fun_axioms, mkForall rng ([[tapp]], vars, mkImp(guard, k))),
+    let tot_fun_axioms = EncodeTerm.isTotFun_axioms rng ttok_tm univ_vars vars (List.map (fun _ -> mkTrue) vars) true in
+    decls@(karr@[Util.mkAssume(mkAnd(tot_fun_axioms, mkForall rng ([[tapp]], univ_vars@vars, mkImp(guard, k))),
                                 None,
                                 ("kinding_"^ttok))] |> mk_decls_trivial)
   in
   let aux =
     kindingAx
     @(inversion_axioms env tapp vars)
-    @([pretype_axiom (not injective_type_params) (Ident.range_of_lid t) env tapp vars] |> mk_decls_trivial)
+    @([pretype_axiom (not injective_type_params) (Ident.range_of_lid t) env tapp (univ_vars@vars)] |> mk_decls_trivial)
   in
   (decls |> mk_decls_trivial)@binder_decls@aux, env
 
@@ -1290,9 +1300,10 @@ let encode_datacon (env:env_t) (se:sigelt)
 = let Sig_datacon {lid=d; us; t; num_ty_params=n_tps; mutuals; injective_type_params } = se.sigel in
   let quals = se.sigquals in
   let us, t = SS.open_univ_vars us t in
+  let env = { env with tcenv = Env.push_univ_vars env.tcenv us } in
   let univ_fvs, univs = List.map EncodeTerm.encode_univ_name us |> List.unzip in
   let univ_sorts = univs |> List.map (fun _ -> univ_sort) in
-  let t = norm_before_encoding_us env us t in
+  let t = norm_before_encoding env t in
   let formals, t_res = U.arrow_formals t in
   let arity = List.length formals in
   let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d arity in
@@ -1308,7 +1319,7 @@ let encode_datacon (env:env_t) (se:sigelt)
           |> List.mapi
             (fun i _ ->
               let bv = {S.null_bv S.tun with ppname=Ident.mk_ident (string_of_int i, Range.dummyRange)} in
-              { field_name = mk_term_projector_name d bv; field_sort = univ_sort; field_projectible = true })
+              { field_name = mk_term_projector_name d bv; field_sort = univ_sort; field_projectible = false })
         in
   let n_univs = List.length univ_fields in
   let fields =
@@ -1397,14 +1408,16 @@ let encode_datacon (env:env_t) (se:sigelt)
             data_arg_params
             arg_params
         in
-        let ty = maybe_curry_fvb fv.fv_name.p encoded_head_fvb arg_vars in
+        let ty = maybe_curry_fvb fv.fv_name.p
+          ({encoded_head_fvb with smt_arity = List.length univs + encoded_head_fvb.smt_arity})
+          (univs@arg_vars) in
         let xvars = List.map mkFreeV vars in
-        let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
+        let dapp =  mkApp(ddconstrsym, univs@xvars) in //arity ok; |xvars| = |formals| = arity
         let ty_pred = mk_HasTypeWithFuel (Some s_fuel_tm) dapp ty in
         let arg_binders = List.map fv_of_term arg_vars in
         let typing_inversion =
               Util.mkAssume(mkForall (Ident.range_of_lid d) ([[ty_pred]],
-                                  add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
+                                  add_fuel (mk_fv (fuel_var, Fuel_sort)) (univ_fvs@vars@arg_binders),
                                   mkImp(ty_pred, elim_eqns_and_guards)),
                           Some "data constructor typing elim",
                           ("data_elim_" ^ ddconstrsym)) in
@@ -1422,7 +1435,7 @@ let encode_datacon (env:env_t) (se:sigelt)
             in
             Util.mkAssume(mkForall (Ident.range_of_lid d)
                                     ([[ty_pred]],
-                                    add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
+                                    add_fuel (mk_fv (fuel_var, Fuel_sort)) (univ_fvs@vars@arg_binders),
                                     mkImp(ty_pred, mk_and_l prec)),
                           Some "subterm ordering",
                           ("subterm_ordering_"^ddconstrsym))
@@ -1432,7 +1445,6 @@ let encode_datacon (env:env_t) (se:sigelt)
           let _, vars' = BU.first_N n_tps vars in
           let norm t = 
               N.unfold_whnf' [Env.AllowUnboundUniverses;
-                              Env.EraseUniverses;
                               Env.Unascribe;
                               //we don't know if this will terminate; so don't do recursive steps
                               Env.Exclude Env.Zeta]
@@ -1528,7 +1540,7 @@ let encode_datacon (env:env_t) (se:sigelt)
           | _ ->
             [Util.mkAssume(mkForall (Ident.range_of_lid d)
                                     ([[ty_pred]],//we use ty_pred here as the pattern, which has an S_fuel guard
-                                      add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
+                                      add_fuel (mk_fv (fuel_var, Fuel_sort)) (univ_fvs@vars@arg_binders),
                                       mk_and_l codomain_prec_l),
                             Some "well-founded ordering on codomain",
                             ("well_founded_ordering_on_codomain_"^ddconstrsym))],
@@ -1601,19 +1613,19 @@ let encode_datacon (env:env_t) (se:sigelt)
       | _ -> ty_pred', vars, guard in  //When will this case arise?
 
     Util.mkAssume(mkForall (Ident.range_of_lid d)
-                            ([[ty_pred']],add_fuel (mk_fv (fuel_var, Fuel_sort)) vars, mkImp(guard, ty_pred')),
+                            ([[ty_pred']],add_fuel (mk_fv (fuel_var, Fuel_sort)) (univ_fvs@vars), mkImp(guard, ty_pred')),
                             Some "data constructor typing intro",
                             ("data_typing_intro_"^ddtok)) in
 
   let g = binder_decls
           @decls2
           @decls3
-          @([Term.DeclFun(ddtok, [], Term_sort, Some (BU.format1 "data constructor proxy: %s" (show d)))]
+          @([Term.DeclFun(ddtok, univ_sorts, Term_sort, Some (BU.format1 "data constructor proxy: %s" (show d)))]
             @proxy_fresh |> mk_decls_trivial)
           @decls_pred
           @([Util.mkAssume(tok_typing, Some "typing for data constructor proxy", ("typing_tok_"^ddtok));
               Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                    ([[app]], vars,
+                                    ([[app]], univ_fvs@vars,
                                       mkEq(app, dapp)), Some "equality for proxy", ("equality_tok_"^ddtok));
               data_cons_typing_intro_decl;
               ]@elim |> mk_decls_trivial) in
@@ -1730,6 +1742,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
 
      | Sig_declare_typ {lid; us; t} ->
         let us, t = SS.open_univ_vars us t in
+        let env = { env with tcenv = Env.push_univ_vars env.tcenv us } in
         let quals = se.sigquals in
         let will_encode_definition = not (quals |> BU.for_some (function
             | Assumption | Projector _ | Discriminator _ | Irreducible -> true

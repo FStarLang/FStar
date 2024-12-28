@@ -162,11 +162,11 @@ let raise_arity_mismatch head arity n_args rng =
               (show n_args))
 
 //See issue #1750 and tests/bug-reports/Bug1750.fst
-let isTotFun_axioms pos head vars guards is_pure =
+let isTotFun_axioms pos head extra_vars vars guards is_pure =
     let maybe_mkForall pat vars body =
-        match vars with
+        match extra_vars @ vars with
         | [] -> body
-        | _ -> mkForall pos (pat, vars, body)
+        | vs -> mkForall pos (pat, vs, body)
     in
     let rec is_tot_fun_axioms ctx ctx_guard head vars guards =
         match vars, guards with
@@ -760,7 +760,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              && U.is_pure_or_ghost_comp res)
              || U.is_tot_or_gtot_comp res
         then 
-             let univ_vars = List.map encode_univ_name (Free.univnames t |> FlatSet.elems) in
+             let t0_univ = env.tcenv.universe_of env.tcenv t0 in
+             let univ_fvs, univ_tms = List.map encode_univ_name (FlatSet.elems (Free.univnames t `FlatSet.union` Free.univnames (U.type_with_u t0_univ))) |> List.unzip in
              let vars, guards_l, env', decls, _ = encode_binders None binders env in
              let fsym = mk_fv (varops.fresh module_name "f", Term_sort) in
              let f = mkFreeV  fsym in
@@ -804,7 +805,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
              //finally add the IsTotFun for the function term itself
              let t_interp =
-                 let tot_fun_axioms = isTotFun_axioms t.pos f vars guards_l is_pure in
+                 let tot_fun_axioms = isTotFun_axioms t.pos f [] vars guards_l is_pure in
                  mkAnd (t_interp, tot_fun_axioms)
              in
              let cvars =
@@ -812,7 +813,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                  Term.free_variables t_interp
                  |> List.filter (fun x -> fv_name x <> fv_name fsym)
                in
-               let cvars = List.map fst univ_vars @ cvars in
+               let cvars = univ_fvs @ cvars in
                BU.remove_dups fv_eq cvars
                |> List.rev
              in
@@ -845,8 +846,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
              let t = mkApp(tsym, List.map mkFreeV cvars) in //arity ok
              let t_has_kind = 
-               let univ = env.tcenv.universe_of env.tcenv t0 in
-               let u = encode_universe univ in
+               let u = encode_universe t0_univ in
                mk_HasType t (mk_Term_type u) 
              in //NS: REVIEW! Can we give it a more precise universe
 
@@ -959,7 +959,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              tapp_concrete, fv_decls @ mk_decls tsym tkey_hash [tdecl ; t_kinding ] []
 
       | Tm_refine _ ->
-        let x, f, universe =
+        let x, f, t0_univ =
           let steps = [
             Env.Weak;
             Env.HNF
@@ -975,7 +975,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let base_t, decls = encode_term x.sort env in
         let x, xtm, env' = gen_term_var env x in
         let refinement, decls' = encode_formula f env' in
-        let universe = encode_universe universe in
+        let universe = encode_universe t0_univ in
         
         let fsym, fterm = fresh_fvar env.current_module_name "f" Fuel_sort in
 
@@ -991,7 +991,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let cvars = BU.remove_dups fv_eq (Term.free_variables refinement @ Term.free_variables tm_has_type_with_fuel) in
         let cvars = cvars |> List.filter (fun y -> fv_name y <> x && fv_name y <> fsym) in
         let cvars = 
-          let univ_vars = List.map encode_univ_name (Free.univnames t |> FlatSet.elems) in
+          let univ_vars = List.map encode_univ_name (FlatSet.elems (Free.univnames t `FlatSet.union` Free.univnames (U.type_with_u t0_univ))) in
           let cvars = List.map fst univ_vars @ cvars in
           BU.remove_dups fv_eq cvars
         in
@@ -1106,7 +1106,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             let v1, decls1 = encode_term v1 env in
             let v2, decls2 = encode_term v2 env in
             let v3, decls3 = encode_term v3 env in            
-            mk_Precedes v0 v1 v2 v3, decls0@decls1@decls2@decls3
+            mk_Precedes_term v0 v1 v2 v3 Range.dummyRange, decls0@decls1@decls2@decls3
 
         | Tm_constant Const_range_of, [(arg, _)] ->
             encode_const (Const_range arg.pos) env
@@ -1408,7 +1408,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   match arrow_t_opt with
                   | None ->
                     let tot_fun_ax =
-                      let ax = (isTotFun_axioms t0.pos f vars (vars |> List.map (fun _ -> mkTrue)) is_pure) in
+                      let ax = (isTotFun_axioms t0.pos f [] vars (vars |> List.map (fun _ -> mkTrue)) is_pure) in
                       match cvars with
                       | [] -> ax
                       | _ -> mkForall t0.pos ([[f]], cvars, ax)

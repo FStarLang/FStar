@@ -589,7 +589,7 @@ let fresh_token (tok, univ_fvs, sort) id =
     let a_name = "fresh_token_" ^tok_name in
     let tm = mkEq(mkInteger' id norng,
                                   mkApp(constr_id_of_sort sort,
-                                        [mkApp (tok_name,[]) norng]) norng) norng in
+                                        [mkApp (tok_name, List.map (fun f -> mkFreeV f norng) univ_fvs) norng]) norng) norng in
     let tm = mkForall norng ([[tok]], univ_fvs, tm) in
     let a = {assumption_name=escape a_name;
              assumption_caption=Some "fresh token";
@@ -689,11 +689,11 @@ let constructor_to_decl rng constr =
         let arg_sorts =
           constr.constr_fields 
           |> List.filter (fun f -> f.field_projectible)
-          |> List.map (fun _ -> Term_sort)
+          |> List.map (fun f -> f.field_sort)
         in
         let base_name = constr.constr_name ^ "@base" in
         let decl = DeclFun(base_name, arg_sorts, Term_sort, Some "Constructor base") in
-        let formals = List.mapi (fun i _ -> mk_fv ("x" ^ string_of_int i, Term_sort)) constr.constr_fields in
+        let formals = List.mapi (fun i f -> mk_fv ("x" ^ string_of_int i, f.field_sort)) constr.constr_fields in
         let constructed_term = mkApp(constr.constr_name, List.map (fun fv -> mkFreeV fv norng) formals) norng in
         let inj_formals = List.flatten <| List.map2 (fun f fld -> if fld.field_projectible then [f] else []) formals constr.constr_fields in
         let base_term = mkApp(base_name, List.map (fun fv -> mkFreeV fv norng) inj_formals) norng in
@@ -1001,7 +1001,7 @@ and mkPrelude z3options =
    let constrs : constructors = 
      List.map as_constr
        [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
-        ("Tm_type",  [], Term_sort, 2, true);
+        ("Tm_type",  ["Tm_type_0", Sort "Universe", true], Term_sort, 2, true);
         ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, 3, false);
         ("Tm_unit",  [], Term_sort, 6, true);
         (fst boxIntFun,     [snd boxIntFun,  Int_sort, true],   Term_sort, 7, true);
@@ -1174,7 +1174,7 @@ let mk_Valid t        = match t.tm with
     | _ ->
         mkApp("Valid",  [t]) t.rng
 let mk_unit_type = mkApp("Prims.unit", []) norng
-let mk_subtype_of_unit v = mkApp("Prims.subtype_of", [v;mk_unit_type]) v.rng
+let mk_subtype_of_unit v = mkApp("Prims.subtype_of", [mk_U_unknown;mk_U_unknown;v;mk_unit_type]) v.rng // GE: FIXME
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t]) t.rng
 let mk_IsTotFun t     = mkApp("IsTotFun", [t]) t.rng
@@ -1207,7 +1207,8 @@ let kick_partial_app t  =
 
 
 let mk_String_const s r = mkApp ("FString_const", [mk (String s) r]) r
-let mk_Precedes x1 x2 x3 x4 r = mkApp("Prims.precedes", [x1;x2;x3;x4])  r|> mk_Valid
+let mk_Precedes_term x1 x2 x3 x4 r = mkApp("Prims.precedes", [x1;x2;x3;x4]) r
+let mk_Precedes x1 x2 x3 x4 r = mk_Valid (mk_Precedes_term x1 x2 x3 x4 r)
 let mk_lex_t r = mkApp("Prims.lex_t", []) r
 let mk_LexCons x1 x2 x3 r  = mkApp("LexCons", [x1;x2;x3]) r
 let mk_LexTop r  = mkApp("LexTop", []) r
