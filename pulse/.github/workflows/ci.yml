@@ -1,0 +1,83 @@
+name: Pulse CI
+on:
+  push:
+    branches-ignore:
+    - _**
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    steps:
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/checkout@master
+        id: checkout-fstar
+        with:
+          path: FStar
+          repository: FStarLang/FStar
+          ref: master
+
+      - name: Try fetch built F*
+        id: cache-fstar
+        uses: actions/cache/restore@v4
+        with:
+          path: FStar
+          key: FStar-${{ runner.os }}-${{ runner.arch }}-${{ steps.checkout-fstar.outputs.commit }}
+
+      - name: Build F*
+        if: steps.cache-fstar.outputs.cache-hit != 'true'
+        run: |
+          make -C FStar ADMIT=1 -skj$(nproc) 1
+          make -C FStar ADMIT=1 -skj$(nproc) bootstrap
+
+      - name: Save built F*
+        if: steps.cache-fstar.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: FStar
+          key: FStar-${{ runner.os }}-${{ runner.arch }}-${{ steps.checkout-fstar.outputs.commit }}
+
+      - run: echo "FSTAR_HOME=$(pwd)/FStar" >> $GITHUB_ENV
+
+      - uses: actions/checkout@master
+        id: checkout-karamel
+        with:
+          path: karamel
+          repository: FStarLang/karamel
+          ref: master
+
+      - name: Try fetch built karamel
+        id: cache-karamel
+        uses: actions/cache/restore@v4
+        with:
+          path: karamel
+          key: karamel-${{ runner.os }}-${{ runner.arch }}-${{ steps.checkout-karamel.outputs.commit }}
+
+      - name: Build karamel (if not cached)
+        if: steps.cache-karamel.outputs.cache-hit != 'true'
+        run: |
+          make -C karamel -skj$(nproc)
+
+      - name: Save built karamel
+        if: steps.cache-karamel.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: karamel
+          key: karamel-${{ runner.os }}-${{ runner.arch }}-${{ steps.checkout-karamel.outputs.commit }}
+
+      - run: echo "KRML_HOME=$(pwd)/karamel" >> $GITHUB_ENV
+
+      - uses: actions/checkout@master
+        with:
+          path: pulse
+
+      - name: Pulse CI
+        run: . $HOME/.cargo/env && make -C pulse ci -skj$(nproc)
