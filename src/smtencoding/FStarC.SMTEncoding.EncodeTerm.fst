@@ -1227,14 +1227,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
             let encode_full_app fv univs =
                 let fname, fuel_args, arity = lookup_free_var_sym env fv in
-                BU.print5 "Encoding %s with arity %s applied to %s fuel args, %s univs, and %s args\n"
-                          (match fname with
-                           | Inl (Var s) -> s
-                           | Inr tm -> Term.print_smt_term tm)
-                          (string_of_int arity)
-                          (string_of_int (List.length fuel_args))
-                          (string_of_int (List.length univs))
-                          (string_of_int (List.length args));
+                // BU.print5 "Encoding %s with arity %s applied to %s fuel args, %s univs, and %s args\n"
+                //           (match fname with
+                //            | Inl (Var s) -> s
+                //            | Inr tm -> Term.print_smt_term tm)
+                //           (string_of_int arity)
+                //           (string_of_int (List.length fuel_args))
+                //           (string_of_int (List.length univs))
+                //           (string_of_int (List.length args));
                 let tm = maybe_curry_app t0.pos fname (arity+List.length univs) (fuel_args@univs@args) in
                 tm, decls
             in
