@@ -22,6 +22,7 @@ FSTAR_OPTIONS += --odir "$(OUTPUT_DIR)"
 FSTAR_OPTIONS += --use_hints
 FSTAR_OPTIONS += --hint_dir $(SRC)/.hints
 FSTAR_OPTIONS += --warn_error -333 # Do not warn about missing hints
+FSTAR_OPTIONS += --ext context_pruning
 FSTAR_OPTIONS += --z3version 4.13.3
 
 FSTAR_OPTIONS += --no_default_includes
