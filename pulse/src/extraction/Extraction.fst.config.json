@@ -14,20 +14,6 @@
   ],
   "include_dirs": [
     ".",
-    "${FSTAR_HOME}/src/basic",
-    "${FSTAR_HOME}/src/class",
-    "${FSTAR_HOME}/src/data",
-    "${FSTAR_HOME}/src/extraction",
-    "${FSTAR_HOME}/src/fstar",
-    "${FSTAR_HOME}/src/parser",
-    "${FSTAR_HOME}/src/prettyprint",
-    "${FSTAR_HOME}/src/reflection",
-    "${FSTAR_HOME}/src/smtencoding",
-    "${FSTAR_HOME}/src/syntax",
-    "${FSTAR_HOME}/src/syntax/print",
-    "${FSTAR_HOME}/src/tactics",
-    "${FSTAR_HOME}/src/tosyntax",
-    "${FSTAR_HOME}/src/typechecker",
-    "${FSTAR_HOME}/src/tests"
+    "${FSTAR_HOME}/src"
   ]
 }

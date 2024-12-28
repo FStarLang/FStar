@@ -5,21 +5,29 @@
 # It is invoked by the gen-rust-bindings.sh script
 #
 
-PULSE_HOME ?= ../..
-OUTPUT_DIRECTORY=_output
-CACHE_DIRECTORY=$(OUTPUT_DIRECTORY)/cache
-DICE_DIR=$(PULSE_HOME)/share/pulse/examples/dice/
+CODEGEN=none
+SRC=.
+TAG=dpe
+PULSE_ROOT ?= ../..
+OUTPUT_DIR=_output
+CACHE_DIR=cache
+DICE_DIR=$(PULSE_ROOT)/share/pulse/examples/dice/
 INCLUDE_PATHS += $(DICE_DIR)/external $(DICE_DIR)/dpe $(DICE_DIR)/engine $(DICE_DIR)/l0 $(DICE_DIR)/external/hacl $(DICE_DIR)/external/l0
-FSTAR_FILES := $(DICE_DIR)/dpe/DPE.fst
-ALREADY_CACHED_LIST = *,-HACL,-EverCrypt,-Spec.Hash.Definitions,-L0Core
-FSTAR_OPTIONS += --warn_error -342
-FSTAR_DEP_OPTIONS=--extract '+EverCrypt +L0Core'
+INCLUDE_PATHS += $(PULSE_HOME)/out/lib/pulse
+ROOTS := $(DICE_DIR)/dpe/DPE.fst
+# ALREADY_CACHED_LIST = *,-HACL,-EverCrypt,-Spec.Hash.Definitions,-L0Core
+OTHERFLAGS += --warn_error -342
+DEPFLAGS += --extract '+EverCrypt +L0Core'
 all: verify extract
 
-include $(PULSE_HOME)/share/pulse/Makefile.include
+include $(PULSE_ROOT)/mk/boot.mk
+.DEFAULT_GOAL := all
+
+
+$(call need_dir,KRML_HOME)
 
 KRML ?= $(KRML_HOME)/krml
 
 .PHONY: extract
 extract: $(ALL_KRML_FILES)
-	$(KRML) -skip-makefiles -skip-compilation -bundle 'EverCrypt.Hash.Incremental=Spec.Hash.Definitions[rename=EverCrypt_Hash]' -warn-error @4 -tmpdir $(OUTPUT_DIRECTORY) -add-include '"EverCrypt_Base.h"' -add-include '"compat.h"' -no-prefix 'L0Core' $^
+	$(KRML) -skip-makefiles -skip-compilation -bundle 'EverCrypt.Hash.Incremental=Spec.Hash.Definitions[rename=EverCrypt_Hash]' -warn-error @4 -tmpdir $(OUTPUT_DIR) -add-include '"EverCrypt_Base.h"' -add-include '"compat.h"' -no-prefix 'L0Core' $^

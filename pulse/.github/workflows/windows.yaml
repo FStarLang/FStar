@@ -10,9 +10,9 @@ jobs:
       - name: Build a package
         shell: C:\cygwin64\bin\bash.exe --login '{0}'
         run: |
-          $GITHUB_WORKSPACE/src/ci/package.sh -j 8 && echo "There is a CR at the end of this line"
+          $GITHUB_WORKSPACE/ci/package.sh -j 8 && echo "There is a CR at the end of this line"
       - name: Archive the package
         uses: actions/upload-artifact@v3
         with:
           name: pulse-Windows_x86_64.zip
-          path: src\ci\pulse.zip
+          path: ci\pulse.zip

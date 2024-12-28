@@ -1,0 +1,111 @@
+open Prims
+let (zero : unit -> FStar_UInt32.t) = fun uu___ -> Stdint.Uint32.zero
+let rec (test_invariants_and_later : unit -> unit) = fun uu___ -> ()
+let rec (test_read_write :
+  FStar_UInt32.t Pulse_Lib_Reference.ref -> unit -> unit) =
+  fun x ->
+    fun _'n ->
+      let n = Pulse_Lib_Reference.op_Bang x () () in
+      Pulse_Lib_Reference.op_Colon_Equals x
+        (FStar_UInt32.add n Stdint.Uint32.zero) ()
+let rec (test_write_10 :
+  FStar_UInt32.t Pulse_Lib_Reference.ref -> unit -> unit) =
+  fun x ->
+    fun _'n ->
+      Pulse_Lib_Reference.op_Colon_Equals x (Stdint.Uint32.of_int (2)) ();
+      test_read_write x ();
+      Pulse_Lib_Reference.op_Colon_Equals x Stdint.Uint32.zero ()
+let rec (test_inner_ghost_fun : unit -> unit) = fun uu___ -> ()
+let rec (write10 : FStar_UInt32.t Pulse_Lib_Reference.ref -> unit -> unit) =
+  fun x ->
+    fun _'n ->
+      let ctr = Pulse_Lib_Reference.alloc (Stdint.Uint32.of_int (10)) in
+      Pulse_Lib_Dv.while_
+        (fun while_cond ->
+           let ctr@1 = Pulse_Lib_Reference.op_Bang ctr () () in
+           FStar_UInt32.gt ctr@1 Stdint.Uint32.zero)
+        (fun while_body ->
+           test_write_10 x ();
+           (let ctr@2 = Pulse_Lib_Reference.op_Bang ctr () () in
+            Pulse_Lib_Reference.op_Colon_Equals ctr
+              (FStar_UInt32.sub ctr@2 Stdint.Uint32.one) ()))
+let rec (fill_array :
+  FStar_UInt32.t Pulse_Lib_Array_Core.array ->
+    FStar_SizeT.t -> FStar_UInt32.t -> unit -> unit)
+  =
+  fun x ->
+    fun n ->
+      fun v ->
+        fun _'s ->
+          let i = Pulse_Lib_Reference.alloc Stdint.Uint64.zero in
+          Pulse_Lib_Dv.while_
+            (fun while_cond ->
+               let i@1 = Pulse_Lib_Reference.op_Bang i () () in
+               FStar_SizeT.lt i@1 n)
+            (fun while_body ->
+               let i@2 = Pulse_Lib_Reference.op_Bang i () () in
+               Pulse_Lib_Array_Core.op_Array_Assignment x i@2 v ();
+               Pulse_Lib_Reference.op_Colon_Equals i
+                 (FStar_SizeT.add i@2 Stdint.Uint64.one) ())
+let (test0 : FStar_SizeT.t -> FStar_SizeT.t -> FStar_SizeT.t) =
+  fun x -> fun y -> FStar_SizeT.rem x y
+type 'a opt =
+  | None 
+  | Some of 'a 
+let uu___is_None : 'a . 'a opt -> Prims.bool =
+  fun projectee -> match projectee with | None -> true | uu___ -> false
+let uu___is_Some : 'a . 'a opt -> Prims.bool =
+  fun projectee -> match projectee with | Some v -> true | uu___ -> false
+let __proj__Some__item__v : 'a . 'a opt -> 'a =
+  fun projectee -> match projectee with | Some v -> v
+let (my_safe_add : FStar_SizeT.t -> FStar_SizeT.t -> FStar_SizeT.t opt) =
+  fun x ->
+    fun y ->
+      if FStar_SizeT.lte x (Stdint.Uint64.of_string "0xffff")
+      then
+        (if
+           FStar_SizeT.lte y
+             (FStar_SizeT.sub (Stdint.Uint64.of_string "0xffff") x)
+         then Some (FStar_SizeT.add x y)
+         else None)
+      else None
+let rec (testbi : FStar_SizeT.t -> FStar_SizeT.t -> FStar_SizeT.t) =
+  fun x -> fun y -> FStar_SizeT.rem x y
+let rec (testbi2 : FStar_SizeT.t -> FStar_SizeT.t -> FStar_SizeT.t opt) =
+  fun x -> fun y -> my_safe_add x y
+let rec (extract_match : Prims.bool opt -> Prims.bool) =
+  fun x -> match x with | None -> false | Some b -> Prims.op_Negation b
+let rec (fib : Prims.nat -> Prims.nat) =
+  fun x ->
+    if x <= Prims.int_one
+    then Prims.int_one
+    else
+      (let x1 = fib (x - Prims.int_one) in
+       let x2 = fib (x - (Prims.of_int (2))) in x1 + x2)
+let rec (fib2 : Prims.nat -> Prims.nat) =
+  fun x -> let n = fib x in let m = fib (x + Prims.int_one) in m + n
+type ('a, 'b) data =
+  | One of 'a * 'b 
+  | Two of 'a 
+  | Three of 'b * 'a 
+let uu___is_One : 'a 'b . ('a, 'b) data -> Prims.bool =
+  fun projectee ->
+    match projectee with | One (_0, _1) -> true | uu___ -> false
+let __proj__One__item___0 : 'a 'b . ('a, 'b) data -> 'a =
+  fun projectee -> match projectee with | One (_0, _1) -> _0
+let __proj__One__item___1 : 'a 'b . ('a, 'b) data -> 'b =
+  fun projectee -> match projectee with | One (_0, _1) -> _1
+let uu___is_Two : 'a 'b . ('a, 'b) data -> Prims.bool =
+  fun projectee -> match projectee with | Two _0 -> true | uu___ -> false
+let __proj__Two__item___0 : 'a 'b . ('a, 'b) data -> 'a =
+  fun projectee -> match projectee with | Two _0 -> _0
+let uu___is_Three : 'a 'b . ('a, 'b) data -> Prims.bool =
+  fun projectee ->
+    match projectee with | Three (_0, _1) -> true | uu___ -> false
+let __proj__Three__item___0 : 'a 'b . ('a, 'b) data -> 'b =
+  fun projectee -> match projectee with | Three (_0, _1) -> _0
+let __proj__Three__item___1 : 'a 'b . ('a, 'b) data -> 'a =
+  fun projectee -> match projectee with | Three (_0, _1) -> _1
+let rec (test_that_we_access_the_right_field_in_matches :
+  (Prims.nat, Prims.bool) data -> Prims.nat) =
+  fun x -> match x with | One (y, z) -> y | Two y -> y | Three (z, y) -> y

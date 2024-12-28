@@ -15,10 +15,7 @@ In all cases (user or developer), please first read `README.md`
   PulseC. This F* code typechecks against the F* sources.
 * In `src/syntax-extension`: A top-level parser hook for the custom
   syntax of pulse. This F* code typechecks against the F* sources.
-* In `src/ocaml/plugin/generated`: A snapshot of the generated OCaml
-  code for the Pulse plugin, containing the extracted implementations
-  of the Pulse checker and the Pulse and PulseC extraction rules to
-  krml.
+* In `src/ml`: Base OCaml files for the checker.
 
 ## Modifying the user-facing Pulse libraries
 
@@ -29,20 +26,17 @@ the Pulse root directory.
 
 Dependency diagram:
 
-* `lib/pulse` and `lib/pulse/core` can be typechecked without loading
+* `lib/common` and `lib/core` can can be typechecked without loading
   the Pulse plugin
-* `lib/pulse/lib` and its subdirectories depend on `lib/pulse`,
-  `lib/pulse/core`, and need to load the Pulse plugin
-* `lib/pulse/c` depends on `lib/pulse/lib`
+* `lib/pulse` and its subdirectories depend on `lib/common`,
+  and required the Pulse plugin
+* `lib/core` and `lib/pulse` are independent as far as checking goes.
+  The former is the formalization of the Pulse separation logic,
+  culminating in providing the interface `Pulse.Lib.Core.fsti` in
+  `lib/common`. The latter are user-facing Pulse modules.
 
-## Modifying the Pulse checker
-
-If you modify the Pulse checker in `src/checker`, you need to
-regenerate and recompile the corresponding OCaml snapshot, with `make -j
-boot-checker` from the Pulse root directory.
-
-Modifying the Pulse checker does not require a source repository clone
-of F*.
+The top-level Makefile knows about these dependencies and will parallelize
+the checking.
 
 ### Notes on the implementation of Pulse
 
@@ -144,22 +138,24 @@ generated OCaml files beforehand.
 
 ## Testing
 
-`share/pulse` contains all examples and tests. You can run `make -j -C
-share/pulse` to verify and test them. This rule will work whether you have
-Karamel or not. If you have Karamel with the `KRML_HOME` variable set, then
-this rule will also extract and compile (and sometimes run) C extraction
-examples. Alternatively, you can run `make -j test` from the Pulse root
-directory, which will build Pulse beforehand.
+There are simple tests in `test/` and examples in `share/pulse`.
+Anything that is not user-facing (like simple regression tests) should
+go into `test/`. All of `share/pulse` is distributed in the package.
 
-If you have Docker, you can run `docker build -f
-src/ci/opam.Dockerfile .` to test the opam installation of Pulse
-(including all dependencies.) This will also verify all examples and
-tests, by moving them outside of the Pulse directory hierarchy
-beforehand, to make sure that the location of those examples does not
-need to depend on the location of Pulse.
+You can run `make -j test` to verify and test them. This rule will
+work whether you have Karamel or not. If you have Karamel with the
+`KRML_HOME` variable set, then this rule will also extract and compile
+(and sometimes run) C extraction examples. Alternatively, you can run
+`make -j test` from the Pulse root directory, which will build Pulse
+beforehand.
 
-Finally, you can run `make -j -C src ci` to re-extract, recompile and
-re-test everything. This rule also checks that the re-extracted
-snapshot is no newer than the current snapshot. If you have Docker,
-you can run the `ci` rule with `docker build -f src/ci/ci.Dockerfile
-.` which will also install all dependencies automatically.
+If you have Docker, you can run `docker build -f ci/opam.Dockerfile .`
+to test the opam installation of Pulse (including all dependencies.)
+This will also verify all examples and tests, by moving them outside of
+the Pulse directory hierarchy beforehand, to make sure that the location
+of those examples does not need to depend on the location of Pulse.
+
+Finally, you can run `make -j ci` to re-extract, recompile and re-test
+everything. If you have Docker, you can run the `ci` rule with `docker
+build -f ci/ci.Dockerfile .` which will also install all dependencies
+automatically.
