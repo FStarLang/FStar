@@ -528,9 +528,9 @@ let encode_free_var uninterpreted env fv us tt t_norm quals :decls_t & env_t =
 
                     | _ -> false
                 in
-                //Do not thunk ...
+                // Thunk if ...
                 nsstr lid <> "Prims"  //things in prims
-                && List.length us > 0 //has universe binders
+                && List.length us = 0 //has universe binders
                 && not (quals |> List.contains Logic) //logic qualified terms
                 && not (is_squash t_norm) //ambient squashed properties
                 && not (is_type t_norm) // : Type terms, since ambient typing hypotheses for these are cheap
