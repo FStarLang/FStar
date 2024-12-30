@@ -12,7 +12,7 @@ defaults:
 
 jobs:
   ci:
-    runs-on: [Linux, X64, self-hosted]
+    runs-on: ubuntu-latest
     container: mtzguido/dev-base
     steps:
       - name: Cleanup
