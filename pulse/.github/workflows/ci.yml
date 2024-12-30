@@ -35,8 +35,8 @@ jobs:
       - name: Build F*
         if: steps.cache-fstar.outputs.cache-hit != 'true'
         run: |
-          make -C FStar ADMIT=1 -skj$(nproc) 1
-          make -C FStar ADMIT=1 -skj$(nproc) bootstrap
+          make -C FStar ADMIT=1 -sj$(nproc) fstar
+          make -C FStar ADMIT=1 -sj$(nproc) bootstrap
 
       - name: Save built F*
         if: steps.cache-fstar.outputs.cache-hit != 'true'
@@ -64,7 +64,7 @@ jobs:
       - name: Build karamel (if not cached)
         if: steps.cache-karamel.outputs.cache-hit != 'true'
         run: |
-          make -C karamel -skj$(nproc)
+          make -C karamel -sj$(nproc)
 
       - name: Save built karamel
         if: steps.cache-karamel.outputs.cache-hit != 'true'
