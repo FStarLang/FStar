@@ -18,7 +18,7 @@ jobs:
       - name: Cleanup
         run: sudo find . -delete
 
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - run: echo "HOME=/home/user" | sudo tee -a $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
       - uses: actions/checkout@master
@@ -48,7 +48,7 @@ jobs:
           path: FStar
           key: FStar-${{ runner.os }}-${{ runner.arch }}-${{ steps.checkout-fstar.outputs.commit }}
 
-      - run: echo "FSTAR_HOME=$(pwd)/FStar" >> $GITHUB_ENV
+      - run: echo "FSTAR_HOME=$(pwd)/FStar" | sudo tee -a $GITHUB_ENV
 
       - uses: actions/checkout@master
         id: checkout-karamel
@@ -76,7 +76,7 @@ jobs:
           path: karamel
           key: karamel-${{ runner.os }}-${{ runner.arch }}-${{ steps.checkout-karamel.outputs.commit }}
 
-      - run: echo "KRML_HOME=$(pwd)/karamel" >> $GITHUB_ENV
+      - run: echo "KRML_HOME=$(pwd)/karamel" | sudo tee -a $GITHUB_ENV
 
       - uses: actions/checkout@master
         with:
