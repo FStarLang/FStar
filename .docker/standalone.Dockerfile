@@ -1,6 +1,6 @@
 # This Dockerfile should be run from the root FStar directory
 
-ARG FSTAR_CI_BASE=fstar_ci_base
+ARG FSTAR_CI_BASE=ghcr.io/fstarlang/fstar-ci-base
 FROM ${FSTAR_CI_BASE}
 
 # Copy repo into image.
