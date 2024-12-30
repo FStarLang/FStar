@@ -18,7 +18,7 @@ jobs:
     container: mtzguido/dev-base
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
@@ -57,7 +57,7 @@ jobs:
     container: mtzguido/dev-base
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 

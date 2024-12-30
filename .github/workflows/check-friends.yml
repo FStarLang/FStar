@@ -14,7 +14,7 @@ jobs:
     container: mtzguido/dev-base
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
@@ -53,7 +53,7 @@ jobs:
       - build-krml
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
@@ -76,7 +76,7 @@ jobs:
     container: mtzguido/dev-base
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
@@ -109,7 +109,7 @@ jobs:
       - build-steel
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
@@ -135,7 +135,7 @@ jobs:
     container: mtzguido/dev-base
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
@@ -168,7 +168,7 @@ jobs:
       - build-pulse
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
@@ -203,7 +203,7 @@ jobs:
       - build-krml
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
@@ -248,7 +248,7 @@ jobs:
       - build-hacl
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
@@ -281,7 +281,7 @@ jobs:
       - build-krml
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
       - run: opam install -y hex re ctypes sha sexplib
@@ -322,7 +322,7 @@ jobs:
       - build-everparse
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
       - run: opam install -y hex re ctypes sha sexplib
@@ -352,7 +352,7 @@ jobs:
       - build-hacl
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
@@ -396,7 +396,7 @@ jobs:
       - build-merkle-tree
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
@@ -430,7 +430,7 @@ jobs:
       - build-everparse
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
@@ -477,7 +477,7 @@ jobs:
       - build-mitls-fstar
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
@@ -586,7 +586,7 @@ jobs:
       - build-pulse
     steps:
       - name: Cleanup
-        run: find . -delete
+        run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
