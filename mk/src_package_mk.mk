@@ -19,9 +19,8 @@ _force:
 
 build:
 	dune build --root=dune $(FSTAR_DUNE_BUILD_OPTIONS)
-	
+
 install_bin: build
-	rm -rf $(CURDIR)/out
 	dune install --root=dune --prefix=$(CURDIR)/out
 
 install_lib:
