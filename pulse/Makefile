@@ -21,7 +21,9 @@ default: local-install lib-core
 .PHONY: all
 all: local-install # build plugin and library, and install in out/
 all: lib-core      # also check implentation files in core
-all: pulse2rust    # and pulse2rust tool
+ifeq ($(PULSE_NO_RUST),)
+all: pulse2rust    # and pulse2rust tool, unless Rust is disabled
+endif
 
 .PHONY: .force
 .force:
@@ -111,7 +113,10 @@ test-pulse2rust: test-share # test-pulse2rust uses .checked files from share/
 	+$(MAKE) -C pulse2rust test
 
 .PHONY: test
-test: test-pulse test-share test-pulse2rust test-qs
+test: test-pulse test-share test-qs
+ifeq ($(PULSE_NO_RUST),)
+test: test-pulse2rust
+endif
 
 .PHONY: test-qs
 test-qs: local-install

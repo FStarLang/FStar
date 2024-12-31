@@ -25,8 +25,7 @@ RUN mkdir -p $HOME/pulse_tools && \
     env OTHERFLAGS='--admit_smt_queries true' make -C $KRML_HOME -j $opamthreads
 
 # Pulse CI proper
-ARG PULSE_NIGHTLY_CI
 ARG OTHERFLAGS
-RUN eval $(opam env) && . "$HOME/.cargo/env" && env PULSE_NIGHTLY_CI="$PULSE_NIGHTLY_CI" make -k -j $opamthreads -C $HOME/pulse ci
+RUN eval $(opam env) && . "$HOME/.cargo/env" && make -k -j $opamthreads -C $HOME/pulse ci
 
 ENV PULSE_HOME $HOME/pulse

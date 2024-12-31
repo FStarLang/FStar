@@ -14,6 +14,9 @@ For documentation on how to use Pulse, see https://fstar-lang.org/tutorial/book/
 * Karamel, but only if you are interested in extracting to C. If you
   are only interested in verifying Pulse code, or extracting to OCaml,
   then Karamel is not needed.
+* Rust and the bindgen-cli crate are required to build pulse2rust.
+  If you would like to skip this, set the environment variable
+  `PULSE_NO_RUST` to something non-empty.
 
 ## Building (and optionally installing) Pulse
 
