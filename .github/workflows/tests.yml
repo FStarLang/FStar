@@ -74,8 +74,8 @@ jobs:
         run: mkdir -p out && tar xzf fstar-ci.tar.gz -C out
         # run: mkdir -p out && tar xzf ${{ matrix.pak }} -C out
 
-      - name: Run tests
-        run: make -skj$(nproc) test
+      - name: Run tests, without forcing a build
+        run: make -skj$(nproc) _test
 
   binary-smoke:
     strategy:
