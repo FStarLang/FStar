@@ -62,8 +62,7 @@ RUN eval $(opam env) && \
 
 # Pulse CI proper
 ADD --chown=opam:opam ./ pulse/
-ARG PULSE_NIGHTLY_CI
 ARG OTHERFLAGS
-RUN eval $(opam env) && . $HOME/.cargo/env && env PULSE_NIGHTLY_CI="$PULSE_NIGHTLY_CI" make -k -j $opamthreads -C pulse ci
+RUN eval $(opam env) && . $HOME/.cargo/env && make -k -j $opamthreads -C pulse ci
 
 ENV PULSE_HOME $HOME/pulse

@@ -38,6 +38,5 @@ RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
 ENV PATH=$HOME/FStar/bin:$PATH
 
 # Pulse CI proper
-ARG PULSE_NIGHTLY_CI
 ARG OTHERFLAGS
-RUN eval $(opam env) && . "$HOME/.cargo/env" && env PULSE_NIGHTLY_CI="$PULSE_NIGHTLY_CI" make -k -j $opamthreads -C pulse ci
+RUN eval $(opam env) && . "$HOME/.cargo/env" && make -k -j $opamthreads -C pulse ci
