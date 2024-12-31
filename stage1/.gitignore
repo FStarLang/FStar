@@ -5,3 +5,6 @@
 .*_depend
 .depend
 *.install
+
+# For VS Code: don't show stage1/ulib in search results
+/ulib/*
