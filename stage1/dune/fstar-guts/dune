@@ -16,10 +16,6 @@
  )
  (modes native)
  (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
- (wrapped true)
- ; ^ This is the default, but we make it explicit since we absolutely 
- ; need modules here to be qualified to not clash with the compiler
- ; internal modules.
 )
 
 (menhir
@@ -35,5 +31,3 @@
       (with-stdout-to
         FStarC_Version.ml
         (run bash %{script})))))
-
-(dirs :standard \ app/hyperstack)
