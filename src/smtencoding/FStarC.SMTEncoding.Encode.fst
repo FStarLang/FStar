@@ -1592,7 +1592,7 @@ let encode_datacon (env:env_t) (se:sigelt)
       match t_res_tm.tm with
       | App (op, args) ->
         //iargs are index arguments in the return type of the data constructor
-        let targs, iargs = List.splitAt n_tps args in
+        let targs, iargs = List.splitAt (n_univs + n_tps) args in
         //fresh vars for iargs
         let fresh_ivars, fresh_iargs =
           iargs |> List.map (fun _ -> fresh_fvar env.current_module_name "i" Term_sort)
