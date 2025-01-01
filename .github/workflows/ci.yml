@@ -18,3 +18,7 @@ jobs:
     name: tests
     needs: build
     uses: ./.github/workflows/tests.yml
+
+  nix-build:
+    name: nix
+    uses: ./.github/workflows/nix.yml
