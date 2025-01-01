@@ -355,7 +355,7 @@ _examples: need_fstar_exe _force
 
 ci: _force
 	+$(MAKE) 2
-	+$(MAKE) test lib-fsharp
+	+$(MAKE) test lib-fsharp stage3-diff
 
 do-save: _force
 	$(call bold_msg,"SAVE", "$(FROM)  -->  $(TO)")
