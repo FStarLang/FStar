@@ -1,13 +1,15 @@
-# This workflow tests the Nix build of F*. We run it only for PRs (not
-# on every push) and we use Github hosted runners.
-
-name: Nix Build
+name: Build F* (Nix)
 
 on:
-  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
-  nix-build:
+  fstar-nix:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4

@@ -18,3 +18,12 @@ jobs:
     needs: build
     name: friends
     uses: ./.github/workflows/check-friends.yml
+
+  build-nix:
+    name: build (nix)
+    uses: ./.github/workflows/nix.yml
+
+  check-nix-friends:
+    needs: build-nix
+    name: friends-nix
+    uses: ./.github/workflows/check-nix-friends.yml
