@@ -1,4 +1,3 @@
-SHELL=/bin/bash
 export FSTAR_ROOT=$(CURDIR)
 # ^ This variable is only used by internal makefiles.
 # Do NOT rely on it in client code. It is not what FSTAR_HOME was.
