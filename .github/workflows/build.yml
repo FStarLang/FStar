@@ -30,7 +30,7 @@ jobs:
           path: FStar
 
       - name: Produce all artifacts
-        run: make -skj$(nproc) all-packages FSTAR_VERSION=ci ADMIT=1
+        run: make -skj$(nproc) all-packages FSTAR_VERSION=ci
         working-directory: FStar
 
       # Upload the archives.
