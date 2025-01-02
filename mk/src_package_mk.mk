@@ -23,30 +23,28 @@ build:
 install_bin: build
 	dune install --root=dune --prefix=$(CURDIR)/out
 
-install_lib:
-	# Install library (cp -u: don't copy unless newer)
-	mkdir -p out/ulib
-	cp -t out/lib/fstar ulib/*.fst
-	cp -t out/lib/fstar ulib/*.fsti
-	cp -t out/lib/fstar ulib/fstar.include
-	cp -r -t out/lib/fstar ulib/experimental
-	cp -r -t out/lib/fstar ulib/legacy
-
-check_lib: install_bin install_lib
-	mkdir -p out/lib/fstar/.checked
+check_lib: install_bin
 	env \
 	  SRC=ulib/ \
 	  FSTAR_EXE=out/bin/fstar.exe \
-	  CACHE_DIR=out/lib/fstar/.checked \
+	  CACHE_DIR=ulib.checked \
 	  TAG=lib \
 	  CODEGEN=none \
 	  OUTPUT_DIR=none \
 	  $(MAKE) -f mk/lib.mk verify
-	# No need for the depend file
-	rm -f out/lib/fstar/.checked/.dependlib
+
+install_lib: check_lib
+	@# Install library
+	cp -H -p -r ulib out/lib/fstar/ulib
+	echo 'ulib' >> out/lib/fstar/fstar.include
+	rm -f out/lib/fstar/ulib/*.config.json
+	@# Install checked files for the library
+	mkdir -p out/lib/fstar/ulib/.checked
+	cp -p ulib.checked/* out/lib/fstar/ulib/.checked/
+	echo '.checked' >> out/lib/fstar/ulib/fstar.include
 
 clean: _force
 	dune clean $(FSTAR_DUNE_OPTIONS) --root=dune
 	rm -rf $(CURDIR)/out
 
-all: check_lib
+all: install_lib
