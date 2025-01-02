@@ -1,20 +1,35 @@
 #!/bin/bash
 
-set -eux
+set -euo pipefail
 
-# Get latest run ID
-# ID=$(gh run list --workflow nightly.yml -L1 --json databaseId | jq '.[0].databaseId')
-ID=$(gh run list --workflow nightly.yml --json status,databaseId | jq '(.[] | select (.status == "completed") | .databaseId)' | head -n 1)
-NAME=fstar-ci-stage1.tar.gz
+kernel="$(uname -s)"
+case "$kernel" in
+  CYGWIN*) kernel=Windows ;;
+esac
 
-# Download binary package
-gh run download ${ID} -n ${NAME}
+arch="$(uname -m)"
+case "$arch" in
+  arm64) arch=aarch64 ;;
+esac
+
+URL="https://github.com/FStarLang/FStar/releases/download/nightly/fstar-$kernel-$arch.tar.gz"
+FILE="$(basename "$URL")"
+
+# Get artifact
+wget "$URL" -O "$FILE"
+
+# Warn if too old (over 48 hours)
+S_NOW=$(date +%s)
+S_FILE=$(stat "$FILE" -c '%Y')
+if [[ $((S_NOW - S_FILE)) -gt $((48 * 60 * 60)) ]]; then
+	echo "Warning: downloaded package seems old" >&2
+	echo "Modification date: $(stat "$FILE" -c '%y')" >&2
+fi
 
 # Untar
 rm -rf out
 mkdir out
-tar xzf ${NAME} -C out
-rm -f ${NAME}
+tar xzf "$FILE" -C out
+rm "$FILE"
 
-# Done?
-echo DONE
+echo Done.
