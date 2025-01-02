@@ -12,7 +12,7 @@ defaults:
 jobs:
   build:
     name: build
-    uses: ./.github/workflows/build.yml
+    uses: ./.github/workflows/build-ci.yml
 
   check-friends:
     needs: build

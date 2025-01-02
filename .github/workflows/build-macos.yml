@@ -1,0 +1,36 @@
+name: Build F* (macos)
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@master
+        with:
+          path: FStar
+
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 4.14.2
+
+      - name: Prepare
+        run: |
+          brew install opam bash gnu-getopt coreutils gnu-sed make
+          ./FStar/.scripts/get_fstar_z3.sh $HOME/bin
+          echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
+          opam install --deps-only FStar/fstar.opam
+
+      # Note *g*make below!
+      - name: Build package
+        working-directory: FStar
+        run: |
+          eval $(opam env)
+          gmake -skj$(nproc) package FSTAR_TAG=-Darwin-x86_64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: FStar/fstar-Darwin-x86_64.tar.gz
+          name: fstar-Darwin-x86_64.tar.gz

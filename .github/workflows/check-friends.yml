@@ -20,8 +20,8 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: fstar-ci.tar.gz
-      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+          name: fstar.tar.gz
+      - run: mkdir FStar && tar -xzf fstar.tar.gz -C FStar
       - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
 
       - name: Checkout karamel
@@ -59,8 +59,8 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: fstar-ci.tar.gz
-      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+          name: fstar.tar.gz
+      - run: mkdir FStar && tar -xzf fstar.tar.gz -C FStar
       - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
@@ -82,8 +82,8 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: fstar-ci.tar.gz
-      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+          name: fstar.tar.gz
+      - run: mkdir FStar && tar -xzf fstar.tar.gz -C FStar
       - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
 
       - name: Checkout steel
@@ -115,8 +115,8 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: fstar-ci.tar.gz
-      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+          name: fstar.tar.gz
+      - run: mkdir FStar && tar -xzf fstar.tar.gz -C FStar
       - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
@@ -209,8 +209,8 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: fstar-ci.tar.gz
-      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+          name: fstar.tar.gz
+      - run: mkdir FStar && tar -xzf fstar.tar.gz -C FStar
       - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
@@ -254,8 +254,8 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: fstar-ci.tar.gz
-      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+          name: fstar.tar.gz
+      - run: mkdir FStar && tar -xzf fstar.tar.gz -C FStar
       - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
@@ -288,8 +288,8 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: fstar-ci.tar.gz
-      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+          name: fstar.tar.gz
+      - run: mkdir FStar && tar -xzf fstar.tar.gz -C FStar
       - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
@@ -329,8 +329,8 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: fstar-ci.tar.gz
-      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+          name: fstar.tar.gz
+      - run: mkdir FStar && tar -xzf fstar.tar.gz -C FStar
       - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
@@ -358,8 +358,8 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: fstar-ci.tar.gz
-      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+          name: fstar.tar.gz
+      - run: mkdir FStar && tar -xzf fstar.tar.gz -C FStar
       - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
@@ -402,8 +402,8 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: fstar-ci.tar.gz
-      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+          name: fstar.tar.gz
+      - run: mkdir FStar && tar -xzf fstar.tar.gz -C FStar
       - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
@@ -436,8 +436,8 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: fstar-ci.tar.gz
-      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+          name: fstar.tar.gz
+      - run: mkdir FStar && tar -xzf fstar.tar.gz -C FStar
       - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
@@ -483,8 +483,8 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: fstar-ci.tar.gz
-      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+          name: fstar.tar.gz
+      - run: mkdir FStar && tar -xzf fstar.tar.gz -C FStar
       - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
@@ -524,8 +524,8 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: fstar-ci.tar.gz
-      - run: mkdir FStar && tar -xzf fstar-ci.tar.gz -C FStar
+          name: fstar.tar.gz
+      - run: mkdir FStar && tar -xzf fstar.tar.gz -C FStar
       - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master

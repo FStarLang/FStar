@@ -50,8 +50,8 @@ jobs:
     # strategy:
     #   matrix:
     #     pak:
-    #       - fstar-ci.tar.gz
-    #       - fstar-ci-stage1.tar.gz
+    #       - fstar.tar.gz
+    #       - fstar-stage1.tar.gz
     # runs-on: [self-hosted, linux, X64] # self-hosted so we use fast runners
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
@@ -68,10 +68,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           # name: ${{ matrix.pak }}
-          name: fstar-ci.tar.gz
+          name: fstar.tar.gz
 
       - name: Set up package locally
-        run: mkdir -p out && tar xzf fstar-ci.tar.gz -C out
+        run: mkdir -p out && tar xzf fstar.tar.gz -C out
         # run: mkdir -p out && tar xzf ${{ matrix.pak }} -C out
 
       - name: Run tests, without forcing a build
@@ -81,8 +81,8 @@ jobs:
     strategy:
       matrix:
         pak:
-          - fstar-ci.tar.gz
-          # - fstar-ci-stage1.tar.gz
+          - fstar.tar.gz
+          # - fstar-stage1.tar.gz
           # ^ See note in test-local.
         os:
           # - ubuntu-20.04
@@ -114,8 +114,8 @@ jobs:
     strategy:
       matrix:
         pak:
-          - fstar-ci-src.tar.gz
-          # - fstar-ci-stage1-src.tar.gz
+          - fstar-src.tar.gz
+          # - fstar-stage1-src.tar.gz
           # ^ See note in test-local.
         os:
           - ubuntu-20.04
@@ -165,9 +165,9 @@ jobs:
       - name: Get fstar package
         uses: actions/download-artifact@v4
         with:
-          name: fstar-ci.tar.gz
+          name: fstar.tar.gz
 
-      - run: tar xzf fstar-ci.tar.gz
+      - run: tar xzf fstar.tar.gz
 
       - name: Run perf canaries
         run: .scripts/perf_canaries.sh ./bin/fstar.exe
