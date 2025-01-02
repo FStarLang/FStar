@@ -13,8 +13,7 @@ jobs:
     # Build an F* binary package: a fully-bootstrapped stage 2 compiler,
     # with its plugins, a fully checked library (i.e. with .checked)
     # files and compiled versions of fstar_lib and fstar_plugin_lib.
-    # Also, we build a full stage 1 compiler and its libraries, and
-    # make all possible artifacts.
+    # We do not package a stage 1 compiler.
     # runs-on: [self-hosted, linux, X64] # self-hosted so we use fast runners
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
@@ -30,7 +29,7 @@ jobs:
           path: FStar
 
       - name: Produce all artifacts
-        run: make -skj$(nproc) all-packages FSTAR_VERSION=ci
+        run: make -skj$(nproc) package package-src FSTAR_VERSION=ci
         working-directory: FStar
 
       # Upload the archives.
@@ -41,27 +40,17 @@ jobs:
           retention-days: 3
       - uses: actions/upload-artifact@v4
         with:
-          path: FStar/fstar-ci-stage1.tar.gz
-          name: fstar-ci-stage1.tar.gz
-          retention-days: 3
-      - uses: actions/upload-artifact@v4
-        with:
           path: FStar/fstar-ci-src.tar.gz
           name: fstar-ci-src.tar.gz
           retention-days: 3
-      - uses: actions/upload-artifact@v4
-        with:
-          path: FStar/fstar-ci-stage1-src.tar.gz
-          name: fstar-ci-stage1-src.tar.gz
-          retention-days: 3
 
       # Upload full repo too, for stage3 check and Pulse. Note: we
-      # explicitly run 'make 2' at this point to generate the out/
+      # explicitly run 'make setlink-2' at this point to generate the out/
       # directory, as the previous targets do not. Also, remove the
       # previous archives so they don't blow up the size of this
       # artifact.
       - run: rm -f FStar/fstar-ci*.tar.gz
-      - run: make 2
+      - run: make setlink-2
         working-directory: FStar
 
       - uses: mtzguido/gci-upload@master
