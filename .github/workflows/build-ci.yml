@@ -1,4 +1,9 @@
-name: Build F*
+name: Build F* (ci)
+
+# This builds F* for Linux for the purposes of CI. It runs on a
+# recent Ubuntu-based container and also generates a source package
+# and a repo snapshot. For the purposes of binary releases, see
+# build-linux.yml.
 
 on:
   workflow_call:
@@ -23,25 +28,24 @@ jobs:
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
-      - name: Checkout
-        uses: actions/checkout@master
+      - uses: actions/checkout@master
         with:
           path: FStar
 
       - name: Produce all artifacts
-        run: make -skj$(nproc) package package-src FSTAR_VERSION=ci
+        run: make -skj$(nproc) package package-src FSTAR_TAG=
         working-directory: FStar
 
       # Upload the archives.
       - uses: actions/upload-artifact@v4
         with:
-          path: FStar/fstar-ci.tar.gz
-          name: fstar-ci.tar.gz
+          path: FStar/fstar.tar.gz
+          name: fstar.tar.gz
           retention-days: 3
       - uses: actions/upload-artifact@v4
         with:
-          path: FStar/fstar-ci-src.tar.gz
-          name: fstar-ci-src.tar.gz
+          path: FStar/fstar-src.tar.gz
+          name: fstar-src.tar.gz
           retention-days: 3
 
       # Upload full repo too, for stage3 check and Pulse. Note: we
@@ -49,7 +53,7 @@ jobs:
       # directory, as the previous targets do not. Also, remove the
       # previous archives so they don't blow up the size of this
       # artifact.
-      - run: rm -f FStar/fstar-ci*.tar.gz
+      - run: rm -f FStar/fstar*.tar.gz
       - run: make setlink-2
         working-directory: FStar
 

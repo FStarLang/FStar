@@ -4,7 +4,8 @@ export FSTAR_ROOT=$(CURDIR)
 include mk/common.mk
 undefine FSTAR_EXE # just in case
 
-FSTAR_VERSION ?= $(shell cat version.txt)
+# NOTE: If you are changing any of install rules, run a macos build too.
+# The behavior of cp, find, etc, can differ in subtle ways from that of GNU tools.
 
 FSTAR_DEFAULT_GOAL ?= build
 .DEFAULT_GOAL := $(FSTAR_DEFAULT_GOAL)
@@ -267,10 +268,12 @@ stage2: $(INSTALLED_FSTAR2_FULL_EXE)
 do-install: _force
 	$(call bold_msg, "INSTALL", $(PREFIX))
 	# Install fstar.exe, application library, and plugin library
-	cp -r $(BROOT)/out -T $(PREFIX)
+	mkdir -p $(PREFIX) # Needed for macOS apparently
+	cp -r $(BROOT)/out/* $(PREFIX)
 
 install: 2
 install: BROOT=stage2
+install: export PREFIX?=/usr/local
 install: do-install
 
 do-src-install: _force
@@ -292,32 +295,36 @@ __do-src-archive: _force
 	tar czf $(ARCHIVE) -h -C $(PREFIX) .
 	rm -rf $(PREFIX)
 
+# We append the version to the package names, unless
+# FSTAR_TAG is set (possibly empty)
+FSTAR_TAG ?= -v$(shell cat version.txt)
+
 package-1: $(INSTALLED_FSTAR1_FULL_EXE) _force
 	env \
 	  PREFIX=_pak1/ \
 	  BROOT=stage1/ \
-	  ARCHIVE=fstar-$(FSTAR_VERSION)-stage1.tar.gz \
+	  ARCHIVE=fstar$(FSTAR_TAG)-stage1.tar.gz \
 	  $(MAKE) __do-archive
 
 package-2: $(INSTALLED_FSTAR2_FULL_EXE) _force
 	env \
 	  PREFIX=_pak2/ \
 	  BROOT=stage2/ \
-	  ARCHIVE=fstar-$(FSTAR_VERSION).tar.gz \
+	  ARCHIVE=fstar$(FSTAR_TAG).tar.gz \
 	  $(MAKE) __do-archive
 
 package-src-1: $(FSTAR1_FULL_EXE).src 1.alib.src 1.plib.src _force
 	env \
 	  PREFIX=_srcpak1/ \
 	  BROOT=stage1/ \
-	  ARCHIVE=fstar-$(FSTAR_VERSION)-stage1-src.tar.gz \
+	  ARCHIVE=fstar$(FSTAR_TAG)-stage1-src.tar.gz \
 	  $(MAKE) __do-src-archive
 
 package-src-2: $(FSTAR2_FULL_EXE).src 2.alib.src 2.plib.src _force
 	env \
 	  PREFIX=_srcpak2/ \
 	  BROOT=stage2/ \
-	  ARCHIVE=fstar-$(FSTAR_VERSION)-src.tar.gz \
+	  ARCHIVE=fstar$(FSTAR_TAG)-src.tar.gz \
 	  $(MAKE) __do-src-archive
 
 package: package-2
@@ -484,6 +491,7 @@ help:
 	echo "  package            build a binary package"
 	echo "  package-src        build an OCaml source package"
 	echo "  clean              clean everything except built packages"
+	echo "  install            install F* into your system (by default to /usr/local, set PREFIX to change this)"
 	echo
 	echo "Optional arguments:"
 	echo "  V=1                enable verbose build"
@@ -506,7 +514,7 @@ help:
 	echo "  distclean          remove every generated file"
 	echo "  unit-tests         run the smaller unit test suite (implied by test)"
 	echo "  bump-stage0        copy stage2 into stage0, and restore symlinks between stage1/stage2"
-	echo "                     (essentially snapshotting a src-archive-2)"
+	echo "                     (essentially snapshotting a package-src-2)"
 	echo "  save               like bump-stage0, but saves the snapshot in _new/ for inspection"
 	echo
 	echo "You can set a different default goal by defining FSTAR_DEFAULT_GOAL in your environment."
