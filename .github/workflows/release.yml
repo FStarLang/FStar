@@ -25,8 +25,7 @@ jobs:
           git fetch --tags
           V="v$(cat version.txt)"
           if git tag -l "$V" | grep -q .; then
-            echo "::error::Version $V already exists." >&2
-            echo "::error::Bump the version number in version.txt before running this workflow." >&2
+            echo "::error::Version $V already exists (as a tag). Bump the version number in version.txt before running this workflow." >&2
             false
           fi
 
