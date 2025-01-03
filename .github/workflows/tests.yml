@@ -71,8 +71,7 @@ jobs:
           name: fstar.tar.gz
 
       - name: Set up package locally
-        run: mkdir -p out && tar xzf fstar.tar.gz -C out
-        # run: mkdir -p out && tar xzf ${{ matrix.pak }} -C out
+        run: tar xzf fstar.tar.gz && ln -s fstar out
 
       - name: Run tests, without forcing a build
         run: make -skj$(nproc) _test
@@ -106,9 +105,9 @@ jobs:
 
       - name: Smoke test
         run: |
-          ./bin/fstar.exe lib/fstar/ulib/Prims.fst -f
+          ./fstar/bin/fstar.exe fstar/lib/fstar/ulib/Prims.fst -f
           echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
-          ./bin/fstar.exe A.fst
+          ./fstar/bin/fstar.exe A.fst
 
   ocaml-smoke:
     strategy:
@@ -143,14 +142,17 @@ jobs:
           ocaml-compiler: 4.14.2
 
       - run: opam install . --deps-only --with-test
+        working-directory: fstar
       # Note: we admit queries here, like the OPAM build does.
       - run: eval $(opam env) && make -kj$(nproc) ADMIT=1
+        working-directory: fstar
 
       - name: Smoke test
         run: |
           ./out/bin/fstar.exe out/lib/fstar/ulib/Prims.fst -f
           echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
           ./out/bin/fstar.exe A.fst
+        working-directory: fstar
 
   perf-canaries:
     runs-on: ubuntu-24.04
@@ -171,3 +173,4 @@ jobs:
 
       - name: Run perf canaries
         run: .scripts/perf_canaries.sh ./bin/fstar.exe
+        working-directory: fstar
