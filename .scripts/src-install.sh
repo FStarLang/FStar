@@ -37,6 +37,7 @@ rsync -r --copy-links                   \
   --filter="- /.gitignore"              \
   "${BROOT}/" "${PREFIX}/"
 
+cp .scripts/get_fstar_z3.sh "${PREFIX}/get_fstar_z3.sh"
 cp fstar.opam "${PREFIX}/fstar.opam"
 cp mk/src_package_mk.mk "${PREFIX}/Makefile"
 mkdir "${PREFIX}/mk"

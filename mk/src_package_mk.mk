@@ -34,6 +34,8 @@ check_lib: install_bin
 	  $(MAKE) -f mk/lib.mk verify
 
 install_lib: check_lib
+	@# Install get_fstar_z3 script
+	cp get_fstar_z3.sh $(CURDIR)/out/bin
 	@# Install library
 	cp -H -p -r ulib out/lib/fstar/ulib
 	echo 'ulib' >> out/lib/fstar/fstar.include

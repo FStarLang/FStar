@@ -254,6 +254,7 @@ setlink-%:
 	# For compatibility with the previous layout
 	mkdir -p bin
 	ln -Trsf out/bin/fstar.exe bin/fstar.exe
+	ln -Trsf out/bin/get_fstar_z3.sh bin/get_fstar_z3.sh
 
 stage1: $(INSTALLED_FSTAR1_FULL_EXE)
 1: stage1
