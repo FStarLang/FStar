@@ -37,8 +37,6 @@ install: fstarc-bare fstarc-full libapp libplugin
 	@# Seems to need one final build?
 	cd dune && dune build $(FSTAR_DUNE_BUILD_OPTIONS)
 	cd dune && dune install $(FSTAR_DUNE_OPTIONS) --prefix=$(abspath $(CURDIR)/out)
-	@# Install get_fstar_z3 script
-	cp ../.scripts/get_fstar_z3.sh $(CURDIR)/out/bin
 	@# Install library
 	cp -H -p -r ulib out/lib/fstar/ulib
 	echo 'ulib' >> out/lib/fstar/fstar.include
@@ -47,3 +45,10 @@ install: fstarc-bare fstarc-full libapp libplugin
 	mkdir -p out/lib/fstar/ulib/.checked
 	cp -p ulib.checked/* out/lib/fstar/ulib/.checked/
 	echo '.checked' >> out/lib/fstar/ulib/fstar.include
+	@# Install get_fstar_z3 script
+	cp ../.scripts/get_fstar_z3.sh $(CURDIR)/out/bin
+	@# License and extra files
+	cp ../LICENSE* $(CURDIR)/out/
+	cp ../README.md $(CURDIR)/out/
+	cp ../INSTALL.md $(CURDIR)/out/
+	cp ../version.txt $(CURDIR)/out/
