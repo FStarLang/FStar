@@ -39,7 +39,7 @@ install: fstarc-bare fstarc-full libapp libplugin
 	cd dune && dune install $(FSTAR_DUNE_OPTIONS) --prefix=$(abspath $(CURDIR)/out)
 	@# Install library
 	cp -H -p -r ulib out/lib/fstar/ulib
-	echo 'ulib' >> out/lib/fstar/fstar.include
+	echo 'ulib' > out/lib/fstar/fstar.include
 	rm -f out/lib/fstar/ulib/*.config.json
 	@# Install checked files for the library
 	mkdir -p out/lib/fstar/ulib/.checked
