@@ -23,6 +23,16 @@ jobs:
           echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
           opam install --deps-only FStar/fstar.opam
 
+      - name: Set version
+        run: |
+          # Setting FSTAR_VERSION for nightly and release builds. If unset,
+          # we use $(version.txt)~dev. Setting it avoids the ~dev.
+          if [[ "${{github.workflow_ref}}" =~ "nightly.yml" ]]; then
+            echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV
+          elif [[ "${{github.workflow_ref}}" =~ "release.yml" ]]; then
+            echo FSTAR_VERSION="$(cat FStar/version.txt)" >> $GITHUB_ENV
+          fi
+
       # Note *g*make below!
       - name: Build package
         working-directory: FStar
