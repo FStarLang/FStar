@@ -50,10 +50,11 @@ buildDunePackage {
     "Makefile"
     "src.*"
     "mk.*"
-    "stage*.*"
+    "stage..*"
     "ulib.*"
     "doc.*"
     "version.txt"
+    ".scripts.*" # Mostly here for get_fstar_z3.sh
   ];
 
   buildPhase = ''
