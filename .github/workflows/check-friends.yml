@@ -63,13 +63,18 @@ jobs:
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
 
+      # krml test needs node
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 16
+
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
 
       # node is needed for the wasm tests, skip them for now
       - name: Test
-        run: make -C karamel -skj$(nproc) test NOWASMTEST=1
+        run: make -C karamel -skj$(nproc) test
 
   build-steel:
     runs-on: ubuntu-latest
