@@ -55,6 +55,9 @@ buildDunePackage {
     "doc.*"
     "version.txt"
     ".scripts.*" # Mostly here for get_fstar_z3.sh
+    "LICENSE.*"
+    "README.md"
+    "INSTALL.md"
   ];
 
   buildPhase = ''
