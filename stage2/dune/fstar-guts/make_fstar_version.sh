@@ -1,0 +1,1 @@
+../../../.scripts/make_fstar_version.sh

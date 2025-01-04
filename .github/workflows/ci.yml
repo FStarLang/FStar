@@ -1,0 +1,24 @@
+name: F* CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: build
+    uses: ./.github/workflows/build-ci.yml
+
+  tests:
+    name: tests
+    needs: build
+    uses: ./.github/workflows/tests.yml
+
+  nix-build:
+    name: nix
+    uses: ./.github/workflows/nix.yml

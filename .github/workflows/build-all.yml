@@ -1,0 +1,14 @@
+name: Build F* binaries (all archs)
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    # This job also builds an (architecture-indepenendent) source package
+    # artifact.
+    uses: ./.github/workflows/build-linux.yml
+
+  build-macos:
+    uses: ./.github/workflows/build-macos.yml
