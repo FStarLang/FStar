@@ -541,6 +541,10 @@ jobs:
         with:
           name: pulse
 
+      # everparse expects PULSE_HOME to be the root of the installation,
+      # not the root of the repo
+      - run: echo "PULSE_HOME=$PULSE_HOME/out" >> $GITHUB_ENV
+
       - name: Checkout everparse (cbor branch)
         uses: actions/checkout@master
         with:
