@@ -172,5 +172,4 @@ jobs:
       - run: tar xzf fstar.tar.gz
 
       - name: Run perf canaries
-        run: .scripts/perf_canaries.sh ./bin/fstar.exe
-        working-directory: fstar
+        run: .scripts/perf_canaries.sh ./fstar/bin/fstar.exe
