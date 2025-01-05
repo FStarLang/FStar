@@ -129,6 +129,11 @@ let set_error_trap () =
   in
   set_sigint_handler (sigint_handler_f h')
 
+let print_help_for (o : string) : unit =
+  match Options.help_for_option o with
+  | None -> ()
+  | Some doc -> Util.print_error (Errors.Msg.renderdoc doc)
+
 (* Normal mode with some flags, files, etc *)
 let go_normal () =
   let res, filenames = process_args () in
@@ -136,7 +141,10 @@ let go_normal () =
   match res with
     | Empty     -> Options.display_usage(); exit 1
     | Help      -> Options.display_usage(); exit 0
-    | Error msg -> Util.print_error msg; exit 1
+    | Error (msg, opt) ->
+      Util.print_error ("error: " ^ msg);
+      print_help_for opt;
+      exit 1
 
     | Success when Options.print_cache_version () ->
       Util.print1 "F* cache version number: %s\n"

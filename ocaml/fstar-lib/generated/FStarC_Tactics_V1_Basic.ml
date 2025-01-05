@@ -6238,7 +6238,7 @@ let (set_options : Prims.string -> unit FStarC_Tactics_Monad.tac) =
                           (g.FStarC_Tactics_Types.label)
                       } in
                     Obj.magic (FStarC_Tactics_Monad.replace_cur g')
-                | FStarC_Getopt.Error err ->
+                | FStarC_Getopt.Error (err, uu___4) ->
                     Obj.magic (fail2 "Setting options `%s` failed: %s" s err)
                 | FStarC_Getopt.Help ->
                     Obj.magic

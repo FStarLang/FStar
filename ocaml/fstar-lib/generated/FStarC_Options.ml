@@ -865,6 +865,19 @@ let (display_version : unit -> unit) =
         "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n" uu___2 uu___3
         uu___4 uu___5 uu___6 in
     FStarC_Compiler_Util.print_string uu___1
+let (bold_doc : FStarC_Pprint.document -> FStarC_Pprint.document) =
+  fun d ->
+    let uu___ =
+      let uu___1 = FStarC_Compiler_Util.stdout_isatty () in
+      uu___1 = (FStar_Pervasives_Native.Some true) in
+    if uu___
+    then
+      let uu___1 = FStarC_Pprint.fancystring "\027[39;1m" Prims.int_zero in
+      let uu___2 =
+        let uu___3 = FStarC_Pprint.fancystring "\027[0m" Prims.int_zero in
+        FStarC_Pprint.op_Hat_Hat d uu___3 in
+      FStarC_Pprint.op_Hat_Hat uu___1 uu___2
+    else d
 let (display_debug_keys : unit -> unit) =
   fun uu___ ->
     let keys = FStarC_Compiler_Debug.list_all_toggles () in
@@ -874,24 +887,69 @@ let (display_debug_keys : unit -> unit) =
       (fun s ->
          let uu___2 = FStarC_Compiler_String.op_Hat s "\n" in
          FStarC_Compiler_Util.print_string uu___2) uu___1
+let (usage_for :
+  (FStarC_Getopt.opt * FStarC_Pprint.document) -> FStarC_Pprint.document) =
+  fun o ->
+    let uu___ = o in
+    match uu___ with
+    | ((short, flag, p), explain) ->
+        let arg =
+          match p with
+          | FStarC_Getopt.ZeroArgs uu___1 -> FStarC_Pprint.empty
+          | FStarC_Getopt.OneArg (uu___1, argname) ->
+              let uu___2 = FStarC_Pprint.blank Prims.int_one in
+              let uu___3 = FStarC_Pprint.doc_of_string argname in
+              FStarC_Pprint.op_Hat_Hat uu___2 uu___3 in
+        let short_opt =
+          if short <> FStarC_Getopt.noshort
+          then
+            let uu___1 =
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 =
+                    FStarC_Compiler_String.make Prims.int_one short in
+                  FStarC_Compiler_String.op_Hat "-" uu___4 in
+                FStarC_Pprint.doc_of_string uu___3 in
+              FStarC_Pprint.op_Hat_Hat uu___2 arg in
+            [uu___1]
+          else [] in
+        let long_opt =
+          if flag <> ""
+          then
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = FStarC_Compiler_String.op_Hat "--" flag in
+                FStarC_Pprint.doc_of_string uu___3 in
+              FStarC_Pprint.op_Hat_Hat uu___2 arg in
+            [uu___1]
+          else [] in
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStarC_Pprint.blank Prims.int_one in
+                FStarC_Pprint.op_Hat_Hat FStarC_Pprint.comma uu___5 in
+              FStarC_Pprint.separate uu___4
+                (FStarC_Compiler_List.op_At short_opt long_opt) in
+            bold_doc uu___3 in
+          FStarC_Pprint.group uu___2 in
+        let uu___2 =
+          let uu___3 =
+            let uu___4 =
+              let uu___5 =
+                let uu___6 = FStarC_Pprint.blank (Prims.of_int (4)) in
+                let uu___7 = FStarC_Pprint.align explain in
+                FStarC_Pprint.op_Hat_Hat uu___6 uu___7 in
+              FStarC_Pprint.group uu___5 in
+            FStarC_Pprint.op_Hat_Hat uu___4 FStarC_Pprint.hardline in
+          FStarC_Pprint.op_Hat_Hat FStarC_Pprint.hardline uu___3 in
+        FStarC_Pprint.op_Hat_Hat uu___1 uu___2
 let (display_usage_aux :
   (FStarC_Getopt.opt * FStarC_Pprint.document) Prims.list -> unit) =
   fun specs ->
     let text s =
       let uu___ = FStarC_Pprint.break_ Prims.int_one in
       let uu___1 = FStarC_Pprint.words s in FStarC_Pprint.flow uu___ uu___1 in
-    let bold_doc d =
-      let uu___ =
-        let uu___1 = FStarC_Compiler_Util.stdout_isatty () in
-        uu___1 = (FStar_Pervasives_Native.Some true) in
-      if uu___
-      then
-        let uu___1 = FStarC_Pprint.fancystring "\027[39;1m" Prims.int_zero in
-        let uu___2 =
-          let uu___3 = FStarC_Pprint.fancystring "\027[0m" Prims.int_zero in
-          FStarC_Pprint.op_Hat_Hat d uu___3 in
-        FStarC_Pprint.op_Hat_Hat uu___1 uu___2
-      else d in
     let d =
       let uu___ =
         FStarC_Pprint.doc_of_string
@@ -906,68 +964,10 @@ let (display_usage_aux :
           FStarC_Pprint.doc_of_string uu___3 in
         let uu___3 =
           FStarC_Compiler_List.fold_right
-            (fun uu___4 ->
+            (fun o ->
                fun rest ->
-                 match uu___4 with
-                 | ((short, flag, p), explain) ->
-                     let arg =
-                       match p with
-                       | FStarC_Getopt.ZeroArgs uu___5 -> FStarC_Pprint.empty
-                       | FStarC_Getopt.OneArg (uu___5, argname) ->
-                           let uu___6 = FStarC_Pprint.blank Prims.int_one in
-                           let uu___7 = FStarC_Pprint.doc_of_string argname in
-                           FStarC_Pprint.op_Hat_Hat uu___6 uu___7 in
-                     let short_opt =
-                       if short <> FStarC_Getopt.noshort
-                       then
-                         let uu___5 =
-                           let uu___6 =
-                             let uu___7 =
-                               let uu___8 =
-                                 FStarC_Compiler_String.make Prims.int_one
-                                   short in
-                               FStarC_Compiler_String.op_Hat "-" uu___8 in
-                             FStarC_Pprint.doc_of_string uu___7 in
-                           FStarC_Pprint.op_Hat_Hat uu___6 arg in
-                         [uu___5]
-                       else [] in
-                     let long_opt =
-                       if flag <> ""
-                       then
-                         let uu___5 =
-                           let uu___6 =
-                             let uu___7 =
-                               FStarC_Compiler_String.op_Hat "--" flag in
-                             FStarC_Pprint.doc_of_string uu___7 in
-                           FStarC_Pprint.op_Hat_Hat uu___6 arg in
-                         [uu___5]
-                       else [] in
-                     let uu___5 =
-                       let uu___6 =
-                         let uu___7 =
-                           let uu___8 =
-                             let uu___9 = FStarC_Pprint.blank Prims.int_one in
-                             FStarC_Pprint.op_Hat_Hat FStarC_Pprint.comma
-                               uu___9 in
-                           FStarC_Pprint.separate uu___8
-                             (FStarC_Compiler_List.op_At short_opt long_opt) in
-                         bold_doc uu___7 in
-                       FStarC_Pprint.group uu___6 in
-                     let uu___6 =
-                       let uu___7 =
-                         let uu___8 =
-                           let uu___9 =
-                             let uu___10 =
-                               FStarC_Pprint.blank (Prims.of_int (4)) in
-                             let uu___11 = FStarC_Pprint.align explain in
-                             FStarC_Pprint.op_Hat_Hat uu___10 uu___11 in
-                           FStarC_Pprint.group uu___9 in
-                         let uu___9 =
-                           FStarC_Pprint.op_Hat_Hat FStarC_Pprint.hardline
-                             rest in
-                         FStarC_Pprint.op_Hat_Hat uu___8 uu___9 in
-                       FStarC_Pprint.op_Hat_Hat FStarC_Pprint.hardline uu___7 in
-                     FStarC_Pprint.op_Hat_Hat uu___5 uu___6) specs
+                 let uu___4 = usage_for o in
+                 FStarC_Pprint.op_Hat_Hat uu___4 rest) specs
             FStarC_Pprint.empty in
         FStarC_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
       FStarC_Pprint.op_Hat_Slash_Hat uu___ uu___1 in
@@ -4084,6 +4084,18 @@ let (settable_specs :
     (fun uu___ ->
        match uu___ with | ((uu___2, x, uu___3), uu___4) -> settable x)
     all_specs
+let (help_for_option :
+  Prims.string -> FStarC_Pprint.document FStar_Pervasives_Native.option) =
+  fun s ->
+    let uu___ =
+      FStarC_Compiler_List.filter
+        (fun uu___2 ->
+           match uu___2 with | ((uu___3, x, uu___4), uu___5) -> x = s)
+        all_specs in
+    match uu___ with
+    | [] -> FStar_Pervasives_Native.None
+    | o::uu___2 ->
+        let uu___3 = usage_for o in FStar_Pervasives_Native.Some uu___3
 let (uu___2 :
   (((unit -> FStarC_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStarC_Getopt.parse_cmdline_res)))
@@ -4930,15 +4942,17 @@ let (set_options : Prims.string -> FStarC_Getopt.parse_cmdline_res) =
                   FStarC_Getopt.parse_string settable_specs1
                     (fun s1 ->
                        FStarC_Compiler_Effect.raise (File_argument s1);
-                       FStarC_Getopt.Error "set_options with file argument")
-                    s in
+                       FStarC_Getopt.Error
+                         ("set_options with file argument", "")) s in
                 if res = FStarC_Getopt.Success
                 then set_error_flags ()
                 else res)) ()
     with
     | File_argument s1 ->
         let uu___3 =
-          FStarC_Compiler_Util.format1 "File %s is not a valid option" s1 in
+          let uu___4 =
+            FStarC_Compiler_Util.format1 "File %s is not a valid option" s1 in
+          (uu___4, "") in
         FStarC_Getopt.Error uu___3
 let with_options : 'a . Prims.string -> (unit -> 'a) -> 'a =
   fun s ->
