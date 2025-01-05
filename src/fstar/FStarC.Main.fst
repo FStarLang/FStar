@@ -212,10 +212,11 @@ let go_normal () =
       Util.print1 "Registered tactic plugins:\n%s\n" (String.concat "\n" (List.map (fun p -> "  " ^ show p.TypeChecker.Primops.Base.name) ts));
       ()
 
-    (* --locate, --locate_lib, --locate_ocaml *)
+    (* --locate, --locate_lib, --locate_ocaml, --locate_file *)
     | Success when Options.locate () ->
       Util.print1 "%s\n" (Find.locate ());
       exit 0
+
     | Success when Options.locate_lib () -> (
       match Find.locate_lib () with
       | None ->
@@ -225,9 +226,21 @@ let go_normal () =
         Util.print1 "%s\n" s;
         exit 0
     )
+
     | Success when Options.locate_ocaml () ->
       Util.print1 "%s\n" (Find.locate_ocaml ());
       exit 0
+
+    | Success when Some? (Options.locate_file ()) -> (
+      let f = Some?.v (Options.locate_file ()) in
+      match Find.find_file f with
+      | None ->
+        Util.print1_error "File %s was not found in include path.\n" f;
+        exit 1
+      | Some fn ->
+        Util.print1 "%s\n" (Util.normalize_file_path fn);
+        exit 0
+    )
 
     (* either batch or interactive mode *)
     | Success ->
