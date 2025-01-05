@@ -1,5 +1,5 @@
 [
-  "Dø\u0006ýCìœ;…®–\u007f\u001b«z‰",
+  "\u0014H{Ö\u0011á¶Ü\u001a”E—ñ2T&",
   [
     [
       "FStar.IndefiniteDescription.indefinite_description_ghost",
@@ -8,11 +8,23 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_4861ff30b18822886452f698558931e8",
-        "typing_FStar.IndefiniteDescription.indefinite_description_tot"
+        "refinement_interpretation_Tm_refine_4cc89ae73e7128e43010e5aba0ff060c"
       ],
       0,
-      "47a007d6df342c9a405badf2fa514fe1"
+      "6dbcefa13df815a5edf30673dae6a5e8"
+    ],
+    [
+      "FStar.IndefiniteDescription.indefinite_description_tot",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
+        "typing_FStar.IndefiniteDescription.indefinite_description_ghost"
+      ],
+      0,
+      "a0556290c5e03174455c5e8099e3d0be"
     ],
     [
       "FStar.IndefiniteDescription.strong_excluded_middle",
@@ -21,11 +33,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
-        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.sum",
+        "disc_equation_Prims.Right", "equation_Prims.l_not",
+        "fuel_guarded_inversion_Prims.sum", "l_not-interp",
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "b9496c4951f102bd0245a96db1ffb275"
+      "fa27bd9598293e819ac49c24ef3b6bcb"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
@@ -40,7 +53,7 @@
         "refinement_interpretation_Tm_refine_f3db4b290bcde56fe0046b79b9c3a13f"
       ],
       0,
-      "6b1325e84538271f424a08f59b60157a"
+      "651af61d1a0360043de43b33a075e0c8"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle_prop",
@@ -54,16 +67,7 @@
         "refinement_interpretation_Tm_refine_e76bd1e3fcd1369d7232ec3854a8c984"
       ],
       0,
-      "93fdc057517da1ccc10556fd0867afc8"
-    ],
-    [
-      "FStar.IndefiniteDescription.elim_squash",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "ec9a9e011b6689e9560ee4952e10e65c"
+      "a87954d40bab496499d21feb5be5769b"
     ]
   ]
 ]

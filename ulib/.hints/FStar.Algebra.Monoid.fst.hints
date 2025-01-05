@@ -13,7 +13,7 @@
         "projection_inverse_FStar.Algebra.Monoid.Monoid_unit"
       ],
       0,
-      "0cac39a5962b8f3a0849bc37082dfd78"
+      "8d990d86c481c499838bcf96e4446fc4"
     ],
     [
       "FStar.Algebra.Monoid.nat_plus_monoid",
@@ -33,7 +33,7 @@
         "typing_Tm_abs_cfa108ea2e44f8f80ea74d6b8d851c76"
       ],
       0,
-      "cc552cf7ea2b2db86eee14aaf31e3380"
+      "cf9159cd5236defa4b899a13c7d233b5"
     ],
     [
       "FStar.Algebra.Monoid.int_plus_monoid",
@@ -47,12 +47,12 @@
         "equation_FStar.Algebra.Monoid.left_unitality_lemma",
         "equation_FStar.Algebra.Monoid.right_unitality_lemma",
         "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "primitive_Prims.op_Addition",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "projection_inverse_BoxInt_proj_0",
         "token_correspondence_Prims.op_Addition"
       ],
       0,
-      "769472d880411a06a9f22226a4a213d6"
+      "77229d3502fc08dc0856142e45601bef"
     ],
     [
       "FStar.Algebra.Monoid.conjunction_monoid",
@@ -79,7 +79,7 @@
         "typing_Prims.l_True", "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "2f105c247639a55f9f1024ce7dfec0c5"
+      "207a3b2d81fa6ad1df8e24d106c33f63"
     ],
     [
       "FStar.Algebra.Monoid.disjunction_monoid",
@@ -102,7 +102,7 @@
         "unit_typing"
       ],
       0,
-      "b888b67185dd19278520e51550e0c051"
+      "f6896fc757384150da1cf862bb8fe1a0"
     ],
     [
       "FStar.Algebra.Monoid.bool_and_monoid",
@@ -121,7 +121,7 @@
         "typing_Tm_abs_8939a34eb92f993c93075a413a93c17c"
       ],
       0,
-      "f85a8f0ea20b36aa3975b814cde9b477"
+      "2829b9342eaab2a6fceb0a6613bea5f5"
     ],
     [
       "FStar.Algebra.Monoid.bool_or_monoid",
@@ -140,7 +140,7 @@
         "typing_Tm_abs_97a476600c466721ac503386d260fe4f"
       ],
       0,
-      "578e43c87725c8e84e691c774ff856cf"
+      "1fd1959633382710980f57deecf1288d"
     ],
     [
       "FStar.Algebra.Monoid.bool_xor_monoid",
@@ -160,7 +160,7 @@
         "typing_Tm_abs_5043f38a94b5783f1a2853ffc23a082c"
       ],
       0,
-      "5177f5b621a1f5da29b03689ada05e27"
+      "250cd54aad10fc254c32cfb16347b645"
     ],
     [
       "FStar.Algebra.Monoid.lift_monoid_option",
@@ -192,7 +192,7 @@
         "typing_Tm_abs_9bee8d4e0220718dda8a4314b261cdec"
       ],
       0,
-      "4fbf6c7d04705794060fbdd684e98f1d"
+      "a1732958aca5c47eb321e071ca5f053a"
     ],
     [
       "FStar.Algebra.Monoid.monoid_morphism",
@@ -207,7 +207,7 @@
         "typing_Prims.unit"
       ],
       0,
-      "911a668d69e0d712bae7f59c3fe6f19b"
+      "1d25906ac5c4af6dfcb68ac447373707"
     ],
     [
       "FStar.Algebra.Monoid.intro_monoid_morphism",
@@ -216,7 +216,7 @@
       1,
       [ "@query" ],
       0,
-      "0e4ee20ed678cbae125a9a76fe0d83fc"
+      "4b7e18baca445c69e8765e5805910368"
     ],
     [
       "FStar.Algebra.Monoid.uu___0",
@@ -244,7 +244,7 @@
         "token_correspondence_Prims.op_Addition"
       ],
       0,
-      "ecccd84e9bbf5bb2c2d501c9283a8478"
+      "c9c13a960140eeb52d31203c72fe8bec"
     ],
     [
       "FStar.Algebra.Monoid.uu___1",
@@ -282,7 +282,7 @@
         "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "04830c20a8cca9597f90a52383defff7"
+      "2ad7c8a74289a57170e49085daba610d"
     ],
     [
       "FStar.Algebra.Monoid.uu___2",
@@ -316,7 +316,7 @@
         "unit_typing"
       ],
       0,
-      "276921d73eea94639cb89906bb980491"
+      "abc33e743c6140659ee92c8aa778d845"
     ]
   ]
 ]
