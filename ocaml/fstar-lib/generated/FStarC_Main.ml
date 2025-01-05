@@ -160,6 +160,13 @@ let (go_normal : unit -> unit) =
     let uu___1 = process_args () in
     match uu___1 with
     | (res, filenames) ->
+        let check_no_filenames opt =
+          if Prims.uu___is_Cons filenames
+          then
+            (FStarC_Compiler_Util.print1_error
+               "error: No filenames should be passed with option %s\n" opt;
+             FStarC_Compiler_Effect.exit Prims.int_one)
+          else () in
         ((let uu___3 = FStarC_Options.trace_error () in
           if uu___3 then set_error_trap () else ());
          (match res with
@@ -301,23 +308,44 @@ let (go_normal : unit -> unit) =
                 FStarC_Compiler_Util.print1
                   "Registered tactic plugins:\n%s\n" uu___5))
           | FStarC_Getopt.Success when FStarC_Options.locate () ->
-              ((let uu___4 = FStarC_Find.locate () in
-                FStarC_Compiler_Util.print1 "%s\n" uu___4);
+              (check_no_filenames "--locate";
+               (let uu___5 = FStarC_Find.locate () in
+                FStarC_Compiler_Util.print1 "%s\n" uu___5);
                FStarC_Compiler_Effect.exit Prims.int_zero)
           | FStarC_Getopt.Success when FStarC_Options.locate_lib () ->
-              let uu___3 = FStarC_Find.locate_lib () in
-              (match uu___3 with
-               | FStar_Pervasives_Native.None ->
-                   (FStarC_Compiler_Util.print_error
-                      "No library found (is --no_default_includes set?)\n";
-                    FStarC_Compiler_Effect.exit Prims.int_one)
-               | FStar_Pervasives_Native.Some s ->
-                   (FStarC_Compiler_Util.print1 "%s\n" s;
-                    FStarC_Compiler_Effect.exit Prims.int_zero))
+              (check_no_filenames "--locate_lib";
+               (let uu___4 = FStarC_Find.locate_lib () in
+                match uu___4 with
+                | FStar_Pervasives_Native.None ->
+                    (FStarC_Compiler_Util.print_error
+                       "No library found (is --no_default_includes set?)\n";
+                     FStarC_Compiler_Effect.exit Prims.int_one)
+                | FStar_Pervasives_Native.Some s ->
+                    (FStarC_Compiler_Util.print1 "%s\n" s;
+                     FStarC_Compiler_Effect.exit Prims.int_zero)))
           | FStarC_Getopt.Success when FStarC_Options.locate_ocaml () ->
-              ((let uu___4 = FStarC_Find.locate_ocaml () in
-                FStarC_Compiler_Util.print1 "%s\n" uu___4);
+              (check_no_filenames "--locate_ocaml";
+               (let uu___5 = FStarC_Find.locate_ocaml () in
+                FStarC_Compiler_Util.print1 "%s\n" uu___5);
                FStarC_Compiler_Effect.exit Prims.int_zero)
+          | FStarC_Getopt.Success when
+              let uu___3 = FStarC_Options.locate_file () in
+              FStar_Pervasives_Native.uu___is_Some uu___3 ->
+              (check_no_filenames "--locate_fle";
+               (let f =
+                  let uu___4 = FStarC_Options.locate_file () in
+                  FStar_Pervasives_Native.__proj__Some__item__v uu___4 in
+                let uu___4 = FStarC_Find.find_file f in
+                match uu___4 with
+                | FStar_Pervasives_Native.None ->
+                    (FStarC_Compiler_Util.print1_error
+                       "File %s was not found in include path.\n" f;
+                     FStarC_Compiler_Effect.exit Prims.int_one)
+                | FStar_Pervasives_Native.Some fn ->
+                    ((let uu___6 =
+                        FStarC_Compiler_Util.normalize_file_path fn in
+                      FStarC_Compiler_Util.print1 "%s\n" uu___6);
+                     FStarC_Compiler_Effect.exit Prims.int_zero)))
           | FStarC_Getopt.Success ->
               (FStarC_Compiler_Effect.op_Colon_Equals fstar_files
                  (FStar_Pervasives_Native.Some filenames);

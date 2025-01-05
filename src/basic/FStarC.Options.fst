@@ -273,6 +273,7 @@ let defaults =
       ("locate"                       , Bool false);
       ("locate_lib"                   , Bool false);
       ("locate_ocaml"                 , Bool false);
+      ("locate_file"                  , Unset);
       ("read_krml_file"               , Unset);
       ("record_hints"                 , Bool false);
       ("record_options"               , Bool false);
@@ -534,6 +535,7 @@ let get_list_plugins            ()      = lookup_opt "list_plugins"             
 let get_locate                  ()      = lookup_opt "locate"                   as_bool
 let get_locate_lib              ()      = lookup_opt "locate_lib"               as_bool
 let get_locate_ocaml            ()      = lookup_opt "locate_ocaml"             as_bool
+let get_locate_file             ()      = lookup_opt "locate_file"              (as_option as_string)
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
 let get_retry                   ()      = lookup_opt "retry"                    as_bool
@@ -1634,6 +1636,10 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     Const (Bool true),
     text "Print the root of the built OCaml F* library and exit");
   ( noshort,
+    "locate_file",
+    SimpleStr "basename",
+    text "Find a file in F*'s include path and print its absolute path, then exit");
+  ( noshort,
     "ocamlenv",
     WithSideEffect ((fun _ -> print_error "--ocamlenv must be the first argument, see fstar.exe --help for details\n"; exit 1),
                      (Const (Bool true))),
@@ -2054,6 +2060,7 @@ let list_plugins                 () = get_list_plugins                ()
 let locate                       () = get_locate                      ()
 let locate_lib                   () = get_locate_lib                  ()
 let locate_ocaml                 () = get_locate_ocaml                ()
+let locate_file                  () = get_locate_file                 ()
 let read_krml_file               () = get_read_krml_file              ()
 let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()
