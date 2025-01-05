@@ -16,7 +16,7 @@
         "refinement_interpretation_Tm_refine_d1b2f1d51ec217fc7d0f57abe8ff2fe9"
       ],
       0,
-      "a536e637e2736c53fc03a9d7a37521d9"
+      "7de3478893bfb8a1c16d20740ee20340"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.equality_equiv",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "b91a11d5c340dd3313246f7a81562f87"
+      "9307f20d8ee309913a69436cd4fee55a"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.right_identity",
@@ -34,7 +34,7 @@
       1,
       [ "@query" ],
       0,
-      "2635316d996e77707860bcad04856dbf"
+      "addbc33b745f837758a8a87ef4dd1764"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.int_plus_cm",
@@ -55,7 +55,7 @@
         "token_correspondence_FStar.Algebra.CommMonoid.Equiv.__proj__EQ__item__eq"
       ],
       0,
-      "00486e79633ffb4aa85a10eefc3e6a58"
+      "c3ceec424e81ac86ac27d265aa265279"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.int_multiply_cm",
@@ -67,7 +67,7 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "eq2-interp",
         "equation_FStar.Algebra.CommMonoid.Equiv.equality_equiv",
         "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion",
+        "int_inversion", "int_typing",
         "interpretation_Tm_abs_d82b071f52606d28a1f5f5870f4b75f9",
         "primitive_Prims.op_Multiply",
         "proj_equation_FStar.Algebra.CommMonoid.Equiv.EQ_eq",
@@ -76,7 +76,7 @@
         "token_correspondence_FStar.Algebra.CommMonoid.Equiv.__proj__EQ__item__eq"
       ],
       0,
-      "04fbd3ca7df94da3015ba1e3c1cbbdfe"
+      "d13bba7a4829fd8a89cfd2adc7167d84"
     ]
   ]
 ]
