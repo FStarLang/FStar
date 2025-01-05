@@ -50,3 +50,8 @@ clean: _force
 	rm -rf $(CURDIR)/out
 
 all: install_lib
+
+# Needed for 'opam install'
+PREFIX ?= /usr/local
+install: install_lib
+	cp -r out/* $(PREFIX)
