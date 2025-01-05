@@ -66,6 +66,8 @@ on:
   # push:
   workflow_dispatch:
   workflow_call:
+  schedule:
+    - cron: '0 1 * * *' # 1AM UTC
 
 # TODO:
 # Is there a way to set the default container?
