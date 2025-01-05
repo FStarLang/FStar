@@ -47,8 +47,3 @@ install: fstarc-bare fstarc-full libapp libplugin
 	echo '.checked' >> out/lib/fstar/ulib/fstar.include
 	@# Install get_fstar_z3 script
 	cp ../.scripts/get_fstar_z3.sh $(CURDIR)/out/bin
-	@# License and extra files
-	cp ../LICENSE* $(CURDIR)/out/
-	cp ../README.md $(CURDIR)/out/
-	cp ../INSTALL.md $(CURDIR)/out/
-	cp ../version.txt $(CURDIR)/out/
