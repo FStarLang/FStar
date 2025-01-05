@@ -2553,6 +2553,7 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
       let print_entry target first_dep all_deps =
         pr target; pr ": "; pr first_dep; pr "\\\n\t"; pr all_deps; pr "\n\n" in
       let keys = deps_keys deps1.dep_graph in
+      let keys1 = FStarC_Class_Ord.sort FStarC_Class_Ord.ord_string keys in
       let no_fstar_stubs_file s =
         let s1 = "FStar.Stubs." in
         let s2 = "FStar." in
@@ -2834,13 +2835,13 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
                                    else ()));
                                all_checked_files2)) in
                    profile process_one_key
-                     "FStarC.Parser.Dep.process_one_key") [] keys in
+                     "FStarC.Parser.Dep.process_one_key") [] keys1 in
           let all_fst_files =
-            let uu___1 = FStarC_Compiler_List.filter is_implementation keys in
+            let uu___1 = FStarC_Compiler_List.filter is_implementation keys1 in
             FStarC_Compiler_Util.sort_with FStarC_Compiler_String.compare
               uu___1 in
           let all_fsti_files =
-            let uu___1 = FStarC_Compiler_List.filter is_interface keys in
+            let uu___1 = FStarC_Compiler_List.filter is_interface keys1 in
             FStarC_Compiler_Util.sort_with FStarC_Compiler_String.compare
               uu___1 in
           let all_ml_files =
@@ -2883,13 +2884,15 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
                  then
                    let uu___3 = output_krml_file fst_file in
                    FStarC_Compiler_Util.smap_add krml_file_map mname uu___3
-                 else ()) keys;
+                 else ()) keys1;
             sort_output_files krml_file_map in
           let print_all tag files =
+            let files1 =
+              FStarC_Class_Ord.sort FStarC_Class_Ord.ord_string files in
             pr (Prims.strcat pre_tag tag);
             pr "=\\\n\t";
             FStarC_Compiler_List.iter
-              (fun f -> pr (norm_path f); pr " \\\n\t") files;
+              (fun f -> pr (norm_path f); pr " \\\n\t") files1;
             pr "\n" in
           (FStarC_Compiler_List.iter
              (fun fsti ->

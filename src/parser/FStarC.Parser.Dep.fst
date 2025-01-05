@@ -1762,6 +1762,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
     let sb = FStarC.StringBuffer.create (FStarC.BigInt.of_int_fs 10000) in
     let pr str = ignore <| FStarC.StringBuffer.add str sb in
     let print_entry target first_dep all_deps =
+        let all_deps = Class.Ord.sort all_deps in
         pr target;
         pr ": ";
         pr first_dep;
@@ -1770,6 +1771,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
         pr "\n\n"
     in
     let keys = deps_keys deps.dep_graph in
+    let keys = Class.Ord.sort keys in
     let no_fstar_stubs_file (s:string) : string =
       (* If the original filename begins with FStar.Stubs, then remove that,
       consistent with what extraction will actually do.
@@ -2014,6 +2016,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
         sort_output_files krml_file_map
     in
     let print_all tag files =
+        let files = Class.Ord.sort files in
         pr (pre_tag^tag);
         pr "=\\\n\t";
         List.iter (fun f -> pr (norm_path f); pr " \\\n\t") files;
