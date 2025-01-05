@@ -29,4 +29,4 @@ This file is here for the F# build. *)
 let print (_: option string) (ext: string) (l: mllib) =
     let newDoc = FStarC.Extraction.ML.Code.doc_of_mllib l in
     List.iter (fun (n,d) ->
-        FStarC.Compiler.Util.write_file (FStarC.Options.prepend_output_dir (n^ext)) (FStarC.Extraction.ML.Code.pretty 120 d)) newDoc
+        FStarC.Compiler.Util.write_file (FStarC.Find.prepend_output_dir (n^ext)) (FStarC.Extraction.ML.Code.pretty 120 d)) newDoc
