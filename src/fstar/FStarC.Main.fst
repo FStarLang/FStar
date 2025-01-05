@@ -137,6 +137,12 @@ let print_help_for (o : string) : unit =
 (* Normal mode with some flags, files, etc *)
 let go_normal () =
   let res, filenames = process_args () in
+  let check_no_filenames opt =
+    if Cons? filenames then (
+      Util.print1_error "error: No filenames should be passed with option %s\n" opt;
+      exit 1
+    )
+  in
   if Options.trace_error () then set_error_trap ();
   match res with
     | Empty     -> Options.display_usage(); exit 1
@@ -214,10 +220,12 @@ let go_normal () =
 
     (* --locate, --locate_lib, --locate_ocaml, --locate_file *)
     | Success when Options.locate () ->
+      check_no_filenames "--locate";
       Util.print1 "%s\n" (Find.locate ());
       exit 0
 
     | Success when Options.locate_lib () -> (
+      check_no_filenames "--locate_lib";
       match Find.locate_lib () with
       | None ->
         Util.print_error "No library found (is --no_default_includes set?)\n";
@@ -228,10 +236,12 @@ let go_normal () =
     )
 
     | Success when Options.locate_ocaml () ->
+      check_no_filenames "--locate_ocaml";
       Util.print1 "%s\n" (Find.locate_ocaml ());
       exit 0
 
     | Success when Some? (Options.locate_file ()) -> (
+      check_no_filenames "--locate_fle";
       let f = Some?.v (Options.locate_file ()) in
       match Find.find_file f with
       | None ->
