@@ -595,46 +595,48 @@ let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
                                   !_version !_platform !_compiler !_date !_commit)
 
+let bold_doc (d:Pprint.document) : Pprint.document =
+  let open FStarC.Pprint in
+  (* very hacky, this would make no sense for documents going elsewhere
+  other than stdout *)
+  if stdout_isatty () = Some true
+  then fancystring "\x1b[39;1m" 0 ^^ d ^^ fancystring "\x1b[0m" 0
+  else d
+
 let display_debug_keys () =
   let keys = Debug.list_all_toggles () in
   keys |> List.sortWith String.compare |> List.iter (fun s -> Util.print_string (s ^ "\n"))
+
+let usage_for (o : opt & Pprint.document) : Pprint.document =
+  let open FStarC.Pprint in
+  let open FStarC.Errors.Msg in
+  let ((short, flag, p), explain) = o in
+  let arg =
+    match p with
+    | ZeroArgs _ -> empty
+    | OneArg (_, argname) -> blank 1 ^^ doc_of_string argname
+  in
+  let short_opt =
+    if short <> noshort
+    then [doc_of_string ("-" ^ String.make 1 short) ^^ arg]
+    else []
+  in
+  let long_opt =
+    if flag <> ""
+    then [doc_of_string ("--" ^ flag) ^^ arg]
+    else []
+  in
+  group (bold_doc (separate (comma ^^ blank 1) (short_opt @ long_opt))) ^^ hardline ^^
+  group (blank 4 ^^ align explain) ^^ hardline
 
 let display_usage_aux (specs : list (opt & Pprint.document)) : unit =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
   let text (s:string) : document = flow (break_ 1) (words s) in
-  let bold_doc (d:document) : document =
-    (* very hacky, this would make no sense for documents going elsewhere
-    other than stdout *)
-    if stdout_isatty () = Some true
-    then fancystring "\x1b[39;1m" 0 ^^ d ^^ fancystring "\x1b[0m" 0
-    else d
-  in
   let d : document =
     doc_of_string "fstar.exe [options] file[s] [@respfile...]" ^/^
     doc_of_string (Util.format1 "  %srespfile: read command-line options from respfile\n" (Util.colorize_bold "@")) ^/^
-    List.fold_right
-      (fun ((short, flag, p), explain) rest ->
-        let arg =
-          match p with
-          | ZeroArgs _ -> empty
-          | OneArg (_, argname) -> blank 1 ^^ doc_of_string argname
-        in
-        let short_opt =
-          if short <> noshort
-          then [doc_of_string ("-" ^ String.make 1 short) ^^ arg]
-          else []
-        in
-        let long_opt =
-          if flag <> ""
-          then [doc_of_string ("--" ^ flag) ^^ arg]
-          else []
-        in
-        group (bold_doc (separate (comma ^^ blank 1) (short_opt @ long_opt))) ^^ hardline ^^
-        group (blank 4 ^^ align explain) ^^ hardline ^^
-        rest
-      )
-      specs empty
+    List.fold_right (fun o rest -> usage_for o ^^ rest) specs empty
   in
   Util.print_string (pretty_string (float_of_string "1.0") 80 d)
 
@@ -1760,6 +1762,11 @@ let all_specs_getopt = List.map fst all_specs
 let all_specs_with_types = specs_with_types true
 let settable_specs = all_specs |> List.filter (fun ((_, x, _), _) -> settable x)
 
+let help_for_option (s:string) : option Pprint.document =
+  match all_specs |> List.filter (fun ((_, x, _), _) -> x = s) with
+  | [] -> None
+  | o::_ -> Some (usage_for o) // NB: there should be only one
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PUBLIC API
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2342,12 +2349,12 @@ let set_options s =
         if s = ""
         then Success
         else let settable_specs = List.map fst settable_specs in
-             let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); Error "set_options with file argument") s in
+             let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); Error ("set_options with file argument", "")) s in
              if res=Success
              then set_error_flags()
              else res
     with
-    | File_argument s -> Getopt.Error (Util.format1 "File %s is not a valid option" s)
+    | File_argument s -> Getopt.Error (Util.format1 "File %s is not a valid option" s, "")
 
 let with_options s f =
   with_saved_options (fun () ->

@@ -1595,7 +1595,7 @@ let set_options (s : string) : tac unit = wrap_err "set_options" <| (
     | FStarC.Getopt.Success ->
         let g' = { g with opts = opts' } in
         replace_cur g'
-    | FStarC.Getopt.Error err ->
+    | FStarC.Getopt.Error (err, _) ->
         fail2 "Setting options `%s` failed: %s" s err
     | FStarC.Getopt.Help ->
         fail1 "Setting options `%s` failed (got `Help`?)" s

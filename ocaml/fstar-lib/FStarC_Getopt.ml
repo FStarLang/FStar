@@ -7,7 +7,7 @@ type opt = unit opt'
 type parse_cmdline_res =
   | Empty
   | Help
-  | Error of string
+  | Error of (string * string)
   | Success
 
 let bind l f =
@@ -46,17 +46,17 @@ let rec parse (opts:opt list) def ar ix max i : parse_cmdline_res =
     let go_on () = bind (def arg) (fun _ -> parse opts def ar (ix + 1) max (i + 1)) in
     match find_matching_opt opts arg with
     | None -> go_on ()
-    | Some (None, _) -> Error ("unrecognized option '" ^ arg ^ "'\n")
-    | Some (Some (_, _, p), argtrim) ->
+    | Some (None, _) -> Error ("unrecognized option '" ^ arg ^ "'\n", arg)
+    | Some (Some (_, opt, p), argtrim) ->
       begin match p with
       | ZeroArgs f -> f (); parse opts def ar (ix + 1) max (i + 1)
-      | OneArg (f, _) ->
+      | OneArg (f, name) ->
          if ix + 1 > max
-         then Error ("last option '" ^ argtrim ^ "' takes an argument but has none\n")
+         then Error ("last option '" ^ argtrim ^ "' takes an argument but has none\n", opt)
          else
            let r =
                try (f (ar.(ix + 1)); Success)
-               with _ -> Error ("wrong argument given to option `" ^ argtrim ^ "`\n")
+               with _ -> Error ("wrong argument given to option `" ^ argtrim ^ "`\n", opt)
            in bind r (fun () -> parse opts def ar (ix + 2) max (i + 1))
       end
 
@@ -97,7 +97,7 @@ let parse_string specs others (str:string) =
 
     in
     match split_quoted_fragments str with
-    | None -> Error("Failed to parse options; unmatched quote \"'\"")
+    | None -> Error("Failed to parse options; unmatched quote \"'\"", "")
     | Some args ->
       parse_array specs others (Array.of_list args) 0
 
