@@ -1,5 +1,5 @@
 [
-  "\u0015Ó&°wÙø’n<ªkž\u001djÌ",
+  ">ÿ‘\u0015Ê–R/ÕÓäµ£8™4",
   [
     [
       "BinomialQueue.last_cons",
@@ -27,7 +27,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "722ddc43d43e60f7bb0c8dbac168be1e"
+      "6e48a1b624a584dffe14389d9e36d2c5"
     ],
     [
       "BinomialQueue.last_cons",
@@ -44,7 +44,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "2f7a6c3a53961a6213ae60c23a8c49fa"
+      "c0d07f5b53b86f561579e897b7c401e3"
     ],
     [
       "BinomialQueue.tree",
@@ -59,7 +59,7 @@
         "typing_Prims.int"
       ],
       0,
-      "73718ddcded6895fdbdd43e1588a86db"
+      "3c4a89ea0b01d5cc383c0ffc4cc3c7e8"
     ],
     [
       "BinomialQueue.__proj__Internal__item___0",
@@ -71,7 +71,7 @@
         "refinement_interpretation_Tm_refine_8a52c7ed1e8b93d264945c07880ca137"
       ],
       0,
-      "3e4ed648b9e9f492550d320a5f90d6b5"
+      "e106cb0b018f66d03c77d901311c9309"
     ],
     [
       "BinomialQueue.__proj__Internal__item___1",
@@ -83,7 +83,7 @@
         "refinement_interpretation_Tm_refine_8a52c7ed1e8b93d264945c07880ca137"
       ],
       0,
-      "07bf55d4c1378e5060ac15096567d1a7"
+      "c067828a361f227d8a73ab4178c7f5fb"
     ],
     [
       "BinomialQueue.__proj__Internal__item___2",
@@ -95,7 +95,7 @@
         "refinement_interpretation_Tm_refine_8a52c7ed1e8b93d264945c07880ca137"
       ],
       0,
-      "48e129cbcc3fc670519dc9268ce4b125"
+      "e6698ea02b3a347df3d651422eded684"
     ],
     [
       "BinomialQueue.pow2heap_pred",
@@ -116,7 +116,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3d5fb54f2599651736aea2f349577c44"
+      "9cae1cc2a78b02048d7d48b7c45d5802"
     ],
     [
       "BinomialQueue.is_pow2heap",
@@ -129,7 +129,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "c5877b30248b53cd2a600650cab1b4c3"
+      "799565d8c3b5984da2f6abc941135785"
     ],
     [
       "BinomialQueue.is_binomial_queue",
@@ -151,7 +151,7 @@
         "subterm_ordering_Prims.Cons", "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "6964bc4d08aaf7c554fad34531ef407b"
+      "2b2be3822c4340b0b910c9d0e15384cd"
     ],
     [
       "BinomialQueue.is_compact",
@@ -164,7 +164,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "555d45bab0b9bf0c5aabe22065189ec3"
+      "cf6c4fba82e88e156637bcbd7915bfcd"
     ],
     [
       "BinomialQueue.empty",
@@ -185,7 +185,7 @@
         "true_interp"
       ],
       0,
-      "de0d4e34e3e816bde4b672bf17ea0047"
+      "b6df2edc69d5ca225c234e74ea552987"
     ],
     [
       "BinomialQueue.all_leaf",
@@ -209,7 +209,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "27b8197021554ec87a9fdd06315c4d70"
+      "1d63c551d44fb4e52bbb2ce94ceee635"
     ],
     [
       "BinomialQueue.mk_compact",
@@ -227,7 +227,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "7bf8e675682511c11c63e9a56ba3b341"
+      "1ddec293337e919f5f383187ed7b8cba"
     ],
     [
       "BinomialQueue.mk_compact_correctness",
@@ -267,7 +267,7 @@
         "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "9d4b892f9574c7d2d43e90b9a7dd6a64"
+      "a81b2ad7b5a80c47351a6f9a1a171c13"
     ],
     [
       "BinomialQueue.mk_compact_preserves_binomial_queue",
@@ -303,7 +303,7 @@
         "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "e89049d318fdb59c8c5a3520fcb06f37"
+      "60df5384e7d68af59c6ebbe7e4442ba3"
     ],
     [
       "BinomialQueue.smash",
@@ -344,7 +344,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "5b2a6afc9901fafdd491b1c91a274696"
+      "5a3941981b5f88cad85fe1396d131f67"
     ],
     [
       "BinomialQueue.carry",
@@ -377,7 +377,7 @@
         "subterm_ordering_Prims.Cons", "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "e7e988ffc7f49dc9a3bfc9598a725b75"
+      "063242d7636a5a2f93c41bfded478b2d"
     ],
     [
       "BinomialQueue.join",
@@ -404,7 +404,7 @@
         "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "false_interp", "fuel_guarded_inversion_BinomialQueue.tree",
+        "fuel_guarded_inversion_BinomialQueue.tree",
         "fuel_guarded_inversion_Prims.list", "int_inversion",
         "kinding_BinomialQueue.tree@tok", "l_and-interp", "l_or-interp",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
@@ -418,14 +418,14 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "typing_FStar.List.Tot.Base.length", "typing_Prims.uu___is_Cons",
         "typing_tok_BinomialQueue.Leaf@tok", "well-founded-ordering-on-nat"
       ],
       0,
-      "02ac44743be744606ebce390aed8d498"
+      "e2f70b79ec142cbecdf8b6de29cfeb9b"
     ],
     [
       "BinomialQueue.insert",
@@ -463,7 +463,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "0b60d2690e8d7c7259ec809f8a245644"
+      "920729c0dd3c00a8dd410e99c486b979"
     ],
     [
       "BinomialQueue.find_max",
@@ -491,7 +491,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "26f7ea648acb1dee6ac2f04990087f81"
+      "77abc77047d72a2c44802c3def5757d7"
     ],
     [
       "BinomialQueue.binomial_queue_append",
@@ -501,36 +501,29 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
-        "@fuel_correspondence_BinomialQueue.pow2heap_pred.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.append.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
         "binder_x_07642eb27f8c86505049ec727a4a557c_1",
         "binder_x_c1ab7496c060d1f2d977fd02b92d48e2_2",
         "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
         "constructor_distinct_BinomialQueue.Leaf",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "constructor_distinct_Tm_unit", "data_elim_BinomialQueue.Internal",
-        "data_typing_intro_Prims.Cons@tok",
+        "constructor_distinct_Tm_unit", "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "eq2-interp",
-        "equality_tok_BinomialQueue.Leaf@tok",
+        "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
         "equation_BinomialQueue.forest",
-        "equation_BinomialQueue.is_pow2heap", "equation_BinomialQueue.key_t",
-        "equation_Prims.l_or", "equation_Prims.nat", "equation_Prims.pos",
+        "equation_BinomialQueue.is_pow2heap", "equation_Prims.l_or",
+        "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
-        "equation_with_fuel_BinomialQueue.pow2heap_pred.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "false_interp", "fuel_guarded_inversion_BinomialQueue.tree",
-        "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "int_typing", "kinding_BinomialQueue.tree@tok",
-        "l_and-interp", "l_or-interp", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_Subtraction",
+        "false_interp", "int_inversion", "int_typing",
+        "kinding_BinomialQueue.tree@tok", "l_and-interp", "l_or-interp",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
@@ -543,7 +536,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "b1d23fbc90a1627a01a7aa54bab2a96f"
+      "6da4e113cc9f6dcbd51516335c037be6"
     ],
     [
       "BinomialQueue.binomial_queue_append",
@@ -565,7 +558,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "9e53a78eaec41bcf49516d6e465cdeed"
+      "563cd4cc47ddd0859f2c8aafbec97be5"
     ],
     [
       "BinomialQueue.unzip",
@@ -576,11 +569,9 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
         "@fuel_correspondence_BinomialQueue.pow2heap_pred.fuel_instrumented",
-        "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.last.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_BinomialQueue.pow2heap_pred.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
         "binder_x_b19ee3ff3f4f676fe283c4905f1b1f83_1",
@@ -602,11 +593,9 @@
         "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
         "equation_with_fuel_BinomialQueue.pow2heap_pred.fuel_instrumented",
-        "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.last.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "fuel_guarded_inversion_BinomialQueue.tree",
-        "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "kinding_BinomialQueue.tree@tok",
         "l_and-interp", "primitive_Prims.op_Addition",
@@ -624,11 +613,11 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Tm_refine_bf9b8da8f290823f0b11be068baec869",
-        "true_interp", "typing_FStar.List.Tot.Base.length",
-        "typing_tok_BinomialQueue.Leaf@tok", "well-founded-ordering-on-nat"
+        "true_interp", "typing_tok_BinomialQueue.Leaf@tok",
+        "well-founded-ordering-on-nat"
       ],
       0,
-      "09ed99eaad3233d39725930b1a11174e"
+      "901039eef5212af7eb913f1142a077d8"
     ],
     [
       "BinomialQueue.heap_delete_max",
@@ -651,7 +640,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "7d011fbd4e9544f5b37247753142a32f"
+      "3cc15159507a07238e30c0f5164d7c74"
     ],
     [
       "BinomialQueue.delete_max_aux",
@@ -698,7 +687,7 @@
         "subterm_ordering_Prims.Cons", "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "67a30082bfd43c15ca270ae5ffb5a00e"
+      "0973c7de82e369a4c9074edcd7823a1f"
     ],
     [
       "BinomialQueue.delete_max",
@@ -732,7 +721,7 @@
         "typing_BinomialQueue.find_max"
       ],
       0,
-      "d89be573c9fea8c099dd680c0b75c9c0"
+      "ed867bb05c25a79166e59ea5cb973180"
     ],
     [
       "BinomialQueue.merge",
@@ -758,7 +747,7 @@
         "refinement_interpretation_Tm_refine_bf9b8da8f290823f0b11be068baec869"
       ],
       0,
-      "21dc1b7dc03b79b7c8622d15dd66cd59"
+      "31445ce2bd6ffaa5c20d9c9983c82cb9"
     ],
     [
       "BinomialQueue.ms",
@@ -773,7 +762,7 @@
         "typing_Prims.int"
       ],
       0,
-      "71987a3fe3f1f0c978eb94857b9218f1"
+      "9a76853e2662ff735e8680129a87bb7e"
     ],
     [
       "BinomialQueue.__proj__Mkms__item__ms_elems",
@@ -788,7 +777,7 @@
         "typing_Prims.int"
       ],
       0,
-      "c035b986e03a9e9d1109831ee8d23d0e"
+      "b3f7a7f4e757a8c4ffe3e0f49613eab6"
     ],
     [
       "BinomialQueue.__proj__Mkms__item__ms_elems",
@@ -803,7 +792,7 @@
         "typing_Prims.int"
       ],
       0,
-      "c4d302b1ce8548c9cba5a23deeb234af"
+      "956b448c5a9e4613eed4da6983fb14d1"
     ],
     [
       "BinomialQueue.ms_empty",
@@ -818,7 +807,7 @@
         "typing_Prims.int"
       ],
       0,
-      "683e7e68de15ce26f620c664c6534c97"
+      "b7a486672eb4388dd5e42bc9b9d505e1"
     ],
     [
       "BinomialQueue.ms_singleton",
@@ -833,7 +822,7 @@
         "typing_Prims.int"
       ],
       0,
-      "d15c0567bcc212ecf3de519fe71234bc"
+      "0bb22224af16cba665e6bde4b5bbe931"
     ],
     [
       "BinomialQueue.ms_append",
@@ -856,7 +845,7 @@
         "typing_Prims.int"
       ],
       0,
-      "0001013c15513e6546a97d6671e1b897"
+      "1fceded9eca696bcde58e9b5858fb2aa"
     ],
     [
       "BinomialQueue.permutation",
@@ -871,7 +860,7 @@
         "typing_Prims.int"
       ],
       0,
-      "5a9026ac860e305fa737661bb60d8828"
+      "83fb7ae54cb959be90988ac48da00828"
     ],
     [
       "BinomialQueue.keys_of_tree",
@@ -891,7 +880,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "1d634116ac5510ba62d0b47047ed2cd9"
+      "9dbd565bcd6b67291d38c0fd94e29f6c"
     ],
     [
       "BinomialQueue.keys",
@@ -909,7 +898,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "6c1e8c50b3ce630c3cc5d7aa2aadfd05"
+      "0e7b04cfe08af9ec877509e50b8d0832"
     ],
     [
       "BinomialQueue.repr_t",
@@ -921,7 +910,7 @@
         "typing_BinomialQueue.keys_of_tree"
       ],
       0,
-      "8795877a3eba827a3192808f3ce7d170"
+      "526a3cd85306a8328abf4252f28f55c5"
     ],
     [
       "BinomialQueue.repr_l",
@@ -933,7 +922,7 @@
         "typing_BinomialQueue.keys"
       ],
       0,
-      "87e9efd26b4b1ab01193e903ad39a9e1"
+      "c7b1431133e1ad2e1f6d1b0d513c73b6"
     ],
     [
       "BinomialQueue.empty_repr",
@@ -966,7 +955,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "08037f759adbf01d8f37f1d4d48fd5da"
+      "522cb3fd919494b3bf2148657ac2dec4"
     ],
     [
       "BinomialQueue.smash_repr",
@@ -981,8 +970,8 @@
         "@query",
         "BinomialQueue_interpretation_Tm_arrow_e979b9dc6be45dd92c9914c44a112e40",
         "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_inversion",
-        "constructor_distinct_BinomialQueue.Leaf",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "bool_inversion", "constructor_distinct_BinomialQueue.Leaf",
         "constructor_distinct_Tm_unit", "data_elim_BinomialQueue.Internal",
         "data_elim_BinomialQueue.Mkms", "eq2-interp",
         "equality_tok_BinomialQueue.Leaf@tok",
@@ -1002,11 +991,11 @@
         "int_typing",
         "interpretation_Tm_abs_015f65dc738b17ca923c21bdd897be70",
         "interpretation_Tm_abs_0750d50e859fe4be4a1d3b6be7ce934c",
-        "lemma_FStar.Set.lemma_equal_elim",
+        "l_and-interp", "lemma_FStar.Set.lemma_equal_elim",
         "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
         "lemma_FStar.Set.mem_singleton", "lemma_FStar.Set.mem_union",
         "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_Subtraction",
         "proj_equation_BinomialQueue.Mkms_ms_count",
         "proj_equation_BinomialQueue.Mkms_ms_elems",
         "projection_inverse_BinomialQueue.Internal__0",
@@ -1028,13 +1017,14 @@
         "token_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
         "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
         "typing_BinomialQueue.keys_of_tree",
-        "typing_BinomialQueue.ms_append", "typing_BinomialQueue.ms_cons",
+        "typing_BinomialQueue.ms_append",
         "typing_BinomialQueue.ms_singleton", "typing_BinomialQueue.smash",
-        "typing_FStar.Set.mem", "typing_FStar.Set.union", "typing_Prims.int",
+        "typing_FStar.Set.mem", "typing_FStar.Set.singleton",
+        "typing_FStar.Set.union", "typing_Prims.int",
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "ff7477c20a2b4660491783bc06ddbeba"
+      "be8e5e397b781c3de1b88c87e5fed2ff"
     ],
     [
       "BinomialQueue.carry_repr",
@@ -1053,6 +1043,7 @@
         "@fuel_irrelevance_BinomialQueue.keys_of_tree.fuel_instrumented",
         "@query",
         "BinomialQueue_interpretation_Tm_arrow_e979b9dc6be45dd92c9914c44a112e40",
+        "BinomialQueue_interpretation_Tm_arrow_ff32f7ccb320a566131f772799c7fc50",
         "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
         "b2t_def", "binder_x_07642eb27f8c86505049ec727a4a557c_1",
         "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_3",
@@ -1066,7 +1057,7 @@
         "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
         "equation_BinomialQueue.forest",
         "equation_BinomialQueue.is_pow2heap", "equation_BinomialQueue.key_t",
-        "equation_BinomialQueue.ms_append",
+        "equation_BinomialQueue.ms_append", "equation_BinomialQueue.ms_cons",
         "equation_BinomialQueue.ms_empty",
         "equation_BinomialQueue.permutation",
         "equation_BinomialQueue.repr_l", "equation_BinomialQueue.repr_t",
@@ -1077,6 +1068,8 @@
         "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_BinomialQueue.ms",
         "fuel_guarded_inversion_BinomialQueue.tree",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_BinomialQueue.__proj__Mkms__item__ms_count",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "int_typing",
         "interpretation_Tm_abs_015f65dc738b17ca923c21bdd897be70",
@@ -1103,6 +1096,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count",
+        "token_correspondence_BinomialQueue.carry.fuel_instrumented",
         "token_correspondence_BinomialQueue.keys.fuel_instrumented",
         "token_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
         "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
@@ -1114,7 +1108,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "9f23b6947ca50c283f8e21082ba31300"
+      "5d81ce9be1877db6d7c94a51b05d521b"
     ],
     [
       "BinomialQueue.carry_repr",
@@ -1126,11 +1120,934 @@
         "refinement_interpretation_Tm_refine_f92f3e6b3863a3cc9f2f0700b6474407"
       ],
       0,
-      "9fe5a0194fad103a22427a3a2e6ea714"
+      "160661dc7d73e88f877308e1308aaa5a"
     ],
     [
       "BinomialQueue.join_repr",
+      2,
       1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0126be480748f7241b165d1b758f5fc8"
+      ],
+      0,
+      "63a4e4d1c7a0933a0a23c3197d6b6855"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      3,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0126be480748f7241b165d1b758f5fc8"
+      ],
+      0,
+      "e048d913465ad51a91a4f625cf44a050"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      4,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0126be480748f7241b165d1b758f5fc8"
+      ],
+      0,
+      "13caa3939d1135316b717cb6fe875667"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      5,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "fuel_guarded_inversion_Prims.list",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "refinement_interpretation_Tm_refine_691c59577b5a60050bfc07ae9223dd2e",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "67059965ddcd0fa41a5f04f2a12f6217"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      6,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.join.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@query",
+        "BinomialQueue_interpretation_Tm_arrow_e979b9dc6be45dd92c9914c44a112e40",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_4",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_5",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_6",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "bool_inversion",
+        "constructor_distinct_BinomialQueue.Leaf",
+        "constructor_distinct_Prims.Nil", "data_elim_BinomialQueue.Mkms",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_BinomialQueue.key_t",
+        "equation_BinomialQueue.ms_append",
+        "equation_BinomialQueue.ms_empty",
+        "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_BinomialQueue.repr_t",
+        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.join.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "fuel_guarded_inversion_BinomialQueue.ms",
+        "fuel_guarded_inversion_Prims.list",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "interpretation_Tm_abs_015f65dc738b17ca923c21bdd897be70",
+        "interpretation_Tm_abs_0750d50e859fe4be4a1d3b6be7ce934c",
+        "lemma_FStar.Set.lemma_equal_elim",
+        "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.Set.mem_union", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_BarBar",
+        "proj_equation_BinomialQueue.Mkms_ms_count",
+        "proj_equation_BinomialQueue.Mkms_ms_elems",
+        "projection_inverse_BinomialQueue.Mkms_ms_count",
+        "projection_inverse_BinomialQueue.Mkms_ms_elems",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_28b3529e604de38cfa56254e079a0089",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7de0f42bd8ef960dba43de3ec09b7c75",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count",
+        "token_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.keys", "typing_BinomialQueue.ms_append",
+        "typing_FStar.Set.mem", "typing_Prims.int",
+        "typing_Tm_abs_015f65dc738b17ca923c21bdd897be70",
+        "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
+      ],
+      0,
+      "a9a58f7c9ba71be50956641b2c5ab868"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      7,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.join.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@query",
+        "BinomialQueue_interpretation_Tm_arrow_e979b9dc6be45dd92c9914c44a112e40",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_4",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_5",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_6",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "bool_inversion",
+        "constructor_distinct_BinomialQueue.Leaf",
+        "constructor_distinct_Prims.Nil", "data_elim_BinomialQueue.Mkms",
+        "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Nil",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_BinomialQueue.key_t",
+        "equation_BinomialQueue.ms_append",
+        "equation_BinomialQueue.ms_empty",
+        "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_BinomialQueue.repr_t",
+        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.join.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "fuel_guarded_inversion_BinomialQueue.ms",
+        "fuel_guarded_inversion_Prims.list",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "interpretation_Tm_abs_015f65dc738b17ca923c21bdd897be70",
+        "interpretation_Tm_abs_0750d50e859fe4be4a1d3b6be7ce934c",
+        "lemma_FStar.Set.lemma_equal_elim",
+        "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.Set.mem_union", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_BarBar",
+        "proj_equation_BinomialQueue.Mkms_ms_count",
+        "proj_equation_BinomialQueue.Mkms_ms_elems",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_BinomialQueue.Mkms_ms_count",
+        "projection_inverse_BinomialQueue.Mkms_ms_elems",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_28b3529e604de38cfa56254e079a0089",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_74d538daf328e3d16b550785baf3ad27",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_806e88f93d1827b4a234914f23239789",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count",
+        "token_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.keys", "typing_BinomialQueue.ms_append",
+        "typing_FStar.Set.mem", "typing_Prims.int",
+        "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
+      ],
+      0,
+      "0698d7f7cd39242ec7546d485745368c"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      8,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f"
+      ],
+      0,
+      "ab8a4ec38177d880a2cd63877efb7a7d"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      9,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "constructor_distinct_Prims.Nil", "disc_equation_BinomialQueue.Leaf",
+        "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_570ab0988b3cbdd12b0e16cf35a1b1c7",
+        "refinement_interpretation_Tm_refine_74d538daf328e3d16b550785baf3ad27",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "11c426e61145d9f23226dd99278c400d"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      10,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f"
+      ],
+      0,
+      "61a58a13f72ab61afc9cb692649b9bc1"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      11,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f"
+      ],
+      0,
+      "25404a28f3b3af4e57db70d7a65f5607"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      12,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.carry.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.join.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@query",
+        "BinomialQueue_interpretation_Tm_arrow_e979b9dc6be45dd92c9914c44a112e40",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_4",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_5",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_6",
+        "binder_x_c1ab7496c060d1f2d977fd02b92d48e2_3",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "bool_inversion",
+        "constructor_distinct_Prims.Nil", "data_elim_BinomialQueue.Mkms",
+        "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Nil",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_BinomialQueue.key_t",
+        "equation_BinomialQueue.ms_append",
+        "equation_BinomialQueue.ms_empty",
+        "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Prims.pos", "equation_Prims.prop",
+        "equation_Prims.subtype_of",
+        "equation_with_fuel_BinomialQueue.join.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "fuel_guarded_inversion_BinomialQueue.ms",
+        "fuel_guarded_inversion_BinomialQueue.tree",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "interpretation_Tm_abs_015f65dc738b17ca923c21bdd897be70",
+        "interpretation_Tm_abs_0750d50e859fe4be4a1d3b6be7ce934c",
+        "lemma_FStar.Set.lemma_equal_elim",
+        "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.Set.mem_union", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_BarBar",
+        "proj_equation_BinomialQueue.Mkms_ms_count",
+        "proj_equation_BinomialQueue.Mkms_ms_elems",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_BinomialQueue.Mkms_ms_count",
+        "projection_inverse_BinomialQueue.Mkms_ms_elems",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_28b3529e604de38cfa56254e079a0089",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_570ab0988b3cbdd12b0e16cf35a1b1c7",
+        "refinement_interpretation_Tm_refine_73f210ca6e0061ed4a3150f69b8f33bf",
+        "refinement_interpretation_Tm_refine_74d538daf328e3d16b550785baf3ad27",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "refinement_interpretation_Tm_refine_ef894c20818013c5faab7b4bf585814b",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count",
+        "token_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.carry", "typing_BinomialQueue.join",
+        "typing_BinomialQueue.keys", "typing_BinomialQueue.ms_append",
+        "typing_BinomialQueue.repr_l", "typing_FStar.Set.mem",
+        "typing_Prims.int", "typing_tok_BinomialQueue.Leaf@tok",
+        "unit_inversion", "unit_typing"
+      ],
+      0,
+      "ff8dc7d01a1462a1e6c4b93f8c57f2bf"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      13,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f"
+      ],
+      0,
+      "e5dae471b0637fb4a82d475a78ef4cc2"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      14,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "constructor_distinct_Prims.Nil", "disc_equation_BinomialQueue.Leaf",
+        "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_a0cceef331f526fdc2a483a7b38f9c49",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "refinement_interpretation_Tm_refine_dacc8cc73c2820b3de0c38503b0ca5ed",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "b2841aaf971fc26c15cefc7a140f2bef"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      15,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f"
+      ],
+      0,
+      "510d3d3ddfb38c51ba631772013ea3d4"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      16,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f"
+      ],
+      0,
+      "6d8f20ee8959248f06c9b7fa1ad8230f"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      17,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.carry.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.join.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@query",
+        "BinomialQueue_interpretation_Tm_arrow_e979b9dc6be45dd92c9914c44a112e40",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_4",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_5",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_6",
+        "binder_x_c1ab7496c060d1f2d977fd02b92d48e2_3",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "bool_inversion",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "data_elim_BinomialQueue.Mkms", "disc_equation_BinomialQueue.Leaf",
+        "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_BinomialQueue.key_t",
+        "equation_BinomialQueue.ms_append",
+        "equation_BinomialQueue.ms_empty",
+        "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Prims.pos", "equation_Prims.prop",
+        "equation_Prims.subtype_of",
+        "equation_with_fuel_BinomialQueue.carry.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.join.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "fuel_guarded_inversion_BinomialQueue.ms",
+        "fuel_guarded_inversion_BinomialQueue.tree",
+        "fuel_guarded_inversion_Prims.list",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "interpretation_Tm_abs_015f65dc738b17ca923c21bdd897be70",
+        "interpretation_Tm_abs_0750d50e859fe4be4a1d3b6be7ce934c",
+        "lemma_FStar.Set.lemma_equal_elim",
+        "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.Set.mem_union", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_BarBar",
+        "proj_equation_BinomialQueue.Mkms_ms_count",
+        "proj_equation_BinomialQueue.Mkms_ms_elems",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_BinomialQueue.Mkms_ms_count",
+        "projection_inverse_BinomialQueue.Mkms_ms_elems",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_28b3529e604de38cfa56254e079a0089",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_73f210ca6e0061ed4a3150f69b8f33bf",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7b20a8433442a6843247a0f86acf4683",
+        "refinement_interpretation_Tm_refine_a0cceef331f526fdc2a483a7b38f9c49",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "refinement_interpretation_Tm_refine_dacc8cc73c2820b3de0c38503b0ca5ed",
+        "refinement_interpretation_Tm_refine_ef894c20818013c5faab7b4bf585814b",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count",
+        "token_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.carry", "typing_BinomialQueue.join",
+        "typing_BinomialQueue.keys", "typing_BinomialQueue.ms_append",
+        "typing_BinomialQueue.repr_l", "typing_FStar.Set.mem",
+        "typing_FStar.Set.union", "typing_Prims.int",
+        "typing_Tm_abs_015f65dc738b17ca923c21bdd897be70",
+        "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
+      ],
+      0,
+      "b97060a9f538b6c5a6b74dc2919147e6"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      18,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "equation_Prims.pos",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "4174d72b161bcd4bd794cc55b9739d4d"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      19,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "refinement_interpretation_Tm_refine_6574835e28379f7b8c040a52716521be",
+        "subterm_ordering_Prims.Cons", "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "c6801c4620db621d8b7b0e4442d2289c"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      20,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_Prims.Cons",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_6574835e28379f7b8c040a52716521be",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "0d8e8bb16ef9b0f4f644c6e590be1ebb"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      21,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_Prims.Cons",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_6574835e28379f7b8c040a52716521be",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "e943b7be2c904a3a50f6dedb5cb3fb4e"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      22,
+      1,
+      1,
+      [
+        "@query", "constructor_distinct_BinomialQueue.Leaf",
+        "disc_equation_BinomialQueue.Leaf",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "63404bcc8187f3bd6f16a1bd919b99de"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      23,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@query", "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_Prims.int"
+      ],
+      0,
+      "a63cbca45ffdde7f975516c1e5d00788"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      24,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@query", "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_Prims.int"
+      ],
+      0,
+      "038691bf5f4ee8833dc9f2ac642306e0"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      25,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@query", "constructor_distinct_BinomialQueue.Leaf",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.ms_empty",
+        "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_t", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.ms_empty", "typing_Prims.int",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "994e4f06429f02bb0e95a843186e211b"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      26,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.join.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.join.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.keys.fuel_instrumented", "@query",
+        "BinomialQueue_interpretation_Tm_arrow_e979b9dc6be45dd92c9914c44a112e40",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_4",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_5",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_6",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "bool_inversion",
+        "constructor_distinct_BinomialQueue.Leaf",
+        "constructor_distinct_Prims.Cons", "data_elim_BinomialQueue.Mkms",
+        "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Nil",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_BinomialQueue.key_t",
+        "equation_BinomialQueue.ms_append",
+        "equation_BinomialQueue.ms_empty",
+        "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_BinomialQueue.repr_t",
+        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
+        "equation_Prims.prop", "equation_Prims.subtype_of",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.join.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "fuel_guarded_inversion_BinomialQueue.ms",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "interpretation_Tm_abs_015f65dc738b17ca923c21bdd897be70",
+        "interpretation_Tm_abs_0750d50e859fe4be4a1d3b6be7ce934c",
+        "l_and-interp", "lemma_FStar.Set.lemma_equal_elim",
+        "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.Set.mem_union", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_BarBar",
+        "proj_equation_BinomialQueue.Mkms_ms_count",
+        "proj_equation_BinomialQueue.Mkms_ms_elems",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_BinomialQueue.Mkms_ms_count",
+        "projection_inverse_BinomialQueue.Mkms_ms_elems",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_28b3529e604de38cfa56254e079a0089",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_6574835e28379f7b8c040a52716521be",
+        "refinement_interpretation_Tm_refine_73f210ca6e0061ed4a3150f69b8f33bf",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7b20a8433442a6843247a0f86acf4683",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "refinement_interpretation_Tm_refine_ef894c20818013c5faab7b4bf585814b",
+        "refinement_interpretation_Tm_refine_ff029b35848d1c928aa5484232b0fac8",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.join", "typing_BinomialQueue.keys",
+        "typing_BinomialQueue.keys_of_tree",
+        "typing_BinomialQueue.ms_append", "typing_BinomialQueue.ms_empty",
+        "typing_BinomialQueue.repr_l", "typing_FStar.Set.mem",
+        "typing_FStar.Set.union", "typing_Prims.int",
+        "typing_Tm_abs_015f65dc738b17ca923c21bdd897be70",
+        "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
+      ],
+      0,
+      "58b46ad89afbb75222a980c2a0e2a8e4"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      27,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "equation_Prims.pos",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "e5d773a981377575e6838ca56b04fc28"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      28,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "refinement_interpretation_Tm_refine_60700d62d3eb4c1afe1aae9b9ecc113c",
+        "subterm_ordering_Prims.Cons", "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "30546437ee4b9be248a430bee29dc238"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      29,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_Prims.Cons",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_60700d62d3eb4c1afe1aae9b9ecc113c",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "a790fc3cf745a038bdd282f2fcc8571d"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      30,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_Prims.Cons",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_60700d62d3eb4c1afe1aae9b9ecc113c",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "fad5581a41a778daf24ecb39e690c1ee"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      31,
+      1,
+      1,
+      [
+        "@query", "constructor_distinct_BinomialQueue.Leaf",
+        "disc_equation_BinomialQueue.Leaf",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "e384d4f6e07da76628a2b2f3ffd50114"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      32,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@query", "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_Prims.int"
+      ],
+      0,
+      "cd5f31518d07a1268a2e44e9aea1a32a"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      33,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@query", "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_Prims.int"
+      ],
+      0,
+      "c4b4ed9bcc7ce48d525778ab597667c6"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      34,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@query", "constructor_distinct_BinomialQueue.Leaf",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.ms_empty",
+        "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_t", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.ms_empty", "typing_Prims.int",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "470df511a10d4c305242a960b9d3284a"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      35,
       1,
       1,
       [
@@ -1146,17 +2063,16 @@
         "@query",
         "BinomialQueue_interpretation_Tm_arrow_e979b9dc6be45dd92c9914c44a112e40",
         "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
-        "b2t_def", "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
         "binder_x_07642eb27f8c86505049ec727a4a557c_2",
         "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_4",
         "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_5",
         "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_6",
-        "binder_x_c1ab7496c060d1f2d977fd02b92d48e2_3",
         "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "bool_inversion",
-        "bool_typing", "constructor_distinct_BinomialQueue.Leaf",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "constructor_distinct_Tm_unit", "data_elim_BinomialQueue.Internal",
-        "data_elim_BinomialQueue.Mkms", "data_elim_Prims.Cons",
+        "constructor_distinct_BinomialQueue.Leaf",
+        "constructor_distinct_Prims.Cons",
+        "data_elim_BinomialQueue.Internal", "data_elim_BinomialQueue.Mkms",
         "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
         "equation_BinomialQueue.forest",
@@ -1165,8 +2081,8 @@
         "equation_BinomialQueue.ms_empty",
         "equation_BinomialQueue.permutation",
         "equation_BinomialQueue.repr_l", "equation_BinomialQueue.repr_t",
-        "equation_Prims.eqtype", "equation_Prims.l_or", "equation_Prims.nat",
-        "equation_Prims.pos",
+        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
+        "equation_Prims.prop", "equation_Prims.subtype_of",
         "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
         "equation_with_fuel_BinomialQueue.join.fuel_instrumented",
         "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
@@ -1175,20 +2091,16 @@
         "fuel_guarded_inversion_BinomialQueue.tree",
         "fuel_guarded_inversion_Prims.list",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
-        "int_typing",
         "interpretation_Tm_abs_015f65dc738b17ca923c21bdd897be70",
         "interpretation_Tm_abs_0750d50e859fe4be4a1d3b6be7ce934c",
-        "kinding_BinomialQueue.tree@tok", "l_and-interp", "l_or-interp",
-        "lemma_FStar.Set.lemma_equal_elim",
+        "l_and-interp", "l_or-interp", "lemma_FStar.Set.lemma_equal_elim",
         "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
         "lemma_FStar.Set.mem_union", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_Equality",
         "proj_equation_BinomialQueue.Mkms_ms_count",
         "proj_equation_BinomialQueue.Mkms_ms_elems",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
-        "proj_equation_FStar.Pervasives.Native.Mktuple3__3",
         "proj_equation_Prims.Cons_hd",
         "projection_inverse_BinomialQueue.Mkms_ms_count",
         "projection_inverse_BinomialQueue.Mkms_ms_elems",
@@ -1199,34 +2111,1651 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_Tm_refine_0126be480748f7241b165d1b758f5fc8",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_28b3529e604de38cfa56254e079a0089",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_60700d62d3eb4c1afe1aae9b9ecc113c",
+        "refinement_interpretation_Tm_refine_6c3f6b311debcd23b98ac4f6c41e499e",
+        "refinement_interpretation_Tm_refine_73f210ca6e0061ed4a3150f69b8f33bf",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7b20a8433442a6843247a0f86acf4683",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
         "refinement_interpretation_Tm_refine_ef894c20818013c5faab7b4bf585814b",
+        "refinement_interpretation_Tm_refine_ff029b35848d1c928aa5484232b0fac8",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "subterm_ordering_Prims.Cons",
         "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count",
-        "token_correspondence_BinomialQueue.join.fuel_instrumented",
         "token_correspondence_BinomialQueue.keys.fuel_instrumented",
         "token_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
-        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "true_interp", "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
         "typing_BinomialQueue.join", "typing_BinomialQueue.keys",
         "typing_BinomialQueue.keys_of_tree",
-        "typing_BinomialQueue.ms_append",
-        "typing_BinomialQueue.uu___is_Leaf", "typing_FStar.Set.mem",
+        "typing_BinomialQueue.ms_append", "typing_BinomialQueue.ms_empty",
+        "typing_BinomialQueue.repr_l", "typing_FStar.Set.mem",
         "typing_FStar.Set.union", "typing_Prims.int",
-        "typing_Prims.uu___is_Cons",
         "typing_Tm_abs_015f65dc738b17ca923c21bdd897be70",
-        "typing_tok_BinomialQueue.Leaf@tok"
+        "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "d8b07ce135479e23030b69aacce80acf"
+      "4f8d44f2f5ffffd90f0d95e157d11301"
     ],
     [
       "BinomialQueue.join_repr",
-      2,
+      36,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "equation_Prims.pos",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "a598958716f052c1af23a2fed8acfec6"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      37,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "refinement_interpretation_Tm_refine_757165d7f5fffaeacebe382631c5a34f",
+        "subterm_ordering_Prims.Cons", "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "13552f2b7eba3a34b4353eb95265bb59"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      38,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_Prims.Cons",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_757165d7f5fffaeacebe382631c5a34f",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "3b31c8de0b2b1979aac1e5ae99d6e51a"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      39,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_Prims.Cons",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_757165d7f5fffaeacebe382631c5a34f",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "cf7e5468390a1abaef123d25a71f3e02"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      40,
+      1,
+      1,
+      [
+        "@query", "constructor_distinct_BinomialQueue.Leaf",
+        "disc_equation_BinomialQueue.Leaf",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "70ae9b64fceb760a832fceea5866af03"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      41,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@query", "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_Prims.int"
+      ],
+      0,
+      "67efe57247faf8ab3bae4a1cc5a7f3ad"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      42,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@query", "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_Prims.int"
+      ],
+      0,
+      "6a1418ddb4961bd2b21e0e63be69f99b"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      43,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@query", "constructor_distinct_BinomialQueue.Leaf",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.ms_empty",
+        "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_t", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.ms_empty", "typing_Prims.int",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "b264e82e152290d8e9a363d3d0c87174"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      44,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.join.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.join.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.keys.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@query",
+        "BinomialQueue_interpretation_Tm_arrow_e979b9dc6be45dd92c9914c44a112e40",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_4",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_5",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_6",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "bool_inversion",
+        "constructor_distinct_BinomialQueue.Leaf",
+        "constructor_distinct_Prims.Cons",
+        "data_elim_BinomialQueue.Internal", "data_elim_BinomialQueue.Mkms",
+        "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.is_pow2heap", "equation_BinomialQueue.key_t",
+        "equation_BinomialQueue.ms_append",
+        "equation_BinomialQueue.ms_empty",
+        "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_BinomialQueue.repr_t",
+        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
+        "equation_Prims.prop", "equation_Prims.subtype_of",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.join.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_BinomialQueue.ms",
+        "fuel_guarded_inversion_BinomialQueue.tree",
+        "fuel_guarded_inversion_Prims.list",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "interpretation_Tm_abs_015f65dc738b17ca923c21bdd897be70",
+        "interpretation_Tm_abs_0750d50e859fe4be4a1d3b6be7ce934c",
+        "l_and-interp", "l_or-interp", "lemma_FStar.Set.lemma_equal_elim",
+        "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.Set.mem_union", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
+        "proj_equation_BinomialQueue.Mkms_ms_count",
+        "proj_equation_BinomialQueue.Mkms_ms_elems",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "proj_equation_Prims.Cons_hd",
+        "projection_inverse_BinomialQueue.Mkms_ms_count",
+        "projection_inverse_BinomialQueue.Mkms_ms_elems",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_28b3529e604de38cfa56254e079a0089",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_6c3f6b311debcd23b98ac4f6c41e499e",
+        "refinement_interpretation_Tm_refine_73f210ca6e0061ed4a3150f69b8f33bf",
+        "refinement_interpretation_Tm_refine_757165d7f5fffaeacebe382631c5a34f",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7b20a8433442a6843247a0f86acf4683",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "refinement_interpretation_Tm_refine_ef894c20818013c5faab7b4bf585814b",
+        "refinement_interpretation_Tm_refine_ff029b35848d1c928aa5484232b0fac8",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count",
+        "token_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "true_interp", "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.join", "typing_BinomialQueue.keys",
+        "typing_BinomialQueue.keys_of_tree",
+        "typing_BinomialQueue.ms_append", "typing_BinomialQueue.ms_empty",
+        "typing_BinomialQueue.repr_l", "typing_FStar.Set.mem",
+        "typing_FStar.Set.union", "typing_Prims.int",
+        "typing_Tm_abs_015f65dc738b17ca923c21bdd897be70",
+        "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
+      ],
+      0,
+      "5664da18a55940e79698da9763d44d68"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      45,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "b2t_def", "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_BinomialQueue.Leaf",
+        "constructor_distinct_Prims.Cons",
+        "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.is_pow2heap", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "l_or-interp",
+        "primitive_Prims.op_AmpAmp",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "proj_equation_Prims.Cons_hd", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_3958464058262617e2cb49fb2c866277",
+        "refinement_interpretation_Tm_refine_6c3f6b311debcd23b98ac4f6c41e499e",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7b20a8433442a6843247a0f86acf4683",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "113caad03704adf30d22756126669276"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      46,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_c1ab7496c060d1f2d977fd02b92d48e2_3", "bool_inversion",
+        "constructor_distinct_Prims.Cons",
+        "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Cons",
+        "equality_tok_BinomialQueue.Leaf@tok", "primitive_Prims.op_AmpAmp",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__3",
+        "proj_equation_Prims.Cons_hd", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_0ede0b0f6ad40463ef744ee142fe7491",
+        "refinement_interpretation_Tm_refine_3958464058262617e2cb49fb2c866277",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_BinomialQueue.uu___is_Leaf",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "16831405f46a62974d2c92ba01ba8dd7"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      47,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@query", "equation_BinomialQueue.key_t",
+        "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_t", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.keys_of_tree", "typing_Prims.int"
+      ],
+      0,
+      "760a61318ae7478680a8545c07c8d209"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      48,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@query", "binder_x_c1ab7496c060d1f2d977fd02b92d48e2_3",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_t", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.keys_of_tree", "typing_Prims.int"
+      ],
+      0,
+      "4126337d7459faf18860511f44e6429e"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      49,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "equation_Prims.pos",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "78f97e0f5c2d391bf48c4ce666a1d4f8"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      50,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "b2t_def", "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_BinomialQueue.Leaf",
+        "constructor_distinct_Prims.Cons",
+        "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.is_pow2heap", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "l_or-interp",
+        "primitive_Prims.op_AmpAmp",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "proj_equation_Prims.Cons_hd", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_3958464058262617e2cb49fb2c866277",
+        "refinement_interpretation_Tm_refine_6c3f6b311debcd23b98ac4f6c41e499e",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7b20a8433442a6843247a0f86acf4683",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "f92e1b9cc5a3054a9f1834828d2841c4"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      51,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_c1ab7496c060d1f2d977fd02b92d48e2_3", "bool_inversion",
+        "constructor_distinct_Prims.Cons",
+        "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Cons",
+        "equality_tok_BinomialQueue.Leaf@tok", "primitive_Prims.op_AmpAmp",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__3",
+        "proj_equation_Prims.Cons_hd", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_0ede0b0f6ad40463ef744ee142fe7491",
+        "refinement_interpretation_Tm_refine_3958464058262617e2cb49fb2c866277",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_BinomialQueue.uu___is_Leaf",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "821f13073f94077d4e2bc87d918c4e07"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      52,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "refinement_interpretation_Tm_refine_3958464058262617e2cb49fb2c866277",
+        "subterm_ordering_Prims.Cons", "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "9d353567723f279aca95f11ff02bf0ec"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      53,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_Prims.Cons",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_3958464058262617e2cb49fb2c866277",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "b11d0a0fd89dc0d484f567b29ccda5ce"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      54,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_Prims.Cons",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_3958464058262617e2cb49fb2c866277",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "a80c6fd678bdd364c4a85c5760ccdcec"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      55,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_BinomialQueue.is_pow2heap",
+        "refinement_interpretation_Tm_refine_893c67deed089973b65bf4dbece19d8b"
+      ],
+      0,
+      "2e70faccf64219c019c21fe9b9f9cf42"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      56,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@query", "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_Prims.int"
+      ],
+      0,
+      "0e35b75c0675fe029907d674f599c1a2"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      57,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@query", "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_Prims.int"
+      ],
+      0,
+      "a6397bf94520c7bf76d9def5cba0b2aa"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      58,
+      1,
+      1,
+      [ "@query" ],
+      0,
+      "8652a90eca303d03aa85e9c6a33be1a5"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      59,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.join.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.join.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.keys.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@query",
+        "BinomialQueue_interpretation_Tm_arrow_e979b9dc6be45dd92c9914c44a112e40",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_4",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_5",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_6",
+        "binder_x_c1ab7496c060d1f2d977fd02b92d48e2_3",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "bool_inversion",
+        "constructor_distinct_BinomialQueue.Leaf",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Tm_unit",
+        "data_elim_BinomialQueue.Internal", "data_elim_BinomialQueue.Mkms",
+        "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.is_pow2heap", "equation_BinomialQueue.key_t",
+        "equation_BinomialQueue.ms_append", "equation_BinomialQueue.ms_cons",
+        "equation_BinomialQueue.ms_empty",
+        "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_BinomialQueue.repr_t",
+        "equation_BinomialQueue.smash", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Prims.pos", "equation_Prims.prop",
+        "equation_Prims.subtype_of",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.join.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_BinomialQueue.ms",
+        "fuel_guarded_inversion_BinomialQueue.tree",
+        "fuel_guarded_inversion_Prims.list",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "interpretation_Tm_abs_015f65dc738b17ca923c21bdd897be70",
+        "interpretation_Tm_abs_0750d50e859fe4be4a1d3b6be7ce934c",
+        "l_and-interp", "lemma_FStar.Set.lemma_equal_elim",
+        "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.Set.mem_union", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Subtraction",
+        "proj_equation_BinomialQueue.Mkms_ms_count",
+        "proj_equation_BinomialQueue.Mkms_ms_elems",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__3",
+        "proj_equation_Prims.Cons_hd",
+        "projection_inverse_BinomialQueue.Mkms_ms_count",
+        "projection_inverse_BinomialQueue.Mkms_ms_elems",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_0ede0b0f6ad40463ef744ee142fe7491",
+        "refinement_interpretation_Tm_refine_28b3529e604de38cfa56254e079a0089",
+        "refinement_interpretation_Tm_refine_3958464058262617e2cb49fb2c866277",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_73f210ca6e0061ed4a3150f69b8f33bf",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7b20a8433442a6843247a0f86acf4683",
+        "refinement_interpretation_Tm_refine_893c67deed089973b65bf4dbece19d8b",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "refinement_interpretation_Tm_refine_ef894c20818013c5faab7b4bf585814b",
+        "refinement_interpretation_Tm_refine_ff029b35848d1c928aa5484232b0fac8",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count",
+        "token_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "true_interp", "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.is_pow2heap", "typing_BinomialQueue.join",
+        "typing_BinomialQueue.keys", "typing_BinomialQueue.keys_of_tree",
+        "typing_BinomialQueue.ms_append",
+        "typing_BinomialQueue.ms_singleton", "typing_BinomialQueue.repr_l",
+        "typing_BinomialQueue.repr_t", "typing_FStar.Set.mem",
+        "typing_FStar.Set.union", "typing_Prims.int",
+        "typing_Tm_abs_015f65dc738b17ca923c21bdd897be70",
+        "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
+      ],
+      0,
+      "805e432f5be1d932ca5c1ffb44d0b70e"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      60,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "b2t_def", "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_BinomialQueue.Leaf",
+        "constructor_distinct_Prims.Cons",
+        "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.is_pow2heap", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "l_or-interp",
+        "primitive_Prims.op_AmpAmp",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "proj_equation_Prims.Cons_hd", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_214834abf4ce54b327149a60e23d13e1",
+        "refinement_interpretation_Tm_refine_3defe0a363a26994268d4b1c841ccbab",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7b20a8433442a6843247a0f86acf4683",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "3177d2ee3d10e4628c447797a979e817"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      61,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_c1ab7496c060d1f2d977fd02b92d48e2_3", "bool_inversion",
+        "constructor_distinct_Prims.Cons",
+        "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Cons",
+        "equality_tok_BinomialQueue.Leaf@tok", "primitive_Prims.op_AmpAmp",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__3",
+        "proj_equation_Prims.Cons_hd", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_0294f211f76fcd4447241d742eb595ee",
+        "refinement_interpretation_Tm_refine_214834abf4ce54b327149a60e23d13e1",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_BinomialQueue.uu___is_Leaf",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "b94d44a4e32b73867f94e67cd77db11b"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      62,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@query", "equation_BinomialQueue.key_t",
+        "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_t", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.keys_of_tree", "typing_Prims.int"
+      ],
+      0,
+      "5a74292a2eae74bb5ddbe91e6366916a"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      63,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@query", "binder_x_c1ab7496c060d1f2d977fd02b92d48e2_3",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_t", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.keys_of_tree", "typing_Prims.int"
+      ],
+      0,
+      "4fa15ff6433200059de9cdda02699b86"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      64,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "equation_Prims.pos",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "810a7a3eb6a20a568d176f531a1d7ff9"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      65,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "b2t_def", "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_Prims.Cons",
+        "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.is_pow2heap", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "l_or-interp",
+        "primitive_Prims.op_AmpAmp",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "proj_equation_Prims.Cons_hd", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_214834abf4ce54b327149a60e23d13e1",
+        "refinement_interpretation_Tm_refine_3defe0a363a26994268d4b1c841ccbab",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7b20a8433442a6843247a0f86acf4683",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "3cebbf1bf69ad6f6132433ae55af7f43"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      66,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_c1ab7496c060d1f2d977fd02b92d48e2_3", "bool_inversion",
+        "constructor_distinct_Prims.Cons",
+        "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Cons",
+        "equality_tok_BinomialQueue.Leaf@tok", "primitive_Prims.op_AmpAmp",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__3",
+        "proj_equation_Prims.Cons_hd", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_0294f211f76fcd4447241d742eb595ee",
+        "refinement_interpretation_Tm_refine_214834abf4ce54b327149a60e23d13e1",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_BinomialQueue.uu___is_Leaf",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "9532b2be1a3eda181bcb7ae9364e93aa"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      67,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "refinement_interpretation_Tm_refine_214834abf4ce54b327149a60e23d13e1",
+        "subterm_ordering_Prims.Cons", "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "081dde7ca51cd258528db2c55fd8c320"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      68,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_Prims.Cons",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_214834abf4ce54b327149a60e23d13e1",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "30e22b43b11adf49809b5e88c79b321e"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      69,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_Prims.Cons",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_214834abf4ce54b327149a60e23d13e1",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "df332d777e2c9be1036f90fb79f40ee4"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      70,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_BinomialQueue.is_pow2heap",
+        "refinement_interpretation_Tm_refine_893c67deed089973b65bf4dbece19d8b"
+      ],
+      0,
+      "f8746eb0c49ffa234009e125dc971ed5"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      71,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@query", "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_Prims.int"
+      ],
+      0,
+      "9475e51e08900b1b063d9f45c1942783"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      72,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@query", "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_Prims.int"
+      ],
+      0,
+      "4a7178df341985802486be9bb76b9981"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      73,
+      1,
+      1,
+      [ "@query" ],
+      0,
+      "69e717faa60830d995ada2d366832141"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      74,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.join.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.join.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.keys.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@query",
+        "BinomialQueue_interpretation_Tm_arrow_e979b9dc6be45dd92c9914c44a112e40",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_4",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_5",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_6",
+        "binder_x_c1ab7496c060d1f2d977fd02b92d48e2_3",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "bool_inversion",
+        "constructor_distinct_BinomialQueue.Leaf",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Tm_unit",
+        "data_elim_BinomialQueue.Internal", "data_elim_BinomialQueue.Mkms",
+        "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Nil",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.is_pow2heap", "equation_BinomialQueue.key_t",
+        "equation_BinomialQueue.ms_append", "equation_BinomialQueue.ms_cons",
+        "equation_BinomialQueue.ms_empty",
+        "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_BinomialQueue.repr_t",
+        "equation_BinomialQueue.smash", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Prims.pos", "equation_Prims.prop",
+        "equation_Prims.subtype_of",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.join.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_BinomialQueue.ms",
+        "fuel_guarded_inversion_Prims.list",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "interpretation_Tm_abs_015f65dc738b17ca923c21bdd897be70",
+        "interpretation_Tm_abs_0750d50e859fe4be4a1d3b6be7ce934c",
+        "l_and-interp", "lemma_FStar.Set.lemma_equal_elim",
+        "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.Set.mem_union", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Subtraction",
+        "proj_equation_BinomialQueue.Mkms_ms_count",
+        "proj_equation_BinomialQueue.Mkms_ms_elems",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_BinomialQueue.Mkms_ms_count",
+        "projection_inverse_BinomialQueue.Mkms_ms_elems",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_214834abf4ce54b327149a60e23d13e1",
+        "refinement_interpretation_Tm_refine_28b3529e604de38cfa56254e079a0089",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_73f210ca6e0061ed4a3150f69b8f33bf",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7b20a8433442a6843247a0f86acf4683",
+        "refinement_interpretation_Tm_refine_893c67deed089973b65bf4dbece19d8b",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "refinement_interpretation_Tm_refine_ef894c20818013c5faab7b4bf585814b",
+        "refinement_interpretation_Tm_refine_ff029b35848d1c928aa5484232b0fac8",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count",
+        "token_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "true_interp", "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.is_pow2heap", "typing_BinomialQueue.join",
+        "typing_BinomialQueue.keys", "typing_BinomialQueue.keys_of_tree",
+        "typing_BinomialQueue.ms_append",
+        "typing_BinomialQueue.ms_singleton", "typing_BinomialQueue.repr_l",
+        "typing_BinomialQueue.repr_t", "typing_FStar.Set.mem",
+        "typing_FStar.Set.union", "typing_Prims.int",
+        "typing_Tm_abs_015f65dc738b17ca923c21bdd897be70",
+        "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
+      ],
+      0,
+      "20cdcb361eabdb167b64be46d4a07564"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      75,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "b2t_def", "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_Prims.Cons",
+        "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.is_pow2heap", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "l_or-interp",
+        "primitive_Prims.op_AmpAmp",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "proj_equation_Prims.Cons_hd", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_1e5ca76a3c7bd4dc22f88344c5e0a59b",
+        "refinement_interpretation_Tm_refine_3defe0a363a26994268d4b1c841ccbab",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7b20a8433442a6843247a0f86acf4683",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "1341de7e8490415e47b0d38a96b604fe"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      76,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "b2t_def", "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "bool_inversion",
+        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.is_pow2heap", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "kinding_BinomialQueue.tree@tok", "l_and-interp",
+        "l_or-interp", "primitive_Prims.op_AmpAmp",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "proj_equation_Prims.Cons_hd", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_1e5ca76a3c7bd4dc22f88344c5e0a59b",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7b20a8433442a6843247a0f86acf4683",
+        "refinement_interpretation_Tm_refine_c7c8841ed1f3c74bc63912aafcf21231",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_BinomialQueue.uu___is_Leaf", "typing_Prims.uu___is_Cons",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "369c319b5e77ca006b2bd402510eb947"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      77,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@query", "equation_BinomialQueue.key_t",
+        "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_t", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.keys_of_tree", "typing_Prims.int"
+      ],
+      0,
+      "4c2ed4bc4ab54fa6b92406cbcf714645"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      78,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@query", "equation_BinomialQueue.key_t",
+        "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_t", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.keys_of_tree", "typing_Prims.int"
+      ],
+      0,
+      "cb20edd10a0b55ff233b221a3a371ad1"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      79,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "equation_Prims.pos",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "06105e1ab2cb835d57ff5960f46950f9"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      80,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "b2t_def", "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_Prims.Cons",
+        "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.is_pow2heap", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "l_or-interp",
+        "primitive_Prims.op_AmpAmp",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "proj_equation_Prims.Cons_hd", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_1e5ca76a3c7bd4dc22f88344c5e0a59b",
+        "refinement_interpretation_Tm_refine_3defe0a363a26994268d4b1c841ccbab",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7b20a8433442a6843247a0f86acf4683",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "3cfbdd183bc6b39b622d2d0545831b31"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      81,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "b2t_def", "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "bool_inversion",
+        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.is_pow2heap", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "kinding_BinomialQueue.tree@tok", "l_and-interp",
+        "l_or-interp", "primitive_Prims.op_AmpAmp",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "proj_equation_Prims.Cons_hd", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_1e5ca76a3c7bd4dc22f88344c5e0a59b",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7b20a8433442a6843247a0f86acf4683",
+        "refinement_interpretation_Tm_refine_c7c8841ed1f3c74bc63912aafcf21231",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_BinomialQueue.uu___is_Leaf", "typing_Prims.uu___is_Cons",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "2c508c44fbf92b97c90f212dcbe6bffb"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      82,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "refinement_interpretation_Tm_refine_1e5ca76a3c7bd4dc22f88344c5e0a59b",
+        "subterm_ordering_Prims.Cons", "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "e1192f34ae01f3aa5913410e685ac833"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      83,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_Prims.Cons",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_1e5ca76a3c7bd4dc22f88344c5e0a59b",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "e99710c049fc2764916732ac19d7bf1e"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      84,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@query", "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
+        "constructor_distinct_Prims.Cons",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest", "equation_Prims.pos",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "int_inversion", "l_and-interp", "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_1e5ca76a3c7bd4dc22f88344c5e0a59b",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "typing_tok_BinomialQueue.Leaf@tok"
+      ],
+      0,
+      "e5836e7baf7702120a8182981fa85271"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      85,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_BinomialQueue.is_pow2heap",
+        "refinement_interpretation_Tm_refine_388482d5ddcd4cf30626ab56d4782b08"
+      ],
+      0,
+      "7d9f00bae2e8caf12f7e75b82f06636f"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      86,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@query", "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_Prims.int"
+      ],
+      0,
+      "7b17d187e4a509a8fc2f78d47ef8a23a"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      87,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@query", "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.key_t", "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "lemma_FStar.Set.lemma_equal_intro",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_Prims.int"
+      ],
+      0,
+      "62f8c0b91f61abfe7a1f9ed492acfebd"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      88,
+      1,
+      1,
+      [ "@query" ],
+      0,
+      "aa03b636ad79b00a678322099db72f00"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      89,
+      1,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.join.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.join.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.keys.fuel_instrumented", "@query",
+        "BinomialQueue_interpretation_Tm_arrow_e979b9dc6be45dd92c9914c44a112e40",
+        "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_1",
+        "binder_x_07642eb27f8c86505049ec727a4a557c_2",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_4",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_5",
+        "binder_x_2841d97f95e403f3d9b78b0c5aec5c0a_6",
+        "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "bool_inversion",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Tm_unit",
+        "data_elim_BinomialQueue.Internal", "data_elim_BinomialQueue.Mkms",
+        "data_elim_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_BinomialQueue.Leaf@tok",
+        "equation_BinomialQueue.forest",
+        "equation_BinomialQueue.is_pow2heap", "equation_BinomialQueue.key_t",
+        "equation_BinomialQueue.ms_append", "equation_BinomialQueue.ms_cons",
+        "equation_BinomialQueue.ms_empty",
+        "equation_BinomialQueue.permutation",
+        "equation_BinomialQueue.repr_l", "equation_BinomialQueue.repr_t",
+        "equation_BinomialQueue.smash", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Prims.pos", "equation_Prims.prop",
+        "equation_Prims.subtype_of",
+        "equation_with_fuel_BinomialQueue.is_binomial_queue.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.join.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_BinomialQueue.ms",
+        "fuel_guarded_inversion_Prims.list",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "interpretation_Tm_abs_015f65dc738b17ca923c21bdd897be70",
+        "l_and-interp", "lemma_FStar.Set.lemma_equal_elim",
+        "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.Set.mem_union", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Subtraction",
+        "proj_equation_BinomialQueue.Mkms_ms_count",
+        "proj_equation_BinomialQueue.Mkms_ms_elems",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_BinomialQueue.Mkms_ms_count",
+        "projection_inverse_BinomialQueue.Mkms_ms_elems",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_1e5ca76a3c7bd4dc22f88344c5e0a59b",
+        "refinement_interpretation_Tm_refine_28b3529e604de38cfa56254e079a0089",
+        "refinement_interpretation_Tm_refine_388482d5ddcd4cf30626ab56d4782b08",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_73f210ca6e0061ed4a3150f69b8f33bf",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_7b20a8433442a6843247a0f86acf4683",
+        "refinement_interpretation_Tm_refine_d33ca3101e241a29189debf129f6591f",
+        "refinement_interpretation_Tm_refine_ef894c20818013c5faab7b4bf585814b",
+        "refinement_interpretation_Tm_refine_ff029b35848d1c928aa5484232b0fac8",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count",
+        "token_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "token_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
+        "typing_BinomialQueue.is_pow2heap", "typing_BinomialQueue.join",
+        "typing_BinomialQueue.keys", "typing_BinomialQueue.keys_of_tree",
+        "typing_BinomialQueue.ms_append", "typing_BinomialQueue.repr_l",
+        "typing_BinomialQueue.repr_t", "typing_FStar.Set.mem",
+        "typing_FStar.Set.union", "typing_Prims.int",
+        "typing_Tm_abs_015f65dc738b17ca923c21bdd897be70",
+        "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
+      ],
+      0,
+      "8c084fefa5172353a8dd0c9dcc09da67"
+    ],
+    [
+      "BinomialQueue.join_repr",
+      90,
       1,
       1,
       [
@@ -1234,7 +3763,7 @@
         "refinement_interpretation_Tm_refine_4aaacdbe6aef23914ad906053a7ec01c"
       ],
       0,
-      "bd967df2ee340d067b9675fedc1bbfb0"
+      "b9809dad3d26ffb5ac1421b329437c2c"
     ],
     [
       "BinomialQueue.all_leaf_keys",
@@ -1247,11 +3776,14 @@
         "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
         "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
         "@fuel_irrelevance_BinomialQueue.all_leaf.fuel_instrumented",
-        "@fuel_irrelevance_BinomialQueue.keys.fuel_instrumented", "@query",
+        "@fuel_irrelevance_BinomialQueue.keys.fuel_instrumented",
+        "@fuel_irrelevance_BinomialQueue.keys_of_tree.fuel_instrumented",
+        "@query",
         "BinomialQueue_interpretation_Tm_arrow_e979b9dc6be45dd92c9914c44a112e40",
+        "BinomialQueue_interpretation_Tm_arrow_ff32f7ccb320a566131f772799c7fc50",
         "BinomialQueue_pretyping_c1ab7496c060d1f2d977fd02b92d48e2",
         "binder_x_92cc3092b50378b9697de1162e4e2190_0", "bool_inversion",
-        "constructor_distinct_Prims.Nil", "data_elim_BinomialQueue.Mkms",
+        "constructor_distinct_Prims.Nil", "data_elim_Prims.Cons",
         "data_typing_intro_Prims.Nil@tok",
         "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
@@ -1264,6 +3796,7 @@
         "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
         "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_BinomialQueue.__proj__Mkms__item__ms_count",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "interpretation_Tm_abs_015f65dc738b17ca923c21bdd897be70",
         "interpretation_Tm_abs_0750d50e859fe4be4a1d3b6be7ce934c",
@@ -1287,12 +3820,12 @@
         "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count",
         "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
         "typing_BinomialQueue.all_leaf", "typing_BinomialQueue.keys",
-        "typing_FStar.Set.empty", "typing_FStar.Set.mem",
-        "typing_FStar.Set.union", "typing_Prims.int",
+        "typing_BinomialQueue.keys_of_tree", "typing_FStar.Set.empty",
+        "typing_FStar.Set.mem", "typing_FStar.Set.union", "typing_Prims.int",
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "187af1a74dc2ca6252853139d264845d"
+      "87703a281c43be00fffdbf36c386bb0d"
     ],
     [
       "BinomialQueue.all_leaf_keys",
@@ -1301,7 +3834,7 @@
       1,
       [ "@query" ],
       0,
-      "610fdc66541613c5a3508e404ed6b86e"
+      "f6c18873e77bc074cd9901cbd6ece4ef"
     ],
     [
       "BinomialQueue.compact_preserves_keys",
@@ -1311,6 +3844,7 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
         "@fuel_correspondence_BinomialQueue.mk_compact.fuel_instrumented",
         "@fuel_irrelevance_BinomialQueue.keys.fuel_instrumented",
         "@fuel_irrelevance_BinomialQueue.mk_compact.fuel_instrumented",
@@ -1352,7 +3886,7 @@
         "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "ad7c629d609d5376dedf10bb79f9745c"
+      "fd4d6d241fb5d85f821111ff77d460dc"
     ],
     [
       "BinomialQueue.insert_repr",
@@ -1431,7 +3965,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "12ba588f885bb47532eb02beb228abba"
+      "662990c82f8157ee42e8703a4301911b"
     ],
     [
       "BinomialQueue.merge_repr",
@@ -1492,7 +4026,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "84c4afd1250d8c08662d840e7623c6ff"
+      "e44017fcff3d8a73be7a666898e34542"
     ],
     [
       "BinomialQueue.last_key_in_keys",
@@ -1550,7 +4084,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "71e286b143306bd248084601b82b7e75"
+      "3e3b9db4a311ac2cab761f9462eec8f7"
     ],
     [
       "BinomialQueue.last_key_in_keys",
@@ -1566,7 +4100,7 @@
         "typing_Prims.int"
       ],
       0,
-      "5c613f2818d97d0ba4d2a75317da2b52"
+      "8ac47d67d1a288a98797dacc2e79807c"
     ],
     [
       "BinomialQueue.find_max_some_is_some",
@@ -1615,7 +4149,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "79ef0b0e92a4b1586d5d408df4060fd9"
+      "dd25de757acce4b262090c6ae03762d3"
     ],
     [
       "BinomialQueue.find_max_emp_repr_l",
@@ -1659,7 +4193,7 @@
         "typing_Prims.int", "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "d0d483d155b96b53fe431169fdc6bc24"
+      "1388b089f3af55f1a4fc8f3f132713af"
     ],
     [
       "BinomialQueue.find_max_emp_repr_r",
@@ -1720,13 +4254,14 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count",
+        "token_correspondence_BinomialQueue.keys.fuel_instrumented",
         "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
         "typing_BinomialQueue.keys", "typing_FStar.Set.empty",
         "typing_FStar.Set.mem", "typing_FStar.Set.union", "typing_Prims.int",
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "55b65e53f30faa9f6fdb927ac145ce5b"
+      "58bd798cc7e96504c4e09a116f01ca0e"
     ],
     [
       "BinomialQueue.delete_max_none_repr",
@@ -1752,7 +4287,7 @@
         "typing_BinomialQueue.find_max"
       ],
       0,
-      "fecd6c2ff99a35ac6a24937fc92bd713"
+      "e281903064892f4b3cfb3bdbe9e4659a"
     ],
     [
       "BinomialQueue.keys_append",
@@ -1812,22 +4347,21 @@
         "subterm_ordering_Prims.Cons",
         "token_correspondence_BinomialQueue.__proj__Mkms__item__ms_count",
         "token_correspondence_BinomialQueue.keys.fuel_instrumented",
-        "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
         "typing_BinomialQueue.keys", "typing_BinomialQueue.keys_of_tree",
         "typing_BinomialQueue.ms_append",
-        "typing_FStar.List.Tot.Base.append", "typing_FStar.Set.mem",
-        "typing_FStar.Set.union", "typing_Prims.int",
+        "typing_FStar.List.Tot.Base.append", "typing_FStar.Set.empty",
+        "typing_FStar.Set.mem", "typing_FStar.Set.union", "typing_Prims.int",
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "0f7173202ccef08cc47c1f3ef389f3ef"
+      "515f8c25fafcff9de24fd98e46105b42"
     ],
     [
       "BinomialQueue.unzip_repr",
       1,
       2,
-      1,
+      2,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
@@ -1850,6 +4384,7 @@
         "constructor_distinct_BinomialQueue.Leaf",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "data_elim_BinomialQueue.Internal", "data_elim_BinomialQueue.Mkms",
+        "data_elim_Prims.Cons",
         "data_typing_intro_BinomialQueue.Internal@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
@@ -1912,10 +4447,11 @@
         "typing_BinomialQueue.ms_empty", "typing_BinomialQueue.ms_singleton",
         "typing_FStar.List.Tot.Base.append", "typing_FStar.Set.empty",
         "typing_FStar.Set.mem", "typing_FStar.Set.union", "typing_Prims.int",
+        "typing_Tm_abs_015f65dc738b17ca923c21bdd897be70",
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "661d745284fb66f3ae76242a9a0b6d33"
+      "dc66884e8c6ec08a783d8824b3a51cf9"
     ],
     [
       "BinomialQueue.unzip_repr",
@@ -1927,7 +4463,7 @@
         "refinement_interpretation_Tm_refine_76adbb251afae091ffb3b3578bcabcfe"
       ],
       0,
-      "2512b1e8be1b83b65a5799383a7bcb1c"
+      "d5d44e5b2953a953d63aa138462e48e4"
     ],
     [
       "BinomialQueue.heap_delete_max_repr",
@@ -2002,7 +4538,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "bc0e77298ebf6e4d98384552adc80a8c"
+      "65db0c07b02d164da29ef7500104ab80"
     ],
     [
       "BinomialQueue.max",
@@ -2017,7 +4553,7 @@
         "typing_Prims.int"
       ],
       0,
-      "d9f4d579bc223dc12e7a7d975a59572d"
+      "851fcb59868705bc3c073953186d7740"
     ],
     [
       "BinomialQueue.max",
@@ -2032,7 +4568,7 @@
         "typing_Prims.int"
       ],
       0,
-      "59e5d701aa592f5971e77f1f9fba245c"
+      "7f7f5c9a09684d9ec798a1fb97517eb6"
     ],
     [
       "BinomialQueue.tree_root_is_max_aux",
@@ -2085,7 +4621,7 @@
         "typing_Prims.int", "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "830efd2dcefe8cc70e0e1af9bd7d2151"
+      "dfefbf2e7fb7328ccdf96b365ebf7d5d"
     ],
     [
       "BinomialQueue.tree_root_is_max",
@@ -2110,7 +4646,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "8ea27af3eff389ddd2e0bbc23a482f92"
+      "f4ccf90e9d667cdf42db3147e6a3e2ec"
     ],
     [
       "BinomialQueue.delete_max_aux_repr",
@@ -2139,10 +4675,12 @@
         "binder_x_b19ee3ff3f4f676fe283c4905f1b1f83_0",
         "binder_x_b19ee3ff3f4f676fe283c4905f1b1f83_3",
         "binder_x_f26957a7e62b271a8736230b1e9c83c1_1", "bool_inversion",
-        "bool_typing", "constructor_distinct_BinomialQueue.Leaf",
+        "bool_typing", "constructor_distinct_BinomialQueue.Internal",
+        "constructor_distinct_BinomialQueue.Leaf",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "constructor_distinct_Tm_unit", "data_elim_BinomialQueue.Mkms",
-        "data_elim_Prims.Cons", "disc_equation_BinomialQueue.Internal",
+        "constructor_distinct_Tm_unit", "data_elim_BinomialQueue.Internal",
+        "data_elim_BinomialQueue.Mkms", "data_elim_Prims.Cons",
+        "disc_equation_BinomialQueue.Internal",
         "disc_equation_BinomialQueue.Leaf", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil", "equality_tok_BinomialQueue.Leaf@tok",
         "equation_BinomialQueue.forest",
@@ -2204,7 +4742,7 @@
         "token_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
         "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
         "typing_BinomialQueue.keys", "typing_BinomialQueue.keys_of_tree",
-        "typing_BinomialQueue.ms_append",
+        "typing_BinomialQueue.ms_append", "typing_BinomialQueue.ms_cons",
         "typing_BinomialQueue.ms_singleton", "typing_FStar.Set.empty",
         "typing_FStar.Set.mem", "typing_FStar.Set.singleton",
         "typing_FStar.Set.union", "typing_Prims.int",
@@ -2212,7 +4750,7 @@
         "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "963f763aa4e57544f8b2303df80552e2"
+      "ceba102fae343bfba6f27b6a44f2491a"
     ],
     [
       "BinomialQueue.delete_max_aux_repr",
@@ -2227,7 +4765,7 @@
         "typing_Prims.int"
       ],
       0,
-      "0263e3541fd921af29cee7bbbf432198"
+      "8234a10101bd201bf718751f99025a73"
     ],
     [
       "BinomialQueue.find_max_mem_keys",
@@ -2302,7 +4840,7 @@
         "typing_tok_BinomialQueue.Leaf@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "136ddc1ad1685f27783a56869c9278aa"
+      "abebb3ace09e26959d3acb4aa3f684d6"
     ],
     [
       "BinomialQueue.find_max_mem_keys",
@@ -2317,7 +4855,7 @@
         "typing_Prims.int"
       ],
       0,
-      "e3457532c038f7128325ebc505219b9f"
+      "7b9e9ac5d2ecf611a7e87e0c4f95eeef"
     ],
     [
       "BinomialQueue.find_max_is_max",
@@ -2358,6 +4896,7 @@
         "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
         "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_BinomialQueue.tree",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_Prims.list",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "l_and-interp", "l_or-interp", "lemma_FStar.Pervasives.invertOption",
@@ -2376,7 +4915,6 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.None_a",
-        "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
@@ -2390,13 +4928,13 @@
         "token_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
         "typing_BinomialQueue.__proj__Mkms__item__ms_elems",
         "typing_BinomialQueue.keys", "typing_BinomialQueue.keys_of_tree",
-        "typing_BinomialQueue.ms_append",
-        "typing_BinomialQueue.ms_singleton", "typing_FStar.Set.mem",
+        "typing_BinomialQueue.ms_cons", "typing_FStar.Set.empty",
+        "typing_FStar.Set.mem", "typing_FStar.Set.singleton",
         "typing_Prims.int", "typing_tok_BinomialQueue.Leaf@tok",
         "unit_inversion", "unit_typing"
       ],
       0,
-      "fbea457e8b0b42675e90427b401a2fdf"
+      "4467da018bde3fe5a9b9b2a92b752c81"
     ],
     [
       "BinomialQueue.find_max_is_max",
@@ -2408,7 +4946,7 @@
         "refinement_interpretation_Tm_refine_40004e77c501d0d7faf8da16dffd8ea1"
       ],
       0,
-      "c0674e864b4b968c681ddb1a55a8efa8"
+      "a29ddd565957897f37e500dbe842cb8f"
     ],
     [
       "BinomialQueue.delete_max_some_repr",
@@ -2423,16 +4961,17 @@
         "typing_Prims.int"
       ],
       0,
-      "c836a6666cb19b452d988cbe7d8fd051"
+      "8679c15618358b9b965ce54d6aec8035"
     ],
     [
       "BinomialQueue.delete_max_some_repr",
       2,
+      4,
       2,
-      1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_BinomialQueue.delete_max_aux.fuel_instrumented",
+        "@fuel_correspondence_BinomialQueue.join.fuel_instrumented",
         "@fuel_correspondence_BinomialQueue.keys.fuel_instrumented",
         "@fuel_correspondence_BinomialQueue.keys_of_tree.fuel_instrumented",
         "@fuel_correspondence_BinomialQueue.mk_compact.fuel_instrumented",
@@ -2460,6 +4999,7 @@
         "equation_BinomialQueue.repr_t", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_Prims.pos",
         "equation_with_fuel_BinomialQueue.delete_max_aux.fuel_instrumented",
+        "equation_with_fuel_BinomialQueue.join.fuel_instrumented",
         "equation_with_fuel_BinomialQueue.keys.fuel_instrumented",
         "equation_with_fuel_BinomialQueue.keys_of_tree.fuel_instrumented",
         "fuel_guarded_inversion_BinomialQueue.ms",
@@ -2472,8 +5012,8 @@
         "lemma_BinomialQueue.compact_preserves_keys",
         "lemma_FStar.Set.lemma_equal_elim",
         "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
-        "lemma_FStar.Set.mem_union", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_BarBar",
+        "lemma_FStar.Set.mem_singleton", "lemma_FStar.Set.mem_union",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
         "proj_equation_BinomialQueue.Mkms_ms_count",
         "proj_equation_BinomialQueue.Mkms_ms_elems",
         "proj_equation_FStar.Pervasives.Native.Some_v",
@@ -2504,7 +5044,7 @@
         "typing_tok_BinomialQueue.Leaf@tok"
       ],
       0,
-      "5c1027863e77c68d7c0a3e6b47dd1f60"
+      "44dcc9e6e34208d24ac34cedc2e4c8a0"
     ]
   ]
 ]
