@@ -359,13 +359,21 @@ unit-tests: _unit-tests
 
 # Use directly only at your own risk.
 _test: FSTAR_EXE ?= $(abspath out/bin/fstar.exe)
-_test: _unit-tests _examples
+_test: _unit-tests _examples _doc
 
 need_fstar_exe:
 	if [ -z "$(FSTAR_EXE)" ]; then \
 		echo "This rule needs FSTAR_EXE defined."; \
 		false; \
 	fi
+
+_doc: _doc_book_code _doc_old_tutorial
+
+_doc_book_code: need_fstar_exe _force
+	+$(MAKE) -C doc/book/code FSTAR_EXE=$(FSTAR_EXE)
+
+_doc_old_tutorial: need_fstar_exe _force
+	+$(MAKE) -C doc/old/tutorial regressions FSTAR_EXE=$(FSTAR_EXE)
 
 _unit-tests: need_fstar_exe _force
 	+$(MAKE) -C tests all FSTAR_EXE=$(FSTAR_EXE)
