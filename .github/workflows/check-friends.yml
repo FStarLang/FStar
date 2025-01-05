@@ -523,6 +523,7 @@ jobs:
         run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
+      - run: opam install -y hex re ctypes sha sexplib
 
       # Install rust toolchain
       - uses: dtolnay/rust-toolchain@stable
