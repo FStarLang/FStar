@@ -3003,7 +3003,7 @@ let (js_repl_init_opts : unit -> unit) =
     match uu___1 with
     | (res, fnames) ->
         (match res with
-         | FStarC_Getopt.Error msg ->
+         | FStarC_Getopt.Error (msg, uu___2) ->
              failwith (Prims.strcat "repl_init: " msg)
          | FStarC_Getopt.Help -> failwith "repl_init: --help unexpected"
          | FStarC_Getopt.Success ->

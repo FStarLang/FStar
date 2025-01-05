@@ -3679,11 +3679,16 @@ let (process_pragma :
                (Obj.magic FStarC_Errors_Msg.is_error_message_string)
                (Obj.magic
                   "Failed to process pragma: use 'fstar --help' to see which options are available")
-         | FStarC_Getopt.Error s1 ->
+         | FStarC_Getopt.Error (s1, opt) ->
+             let uu___2 =
+               let uu___3 =
+                 FStarC_Errors_Msg.text
+                   (Prims.strcat "Failed to process pragma: " s1) in
+               [uu___3] in
              FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
                FStarC_Errors_Codes.Fatal_FailToProcessPragma ()
-               (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-               (Obj.magic (Prims.strcat "Failed to process pragma: " s1)) in
+               (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+               (Obj.magic uu___2) in
        match p with
        | FStarC_Syntax_Syntax.ShowOptions -> ()
        | FStarC_Syntax_Syntax.SetOptions o -> set_options o

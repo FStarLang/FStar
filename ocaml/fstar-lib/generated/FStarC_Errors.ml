@@ -804,8 +804,8 @@ let (uu___0 :
         (FStarC_Compiler_Util.smap_add error_flags we
            FStar_Pervasives_Native.None;
          FStarC_Getopt.Error
-           (Prims.strcat "Invalid --warn_error setting: "
-              (Prims.strcat msg "\n"))) in
+           ((Prims.strcat "Invalid --warn_error setting: "
+               (Prims.strcat msg "\n")), "warn_error")) in
   let get_error_flags uu___ =
     let we = FStarC_Options.warn_error () in
     let uu___1 = FStarC_Compiler_Util.smap_try_find error_flags we in

@@ -147,6 +147,14 @@ let (set_error_trap : unit -> unit) =
       FStarC_Compiler_Effect.exit Prims.int_one in
     let uu___1 = FStarC_Compiler_Util.sigint_handler_f h' in
     FStarC_Compiler_Util.set_sigint_handler uu___1
+let (print_help_for : Prims.string -> unit) =
+  fun o ->
+    let uu___ = FStarC_Options.help_for_option o in
+    match uu___ with
+    | FStar_Pervasives_Native.None -> ()
+    | FStar_Pervasives_Native.Some doc ->
+        let uu___1 = FStarC_Errors_Msg.renderdoc doc in
+        FStarC_Compiler_Util.print_error uu___1
 let (go_normal : unit -> unit) =
   fun uu___ ->
     let uu___1 = process_args () in
@@ -161,8 +169,9 @@ let (go_normal : unit -> unit) =
           | FStarC_Getopt.Help ->
               (FStarC_Options.display_usage ();
                FStarC_Compiler_Effect.exit Prims.int_zero)
-          | FStarC_Getopt.Error msg ->
-              (FStarC_Compiler_Util.print_error msg;
+          | FStarC_Getopt.Error (msg, opt) ->
+              (FStarC_Compiler_Util.print_error (Prims.strcat "error: " msg);
+               print_help_for opt;
                FStarC_Compiler_Effect.exit Prims.int_one)
           | FStarC_Getopt.Success when FStarC_Options.print_cache_version ()
               ->
