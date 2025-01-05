@@ -1761,15 +1761,29 @@ let print_full (outc : out_channel) (deps:deps) : unit =
     in
     let sb = FStarC.StringBuffer.create (FStarC.BigInt.of_int_fs 10000) in
     let pr str = ignore <| FStarC.StringBuffer.add str sb in
-    let print_entry target first_dep all_deps =
-        pr target;
-        pr ": ";
-        pr first_dep;
-        pr "\\\n\t";
-        pr all_deps;
+    let norm_path s = replace_chars (replace_chars s '\\' "/") ' ' "\\ " in
+    let print_entry (target : string) (all_deps : list string) : unit =
+        (* Print a target with dependencies. NOTE: we sort the dependencies,
+        but keep the first element unchanged as it's distinguished by $<. *)
+        let all_deps =
+          match all_deps with
+          | h::t -> h :: Class.Ord.sort t
+          | [] -> []
+        in
+        pr target; pr ":";
+        all_deps |> List.iter (fun f -> pr " \\\n\t" ; pr (norm_path f));
+        pr "\n\n"
+    in
+    let print_all tag files =
+        (* Print a variable defined as a list of files *)
+        let files = Class.Ord.sort files in
+        pr (pre_tag^tag);
+        pr "=";
+        files |> List.iter (fun f -> pr " \\\n\t"; pr (norm_path f));
         pr "\n\n"
     in
     let keys = deps_keys deps.dep_graph in
+    let keys = Class.Ord.sort keys in
     let no_fstar_stubs_file (s:string) : string =
       (* If the original filename begins with FStar.Stubs, then remove that,
       consistent with what extraction will actually do.
@@ -1791,12 +1805,11 @@ let print_full (outc : out_channel) (deps:deps) : unit =
         let ml_base_name = replace_chars basename '.' "_" in
         Find.prepend_output_dir (ml_base_name ^ ext)
     in
-    let norm_path s = replace_chars (replace_chars s '\\' "/") ' ' "\\ " in
-    let output_fs_file f = norm_path (output_file ".fs" f) in
-    let output_ml_file f = norm_path (output_file ".ml" f) in
-    let output_krml_file f = norm_path (output_file ".krml" f) in
-    let output_cmx_file f = norm_path (output_file ".cmx" f) in
-    let cache_file f = norm_path (cache_file_name f) in
+    let output_fs_file f = (output_file ".fs" f) in
+    let output_ml_file f = (output_file ".ml" f) in
+    let output_krml_file f = (output_file ".krml" f) in
+    let output_cmx_file f = (output_file ".cmx" f) in
+    let cache_file f = (cache_file_name f) in
     let widened, dep_graph = phase1 deps.file_system_map deps.dep_graph deps.interfaces_with_inlining true in
     let all_checked_files =
         keys |>
@@ -1820,7 +1833,6 @@ let print_full (outc : out_channel) (deps:deps) : unit =
                              (fun iface_dep ->
                                 not (BU.for_some (dep_subsumed_by iface_dep) dep_node.edges)))
             in
-            let norm_f = norm_path file_name in
             let files =
               List.map
                 (file_of_dep_aux true deps.file_system_map deps.cmd_line_files)
@@ -1847,15 +1859,13 @@ let print_full (outc : out_channel) (deps:deps) : unit =
                       |> (fun files -> (cache_file_name iface_fn)::files)
               else files in
 
-            let files = List.map norm_path files in
-            let files = String.concat "\\\n\t" files in
             let cache_file_name = cache_file file_name in
 
             let all_checked_files =
                 if not (Options.should_be_already_cached (module_name_of_file file_name))
                 then //this one prints:
                      //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
-                     (print_entry cache_file_name norm_f files;
+                     (print_entry cache_file_name (file_name :: files);
                       cache_file_name::all_checked_files)
                 else all_checked_files
             in
@@ -1890,9 +1900,6 @@ let print_full (outc : out_channel) (deps:deps) : unit =
                    false
           in
           let all_checked_fst_dep_files = all_fst_files_dep |> List.map cache_file in
-          let all_checked_fst_dep_files_string =
-                 String.concat " \\\n\t" all_checked_fst_dep_files
-          in
           let _ =
             if is_implementation file_name
             then begin
@@ -1903,38 +1910,32 @@ let print_full (outc : out_channel) (deps:deps) : unit =
 
                      print_entry
                         (output_ml_file file_name)
-                        cache_file_name
-                        all_checked_fst_dep_files_string;
+                        (cache_file_name :: all_checked_fst_dep_files);
 
                      if Options.should_extract mname Options.FSharp
                      then print_entry
                             (output_fs_file file_name)
-                            cache_file_name
-                            all_checked_fst_dep_files_string;
+                            (cache_file_name :: all_checked_fst_dep_files);
 
                      print_entry
                         (output_krml_file file_name)
-                        cache_file_name
-                        all_checked_fst_dep_files_string
+                        (cache_file_name :: all_checked_fst_dep_files)
               end
               else begin
                      let mname = lowercase_module_name file_name in
 
                      print_entry
                         (output_ml_file file_name)
-                        cache_file_name
-                        "";
+                        [cache_file_name];
 
                      if Options.should_extract mname Options.FSharp
                      then print_entry
                             (output_fs_file file_name)
-                            cache_file_name
-                            "";
+                            [cache_file_name];
 
                      print_entry
                         (output_krml_file file_name)
-                        cache_file_name
-                        ""
+                        [cache_file_name]
               end;
               let cmx_files =
                   let extracted_fst_files =
@@ -1948,11 +1949,9 @@ let print_full (outc : out_channel) (deps:deps) : unit =
               in
               if Options.should_extract (lowercase_module_name file_name) Options.OCaml
               then
-                let cmx_files = String.concat "\\\n\t" cmx_files in
                 print_entry
                     (output_cmx_file file_name)
-                    (output_ml_file file_name)
-                    cmx_files
+                    (output_ml_file file_name :: cmx_files)
 
             end
             else if not(has_implementation deps.file_system_map (lowercase_module_name file_name))
@@ -1964,13 +1963,11 @@ let print_full (outc : out_channel) (deps:deps) : unit =
                 then
                     print_entry
                         (output_krml_file file_name)
-                        cache_file_name
-                        all_checked_fst_dep_files_string
+                        (cache_file_name :: all_checked_fst_dep_files)
                 else
                    print_entry
                     (output_krml_file file_name)
-                    (cache_file_name)
-                    ""
+                    [cache_file_name]
             end
           in
           all_checked_files
@@ -2012,12 +2009,6 @@ let print_full (outc : out_channel) (deps:deps) : unit =
                        if Options.should_extract mname Options.Krml
                        then BU.smap_add krml_file_map mname (output_krml_file fst_file));
         sort_output_files krml_file_map
-    in
-    let print_all tag files =
-        pr (pre_tag^tag);
-        pr "=\\\n\t";
-        List.iter (fun f -> pr (norm_path f); pr " \\\n\t") files;
-        pr "\n"
     in
     all_fsti_files
     |> List.iter
