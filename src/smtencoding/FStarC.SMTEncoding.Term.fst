@@ -246,14 +246,21 @@ let weightToSmt = function
   | None -> ""
   | Some i -> BU.format1 ":weight %s\n" (string_of_int i)
 
-let rec hash_of_term' t = match t with
+(* NOTE: these hashes are used for variable names in the encoding (Tm_refine_xxx, etc).
+These names can affect the behavior of Z3 and make the difference between a success and
+a failure, especially on flaky queries. So this function SHOULD NOT depend on any
+external factors, like filepaths, timestamps, etc. There used to be a string_of_range
+call here for the Labeled case, which caused flakiness across machines. *)
+let rec hash_of_term' t =
+  match t with
   | Integer i ->  i
   | String s -> s
   | Real r -> r
   | BoundV i  -> "@"^string_of_int i
   | FreeV x   -> fv_name x ^ ":" ^ strSort (fv_sort x) //Question: Why is the sort part of the hash?
   | App(op, tms) -> "("^(op_to_string op)^(List.map hash_of_term tms |> String.concat " ")^")"
-  | Labeled(t, r1, r2) -> hash_of_term t ^ Errors.Msg.rendermsg r1 ^ (Range.string_of_range r2)
+  | Labeled(t, _, _) ->
+    hash_of_term t // labels are semantically irrelevant, ignore them
   | LblPos(t, r) -> "(! " ^hash_of_term t^ " :lblpos " ^r^ ")"
   | Quant(qop, pats, wopt, sorts, body) ->
       "("
