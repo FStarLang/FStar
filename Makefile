@@ -286,6 +286,12 @@ __do-archive: _force
 	rm -rf $(PREFIX)
 	# add an 'fstar' top-level directory to the archive
 	$(MAKE) do-install PREFIX=$(PREFIX)/fstar
+	@# License and extra files. Not there on normal installs, but present
+	@# in package.
+	cp LICENSE* $(PREFIX)/fstar/
+	cp README.md $(PREFIX)/fstar/
+	cp INSTALL.md $(PREFIX)/fstar/
+	cp version.txt $(PREFIX)/fstar/
 	$(call bold_msg, "ARCHIVE", $(ARCHIVE))
 	tar czf $(ARCHIVE) -h -C $(PREFIX) .
 	rm -rf $(PREFIX)
@@ -293,6 +299,12 @@ __do-archive: _force
 __do-src-archive: _force
 	rm -rf $(PREFIX)
 	$(MAKE) do-src-install PREFIX=$(PREFIX)/fstar
+	@# License and extra files. Not there on normal installs, but present
+	@# in package.
+	cp LICENSE* $(PREFIX)/fstar/
+	cp README.md $(PREFIX)/fstar/
+	cp INSTALL.md $(PREFIX)/fstar/
+	cp version.txt $(PREFIX)/fstar/
 	$(call bold_msg, "SRC ARCHIVE", $(ARCHIVE))
 	tar czf $(ARCHIVE) -h -C $(PREFIX) .
 	rm -rf $(PREFIX)
