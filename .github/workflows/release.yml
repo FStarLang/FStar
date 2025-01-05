@@ -21,7 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: |
+      - if: env.DRY_RUN != 'true' # don't check on a dry run.
+        run: |
           git fetch --tags
           V="v$(cat version.txt)"
           if git tag -l "$V" | grep -q .; then
