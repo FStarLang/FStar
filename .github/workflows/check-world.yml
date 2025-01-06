@@ -346,6 +346,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y curl
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo install bindgen-cli # needed for tests
+      - run: sudo apt-get install -y llvm-dev libclang-dev clang # for pulse2rust
 
       - uses: mtzguido/gci-download@master
         with:
@@ -751,7 +752,7 @@ jobs:
 
       - uses: mtzguido/gci-download@master
         with:
-          name: FStar-boot
+          name: FStar
 
       - uses: mtzguido/gci-download@master
         with:
