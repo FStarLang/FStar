@@ -738,7 +738,7 @@ jobs:
     container: mtzguido/fstar-base-testing
     needs:
       - build-fstar
-      - build-krml
+      # - build-krml
       - build-pulse
     steps:
       - name: Cleanup
@@ -752,11 +752,24 @@ jobs:
 
       - uses: mtzguido/gci-download@master
         with:
-          name: FStar
+          name: FStar-boot
 
-      - uses: mtzguido/gci-download@master
+      # karamel was built with the FStar artifact, not FStar-boot. If we
+      # try to use it, the build later fails due to a dependence hash
+      # mismatch. The error is probably bogus and due to absolute paths
+      # or some similar discrepancy, but we just avoid it by rebuilding
+      # karamel.
+
+      # - uses: mtzguido/gci-download@master
+      #   with:
+      #     name: karamel
+      - name: Checkout karamel
+        uses: actions/checkout@master
         with:
-          name: karamel
+          path: karamel/
+          repository: FStarLang/karamel
+      - run: make -C karamel -skj$(nproc)
+      - run: echo "KRML_HOME=$(pwd)/karamel" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
