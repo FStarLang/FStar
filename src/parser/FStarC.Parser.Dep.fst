@@ -1763,27 +1763,19 @@ let print_full (outc : out_channel) (deps:deps) : unit =
     let pr str = ignore <| FStarC.StringBuffer.add str sb in
     let norm_path s = replace_chars (replace_chars s '\\' "/") ' ' "\\ " in
     let print_entry (target : string) (all_deps : list string) : unit =
-        (* Print a target with dependencies. NOTE: we sort the dependencies,
-        but keep the first element unchanged as it's distinguished by $<. *)
-        let all_deps =
-          match all_deps with
-          | h::t -> h :: Class.Ord.sort t
-          | [] -> []
-        in
+        (* Print a target with dependencies. *)
         pr target; pr ":";
         all_deps |> List.iter (fun f -> pr " \\\n\t" ; pr (norm_path f));
         pr "\n\n"
     in
     let print_all tag files =
         (* Print a variable defined as a list of files *)
-        let files = Class.Ord.sort files in
         pr (pre_tag^tag);
         pr "=";
         files |> List.iter (fun f -> pr " \\\n\t"; pr (norm_path f));
         pr "\n\n"
     in
     let keys = deps_keys deps.dep_graph in
-    let keys = Class.Ord.sort keys in
     let no_fstar_stubs_file (s:string) : string =
       (* If the original filename begins with FStar.Stubs, then remove that,
       consistent with what extraction will actually do.
