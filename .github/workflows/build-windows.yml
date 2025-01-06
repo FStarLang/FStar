@@ -25,13 +25,11 @@ jobs:
       - name: Set version
         shell: C:\cygwin64\bin\bash.exe --login '{0}'
         run: |
-          if [[ "${{github.workflow_ref}}" =~ "nightly.yml" ]]; then echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV; elif [[ "${{github.workflow_ref}}" =~ "release.yml" ]]; then echo FSTAR_VERSION="$(cat version.txt)" >> $GITHUB_ENV; fi && echo "There is a CR at the end of this line"
-      - run: find .
-        shell: C:\cygwin64\bin\bash.exe --login '{0}'
+          if [[ "${{github.workflow_ref}}" =~ "nightly.yml" ]]; then echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV; elif [[ "${{github.workflow_ref}}" =~ "release.yml" ]]; then echo FSTAR_VERSION="$(cat $GITHUB_WORKSPACE/version.txt)" >> $GITHUB_ENV; fi && echo "There is a CR at the end of this line"
       - name: Build package
         shell: C:\cygwin64\bin\bash.exe --login '{0}'
         run: |
-          eval $(opam env) && CC=x86_64-w64-mingw32-gcc.exe make -skj$(nproc) package FSTAR_TAG=-Windows_NT-x86_64 V=1 && echo "There is a CR at the end of this line"
+          eval $(opam env) && CC=x86_64-w64-mingw32-gcc.exe make -C $GITHUB_WORKSPACE -skj$(nproc) package FSTAR_TAG=-Windows_NT-x86_64 V=1 && echo "There is a CR at the end of this line"
       - uses: actions/upload-artifact@v4
         with:
           path: fstar-Windows_NT-x86_64.tar.gz
