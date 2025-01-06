@@ -26,6 +26,7 @@ jobs:
         shell: C:\cygwin64\bin\bash.exe --login '{0}'
         run: |
           if [[ "${{github.workflow_ref}}" =~ "nightly.yml" ]]; then echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV; elif [[ "${{github.workflow_ref}}" =~ "release.yml" ]]; then echo FSTAR_VERSION="$(cat version.txt)" >> $GITHUB_ENV; fi && echo "There is a CR at the end of this line"
+      - run: find .
       - name: Build package
         shell: C:\cygwin64\bin\bash.exe --login '{0}'
         run: |
