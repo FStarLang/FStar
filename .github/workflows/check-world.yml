@@ -66,6 +66,8 @@ on:
   # push:
   workflow_dispatch:
   workflow_call:
+  schedule:
+    - cron: '0 1 * * *' # 1AM UTC
 
 # TODO:
 # Is there a way to set the default container?
@@ -302,35 +304,6 @@ jobs:
     runs-on: ubuntu-latest
     container: mtzguido/fstar-base-testing
     needs:
-      - build-fstar
-    steps:
-      - name: Cleanup
-        run: find . -delete
-      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: FStar
-
-      - name: Checkout pulse
-        uses: actions/checkout@master
-        with:
-          path: pulse/
-          repository: FStarLang/pulse
-
-      - name: Build
-        run: make -C pulse -skj$(nproc)
-
-      - uses: mtzguido/gci-upload@master
-        with:
-          name: pulse
-          hometag: PULSE
-
-  test-pulse-boot:
-    runs-on: ubuntu-latest
-    container: mtzguido/fstar-base-testing
-    needs:
       - test-fstar-boot
     steps:
       - name: Cleanup
@@ -349,17 +322,12 @@ jobs:
           repository: FStarLang/pulse
 
       - name: Build
-        run: |
-          # This is similar for 'make full-boot', but does not
-          # check the library.
-          make -C pulse/src -skj$(nproc) clean-snapshot
-          make -C pulse/src -skj$(nproc) extract
-          make -C pulse/src -skj$(nproc) build-ocaml
+        run: make -C pulse -skj$(nproc)
 
-      - name: Check diff
-        run: |
-          cd pulse/
-          ./.scripts/check-snapshot-diff.sh
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: pulse
+          hometag: PULSE
 
   test-pulse:
     runs-on: ubuntu-latest
@@ -374,9 +342,15 @@ jobs:
       - run: echo "HOME=/home/opam" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
+      # Install rust toolchain
+      - run: sudo apt-get update && sudo apt-get install -y curl
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo install bindgen-cli # needed for tests
+      - run: sudo apt-get install -y llvm-dev libclang-dev clang # for pulse2rust
+
       - uses: mtzguido/gci-download@master
         with:
-          name: FStar
+          name: FStar-boot
 
       - uses: mtzguido/gci-download@master
         with:
@@ -764,7 +738,7 @@ jobs:
     container: mtzguido/fstar-base-testing
     needs:
       - build-fstar
-      - build-krml
+      # - build-krml
       - build-pulse
     steps:
       - name: Cleanup
@@ -773,19 +747,37 @@ jobs:
       - uses: mtzguido/set-opam-env@master
 
       # Install rust toolchain
+      - run: sudo apt-get update && sudo apt-get install -y curl
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: mtzguido/gci-download@master
         with:
-          name: FStar
+          name: FStar-boot
 
-      - uses: mtzguido/gci-download@master
+      # karamel was built with the FStar artifact, not FStar-boot. If we
+      # try to use it, the build later fails due to a dependence hash
+      # mismatch. The error is probably bogus and due to absolute paths
+      # or some similar discrepancy, but we just avoid it by rebuilding
+      # karamel.
+
+      # - uses: mtzguido/gci-download@master
+      #   with:
+      #     name: karamel
+      - name: Checkout karamel
+        uses: actions/checkout@master
         with:
-          name: karamel
+          path: karamel/
+          repository: FStarLang/karamel
+      - run: make -C karamel -skj$(nproc)
+      - run: echo "KRML_HOME=$(pwd)/karamel" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
           name: pulse
+
+      # everparse expects PULSE_HOME to be the root of the installation,
+      # not the root of the repo
+      - run: echo "PULSE_HOME=$PULSE_HOME/out" >> $GITHUB_ENV
 
       - name: Checkout everparse (cbor branch)
         uses: actions/checkout@master

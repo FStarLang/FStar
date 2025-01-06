@@ -109,3 +109,4 @@ depend: .depend
 include .depend
 
 all-ml: $(ALL_ML_FILES)
+all-checked: $(ALL_CHECKED_FILES)
