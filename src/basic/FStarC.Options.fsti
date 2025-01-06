@@ -180,6 +180,7 @@ val locate                      : unit    -> bool
 val locate_lib                  : unit    -> bool
 val locate_ocaml                : unit    -> bool
 val locate_file                 : unit    -> option string
+val locate_z3                   : unit    -> option string
 val output_deps_to              : unit    -> option string
 val output_dir                  : unit    -> option string
 val custom_prims                : unit    -> option string

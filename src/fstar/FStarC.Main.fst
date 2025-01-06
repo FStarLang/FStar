@@ -241,7 +241,7 @@ let go_normal () =
       exit 0
 
     | Success when Some? (Options.locate_file ()) -> (
-      check_no_filenames "--locate_fle";
+      check_no_filenames "--locate_file";
       let f = Some?.v (Options.locate_file ()) in
       match Find.find_file f with
       | None ->
@@ -249,6 +249,22 @@ let go_normal () =
         exit 1
       | Some fn ->
         Util.print1 "%s\n" (Util.normalize_file_path fn);
+        exit 0
+    )
+
+    | Success when Some? (Options.locate_z3 ()) -> (
+      check_no_filenames "--locate_z3";
+      let v = Some?.v (Options.locate_z3 ()) in
+      match Find.locate_z3 v with
+      | None ->
+        // Use an actual error to reuse the pretty printing.
+        Errors.log_issue0 Errors.Error_Z3InvocationError ([
+          Errors.Msg.text <| Util.format1 "Z3 version '%s' was not found." v;
+          ] @ Find.z3_install_suggestion v);
+        report_errors []; // but make sure to report.
+        exit 1
+      | Some fn ->
+        Util.print1 "%s\n" fn;
         exit 0
     )
 

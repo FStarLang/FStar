@@ -33,56 +33,6 @@ module BU = FStarC.Compiler.Util
 let _already_warned_solver_mismatch : ref bool = BU.mk_ref false
 let _already_warned_version_mismatch : ref bool = BU.mk_ref false
 
-let z3url = "https://github.com/Z3Prover/z3/releases"
-
-(* Check if [path] is potentially a valid z3, by trying to run
-it with -version and checking for non-empty output. Alternatively
-we could call [which] on it (if it's not an absolute path), but
-we shouldn't rely on the existence of a binary which. *)
-let inpath (path:string) : bool =
-  try
-    let s = BU.run_process "z3_pathtest" path ["-version"] None in
-    s <> ""
-  with
-  | _ -> false
-
-(* Find the Z3 executable that we should invoke, according to the
-needed version. The logic is as follows:
-
-- If the user provided the --smt option, use that binary unconditionally.
-- If z3-VER (or z3-VER.exe) exists in the PATH (where VER is either
-  the default version or the user-provided --z3version) use it.
-- Otherwise, default to "z3" in the PATH.
-
-We cache the chosen executable for every Z3 version we've ran.
-*)
-let z3_exe : unit -> string =
-  let cache : BU.smap string = BU.smap_create 5 in
-  let find_or (k:string) (f : string -> string) : string =
-    match smap_try_find cache k with
-    | Some v -> v
-    | None ->
-      let v = f k in
-      smap_add cache k v;
-      v
-  in
-  fun () ->
-    find_or (Options.z3_version()) (fun version ->
-      let path =
-        let z3_v = Platform.exe ("z3-" ^ version) in
-        let local_z3 = Platform.exe (FStarC.Find.fstar_bin_directory ^ "/" ^ "z3-fstar-" ^ version) in
-        let smto = Options.smt () in
-
-        if Some? smto then Some?.v smto
-        else if BU.file_exists local_z3 then local_z3
-        else if inpath z3_v then z3_v
-        else Platform.exe "z3"
-      in
-      if Debug.any () then
-        BU.print1 "Chosen Z3 executable: %s\n" path;
-      path
-    )
-
 type label = string
 
 let status_tag = function
@@ -174,7 +124,18 @@ let query_logging =
 
 (*  Z3 background process handling *)
 let z3_cmd_and_args () =
-  let cmd = z3_exe () in
+  let ver = Options.z3_version () in
+  let cmd =
+    match Find.locate_z3 ver with
+    | Some fn -> fn
+    | None ->
+      let open FStarC.Pprint in
+      let open FStarC.Errors.Msg in
+      FStarC.Errors.raise_error0 Errors.Error_Z3InvocationError (
+        [ text "Z3 solver not found.";
+          prefix 2 1 (text "Required version: ") (doc_of_string ver)]
+        @ Find.z3_install_suggestion ver)
+  in
   let cmd_args =
     List.append ["-smt2";
                  "-in";
@@ -189,14 +150,6 @@ let warn_handler (suf:Errors.error_message) (s:string) : unit =
     text "Unexpected output from Z3:" ^^ hardline ^^
      blank 2 ^^ align (dquotes (arbitrary_string s));
     ] @ suf)
-
-let install_suggestion (v : string) : Pprint.document =
-  let open FStarC.Errors.Msg in
-  let open FStarC.Pprint in
-  prefix 4 1 (text <| BU.format1 "Please download version %s of Z3 from" v)
-             (url z3url) ^/^
-    group (text "and install it into your $PATH as" ^/^ squotes
-      (doc_of_string (Platform.exe ("z3-" ^ v))) ^^ dot)
 
 (* Talk to the process to see if it's the correct version of Z3
 (i.e. the one in the optionstate). Also check that it indeed is Z3. By
@@ -217,23 +170,23 @@ let check_z3version (p:proc) : unit =
   let name = getinfo "name" in
   if name <> "Z3" && not (!_already_warned_solver_mismatch) then (
     let open FStarC.Errors.Msg in
-    Errors.log_issue0 Errors.Warning_SolverMismatch [
+    Errors.log_issue0 Errors.Warning_SolverMismatch ([
       text <| BU.format1 "Unexpected SMT solver: expected to be talking to Z3, got %s." name;
-      install_suggestion (Options.z3_version ());
-    ];
+    ] @ Find.z3_install_suggestion (Options.z3_version ())
+    );
     _already_warned_solver_mismatch := true
   );
-  let ver_found : string = BU.trim_string (List.hd (BU.split (getinfo "version") "-")) in
+  let ver_found : string = BU.trim_string (getinfo "version") in
   let ver_conf  : string = BU.trim_string (Options.z3_version ()) in
   if ver_conf <> ver_found && not (!_already_warned_version_mismatch) then (
     let open FStarC.Errors in
     let open FStarC.Pprint in
     let open FStarC.Errors.Msg in
-    Errors.log_issue0 Errors.Warning_SolverMismatch [
+    Errors.log_issue0 Errors.Warning_SolverMismatch ([
       text (BU.format3 "Unexpected Z3 version for '%s': expected '%s', got '%s'."
                   (proc_prog p) ver_conf ver_found);
-      (install_suggestion ver_conf);
-    ];
+      ] @ Find.z3_install_suggestion ver_conf
+    );
     Errors.stop_if_err(); (* stop now if this was a hard error *)
     _already_warned_version_mismatch := true
   );
@@ -244,16 +197,6 @@ let new_z3proc (id:string) (cmd_and_args : string & list string) : BU.proc =
       try
         BU.start_process id (fst cmd_and_args) (snd cmd_and_args) (fun s -> s = "Done!")
       with
-      | e when BU.exn_is_enoent e ->
-        let open FStarC.Pprint in
-        let open FStarC.Errors.Msg in
-        Errors.raise_error0 Errors.Error_Z3InvocationError [
-          text "Z3 solver not found.";
-          prefix 2 1 (text "Required version:")
-            (text (Options.z3_version ()));
-          install_suggestion (Options.z3_version ());
-        ]
-
       | e ->
         let open FStarC.Pprint in
         let open FStarC.Errors.Msg in
