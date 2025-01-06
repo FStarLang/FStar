@@ -331,7 +331,7 @@ let (go_normal : unit -> unit) =
           | FStarC_Getopt.Success when
               let uu___3 = FStarC_Options.locate_file () in
               FStar_Pervasives_Native.uu___is_Some uu___3 ->
-              (check_no_filenames "--locate_fle";
+              (check_no_filenames "--locate_file";
                (let f =
                   let uu___4 = FStarC_Options.locate_file () in
                   FStar_Pervasives_Native.__proj__Some__item__v uu___4 in
@@ -345,6 +345,36 @@ let (go_normal : unit -> unit) =
                     ((let uu___6 =
                         FStarC_Compiler_Util.normalize_file_path fn in
                       FStarC_Compiler_Util.print1 "%s\n" uu___6);
+                     FStarC_Compiler_Effect.exit Prims.int_zero)))
+          | FStarC_Getopt.Success when
+              let uu___3 = FStarC_Options.locate_z3 () in
+              FStar_Pervasives_Native.uu___is_Some uu___3 ->
+              (check_no_filenames "--locate_z3";
+               (let v =
+                  let uu___4 = FStarC_Options.locate_z3 () in
+                  FStar_Pervasives_Native.__proj__Some__item__v uu___4 in
+                let uu___4 = FStarC_Find.locate_z3 v in
+                match uu___4 with
+                | FStar_Pervasives_Native.None ->
+                    ((let uu___6 =
+                        let uu___7 =
+                          let uu___8 =
+                            let uu___9 =
+                              FStarC_Compiler_Util.format1
+                                "Z3 version '%s' was not found." v in
+                            FStarC_Errors_Msg.text uu___9 in
+                          [uu___8] in
+                        let uu___8 = FStarC_Find.z3_install_suggestion v in
+                        FStarC_Compiler_List.op_At uu___7 uu___8 in
+                      FStarC_Errors.log_issue0
+                        FStarC_Errors_Codes.Error_Z3InvocationError ()
+                        (Obj.magic
+                           FStarC_Errors_Msg.is_error_message_list_doc)
+                        (Obj.magic uu___6));
+                     report_errors [];
+                     FStarC_Compiler_Effect.exit Prims.int_one)
+                | FStar_Pervasives_Native.Some fn ->
+                    (FStarC_Compiler_Util.print1 "%s\n" fn;
                      FStarC_Compiler_Effect.exit Prims.int_zero)))
           | FStarC_Getopt.Success ->
               (FStarC_Compiler_Effect.op_Colon_Equals fstar_files
