@@ -1,6 +1,6 @@
 (include_subdirs unqualified)
 (executable
- (name main)
+ (name fstarc2_full)
  (public_name fstar.exe)
  (libraries
     ; Can we just say we extend fstar_bare instead of _guts, and duplicating main?

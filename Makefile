@@ -35,11 +35,11 @@ FSTAR0_EXE ?= $(STAGE0)/bin/fstar.exe
 # stage 1 libraries for the stage 2, which does not need them at all (currently?).
 #
 # I'd love a better alternative.
-FSTAR1_BARE_EXE := stage1/dune/_build/default/fstarc-bare/main.exe
-FSTAR1_FULL_EXE := stage1/dune/_build/default/fstarc-full/main.exe
+FSTAR1_BARE_EXE := stage1/dune/_build/default/fstarc-bare/fstarc1_bare.exe
+FSTAR1_FULL_EXE := stage1/dune/_build/default/fstarc-full/fstarc1_full.exe
 INSTALLED_FSTAR1_FULL_EXE := stage1/out/bin/fstar.exe
-FSTAR2_BARE_EXE := stage2/dune/_build/default/fstarc-bare/main.exe
-FSTAR2_FULL_EXE := stage2/dune/_build/default/fstarc-full/main.exe
+FSTAR2_BARE_EXE := stage2/dune/_build/default/fstarc-bare/fstarc2_bare.exe
+FSTAR2_FULL_EXE := stage2/dune/_build/default/fstarc-full/fstarc2_full.exe
 INSTALLED_FSTAR2_FULL_EXE := stage2/out/bin/fstar.exe
 
 .PHONY: _force

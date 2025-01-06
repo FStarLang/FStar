@@ -1,7 +1,6 @@
 (include_subdirs unqualified)
 (executable
- (name main)
- ; ^ can we avoid this? Users do not really need it
+ (name fstarc2_bare)
  (libraries
    fstarcompiler
    memtrace
