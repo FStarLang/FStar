@@ -33,7 +33,10 @@ jobs:
           path: FStar
 
       - name: Produce all artifacts
-        run: make -skj$(nproc) package package-src FSTAR_TAG=
+        run: |
+          # Note: we don't package Z3 for the CI artifact as the images
+          # already have the relevant Z3.
+          make -skj$(nproc) package package-src FSTAR_TAG= FSTAR_PACKAGE_Z3=false
         working-directory: FStar
 
       # Upload the archives.
