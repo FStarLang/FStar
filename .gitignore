@@ -2,7 +2,8 @@
 /stage2/out
 /stage3
 /out
-/fstar*.tar.gz
+/*.tar.gz
+/*.zip
 /_pak*
 /_srcpak*
 _build

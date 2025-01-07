@@ -280,33 +280,29 @@ do-src-install: _force
 	# Install OCaml sources only
 	.scripts/src-install.sh "$(BROOT)" "$(PREFIX)"
 
-__do-archive: ARCHIVE_Z3 ?= false
 __do-archive: _force
 	rm -rf $(PREFIX)
 	# add an 'fstar' top-level directory to the archive
 	$(MAKE) do-install PREFIX=$(PREFIX)/fstar
-	if $(ARCHIVE_Z3); then .scripts/package_z3.sh $(PREFIX)/fstar/; fi
+ifneq ($(FSTAR_PACKAGE_Z3),false)
+	.scripts/package_z3.sh $(PREFIX)/fstar/
+endif
 	@# License and extra files. Not there on normal installs, but present
 	@# in package.
 	cp LICENSE* $(PREFIX)/fstar/
 	cp README.md $(PREFIX)/fstar/
 	cp INSTALL.md $(PREFIX)/fstar/
 	cp version.txt $(PREFIX)/fstar/
-	$(call bold_msg, "ARCHIVE", $(ARCHIVE))
-	tar czf $(ARCHIVE) -h -C $(PREFIX) --exclude='lib/**/*.fst.config.json' .
+	$(call bold_msg, "PACKAGE", $(ARCHIVE))
+	.scripts/mk-package.sh "$(PREFIX)" "$(ARCHIVE)"
+	# tar czf $(ARCHIVE) -h -C $(PREFIX) --exclude='lib/**/*.fst.config.json' .
 	rm -rf $(PREFIX)
 
 __do-src-archive: _force
-	rm -rf $(PREFIX)
+	rm -rf $(PREFIX) # change the name, this is safe (its overriden) but scary
 	$(MAKE) do-src-install PREFIX=$(PREFIX)/fstar
-	@# License and extra files. Not there on normal installs, but present
-	@# in package.
-	cp LICENSE* $(PREFIX)/fstar/
-	cp README.md $(PREFIX)/fstar/
-	cp INSTALL.md $(PREFIX)/fstar/
-	cp version.txt $(PREFIX)/fstar/
-	$(call bold_msg, "SRC ARCHIVE", $(ARCHIVE))
-	tar czf $(ARCHIVE) -h -C $(PREFIX) .
+	$(call bold_msg, "SRC PACKAGE", $(ARCHIVE))
+	.scripts/mk-package.sh "$(PREFIX)" "$(ARCHIVE)"
 	rm -rf $(PREFIX)
 
 # We append the version to the package names, unless
@@ -317,31 +313,33 @@ package-1: $(INSTALLED_FSTAR1_FULL_EXE) _force
 	env \
 	  PREFIX=_pak1 \
 	  BROOT=stage1/ \
-	  ARCHIVE=fstar$(FSTAR_TAG)-stage1.tar.gz \
-	  ARCHIVE_Z3=true \
+	  ARCHIVE=fstar$(FSTAR_TAG)-stage1 \
 	  $(MAKE) __do-archive
 
 package-2: $(INSTALLED_FSTAR2_FULL_EXE) _force
 	env \
 	  PREFIX=_pak2 \
 	  BROOT=stage2/ \
-	  ARCHIVE=fstar$(FSTAR_TAG).tar.gz \
-	  ARCHIVE_Z3=true \
+	  FSTAR_DUNE_RELEASE=1 \
+	  ARCHIVE=fstar$(FSTAR_TAG) \
 	  $(MAKE) __do-archive
+	# ^pass FSTAR_DUNE_RELEASE since this may trigger a rebuild
 
 package-src-1: $(FSTAR1_FULL_EXE).src 1.alib.src 1.plib.src _force
 	env \
 	  PREFIX=_srcpak1 \
 	  BROOT=stage1/ \
-	  ARCHIVE=fstar$(FSTAR_TAG)-stage1-src.tar.gz \
+	  ARCHIVE=fstar$(FSTAR_TAG)-stage1-src \
 	  $(MAKE) __do-src-archive
 
 package-src-2: $(FSTAR2_FULL_EXE).src 2.alib.src 2.plib.src _force
 	env \
 	  PREFIX=_srcpak2 \
 	  BROOT=stage2/ \
-	  ARCHIVE=fstar$(FSTAR_TAG)-src.tar.gz \
+	  FSTAR_DUNE_RELEASE=1 \
+	  ARCHIVE=fstar$(FSTAR_TAG)-src \
 	  $(MAKE) __do-src-archive
+	# ^pass FSTAR_DUNE_RELEASE since this may trigger a rebuild
 
 package: package-2
 package-src: package-src-2

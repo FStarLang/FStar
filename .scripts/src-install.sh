@@ -37,6 +37,11 @@ rsync -r --copy-links                   \
   --filter="- /.gitignore"              \
   "${BROOT}/" "${PREFIX}/"
 
+cp LICENSE* "${PREFIX}"
+cp README.md "${PREFIX}"
+cp INSTALL.md "${PREFIX}"
+cp version.txt "${PREFIX}"
+
 cp -H -r src "${PREFIX}/src"
 cp .scripts/get_fstar_z3.sh "${PREFIX}/get_fstar_z3.sh"
 cp fstar.opam "${PREFIX}/fstar.opam"

@@ -63,7 +63,7 @@ download_z3() {
   pushd "$tmp_dir"
   curl -L "$url" -o "$base_name"
 
-  unzip "$base_name" "$z3_path"
+  unzip -q "$base_name" "$z3_path"
   popd
   install -m0755 "$tmp_dir/$z3_path" "$destination_file_name"
   echo ">>> Installed Z3 $version to $destination_file_name"
@@ -83,7 +83,7 @@ full_install_z3() {
   base_name="$(basename "$url")"
   curl -L "$url" -o "$base_name"
 
-  unzip "$base_name"
+  unzip -q "$base_name"
   mv "${base_name%.zip}"/* .
   rmdir "${base_name%.zip}"
   rm "$base_name"
