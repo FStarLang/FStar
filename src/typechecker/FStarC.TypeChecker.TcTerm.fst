@@ -3854,7 +3854,7 @@ and check_top_level_let env e =
 
          (* Check that it doesn't have a top-level effect; warn if it does *)
          let e2, c1 =
-           let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
+           let ok, c1 = TcUtil.check_top_level (Env.push_univ_vars env univ_vars) g1 c1 in //check that it has no effect and a trivial pre-condition
            if ok
            then e2, c1
            else (
