@@ -70,7 +70,6 @@ buildDunePackage {
 
     for binary in $out/bin/*
     do
-      chmod +x $binary
       wrapProgram $binary --prefix PATH ":" ${z3}/bin
     done
 
