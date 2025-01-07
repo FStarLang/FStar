@@ -33,7 +33,7 @@ RUN { type -p curl >/dev/null || sudo apt-get install curl -y ; } \
 
 # Install .NET
 RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
-  libicu66
+  libicu70
 
 # (for .NET, cf. https://aka.ms/dotnet-missing-libicu )
 # CI dependencies: .NET Core
@@ -53,11 +53,6 @@ ENV PATH=${PATH}:$DOTNET_ROOT:$DOTNET_ROOT/tools
 RUN git config --global user.name "Dzomo, the Everest Yak" && \
     git config --global user.email "24394600+dzomo@users.noreply.github.com"
 
-# Download and extract z3, but do not add it in the PATH
-# We download a z3 that does not depend on libgomp
-ADD --chown=opam:opam https://github.com/tahina-pro/z3/releases/download/z3-4.8.5-linux-clang/z3-4.8.5-linux-clang-x86_64.tar.gz z3.tar.gz
-RUN tar xf z3.tar.gz
-
 ADD --chown=opam:opam ./ FStar/
 
 # Check if we need to create a tag
@@ -67,7 +62,7 @@ RUN --mount=type=secret,id=DZOMO_GITHUB_TOKEN eval $(opam env) && env GH_TOKEN=$
 RUN eval $(opam env) && env OTHERFLAGS='--admit_smt_queries true' PATH=$HOME/z3:$PATH make -j $CI_THREADS -C FStar package
 
 # Test the package with its Z3, without OCaml or any other dependency
-FROM ubuntu:20.04 AS fstarnoocaml
+FROM ubuntu:22.04 AS fstarnoocaml
 
 # Install some dependencies
 RUN apt-get update && \
