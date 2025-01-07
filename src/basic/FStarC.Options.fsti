@@ -102,6 +102,7 @@ val add_verify_module           : string  -> unit
 val set_option_warning_callback : (string -> unit) -> unit
 val desc_of_opt_type            : opt_type -> option string
 val all_specs_with_types        : list (char & string & opt_type & Pprint.document)
+val help_for_option             : string -> option Pprint.document
 val settable                    : string -> bool
 
 val abort_counter : ref int
@@ -178,6 +179,8 @@ val list_plugins                : unit    -> bool
 val locate                      : unit    -> bool
 val locate_lib                  : unit    -> bool
 val locate_ocaml                : unit    -> bool
+val locate_file                 : unit    -> option string
+val locate_z3                   : unit    -> option string
 val output_deps_to              : unit    -> option string
 val output_dir                  : unit    -> option string
 val custom_prims                : unit    -> option string

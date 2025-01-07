@@ -339,6 +339,7 @@ let smash_repr (d:pos) (t1 t2:tree) (l1 l2:ms)
          t2 `repr_t` l2)
       (ensures smash d t1 t2 `repr_t` (ms_append l1 l2)) = ()
 
+#push-options "--z3rlimit 25"
 let rec carry_repr (d:pos) (q:forest) (t:tree) (lq lt:ms)
   : Lemma
       (requires
@@ -357,6 +358,7 @@ let rec carry_repr (d:pos) (q:forest) (t:tree) (lq lt:ms)
     carry_repr (d + 1) tl (smash d hd t)
       (keys tl)
       (ms_append (keys_of_tree hd) (keys_of_tree t))
+#pop-options
 
 #push-options "--z3rlimit 50 --fuel 1 --ifuel 1"
 let rec join_repr (d:pos) (p q:forest) (c:tree)

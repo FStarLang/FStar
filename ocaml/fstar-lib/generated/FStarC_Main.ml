@@ -147,11 +147,26 @@ let (set_error_trap : unit -> unit) =
       FStarC_Compiler_Effect.exit Prims.int_one in
     let uu___1 = FStarC_Compiler_Util.sigint_handler_f h' in
     FStarC_Compiler_Util.set_sigint_handler uu___1
+let (print_help_for : Prims.string -> unit) =
+  fun o ->
+    let uu___ = FStarC_Options.help_for_option o in
+    match uu___ with
+    | FStar_Pervasives_Native.None -> ()
+    | FStar_Pervasives_Native.Some doc ->
+        let uu___1 = FStarC_Errors_Msg.renderdoc doc in
+        FStarC_Compiler_Util.print_error uu___1
 let (go_normal : unit -> unit) =
   fun uu___ ->
     let uu___1 = process_args () in
     match uu___1 with
     | (res, filenames) ->
+        let check_no_filenames opt =
+          if Prims.uu___is_Cons filenames
+          then
+            (FStarC_Compiler_Util.print1_error
+               "error: No filenames should be passed with option %s\n" opt;
+             FStarC_Compiler_Effect.exit Prims.int_one)
+          else () in
         ((let uu___3 = FStarC_Options.trace_error () in
           if uu___3 then set_error_trap () else ());
          (match res with
@@ -161,8 +176,9 @@ let (go_normal : unit -> unit) =
           | FStarC_Getopt.Help ->
               (FStarC_Options.display_usage ();
                FStarC_Compiler_Effect.exit Prims.int_zero)
-          | FStarC_Getopt.Error msg ->
-              (FStarC_Compiler_Util.print_error msg;
+          | FStarC_Getopt.Error (msg, opt) ->
+              (FStarC_Compiler_Util.print_error (Prims.strcat "error: " msg);
+               print_help_for opt;
                FStarC_Compiler_Effect.exit Prims.int_one)
           | FStarC_Getopt.Success when FStarC_Options.print_cache_version ()
               ->
@@ -292,23 +308,74 @@ let (go_normal : unit -> unit) =
                 FStarC_Compiler_Util.print1
                   "Registered tactic plugins:\n%s\n" uu___5))
           | FStarC_Getopt.Success when FStarC_Options.locate () ->
-              ((let uu___4 = FStarC_Find.locate () in
-                FStarC_Compiler_Util.print1 "%s\n" uu___4);
+              (check_no_filenames "--locate";
+               (let uu___5 = FStarC_Find.locate () in
+                FStarC_Compiler_Util.print1 "%s\n" uu___5);
                FStarC_Compiler_Effect.exit Prims.int_zero)
           | FStarC_Getopt.Success when FStarC_Options.locate_lib () ->
-              let uu___3 = FStarC_Find.locate_lib () in
-              (match uu___3 with
-               | FStar_Pervasives_Native.None ->
-                   (FStarC_Compiler_Util.print_error
-                      "No library found (is --no_default_includes set?)\n";
-                    FStarC_Compiler_Effect.exit Prims.int_one)
-               | FStar_Pervasives_Native.Some s ->
-                   (FStarC_Compiler_Util.print1 "%s\n" s;
-                    FStarC_Compiler_Effect.exit Prims.int_zero))
+              (check_no_filenames "--locate_lib";
+               (let uu___4 = FStarC_Find.locate_lib () in
+                match uu___4 with
+                | FStar_Pervasives_Native.None ->
+                    (FStarC_Compiler_Util.print_error
+                       "No library found (is --no_default_includes set?)\n";
+                     FStarC_Compiler_Effect.exit Prims.int_one)
+                | FStar_Pervasives_Native.Some s ->
+                    (FStarC_Compiler_Util.print1 "%s\n" s;
+                     FStarC_Compiler_Effect.exit Prims.int_zero)))
           | FStarC_Getopt.Success when FStarC_Options.locate_ocaml () ->
-              ((let uu___4 = FStarC_Find.locate_ocaml () in
-                FStarC_Compiler_Util.print1 "%s\n" uu___4);
+              (check_no_filenames "--locate_ocaml";
+               (let uu___5 = FStarC_Find.locate_ocaml () in
+                FStarC_Compiler_Util.print1 "%s\n" uu___5);
                FStarC_Compiler_Effect.exit Prims.int_zero)
+          | FStarC_Getopt.Success when
+              let uu___3 = FStarC_Options.locate_file () in
+              FStar_Pervasives_Native.uu___is_Some uu___3 ->
+              (check_no_filenames "--locate_file";
+               (let f =
+                  let uu___4 = FStarC_Options.locate_file () in
+                  FStar_Pervasives_Native.__proj__Some__item__v uu___4 in
+                let uu___4 = FStarC_Find.find_file f in
+                match uu___4 with
+                | FStar_Pervasives_Native.None ->
+                    (FStarC_Compiler_Util.print1_error
+                       "File %s was not found in include path.\n" f;
+                     FStarC_Compiler_Effect.exit Prims.int_one)
+                | FStar_Pervasives_Native.Some fn ->
+                    ((let uu___6 =
+                        FStarC_Compiler_Util.normalize_file_path fn in
+                      FStarC_Compiler_Util.print1 "%s\n" uu___6);
+                     FStarC_Compiler_Effect.exit Prims.int_zero)))
+          | FStarC_Getopt.Success when
+              let uu___3 = FStarC_Options.locate_z3 () in
+              FStar_Pervasives_Native.uu___is_Some uu___3 ->
+              (check_no_filenames "--locate_z3";
+               (let v =
+                  let uu___4 = FStarC_Options.locate_z3 () in
+                  FStar_Pervasives_Native.__proj__Some__item__v uu___4 in
+                let uu___4 = FStarC_Find.locate_z3 v in
+                match uu___4 with
+                | FStar_Pervasives_Native.None ->
+                    ((let uu___6 =
+                        let uu___7 =
+                          let uu___8 =
+                            let uu___9 =
+                              FStarC_Compiler_Util.format1
+                                "Z3 version '%s' was not found." v in
+                            FStarC_Errors_Msg.text uu___9 in
+                          [uu___8] in
+                        let uu___8 = FStarC_Find.z3_install_suggestion v in
+                        FStarC_Compiler_List.op_At uu___7 uu___8 in
+                      FStarC_Errors.log_issue0
+                        FStarC_Errors_Codes.Error_Z3InvocationError ()
+                        (Obj.magic
+                           FStarC_Errors_Msg.is_error_message_list_doc)
+                        (Obj.magic uu___6));
+                     report_errors [];
+                     FStarC_Compiler_Effect.exit Prims.int_one)
+                | FStar_Pervasives_Native.Some fn ->
+                    (FStarC_Compiler_Util.print1 "%s\n" fn;
+                     FStarC_Compiler_Effect.exit Prims.int_zero)))
           | FStarC_Getopt.Success ->
               (FStarC_Compiler_Effect.op_Colon_Equals fstar_files
                  (FStar_Pervasives_Native.Some filenames);

@@ -28,7 +28,11 @@ clean_boot:
 # And ocaml-output/Makefile, to actually build the compiler in OCaml
 # --------------------------------------------------------------------------------
 ocaml:
-	$(Q)+$(MAKE) -f Makefile.boot all-ml
+	# Note: we add all-checked in support of Pulse and other
+	# projects that code against compiler internals, to make
+	# sure we generate all possible .checked files, instead of
+	# just the ones needed for extracting.
+	$(Q)+$(MAKE) -f Makefile.boot all-ml all-checked
 
 clean-ocaml: clean_boot
 	+$(Q)$(MAKE) -C ocaml-output clean

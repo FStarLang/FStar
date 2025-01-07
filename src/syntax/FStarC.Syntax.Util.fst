@@ -1587,9 +1587,10 @@ let process_pragma p r =
       | Getopt.Help  ->
         Errors.raise_error r Errors.Fatal_FailToProcessPragma
           "Failed to process pragma: use 'fstar --help' to see which options are available"
-      | Getopt.Error s ->
-        Errors.raise_error r Errors.Fatal_FailToProcessPragma
-          ("Failed to process pragma: " ^ s)
+      | Getopt.Error (s, opt) ->
+        Errors.raise_error r Errors.Fatal_FailToProcessPragma [
+          Errors.Msg.text <| "Failed to process pragma: " ^ s;
+        ]
     in
     match p with
     | ShowOptions ->

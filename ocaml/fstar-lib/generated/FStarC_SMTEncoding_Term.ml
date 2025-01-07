@@ -747,13 +747,7 @@ let rec (hash_of_term' : term' -> Prims.string) =
             Prims.strcat uu___3 ")" in
           Prims.strcat uu___1 uu___2 in
         Prims.strcat "(" uu___
-    | Labeled (t1, r1, r2) ->
-        let uu___ = hash_of_term t1 in
-        let uu___1 =
-          let uu___2 = FStarC_Errors_Msg.rendermsg r1 in
-          let uu___3 = FStarC_Compiler_Range_Ops.string_of_range r2 in
-          Prims.strcat uu___2 uu___3 in
-        Prims.strcat uu___ uu___1
+    | Labeled (t1, uu___, uu___1) -> hash_of_term t1
     | LblPos (t1, r) ->
         let uu___ =
           let uu___1 = hash_of_term t1 in

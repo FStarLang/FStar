@@ -273,6 +273,8 @@ let defaults =
       ("locate"                       , Bool false);
       ("locate_lib"                   , Bool false);
       ("locate_ocaml"                 , Bool false);
+      ("locate_file"                  , Unset);
+      ("locate_z3"                    , Unset);
       ("read_krml_file"               , Unset);
       ("record_hints"                 , Bool false);
       ("record_options"               , Bool false);
@@ -534,6 +536,8 @@ let get_list_plugins            ()      = lookup_opt "list_plugins"             
 let get_locate                  ()      = lookup_opt "locate"                   as_bool
 let get_locate_lib              ()      = lookup_opt "locate_lib"               as_bool
 let get_locate_ocaml            ()      = lookup_opt "locate_ocaml"             as_bool
+let get_locate_file             ()      = lookup_opt "locate_file"              (as_option as_string)
+let get_locate_z3               ()      = lookup_opt "locate_z3"                (as_option as_string)
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
 let get_retry                   ()      = lookup_opt "retry"                    as_bool
@@ -595,46 +599,48 @@ let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
                                   !_version !_platform !_compiler !_date !_commit)
 
+let bold_doc (d:Pprint.document) : Pprint.document =
+  let open FStarC.Pprint in
+  (* very hacky, this would make no sense for documents going elsewhere
+  other than stdout *)
+  if stdout_isatty () = Some true
+  then fancystring "\x1b[39;1m" 0 ^^ d ^^ fancystring "\x1b[0m" 0
+  else d
+
 let display_debug_keys () =
   let keys = Debug.list_all_toggles () in
   keys |> List.sortWith String.compare |> List.iter (fun s -> Util.print_string (s ^ "\n"))
+
+let usage_for (o : opt & Pprint.document) : Pprint.document =
+  let open FStarC.Pprint in
+  let open FStarC.Errors.Msg in
+  let ((short, flag, p), explain) = o in
+  let arg =
+    match p with
+    | ZeroArgs _ -> empty
+    | OneArg (_, argname) -> blank 1 ^^ doc_of_string argname
+  in
+  let short_opt =
+    if short <> noshort
+    then [doc_of_string ("-" ^ String.make 1 short) ^^ arg]
+    else []
+  in
+  let long_opt =
+    if flag <> ""
+    then [doc_of_string ("--" ^ flag) ^^ arg]
+    else []
+  in
+  group (bold_doc (separate (comma ^^ blank 1) (short_opt @ long_opt))) ^^ hardline ^^
+  group (blank 4 ^^ align explain) ^^ hardline
 
 let display_usage_aux (specs : list (opt & Pprint.document)) : unit =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
   let text (s:string) : document = flow (break_ 1) (words s) in
-  let bold_doc (d:document) : document =
-    (* very hacky, this would make no sense for documents going elsewhere
-    other than stdout *)
-    if stdout_isatty () = Some true
-    then fancystring "\x1b[39;1m" 0 ^^ d ^^ fancystring "\x1b[0m" 0
-    else d
-  in
   let d : document =
     doc_of_string "fstar.exe [options] file[s] [@respfile...]" ^/^
     doc_of_string (Util.format1 "  %srespfile: read command-line options from respfile\n" (Util.colorize_bold "@")) ^/^
-    List.fold_right
-      (fun ((short, flag, p), explain) rest ->
-        let arg =
-          match p with
-          | ZeroArgs _ -> empty
-          | OneArg (_, argname) -> blank 1 ^^ doc_of_string argname
-        in
-        let short_opt =
-          if short <> noshort
-          then [doc_of_string ("-" ^ String.make 1 short) ^^ arg]
-          else []
-        in
-        let long_opt =
-          if flag <> ""
-          then [doc_of_string ("--" ^ flag) ^^ arg]
-          else []
-        in
-        group (bold_doc (separate (comma ^^ blank 1) (short_opt @ long_opt))) ^^ hardline ^^
-        group (blank 4 ^^ align explain) ^^ hardline ^^
-        rest
-      )
-      specs empty
+    List.fold_right (fun o rest -> usage_for o ^^ rest) specs empty
   in
   Util.print_string (pretty_string (float_of_string "1.0") 80 d)
 
@@ -1632,6 +1638,17 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     Const (Bool true),
     text "Print the root of the built OCaml F* library and exit");
   ( noshort,
+    "locate_file",
+    SimpleStr "basename",
+    text "Find a file in F*'s include path and print its absolute path, then exit");
+  ( noshort,
+    "locate_z3",
+    SimpleStr "version",
+    text "Locate the executable for a given Z3 version, then exit. \
+          The output is either an absolute path, or a name that was found in the PATH. \
+          Note: this is the Z3 executable that F* will attempt to call for the given version, \
+          but the version check is not performed at this point.");
+  ( noshort,
     "ocamlenv",
     WithSideEffect ((fun _ -> print_error "--ocamlenv must be the first argument, see fstar.exe --help for details\n"; exit 1),
                      (Const (Bool true))),
@@ -1759,6 +1776,11 @@ let all_specs_getopt = List.map fst all_specs
 
 let all_specs_with_types = specs_with_types true
 let settable_specs = all_specs |> List.filter (fun ((_, x, _), _) -> settable x)
+
+let help_for_option (s:string) : option Pprint.document =
+  match all_specs |> List.filter (fun ((_, x, _), _) -> x = s) with
+  | [] -> None
+  | o::_ -> Some (usage_for o) // NB: there should be only one
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PUBLIC API
@@ -2047,6 +2069,8 @@ let list_plugins                 () = get_list_plugins                ()
 let locate                       () = get_locate                      ()
 let locate_lib                   () = get_locate_lib                  ()
 let locate_ocaml                 () = get_locate_ocaml                ()
+let locate_file                  () = get_locate_file                 ()
+let locate_z3                    () = get_locate_z3                   ()
 let read_krml_file               () = get_read_krml_file              ()
 let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()
@@ -2342,12 +2366,12 @@ let set_options s =
         if s = ""
         then Success
         else let settable_specs = List.map fst settable_specs in
-             let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); Error "set_options with file argument") s in
+             let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); Error ("set_options with file argument", "")) s in
              if res=Success
              then set_error_flags()
              else res
     with
-    | File_argument s -> Getopt.Error (Util.format1 "File %s is not a valid option" s)
+    | File_argument s -> Getopt.Error (Util.format1 "File %s is not a valid option" s, "")
 
 let with_options s f =
   with_saved_options (fun () ->

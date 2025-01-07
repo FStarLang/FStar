@@ -34,7 +34,7 @@ let main argv =
           BU.print_string "F* unit tests. This binary can take the same options \
                            as F*, but not all of them are meaningful.";
           exit 0
-        | G.Error msg ->
+        | G.Error (msg, _) ->
           BU.print_error msg; exit 1
         | G.Empty
         | G.Success ->

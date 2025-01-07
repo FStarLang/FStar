@@ -14,7 +14,7 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
                         (FStarC_Compiler_Util.print_string
                            "F* unit tests. This binary can take the same options as F*, but not all of them are meaningful.";
                          FStarC_Compiler_Effect.exit Prims.int_zero)
-                    | FStarC_Getopt.Error msg ->
+                    | FStarC_Getopt.Error (msg, uu___3) ->
                         (FStarC_Compiler_Util.print_error msg;
                          FStarC_Compiler_Effect.exit Prims.int_one)
                     | FStarC_Getopt.Empty ->
