@@ -18,8 +18,6 @@ jobs:
     # all more recent versions.
     steps:
       - uses: actions/checkout@master
-        with:
-          path: FStar
 
       - uses: ocaml/setup-ocaml@v3
         with:
@@ -27,9 +25,9 @@ jobs:
 
       - name: Prepare
         run: |
-          ./FStar/.scripts/get_fstar_z3.sh $HOME/bin
+          ./.scripts/get_fstar_z3.sh $HOME/bin
           echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
-          opam install --deps-only FStar/fstar.opam
+          opam install --deps-only ./fstar.opam
 
       - name: Set version
         run: |
@@ -38,21 +36,23 @@ jobs:
           if [[ "${{github.workflow_ref}}" =~ "nightly.yml" ]]; then
             echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV
           elif [[ "${{github.workflow_ref}}" =~ "release.yml" ]]; then
-            echo FSTAR_VERSION="$(cat FStar/version.txt)" >> $GITHUB_ENV
+            echo FSTAR_VERSION="$(cat version.txt)" >> $GITHUB_ENV
           fi
 
+      # NB: release workflow later adds version number to the name
       - name: Build packages
-        working-directory: FStar
         run: |
           eval $(opam env)
-          make -skj$(nproc) package     FSTAR_TAG=-Linux-x86_64
+          KERNEL=$(uname -s)
+          ARCH=$(uname -m)
+          make -skj$(nproc) package     FSTAR_TAG=-$KERNEL-$ARCH
           make -skj$(nproc) package-src FSTAR_TAG=
 
       - uses: actions/upload-artifact@v4
         with:
-          path: FStar/fstar-Linux-x86_64.tar.gz
-          name: fstar-Linux-x86_64.tar.gz
+          path: fstar-Linux-*
+          name: package-linux
       - uses: actions/upload-artifact@v4
         with:
-          path: FStar/fstar-src.tar.gz
-          name: fstar-src.tar.gz
+          path: fstar-src.tar.gz
+          name: package-src

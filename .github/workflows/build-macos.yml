@@ -9,8 +9,6 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@master
-        with:
-          path: FStar
 
       - uses: ocaml/setup-ocaml@v3
         with:
@@ -19,9 +17,9 @@ jobs:
       - name: Prepare
         run: |
           brew install opam bash gnu-getopt coreutils gnu-sed make
-          ./FStar/.scripts/get_fstar_z3.sh $HOME/bin
+          ./.scripts/get_fstar_z3.sh $HOME/bin
           echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
-          opam install --deps-only FStar/fstar.opam
+          opam install --deps-only ./fstar.opam
 
       - name: Set version
         run: |
@@ -30,17 +28,19 @@ jobs:
           if [[ "${{github.workflow_ref}}" =~ "nightly.yml" ]]; then
             echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV
           elif [[ "${{github.workflow_ref}}" =~ "release.yml" ]]; then
-            echo FSTAR_VERSION="$(cat FStar/version.txt)" >> $GITHUB_ENV
+            echo FSTAR_VERSION="$(cat version.txt)" >> $GITHUB_ENV
           fi
 
       # Note *g*make below!
+      # NB: release workflow later adds version number to the name
       - name: Build package
-        working-directory: FStar
         run: |
           eval $(opam env)
-          gmake -skj$(nproc) package FSTAR_TAG=-Darwin-x86_64
+          KERNEL=$(uname -s)
+          ARCH=$(uname -m)
+          gmake -skj$(nproc) package FSTAR_TAG=-$KERNEL-$ARCH
 
       - uses: actions/upload-artifact@v4
         with:
-          path: FStar/fstar-Darwin-x86_64.tar.gz
-          name: fstar-Darwin-x86_64.tar.gz
+          path: fstar-*
+          name: package-mac
