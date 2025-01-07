@@ -676,7 +676,7 @@ let encode_top_level_val uninterpreted env us fv t quals =
       else norm_before_encoding env t
     in
     if !dbg_SMTEncoding
-    then BU.print4 "Encoding top-level val %s %s : %s\Normalized to is %s\n"
+    then BU.print4 "Encoding top-level val %s %s : %s\nNormalized to is %s\n"
            (show fv)
            (show us)
            (show t)
