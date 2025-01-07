@@ -34,24 +34,38 @@ check_lib: install_bin
 	  $(MAKE) -f mk/lib.mk verify
 
 install_lib: check_lib
-	@# Install get_fstar_z3 script
-	cp get_fstar_z3.sh $(CURDIR)/out/bin
-	@# Install library
+	@# Install library and its checked files
 	cp -H -p -r ulib out/lib/fstar/ulib
-	echo 'ulib' >> out/lib/fstar/fstar.include
-	rm -f out/lib/fstar/ulib/*.config.json
-	@# Install checked files for the library
-	mkdir -p out/lib/fstar/ulib/.checked
-	cp -p ulib.checked/* out/lib/fstar/ulib/.checked/
-	echo '.checked' >> out/lib/fstar/ulib/fstar.include
+	cp -H -p -r ulib.checked out/lib/fstar/ulib.checked
+	echo 'ulib'          > out/lib/fstar/fstar.include
+	echo 'ulib.checked' >> out/lib/fstar/fstar.include
+
+check_fstarc: install_bin
+	env \
+	  SRC=src/ \
+	  FSTAR_EXE=out/bin/fstar.exe \
+	  CACHE_DIR=fstarc.checked/ \
+	  CODEGEN=None \
+	  OUTPUT_DIR=None \
+	  TAG=fstarc \
+	  FSTAR_LIB=$(abspath ulib) \
+	  $(MAKE) -f mk/fstar-12.mk all-checked
+
+install_fstarc: check_fstarc
+	@# Install checked files for FStarC
+	mkdir -p out/lib/fstar/fstarc/
+	cp -H -p -r src               out/lib/fstar/fstarc/src
+	cp -H -p -r fstarc.checked    out/lib/fstar/fstarc/src.checked
+	echo 'src'          > out/lib/fstar/fstarc/fstar.include
+	echo 'src.checked' >> out/lib/fstar/fstarc/fstar.include
 
 clean: _force
 	dune clean $(FSTAR_DUNE_OPTIONS) --root=dune
 	rm -rf $(CURDIR)/out
 
-all: install_lib
+all: install_lib install_fstarc
 
 # Needed for 'opam install'
 PREFIX ?= /usr/local
-install: install_lib
+install: install_lib install_fstarc
 	cp -r out/* $(PREFIX)
