@@ -242,11 +242,11 @@ stage3-diff: stage3-bare _force
 
 $(INSTALLED_FSTAR1_FULL_EXE): 1.full 1.alib.src 1.plib.src
 	$(call bold_msg, "INSTALL", "STAGE 1")
-	$(MAKE) -C stage1 install
+	$(MAKE) -C stage1 install FSTAR_LINK_LIBDIRS=1
 
 $(INSTALLED_FSTAR2_FULL_EXE): 2.full 2.alib.src 2.plib.src
 	$(call bold_msg, "INSTALL", "STAGE 2")
-	$(MAKE) -C stage2 install FSTAR_DUNE_RELEASE=1
+	$(MAKE) -C stage2 install FSTAR_DUNE_RELEASE=1 FSTAR_LINK_LIBDIRS=1
 
 setlink-%:
 	if [ -e out ] && ! [ -h out ]; then echo "ERROR: out/ exists and is not a symbolic link, please remove it"; false; fi
