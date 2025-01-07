@@ -63,21 +63,32 @@ download_z3() {
   pushd "$tmp_dir"
   curl -L "$url" -o "$base_name"
 
-  if $full_install; then
-    mkdir -p "$destination_file_name"
-    b=$(realpath "$base_name")
-    pushd "$destination_file_name"
-    unzip $b "${base_name%.zip}/*"
-    mv "${base_name%.zip}"/* .
-    rm -r "${base_name%.zip}"
-    popd
-    popd
-  else
-    unzip "$base_name" "$z3_path"
-    popd
-    install -m0755 "$tmp_dir/$z3_path" "$destination_file_name"
-    echo ">>> Installed Z3 $version to $destination_file_name"
-  fi
+  unzip "$base_name" "$z3_path"
+  popd
+  install -m0755 "$tmp_dir/$z3_path" "$destination_file_name"
+  echo ">>> Installed Z3 $version to $destination_file_name"
+}
+
+full_install_z3() {
+  local url version dest_dir base_name
+  echo wat
+
+  url="$1"
+  version="$2"
+  dest_dir="$3"
+
+  mkdir -p "$dest_dir/z3-$version"
+  pushd "$dest_dir/z3-$version"
+
+  echo ">>> Downloading Z3 $version from $url ..."
+  base_name="$(basename "$url")"
+  curl -L "$url" -o "$base_name"
+
+  unzip "$base_name"
+  mv "${base_name%.zip}"/* .
+  rmdir "${base_name%.zip}"
+  rm "$base_name"
+  popd
 }
 
 if [ "$1" == "--full" ]; then
@@ -122,8 +133,10 @@ for z3_ver in 4.8.5 4.13.3; do
 
     if [ -z "$url" ]; then
       echo ">>> Z3 $z3_ver not available for this architecture, skipping..."
+    elif $full_install; then
+      full_install_z3 "$url" "$z3_ver" "$dest_dir"
     else
-      download_z3 "$url" "$z3_ver" "$(realpath "$destination_file_name")"
+      download_z3 "$url" "$z3_ver" "$destination_file_name"
     fi
   fi
 done

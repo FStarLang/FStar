@@ -131,7 +131,7 @@ ifeq ($(OS),Windows_NT)
 	mkdir -p $(package_prefix)/lib/fstar/z3-4.13.3/bin/
 	cp z3tmp/z3-4.13.3/bin/z3.exe  $(package_prefix)/lib/fstar/z3-4.13.3/bin/z3.exe
 	cp z3tmp/z3-4.13.3/LICENSE.txt $(package_prefix)/lib/fstar/z3-4.13.3/LICENSE.txt
-	chmod a+x $(package_prefix)/lib/fstar/z3-*/z3.exe
+	chmod a+x $(package_prefix)/lib/fstar/z3-*/bin/*
 	zip -r -9 $(PACKAGE_NAME).zip fstar
 else
 	$(INSTALL_EXEC) -D -T z3tmp/z3-4.8.5/bin/z3       $(package_prefix)/lib/fstar/z3-4.8.5/bin/z3
