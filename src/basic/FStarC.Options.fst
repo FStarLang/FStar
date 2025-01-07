@@ -322,6 +322,7 @@ let defaults =
       ("use_nbe_for_extraction"       , Bool false);
       ("trivial_pre_for_unannotated_effectful_fns"
                                       , Bool true);
+      ("with_fstarc"                  , Bool false);
       ("profile_group_by_decl"        , Bool false);
       ("profile_component"            , Unset);
       ("profile"                      , Unset);
@@ -584,6 +585,7 @@ let get_use_nbe                 ()      = lookup_opt "use_nbe"                  
 let get_use_nbe_for_extraction  ()      = lookup_opt "use_nbe_for_extraction"                  as_bool
 let get_trivial_pre_for_unannotated_effectful_fns
                                 ()      = lookup_opt "trivial_pre_for_unannotated_effectful_fns"    as_bool
+let get_with_fstarc             ()      = lookup_opt "with_fstarc"                                  as_bool
 let get_profile                 ()      = lookup_opt "profile"                  (as_option (as_list as_string))
 let get_profile_group_by_decl   ()      = lookup_opt "profile_group_by_decl"    as_bool
 let get_profile_component       ()      = lookup_opt "profile_component"        (as_option (as_list as_string))
@@ -1578,6 +1580,12 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     text "Enforce trivial preconditions for unannotated effectful functions (default 'true')" );
 
   ( noshort,
+   "with_fstarc",
+    Const (Bool true),
+    text "Expose compiler internal modules (FStarC namespace). Only for advanced plugins \
+          you should probably not use it.");
+
+  ( noshort,
     "__debug_embedding",
     WithSideEffect ((fun _ -> debug_embedding := true),
                    (Const (Bool true))),
@@ -2132,6 +2140,7 @@ let use_nbe                      () = get_use_nbe                     ()
 let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
 let trivial_pre_for_unannotated_effectful_fns
                                  () = get_trivial_pre_for_unannotated_effectful_fns ()
+let with_fstarc                  () = get_with_fstarc ()
 
 let debug_keys                   () = lookup_opt "debug" as_comma_string_list
 let debug_all                    () = lookup_opt "debug_all" as_bool
