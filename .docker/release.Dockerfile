@@ -15,11 +15,12 @@ RUN opam depext conf-gmp conf-m4
 
 ADD --chown=opam:opam ./fstar.opam fstar.opam
 
-# Install opam dependencies only, but not z3
-RUN grep -v z3 < fstar.opam > fstar-no-z3.opam && \
-    rm fstar.opam && \
-    opam install --deps-only ./fstar-no-z3.opam && \
-    rm fstar-no-z3.opam
+# Install opam dependencies only
+RUN opam install --deps-only ./fstar.opam
+
+# Install the relevant Z3 versions.
+COPY ./bin/get_fstar_z3.sh /usr/local/bin
+RUN sudo get_fstar_z3.sh /usr/local/bin
 
 # Install GitHub CLI
 # From https://github.com/cli/cli/blob/trunk/docs/install_linux.md#debian-ubuntu-linux-raspberry-pi-os-apt

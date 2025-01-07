@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+full_install=false
+
 kernel="$(uname -s)"
 case "$kernel" in
   CYGWIN*) kernel=Windows ;;
@@ -60,12 +62,33 @@ download_z3() {
 
   pushd "$tmp_dir"
   curl -L "$url" -o "$base_name"
-  unzip "$base_name" "$z3_path"
-  popd
 
-  install -m0755 "$tmp_dir/$z3_path" "$destination_file_name"
-  echo ">>> Installed Z3 $version to $destination_file_name"
+  if $full_install; then
+    mkdir -p "$destination_file_name"
+    b=$(realpath "$base_name")
+    pushd "$destination_file_name"
+    unzip $b "${base_name%.zip}/*"
+    mv "${base_name%.zip}"/* .
+    rm -r "${base_name%.zip}"
+    popd
+    popd
+  else
+    unzip "$base_name" "$z3_path"
+    popd
+    install -m0755 "$tmp_dir/$z3_path" "$destination_file_name"
+    echo ">>> Installed Z3 $version to $destination_file_name"
+  fi
 }
+
+if [ "$1" == "--full" ]; then
+  # Passing --full xyz/ will create a tree like
+  #  xyz/z3-4.8.5/bin/z3
+  #  xyz/z3-4.13.3/bin/z3
+  # (plus all other files in each package). This is used
+  # for our binary packages which include Z3.
+  full_install=true;
+  shift;
+fi
 
 dest_dir="$1"
 if [ -z "$dest_dir" ]; then
@@ -100,7 +123,7 @@ for z3_ver in 4.8.5 4.13.3; do
     if [ -z "$url" ]; then
       echo ">>> Z3 $z3_ver not available for this architecture, skipping..."
     else
-      download_z3 "$url" "$z3_ver" "$destination_file_name"
+      download_z3 "$url" "$z3_ver" "$(realpath "$destination_file_name")"
     fi
   fi
 done

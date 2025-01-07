@@ -274,6 +274,7 @@ let defaults =
       ("locate_lib"                   , Bool false);
       ("locate_ocaml"                 , Bool false);
       ("locate_file"                  , Unset);
+      ("locate_z3"                    , Unset);
       ("read_krml_file"               , Unset);
       ("record_hints"                 , Bool false);
       ("record_options"               , Bool false);
@@ -536,6 +537,7 @@ let get_locate                  ()      = lookup_opt "locate"                   
 let get_locate_lib              ()      = lookup_opt "locate_lib"               as_bool
 let get_locate_ocaml            ()      = lookup_opt "locate_ocaml"             as_bool
 let get_locate_file             ()      = lookup_opt "locate_file"              (as_option as_string)
+let get_locate_z3               ()      = lookup_opt "locate_z3"                (as_option as_string)
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
 let get_retry                   ()      = lookup_opt "retry"                    as_bool
@@ -1640,6 +1642,13 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     SimpleStr "basename",
     text "Find a file in F*'s include path and print its absolute path, then exit");
   ( noshort,
+    "locate_z3",
+    SimpleStr "version",
+    text "Locate the executable for a given Z3 version, then exit. \
+          The output is either an absolute path, or a name that was found in the PATH. \
+          Note: this is the Z3 executable that F* will attempt to call for the given version, \
+          but the version check is not performed at this point.");
+  ( noshort,
     "ocamlenv",
     WithSideEffect ((fun _ -> print_error "--ocamlenv must be the first argument, see fstar.exe --help for details\n"; exit 1),
                      (Const (Bool true))),
@@ -2061,6 +2070,7 @@ let locate                       () = get_locate                      ()
 let locate_lib                   () = get_locate_lib                  ()
 let locate_ocaml                 () = get_locate_ocaml                ()
 let locate_file                  () = get_locate_file                 ()
+let locate_z3                    () = get_locate_z3                   ()
 let read_krml_file               () = get_read_krml_file              ()
 let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()

@@ -53,9 +53,8 @@ else
 fi
 pushd fstar
 
-diag "-- Versions --"
+diag "-- Version --"
 bin/fstar.exe --version
-bin/z3 --version
 
 diag "*** Test the binary package"
 # We need two FSTAR_HOMEs in this script: one for the host (from where

@@ -365,6 +365,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("locate_lib", (Bool false));
   ("locate_ocaml", (Bool false));
   ("locate_file", Unset);
+  ("locate_z3", Unset);
   ("read_krml_file", Unset);
   ("record_hints", (Bool false));
   ("record_options", (Bool false));
@@ -744,6 +745,8 @@ let (get_locate_ocaml : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "locate_ocaml" as_bool
 let (get_locate_file : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> lookup_opt "locate_file" (as_option as_string)
+let (get_locate_z3 : unit -> Prims.string FStar_Pervasives_Native.option) =
+  fun uu___ -> lookup_opt "locate_z3" (as_option as_string)
 let (get_record_hints : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "record_hints" as_bool
 let (get_record_options : unit -> Prims.bool) =
@@ -3530,20 +3533,11 @@ let rec (specs_with_types :
                                                                     let uu___282
                                                                     =
                                                                     text
-                                                                    "With no arguments: print shell code to set up an environment with the OCaml libraries in scope (similar to 'opam env'). With arguments: run a command in that environment. NOTE: this must be the FIRST argument passed to F* and other options are NOT processed." in
+                                                                    "Locate the executable for a given Z3 version, then exit. The output is either an absolute path, or a name that was found in the PATH. Note: this is the Z3 executable that F* will attempt to call for the given version, but the version check is not performed at this point." in
                                                                     (FStarC_Getopt.noshort,
-                                                                    "ocamlenv",
-                                                                    (WithSideEffect
-                                                                    ((fun
-                                                                    uu___283
-                                                                    ->
-                                                                    FStarC_Compiler_Util.print_error
-                                                                    "--ocamlenv must be the first argument, see fstar.exe --help for details\n";
-                                                                    FStarC_Compiler_Effect.exit
-                                                                    Prims.int_one),
-                                                                    (Const
-                                                                    (Bool
-                                                                    true)))),
+                                                                    "locate_z3",
+                                                                    (SimpleStr
+                                                                    "version"),
                                                                     uu___282) in
                                                                     let uu___282
                                                                     =
@@ -3552,15 +3546,15 @@ let rec (specs_with_types :
                                                                     let uu___284
                                                                     =
                                                                     text
-                                                                    "A helper. This runs 'ocamlc' in the environment set up by --ocamlenv, for building an F* application bytecode executable." in
+                                                                    "With no arguments: print shell code to set up an environment with the OCaml libraries in scope (similar to 'opam env'). With arguments: run a command in that environment. NOTE: this must be the FIRST argument passed to F* and other options are NOT processed." in
                                                                     (FStarC_Getopt.noshort,
-                                                                    "ocamlc",
+                                                                    "ocamlenv",
                                                                     (WithSideEffect
                                                                     ((fun
                                                                     uu___285
                                                                     ->
                                                                     FStarC_Compiler_Util.print_error
-                                                                    "--ocamlc must be the first argument, see fstar.exe --help for details\n";
+                                                                    "--ocamlenv must be the first argument, see fstar.exe --help for details\n";
                                                                     FStarC_Compiler_Effect.exit
                                                                     Prims.int_one),
                                                                     (Const
@@ -3574,15 +3568,15 @@ let rec (specs_with_types :
                                                                     let uu___286
                                                                     =
                                                                     text
-                                                                    "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* application native executable." in
+                                                                    "A helper. This runs 'ocamlc' in the environment set up by --ocamlenv, for building an F* application bytecode executable." in
                                                                     (FStarC_Getopt.noshort,
-                                                                    "ocamlopt",
+                                                                    "ocamlc",
                                                                     (WithSideEffect
                                                                     ((fun
                                                                     uu___287
                                                                     ->
                                                                     FStarC_Compiler_Util.print_error
-                                                                    "--ocamlopt must be the first argument, see fstar.exe --help for details\n";
+                                                                    "--ocamlc must be the first argument, see fstar.exe --help for details\n";
                                                                     FStarC_Compiler_Effect.exit
                                                                     Prims.int_one),
                                                                     (Const
@@ -3596,12 +3590,34 @@ let rec (specs_with_types :
                                                                     let uu___288
                                                                     =
                                                                     text
+                                                                    "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* application native executable." in
+                                                                    (FStarC_Getopt.noshort,
+                                                                    "ocamlopt",
+                                                                    (WithSideEffect
+                                                                    ((fun
+                                                                    uu___289
+                                                                    ->
+                                                                    FStarC_Compiler_Util.print_error
+                                                                    "--ocamlopt must be the first argument, see fstar.exe --help for details\n";
+                                                                    FStarC_Compiler_Effect.exit
+                                                                    Prims.int_one),
+                                                                    (Const
+                                                                    (Bool
+                                                                    true)))),
+                                                                    uu___288) in
+                                                                    let uu___288
+                                                                    =
+                                                                    let uu___289
+                                                                    =
+                                                                    let uu___290
+                                                                    =
+                                                                    text
                                                                     "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* plugin." in
                                                                     (FStarC_Getopt.noshort,
                                                                     "ocamlopt_plugin",
                                                                     (WithSideEffect
                                                                     ((fun
-                                                                    uu___289
+                                                                    uu___291
                                                                     ->
                                                                     FStarC_Compiler_Util.print_error
                                                                     "--ocamlopt_plugin must be the first argument, see fstar.exe --help for details\n";
@@ -3610,8 +3626,11 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)))),
-                                                                    uu___288) in
-                                                                    [uu___287] in
+                                                                    uu___290) in
+                                                                    [uu___289] in
+                                                                    uu___287
+                                                                    ::
+                                                                    uu___288 in
                                                                     uu___285
                                                                     ::
                                                                     uu___286 in
@@ -4523,6 +4542,8 @@ let (locate_lib : unit -> Prims.bool) = fun uu___ -> get_locate_lib ()
 let (locate_ocaml : unit -> Prims.bool) = fun uu___ -> get_locate_ocaml ()
 let (locate_file : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> get_locate_file ()
+let (locate_z3 : unit -> Prims.string FStar_Pervasives_Native.option) =
+  fun uu___ -> get_locate_z3 ()
 let (read_krml_file : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> get_read_krml_file ()
 let (record_hints : unit -> Prims.bool) = fun uu___ -> get_record_hints ()
