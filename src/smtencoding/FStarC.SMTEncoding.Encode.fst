@@ -1346,7 +1346,7 @@ let encode_datacon (env:env_t) (se:sigelt)
     constr_fields=univ_fields@fields;
     constr_sort=Term_sort;
     constr_id=Some (varops.next_id());
-    constr_base=not injective_type_params
+    constr_base=not injective_type_params || not (List.isEmpty univ_fields);
   } |> Term.constructor_to_decl (Ident.range_of_lid d) in
   let app = mk_Apply ddtok_tm vars in
   let guard = mk_and_l guards in
