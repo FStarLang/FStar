@@ -96,17 +96,6 @@ endif
 
 PACKAGE_NAME ?= fstar
 
-ifeq ($(OS),Windows_NT)
-  Z3_NAME=z3.exe
-else
-  Z3_NAME=z3
-endif
-Z3_DIR=$(dir $(shell which $(Z3_NAME)))
-# Z3_LICENSE MUST be explicitly overridden if z3 is installed from an opam package.
-# See for instance $(FSTAR_HOME)/.docker/package.Dockerfile
-ifndef Z3_LICENSE
-  Z3_LICENSE?=$(shell if test -f $(Z3_DIR)/LICENSE.txt ; then echo $(Z3_DIR)/LICENSE.txt ; elif test -f $(Z3_DIR)/../LICENSE.txt ; then echo $(Z3_DIR)/../LICENSE.txt ; fi)
-endif
 
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
@@ -118,7 +107,6 @@ package_prefix=$(call maybe_cygwin_path,$(CURDIR)/fstar)
 package_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {} $(package_prefix)/$(2)/{} \;
 
 package:
-	if test -z "$(Z3_LICENSE)" ; then echo Please set Z3_LICENSE to the location of the license file for Z3 ; false ; fi
 	@# Clean previous packages.
 	! [ -d "$(package_prefix)" ]
 	rm -f $(PACKAGE_NAME).zip $(PACKAGE_NAME).tar.gz
@@ -130,15 +118,26 @@ package:
 	cp ../../version.txt $(package_prefix)/
 	@# Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(package_prefix)
-	cp $(Z3_LICENSE) $(package_prefix)/LICENSE-z3.txt
-	@# Z3
+	@# packaged Z3 versions
+	rm -rf z3tmp && mkdir -p z3tmp
+	$(FSTAR_HOME)/bin/get_fstar_z3.sh --full ./z3tmp
 ifeq ($(OS),Windows_NT)
 	cp $(shell which libgmp-10.dll) $(package_prefix)/bin
-	cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(package_prefix)/bin
-	chmod a+x $(package_prefix)/bin/z3.exe $(package_prefix)/bin/*.dll
+	# cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(package_prefix)/bin
+	# trying to slim down and avoid dlls,etc
+	mkdir -p $(package_prefix)/lib/fstar/z3-4.8.5/bin/
+	cp z3tmp/z3-4.8.5/bin/z3.exe   $(package_prefix)/lib/fstar/z3-4.8.5/bin/z3.exe
+	cp z3tmp/z3-4.8.5/LICENSE.txt  $(package_prefix)/lib/fstar/z3-4.8.5/LICENSE.txt
+	mkdir -p $(package_prefix)/lib/fstar/z3-4.13.3/bin/
+	cp z3tmp/z3-4.13.3/bin/z3.exe  $(package_prefix)/lib/fstar/z3-4.13.3/bin/z3.exe
+	cp z3tmp/z3-4.13.3/LICENSE.txt $(package_prefix)/lib/fstar/z3-4.13.3/LICENSE.txt
+	chmod a+x $(package_prefix)/lib/fstar/z3-*/z3.exe
 	zip -r -9 $(PACKAGE_NAME).zip fstar
 else
-	cp $(Z3_DIR)/z3 $(package_prefix)/bin
+	$(INSTALL_EXEC) -D -T z3tmp/z3-4.8.5/bin/z3       $(package_prefix)/lib/fstar/z3-4.8.5/bin/z3
+	$(INSTALL_EXEC) -D -T z3tmp/z3-4.8.5/LICENSE.txt  $(package_prefix)/lib/fstar/z3-4.8.5/LICENSE.txt
+	$(INSTALL_EXEC) -D -T z3tmp/z3-4.13.3/bin/z3      $(package_prefix)/lib/fstar/z3-4.13.3/bin/z3
+	$(INSTALL_EXEC) -D -T z3tmp/z3-4.13.3/LICENSE.txt $(package_prefix)/lib/fstar/z3-4.13.3/LICENSE.txt
 	tar czf $(PACKAGE_NAME).tar.gz fstar
 endif
 
