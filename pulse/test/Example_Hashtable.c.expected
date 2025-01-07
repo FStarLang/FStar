@@ -36,8 +36,9 @@ static cell__size_t_Example_Hashtable_data
   KRML_CHECK_SIZE(sizeof (cell__size_t_Example_Hashtable_data), n);
   cell__size_t_Example_Hashtable_data
   *buf = KRML_HOST_MALLOC(sizeof (cell__size_t_Example_Hashtable_data) * n);
-  for (uint32_t _i = 0U; _i < n; ++_i)
-    buf[_i] = x;
+  if (buf != NULL)
+    for (uint32_t _i = 0U; _i < n; ++_i)
+      buf[_i] = x;
   return buf;
 }
 
