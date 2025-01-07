@@ -428,17 +428,24 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
             | None -> []
             | Some(_, f) -> f env s tt)
 
+let forall_univs rng univ_fvs body =
+  match univ_fvs with
+  | [] -> body
+  | us ->
+    let univ_vars = List.map encode_univ_name us in
+    let cvars = List.map fst univ_vars in
+    let csorts = List.map fv_sort cvars in
+    let body = abstr cvars body in
+    match body with
+    | {tm=Quant (Forall, pats, wopt, sorts, body); rng} ->
+      mkForall'' rng (pats, wopt, csorts @ sorts, body)
+    | _ ->
+      mkForall'' rng ([], None, csorts, body)
+
 let encode_smt_lemma env fv t =
     let lid = fv.fv_name.v in
     let form, decls = encode_function_type_as_formula t env in
-    let form =
-      match (Free.univnames t |> FlatSet.elems) with
-      | [] -> form
-      | us ->
-        let univ_vars = List.map encode_univ_name us in
-        let cvars = List.map fst univ_vars in
-        mkForall (range_of_fv fv) ([], cvars, form)
-    in
+    let form = forall_univs (range_of_fv fv) (Free.univnames t |> FlatSet.elems) form in
     decls@([Util.mkAssume(form, Some ("Lemma: " ^ (string_of_lid lid)), ("lemma_"^(string_of_lid lid)))]
            |> mk_decls_trivial)
 
@@ -669,7 +676,7 @@ let encode_top_level_val uninterpreted env us fv t quals =
       else norm_before_encoding env t
     in
     if !dbg_SMTEncoding
-    then BU.print4 "Encoding top-level val %s %s : %s\Normalized to is %s\n"
+    then BU.print4 "Encoding top-level val %s %s : %s\nNormalized to is %s\n"
            (show fv)
            (show us)
            (show t)
@@ -1339,7 +1346,7 @@ let encode_datacon (env:env_t) (se:sigelt)
     constr_fields=univ_fields@fields;
     constr_sort=Term_sort;
     constr_id=Some (varops.next_id());
-    constr_base=not injective_type_params
+    constr_base=not injective_type_params || not (List.isEmpty univ_fields);
   } |> Term.constructor_to_decl (Ident.range_of_lid d) in
   let app = mk_Apply ddtok_tm vars in
   let guard = mk_and_l guards in
