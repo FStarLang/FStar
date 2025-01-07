@@ -2051,7 +2051,7 @@ and tc_abs_expected_function_typ env (bs:binders) (t0:option (typ & bool)) (body
       (* CK: add this case since the type may be f:(a -> M b wp){φ}, in which case I drop the refinement *)
       (* NS: 07/21 dropping the refinement is not sound; we need to check that f validates phi. See Bug #284 *)
       | Tm_refine {b} ->
-        let _, bs, bs', copt, env_body, body, g_env = as_function_typ norm b.sort in
+        let _, bs, bs', copt, env_body, body, g_env = as_function_typ false b.sort in
         //we pass type `t` out to check afterwards the full refinement type is respected
         Some t, bs, bs', copt, env_body, body, g_env
 
@@ -2284,8 +2284,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term & lcomp & guard_t =
       tc_abs_expected_function_typ env bs topt body in
 
     if Debug.extreme () then
-      BU.print3 "After expected_function_typ, tfun_opt: %s, c_opt: %s, and expected type in envbody: %s\n"
-           (show tfun_opt) (show c_opt) (show (Env.expected_typ envbody));
+      BU.print4 "After expected_function_typ, tfun_opt: %s, bs: %s, c_opt: %s, and expected type in envbody: %s\n"
+           (show tfun_opt) (show bs) (show c_opt) (show (Env.expected_typ envbody));
 
     if !dbg_NYC
     then BU.print2 "!!!!!!!!!!!!!!!Guard for function with binders %s is %s\n"
