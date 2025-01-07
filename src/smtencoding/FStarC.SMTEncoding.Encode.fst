@@ -1196,17 +1196,18 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
               if injective_type_params
               || Options.Ext.get "compat:injectivity" <> ""
               then (
-                let _, data_t = Env.lookup_datacon env.tcenv l in
+                let _univs, data_t = Env.lookup_datacon env.tcenv l in
                 let args, res = U.arrow_formals data_t in
-                let indices = res |> U.head_and_args_full |> snd in
+                let params_and_indices = res |> U.head_and_args_full |> snd in
                 let env = args |> List.fold_left
                     (fun env ({binder_bv=x}) -> push_term_var env x (mkApp(mk_term_projector_name l x, [xx])))
                     env in
-                let indices, decls' = encode_args indices env in
-                if List.length indices <> List.length vars
+                let params_and_indices, decls' = encode_args params_and_indices env in
+                if List.length params_and_indices <> List.length vars
                 then failwith "Impossible";
-                let eqs = List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices in
-                mkAnd(is_l, mk_and_l eqs), decls'
+                let eqs = List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars params_and_indices in
+                let univ_eqs = List.mapi (fun i u -> mkEq(mkFreeV u, mkApp(mk_univ_projector_name l i, [xx]))) univ_vars in
+                mkAnd(is_l, mk_and_l (univ_eqs@eqs)), decls'
               )
               else is_l, []
             in
@@ -1325,8 +1326,7 @@ let encode_datacon (env:env_t) (se:sigelt)
           univs
           |> List.mapi
             (fun i _ ->
-              let bv = {S.null_bv S.tun with ppname=Ident.mk_ident (string_of_int i, Range.dummyRange)} in
-              { field_name = mk_term_projector_name d bv; field_sort = univ_sort; field_projectible = false })
+              { field_name = mk_univ_projector_name d i; field_sort = univ_sort; field_projectible = true })
         in
   let n_univs = List.length univ_fields in
   let fields =
@@ -1346,7 +1346,7 @@ let encode_datacon (env:env_t) (se:sigelt)
     constr_fields=univ_fields@fields;
     constr_sort=Term_sort;
     constr_id=Some (varops.next_id());
-    constr_base=not injective_type_params || not (List.isEmpty univ_fields);
+    constr_base=not injective_type_params;
   } |> Term.constructor_to_decl (Ident.range_of_lid d) in
   let app = mk_Apply ddtok_tm vars in
   let guard = mk_and_l guards in
