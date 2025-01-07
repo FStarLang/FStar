@@ -62,7 +62,8 @@ build: 2
 	$(MAKE) -C $(STAGE0) fstar
 	$(MAKE) -C $(STAGE0) trim # We don't need OCaml build files.
 
-$(FSTAR1_BARE_EXE).src: $(FSTAR0_EXE) _force
+
+.bare1.touch: $(FSTAR0_EXE) _force
 	$(call bold_msg, "EXTRACT", "STAGE 1 FSTARC-BARE")
 	env \
 	  SRC=src/ \
@@ -71,13 +72,15 @@ $(FSTAR1_BARE_EXE).src: $(FSTAR0_EXE) _force
 	  OUTPUT_DIR=stage1/fstarc.ml/ \
 	  CODEGEN=OCaml \
 	  TAG=fstarc \
+	  TOUCH=$@ \
 	  $(MAKE) -f mk/fstar-01.mk ocaml
 
-$(FSTAR1_BARE_EXE): $(FSTAR1_BARE_EXE).src _force
+$(FSTAR1_BARE_EXE): .bare1.touch
 	$(call bold_msg, "BUILD", "STAGE 1 FSTARC-BARE")
 	$(MAKE) -C stage1 fstarc-bare
+	touch -c $@
 
-$(FSTAR1_FULL_EXE).src: $(FSTAR1_BARE_EXE) _force
+.full1.touch: $(FSTAR1_BARE_EXE) _force
 	$(call bold_msg, "EXTRACT", "STAGE 1 PLUGINS")
 	env \
 	  SRC=ulib/ \
@@ -87,29 +90,33 @@ $(FSTAR1_FULL_EXE).src: $(FSTAR1_BARE_EXE) _force
 	  CODEGEN=PluginNoLib \
 	  OTHERFLAGS="--ext __guts $(OTHERFLAGS)" \
 	  TAG=plugins \
+	  TOUCH=$@ \
 	  $(MAKE) -f mk/plugins.mk ocaml
 
-$(FSTAR1_FULL_EXE): $(FSTAR1_FULL_EXE).src _force
+$(FSTAR1_FULL_EXE): .bare1.touch .full1.touch
 	$(call bold_msg, "BUILD", "STAGE 1 FSTARC")
 	$(MAKE) -C stage1 fstarc-full
+	touch -c $@
 
-1.alib.src: $(FSTAR1_FULL_EXE) _force
+.alib1.src.touch: $(FSTAR1_FULL_EXE) _force
 	$(call bold_msg, "EXTRACT", "STAGE 1 LIB")
-	env \
+	+env \
 	  SRC=ulib/ \
 	  FSTAR_EXE=$(FSTAR1_FULL_EXE) \
 	  CACHE_DIR=stage1/ulib.checked/ \
 	  OUTPUT_DIR=stage1/ulib.ml/ \
 	  CODEGEN=OCaml \
 	  TAG=lib \
+	  TOUCH=$@ \
 	  $(MAKE) -f mk/lib.mk all-ml
 
-1.alib: 1.alib.src _force
+.alib1.touch: .alib1.src.touch
 	$(call bold_msg, "BUILD", "STAGE 1 LIB")
 	$(MAKE) -C stage1/ libapp
+	touch $@
 
-1.plib.src: $(FSTAR1_FULL_EXE) 1.alib.src _force
-	# NB: shares .depend and checked from 1.alib.src,
+.plib1.src.touch: $(FSTAR1_FULL_EXE) .alib1.src.touch _force
+	# NB: shares .depend and checked from alib1.src,
 	# hence the dependency, though it is not quite precise.
 	$(call bold_msg, "EXTRACT", "STAGE 1 PLUGLIB")
 	env \
@@ -120,13 +127,15 @@ $(FSTAR1_FULL_EXE): $(FSTAR1_FULL_EXE).src _force
 	  CODEGEN=PluginNoLib \
 	  TAG=pluginlib \
 	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed' \
+	  TOUCH=$@ \
 	  $(MAKE) -f mk/lib.mk all-ml
 
-1.plib: 1.plib.src _force | 1.alib # this last dependency only to prevent simultaneous dune builds
+.plib1.touch: .plib1.src.touch | .alib1.touch # this last dependency only to prevent simultaneous dune builds
 	$(call bold_msg, "BUILD", "STAGE 1 PLUGLIB")
 	$(MAKE) -C stage1/ libplugin
+	touch $@
 
-$(FSTAR2_BARE_EXE).src: $(FSTAR1_FULL_EXE) _force
+.bare2.touch: $(FSTAR1_FULL_EXE) _force
 	$(call bold_msg, "EXTRACT", "STAGE 2 FSTARC")
 	# NOTE: see the explanation for FSTAR_LIB near top of file.
 	env \
@@ -137,17 +146,18 @@ $(FSTAR2_BARE_EXE).src: $(FSTAR1_FULL_EXE) _force
 	  OUTPUT_DIR=stage2/fstarc.ml/ \
 	  CODEGEN=OCaml \
 	  TAG=fstarc \
+	  TOUCH=$@ \
 	  $(MAKE) -f mk/fstar-12.mk ocaml
 
-$(FSTAR2_BARE_EXE): $(FSTAR2_BARE_EXE).src _force
+$(FSTAR2_BARE_EXE): .bare2.touch
 	$(call bold_msg, "BUILD", "STAGE 2 FSTARC-BARE")
 	$(MAKE) -C stage2 fstarc-bare FSTAR_DUNE_RELEASE=1
+	touch -c $@
 	# ^ Note, even if we don't release fstar-bare itself,
 	# it is still part of the build of the full fstar, so
 	# we set the release flag to have a more incremental build.
 
-
-$(FSTAR2_FULL_EXE).src: $(FSTAR2_BARE_EXE) _force
+.full2.touch: $(FSTAR2_BARE_EXE) _force
 	$(call bold_msg, "EXTRACT", "STAGE 2 PLUGINS")
 	env \
 	  SRC=ulib/ \
@@ -157,13 +167,15 @@ $(FSTAR2_FULL_EXE).src: $(FSTAR2_BARE_EXE) _force
 	  CODEGEN=PluginNoLib \
 	  OTHERFLAGS="--ext __guts $(OTHERFLAGS)" \
 	  TAG=plugins \
+	  TOUCH=$@ \
 	  $(MAKE) -f mk/plugins.mk ocaml
 
-$(FSTAR2_FULL_EXE): $(FSTAR2_FULL_EXE).src _force
+$(FSTAR2_FULL_EXE): .bare2.touch .full2.touch
 	$(call bold_msg, "BUILD", "STAGE 2 FSTARC")
 	$(MAKE) -C stage2 fstarc-full FSTAR_DUNE_RELEASE=1
+	touch -c $@
 
-2.alib.src: $(FSTAR2_FULL_EXE) _force
+.alib2.src.touch: $(FSTAR2_FULL_EXE) _force
 	$(call bold_msg, "EXTRACT", "STAGE 2 LIB")
 	env \
 	  SRC=ulib/ \
@@ -172,14 +184,16 @@ $(FSTAR2_FULL_EXE): $(FSTAR2_FULL_EXE).src _force
 	  OUTPUT_DIR=stage2/ulib.ml/ \
 	  CODEGEN=OCaml \
 	  TAG=lib \
+	  TOUCH=$@ \
 	  $(MAKE) -f mk/lib.mk all-ml
 
-2.alib: 2.alib.src _force
+.alib2.touch: .alib2.src.touch
 	$(call bold_msg, "BUILD", "STAGE 2 LIB")
 	$(MAKE) -C stage2/ libapp FSTAR_DUNE_RELEASE=1
+	touch $@
 
-2.plib.src: $(FSTAR2_FULL_EXE) 2.alib.src _force
-	# NB: shares .depend and checked from 2.alib.src,
+.plib2.src.touch: $(FSTAR2_FULL_EXE) .alib2.src.touch _force
+	# NB: shares .depend and checked from .alib2.src,
 	# hence the dependency, though it is not quite precise.
 	$(call bold_msg, "EXTRACT", "STAGE 2 PLUGLIB")
 	env \
@@ -190,15 +204,17 @@ $(FSTAR2_FULL_EXE): $(FSTAR2_FULL_EXE).src _force
 	  CODEGEN=PluginNoLib \
 	  TAG=pluginlib \
 	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed' \
+	  TOUCH=$@ \
 	  $(MAKE) -f mk/lib.mk all-ml
 
-2.plib: 2.plib.src _force | 2.alib # this last dependency only to prevent simultaneous dune builds
+.plib2.touch: .plib2.src.touch | .alib2.touch # this last dependency only to prevent simultaneous dune builds
 	$(call bold_msg, "BUILD", "STAGE 2 PLUGLIB")
 	$(MAKE) -C stage2/ libplugin FSTAR_DUNE_RELEASE=1
+	touch $@
 
 # F# library, from stage 2.
-lib-fsharp.src: $(FSTAR2_FULL_EXE) 2.alib.src _force
-	# NB: shares checked files from 2.alib.src,
+lib-fsharp.src: $(FSTAR2_FULL_EXE) .alib2.src.touch _force
+	# NB: shares checked files from .alib2.src,
 	# hence the dependency, though it is not quite precise.
 	$(call bold_msg, "EXTRACT", "FSHARP LIB")
 	# Note: FStar.Map and FStar.Set are special-cased
@@ -246,25 +262,30 @@ else
 LINK_OK=0
 endif
 
-stage1-components: 1.full 1.alib.src 1.plib.src
-__install-stage1:
+.stage1.touch: .bare1.touch .full1.touch .alib1.touch .plib1.touch
+	touch $@
+
+.stage2.touch: .bare2.touch .full2.touch .alib2.touch .plib2.touch
+	touch $@
+
+__do-install-stage1: .stage1.touch
 	$(call bold_msg, "INSTALL", "STAGE 1")
 	$(MAKE) -C stage1 install
-
-$(INSTALLED_FSTAR1_FULL_EXE): export FSTAR_LINK_LIBDIRS=$(LINK_OK)
-$(INSTALLED_FSTAR1_FULL_EXE): stage1-components
-	$(MAKE) __install-stage1 PREFIX=$(CURDIR)/stage1/out
-	@# ^ pass PREFIX to make sure we don't get it from env
-
-stage2-components: 2.full 2.alib.src 2.plib.src
-__install-stage2:
+__do-install-stage2: .stage2.touch
 	$(call bold_msg, "INSTALL", "STAGE 2")
 	$(MAKE) -C stage2 install FSTAR_DUNE_RELEASE=1
 
-$(INSTALLED_FSTAR2_FULL_EXE): export FSTAR_LINK_LIBDIRS=$(LINK_OK)
-$(INSTALLED_FSTAR2_FULL_EXE): stage2-components
-	$(MAKE) __install-stage2 PREFIX=$(CURDIR)/stage2/out
+.install-stage1.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
+.install-stage1.touch: .stage1.touch
+	$(MAKE) __do-install-stage1 PREFIX=$(CURDIR)/stage1/out
 	@# ^ pass PREFIX to make sure we don't get it from env
+	touch $@
+
+.install-stage2.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
+.install-stage2.touch: .stage2.touch
+	$(MAKE) __do-install-stage2 PREFIX=$(CURDIR)/stage2/out
+	@# ^ pass PREFIX to make sure we don't get it from env
+	touch $@
 
 setlink-%:
 	if [ -e out ] && ! [ -h out ]; then echo "ERROR: out/ exists and is not a symbolic link, please remove it"; false; fi
@@ -274,11 +295,11 @@ setlink-%:
 	ln -Trsf out/bin/fstar.exe bin/fstar.exe
 	ln -Trsf .scripts/get_fstar_z3.sh bin/get_fstar_z3.sh
 
-stage1: $(INSTALLED_FSTAR1_FULL_EXE)
+stage1: .install-stage1.touch
 1: stage1
 	$(MAKE) setlink-1
 
-stage2: $(INSTALLED_FSTAR2_FULL_EXE)
+stage2: .install-stage2.touch
 2: stage2
 	$(MAKE) setlink-2
 
@@ -287,8 +308,7 @@ stage2: $(INSTALLED_FSTAR2_FULL_EXE)
 install: BROOT=stage2
 install: export PREFIX?=/usr/local
 install: export FSTAR_LINK_LIBDIRS=0 # default is false, but set anyway
-install: stage2-components
-	$(MAKE) __install-stage2
+install: __do-install-stage2
 
 __do-archive: _force
 	rm -rf $(PKGTMP)
@@ -319,30 +339,30 @@ __do-src-archive: _force
 # FSTAR_TAG is set (possibly empty)
 FSTAR_TAG ?= -v$(shell cat version.txt)
 
-package-1: stage1-components _force
+package-1: .stage1.touch _force
 	env \
 	  PKGTMP=_pak1 \
 	  BROOT=stage1/ \
 	  ARCHIVE=fstar$(FSTAR_TAG)-stage1 \
-	  INSTALL_RULE=__install-stage1 \
+	  INSTALL_RULE=__do-install-stage1 \
 	  $(MAKE) __do-archive
 
-package-2: stage2-components _force
+package-2: .stage2.touch _force
 	env \
 	  PKGTMP=_pak2 \
 	  BROOT=stage2/ \
 	  ARCHIVE=fstar$(FSTAR_TAG) \
-	  INSTALL_RULE=__install-stage2 \
+	  INSTALL_RULE=__do-install-stage2 \
 	  $(MAKE) __do-archive
 
-package-src-1: stage1-components _force
+package-src-1: .stage1.touch _force
 	env \
 	  PKGTMP=_srcpak1 \
 	  BROOT=stage1/ \
 	  ARCHIVE=fstar$(FSTAR_TAG)-stage1-src \
 	  $(MAKE) __do-src-archive
 
-package-src-2: stage2-components _force
+package-src-2: .stage2.touch _force
 	env \
 	  PKGTMP=_srcpak2 \
 	  BROOT=stage2/ \
