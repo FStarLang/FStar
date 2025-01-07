@@ -4,7 +4,7 @@
 ARG ocaml_version=4.14
 ARG CI_THREADS=24
 
-FROM ocaml/opam:ubuntu-20.04-ocaml-$ocaml_version AS fstarbuild
+FROM ocaml/opam:ubuntu-22.04-ocaml-$ocaml_version AS fstarbuild
 
 # Needed for OPAM command below
 RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
