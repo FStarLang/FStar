@@ -151,11 +151,11 @@ jobs:
           repository: mtzguido/pulse
           ref: dev
 
-      # Since pulse needs F* internal build files, we can't use
-      # binary nor source packages. So we get the whole repo.
-      - uses: mtzguido/gci-download@master
+      - uses: actions/download-artifact@v4
         with:
-          name: fstar-repo
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
 
       - name: Build (after setting up cargo env)
         run: . $HOME/.cargo/env && make -C pulse -skj$(nproc)
@@ -177,11 +177,11 @@ jobs:
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
-      # Since pulse needs F* internal build files, we can't use
-      # binary nor source packages. So we get the whole repo.
-      - uses: mtzguido/gci-download@master
+      - uses: actions/download-artifact@v4
         with:
-          name: fstar-repo
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
