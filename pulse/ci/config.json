@@ -1,7 +1,0 @@
-{
-    "RepoVersions" : {
-        "fstar": "master",
-        "karamel" : "master"
-    },
-    "NotificationChannel" : "#pulse-build"
-}

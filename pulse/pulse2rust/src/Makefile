@@ -7,8 +7,7 @@ CACHE_DIR := _cache
 OUTPUT_DIR := ocaml/generated
 CODEGEN := PluginNoLib
 ROOTS := $(shell find $(SRC) -name '*.fst' -o -name '*.fsti')
-FSTAR_OPTIONS += --include $(FSTAR_HOME)/src
-FSTAR_OPTIONS += --include $(FSTAR_HOME)/stage2/fstarc.checked
+FSTAR_OPTIONS += --with_fstarc
 EXTRACT += --extract '-*,+Pulse2Rust'
 FSTAR_OPTIONS += --lax --MLish --MLish_effect FStarC.Compiler.Effect
 

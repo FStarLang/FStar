@@ -67,7 +67,7 @@ RUN eval $(opam env) \
  && .docker/build/install-other-deps.sh \
  && make -j$(nproc)
 
-ENV FSTAR_HOME $HOME/FStar
+ENV FSTAR_EXE  $HOME/FStar/bin/fstar.exe
 ENV KRML_HOME $HOME/karamel
 
 # Instrument .profile and .bashrc to set the opam switch. Note that this

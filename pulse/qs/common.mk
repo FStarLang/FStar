@@ -63,7 +63,9 @@ need_exe =											\
       $(if $(shell test -x $(value $(strip $1)) && echo 1),					\
         $(eval override $(strip $1):=$(abspath $(value $(strip $1)))),				\
         $(error $(strip $1) ("$(value $(strip $1))") is not executable)),			\
-      $(error $(strip $1) ("$(value $(strip $1))") does not exist (cwd = $(CURDIR)))),		\
+      $(if $(shell which $(value $(strip $1))),							\
+        $(eval override $(strip $1):=$(shell which $(value $(strip $1)))),			\
+        $(error $(strip $1) ("$(value $(strip $1))") does not exist and is not in PATH (cwd = $(CURDIR))))),	\
     $(error Need an executable for $(strip $1)$(if $2, ("$(strip $2)"))))			\
 
 need_file =											\
