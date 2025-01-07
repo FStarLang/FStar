@@ -71,7 +71,6 @@ download_z3() {
 
 full_install_z3() {
   local url version dest_dir base_name
-  echo wat
 
   url="$1"
   version="$2"
