@@ -2550,21 +2550,8 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
         let uu___ = FStarC_BigInt.of_int_fs (Prims.of_int (10000)) in
         FStarC_StringBuffer.create uu___ in
       let pr str = let uu___ = FStarC_StringBuffer.add str sb in () in
-      let norm_path s =
-        FStarC_Compiler_Util.replace_chars
-          (FStarC_Compiler_Util.replace_chars s 92 "/") 32 "\\ " in
-      let print_entry target all_deps =
-        pr target;
-        pr ":";
-        FStarC_Compiler_List.iter (fun f -> pr " \\\n\t"; pr (norm_path f))
-          all_deps;
-        pr "\n\n" in
-      let print_all tag files =
-        pr (Prims.strcat pre_tag tag);
-        pr "=";
-        FStarC_Compiler_List.iter (fun f -> pr " \\\n\t"; pr (norm_path f))
-          files;
-        pr "\n\n" in
+      let print_entry target first_dep all_deps =
+        pr target; pr ": "; pr first_dep; pr "\\\n\t"; pr all_deps; pr "\n\n" in
       let keys = deps_keys deps1.dep_graph in
       let no_fstar_stubs_file s =
         let s1 = "FStar.Stubs." in
@@ -2592,11 +2579,18 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
         let ml_base_name =
           FStarC_Compiler_Util.replace_chars basename1 46 "_" in
         FStarC_Find.prepend_output_dir (Prims.strcat ml_base_name ext) in
-      let output_fs_file f = output_file ".fs" f in
-      let output_ml_file f = output_file ".ml" f in
-      let output_krml_file f = output_file ".krml" f in
-      let output_cmx_file f = output_file ".cmx" f in
-      let cache_file f = cache_file_name f in
+      let norm_path s =
+        FStarC_Compiler_Util.replace_chars
+          (FStarC_Compiler_Util.replace_chars s 92 "/") 32 "\\ " in
+      let output_fs_file f =
+        let uu___ = output_file ".fs" f in norm_path uu___ in
+      let output_ml_file f =
+        let uu___ = output_file ".ml" f in norm_path uu___ in
+      let output_krml_file f =
+        let uu___ = output_file ".krml" f in norm_path uu___ in
+      let output_cmx_file f =
+        let uu___ = output_file ".cmx" f in norm_path uu___ in
+      let cache_file f = let uu___ = cache_file_name f in norm_path uu___ in
       let uu___ =
         phase1 deps1.file_system_map deps1.dep_graph
           deps1.interfaces_with_inlining true in
@@ -2645,6 +2639,7 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
                                        (dep_subsumed_by iface_dep)
                                        dep_node1.edges in
                                    Prims.op_Negation uu___3)) in
+                         let norm_f = norm_path file_name1 in
                          let files =
                            FStarC_Compiler_List.map
                              (file_of_dep_aux true deps1.file_system_map
@@ -2673,6 +2668,10 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
                              let uu___4 = cache_file_name iface_fn1 in uu___4
                                :: uu___3
                            else files1 in
+                         let files3 =
+                           FStarC_Compiler_List.map norm_path files2 in
+                         let files4 =
+                           FStarC_Compiler_String.concat "\\\n\t" files3 in
                          let cache_file_name1 = cache_file file_name1 in
                          let all_checked_files2 =
                            let uu___3 =
@@ -2682,8 +2681,7 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
                              Prims.op_Negation uu___4 in
                            if uu___3
                            then
-                             (print_entry cache_file_name1 (file_name1 ::
-                                files2);
+                             (print_entry cache_file_name1 norm_f files4;
                               cache_file_name1
                               ::
                               all_checked_files1)
@@ -2725,6 +2723,9 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
                               let all_checked_fst_dep_files =
                                 FStarC_Compiler_List.map cache_file
                                   all_fst_files_dep in
+                              let all_checked_fst_dep_files_string =
+                                FStarC_Compiler_String.concat " \\\n\t"
+                                  all_checked_fst_dep_files in
                               ((let uu___5 = is_implementation file_name1 in
                                 if uu___5
                                 then
@@ -2736,8 +2737,8 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
                                         lowercase_module_name file_name1 in
                                       ((let uu___9 =
                                           output_ml_file file_name1 in
-                                        print_entry uu___9 (cache_file_name1
-                                          :: all_checked_fst_dep_files));
+                                        print_entry uu___9 cache_file_name1
+                                          all_checked_fst_dep_files_string);
                                        (let uu___10 =
                                           FStarC_Options.should_extract mname
                                             FStarC_Options.FSharp in
@@ -2746,20 +2747,20 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
                                           let uu___11 =
                                             output_fs_file file_name1 in
                                           print_entry uu___11
-                                            (cache_file_name1 ::
-                                            all_checked_fst_dep_files)
+                                            cache_file_name1
+                                            all_checked_fst_dep_files_string
                                         else ());
                                        (let uu___10 =
                                           output_krml_file file_name1 in
-                                        print_entry uu___10 (cache_file_name1
-                                          :: all_checked_fst_dep_files)))
+                                        print_entry uu___10 cache_file_name1
+                                          all_checked_fst_dep_files_string))
                                     else
                                       (let mname =
                                          lowercase_module_name file_name1 in
                                        (let uu___10 =
                                           output_ml_file file_name1 in
-                                        print_entry uu___10
-                                          [cache_file_name1]);
+                                        print_entry uu___10 cache_file_name1
+                                          "");
                                        (let uu___11 =
                                           FStarC_Options.should_extract mname
                                             FStarC_Options.FSharp in
@@ -2768,12 +2769,12 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
                                           let uu___12 =
                                             output_fs_file file_name1 in
                                           print_entry uu___12
-                                            [cache_file_name1]
+                                            cache_file_name1 ""
                                         else ());
                                        (let uu___11 =
                                           output_krml_file file_name1 in
-                                        print_entry uu___11
-                                          [cache_file_name1])));
+                                        print_entry uu___11 cache_file_name1
+                                          "")));
                                    (let cmx_files =
                                       let extracted_fst_files =
                                         FStarC_Compiler_List.filter
@@ -2798,12 +2799,12 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
                                         FStarC_Options.OCaml in
                                     if uu___7
                                     then
+                                      let cmx_files1 =
+                                        FStarC_Compiler_String.concat
+                                          "\\\n\t" cmx_files in
                                       let uu___8 = output_cmx_file file_name1 in
-                                      let uu___9 =
-                                        let uu___10 =
-                                          output_ml_file file_name1 in
-                                        uu___10 :: cmx_files in
-                                      print_entry uu___8 uu___9
+                                      let uu___9 = output_ml_file file_name1 in
+                                      print_entry uu___8 uu___9 cmx_files1
                                     else ()))
                                 else
                                   (let uu___7 =
@@ -2823,13 +2824,13 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
                                       then
                                         let uu___9 =
                                           output_krml_file file_name1 in
-                                        print_entry uu___9 (cache_file_name1
-                                          :: all_checked_fst_dep_files)
+                                        print_entry uu___9 cache_file_name1
+                                          all_checked_fst_dep_files_string
                                       else
                                         (let uu___10 =
                                            output_krml_file file_name1 in
-                                         print_entry uu___10
-                                           [cache_file_name1]))
+                                         print_entry uu___10 cache_file_name1
+                                           ""))
                                    else ()));
                                all_checked_files2)) in
                    profile process_one_key
@@ -2884,6 +2885,12 @@ let (print_full : FStarC_Compiler_Util.out_channel -> deps -> unit) =
                    FStarC_Compiler_Util.smap_add krml_file_map mname uu___3
                  else ()) keys;
             sort_output_files krml_file_map in
+          let print_all tag files =
+            pr (Prims.strcat pre_tag tag);
+            pr "=\\\n\t";
+            FStarC_Compiler_List.iter
+              (fun f -> pr (norm_path f); pr " \\\n\t") files;
+            pr "\n" in
           (FStarC_Compiler_List.iter
              (fun fsti ->
                 let mn = lowercase_module_name fsti in
