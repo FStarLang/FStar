@@ -33,17 +33,23 @@ clean: _force
 	dune clean $(FSTAR_DUNE_OPTIONS) --root=dune
 	rm -rf out
 
+# NOTE: We install ulib/ and src/ as symlinks, which is useful for
+# local installs so VS Code can properly jump between these files,
+# and we also avoid unnecessary copies. When building packages, we use
+# tar's -h to follow and eliminate all these links.
+install: PREFIX ?= ./out
 install: fstarc-bare fstarc-full libapp libplugin
 	@# Seems to need one final build?
 	cd dune && dune build $(FSTAR_DUNE_BUILD_OPTIONS)
-	cd dune && dune install $(FSTAR_DUNE_OPTIONS) --prefix=$(abspath $(CURDIR)/out)
-	@# Install library
-	cp -H -p -r ulib out/lib/fstar/ulib
-	echo 'ulib' > out/lib/fstar/fstar.include
-	rm -f out/lib/fstar/ulib/*.config.json
-	@# Install checked files for the library
-	mkdir -p out/lib/fstar/ulib/.checked
-	cp -p ulib.checked/* out/lib/fstar/ulib/.checked/
-	echo '.checked' >> out/lib/fstar/ulib/fstar.include
-	@# Install get_fstar_z3 script
-	cp ../.scripts/get_fstar_z3.sh $(CURDIR)/out/bin
+	cd dune && dune install $(FSTAR_DUNE_OPTIONS) --prefix=$(abspath $(PREFIX))
+	@# Install library and its checked files
+	ln -Tsrf ulib $(PREFIX)/lib/fstar/ulib
+	ln -Tsrf ulib.checked $(PREFIX)/lib/fstar/ulib.checked
+	echo 'ulib'          > $(PREFIX)/lib/fstar/fstar.include
+	echo 'ulib.checked' >> $(PREFIX)/lib/fstar/fstar.include
+	@# Install checked files for FStarC
+	mkdir -p $(PREFIX)/lib/fstar/fstarc/
+	ln -Tsrf $(FSTAR_ROOT)/src $(PREFIX)/lib/fstar/fstarc/src
+	ln -Tsrf fstarc.checked    $(PREFIX)/lib/fstar/fstarc/src.checked
+	echo 'src'          > $(PREFIX)/lib/fstar/fstarc/fstar.include
+	echo 'src.checked' >> $(PREFIX)/lib/fstar/fstarc/fstar.include

@@ -268,9 +268,7 @@ stage2: $(INSTALLED_FSTAR2_FULL_EXE)
 
 do-install: _force
 	$(call bold_msg, "INSTALL", $(PREFIX))
-	# Install fstar.exe, application library, and plugin library
-	mkdir -p $(PREFIX) # Needed for macOS apparently
-	cp -r $(BROOT)/out/* $(PREFIX)
+	$(MAKE) -C $(BROOT) install PREFIX=$(abspath $(PREFIX))
 
 install: 2
 install: BROOT=stage2
@@ -293,7 +291,7 @@ __do-archive: _force
 	cp INSTALL.md $(PREFIX)/fstar/
 	cp version.txt $(PREFIX)/fstar/
 	$(call bold_msg, "ARCHIVE", $(ARCHIVE))
-	tar czf $(ARCHIVE) -h -C $(PREFIX) .
+	tar czf $(ARCHIVE) -h -C $(PREFIX) --exclude='lib/**/*.fst.config.json' .
 	rm -rf $(PREFIX)
 
 __do-src-archive: _force
