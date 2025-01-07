@@ -799,7 +799,7 @@ let impl_matches_map_entry_zero_or_more
         (fun res -> 
             raw_data_item_map_entry_match p c v **
             pure (opt_precedes (Ghost.reveal v) b /\
-            res == List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) g.zero_or_more)
+            res <==> (exists y. List.Tot.memP y g.zero_or_more /\ matches_map_group_entry' v y))
         )
 
 (* FIXME: WHY WHY WHY does this one not work?
@@ -836,7 +836,7 @@ ensures
         (
             raw_data_item_map_entry_match p c v **
             pure (opt_precedes (Ghost.reveal v) b /\
-            res == List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) (map_group_empty #b).zero_or_more)
+            res <==> (exists y. List.Tot.memP y (map_group_empty #b).zero_or_more /\ matches_map_group_entry' v y))
         )
 {
     false
@@ -865,10 +865,11 @@ fn impl_matches_map_entry_zero_or_more_cons
     (#v: Ghost.erased (raw_data_item & raw_data_item))
 {
     assert (pure (
-        List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) (map_group_cons_zero_or_more e false g).zero_or_more == (
-          matches_map_group_entry e (Ghost.reveal v) ||
-          List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) g.zero_or_more
-    )));
+        (exists y. List.Tot.memP y (map_group_cons_zero_or_more e false g).zero_or_more /\ matches_map_group_entry' v y)
+        <==>
+        (matches_map_group_entry e (Ghost.reveal v) \/
+          (exists y. List.Tot.memP y g.zero_or_more /\ matches_map_group_entry y v))
+    ));
     unfold (raw_data_item_map_entry_match p c v);
     let test_fst = f_fst (cbor_map_entry_key c);
     if (test_fst) {
@@ -914,8 +915,8 @@ fn impl_matches_map_group_no_restricted
         cbor_map_iterator_match p i l **
         (cbor_map_iterator_match p i l @==> raw_data_item_match p c v) **
         pure (
-            list_ghost_forall_exists matches_map_group_entry' (Map?.v v) g.zero_or_more ==
-                (res && list_ghost_forall_exists matches_map_group_entry' l g.zero_or_more) /\
+            (list_ghost_forall_exists matches_map_group_entry' (Map?.v v) g.zero_or_more <==>
+                (res /\ list_ghost_forall_exists matches_map_group_entry' l g.zero_or_more)) /\
             opt_precedes l (Ghost.reveal b) /\
             cont == (res && Cons? l)
         )

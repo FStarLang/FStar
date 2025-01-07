@@ -140,6 +140,9 @@ val sub_invs_stt_atomic
     (_ : squash (inames_subset opens1 opens2))
 : stt_atomic a #obs opens2 pre post
 
+let as_ghost_post #t (post: t->slprop) : erased t -> slprop =
+  fun x -> post (reveal x)
+
 (* stt_ghost a opens pre post: The type of a pulse computation
    that when run in a state satisfying `pre`
    takes a single ghost atomic step (i.e. a step that does not modify the heap, and does not get extracted)
@@ -153,6 +156,34 @@ val stt_ghost
     (pre:slprop)
     (post:a -> slprop)
 : Type u#(max 4 a)
+
+type non_informative_witness (a:Type u#a) =
+  x:Ghost.erased a -> y:a{y == Ghost.reveal x}
+
+val lift_ghost_neutral'
+    (#a:Type u#a)
+    (#opens:inames)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (e:stt_ghost a opens pre post)
+: stt_atomic (erased a) #Neutral opens pre (as_ghost_post post)
+
+val lift_ghost_neutral
+    (#a:Type u#a)
+    (#opens:inames)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (e:stt_ghost a opens pre post)
+    (reveal_a:non_informative_witness a)
+: stt_atomic a #Neutral opens pre post
+
+val lift_neutral_ghost
+    (#a:Type u#a)
+    (#opens:inames)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (e:stt_atomic a #Neutral opens pre post)
+: stt_ghost a opens pre post
 
 val return_ghost
     (#a:Type u#a)
@@ -176,26 +207,6 @@ val bind_ghost
     (e1:stt_ghost a opens pre1 post1)
     (e2:(x:a -> stt_ghost b opens (post1 x) post2))
 : stt_ghost b opens pre1 post2
-
-type non_informative_witness (a:Type u#a) =
-  x:Ghost.erased a -> y:a{y == Ghost.reveal x}
-
-val lift_ghost_neutral
-    (#a:Type u#a)
-    (#opens:inames)
-    (#pre:slprop)
-    (#post:a -> slprop)
-    (e:stt_ghost a opens pre post)
-    (reveal_a:non_informative_witness a)
-: stt_atomic a #Neutral opens pre post
-
-val lift_neutral_ghost
-    (#a:Type u#a)
-    (#opens:inames)
-    (#pre:slprop)
-    (#post:a -> slprop)
-    (e:stt_atomic a #Neutral opens pre post)
-: stt_ghost a opens pre post
 
 val frame_ghost
     (#a:Type u#a)
