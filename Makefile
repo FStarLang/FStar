@@ -240,13 +240,29 @@ stage3-diff: stage3-bare _force
 	@# No output expected the gitignore line
 	diff -r stage2/fstarc.ml stage3/fstarc.ml
 
-$(INSTALLED_FSTAR1_FULL_EXE): 1.full 1.alib.src 1.plib.src
-	$(call bold_msg, "INSTALL", "STAGE 1")
-	$(MAKE) -C stage1 install FSTAR_LINK_LIBDIRS=1
+ifeq ($(shell uname),Linux)
+LINK_OK=1
+else
+LINK_OK=0
+endif
 
-$(INSTALLED_FSTAR2_FULL_EXE): 2.full 2.alib.src 2.plib.src
+stage1-components: 1.full 1.alib.src 1.plib.src
+__install-stage1:
+	$(call bold_msg, "INSTALL", "STAGE 1")
+	$(MAKE) -C stage1 install
+
+$(INSTALLED_FSTAR1_FULL_EXE): export FSTAR_LINK_LIBDIRS=$(LINK_OK)
+$(INSTALLED_FSTAR1_FULL_EXE): stage1-components
+	$(MAKE) __install-stage1
+
+stage2-components: 2.full 2.alib.src 2.plib.src
+__install-stage2:
 	$(call bold_msg, "INSTALL", "STAGE 2")
-	$(MAKE) -C stage2 install FSTAR_DUNE_RELEASE=1 FSTAR_LINK_LIBDIRS=1
+	$(MAKE) -C stage2 install FSTAR_DUNE_RELEASE=1
+
+$(INSTALLED_FSTAR2_FULL_EXE): export FSTAR_LINK_LIBDIRS=$(LINK_OK)
+$(INSTALLED_FSTAR2_FULL_EXE): stage2-components
+	$(MAKE) __install-stage2
 
 setlink-%:
 	if [ -e out ] && ! [ -h out ]; then echo "ERROR: out/ exists and is not a symbolic link, please remove it"; false; fi
@@ -266,80 +282,70 @@ stage2: $(INSTALLED_FSTAR2_FULL_EXE)
 
 3: stage3-diff
 
-do-install: _force
-	$(call bold_msg, "INSTALL", $(PREFIX))
-	$(MAKE) -C $(BROOT) install PREFIX=$(abspath $(PREFIX))
-
-install: 2
 install: BROOT=stage2
 install: export PREFIX?=/usr/local
-install: do-install
-
-do-src-install: _force
-	$(call bold_msg, "SRC INSTALL", $(PREFIX))
-	# Install OCaml sources only
-	.scripts/src-install.sh "$(BROOT)" "$(PREFIX)"
+install: export FSTAR_LINK_LIBDIRS=0 # default is false, but set anyway
+install: stage2-components
+	$(MAKE) __install-stage2
 
 __do-archive: _force
-	rm -rf $(PREFIX)
+	rm -rf $(PKGTMP)
 	# add an 'fstar' top-level directory to the archive
-	$(MAKE) do-install PREFIX=$(PREFIX)/fstar
+	$(MAKE) $(INSTALL_RULE) PREFIX=$(abspath $(PKGTMP)/fstar)
 ifneq ($(FSTAR_PACKAGE_Z3),false)
-	.scripts/package_z3.sh $(PREFIX)/fstar/
+	.scripts/package_z3.sh $(PKGTMP)/fstar/
 endif
 	@# License and extra files. Not there on normal installs, but present
 	@# in package.
-	cp LICENSE* $(PREFIX)/fstar/
-	cp README.md $(PREFIX)/fstar/
-	cp INSTALL.md $(PREFIX)/fstar/
-	cp version.txt $(PREFIX)/fstar/
+	cp LICENSE* $(PKGTMP)/fstar/
+	cp README.md $(PKGTMP)/fstar/
+	cp INSTALL.md $(PKGTMP)/fstar/
+	cp version.txt $(PKGTMP)/fstar/
 	$(call bold_msg, "PACKAGE", $(ARCHIVE))
-	.scripts/mk-package.sh "$(PREFIX)" "$(ARCHIVE)"
-	# tar czf $(ARCHIVE) -h -C $(PREFIX) --exclude='lib/**/*.fst.config.json' .
-	rm -rf $(PREFIX)
+	.scripts/mk-package.sh "$(PKGTMP)" "$(ARCHIVE)"
+	# tar czf $(ARCHIVE) -h -C $(PKGTMP) --exclude='lib/**/*.fst.config.json' .
+	rm -rf $(PKGTMP)
 
 __do-src-archive: _force
-	rm -rf $(PREFIX) # change the name, this is safe (its overriden) but scary
-	$(MAKE) do-src-install PREFIX=$(PREFIX)/fstar
+	rm -rf $(PKGTMP) # change the name, this is safe (its overriden) but scary
 	$(call bold_msg, "SRC PACKAGE", $(ARCHIVE))
-	.scripts/mk-package.sh "$(PREFIX)" "$(ARCHIVE)"
-	rm -rf $(PREFIX)
+	.scripts/src-install.sh "$(BROOT)" "$(PKGTMP)/fstar"
+	.scripts/mk-package.sh "$(PKGTMP)" "$(ARCHIVE)"
+	rm -rf $(PKGTMP)
 
 # We append the version to the package names, unless
 # FSTAR_TAG is set (possibly empty)
 FSTAR_TAG ?= -v$(shell cat version.txt)
 
-package-1: $(INSTALLED_FSTAR1_FULL_EXE) _force
+package-1: stage1-components _force
 	env \
-	  PREFIX=_pak1 \
+	  PKGTMP=_pak1 \
 	  BROOT=stage1/ \
 	  ARCHIVE=fstar$(FSTAR_TAG)-stage1 \
+	  INSTALL_RULE=__install-stage1 \
 	  $(MAKE) __do-archive
 
-package-2: $(INSTALLED_FSTAR2_FULL_EXE) _force
+package-2: stage2-components _force
 	env \
-	  PREFIX=_pak2 \
+	  PKGTMP=_pak2 \
 	  BROOT=stage2/ \
-	  FSTAR_DUNE_RELEASE=1 \
 	  ARCHIVE=fstar$(FSTAR_TAG) \
+	  INSTALL_RULE=__install-stage2 \
 	  $(MAKE) __do-archive
-	# ^pass FSTAR_DUNE_RELEASE since this may trigger a rebuild
 
-package-src-1: $(FSTAR1_FULL_EXE).src 1.alib.src 1.plib.src _force
+package-src-1: stage1-components _force
 	env \
-	  PREFIX=_srcpak1 \
+	  PKGTMP=_srcpak1 \
 	  BROOT=stage1/ \
 	  ARCHIVE=fstar$(FSTAR_TAG)-stage1-src \
 	  $(MAKE) __do-src-archive
 
-package-src-2: $(FSTAR2_FULL_EXE).src 2.alib.src 2.plib.src _force
+package-src-2: stage2-components _force
 	env \
-	  PREFIX=_srcpak2 \
+	  PKGTMP=_srcpak2 \
 	  BROOT=stage2/ \
-	  FSTAR_DUNE_RELEASE=1 \
 	  ARCHIVE=fstar$(FSTAR_TAG)-src \
 	  $(MAKE) __do-src-archive
-	# ^pass FSTAR_DUNE_RELEASE since this may trigger a rebuild
 
 package: package-2
 package-src: package-src-2

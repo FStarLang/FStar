@@ -35,7 +35,9 @@ clean: _force
 
 # In a local build, we prefer to symlink the library and checked file
 # directories to get better IDE integration, but of course we cannot do
-# that on actual install, and must copy all files.
+# that on actual install, and must copy all files. Note: this flag is
+# also only set by the parent Makefile on Lonux, since Mac's ln does not
+# support the same options.
 ifeq ($(FSTAR_LINK_LIBDIRS),1)
 INSTALL_DIR := ln -Tsrf
 else
@@ -46,11 +48,15 @@ endif
 # local installs so VS Code can properly jump between these files,
 # and we also avoid unnecessary copies. When building packages, we use
 # tar's -h to follow and eliminate all these links.
-install: PREFIX ?= ./out
+install: PREFIX ?= $(CURDIR)/out
 install: fstarc-bare fstarc-full libapp libplugin
+	@# We check for absolute so there's no confusion between the makefiles
+	@# that call each other. Do NOT just use $(abspath ..) here. Also not use
+	@# bashisms or 'expr' (does not work in macos)
+	if ! echo '$(PREFIX)' | grep -q '^/' ; then echo "PREFIX (= $(PREFIX)) must be absolute">&2; false; fi
 	@# Seems to need one final build?
 	cd dune && dune build $(FSTAR_DUNE_BUILD_OPTIONS)
-	cd dune && dune install $(FSTAR_DUNE_OPTIONS) --prefix=$(abspath $(PREFIX))
+	cd dune && dune install $(FSTAR_DUNE_OPTIONS) --prefix=$(PREFIX)
 	@# Install library and its checked files
 	$(INSTALL_DIR) ulib $(PREFIX)/lib/fstar/ulib
 	$(INSTALL_DIR) ulib.checked $(PREFIX)/lib/fstar/ulib.checked
@@ -62,3 +68,9 @@ install: fstarc-bare fstarc-full libapp libplugin
 	$(INSTALL_DIR) fstarc.checked    $(PREFIX)/lib/fstar/fstarc/src.checked
 	echo 'src'          > $(PREFIX)/lib/fstar/fstarc/fstar.include
 	echo 'src.checked' >> $(PREFIX)/lib/fstar/fstarc/fstar.include
+	@# If we're not linking, remove the VS code configs, they have paths
+	@# into the repo.
+ifneq ($(FSTAR_LINK_LIBDIRS),1)
+	rm -f $(PREFIX)/lib/fstar/ulib/*.fst.config.json
+	rm -f $(PREFIX)/lib/fstar/fstarc/src/*.fst.config.json
+endif

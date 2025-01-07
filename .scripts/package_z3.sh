@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PREFIX="$(realpath "$1")"
+PREFIX="$(realpath -m "$1")" # -m: leading dirs allowed to not exist
 D="$(dirname "$0")"
 
 mkdir -p "$PREFIX"/lib/fstar
