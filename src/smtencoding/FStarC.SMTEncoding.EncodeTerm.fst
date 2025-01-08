@@ -697,9 +697,6 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_type u ->
         mk_Term_type (encode_universe u), []
 
-      | Tm_fvar _ ->
-        encode_term (S.mk (Tm_uinst(t, [])) t.pos) env
-
       | Tm_uinst({n=Tm_fvar fv}, _)
         when S.fv_eq_lid fv Const.lex_t_lid ->         
         //lex_t is primitive        
@@ -710,7 +707,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         //lex top is primitive
         mk_LexTop, []
 
-      | Tm_uinst({n=Tm_fvar v}, us) ->
+      | Tm_fvar v
+      | Tm_uinst({n=Tm_fvar v}, _) ->
+        let us = 
+          match t.n with
+          | Tm_fvar _ -> []
+          | Tm_uinst(_, us) -> us
+        in
         let encode_freev () =
           let us = List.map encode_universe us in
           let fvb = lookup_free_var_name env v.fv_name in
