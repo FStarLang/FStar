@@ -4031,7 +4031,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
           c1 |> U.comp_effect_name |> Env.norm_eff_name env,
           c2 |> U.comp_effect_name |> Env.norm_eff_name env in
 
-        if not (Ident.lid_equals eff1 eff2) then
+        if not (Options.ml_ish () || Ident.lid_equals eff1 eff2) then
           giveup wl (Thunk.mk fun _ -> "computation type mismatch in arrow: " ^ string_of_lid eff1 ^ " vs " ^ string_of_lid eff2) orig
 
         else
