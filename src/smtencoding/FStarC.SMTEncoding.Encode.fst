@@ -1206,6 +1206,8 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
         List.fold_left
           (fun (out, decls) l ->
             let is_l = mk_data_tester env l xx in
+            let univ_eqs = List.mapi (fun i u -> mkEq(mkFreeV u, mkApp(mk_univ_projector_name l i, [xx]))) univ_vars in
+            let base_eqs = is_l::univ_eqs in
             let inversion_case, decls' =
               if injective_type_params
               || Options.Ext.get "compat:injectivity" <> ""
@@ -1220,10 +1222,9 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
                 if List.length params_and_indices <> List.length vars
                 then failwith "Impossible";
                 let eqs = List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars params_and_indices in
-                let univ_eqs = List.mapi (fun i u -> mkEq(mkFreeV u, mkApp(mk_univ_projector_name l i, [xx]))) univ_vars in
-                mkAnd(is_l, mk_and_l (univ_eqs@eqs)), decls'
+                mk_and_l (base_eqs@eqs), decls'
               )
-              else is_l, []
+              else mk_and_l base_eqs, []
             in
             mkOr(out, inversion_case), decls@decls')
           (mkFalse, [])
