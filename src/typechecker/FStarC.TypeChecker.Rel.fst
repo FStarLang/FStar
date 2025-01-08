@@ -4026,6 +4026,16 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
         solve_one_universe_eq orig u1 u2 wl
 
       | Tm_arrow {bs=bs1; comp=c1}, Tm_arrow {bs=bs2; comp=c2} ->
+        let eff1, eff2 =
+          let env = p_env wl orig in
+          c1 |> U.comp_effect_name |> Env.norm_eff_name env,
+          c2 |> U.comp_effect_name |> Env.norm_eff_name env in
+
+        if not (Ident.lid_equals eff1 eff2) then
+          giveup wl (Thunk.mk fun _ -> "computation type mismatch in arrow: " ^ string_of_lid eff1 ^ " vs " ^ string_of_lid eff2) orig
+
+        else
+
         let mk_c c = function
             | [] -> c
             | bs -> mk_Total(mk (Tm_arrow {bs; comp=c}) c.pos) in
