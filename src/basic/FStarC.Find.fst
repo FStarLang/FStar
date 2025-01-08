@@ -59,16 +59,17 @@ let lib_root () : option string =
     match Util.expand_environment_variable "FSTAR_LIB" with
     | Some s -> Some s
     | None ->
-      (* Otherwise, try to find the library in the default locations. It's ulib/
-      in the repository, and lib/fstar/ in the binary package. *)
-      if Util.file_exists (fstar_bin_directory ^ "/../ulib")
-      then Some (fstar_bin_directory ^ "/../ulib")
-      else if Util.file_exists (fstar_bin_directory ^ "/../lib/fstar")
-      then Some (fstar_bin_directory ^ "/../lib/fstar")
-      else None
+      (* Otherwise, just at the default location *)
+      Some (fstar_bin_directory ^ "/../lib/fstar")
+
+let fstarc_paths () =
+  if Options.with_fstarc ()
+  then expand_include_d (fstar_bin_directory ^ "/../lib/fstar/fstarc")
+  else []
 
 let lib_paths () =
-  Common.option_to_list (lib_root ()) |> expand_include_ds
+  (Common.option_to_list (lib_root ()) |> expand_include_ds)
+  @ fstarc_paths ()
 
 let include_path () =
   let cache_dir =

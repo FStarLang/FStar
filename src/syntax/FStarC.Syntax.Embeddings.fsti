@@ -44,7 +44,7 @@ instance val e_string      : embedding string
 instance val e_real        : embedding Compiler.Real.real
 instance val e_norm_step   : embedding Pervasives.norm_step
 instance val e_vconfig     : embedding FStarC.VConfig.vconfig
-instance val e_order       : embedding FStar.Order.order
+instance val e_order       : embedding FStarC.Compiler.Order.order
 
 instance val e_option      : embedding 'a -> Tot (embedding (option 'a))
 instance val e_list        : embedding 'a -> Tot (embedding (list 'a))

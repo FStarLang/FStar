@@ -15,18 +15,20 @@
 *)
 module FStarC.Reflection.V1.Builtins
 
-open FStarC.Ident
-open FStarC.Syntax.Syntax
-open FStarC.Syntax.Embeddings
-open FStar.Order
-module Env = FStarC.TypeChecker.Env
-open FStarC.Reflection.V1.Data
+open FStarC.Compiler
 open FStarC.Compiler.Effect
+open FStarC.Compiler.Order
+open FStarC.Reflection.V1.Data
+open FStarC.Syntax.Embeddings
+open FStarC.Syntax.Syntax
+open FStarC.VConfig
+open FStarC.Ident
+
+module EMB = FStarC.Syntax.Embeddings
+module Env = FStarC.TypeChecker.Env
 module O   = FStarC.Options
 module RD  = FStarC.Reflection.V1.Data
-module EMB = FStarC.Syntax.Embeddings
 module Z   = FStarC.BigInt
-open FStarC.VConfig
 
 (* Primitives *)
 val compare_bv            : bv -> bv -> order

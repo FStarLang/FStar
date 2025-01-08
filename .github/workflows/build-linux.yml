@@ -1,0 +1,58 @@
+name: Build F* (Linux)
+
+# This builds F* for Linux for a binary package release.
+# See build.yml for the build used in normal CI runs.
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    # We prefer slightly older Ubuntu so we get binaries that work on
+    # all more recent versions.
+    steps:
+      - uses: actions/checkout@master
+
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 4.14.2
+
+      - name: Prepare
+        run: |
+          ./.scripts/get_fstar_z3.sh $HOME/bin
+          echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
+          opam install --deps-only ./fstar.opam
+
+      - name: Set version
+        run: |
+          # Setting FSTAR_VERSION for nightly and release builds. If unset,
+          # we use $(version.txt)~dev. Setting it avoids the ~dev.
+          if [[ "${{github.workflow_ref}}" =~ "nightly.yml" ]]; then
+            echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV
+          elif [[ "${{github.workflow_ref}}" =~ "release.yml" ]]; then
+            echo FSTAR_VERSION="$(cat version.txt)" >> $GITHUB_ENV
+          fi
+
+      # NB: release workflow later adds version number to the name
+      - name: Build packages
+        run: |
+          eval $(opam env)
+          KERNEL=$(uname -s)
+          ARCH=$(uname -m)
+          make -skj$(nproc) package     FSTAR_TAG=-$KERNEL-$ARCH
+          make -skj$(nproc) package-src FSTAR_TAG=
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: fstar-Linux-*
+          name: package-linux
+      - uses: actions/upload-artifact@v4
+        with:
+          path: fstar-src.tar.gz
+          name: package-src

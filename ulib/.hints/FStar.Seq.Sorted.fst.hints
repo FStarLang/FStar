@@ -30,7 +30,7 @@
         "typing_FStar.Seq.Properties.tail"
       ],
       0,
-      "1c1280194f1f7f094470f801040759d7"
+      "b6c45d127477e9a0c9f25ffbd9923e86"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_sorted_lemma",
@@ -63,7 +63,7 @@
         "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "ebe0f8d83a580804f0b38a46f76131fc"
+      "e63cef6bf40781dac92e14b496442915"
     ],
     [
       "FStar.Seq.Sorted.intro_sorted_pred",
@@ -72,7 +72,7 @@
       1,
       [ "@query", "equation_FStar.Seq.Sorted.sorted_pred" ],
       0,
-      "0bb5b26215cf73c7f90151ea9324cd20"
+      "814294c1974b80d6418d8dd753172c97"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_cons_lemma",
@@ -84,7 +84,7 @@
         "refinement_interpretation_Tm_refine_db53fa9c4814b0d5bbe0b7987448300c"
       ],
       0,
-      "bed9e1cef29b436f74dd1f70f2d589f4"
+      "dc51c610d9dc75bb97f0716728024d0c"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_cons_lemma",
@@ -109,7 +109,6 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_167ef714932ec832fb671890fc3eee6c",
         "refinement_interpretation_Tm_refine_35a0739c434508f48d0bb1d5cd5df9e8",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
@@ -120,10 +119,10 @@
         "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55",
         "refinement_interpretation_Tm_refine_db53fa9c4814b0d5bbe0b7987448300c",
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
-        "typing_FStar.Seq.Properties.tail", "unit_inversion", "unit_typing"
+        "unit_inversion", "unit_typing"
       ],
       0,
-      "8fde21fe6bea9ee873deb1a291f81a69"
+      "de73f4792a450847029d312c624960ec"
     ],
     [
       "FStar.Seq.Sorted.sorted_sorted_pred_lemma",
@@ -162,7 +161,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "260637dc186dddbfe7c66c676fa5856d"
+      "8231f64f75edec28fdb34559be131f8c"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_slice_lemma",
@@ -181,7 +180,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "c45256afb01e43b43d6409b205374dbb"
+      "43b4c2729752b741d068fe08b3cfdb42"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_slice_lemma",
@@ -207,7 +206,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "c70abe08ed4f77315def526bc8038167"
+      "7aa25dc2848a4243a591a8ae98150b0b"
     ],
     [
       "FStar.Seq.Sorted.sorted_slice_lemma",
@@ -226,7 +225,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "1733fd3ed881584b9ea5f27107321f1c"
+      "20917ccfbb7e1208056431f7d493c3d8"
     ],
     [
       "FStar.Seq.Sorted.sorted_slice_lemma",
@@ -245,7 +244,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "145ab00428198c8a1ddf1d45d90e0995"
+      "c769469b9c81c9cbc59a9b79aae39614"
     ],
     [
       "FStar.Seq.Sorted.sorted_split_lemma",
@@ -258,7 +257,7 @@
         "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55"
       ],
       0,
-      "2d12a285958dc23e49226b5a038c9704"
+      "52ffd39951c2dd05603769e95e400003"
     ],
     [
       "FStar.Seq.Sorted.sorted_split_lemma",
@@ -276,7 +275,7 @@
         "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55"
       ],
       0,
-      "e99bfa83c6ad050602db54ef1ee6e434"
+      "8c5ea656618ef1cc84b8497b166c7358"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_append_lemma",
@@ -285,7 +284,7 @@
       1,
       [ "@query" ],
       0,
-      "40ddf9f0d8dd0a982403b437b1f70954"
+      "009a3a3bcf6ee8da4cb9c767162de9c1"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_append_lemma",
@@ -320,7 +319,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "23af68b429ed4f5d0fe75ab86a150d57"
+      "f379e0105927329da981089a7d683a11"
     ]
   ]
 ]

@@ -26,6 +26,7 @@ type codegen_t =
   | FSharp
   | Krml
   | Plugin
+  | PluginNoLib
   | Extension
 
 //let __test_norm_all = Util.mk_ref false
@@ -261,6 +262,7 @@ val use_nbe                     : unit    -> bool
 val use_nbe_for_extraction      : unit    -> bool
 val trivial_pre_for_unannotated_effectful_fns
                                 : unit    -> bool
+val with_fstarc                 : unit    -> bool
 
 (* List of enabled debug toggles. *)
 val debug_keys                  : unit    -> list string

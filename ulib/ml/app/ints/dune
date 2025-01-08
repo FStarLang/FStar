@@ -1,0 +1,41 @@
+
+; This one is special and hand-written... sigh
+; (rule
+;   (target FStar_UInt8.ml)
+;   (deps (:script mk_int_file.sh) (:body FStar_Ints.ml.body))
+;   (action (with-stdout-to %{target} (run ./mk_int_file.sh U 8))))
+
+(rule
+  (target FStar_UInt16.ml)
+  (deps (:script mk_int_file.sh) (:body FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run ./mk_int_file.sh U 16))))
+
+(rule
+  (target FStar_UInt32.ml)
+  (deps (:script mk_int_file.sh) (:body FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run ./mk_int_file.sh U 32))))
+
+(rule
+  (target FStar_UInt64.ml)
+  (deps (:script mk_int_file.sh) (:body FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run ./mk_int_file.sh U 64))))
+
+(rule
+  (target FStar_Int8.ml)
+  (deps (:script mk_int_file.sh) (:body FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run ./mk_int_file.sh S 8))))
+
+(rule
+  (target FStar_Int16.ml)
+  (deps (:script mk_int_file.sh) (:body FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run ./mk_int_file.sh S 16))))
+
+(rule
+  (target FStar_Int32.ml)
+  (deps (:script mk_int_file.sh) (:body FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run ./mk_int_file.sh S 32))))
+
+(rule
+  (target FStar_Int64.ml)
+  (deps (:script mk_int_file.sh) (:body FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run ./mk_int_file.sh S 64))))

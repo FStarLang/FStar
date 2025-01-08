@@ -31,7 +31,7 @@
         "typing_FStar.OrdSet.size", "well-founded-ordering-on-nat"
       ],
       0,
-      "656c7bfe43c548cebbb4c88e746a71b8"
+      "f4b4b350cb34f48dfec28b992c3c98f2"
     ],
     [
       "FStar.OrdSetProps.union_lemma",
@@ -55,6 +55,7 @@
         "equation_Prims.nat",
         "equation_with_fuel_FStar.OrdSetProps.fold.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "int_inversion",
         "interpretation_Tm_abs_9eab8d03da31f5c9aab997821ea71ae4",
         "lemma_FStar.OrdSet.choose_s", "lemma_FStar.OrdSet.eq_remove",
         "lemma_FStar.OrdSet.hasEq_ordset",
@@ -80,7 +81,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8072dfa05eccf42a2e9e8db3839b5fe6"
+      "ef96e63e0ab36fa2043dd3bafb46f548"
     ],
     [
       "FStar.OrdSetProps.union_lemma'",
@@ -89,7 +90,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "70732f20cf9e1886449d5f770a682095"
+      "af55b8ae46cab2b86f108e7577811ffd"
     ],
     [
       "FStar.OrdSetProps.union_lemma'",
@@ -98,7 +99,7 @@
       1,
       [ "@query", "equation_FStar.OrdSet.equal" ],
       0,
-      "bb78990ad7ff3666f2956be44f351045"
+      "57139eb766c879d3fae51b6ad7e21364"
     ]
   ]
 ]

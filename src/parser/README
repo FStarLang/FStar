@@ -2,14 +2,14 @@ Parser
 ------
 
 The parser is implemented as a menhir grammar in
-FSTAR_HOME/ocaml/fstar-lib/FStar_Parser_Parse.mly
+/src/ml/bare/FStarC_Parser_Parse.mly
 
 To call into the parser from F*, we have a wrapper written in OCaml
 with an F* interface:
 
 * FStarC.Parser.ParseIt.fsti: This is the F* interface
 
-* FSTAR_HOME/ocaml/fstar-lib/FStar_Parser_ParseIt.ml: This is its
+* src/ml/bare/FStar_Parser_ParseIt.ml: This is its
   implementation
 
 It provides an API that allows parsing and entire file, a fragment of
@@ -21,22 +21,22 @@ Lexer
 -----
 
 The lexer is written using sedlex in
-FSTAR_HOME/ocaml/fstar-lib/FStar_Parser_LexFStar.ml.
+src/ml/bare/FStarC_Parser_LexFStar.ml.
 
 It uses a small wrapper for the OCaml Lexing module implemeted in
-FSTAR_HOME/ocaml/fstar-lib/FStar_SedLexing.ml
+src/ml/bare/FStarC_SedLexing.ml
 
 
 If you want to modify the parser, you need a recent version of menhir
 (at least december 2016). Also the printer in
-[src/parser/FStarC.Parser.ToDocument.fs] should be kept up to date with
+[src/parser/FStarC.Parser.ToDocument.fst] should be kept up to date with
 the parser as much as possible since it tries to keep the same general
 structure as the parser.
 
 If you're adding a new token, you need to edit:
 
-- [src/parser/ml/FStar_Parser_LexFStar.ml] to add it to the parser
+- [src/ml/bare/FStarC_Parser_LexFStar.ml] to add it to the parser
   keyword table (OCaml)
 
-- [FStar_Parser_Parse.mly] to expose it to the parser, possibly with
+- [src/ml/bare/FStarC_Parser_Parse.mly] to expose it to the parser, possibly with
   an adequate precedence

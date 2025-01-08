@@ -1,4 +1,6 @@
-FSTAR_EXE ?= ../../bin/fstar.exe
+# In this repository, we inherit this variable. Externally we
+# just take fstar.exe from the PATH.
+FSTAR_EXE ?= fstar.exe
 
 .PHONY: all
 all: run
