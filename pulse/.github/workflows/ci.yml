@@ -4,6 +4,7 @@ on:
     branches-ignore:
     - _**
   pull_request:
+  merge_group:
   workflow_dispatch:
 
 defaults:
