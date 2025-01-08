@@ -25,8 +25,8 @@ jobs:
         id: checkout-fstar
         with:
           path: FStar
-          repository: mtzguido/FStar
-          ref: dev
+          repository: FStarLang/FStar
+          ref: master
 
       - name: Try fetch built F*
         id: cache-fstar
