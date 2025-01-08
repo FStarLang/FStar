@@ -22,3 +22,10 @@ jobs:
   nix-build:
     name: nix
     uses: ./.github/workflows/nix.yml
+
+  # Branch protection points here
+  ciok:
+    runs-on: ubuntu-latest
+    needs: [build, tests, nix-build]
+    steps:
+      - run: exit 0
