@@ -318,6 +318,7 @@ let logor_disjoint #n a b m =
   small_modulo_lemma_1 b (pow2 m);
   assert (from_vec #m (slice (to_vec b) (n - m) n) == b)
 
+#push-options "--z3rlimit_factor 2"
 let logand_mask #n a m =
   pow2_lt_compat n m;
   Seq.lemma_split (logand_vec (to_vec a) (to_vec (pow2 m - 1))) (n - m);
@@ -336,6 +337,7 @@ let logand_mask #n a m =
   assert (from_vec #(n - m) (zero_vec #(n - m)) == 0);
   slice_right_lemma #n (to_vec a) m;
   assert (from_vec #m (slice (to_vec a) (n - m) n) == a % pow2 m)
+#pop-options
 
 let shift_left_lemma_1 #n a s i = ()
 
