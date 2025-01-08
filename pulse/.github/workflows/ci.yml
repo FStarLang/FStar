@@ -87,6 +87,7 @@ jobs:
         run: . $HOME/.cargo/env && make -C pulse ci -skj$(nproc)
 
       - name: Calculate Time
+        if: ${{ always () }}
         id: duration
         uses: RockyIsHere/actions-calculate-log-time@v0.2.4
         env:
