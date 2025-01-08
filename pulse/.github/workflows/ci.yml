@@ -62,7 +62,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: karamel
-          key: karamel-${{ runner.os }}-${{ runner.arch }}-${{ steps.checkout-karamel.outputs.commit }}
+          key: karamel-${{ runner.os }}-${{ runner.arch }}-${{ steps.checkout-fstar.outputs.commit }}-${{ steps.checkout-karamel.outputs.commit }}
 
       - name: Build karamel (if not cached)
         if: steps.cache-karamel.outputs.cache-hit != 'true'
@@ -74,7 +74,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: karamel
-          key: karamel-${{ runner.os }}-${{ runner.arch }}-${{ steps.checkout-karamel.outputs.commit }}
+          key: karamel-${{ runner.os }}-${{ runner.arch }}-${{ steps.checkout-fstar.outputs.commit }}-${{ steps.checkout-karamel.outputs.commit }}
 
       - run: echo "KRML_HOME=$(pwd)/karamel" | sudo tee -a $GITHUB_ENV
 
@@ -87,6 +87,7 @@ jobs:
         run: . $HOME/.cargo/env && make -C pulse ci -skj$(nproc)
 
       - name: Calculate Time
+        if: ${{ always () }}
         id: duration
         uses: RockyIsHere/actions-calculate-log-time@v0.2.4
         env:
