@@ -5,6 +5,7 @@ Warning: 8 shift/reduce conflicts were arbitrarily resolved.
 Warning: 221 end-of-stream conflicts were arbitrarily resolved.
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
+open Fstarcompiler
 open Prims
 open FStar_Pervasives
 open FStarC_Errors

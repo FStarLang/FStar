@@ -3,7 +3,7 @@
  (name pulse)
  (public_name pulse)
  (libraries
-    fstar.lib
+    fstar.pluginlib
  )
  ; Consider using private modules here? If all we want to provide is the
  ; plugin, there's no need to provide cmi/cmt/cmx for every internal

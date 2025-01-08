@@ -1,18 +1,7 @@
 # common.mk must be included before this file.
 
-ifeq ($(FSTAR_HOME),)
-$(error Pulse needs an FSTAR_HOME)
-endif
-
-ifeq ($(FSTAR_EXE),)
-ifneq ($(FSTAR_HOME),)
-FSTAR_EXE := $(FSTAR_HOME)/bin/fstar.exe
-endif
-endif
-
-FSTAR_EXE ?= $(shell which fstar.exe)
-FSTAR_EXE := $(FSTAR_EXE)
-export FSTAR_EXE
+FSTAR_EXE ?= fstar.exe
+$(call need_exe, FSTAR_EXE)
 
 ifeq ($(KRML_EXE),)
 ifneq ($(KRML_HOME),)
@@ -22,9 +11,6 @@ KRML_EXE := krml
 endif
 endif
 
-$(call need_exe, FSTAR_EXE)
-
-export FSTAR_HOME
 export KRML_EXE
 
 PULSE_ROOT := $(abspath $(PULSE_ROOT))

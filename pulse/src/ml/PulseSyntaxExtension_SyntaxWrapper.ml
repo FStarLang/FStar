@@ -1,3 +1,4 @@
+open Fstarcompiler
 open Prims
 open FStarC_Ident
 open Pulse_Syntax_Base
@@ -247,7 +248,7 @@ let comp_to_string (env:Env.env) (t:comp)
 let close_binders bs xs = Pulse_Syntax_Naming.close_binders bs xs
 let bvs_as_subst bvs =
   List.fold_left
-    (fun s b -> FStar_Reflection_Typing.ND (b, Z.of_int 0)::(Pulse_Syntax_Naming.shift_subst s))
+    (fun s b -> Fstar_pluginlib.FStar_Reflection_Typing.ND (b, Z.of_int 0)::(Pulse_Syntax_Naming.shift_subst s))
     [] bvs
 let subst_term s t = Pulse_Syntax_Naming.subst_term t s
 let subst_st_term s t = Pulse_Syntax_Naming.subst_st_term t s

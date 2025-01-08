@@ -24,9 +24,8 @@ For documentation on how to use Pulse, see https://fstar-lang.org/tutorial/book/
 
 1. Make sure `fstar.exe` is in your `PATH`. If F* was installed with
    opam, you may need to run `eval $(opam env)`. If F* is not in your
-   `PATH`, set the `FSTAR_HOME` environment variable to the directory
-   where F* was installed (or to the F* source tree), so that the F*
-   executable should be in `$FSTAR_HOME/bin/fstar.exe`.
+   `PATH`, set the `FSTAR_EXE` environment variable to the location
+   of fstar.exe.
 2. Run `make` (possibly with `-j`). This will generate a local
    installation under the `out/` subdirectory, identical to the ones
    created by the other options below.
