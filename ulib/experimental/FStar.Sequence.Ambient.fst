@@ -39,5 +39,5 @@ module FStar.Sequence.Ambient
 
 open FStar.Sequence.Base
 
-let all_seq_facts_ambient : (squash all_seq_facts) =
-  all_seq_facts_lemma ()
+let all_seq_facts_ambient : (squash (all_seq_facts u#a)) =
+  all_seq_facts_lemma u#a ()
