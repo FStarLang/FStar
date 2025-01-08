@@ -27,7 +27,7 @@
         '';
       in rec {
         packages = {
-          inherit z3 fstar emacs;
+          inherit z3 fstar emacs ocamlPackages;
           default = fstar;
         };
         apps.emacs = {
