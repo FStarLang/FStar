@@ -30,7 +30,7 @@ FSTAR = $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 # FIXME: Maintaining this list sucks. Could **the module** itself specify whether it is
 # noextract? Or maybe if we find an aptly-named .ml file then we auto skip?
 EXTRACT :=
-EXTRACT += --extract '*'
+EXTRACT += --extract ',*' # keep the comma (https://github.com/FStarLang/FStar/pull/3640)
 EXTRACT += --extract -Prims
 EXTRACT += --extract -FStar.Pervasives.Native
 EXTRACT += --extract -FStar.All

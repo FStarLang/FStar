@@ -37,7 +37,7 @@ FSTAR = $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 # noextract? Actually, the F* compiler should already know which of its modules are
 # in its library, and do this by default.
 EXTRACT :=
-EXTRACT += --extract '*'
+EXTRACT += --extract ',*' # keep the comma (https://github.com/FStarLang/FStar/pull/3640)
 EXTRACT += --extract -Prims
 EXTRACT += --extract -FStar
 EXTRACT += --extract -FStarC.Extraction.ML.PrintML # very much a special case
