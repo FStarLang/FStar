@@ -536,11 +536,11 @@ let encode_free_var uninterpreted env fv us tt t_norm quals :decls_t & env_t =
                     | _ -> false
                 in
                 // Thunk if ...
-                nsstr lid <> "Prims"  //things in prims
-                && List.length us = 0 //has universe binders
-                && not (quals |> List.contains Logic) //logic qualified terms
-                && not (is_squash t_norm) //ambient squashed properties
-                && not (is_type t_norm) // : Type terms, since ambient typing hypotheses for these are cheap
+                nsstr lid <> "Prims"  //not in prims
+                && List.length us = 0 //has no universe binders
+                && not (quals |> List.contains Logic) //not logic qualified terms
+                && not (is_squash t_norm) //not ambient squashed properties
+                && not (is_type t_norm) //not : Type terms, since ambient typing hypotheses for these are cheap
               in
               let thunked, vars =
                  match vars with
@@ -582,7 +582,8 @@ let encode_free_var uninterpreted env fv us tt t_norm quals :decls_t & env_t =
                       decls2@([tok_typing] |> mk_decls_trivial),
                       push_free_var env lid arity vname (Some <| mkApp(vname, []))
 
-                    | _ when thunked -> decls2, env
+                    | _ when thunked ->
+                      decls2, env
 
                     | _ ->
                      (* Generate a token and a function symbol;
@@ -590,7 +591,20 @@ let encode_free_var uninterpreted env fv us tt t_norm quals :decls_t & env_t =
                       let vtok = get_vtok() in
                       let vtok_decl = Term.DeclFun(vtok, univ_sorts, Term_sort, None) in
                       let name_tok_corr_formula pat =
-                          mkForall (S.range_of_fv fv) ([[pat]], univ_fvs@vars, mkEq(vtok_app, vapp))
+                          match univ_fvs with
+                          | [] ->
+                            mkForall (S.range_of_fv fv)
+                                     ([[pat]], vars, mkEq(vtok_app, vapp))
+                                     //use the patterns provided by the caller
+                          | _ ->
+                            let inner_quant =
+                              mkForall (S.range_of_fv fv)
+                                       ([[vtok_app];[vapp]], vars, mkEq(vtok_app, vapp))
+                                       //patterns for rewriting in both directions
+                                       //since it is nested within a quantifier guarded by
+                                       //a universe-application of the token
+                            in
+                            mkForall (S.range_of_fv fv) ([[vtok_tm]], univ_fvs, inner_quant)
                       in
                       //See issue #613 for the choice of patterns here
                       let name_tok_corr =
