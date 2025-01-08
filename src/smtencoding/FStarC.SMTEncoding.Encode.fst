@@ -831,7 +831,7 @@ let encode_top_level_let :
             (* TODO : clear this mess, the declaration should have a type corresponding to *)
             (* the encoded term *)
             let tok, decl, env = declare_top_level_let env (BU.right lb.lbname) us t t_norm in
-            tok::toks, t_norm::typs, decl::decls, env)
+            (tok,us)::toks, t_norm::typs, decl::decls, env)
             ([], [], [], env)
         in
         let toks_fvbs = List.rev toks in
@@ -853,10 +853,10 @@ let encode_top_level_let :
         let encode_non_rec_lbdef
                 (bindings:list letbinding)
                 (typs:list S.term)
-                (toks:list fvar_binding)
+                (toks:list (fvar_binding & S.univ_names))
                 (env:env_t) =
             match bindings, typs, toks with
-            | [{lbunivs=uvs;lbdef=e;lbname=lbn}], [t_norm], [fvb] ->
+            | [{lbunivs=uvs;lbdef=e;lbname=lbn}], [t_norm], [(fvb, _)] ->
 
                 (* Open universes *)
                 let flid = fvb.fvar_lid in
@@ -962,7 +962,7 @@ let encode_top_level_let :
 
         let encode_rec_lbdefs (bindings:list letbinding)
                               (typs:list S.term)
-                              (toks:list fvar_binding)
+                              (toks:list (fvar_binding & S.univ_names))
                               (env:env_t) =
           (* encoding recursive definitions using fuel to throttle unfoldings *)
           (* We create a new variable corresponding to the current fuel *)
@@ -970,11 +970,11 @@ let encode_top_level_let :
           let fuel_tm = mkFreeV fuel in
           let env0 = env in
           (* For each declaration, we push in the environment its fuel-guarded copy (using current fuel) *)
-          let gtoks, env = toks |> List.fold_left (fun (gtoks, env) fvb -> //(flid_fv, (f, ftok)) ->
+          let gtoks, env = toks |> List.fold_left (fun (gtoks, env) (fvb, univ_names) -> //(flid_fv, (f, ftok)) ->
             let flid = fvb.fvar_lid in
             let g = varops.new_fvar (Ident.lid_add_suffix flid "fuel_instrumented") in
             let gtok = varops.new_fvar (Ident.lid_add_suffix flid "fuel_instrumented_token") in
-            let env = push_free_var env flid fvb.smt_arity gtok (Some <| mkApp(g, [fuel_tm])) in
+            let env = push_free_var_with_univs env flid fvb.smt_arity gtok (Some <| mkApp(g, [fuel_tm])) univ_names in
             (fvb, g, gtok)::gtoks, env) ([], env)
           in
           let gtoks = List.rev gtoks in

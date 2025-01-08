@@ -171,7 +171,6 @@ type decls_elt = {
 }
 
 type decls_t = list decls_elt
-
 val fv_name : fv -> string
 val fv_sort : fv -> sort
 val fv_force : fv -> bool
@@ -339,7 +338,10 @@ val print_smt_term_list_list: list (list term) -> string
 
 val dummy_sort : sort
 
+instance val showable_fv : showable fv
 instance val showable_smt_term : Class.Show.showable term
 instance val showable_decl : showable decl
+instance val showable_decls_elt : showable decls_elt
+
 val names_of_decl (d:decl) : list string
 val decl_to_string_short (d:decl) : string

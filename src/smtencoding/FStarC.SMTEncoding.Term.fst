@@ -1223,12 +1223,20 @@ let mk_or_l l r = List.fold_right (fun p1 p2 -> mkOr(p1,p2) r) l (mkFalse r)
 let mk_haseq u t = mk_Valid (mkApp ("Prims.hasEq", [u; t]) t.rng)
 let dummy_sort = Sort "Dummy_sort"
 
+instance showable_fv : showable fv = {
+  show = fun (FV (n, _, _)) -> n
+}
+
 instance showable_smt_term = {
   show = print_smt_term;
 }
 
 instance showable_decl = {
   show = declToSmt_no_caps "";
+}
+
+instance showable_decls_elt = {
+  show = fun d -> show d.decls
 }
 
 let rec names_of_decl d =

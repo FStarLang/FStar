@@ -719,8 +719,29 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             match tok.tm, us with
             | FreeV _, _::_ -> 
               failwith "Impossible: Universe applications on nullary symbol"
+            (* This is a pretty ugly pattern match to rewrite applications of universe-polymorphic 
+               fuel-instrumented, partially applied recursive functions.
+               
+               In particular, if one writes something like
+
+               let rec length (a:Type u#a) : list a -> nat = function
+                | [] -> 0
+                | _ :: tl -> 1 + length u#a a tl
+
+               Then the "natural" arity of length is taken to be 1 rather than 2
+               And the recursive application of (length u#a a tl) is translated as
+               an over-application of length.
+
+               It appears in the environment already instrumented by fuel, but it
+               needs a universe application first. This hack here permutes that fuel
+               and universe application to the right place.
+
+               We should find a better way to do this! *)
+            | App(Var "ApplyTF", [{tm=FreeV (FV (tok, _, _))}; fuel]), us
+            | App(Var "ApplyTF", [{tm=App(Var tok, [])}; fuel]), us when Some? fvb.needs_universe_instantiations -> 
+              true, mkApp("ApplyTF", [mkApp (tok, us); fuel])
             | App(op, _::_), _::_ ->
-              failwith "Impossible: Universe applications cannot be curried"
+              failwith (BU.format1 "Impossible: Universe applications cannot be curried: head is %s" (show tok))
             | FreeV _, [] -> 
               true, tok
             | App(op, []), us ->
