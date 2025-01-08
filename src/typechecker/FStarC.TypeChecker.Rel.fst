@@ -2959,9 +2959,26 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
           bs,
           S.mk_Tm_app rhs_hd rhs_args rhs.pos
         in
+        // We need to check that `?u` and `rhs` have compatible effects
+        let compatible_effs () =
+          let env = { env with admit=true; expected_typ=None } in
+          let get_eff ty =
+            match (SS.compress ty).n with
+            | Tm_arrow {bs=bs'; comp=c'} when List.length bs' = List.length bs ->
+              Some (c' |> U.comp_effect_name |> Env.norm_eff_name env)
+            | Tm_arrow {bs=bs'; comp=c'} when List.length bs' > List.length bs ->
+              Some PC.effect_Tot_lid
+            | _ -> None in
+          let t_rhs, _ = env.typeof_well_typed_tot_or_gtot_term env rhs false in
+          let eff_rhs = get_eff t_rhs in
+          let eff_u = get_eff (U.ctx_uvar_typ ctx_u) in
+          match eff_u, eff_rhs with
+          | Some eff_u, Some eff_rhs -> lid_equals eff_u eff_rhs
+          | _ -> false
+        in
         let sol =
           match bs with
-          | [] -> rhs
+          | [] when compatible_effs () -> rhs
           | _ -> u_abs (U.ctx_uvar_typ ctx_u) (sn_binders env bs) rhs
         in
         [TERM(ctx_u, sol)]
