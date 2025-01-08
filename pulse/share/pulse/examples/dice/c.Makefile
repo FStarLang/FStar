@@ -35,9 +35,16 @@ test: extract
 	cp $(CURDIR)/external/c/hacl/* $(OUTPUT_DIR)
 	+$(MAKE) -C $(OUTPUT_DIR) -f Makefile.basic Pulse_Lib_SpinLock.o DPE.o HACL.o
 ifneq (,$(HACL_HOME))
+ifneq (,$(wildcard $(HACL_HOME)/dist/gcc-compatible/Makefile.basic))
+	# ^ This makefile is removed routinely by the everest script (unsure why)
+	# and having it missing would make all this fail mysteriously. Skip
+	# this chunk if it's missing and add a warning.
 	+$(MAKE) -C $(OUTPUT_DIR) -f Makefile.basic clean
 	+$(MAKE) -C $(HACL_HOME)/dist/gcc-compatible Makefile.config
 	+$(MAKE) -C $(OUTPUT_DIR) -f Makefile.basic USER_CFLAGS='-I $(HACL_HOME)/dist/gcc-compatible -mavx' Pulse_Lib_SpinLock.o DPE.o HACL.o
 	+$(MAKE) -C $(OUTPUT_DIR) -f Makefile.basic clean
 	+$(MAKE) -C $(OUTPUT_DIR) -f Makefile.basic USER_CFLAGS='-I $(HACL_HOME)/dist/gcc-compatible -mavx -mavx2' Pulse_Lib_SpinLock.o DPE.o HACL.o
+else
+	$(warning WARNING: skipping HACL tests even if HACL_HOME is set since state looks dirty)
+endif
 endif
