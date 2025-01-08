@@ -8,6 +8,7 @@
 /_srcpak*
 _build
 # ^ build output
+/nightly
 /bin/fstar.exe
 /bin/get_fstar_z3.sh
 

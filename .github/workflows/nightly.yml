@@ -1,0 +1,65 @@
+name: F* nightly build
+
+# For this to work, there must a repo called FStar-nightly
+# in the same org as FStar, and a DZOMO_GITHUB_TOKEN secret configured
+# in the FStar repo that has write access to FStar-nightly (i.e. 'Contents'
+# permission), *AND* also workflow access (or you'll get "Refusing to
+# allow a Personal Access Token to create or update workflow").
+#
+# The default GITHUB_TOKEN only allows access to the current repo, so it's
+# not useful.
+
+on:
+  push:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  build-all:
+    uses: ./.github/workflows/build-all.yml
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: build-all
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 0 # full clone, so we can push objects
+
+      - name: Set up git
+        run: |
+          git config --global user.name "Dzomo, the Everest Yak"
+          git config --global user.email "24394600+dzomo@users.noreply.github.com"
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+          # ^ Download all artifacts into the same dir.
+          # Each of them is a single file, so no clashes happen.
+
+      - name: Publish artifacts in nightly tag
+        run: |
+          git config --unset-all http.https://github.com/.extraheader
+          # ^ https://stackoverflow.com/questions/64374179/how-to-push-to-another-repository-in-github-actions
+
+          # We push nightly builds to a different repo (same org)
+          REPO="${{github.repository}}-nightly"
+          TAG=nightly-$(date -I)
+
+          # Create tag
+          git tag $TAG ${{github.sha}}
+
+          # Add new remote and push tag
+          git remote add nightly-repo https://${{secrets.DZOMO_GITHUB_TOKEN}}@github.com/$REPO
+          git push nightly-repo $TAG
+
+          # Create release
+          gh release create -R "$REPO" \
+            --generate-notes \
+            --target ${{ github.sha }} \
+            $TAG artifacts/*
+
+        env:
+          GH_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}

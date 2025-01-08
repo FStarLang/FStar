@@ -79,4 +79,4 @@ jobs:
             --generate-notes \
             --target ${{ github.sha }} \
             -t "F* v$V" \
-            "v$V" ../artifacts/fstar-*
+            "v$V" ../artifacts/*
