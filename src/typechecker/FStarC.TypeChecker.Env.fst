@@ -1050,7 +1050,13 @@ let rec non_informative env t =
       if is_ghost_effect (comp_effect_name c) || is_erasable_effect env (comp_effect_name c) then
         // Functions with a ghost effect can only be invoked in a ghost context,
         // therefore it is safe to erase them to unit, a non-function.
-        Some unit_const
+        if List.length bs <= 1 then
+          Some unit_const
+        else
+          // However, this is only true for the full application;
+          // `a -> b -> GTot c` is equivalent to `a -> Tot (b -> GTot c)`
+          // and needs to be erased to `fun x -> ()`.
+          Some (mk (Tm_abs { body = unit_const; rc_opt = None; bs = List.init bs }) t.pos)
       else if is_pure_comp c then
         // Only the result of a pure computation can be erased;
         // a pure function can be still be invoked in non-ghost contexts (see #3366)
