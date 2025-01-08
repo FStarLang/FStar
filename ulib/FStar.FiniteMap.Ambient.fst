@@ -39,6 +39,9 @@ module FStar.FiniteMap.Ambient
 
 open FStar.FiniteMap.Base
 
-let all_finite_map_facts_ambient : squash (all_finite_map_facts u#b) =
-  all_finite_map_facts_lemma u#b ()
+let all_finite_map_facts_ambient (a:eqtype) (b:Type u#b)
+: Lemma
+  (ensures all_finite_map_facts u#b)
+  [SMTPat (FStar.FiniteMap.Base.map u#b a b)]
+= all_finite_map_facts_lemma u#b ()
 
