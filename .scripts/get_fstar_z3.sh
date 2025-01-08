@@ -90,7 +90,12 @@ full_install_z3() {
   popd
 }
 
-if [ "$1" == "--full" ]; then
+usage() {
+  echo "Usage: get_fstar_z3.sh destination/directory/bin"
+  exit 1
+}
+
+if [ $# -ge 1 ] && [ "$1" == "--full" ]; then
   # Passing --full xyz/ will create a tree like
   #  xyz/z3-4.8.5/bin/z3
   #  xyz/z3-4.13.3/bin/z3
@@ -100,11 +105,11 @@ if [ "$1" == "--full" ]; then
   shift;
 fi
 
-dest_dir="$1"
-if [ -z "$dest_dir" ]; then
-  echo "Usage: get_fstar_z3.sh destination/directory/bin"
-  exit 1
+if [ $# -ne 1 ]; then
+  usage
 fi
+
+dest_dir="$1"
 
 mkdir -p "$dest_dir"
 
