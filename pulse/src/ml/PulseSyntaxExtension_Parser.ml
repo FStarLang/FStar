@@ -1,3 +1,4 @@
+open Fstarcompiler
 open Lexing
 open FStar_Pervasives_Native
 open FStar_Pervasives

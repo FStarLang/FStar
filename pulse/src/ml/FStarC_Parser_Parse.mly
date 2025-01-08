@@ -1,3 +1,17 @@
+(* IMPORTANT!
+
+This file is copied from the F* repo almost verbatim, but
+requires a few changes. Since in the F* build the compiler
+are within the same project, there is no need to `open Fstarcompiler`
+(like above) or qualify some modules, so those changes are manually
+applied here.
+
+Note that `open Fstarcompiler` should be enough, except that it does
+not apply for the interface of the parser, namely the types of
+tokens (see https://gallium.inria.fr/~fpottier/menhir/manual.html#sec9).
+So there also a few explicit module qualifications in the file.
+*)
+
 %{
 (*
  Menhir reports the following warnings:
@@ -18,6 +32,7 @@
  
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
+open Fstarcompiler
 open Prims
 open FStar_Pervasives
 open FStarC_Errors
@@ -87,7 +102,7 @@ let parse_use_lang_blob (extension_name:string)
 %token <string> UINT64
 %token <string> SIZET
 %token <string> REAL
-%token <FStar_Char.char> CHAR
+%token <Fstarcompiler.FStar_Char.char> CHAR
 %token <bool> LET
 %token <string> LET_OP
 %token <string> AND_OP
@@ -137,8 +152,8 @@ let parse_use_lang_blob (extension_name:string)
 
 %token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
 %token<string>  OP_MIXFIX_ASSIGNMENT OP_MIXFIX_ACCESS
-%token<string * string * Lexing.position * FStarC_Sedlexing.snap>  BLOB
-%token<string * string * Lexing.position * FStarC_Sedlexing.snap>  USE_LANG_BLOB
+%token<string * string * Lexing.position * Fstarcompiler.FStarC_Sedlexing.snap>  BLOB
+%token<string * string * Lexing.position * Fstarcompiler.FStarC_Sedlexing.snap>  USE_LANG_BLOB
 
 /* These are artificial */
 %token EOF

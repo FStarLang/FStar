@@ -108,8 +108,7 @@ test-share: local-install
 	+$(MAKE) -C share/pulse
 
 .PHONY: test-pulse2rust
-test-pulse2rust: test-share # test-pulse2rust uses .checked files from share/
-	+$(MAKE) -C pulse2rust
+test-pulse2rust: pulse2rust test-share # test-pulse2rust uses .checked files from share/
 	+$(MAKE) -C pulse2rust test
 
 .PHONY: test

@@ -1,3 +1,4 @@
+open Fstarcompiler
 module U = FStarC_Syntax_Util
 module C = FStarC_Parser_Const
 module S = FStarC_Syntax_Syntax

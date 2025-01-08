@@ -38,8 +38,7 @@ jobs:
       - name: Build F*
         if: steps.cache-fstar.outputs.cache-hit != 'true'
         run: |
-          make -C FStar ADMIT=1 -sj$(nproc) fstar
-          make -C FStar ADMIT=1 -sj$(nproc) bootstrap
+          make -C FStar ADMIT=1 -sj$(nproc)
 
       - name: Save built F*
         if: steps.cache-fstar.outputs.cache-hit != 'true'
@@ -48,14 +47,14 @@ jobs:
           path: FStar
           key: FStar-${{ runner.os }}-${{ runner.arch }}-${{ steps.checkout-fstar.outputs.commit }}
 
-      - run: echo "FSTAR_HOME=$(pwd)/FStar" | sudo tee -a $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/FStar/bin/fstar.exe" | sudo tee -a $GITHUB_ENV
 
       - uses: actions/checkout@master
         id: checkout-karamel
         with:
           path: karamel
-          repository: FStarLang/karamel
-          ref: master
+          repository: mtzguido/karamel
+          ref: dev
 
       - name: Try fetch built karamel
         id: cache-karamel

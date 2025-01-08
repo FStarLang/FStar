@@ -114,28 +114,6 @@ See F* PR https://github.com/FStarLang/FStar/pull/3363
 
 
 
-## Modifying the Pulse or PulseC extraction rules, or the syntax extension
-
-If you modify the Pulse or PulseC
-extraction rules in `src/extraction` (`ExtractPulse.fst` and
-`ExtractPulseC.fst` respectively), or the syntax extension in
-`src/syntax-extension`, you need to regenerate the corresponding OCaml
-snapshot.
-
-To do so, you need to clone the F* repository and set the `FSTAR_HOME`
-variable to your F* clone. Indeed, the extraction rules typecheck
-against the F* sources. An opam installation of F* (or a binary
-package) will not work.
-
-Optionally, to extract C code, you must set the `KRML_HOME` environment
-variable. This should point to your clone of the Karamel repository.
-
-Then, you can extract the rules and recompile everything with `make -j
-boot` from the Pulse root directory.
-
-Alternatively, you can do `make -j full-boot`, which will remove all
-generated OCaml files beforehand.
-
 ## Testing
 
 There are simple tests in `test/` and examples in `share/pulse`.
@@ -155,7 +133,5 @@ This will also verify all examples and tests, by moving them outside of
 the Pulse directory hierarchy beforehand, to make sure that the location
 of those examples does not need to depend on the location of Pulse.
 
-Finally, you can run `make -j ci` to re-extract, recompile and re-test
-everything. If you have Docker, you can run the `ci` rule with `docker
-build -f ci/ci.Dockerfile .` which will also install all dependencies
-automatically.
+Finally, you can run `make -j ci` to compile and re-test
+everything.
