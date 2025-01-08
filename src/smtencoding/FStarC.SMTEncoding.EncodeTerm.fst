@@ -738,7 +738,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
                We should find a better way to do this! *)
             | App(Var "ApplyTF", [{tm=FreeV (FV (tok, _, _))}; fuel]), us
-            | App(Var "ApplyTF", [{tm=App(Var tok, [])}; fuel]), us when Some? fvb.needs_universe_instantiations -> 
+            | App(Var "ApplyTF", [{tm=App(Var tok, [])}; fuel]), us -> // when Some? fvb.needs_universe_instantiations -> 
               true, mkApp("ApplyTF", [mkApp (tok, us); fuel])
             | App(op, _::_), _::_ ->
               failwith (BU.format1 "Impossible: Universe applications cannot be curried: head is %s" (show tok))
