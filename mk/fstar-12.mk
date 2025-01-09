@@ -70,13 +70,31 @@ EXTRACT += --extract +FStar.Seq.Properties
 ROOTS :=
 ROOTS += $(SRC)/fstar/FStarC.Main.fst
 
-$(CACHE_DIR)/.depend$(TAG):
+DEPSTEM := $(CACHE_DIR)/.depend$(TAG)
+# We always run this to compute a full list of fst/fsti files in the
+# $(SRC) (ignoring the roots, it's a bit conservative). The list is
+# saved in $(DEPSTEM).touch.chk, and compared to the one we generated
+# before in $(DEPSTEM).touch. If there's a change (or the 'previous')
+# does not exist, the timestamp of $(DEPSTEM0.touch will be updated
+# triggering an actual dependency run.
+.PHONY: .force
+$(DEPSTEM).touch: .force
+	mkdir -p $(dir $@)
+	find $(SRC) -name '*.fst*' > $@.chk
+	diff -q $@ $@.chk 2>/dev/null || cp $@.chk $@
+
+$(DEPSTEM): $(DEPSTEM).touch
 	$(call msg, "DEPEND", $(SRC))
 	$(FSTAR) --dep full $(ROOTS) $(EXTRACT) $(DEPFLAGS) --output_deps_to $@
-	mkdir -p $(CACHE_DIR)
 
-depend: $(CACHE_DIR)/.depend$(TAG)
-include $(CACHE_DIR)/.depend$(TAG)
+depend: $(DEPSTEM)
+include $(DEPSTEM)
 
 all-ml: $(ALL_ML_FILES)
+	@# Remove extraneous .ml files, which can linger after
+	@# module renamings. The realpath is necessary to prevent
+	@# discrepancies between absolute and relative paths, double
+	@# slashes, etc.
+	rm -vf $(filter-out $(realpath $(ALL_ML_FILES)), $(realpath $(wildcard $(OUTPUT_DIR)/*.ml)))
+
 all-checked: $(ALL_CHECKED_FILES)
