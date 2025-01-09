@@ -119,7 +119,7 @@ $(OUTPUT_DIR)/%.out: $(OUTPUT_DIR)/%.exe
 ### Checking expected output for any kind of file (error output, ml, etc)
 $(OUTPUT_DIR)/%.diff: $(OUTPUT_DIR)/% %.expected
 	$(call msg, "DIFF", $<)
-	diff -u --strip-trailing-cr $^
+	$(FSTAR_ROOT)/mk/diff.sh $^
 	touch $@
 
 $(OUTPUT_DIR)/%.accept: $(OUTPUT_DIR)/%
