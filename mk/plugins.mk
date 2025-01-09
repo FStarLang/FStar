@@ -114,13 +114,25 @@ ROOTS += ../ulib/FStar.Tactics.V2.Logic.fsti
 ROOTS += ../ulib/FStar.Tactics.V2.SyntaxHelpers.fst
 ROOTS += ../ulib/FStar.Tactics.Visit.fst
 
-$(CACHE_DIR)/.depend$(TAG):
-	$(call msg, "DEPEND")
-	$(FSTAR) --dep full $(ROOTS) $(EXTRACT) --output_deps_to $@
+DEPSTEM := $(CACHE_DIR)/.depend$(TAG)
+# We always run this to compute a full list of fst/fsti files in the
+# $(SRC) (ignoring the roots, it's a bit conservative). The list is
+# saved in $(DEPSTEM).touch.chk, and compared to the one we generated
+# before in $(DEPSTEM).touch. If there's a change (or the 'previous')
+# does not exist, the timestamp of $(DEPSTEM0.touch will be updated
+# triggering an actual dependency run.
+.PHONY: .force
+$(DEPSTEM).touch: .force
+	find $(SRC) -name '*.fst*' > $@.chk
+	diff -q $@ $@.chk || cp $@.chk $@
+
+$(DEPSTEM): $(DEPSTEM).touch
+	$(call msg, "DEPEND", $(SRC))
+	$(FSTAR) --dep full $(ROOTS) $(EXTRACT) $(DEPFLAGS) --output_deps_to $@
 	mkdir -p $(CACHE_DIR)
 
-depend: $(CACHE_DIR)/.depend$(TAG)
-include $(CACHE_DIR)/.depend$(TAG)
+depend: $(DEPSTEM)
+include $(DEPSTEM)
 
 all-ml: $(ALL_ML_FILES)
 	@# Remove extraneous .ml files, which can linger after
