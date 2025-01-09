@@ -142,4 +142,11 @@ all-checked: $(ALL_CHECKED_FILES)
 # These targets imply verification of every file too, regardless
 # of extraction.
 all-ml: all-checked $(ALL_ML_FILES)
+	@# Remove extraneous .ml files, which can linger after
+	@# module renamings. The realpath is necessary to prevent
+	@# discrepancies between absolute and relative paths, double
+	@# slashes, etc.
+	rm -vf $(filter-out $(realpath $(ALL_ML_FILES)), $(realpath $(wildcard $(OUTPUT_DIR)/*.ml)))
+
 all-fs: all-checked $(ALL_FS_FILES)
+	rm -vf $(filter-out $(realpath $(ALL_FS_FILES)), $(realpath $(wildcard $(OUTPUT_DIR)/*.fs)))

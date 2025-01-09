@@ -123,3 +123,8 @@ depend: $(CACHE_DIR)/.depend$(TAG)
 include $(CACHE_DIR)/.depend$(TAG)
 
 all-ml: $(ALL_ML_FILES)
+	@# Remove extraneous .ml files, which can linger after
+	@# module renamings. The realpath is necessary to prevent
+	@# discrepancies between absolute and relative paths, double
+	@# slashes, etc.
+	rm -vf $(filter-out $(realpath $(ALL_ML_FILES)), $(realpath $(wildcard $(OUTPUT_DIR)/*.ml)))
