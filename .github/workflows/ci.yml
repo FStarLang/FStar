@@ -1,4 +1,4 @@
-name: F* CI
+name: CI
 
 on:
   push:
@@ -10,6 +10,10 @@ defaults:
     shell: bash
 
 jobs:
+  hints: # not required
+    name: stale-hints
+    uses: ./.github/workflows/stale_hints.yml
+
   build:
     name: build
     uses: ./.github/workflows/build-ci.yml
