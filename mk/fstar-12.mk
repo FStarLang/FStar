@@ -79,13 +79,13 @@ DEPSTEM := $(CACHE_DIR)/.depend$(TAG)
 # triggering an actual dependency run.
 .PHONY: .force
 $(DEPSTEM).touch: .force
+	mkdir -p $(dir $@)
 	find $(SRC) -name '*.fst*' > $@.chk
 	diff -q $@ $@.chk || cp $@.chk $@
 
 $(DEPSTEM): $(DEPSTEM).touch
 	$(call msg, "DEPEND", $(SRC))
 	$(FSTAR) --dep full $(ROOTS) $(EXTRACT) $(DEPFLAGS) --output_deps_to $@
-	mkdir -p $(CACHE_DIR)
 
 depend: $(DEPSTEM)
 include $(DEPSTEM)
