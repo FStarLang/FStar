@@ -184,7 +184,7 @@ let option_wfr (#a: Type u#a) (wfr: wfr_t a)
   //          `Some x` to `(| true, x |)` and `None` to `(| false, () |)`.
 
   let f: option a -> (b: bool & (if b then a else unit_a)) =
-    fun opt -> (match opt with | Some x -> (| true, x |) | None -> (| false, raise_val () |) )
+    fun opt -> (match opt with | Some x -> (| true, x |) | None -> (| false, raise_val u#0 u#a () |) )
   in
 
   // Step 2:  Create a wfr for (b: bool & (if b then a else unit_a)) using lex_dep_wfr.
