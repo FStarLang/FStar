@@ -253,7 +253,8 @@ __install-stage1:
 
 $(INSTALLED_FSTAR1_FULL_EXE): export FSTAR_LINK_LIBDIRS=$(LINK_OK)
 $(INSTALLED_FSTAR1_FULL_EXE): stage1-components
-	$(MAKE) __install-stage1
+	$(MAKE) __install-stage1 PREFIX=$(CURDIR)/stage1/out
+	@# ^ pass PREFIX to make sure we don't get it from env
 
 stage2-components: 2.full 2.alib.src 2.plib.src
 __install-stage2:
@@ -262,7 +263,8 @@ __install-stage2:
 
 $(INSTALLED_FSTAR2_FULL_EXE): export FSTAR_LINK_LIBDIRS=$(LINK_OK)
 $(INSTALLED_FSTAR2_FULL_EXE): stage2-components
-	$(MAKE) __install-stage2
+	$(MAKE) __install-stage2 PREFIX=$(CURDIR)/stage2/out
+	@# ^ pass PREFIX to make sure we don't get it from env
 
 setlink-%:
 	if [ -e out ] && ! [ -h out ]; then echo "ERROR: out/ exists and is not a symbolic link, please remove it"; false; fi
