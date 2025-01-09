@@ -755,13 +755,18 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           let tkey_hash = Term.hash_of_term tok in
           let aux_decls, sym_name =
                if fvb.smt_arity > 0 && is_nullary
-               then //kick partial application axioms if arity > 0; see #613
-                    //and if the head symbol is just a variable
-                    //rather than maybe a fuel-instrumented name (cf. #1433)
-                    let sym_name = "@kick_partial_app_" ^ (BU.digest_of_string tkey_hash) in  //the '@' retains this for hints
-                    [Util.mkAssume(kick_partial_app tok,
-                                   Some "kick_partial_app",
-                                   sym_name)], sym_name
+               then begin
+                //kick partial application axioms if arity > 0; see #613
+                //and if the head symbol is just a variable
+                //rather than maybe a fuel-instrumented name (cf. #1433)
+                match kick_partial_app fvb with
+                | None -> [], ""
+                | Some kpa ->
+                  let sym_name = "@kick_partial_app_" ^ (BU.digest_of_string tkey_hash) in  //the '@' retains this for hints
+                  [Util.mkAssume(kpa,
+                                 Some "kick_partial_app",
+                                 sym_name)], sym_name
+               end
                else [], "" 
           in
           tok, (if aux_decls = []
