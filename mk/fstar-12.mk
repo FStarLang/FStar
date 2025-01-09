@@ -26,6 +26,8 @@ FSTAR_OPTIONS += --MLish_effect 'FStarC.Compiler.Effect'
 FSTAR_OPTIONS += --cache_checked_modules
 FSTAR_OPTIONS += --cache_dir "$(CACHE_DIR)"
 FSTAR_OPTIONS += --odir "$(OUTPUT_DIR)"
+FSTAR_OPTIONS += --no_default_includes
+FSTAR_OPTIONS += --include "$(FSTAR_ROOT)/ulib"
 
 FSTAR_OPTIONS += --include "$(SRC)"
 
