@@ -50,3 +50,9 @@ mkdir "${PREFIX}/mk"
 cp mk/lib.mk "${PREFIX}/mk/lib.mk"
 cp mk/common.mk "${PREFIX}/mk/common.mk"
 cp -H mk/fstar-12.mk "${PREFIX}/mk/fstar-12.mk"
+
+# Remove extra ML files, rsync has resolved the links
+# into the corresponding files already, and these would be
+# duplicates.
+rm -r "$PREFIX"/*.ml
+rm -r "$PREFIX"/*.pluginml

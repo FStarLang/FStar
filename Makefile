@@ -19,9 +19,10 @@ ifneq ($(FSTAR_EXTERNAL_STAGE0),)
 FSTAR0_EXE := $(abspath $(FSTAR_EXTERNAL_STAGE0))
 endif
 
-STAGE0 ?= stage0
+# When stage0 is bumped, use this:
+#FSTAR0_EXE ?= stage0/out/bin/fstar.exe
+FSTAR0_EXE ?= stage0/bin/fstar.exe
 
-FSTAR0_EXE ?= $(STAGE0)/bin/fstar.exe
 # This is hardcoding some dune paths, with internal (non-public) names.
 # This is motivated by dune installing packages as a unit, so I could not
 # install simply the bare compiler and then use it to build the full compiler
@@ -58,10 +59,12 @@ build: 2
 # build by 'make 0'.
 0 $(FSTAR0_EXE):
 	$(call bold_msg, "STAGE 0")
-	mkdir -p $(STAGE0)/ulib/.cache # prevent warnings
-	$(MAKE) -C $(STAGE0) fstar
-	$(MAKE) -C $(STAGE0) trim # We don't need OCaml build files.
-
+	mkdir -p stage0/ulib/.cache # prevent warnings
+	$(MAKE) -C stage0 fstar
+	$(MAKE) -C stage0 trim # We don't need OCaml build files.
+	# When the stage is bumped, use this:
+	# $(MAKE) -C stage0 build # build: only fstar.exe
+	# $(MAKE) -C stage0 trim # We don't need OCaml build files.
 
 .bare1.touch: $(FSTAR0_EXE) _force
 	$(call bold_msg, "EXTRACT", "STAGE 1 FSTARC-BARE")
@@ -413,46 +416,29 @@ ci: _force
 	+$(MAKE) 2
 	+$(MAKE) test lib-fsharp stage3-diff
 
-do-save: _force
-	$(call bold_msg,"SAVE", "$(FROM)  -->  $(TO)")
-	rm -rf $(TO)
-	mkdir -p $(TO)
-	cp -r $(FROM) -T $(TO)
-	rm -rf $(TO)/out
-	rm -rf $(TO)/fstarc.checked
-	rm -rf $(TO)/plugins.checked
-	rm -rf $(TO)/ulib.checked
-	dune clean --no-print-directory --display=quiet --root=$(TO)/bare
-	dune clean --no-print-directory --display=quiet --root=$(TO)/full
-	dune clean --no-print-directory --display=quiet --root=$(TO)/fstarlib
-	dune clean --no-print-directory --display=quiet --root=$(TO)/fstar-pluginlib
-	sed -i 's/a/a/' $(TO)/version.txt # hack to turn symlink into concrete file
-	rm -f $(TO)/full/ulib
-	rm -f $(TO)/ulib # a symlink
-	cp -r ulib -T $(TO)/ulib
-	# For now at least... we do not really use the stage0 F* to compile
-	# normal applications, though that should definitely change if possible.
-	# So, remove some more stuff.
-	rm -rf $(TO)/fstarlib
-	rm -rf $(TO)/fstar-pluginlib
-	rm -rf $(TO)/ulib.ml
-	rm -rf $(TO)/ulib.pluginml
-	# We also do not ever verify anything with the stage0. So, remove
-	# the hints, but this is weird...
-	rm -rf $(TO)/ulib/.hints
-	rm -f $(TO)/.gitignore
-	echo '/out' >> $(TO)/.gitignore
+save: stage0_new
 
-save: FROM=stage2
-save: TO=_new
-save: do-save
+stage0_new: TO=stage0_new
+stage0_new: .stage2.touch
+	$(call bold_msg, "SNAPSHOT", "$(TO)")
+	rm -rf "$(TO)"
+	.scripts/src-install.sh "stage2" "$(TO)"
+	# Trim it a bit...
+	rm -rf "$(TO)/src"            # no need for compiler F* sources
+	rm -rf "$(TO)/ulib/.hints"    # this library won't be checked
+	rm -rf "$(TO)/ulib.pluginml"  # we won't build plugins against stage0
+	rm -rf "$(TO)/dune/libplugin" # idem
+	rm -rf "$(TO)/dune/libapp"    # we won't even build apps
 
-bump-stage0: FROM=stage2
-bump-stage0: TO=stage0
-bump-stage0: do-save
+bump-stage0: stage0_new
+	$(call bold_msg, "BUMP!")
+	# Replace stage0
+	rm -rf stage0
+	mv stage0_new stage0
+	echo 'out' >> stage0/.gitignore
 	# Now that stage0 supports all features, we can return to a clean state
-	# where the 01 makefile is equal to the 12 makefile. Same for stage1 support
-	# and config code, we just take it from the stage2.
+	# where the 01 makefile is equal to the 12 makefile. Same for stage1
+	# support and config code, we just take it from the stage2.
 	rm -f mk/fstar-01.mk
 	ln -s fstar-12.mk mk/fstar-01.mk
 	rm -rf stage1
@@ -491,8 +477,8 @@ clean-depend: _force
 
 clean-0: _force
 	$(call bold_msg, "CLEAN", "STAGE 0")
-	$(MAKE) -C $(STAGE0) clean
-	rm -rf $(STAGE0)/ulib/.cache # created only to prevent warnings, always empty
+	$(MAKE) -C stage0 clean
+	rm -rf stage0/ulib/.cache # created only to prevent warnings, always empty
 
 clean-1: _force
 	$(call bold_msg, "CLEAN", "STAGE 1")
@@ -563,8 +549,7 @@ help:
 	echo "  trim               clean some buildfiles, but retain any installed F* in out"
 	echo "  distclean          remove every generated file"
 	echo "  unit-tests         run the smaller unit test suite (implied by test)"
-	echo "  bump-stage0        copy stage2 into stage0, and restore symlinks between stage1/stage2"
-	echo "                     (essentially snapshotting a package-src-2)"
-	echo "  save               like bump-stage0, but saves the snapshot in _new/ for inspection"
+	echo "  save               copy a trimmed stage2 into stage0_new (essentially snapshotting a package-src-2)"
+	echo "  bump-stage0        like save, but replace existing stage0 and reset to a default state"
 	echo
 	echo "You can set a different default goal by defining FSTAR_DEFAULT_GOAL in your environment."
