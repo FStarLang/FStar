@@ -16,6 +16,7 @@
 module FStar.Monotonic.DependentMap
 (** A library for mutable partial, dependent maps,
     that grow monotonically,
+    with keys and (dependent) values in universe 0,
     while subject to an invariant on the entire map *)
 open FStar.HyperStack.ST
 
@@ -24,8 +25,8 @@ module DM  = FStar.DependentMap
 module HST = FStar.HyperStack.ST
 
 /// The logical model of the map is given in terms of DM.t///
-let opt (#a:eqtype) (b:a -> Type) = fun (x:a) -> option (b x)
-let partial_dependent_map (a:eqtype) (b:a -> Type) =
+let opt (#a:eqtype) (b:a -> Type u#0) = fun (x:a) -> option (b x)
+let partial_dependent_map (a:eqtype) (b:a -> Type u#0) =
     DM.t a (opt b)
 
 /// An empty partial, dependent map maps all keys to None
@@ -41,8 +42,8 @@ let empty_partial_dependent_map (#a:_) (#b:_)
 ///    via the homomorphism `repr` below
 val map
     (a:eqtype)
-    (b:(a -> Type u#b))
-  : Type u#b
+    (b:(a -> Type u#0))
+  : Type u#0
 
 /// `repr m`: A ghost function that reveals the internal `map` as a `DM.t`
 val repr (#a:_) (#b:_)
@@ -71,7 +72,7 @@ val upd (#a:_) (#b:_)
     (ensures (fun r' -> repr r' == DM.upd (repr r) x (Some v)))
 
 /// `imap a b inv` further augments a map with an invariant on its repr
-let imap (a:eqtype) (b: a -> Type) (inv:DM.t a (opt b) -> Type) =
+let imap (a:eqtype) (b: a -> Type u#0) (inv:DM.t a (opt b) -> Type u#0) =
     r:map a b{inv (repr r)}
 
 /// `grows r1 r2` is an abstract preorder on `imap`
@@ -82,7 +83,7 @@ val grows (#a:_) (#b:_) (#inv:DM.t a (opt b) -> Type)
 ///
 /// `t r a b inv` is a mutable, imap stored in region `r` constrained
 ///               to evolve according to `grows`
-let t (r:HST.erid) (a:eqtype) (b:a -> Type) (inv:DM.t a (opt b) -> Type) =
+let t (r:HST.erid) (a:eqtype) (b:a -> Type u#0) (inv:DM.t a (opt b) -> Type u#0) =
     m_rref r (imap a b inv) grows
 
 /// `defined t x h`: In state `h`, map `t` is defined at point `x`.
