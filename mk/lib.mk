@@ -141,7 +141,7 @@ DEPSTEM := $(CACHE_DIR)/.depend$(TAG)
 $(DEPSTEM).touch: .force
 	mkdir -p $(dir $@)
 	find $(SRC) -name '*.fst*' > $@.chk
-	diff -q $@ $@.chk || cp $@.chk $@
+	diff -q $@ $@.chk 2>/dev/null || cp $@.chk $@
 
 $(DEPSTEM): $(DEPSTEM).touch
 	$(call msg, "DEPEND", $(SRC))
