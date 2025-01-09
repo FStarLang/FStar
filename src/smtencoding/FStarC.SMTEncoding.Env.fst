@@ -144,18 +144,25 @@ let kick_partial_app (fvb:fvar_binding) =
   | _, Some _ -> None
   | Some ({tm=FreeV (FV(tok, _, _))}), _
   | Some ({tm=App(Var tok, _)}), _ ->
-    let vars =
-      list_of
-          (fvb.smt_arity + fvb.univ_arity)
-          (fun i ->
-              let sort = if i < fvb.univ_arity then univ_sort else Term_sort in
-              mk_fv (("@u" ^ string_of_int i), sort))
-    in
-    let var_terms = List.map mkFreeV vars in
-    let vapp = mkApp(fvb.smt_id, var_terms) in
-    let univs, rest = List.splitAt fvb.univ_arity var_terms in
-    let vtok_app = List.fold_left mk_ApplyTT (mkApp(tok, univs)) rest in
-    Some <| mkForall Range.dummyRange ([[vapp]], vars, mkEq(vapp, vtok_app))
+    if fvb.univ_arity = 0
+    then (
+      let t = mkApp(tok, []) in
+      Some <| mk_Valid <| mk_ApplyTT (mkApp("__uu__PartialApp", [])) t
+    )
+    else (
+      let vars =
+        list_of
+            (fvb.smt_arity + fvb.univ_arity)
+            (fun i ->
+                let sort = if i < fvb.univ_arity then univ_sort else Term_sort in
+                mk_fv (("@u" ^ string_of_int i), sort))
+      in
+      let var_terms = List.map mkFreeV vars in
+      let vapp = mkApp(fvb.smt_id, var_terms) in
+      let univs, rest = List.splitAt fvb.univ_arity var_terms in
+      let vtok_app = List.fold_left mk_ApplyTT (mkApp(tok, univs)) rest in
+      Some <| mkForall Range.dummyRange ([[vapp]], vars, mkEq(vapp, vtok_app))
+    )
 
 let fvb_to_string fvb =
   let term_opt_to_string = function
