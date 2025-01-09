@@ -462,16 +462,17 @@ let encode_free_var uninterpreted env fv us tt t_norm quals :decls_t & env_t =
             | Tm_arrow {bs=binders} -> binders |> List.map (fun _ -> Term_sort)
             | _ -> [] in
          let arity = List.length arg_sorts in
-         let vname, vtok, env = new_term_constant_and_tok_from_lid env lid arity in
-         let univ_arity = List.map (fun _ -> univ_sort) us in
-         let d = Term.DeclFun(vname, univ_arity @ arg_sorts, Term_sort, Some "Uninterpreted function symbol for impure function") in
-         let dd = Term.DeclFun(vtok, univ_arity, Term_sort, Some "Uninterpreted name for impure function") in
+         let univ_arity = List.length us in
+         let vname, vtok, env = new_term_constant_and_tok_from_lid env lid arity univ_arity in
+         let univ_sorts = List.map (fun _ -> univ_sort) us in
+         let d = Term.DeclFun(vname, univ_sorts @ arg_sorts, Term_sort, Some "Uninterpreted function symbol for impure function") in
+         let dd = Term.DeclFun(vtok, univ_sorts, Term_sort, Some "Uninterpreted name for impure function") in
          [d;dd] |> mk_decls_trivial, env
     else if prims.is lid
          then let _ = if List.length us <> 0 then failwith "Impossible: unexpected universe-polymorphic primitive function" in
               let vname = varops.new_fvar lid in
               let tok, arity, definition = prims.mk lid vname in
-              let env = push_free_var env lid arity vname (Some tok) in
+              let env = push_free_var env lid arity 0 vname (Some tok) in
               definition |> mk_decls_trivial, env
          else let encode_non_total_function_typ = nsstr lid <> "Prims" in
               let formals, (pre_opt, res_t) =
@@ -549,7 +550,8 @@ let encode_free_var uninterpreted env fv us tt t_norm quals :decls_t & env_t =
                  | _ -> false, vars
               in
               let arity = List.length formals in
-              let vname, vtok_opt, env = new_term_constant_and_tok_from_lid_maybe_thunked env lid arity thunked in
+              let univ_arity = List.length univs in
+              let vname, vtok_opt, env = new_term_constant_and_tok_from_lid_maybe_thunked env lid arity univ_arity thunked in
               let get_vtok () = Option.get vtok_opt in
               let vtok_tm =
                     match formals with
@@ -580,7 +582,7 @@ let encode_free_var uninterpreted env fv us tt t_norm quals :decls_t & env_t =
                         Util.mkAssume(tok_typing, Some "function token typing", ("function_token_typing_"^vname))
                       in
                       decls2@([tok_typing] |> mk_decls_trivial),
-                      push_free_var env lid arity vname (Some <| mkApp(vname, []))
+                      push_free_var env lid arity univ_arity vname (Some <| mkApp(vname, []))
 
                     | _ when thunked ->
                       decls2, env
@@ -988,7 +990,16 @@ let encode_top_level_let :
             let flid = fvb.fvar_lid in
             let g = varops.new_fvar (Ident.lid_add_suffix flid "fuel_instrumented") in
             let gtok = varops.new_fvar (Ident.lid_add_suffix flid "fuel_instrumented_token") in
-            let env = push_free_var_with_univs env flid fvb.smt_arity gtok (Some <| mkApp(g, [fuel_tm])) univ_names in
+            let env = 
+              push_free_var_tok_with_fuel_and_univs
+                env 
+                flid 
+                fvb.smt_arity 
+                fvb.univ_arity
+                gtok 
+                (Some <| mkApp(g, [fuel_tm]))
+                univ_names
+            in
             (fvb, g, gtok)::gtoks, env) ([], env)
           in
           let gtoks = List.rev gtoks in
@@ -1260,7 +1271,8 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
   in
   let vars, guards, env', binder_decls, _ = encode_binders None formals env in
   let arity = List.length vars in
-  let tname, ttok, env = new_term_constant_and_tok_from_lid env t arity in
+  let univ_arity = List.length univ_terms in
+  let tname, ttok, env = new_term_constant_and_tok_from_lid env t arity univ_arity in
   let ttok_tm = mkApp(ttok, univ_terms) in
   let guard = mk_and_l guards in
   let tapp = mkApp(tname, List.map mkFreeV (univ_vars@vars)) in //arity ok
@@ -1280,7 +1292,7 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
     in
     let tok_decls, env =
       match vars with
-      | [] -> [], push_free_var env t arity tname (Some <| mkApp(tname, []))
+      | [] -> [], push_free_var env t arity univ_arity tname (Some <| mkApp(tname, []))
       | _ ->
         let ttok_decl = Term.DeclFun(ttok, List.map fv_sort univ_vars, Term_sort, Some "token") in
         let ttok_fresh = Term.fresh_token (ttok_tm, univ_vars, Term_sort) (varops.next_id()) in
@@ -1329,7 +1341,8 @@ let encode_datacon (env:env_t) (se:sigelt)
   let t = norm_before_encoding env t in
   let formals, t_res = U.arrow_formals t in
   let arity = List.length formals in
-  let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d arity in
+  let univ_arity = List.length univs in
+  let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d arity univ_arity in
   let ddtok_tm = mkApp(ddtok, univs) in
   let fuel_var, fuel_tm = fresh_fvar env.current_module_name "f" Fuel_sort in
   let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
@@ -1725,7 +1738,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
               let action_defn = norm_before_encoding env (close_effect_params a.action_defn) in
               let formals, _ = U.arrow_formals_comp a.action_typ in
               let arity = List.length formals in
-              let aname, atok, env = new_term_constant_and_tok_from_lid env a.action_name arity in
+              let univ_arity = 0 in //actions are not universe polymorphic
+              let aname, atok, env = new_term_constant_and_tok_from_lid env a.action_name arity univ_arity in
               let tm, decls = encode_term action_defn env in
               let a_decls =
                 [Term.DeclFun(aname, formals |> List.map (fun _ -> Term_sort), Term_sort, Some "Action");
@@ -1759,7 +1773,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
 
      | Sig_declare_typ {lid} when (lid_equals lid Const.precedes_lid) ->
         //precedes is added in the prelude, see FStarC.SMTEncoding.Term.fs
-        let tname, ttok, env = new_term_constant_and_tok_from_lid env lid 4 in
+        let tname, ttok, env = new_term_constant_and_tok_from_lid env lid 4 2 in
         [], env
 
      | Sig_declare_typ {lid; us; t} ->
@@ -1816,7 +1830,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
 
      (* Special encoding for b2t *)
      | Sig_let {lbs=(_, [{lbname=Inr b2t}])} when S.fv_eq_lid b2t Const.b2t_lid ->
-       let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v 1 in
+       let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v 1 0 in
        let xx = mk_fv ("x", Term_sort) in
        let x = mkFreeV xx in
        let b2t_x = mkApp("Prims.b2t", [x]) in
