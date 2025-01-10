@@ -2572,6 +2572,15 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term & lcomp & guard_
               BU.print1 "(%s) No user coercion found\n"
                       (Range.string_of_range e.pos)
       in
+
+      match maybe_eta_expand_fun env e lc.res_typ exp_t with
+      | Some e' ->
+        if !dbg_Coercions then
+          BU.print3 "(%s) Eta-expansion coercion from %s to %s" (Range.string_of_range e.pos) (show e) (show e');
+        // FIXME: do we need to type-check this again?
+        e', { lc with res_typ = exp_t }, Env.trivial_guard
+
+      | None ->
       
       (* TODO: hide/reveal also user coercions? it's trickier for sure *)
 
