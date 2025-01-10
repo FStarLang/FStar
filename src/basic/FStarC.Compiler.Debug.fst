@@ -84,15 +84,17 @@ let set_level_high    () = dbg_level := 3
 let set_level_extreme () = dbg_level := 4
 
 let enable_toggles (keys : list string) : unit =
-  if Cons? keys then enable ();
+  if Cons? keys then
+    enable ();
   keys |> List.iter (fun k ->
-    if k = "Low" then set_level_low ()
-    else if k = "Medium" then set_level_medium ()
-    else if k = "High" then set_level_high ()
-    else if k = "Extreme" then set_level_extreme ()
-    else
-    let t = get_toggle k in
-    t := true
+    match k with
+    | "Low" ->     set_level_low ()
+    | "Medium" ->  set_level_medium ()
+    | "High" ->    set_level_high ()
+    | "Extreme" -> set_level_extreme ()
+    | _ ->
+      let t = get_toggle k in
+      t := true
   )
 
 let disable_all () : unit =
