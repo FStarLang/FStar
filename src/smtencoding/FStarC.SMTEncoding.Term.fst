@@ -929,6 +929,7 @@ and mkPrelude z3options =
                                 (! (= (U_max u1 u2)\n\
                                       (Univ (imax (ulevel u1) (ulevel u2))))\n\
                                  :pattern ((U_max u1 u2)))))\n\
+                (assert (forall ((u Universe)) (>= (ulevel u) 0)))\n\
                 (declare-fun U_unif (Int) Universe)\n\
                 (declare-fun U_unknown () Universe)\n\
                 (declare-fun Term_constr_id (Term) Int)\n\
