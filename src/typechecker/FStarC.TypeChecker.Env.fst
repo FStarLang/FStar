@@ -1050,6 +1050,13 @@ let rec non_informative env t =
     | Tm_meta {tm} -> non_informative env tm
     | _ -> false
 
+let rec non_informative_sort t =
+  match (U.unrefine t).n with
+  | Tm_fvar fv when fv_eq_lid fv Const.prop_lid -> true
+  | Tm_arrow {comp=c} -> non_informative_sort (comp_result c)
+  | Tm_meta {tm} -> non_informative_sort tm
+  | _ -> false
+
 let num_effect_indices env name r =
   let sig_t = name |> lookup_effect_lid env |> SS.compress in
   match sig_t.n with
