@@ -12,6 +12,9 @@ _build
 /bin/fstar.exe
 /bin/get_fstar_z3.sh
 
+# touch files for incrementality
+/.*.touch
+
 *~
 .#*
 \#*\#

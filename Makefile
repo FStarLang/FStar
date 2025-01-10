@@ -19,9 +19,10 @@ ifneq ($(FSTAR_EXTERNAL_STAGE0),)
 FSTAR0_EXE := $(abspath $(FSTAR_EXTERNAL_STAGE0))
 endif
 
-STAGE0 ?= stage0
+# When stage0 is bumped, use this:
+#FSTAR0_EXE ?= stage0/out/bin/fstar.exe
+FSTAR0_EXE ?= stage0/bin/fstar.exe
 
-FSTAR0_EXE ?= $(STAGE0)/bin/fstar.exe
 # This is hardcoding some dune paths, with internal (non-public) names.
 # This is motivated by dune installing packages as a unit, so I could not
 # install simply the bare compiler and then use it to build the full compiler
@@ -58,11 +59,14 @@ build: 2
 # build by 'make 0'.
 0 $(FSTAR0_EXE):
 	$(call bold_msg, "STAGE 0")
-	mkdir -p $(STAGE0)/ulib/.cache # prevent warnings
-	$(MAKE) -C $(STAGE0) fstar
-	$(MAKE) -C $(STAGE0) trim # We don't need OCaml build files.
+	mkdir -p stage0/ulib/.cache # prevent warnings
+	$(MAKE) -C stage0 fstar
+	$(MAKE) -C stage0 trim # We don't need OCaml build files.
+	# When the stage is bumped, use this:
+	# $(MAKE) -C stage0 build # build: only fstar.exe
+	# $(MAKE) -C stage0 trim # We don't need OCaml build files.
 
-$(FSTAR1_BARE_EXE).src: $(FSTAR0_EXE) _force
+.bare1.touch: $(FSTAR0_EXE) _force
 	$(call bold_msg, "EXTRACT", "STAGE 1 FSTARC-BARE")
 	env \
 	  SRC=src/ \
@@ -71,13 +75,15 @@ $(FSTAR1_BARE_EXE).src: $(FSTAR0_EXE) _force
 	  OUTPUT_DIR=stage1/fstarc.ml/ \
 	  CODEGEN=OCaml \
 	  TAG=fstarc \
+	  TOUCH=$@ \
 	  $(MAKE) -f mk/fstar-01.mk ocaml
 
-$(FSTAR1_BARE_EXE): $(FSTAR1_BARE_EXE).src _force
+$(FSTAR1_BARE_EXE): .bare1.touch
 	$(call bold_msg, "BUILD", "STAGE 1 FSTARC-BARE")
 	$(MAKE) -C stage1 fstarc-bare
+	touch -c $@
 
-$(FSTAR1_FULL_EXE).src: $(FSTAR1_BARE_EXE) _force
+.full1.touch: $(FSTAR1_BARE_EXE) _force
 	$(call bold_msg, "EXTRACT", "STAGE 1 PLUGINS")
 	env \
 	  SRC=ulib/ \
@@ -87,29 +93,33 @@ $(FSTAR1_FULL_EXE).src: $(FSTAR1_BARE_EXE) _force
 	  CODEGEN=PluginNoLib \
 	  OTHERFLAGS="--ext __guts $(OTHERFLAGS)" \
 	  TAG=plugins \
+	  TOUCH=$@ \
 	  $(MAKE) -f mk/plugins.mk ocaml
 
-$(FSTAR1_FULL_EXE): $(FSTAR1_FULL_EXE).src _force
+$(FSTAR1_FULL_EXE): .bare1.touch .full1.touch
 	$(call bold_msg, "BUILD", "STAGE 1 FSTARC")
 	$(MAKE) -C stage1 fstarc-full
+	touch -c $@
 
-1.alib.src: $(FSTAR1_FULL_EXE) _force
+.alib1.src.touch: $(FSTAR1_FULL_EXE) _force
 	$(call bold_msg, "EXTRACT", "STAGE 1 LIB")
-	env \
+	+env \
 	  SRC=ulib/ \
 	  FSTAR_EXE=$(FSTAR1_FULL_EXE) \
 	  CACHE_DIR=stage1/ulib.checked/ \
 	  OUTPUT_DIR=stage1/ulib.ml/ \
 	  CODEGEN=OCaml \
 	  TAG=lib \
+	  TOUCH=$@ \
 	  $(MAKE) -f mk/lib.mk all-ml
 
-1.alib: 1.alib.src _force
+.alib1.touch: .alib1.src.touch
 	$(call bold_msg, "BUILD", "STAGE 1 LIB")
 	$(MAKE) -C stage1/ libapp
+	touch $@
 
-1.plib.src: $(FSTAR1_FULL_EXE) 1.alib.src _force
-	# NB: shares .depend and checked from 1.alib.src,
+.plib1.src.touch: $(FSTAR1_FULL_EXE) .alib1.src.touch _force
+	# NB: shares .depend and checked from alib1.src,
 	# hence the dependency, though it is not quite precise.
 	$(call bold_msg, "EXTRACT", "STAGE 1 PLUGLIB")
 	env \
@@ -120,13 +130,15 @@ $(FSTAR1_FULL_EXE): $(FSTAR1_FULL_EXE).src _force
 	  CODEGEN=PluginNoLib \
 	  TAG=pluginlib \
 	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed' \
+	  TOUCH=$@ \
 	  $(MAKE) -f mk/lib.mk all-ml
 
-1.plib: 1.plib.src _force | 1.alib # this last dependency only to prevent simultaneous dune builds
+.plib1.touch: .plib1.src.touch | .alib1.touch # this last dependency only to prevent simultaneous dune builds
 	$(call bold_msg, "BUILD", "STAGE 1 PLUGLIB")
 	$(MAKE) -C stage1/ libplugin
+	touch $@
 
-$(FSTAR2_BARE_EXE).src: $(FSTAR1_FULL_EXE) _force
+.bare2.touch: $(FSTAR1_FULL_EXE) _force
 	$(call bold_msg, "EXTRACT", "STAGE 2 FSTARC")
 	# NOTE: see the explanation for FSTAR_LIB near top of file.
 	env \
@@ -137,17 +149,18 @@ $(FSTAR2_BARE_EXE).src: $(FSTAR1_FULL_EXE) _force
 	  OUTPUT_DIR=stage2/fstarc.ml/ \
 	  CODEGEN=OCaml \
 	  TAG=fstarc \
+	  TOUCH=$@ \
 	  $(MAKE) -f mk/fstar-12.mk ocaml
 
-$(FSTAR2_BARE_EXE): $(FSTAR2_BARE_EXE).src _force
+$(FSTAR2_BARE_EXE): .bare2.touch
 	$(call bold_msg, "BUILD", "STAGE 2 FSTARC-BARE")
 	$(MAKE) -C stage2 fstarc-bare FSTAR_DUNE_RELEASE=1
+	touch -c $@
 	# ^ Note, even if we don't release fstar-bare itself,
 	# it is still part of the build of the full fstar, so
 	# we set the release flag to have a more incremental build.
 
-
-$(FSTAR2_FULL_EXE).src: $(FSTAR2_BARE_EXE) _force
+.full2.touch: $(FSTAR2_BARE_EXE) _force
 	$(call bold_msg, "EXTRACT", "STAGE 2 PLUGINS")
 	env \
 	  SRC=ulib/ \
@@ -157,13 +170,15 @@ $(FSTAR2_FULL_EXE).src: $(FSTAR2_BARE_EXE) _force
 	  CODEGEN=PluginNoLib \
 	  OTHERFLAGS="--ext __guts $(OTHERFLAGS)" \
 	  TAG=plugins \
+	  TOUCH=$@ \
 	  $(MAKE) -f mk/plugins.mk ocaml
 
-$(FSTAR2_FULL_EXE): $(FSTAR2_FULL_EXE).src _force
+$(FSTAR2_FULL_EXE): .bare2.touch .full2.touch
 	$(call bold_msg, "BUILD", "STAGE 2 FSTARC")
 	$(MAKE) -C stage2 fstarc-full FSTAR_DUNE_RELEASE=1
+	touch -c $@
 
-2.alib.src: $(FSTAR2_FULL_EXE) _force
+.alib2.src.touch: $(FSTAR2_FULL_EXE) _force
 	$(call bold_msg, "EXTRACT", "STAGE 2 LIB")
 	env \
 	  SRC=ulib/ \
@@ -172,14 +187,16 @@ $(FSTAR2_FULL_EXE): $(FSTAR2_FULL_EXE).src _force
 	  OUTPUT_DIR=stage2/ulib.ml/ \
 	  CODEGEN=OCaml \
 	  TAG=lib \
+	  TOUCH=$@ \
 	  $(MAKE) -f mk/lib.mk all-ml
 
-2.alib: 2.alib.src _force
+.alib2.touch: .alib2.src.touch
 	$(call bold_msg, "BUILD", "STAGE 2 LIB")
 	$(MAKE) -C stage2/ libapp FSTAR_DUNE_RELEASE=1
+	touch $@
 
-2.plib.src: $(FSTAR2_FULL_EXE) 2.alib.src _force
-	# NB: shares .depend and checked from 2.alib.src,
+.plib2.src.touch: $(FSTAR2_FULL_EXE) .alib2.src.touch _force
+	# NB: shares .depend and checked from .alib2.src,
 	# hence the dependency, though it is not quite precise.
 	$(call bold_msg, "EXTRACT", "STAGE 2 PLUGLIB")
 	env \
@@ -190,15 +207,17 @@ $(FSTAR2_FULL_EXE): $(FSTAR2_FULL_EXE).src _force
 	  CODEGEN=PluginNoLib \
 	  TAG=pluginlib \
 	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed' \
+	  TOUCH=$@ \
 	  $(MAKE) -f mk/lib.mk all-ml
 
-2.plib: 2.plib.src _force | 2.alib # this last dependency only to prevent simultaneous dune builds
+.plib2.touch: .plib2.src.touch | .alib2.touch # this last dependency only to prevent simultaneous dune builds
 	$(call bold_msg, "BUILD", "STAGE 2 PLUGLIB")
 	$(MAKE) -C stage2/ libplugin FSTAR_DUNE_RELEASE=1
+	touch $@
 
 # F# library, from stage 2.
-lib-fsharp.src: $(FSTAR2_FULL_EXE) 2.alib.src _force
-	# NB: shares checked files from 2.alib.src,
+lib-fsharp.src: $(FSTAR2_FULL_EXE) .alib2.src.touch _force
+	# NB: shares checked files from .alib2.src,
 	# hence the dependency, though it is not quite precise.
 	$(call bold_msg, "EXTRACT", "FSHARP LIB")
 	# Note: FStar.Map and FStar.Set are special-cased
@@ -246,25 +265,30 @@ else
 LINK_OK=0
 endif
 
-stage1-components: 1.full 1.alib.src 1.plib.src
-__install-stage1:
+.stage1.touch: .bare1.touch .full1.touch .alib1.touch .plib1.touch
+	touch $@
+
+.stage2.touch: .bare2.touch .full2.touch .alib2.touch .plib2.touch
+	touch $@
+
+__do-install-stage1: .stage1.touch
 	$(call bold_msg, "INSTALL", "STAGE 1")
 	$(MAKE) -C stage1 install
-
-$(INSTALLED_FSTAR1_FULL_EXE): export FSTAR_LINK_LIBDIRS=$(LINK_OK)
-$(INSTALLED_FSTAR1_FULL_EXE): stage1-components
-	$(MAKE) __install-stage1 PREFIX=$(CURDIR)/stage1/out
-	@# ^ pass PREFIX to make sure we don't get it from env
-
-stage2-components: 2.full 2.alib.src 2.plib.src
-__install-stage2:
+__do-install-stage2: .stage2.touch
 	$(call bold_msg, "INSTALL", "STAGE 2")
 	$(MAKE) -C stage2 install FSTAR_DUNE_RELEASE=1
 
-$(INSTALLED_FSTAR2_FULL_EXE): export FSTAR_LINK_LIBDIRS=$(LINK_OK)
-$(INSTALLED_FSTAR2_FULL_EXE): stage2-components
-	$(MAKE) __install-stage2 PREFIX=$(CURDIR)/stage2/out
+.install-stage1.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
+.install-stage1.touch: .stage1.touch
+	$(MAKE) __do-install-stage1 PREFIX=$(CURDIR)/stage1/out
 	@# ^ pass PREFIX to make sure we don't get it from env
+	touch $@
+
+.install-stage2.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
+.install-stage2.touch: .stage2.touch
+	$(MAKE) __do-install-stage2 PREFIX=$(CURDIR)/stage2/out
+	@# ^ pass PREFIX to make sure we don't get it from env
+	touch $@
 
 setlink-%:
 	if [ -e out ] && ! [ -h out ]; then echo "ERROR: out/ exists and is not a symbolic link, please remove it"; false; fi
@@ -274,11 +298,11 @@ setlink-%:
 	ln -Trsf out/bin/fstar.exe bin/fstar.exe
 	ln -Trsf .scripts/get_fstar_z3.sh bin/get_fstar_z3.sh
 
-stage1: $(INSTALLED_FSTAR1_FULL_EXE)
+stage1: .install-stage1.touch
 1: stage1
 	$(MAKE) setlink-1
 
-stage2: $(INSTALLED_FSTAR2_FULL_EXE)
+stage2: .install-stage2.touch
 2: stage2
 	$(MAKE) setlink-2
 
@@ -287,8 +311,7 @@ stage2: $(INSTALLED_FSTAR2_FULL_EXE)
 install: BROOT=stage2
 install: export PREFIX?=/usr/local
 install: export FSTAR_LINK_LIBDIRS=0 # default is false, but set anyway
-install: stage2-components
-	$(MAKE) __install-stage2
+install: __do-install-stage2
 
 __do-archive: _force
 	rm -rf $(PKGTMP)
@@ -319,30 +342,30 @@ __do-src-archive: _force
 # FSTAR_TAG is set (possibly empty)
 FSTAR_TAG ?= -v$(shell cat version.txt)
 
-package-1: stage1-components _force
+package-1: .stage1.touch _force
 	env \
 	  PKGTMP=_pak1 \
 	  BROOT=stage1/ \
 	  ARCHIVE=fstar$(FSTAR_TAG)-stage1 \
-	  INSTALL_RULE=__install-stage1 \
+	  INSTALL_RULE=__do-install-stage1 \
 	  $(MAKE) __do-archive
 
-package-2: stage2-components _force
+package-2: .stage2.touch _force
 	env \
 	  PKGTMP=_pak2 \
 	  BROOT=stage2/ \
 	  ARCHIVE=fstar$(FSTAR_TAG) \
-	  INSTALL_RULE=__install-stage2 \
+	  INSTALL_RULE=__do-install-stage2 \
 	  $(MAKE) __do-archive
 
-package-src-1: stage1-components _force
+package-src-1: .stage1.touch _force
 	env \
 	  PKGTMP=_srcpak1 \
 	  BROOT=stage1/ \
 	  ARCHIVE=fstar$(FSTAR_TAG)-stage1-src \
 	  $(MAKE) __do-src-archive
 
-package-src-2: stage2-components _force
+package-src-2: .stage2.touch _force
 	env \
 	  PKGTMP=_srcpak2 \
 	  BROOT=stage2/ \
@@ -393,46 +416,29 @@ ci: _force
 	+$(MAKE) 2
 	+$(MAKE) test lib-fsharp stage3-diff
 
-do-save: _force
-	$(call bold_msg,"SAVE", "$(FROM)  -->  $(TO)")
-	rm -rf $(TO)
-	mkdir -p $(TO)
-	cp -r $(FROM) -T $(TO)
-	rm -rf $(TO)/out
-	rm -rf $(TO)/fstarc.checked
-	rm -rf $(TO)/plugins.checked
-	rm -rf $(TO)/ulib.checked
-	dune clean --no-print-directory --display=quiet --root=$(TO)/bare
-	dune clean --no-print-directory --display=quiet --root=$(TO)/full
-	dune clean --no-print-directory --display=quiet --root=$(TO)/fstarlib
-	dune clean --no-print-directory --display=quiet --root=$(TO)/fstar-pluginlib
-	sed -i 's/a/a/' $(TO)/version.txt # hack to turn symlink into concrete file
-	rm -f $(TO)/full/ulib
-	rm -f $(TO)/ulib # a symlink
-	cp -r ulib -T $(TO)/ulib
-	# For now at least... we do not really use the stage0 F* to compile
-	# normal applications, though that should definitely change if possible.
-	# So, remove some more stuff.
-	rm -rf $(TO)/fstarlib
-	rm -rf $(TO)/fstar-pluginlib
-	rm -rf $(TO)/ulib.ml
-	rm -rf $(TO)/ulib.pluginml
-	# We also do not ever verify anything with the stage0. So, remove
-	# the hints, but this is weird...
-	rm -rf $(TO)/ulib/.hints
-	rm -f $(TO)/.gitignore
-	echo '/out' >> $(TO)/.gitignore
+save: stage0_new
 
-save: FROM=stage2
-save: TO=_new
-save: do-save
+stage0_new: TO=stage0_new
+stage0_new: .stage2.touch
+	$(call bold_msg, "SNAPSHOT", "$(TO)")
+	rm -rf "$(TO)"
+	.scripts/src-install.sh "stage2" "$(TO)"
+	# Trim it a bit...
+	rm -rf "$(TO)/src"            # no need for compiler F* sources
+	rm -rf "$(TO)/ulib/.hints"    # this library won't be checked
+	rm -rf "$(TO)/ulib.pluginml"  # we won't build plugins against stage0
+	rm -rf "$(TO)/dune/libplugin" # idem
+	rm -rf "$(TO)/dune/libapp"    # we won't even build apps
 
-bump-stage0: FROM=stage2
-bump-stage0: TO=stage0
-bump-stage0: do-save
+bump-stage0: stage0_new
+	$(call bold_msg, "BUMP!")
+	# Replace stage0
+	rm -rf stage0
+	mv stage0_new stage0
+	echo 'out' >> stage0/.gitignore
 	# Now that stage0 supports all features, we can return to a clean state
-	# where the 01 makefile is equal to the 12 makefile. Same for stage1 support
-	# and config code, we just take it from the stage2.
+	# where the 01 makefile is equal to the 12 makefile. Same for stage1
+	# support and config code, we just take it from the stage2.
 	rm -f mk/fstar-01.mk
 	ln -s fstar-12.mk mk/fstar-01.mk
 	rm -rf stage1
@@ -471,8 +477,8 @@ clean-depend: _force
 
 clean-0: _force
 	$(call bold_msg, "CLEAN", "STAGE 0")
-	$(MAKE) -C $(STAGE0) clean
-	rm -rf $(STAGE0)/ulib/.cache # created only to prevent warnings, always empty
+	$(MAKE) -C stage0 clean
+	rm -rf stage0/ulib/.cache # created only to prevent warnings, always empty
 
 clean-1: _force
 	$(call bold_msg, "CLEAN", "STAGE 1")
@@ -543,8 +549,7 @@ help:
 	echo "  trim               clean some buildfiles, but retain any installed F* in out"
 	echo "  distclean          remove every generated file"
 	echo "  unit-tests         run the smaller unit test suite (implied by test)"
-	echo "  bump-stage0        copy stage2 into stage0, and restore symlinks between stage1/stage2"
-	echo "                     (essentially snapshotting a package-src-2)"
-	echo "  save               like bump-stage0, but saves the snapshot in _new/ for inspection"
+	echo "  save               copy a trimmed stage2 into stage0_new (essentially snapshotting a package-src-2)"
+	echo "  bump-stage0        like save, but replace existing stage0 and reset to a default state"
 	echo
 	echo "You can set a different default goal by defining FSTAR_DEFAULT_GOAL in your environment."

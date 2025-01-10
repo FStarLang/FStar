@@ -7,6 +7,12 @@ $(call need, CODEGEN, backend (OCaml / Plugin))
 $(call need, SRC, source directory)
 $(call need, TAG, a tag for the .depend; to prevent clashes. Sorry.)
 
+# Optionally pass a file to touch everytime something is performed.
+# We also create it if it does not exist (this simplifies external use)
+ifneq ($(TOUCH),)
+_ != $(shell [ -f "$(TOUCH)" ] || touch $(TOUCH))
+endif
+
 .PHONY: clean
 clean:
 	rm -rf $(CACHE_DIR)
@@ -68,6 +74,7 @@ EXTRACT += --extract -FStar.Util
 %.checked.lax:
 	$(call msg, "LAXCHECK", $(basename $(basename $(notdir $@))))
 	$(FSTAR) $(if $(findstring /ulib/,$<),,--MLish) $<
+	$(if $(TOUCH), touch $(TOUCH))
 	@touch -c $@  ## SHOULD NOT BE NEEDED
 
 %.ml: FF=$(notdir $(subst .checked.lax,,$<))
@@ -80,6 +87,7 @@ EXTRACT += --extract -FStar.Util
 	$(FSTAR) $(FF) \
 	  --codegen $(CODEGEN) \
 	  --extract_module $(MM)
+	$(if $(TOUCH), touch $(TOUCH))
 	@touch -c $@  ## SHOULD NOT BE NEEDED
 
 # --------------------------------------------------------------------

@@ -29,7 +29,14 @@ let fstar_bin_directory : string =
 let read_fstar_include (fn : string) : option (list string) =
   try
     let s = BU.file_get_contents fn in
-    let subdirs = String.split ['\n'] s |> List.filter (fun s -> s <> "" && not (String.get s 0 = '#')) in
+    let subdirs =
+      // Read each line
+      String.split ['\n'] s |>
+      // Trim whitespace (including Windows' \r ! Important!)
+      List.map BU.trim_string |>
+      // And keep the non-empty lines that don't begin with '#'
+      List.filter (fun s -> s <> "" && not (String.get s 0 = '#'))
+    in
     Some subdirs
   with
   | _ ->

@@ -7,6 +7,12 @@ $(call need, CODEGEN, backend (OCaml / Plugin))
 $(call need_dir, SRC, source directory)
 $(call need, TAG, a tag for the .depend; to prevent clashes. Sorry.)
 
+# Optionally pass a file to touch everytime something is performed.
+# We also create it if it does not exist (this simplifies external use)
+ifneq ($(TOUCH),)
+_ != $(shell [ -f "$(TOUCH)" ] || touch $(TOUCH))
+endif
+
 .PHONY: clean
 clean:
 	rm -rf $(CACHE_DIR)
@@ -26,6 +32,8 @@ FSTAR_OPTIONS += --MLish_effect 'FStarC.Compiler.Effect'
 FSTAR_OPTIONS += --cache_checked_modules
 FSTAR_OPTIONS += --cache_dir "$(CACHE_DIR)"
 FSTAR_OPTIONS += --odir "$(OUTPUT_DIR)"
+FSTAR_OPTIONS += --no_default_includes
+FSTAR_OPTIONS += --include "$(FSTAR_ROOT)/ulib"
 
 FSTAR_OPTIONS += --include "$(SRC)"
 
@@ -55,6 +63,7 @@ EXTRACT += --extract +FStar.Seq.Properties
 	$(FSTAR) $(if $(findstring FStarC,$<),--MLish,) $<
 	@# HACK: finding FStarC modules
 	@touch -c $@  ## SHOULD NOT BE NEEDED
+	$(if $(TOUCH), touch $(TOUCH))
 
 %.ml: FF=$(notdir $(subst .checked.lax,,$<))
 %.ml: MM=$(basename $(FF))
@@ -66,6 +75,7 @@ EXTRACT += --extract +FStar.Seq.Properties
 	$(call msg, "EXTRACT", $(LBL))
 	$(FSTAR) $(FF) $(if $(findstring FStarC,$<),--MLish,) --codegen $(CODEGEN) --extract_module $(MM)
 	@touch -c $@  ## SHOULD NOT BE NEEDED
+	$(if $(TOUCH), touch $(TOUCH))
 
 ROOTS :=
 ROOTS += $(SRC)/fstar/FStarC.Main.fst

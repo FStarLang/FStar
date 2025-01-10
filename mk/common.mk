@@ -21,11 +21,11 @@ endef
 define msg =
 @printf "   %-14s  %s\n" $(1) $(2)
 endef
+# Must be one line so it can be commented out easily
+#-tput bold 2>/dev/null
+#-tput sgr0 2>/dev/null
 define bold_msg =
-@#-tput bold 2>/dev/null
-@printf -- "  %-15s" $(1)
-@#-tput sgr0 2>/dev/null
-@printf "  %s\n" $(2)
+printf -- "  %-15s  %s\n" $(1) $(2)
 endef
 
 # Passing RESOURCEMONITOR=1 will create .runlim files through the source tree with

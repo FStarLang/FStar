@@ -49,6 +49,7 @@ check_fstarc: install_bin
 	  OUTPUT_DIR=None \
 	  TAG=fstarc \
 	  FSTAR_LIB=$(abspath ulib) \
+	  FSTAR_ROOT=$(CURDIR) \
 	  $(MAKE) -f mk/fstar-12.mk all-checked
 
 install_fstarc: check_fstarc
@@ -59,8 +60,10 @@ install_fstarc: check_fstarc
 	echo 'src'          > out/lib/fstar/fstarc/fstar.include
 	echo 'src.checked' >> out/lib/fstar/fstarc/fstar.include
 
-clean: _force
+trim: _force
 	dune clean $(FSTAR_DUNE_OPTIONS) --root=dune
+
+clean: trim
 	rm -rf $(CURDIR)/out
 
 all: install_lib install_fstarc
