@@ -2573,7 +2573,8 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term & lcomp & guard_
                       (Range.string_of_range e.pos)
       in
 
-      match maybe_eta_expand_fun env e lc.res_typ exp_t with
+      // eta-expand functions for effect promotion, unless we're in --MLish
+      match if Options.ml_ish () then None else maybe_eta_expand_fun env e lc.res_typ exp_t with
       | Some e' ->
         if !dbg_Coercions then
           BU.print3 "(%s) Eta-expansion coercion from %s to %s" (Range.string_of_range e.pos) (show e) (show e');

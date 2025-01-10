@@ -2997,6 +2997,8 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
           S.mk_Tm_app rhs_hd rhs_args rhs.pos
         in
         let rhs =
+          // eta-expand functions for effect promotion, unless we're in --MLish
+          if Options.ml_ish () then rhs else
           let env = { env with admit=true; expected_typ=None } in
           let t_u, _ =
             let Flex (lhs, _, _) = lhs in
