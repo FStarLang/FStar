@@ -4225,9 +4225,21 @@ and build_let_rec_env _top_level env lbs : list letbinding & env_t & guard_t =
        let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) None in
        env0, g |> Rel.resolve_implicits env |> Rel.discharge_guard env0, t
    in
-   let lbs, env, g = List.fold_left (fun (lbs, env, g_acc) lb ->
+   let _, lbs, env, g = List.fold_left (fun (univ_vars_acc, lbs, env, g_acc) lb ->
         let univ_vars, lbtyp, lbdef, check_t = TcUtil.extract_let_rec_annotation env lb in
-        let env = Env.push_univ_vars env univ_vars in //no polymorphic recursion on universes
+        let univ_vars_acc, env =
+          match univ_vars_acc with
+          | None -> Some univ_vars, Env.push_univ_vars env univ_vars //no polymorphic recursion on universes
+          | Some uvs ->
+            if List.length uvs <> List.length univ_vars
+            || not (List.forall2 (fun u1 u2 -> Ident.ident_equals u1 u2) uvs univ_vars)
+            then
+              raise_error lbtyp Errors.Fatal_IncompatibleSetOfUniverse [
+                text "Mutually recursive functions must all have the same universe variables in their type annotation"
+              ]
+            else
+              univ_vars_acc, env
+        in
         let g, lbtyp =
             if not check_t
             then g_acc, lbtyp
@@ -4256,8 +4268,8 @@ and build_let_rec_env _top_level env lbs : list letbinding & env_t & guard_t =
               let lb = {lb with lbtyp=lbtyp; lbunivs=univ_vars; lbdef=lbdef} in
               lb, Env.push_let_binding env lb.lbname (univ_vars, lbtyp)
         in
-        lb::lbs,  env, g)
-    ([], env, mzero)
+        univ_vars_acc, lb::lbs,  env, g)
+    (None, [], env, mzero)
     lbs  in
   List.rev lbs, env, g
 
