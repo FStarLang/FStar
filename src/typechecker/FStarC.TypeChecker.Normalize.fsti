@@ -35,6 +35,7 @@ val unfold_whnf':         steps -> Env.env -> term -> term
 val unfold_whnf:          Env.env -> term -> term
 val reduce_uvar_solutions:Env.env -> term -> term
 val non_info_norm: Env.env -> term -> option term
+val non_info_sort_norm: Env.env -> term -> bool
 
 (*
  * The maybe versions of ghost_to_pure only promote
