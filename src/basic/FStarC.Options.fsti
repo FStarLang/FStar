@@ -33,7 +33,7 @@ type codegen_t =
 
 type split_queries_t = | No | OnFailure | Always
 
-type message_format_t = | Json | Human
+type message_format_t = | Json | Human | Github
 
 type option_val =
   | Bool of bool

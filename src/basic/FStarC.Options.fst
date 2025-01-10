@@ -991,7 +991,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "message_format",
-    EnumStr ["human"; "json"],
+    EnumStr ["human"; "json"; "github"],
     text "Format of the messages emitted by F* (default `human`)");
 
   ( noshort,
@@ -1997,6 +1997,7 @@ let message_format               () =
   match get_message_format () with
   | "human" -> Human
   | "json" -> Json
+  | "github" -> Github
   | illegal -> failwith ("print_issue: option `message_format` was expected to be `human` or `json`, not `" ^ illegal ^ "`. This should be impossible: `message_format` was supposed to be validated.")
 let force                        () = get_force                       ()
 let full_context_dependency      () = true
