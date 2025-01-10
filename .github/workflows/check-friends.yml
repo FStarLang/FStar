@@ -28,8 +28,7 @@ jobs:
         uses: actions/checkout@master
         with:
           path: karamel/
-          repository: mtzguido/karamel
-          ref: dev
+          repository: FStarLang/karamel
 
       - name: Build krml
         run: make -C karamel -skj$(nproc)
@@ -95,8 +94,7 @@ jobs:
         uses: actions/checkout@master
         with:
           path: steel/
-          repository: mtzguido/steel
-          ref: dev
+          repository: FStarLang/steel
 
       - name: Build
         run: make -C steel -skj$(nproc)
@@ -148,8 +146,7 @@ jobs:
         uses: actions/checkout@master
         with:
           path: pulse/
-          repository: mtzguido/pulse
-          ref: dev
+          repository: FStarLang/pulse
 
       - uses: actions/download-artifact@v4
         with:
@@ -226,8 +223,7 @@ jobs:
         uses: actions/checkout@master
         with:
           path: hacl-star/
-          repository: mtzguido/hacl-star
-          ref: dev
+          repository: hacl-star/hacl-star
 
       # Patch HACL* for new lib
       - run: sed -i 's/^\(OCAMLSHARED.*\)fstar\.lib/\1fstar.pluginlib/' hacl-star/Makefile.common
@@ -308,8 +304,7 @@ jobs:
         uses: actions/checkout@master
         with:
           path: everparse/
-          repository: mtzguido/everparse
-          ref: dev
+          repository: project-everest/everparse
 
       - name: Build
         run: |
@@ -382,8 +377,7 @@ jobs:
         uses: actions/checkout@master
         with:
           path: merkle-tree/
-          repository: mtzguido/merkle-tree
-          ref: dev
+          repository: hacl-star/merkle-tree
 
       - name: Build
         run: |
@@ -464,8 +458,7 @@ jobs:
         uses: actions/checkout@master
         with:
           path: mitls-fstar/
-          repository: mtzguido/mitls-fstar
-          ref: dev
+          repository: project-everest/mitls-fstar
 
       - name: Build
         run: make -C mitls-fstar/src/tls -skj$(nproc)
@@ -554,7 +547,7 @@ jobs:
         with:
           path: everparse/
           ref: taramana_cbor
-          repository: mtzguido/everparse
+          repository: project-everest/everparse
 
       - name: Build
         run: |
