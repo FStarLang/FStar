@@ -1726,24 +1726,44 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
                     3. For each action, a : x1:n -> ... -> xn:tn -> st_repr t wp = fun x1..xn -> e
                         encode forall x1..xn. Reify (Apply a x1 ... xn) = [[e]]
             *)
+            let ed_univs_subst, ed_univs = SS.univ_var_opening ed.univs in
             let close_effect_params tm =
-              match ed.binders with
-              | [] -> tm
-              | _ -> S.mk (Tm_abs {bs=ed.binders;
-                                   body=tm;
-                                   rc_opt=Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])}) tm.pos
+              SS.subst ed_univs_subst
+                (match ed.binders with
+                  | [] -> tm
+                  | _ -> S.mk (Tm_abs {bs=ed.binders;
+                                      body=tm;
+                                      rc_opt=Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])}) tm.pos)
+            in
+
+            let open_action_univs (a:S.action) =
+              let action_univs_subst, action_univs = SS.univ_var_opening a.action_univs in
+              SS.subst ed_univs_subst (SS.subst action_univs_subst a.action_defn),
+              SS.subst ed_univs_subst (SS.subst action_univs_subst a.action_typ),
+              action_univs
+
             in
 
             let encode_action env (a:S.action) =
-              let action_defn = norm_before_encoding env (close_effect_params a.action_defn) in
-              let formals, _ = U.arrow_formals_comp a.action_typ in
+              let action_univs_subst, action_univs = SS.univ_var_opening a.action_univs in
+              let action_defn, action_typ, action_univs = open_action_univs a in
+              let action_defn = norm_before_encoding env (close_effect_params action_defn) in
+              let formals, _ = U.arrow_formals_comp action_typ in
               let arity = List.length formals in
-              let univ_arity = 0 in //actions are not universe polymorphic
+              let univ_arity = List.length action_univs + List.length ed_univs in
               let aname, atok, env = new_term_constant_and_tok_from_lid env a.action_name arity univ_arity in
               let tm, decls = encode_term action_defn env in
+              let univ_sorts = ed_univs@action_univs |> List.map (fun _ -> univ_sort) in
               let a_decls =
-                [Term.DeclFun(aname, formals |> List.map (fun _ -> Term_sort), Term_sort, Some "Action");
-                  Term.DeclFun(atok, [], Term_sort, Some "Action token")]
+                [Term.DeclFun(aname, univ_sorts @ (formals |> List.map (fun _ -> Term_sort)), Term_sort, Some "Action");
+                  Term.DeclFun(atok, univ_sorts, Term_sort, Some "Action token")]
+              in
+              let _, us_sorts, us = 
+                let aux u (env, acc_sorts, acc) =
+                  let fv, tm = encode_univ_name u in
+                  env, fv::acc_sorts, tm::acc
+                in
+                List.fold_right aux (ed_univs@action_univs) (env, [], [])
               in
               let _, xs_sorts, xs =
                 let aux ({binder_bv=bv}) (env, acc_sorts, acc) =
@@ -1752,17 +1772,16 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
                 in
                 List.fold_right aux formals (env, [], [])
               in
-              (* let app = mkApp("Reify", [mkApp(aname, xs)]) in *)
-              let app = mkApp(aname, xs) in //arity ok; length xs = length formals = arity
+              let app = mkApp(aname, us@xs) in
               let a_eq =
-                Util.mkAssume(mkForall (Ident.range_of_lid a.action_name) ([[app]], xs_sorts, mkEq(app, mk_Apply tm xs_sorts)),
+                Util.mkAssume(mkForall (Ident.range_of_lid a.action_name) ([[app]], us_sorts@xs_sorts, mkEq(app, mk_Apply tm xs_sorts)),
                             Some "Action equality",
                             (aname ^"_equality"))
               in
               let tok_correspondence =
-                let tok_term = mkFreeV <| mk_fv (atok,Term_sort) in
+                let tok_term = mkApp(atok, us) in
                 let tok_app = mk_Apply tok_term xs_sorts in
-                Util.mkAssume(mkForall (Ident.range_of_lid a.action_name) ([[tok_app]], xs_sorts, mkEq(tok_app, app)),
+                Util.mkAssume(mkForall (Ident.range_of_lid a.action_name) ([[tok_app]], us_sorts@xs_sorts, mkEq(tok_app, app)),
                             Some "Action token correspondence", (aname ^ "_token_correspondence"))
               in
               env, decls@(a_decls@[a_eq; tok_correspondence] |> mk_decls_trivial)
