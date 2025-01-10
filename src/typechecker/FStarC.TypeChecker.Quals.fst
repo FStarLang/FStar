@@ -248,13 +248,20 @@ let check_erasable env quals (r:Range.range) se =
       let has_iface_val = match DsEnv.iface_decls (Env.dsenv env) (Env.current_module env) with
         | Some iface_decls -> iface_decls |> BU.for_some (Parser.AST.decl_is_val (ident_of_lid lbname.fv_name.v))
         | None -> false in
-      let _, body, _ = U.abs_formals lb.lbdef in
-      if has_iface_val && Some? (non_info_norm_weak env body) then log_issue lbname Error_MustEraseMissing [
-        text (BU.format1 "Values of type `%s` will be erased during extraction, \
-              but its interface hides this fact." (show lbname));
-        text (BU.format1 "Add the `erasable` \
-              attribute to the `val %s` declaration for this symbol in the interface" (show lbname));
-      ]
+      let val_decl = Env.try_lookup_val_decl env lbname.fv_name.v in
+      if has_iface_val && Some? val_decl then
+        let _, body, _ = U.abs_formals lb.lbdef in
+          let Some ((us, t), _) = val_decl in
+        let known_to_be_erasable =
+          let env = Env.push_univ_vars env us in
+          N.non_info_sort_norm env t in
+        if not known_to_be_erasable && Some? (non_info_norm_weak env body) then
+          log_issue lbname Error_MustEraseMissing [
+            text (BU.format1 "Values of type `%s` will be erased during extraction, \
+                  but its interface hides this fact." (show lbname));
+            text (BU.format1 "Add the `erasable` \
+                  attribute to the `val %s` declaration for this symbol in the interface" (show lbname));
+          ]
     | _ -> ()
   end;
   if se_has_erasable_attr

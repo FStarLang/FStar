@@ -352,6 +352,11 @@ val fv_has_erasable_attr   : env -> fv -> bool
    and any `x: t ...` can be erased to `i`. *)
 val non_informative        : env -> typ -> option term
 
+(* `non_informative_sort t` is `true` if the type family `t: ... -> Type` only ranges over noninformative types,
+   i.e., any `x: s ...` such that `s ... : t ...` can be erased.
+   (practically, this means that `t` is of the form `... -> prop`) *)
+val non_informative_sort   : typ -> bool
+
 val try_lookup_effect_lid  : env -> lident -> option term
 val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> universes -> lident -> option (binders & comp)
