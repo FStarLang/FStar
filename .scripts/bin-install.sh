@@ -5,6 +5,10 @@
 
 set -eu
 
+windows () {
+  [ -v OS ] && [ "$OS" = "Windows_NT" ]
+}
+
 if [ $# -ne 1 ]; then
 	echo "Usage: $0 <prefix>" >&2
 	exit 1
@@ -25,3 +29,13 @@ cp LICENSE* "$PREFIX"
 cp README.md "$PREFIX"
 cp INSTALL.md "$PREFIX"
 cp version.txt "$PREFIX"
+
+# Save the megabytes! Strip binaries
+STRIP=strip
+
+if windows; then
+  STRIP="$(pwd)/mk/winwrap.sh $STRIP"
+fi
+
+$STRIP "$PREFIX"/bin/* || true
+$STRIP "$PREFIX"/lib/fstar/z3-*/bin/* || true
