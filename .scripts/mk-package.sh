@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# This will just create a tar.gz or zip out of a directory.
+# You may want to look at src-install.sh and bin-install.sh
+# that generate the layouts for a source and binary package,
+# and are then packaged up with this script.
+
 if [ $# -ne 2 ]; then
 	echo "usage: $0 <install_root> <package_basename>" >&2
 	echo "Default format is tar.gz. Optionally set FSTAR_PACKAGE_FORMAT=zip to generate a zip instead." >&2

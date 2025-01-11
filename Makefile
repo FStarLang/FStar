@@ -316,19 +316,10 @@ install: __do-install-stage2
 __do-archive: _force
 	rm -rf $(PKGTMP)
 	# add an 'fstar' top-level directory to the archive
-	$(MAKE) $(INSTALL_RULE) PREFIX=$(abspath $(PKGTMP)/fstar)
-ifneq ($(FSTAR_PACKAGE_Z3),false)
-	.scripts/package_z3.sh $(PKGTMP)/fstar/
-endif
-	@# License and extra files. Not there on normal installs, but present
-	@# in package.
-	cp LICENSE* $(PKGTMP)/fstar/
-	cp README.md $(PKGTMP)/fstar/
-	cp INSTALL.md $(PKGTMP)/fstar/
-	cp version.txt $(PKGTMP)/fstar/
+	$(MAKE) $(INSTALL_RULE) PREFIX="$(abspath $(PKGTMP)/fstar)"
 	$(call bold_msg, "PACKAGE", $(ARCHIVE))
+	.scripts/bin-install.sh "$(PKGTMP)/fstar"
 	.scripts/mk-package.sh "$(PKGTMP)" "$(ARCHIVE)"
-	# tar czf $(ARCHIVE) -h -C $(PKGTMP) --exclude='lib/**/*.fst.config.json' .
 	rm -rf $(PKGTMP)
 
 __do-src-archive: _force
