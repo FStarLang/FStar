@@ -229,7 +229,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
         let a = mkFreeV aa in
         let bb = mk_fv ("b", Int_sort) in
         let b = mkFreeV bb in
-        let precedes_y_x = mk_Valid <| mkApp("Prims.precedes", [lex_t; lex_t;y;x]) in
+        let precedes_y_x = mk_Valid <| mkApp("Prims.precedes", [mk_U_zero; mk_U_zero; lex_t; lex_t;y;x]) in
         [Util.mkAssume(mkForall (Env.get_range env) ([[Term.boxInt b]], [bb], mk_HasType (Term.boxInt b) tt), Some "int typing", "int_typing");
          Util.mkAssume(mkForall_fuel env (Env.get_range env) ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxIntFun) x)), Some "int inversion", "int_inversion");
          Util.mkAssume(mkForall_fuel env (Env.get_range env) ([[typing_pred; typing_pred_y;precedes_y_x]],
@@ -1465,7 +1465,7 @@ let encode_datacon (env:env_t) (se:sigelt)
                           (* it's a parameter, so it's inaccessible and no need for a sub-term ordering on it *)
                           if i < n_tps
                           then []
-                          else [mk_Precedes lex_t lex_t (mkFreeV v) dapp])
+                          else [mk_Precedes mk_U_zero mk_U_zero lex_t lex_t (mkFreeV v) dapp])
                     |> List.flatten
             in
             Util.mkAssume(mkForall (Ident.range_of_lid d)
@@ -1556,13 +1556,13 @@ let encode_datacon (env:env_t) (se:sigelt)
                     let bs', guards', _env', bs_decls, _ = encode_binders None bs env' in
                     let fun_app = mk_Apply (mkFreeV var) bs' in
                     mkForall (Ident.range_of_lid d)
-                              ([[mk_Precedes lex_t lex_t fun_app dapp]],
+                              ([[mk_Precedes mk_U_zero mk_U_zero lex_t lex_t fun_app dapp]],
                                 bs',
                                 //need to use ty_pred' here, to avoid variable capture
                                 //Note, ty_pred' is indexed by fuel, not S_fuel
                                 //That's ok, since the outer pattern is guarded on S_fuel
                                 mkImp (mk_and_l (ty_pred'::guards'),
-                                      mk_Precedes lex_t lex_t fun_app dapp))
+                                      mk_Precedes mk_U_zero mk_U_zero lex_t lex_t fun_app dapp))
                     :: codomain_prec_l,
                     bs_decls @ cod_decls)
               ([],[])

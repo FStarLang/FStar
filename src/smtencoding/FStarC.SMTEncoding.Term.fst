@@ -976,7 +976,7 @@ and mkPrelude z3options =
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
                 (declare-fun Tm_uvar (Int) Term)\n\
                 (define-fun Reify ((x Term)) Term x)\n\
-                (declare-fun Prims.precedes (Term Term Term Term) Term)\n\
+                (declare-fun Prims.precedes (Universe Universe Term Term Term Term) Term)\n\
                 (declare-fun Range_const (Int) Term)\n\
                 (declare-fun _mul (Int Int) Int)\n\
                 (declare-fun _div (Int Int) Int)\n\
@@ -1015,17 +1015,17 @@ and mkPrelude z3options =
                        |> List.map (declToSmt z3options) |> String.concat "\n" in
 
    let precedes_partial_app = "\n\
-     (declare-fun Prims.precedes@tok () Term)\n\
+     (declare-fun Prims.precedes@tok (Universe Universe) Term)\n\
      (assert\n\
-     (forall ((@x0 Term) (@x1 Term) (@x2 Term) (@x3 Term))\n\
-     (! (= (ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok\n\
+     (forall ((u0 Universe) (u1 Universe) (@x0 Term) (@x1 Term) (@x2 Term) (@x3 Term))\n\
+     (! (= (ApplyTT (ApplyTT (ApplyTT (ApplyTT (Prims.precedes@tok u0 u1)\n\
      @x0)\n\
      @x1)\n\
      @x2)\n\
      @x3)\n\
-     (Prims.precedes @x0 @x1 @x2 @x3))\n\
+     (Prims.precedes u0 u1 @x0 @x1 @x2 @x3))\n\
      \n\
-     :pattern ((ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok\n\
+     :pattern ((ApplyTT (ApplyTT (ApplyTT (ApplyTT (Prims.precedes@tok u0 u1)\n\
      @x0)\n\
      @x1)\n\
      @x2)\n\
@@ -1035,19 +1035,19 @@ and mkPrelude z3options =
                                    (is-LexCons t))\n\
                        (declare-fun Prims.lex_t () Term)\n\
                        (declare-fun LexTop () Term)\n\
-                       (assert (forall ((t1 Term) (t2 Term) (x1 Term) (x2 Term) (y1 Term) (y2 Term))\n\
-                                    (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t (LexCons t1 x1 x2) (LexCons t2 y1 y2)))\n\
-                                         (or (Valid (Prims.precedes t1 t2 x1 y1))\n\
+                       (assert (forall ((u0 Universe) (u1 Universe) (t1 Term) (t2 Term) (x1 Term) (x2 Term) (y1 Term) (y2 Term))\n\
+                                    (iff (Valid (Prims.precedes u0 u1 Prims.lex_t Prims.lex_t (LexCons t1 x1 x2) (LexCons t2 y1 y2)))\n\
+                                         (or (Valid (Prims.precedes u0 u1 t1 t2 x1 y1))\n\
                                              (and (= x1 y1)\n\
-                                                  (Valid (Prims.precedes Prims.lex_t Prims.lex_t x2 y2)))))))\n\
-                      (assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
-                                                          (! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n\
-                                                                  (Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n\
-                                                          :pattern (Prims.precedes t1 t2 e1 e2))))\n\
-                      (assert (forall ((t1 Term) (t2 Term))\n\
-                                      (! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n\
+                                                  (Valid (Prims.precedes u0 u1 Prims.lex_t Prims.lex_t x2 y2)))))))\n\
+                      (assert (forall ((u0 Universe) (u1 Universe) (t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
+                                                          (! (iff (Valid (Prims.precedes u0 u1 t1 t2 e1 e2))\n\
+                                                                  (Valid (Prims.precedes U_zero U_zero Prims.lex_t Prims.lex_t e1 e2)))\n\
+                                                          :pattern (Prims.precedes u0 u1 t1 t2 e1 e2))))\n\
+                      (assert (forall ((u0 Universe) (u1 Universe) (t1 Term) (t2 Term))\n\
+                                      (! (iff (Valid (Prims.precedes u0 u1 Prims.lex_t Prims.lex_t t1 t2)) \n\
                                               (Prec t1 t2))\n\
-                                      :pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
+                                      :pattern ((Prims.precedes u0 u1 Prims.lex_t Prims.lex_t t1 t2)))))\n" in
 
    let valid_intro =
      "(assert (forall ((e Term) (t Term))\n\
@@ -1191,8 +1191,8 @@ let mk_tester n t     = mkApp("is-"^n,   [t]) t.rng
 let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t']) t.rng
 let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
 let mk_String_const s r = mkApp ("FString_const", [mk (String s) r]) r
-let mk_Precedes_term x1 x2 x3 x4 r = mkApp("Prims.precedes", [x1;x2;x3;x4]) r
-let mk_Precedes x1 x2 x3 x4 r = mk_Valid (mk_Precedes_term x1 x2 x3 x4 r)
+let mk_Precedes_term u0 u1 x1 x2 x3 x4 r = mkApp("Prims.precedes", [u0;u1;x1;x2;x3;x4]) r
+let mk_Precedes u0 u1 x1 x2 x3 x4 r = mk_Valid (mk_Precedes_term u0 u1 x1 x2 x3 x4 r)
 let mk_lex_t r = mkApp("Prims.lex_t", []) r
 let mk_LexCons x1 x2 x3 r  = mkApp("LexCons", [x1;x2;x3]) r
 let mk_LexTop r  = mkApp("LexTop", []) r

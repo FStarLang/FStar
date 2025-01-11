@@ -1127,16 +1127,6 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             let v2, decls2 = encode_term v2 env in
             mk_LexCons v0 v1 v2, decls0@decls1@decls2
 
-        | Tm_uinst({n=Tm_fvar fv}, _), [(v0, _); (v1, _); (v2, _); (v3, _)]
-        | Tm_fvar fv, [(v0, _); (v1, _); (v2, _); (v3, _)]        
-            when S.fv_eq_lid fv Const.precedes_lid ->
-            //precedes is primitive
-            let v0, decls0 = encode_term v0 env in
-            let v1, decls1 = encode_term v1 env in
-            let v2, decls2 = encode_term v2 env in
-            let v3, decls3 = encode_term v3 env in            
-            mk_Precedes_term v0 v1 v2 v3 Range.dummyRange, decls0@decls1@decls2@decls3
-
         | Tm_constant Const_range_of, [(arg, _)] ->
             encode_const (Const_range arg.pos) env
 
