@@ -25,7 +25,11 @@ PREFIX="$1"
 ARCHIVE="$2"
 
 windows () {
-  [ -v OS ] && [ "$OS" = "Windows_NT" ]
+  # This seems portable enough and does not trigger an
+  # undefined variable error (see set -u above) if $OS
+  # is unset (like in linux/mac). Note: OSX's bash is usually
+  # old and does not support '[ -v OS ]'.
+  [[ "${OS:-}" = "Windows_NT" ]]
 }
 
 # Computes a (hopefully) sensible default for the current system

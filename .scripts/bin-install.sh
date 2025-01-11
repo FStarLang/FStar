@@ -1,17 +1,21 @@
 #!/bin/bash
 
 # This is called by the Makefile *after* an installation into the
-# prefix, so we add the rest of the files that go into a binary pacakge.
+# prefix, so we add the rest of the files that go into a binary package.
 
 set -eu
 
 windows () {
-  [ -v OS ] && [ "$OS" = "Windows_NT" ]
+  # This seems portable enough and does not trigger an
+  # undefined variable error (see set -u above) if $OS
+  # is unset (like in linux/mac). Note: OSX's bash is usually
+  # old and does not support '[ -v OS ]'.
+  [[ "${OS:-}" = "Windows_NT" ]]
 }
 
 if [ $# -ne 1 ]; then
-	echo "Usage: $0 <prefix>" >&2
-	exit 1
+  echo "Usage: $0 <prefix>" >&2
+  exit 1
 fi
 
 PREFIX="$1"
