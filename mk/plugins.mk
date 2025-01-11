@@ -31,7 +31,13 @@ FSTAR_OPTIONS += --include $(SRC)
 
 FSTAR_OPTIONS += $(OTHERFLAGS)
 
-FSTAR = $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
+ifeq ($(OS),Windows_NT)
+WINWRAP=$(FSTAR_ROOT)/mk/winwrap.sh
+else
+WINWRAP=
+endif
+
+FSTAR = $(WINWRAP) $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 
 # FIXME: Maintaining this list sucks. Could **the module** itself specify whether it is
 # noextract? Or maybe if we find an aptly-named .ml file then we auto skip?

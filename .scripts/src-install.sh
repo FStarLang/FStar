@@ -49,7 +49,13 @@ cp mk/src_package_mk.mk "${PREFIX}/Makefile"
 mkdir "${PREFIX}/mk"
 cp mk/lib.mk "${PREFIX}/mk/lib.mk"
 cp mk/common.mk "${PREFIX}/mk/common.mk"
+cp mk/winwrap.sh "${PREFIX}/mk/winwrap.sh"
 cp -H mk/fstar-12.mk "${PREFIX}/mk/fstar-12.mk"
+mkdir "${PREFIX}/.scripts"
+cp .scripts/bin-install.sh  "${PREFIX}/.scripts"
+cp .scripts/mk-package.sh   "${PREFIX}/.scripts"
+cp .scripts/get_fstar_z3.sh "${PREFIX}/.scripts"
+cp .scripts/package_z3.sh   "${PREFIX}/.scripts"
 
 # Remove extra ML files, rsync has resolved the links
 # into the corresponding files already, and these would be
