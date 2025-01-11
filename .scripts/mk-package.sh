@@ -32,6 +32,10 @@ windows () {
   [[ "${OS:-}" = "Windows_NT" ]]
 }
 
+release () {
+  [[ -n "${FSTAR_RELEASE:-}" ]]
+}
+
 # Computes a (hopefully) sensible default for the current system
 detect_format () {
   if windows; then
@@ -67,7 +71,7 @@ case $FSTAR_PACKAGE_FORMAT in
     ATGT="$(realpath "$TGT")"
     pushd "$PREFIX" >/dev/null
     LEVEL=
-    if [ -v FSTAR_RELEASE ]; then
+    if release; then
       LEVEL=-9
     fi
     $WRAP zip -q -r $LEVEL "$ATGT" .
@@ -77,7 +81,7 @@ case $FSTAR_PACKAGE_FORMAT in
     TGT="$ARCHIVE.zip"
     ATGT="$(realpath "$TGT")"
     LEVEL=
-    if [ -v FSTAR_RELEASE ]; then
+    if release; then
       LEVEL=-mx9
     fi
     pushd "$PREFIX" >/dev/null
@@ -89,7 +93,7 @@ case $FSTAR_PACKAGE_FORMAT in
     TGT="$ARCHIVE.tar.gz"
     $WRAP tar cf "$ARCHIVE.tar" -h -C "$PREFIX" .
     LEVEL=
-    if [ -v FSTAR_RELEASE ]; then
+    if release; then
       LEVEL=-9
     fi
     $WRAP gzip -f $LEVEL "$ARCHIVE.tar"
