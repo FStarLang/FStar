@@ -23,6 +23,14 @@ if ! [ -v FSTAR_PACKAGE_Z3 ] || ! [ "$FSTAR_PACKAGE_Z3" = false ]; then
   .scripts/package_z3.sh "$PREFIX"
 fi
 
+if windows; then
+    # This dll is needed. It must be installed if we're packaging, as we
+    # must have run F* already, but it should probably be obtained from
+    # somewhere else..
+    LIBGMP=$(which libgmp-10.dll) || echo "error: libgmp-10.dll not found! Carrying on..." >&2
+    cp "$LIBGMP" "$PREFIX/bin"
+fi
+
 # License and extra files. Not there on normal installs, but present in
 # package.
 cp LICENSE* "$PREFIX"
