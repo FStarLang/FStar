@@ -52,7 +52,7 @@ let as_int = function
   | _ -> failwith "Impos: expected Int"
 let as_string = function
   | String b -> b
-  | Path b -> FStarC.Common.try_convert_file_name_to_mixed b
+  | Path b -> b
   | _ -> failwith "Impos: expected String"
 let as_list' = function
   | List ts -> ts
@@ -1847,7 +1847,7 @@ let parse_cmd_line () =
     then set_error_flags()
     else res
   in
-  res, List.map FC.try_convert_file_name_to_mixed !file_list_
+  res, !file_list_
 
 let file_list () =
   !file_list_
