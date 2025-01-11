@@ -5,7 +5,7 @@ on:
   workflow_call:
 
 jobs:
-  build:
+  build-macos:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@master
@@ -39,7 +39,8 @@ jobs:
           eval $(opam env)
           KERNEL=$(uname -s)
           ARCH=$(uname -m)
-          gmake -skj$(nproc) package FSTAR_TAG=-$KERNEL-$ARCH
+          export FSTAR_TAG=-$KERNEL-$ARCH
+          gmake -skj$(nproc) package
 
       - uses: actions/upload-artifact@v4
         with:

@@ -12,7 +12,7 @@ defaults:
     shell: bash
 
 jobs:
-  build:
+  build-linux:
     runs-on: ubuntu-22.04
     # We prefer slightly older Ubuntu so we get binaries that work on
     # all more recent versions.
@@ -46,8 +46,10 @@ jobs:
           eval $(opam env)
           KERNEL=$(uname -s)
           ARCH=$(uname -m)
-          make -skj$(nproc) package     FSTAR_TAG=-$KERNEL-$ARCH
+          export FSTAR_TAG=-$KERNEL-$ARCH
+          make -skj$(nproc) package
           make -skj$(nproc) package-src FSTAR_TAG=
+          # ^ no tag in source package
 
       - uses: actions/upload-artifact@v4
         with:
