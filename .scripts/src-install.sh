@@ -8,14 +8,10 @@ if [ $# -ne 2 ]; then
 fi
 
 BROOT="$(realpath "$1")"
-PREFIX="$(realpath -m "$2")" # -m: leading dirs allowed to not exist
 
-if [ -e "${PREFIX}" ]; then
-  echo "Destination directory already exists: ${PREFIX}"
-  exit 1
-fi
-
-mkdir -p "${PREFIX}"
+PREFIX="$2"
+mkdir -p "$PREFIX"
+PREFIX="$(realpath "$PREFIX")"
 
 # Note: we must exclude everything in the Dune build directories, since
 # if some files "vanish" during this copy, rsync will fail (even if

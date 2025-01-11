@@ -14,10 +14,9 @@ if [ $# -ne 1 ]; then
 	exit 1
 fi
 
-# $1 will usually exist, but mkdir it if not
-PREFIX="$(realpath -m "$1")" # -m: leading dirs allowed to not exist
-
-mkdir -p "${PREFIX}"
+PREFIX="$1"
+mkdir -p "$PREFIX"
+PREFIX="$(realpath "$PREFIX")"
 
 if ! [ -v FSTAR_PACKAGE_Z3 ] || ! [ "$FSTAR_PACKAGE_Z3" = false ]; then
   .scripts/package_z3.sh "$PREFIX"
