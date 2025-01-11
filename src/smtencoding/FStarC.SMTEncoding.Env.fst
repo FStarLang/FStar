@@ -44,9 +44,9 @@ let vargs args = List.filter (function (Inl _, _) -> false | _ -> true) args
 (* Some operations on constants *)
 let escape (s:string) = BU.replace_char s '\'' '_'
 let mk_term_projector_name lid (a:bv) =
-    escape <| BU.format2 "%s_%s" (string_of_lid lid) (string_of_id a.ppname)
+    escape <| BU.format2 "%s_@%s" (string_of_lid lid) (string_of_id a.ppname)
 let mk_univ_projector_name lid (i:int) =
-    escape <| BU.format2 "%s_%s" (string_of_lid lid) (string_of_int i)
+    escape <| BU.format2 "%s_@%s" (string_of_lid lid) (string_of_int i)
 let primitive_projector_by_pos env lid i =
     let fail () = failwith (BU.format2 "Projector %s on data constructor %s not found" (string_of_int i) (string_of_lid lid)) in
     let _, t = Env.lookup_datacon env lid in
@@ -58,7 +58,7 @@ let primitive_projector_by_pos env lid i =
           else let b = List.nth binders i in
                 mk_term_projector_name lid b.binder_bv
         | _ -> fail ()
-let mk_term_projector_name_by_pos lid (i:int) = escape <| BU.format2 "%s_%s" (string_of_lid lid) (string_of_int i)
+let mk_term_projector_name_by_pos lid (i:int) = escape <| BU.format2 "%s_@%s" (string_of_lid lid) (string_of_int i)
 let mk_term_projector (lid:lident) (a:bv) : term =
     mkFreeV <| mk_fv (mk_term_projector_name lid a, Arrow(Term_sort, Term_sort))
 let mk_term_projector_by_pos (lid:lident) (i:int) : term =
