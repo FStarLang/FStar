@@ -6,9 +6,10 @@
     "--lax",
     "--cache_dir", "../stage1/fstarc.checked",
     "--warn_error",
-    "-271-272-241-319-274"
+    "-271-272-241-319-274",
+    "--no_default_includes"
   ],
   "include_dirs": [
-    "."
+    ".", "../ulib"
   ]
 }
