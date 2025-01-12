@@ -443,7 +443,8 @@ let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph)
     List.iter (fun dep ->
       let l = basename k in
       let r = basename <| file_of_dep file_system_map cmd_lined_files dep in
-      pr (Util.format2 "  \"%s\" -> \"%s\"\n" l r)
+      if not <| Options.should_be_already_cached (module_name_of_dep dep) then
+        pr (Util.format2 "  \"%s\" -> \"%s\"\n" l r)
     ) deps
   );
   pr "}\n";
