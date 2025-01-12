@@ -11,23 +11,34 @@ ifeq ($(FSTAR_DUNE_RELEASE),1)
 FSTAR_DUNE_BUILD_OPTIONS += --release
 endif
 
-.NOTPARALLEL:
-# Sorry, but dune seems to get confused when its OCAMLPATH is changing
-
 .PHONY: _force
 _force:
 
+# There can only be one dune instance running in a given project, but we
+# could be asked to build several targets at once. So, wrap dune calls
+# with flock, if we have it.
+ifneq ($(shell which flock),)
+LOCKFILE=$(CURDIR)/.fstarlock
+DUNE=flock $(LOCKFILE) dune
+else
+# If flock is not around, at the very least disable parallelism within
+# this Makefile, but external calls from the top-level Makefile could
+# still pose a problem.
+.NOTPARALLEL:
+DUNE=dune
+endif
+
 fstarc-bare: _force
-	cd dune && dune build $(FSTAR_DUNE_BUILD_OPTIONS) fstarc-bare
+	cd dune && $(DUNE) build $(FSTAR_DUNE_BUILD_OPTIONS) fstarc-bare
 
 fstarc-full: _force
-	cd dune && dune build $(FSTAR_DUNE_BUILD_OPTIONS) fstarc-full
+	cd dune && $(DUNE) build $(FSTAR_DUNE_BUILD_OPTIONS) fstarc-full
 
 libapp: _force
-	cd dune && dune build $(FSTAR_DUNE_BUILD_OPTIONS) libapp
+	cd dune && $(DUNE) build $(FSTAR_DUNE_BUILD_OPTIONS) libapp
 
 libplugin: _force
-	cd dune && dune build $(FSTAR_DUNE_BUILD_OPTIONS) libplugin
+	cd dune && $(DUNE) build $(FSTAR_DUNE_BUILD_OPTIONS) libplugin
 
 clean: _force
 	dune clean $(FSTAR_DUNE_OPTIONS) --root=dune
@@ -49,14 +60,14 @@ endif
 # and we also avoid unnecessary copies. When building packages, we use
 # tar's -h to follow and eliminate all these links.
 install: PREFIX ?= $(CURDIR)/out
-install: fstarc-bare fstarc-full libapp libplugin
+install: # NOTE: no deps, dune figures it out and rebuilds if needed
 	@# We check for absolute so there's no confusion between the makefiles
 	@# that call each other. Do NOT just use $(abspath ..) here. Also not use
 	@# bashisms or 'expr' (does not work in macos)
 	if ! echo '$(PREFIX)' | grep -q '^/' ; then echo "PREFIX (= $(PREFIX)) must be absolute">&2; false; fi
 	@# Seems to need one final build?
-	cd dune && dune build $(FSTAR_DUNE_BUILD_OPTIONS)
-	cd dune && dune install $(FSTAR_DUNE_OPTIONS) --prefix=$(PREFIX)
+	cd dune && $(DUNE) build $(FSTAR_DUNE_BUILD_OPTIONS)
+	cd dune && $(DUNE) install $(FSTAR_DUNE_OPTIONS) --prefix=$(PREFIX)
 	@# Install library and its checked files
 	$(INSTALL_DIR) ulib $(PREFIX)/lib/fstar/ulib
 	$(INSTALL_DIR) ulib.checked $(PREFIX)/lib/fstar/ulib.checked
