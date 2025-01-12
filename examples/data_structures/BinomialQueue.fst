@@ -360,7 +360,7 @@ let rec carry_repr (d:pos) (q:forest) (t:tree) (lq lt:ms)
       (ms_append (keys_of_tree hd) (keys_of_tree t))
 #pop-options
 
-#push-options "--z3rlimit 50 --fuel 1 --ifuel 1"
+#push-options "--z3rlimit 75 --fuel 1 --ifuel 1"
 let rec join_repr (d:pos) (p q:forest) (c:tree)
   (lp lq lc:ms)
   : Lemma
