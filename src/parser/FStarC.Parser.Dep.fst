@@ -431,22 +431,18 @@ let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph) =
     Util.print1 "With GraphViz installed, try: fdp -Tpng -odep.png %s\n" fn;
     Util.print1 "Hint: cat %s | grep -v _ | grep -v prims\n" fn
   end;
-  let s =
-    "digraph {\n" ^
-    String.concat "\n" (List.collect
-      (fun k ->
-          let deps = (must (deps_try_find graph k)).edges in
-          let r s = replace_char s '.' '_' in
-          let print dep =
-            Util.format2 "  \"%s\" -> \"%s\""
-                (r (lowercase_module_name k))
-                (r (module_name_of_dep dep))
-          in
-          List.map print deps)
-     (List.unique (deps_keys graph))) ^
-    "\n}\n"
-  in
-  fprint outc "%s" [s]
+  let sb = FStarC.StringBuffer.create 10000 in
+  let pr str = ignore <| FStarC.StringBuffer.add str sb in
+  pr "digraph {\n";
+  List.unique (deps_keys graph) |> List.iter (fun k ->
+    let deps = (must (deps_try_find graph k)).edges in
+    List.iter (fun dep ->
+      let r s = replace_char s '.' '_' in
+      pr (Util.format2 "  \"%s\" -> \"%s\"\n" (r (lowercase_module_name k)) (r (module_name_of_dep dep)))
+    ) deps
+  );
+  pr "}\n";
+  fprint outc "%s" [FStarC.StringBuffer.contents sb]
 
 let safe_readdir_for_include (d:string) : list string =
   try readdir d
