@@ -2,6 +2,7 @@
 /stage2/out
 /stage3
 /out
+/*.tar
 /*.tar.gz
 /*.zip
 /_pak*
