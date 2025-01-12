@@ -111,7 +111,8 @@ $(FSTAR1_FULL_EXE): .bare1.touch .full1.touch
 	  CODEGEN=OCaml \
 	  TAG=lib \
 	  TOUCH=$@ \
-	  $(MAKE) -f mk/lib.mk all-ml
+	  $(MAKE) -f mk/lib.mk ocaml verify
+	# ^ NB: also verify files we don't extract
 
 .alib1.touch: .alib1.src.touch
 	$(call bold_msg, "BUILD", "STAGE 1 LIB")
@@ -131,7 +132,7 @@ $(FSTAR1_FULL_EXE): .bare1.touch .full1.touch
 	  TAG=pluginlib \
 	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed' \
 	  TOUCH=$@ \
-	  $(MAKE) -f mk/lib.mk all-ml
+	  $(MAKE) -f mk/lib.mk ocaml
 
 .plib1.touch: .plib1.src.touch | .alib1.touch # this last dependency only to prevent simultaneous dune builds
 	$(call bold_msg, "BUILD", "STAGE 1 PLUGLIB")
@@ -188,7 +189,8 @@ $(FSTAR2_FULL_EXE): .bare2.touch .full2.touch
 	  CODEGEN=OCaml \
 	  TAG=lib \
 	  TOUCH=$@ \
-	  $(MAKE) -f mk/lib.mk all-ml
+	  $(MAKE) -f mk/lib.mk ocaml verify
+	# ^ NB: also verify files we don't extract
 
 .alib2.touch: .alib2.src.touch
 	$(call bold_msg, "BUILD", "STAGE 2 LIB")
@@ -208,7 +210,7 @@ $(FSTAR2_FULL_EXE): .bare2.touch .full2.touch
 	  TAG=pluginlib \
 	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed' \
 	  TOUCH=$@ \
-	  $(MAKE) -f mk/lib.mk all-ml
+	  $(MAKE) -f mk/lib.mk ocaml
 
 .plib2.touch: .plib2.src.touch | .alib2.touch # this last dependency only to prevent simultaneous dune builds
 	$(call bold_msg, "BUILD", "STAGE 2 PLUGLIB")
