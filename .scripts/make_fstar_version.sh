@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
+windows () {
+  [[ "${OS:-}" = "Windows_NT" ]]
+}
+
 if [[ -z "$FSTAR_VERSION" ]]; then
   FSTAR_VERSION=$(head -n 1 version.txt)~dev
 fi
 
-if [ "$OS" = "Windows_NT" ]
-then
+if windows; then
    if [ "$PROCESSOR_ARCHITECTURE" = "AMD64" ]
    then
      PLATFORM="Windows_x64"

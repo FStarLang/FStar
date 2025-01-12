@@ -105,7 +105,13 @@ EXTRACT_NS += +FStar.Int.Cast.Full
 EXTRACT_NS += -FStar.Tactics
 EXTRACT_NS += -FStar.Reflection
 
-FSTAR := $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
+ifeq ($(OS),Windows_NT)
+WINWRAP=$(FSTAR_ROOT)/mk/winwrap.sh
+else
+WINWRAP=
+endif
+
+FSTAR := $(WINWRAP) $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 
 EXTRACT := --extract '* $(EXTRACT_NS)'
 

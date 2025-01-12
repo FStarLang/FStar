@@ -8,14 +8,10 @@ if [ $# -ne 2 ]; then
 fi
 
 BROOT="$(realpath "$1")"
-PREFIX="$(realpath -m "$2")" # -m: leading dirs allowed to not exist
 
-if [ -e "${PREFIX}" ]; then
-  echo "Destination directory already exists: ${PREFIX}"
-  exit 1
-fi
-
-mkdir -p "${PREFIX}"
+PREFIX="$2"
+mkdir -p "$PREFIX"
+PREFIX="$(realpath "$PREFIX")"
 
 # Note: we must exclude everything in the Dune build directories, since
 # if some files "vanish" during this copy, rsync will fail (even if
@@ -49,7 +45,13 @@ cp mk/src_package_mk.mk "${PREFIX}/Makefile"
 mkdir "${PREFIX}/mk"
 cp mk/lib.mk "${PREFIX}/mk/lib.mk"
 cp mk/common.mk "${PREFIX}/mk/common.mk"
+cp mk/winwrap.sh "${PREFIX}/mk/winwrap.sh"
 cp -H mk/fstar-12.mk "${PREFIX}/mk/fstar-12.mk"
+mkdir "${PREFIX}/.scripts"
+cp .scripts/bin-install.sh  "${PREFIX}/.scripts"
+cp .scripts/mk-package.sh   "${PREFIX}/.scripts"
+cp .scripts/get_fstar_z3.sh "${PREFIX}/.scripts"
+cp .scripts/package_z3.sh   "${PREFIX}/.scripts"
 
 # Remove extra ML files, rsync has resolved the links
 # into the corresponding files already, and these would be

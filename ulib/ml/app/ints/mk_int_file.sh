@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# This script must run on Windows/Cygwin too.
 
 set -eu
 

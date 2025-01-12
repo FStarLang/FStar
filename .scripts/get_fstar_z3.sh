@@ -60,11 +60,11 @@ download_z3() {
   z3_path="${base_name%.zip}/bin/z3"
   if [ "$kernel" = Windows ]; then z3_path="$z3_path.exe"; fi
 
-  pushd "$tmp_dir"
-  curl -L "$url" -o "$base_name"
+  pushd "$tmp_dir" > /dev/null
+  curl -s -L "$url" -o "$base_name"
 
   unzip -q "$base_name" "$z3_path"
-  popd
+  popd > /dev/null
   install -m0755 "$tmp_dir/$z3_path" "$destination_file_name"
   echo ">>> Installed Z3 $version to $destination_file_name"
 }
@@ -77,17 +77,17 @@ full_install_z3() {
   dest_dir="$3"
 
   mkdir -p "$dest_dir/z3-$version"
-  pushd "$dest_dir/z3-$version"
+  pushd "$dest_dir/z3-$version" > /dev/null
 
   echo ">>> Downloading Z3 $version from $url ..."
   base_name="$(basename "$url")"
-  curl -L "$url" -o "$base_name"
+  curl -s -L "$url" -o "$base_name"
 
   unzip -q "$base_name"
   mv "${base_name%.zip}"/* .
   rmdir "${base_name%.zip}"
   rm "$base_name"
-  popd
+  popd > /dev/null
 }
 
 usage() {
