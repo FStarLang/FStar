@@ -109,6 +109,14 @@ $(DEPSTEM): $(DEPSTEM).touch
 depend: $(DEPSTEM)
 include $(DEPSTEM)
 
+depgraph: $(DEPSTEM).pdf
+$(DEPSTEM).pdf: $(DEPSTEM) .force
+	$(call msg, "DEPEND GRAPH", $(SRC))
+	$(FSTAR) --dep graph $(ROOTS) $(EXTRACT) $(DEPFLAGS) --output_deps_to $(DEPSTEM).graph
+	$(FSTAR_ROOT)/.scripts/simpl_graph.py $(DEPSTEM).graph > $(DEPSTEM).simpl
+	dot -Tpdf -o $@ $(DEPSTEM).simpl
+	echo "Wrote $@"
+
 all-checked: $(ALL_CHECKED_FILES)
 
 all-ml: $(ALL_ML_FILES)
