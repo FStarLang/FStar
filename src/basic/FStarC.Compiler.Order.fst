@@ -16,9 +16,6 @@
 
 module FStarC.Compiler.Order
 open FStarC.Compiler.Effect
-module List = FStarC.Compiler.List
-
-type order = | Lt | Eq | Gt
 
 // Some derived checks
 let ge (o : order) : bool = o <> Lt

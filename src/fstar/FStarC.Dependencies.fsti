@@ -16,8 +16,6 @@
 
 // A dependency-finding routine
 module FStarC.Dependencies
-open FStarC
-open FStarC.Compiler
 open FStarC.Compiler.Effect
 
 (***********************************************************************)
@@ -28,14 +26,6 @@ open FStarC.Compiler.Effect
  * get_parsing_data_from_cache is a callback passed to Parser.Dep for
  *   getting deps from the checked files
  *)
-let find_deps_if_needed files
+val find_deps_if_needed (files : list string)
   (get_parsing_data_from_cache:string -> option Parser.Dep.parsing_data)
-  = let all_files, deps = Parser.Dep.collect files get_parsing_data_from_cache in
-    match all_files with
-    | [] ->
-        Errors.log_issue0 Errors.Error_DependencyAnalysisFailed "Dependency analysis failed; reverting to using only the files provided";
-        files,
-        deps
-    | _ ->
-        List.rev all_files,
-        deps
+   : list string & Parser.Dep.deps

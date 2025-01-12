@@ -23,11 +23,6 @@ module List = FStarC.Compiler.List
 module D = FStarC.Parser.Driver
 module P = FStarC.Pprint
 
-type printing_mode =
-  | ToTempFile
-  | FromTempToStdout
-  | FromTempToFile
-
 let temp_file_name f = format1 "%s.print_.fst" f
 
 let generate (m: printing_mode) filenames =

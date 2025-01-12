@@ -15,10 +15,9 @@
 *)
 
 module FStarC.Interactive.Ide
-open FStar.Pervasives
+open FStarC
 open FStarC.Compiler.Effect
 open FStarC.Compiler.List
-open FStar open FStarC
 open FStarC.Compiler
 open FStarC.Compiler.Range
 open FStarC.Compiler.Util
@@ -45,6 +44,9 @@ module TcErr = FStarC.TypeChecker.Err
 module TcEnv = FStarC.TypeChecker.Env
 module CTable = FStarC.Interactive.CompletionTable
 module QH = FStarC.Interactive.QueryHelper
+
+// NOTE! This is not FStarC.Errors.json_of_issue
+let json_of_issue = FStarC.Interactive.Ide.Types.json_of_issue
 
 let with_captured_errors' env sigint_handler f =
   try
