@@ -38,7 +38,7 @@ let main argv =
           BU.print_error msg; exit 1
         | G.Empty
         | G.Success ->
-          FStarC.Main.setup_hooks();
+          FStarC.Hooks.setup_hooks();
           Pars.init() |> ignore;
           Pars.parse_incremental_decls();
           Pars.parse_incremental_decls_use_lang ();

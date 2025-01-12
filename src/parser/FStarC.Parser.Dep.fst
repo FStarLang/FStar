@@ -960,7 +960,10 @@ let collect_one
         | Const_set_range_of ->
             add_to_parsing_data (P_dep (false, ("fstar.range" |> Ident.lid_of_str)))
         | Const_real _ ->
-            add_to_parsing_data (P_dep (false, ("fstar.real" |> Ident.lid_of_str)))
+            (* FStar.Real has a real literal it, don't add a circular dep. *)
+            let mm = maybe_module_name_of_file filename in
+            if mm <> Some "FStar.Real" then
+              add_to_parsing_data (P_dep (false, ("fstar.real" |> Ident.lid_of_str)))
         | _ ->
             ()
 
