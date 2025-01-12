@@ -188,8 +188,13 @@ let kill_process (p: proc) =
       attempt (fun () -> Unix.close (Unix.descr_of_in_channel p.inc));
       attempt (fun () -> Unix.close (Unix.descr_of_in_channel p.errc));
       attempt (fun () -> Unix.close (Unix.descr_of_out_channel p.outc));
+      (* Try to kill, but the process may already be gone. On Unix we
+         get ESRCH. On Windows, we apparently get EACCES (permission denied). *)
       (try Unix.kill p.pid Sys.sigkill
-       with Unix.Unix_error (Unix.ESRCH, _, _) -> ());
+       with Unix.Unix_error (Unix.ESRCH, _, _) -> ()
+          | Unix.Unix_error (Unix.EACCES, _, _) when FStarC_Platform.system = FStarC_Platform.Windows -> ()
+          ); 
+
       (* Avoid zombie processes (Unix.close_process does the same thing. *)
       waitpid_ignore_signals p.pid;
       (* print_string ("Killed process " ^ p.id ^ "\n" ^ (stack_dump()));       *)
