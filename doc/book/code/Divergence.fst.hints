@@ -19,7 +19,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "552124cbe862db631f6c81cb446c955c"
+      "80afe3d451f9d294e1c2744a45b6a89e"
     ],
     [
       "Divergence.last",
@@ -42,7 +42,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "d2272c6ff578c137b1f3d9a853044f57"
+      "20a8ddb5c6b97464a5a267f85ea165cd"
     ],
     [
       "Divergence.collatz_ends_in_one",
@@ -85,7 +85,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "b7a2a43dad4b21f7cb9ca908081ac318"
+      "c69989d7b46ba0780905457cd425189a"
     ],
     [
       "Divergence.collatz_spec",
@@ -102,7 +102,6 @@
         "equation_Prims.eqtype", "equation_Prims.pos",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_774ba3f728d91ead8ef40be66c9802e5", "int_inversion",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Division",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Modulus",
@@ -111,10 +110,10 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "refinement_kinding_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
-        "subterm_ordering_Prims.Cons"
+        "subterm_ordering_Prims.Cons", "typing_Prims.int"
       ],
       0,
-      "32eb20428ec677b7cd829ada9e805411"
+      "734ab7ad1826609503cd4aed9febac81"
     ],
     [
       "Divergence.collatz'",
@@ -147,7 +146,7 @@
         "typing_Divergence.collatz_spec"
       ],
       0,
-      "7699dd98e225ba22bc6606b19ca4ec7a"
+      "1eca7e07710bd4da0205699990f194c7"
     ],
     [
       "Divergence.term",
@@ -157,12 +156,12 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Divergence.var",
         "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "9480937f3aa9a22ae1f70c68b6fca798"
+      "ac06b0ca34d066fdd042aebc8bc96ec7"
     ],
     [
       "Divergence.__proj__Var__item___0",
@@ -174,7 +173,7 @@
         "refinement_interpretation_Tm_refine_cdd50521e9c03cc2d185a28f1ee1af46"
       ],
       0,
-      "c976b8617af683328273826143562340"
+      "7d668e9cd96932491ee36f73767b0299"
     ],
     [
       "Divergence.__proj__Int__item___0",
@@ -186,7 +185,7 @@
         "refinement_interpretation_Tm_refine_412b22bcd22c0ff134f850a6e38558cd"
       ],
       0,
-      "f0a2d6a34d046acb0193f9ed5023140c"
+      "4ba5c345288d42c6d63025f8ef037cfd"
     ],
     [
       "Divergence.__proj__Lam__item___0",
@@ -198,7 +197,7 @@
         "refinement_interpretation_Tm_refine_111879f7c1a479de6f84866f8b3a1ca1"
       ],
       0,
-      "84ee30e669aeedf11a31a56cb86217e3"
+      "40471b262dc1863ae2b24fa230459c04"
     ],
     [
       "Divergence.__proj__App__item___0",
@@ -210,7 +209,7 @@
         "refinement_interpretation_Tm_refine_f01e7d484d7a97acf2fd967415f36ddb"
       ],
       0,
-      "a932318c3f2127490da985eb52bc9bcc"
+      "e4f8addd40afd3c62642243a663f10ec"
     ],
     [
       "Divergence.__proj__App__item___1",
@@ -222,7 +221,7 @@
         "refinement_interpretation_Tm_refine_f01e7d484d7a97acf2fd967415f36ddb"
       ],
       0,
-      "b75607976d71ce32268d0a81c8143dd0"
+      "8ac9e0c7a9e6dca929bba97c16276c3e"
     ],
     [
       "Divergence.subst",
@@ -239,16 +238,16 @@
         "disc_equation_Divergence.Lam", "disc_equation_Divergence.Var",
         "equation_Divergence.var", "equation_Prims.eqtype",
         "equation_Prims.nat", "fuel_guarded_inversion_Divergence.term",
-        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "subterm_ordering_Divergence.App", "subterm_ordering_Divergence.Lam"
+        "subterm_ordering_Divergence.App", "subterm_ordering_Divergence.Lam",
+        "typing_Prims.int"
       ],
       0,
-      "339c3623ba1068ad0df4fb7aca098f88"
+      "d3f8b62385125acdf746f768925403a5"
     ],
     [
       "Divergence.interpret",
@@ -263,7 +262,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "732b5ae7aeb845c5477adca379503b37"
+      "b61236733a7eacb93fc8815b8091f8e8"
     ],
     [
       "Divergence.__proj__DErr__item___0",
@@ -275,7 +274,7 @@
         "refinement_interpretation_Tm_refine_ad29e06a7f7d5073ace7a1c2a3ec13f8"
       ],
       0,
-      "9cb7cdbd91833ee3a8c16c4c69089263"
+      "3411a90217fbcba191f507c145ff72f9"
     ],
     [
       "Divergence.__proj__DInt__item___0",
@@ -287,7 +286,7 @@
         "refinement_interpretation_Tm_refine_4d4850cc1f5cf9c0b93b593ebbdcbfb5"
       ],
       0,
-      "c0aacfd02964d6e0c1eea7bab8375327"
+      "c91a313e17d0dbc8ba9527d63086493c"
     ],
     [
       "Divergence.__proj__DFun__item___0",
@@ -299,7 +298,7 @@
         "refinement_interpretation_Tm_refine_0d7b78c2bec10e6dab76d83ddf094d02"
       ],
       0,
-      "644c891def4ca9fc57bda3ab000d61b5"
+      "2e9834432d32d1b0cfb2c035eda52a86"
     ],
     [
       "Divergence.shift",
@@ -313,7 +312,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "0abef55e7696aa91753bc103daf78015"
+      "9931d88a4a045639ec426719ece153ad"
     ],
     [
       "Divergence.denote",
@@ -330,7 +329,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "6d17b9d488f44c4fcdc57f05f483ad57"
+      "803890aafef9be803eb1b4aa2c29c199"
     ],
     [
       "Divergence.div",
@@ -339,7 +338,7 @@
       1,
       [ "@query", "primitive_Prims.op_Equality" ],
       0,
-      "365f84bd92744ec3d66cab7fd102231e"
+      "3cc01816c01c5f0b6b0b4fe27075b180"
     ],
     [
       "Divergence.mod",
@@ -348,7 +347,7 @@
       1,
       [ "@query", "primitive_Prims.op_Equality" ],
       0,
-      "8483e7ebe7b57a44425f7893bd989d0f"
+      "0835bec4c0a319dc351b08d8b087956f"
     ]
   ]
 ]

@@ -9,10 +9,11 @@
       [
         "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
-        "projection_inverse_BoxInt_proj_0"
+        "projection_inverse_BoxInt_proj_0", "typing_Canon.Test.x",
+        "typing_Canon.Test.y", "typing_Canon.Test.z"
       ],
       0,
-      "b9cbbf9193aef88def435be4272d76a8"
+      "75c21ded9ad16399f5c70b9c7d7446b1"
     ]
   ]
 ]

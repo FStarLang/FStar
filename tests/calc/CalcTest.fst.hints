@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "1567a0e329ad62b4fcb87244a7674617"
+      "3f0a23b696afa24cb017b5ef44e984d0"
     ],
     [
       "CalcTest.calc0",
@@ -26,7 +26,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "49fe90549c5632d132aedc426cbf3079"
+      "27a57f847e9f027ec4c229a15e60c2f2"
     ],
     [
       "CalcTest.calc0_desugared",
@@ -35,12 +35,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "int_inversion", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "ef911a9dce15f8bde2bf849c1617d1b3"
+      "11c2beb23d33ec8919e364a6080dcd72"
     ],
     [
       "CalcTest.calc1",
@@ -53,7 +53,7 @@
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "cb8da187653390d473722c0b4598a490"
+      "9b2df6d3983fc126a698d8c1a3c684fb"
     ],
     [
       "CalcTest.test_ge",
@@ -62,7 +62,7 @@
       1,
       [ "@query" ],
       0,
-      "45b1d979c85aeb2a359447c6d3cd31cb"
+      "c9bdbc0e5938e2aab28fea4fd64eb9cf"
     ],
     [
       "CalcTest.test_erase",
@@ -71,7 +71,7 @@
       1,
       [ "@query" ],
       0,
-      "ef6eef987128614c5c8130279b470be2"
+      "f9c56f3dcc285fa2a0b77d1b9b831c8a"
     ],
     [
       "CalcTest.test_gt",
@@ -80,7 +80,7 @@
       1,
       [ "@query" ],
       0,
-      "41ab070183d56213c5e2d0197e078842"
+      "b7674ec206433ae1a673838d75df4341"
     ]
   ]
 ]

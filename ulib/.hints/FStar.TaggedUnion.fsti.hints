@@ -64,7 +64,7 @@
         "typing_Prims.string", "typing_Prims.uu___is_Cons"
       ],
       0,
-      "c56239e45f1064c584565ff258421196"
+      "6e3676d298bd762e9ff52ae689ea148d"
     ],
     [
       "FStar.TaggedUnion.field_of_tag",
@@ -138,7 +138,7 @@
         "typing_Prims.string"
       ],
       0,
-      "67bfd799263c7a74418d282b557be33c"
+      "865a62e8b3a598a8445f10e4131ba782"
     ],
     [
       "FStar.TaggedUnion.tag_of_field",

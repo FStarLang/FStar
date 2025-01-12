@@ -7,12 +7,12 @@
       2,
       1,
       [
-        "@query", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0"
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "81f5f15a1fffba8c0f40fee7fce05cec"
+      "9696f0d0bd8d74af231db80b6fae7be2"
     ],
     [
       "Arith.lem1",
@@ -20,12 +20,12 @@
       2,
       1,
       [
-        "@query", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0"
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "52c3cbbdc6df7d2e657a981d6272f172"
+      "e011966d16e25f25cec6490c7a229edc"
     ],
     [
       "Arith.lem1",
@@ -48,7 +48,7 @@
         "typing_Prims.int"
       ],
       0,
-      "b3e65f1a1ef2388010a4f00826be73e3"
+      "3e927f27ed1782f9f10d960d741e6f60"
     ],
     [
       "Arith.lem2",
@@ -71,7 +71,7 @@
         "typing_Prims.int"
       ],
       0,
-      "b3e65f1a1ef2388010a4f00826be73e3"
+      "3e927f27ed1782f9f10d960d741e6f60"
     ],
     [
       "Arith.lem2",
@@ -79,12 +79,12 @@
       2,
       1,
       [
-        "@query", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0"
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "bba46731b7814080d98c4cf5fd6812ea"
+      "c29628380c17260af51b88cf6cdde095"
     ],
     [
       "Arith.lem3",
@@ -99,7 +99,7 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "3463d4d2996b6bc1fd2a0e841bfbaf6a"
+      "bca9fa70f60c4ee1a8a8d759baeeb3f6"
     ],
     [
       "Arith.lem3",
@@ -112,7 +112,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ff7a83f27e170c863e7b10cc99a87c34"
+      "b9ecc08ea1555a199b45d992265824ba"
     ],
     [
       "Arith.lem3",
@@ -138,7 +138,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_Prims.int"
       ],
       0,
-      "e2b7d8b440871c08d7b3b929bd55c008"
+      "ba37f1ccedf8ff832af750fe7f13bf16"
     ],
     [
       "Arith.lem3",
@@ -153,7 +153,7 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "8b1354b92a6997da1a3bceebb4e0b847"
+      "c50f590a69be15b4761e59bbe4c4158b"
     ],
     [
       "Arith.lem4",
@@ -168,7 +168,7 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "5c702d85b72c0b394e134a9cc6fe963a"
+      "a546ebf8eb8d5fff0da8ef0a93a3168b"
     ],
     [
       "Arith.lem4",
@@ -181,7 +181,7 @@
         "refinement_interpretation_Tm_refine_51a1a11c85affab19a1e24b7b60f7bf9"
       ],
       0,
-      "1b7623012d0db71b8a5ba1a890737acf"
+      "9b5c9d0230b69fd97f96387361cb5699"
     ],
     [
       "Arith.lem4",
@@ -207,7 +207,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_Prims.int"
       ],
       0,
-      "ab207b36f654fcb4044ad262ad40ac81"
+      "a0bae5a4943b2e99a8084329818c9323"
     ],
     [
       "Arith.lem4",
@@ -221,7 +221,7 @@
         "refinement_interpretation_Tm_refine_51a1a11c85affab19a1e24b7b60f7bf9"
       ],
       0,
-      "b51f293a6b70c2771e0e0320872d513a"
+      "9cbd816f97815ae4edee3165cd71cd3d"
     ],
     [
       "Arith.lem4",
@@ -237,7 +237,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "b0498dcf838b5ff46752c4a3932cff25"
+      "5835a9fdbad8414502714dfdceb80d78"
     ],
     [
       "Arith.lem4",
@@ -252,7 +252,7 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "8db916c3e29b02a00da8b119e9c4319d"
+      "b11838c439aa75fa3d2011223da3cb50"
     ]
   ]
 ]

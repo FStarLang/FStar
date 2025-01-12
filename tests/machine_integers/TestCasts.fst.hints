@@ -27,7 +27,7 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_3cf334ef18b786b10503183e1612e31a",
+        "refinement_interpretation_Tm_refine_42b58920e13a7dbff91a101284e63308",
         "refinement_interpretation_Tm_refine_48f9ac257d29128f5b2e6782f5287af5",
         "refinement_interpretation_Tm_refine_522ab1248dd490260a473b54207b5088",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
@@ -36,14 +36,13 @@
         "refinement_interpretation_Tm_refine_da74c01342e00742523519bc745a6a15",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
         "token_correspondence_Prims.pow2.fuel_instrumented",
-        "typing_FStar.Int.fits", "typing_FStar.Int.max_int",
-        "typing_FStar.Int32.v", "typing_FStar.UInt.fits",
-        "typing_FStar.UInt.max_int", "typing_FStar.UInt16.v",
+        "typing_FStar.Int.fits", "typing_FStar.Int32.v",
+        "typing_FStar.UInt.fits", "typing_FStar.UInt16.v",
         "typing_FStar.UInt32.v", "typing_FStar.UInt64.v",
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "8e8674f6c4787076eda60f38612d8697"
+      "d9cbd51b3affc41ef9b1f7503db1b0c7"
     ]
   ]
 ]

@@ -451,7 +451,7 @@
         "typing_Prims.bool", "well-founded-ordering-on-nat"
       ],
       0,
-      "5b867f2bc0764efab88235f0f7c90050"
+      "1451c690ef1b1ba4bed5133c755aaf67"
     ],
     [
       "FStar.UInt.from_vec",
@@ -490,7 +490,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3b99bb6ab861c8e784a09f1abf847a16"
+      "956e6cabcfd0ee0e70a8588ecbbdf96a"
     ],
     [
       "FStar.UInt.to_vec_lemma_1",

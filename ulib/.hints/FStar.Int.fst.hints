@@ -966,12 +966,12 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.BitVector.bv_t",
         "equation_Prims.nat", "int_inversion",
-        "refinement_interpretation_Tm_refine_08923c9a3f1d6f1c935e559ed1ae6677",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_d40628d41cee9efcd56a495623f5d085",
         "refinement_interpretation_Tm_refine_e2d5d62a90ceed8a6faf9d20615f4e1e"
       ],
       0,
-      "78c7a4ab48601beabcb685cfcfd94439"
+      "d5f69162e289929d3dd54c0928229d9a"
     ],
     [
       "FStar.Int.inverse_vec_lemma",
@@ -1233,13 +1233,13 @@
         "equation_FStar.BitVector.zero_vec", "equation_FStar.Int.to_vec",
         "equation_Prims.pos", "int_inversion",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
-        "refinement_interpretation_Tm_refine_a5afaf5489142b35ed9cb7ce34a624ae",
+        "refinement_interpretation_Tm_refine_bbf422d11a9bab747fa0231946b89b0a",
         "refinement_interpretation_Tm_refine_e2d5d62a90ceed8a6faf9d20615f4e1e",
         "typing_FStar.BitVector.zero_vec", "typing_FStar.Int.to_vec",
         "typing_FStar.Int.zero"
       ],
       0,
-      "0a4a0ca996899d1f4b527c6ce24c3f60"
+      "a3ac7d8f51c00e9624b8689fc1ab41c0"
     ],
     [
       "FStar.Int.zero_from_vec_lemma",
@@ -1465,16 +1465,16 @@
         "equation_FStar.Int.to_vec", "equation_Prims.nat",
         "equation_Prims.pos", "int_inversion",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_09f2a9571baea9970821fbbf40a4ce16",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
-        "refinement_interpretation_Tm_refine_a180fb5cec43006c98e2286c29d510e7",
         "refinement_interpretation_Tm_refine_cf74cf5c1e7834b84db9cc7ebce886a3",
         "refinement_interpretation_Tm_refine_e2d5d62a90ceed8a6faf9d20615f4e1e",
         "refinement_interpretation_Tm_refine_fae52e146c90244d6a2517e3274edeb3",
         "typing_FStar.Int.pow2_n", "typing_FStar.Int.to_vec"
       ],
       0,
-      "446dcbf945a0d82b8750d1db610e6956"
+      "c7cba5717392985677dfcba02c3dda0b"
     ],
     [
       "FStar.Int.pow2_from_vec_lemma",

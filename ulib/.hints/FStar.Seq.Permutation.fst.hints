@@ -174,7 +174,7 @@
         "typing_FStar.Seq.Base.seq", "well-founded-ordering-on-nat"
       ],
       0,
-      "70387f14558ba2dbe9faa0e97ee940c1"
+      "c520830871f2b704d1195a0942255d4e"
     ],
     [
       "FStar.Seq.Permutation.introduce_is_permutation",
@@ -464,7 +464,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "08dcf0b59392fc0bc90e8f51a7f8f145"
+      "02c7c933e27a20c96f521f9311280bb1"
     ],
     [
       "FStar.Seq.Permutation.elim_monoid_laws",
@@ -1217,7 +1217,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "bf0c31d4d4accd29396e1d423f1a6315"
+      "3be6aaed666cf03e6e6bfea173a8955c"
     ],
     [
       "FStar.Seq.Permutation.foldm_snoc_split'",
@@ -1237,7 +1237,7 @@
         "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408"
       ],
       0,
-      "548579689f47f0b6678d8a4626ef6042"
+      "40adee63d49f1f385458a3d86d3b1f2f"
     ],
     [
       "FStar.Seq.Permutation.foldm_snoc_split",
@@ -1532,7 +1532,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "7beae62f6682e0ab5c69210815b9b2fa"
+      "d9738286f3bccf59a96f3ddd1d5b0174"
     ],
     [
       "FStar.Seq.Permutation.foldm_snoc_of_equal_inits",
@@ -1548,7 +1548,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "7e7977bcfd39a1510af8ad931ecd9700"
+      "dce1012b55359602fb4cda0dab5876eb"
     ],
     [
       "FStar.Seq.Permutation.foldm_snoc_decomposition",
@@ -1567,20 +1567,30 @@
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
         "equation_FStar.Seq.Permutation.foldm_snoc",
-        "equation_FStar.Seq.Properties.un_snoc",
+        "equation_FStar.Seq.Properties.snoc",
+        "equation_FStar.Seq.Properties.un_snoc", "equation_Prims.nat",
         "equation_with_fuel_FStar.Seq.Properties.foldr_snoc.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Algebra.CommMonoid.Equiv.cm",
         "fuel_guarded_inversion_FStar.Algebra.CommMonoid.Equiv.equiv",
-        "function_token_typing_Prims.__cache_version_number__",
-        "primitive_Prims.op_Equality",
+        "function_token_typing_Prims.__cache_version_number__", "int_typing",
+        "lemma_FStar.Seq.Base.lemma_create_len",
+        "lemma_FStar.Seq.Base.lemma_len_append",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "proj_equation_FStar.Algebra.CommMonoid.Equiv.CM_mult",
         "proj_equation_FStar.Algebra.CommMonoid.Equiv.CM_unit",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_16326afaeb5f4d93ab294cc4a965de3e",
         "refinement_interpretation_Tm_refine_167ef714932ec832fb671890fc3eee6c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_5739deb21d8cba89243fec27b35b7ef0",
         "token_correspondence_FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__mult",
-        "typing_FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit"
+        "typing_FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit",
+        "typing_FStar.Pervasives.Native.fst",
+        "typing_FStar.Pervasives.Native.snd", "typing_FStar.Seq.Base.create",
+        "typing_FStar.Seq.Base.seq", "typing_FStar.Seq.Properties.un_snoc"
       ],
       0,
       "bd358f3990cc06f088a5b649613f2f07"

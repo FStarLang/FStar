@@ -22,7 +22,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ef59bee80a771f55597d9785d3483611"
+      "2871a6383cfa5bc6c458c9aa470a0e0a"
     ],
     [
       "Bug2125b.conjmapl",
@@ -39,21 +39,21 @@
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
         "binder_x_8691477dadb3127747d6cabdd98d71a0_2",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
-        "constructor_distinct_Prims.Nil", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "eq2-interp", "equation_Prims.l_True",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil", "eq2-interp",
         "equation_Prims.logical",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_Prims.list", "l_and-interp",
         "l_or-interp", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_639eb3e22afaf240dea3f05456603c6b",
-        "refinement_interpretation_Tm_refine_ae31cb0a224b53b0421e4470eadbb6ad",
-        "subterm_ordering_Prims.Cons", "true_interp",
-        "typing_Bug2125b.conjmapl", "typing_Prims.l_True"
+        "refinement_interpretation_Tm_refine_77a660b7dabde3ba33e6051849796579",
+        "subterm_ordering_Prims.Cons", "typing_Bug2125b.conjmapl"
       ],
       0,
-      "7e71e2fcd33d34ca19c0788d087d77f0"
+      "fba91eaf991303b156ca8d5656f42fb9"
     ],
     [
       "Bug2125b.myflatten",
@@ -75,7 +75,7 @@
         "projection_inverse_BoxBool_proj_0", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "6197b0573b7caed7c61c9acded53717d"
+      "2edd93509e4ff4e2a144e8f8be8c61b6"
     ]
   ]
 ]

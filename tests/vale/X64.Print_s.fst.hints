@@ -20,7 +20,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "1c711c3d2dcfe712416f16ecbe295f39"
+      "0499cd8f48e32d8259d4247c8ed4e1f7"
     ],
     [
       "X64.Print_s.print_maddr",
@@ -36,7 +36,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "63c6a697b4221b9d226def4f46c05d9f"
+      "9734a580db280efac578e6a396f50399"
     ],
     [
       "X64.Print_s.print_operand",
@@ -52,13 +52,13 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "d086475c802a817a98cbe5afdf524343"
+      "608f218584ef4ae76440f2bc786f100a"
     ],
     [
       "X64.Print_s.print_shift_operand",
       1,
       1,
-      0,
+      1,
       [
         "@query", "constructor_distinct_X64.Machine_s.OReg",
         "disc_equation_X64.Machine_s.OReg",
@@ -67,7 +67,7 @@
         "projection_inverse_X64.Machine_s.OReg_r"
       ],
       0,
-      "3f8a53c5a232ff835286dd6b0c6ad25c"
+      "27f1d96bcc5b6a967f7ed6e6cf8d4f9f"
     ],
     [
       "X64.Print_s.cmp_not",
@@ -86,26 +86,23 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "c25fc2d416f6ad8f1acbf3af24e04162"
+      "1af20c11ef5de01259d425fa14f08803"
     ],
     [
       "X64.Print_s.uu___0",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "X64.Semantics_s_pretyping_2a81ad8d1eb2e61e03519aaf20bc2afb",
-        "constructor_distinct_Prims.unit", "constructor_distinct_Tm_unit",
         "constructor_distinct_X64.Semantics_s.OEq",
         "constructor_distinct_X64.Semantics_s.OGe",
         "constructor_distinct_X64.Semantics_s.OGt",
         "constructor_distinct_X64.Semantics_s.OLe",
         "constructor_distinct_X64.Semantics_s.OLt",
         "constructor_distinct_X64.Semantics_s.ONe",
-        "constructor_distinct_X64.Semantics_s.ocmp",
         "equation_X64.Print_s.cmp_not",
+        "fuel_guarded_inversion_X64.Semantics_s.ocmp",
         "projection_inverse_X64.Semantics_s.OEq_o1",
         "projection_inverse_X64.Semantics_s.OEq_o2",
         "projection_inverse_X64.Semantics_s.OGe_o1",
@@ -117,11 +114,10 @@
         "projection_inverse_X64.Semantics_s.OLt_o1",
         "projection_inverse_X64.Semantics_s.OLt_o2",
         "projection_inverse_X64.Semantics_s.ONe_o1",
-        "projection_inverse_X64.Semantics_s.ONe_o2",
-        "typing_X64.Print_s.cmp_not", "unit_typing"
+        "projection_inverse_X64.Semantics_s.ONe_o2"
       ],
       0,
-      "fbbf58f1cfcfa57533c5992577940761"
+      "9a88563764262a7f55bb2d616a1acc21"
     ],
     [
       "X64.Print_s.print_ins",
@@ -148,7 +144,7 @@
         "typing_X64.Machine_s.valid_dst"
       ],
       0,
-      "022e90a73b14bab864660cfdb2c0c7e6"
+      "602e67d8d9316a00f8f7bf1e2adf3b1e"
     ],
     [
       "X64.Print_s.print_cmp",
@@ -167,7 +163,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "7a0a540ac094bc35b44dd4c4008a901d"
+      "d6a86d4902638df034b35107a80d5e9c"
     ],
     [
       "X64.Print_s.print_block",
@@ -183,7 +179,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "588a28f2050545877f5b4115d11b03c1"
+      "e9fb1a89ff59636424b789b6bede618c"
     ],
     [
       "X64.Print_s.print_block",
@@ -205,13 +201,13 @@
         "subterm_ordering_X64.Machine_s.While"
       ],
       0,
-      "9fb045b17b361a21647ae212d2cb1b7e"
+      "615458aa5852f85e57f7df875a1769a5"
     ],
     [
       "X64.Print_s.masm",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
@@ -220,7 +216,7 @@
         "typing_Prims.string"
       ],
       0,
-      "c89970617849b3bb7163defd21290762"
+      "6b9fa81495d49ca80be2e0110df3d30c"
     ],
     [
       "X64.Print_s.gcc",
@@ -238,7 +234,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.string"
       ],
       0,
-      "f486fc87fa0f7c4abe92ff5c3343e553"
+      "6c584da5911ae1d66de7d1d8690fcef0"
     ]
   ]
 ]

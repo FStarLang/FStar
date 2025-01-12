@@ -14,7 +14,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "55e66971b63b752bba2e15795a3fa024"
+      "960585e6d3b364ee8f8098ef3abc5c6c"
     ],
     [
       "Bug3089.index",
@@ -58,7 +58,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "51a807496542f3048ee0ce613183cbed"
+      "97f1fc751866619d9d4b9babf158891a"
     ],
     [
       "Bug3089.index",
@@ -67,7 +67,7 @@
       1,
       [ "@query" ],
       0,
-      "3f15bd7e6138026424d679de0767de6c"
+      "5c710a261ad63b14f9b9a6da78c3564d"
     ],
     [
       "Bug3089.stepx",
@@ -78,19 +78,18 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Bug3089.index.fuel_instrumented",
         "@fuel_correspondence_Bug3089.row.fuel_instrumented",
-        "@fuel_correspondence_FStar.List.Tot.Base.index.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_Bug3089.row.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "bool_typing", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Nil",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "data_typing_intro_Prims.Cons@tok",
-        "data_typing_intro_Prims.Nil@tok", "equation_FStar.List.Tot.Base.hd",
-        "equation_Prims.eqtype", "equation_Prims.nat",
+        "data_typing_intro_Prims.Nil@tok", "equation_Prims.eqtype",
+        "equation_Prims.nat",
         "equation_with_fuel_Bug3089.index.fuel_instrumented",
         "equation_with_fuel_Bug3089.row.fuel_instrumented",
-        "equation_with_fuel_FStar.List.Tot.Base.index.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "function_token_typing_Prims.__cache_version_number__",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
@@ -109,7 +108,7 @@
         "typing_Bug3089.row", "typing_Prims.bool", "unit_typing"
       ],
       0,
-      "f9dfdf51e23dea1522dfd6262ac9f34c"
+      "5504cf78f7f84bdce13638cc0a4147d6"
     ]
   ]
 ]

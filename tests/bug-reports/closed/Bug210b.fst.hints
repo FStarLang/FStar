@@ -10,7 +10,7 @@
         "@MaxIFuel_assumption", "@query", "subterm_ordering_Bug210b.AccIntro"
       ],
       0,
-      "b35cec32a67db8b457cf63178c874fd6"
+      "9b16fd681d039db2bc0750a46cfde189"
     ],
     [
       "Bug210b.fix_F",
@@ -24,7 +24,7 @@
         "subterm_ordering_Bug210b.AccIntro"
       ],
       0,
-      "19e2f1bc4904281883ef15b0cc2c7732"
+      "032525e14c0f8fb6eb7b9a6c3868b93d"
     ]
   ]
 ]

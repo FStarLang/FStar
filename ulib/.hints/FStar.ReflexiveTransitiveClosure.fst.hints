@@ -133,7 +133,7 @@
         "subterm_ordering_FStar.ReflexiveTransitiveClosure.Closure"
       ],
       0,
-      "7de8f1e8cd86af7e5cf46a147a981084"
+      "501d8c14483ce30fa298bb21fd46dd41"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.get_squash",
@@ -222,7 +222,7 @@
         "subterm_ordering_FStar.ReflexiveTransitiveClosure.Closure"
       ],
       0,
-      "094226d06f0b63546be520d7f7b2498b"
+      "5be72d781bbc8712de76b73c2b41a094"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_one_aux'",
@@ -277,7 +277,7 @@
         "subterm_ordering_FStar.ReflexiveTransitiveClosure.Closure"
       ],
       0,
-      "9a95fa8bb0ff75153bba5fc627da160a"
+      "0bbc9d4c0bea25390a266ae9965b90f8"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.squash_implies_to_arrow",

@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_8984efe2f0cef45f5100268c64c20baa"
       ],
       0,
-      "a907b214887360c5588ba529abb59ce3"
+      "8ac3ab750cda304a70ccaf1739380829"
     ],
     [
       "TestWellFoundedRecursion.__proj__Lim__item___0",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_d5a8ded1543cff98dd3f7b46c3d44a5f"
       ],
       0,
-      "29248faf49d7f49c1bb49e8d04b0594c"
+      "69f9de9e6a3c885fd6b9491793ade923"
     ],
     [
       "TestWellFoundedRecursion.sum",
@@ -45,7 +45,7 @@
         "well_founded_ordering_on_codomain_TestWellFoundedRecursion.Lim"
       ],
       0,
-      "af22c23a6225db5c9323ec073c532908"
+      "207b7d808c5218d078677433dc7ac461"
     ],
     [
       "TestWellFoundedRecursion.__proj__T0__item___0",
@@ -57,7 +57,7 @@
         "refinement_interpretation_Tm_refine_bf2273afcdc185e928a86603e929f9ef"
       ],
       0,
-      "9e0de82d0abafefe4828e901791f5e87"
+      "131df305a7ac76d756aa1be4a77f8b55"
     ],
     [
       "TestWellFoundedRecursion.__proj__T__item___0",
@@ -69,7 +69,7 @@
         "refinement_interpretation_Tm_refine_b272cf7ed418ca41754995dc94cbc637"
       ],
       0,
-      "b636ef2fea771b27b616b0a9501915d3"
+      "a589b6736b295cfa26ed285a2e913672"
     ],
     [
       "TestWellFoundedRecursion.__proj__S0__item___0",
@@ -81,7 +81,7 @@
         "refinement_interpretation_Tm_refine_2526a6b4db292a420821ceb08465e7ce"
       ],
       0,
-      "ecd8e25ab1339e374c47709930d224b8"
+      "eb141299de73c0f63ce41e32fc6b62be"
     ],
     [
       "TestWellFoundedRecursion.__proj__S__item___0",
@@ -93,7 +93,7 @@
         "refinement_interpretation_Tm_refine_ceb852e4b21729325b4452bbfd864562"
       ],
       0,
-      "e634267e318a1c920c2ee414bf55af12"
+      "e51838609be4a930caa1a79667758e30"
     ],
     [
       "TestWellFoundedRecursion.neg_t",
@@ -111,7 +111,7 @@
         "well_founded_ordering_on_codomain_TestWellFoundedRecursion.T"
       ],
       0,
-      "2f7f09986b1c2a8d6017cba08e285999"
+      "cbd9a36a5e04f915b56f284700910b5a"
     ],
     [
       "TestWellFoundedRecursion.neg_t",
@@ -129,7 +129,7 @@
         "well_founded_ordering_on_codomain_TestWellFoundedRecursion.S"
       ],
       0,
-      "8e0546059f8c11cba30512340d4e8c07"
+      "421b63c3d2faa2b1104ef7364fcb03c4"
     ],
     [
       "TestWellFoundedRecursion.__proj__Leaf__item__data",
@@ -141,7 +141,7 @@
         "refinement_interpretation_Tm_refine_f19749595c8f6a9f8ac00a56a01bec80"
       ],
       0,
-      "1994085708eb5a1f1de51e68d199040c"
+      "7ca60e242acbe08f5f735f4fc6f9a3b4"
     ],
     [
       "TestWellFoundedRecursion.__proj__Node__item__children",
@@ -153,7 +153,7 @@
         "refinement_interpretation_Tm_refine_6bf5eb2a2468891f02855d133a655dc1"
       ],
       0,
-      "ff4d94b7d51067680fa9240f1e098337"
+      "90ca78ed69fafde7638f2635ea567565"
     ],
     [
       "TestWellFoundedRecursion.map",
@@ -170,7 +170,7 @@
         "well_founded_ordering_on_codomain_TestWellFoundedRecursion.Node"
       ],
       0,
-      "c8932afd06c98084285599fb12616187"
+      "545e1a8ab06307f7f596b9c403d79722"
     ],
     [
       "TestWellFoundedRecursion.codomain_ordering",
@@ -190,7 +190,7 @@
         "well_founded_ordering_on_codomain_TestWellFoundedRecursion.Node"
       ],
       0,
-      "e07bb409a4fd3c44ef508ee4756f7b7d"
+      "eee70f6cde19594b0d9906084d5d6949"
     ],
     [
       "TestWellFoundedRecursion.test",
@@ -209,7 +209,7 @@
         "well_founded_ordering_on_codomain_TestWellFoundedRecursion.Node"
       ],
       0,
-      "4735015af15688f7e49ab2532886cddc"
+      "7137e60dcbe1ba964a72da9ac0917f44"
     ],
     [
       "TestWellFoundedRecursion.map_alt",
@@ -229,7 +229,7 @@
         "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
       ],
       0,
-      "fa5eacf6b50f5706a9f7fa0fdd9c8652"
+      "f3c1fbbd4c4fd79eae223e1c6ccfd4e9"
     ],
     [
       "TestWellFoundedRecursion.map_alt",
@@ -248,7 +248,7 @@
         "well_founded_ordering_on_codomain_TestWellFoundedRecursion.Node"
       ],
       0,
-      "7d010cabf7ef801af17fe03355dbc04c"
+      "de2cac929ffe740e8567a476fa45b539"
     ],
     [
       "TestWellFoundedRecursion.__proj__SCons'__item___0",
@@ -260,7 +260,7 @@
         "refinement_interpretation_Tm_refine_346cbdfada0725d3e74b4c52aab8adf4"
       ],
       0,
-      "63e13f450b0fa228fcbfd0036023cd3c"
+      "4900ad7c865224ac5033f58b22ba84e5"
     ],
     [
       "TestWellFoundedRecursion.__proj__SCons__item__uu___0",
@@ -272,7 +272,7 @@
         "refinement_interpretation_Tm_refine_f195aa4109afbb06f867e978be79070b"
       ],
       0,
-      "4fb75b6c201a4324cd84028326559281"
+      "5a126d733ab52a2b4f0bfb41bc5b6a92"
     ],
     [
       "TestWellFoundedRecursion.__proj__SCons__item__f",
@@ -284,7 +284,7 @@
         "refinement_interpretation_Tm_refine_f195aa4109afbb06f867e978be79070b"
       ],
       0,
-      "2e13f3230aaf7130c2ef90734c3aeae2"
+      "9c79efcfacd52d11d90cfb677cf857e3"
     ],
     [
       "TestWellFoundedRecursion.fmap_stream",
@@ -301,7 +301,7 @@
         "well_founded_ordering_on_codomain_TestWellFoundedRecursion.SCons"
       ],
       0,
-      "8b1a1ccef74e5773ba8ca8070c85c1c7"
+      "f6dbc37cedc9694db3c0dfbdee8cb3c4"
     ],
     [
       "TestWellFoundedRecursion.test_tf",
@@ -314,7 +314,7 @@
         "well_founded_ordering_on_codomain_TestWellFoundedRecursion.TF"
       ],
       0,
-      "2203af60191450eacc1a5e2ea498cecf"
+      "0f974f622422ce77d98ec8c60130c3c4"
     ],
     [
       "TestWellFoundedRecursion.ackermann",
@@ -335,7 +335,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "5ffa94a3982a2a141de52cd0bd338890"
+      "79c4f4152ac8d776808b76d38e9de241"
     ],
     [
       "TestWellFoundedRecursion.lt_well_founded",
@@ -351,7 +351,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "37594276afa0e8dfc1463ee0cfd97276"
+      "0b4097437ad00cfa1616e85f7d489b0d"
     ],
     [
       "TestWellFoundedRecursion.lt_dep_well_founded",
@@ -367,7 +367,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "74adfeafea48736fb0191e956363e1b2"
+      "88f42a222c55e486467c847f3e9d9dac"
     ],
     [
       "TestWellFoundedRecursion.higher_nat",
@@ -376,7 +376,7 @@
       1,
       [ "@query" ],
       0,
-      "cd0f9b5815814808850b870fdc175b93"
+      "4773ad0e9272723a5129ee2acb04d28c"
     ],
     [
       "TestWellFoundedRecursion.__proj__HS__item___0",
@@ -388,7 +388,7 @@
         "refinement_interpretation_Tm_refine_6d02e0add0161078d4cd126ba95a57e7"
       ],
       0,
-      "202d61699789815d9f316a046509b53e"
+      "94e57e4884c0e010a36c05e2d66ef9a6"
     ],
     [
       "TestWellFoundedRecursion.higher_nat_lt_well_founded",
@@ -397,7 +397,7 @@
       1,
       [ "@query", "equation_TestWellFoundedRecursion.higher_nat_lt" ],
       0,
-      "01bc5e0d157a54955d5ec7a1331c55eb"
+      "7c42d158ce77c2e39715ac40a0b5dbda"
     ],
     [
       "TestWellFoundedRecursion.ackermann_wf",
@@ -410,14 +410,14 @@
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
         "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "primitive_Prims.op_Addition",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "07aa423695c8e293ac22d0f555c0e6ad"
+      "4c978717e37b456f3592591450cfa98c"
     ],
     [
       "TestWellFoundedRecursion.rel_parametric",
@@ -441,7 +441,7 @@
         "typing_TestWellFoundedRecursion.get_previous"
       ],
       0,
-      "21cb25bd74fde29dc71d089510cd9e15"
+      "179ad2c16223b73704aa99e4c44fccec"
     ],
     [
       "TestWellFoundedRecursion.rel_poly",
@@ -483,7 +483,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236"
       ],
       0,
-      "e656e8fef8f71ba8edbefe525a753dcf"
+      "39a6fb96752c576572c55730f1375dc5"
     ],
     [
       "TestWellFoundedRecursion.rel_poly2",
@@ -523,7 +523,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236"
       ],
       0,
-      "986cf516a677563c5de2c97480af58dc"
+      "21f6b9e16a8066e78dd26c3156098750"
     ],
     [
       "TestWellFoundedRecursion.f",
@@ -561,7 +561,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d59f41948d039f1c542bacd572239034"
+      "2a2850f9d5600928488678bbda3bc3ac"
     ],
     [
       "TestWellFoundedRecursion.count_steps_to_none",
@@ -594,7 +594,7 @@
         "typing_FStar.WellFoundedRelation.option_wfr"
       ],
       0,
-      "ce8336d8aad0fc345060c4610b7cfe1c"
+      "60831f62e9b580fe4a98a270326c3fb6"
     ]
   ]
 ]

@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e2ca15cb14bf3d6d4ae72ee89505c826"
+      "0a0c4a70c7fabf21d651d76227951bfb"
     ],
     [
       "OPLSS2021.Basic.factorial_increasing",
@@ -39,10 +39,10 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "token_correspondence_OPLSS2021.Basic.factorial.fuel_instrumented",
-        "well-founded-ordering-on-nat"
+        "typing_OPLSS2021.Basic.factorial", "well-founded-ordering-on-nat"
       ],
       0,
-      "5a349c9898a35d883f2fb4915e3991d9"
+      "9a056368b2e65f07b35b9a500215f130"
     ],
     [
       "OPLSS2021.Basic.factorial_increasing_lemma",
@@ -67,7 +67,7 @@
         "typing_OPLSS2021.Basic.factorial", "well-founded-ordering-on-nat"
       ],
       0,
-      "341093989e796642543f33347d582148"
+      "c8da041bee434928251b18a0428d51f2"
     ],
     [
       "OPLSS2021.Basic.factorial_increasing_lemma'",
@@ -91,10 +91,11 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c117e3dfa0913e9570f652c9d3f27f5b",
         "typing_OPLSS2021.Basic.factorial", "well-founded-ordering-on-nat"
       ],
       0,
-      "3b1a2472ff5c73132e71af69304368d0"
+      "9a527816ef608671e32186e0f84b0bfc"
     ],
     [
       "OPLSS2021.Basic.factorial_increasing_lemma'",
@@ -108,7 +109,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "478489ef6845575219e82ec88a994513"
+      "0fb835198aac4a3fa4094304e0698536"
     ],
     [
       "OPLSS2021.Basic.map",
@@ -123,7 +124,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b48de7bf85c4fe55766a04e4bfc303d9"
+      "ca374211593d2bab5669987294818e82"
     ],
     [
       "OPLSS2021.Basic.test0",
@@ -134,25 +135,23 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_OPLSS2021.Basic.map.fuel_instrumented",
         "@query",
-        "FStar.List.Tot.Base_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
+        "FStar.Ghost_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "Prims_interpretation_Tm_arrow_35447810753695c4fe25c93af1251992",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_elim_Prims.Cons", "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equation_Prims.eqtype",
         "equation_with_fuel_OPLSS2021.Basic.map.fuel_instrumented",
-        "int_inversion", "int_typing",
+        "int_typing",
         "interpretation_Tm_abs_b0ccd7de28a6672e541735f7bc00b394",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "token_correspondence_OPLSS2021.Basic.map.fuel_instrumented",
-        "typing_OPLSS2021.Basic.map", "typing_Prims.int",
-        "typing_Tm_abs_b0ccd7de28a6672e541735f7bc00b394"
+        "typing_Prims.int", "typing_Tm_abs_b0ccd7de28a6672e541735f7bc00b394"
       ],
       0,
-      "96942668a4af76a7d1c2c62da47b0df8"
+      "09d9f911a3bace3ba023e665a3a873cc"
     ],
     [
       "OPLSS2021.Basic.string_or_int",
@@ -161,7 +160,7 @@
       1,
       [ "@query", "int_typing", "string_typing" ],
       0,
-      "c1828729633e314500a8f91bab6d3506"
+      "5c2de3da1eb05d809974d07b46e91946"
     ],
     [
       "OPLSS2021.Basic.vector",
@@ -174,7 +173,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "e0f69aa85938c20c0834dcaa84b65432"
+      "e08076a0b0488735ccdecfb8aa8ec542"
     ],
     [
       "OPLSS2021.Basic.vector",
@@ -190,7 +189,7 @@
         "typing_Prims.int"
       ],
       0,
-      "8a0b432c6a29dae097e8a71fbcf57b28"
+      "d2ceab91180cf0e206cf8778f3ee6e97"
     ],
     [
       "OPLSS2021.Basic.__proj__VCons__item__hd",
@@ -202,7 +201,7 @@
         "refinement_interpretation_Tm_refine_263701cd9f084b3ec0fd74e628d41dfc"
       ],
       0,
-      "784c0ed4d36a8f1483cfd610d0aaef75"
+      "903ea7ac8c3e0d1764fa17c9107374b3"
     ],
     [
       "OPLSS2021.Basic.__proj__VCons__item__n",
@@ -214,7 +213,7 @@
         "refinement_interpretation_Tm_refine_263701cd9f084b3ec0fd74e628d41dfc"
       ],
       0,
-      "32bc9ca2dd8a10bd7ad955ed3c482b83"
+      "19e2cd821154dc0508e11221934e5514"
     ],
     [
       "OPLSS2021.Basic.__proj__VCons__item__tl",
@@ -226,7 +225,7 @@
         "refinement_interpretation_Tm_refine_263701cd9f084b3ec0fd74e628d41dfc"
       ],
       0,
-      "1de518714a88dfd30c2cb8093f3cad52"
+      "3feeffc6e18e6fb5df59c39656ba5b34"
     ],
     [
       "OPLSS2021.Basic.head'",
@@ -240,7 +239,7 @@
         "refinement_interpretation_Tm_refine_890c02a0912261dc6c18398823d22009"
       ],
       0,
-      "c342c1b9a6b312a1dac1f894cd9fa48b"
+      "a56d92ebf229db1dad3793681d147986"
     ],
     [
       "OPLSS2021.Basic.head''",
@@ -252,7 +251,7 @@
         "refinement_interpretation_Tm_refine_263701cd9f084b3ec0fd74e628d41dfc"
       ],
       0,
-      "43e44152d8f7a0ef48b831072a709ee1"
+      "fd9886dc4418ad92d63e431d9cdeca12"
     ],
     [
       "OPLSS2021.Basic.head",
@@ -267,7 +266,7 @@
         "refinement_interpretation_Tm_refine_e6a49b520963ae8c566589b9e4cccaaa"
       ],
       0,
-      "0e0badd0e69ab0f723cc35c80b09ef13"
+      "2e47c167271cd3c371776ea9772f1d97"
     ],
     [
       "OPLSS2021.Basic.nth",
@@ -294,7 +293,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "41d9ead23d1ab283e21601c0a3cd5c41"
+      "9a11aeb17e5adf91de3d9ca4e0c3f369"
     ],
     [
       "OPLSS2021.Basic.append",
@@ -317,7 +316,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f9e44bffcac32674e060f5ae7deb220b"
+      "1976fdb257025f46aac511dd20762632"
     ],
     [
       "OPLSS2021.Basic.append",
@@ -330,7 +329,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "b072f44775c3c2643be4e4e8f8b15f47"
+      "b8d6f11223d464943dc255b0eb96baec"
     ],
     [
       "OPLSS2021.Basic.reverse",
@@ -352,7 +351,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a6da85dcbeae5c9f5bbdd89041f38a0c"
+      "99326755f6db216747ee95c03ac2932a"
     ],
     [
       "OPLSS2021.Basic.map_vec",
@@ -374,7 +373,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "400a11340cb131124337385dd4d28e09"
+      "ec06197ae8b47aaedaabecfd16155c8b"
     ],
     [
       "OPLSS2021.Basic.fold_right",
@@ -395,7 +394,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "215ea9ff4d95d44be436d67fe6b2a715"
+      "039d34e6ae6c5f52a04a3d9bac940a4d"
     ],
     [
       "OPLSS2021.Basic.length",
@@ -413,7 +412,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9bc742c5204c6051421b5b8013664c59"
+      "d5d8a83e22963a21f9f4d2a82da4fc0a"
     ],
     [
       "OPLSS2021.Basic.llist",
@@ -428,7 +427,7 @@
         "typing_Prims.int"
       ],
       0,
-      "5cd5d19b925ef5bb4b2f58d2c847a3cf"
+      "77358e566db71059b9578356672ca490"
     ]
   ]
 ]

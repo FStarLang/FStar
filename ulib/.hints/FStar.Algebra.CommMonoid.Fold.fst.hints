@@ -51,7 +51,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a1f145c93d2dbaa0212fbd9c0e472fb0"
+      "7678acb13840f4aa09a5e8805ec41c53"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_equality",
@@ -311,7 +311,7 @@
         "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408"
       ],
       0,
-      "91c39ae738e452347e6abb2a4b62dc42"
+      "3df0df97d69973fbf2f233cb079884c1"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_offset_irrelevance_lemma",
@@ -371,6 +371,7 @@
         "bool_typing",
         "equation_FStar.IntegerIntervals.closed_interval_size",
         "equation_FStar.IntegerIntervals.greater_than",
+        "equation_FStar.IntegerIntervals.ifrom_ito",
         "equation_FStar.IntegerIntervals.interval",
         "equation_FStar.IntegerIntervals.interval_condition",
         "equation_FStar.IntegerIntervals.interval_size",
@@ -412,6 +413,7 @@
         "equation_FStar.IntegerIntervals.not_less_than",
         "equation_FStar.IntegerIntervals.under", "int_inversion",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
@@ -420,7 +422,7 @@
         "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
       ],
       0,
-      "26c207b4b22f1543091f0a8ef8031fa8"
+      "d71ce77e03b989929313239ec04ffb0a"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_offset_elimination_lemma",
@@ -436,8 +438,8 @@
         "equation_FStar.IntegerIntervals.interval_size",
         "equation_FStar.IntegerIntervals.not_less_than",
         "equation_FStar.IntegerIntervals.under", "int_inversion",
-        "int_typing", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",

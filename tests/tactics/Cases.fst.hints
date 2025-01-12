@@ -13,7 +13,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "537c752b2dcf163af3447e2e202a1fdd"
+      "c1b5d9b9660fcf0a04fb78c6b11a4979"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -21,11 +21,12 @@
       2,
       1,
       [
-        "@query", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "aa2dee40bc3931fd0e3fe5b235d3ea0d"
+      "66833cdee310c0f1d4d84e4c2baff696"
     ]
   ]
 ]

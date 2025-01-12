@@ -8,17 +8,15 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Pervasives.V", "equation_Ex01a.canRead",
-        "equation_Ex01a.canWrite", "equation_Ex01a.readme",
-        "equation_Ex01a.tmp",
+        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
+        "equation_Ex01a.canRead", "equation_Ex01a.canWrite",
+        "equation_Ex01a.readme", "equation_Ex01a.tmp",
         "fuel_guarded_inversion_FStar.Pervasives.result",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.V_a",
-        "projection_inverse_FStar.Pervasives.V_v"
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "66ae050f44534b263ccbdc4ee6c3e716"
+      "0ba8711631e6d8d8989f1c7150a6e72e"
     ],
     [
       "Ex01a.checkedRead",
@@ -27,7 +25,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "1104d191068272060657a17172cbbbf7"
+      "f690da04f01cb1fa5ba9faed45b999ae"
     ],
     [
       "Ex01a.checkedWrite",
@@ -36,7 +34,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "072249851da18246df037ab994b858fa"
+      "ea9c98c925957f190acb3fb70b04e95f"
     ]
   ]
 ]

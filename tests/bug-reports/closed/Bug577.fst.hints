@@ -8,19 +8,16 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "data_elim_Bug577.Multi_step" ],
       0,
-      "6f6c5377800eb075a5378c6001c75859"
+      "5bfb73b686b42a2a6f6de5b9f62c3738"
     ],
     [
       "Bug577.steps_preserves_red",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_Bug577.step"
-      ],
+      [ "@MaxIFuel_assumption", "@query", "data_elim_Bug577.Multi_step" ],
       0,
-      "d576cbc40000f03a0b4e359f470f40b3"
+      "547f6030b4e05bd16e29cac3815d628d"
     ]
   ]
 ]

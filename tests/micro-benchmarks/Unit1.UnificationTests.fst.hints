@@ -14,7 +14,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "169a50487de5ff8f19a0f96bae3999f1"
+      "3f186fb086aa6cfecd64d5c9ebdc344c"
     ],
     [
       "Unit1.UnificationTests.test_unit_valued_implicits0",
@@ -23,7 +23,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "unit_inversion", "unit_typing" ],
       0,
-      "8a9f387138cc05d6549fb39a69077894"
+      "53b93b9e56c6c42b712493826ae62428"
     ],
     [
       "Unit1.UnificationTests.test_unit_valued_implicits4",
@@ -32,7 +32,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "unit_inversion", "unit_typing" ],
       0,
-      "a06dd9b3a89b51570d31d317cdecdf65"
+      "f0c90b864a0c106a3b0bd1e3d4fd7be8"
     ]
   ]
 ]

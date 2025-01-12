@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_795f9e9fa08e5f78560459994a1c8f9f"
       ],
       0,
-      "d13f5140e8449d59283c646b07759489"
+      "7f5c08002d23859193687d9acac0347b"
     ],
     [
       "AlexOpaque.g",
@@ -26,7 +26,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "530727a0c921c0296cedca2315c714f0"
+      "7a2e826ee45cbb901152adfaba04447f"
     ],
     [
       "AlexOpaque.find_above_for_g",
@@ -37,7 +37,7 @@
         "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
         "bool_typing", "equation_AlexOpaque.g", "equation_Prims.abs",
         "equation_Prims.nat", "equation_Prims.squash",
-        "function_token_typing_AlexOpaque.f", "int_inversion",
+        "function_token_typing_AlexOpaque.f", "int_inversion", "int_typing",
         "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_Subtraction",
@@ -50,7 +50,7 @@
         "typing_AlexOpaque.f"
       ],
       0,
-      "a1169afa5752c48fde7e3fa134b6db71"
+      "38a726481ac9afd6343cc287c1e374b6"
     ],
     [
       "AlexOpaque.gg",
@@ -63,7 +63,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "39338451d8408dfe2447944cfc64c6d3"
+      "c7f359c188bd0b0fae0497a26cb28e12"
     ],
     [
       "AlexOpaque.find_above_for_gg",
@@ -75,7 +75,7 @@
         "bool_typing", "equation_AlexOpaque.gg",
         "equation_AlexOpaque.trigger", "equation_AlexOpaque.unbounded_alt",
         "equation_Prims.abs", "equation_Prims.nat", "equation_Prims.squash",
-        "function_token_typing_AlexOpaque.ff", "int_inversion",
+        "function_token_typing_AlexOpaque.ff", "int_inversion", "int_typing",
         "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_Subtraction",
@@ -89,7 +89,7 @@
         "typing_Prims.abs"
       ],
       0,
-      "9ab3ccf9278519c75f6ad966b1413342"
+      "3ba34e461110f8a424b980e6ef67d1db"
     ],
     [
       "AlexOpaque.find_above_for_g1",
@@ -100,20 +100,19 @@
         "@MaxIFuel_assumption", "@query", "b2t_def", "equation_AlexOpaque.g",
         "equation_AlexOpaque.trigger", "equation_Prims.abs",
         "equation_Prims.nat", "equation_Prims.squash",
-        "function_token_typing_AlexOpaque.f", "int_inversion",
+        "function_token_typing_AlexOpaque.f", "int_inversion", "int_typing",
         "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
-        "primitive_Prims.op_GreaterThanOrEqual", "primitive_Prims.op_Minus",
+        "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_6f94613fb44f05144ff447cef09f7d9d",
-        "refinement_interpretation_Tm_refine_795f9e9fa08e5f78560459994a1c8f9f",
-        "typing_AlexOpaque.f"
+        "refinement_interpretation_Tm_refine_795f9e9fa08e5f78560459994a1c8f9f"
       ],
       0,
-      "c3ae94fb0c75067d06d418e6b1b43654"
+      "6fbb705440f543038c4052d4a365f476"
     ],
     [
       "AlexOpaque.find_above_for_g2",
@@ -134,10 +133,10 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_6f94613fb44f05144ff447cef09f7d9d",
         "refinement_interpretation_Tm_refine_795f9e9fa08e5f78560459994a1c8f9f",
-        "typing_AlexOpaque.f", "typing_AlexOpaque.g"
+        "typing_AlexOpaque.f"
       ],
       0,
-      "c74ef4b2c710b19e228deed21c2a2e5f"
+      "99755e052319c094a688244a694953b0"
     ],
     [
       "AlexOpaque.find_above_for_g'",
@@ -147,7 +146,7 @@
       [
         "@MaxIFuel_assumption", "@query", "b2t_def", "equation_AlexOpaque.g",
         "equation_Prims.abs", "equation_Prims.nat", "equation_Prims.squash",
-        "function_token_typing_AlexOpaque.f", "int_inversion",
+        "function_token_typing_AlexOpaque.f", "int_inversion", "int_typing",
         "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_Subtraction",
@@ -160,7 +159,7 @@
         "typing_AlexOpaque.f", "typing_AlexOpaque.g"
       ],
       0,
-      "ca093a337564590b4fb95894317c814f"
+      "56de6b4b70bb375c68eb65f64f1e9c7b"
     ]
   ]
 ]

@@ -13,7 +13,7 @@
         "typing_Prims.unit"
       ],
       0,
-      "613d5b6d32d5f01bbd278b097fb429e1"
+      "7342ac1a90f43a6871a8779f3a6cd274"
     ],
     [
       "ApplicationUnparenthesisedRecord.dummy",
@@ -33,7 +33,7 @@
         "typing_Prims.int", "typing_Prims.unit"
       ],
       0,
-      "336c8a36ca2e1d002e492eff3a20bdb0"
+      "8a608706a70671b931a6c7114dc631a5"
     ],
     [
       "ApplicationUnparenthesisedRecord.__proj__Dummy1__item__x",
@@ -45,7 +45,7 @@
         "refinement_interpretation_Tm_refine_0b229cbc08acae1b512b29a2f6d0055c"
       ],
       0,
-      "e24d84711c0ec61ca97adc9fb02c2566"
+      "c65812587f291418720c23606664a32f"
     ],
     [
       "ApplicationUnparenthesisedRecord.__proj__Dummy2__item__x",
@@ -57,7 +57,7 @@
         "refinement_interpretation_Tm_refine_5d8ed3af48177a080d818093bdc46ca2"
       ],
       0,
-      "8da2b315bc7482c6e27d68b90407d7ba"
+      "54df9661e219567c65e3e108e107f532"
     ]
   ]
 ]

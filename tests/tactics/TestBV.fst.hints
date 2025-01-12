@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "75c8f28b4c220b3019c670b55b168927"
+      "1533f9371a2ec2ef8472e4003fa8c240"
     ],
     [
       "TestBV.test2",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "930ccc4eef68b222fd78e6638b196cdd"
+      "9f0918765f1b059681f0dd644910b6f3"
     ],
     [
       "TestBV.test3",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "b48d780d6fe6c04b5c4bf1bb57c71577"
+      "09569cc4b9121799c1f778c104c4c0a4"
     ],
     [
       "TestBV.test4",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "c7526dc0e33929449a643598c1784b0c"
+      "8a4070bce5c96b56a01ffaddb4c9f361"
     ],
     [
       "TestBV.test5",
@@ -44,7 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "aaeb7330fab1f20d2ca9f6d86a6ca213"
+      "e05407821f296d9a27155dc5be604c8e"
     ],
     [
       "TestBV.v64_eq",
@@ -53,7 +53,7 @@
       1,
       [ "@query", "lemma_FStar.UInt64.uv_inv" ],
       0,
-      "79c600192d447d476490331a6bb6c0f0"
+      "7073ba0fd0e3538d4b7e14a9ed039baa"
     ],
     [
       "TestBV.unfold_logand64",
@@ -66,7 +66,7 @@
         "typing_FStar.UInt64.logand"
       ],
       0,
-      "0b011838b6418371846a46091c9521b5"
+      "f5df41d01079dbed1330a003cb648978"
     ],
     [
       "TestBV.unfold_logor64",
@@ -79,7 +79,7 @@
         "typing_FStar.UInt64.logor"
       ],
       0,
-      "9f01664d3c858d7a6e6f15c1408b3929"
+      "fbef5284106eb94866b3a012065816d8"
     ],
     [
       "TestBV.unfold_logxor64",
@@ -92,7 +92,7 @@
         "typing_FStar.UInt64.logxor"
       ],
       0,
-      "6e572fb4ec5cb68fadccad4ca277102e"
+      "391fdd2b9891986830f7471306eee665"
     ],
     [
       "TestBV.test6",
@@ -101,7 +101,7 @@
       1,
       [ "@query" ],
       0,
-      "647cd23825f1c796d69b566d19b48e47"
+      "12f6d73fe3d27e6e0c2a270995431fb8"
     ],
     [
       "TestBV.test7",
@@ -110,7 +110,7 @@
       1,
       [ "@query" ],
       0,
-      "fde33eeef9f7c50027d98786f9a83c04"
+      "07e429b78bbfdfd55cba0d9feb7823a7"
     ]
   ]
 ]

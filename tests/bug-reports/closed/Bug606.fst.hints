@@ -14,7 +14,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "da6d3fc8683554d56235eb7f828c5eb8"
+      "93c91fb09bce901920f17b90d08c6e2d"
     ],
     [
       "Bug606.g",
@@ -29,7 +29,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7dc725bde2cfe6d2c7641cb9ccf604ac"
+      "ad1d687d897ef98d12b3e04f306ae78c"
     ],
     [
       "Bug606.f_eq_g",
@@ -56,7 +56,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "8c7089eb0256544a80fb4efd9a91592d"
+      "a6b977bf1f78ab0c18b095e7a570ebff"
     ],
     [
       "Bug606.h",
@@ -72,7 +72,7 @@
         "lemma_Bug606.f_eq_g"
       ],
       0,
-      "ed3ce72055add1f4098c07e320b8fe37"
+      "a8f32507c2377308a96c035624ac5a1a"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -81,7 +81,7 @@
       1,
       [ "@query" ],
       0,
-      "7e5ca0c1df1500afee9b0709af2ba8e2"
+      "251a0adc99a0ac886df6c28aa9abd34d"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -99,7 +99,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "3c2e92ff8ed6cbf2421ea02ea3539a30"
+      "30993ab55872c2685d7c7dcc6003eeab"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -108,7 +108,7 @@
       1,
       [ "@query" ],
       0,
-      "a6cded31fedca68f2a9283c9f486dc72"
+      "5239abef93c3957d4eb0aa3681cca929"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -117,7 +117,7 @@
       1,
       [ "@query" ],
       0,
-      "32ca5340d4bd3af2df6b009d29e2c08d"
+      "ffff2a2be9db5e6e00a3bc4cc09288bc"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -131,7 +131,7 @@
         "refinement_interpretation_Tm_refine_3ef4a51931da44c64f612b2a96bb7412"
       ],
       0,
-      "1df55c549c3a2f20a5b23560d02d252c"
+      "c4d48b999096f66cf17395afb1f97319"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -140,7 +140,7 @@
       1,
       [ "@query" ],
       0,
-      "a6cded31fedca68f2a9283c9f486dc72"
+      "5239abef93c3957d4eb0aa3681cca929"
     ]
   ]
 ]

@@ -12,7 +12,7 @@
         "equation_Benton2004.op_abs", "lemma_Benton2004.DDCC.holds_ns_singl"
       ],
       0,
-      "c850e36669be873486c51ea282045346"
+      "3b7fab675ba44004aec0b908d6e62206"
     ],
     [
       "Benton2004.DDCC.Examples.d_op_singl",
@@ -21,7 +21,7 @@
       1,
       [ "@query" ],
       0,
-      "3360c8ea4f21b218e9be1fc7871ba7fa"
+      "5ce47e87508c50b087d4582a96a44478"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d1",
@@ -54,7 +54,7 @@
         "typing_Prims.bool", "typing_Prims.int"
       ],
       0,
-      "cc833b89d597000227b764b718d3d17d"
+      "f0ea436be5808c851628826478c8ba3e"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d2",
@@ -77,8 +77,8 @@
         "equation_Benton2004.var", "equation_Prims.eqtype",
         "function_token_typing_Prims.__cache_version_number__", "int_typing",
         "lemma_Benton2004.DDCC.d_assign", "lemma_Benton2004.DDCC.d_cf",
-        "lemma_Benton2004.DDCC.d_csub", "lemma_Benton2004.DDCC.d_n",
-        "lemma_Benton2004.DDCC.d_v", "lemma_Benton2004.DDCC.exec_equiv_sym",
+        "lemma_Benton2004.DDCC.d_csub", "lemma_Benton2004.DDCC.d_csym",
+        "lemma_Benton2004.DDCC.d_n", "lemma_Benton2004.DDCC.d_v",
         "lemma_Benton2004.DDCC.holds_ns_singl",
         "lemma_Benton2004.DDCC.holds_ns_t",
         "lemma_Benton2004.DDCC.holds_st_intersect",
@@ -99,7 +99,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel", "typing_Prims.int"
       ],
       0,
-      "b38aa01887af32219d6fad8e2349aeab"
+      "a6b420e5859aa1c163829e2f717fc06d"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d3",
@@ -135,7 +135,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel", "typing_Prims.int"
       ],
       0,
-      "7bde87540f427163f77e25ac92905a06"
+      "900549797a864edb2d7f3c5e96aad567"
     ],
     [
       "Benton2004.DDCC.Examples.fig3",
@@ -156,9 +156,7 @@
         "equation_Benton2004.seq", "equation_Benton2004.var",
         "equation_Prims.eqtype",
         "function_token_typing_Prims.__cache_version_number__", "int_typing",
-        "lemma_Benton2004.DDCC.d_seq",
-        "lemma_Benton2004.DDCC.exec_equiv_sym",
-        "lemma_Benton2004.DDCC.exec_equiv_trans",
+        "lemma_Benton2004.DDCC.d_ctr", "lemma_Benton2004.DDCC.d_seq",
         "lemma_Benton2004.DDCC.holds_ns_singl",
         "lemma_Benton2004.DDCC.holds_st_intersect",
         "lemma_Benton2004.DDCC.holds_st_var",
@@ -183,7 +181,7 @@
         "typing_Prims.int"
       ],
       0,
-      "7d4044bd3ca95fe031ac4445412a2c50"
+      "485901e3f655d140396b277299d8dec3"
     ]
   ]
 ]
