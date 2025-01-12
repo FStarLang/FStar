@@ -1764,7 +1764,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
         aux all_extracted_modules;
         List.rev !order
     in
-    let sb = FStarC.StringBuffer.create (FStarC.BigInt.of_int_fs 10000) in
+    let sb = FStarC.StringBuffer.create 10000 in
     let pr str = ignore <| FStarC.StringBuffer.add str sb in
     let print_entry target first_dep all_deps =
         pr target;
