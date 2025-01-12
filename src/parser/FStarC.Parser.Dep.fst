@@ -425,7 +425,11 @@ let dependences_of (file_system_map:files_for_module_name)
       List.map (file_of_dep file_system_map all_cmd_line_files) deps
       |> List.filter (fun k -> k <> fn) (* skip current module, cf #451 *)
 
-let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph) =
+let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph)
+  (file_system_map:files_for_module_name)
+  (cmd_lined_files:list file_name)
+ : unit
+ =
   if not (Options.silent ()) then begin
     Util.print1 "A DOT-format graph has been dumped in the current directory as `%s`\n" fn;
     Util.print1 "With GraphViz installed, try: fdp -Tpng -odep.png %s\n" fn;
@@ -437,8 +441,9 @@ let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph) =
   List.unique (deps_keys graph) |> List.iter (fun k ->
     let deps = (must (deps_try_find graph k)).edges in
     List.iter (fun dep ->
-      let r s = replace_char s '.' '_' in
-      pr (Util.format2 "  \"%s\" -> \"%s\"\n" (r (lowercase_module_name k)) (r (module_name_of_dep dep)))
+      let l = basename k in
+      let r = basename <| file_of_dep file_system_map cmd_lined_files dep in
+      pr (Util.format2 "  \"%s\" -> \"%s\"\n" l r)
     ) deps
   );
   pr "}\n";
@@ -1531,7 +1536,7 @@ let collect (all_cmd_line_files: list file_name)
 
       (* Write the graph to a file for the user to see. *)
       let fn = "dep.graph" in
-      with_file_outchannel fn (fun outc -> print_graph outc fn dep_graph);
+      with_file_outchannel fn (fun outc -> print_graph outc fn dep_graph file_system_map all_cmd_line_files);
 
       print_string "\n";
       raise_error0 Errors.Fatal_CyclicDependence [
@@ -2056,7 +2061,7 @@ let do_print (outc : out_channel) (fn : string) deps : unit =
       pref ();
       profile (fun () -> print_full outc deps) "FStarC.Parser.Deps.print_full_deps"
   | Some "graph" ->
-      print_graph outc fn deps.dep_graph
+      print_graph outc fn deps.dep_graph deps.file_system_map deps.cmd_line_files
   | Some "raw" ->
       print_raw outc deps
   | Some _ ->
