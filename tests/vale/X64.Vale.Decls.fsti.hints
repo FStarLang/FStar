@@ -5,16 +5,16 @@
       "X64.Vale.Decls.va_coerce_dst_operand_to_reg_operand",
       1,
       1,
-      0,
+      1,
       [ "@query" ],
       0,
-      "88812c3bca3152b816ee38b998b0bb90"
+      "a62e430ba53531662131e7053adf3996"
     ],
     [
       "X64.Vale.Decls.va_op_reg_operand_reg",
       1,
       1,
-      0,
+      1,
       [
         "@query", "constructor_distinct_X64.Machine_s.OReg",
         "disc_equation_X64.Machine_s.OReg",
@@ -22,13 +22,13 @@
         "projection_inverse_X64.Machine_s.OReg_r"
       ],
       0,
-      "82e5d824b57cf6f4d340b3a624cfa72e"
+      "24865d856c20507130a1bafcc7b8834a"
     ],
     [
       "X64.Vale.Decls.va_op_dst_operand_reg",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "constructor_distinct_X64.Machine_s.OReg",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_2ef22b5edaec67adad91f2b28dd82703"
       ],
       0,
-      "28e7fd10cb29d4486096870ad50b1c27"
+      "8ca560b197c6924994852684bf4459da"
     ],
     [
       "X64.Vale.Decls.va_update_operand",
@@ -57,22 +57,22 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "f0939cb6ebaa17927445a6ff194b5a18"
+      "2cf8f96ec1406774ad119d5091bca292"
     ],
     [
       "X64.Vale.Decls.va_ensure",
       1,
       1,
-      0,
+      1,
       [ "@query" ],
       0,
-      "3d80b57f1231333b529a1cdd6ab55005"
+      "6143e0bae60a77b626e57de1578773e1"
     ],
     [
       "X64.Vale.Decls.lemma_cmp_ne",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_X64.Machine_s.nat64",
@@ -82,22 +82,22 @@
         "typing_Prims.int"
       ],
       0,
-      "cd57fa09813c732841fc2e09b5d14834"
+      "092ab1822115dd8034fa0fd8cdab279d"
     ],
     [
       "X64.Vale.Decls.va_lemma_whileTrue",
       1,
       1,
-      0,
+      1,
       [ "@query" ],
       0,
-      "d8b47ac1c7c3c9b615396cfc452d4bc2"
+      "f16497c3676287a9ea2900c619aefba0"
     ],
     [
       "X64.Vale.Decls.reveal_logand128",
       1,
       1,
-      0,
+      1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
@@ -114,7 +114,7 @@
         "refinement_interpretation_Tm_refine_758ff42440a58a30c095e911b9c96f61"
       ],
       0,
-      "9c457f9a73e3d36f3eea09217e26efd8"
+      "af4e0fbf5b657bebd506de74dc61c0e0"
     ]
   ]
 ]

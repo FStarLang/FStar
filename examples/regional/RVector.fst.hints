@@ -41,7 +41,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_buffer", "typing_Prims.int"
       ],
       0,
-      "fa5bab34668d346ac9eb48dc95f75d76"
+      "b53f1591334261e0384471a1f83e23f6"
     ],
     [
       "RVector.two_regional_vectors_disjoint",
@@ -53,7 +53,7 @@
         "LowStar.Regional.Instances_interpretation_Tm_ghost_arrow_e79a3b97235ac88cf4ef318b133a3ada",
         "assumption_FStar.Monotonic.HyperHeap.Mod_set_def", "bool_inversion",
         "bool_typing", "equation_FStar.Monotonic.HyperHeap.disjoint",
-        "equation_LowStar.Buffer.buffer",
+        "equation_FStar.Set.subset", "equation_LowStar.Buffer.buffer",
         "equation_LowStar.RVector.loc_rvector",
         "equation_LowStar.RVector.rvector",
         "equation_LowStar.Regional.Instances.nonzero",
@@ -66,7 +66,6 @@
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Monotonic.HyperHeap.lemma_disjoint_includes",
         "lemma_FStar.Set.mem_intersect", "lemma_FStar.Set.mem_singleton",
-        "lemma_FStar.Set.mem_subset",
         "lemma_LowStar.Monotonic.Buffer.loc_disjoint_regions",
         "lemma_LowStar.Monotonic.Buffer.loc_disjoint_sym_",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
@@ -80,14 +79,13 @@
         "token_correspondence_LowStar.Regional.__proj__Rgl__item__region_of",
         "typing_FStar.Monotonic.HyperHeap.includes",
         "typing_FStar.Monotonic.HyperHeap.mod_set",
-        "typing_FStar.Monotonic.HyperHeap.rid", "typing_FStar.Set.empty",
-        "typing_FStar.Set.intersect", "typing_FStar.Set.singleton",
+        "typing_FStar.Monotonic.HyperHeap.rid", "typing_FStar.Set.singleton",
         "typing_FStar.UInt32.t", "typing_LowStar.Buffer.trivial_preorder",
         "typing_LowStar.Monotonic.Buffer.mbuffer",
         "typing_LowStar.RVector.loc_rvector", "typing_RVector.breg"
       ],
       0,
-      "5f90ba93a198b320e8d35a7d72d4d647"
+      "198bc44eba3357a849eea10beb3cd046"
     ],
     [
       "RVector.bcpy",
@@ -171,7 +169,7 @@
         "typing_Prims.int"
       ],
       0,
-      "710d8799d351a334c5cbb43a52268615"
+      "af623e8030ecff0b0e694377afb24c12"
     ],
     [
       "RVector.insert_does_not_affect_the_other",
@@ -183,7 +181,7 @@
         "refinement_interpretation_Tm_refine_e9c594b4242f76198d582dc26bb410e2"
       ],
       0,
-      "5a39b6244ece7124751ff1e051ea360b"
+      "48296722244cf3948a553e80a3f5cf4f"
     ],
     [
       "RVector.insert_does_not_affect_the_other",
@@ -197,7 +195,7 @@
         "LowStar.Regional.Instances_interpretation_Tm_ghost_arrow_e79a3b97235ac88cf4ef318b133a3ada",
         "assumption_FStar.Monotonic.HyperHeap.Mod_set_def", "bool_inversion",
         "bool_typing", "equation_FStar.Monotonic.HyperHeap.disjoint",
-        "equation_LowStar.Buffer.buffer",
+        "equation_FStar.Set.subset", "equation_LowStar.Buffer.buffer",
         "equation_LowStar.Buffer.trivial_preorder",
         "equation_LowStar.RVector.loc_rvector",
         "equation_LowStar.RVector.rvector",
@@ -227,7 +225,6 @@
         "lemma_LowStar.Monotonic.Buffer.length_null_1",
         "lemma_LowStar.Monotonic.Buffer.length_null_2",
         "lemma_LowStar.Monotonic.Buffer.loc_disjoint_regions",
-        "lemma_LowStar.Monotonic.Buffer.loc_disjoint_sym_",
         "lemma_LowStar.RVector.as_seq_preserved",
         "lemma_LowStar.RVector.rv_inv_preserved",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
@@ -270,7 +267,7 @@
         "typing_LowStar.Vector.is_full", "typing_RVector.breg"
       ],
       0,
-      "42c97fb02f93284ecf8d3022b3b9b72a"
+      "166953fd0cf00076700e1a92ce33e128"
     ],
     [
       "RVector.free_does_not_affect_the_other",
@@ -282,7 +279,7 @@
         "refinement_interpretation_Tm_refine_7ed8d5706de7260812cef97376df095f"
       ],
       0,
-      "7f98b6b3f7722deba8308251907190a3"
+      "cdf9f1ac8eec8c997bab41dbf5cc6d5b"
     ],
     [
       "RVector.free_does_not_affect_the_other",
@@ -295,7 +292,7 @@
         "LowStar.Regional.Instances_interpretation_Tm_ghost_arrow_e79a3b97235ac88cf4ef318b133a3ada",
         "assumption_FStar.Monotonic.HyperHeap.Mod_set_def", "bool_inversion",
         "equation_FStar.Monotonic.HyperHeap.disjoint",
-        "equation_LowStar.Buffer.buffer",
+        "equation_FStar.Set.subset", "equation_LowStar.Buffer.buffer",
         "equation_LowStar.Buffer.trivial_preorder",
         "equation_LowStar.RVector.loc_rvector",
         "equation_LowStar.RVector.rv_inv",
@@ -325,7 +322,6 @@
         "lemma_LowStar.Monotonic.Buffer.length_null_1",
         "lemma_LowStar.Monotonic.Buffer.length_null_2",
         "lemma_LowStar.Monotonic.Buffer.loc_disjoint_regions",
-        "lemma_LowStar.Monotonic.Buffer.loc_disjoint_sym_",
         "lemma_LowStar.RVector.as_seq_preserved",
         "lemma_LowStar.RVector.rv_inv_preserved",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
@@ -368,7 +364,7 @@
         "typing_LowStar.Vector.is_full", "typing_RVector.breg"
       ],
       0,
-      "9f4d8f6dd1f8d74e4407bee526e465a6"
+      "ea786d3fcdf41c9ce61cb8f4bdb05427"
     ]
   ]
 ]

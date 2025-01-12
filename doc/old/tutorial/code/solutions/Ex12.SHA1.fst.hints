@@ -1,0 +1,50 @@
+[
+  "ç\u0002\u001eIù\u007fªà'Å¶∑ÌS}„",
+  [
+    [
+      "Ex12.SHA1.key",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Ex12.SHA1.keysize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "accb8228a14953388fb5ac7ac2203bd7"
+    ],
+    [
+      "Ex12.SHA1.sample",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "52b6cb65a1b8437b981f0986787d0d23"
+    ],
+    [
+      "Ex12.SHA1.sha1",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_CoreCrypto.SHA1",
+        "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.hashSize"
+      ],
+      0,
+      "debda169ba65ffdabfe34a03e39b5421"
+    ],
+    [
+      "Ex12.SHA1.hmac_sha1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Ex12.SHA1.blocksize",
+        "equation_Ex12.SHA1.keysize", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "a223d6bd57823e058e89f7d2795f7e50"
+    ]
+  ]
+]

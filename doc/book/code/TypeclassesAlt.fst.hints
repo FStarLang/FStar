@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "34ae6dc8e7cc54f230747a348cb3346b"
+      "58bcc02e8832f09aa4314cba47cb5ff7"
     ],
     [
       "TypeclassesAlt.__proj__Mkbounded_unsigned_int__item__properties",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "8213bf497d22a53d9cecd338c8947767"
+      "bae3068dc8e0f1680b6a63a4339b17d9"
     ],
     [
       "TypeclassesAlt.__proj__Mkbounded_unsigned_int__item__properties",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "de10c129c8df392cf038aeeca0355f73"
+      "48006872e27fa8115a015cb473d8809e"
     ],
     [
       "TypeclassesAlt.ok",
@@ -46,7 +46,7 @@
         "token_correspondence_TypeclassesAlt.bound"
       ],
       0,
-      "1cc4b8d1515582e7588a4b8f6a597ccd"
+      "796bda63517c1e0cf7d926aebdbb1349"
     ],
     [
       "TypeclassesAlt.op_Plus_Hat",
@@ -71,7 +71,7 @@
         "token_correspondence_TypeclassesAlt.ok"
       ],
       0,
-      "0eded1c57f054279eab7ed8d6ce5fb06"
+      "a7135619dea028cd1603c470666c9d52"
     ],
     [
       "TypeclassesAlt.op_Subtraction_Hat",
@@ -96,7 +96,7 @@
         "token_correspondence_TypeclassesAlt.ok"
       ],
       0,
-      "9a1525192b2f888508dc7ead9687aba4"
+      "680e8c48ec405b4b9cc60bed998e11e7"
     ],
     [
       "TypeclassesAlt.op_Star_Hat",
@@ -121,7 +121,7 @@
         "token_correspondence_TypeclassesAlt.ok"
       ],
       0,
-      "c5dd3da02b386abc1af994f3e7416783"
+      "ce9fda25765950f8de7bf497a17c7597"
     ],
     [
       "TypeclassesAlt.u32_instance",
@@ -160,12 +160,12 @@
         "token_correspondence_Prims.op_Addition",
         "token_correspondence_Prims.op_Multiply",
         "token_correspondence_Prims.op_Subtraction",
-        "typing_FStar.UInt.fits", "typing_FStar.UInt.max_int",
-        "typing_FStar.UInt32.add", "typing_FStar.UInt32.mul",
-        "typing_FStar.UInt32.sub", "typing_FStar.UInt32.v"
+        "typing_FStar.UInt.max_int", "typing_FStar.UInt32.add",
+        "typing_FStar.UInt32.mul", "typing_FStar.UInt32.sub",
+        "typing_FStar.UInt32.v"
       ],
       0,
-      "821771126cf3dd448d1675d96f8a7043"
+      "ed897a00ae7fe54f734b62bc0ed89711"
     ],
     [
       "TypeclassesAlt.u64_instance",
@@ -204,12 +204,12 @@
         "token_correspondence_Prims.op_Addition",
         "token_correspondence_Prims.op_Multiply",
         "token_correspondence_Prims.op_Subtraction",
-        "typing_FStar.UInt.fits", "typing_FStar.UInt.max_int",
-        "typing_FStar.UInt64.add", "typing_FStar.UInt64.mul",
-        "typing_FStar.UInt64.sub", "typing_FStar.UInt64.v"
+        "typing_FStar.UInt.max_int", "typing_FStar.UInt64.add",
+        "typing_FStar.UInt64.mul", "typing_FStar.UInt64.sub",
+        "typing_FStar.UInt64.v"
       ],
       0,
-      "2de3cd0197afd9244af8efe697db2578"
+      "a34509379c54297acee435c041f02e28"
     ],
     [
       "TypeclassesAlt.bounded_unsigned_int_eq",
@@ -218,19 +218,24 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "TypeclassesAlt_interpretation_Tm_arrow_1b6d5700d19e269214362a600eabbf86",
         "TypeclassesAlt_interpretation_Tm_arrow_1eea001dc988a6a52767d18e2341e80f",
         "data_elim_TypeclassesAlt.Mkbounded_unsigned_int",
         "equation_Prims.nat", "equation_TypeclassesAlt.lt",
         "fuel_guarded_inversion_TypeclassesAlt.bounded_unsigned_int",
         "int_inversion",
         "interpretation_Tm_abs_4353ded811b2bc4a31a4a230b0a4bd22",
-        "primitive_Prims.op_Negation", "projection_inverse_BoxBool_proj_0",
+        "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_8869caffb2e39082e0ed96689001e161",
+        "refinement_interpretation_Tm_refine_a0c83da74d12c18b89f1234f7b9acf62",
+        "token_correspondence_Prims.op_Subtraction",
         "token_correspondence_TypeclassesAlt.lt"
       ],
       0,
-      "feb69e88e248dda342902de355abb288"
+      "483285f8621121a8f8256c949670d6fb"
     ],
     [
       "TypeclassesAlt.test32",
@@ -300,7 +305,7 @@
         "typing_TypeclassesAlt.u32_instance"
       ],
       0,
-      "d72f9ce3754c831379cff6a680e9beff"
+      "0631a1e14071fbadd00f0822de42d142"
     ],
     [
       "TypeclassesAlt.test64",
@@ -370,7 +375,7 @@
         "typing_TypeclassesAlt.u64_instance"
       ],
       0,
-      "88d460960ed1a92294f3d0f153d09559"
+      "238db1568f917a4dfd78168629cdbfc4"
     ],
     [
       "TypeclassesAlt.try_add",
@@ -395,7 +400,7 @@
         "equation_TypeclassesAlt.op_Subtraction_Hat",
         "equation_TypeclassesAlt.sub",
         "equation_TypeclassesAlt.u32_instance",
-        "function_token_typing_TypeclassesAlt.bound",
+        "function_token_typing_TypeclassesAlt.bound", "int_inversion",
         "interpretation_Tm_abs_41bb09c674e93e3a48d87ef068e9eb30",
         "interpretation_Tm_abs_4353ded811b2bc4a31a4a230b0a4bd22",
         "interpretation_Tm_abs_8ed289b1dc7e2ceb656120e67e98559e",
@@ -418,6 +423,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_8869caffb2e39082e0ed96689001e161",
         "token_correspondence_Prims.op_Addition",
+        "token_correspondence_Prims.op_Subtraction",
         "token_correspondence_TypeclassesAlt.as_nat",
         "token_correspondence_TypeclassesAlt.bound",
         "token_correspondence_TypeclassesAlt.eq_op",
@@ -429,7 +435,7 @@
         "typing_TypeclassesAlt.u32_instance"
       ],
       0,
-      "3c609a52da8f8d99511ec0e882daf4bb"
+      "e5b84d494fbda626265d365ebbd34ae9"
     ],
     [
       "TypeclassesAlt.sum",
@@ -455,7 +461,6 @@
         "equation_TypeclassesAlt.sub",
         "fuel_guarded_inversion_TypeclassesAlt.bounded_unsigned_int",
         "function_token_typing_TypeclassesAlt.bound", "int_inversion",
-        "int_typing",
         "interpretation_Tm_abs_41bb09c674e93e3a48d87ef068e9eb30",
         "interpretation_Tm_abs_4353ded811b2bc4a31a4a230b0a4bd22",
         "interpretation_Tm_abs_8ed289b1dc7e2ceb656120e67e98559e",
@@ -485,7 +490,7 @@
         "token_correspondence_TypeclassesAlt.sub"
       ],
       0,
-      "8cb56eb9190ad9ed71a12886f399be82"
+      "6b2a2c3202ffd98b4793b376be1a9874"
     ]
   ]
 ]

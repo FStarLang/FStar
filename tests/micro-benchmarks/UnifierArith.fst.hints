@@ -7,11 +7,11 @@
       2,
       1,
       [
-        "@query", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0"
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "d40da00bd5bf1652668da0b448a6f614"
+      "6bfb3876e49406242fd1f281498038bb"
     ]
   ]
 ]

@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "92cf43aa11db6f2fed2eb8559ef9bcb2"
+      "3cb341e48cd4a67fe129932373152ed6"
     ],
     [
       "Ex12g.TMAC2.bspec1",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "013bced5415b682d69fad80b1dfc0e1b"
+      "f7bba11cacfd2421c62afa1deb5881c9"
     ],
     [
       "Ex12g.TMAC2.keygen",
@@ -40,7 +40,7 @@
         "typing_Ex12.BMAC.keygen"
       ],
       0,
-      "2a3ce5217a5005272555ff2153e01d75"
+      "15fbb8767a3c32f407ac079dc1965b2d"
     ],
     [
       "Ex12g.TMAC2.mac",
@@ -72,7 +72,7 @@
         "typing_FStar.Seq.Base.length", "typing_FStar.UInt8.t"
       ],
       0,
-      "31c6782cf2c522de64e6c2de207b9ce5"
+      "3a48a049f921aae14a5c2322fb5fee75"
     ],
     [
       "Ex12g.TMAC2.verify",
@@ -87,7 +87,7 @@
         "equation_Ex12g.TMAC2.pkey", "equation_Ex12g.TMAC2.text2",
         "equation_Prims.eqtype", "equation_Prims.nat",
         "function_token_typing_Ex12.BMAC.key_prop", "int_inversion",
-        "lemma_FStar.Seq.Base.lemma_eq_refl", "primitive_Prims.op_LessThan",
+        "lemma_FStar.Seq.Base.lemma_eq_intro", "primitive_Prims.op_LessThan",
         "proj_equation_Ex12g.TMAC2.Keys_k0",
         "proj_equation_Ex12g.TMAC2.Keys_k1",
         "projection_inverse_BoxBool_proj_0",
@@ -105,7 +105,7 @@
         "typing_FStar.Seq.Base.length", "typing_FStar.UInt8.t"
       ],
       0,
-      "70902076cb2dfb002331bbe6ed0f2f2a"
+      "48705e835e3cc7c5f696a1146fba8de1"
     ]
   ]
 ]

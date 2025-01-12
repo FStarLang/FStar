@@ -56,7 +56,7 @@
         "typing_FStar.Monotonic.HyperStack.mk_mem", "typing_Prims.int"
       ],
       0,
-      "f72390a479f46bf1f1a1ac072245821d"
+      "dbe99071cd0768959a87b35b0323a56e"
     ],
     [
       "InlineLet.test",
@@ -78,7 +78,7 @@
         "typing_FStar.Monotonic.HyperStack.is_heap_color"
       ],
       0,
-      "dc887f0b3c0f4f333cf553e91f61acee"
+      "fd3dc18756ac5a52c916efaa54ee5e51"
     ]
   ]
 ]

@@ -11,7 +11,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "fe411f75fc9c0872a37cde3a296e292c"
+      "99f66d8ea4248771839095aabc9bd724"
     ],
     [
       "EtM.MAC.tag",
@@ -24,7 +24,7 @@
         "equation_EtM.MAC.macsize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "86ca4af4858174e118a40c84f08d9d16"
+      "421d7513ae9e5dc1c7e8c3a552cc3f3a"
     ],
     [
       "EtM.MAC.sha1",
@@ -33,7 +33,7 @@
       1,
       [ "@query", "equation_EtM.MAC.macsize" ],
       0,
-      "3048c34a713e198937dea620e95ea27a"
+      "c9cfe8afa9edc4aa60884fb0bbe699cc"
     ],
     [
       "EtM.MAC.hmac_sha1",
@@ -45,7 +45,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "1c0413ded5e79f75b47536c129e5260b"
+      "8cf8923f2bb97913b4b06b308c661478"
     ],
     [
       "EtM.MAC.keygen",
@@ -73,8 +73,8 @@
         "equation_FStar.Monotonic.HyperStack.modifies",
         "equation_FStar.Monotonic.HyperStack.mref",
         "equation_FStar.Monotonic.HyperStack.new_eternal_region",
-        "equation_FStar.Monotonic.HyperStack.upd",
-        "equation_FStar.Set.subset", "int_inversion", "int_typing",
+        "equation_FStar.Monotonic.HyperStack.upd", "int_inversion",
+        "int_typing",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_elim",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_intro",
         "lemma_FStar.Map.lemma_ContainsDom",
@@ -90,10 +90,11 @@
         "lemma_FStar.Monotonic.HyperStack.lemma_mk_mem__projectors",
         "lemma_FStar.Set.lemma_equal_elim", "lemma_FStar.Set.mem_complement",
         "lemma_FStar.Set.mem_empty", "lemma_FStar.Set.mem_singleton",
-        "lemma_FStar.Set.mem_union", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_Negation",
-        "proj_equation_EtM.MAC.Key_log", "proj_equation_EtM.MAC.Key_region",
+        "lemma_FStar.Set.mem_subset", "lemma_FStar.Set.mem_union",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Negation", "proj_equation_EtM.MAC.Key_log",
+        "proj_equation_EtM.MAC.Key_region",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_EtM.MAC.Key_log",
@@ -133,7 +134,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "efa504331b7d3a6f490690ec78c747e3"
+      "673b50d416d61bdfb1f243da6cce9454"
     ],
     [
       "EtM.MAC.mac",
@@ -167,7 +168,7 @@
         "typing_FStar.Seq.Base.seq"
       ],
       0,
-      "a9c3e0f3b7759aadb3c8b64f7b0dbbd6"
+      "03e52da14f0e01bab048601bfee22164"
     ],
     [
       "EtM.MAC.verify",
@@ -185,7 +186,7 @@
         "typing_EtM.CPA.cipher", "typing_EtM.MAC.tag"
       ],
       0,
-      "25ff0e3050fdf33c3328561981b464e6"
+      "17bf15fc989991f5960b67fabb4a2858"
     ],
     [
       "EtM.MAC.verify",
@@ -247,7 +248,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.empty"
       ],
       0,
-      "e770fde202bae7c380d5e7efbf25b194"
+      "5001f8f6e482d114b4fad591460a37fb"
     ]
   ]
 ]

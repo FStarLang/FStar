@@ -31,7 +31,7 @@
         "typing_FStar.OrdSet.size", "well-founded-ordering-on-nat"
       ],
       0,
-      "f4b4b350cb34f48dfec28b992c3c98f2"
+      "5e1fd9c552d96c3b4a8db66c4811ae76"
     ],
     [
       "FStar.OrdSetProps.union_lemma",

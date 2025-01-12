@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "389cffd5a3539518a1840c4ac23ff109"
+      "7a8cea932e60acfa926891bf816474a1"
     ],
     [
       "UInt32BV.v",
@@ -29,7 +29,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "bcdc7d2065612839017ca5620459251d"
+      "89a9a12009094d3a2645ff91dbe8cbfc"
     ],
     [
       "UInt32BV.u",
@@ -45,7 +45,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "bee5015f92299ccfc876b621aea7f4c5"
+      "9dfea0da45fb4dfdb53121986bd8a329"
     ],
     [
       "UInt32BV.sym",
@@ -54,7 +54,7 @@
       1,
       [ "@query" ],
       0,
-      "5feefd5fecd5818756780f5b4a6fbc64"
+      "a16f73f0d6579bc6c6e9f2c2b179cb9b"
     ],
     [
       "UInt32BV.dec_eq",
@@ -63,7 +63,7 @@
       1,
       [ "@query" ],
       0,
-      "1c6094a9862bb18e8479d7ae0eab8d5d"
+      "bbc0288c7f5e4cedb0c7c1c66e2ee764"
     ],
     [
       "UInt32BV.ty",
@@ -82,7 +82,7 @@
         "refinement_interpretation_Tm_refine_c1d4dc93ea6cce0512d2f8b84fba6607"
       ],
       0,
-      "c55d30f3ea1c980031ad58f68f43d49b"
+      "aefd736b8d5879bea78e937f3fb4afa8"
     ],
     [
       "UInt32BV.vu_inv",
@@ -98,7 +98,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "30598144b5ad40768bb573abc04ed01f"
+      "476f88970c12ce5b66a3700c37a654ed"
     ],
     [
       "UInt32BV.vu_inv",
@@ -107,12 +107,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.UInt.uint_t",
-        "equation_Prims.eqtype", "function_token_typing_Prims.int",
+        "equation_Prims.eqtype",
         "haseqTm_refine_f13070840248fced9d9d60d77bdae3ec",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Prims.int"
       ],
       0,
-      "eb894862b7a83e7ff63d1169e5e526f7"
+      "d1610c1f11f1857395c764b88cf513db"
     ],
     [
       "UInt32BV.vu_inv",
@@ -128,7 +129,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "30598144b5ad40768bb573abc04ed01f"
+      "eb14505f60f2b8e664f5cbe48ac4e230"
     ],
     [
       "UInt32BV.vu_inv",
@@ -139,35 +140,16 @@
         "@query", "b2t_def", "equation_FStar.UInt.fits",
         "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
         "equation_FStar.UInt.size", "equation_UInt32BV.max",
-        "equation_UInt32BV.n", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_LessThanOrEqual",
+        "equation_UInt32BV.n", "equation_UInt32BV.v",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "f4499bbde82dcb512171f74d234149e6"
+      "a917e72339c3e3f36a03952ac82dba33"
     ],
     [
       "UInt32BV.vu_inv",
       5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "b2t_def",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
-        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
-        "equation_UInt32BV.max", "equation_UInt32BV.n",
-        "equation_UInt32BV.u32_nat", "equation_UInt32BV.v",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_c1d4dc93ea6cce0512d2f8b84fba6607",
-        "typing_UInt32BV.u", "typing_UInt32BV.v"
-      ],
-      0,
-      "06f16fe88114079d226e33d321df9f77"
-    ],
-    [
-      "UInt32BV.vu_inv",
-      6,
       2,
       1,
       [
@@ -179,7 +161,23 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "f4499bbde82dcb512171f74d234149e6"
+      "eb14505f60f2b8e664f5cbe48ac4e230"
+    ],
+    [
+      "UInt32BV.vu_inv",
+      6,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_UInt32BV.max",
+        "equation_UInt32BV.n", "equation_UInt32BV.v",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "a917e72339c3e3f36a03952ac82dba33"
     ],
     [
       "UInt32BV.add_mod",
@@ -188,7 +186,7 @@
       1,
       [ "@query", "equation_UInt32BV.n", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "75e833d4e567135d839a53a28918487c"
+      "38fbca61a4670278500f5993fead1c6a"
     ],
     [
       "UInt32BV.add_mod",
@@ -201,16 +199,17 @@
         "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
         "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
         "equation_Prims.nat", "equation_UInt32BV.max", "equation_UInt32BV.n",
-        "equation_UInt32BV.u32_nat", "equation_UInt32BV.v",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "equation_UInt32BV.t", "equation_UInt32BV.u32_nat",
+        "equation_UInt32BV.v", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_c1d4dc93ea6cce0512d2f8b84fba6607",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
-        "true_interp", "typing_UInt32BV.v"
+        "typing_UInt32BV.v", "typing_inversion_for_BoxBitVec32"
       ],
       0,
-      "b261e61c890e3bef469aecc84cda9a7e"
+      "c8280a751c4b616010e2e7223211be78"
     ],
     [
       "UInt32BV.add_mod",
@@ -223,7 +222,7 @@
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec"
       ],
       0,
-      "3df40f2a0763980c9b5786737c391c38"
+      "5cb9ef7053d47602737b80bdf762dfbd"
     ],
     [
       "UInt32BV.add_mod",
@@ -236,7 +235,7 @@
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec"
       ],
       0,
-      "a6bdff4df40f15565f58705d874146d7"
+      "f2b9e62cc92d668eb468f0965a0144e9"
     ],
     [
       "UInt32BV.sub_mod",
@@ -245,7 +244,7 @@
       1,
       [ "@query", "equation_UInt32BV.n", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "1f2cbccedb09b46abe269929e24c5ee0"
+      "61fb7da27d9eac22165b8968d1a2c75d"
     ],
     [
       "UInt32BV.sub_mod",
@@ -258,16 +257,17 @@
         "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
         "equation_FStar.UInt.sub_mod", "equation_FStar.UInt.uint_t",
         "equation_Prims.nat", "equation_UInt32BV.max", "equation_UInt32BV.n",
-        "equation_UInt32BV.u32_nat", "equation_UInt32BV.v",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "equation_UInt32BV.t", "equation_UInt32BV.u32_nat",
+        "equation_UInt32BV.v", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_c1d4dc93ea6cce0512d2f8b84fba6607",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
-        "true_interp", "typing_UInt32BV.v"
+        "typing_UInt32BV.v", "typing_inversion_for_BoxBitVec32"
       ],
       0,
-      "d459e2c6c0fbe16703e8648ea20cc252"
+      "44c366ae733b252de02e624cc9165dec"
     ],
     [
       "UInt32BV.sub_mod",
@@ -280,7 +280,7 @@
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec"
       ],
       0,
-      "b67ecb1ca6ecbec1121e5bad6b7d98a2"
+      "99866a0099674fa44d3eea5b1f25de64"
     ],
     [
       "UInt32BV.sub_mod",
@@ -293,7 +293,7 @@
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec"
       ],
       0,
-      "d02d8b929912173203c7c3097311a969"
+      "7bdb2401d04c3b2c38e69e9ac55a87da"
     ],
     [
       "UInt32BV.add",
@@ -303,14 +303,15 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_UInt32BV.fits",
         "equation_UInt32BV.max", "equation_UInt32BV.min",
-        "equation_UInt32BV.n", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "equation_UInt32BV.n", "equation_UInt32BV.t",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_1761bfa8b44737e701eb72381d854fb8",
         "refinement_interpretation_Tm_refine_51da7585105249649ebfe4a819c04cd5",
-        "token_correspondence_Prims.op_Addition"
+        "token_correspondence_Prims.op_Addition",
+        "typing_inversion_for_BoxBitVec32"
       ],
       0,
-      "0688a8058a87b79749364109ff3424fd"
+      "33c2d524b4263a2cc3926cc7a64c12c5"
     ],
     [
       "UInt32BV.sub",
@@ -320,14 +321,15 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_UInt32BV.fits",
         "equation_UInt32BV.max", "equation_UInt32BV.min",
-        "equation_UInt32BV.n",
+        "equation_UInt32BV.n", "equation_UInt32BV.t",
         "interpretation_Tm_abs_12ddde8171c888fa95f826be9c2a1fe9",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_0e393331314b02b2060c48f5040b4aa4",
-        "refinement_interpretation_Tm_refine_3adc12fceb0138e1883e7519601a17c4"
+        "refinement_interpretation_Tm_refine_3adc12fceb0138e1883e7519601a17c4",
+        "typing_inversion_for_BoxBitVec32"
       ],
       0,
-      "445161967451ce7cf3f9ed844a965e10"
+      "df20177e968663f7b2625525d55879eb"
     ]
   ]
 ]

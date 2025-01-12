@@ -11,7 +11,7 @@
         "@fuel_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
         "@query",
         "FStar.Char_interpretation_Tm_arrow_edb4339633bae2b96af63b0dbac8e538",
-        "FStar.List.Tot.Base_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
+        "FStar.Ghost_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "constructor_distinct_Prims.Nil", "data_typing_intro_Prims.Nil@tok",
         "equation_FStar.String.char", "equation_Prims.eqtype",
         "equation_Prims.nat",
@@ -23,7 +23,7 @@
         "typing_FStar.Char.char"
       ],
       0,
-      "8b2056ef4d8aaa6f836ac63dd577ce96"
+      "39e5dc4b1f3657573e10a628bf0b846b"
     ],
     [
       "StringNormalization.uu___4",
@@ -32,7 +32,7 @@
       1,
       [ "@query", "equation_FStar.String.char" ],
       0,
-      "2ed2757779c130c8c86a0792d5854d68"
+      "0e8dadfe294ef5a957bf94ba85442edd"
     ],
     [
       "StringNormalization.uu___5",
@@ -45,7 +45,7 @@
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "FStar.Char_interpretation_Tm_arrow_edb4339633bae2b96af63b0dbac8e538",
-        "FStar.List.Tot.Base_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
+        "FStar.Ghost_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "b2t_def", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil", "data_elim_Prims.Cons",
         "data_typing_intro_Prims.Cons@tok",
@@ -79,7 +79,7 @@
         "typing_FStar.UInt32.uint_to_t", "typing_FStar.UInt32.v"
       ],
       0,
-      "1a1f6af70cee94fd005d6ba0943186bf"
+      "572e918dc0a5fa53d45d69d3642ea3cf"
     ],
     [
       "StringNormalization.uu___28",
@@ -88,7 +88,7 @@
       1,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "3edf1eb9d7c1f0f8665df24b34ac1afc"
+      "1412b5eea37e38b26cc35b5b8c3b363f"
     ],
     [
       "StringNormalization.uu___31",
@@ -97,7 +97,7 @@
       1,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "2336c82a360ce66f272e137e7e76eabd"
+      "feb6bb7a7bb76f71a54c1ee84db1ed90"
     ]
   ]
 ]

@@ -5,7 +5,7 @@
       "Asm1.ins",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Asm1.reg",
         "equation_Prims.eqtype",
@@ -13,79 +13,79 @@
         "typing_Prims.int"
       ],
       0,
-      "7142f448f24a86dcdfd27093ceda9eb4"
+      "ebba03a542b8a5bfd7c86c88d4ec45fa"
     ],
     [
       "Asm1.__proj__ILoad__item__lDst",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_f230ca36ce2a7ff8ae53c124d032312b"
       ],
       0,
-      "c45352f87e7655cafb4de10cce011736"
+      "b4ec93929e5d5f6c08cf2fbf74cc0761"
     ],
     [
       "Asm1.__proj__ILoad__item__lSrc",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_f230ca36ce2a7ff8ae53c124d032312b"
       ],
       0,
-      "08d3f0d986b6718f3acd0b1496d99986"
+      "ea54fd9e8b6b9af1812e508c8d8651d1"
     ],
     [
       "Asm1.__proj__ILoad__item__lOffset",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_f230ca36ce2a7ff8ae53c124d032312b"
       ],
       0,
-      "41cd2df46244fd4e5f59f866348aa279"
+      "8bd39f3f6c2fe3caf1842fd79a83fcd7"
     ],
     [
       "Asm1.__proj__IStore__item__sDst",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_999ac40df2c08a5d6e4e4cb66f26d80b"
       ],
       0,
-      "ba8a4c02db94786b9edf138f48df7eeb"
+      "9e7c4ae6ac1612d34bcdc0c92f41604e"
     ],
     [
       "Asm1.__proj__IStore__item__sOffset",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_999ac40df2c08a5d6e4e4cb66f26d80b"
       ],
       0,
-      "c9bdf42df67d7051675f437b4d86d0fc"
+      "2db30e749d5b5a4f932121e3d322074b"
     ],
     [
       "Asm1.__proj__IStore__item__sSrc",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_999ac40df2c08a5d6e4e4cb66f26d80b"
       ],
       0,
-      "a56df0bcdbcfb4929bc6c124a28415c2"
+      "18a6ef713ab61fdefd64e2c960ad4498"
     ],
     [
       "Asm1.eval_ins",
@@ -98,7 +98,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "c39c413e80f4a430b848ad639d6b807a"
+      "9fec50812e8bfba6fe23c88408a29cd9"
     ],
     [
       "Asm1.eval_block",
@@ -117,7 +117,7 @@
         "typing_Asm1.eval_ins"
       ],
       0,
-      "7868daaf9143a1a10cfd85d6f2842ad0"
+      "dad66221ead6a30970e91539730ce565"
     ],
     [
       "Asm1.lemma_load",
@@ -175,7 +175,7 @@
         "typing_Prims.int"
       ],
       0,
-      "06d04aebaa26d40b3dbb4cb8998cc3f6"
+      "20ac20523b0da326ec242557aae41383"
     ],
     [
       "Asm1.lemma_store",
@@ -225,13 +225,13 @@
         "typing_Asm1.valid_state", "typing_Prims.int"
       ],
       0,
-      "776622c45251773c0fc4a8c80ced55a1"
+      "556acfe74bb7b319a469cfc6f1978dda"
     ],
     [
       "Asm1.lemma_empty",
       1,
       1,
-      0,
+      1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Asm1.eval_block.fuel_instrumented", "@query",
@@ -240,13 +240,13 @@
         "kinding_Asm1.ins@tok", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "e9e9e3f65878997fa312b035f02d3d6a"
+      "d1ef8c2dc605dc62e41d19ce48541d86"
     ],
     [
       "Asm1.lemma_copy",
       1,
       1,
-      0,
+      1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Asm1.eval_block.fuel_instrumented",
@@ -256,12 +256,10 @@
         "Asm1_interpretation_Tm_arrow_e76ad7ea1b49a51ebc304bcd6e344d98",
         "Asm1_interpretation_Tm_arrow_ecbe25e460c8c11eb9fd7d4047b093d0",
         "Asm1_pretyping_8d2a371ced49b74ad42c2d4f031a5095",
-        "FStar.Map_interpretation_Tm_arrow_28a168f8d4c6d78564a214862be72b08",
         "FStar.Map_interpretation_Tm_arrow_32b461b2324f01c7a6bc6b577725566d",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_inversion",
         "bool_typing", "constructor_distinct_Asm1.ILoad",
         "constructor_distinct_Asm1.IStore",
-        "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons", "disc_equation_Asm1.ILoad",
         "disc_equation_Asm1.IStore", "disc_equation_Prims.Cons",
@@ -275,7 +273,6 @@
         "fuel_guarded_inversion_Asm1.state",
         "function_token_typing_Asm1.op_String_Assignment",
         "function_token_typing_FStar.Map.contains",
-        "function_token_typing_FStar.Map.sel",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "lemma_FStar.Map.lemma_InDomUpd1",
         "lemma_FStar.Map.lemma_SelUpd1", "lemma_FStar.Map.lemma_SelUpd2",
@@ -304,6 +301,7 @@
         "refinement_interpretation_Tm_refine_2d0e4143b34a89d925e715c163c112f4",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_4185fbd0490c35b112c0e16227dcbd49",
+        "refinement_interpretation_Tm_refine_4e80bd4cb4381dd7b404ae8d87d55810",
         "refinement_interpretation_Tm_refine_a766ba25747e5f65d9110aeed34306a4",
         "token_correspondence_Asm1.contains",
         "token_correspondence_Asm1.op_String_Access",
@@ -313,11 +311,12 @@
         "token_correspondence_FStar.Map.upd",
         "typing_Asm1.__proj__Mkstate__item__mem",
         "typing_Asm1.__proj__Mkstate__item__regs", "typing_Asm1.contains",
+        "typing_Asm1.copy", "typing_Asm1.lemma_load",
         "typing_Asm1.op_String_Access", "typing_Asm1.valid_reg",
-        "typing_Asm1.valid_state", "typing_FStar.Map.sel", "typing_Prims.int"
+        "typing_Asm1.valid_state", "typing_Prims.int"
       ],
       0,
-      "90a1829ebc7d21a51069019d4c855d9c"
+      "065686373890da14d6986a9c444c5472"
     ]
   ]
 ]

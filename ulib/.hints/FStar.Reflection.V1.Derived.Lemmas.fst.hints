@@ -14,7 +14,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "959983bb68097a2972f0fd56c1875e4d"
+      "71956e426d4c3ba52ef740648a0620ef"
     ],
     [
       "FStar.Reflection.V1.Derived.Lemmas.list_ref",
@@ -38,7 +38,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4025f5350a1eda62d0f112f447307187"
+      "320564a574b18f85b2895188f7db8c36"
     ],
     [
       "FStar.Reflection.V1.Derived.Lemmas.collect_app_order'",

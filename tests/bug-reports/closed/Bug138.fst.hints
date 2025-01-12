@@ -16,7 +16,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e16c6814059395154b572aa16376f2a2"
+      "186b1d4d79fa097dcd352587e1720e38"
     ],
     [
       "Bug138.foo",
@@ -28,7 +28,7 @@
         "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
       ],
       0,
-      "6c5137115fa350691248a7ca2e37c108"
+      "127d11878c59c83cd628328564cff0fc"
     ],
     [
       "Bug138.arg_precede",
@@ -41,7 +41,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "7eff0029d4c833ea4483f9023d964612"
+      "5fc1fee79cd03380010df8f1410c0e57"
     ],
     [
       "Bug138.foo_bar",
@@ -68,7 +68,7 @@
         "typing_tok_Bug138.Bar@tok", "well-founded-ordering-on-nat"
       ],
       0,
-      "c29af9b5be3b1670fa50ac590d43f253"
+      "4541ceac39438f65b02db3e84a169369"
     ]
   ]
 ]

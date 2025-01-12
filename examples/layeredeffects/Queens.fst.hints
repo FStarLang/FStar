@@ -16,7 +16,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "8517347b1b4b3f0ba2e0eb65a124a7f2"
+      "8bd0ebbb549b1bc03e2df5c6567f0af8"
     ],
     [
       "Queens.no_clash_minus",
@@ -33,7 +33,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7bf032f08a678f750ffb91bc3b5caace"
+      "8ca67a16a4e0a38c6aa1ecce280c2934"
     ],
     [
       "Queens.valid",
@@ -50,7 +50,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3634c6a0a19cc565d19ac3dd62ff6990"
+      "8aadc109ac74ea856558abe7769b9462"
     ],
     [
       "Queens.pickn",
@@ -84,7 +84,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c731c9942fb4d34dac171df1245bd44c"
+      "48555ac3a7211fad4fe9ffa33df2ef17"
     ],
     [
       "Queens._queens",
@@ -138,6 +138,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
         "refinement_interpretation_Tm_refine_ba4c91b92f4c4f6a09c95f79852bd4f3",
         "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
+        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "typing_FStar.List.Tot.Base.append",
         "typing_FStar.List.Tot.Base.op_At", "typing_Prims.int",
         "typing_Queens.flipOp", "typing_Queens.quitOp",
@@ -145,7 +146,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d0db2545a45b3f72c6094a51bc60297f"
+      "dc41ac3fb8c9e5c1fbec3527e705c488"
     ],
     [
       "Queens.queens",
@@ -187,7 +188,7 @@
         "typing_Queens.quitOp", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "ffe51e35a181b4e068bcec30c7075d5a"
+      "d725727d3ee4e26e5ff99348ece38346"
     ]
   ]
 ]

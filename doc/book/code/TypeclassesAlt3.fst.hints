@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "cec6ead57d9b6149234fb170c0ffa79d"
+      "e2534ab95dbf5127404e0483f6f0f8ea"
     ],
     [
       "TypeclassesAlt3.related_ops",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "e1220321ae06a05c1b40036af4a46e16"
+      "32397d04d843c8fe246ba4cfc0006cca"
     ],
     [
       "TypeclassesAlt3.op_Plus_Hat",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "equation_TypeclassesAlt3.ops_base" ],
       0,
-      "773d612b9b623b23b839749c6565a670"
+      "b01873c0f4df5cba6c8d037970299ae8"
     ],
     [
       "TypeclassesAlt3.op_Subtraction_Hat",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "equation_TypeclassesAlt3.ops_base" ],
       0,
-      "c7aadd6e233e9cfac6e620d6c0b8dea0"
+      "b8c7b5c1ed7c4fba4a274629d56ae784"
     ],
     [
       "TypeclassesAlt3.bounded_unsigned_int_ops_eq",
@@ -44,8 +44,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "TypeclassesAlt3_interpretation_Tm_arrow_0798320bcf7a9eb49616d1499c4f73d0",
         "TypeclassesAlt3_interpretation_Tm_arrow_1eea001dc988a6a52767d18e2341e80f",
         "TypeclassesAlt3_interpretation_Tm_arrow_601e01d053bdf88869cdca0976a6e006",
+        "TypeclassesAlt3_interpretation_Tm_arrow_b5d855d37bd67ba7f379a56224df2ac5",
+        "TypeclassesAlt3_interpretation_Tm_arrow_da8298408ae4d168f774cd7ff91260d3",
         "TypeclassesAlt3_interpretation_Tm_arrow_fb69d7c728809d59b86977279a39b019",
         "TypeclassesAlt3_pretyping_25108e5fd216ad5a7b567ee80965da91",
         "bool_inversion", "data_elim_TypeclassesAlt3.Mkbounded_unsigned_int",
@@ -53,23 +56,29 @@
         "equation_Prims.nat", "equation_TypeclassesAlt3.as_nat",
         "equation_TypeclassesAlt3.bound", "equation_TypeclassesAlt3.lt",
         "equation_TypeclassesAlt3.op_Less_Hat",
+        "equation_TypeclassesAlt3.related_ops",
         "fuel_guarded_inversion_TypeclassesAlt3.bounded_unsigned_int",
         "fuel_guarded_inversion_TypeclassesAlt3.bounded_unsigned_int_ops",
-        "function_token_typing_TypeclassesAlt3.as_nat", "int_inversion",
+        "function_token_typing_TypeclassesAlt3.as_nat",
+        "function_token_typing_TypeclassesAlt3.bound", "int_inversion",
         "interpretation_Tm_abs_97da743b849cf0d7038a9f6ae132f462",
         "interpretation_Tm_abs_b642211d130730b12c3023e7271d0763",
         "interpretation_Tm_abs_ba0365fb5414d12479e80a3d124bb74c",
-        "primitive_Prims.op_Negation", "projection_inverse_BoxBool_proj_0",
+        "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_26d6a80aa7265604c53b5966e2688c30",
         "refinement_interpretation_Tm_refine_3ccea82ca77a7c1adad170bb1c2414a3",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_bcaef16606f8ccd1707ea17949cf35e1",
+        "token_correspondence_Prims.op_Subtraction",
         "token_correspondence_TypeclassesAlt3.as_nat",
         "token_correspondence_TypeclassesAlt3.bound",
         "token_correspondence_TypeclassesAlt3.lt",
         "typing_TypeclassesAlt3.op_Less_Hat"
       ],
       0,
-      "f06da9e9b29ad1e55ca2ad463eca8143"
+      "f7a64506fad1abad7c1e4faef450663a"
     ],
     [
       "TypeclassesAlt3.u32_instance_base",
@@ -95,7 +104,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "c38420f98733add5fe8cfc923401dcb9"
+      "a8c30945ca8e58a4bd1765aeca33abfe"
     ],
     [
       "TypeclassesAlt3.u32_instance_ops",
@@ -108,16 +117,16 @@
         "FStar.UInt32_pretyping_2ab3c8ba2d08b0172817fc70b5994868",
         "TypeclassesAlt3_interpretation_Tm_arrow_1eea001dc988a6a52767d18e2341e80f",
         "TypeclassesAlt3_interpretation_Tm_arrow_b5d855d37bd67ba7f379a56224df2ac5",
+        "TypeclassesAlt3_interpretation_Tm_arrow_cc290050e8ac8f077dbd2af5d5a00bac",
         "TypeclassesAlt3_interpretation_Tm_arrow_da8298408ae4d168f774cd7ff91260d3",
-        "b2t_def", "bool_inversion", "bool_typing",
+        "b2t_def", "bool_inversion",
         "data_elim_TypeclassesAlt3.Mkbounded_unsigned_int",
-        "defn_equation_TypeclassesAlt3.fits", "equation_FStar.UInt.fits",
-        "equation_FStar.UInt.lt", "equation_FStar.UInt.max_int",
-        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
-        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.lt",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "equation_TypeclassesAlt3.as_nat", "equation_TypeclassesAlt3.bound",
-        "equation_TypeclassesAlt3.fits",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.lt",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt32.lt", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_TypeclassesAlt3.as_nat",
+        "equation_TypeclassesAlt3.bound", "equation_TypeclassesAlt3.fits",
         "equation_TypeclassesAlt3.related_ops",
         "equation_TypeclassesAlt3.u32_instance_base",
         "function_token_typing_FStar.UInt32.uint_to_t",
@@ -127,9 +136,9 @@
         "interpretation_Tm_abs_ba0365fb5414d12479e80a3d124bb74c",
         "interpretation_Tm_abs_f3fd0234f45e7964fa30a5f3e031df23",
         "interpretation_Tm_abs_fa6834d567dfa1e807bdf5a4cf4b7d6c",
-        "l_and-interp", "lemma_FStar.UInt32.vu_inv",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "lemma_FStar.UInt32.vu_inv", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -150,10 +159,12 @@
         "token_correspondence_TypeclassesAlt3.bound",
         "typing_FStar.UInt.fits", "typing_FStar.UInt32.add",
         "typing_FStar.UInt32.sub", "typing_FStar.UInt32.t",
-        "typing_FStar.UInt32.v", "typing_TypeclassesAlt3.u32_instance_base"
+        "typing_FStar.UInt32.v",
+        "typing_Tm_abs_f3fd0234f45e7964fa30a5f3e031df23",
+        "typing_TypeclassesAlt3.u32_instance_base"
       ],
       0,
-      "9e6933cd9ad2d547e77f128c7fc82043"
+      "e6dcbd9808f3b6c293aa4bd72ef5e14a"
     ],
     [
       "TypeclassesAlt3.u64_instance_base",
@@ -179,7 +190,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "cd66cf2eca3b6fdad53b9dff15d87a82"
+      "5cc40824ec09874b1297683ac2027ff2"
     ],
     [
       "TypeclassesAlt3.u64_instance_ops",
@@ -190,18 +201,18 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.UInt64_interpretation_Tm_arrow_b1dc77edd47f50a79ef19c45877be87f",
         "FStar.UInt64_pretyping_0a6d0526dc068d94bc7967094b2dd513",
+        "TypeclassesAlt3_interpretation_Tm_arrow_12e8c46e90253a7797a30cc17cec8dfd",
         "TypeclassesAlt3_interpretation_Tm_arrow_1eea001dc988a6a52767d18e2341e80f",
         "TypeclassesAlt3_interpretation_Tm_arrow_b5d855d37bd67ba7f379a56224df2ac5",
         "TypeclassesAlt3_interpretation_Tm_arrow_da8298408ae4d168f774cd7ff91260d3",
-        "b2t_def", "bool_inversion", "bool_typing",
+        "b2t_def", "bool_inversion",
         "data_elim_TypeclassesAlt3.Mkbounded_unsigned_int",
-        "defn_equation_TypeclassesAlt3.fits", "equation_FStar.UInt.fits",
-        "equation_FStar.UInt.lt", "equation_FStar.UInt.max_int",
-        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
-        "equation_FStar.UInt.uint_t", "equation_FStar.UInt64.lt",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "equation_TypeclassesAlt3.as_nat", "equation_TypeclassesAlt3.bound",
-        "equation_TypeclassesAlt3.fits",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.lt",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt64.lt", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_TypeclassesAlt3.as_nat",
+        "equation_TypeclassesAlt3.bound", "equation_TypeclassesAlt3.fits",
         "equation_TypeclassesAlt3.related_ops",
         "equation_TypeclassesAlt3.u64_instance_base",
         "function_token_typing_FStar.UInt64.uint_to_t",
@@ -211,9 +222,9 @@
         "interpretation_Tm_abs_97da743b849cf0d7038a9f6ae132f462",
         "interpretation_Tm_abs_ba0365fb5414d12479e80a3d124bb74c",
         "interpretation_Tm_abs_cf9bf7398f38f52869a19e869749a638",
-        "l_and-interp", "lemma_FStar.UInt64.vu_inv",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "lemma_FStar.UInt64.vu_inv", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -234,10 +245,12 @@
         "token_correspondence_TypeclassesAlt3.bound",
         "typing_FStar.UInt.fits", "typing_FStar.UInt64.add",
         "typing_FStar.UInt64.sub", "typing_FStar.UInt64.t",
-        "typing_FStar.UInt64.v", "typing_TypeclassesAlt3.u64_instance_base"
+        "typing_FStar.UInt64.v",
+        "typing_Tm_abs_673d47be29ccf7d513a42b9efea90c75",
+        "typing_TypeclassesAlt3.u64_instance_base"
       ],
       0,
-      "24307876b7b8003129bf610b9c374f1d"
+      "ba6c71fd3c7ef074e6320c01e779923e"
     ],
     [
       "TypeclassesAlt3.test32",
@@ -257,8 +270,7 @@
         "b2t_def", "bool_inversion", "bool_typing",
         "data_elim_TypeclassesAlt3.Mkbounded_unsigned_int",
         "data_elim_TypeclassesAlt3.Mkbounded_unsigned_int_ops",
-        "data_elim_TypeclassesAlt3.Mkeq",
-        "defn_equation_TypeclassesAlt3.fits", "equation_FStar.UInt.fits",
+        "data_elim_TypeclassesAlt3.Mkeq", "equation_FStar.UInt.fits",
         "equation_FStar.UInt.lt", "equation_FStar.UInt.max_int",
         "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
         "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.lt",
@@ -283,11 +295,11 @@
         "interpretation_Tm_abs_ba0365fb5414d12479e80a3d124bb74c",
         "interpretation_Tm_abs_d51bb26a5c858e98f4457d07e986750d",
         "interpretation_Tm_abs_d5feaa0fcd0a4749d03a228af3ad5a12",
-        "l_and-interp", "lemma_FStar.UInt.pow2_values",
-        "lemma_FStar.UInt32.vu_inv", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
+        "lemma_FStar.UInt.pow2_values", "lemma_FStar.UInt32.vu_inv",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Negation",
+        "primitive_Prims.op_Subtraction",
         "proj_equation_TypeclassesAlt3.Mkbounded_unsigned_int_ops_base",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -319,7 +331,7 @@
         "typing_TypeclassesAlt3.u32_instance_ops"
       ],
       0,
-      "a3e8b40594ad1f8dc60cc61eb761f8ef"
+      "251f68195052b05376b0c2b63fbb720d"
     ],
     [
       "TypeclassesAlt3.test64",
@@ -332,15 +344,13 @@
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "FStar.UInt64_interpretation_Tm_arrow_b1dc77edd47f50a79ef19c45877be87f",
         "TypeclassesAlt3_interpretation_Tm_arrow_0798320bcf7a9eb49616d1499c4f73d0",
-        "TypeclassesAlt3_interpretation_Tm_arrow_1eea001dc988a6a52767d18e2341e80f",
         "TypeclassesAlt3_interpretation_Tm_arrow_b5d855d37bd67ba7f379a56224df2ac5",
         "TypeclassesAlt3_interpretation_Tm_arrow_da8298408ae4d168f774cd7ff91260d3",
         "TypeclassesAlt3_interpretation_Tm_arrow_e39760cfad7003621964de2f9cacf90f",
         "b2t_def", "bool_inversion", "bool_typing",
         "data_elim_TypeclassesAlt3.Mkbounded_unsigned_int",
         "data_elim_TypeclassesAlt3.Mkbounded_unsigned_int_ops",
-        "data_elim_TypeclassesAlt3.Mkeq",
-        "defn_equation_TypeclassesAlt3.fits", "equation_FStar.UInt.fits",
+        "data_elim_TypeclassesAlt3.Mkeq", "equation_FStar.UInt.fits",
         "equation_FStar.UInt.lt", "equation_FStar.UInt.max_int",
         "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
         "equation_FStar.UInt.uint_t", "equation_FStar.UInt64.lt",
@@ -365,11 +375,11 @@
         "interpretation_Tm_abs_b642211d130730b12c3023e7271d0763",
         "interpretation_Tm_abs_ba0365fb5414d12479e80a3d124bb74c",
         "interpretation_Tm_abs_d51bb26a5c858e98f4457d07e986750d",
-        "l_and-interp", "lemma_FStar.UInt.pow2_values",
-        "lemma_FStar.UInt64.vu_inv", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
+        "lemma_FStar.UInt.pow2_values", "lemma_FStar.UInt64.vu_inv",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Negation",
+        "primitive_Prims.op_Subtraction",
         "proj_equation_TypeclassesAlt3.Mkbounded_unsigned_int_ops_base",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -401,7 +411,7 @@
         "typing_TypeclassesAlt3.u64_instance_ops"
       ],
       0,
-      "b7e3bb6fe6a0ab311d36561520d36e21"
+      "97ad33ea0482db753a679583da34bbb4"
     ],
     [
       "TypeclassesAlt3.sum",
@@ -410,11 +420,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "TypeclassesAlt3_interpretation_Tm_arrow_1eea001dc988a6a52767d18e2341e80f",
         "TypeclassesAlt3_interpretation_Tm_arrow_b5d855d37bd67ba7f379a56224df2ac5",
         "TypeclassesAlt3_interpretation_Tm_arrow_da8298408ae4d168f774cd7ff91260d3",
         "constructor_distinct_FStar.Pervasives.Native.Some",
+        "data_elim_TypeclassesAlt3.Mkbounded_unsigned_int",
         "data_elim_TypeclassesAlt3.Mkbounded_unsigned_int_ops",
-        "disc_equation_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Pervasives.Native.Some", "equation_Prims.nat",
+        "equation_TypeclassesAlt3.as_nat", "equation_TypeclassesAlt3.bound",
         "equation_TypeclassesAlt3.bounded_unsigned_int_ops_eq",
         "equation_TypeclassesAlt3.eq_op", "equation_TypeclassesAlt3.fits",
         "equation_TypeclassesAlt3.lt",
@@ -427,9 +440,12 @@
         "equation_TypeclassesAlt3.sub",
         "fuel_guarded_inversion_TypeclassesAlt3.bounded_unsigned_int",
         "fuel_guarded_inversion_TypeclassesAlt3.bounded_unsigned_int_ops",
-        "function_token_typing_TypeclassesAlt3.bound",
+        "function_token_typing_TypeclassesAlt3.bound", "int_inversion",
+        "int_typing",
         "interpretation_Tm_abs_006e5043184e8eb0cd3325fb19b81d7a",
+        "interpretation_Tm_abs_97da743b849cf0d7038a9f6ae132f462",
         "interpretation_Tm_abs_b642211d130730b12c3023e7271d0763",
+        "interpretation_Tm_abs_ba0365fb5414d12479e80a3d124bb74c",
         "interpretation_Tm_abs_d51bb26a5c858e98f4457d07e986750d",
         "interpretation_Tm_abs_e6081e9124b615ccbfdd7d765598f17f",
         "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Addition",
@@ -442,15 +458,18 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "projection_inverse_TypeclassesAlt3.Mkeq_eq_op",
         "refinement_interpretation_Tm_refine_3ccea82ca77a7c1adad170bb1c2414a3",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "token_correspondence_Prims.op_Addition",
         "token_correspondence_Prims.op_Subtraction",
+        "token_correspondence_TypeclassesAlt3.as_nat",
+        "token_correspondence_TypeclassesAlt3.bound",
         "token_correspondence_TypeclassesAlt3.eq_op",
         "token_correspondence_TypeclassesAlt3.lt",
         "token_correspondence_TypeclassesAlt3.sub",
         "typing_TypeclassesAlt3.ops_base"
       ],
       0,
-      "4185ca41f6ffca33229c1b0949ae82b9"
+      "9ab491d4d0a4c136e341c5a866a0cb9a"
     ],
     [
       "TypeclassesAlt3.testsum32",
@@ -464,6 +483,7 @@
         "@fuel_irrelevance_FStar.List.Tot.Base.fold_right.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_3c1d21b8f6dcc5e202b4ff1cafbaba81",
+        "Prims_interpretation_Tm_arrow_47fc285d7b44e13bcb7e420cbfc55623",
         "TypeclassesAlt3_interpretation_Tm_arrow_0798320bcf7a9eb49616d1499c4f73d0",
         "TypeclassesAlt3_interpretation_Tm_arrow_1eea001dc988a6a52767d18e2341e80f",
         "TypeclassesAlt3_interpretation_Tm_arrow_3bff42d2a398859551f0ad999230b94a",
@@ -519,7 +539,6 @@
         "interpretation_Tm_abs_d5feaa0fcd0a4749d03a228af3ad5a12",
         "interpretation_Tm_abs_e6081e9124b615ccbfdd7d765598f17f",
         "interpretation_Tm_abs_f3fd0234f45e7964fa30a5f3e031df23",
-        "interpretation_Tm_abs_fa6834d567dfa1e807bdf5a4cf4b7d6c",
         "kinding_FStar.Pervasives.Native.option@tok",
         "lemma_FStar.Pervasives.invertOption",
         "lemma_FStar.UInt.pow2_values", "lemma_FStar.UInt32.vu_inv",
@@ -527,6 +546,8 @@
         "primitive_Prims.op_BarBar", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
         "primitive_Prims.op_Subtraction",
+        "primitive_tot_fun_Prims.op_Subtraction",
+        "primitive_tot_fun_Prims.op_Subtraction.1",
         "proj_equation_TypeclassesAlt3.Mkbounded_unsigned_int_ops_base",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -563,7 +584,7 @@
         "token_correspondence_TypeclassesAlt3.bound",
         "token_correspondence_TypeclassesAlt3.eq_op",
         "token_correspondence_TypeclassesAlt3.lt",
-        "token_correspondence_TypeclassesAlt3.sub", "typing_FStar.UInt.fits",
+        "token_correspondence_TypeclassesAlt3.sub",
         "typing_FStar.UInt.max_int", "typing_FStar.UInt32.add",
         "typing_FStar.UInt32.t", "typing_FStar.UInt32.uint_to_t",
         "typing_Prims.pow2",
@@ -576,7 +597,7 @@
         "typing_TypeclassesAlt3.u32_instance_ops"
       ],
       0,
-      "0f41a665c27e2f56d78933f98ef0f70c"
+      "5e7fc4705e23a49449d92425c30c8a96"
     ],
     [
       "TypeclassesAlt3.testsum64",
@@ -587,7 +608,6 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.fold_right.fuel_instrumented",
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.fold_right.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_3c1d21b8f6dcc5e202b4ff1cafbaba81",
         "TypeclassesAlt3_interpretation_Tm_arrow_0798320bcf7a9eb49616d1499c4f73d0",
@@ -600,7 +620,6 @@
         "b2t_def", "bool_inversion", "bool_typing",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_elim_FStar.Pervasives.Native.Some",
         "data_elim_TypeclassesAlt3.Mkbounded_unsigned_int",
         "data_elim_TypeclassesAlt3.Mkbounded_unsigned_int_ops",
         "data_typing_intro_FStar.Pervasives.Native.Some@tok",
@@ -616,8 +635,7 @@
         "equation_TypeclassesAlt3.add", "equation_TypeclassesAlt3.as_nat",
         "equation_TypeclassesAlt3.bound",
         "equation_TypeclassesAlt3.bounded_unsigned_int_ops_eq",
-        "equation_TypeclassesAlt3.eq_op", "equation_TypeclassesAlt3.fits",
-        "equation_TypeclassesAlt3.lt",
+        "equation_TypeclassesAlt3.eq_op", "equation_TypeclassesAlt3.lt",
         "equation_TypeclassesAlt3.op_Equals_Question_Equals",
         "equation_TypeclassesAlt3.op_Less_Equals_Hat",
         "equation_TypeclassesAlt3.op_Less_Hat",
@@ -630,7 +648,6 @@
         "equation_TypeclassesAlt3.u64_instance_ops",
         "equation_with_fuel_FStar.List.Tot.Base.fold_right.fuel_instrumented",
         "equation_with_fuel_Prims.pow2.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "function_token_typing_FStar.UInt64.uint_to_t",
         "function_token_typing_FStar.UInt64.v",
         "function_token_typing_TypeclassesAlt3.bound", "int_inversion",
@@ -643,6 +660,7 @@
         "interpretation_Tm_abs_b2bacc3f4075db57cb403d8ccecd658e",
         "interpretation_Tm_abs_b642211d130730b12c3023e7271d0763",
         "interpretation_Tm_abs_ba0365fb5414d12479e80a3d124bb74c",
+        "interpretation_Tm_abs_cf9bf7398f38f52869a19e869749a638",
         "interpretation_Tm_abs_d51bb26a5c858e98f4457d07e986750d",
         "interpretation_Tm_abs_e6081e9124b615ccbfdd7d765598f17f",
         "kinding_FStar.Pervasives.Native.option@tok",
@@ -651,7 +669,7 @@
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
-        "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
         "proj_equation_TypeclassesAlt3.Mkbounded_unsigned_int_ops_base",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -677,9 +695,7 @@
         "refinement_interpretation_Tm_refine_bc552b2c624e2add758b3ac761c0c563",
         "refinement_interpretation_Tm_refine_bcaef16606f8ccd1707ea17949cf35e1",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
-        "token_correspondence_FStar.List.Tot.Base.fold_right.fuel_instrumented",
         "token_correspondence_FStar.UInt64.v",
-        "token_correspondence_Prims.op_Addition",
         "token_correspondence_Prims.op_Subtraction",
         "token_correspondence_Prims.pow2.fuel_instrumented",
         "token_correspondence_TypeclassesAlt3.add",
@@ -693,12 +709,12 @@
         "typing_Prims.pow2",
         "typing_Tm_abs_b2bacc3f4075db57cb403d8ccecd658e",
         "typing_Tm_abs_cf9bf7398f38f52869a19e869749a638",
-        "typing_TypeclassesAlt3.op_Less_Hat", "typing_TypeclassesAlt3.sum",
+        "typing_TypeclassesAlt3.sum",
         "typing_TypeclassesAlt3.u64_instance_base",
         "typing_TypeclassesAlt3.u64_instance_ops"
       ],
       0,
-      "16163c7b0febf16c3362ed561dd2758b"
+      "38a784df1719cea420e7c1e21dd15858"
     ],
     [
       "TypeclassesAlt3.testsum32'",
@@ -707,7 +723,7 @@
       1,
       [ "@query" ],
       0,
-      "b9fd84f71fd06c2d845c81880f3fa52d"
+      "c8246e5804bdddaef73c9cf45f18a40e"
     ]
   ]
 ]

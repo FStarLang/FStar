@@ -7,12 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_FriendProvider.x",
-        "equation_Other.y", "int_inversion", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0", "typing_Other.y"
+        "@query", "equation_FriendProvider.x", "equation_Other.y",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "43124eaef91e0ce9cacbadd999f215e3"
+      "8256fbe9eec1dccda794f3656bd9df76"
     ]
   ]
 ]

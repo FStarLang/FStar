@@ -13,7 +13,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "0422db9f050b9e075dda34f6d7291290"
+      "4cf4245a8d3fb2b0ed334358dd5998ff"
     ],
     [
       "HyE.AE.keygen",
@@ -42,8 +42,7 @@
         "equation_FStar.Monotonic.HyperStack.modifies",
         "equation_FStar.Monotonic.HyperStack.mref",
         "equation_FStar.Monotonic.HyperStack.new_eternal_region",
-        "equation_FStar.Monotonic.HyperStack.upd",
-        "equation_FStar.Set.subset", "equation_HyE.AE.cipher",
+        "equation_FStar.Monotonic.HyperStack.upd", "equation_HyE.AE.cipher",
         "equation_HyE.AE.genPost", "equation_HyE.AE.key_log",
         "equation_HyE.AE.key_region", "equation_HyE.AE.keysize",
         "equation_HyE.AE.msg", "int_inversion", "int_typing",
@@ -63,10 +62,11 @@
         "lemma_FStar.Monotonic.HyperStack.lemma_mk_mem__projectors",
         "lemma_FStar.Set.lemma_equal_elim", "lemma_FStar.Set.mem_complement",
         "lemma_FStar.Set.mem_empty", "lemma_FStar.Set.mem_singleton",
-        "lemma_FStar.Set.mem_union", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_Negation",
-        "proj_equation_HyE.AE.Key_log", "proj_equation_HyE.AE.Key_region",
+        "lemma_FStar.Set.mem_subset", "lemma_FStar.Set.mem_union",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Negation", "proj_equation_HyE.AE.Key_log",
+        "proj_equation_HyE.AE.Key_region",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -108,7 +108,7 @@
         "typing_HyE.Plain.t"
       ],
       0,
-      "b167d6fac649a044299722ef8a425dde"
+      "68dd93c30342208685ecccd6d3c0a7a2"
     ],
     [
       "HyE.AE.encrypt",
@@ -118,12 +118,9 @@
       [
         "@MaxIFuel_assumption", "@query",
         "assumption_Platform.Bytes.HasEq_bytes", "bool_inversion",
-        "constructor_distinct_CoreCrypto.AES_128_GCM",
         "data_elim_FStar.Pervasives.Native.Mktuple2", "data_elim_HyE.AE.Key",
         "equality_tok_CoreCrypto.AES_128_GCM@tok",
-        "equation_CoreCrypto.aeadKeySize",
         "equation_CoreCrypto.aeadRealIVSize",
-        "equation_CoreCrypto.aeadTagSize",
         "equation_FStar.HyperStack.ST.erid",
         "equation_FStar.HyperStack.ST.m_rref",
         "equation_FStar.HyperStack.ST.mref",
@@ -139,6 +136,7 @@
         "equation_HyE.AE.keysize", "equation_HyE.AE.mlog_t",
         "equation_HyE.AE.msg", "equation_HyE.Ideal.conf",
         "equation_HyE.Plain.r", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.createBytes",
         "equation_Platform.Bytes.empty_bytes",
         "equation_Platform.Bytes.lbytes", "equation_Platform.Bytes.length",
         "equation_Platform.Bytes.op_At_Bar", "equation_Prims.eqtype",
@@ -170,7 +168,7 @@
         "typing_tok_CoreCrypto.AES_128_GCM@tok"
       ],
       0,
-      "59a98ca1fc21f964455b6f7cb718edb8"
+      "a34831629fb430f4ff4180d786dcfe62"
     ],
     [
       "HyE.AE.decrypt",
@@ -187,7 +185,7 @@
         "typing_HyE.Plain.t"
       ],
       0,
-      "08c001282841d0ebb547f595ff33aacf"
+      "3295b62ec03043abc823b8f36d593d77"
     ],
     [
       "HyE.AE.decrypt",
@@ -281,7 +279,7 @@
         "typing_Prims.int", "typing_Tm_abs_3b0ace08b3d34b1b9c6190ea8851f44c"
       ],
       0,
-      "273559a595024fe05409c83342f11987"
+      "f98bfc1b3c8522b874d2e8a08e6b1222"
     ]
   ]
 ]

@@ -8,7 +8,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "43a7f7666becca55a69211ea5a92d093"
+      "d436fe7ad790c2f3ef0d9e150fbc7e89"
     ],
     [
       "Typeclasses.printable_either",
@@ -23,7 +23,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "6ab2e191e20167b0172973ebcd2c8e83"
+      "2948cfaac7daca7a75360d80a95e63d3"
     ],
     [
       "Typeclasses.bounded_unsigned_int",
@@ -32,7 +32,7 @@
       1,
       [ "@query" ],
       0,
-      "d76596dc697321aa4cf5085fa2c9f577"
+      "4836bf252a852a7d009dc55daeb8e649"
     ],
     [
       "Typeclasses.__proj__Mkbounded_unsigned_int__item__properties",
@@ -41,7 +41,7 @@
       1,
       [ "@query" ],
       0,
-      "2f56a2d7dbaecc34a5f916a254992e80"
+      "f65804598a0cd5ae6645a2dd62535377"
     ],
     [
       "Typeclasses.__proj__Mkbounded_unsigned_int__item__properties",
@@ -50,7 +50,7 @@
       1,
       [ "@query" ],
       0,
-      "c208507c6b1dd6975153358bff4661a8"
+      "a86ea27071ba32f99b6cedbaf37794a2"
     ],
     [
       "Typeclasses.op_Plus_Hat",
@@ -66,7 +66,7 @@
         "token_correspondence_Typeclasses.fits"
       ],
       0,
-      "ec9b29c7bf7f9d59e401dee8ae4a6a65"
+      "095aac024e99ae0b198b3641475a45c1"
     ],
     [
       "Typeclasses.op_Subtraction_Hat",
@@ -82,7 +82,7 @@
         "token_correspondence_Typeclasses.fits"
       ],
       0,
-      "544aaa7c26ed5f841c00a182866e7960"
+      "1977ef2275c59c634b202d7e65b149cc"
     ],
     [
       "Typeclasses.u32_instance",
@@ -97,17 +97,14 @@
         "equation_FStar.UInt.fits", "equation_FStar.UInt.lt",
         "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
         "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt32.lt", "equation_Prims.l_and",
-        "equation_Prims.nat", "equation_Prims.squash",
-        "equation_Prims.subtype_of", "int_inversion", "int_typing",
-        "lemma_FStar.UInt.pow2_values", "lemma_FStar.UInt32.uv_inv",
-        "lemma_FStar.UInt32.vu_inv", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
-        "primitive_Prims.op_LessThanOrEqual",
+        "equation_FStar.UInt32.lt", "equation_Prims.nat", "int_inversion",
+        "int_typing", "lemma_FStar.UInt.pow2_values",
+        "lemma_FStar.UInt32.uv_inv", "lemma_FStar.UInt32.vu_inv",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_400a3d1113fd8cfa2b96f8d60bad1e68",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_709aff84c75b0fff77dcbf3b529649dd",
@@ -119,7 +116,7 @@
         "typing_FStar.UInt32.sub", "typing_FStar.UInt32.v"
       ],
       0,
-      "a4d7529d42f71bdecd53be08fb548552"
+      "cab1c8c2e310fb1ba44fb316e3bae378"
     ],
     [
       "Typeclasses.u64_instance",
@@ -134,17 +131,14 @@
         "equation_FStar.UInt.fits", "equation_FStar.UInt.lt",
         "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
         "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt64.lt", "equation_Prims.l_and",
-        "equation_Prims.nat", "equation_Prims.squash",
-        "equation_Prims.subtype_of", "int_inversion", "int_typing",
-        "lemma_FStar.UInt.pow2_values", "lemma_FStar.UInt64.uv_inv",
-        "lemma_FStar.UInt64.vu_inv", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
-        "primitive_Prims.op_LessThanOrEqual",
+        "equation_FStar.UInt64.lt", "equation_Prims.nat", "int_inversion",
+        "int_typing", "lemma_FStar.UInt.pow2_values",
+        "lemma_FStar.UInt64.uv_inv", "lemma_FStar.UInt64.vu_inv",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_4db8ba22c4504a66577a2159dcc603cd",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_5c26bed2289c83f3a218f7e3c34959c7",
@@ -152,11 +146,11 @@
         "refinement_interpretation_Tm_refine_9cfedaa25741363100cfae68d244536e",
         "refinement_interpretation_Tm_refine_bc552b2c624e2add758b3ac761c0c563",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
-        "typing_FStar.UInt.max_int", "typing_FStar.UInt64.add",
-        "typing_FStar.UInt64.sub", "typing_FStar.UInt64.v"
+        "typing_FStar.UInt64.add", "typing_FStar.UInt64.sub",
+        "typing_FStar.UInt64.v"
       ],
       0,
-      "7dcdc8154aeb7c0556abd6b2e431169e"
+      "df40f282c85d64859ed5fa85ea47a0d3"
     ],
     [
       "Typeclasses.bounded_unsigned_int_eq",
@@ -165,19 +159,23 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Typeclasses_interpretation_Tm_arrow_1a0120adf1d7bc7634d805f5498b2ea3",
         "Typeclasses_interpretation_Tm_arrow_1eea001dc988a6a52767d18e2341e80f",
         "data_elim_Typeclasses.Mkbounded_unsigned_int", "equation_Prims.nat",
         "equation_Typeclasses.lt",
         "fuel_guarded_inversion_Typeclasses.bounded_unsigned_int",
         "int_inversion",
         "interpretation_Tm_abs_6565e286ae42e5c941463d4aa1f90d62",
-        "primitive_Prims.op_Negation", "projection_inverse_BoxBool_proj_0",
+        "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c87fd7e81b78266e7c4e88b82bffe3f2",
         "refinement_interpretation_Tm_refine_e9c8369c89dc7f6f499e4562ff9f8e9f",
         "token_correspondence_Typeclasses.lt"
       ],
       0,
-      "080601632c294aef9be4366590bcde52"
+      "6ca5b9edfeefcbd9c0af1df590e47d57"
     ],
     [
       "Typeclasses.test32",
@@ -237,7 +235,7 @@
         "typing_Typeclasses.u32_instance"
       ],
       0,
-      "8317fa1b2bfb945f66b6486cb7f84ba3"
+      "0158f495b4ec10b507be120947ee4111"
     ],
     [
       "Typeclasses.test64",
@@ -297,7 +295,7 @@
         "typing_Typeclasses.u64_instance"
       ],
       0,
-      "24b3d1cb1c11ccd3ebb263ae29c972a7"
+      "74eb92f6f95cda633827c5b8412e19eb"
     ],
     [
       "Typeclasses.try_add",
@@ -357,7 +355,7 @@
         "typing_FStar.UInt32.v", "typing_Typeclasses.u32_instance"
       ],
       0,
-      "ef97d6d18b84e152e90ad04a5a0911e0"
+      "b85182cc900e2ab9dab9d432c3e499d8"
     ],
     [
       "Typeclasses.sum",
@@ -397,6 +395,8 @@
         "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
         "primitive_tot_fun_Prims.op_Addition",
         "primitive_tot_fun_Prims.op_Addition.1",
+        "primitive_tot_fun_Prims.op_Subtraction",
+        "primitive_tot_fun_Prims.op_Subtraction.1",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
@@ -406,6 +406,7 @@
         "refinement_interpretation_Tm_refine_c87fd7e81b78266e7c4e88b82bffe3f2",
         "refinement_interpretation_Tm_refine_e9c8369c89dc7f6f499e4562ff9f8e9f",
         "token_correspondence_Prims.op_Addition",
+        "token_correspondence_Prims.op_Subtraction",
         "token_correspondence_Typeclasses.bound",
         "token_correspondence_Typeclasses.eq_op",
         "token_correspondence_Typeclasses.fits",
@@ -413,7 +414,7 @@
         "token_correspondence_Typeclasses.sub"
       ],
       0,
-      "4a1ba25d8e9c55594ba6b469856ff020"
+      "0b4d99151cfeac53b62a3ed15f86c293"
     ]
   ]
 ]

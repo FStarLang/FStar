@@ -5,7 +5,7 @@
       "TransparentMap.sel_upd1",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.FunctionalExtensionality_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
@@ -22,13 +22,13 @@
         "typing_Tm_abs_331bcae1afb9bcb02e34122de03c3f66"
       ],
       0,
-      "96bd33b05b78590587c50af9b2cff3ec"
+      "d8574eab40a4a0bc11be479acc397c22"
     ],
     [
       "TransparentMap.sel_upd2",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.FunctionalExtensionality_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
@@ -45,25 +45,25 @@
         "typing_Tm_abs_331bcae1afb9bcb02e34122de03c3f66"
       ],
       0,
-      "55c9eab303b8e17a0eaf16581f469109"
+      "c37bd99fd551bc1a006d8434d306e90b"
     ],
     [
       "TransparentMap.lemma_equal_intro",
       1,
       1,
-      0,
+      1,
       [
         "@query", "equation_FStar.FunctionalExtensionality.feq",
         "equation_TransparentMap.equal", "equation_TransparentMap.sel"
       ],
       0,
-      "362480bb99442a8f4ad067cc720465d2"
+      "b1a14567b5f5f7066e63bdebda3e76a3"
     ],
     [
       "TransparentMap.lemma_equal_elim",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.FunctionalExtensionality.is_restricted",
@@ -76,16 +76,16 @@
         "typing_Tm_abs_134069e179ddf4705519081c391c4e10"
       ],
       0,
-      "538700c8ddb1be7146bb448266da2a32"
+      "613941c122ff5c93488ab55e7675ae2d"
     ],
     [
       "TransparentMap.lemma_equal_refl",
       1,
       1,
-      0,
+      1,
       [ "@query", "lemma_TransparentMap.lemma_equal_intro" ],
       0,
-      "79da445a7691d4955f975d6578381e37"
+      "c95d6364ea865a409b4378444fd58633"
     ]
   ]
 ]

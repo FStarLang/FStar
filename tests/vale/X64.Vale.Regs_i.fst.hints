@@ -5,7 +5,7 @@
       "X64.Vale.Regs_i.lemma_equal_intro",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "X64.Machine_s_pretyping_b7c45855ed90996ceceb34aa61de24e7",
@@ -14,13 +14,13 @@
         "equation_X64.Vale.Regs_i.equal", "typing_tok_X64.Machine_s.Rsp@tok"
       ],
       0,
-      "55babc7dec4ee6f50b84d67461d33661"
+      "15904167fd5c6681bee3989ccbf55cca"
     ],
     [
       "X64.Vale.Regs_i.lemma_equal_elim",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
@@ -37,7 +37,7 @@
         "typing_tok_X64.Machine_s.Rsp@tok"
       ],
       0,
-      "590ad8db1a1ba10fd7f0283142fa0b6f"
+      "ce4f891ba187b586245335c482d60c47"
     ]
   ]
 ]

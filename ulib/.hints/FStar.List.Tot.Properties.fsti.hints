@@ -75,7 +75,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f5650e69063fc13ac2bd9baf66fb3568"
+      "2801f5be573e1182bcb34148991b1dda"
     ],
     [
       "FStar.List.Tot.Properties.map_lemma",
@@ -200,7 +200,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b362f50666280808dedbb767771a90ef"
+      "39fdf2ed9811d4648a00e511c5e113fc"
     ],
     [
       "FStar.List.Tot.Properties.lemma_split_using",
@@ -264,7 +264,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "a7c793b0853a0272cca434906ea59ed5"
+      "e82806b614271589bbc08e51ad77146f"
     ],
     [
       "FStar.List.Tot.Properties.sortWith_permutation",
@@ -297,7 +297,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "ba7c3b48e7c922135cdd32a0c5884281"
+      "c6e617ed81207e8bde095ed2b6f3a0ee"
     ],
     [
       "FStar.List.Tot.Properties.index_extensionality",

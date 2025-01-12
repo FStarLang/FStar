@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
       ],
       0,
-      "9e885b35a497e1220fc5b59a2407995c"
+      "7f68a9dacdaaa02edf624f61fdf75a24"
     ],
     [
       "LatticeEff.interp",
@@ -20,7 +20,7 @@
       1,
       [ "@query", "assumption_LatticeEff.eff_label__uu___haseq" ],
       0,
-      "46fb71fa1a44544242330e509b3a4ba3"
+      "a84f7c6395a4f95e50bb268925f6b674"
     ],
     [
       "LatticeEff.interp_at",
@@ -66,7 +66,7 @@
         "typing_tok_LatticeEff.EXN@tok", "typing_tok_LatticeEff.WR@tok"
       ],
       0,
-      "f9a8b9d00299e989cb0a51c820d5617e"
+      "a5e5243483ee05924842d5f4a61ea81d"
     ],
     [
       "LatticeEff.sublist",
@@ -75,7 +75,7 @@
       1,
       [ "@query", "assumption_LatticeEff.eff_label__uu___haseq" ],
       0,
-      "6a8693481f1ed7984d2f4cfbab12350b"
+      "385be7e551998531ecf51a901632f0ca"
     ],
     [
       "LatticeEff.sublist_refl",
@@ -84,7 +84,7 @@
       1,
       [ "@query", "equation_LatticeEff.sublist" ],
       0,
-      "c3d475b3772c03aea127796faaa6c4f3"
+      "a7b22dbc28a3319f42e4f0af5231b9e4"
     ],
     [
       "LatticeEff.interp_sublist",
@@ -118,7 +118,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_tok_LatticeEff.WR@tok"
       ],
       0,
-      "b72961a3ee01c6f6e0b0196f2b69b5dd"
+      "9aaa5e178c47b6822889e8faf1ef5c60"
     ],
     [
       "LatticeEff.sublist_at",
@@ -155,7 +155,7 @@
         "typing_FStar.List.Tot.Base.op_At", "typing_tok_LatticeEff.WR@tok"
       ],
       0,
-      "aabf89734364d0cbc9ccebe590052ede"
+      "6ddbd0731c09ea6121d5c9239631afe2"
     ],
     [
       "LatticeEff.return",
@@ -175,7 +175,7 @@
         "token_correspondence_LatticeEff.wpof2"
       ],
       0,
-      "ce757f8c789c5f8b4ea99a4b20c0184e"
+      "323b963010ad249866d76c65d97bddf2"
     ],
     [
       "LatticeEff.bind",
@@ -219,11 +219,10 @@
         "string_inversion", "string_typing",
         "token_correspondence_LatticeEff.interp",
         "token_correspondence_LatticeEff.wpof2",
-        "typing_FStar.List.Tot.Base.mem", "typing_tok_LatticeEff.EXN@tok",
-        "typing_tok_LatticeEff.WR@tok"
+        "typing_tok_LatticeEff.EXN@tok", "typing_tok_LatticeEff.WR@tok"
       ],
       0,
-      "dd20bdeb46659af46f2c577de323dfa3"
+      "9a07dffa9ebbc4b25e45411379b9156f"
     ],
     [
       "LatticeEff.subcomp",
@@ -252,7 +251,7 @@
         "typing_tok_LatticeEff.EXN@tok", "typing_tok_LatticeEff.WR@tok"
       ],
       0,
-      "da6f6b30d59ece2f18ec1e037213809e"
+      "cea212b6dad6e1d9cf790e084b3b3856"
     ],
     [
       "LatticeEff.EFF",
@@ -261,7 +260,7 @@
       1,
       [ "@query" ],
       0,
-      "76e334ae6c54255cd1d2b35908b2a4ff"
+      "7db4c507586a9c64c89bd214cd90d07f"
     ],
     [
       "LatticeEff.EFF",
@@ -270,7 +269,7 @@
       1,
       [ "@query", "lemma_LatticeEff.sublist_at" ],
       0,
-      "0f56bc51ddf6fb5084a084693e8ae208"
+      "92af94d42ec220164f9ac1ebf661de83"
     ],
     [
       "LatticeEff.EFF",
@@ -279,7 +278,7 @@
       1,
       [ "@query", "lemma_LatticeEff.sublist_at" ],
       0,
-      "5d8eeec6ddc4f297505e34e6f6bd0a22"
+      "605232f165e593c5555dbc77f6c6576b"
     ],
     [
       "LatticeEff.lift_pure_eff",
@@ -310,7 +309,7 @@
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
       ],
       0,
-      "69645bc0ea868ec01f0a4cce369d7155"
+      "6f8963d50a1a7b87fb9937450c0ee6b5"
     ],
     [
       "LatticeEff.0",
@@ -319,7 +318,7 @@
       1,
       [ "@query" ],
       0,
-      "f40a169b237adffee86dc747d86e4f4e"
+      "46eb388b7650ef8a5726274527295d8b"
     ],
     [
       "LatticeEff.get",
@@ -340,7 +339,7 @@
         "typing_FStar.Monotonic.Heap.heap"
       ],
       0,
-      "f43bd2385347341d7923cf619badcd3f"
+      "1eac1a0d61b8cf8d12285e4d3266ca21"
     ],
     [
       "LatticeEff.op_Bang",
@@ -365,7 +364,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "62b1004ebebee8b1d7f19f2733dbeca7"
+      "8a7cb03ef27422f1a5ba32c61046eb73"
     ],
     [
       "LatticeEff.op_Colon_Equals",
@@ -407,7 +406,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "1eead2fd7d3f7ced93ec798fadd354c7"
+      "396cdc5caa9a8960256565d154c5f2e7"
     ],
     [
       "LatticeEff.put",
@@ -445,7 +444,7 @@
         "typing_tok_LatticeEff.WR@tok", "unit_typing"
       ],
       0,
-      "1fdbbe15e9f50e76081813440d98354f"
+      "cf11da3d72cf399c8e965f4096a59a87"
     ],
     [
       "LatticeEff.raise",
@@ -476,7 +475,7 @@
         "typing_tok_LatticeEff.EXN@tok"
       ],
       0,
-      "fa562f1d8c59e68b5fc3e779e21235b7"
+      "b6c5e0743ccae9d1b3dbc53023c716ee"
     ],
     [
       "LatticeEff.test0",
@@ -497,7 +496,7 @@
         "typing_tok_LatticeEff.EXN@tok"
       ],
       0,
-      "3d9f4d53c294a7ced29f57a070999b84"
+      "c9aae8f42da361909001f7f1e833cdcd"
     ],
     [
       "LatticeEff.test1",
@@ -524,7 +523,7 @@
         "typing_tok_LatticeEff.WR@tok"
       ],
       0,
-      "b4bb6a28bea4e26de77775ffd32e4e43"
+      "a173c60d34b347951c0231565339d8e1"
     ],
     [
       "LatticeEff.sublist_at_self",
@@ -538,7 +537,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "44d078d4dce3b52376eb58735b437207"
+      "a3162f3a8e80b1441bbe8d69c9ec17db"
     ],
     [
       "LatticeEff.labpoly",
@@ -552,7 +551,7 @@
         "lemma_LatticeEff.sublist_at_self"
       ],
       0,
-      "533008b7a260613f95169fa4d8ae7d06"
+      "d0e713bf2ddf8ae8acfeca7eff0a84c6"
     ],
     [
       "LatticeEff.catch",
@@ -589,7 +588,7 @@
         "typing_tok_LatticeEff.EXN@tok", "typing_tok_LatticeEff.WR@tok"
       ],
       0,
-      "95d19ca3a161e102fd098809572c819b"
+      "acbc894032f1e98a1afd46ea35e08630"
     ],
     [
       "LatticeEff.g",
@@ -609,7 +608,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e949219ec5ebc59785e58de5496bc5e9"
+      "4749d9cdc281aa51624330e5d35f9f3d"
     ],
     [
       "LatticeEff.test_catch",
@@ -628,7 +627,7 @@
         "typing_FStar.List.Tot.Base.op_At", "typing_tok_LatticeEff.WR@tok"
       ],
       0,
-      "8d84318ee90047c836e9cfde906f59ef"
+      "03275411eb4ed71419c67c995b06a672"
     ]
   ]
 ]

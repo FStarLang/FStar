@@ -15,7 +15,7 @@
         "typing_Prims.int"
       ],
       0,
-      "0bbbd5f9d0ec0db8839fc9e665add797"
+      "ebb5e6ffe00cabb986ccdf917bd4f370"
     ],
     [
       "Lens.rgb",
@@ -30,7 +30,7 @@
         "typing_Prims.int"
       ],
       0,
-      "8e29f19020724d6de5ce187f6a84a583"
+      "3cf069e2c28725bbb456a15d7f466908"
     ],
     [
       "Lens.colored",
@@ -39,7 +39,7 @@
       1,
       [ "@query", "assumption_Lens.rgb__uu___haseq" ],
       0,
-      "f38b3f636144189f42909ad9b49f4ffa"
+      "8938ff002c5b4bbefb12127614f87c8f"
     ],
     [
       "Lens.stlens",
@@ -54,7 +54,7 @@
         "typing_Prims.int"
       ],
       0,
-      "eb68f5d54f5c9c35f0a3278be0f6033a"
+      "f9f745ea509ceb8e7f9b6523ea734ffb"
     ],
     [
       "Lens.__proj__Mkstlens__item__st_put",
@@ -69,7 +69,7 @@
         "typing_Prims.int"
       ],
       0,
-      "039e7098c81d808e73cd3cf12dbf52e0"
+      "72e09e88b997d1ea75d0fc816e64503d"
     ],
     [
       "Lens.__proj__Mkstlens__item__st_put",
@@ -84,7 +84,7 @@
         "typing_Prims.int"
       ],
       0,
-      "23cf4de544807ebf9b9df48437f07515"
+      "ec11912aaad454142dd7987bb43bc0a2"
     ],
     [
       "Lens.st",
@@ -102,7 +102,7 @@
         "typing_FStar.Monotonic.Heap.sel", "typing_Lens.op_String_Access"
       ],
       0,
-      "cc509437420d4dd99ad1826a279f11cb"
+      "4c2f092fba9aa14ad8db7ed5b03a398a"
     ],
     [
       "Lens.op_Bar_Colon_Dot_Dot",
@@ -115,7 +115,6 @@
         "equation_Lens.op_Bar_Dot_Dot", "equation_Lens.op_String_Access",
         "equation_Lens.op_String_Assignment",
         "fuel_guarded_inversion_Lens.lens",
-        "fuel_guarded_inversion_Lens.stlens",
         "interpretation_Tm_abs_2a3edf4b01e4f2bd197952ce921068e0",
         "interpretation_Tm_abs_519017a02c008e8d770d2bb88e107760",
         "interpretation_Tm_abs_623dbc4739871293a8e5a3c0e6f66cc2",
@@ -128,7 +127,7 @@
         "typing_Lens.op_String_Access"
       ],
       0,
-      "d4474c498a7806aabc4fc770dbffef40"
+      "80b4065fe1fc08a705764ff605957cd4"
     ]
   ]
 ]
