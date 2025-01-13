@@ -56,6 +56,7 @@ type fsteps = {
      do_not_unfold_pure_lets : bool;
      unfold_until : option S.delta_depth;
      unfold_only  : option (list I.lid);
+     unfold_once  : option (list I.lid);
      unfold_fully : option (list I.lid);
      unfold_attr  : option (list I.lid);
      unfold_qual  : option (list string);

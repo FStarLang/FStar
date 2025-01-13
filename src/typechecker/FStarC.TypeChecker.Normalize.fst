@@ -631,9 +631,19 @@ let decide_unfolding cfg stack fv qninfo (* : option (option cfg * stack) *) =
     | Should_unfold_no ->
         // No unfolding
         None
+
     | Should_unfold_yes ->
         // Usual unfolding, no change to cfg or stack
         Some (None, stack)
+
+    | Should_unfold_once ->
+        let Some once = cfg.steps.unfold_once in
+        let cfg' = { cfg with steps = {
+                     cfg.steps with unfold_once =
+                     Some <| List.filter (fun lid -> not (S.fv_eq_lid fv lid)) once } } in
+        // Unfold only once. Keep the stack, but remove the lid from the step.
+        Some (Some cfg', stack)
+
     | Should_unfold_fully ->
         // Unfolding fully, use new cfg with more steps and keep old one in stack
         let cfg' =
