@@ -176,7 +176,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
       ],
       0,
-      "cf7324fb7916e24fc16b12935fc0c8c9"
+      "d3663f80827d3e943589b880baf021e1"
     ],
     [
       "FStar.LexicographicOrdering.lex_t_wf",
@@ -252,7 +252,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
       ],
       0,
-      "cd7658c4858549394959b3df5b2845e1"
+      "c13b5ef98cc28293b8f3e909d4859717"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_sym__item__x1",

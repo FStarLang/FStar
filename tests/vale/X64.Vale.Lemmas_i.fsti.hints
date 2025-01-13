@@ -5,7 +5,7 @@
       "X64.Vale.Lemmas_i.cf",
       1,
       1,
-      0,
+      1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
@@ -20,13 +20,13 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "25440ab25f5a15e7482fa2e4347236a0"
+      "3ccae45ce0eee62c9b24a9a2b96fc1e9"
     ],
     [
       "X64.Vale.Lemmas_i.lemma_cmp_ne",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_X64.Machine_s.nat64",
@@ -36,16 +36,16 @@
         "typing_Prims.int"
       ],
       0,
-      "dd61fa235089133a403645bd86c9c84c"
+      "a2a9b3a7ee589783735a4beb0971d42a"
     ],
     [
       "X64.Vale.Lemmas_i.lemma_whileTrue",
       1,
       1,
-      0,
+      1,
       [ "@query" ],
       0,
-      "2c8a77bfca6a274faa010e5250b31b1f"
+      "0b0caef127a7e00ee06f8719fe2fb9fc"
     ]
   ]
 ]

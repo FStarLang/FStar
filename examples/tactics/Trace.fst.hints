@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "fa93b628d11ca10091ece7d42fc824cd"
+      "38fe4241b2a2a606da2ec3f7f7d5c652"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "69ea97db097d1218fd0be66bb339e2f5"
+      "3b4eb3a70c5268ddfae93fc53591937b"
     ],
     [
       "Trace.tick_last",
@@ -35,7 +35,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2e247545671fa1f4d30faa705b4100df"
+      "6cd2aa35dd75d7015cfdb084a05cf5d7"
     ],
     [
       "Trace.instrument_body",
@@ -48,7 +48,7 @@
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result"
       ],
       0,
-      "d4d36ba82c192c8b55db483886c07acc"
+      "15b841828548680d5c15304b5e5dd1ae"
     ],
     [
       "Trace.cutlast",
@@ -76,7 +76,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "2d754b5a4df6b0e68d70f77b3cee291b"
+      "5ad12f06c84ce57f495217171349c118"
     ],
     [
       "Trace.instrument",
@@ -109,7 +109,7 @@
         "typing_FStar.List.Tot.Base.length", "unit_typing"
       ],
       0,
-      "8c176a170ab384497cfe02c7cb063260"
+      "8e0fe53c005421ab70e3fa33ad4aa57c"
     ],
     [
       "Trace.fall",
@@ -126,7 +126,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "ed3e1773f1b14fbfd6172f8b6a7e32e3"
+      "bb7db12f83301712a127c0d80786dbeb"
     ],
     [
       "Trace.uu___0",
@@ -145,7 +145,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "574fb31870750b6f6f44216ccc81cc20"
+      "c05512e5214564f2815ca14ee8fee506"
     ],
     [
       "Trace.fact_aux",
@@ -163,7 +163,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "da2ba7ec03c8b21fbc06b7d91fff9d00"
+      "0955a71d9c56f6de38065adc69ac9294"
     ],
     [
       "Trace.uu___1",
@@ -178,7 +178,8 @@
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equation_Prims.nat",
         "equation_with_fuel_Trace.fact_aux_.fuel_instrumented",
-        "function_token_typing_Prims.__cache_version_number__", "int_typing",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Multiply",
         "primitive_Prims.op_Subtraction",
@@ -188,7 +189,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "e95271b05891fb80b4d417952894d2f2"
+      "1764f5cdf8b28a51333065f41e3e23e2"
     ],
     [
       "Trace.uu___2",
@@ -199,22 +200,18 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Trace.fact_.fuel_instrumented",
         "@fuel_correspondence_Trace.fact_aux.fuel_instrumented", "@query",
-        "data_elim_FStar.Pervasives.Native.Mktuple2",
         "data_typing_intro_Prims.Nil@tok", "equation_Prims.nat",
         "equation_with_fuel_Trace.fact_.fuel_instrumented",
-        "equation_with_fuel_Trace.fact_aux.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "equation_with_fuel_Trace.fact_aux.fuel_instrumented", "int_typing",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "typing_Trace.fact_"
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "55008a4cdc53022ea3cdd87cab43bdf2"
+      "b442f95df9877e4916c32032791bd7d0"
     ]
   ]
 ]

@@ -19,7 +19,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1d6802f50c48b6b92542f7541d235413"
+      "297fd191b053a8fa3590973f71d7f6ca"
     ],
     [
       "Dec.f1",
@@ -39,7 +39,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e4c748f5d30028a22670032191c88988"
+      "9953b07e0da5dcf2c47170a9b0c43084"
     ],
     [
       "Dec.f1",
@@ -59,7 +59,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "874d2cb59ca0c58e4dfdbd349da087b2"
+      "fe91fb600918fc1097d75857705fbbf8"
     ],
     [
       "Dec.g",
@@ -70,9 +70,9 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "bool_typing",
-        "eq2-interp", "equation_Dec.pred", "equation_Prims.nat",
-        "int_inversion", "int_typing", "primitive_Prims.op_GreaterThan",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "eq2-interp",
+        "equation_Dec.pred", "equation_Prims.nat", "int_inversion",
+        "int_typing", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
@@ -81,7 +81,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f8432165dad619cdee8dffc67b94e6e6"
+      "76e9ba763629e0a3c6cf3f5538ba7eda"
     ],
     [
       "Dec.h",
@@ -92,9 +92,9 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "bool_typing",
-        "eq2-interp", "equation_Dec.pred", "equation_Prims.nat",
-        "int_inversion", "int_typing", "primitive_Prims.op_GreaterThan",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "eq2-interp",
+        "equation_Dec.pred", "equation_Prims.nat", "int_inversion",
+        "int_typing", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
@@ -103,7 +103,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "720a6cb1e18d21abf53a30fdeeb33c2e"
+      "81a6c2e24d88647e19a7478f006919b3"
     ],
     [
       "Dec.old",
@@ -123,7 +123,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "51ca862d52b2f9abcce45a7ada03c920"
+      "5674236a7dd740b2e38a3c299445e33b"
     ],
     [
       "Dec.old2",
@@ -143,7 +143,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c907a8a926cbdb53a4cbddc3bc9e7728"
+      "a4aac69ad5b7c62dad3854d1b7469c5e"
     ],
     [
       "Dec.simple",
@@ -161,7 +161,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e2c7be10cf6dc8ca29fa1ba7ec588ae5"
+      "1d886a02ab5bd104cdb64d88873f4652"
     ],
     [
       "Dec.last",
@@ -181,7 +181,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "eca9db6cecdd08dcf89a0398ac144241"
+      "cb99a56c1ed81e53b948f7f508135637"
     ],
     [
       "Dec.test_inner_let_rec",
@@ -201,7 +201,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "52baa52cb14af491579f566a8c22f3fd"
+      "f732665ce77faba83d285d7bf7893d19"
     ],
     [
       "Dec.factorial_tail",
@@ -210,10 +210,8 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
-        "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
@@ -221,7 +219,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b05f1dd458c2c87dd259a239c9796259"
+      "3443eb55ef94697337ede32a55c1c207"
     ],
     [
       "Dec.test_inner_let_rec_with_wf",
@@ -240,7 +238,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "40f3be397e6249b5d9f2b4fead011f58"
+      "868b7a1ea75c17923c1598a9dd4e2024"
     ]
   ]
 ]

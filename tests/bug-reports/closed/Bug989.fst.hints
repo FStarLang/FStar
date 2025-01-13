@@ -17,7 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7575d77ea3a17a94e1ddaa8a7da65d2d"
+      "e9c99a1afab44a7f2c27b23bdee46aed"
     ],
     [
       "Bug989.foo",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "82cfc93839d0dfcadae8c170b9ae8b90"
+      "6d1ed24e5f72a9a4e29b722aff5c8b15"
     ],
     [
       "Bug989.f",
@@ -48,7 +48,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "92445171b72bb95d9e0b75965202b5d8"
+      "6b5df6579f6d5f789d0f6fa0d339ca3a"
     ]
   ]
 ]

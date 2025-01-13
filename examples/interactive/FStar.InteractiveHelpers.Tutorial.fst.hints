@@ -15,7 +15,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "a486fff631b18c760c9f93664bbc2d3c"
+      "23484c88e3c15e2641078bbf79d38d4c"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.simpl_ex2",
@@ -30,7 +30,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "f646c85af3c7015b353aaffe3c3a125e"
+      "b76fe9e80d99a79aff95f0f05babeb85"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ci_ex1",
@@ -38,16 +38,14 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.InteractiveHelpers.Tutorial.Definitions.f2",
-        "equation_FStar.InteractiveHelpers.Tutorial.Definitions.f4",
-        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Addition",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "68a5aedbd59375afb507bb6188b6a3bd"
+      "919d3c39f804c85eeddd036d4d4243d7"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ci_ex2",
@@ -56,7 +54,7 @@
       0,
       [ "@query" ],
       0,
-      "726fa9fbf82ed4e9095174c64b1c0a72"
+      "b14d8a127cb4661a6f93a4ca49d0921a"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ci_ex3",
@@ -69,7 +67,7 @@
         "primitive_Prims.op_Addition"
       ],
       0,
-      "d908c9114e309bf6121e357361228624"
+      "cdb144374b38b176c18c6c17bd612e0e"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ci_ex4",
@@ -82,7 +80,7 @@
         "refinement_interpretation_Tm_refine_c60d276dd0e4be790a2120a44d571d0d"
       ],
       0,
-      "bd769a1251823ed1cdbac56dc5e42163"
+      "cef92eef634c20868bc7be660bbac2c7"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.split_ex1",
@@ -101,7 +99,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "935c419d4554caed23ccf9ae12548505"
+      "d0f9c2d182c6619e690bcc7a418b1b65"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ut_ex1",
@@ -120,7 +118,7 @@
         "typing_Prims.int"
       ],
       0,
-      "58b3b5b1e5f7b3eba9962acfe785b303"
+      "9c5f68cc4a17b0753bbd93ce6dad0397"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ut_ex2",
@@ -129,7 +127,7 @@
       0,
       [ "@query" ],
       0,
-      "822102adbe293fe9f4d9cf19b6756fb0"
+      "386b408b0d9406a2feab97299d86105f"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.cc_ex1",
@@ -143,7 +141,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "6f0d588e2905d864b5b1fdd913fb8bcc"
+      "f0561e476ec19f7b3e204ada5a58421c"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ts_ex1",
@@ -159,7 +157,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "4974277b940ce9f0766f63ced6d18708"
+      "0b9b04997e044c1136b292e8942b741f"
     ]
   ]
 ]

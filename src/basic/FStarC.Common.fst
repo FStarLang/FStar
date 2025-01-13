@@ -21,29 +21,6 @@ open FStarC.Compiler.Effect
 module List = FStarC.Compiler.List
 module BU = FStarC.Compiler.Util
 
-let has_cygpath =
-    try
-        let t_out = BU.run_process "has_cygpath" "which" ["cygpath"] None in
-        BU.trim_string t_out = "/usr/bin/cygpath"
-    with
-    | _ -> false
-
-let try_convert_file_name_to_mixed =
-  let cache = BU.smap_create 20 in
-  fun (s:string) ->
-    if has_cygpath
-    && BU.starts_with s "/" then
-      match BU.smap_try_find cache s with
-      | Some s ->
-          s
-      | None ->
-          let label = "try_convert_file_name_to_mixed" in
-          let out = BU.run_process label "cygpath" ["-m"; s] None |> BU.trim_string in
-          BU.smap_add cache s out;
-          out
-    else
-      s
-
 let snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b) = BU.atomically (fun () ->
   let len : int = List.length !stackref in
   let arg' = push arg in

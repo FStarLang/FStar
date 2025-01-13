@@ -188,8 +188,13 @@ let kill_process (p: proc) =
       attempt (fun () -> Unix.close (Unix.descr_of_in_channel p.inc));
       attempt (fun () -> Unix.close (Unix.descr_of_in_channel p.errc));
       attempt (fun () -> Unix.close (Unix.descr_of_out_channel p.outc));
+      (* Try to kill, but the process may already be gone. On Unix we
+         get ESRCH. On Windows, we apparently get EACCES (permission denied). *)
       (try Unix.kill p.pid Sys.sigkill
-       with Unix.Unix_error (Unix.ESRCH, _, _) -> ());
+       with Unix.Unix_error (Unix.ESRCH, _, _) -> ()
+          | Unix.Unix_error (Unix.EACCES, _, _) when FStarC_Platform.system = FStarC_Platform.Windows -> ()
+          ); 
+
       (* Avoid zombie processes (Unix.close_process does the same thing. *)
       waitpid_ignore_signals p.pid;
       (* print_string ("Killed process " ^ p.id ^ "\n" ^ (stack_dump()));       *)
@@ -341,11 +346,23 @@ let ask_process
     kill_process p; raise e
 
 let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
+
+(* NOTE: Working around https://github.com/ocaml-batteries-team/batteries-included/issues/1136 *)
+let is_absolute_windows (path_str : string) : bool =
+  if FStarC_Platform.system = FStarC_Platform.Windows then
+    match BatString.to_list path_str with
+    | '\\' :: _ -> true
+    | letter :: ':' :: '\\' :: _ -> BatChar.is_letter letter
+    | _ -> false
+  else
+    false
+
 let is_path_absolute path_str =
   let open Batteries.Incubator in
   let open BatPathGen.OfString in
-  let path_str' = of_string path_str in
-  is_absolute path_str'
+  let path = of_string path_str in
+  is_absolute path || is_absolute_windows path_str
+
 let join_paths path_str0 path_str1 =
   let open Batteries.Incubator in
   let open BatPathGen.OfString in
@@ -353,17 +370,15 @@ let join_paths path_str0 path_str1 =
   to_string ((of_string path_str0) //@ (of_string path_str1))
 
 let normalize_file_path (path_str:string) =
-  let open Batteries.Incubator in
-  let open BatPathGen.OfString in
-  let open BatPathGen.OfString.Operators in
-  to_string
-    (normalize_in_tree
-       (let path = of_string path_str in
-         if is_absolute path then
-           path
-         else
-           let pwd = of_string (BatSys.getcwd ()) in
-           pwd //@ path))
+  if is_path_absolute path_str then
+    path_str
+  else
+    let open Batteries.Incubator in
+    let open BatPathGen.OfString in
+    let open BatPathGen.OfString.Operators in
+    let path = of_string path_str in
+    let cwd = of_string (BatSys.getcwd ()) in
+    to_string (normalize_in_tree (cwd //@ path))
 
 type stream_reader = BatIO.input
 let open_stdin () = BatIO.stdin

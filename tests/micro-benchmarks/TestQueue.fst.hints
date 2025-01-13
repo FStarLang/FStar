@@ -22,7 +22,6 @@
         "lemma_FStar.Seq.Base.lemma_eq_intro",
         "lemma_FStar.Seq.Base.lemma_index_app1",
         "lemma_FStar.Seq.Base.lemma_index_app2",
-        "lemma_FStar.Seq.Base.lemma_index_create",
         "lemma_FStar.Seq.Base.lemma_len_append",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
@@ -30,7 +29,6 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_ac201cf927190d39c033967b63cb957b",
         "refinement_interpretation_Tm_refine_b913a3f691ca99086652e0a655e72f17",
-        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
         "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55",
         "typing_FStar.FunctionalQueue.empty",
         "typing_FStar.FunctionalQueue.enqueue",
@@ -42,7 +40,7 @@
         "typing_TestQueue.my_seq"
       ],
       0,
-      "3c50f66c862511c37ce06e1947102a03"
+      "127bd742f33202dbdf24767eb0645c23"
     ],
     [
       "TestQueue.uu___1",
@@ -83,7 +81,7 @@
         "typing_TestQueue.my_queue", "typing_TestQueue.my_seq"
       ],
       0,
-      "97c50ccba5459f44565274a98c72f276"
+      "2dcc9e20b6093356e3cbc8443f786681"
     ],
     [
       "TestQueue.uu___2",
@@ -129,7 +127,7 @@
         "typing_TestQueue.my_queue"
       ],
       0,
-      "e990d215e704308d76334c28679ebd49"
+      "e01fc07894b35cc9761d9274968740d6"
     ],
     [
       "TestQueue.uu___3",
@@ -188,7 +186,7 @@
         "typing_Prims.int", "typing_TestQueue.my_queue"
       ],
       0,
-      "87cb56977d3383ae47f2f835d502f1ab"
+      "1b8ec42972681285cb531eebf028ab2c"
     ],
     [
       "TestQueue.uu___4",
@@ -200,7 +198,6 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
         "equation_FStar.FunctionalQueue.not_empty",
         "equation_FStar.Pervasives.Native.snd",
-        "equation_FStar.Seq.Properties.head",
         "equation_FStar.Seq.Properties.snoc",
         "equation_FStar.Seq.Properties.tail", "equation_Prims.eqtype",
         "equation_Prims.nat",
@@ -214,14 +211,10 @@
         "lemma_FStar.FunctionalQueue.lemma_seq_queue_bij",
         "lemma_FStar.Seq.Base.lemma_create_len",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
-        "lemma_FStar.Seq.Base.lemma_eq_intro",
-        "lemma_FStar.Seq.Base.lemma_index_app2",
-        "lemma_FStar.Seq.Base.lemma_index_create",
+        "lemma_FStar.Seq.Base.lemma_eq_refl",
         "lemma_FStar.Seq.Base.lemma_len_append",
-        "lemma_FStar.Seq.Base.lemma_len_slice",
+        "lemma_FStar.Seq.Properties.slice_is_empty",
         "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
-        "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -229,12 +222,9 @@
         "refinement_interpretation_Tm_refine_167ef714932ec832fb671890fc3eee6c",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_81407705a0828c2c1b1976675443f647",
         "refinement_interpretation_Tm_refine_9d36978bdc8e3c7dc67574bf23a79168",
-        "refinement_interpretation_Tm_refine_ac201cf927190d39c033967b63cb957b",
+        "refinement_interpretation_Tm_refine_b361ba8089a6e963921008d537e799a1",
         "refinement_interpretation_Tm_refine_b913a3f691ca99086652e0a655e72f17",
-        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
-        "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55",
         "typing_FStar.FunctionalQueue.empty",
         "typing_FStar.FunctionalQueue.enqueue",
         "typing_FStar.FunctionalQueue.queue_of_seq",
@@ -244,7 +234,7 @@
         "typing_Prims.int"
       ],
       0,
-      "f00989a819b99e9c022687154b50909e"
+      "618887879b8314c09706706940d5e861"
     ],
     [
       "TestQueue.uu___5",
@@ -288,7 +278,7 @@
         "typing_TestQueue.my_queue"
       ],
       0,
-      "cf50263d52bab842e2101a641ba3c7d5"
+      "bed81658da9e6a8ab319b9da6d70dba0"
     ],
     [
       "TestQueue.uu___6",
@@ -314,6 +304,7 @@
         "lemma_FStar.FunctionalQueue.lemma_seq_queue_bij",
         "lemma_FStar.Seq.Base.lemma_create_len",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
+        "lemma_FStar.Seq.Base.lemma_eq_intro",
         "lemma_FStar.Seq.Base.lemma_index_app1",
         "lemma_FStar.Seq.Base.lemma_index_app2",
         "lemma_FStar.Seq.Base.lemma_index_create",
@@ -346,7 +337,7 @@
         "typing_Prims.int", "typing_TestQueue.my_queue"
       ],
       0,
-      "3134c7f6b1fcca3fc53c3de93060cc7c"
+      "fc5d198afab39c708d577647889d5fb5"
     ]
   ]
 ]

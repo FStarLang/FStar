@@ -16,7 +16,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "06bb8cb16dcc063b9edf6c557304eb98"
+      "7c40a72c10635d19869273a49ba202ff"
     ],
     [
       "Tests.test1",
@@ -51,7 +51,7 @@
         "typing_Num.num_int", "typing_Prims.int", "typing_Tests.sum"
       ],
       0,
-      "428d88b7f4a0b93e8d25a17654b4aadd"
+      "a60575de24454a9849210bfe02650586"
     ],
     [
       "Tests.test2",
@@ -78,7 +78,7 @@
         "token_correspondence_Prims.op_Addition"
       ],
       0,
-      "59e403be7da0e8d81b76e7ae7f149af5"
+      "0a198c12d967c815a1c1d8cbd24d5cf4"
     ]
   ]
 ]

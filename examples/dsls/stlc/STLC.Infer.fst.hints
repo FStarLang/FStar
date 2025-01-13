@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_67dd0c8a36eaf642ae0fc764a3b385e4"
       ],
       0,
-      "8fb98a0e8670666d5eabc59af6315277"
+      "22c1ebd1ebb7d62b85bb50321f2d0143"
     ],
     [
       "STLC.Infer.__proj__EVar__item___0",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_10f5db85a110b66ccb5055c6ad6b968a"
       ],
       0,
-      "1192770fee236a8e0617d2b87d021943"
+      "661b189ac15c1b1a814e1d7ab3854f94"
     ],
     [
       "STLC.Infer.__proj__ELam__item___0",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_77e8f911aba7f63a6e07ac80f3ab2530"
       ],
       0,
-      "56db12b3a03a6c43f9fb0c370bd58a60"
+      "641861ac531db15136bfe4a6af01a9a3"
     ],
     [
       "STLC.Infer.__proj__ELam__item___1",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_77e8f911aba7f63a6e07ac80f3ab2530"
       ],
       0,
-      "df2b78a08b7324c7ae1cfed1dd4602de"
+      "231af2adcb2e756e7b5afe33908387e8"
     ],
     [
       "STLC.Infer.__proj__EApp__item___0",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Tm_refine_ab6d475508fc8c19b7a29918cef42c03"
       ],
       0,
-      "4a60947bbe412e774a8b6ba25ec674b4"
+      "a02caace2c119c36107f8d9ecd353a28"
     ],
     [
       "STLC.Infer.__proj__EApp__item___1",
@@ -71,7 +71,7 @@
         "refinement_interpretation_Tm_refine_ab6d475508fc8c19b7a29918cef42c03"
       ],
       0,
-      "e0abf4d3eb75c6f7ff95d0ea550d337f"
+      "0705241a78c70259c3a6361a923be218"
     ],
     [
       "STLC.Infer.open_exp'",
@@ -96,7 +96,7 @@
         "subterm_ordering_STLC.Infer.ELam", "typing_Prims.int"
       ],
       0,
-      "22878595bd0f2760019c64403ac025b5"
+      "42e3ed0ffea4a898e6d3e25a532cc686"
     ],
     [
       "STLC.Infer.close_exp'",
@@ -121,7 +121,7 @@
         "subterm_ordering_STLC.Infer.ELam", "typing_Prims.int"
       ],
       0,
-      "61d1af977af51f37b3b0f70f7d324c9a"
+      "22ebf7d5c8d07ced5c67ba6ca1987be2"
     ],
     [
       "STLC.Infer.infer",
@@ -141,7 +141,7 @@
         "typing_STLC.Core.lookup", "unit_typing"
       ],
       0,
-      "4d4a891122828840cdd93055611c3777"
+      "54a0171b4b2b5ab16c506d0c1207f512"
     ],
     [
       "STLC.Infer.elab_core",
@@ -156,7 +156,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "01c311b3e6ddf59dc67f23597b9f8f79"
+      "23e983be8b5510f80fb3e57815ae88f9"
     ],
     [
       "STLC.Infer.main",
@@ -171,7 +171,7 @@
         "typing_tok_STLC.Core.EUnit@tok"
       ],
       0,
-      "8c553fbd2bd392d11573683b8f6327cf"
+      "f009318eb568bb57eac9b84a93215f00"
     ]
   ]
 ]

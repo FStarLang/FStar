@@ -521,12 +521,12 @@ let maybe_eta_expand_coercion g expect e =
 let apply_coercion (pos:Range.range) (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
     if Util.codegen_fsharp()
     then //magics are not always sound in F#; warn
-        FStarC.Errors.log_issue pos
-          Errors.Warning_NoMagicInFSharp
-           (BU.format2
-             "Inserted an unsafe type coercion in generated code from %s to %s; this may be unsound in F#"
-               (Code.string_of_mlty (current_module_of_uenv g) ty)
-               (Code.string_of_mlty (current_module_of_uenv g) expect));
+      FStarC.Errors.log_issue pos Errors.Warning_NoMagicInFSharp [
+         text <| BU.format2 "Inserted an unsafe type coercion in generated code from %s to %s."
+             (Code.string_of_mlty (current_module_of_uenv g) ty)
+             (Code.string_of_mlty (current_module_of_uenv g) expect);
+         text "This may be unsound in F#.";
+      ];
     let mk_fun binder body =
         match body.expr with
         | MLE_Fun(binders, body) ->

@@ -34,7 +34,7 @@
         "typing_Tm_abs_d28f38ba11bb810de36e822e960dcddd"
       ],
       0,
-      "e0f0f34f8d5c0f1a9659fe91763641e0"
+      "83276cdf9e42293ff2e2c2b6fc1bdaa5"
     ],
     [
       "Test.FunctionalExtensionality.shrinking_domains_ok",
@@ -51,7 +51,7 @@
         "typing_Test.FunctionalExtensionality.g1"
       ],
       0,
-      "51076e2952500615323bf46e0e41ce7f"
+      "eb9f32a499efc1359df518fa6868815d"
     ],
     [
       "Test.FunctionalExtensionality.restricted_t_2_idem",
@@ -65,7 +65,7 @@
         "refinement_interpretation_Tm_refine_7e4a6c5999db731b5d17d0418dfeea3e"
       ],
       0,
-      "32c663f17e58a7019fe57653be567aac"
+      "6bfa3b5f03c34d0365002ce8c60eebbd"
     ],
     [
       "Test.FunctionalExtensionality.on_2_interp",
@@ -91,7 +91,7 @@
         "typing_Tm_abs_e9b780d87b9e0e900694c1825f5011b6"
       ],
       0,
-      "cc6e334933209a50bd0f19ad1f92724f"
+      "e401f361bcf3c4844d779e6dd2bd1d20"
     ],
     [
       "Test.FunctionalExtensionality.needs_explicit_coercion",
@@ -117,7 +117,7 @@
         "typing_Prims.int", "typing_Tm_abs_198369e9b95c3a9aefb7ef145e8927e9"
       ],
       0,
-      "a018f66deb0d784e3a7276c301f8e95b"
+      "6313fa52d1a2e261689f2a0b7bb36380"
     ],
     [
       "Test.FunctionalExtensionality.sub_currently_not_why",
@@ -143,7 +143,7 @@
         "typing_Prims.int", "typing_Tm_abs_198369e9b95c3a9aefb7ef145e8927e9"
       ],
       0,
-      "d822776077579e7e261a2eef95424c56"
+      "21ccf67ee9f44b2cf7e2919c3e910a55"
     ]
   ]
 ]

@@ -8,7 +8,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "89ef048694a8bad5fc375e358e56188a"
+      "b8d67f99981bcf1e47e12b71644a45d9"
     ],
     [
       "SMTSync.test5",
@@ -34,7 +34,7 @@
         "typing_SMTSync.l"
       ],
       0,
-      "8f564836d86db28b9d312970600e0940"
+      "0b14332f92baab089c13e2cb7cf51e6c"
     ]
   ]
 ]

@@ -35,7 +35,6 @@
         "equation_LowStar.Buffer.trivial_preorder", "equation_Prims.eqtype",
         "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "equation_with_fuel_Prims.pow2.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing",
@@ -57,8 +56,7 @@
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Negation",
-        "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
@@ -78,9 +76,9 @@
         "refinement_interpretation_Tm_refine_f63e058f9631c11993f3ef0430296051",
         "refinement_interpretation_Tm_refine_f759b00d0ea3017d744ed132c2ce48f4",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "typing_FStar.List.Tot.Base.length", "typing_FStar.Map.contains",
-        "typing_FStar.Map.domain", "typing_FStar.Map.restrict",
-        "typing_FStar.Map.upd", "typing_FStar.Monotonic.Heap.emp",
+        "typing_FStar.Map.contains", "typing_FStar.Map.domain",
+        "typing_FStar.Map.restrict", "typing_FStar.Map.upd",
+        "typing_FStar.Monotonic.Heap.emp",
         "typing_FStar.Monotonic.Heap.heap",
         "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperHeap.rid_freeable",
@@ -96,7 +94,7 @@
         "typing_Prims.int"
       ],
       0,
-      "dc1265ce3a6040e6a50a0beb731d593d"
+      "8de6b9ee8cdafbce38b40d1ad45c386e"
     ],
     [
       "ImmutableBuffer.test",
@@ -188,15 +186,14 @@
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.empty",
         "typing_FStar.Seq.Base.seq_of_list", "typing_FStar.Seq.Base.slice",
         "typing_FStar.Seq.Properties.replace_subseq",
-        "typing_FStar.UInt.fits", "typing_FStar.UInt32.uint_to_t",
-        "typing_FStar.UInt32.v",
+        "typing_FStar.UInt32.uint_to_t", "typing_FStar.UInt32.v",
         "typing_LowStar.ImmutableBuffer.immutable_preorder",
         "typing_LowStar.Monotonic.Buffer.g_is_null",
         "typing_LowStar.Monotonic.Buffer.len", "typing_Prims.int",
         "unit_inversion", "unit_typing"
       ],
       0,
-      "7028105c3115ba296cb9a05bc1ea431b"
+      "581f3c1bba421dee2de137e69c984674"
     ],
     [
       "ImmutableBuffer.test_ub",
@@ -222,8 +219,8 @@
         "equation_LowStar.UninitializedBuffer.ubuffer",
         "equation_Prims.eqtype", "equation_Prims.nat",
         "function_token_typing_Prims.__cache_version_number__",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_typing",
-        "kinding_FStar.Pervasives.Native.option@tok",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "int_typing", "kinding_FStar.Pervasives.Native.option@tok",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_all_regions_elim",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_elim",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_intro",
@@ -285,7 +282,7 @@
         "typing_Prims.int"
       ],
       0,
-      "b09c2bc555da48fe573f1e9a708faded"
+      "1aed2d764d20f76514e21f481ce7d89e"
     ],
     [
       "ImmutableBuffer.test_bigops",
@@ -298,7 +295,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__3"
       ],
       0,
-      "2d3a68972c2a8d4be8c0952150d2b021"
+      "5d7a63d211c93e2e4e04dde1dc18d3a9"
     ],
     [
       "ImmutableBuffer.havoc_pf",
@@ -316,7 +313,7 @@
         "typing_LowStar.PrefixFreezableBuffer.prefix_freezable_preorder"
       ],
       0,
-      "b988ca4f2bf446ee396563617f2c9df5"
+      "4b7b6c955580f4f58cad19649cf23ba3"
     ],
     [
       "ImmutableBuffer.test_pf",
@@ -327,7 +324,7 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
-        "bool_inversion", "eq2-interp",
+        "bool_inversion", "bool_typing", "eq2-interp",
         "equation_FStar.HyperStack.ST.equal_domains",
         "equation_FStar.HyperStack.ST.equal_stack_domains",
         "equation_FStar.HyperStack.ST.is_eternal_region",
@@ -364,6 +361,7 @@
         "lemma_FStar.Set.lemma_equal_elim", "lemma_FStar.UInt.pow2_values",
         "lemma_FStar.UInt32.vu_inv",
         "lemma_LowStar.Monotonic.Buffer.length_as_seq",
+        "lemma_LowStar.Monotonic.Buffer.length_null_2",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Negation",
@@ -402,16 +400,16 @@
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.index",
-        "typing_FStar.Seq.Base.seq", "typing_FStar.Seq.Base.slice",
-        "typing_FStar.UInt.fits", "typing_FStar.UInt8.t",
-        "typing_FStar.UInt8.uint_to_t",
+        "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.seq",
+        "typing_FStar.Seq.Base.slice", "typing_FStar.UInt.fits",
+        "typing_FStar.UInt8.t", "typing_FStar.UInt8.uint_to_t",
         "typing_LowStar.Monotonic.Buffer.as_seq",
         "typing_LowStar.Monotonic.Buffer.g_is_null",
         "typing_LowStar.PrefixFreezableBuffer.frozen_until",
         "typing_LowStar.PrefixFreezableBuffer.prefix_freezable_preorder"
       ],
       0,
-      "cbdb0bdeab3c59d70e45ac99bc915a25"
+      "8cced886d46b4017fccbf173887f51a1"
     ],
     [
       "ImmutableBuffer.test_witnessed_functoriality",
@@ -462,7 +460,7 @@
         "typing_FStar.Seq.Properties.replace_subseq", "typing_Prims.int"
       ],
       0,
-      "21cc7b70edff106c596d82c220c6047f"
+      "efa1d95c5b1a5bee28b428d4f841d704"
     ]
   ]
 ]

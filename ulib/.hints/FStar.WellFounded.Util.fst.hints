@@ -154,7 +154,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
       ],
       0,
-      "56f3c1795250587ba74acb5bd1cde7e2"
+      "db346b22480a0d328a5fe9c321e727b6"
     ],
     [
       "FStar.WellFounded.Util.lift_binrel_squashed",
@@ -247,7 +247,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
       ],
       0,
-      "d41ca1f2f350b2fc4342d257512b6384"
+      "f5d428e487d49b035eafa876658382a4"
     ],
     [
       "FStar.WellFounded.Util.lift_binrel_squashed_intro",
@@ -275,7 +275,7 @@
         "token_correspondence_FStar.WellFounded.Util.lift_binrel_squashed_as_well_founded_relation"
       ],
       0,
-      "81b7da1a41298ebaa1573e030a9c9c18"
+      "9e3a6aaa8361c0e67246fabba6b66805"
     ]
   ]
 ]

@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b96908333525fba3f648de796356d288"
+      "5f60b66cde3542bc257010308fcd68fa"
     ],
     [
       "FirstProofs.factorial_is_positive",
@@ -36,11 +36,10 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_c5028ad6190337f18b3a5b40f65cda41",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "474c111ba3b1a008ea55b6f996520394"
+      "16708e44de72fa8a72209c3dee205c32"
     ],
     [
       "FirstProofs.factorial_is_increasing",
@@ -61,11 +60,10 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_45626e3fb191d65dc06c4dc9870b6b11",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_f5e7b3b99b77aabc8c52456e3d60ac6f",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1a7d71173898838c421fd63cee5166e6"
+      "666132e2606a774ea7e38cf52ac47274"
     ],
     [
       "FirstProofs.factorial_is_doubling",
@@ -86,12 +84,11 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_3fd582fff7abe35f926b0f5977b70ae5",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_aed863c320ae128d9af964598e05c9fe",
-        "token_correspondence_FirstProofs.factorial.fuel_instrumented",
+        "refinement_interpretation_Tm_refine_984c70d12994252595cc4bfd8d436fb9",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4090e67d7f43945cc7cff8f34e19e2f3"
+      "ddbb1c5ab8783aa03cb79b668af32cf2"
     ],
     [
       "FirstProofs.fibonacci",
@@ -107,7 +104,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "417d4993acb2df64866f7bd3bb8cc5b8"
+      "d131421724660fbb80303857205f2bd0"
     ],
     [
       "FirstProofs.fibonacci_is_increasing",
@@ -126,12 +123,12 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_b6915ca219eebbba9223bf245e6b0bfd",
+        "refinement_interpretation_Tm_refine_b0ca6e96b7a87a0480fe752315aefe67",
         "token_correspondence_FirstProofs.fibonacci.fuel_instrumented",
         "typing_FirstProofs.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-      "01c68b116cb319bcdb741470f6778b74"
+      "be1866a36e2d569dfeacf756cbac001b"
     ]
   ]
 ]

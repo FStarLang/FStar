@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "d30c82fc871c7918918f6194cdc96030"
+      "106507742eff1d5dbdd6f95ac0907fa2"
     ],
     [
       "Arith.test2",
@@ -17,33 +17,25 @@
       1,
       [ "@query" ],
       0,
-      "e0dabeaaa158b7c08db7f62f583a0a0a"
+      "0a079274654834cf9ba7b510eaaaaed0"
     ],
     [
       "Arith.test3",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
-      ],
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "665cbd818059264d557c4e79e22e53de"
+      "7911352b8e485922ffad1ed2da143ec9"
     ],
     [
       "Arith.test4",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
-      ],
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "7de3a9b85b1cfbe0e2025d9a1cd8f5d4"
+      "26ef56fb466ee41af0fe30ce5aff7098"
     ],
     [
       "Arith.test5",
@@ -52,7 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "64616a3f216a404f806ff73c2300966b"
+      "8c6b57e93356a2fa169e164f60b98948"
     ],
     [
       "Arith.test6",
@@ -61,7 +53,7 @@
       1,
       [ "@query" ],
       0,
-      "eb17bdfdd7932ecb12aeb5225e38b09d"
+      "3317661feb701c42c2d8767fc40aafa7"
     ],
     [
       "Arith.test7",
@@ -70,7 +62,7 @@
       1,
       [ "@query" ],
       0,
-      "e57cb5403e836996f2653723179a8ac4"
+      "e5a60b5b44f0cb05f9aa99ee5cecee3d"
     ],
     [
       "Arith.test8",
@@ -79,7 +71,7 @@
       1,
       [ "@query" ],
       0,
-      "ada69bd4e63e5862425a457115e192c8"
+      "21bb9fd7e0c3a0fb44a769994c1d5999"
     ],
     [
       "Arith.test9",
@@ -88,7 +80,7 @@
       1,
       [ "@query" ],
       0,
-      "d14e3f2e0b232d31c829b3bf9b1d05d0"
+      "0afd4ba4ed885639e89eb25231a03bfa"
     ],
     [
       "Arith.test10",
@@ -97,7 +89,7 @@
       1,
       [ "@query" ],
       0,
-      "388fbbb7e4490d9aae6db9f06a80f64c"
+      "597fd8be83ff7f9c9a8d970f0bbb735d"
     ],
     [
       "Arith.test11",
@@ -106,7 +98,7 @@
       1,
       [ "@query" ],
       0,
-      "558565a2d6b86450eba8cc199fed59c4"
+      "89592ecdbab82ac4ebb69c7f402db604"
     ]
   ]
 ]

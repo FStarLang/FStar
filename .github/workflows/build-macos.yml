@@ -5,7 +5,7 @@ on:
   workflow_call:
 
 jobs:
-  build:
+  build-macos:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@master
@@ -29,6 +29,7 @@ jobs:
             echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV
           elif [[ "${{github.workflow_ref}}" =~ "release.yml" ]]; then
             echo FSTAR_VERSION="$(cat version.txt)" >> $GITHUB_ENV
+            echo FSTAR_RELEASE=1 >> $GITHUB_ENV
           fi
 
       # Note *g*make below!
@@ -38,7 +39,8 @@ jobs:
           eval $(opam env)
           KERNEL=$(uname -s)
           ARCH=$(uname -m)
-          gmake -skj$(nproc) package FSTAR_TAG=-$KERNEL-$ARCH
+          export FSTAR_TAG=-$KERNEL-$ARCH
+          gmake -skj$(nproc) package
 
       - uses: actions/upload-artifact@v4
         with:

@@ -19,7 +19,7 @@
         "lemma_FStar.Pervasives.invertOption", "typing_tok_Bug710.Low@tok"
       ],
       0,
-      "9ccb2987817a254fe6fb138aae51f7f5"
+      "261432718b06c30018dacb4c95dd77cf"
     ],
     [
       "Bug710.left_unit",
@@ -48,7 +48,7 @@
         "typing_tok_Bug710.Low@tok"
       ],
       0,
-      "6c2fd25c47af223a43c3f10afc2d29e7"
+      "cd2361f881ec64c51ab1c85d972e4bc6"
     ]
   ]
 ]

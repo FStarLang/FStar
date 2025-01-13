@@ -14,7 +14,7 @@
         "typing_Prims.int"
       ],
       0,
-      "bfde14a19b717006374176d715c37947"
+      "e22311e3981e66258ec71f0ba1f85604"
     ],
     [
       "Bug1074.does_not_fail_if_annot",
@@ -27,7 +27,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "1d0711e594c405138ebe01267128fa7a"
+      "c795f25739e496a111e631c44e552261"
     ]
   ]
 ]

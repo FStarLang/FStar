@@ -7,17 +7,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_Prims.nat",
-        "function_token_typing_Prims.__cache_version_number__",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "92fbaa846e5aaadf9b843a1db1ae230e"
+      "bba4311532a0c375fae2332ea6fc4703"
     ],
     [
       "Simple.poly_id",
@@ -35,7 +32,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "39fc817a70f567a2ba7a5f6a6b7524ff"
+      "5e94b1daa201644ac4209cd44d2f9791"
     ],
     [
       "Simple.mk_n_list",
@@ -50,7 +47,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e0dd647b77f2a1e127540131ce69177d"
+      "9ff93091a9fc1a66d7188ebe2e5a8276"
     ],
     [
       "Simple.poly_list_id",
@@ -63,7 +60,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0f79d12b175a3e344060f819bfaeac37"
+      "f705a1be7e9e61dbc24a3e2613c9ae1d"
     ],
     [
       "Simple.eq_int_list",
@@ -77,7 +74,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "83c86655e6e8194ab55b1a738ffe143b"
+      "f37145939978ea0d9ab7bc36363cce80"
     ]
   ]
 ]

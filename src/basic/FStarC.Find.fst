@@ -31,8 +31,11 @@ let read_fstar_include (fn : string) : option (list string) =
     let s = BU.file_get_contents fn in
     let subdirs =
       // Read each line
-      String.split ['\n'] s |>
-      // Trim whitespace (including Windows' \r ! Important!)
+      String.split ['\r'; '\n'] s |>
+      // Trim whitespace. NOTE: Carriage returns (\r) should be trimmed
+      // by BU.trim_string (which is BatString.trim) according to
+      // the docs, but do not seem to be. So instead we use it as a
+      // separator above and just get a few more empty lines.
       List.map BU.trim_string |>
       // And keep the non-empty lines that don't begin with '#'
       List.filter (fun s -> s <> "" && not (String.get s 0 = '#'))

@@ -5,31 +5,31 @@
       "Calc.op_Amp_Equals",
       1,
       1,
-      0,
+      1,
       [ "@query" ],
       0,
-      "5f276c2bf2f9362a0320eb66668ea5ce"
+      "e52ec7ac07dfb747a284911c2c174f88"
     ],
     [
       "Calc.op_Amp_Bar",
       1,
       1,
-      0,
+      1,
       [ "@query" ],
       0,
-      "908c6edef9a6cb1063569164a7b8eaac"
+      "2b1d96c9e06a0ceef458e106bba3f96b"
     ],
     [
       "Calc.op_Amp_Bar_Bar",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_3d3ce46a7902034504bfa0107c776516"
       ],
       0,
-      "4f22bcf4a6459a6c7589416b718bac96"
+      "7759974a3d2565f1bb30eec54a439783"
     ]
   ]
 ]

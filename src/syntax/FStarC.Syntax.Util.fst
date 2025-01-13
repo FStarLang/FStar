@@ -594,7 +594,7 @@ let range_of_sigelt (x: sigelt) = x.sigrng
 let range_of_arg (hd, _) = hd.pos
 
 let range_of_args args r =
-   args |> List.fold_left (fun r a -> Range.union_ranges r (range_of_arg a)) r
+   List.fold_left (fun r a -> Range.union_ranges r (range_of_arg a)) r args
 
 let mk_app f args =
   match args with
@@ -918,7 +918,6 @@ let is_lid_equality x = lid_equals x PC.eq2_lid
 let is_forall lid = lid_equals lid PC.forall_lid
 let is_exists lid = lid_equals lid PC.exists_lid
 let is_qlid lid   = is_forall lid || is_exists lid
-let is_equality x = is_lid_equality x.v
 
 let lid_is_connective =
   let lst = [PC.and_lid; PC.or_lid; PC.not_lid;

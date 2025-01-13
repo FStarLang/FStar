@@ -15,11 +15,10 @@
 *)
 
 module FStarC.Interactive.Legacy
-open FStar.Pervasives
+open FStarC
+open FStarC.Compiler
 open FStarC.Compiler.Effect
 open FStarC.Compiler.List
-open FStar open FStarC
-open FStarC.Compiler
 open FStarC.Compiler.Util
 open FStarC.Getopt
 open FStarC.Ident

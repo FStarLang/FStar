@@ -14,7 +14,7 @@
         "typing_FStar.Ghost.reveal"
       ],
       0,
-      "48203711e1720f3e087ae15ec7a08f23"
+      "0878328e285c61d342636a256883f63c"
     ],
     [
       "VecErasedExplicit.__proj__Cons__item__n",
@@ -26,7 +26,7 @@
         "refinement_interpretation_Tm_refine_9669f7037e621be323cbb7c72d0cebf3"
       ],
       0,
-      "92fbb54b0c10d547aa9f883369ed0ffa"
+      "c8a35c373820b723340b6aa2c9b1eb0a"
     ],
     [
       "VecErasedExplicit.__proj__Cons__item__hd",
@@ -38,7 +38,7 @@
         "refinement_interpretation_Tm_refine_9669f7037e621be323cbb7c72d0cebf3"
       ],
       0,
-      "098286f61383bbd900bf074f92208da1"
+      "783f1fd0610ee4293c27e0d3b48800e9"
     ],
     [
       "VecErasedExplicit.__proj__Cons__item__tl",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_9669f7037e621be323cbb7c72d0cebf3"
       ],
       0,
-      "bd8f2efedfce0e93ca3047d5f44dc0f3"
+      "8e068bf5fb5f5e39e3f6f278ecf3d4ab"
     ],
     [
       "VecErasedExplicit.append",
@@ -75,7 +75,7 @@
         "typing_FStar.Ghost.reveal", "well-founded-ordering-on-nat"
       ],
       0,
-      "760496355593274df99630e548e9b26b"
+      "769aacf21aed46d28fe504909a2493ed"
     ],
     [
       "VecErasedExplicit.append",
@@ -83,24 +83,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_85a98bd7507a56e18835d01a7741750b_4",
-        "binder_x_b513ddacc5d7615736c68c89260be2e6_2",
-        "binder_x_b513ddacc5d7615736c68c89260be2e6_3",
-        "data_elim_VecErasedExplicit.Cons",
-        "data_elim_VecErasedExplicit.Nil",
-        "disc_equation_VecErasedExplicit.Cons",
-        "disc_equation_VecErasedExplicit.Nil", "equation_Prims.nat",
-        "fuel_guarded_inversion_VecErasedExplicit.vec", "int_inversion",
-        "int_typing", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "typing_FStar.Ghost.reveal", "well-founded-ordering-on-nat"
+        "typing_FStar.Ghost.reveal"
       ],
       0,
-      "d026e1ec6f2f0113ae8f0640a4b389ea"
+      "71466370aeea3e0d984dbdcab65bcbdc"
     ]
   ]
 ]

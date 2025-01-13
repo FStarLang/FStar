@@ -7,12 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Preprocess.test_add_1_",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0", "typing_Preprocess.test_add_1_"
+        "@query", "equation_Preprocess.test_add_1_",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "6fb2f3101bcf44ca8660d28009095177"
+      "d21ec788637e7de1b67922f691b08f88"
     ]
   ]
 ]

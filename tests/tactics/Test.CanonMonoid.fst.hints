@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_86378bcbf49edefce0f2701ad7aa8068"
       ],
       0,
-      "c6374b34efd3e38691a9984e445c3df3"
+      "1a4fd840bb45c4d2da799868c2fcf635"
     ],
     [
       "Test.CanonMonoid.lem1",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_86378bcbf49edefce0f2701ad7aa8068"
       ],
       0,
-      "c1d47cf1e947cc0500395c7f92c81e5d"
+      "2dd76cf161b7b9e209beedcf02e86b08"
     ],
     [
       "Test.CanonMonoid.lem2",
@@ -37,7 +37,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "a33e07240a7b3c06460ea22f08473382"
+      "8066211f8130e36b872993809d9470ff"
     ],
     [
       "Test.CanonMonoid.lem2",
@@ -49,7 +49,7 @@
         "refinement_interpretation_Tm_refine_86378bcbf49edefce0f2701ad7aa8068"
       ],
       0,
-      "2c6dd503330d7642fcde650af4670c15"
+      "a9c2181bb6bb0440816844bcf6f53f8f"
     ],
     [
       "Test.CanonMonoid.lem2",
@@ -63,7 +63,7 @@
         "refinement_interpretation_Tm_refine_6d04fd52b4a5e49051f5c30a0bbf89a1"
       ],
       0,
-      "23977b3e7ab52c5fabefb8a77781ffc1"
+      "10c7eee6a152d406176774c1265de37a"
     ]
   ]
 ]

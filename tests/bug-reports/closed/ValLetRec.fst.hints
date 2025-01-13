@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "2ace0047fd999268758550b60065424f"
+      "1cb8d77a251bebfeffbcd89dedee97b6"
     ],
     [
       "ValLetRec.__proj__A__item___0",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_9f8cdf5b59c7868a420342e13f3b1fcc"
       ],
       0,
-      "504224dd4f64c29c76fc2a2ec5dd9981"
+      "34651541522ba8298d6f9c0309487a08"
     ],
     [
       "ValLetRec.__proj__B__item___0",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Tm_refine_a1bc58c5296cb54dc8f0ebdadb0dcbe1"
       ],
       0,
-      "31d0556691a3fb4141bd70ee9bc37ad5"
+      "ed4e3905da0bfdaeaf121d5c3469fd17"
     ],
     [
       "ValLetRec.cmp",
@@ -46,7 +46,7 @@
         "subterm_ordering_ValLetRec.A"
       ],
       0,
-      "b7f6b7fc2bdbc9f1a6595ed0d49ee159"
+      "dce8ae21e584e467a718da756bacb0c3"
     ]
   ]
 ]

@@ -213,7 +213,7 @@ val get_file_extension: string -> string
 val is_path_absolute: string -> bool
 val join_paths: string -> string -> string
 val normalize_file_path: string -> string
-val basename: string -> string
+val basename: string -> string (* name of file without directory *)
 val dirname : string -> string
 val getcwd: unit -> string
 val readdir: string -> list string

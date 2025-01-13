@@ -5,19 +5,19 @@
       "X64.Poly1305.Spec_s.modp'",
       1,
       1,
-      0,
+      1,
       [
         "@query", "equation_X64.Poly1305.Spec_s.nat128_max",
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "86670d5bfd9b809ad81b865ad4344e2a"
+      "fb84130bc2bb87da13573dc0e1d3cff4"
     ],
     [
       "X64.Poly1305.Spec_s.and128",
       1,
       1,
-      0,
+      1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
@@ -36,13 +36,13 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "c85a5e225cd8d2b8d710a57b86b235ab"
+      "a4fa64dd59bd9cf24b626bc8dc4fa5d7"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
       1,
       1,
-      0,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
@@ -57,13 +57,13 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d795db32ebd3e78a1b5e07815a978cb2"
+      "160bd9f47dd27ef67142c40fbb259121"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash",
       1,
       1,
-      0,
+      1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
@@ -74,6 +74,7 @@
         "equation_FStar.UInt.size", "equation_Prims.nat",
         "equation_Prims.pos", "equation_X64.Poly1305.Spec_s.nat128",
         "equation_X64.Poly1305.Spec_s.nat128_max",
+        "equation_with_fuel_Prims.pow2.fuel_instrumented",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "lemma_FStar.UInt.pow2_values",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
@@ -88,7 +89,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "bb82f914dd2568787b839d7a3d901b2f"
+      "491fcb04bb7f63d64f5c8fc81eb006a4"
     ]
   ]
 ]

@@ -15,7 +15,7 @@
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equation_Prims.eqtype",
         "equation_with_fuel_FStar.List.Tot.Base.fold_left.fuel_instrumented",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "int_typing", "primitive_Prims.op_Addition",
         "primitive_tot_fun_Prims.op_Addition",
         "primitive_tot_fun_Prims.op_Addition.1",
         "projection_inverse_BoxInt_proj_0",
@@ -23,11 +23,10 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "token_correspondence_Prims.op_Addition",
-        "typing_FStar.List.Tot.Base.fold_left", "typing_Prims.int"
+        "token_correspondence_Prims.op_Addition", "typing_Prims.int"
       ],
       0,
-      "67f0a796a29a9acc4744dfe21a2e75dd"
+      "00522b1c6f2faa6d89540ab268d56c6f"
     ]
   ]
 ]

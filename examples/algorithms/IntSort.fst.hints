@@ -20,7 +20,7 @@
         "typing_Prims.int"
       ],
       0,
-      "be4a17953bcfaf057743fa98a15fcd0e"
+      "4f93a09ec5193a3951df8d633af622d5"
     ],
     [
       "IntSort.test_sorted",
@@ -29,7 +29,7 @@
       1,
       [ "@query" ],
       0,
-      "a9f8dcc4cd46c9c65e931400e6e3ef1d"
+      "04a8e854db38d4495419483498803f5a"
     ],
     [
       "IntSort.test_sorted",
@@ -52,7 +52,7 @@
         "typing_Prims.int"
       ],
       0,
-      "1a15040de6975f2135ed992633c6991c"
+      "c4c65b277cb66a35ee00190c3614f8d0"
     ],
     [
       "IntSort.test_sorted2",
@@ -71,7 +71,7 @@
         "typing_Prims.int"
       ],
       0,
-      "698017389ecfa4c77375482480d82db1"
+      "f5e48319bdfa548657e7ebec7f9366a4"
     ],
     [
       "IntSort.sorted_smaller",
@@ -107,7 +107,7 @@
         "typing_Prims.int", "unit_inversion", "unit_typing"
       ],
       0,
-      "7b4adbf55a036b9b1dec0da361ed6b22"
+      "c94aabc9e5695bca21dd73eddacf4bc1"
     ],
     [
       "IntSort.permutation",
@@ -122,7 +122,7 @@
         "typing_Prims.int"
       ],
       0,
-      "32ad19fd88da67090f72c9f609456d56"
+      "85806025ab8c1fa683597fffe8626a46"
     ]
   ]
 ]

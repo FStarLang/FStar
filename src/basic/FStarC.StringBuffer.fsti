@@ -27,7 +27,7 @@ type t
 // sb |> add "hello" |> add " world" |> add "!"
 
 
-val create : FStarC.BigInt.t -> t
+val create : int -> t
 val add: string -> t -> t
 val contents: t -> string
 val clear: t -> t

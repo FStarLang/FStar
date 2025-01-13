@@ -7,16 +7,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_47fc285d7b44e13bcb7e420cbfc55623",
-        "equation_RecordFieldOperator.bar", "int_inversion", "int_typing",
+        "@query", "equation_RecordFieldOperator.bar",
         "interpretation_Tm_abs_b7bd7ca32453cd32f19493f86c11906d",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_RecordFieldOperator.Mkfoo_op_Hat",
-        "typing_Tm_abs_b7bd7ca32453cd32f19493f86c11906d"
+        "projection_inverse_RecordFieldOperator.Mkfoo_op_Hat"
       ],
       0,
-      "00b3451a277dc6261cf516343f1fbf43"
+      "fc5656953839d388bf6caf30dbe9cda6"
     ],
     [
       "RecordFieldOperator.uu___2",
@@ -24,21 +21,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "RecordFieldOperator_interpretation_Tm_arrow_72ac2ec523211f8603e00b25deb1543b",
-        "data_elim_RecordFieldOperator.MkhasPlus",
-        "equation_RecordFieldOperator.intHasPlus",
-        "equation_RecordFieldOperator.op_Plus", "int_inversion",
-        "int_typing",
+        "@query", "equation_RecordFieldOperator.intHasPlus",
+        "equation_RecordFieldOperator.op_Plus",
         "interpretation_Tm_abs_6d8aefb3f511fbf6b8395455a5d9e2fa",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_RecordFieldOperator.MkhasPlus_op_Plus",
         "token_correspondence_Prims.op_Addition",
-        "token_correspondence_RecordFieldOperator.op_Plus",
-        "typing_RecordFieldOperator.intHasPlus"
+        "token_correspondence_RecordFieldOperator.op_Plus"
       ],
       0,
-      "c11ea27d16ff91ecb205293bbbce980e"
+      "ebe3f11aa0df04d166fd789b8af8126a"
     ],
     [
       "RecordFieldOperator.uu___3",
@@ -47,7 +39,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "137bd9107a604726179baba037418847"
+      "36094425675bb626b1c4b22bd074be93"
     ]
   ]
 ]

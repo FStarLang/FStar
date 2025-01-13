@@ -8,14 +8,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
-        "int_inversion", "primitive_Prims.op_Equality",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "efc7d5b52575bbcf3edd7b72b8b59622"
+      "7df5eaa1381bb983ab8150fda8c325cb"
     ],
     [
       "Bug1355.create",
@@ -27,7 +29,7 @@
         "projection_inverse_Bug1355.TC0_t"
       ],
       0,
-      "03cbc40754654febc6663670d2156a04"
+      "3864449691943686f1ff38eb64dcd2eb"
     ]
   ]
 ]

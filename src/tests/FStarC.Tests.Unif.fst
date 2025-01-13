@@ -71,7 +71,7 @@ let guard_eq i g g' =
 
 let unify i bvs x y g' check =
     BU.print1 "%s ..." (BU.string_of_int i);
-    FStarC.Main.process_args () |> ignore; //set options
+    Options.parse_cmd_line () |> ignore; //set options
     BU.print2 "Unify %s\nand %s\n" (show x) (show y);
     let tcenv = tcenv() in
     let tcenv = Env.push_bvs tcenv bvs in
@@ -97,7 +97,7 @@ let unify' x y =
 let norm t = N.normalize [] (tcenv()) t
 
 let check_core i subtyping guard_ok x y =
-  FStarC.Main.process_args () |> ignore; //set options
+  Options.parse_cmd_line () |> ignore; //set options
   let env = tcenv () in
   let res = 
     if subtyping
@@ -119,7 +119,7 @@ let check_core i subtyping guard_ok x y =
   Options.init()
 
 let check_core_typing i e t =
-  FStarC.Main.process_args () |> ignore; //set options
+  Options.parse_cmd_line () |> ignore; //set options
   let env = tcenv () in
   let _ =
     match FStarC.TypeChecker.Core.check_term env e t true with
@@ -199,7 +199,7 @@ let run_all () =
             (NonTrivial (tc "(forall (x:int). (forall (y:int). (forall (z:int). y==z)))"));
 
     //imitation: unifies u to a constant
-    FStarC.Main.process_args () |> ignore; //set options
+    Options.parse_cmd_line () |> ignore; //set options
     let tm, us = inst 1 (tc "fun (u:Type0 -> Type0) (x:Type0) -> u x") in
     let sol = tc "fun (x:Type0) -> Prims.pair x x" in
     unify_check 9 [] tm

@@ -22,7 +22,7 @@
         "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "7863045b76f6359bac7acfd52d742e90"
+      "b33f60e081006c67ca21fbed989277f7"
     ],
     [
       "Part2.STInt.right_identity",
@@ -46,7 +46,7 @@
         "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "f924c4944d52232d1d53f3851effdae5"
+      "a318f2e44c9d8470886a52eb116a1e23"
     ],
     [
       "Part2.STInt.associativity",
@@ -64,7 +64,7 @@
         "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "e91115e69d2e8a29594f9e1f4f725db2"
+      "ae1c14217de5be728886791c8b20a275"
     ],
     [
       "Part2.STInt.redundant_read_elim",
@@ -85,7 +85,7 @@
         "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "071aa5598684004b095637167dc68291"
+      "1f8e3868d7be7f2dfba5f62ec0373348"
     ],
     [
       "Part2.STInt.redundant_write_elim",
@@ -93,17 +93,19 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Part2.STInt.bind",
-        "equation_Part2.STInt.feq", "equation_Part2.STInt.op_let_Bang",
-        "equation_Part2.STInt.write", "int_inversion",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Part2.STInt.bind", "equation_Part2.STInt.feq",
+        "equation_Part2.STInt.op_let_Bang", "equation_Part2.STInt.write",
+        "int_inversion",
         "interpretation_Tm_abs_03e66b6f12eb85069ed3f8523b7cfb8c",
         "interpretation_Tm_abs_21135f7a40394ea9900bf22c6ef80c5e",
         "interpretation_Tm_abs_bdc06410776c1d9adee9aeba485b40ed",
         "token_correspondence_Part2.STInt.bind",
-        "token_correspondence_Part2.STInt.op_let_Bang"
+        "token_correspondence_Part2.STInt.op_let_Bang", "unit_typing"
       ],
       0,
-      "c610a3947a9e933bb66e439b4ecbd01c"
+      "004bc85b1ba272c3532176ce03e3c35d"
     ],
     [
       "Part2.STInt.read_write_noop",
@@ -113,6 +115,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_Part2.STInt.bind", "equation_Part2.STInt.feq",
         "equation_Part2.STInt.op_let_Bang", "equation_Part2.STInt.read",
         "equation_Part2.STInt.return", "equation_Part2.STInt.write",
@@ -124,10 +127,10 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "token_correspondence_Part2.STInt.bind",
-        "token_correspondence_Part2.STInt.op_let_Bang"
+        "token_correspondence_Part2.STInt.op_let_Bang", "unit_typing"
       ],
       0,
-      "ce5d082419a86bbeb8ddf525f5cd5c06"
+      "0692d606f54997898fdee61ac0344ea3"
     ]
   ]
 ]

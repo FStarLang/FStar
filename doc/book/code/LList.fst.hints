@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "cb0d436b3e0daa9a5df19f6d51c567be"
+      "222db11fd987cd142e369d5e4ce60a54"
     ],
     [
       "LList.get",
@@ -48,7 +48,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "5e4061ca7c13d0495b5b539275447a3b"
+      "81f7a8016a24f337ec049fc001ad6870"
     ],
     [
       "LList.split_at",
@@ -64,7 +64,7 @@
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_2",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_typing_intro_Prims.Cons@tok",
+        "constructor_distinct_Tm_unit", "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.nat",
@@ -89,7 +89,7 @@
         "typing_LList.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "14a91eba5c43bac8b84581b78e720297"
+      "6175e5a13cb92a5b92ad9f3d23be29fc"
     ],
     [
       "LList.append",
@@ -104,8 +104,8 @@
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Prims.nat",
+        "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_Prims.nat",
         "equation_with_fuel_LList.length.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
         "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
@@ -115,10 +115,12 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_a3771a7eaf8743ab6b3088b9a5ab521b",
-        "subterm_ordering_Prims.Cons", "typing_LList.length"
+        "subterm_ordering_Prims.Cons",
+        "token_correspondence_LList.length.fuel_instrumented",
+        "typing_LList.length"
       ],
       0,
-      "dfbb21e3271c0a0a6e2d0acec69eddfd"
+      "793737542159318aed828344ed6cd490"
     ]
   ]
 ]

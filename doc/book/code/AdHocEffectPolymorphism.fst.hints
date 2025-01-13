@@ -14,7 +14,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "e8f74a2c33e3e67ca7f3765d481cfbda"
+      "d3273a2e31ed905c551533bc058157fd"
     ],
     [
       "AdHocEffectPolymorphism.elim_tot",
@@ -29,7 +29,7 @@
         "refinement_interpretation_Tm_refine_3d79f9587edb6fce694621aacef574f4"
       ],
       0,
-      "8b231f8e4e2a0dce4d0f2135cf3c405d"
+      "6e7e9773d3263aff31504d7f75bd1072"
     ],
     [
       "AdHocEffectPolymorphism.elim_tot",
@@ -38,7 +38,7 @@
       1,
       [ "@query", "assumption_AdHocEffectPolymorphism.eff_tag__uu___haseq" ],
       0,
-      "621e3a51aedc7419f8c28309fb346b3e"
+      "ad8b6ab81ede17e4a4276587a1b8b033"
     ],
     [
       "AdHocEffectPolymorphism.elim_gtot",
@@ -53,7 +53,7 @@
         "refinement_interpretation_Tm_refine_b3f3fc301d11a45e47f02d6e4e9e143b"
       ],
       0,
-      "1df6192462a01373aef653929538f550"
+      "daa0e9e0bebfb3d8c6d8b6162870f914"
     ],
     [
       "AdHocEffectPolymorphism.elim_gtot",
@@ -62,7 +62,7 @@
       1,
       [ "@query", "assumption_AdHocEffectPolymorphism.eff_tag__uu___haseq" ],
       0,
-      "667ac75ca19e8755c9ebd2a131685444"
+      "ad8b6ab81ede17e4a4276587a1b8b033"
     ],
     [
       "AdHocEffectPolymorphism.return",
@@ -84,7 +84,7 @@
         "typing_Tm_abs_b68e73a4efe6a575c72f28a07914e6c3"
       ],
       0,
-      "db3fcb62c9ebc62bdf9b93d1e65e5197"
+      "3567d376f8d650ea496431084100b593"
     ],
     [
       "AdHocEffectPolymorphism.op_let_Bang",
@@ -105,7 +105,7 @@
         "typing_Tm_abs_e0231376ac4f1e1c1f86bc97f17fb9b1"
       ],
       0,
-      "33ff7ba71e23cfdadb3a6076280ca136"
+      "bc8654eb1690310a034edfc3ccf4e89f"
     ],
     [
       "AdHocEffectPolymorphism.map",
@@ -114,16 +114,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "AdHocEffectPolymorphism_pretyping_aba3a3f6bd49314895416739be88c0d4",
         "binder_x_3dddec8ced2db740e4e8aaf70542be7a_6",
-        "data_typing_intro_AdHocEffectPolymorphism.T@tok",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Prims.op_Equals_Equals_Equals",
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6db4366b7c17e0cd6d7d158d3c530eea"
+      "14736b6d8974b5029f0fda737e52b280"
     ],
     [
       "AdHocEffectPolymorphism.inc",
@@ -136,7 +133,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "ac50e953ed4d60475056f18fa0461e62"
+      "90913cc201994cf102aebec8f227f6ed"
     ],
     [
       "AdHocEffectPolymorphism.ginc",
@@ -151,7 +148,7 @@
         "typing_FStar.Ghost.reveal"
       ],
       0,
-      "0af24e71e598815b4c049e80b2d2507c"
+      "fb14514fcd354f8814decbef12683bd8"
     ]
   ]
 ]

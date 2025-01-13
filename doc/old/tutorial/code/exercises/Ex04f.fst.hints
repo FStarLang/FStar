@@ -11,10 +11,10 @@
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d322c300519970209fd4e876f9a37147"
+      "e56b119b867d786ce38f7bf6802acff9"
     ],
     [
       "Ex04f.reverse",
@@ -26,10 +26,10 @@
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "99fa2ab1bb64410f96cecff5a42b361a"
+      "0e9cea07c79192793bcec2339117434a"
     ]
   ]
 ]

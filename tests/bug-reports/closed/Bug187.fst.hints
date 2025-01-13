@@ -14,7 +14,7 @@
         "projection_inverse_BoxBool_proj_0", "typing_Bug187.test"
       ],
       0,
-      "930ffa9ff04af9a7ebbe3d2ddb5e8c67"
+      "2c034fdce253101944fef259393e0809"
     ],
     [
       "Bug187.no_fail",
@@ -23,7 +23,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "2d20cd3c8354a3749708f39ee6f628b5"
+      "31ea71915b274ffac12a47d7f67c3c45"
     ]
   ]
 ]

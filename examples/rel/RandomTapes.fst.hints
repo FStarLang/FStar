@@ -15,7 +15,7 @@
         "interpretation_Tm_abs_f8b7175ad4f28c0bc3c11371abe1d18d"
       ],
       0,
-      "386159f52bf57fceeff3d85ec907e8f8"
+      "6844bec86d5e5d07fb4eac08d293e63e"
     ],
     [
       "RandomTapes.add",
@@ -24,6 +24,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Bijection_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "Prims_interpretation_Tm_arrow_47fc285d7b44e13bcb7e420cbfc55623",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_Bijection.bijection", "equation_Bijection.injection",
@@ -31,13 +32,15 @@
         "equation_RandomTapes.minus",
         "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_RandomTapes.minus", "int_inversion",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Subtraction",
+        "primitive_tot_fun_Prims.op_Addition.1",
         "projection_inverse_BoxInt_proj_0",
         "token_correspondence_Prims.op_Addition",
         "token_correspondence_RandomTapes.minus"
       ],
       0,
-      "22889f8f652ffe7814e2f33f525386c8"
+      "c45e5dc8b72fef2f0612bd3ef4f596ec"
     ],
     [
       "RandomTapes.otp_eq",
@@ -65,7 +68,7 @@
         "token_correspondence_Rel.__proj__R__item__r"
       ],
       0,
-      "2cc58a908aa00f3f0a6052013c5605a3"
+      "6bb53687770e2ca817fd943371d729f5"
     ],
     [
       "RandomTapes.otp2_eq",
@@ -77,10 +80,10 @@
         "equation_RandomTapes.add", "equation_RandomTapes.otp2",
         "equation_RandomTapes.otp2_rand", "equation_RandomTapes.random_tape",
         "equation_RandomTapes.rel_random_tape", "equation_Rel.lift5",
-        "equation_Rel.r_eq", "fuel_guarded_inversion_Rel.rel", "int_typing",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-        "proj_equation_Rel.R_l", "proj_equation_Rel.R_r",
-        "projection_inverse_BoxInt_proj_0",
+        "equation_Rel.r_eq", "fuel_guarded_inversion_Rel.rel",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Subtraction", "proj_equation_Rel.R_l",
+        "proj_equation_Rel.R_r", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple5__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple5__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple5__3",
@@ -95,7 +98,7 @@
         "token_correspondence_Rel.__proj__R__item__r"
       ],
       0,
-      "43fa59c2c87d2ab2c5c7d6ad954a7d46"
+      "0dd3d535391dd150247bd79fc616f5fd"
     ]
   ]
 ]

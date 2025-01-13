@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_4d5241eb6fe198666a8101195bbd4a2a"
       ],
       0,
-      "c30073a681e6c5b6210553723e68a525"
+      "16252878c48b6b24f84567f29d64b6ac"
     ],
     [
       "StrictUnfolding.test1",
@@ -28,7 +28,7 @@
         "refinement_interpretation_Tm_refine_88b070fdaa2704b0d1fcf1ddd6ee47eb"
       ],
       0,
-      "b1656cfdd36a6a407196790f34e734e8"
+      "9593447558cc7b7dd6b12eb469ef0ee2"
     ],
     [
       "StrictUnfolding.test2",
@@ -43,7 +43,7 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v"
       ],
       0,
-      "7bb8c949521fe325448bf5ea073f89a3"
+      "f0bc2619b9e439816a67041909ba6923"
     ],
     [
       "StrictUnfolding.test_integer_generic",
@@ -100,7 +100,7 @@
         "typing_FStar.UInt8.add"
       ],
       0,
-      "20bfb04cd17522eb29cbc13d899a6ccc"
+      "41d58740740eab11221e1e1e763ddb43"
     ],
     [
       "StrictUnfolding.test_integer_generic_wo_fstar_integers",
@@ -109,7 +109,7 @@
       1,
       [ "@query" ],
       0,
-      "571d556854adc973491a85ca7cdf16b1"
+      "21e35210aa7f650ecc61ea2b362ac0ab"
     ],
     [
       "StrictUnfolding.test_int_64",
@@ -118,7 +118,7 @@
       1,
       [ "@query" ],
       0,
-      "22bae8b7b5189e5decd7a1cb04cb2020"
+      "d0c9e4a853471b4aee8ac1b5b0104118"
     ],
     [
       "StrictUnfolding.test_int_64",
@@ -131,7 +131,7 @@
         "typing_FStar.UInt64.add"
       ],
       0,
-      "119f44df17a23211c05726b1338ac652"
+      "3b746294ed2728cbde999c06a44f7fd7"
     ],
     [
       "StrictUnfolding.test_extraction_generic",
@@ -140,7 +140,7 @@
       1,
       [ "@query" ],
       0,
-      "ad284f415fbac056f1290a1a4cd5882c"
+      "05abf545d06c03f57f94165c70030a53"
     ],
     [
       "StrictUnfolding.test_extraction_specific",
@@ -149,7 +149,7 @@
       1,
       [ "@query" ],
       0,
-      "62f73b0de86c949e4fed94520497e5ca"
+      "200d2e18c448d3f8d10314b45c963ee2"
     ]
   ]
 ]

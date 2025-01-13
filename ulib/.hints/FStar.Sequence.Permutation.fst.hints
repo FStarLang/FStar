@@ -169,7 +169,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d06537b579226b752dabce355e13afd7"
+      "ea8ffa428ea67a067808db78edd4e4a9"
     ],
     [
       "FStar.Sequence.Permutation.count_singleton_one",
@@ -399,7 +399,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "17b526a8f6420eb83b76328dcfe19dcd"
+      "c416152cd98eba365c398970e88c7384"
     ],
     [
       "FStar.Sequence.Permutation.elim_monoid_laws",

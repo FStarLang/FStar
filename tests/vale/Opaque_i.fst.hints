@@ -5,10 +5,10 @@
       "Opaque_i.reveal_opaque",
       1,
       1,
-      0,
+      1,
       [ "@query", "equation_Opaque_i.make_opaque" ],
       0,
-      "6a168bf4f78f0144faf1764e60ba6c77"
+      "1b0d11ff7dea54033dc27c9b29d571a8"
     ]
   ]
 ]
