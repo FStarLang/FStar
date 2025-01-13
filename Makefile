@@ -383,7 +383,7 @@ test-1: stage1
 
 _unit-tests-1: override FSTAR_EXE := $(abspath stage1/out/bin/fstar.exe)
 _unit-tests-1: stage1
-	$(MAKE) _unit-tests FSTAR_EXE=$(FSTAR_EXE) unit-tests
+	$(MAKE) _unit-tests FSTAR_EXE=$(FSTAR_EXE)
 
 test-2: override FSTAR_EXE := $(abspath stage2/out/bin/fstar.exe)
 test-2: stage2
