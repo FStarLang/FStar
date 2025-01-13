@@ -482,11 +482,11 @@ in
 [@ ]
 visible let  apply_feq_lem  : ($f:(uu___:a@1:(Tm_unknown) -> Tot b@1:(Tm_unknown)) -> $g:(uu___:a@2:(Tm_unknown) -> Tot b@2:(Tm_unknown)) -> Lemma (unit)) = (fun $f $g -> (congruence_fun f@1:(Tm_unknown) g@0:(Tm_unknown) ()))
 [@ ]
-visible let  fext  : (uu___:unit -> Tac (unit)) = (fun uu___ -> let  uu___#1096  : unit = (apply_lemma `(apply_feq_lem)[])
+visible let  fext  : (uu___:unit -> Tac (unit)) = (fun uu___ -> let  uu___#1098  : unit = (apply_lemma `(apply_feq_lem)[])
 in
-let  uu___#1097  : unit = (dismiss ())
+let  uu___#1099  : unit = (dismiss ())
 in
-let  uu___#1098  : (list binding) = (forall_intros ())
+let  uu___#1100  : (list binding) = (forall_intros ())
 in
 (ignore uu___@0:(Tm_unknown)))
 [@ ]
