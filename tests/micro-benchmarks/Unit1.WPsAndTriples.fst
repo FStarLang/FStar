@@ -51,9 +51,9 @@ val good_hoare : unit -> Pure int True (fun r -> r == 3)
 (*
  * An example from Dominique Unruh
  *)
-let mono a (wp:pure_wp a) (p q:pure_post a) (_:squash(forall (x:a). p x ==> q x)) : 
+let mono (a:Type u#a) (wp:pure_wp a) (p q:pure_post a) (_:squash(forall (x:a). p x ==> q x)) : 
     Lemma (wp p ==> wp q) = 
-	FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ()
+	FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall u#a ()
 
 [@@ expect_failure]
 let contradiction () : Lemma(False) = 

@@ -1961,8 +1961,11 @@ let union_loc_of_loc_disjoint_intro
     xs.addr `GSet.mem` addrs_of_loc_weak smaller xs.region /\
     aloc_disjoint xl xs
   )) by (
+    let open FStar.Stubs.Tactics.V2.Builtins in
     let open FStar.Tactics.SMT in
     set_rlimit 15;
+    set_options "--z3cliopt 'smt.qi.eager_threshold=1'";
+    set_options "--retry 5";
     ()
   );
   assert (auxl ` loc_aux_disjoint` doms);
