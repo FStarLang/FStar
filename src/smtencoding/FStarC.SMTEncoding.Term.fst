@@ -1064,6 +1064,11 @@ and mkPrelude z3options =
                        :pattern ((Valid t))\n\
                        :qid __prelude_valid_elim)))\n"
    in
+   let tm_type_typing =
+     "(assert (forall ((u Universe) (t Term))\n\
+                (! (iff (HasType (Tm_type u) t)\n\
+                        (= t (Tm_type (U_succ u))))\n\
+                   :pattern ((HasType (Tm_type u) t)))))\n"   in
    basic
    ^ bcons
    ^ precedes_partial_app
@@ -1074,6 +1079,7 @@ and mkPrelude z3options =
    ^ (if FStarC.Options.smtencoding_valid_elim()
       then valid_elim
       else "")
+   ^ tm_type_typing
 
 let declsToSmt        z3options decls = List.map (declToSmt z3options) decls |> String.concat "\n"
 let declToSmt_no_caps z3options decl = declToSmt' false z3options decl
