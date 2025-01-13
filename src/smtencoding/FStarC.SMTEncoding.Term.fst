@@ -924,8 +924,7 @@ and mkPrelude z3options =
                 (declare-fun NoHoist (Term Bool) Bool)\n\
                 ;;no-hoist\n\
                 (assert (forall ((dummy Term) (b Bool))\n\
-                                (! (= (NoHoist dummy b)\n\
-                                          b)\n\
+                                (! (= (NoHoist dummy b) b)\n\
                                    :pattern ((NoHoist dummy b)))))\n\
                 (define-fun  IsTyped ((x Term)) Bool\n\
                     (exists ((t Term)) (HasTypeZ x t)))\n\
@@ -933,8 +932,7 @@ and mkPrelude z3options =
                 (declare-fun ApplyTT (Term Term) Term)\n\
                 (declare-fun Prec (Term Term) Bool)\n\
                 (assert (forall ((x Term) (y Term) (z Term))\n\
-                                (! (implies (and (Prec x y) (Prec y z))\n\
-                                            (Prec x z))
+                                (! (implies (and (Prec x y) (Prec y z)) (Prec x z))\n\
                                    :pattern ((Prec x z) (Prec x y)))))\n\
                 (assert (forall ((x Term) (y Term))\n\
                          (implies (Prec x y)\n\
@@ -983,19 +981,10 @@ and mkPrelude z3options =
    let precedes_partial_app = "\n\
      (declare-fun Prims.precedes@tok () Term)\n\
      (assert\n\
-     (forall ((@x0 Term) (@x1 Term) (@x2 Term) (@x3 Term))\n\
-     (! (= (ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok\n\
-     @x0)\n\
-     @x1)\n\
-     @x2)\n\
-     @x3)\n\
-     (Prims.precedes @x0 @x1 @x2 @x3))\n\
-     \n\
-     :pattern ((ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok\n\
-     @x0)\n\
-     @x1)\n\
-     @x2)\n\
-     @x3)))))\n" in
+      (forall ((@x0 Term) (@x1 Term) (@x2 Term) (@x3 Term))\n\
+       (! (= (ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok @x0) @x1) @x2) @x3)
+        (Prims.precedes @x0 @x1 @x2 @x3))\n\
+       :pattern ((ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok @x0) @x1) @x2) @x3)))))\n" in
 
    let lex_ordering = "\n(declare-fun Prims.lex_t () Term)\n\
                       (assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
