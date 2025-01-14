@@ -9,7 +9,7 @@ let default_to (def : 'a) (x : option 'a) : Tot 'a =
     | None -> def
     | Some a -> a
 
-type description (d : string) = ()
+let description (d : string) = ()
 
 type inductive_example =
     | CaseExplicit : [@@@ description "x"] x:int -> [@@@ description "y"] y:string -> inductive_example

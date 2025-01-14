@@ -7,9 +7,9 @@ type attr_value =
     | String : v:string -> attr_value
     | Int : v:int -> attr_value
 
-type attr1 (v : string) = ()
-type attr2 (v : int) = ()
-type attr3 (v : attr_value) = ()
+let attr1 (v : string) = ()
+let attr2 (v : int) = ()
+let attr3 (v : attr_value) = ()
 
 let f (#[@@@ attr1 "imp"; attr2 1; attr3 (String "x")] x_imp:int) ([@@@ attr1 "exp"; attr2 2; attr3 (String "y")] y:string) : Tot unit =
     ()
