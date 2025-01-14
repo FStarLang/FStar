@@ -887,8 +887,31 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
                                                          kind=Some k} }) in
     [se], [], env0)
 
+let tc_decl_post env (res : list sigelt & list sigelt & Env.env) : unit =
+  (* Do the post-tc attribute/qualifier check. *)
+  let (ses, _, _) = res in
+  List.iter (Quals.check_sigelt_quals_post env) ses;
 
-(* [tc_decl env se] typechecks [se] in environment [env] and returns *
+  (* Check that all `type t = ...` indeed define types. *)
+  let is_type_arr univs t =
+    let univs, t = SS.open_univ_vars univs t in
+    let env = Env.push_univ_vars env univs in
+    let bs, ret = N.get_n_binders env (-1) t in
+    S.is_type (U.comp_result ret)
+  in
+  ses |> List.iter  (fun se ->
+    if se.sigmeta.sigmeta_is_typ_abbrev then
+      match se.sigel with
+      | Sig_let {lbs=(_, [lb])} ->
+        if not (is_type_arr lb.lbunivs lb.lbtyp) then
+          Errors.log_issue lb Error_InductiveAnnotNotAType [
+            text "`type` declarations must define types.";
+          ]
+      | _ -> failwith "gg unexpected"
+  );
+  ()
+
+(* [tc_decl env se] typechecks [se] in environment [env] and returns
  * the list of typechecked sig_elts, and a list of new sig_elts elaborated
  * during typechecking but not yet typechecked *)
 let tc_decl env se: list sigelt & list sigelt & Env.env =
@@ -915,11 +938,8 @@ let tc_decl env se: list sigelt & list sigelt & Env.env =
     ) else
       tc_decl' env se
   in
-  let () =
-    (* Do the post-tc attribute/qualifier check. *)
-    let (ses, _, _) = result in
-    List.iter (Quals.check_sigelt_quals_post env) ses
-  in
+  (* Post checks, may log errors. *)
+  tc_decl_post env result;
   (* Restore admit *)
   let result =
     let ses, ses_e, env = result in

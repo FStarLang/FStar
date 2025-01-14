@@ -353,7 +353,8 @@ let default_sigmeta = {
     sigmeta_spliced=false;
     sigmeta_admit=false;
     sigmeta_already_checked=false;
-    sigmeta_extension_data=[]
+    sigmeta_extension_data=[];
+    sigmeta_is_typ_abbrev=false;
 }
 let mk_sigelt (e: sigelt') = { 
     sigel = e;
