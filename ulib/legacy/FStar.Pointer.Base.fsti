@@ -208,7 +208,7 @@ let type_of_base_typ
   | TInt16 -> FStar.Int16.t
   | TInt32 -> FStar.Int32.t
   | TInt64 -> FStar.Int64.t
-  | TChar -> FStar.Char.char
+  | TChar -> FStar.Char.Type.char
   | TBool -> bool
   | TUnit -> unit
 

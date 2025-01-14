@@ -956,7 +956,7 @@ let collect_one
             let w = match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64" in
             add_to_parsing_data (P_dep (false, (Util.format2 "fstar.%sint%s" u w |> Ident.lid_of_str)))
         | Const_char _ ->
-            add_to_parsing_data (P_dep (false, ("fstar.char" |> Ident.lid_of_str)))
+            add_to_parsing_data (P_dep (false, ("fstar.char.type" |> Ident.lid_of_str)))
         | Const_range_of
         | Const_set_range_of ->
             add_to_parsing_data (P_dep (false, ("fstar.range" |> Ident.lid_of_str)))

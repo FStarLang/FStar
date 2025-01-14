@@ -87,7 +87,7 @@ let parse_use_lang_blob (extension_name:string)
 %token <string> UINT64
 %token <string> SIZET
 %token <string> REAL
-%token <FStar_Char.char> CHAR
+%token <FStar_Char_Type.char> CHAR
 %token <bool> LET
 %token <string> LET_OP
 %token <string> AND_OP

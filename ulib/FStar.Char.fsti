@@ -26,42 +26,35 @@ module FStar.Char
 /// See https://en.wikipedia.org/wiki/UTF-8 and
 /// https://erratique.ch/software/uucp/doc/unicode.html
 
-module U32 = FStar.UInt32
+(* The type definition is here. The rest of this module is properties.
+Clients who only need the name of the type can import this smaller
+Char.Type module. *)
+include FStar.Char.Type
 
-(** [char] is a new primitive type with decidable equality *)
-new
-val char:eqtype
+module U32 = FStar.UInt32
 
 (** A [char_code] is the representation of a UTF-8 char code in
     an unsigned 32-bit integer whose value is at most 0x110000,
     and not between 0xd800 and 0xe000 *)
-type char_code = n: U32.t{U32.v n < 0xd7ff \/ (U32.v n >= 0xe000 /\ U32.v n <= 0x10ffff)}
+type char_code = n: U32.t{valid_codepoint (U32.v n)}
 
 (** A primitive to extract the [char_code] of a [char] *)
-val u32_of_char: char -> Tot char_code
+val u32_of_char: c:char -> Tot (n:char_code{U32.v n == int_of_char c})
 
 (** A primitive to promote a [char_code] to a [char] *)
-val char_of_u32: char_code -> Tot char
+val char_of_u32: n:char_code -> Tot (c:char{c == char_of_int (U32.v n)})
 
-(** Encoding and decoding from [char] to [char_code] is the identity *)
+(* These two are provable from the lemmas in FStar.Char.Type. *)
 val char_of_u32_of_char (c: char)
     : Lemma (ensures (char_of_u32 (u32_of_char c) == c)) [SMTPat (u32_of_char c)]
-
-(** Encoding and decoding from [char] to [char_code] is the identity *)
 val u32_of_char_of_u32 (c: char_code)
     : Lemma (ensures (u32_of_char (char_of_u32 c) == c)) [SMTPat (char_of_u32 c)]
-
-(** A couple of utilities to use mathematical integers rather than [U32.t]
-    to represent a [char_code] *)
-let int_of_char (c: char) : nat = U32.v (u32_of_char c)
-let char_of_int (i: nat{i < 0xd7ff \/ (i >= 0xe000 /\ i <= 0x10ffff)}) : char = char_of_u32 (U32.uint_to_t i)
 
 (** Case conversion *)
 val lowercase: char -> Tot char
 val uppercase: char -> Tot char
 
-#set-options "--admit_smt_queries true"
-
+#push-options "--admit_smt_queries true"
 (** This private primitive is used internally by the compiler to
     translate character literals with a desugaring-time check of the
     size of the number, rather than an expensive verification check.
@@ -71,5 +64,4 @@ val uppercase: char -> Tot char
 
 private unfold
 let __char_of_int (x: int) : char = char_of_int x
-#reset-options
-
+#pop-options

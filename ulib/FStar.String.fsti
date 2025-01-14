@@ -33,7 +33,7 @@ open FStar.List.Tot
    For strings in Low*, see LowStar.String, LowStar.Literal etc.
 *)
 
-type char = FStar.Char.char
+type char = FStar.Char.Type.char
 
 /// `list_of_string` and `string_of_list`: A pair of coercions to
 /// expose and pack a string as a list of characters

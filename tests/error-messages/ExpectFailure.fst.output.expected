@@ -2,14 +2,14 @@
 * Error 189 at ExpectFailure.fst(20,12-20,15):
   - Expected expression of type Prims.int
     got expression 'a'
-    of type FStar.Char.char
+    of type FStar.Char.Type.char
 
 >>]
 >> Got issues: [
 * Error 189 at ExpectFailure.fst(24,12-24,15):
   - Expected expression of type Prims.int
     got expression 'a'
-    of type FStar.Char.char
+    of type FStar.Char.Type.char
 
 >>]
 >> Got issues: [
@@ -32,20 +32,20 @@
 * Error 189 at ExpectFailure.fst(43,12-43,15):
   - Expected expression of type Prims.int
     got expression 'a'
-    of type FStar.Char.char
+    of type FStar.Char.Type.char
 
 >>]
 >> Got issues: [
 * Error 189 at ExpectFailure.fst(50,12-50,15):
   - Expected expression of type Prims.int
     got expression 'a'
-    of type FStar.Char.char
+    of type FStar.Char.Type.char
 
 >>]
 >> Got issues: [
 * Error 189 at ExpectFailure.fst(61,12-61,15):
   - Expected expression of type Prims.int
     got expression 'a'
-    of type FStar.Char.char
+    of type FStar.Char.Type.char
 
 >>]

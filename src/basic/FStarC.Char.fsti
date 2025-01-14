@@ -20,8 +20,7 @@ module FStarC.Char
 same ML implementation. It is here to prevent dependencies from the
 compiler into the UInt32 module. *)
 
-new
-val char:eqtype
+include FStar.Char.Type
 
 type char_code
 
