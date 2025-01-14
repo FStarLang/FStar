@@ -64,6 +64,6 @@ let diag (r:ras) : Lemma (r.rank pid > r.rank pid) =
   ()
 
 (* We obviously get false from that. *)
-let falso () : Lemma (~(exists (r:ras). True)) =
-  let aux (r:ras) : Lemma (True ==> False) = diag r in
+let falso () : Lemma (~(exists (r:ras u#0). True)) =
+  let aux (r:ras u#0) : Lemma (True ==> False) = diag r in
   Classical.forall_to_exists aux

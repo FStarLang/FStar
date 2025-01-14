@@ -189,11 +189,11 @@ val mk (#a:_) (#p:_) (#q:_) (b:B.mbuffer a p q) (f:flavor b) (snap:HS.mem{B.live
   : Tot (l:buffer_lens b f{(lens_of l).snapshot == snap})
 
 /// `elim_inv`: Revealing the abstract invariant of buffer lenses
-val elim_inv (#a:_) (#p:_) (#q:_) 
+val elim_inv (#a:Type) (#p:_) (#q:_) 
              (#b:B.mbuffer a p q)
              (#f:flavor b)
              (bl:buffer_lens b f)
-  : Lemma (reveal_inv();
+  : Lemma (reveal_inv u#0 u#0 ();
           (forall (h:HS.mem).{:pattern (lens_of bl).invariant (lens_of bl).x h}
            let l = lens_of bl in
            (exists h'.{:pattern mk b f h'} B.live h' b /\ bl == mk b f h') /\

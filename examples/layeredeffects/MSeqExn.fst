@@ -124,9 +124,9 @@ let lift_pure_wp (#a:Type) (wp:pure_wp a) : wp_t a =
   FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
   fun p s0 -> wp (fun x -> p (Success x) s0)
 
-let lift_pure_mseqexn (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
+let lift_pure_mseqexn (a:Type u#a) (wp:pure_wp a) (f:unit -> PURE a wp)
 : repr a (lift_pure_wp wp)
-= elim_pure_wp_monotonicity_forall (); fun s0 -> Success (f ()), s0
+= elim_pure_wp_monotonicity_forall u#a (); fun s0 -> Success (f ()), s0
 
 sub_effect PURE ~> MSeqEXN = lift_pure_mseqexn
 
