@@ -41,7 +41,6 @@ cp version.txt "${PREFIX}"
 cp -H -r src "${PREFIX}/src"
 cp .scripts/get_fstar_z3.sh "${PREFIX}/get_fstar_z3.sh"
 cp fstar.opam "${PREFIX}/fstar.opam"
-cp mk/src_package_mk.mk "${PREFIX}/Makefile"
 mkdir "${PREFIX}/mk"
 cp mk/lib.mk "${PREFIX}/mk/lib.mk"
 cp mk/common.mk "${PREFIX}/mk/common.mk"
@@ -53,6 +52,16 @@ cp .scripts/bin-install.sh  "${PREFIX}/.scripts"
 cp .scripts/mk-package.sh   "${PREFIX}/.scripts"
 cp .scripts/get_fstar_z3.sh "${PREFIX}/.scripts"
 cp .scripts/package_z3.sh   "${PREFIX}/.scripts"
+
+cp mk/src_package_mk.mk "${PREFIX}/Makefile"
+
+# Make sure the source package has a proper version.
+FSTAR_COMMIT=$(git describe --match="" --always --abbrev=40 --dirty 2>/dev/null || echo unset)
+FSTAR_COMMITDATE=$(git log --pretty=format:%ci -n 1 2>/dev/null || echo unset)
+# NB: ^ has to be in-sync with make_fstar_version.sh
+echo "## LINES BELOW ADDED BY src-install.sh" >> "${PREFIX}/Makefile"
+echo "export FSTAR_COMMITDATE=$FSTAR_COMMITDATE" >> "${PREFIX}/Makefile"
+echo "export FSTAR_COMMIT=$FSTAR_COMMIT" >> "${PREFIX}/Makefile"
 
 # Remove extra ML files, rsync has resolved the links
 # into the corresponding files already, and these would be
