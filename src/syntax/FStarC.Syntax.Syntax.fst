@@ -626,6 +626,11 @@ instance hasRange_binder : hasRange binder = {
   setPos = (fun r b -> { b with binder_bv = setPos r b.binder_bv });
 }
 
+instance hasRange_letbinding : hasRange letbinding = {
+  pos = (fun lb -> lb.lbpos);
+  setPos = (fun r lb -> { lb with lbpos = r });
+}
+
 instance showable_lazy_kind = {
   show = (function
           | BadLazy -> "BadLazy"

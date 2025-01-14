@@ -941,6 +941,7 @@ instance val has_range_sigelt : hasRange sigelt
 instance val hasRange_fv : hasRange fv
 instance val hasRange_bv     : hasRange bv
 instance val hasRange_binder : hasRange binder
+instance val hasRange_letbinding : hasRange letbinding
 
 instance val showable_emb_typ : showable emb_typ
 instance val showable_delta_depth : showable delta_depth
