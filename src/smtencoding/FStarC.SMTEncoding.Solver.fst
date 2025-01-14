@@ -55,10 +55,6 @@ let dbg_SMTFail  = Debug.get_toggle "SMTFail"
 // The type definition is now in [FStarC.Compiler.Util], since it needs to be visible to
 // both the F# and OCaml implementations.
 
-type z3_replay_result = either (option UC.unsat_core), error_labels
-let z3_result_as_replay_result = function
-    | Inl l -> Inl l
-    | Inr (r, _) -> Inr r
 let recorded_hints : ref (option hints) = BU.mk_ref None
 let replaying_hints: ref (option hints) = BU.mk_ref None
 
