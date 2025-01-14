@@ -1,7 +1,4 @@
-name: Build F* (Linux)
-
-# This builds F* for Linux for a binary package release.
-# See build.yml for the build used in normal CI runs.
+name: Build F* (src)
 
 on:
   workflow_call:
@@ -18,6 +15,14 @@ jobs:
     # all more recent versions.
     steps:
       - uses: actions/checkout@master
+        id: checkout
+
+      - name: Check cache
+        id: check-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: fstar-src.tar.gz
+          key: FStar-src-${{steps.checkout.outputs.commit}}
 
       - uses: ocaml/setup-ocaml@v3
         with:
@@ -41,22 +46,22 @@ jobs:
           fi
 
       # NB: release workflow later adds version number to the name
-      - name: Build packages
+      - name: Build package
+        if: steps.check-cache.outputs.cache-hit != 'true'
         run: |
           eval $(opam env)
-          KERNEL=$(uname -s)
-          ARCH=$(uname -m)
-          export FSTAR_TAG=-$KERNEL-$ARCH
-          make -skj$(nproc) package
-          # Currently creating the source package in a separate job
-          # make -skj$(nproc) package-src FSTAR_TAG=
-          # # ^ no tag in source package
+          export FSTAR_TAG=
+          # ^ no tag in source package
+          make -skj$(nproc) package-src ADMIT=1
+
+      - name: Save
+        if: steps.check-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: fstar-src.tar.gz
+          key: FStar-src-${{steps.checkout.outputs.commit}}
 
       - uses: actions/upload-artifact@v4
         with:
-          path: fstar-Linux-*
-          name: package-linux
-      # - uses: actions/upload-artifact@v4
-      #   with:
-      #     path: fstar-src.tar.gz
-      #     name: package-src
+          path: fstar-src.tar.gz
+          name: package-src
