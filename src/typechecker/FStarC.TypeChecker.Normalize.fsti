@@ -73,8 +73,10 @@ val has_extract_as_attr : Env.env -> Ident.lid -> option term
 val reflection_env_hook : ref (option Env.env)
 
 (* Destructs the term as an arrow type and returns its binders and
-computation type. Only grabs up to [n] binders, and normalizes only as
-needed to discover the shape of the arrow. The binders are opened. *)
+computation type. If [n] is non-negative, this function only grabs up to
+[n] binders, and normalizes only as needed to discover the shape of the
+arrow. If [n] is negative it will keep unfolding and normalizing until
+it is no longer possible. The returned binders are opened. *)
 val get_n_binders : Env.env -> int -> term -> list binder & comp
 
 val maybe_unfold_head : Env.env -> term -> option term
