@@ -1,11 +1,7 @@
 # This makefile is for OCaml source distributions.
 #
-# FSTAR_DUNE_OPTIONS += --no-print-directory
-# FSTAR_DUNE_OPTIONS += --display=quiet
-#
-# Also note: this Makefile should run in Windows too. Some
-# of the $(call cygpath, ..) below are in support of this. Example
-# windows error:
+# Also note: this Makefile should run in Windows too. Some of the $(call
+# cygpath, ..) below are in support of this. Example windows error:
 #
 # ...
 # dune install --root=dune --prefix=/cygdrive/d/a/FStar/FStar/fstar/out
@@ -22,14 +18,31 @@
 #
 # I think this is probably a dune bug.
 
+# NOTE: (Guido 2025-01-13) For whatever undebuggable reason, Cygwin make
+# (version 4.4.1-1 at least) to (sometimes) freeze , and halt the build.
+# Not running this makefile (and sub-makes) in parallel *seems* to help,
+# though obviously makes this significantly slower in Windows.
+ifeq ($(OS),Windows_NT)
+.NOTPARALLEL:
+MAYBEJ1=-j1
+else
+MAYBEJ1=
+endif
+
 include mk/common.mk
+
+FSTAR_DUNE_OPTIONS += --no-print-directory
+FSTAR_DUNE_OPTIONS += --display=quiet
 
 FSTAR_DUNE_BUILD_OPTIONS := $(FSTAR_DUNE_OPTIONS)
 .DEFAULT_GOAL:= all
 
-.PHONY: _force
-_force:
+.PHONY: .force
+.force:
 
+# In some places, we need to compute absolute paths, and in a Cygwin
+# enviroment we need Windows-style paths (forward slashes ok, but no
+# /cygdrive/).
 ifeq ($(OS),Windows_NT)
 cygpath=$(shell cygpath -m "$(abspath $(1))")
 else
@@ -54,19 +67,13 @@ check_lib: install_bin
 	  CODEGEN=none \
 	  OUTPUT_DIR=none \
 	  FSTAR_ROOT=$(CURDIR) \
-	  $(MAKE) -f mk/lib.mk verify
-
-ifeq ($(OS),Windows_NT)
-vv=-v
-else
-vv=
-endif
+	  $(MAKE) -f mk/lib.mk verify $(MAYBEJ1)
 
 install_lib: check_lib
 	$(call msg, "INSTALL LIB")
 	@# Install library and its checked files
-	cp $(vv) -T -H -p -r ulib out/lib/fstar/ulib
-	cp $(vv) -T -H -p -r ulib.checked out/lib/fstar/ulib.checked
+	cp -T -H -p -r ulib out/lib/fstar/ulib
+	cp -T -H -p -r ulib.checked out/lib/fstar/ulib.checked
 	echo 'ulib'          > out/lib/fstar/fstar.include
 	echo 'ulib.checked' >> out/lib/fstar/fstar.include
 
@@ -81,19 +88,20 @@ check_fstarc: install_bin
 	  TAG=fstarc \
 	  FSTAR_LIB=$(call cygpath,ulib) \
 	  FSTAR_ROOT=$(CURDIR) \
-	  $(MAKE) -f mk/fstar-12.mk all-checked
+	  $(MAKE) -f mk/fstar-12.mk verify $(MAYBEJ1)
+	$(call msg, "DONE CHECK FSTARC")
 
 install_fstarc: check_fstarc
 	$(call msg, "INSTALL FSTARC")
 	@# Install checked files for FStarC
 	mkdir -p out/lib/fstar/fstarc/
-	cp $(vv) -T -H -p -r src               out/lib/fstar/fstarc/src
-	cp $(vv) -T -H -p -r fstarc.checked    out/lib/fstar/fstarc/src.checked
+	cp -T -H -p -r src               out/lib/fstar/fstarc/src
+	cp -T -H -p -r fstarc.checked    out/lib/fstar/fstarc/src.checked
 	echo 'src'          > out/lib/fstar/fstarc/fstar.include
 	echo 'src.checked' >> out/lib/fstar/fstarc/fstar.include
 
-trim: _force
-	@echo DUNE CLEAN
+trim: .force
+	$(call msg, "DUNE CLEAN")
 	dune clean $(FSTAR_DUNE_OPTIONS) --root=dune
 
 clean: trim
@@ -116,6 +124,7 @@ install: install_lib install_fstarc
 	cp -r out/* $(PREFIX)
 
 package:
-	$(MAKE) install PREFIX=fstar
-	.scripts/bin-install.sh fstar
-	.scripts/mk-package.sh fstar fstar$(FSTAR_TAG)
+	mkdir pkgtmp
+	$(MAKE) install PREFIX=pkgtmp/fstar
+	.scripts/bin-install.sh pkgtmp/fstar
+	.scripts/mk-package.sh pkgtmp fstar$(FSTAR_TAG)
