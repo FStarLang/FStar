@@ -28,7 +28,7 @@ FSTAR_FILES += $(filter-out $(FLAKY), \
 endif
 endif
 
-WITH_CACHE_DIR=--cache_dir .cache --hint_dir .hints
+WITH_CACHE_DIR=--cache_dir .cache
 
 # 271 -> pattern uses theory symbols
 # 330 -> experimental feature
@@ -43,7 +43,6 @@ include gmake/Makefile.tmpl
 # Default rule is verify-all, defined in gmake/Makefile.tmpl
 
 %.fst-in:
-	@echo --use_hints --hint_info
 
 #turn off 271 (pattern uses theory symbols warning), to be fixed soon
 %FStar.UInt.fsti.checked: OTHERFLAGS+=--warn_error -271

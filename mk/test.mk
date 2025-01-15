@@ -27,8 +27,6 @@ FSTAR_EXE ?= $(FSTAR_ROOT)/out/bin/fstar.exe
 FSTAR_EXE := $(abspath $(FSTAR_EXE))
 export FSTAR_EXE
 
-HINTS_ENABLED?=--use_hints
-
 # This warning is really useless.
 OTHERFLAGS += --warn_error -321
 OTHERFLAGS += --ext context_pruning
@@ -50,7 +48,7 @@ FSTAR = $(FSTAR_EXE) $(SIL) 				\
 	--odir $(OUTPUT_DIR)				\
 	--cache_dir $(CACHE_DIR)			\
 	--already_cached Prims,FStar,LowStar		\
-	 $(OTHERFLAGS) $(MAYBE_ADMIT) $(HINTS_ENABLED)
+	 $(OTHERFLAGS) $(MAYBE_ADMIT)
 
 ifneq ($(MAKECMDGOALS),clean)
 ifeq ($(NODEPEND),) # Set NODEPEND=1 to not dependency analysis

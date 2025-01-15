@@ -1,4 +1,3 @@
-HINTS_ENABLED?=--use_hints
 WARN_ERROR=
 OTHERFLAGS+=$(WARN_ERROR)
 OTHERFLAGS+=--z3version 4.13.3
@@ -20,7 +19,7 @@ else
 # FSTAR_HOME not defined, assume fstar.exe reachable from PATH
 FSTAR_EXE?=fstar.exe
 endif
-FSTAR=$(FSTAR_EXE) $(OTHERFLAGS) $(MAYBE_ADMIT) $(HINTS_ENABLED) $(WITH_CACHE_DIR)
+FSTAR=$(FSTAR_EXE) $(OTHERFLAGS) $(MAYBE_ADMIT) $(WITH_CACHE_DIR)
 
 # Benchmarking wrappers are enabled by setting BENCHMARK_CMD, for example:
 #  make -C tests/micro-benchmarks BENCHMARK_CMD=time
