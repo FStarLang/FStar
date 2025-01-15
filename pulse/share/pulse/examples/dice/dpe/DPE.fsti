@@ -229,7 +229,26 @@ let mk_frame_preserving_upd
   (t:hist trace_preorder)
   (s:g_session_state { valid_transition t s })
   : FStar.PCM.frame_preserving_upd trace_pcm (Some 1.0R, t) (Some 1.0R, next_trace t s) =
-  fun _ -> Some 1.0R, next_trace t s
+  fun v -> 
+    assert (trace_pcm.refine v);
+    assert (FStar.PCM.compatible trace_pcm (Some 1.0R, t) v);
+    let v_new = Some 1.0R, next_trace t s in
+    assert (trace_pcm.refine v_new);
+    FStar.PCM.compatible_refl trace_pcm v_new;
+    assert (FStar.PCM.compatible trace_pcm (Some 1.0R, next_trace t s) v_new);
+    let x = Some 1.0R, t in
+    let y = Some 1.0R, next_trace t s in
+    let p = trace_pcm in
+    let open FStar.PCM in
+    introduce 
+      forall (frame:_{composable p x frame}).
+       composable p y frame /\
+       (op p x frame == v ==> op p y frame == v_new)
+    with (
+      assert (composable p x frame);
+      assert (fst frame == None)
+    );
+    v_new
 
 //
 // A snapshot of the trace PCM is the trace with no permission

@@ -216,7 +216,8 @@ let parse_dpe_cmd_post
       )
 
 
-
+#push-options "--z3rlimit_factor 2 --fuel 2 --ifuel 1 --query_stats"
+#restart-solver
 fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
                  (#p:perm)
                  (len:SZ.t)
