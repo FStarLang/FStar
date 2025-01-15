@@ -14,13 +14,13 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Syntax
-open FStarC.Compiler.Effect
+open FStarC.Effect
 (* Type definitions for the core AST *)
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
-open FStarC.Compiler.Range
+open FStarC
+open FStarC.Util
+open FStarC.Range
 open FStarC.Ident
 open FStarC.Dyn
 open FStarC.Const

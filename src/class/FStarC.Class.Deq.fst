@@ -1,6 +1,6 @@
 module FStarC.Class.Deq
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 let (<>?) x y = not (x =? y)
 

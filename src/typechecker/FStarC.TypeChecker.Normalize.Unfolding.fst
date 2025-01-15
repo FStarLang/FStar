@@ -1,16 +1,16 @@
 module FStarC.TypeChecker.Normalize.Unfolding
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC
+open FStarC.Effect
+open FStarC.List
 open FStarC.TypeChecker.Cfg
 open FStarC.TypeChecker.Env
 open FStarC.Syntax.Print
 
 module Common = FStarC.TypeChecker.Common
-module BU = FStarC.Compiler.Util
-module Path = FStarC.Compiler.Path
+module BU = FStarC.Util
+module Path = FStarC.Path
 module PC = FStarC.Parser.Const
 module Print = FStarC.Syntax.Print
 module S = FStarC.Syntax.Syntax

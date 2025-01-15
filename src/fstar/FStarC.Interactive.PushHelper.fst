@@ -19,11 +19,11 @@
 
 module FStarC.Interactive.PushHelper
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.Util
+open FStarC.Effect
+open FStarC.List
+open FStarC.Util
 open FStarC.Ident
 open FStarC.Errors
 open FStarC.Universal
@@ -32,7 +32,7 @@ open FStarC.TypeChecker.Env
 open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.Ide.Types
 
-module U = FStarC.Compiler.Util
+module U = FStarC.Util
 module SS = FStarC.Syntax.Syntax
 module DsEnv = FStarC.Syntax.DsEnv
 module TcErr = FStarC.TypeChecker.Err

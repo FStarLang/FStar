@@ -16,17 +16,17 @@
 
 module FStarC.TypeChecker.Rel
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.TypeChecker
 open FStarC.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Common
-open FStarC.Compiler.Range
+open FStarC.Range
 open FStarC.Class.Show
 
 type match_result =

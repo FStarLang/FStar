@@ -15,10 +15,9 @@
 *)
 
 module FStarC.SMTEncoding.Util
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 open FStarC
-open FStarC.Compiler
 open FStarC.TypeChecker.Env
 open FStarC.Syntax.Syntax
 open FStarC.SMTEncoding.Term

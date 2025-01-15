@@ -2,10 +2,10 @@ module FStarC.TypeChecker.Cfg
 
 open FStar open FStarC
 open FStar.Char
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.String
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.String
 open FStarC.Const
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -16,7 +16,7 @@ open FStarC.Class.Show
 
 module S   = FStarC.Syntax.Syntax
 module SS  = FStarC.Syntax.Subst
-module BU  = FStarC.Compiler.Util
+module BU  = FStarC.Util
 module FC  = FStarC.Const
 module PC  = FStarC.Parser.Const
 module U   = FStarC.Syntax.Util

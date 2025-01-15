@@ -1,6 +1,6 @@
 module FStarC.Class.Listlike
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 type view_t e s =
   | VNil  : view_t e s

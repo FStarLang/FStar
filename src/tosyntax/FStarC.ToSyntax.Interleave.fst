@@ -14,13 +14,13 @@
   limitations under the License.
 *)
 module FStarC.ToSyntax.Interleave
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 //Reorders the top-level definitions/declarations in a file
 //in a proper order for consistent type-checking
 
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Ident
 open FStarC.Errors
 open FStarC.Syntax.Syntax
@@ -29,7 +29,7 @@ open FStarC.Class.Show
 open FStarC.Pprint
 open FStarC.Class.PP
 
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 (* Some basic utilities *)
 let id_eq_lid i (l:lident) = (string_of_id i) = (string_of_id (ident_of_lid l))
@@ -421,7 +421,7 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
                 impls
         in
         let iface_lets, remaining_iface_vals =
-            match FStarC.Compiler.Util.prefix_until (function {d=Val _} -> true
+            match FStarC.Util.prefix_until (function {d=Val _} -> true
                                                            | {d=Splice _} -> true
             | _ -> false) iface with
             | None -> iface, []

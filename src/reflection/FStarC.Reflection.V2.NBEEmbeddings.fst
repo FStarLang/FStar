@@ -15,25 +15,25 @@
 *)
 module FStarC.Reflection.V2.NBEEmbeddings
 open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStar.Pervasives
 open FStarC.Reflection.V2.Data
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.NBETerm
-open FStarC.Compiler.Order
+open FStarC.Order
 open FStarC.Errors
 open FStarC.Dyn
 open FStarC.Reflection.V2.Constants
 
-module BU      = FStarC.Compiler.Util
+module BU      = FStarC.Util
 module Env     = FStarC.TypeChecker.Env
 module Err     = FStarC.Errors
 module I       = FStarC.Ident
 module NBETerm = FStarC.TypeChecker.NBETerm
 module O       = FStarC.Options
 module PC      = FStarC.Parser.Const
-module Range   = FStarC.Compiler.Range
+module Range   = FStarC.Range
 module S       = FStarC.Syntax.Syntax // TODO: remove, it's open
 module SS      = FStarC.Syntax.Subst
 module U       = FStarC.Syntax.Util

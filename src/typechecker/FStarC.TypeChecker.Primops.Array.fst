@@ -1,8 +1,8 @@
 module FStarC.TypeChecker.Primops.Array
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStarC.Errors
 open FStarC.Class.Monad
 open FStarC.Syntax.Syntax
@@ -10,7 +10,7 @@ open FStarC.Syntax.Embeddings
 
 open FStarC.TypeChecker.Primops.Base
 
-module BU      = FStarC.Compiler.Util
+module BU      = FStarC.Util
 module EMB     = FStarC.Syntax.Embeddings
 module NBETerm = FStarC.TypeChecker.NBETerm
 module PC      = FStarC.Parser.Const

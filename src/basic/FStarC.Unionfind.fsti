@@ -15,7 +15,7 @@
 *)
 module FStarC.Unionfind
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 type puf 'a
 type p_uvar 'a

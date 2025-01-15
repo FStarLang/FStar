@@ -16,12 +16,12 @@
 
 module FStarC.Syntax.Print.Ugly
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Syntax
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Subst
 open FStarC.Ident
@@ -32,7 +32,7 @@ open FStarC.Class.Tagged
 open FStarC.Class.Show
 
 module Errors     = FStarC.Errors
-module U          = FStarC.Compiler.Util
+module U          = FStarC.Util
 module A          = FStarC.Parser.AST
 module Unionfind  = FStarC.Syntax.Unionfind
 module C          = FStarC.Parser.Const

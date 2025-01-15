@@ -17,8 +17,8 @@
 *)
 module FStarC.Parser.AST.Util
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStarC.Parser.AST
 
 (* Check if two decls are equal, ignoring range metadata.
@@ -37,19 +37,19 @@ type open_namespaces_and_abbreviations = {
 
 type error_message = {
    message: string;
-   range: FStarC.Compiler.Range.range;
+   range: FStarC.Range.range;
 }
 
 type extension_parser = {
   parse_decl_name:
     (contents:string ->
-     FStarC.Compiler.Range.range ->
+     FStarC.Range.range ->
      either error_message FStarC.Ident.ident);
 
   parse_decl:
    (open_namespaces_and_abbreviations ->
     contents:string ->
-    p:FStarC.Compiler.Range.range ->
+    p:FStarC.Range.range ->
     either error_message decl)
 }
 
@@ -60,11 +60,11 @@ val lookup_extension_parser (extension_name:string) : option extension_parser
 type extension_lang_parser = {
   parse_decls:
    (contents:string ->
-    p:FStarC.Compiler.Range.range ->
+    p:FStarC.Range.range ->
     either error_message (list decl))
 }
 
 val as_open_namespaces_and_abbrevs (ls:list decl) : open_namespaces_and_abbreviations
 val register_extension_lang_parser (extension_name:string) (parser:extension_lang_parser) : unit
 val lookup_extension_lang_parser (extension_name:string) : option extension_lang_parser
-val parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:FStarC.Compiler.Range.range) : list decl
+val parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:FStarC.Range.range) : list decl

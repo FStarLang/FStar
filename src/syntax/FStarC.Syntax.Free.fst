@@ -16,15 +16,15 @@
 module FStarC.Syntax.Free
 open Prims
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
-module Util = FStarC.Compiler.Util
+module Util = FStarC.Util
 module UF = FStarC.Syntax.Unionfind
 
 open FStarC.Class.Ord

@@ -16,11 +16,11 @@
 (* -------------------------------------------------------------------- *)
 
 module FStarC.Extraction.Krml
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Extraction
 open FStarC.Extraction.ML
 open FStarC.Extraction.ML.Syntax
@@ -32,7 +32,7 @@ open FStarC.Class.Show
 open FStarC.Class.PP
 open FStarC.Pprint
 
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module FC = FStarC.Const
 
 (** CHANGELOG

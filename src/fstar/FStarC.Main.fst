@@ -15,14 +15,14 @@
 *)
 module FStarC.Main
 open FStarC
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.Util
+open FStarC.Effect
+open FStarC.List
+open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.CheckedFiles
 open FStarC.Universal
-open FStarC.Compiler
+open FStarC
 
 open FStarC.Class.Show
 
@@ -366,7 +366,7 @@ let main () =
     let _, time = Util.record_time_ms go in
     if FStarC.Options.query_stats()
     then Util.print2_error "TOTAL TIME %s ms: %s\n"
-              (FStarC.Compiler.Util.string_of_int time)
+              (FStarC.Util.string_of_int time)
               (String.concat " " (FStarC.Getopt.cmdline()));
     cleanup ();
     exit 0

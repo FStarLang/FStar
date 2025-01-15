@@ -15,8 +15,8 @@
 *)
 module FStarC.Defensive
 
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Range
+open FStarC.Effect
+open FStarC.Range
 open FStarC.Class.Binders
 open FStarC.Class.PP
 

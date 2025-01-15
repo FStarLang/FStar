@@ -17,14 +17,14 @@
 *)
 module FStarC.TypeChecker.TcInductive
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Errors
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Env
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Ident
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -39,7 +39,7 @@ module SS = FStarC.Syntax.Subst
 module N  = FStarC.TypeChecker.Normalize
 module TcUtil = FStarC.TypeChecker.Util
 module Gen = FStarC.TypeChecker.Generalize
-module BU = FStarC.Compiler.Util //basic util
+module BU = FStarC.Util //basic util
 module U  = FStarC.Syntax.Util
 module PP = FStarC.Syntax.Print
 module C  = FStarC.Parser.Const

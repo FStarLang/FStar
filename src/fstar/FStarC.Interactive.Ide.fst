@@ -16,11 +16,10 @@
 
 module FStarC.Interactive.Ide
 open FStarC
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler
-open FStarC.Compiler.Range
-open FStarC.Compiler.Util
+open FStarC.Effect
+open FStarC.List
+open FStarC.Range
+open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors
@@ -28,7 +27,7 @@ open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.QueryHelper
 open FStarC.Interactive.PushHelper
 open FStarC.Interactive.Ide.Types
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 let dbg = Debug.get_toggle "IDE"
 
@@ -1237,7 +1236,7 @@ let interactive_printer printer =
                          forward_message printer label (get_json ())) }
 
 let install_ide_mode_hooks printer =
-  FStarC.Compiler.Util.set_printer (interactive_printer printer);
+  FStarC.Util.set_printer (interactive_printer printer);
   FStarC.Errors.set_handler interactive_error_handler
 
 

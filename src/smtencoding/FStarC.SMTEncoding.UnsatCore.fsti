@@ -14,9 +14,9 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.UnsatCore
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.SMTEncoding.Term
 
 type unsat_core = list string

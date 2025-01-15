@@ -16,7 +16,7 @@
    limitations under the License.
 *)
 module FStarC.Thunk
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 type thunk (a:Type) : Type = ref (either (unit -> a) a)
 

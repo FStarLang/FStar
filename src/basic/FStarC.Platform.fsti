@@ -1,5 +1,5 @@
 module FStarC.Platform
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 type sys =
 | Windows

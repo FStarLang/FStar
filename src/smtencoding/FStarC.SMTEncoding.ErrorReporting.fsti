@@ -15,16 +15,16 @@
 *)
 
 module FStarC.SMTEncoding.ErrorReporting
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.BaseTypes
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.SMTEncoding.Term
 open FStarC.SMTEncoding.Util
 open FStarC.SMTEncoding
-open FStarC.Compiler.Range
-module BU = FStarC.Compiler.Util
+open FStarC.Range
+module BU = FStarC.Util
 
 type label = error_label
 type labels = list label

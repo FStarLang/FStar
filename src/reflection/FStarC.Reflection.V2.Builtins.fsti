@@ -15,9 +15,9 @@
 *)
 module FStarC.Reflection.V2.Builtins
 
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Order
+open FStarC
+open FStarC.Effect
+open FStarC.Order
 open FStarC.Reflection.V2.Data
 open FStarC.Syntax.Embeddings
 open FStarC.Syntax.Syntax

@@ -4,16 +4,16 @@ module FStarC.TypeChecker.Primops
 with their implementations. *)
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC
+open FStarC.Effect
+open FStarC.List
 open FStar.String
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Class.Monad
 
 module S  = FStarC.Syntax.Syntax
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module PC = FStarC.Parser.Const
 module EMB = FStarC.Syntax.Embeddings
 module Z = FStarC.BigInt

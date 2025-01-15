@@ -16,7 +16,7 @@
 
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStarC.Parser.ToDocument
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 val term_to_document : FStarC.Parser.AST.term -> FStarC.Pprint.document
 val decl_to_document   : FStarC.Parser.AST.decl -> FStarC.Pprint.document
@@ -24,7 +24,7 @@ val signature_to_document : FStarC.Parser.AST.decl -> FStarC.Pprint.document
 val pat_to_document : FStarC.Parser.AST.pattern -> FStarC.Pprint.document
 val binder_to_document : FStarC.Parser.AST.binder -> FStarC.Pprint.document
 val modul_to_document  : FStarC.Parser.AST.modul -> FStarC.Pprint.document
-val comments_to_document : list (string & FStarC.Compiler.Range.range) -> FStarC.Pprint.document
-val modul_with_comments_to_document : FStarC.Parser.AST.modul -> list (string & FStarC.Compiler.Range.range) -> FStarC.Pprint.document & list (string & FStarC.Compiler.Range.range)
+val comments_to_document : list (string & FStarC.Range.range) -> FStarC.Pprint.document
+val modul_with_comments_to_document : FStarC.Parser.AST.modul -> list (string & FStarC.Range.range) -> FStarC.Pprint.document & list (string & FStarC.Range.range)
 val handleable_args_length : FStarC.Ident.ident -> int
-val decl_with_comments_to_document : FStarC.Parser.AST.decl -> list (string & FStarC.Compiler.Range.range) -> FStarC.Pprint.document & list (string & FStarC.Compiler.Range.range)
+val decl_with_comments_to_document : FStarC.Parser.AST.decl -> list (string & FStarC.Range.range) -> FStarC.Pprint.document & list (string & FStarC.Range.range)

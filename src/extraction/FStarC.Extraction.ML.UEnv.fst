@@ -37,18 +37,18 @@ module FStarC.Extraction.ML.UEnv
  *)
 
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Ident
 open FStarC.Extraction.ML.Syntax
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker
 module U  = FStarC.Syntax.Util
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module Const = FStarC.Parser.Const
 
 open FStarC.Class.Show
@@ -688,7 +688,7 @@ let new_uenv (e:TypeChecker.Env.env)
       currentModule = ([], "");
     } in
     (* We handle [failwith] specially, extracting it to OCaml's 'failwith'
-       rather than FStarC.Compiler.Effect.failwith. Not sure this is necessary *)
+       rather than FStarC.Effect.failwith. Not sure this is necessary *)
     let a = "'a" in
     let failwith_ty = ([{ty_param_name=a; ty_param_attrs=[]}],
                         MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in

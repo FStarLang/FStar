@@ -17,17 +17,17 @@ module FStarC.Syntax.Formula
 
 open Prims
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Ident
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Print
 
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module PC = FStarC.Parser.Const
 module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst

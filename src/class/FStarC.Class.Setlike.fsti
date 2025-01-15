@@ -1,6 +1,6 @@
 module FStarC.Class.Setlike
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Class.Ord
 
 [@@Tactics.Typeclasses.fundeps [0]]

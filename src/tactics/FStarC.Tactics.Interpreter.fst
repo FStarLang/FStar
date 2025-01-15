@@ -20,11 +20,11 @@ module FStarC.Tactics.Interpreter
 into this module for all of that. *)
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.Range
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.Range
+open FStarC.Util
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStarC.TypeChecker.Common
@@ -41,7 +41,7 @@ open FStarC.Class.PP
 open FStarC.Class.Monad
 module Listlike = FStarC.Class.Listlike
 
-module BU      = FStarC.Compiler.Util
+module BU      = FStarC.Util
 module Cfg     = FStarC.TypeChecker.Cfg
 module E       = FStarC.Tactics.Embedding
 module Env     = FStarC.TypeChecker.Env
@@ -211,7 +211,7 @@ let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_
 
 let unembed_tactic_1 (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : 'a -> tac 'r =
     fun x ->
-      let rng = FStarC.Compiler.Range.dummyRange  in
+      let rng = FStarC.Range.dummyRange  in
       let x_tm = embed rng x ncb in
       let app = S.mk_Tm_app f [as_arg x_tm] rng in
       unembed_tactic_0 er app ncb
@@ -252,7 +252,7 @@ let e_tactic_nbe_1 (ea : NBET.embedding 'a) (er : NBET.embedding 'r) : NBET.embe
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =
     Some (fun x ->
-      let rng = FStarC.Compiler.Range.dummyRange  in
+      let rng = FStarC.Range.dummyRange  in
       let x_tm = embed rng x ncb in
       let app = S.mk_Tm_app f [as_arg x_tm] rng in
       unembed_tactic_0 er app ncb)

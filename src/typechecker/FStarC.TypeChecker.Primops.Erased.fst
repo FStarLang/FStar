@@ -1,9 +1,9 @@
 module FStarC.TypeChecker.Primops.Erased
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC
+open FStarC.Effect
+open FStarC.List
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker
 open FStarC.Class.Monad

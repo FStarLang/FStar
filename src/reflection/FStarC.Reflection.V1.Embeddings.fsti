@@ -15,7 +15,7 @@
 *)
 module FStarC.Reflection.V1.Embeddings
 
-open FStar open FStarC.Compiler
+open FStar open FStarC
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStar.Order

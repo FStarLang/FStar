@@ -15,14 +15,14 @@
 *)
 module FStarC.TypeChecker.TcEffect
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Syntax
 open FStarC.TypeChecker
 
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Ident
 open FStarC.Errors
 open FStarC.Syntax.Syntax
@@ -40,7 +40,7 @@ module TcUtil = FStarC.TypeChecker.Util
 module Gen = FStarC.TypeChecker.Generalize
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 open FStarC.Class.Show
 open FStarC.Class.Tagged
 

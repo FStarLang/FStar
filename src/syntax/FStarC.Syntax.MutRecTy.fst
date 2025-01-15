@@ -16,17 +16,17 @@
 
 module FStarC.Syntax.MutRecTy
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Errors
 open FStarC.Syntax.InstFV
 module S = FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
-module U = FStarC.Compiler.Util
+module U = FStarC.Util
 
 
 
@@ -42,7 +42,7 @@ let disentangle_abbrevs_from_bundle
     (sigelts: list sigelt)
     (quals:   list qualifier)
     (members: list lident)
-    (rng:   FStarC.Compiler.Range.range)
+    (rng:   FStarC.Range.range)
     : sigelt & list sigelt =
 
    (* NS: Attributes on the type constructors and abbreviation are gathered,
@@ -131,7 +131,7 @@ let disentangle_abbrevs_from_bundle
                 | None ->
                   begin match U.find_map type_abbrev_sigelts replacee with
                       | Some se ->
-                          if FStarC.Compiler.List.existsb (fun x -> lid_equals x fv.fv_name.v) !in_progress
+                          if FStarC.List.existsb (fun x -> lid_equals x fv.fv_name.v) !in_progress
                           then let msg = U.format1 "Cycle on %s in mutually recursive type abbreviations" (string_of_lid fv.fv_name.v) in
                                raise_error fv.fv_name.v Errors.Fatal_CycleInRecTypeAbbreviation msg
                           else unfold_abbrev se
@@ -174,7 +174,7 @@ let disentangle_abbrevs_from_bundle
       (* Now, unfold in inductive types and data constructors *)
 
       let filter_out_type_abbrevs l =
-          List.filter (fun lid -> FStarC.Compiler.List.for_all (fun lid' -> not (lid_equals lid lid')) type_abbrevs) l
+          List.filter (fun lid -> FStarC.List.for_all (fun lid' -> not (lid_equals lid lid')) type_abbrevs) l
       in
 
       let inductives_with_abbrevs_unfolded =

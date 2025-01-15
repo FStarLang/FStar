@@ -1,9 +1,9 @@
 module FStarC.TypeChecker.TermEqAndSimplify
 open FStarC
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC.Effect
+open FStarC
+open FStarC.Util
 open FStarC.Syntax
 open FStarC.Const
 open FStarC.Ident
@@ -14,7 +14,7 @@ module SS = FStarC.Syntax.Subst
 module U = FStarC.Syntax.Util
 module PC = FStarC.Parser.Const
 module S = FStarC.Syntax.Syntax
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 open FStarC.Class.Tagged
 open FStarC.Class.Show

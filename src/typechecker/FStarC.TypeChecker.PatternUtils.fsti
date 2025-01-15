@@ -15,10 +15,10 @@
 *)
 
 module FStarC.TypeChecker.PatternUtils
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Errors
 open FStarC.TypeChecker
 open FStarC.Syntax

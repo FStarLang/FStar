@@ -17,10 +17,10 @@ module FStarC.Find
 
 open FStar
 open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-module BU = FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.List
+module BU = FStarC.Util
 open FStarC.Class.Show
 
 let fstar_bin_directory : string =

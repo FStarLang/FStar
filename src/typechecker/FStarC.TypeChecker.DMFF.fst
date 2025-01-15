@@ -15,14 +15,14 @@
 *)
 module FStarC.TypeChecker.DMFF
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Ident
 open FStarC.Errors
 open FStarC.Syntax
@@ -49,7 +49,7 @@ module N  = FStarC.TypeChecker.Normalize
 module TcComm = FStarC.TypeChecker.Common
 module TcUtil = FStarC.TypeChecker.Util
 module TcTerm = FStarC.TypeChecker.TcTerm
-module BU = FStarC.Compiler.Util //basic util
+module BU = FStarC.Util //basic util
 module U  = FStarC.Syntax.Util
 module PC = FStarC.Parser.Const
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify

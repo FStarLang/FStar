@@ -16,9 +16,9 @@
 
 module FStarC.CheckedFiles
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.Util
 
 open FStarC.Class.Show
 
@@ -26,7 +26,7 @@ open FStarC.Class.Show
 module Syntax  = FStarC.Syntax.Syntax
 module TcEnv   = FStarC.TypeChecker.Env
 module SMT     = FStarC.SMTEncoding.Solver
-module BU      = FStarC.Compiler.Util
+module BU      = FStarC.Util
 module Dep     = FStarC.Parser.Dep
 
 let dbg = Debug.get_toggle "CheckedFiles"
@@ -138,7 +138,7 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & 
          not (Dep.is_interface fn &&
               Dep.lowercase_module_name fn = module_name)) in
   let binary_deps =
-    FStarC.Compiler.List.sortWith
+    FStarC.List.sortWith
       (fun fn1 fn2 ->
        String.compare (Dep.lowercase_module_name fn1)
                       (Dep.lowercase_module_name fn2))
@@ -482,8 +482,8 @@ let store_module_to_cache env fn parsing_data tc_result =
       let open FStarC.Errors in
       let open FStarC.Errors.Msg in
       let open FStarC.Pprint in
-      log_issue (FStarC.Compiler.Range.mk_range fn (FStarC.Compiler.Range.mk_pos 0 0)
-                                 (FStarC.Compiler.Range.mk_pos 0 0))
+      log_issue (FStarC.Range.mk_range fn (FStarC.Range.mk_pos 0 0)
+                                 (FStarC.Range.mk_pos 0 0))
         Errors.Warning_FileNotWritten [
           text <| BU.format1 "Checked file %s was not written." cache_file;
           prefix 2 1 (doc_of_string "Reason:") (text msg)

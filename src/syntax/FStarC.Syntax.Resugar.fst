@@ -17,14 +17,14 @@
 *)
 module FStarC.Syntax.Resugar //we should rename FStarC.ToSyntax to something else
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Const
-open FStarC.Compiler.List
+open FStarC.List
 open FStarC.Parser.AST
 open FStarC.Class.Monad
 open FStarC.Class.Setlike
@@ -36,7 +36,7 @@ module SS = FStarC.Syntax.Subst
 module A  = FStarC.Parser.AST
 module C = FStarC.Parser.Const
 module U = FStarC.Syntax.Util
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module D = FStarC.Parser.ToDocument
 module UF = FStarC.Syntax.Unionfind
 module E = FStarC.Errors

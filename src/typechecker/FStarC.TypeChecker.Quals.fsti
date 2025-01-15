@@ -17,7 +17,7 @@
 module FStarC.TypeChecker.Quals
 
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
   

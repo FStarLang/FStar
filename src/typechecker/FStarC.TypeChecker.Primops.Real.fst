@@ -1,11 +1,11 @@
 module FStarC.TypeChecker.Primops.Real
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC
+open FStarC.Effect
+open FStarC.List
 open FStarC.Class.Monad
-open FStarC.Compiler.Order
+open FStarC.Order
 
 open FStarC.TypeChecker.Primops.Base
 open FStarC.Syntax.Syntax
@@ -61,7 +61,7 @@ instance nbe_e_tf : TypeChecker.NBETerm.embedding tf =
   in
   mk_emb em un (fun () -> lid_as_typ PC.bool_lid [] []) (Syntax.Embeddings.emb_typ_of tf)
 
-let cmp (r1 r2 : Compiler.Real.real) : option order =
+let cmp (r1 r2 : Real.real) : option order =
   match r1._0, r2._0 with
   | "0.0", "0.0" -> Some Eq
   | "0.0", "0.5" -> Some Lt
@@ -74,17 +74,17 @@ let cmp (r1 r2 : Compiler.Real.real) : option order =
   | "1.0", "1.0" -> Some Eq
   | _ -> None
 
-let lt (r1 r2 : Compiler.Real.real) : option tf =
+let lt (r1 r2 : Real.real) : option tf =
   cmp r1 r2 |> Class.Monad.fmap (function Lt -> T | _ -> F)
-let le (r1 r2 : Compiler.Real.real) : option tf =
+let le (r1 r2 : Real.real) : option tf =
   cmp r1 r2 |> Class.Monad.fmap (function Lt | Eq -> T | _ -> F)
-let gt (r1 r2 : Compiler.Real.real) : option tf =
+let gt (r1 r2 : Real.real) : option tf =
   cmp r1 r2 |> Class.Monad.fmap (function Gt -> T | _ -> F)
-let ge (r1 r2 : Compiler.Real.real) : option tf =
+let ge (r1 r2 : Real.real) : option tf =
   cmp r1 r2 |> Class.Monad.fmap (function Gt | Eq -> T | _ -> F)
 
-let of_int (i:Z.t) : Compiler.Real.real =
-  Compiler.Real.Real (string_of_int (Z.to_int_fs i) ^ ".0")
+let of_int (i:Z.t) : Real.real =
+  Real.Real (string_of_int (Z.to_int_fs i) ^ ".0")
 
 let ops = [
   mk1 0 PC.real_of_int of_int;

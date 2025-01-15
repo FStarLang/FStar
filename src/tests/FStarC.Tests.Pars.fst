@@ -15,12 +15,12 @@
 *)
 module FStarC.Tests.Pars
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Range
+open FStarC.Effect
+open FStarC.Range
 open FStarC.Parser
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Errors
@@ -32,7 +32,7 @@ module SMT = FStarC.SMTEncoding.Solver
 module Tc = FStarC.TypeChecker.Tc
 module TcTerm = FStarC.TypeChecker.TcTerm
 module ToSyntax = FStarC.ToSyntax.ToSyntax
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module D = FStarC.Parser.Driver
 module Rel = FStarC.TypeChecker.Rel
 module NBE = FStarC.TypeChecker.NBE
@@ -47,7 +47,7 @@ let parse_mod mod_name dsenv =
     match parse None (Filename mod_name) with
     | ASTFragment (Inl m, _) ->
         let m, env'= ToSyntax.ast_modul_to_modul m dsenv in
-        let env' , _ = DsEnv.prepare_module_or_interface false false env' (FStarC.Ident.lid_of_path ["Test"] (FStarC.Compiler.Range.dummyRange)) DsEnv.default_mii in
+        let env' , _ = DsEnv.prepare_module_or_interface false false env' (FStarC.Ident.lid_of_path ["Test"] (FStarC.Range.dummyRange)) DsEnv.default_mii in
         env', m
     | ParseError (err, msg, r) ->
         raise (Error(err, msg, r, []))
@@ -85,15 +85,15 @@ let init_once () : unit =
   let _prims_mod, env = Tc.check_module env prims_mod false in
   // needed to run tests with chars
   // let dsenv, env = add_mods ["FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStar.Mul.fst"; "FStar.Squash.fsti";
-  //                            "FStar.Classical.fst"; "FStarC.Compiler.List.Tot.Base.fst"; "FStarC.Compiler.List.Tot.Properties.fst"; "FStarC.Compiler.List.Tot.fst";
+  //                            "FStar.Classical.fst"; "FStarC.List.Tot.Base.fst"; "FStarC.List.Tot.Properties.fst"; "FStarC.List.Tot.fst";
   //                            "FStar.StrongExcludedMiddle.fst"; "FStar.Seq.Base.fst"; "FStar.Seq.Properties.fst"; "FStar.Seq.fst";
   //                            "FStar.BitVector.fst"; "FStar.Math.Lib.fst"; "FStar.Math.Lemmas.fst"; "FStar.UInt.fst"; "FStar.UInt32.fst";
   //                            "FStar.Char.fsti"; "FStar.String.fsti"] dsenv env in
 
   // only needed to test tatic normalization
-  // let dsenv, env = add_mods ["FStarC.Compiler.Range.fsti"; "FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStarC.Reflection.Types.fsti"; "FStar.Order.fst";
+  // let dsenv, env = add_mods ["FStarC.Range.fsti"; "FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStarC.Reflection.Types.fsti"; "FStar.Order.fst";
   //                            "FStarC.Reflection.Data.fst"; "FStarC.Reflection.Basic.fst"; "FStar.Squash.fsti"; "FStar.Classical.fst";
-  //                            "FStarC.Compiler.List.Tot.Base.fst"; "FStarC.Compiler.List.Tot.Properties.fst"; "FStarC.Compiler.List.Tot.fst"; "FStar.Char.fsti";
+  //                            "FStarC.List.Tot.Base.fst"; "FStarC.List.Tot.Properties.fst"; "FStarC.List.Tot.fst"; "FStar.Char.fsti";
   //                            "FStar.String.fsti"; "FStarC.Reflection.Syntax.fst"; "FStarC.Reflection.Syntax.Lemmas.fst";
   //                            "FStarC.Reflection.Formula.fst"; "FStarC.Tactics.Types.fsti"; "FStarC.Tactics.Result.fst";
   //                            "FStarC.Tactics.Effect.fst"; "FStarC.Tactics.Builtins.fst"; "FStarC.Tactics.Derived.fst";
@@ -129,9 +129,9 @@ let pars s =
             failwith "Impossible: parsing a Fragment always results in a Term"
     with
         | Error(err, msg, r, _ctx) when not <| FStarC.Options.trace_error() ->
-          if r = FStarC.Compiler.Range.dummyRange
+          if r = FStarC.Range.dummyRange
           then BU.print_string (Errors.rendermsg msg)
-          else BU.print2 "%s: %s\n" (FStarC.Compiler.Range.string_of_range r) (Errors.rendermsg msg);
+          else BU.print2 "%s: %s\n" (FStarC.Range.string_of_range r) (Errors.rendermsg msg);
           exit 1
 
         | e when not ((Options.trace_error())) -> raise e
@@ -236,7 +236,7 @@ let parse_incremental_decls () =
                              frag_text = source1;
                              frag_line = 1;
                              frag_col = 0 } in
-  let open FStarC.Compiler.Range in
+  let open FStarC.Range in
   match parse None input0, parse None input1 with
   | IncrementalFragment (decls0, _, parse_err0),
     IncrementalFragment (decls1, _, parse_err1) -> (
@@ -305,7 +305,7 @@ let parse_incremental_decls_use_lang () =
                              frag_text = source0;
                              frag_line = 1;
                              frag_col = 0 } in
-  let open FStarC.Compiler.Range in
+  let open FStarC.Range in
   match parse None input0 with
   | IncrementalFragment (decls0, _, parse_err0) -> (
       let _ =

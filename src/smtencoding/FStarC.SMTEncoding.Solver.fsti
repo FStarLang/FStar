@@ -15,7 +15,7 @@
 *)
 
 module FStarC.SMTEncoding.Solver
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 val with_hints_db : string -> (unit -> 'a) -> 'a
 val dummy: FStarC.TypeChecker.Env.solver_t

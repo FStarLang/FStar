@@ -14,6 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Version
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 val dummy: unit -> unit

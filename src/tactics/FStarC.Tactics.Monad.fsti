@@ -23,8 +23,8 @@ open FStarC.Tactics.Types
 open FStarC.Class.Monad
 open FStarC.Errors.Msg
 
-module Range = FStarC.Compiler.Range
-module BU    = FStarC.Compiler.Util
+module Range = FStarC.Range
+module BU    = FStarC.Util
 module O     = FStarC.Options
 
 (* Type of tactics *)

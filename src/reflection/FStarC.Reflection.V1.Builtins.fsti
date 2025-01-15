@@ -15,9 +15,9 @@
 *)
 module FStarC.Reflection.V1.Builtins
 
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Order
+open FStarC
+open FStarC.Effect
+open FStarC.Order
 open FStarC.Reflection.V1.Data
 open FStarC.Syntax.Embeddings
 open FStarC.Syntax.Syntax
@@ -91,5 +91,5 @@ val compare_string : string -> string -> Z.t
 
 val push_binder    : Env.env -> binder -> Env.env
 
-val range_of_term : term -> FStarC.Compiler.Range.range
-val range_of_sigelt : sigelt -> FStarC.Compiler.Range.range
+val range_of_term : term -> FStarC.Range.range
+val range_of_sigelt : sigelt -> FStarC.Range.range

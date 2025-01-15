@@ -16,26 +16,26 @@
 module FStarC.TypeChecker.Common
 open Prims
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Ident
 open FStarC.Class.Show
 open FStarC.Class.Monoid
 
-open FStarC.Compiler.CList
-module CList = FStarC.Compiler.CList
+open FStarC.CList
+module CList = FStarC.CList
 
 (* Bring instances in scope *)
 open FStarC.Syntax.Print {}
 
 module S = FStarC.Syntax.Syntax
 
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 (* relations on types, kinds, etc. *)
 type rel =

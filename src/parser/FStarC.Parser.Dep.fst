@@ -23,12 +23,11 @@
 module FStarC.Parser.Dep
 
 open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect   //for ref, failwith etc
-open FStarC.Compiler.List
+open FStarC.Effect   //for ref, failwith etc
+open FStarC.List
 open FStarC.Parser
 open FStarC.Parser.AST
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Const
 open FStar.String
 open FStarC.Ident
@@ -36,7 +35,7 @@ open FStarC.Errors
 open FStarC.Class.Show
 
 module Const = FStarC.Parser.Const
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 let dbg              = Debug.get_toggle "Dep"
 let dbg_CheckedFiles = Debug.get_toggle "CheckedFiles"

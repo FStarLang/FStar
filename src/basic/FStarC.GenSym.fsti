@@ -18,7 +18,7 @@
 *)
 module FStarC.GenSym
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 (** Obtain a fresh ID. *)
 val next_id             : unit -> int

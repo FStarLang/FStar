@@ -17,10 +17,10 @@
 *)
 module FStarC.TypeChecker.NBE
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.TypeChecker.Cfg
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Env
@@ -32,10 +32,10 @@ open FStarC.TypeChecker.NBETerm
 
 module S = FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
-module Range = FStarC.Compiler.Range
+module Range = FStarC.Range
 module U = FStarC.Syntax.Util
 module P = FStarC.Syntax.Print
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module Env = FStarC.TypeChecker.Env
 module Z = FStarC.BigInt
 module C = FStarC.Const
@@ -82,7 +82,7 @@ let dbg_NBETop = Debug.get_toggle "NBETop"
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Utilities: Many of these should just move to FStarC.Compiler.List, if it's
+// Utilities: Many of these should just move to FStarC.List, if it's
 // not already there
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1244,7 +1244,7 @@ and readback (cfg:config) (x:t) : term =
     | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r)))
     | Constant (Char c) -> with_range (U.exp_char c)
     | Constant (Range r) -> PO.embed_simple #_ #EMB.e___range x.nbe_r r
-    | Constant (Real r) ->  PO.embed_simple x.nbe_r (Compiler.Real.Real r)
+    | Constant (Real r) ->  PO.embed_simple x.nbe_r (Real.Real r)
     | Constant (SConst c) -> mk (S.Tm_constant c)
 
     | Meta(t, m) ->

@@ -15,7 +15,7 @@
 *)
 module FStarC.StringBuffer
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.BigInt
 
 type t
@@ -31,4 +31,4 @@ val create : int -> t
 val add: string -> t -> t
 val contents: t -> string
 val clear: t -> t
-val output_channel: FStarC.Compiler.Util.out_channel -> t -> unit
+val output_channel: FStarC.Util.out_channel -> t -> unit

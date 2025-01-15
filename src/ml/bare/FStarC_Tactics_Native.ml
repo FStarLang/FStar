@@ -1,4 +1,4 @@
-open FStarC_Compiler_Range
+open FStarC_Range
 open FStarC_Tactics_Types
 open FStarC_Tactics_Result
 open FStarC_Tactics_Monad
@@ -6,7 +6,7 @@ open FStarC_Syntax_Syntax
 
 module N = FStarC_TypeChecker_Normalize
 module C = FStarC_TypeChecker_Cfg
-module BU = FStarC_Compiler_Util
+module BU = FStarC_Util
 module NBETerm = FStarC_TypeChecker_NBETerm
 module O = FStarC_Options
 module PO = FStarC_TypeChecker_Primops
@@ -30,8 +30,8 @@ type native_primitive_step =
       strong_reduction_ok: bool;
       tactic: itac}
 
-let perr  s   = if FStarC_Compiler_Debug.any () then BU.print_error s
-let perr1 s x = if FStarC_Compiler_Debug.any () then BU.print1_error s x
+let perr  s   = if FStarC_Debug.any () then BU.print_error s
+let perr1 s x = if FStarC_Debug.any () then BU.print1_error s x
 
 let compiled_tactics: native_primitive_step list ref = ref []
 

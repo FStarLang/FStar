@@ -1,9 +1,9 @@
 module FStarC.TypeChecker.Primops.Errors.Msg
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC
+open FStarC.Effect
+open FStarC.List
 open FStarC.Class.Monad
 
 module Z = FStarC.BigInt

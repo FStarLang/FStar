@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Const
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 open FStarC.BigInt
 open FStar.Char
@@ -31,7 +31,7 @@ type width = | Int8 | Int16 | Int32 | Int64 | Sizet
     and
     Const_int("67108863", None)
     which represent the same number
-    You should do an "FStarC.Compiler.Util.ensure_decimal" on the
+    You should do an "FStarC.Util.ensure_decimal" on the
     string representation before comparing integer constants.
 
     eq_const below does that for you
@@ -45,10 +45,10 @@ type sconst =
   | Const_int         of string & option (signedness & width) (* When None, means "mathematical integer", i.e. Prims.int. *)
   | Const_char        of char (* unicode code point: char in F#, int in OCaml *)
   | Const_real        of string
-  | Const_string      of string & FStarC.Compiler.Range.range                (* UTF-8 encoded *)
+  | Const_string      of string & FStarC.Range.range                (* UTF-8 encoded *)
   | Const_range_of                                           (* `range_of` primitive *)
   | Const_set_range_of                                       (* `set_range_of` primitive *)
-  | Const_range       of FStarC.Compiler.Range.range          (* not denotable by the programmer *)
+  | Const_range       of FStarC.Range.range                  (* not denotable by the programmer *)
   | Const_reify       of option Ident.lid                    (* a coercion from a computation to its underlying repr *)
                                                              (* decorated optionally with the computation effect name *)
   | Const_reflect     of Ident.lid                           (* a coercion from a Tot term to an l-computation type *)

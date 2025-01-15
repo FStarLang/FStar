@@ -15,13 +15,13 @@
 *)
 module FStarC.Syntax.Resugar //we should rename FStarC.ToSyntax to something else
 
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Const
-open FStarC.Compiler.Range
+open FStarC.Range
 
 module I = FStarC.Ident
 module S  = FStarC.Syntax.Syntax
@@ -29,8 +29,8 @@ module SS = FStarC.Syntax.Subst
 module A  = FStarC.Parser.AST
 module C = FStarC.Parser.Const
 module U = FStarC.Syntax.Util
-module BU = FStarC.Compiler.Util
-module Range = FStarC.Compiler.Range
+module BU = FStarC.Util
+module Range = FStarC.Range
 module DsEnv = FStarC.Syntax.DsEnv
 
 val resugar_term: S.term -> A.term

@@ -15,7 +15,7 @@
 *)
 module FStarC.Hooks
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 (* This function sets ties some know between modules in the compiler source tree,
 enabling more recursion and breaking some dependencies.

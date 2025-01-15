@@ -1,7 +1,7 @@
 module FStarC.Class.Monad
 
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 
 instance monad_option : monad option = {
   return = (fun x -> Some x); // FIXME: without the we gell ill-typed ML

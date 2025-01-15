@@ -17,7 +17,7 @@ module FStarC.Find
 (* Utilities for finding files in the include path and related
 operations. *)
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 (* A bit silly to have this, but this is the directory where the fstar.exe executable is in. *)
 val fstar_bin_directory : string

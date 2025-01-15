@@ -16,10 +16,10 @@
 module FStarC.Tactics.Printing
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC
+open FStarC.Util
+open FStarC.Effect
+open FStarC.List
 open FStarC.Ident
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Common
@@ -27,8 +27,8 @@ open FStarC.TypeChecker.Env
 open FStarC.Tactics.Types
 open FStarC.Class.Show
 
-module BU      = FStarC.Compiler.Util
-module Range   = FStarC.Compiler.Range
+module BU      = FStarC.Util
+module Range   = FStarC.Range
 module Options = FStarC.Options
 module Print   = FStarC.Syntax.Print
 module SS      = FStarC.Syntax.Subst

@@ -14,16 +14,16 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.SolverState
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStar.List.Tot
 open FStarC.Class.Show
 open FStarC.Class.Setlike
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module Pruning = FStarC.SMTEncoding.Pruning
 module U = FStarC.SMTEncoding.UnsatCore
 module TcEnv = FStarC.TypeChecker.Env

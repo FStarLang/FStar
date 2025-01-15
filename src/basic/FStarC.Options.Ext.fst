@@ -15,10 +15,10 @@
 *)
 module FStarC.Options.Ext
 
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStarC.Class.Show
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 type ext_state =
   | E : map : BU.psmap string -> ext_state
@@ -40,7 +40,7 @@ let get (k:key) : value =
 
 (* Find a home *)
 let is_prefix (s1 s2 : string) : ML bool =
-  let open FStarC.Compiler.String in
+  let open FStarC.String in
   let l1 = length s1 in
   let l2 = length s2 in
   l2 >= l1 && substring s2 0 l1 = s1

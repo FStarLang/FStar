@@ -17,9 +17,9 @@
 *)
 module FStarC.TypeChecker.NBE
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Env
 open FStarC.Syntax.Syntax

@@ -15,9 +15,9 @@
 *)
 module FStarC.TypeChecker.Env
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Syntax.Syntax
 open FStarC.Ident
 open FStarC.TypeChecker.Common
@@ -26,7 +26,7 @@ open FStarC.Class.Deq
 open FStarC.Class.Show
 open FStarC.Class.Setlike
 
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module S = FStarC.Syntax.Syntax
 module TcComm = FStarC.TypeChecker.Common
 
@@ -170,7 +170,7 @@ and env = {
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list binding;                (* Local typing environment *)
   gamma_sig      :list sig_binding;            (* and signature elements *)
-  gamma_cache    :FStarC.Compiler.Util.smap cached_elt;  (* Memo table for the global gamma_sig environment *)
+  gamma_cache    :FStarC.Util.smap cached_elt;  (* Memo table for the global gamma_sig environment *)
   modules        :list modul;                  (* already fully type checked modules *)
   expected_typ   :option (typ & bool);         (* type expected by the context *)
                                                 (* a true bool will check for type equality (else subtyping) *)

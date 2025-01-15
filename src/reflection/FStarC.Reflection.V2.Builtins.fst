@@ -16,9 +16,9 @@
 module FStarC.Reflection.V2.Builtins
 
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Reflection.V2.Data
 open FStarC.Syntax.Syntax
 open FStarC.Errors
@@ -32,8 +32,8 @@ open FStarC.Class.Tagged
 module C     = FStarC.Const
 module PC    = FStarC.Parser.Const
 module SS    = FStarC.Syntax.Subst
-module BU    = FStarC.Compiler.Util
-module Range = FStarC.Compiler.Range
+module BU    = FStarC.Util
+module Range = FStarC.Range
 module U     = FStarC.Syntax.Util
 module UF    = FStarC.Syntax.Unionfind
 module Print = FStarC.Syntax.Print

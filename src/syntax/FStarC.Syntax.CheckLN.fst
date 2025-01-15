@@ -2,7 +2,7 @@ module FStarC.Syntax.CheckLN
 
 open FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
-module L = FStarC.Compiler.List
+module L = FStarC.List
 
 (* Computes the binding amount of a pattern.
 Anywhere where this is defined already? *)

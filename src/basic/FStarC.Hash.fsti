@@ -1,5 +1,5 @@
 module FStarC.Hash
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 type hash_code
 

@@ -15,20 +15,19 @@
 *)
 module FStarC.Syntax.Util
 
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 
 open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Ident
-open FStarC.Compiler.Range
+open FStarC.Range
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Const
 open FStarC.Dyn
-module U = FStarC.Compiler.Util
-module List = FStarC.Compiler.List
+module U = FStarC.Util
+module List = FStarC.List
 module PC = FStarC.Parser.Const
 open FStarC.Syntax.Subst
 

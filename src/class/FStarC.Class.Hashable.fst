@@ -1,7 +1,7 @@
 module FStarC.Class.Hashable
 
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Hash
 open FStarC.Class.Show
 open FStarC.Class.Deq

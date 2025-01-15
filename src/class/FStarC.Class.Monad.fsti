@@ -1,7 +1,7 @@
 module FStarC.Class.Monad
 
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 
 class monad (m : Type -> Type) = {
    return : #a:Type -> a -> m a;
