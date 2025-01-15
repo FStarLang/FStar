@@ -1101,8 +1101,8 @@ let tot_dll_to_fragment_split (#t:Type) (h0:heap) (d:dll t{dll_valid h0 d})
           reveal d.nodes == reveal p1.pnodes `append` reveal p2.pnodes))) =
   let split_nodes = elift2_p split_using d.nodes (hide n2) in
   lemma_split_using d.nodes n2;
-  let l1 = elift1 fst split_nodes in
-  let l2 = elift1 snd split_nodes in
+  let l1 = hide (fst split_nodes) in
+  let l2 = hide (snd split_nodes) in
   let p1 = { phead = d.lhead ; ptail = n1 ; pnodes = l1 } in
   let p2 = { phead = n2 ; ptail = d.ltail ; pnodes = l2 } in
   let f = Frag2 p1 p2 in
