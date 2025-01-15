@@ -22,12 +22,14 @@
 # (version 4.4.1-1 at least) to (sometimes) freeze , and halt the build.
 # Not running this makefile (and sub-makes) in parallel *seems* to help,
 # though obviously makes this significantly slower in Windows.
-ifeq ($(OS),Windows_NT)
-.NOTPARALLEL:
-MAYBEJ1=-j1
-else
-MAYBEJ1=
-endif
+# LATER EDIT: For the self-hosted runner, this does not seem to be a problem,
+# so do not restrict parallelism.
+# ifeq ($(OS),Windows_NT)
+# .NOTPARALLEL:
+# MAYBEJ1=-j1
+# else
+# MAYBEJ1=
+# endif
 
 include mk/common.mk
 

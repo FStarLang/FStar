@@ -1,4 +1,3 @@
-# This file is used (or created) by the bring-stage0 rule in the toplevel Makefile
 
 include $(FSTAR_ROOT)/mk/common.mk
 

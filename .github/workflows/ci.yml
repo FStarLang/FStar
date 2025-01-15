@@ -2,6 +2,8 @@ name: CI
 
 on:
   push:
+    branches-ignore:
+    - _**
   pull_request:
   workflow_dispatch:
   merge_group:

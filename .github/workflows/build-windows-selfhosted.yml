@@ -1,0 +1,55 @@
+name: Build F* (Windows, self-hosted)
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  push:
+
+jobs:
+  # We begin from a source package (built in Linux)
+  build-src:
+    uses: ./.github/workflows/build-src.yml
+
+  build-windows:
+    needs: build-src
+    runs-on: [self-hosted, Windows, X64, opam-2-3]
+    # NOTE: no setup, the self-hosted runner already has all that is needed.
+    # This workflow also has many weird restrictions like
+    # having to set cygwin bash, cd into $GITHUB_WORKSPACE, and keep
+    # shell commands to a single line.
+    steps:
+      - name: clean
+        shell: C:\cygwin64\bin\bash.exe --login '{0}'
+        run: cd $GITHUB_WORKSPACE && ls -lR && rm -vrf fstar && echo "There is a CR at the end of this line"
+        # ^ remove the directory where the package extracts to and builds,
+        # all files from previous runs remain the runner's working directory
+        # otherwise.
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: package-src
+      - run: cd $GITHUB_WORKSPACE && tar xzf fstar-src.tar.gz
+        shell: C:\cygwin64\bin\bash.exe --login '{0}'
+
+      - name: Set version
+        shell: C:\cygwin64\bin\bash.exe --login '{0}'
+        run: |
+          # Setting FSTAR_VERSION for nightly and release builds. If unset,
+          # we use $(version.txt)~dev. Setting it avoids the ~dev.
+          cd $GITHUB_WORKSPACE && if [[ "${{github.workflow_ref}}" =~ "nightly.yml" ]]; then echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV; elif [[ "${{github.workflow_ref}}" =~ "release.yml" ]]; then echo FSTAR_VERSION="$(cat fstar/version.txt)" >> $GITHUB_ENV; echo FSTAR_RELEASE=1 >> $GITHUB_ENV; fi && echo "There is a CR at the end of this line"
+
+      - name: Build a package
+        shell: C:\cygwin64\bin\bash.exe --login '{0}'
+        run: |
+          cd $GITHUB_WORKSPACE && cd fstar && eval $(opam env) && export CC=x86_64-w64-mingw32-gcc.exe && make -j$(nproc) package V=1 ADMIT=1 && mv fstar.zip fstar-Windows_NT-x86_64.zip && echo "There is a CR at the end of this line"
+
+      # - name: Test the package
+      #   shell: C:\cygwin64\bin\bash.exe --login '{0}'
+      #   run: |
+      #     cd $GITHUB_WORKSPACE && cd fstar && eval $(opam env) && export CC=x86_64-w64-mingw32-gcc.exe && export CI_THREADS=$(nproc) && .scripts/test_package.sh && echo "There is a CR at the end of this line"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: fstar/fstar*.zip
+          name: package-win
