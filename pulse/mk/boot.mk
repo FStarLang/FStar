@@ -53,6 +53,7 @@ FSTAR = $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 %$(EXTENSION):
 	$(call msg, $(MSG), $(FF))
 	$(FSTAR) --already_cached ',*' $<
+	touch -c $@
 
 %.ml: FF=$(notdir $(subst $(EXTENSION),,$<))
 %.ml: MM=$(basename $(FF))
