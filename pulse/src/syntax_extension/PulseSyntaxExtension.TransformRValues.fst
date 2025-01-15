@@ -16,17 +16,17 @@
 
 module PulseSyntaxExtension.TransformRValues
 open FStarC
-open FStarC.Compiler.Effect
+open FStarC.Effect
 module Sugar = PulseSyntaxExtension.Sugar
 module SW = PulseSyntaxExtension.SyntaxWrapper
 module A = FStarC.Parser.AST
 module D = FStarC.Syntax.DsEnv
 module S = FStarC.Syntax.Syntax
-module L = FStarC.Compiler.List
+module L = FStarC.List
 module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst
-module R = FStarC.Compiler.Range
-module BU = FStarC.Compiler.Util
+module R = FStarC.Range
+module BU = FStarC.Util
 module P =  FStarC.Syntax.Print
 open FStarC.Class.Show
 open FStarC.Class.HasRange
@@ -266,7 +266,7 @@ let rec transform_stmt_with_reads (m:menv) (p:Sugar.stmt)
         | _ -> true in
 
       let! vs = pat_vars pat in
-      let m = Compiler.List.fold_left (fun m v -> menv_push_bv m v qualifier auto_deref_applicable) m vs in
+      let m = L.fold_left (fun m v -> menv_push_bv m v qualifier auto_deref_applicable) m vs in
 
       let p = { p with s=LetBinding { qualifier; pat; typ; init } } in
       return (p, needs, m)

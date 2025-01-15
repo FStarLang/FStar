@@ -16,18 +16,18 @@
 
 module PulseSyntaxExtension.Desugar
 open FStarC
-open FStarC.Compiler.Effect
+open FStarC.Effect
 module Sugar = PulseSyntaxExtension.Sugar
 module SW = PulseSyntaxExtension.SyntaxWrapper
 module A = FStarC.Parser.AST
 module D = FStarC.Syntax.DsEnv
 module ToSyntax = FStarC.ToSyntax.ToSyntax
 module S = FStarC.Syntax.Syntax
-module L = FStarC.Compiler.List
+module L = FStarC.List
 module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst
-module R = FStarC.Compiler.Range
-module BU = FStarC.Compiler.Util
+module R = FStarC.Range
+module BU = FStarC.Util
 module P =  FStarC.Syntax.Print
 module LR = PulseSyntaxExtension.TransformRValues
 
@@ -184,7 +184,7 @@ let desugar_term (env:env_t) (t:A.term)
 let desugar_term_opt (env:env_t) (t:option A.term)
   : err SW.term
   = match t with
-    | None -> return (SW.tm_unknown FStarC.Compiler.Range.dummyRange)
+    | None -> return (SW.tm_unknown FStarC.Range.dummyRange)
     | Some e -> desugar_term env e
 
 //
@@ -205,7 +205,7 @@ let idents_as_binders (env:env_t) (l:list ident)
            (BU.format1 "Identifiers (%s) not found, consider adding them as binders" s)
            (non_tick_idents |> L.hd |> Ident.range_of_id)
     else begin
-      let erased_tm = A.(mk_term (Var FStarC.Parser.Const.erased_lid) FStarC.Compiler.Range.dummyRange Un) in
+      let erased_tm = A.(mk_term (Var FStarC.Parser.Const.erased_lid) FStarC.Range.dummyRange Un) in
       let mk_ty i =
         let wild = A.(mk_term Wild (Ident.range_of_id i) Un) in
         A.(mkApp erased_tm [wild, A.Nothing] (Ident.range_of_id i)) in

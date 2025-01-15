@@ -16,10 +16,10 @@
 
 module Pulse2Rust
 
-open FStarC.Compiler
-open FStarC.Compiler.Util
-open FStarC.Compiler.List
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Util
+open FStarC.List
+open FStarC.Effect
 
 open Pulse2Rust.Deps
 open Pulse2Rust.Rust.Syntax
@@ -182,7 +182,7 @@ let extract (files:list string) (odir:string) (libs:string) : unit =
   let root_module = file_to_module_name (let root_file::_ = files in root_file) in
   // print1 "root_module: %s\n" root_module;
   let reachable_defs = collect_reachable_defs d root_module in
-  let external_libs = FStarC.Compiler.Util.split libs "," |> List.map trim_string in
+  let external_libs = FStarC.Util.split libs "," |> List.map trim_string in
   let g = empty_env external_libs d all_modules reachable_defs in
   let _, all_rust_files = List.fold_left (fun (g, all_rust_files) f ->
     // print1 "Extracting file: %s\n" f;

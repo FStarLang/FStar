@@ -36,9 +36,9 @@ open Fstarcompiler
 open Prims
 open FStar_Pervasives
 open FStarC_Errors
-open FStarC_Compiler_List
-open FStarC_Compiler_Util
-open FStarC_Compiler_Range
+open FStarC_List
+open FStarC_Util
+open FStarC_Range
 
 (* TODO : these files should be deprecated and removed *)
 open FStarC_Parser_Const

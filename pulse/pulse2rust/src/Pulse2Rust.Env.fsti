@@ -16,10 +16,10 @@
 
 module Pulse2Rust.Env
 
-open FStarC.Compiler
-open FStarC.Compiler.Util
-open FStarC.Compiler.List
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Util
+open FStarC.List
+open FStarC.Effect
 
 open Pulse2Rust.Rust.Syntax
 
