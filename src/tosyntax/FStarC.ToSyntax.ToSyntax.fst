@@ -2904,7 +2904,7 @@ let mk_typ_abbrev env d lid uvs typars kopt t lids quals rng =
     { sigel = Sig_let {lbs=(false, [lb]); lids};
       sigquals = quals;
       sigrng = rng;
-      sigmeta = default_sigmeta ;
+      sigmeta = { default_sigmeta with sigmeta_is_typ_abbrev = true };
       sigattrs = U.deduplicate_terms (val_attrs @ attrs);
       sigopts = None;
       sigopens_and_abbrevs = opens_and_abbrevs env
