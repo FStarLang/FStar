@@ -18,13 +18,10 @@ endif
 OUT_DIR   = out
 CACHE_DIR = cache
 ROOTS     = Test.fst
-HINT_DIR  = hints
 
 FSTAR_FLAGS = $(OTHERFLAGS) --cmi --odir $(OUT_DIR) --cache_dir $(CACHE_DIR) \
-  --cache_checked_modules --already_cached 'Prims FStar' --z3version 4.13.3
-
-# Run with ENABLE_HINTS= to disable
-ENABLE_HINTS ?= --use_hints
+  --cache_checked_modules --already_cached 'Prims FStar' --z3version 4.13.3 \
+  --ext context_pruning
 
 FSTAR = $(FSTAR_EXE) $(FSTAR_FLAGS)
 
@@ -44,7 +41,7 @@ all:
 include .depend
 
 $(CACHE_DIR)/%.checked:
-	$(FSTAR) $< $(ENABLE_HINTS) --hint_file $(HINT_DIR)/$(notdir $<).hints && \
+	$(FSTAR) $< && \
 	touch $@
 
 # 2. Compile all .ml files to .cmx and link them to get an executable
