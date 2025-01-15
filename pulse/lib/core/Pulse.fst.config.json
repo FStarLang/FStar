@@ -8,5 +8,7 @@
 		"4.13.3"
 	],
 	"include_dirs": [
+		"../pulse/_cache",
+		"../common"
 	]
 }
