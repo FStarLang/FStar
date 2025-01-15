@@ -16,7 +16,6 @@
 module LowStar.ToFStarBuffer
 
 (* WARNING: FOR TRANSITIONAL PURPOSES ONLY *)
-#set-options "--ext 'context_pruning='"
 module Old = FStar.Buffer
 module OldM = FStar.Modifies
 module New = LowStar.Buffer
