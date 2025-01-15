@@ -20,7 +20,7 @@ defaults:
       bash
 
 jobs:
-  # We being from a source package (built in Linux)
+  # We begin from a source package (built in Linux)
   build-src:
     uses: ./.github/workflows/build-src.yml
 
