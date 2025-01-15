@@ -17,10 +17,9 @@
 module Pulse2Rust.Deps
 
 open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
-open FStarC.Compiler.List
-open FStarC.Compiler.Effect
+open FStarC.Util
+open FStarC.List
+open FStarC.Effect
 
 open Pulse2Rust.Rust.Syntax
 open Pulse2Rust.Env

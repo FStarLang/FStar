@@ -16,10 +16,10 @@
 
 module Pulse2Rust.Extract
 
-open FStarC.Compiler
-open FStarC.Compiler.Util
-open FStarC.Compiler.List
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Util
+open FStarC.List
+open FStarC.Effect
 
 open Pulse2Rust.Rust.Syntax
 open Pulse2Rust.Env
@@ -73,7 +73,7 @@ let lookup_datacon (g:env) (s:S.mlident) : option (list string & S.mlsymbol) =
     let ropt = find_map decls (lookup_datacon_in_module1 s) in
     match ropt with
     | None -> None
-    | Some tname -> Some (FStarC.Compiler.Util.split k ".", tname)
+    | Some tname -> Some (FStarC.Util.split k ".", tname)
   )
 
 //
@@ -887,7 +887,7 @@ let extract_generic_type_param_trait_bounds (attrs:list S.mlexpr) : list (list s
                       match e.expr with
                       | MLE_Const (MLC_String s) -> s
                       | _ -> failwith "unexpected generic type param bounds")
-         |> List.map (fun bound -> FStarC.Compiler.Util.split bound "::"))
+         |> List.map (fun bound -> FStarC.Util.split bound "::"))
   |> dflt []
 
 let extract_generic_type_params (tyvars:list S.ty_param)

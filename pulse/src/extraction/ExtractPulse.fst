@@ -1,20 +1,17 @@
 module ExtractPulse
 friend FStarC.Extraction.Krml
 
-(* IMPORTANT: these `open` directives come from FStarC.Extraction.Krml.
-   Without them, spurious dependencies on F* ulib will be introduced *)
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStar
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.Util
 open FStarC.Extraction
 open FStarC.Extraction.ML
 open FStarC.Extraction.ML.Syntax
 open FStarC.Const
 open FStarC.BaseTypes
 
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module FC = FStarC.Const
 
 open FStarC.Class.Show

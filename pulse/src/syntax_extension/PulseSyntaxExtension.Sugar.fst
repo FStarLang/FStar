@@ -22,8 +22,8 @@ module AU = FStarC.Parser.AST.Util
 open FStarC.Class.Show
 open FStarC.Class.Tagged
 
-let rng = FStarC.Compiler.Range.range
-let dummyRange = FStarC.Compiler.Range.dummyRange
+let rng = FStarC.Range.range
+let dummyRange = FStarC.Range.dummyRange
 
 //Note: We do not yet process binder attributes, like typeclass attributes
 type binder = A.binder

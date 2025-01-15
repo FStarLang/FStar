@@ -17,7 +17,7 @@
 module PulseSyntaxExtension.SyntaxWrapper
 open FStarC
 open FStarC.Ident
-let range = FStarC.Compiler.Range.range
+let range = FStarC.Range.range
 let var = nat
 let index = nat
 

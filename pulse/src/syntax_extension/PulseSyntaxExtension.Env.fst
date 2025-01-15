@@ -16,17 +16,17 @@
 
 module PulseSyntaxExtension.Env
 open FStarC
-open FStarC.Compiler.Effect
+open FStarC.Effect
 // module Sugar = PulseSugar
 module SW = PulseSyntaxExtension.SyntaxWrapper
 module A = FStarC.Parser.AST
 module D = FStarC.Syntax.DsEnv
 module S = FStarC.Syntax.Syntax
-module L = FStarC.Compiler.List
+module L = FStarC.List
 module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst
-module R = FStarC.Compiler.Range
-module BU = FStarC.Compiler.Util
+module R = FStarC.Range
+module BU = FStarC.Util
 module P =  FStarC.Syntax.Print
 module ToSyntax = FStarC.ToSyntax.ToSyntax
 open FStarC.Class.Show
@@ -36,7 +36,7 @@ open FStarC.Ident
 open FStar.List.Tot
 open PulseSyntaxExtension.Err
 
-let r_ = FStarC.Compiler.Range.dummyRange
+let r_ = FStarC.Range.dummyRange
 #push-options "--warn_error -272" //intentional top-level effects
 let admit_lid = Ident.lid_of_path ["Prims"; "admit"] r_
 let pulse_lib_core_lid l = Ident.lid_of_path (["Pulse"; "Lib"; "Core"]@[l]) r_

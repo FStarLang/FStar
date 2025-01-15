@@ -17,11 +17,11 @@
 module PulseSyntaxExtension.Desugar
 open FStarC
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 module Sugar = PulseSyntaxExtension.Sugar
 module SW = PulseSyntaxExtension.SyntaxWrapper
 module D = FStarC.Syntax.DsEnv
-module R = FStarC.Compiler.Range
+module R = FStarC.Range
 
 // An error can be "None", which means all relevant
 // errors were already logged via the error API.

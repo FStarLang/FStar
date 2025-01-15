@@ -5,7 +5,7 @@ open Pulse_Syntax_Base
 module U = Pulse_Syntax_Pure
 module S = FStarC_Syntax_Syntax
 type universe = Pulse_Syntax_Base.universe
-type range = FStarC_Compiler_Range.range
+type range = FStarC_Range.range
 let u_zero : universe = U.u_zero
 let u_succ (u:universe) : universe = U.u_succ u
 let u_var (s:string) : universe = U.u_var s
@@ -64,7 +64,7 @@ let tm_arrow (b:binder) (q:S.aqual) (body:comp) : term =
   U.tm_arrow b (map_aqual q) body
 let tm_expr (t:S.term) r : term = Pulse_Syntax_Pure.wr t r
 let tm_unknown r : term = wr r Tm_Unknown
-let tm_emp_inames :term = wr FStarC_Compiler_Range.dummyRange Tm_EmpInames
+let tm_emp_inames :term = wr FStarC_Range.dummyRange Tm_EmpInames
 let tm_add_inv (names:term) (n:term) r : term =
   Pulse_RuntimeUtils.set_range (Pulse_Syntax_Pure.tm_add_inv names n) r
 
@@ -231,7 +231,7 @@ let binder_to_string (env:Env.env) (b:binder)
   = tac_to_string env (Pulse_Syntax_Printer.binder_to_string b)
 let bv_to_string (x:bv) : string =
     x.bv_ppname.name ^ "@" ^
-     (FStarC_Compiler_Util.string_of_int x.bv_index)
+     (FStarC_Util.string_of_int x.bv_index)
 let term_to_string (env:Env.env) (t:term)
   : string
   = tac_to_string env (Pulse_Syntax_Printer.term_to_string t)

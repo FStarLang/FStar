@@ -7,18 +7,17 @@ extract Quicksort.Task simply, without needing to build fstar.lib in
 OCaml 5. (We could.. but the compiled fstar.lib that F* comes with
 is in OCaml 4.X, so we'd need more build logic.) *)
 
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Extraction
 open FStarC.Extraction.ML
 open FStarC.Extraction.ML.Syntax
 open FStarC.Const
 open FStarC.BaseTypes
 
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module FC = FStarC.Const
 
 open FStarC.Class.Show

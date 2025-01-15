@@ -16,8 +16,8 @@
 
 module PulseSyntaxExtension.Err
 open FStarC
-module R = FStarC.Compiler.Range
-open FStarC.Compiler.Effect
+module R = FStarC.Range
+open FStarC.Effect
 open FStarC.Class.HasRange
 open FStarC.Ident
 open FStarC.Class.Monad
@@ -74,7 +74,7 @@ let rec map2 (f : 'a -> 'b -> 'c) (xs : list 'a) (ys : list 'b) : err (list 'c) 
     let! r = map2 f xx yy in
     return (f x y :: r)
   | _ ->
-    fail "map2: mismatch" FStarC.Compiler.Range.dummyRange
+    fail "map2: mismatch" FStarC.Range.dummyRange
 
 
 let left (f:either 'a 'b) (r:R.range)
