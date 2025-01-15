@@ -5,13 +5,15 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Disable when Windows is reenabled.
+  build-src:
+    uses: ./.github/workflows/build-src.yml
+
   build-linux:
-    # This job also builds an (architecture-indepenendent) source package
-    # artifact.
     uses: ./.github/workflows/build-linux.yml
 
   build-macos:
     uses: ./.github/workflows/build-macos.yml
 
-  build-windows:
-    uses: ./.github/workflows/build-windows.yml
+  # build-windows:
+  #   uses: ./.github/workflows/build-windows.yml
