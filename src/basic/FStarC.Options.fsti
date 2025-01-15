@@ -15,11 +15,11 @@
 *)
 module FStarC.Options
 open FStar.All
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Getopt
 open FStarC.BaseTypes
 open FStarC.VConfig
-open FStarC.Compiler
+open FStarC
 
 type codegen_t =
   | OCaml
@@ -43,7 +43,7 @@ type option_val =
   | List of list option_val
   | Unset
 
-type optionstate = FStarC.Compiler.Util.psmap option_val
+type optionstate = FStarC.Util.psmap option_val
 
 type opt_type =
 | Const of option_val

@@ -15,10 +15,10 @@
 *)
 module FStarC.Reflection.V2.Constants
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 module Ident = FStarC.Ident
-module Range = FStarC.Compiler.Range
+module Range = FStarC.Range
 
 (* Contains all lids and terms needed for embedding/unembedding *)
 

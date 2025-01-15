@@ -17,10 +17,10 @@
 module FStarC.Interactive.Ide.Types
 
 open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Util
-open FStarC.Compiler.Range
+open FStarC
+open FStarC.Effect
+open FStarC.Util
+open FStarC.Range
 module PI = FStarC.Parser.ParseIt
 module TcEnv = FStarC.TypeChecker.Env
 module CTable = FStarC.Interactive.CompletionTable

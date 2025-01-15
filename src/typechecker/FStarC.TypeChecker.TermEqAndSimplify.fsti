@@ -1,6 +1,6 @@
 module FStarC.TypeChecker.TermEqAndSimplify
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.TypeChecker.Env
 open FStarC.Syntax.Syntax
 

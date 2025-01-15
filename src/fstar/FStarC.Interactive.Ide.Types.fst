@@ -15,11 +15,11 @@
 *)
 
 module FStarC.Interactive.Ide.Types
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler
-open FStarC.Compiler.Range
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.Range
+open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors
@@ -38,7 +38,7 @@ module DsEnv = FStarC.Syntax.DsEnv
 module TcErr = FStarC.TypeChecker.Err
 module CTable = FStarC.Interactive.CompletionTable
 module PI = FStarC.Parser.ParseIt
-module U = FStarC.Compiler.Util
+module U = FStarC.Util
 
 let initial_range =
   Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
@@ -71,7 +71,7 @@ let string_of_repl_task = function
     Util.format1 "PushFragment { decl = %s }" (show d)
   | Noop -> "Noop {}"
 
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 let string_of_repl_stack_entry
   : repl_stack_entry_t -> string
@@ -116,7 +116,7 @@ let push_query_to_string pq =
     | Inl code -> code
     | Inr (_decl, code) -> code.code
   in
-  FStarC.Compiler.Util.format "{ push_kind = %s; push_line = %s; \
+  FStarC.Util.format "{ push_kind = %s; push_line = %s; \
                push_column = %s; push_peek_only = %s; push_code_or_decl = %s }"
     [pk; string_of_int pq.push_line;
      string_of_int pq.push_column;

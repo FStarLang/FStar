@@ -1,7 +1,7 @@
 module FStarC.Class.Ord
 
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Order
+open FStarC.Effect
+open FStarC.Order
 include FStarC.Class.Deq
 open FStarC.Class.Deq
 

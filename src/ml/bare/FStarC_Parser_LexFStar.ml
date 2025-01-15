@@ -8,7 +8,7 @@ module Sedlexing = FStarC_Sedlexing
 module L = Sedlexing
 module E = FStarC_Errors
 module Codes = FStarC_Errors_Codes
-module BU = FStarC_Compiler_Util
+module BU = FStarC_Util
 
 let ba_of_string s = Array.init (String.length s) (fun i -> Char.code (String.get s i))
 let array_trim_both a n m = Array.sub a n (Array.length a - n - m)

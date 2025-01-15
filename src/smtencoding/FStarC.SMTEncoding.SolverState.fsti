@@ -32,13 +32,13 @@ module FStarC.SMTEncoding.SolverState
   handled in FStarC.SMTEncoding.Z3.fst. Instead, it buffers all Term.decls to be
   sent to the solver and a call to flush returns all the decls to be sent.
 *)
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
-open FStarC.Compiler.Util
-module BU = FStarC.Compiler.Util
+open FStarC.Util
+module BU = FStarC.Util
 module U = FStarC.SMTEncoding.UnsatCore
 type using_facts_from_setting = list (list string & bool)
 

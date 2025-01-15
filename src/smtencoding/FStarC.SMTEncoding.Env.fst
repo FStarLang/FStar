@@ -16,9 +16,9 @@
 module FStarC.SMTEncoding.Env
 open Prims
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.TypeChecker.Env
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -28,7 +28,7 @@ open FStarC.Ident
 open FStarC.SMTEncoding.Util
 
 module SS = FStarC.Syntax.Subst
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module U = FStarC.Syntax.Util
 
 open FStarC.Class.Show

@@ -18,19 +18,19 @@
  * queries; this file collects helpers for them                  *)
 
 module FStarC.Interactive.QueryHelper
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStar.Pervasives
-open FStarC.Compiler.Range
-open FStarC.Compiler.Util
+open FStarC.Range
+open FStarC.Util
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
 open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.CompletionTable
 
-module U = FStarC.Compiler.Util
+module U = FStarC.Util
 module PI = FStarC.Parser.ParseIt
 module DsEnv = FStarC.Syntax.DsEnv
 module TcErr = FStarC.TypeChecker.Err

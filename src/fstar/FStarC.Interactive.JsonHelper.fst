@@ -19,16 +19,16 @@
 
 module FStarC.Interactive.JsonHelper
 open FStar open FStarC
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC.Effect
+open FStarC.List
+open FStarC
+open FStarC.Util
 open FStarC.Errors
-open FStarC.Compiler.Range
+open FStarC.Range
 open FStarC.Json
 open FStarC.TypeChecker.Env
 
-module U = FStarC.Compiler.Util
+module U = FStarC.Util
 module PI = FStarC.Parser.ParseIt
 module TcEnv = FStarC.TypeChecker.Env
 module CTable = FStarC.Interactive.CompletionTable

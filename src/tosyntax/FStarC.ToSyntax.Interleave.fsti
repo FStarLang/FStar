@@ -14,8 +14,8 @@
   limitations under the License.
 *)
 module FStarC.ToSyntax.Interleave
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Effect
+open FStarC.Effect
+open FStarC.Effect
 open FStarC.Ident
 open FStarC.Parser.AST
 module DsEnv = FStarC.Syntax.DsEnv

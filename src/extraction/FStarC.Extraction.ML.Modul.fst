@@ -16,10 +16,10 @@
 module FStarC.Extraction.ML.Modul
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.Util
 open FStarC.Const
 open FStarC.Extraction.ML
 open FStarC.Extraction.ML.RegEmb
@@ -36,7 +36,7 @@ open FStarC.Class.Show
 
 module Term   = FStarC.Extraction.ML.Term
 module MLS    = FStarC.Extraction.ML.Syntax
-module BU     = FStarC.Compiler.Util
+module BU     = FStarC.Util
 module S      = FStarC.Syntax.Syntax
 module SS     = FStarC.Syntax.Subst
 module UF     = FStarC.Syntax.Unionfind
@@ -64,14 +64,14 @@ type iface = {
 
 let extension_extractor_table
   : BU.smap extension_extractor
-  = FStarC.Compiler.Util.smap_create 20
+  = FStarC.Util.smap_create 20
 
 let register_extension_extractor (ext:string) (callback:extension_extractor) =
-  FStarC.Compiler.Util.smap_add extension_extractor_table ext callback
+  FStarC.Util.smap_add extension_extractor_table ext callback
 
 let lookup_extension_extractor (ext:string) =
   (* Try to find a plugin if lookup fails *)
-  let do () = FStarC.Compiler.Util.smap_try_find extension_extractor_table ext in
+  let do () = FStarC.Util.smap_try_find extension_extractor_table ext in
   match do () with
   | None ->
     if Plugins.autoload_plugin ext
@@ -897,7 +897,7 @@ let extract_iface (g:env_t) modul =
   let g, iface =
     UF.with_uf_enabled (fun () ->
       if Debug.any()
-      then FStarC.Compiler.Util.measure_execution_time
+      then FStarC.Util.measure_execution_time
              (BU.format1 "Extracted interface of %s" (string_of_lid modul.name))
              (fun () -> extract_iface' g modul)
       else extract_iface' g modul)
@@ -1319,7 +1319,7 @@ let extract' (g:uenv) (m:modul) : uenv & option mllib =
             if Debug.any ()
             then let nm = FStarC.Syntax.Util.lids_of_sigelt se |> List.map Ident.string_of_lid |> String.concat ", " in
                  BU.print1 "+++About to extract {%s}\n" nm;
-                 let r = FStarC.Compiler.Util.measure_execution_time
+                 let r = FStarC.Util.measure_execution_time
                        (BU.format1 "---Extracted {%s}" nm)
                        (fun () -> extract_sig g se)
                  in

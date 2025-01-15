@@ -17,14 +17,14 @@ module FStarC.Errors
 
 open FStar.Pervasives
 open FStar.String
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.Util
-open FStarC.Compiler.Range
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.Util
+open FStarC.Range
 open FStarC.Options
-module List = FStarC.Compiler.List
-module BU = FStarC.Compiler.Util
+module List = FStarC.List
+module BU = FStarC.Util
 module PP = FStarC.Pprint
 
 open FStarC.Class.Monad
@@ -282,7 +282,7 @@ let compare_issues i1 i2 =
     | None, None -> 0
     | None, Some _ -> -1
     | Some _, None -> 1
-    | Some r1, Some r2 -> FStarC.Compiler.Range.compare_use_range r1 r2
+    | Some r1, Some r2 -> FStarC.Range.compare_use_range r1 r2
 
 let dummy_ide_rng : Range.rng =
   mk_rng "<input>" (mk_pos 1 0) (mk_pos 1 0)
@@ -437,7 +437,7 @@ let warn_unsafe_options rng_opt msg =
     add_one (mk_issue EError rng_opt (mkmsg ("Every use of this option triggers an error: " ^ msg)) (Some warn_on_use_errno) [])
   | _ -> ()
 
-let set_option_warning_callback_range (ropt:option FStarC.Compiler.Range.range) =
+let set_option_warning_callback_range (ropt:option FStarC.Range.range) =
     Options.set_option_warning_callback (warn_unsafe_options ropt)
 
 let t_set_parse_warn_error,

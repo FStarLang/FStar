@@ -15,19 +15,19 @@
 *)
 
 module FStarC.SMTEncoding.ErrorReporting
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.BaseTypes
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.SMTEncoding.Term
 open FStarC.SMTEncoding.Util
 open FStarC.SMTEncoding.Z3
 open FStarC.SMTEncoding
-open FStarC.Compiler.Range
+open FStarC.Range
 open FStarC.Class.Setlike
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 exception Not_a_wp_implication of string
 let sort_labels (l:(list (error_label & bool))) = List.sortWith (fun ((_, _, r1), _) ((_, _, r2), _) -> Range.compare r1 r2) l

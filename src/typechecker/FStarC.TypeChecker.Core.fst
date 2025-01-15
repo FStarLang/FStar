@@ -1,20 +1,20 @@
 module FStarC.TypeChecker.Core
 open FStarC
 open FStar.List.Tot
-open FStarC.Compiler
-open FStarC.Compiler.Util
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Util
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker
 module Env = FStarC.TypeChecker.Env
 module S = FStarC.Syntax.Syntax
-module R = FStarC.Compiler.Range
+module R = FStarC.Range
 module U = FStarC.Syntax.Util
 module N = FStarC.TypeChecker.Normalize
 module PC = FStarC.Parser.Const
 module I = FStarC.Ident
 module P = FStarC.Syntax.Print
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module TcUtil = FStarC.TypeChecker.Util
 module Hash = FStarC.Syntax.Hash
 module Subst = FStarC.Syntax.Subst
@@ -462,7 +462,7 @@ let check_positivity_qual (rel:relation) (p0 p1:option positivity_qualifier)
 
 let mk_forall_l (us:universes) (xs:binders) (t:term)
   : term
-  = FStarC.Compiler.List.fold_right2
+  = FStarC.List.fold_right2
         (fun u x t -> U.mk_forall u x.binder_bv t)
         us
         xs

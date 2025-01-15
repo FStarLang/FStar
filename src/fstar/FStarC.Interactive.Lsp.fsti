@@ -15,6 +15,6 @@
 *)
 module FStarC.Interactive.Lsp
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 val start_server () : unit

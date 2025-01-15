@@ -17,12 +17,12 @@
 *)
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.Syntax
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Ident
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Const
 open FStarC.BaseTypes
 
@@ -105,8 +105,8 @@ type meta =
   | CIfDef
   | CMacro
   | Deprecated of string
-  | RemoveUnusedTypeParameters of list int & FStarC.Compiler.Range.range //positional
-  | HasValDecl of FStarC.Compiler.Range.range //this symbol appears in the interface of a module
+  | RemoveUnusedTypeParameters of list int & FStarC.Range.range //positional
+  | HasValDecl of FStarC.Range.range //this symbol appears in the interface of a module
   | CNoInline
 
 // rename

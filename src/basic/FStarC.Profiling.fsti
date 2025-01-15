@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Profiling
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 // When --profile module_name
 // And  --profile_component component_name

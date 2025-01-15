@@ -1,4 +1,4 @@
-module BU = FStarC_Compiler_Util
+module BU = FStarC_Util
 module Z = FStarC_BigInt
 
 type hash_code = int

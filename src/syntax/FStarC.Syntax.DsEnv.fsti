@@ -15,18 +15,18 @@
 *)
 
 module FStarC.Syntax.DsEnv
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Util
+open FStarC.Effect
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Util
 open FStarC.Parser
 open FStarC.Ident
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
 

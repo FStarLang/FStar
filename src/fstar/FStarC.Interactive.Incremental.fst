@@ -16,12 +16,12 @@
 
 module FStarC.Interactive.Incremental
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Range
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Range
+open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors
@@ -40,7 +40,7 @@ module TcEnv = FStarC.TypeChecker.Env
 module CTable = FStarC.Interactive.CompletionTable
 open FStarC.Interactive.Ide.Types
 module P = FStarC.Parser.ParseIt
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 open FStarC.Parser.AST
 open FStarC.Parser.AST.Util
 
@@ -120,7 +120,7 @@ let push_decl (push_kind:push_kind)
               (write_full_buffer_fragment_progress: fragment_progress -> unit)
               (ds:decl & code_fragment)              
   : qst (list query)
-  = let open FStarC.Compiler.Range in
+  = let open FStarC.Range in
     let d, s = ds in
     let pq = {
         push_kind;

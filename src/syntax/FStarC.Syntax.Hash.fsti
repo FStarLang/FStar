@@ -17,9 +17,9 @@
 *)
 module FStarC.Syntax.Hash
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.Util
 open FStarC.Syntax.Syntax
 open FStarC.Const
 module H = FStarC.Hash

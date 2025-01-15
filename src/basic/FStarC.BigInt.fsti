@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStarC.BigInt
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 type bigint
 type t = bigint

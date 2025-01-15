@@ -33,7 +33,7 @@ let render_issue (i:issue) : string = FStarC_Errors.format_issue i
 
 let mk_issue_doc (i:issue_level_string)
              (msg:FStarC_Pprint.document list)
-             (range:FStarC_Compiler_Range.range option)
+             (range:FStarC_Range.range option)
              (number:Z.t option)
              (ctx:string list)
   = { issue_level = mk_issue_level i;
@@ -45,7 +45,7 @@ let mk_issue_doc (i:issue_level_string)
 (* repeated... could be extracted *)
 let mk_issue (i:issue_level_string)
              (msg:string)
-             (range:FStarC_Compiler_Range.range option)
+             (range:FStarC_Range.range option)
              (number:Z.t option)
              (ctx:string list)
   = { issue_level = mk_issue_level i;

@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 module FStarC.Syntax.Print
 
 open FStarC
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Class.Show
 open FStarC.Class.PP

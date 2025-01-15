@@ -2,7 +2,7 @@ FSTAR_OPTIONS += --lax
 # HACK ALERT! --MLish passed by generic.mk to FStarC modules
 # only. Passing it here would mean the library is checked with
 # --MLish, which fails.
-FSTAR_OPTIONS += --MLish_effect 'FStarC.Compiler.Effect'
+FSTAR_OPTIONS += --MLish_effect 'FStarC.Effect'
 FSTAR_OPTIONS += --no_default_includes
 FSTAR_OPTIONS += --include "$(FSTAR_ROOT)/ulib"
 

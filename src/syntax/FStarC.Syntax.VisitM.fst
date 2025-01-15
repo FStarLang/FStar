@@ -1,8 +1,8 @@
 module FStarC.Syntax.VisitM
 
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.Util
+open FStarC.Effect
+open FStarC.List
+open FStarC.Util
 
 open FStarC.Class.Monad
 
@@ -523,7 +523,7 @@ let visitM_sigelt #m {| md : monad m |} (proc_quotes : bool) vt vu (tm : sigelt)
 
 let open FStarC.Class.Show in
 let open FStarC.Class.Monad in
-let open FStarC.Compiler.Writer in
+let open FStarC.Writer in
 
 type mymon = writer (list lident)
 

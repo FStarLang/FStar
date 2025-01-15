@@ -45,9 +45,9 @@ module FStarC.SMTEncoding.Pruning
 
   Thanks to Chris Hawblitzel and Guido Martínez for design and discussions.
 *)
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.SMTEncoding.Term
 
 (* The main abstract type of this module, representing the set of all assumptions *)

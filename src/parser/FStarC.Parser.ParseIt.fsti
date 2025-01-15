@@ -14,11 +14,11 @@
    limitations under the License.
 *)
 module FStarC.Parser.ParseIt
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Parser
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Errors
 module AU = FStarC.Parser.AST.Util
 type filename = string
@@ -46,7 +46,7 @@ type parse_error = (error_code & error_message & Range.range)
 
 type code_fragment = {
     code: string;
-    range: FStarC.Compiler.Range.range;
+    range: FStarC.Range.range;
 }
 
 type incremental_result 'a = 

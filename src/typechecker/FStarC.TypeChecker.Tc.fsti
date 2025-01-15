@@ -14,8 +14,8 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.Tc
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Effect
+open FStarC.Effect
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common

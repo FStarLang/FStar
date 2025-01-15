@@ -17,13 +17,13 @@
 module FStarC.Syntax.Embeddings.Base
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStar.Pervasives
 open FStarC.Syntax.Syntax
 module S = FStarC.Syntax.Syntax
 
-module Range = FStarC.Compiler.Range
+module Range = FStarC.Range
 
 type norm_cb = either Ident.lident term -> term // a callback to the normalizer
 

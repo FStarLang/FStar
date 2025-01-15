@@ -17,11 +17,11 @@
 module FStarC.Tactics.Hooks
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.Util
-open FStarC.Compiler.Range
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.Util
+open FStarC.Range
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStarC.TypeChecker.Env
@@ -31,8 +31,8 @@ open FStarC.Tactics.Interpreter
 open FStarC.Class.Show
 module Listlike = FStarC.Class.Listlike
 
-module BU      = FStarC.Compiler.Util
-module Range   = FStarC.Compiler.Range
+module BU      = FStarC.Util
+module Range   = FStarC.Range
 module Err     = FStarC.Errors
 module O       = FStarC.Options
 module PC      = FStarC.Parser.Const

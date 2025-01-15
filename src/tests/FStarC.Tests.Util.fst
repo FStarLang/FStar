@@ -17,11 +17,11 @@ module FStarC.Tests.Util
 
 open FStar
 open FStarC
-open FStarC.Compiler
+open FStarC
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Errors
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 module S = FStarC.Syntax.Syntax
@@ -30,10 +30,10 @@ module SS = FStarC.Syntax.Subst
 module I = FStarC.Ident
 module UF = FStarC.Syntax.Unionfind
 module Const = FStarC.Parser.Const
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 open FStarC.Ident
-open FStarC.Compiler.Range
+open FStarC.Range
 open FStarC.Class.Tagged
 open FStarC.Class.Show
 open FStarC.Syntax.Print {}

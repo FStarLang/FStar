@@ -14,14 +14,13 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.Err
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 open FStarC
-open FStarC.Compiler
 open FStarC.Syntax.Syntax
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.TypeChecker.Env
-open FStarC.Compiler.Range
+open FStarC.Range
 open FStarC.Ident
 open FStarC.Pprint
 module N = FStarC.TypeChecker.Normalize

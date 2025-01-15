@@ -17,11 +17,11 @@
 *)
 
 module FStarC.TypeChecker.DeferredImplicits
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Errors
 open FStarC.TypeChecker
 open FStarC.Syntax
@@ -31,7 +31,7 @@ open FStarC.Syntax.Subst
 open FStarC.Ident
 open FStarC.TypeChecker.Common
 open FStarC.Syntax
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst

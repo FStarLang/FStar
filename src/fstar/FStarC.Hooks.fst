@@ -16,9 +16,9 @@
 module FStarC.Hooks
 
 open FStarC
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.Util
+open FStarC.Effect
+open FStarC.List
+open FStarC.Util
 open FStarC.Ident
 open FStarC.Class.Show
 

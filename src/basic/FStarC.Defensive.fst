@@ -1,8 +1,8 @@
 ﻿module FStarC.Defensive
 
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.Util
 open FStarC.Class.Binders
 open FStarC.Class.Show
 open FStarC.Class.Ord

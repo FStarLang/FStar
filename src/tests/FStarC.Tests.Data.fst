@@ -18,12 +18,12 @@ module FStarC.Tests.Data
 
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-module BU = FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+module BU = FStarC.Util
 
-module FlatSet = FStarC.Compiler.FlatSet
-module RBSet = FStarC.Compiler.RBSet
+module FlatSet = FStarC.FlatSet
+module RBSet = FStarC.RBSet
 
 open FStarC.Class.Setlike
 open FStarC.Class.Show

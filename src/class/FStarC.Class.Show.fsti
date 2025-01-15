@@ -1,7 +1,7 @@
 module FStarC.Class.Show
 
-open FStarC.Compiler.Effect
-module BU = FStarC.Compiler.Util
+open FStarC.Effect
+module BU = FStarC.Util
 
 class showable (a:Type) = {
   show : a -> ML string;

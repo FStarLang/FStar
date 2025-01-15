@@ -21,10 +21,10 @@ taken by the dependency analysis to be the interface of the .fs. We also
 cannot ditch the .fs, since out bootstrapping process does not extract
 any .ml file from an interface. Hence we keep both, exactly equal to
 each other. *)
-open FStarC.Compiler.List
+open FStarC.List
 open FStarC.Syntax.Syntax
 module Ident = FStarC.Ident
-module Range = FStarC.Compiler.Range
+module Range = FStarC.Range
 module Z     = FStarC.BigInt
 open FStarC.Ident
 
@@ -38,7 +38,7 @@ open FStarC.Ident
    functions in the interface are not supported for extraction. So,
    we include them in this module implementation file to force them
    to be extracted *)
-let as_ppname (x:string) : Tot ppname_t = FStarC.Compiler.Sealed.seal x
+let as_ppname (x:string) : Tot ppname_t = FStarC.Sealed.seal x
 
 let notAscription (tv:term_view) : Tot bool =
   not (Tv_AscribedT? tv) && not (Tv_AscribedC? tv)

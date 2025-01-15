@@ -16,11 +16,11 @@
 
 module FStarC.Syntax.DsEnv
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Util
@@ -37,7 +37,7 @@ let ugly_sigelt_to_string (se:sigelt) : string = !ugly_sigelt_to_string_hook se
 
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module Const = FStarC.Parser.Const
 
 type local_binding = (ident & bv & used_marker)           (* local name binding for name resolution, paired with an env-generated unique name *)
@@ -150,7 +150,7 @@ let iface_decls env l =
     | Some (_, decls) -> Some decls
 let set_iface_decls env l ds =
     let _, rest =
-        FStarC.Compiler.List.partition
+        FStarC.List.partition
             (fun (m, _) -> Ident.lid_equals l m)
             env.remaining_iface_decls in
     {env with remaining_iface_decls=(l, ds)::rest}
@@ -1073,7 +1073,7 @@ let find_data_constructors_for_typ env (lid:lident) =
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
 let find_binders_for_datacons: env -> lident -> option (list ident) =
-  let debug = FStarC.Compiler.Debug.get_toggle "open_include_restrictions" in
+  let debug = FStarC.Debug.get_toggle "open_include_restrictions" in
   fun env lid ->
     let ns = ns_of_lid lid in
     let k_global_def lid = function
@@ -1251,7 +1251,7 @@ let push_include' env ns restriction =
         in
         env
       | None ->
-        (* module to be included was not prepared, so forbid the 'include'. It may be the case for modules such as FStarC.Compiler.Effect, etc. *)
+        (* module to be included was not prepared, so forbid the 'include'. It may be the case for modules such as FStarC.Effect, etc. *)
         raise_error ns Errors.Fatal_IncludeModuleNotPrepared
           (BU.format1 "include: Module %s was not prepared" (string_of_lid ns))
       end

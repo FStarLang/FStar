@@ -17,15 +17,15 @@
 *)
 module FStarC.Parser.AST.Util
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStarC.Errors
 module C = FStarC.Parser.Const
-open FStarC.Compiler.Range
+open FStarC.Range
 open FStarC.Ident
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Const
 open FStarC.Parser.AST
 
@@ -743,13 +743,13 @@ and lidents_of_effect_decl (ed:effect_decl) =
     concat_map lidents_of_binder bs @
     lidents_of_term t
 
-module BU = FStarC.Compiler.Util
-let extension_parser_table : BU.smap extension_parser = FStarC.Compiler.Util.smap_create 20
+module BU = FStarC.Util
+let extension_parser_table : BU.smap extension_parser = FStarC.Util.smap_create 20
 let register_extension_parser (ext:string) (parser:extension_parser) =
-  FStarC.Compiler.Util.smap_add extension_parser_table ext parser
+  FStarC.Util.smap_add extension_parser_table ext parser
 
 let lookup_extension_parser (ext:string) =
-  let do () = FStarC.Compiler.Util.smap_try_find extension_parser_table ext in
+  let do () = FStarC.Util.smap_try_find extension_parser_table ext in
   match do () with
   | None ->
     if Plugins.autoload_plugin ext
@@ -768,15 +768,15 @@ let as_open_namespaces_and_abbrevs (ls:list decl)
     ls
     {open_namespaces = []; module_abbreviations = []}
 
-let extension_lang_parser_table : BU.smap extension_lang_parser = FStarC.Compiler.Util.smap_create 20
+let extension_lang_parser_table : BU.smap extension_lang_parser = FStarC.Util.smap_create 20
 let register_extension_lang_parser (ext:string) (parser:extension_lang_parser) =
-  FStarC.Compiler.Util.smap_add extension_lang_parser_table ext parser
+  FStarC.Util.smap_add extension_lang_parser_table ext parser
 let lookup_extension_lang_parser (ext:string) =
-  let r = FStarC.Compiler.Util.smap_try_find extension_lang_parser_table ext in
+  let r = FStarC.Util.smap_try_find extension_lang_parser_table ext in
   match r with
   | None ->
     if Plugins.autoload_plugin ext
-    then FStarC.Compiler.Util.smap_try_find extension_lang_parser_table ext
+    then FStarC.Util.smap_try_find extension_lang_parser_table ext
     else None
   | _ -> r
 

@@ -19,10 +19,10 @@ module FStarC.Tests.Unif
 
 open FStar
 open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStarC.Errors
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Syntax.Syntax
 open FStarC.Tests.Pars
 module S = FStarC.Syntax.Syntax
@@ -33,11 +33,11 @@ module P  = FStarC.Syntax.Print
 module N = FStarC.TypeChecker.Normalize
 module Rel = FStarC.TypeChecker.Rel
 module Env = FStarC.TypeChecker.Env
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
 open FStarC.Ident
-open FStarC.Compiler.Range
+open FStarC.Range
 open FStarC.Tests.Util
 
 open FStarC.Class.Show

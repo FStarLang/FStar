@@ -16,12 +16,12 @@
 
 module FStarC.TypeChecker.Normalize
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Defensive
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStar.String
 open FStarC.Const
 open FStar.Char
@@ -41,7 +41,7 @@ open FStarC.Class.Deq
 
 module S  = FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module FC = FStarC.Const
 module PC = FStarC.Parser.Const
 module U  = FStarC.Syntax.Util

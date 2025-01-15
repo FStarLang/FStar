@@ -16,16 +16,16 @@
 module FStarC.Tactics.Types
 
 open FStarC
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.Tactics.Common
 
-module BU      = FStarC.Compiler.Util
+module BU      = FStarC.Util
 module Cfg     = FStarC.TypeChecker.Cfg
 module Core    = FStarC.TypeChecker.Core
 module PO      = FStarC.TypeChecker.Primops
-module Range   = FStarC.Compiler.Range
+module Range   = FStarC.Range
 
 (*
    f: x:int -> P

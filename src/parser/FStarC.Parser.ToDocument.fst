@@ -18,21 +18,21 @@
 module FStarC.Parser.ToDocument
 open FStarC
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Parser.AST
 open FStarC.Ident
 open FStarC.Const
 open FStarC.Pprint
-open FStarC.Compiler.Range
+open FStarC.Range
 open FStarC.Class.Show
 
 module C = FStarC.Parser.Const
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 
 
@@ -48,7 +48,7 @@ let maybe_unthunk t =
 let min x y = if x > y then y else x
 let max x y = if x > y then x else y
 
-// VD: copied over from NBE, should both probably go in FStarC.Compiler.List
+// VD: copied over from NBE, should both probably go in FStarC.List
 let map_rev (f: 'a -> 'b) (l: list 'a): list 'b =
   let rec aux (l:list 'a) (acc:list 'b) =
     match l with
@@ -305,9 +305,9 @@ let is_non_latin_char (s:Char.char): bool
     = int_of_char s > 0x024f
 
 let matches_token (s:string) = function
-    | StartsWith c  -> FStarC.Compiler.String.get s 0 = c
+    | StartsWith c  -> FStarC.String.get s 0 = c
     | Exact      s' -> s = s'
-    | UnicodeOperator -> is_non_latin_char (FStarC.Compiler.String.get s 0)
+    | UnicodeOperator -> is_non_latin_char (FStarC.String.get s 0)
 
 let matches_level s (assoc_levels, tokens) =
     List.tryFind (matches_token s) tokens <> None
@@ -674,7 +674,7 @@ let p_char_literal' quote_char (c: FStarC.BaseTypes.char): document =
   | '\r' -> "\\r"
   | '\v' -> "\\v"
   | '\0' -> "\\0"
-  | c -> let s = FStarC.Compiler.Util.string_of_char c in
+  | c -> let s = FStarC.Util.string_of_char c in
         if quote_char = c then "\\" ^ s else s) |> str
 
 let p_char_literal (c: FStarC.BaseTypes.char): document =
@@ -2292,7 +2292,7 @@ let modul_to_document (m:modul) =
   | Interface (_, decls, _) ->
     decls |> List.map decl_to_document |> separate hardline
 
-let comments_to_document (comments : list (string & FStarC.Compiler.Range.range)) =
+let comments_to_document (comments : list (string & FStarC.Range.range)) =
     separate_map hardline (fun (comment, range) -> str comment) comments
 
 let extract_decl_range (d: decl): decl_meta =

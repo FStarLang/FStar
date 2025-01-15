@@ -17,21 +17,21 @@ module FStarC.Options
 
 open FStar open FStarC
 open FStarC.BaseTypes
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.String
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.String
+open FStarC.Util
 open FStarC.Getopt
 open FStar.Pervasives
 open FStarC.VConfig
 open FStarC.Class.Show
 open FStarC.Class.Deq
 
-module Option = FStarC.Compiler.Option
+module Option = FStarC.Option
 module FC = FStarC.Common
-module Util = FStarC.Compiler.Util
-module List = FStarC.Compiler.List
+module Util = FStarC.Util
+module List = FStarC.List
 
 module Ext = FStarC.Options.Ext
 
@@ -238,7 +238,7 @@ let defaults =
       ("max_fuel"                     , Int 8);
       ("max_ifuel"                    , Int 2);
       ("MLish"                        , Bool false);
-      ("MLish_effect"                 , String "FStar.Compiler.Effect");
+      ("MLish_effect"                 , String "FStar.Effect");
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
@@ -1157,7 +1157,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
   ( noshort,
     "MLish_effect",
     SimpleStr "module_name",
-    text "Set the default effect *module* for --MLish (default: FStar.Compiler.Effect)");
+    text "Set the default effect *module* for --MLish (default: FStar.Effect)");
 
   ( noshort,
     "no_default_includes",
@@ -1491,12 +1491,12 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     ReverseAccumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'"),
     text "Prunes the context to include only the facts from the given namespace or fact id. \
           Facts can be include or excluded using the [+|-] qualifier. \
-          For example --using_facts_from '* -FStarC.Reflection +FStarC.Compiler.List -FStarC.Compiler.List.Tot' will \
-          remove all facts from FStarC.Compiler.List.Tot.*, \
-          retain all remaining facts from FStarC.Compiler.List.*, \
+          For example --using_facts_from '* -FStarC.Reflection +FStarC.List -FStarC.List.Tot' will \
+          remove all facts from FStarC.List.Tot.*, \
+          retain all remaining facts from FStarC.List.*, \
           remove all facts from FStarC.Reflection.*, \
           and retain all the rest. \
-          Note, the '+' is optional: --using_facts_from 'FStarC.Compiler.List' is equivalent to --using_facts_from '+FStarC.Compiler.List'. \
+          Note, the '+' is optional: --using_facts_from 'FStarC.List' is equivalent to --using_facts_from '+FStarC.List'. \
           Multiple uses of this option accumulate, e.g., --using_facts_from A --using_facts_from B is interpreted as --using_facts_from A^B.");
 
   ( noshort,

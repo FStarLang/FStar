@@ -16,8 +16,8 @@
 
 module FStarC.TypeChecker.Quals
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStarC.Errors
 open FStarC.Errors.Msg
 open FStarC.Pprint
@@ -29,7 +29,7 @@ open FStarC.Class.PP
 
 module SS = FStarC.Syntax.Subst
 module S  = FStarC.Syntax.Syntax
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module U  = FStarC.Syntax.Util
 module N  = FStarC.TypeChecker.Normalize
 module C  = FStarC.Parser.Const

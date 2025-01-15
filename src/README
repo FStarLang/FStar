@@ -6,8 +6,8 @@ Some files are written directly in OCaml:
 
  * The lexer: uses the OCaml Sedlexing library
 
- * Some basic system utilities, like FStarC.Compiler.Util only has an
-   interface in F* and is implemented as FStarC_Compiler_Util.ml
+ * Some basic system utilities, like FStarC.Util only has an
+   interface in F* and is implemented as FStarC_Util.ml
 
 --------------------------------------------------------------------------------
 

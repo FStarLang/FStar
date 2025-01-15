@@ -16,9 +16,9 @@
 module FStarC.Parser.AST
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Range
+open FStarC
+open FStarC.Effect
+open FStarC.Range
 open FStarC.Const
 open FStarC.Ident
 open FStarC.Class.Show
@@ -335,7 +335,7 @@ val extract_named_refinement : bool -> term -> option (ident & term & option ter
 
 val as_frag : list decl -> inputFragment
 
-// TODO: Move to something like FStarC.Compiler.Util
+// TODO: Move to something like FStarC.Util
 val strip_prefix : string -> string -> option string
 
 val compile_op : int -> string -> range -> string

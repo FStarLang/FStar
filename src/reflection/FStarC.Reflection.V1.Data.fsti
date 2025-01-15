@@ -21,11 +21,11 @@ taken by the dependency analysis to be the interface of the .fs. We also
 cannot ditch the .fs, since out bootstrapping process does not extract
 any .ml file from an interface. Hence we keep both, exactly equal to
 each other. *)
-open FStarC.Compiler.List
+open FStarC.List
 open FStarC.Syntax.Syntax
-open FStarC.Compiler.Sealed
+open FStarC.Sealed
 module Ident = FStarC.Ident
-module Range = FStarC.Compiler.Range
+module Range = FStarC.Range
 module Z     = FStarC.BigInt
 open FStarC.Ident
 

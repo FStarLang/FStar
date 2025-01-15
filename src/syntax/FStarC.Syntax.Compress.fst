@@ -2,16 +2,16 @@ module FStarC.Syntax.Compress
 open FStarC
 
 open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Util
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Subst
 open FStarC.Syntax.Visit
 
 open FStarC.Class.Show
 
-module List = FStarC.Compiler.List
+module List = FStarC.List
 module Err = FStarC.Errors
 
 (* This function really just checks for bad(tm) things happening, the

@@ -1,8 +1,8 @@
 module FStarC.Errors.Msg
 
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.Util
 open FStarC.Pprint
 
 instance is_error_message_string   : is_error_message string = {
@@ -58,6 +58,6 @@ let rendermsg (ds : list document) : string =
   renderdoc (concat (List.map (fun d -> subdoc (group d)) ds))
 
 let json_of_error_message (err_msg: list document): FStarC.Json.json
-  = FStarC.Compiler.List.map
+  = FStarC.List.map
       (fun doc -> FStarC.Json.JsonStr (renderdoc doc)) err_msg
     |> FStarC.Json.JsonList

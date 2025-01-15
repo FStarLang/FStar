@@ -16,12 +16,12 @@
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.RemoveUnusedParameters
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Ident
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Const
 open FStarC.BaseTypes
 open FStarC.Extraction.ML.Syntax
@@ -37,7 +37,7 @@ open FStarC.Class.Show
   parameters. However, this transformation may also be useful for use
   with OCaml, since it may lead to nicer code.
 *)
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 (**
   The transformation maintains an environment recording which

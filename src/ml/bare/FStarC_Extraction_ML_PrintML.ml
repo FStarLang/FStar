@@ -93,8 +93,8 @@ let mk_top_mllb (e: mlexpr): mllb =
    print_typ=false }
 
 (* Find the try_with in the default effect module. For instance this can be
-FStar.All.try_with (for most users) or FStarC.Compiler.Effect.try_with (during
-bootstrapping with "--MLish --MLish_effect FStarC.Compiler.Effect"). *)
+FStar.All.try_with (for most users) or FStarC.Effect.try_with (during
+bootstrapping with "--MLish --MLish_effect FStarC.Effect"). *)
 let try_with_ident () =
   let lid = FStarC_Parser_Const.try_with_lid () in
   let ns = FStarC_Ident.ns_of_lid lid in
@@ -559,7 +559,7 @@ let print (out_dir: string option) (ext: string) (ml: mllib) =
      (* Use the old printer for F# extraction *)
      let new_doc = FStarC_Extraction_ML_Code.doc_of_mllib ml in
      iter (fun (n, d) ->
-         FStarC_Compiler_Util.write_file
+         FStarC_Util.write_file
            (FStarC_Find.prepend_output_dir (BatString.concat "" [n;ext]))
            (FStarC_Extraction_ML_Code.pretty (Prims.parse_int "120") d)
            ) new_doc

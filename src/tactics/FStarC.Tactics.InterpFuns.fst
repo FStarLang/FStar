@@ -19,10 +19,10 @@ module FStarC.Tactics.InterpFuns
 (* This module is awful, don't even look at it please. *)
 
 open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStarC.Syntax.Syntax
-open FStarC.Compiler.Range
+open FStarC.Range
 
 open FStarC.Tactics.Types
 open FStarC.Tactics.Result
@@ -33,7 +33,7 @@ open FStarC.Tactics.Monad
 module S     = FStarC.Syntax.Syntax
 module SS    = FStarC.Syntax.Subst
 module PC    = FStarC.Parser.Const
-module BU    = FStarC.Compiler.Util
+module BU    = FStarC.Util
 module Print = FStarC.Syntax.Print
 module Cfg   = FStarC.TypeChecker.Cfg
 module E     = FStarC.Tactics.Embedding

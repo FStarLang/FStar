@@ -19,10 +19,10 @@
 
 module FStarC.Interactive.PushHelper
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Util
+open FStarC.Effect
+open FStarC.Util
 open FStarC.Ident
 open FStarC.TypeChecker.Env
 open FStarC.Interactive.JsonHelper

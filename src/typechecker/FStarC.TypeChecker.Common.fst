@@ -16,12 +16,12 @@
 module FStarC.TypeChecker.Common
 open Prims
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Ident
@@ -29,7 +29,7 @@ module S = FStarC.Syntax.Syntax
 module Print = FStarC.Syntax.Print
 module U = FStarC.Syntax.Util
 
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module PC = FStarC.Parser.Const
 module C = FStarC.Parser.Const
 
@@ -113,7 +113,7 @@ let id_info_table_empty =
       id_info_db = BU.psmap_empty ();
       id_info_buffer = [] }
 
-open FStarC.Compiler.Range
+open FStarC.Range
 
 let print_identifier_info info =
   BU.format3 "id info { %s, %s : %s}"
@@ -285,7 +285,7 @@ let mk_lcomp eff_name res_typ cflags comp_thunk =
     { eff_name = eff_name;
       res_typ = res_typ;
       cflags = cflags;
-      comp_thunk = FStarC.Compiler.Util.mk_ref (Inl comp_thunk) }
+      comp_thunk = FStarC.Util.mk_ref (Inl comp_thunk) }
 
 let lcomp_comp lc =
     match !(lc.comp_thunk) with

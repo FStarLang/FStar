@@ -1,4 +1,4 @@
-open FStarC_Compiler_Range
+open FStarC_Range
 open Lexing
 
 (* This brings into scope enough the translation of F# type names into the
@@ -28,16 +28,16 @@ exception ReportedError
 exception StopProcessing
 
 let warningHandler = ref (fun (e:exn) -> 
-                          FStarC_Compiler_Util.print_string "no warning handler installed\n" ; 
-                          FStarC_Compiler_Util.print_any e; ())
+                          FStarC_Util.print_string "no warning handler installed\n" ; 
+                          FStarC_Util.print_any e; ())
 let errorHandler = ref (fun (e:exn) -> 
-                        FStarC_Compiler_Util.print_string "no warning handler installed\n" ; 
-                        FStarC_Compiler_Util.print_any e; ())
+                        FStarC_Util.print_string "no warning handler installed\n" ; 
+                        FStarC_Util.print_any e; ())
 let errorAndWarningCount = ref 0
 let errorR  exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !errorHandler exn
 let warning exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !warningHandler exn
 
-let comments : (string * FStarC_Compiler_Range.range) list ref = ref []
+let comments : (string * FStarC_Range.range) list ref = ref []
 let add_comment x = comments := x :: !comments
 let flush_comments () =
   let lexed_comments = !comments in

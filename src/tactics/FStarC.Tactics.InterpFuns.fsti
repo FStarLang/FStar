@@ -18,8 +18,8 @@ module FStarC.Tactics.InterpFuns
 
 (* This module is awful, don't even look at it please. *)
 
-open FStar open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStar open FStarC
+open FStarC.Effect
 
 open FStarC.Syntax.Embeddings
 open FStarC.Tactics.Monad

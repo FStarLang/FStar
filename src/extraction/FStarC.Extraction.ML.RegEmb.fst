@@ -19,15 +19,15 @@ module FStarC.Extraction.ML.RegEmb
 embeddings for their types. *)
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC
+open FStarC.Effect
+open FStarC.List
 open FStarC.Const
 open FStarC.Extraction.ML.Syntax
 open FStarC.Extraction.ML.UEnv
 open FStarC.Syntax.Syntax
 
-module BU    = FStarC.Compiler.Util
+module BU    = FStarC.Util
 module Code  = FStarC.Extraction.ML.Code
 module EMB   = FStarC.Syntax.Embeddings
 module Env   = FStarC.TypeChecker.Env
@@ -100,7 +100,7 @@ let cons_lid       = Ident.lid_of_str "Prims.Cons"
 
 let embed      = mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"; "Base"; "extracted_embed"]))
 let unembed    = mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"; "Base"; "extracted_unembed"]))
-let bind_opt   = mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Compiler"; "Util"; "bind_opt"]))
+let bind_opt   = mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Util"; "bind_opt"]))
 
 let ml_nbe_unsupported : mlexpr =
   (* extraction thunks this definition *)

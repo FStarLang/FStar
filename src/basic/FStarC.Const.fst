@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Const
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 open FStarC.BigInt
 open FStar.Char
@@ -22,7 +22,7 @@ open FStar.Char
 let eq_const c1 c2 =
     match c1, c2 with
     | Const_int (s1, o1), Const_int(s2, o2) ->
-      FStarC.Compiler.Util.ensure_decimal s1 = FStarC.Compiler.Util.ensure_decimal s2 &&
+      FStarC.Util.ensure_decimal s1 = FStarC.Util.ensure_decimal s2 &&
       o1=o2
     | Const_string(a, _), Const_string(b, _) -> a=b
     | Const_reflect l1, Const_reflect l2 -> Ident.lid_equals l1 l2
@@ -55,5 +55,5 @@ let bounds signedness width =
 
 let within_bounds repr signedness width =
   let lower, upper = bounds signedness width in
-  let value = big_int_of_string (FStarC.Compiler.Util.ensure_decimal repr) in
+  let value = big_int_of_string (FStarC.Util.ensure_decimal repr) in
   le_big_int lower value && le_big_int value upper

@@ -16,20 +16,20 @@
 module FStarC.Syntax.Util
 open Prims
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Ident
-open FStarC.Compiler.Range
+open FStarC.Range
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Const
 open FStarC.Dyn
-module U = FStarC.Compiler.Util
-module List = FStarC.Compiler.List
+module U = FStarC.Util
+module List = FStarC.List
 module PC = FStarC.Parser.Const
 
 open FStarC.Class.Show
@@ -688,7 +688,7 @@ let qualifier_equal q1 q2 = match q1, q2 with
 let abs bs t lopt =
   let close_lopt lopt = match lopt with
       | None -> None
-      | Some rc -> Some ({rc with residual_typ=FStarC.Compiler.Util.map_opt rc.residual_typ (close bs)})
+      | Some rc -> Some ({rc with residual_typ=FStarC.Util.map_opt rc.residual_typ (close bs)})
   in
   match bs with
   | [] -> t
@@ -832,7 +832,7 @@ let let_rec_arity (lb:letbinding) : int & option (list bool) =
 let abs_formals_maybe_unascribe_body maybe_unascribe t =
     let subst_lcomp_opt s l = match l with
         | Some rc ->
-          Some ({rc with residual_typ=FStarC.Compiler.Util.map_opt rc.residual_typ (Subst.subst s)})
+          Some ({rc with residual_typ=FStarC.Util.map_opt rc.residual_typ (Subst.subst s)})
         | _ -> l
     in
     let rec aux t abs_body_lcomp =
@@ -1560,7 +1560,7 @@ let is_synth_by_tactic t =
     is_fvar PC.synth_lid t
 
 let has_attribute (attrs:list Syntax.attribute) (attr:lident) =
-     FStarC.Compiler.Util.for_some (is_fvar attr) attrs
+     FStarC.Util.for_some (is_fvar attr) attrs
 
 (* Checks whether the list of attrs contains an application of `attr`, and
  * returns the arguments if so. If there's more than one, the first one
@@ -2142,7 +2142,7 @@ let is_binder_unused (b:binder) =
   b.binder_positivity = Some BinderUnused
 
 let deduplicate_terms (l:list term) = 
-  FStarC.Compiler.List.deduplicate (fun x y -> term_eq x y) l
+  FStarC.List.deduplicate (fun x y -> term_eq x y) l
 
 let eq_binding b1 b2 =
     match b1, b2 with

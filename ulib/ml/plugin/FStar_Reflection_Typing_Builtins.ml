@@ -1,6 +1,6 @@
 open Fstarcompiler
 open FStarC_Syntax_Syntax
-module R = FStarC_Compiler_Range
+module R = FStarC_Range
 
 let dummy_range = R.dummyRange
 let underscore = FStarC_Ident.mk_ident ("_", R.dummyRange)

@@ -15,6 +15,6 @@
 *)
 
 module FStarC.Interactive.Legacy
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 val interactive_mode (filename:string) : unit

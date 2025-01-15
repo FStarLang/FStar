@@ -1,6 +1,6 @@
 ﻿module FStarC.GenSym
 
-module Util = FStarC.Compiler.Util
+module Util = FStarC.Util
 
 (* private *)
 let gensym_st = Util.mk_ref 0

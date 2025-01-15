@@ -16,7 +16,7 @@
 
 // A dependency-finding routine
 module FStarC.Dependencies
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 (***********************************************************************)
 (* Finding the transitive dependencies of a list of files               *)

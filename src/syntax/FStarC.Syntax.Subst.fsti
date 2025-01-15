@@ -14,13 +14,13 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Subst
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
-open FStarC.Compiler.Util
+open FStarC.Util
 
 val shift_subst:        int -> subst_t -> subst_t
 val subst:              list subst_elt -> term -> term

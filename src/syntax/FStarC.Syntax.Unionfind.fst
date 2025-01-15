@@ -15,15 +15,15 @@
 *)
 
 module FStarC.Syntax.Unionfind
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Errors
 open FStarC.Syntax.Syntax
 
-module Range = FStarC.Compiler.Range
+module Range = FStarC.Range
 module S     = FStarC.Syntax.Syntax
 module PU    = FStarC.Unionfind
-module BU    = FStarC.Compiler.Util
-module L     = FStarC.Compiler.List
+module BU    = FStarC.Util
+module L     = FStarC.List
 module O     = FStarC.Options
 
 type vops_t = {

@@ -15,7 +15,7 @@
 *)
 module FStarC.OCaml
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 (* Escape a string for use in a shell command, expecting to be wrapped in SINGLE quotes. *)
 val shellescape (s:string) : string

@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Encode
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.SMTEncoding.Term
 module ErrorReporting = FStarC.SMTEncoding.ErrorReporting
 module S = FStarC.Syntax.Syntax

@@ -1,13 +1,13 @@
 module FStarC.TypeChecker.Primops.Range
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC
+open FStarC.Effect
+open FStarC.List
 open FStarC.Class.Monad
 
 open FStarC.TypeChecker.Primops.Base
-open FStarC.Compiler.Range
+open FStarC.Range
 
 module PC = FStarC.Parser.Const
 module Z = FStarC.BigInt
@@ -27,7 +27,7 @@ let __mk_range (fn : string) (from_l from_c to_l to_c : Z.t) : unsealedRange =
 let explode (r : unsealedRange) : (string & Z.t & Z.t & Z.t & Z.t) =
   match r with
   | U r ->
-    let open FStarC.Compiler.Range.Type in
+    let open FStarC.Range.Type in
     (file_of_range r,
      Z.of_int_fs (line_of_pos (start_of_range r)),
      Z.of_int_fs (col_of_pos  (start_of_range r)),
@@ -52,5 +52,5 @@ let ops = [
   mk5 0 PC.__mk_range_lid __mk_range;
   mk5 0 PC.mk_range_lid   mk_range;
   mk1 0 PC.__explode_range_lid explode;
-  mk2 0 PC.join_range_lid FStarC.Compiler.Range.union_ranges;
+  mk2 0 PC.join_range_lid FStarC.Range.union_ranges;
 ]

@@ -17,16 +17,16 @@
 module FStarC.Syntax.Embeddings.Base
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Range
+open FStarC
+open FStarC.Effect
+open FStarC.Range
 open FStar.Pervasives
 open FStarC.Syntax.Syntax
 open FStarC.Class.Show
 open FStarC.Class.PP
 open FStarC.Class.Deq
 
-module BU    = FStarC.Compiler.Util
+module BU    = FStarC.Util
 module Err   = FStarC.Errors
 module Ident = FStarC.Ident
 module PC    = FStarC.Parser.Const

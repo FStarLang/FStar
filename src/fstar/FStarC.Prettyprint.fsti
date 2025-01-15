@@ -16,7 +16,7 @@
 
 module FStarC.Prettyprint
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 type printing_mode =
   | ToTempFile

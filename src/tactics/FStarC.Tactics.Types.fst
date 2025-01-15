@@ -16,15 +16,15 @@
 module FStarC.Tactics.Types
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
 
 module Env     = FStarC.TypeChecker.Env
 module O       = FStarC.Options
-module Range   = FStarC.Compiler.Range
+module Range   = FStarC.Range
 module U       = FStarC.Syntax.Util
 
 let goal_env g = g.goal_main_env

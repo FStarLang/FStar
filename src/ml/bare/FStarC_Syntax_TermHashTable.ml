@@ -1,6 +1,6 @@
 module S = FStarC_Syntax_Syntax
 module P = FStarC_Profiling
-module BU = FStarC_Compiler_Util
+module BU = FStarC_Util
 let now () = BatUnix.gettimeofday ()
 let record_time f = 
     let start = now () in

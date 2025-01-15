@@ -17,8 +17,8 @@
 module FStarC.Interactive.CompletionTable
 
 open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 
 let string_compare s1 s2 =
   String.compare s1 s2
@@ -379,7 +379,7 @@ let empty : table =
 // completion of opens and includes, and these take full module paths.
 // Inclusions handling would have to be reinstated should we wish to also
 // complete partial names of unloaded (e.g. [open FStar // let x = List._] when
-// FStarC.Compiler.List isn't loaded).
+// FStarC.List isn't loaded).
 
 let insert (tbl: table) (host_query: query) (id: string) (c: lid_symbol) : table =
   { tbl with tbl_lids = trie_insert tbl.tbl_lids host_query id c }

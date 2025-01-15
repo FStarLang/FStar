@@ -16,14 +16,14 @@
 
 module FStarC.Interactive.Incremental
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Parser.AST
 open FStarC.Errors
 open FStarC.Interactive.Ide.Types
-open FStarC.Compiler.Util
+open FStarC.Util
 
 (* Various kinds of progress messages to print back to the client *)
 type fragment_progress =
