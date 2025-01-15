@@ -2151,7 +2151,7 @@ let has_typeclass_constraint (u:ctx_uvar) (wl:worklist)
   = wl.typeclass_variables |> for_any (fun v -> UF.equiv v.ctx_uvar_head u.ctx_uvar_head)
 
 let maybe_eta_expand_fun (env: env) (e t_e t_expected: term) : option term =
-  let norm = N.normalize [Env.Primops; Env.HNF; Env.Beta; Env.Eager_unfolding; Env.Unascribe; Env.Unrefine] env in
+  let norm = N.normalize [Env.Primops; Env.UnfoldUntil delta_constant; Env.HNF; Env.Beta; Env.Unascribe; Env.Unrefine] env in
   let t_e = norm t_e in
   let t_expected = norm t_expected in
   if !dbg_Rel then BU.print2 "t_e=%s   t_exp=%s\n" (show t_e) (show t_expected);
