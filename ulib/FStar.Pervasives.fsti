@@ -342,7 +342,7 @@ let reveal_opaque (s: string) = norm_spec [delta_once [s]]
     (with monotonicity refinement) *)
 
 unfold
-let pure_return (a:Type) (x:a) : pure_wp a =
+let pure_return (a:Type) (x:a) : GTot (pure_wp a) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   pure_return0 a x
 
@@ -455,7 +455,7 @@ let st_wp_h (heap a: Type) = st_post_h heap a -> Tot (st_pre_h heap)
 
 (** Returning a value does not transform the state *)
 unfold
-let st_return (heap a: Type) (x: a) (p: st_post_h heap a) = p x
+let st_return (heap a: Type) (x: a) : GTot (st_wp_h heap a) = fun (p: st_post_h heap a) -> p x
 
 (** Sequential composition of stateful WPs *)
 unfold
@@ -463,24 +463,27 @@ let st_bind_wp
       (heap: Type)
       (a b: Type)
       (wp1: st_wp_h heap a)
-      (wp2: (a -> GTot (st_wp_h heap b)))
+      (wp2: a -> st_wp_h heap b)
+    : st_wp_h heap b = fun
       (p: st_post_h heap b)
       (h0: heap)
-     = wp1 (fun a h1 -> wp2 a p h1) h0
+    -> wp1 (fun a h1 -> wp2 a p h1) h0
 
 (** Branching for stateful WPs *)
 unfold
 let st_if_then_else
       (heap a p: Type)
       (wp_then wp_else: st_wp_h heap a)
+    : st_wp_h heap a =
+    fun
       (post: st_post_h heap a)
       (h0: heap)
-     = wp_then post h0 /\ (~p ==> wp_else post h0)
+    -> wp_then post h0 /\ (~p ==> wp_else post h0)
 
 (** As with [PURE] the [wp] combinator names the postcondition as
     [k] to avoid duplicating it. *)
 unfold
-let st_ite_wp (heap a: Type) (wp: st_wp_h heap a) (post: st_post_h heap a) (h0: heap) =
+let st_ite_wp (heap a: Type) (wp: st_wp_h heap a) : st_wp_h heap a = fun (post: st_post_h heap a) (h0: heap) ->
   forall (k: st_post_h heap a).
     (forall (x: a) (h: heap). {:pattern (guard_free (k x h))} post x h ==> k x h) ==> wp k h0
 
@@ -491,12 +494,12 @@ let st_stronger (heap a: Type) (wp1 wp2: st_wp_h heap a) =
 
 (** Closing the scope of a binder within a stateful WP *)
 unfold
-let st_close_wp (heap a b: Type) (wp: (b -> GTot (st_wp_h heap a))) (p: st_post_h heap a) (h: heap) =
+let st_close_wp (heap a b: Type) (wp: b -> st_wp_h heap a) : st_wp_h heap a = fun (p: st_post_h heap a) (h: heap) ->
   (forall (b: b). wp b p h)
 
 (** Applying a stateful WP to a trivial postcondition *)
 unfold
-let st_trivial (heap a: Type) (wp: st_wp_h heap a) = (forall h0. wp (fun r h1 -> True) h0)
+let st_trivial (heap a: Type) (wp: st_wp_h heap a) : GTot prop = (forall h0. wp (fun r h1 -> True) h0)
 
 (** Introducing a new effect template [STATE_h] *)
 new_effect {
@@ -541,13 +544,12 @@ let ex_wp (a: Type) = ex_post a -> GTot ex_pre
 
 (** Returning a value [x] normally promotes it to the [V x] result *)
 unfold
-let ex_return (a: Type) (x: a) (p: ex_post a) : GTot Type0 = p (V x)
+let ex_return (a: Type) (x: a) : GTot (ex_wp a) = fun p -> p (V x)
 
 (** Sequential composition of exception-raising code requires case analysing
     the result of the first computation before "running" the second one *)
 unfold
-let ex_bind_wp (a b: Type) (wp1: ex_wp a) (wp2: (a -> GTot (ex_wp b))) (p: ex_post b)
-    : GTot Type0 =
+let ex_bind_wp (a b: Type) (wp1: ex_wp a) (wp2: (a -> (ex_wp b))) : ex_wp b = fun p ->
   forall (k: ex_post b).
     (forall (rb: result b). {:pattern (guard_free (k rb))} p rb ==> k rb) ==>
     (wp1 (function
@@ -558,12 +560,12 @@ let ex_bind_wp (a b: Type) (wp1: ex_wp a) (wp2: (a -> GTot (ex_wp b))) (p: ex_po
 (** As for other effects, branching in [ex_wp] appears in two forms.
     First, a simple case analysis on [p] *)
 unfold
-let ex_if_then_else (a p: Type) (wp_then wp_else: ex_wp a) (post: ex_post a) =
+let ex_if_then_else (a p: Type) (wp_then wp_else: ex_wp a) : ex_wp a = fun (post: ex_post a) ->
   wp_then post /\ (~p ==> wp_else post)
 
 (** Naming continuations for use with branching *)
 unfold
-let ex_ite_wp (a: Type) (wp: ex_wp a) (post: ex_post a) =
+let ex_ite_wp (a: Type) (wp: ex_wp a) : ex_wp a = fun (post: ex_post a) ->
   forall (k: ex_post a).
     (forall (rb: result a). {:pattern (guard_free (k rb))} post rb ==> k rb) ==> wp k
 
@@ -573,11 +575,11 @@ let ex_stronger (a: Type) (wp1 wp2: ex_wp a) = (forall (p: ex_post a). wp1 p ==>
 
 (** Closing the scope of a binder for exceptional WPs *)
 unfold
-let ex_close_wp (a b: Type) (wp: (b -> GTot (ex_wp a))) (p: ex_post a) = (forall (b: b). wp b p)
+let ex_close_wp (a b: Type) (wp: b -> ex_wp a) : ex_wp a = fun (p: ex_post a) -> (forall (b: b). wp b p)
 
 (** Applying a computation with a trivial postcondition *)
 unfold
-let ex_trivial (a: Type) (wp: ex_wp a) = wp (fun r -> True)
+let ex_trivial (a: Type) (wp: ex_wp a) : GTot ex_pre = wp (fun r -> True)
 
 (** Introduce a new effect for [EXN] *)
 new_effect {
@@ -601,7 +603,7 @@ effect Exn (a: Type) (pre: ex_pre) (post: ex_post' a pre) =
     NOTE: BE WARNED, CODE IN THE [EXN] EFFECT IS ONLY CHECKED FOR
     PARTIAL CORRECTNESS *)
 unfold
-let lift_div_exn (a: Type) (wp: pure_wp a) (p: ex_post a) = wp (fun a -> p (V a))
+let lift_div_exn (a: Type) (wp: pure_wp a) : ex_wp a = fun (p: ex_post a) -> wp (fun a -> p (V a))
 sub_effect DIV ~> EXN { lift_wp = lift_div_exn }
 
 (** A variant of [Exn] with trivial pre- and postconditions *)
@@ -637,7 +639,7 @@ let all_wp_h (h a: Type) = all_post_h h a -> Tot (all_pre_h h)
 (** Returning a value [x] normally promotes it to the [V x] result
     without touching the [heap] *)
 unfold
-let all_return (heap a: Type) (x: a) (p: all_post_h heap a) = p (V x)
+let all_return (heap a: Type) (x: a) : GTot (all_wp_h heap a) = fun (p: all_post_h heap a) -> p (V x)
 
 (** Sequential composition for [ALL_h] is like [EXN]: case analysis of
     the exceptional result before "running" the continuation *)
@@ -646,10 +648,9 @@ let all_bind_wp
       (heap: Type)
       (a b: Type)
       (wp1: all_wp_h heap a)
-      (wp2: (a -> GTot (all_wp_h heap b)))
-      (p: all_post_h heap b)
-      (h0: heap)
-    : GTot Type0 =
+      (wp2: a -> all_wp_h heap b)
+    : all_wp_h heap b =
+  fun (p: all_post_h heap b) (h0: heap) ->
   wp1 (fun ra h1 ->
         (match ra with
           | V v -> wp2 v p h1
@@ -662,13 +663,13 @@ unfold
 let all_if_then_else
       (heap a p: Type)
       (wp_then wp_else: all_wp_h heap a)
-      (post: all_post_h heap a)
-      (h0: heap)
-     = wp_then post h0 /\ (~p ==> wp_else post h0)
+    : all_wp_h heap a
+    = fun (post: all_post_h heap a) (h0: heap)
+    -> wp_then post h0 /\ (~p ==> wp_else post h0)
 
 (** Naming postcondition for better sharing in [ALL_h] *)
 unfold
-let all_ite_wp (heap a: Type) (wp: all_wp_h heap a) (post: all_post_h heap a) (h0: heap) =
+let all_ite_wp (heap a: Type) (wp: all_wp_h heap a) : all_wp_h heap a = fun (post: all_post_h heap a) (h0: heap) ->
   forall (k: all_post_h heap a).
     (forall (x: result a) (h: heap). {:pattern (guard_free (k x h))} post x h ==> k x h) ==> wp k h0
 
@@ -681,14 +682,14 @@ let all_stronger (heap a: Type) (wp1 wp2: all_wp_h heap a) =
 unfold
 let all_close_wp
       (heap a b: Type)
-      (wp: (b -> GTot (all_wp_h heap a)))
-      (p: all_post_h heap a)
-      (h: heap)
-     = (forall (b: b). wp b p h)
+      (wp: b -> all_wp_h heap a)
+    : all_wp_h heap a
+    = fun (p: all_post_h heap a) (h: heap)
+    -> (forall (b: b). wp b p h)
 
 (** Applying an [ALL_h] wp to a trivial postcondition *)
 unfold
-let all_trivial (heap a: Type) (wp: all_wp_h heap a) = (forall (h0: heap). wp (fun r h1 -> True) h0)
+let all_trivial (heap a: Type) (wp: all_wp_h heap a) : GTot prop = (forall (h0: heap). wp (fun r h1 -> True) h0)
 
 (** Introducing the [ALL_h] effect template *)
 new_effect {

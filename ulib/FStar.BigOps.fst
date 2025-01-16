@@ -108,7 +108,7 @@ let pairwise_or'_nil (#a:Type) (f:a -> a -> Type0)
   = assert (pairwise_or' f [] == False) by (T.compute())
 
 let pairwise_or'_cons (#a:Type) (f:a -> a -> Type) (hd:a) (tl:list a)
-  = assert (pairwise_or' f (hd::tl) == (big_or' (f hd) tl \/ pairwise_or' f tl))
+  = assert_norm (pairwise_or' f (hd::tl) == (big_or' (f hd) tl \/ pairwise_or' f tl))
 
 let pairwise_or'_prop (#a:Type) (f:a -> a -> Type) (l:list a)
   = match l with

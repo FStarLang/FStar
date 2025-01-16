@@ -6,8 +6,8 @@ set. *)
 
 open FStar.Functions
 
-val no_surj_powerset (a : Type) (f : a -> powerset a)
+val no_surj_powerset (a : Type) (f : a -> GTot (powerset a))
   : Lemma (~(is_surj f))
 
-val no_inj_powerset (a : Type) (f : powerset a -> a)
+val no_inj_powerset (a : Type) (f : powerset a -> GTot a)
   : Lemma (~(is_inj f))

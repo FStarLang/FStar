@@ -25,11 +25,11 @@ open FStar.Stubs.Tactics.Result
  * will break. (`synth_by_tactic` is fine) *)
 
 type tac_wp_t0 (a:Type) =
-  proofstate -> (__result a -> Type0) -> Type0
+  proofstate -> (__result a -> GTot Type0) -> GTot Type0
 
 unfold
 let tac_wp_monotonic (#a:Type) (wp:tac_wp_t0 a) =
-  forall (ps:proofstate) (p q:__result a -> Type0).
+  forall (ps:proofstate) (p q:__result a -> GTot Type0).
     (forall x. p x ==> q x) ==> (wp ps p ==> wp ps q)
 
 type tac_wp_t (a:Type) = wp:tac_wp_t0 a{tac_wp_monotonic wp}

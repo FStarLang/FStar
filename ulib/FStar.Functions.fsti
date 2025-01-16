@@ -6,11 +6,22 @@ about functions and sets. *)
 let is_inj (#a #b : _) (f : a -> GTot b) : prop =
   forall (x1 x2 : a). f x1 == f x2 ==> x1 == x2
 
+let to_gtot #a #b (f: a -> b) : (a -> GTot b) = fun x -> f x
+
+let is_inj_tot #a #b (f: a -> b) : prop =
+  is_inj (to_gtot f)
+
 let is_surj (#a #b : _) (f : a -> GTot b) : prop =
   forall (y:b). exists (x:a). f x == y
 
+let is_surj_tot #a #b (f: a -> b) : prop =
+  is_surj (to_gtot f)
+
 let is_bij (#a #b : _) (f : a -> GTot b) : prop =
   is_inj f /\ is_surj f
+
+let is_bij_tot #a #b (f: a -> b) : prop =
+  is_bij (to_gtot f)
 
 let in_image (#a #b : _) (f : a -> GTot b) (y : b) : prop =
   exists (x:a). f x == y

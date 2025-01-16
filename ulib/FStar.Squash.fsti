@@ -76,13 +76,13 @@ val squash_double_arrow (#a: Type) (#p: (a -> Type)) ($f: (squash (x: a -> GTot 
     : GTot (squash (x: a -> GTot (p x)))
 
 (** The analog of [push_squash] for sums (existential quantification *)
-val push_sum (#a: Type) (#b: (a -> Type)) ($p: (dtuple2 a (fun (x: a) -> squash (b x))))
+val push_sum (#a: Type) (#b: (a -> GTot Type)) ($p: (dtuple2 a (fun (x: a) -> squash (b x))))
     : Tot (squash (dtuple2 a b))
 
 (** The analog of [squash_double_arrow] for sums (existential quantification) *)
 val squash_double_sum
       (#a: Type)
-      (#b: (a -> Type))
+      (#b: (a -> GTot Type))
       ($p: (squash (dtuple2 a (fun (x: a) -> squash (b x)))))
     : Tot (squash (dtuple2 a b))
 
