@@ -38,10 +38,20 @@ jobs:
           # we use $(version.txt)~dev. Setting it avoids the ~dev.
           cd $GITHUB_WORKSPACE && if [[ "${{github.workflow_ref}}" =~ "nightly.yml" ]]; then echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV; elif [[ "${{github.workflow_ref}}" =~ "release.yml" ]]; then echo FSTAR_VERSION="$(cat fstar/version.txt)" >> $GITHUB_ENV; echo FSTAR_RELEASE=1 >> $GITHUB_ENV; fi && echo "There is a CR at the end of this line"
 
+      - name: Prepare environment
+        shell: C:\cygwin64\bin\bash.exe --login '{0}'
+        run: |
+          echo "CC=x86_64-w64-mingw32-gcc.exe" >> $GITHUB_ENV
+          # echo "FSTAR_DUNE_OPTIONS=-j1" >> $GITHUB_ENV
+          echo "DUNE_CONFIG__BACKGROUND_SANDBOXES=disabled" >> $GITHUB_ENV
+        # ^ Related issues:
+        # https://github.com/ocaml/dune/issues/2324
+        # https://github.com/ocaml/dune/issues/10076
+
       - name: Build a package
         shell: C:\cygwin64\bin\bash.exe --login '{0}'
         run: |
-          cd $GITHUB_WORKSPACE && cd fstar && eval $(opam env) && export CC=x86_64-w64-mingw32-gcc.exe && make -j$(nproc) package V=1 ADMIT=1 && mv fstar.zip fstar-Windows_NT-x86_64.zip && echo "There is a CR at the end of this line"
+          cd $GITHUB_WORKSPACE && cd fstar && eval $(opam env) && make -j$(nproc) package V=1 ADMIT=1 && mv fstar.zip fstar-Windows_NT-x86_64.zip && echo "There is a CR at the end of this line"
 
       # - name: Test the package
       #   shell: C:\cygwin64\bin\bash.exe --login '{0}'
