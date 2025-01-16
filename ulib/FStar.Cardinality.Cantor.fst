@@ -2,7 +2,7 @@ module FStar.Cardinality.Cantor
 
 open FStar.Functions
 
-let no_surj_powerset (a : Type) (f : a -> powerset a) : Lemma (~(is_surj f)) =
+let no_surj_powerset (a : Type) (f : a -> GTot (powerset a)) : Lemma (~(is_surj f)) =
   let aux () : Lemma (requires is_surj f) (ensures False) =
     (* Cantor's proof: given a supposed surjective f,
     we define a set s that cannot be in the image of f. Namely,
@@ -16,9 +16,9 @@ let no_surj_powerset (a : Type) (f : a -> powerset a) : Lemma (~(is_surj f)) =
   in
   Classical.move_requires aux ()
 
-let no_inj_powerset (a : Type) (f : powerset a -> a) : Lemma (~(is_inj f)) =
+let no_inj_powerset (a : Type) (f : powerset a -> GTot a) : Lemma (~(is_inj f)) =
   let aux () : Lemma (requires is_inj f) (ensures False) =
-    let g : a -> GTot (powerset a) = inverse_of_inj f (fun _ -> false) in
+    let g : a -> GTot (powerset a) = inverse_of_inj (fun x -> f x) (fun _ -> false) in
     no_surj_powerset a g
   in
   Classical.move_requires aux ()

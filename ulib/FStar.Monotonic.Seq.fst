@@ -368,7 +368,7 @@ type log_t (i:rid) (a:Type) = m_rref i (seq a) grows
 let increases (x:int) (y:int) = b2t (x <= y)
 
 let at_most_log_len (#l:rid) (#a:Type) (x:nat) (log:log_t l a)
-    : mem -> GTot Type0
+    : HST.mem_predicate
     = fun h -> x <= Seq.length (HS.sel h log)
 
 //Note: we may want int seqn, instead of nat seqn

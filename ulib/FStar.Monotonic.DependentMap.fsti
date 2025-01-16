@@ -29,7 +29,7 @@ let partial_dependent_map (a:eqtype) (b:a -> Type) =
     DM.t a (opt b)
 
 /// An empty partial, dependent map maps all keys to None
-let empty_partial_dependent_map (#a:_) (#b:_)
+let empty_partial_dependent_map (#a:eqtype) (#b:_)
   : partial_dependent_map a b
   = DM.create #a #(opt b) (fun x -> None)
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,16 +45,16 @@ val map
   : Type u#b
 
 /// `repr m`: A ghost function that reveals the internal `map` as a `DM.t`
-val repr (#a:_) (#b:_)
+val repr (#a:eqtype) (#b:_)
     (r:map a b)
   : GTot (partial_dependent_map a b)
 
 /// An `empty : map a b` is equivalent to the `empty_partial_dependent_map`
-val empty (#a:_) (#b:_)
+val empty (#a:eqtype) (#b:_)
   : r:map a b{repr r == empty_partial_dependent_map}
 
 /// Selecting a key from a map `sel r x` is equivalent to selecting it from its `repr`
-val sel (#a:_) (#b:_)
+val sel (#a:eqtype) (#b:_)
     (r:map a b)
     (x:a)
   : Pure (option (b x))
@@ -62,7 +62,7 @@ val sel (#a:_) (#b:_)
     (ensures (fun o -> DM.sel (repr r) x == o))
 
 /// Updating a map using `upd r x v` is equivalent to updating its repr
-val upd (#a:_) (#b:_)
+val upd (#a:eqtype) (#b:_)
     (r:map a b)
     (x:a)
     (v:b x)
@@ -96,9 +96,8 @@ let defined
     (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
-    (h:HS.mem)
-  : GTot Type
-  = Some? (sel (HS.sel h t) x)
+  : HST.mem_predicate = fun (h:HS.mem) ->
+    Some? (sel (HS.sel h t) x)
 
 /// `fresh t x h`: The map is not defined at point `x`
 let fresh
@@ -109,8 +108,8 @@ let fresh
     (t:t r a b inv)
     (x:a)
     (h:HS.mem)
-  : GTot Type0
-  = ~ (defined t x h)
+  : HST.mem_predicate = fun (h:HS.mem) ->
+    ~ (defined t x h)
 
 /// `value_of t x h`: Get the value of `x` in the map `t` in state `h`
 let value_of
@@ -133,9 +132,9 @@ let contains
     (t:t r a b inv)
     (x:a)
     (y:b x)
-    (h:HS.mem)
-  : GTot Type0
-  = defined t x h /\
+  : HST.mem_predicate
+  = fun (h:HS.mem) ->
+    defined t x h /\
     value_of t x h == y
 
 /// `contains_stable`: The `contains` predicate is stable with respect to `grows`
