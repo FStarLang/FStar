@@ -106,8 +106,8 @@ trim: .force
 
 clean: trim
 	rm -rf $(CURDIR)/out
-	rm -r ulib.checked
-	rm -r fstarc.checked
+	rm -rf ulib.checked
+	rm -rf fstarc.checked
 
 all: install_lib install_fstarc
 
@@ -124,7 +124,8 @@ install: install_lib install_fstarc
 	cp -r out/* $(PREFIX)
 
 package:
-	mkdir pkgtmp
+	rm -rf pkgtmp
+	mkdir -p pkgtmp
 	$(MAKE) install PREFIX=pkgtmp/fstar
 	.scripts/bin-install.sh pkgtmp/fstar
 	.scripts/mk-package.sh pkgtmp fstar$(FSTAR_TAG)
