@@ -29,7 +29,6 @@ after the function is typechecked.
 
 Currently, the only things that must be checked after the function is typechecked are:
 - The erasable attribute, since the defn must be elaborated. See #3253.
-- The must_erase attribute
 - The instance attribute for typeclasses
 *)
 
