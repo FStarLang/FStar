@@ -12,7 +12,7 @@ type bytes = byte array
 let parseState = ()
 
 let pos_of_lexpos (p:position) =
-  mk_pos (Z.of_int p.pos_lnum) (Z.of_int (p.pos_cnum - p.pos_bol))
+  mk_pos (Z.of_int p.pos_lnum) (Z.of_int (1 + p.pos_cnum - p.pos_bol))
 
 let mksyn_range (p1:position) p2 =
   mk_range p1.pos_fname (pos_of_lexpos p1) (pos_of_lexpos p2)
