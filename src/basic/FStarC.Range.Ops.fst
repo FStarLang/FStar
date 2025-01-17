@@ -90,7 +90,11 @@ let extend_to_end_of_line r = mk_range (file_of_range r)
                                        (end_of_line (end_of_range r))
 
 let json_of_pos pos =
-  JsonList [JsonInt (line_of_pos pos); JsonInt (col_of_pos pos)]
+  (* This -1 below is here since the IDE expects 0-based column numbers,
+     while we internally keep 1-based column numbers. In fact, the VS Code
+     extension does a +1 to adjust the number into 1-based numbering, so
+     that +1 and this -1 should both be removed. *)
+  JsonList [JsonInt (line_of_pos pos); JsonInt (col_of_pos pos - 1)]
 
 let json_of_range_fields file b e =
   JsonAssoc [("fname", JsonStr file);
