@@ -431,12 +431,10 @@ let check_bqual (b0 b1:bqual)
       return ()
     | Some Equality, Some Equality ->
       return ()
-    | Some (Meta t1), Some (Meta t2) ->
-      if equal_term t1 t2
-      then return ()
-      else fail "Binder qualifier mismatch"
+    | Some (Meta t1), Some (Meta t2) when equal_term t1 t2 ->
+      return ()
     | _ ->
-      fail "Binder qualifier mismatch"
+      fail (BU.format2 "Binder qualifier mismatch, %s vs %s" (show b0) (show b1))
 
 let check_aqual (a0 a1:aqual)
   : result unit
