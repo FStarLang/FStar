@@ -24,7 +24,7 @@ jobs:
   build-src:
     uses: ./.github/workflows/build-src.yml
 
-  build-windows:
+  build:
     needs: build-src
     runs-on: windows-latest
     steps:

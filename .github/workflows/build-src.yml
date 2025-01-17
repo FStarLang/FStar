@@ -9,7 +9,7 @@ defaults:
     shell: bash
 
 jobs:
-  build-linux:
+  build:
     runs-on: ubuntu-22.04
     # We prefer slightly older Ubuntu so we get binaries that work on
     # all more recent versions.

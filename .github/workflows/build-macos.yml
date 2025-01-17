@@ -5,7 +5,7 @@ on:
   workflow_call:
 
 jobs:
-  build-macos:
+  build:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@master

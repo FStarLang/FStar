@@ -6,14 +6,14 @@ on:
 
 jobs:
   # Windows build call this as a substep
-  # build-src:
+  # src:
   #   uses: ./.github/workflows/build-src.yml
 
-  build-linux:
+  linux:
     uses: ./.github/workflows/build-linux.yml
 
-  build-macos:
+  macos:
     uses: ./.github/workflows/build-macos.yml
 
-  build-windows:
+  windows:
     uses: ./.github/workflows/build-windows-selfhosted.yml

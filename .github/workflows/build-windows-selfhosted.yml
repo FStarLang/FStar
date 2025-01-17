@@ -3,14 +3,13 @@ name: Build F* (Windows, self-hosted)
 on:
   workflow_call:
   workflow_dispatch:
-  push:
 
 jobs:
   # We begin from a source package (built in Linux)
   build-src:
     uses: ./.github/workflows/build-src.yml
 
-  build-windows:
+  build:
     needs: build-src
     runs-on: [self-hosted, Windows, X64, opam-2-3]
     # NOTE: no setup, the self-hosted runner already has all that is needed.
@@ -57,7 +56,7 @@ jobs:
           name: package-win
 
   binary-smoke:
-    needs: build-windows
+    needs: build
     # This is a cloud job.
     runs-on: windows-latest
     steps:
