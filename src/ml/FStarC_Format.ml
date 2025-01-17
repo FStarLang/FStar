@@ -15,11 +15,11 @@ let colorize (o, c) s =
   | _ -> s
 
 let colorize_bold    = colorize ("\x1b[39;1m", "\x1b[0m")
-let colorize_red     = colorize ("\x1b[31;1m", "\x1b[0m")
-let colorize_yellow  = colorize ("\x1b[33;1m", "\x1b[0m")
-let colorize_cyan    = colorize ("\x1b[36;1m", "\x1b[0m")
-let colorize_green   = colorize ("\x1b[32;1m", "\x1b[0m")
-let colorize_magenta = colorize ("\x1b[35;1m", "\x1b[0m")
+let colorize_red     = colorize ("\x1b[31m", "\x1b[0m")
+let colorize_yellow  = colorize ("\x1b[33m", "\x1b[0m")
+let colorize_cyan    = colorize ("\x1b[36m", "\x1b[0m")
+let colorize_green   = colorize ("\x1b[32m", "\x1b[0m")
+let colorize_magenta = colorize ("\x1b[35m", "\x1b[0m")
 
 type printer = {
   printer_prinfo: string -> unit;
