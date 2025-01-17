@@ -18,17 +18,6 @@
 #
 # I think this is probably a dune bug.
 
-# NOTE: (Guido 2025-01-13) For whatever undebuggable reason, Cygwin make
-# (version 4.4.1-1 at least) to (sometimes) freeze , and halt the build.
-# Not running this makefile (and sub-makes) in parallel *seems* to help,
-# though obviously makes this significantly slower in Windows.
-ifeq ($(OS),Windows_NT)
-.NOTPARALLEL:
-MAYBEJ1=-j1
-else
-MAYBEJ1=
-endif
-
 include mk/common.mk
 
 FSTAR_DUNE_OPTIONS += --no-print-directory
@@ -67,7 +56,7 @@ check_lib: install_bin
 	  CODEGEN=none \
 	  OUTPUT_DIR=none \
 	  FSTAR_ROOT=$(CURDIR) \
-	  $(MAKE) -f mk/lib.mk verify $(MAYBEJ1)
+	  $(MAKE) -f mk/lib.mk verify
 
 install_lib: check_lib
 	$(call msg, "INSTALL LIB")
@@ -88,7 +77,7 @@ check_fstarc: install_bin
 	  TAG=fstarc \
 	  FSTAR_LIB=$(call cygpath,ulib) \
 	  FSTAR_ROOT=$(CURDIR) \
-	  $(MAKE) -f mk/fstar-12.mk verify $(MAYBEJ1)
+	  $(MAKE) -f mk/fstar-12.mk verify
 	$(call msg, "DONE CHECK FSTARC")
 
 install_fstarc: check_fstarc
