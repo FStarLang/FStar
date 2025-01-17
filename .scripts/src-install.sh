@@ -62,6 +62,9 @@ FSTAR_COMMITDATE=$(git log --pretty=format:%ci -n 1 2>/dev/null || echo unset)
 echo "## LINES BELOW ADDED BY src-install.sh" >> "${PREFIX}/Makefile"
 echo "export FSTAR_COMMITDATE=$FSTAR_COMMITDATE" >> "${PREFIX}/Makefile"
 echo "export FSTAR_COMMIT=$FSTAR_COMMIT" >> "${PREFIX}/Makefile"
+if [[ -n "${FSTAR_VERSION:-}" ]]; then
+  echo "export FSTAR_VERSION=$FSTAR_VERSION" >> "${PREFIX}/Makefile"
+fi
 
 # Remove extra ML files, rsync has resolved the links
 # into the corresponding files already, and these would be
