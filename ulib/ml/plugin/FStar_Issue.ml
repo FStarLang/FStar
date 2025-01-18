@@ -29,6 +29,7 @@ let mk_issue_level (i:issue_level_string)
     | "Info" -> EInfo
     | "Warning" -> EWarning
 
+let issue_to_doc (i:issue) : FStarC_Pprint.document = FStarC_Errors.issue_to_doc' true i
 let render_issue (i:issue) : string = FStarC_Errors.format_issue i
 
 let mk_issue_doc (i:issue_level_string)
