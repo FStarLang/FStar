@@ -23,8 +23,10 @@ val range_of_issue (i:issue) : Tot (option range)
 
 val context_of_issue (i:issue) : Tot (list string)
 
+val issue_to_doc (i:issue) : Tot Pprint.document
+
 val render_issue (i:issue) : Tot string
-  
+
 (* NOTE: the only way to build a document that actually reduces
 in interpreted mode (like in tactics when not using plugins)
 is using arbitrary_string, as below. *)

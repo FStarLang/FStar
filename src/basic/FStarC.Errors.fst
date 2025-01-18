@@ -179,7 +179,7 @@ let optional_def (f : 'a -> PP.document) (def : PP.document) (o : option 'a) : P
   | Some x -> f x
   | None -> def
 
-let format_issue' (print_hdr:bool) (issue:issue) : string =
+let issue_to_doc' (print_hdr:bool) (issue:issue) : PP.document =
   let open FStarC.Pprint in
   let r = issue.issue_range in
   let hdr : document =
@@ -221,14 +221,14 @@ let format_issue' (print_hdr:bool) (issue:issue) : string =
   let mainmsg : document =
     concat (List.map (fun d -> subdoc (group d)) issue.issue_msg)
   in
-  let doc : document =
-    (* This ends in a hardline to get a 1-line spacing between errors *)
-    hdr ^^
-    mainmsg ^^
-    subdoc seealso ^^
-    subdoc ctx
-  in
-  renderdoc doc
+  (* This ends in a hardline to get a 1-line spacing between errors *)
+  hdr ^^
+  mainmsg ^^
+  subdoc seealso ^^
+  subdoc ctx
+
+let format_issue' (print_hdr:bool) (issue:issue) : string =
+  issue_to_doc' print_hdr issue |> renderdoc
 
 let format_issue issue : string = format_issue' true issue
 
