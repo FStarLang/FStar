@@ -435,7 +435,7 @@ ci: .force
 save: stage0_new
 
 stage0_new: TO=stage0_new
-stage0_new: .stage2.touch
+stage0_new: .stage2.src.touch
 	$(call bold_msg, "SNAPSHOT", "$(TO)")
 	rm -rf "$(TO)"
 	.scripts/src-install.sh "stage2" "$(TO)"
