@@ -100,6 +100,8 @@ let ops = [
 
   unseal_step;
 
+  mk_tac_step_1 0 "fixup_range" fixup_range fixup_range;
+
   mk_tac_step_1 0 "compress" compress compress;
   mk_tac_step_1 0 "set_goals" set_goals set_goals;
   mk_tac_step_1 0 "set_smt_goals" set_smt_goals set_smt_goals;

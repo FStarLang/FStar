@@ -37,6 +37,9 @@ val error_range_bound : FStarC.Effect.ref (option Range.range)
 
 val with_error_bound (r:Range.range) (f : unit -> 'a) : 'a
 
+(* Intersect a range by the current bound (if any). *)
+val maybe_bound_range (rng:Range.range) : Range.range
+
 (* Get the error number for a particular code. Useful for creating error
 messages mentioning --warn_error. *)
 val errno : error_code -> int

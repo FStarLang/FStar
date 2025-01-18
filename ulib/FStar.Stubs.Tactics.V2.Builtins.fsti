@@ -29,6 +29,8 @@ open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.Types
 include FStar.Stubs.Tactics.Unseal
 
+val fixup_range : Range.range -> TacRO Range.range
+
 (** Resolve unification variable indirections at the top of the term. *)
 val compress : term -> Tac term
 

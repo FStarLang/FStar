@@ -44,6 +44,11 @@ let with_error_bound (r:range) (f : unit -> 'a) : 'a =
   error_range_bound := old;
   res
 
+let maybe_bound_range (r : Range.range) : Range.range =
+  match !error_range_bound with
+  | Some r' -> Range.bound_range r r'
+  | None -> r
+
 (** This exception is raised in FStar.Error
     when a warn_error string could not be processed;
     The exception is handled in FStarC.Options as part of
@@ -287,16 +292,11 @@ let compare_issues i1 i2 =
 let dummy_ide_rng : Range.rng =
   mk_rng "<input>" (mk_pos 1 0) (mk_pos 1 0)
 
-let maybe_bound_rng (r : Range.range) : Range.range =
-  match !error_range_bound with
-  | Some r' -> Range.bound_range r r'
-  | None -> r
-
 (* Attempts to set a decent range (no dummy, no dummy ide) relying
 on the fallback_range reference. *)
-let fixup_issue_range (i:issue) : issue =
+let fixup_issue_range (rng:option Range.range) : option Range.range =
   let rng =
-    match i.issue_range with
+    match rng with
     | None ->
       (* No range given, just rely on the fallback. NB: the
       fallback could also be set to None if it's too early. *)
@@ -316,7 +316,7 @@ let fixup_issue_range (i:issue) : issue =
       in
       Some (set_use_range range use_rng')
   in
-  { i with issue_range = map_opt rng maybe_bound_rng }
+  map_opt rng maybe_bound_range
 
 let mk_default_handler print =
     let issues : ref (list issue) = BU.mk_ref [] in
@@ -368,7 +368,6 @@ let get_err_count () = (!current_handler).eh_count_errors ()
 
 let wrapped_eh_add_one (h : error_handler) (issue : issue) : unit =
     (* Try to set a good use range if we got an empty/dummy one *)
-    let issue = fixup_issue_range issue in
     h.eh_add_one issue;
     if issue.issue_level <> EInfo then begin
       Options.abort_counter := !Options.abort_counter - 1;
@@ -533,16 +532,17 @@ let lookup err =
 
 let log_issue_ctx r (e, msg) ctx =
   let msg = maybe_add_backtrace msg in
+  let r = fixup_issue_range (Some r) in
   match lookup e with
   | (_, CAlwaysError, errno)
   | (_, CError, errno)  ->
-     add_one (mk_issue EError (Some r) msg (Some errno) ctx)
+     add_one (mk_issue EError r msg (Some errno) ctx)
   | (_, CWarning, errno) ->
-     add_one (mk_issue EWarning (Some r) msg (Some errno) ctx)
+     add_one (mk_issue EWarning r msg (Some errno) ctx)
   | (_, CSilent, _) -> ()
   // We allow using log_issue to report a Fatal error in interactive mode
   | (_, CFatal, errno) ->
-    let i = mk_issue EError (Some r) msg (Some errno) ctx in
+    let i = mk_issue EError r msg (Some errno) ctx in
     if Options.ide()
     then add_one i
     else failwith ("don't use log_issue to report fatal error, should use raise_error: " ^ format_issue i)
@@ -550,10 +550,11 @@ let log_issue_ctx r (e, msg) ctx =
 let info r msg =
   let open FStarC.Class.HasRange in
   let rng = pos r in
+  let rng = fixup_issue_range (Some rng) in
   let msg = to_doc_list msg in
   let msg = maybe_add_backtrace msg in
   let ctx = get_ctx () in
-  add_one (mk_issue EInfo (Some rng) msg None ctx)
+  add_one (mk_issue EInfo rng msg None ctx)
 
 let diag r msg =
   if Debug.any() then
@@ -562,6 +563,7 @@ let diag r msg =
 let raise_error r e msg =
   let open FStarC.Class.HasRange in
   let rng = pos r in
+  let Some rng = fixup_issue_range (Some rng) in
   let msg = to_doc_list msg in
   raise (Error (e, maybe_add_backtrace msg, rng, error_context.get ()))
 
@@ -583,7 +585,8 @@ let issue_of_exn (e:exn) : option issue =
   match e with
   | Error(e, msg, r, ctx) ->
     let errno = error_number (lookup e) in
-    Some (mk_issue EError (Some r) msg (Some errno) ctx)
+    let r = fixup_issue_range (Some r) in
+    Some (mk_issue EError r msg (Some errno) ctx)
   | _ -> None
 
 let err_exn exn =
