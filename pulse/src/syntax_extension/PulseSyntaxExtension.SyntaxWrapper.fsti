@@ -43,6 +43,7 @@ val tc_qual : option qualifier
 new val term : Type0
 new val binder : Type0
 new val comp : Type0
+val meta_qual : term -> option qualifier
 let slprop = term
 val mk_binder (x:ident) (t:term) : binder
 val mk_binder_with_attrs (x:ident) (t:term) (attrs:list term) : binder

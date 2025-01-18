@@ -126,6 +126,14 @@ let should_allow_ambiguous (t:term) : T.Tac bool =
       let attrs = T.sigelt_attrs se in
       attrs |> T.tryFind (fun a -> T.is_fvar a attr_name)
 
+let compatible_qual (actual expected : option qualifier) : bool =
+  match actual, expected with
+  | None, None -> true
+  | Some Implicit, Some Implicit
+  | Some TcArg, Some Implicit
+  | Some (Meta _), Some Implicit -> true
+  | _ -> false
+
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
 let apply_impure_function 
       (range:range)
@@ -162,7 +170,7 @@ let apply_impure_function
            (Printf.sprintf "head term %s is ghost, but the arrow comp is not STGhost"
               (P.term_to_string head));
 
-    if qual <> bqual
+    if not (compatible_qual qual bqual)
     then (
      fail g (Some range) (Printf.sprintf "Unexpected qualifier in head type %s of stateful application: head = %s, arg = %s"
                 (P.term_to_string ty_head)
@@ -179,9 +187,9 @@ let apply_impure_function
         | C_STAtomic _ _ res ->
           // ST application
           let d : st_typing _ _ (open_comp_with comp_typ arg) =
-            T_STApp g head formal qual comp_typ arg dhead darg in
+            T_STApp g head formal bqual comp_typ arg dhead darg in
           let d = canonicalize_st_typing d in
-          let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range; effect_tag=as_effect_hint (ctag_of_comp_st comp_typ); source=Sealed.seal false } in
+          let t = { term = Tm_STApp {head; arg_qual=bqual; arg}; range; effect_tag=as_effect_hint (ctag_of_comp_st comp_typ); source=Sealed.seal false } in
           let c = (canon_comp (open_comp_with comp_typ arg)) in
           (| t, c, d |)
         | C_STGhost _ res ->
@@ -207,12 +215,12 @@ let apply_impure_function
                 (FStar.Squash.return_squash token) in
 
           let d : st_typing _ _ (open_comp_with comp_typ arg) =
-            T_STGhostApp g head formal qual comp_typ arg x
+            T_STGhostApp g head formal bqual comp_typ arg x
               (lift_typing_to_ghost_typing dhead)
               (E d_non_info)
               (lift_typing_to_ghost_typing darg) in
           let d = canonicalize_st_typing d in
-          let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range; effect_tag=as_effect_hint STT_Ghost; source=Sealed.seal false; } in
+          let t = { term = Tm_STApp {head; arg_qual=bqual; arg}; range; effect_tag=as_effect_hint STT_Ghost; source=Sealed.seal false; } in
           let c = (canon_comp (open_comp_with comp_typ arg)) in
           (| t, c, d |)
         | _ ->

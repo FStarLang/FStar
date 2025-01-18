@@ -74,12 +74,16 @@ let rec eq_list (f: (x:'a -> y:'a -> b:bool { b <==> (x == y)})) (l m:list 'a)
       eq_list f t1 t2
     | _ -> false
 
-let eq_opt (f: (x:'a -> y:'a -> b:bool { b <==> (x == y)})) (l m:option 'a)
+let eq_opt_dec (l m:option 'a) (f: (x:'a -> y:'a{x << l /\ y << m} -> b:bool { b <==> (x == y)}))
   : b:bool { b <==> (l == m) }
   = match l, m with
     | None, None -> true
     | Some l, Some m -> f l m
     | _ -> false
+
+let eq_opt (f: (x:'a -> y:'a -> b:bool { b <==> (x == y)})) (l m:option 'a)
+  : b:bool { b <==> (l == m) }
+  = eq_opt_dec l m f
 
 let eq_tm_opt (t1 t2:option term)
   : b:bool { b <==> (t1 == t2) }
@@ -162,8 +166,8 @@ let eq_hint_type (ht1 ht2:proof_hint_type)
 
 let eq_ascription (a1 a2:comp_ascription) 
  : b:bool { b <==> (a1 == a2) }
- = eq_opt eq_comp a1.elaborated a2.elaborated &&
-   eq_opt eq_comp a1.annotated a2.annotated
+ = eq_comp_opt a1.elaborated a2.elaborated &&
+   eq_comp_opt a1.annotated a2.annotated
 
 
 let rec eq_st_term (t1 t2:st_term) 
@@ -175,17 +179,17 @@ let rec eq_st_term (t1 t2:st_term)
       b1 = b2 &&
       eq_tm t1 t2
 
-    | Tm_Abs { b=b1; q=o1; ascription=c1; body=t1 },
-      Tm_Abs { b=b2; q=o2; ascription=c2; body=t2 } ->
+    | Tm_Abs { b=b1; q=q1; ascription=c1; body=t1 },
+      Tm_Abs { b=b2; q=q2; ascription=c2; body=t2 } ->
       eq_tm b1.binder_ty b2.binder_ty &&
-      o1=o2 &&
+      eq_opt_dec q1 q2 eq_aqual &&
       eq_ascription c1 c2 &&
       eq_st_term t1 t2
   
-    | Tm_STApp { head=h1; arg_qual=o1; arg=t1},
-      Tm_STApp { head=h2; arg_qual=o2; arg=t2} ->
+    | Tm_STApp { head=h1; arg_qual=q1; arg=t1},
+      Tm_STApp { head=h2; arg_qual=q2; arg=t2} ->
       eq_tm h1 h2 &&
-      o1=o2 &&
+      eq_opt_dec q1 q2 eq_aqual &&
       eq_tm t1 t2
 
     | Tm_Bind { binder=b1; head=t1; body=k1 },
@@ -282,8 +286,8 @@ let rec eq_st_term (t1 t2:st_term)
       eq_opt (fun (b1, r1, is1) (b2, r2, is2) ->
               eq_tm b1.binder_ty b2.binder_ty &&
               eq_tm r1 r2 &&
-              eq_tm is1 is2)
-             r1 r2 &&
+              eq_tm is1 is2) r1 r2
+             &&
       eq_st_term body1 body2
 
     | _ -> false
@@ -293,3 +297,10 @@ and eq_branch (b1 b2 : pattern & st_term)
   = let (p1, e1) = b1 in
     let (p2, e2) = b2 in
     eq_pattern p1 p2 && eq_st_term e1 e2
+
+and eq_aqual (q1 q2 : qualifier) : b:bool{b <==> (q1 == q2)} =
+  match q1, q2 with
+  | Implicit, Implicit
+  | TcArg, TcArg -> true
+  | Meta t1, Meta t2 -> eq_tm t1 t2
+  | _ -> false

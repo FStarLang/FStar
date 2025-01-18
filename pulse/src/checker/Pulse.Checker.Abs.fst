@@ -106,7 +106,34 @@ let qualifier_compat g r (q:option qualifier) (q':T.aqualv) : T.Tac unit =
   | Some Implicit, T.Q_Implicit 
   | Some Implicit, T.Q_Meta _ -> ()
   | Some TcArg, T.Q_Meta _ -> ()
+  | Some (Meta _), T.Q_Meta _ -> ()
   | _ -> Env.fail g (Some r) "Unexpected binder qualifier"
+
+// let check_qual g (q:T.aqualv) : T.Tac T.aqualv =
+//   match q with
+//   | T.Q_Meta t ->
+//     let t = T.tc (elab_env g) t in
+//     (* FIXME *)
+//     T.Q_Meta t
+//   | q -> q
+let check_qual g (q:qualifier) : T.Tac qualifier =
+  match q with
+  | Meta t ->
+    let ty = (`(unit -> T.Tac u#0 unit)) in
+    // let t = T.pack (T.Tv_AscribedT t ty None false) in
+    let t =
+      (* This makes sure to elaborate the meta qualifier so it
+      matches exactly with what F* would generate. If not, we get
+      weird errors using an `fn` in the implementation and a `val .. : stt`
+      in the interface, or vice-versa, since they don't fully match. *)
+      match T.instantiate_implicits (elab_env g) t (Some ty) with
+      | Some (_, t, _), _ -> t
+      | None, iss ->
+        T.log_issues iss;
+        T.fail ("check_qual: failed to elaborate term " ^ show t)
+    in
+    Meta t
+  | q -> q
 
 let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
   : T.Tac (t:st_term { Tm_Abs? t.term })
@@ -299,6 +326,7 @@ let rec check_abs_core
   let range = t.range in
   match t.term with  
   | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname;binder_attrs}; q=qual; ascription=asc; body } -> //pre=pre_hint; body; ret_ty; post=post_hint_body } ->
+    let qual = T.map_opt (check_qual g) qual in
     (*  (fun (x:t) -> {pre_hint} body : t { post_hint } *)
     let (| t, _, _ |) = compute_tot_term_type g t in //elaborate it first
     let (| u, t_typing |) = check_universe g t in //then check that its universe ... We could collapse the two calls

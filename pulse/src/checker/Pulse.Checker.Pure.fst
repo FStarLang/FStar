@@ -165,15 +165,19 @@ let readback_failure (s:R.term) =
 let ill_typed_term (t:term) (expected_typ:option term) (got_typ:option term) : Tac (list document) =
   let open Pulse.PP in
   match expected_typ, got_typ with
-  | None, _ ->
-    [text "Ill-typed term: " ^^ pp t]
-  | Some ty, None ->
-    [prefix 2 1 (text "Expected term of type") (pp ty) ^/^
-     prefix 2 1 (text "got term") (pp t)]
-  | Some ty, Some ty' ->
-    [prefix 2 1 (text "Expected term of type") (pp ty) ^/^
-     prefix 2 1 (text "got term") (pp t) ^/^
-     prefix 2 1 (text "of type") (pp ty')]
+  | None, _ -> [
+    prefix 2 1 (text "Ill-typed term:") (pp t)
+  ]
+  | Some ty, None -> [
+    prefix 2 1 (text "Expected term of type") (pp ty) ^/^
+    prefix 2 1 (text "got term") (pp t) ^/^
+    text "of unknown type"
+  ]
+  | Some ty, Some ty' -> [
+    prefix 2 1 (text "Expected term of type") (pp ty) ^/^
+    prefix 2 1 (text "got term") (pp t) ^/^
+    prefix 2 1 (text "of type") (pp ty')
+  ]
 
 let maybe_fail_doc (issues:list FStar.Issue.issue)
                    (g:env) (rng:range) (doc:list FStar.Pprint.document) =

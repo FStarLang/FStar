@@ -71,10 +71,11 @@ type nm = {
   nm_ppname : ppname;
 }
 
+noeq
 type qualifier =
   | Implicit
   | TcArg
-
+  | Meta of R.term
 
 noeq
 type fv = {

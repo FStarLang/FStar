@@ -17,7 +17,7 @@
 
 >>]
 >> Got issues: [
-* Error 228 at Bug.DesugaringError.fst(31,4-31,4):
+* Error 228 at Bug.DesugaringError.fst(31,4-31,10):
   - Could not check term: Bug.DesugaringError.id x y
 
 * Error 189 at Bug.DesugaringError.fst(31,9-31,10):
@@ -27,7 +27,7 @@
 
 >>]
 >> Got issues: [
-* Error 228 at Bug.DesugaringError.fst(46,2-46,2):
+* Error 228 at Bug.DesugaringError.fst(46,2-46,8):
   - Could not check term: Bug.DesugaringError.f true
 
 * Error 189 at Bug.DesugaringError.fst(46,4-46,8):

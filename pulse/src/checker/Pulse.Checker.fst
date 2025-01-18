@@ -170,7 +170,14 @@ let maybe_trace (t:st_term) (g:env) (pre:term) (rng:range) : T.Tac unit =
   then
     trace t g pre rng
 
+(* We set the error bound from t when t is a source term. Otherwise don't. *)
+let maybe_setting_error_bound (t:st_term) (f : unit -> T.Tac 'a) : T.Tac 'a =
+  if T.unseal t.source
+  then RU.with_error_bound t.range f
+  else f ()
+
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
+
 let rec check
   (g0:env)
   (pre0:term)
@@ -179,7 +186,7 @@ let rec check
   (res_ppname:ppname)
   (t:st_term)
 : T.Tac (checker_result_t g0 pre0 post_hint)
-= RU.with_error_bound #(checker_result_t g0 pre0 post_hint) t.range <| fun () ->
+= maybe_setting_error_bound #(checker_result_t g0 pre0 post_hint) t <| fun () ->
   if Pulse.Checker.AssertWithBinders.handle_head_immediately t
   then Pulse.Checker.AssertWithBinders.check g0 pre0 pre0_typing post_hint res_ppname t check
   else (
