@@ -1928,7 +1928,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         let env = Env.push_univ_vars env0 us in
         let env = Env.push_binders env [a_b] in
         let _, r = List.fold_left (fun (env, r) b ->
-          let r = r && N.non_info_norm env b.binder_bv.sort in
+          let r = r && Some? (N.non_info_norm env b.binder_bv.sort) in
           Env.push_binders env [b], r) (env, true) rest_bs in
         if r &&
            Substitutive_combinator? bind_kind &&
