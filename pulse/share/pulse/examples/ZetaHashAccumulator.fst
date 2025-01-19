@@ -277,6 +277,7 @@ fn package
 // End boilerplate
 
 // Allocting a new instance of ha
+// TODO: A.alloc is deprecated, use V.alloc instead and use vectors instead of arrays in datatypes.
 
 fn create ()
     requires emp
@@ -292,6 +293,7 @@ fn create ()
 
 
 // Free'ing an ha
+// TODO: A.free is deprecated, use V.free instead and use vectors instead of arrays in datatypes.
 
 fn reclaim (#h:hash_value_t) (s:ha)
     requires ha_val s h

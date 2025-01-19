@@ -20,6 +20,7 @@ module MSort.Base
 open FStar.Ghost
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
+module V = Pulse.Lib.Vec
 module S = FStar.Seq
 module SZ = FStar.SizeT
 open MSort.SeqLemmas
@@ -94,8 +95,12 @@ merge_impl
   assert (pure (SZ.v l1 == S.length s1));
   assert (pure (SZ.v l2 == S.length s2));
 
-  let sw1 = A.alloc 0 (mid `SZ.sub` lo);
-  let sw2 = A.alloc 0 (hi `SZ.sub` mid);
+  let sw1_v = V.alloc 0 (mid `SZ.sub` lo);
+  let sw1 = V.vec_to_array sw1_v;
+  V.to_array_pts_to sw1_v;
+  let sw2_v = V.alloc 0 (hi `SZ.sub` mid);
+  let sw2 = V.vec_to_array sw2_v;
+  V.to_array_pts_to sw2_v;
 
   pts_to_range_intro sw1 1.0R (S.create (SZ.v l1) 0);
   copy_array a sw1 lo 0sz (mid `SZ.sub` lo);
@@ -190,7 +195,9 @@ merge_impl
     }
   };
 
-  A.free sw1;
-  A.free sw2;
+  V.to_vec_pts_to sw1_v;
+  V.free sw1_v;
+  V.to_vec_pts_to sw2_v;
+  V.free sw2_v;
 }
 

@@ -19,6 +19,7 @@ module ArrayTests
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 module A = Pulse.Lib.Array
+module V = Pulse.Lib.Vec
 module US = FStar.SizeT
 module R = Pulse.Lib.Reference
 
@@ -93,13 +94,13 @@ fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t
 
 fn array_of_zeroes (n:US.t)
    requires emp
-   returns a: array U32.t
+   returns a: V.vec U32.t
    ensures (
-    A.pts_to a (Seq.create (US.v n) 0ul) **
-    pure (is_full_array a /\ A.length a == US.v n)
+    V.pts_to a (Seq.create (US.v n) 0ul) **
+    pure (V.length a == US.v n)
   )
 {
-   let a = A.alloc 0ul n;
+   let a = V.alloc 0ul n;
    a
 }
 
@@ -405,9 +406,12 @@ fn test_local_array0 ()
   ensures  pure (b)
 {
   let mut a1 = [| 0; 2sz |];
-  let a2 = A.alloc 0 2sz;
+  let v2 = V.alloc 0 2sz;
+  let a2 = V.vec_to_array v2;
+  V.to_array_pts_to v2;
   let b = compare 2sz a1 a2;
-  A.free a2;
+  V.to_vec_pts_to v2;
+  V.free v2;
   b
 }
 
