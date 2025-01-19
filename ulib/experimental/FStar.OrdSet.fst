@@ -99,7 +99,7 @@ let rec insert' #_ #f x s =
     else if f x hd then x::hd::tl
     else hd::(insert' #_ #f x tl)
 
-let rec distinct' #a f l : Tot (ordset a f) = 
+let rec distinct' #a (f: cmp a) (l: list a) : Tot (ordset a f) = 
   match l with 
   | []  -> []
   | x::t -> insert' x (distinct' f t)
