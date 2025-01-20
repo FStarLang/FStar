@@ -1,0 +1,12 @@
+{
+  "_comment": "Note: the path below must be the 'uninstalled' path (not in out/) so we can still open ulib interactively even if the library failed to build as a whole (which is usually a time when you want to open it!). You can switch to stage2 too, just also switch the include of ulib.checked below",
+
+  "fstar_exe": "../stage1/dune/_build/default/fstarc-full/fstarc1_full.exe",
+  "options": [
+    "--ext", "context_pruning",
+    "--z3version", "4.13.3"
+  ],
+  "include_dirs": [
+    "../stage1/ulib.checked"
+  ]
+}

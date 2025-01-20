@@ -17,12 +17,12 @@
 //Top-level invocations into the universal type-checker FStarC.TypeChecker
 module FStarC.Universal
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Errors
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Syntax.Syntax
@@ -47,7 +47,7 @@ module Const    = FStarC.Parser.Const
 module Pars     = FStarC.Parser.ParseIt
 module Tc       = FStarC.TypeChecker.Tc
 module TcTerm   = FStarC.TypeChecker.TcTerm
-module BU       = FStarC.Compiler.Util
+module BU       = FStarC.Util
 module Dep      = FStarC.Parser.Dep
 module NBE      = FStarC.TypeChecker.NBE
 module Ch       = FStarC.CheckedFiles
@@ -304,13 +304,14 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
     let ext = match opt with
       | Some Options.FSharp -> ".fs"
       | Some Options.OCaml
-      | Some Options.Plugin -> ".ml"
+      | Some Options.Plugin
+      | Some Options.PluginNoLib -> ".ml"
       | Some Options.Krml -> ".krml"
       | Some Options.Extension -> ".ast"
       | _ -> fail ()
     in
     match opt with
-    | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin ->
+    | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin | Some Options.PluginNoLib ->
       (* When bootstrapped in F#, this will use the old printer in
          FStarC.Extraction.ML.Code for both OCaml and F# extraction.
          When bootstarpped in OCaml, this will use the old printer
@@ -381,7 +382,7 @@ let tc_one_file
     | Some tgt ->
       if not (Options.should_extract (string_of_lid tcmod.name) tgt)
       then None, 0
-      else FStarC.Compiler.Util.record_time_ms (fun () ->
+      else FStarC.Util.record_time_ms (fun () ->
             with_env env (fun env ->
               let _, defs = FStarC.Extraction.ML.Modul.extract env tcmod in
               defs)
@@ -391,7 +392,7 @@ let tc_one_file
       if Options.codegen() = None
       then env, 0
       else
-        FStarC.Compiler.Util.record_time_ms (fun () ->
+        FStarC.Util.record_time_ms (fun () ->
             let env, _ = with_env env (fun env ->
                   FStarC.Extraction.ML.Modul.extract_iface env tcmod) in
             env
@@ -494,7 +495,7 @@ let tc_one_file
         then BU.print1 "Module after type checking:\n%s\n" (show tcmod);
 
         let extend_tcenv tcmod tcenv =
-            if not (Options.lax()) then FStarC.SMTEncoding.Z3.refresh None;
+            FStarC.SMTEncoding.Z3.refresh None;
             let _, tcenv =
                 with_dsenv_of_tcenv tcenv <|
                     FStarC.ToSyntax.ToSyntax.add_modul_to_env
@@ -559,8 +560,8 @@ let needs_interleaving intf impl =
   let m1 = Parser.Dep.lowercase_module_name intf in
   let m2 = Parser.Dep.lowercase_module_name impl in
   m1 = m2 &&
-  List.mem (FStarC.Compiler.Util.get_file_extension intf) ["fsti"; "fsi"] &&
-  List.mem (FStarC.Compiler.Util.get_file_extension impl) ["fst"; "fs"]
+  List.mem (FStarC.Util.get_file_extension intf) ["fsti"; "fsi"] &&
+  List.mem (FStarC.Util.get_file_extension impl) ["fst"; "fs"]
 
 let tc_one_file_from_remaining (remaining:list string) (env:uenv)
                                (deps:FStarC.Parser.Dep.deps)  //used to query parsing data
@@ -605,10 +606,10 @@ let rec tc_fold_interleave (deps:FStarC.Parser.Dep.deps)  //used to query parsin
 let dbg_dep = Debug.get_toggle "Dep"
 let batch_mode_tc filenames dep_graph =
   if !dbg_dep then begin
-    FStarC.Compiler.Util.print_endline "Auto-deps kicked in; here's some info.";
-    FStarC.Compiler.Util.print1 "Here's the list of filenames we will process: %s\n"
+    FStarC.Util.print_endline "Auto-deps kicked in; here's some info.";
+    FStarC.Util.print1 "Here's the list of filenames we will process: %s\n"
       (String.concat " " filenames);
-    FStarC.Compiler.Util.print1 "Here's the list of modules we will verify: %s\n"
+    FStarC.Util.print1 "Here's the list of modules we will verify: %s\n"
       (String.concat " " (filenames |> List.filter Options.should_verify_file))
   end;
   let env = FStarC.Extraction.ML.UEnv.new_uenv (init_env dep_graph) in

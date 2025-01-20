@@ -16,11 +16,11 @@
 module FStarC.Tactics.V2.Basic
 
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.Util
+open FStarC.Effect
+open FStarC.List
+open FStarC.Util
 open FStarC.Ident
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
@@ -38,7 +38,7 @@ module Listlike = FStarC.Class.Listlike
 
 friend FStar.Pervasives (* to expose norm_step *)
 
-module BU     = FStarC.Compiler.Util
+module BU     = FStarC.Util
 module Cfg    = FStarC.TypeChecker.Cfg
 module Env    = FStarC.TypeChecker.Env
 module Err    = FStarC.Errors
@@ -72,6 +72,9 @@ open FStarC.Class.Show
 open FStarC.Class.Monad
 open FStarC.Class.PP
 open FStarC.Class.Setlike
+
+let fixup_range (r : FStarC.Range.range) : tac (FStarC.Range.range) =
+  return (Errors.maybe_bound_range r)
 
 let compress (t:term) : tac term =
   return ();!
@@ -1703,7 +1706,7 @@ let set_options (s : string) : tac unit = wrap_err "set_options" <| (
     | FStarC.Getopt.Success ->
         let g' = { g with opts = opts' } in
         replace_cur g'
-    | FStarC.Getopt.Error err ->
+    | FStarC.Getopt.Error (err, _) ->
         fail2 "Setting options `%s` failed: %s" s err
     | FStarC.Getopt.Help ->
         fail1 "Setting options `%s` failed (got `Help`?)" s
@@ -2118,7 +2121,7 @@ let string_to_term (e: Env.env) (s: string): tac term
     | ParseError (_, err, _) -> fail ("string_to_term: got error " ^ Errors.rendermsg err) // FIXME
 
 let push_bv_dsenv (e: Env.env) (i: string): tac (env & RD.binding)
-  = let ident = Ident.mk_ident (i, FStarC.Compiler.Range.dummyRange) in
+  = let ident = Ident.mk_ident (i, FStarC.Range.dummyRange) in
     let dsenv, bv = FStarC.Syntax.DsEnv.push_bv e.dsenv ident in
     return ({ e with dsenv }, bv_to_binding bv)
 
@@ -2142,7 +2145,7 @@ let comp_to_doc (c:comp) : tac Pprint.document
     let s = Print.comp_to_doc' g.dsenv c in
     return s
 
-let range_to_string (r:FStarC.Compiler.Range.range) : tac string
+let range_to_string (r:FStarC.Range.range) : tac string
   = return (show r)
 
 let term_eq_old (t1:term) (t2:term) : tac bool

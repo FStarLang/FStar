@@ -17,9 +17,9 @@
 module FStarC.Syntax.Print.Pretty
 open FStarC
 
-open FStarC.Compiler
+open FStarC
 open FStarC.Syntax.Syntax
-open FStarC.Compiler.Util
+open FStarC.Util
 module Resugar    = FStarC.Syntax.Resugar
 module ToDocument = FStarC.Parser.ToDocument
 module Pp         = FStarC.Pprint

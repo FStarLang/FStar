@@ -15,14 +15,14 @@
 *)
 module FStarC.Main
 open FStarC
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.Util
+open FStarC.Effect
+open FStarC.List
+open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.CheckedFiles
 open FStarC.Universal
-open FStarC.Compiler
+open FStarC
 
 open FStarC.Class.Show
 
@@ -129,14 +129,28 @@ let set_error_trap () =
   in
   set_sigint_handler (sigint_handler_f h')
 
+let print_help_for (o : string) : unit =
+  match Options.help_for_option o with
+  | None -> ()
+  | Some doc -> Util.print_error (Errors.Msg.renderdoc doc)
+
 (* Normal mode with some flags, files, etc *)
 let go_normal () =
   let res, filenames = process_args () in
+  let check_no_filenames opt =
+    if Cons? filenames then (
+      Util.print1_error "error: No filenames should be passed with option %s\n" opt;
+      exit 1
+    )
+  in
   if Options.trace_error () then set_error_trap ();
   match res with
     | Empty     -> Options.display_usage(); exit 1
     | Help      -> Options.display_usage(); exit 0
-    | Error msg -> Util.print_error msg; exit 1
+    | Error (msg, opt) ->
+      Util.print_error ("error: " ^ msg);
+      print_help_for opt;
+      exit 1
 
     | Success when Options.print_cache_version () ->
       Util.print1 "F* cache version number: %s\n"
@@ -152,9 +166,6 @@ let go_normal () =
 
     (* --print: Emit files in canonical source syntax *)
     | Success when Options.print () || Options.print_in_place () ->
-      if not Platform.is_fstar_compiler_using_ocaml then
-        failwith "You seem to be using the F#-generated version of the compiler ; \o
-                   reindenting is not known to work yet with this version";
       let printing_mode =
         if Options.print ()
         then Prettyprint.FromTempToStdout
@@ -204,11 +215,14 @@ let go_normal () =
       Util.print1 "Registered tactic plugins:\n%s\n" (String.concat "\n" (List.map (fun p -> "  " ^ show p.TypeChecker.Primops.Base.name) ts));
       ()
 
-    (* --locate, --locate_lib, --locate_ocaml *)
+    (* --locate, --locate_lib, --locate_ocaml, --locate_file *)
     | Success when Options.locate () ->
+      check_no_filenames "--locate";
       Util.print1 "%s\n" (Find.locate ());
       exit 0
+
     | Success when Options.locate_lib () -> (
+      check_no_filenames "--locate_lib";
       match Find.locate_lib () with
       | None ->
         Util.print_error "No library found (is --no_default_includes set?)\n";
@@ -217,9 +231,39 @@ let go_normal () =
         Util.print1 "%s\n" s;
         exit 0
     )
+
     | Success when Options.locate_ocaml () ->
+      check_no_filenames "--locate_ocaml";
       Util.print1 "%s\n" (Find.locate_ocaml ());
       exit 0
+
+    | Success when Some? (Options.locate_file ()) -> (
+      check_no_filenames "--locate_file";
+      let f = Some?.v (Options.locate_file ()) in
+      match Find.find_file f with
+      | None ->
+        Util.print1_error "File %s was not found in include path.\n" f;
+        exit 1
+      | Some fn ->
+        Util.print1 "%s\n" (Util.normalize_file_path fn);
+        exit 0
+    )
+
+    | Success when Some? (Options.locate_z3 ()) -> (
+      check_no_filenames "--locate_z3";
+      let v = Some?.v (Options.locate_z3 ()) in
+      match Find.locate_z3 v with
+      | None ->
+        // Use an actual error to reuse the pretty printing.
+        Errors.log_issue0 Errors.Error_Z3InvocationError ([
+          Errors.Msg.text <| Util.format1 "Z3 version '%s' was not found." v;
+          ] @ Find.z3_install_suggestion v);
+        report_errors []; // but make sure to report.
+        exit 1
+      | Some fn ->
+        Util.print1 "%s\n" fn;
+        exit 0
+    )
 
     (* either batch or interactive mode *)
     | Success ->
@@ -306,49 +350,6 @@ let go () =
     OCaml.exec_ocamlopt_plugin rest
 
   | _ -> go_normal ()
-
-(* This is pretty awful. Now that we have Lazy_embedding, we can get rid of this table. *)
-let lazy_chooser (k:Syntax.Syntax.lazy_kind) (i:Syntax.Syntax.lazyinfo) : Syntax.Syntax.term
-  = match k with
-    (* TODO: explain *)
-    | FStarC.Syntax.Syntax.BadLazy               -> failwith "lazy chooser: got a BadLazy"
-    | FStarC.Syntax.Syntax.Lazy_bv               -> RE.unfold_lazy_bv          i
-    | FStarC.Syntax.Syntax.Lazy_namedv           -> RE.unfold_lazy_namedv      i
-    | FStarC.Syntax.Syntax.Lazy_binder           -> RE.unfold_lazy_binder      i
-    | FStarC.Syntax.Syntax.Lazy_letbinding       -> RE.unfold_lazy_letbinding  i
-    | FStarC.Syntax.Syntax.Lazy_optionstate      -> RE.unfold_lazy_optionstate i
-    | FStarC.Syntax.Syntax.Lazy_fvar             -> RE.unfold_lazy_fvar        i
-    | FStarC.Syntax.Syntax.Lazy_comp             -> RE.unfold_lazy_comp        i
-    | FStarC.Syntax.Syntax.Lazy_env              -> RE.unfold_lazy_env         i
-    | FStarC.Syntax.Syntax.Lazy_sigelt           -> RE.unfold_lazy_sigelt      i
-    | FStarC.Syntax.Syntax.Lazy_universe         -> RE.unfold_lazy_universe    i
-
-    | FStarC.Syntax.Syntax.Lazy_proofstate       -> Tactics.Embedding.unfold_lazy_proofstate i
-    | FStarC.Syntax.Syntax.Lazy_goal             -> Tactics.Embedding.unfold_lazy_goal i
-
-    | FStarC.Syntax.Syntax.Lazy_doc              -> RE.unfold_lazy_doc i
-
-    | FStarC.Syntax.Syntax.Lazy_uvar             -> FStarC.Syntax.Util.exp_string "((uvar))"
-    | FStarC.Syntax.Syntax.Lazy_universe_uvar    -> FStarC.Syntax.Util.exp_string "((universe_uvar))"
-    | FStarC.Syntax.Syntax.Lazy_issue            -> FStarC.Syntax.Util.exp_string "((issue))"
-    | FStarC.Syntax.Syntax.Lazy_ident            -> FStarC.Syntax.Util.exp_string "((ident))"
-    | FStarC.Syntax.Syntax.Lazy_tref             -> FStarC.Syntax.Util.exp_string "((tref))"
-
-    | FStarC.Syntax.Syntax.Lazy_embedding (_, t) -> Thunk.force t
-    | FStarC.Syntax.Syntax.Lazy_extension s      -> FStarC.Syntax.Util.exp_string (format1 "((extension %s))" s)
-
-// This is called directly by the Javascript port (it doesn't call Main)
-let setup_hooks () =
-    FStarC.Syntax.DsEnv.ugly_sigelt_to_string_hook := show;
-    FStarC.Errors.set_parse_warn_error FStarC.Parser.ParseIt.parse_warn_error;
-    FStarC.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
-    FStarC.Syntax.Util.tts_f := Some show;
-    FStarC.Syntax.Util.ttd_f := Some Class.PP.pp;
-    FStarC.TypeChecker.Normalize.unembed_binder_knot := Some RE.e_binder;
-    List.iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V1.Primops.ops;
-    List.iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V2.Primops.ops;
-    ()
-
 let handle_error e =
     if FStarC.Errors.handleable e then
       FStarC.Errors.err_exn e;
@@ -361,11 +362,11 @@ let handle_error e =
 
 let main () =
   try
-    setup_hooks ();
+    Hooks.setup_hooks ();
     let _, time = Util.record_time_ms go in
     if FStarC.Options.query_stats()
     then Util.print2_error "TOTAL TIME %s ms: %s\n"
-              (FStarC.Compiler.Util.string_of_int time)
+              (FStarC.Util.string_of_int time)
               (String.concat " " (FStarC.Getopt.cmdline()));
     cleanup ();
     exit 0

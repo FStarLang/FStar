@@ -17,37 +17,9 @@
 *)
 
 module FStarC.Common
-open FStarC.Compiler.Effect
-module List = FStarC.Compiler.List
-module BU = FStarC.Compiler.Util
-
-let has_cygpath =
-    try
-        let t_out = BU.run_process "has_cygpath" "which" ["cygpath"] None in
-        BU.trim_string t_out = "/usr/bin/cygpath"
-    with
-    | _ -> false
-
-//try to convert filename passed from the editor to mixed path
-//that works on both cygwin and native windows
-//noop if not on cygwin
-//on cygwin emacs this is required
-
-let try_convert_file_name_to_mixed =
-  let cache = BU.smap_create 20 in
-  fun (s:string) ->
-    if has_cygpath
-    && BU.starts_with s "/" then
-      match BU.smap_try_find cache s with
-      | Some s ->
-          s
-      | None ->
-          let label = "try_convert_file_name_to_mixed" in
-          let out = BU.run_process label "cygpath" ["-m"; s] None |> BU.trim_string in
-          BU.smap_add cache s out;
-          out
-    else
-      s
+open FStarC.Effect
+module List = FStarC.List
+module BU = FStarC.Util
 
 let snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b) = BU.atomically (fun () ->
   let len : int = List.length !stackref in
@@ -55,7 +27,7 @@ let snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b) =
   (len, arg'))
 
 let rollback (pop: unit -> 'a) (stackref: ref (list 'c)) (depth: option int) =
-  let rec aux n =
+  let rec aux n : 'a =
     if n <= 0 then failwith "Too many pops"
     else if n = 1 then pop ()
     else (ignore (pop ()); aux (n - 1)) in
@@ -87,8 +59,8 @@ let __string_of_list (delim:string) (f : 'a -> string) (l : list 'a) : string =
 (* Why two? This function was added during a refactoring, and
 both variants existed. We cannot simply move to ";" since that is a
 breaking change to anything that parses F* source code (like Vale). *)
-let string_of_list = __string_of_list ", "
-let string_of_list' = __string_of_list "; "
+let string_of_list  f l = __string_of_list ", " f l
+let string_of_list' f l = __string_of_list "; " f l
 
 let list_of_option (o:option 'a) : list 'a =
     match o with
@@ -101,7 +73,7 @@ let string_of_option f = function
 
 (* Was List.init, but F* doesn't have this in ulib *)
 let tabulate (n:int) (f : int -> 'a) : list 'a =
-  let rec aux i =
+  let rec aux i : list 'a =
     if i < n
     then f i :: aux (i + 1)
     else []
@@ -127,7 +99,7 @@ let rec max_prefix (f : 'a -> bool) (xs : list 'a) : list 'a & list 'a =
   * and r is the largest list satisfying that
   *)
 let max_suffix (f : 'a -> bool) (xs : list 'a) : list 'a & list 'a =
-  let rec aux acc xs =
+  let rec aux acc xs : list 'a & list 'a =
     match xs with
     | [] -> acc, []
     | x::xs when f x ->

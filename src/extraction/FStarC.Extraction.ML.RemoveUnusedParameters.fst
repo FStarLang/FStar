@@ -16,12 +16,12 @@
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.RemoveUnusedParameters
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Ident
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Const
 open FStarC.BaseTypes
 open FStarC.Extraction.ML.Syntax
@@ -37,7 +37,7 @@ open FStarC.Class.Show
   parameters. However, this transformation may also be useful for use
   with OCaml, since it may lead to nicer code.
 *)
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 (**
   The transformation maintains an environment recording which
@@ -229,11 +229,14 @@ let elim_tydef (env:env_t) name metadata parameters mlty
                       | Some r -> r
                       | _ -> range_of_tydef
                     in
-                    FStarC.Errors.log_issue range FStarC.Errors.Error_RemoveUnusedTypeParameter
-                      (BU.format3
+                    let open FStarC.Errors.Msg in
+                    FStarC.Errors.log_issue range FStarC.Errors.Error_RemoveUnusedTypeParameter [
+                      text <| BU.format3
                         "Parameter %s of %s is unused and must be eliminated for F#; \
-                         add `[@@ remove_unused_type_parameters [%s; ...]]` to the interface signature; \n\
-                         This type definition is being dropped" (show i) name (show i));
+                         add `[@@ remove_unused_type_parameters [%s; ...]]` to the interface signature."
+                         (show i) name (show i);
+                      text "This type definition is being dropped"
+                    ];
                     raise Drop_tydef
                else i+1, param::params, Retain::entry
              end)

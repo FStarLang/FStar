@@ -8,9 +8,8 @@
 # and it is copied into the home directory on the image. CI jobs
 # will NOT use this file.
 
-# We always try to build against the most current ubuntu image.
-# FIXME: Broken with 24.04, fixing it to 23.10 so we can keep working
-FROM ubuntu:23.10
+# FIXME: z3.4.8.5-1 can no longer be installed on Ubuntu 24.04 because python3-distutils disappeared, and the z3 opam package has not been fixed for version 4.8.5, and 23.10 and all prior non-LTS are now EOL. Reverting to the previous LTS
+FROM ubuntu:22.04
 
 RUN apt-get update
 
@@ -34,8 +33,13 @@ RUN apt-get install -y --no-install-recommends \
       sudo \
       python3 \
       python-is-python3 \
+      pkg-config \
       opam \
       && apt-get clean -y
+
+# Install the relevant Z3 versions.
+COPY ./bin/get_fstar_z3.sh /usr/local/bin
+RUN get_fstar_z3.sh /usr/local/bin
 
 # Create a new user and give them sudo rights
 # NOTE: we give them the name "opam" to keep compatibility with

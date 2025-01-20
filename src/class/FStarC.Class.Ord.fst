@@ -1,7 +1,7 @@
 module FStarC.Class.Ord
 
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStar.Tactics.Typeclasses
 
 let (<?)  x y = cmp x y =  Lt
@@ -25,7 +25,7 @@ let rec sort #a xs =
   | x::xs -> insert x (sort xs)
 
 let dedup #a xs =
-  let open FStarC.Compiler.List in
+  let open FStarC.List in
   let out = fold_left (fun out x -> if existsb (fun y -> x =? y) out then out else x :: out) [] xs in
   List.rev out
 
@@ -44,7 +44,7 @@ let rec sort_dedup #a xs =
   | x::xs -> insert x (sort_dedup xs)
 
 let ord_list_diff (#a:Type0) {| ord a |} (xs ys : list a) : list a & list a =
-  let open FStarC.Compiler.Order in
+  let open FStarC.Order in
   let xs = xs |> sort_dedup in
   let ys = ys |> sort_dedup in
   let rec go (xd, yd) xs ys : list a & list a =

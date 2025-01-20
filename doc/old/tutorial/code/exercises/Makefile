@@ -1,4 +1,11 @@
-VERFILES=Ex01a.fst \
+FSTAR_ROOT ?= ../../../../../
+FSTAR_CONTRIB := $(FSTAR_ROOT)/contrib
+OTHERFLAGS += --include $(FSTAR_CONTRIB)/Platform/fst --include $(FSTAR_CONTRIB)/CoreCrypto/fst
+
+# exercises have val without definitions, by design
+OTHERFLAGS += --warn_error -240
+
+FSTAR_FILES := Ex01a.fst \
 Ex02a.fst \
 Ex03a.fst \
 Ex03b.fst \
@@ -34,39 +41,7 @@ LowStar.Ex1.fst \
 LowStar.Ex2.fst \
 LowStar.Ex3.fst
 
-include ../../../../Makefile.include
+include $(FSTAR_ROOT)/mk/test.mk
 
-# exercises have val without definitions, by design
-OTHERFLAGS+=--warn_error -240
-
-verify-%: __force__
-	$(FSTAR) --include $(FSTAR_CONTRIB)/Platform/fst --include $(FSTAR_CONTRIB)/CoreCrypto/fst $*
-
-
-all: uall sall
-
-sall:
-
-uall: $(VERFILES:%=verify-%)
-
-# Importing targets for simplified extraction to Ocaml
-
-include $(FSTAR_ULIB)/ml/Makefile.include
-
-out:
-	mkdir -p out
-
-
-HAS_OCAMLFIND := $(shell which ocamlfind 2>/dev/null)
-
-Ex01a-ocaml: out Ex01a.fst
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Ex01a.fst
-ifdef HAS_OCAMLFIND
-	$(OCAMLOPT) out/Ex01a.ml -o Ex01a.exe
-	-./Ex01a.exe
-endif
-
-# # Parameter for interactive mode
-# %.fst-in: 
-# 	@echo $(OPTIONS) \
-# 	--include $(FSTAR_HOME)/ulib/hyperstack \
+Ex01a-ocaml: $(OUTPUT_DIR)/Ex01a.exe
+	-./$(OUTPUT_DIR)/Ex01a.exe

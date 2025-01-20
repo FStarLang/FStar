@@ -1,6 +1,6 @@
 module FStarC.Basefiles
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 val prims                       : unit    -> string
 val prims_basename              : unit    -> string

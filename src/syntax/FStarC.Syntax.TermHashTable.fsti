@@ -1,5 +1,5 @@
 module FStarC.Syntax.TermHashTable
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 module H = FStarC.Hash
 

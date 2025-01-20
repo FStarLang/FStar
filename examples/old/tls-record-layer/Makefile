@@ -177,13 +177,13 @@ chacha-aead-test: chacha-aead-compile
 	./test_chacha_aead.exe
 
 bignum-ver:
-	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.fst --include crypto
-	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2.fst --include crypto
-	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.fst --include crypto
-	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4.fst --include crypto
-	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.fst --include crypto
-	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part6.fst --include crypto
-	$(FSTAR) --use_hints --include crypto crypto/Crypto.Symmetric.Poly1305.Bignum.fst
+	$(FSTAR) --ext context_pruning crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.fst --include crypto
+	$(FSTAR) --ext context_pruning crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2.fst --include crypto
+	$(FSTAR) --ext context_pruning crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.fst --include crypto
+	$(FSTAR) --ext context_pruning crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4.fst --include crypto
+	$(FSTAR) --ext context_pruning crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.fst --include crypto
+	$(FSTAR) --ext context_pruning crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part6.fst --include crypto
+	$(FSTAR) --ext context_pruning --include crypto crypto/Crypto.Symmetric.Poly1305.Bignum.fst
 
 KRML_INCLUDES=$(addprefix -I ,spartan_aes crypto $(KRML_HOME)/krmllib $(KRML_HOME)/test)
 ifeq ($(OS),Windows_NT)
@@ -328,7 +328,7 @@ ocaml-test.exe: ocaml-test-extract
 	$(OCAMLOPT) -I tmp -I crypto/ml -I $(AEAD_ODIR) $(OCAML_FILES) -o ocaml-test.exe
 	./ocaml-test.exe
 
-OPENSSL_HOME=../../ucontrib/CoreCrypto/ml/openssl
+OPENSSL_HOME=../../contrib/CoreCrypto/ml/openssl
 #OPENSSL_HOME=/usr/local/Cellar/openssl\@1.1/1.1.0c
 #CC=gcc-6 
 

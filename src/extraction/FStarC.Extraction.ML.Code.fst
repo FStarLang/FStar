@@ -15,17 +15,17 @@
 *)
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.Code
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Extraction.ML
 open FStarC.Extraction.ML.Syntax
 open FStarC.Pprint
 open FStarC.Const
 open FStarC.BaseTypes
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 (* This is the old printer used exclusively for the F# build of F*. It will not
  * evolve in the future. *)
@@ -182,7 +182,7 @@ let prim_constructors = [
 
 (* -------------------------------------------------------------------- *)
 let is_prims_ns (ns : list mlsymbol) =
-    ns = ["Prims"] || ns = ["Prims"]
+    ns = ["Prims"] || ns = ["Fstarcompiler.Prims"]
 
 (* -------------------------------------------------------------------- *)
 let as_bin_op ((ns, x) : mlpath) =
@@ -298,7 +298,7 @@ let string_of_mlconstant (sctt : mlconstant) =
 
   | MLC_Bytes bytes ->
       (* A byte buffer. Not meant to be readable. *)
-      "\"" ^ FStarC.Compiler.Bytes.f_encode escape_byte_hex bytes ^ "\""
+      "\"" ^ FStarC.Bytes.f_encode escape_byte_hex bytes ^ "\""
 
   | MLC_String chars ->
       (* It was a string literal. Escape what was (likely) escaped originally.
@@ -437,7 +437,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
         | MLE_Name p, [
             ({ expr = MLE_Fun ([ _ ], scrutinee) });
             ({ expr = MLE_Fun ([ {mlbinder_name=arg} ], possible_match)})
-          ] when (string_of_mlpath p = "FStarC.Compiler.Effect.try_with" ||
+          ] when (string_of_mlpath p = "FStarC.Effect.try_with" ||
                   string_of_mlpath p = "FStar.All.try_with") ->
             let branches =
               match possible_match with

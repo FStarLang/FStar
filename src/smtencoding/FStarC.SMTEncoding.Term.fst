@@ -16,11 +16,11 @@
 module FStarC.SMTEncoding.Term
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 
 module S   = FStarC.Syntax.Syntax
-module BU  = FStarC.Compiler.Util
+module BU  = FStarC.Util
 module U   = FStarC.Syntax.Util
 
 let escape (s:string) = BU.replace_char s '\'' '_'
@@ -246,14 +246,21 @@ let weightToSmt = function
   | None -> ""
   | Some i -> BU.format1 ":weight %s\n" (string_of_int i)
 
-let rec hash_of_term' t = match t with
+(* NOTE: these hashes are used for variable names in the encoding (Tm_refine_xxx, etc).
+These names can affect the behavior of Z3 and make the difference between a success and
+a failure, especially on flaky queries. So this function SHOULD NOT depend on any
+external factors, like filepaths, timestamps, etc. There used to be a string_of_range
+call here for the Labeled case, which caused flakiness across machines. *)
+let rec hash_of_term' t =
+  match t with
   | Integer i ->  i
   | String s -> s
   | Real r -> r
   | BoundV i  -> "@"^string_of_int i
   | FreeV x   -> fv_name x ^ ":" ^ strSort (fv_sort x) //Question: Why is the sort part of the hash?
   | App(op, tms) -> "("^(op_to_string op)^(List.map hash_of_term tms |> String.concat " ")^")"
-  | Labeled(t, r1, r2) -> hash_of_term t ^ Errors.Msg.rendermsg r1 ^ (Range.string_of_range r2)
+  | Labeled(t, _, _) ->
+    hash_of_term t // labels are semantically irrelevant, ignore them
   | LblPos(t, r) -> "(! " ^hash_of_term t^ " :lblpos " ^r^ ")"
   | Quant(qop, pats, wopt, sorts, body) ->
       "("
@@ -1111,7 +1118,7 @@ let mk_Valid t        = match t.tm with
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Negation", [t])}]) -> mkNot (unboxBool t) t.rng
     | App(Var "Prims.b2t", [{tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}])
     | App(Var "Prims.equals", [_; {tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}; _])
-            when (FStarC.Compiler.Util.is_some (getBoxedInteger t0))->
+            when (FStarC.Util.is_some (getBoxedInteger t0))->
         // sometimes b2t gets needlessly normalized...
         let sz = match getBoxedInteger t0 with | Some sz -> sz | _ -> failwith "impossible" in
         mkBvUlt (unboxBitVec sz t1, unboxBitVec sz t2) t.rng

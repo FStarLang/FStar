@@ -17,13 +17,13 @@
 module FStarC.SMTEncoding.Solver.Cache
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStarC.TypeChecker.Env
 open FStarC.Syntax.Syntax
 
-module BU = FStarC.Compiler.Util
-open FStarC.Compiler.RBSet
+module BU = FStarC.Util
+open FStarC.RBSet
 
 open FStarC.Class.Show
 open FStarC.Class.Hashable

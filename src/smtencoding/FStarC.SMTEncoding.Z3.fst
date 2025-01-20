@@ -14,17 +14,17 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Z3
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Class.Show
 module SolverState = FStarC.SMTEncoding.SolverState
-module M = FStarC.Compiler.Misc
-module BU = FStarC.Compiler.Util
+module M = FStarC.Misc
+module BU = FStarC.Util
 (****************************************************************************)
 (* Z3 Specifics                                                             *)
 (****************************************************************************)
@@ -32,53 +32,6 @@ module BU = FStarC.Compiler.Util
 (* We only warn once about these things *)
 let _already_warned_solver_mismatch : ref bool = BU.mk_ref false
 let _already_warned_version_mismatch : ref bool = BU.mk_ref false
-
-let z3url = "https://github.com/Z3Prover/z3/releases"
-
-(* Check if [path] is potentially a valid z3, by trying to run
-it with -version and checking for non-empty output. Alternatively
-we could call [which] on it (if it's not an absolute path), but
-we shouldn't rely on the existence of a binary which. *)
-let inpath (path:string) : bool =
-  try
-    let s = BU.run_process "z3_pathtest" path ["-version"] None in
-    s <> ""
-  with
-  | _ -> false
-
-(* Find the Z3 executable that we should invoke, according to the
-needed version. The logic is as follows:
-
-- If the user provided the --smt option, use that binary unconditionally.
-- If z3-VER (or z3-VER.exe) exists in the PATH (where VER is either
-  the default version or the user-provided --z3version) use it.
-- Otherwise, default to "z3" in the PATH.
-
-We cache the chosen executable for every Z3 version we've ran.
-*)
-let z3_exe : unit -> string =
-  let cache : BU.smap string = BU.smap_create 5 in
-  let find_or (k:string) (f : string -> string) : string =
-    match smap_try_find cache k with
-    | Some v -> v
-    | None ->
-      let v = f k in
-      smap_add cache k v;
-      v
-  in
-  fun () ->
-    find_or (Options.z3_version()) (fun version ->
-      let path =
-        let z3_v = Platform.exe ("z3-" ^ version) in
-        let smto = Options.smt () in
-        if Some? smto then Some?.v smto
-        else if inpath z3_v then z3_v
-        else Platform.exe "z3"
-      in
-      if Debug.any () then
-        BU.print1 "Chosen Z3 executable: %s\n" path;
-      path
-    )
 
 type label = string
 
@@ -171,7 +124,18 @@ let query_logging =
 
 (*  Z3 background process handling *)
 let z3_cmd_and_args () =
-  let cmd = z3_exe () in
+  let ver = Options.z3_version () in
+  let cmd =
+    match Find.locate_z3 ver with
+    | Some fn -> fn
+    | None ->
+      let open FStarC.Pprint in
+      let open FStarC.Errors.Msg in
+      FStarC.Errors.raise_error0 Errors.Error_Z3InvocationError (
+        [ text "Z3 solver not found.";
+          prefix 2 1 (text "Required version: ") (doc_of_string ver)]
+        @ Find.z3_install_suggestion ver)
+  in
   let cmd_args =
     List.append ["-smt2";
                  "-in";
@@ -205,27 +169,24 @@ let check_z3version (p:proc) : unit =
   in
   let name = getinfo "name" in
   if name <> "Z3" && not (!_already_warned_solver_mismatch) then (
-    Errors.log_issue0 Errors.Warning_SolverMismatch
-      (BU.format3 "Unexpected SMT solver: expected to be talking to Z3, got %s.\n\
-                  Please download the correct version of Z3 from %s\n\
-                  and install it into your $PATH as `%s'."
-        name
-        z3url (Platform.exe ("z3-" ^ Options.z3_version  ())));
+    let open FStarC.Errors.Msg in
+    Errors.log_issue0 Errors.Warning_SolverMismatch ([
+      text <| BU.format1 "Unexpected SMT solver: expected to be talking to Z3, got %s." name;
+    ] @ Find.z3_install_suggestion (Options.z3_version ())
+    );
     _already_warned_solver_mismatch := true
   );
-  let ver_found : string = BU.trim_string (List.hd (BU.split (getinfo "version") "-")) in
+  let ver_found : string = BU.trim_string (getinfo "version") in
   let ver_conf  : string = BU.trim_string (Options.z3_version ()) in
   if ver_conf <> ver_found && not (!_already_warned_version_mismatch) then (
     let open FStarC.Errors in
     let open FStarC.Pprint in
-    Errors.log_issue0 Errors.Warning_SolverMismatch [
+    let open FStarC.Errors.Msg in
+    Errors.log_issue0 Errors.Warning_SolverMismatch ([
       text (BU.format3 "Unexpected Z3 version for '%s': expected '%s', got '%s'."
                   (proc_prog p) ver_conf ver_found);
-      prefix 4 1 (text "Please download the correct version of Z3 from")
-                 (url z3url) ^/^
-        group (text "and install it into your $PATH as" ^/^ squotes
-          (doc_of_string (Platform.exe ("z3-" ^ Options.z3_version  ()))) ^^ dot);
-    ];
+      ] @ Find.z3_install_suggestion ver_conf
+    );
     Errors.stop_if_err(); (* stop now if this was a hard error *)
     _already_warned_version_mismatch := true
   );
@@ -264,13 +225,6 @@ type bgproc = {
     ctxt:     SolverState.solver_state;
 }
 
-let cmd_and_args_to_string cmd_and_args =
-  String.concat "" [
-   "cmd="; (fst cmd_and_args);
-   " args=["; (String.concat ", " (snd cmd_and_args));
-   "]"
-    ]
-
 (* the current background process is stored in the_z3proc
    the params with which it was started are stored in the_z3proc_params
    refresh will kill and restart the process if the params changed or
@@ -285,6 +239,10 @@ let bg_z3_proc =
     // just to be safe: the executable name in the_z3proc_params should
     // be enough to distinguish between the different executables.
     let make_new_z3_proc cmd_and_args =
+      if Options.hint_info () then
+        BU.print2 "Creating new z3proc (cmd=[%s], version=[%s])\n"
+          (show cmd_and_args)
+          (show (Options.z3_version ()));
       the_z3proc := Some (new_z3proc_with_id cmd_and_args);
       the_z3proc_params := Some cmd_and_args;
       the_z3proc_ask_count := 0 in
@@ -300,38 +258,21 @@ let bg_z3_proc =
     in
     let maybe_kill_z3proc () =
       if !the_z3proc <> None then begin
+        let old_params = must (!the_z3proc_params) in
+        let old_version = !the_z3proc_version in
+
+        if Options.hint_info () then
+          BU.print2 "Killing old z3proc (ask_count=%s, old_cmd=[%s])\n"
+            (show !the_z3proc_ask_count)
+            (show old_params);
+
          BU.kill_process (must (!the_z3proc));
+         the_z3proc_ask_count := 0;
          the_z3proc := None
       end
     in
     let refresh () =
-        let next_params = z3_cmd_and_args () in
-        let old_params = must (!the_z3proc_params) in
-
-        let old_version = !the_z3proc_version in
-        let next_version = Options.z3_version () in
-
-        (* We only refresh the solver if we have used it at all, or if the
-        parameters/version must be changed. We also force a refresh if log_queries is
-        on. I (GM 2023/07/23) think this might have been for making sure we get
-        a new file after checking a dependency, and that it might not be needed
-        now. However it's not a big performance hit, and it's only when logging
-        queries, so I'm maintaining this. *)
-        if Options.log_queries() ||
-           (!the_z3proc_ask_count > 0) ||
-           old_params <> next_params ||
-           old_version <> next_version
-        then begin
-          maybe_kill_z3proc();
-          if Options.query_stats()
-          then begin
-             BU.print3 "Refreshing the z3proc (ask_count=%s old=[%s] new=[%s])\n"
-               (BU.string_of_int !the_z3proc_ask_count)
-               (cmd_and_args_to_string old_params)
-               (cmd_and_args_to_string next_params)
-          end;
-          make_new_z3_proc next_params
-        end;
+        maybe_kill_z3proc ();
         query_logging.close_log()
     in
     let restart () =
@@ -516,7 +457,7 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
     let reason_unknown = BU.map_opt smt_output.smt_reason_unknown (fun x ->
         let ru = String.concat " " x in
         if BU.starts_with ru "(:reason-unknown \""
-        then let reason = FStarC.Compiler.Util.substring_from ru (String.length "(:reason-unknown \"" ) in
+        then let reason = FStarC.Util.substring_from ru (String.length "(:reason-unknown \"" ) in
              let res = String.substring reason 0 (String.length reason - 2) in //it ends with '")'
              res
         else ru) in

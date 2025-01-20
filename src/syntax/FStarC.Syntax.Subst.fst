@@ -15,19 +15,19 @@
 *)
 module FStarC.Syntax.Subst
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Range
+open FStarC
+open FStarC.Range
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Ident
 
 module Err = FStarC.Errors
-module U = FStarC.Compiler.Util
+module U = FStarC.Util
 module S = FStarC.Syntax.Syntax
 
 ///////////////////////////////////////////////////////////////////////////

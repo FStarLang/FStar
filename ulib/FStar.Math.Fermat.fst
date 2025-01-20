@@ -477,11 +477,14 @@ let fermat p a =
 val mod_mult_congr_aux (p:int{is_prime p}) (a b c:int) : Lemma
   (requires (a * c) % p = (b * c) % p /\ 0 <= b /\ b <= a /\ a < p /\ c % p <> 0)
   (ensures  a = b)
+#push-options "--retry 3" // proof below is brittle
 let mod_mult_congr_aux p a b c =
   let open FStar.Math.Lemmas in
   calc (==>) {
     (a * c) % p == (b * c) % p;
     ==> { mod_add_both (a * c) (b * c) (-b * c) p }
+    (a * c + (- b * c)) % p == (b * c + (- b * c)) % p;
+    ==> {}
     (a * c - b * c) % p == (b * c - b * c) % p;
     ==> { swap_mul a c; swap_mul b c; lemma_mul_sub_distr c a b }
     (c * (a - b)) % p == (b * c - b * c) % p;
@@ -491,6 +494,7 @@ let mod_mult_congr_aux p a b c =
   let r, s = FStar.Math.Euclid.bezout_prime p (c % p) in
   FStar.Math.Euclid.euclid p (c % p) (a - b) r s;
   small_mod (a - b) p
+#pop-options
 
 let mod_mult_congr p a b c =
   let open FStar.Math.Lemmas in

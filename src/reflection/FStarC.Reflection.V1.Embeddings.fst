@@ -15,24 +15,24 @@
 *)
 module FStarC.Reflection.V1.Embeddings
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Reflection.V1.Data
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStar.Order
 open FStarC.Errors
 
-module BU      = FStarC.Compiler.Util
+module BU      = FStarC.Util
 module EMB     = FStarC.Syntax.Embeddings
 module Env     = FStarC.TypeChecker.Env
 module Err     = FStarC.Errors
 module I       = FStarC.Ident
-module List    = FStarC.Compiler.List
+module List    = FStarC.List
 module NBETerm = FStarC.TypeChecker.NBETerm
 module O       = FStarC.Options
 module PC      = FStarC.Parser.Const
 module Print   = FStarC.Syntax.Print
-module Range   = FStarC.Compiler.Range
+module Range   = FStarC.Range
 module RD      = FStarC.Reflection.V1.Data
 module S       = FStarC.Syntax.Syntax
 module SS      = FStarC.Syntax.Subst

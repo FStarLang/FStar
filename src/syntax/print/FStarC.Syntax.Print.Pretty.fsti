@@ -17,7 +17,7 @@
 module FStarC.Syntax.Print.Pretty
 
 open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 

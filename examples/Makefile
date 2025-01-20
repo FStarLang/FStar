@@ -1,5 +1,6 @@
 rel.__all: dm4free.__verify
 rel.__accept: dm4free.__verify
+rel.__verify: dm4free.__verify
 # ^ rel uses modules from dm4free, make sure to check them in proper
 # order.
 
@@ -40,7 +41,11 @@ SUBDIRS += verifythis
 # SUBDIRS_CLEAN += hello
 SUBDIRS_ALL += dependencies
 SUBDIRS_CLEAN += dependencies
+
+HAS_OCAML ?= 1
+ifneq (,$(HAS_OCAML))
 SUBDIRS_ALL += native_tactics
+endif
 SUBDIRS_CLEAN += native_tactics
 
 FSTAR_ROOT ?= ..

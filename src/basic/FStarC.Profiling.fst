@@ -16,11 +16,11 @@
 
 module FStarC.Profiling
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-module List = FStarC.Compiler.List
+open FStarC
+open FStarC.Effect
+module List = FStarC.List
 open FStarC.Options
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 open FStarC.Json
 
 (*

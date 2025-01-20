@@ -15,10 +15,10 @@
 *)
 
 module FStarC.TypeChecker.Cfg
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStar.String
 open FStarC.Const
 open FStar.Char
@@ -36,7 +36,7 @@ open FStarC.Class.Deq
 
 module S  = FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module FC = FStarC.Const
 module PC = FStarC.Parser.Const
 module U  = FStarC.Syntax.Util
@@ -56,6 +56,7 @@ type fsteps = {
      do_not_unfold_pure_lets : bool;
      unfold_until : option S.delta_depth;
      unfold_only  : option (list I.lid);
+     unfold_once  : option (list I.lid);
      unfold_fully : option (list I.lid);
      unfold_attr  : option (list I.lid);
      unfold_qual  : option (list string);

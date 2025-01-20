@@ -17,8 +17,8 @@ module FStarC.Tests.Norm
 //Normalization tests
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStar.Pervasives
 open FStarC.Syntax.Syntax
 open FStarC.Tests.Pars
@@ -28,11 +28,11 @@ module SS = FStarC.Syntax.Subst
 module I = FStarC.Ident
 module P  = FStarC.Syntax.Print
 module Const = FStarC.Parser.Const
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module N = FStarC.TypeChecker.Normalize
 module Env = FStarC.TypeChecker.Env
 open FStarC.Ident
-open FStarC.Compiler.Range
+open FStarC.Range
 open FStarC.Tests.Util
 
 open FStarC.Class.Show
@@ -258,7 +258,7 @@ let run_either i r expected normalizer =
 //    force_term r;
     BU.print1 "%s: ... \n\n" (BU.string_of_int i);
     let tcenv = Pars.init() in
-    FStarC.Main.process_args() |> ignore; //set the command line args for debugging
+    Options.parse_cmd_line() |> ignore; //set the command line args for debugging
     let x = normalizer tcenv r in
     Options.init(); //reset them
     Options.set_option "print_universes" (Options.Bool true);
@@ -282,15 +282,15 @@ let run_interpreter i r expected = run_either i r expected (N.normalize [Env.Bet
 let run_nbe i r expected = run_either i r expected (FStarC.TypeChecker.NBE.normalize_for_unit_test [FStarC.TypeChecker.Env.UnfoldUntil delta_constant])
 let run_interpreter_with_time i r expected =
   let interp () = run_interpreter i r expected in
-  (i, snd (FStarC.Compiler.Util.return_execution_time interp))
+  (i, snd (FStarC.Util.return_execution_time interp))
 
 let run_whnf_with_time i r expected =
   let whnf () = run_whnf i r expected in
-  (i, snd (FStarC.Compiler.Util.return_execution_time whnf))
+  (i, snd (FStarC.Util.return_execution_time whnf))
 
 let run_nbe_with_time i r expected =
   let nbe () = run_nbe i r expected in
-  (i, snd (FStarC.Compiler.Util.return_execution_time nbe))
+  (i, snd (FStarC.Util.return_execution_time nbe))
 
 let run_tests tests run =
   Options.__set_unit_tests();
@@ -354,9 +354,9 @@ let run_all_interpreter_with_time () =
 let run_both_with_time i r expected =
   let nbe () = run_nbe i r expected in
   let norm () = run_interpreter i r expected in
-  FStarC.Compiler.Util.measure_execution_time "nbe" nbe;
+  FStarC.Util.measure_execution_time "nbe" nbe;
   BU.print_string "\n";
-  FStarC.Compiler.Util.measure_execution_time "normalizer" norm;
+  FStarC.Util.measure_execution_time "normalizer" norm;
   BU.print_string "\n"
 
 let compare () =

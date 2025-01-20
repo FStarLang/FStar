@@ -28,6 +28,25 @@ using the [online F\* editor] that's part of the [F\* tutorial].
 [online F\* editor]: https://www.fstar-lang.org/run.php
 [F\* tutorial]: https://www.fstar-lang.org/tutorial
 
+## Runtime dependency: Particular version of Z3 ##
+
+F\* requires specific versions of Z3 to work correctly,
+and will refuse to run if the version string does not match.
+You should have `z3-4.8.5` and `z3-4.13.3` in your `$PATH`:
+
+```
+❯ z3-4.8.5 --version
+Z3 version 4.8.5 - 64 bit
+
+❯ z3-4.13.3 --version
+Z3 version 4.13.3 - 64 bit
+```
+
+On Linux you can install these two versions with the following command:
+```bash
+sudo ./bin/get_fstar_z3.sh /usr/local/bin
+```
+
 ## OPAM package ##
 
 If the OCaml package manager (OPAM version 2.0 or later) is present on your platform,
@@ -83,8 +102,8 @@ need to perform the following step before your first use:
         compiler=OCaml 4.14.0
         date=yyyy-mm-ddThh:nn:ss+02:00
         commit=xxxxxxxx
-        $ z3 --version
-        Z3 version 4.8.5 - 64 bit
+        $ z3-4.13.3 --version
+        Z3 version 4.13.3 - 64 bit
 
    Note: if you are using the binary package and extracted it to, say, the
    `/path/to/fstar` directory, then both `fstar.exe` and the right version of
@@ -366,15 +385,3 @@ erase the extracted snapshot.
         $ make dune-extract-all -j6
 
 ### Repeat [Step 1](#step-1-build-an-f-binary-from-ocaml-snapshot)
-
-## Runtime dependency: Particular version of Z3 ##
-
-To use F\* for verification you need a particular Z3 binary.
-Our binary packages include that already in `bin`, but if you compile
-F\* from sources you need to get the Z3 binary yourself and add it to
-your `PATH`. We strongly recommend to use the corresponding binary here:
-https://github.com/FStarLang/binaries/tree/master/z3-tested
-
-Other versions of Z3 may well work, but the F* tests, standard library, and
-examples take a strong dependency on the particular Z3 binary above.
-They will likely fail to verify with any other Z3 version.

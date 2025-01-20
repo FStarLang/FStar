@@ -15,8 +15,8 @@
 *)
 module FStarC.Tactics.Interpreter
 
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Range
+open FStarC.Effect
+open FStarC.Range
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStarC.Tactics.Types

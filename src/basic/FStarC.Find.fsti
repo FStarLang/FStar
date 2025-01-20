@@ -17,7 +17,7 @@ module FStarC.Find
 (* Utilities for finding files in the include path and related
 operations. *)
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 (* A bit silly to have this, but this is the directory where the fstar.exe executable is in. *)
 val fstar_bin_directory : string
@@ -47,3 +47,9 @@ val locate_lib () : option string
 
 (* Return absolute path of OCaml-installed components of F*. *)
 val locate_ocaml () : string
+
+(* A message for the user suggesting how to install the proper Z3 version. *)
+val z3_install_suggestion (v : string) : list Pprint.document
+
+(* Locate executable for Z3 version [v]. *)
+val locate_z3 (v : string) : option string

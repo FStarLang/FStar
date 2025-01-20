@@ -2,10 +2,10 @@ module FStarC.TypeChecker.Cfg
 
 open FStar open FStarC
 open FStar.Char
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.String
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.String
 open FStarC.Const
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -16,7 +16,7 @@ open FStarC.Class.Show
 
 module S   = FStarC.Syntax.Syntax
 module SS  = FStarC.Syntax.Subst
-module BU  = FStarC.Compiler.Util
+module BU  = FStarC.Util
 module FC  = FStarC.Const
 module PC  = FStarC.Parser.Const
 module U   = FStarC.Syntax.Util
@@ -46,6 +46,7 @@ let steps_to_string f =
     do_not_unfold_pure_lets = %s;\n\
     unfold_until = %s;\n\
     unfold_only = %s;\n\
+    unfold_once = %s;\n\
     unfold_fully = %s;\n\
     unfold_attr = %s;\n\
     unfold_qual = %s;\n\
@@ -78,6 +79,7 @@ let steps_to_string f =
     f.do_not_unfold_pure_lets |> show;
     f.unfold_until |> show;
     f.unfold_only |> show;
+    f.unfold_once |> show;
     f.unfold_fully |> show;
     f.unfold_attr |> show;
     f.unfold_qual |> show;
@@ -149,6 +151,7 @@ let default_steps : fsteps = {
     do_not_unfold_pure_lets = false;
     unfold_until = None;
     unfold_only = None;
+    unfold_once = None;
     unfold_fully = None;
     unfold_attr = None;
     unfold_qual = None;
@@ -191,6 +194,7 @@ let fstep_add_one s fs =
     | DoNotUnfoldPureLets ->  { fs with do_not_unfold_pure_lets = true }
     | UnfoldUntil d -> { fs with unfold_until = Some d }
     | UnfoldOnly  lids -> { fs with unfold_only  = Some lids }
+    | UnfoldOnce  lids -> { fs with unfold_once  = Some lids }
     | UnfoldFully lids -> { fs with unfold_fully = Some lids }
     | UnfoldAttr  lids -> { fs with unfold_attr  = Some lids }
     | UnfoldQual  strs ->
@@ -459,6 +463,8 @@ let translate_norm_step = function
     | Pervasives.NormDebug -> [NormDebug]
     | Pervasives.UnfoldOnly names ->
         [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
+    | Pervasives.UnfoldOnce names ->
+        [UnfoldUntil delta_constant; UnfoldOnce (List.map I.lid_of_str names)]
     | Pervasives.UnfoldFully names ->
         [UnfoldUntil delta_constant; UnfoldFully (List.map I.lid_of_str names)]
     | Pervasives.UnfoldAttr names ->

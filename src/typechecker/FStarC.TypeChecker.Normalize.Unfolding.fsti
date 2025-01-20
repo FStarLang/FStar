@@ -1,6 +1,6 @@
 module FStarC.TypeChecker.Normalize.Unfolding
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.TypeChecker
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Cfg
@@ -13,6 +13,7 @@ val plugin_unfold_warn_ctr : ref int
 type should_unfold_res =
     | Should_unfold_no
     | Should_unfold_yes
+    | Should_unfold_once
     | Should_unfold_fully
     | Should_unfold_reify
 

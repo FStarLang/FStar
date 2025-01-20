@@ -15,18 +15,20 @@
 *)
 module FStarC.Reflection.V1.Builtins
 
-open FStarC.Ident
-open FStarC.Syntax.Syntax
-open FStarC.Syntax.Embeddings
-open FStar.Order
-module Env = FStarC.TypeChecker.Env
+open FStarC
+open FStarC.Effect
+open FStarC.Order
 open FStarC.Reflection.V1.Data
-open FStarC.Compiler.Effect
+open FStarC.Syntax.Embeddings
+open FStarC.Syntax.Syntax
+open FStarC.VConfig
+open FStarC.Ident
+
+module EMB = FStarC.Syntax.Embeddings
+module Env = FStarC.TypeChecker.Env
 module O   = FStarC.Options
 module RD  = FStarC.Reflection.V1.Data
-module EMB = FStarC.Syntax.Embeddings
 module Z   = FStarC.BigInt
-open FStarC.VConfig
 
 (* Primitives *)
 val compare_bv            : bv -> bv -> order
@@ -89,5 +91,5 @@ val compare_string : string -> string -> Z.t
 
 val push_binder    : Env.env -> binder -> Env.env
 
-val range_of_term : term -> FStarC.Compiler.Range.range
-val range_of_sigelt : sigelt -> FStarC.Compiler.Range.range
+val range_of_term : term -> FStarC.Range.range
+val range_of_sigelt : sigelt -> FStarC.Range.range

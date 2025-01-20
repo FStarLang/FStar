@@ -15,8 +15,7 @@
 *)
 module FStar.ModifiesGen
 
-#set-options "--split_queries no --ext 'context_pruning='"
-#set-options "--using_facts_from '*,-FStar.Tactics,-FStar.Reflection,-FStar.List'"
+#set-options "--split_queries no"
 
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
@@ -219,7 +218,6 @@ let loc_equal_elim (#al: aloc_t) (#c: cls al) (s1 s2: loc c) : Lemma
   [SMTPat (s1 `loc_equal` s2)]
 = fun_set_equal_elim (Loc?.non_live_addrs s1) (Loc?.non_live_addrs s2);
   fun_set_equal_elim (Loc?.live_addrs s1) (Loc?.live_addrs s2)
-
 
 let loc_union_idem #al #c s =
   assert (loc_union s s `loc_equal` s)
@@ -1060,7 +1058,7 @@ let modifies_preserves_liveness_strong #al #c s1 s2 h h' #t #pre r x =
 #pop-options
 
 let modifies_preserves_region_liveness #al #c l1 l2 h h' r = ()
-
+#restart-solver
 let modifies_preserves_region_liveness_reference #al #c l1 l2 h h' #t #pre r = ()
 
 let modifies_preserves_region_liveness_aloc #al #c l1 l2 h h' #r #n x =
@@ -1184,6 +1182,7 @@ let loc_includes_loc_regions_restrict_to_regions
   (loc_includes (loc_regions false rs) (restrict_to_regions l rs))
 = Classical.forall_intro (loc_aux_includes_refl #al #c)
 
+#push-options "--z3rlimit_factor 2"
 let modifies_only_live_regions #al #c rs l h h' =
   let s = l in
   let c_rs = Set.complement rs in
@@ -1205,6 +1204,7 @@ let modifies_only_live_regions #al #c rs l h h' =
   modifies_only_live_regions_weak rs s_c_rs h h';
   loc_includes_restrict_to_regions s c_rs;
   modifies_loc_includes s h h' s_c_rs
+#pop-options
 
 let no_upd_fresh_region #al #c r l h0 h1 =
   modifies_only_live_regions (HS.mod_set (Set.singleton r)) l h0 h1
@@ -1244,6 +1244,7 @@ let popped_modifies #al c h0 h1 =
   )
 #pop-options
 
+#push-options "--z3rlimit_factor 2"
 let modifies_fresh_frame_popped #al #c h0 h1 s h2 h3 =
   fresh_frame_modifies c h0 h1;
   let r = loc_region_only #al #c false (HS.get_tip h2) in
@@ -1261,6 +1262,7 @@ let modifies_fresh_frame_popped #al #c h0 h1 s h2 h3 =
   );
   modifies_trans' s' h0 h2 h3;
   modifies_only_live_regions rs s h0 h3
+#pop-options
 
 let modifies_loc_regions_intro #al #c rs h1 h2 =
   let f (r: HS.rid) (a: nat) (b: al r a) : Lemma
@@ -1475,6 +1477,7 @@ let loc_not_unused_in #al c h =
     (mk_live_addrs (fun x -> f x))
     (Ghost.hide (aloc_domain c (Ghost.hide (Set.complement Set.empty)) f))
 
+#restart-solver
 let loc_unused_in #al c h =
   let f (r: HS.rid) : GTot (GSet.set nat) =
     if not (HS.live_region h r)
@@ -1493,10 +1496,13 @@ let loc_unused_in #al c h =
 let loc_regions_unused_in #al c h rs = ()
 
 #push-options "--z3rlimit 20"
+#restart-solver
 let loc_addresses_unused_in #al c r a h = ()
 #pop-options
-
+#restart-solver
+#push-options "--fuel 2 --ifuel 1 --z3smtopt '(set-option :smt.qi.eager_threshold 5)' --z3rlimit_factor 4"
 let loc_addresses_not_unused_in #al c r a h = ()
+#pop-options
 
 #push-options "--z3rlimit 50"
 let loc_unused_in_not_unused_in_disjoint #al c h =
@@ -1528,7 +1534,8 @@ let modifies_address_liveness_insensitive_unused_in #al c h h' =
 #pop-options
 #pop-options
 
-#push-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 16"
+#push-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 16 --retry 5 --z3cliopt 'smt.qi.eager_threshold=5'"
+#restart-solver
 let modifies_only_not_unused_in #al #c l h h' =
   assert (modifies_preserves_regions l h h');
   assert (modifies_preserves_not_unused_in l h h');
@@ -1713,6 +1720,7 @@ let union_aux_of_aux_left
 : Tot (GSet.set (aloc (cls_union c)))
 = GSet.comprehend (union_aux_of_aux_left_pred c b s)
 
+#restart-solver
 let union_loc_of_loc #al c b l =
   let (Loc regions region_liveness_tags non_live_addrs live_addrs aux) = l in
   let aux' : GSet.set (aloc #(cls_union_aloc al) (cls_union c)) =
@@ -1750,6 +1758,7 @@ let union_aux_of_aux_left_inv
 : Tot (GSet.set (aloc (c b)))
 = GSet.comprehend (union_aux_of_aux_left_inv_pred b s)
 
+#restart-solver
 let mem_union_aux_of_aux_left_intro
   (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
@@ -1772,6 +1781,7 @@ let mem_union_aux_of_aux_left_elim
   [SMTPat (GSet.mem x (union_aux_of_aux_left #al c b aux))]
 = ()
 
+#restart-solver
 let addrs_of_loc_union_loc_of_loc
   (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
@@ -1783,6 +1793,7 @@ let addrs_of_loc_union_loc_of_loc
   [SMTPat (addrs_of_loc (union_loc_of_loc #al c b l) r)]
 = ()
 
+#restart-solver
 let union_loc_of_loc_none #al c b =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_none #_ #(c b)))  (loc_none #_ #(cls_union c)))
 
@@ -1791,13 +1802,17 @@ let union_loc_of_loc_union #al c b l1 l2 =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_union #_ #(c b) l1 l2)) (loc_union #_ #(cls_union c) (union_loc_of_loc c b l1) (union_loc_of_loc c b l2)))
 #pop-options
 
+#push-options "--z3rlimit_factor 2"
+#restart-solver
 let union_loc_of_loc_addresses #al c b preserve_liveness r n =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_addresses #_ #(c b) preserve_liveness r n)) (loc_addresses #_ #(cls_union c) preserve_liveness r n))
 
 let union_loc_of_loc_regions #al c b preserve_liveness r =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_regions #_ #(c b) preserve_liveness r)) (loc_regions #_ #(cls_union c) preserve_liveness r))
+#pop-options
 
-#push-options "--z3rlimit 25"
+#push-options "--z3rlimit_factor 6 --fuel 2 --ifuel 1 --z3cliopt 'smt.qi.eager_threshold=5'"
+#restart-solver
 let union_loc_of_loc_includes_intro
   (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
@@ -1897,7 +1912,8 @@ let union_loc_of_loc_includes #al c b s1 s2 =
   Classical.move_requires (union_loc_of_loc_includes_elim c b s1) s2;
   Classical.move_requires (union_loc_of_loc_includes_intro c b s1) s2
 
-#push-options "--fuel 0 --ifuel 0"
+#push-options "--fuel 0 --ifuel 0 --z3cliopt 'smt.qi.eager_threshold=5' --z3rlimit_factor 4"
+#restart-solver
 let union_loc_of_loc_disjoint_intro
   (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
@@ -1947,8 +1963,11 @@ let union_loc_of_loc_disjoint_intro
     xs.addr `GSet.mem` addrs_of_loc_weak smaller xs.region /\
     aloc_disjoint xl xs
   )) by (
+    let open FStar.Stubs.Tactics.V2.Builtins in
     let open FStar.Tactics.SMT in
     set_rlimit 15;
+    set_options "--z3cliopt 'smt.qi.eager_threshold=1'";
+    set_options "--retry 5";
     ()
   );
   assert (auxl ` loc_aux_disjoint` doms);
@@ -2144,6 +2163,7 @@ let raise_loc #al #c l =
     live_addrs
     (Ghost.hide (GSet.comprehend (raise_loc_aux_pred c aux)))
 
+#restart-solver
 let raise_loc_none #al #c =
   assert (raise_loc u#x u#y (loc_none #_ #c) `loc_equal` loc_none)
 
@@ -2156,23 +2176,24 @@ let raise_loc_addresses #al #c preserve_liveness r a =
 let raise_loc_regions #al #c preserve_liveness r =
   assert (raise_loc u#x u#y (loc_regions #_ #c preserve_liveness r) `loc_equal` loc_regions preserve_liveness r)
 
-#push-options "--z3rlimit 15 --z3cliopt 'smt.qi.eager_threshold=100'"
+#push-options "--z3rlimit 15 --z3cliopt 'smt.qi.eager_threshold=100' --fuel 2 --ifuel 1"
+#restart-solver
 let raise_loc_includes #al #c l1 l2 =
-  let l1' = raise_loc l1 in
-  let l2' = raise_loc l2 in
-  assert (forall (x: aloc (raise_cls c)) . GSet.mem x (Ghost.reveal (Loc?.aux l1')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l1)));
-  assert (forall (x: aloc (raise_cls c)) . GSet.mem x (Ghost.reveal (Loc?.aux l2')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l2)));
-  assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l1)) <==> GSet.mem (upgrade_aloc x) (Ghost.reveal (Loc?.aux l1')));
-  assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l2)) <==> GSet.mem (upgrade_aloc x) (Ghost.reveal (Loc?.aux l2')));
-  assert (loc_aux_includes (Ghost.reveal (Loc?.aux l1')) (Ghost.reveal (Loc?.aux l2')) <==> loc_aux_includes (Ghost.reveal (Loc?.aux l1)) (Ghost.reveal (Loc?.aux l2)))
+  let l1' = raise_loc u#x u#y l1 in
+  let l2' = raise_loc u#x u#y l2 in
+  assert (forall (x: aloc (raise_cls u#x u#y c)) . GSet.mem x (Ghost.reveal (Loc?.aux l1')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l1)));
+  assert (forall (x: aloc (raise_cls u#x u#y c)) . GSet.mem x (Ghost.reveal (Loc?.aux l2')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l2)));
+  assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l1)) <==> GSet.mem (upgrade_aloc u#x u#y x) (Ghost.reveal (Loc?.aux l1')));
+  assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l2)) <==> GSet.mem (upgrade_aloc u#x u#y x) (Ghost.reveal (Loc?.aux l2')));
+  ()
 #pop-options
 
 #push-options "--z3rlimit 20"
 let raise_loc_disjoint #al #c l1 l2 =
-  let l1' = raise_loc l1 in
-  let l2' = raise_loc l2 in
-  assert (forall (x: aloc (raise_cls c)) . GSet.mem x (Ghost.reveal (Loc?.aux l1')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l1)));
-  assert (forall (x: aloc (raise_cls c)) . GSet.mem x (Ghost.reveal (Loc?.aux l2')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l2)));
+  let l1' = raise_loc u#x u#y l1 in
+  let l2' = raise_loc u#x u#y l2 in
+  assert (forall (x: aloc (raise_cls u#x u#y c)) . GSet.mem x (Ghost.reveal (Loc?.aux l1')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l1)));
+  assert (forall (x: aloc (raise_cls u#x u#y c)) . GSet.mem x (Ghost.reveal (Loc?.aux l2')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l2)));
   assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l1)) <==> GSet.mem (upgrade_aloc x) (Ghost.reveal (Loc?.aux l1')));
   assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l2)) <==> GSet.mem (upgrade_aloc x) (Ghost.reveal (Loc?.aux l2')));
   assert (forall r . addrs_of_loc l1' r `GSet.equal` addrs_of_loc l1 r);
@@ -2182,9 +2203,9 @@ let raise_loc_disjoint #al #c l1 l2 =
 #pop-options
 
 let modifies_raise_loc #al #c l h1 h2 =
-  let l' = raise_loc l in
-  assert (forall (x: aloc (raise_cls c)) . GSet.mem x (Ghost.reveal (Loc?.aux l')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l)));
-  assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l)) <==> GSet.mem (upgrade_aloc x) (Ghost.reveal (Loc?.aux l')));
+  let l' = raise_loc u#x u#y l in
+  assert (forall (x: aloc (raise_cls u#x u#y c)) . GSet.mem x (Ghost.reveal (Loc?.aux l')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l)));
+  assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l)) <==> GSet.mem (upgrade_aloc u#x u#y x) (Ghost.reveal (Loc?.aux l')));
   assert (forall r . addrs_of_loc l' r `GSet.equal` addrs_of_loc l r);
   assert (forall (x1 x2: aloc (raise_cls u#x u#y c)) . aloc_disjoint x1 x2 <==> aloc_disjoint (downgrade_aloc x1) (downgrade_aloc x2));
   assert (forall (r: HS.rid) (a: nat) (b: raise_aloc al r a) .

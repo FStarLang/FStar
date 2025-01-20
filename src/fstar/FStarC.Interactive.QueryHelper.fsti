@@ -19,9 +19,9 @@
 
 module FStarC.Interactive.QueryHelper
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Range
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Range
+open FStarC.Util
 open FStarC.TypeChecker.Env
 open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.Ide.Types

@@ -3,9 +3,9 @@ module FStarC.TypeChecker.Primops.Base
 (* This module defines the type of primitive steps and some helpers. *)
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC
+open FStarC.Effect
+open FStarC.List
 open FStarC.Syntax.Syntax
 open FStarC.Class.Monad
 

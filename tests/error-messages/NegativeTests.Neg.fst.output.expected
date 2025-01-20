@@ -63,7 +63,7 @@
     got type FStar.Pervasives.result Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also FStar.Pervasives.fsti(519,4-519,5)
+  - See also FStar.Pervasives.fsti(526,4-526,5)
 
 >>]
 >> Got issues: [

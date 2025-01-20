@@ -5,7 +5,9 @@
 # 'include test.mk'.
 
 FSTAR_HOME=../..
-FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS)
+OTHERFLAGS += --z3version 4.13.3
+FSTAR_EXE ?= $(FSTAR_HOME)/out/bin/fstar.exe
+FSTAR=$(FSTAR_EXE) $(OTHERFLAGS)
 
 # Tests for which the native tactics used in module named Sample.Test.fst are
 # declared in a corresponding module named Sample.fst
@@ -43,8 +45,6 @@ ALL=Apply\
     Tutorial\
     Unify
 
-OTHERFLAGS +=
-
 all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 
 # .depend:
@@ -75,7 +75,6 @@ all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 
 %.interp: %.fst Registers.List.fst
 	$(FSTAR) $*.fst
-
 
 clean:
 	rm -f *.test *.ml *.o *.cm[ix] *.cmxs

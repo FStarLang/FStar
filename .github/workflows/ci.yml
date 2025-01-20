@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches-ignore:
+    - _**
+  pull_request:
+  workflow_dispatch:
+  merge_group:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: build
+    uses: ./.github/workflows/build-ci.yml
+
+  tests:
+    name: tests
+    needs: build
+    uses: ./.github/workflows/tests.yml
+
+  nix-build:
+    name: nix
+    uses: ./.github/workflows/nix.yml
+
+  # Branch protection points here
+  ciok:
+    runs-on: ubuntu-latest
+    needs: [build, tests, nix-build]
+    steps:
+      - run: exit 0

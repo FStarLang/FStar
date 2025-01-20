@@ -15,7 +15,7 @@
 *)
 module FStarC.OCaml
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 (* Escape a string for use in a shell command, expecting to be wrapped in SINGLE quotes. *)
 val shellescape (s:string) : string
@@ -41,6 +41,6 @@ arguments. *)
 val exec_ocamlopt #a (args : list string) : a
 
 (* Run ocamlc passing appropriate flags to generate an F* plugin,
-using fstar_plugin_lib. Expects the source file and further options as
+using fstar.pluginlib. Expects the source file and further options as
 arguments. *)
 val exec_ocamlopt_plugin #a (args : list string) : a

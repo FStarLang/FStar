@@ -37,21 +37,25 @@ module FStarC.Extraction.ML.UEnv
  *)
 
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Ident
 open FStarC.Extraction.ML.Syntax
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker
 module U  = FStarC.Syntax.Util
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module Const = FStarC.Parser.Const
 
 open FStarC.Class.Show
+
+let plug () = Options.codegen () = Some Options.Plugin
+           || Options.codegen () = Some Options.PluginNoLib
+let plug_no_lib () = Options.codegen () = Some Options.PluginNoLib
 
 (**** Type definitions *)
 
@@ -249,11 +253,22 @@ let is_fv_type g fv =
     g.tydefs |> BU.for_some (fun tydef -> fv_eq fv tydef.tydef_fv)
 
 let no_fstar_stubs_ns (ns : list mlsymbol) : list mlsymbol =
-  let pl = Options.codegen () = Some Options.Plugin in
   match ns with
-  | "Prims" :: [] when pl -> "Prims" :: []
-  | "FStar"::"Stubs"::rest when pl -> "FStarC"::rest
-  | "FStar"::"Stubs"::rest -> "FStar"::rest // unclear
+  | "FStar"::"Stubs"::rest when plug_no_lib () && Options.Ext.get "__guts" <> "" -> "FStarC"::rest
+
+  (* These 3 modules are special, and are not in the guts. They live in src/ml/full and
+  are visible at the ambient namespace when building the plugin lib. *)
+  | "FStar"::"Stubs"::"Tactics"::"V1"::"Builtins"::[] when plug () ->
+    "FStarC"::"Tactics"::"V1"::"Builtins"::[]
+  | "FStar"::"Stubs"::"Tactics"::"V2"::"Builtins"::[] when plug () ->
+    "FStarC"::"Tactics"::"V2"::"Builtins"::[]
+  | "FStar"::"Stubs"::"Tactics"::"Unseal"::[] when plug () ->
+    "FStarC"::"Tactics"::"Unseal"::[]
+
+  | "FStar"::"Stubs"::rest when plug () -> "Fstarcompiler.FStarC"::rest // review, but I think it's right
+
+  | "FStar"::"Stubs"::rest -> "FStar"::rest // review, wrong
+
   | _ -> ns
 
 let no_fstar_stubs (p : mlpath) : mlpath =
@@ -278,9 +293,8 @@ let lookup_record_field_name g (type_name, fn) =
     | None -> failwith ("Field name not found: " ^ string_of_lid key)
     | Some mlp -> 
       let ns, id = mlp in
-      if Options.codegen () = Some Options.Plugin
-      then List.filter (fun s -> s <> "Stubs") ns, id
-      else ns, id
+      let ns = no_fstar_stubs_ns ns in
+      ns, id
 
 (**** Naming conventions and freshness (internal) *)
 
@@ -302,7 +316,9 @@ let initial_mlident_map =
             (match Options.codegen() with
               | Some Options.FSharp -> fsharpkeywords
               | Some Options.OCaml
-              | Some Options.Plugin -> ocamlkeywords
+              | Some Options.Plugin
+              | Some Options.PluginNoLib ->
+                ocamlkeywords
               | Some Options.Krml -> krml_keywords
               | Some Options.Extension -> []  // TODO
               | None -> [])
@@ -411,6 +427,42 @@ let new_mlpath_of_lident (g:uenv) (x : lident) : mlpath & uenv =
     else let name, map = find_uniq g.env_mlident_map (string_of_id (ident_of_lid x)) false in
          let g = { g with env_mlident_map = map } in
          (mlns_of_lid x, name), g
+  in
+  let guts (p::ps, l) = ("Fstarcompiler."^p) :: ps, l in
+  let mlp =
+    match string_of_lid x with
+    (* This sucks, but these are the types in the interface
+    to tactic primitives. Tuples/lists are not here since they
+    get extracted to the OCaml native ones. *)
+    | "Prims.dtuple2"
+    | "Prims.Mkdtuple2"
+    | "FStar.Pervasives.either"
+    | "FStar.Pervasives.Inl"
+    | "FStar.Pervasives.Inr"
+
+    | "FStar.Pervasives.norm_step"
+    | "FStar.Pervasives.norm_debug"
+    | "FStar.Pervasives.simplify"
+    | "FStar.Pervasives.weak"
+    | "FStar.Pervasives.hnf"
+    | "FStar.Pervasives.primops"
+    | "FStar.Pervasives.delta"
+    | "FStar.Pervasives.norm_debug"
+    | "FStar.Pervasives.zeta"
+    | "FStar.Pervasives.zeta_full"
+    | "FStar.Pervasives.iota"
+    | "FStar.Pervasives.nbe"
+    | "FStar.Pervasives.reify_"
+    | "FStar.Pervasives.delta_only"
+    | "FStar.Pervasives.delta_fully"
+    | "FStar.Pervasives.delta_attr"
+    | "FStar.Pervasives.delta_qualifier"
+    | "FStar.Pervasives.delta_namespace"
+    | "FStar.Pervasives.unmeta"
+    | "FStar.Pervasives.unascribe"
+      when plug ()
+      -> guts mlp
+    | _ -> mlp
   in
   let g = { g with
     mlpath_of_lid = BU.psmap_add g.mlpath_of_lid (string_of_lid x) mlp
@@ -636,7 +688,7 @@ let new_uenv (e:TypeChecker.Env.env)
       currentModule = ([], "");
     } in
     (* We handle [failwith] specially, extracting it to OCaml's 'failwith'
-       rather than FStarC.Compiler.Effect.failwith. Not sure this is necessary *)
+       rather than FStarC.Effect.failwith. Not sure this is necessary *)
     let a = "'a" in
     let failwith_ty = ([{ty_param_name=a; ty_param_attrs=[]}],
                         MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in

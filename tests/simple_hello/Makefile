@@ -2,22 +2,32 @@
 # We should not need to include any other internal makefiles.
 # Dune also works fine under the --ocamlenv.
 
-FSTAR ?= ../../bin/fstar.exe
+# In this repository, we inherit this variable. Externally we
+# just take fstar.exe from the PATH.
+FSTAR_EXE ?= fstar.exe
 
-all: Hello.test
+all: Hello.exe.test
 
-Hello.test: Hello.exe Hello.byte
-	./Hello.exe  | grep "Hello F\*!"
-	./Hello.byte | grep "Hello F\*!"
+# In a Cygwin build, somehow this dll is not the search path (copying it
+# to this directory does make the test work). Just skip it for now.
+# $ ./Hello.byte
+# Fatal error: cannot load shared library dllzarith
+# Reason: No such file or directory
+ifneq ($(OS),Windows_NT)
+all: Hello.byte.test
+endif
+
+Hello.%.test: Hello.%
+	./$< | grep "Hello F\*!"
 
 %.ml: %.fst
-	$(FSTAR) --codegen OCaml $< --extract $*
+	$(FSTAR_EXE) --codegen OCaml $< --extract $* --z3version 4.13.3
 
 %.exe: %.ml
-	$(FSTAR) --ocamlopt $< -o $@
+	$(FSTAR_EXE) --ocamlopt $< -o $@
 
 %.byte: %.ml
-	$(FSTAR) --ocamlc $< -o $@
+	$(FSTAR_EXE) --ocamlc $< -o $@
 
 clean:
 	rm -f *.ml *.exe *.byte *.cm* *.o

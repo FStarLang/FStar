@@ -23,15 +23,14 @@ include $(FSTAR_ROOT)/mk/common.mk
 .DEFAULT_GOAL := all
 
 # Set a default FSTAR_EXE for most clients.
-FSTAR_EXE ?= $(FSTAR_ROOT)/bin/fstar.exe
+FSTAR_EXE ?= $(FSTAR_ROOT)/out/bin/fstar.exe
 FSTAR_EXE := $(abspath $(FSTAR_EXE))
 export FSTAR_EXE
-
-HINTS_ENABLED?=--use_hints
 
 # This warning is really useless.
 OTHERFLAGS += --warn_error -321
 OTHERFLAGS += --ext context_pruning
+OTHERFLAGS += --z3version 4.13.3
 
 # Set ADMIT=1 to admit queries
 ADMIT ?=
@@ -45,11 +44,11 @@ OUTPUT_DIR ?= _output
 CACHE_DIR ?= _cache
 
 FSTAR = $(FSTAR_EXE) $(SIL) 				\
-	--cache_checked_modules				\
+	$(if $(NO_WRITE_CHECKED),,--cache_checked_modules)		\
 	--odir $(OUTPUT_DIR)				\
 	--cache_dir $(CACHE_DIR)			\
-	--already_cached Prims,FStar			\
-	 $(OTHERFLAGS) $(MAYBE_ADMIT) $(HINTS_ENABLED)
+	--already_cached Prims,FStar,LowStar		\
+	 $(OTHERFLAGS) $(MAYBE_ADMIT)
 
 ifneq ($(MAKECMDGOALS),clean)
 ifeq ($(NODEPEND),) # Set NODEPEND=1 to not dependency analysis
@@ -78,18 +77,22 @@ endif
 	$(FSTAR) $<
 	touch -c $@
 
+$(OUTPUT_DIR)/%.fst.output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fst.output: %.fst
 	$(call msg, "OUTPUT", $(basename $(notdir $@)))
 	$(FSTAR) --message_format human -f --print_expected_failures $< >$@ 2>&1
 
+$(OUTPUT_DIR)/%.fsti.output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fsti.output: %.fsti
 	$(call msg, "OUTPUT", $(basename $(notdir $@)))
 	$(FSTAR) --message_format human -f --print_expected_failures $< >$@ 2>&1
 
+$(OUTPUT_DIR)/%.fst.json_output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fst.json_output: %.fst
 	$(call msg, "JSONOUT", $(basename $(notdir $@)))
 	$(FSTAR) --message_format json -f --print_expected_failures $< >$@ 2>&1
 
+$(OUTPUT_DIR)/%.fsti.json_output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fsti.json_output: %.fsti
 	$(call msg, "JSONOUT", $(basename $(notdir $@)))
 	$(FSTAR) --message_format json -f --print_expected_failures $< >$@ 2>&1
@@ -114,7 +117,7 @@ $(OUTPUT_DIR)/%.out: $(OUTPUT_DIR)/%.exe
 ### Checking expected output for any kind of file (error output, ml, etc)
 $(OUTPUT_DIR)/%.diff: $(OUTPUT_DIR)/% %.expected
 	$(call msg, "DIFF", $<)
-	diff -u --strip-trailing-cr $^
+	$(FSTAR_ROOT)/mk/diff.sh $^
 	touch $@
 
 $(OUTPUT_DIR)/%.accept: $(OUTPUT_DIR)/%
@@ -149,6 +152,15 @@ verify: $(addsuffix .__verify, $(SUBDIRS_VERIFY))
 verify: __verify
 ifeq ($(NOVERIFY),)
 all: __verify
+endif
+
+HAS_OCAML ?= 1
+# We assume we have ocaml, unless HAS_OCAML= was given as an argument
+# to make (this is done by binary package CI). If we don't have ocaml,
+# we don't try to build or run programs.
+ifeq (,$(HAS_OCAML))
+NORUN := 1
+NOBUILD := 1
 endif
 
 # clean

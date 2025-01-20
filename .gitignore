@@ -1,3 +1,21 @@
+/stage1/out
+/stage2/out
+/stage3
+/out
+/*.tar
+/*.tar.gz
+/*.zip
+/_pak*
+/_srcpak*
+_build
+# ^ build output
+/nightly
+/bin/fstar.exe
+/bin/get_fstar_z3.sh
+
+# touch files for incrementality
+/.*.touch
+
 *~
 .#*
 \#*\#
@@ -6,55 +24,17 @@
 *.suo
 *.smt2
 *.sav
-*.hints.fsval
-*.hints.mlval
-*.bench
 dump*
 cache/
-/VS/packages
-
-/src/parser/parse.fs
-/src/parser/lex.fs
-
-/src/boot
-
-/bin/*.dll
-/bin/*.pdb
-/bin/*.mdb
-/bin/*.xml
-/bin/*.config
-/bin/fstar.exe
-/bin/fstar.ocaml
-/bin/tests.exe
-/bin/z3.exe
-/bin/z3-x86.exe
-/bin/z3-x64.exe
-/src/*/obj
 
 /lib
 
-examples/*/*.ml
-examples/crypto/CntProtocol.exe
-examples/wysteria/ocaml-output/*
-
-tests/*/*.ml
 tests/incl/*.neg/error.log
 
-_build/
-/ulib/fs/obj
-/ulib/fs/bin
-
-/release
-
-*.native
+*.exe
 *.byte
 
 queries*.smt2
-transcript
-dump
-
-# ignore .ml files on the root dir
-/*.ml
 
 *.cmi
 *.cmo
@@ -63,41 +43,19 @@ dump
 *.cmxs
 *.cmxa
 *.o
-fstar.install
-._fstar.install
 
-.depend
-.depend.rsp
-._depend
-*.a
-*.cmxa
-*.so
-*.annot
-/VS/
+.depend*
 
 tags
 
 *~
 *.swp
 
-*.exe
 
 *.checked
 *.checked.lax
 *.dump
 *.runlim
-
-/.nubuild
-/nucache/
-/nuobj/
-nubuild.log
-nubuild.progress
-
-# Z3/F* nightly/weekly files
-/nightly
-
-# Nuget packages
-nuget/
 
 # devcontainer temp files
 /.devcontainer_build.log

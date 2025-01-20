@@ -6,6 +6,11 @@ FSTAR_EXE ?= $(shell which fstar.exe)
 
 V != $(FSTAR_EXE) --version
 
+HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
+# NB: This is overriden (to empty) when testing the binary package
+# so we skip the build test. (Variables given in the command line, not
+# the environment, override those defined in the script.)
+
 ifeq ($(V),)
 $(error "fstar.exe --version failed... place a valid F* in your PATH or set FSTAR_EXE")
 endif
@@ -15,14 +20,12 @@ CACHE_DIR = cache
 ROOTS     = Test.fst
 
 FSTAR_FLAGS = $(OTHERFLAGS) --cmi --odir $(OUT_DIR) --cache_dir $(CACHE_DIR) \
-  --cache_checked_modules --already_cached 'Prims FStar'
-
-# Run with ENABLE_HINTS= to disable
-ENABLE_HINTS ?= --use_hints
+  --cache_checked_modules --already_cached 'Prims FStar' --z3version 4.13.3 \
+  --ext context_pruning
 
 FSTAR = $(FSTAR_EXE) $(FSTAR_FLAGS)
 
-.PHONY: all test clean
+.PHONY: all test clean run
 
 all:
 	rm -f .depend && $(MAKE) .depend # Always re-generate dependencies
@@ -38,7 +41,7 @@ all:
 include .depend
 
 $(CACHE_DIR)/%.checked:
-	$(FSTAR) $< $(ENABLE_HINTS) --hint_file $(HINT_DIR)/$(notdir $<).hints && \
+	$(FSTAR) $< && \
 	touch $@
 
 # 2. Compile all .ml files to .cmx and link them to get an executable
@@ -54,7 +57,14 @@ $(OUT_DIR)/%.ml:
 $(OUT_DIR)/test.exe: $(subst .ml,.cmx,$(ALL_ML_FILES)) | $(OUT_DIR)
 	$(FSTAR_EXE) --ocamlopt -I $(OUT_DIR) -o $(OUT_DIR)/test.exe $(subst .ml,.cmx,$(ALL_ML_FILES))
 
-test: $(OUT_DIR)/test.exe
+# If we don't have OCaml, just extract the ML files.
+ifneq (,$(HAS_OCAML))
+test: run
+else
+test: $(ALL_ML_FILES)
+endif
+
+run: $(OUT_DIR)/test.exe
 	$(OUT_DIR)/test.exe
 
 clean:

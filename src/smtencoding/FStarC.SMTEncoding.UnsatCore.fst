@@ -14,11 +14,11 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.UnsatCore
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.SMTEncoding.Term
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 let filter (core:unsat_core) (decls:list decl)
 : list decl

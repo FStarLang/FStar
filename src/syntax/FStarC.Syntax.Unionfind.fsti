@@ -19,8 +19,8 @@ module FStarC.Syntax.Unionfind
 (* This module offers a transactional interface specialized for terms and
  * universes on top of the existing union-find implementation. *)
 
-open FStarC.Compiler.Effect
-module Range = FStarC.Compiler.Range
+open FStarC.Effect
+module Range = FStarC.Range
 module S = FStarC.Syntax.Syntax
 
 val uf : Type0

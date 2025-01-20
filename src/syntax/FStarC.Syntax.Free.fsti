@@ -14,12 +14,12 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Free
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open Prims
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
-open FStarC.Compiler.FlatSet
+open FStarC
+open FStarC.Util
+open FStarC.FlatSet
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 

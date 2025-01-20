@@ -1,7 +1,7 @@
 module FStarC.Class.Binders
 
-open FStarC.Compiler.Util
-open FStarC.Compiler.FlatSet
+open FStarC.Util
+open FStarC.FlatSet
 open FStarC.Syntax.Syntax
 
 (* TODO: should be for any setlike *)

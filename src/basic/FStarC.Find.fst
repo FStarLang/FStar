@@ -16,10 +16,12 @@
 module FStarC.Find
 
 open FStar
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-module BU = FStarC.Compiler.Util
+open FStarC
+open FStarC
+open FStarC.Effect
+open FStarC.List
+module BU = FStarC.Util
+open FStarC.Class.Show
 
 let fstar_bin_directory : string =
   BU.get_exec_dir ()
@@ -27,7 +29,17 @@ let fstar_bin_directory : string =
 let read_fstar_include (fn : string) : option (list string) =
   try
     let s = BU.file_get_contents fn in
-    let subdirs = String.split ['\n'] s |> List.filter (fun s -> s <> "" && not (String.get s 0 = '#')) in
+    let subdirs =
+      // Read each line
+      String.split ['\r'; '\n'] s |>
+      // Trim whitespace. NOTE: Carriage returns (\r) should be trimmed
+      // by BU.trim_string (which is BatString.trim) according to
+      // the docs, but do not seem to be. So instead we use it as a
+      // separator above and just get a few more empty lines.
+      List.map BU.trim_string |>
+      // And keep the non-empty lines that don't begin with '#'
+      List.filter (fun s -> s <> "" && not (String.get s 0 = '#'))
+    in
     Some subdirs
   with
   | _ ->
@@ -57,16 +69,17 @@ let lib_root () : option string =
     match Util.expand_environment_variable "FSTAR_LIB" with
     | Some s -> Some s
     | None ->
-      (* Otherwise, try to find the library in the default locations. It's ulib/
-      in the repository, and lib/fstar/ in the binary package. *)
-      if Util.file_exists (fstar_bin_directory ^ "/../ulib")
-      then Some (fstar_bin_directory ^ "/../ulib")
-      else if Util.file_exists (fstar_bin_directory ^ "/../lib/fstar")
-      then Some (fstar_bin_directory ^ "/../lib/fstar")
-      else None
+      (* Otherwise, just at the default location *)
+      Some (fstar_bin_directory ^ "/../lib/fstar")
+
+let fstarc_paths () =
+  if Options.with_fstarc ()
+  then expand_include_d (fstar_bin_directory ^ "/../lib/fstar/fstarc")
+  else []
 
 let lib_paths () =
-  Common.option_to_list (lib_root ()) |> expand_include_ds
+  (Common.option_to_list (lib_root ()) |> expand_include_ds)
+  @ fstarc_paths ()
 
 let include_path () =
   let cache_dir =
@@ -144,3 +157,93 @@ let locate_lib () =
 let locate_ocaml () =
   // This is correct right now, but probably should change.
   Util.get_exec_dir () ^ "/../lib" |> Util.normalize_file_path
+
+let z3url = "https://github.com/Z3Prover/z3/releases"
+
+let packaged_z3_versions = ["4.8.5"; "4.13.3"]
+
+let z3_install_suggestion (v : string) : list Pprint.document =
+  let open FStarC.Errors.Msg in
+  let open FStarC.Pprint in
+  [
+    prefix 4 1 (text <| BU.format1 "Please download version %s of Z3 from" v)
+              (url z3url) ^/^
+      group (text "and install it into your $PATH as" ^/^ squotes
+        (doc_of_string (Platform.exe ("z3-" ^ v))) ^^ dot);
+    if List.mem v packaged_z3_versions then
+      text <| BU.format1 "Version %s of Z3 should be included in binary packages \
+              of F*. If you are using a binary package and are seeing
+              this error, please file a bug report." v
+    else
+      empty
+  ]
+
+(* Check if [path] is potentially a valid z3, by trying to run
+it with -version and checking for non-empty output. Alternatively
+we could call [which] on it (if it's not an absolute path), but
+we shouldn't rely on the existence of a binary which. *)
+let z3_inpath (path:string) : bool =
+  try
+    let s = BU.run_process "z3_pathtest" path ["-version"] None in
+    s <> ""
+  with
+  | _ -> false
+
+(* Find the Z3 executable that we should invoke for a given version.
+
+- If the user provided the --smt option, use that binary unconditionally.
+- We then look in $LIB/z3-VER/z3, where LIB is the F* library root, for example
+  /usr/local/lib/fstar/z3-4.8.5/bin/z3, for an installed package. We ship Z3 4.8.5
+  and 4.13.3 in the binary package in these paths, so F* automatically find them
+  without relying on PATH or adding more stuff to the user's /usr/local/bin.
+  Each $PREFIX/lib/fstar/z3-VER directory roughly contains an extracted Z3
+  binary package, but with many files removed (currently we just keep LICENSE
+  and the executable).
+
+- Else we check the PATH:
+  - If z3-VER (or z3-VER.exe) exists in the PATH use it.
+  - Otherwise, default to "z3" in the PATH.
+
+We cache the chosen executable for every Z3 version we've ran.
+*)
+let do_locate_z3 (v:string) : option string =
+  let open FStarC.Class.Monad in
+  let guard (b:bool) : option unit = if b then Some () else None in
+  let (<|>) o1 o2 () =
+    match o1 () with
+    | Some v -> Some v
+    | None -> o2 ()
+  in
+  let path =
+    let in_lib () : option string =
+      let! root = lib_root () in
+      let path = Platform.exe (root ^ "/z3-" ^ v ^ "/bin/z3") in
+      let path = BU.normalize_file_path path in
+      guard (BU.file_exists path);!
+      Some path
+    in
+    let from_path (cmd : string) () =
+      let cmd = Platform.exe cmd in
+      guard (z3_inpath cmd);!
+      Some cmd
+    in
+    (Options.smt <|>
+    in_lib <|>
+    from_path ("z3-" ^ v) <|>
+    from_path "z3" <|> (fun _ -> None)) ()
+  in
+  if Debug.any () then
+    BU.print2 "do_locate_z3(%s) = %s\n" (Class.Show.show v) (Class.Show.show path);
+  path
+
+let locate_z3 (v : string) : option string =
+  let cache : BU.smap (option string) = BU.smap_create 5 in
+  let find_or (k:string) (f : string -> option string) : option string =
+    match BU.smap_try_find cache k with
+    | Some v -> v
+    | None ->
+      let v = f k in
+      BU.smap_add cache k v;
+      v
+  in
+  find_or v do_locate_z3

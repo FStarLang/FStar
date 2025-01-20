@@ -17,21 +17,21 @@ module FStarC.Options
 
 open FStar open FStarC
 open FStarC.BaseTypes
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.String
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.String
+open FStarC.Util
 open FStarC.Getopt
 open FStar.Pervasives
 open FStarC.VConfig
 open FStarC.Class.Show
 open FStarC.Class.Deq
 
-module Option = FStarC.Compiler.Option
+module Option = FStarC.Option
 module FC = FStarC.Common
-module Util = FStarC.Compiler.Util
-module List = FStarC.Compiler.List
+module Util = FStarC.Util
+module List = FStarC.List
 
 module Ext = FStarC.Options.Ext
 
@@ -52,7 +52,7 @@ let as_int = function
   | _ -> failwith "Impos: expected Int"
 let as_string = function
   | String b -> b
-  | Path b -> FStarC.Common.try_convert_file_name_to_mixed b
+  | Path b -> b
   | _ -> failwith "Impos: expected String"
 let as_list' = function
   | List ts -> ts
@@ -204,7 +204,7 @@ let defaults =
       ("eager_subtyping"              , Bool false);
       ("error_contexts"               , Bool false);
       ("expose_interfaces"            , Bool false);
-      ("message_format"               , String "human");
+      ("message_format"               , String "auto");
       ("ext"                          , Unset);
       ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
@@ -238,7 +238,7 @@ let defaults =
       ("max_fuel"                     , Int 8);
       ("max_ifuel"                    , Int 2);
       ("MLish"                        , Bool false);
-      ("MLish_effect"                 , String "FStar.Compiler.Effect");
+      ("MLish_effect"                 , String "FStar.Effect");
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
@@ -273,6 +273,8 @@ let defaults =
       ("locate"                       , Bool false);
       ("locate_lib"                   , Bool false);
       ("locate_ocaml"                 , Bool false);
+      ("locate_file"                  , Unset);
+      ("locate_z3"                    , Unset);
       ("read_krml_file"               , Unset);
       ("record_hints"                 , Bool false);
       ("record_options"               , Bool false);
@@ -320,6 +322,7 @@ let defaults =
       ("use_nbe_for_extraction"       , Bool false);
       ("trivial_pre_for_unannotated_effectful_fns"
                                       , Bool true);
+      ("with_fstarc"                  , Bool false);
       ("profile_group_by_decl"        , Bool false);
       ("profile_component"            , Unset);
       ("profile"                      , Unset);
@@ -534,6 +537,8 @@ let get_list_plugins            ()      = lookup_opt "list_plugins"             
 let get_locate                  ()      = lookup_opt "locate"                   as_bool
 let get_locate_lib              ()      = lookup_opt "locate_lib"               as_bool
 let get_locate_ocaml            ()      = lookup_opt "locate_ocaml"             as_bool
+let get_locate_file             ()      = lookup_opt "locate_file"              (as_option as_string)
+let get_locate_z3               ()      = lookup_opt "locate_z3"                (as_option as_string)
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
 let get_retry                   ()      = lookup_opt "retry"                    as_bool
@@ -580,6 +585,7 @@ let get_use_nbe                 ()      = lookup_opt "use_nbe"                  
 let get_use_nbe_for_extraction  ()      = lookup_opt "use_nbe_for_extraction"                  as_bool
 let get_trivial_pre_for_unannotated_effectful_fns
                                 ()      = lookup_opt "trivial_pre_for_unannotated_effectful_fns"    as_bool
+let get_with_fstarc             ()      = lookup_opt "with_fstarc"                                  as_bool
 let get_profile                 ()      = lookup_opt "profile"                  (as_option (as_list as_string))
 let get_profile_group_by_decl   ()      = lookup_opt "profile_group_by_decl"    as_bool
 let get_profile_component       ()      = lookup_opt "profile_component"        (as_option (as_list as_string))
@@ -595,46 +601,48 @@ let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
                                   !_version !_platform !_compiler !_date !_commit)
 
+let bold_doc (d:Pprint.document) : Pprint.document =
+  let open FStarC.Pprint in
+  (* very hacky, this would make no sense for documents going elsewhere
+  other than stdout *)
+  if stdout_isatty () = Some true
+  then fancystring "\x1b[39;1m" 0 ^^ d ^^ fancystring "\x1b[0m" 0
+  else d
+
 let display_debug_keys () =
   let keys = Debug.list_all_toggles () in
   keys |> List.sortWith String.compare |> List.iter (fun s -> Util.print_string (s ^ "\n"))
+
+let usage_for (o : opt & Pprint.document) : Pprint.document =
+  let open FStarC.Pprint in
+  let open FStarC.Errors.Msg in
+  let ((short, flag, p), explain) = o in
+  let arg =
+    match p with
+    | ZeroArgs _ -> empty
+    | OneArg (_, argname) -> blank 1 ^^ doc_of_string argname
+  in
+  let short_opt =
+    if short <> noshort
+    then [doc_of_string ("-" ^ String.make 1 short) ^^ arg]
+    else []
+  in
+  let long_opt =
+    if flag <> ""
+    then [doc_of_string ("--" ^ flag) ^^ arg]
+    else []
+  in
+  group (bold_doc (separate (comma ^^ blank 1) (short_opt @ long_opt))) ^^ hardline ^^
+  group (blank 4 ^^ align explain) ^^ hardline
 
 let display_usage_aux (specs : list (opt & Pprint.document)) : unit =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
   let text (s:string) : document = flow (break_ 1) (words s) in
-  let bold_doc (d:document) : document =
-    (* very hacky, this would make no sense for documents going elsewhere
-    other than stdout *)
-    if stdout_isatty () = Some true
-    then fancystring "\x1b[39;1m" 0 ^^ d ^^ fancystring "\x1b[0m" 0
-    else d
-  in
   let d : document =
     doc_of_string "fstar.exe [options] file[s] [@respfile...]" ^/^
     doc_of_string (Util.format1 "  %srespfile: read command-line options from respfile\n" (Util.colorize_bold "@")) ^/^
-    List.fold_right
-      (fun ((short, flag, p), explain) rest ->
-        let arg =
-          match p with
-          | ZeroArgs _ -> empty
-          | OneArg (_, argname) -> blank 1 ^^ doc_of_string argname
-        in
-        let short_opt =
-          if short <> noshort
-          then [doc_of_string ("-" ^ String.make 1 short) ^^ arg]
-          else []
-        in
-        let long_opt =
-          if flag <> ""
-          then [doc_of_string ("--" ^ flag) ^^ arg]
-          else []
-        in
-        group (bold_doc (separate (comma ^^ blank 1) (short_opt @ long_opt))) ^^ hardline ^^
-        group (blank 4 ^^ align explain) ^^ hardline ^^
-        rest
-      )
-      specs empty
+    List.fold_right (fun o rest -> usage_for o ^^ rest) specs empty
   in
   Util.print_string (pretty_string (float_of_string "1.0") 80 d)
 
@@ -843,7 +851,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "codegen",
-    EnumStr ["OCaml"; "FSharp"; "krml"; "Plugin"; "Extension"],
+    EnumStr ["OCaml"; "FSharp"; "krml"; "Plugin"; "PluginNoLib"; "Extension"],
     text "Generate code for further compilation to executable code, or build a compiler plugin");
 
   ( noshort,
@@ -956,7 +964,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     "extract",
     Accumulated (SimpleStr "One or more semicolon separated occurrences of '[TargetName:]ModuleSelector'"),
     text "Extract only those modules whose names or namespaces match the provided options. \
-     'TargetName' ranges over {OCaml, krml, FSharp, Plugin, Extension}. \
+     'TargetName' ranges over {OCaml, krml, FSharp, Plugin, PluginNoLib, Extension}. \
      A 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'. \
      For example --extract 'OCaml:A -A.B' --extract 'krml:A -A.C' --extract '*' means \
      for OCaml, extract everything in the A namespace only except A.B; \
@@ -983,8 +991,10 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "message_format",
-    EnumStr ["human"; "json"],
-    text "Format of the messages emitted by F* (default `human`)");
+    EnumStr ["human"; "json"; "github"; "auto"],
+    text "Format of the messages emitted by F*. Using 'auto' will use human messages \
+          unless the variable GITHUB_ACTIONS is non-empty, in which case 'github' is \
+          used (default `auto`).");
 
   ( noshort,
     "hide_uvar_nums",
@@ -1147,7 +1157,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
   ( noshort,
     "MLish_effect",
     SimpleStr "module_name",
-    text "Set the default effect *module* for --MLish (default: FStar.Compiler.Effect)");
+    text "Set the default effect *module* for --MLish (default: FStar.Effect)");
 
   ( noshort,
     "no_default_includes",
@@ -1481,12 +1491,12 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     ReverseAccumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'"),
     text "Prunes the context to include only the facts from the given namespace or fact id. \
           Facts can be include or excluded using the [+|-] qualifier. \
-          For example --using_facts_from '* -FStarC.Reflection +FStarC.Compiler.List -FStarC.Compiler.List.Tot' will \
-          remove all facts from FStarC.Compiler.List.Tot.*, \
-          retain all remaining facts from FStarC.Compiler.List.*, \
+          For example --using_facts_from '* -FStarC.Reflection +FStarC.List -FStarC.List.Tot' will \
+          remove all facts from FStarC.List.Tot.*, \
+          retain all remaining facts from FStarC.List.*, \
           remove all facts from FStarC.Reflection.*, \
           and retain all the rest. \
-          Note, the '+' is optional: --using_facts_from 'FStarC.Compiler.List' is equivalent to --using_facts_from '+FStarC.Compiler.List'. \
+          Note, the '+' is optional: --using_facts_from 'FStarC.List' is equivalent to --using_facts_from '+FStarC.List'. \
           Multiple uses of this option accumulate, e.g., --using_facts_from A --using_facts_from B is interpreted as --using_facts_from A^B.");
 
   ( noshort,
@@ -1572,6 +1582,12 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     text "Enforce trivial preconditions for unannotated effectful functions (default 'true')" );
 
   ( noshort,
+   "with_fstarc",
+    Const (Bool true),
+    text "Expose compiler internal modules (FStarC namespace). Only for advanced plugins \
+          you should probably not use it.");
+
+  ( noshort,
     "__debug_embedding",
     WithSideEffect ((fun _ -> debug_embedding := true),
                    (Const (Bool true))),
@@ -1631,6 +1647,17 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     "locate_ocaml",
     Const (Bool true),
     text "Print the root of the built OCaml F* library and exit");
+  ( noshort,
+    "locate_file",
+    SimpleStr "basename",
+    text "Find a file in F*'s include path and print its absolute path, then exit");
+  ( noshort,
+    "locate_z3",
+    SimpleStr "version",
+    text "Locate the executable for a given Z3 version, then exit. \
+          The output is either an absolute path, or a name that was found in the PATH. \
+          Note: this is the Z3 executable that F* will attempt to call for the given version, \
+          but the version check is not performed at this point.");
   ( noshort,
     "ocamlenv",
     WithSideEffect ((fun _ -> print_error "--ocamlenv must be the first argument, see fstar.exe --help for details\n"; exit 1),
@@ -1760,6 +1787,11 @@ let all_specs_getopt = List.map fst all_specs
 let all_specs_with_types = specs_with_types true
 let settable_specs = all_specs |> List.filter (fun ((_, x, _), _) -> settable x)
 
+let help_for_option (s:string) : option Pprint.document =
+  match all_specs |> List.filter (fun ((_, x, _), _) -> x = s) with
+  | [] -> None
+  | o::_ -> Some (usage_for o) // NB: there should be only one
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PUBLIC API
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1817,7 +1849,7 @@ let parse_cmd_line () =
     then set_error_flags()
     else res
   in
-  res, List.map FC.try_convert_file_name_to_mixed !file_list_
+  res, !file_list_
 
 let file_list () =
   !file_list_
@@ -1932,6 +1964,7 @@ let parse_codegen =
   | "FSharp" -> Some FSharp
   | "krml" -> Some Krml
   | "Plugin" -> Some Plugin
+  | "PluginNoLib" -> Some PluginNoLib
   | "Extension" -> Some Extension
   | _ -> None
 
@@ -1941,6 +1974,7 @@ let print_codegen =
   | FSharp -> "FSharp"
   | Krml -> "krml"
   | Plugin -> "Plugin"
+  | PluginNoLib -> "PluginNoLib"
   | Extension -> "Extension"
 
 let codegen                      () =
@@ -1961,10 +1995,20 @@ let dump_module                  s  = get_dump_module() |> List.existsb (module_
 let eager_subtyping              () = get_eager_subtyping()
 let error_contexts               () = get_error_contexts              ()
 let expose_interfaces            () = get_expose_interfaces          ()
+let interactive                  () = get_in () || get_ide () || get_lsp ()
 let message_format               () =
   match get_message_format () with
+  | "auto" -> (
+    if interactive () then Human
+    else
+    match Util.expand_environment_variable "GITHUB_ACTIONS" with
+    | None
+    | Some "" -> Human
+    | Some _ -> Github
+  )
   | "human" -> Human
   | "json" -> Json
+  | "github" -> Github
   | illegal -> failwith ("print_issue: option `message_format` was expected to be `human` or `json`, not `" ^ illegal ^ "`. This should be impossible: `message_format` was supposed to be validated.")
 let force                        () = get_force                       ()
 let full_context_dependency      () = true
@@ -2000,7 +2044,6 @@ let print                        () = get_print                       ()
 let print_in_place               () = get_print_in_place              ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
-let interactive                  () = get_in () || get_ide () || get_lsp ()
 let lax                          () = get_lax                         ()
 let load                         () = get_load                        ()
 let load_cmxs                    () = get_load_cmxs                   ()
@@ -2047,6 +2090,8 @@ let list_plugins                 () = get_list_plugins                ()
 let locate                       () = get_locate                      ()
 let locate_lib                   () = get_locate_lib                  ()
 let locate_ocaml                 () = get_locate_ocaml                ()
+let locate_file                  () = get_locate_file                 ()
+let locate_z3                    () = get_locate_z3                   ()
 let read_krml_file               () = get_read_krml_file              ()
 let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()
@@ -2106,6 +2151,7 @@ let use_nbe                      () = get_use_nbe                     ()
 let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
 let trivial_pre_for_unannotated_effectful_fns
                                  () = get_trivial_pre_for_unannotated_effectful_fns ()
+let with_fstarc                  () = get_with_fstarc ()
 
 let debug_keys                   () = lookup_opt "debug" as_comma_string_list
 let debug_all                    () = lookup_opt "debug_all" as_bool
@@ -2196,7 +2242,7 @@ let extract_settings
         | Some x -> [tgt,x]
       in
       {
-        target_specific_settings = List.collect merge_target [OCaml;FSharp;Krml;Plugin;Extension];
+        target_specific_settings = List.collect merge_target [OCaml;FSharp;Krml;Plugin;PluginNoLib;Extension];
         default_settings = merge_setting p0.default_settings p1.default_settings
       }
     in
@@ -2342,12 +2388,12 @@ let set_options s =
         if s = ""
         then Success
         else let settable_specs = List.map fst settable_specs in
-             let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); Error "set_options with file argument") s in
+             let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); Error ("set_options with file argument", "")) s in
              if res=Success
              then set_error_flags()
              else res
     with
-    | File_argument s -> Getopt.Error (Util.format1 "File %s is not a valid option" s)
+    | File_argument s -> Getopt.Error (Util.format1 "File %s is not a valid option" s, "")
 
 let with_options s f =
   with_saved_options (fun () ->

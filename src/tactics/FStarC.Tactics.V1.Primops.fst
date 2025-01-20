@@ -1,11 +1,11 @@
 ﻿module FStarC.Tactics.V1.Primops
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.Range
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.Range
+open FStarC.Util
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStarC.TypeChecker.Common
@@ -23,7 +23,7 @@ open FStarC.Class.Show
 open FStarC.Class.Monad
 open FStarC.Class.HasRange
 
-module BU      = FStarC.Compiler.Util
+module BU      = FStarC.Util
 module Cfg     = FStarC.TypeChecker.Cfg
 module E       = FStarC.Tactics.Embedding
 module Env     = FStarC.TypeChecker.Env

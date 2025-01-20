@@ -14,14 +14,14 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Syntax
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 (* Type definitions for the core AST *)
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
-open FStarC.Compiler.Range
+open FStarC
+open FStarC.Util
+open FStarC.Range
 open FStarC.Ident
 open FStarC.Const
 open FStarC.Dyn
@@ -30,13 +30,13 @@ open FStarC.VConfig
 open FStarC.Class.Ord
 open FStarC.Class.HasRange
 open FStarC.Class.Setlike
-open FStarC.Compiler.Order
+open FStarC.Order
 
 module O    = FStarC.Options
 module PC   = FStarC.Parser.Const
 module Err  = FStarC.Errors
 module GS   = FStarC.GenSym
-module FlatSet  = FStarC.Compiler.FlatSet
+module FlatSet  = FStarC.FlatSet
 
 let pragma_to_string (p:pragma) : string =
   match p with
@@ -86,7 +86,7 @@ instance showable_should_check_uvar = {
 // This is set in FStarC.Main.main, where all modules are in-scope.
 let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term)) = mk_ref None
 
-let cmp_qualifier (q1 q2 : qualifier) : FStarC.Compiler.Order.order =
+let cmp_qualifier (q1 q2 : qualifier) : FStarC.Order.order =
   match q1, q2 with
   | Assumption, Assumption -> Eq
   | New, New -> Eq
@@ -588,7 +588,7 @@ let is_ident_allowed_by_restriction' id
                ) allow_list) fst
 
 let is_ident_allowed_by_restriction
-  = let debug = FStarC.Compiler.Debug.get_toggle "open_include_restrictions" in
+  = let debug = FStarC.Debug.get_toggle "open_include_restrictions" in
     fun id restriction ->
     let result = is_ident_allowed_by_restriction' id restriction in
     if !debug then print_endline ( "is_ident_allowed_by_restriction(" ^ show id ^ ", "

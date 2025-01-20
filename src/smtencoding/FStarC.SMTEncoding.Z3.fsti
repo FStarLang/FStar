@@ -14,13 +14,13 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Z3
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
-open FStarC.Compiler.Util
-module BU = FStarC.Compiler.Util
+open FStarC.Util
+module BU = FStarC.Util
 module U = FStarC.SMTEncoding.UnsatCore
 module SolverState = FStarC.SMTEncoding.SolverState
 
@@ -70,7 +70,11 @@ val ask: r:Range.range
        -> core:option U.unsat_core
        -> z3result
 
+(* This will make sure the solver is in a fresh state, potentially
+killing the current process. A new process will *not* be started
+until we actually need to perform a query. *)
 val refresh: option SolverState.using_facts_from_setting -> unit
+
 val push : msg:string -> unit
 val pop : msg:string -> unit
 val snapshot : string -> int

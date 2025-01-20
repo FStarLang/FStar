@@ -1,10 +1,10 @@
 module FStarC.Basefiles
 
 open FStarC
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 module O  = FStarC.Options
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module E  = FStarC.Errors
 
 let must_find (fn:string) : string =

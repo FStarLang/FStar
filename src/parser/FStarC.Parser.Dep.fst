@@ -22,14 +22,12 @@
 *)
 module FStarC.Parser.Dep
 
-open FStar.Pervasives
-open FStarC.Compiler.Effect   //for ref, failwith etc
-open FStarC.Compiler.List
-open FStar open FStarC
-open FStarC.Compiler
+open FStarC
+open FStarC.Effect   //for ref, failwith etc
+open FStarC.List
 open FStarC.Parser
 open FStarC.Parser.AST
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Const
 open FStar.String
 open FStarC.Ident
@@ -37,7 +35,7 @@ open FStarC.Errors
 open FStarC.Class.Show
 
 module Const = FStarC.Parser.Const
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 let dbg              = Debug.get_toggle "Dep"
 let dbg_CheckedFiles = Debug.get_toggle "CheckedFiles"
@@ -127,7 +125,18 @@ let module_name_of_file f =
     | Some longname ->
       longname
     | None ->
-      raise_error0 Errors.Fatal_NotValidFStarFile (Util.format1 "Not a valid FStar file: '%s'" f)
+      raise_error0 Errors.Fatal_NotValidFStarFile (
+        [ text <| Util.format1 "Not a valid FStar file: '%s'" f; ] @
+        (if Platform.system = Platform.Windows && f = ".." then [
+          text <| "Note: In Windows-compiled versions of F*, a literal
+          asterisk as argument will be expanded to a list of files,
+          **even if quoted**. It is possible you provided such an
+          argument which got expanded to the list of all files in this
+          directory, causing spurious arguments that F* attempts to interpret as files.";
+          text <| "Hint: did you perhaps pass --already_cached '*' or similar? You can add
+          a comma (',*') to prevent the expansion and retain the behavior.";
+        ] else [])
+      )
 
 (* In public interface *)
 let lowercase_module_name f = String.lowercase (module_name_of_file f)
@@ -414,28 +423,30 @@ let dependences_of (file_system_map:files_for_module_name)
       List.map (file_of_dep file_system_map all_cmd_line_files) deps
       |> List.filter (fun k -> k <> fn) (* skip current module, cf #451 *)
 
-let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph) =
+let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph)
+  (file_system_map:files_for_module_name)
+  (cmd_lined_files:list file_name)
+ : unit
+ =
   if not (Options.silent ()) then begin
     Util.print1 "A DOT-format graph has been dumped in the current directory as `%s`\n" fn;
     Util.print1 "With GraphViz installed, try: fdp -Tpng -odep.png %s\n" fn;
     Util.print1 "Hint: cat %s | grep -v _ | grep -v prims\n" fn
   end;
-  let s =
-    "digraph {\n" ^
-    String.concat "\n" (List.collect
-      (fun k ->
-          let deps = (must (deps_try_find graph k)).edges in
-          let r s = replace_char s '.' '_' in
-          let print dep =
-            Util.format2 "  \"%s\" -> \"%s\""
-                (r (lowercase_module_name k))
-                (r (module_name_of_dep dep))
-          in
-          List.map print deps)
-     (List.unique (deps_keys graph))) ^
-    "\n}\n"
-  in
-  fprint outc "%s" [s]
+  let sb = FStarC.StringBuffer.create 10000 in
+  let pr str = ignore <| FStarC.StringBuffer.add str sb in
+  pr "digraph {\n";
+  List.unique (deps_keys graph) |> List.iter (fun k ->
+    let deps = (must (deps_try_find graph k)).edges in
+    List.iter (fun dep ->
+      let l = basename k in
+      let r = basename <| file_of_dep file_system_map cmd_lined_files dep in
+      if not <| Options.should_be_already_cached (module_name_of_dep dep) then
+        pr (Util.format2 "  \"%s\" -> \"%s\"\n" l r)
+    ) deps
+  );
+  pr "}\n";
+  fprint outc "%s" [FStarC.StringBuffer.contents sb]
 
 let safe_readdir_for_include (d:string) : list string =
   try readdir d
@@ -795,7 +806,7 @@ let collect_one
   if data_from_cache |> is_some then begin  //we found the parsing data in the checked file
     let deps, has_inline_for_extraction, mo_roots = from_parsing_data (data_from_cache |> must) original_map filename in
     if !dbg then
-      BU.print2 "Reading the parsing data for %s from its checked file .. found [%s]\n" filename (show deps);
+      BU.print2 "Reading the parsing data for %s from its checked file .. found %s\n" filename (show deps);
     data_from_cache |> must,
     deps, has_inline_for_extraction, mo_roots
   end
@@ -949,7 +960,10 @@ let collect_one
         | Const_set_range_of ->
             add_to_parsing_data (P_dep (false, ("fstar.range" |> Ident.lid_of_str)))
         | Const_real _ ->
-            add_to_parsing_data (P_dep (false, ("fstar.real" |> Ident.lid_of_str)))
+            (* FStar.Real has a real literal it, don't add a circular dep. *)
+            let mm = maybe_module_name_of_file filename in
+            if mm <> Some "FStar.Real" then
+              add_to_parsing_data (P_dep (false, ("fstar.real" |> Ident.lid_of_str)))
         | _ ->
             ()
 
@@ -1516,12 +1530,12 @@ let collect (all_cmd_line_files: list file_name)
   profile (fun () -> List.iter discover_one all_cmd_line_files) "FStarC.Parser.Dep.discover";
 
   (* At this point, dep_graph has all the (immediate) dependency graph of all the files. *)
-  let cycle_detected dep_graph cycle filename =
+  let cycle_detected (dep_graph:dependence_graph) cycle filename =
       Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
 
       (* Write the graph to a file for the user to see. *)
       let fn = "dep.graph" in
-      with_file_outchannel fn (fun outc -> print_graph outc fn dep_graph);
+      with_file_outchannel fn (fun outc -> print_graph outc fn dep_graph file_system_map all_cmd_line_files);
 
       print_string "\n";
       raise_error0 Errors.Fatal_CyclicDependence [
@@ -1583,7 +1597,7 @@ let collect (all_cmd_line_files: list file_name)
             | _ -> [x]) in
         match node.color with
         | Gray ->
-           cycle_detected dep_graph cycle filename
+          cycle_detected dep_graph cycle filename
         | Black ->
             (* If the element has been visited already, then the map contains all its
              * dependencies. Otherwise, the map only contains its direct dependencies. *)
@@ -1748,7 +1762,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
         aux all_extracted_modules;
         List.rev !order
     in
-    let sb = FStarC.StringBuffer.create (FStarC.BigInt.of_int_fs 10000) in
+    let sb = FStarC.StringBuffer.create 10000 in
     let pr str = ignore <| FStarC.StringBuffer.add str sb in
     let print_entry target first_dep all_deps =
         pr target;
@@ -2046,7 +2060,7 @@ let do_print (outc : out_channel) (fn : string) deps : unit =
       pref ();
       profile (fun () -> print_full outc deps) "FStarC.Parser.Deps.print_full_deps"
   | Some "graph" ->
-      print_graph outc fn deps.dep_graph
+      print_graph outc fn deps.dep_graph deps.file_system_map deps.cmd_line_files
   | Some "raw" ->
       print_raw outc deps
   | Some _ ->

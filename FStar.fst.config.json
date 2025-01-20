@@ -1,12 +1,9 @@
 {
-  "fstar_exe": "./bin/fstar.exe",
+  "fstar_exe": "./out/bin/fstar.exe",
   "options": [
-    "--cache_dir", ".cache",
+    "--z3version", "4.13.3",
     "--ext", "context_pruning"
   ],
   "include_dirs": [
-    "ulib/",
-    "ulib/experimental",
-    "ulib/legacy"
   ]
 }

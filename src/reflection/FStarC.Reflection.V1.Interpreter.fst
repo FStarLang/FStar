@@ -15,7 +15,7 @@
 *)
 module FStarC.Reflection.V1.Interpreter
 
-module BU    = FStarC.Compiler.Util
+module BU    = FStarC.Util
 module Cfg   = FStarC.TypeChecker.Cfg
 module EMB   = FStarC.Syntax.Embeddings
 module Env   = FStarC.TypeChecker.Env
@@ -26,9 +26,9 @@ module RB    = FStarC.Reflection.V1.Builtins
 module RD    = FStarC.Reflection.V1.Data
 module RE    = FStarC.Reflection.V1.Embeddings
 module Z     = FStarC.BigInt
-module Range = FStarC.Compiler.Range
-open FStarC.Compiler
-open FStarC.Compiler.List
+module Range = FStarC.Range
+open FStarC
+open FStarC.List
 open FStarC.Ident
 open FStarC.Syntax.Syntax
 open FStarC.Reflection.V1.Constants

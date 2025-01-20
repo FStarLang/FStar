@@ -15,11 +15,11 @@
 *)
 module FStarC.ToSyntax.ToSyntax
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Util
@@ -36,7 +36,7 @@ open FStarC.Class.Show
 module C = FStarC.Parser.Const
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module Env = FStarC.Syntax.DsEnv
 module P = FStarC.Syntax.Print
 module EMB = FStarC.Syntax.Embeddings
@@ -44,16 +44,16 @@ module SS = FStarC.Syntax.Subst
 
 let extension_tosyntax_table 
 : BU.smap extension_tosyntax_decl_t
-= FStarC.Compiler.Util.smap_create 20
+= FStarC.Util.smap_create 20
 
 let register_extension_tosyntax
     (lang_name:string)
     (cb:extension_tosyntax_decl_t)
-= FStarC.Compiler.Util.smap_add extension_tosyntax_table lang_name cb
+= FStarC.Util.smap_add extension_tosyntax_table lang_name cb
 
 let lookup_extension_tosyntax
     (lang_name:string)
-= FStarC.Compiler.Util.smap_try_find extension_tosyntax_table lang_name
+= FStarC.Util.smap_try_find extension_tosyntax_table lang_name
 
 let dbg_attrs    = Debug.get_toggle "attrs"
 let dbg_ToSyntax = Debug.get_toggle "ToSyntax"
@@ -3592,7 +3592,7 @@ and desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders 
                 let nparam = List.length action.action_params in
                 {
                     // Since we called enter_monad_env before, this is going to generate
-                    // a name of the form FStarC.Compiler.Effect.uu___proj__STATE__item__get
+                    // a name of the form FStarC.Effect.uu___proj__STATE__item__get
                     action_name = Env.qualify env (action.action_unqualified_name);
                     action_unqualified_name = action.action_unqualified_name;
                     action_univs = action.action_univs ;

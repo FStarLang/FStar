@@ -17,8 +17,8 @@ module FStarC.OCaml
 
 open FStarC
 open FStar.List.Tot.Base
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 
 let shellescape (s:string) : string =
   String.list_of_string s |>
@@ -30,24 +30,26 @@ let shellescape (s:string) : string =
 
 let new_ocamlpath () : string =
   let ocamldir = Find.locate_ocaml () in
+  let sep = match Platform.system with
+    | Platform.Windows -> ";"
+    | Platform.Posix -> ":"
+  in
   let old_ocamlpath = Util.dflt "" (Util.expand_environment_variable "OCAMLPATH") in
-  let new_ocamlpath = ocamldir ^ ":" ^ old_ocamlpath in
+  let new_ocamlpath = ocamldir ^ sep ^ old_ocamlpath in
   new_ocamlpath
 
 let exec_in_ocamlenv #a (cmd : string) (args : list string) : a =
   let new_ocamlpath = new_ocamlpath () in
-  if Platform.system = Platform.Windows then (
-    Errors.raise_error0 Errors.Fatal_OptionsNotCompatible [
-      Errors.text "--ocamlenv is not supported on Windows (yet?)"
-    ]
-  );
-  (* Update OCAMLPATH and run (exec) the command *)
+  (* Update OCAMLPATH and run the command *)
   Util.putenv "OCAMLPATH" new_ocamlpath;
-  Util.execvp cmd (cmd :: args);
-  failwith "execvp failed"
+  let pid = Util.create_process cmd (cmd :: args) in
+  let rc = Util.waitpid pid in
+  match rc with
+  | Inl rc -> exit rc
+  | Inr _ -> exit 1
 
 let app_lib = "fstar.lib"
-let plugin_lib = "fstar.lib"
+let plugin_lib = "fstar.pluginlib"
 
 (* OCaml Warning 8: this pattern-matching is not exhaustive.
 This is usually benign as we check for exhaustivenss via SMT. *)

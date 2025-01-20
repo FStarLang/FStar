@@ -17,10 +17,10 @@
 module FStarC.Tactics.Monad
 
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
@@ -37,9 +37,9 @@ module Setlike = FStarC.Class.Setlike
 module Listlike = FStarC.Class.Listlike
 
 module O       = FStarC.Options
-module BU      = FStarC.Compiler.Util
+module BU      = FStarC.Util
 module Err     = FStarC.Errors
-module Range   = FStarC.Compiler.Range
+module Range   = FStarC.Range
 module S       = FStarC.Syntax.Syntax
 module U       = FStarC.Syntax.Util
 module UF      = FStarC.Syntax.Unionfind

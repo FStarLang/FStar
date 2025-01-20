@@ -30,9 +30,9 @@ open FStarC.Reflection.V2.Data
 open FStarC.Tactics.Types
 open FStarC.Tactics.Monad
 
-module BU     = FStarC.Compiler.Util
+module BU     = FStarC.Util
 module O      = FStarC.Options
-module Range  = FStarC.Compiler.Range
+module Range  = FStarC.Range
 module Z      = FStarC.BigInt
 module TcComm = FStarC.TypeChecker.Common
 module Core   = FStarC.TypeChecker.Core
@@ -47,6 +47,7 @@ val proofstate_of_all_implicits: Range.range -> env -> implicits -> proofstate &
 (* Metaprogramming primitives (not all of them).
  * Documented in `ulib/FStarC.Tactics.Builtins.fst` *)
 
+val fixup_range (r : Range.range) : tac (Range.range)
 val compress               : term -> tac term
 val top_env                : unit -> tac env
 val fresh                  : unit -> tac Z.t

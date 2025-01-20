@@ -15,10 +15,10 @@
 *)
 module FStarC.TypeChecker.TcEffect
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Ident
 
 module S = FStarC.Syntax.Syntax

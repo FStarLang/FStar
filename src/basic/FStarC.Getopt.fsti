@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Getopt
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.BaseTypes
 
 val noshort : char
@@ -29,7 +29,7 @@ type opt = opt' unit
 type parse_cmdline_res =
   | Empty
   | Help
-  | Error of string
+  | Error of (string & string) // second arg is the long name of the failed option
   | Success
 
 val parse_cmdline: list opt -> (string -> parse_cmdline_res) -> parse_cmdline_res

@@ -15,13 +15,13 @@
 *)
 module FStarC.Tests.Test
 open FStarC
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Syntax
 open FStarC.Errors
 module S = FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
 module U = FStarC.Syntax.Util
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module O = FStarC.Options
 module G = FStarC.Getopt
 
@@ -34,11 +34,11 @@ let main argv =
           BU.print_string "F* unit tests. This binary can take the same options \
                            as F*, but not all of them are meaningful.";
           exit 0
-        | G.Error msg ->
+        | G.Error (msg, _) ->
           BU.print_error msg; exit 1
         | G.Empty
         | G.Success ->
-          FStarC.Main.setup_hooks();
+          FStarC.Hooks.setup_hooks();
           Pars.init() |> ignore;
           Pars.parse_incremental_decls();
           Pars.parse_incremental_decls_use_lang ();
@@ -53,9 +53,9 @@ let main argv =
           exit 0
     with 
       | Error(err, msg, r, _ctx) when not <| O.trace_error() ->
-        if r = FStarC.Compiler.Range.dummyRange
+        if r = FStarC.Range.dummyRange
         then BU.print_string (Errors.rendermsg msg)
-        else BU.print2 "%s: %s\n" (FStarC.Compiler.Range.string_of_range r) (Errors.rendermsg msg);
+        else BU.print2 "%s: %s\n" (FStarC.Range.string_of_range r) (Errors.rendermsg msg);
         exit 1
       | e ->
         BU.print2_error "Error\n%s\n%s\n" (BU.message_of_exn e) (BU.trace_of_exn e);

@@ -1,10 +1,10 @@
 module FStarC.Class.Binders
 
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Range
-open FStarC.Compiler.Util
-open FStarC.Compiler.FlatSet
+open FStarC
+open FStarC.Effect
+open FStarC.Range
+open FStarC.Util
+open FStarC.FlatSet
 open FStarC.Syntax.Syntax
 module F = FStarC.Syntax.Free
 open FStarC.Errors

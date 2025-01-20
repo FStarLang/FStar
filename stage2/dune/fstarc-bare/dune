@@ -1,0 +1,10 @@
+(include_subdirs unqualified)
+(executable
+ (name fstarc2_bare)
+ (libraries
+   fstarcompiler
+   memtrace
+ )
+ (link_flags "-linkall")
+ (modes (native exe))
+)

@@ -17,17 +17,18 @@ module FStarC.Errors
 
 open FStar.Pervasives
 open FStar.String
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.Util
-open FStarC.Compiler.Range
-open FStarC.Class.Monad
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.Util
+open FStarC.Range
 open FStarC.Options
-module List = FStarC.Compiler.List
-module BU = FStarC.Compiler.Util
+module List = FStarC.List
+module BU = FStarC.Util
 module PP = FStarC.Pprint
 
+open FStarC.Class.Monad
+open FStarC.Class.Show
 open FStarC.Errors.Codes
 open FStarC.Errors.Msg
 open FStarC.Json
@@ -42,6 +43,11 @@ let with_error_bound (r:range) (f : unit -> 'a) : 'a =
   let res = f () in
   error_range_bound := old;
   res
+
+let maybe_bound_range (r : Range.range) : Range.range =
+  match !error_range_bound with
+  | Some r' -> Range.bound_range r r'
+  | None -> r
 
 (** This exception is raised in FStar.Error
     when a warn_error string could not be processed;
@@ -173,29 +179,28 @@ let optional_def (f : 'a -> PP.document) (def : PP.document) (o : option 'a) : P
   | Some x -> f x
   | None -> def
 
-let format_issue' (print_hdr:bool) (issue:issue) : string =
+let issue_to_doc' (print_hdr:bool) (issue:issue) : PP.document =
   let open FStarC.Pprint in
-  let level_header = doc_of_string (string_of_issue_level issue.issue_level) in
-  let num_opt =
-    if issue.issue_level = EError || issue.issue_level = EWarning
-    then blank 1 ^^ optional_def (fun n -> doc_of_string (string_of_int n)) (doc_of_string "<unknown>") issue.issue_number
-    else empty
-  in
   let r = issue.issue_range in
-  let atrng : document =
-    match r with
-    | Some r when r <> Range.dummyRange ->
-      blank 1 ^^ doc_of_string "at" ^^ blank 1 ^^ doc_of_string (Range.string_of_use_range r)
-    | _ ->
-      empty
-  in
   let hdr : document =
-    if print_hdr
-    then
+    if print_hdr then (
+      let level_header = doc_of_string (string_of_issue_level issue.issue_level) in
+      let num_opt =
+        if issue.issue_level = EError || issue.issue_level = EWarning
+        then blank 1 ^^ optional_def (fun n -> doc_of_string (string_of_int n)) (doc_of_string "<unknown>") issue.issue_number
+        else empty
+      in
+      let atrng : document =
+        match r with
+        | Some r when r <> Range.dummyRange ->
+          blank 1 ^^ doc_of_string "at" ^^ blank 1 ^^ doc_of_string (Range.string_of_use_range r)
+        | _ ->
+          empty
+      in
       doc_of_string "*" ^^ blank 1 ^^ level_header ^^ num_opt ^^
         atrng ^^
         doc_of_string ":" ^^ hardline
-    else empty
+    ) else empty
   in
   let seealso : document =
     match r with
@@ -216,19 +221,51 @@ let format_issue' (print_hdr:bool) (issue:issue) : string =
   let mainmsg : document =
     concat (List.map (fun d -> subdoc (group d)) issue.issue_msg)
   in
-  let doc : document =
-    (* This ends in a hardline to get a 1-line spacing between errors *)
-    hdr ^^
-    mainmsg ^^
-    subdoc seealso ^^
-    subdoc ctx
-  in
-  renderdoc doc
+  (* This ends in a hardline to get a 1-line spacing between errors *)
+  hdr ^^
+  mainmsg ^^
+  subdoc seealso ^^
+  subdoc ctx
+
+let format_issue' (print_hdr:bool) (issue:issue) : string =
+  issue_to_doc' print_hdr issue |> renderdoc
 
 let format_issue issue : string = format_issue' true issue
 
 let print_issue_json issue =
     json_of_issue issue |> string_of_json |> BU.print1_error "%s\n"
+
+(*
+  Printing for nicer display in github actions runs. See
+    https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions
+  for more info. The idea here is basically render it as text and then
+  add a github header. Also we replace newlines by %0A which become
+  newlines in the rendered github annotation, though that does not seem
+  to be very well documented (https://github.com/orgs/community/discussions/26736)
+*)
+let print_issue_github issue =
+  match issue.issue_level with
+  | ENotImplemented
+  | EInfo -> ()
+  | EError
+  | EWarning ->
+    let level = if EError? issue.issue_level then "error" else "warning" in
+    let rng = dflt dummyRange issue.issue_range in
+    let msg = format_issue' true issue in
+    let msg = msg |> BU.splitlines |> String.concat "%0A" in
+    let num =
+      match issue.issue_number with
+      | None -> ""
+      | Some n -> BU.format1 "(%s) " (show n)
+    in
+    BU.print_warning <|
+      BU.format6 "::%s file=%s,line=%s,endLine=%s::%s%s\n"
+        level
+        (Range.file_of_range rng)
+        (show (rng |> Range.start_of_range |> Range.line_of_pos))
+        (show (rng |> Range.end_of_range   |> Range.line_of_pos))
+        num
+        msg
 
 let print_issue_rendered issue =
     let printer =
@@ -243,27 +280,23 @@ let print_issue issue =
     match FStarC.Options.message_format () with
     | Human -> print_issue_rendered issue
     | Json -> print_issue_json issue
+    | Github -> print_issue_github issue
 
 let compare_issues i1 i2 =
     match i1.issue_range, i2.issue_range with
     | None, None -> 0
     | None, Some _ -> -1
     | Some _, None -> 1
-    | Some r1, Some r2 -> FStarC.Compiler.Range.compare_use_range r1 r2
+    | Some r1, Some r2 -> FStarC.Range.compare_use_range r1 r2
 
 let dummy_ide_rng : Range.rng =
   mk_rng "<input>" (mk_pos 1 0) (mk_pos 1 0)
 
-let maybe_bound_rng (r : Range.range) : Range.range =
-  match !error_range_bound with
-  | Some r' -> Range.bound_range r r'
-  | None -> r
-
 (* Attempts to set a decent range (no dummy, no dummy ide) relying
 on the fallback_range reference. *)
-let fixup_issue_range (i:issue) : issue =
+let fixup_issue_range (rng:option Range.range) : option Range.range =
   let rng =
-    match i.issue_range with
+    match rng with
     | None ->
       (* No range given, just rely on the fallback. NB: the
       fallback could also be set to None if it's too early. *)
@@ -283,7 +316,7 @@ let fixup_issue_range (i:issue) : issue =
       in
       Some (set_use_range range use_rng')
   in
-  { i with issue_range = map_opt rng maybe_bound_rng }
+  map_opt rng maybe_bound_range
 
 let mk_default_handler print =
     let issues : ref (list issue) = BU.mk_ref [] in
@@ -335,7 +368,6 @@ let get_err_count () = (!current_handler).eh_count_errors ()
 
 let wrapped_eh_add_one (h : error_handler) (issue : issue) : unit =
     (* Try to set a good use range if we got an empty/dummy one *)
-    let issue = fixup_issue_range issue in
     h.eh_add_one issue;
     if issue.issue_level <> EInfo then begin
       Options.abort_counter := !Options.abort_counter - 1;
@@ -404,7 +436,7 @@ let warn_unsafe_options rng_opt msg =
     add_one (mk_issue EError rng_opt (mkmsg ("Every use of this option triggers an error: " ^ msg)) (Some warn_on_use_errno) [])
   | _ -> ()
 
-let set_option_warning_callback_range (ropt:option FStarC.Compiler.Range.range) =
+let set_option_warning_callback_range (ropt:option FStarC.Range.range) =
     Options.set_option_warning_callback (warn_unsafe_options ropt)
 
 let t_set_parse_warn_error,
@@ -436,7 +468,7 @@ let t_set_parse_warn_error,
             Getopt.Success
         with Invalid_warn_error_setting msg ->
             (BU.smap_add error_flags we None;
-             Getopt.Error ("Invalid --warn_error setting: " ^ msg ^ "\n"))
+             Getopt.Error ("Invalid --warn_error setting: " ^ msg ^ "\n", "warn_error"))
     in
     (* get_error_flags is called when logging an issue to figure out
        which error level to report a particular issue at (Warning, Error etc.)
@@ -500,16 +532,17 @@ let lookup err =
 
 let log_issue_ctx r (e, msg) ctx =
   let msg = maybe_add_backtrace msg in
+  let r = fixup_issue_range (Some r) in
   match lookup e with
   | (_, CAlwaysError, errno)
   | (_, CError, errno)  ->
-     add_one (mk_issue EError (Some r) msg (Some errno) ctx)
+     add_one (mk_issue EError r msg (Some errno) ctx)
   | (_, CWarning, errno) ->
-     add_one (mk_issue EWarning (Some r) msg (Some errno) ctx)
+     add_one (mk_issue EWarning r msg (Some errno) ctx)
   | (_, CSilent, _) -> ()
   // We allow using log_issue to report a Fatal error in interactive mode
   | (_, CFatal, errno) ->
-    let i = mk_issue EError (Some r) msg (Some errno) ctx in
+    let i = mk_issue EError r msg (Some errno) ctx in
     if Options.ide()
     then add_one i
     else failwith ("don't use log_issue to report fatal error, should use raise_error: " ^ format_issue i)
@@ -517,10 +550,11 @@ let log_issue_ctx r (e, msg) ctx =
 let info r msg =
   let open FStarC.Class.HasRange in
   let rng = pos r in
+  let rng = fixup_issue_range (Some rng) in
   let msg = to_doc_list msg in
   let msg = maybe_add_backtrace msg in
   let ctx = get_ctx () in
-  add_one (mk_issue EInfo (Some rng) msg None ctx)
+  add_one (mk_issue EInfo rng msg None ctx)
 
 let diag r msg =
   if Debug.any() then
@@ -529,6 +563,7 @@ let diag r msg =
 let raise_error r e msg =
   let open FStarC.Class.HasRange in
   let rng = pos r in
+  let Some rng = fixup_issue_range (Some rng) in
   let msg = to_doc_list msg in
   raise (Error (e, maybe_add_backtrace msg, rng, error_context.get ()))
 
@@ -550,7 +585,8 @@ let issue_of_exn (e:exn) : option issue =
   match e with
   | Error(e, msg, r, ctx) ->
     let errno = error_number (lookup e) in
-    Some (mk_issue EError (Some r) msg (Some errno) ctx)
+    let r = fixup_issue_range (Some r) in
+    Some (mk_issue EError r msg (Some errno) ctx)
   | _ -> None
 
 let err_exn exn =

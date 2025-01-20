@@ -1,6 +1,7 @@
 {
   "name": "F* minimal devcontainer",
   "build": {
+    "context": "..",
     "dockerfile": "minimal.Dockerfile"
   },
   "customizations": {

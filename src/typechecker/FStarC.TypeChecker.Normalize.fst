@@ -16,12 +16,12 @@
 
 module FStarC.TypeChecker.Normalize
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Defensive
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStar.String
 open FStarC.Const
 open FStar.Char
@@ -41,7 +41,7 @@ open FStarC.Class.Deq
 
 module S  = FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module FC = FStarC.Const
 module PC = FStarC.Parser.Const
 module U  = FStarC.Syntax.Util
@@ -631,9 +631,19 @@ let decide_unfolding cfg stack fv qninfo (* : option (option cfg * stack) *) =
     | Should_unfold_no ->
         // No unfolding
         None
+
     | Should_unfold_yes ->
         // Usual unfolding, no change to cfg or stack
         Some (None, stack)
+
+    | Should_unfold_once ->
+        let Some once = cfg.steps.unfold_once in
+        let cfg' = { cfg with steps = {
+                     cfg.steps with unfold_once =
+                     Some <| List.filter (fun lid -> not (S.fv_eq_lid fv lid)) once } } in
+        // Unfold only once. Keep the stack, but remove the lid from the step.
+        Some (Some cfg', stack)
+
     | Should_unfold_fully ->
         // Unfolding fully, use new cfg with more steps and keep old one in stack
         let cfg' =
@@ -937,7 +947,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               match decide_unfolding cfg stack fv qninfo with
               | Some (None, stack) -> do_unfold_fv cfg stack t qninfo fv
               | Some (Some cfg, stack) ->
-                do_unfold_fv cfg [] t qninfo fv |> rebuild cfg empty_env stack
+                do_unfold_fv cfg stack t qninfo fv
               | None -> rebuild cfg empty_env stack t
             end
 

@@ -20,8 +20,8 @@ module FStarC.Extraction.ML.RegEmb
 embeddings for their types. *)
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 
 open FStarC.Syntax.Syntax
 open FStarC.Extraction.ML

@@ -8,14 +8,14 @@
 
 
 ;;set fstar includes, these should work for most tutorial examples, except those using hyperheap
-(setq fstar-subp-prover-args '("--include" "/home/build/FStar/ucontrib/Platform/fst" "--include" "/home/build/FStar/ucontrib/CoreCrypto/fst"))
+(setq fstar-subp-prover-args '("--include" "/home/build/FStar/contrib/Platform/fst" "--include" "/home/build/FStar/contrib/CoreCrypto/fst"))
 
 
 ;;this is what the above corresponds to on the command line:
-;fstar --include /home/FStar/FStar/ucontrib/Platform/fst --include /home/FStar/FStar/ucontrib/CoreCrypto/fst
+;fstar --include /home/FStar/FStar/contrib/Platform/fst --include /home/FStar/FStar/contrib/CoreCrypto/fst
 
 ;;set fstar includes, these work for the the Encrypt-then-MAC example:
-;(setq fstar-subp-prover-args '("--include" "/home/FStar/FStar/ulib/hyperheap" "--include" "/home/FStar/FStar/ucontrib/Platform/fst" "--include" "/home/FStar/FStar/ucontrib/CoreCrypto/fst"))
+;(setq fstar-subp-prover-args '("--include" "/home/FStar/FStar/ulib/hyperheap" "--include" "/home/FStar/FStar/contrib/Platform/fst" "--include" "/home/FStar/FStar/contrib/CoreCrypto/fst"))
 
 ;;this is what the above corresponds to on the command line:
-;fstar --include /home/FStar/FStar/ulib/hyperheap --include /home/FStar/FStar/ucontrib/Platform/fst --include /home/FStar/FStar/ucontrib/CoreCrypto/fst
+;fstar --include /home/FStar/FStar/ulib/hyperheap --include /home/FStar/FStar/contrib/Platform/fst --include /home/FStar/FStar/contrib/CoreCrypto/fst

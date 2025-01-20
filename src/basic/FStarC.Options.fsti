@@ -15,24 +15,25 @@
 *)
 module FStarC.Options
 open FStar.All
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Getopt
 open FStarC.BaseTypes
 open FStarC.VConfig
-open FStarC.Compiler
+open FStarC
 
 type codegen_t =
   | OCaml
   | FSharp
   | Krml
   | Plugin
+  | PluginNoLib
   | Extension
 
 //let __test_norm_all = Util.mk_ref false
 
 type split_queries_t = | No | OnFailure | Always
 
-type message_format_t = | Json | Human
+type message_format_t = | Json | Human | Github
 
 type option_val =
   | Bool of bool
@@ -42,7 +43,7 @@ type option_val =
   | List of list option_val
   | Unset
 
-type optionstate = FStarC.Compiler.Util.psmap option_val
+type optionstate = FStarC.Util.psmap option_val
 
 type opt_type =
 | Const of option_val
@@ -102,6 +103,7 @@ val add_verify_module           : string  -> unit
 val set_option_warning_callback : (string -> unit) -> unit
 val desc_of_opt_type            : opt_type -> option string
 val all_specs_with_types        : list (char & string & opt_type & Pprint.document)
+val help_for_option             : string -> option Pprint.document
 val settable                    : string -> bool
 
 val abort_counter : ref int
@@ -178,6 +180,8 @@ val list_plugins                : unit    -> bool
 val locate                      : unit    -> bool
 val locate_lib                  : unit    -> bool
 val locate_ocaml                : unit    -> bool
+val locate_file                 : unit    -> option string
+val locate_z3                   : unit    -> option string
 val output_deps_to              : unit    -> option string
 val output_dir                  : unit    -> option string
 val custom_prims                : unit    -> option string
@@ -258,6 +262,7 @@ val use_nbe                     : unit    -> bool
 val use_nbe_for_extraction      : unit    -> bool
 val trivial_pre_for_unannotated_effectful_fns
                                 : unit    -> bool
+val with_fstarc                 : unit    -> bool
 
 (* List of enabled debug toggles. *)
 val debug_keys                  : unit    -> list string

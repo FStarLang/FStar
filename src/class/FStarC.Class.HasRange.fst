@@ -1,6 +1,6 @@
 module FStarC.Class.HasRange
 
-open FStarC.Compiler.Range
+open FStarC.Range
 
 instance hasRange_range : hasRange range = {
   pos = id;

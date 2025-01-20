@@ -15,23 +15,10 @@
 *)
 module FStarC.Reflection.V2.Constants
 
-
-open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-
-(* NOTE: This file is exactly the same as its .fs variant. It is only
-here so the equally-named interface file in ulib/ is not taken by the
-dependency analysis to be the interface of the .fs. We also cannot ditch
-the .fs, since out bootstrapping process does not extract any .ml file
-from an interface. Hence we keep both, exactly equal to each other. *)
-
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 module Ident = FStarC.Ident
-module Range = FStarC.Compiler.Range
-module Z     = FStarC.BigInt
-open FStarC.Ident
-module PC = FStarC.Parser.Const
+module Range = FStarC.Range
 
 (* Contains all lids and terms needed for embedding/unembedding *)
 

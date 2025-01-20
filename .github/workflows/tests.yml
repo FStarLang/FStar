@@ -1,0 +1,175 @@
+name: F* tests
+
+# This workflow must be called ONLY after a run of build.yml
+on:
+  workflow_call:
+
+defaults:
+  run:
+    shell: bash
+
+
+jobs:
+  # This checks that the stage3 extracted fstarc matches exactly with
+  # stage2. Also, we build the F# library (it is not packaged, so not
+  # built by the job above)
+  check-stage3:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      # We download the full repo state from the step below and start a
+      # stage3 check. This allows the rest of the workflow to go ahead
+      # while we do this.
+      - uses: mtzguido/gci-download@master
+        with:
+          name: fstar-repo
+
+      - name: Check for a stage 3 diff and F# library build
+        run: make -skj$(nproc) stage3-diff lib-fsharp
+        working-directory: FStar
+
+  # Download the stage2 binary package from the previous job and run the
+  # tests in the repo. This makes sure that the tests do not depend on
+  # some random internal state of the repo, but only on out/.
+  #
+  # We could be paranoid and rm -rf ulib too, it should not make a
+  # difference.
+  #
+  # We could also run all tests over the stage 1 compiler. They should
+  # all pass, just like for stage2. The compiler used to build fstar.exe
+  # itself should not matter. I am commenting this out just to save on
+  # CI usage, and getting a nicer display of the workflow run. Ideally
+  # there would be a toggle for calling this workflow to check the
+  # stage1, but it's really clunky to tweak a matrix in Github actions.
+  test-local:
+    # strategy:
+    #   matrix:
+    #     pak:
+    #       - fstar.tar.gz
+    #       - fstar-stage1.tar.gz
+    # runs-on: [self-hosted, linux, X64] # self-hosted so we use fast runners
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Get fstar package
+        uses: actions/download-artifact@v4
+        with:
+          # name: ${{ matrix.pak }}
+          name: fstar.tar.gz
+
+      - name: Set up package locally
+        run: tar xzf fstar.tar.gz && ln -s fstar out
+
+      - name: Run tests, without forcing a build
+        run: make -skj$(nproc) _test
+
+  binary-smoke:
+    strategy:
+      matrix:
+        pak:
+          - fstar.tar.gz
+          # - fstar-stage1.tar.gz
+          # ^ See note in test-local.
+        os:
+          # - ubuntu-20.04
+          # - ubuntu-22.04
+          - ubuntu-24.04
+          # - ubuntu-latest
+          # FIXME: the container builds with a recent glibc, use an older
+          # base system to get a more portable executable.
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: cda-tum/setup-z3@main
+        with:
+          version: 4.8.5
+
+      - name: Get fstar package
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.pak }}
+
+      - run: tar xzf ${{ matrix.pak }}
+
+      - name: Smoke test
+        run: |
+          ./fstar/bin/fstar.exe fstar/lib/fstar/ulib/Prims.fst -f
+          echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          ./fstar/bin/fstar.exe A.fst
+
+  ocaml-smoke:
+    strategy:
+      matrix:
+        pak:
+          - fstar-src.tar.gz
+          # - fstar-stage1-src.tar.gz
+          # ^ See note in test-local.
+        os:
+          - ubuntu-20.04
+          - ubuntu-22.04
+          - ubuntu-24.04
+          - ubuntu-latest
+        exclude:
+          - os: ubuntu-24.04 # setup-ocaml fails due to darcs https://github.com/ocaml/setup-ocaml/issues/872
+    runs-on: ${{ matrix.os }}
+    steps:
+      # TODO: Install both 4.8.5 and 4.13.1
+      - uses: cda-tum/setup-z3@main
+        with:
+          version: 4.8.5
+
+      - name: Get fstar package
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.pak }}
+      - run: tar xzf ${{ matrix.pak }}
+
+      - name: Set-up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 4.14.2
+
+      - run: opam install . --deps-only --with-test
+        working-directory: fstar
+      # Note: we admit queries here, like the OPAM build does.
+      - run: eval $(opam env) && make -kj$(nproc) ADMIT=1
+        working-directory: fstar
+
+      - name: Smoke test
+        run: |
+          ./out/bin/fstar.exe out/lib/fstar/ulib/Prims.fst -f
+          echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          ./out/bin/fstar.exe A.fst
+        working-directory: fstar
+
+  perf-canaries:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - uses: cda-tum/setup-z3@main
+        with:
+          version: 4.8.5
+
+      - name: Get fstar package
+        uses: actions/download-artifact@v4
+        with:
+          name: fstar.tar.gz
+
+      - run: tar xzf fstar.tar.gz
+
+      - name: Run perf canaries
+        run: .scripts/perf_canaries.sh ./fstar/bin/fstar.exe

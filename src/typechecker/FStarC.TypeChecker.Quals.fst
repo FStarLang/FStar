@@ -16,8 +16,8 @@
 
 module FStarC.TypeChecker.Quals
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStarC.Errors
 open FStarC.Errors.Msg
 open FStarC.Pprint
@@ -29,7 +29,7 @@ open FStarC.Class.PP
 
 module SS = FStarC.Syntax.Subst
 module S  = FStarC.Syntax.Syntax
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module U  = FStarC.Syntax.Util
 module N  = FStarC.TypeChecker.Normalize
 module C  = FStarC.Parser.Const
@@ -247,17 +247,17 @@ let check_must_erase_attribute env se =
                let has_attr = Env.fv_has_attr env lbname C.must_erase_for_extraction_attr in
                if must_erase && not has_attr
                then log_issue lbname Error_MustEraseMissing [
-                        text (BU.format2 "Values of type `%s` will be erased during extraction, \
-                               but its interface hides this fact. Add the `must_erase_for_extraction` \
-                               attribute to the `val %s` declaration for this symbol in the interface"
-                               (show lbname) (show lbname));
+                        text (BU.format1 "Values of type `%s` will be erased during extraction, \
+                               but its interface hides this fact." (show lbname));
+                        text (BU.format1 "Add the `must_erase_for_extraction` \
+                               attribute to the `val %s` declaration for this symbol in the interface" (show lbname));
                       ]
                else if has_attr && not must_erase
                then log_issue lbname Error_MustEraseMissing [
                         text (BU.format1 "Values of type `%s` cannot be erased during extraction, \
-                               but the `must_erase_for_extraction` attribute claims that it can. \
-                               Please remove the attribute."
+                               but the `must_erase_for_extraction` attribute claims that it can."
                                (show lbname));
+                        text "Please remove the attribute.";
                       ])
   end
   | _ -> ()

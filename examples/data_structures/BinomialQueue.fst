@@ -339,6 +339,7 @@ let smash_repr (d:pos) (t1 t2:tree) (l1 l2:ms)
          t2 `repr_t` l2)
       (ensures smash d t1 t2 `repr_t` (ms_append l1 l2)) = ()
 
+#push-options "--z3rlimit 25"
 let rec carry_repr (d:pos) (q:forest) (t:tree) (lq lt:ms)
   : Lemma
       (requires
@@ -357,8 +358,9 @@ let rec carry_repr (d:pos) (q:forest) (t:tree) (lq lt:ms)
     carry_repr (d + 1) tl (smash d hd t)
       (keys tl)
       (ms_append (keys_of_tree hd) (keys_of_tree t))
+#pop-options
 
-#push-options "--z3rlimit 50 --fuel 1 --ifuel 1"
+#push-options "--z3rlimit 75 --fuel 1 --ifuel 1"
 let rec join_repr (d:pos) (p q:forest) (c:tree)
   (lp lq lc:ms)
   : Lemma
@@ -433,8 +435,10 @@ let rec compact_preserves_keys (q:forest)
 let insert_repr x q s =
   carry_repr 1 q (Internal Leaf x Leaf) s (ms_singleton x)
 
+#push-options "--z3rlimit_factor 10"
 let merge_repr p q sp sq =
   join_repr 1 p q Leaf sp sq ms_empty
+#pop-options
 
 /// Towards proof of delete correctness
 
@@ -628,6 +632,7 @@ let rec find_max_is_max (d:pos) (kopt:option key_t) (q:forest)
       find_max_is_max (d + 1) (Some k) tl;
       find_max_some_is_some k tl
 
+#push-options "--z3rlimit_factor 4"
 let delete_max_some_repr p pl k q ql =
   match find_max None p with
   | None -> ()
@@ -642,3 +647,4 @@ let delete_max_some_repr p pl k q ql =
     compact_preserves_keys r;
     assert (permutation pl (ms_append (ms_singleton k) ql));
     find_max_is_max 1 None p
+#pop-options

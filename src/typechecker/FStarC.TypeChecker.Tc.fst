@@ -16,15 +16,15 @@
 
 module FStarC.TypeChecker.Tc
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Errors
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Ident
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -46,7 +46,7 @@ module UF = FStarC.Syntax.Unionfind
 module N  = FStarC.TypeChecker.Normalize
 module TcComm = FStarC.TypeChecker.Common
 module TcUtil = FStarC.TypeChecker.Util
-module BU = FStarC.Compiler.Util //basic util
+module BU = FStarC.Util //basic util
 module U  = FStarC.Syntax.Util
 module Gen = FStarC.TypeChecker.Generalize
 module TcInductive = FStarC.TypeChecker.TcInductive
@@ -1135,9 +1135,9 @@ let tc_partial_modul env modul =
   if Debug.any () then
     BU.print3 "Now %s %s of %s\n" action label (string_of_lid modul.name);
 
-  Debug.disable_all ();
-  if Options.should_check (string_of_lid modul.name) // || Options.debug_all_modules ()
-  then Debug.enable_toggles (Options.debug_keys ());
+  let dsnap = Debug.snapshot () in
+  if not (Options.should_check (string_of_lid modul.name)) && not (Options.debug_all_modules ())
+  then Debug.disable_all ();
 
   let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module") (string_of_lid modul.name) in
   let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
@@ -1148,6 +1148,7 @@ let tc_partial_modul env modul =
                                     (string_of_lid modul.name)
                                     (if modul.is_interface then " (interface)" else "")) (fun () ->
     let ses, env = tc_decls env modul.declarations in
+    Debug.restore dsnap;
     {modul with declarations=ses}, env
   )
 
@@ -1222,9 +1223,9 @@ let load_checked_module (en:env) (m:modul) :env =
   module. *)
 
   (* Reset debug flags *)
-  if Options.should_check (string_of_lid m.name) || Options.debug_all_modules ()
-  then Debug.enable_toggles (Options.debug_keys ())
-  else Debug.disable_all ();
+  let dsnap = Debug.snapshot () in
+  if not (Options.should_check (string_of_lid m.name)) && not (Options.debug_all_modules ())
+  then Debug.disable_all ();
 
   let m = deep_compress_modul m in
   let env = load_checked_module_sigelts en m in
@@ -1232,6 +1233,7 @@ let load_checked_module (en:env) (m:modul) :env =
   //except with the flag `must_check_exports` set to false, since this is already a checked module
   //the second true flag is for iface_exists, used to determine whether should extract interface or not
   let _, env = finish_partial_modul true true env m in
+  Debug.restore dsnap;
   env
 
 let load_partial_checked_module (en:env) (m:modul) : env =

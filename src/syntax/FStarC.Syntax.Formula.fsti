@@ -15,7 +15,7 @@
 *)
 module FStarC.Syntax.Formula
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Ident
 open FStarC.Syntax.Syntax
 open FStarC.Class.Show
