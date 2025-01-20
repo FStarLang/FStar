@@ -471,14 +471,13 @@ let build_inclusion_candidates_list (): list (string & string) =
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
   let include_directories = List.unique include_directories in
-  let cwd = normalize_file_path (getcwd ()) in
   include_directories |> List.concatMap (fun d ->
     let files = safe_readdir_for_include d in
     files |> List.filter_map (fun f ->
       let f = basename f in
       check_and_strip_suffix f
       |> Util.map_option (fun longname ->
-            let full_path = if d = cwd then f else join_paths d f in
+            let full_path = join_paths d f in
             (longname, full_path))
     )
   )

@@ -96,6 +96,12 @@ let include_path () =
   cache_dir @ lib_paths () @ include_paths @ cmd_line_file_dirs
 
 let do_find (paths : list string) (filename : string) : option string =
+  if BU.is_path_absolute filename then
+    if BU.file_exists filename then
+      Some filename
+    else
+      None
+  else
   let filename = BU.basename filename in
   try
       (* In reverse, because the last directory has the highest precedence. *)
