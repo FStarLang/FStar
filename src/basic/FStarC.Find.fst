@@ -93,7 +93,8 @@ let include_path () =
   let cmd_line_file_dirs =
     Options.file_list() |> List.map (fun f -> BU.normalize_file_path <| BU.dirname f)
   in
-  cache_dir @ lib_paths () @ include_paths @ cmd_line_file_dirs
+  let cwd = expand_include_d "." |> List.map BU.normalize_file_path in
+  cache_dir @ lib_paths () @ include_paths @ cwd @ cmd_line_file_dirs
 
 let do_find (paths : list string) (filename : string) : option string =
   if BU.is_path_absolute filename then
