@@ -1506,12 +1506,12 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t & env_t) =
             begin
             if !dbg_SMTEncoding then
               BU.print1 "Skipped encoding of %s\n" nm;
-            [Caption (BU.format1 "<Skipped %s/>" nm)] |> mk_decls_trivial
+            [Caption (BU.format1 "<Skipped %s/>" nm); EmptyLine] |> mk_decls_trivial
             end
 
          | _ -> ([Caption (BU.format1 "<Start encoding %s>" nm)] |> mk_decls_trivial)
                 @g
-                @([Caption (BU.format1 "</end encoding %s>" nm)] |> mk_decls_trivial) in
+                @([Caption (BU.format1 "</end encoding %s>" nm); EmptyLine] |> mk_decls_trivial) in
     g, env
 
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =

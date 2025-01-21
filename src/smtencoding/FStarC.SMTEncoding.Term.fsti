@@ -139,6 +139,7 @@ type decl =
   | SetOption  of string & string
   | GetStatistics
   | GetReasonUnknown
+  | EmptyLine
 
 (*
  * AR: decls_elt captures a block of "related" decls
