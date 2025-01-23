@@ -490,6 +490,7 @@ let build_inclusion_candidates_list (): list (string & string) =
 let build_map (filenames: list string): files_for_module_name =
   let map = smap_create 41 in
   let add_entry key full_path =
+    let full_path = BU.normalize_file_path full_path in
     match smap_try_find map key with
     | Some (intf, impl) ->
         if is_interface full_path then begin
