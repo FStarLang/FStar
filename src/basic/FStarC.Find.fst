@@ -109,32 +109,22 @@ let do_find (paths : list string) (filename : string) : option string =
       Some filename
     else
       None
-  else if BU.basename filename <> filename
-  then
-    // we have a qualified name like
-    //  fstar.exe src/fstar/FStar.Main.fst
-    // it as is, without trying to find it in the include path
-    // We don't want to resolve to FStar.Main.fst found
-    // in some other directory
-    let abs_path = BU.normalize_file_path filename in
-    if BU.file_exists abs_path
-    then Some abs_path
-    else None
-  else //unqualified file name: resolve in include path
-    try
-        (* In reverse, because the last directory has the highest precedence. *)
-        (* FIXME: We should fail if we find two files with the same name *)
-        BU.find_map (List.rev paths) (fun p ->
-          let path =
-            if p = "." then filename
-            else BU.join_paths p filename in
-          if BU.file_exists path then
-            Some path
-          else
-            None)
-    with
-      | _ -> None
-      // ^ to deal with issues like passing bogus strings as paths like " input"
+  else
+  let filename = BU.basename filename in
+  try
+      (* In reverse, because the last directory has the highest precedence. *)
+      (* FIXME: We should fail if we find two files with the same name *)
+      BU.find_map (List.rev paths) (fun p ->
+        let path =
+          if p = "." then filename
+          else BU.join_paths p filename in
+        if BU.file_exists path then
+          Some path
+        else
+          None)
+  with
+    | _ -> None
+    // ^ to deal with issues like passing bogus strings as paths like " input"
 
 let find_file =
   let cache = BU.smap_create 100 in
