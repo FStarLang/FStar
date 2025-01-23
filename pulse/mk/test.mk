@@ -23,7 +23,7 @@ include $(PULSE_ROOT)/mk/common.mk
 include $(PULSE_ROOT)/mk/locate.mk
 .DEFAULT_GOAL := all
 
-HINTS_ENABLED?=--use_hints
+HINTS_ENABLED?=
 
 # This warning is really useless.
 OTHERFLAGS += --warn_error -321
