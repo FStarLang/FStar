@@ -492,10 +492,27 @@ let build_map (filenames: list string): files_for_module_name =
   let add_entry key full_path =
     match smap_try_find map key with
     | Some (intf, impl) ->
-        if is_interface full_path then
-          smap_add map key (Some full_path, impl)
-        else
-          smap_add map key (intf, Some full_path)
+        if is_interface full_path then begin
+          match intf with
+          | Some other when other <> full_path ->
+            //duplicate interface file found
+            raise_error0
+                Errors.Fatal_ModuleOrFileNotFound
+                (Util.format2 "Interface files %s and %s are both in the include path\n"
+                    full_path other)
+          | _ ->
+            smap_add map key (Some full_path, impl)
+        end
+        else begin
+          match impl with
+          | Some other when other <> full_path -> 
+            //duplicate implementation file found
+             raise_error0
+                Errors.Fatal_ModuleOrFileNotFound
+                (Util.format2 "Files %s and %s are both in the include path\n"
+                    full_path other)
+          | _ -> smap_add map key (intf, Some full_path)
+        end
     | None ->
         if is_interface full_path then
           smap_add map key (Some full_path, None)
