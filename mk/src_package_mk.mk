@@ -72,8 +72,8 @@ check_fstarc: install_bin
 	  SRC=src/ \
 	  FSTAR_EXE=$(call cygpath,out/bin/fstar.exe) \
 	  CACHE_DIR=fstarc.checked/ \
-	  CODEGEN=None \
-	  OUTPUT_DIR=None \
+	  CODEGEN=none \
+	  OUTPUT_DIR=none \
 	  TAG=fstarc \
 	  FSTAR_LIB=$(call cygpath,ulib) \
 	  FSTAR_ROOT=$(CURDIR) \
