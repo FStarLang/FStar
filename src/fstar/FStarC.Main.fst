@@ -44,10 +44,6 @@ open FStarC.Reflection.V2.Interpreter {}
 let process_args () : parse_cmdline_res & list string =
   Options.parse_cmd_line ()
 
-(* cleanup: kills background Z3 processes; relevant when --n_cores > 1 *)
-(* GM: unclear if it's useful now? *)
-let cleanup () = Util.kill_all ()
-
 (* printing a finished message *)
 let finished_message fmods errs =
   let print_to = if errs > 0 then Util.print_error else Util.print_string in
@@ -350,14 +346,17 @@ let go () =
     OCaml.exec_ocamlopt_plugin rest
 
   | _ -> go_normal ()
+
 let handle_error e =
     if FStarC.Errors.handleable e then
-      FStarC.Errors.err_exn e;
-    if Options.trace_error() then
-      Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
-    else if not (FStarC.Errors.handleable e) then
-      Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
-    cleanup();
+      FStarC.Errors.err_exn e
+    else begin
+      Util.print1_error "Unexpected error: %s\n" (Util.message_of_exn e);
+      if Options.trace_error() then
+        Util.print1_error "Trace:\n%s\n" (Util.trace_of_exn e)
+      else
+        Util.print_error "Please file a bug report, ideally with a minimized version of the source program that triggered the error.\n"
+    end;
     report_errors []
 
 let main () =
@@ -368,8 +367,8 @@ let main () =
     then Util.print2_error "TOTAL TIME %s ms: %s\n"
               (FStarC.Util.string_of_int time)
               (String.concat " " (FStarC.Getopt.cmdline()));
-    cleanup ();
     exit 0
   with
-  | e -> handle_error e;
-        exit 1
+  | e ->
+    handle_error e;
+    exit 1
