@@ -15,8 +15,13 @@ all-packages: package-1 package-2 package-src-1 package-src-2
 
 ### STAGES
 
+# For developers: you can set this variable externally, pointing
+# to a local build of stage0, to avoid recompiling it every time.
 ifneq ($(FSTAR_EXTERNAL_STAGE0),)
 FSTAR0_EXE := $(abspath $(FSTAR_EXTERNAL_STAGE0))
+_ != mkdir -p stage0/bin
+_ != ln -Trsf $(FSTAR0_EXE) stage0/bin/fstar.exe
+# ^ Setting this link allows VS code to work seamlessly.
 endif
 
 # When stage0 is bumped, use this:
