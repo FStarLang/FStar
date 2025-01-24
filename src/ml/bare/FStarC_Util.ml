@@ -937,8 +937,13 @@ let incr r = r := Z.(!r + one)
 let decr r = r := Z.(!r - one)
 let geq (i:int) (j:int) = i >= j
 
-let exec_name = Sys.executable_name
-let get_exec_dir () = Filename.dirname (Sys.executable_name)
+(* Note: If F* is called invoked via a symlink, executable_name contains
+   the name of the unresolved link in macos (not so in Linux). Since
+   F* needs to find its library relative to the path of its installed
+   executable, we must resolve all links, so we use realpath. *)
+let exec_name = Unix.realpath Sys.executable_name
+
+let get_exec_dir () = Filename.dirname exec_name
 let get_cmd_args () = Array.to_list Sys.argv
 let expand_environment_variable x = try Some (Sys.getenv x) with Not_found -> None
 
