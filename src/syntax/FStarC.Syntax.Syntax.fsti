@@ -651,7 +651,10 @@ type sig_metadata = {
     sigmeta_already_checked:bool;
     // ^ This sigelt was created from a splice_t with a proof of well-typing,
     // and does not need to be checked again.
-    sigmeta_extension_data: list (string & dyn) //each extension can register some data with a sig
+    sigmeta_extension_data: list (string & dyn); //each extension can register some data with a sig
+    sigmeta_is_typ_abbrev:bool;
+    // ^ true iff this sigelt is a `type t = expr` decl, to trigger a
+    // final check that expr is indeed a type (see #2933).
 }
 
 
@@ -941,6 +944,7 @@ instance val has_range_sigelt : hasRange sigelt
 instance val hasRange_fv : hasRange fv
 instance val hasRange_bv     : hasRange bv
 instance val hasRange_binder : hasRange binder
+instance val hasRange_letbinding : hasRange letbinding
 
 instance val showable_emb_typ : showable emb_typ
 instance val showable_delta_depth : showable delta_depth

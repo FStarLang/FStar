@@ -219,7 +219,7 @@ let test_skolem_match (x:int) =
   match apply (fun x -> x) 0  with
   | 0 -> 0
 
-type _T = (apply (fun x -> x) 0 = 1)
+type _T = (apply (fun x -> x) 0 == 1)
 
 val test_skolem_refinement: x:int{_T} -> Tot unit
 let test_skolem_refinement x = assert false
