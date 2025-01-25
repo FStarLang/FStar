@@ -471,14 +471,13 @@ let build_inclusion_candidates_list (): list (string & string) =
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
   let include_directories = List.unique include_directories in
-  let cwd = normalize_file_path (getcwd ()) in
   include_directories |> List.concatMap (fun d ->
     let files = safe_readdir_for_include d in
     files |> List.filter_map (fun f ->
       let f = basename f in
       check_and_strip_suffix f
       |> Util.map_option (fun longname ->
-            let full_path = if d = cwd then f else join_paths d f in
+            let full_path = join_paths d f in
             (longname, full_path))
     )
   )
@@ -491,12 +490,30 @@ let build_inclusion_candidates_list (): list (string & string) =
 let build_map (filenames: list string): files_for_module_name =
   let map = smap_create 41 in
   let add_entry key full_path =
+    let full_path = BU.normalize_file_path full_path in
     match smap_try_find map key with
     | Some (intf, impl) ->
-        if is_interface full_path then
-          smap_add map key (Some full_path, impl)
-        else
-          smap_add map key (intf, Some full_path)
+        if is_interface full_path then begin
+          match intf with
+          | Some other when other <> full_path ->
+            //duplicate interface file found
+            raise_error0
+                Errors.Fatal_ModuleOrFileNotFound
+                (Util.format2 "Interface files %s and %s are both in the include path\n"
+                    full_path other)
+          | _ ->
+            smap_add map key (Some full_path, impl)
+        end
+        else begin
+          match impl with
+          | Some other when other <> full_path -> 
+            //duplicate implementation file found
+             raise_error0
+                Errors.Fatal_ModuleOrFileNotFound
+                (Util.format2 "Files %s and %s are both in the include path\n"
+                    full_path other)
+          | _ -> smap_add map key (intf, Some full_path)
+        end
     | None ->
         if is_interface full_path then
           smap_add map key (Some full_path, None)
