@@ -14,27 +14,18 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.Err
-open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
-open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.List
-open FStarC.Syntax
+open FStarC
 open FStarC.Syntax.Syntax
-open FStarC.Compiler.Util
-open FStarC.TypeChecker.Normalize
+open FStarC.Util
 open FStarC.TypeChecker.Env
-open FStarC.Compiler.Range
+open FStarC.Range
 open FStarC.Ident
 open FStarC.Pprint
 module N = FStarC.TypeChecker.Normalize
-module BU = FStarC.Compiler.Util //basic util
-module Env = FStarC.TypeChecker.Env
-open FStarC.TypeChecker.Common
 
 open FStarC.Errors.Msg
-open FStarC.Class.PP
 open FStarC.Class.Show
 
 let info_at_pos env file row col : option (either string lident & typ & Range.range) =

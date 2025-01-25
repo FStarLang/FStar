@@ -1,7 +1,7 @@
 module FStarC.Class.HasRange
 
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Range
+open FStarC.Effect
+open FStarC.Range
 
 class hasRange (a:Type) = {
   pos : a -> range;

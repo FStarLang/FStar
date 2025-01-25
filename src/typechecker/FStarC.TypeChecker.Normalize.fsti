@@ -16,7 +16,7 @@
 
 module FStarC.TypeChecker.Normalize
 open FStarC
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 open FStarC.TypeChecker
 open FStarC.Syntax.Syntax

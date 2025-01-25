@@ -16,17 +16,17 @@
 module FStarC.Interactive.Lsp
 
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Util
-open FStarC.Compiler.Range
+open FStarC.Effect
+open FStarC.Util
+open FStarC.Range
 open FStarC.Errors
 open FStarC.Universal
 open FStarC.Interactive.Ide.Types
 open FStarC.Interactive.JsonHelper
 
-module U = FStarC.Compiler.Util
+module U = FStarC.Util
 module QH = FStarC.Interactive.QueryHelper
 module PH = FStarC.Interactive.PushHelper
 module PI = FStarC.Parser.ParseIt

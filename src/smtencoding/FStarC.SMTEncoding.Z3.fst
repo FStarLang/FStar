@@ -14,17 +14,17 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Z3
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Class.Show
 module SolverState = FStarC.SMTEncoding.SolverState
-module M = FStarC.Compiler.Misc
-module BU = FStarC.Compiler.Util
+module M = FStarC.Misc
+module BU = FStarC.Util
 (****************************************************************************)
 (* Z3 Specifics                                                             *)
 (****************************************************************************)
@@ -457,7 +457,7 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
     let reason_unknown = BU.map_opt smt_output.smt_reason_unknown (fun x ->
         let ru = String.concat " " x in
         if BU.starts_with ru "(:reason-unknown \""
-        then let reason = FStarC.Compiler.Util.substring_from ru (String.length "(:reason-unknown \"" ) in
+        then let reason = FStarC.Util.substring_from ru (String.length "(:reason-unknown \"" ) in
              let res = String.substring reason 0 (String.length reason - 2) in //it ends with '")'
              res
         else ru) in

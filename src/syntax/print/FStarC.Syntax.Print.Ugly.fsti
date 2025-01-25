@@ -15,8 +15,8 @@ See the License for the specific language governing permissions and
 *)
 module FStarC.Syntax.Print.Ugly
 
-open FStarC.Compiler.Effect
-open FStarC.Compiler
+open FStarC.Effect
+open FStarC
 open FStarC.Syntax.Syntax
 
 val term_to_string        : term -> string

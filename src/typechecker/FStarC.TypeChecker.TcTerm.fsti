@@ -16,12 +16,12 @@
 
 module FStarC.TypeChecker.TcTerm
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Env
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Ident
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -32,7 +32,7 @@ open FStarC.TypeChecker.Rel
 open FStarC.TypeChecker.Common
 
 val level_of_type: env -> term -> typ -> universe //the term argument is for error reporting only
-val tc_constant: env -> FStarC.Compiler.Range.range -> sconst -> typ
+val tc_constant: env -> FStarC.Range.range -> sconst -> typ
 val tc_binders: env -> binders -> binders & env & guard_t & universes
 val tc_term: env -> term -> term & lcomp & guard_t
 val tc_maybe_toplevel_term: env -> term -> term & lcomp & guard_t

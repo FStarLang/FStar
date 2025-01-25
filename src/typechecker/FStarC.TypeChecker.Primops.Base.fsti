@@ -2,21 +2,21 @@ module FStarC.TypeChecker.Primops.Base
 (* This module defines the type of primitive steps and some helpers. *)
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC
+open FStarC.Effect
+open FStarC.List
 open FStarC.Syntax.Syntax
 module Env = FStarC.TypeChecker.Env
 module EMB = FStarC.Syntax.Embeddings
 module NBE = FStarC.TypeChecker.NBETerm
 
 type psc = {
-     psc_range : FStarC.Compiler.Range.range;
+     psc_range : FStarC.Range.range;
      psc_subst : unit -> subst_t // potentially expensive, so thunked
 }
 
 val null_psc : psc
-val psc_range : psc -> FStarC.Compiler.Range.range
+val psc_range : psc -> FStarC.Range.range
 val psc_subst : psc -> subst_t
 
 type interp_t =

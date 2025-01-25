@@ -17,9 +17,9 @@
 module FStarC.SMTEncoding.EncodeTerm
 open Prims
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.TypeChecker.Env
 open FStarC.Syntax
 open FStarC.Syntax.Syntax

@@ -15,17 +15,17 @@
 *)
 module FStarC.TypeChecker.Env
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Subst
 open FStarC.Syntax.Util
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Ident
-open FStarC.Compiler.Range
+open FStarC.Range
 open FStarC.Errors
 open FStarC.TypeChecker.Common
 open FStarC.Class.Setlike
@@ -36,7 +36,7 @@ module Listlike = FStarC.Class.Listlike
 
 module S = FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module U  = FStarC.Syntax.Util
 module UF = FStarC.Syntax.Unionfind
 module Const = FStarC.Parser.Const
@@ -1825,7 +1825,7 @@ let should_enc_path proof_ns path =
         | x::xs, y::ys -> String.lowercase x = String.lowercase y && str_i_prefix xs ys
         | _, _ -> false
     in
-    match FStarC.Compiler.List.tryFind (fun (p, _) -> str_i_prefix p path) proof_ns with
+    match FStarC.List.tryFind (fun (p, _) -> str_i_prefix p path) proof_ns with
     | None -> false
     | Some (_, b) -> b
 

@@ -17,20 +17,20 @@
 module FStarC.Tactics.Embedding
 
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
-open FStarC.Compiler.Util
-open FStarC.Compiler.List
+open FStarC.Util
+open FStarC.List
 open FStarC.Class.Show
 
 open FStarC.Tactics.Common
 open FStarC.Tactics.Types
 open FStarC.Tactics.Result
 
-module BU      = FStarC.Compiler.Util
+module BU      = FStarC.Util
 module Err     = FStarC.Errors
 module NBE     = FStarC.TypeChecker.NBE
 module NBETerm = FStarC.TypeChecker.NBETerm

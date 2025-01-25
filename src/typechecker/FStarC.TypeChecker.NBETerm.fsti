@@ -19,8 +19,8 @@
 module FStarC.TypeChecker.NBETerm
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
 open FStarC.VConfig
@@ -279,7 +279,7 @@ instance val e_bool   : embedding bool
 instance val e_string : embedding string
 instance val e_char   : embedding char
 instance val e_int    : embedding Z.t
-instance val e_real   : embedding Compiler.Real.real
+instance val e_real   : embedding Real.real
 instance val e_unit   : embedding unit
 val e_any    : embedding t
 val mk_any_emb : t -> embedding t
@@ -296,12 +296,12 @@ instance val e_tuple3 : embedding 'a -> embedding 'b -> embedding 'c -> Prims.To
 instance val e_tuple4 : embedding 'a -> embedding 'b -> embedding 'c -> embedding 'd -> Prims.Tot (embedding ('a & 'b & 'c & 'd))
 instance val e_tuple5 : embedding 'a -> embedding 'b -> embedding 'c -> embedding 'd -> embedding 'e -> Prims.Tot (embedding ('a & 'b & 'c & 'd & 'e))
 instance val e_either : embedding 'a -> embedding 'b -> Prims.Tot (embedding (either 'a 'b))
-instance val e_sealed : embedding 'a -> Prims.Tot (embedding (FStarC.Compiler.Sealed.sealed 'a))
+instance val e_sealed : embedding 'a -> Prims.Tot (embedding (FStarC.Sealed.sealed 'a))
 instance val e_string_list : embedding (list string)
 val e_arrow : embedding 'a -> embedding 'b -> embedding ('a -> 'b)
 
 instance val e_abstract_nbe_term : embedding abstract_nbe_term
-instance val e_order : embedding FStarC.Compiler.Order.order
+instance val e_order : embedding FStarC.Order.order
 
 (* Unconditionally fails raising an exception when called *)
 val e_unsupported : #a:Type -> embedding a

@@ -16,7 +16,7 @@
    limitations under the License.
 *)
 module FStarC.Thunk
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 val thunk (a:Type0) : Type0
 type t 'a = thunk 'a

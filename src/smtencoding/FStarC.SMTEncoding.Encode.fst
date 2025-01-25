@@ -17,9 +17,9 @@ module FStarC.SMTEncoding.Encode
 open Prims
 open FStar open FStarC
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler
+open FStarC.Effect
+open FStarC.List
+open FStarC
 open FStarC.TypeChecker.Env
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -33,7 +33,7 @@ open FStarC.SMTEncoding.Env
 open FStarC.SMTEncoding.EncodeTerm
 open FStarC.Class.Show
 
-module BU     = FStarC.Compiler.Util
+module BU     = FStarC.Util
 module Const  = FStarC.Parser.Const
 module Env    = FStarC.TypeChecker.Env
 module N      = FStarC.TypeChecker.Normalize
@@ -917,7 +917,7 @@ let encode_top_level_let :
                   | _ -> false
                 in
                 let is_smt_theory_symbol =
-                    let fv = FStarC.Compiler.Util.right lbn in
+                    let fv = FStarC.Util.right lbn in
                     Env.fv_has_attr env.tcenv fv FStarC.Parser.Const.smt_theory_symbol_attr_lid
                 in
                 let is_sub_singleton = U.is_sub_singleton body in
@@ -1428,7 +1428,7 @@ let encode_datacon (env:env_t) (se:sigelt)
                 in
                 (env, xv::arg_vars, eqns, i + 1))
               (env', [], [], 0)
-              (FStarC.Compiler.List.zip args encoded_args)
+              (FStarC.List.zip args encoded_args)
         in
         let arg_vars = List.rev arg_vars in
         let arg_params, _ = List.splitAt n_tps arg_vars in

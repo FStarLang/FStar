@@ -16,7 +16,7 @@
 
 module FStarC.Tactics.Native
 
-open FStarC.Compiler.Range
+open FStarC.Range
 open FStarC.Syntax.Syntax
 open FStarC.Tactics.Types
 

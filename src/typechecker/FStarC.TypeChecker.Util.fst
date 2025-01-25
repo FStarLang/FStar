@@ -16,11 +16,11 @@
 
 module FStarC.TypeChecker.Util
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Errors
 open FStarC.Errors.Msg
 open FStarC.Pprint
@@ -42,7 +42,7 @@ module Listlike = FStarC.Class.Listlike
 
 module SS = FStarC.Syntax.Subst
 module S = FStarC.Syntax.Syntax
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module U = FStarC.Syntax.Util
 module N = FStarC.TypeChecker.Normalize
 module TcComm = FStarC.TypeChecker.Common

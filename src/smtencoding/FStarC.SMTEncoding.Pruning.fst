@@ -14,15 +14,15 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Pruning
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStar open FStarC
 open FStar.List.Tot
-open FStarC.Compiler
+open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.Class.Setlike
 open FStarC.Class.Show
 open FStarC.Class.Monad
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 type triggers = list (list string)
 type triggers_set = list (RBSet.t string)
 
@@ -332,7 +332,7 @@ let add_decls (ds:list decl) (p:pruning_state)
 = List.fold_left (fun p d -> add_decl d p) p ds
 
 let sym = string
-let reached_assumption_names = FStarC.Compiler.RBSet.rbset string
+let reached_assumption_names = FStarC.RBSet.rbset string
 
 // The main pruning algorithm is expresses as a state monad over the ctxt
 type ctxt = {

@@ -16,17 +16,17 @@
 
 module FStarC.Syntax.Embeddings
 
-open FStar open FStarC
-open FStarC.Compiler
+open FStar
+open FStarC
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Syntax.Syntax
-open FStarC.Compiler.Range
+open FStarC.Range
 open FStarC.VConfig
 
 open FStarC.Class.Show
 
-module BU    = FStarC.Compiler.Util
+module BU    = FStarC.Util
 module C     = FStarC.Const
 module Err   = FStarC.Errors
 module Ident = FStarC.Ident
@@ -307,7 +307,7 @@ let e_string =
         (fun () -> emb_t_string)
 
 let e_real =
-    let open FStarC.Compiler.Real in
+    let open FStarC.Real in
     let ty = S.t_real in
     let emb_t_real = ET_app(PC.real_lid |> Ident.string_of_lid, []) in
     let em (r:real) (rng:range) _shadow _norm : term =
@@ -798,6 +798,7 @@ let steps_Iota          = tconst PC.steps_iota
 let steps_Reify         = tconst PC.steps_reify
 let steps_NormDebug     = tconst PC.steps_norm_debug
 let steps_UnfoldOnly    = tconst PC.steps_unfoldonly
+let steps_UnfoldOnce    = tconst PC.steps_unfoldonce
 let steps_UnfoldFully   = tconst PC.steps_unfoldonly
 let steps_UnfoldAttr    = tconst PC.steps_unfoldattr
 let steps_UnfoldQual    = tconst PC.steps_unfoldqual
@@ -847,6 +848,9 @@ let e_norm_step : embedding Pervasives.norm_step =
                     steps_NormDebug
                 | UnfoldOnly l ->
                     S.mk_Tm_app steps_UnfoldOnly [S.as_arg (embed l rng None norm)]
+                                rng
+                | UnfoldOnce l ->
+                    S.mk_Tm_app steps_UnfoldOnce [S.as_arg (embed l rng None norm)]
                                 rng
                 | UnfoldFully l ->
                     S.mk_Tm_app steps_UnfoldFully [S.as_arg (embed l rng None norm)]
@@ -902,6 +906,9 @@ let e_norm_step : embedding Pervasives.norm_step =
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->
                     BU.bind_opt (try_unembed l norm) (fun ss ->
                     Some <| UnfoldOnly ss)
+                | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonce ->
+                    BU.bind_opt (try_unembed l norm) (fun ss ->
+                    Some <| UnfoldOnce ss)
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldfully ->
                     BU.bind_opt (try_unembed l norm) (fun ss ->
                     Some <| UnfoldFully ss)
@@ -1061,7 +1068,7 @@ let e_vconfig =
         (fun () -> ET_app (PC.vconfig_lid |> Ident.string_of_lid, []))
 
 let e_order =
-  let open FStarC.Compiler.Order in
+  let open FStarC.Order in
   let ord_Lt_lid = Ident.lid_of_path (["FStar"; "Order"; "Lt"]) Range.dummyRange in
   let ord_Eq_lid = Ident.lid_of_path (["FStar"; "Order"; "Eq"]) Range.dummyRange in
   let ord_Gt_lid = Ident.lid_of_path (["FStar"; "Order"; "Gt"]) Range.dummyRange in

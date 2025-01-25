@@ -1,50 +1,9 @@
-include mk/common.mk
-
-$(call need_exe, FSTAR_EXE, fstar.exe to be used)
-$(call need_dir_mk, CACHE_DIR, directory for checked files)
-$(call need_dir_mk, OUTPUT_DIR, directory for extracted OCaml files)
-$(call need, CODEGEN, backend (OCaml / Plugin))
-$(call need_dir, SRC, source directory)
-$(call need, TAG, a tag for the .depend; to prevent clashes. Sorry.)
-
-# Optionally pass a file to touch everytime something is performed.
-# We also create it if it does not exist (this simplifies external use)
-ifneq ($(TOUCH),)
-_ != $(shell [ -f "$(TOUCH)" ] || touch $(TOUCH))
-endif
-
-.PHONY: clean
-clean:
-	rm -rf $(CACHE_DIR)
-	rm -rf $(OUTPUT_DIR)
-
-.PHONY: verify
-verify: all-checked
-
-FSTAR_OPTIONS += --cache_checked_modules # should be the default
-FSTAR_OPTIONS += --cache_dir "$(CACHE_DIR)"
-FSTAR_OPTIONS += --odir "$(OUTPUT_DIR)"
-
-FSTAR_OPTIONS += --use_hints
-FSTAR_OPTIONS += --hint_dir $(SRC)/.hints
-FSTAR_OPTIONS += --warn_error -333 # Do not warn about missing hints
 FSTAR_OPTIONS += --ext context_pruning
 FSTAR_OPTIONS += --z3version 4.13.3
 
+# Checking a library, make sure to not use the parent lib.
 FSTAR_OPTIONS += --no_default_includes
 FSTAR_OPTIONS += --include $(SRC)
-ifeq ($(ADMIT),1)
-FSTAR_OPTIONS += --admit_smt_queries true
-endif
-
-# Extension for extracted files
-ifeq ($(CODEGEN),FSharp)
-EEXT:=fs
-else
-EEXT:=ml
-endif
-
-FSTAR_OPTIONS += $(OTHERFLAGS)
 
 EXTRACT_NS :=
 EXTRACT_NS += -FStar.Buffer
@@ -105,26 +64,7 @@ EXTRACT_NS += +FStar.Int.Cast.Full
 EXTRACT_NS += -FStar.Tactics
 EXTRACT_NS += -FStar.Reflection
 
-FSTAR := $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
-
 EXTRACT := --extract '* $(EXTRACT_NS)'
-
-%.checked: LBL=$(basename $(notdir $@))
-%.checked:
-	$(call msg, "CHECK", $(LBL))
-	$(FSTAR) $<
-	@touch -c $@  ## SHOULD NOT BE NEEDED
-
-%.$(EEXT): FF=$(notdir $(subst .checked,,$<))
-%.$(EEXT): MM=$(basename $(FF))
-%.$(EEXT): LBL=$(notdir $@)
-# ^ HACK: we use notdir to get the module name since we need to pass in
-# the fst (not the checked file), but we don't know where it is, so this
-# is relying on F* looking in its include path. sigh.
-%.$(EEXT):
-	$(call msg, "EXTRACT", $(LBL))
-	$(FSTAR) $(FF) --codegen $(CODEGEN) --extract_module $(MM)
-	@touch -c $@  ## SHOULD NOT BE NEEDED
 
 # Leaving this empty, F* will scan the include path for all fst/fsti
 # files. This will read fstar.include and follow it too.
@@ -134,37 +74,8 @@ EXTRACT := --extract '* $(EXTRACT_NS)'
 # search path. So instead, be explicit about scanning over all the files
 # in $(SRC) (i.e. ulib). Note that there is a still a problem if there is a
 # file in the cwd named like a file in ulib/, F* may prefer the former.
+#
+# Update: generic.mk will now complain too.
 ROOTS := $(shell find $(SRC) -name '*.fst' -o -name '*.fsti')
 
-DEPSTEM := $(CACHE_DIR)/.depend$(TAG)
-# We always run this to compute a full list of fst/fsti files in the
-# $(SRC) (ignoring the roots, it's a bit conservative). The list is
-# saved in $(DEPSTEM).touch.chk, and compared to the one we generated
-# before in $(DEPSTEM).touch. If there's a change (or the 'previous')
-# does not exist, the timestamp of $(DEPSTEM0.touch will be updated
-# triggering an actual dependency run.
-.PHONY: .force
-$(DEPSTEM).touch: .force
-	mkdir -p $(dir $@)
-	find $(SRC) -name '*.fst*' > $@.chk
-	diff -q $@ $@.chk 2>/dev/null || cp $@.chk $@
-
-$(DEPSTEM): $(DEPSTEM).touch
-	$(call msg, "DEPEND", $(SRC))
-	$(FSTAR) --dep full $(ROOTS) $(EXTRACT) $(DEPFLAGS) --output_deps_to $@
-
-depend: $(DEPSTEM)
-include $(DEPSTEM)
-
-all-checked: $(ALL_CHECKED_FILES)
-# These targets imply verification of every file too, regardless
-# of extraction.
-all-ml: all-checked $(ALL_ML_FILES)
-	@# Remove extraneous .ml files, which can linger after
-	@# module renamings. The realpath is necessary to prevent
-	@# discrepancies between absolute and relative paths, double
-	@# slashes, etc.
-	rm -vf $(filter-out $(realpath $(ALL_ML_FILES)), $(realpath $(wildcard $(OUTPUT_DIR)/*.ml)))
-
-all-fs: all-checked $(ALL_FS_FILES)
-	rm -vf $(filter-out $(realpath $(ALL_FS_FILES)), $(realpath $(wildcard $(OUTPUT_DIR)/*.fs)))
+include mk/generic.mk

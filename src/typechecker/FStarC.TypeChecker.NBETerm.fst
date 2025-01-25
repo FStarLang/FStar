@@ -16,8 +16,8 @@
 
 module FStarC.TypeChecker.NBETerm
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Errors
 open FStar.Char
@@ -28,7 +28,7 @@ friend FStar.Pervasives (* To expose norm_step *)
 module PC = FStarC.Parser.Const
 module S = FStarC.Syntax.Syntax
 module P = FStarC.Syntax.Print
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module C = FStarC.Const
 module SE = FStarC.Syntax.Embeddings
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
@@ -374,14 +374,14 @@ let e_int : embedding Z.t =
     in
     mk_emb' em un (fun () -> lid_as_typ PC.int_lid [] [])  (SE.emb_typ_of int)
 
-let e_real : embedding Compiler.Real.real =
-    let em _cb (Compiler.Real.Real c) = Constant (Real c) in
+let e_real : embedding Real.real =
+    let em _cb (Real.Real c) = Constant (Real c) in
     let un _cb c =
         match c with
-        | Constant (Real a) -> Some (Compiler.Real.Real a)
+        | Constant (Real a) -> Some (Real.Real a)
         | _ -> None
     in
-    mk_emb' em un (fun () -> lid_as_typ PC.real_lid [] [])  (SE.emb_typ_of Compiler.Real.real)
+    mk_emb' em un (fun () -> lid_as_typ PC.real_lid [] [])  (SE.emb_typ_of Real.real)
 
 let e_fsint = embed_as e_int Z.to_int_fs Z.of_int_fs None
 
@@ -919,7 +919,7 @@ let e_order =
   let ord_Lt_fv = lid_as_fv ord_Lt_lid (Some Data_ctor) in
   let ord_Eq_fv = lid_as_fv ord_Eq_lid (Some Data_ctor) in
   let ord_Gt_fv = lid_as_fv ord_Gt_lid (Some Data_ctor) in
-  let open FStarC.Compiler.Order in
+  let open FStarC.Order in
   let embed_order cb (o:order) : t =
       match o with
       | Lt -> mkConstruct ord_Lt_fv [] []

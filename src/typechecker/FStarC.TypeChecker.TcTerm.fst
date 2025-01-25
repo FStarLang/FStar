@@ -16,16 +16,16 @@
 
 module FStarC.TypeChecker.TcTerm
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Errors
 open FStarC.Defensive
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Ident
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -47,7 +47,7 @@ module TcComm = FStarC.TypeChecker.Common
 module N  = FStarC.TypeChecker.Normalize
 module TcUtil = FStarC.TypeChecker.Util
 module Gen = FStarC.TypeChecker.Generalize
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module U  = FStarC.Syntax.Util
 module PP = FStarC.Syntax.Print
 module UF = FStarC.Syntax.Unionfind

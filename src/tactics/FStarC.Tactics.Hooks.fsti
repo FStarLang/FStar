@@ -18,7 +18,7 @@ module FStarC.Tactics.Hooks
 
 open FStarC
 open FStarC.Syntax.Syntax
-open FStarC.Compiler.Range
+open FStarC.Range
 
 module O   = FStarC.Options
 module Env = FStarC.TypeChecker.Env

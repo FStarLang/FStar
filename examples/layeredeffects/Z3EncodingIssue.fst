@@ -15,7 +15,6 @@
 *)
 
 module Z3EncodingIssue
-
 /// This module illustrates a z3 encoding issue when a layered effect is written in a particular style
 
 /// Suppose we want to write an effect that works on a single global buffer

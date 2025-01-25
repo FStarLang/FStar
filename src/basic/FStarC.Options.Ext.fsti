@@ -15,7 +15,7 @@
 *)
 module FStarC.Options.Ext
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 type key   = string
 type value = string

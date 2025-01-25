@@ -3,8 +3,8 @@ module FStarC.TypeChecker.Primops.MachineInts
 (* Primops about machine integers *)
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStar.Char
 open FStarC.TypeChecker.Primops.Base
 module PC = FStarC.Parser.Const
@@ -12,10 +12,10 @@ module Z = FStarC.BigInt
 
 (* We're going full Haskell in this module *)
 open FStarC.Class.Monad
-open FStarC.Compiler.Writer
+open FStarC.Writer
 open FStarC.Class.Show
 
-open FStarC.Compiler.MachineInts
+open FStarC.MachineInts
 
 (* NB: Eta expanding trips typeclass resolution *)
 let mymon = writer (list primitive_step)
@@ -89,6 +89,6 @@ let ops : list primitive_step =
   (iterM bounded_arith_ops_for all_machint_kinds ;!
    emit [
         (* Single extra op that returns a U32 *)
-        mk1 0 PC.char_u32_of_char (fun (c : char) -> let n = Compiler.Util.int_of_char c |> Z.of_int_fs in
+        mk1 0 PC.char_u32_of_char (fun (c : char) -> let n = Util.int_of_char c |> Z.of_int_fs in
                                                         MachineInts.mk #UInt32 n None);
    ])

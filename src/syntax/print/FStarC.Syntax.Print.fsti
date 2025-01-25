@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 module FStarC.Syntax.Print
 
 open FStarC
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Class.Show
 open FStarC.Class.PP
@@ -38,6 +38,7 @@ instance val showable_ctxu      : showable ctx_uvar
 instance val showable_binding   : showable binding
 instance val showable_subst_elt : showable subst_elt
 instance val showable_branch    : showable branch
+instance val showable_bqual     : showable binder_qualifier
 instance val showable_aqual     : showable aqual
 instance val showable_qualifier : showable qualifier
 instance val showable_pat       : showable pat

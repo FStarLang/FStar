@@ -16,11 +16,11 @@
 module FStarC.Parser.AST
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.Range
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.Range
+open FStarC.Util
 open FStarC.Const
 open FStarC.Errors
 open FStarC.Ident
@@ -281,7 +281,7 @@ let as_frag (ds:list decl) : inputFragment =
       ) ds;
       Inr ds
 
-// TODO: Move to something like FStarC.Compiler.Util
+// TODO: Move to something like FStarC.Util
 let strip_prefix (prefix s: string): option string
   = if starts_with s prefix
     then Some (substring_from s (String.length prefix))

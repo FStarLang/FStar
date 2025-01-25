@@ -15,15 +15,15 @@
 *)
 module FStarC.Syntax.InstFV
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
-open FStarC.Compiler.Util
-open FStarC.Compiler
+open FStarC.Util
+open FStarC
 
 module S = FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
-module U = FStarC.Compiler.Util
+module U = FStarC.Util
 
 let mk t s = S.mk s t.pos
 
@@ -125,7 +125,7 @@ and inst_decreases_order s = function
 
 and inst_lcomp_opt s l = match l with
     | None -> None
-    | Some rc -> Some ({rc with residual_typ = FStarC.Compiler.Util.map_opt rc.residual_typ (inst s)})
+    | Some rc -> Some ({rc with residual_typ = FStarC.Util.map_opt rc.residual_typ (inst s)})
 
 and inst_ascription s (asc:ascription) =
   let annot, topt, use_eq = asc in
@@ -133,7 +133,7 @@ and inst_ascription s (asc:ascription) =
     match annot with
     | Inl t -> Inl (inst s t)
     | Inr c -> Inr (inst_comp s c) in
-  let topt = FStarC.Compiler.Util.map_opt topt (inst s) in
+  let topt = FStarC.Util.map_opt topt (inst s) in
   annot, topt, use_eq
 
 let instantiate i t = match i with

@@ -16,11 +16,11 @@
 module FStarC.Extraction.ML.Util
 open Prims
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
@@ -29,11 +29,11 @@ open FStarC.Extraction.ML.Syntax
 open FStarC.Const
 open FStarC.Ident
 open FStarC.Errors
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module U = FStarC.Syntax.Util
 module UEnv = FStarC.Extraction.ML.UEnv
 module PC = FStarC.Parser.Const
-module Range = FStarC.Compiler.Range
+module Range = FStarC.Range
 module S = FStarC.Syntax.Syntax
 module N = FStarC.TypeChecker.Normalize
 module Env = FStarC.TypeChecker.Env

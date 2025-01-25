@@ -61,6 +61,7 @@ let from_tac_5 s (t: 'a -> 'b -> 'c -> 'd -> 'e -> 'r TM.tac): 'a  -> 'b -> 'c -
 
 
 (* Pointing to the internal primitives *)
+let fixup_range             = from_tac_1 "B.fixup_range" B.fixup_range
 let compress                = from_tac_1 "B.compress" B.compress
 let set_goals               = from_tac_1 "TM.set_goals" TM.set_goals
 let set_smt_goals           = from_tac_1 "TM.set_smt_goals" TM.set_smt_goals

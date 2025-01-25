@@ -19,8 +19,8 @@
 module FStarC.TypeChecker.Positivity
 
 open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStarC.TypeChecker.Env
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -29,10 +29,10 @@ open FStarC.Errors
 open FStar.List.Tot
 module S = FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 module U = FStarC.Syntax.Util
 module N = FStarC.TypeChecker.Normalize
-module L = FStarC.Compiler.List
+module L = FStarC.List
 module C = FStarC.Parser.Const
 
 open FStarC.Class.Setlike
@@ -812,7 +812,7 @@ let rec ty_strictly_positive_in_type (env:env)
           
         | Some (Inl (fv, us)) ->
           begin
-          if FStarC.Compiler.List.existsML (Ident.lid_equals fv.fv_name.v) mutuals
+          if FStarC.List.existsML (Ident.lid_equals fv.fv_name.v) mutuals
           then (
             //if the head is one of the mutually inductive types
             //then check that ty_lid does not occur in the arguments

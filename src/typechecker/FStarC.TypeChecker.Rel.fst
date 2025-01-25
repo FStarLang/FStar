@@ -20,11 +20,11 @@
 
 module FStarC.TypeChecker.Rel
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Util
 open FStarC.Errors
 open FStarC.Defensive
 open FStarC.TypeChecker
@@ -45,10 +45,10 @@ open FStarC.Class.Listlike
 open FStarC.Class.Monoid
 module Setlike = FStarC.Class.Setlike
 open FStarC.Class.Listlike
-open FStarC.Compiler.CList
+open FStarC.CList
 module Listlike = FStarC.Class.Listlike
 
-module BU = FStarC.Compiler.Util //basic util
+module BU = FStarC.Util //basic util
 module U = FStarC.Syntax.Util
 module S = FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
@@ -58,7 +58,7 @@ module PC = FStarC.Parser.Const
 module FC = FStarC.Const
 module TcComm = FStarC.TypeChecker.Common
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
-module CList = FStarC.Compiler.CList
+module CList = FStarC.CList
 
 let dbg_Disch                = Debug.get_toggle "Disch"
 let dbg_Discharge            = Debug.get_toggle "Discharge"

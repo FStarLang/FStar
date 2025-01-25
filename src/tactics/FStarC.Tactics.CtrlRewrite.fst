@@ -17,10 +17,10 @@
 module FStarC.Tactics.CtrlRewrite
 
 open FStarC
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC.Effect
+open FStarC.List
+open FStarC
+open FStarC.Util
 open FStarC.Reflection.V2.Data
 open FStarC.Reflection.V2.Builtins
 open FStarC.Tactics.Result
@@ -34,7 +34,7 @@ open FStarC.Class.Show
 open FStarC.Class.Monad
 
 module Print  = FStarC.Syntax.Print
-module BU     = FStarC.Compiler.Util
+module BU     = FStarC.Util
 module S      = FStarC.Syntax.Syntax
 module U      = FStarC.Syntax.Util
 module SS     = FStarC.Syntax.Subst

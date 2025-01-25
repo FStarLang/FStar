@@ -1,8 +1,8 @@
 module FStarC.Class.Monoid
 
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC
+open FStarC.Effect
+open FStarC.List
 
 class monoid (a:Type) = {
    mzero : a;

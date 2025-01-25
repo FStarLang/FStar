@@ -17,7 +17,7 @@
 *)
 
 module FStarC.TypeChecker.Positivity
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.TypeChecker.Env
 open FStarC.Syntax.Syntax
 open FStarC.Ident

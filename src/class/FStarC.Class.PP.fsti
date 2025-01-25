@@ -1,6 +1,6 @@
 module FStarC.Class.PP
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Pprint
 
 class pretty (a:Type) = {

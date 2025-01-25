@@ -16,11 +16,11 @@
 module FStarC.SMTEncoding.Term
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 
 module S   = FStarC.Syntax.Syntax
-module BU  = FStarC.Compiler.Util
+module BU  = FStarC.Util
 module U   = FStarC.Syntax.Util
 
 let escape (s:string) = BU.replace_char s '\'' '_'
@@ -1173,7 +1173,7 @@ let mk_Valid t        = match t.tm with
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Negation", [t])}]) -> mkNot (unboxBool t) t.rng
     | App(Var "Prims.b2t", [{tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}])
     | App(Var "Prims.equals", [_; {tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}; _])
-            when (FStarC.Compiler.Util.is_some (getBoxedInteger t0))->
+            when (FStarC.Util.is_some (getBoxedInteger t0))->
         // sometimes b2t gets needlessly normalized...
         let sz = match getBoxedInteger t0 with | Some sz -> sz | _ -> failwith "impossible" in
         mkBvUlt (unboxBitVec sz t1, unboxBitVec sz t2) t.rng

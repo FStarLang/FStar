@@ -1,6 +1,6 @@
 module FStarC.Class.Show
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 instance showable_unit : showable unit =
 {

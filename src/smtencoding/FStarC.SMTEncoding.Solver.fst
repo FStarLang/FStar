@@ -16,14 +16,14 @@
 
 module FStarC.SMTEncoding.Solver
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.SMTEncoding.Z3
 open FStarC.SMTEncoding.Term
-open FStarC.Compiler.Util
-open FStarC.Compiler.Hints
+open FStarC.Util
+open FStarC.Hints
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Env
 open FStarC.SMTEncoding
@@ -33,9 +33,9 @@ open FStarC.SMTEncoding.Env
 open FStarC.Class.Show
 open FStarC.Class.PP
 open FStarC.Class.Hashable
-open FStarC.Compiler.RBSet
+open FStarC.RBSet
 
-module BU       = FStarC.Compiler.Util
+module BU       = FStarC.Util
 module Env      = FStarC.TypeChecker.Env
 module Err      = FStarC.Errors
 module Print    = FStarC.Syntax.Print
@@ -52,7 +52,7 @@ let dbg_SMTFail  = Debug.get_toggle "SMTFail"
 (* Hint databases for record and replay (private)                           *)
 (****************************************************************************)
 
-// The type definition is now in [FStarC.Compiler.Util], since it needs to be visible to
+// The type definition is now in [FStarC.Util], since it needs to be visible to
 // both the F# and OCaml implementations.
 
 type z3_replay_result = either (option UC.unsat_core), error_labels

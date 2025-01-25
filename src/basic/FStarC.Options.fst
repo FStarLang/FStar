@@ -17,21 +17,21 @@ module FStarC.Options
 
 open FStar open FStarC
 open FStarC.BaseTypes
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.String
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.String
+open FStarC.Util
 open FStarC.Getopt
 open FStar.Pervasives
 open FStarC.VConfig
 open FStarC.Class.Show
 open FStarC.Class.Deq
 
-module Option = FStarC.Compiler.Option
+module Option = FStarC.Option
 module FC = FStarC.Common
-module Util = FStarC.Compiler.Util
-module List = FStarC.Compiler.List
+module Util = FStarC.Util
+module List = FStarC.List
 
 module Ext = FStarC.Options.Ext
 
@@ -52,7 +52,7 @@ let as_int = function
   | _ -> failwith "Impos: expected Int"
 let as_string = function
   | String b -> b
-  | Path b -> FStarC.Common.try_convert_file_name_to_mixed b
+  | Path b -> b
   | _ -> failwith "Impos: expected String"
 let as_list' = function
   | List ts -> ts
@@ -204,7 +204,7 @@ let defaults =
       ("eager_subtyping"              , Bool false);
       ("error_contexts"               , Bool false);
       ("expose_interfaces"            , Bool false);
-      ("message_format"               , String "human");
+      ("message_format"               , String "auto");
       ("ext"                          , Unset);
       ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
@@ -238,7 +238,7 @@ let defaults =
       ("max_fuel"                     , Int 8);
       ("max_ifuel"                    , Int 2);
       ("MLish"                        , Bool false);
-      ("MLish_effect"                 , String "FStar.Compiler.Effect");
+      ("MLish_effect"                 , String "FStar.Effect");
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
@@ -991,8 +991,10 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "message_format",
-    EnumStr ["human"; "json"; "github"],
-    text "Format of the messages emitted by F* (default `human`)");
+    EnumStr ["human"; "json"; "github"; "auto"],
+    text "Format of the messages emitted by F*. Using 'auto' will use human messages \
+          unless the variable GITHUB_ACTIONS is non-empty, in which case 'github' is \
+          used (default `auto`).");
 
   ( noshort,
     "hide_uvar_nums",
@@ -1155,7 +1157,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
   ( noshort,
     "MLish_effect",
     SimpleStr "module_name",
-    text "Set the default effect *module* for --MLish (default: FStar.Compiler.Effect)");
+    text "Set the default effect *module* for --MLish (default: FStar.Effect)");
 
   ( noshort,
     "no_default_includes",
@@ -1489,12 +1491,12 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     ReverseAccumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'"),
     text "Prunes the context to include only the facts from the given namespace or fact id. \
           Facts can be include or excluded using the [+|-] qualifier. \
-          For example --using_facts_from '* -FStarC.Reflection +FStarC.Compiler.List -FStarC.Compiler.List.Tot' will \
-          remove all facts from FStarC.Compiler.List.Tot.*, \
-          retain all remaining facts from FStarC.Compiler.List.*, \
+          For example --using_facts_from '* -FStarC.Reflection +FStarC.List -FStarC.List.Tot' will \
+          remove all facts from FStarC.List.Tot.*, \
+          retain all remaining facts from FStarC.List.*, \
           remove all facts from FStarC.Reflection.*, \
           and retain all the rest. \
-          Note, the '+' is optional: --using_facts_from 'FStarC.Compiler.List' is equivalent to --using_facts_from '+FStarC.Compiler.List'. \
+          Note, the '+' is optional: --using_facts_from 'FStarC.List' is equivalent to --using_facts_from '+FStarC.List'. \
           Multiple uses of this option accumulate, e.g., --using_facts_from A --using_facts_from B is interpreted as --using_facts_from A^B.");
 
   ( noshort,
@@ -1847,7 +1849,7 @@ let parse_cmd_line () =
     then set_error_flags()
     else res
   in
-  res, List.map FC.try_convert_file_name_to_mixed !file_list_
+  res, !file_list_
 
 let file_list () =
   !file_list_
@@ -1993,8 +1995,17 @@ let dump_module                  s  = get_dump_module() |> List.existsb (module_
 let eager_subtyping              () = get_eager_subtyping()
 let error_contexts               () = get_error_contexts              ()
 let expose_interfaces            () = get_expose_interfaces          ()
+let interactive                  () = get_in () || get_ide () || get_lsp ()
 let message_format               () =
   match get_message_format () with
+  | "auto" -> (
+    if interactive () then Human
+    else
+    match Util.expand_environment_variable "GITHUB_ACTIONS" with
+    | None
+    | Some "" -> Human
+    | Some _ -> Github
+  )
   | "human" -> Human
   | "json" -> Json
   | "github" -> Github
@@ -2033,7 +2044,6 @@ let print                        () = get_print                       ()
 let print_in_place               () = get_print_in_place              ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
-let interactive                  () = get_in () || get_ide () || get_lsp ()
 let lax                          () = get_lax                         ()
 let load                         () = get_load                        ()
 let load_cmxs                    () = get_load_cmxs                   ()

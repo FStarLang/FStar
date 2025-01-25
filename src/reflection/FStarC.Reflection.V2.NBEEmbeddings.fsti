@@ -17,7 +17,7 @@
 module FStarC.Reflection.V2.NBEEmbeddings
 
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.NBETerm
 open FStarC.Reflection.V2.Data

@@ -8,14 +8,10 @@ if [ $# -ne 2 ]; then
 fi
 
 BROOT="$(realpath "$1")"
-PREFIX="$(realpath -m "$2")" # -m: leading dirs allowed to not exist
 
-if [ -e "${PREFIX}" ]; then
-  echo "Destination directory already exists: ${PREFIX}"
-  exit 1
-fi
-
-mkdir -p "${PREFIX}"
+PREFIX="$2"
+mkdir -p "$PREFIX"
+PREFIX="$(realpath "$PREFIX")"
 
 # Note: we must exclude everything in the Dune build directories, since
 # if some files "vanish" during this copy, rsync will fail (even if
@@ -45,11 +41,30 @@ cp version.txt "${PREFIX}"
 cp -H -r src "${PREFIX}/src"
 cp .scripts/get_fstar_z3.sh "${PREFIX}/get_fstar_z3.sh"
 cp fstar.opam "${PREFIX}/fstar.opam"
-cp mk/src_package_mk.mk "${PREFIX}/Makefile"
 mkdir "${PREFIX}/mk"
 cp mk/lib.mk "${PREFIX}/mk/lib.mk"
 cp mk/common.mk "${PREFIX}/mk/common.mk"
+cp mk/winwrap.sh "${PREFIX}/mk/winwrap.sh"
 cp -H mk/fstar-12.mk "${PREFIX}/mk/fstar-12.mk"
+cp mk/generic.mk "${PREFIX}/mk/generic.mk"
+mkdir "${PREFIX}/.scripts"
+cp .scripts/bin-install.sh  "${PREFIX}/.scripts"
+cp .scripts/mk-package.sh   "${PREFIX}/.scripts"
+cp .scripts/get_fstar_z3.sh "${PREFIX}/.scripts"
+cp .scripts/package_z3.sh   "${PREFIX}/.scripts"
+
+cp mk/src_package_mk.mk "${PREFIX}/Makefile"
+
+# Make sure the source package has a proper version.
+FSTAR_COMMIT=$(git describe --match="" --always --abbrev=40 --dirty 2>/dev/null || echo unset)
+FSTAR_COMMITDATE=$(git log --pretty=format:%ci -n 1 2>/dev/null || echo unset)
+# NB: ^ has to be in-sync with make_fstar_version.sh
+echo "## LINES BELOW ADDED BY src-install.sh" >> "${PREFIX}/Makefile"
+echo "export FSTAR_COMMITDATE=$FSTAR_COMMITDATE" >> "${PREFIX}/Makefile"
+echo "export FSTAR_COMMIT=$FSTAR_COMMIT" >> "${PREFIX}/Makefile"
+if [[ -n "${FSTAR_VERSION:-}" ]]; then
+  echo "export FSTAR_VERSION=$FSTAR_VERSION" >> "${PREFIX}/Makefile"
+fi
 
 # Remove extra ML files, rsync has resolved the links
 # into the corresponding files already, and these would be

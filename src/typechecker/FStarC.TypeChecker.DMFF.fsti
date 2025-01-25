@@ -16,7 +16,7 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.DMFF
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.TypeChecker
 open FStarC.Syntax.Syntax
 

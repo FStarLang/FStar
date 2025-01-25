@@ -15,7 +15,7 @@
 *)
 module FStarC.Json
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 type json =
 | JsonNull

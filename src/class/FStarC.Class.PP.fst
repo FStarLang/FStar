@@ -1,7 +1,7 @@
 module FStarC.Class.PP
 
 open FStarC
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Pprint
 
 let gparens a = group (nest 2 (parens a))

@@ -1,8 +1,8 @@
 module FStarC.TypeChecker.Primops.Sealed
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 
 open FStarC.TypeChecker.Primops.Base

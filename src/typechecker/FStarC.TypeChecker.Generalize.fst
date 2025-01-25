@@ -16,10 +16,10 @@
 module FStarC.TypeChecker.Generalize
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.Util
 open FStarC.Errors
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -28,7 +28,7 @@ open FStarC.TypeChecker.Env
 open FStarC.Class.Show
 open FStarC.Class.Setlike
 
-module BU    = FStarC.Compiler.Util
+module BU    = FStarC.Util
 module S     = FStarC.Syntax.Syntax
 module SS    = FStarC.Syntax.Subst
 module Free  = FStarC.Syntax.Free

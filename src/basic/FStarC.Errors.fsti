@@ -16,7 +16,7 @@
 
 module FStarC.Errors
 
-module Range = FStarC.Compiler.Range
+module Range = FStarC.Range
 
 include FStarC.Errors.Codes
 include FStarC.Errors.Msg
@@ -27,15 +27,18 @@ open FStarC.Json {json}
 (* This is a fallback to be used if an error is raised/logged
 with a dummy range. It is set by TypeChecker.Tc.process_one_decl to
 the range of the sigelt being checked. *)
-val fallback_range : FStarC.Compiler.Effect.ref (option Range.range)
+val fallback_range : FStarC.Effect.ref (option Range.range)
 
 (* This range, if set, will be used to limit the range of every
 issue that is logged/raised. This is set, e.g. when checking a top-level
 definition, to the range of the definition, so no error can be reported
 outside of it. *)
-val error_range_bound : FStarC.Compiler.Effect.ref (option Range.range)
+val error_range_bound : FStarC.Effect.ref (option Range.range)
 
 val with_error_bound (r:Range.range) (f : unit -> 'a) : 'a
+
+(* Intersect a range by the current bound (if any). *)
+val maybe_bound_range (rng:Range.range) : Range.range
 
 (* Get the error number for a particular code. Useful for creating error
 messages mentioning --warn_error. *)
@@ -49,7 +52,7 @@ val call_to_erased_errno : int
 val update_flags : list (error_flag & string) -> list error_setting
 
 (* error code, message, source position, and error context *)
-type error = error_code & error_message & FStarC.Compiler.Range.range & list string
+type error = error_code & error_message & FStarC.Range.range & list string
 
 exception Error   of error
 exception Warning of error
@@ -102,7 +105,7 @@ val clear : unit -> unit
 val set_handler : error_handler -> unit
 val get_ctx : unit -> list string
 
-val set_option_warning_callback_range : ropt:option FStarC.Compiler.Range.range -> unit
+val set_option_warning_callback_range : ropt:option FStarC.Range.range -> unit
 val set_parse_warn_error : (string -> list error_setting) -> unit
 
 val lookup : error_code -> error_setting

@@ -1,6 +1,6 @@
 module FStarC.Class.Tagged
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 (* This class is meant to print the constructor of a term.
 It replaces tag_of_term and tag_of_sigelt. *)

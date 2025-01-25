@@ -14,13 +14,13 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Z3
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
-open FStarC.Compiler.Util
-module BU = FStarC.Compiler.Util
+open FStarC.Util
+module BU = FStarC.Util
 module U = FStarC.SMTEncoding.UnsatCore
 module SolverState = FStarC.SMTEncoding.SolverState
 

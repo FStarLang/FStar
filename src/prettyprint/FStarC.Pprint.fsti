@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Pprint
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.BaseTypes
 
 (** A pretty-printing engine and a set of basic document combinators. *)
@@ -380,7 +380,7 @@ val surround_separate_map: int -> int -> document -> document -> document -> doc
 // [pretty_string] uses ToBuffer:RENDERER implementation;
 // [print_out_channel] uses the ToChannel:RENDERER one.
 val pretty_string : float -> int -> document -> string
-val pretty_out_channel : float -> int -> document -> FStarC.Compiler.Util.out_channel -> unit
+val pretty_out_channel : float -> int -> document -> FStarC.Util.out_channel -> unit
 
 (* Simple renderer, defined as [pretty_string 1.0 80] *)
 val render : document -> string

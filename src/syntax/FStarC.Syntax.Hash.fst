@@ -15,14 +15,14 @@
 *)
 module FStarC.Syntax.Hash
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.Util
 open FStarC.Syntax.Syntax
 open FStarC.Const
 module SS = FStarC.Syntax.Subst
 module UU = FStarC.Syntax.Unionfind
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 (* maybe memo *)
 let mm (t:Type) = bool -> t & bool
@@ -100,7 +100,7 @@ and hash_comp c
 and hash_term' (t:term)
   : mm H.hash_code
   = // if Debug.any ()
-    // then FStarC.Compiler.Util.print1 "Hash_term %s\n" (FStarC.Syntax.show t);
+    // then FStarC.Util.print1 "Hash_term %s\n" (FStarC.Syntax.show t);
     match (SS.compress t).n with
     | Tm_bvar bv -> mix (of_int 3) (of_int bv.index)
     | Tm_name bv -> mix (of_int 5) (of_int bv.index)

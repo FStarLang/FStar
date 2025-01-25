@@ -16,7 +16,7 @@
 
 module FStarC.Dyn
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 /// Dynamic casts
 

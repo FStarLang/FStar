@@ -19,10 +19,10 @@
 
 module FStarC.Interactive.JsonHelper
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Errors
 open FStarC.Json
-open FStarC.Compiler.Util
+open FStarC.Util
 
 // Type of an associative array
 type assoct = list (string & json)

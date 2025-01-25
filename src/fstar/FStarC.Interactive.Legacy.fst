@@ -15,12 +15,11 @@
 *)
 
 module FStarC.Interactive.Legacy
-open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
 
@@ -399,12 +398,12 @@ let rec go (line_col:(int&int))
       //Q: isn't the output list ident always the same as the candidate?
         // About the degree of the match, cpitclaudel says:
         //      Because we're measuring the length of the match and we allow partial
-        //      matches. Say we're matching FS.Li.app against FStarC.Compiler.List.Append. Then
+        //      matches. Say we're matching FS.Li.app against FStarC.List.Append. Then
         //      the length we want is (length "FStar" + 1 + length "List" + 1 + length
         //      "app"), not (length "FStar" + 1 + length "List" + 1 + length
         //      "append"). This length is used to know how much of the candidate to
         //      highlight in the company-mode popup (we want to display the candidate
-        //      as FStarC.Compiler.List.append.
+        //      as FStarC.List.append.
       = fun search_term candidate ->
           match search_term, candidate with
           | [], _ -> Some ([], 0)

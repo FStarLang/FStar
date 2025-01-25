@@ -1,6 +1,6 @@
 module FStarC.Class.Listlike
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 let is_empty (#e #s : Type) {| listlike e s |} (l : s) : bool =
   match view l with

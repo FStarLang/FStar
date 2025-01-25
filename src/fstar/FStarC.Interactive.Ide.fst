@@ -15,13 +15,11 @@
 *)
 
 module FStarC.Interactive.Ide
-open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Range
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.Range
+open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors
@@ -29,7 +27,7 @@ open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.QueryHelper
 open FStarC.Interactive.PushHelper
 open FStarC.Interactive.Ide.Types
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 let dbg = Debug.get_toggle "IDE"
 
@@ -45,6 +43,9 @@ module TcErr = FStarC.TypeChecker.Err
 module TcEnv = FStarC.TypeChecker.Env
 module CTable = FStarC.Interactive.CompletionTable
 module QH = FStarC.Interactive.QueryHelper
+
+// NOTE! This is not FStarC.Errors.json_of_issue
+let json_of_issue = FStarC.Interactive.Ide.Types.json_of_issue
 
 let with_captured_errors' env sigint_handler f =
   try
@@ -1235,7 +1236,7 @@ let interactive_printer printer =
                          forward_message printer label (get_json ())) }
 
 let install_ide_mode_hooks printer =
-  FStarC.Compiler.Util.set_printer (interactive_printer printer);
+  FStarC.Util.set_printer (interactive_printer printer);
   FStarC.Errors.set_handler interactive_error_handler
 
 

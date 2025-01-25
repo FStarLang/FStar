@@ -15,14 +15,14 @@
 *)
 module FStarC.Parser.Driver
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Parser
 open FStarC.Parser.AST
 open FStarC.Parser.ParseIt
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Errors
 open FStarC.Class.Show
 

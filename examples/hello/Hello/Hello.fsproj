@@ -8,7 +8,7 @@
   <PropertyGroup>
     <FSTAR_HOME>..\..\..</FSTAR_HOME>
     <!-- Custom FStar flags used in this project -->
-    <FSTAR_FLAGS>--use_hints --record_hints</FSTAR_FLAGS>
+    <FSTAR_FLAGS>--ext context_pruning</FSTAR_FLAGS>
   </PropertyGroup>
   <Import Project="$(FSTAR_HOME)\examples\fsharp.extraction.targets" />
   <ItemGroup>

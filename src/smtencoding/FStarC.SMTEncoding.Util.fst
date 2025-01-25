@@ -15,24 +15,16 @@
 *)
 
 module FStarC.SMTEncoding.Util
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
-open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.TypeChecker.Env
-open FStarC.Compiler.Util
-open FStarC.Syntax
 open FStarC.Syntax.Syntax
-open FStarC.TypeChecker
 open FStarC.SMTEncoding.Term
 open FStarC.Ident
-open FStarC.Const
-open FStarC.Class.Setlike
-module C = FStarC.Parser.Const
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst
-module N = FStarC.TypeChecker.Normalize
 module TcEnv = FStarC.TypeChecker.Env
 
 let mkAssume (tm, cap, nm) =

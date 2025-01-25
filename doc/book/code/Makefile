@@ -3,9 +3,6 @@ include $(FSTAR_ROOT)/mk/test.mk
 
 FSTAR_FILES := $(filter-out ContextPollution.fst,$(FSTAR_FILES))
 
-# Disable context pruning for this file, fails otherwise.
-$(CACHE_DIR)/Alex.fst.checked: OTHERFLAGS += --ext context_pruning=
-
 exercises:
 	$(MAKE) -C exercises
 

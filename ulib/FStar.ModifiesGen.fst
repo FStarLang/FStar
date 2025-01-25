@@ -1499,8 +1499,10 @@ let loc_regions_unused_in #al c h rs = ()
 #restart-solver
 let loc_addresses_unused_in #al c r a h = ()
 #pop-options
-
+#restart-solver
+#push-options "--fuel 2 --ifuel 1 --z3smtopt '(set-option :smt.qi.eager_threshold 5)' --z3rlimit_factor 4"
 let loc_addresses_not_unused_in #al c r a h = ()
+#pop-options
 
 #push-options "--z3rlimit 50"
 let loc_unused_in_not_unused_in_disjoint #al c h =

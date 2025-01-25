@@ -15,18 +15,13 @@
 *)
 
 module FStarC.Prettyprint
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStarC.Compiler.Util
+open FStarC.Effect
+open FStarC.List
+open FStarC.Util
 open FStarC.Parser.ToDocument
-module List = FStarC.Compiler.List
+module List = FStarC.List
 module D = FStarC.Parser.Driver
 module P = FStarC.Pprint
-
-type printing_mode =
-  | ToTempFile
-  | FromTempToStdout
-  | FromTempToFile
 
 let temp_file_name f = format1 "%s.print_.fst" f
 
@@ -53,7 +48,7 @@ let generate (m: printing_mode) filenames =
            comments
         in
         let left_over_doc =
-          if not (FStarC.Compiler.List.isEmpty leftover_comments) then
+          if not (FStarC.List.isEmpty leftover_comments) then
             P.concat  [P.hardline ; P.hardline ; comments_to_document leftover_comments]
           else if m = FromTempToStdout then
             // This isn't needed for FromTempToFile, when using `append_to_file` a newline is added to EoF

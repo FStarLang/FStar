@@ -17,15 +17,15 @@ module FStarC.Parser.Const
 
 open FStar.String
 open FStarC
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Util
+open FStarC.Effect
+open FStarC.Util
 open FStarC.Ident
-open FStarC.Compiler.Range
+open FStarC.Range
 open FStarC.Const
-open FStarC.Compiler.List
-module U = FStarC.Compiler.Util
+open FStarC.List
+module U = FStarC.Util
 module Options = FStarC.Options
-module List = FStarC.Compiler.List
+module List = FStarC.List
 
 let p2l l = lid_of_path l dummyRange
 
@@ -325,6 +325,7 @@ let steps_delta         = psconst "delta"
 let steps_reify         = psconst "reify_"
 let steps_norm_debug    = psconst "norm_debug"
 let steps_unfoldonly    = psconst "delta_only"
+let steps_unfoldonce    = psconst "delta_once"
 let steps_unfoldfully   = psconst "delta_fully"
 let steps_unfoldattr    = psconst "delta_attr"
 let steps_unfoldqual    = psconst "delta_qualifier"
@@ -400,7 +401,7 @@ let const_to_string x = match x with
   | Const_string(s, _) -> U.format1 "\"%s\"" s
   | Const_int (x, _) -> x
   | Const_char c -> "'" ^ U.string_of_char c ^ "'"
-  | Const_range r -> FStarC.Compiler.Range.string_of_range r
+  | Const_range r -> FStarC.Range.string_of_range r
   | Const_range_of -> "range_of"
   | Const_set_range_of -> "set_range_of"
   | Const_reify lopt ->
@@ -483,8 +484,8 @@ let is_name (lid:lident) =
 let term_view_lid  = p2l ["FStar"; "Reflection"; "V1"; "Data"; "term_view"]
 
 (* tactic constants *)
-let fstar_tactics_lid' s : lid = FStarC.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStarC.Compiler.Range.dummyRange
-let fstar_stubs_tactics_lid' s : lid = FStarC.Ident.lid_of_path (["FStar"; "Stubs"; "Tactics"]@s) FStarC.Compiler.Range.dummyRange
+let fstar_tactics_lid' s : lid = FStarC.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStarC.Range.dummyRange
+let fstar_stubs_tactics_lid' s : lid = FStarC.Ident.lid_of_path (["FStar"; "Stubs"; "Tactics"]@s) FStarC.Range.dummyRange
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tac_lid = fstar_tactics_lid' ["Effect"; "tac"]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
@@ -508,10 +509,10 @@ let rewrite_by_tactic_lid = fstar_tactics_lid' ["Effect"; "rewrite_with_tactic"]
 let synth_lid = fstar_tactics_lid' ["Effect"; "synth_by_tactic"]
 let assert_by_tactic_lid = fstar_tactics_lid' ["Effect"; "assert_by_tactic"]
 let fstar_syntax_syntax_term = FStarC.Ident.lid_of_str "FStarC.Syntax.Syntax.term"
-let binder_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "binder"]) FStarC.Compiler.Range.dummyRange
-let binders_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "binders"]) FStarC.Compiler.Range.dummyRange
-let bv_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "bv"]) FStarC.Compiler.Range.dummyRange
-let fv_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "fv"]) FStarC.Compiler.Range.dummyRange
+let binder_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "binder"]) FStarC.Range.dummyRange
+let binders_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "binders"]) FStarC.Range.dummyRange
+let bv_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "bv"]) FStarC.Range.dummyRange
+let fv_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "fv"]) FStarC.Range.dummyRange
 let norm_step_lid = psconst "norm_step"
 let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
 let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
@@ -519,24 +520,24 @@ let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_
 let term_lid       = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "term"]
 let ctx_uvar_and_subst_lid = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
 let universe_uvar_lid      = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "universe_uvar"]
-let check_with_lid = lid_of_path (["FStar"; "Stubs"; "VConfig"; "check_with"]) FStarC.Compiler.Range.dummyRange
+let check_with_lid = lid_of_path (["FStar"; "Stubs"; "VConfig"; "check_with"]) FStarC.Range.dummyRange
 
 let decls_lid      = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "decls"]
 
 // meta dsl constants
-let dsl_typing_builtin s = lid_of_path (["FStar"; "Reflection"; "Typing"; "Builtins"]@[s]) FStarC.Compiler.Range.dummyRange
-let dsl_tac_typ_lid = lid_of_path ["FStar"; "Reflection"; "Typing"; "dsl_tac_t"] FStarC.Compiler.Range.dummyRange
+let dsl_typing_builtin s = lid_of_path (["FStar"; "Reflection"; "Typing"; "Builtins"]@[s]) FStarC.Range.dummyRange
+let dsl_tac_typ_lid = lid_of_path ["FStar"; "Reflection"; "Typing"; "dsl_tac_t"] FStarC.Range.dummyRange
 
 
 (* Calculational proofs, from FStar.Calc *)
-let calc_lid i : lid = lid_of_path ["FStar"; "Calc"; i] FStarC.Compiler.Range.dummyRange
+let calc_lid i : lid = lid_of_path ["FStar"; "Calc"; i] FStarC.Range.dummyRange
 let calc_init_lid   = calc_lid "calc_init"
 let calc_step_lid   = calc_lid "calc_step"
 let calc_finish_lid = calc_lid "calc_finish"
 let calc_push_impl_lid = calc_lid "calc_push_impl"
 
 (* Classical proofs, from FStar.Classical *)
-let classical_sugar_lid i : lid = lid_of_path ["FStar"; "Classical"; "Sugar"; i] FStarC.Compiler.Range.dummyRange
+let classical_sugar_lid i : lid = lid_of_path ["FStar"; "Classical"; "Sugar"; i] FStarC.Range.dummyRange
 
 let forall_intro_lid = classical_sugar_lid "forall_intro"
 let exists_intro_lid = classical_sugar_lid "exists_intro"
@@ -554,20 +555,20 @@ let and_elim_lid = classical_sugar_lid "and_elim"
 
 let match_returns_def_name = reserved_prefix ^ "_ret_"
 
-let steel_memory_inv_lid = FStarC.Ident.lid_of_path ["Steel"; "Memory"; "inv"] FStarC.Compiler.Range.dummyRange
+let steel_memory_inv_lid = FStarC.Ident.lid_of_path ["Steel"; "Memory"; "inv"] FStarC.Range.dummyRange
 
-let steel_new_invariant_lid = FStarC.Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "new_invariant"] FStarC.Compiler.Range.dummyRange
-let steel_st_new_invariant_lid = FStarC.Ident.lid_of_path ["Steel"; "ST"; "Util"; "new_invariant"] FStarC.Compiler.Range.dummyRange
+let steel_new_invariant_lid = FStarC.Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "new_invariant"] FStarC.Range.dummyRange
+let steel_st_new_invariant_lid = FStarC.Ident.lid_of_path ["Steel"; "ST"; "Util"; "new_invariant"] FStarC.Range.dummyRange
 
-let steel_with_invariant_g_lid = FStarC.Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "with_invariant_g"] FStarC.Compiler.Range.dummyRange
-let steel_st_with_invariant_g_lid = FStarC.Ident.lid_of_path ["Steel"; "ST"; "Util"; "with_invariant_g"] FStarC.Compiler.Range.dummyRange
+let steel_with_invariant_g_lid = FStarC.Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "with_invariant_g"] FStarC.Range.dummyRange
+let steel_st_with_invariant_g_lid = FStarC.Ident.lid_of_path ["Steel"; "ST"; "Util"; "with_invariant_g"] FStarC.Range.dummyRange
 
-let steel_with_invariant_lid = FStarC.Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "with_invariant"] FStarC.Compiler.Range.dummyRange
-let steel_st_with_invariant_lid = FStarC.Ident.lid_of_path ["Steel"; "ST"; "Util"; "with_invariant"] FStarC.Compiler.Range.dummyRange
+let steel_with_invariant_lid = FStarC.Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "with_invariant"] FStarC.Range.dummyRange
+let steel_st_with_invariant_lid = FStarC.Ident.lid_of_path ["Steel"; "ST"; "Util"; "with_invariant"] FStarC.Range.dummyRange
 
 
 (* on_domain_lids are constant, so compute them once *)
-let fext_lid s = Ident.lid_of_path ["FStar"; "FunctionalExtensionality"; s] FStarC.Compiler.Range.dummyRange
+let fext_lid s = Ident.lid_of_path ["FStar"; "FunctionalExtensionality"; s] FStarC.Range.dummyRange
 let fext_on_domain_lid = fext_lid "on_domain"
 let fext_on_dom_lid = fext_lid "on_dom"
 let fext_on_domain_g_lid = fext_lid "on_domain_g"

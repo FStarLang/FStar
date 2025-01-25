@@ -1,5 +1,5 @@
 module FStarC.Platform
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 type sys =
 | Windows
@@ -8,5 +8,5 @@ type sys =
 val system : sys
 val exe : string -> string
 
-(* true if the fstar compiler is compiled from sources extracted to ocaml, false otherwise *)
-val is_fstar_compiler_using_ocaml : bool
+(* true when we are running in Cygwin. Note: system will return 'Windows' in this case *)
+val is_cygwin : bool

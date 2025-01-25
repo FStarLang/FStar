@@ -1,11 +1,11 @@
 ﻿module FStarC.Ident
 
 open Prims
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Range
-open FStarC.Compiler.List
-module List = FStarC.Compiler.List
-module Util = FStarC.Compiler.Util
+open FStarC.Effect
+open FStarC.Range
+open FStarC.List
+module List = FStarC.List
+module Util = FStarC.Util
 module GS = FStarC.GenSym
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]

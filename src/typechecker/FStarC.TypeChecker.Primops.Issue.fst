@@ -1,8 +1,8 @@
 module FStarC.TypeChecker.Primops.Issue
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Effect
 open FStarC.Errors
 open FStarC.Class.Monad
 

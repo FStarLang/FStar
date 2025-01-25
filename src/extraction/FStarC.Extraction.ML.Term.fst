@@ -15,12 +15,12 @@
 *)
 module FStarC.Extraction.ML.Term
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.TypeChecker.Env
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Const
 open FStarC.Ident
 open FStarC.Extraction
@@ -31,7 +31,7 @@ open FStarC.Extraction.ML.Util
 open FStarC.Syntax.Syntax
 open FStarC.Errors
 
-module BU     = FStarC.Compiler.Util
+module BU     = FStarC.Util
 module Code   = FStarC.Extraction.ML.Code
 module EMB    = FStarC.Syntax.Embeddings
 module Env    = FStarC.TypeChecker.Env
@@ -135,7 +135,7 @@ let effect_as_etag =
     then E_ERASABLE
     else
          // Reifiable effects should be pure. Added guard because some effect declarations
-         // don't seem to be in the environment at this point, in particular FStarC.Compiler.Effect.ML
+         // don't seem to be in the environment at this point, in particular FStarC.Effect.ML
          // (maybe because it's primitive?)
          let ed_opt = TcEnv.effect_decl_opt (tcenv_of_uenv g) l in
          match ed_opt with
@@ -521,12 +521,12 @@ let maybe_eta_expand_coercion g expect e =
 let apply_coercion (pos:Range.range) (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
     if Util.codegen_fsharp()
     then //magics are not always sound in F#; warn
-        FStarC.Errors.log_issue pos
-          Errors.Warning_NoMagicInFSharp
-           (BU.format2
-             "Inserted an unsafe type coercion in generated code from %s to %s; this may be unsound in F#"
-               (Code.string_of_mlty (current_module_of_uenv g) ty)
-               (Code.string_of_mlty (current_module_of_uenv g) expect));
+      FStarC.Errors.log_issue pos Errors.Warning_NoMagicInFSharp [
+         text <| BU.format2 "Inserted an unsafe type coercion in generated code from %s to %s."
+             (Code.string_of_mlty (current_module_of_uenv g) ty)
+             (Code.string_of_mlty (current_module_of_uenv g) expect);
+         text "This may be unsound in F#.";
+      ];
     let mk_fun binder body =
         match body.expr with
         | MLE_Fun(binders, body) ->

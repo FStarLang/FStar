@@ -17,11 +17,11 @@
 module FStarC.SMTEncoding.Term
 open FStarC
 
-open FStarC.Compiler
-open FStarC.Compiler.Effect
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.Util
 open FStarC.Class.Show
-open FStarC.Compiler.List
+open FStarC.List
 open FStarC.Class.Ord
 
 module S = FStarC.Syntax.Syntax

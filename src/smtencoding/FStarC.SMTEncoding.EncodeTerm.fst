@@ -17,10 +17,10 @@
 module FStarC.SMTEncoding.EncodeTerm
 open Prims
 open FStar.Pervasives
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
+open FStarC.Effect
+open FStarC.List
 open FStar open FStarC
-open FStarC.Compiler
+open FStarC
 open FStarC.Defensive
 open FStarC.TypeChecker.Env
 open FStarC.Syntax
@@ -33,7 +33,7 @@ open FStarC.SMTEncoding
 open FStarC.SMTEncoding.Util
 open FStarC.SMTEncoding.Env
 
-module BU     = FStarC.Compiler.Util
+module BU     = FStarC.Util
 module Const  = FStarC.Parser.Const
 module EMB    = FStarC.Syntax.Embeddings
 module Env    = FStarC.TypeChecker.Env
@@ -321,7 +321,7 @@ let isInteger (tm: Syntax.term') : bool =
 
 let getInteger (tm : Syntax.term') =
     match tm with
-    | Tm_constant (Const_int (n,None)) -> FStarC.Compiler.Util.int_of_string n
+    | Tm_constant (Const_int (n,None)) -> FStarC.Util.int_of_string n
     | _ -> failwith "Expected an Integer term"
 
 (* We only want to encode a term as a bitvector term (not an uninterpreted function)
@@ -496,7 +496,7 @@ and encode_arith_term env head args_e =
       we do not want to encode this*)
     let (tm_sz, _) : arg = List.hd args_e in
     let sz = getInteger tm_sz.n in
-    let sz_key = FStarC.Compiler.Util.format1 "BitVector_%s" (string_of_int sz) in
+    let sz_key = FStarC.Util.format1 "BitVector_%s" (string_of_int sz) in
     let sz_decls =
       let t_decls, constr_name, discriminator_name = mkBvConstructor sz in
       //Typing inversion for bv_t n
@@ -528,7 +528,7 @@ and encode_arith_term env head args_e =
         | Tm_fvar fv, [_;(sz_arg, _);_] when
             (S.fv_eq_lid fv Const.bv_uext_lid) ->
             (*fail if extension size is not a constant*)
-            failwith (FStarC.Compiler.Util.format1 "Not a constant bitvector extend size: %s"
+            failwith (FStarC.Util.format1 "Not a constant bitvector extend size: %s"
                             (show sz_arg))
         | _  -> (List.tail args_e, None)
     in

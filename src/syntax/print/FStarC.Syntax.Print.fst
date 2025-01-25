@@ -16,13 +16,13 @@
 
 module FStarC.Syntax.Print
 open FStar.Pervasives
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
 open FStar open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Range
+open FStarC
+open FStarC.Range
 open FStarC.Syntax
-open FStarC.Compiler.Util
+open FStarC.Util
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Subst
 open FStarC.Ident
@@ -30,7 +30,7 @@ open FStarC.Const
 open FStarC.Json
 
 module Errors     = FStarC.Errors
-module U          = FStarC.Compiler.Util
+module U          = FStarC.Util
 module A          = FStarC.Parser.AST
 module Unionfind  = FStarC.Syntax.Unionfind
 module C          = FStarC.Parser.Const
@@ -351,6 +351,7 @@ instance showable_ctx_uvar_meta = {
           | Ctx_uvar_meta_attr attr -> "Ctx_uvar_meta_attr " ^ show attr
           | Ctx_uvar_meta_tac r -> "Ctx_uvar_meta_tac " ^ show r);
 }
+instance showable_bqual   = { show = (fun b -> bqual_to_string (Some b)); } // really silly but OK
 instance showable_aqual   = { show = aqual_to_string; }
 
 let tscheme_to_string ts =
