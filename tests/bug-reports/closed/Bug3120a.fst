@@ -162,15 +162,25 @@ let as_requires_wlift (#a:Type u#a) (w : pure_wp a) :
   elim_pure_wp_monotonicity w ;
   assert (forall post. w post ==> w (fun _ -> True)) ;
   assert (forall post. (True ==> w post) ==> w (fun _ -> True))
-// #push-options "--print_universes --print_implicits"
-let lift_pure (a : Type u#0) (w : pure_wp a) (f:(eqtype_as_type unit -> PURE a w)) : dm a (wlift w) =
-  admit();
+let lift_pure_alt (a : Type u#0) (w : pure_wp a) (f:(eqtype_as_type unit -> PURE a w)) = //: dm a (wlift w) =
+  // admit();
   as_requires_wlift w ;
   d_bind #_ #_ #_ #_ #_ #_ #_ #(fun _ -> w_return (elim_pure #a #w f)) (d_req (as_requires w)) (fun _ ->
     let r = elim_pure #a #w f in
     let r' : dm a (w_return r) = d_ret r in
     r'
   )
+let lift_pure (a : Type u#0) (w : pure_wp a) (f:(eqtype_as_type unit -> PURE a w)) : dm a (wlift w) =
+  let c = lift_pure_alt a w f in
+  // assume (forall (p:wpost a). w (p[]) ==> p [] (f ()));//elim_pure #a #w f;
+  assert ((w_bind (w_req (as_requires w)) (fun _ -> w_return (elim_pure #a #w f))) `wle` (wlift w))
+      by (norm [delta];//_only [`%w_bind; `%as_requires; `%wle; `%wlift; `%w_return]];
+          dump "A";
+          tadmit())
+          ;
+  assert (theta c `wle` (wlift w));
+  c
+
 
 (** Recast return and bind so that they have effect-friendly types **)
 
