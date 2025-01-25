@@ -133,6 +133,118 @@ val seq_seq_match_length
     (seq_seq_match p s1 s2 i j)
     (fun _ -> seq_seq_match p s1 s2 i j ** pure (i <= j /\ (i == j \/ (j <= Seq.length s1 /\ j <= Seq.length s2))))
 
+val seq_seq_match_empty_intro
+  (#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i: nat)
+: stt_ghost unit emp_inames
+    emp
+    (fun _ -> seq_seq_match p s1 s2 i i)
+
+val seq_seq_match_empty_elim
+  (#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i: nat)
+: stt_ghost unit emp_inames
+    (seq_seq_match p s1 s2 i i)
+    (fun _ -> emp)
+
+val seq_seq_match_join
+(#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i j k: nat)
+: stt_ghost unit emp_inames
+    (seq_seq_match p s1 s2 i j ** seq_seq_match p s1 s2 j k)
+    (fun _ -> seq_seq_match p s1 s2 i k)
+
+val seq_seq_match_split
+(#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i j k: nat)
+: stt_ghost unit emp_inames
+    (seq_seq_match p s1 s2 i k ** pure (i <= j /\ j <= k))
+    (fun _ -> seq_seq_match p s1 s2 i j ** seq_seq_match p s1 s2 j k)
+
+val seq_seq_match_singleton_intro
+(#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i: nat)
+  (x1: t1)
+  (x2: t2)
+: stt_ghost unit emp_inames
+    (p x1 x2 ** pure (i < Seq.length s1 /\ i < Seq.length s2 /\ x1 == Seq.index s1 i /\ x2 == Seq.index s2 i))
+    (fun _ -> seq_seq_match p s1 s2 i (i + 1))
+
+val seq_seq_match_singleton_elim
+(#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i: nat)
+  (x1: t1)
+  (x2: t2)
+: stt_ghost (squash (i < Seq.length s1 /\ i < Seq.length s2)) emp_inames
+    (seq_seq_match p s1 s2 i (i + 1))
+    (fun _ -> p (Seq.index s1 i) (Seq.index s2 i))
+
+val seq_seq_match_enqueue_left
+(#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i: nat { i > 0 /\ i <= Seq.length s1 /\ i <= Seq.length s2 })
+  (j: nat)
+  (x1: t1)
+  (x2: t2)
+: stt_ghost unit emp_inames
+    (seq_seq_match p s1 s2 i j ** p x1 x2 ** pure (x1 == Seq.index s1 (i - 1) /\ x2 == Seq.index s2 (i - 1)))
+    (fun _ -> seq_seq_match p s1 s2 (i - 1) j)
+
+val seq_seq_match_enqueue_right
+(#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i: nat)
+  (j: nat { j < Seq.length s1 /\ j < Seq.length s2 })
+  (x1: t1)
+  (x2: t2)
+: stt_ghost unit emp_inames
+    (seq_seq_match p s1 s2 i j ** p x1 x2 ** pure (x1 == Seq.index s1 j /\ x2 == Seq.index s2 j))
+    (fun _ -> seq_seq_match p s1 s2 i (j + 1))
+
+val seq_seq_match_dequeue_left
+(#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i: nat)
+  (j: nat)
+: stt_ghost (squash (i < j /\ j <= Seq.length s1 /\ j <= Seq.length s2)) emp_inames
+    (seq_seq_match p s1 s2 i j ** pure (i < j))
+    (fun _ -> seq_seq_match p s1 s2 (i + 1) j ** p (Seq.index s1 i) (Seq.index s2 i))
+
+val seq_seq_match_dequeue_right
+(#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i: nat)
+  (j: nat)
+: stt_ghost (squash (i < j /\ j <= Seq.length s1 /\ j <= Seq.length s2)) emp_inames
+    (seq_seq_match p s1 s2 i j ** pure (i < j))
+    (fun _ -> seq_seq_match p s1 s2 i (j - 1) ** p (Seq.index s1 (j - 1)) (Seq.index s2 (j - 1)))
+
 val seq_seq_match_weaken
   (#t1 #t2: Type0)
   (p p': t1 -> t2 -> slprop)
@@ -153,6 +265,23 @@ val seq_seq_match_weaken
     ))
     (fun _ -> seq_seq_match p' c1' c2' i j)
 
+val seq_seq_match_rewrite_seq
+  (#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (c1 c1': Seq.seq t1)
+  (c2 c2': Seq.seq t2)
+  (i j: nat)
+: stt_ghost unit emp_inames
+    (seq_seq_match p c1 c2 i j ** pure (
+      (i <= j /\ (i == j \/ (
+        j <= Seq.length c1 /\ j <= Seq.length c2 /\
+        j <= Seq.length c1' /\ j <= Seq.length c2' /\
+        Seq.slice c1 i j `Seq.equal` Seq.slice c1' i j /\
+        Seq.slice c2 i j `Seq.equal` Seq.slice c2' i j
+      )))
+    ))
+    (fun _ -> seq_seq_match p c1' c2' i j)
+
 val seq_seq_match_weaken_with_implies
   (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
@@ -171,6 +300,26 @@ val seq_seq_match_weaken_with_implies
     (fun _ -> seq_seq_match p c1' c2' i j **
       (seq_seq_match p c1' c2' i j @==> seq_seq_match p c1 c2 i j)
     )
+
+val seq_seq_match_move
+  (#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (c1: Seq.seq t1)
+  (c2: Seq.seq t2)
+  (i j: nat)
+  (c1': Seq.seq t1)
+  (c2': Seq.seq t2)
+  (i' j': nat)
+: stt_ghost unit emp_inames
+    (seq_seq_match p c1 c2 i j ** pure (
+      (i <= j /\ i' <= j' /\ ((i == j /\ i' == j') \/ (
+        j <= Seq.length c1 /\ j <= Seq.length c2 /\
+        j' <= Seq.length c1' /\ j' <= Seq.length c2' /\
+        Seq.slice c1 i j `Seq.equal` Seq.slice c1' i' j' /\
+        Seq.slice c2 i j `Seq.equal` Seq.slice c2' i' j'
+      )))
+    ))
+    (fun _ -> seq_seq_match p c1' c2' i' j')
 
 (* Going between `seq_list_match` and `seq_seq_match` *)
 

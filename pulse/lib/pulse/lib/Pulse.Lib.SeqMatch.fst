@@ -253,6 +253,190 @@ ensures
   }
 }
 
+ghost fn seq_seq_match_empty_intro
+  (#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i: nat)
+requires
+    emp
+ensures
+    (seq_seq_match p s1 s2 i i)
+{
+  on_range_empty (seq_seq_match_item p s1 s2) i;
+  fold (seq_seq_match p s1 s2 i i)
+}
+
+ghost fn seq_seq_match_empty_elim
+  (#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i: nat)
+requires
+    (seq_seq_match p s1 s2 i i)
+ensures
+    (emp)
+{
+  unfold (seq_seq_match p s1 s2 i i);
+  on_range_empty_elim (seq_seq_match_item p s1 s2) i;
+}
+
+ghost fn seq_seq_match_join
+(#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i j k: nat)
+requires
+    (seq_seq_match p s1 s2 i j ** seq_seq_match p s1 s2 j k)
+ensures
+    (seq_seq_match p s1 s2 i k)
+{
+  unfold (seq_seq_match p s1 s2 i j);
+  unfold (seq_seq_match p s1 s2 j k);
+  on_range_join i j k;
+  fold (seq_seq_match p s1 s2 i k)
+}
+
+ghost fn seq_seq_match_split
+(#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i j k: nat)
+requires
+    (seq_seq_match p s1 s2 i k ** pure (i <= j /\ j <= k))
+ensures
+    (seq_seq_match p s1 s2 i j ** seq_seq_match p s1 s2 j k)
+{
+  unfold (seq_seq_match p s1 s2 i k);
+  on_range_split j;
+  fold (seq_seq_match p s1 s2 i j);
+  fold (seq_seq_match p s1 s2 j k)
+}
+
+ghost fn seq_seq_match_singleton_intro
+  (#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i: nat)
+  (x1: t1)
+  (x2: t2)
+requires
+    (p x1 x2 ** pure (i < Seq.length s1 /\ i < Seq.length s2 /\ x1 == Seq.index s1 i /\ x2 == Seq.index s2 i))
+ensures
+    (seq_seq_match p s1 s2 i (i + 1))
+{
+  fold (seq_seq_match_item p s1 s2 i);
+  on_range_singleton_intro (seq_seq_match_item p s1 s2) i;
+  fold (seq_seq_match p s1 s2 i (i + 1))
+}
+
+ghost fn seq_seq_match_singleton_elim
+(#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i: nat)
+  (x1: t1)
+  (x2: t2)
+requires
+  (seq_seq_match p s1 s2 i (i + 1))
+returns _: (squash (i < Seq.length s1 /\ i < Seq.length s2))
+ensures
+  (p (Seq.index s1 i) (Seq.index s2 i))
+{
+  seq_seq_match_length p s1 s2 i (i + 1);
+  unfold (seq_seq_match p s1 s2 i (i + 1));
+  on_range_singleton_elim ();
+  unfold (seq_seq_match_item p s1 s2 i);
+  ()
+}
+
+ghost fn seq_seq_match_enqueue_left
+  (#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i: nat { i > 0 /\ i <= Seq.length s1 /\ i <= Seq.length s2 })
+  (j: nat)
+  (x1: t1)
+  (x2: t2)
+requires
+    (seq_seq_match p s1 s2 i j ** p x1 x2 ** pure (x1 == Seq.index s1 (i - 1) /\ x2 == Seq.index s2 (i - 1)))
+ensures
+    (seq_seq_match p s1 s2 (i - 1) j)
+{
+  unfold (seq_seq_match p s1 s2 i j);
+  fold (seq_seq_match_item p s1 s2 (i - 1));
+  on_range_cons (i - 1);
+  fold (seq_seq_match p s1 s2 (i - 1) j)
+}
+
+ghost fn seq_seq_match_enqueue_right
+  (#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i: nat)
+  (j: nat { j < Seq.length s1 /\ j < Seq.length s2 })
+  (x1: t1)
+  (x2: t2)
+requires
+    (seq_seq_match p s1 s2 i j ** p x1 x2 ** pure (x1 == Seq.index s1 j /\ x2 == Seq.index s2 j))
+ensures
+    (seq_seq_match p s1 s2 i (j + 1))
+{
+  unfold (seq_seq_match p s1 s2 i j);
+  fold (seq_seq_match_item p s1 s2 j);
+  on_range_snoc ();
+  fold (seq_seq_match p s1 s2 i (j + 1))
+}
+
+ghost fn seq_seq_match_dequeue_left
+  (#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i: nat)
+  (j: nat)
+requires
+   (seq_seq_match p s1 s2 i j ** pure (i < j))
+returns _: squash (i < j /\ j <= Seq.length s1 /\ j <= Seq.length s2)
+ensures
+   seq_seq_match p s1 s2 (i + 1) j ** p (Seq.index s1 i) (Seq.index s2 i)
+{
+  seq_seq_match_length p s1 s2 i j;
+  unfold (seq_seq_match p s1 s2 i j);
+  on_range_uncons ();
+  fold (seq_seq_match p s1 s2 (i + 1) j);
+  unfold (seq_seq_match_item p s1 s2 i)
+}
+
+ghost fn seq_seq_match_dequeue_right
+  (#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq t2)
+  (i: nat)
+  (j: nat)
+requires
+    (seq_seq_match p s1 s2 i j ** pure (i < j))
+returns _: (squash (i < j /\ j <= Seq.length s1 /\ j <= Seq.length s2))
+ensures
+    (seq_seq_match p s1 s2 i (j - 1) ** p (Seq.index s1 (j - 1)) (Seq.index s2 (j - 1)))
+{
+  seq_seq_match_length p s1 s2 i j;
+  unfold (seq_seq_match p s1 s2 i j);
+  on_range_unsnoc ();
+  fold (seq_seq_match p s1 s2 i (j - 1));
+  unfold (seq_seq_match_item p s1 s2 (j - 1))
+}
+
+
 ghost fn seq_seq_match_weaken
   (#t1 #t2: Type0)
   (p p': t1 -> t2 -> slprop)
@@ -294,6 +478,33 @@ ensures
     i j
     aux;
   fold (seq_seq_match p' c1' c2' i j)
+}
+
+ghost fn seq_seq_match_rewrite_seq
+  (#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (c1 c1': Seq.seq t1)
+  (c2 c2': Seq.seq t2)
+  (i j: nat)
+requires
+    (seq_seq_match p c1 c2 i j ** pure (
+      (i <= j /\ (i == j \/ (
+        j <= Seq.length c1 /\ j <= Seq.length c2 /\
+        j <= Seq.length c1' /\ j <= Seq.length c2' /\
+        Seq.slice c1 i j `Seq.equal` Seq.slice c1' i j /\
+        Seq.slice c2 i j `Seq.equal` Seq.slice c2' i j
+      )))
+    ))
+ensures
+    (seq_seq_match p c1' c2' i j)
+{
+  ghost fn aux (x1: t1) (x2: t2)
+  requires p x1 x2
+  ensures p x1 x2
+  {
+    ()
+  };
+  seq_seq_match_weaken p p aux c1 c1' c2 c2' i j
 }
 
 ghost fn seq_seq_match_weaken_with_implies
@@ -444,6 +655,40 @@ ensures
     aux;
   fold (seq_seq_match p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)) (i - delta) (j - delta));
   ()
+}
+
+ghost fn seq_seq_match_move
+  (#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (c1: Seq.seq t1)
+  (c2: Seq.seq t2)
+  (i j: nat)
+  (c1': Seq.seq t1)
+  (c2': Seq.seq t2)
+  (i' j': nat)
+requires
+    (seq_seq_match p c1 c2 i j ** pure (
+      (i <= j /\ i' <= j' /\ ((i == j /\ i' == j') \/ (
+        j <= Seq.length c1 /\ j <= Seq.length c2 /\
+        j' <= Seq.length c1' /\ j' <= Seq.length c2' /\
+        Seq.slice c1 i j `Seq.equal` Seq.slice c1' i' j' /\
+        Seq.slice c2 i j `Seq.equal` Seq.slice c2' i' j'
+      )))
+    ))
+ensures
+    (seq_seq_match p c1' c2' i' j')
+{
+  if (i = j) {
+    seq_seq_match_empty_elim p c1 c2 i;
+    seq_seq_match_empty_intro p c1' c2' i';
+  } else {
+    assert (pure (Seq.length (Seq.slice c1 i j) == Seq.length (Seq.slice c1' i' j')));
+    assert (pure (j - i == j' - i'));
+    seq_seq_match_length p c1 c2 i j;
+    seq_seq_match_tail_intro p c1 c2 i i j;
+    seq_seq_match_rewrite_seq p (Seq.slice c1 i (Seq.length c1)) (Seq.slice c1' i' (Seq.length c1')) (Seq.slice c2 i (Seq.length c2)) (Seq.slice c2' i' (Seq.length c2')) 0 (j - i);
+    seq_seq_match_tail_elim p c1' c2' i' 0 (j - i)
+  }
 }
 
 ghost fn rec seq_seq_match_seq_list_match
