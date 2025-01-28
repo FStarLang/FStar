@@ -552,7 +552,6 @@ let z3_options (ver:string) =
     "(set-option :global-decls false)";
     "(set-option :smt.mbqi false)";
     "(set-option :auto_config false)";
-    "(set-option :produce-unsat-cores true)";
     "(set-option :model true)";
     "(set-option :smt.case_split 3)";
     "(set-option :smt.relevancy 2)";
@@ -614,6 +613,13 @@ let mk_input (fresh : bool) (theory : list decl) : string & option string & opti
       ) :: theory
     in
     let options = z3_options ver in
+    let options =
+      (* With --ext fast_hints, we only enable unsat-core generation
+      if we are actually recording hints. *)
+      if Options.Ext.enabled "fast_hints" && not (Options.record_hints ())
+      then options
+      else options ^ "(set-option :produce-unsat-cores true)\n"
+    in
     let options = options ^ (Options.z3_smtopt() |> String.concat "\n") ^ "\n\n" in
     if Options.print_z3_statistics() then context_profile theory;
     let r, hash =
