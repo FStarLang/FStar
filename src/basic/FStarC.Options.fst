@@ -1745,6 +1745,7 @@ let settable = function
     | "quake"
     | "query_cache"
     | "query_stats"
+    | "record_hints"
     | "record_options"
     | "retry"
     | "reuse_hint_for"

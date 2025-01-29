@@ -1250,7 +1250,7 @@ type solver_cfg = {
   valid_intro      : bool;
   valid_elim       : bool;
   z3version        : string;
-  context_pruning  : bool
+  context_pruning  : bool;
 }
 
 let _last_cfg : ref (option solver_cfg) = BU.mk_ref None
