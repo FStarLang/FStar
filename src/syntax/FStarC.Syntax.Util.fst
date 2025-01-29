@@ -1581,6 +1581,7 @@ let remove_attr (attr : lident) (attrs:list attribute) : list attribute =
 let process_pragma p r =
     FStarC.Errors.set_option_warning_callback_range (Some r);
     let set_options s =
+      try
       match Options.set_options s with
       | Getopt.Success -> ()
       | Getopt.Help  ->
@@ -1589,6 +1590,11 @@ let process_pragma p r =
       | Getopt.Error (s, opt) ->
         Errors.raise_error r Errors.Fatal_FailToProcessPragma [
           Errors.Msg.text <| "Failed to process pragma: " ^ s;
+        ]
+      with
+      | Options.NotSettable x ->
+        Errors.raise_error r Errors.Fatal_FailToProcessPragma [
+          Errors.Msg.text <| U.format1 "Option '%s' is not settable via a pragma." x;
         ]
     in
     match p with
