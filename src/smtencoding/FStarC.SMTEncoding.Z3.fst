@@ -176,7 +176,7 @@ let check_z3version (p:proc) : unit =
     );
     _already_warned_solver_mismatch := true
   );
-  let ver_found : string = BU.trim_string (getinfo "version") in
+  let ver_found : string = BU.trim_string (List.hd (BU.split (getinfo "version") "-")) in
   let ver_conf  : string = BU.trim_string (Options.z3_version ()) in
   if ver_conf <> ver_found && not (!_already_warned_version_mismatch) then (
     let open FStarC.Errors in
