@@ -1259,10 +1259,9 @@ let interactive_mode' init_st =
   write_hello ();
 
   let exit_code =
-    if FStarC.Options.record_hints() || FStarC.Options.use_hints() then
-      FStarC.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
-    else
-      go init_st in
+    let fn = List.hd (Options.file_list ()) in
+    SMTEncoding.Solver.with_hints_db fn (fun () -> go init_st)
+  in
   exit exit_code
 
 let interactive_mode (filename:string): unit =

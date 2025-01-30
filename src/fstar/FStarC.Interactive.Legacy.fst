@@ -15,7 +15,7 @@
 *)
 
 module FStarC.Interactive.Legacy
-open FStarC
+
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -572,9 +572,5 @@ let interactive_mode (filename:string): unit =
         env
   in
 
-  if FStarC.Options.record_hints() //and if we're recording or using hints
-  || FStarC.Options.use_hints()
-  then FStarC.SMTEncoding.Solver.with_hints_db
-            (List.hd (Options.file_list ()))
-            (fun () -> go (1, 0) filename stack None env ts)
-  else go (1, 0) filename stack None env ts
+  let fn = List.hd (Options.file_list ()) in
+  SMTEncoding.Solver.with_hints_db fn (fun () -> go (1, 0) filename stack None env ts)

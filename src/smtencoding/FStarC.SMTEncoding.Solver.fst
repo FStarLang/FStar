@@ -59,15 +59,24 @@ type z3_replay_result = either (option UC.unsat_core), error_labels
 let z3_result_as_replay_result = function
     | Inl l -> Inl l
     | Inr (r, _) -> Inr r
-let recorded_hints : ref (option hints) = BU.mk_ref None
+
+// Hints are stored in this reference as we progress through the file,
+// and written out by calling finalize_hints_db below.
+let recorded_hints : ref hints = BU.mk_ref []
 let replaying_hints: ref (option hints) = BU.mk_ref None
+let refreshing_hints : ref bool = BU.mk_ref false
 
 (****************************************************************************)
 (* Hint databases (public)                                                  *)
 (****************************************************************************)
 let use_hints () = Options.use_hints ()
-let initialize_hints_db src_filename format_filename : unit =
-    if Options.record_hints() then recorded_hints := Some [];
+
+(* fresh: true iff we are recording hints for the whole file, and hence should
+not merge hints with old ones. *)
+let initialize_hints_db src_filename (refresh:bool) : unit =
+    recorded_hints := [];
+    refreshing_hints := refresh;
+
     let norm_src_filename = BU.normalize_file_path src_filename in
     (*
      * Read the hints file into replaying_hints
@@ -104,22 +113,56 @@ let initialize_hints_db src_filename format_filename : unit =
             ()
     end
 
+let rec merge_hints (prev next : hints) : hints =
+  match prev, next with
+  (* Can Nones really happen? *)
+  | None :: prev, next -> merge_hints prev next
+  | prev, None :: next -> merge_hints prev next
+  | Some p :: prev,  Some n :: next ->
+    (* Take the lesser one, or prefer n if they are for the same query. *)
+    if String.compare p.hint_name n.hint_name < 0 || (p.hint_name = n.hint_name && p.hint_index < n.hint_index) then
+      Some p :: merge_hints prev (Some n :: next)
+    else if p.hint_name = n.hint_name && p.hint_index = n.hint_index then
+      Some n :: merge_hints prev next
+    else
+      Some n :: merge_hints (Some p :: prev) next
+  | [], next -> next
+  | prev, [] -> prev
+
+let merge_hints_db (prev next : hints_db) : hints_db =
+  {
+    module_digest = next.module_digest;
+    hints = merge_hints prev.hints next.hints;
+  }
+
 let finalize_hints_db src_filename :unit =
-    begin if Options.record_hints () then
-          let hints = Option.get !recorded_hints in
-          let hints_db = {
-                module_digest = BU.digest_of_file src_filename;
-                hints = hints
-              }  in
-          let norm_src_filename = BU.normalize_file_path src_filename in
-          let val_filename = Options.hint_file_for_src norm_src_filename in
-          write_hints val_filename hints_db
-    end;
-    recorded_hints := None;
-    replaying_hints := None
+  let hints = !recorded_hints in
+  (* If empty, don't do anything. *)
+  if Cons? hints then begin
+    let hints_db = {
+      module_digest = BU.digest_of_file src_filename;
+      hints = hints;
+    } in
+    let norm_src_filename = BU.normalize_file_path src_filename in
+    let val_filename = Options.hint_file_for_src norm_src_filename in
+    let hints_db =
+      (* If it's a full --record_hints run, overwrite file. Otherwise merge with
+      old hints. *)
+      if !refreshing_hints
+      then hints_db
+      else
+        match read_hints val_filename with
+        | HintsOK prev_hints -> merge_hints_db prev_hints hints_db
+        | _ -> hints_db
+    in
+    write_hints val_filename hints_db
+  end;
+  recorded_hints := [];
+  replaying_hints := None
 
 let with_hints_db fname f =
-    initialize_hints_db fname false;
+    (* If --record_hints is set at this time, we're refreshing. *)
+    initialize_hints_db fname (Options.record_hints ());
     let result = f () in
     // for the moment, there should be no need to trap exceptions to finalize the hints db
     // no cleanup needs to occur if an error occurs.
@@ -612,9 +655,8 @@ let query_info settings z3result =
 
 //caller must ensure that the recorded_hints is already initiailized
 let store_hint hint =
-  match !recorded_hints with
-  | Some l -> recorded_hints := Some (l@[Some hint])
-  | _ -> assert false; ()
+  let l = !recorded_hints in
+  recorded_hints := l@[Some hint]
 
 let record_hint settings z3result =
     if not (Options.record_hints()) then () else
