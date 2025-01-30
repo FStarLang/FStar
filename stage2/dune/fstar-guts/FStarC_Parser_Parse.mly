@@ -1,1 +1,1 @@
-../../../src/ml/bare/FStarC_Parser_Parse.mly
+../../../src/ml/FStarC_Parser_Parse.mly
