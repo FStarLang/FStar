@@ -23,7 +23,11 @@ module BU = FStarC.Util
 type ext_state =
   | E : map : BU.psmap string -> ext_state
 
-let cur_state = BU.mk_ref (E (BU.psmap_empty ()))
+(* If we ever want to set any defaults, this is the place to do it.  *)
+let init : ext_state =
+  E (BU.psmap_empty ())
+
+let cur_state = BU.mk_ref init
 
 (* Set a key-value pair in the map *)
 let set (k:key) (v:value) : unit =
@@ -37,6 +41,11 @@ let get (k:key) : value =
     | Some v -> v
   in
   r
+
+let enabled (k:key) : bool =
+  let v = get k in
+  let v = String.lowercase v in
+  v <> "" && not (v = "off" || v = "false" || v = "0")
 
 (* Find a home *)
 let is_prefix (s1 s2 : string) : ML bool =
@@ -67,4 +76,4 @@ let restore (s:ext_state) : unit =
   ()
 
 let reset () : unit =
-  cur_state := E (BU.psmap_empty ())
+  cur_state := init

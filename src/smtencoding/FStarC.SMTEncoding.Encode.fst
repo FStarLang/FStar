@@ -824,7 +824,7 @@ let encode_top_level_let :
                     let app_is_prop = Term.mk_subtype_of_unit app in
                     if should_encode_logical
                     then (
-                      if is_sub_singleton && Options.Ext.get "retain_old_prop_typing" = ""
+                      if is_sub_singleton && not (Options.Ext.enabled "retain_old_prop_typing")
                       then (
                         Util.mkAssume(mkForall (S.range_of_lbname lbn)
                                             ([[app_is_prop]], vars, mkImp(mk_and_l binder_guards, mk_Valid <| app_is_prop)),
@@ -1064,7 +1064,7 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
             let is_l = mk_data_tester env l xx in
             let inversion_case, decls' =
               if injective_type_params
-              || Options.Ext.get "compat:injectivity" <> ""
+              || Options.Ext.enabled "compat:injectivity"
               then (
                 let _, data_t = Env.lookup_datacon env.tcenv l in
                 let args, res = U.arrow_formals data_t in
@@ -1183,7 +1183,7 @@ let encode_datacon (env:env_t) (se:sigelt)
   let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
   let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
   let injective_type_params =
-    injective_type_params || Options.Ext.get "compat:injectivity" <> ""
+    injective_type_params || Options.Ext.enabled "compat:injectivity"
   in
   let fields =
     names |>
@@ -1345,11 +1345,11 @@ let encode_datacon (env:env_t) (se:sigelt)
                               | Tm_fvar fv ->
                                 if BU.for_some (S.fv_eq_lid fv) mutuals
                                 then Some (bs, c)
-                                else if Options.Ext.get "compat:2954" <> ""
+                                else if Options.Ext.enabled "compat:2954"
                                 then (warn_compat(); Some (bs, c)) //compatibility mode
                                 else None
                               | _ ->
-                                if Options.Ext.get "compat:2954" <> ""
+                                if Options.Ext.enabled "compat:2954"
                                 then (warn_compat(); Some (bs, c)) //compatibility mode
                                 else None
                             )

@@ -254,7 +254,7 @@ let is_fv_type g fv =
 
 let no_fstar_stubs_ns (ns : list mlsymbol) : list mlsymbol =
   match ns with
-  | "FStar"::"Stubs"::rest when plug_no_lib () && Options.Ext.get "__guts" <> "" -> "FStarC"::rest
+  | "FStar"::"Stubs"::rest when plug_no_lib () && Options.Ext.enabled "__guts" -> "FStarC"::rest
 
   (* These 3 modules are special, and are not in the guts. They live in src/ml/full and
   are visible at the ambient namespace when building the plugin lib. *)
