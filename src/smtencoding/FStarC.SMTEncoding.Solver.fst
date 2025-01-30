@@ -1269,6 +1269,7 @@ type solver_cfg = {
   valid_elim       : bool;
   z3version        : string;
   context_pruning  : bool;
+  record_hints     : bool;
 }
 
 let _last_cfg : ref (option solver_cfg) = BU.mk_ref None
@@ -1282,6 +1283,7 @@ let get_cfg env : solver_cfg =
     ; valid_elim       = Options.smtencoding_valid_elim ()
     ; z3version        = Options.z3_version ()
     ; context_pruning  = Options.Ext.enabled "context_pruning"
+    ; record_hints     = Options.record_hints ()
     }
 
 let save_cfg env =
