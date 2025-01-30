@@ -176,7 +176,12 @@ let check_z3version (p:proc) : unit =
     );
     _already_warned_solver_mismatch := true
   );
-  let ver_found : string = BU.trim_string (getinfo "version") in
+  (* Note: Z3 can either output a "clean" version like 4.13.4 or something like
+     "4.13.4 - build hashcode 6d3cfb63daa9afdd7d6d6b4d2f2fb84bd7324571" depending
+     on how it was built. Hence we split by "-" and take the first component to
+     ignore the hashcode. See https://github.com/FStarLang/FStar/pull/3700 for
+     more details. *)
+  let ver_found : string = BU.trim_string (List.hd (BU.split (getinfo "version") "-")) in
   let ver_conf  : string = BU.trim_string (Options.z3_version ()) in
   if ver_conf <> ver_found && not (!_already_warned_version_mismatch) then (
     let open FStarC.Errors in
