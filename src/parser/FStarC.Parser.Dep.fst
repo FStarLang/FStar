@@ -540,11 +540,7 @@ exception Exit
 
 (* In public interface *)
 
-let core_modules () =
-  [Basefiles.prims_basename () ;
-   Basefiles.pervasives_basename () ;
-   Basefiles.pervasives_native_basename ()]
-  |> List.map module_name_of_file
+let core_modules () = [ "Prims"; "FStar.Pervasives"; "FStar.Pervasives.Native" ]
 
 let implicit_ns_deps =
   [ Const.fstar_ns_lid ]

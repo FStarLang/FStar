@@ -33,6 +33,8 @@ module FC = FStarC.Common
 module Util = FStarC.Util
 module List = FStarC.List
 
+exception NotSettable of string
+
 module Ext = FStarC.Options.Ext
 
 let debug_embedding = mk_ref false
@@ -1785,7 +1787,19 @@ let all_specs = specs true
 let all_specs_getopt = List.map fst all_specs
 
 let all_specs_with_types = specs_with_types true
-let settable_specs = all_specs |> List.filter (fun ((_, x, _), _) -> settable x)
+let settable_specs =
+  all_specs |>
+  List.map (fun spec ->
+    let ((c, x, h), doc) = spec in
+    if settable x
+    then spec
+    else
+      let h' = match h with
+               | ZeroArgs _ -> ZeroArgs (fun () -> raise (NotSettable x))
+               | OneArg (_, k) -> OneArg ((fun s -> raise (NotSettable x)), k)
+      in
+      ((c, x, h'), doc)
+  )
 
 let help_for_option (s:string) : option Pprint.document =
   match all_specs |> List.filter (fun ((_, x, _), _) -> x = s) with

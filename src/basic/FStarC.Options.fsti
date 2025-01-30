@@ -21,6 +21,10 @@ open FStarC.BaseTypes
 open FStarC.VConfig
 open FStarC
 
+(* Raised when a processing a pragma an a non-settable option
+appears there. *)
+exception NotSettable of string
+
 type codegen_t =
   | OCaml
   | FSharp
