@@ -25,6 +25,8 @@ val make:    int -> char -> string
 val split:   chars: list char -> s: string -> Tot (list string)
 val strcat:  string -> string -> Tot string
 val concat:  separator: string -> strings: list string -> Tot string
+
+(* Negative if s1<s2, zero if equal, positive if s1>s2 *)
 val compare: s1: string -> s2: string -> Tot int
 val strlen:  string -> Tot nat
 val length:  string -> Tot nat
