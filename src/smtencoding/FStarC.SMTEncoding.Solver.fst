@@ -65,7 +65,7 @@ let replaying_hints: ref (option hints) = BU.mk_ref None
 (****************************************************************************)
 (* Hint databases (public)                                                  *)
 (****************************************************************************)
-let use_hints () = Options.use_hints () && Options.Ext.get "context_pruning" = ""
+let use_hints () = Options.use_hints ()
 let initialize_hints_db src_filename format_filename : unit =
     if Options.record_hints() then recorded_hints := Some [];
     let norm_src_filename = BU.normalize_file_path src_filename in
