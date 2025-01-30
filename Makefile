@@ -310,11 +310,11 @@ endif
 
 setlink-%:
 	if [ -e out ] && ! [ -h out ]; then echo "ERROR: out/ exists and is not a symbolic link, please remove it"; false; fi
-	ln -Trsf stage$*/out out
+	rm -f out && ln -sf $(CURDIR)/stage$*/out out
 	# For compatibility with the previous layout
 	mkdir -p bin
-	ln -Trsf out/bin/fstar.exe bin/fstar.exe
-	ln -Trsf .scripts/get_fstar_z3.sh bin/get_fstar_z3.sh
+	ln -sf $(CURDIR)/out/bin/fstar.exe bin/fstar.exe
+	ln -sf $(CURDIR)/.scripts/get_fstar_z3.sh bin/get_fstar_z3.sh
 
 stage1: .install-stage1.touch
 1: stage1
