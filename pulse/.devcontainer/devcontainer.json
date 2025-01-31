@@ -1,6 +1,6 @@
 {
   "name": "Pulse devcontainer (from cached base container)",
-  "image": "mtzguido/pulse-devcontainer:latest",
+  "image": "mtzguido/pulse-base-devcontainer:latest",
   "customizations": {
     "vscode": {
       "extensions": [
