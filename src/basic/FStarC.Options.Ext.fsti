@@ -29,6 +29,11 @@ val set (k:key) (v:value) : unit
 (* Get the value from the map, or return "" if not there *)
 val get (k:key) : value
 
+(* For boolean-like options, return true if enabled. We consider an
+extension enabled when set to a non-empty string what is NOT "off",
+"false", or "0" (and this comparison is case-insensitive). *)
+val enabled (k:key) : bool
+
 (* Get a list of all KV pairs that "begin" with k, considered
 as a namespace. *)
 val getns (ns:string) : list (key & value)

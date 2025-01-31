@@ -80,7 +80,7 @@ let solver_state_to_string (s:solver_state) =
 instance showable_solver_state : showable solver_state = { show = solver_state_to_string }
 
 let debug (msg:string) (s0 s1:solver_state) =
-  if Options.Ext.get "debug_solver_state" <> ""
+  if Options.Ext.enabled "debug_solver_state"
   then (
     BU.print3 "Debug (%s):{\n\t before=%s\n\t after=%s\n}" msg
       (solver_state_to_string s0)
@@ -317,7 +317,7 @@ let give_now (resetting:bool) (ds:list decl) (s:solver_state)
 
 let give_aux resetting (ds:list decl) (s:solver_state)
 : solver_state
-= if Options.Ext.get "context_pruning" <> ""
+= if Options.Ext.enabled "context_pruning"
   then give_delay_assumptions resetting ds s
   else give_now resetting ds s
 
@@ -460,7 +460,7 @@ let filter_with_unsat_core queryid (core:U.unsat_core) (s:solver_state)
   U.filter core all_decls
 
 let would_have_pruned (s:solver_state) =
-  if Options.Ext.get "context_pruning_sim" = ""
+  if not (Options.Ext.enabled "context_pruning_sim")
   then None
   else 
     (*find the first level with pruning roots, and prune the context with respect to them *)
@@ -479,7 +479,7 @@ let would_have_pruned (s:solver_state) =
 let flush (s:solver_state)
 : list decl & solver_state
 = let s =
-    if Options.Ext.get "context_pruning" <> ""
+    if Options.Ext.enabled "context_pruning"
     then (
       (*find the first level with pruning roots, and prune the context with respect to them *)
       let rec aux levels =

@@ -224,6 +224,7 @@ let ops = [
   mk_tac_step_1 0 "free_uvars"  free_uvars free_uvars;
   mk_tac_step_1 0 "all_ext_options" all_ext_options all_ext_options;
   mk_tac_step_1 0 "ext_getv" ext_getv ext_getv;
+  mk_tac_step_1 0 "ext_enabled" ext_enabled ext_enabled;
   mk_tac_step_1 0 "ext_getns" ext_getns ext_getns;
 
   mk_tac_step_2 1 "alloc"

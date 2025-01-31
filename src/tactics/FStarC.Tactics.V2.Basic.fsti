@@ -122,6 +122,7 @@ val free_uvars             : term -> tac (list Z.t)
 
 val all_ext_options        : unit -> tac (list (string & string))
 val ext_getv               : string -> tac string
+val ext_enabled            : string -> tac bool
 val ext_getns              : string -> tac (list (string & string))
 
 val alloc                  : 'a -> tac (tref 'a)

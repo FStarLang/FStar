@@ -530,7 +530,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                        mk (A.App (acc, aa, qq)))
                      h
       else if not (Options.print_implicits ())
-           && Options.Ext.get "show_hide_reveal" = ""
+           && not (Options.Ext.enabled "show_hide_reveal")
            && is_hide_or_reveal e
            && List.length args = 1 //args already filtered
       then (

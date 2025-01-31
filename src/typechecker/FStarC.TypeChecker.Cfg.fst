@@ -430,7 +430,7 @@ let config' psteps s e =
       memoize_lazy = true;
       normalize_pure_lets = (not steps.pure_subterms_within_computations) || Options.normalize_pure_terms_for_extraction();
       reifying = false;
-      compat_memo_ignore_cfg = Options.Ext.get "compat:normalizer_memo_ignore_cfg" <> "";
+      compat_memo_ignore_cfg = Options.Ext.enabled "compat:normalizer_memo_ignore_cfg";
    }
 
 let config s e = config' [] s e

@@ -2223,6 +2223,10 @@ let ext_getv (k:string) : tac string
   = return () ;!
     return (Options.Ext.get k)
 
+let ext_enabled (k:string) : tac bool
+  = return () ;!
+    return (Options.Ext.enabled k)
+
 let ext_getns (ns:string) : tac (list (string & string))
   = return () ;!
     return (Options.Ext.getns ns)

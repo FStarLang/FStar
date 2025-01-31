@@ -478,6 +478,10 @@ val all_ext_options : unit -> Tac (list (string & string))
 is returned if the key was unset. *)
 val ext_getv (k:string) : Tac string
 
+(* Returns true iff the extension flag is enabled. I.e. it's a non-empty
+string that is not 0/off/false. *)
+val ext_enabled (k:string) : Tac bool
+
 (* Return all k/v pairs in the state which are within
 the given namespace. *)
 val ext_getns (ns:string) : Tac (list (string & string))
