@@ -605,7 +605,7 @@ let query_info settings z3result =
             let msg = if used_hint settings then Pprint.doc_of_string "Hint-replay failed" :: msg else msg in
             FStarC.Errors.log_issue range FStarC.Errors.Warning_HitReplayFailed msg)
     end
-    else if Options.Ext.get "profile_context" <> ""
+    else if Options.Ext.enabled "profile_context"
     then match z3result.z3result_status with
          | UNSAT core -> process_unsat_core core
          | _ -> ()
@@ -1221,7 +1221,7 @@ let get_cfg env : solver_cfg =
     ; valid_intro      = Options.smtencoding_valid_intro ()
     ; valid_elim       = Options.smtencoding_valid_elim ()
     ; z3version        = Options.z3_version ()
-    ; context_pruning  = Options.Ext.get "context_pruning" <> ""
+    ; context_pruning  = Options.Ext.enabled "context_pruning"
     }
 
 let save_cfg env =

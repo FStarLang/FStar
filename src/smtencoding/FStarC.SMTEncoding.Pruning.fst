@@ -47,7 +47,7 @@ type pruning_state = {
 }
 
 let debug (f: unit -> unit) : unit =
-  if Options.Ext.get "debug_context_pruning" <> ""
+  if Options.Ext.enabled "debug_context_pruning"
   then f()
 
 let print_pruning_state (p:pruning_state)
@@ -461,7 +461,7 @@ let prune (p:pruning_state) (roots:list decl)
         | Some a -> [a]) 
       (reached_names@p.ambients)
   in
-  // if Options.Ext.get "debug_context_pruning" <> ""
+  // if Options.Ext.enabled "debug_context_pruning"
   // then (
   //   BU.print1 "Retained %s assumptions\n" (show (List.length reached_assumptions))
   // );

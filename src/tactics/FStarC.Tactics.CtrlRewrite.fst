@@ -109,7 +109,7 @@ let __do_rewrite
 
     (* unrefine typ as is done for the type arg of eq2 *)
     let typ =
-      if Options.Ext.get "__unrefine" <> "" then
+      if Options.Ext.enabled "__unrefine" then
         let typ_norm = N.unfold_whnf' [Env.DontUnfoldAttr [Parser.Const.do_not_unrefine_attr]] env typ in
         if Tm_refine? (SS.compress typ_norm).n then
           (* It is indeed a refinement, normalize again to remove them. *)

@@ -136,6 +136,7 @@ let t_smt_sync              = from_tac_1 "B.t_smt_sync" B.t_smt_sync
 let free_uvars              = from_tac_1 "B.free_uvars" B.free_uvars
 let all_ext_options         = from_tac_1 "B.all_ext_options" B.all_ext_options
 let ext_getv                = from_tac_1 "B.ext_getv" B.ext_getv
+let ext_enabled             = from_tac_1 "B.ext_enabled" B.ext_enabled
 let ext_getns               = from_tac_1 "B.ext_getns" B.ext_getns
 
 let alloc x                 = from_tac_1 "B.alloc" B.alloc x

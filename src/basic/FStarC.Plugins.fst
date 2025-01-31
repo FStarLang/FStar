@@ -126,7 +126,7 @@ let compile_modules dir ms =
 if it could find a plugin with the proper name. This will fail hard
 if loading the plugin fails. *)
 let autoload_plugin (ext:string) : bool =
-  if Options.Ext.get "noautoload" <> "" then false else (
+  if Options.Ext.enabled "noautoload" then false else (
   if Debug.any () then
     BU.print1 "Trying to find a plugin for extension %s\n" ext;
   match Find.find_file (ext ^ ".cmxs") with

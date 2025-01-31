@@ -2210,7 +2210,7 @@ let rec solve (probs :worklist) : solution =
           | _ -> false
         in
         let maybe_expand (tp:tprob) : tprob =
-          if Options.Ext.get "__unrefine" <> "" && tp.relation = SUB && is_expand_uvar tp.rhs
+          if Options.Ext.enabled "__unrefine" && tp.relation = SUB && is_expand_uvar tp.rhs
           then
             let lhs = tp.lhs in
             let lhs_norm = N.unfold_whnf' [Env.DontUnfoldAttr [PC.do_not_unrefine_attr]] (p_env probs hd) lhs in
@@ -5642,7 +5642,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
             BU.print1 "Deferring implicit due to open ctx/typ %s\n" (show ctx_u);
           until_fixpoint ((hd, Implicit_unresolved)::out, changed, defer_open_metas) tl
         ) else if is_open && not (meta_tac_allowed_for_open_problem tac)
-            && Options.Ext.get "compat:open_metas" = "" then ( // i.e. compat option unset
+            && not (Options.Ext.enabled "compat:open_metas") then ( // i.e. compat option unset
           (* If the tactic is not explicitly whitelisted to run with open problems,
           then defer. *)
           until_fixpoint ((hd, Implicit_unresolved)::out, changed, defer_open_metas) tl
