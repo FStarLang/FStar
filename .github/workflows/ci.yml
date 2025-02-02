@@ -22,13 +22,17 @@ jobs:
     needs: build
     uses: ./.github/workflows/tests.yml
 
-  nix-build:
-    name: nix
-    uses: ./.github/workflows/nix.yml
+  # Disabled as it takes too long without the magic nix cache.
+  # nix-build:
+  #   name: nix
+  #   uses: ./.github/workflows/nix.yml
 
   # Branch protection points here
   ciok:
     runs-on: ubuntu-latest
-    needs: [build, tests, nix-build]
+    needs:
+      - build
+      - tests
+      # - nix-build
     steps:
       - run: exit 0
