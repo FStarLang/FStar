@@ -1,0 +1,108 @@
+name: Pulse nightly build
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/checkout@master
+        with:
+          path: FStar
+          repository: FStarLang/FStar
+
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 4.14.2
+
+      - name: Prepare
+        run: |
+          ./FStar/.scripts/get_fstar_z3.sh $HOME/bin
+          echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
+          opam install --deps-only ./FStar/fstar.opam
+
+      - run: eval $(opam env) && .scripts/mk_package.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          path: pulse-*.tar.gz
+          name: package-linux
+
+  mac:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/checkout@master
+        with:
+          path: FStar
+          repository: FStarLang/FStar
+
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 4.14.2
+
+      - name: Prepare
+        run: |
+          brew install opam bash gnu-getopt coreutils gnu-sed make
+          ./FStar/.scripts/get_fstar_z3.sh $HOME/bin
+          echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
+          opam install --deps-only ./FStar/fstar.opam
+
+      - run: eval $(opam env) && .scripts/mk_package.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          path: pulse-*.tar.gz
+          name: package-mac
+
+  publish:
+    runs-on: ubuntu-latest
+    needs:
+      - linux
+      - mac
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 0 # full clone, so we can push objects
+
+      - name: Set up git
+        run: |
+          git config --global user.name "Dzomo, the Everest Yak"
+          git config --global user.email "24394600+dzomo@users.noreply.github.com"
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+          # ^ Download all artifacts into the same dir.
+          # Each of them is a single file, so no clashes happen.
+
+      - name: Publish artifacts in nightly tag
+        run: |
+          git config --unset-all http.https://github.com/.extraheader
+          # ^ https://stackoverflow.com/questions/64374179/how-to-push-to-another-repository-in-github-actions
+
+          # We push nightly builds to a different repo (same org)
+          REPO="${{github.repository}}-nightly"
+          TAG=nightly-$(date -I)
+
+          # Create tag
+          git tag $TAG ${{github.sha}}
+
+          # Add new remote and push tag
+          git remote add nightly-repo https://${{secrets.DZOMO_GITHUB_TOKEN}}@github.com/$REPO
+          git push nightly-repo $TAG
+
+          # Create release
+          gh release create -R "$REPO" \
+            --generate-notes \
+            --target ${{ github.sha }} \
+            $TAG artifacts/*
+
+        env:
+          GH_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}

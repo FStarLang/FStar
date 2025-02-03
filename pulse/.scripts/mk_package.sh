@@ -7,7 +7,11 @@
 
 set -eux
 
+if [ "$(uname -s)" = "Darwin" ]; then
+MAKE="gmake -ksj$(nproc)"
+else
 MAKE="make -ksj$(nproc)"
+fi
 
 if ! [ -d FStar ]; then
   git clone https://github.com/FStarLang/FStar --depth 1
@@ -38,7 +42,11 @@ EOF
 
 chmod +x _pak/pulse/bin/pulse
 
-tar czf pulse.tar.gz -C _pak .
+KERNEL=$(uname -s)
+ARCH=$(uname -m)
+PAK=pulse-$KERNEL-$ARCH.tar.gz
+
+tar czf $PAK -C _pak .
 
 echo Done
-ls -l pulse.tar.gz
+ls -l $PAK
