@@ -444,11 +444,7 @@ let tc_one_file
           extracted_defs,
           env
       in
-      if (Options.should_verify (string_of_lid fmod.name) //if we're verifying this module
-            && (FStarC.Options.record_hints() //and if we're recording or using hints
-                || FStarC.Options.use_hints()))
-      then SMT.with_hints_db (Pars.find_file fn) check_mod
-      else check_mod () //don't add a hints file for modules that are not actually verified
+      SMT.with_hints_db (Pars.find_file fn) check_mod
   in
   if not (Options.cache_off()) then
       let r = Ch.load_module_from_cache (tcenv_of_uenv env) fn in

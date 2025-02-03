@@ -111,6 +111,7 @@ let read_hints (filename: string) : hints_read_result =
            raise Exit
     )
   with
+   | Yojson.Json_error _
    | Exit ->
       MalformedJson
    | Sys_error _ ->
