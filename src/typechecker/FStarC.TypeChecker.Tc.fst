@@ -1083,6 +1083,11 @@ let tc_decls env ses =
       (Some (Ident.string_of_lid (Env.current_module env)))      
       "FStarC.TypeChecker.Tc.encode_sig";
 
+
+    (* Potentially write hints to disk after every query, when on interactive mode. *)
+    if Options.interactive () then
+      SMTEncoding.Solver.flush_hints ();
+
     (List.rev_append ses' ses, env), ses_elaborated
     end
   in

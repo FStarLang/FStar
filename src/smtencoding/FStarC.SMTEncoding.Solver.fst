@@ -62,6 +62,7 @@ let z3_result_as_replay_result = function
 
 // Hints are stored in this reference as we progress through the file,
 // and written out by calling finalize_hints_db below.
+let src_filename : ref string = BU.mk_ref ""
 let recorded_hints : ref hints = BU.mk_ref []
 let replaying_hints: ref (option hints) = BU.mk_ref None
 let refreshing_hints : ref bool = BU.mk_ref false
@@ -73,11 +74,12 @@ let use_hints () = Options.use_hints ()
 
 (* fresh: true iff we are recording hints for the whole file, and hence should
 not merge hints with old ones. *)
-let initialize_hints_db src_filename (refresh:bool) : unit =
+let initialize_hints_db filename (refresh:bool) : unit =
     recorded_hints := [];
     refreshing_hints := refresh;
 
-    let norm_src_filename = BU.normalize_file_path src_filename in
+    let norm_src_filename = BU.normalize_file_path filename in
+    src_filename := norm_src_filename;
     (*
      * Read the hints file into replaying_hints
      * But it will only be used when use_hints is on
@@ -135,16 +137,19 @@ let merge_hints_db (prev next : hints_db) : hints_db =
     hints = merge_hints prev.hints next.hints;
   }
 
-let finalize_hints_db src_filename :unit =
+(* This is called after we check every single top-level in the interactive mode, so
+we can record hints before "finishing" a module (which is never triggered in
+interactive mode, currently). *)
+let flush_hints () : unit =
   let hints = !recorded_hints in
+  let src_filename = !src_filename in
   (* If empty, don't do anything. *)
   if Cons? hints then begin
     let hints_db = {
       module_digest = BU.digest_of_file src_filename;
       hints = hints;
     } in
-    let norm_src_filename = BU.normalize_file_path src_filename in
-    let val_filename = Options.hint_file_for_src norm_src_filename in
+    let val_filename = Options.hint_file_for_src src_filename in
     let hints_db =
       (* If it's a full --record_hints run, overwrite file. Otherwise merge with
       old hints. *)
@@ -160,14 +165,27 @@ let finalize_hints_db src_filename :unit =
   recorded_hints := [];
   replaying_hints := None
 
+let finalize_hints_db () : unit =
+  flush_hints ()
+
 let with_hints_db fname f =
-    (* If --record_hints is set at this time, we're refreshing. *)
-    initialize_hints_db fname (Options.record_hints ());
+  (* Forbid reentrant calls, which would trash the state. This
+  happens (benignly) in the IDE, since the top-level invocation of the
+  interactive mode is wrapped by this function, and that driver will
+  call the typechecker to check dependencies of the current file, which
+  are also wrapped (even if lax). This will do the right thing of only
+  handling the outer invocation. *)
+  if !src_filename <> "" then
+    f ()
+  else begin
+    (* If --record_hints is set at this time, and this is not an interactive, we're fully refreshing. *)
+    initialize_hints_db fname (Options.record_hints () && not (Options.interactive ()));
     let result = f () in
     // for the moment, there should be no need to trap exceptions to finalize the hints db
     // no cleanup needs to occur if an error occurs.
-    finalize_hints_db fname;
+    finalize_hints_db ();
     result
+  end
 
 (***********************************************************************************)
 (* Invoking the SMT solver and extracting an error report from the model, if any   *)
