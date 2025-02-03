@@ -353,7 +353,8 @@ let default_sigmeta = {
     sigmeta_spliced=false;
     sigmeta_admit=false;
     sigmeta_already_checked=false;
-    sigmeta_extension_data=[]
+    sigmeta_extension_data=[];
+    sigmeta_is_typ_abbrev=false;
 }
 let mk_sigelt (e: sigelt') = { 
     sigel = e;
@@ -624,6 +625,11 @@ instance hasRange_bv : hasRange bv = {
 instance hasRange_binder : hasRange binder = {
   pos = (fun b -> pos b.binder_bv);
   setPos = (fun r b -> { b with binder_bv = setPos r b.binder_bv });
+}
+
+instance hasRange_letbinding : hasRange letbinding = {
+  pos = (fun lb -> lb.lbpos);
+  setPos = (fun r lb -> { lb with lbpos = r });
 }
 
 instance showable_lazy_kind = {

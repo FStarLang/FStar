@@ -3243,16 +3243,16 @@ let get_n_binders' (env:Env.env) (steps : list step) (n:int) (t:term) : list bin
       (bs, c)
 
     (* Exactly what we wanted, return *)
-    | bs, c when len = n ->
+    | bs, c when n >= 0 && len = n ->
       (bs, c)
 
     (* Plenty of binders, grab as many as needed and finish *)
-    | bs, c when len > n ->
+    | bs, c when n >= 0 && len > n ->
       let bs_l, bs_r = List.splitAt n bs in
       (bs_l, S.mk_Total (U.arrow bs_r c))
 
     (* We need more, descend if `c` is total *)
-    | bs, c when len < n && U.is_total_comp c && not (U.has_decreases c) ->
+    | bs, c when U.is_total_comp c && not (U.has_decreases c) ->
       let (bs', c') = aux true (n-len) (U.comp_result c) in
       (bs@bs', c')
 

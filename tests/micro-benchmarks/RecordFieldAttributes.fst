@@ -2,7 +2,7 @@ module RecordFieldAttributes
 
 module T = FStar.Tactics.V2
 
-type description (d : string) = ()
+let description (d : string) = ()
 
 type r = 
     {
