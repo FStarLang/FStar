@@ -21,3 +21,8 @@ BUILDLOG
 out
 _output
 _cache
+
+# For package building
+FStar
+_pak
+pulse.tar.gz

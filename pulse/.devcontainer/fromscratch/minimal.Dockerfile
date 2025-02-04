@@ -1,4 +1,4 @@
-FROM ubuntu:23.10
+FROM ubuntu:24.04
 
 SHELL ["/bin/bash", "-c"]
 
@@ -45,25 +45,25 @@ RUN opam option depext-run-installs=true
 ENV OPAMYES=1
 RUN opam install --yes batteries zarith stdint yojson dune menhir menhirLib pprint sedlex ppxlib process ppx_deriving ppx_deriving_yojson memtrace
 
-# Get compiled Z3
-RUN wget -nv https://github.com/Z3Prover/z3/releases/download/Z3-4.8.5/z3-4.8.5-x64-ubuntu-16.04.zip \
- && unzip z3-4.8.5-x64-ubuntu-16.04.zip \
- && cp z3-4.8.5-x64-ubuntu-16.04/bin/z3 $HOME/bin/z3 \
- && rm -r z3-4.8.5-*
-
-# Get F* master and build
+# Get F* master and build (install opam deps too)
 RUN eval $(opam env) \
  && source $HOME/.profile \
  && git clone --depth=1 https://github.com/FStarLang/FStar \
  && cd FStar/ \
+ && opam install --deps-only ./fstar.opam \
  && make -j$(nproc) ADMIT=1 \
  && ln -s $(realpath bin/fstar.exe) $HOME/bin/fstar.exe
 
-# Get karamel master and build
+# Install z3 with F* script
+RUN ./FStar/.scripts/get_fstar_z3.sh $HOME/bin
+
+# Get karamel master and build (installing opam deps too, but ignoring fstar dependency)
 RUN eval $(opam env) \
  && source $HOME/.profile \
  && git clone --depth=1 https://github.com/FStarLang/karamel \
  && cd karamel/ \
+ && sed -i '/"fstar"/d' karamel.opam \
+ && opam install --deps-only ./karamel.opam \
  && .docker/build/install-other-deps.sh \
  && make -j$(nproc)
 

@@ -1,6 +1,6 @@
 {
   "name": "Pulse devcontainer (from cached base container)",
-  "image": "mtzguido/pulse-devcontainer:latest",
+  "image": "mtzguido/pulse-base-devcontainer:latest",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -15,7 +15,6 @@
   },
   // Runs periodically and/or when content of repo changes
   "updateContentCommand": {
-    "build_plugin_and_lib": "make -j$(nproc)"
   },
   // These run only when the container is assigned to a user
   "postCreateCommand": {
