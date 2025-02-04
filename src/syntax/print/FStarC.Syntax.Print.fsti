@@ -78,6 +78,7 @@ val sigelt_to_doc'        : DsEnv.env -> sigelt -> Pprint.document
 
 (* Prints as <u1,..,un>ty instead of a pair. *)
 val tscheme_to_string : tscheme -> string
+val tscheme_to_doc    : tscheme -> Pprint.document
 
 (* Prints sugar, 'Implicit _' prints as '#', etc *)
 val bqual_to_string       : bqual -> string

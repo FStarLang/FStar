@@ -45,6 +45,8 @@ val comp_to_string      : comp -> string
 val sigelt_to_string    : sigelt -> string
 
 val tscheme_to_string   : tscheme -> string
+val tscheme_to_doc      : tscheme -> Pprint.document
+
 val pat_to_string       : pat -> string
 val binder_to_string'   : bool -> binder -> string
 val eff_decl_to_string  : eff_decl -> string

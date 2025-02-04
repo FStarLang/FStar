@@ -119,11 +119,13 @@ let univ_to_string (u:universe) : string = GenSym.with_frozen_gensym (fun () ->
   pp d
 )
 
-let tscheme_to_string (ts:tscheme) : string = GenSym.with_frozen_gensym (fun () ->
+let tscheme_to_doc (ts:tscheme) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
   let d = Resugar.resugar_tscheme ts in
-  let d = ToDocument.decl_to_document d in
-  pp d
+  ToDocument.decl_to_document d
 )
+
+let tscheme_to_string (ts:tscheme) : string =
+  tscheme_to_doc ts |> pp
 
 let pat_to_string (p:pat) : string = GenSym.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_pat p (Class.Setlike.empty ()) in

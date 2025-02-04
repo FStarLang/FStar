@@ -890,10 +890,12 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
     | Sig_inductive_typ {lid=l;us=univs;params=binders;num_uniform_params=num_uniform;t=typ;
                          mutuals=ts;ds} ->
       let fail expected inferred =
-          raise_error se Errors.Fatal_UnexpectedInductivetype
-                       (BU.format2 "Expected an inductive with type %s; got %s"
-                                   (Print.tscheme_to_string expected)
-                                   (Print.tscheme_to_string inferred))
+        let open FStarC.Errors.Msg in
+        let open FStarC.Pprint in
+        raise_error se Errors.Fatal_UnexpectedInductivetype [
+          text "Expected an inductive with type" ^/^ Print.tscheme_to_doc expected;
+          text "Got" ^/^ Print.tscheme_to_doc inferred;
+        ]
       in
       //
       //binders are the binders in Sig_inductive

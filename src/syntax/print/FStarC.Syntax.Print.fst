@@ -359,6 +359,11 @@ let tscheme_to_string ts =
   then Ugly.tscheme_to_string ts
   else Pretty.tscheme_to_string ts
 
+let tscheme_to_doc ts =
+  if Options.ugly ()
+  then Pprint.arbitrary_string (Ugly.tscheme_to_string ts)
+  else Pretty.tscheme_to_doc ts
+
 let sub_eff_to_string se =
   let tsopt_to_string ts_opt =
     if is_some ts_opt then ts_opt |> must |> tscheme_to_string
