@@ -1,8 +1,7 @@
-SUBDIRS += ns_resolution
-
-OTHERFLAGS+=--warn_error +240
-
 FSTAR_ROOT ?= ../..
 include $(FSTAR_ROOT)/mk/test.mk
 
-$(CACHE_DIR)/MustEraseForExtraction.fst.checked: OTHERFLAGS += --warn_error @318
+SUBDIRS += ns_resolution
+
+$(CACHE_DIR)/MustEraseForExtraction.fst.checked: FSTAR_ARGS += --warn_error @318
+FSTAR_ARGS += --warn_error +240
