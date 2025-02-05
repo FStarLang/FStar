@@ -233,6 +233,7 @@ type query_settings = {
     query_hash:option string;
     query_can_be_split_and_retried:bool;
     query_term: FStarC.Syntax.Syntax.term;
+    query_record_hints: bool;
 }
 
 (* Translation from F* rlimit units to Z3 rlimit units.
@@ -267,8 +268,10 @@ let with_fuel_and_diagnostics settings label_assumptions =
         Term.CheckSat; //go Z3!
         Term.SetOption ("rlimit", "0"); //back to using infinite rlimit
         Term.GetReasonUnknown; //explain why it failed
-        Term.GetUnsatCore; //for proof profiling, recording hints etc
-    ]
+    ]@
+    (if settings.query_record_hints
+     then [ Term.GetUnsatCore ]
+     else [])
     @(if (Options.print_z3_statistics() ||
           Options.query_stats ()) then [Term.GetStatistics] else []) //stats
     @settings.query_suffix //recover error labels and a final "Done!" message
@@ -846,6 +849,7 @@ let make_solver_configs
                         | Some {hash=h} -> h);
             query_can_be_split_and_retried=can_split;
             query_term=query_term;
+            query_record_hints=Options.record_hints();
         } in
         default_settings, next_hint
     in
@@ -1269,6 +1273,7 @@ type solver_cfg = {
   valid_elim       : bool;
   z3version        : string;
   context_pruning  : bool;
+  record_hints     : bool;
 }
 
 let _last_cfg : ref (option solver_cfg) = BU.mk_ref None
@@ -1282,6 +1287,7 @@ let get_cfg env : solver_cfg =
     ; valid_elim       = Options.smtencoding_valid_elim ()
     ; z3version        = Options.z3_version ()
     ; context_pruning  = Options.Ext.enabled "context_pruning"
+    ; record_hints     = Options.record_hints ()
     }
 
 let save_cfg env =
@@ -1527,7 +1533,7 @@ let solver = {
 
     solve=solve;
     solve_sync=solve_sync_bool;
-    finish=(fun () -> ());
+    finish=Z3.stop;
     refresh=Z3.refresh;
 }
 

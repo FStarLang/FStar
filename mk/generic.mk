@@ -41,11 +41,11 @@ ocaml: all-ml
 .PHONY: verify
 verify: all-checked
 
-FSTAR_OPTIONS += $(OTHERFLAGS)
 FSTAR_OPTIONS += --odir "$(OUTPUT_DIR)"
 FSTAR_OPTIONS += --cache_dir "$(CACHE_DIR)"
 FSTAR_OPTIONS += --include "$(SRC)"
 FSTAR_OPTIONS += --cache_checked_modules
+FSTAR_OPTIONS += $(OTHERFLAGS)
 
 ifeq ($(ADMIT),1)
 FSTAR_OPTIONS += --admit_smt_queries true

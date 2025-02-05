@@ -27,14 +27,16 @@ FSTAR_EXE ?= $(FSTAR_ROOT)/out/bin/fstar.exe
 FSTAR_EXE := $(abspath $(FSTAR_EXE))
 export FSTAR_EXE
 
-# This warning is really useless.
-OTHERFLAGS += --warn_error -321
-OTHERFLAGS += --ext context_pruning
-OTHERFLAGS += --z3version 4.13.3
+FSTAR_ARGS += --odir $(OUTPUT_DIR)
+FSTAR_ARGS += --cache_dir $(CACHE_DIR)
+FSTAR_ARGS += --already_cached Prims,FStar,LowStar
+FSTAR_ARGS += --warn_error -321 # This warning is really useless.
+FSTAR_ARGS += --ext context_pruning
+FSTAR_ARGS += --z3version 4.13.3
+FSTAR_ARGS += $(OTHERFLAGS)
 
 # Set ADMIT=1 to admit queries
-ADMIT ?=
-MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)
+FSTAR_ARGS += $(if $(ADMIT),--admit_smt_queries true)
 
 # Almost everything goes into the OUTPUT_DIR, except for .checked files
 # which go in the CACHE_DIR. The .depend goes in the current directory.
@@ -43,12 +45,9 @@ MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)
 OUTPUT_DIR ?= _output
 CACHE_DIR ?= _cache
 
-FSTAR = $(FSTAR_EXE) $(SIL) 				\
+FSTAR = $(FSTAR_EXE) $(SIL) 						\
 	$(if $(NO_WRITE_CHECKED),,--cache_checked_modules)		\
-	--odir $(OUTPUT_DIR)				\
-	--cache_dir $(CACHE_DIR)			\
-	--already_cached Prims,FStar,LowStar		\
-	 $(OTHERFLAGS) $(MAYBE_ADMIT)
+	$(FSTAR_ARGS)
 
 ifneq ($(MAKECMDGOALS),clean)
 ifeq ($(NODEPEND),) # Set NODEPEND=1 to not dependency analysis
