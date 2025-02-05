@@ -382,6 +382,7 @@ instance pretty_ctxu     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
 instance pretty_uvar     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
 instance pretty_binder   = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
 instance pretty_bv       = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
+instance pretty_qualifier = { pp  = (fun x -> Pprint.doc_of_string (show x)); }
 
 open FStarC.Pprint
 
