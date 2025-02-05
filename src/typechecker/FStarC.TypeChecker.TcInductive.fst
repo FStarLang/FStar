@@ -1050,8 +1050,9 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     in
 
     let discriminator_ses =
-        if fvq <> Data_ctor
-        then [] // We do not generate discriminators for record types
+        if fvq <> Data_ctor // We do not generate discriminators for record types
+          || U.has_attribute attrs C.no_auto_projectors_decls_attr
+        then []
         else
             let discriminator_name = U.mk_discriminator lid in
             let no_decl = false in
