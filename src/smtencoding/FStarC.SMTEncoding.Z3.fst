@@ -409,6 +409,8 @@ let giveZ3 decls = with_solver_state_unit (SolverState.give decls)
 let refresh using_facts_from =
     (!bg_z3_proc).refresh();
     with_solver_state_unit (SolverState.reset using_facts_from)
+let stop () =
+    (!bg_z3_proc).refresh()
 
 let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) (queryid:string) : z3status & z3statistics =
   let parse (z3out:string) =

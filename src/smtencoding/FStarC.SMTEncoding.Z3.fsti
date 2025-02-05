@@ -75,6 +75,9 @@ killing the current process. A new process will *not* be started
 until we actually need to perform a query. *)
 val refresh: option SolverState.using_facts_from_setting -> unit
 
+(* Kill the current background Z3 process. *)
+val stop : unit -> unit
+
 val push : msg:string -> unit
 val pop : msg:string -> unit
 val snapshot : string -> int
