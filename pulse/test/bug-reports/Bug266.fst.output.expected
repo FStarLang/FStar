@@ -1,0 +1,9 @@
+>> Got issues: [
+* Error 19 at Bug266.fst(12,2-12,14):
+  - Failed to prove pure property: Prims.l_False
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also Bug266.fst(12,31-12,36)
+
+>>]
