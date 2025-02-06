@@ -63,7 +63,59 @@ let check_bind_fn
   | _ -> fail g (Some t.range) "check_bind_fn: head is not an abstraction"
 #pop-options
 
-#push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
+let check_if_seq_lhs
+  (g:env) (ctxt : slprop) (post_hint : post_hint_opt g)
+  (r:checker_result_t g ctxt post_hint) (e1:st_term)
+  : T.Tac unit
+=
+  if T.unseal e1.seq_lhs then begin
+    let (| _x, g, (| u, ty, ty_wf |), _ctxt', _k |) = r in
+    let open Pulse.PP in
+    if T.Tv_Arrow? ty then
+      fail_doc g (Some e1.range) [
+        prefix 2 1 (text "This function is partially applied. Remaining type:") (pp ty);
+        text "Did you forget to apply some arguments?";
+      ]
+    else if None? (fst <| T.is_non_informative (elab_env g) ty) then (
+      if None? (Pulse.Checker.Pure.try_get_non_informative_witness g u ty ty_wf) then
+        fail_doc g (Some e1.range) [
+          prefix 2 1 (text "This statement returns a value of type:") (pp ty);
+          text "Did you forget to assign it or ignore it?";
+        ]
+    ) else
+      () (* ok *)
+  end
+
+let check_binder_typ
+  (g:env) (ctxt : slprop) (post_hint : post_hint_opt g)
+  (r:checker_result_t g ctxt post_hint)
+  (b:binder) (e1:st_term)
+  : T.Tac unit
+=
+  (* Check that the type matches the annotation, if any *)
+  let ty = b.binder_ty in
+  begin match inspect_term ty with
+  | Tm_Unknown -> ()
+  | _ ->
+    let (| ty, _, _ |) = compute_tot_term_type g ty in //elaborate it first
+    let (| _, _, (| _, t, _ |), _, _ |) = r in
+    // TODO: once we have the rename operation then we should
+    // ditch this check and just elaborate the bind
+    //   let x : ty = stapp in ...
+    // to
+    //   let x0 = stapp in
+    //   let x : t = x0 in
+    //   rename x0 x; ...
+    // to leverage the pure case
+    if not (eq_tm ty t) then
+      let open Pulse.PP in
+      fail_doc g (Some e1.range) [
+        text "Type mismatch (NB: this is a syntactic check)";
+        prefix 2 1 (text "Expected:") (pp ty);
+        prefix 2 1 (text "Got:") (pp t);
+      ]
+  end
+
 let check_bind
   (g:env)
   (ctxt:slprop)
@@ -94,29 +146,8 @@ let check_bind
   else (
     let (| x, g1, _, (| ctxt', ctxt'_typing |), k1 |) =
       let r = check g ctxt ctxt_typing None binder.binder_ppname e1 in
-      (* Check that the type matches the annotation, if any *)
-      let ty = binder.binder_ty in
-      begin match inspect_term ty with
-      | Tm_Unknown -> ()
-      | _ ->
-        let (| ty, _, _ |) = compute_tot_term_type g ty in //elaborate it first
-        let (| _, _, (| _, t, _ |), _, _ |) = r in
-        // TODO: once we have the rename operation then we should
-        // ditch this check and just elaborate the bind
-        //   let x : ty = stapp in ...
-        // to
-        //   let x0 = stapp in
-        //   let x : t = x0 in
-        //   rename x0 x; ...
-        // to leverage the pure case
-        if not (eq_tm ty t) then
-          let open Pulse.PP in
-          fail_doc g (Some e1.range) [
-            text "Type mismatch (NB: this is a syntactic check)";
-            prefix 2 1 (text "Expected:") (pp ty);
-            prefix 2 1 (text "Got:") (pp t);
-          ]
-      end;
+      check_if_seq_lhs g ctxt None r e1;
+      check_binder_typ g ctxt None r binder e1;
       r
     in
     let g1 = reset_context g1 g in
@@ -156,7 +187,7 @@ let check_tot_bind
 
   | None -> (
     let head = Tm_Return { expected_type = b.binder_ty; term = e1; insert_eq = true } in
-    let head = { term = head; range = Pulse.RuntimeUtils.range_of_term e1; effect_tag = default_effect_hint; source = Sealed.seal false } in
+    let head = mk_term head (Pulse.RuntimeUtils.range_of_term e1) in
     let t = { t with term = Tm_Bind { binder=b; head; body=e2 } } in
     check_bind g pre pre_typing post_hint res_ppname t check
   )

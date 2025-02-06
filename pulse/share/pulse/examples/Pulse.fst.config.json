@@ -12,7 +12,7 @@
     "4.13.3"
   ],
   "include_dirs": [
-    "../../../lib/pulse",
+    "../../../out/lib/pulse",
     "bug-reports",
     "by-example",
     "parallel",

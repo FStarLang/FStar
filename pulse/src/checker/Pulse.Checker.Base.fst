@@ -635,13 +635,14 @@ let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
     let cres = comp_res c in
     if eq_tm cres ret_ty
     then (| t, c, d |)
-    else match Pulse.Checker.Pure.check_equiv g cres ret_ty with
-         | None ->
-           fail g (Some t.range)
-             (Printf.sprintf "Could not prove equiv for computed type %s and expected type %s"
-                (P.term_to_string cres)
-                (P.term_to_string ret_ty))
-         | Some tok ->
+    else match Pulse.Typing.Util.check_equiv_now (elab_env g) cres ret_ty with
+         | None, issues ->
+           let open Pulse.PP in
+           fail_doc_with_subissues g (Some t.range) issues [
+            prefix 2 1 (text "Could not prove equality between computed type") (pp cres) ^/^
+            prefix 2 1 (text "and expected type") (pp ret_ty);
+           ]
+         | Some tok, _ ->
            let d_equiv
              : RT.equiv _ cres ret_ty =
              RT.Rel_eq_token _ _ _ (FStar.Squash.return_squash tok) in
@@ -807,7 +808,7 @@ let is_stateful_application (g:env) (e:term)
         | _ -> None
       in
       let st_app = Tm_STApp { head; arg=last_arg; arg_qual=qual} in
-      let st_app = { term = st_app; range=RU.range_of_term e; effect_tag=default_effect_hint; source=Sealed.seal false } in
+      let st_app = mk_term st_app (RU.range_of_term e) in
       Some st_app
     | _ -> None
 

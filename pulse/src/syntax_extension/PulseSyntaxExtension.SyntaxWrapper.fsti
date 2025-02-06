@@ -116,6 +116,9 @@ val close_comp_n (t:comp) (vs:list var) : comp
 val comp_pre (c:comp) : term
 val comp_res (c:comp) : term
 val comp_post (c:comp) : term
+val mark_statement_sequence (s:st_term) : st_term
+(* ^marks a statement as being the lhs of s1;s2, to perform more checks on it
+(type must be unit) *)
 
 val print_exn (e:exn) : string
 val binder_to_string (env:FStarC.TypeChecker.Env.env) (b:binder) : string

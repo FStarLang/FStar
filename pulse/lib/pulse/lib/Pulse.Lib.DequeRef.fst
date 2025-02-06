@@ -110,10 +110,10 @@ ensures
   push_front x3 v;
   push_front x4 v;
 
-  pop_front x1;
-  pop_front x2;
-  pop_front x3;
-  pop_front x4;
+  let _ = pop_front x1;
+  let _ = pop_front x2;
+  let _ = pop_front x3;
+  let _ = pop_front x4;
   ()
 }
 #pop-options

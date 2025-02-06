@@ -18,23 +18,64 @@ module PartialApp
 #lang-pulse
 open Pulse.Lib.Pervasives
 
+[@@expect_failure]
+fn statement_not_unit ()
+  requires emp
+  ensures emp
+{
+  1;
+  ()
+}
 
-fn my_fn (#t:Type0) (x y:t) 
+fn statement_not_unit2 ()
+  requires emp
+  ensures emp
+{
+  let _ = 1;
+  ()
+}
+
+fn statement_not_unit3 ()
+  requires emp
+  ensures emp
+{
+  ignore 1;
+  ()
+}
+
+fn my_fn (#t:Type0) (x y:t)
   requires emp
   ensures emp
 {
   ()
 }
 
-
 // Line 22 is a partial application that returns _:t -> unit.
-// We should warn the user in case this return type was unintentional. 
-
+// We should warn the user in case this return type was unintentional.
+[@@expect_failure]
 fn app (#t:Type0) (v:t)
   requires emp
   ensures emp
 {
   my_fn v;
+  my_fn v v;
+  ()
+}
+
+fn app2 (#t:Type0) (v:t)
+  requires emp
+  ensures emp
+{
+  let _ = my_fn v;
+  my_fn v v;
+  ()
+}
+
+fn app3 (#t:Type0) (v:t)
+  requires emp
+  ensures emp
+{
+  ignore (my_fn v);
   my_fn v v;
   ()
 }

@@ -32,16 +32,20 @@ module P = Pulse.Syntax.Printer
 module Rec = Pulse.Recursion
 
 let debug_main g (s: unit -> T.Tac string) : T.Tac unit =
-  if RU.debug_at_level (fstar_env g) "pulse.main"
-  then T.print (s ())
-  else ()
+  if RU.debug_at_level (fstar_env g) "pulse.main" then
+    T.print (s ())
 
 let rec mk_abs (g:env) (qbs:list (option qualifier & binder & bv)) (body:st_term) (comp:comp)
 : TacH st_term (fun _ -> not (Nil? qbs))
                (fun _ r -> match r with FStar.Tactics.Result.Success v _ -> Tm_Abs? v.term | _ -> False)
 =
   let with_range (s:st_term') (r:range) : st_term =
-    { term = s; range = r; effect_tag = default_effect_hint; source=Sealed.seal false }
+    { term = s;
+      range = r;
+      effect_tag = default_effect_hint;
+      source=Sealed.seal false;
+      seq_lhs=Sealed.seal false;
+    }
   in
   match qbs with
   | [(q, last, last_bv)] -> 
@@ -196,17 +200,13 @@ let check_fndecl
 
   (* We make a dummy FnDefn setting the body to a Tm_Admit, and
   call the checker to elaborate its actual type. *)
-  let body : st_term = {
-    term = Tm_Admit {
+  let body : st_term =
+    mk_term (Tm_Admit {
       ctag   = ctag_of_comp_st comp;
       u      = stc.u;
       typ    = stc.res;
       post   = None; // Some stc.post?
-    };
-    range = d.range;
-    effect_tag = seal None;
-    source = seal false;
-  }
+    }) d.range
   in
   let body = mk_abs g bs body comp in
   let rng = body.range in

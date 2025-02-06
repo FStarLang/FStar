@@ -1,0 +1,33 @@
+>> Got issues: [
+* Error 228 at Bug267.fst(14,4-14,6):
+  - Expected a total term, but this term has Ghost effect
+
+>>]
+>> Got issues: [
+* Error 12 at Bug267.fst(33,10-33,14):
+  - Expected type Prims.int
+    but !i
+    has type
+        Pulse.Lib.Core.stt Prims.int
+          (Pulse.Lib.Reference.pts_to i (*?u39*) _)
+          (fun x ->
+              Pulse.Lib.Reference.pts_to i (*?u39*) _ **
+              Pulse.Lib.Core.pure ((*?u39*) _ == x))
+
+>>]
+>> Got issues: [
+* Error 19 at Bug267.fst(64,4-64,5):
+  - Could not prove equality between computed type Prims.int
+    and expected type Prims.nat
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: Prims.fst(153,28-175,79)
+  - See also Bug267.fst(64,4-64,8)
+
+>>]
+>> Got issues: [
+* Error 12 at Bug267.fst(69,13-69,14):
+  - Expected type Pulse.Lib.Core.slprop but n >= 1 has type Prims.bool
+
+>>]

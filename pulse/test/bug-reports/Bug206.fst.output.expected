@@ -1,0 +1,11 @@
+>> Got issues: [
+* Error 19 at Bug206.fst(18,7-18,8):
+  - Expected term of type x: Prims.nat{x > 0} got term x
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: Bug206.fst(18,2-18,6)
+  - Other related locations: Bug206.fst(6,20-6,20)
+  - See also Bug206.fst(18,2-18,8)
+
+>>]

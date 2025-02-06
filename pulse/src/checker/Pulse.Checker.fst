@@ -96,7 +96,9 @@ let instantiate_unknown_witnesses (g:env) (t:st_term { Tm_IntroExists? t.term })
     let e1 =
       let hint_type = ASSERT { p = opened_p } in
       let binders = [] in
-      {term=Tm_ProofHintWithBinders { hint_type;binders;t=e2 }; range=t.range; effect_tag=as_effect_hint STT_Ghost; source = Sealed.seal false } in
+      let t = mk_term (Tm_ProofHintWithBinders { hint_type;binders;t=e2 }) t.range in
+      { t with effect_tag = as_effect_hint STT_Ghost }
+     in
     
     let t = 
       L.fold_right

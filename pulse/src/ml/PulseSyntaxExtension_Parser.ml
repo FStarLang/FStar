@@ -241,12 +241,7 @@ let parse_peek_id (s:string) (r:range) : (string, string * range) either =
   | e ->
     let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
     let r = FStarC_Range.mk_range fn pos pos in
-    let msg = FStarC_Util.format3 
-         "Failed to peek id, Syntax error @ %s\n%s\n%s\n"
-          (FStarC_Range.string_of_range r)
-          (Printexc.to_string e)
-          (Printexc.get_backtrace()) in
-    Inr (msg, r)
+    Inr ("Syntax error", r)
 
 
 let parse_lang (s:string) (r:range) =
