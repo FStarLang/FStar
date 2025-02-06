@@ -9,3 +9,9 @@ let system =
   | "Win32" -> Win32
   | "Cygwin" -> Cygwin
   | s -> failwith ("Unrecognized system: " ^ s)
+
+let kernel () : string =
+  try
+    List.hd (Process.read_stdout "uname" [| |])
+  with
+  | _ -> Sys.os_type

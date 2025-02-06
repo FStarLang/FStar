@@ -266,8 +266,9 @@ let go_normal () =
       fstar_files := Some filenames;
 
       if Debug.any () then (
-        Util.print1 "- F* executable: %s\n" (Util.exec_name);
-        Util.print1 "- Library root: %s\n" ((Util.dflt "<none>" (Find.lib_root ())));
+        Util.print3 "- F* version %s -- %s (on %s)\n"  !Options._version !Options._commit (Platform.kernel ());
+        Util.print1 "- Executable: %s\n" (Util.exec_name);
+        Util.print1 "- Library root: %s\n" (Util.dflt "<none>" (Find.lib_root ()));
         Util.print1 "- Full include path: %s\n" (show (Find.include_path ()));
         Util.print_string "\n";
         ()
