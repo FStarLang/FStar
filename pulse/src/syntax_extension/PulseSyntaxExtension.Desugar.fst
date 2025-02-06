@@ -161,7 +161,6 @@ let tosyntax' (env:env_t) (t:A.term)
       | e -> 
         match FStarC.Errors.issue_of_exn e with
         | Some i ->
-          let i = prepend_ctx_issue (Pprint.arbitrary_string "Failed to desugar Pulse term") i in
           FStarC.Errors.add_issues [i];
           just_fail ()
 

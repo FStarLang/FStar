@@ -1,0 +1,8 @@
+>> Got issues: [
+* Error 228 at Bug29.fst(58,4-58,45):
+  - Cannot prove:
+      Pulse.Lib.Reference.pts_to r v
+  - In the context:
+      emp
+
+>>]

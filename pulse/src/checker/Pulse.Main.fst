@@ -318,17 +318,10 @@ let check_pulse_core
         T.fail "Pulse parser failed"
 
       | Inr (Some (msg, range)) ->
-        let i =
-          Issue.mk_issue "Error"
-                   (Printf.sprintf "%s: %s" (T.range_to_string range) msg)
-                   (Some range)
-                   None
-                   []
-        in
-        T.log_issues [i];
-        T.fail "Pulse parser failed"
-
-
+        T.fail_doc_at [
+          PP.text "Pulse parser failed";
+          Pprint.prefix 2 1 (text "Error:") (text msg);
+        ] (Some range)
 
 [@@plugin]
 let check_pulse (namespaces:list string)

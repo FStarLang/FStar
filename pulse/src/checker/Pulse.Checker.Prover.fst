@@ -628,7 +628,6 @@ let prove_post_hint (#g:env) (#ctxt:slprop)
     if not (eq_tm ty post_hint.ret_ty)
     then
       fail_doc g (Some rng) [
-        text "Error in proving postcondition";
         text "The return type" ^^
           indent (pp ty) ^/^
         text "does not match the expected" ^^
@@ -648,8 +647,7 @@ let prove_post_hint (#g:env) (#ctxt:slprop)
       match check_equiv_emp' g3 remaining_ctxt with
       | None -> 
         fail_doc g (Some rng) [
-          text "Error in proving postcondition";
-          prefix 2 1 (text "Inferred postcondition additionally contains")
+          prefix 2 1 (text "Leftover resources:")
                      (align (P.term_to_doc remaining_ctxt));
           (let tv = inspect_term remaining_ctxt in
            if Tm_Star? tv

@@ -29,13 +29,13 @@ module R = FStar.Reflection.V2
 let check_slprop_equiv_ext r (g:env) (p q:slprop)
 : T.Tac (slprop_equiv g p q)
 = let res, issues = Pulse.Typing.Util.check_equiv_now (elab_env g) p q in
-  T.log_issues issues;
   match res with
   | None -> 
-    fail_doc g (Some r)
-           [text "rewrite: could not prove equality of";
-            pp p;
-            pp q]
+    fail_doc_with_subissues g (Some r) issues [
+      text "rewrite: could not prove equality of";
+      pp p;
+      pp q;
+    ]
   | Some token ->
     VE_Ext g p q token
 
@@ -66,12 +66,12 @@ let check_slprop_equiv_tac r (g:env) (p q:slprop) (tac_tm : term)
   let res, issues = T.call_subtac_tm r_env tac_tm u0 goal in
   match res with
   | None -> 
-    T.log_issues issues;
-    fail_doc g (Some r)
-           [text "rewrite: could not prove equality of";
-            pp p;
-            pp q;
-            text "Using tactic:" ^/^ pp tac_tm]
+    fail_doc_with_subissues g (Some r) issues [
+      text "rewrite: could not prove equality of";
+      pp p;
+      pp q;
+      text "Using tactic:" ^/^ pp tac_tm
+    ]
   | Some token ->
     // Need a VE_ rule to turn an arbitrary proof into a slprop_equiv.
     // Or use enough core lemmas to show that slprop_equiv implies equality here,

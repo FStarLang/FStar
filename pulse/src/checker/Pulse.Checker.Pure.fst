@@ -94,13 +94,13 @@ let rtb_instantiate_implicits g f t expected =
   (* WARN: unary dependence, see comment in RU *)
   let t = RU.deep_transform_to_unary_applications t in
   let res, iss = RU.with_context (get_context g) (fun _ -> RTB.instantiate_implicits f t expected) in
-  match res with
+  begin match res with
   | None ->
-    debug g (fun _ -> "Returned from instantiate_implicits: None");
-    res, iss
+    debug g (fun _ -> "Returned from instantiate_implicits: None")
   | Some (_, t, _) ->
-    debug g (fun _ -> Printf.sprintf "Returned from instantiate_implicits: %s" (T.term_to_string t));
-    res, iss
+    debug g (fun _ -> Printf.sprintf "Returned from instantiate_implicits: %s" (Pulse.Show.show t))
+  end;
+  res, iss
 
 let rtb_core_check_term g f e eff t =
   check_ln g "rtb_core_check_term.e" e;
@@ -179,59 +179,36 @@ let ill_typed_term (t:term) (expected_typ:option term) (got_typ:option term) : T
     prefix 2 1 (text "of type") (pp ty')
   ]
 
-let maybe_fail_doc (issues:list FStar.Issue.issue)
-                   (g:env) (rng:range) (doc:list FStar.Pprint.document) =
-  let has_localized_error = 
-      List.Tot.Base.existsb
-        (fun i -> 
-          FStar.Issue.level_of_issue i = "Error"
-          && Some? (FStar.Issue.range_of_issue i))
-        issues
-  in
-  if has_localized_error
-  then let message = FStar.Pprint.(pretty_string RU.float_one 80 (concat doc)) in
-       T.fail_at message (Some <| RU.start_of_range rng)
-  else fail_doc g (Some rng) doc
-
-let instantiate_term_implicits (g:env) (t0:term) (expected:option typ) =
+let instantiate_term_implicits (g:env) (t0:term) (expected:option typ) : Tac _ =
   let f = elab_env g in
   let rng = RU.range_of_term t0 in
   let f = RU.env_set_range f (Pulse.Typing.Env.get_range g (Some rng)) in
   let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f t0 expected) in
-  T.log_issues issues;
+  let fail #a issues : Tac a =
+    fail_doc_with_subissues g (Some rng) issues []
+  in
   match topt with
-  | None -> (
-    let open Pulse.PP in
-    maybe_fail_doc issues
-         g rng [
-              prefix 4 1 (text ("Could not check term:"))
-                        (pp t0)
-            ]
-  )
+  | None -> fail issues
   | Some (namedvs, t, ty) ->
-    if L.length namedvs <> 0
-    then
-      let open Pulse.PP in
-      maybe_fail_doc []
-        g rng [
-          prefix 4 1 (text "Could not check term:") (pp t0)
-        ]
-    else t, ty
+    match namedvs with
+    | (v, vty) :: _ ->
+      fail_doc g (Some rng) [
+        prefix 2 1 (doc_of_string "Could not resolve implicit") (pp v) ^/^
+        prefix 2 1 (doc_of_string "of type") (pp vty) ^/^
+        prefix 2 1 (doc_of_string "in term") (pp t0);
+      ]
+    | [] ->
+      t, ty
 
 let instantiate_term_implicits_uvs (g:env) (t0:term) =
   let f = elab_env g in
   let rng = RU.range_of_term t0 in
   let f = RU.env_set_range f (Pulse.Typing.Env.get_range g (Some rng)) in
   let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f t0 None) in
-  T.log_issues issues;
   match topt with
   | None -> (
     let open Pulse.PP in
-    maybe_fail_doc issues
-         g rng [
-              prefix 4 1 (text "Could not check term:")
-                        (pp t0)
-            ]
+    fail_doc_with_subissues g (Some rng) issues []
   )
   | Some (namedvs, t, ty) ->
     let (| uvs, t, ty |)
@@ -253,12 +230,9 @@ let check_universe (g:env) (t:term)
   : T.Tac (u:universe & universe_of g t u)
   = let f = elab_env g in
     let ru_opt, issues = catch_all (fun _ -> rtb_universe_of g f t) in
-    T.log_issues issues;
     match ru_opt with
     | None -> 
-      maybe_fail_doc
-        issues
-        g (RU.range_of_term t) (ill_typed_term t (Some (tm_type u_unknown)) None)
+      fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t (Some (tm_type u_unknown)) None)
 
     | Some ru ->
       let proof : squash (T.typing_token f t (E_Total, R.pack_ln (R.Tv_Type ru))) =
@@ -290,13 +264,10 @@ let compute_term_type (g:env) (t:term)
                       (P.term_to_string t)
                       (T.term_to_string t));
     let res, issues = tc_meta_callback g fg t in
-    T.log_issues issues;
     match res with
     | None -> 
-      maybe_fail_doc issues
-            g (RU.range_of_term t) (ill_typed_term t None None)
+      fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t None None)
     | Some (| rt, eff, ty', tok |) -> (| rt, eff, ty', E tok |)
-
 
 let compute_term_type_and_u (g:env) (t:term)
   : T.Tac (t:term &
@@ -306,12 +277,9 @@ let compute_term_type_and_u (g:env) (t:term)
            typing g t eff ty)
   = let fg = elab_env g in
     let res, issues = tc_meta_callback g fg t in
-    T.log_issues issues;
     match res with
     | None ->
-      maybe_fail_doc 
-        issues
-        g (RU.range_of_term t) (ill_typed_term t None None)
+      fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t None None)
     | Some (| rt, eff, ty', tok |) ->
       let (| u, uty |) = check_universe g ty' in
       (| rt, eff, ty', (| u, uty |), E tok |)
@@ -328,12 +296,9 @@ let check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
       rtb_core_check_term 
         (push_context g "check_term_with_expected_type_and_effect" (range_of_term t))
          fg e eff t) in
-  T.log_issues issues;
   match topt with
   | None ->
-    maybe_fail_doc 
-      issues
-      g (RU.range_of_term e) (ill_typed_term e (Some t) None)
+    fail_doc_with_subissues g (Some <| RU.range_of_term e) issues (ill_typed_term e (Some t) None)
   | Some tok -> (| e, E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok)) |)
 
 let check_term_at_type (g:env) (e:term) (t:term)
@@ -347,12 +312,9 @@ let check_term_at_type (g:env) (e:term) (t:term)
     rtb_core_check_term_at_type 
       (push_context g "check_term_with_expected_type" (range_of_term t))
       fg e t) in
-  T.log_issues issues;
   match effopt with
   | None ->
-    maybe_fail_doc 
-      issues
-      g (RU.range_of_term e) (ill_typed_term e (Some t) None)
+    fail_doc_with_subissues g (Some <| RU.range_of_term e) issues (ill_typed_term e (Some t) None)
   | Some eff ->
     (| e, eff, E (RT.T_Token _ _ _ (FStar.Squash.get_proof _)) |)
 
@@ -370,12 +332,9 @@ let core_compute_term_type (g:env) (t:term)
            typing g t eff ty)
   = let fg = elab_env g in
     let res, issues = tc_with_core (push_context g "core_check_term" (range_of_term t)) fg t in
-    T.log_issues issues;
     match res with
     | None -> 
-      maybe_fail_doc 
-        issues
-        g (RU.range_of_term t) (ill_typed_term t None None)
+      fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t None None)
     | Some (| eff, ty', tok |) -> (| eff, ty', E tok |)
 
 let core_check_term g e eff t =
@@ -385,12 +344,9 @@ let core_check_term g e eff t =
      rtb_core_check_term
       (push_context g "core_check_term" (range_of_term t))
        fg e eff t) in
-  T.log_issues issues;
   match topt with
   | None ->
-    maybe_fail_doc
-      issues
-      g (RU.range_of_term e) (ill_typed_term e (Some t) None)
+    fail_doc_with_subissues g (Some <| RU.range_of_term e) issues (ill_typed_term e (Some t) None)
   | Some tok -> E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok))
 
 let core_check_term_at_type g e t =
@@ -400,12 +356,9 @@ let core_check_term_at_type g e t =
     rtb_core_check_term_at_type 
       (push_context g "core_check_term_at_type" (range_of_term t))
        fg e t) in
-  T.log_issues issues;
   match effopt with
   | None ->
-    maybe_fail_doc 
-      issues
-      g (RU.range_of_term e) (ill_typed_term e (Some t) None)
+    fail_doc_with_subissues g (Some <| RU.range_of_term e) issues (ill_typed_term e (Some t) None)
   | Some eff ->
     (| eff, E (RT.T_Token _ _ _ (FStar.Squash.get_proof _)) |)
 
@@ -465,7 +418,6 @@ let get_non_informative_witness g u t t_typing
   : T.Tac (non_informative_t g u t)
   = match try_get_non_informative_witness_aux g u t t_typing with
     | None, issues ->
-      T.log_issues issues;
       let open Pulse.PP in
       fail_doc g (Some (RU.range_of_term t)) [
         text "Expected a term with a non-informative (e.g., erased) type.";
@@ -473,7 +425,6 @@ let get_non_informative_witness g u t t_typing
           (pp t);
       ]
     | Some e, issues ->
-      T.log_issues issues;
       e
 
 let try_check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
@@ -484,11 +435,10 @@ let try_check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
 let check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
   : T.Tac (Pulse.Typing.prop_validity g p)
   = let t_opt, issues = rtb_check_prop_validity g false (elab_env g) p in
-    T.log_issues issues;
     match t_opt with
     | None -> 
       let open Pulse.PP in
-      maybe_fail_doc issues g (RU.range_of_term p) [
+      fail_doc_with_subissues g (Some <| RU.range_of_term p) issues [
         prefix 2 1 (text "Failed to prove pure property:") (pp p);
       ]
     | Some tok -> tok
@@ -528,14 +478,13 @@ let is_non_informative g c =
 let check_subtyping g t1 t2 =
   T.with_policy ForceSMT (fun () ->
   let res, issues = rtb_check_subtyping g t1 t2 in
-  T.log_issues issues;
   match res with
   | Some tok -> tok
   | None ->
     let open Pulse.PP in
-    maybe_fail_doc issues g (RU.range_of_term t1)
-          [ text "Could not prove subtyping of "
-            ^/^ pp t1 ^/^ text "and" ^/^ pp t2]
+    fail_doc_with_subissues g (Some (RU.range_of_term t1)) issues [
+      text "Could not prove subtyping of" ^/^ pp t1 ^/^ text "and" ^/^ pp t2
+    ]
   )
 
 let check_equiv g t1 t2 =

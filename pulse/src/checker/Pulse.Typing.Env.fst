@@ -404,9 +404,7 @@ let fail_doc_env (#a:Type) (with_env:bool) (g:env) (r:option range) (msg:list Pp
     then msg @ [doc_of_string "In typing environment:" ^^ indent (env_to_doc g)]
     else msg
   in
-  let issue = FStar.Issue.mk_issue_doc "Error" msg (Some r) None (ctxt_to_list g) in
-  T.log_issues [issue];
-  T.fail_at "Pulse checker failed." (Some r)
+  T.fail_doc_at msg (Some r)
 
 let warn_doc (g:env) (r:option range) (msg:list Pprint.document) : T.Tac unit =
   let r = get_range g r in
@@ -432,3 +430,22 @@ let warn (g:env) (r:option range) (msg:string) : T.Tac unit =
 
 let info (g:env) (r:option range) (msg:string) =
   info_doc g r [Pprint.arbitrary_string msg]
+
+let fail_doc_with_subissues #a (g:env) (ro : option range)
+  (sub : list Issue.issue)
+  (msg : list document)
+  : T.TacH a (requires fun _ -> True) (ensures fun _ r -> FStar.Tactics.Result.Failed? r)
+=
+  (* If for whatever reason `sub` is empty, F* will handle it well
+  and a generic error message will be displayed *)
+  let issues = sub |> T.map (fun is ->
+    FStar.Issue.mk_issue_doc
+      (Issue.level_of_issue is)
+      (msg @ Issue.message_of_issue is)
+      (Issue.range_of_issue is)
+      (Issue.number_of_issue is)
+      (Issue.context_of_issue is)
+    )
+  in
+  T.log_issues issues;
+  T.raise T.Stop

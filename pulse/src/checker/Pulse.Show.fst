@@ -83,6 +83,9 @@ instance tac_showable_post_hint_t : tac_showable post_hint_t = {
       "post = " ^ show h.post ^ "; " ^
     "}")
 }
+instance tac_showable_namedv : tac_showable namedv = {
+  show = (fun b -> namedv_to_string b);
+}
 
 instance tac_showable_r_term : tac_showable Reflection.term = {
   show = Tactics.term_to_string;

@@ -43,6 +43,7 @@ instance val tac_showable_env : tac_showable env
 instance val tac_showable_observability : tac_showable observability
 instance val tac_showable_effect_annot : tac_showable effect_annot
 instance val tac_showable_post_hint_t : tac_showable post_hint_t
+instance val tac_showable_namedv : tac_showable namedv
 
 instance val tac_showable_r_term : tac_showable Reflection.term
 instance val tac_showable_range  : tac_showable Range.range
