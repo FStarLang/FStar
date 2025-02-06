@@ -488,30 +488,18 @@ let check
       ] in
       info_doc_env g (Some st.range) msg
     end;
-    let rw = { term = Tm_Rewrite { t1 = lhs;
-                                   t2 = rhs;
-                                   tac_opt = Some Pulse.Reflection.Util.slprop_equiv_norm_tm };
-               range = st.range;
-               effect_tag = as_effect_hint STT_Ghost;
-               source = Sealed.seal false;
-    } in
-    let st = { term = Tm_Bind { binder = as_binder (wr (`unit) st.range);
-                                head = rw; body };
-               range = st.range;
-               effect_tag = body.effect_tag;
-               source = Sealed.seal false;
-    } in
+
+    let rw = mk_term (Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt = Some Pulse.Reflection.Util.slprop_equiv_norm_tm }) st.range in
+    let rw = { rw with effect_tag = as_effect_hint STT_Ghost } in
+
+    let st = mk_term (Tm_Bind { binder = as_binder (wr (`unit) st.range); head = rw; body }) st.range in
+    let st = { st with effect_tag = body.effect_tag } in
 
     let st =
       match bs with
       | [] -> st
       | _ ->
-        { term = Tm_ProofHintWithBinders { hint_type = ASSERT { p = lhs };
-                                           binders = bs;
-                                           t = st };
-          range = st.range;
-          effect_tag = st.effect_tag;
-          source = Sealed.seal false;
-        }
+        let t = mk_term (Tm_ProofHintWithBinders { hint_type = ASSERT { p = lhs }; binders = bs; t = st }) st.range in
+        { t with effect_tag = st.effect_tag }
     in
     check g pre pre_typing post_hint res_ppname st

@@ -308,6 +308,14 @@ and st_term = {
 
 and branch = pattern & st_term
 
+(* Create a term with default fields *)
+let mk_term (s : st_term') (r : range) : st_term =
+  { term = s;
+    range = r;
+    effect_tag = default_effect_hint;
+    source = FStar.Sealed.seal false;
+  }
+
 noeq
 type fn_defn = {
   (* A function definition. This will be mostly checked as a nested

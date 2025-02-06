@@ -163,7 +163,7 @@ let check_tot_bind
 
   | None -> (
     let head = Tm_Return { expected_type = b.binder_ty; term = e1; insert_eq = true } in
-    let head = { term = head; range = Pulse.RuntimeUtils.range_of_term e1; effect_tag = default_effect_hint; source = Sealed.seal false } in
+    let head = mk_term head (Pulse.RuntimeUtils.range_of_term e1) in
     let t = { t with term = Tm_Bind { binder=b; head; body=e2 } } in
     check_bind g pre pre_typing post_hint res_ppname t check
   )

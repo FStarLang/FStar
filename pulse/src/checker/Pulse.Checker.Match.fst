@@ -250,19 +250,16 @@ let check_branch
   let g' = push_binding g' hyp_var ({name = Sealed.seal "branch equality"; range = Range.range_0 }) eq_typ in
   let e = open_st_term_bs e pulse_bs in
   let e =
-    {
-      term =
-        Tm_ProofHintWithBinders {
-          binders = [];
-          hint_type = RENAME { pairs = [(sc, elab_p_tm)];
-                               goal = None;
-                               tac_opt = Some Pulse.Reflection.Util.match_rewrite_tac_tm; };
-          t = e;
-        };
-      range = e.range;
-      effect_tag = e.effect_tag;
-      source = Sealed.seal false;
-    }
+    let t =
+      mk_term (Tm_ProofHintWithBinders {
+                 binders = [];
+                 hint_type = RENAME { pairs = [(sc, elab_p_tm)];
+                                      goal = None;
+                                      tac_opt = Some Pulse.Reflection.Util.match_rewrite_tac_tm; };
+                 t = e; })
+              e.range
+    in
+    { t with effect_tag = e.effect_tag }
   in
   let pre_typing = tot_typing_weakening_n pulse_bs pre_typing in // weaken w/ binders
   let pre_typing = Pulse.Typing.Metatheory.tot_typing_weakening_single pre_typing hyp_var eq_typ in // weaken w/ branch eq
