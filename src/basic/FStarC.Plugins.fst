@@ -88,10 +88,6 @@ let compile_modules dir ms =
                 @ (List.map pkg packages)
                 @ ["-o"; m ^ ".cmxs"; m ^ ".ml"] in
      (* Note: not useful when in an OPAM setting *)
-     let ocamlpath_sep = match Platform.system with
-       | Platform.Windows -> ";"
-       | Platform.Posix -> ":"
-     in
      let old_ocamlpath =
        match BU.expand_environment_variable "OCAMLPATH" with
        | Some s -> s
@@ -99,7 +95,7 @@ let compile_modules dir ms =
      in
      let env_setter = BU.format3 "env OCAMLPATH=\"%s%s%s\""
        (Find.locate_ocaml ())
-       ocamlpath_sep
+       Platform.ocamlpath_sep
       //  Options.fstar_bin_directory // needed?
       //  ocamlpath_sep
        old_ocamlpath
