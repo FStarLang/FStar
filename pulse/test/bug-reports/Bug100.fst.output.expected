@@ -19,15 +19,13 @@
 
 >>]
 >> Got issues: [
-* Error 19 at Bug100.fst(24,11-24,17):
+* Error 19 at Bug100.fst(23,11-23,17):
+  - Expected term of type slprop
+    got term Bug100.pts_to Prims.int a1 s1
+    of unknown type
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - Also see: Prims.fst(153,28-175,79)
-
-* Error 228 at Bug100.fst(24,11-24,11):
-  - Expected term of type slprop
-    got term Bug100.pts_to Prims.int a1 s1
-    of unknown type
 
 >>]

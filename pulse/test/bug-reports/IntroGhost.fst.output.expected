@@ -1,34 +1,24 @@
 >> Got issues: [
-* Error <unknown> at IntroGhost.fst(44,18-44,20):
+* Error 228 at IntroGhost.fst(44,18-44,20):
   - Cannot prove:
       Pulse.Lib.Reference.pts_to r ?n
   - In the context:
       IntroGhost.my_inv b r
-  - See also Pulse.Lib.Reference.fsti(59,6-63,48)
-
-* Error 228 at IntroGhost.fst(44,18-44,20):
-  - Pulse checker failed.
 
 >>]
 >> Got issues: [
-* Error <unknown> at IntroGhost.fst(71,2-71,4):
+* Error 228 at IntroGhost.fst(71,2-71,4):
   - Cannot prove:
       Pulse.Lib.Reference.pts_to r 0
   - In the context:
       IntroGhost.my_inv b r
 
-* Error 228 at IntroGhost.fst(71,2-71,4):
-  - Pulse checker failed.
-
 >>]
 >> Got issues: [
-* Error <unknown> at IntroGhost.fst(89,46-92,24):
+* Error 228 at IntroGhost.fst(89,46-92,24):
   - Cannot prove:
       IntroGhost.my_inv true r
   - In the context:
       IntroGhost.my_inv b r
-
-* Error 228 at IntroGhost.fst(89,46-92,24):
-  - Pulse checker failed.
 
 >>]

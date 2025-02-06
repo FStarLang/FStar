@@ -2,9 +2,6 @@
 * Error 339 at Bug45.fst(64,13-64,58):
   - Elaborated term has unresolved univ uvars: Bug45.spawn (Bug45.pth n)
 
-* Error 228 at Bug45.fst(64,13-64,58):
-  - Could not check term: Bug45.spawn (Bug45.pth n)
-
 * Error 12 at Bug45.fst(64,51-64,58):
   - Expected type
         $f: Prims.unit

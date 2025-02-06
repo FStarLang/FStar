@@ -1,18 +1,11 @@
 >> Got issues: [
-* Error 168 at JoinIf.fst(75,0-75,0):
-  - Failed to desugar pulse declaration
-
 * Error 72 at JoinIf.fst(113,46-113,50):
-  - Failed to desugar Pulse term
   - Identifier not found: [star]
 
 >>]
 >> Got issues: [
-* Error <unknown> at JoinIf.fst(47,3-51,4):
+* Error 228 at JoinIf.fst(47,3-51,4):
   - Pulse cannot yet infer a postcondition for a non-tail conditional statement;
     Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional
-
-* Error 228 at JoinIf.fst(47,3-51,4):
-  - Pulse checker failed.
 
 >>]

@@ -1,24 +1,15 @@
 >> Got issues: [
-* Error <unknown> at ExistsErasedAndPureEqualities.fst(33,16-33,18):
-  - Could not resolve all free variables in the proposition: v == v_
-
 * Error 228 at ExistsErasedAndPureEqualities.fst(33,16-33,18):
-  - Pulse checker failed.
+  - Could not resolve all free variables in the proposition: v == v_
 
 >>]
 >> Got issues: [
-* Error <unknown> at ExistsErasedAndPureEqualities.fst(51,16-51,18):
-  - Could not resolve all free variables in the proposition: v == v_
-
 * Error 228 at ExistsErasedAndPureEqualities.fst(51,16-51,18):
-  - Pulse checker failed.
+  - Could not resolve all free variables in the proposition: v == v_
 
 >>]
 >> Got issues: [
-* Error <unknown> at ExistsErasedAndPureEqualities.fst(80,16-80,18):
-  - Could not resolve all free variables in the proposition: v == v_
-
 * Error 228 at ExistsErasedAndPureEqualities.fst(80,16-80,18):
-  - Pulse checker failed.
+  - Could not resolve all free variables in the proposition: v == v_
 
 >>]

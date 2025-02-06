@@ -1,33 +1,24 @@
 >> Got issues: [
-* Error <unknown> at Bug111.fst(31,4-31,15):
-  - Cannot prove:
-      _ @==> _ ** _ @==> _
-  - In the context:
-      p @==> q ** q @==> r
-
 * Error 228 at Bug111.fst(31,4-31,15):
-  - Pulse checker failed.
-
->>]
->> Got issues: [
-* Error <unknown> at Bug111.fst(43,4-43,15):
   - Cannot prove:
       _ @==> _ ** _ @==> _
   - In the context:
       p @==> q ** q @==> r
 
+>>]
+>> Got issues: [
 * Error 228 at Bug111.fst(43,4-43,15):
-  - Pulse checker failed.
+  - Cannot prove:
+      _ @==> _ ** _ @==> _
+  - In the context:
+      p @==> q ** q @==> r
 
 >>]
 >> Got issues: [
-* Error <unknown> at Bug111.fst(77,4-77,12):
+* Error 228 at Bug111.fst(77,4-77,12):
   - Cannot prove:
       _ ** _ @==> _
   - In the context:
       p ** p @==> q ** r @==> r
-
-* Error 228 at Bug111.fst(77,4-77,12):
-  - Pulse checker failed.
 
 >>]
