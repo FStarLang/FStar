@@ -7,7 +7,6 @@
             "Could not prove termination"
             (() << ()) }
     got term ()
-    of unknown type
   - Could not prove termination
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
@@ -22,7 +21,6 @@
             "Could not prove termination"
             (z - 1 << z) }
     got term y - 1
-    of unknown type
   - Could not prove termination
   - The SMT solver could not prove the query. Use --query_stats for more
     details.

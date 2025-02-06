@@ -17,8 +17,8 @@
 >>]
 >> Got issues: [
 * Error 19 at Bug267.fst(64,4-64,5):
-  - Could not prove equality between computed type `Prims.int`
-    and expected type `Prims.nat`
+  - Could not prove equality between computed type Prims.int
+    and expected type Prims.nat
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.

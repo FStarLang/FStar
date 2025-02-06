@@ -1,6 +1,6 @@
 >> Got issues: [
 * Error 19 at Bug59.fst(12,11-12,24):
-  - Expected term of type slprop got term pure (x == y) of unknown type
+  - Expected term of type slprop got term pure (x == y)
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.

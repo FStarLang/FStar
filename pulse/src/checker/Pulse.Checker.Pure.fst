@@ -162,6 +162,7 @@ let readback_failure (s:R.term) =
   Printf.sprintf "Internal error: failed to readback F* term %s"
                  (T.term_to_string s)
 
+(* Set got_typ = None if we don't have a good type for `t`. *)
 let ill_typed_term (t:term) (expected_typ:option term) (got_typ:option term) : Tac (list document) =
   let open Pulse.PP in
   match expected_typ, got_typ with
@@ -170,8 +171,7 @@ let ill_typed_term (t:term) (expected_typ:option term) (got_typ:option term) : T
   ]
   | Some ty, None -> [
     prefix 2 1 (text "Expected term of type") (pp ty) ^/^
-    prefix 2 1 (text "got term") (pp t) ^/^
-    text "of unknown type"
+    prefix 2 1 (text "got term") (pp t)
   ]
   | Some ty, Some ty' -> [
     prefix 2 1 (text "Expected term of type") (pp ty) ^/^
