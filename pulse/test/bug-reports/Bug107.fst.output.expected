@@ -1,0 +1,16 @@
+>> Got issues: [
+* Error <unknown> at Bug107.fst(45,9-45,16):
+  - Could not check term: Bug107.foo 1 _
+
+* Error 228 at Bug107.fst(45,9-45,16):
+  - Pulse checker failed.
+
+>>]
+>> Got issues: [
+* Error <unknown> at Bug107.fst(56,9-56,16):
+  - Could not check term: Bug107.foo _ 2
+
+* Error 228 at Bug107.fst(56,9-56,16):
+  - Pulse checker failed.
+
+>>]

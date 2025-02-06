@@ -1,0 +1,10 @@
+>> Got issues: [
+* Error 19 at Bug59.fst(12,30-12,37):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+
+* Error 228 at Bug59.fst(13,11-13,11):
+  - Expected term of type slprop got term pure (x == y) of unknown type
+
+>>]

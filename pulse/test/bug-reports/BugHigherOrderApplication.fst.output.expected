@@ -1,0 +1,10 @@
+>> Got issues: [
+* Error <unknown> at BugHigherOrderApplication.fst(197,4-197,7):
+  - Expected an arrow type; but head BugHigherOrderApplication.g has type f:
+    (_: Prims.bool -> Pulse.Lib.Core.stt Prims.bool Pulse.Lib.Core.emp (fun _ -> Pulse.Lib.Core.emp))
+      {f == f}
+
+* Error 228 at BugHigherOrderApplication.fst(197,4-197,7):
+  - Pulse checker failed.
+
+>>]

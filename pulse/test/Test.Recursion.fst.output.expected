@@ -1,0 +1,34 @@
+>> Got issues: [
+* Error 19 at Test.Recursion.fst(94,2-94,20):
+  - Could not prove termination
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+
+* Error 228 at Test.Recursion.fst(94,2-94,20):
+  - Expected term of type
+      x':
+      Prims.unit
+        { FStar.Range.labeled FStar.Range.range_0
+            "Could not prove termination"
+            (() << ()) }
+    got term ()
+    of unknown type
+
+>>]
+>> Got issues: [
+* Error 19 at Test.Recursion.fst(141,4-141,22):
+  - Could not prove termination
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+
+* Error 228 at Test.Recursion.fst(141,4-141,22):
+  - Expected term of type
+      y':
+      Prims.nat
+        { FStar.Range.labeled FStar.Range.range_0
+            "Could not prove termination"
+            (z - 1 << z) }
+    got term y - 1
+    of unknown type
+
+>>]

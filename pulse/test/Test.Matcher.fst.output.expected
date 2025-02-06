@@ -1,0 +1,34 @@
+>> Got issues: [
+* Error <unknown> at Test.Matcher.fst(69,2-69,4):
+  - Cannot prove:
+      Test.Matcher.fpts_to #Prims.int
+        r
+        #(0.1R +. p)
+        (FStar.Ghost.hide #Prims.int 1)
+  - In the context:
+      Test.Matcher.fpts_to #Prims.int
+        r
+        #(p +. 0.1R)
+        (FStar.Ghost.hide #Prims.int 1)
+
+* Error 228 at Test.Matcher.fst(69,2-69,4):
+  - Pulse checker failed.
+
+>>]
+>> Got issues: [
+* Error <unknown> at Test.Matcher.fst(103,2-103,4):
+  - Cannot prove:
+      Test.Matcher.spts_to #Prims.int
+        r
+        #(p +. 0.10R)
+        (FStar.Ghost.hide #Prims.int 1)
+  - In the context:
+      Test.Matcher.spts_to #Prims.int
+        r
+        #(p +. 0.1R)
+        (FStar.Ghost.hide #Prims.int 1)
+
+* Error 228 at Test.Matcher.fst(103,2-103,4):
+  - Pulse checker failed.
+
+>>]

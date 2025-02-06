@@ -1,0 +1,12 @@
+>> Got issues: [
+* Error <unknown> at Bug.SpinLock.fst(45,2-45,4):
+  - Cannot prove:
+      Pulse.Lib.Reference.pts_to _ ?uu___
+  - In the context:
+      Pulse.Lib.SpinLock.lock_alive my_lock
+        (exists* (v: Prims.int). Pulse.Lib.Reference.pts_to r v)
+
+* Error 228 at Bug.SpinLock.fst(45,2-45,4):
+  - Pulse checker failed.
+
+>>]

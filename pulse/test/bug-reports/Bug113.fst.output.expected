@@ -1,0 +1,9 @@
+>> Got issues: [
+* Error 168 at Bug113.fst(29,0-29,0):
+  - Failed to desugar pulse declaration
+
+* Error 72 at Bug113.fst(29,38-29,44):
+  - Failed to desugar Pulse term
+  - Identifier not found: [erased]
+
+>>]
