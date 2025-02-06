@@ -363,6 +363,17 @@ let run_unembedded_tactic_on_ps
       let msg = FStarC.Pprint.doc_of_string "Tactic failed" :: msg in
       raise (Errors.Error (code, msg, rng, ctx))
 
+    | Failed (Errors.Stop, ps) ->
+      if FStarC.Errors.get_err_count () > 0
+      then raise Errors.Stop
+      else
+        let open FStarC.Pprint in
+        let open FStarC.Errors.Msg in
+        Errors.raise_error0 Errors.Fatal_UserTacticFailure [
+          text "A tactic raised the Stop exception but did not log errors.";
+          text "Failing anyway."
+        ]
+
     (* Any other error, including exceptions being raised by the metaprograms. *)
     | Failed (e, ps) ->
         if ps.dump_on_failure then
