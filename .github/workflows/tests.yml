@@ -77,20 +77,7 @@ jobs:
         run: make -skj$(nproc) _test
 
   binary-smoke:
-    strategy:
-      matrix:
-        pak:
-          - fstar.tar.gz
-          # - fstar-stage1.tar.gz
-          # ^ See note in test-local.
-        os:
-          # - ubuntu-20.04
-          # - ubuntu-22.04
-          - ubuntu-24.04
-          # - ubuntu-latest
-          # FIXME: the container builds with a recent glibc, use an older
-          # base system to get a more portable executable.
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-24.04
     steps:
       - uses: cda-tum/setup-z3@main
         with:
@@ -99,9 +86,9 @@ jobs:
       - name: Get fstar package
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.pak }}
+          name: fstar.tar.gz
 
-      - run: tar xzf ${{ matrix.pak }}
+      - run: tar xzf fstar.tar.gz
 
       - name: Smoke test
         run: |
