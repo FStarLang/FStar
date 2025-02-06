@@ -2321,7 +2321,7 @@ execution of the primitive we are calling. This second is meant to catch
 errors in the tactic execution, e.g. those related to discharging the
 guards if a synchronous mode (SMTSync/Force) was used.
 
-This also adds the label to the messages. *)
+This also adds the label to the messages (when debugging) to identify the primitive. *)
 let refl_typing_builtin_wrapper (label:string) (f:unit -> 'a & list (env & typ)) : tac (option 'a & issues) =
   let open FStarC.Errors in
   let! o, errs =
@@ -2329,7 +2329,11 @@ let refl_typing_builtin_wrapper (label:string) (f:unit -> 'a & list (env & typ))
     | Inl errs -> return (None, errs)
     | Inr r -> return r
   in
-  let errs = errs |> List.map (fun is -> { is with issue_msg = is.issue_msg @ [text ("Raised within Tactics." ^ label)] }) in
+  let errs =
+    if Debug.any ()
+    then errs |> List.map (fun is -> { is with issue_msg = is.issue_msg @ [text ("Raised within Tactics." ^ label)] })
+    else errs
+  in
   return (o, errs)
 
 let no_uvars_in_term (t:term) : bool =

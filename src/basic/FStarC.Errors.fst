@@ -300,7 +300,10 @@ let fixup_issue_range (rng:option Range.range) : option Range.range =
     | None ->
       (* No range given, just rely on the fallback. NB: the
       fallback could also be set to None if it's too early. *)
-      !fallback_range
+      begin match !fallback_range with
+      | Some r -> Some r
+      | None -> !error_range_bound
+      end
     | Some range ->
       let use_rng = use_range range in
       let use_rng' =
@@ -326,6 +329,7 @@ let mk_default_handler print =
     let err_count : ref int = BU.mk_ref 0 in
 
     let add_one (e: issue) =
+        let e = { e with issue_range = fixup_issue_range e.issue_range } in
         (if e.issue_level = EError then
            err_count := 1 + !err_count);
         begin match e.issue_level with

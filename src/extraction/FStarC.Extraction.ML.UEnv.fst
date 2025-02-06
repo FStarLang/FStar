@@ -462,6 +462,10 @@ let new_mlpath_of_lident (g:uenv) (x : lident) : mlpath & uenv =
     | "FStar.Pervasives.unascribe"
       when plug ()
       -> guts mlp
+    (* special case to not expose FStarC.Errors *)
+    | "FStar.Stubs.Tactics.Common.Stop" ->
+      "Fstarcompiler.FStarC"::"Errors"::[], "Stop"
+
     | _ -> mlp
   in
   let g = { g with

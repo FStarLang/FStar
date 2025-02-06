@@ -90,6 +90,7 @@ let fstar_tactics_goal          = fstar_tactics_const ["Types"; "goal"]
 
 let fstar_tactics_TacticFailure = fstar_tactics_data  ["Common"; "TacticFailure"]
 let fstar_tactics_SKIP          = fstar_tactics_data  ["Common"; "SKIP"]
+let fstar_tactics_Stop          = fstar_tactics_data  ["Common"; "Stop"]
 
 let fstar_tactics_result        = fstar_tactics_const ["Result"; "__result"]
 let fstar_tactics_Success       = fstar_tactics_data  ["Result"; "Success"]
@@ -216,8 +217,12 @@ instance e_exn : embedding exn =
             S.mk_Tm_app fstar_tactics_TacticFailure.t
                 [S.as_arg (embed rng s)]
                 rng
+
         | SKIP ->
             { fstar_tactics_SKIP.t with pos = rng }
+
+        | Errors.Stop ->
+            { fstar_tactics_Stop.t with pos = rng }
 
         | EExn t ->
             { t with pos = rng }
@@ -243,6 +248,8 @@ instance e_exn : embedding exn =
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv fstar_tactics_SKIP.lid ->
           Some SKIP
+        | Tm_fvar fv, [] when S.fv_eq_lid fv fstar_tactics_Stop.lid ->
+          Some Errors.Stop
 
         | _ ->
             (* Anything else, we just pass-through *)

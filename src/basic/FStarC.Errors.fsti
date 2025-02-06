@@ -94,6 +94,10 @@ val error_number : error_setting -> int
 val print_issue : issue -> unit
 val compare_issues : issue -> issue -> int // for sorting.. weird
 
+(* Make sure to bound the range of an issue and fallback to the fallback_range
+if need be. *)
+val fixup_issue_range (rng:option Range.range) : option Range.range
+
 val add_errors : list error -> unit
 val issue_of_exn : exn -> option issue
 
