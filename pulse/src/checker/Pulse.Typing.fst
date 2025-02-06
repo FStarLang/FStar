@@ -655,12 +655,14 @@ let wrst (ct:comp_st) (t:st_term') : st_term =
     range = FStar.Range.range_0;
     effect_tag = as_effect_hint (ctag_of_comp_st ct);
     source = Sealed.seal false;
+    seq_lhs = Sealed.seal false;
   }
 let wtag (ct:option ctag)  (t:st_term') : st_term =
   { term = t;
     range = FStar.Range.range_0;
     effect_tag = FStar.Sealed.seal ct;
     source = Sealed.seal false;
+    seq_lhs = Sealed.seal false;
   }
 
 [@@ no_auto_projectors]

@@ -135,6 +135,7 @@ let simplify_nested_let (e:st_term) (b_x:binder) (head:st_term) (e3:st_term)
     effect_tag = default_effect_hint;
     term = t;
     source=Sealed.seal false;
+    seq_lhs=Sealed.seal false;
   } in
   let body e2 = mk (Tm_Bind { binder = b_x; head = e2; body = e3 }) in
   match head.term with

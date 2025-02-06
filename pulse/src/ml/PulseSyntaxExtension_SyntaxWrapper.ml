@@ -212,6 +212,9 @@ let comp_post c =
    | C_STGhost (_, st) -> st.post
    | _ -> Pulse_Syntax_Pure.tm_emp
 
+let mark_statement_sequence (s : st_term) : st_term =
+  PSB.mark_statement_sequence s
+
 let print_exn (e:exn) = Printexc.to_string e
 
 open FStar_Pervasives

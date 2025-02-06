@@ -63,6 +63,29 @@ let check_bind_fn
   | _ -> fail g (Some t.range) "check_bind_fn: head is not an abstraction"
 #pop-options
 
+let check_if_seq_lhs
+  (g:env) (ctxt : slprop) (post_hint : post_hint_opt g)
+  (r:checker_result_t g ctxt post_hint) (e1:st_term)
+  : T.Tac unit
+=
+  if T.unseal e1.seq_lhs then begin
+    let (| _x, g, (| u, ty, ty_wf |), _ctxt', _k |) = r in
+    let open Pulse.PP in
+    if T.Tv_Arrow? ty then
+      fail_doc g (Some e1.range) [
+        prefix 2 1 (text "This function is partially applied. Remaining type:") (pp ty);
+        text "Did you forget to apply some arguments?";
+      ]
+    else if None? (fst <| T.is_non_informative (elab_env g) ty) then (
+      if None? (Pulse.Checker.Pure.try_get_non_informative_witness g u ty ty_wf) then
+        fail_doc g (Some e1.range) [
+          prefix 2 1 (text "This statement returns a value of type:") (pp ty);
+          text "Did you forget to assign it or ignore it?";
+        ]
+    ) else
+      () (* ok *)
+  end
+
 let check_binder_typ
   (g:env) (ctxt : slprop) (post_hint : post_hint_opt g)
   (r:checker_result_t g ctxt post_hint)
@@ -123,6 +146,7 @@ let check_bind
   else (
     let (| x, g1, _, (| ctxt', ctxt'_typing |), k1 |) =
       let r = check g ctxt ctxt_typing None binder.binder_ppname e1 in
+      check_if_seq_lhs g ctxt None r e1;
       check_binder_typ g ctxt None r binder e1;
       r
     in

@@ -44,6 +44,7 @@ let rec mk_abs (g:env) (qbs:list (option qualifier & binder & bv)) (body:st_term
       range = r;
       effect_tag = default_effect_hint;
       source=Sealed.seal false;
+      seq_lhs=Sealed.seal false;
     }
   in
   match qbs with
