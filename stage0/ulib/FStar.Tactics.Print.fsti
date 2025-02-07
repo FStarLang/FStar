@@ -5,7 +5,7 @@ open FStar.Stubs.Reflection.V2.Data
 open FStar.Tactics.Effect
 
 [@@plugin]
-val namedv_to_string (x:namedv) : Tac string
+val namedv_to_string (x:Stubs.Reflection.Types.namedv) : Tac string
 
 [@@plugin]
 val universe_to_ast_string (u:universe) : Tac string

@@ -1,0 +1,34 @@
+(include_subdirs unqualified)
+(library
+ (name fstarcompiler)
+ (public_name fstar.compiler)
+ (libraries
+    batteries
+    zarith
+    stdint
+    yojson
+    ppxlib
+    dynlink
+    menhirLib
+    pprint
+    process
+    sedlex
+    mtime.clock.os
+ )
+ (modes native)
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
+)
+
+(menhir
+ (modules FStarC_Parser_Parse))
+
+(rule
+  (target FStarC_Version.ml)
+  (deps (:script make_fstar_version.sh)
+        (:version ../../version.txt))
+  (action
+    (progn
+      (copy %{version} version.txt)
+      (with-stdout-to
+        FStarC_Version.ml
+        (run bash %{script})))))

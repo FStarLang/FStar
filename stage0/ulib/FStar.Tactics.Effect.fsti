@@ -164,6 +164,9 @@ effect Tac (a:Type) = TacH a (requires (fun _ -> True)) (ensures (fun _ _ -> Tru
 (* Metaprograms that succeed *)
 effect TacS (a:Type) = TacH a (requires (fun _ -> True)) (ensures (fun _ps r -> Success? r))
 
+(* Always succeed, no effect *)
+effect TacRO (a:Type) = TAC a (fun ps post -> forall r. post (Success r ps))
+
 (* A variant that doesn't prove totality (nor type safety!) *)
 effect TacF (a:Type) = TacH a (requires (fun _ -> False)) (ensures (fun _ _ -> True))
 
