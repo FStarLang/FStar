@@ -14,3 +14,5 @@ OTHERFLAGS += \
 
 FSTAR_ROOT ?= ../..
 include $(FSTAR_ROOT)/mk/test.mk
+
+$(OUTPUT_DIR)/DeltaAttr.fst.output: FSTAR_ARGS+=--dump_module DeltaAttr
