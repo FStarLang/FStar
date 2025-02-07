@@ -25,3 +25,6 @@ run.bc: bin/hello.exe
 
 clean:
 	dune clean
+
+# Keep intermediate files
+.SECONDARY:

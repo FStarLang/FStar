@@ -31,3 +31,6 @@ Hello.%.test: Hello.%
 
 clean:
 	rm -f *.ml *.exe *.byte *.cm* *.o
+
+# Keep intermediate files
+.SECONDARY:

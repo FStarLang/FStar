@@ -906,7 +906,7 @@ let open_univ_vars_binders_and_comp uvs binders c =
 (********************************************************************************)
 
 let is_tuple_constructor (t:typ) = match t.n with
-  | Tm_fvar fv -> PC.is_tuple_constructor_string (string_of_lid fv.fv_name.v)
+  | Tm_fvar fv -> PC.is_tuple_constructor_lid fv.fv_name.v
   | _ -> false
 
 let is_dtuple_constructor (t:typ) = match t.n with

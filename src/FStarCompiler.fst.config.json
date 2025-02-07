@@ -10,6 +10,6 @@
     "--no_default_includes"
   ],
   "include_dirs": [
-    ".", "../ulib"
+    ".", "../stage0/ulib"
   ]
 }

@@ -275,10 +275,9 @@ let is_type_abstraction = function
     | _ -> false
 
 let is_xtuple (ns, n) =
-  if FStarC.Parser.Const.is_tuple_datacon_string (BU.concat_l "." (ns@[n]))
-  (* Returns the integer k in "Mktuplek" *)
-  then Some (BU.int_of_char (BU.char_at n 7))
-  else None
+  Parser.Const.get_tuple_datacon_arity (BU.concat_l "." (ns@[n]))
+let is_xtuple_ty (ns, n) =
+  Parser.Const.get_tuple_tycon_arity (BU.concat_l "." (ns@[n]))
 
 let resugar_exp e = match e.expr with
     | MLE_CTor(mlp, args) ->
@@ -308,13 +307,6 @@ let record_fields fs vs = List.map2 (fun (f:lident) e -> (string_of_id (ident_of
 //            | _ -> p
 //      end
 //    | _ -> p
-
-
-let is_xtuple_ty (ns, n) =
-  if FStarC.Parser.Const.is_tuple_constructor_string (BU.concat_l "." (ns@[n]))
-  (* Returns the integer k in "tuplek" *)
-  then Some (BU.int_of_char (BU.char_at n 5))
-  else None
 
 let resugar_mlty t = match t with
     | MLTY_Named (args, mlp) ->

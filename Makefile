@@ -70,7 +70,7 @@ build: 2
 0 $(FSTAR0_EXE):
 	$(call bold_msg, "STAGE 0")
 	mkdir -p stage0/ulib/.cache # prevent warnings
-	$(MAKE) -C stage0 install_bin # build: only fstar.exe
+	$(MAKE) -C stage0 minimal # build: only fstar.exe and set-up lib sources
 	$(MAKE) -C stage0 trim # We don't need OCaml build files.
 
 .bare1.src.touch: $(FSTAR0_EXE) .force
