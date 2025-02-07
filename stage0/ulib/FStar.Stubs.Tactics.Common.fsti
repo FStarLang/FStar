@@ -12,3 +12,9 @@ above. *)
 exception TacticFailure of error_message & option FStar.Range.range
 
 exception SKIP
+
+(* This will stop the execution of the metaprogram, reporting all the errors
+that have been logged so far (with log_issues). If none have been logged
+F* will anyway display an error and reject the definition, but the expectation
+is that this is only raised when the plugin is doing its own error handling. *)
+exception Stop

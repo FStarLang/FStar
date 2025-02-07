@@ -6,8 +6,12 @@ open FStar.Stubs.Tactics.V2.Builtins
 open FStar.Tactics.V2.Derived
 open FStar.Tactics.NamedView
 
-let namedv_to_string (x:namedv) : Tac string=
+let namedv_view_to_string (x:Stubs.Reflection.V2.Data.namedv_view) : Tac string=
   unseal x.ppname ^ "#" ^ string_of_int x.uniq
+
+let namedv_to_string (x:Stubs.Reflection.Types.namedv) : Tac string=
+  let x = Stubs.Reflection.V2.Builtins.inspect_namedv x in
+  namedv_view_to_string x
 
 private
 let paren (s:string) : string = "(" ^ s ^ ")"
@@ -39,7 +43,7 @@ let universes_to_ast_string (us:universes) : Tac string =
 
 let rec term_to_ast_string (t:term) : Tac string =
   match inspect t with
-  | Tv_Var bv -> "Tv_Var " ^ namedv_to_string bv
+  | Tv_Var bv -> "Tv_Var " ^ namedv_view_to_string bv
   | Tv_BVar bv -> "Tv_BVar " ^ bv_to_string bv
   | Tv_FVar fv -> "Tv_FVar " ^ fv_to_string fv
   | Tv_UInst fv us ->

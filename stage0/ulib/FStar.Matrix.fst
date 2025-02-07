@@ -732,6 +732,7 @@ let matrix_mul_unit_row_lemma #c #eq m (add mul: CE.cm c eq) (i: under m)
                    (SB.create 1 mul.unit `SB.append` SB.create (m-i-1) add.unit))
                    (row (matrix_mul_unit add mul m) i)
                    
+#push-options "--z3rlimit 20"
 let matrix_mul_unit_col_lemma #c #eq m (add mul: CE.cm c eq) (i: under m)
   : Lemma ((col (matrix_mul_unit add mul m) i 
              == (SB.create i add.unit) `SB.append` 
@@ -745,7 +746,8 @@ let matrix_mul_unit_col_lemma #c #eq m (add mul: CE.cm c eq) (i: under m)
   SB.lemma_eq_elim ((SB.create i add.unit) `SB.append` 
                    (SB.create 1 mul.unit `SB.append` SB.create (m-i-1) add.unit))
                    (col (matrix_mul_unit add mul m) i)
- 
+#pop-options
+
 let seq_of_products_zeroes_lemma #c #eq #m (mul: CE.cm c eq) 
                                  (z: c{is_absorber z mul})
                                  (s: SB.seq c{SB.length s == m})

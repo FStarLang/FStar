@@ -78,11 +78,11 @@ jobs:
       #     export FSTAR_TAG=-$KERNEL-$ARCH
       #     make -kj$(nproc) 0 V=1
       #     echo -------------------------------------------------
-      #     ./stage0/bin/fstar.exe --version
-      #     ./stage0/bin/fstar.exe --locate
-      #     ./stage0/bin/fstar.exe --locate_lib
-      #     ./stage0/bin/fstar.exe --locate_ocaml
-      #     ./stage0/bin/fstar.exe --include src --debug yes || true
+      #     ./stage0/out/bin/fstar.exe --version
+      #     ./stage0/out/bin/fstar.exe --locate
+      #     ./stage0/out/bin/fstar.exe --locate_lib
+      #     ./stage0/out/bin/fstar.exe --locate_ocaml
+      #     ./stage0/out/bin/fstar.exe --include src --debug yes || true
       #     echo -------------------------------------------------
       #     make -kj$(nproc) package V=1
 
