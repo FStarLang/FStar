@@ -19,6 +19,7 @@ open FStarC
 open FStarC.Effect
 open FStarC.Ident
 open FStarC.Range
+open FStarC.Class.Show
 
 // Arity, type constructor, and data constructor for tuples
 private
@@ -38,21 +39,21 @@ let tuple_table : list (int & string & string) = [
   (14,  "FStar.Pervasives.Native.tuple14", "FStar.Pervasives.Native.Mktuple14");
 ]
 
-let mk_tuple_lid n r =
+let lookup_tuple n =
   match List.tryFind (fun (n', _, _) -> n = n') tuple_table with
-  | Some (_, s, _) ->
-    let l = Ident.lid_of_str s in
-    set_lid_range l r
+  | Some r -> r
   | None ->
-    failwith "Tuple too large"
+    failwith ("Tuple too large: " ^ (show n))
+
+let mk_tuple_lid n r =
+  let (_, s, _) = lookup_tuple n in
+  let l = Ident.lid_of_str s in
+  set_lid_range l r
 
 let mk_tuple_data_lid n r =
-  match List.tryFind (fun (n', _, _) -> n = n') tuple_table with
-  | Some (_, _, s) ->
-    let l = Ident.lid_of_str s in
-    set_lid_range l r
-  | None ->
-    failwith "Tuple too large"
+  let (_, _, s) = lookup_tuple n in
+  let l = Ident.lid_of_str s in
+  set_lid_range l r
 
 let get_tuple_datacon_arity (s:string) : option int =
   match List.tryFind (fun (_, _, s') -> s = s') tuple_table with
@@ -84,21 +85,21 @@ let dtuple_table : list (int & string & string) = [
   (5, "FStar.Pervasives.dtuple5", "FStar.Pervasives.Mkdtuple5");
 ]
 
-let mk_dtuple_lid n r =
+let lookup_dtuple n =
   match List.tryFind (fun (n', _, _) -> n = n') dtuple_table with
-  | Some (_, s, _) ->
-    let l = Ident.lid_of_str s in
-    set_lid_range l r
+  | Some r -> r
   | None ->
-    failwith "Dependent Tuple too large"
+    failwith ("DTuple too large: " ^ (show n))
+
+let mk_dtuple_lid n r =
+  let (_, s, _) = lookup_dtuple n in
+  let l = Ident.lid_of_str s in
+  set_lid_range l r
 
 let mk_dtuple_data_lid n r =
-  match List.tryFind (fun (n', _, _) -> n = n') dtuple_table with
-  | Some (_, _, s) ->
-    let l = Ident.lid_of_str s in
-    set_lid_range l r
-  | None ->
-    failwith "Dependent Tuple too large"
+  let (_, _, s) = lookup_dtuple n in
+  let l = Ident.lid_of_str s in
+  set_lid_range l r
 
 let get_dtuple_datacon_arity (s:string) : option int =
   match List.tryFind (fun (_, _, s') -> s = s') dtuple_table with
