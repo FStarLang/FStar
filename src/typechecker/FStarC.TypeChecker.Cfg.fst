@@ -177,6 +177,7 @@ let default_steps : fsteps = {
 }
 
 let fstep_add_one s fs =
+  let optlist = function None -> [] | Some xs -> xs in
     match s with
     | Beta -> { fs with beta = true }
     | Iota -> { fs with iota = true }
@@ -193,10 +194,11 @@ let fstep_add_one s fs =
     | Inlining -> fs // not a step // ZP : Adding qualification because of name clash
     | DoNotUnfoldPureLets ->  { fs with do_not_unfold_pure_lets = true }
     | UnfoldUntil d -> { fs with unfold_until = Some d }
-    | UnfoldOnly  lids -> { fs with unfold_only  = Some lids }
-    | UnfoldOnce  lids -> { fs with unfold_once  = Some lids }
-    | UnfoldFully lids -> { fs with unfold_fully = Some lids }
-    | UnfoldAttr  lids -> { fs with unfold_attr  = Some lids }
+    | UnfoldOnly  lids ->    { fs with unfold_only      = Some <| optlist fs.unfold_only      @ lids }
+    | UnfoldOnce  lids ->    { fs with unfold_once      = Some <| optlist fs.unfold_once      @ lids }
+    | UnfoldFully lids ->    { fs with unfold_fully     = Some <| optlist fs.unfold_fully     @ lids }
+    | UnfoldAttr  lids ->    { fs with unfold_attr      = Some <| optlist fs.unfold_attr      @ lids }
+    | DontUnfoldAttr lids -> { fs with dont_unfold_attr = Some <| optlist fs.dont_unfold_attr @ lids }
     | UnfoldQual  strs ->
       let fs = { fs with unfold_qual  = Some strs } in
       if List.contains "pure_subterms_within_computations" strs
@@ -205,7 +207,6 @@ let fstep_add_one s fs =
     | UnfoldNamespace strs ->
      { fs with unfold_namespace =
          Some (List.map (fun s -> (Ident.path_of_text s, true)) strs, false) }
-    | DontUnfoldAttr lids -> { fs with dont_unfold_attr = Some lids }
     | PureSubtermsWithinComputations ->  { fs with pure_subterms_within_computations = true }
     | Simplify ->  { fs with simplify = true }
     | EraseUniverses ->  { fs with erase_universes = true }
