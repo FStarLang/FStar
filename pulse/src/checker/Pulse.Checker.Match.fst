@@ -510,8 +510,12 @@ let check
         & pats_complete g sc sc_ty pats)
   =
     match T.check_match_complete (elab_env g) sc sc_ty elab_pats with
-    | None -> fail g (Some sc_range) "Could not check that match is correct/complete"
-    | Some (elab_pats', bnds) ->
+    | None, issues ->
+      let open Pulse.PP in
+      fail_doc_with_subissues g (Some sc_range) issues [
+        text "Could not verify that this match is exhaustive.";
+      ]
+    | Some (elab_pats', bnds), _ ->
       (| elab_pats', bnds, PC_Elab _ _ _ _ _ (RT.MC_Tok _ _ _ _ bnds ()) |)
   in
   let new_pats = map_opt readback_pat elab_pats' in 
