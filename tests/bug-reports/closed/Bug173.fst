@@ -219,8 +219,8 @@ let rec preservation_exp g h e = match e with
 (* type preservation for statments -- working variant *)
 val preservation : g:env -> h:heap{typed_heap g h} ->
                    s:stmt{typing g s /\ Some? (step h s)} -> Lemma
-                   (typing g (Mktuple2?._2 (Some?.v (step h s))) /\
-                     typed_heap g (Mktuple2?._1 (Some?.v (step h s))))
+                   (typing g (Tuple2.Mk?._2 (Some?.v (step h s))) /\
+                     typed_heap g (Tuple2.Mk?._1 (Some?.v (step h s))))
 let rec preservation g h s = match s with
 | Skip -> ()
 | Assign x t -> if not (Val? t) then preservation_exp g h t

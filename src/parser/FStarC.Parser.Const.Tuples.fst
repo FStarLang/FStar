@@ -24,7 +24,7 @@ open FStarC.Class.Show
 // Arity, type constructor, and data constructor for tuples
 private
 let tuple_table : list (int & string & string) = [
-  (2,   "FStar.Pervasives.Native.tuple2", "FStar.Pervasives.Native.Mktuple2");
+  (2,   "FStar.Tuple2.t",  "FStar.Tuple2.Mk");
   (3,   "FStar.Tuple3.t",  "FStar.Tuple3.Mk");
   (4,   "FStar.Tuple4.t",  "FStar.Tuple4.Mk");
   (5,   "FStar.Tuple5.t",  "FStar.Tuple5.Mk");

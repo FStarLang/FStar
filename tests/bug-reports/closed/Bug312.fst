@@ -66,4 +66,4 @@ let triple_a s = let sample_fun = (fun x ->  (x - (R?.l s)) + (R?.r s)) in
                  let as1 = sample sample_fun in
 
                  let a = rel_map2 (fun x y -> x + y) as0 as1 in
-                 (| a, rel_map2 Mktuple2 as0 as1 |)
+                 (| a, rel_map2 Tuple2.Mk as0 as1 |)

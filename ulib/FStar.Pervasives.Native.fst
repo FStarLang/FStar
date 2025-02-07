@@ -18,6 +18,7 @@ module FStar.Pervasives.Native
 
 (* This is a file from the core library, dependencies must be explicit *)
 open Prims
+include FStar.Tuple2
 
 /// This module is implicitly opened in the scope of all other modules.
 ///
@@ -49,15 +50,9 @@ type option (a: Type) =
 /// Tuple values are introduced using as [a1, ..., an], rather than
 /// [MktupleN a1 ... aN].
 ///
-/// We define tuples up to a fixed arity of 14. We have considered
-/// splitting this module into 14 different modules, one for each
-/// tuple type rather than eagerly including 14-tuples in the
-/// dependence graph of all programs.
+/// They are found in the modules FStar.TupleN and FStar.DTupleN, for
+/// the relevant values of N. The only odd case is dtuple2 which is
+/// defined in Prims, as it is needed for the definition of l_Exists.
 
-(** Pairs: [tuple2 a b] is can be written either as [a * b], for
-    notation compatible with OCaml's. Or, better, as [a & b]. *)
-type tuple2 'a 'b = | Mktuple2 : _1: 'a -> _2: 'b -> tuple2 'a 'b
-
-(** The fst and snd projections on pairs are very common *)
-let fst (x: tuple2 'a 'b) : 'a = Mktuple2?._1 x
-let snd (x: tuple2 'a 'b) : 'b = Mktuple2?._2 x
+let fst x = FStar.Tuple2.Mk?._1 x
+let snd x = FStar.Tuple2.Mk?._2 x

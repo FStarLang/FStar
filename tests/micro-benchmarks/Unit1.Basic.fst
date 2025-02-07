@@ -121,7 +121,7 @@ val dup_pure: x:'a -> Tot ('a * 'a)
 let dup_pure x = (x,x)
 
 val dup_pure_eq: #a:eqtype -> x:a -> Pure (a & a) True
-                              (fun y -> b2t (Mktuple2?._1 y=Mktuple2?._2 y))
+                              (fun y -> b2t (Tuple2.Mk?._1 y = Tuple2.Mk?._2 y))
 let dup_pure_eq #a x = (x,x)
 
 (* the programs below are equivalent---see the refinement of the result in tc.fs/Exp_app case. *)

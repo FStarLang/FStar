@@ -22,6 +22,7 @@ EXTRACT += --extract +FStar.Seq.Base
 EXTRACT += --extract +FStar.Seq.Properties
 
 # Extract tuple files, mostly for when we use the projectors directly.
+EXTRACT += --extract +FStar.Tuple2
 EXTRACT += --extract +FStar.Tuple3
 EXTRACT += --extract +FStar.Tuple4
 EXTRACT += --extract +FStar.Tuple5

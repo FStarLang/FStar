@@ -307,21 +307,21 @@ let rec quote_list (#a:Type) (ta:term) (quotea:a->Tac term) (xs:list a) :
 let quote_vm (#a #b:Type) (ta tb: term)
     (quotea:a->Tac term) (quoteb:b->Tac term) (vm:vmap a b) : Tac term =
   let quote_pair (p:a&b) : Tac term =
-    mk_app (`Mktuple2) [(ta, Q_Implicit); (tb, Q_Implicit);
+    mk_app (`Tuple2.Mk) [(ta, Q_Implicit); (tb, Q_Implicit);
            (quotea (fst p), Q_Explicit); (quoteb (snd p), Q_Explicit)] in
-  let t_a_star_b = mk_e_app (`tuple2) [ta;tb] in
+  let t_a_star_b = mk_e_app (`Tuple2.t) [ta;tb] in
   let quote_map_entry (p:(nat&(a&b))) : Tac term =
-    mk_app (`Mktuple2) [(`nat, Q_Implicit); (t_a_star_b, Q_Implicit);
+    mk_app (`Tuple2.Mk) [(`nat, Q_Implicit); (t_a_star_b, Q_Implicit);
       (pack (Tv_Const (C_Int (fst p))), Q_Explicit);
       (quote_pair (snd p), Q_Explicit)] in
-  let tyentry = mk_e_app (`tuple2) [(`nat); t_a_star_b] in
+  let tyentry = mk_e_app (`Tuple2.t) [(`nat); t_a_star_b] in
   let tlist = quote_list tyentry quote_map_entry (fst vm) in
   (* dump (term_to_string (tc tlist)); *)
   let tpair = quote_pair (snd vm) in
   (* dump (term_to_string (tc tpair)); *)
   let tylist = mk_e_app (`list) [tyentry] in
   (* dump (term_to_string (tc tylist)); *)
-  mk_app (`Mktuple2) [(tylist, Q_Implicit); (t_a_star_b, Q_Implicit);
+  mk_app (`Tuple2.Mk) [(tylist, Q_Implicit); (t_a_star_b, Q_Implicit);
                       (tlist, Q_Explicit); (tpair, Q_Explicit)]
 
 let rec quote_exp (e:exp) : Tac term =
@@ -391,8 +391,8 @@ let canon_monoid_aux
 
                             `%FStar.Pervasives.Native.fst;
                             `%FStar.Pervasives.Native.snd;
-                            `%FStar.Pervasives.Native.__proj__Mktuple2__item___1;
-                            `%FStar.Pervasives.Native.__proj__Mktuple2__item___2;
+                            `%Tuple2.Mk?._1;
+                            `%Tuple2.Mk?._2;
 
                             `%FStar.List.Tot.assoc;
                             `%FStar.List.Tot.op_At;
