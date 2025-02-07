@@ -145,8 +145,7 @@ fn tl (xs : list int)
 }
 
 
-[@@expect_failure [228]]
-
+[@@expect_failure [19]]
 fn incomplete (xs : list int)
   requires emp
   returns r:int
