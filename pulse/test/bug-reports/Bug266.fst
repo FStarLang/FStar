@@ -18,7 +18,7 @@ assume
 val my_intro (p : prop)
   : stt_ghost unit emp_inames (pure p) post
 
-(* Should fail! Pulse is now actually applying my_intro. *)
+(* Should fail! Pulse is not actually applying my_intro. *)
 fn
 test_my_intro (_:unit)
   requires emp
