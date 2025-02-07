@@ -2714,6 +2714,9 @@ let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
 
     dbg_refl g (fun _ -> BU.format2 "refl_instantiate_implicits: inferred %s : %s" (show e) (show t));
 
+    // Stop now if we've already logged errors, it's less confusing to the user.
+    Errors.stop_if_err ();
+
     if not (no_univ_uvars_in_term e)
     then Errors.raise_error e Errors.Error_UnexpectedUnresolvedUvar
            (BU.format1 "Elaborated term has unresolved univ uvars: %s" (show e));
