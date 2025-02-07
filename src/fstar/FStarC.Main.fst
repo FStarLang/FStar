@@ -95,9 +95,8 @@ let load_native_tactics () =
                 | Some f -> f
               end
     in
+
     let cmxs_files = (modules_to_load@cmxs_to_load) |> List.map cmxs_file in
-    if Debug.any () then
-      Util.print1 "Will try to load cmxs files: [%s]\n" (String.concat ", " cmxs_files);
     Plugins.load_plugins cmxs_files;
     iter_opt (Options.use_native_tactics ())
       Plugins.load_plugins_dir;
