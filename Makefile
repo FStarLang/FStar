@@ -18,14 +18,12 @@ all-packages: package-1 package-2 package-src-1 package-src-2
 # to a local build of stage0, to avoid recompiling it every time.
 ifneq ($(FSTAR_EXTERNAL_STAGE0),)
 FSTAR0_EXE := $(abspath $(FSTAR_EXTERNAL_STAGE0))
-_ != mkdir -p stage0/bin
-_ != ln -Trsf $(FSTAR0_EXE) stage0/bin/fstar.exe
+_ != mkdir -p stage0/out/bin
+_ != ln -Trsf $(FSTAR0_EXE) stage0/out/bin/fstar.exe
 # ^ Setting this link allows VS code to work seamlessly.
 endif
 
-# When stage0 is bumped, use this:
-#FSTAR0_EXE ?= stage0/out/bin/fstar.exe
-FSTAR0_EXE ?= stage0/bin/fstar.exe
+FSTAR0_EXE ?= stage0/out/bin/fstar.exe
 
 # This is hardcoding some dune paths, with internal (non-public) names.
 # This is motivated by dune installing packages as a unit, so I could not
@@ -72,11 +70,8 @@ build: 2
 0 $(FSTAR0_EXE):
 	$(call bold_msg, "STAGE 0")
 	mkdir -p stage0/ulib/.cache # prevent warnings
-	$(MAKE) -C stage0 fstar
+	$(MAKE) -C stage0 install_bin # build: only fstar.exe
 	$(MAKE) -C stage0 trim # We don't need OCaml build files.
-	# When the stage is bumped, use this:
-	# $(MAKE) -C stage0 build # build: only fstar.exe
-	# $(MAKE) -C stage0 trim # We don't need OCaml build files.
 
 .bare1.src.touch: $(FSTAR0_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 1 FSTARC-BARE")

@@ -1,5 +1,5 @@
 {
-  "fstar_exe": "../stage0/bin/fstar.exe",
+  "fstar_exe": "../stage0/out/bin/fstar.exe",
   "options": [
     "--MLish",
     "--MLish_effect", "FStarC.Effect",
