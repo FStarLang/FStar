@@ -1,0 +1,6 @@
+>> Got issues: [
+* Error 72 at Bug169.fst(10,30-10,31):
+  - Identifier not found: [SiveT.t]
+  - Could not resolve module name SiveT
+
+>>]
