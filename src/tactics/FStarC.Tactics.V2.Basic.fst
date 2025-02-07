@@ -2635,9 +2635,9 @@ let refl_check_prop_validity (g:env) (e:term) : tac (option unit & issues) =
   else return (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_check_match_complete (g:env) (sc:term) (scty:typ) (pats : list RD.pattern)
-: tac (option (list RD.pattern & list (list RD.binding)))
+: tac (option (list RD.pattern & list (list RD.binding)) & issues)
 =
-  return () ;!
+  refl_typing_builtin_wrapper "refl_check_match_complete" fun _ ->
   (* We just craft a match with the sc and patterns, using `1` in every
   branch, and check it against type int. *)
   let one = U.exp_int "1" in
@@ -2645,26 +2645,24 @@ let refl_check_match_complete (g:env) (sc:term) (scty:typ) (pats : list RD.patte
   let mm = mk (Tm_match {scrutinee=sc; ret_opt=None; brs=brs; rc_opt=None}) sc.pos in
   let env = g in
   let env = Env.set_expected_typ env S.t_int in
-  let! mm, _, g = __tc env mm in
+  let mm, _, guard = TcTerm.typeof_tot_or_gtot_term env mm true in
 
-  let errs, b = Errors.catch_errors_and_ignore_rest (fun () -> Env.is_trivial <| Rel.discharge_guard env g) in
-  match errs, b with
-  | [], Some true ->
-    let get_pats t =
-      match (U.unmeta t).n with
-      | Tm_match {brs} -> List.map (fun (p,_,_) -> p) brs
-      | _ -> failwith "refl_check_match_complete: not a match?"
-    in
-    let pats = get_pats mm in
-    let rec bnds_for_pat (p:pat) : list RD.binding =
-      match p.v with
-      | Pat_constant _ -> []
-      | Pat_cons (fv, _, pats) -> List.concatMap (fun (p, _) -> bnds_for_pat p) pats
-      | Pat_var bv -> [bv_to_binding bv]
-      | Pat_dot_term _ -> []
-    in
-    return (Some (List.map inspect_pat pats, List.map bnds_for_pat pats))
-  | _ -> return None
+  Rel.force_trivial_guard env guard;
+  let get_pats t =
+    match (U.unmeta t).n with
+    | Tm_match {brs} -> List.map (fun (p,_,_) -> p) brs
+    | _ -> failwith "refl_check_match_complete: not a match?"
+  in
+  let mm = SC.deep_compress false true mm in // important! we must return fully-compressed patterns
+  let pats = get_pats mm in
+  let rec bnds_for_pat (p:pat) : list RD.binding =
+    match p.v with
+    | Pat_constant _ -> []
+    | Pat_cons (fv, _, pats) -> List.concatMap (fun (p, _) -> bnds_for_pat p) pats
+    | Pat_var bv -> [bv_to_binding bv]
+    | Pat_dot_term _ -> []
+  in
+  (List.map inspect_pat pats, List.map bnds_for_pat pats), []
 
 let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
   : tac (option (list (bv & typ) & term & typ) & issues) =
@@ -2713,6 +2711,9 @@ let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
     in
 
     dbg_refl g (fun _ -> BU.format2 "refl_instantiate_implicits: inferred %s : %s" (show e) (show t));
+
+    // Stop now if we've already logged errors, it's less confusing to the user.
+    Errors.stop_if_err ();
 
     if not (no_univ_uvars_in_term e)
     then Errors.raise_error e Errors.Error_UnexpectedUnresolvedUvar

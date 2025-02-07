@@ -555,9 +555,10 @@ val check_prop_validity (g:env) (t:term)
 val match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) (bnds:list (list binding))
   : Type0
 
-// Returns elaborated patterns, the bindings for each one, and a token
+// Returns elaborated patterns, the bindings for each one, and a token. Possibly some issues
+// too.
 val check_match_complete (g:env) (sc:term) (t:typ) (pats:list pattern)
-  : Tac (option (pats_bnds:(list pattern & list (list binding))
+  : Tac (ret_t (pats_bnds:(list pattern & list (list binding))
                            {match_complete_token g sc t (fst pats_bnds) (snd pats_bnds)
                             /\ List.Tot.length (fst pats_bnds) == List.Tot.length (snd pats_bnds)
                             /\ List.Tot.length (fst pats_bnds) == List.Tot.length pats}))
