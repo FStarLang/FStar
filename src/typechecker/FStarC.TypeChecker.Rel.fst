@@ -2757,6 +2757,8 @@ and solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
        match a1, a2 with
        | Some (Implicit b1), Some (Implicit b2) ->
          true //we don't care about comparing the dot qualifier in this context
+       | Some Equality, None | None, Some Equality ->
+         true // also don't care about the equality qualifier
        | _ ->
          U.eq_bqual a1 a2
    in
