@@ -2,17 +2,4 @@
 * Error 339 at Bug45.fst(64,13-64,58):
   - Elaborated term has unresolved univ uvars: Bug45.spawn (Bug45.pth n)
 
-* Error 12 at Bug45.fst(64,51-64,58):
-  - Expected type
-        $f: Prims.unit
-          -> Pulse.Lib.Core.stt Prims.nat
-              Pulse.Lib.Core.emp
-              (fun _ -> Pulse.Lib.Core.emp)
-    but pth n
-    has type
-        _: Prims.unit
-          -> Pulse.Lib.Core.stt Prims.nat
-              Pulse.Lib.Core.emp
-              (fun _ -> Pulse.Lib.Core.emp)
-
 >>]
