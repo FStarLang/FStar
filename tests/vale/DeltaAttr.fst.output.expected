@@ -173,5 +173,3 @@ let test_5 x = x + 1 - 1 + (x + 1 - 1) <: Prims.int
     "Calc.fst".
   - Rename "Calc.fst" to avoid conflicts.
 
-Verified module: DeltaAttr
-All verification conditions discharged successfully

@@ -13,9 +13,6 @@ OTHERFLAGS := $(filter-out --query_stats, $(OTHERFLAGS))
 OTHERFLAGS := $(filter-out --hint_info, $(OTHERFLAGS))
 OTHERFLAGS += --ext fstar:no_absolute_paths
 
-# Make sure we are silent
-OTHERFLAGS += --silent
-
 # For these tests, we check that the resugared output
 # matches the expected file. We have to repeat the lines for
 # json_output, sadly.

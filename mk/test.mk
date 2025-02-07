@@ -79,22 +79,22 @@ endif
 $(OUTPUT_DIR)/%.fst.output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fst.output: %.fst
 	$(call msg, "OUTPUT", $(basename $(notdir $@)))
-	$(FSTAR) --message_format human -f --print_expected_failures $< >$@ 2>&1
+	$(FSTAR) --message_format human --silent -f --print_expected_failures $< >$@ 2>&1
 
 $(OUTPUT_DIR)/%.fsti.output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fsti.output: %.fsti
 	$(call msg, "OUTPUT", $(basename $(notdir $@)))
-	$(FSTAR) --message_format human -f --print_expected_failures $< >$@ 2>&1
+	$(FSTAR) --message_format human --silent -f --print_expected_failures $< >$@ 2>&1
 
 $(OUTPUT_DIR)/%.fst.json_output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fst.json_output: %.fst
 	$(call msg, "JSONOUT", $(basename $(notdir $@)))
-	$(FSTAR) --message_format json -f --print_expected_failures $< >$@ 2>&1
+	$(FSTAR) --message_format json --silent -f --print_expected_failures $< >$@ 2>&1
 
 $(OUTPUT_DIR)/%.fsti.json_output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fsti.json_output: %.fsti
 	$(call msg, "JSONOUT", $(basename $(notdir $@)))
-	$(FSTAR) --message_format json -f --print_expected_failures $< >$@ 2>&1
+	$(FSTAR) --message_format json --silent -f --print_expected_failures $< >$@ 2>&1
 
 $(OUTPUT_DIR)/$(subst .,_,%).ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
