@@ -46,6 +46,8 @@ install_bin: build
 	$(call msg, "DUNE INSTALL")
 	dune install --root=dune --prefix=$(call cygpath,out)
 
+minimal: install_bin install_lib_src
+
 check_lib: install_bin
 	$(call msg, "CHECK LIB")
 	env \
@@ -58,13 +60,19 @@ check_lib: install_bin
 	  FSTAR_ROOT=$(CURDIR) \
 	  $(MAKE) -f mk/lib.mk verify
 
-install_lib: check_lib
-	$(call msg, "INSTALL LIB")
-	@# Install library and its checked files
-	cp -T -H -p -r ulib out/lib/fstar/ulib
-	cp -T -H -p -r ulib.checked out/lib/fstar/ulib.checked
+install_lib_src:
+	$(call msg, "INSTALL LIB SRC")
+	@# Install library sources, set up fstar.include
+	rm -rf out/lib/fstar/ulib
+	mkdir -p out/lib/fstar
+	cp -H -p -r ulib out/lib/fstar/ulib
 	echo 'ulib'          > out/lib/fstar/fstar.include
 	echo 'ulib.checked' >> out/lib/fstar/fstar.include
+
+install_lib: check_lib install_lib_src
+	$(call msg, "INSTALL LIB")
+	@# Install library checked files
+	cp -T -H -p -r ulib.checked out/lib/fstar/ulib.checked
 
 check_fstarc: install_bin
 	$(call msg, "CHECK FSTARC")
