@@ -448,6 +448,7 @@ let bv_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "bv"]) FStar
 let fv_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "fv"]) FStarC.Range.dummyRange
 let norm_step_lid = psconst "norm_step"
 let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
+let postprocess_type = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_type"]
 let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
 let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
 let term_lid       = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "term"]

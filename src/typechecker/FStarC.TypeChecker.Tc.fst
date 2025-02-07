@@ -255,16 +255,27 @@ let proc_check_with (attrs:list attribute) (kont : unit -> 'a) : 'a =
   | _ -> failwith "ill-formed `check_with`"
 
 let handle_postprocess_with_attr (env:Env.env) (ats:list attribute)
-    : (list attribute & option term)
+    : (list attribute & option (term & bool))
 =   (* Extract the postprocess_with *)
     match U.extract_attr' PC.postprocess_with ats with
     | None -> ats, None
     | Some (ats, [tau, None]) ->
-        ats, Some tau
+      let ats, on_type_too =
+        match U.extract_attr' PC.postprocess_type ats with
+        | None -> ats, false
+        | Some (ats, []) -> ats, true
+        | _ ->
+          Errors.log_issue env Errors.Warning_UnrecognizedAttribute [
+            text <| BU.format1 "Ill-formed application of `%s`" (show PC.postprocess_type);
+          ];
+          ats, false
+      in
+      ats, Some (tau, on_type_too)
     | Some (ats, args) ->
-        Errors.log_issue env Errors.Warning_UnrecognizedAttribute
-          (BU.format1 "Ill-formed application of `%s`" (show PC.postprocess_with));
-        ats, None
+      Errors.log_issue env Errors.Warning_UnrecognizedAttribute [
+        text <| BU.format1 "Ill-formed application of `%s`" (show PC.postprocess_with);
+      ];
+      ats, None
 
 let store_sigopts (se:sigelt) : sigelt =
   { se with sigopts = Some (Options.get_vconfig ()) }
@@ -459,14 +470,24 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
     (* remove the postprocess_with, if any *)
     let se = { se with sigattrs = attrs } in
 
-    let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
+    let postprocess_lb (tau:term) (on_type_too : bool) (lb:letbinding) : letbinding =
         let s, univnames = SS.univ_var_opening lb.lbunivs in
         let lbdef = SS.subst s lb.lbdef in
         let lbtyp = SS.subst s lb.lbtyp in
         let env = Env.push_univ_vars env univnames in
+
         let lbdef = Env.postprocess env tau lbtyp lbdef in
         let lbdef = SS.close_univ_vars univnames lbdef in
-        { lb with lbdef = lbdef }
+
+        let lbtyp =
+          if on_type_too then
+            let u = env.universe_of env lbtyp in
+            let lbtyp = Env.postprocess env tau lbtyp lbtyp in
+            SS.close_univ_vars univnames lbtyp
+          else lbtyp
+        in
+
+        { lb with lbdef = lbdef; lbtyp = lbtyp }
     in
     let env' =
         match (SS.compress e).n with
@@ -494,7 +515,7 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
         // Postprocess the letbindings with the tactic, if any
         let lbs = (fst lbs,
                     (match post_tau with
-                     | Some tau -> List.map (postprocess_lb tau) (snd lbs)
+                     | Some (tau, on_type_too) -> List.map (postprocess_lb tau on_type_too) (snd lbs)
                      | None -> (snd lbs)))
         in
 
