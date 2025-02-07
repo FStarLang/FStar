@@ -127,7 +127,7 @@ let module_name_of_file f =
     | None ->
       raise_error0 Errors.Fatal_NotValidFStarFile (
         [ text <| Util.format1 "Not a valid FStar file: '%s'" f; ] @
-        (if Platform.system = Platform.Windows && f = ".." then [
+        (if Platform.windows && f = ".." then [
           text <| "Note: In Windows-compiled versions of F*, a literal
           asterisk as argument will be expanded to a list of files,
           **even if quoted**. It is possible you provided such an

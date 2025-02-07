@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@master
 
@@ -46,3 +46,31 @@ jobs:
         with:
           path: fstar-*
           name: package-mac
+
+  smoke_test:
+    needs: build
+    strategy:
+      matrix:
+        os:
+          - macos-14
+          - macos-15
+          - macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      # no 4.8.5 on mac, could call script but just admit.
+      # - uses: cda-tum/setup-z3@main
+      #   with:
+      #     version: 4.8.5
+
+      - name: Get fstar package
+        uses: actions/download-artifact@v4
+        with:
+          name: package-mac
+
+      - run: tar xzf fstar*.tar.gz
+
+      - name: Smoke test
+        run: |
+          ./fstar/bin/fstar.exe --admit_smt_queries true fstar/lib/fstar/ulib/Prims.fst -f
+          echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          ./fstar/bin/fstar.exe --admit_smt_queries true A.fst

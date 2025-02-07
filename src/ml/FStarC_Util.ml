@@ -192,7 +192,7 @@ let kill_process (p: proc) =
          get ESRCH. On Windows, we apparently get EACCES (permission denied). *)
       (try Unix.kill p.pid Sys.sigkill
        with Unix.Unix_error (Unix.ESRCH, _, _) -> ()
-          | Unix.Unix_error (Unix.EACCES, _, _) when FStarC_Platform.system = FStarC_Platform.Windows -> ()
+          | Unix.Unix_error (Unix.EACCES, _, _) when FStarC_Platform.windows -> ()
           ); 
 
       (* Avoid zombie processes (Unix.close_process does the same thing. *)
@@ -349,7 +349,7 @@ let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
 
 (* NOTE: Working around https://github.com/ocaml-batteries-team/batteries-included/issues/1136 *)
 let is_absolute_windows (path_str : string) : bool =
-  if FStarC_Platform.system = FStarC_Platform.Windows then
+  if FStarC_Platform.windows then
     match BatString.to_list path_str with
     | '\\' :: _ -> true
     | letter :: ':' :: '\\' :: _ -> BatChar.is_letter letter

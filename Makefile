@@ -2,7 +2,6 @@ export FSTAR_ROOT=$(CURDIR)
 # ^ This variable is only used by internal makefiles.
 # Do NOT rely on it in client code. It is not what FSTAR_HOME was.
 include mk/common.mk
-undefine FSTAR_EXE # just in case
 
 # NOTE: If you are changing any of install rules, run a macos build too.
 # The behavior of cp, find, etc, can differ in subtle ways from that of GNU tools.

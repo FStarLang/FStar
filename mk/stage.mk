@@ -47,7 +47,7 @@ clean: _force
 # In a local build, we prefer to symlink the library and checked file
 # directories to get better IDE integration, but of course we cannot do
 # that on actual install, and must copy all files. Note: this flag is
-# also only set by the parent Makefile on Lonux, since Mac's ln does not
+# also only set by the parent Makefile on Linux, since Mac's ln does not
 # support the same options.
 ifeq ($(FSTAR_LINK_LIBDIRS),1)
 INSTALL_DIR := ln -Tsrf
@@ -69,7 +69,9 @@ install: # NOTE: no deps, dune figures it out and rebuilds if needed
 	cd dune && $(DUNE) build $(FSTAR_DUNE_BUILD_OPTIONS)
 	cd dune && $(DUNE) install $(FSTAR_DUNE_OPTIONS) --prefix=$(PREFIX)
 	@# Install library and its checked files
+	rm -rf $(PREFIX)/lib/fstar/ulib
 	$(INSTALL_DIR) ulib $(PREFIX)/lib/fstar/ulib
+	rm -rf $(PREFIX)/lib/fstar/ulib.checked
 	$(INSTALL_DIR) ulib.checked $(PREFIX)/lib/fstar/ulib.checked
 	echo 'ulib'          > $(PREFIX)/lib/fstar/fstar.include
 	echo 'ulib.checked' >> $(PREFIX)/lib/fstar/fstar.include

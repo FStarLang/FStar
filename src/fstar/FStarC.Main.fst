@@ -95,9 +95,8 @@ let load_native_tactics () =
                 | Some f -> f
               end
     in
+
     let cmxs_files = (modules_to_load@cmxs_to_load) |> List.map cmxs_file in
-    if Debug.any () then
-      Util.print1 "Will try to load cmxs files: [%s]\n" (String.concat ", " cmxs_files);
     Plugins.load_plugins cmxs_files;
     iter_opt (Options.use_native_tactics ())
       Plugins.load_plugins_dir;
@@ -266,8 +265,9 @@ let go_normal () =
       fstar_files := Some filenames;
 
       if Debug.any () then (
-        Util.print1 "- F* executable: %s\n" (Util.exec_name);
-        Util.print1 "- Library root: %s\n" ((Util.dflt "<none>" (Find.lib_root ())));
+        Util.print3 "- F* version %s -- %s (on %s)\n"  !Options._version !Options._commit (Platform.kernel ());
+        Util.print1 "- Executable: %s\n" (Util.exec_name);
+        Util.print1 "- Library root: %s\n" (Util.dflt "<none>" (Find.lib_root ()));
         Util.print1 "- Full include path: %s\n" (show (Find.include_path ()));
         Util.print_string "\n";
         ()
