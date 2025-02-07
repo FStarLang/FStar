@@ -6,6 +6,7 @@
     "--z3version", "4.13.3"
   ],
   "include_dirs": [
-    "../out/lib/pulse"
+    "../build/ocaml/installed/lib/pulse",
+    "../lib"
   ]
 }
