@@ -1,24 +1,6 @@
 >> Got issues: [
-* Error 228 at Bug111.fst(31,4-31,15):
-  - Cannot prove:
-      _ @==> _ ** _ @==> _
-  - In the context:
-      p @==> q ** q @==> r
-
->>]
->> Got issues: [
-* Error 228 at Bug111.fst(43,4-43,15):
-  - Cannot prove:
-      _ @==> _ ** _ @==> _
-  - In the context:
-      p @==> q ** q @==> r
-
->>]
->> Got issues: [
-* Error 228 at Bug111.fst(77,4-77,12):
-  - Cannot prove:
-      _ ** _ @==> _
-  - In the context:
-      p ** p @==> q ** r @==> r
+* Error 114 at Bug111.fst(13,2-20,3):
+  - Could not verify that this match is exhaustive.
+  - Type of pattern (Prims.int) does not match type of scrutinee (FStar.Ghost.erased Prims.int)
 
 >>]

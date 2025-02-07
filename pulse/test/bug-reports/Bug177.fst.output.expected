@@ -1,0 +1,21 @@
+>> Got issues: [
+* Error 12 at Bug177.fst(21,7-21,9):
+  - Expected type Prims.int
+    but !r
+    has type
+        Pulse.Lib.Core.stt Prims.int
+          (Pulse.Lib.Reference.pts_to r (*?u247*) _)
+          (fun x ->
+              Pulse.Lib.Reference.pts_to r (*?u247*) _ **
+              Pulse.Lib.Core.pure ((*?u247*) _ == x))
+
+>>]
+>> Got issues: [
+* Error 19 at Bug177.fst(35,2-35,8):
+  - Ill-typed term: r := !r
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also Bug177.fst(35,2-35,9)
+
+>>]

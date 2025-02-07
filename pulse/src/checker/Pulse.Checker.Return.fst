@@ -25,6 +25,7 @@ open Pulse.Checker.Prover
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
+module RU = Pulse.RuntimeUtils
 
 let check_effect
     (#g:env) (#e:term) (#eff:T.tot_or_ghost) (#t:term)
@@ -43,7 +44,7 @@ let check_effect
   | _, T.E_Total -> 
     (| STT_Atomic, e, d |)
   | _ -> 
-    fail g (Some (Pulse.RuntimeUtils.range_of_term e)) "Expected a total term, but this term has Ghost effect"
+    fail g (Some (RU.range_of_term e)) "Expected a total term, but this term has Ghost effect"
  
 
 let check_tot_or_ghost_term (g:env) (e:term) (t:term) (c:option ctag)
@@ -64,10 +65,11 @@ type result_of_typing (g:env) =
 
 let compute_tot_or_ghost_term_type_and_u (g:env) (e:term) (c:option ctag)
 : T.Tac (result_of_typing g)
-= let (| t, eff, ty, (| u, ud |), d |) = compute_term_type_and_u g e in
+= RU.with_error_bound (RU.range_of_term e) fun () -> // stopgap, ideally remove
+  let (| t, eff, ty, (| u, ud |), d |) = compute_term_type_and_u g e in
   let (| c, e, d |) = check_effect d c in
   R c e u ty ud d
-    
+
 #push-options "--z3rlimit_factor 4"
 let check_core
   (g:env)
