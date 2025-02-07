@@ -1,5 +1,5 @@
 >> Got issues: [
-* Error 228 at Bug111.fst(31,4-31,15):
+* Error 228 at Bug274.fst(31,4-31,15):
   - Cannot prove:
       _ @==> _ ** _ @==> _
   - In the context:
@@ -7,7 +7,7 @@
 
 >>]
 >> Got issues: [
-* Error 228 at Bug111.fst(43,4-43,15):
+* Error 228 at Bug274.fst(43,4-43,15):
   - Cannot prove:
       _ @==> _ ** _ @==> _
   - In the context:
@@ -15,7 +15,7 @@
 
 >>]
 >> Got issues: [
-* Error 228 at Bug111.fst(77,4-77,12):
+* Error 228 at Bug274.fst(77,4-77,12):
   - Cannot prove:
       _ ** _ @==> _
   - In the context:

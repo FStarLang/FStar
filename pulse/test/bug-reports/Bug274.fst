@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Bug111
+module Bug274
 #lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick.Util
@@ -78,7 +78,7 @@ ensures q ** (r @==> r)
 }
 
 
-//this is the main report in Bug 111
+//this is the main report in Bug 274
 
 ghost
 fn test_elim_2 (p q r:slprop)
