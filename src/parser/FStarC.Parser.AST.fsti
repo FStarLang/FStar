@@ -354,6 +354,7 @@ val string_of_pragma : pragma -> string
 val pat_to_string : pattern -> string
 val binder_to_string : binder -> string
 val modul_to_string : modul -> string
+val decl_to_string : decl -> string
 
 val decl_is_val : ident -> decl -> bool
 
