@@ -1,0 +1,23 @@
+>> Got issues: [
+* Error 19 at Bug94.fst(11,16-11,18):
+  - Expected term of type Prims.nat got term - 1
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: Prims.fst(680,18-680,24)
+
+>>]
+>> Got issues: [
+* Error 189 at Bug94.fst(20,16-20,17):
+  - Expected expression of type Prims.nat got expression y of type Prims.string
+  - See also Bug94.fst(20,2-21,4)
+
+>>]
+>> Got issues: [
+* Error 19 at Bug94.fst(36,18-36,27):
+  - Ill-typed term: hundred 0
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+
+>>]
