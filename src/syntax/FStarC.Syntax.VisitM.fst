@@ -320,11 +320,14 @@ let on_sub_wp_eff_combinators #m {|d : lvm m |} (wpcs : wp_eff_combinators) : m 
     bind_repr;
   }
 
+let mktuple2 x y = (x, y)
+let mktuple3 x y z = (x, y, z)
+
 let mapTuple2 #m {| monad m |} (f : 'a -> m 'b) (g : 'c -> m 'd) (t : 'a & 'c) : m ('b & 'd) =
-  Mktuple2 <$> f t._1 <*> g t._2
+  mktuple2 <$> f t._1 <*> g t._2
 
 let mapTuple3 #m {| monad m |} (f : 'a -> m 'b) (g : 'c -> m 'd) (h : 'e -> m 'f) (t : 'a & 'c & 'e) : m ('b & 'd & 'f) =
-  Mktuple3 <$> f t._1 <*> g t._2 <*> h t._3
+  mktuple3 <$> f t._1 <*> g t._2 <*> h t._3
 
 let on_sub_layered_eff_combinators #m {|d : lvm m |} (lecs : layered_eff_combinators) : m layered_eff_combinators =
   let! l_repr         = lecs.l_repr         |> mapTuple2 (f_tscheme #m #d) (f_tscheme #m #d) in

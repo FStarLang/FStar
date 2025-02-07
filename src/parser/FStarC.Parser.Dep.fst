@@ -899,7 +899,7 @@ let collect_one
                       | VpOfNotation t | VpArbitrary t -> collect_term t
                       | VpRecord (record, t) -> collect_tycon_record record;
                                                iter_opt t collect_term
-                      ) (List.filter_map Mktuple3?._2 identterms)
+                      ) (List.filter_map (fun (t : _ & _ & _) -> t._2) identterms)
 
       and collect_tycon_record r = 
         List.iter (fun (_, aq, attrs, t) ->
