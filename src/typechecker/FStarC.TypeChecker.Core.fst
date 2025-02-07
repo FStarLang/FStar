@@ -429,6 +429,8 @@ let check_bqual (b0 b1:bqual)
       //we don't care about the inaccessibility qualifier
       //when comparing bquals
       return ()
+    | Some Equality, None
+    | None, Some Equality // The equality qualifier is metadata, ignore it
     | Some Equality, Some Equality ->
       return ()
     | Some (Meta t1), Some (Meta t2) when equal_term t1 t2 ->
