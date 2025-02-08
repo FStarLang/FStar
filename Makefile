@@ -447,6 +447,7 @@ bump-stage0: stage0_new
 	rm -rf stage0
 	mv stage0_new stage0
 	echo 'out' >> stage0/.gitignore
+	echo '** -diff -merge linguist-generated=true' >> stage0/.gitattributes
 	# Now that stage0 supports all features, we can return to a clean state
 	# where the 01 makefile is equal to the 12 makefile. Same for stage1
 	# support and config code, we just take it from the stage2.
