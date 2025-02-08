@@ -1527,7 +1527,8 @@ let collect (all_cmd_line_files: list file_name)
 
   (* At this point, dep_graph has all the (immediate) dependency graph of all the files. *)
   let cycle_detected (dep_graph:dependence_graph) cycle filename =
-      Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
+      let cycle = List.rev cycle in
+      Util.print1 "The cycle contains a subset of the modules in:\n  %s \n" (String.concat "\n  `uses` " cycle);
 
       (* Write the graph to a file for the user to see. *)
       let fn = "dep.graph" in
