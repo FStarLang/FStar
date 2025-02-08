@@ -52,6 +52,16 @@ type scope_mod =
 | Top_level_defs           of BU.psmap bool   (* a map (to avoid a linear scan) recording that a top-level definition for an unqualified identifier x is in scope and should be resolved as curmodule.x. *)
 | Record_or_dc             of record_or_dc    (* to honor interleavings of "open" and record definitions *)
 
+instance _ : showable scope_mod = {
+  show = function
+    | Local_bindings lbs -> "Local_bindings"
+    | Rec_binding (id, lid, _) -> "Rec_binding " ^ (string_of_id id) ^ " " ^ (string_of_lid lid)
+    | Module_abbrev (id, lid) -> "Module_abbrev " ^ (string_of_id id) ^ " " ^ (string_of_lid lid)
+    | Open_module_or_namespace (lid, _, _) -> "Open_module_or_namespace " ^ (string_of_lid lid)
+    | Top_level_defs lbs -> "Top_level_defs"
+    | Record_or_dc r -> "Record_or_dc " ^ (string_of_lid r.typename)
+}
+
 type string_set = RBSet.t string
 
 type exported_id_kind = (* kinds of identifiers exported by a module *)
@@ -1501,37 +1511,64 @@ let fail_or env lookup lid =
   match lookup lid with
   | Some r -> r
   | None ->
-    (* try to report a nice error *)
+    (* We couldn't find it. Try to report a nice error. *)
     let opened_modules = List.map (fun (lid, _) -> string_of_lid lid) env.modules in
-    let msg = Errors.mkmsg (BU.format1 "Identifier not found: [%s]" (string_of_lid lid)) in
-    let msg =
-      if List.length (ns_of_lid lid) = 0
-      then
-       msg
-      else
-       let modul = set_lid_range (lid_of_ids (ns_of_lid lid)) (range_of_lid lid) in
-       let open FStarC.Pprint in
-       let subdoc d =
-         nest 2 (hardline ^^ align d)
-       in
-       match resolve_module_name env modul true with
-       | None ->
-           let opened_modules = String.concat ", " opened_modules |> Errors.text in
-           msg @ [Errors.text (BU.format1 "Could not resolve module name %s"
-                                          (string_of_lid modul))]
-       | Some modul' when (not (List.existsb (fun m -> m = (string_of_lid modul')) opened_modules)) ->
-           let opened_modules = String.concat ", " opened_modules |> Errors.text in
-           msg @ [Errors.text (BU.format2 "Module %s resolved into %s, which does not belong to the list of modules in scope, namely:"
-                                          (string_of_lid modul)
-                                          (string_of_lid modul')) ^^ subdoc opened_modules]
-       | Some modul' ->
-           msg @ [Errors.text (BU.format3
-                               "Module %s resolved into %s, definition %s not found"
-                               (string_of_lid modul)
-                               (string_of_lid modul')
-                               (string_of_id (ident_of_lid lid)))]
-    in
-    raise_error lid Errors.Fatal_IdentifierNotFound msg
+    let open FStarC.Class.PP in
+    if List.length (ns_of_lid lid) = 0 then
+      raise_error lid Errors.Fatal_IdentifierNotFound [
+        Pprint.prefix 2 1 (text "Identifier not found:") (pp lid);
+      ]
+    else
+      let modul = lid_of_ids (ns_of_lid lid) in
+      let modul =
+        let h::t = ids_of_lid modul in
+        let rng = List.fold_right (fun i r -> Range.union_ranges (range_of_id i) r) t (range_of_id h) in
+        set_lid_range modul rng
+      in
+      (* ^ Make the range point to the namespace component of the lid, to highlight X.Y in X.Y.z *)
+      let open FStarC.Pprint in
+      match resolve_module_name env modul true with
+      | None ->
+        raise_error modul Errors.Fatal_IdentifierNotFound [
+          flow (break_ 1) [
+            text "Module name";
+            pp modul;
+            text "could not be resolved";
+          ];
+          if Debug.any ()
+          then text "Opened modules = "  ^^ (String.concat ", " opened_modules |> Errors.text)
+          else empty;
+        ]
+
+      | Some modul' when (not (List.existsb (fun m -> m = (string_of_lid modul')) opened_modules)) ->
+        (* How can this happen? *)
+        raise_error modul Errors.Fatal_IdentifierNotFound [
+          flow (break_ 1) [
+            text "Module name";
+            pp modul;
+            text "resolved to";
+            pp modul';
+            text "which is not in scope.";
+          ];
+          if Debug.any ()
+          then text "Opened modules =" ^/^ (String.concat ", " opened_modules |> Errors.text)
+          else empty;
+        ]
+
+      | Some modul' ->
+        raise_error lid Errors.Fatal_IdentifierNotFound [
+          flow (break_ 1) [
+            text "Identifier";
+            pp (ident_of_lid lid);
+            text "not found in module";
+            pp modul;
+            (let open FStarC.Class.Deq in
+              if modul <>? modul' then
+              Pprint.parens (Pprint.prefix 2 1 (text "resolved to") (pp modul'))
+            else
+              text "")
+          ]
+        ]
 
 let fail_or2 lookup id = match lookup id with
   | None -> raise_error id Errors.Fatal_IdentifierNotFound ("Identifier not found [" ^(string_of_id id)^"]")
