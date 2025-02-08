@@ -254,29 +254,6 @@ let proc_check_with (attrs:list attribute) (kont : unit -> 'a) : 'a =
       kont ())
   | _ -> failwith "ill-formed `check_with`"
 
-let handle_postprocess_with_attr (env:Env.env) (ats:list attribute)
-    : (list attribute & option (term & bool))
-=   (* Extract the postprocess_with *)
-    match U.extract_attr' PC.postprocess_with ats with
-    | None -> ats, None
-    | Some (ats, [tau, None]) ->
-      let ats, on_type_too =
-        match U.extract_attr' PC.postprocess_type ats with
-        | None -> ats, false
-        | Some (ats, []) -> ats, true
-        | _ ->
-          Errors.log_issue env Errors.Warning_UnrecognizedAttribute [
-            text <| BU.format1 "Ill-formed application of `%s`" (show PC.postprocess_type);
-          ];
-          ats, false
-      in
-      ats, Some (tau, on_type_too)
-    | Some (ats, args) ->
-      Errors.log_issue env Errors.Warning_UnrecognizedAttribute [
-        text <| BU.format1 "Ill-formed application of `%s`" (show PC.postprocess_with);
-      ];
-      ats, None
-
 let store_sigopts (se:sigelt) : sigelt =
   { se with sigopts = Some (Options.get_vconfig ()) }
 
@@ -291,6 +268,68 @@ let run_phase1 (f:unit -> 'a) =
   FStarC.TypeChecker.Core.clear_memo_table();
   r
 
+let read_postprocess_with_attr (for_extraction : bool) (env:Env.env) (ats:list attribute)
+    : list attribute & option term & bool
+      (* returns:
+         - remaining attrs
+         - postprocess tactic
+         - whether postprocess_type is set. *)
+= (* Extract the postprocess_with *)
+  let get1 ats lid =
+    match U.extract_attr' lid ats with
+    | None -> ats, None
+    | Some (ats, [tau, None]) ->
+      ats, Some tau
+    | Some (ats, args) ->
+      Errors.log_issue env Errors.Warning_UnrecognizedAttribute [
+        text <| BU.format1 "Ill-formed application of `%s`" (show lid);
+      ];
+      ats, None
+  in
+  let lid = if for_extraction then PC.postprocess_extr_with else PC.postprocess_with in
+  let ats, pt = get1 ats lid in
+  let on_type =
+    (* NOTE: retain the attribute even if we find it. So postprocess_type can work
+    with a postprocess_with and postprocess_for_extraction_with simultaneously 
+    on a single definition. *)
+    Some? (U.extract_attr' PC.postprocess_type ats)
+  in
+  ats, pt, on_type
+
+let run_postprocess (for_extraction : bool) env (se : sigelt) : sigelt =
+  let attrs, pt, on_type = read_postprocess_with_attr for_extraction env se.sigattrs in
+
+  (* remove the postprocess_with, if any *)
+  let se = { se with sigattrs = attrs } in
+
+  let postprocess_lb (tau:term) (on_type : bool) (lb:letbinding) : letbinding =
+      let s, univnames = SS.univ_var_opening lb.lbunivs in
+      let lbdef = SS.subst s lb.lbdef in
+      let lbtyp = SS.subst s lb.lbtyp in
+      let env = Env.push_univ_vars env univnames in
+
+      let lbdef = Env.postprocess env tau lbtyp lbdef in
+      let lbdef = SS.close_univ_vars univnames lbdef in
+
+      let lbtyp =
+        if on_type then
+          let u = env.universe_of env lbtyp in
+          let lbtyp = Env.postprocess env tau lbtyp lbtyp in
+          SS.close_univ_vars univnames lbtyp
+        else lbtyp
+      in
+
+      { lb with lbdef = lbdef; lbtyp = lbtyp }
+  in
+  let se =
+    match pt, se.sigel with
+    | Some tac, Sig_let {lbs; lids} ->
+        // Postprocess the letbindings with the tactic, if any
+        let lbs = (fst lbs, List.map (postprocess_lb tac on_type) (snd lbs)) in
+        { se with sigel = Sig_let {lbs; lids} }
+    | _ -> se
+  in
+  se
 
 (* The type checking rule for Sig_let (lbs, lids) *)
 let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
@@ -466,29 +505,7 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
         e)
       else e
     in
-    let attrs, post_tau = handle_postprocess_with_attr env se.sigattrs in
-    (* remove the postprocess_with, if any *)
-    let se = { se with sigattrs = attrs } in
 
-    let postprocess_lb (tau:term) (on_type_too : bool) (lb:letbinding) : letbinding =
-        let s, univnames = SS.univ_var_opening lb.lbunivs in
-        let lbdef = SS.subst s lb.lbdef in
-        let lbtyp = SS.subst s lb.lbtyp in
-        let env = Env.push_univ_vars env univnames in
-
-        let lbdef = Env.postprocess env tau lbtyp lbdef in
-        let lbdef = SS.close_univ_vars univnames lbdef in
-
-        let lbtyp =
-          if on_type_too then
-            let u = env.universe_of env lbtyp in
-            let lbtyp = Env.postprocess env tau lbtyp lbtyp in
-            SS.close_univ_vars univnames lbtyp
-          else lbtyp
-        in
-
-        { lb with lbdef = lbdef; lbtyp = lbtyp }
-    in
     let env' =
         match (SS.compress e).n with
         | Tm_let {lbs} ->
@@ -512,13 +529,6 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
         // Propagate binder names into signature
         let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
 
-        // Postprocess the letbindings with the tactic, if any
-        let lbs = (fst lbs,
-                    (match post_tau with
-                     | Some (tau, on_type_too) -> List.map (postprocess_lb tau on_type_too) (snd lbs)
-                     | None -> (snd lbs)))
-        in
-
         //propagate the MaskedEffect tag to the qualifiers
         let quals = match e.n with
             | Tm_meta {meta=Meta_desugared Masked_effect} -> HasMaskedEffect::quals
@@ -529,6 +539,7 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
         lbs
       | _ -> failwith "impossible (typechecking should preserve Tm_let)"
     in
+    let se = run_postprocess false env' se in
 
     //
     // if no_subtyping attribute is present, typecheck the signatures with use_eq_strict

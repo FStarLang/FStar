@@ -1165,33 +1165,10 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
   if not (Sig_let? se.sigel)
   then failwith "Impossible: should only be called with Sig_let"
   else begin
-    let Sig_let { lbs } = se.sigel in
     let attrs = se.sigattrs in
     let quals = se.sigquals in
-    let maybe_postprocess_lbs lbs =
-      let post_tau =
-        match U.extract_attr' PC.postprocess_extr_with attrs with
-        | None -> None
-        | Some (_, (tau, None)::_) -> Some tau
-        | Some _ ->
-            Errors.log_issue se Errors.Warning_UnrecognizedAttribute
-              "Ill-formed application of 'postprocess_for_extraction_with'";
-            None
-      in
-      let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
-        let env = tcenv_of_uenv g in
-        let lbdef = 
-          Profiling.profile
-                (fun () -> Env.postprocess env tau lb.lbtyp lb.lbdef)
-                (Some (Ident.string_of_lid (Env.current_module env)))
-                "FStarC.Extraction.ML.Module.post_process_for_extraction"
-        in
-        { lb with lbdef = lbdef }
-      in
-      match post_tau with
-      | None -> lbs
-      | Some tau -> fst lbs, List.map (postprocess_lb tau) (snd lbs)
-    in
+    let se = TypeChecker.Tc.run_postprocess true (tcenv_of_uenv g) se in
+    let Sig_let { lbs } = se.sigel in
     let maybe_normalize_for_extraction lbs = 
       let norm_steps =
         match U.extract_attr' PC.normalize_for_extraction_lid attrs with
@@ -1248,7 +1225,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
         fst lbs, List.map (norm_one_lb steps) (snd lbs)
     in
     let ml_let, _, _ =
-      let lbs = maybe_normalize_for_extraction (maybe_postprocess_lbs lbs) in
+      let lbs = maybe_normalize_for_extraction lbs in
       Term.term_as_mlexpr
               g
               (mk (Tm_let {lbs; body=U.exp_false_bool}) se.sigrng)
