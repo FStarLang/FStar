@@ -248,6 +248,11 @@ val postprocess_with (tau : unit -> Tac unit) : Tot unit
  * environment should not be affected at all. *)
 val postprocess_for_extraction_with (tau : unit -> Tac unit) : Tot unit
 
+(* When using [postprocess_with] or [postprocess_for_extraction_with]
+ * this flag indicates that the type of the definition should also be
+ * processed with the same tactic. *)
+val postprocess_type : unit
+
 #set-options "--no_tactics"
 
 val unfold_with_tactic (t:unit -> Tac unit) (p:Type)

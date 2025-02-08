@@ -178,6 +178,7 @@ let commute_nested_matches = ()
 let noextract_to _ = ()
 
 let normalize_for_extraction _ = ()
+let normalize_for_extraction_type = ()
 
 let ite_soundness_by _ = ()
 

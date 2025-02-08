@@ -12,3 +12,5 @@ Hacl_Meta.ml:
 Hacl.Meta.Use.fst.test: Hacl.Meta.Use.fst Hacl_Meta.ml
 	$(FSTAR) $< --load Hacl.Meta
 	touch $@
+
+$(OUTPUT_DIR)/Postprocess.fst.output: FSTAR_ARGS+=--dump_module Postprocess --ugly
