@@ -21,6 +21,10 @@ let  x'  : (z#0:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
 let  x''  : (z#0:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
 [@ ((postprocess_for_extraction_with tau))]
 let  y  : int = (foo 1)
+[@ ((postprocess_for_extraction_with tau))]
+let  y'  : (z#0:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
+[@ ((postprocess_for_extraction_with tau)); (postprocess_type)]
+let  y''  : (z#0:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
 [@ ]
 private let  uu___0  : _ = (_assert (eq2 x (foo 2)))
 [@ ]
@@ -189,6 +193,10 @@ let  x'  : (z#0:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
 let  x''  : (z#0:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
 [@ ((postprocess_for_extraction_with tau))]
 let  y  : int = (foo 1)
+[@ ((postprocess_for_extraction_with tau))]
+let  y'  : (z#0:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
+[@ ((postprocess_for_extraction_with tau)); (postprocess_type)]
+let  y''  : (z#0:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
 [@ ]
 private let  uu___0  : _ = (_assert (eq2 x (foo 2)))
 [@ ]
@@ -353,10 +361,14 @@ in
 visible let  x  : int = (foo 2)
 [@ ]
 visible let  x'  : (z#49:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 2)
-[@ ]
+[@ (postprocess_type)]
 visible let  x''  : (z#49:int{(eq2 z@0:(Tm_unknown) (foo 2))}) = (foo 2)
 [@ ((postprocess_for_extraction_with tau))]
 visible let  y  : int = (foo 1)
+[@ ((postprocess_for_extraction_with tau))]
+visible let  y'  : (z#49:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
+[@ ((postprocess_for_extraction_with tau)); (postprocess_type)]
+visible let  y''  : (z#49:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
 [@ ]
 visible private let  uu___0  : unit = (_assert (eq2 x (foo 2)))
 [@ ]
