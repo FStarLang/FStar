@@ -1221,6 +1221,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
               "Ill-formed application of 'normalize_for_extraction'";
             None
       in
+      let norm_type = U.has_attribute attrs PC.normalize_for_extraction_type_lid in
       let norm_one_lb steps lb =
         let env = tcenv_of_uenv g in
         let env = {env with erase_erasable_args=true} in
@@ -1228,9 +1229,18 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
           Profiling.profile
                 (fun () -> N.normalize steps env lb.lbdef)
                 (Some (Ident.string_of_lid (Env.current_module env)))
-                "FStarC.Extraction.ML.Module.normalize_for_extraction"
+                "FStarC.Extraction.ML.Module.normalize_for_extraction.1"
         in
-        { lb with lbdef = lbd }
+        let lbt =
+          if norm_type
+          then
+            Profiling.profile
+                  (fun () -> N.normalize steps env lb.lbtyp)
+                  (Some (Ident.string_of_lid (Env.current_module env)))
+                  "FStarC.Extraction.ML.Module.normalize_for_extraction.2"
+          else lb.lbtyp
+        in
+        { lb with lbdef = lbd; lbtyp = lbt }
       in
       match norm_steps with
       | None -> lbs

@@ -1055,6 +1055,9 @@ val noextract_to (backend:string) : Tot unit
   *)
 val normalize_for_extraction (steps:list norm_step) : Tot unit
 
+(* When using [normalize_for_extraction] this flag indicates that the type
+ * of the definition should also be normalized. *)
+val normalize_for_extraction_type : unit
 
 (** A layered effect definition may optionally be annotated with
     (ite_soundness_by t) attribute, where t is another attribute
