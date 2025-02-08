@@ -241,6 +241,7 @@ irreducible val va_irreducible_lemma_Add64Wrap : va_b0:va_codes -> va_s0:va_stat
     nat64_max) /\ (va_state_eq va_sM (va_update_flags va_sM (va_update_ok va_sM
     (va_update_dst_operand dst va_sM va_s0)))))))
 
+#push-options "--z3rlimit_factor 20"
 let add_wrap_lemma (x y:UInt64.t)
 : Lemma 
   (ensures add_wrap (UInt64.v x) (UInt64.v y) == UInt64.v (S.add_mod64 x y))
@@ -257,6 +258,8 @@ irreducible let va_irreducible_lemma_Add64Wrap va_b0 va_s0 va_sN dst src =
     (va_eval_dst_operand_uint64 va_s0 dst) (va_eval_operand_uint64 va_s0 src))
   );
   (va_bM, va_sM)
+#pop-options
+
 let va_lemma_Add64Wrap = va_irreducible_lemma_Add64Wrap
 
 val va_transparent_code_AddLea64 : dst:va_dst_operand -> src1:va_operand -> src2:va_operand -> Tot
