@@ -16,15 +16,17 @@
 module FStar.Tactics.NamedView
 
 open FStar.Tactics.Effect
-open FStar.Reflection.V2
-module R = FStar.Reflection.V2
+open FStar.Stubs.Reflection.Types
+open FStar.Stubs.Reflection.V2.Data
+module R = FStar.Stubs.Reflection.Types
+module RD = FStar.Stubs.Reflection.V2.Data
 
 (* Re export the syntax types. Expose variables as their views, users do
 not need to pack/inspect these if they are using the named view. *)
-type namedv   = R.namedv_view
-type bv       = R.bv_view
-type comp     = R.comp_view
-type binding  = R.binding (* already good *)
+type namedv   = RD.namedv_view
+type bv       = RD.bv_view
+type comp     = RD.comp_view
+type binding  = RD.binding (* already good *)
 (* Terms and universes are still *deep*, so we do not change their
 representation, and the user needs to pack/inspect. *)
 type term     = R.term
