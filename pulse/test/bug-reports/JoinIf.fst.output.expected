@@ -1,6 +1,6 @@
 >> Got issues: [
 * Error 72 at JoinIf.fst(113,46-113,50):
-  - Identifier not found: [star]
+  - Identifier not found: star
 
 >>]
 >> Got issues: [
