@@ -15,10 +15,8 @@
 *)
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.RemoveUnusedParameters
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Ident
 open FStarC.Util

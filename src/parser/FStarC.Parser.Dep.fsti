@@ -15,7 +15,6 @@
 *)
 module FStarC.Parser.Dep
 open FStarC.Effect
-open FStar open FStarC
 open FStarC
 open FStarC.Parser
 open FStarC.Parser.AST

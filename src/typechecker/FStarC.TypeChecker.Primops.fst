@@ -3,7 +3,6 @@ module FStarC.TypeChecker.Primops
 (* This module just contains the list of all builtin primitive steps
 with their implementations. *)
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List

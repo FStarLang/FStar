@@ -17,7 +17,6 @@ module FStarC.Syntax.Syntax
 open FStarC.Effect
 (* Type definitions for the core AST *)
 
-open FStar open FStarC
 open FStarC
 open FStarC.Util
 open FStarC.Range

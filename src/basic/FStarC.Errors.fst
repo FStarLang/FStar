@@ -15,7 +15,6 @@
 *)
 module FStarC.Errors
 
-open FStar.Pervasives
 open FStar.String
 open FStarC
 open FStarC.Effect

@@ -17,7 +17,6 @@ module FStarC.Tests.Unif
 //Unification tests
 //open FSharp.Compatibility.OCaml
 
-open FStar
 open FStarC
 open FStarC
 open FStarC.Effect

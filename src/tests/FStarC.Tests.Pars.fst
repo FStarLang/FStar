@@ -14,9 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Tests.Pars
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Range
 open FStarC.Parser

@@ -15,10 +15,8 @@
 *)
 
 module FStarC.TypeChecker.Normalize
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Defensive
 open FStarC.Util

@@ -16,9 +16,7 @@
 
 module FStarC.Syntax.Embeddings
 
-open FStar
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStar.Char

@@ -16,9 +16,7 @@
 
 module FStarC.Tactics.Embedding
 
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings

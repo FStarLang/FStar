@@ -15,7 +15,6 @@
 *)
 
 module FStarC.Profiling
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 module List = FStarC.List

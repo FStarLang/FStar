@@ -17,7 +17,6 @@ module FStarC.Tests.Data
 // tests about data structures
 
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 module BU = FStarC.Util

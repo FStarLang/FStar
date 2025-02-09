@@ -15,7 +15,6 @@
 *)
 
 module FStarC.CheckedFiles
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Util

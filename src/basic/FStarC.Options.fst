@@ -15,7 +15,6 @@
 *)
 module FStarC.Options
 
-open FStar open FStarC
 open FStarC.BaseTypes
 open FStarC
 open FStarC.Effect
@@ -23,7 +22,6 @@ open FStarC.List
 open FStarC.String
 open FStarC.Util
 open FStarC.Getopt
-open FStar.Pervasives
 open FStarC.VConfig
 open FStarC.Class.Show
 open FStarC.Class.Deq

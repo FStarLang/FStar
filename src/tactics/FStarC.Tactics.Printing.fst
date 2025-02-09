@@ -15,7 +15,6 @@
 *)
 module FStarC.Tactics.Printing
 
-open FStar open FStarC
 open FStarC
 open FStarC.Util
 open FStarC.Effect

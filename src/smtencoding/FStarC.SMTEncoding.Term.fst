@@ -15,7 +15,6 @@
 *)
 module FStarC.SMTEncoding.Term
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Pprint

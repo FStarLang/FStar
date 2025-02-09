@@ -15,10 +15,8 @@
 *)
 
 module FStarC.Syntax.Print.Ugly
-open FStar.Pervasives
 open FStarC.Effect
 
-open FStar open FStarC
 open FStarC
 open FStarC.Syntax
 open FStarC.Util

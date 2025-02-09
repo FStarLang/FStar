@@ -14,10 +14,8 @@
    limitations under the License.
 *)
 module FStarC.Extraction.ML.Term
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.TypeChecker.Env
 open FStarC.Util

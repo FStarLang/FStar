@@ -1,6 +1,5 @@
 module FStarC.TypeChecker.Normalize.Unfolding
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List

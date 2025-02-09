@@ -16,7 +16,6 @@
 module FStarC.Syntax.Subst
 open FStarC.Effect
 
-open FStar open FStarC
 open FStarC
 open FStarC.Syntax
 open FStarC.Syntax.Syntax

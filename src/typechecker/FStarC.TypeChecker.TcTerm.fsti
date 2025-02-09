@@ -15,9 +15,7 @@
 *)
 
 module FStarC.TypeChecker.TcTerm
-open FStar.Pervasives
 open FStarC.Effect
-open FStar open FStarC
 open FStarC
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Env

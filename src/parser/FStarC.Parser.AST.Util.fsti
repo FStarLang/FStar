@@ -16,7 +16,6 @@
    Authors: N. Swamy and Copilot
 *)
 module FStarC.Parser.AST.Util
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 open FStarC.Parser.AST

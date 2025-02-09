@@ -15,7 +15,6 @@
 *)
 module FStarC.Extraction.ML.Modul
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -26,7 +25,6 @@ open FStarC.Extraction.ML.RegEmb
 open FStarC.Extraction.ML.UEnv
 open FStarC.Extraction.ML.Util
 open FStarC.Ident
-open FStar.Pervasives
 open FStarC.Syntax
 
 open FStarC.Syntax.Syntax

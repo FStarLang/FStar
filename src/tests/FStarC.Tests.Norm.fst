@@ -16,10 +16,8 @@
 module FStarC.Tests.Norm
 //Normalization tests
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
-open FStar.Pervasives
 open FStarC.Syntax.Syntax
 open FStarC.Tests.Pars
 module S = FStarC.Syntax.Syntax

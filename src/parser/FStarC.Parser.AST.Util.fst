@@ -16,14 +16,12 @@
    Authors: N. Swamy and Copilot
 *)
 module FStarC.Parser.AST.Util
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 open FStarC.Errors
 module C = FStarC.Parser.Const
 open FStarC.Range
 open FStarC.Ident
-open FStar open FStarC
 open FStarC
 open FStarC.Util
 open FStarC.Const

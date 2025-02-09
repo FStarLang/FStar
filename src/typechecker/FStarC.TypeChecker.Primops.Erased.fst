@@ -1,6 +1,5 @@
 module FStarC.TypeChecker.Primops.Erased
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List

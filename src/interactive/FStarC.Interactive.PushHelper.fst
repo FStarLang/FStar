@@ -18,9 +18,7 @@
  * text fragments and update state; this file collects helpers for them *)
 
 module FStarC.Interactive.PushHelper
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 open FStarC.Util

@@ -15,10 +15,8 @@
 *)
 
 module FStarC.SMTEncoding.Solver
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.SMTEncoding.Z3
 open FStarC.SMTEncoding.Term

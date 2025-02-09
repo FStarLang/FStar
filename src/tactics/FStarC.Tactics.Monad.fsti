@@ -15,7 +15,6 @@
 *)
 module FStarC.Tactics.Monad
 open FStarC
-open FStar.Pervasives
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.Tactics.Result

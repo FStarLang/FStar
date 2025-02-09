@@ -1,6 +1,5 @@
 module FStarC.TypeChecker.Cfg
 
-open FStar open FStarC
 open FStar.Char
 open FStarC
 open FStarC.Effect

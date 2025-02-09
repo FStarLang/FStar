@@ -16,10 +16,8 @@
 
 module FStarC.Syntax.Embeddings.Base
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
-open FStar.Pervasives
 open FStarC.Syntax.Syntax
 module S = FStarC.Syntax.Syntax
 

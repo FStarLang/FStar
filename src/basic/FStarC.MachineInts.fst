@@ -3,7 +3,6 @@ module FStarC.MachineInts
 (* A type representing all the kinds of machine integers, and an
 embedding instance for them. *)
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax

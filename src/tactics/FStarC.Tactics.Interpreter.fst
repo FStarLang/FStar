@@ -19,7 +19,6 @@ module FStarC.Tactics.Interpreter
 (* Most of the tactic running logic is here. V1.Interpreter calls
 into this module for all of that. *)
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List

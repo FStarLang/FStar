@@ -18,7 +18,6 @@
 module FStarC.Extraction.Krml
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Util
 open FStarC.Extraction

@@ -18,7 +18,6 @@
  * queries; this file collects helpers for them                  *)
 
 module FStarC.Interactive.QueryHelper
-open FStar open FStarC
 open FStarC
 open FStarC.Range
 open FStarC.Util

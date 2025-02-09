@@ -16,7 +16,6 @@
 module FStarC.SMTEncoding.Z3
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes

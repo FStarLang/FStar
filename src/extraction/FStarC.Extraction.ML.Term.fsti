@@ -14,7 +14,6 @@
    limitations under the Licens
 *)
 module FStarC.Extraction.ML.Term
-open FStar.Pervasives
 open FStarC.Extraction.ML.UEnv
 open FStarC.Ident
 open FStarC.Syntax.Syntax

@@ -16,7 +16,6 @@
 
 module FStarC.Tactics.Hooks
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List

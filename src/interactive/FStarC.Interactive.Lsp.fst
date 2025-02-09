@@ -15,9 +15,7 @@
 *)
 module FStarC.Interactive.Lsp
 
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Util
 open FStarC.Range

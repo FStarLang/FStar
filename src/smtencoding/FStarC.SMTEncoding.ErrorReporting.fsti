@@ -16,7 +16,6 @@
 
 module FStarC.SMTEncoding.ErrorReporting
 open FStarC.Effect
-open FStar open FStarC
 open FStarC
 open FStarC.BaseTypes
 open FStarC.Util

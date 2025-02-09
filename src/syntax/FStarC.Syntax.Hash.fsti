@@ -16,7 +16,6 @@
    Author: N. Swamy
 *)
 module FStarC.Syntax.Hash
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Util

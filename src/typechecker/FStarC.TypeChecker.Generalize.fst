@@ -15,7 +15,6 @@
 *)
 module FStarC.TypeChecker.Generalize
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List

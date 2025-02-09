@@ -17,7 +17,6 @@ module FStarC.Reflection.V1.NBEEmbeddings
 open FStarC
 open FStarC
 open FStarC.Effect
-open FStar.Pervasives
 open FStarC.Reflection.V1.Data
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.NBETerm

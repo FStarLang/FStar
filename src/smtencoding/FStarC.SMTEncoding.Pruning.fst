@@ -15,7 +15,6 @@
 *)
 module FStarC.SMTEncoding.Pruning
 open FStarC.Effect
-open FStar open FStarC
 open FStar.List.Tot
 open FStarC
 open FStarC.SMTEncoding.Term

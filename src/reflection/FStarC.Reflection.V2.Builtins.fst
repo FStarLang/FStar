@@ -15,9 +15,7 @@
 *)
 module FStarC.Reflection.V2.Builtins
 
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Reflection.V2.Data
 open FStarC.Syntax.Syntax

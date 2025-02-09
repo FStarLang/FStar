@@ -15,7 +15,6 @@
 *)
 module FStarC.Find
 
-open FStar
 open FStarC
 open FStarC
 open FStarC.Effect

@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Option
-open Prims
 open FStarC.Effect
 
 val isNone: option 'a -> Tot bool

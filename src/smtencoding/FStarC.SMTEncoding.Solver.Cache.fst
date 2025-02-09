@@ -16,7 +16,6 @@
 
 module FStarC.SMTEncoding.Solver.Cache
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.TypeChecker.Env

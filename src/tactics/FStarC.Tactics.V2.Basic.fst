@@ -15,9 +15,7 @@
 *)
 module FStarC.Tactics.V2.Basic
 
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 open FStarC.Util

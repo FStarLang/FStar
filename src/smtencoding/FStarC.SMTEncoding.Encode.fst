@@ -14,9 +14,6 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Encode
-open Prims
-open FStar open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 open FStarC

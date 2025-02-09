@@ -17,7 +17,6 @@ module FStarC.Parser.ParseIt
 open FStarC.Effect
 open FStarC.Parser
 open FStarC.Util
-open FStar open FStarC
 open FStarC
 open FStarC.Errors
 module AU = FStarC.Parser.AST.Util

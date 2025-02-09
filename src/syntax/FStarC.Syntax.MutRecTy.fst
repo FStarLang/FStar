@@ -15,9 +15,7 @@
 *)
 
 module FStarC.Syntax.MutRecTy
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident

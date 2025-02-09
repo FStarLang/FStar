@@ -15,8 +15,6 @@
 *)
 
 module FStarC.Extraction.ML.UEnv
-open FStar.Pervasives
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Util

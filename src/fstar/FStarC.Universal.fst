@@ -16,10 +16,8 @@
 
 //Top-level invocations into the universal type-checker FStarC.TypeChecker
 module FStarC.Universal
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Errors
 open FStarC.Util

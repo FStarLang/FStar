@@ -18,7 +18,6 @@
  * FStarC.Interactive.Ide                                            *)
 
 module FStarC.Interactive.JsonHelper
-open FStar open FStarC
 open FStarC
 open FStarC.Errors
 open FStarC.Json

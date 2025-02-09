@@ -18,7 +18,6 @@
  * FStarC.Interactive.Ide                                            *)
 
 module FStarC.Interactive.JsonHelper
-open FStar open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC

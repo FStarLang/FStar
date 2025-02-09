@@ -1,6 +1,5 @@
 ﻿module FStarC.Ident
 
-open Prims
 open FStarC.Effect
 open FStarC.Range
 open FStarC.List

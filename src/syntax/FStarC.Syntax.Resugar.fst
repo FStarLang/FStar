@@ -16,9 +16,7 @@
   limitations under the License.
 *)
 module FStarC.Syntax.Resugar //we should rename FStarC.ToSyntax to something else
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident

@@ -15,8 +15,6 @@
 *)
 module FStarC.Syntax.Free
 open FStarC.Effect
-open Prims
-open FStar open FStarC
 open FStarC
 open FStarC.Util
 open FStarC.FlatSet

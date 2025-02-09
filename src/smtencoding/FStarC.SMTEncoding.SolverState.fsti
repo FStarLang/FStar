@@ -33,7 +33,6 @@ module FStarC.SMTEncoding.SolverState
   sent to the solver and a call to flush returns all the decls to be sent.
 *)
 open FStarC.Effect
-open FStar open FStarC
 open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes

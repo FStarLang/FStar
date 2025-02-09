@@ -1,6 +1,5 @@
 module FStarC.TypeChecker.Primops.Array
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Errors

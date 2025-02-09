@@ -14,11 +14,8 @@
    limitations under the License.
 *)
 module FStarC.Extraction.ML.Util
-open Prims
-open FStar
 open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Ident
 open FStarC.Extraction.ML.Syntax
 module S = FStarC.Syntax.Syntax
