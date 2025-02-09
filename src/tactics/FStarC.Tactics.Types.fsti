@@ -123,11 +123,3 @@ val check_goal_solved' : goal -> option term
 val check_goal_solved  : goal -> bool
 
 type tref (a:Type) = ref a
-
-(*** These are here for userspace, the library has an interface into this module. *)
-(* Typing reflection *)
-val non_informative_token (g:env) (t:typ) : Type0
-val subtyping_token (g:env) (t0 t1:typ) : Type0
-val equiv_token (g:env) (t0 t1:typ) : Type0
-val typing_token (g:env) (e:term) (c:Core.tot_or_ghost & typ) : Type0
-val match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) : Type0
