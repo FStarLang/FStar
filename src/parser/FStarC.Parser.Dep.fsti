@@ -14,17 +14,12 @@
    limitations under the License.
 *)
 module FStarC.Parser.Dep
-open FStarC.Effect
+
 open FStarC
-open FStarC.Parser
+open FStarC.Effect
 open FStarC.Parser.AST
 open FStarC.Util
-open FStarC.Const
-open FStar.String
 open FStarC.Ident
-open FStarC.Errors
-module Const = FStarC.Parser.Const
-module BU = FStarC.Util
 
 type open_kind = | Open_module | Open_namespace
 type module_name = string
