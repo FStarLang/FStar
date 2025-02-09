@@ -137,3 +137,5 @@ val prepare_module_or_interface: bool -> bool -> env -> lident -> module_inclusi
 (* private *) val unique:  bool -> bool -> env -> lident -> bool
 (* private *) val check_admits: env -> modul -> modul
 (* private *) val finish:  env -> modul -> env
+
+val set_no_prelude : env -> bool -> env

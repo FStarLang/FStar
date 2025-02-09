@@ -95,14 +95,14 @@ let parse (env:uenv) (pre_fn: option string) (fn:string)
     | Some pre_fn ->
         let pre_ast, _ = Parser.Driver.parse_file pre_fn in
         match pre_ast, ast with
-        | Parser.AST.Interface (lid1, decls1, _), Parser.AST.Module (lid2, decls2)
+        | Parser.AST.Interface {mname=lid1; decls=decls1}, Parser.AST.Module {mname=lid2; decls=decls2}
           when Ident.lid_equals lid1 lid2 ->
           let _, env =
             with_dsenv_of_env env (FStarC.ToSyntax.Interleave.initialize_interface lid1 decls1)
           in
           with_dsenv_of_env env (FStarC.ToSyntax.Interleave.interleave_module ast true)
 
-        | Parser.AST.Interface (lid1, _, _), Parser.AST.Module (lid2, _) ->
+        | Parser.AST.Interface {mname=lid1}, Parser.AST.Interface {mname=lid2} ->
           (* Names do not match *)
           Errors.raise_error lid1
             Errors.Fatal_PreModuleMismatch
@@ -181,8 +181,8 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
 
   let range_of_first_mod_decl modul =
     match modul with
-    | Parser.AST.Module (_, { Parser.AST.drange = d } :: _)
-    | Parser.AST.Interface (_, { Parser.AST.drange = d } :: _, _) -> d
+    | Parser.AST.Module {decls = d :: _} -> d.drange
+    | Parser.AST.Interface {decls = d :: _} -> d.drange
     | _ -> Range.dummyRange in
 
   let filter_lang_decls (d:FStarC.Parser.AST.decl) =
@@ -218,8 +218,8 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
         let open FStarC.Parser.AST in
         let decls =
           match ast_modul with
-          | Module (_, decls)
-          | Interface (_, decls, _) -> decls
+          | Module {decls}
+          | Interface {decls} -> decls
         in
         List.filter filter_lang_decls decls
       in
@@ -252,7 +252,14 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
     //We already have a parsed decl, usually from FStarC.Interactive.Incremental
     match d.d with
     | FStarC.Parser.AST.TopLevelModule lid ->
-      check_module_name_declaration (FStarC.Parser.AST.Module(lid, [d]))
+      let no_prelude =
+        d.attrs |> List.existsb (function t ->
+          match t.tm with
+          | Const (FStarC.Const.Const_string ("no_prelude", _)) -> true
+          | _ -> false)
+      in
+      let modul = Parser.AST.Module { mname = lid; decls = [d]; no_prelude } in
+      check_module_name_declaration modul
     | _ -> 
       check_decls [d]
   )
@@ -279,7 +286,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
 let load_interface_decls env interface_file_name : TcEnv.env_t =
   let r = Pars.parse None (Pars.Filename interface_file_name) in
   match r with
-  | Pars.ASTFragment (Inl (FStarC.Parser.AST.Interface(l, decls, _)), _) ->
+  | Pars.ASTFragment (Inl (FStarC.Parser.AST.Interface {mname=l; decls}), _) ->
     snd (with_dsenv_of_tcenv env <| FStarC.ToSyntax.Interleave.initialize_interface l decls)
   | Pars.ASTFragment _ ->
     Errors.raise_error0 FStarC.Errors.Fatal_ParseErrors

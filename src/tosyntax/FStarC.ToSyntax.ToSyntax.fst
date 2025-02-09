@@ -3580,8 +3580,8 @@ and desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders 
     let sub = sub' 0 in
     let mname=qualify env0 eff_name in
     let ed = {
-            mname         = mname;
             cattributes   = cattributes;
+            mname         = mname;
             univs         = ed.univs;
             binders       = binders;
             signature     = U.apply_eff_sig sub ed.signature;
@@ -4308,18 +4308,20 @@ let desugar_modul_common (curmod: option S.modul) env (m:AST.modul) : env_t & Sy
   let env = match curmod, m with
     | None, _ ->
         env
-    | Some ({ name = prev_lid }), Module (current_lid, _)
+    | Some ({ name = prev_lid }), Module {mname = current_lid }
       when lid_equals prev_lid current_lid && Options.interactive () ->
         // If we're in the interactive mode reading the contents of an fst after
         // desugaring the corresponding fsti, don't finish the fsti
         env
     | Some prev_mod, _ ->
         fst (Env.finish_module_or_interface env prev_mod) in
-  let (env, pop_when_done), mname, decls, intf = match m with
-    | Interface(mname, decls, admitted) ->
+  let (env, pop_when_done), mname, decls, intf =
+    match m with
+    | Interface {no_prelude; mname; decls; admitted} ->
       Env.prepare_module_or_interface true admitted env mname Env.default_mii, mname, decls, true
-    | Module(mname, decls) ->
-      Env.prepare_module_or_interface false false env mname Env.default_mii, mname, decls, false in
+    | Module {no_prelude; mname; decls} ->
+      Env.prepare_module_or_interface false false env mname Env.default_mii, mname, decls, false
+  in
   let env, sigelts = desugar_decls env decls in
   let modul = {
     name = mname;
@@ -4327,11 +4329,6 @@ let desugar_modul_common (curmod: option S.modul) env (m:AST.modul) : env_t & Sy
     is_interface=intf
   } in
   env, modul, pop_when_done
-
-let as_interface (m:AST.modul) : AST.modul =
-    match m with
-    | AST.Module(mname, decls) -> AST.Interface(mname, decls, true)
-    | i -> i
 
 let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t & Syntax.modul =
   let m =

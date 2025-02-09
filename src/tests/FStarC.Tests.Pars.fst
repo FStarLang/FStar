@@ -77,7 +77,7 @@ let init_once () : unit =
                 FStarC.Universal.core_check
   in
   env.solver.init env;
-  let dsenv, prims_mod = parse_mod (Basefiles.prims()) (DsEnv.empty_env Parser.Dep.empty_deps) in
+  let dsenv, prims_mod = parse_mod (Find.find_file "FStar.Prelude.fsti" |> BU.must) (DsEnv.empty_env Parser.Dep.empty_deps) in
   let env = {env with dsenv=dsenv} in
   let _prims_mod, env = Tc.check_module env prims_mod false in
   // needed to run tests with chars
