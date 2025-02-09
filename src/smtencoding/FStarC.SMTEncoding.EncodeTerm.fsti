@@ -18,7 +18,7 @@ module FStarC.SMTEncoding.EncodeTerm
 open Prims
 open FStar.Pervasives
 open FStarC.Effect
-open FStar open FStarC
+open FStar
 open FStarC
 open FStarC.TypeChecker.Env
 open FStarC.Syntax
@@ -30,8 +30,8 @@ open FStarC.Const
 open FStarC.SMTEncoding
 open FStarC.SMTEncoding.Util
 open FStarC.SMTEncoding.Env
-module BU = FStarC.Util
-val isTotFun_axioms: Range.range -> head:term -> vars:fvs -> guards:list term -> bool -> term
+
+val isTotFun_axioms: Range.range -> head:term -> extra_vars:fvs -> vars:fvs -> guards:list term -> bool -> term
 val mk_Apply : e:term -> vars:fvs -> term
 val maybe_curry_app : rng:Range.range -> head:either op term -> arity:int -> args:list term -> term
 val maybe_curry_fvb : rng:Range.range -> head:fvar_binding -> args:list term -> term
@@ -45,6 +45,9 @@ val norm: env_t -> Syntax.term -> Syntax.term
 val curried_arrow_formals_comp : k:Syntax.term -> Syntax.binders & comp
 
 val raise_arity_mismatch : head:string -> arity:int -> n_args:int -> rng:Range.range -> 'a
+
+val encode_univ_name : Syntax.univ_name -> fv * term
+val encode_universe : Syntax.universe -> term
 
 val encode_term : t:typ       (* expects t to be in normal form already *)
                -> env:env_t

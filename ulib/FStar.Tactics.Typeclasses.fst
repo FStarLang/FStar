@@ -331,6 +331,7 @@ private
 let binder_set_meta (b : binder) (t : term) : binder =
   { b with qual = Q_Meta t }
 
+#push-options "--z3rlimit_factor 2"
 [@@plugin]
 let mk_class (nm:string) : Tac decls =
     let ns = explode_qn nm in
@@ -424,3 +425,4 @@ let mk_class (nm:string) : Tac decls =
       //debug (fun () -> "trying to return : " ^ term_to_string (quote se));
       se
     )
+#pop-options

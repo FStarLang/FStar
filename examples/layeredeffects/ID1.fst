@@ -22,11 +22,12 @@ let return (a : Type) (x : a) : repr a (return_wp x) =
   fun p _ -> x
   
 unfold
-let bind_wp #a #b
+let bind_wp (#a:Type u#a) (#b:Type u#b)
   (wp_v : wp a)
   (wp_f : (x:a -> wp b))
   : wp b
-  = elim_pure_wp_monotonicity_forall ();
+  = elim_pure_wp_monotonicity_forall u#a ();
+    elim_pure_wp_monotonicity_forall u#b ();
     as_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
 
 let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
@@ -52,8 +53,8 @@ let subcomp (a:Type u#uu) (w1 w2:wp a)
 //= fun p pf -> f (hide (fun x -> reveal p x)) ()
 
 unfold
-let ite_wp #a (wp1 wp2 : wp a) (b : bool) : wp a =
-  elim_pure_wp_monotonicity_forall ();
+let ite_wp (#a:Type u#a) (wp1 wp2 : wp a) (b : bool) : wp a =
+  elim_pure_wp_monotonicity_forall u#a ();
   (as_pure_wp (fun (p:a -> Type) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
 
 let if_then_else (a : Type) (wp1 wp2 : wp a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
@@ -99,7 +100,7 @@ open FStar.Tactics.V2
 
 let elim_pure #a #wp ($f : unit -> PURE a wp) p
  : Pure a (requires (wp p)) (ensures (fun r -> p r))
- = FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
+ = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
    f ()
 
 let lift_pure_nd (a:Type) (wp:wp a) (f:unit -> PURE a wp) :

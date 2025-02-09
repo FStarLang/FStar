@@ -5,7 +5,7 @@
 # 'include test.mk'.
 
 FSTAR_HOME=../..
-OTHERFLAGS += --z3version 4.13.3
+OTHERFLAGS += --z3version 4.13.3 --ext context_pruning
 FSTAR_EXE ?= $(FSTAR_HOME)/out/bin/fstar.exe
 FSTAR=$(FSTAR_EXE) $(OTHERFLAGS)
 

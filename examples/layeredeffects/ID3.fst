@@ -20,8 +20,9 @@ let return (a : Type) (x : a) : repr a (as_pure_wp (fun p -> p x)) =
   x
 
 unfold
-let bind_wp #a #b (wp_v:w a) (wp_f:a -> w b) : w b =
-  elim_pure_wp_monotonicity_forall ();
+let bind_wp (#a:Type u#a) (#b:Type u#b) (wp_v:w a) (wp_f:a -> w b) : w b =
+  elim_pure_wp_monotonicity_forall u#a ();
+  elim_pure_wp_monotonicity_forall u#b ();
   as_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
 
 let bind (a b : Type) (wp_v : w a) (wp_f: a -> w b)
@@ -38,8 +39,8 @@ let subcomp (a:Type) (wp1 wp2: w a)
 = f
 
 unfold
-let if_then_else_wp #a (wp1 wp2:w a) (p:bool) =
-  elim_pure_wp_monotonicity_forall ();
+let if_then_else_wp (#a:Type u#a) (wp1 wp2:w a) (p:bool) =
+  elim_pure_wp_monotonicity_forall u#a ();
   as_pure_wp (fun post -> (p ==> wp1 post) /\ ((~p) ==> wp2 post))
 
 let if_then_else (a : Type) (wp1 wp2 : w a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
@@ -61,7 +62,7 @@ effect {
 let lift_pure_nd (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp) :
   Pure (repr a wp) (requires (wp (fun _ -> True)))
                    (ensures (fun _ -> True))
-  = elim_pure_wp_monotonicity_forall ();
+  = elim_pure_wp_monotonicity wp;
     f ()
   
 sub_effect PURE ~> ID = lift_pure_nd
