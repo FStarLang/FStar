@@ -26,6 +26,9 @@ open FStarC.VConfig
 open FStarC.Class.Show
 open FStarC.Class.Deq
 
+open FStarC.PSMap
+open FStarC.SMap
+
 module Option = FStarC.Option
 module FC = FStarC.Common
 module Util = FStarC.Util
@@ -66,7 +69,7 @@ let as_comma_string_list = function
   | List ls -> List.flatten <| List.map (fun l -> split (as_string l) ",") ls
   | _ -> failwith "Impos: expected String (comma list)"
 
-let copy_optionstate m = Util.smap_copy m
+let copy_optionstate m = SMap.copy m
 
 (* The option state is a stack of stacks. Why? First, we need to
  * support #push-options and #pop-options, which provide the user with
@@ -98,7 +101,7 @@ let copy_optionstate m = Util.smap_copy m
  *)
 let history1 = Debug.saved_state & Ext.ext_state & optionstate
 
-let fstar_options : ref optionstate = Util.mk_ref (Util.psmap_empty ())
+let fstar_options : ref optionstate = Util.mk_ref (PSMap.empty ())
 
 let history : ref (list (list history1)) =
   Util.mk_ref [] // IRRELEVANT: see clear() below
@@ -166,12 +169,12 @@ let rollback depth = Common.rollback pop  history depth
 let set_option k v =
   let map : optionstate = peek() in
   if k = "report_assumes"
-  then match Util.psmap_try_find map k with
+  then match psmap_try_find map k with
        | Some (String "error") ->
          //It's already set to error; ignore any attempt to change it
          ()
-       | _ -> fstar_options := Util.psmap_add map k v
-  else fstar_options := Util.psmap_add map k v
+       | _ -> fstar_options := psmap_add map k v
+  else fstar_options := psmap_add map k v
 
 let set_option' (k,v) =  set_option k v
 let set_admit_smt_queries (b:bool) = set_option "admit_smt_queries" (Bool b)
@@ -331,7 +334,7 @@ let defaults =
 let init () =
   Debug.disable_all ();
   Ext.reset ();
-  fstar_options := Util.psmap_empty ();
+  fstar_options := psmap_empty ();
   defaults |> List.iter set_option'                          //initialize it with the default values
 
 let clear () =
@@ -342,7 +345,7 @@ let clear () =
 let _ = clear ()
 
 let get_option s =
-  match Util.psmap_try_find (peek ()) s with
+  match psmap_try_find (peek ()) s with
   | None -> failwith ("Impossible: option " ^s^ " not found")
   | Some s -> s
 
@@ -447,7 +450,7 @@ let set_verification_options o =
     "z3version";
     "trivial_pre_for_unannotated_effectful_fns";
   ] in
-  List.iter (fun k -> set_option k (Util.psmap_try_find o k |> Util.must)) verifopts
+  List.iter (fun k -> set_option k (psmap_try_find o k |> Util.must)) verifopts
 
 let lookup_opt s c =
   c (get_option s)
@@ -1916,13 +1919,13 @@ let include_ () = get_include ()
 let path_of_text text = String.split ['.'] text
 
 let parse_settings ns : list (list string & bool) =
-    let cache = Util.smap_create 31 in
+    let cache = smap_create 31 in
     let with_cache f s =
-      match Util.smap_try_find cache s with
+      match smap_try_find cache s with
       | Some s -> s
       | None ->
         let res = f s in
-        Util.smap_add cache s res;
+        smap_add cache s res;
         res
     in
     let parse_one_setting s =

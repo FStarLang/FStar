@@ -15,12 +15,14 @@
 *)
 
 module FStarC.SMTEncoding.Solver
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC
 open FStarC.SMTEncoding.Z3
 open FStarC.SMTEncoding.Term
 open FStarC.Util
+open FStarC.SMap
 open FStarC.Hints
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Env

@@ -2043,14 +2043,14 @@ let rec init (l:list 'a) : list 'a =
 
 let lget (ty:term) (k:string) : tac term = wrap_err "lget" <| (
     let! ps = get in
-    match BU.psmap_try_find ps.local_state k with
+    match PSMap.try_find ps.local_state k with
     | None -> fail "not found"
     | Some t -> unquote ty t
     )
 
 let lset (_ty:term) (k:string) (t:term) : tac unit = wrap_err "lset" <| (
     let! ps = get in
-    let ps = { ps with local_state = BU.psmap_add ps.local_state k t } in
+    let ps = { ps with local_state = PSMap.add ps.local_state k t } in
     set ps
     )
 
@@ -2768,8 +2768,8 @@ let refl_try_unify (g:env) (uvs:list (bv & typ)) (t0 t1:term)
       let uv_id = Syntax.Unionfind.uvar_unique_id ctx_u.ctx_uvar_head in
       Env.conj_guard guard_uvs guard_uv,
       (NT (bv, uv_t))::ss,
-      BU.pimap_add tbl uv_id (ctx_u.ctx_uvar_head, bv)
-    ) (Env.trivial_guard, [], (BU.pimap_empty ())) uvs in
+      PIMap.add tbl uv_id (ctx_u.ctx_uvar_head, bv)
+    ) (Env.trivial_guard, [], (PIMap.empty ())) uvs in
     let t0, t1 = SS.subst ss t0, SS.subst ss t1 in
     let g = { g with phase1=true; admit=true } in
     let guard_eq =
@@ -2787,14 +2787,14 @@ let refl_try_unify (g:env) (uvs:list (bv & typ)) (t0 t1:term)
         //   e.g., created as part of Rel.try_teq, return []
         //
         let b = List.existsb (fun {imp_uvar = {ctx_uvar_head = (uv, _, _)}} ->
-          BU.pimap_try_find tbl (Unionfind.puf_unique_id uv) = None) (Listlike.to_list guard.implicits) in
+          PIMap.try_find tbl (Unionfind.puf_unique_id uv) = None) (Listlike.to_list guard.implicits) in
         if b then []
         else
           //
           // iterate over the tbl
           // return uvs that could be solved fully
           //
-          BU.pimap_fold tbl (fun id (uvar, bv) l ->
+          PIMap.fold tbl (fun id (uvar, bv) l ->
             match Syntax.Unionfind.find uvar with
             | Some t ->
               let allow_uvars = true in
@@ -2899,7 +2899,7 @@ let proofstate_of_goals rng env goals imps =
         guard_policy = SMT;
         freshness = 0;
         tac_verb_dbg = !dbg_TacVerbose;
-        local_state = BU.psmap_empty ();
+        local_state = PSMap.empty ();
         urgency = 1;
         dump_on_failure = true;
     }
@@ -2929,7 +2929,7 @@ let proofstate_of_all_implicits rng env imps =
         guard_policy = SMT;
         freshness = 0;
         tac_verb_dbg = !dbg_TacVerbose;
-        local_state = BU.psmap_empty ();
+        local_state = PSMap.empty ();
         urgency = 1;
         dump_on_failure = true;
     }

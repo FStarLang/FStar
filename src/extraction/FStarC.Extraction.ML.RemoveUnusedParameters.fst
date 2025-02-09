@@ -57,22 +57,22 @@ type entry = list argument_tag
 
 type env_t = {
   current_module:list mlsymbol;
-  tydef_map:BU.psmap entry;
+  tydef_map:PSMap.t entry;
 }
 
 let initial_env : env_t = {
   current_module = [];
-  tydef_map = BU.psmap_empty ()
+  tydef_map = PSMap.empty ()
 }
 
 let extend_env (env:env_t) (i:mlsymbol) (e:entry) : env_t = {
     env with
-    tydef_map = BU.psmap_add env.tydef_map (string_of_mlpath (env.current_module,i)) e
+    tydef_map = PSMap.add env.tydef_map (string_of_mlpath (env.current_module,i)) e
 }
 
 let lookup_tyname (env:env_t) (name:mlpath)
   : option entry
-  = BU.psmap_try_find env.tydef_map (string_of_mlpath name)
+  = PSMap.try_find env.tydef_map (string_of_mlpath name)
 
 (** Free variables of a type: Computed to check which parameters are used *)
 type var_set = RBSet.t mlident

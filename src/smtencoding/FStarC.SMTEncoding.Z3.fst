@@ -441,7 +441,7 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
                    | Some (lbl, msg, r) -> [(lbl, msg, r)])
     in
     let statistics =
-        let statistics : z3statistics = BU.smap_create 0 in
+        let statistics : z3statistics = SMap.create 0 in
         match smt_output.smt_statistics with
         | None -> statistics
         | Some lines ->
@@ -454,7 +454,7 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
                let key = List.hd tokens in
                let ltok = List.nth tokens ((List.length tokens) - 1) in
                let value = if BU.ends_with ltok ")" then (BU.substring ltok 0 ((String.length ltok) - 1)) else ltok in
-               BU.smap_add statistics key value
+               SMap.add statistics key value
             | _ -> ()
           in
           List.iter parse_line lines;
@@ -664,8 +664,8 @@ let cache_hit
     if Options.use_hints() && Options.use_hint_hashes() then
         match qhash with
         | Some (x) when qhash = cache ->
-            let stats : z3statistics = BU.smap_create 0 in
-            smap_add stats "fstar_cache_hit" "1";
+            let stats : z3statistics = SMap.create 0 in
+            SMap.add stats "fstar_cache_hit" "1";
             let result = {
               z3result_status = UNSAT None;
               z3result_time = 0;

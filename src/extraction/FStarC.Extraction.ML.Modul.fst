@@ -61,15 +61,15 @@ type iface = {
 }
 
 let extension_extractor_table
-  : BU.smap extension_extractor
-  = FStarC.Util.smap_create 20
+  : SMap.t extension_extractor
+  = SMap.create 20
 
 let register_extension_extractor (ext:string) (callback:extension_extractor) =
-  FStarC.Util.smap_add extension_extractor_table ext callback
+  SMap.add extension_extractor_table ext callback
 
 let lookup_extension_extractor (ext:string) =
   (* Try to find a plugin if lookup fails *)
-  let do () = FStarC.Util.smap_try_find extension_extractor_table ext in
+  let do () = SMap.try_find extension_extractor_table ext in
   match do () with
   | None ->
     if Plugins.autoload_plugin ext

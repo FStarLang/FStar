@@ -18,25 +18,26 @@ module FStarC.Options.Ext
 open FStarC
 open FStarC.Effect
 open FStarC.Class.Show
+open FStarC.PSMap
 module BU = FStarC.Util
 
 type ext_state =
-  | E : map : BU.psmap string -> ext_state
+  | E : map : psmap string -> ext_state
 
 (* If we ever want to set any defaults, this is the place to do it.  *)
 let init : ext_state =
-  E (BU.psmap_empty ())
+  E (psmap_empty ())
 
-let cur_state = BU.mk_ref init
+let cur_state = alloc init
 
 (* Set a key-value pair in the map *)
 let set (k:key) (v:value) : unit =
-  cur_state := E (BU.psmap_add (!cur_state).map k v)
+  cur_state := E (psmap_add (!cur_state).map k v)
 
 (* Get the value from the map, or return "" if not there *)
 let get (k:key) : value =
   let r = 
-    match BU.psmap_try_find (!cur_state).map k with
+    match psmap_try_find (!cur_state).map k with
     | None -> ""
     | Some v -> v
   in
@@ -62,11 +63,11 @@ let getns (ns:string) : list (key & value) =
     then (k, v) :: acc
     else acc
   in
-  BU.psmap_fold (!cur_state).map f []
+  psmap_fold (!cur_state).map f []
 
 let all () : list (key & value) =
   let f k v acc = (k, v) :: acc in
-  BU.psmap_fold (!cur_state).map f []
+  psmap_fold (!cur_state).map f []
 
 let save () : ext_state =
   !cur_state

@@ -107,7 +107,7 @@ type cfg = {
      tcenv: Env.env;
      debug: debug_switches;
      delta_level: list Env.delta_level;  // Controls how much unfolding of definitions should be performed
-     primitive_steps:BU.psmap primitive_step;
+     primitive_steps:PSMap.t primitive_step;
      strong : bool;                       // under a binder
      memoize_lazy : bool;     (* What exactly is this? Seems to be always true now. *)
      normalize_pure_lets: bool;
@@ -137,8 +137,8 @@ val find_prim_step: cfg -> fv -> option primitive_step
 // val embed_simple: EMB.embedding 'a -> Range.range -> 'a -> term
 // val try_unembed_simple: EMB.embedding 'a -> term -> option 'a
 
-val built_in_primitive_steps : BU.psmap primitive_step
-val simplification_steps (env:Env.env_t): BU.psmap primitive_step
+val built_in_primitive_steps : PSMap.t primitive_step
+val simplification_steps (env:Env.env_t): PSMap.t primitive_step
 
 val register_plugin : primitive_step -> unit
 val register_extra_step : primitive_step -> unit

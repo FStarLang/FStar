@@ -131,11 +131,11 @@ let invoke_full_lax (gst: grepl_state) (fname: string) (text: string) (force: bo
   let aux () =
     PI.add_vfs_entry fname text;
     let diag, st' = PH.full_lax text (repl_state_init fname) in
-    let repls = U.psmap_add gst.grepl_repls fname st' in
+    let repls = PSMap.add gst.grepl_repls fname st' in
     // explicitly clear diags
     let diag = if U.is_some diag then diag else Some (js_diag_clear fname) in
     diag, Inl ({ gst with grepl_repls = repls }) in
- match U.psmap_try_find gst.grepl_repls fname with
+ match PSMap.try_find gst.grepl_repls fname with
  | Some _ -> if force then aux () else None, Inl gst
  | None -> aux ()
 
@@ -158,18 +158,18 @@ let run_query (gst: grepl_state) (q: lquery) : optresponse & either_gst_exit =
   | DidSave (f, t) -> invoke_full_lax gst f t true
   | DidClose txid -> None, Inl gst
   | Completion (txpos, ctx) ->
-    (match U.psmap_try_find gst.grepl_repls txpos.path with
+    (match PSMap.try_find gst.grepl_repls txpos.path with
      | Some st -> QH.complookup st txpos, Inl gst
      | None -> nullResponse, Inl gst)
   | Resolve -> nullResponse, Inl gst
   | Hover txpos ->
-    (match U.psmap_try_find gst.grepl_repls txpos.path with
+    (match PSMap.try_find gst.grepl_repls txpos.path with
      | Some st -> QH.hoverlookup st.repl_env txpos, Inl gst
      | None -> nullResponse, Inl gst)
   | SignatureHelp txpos -> nullResponse, Inl gst
   | Declaration txpos -> nullResponse, Inl gst
   | Definition txpos ->
-    (match U.psmap_try_find gst.grepl_repls txpos.path with
+    (match PSMap.try_find gst.grepl_repls txpos.path with
      | Some st -> QH.deflookup st.repl_env txpos, Inl gst
      | None -> nullResponse, Inl gst)
   | TypeDefinition txpos -> nullResponse, Inl gst
@@ -232,5 +232,5 @@ let rec go (gst: grepl_state) : int =
   | Inl gst' -> go gst'
   | Inr exitcode -> exitcode
 
-let start_server () : unit = exit (go ({ grepl_repls = U.psmap_empty ();
+let start_server () : unit = exit (go ({ grepl_repls = PSMap.empty ();
                                          grepl_stdin = open_stdin () }))

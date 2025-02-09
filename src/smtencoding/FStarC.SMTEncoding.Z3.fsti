@@ -29,7 +29,7 @@ type z3status =
     | UNKNOWN of error_labels & option string         //error labels & z3 reason
     | TIMEOUT of error_labels & option string         //error labels & z3 reason
     | KILLED
-type z3statistics = BU.smap string
+type z3statistics = SMap.t string
 
 type z3result = {
       z3result_status      : z3status;

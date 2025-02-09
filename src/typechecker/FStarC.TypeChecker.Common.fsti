@@ -108,10 +108,10 @@ type id_info_by_col = //sorted in ascending order of columns
     list (int & identifier_info)
 
 type col_info_by_row =
-    BU.pimap id_info_by_col
+    PIMap.t id_info_by_col
 
 type row_info_by_file =
-    BU.psmap col_info_by_row
+    PSMap.t col_info_by_row
 
 type id_info_table = {
     id_info_enabled: bool;

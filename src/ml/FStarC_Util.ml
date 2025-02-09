@@ -411,85 +411,6 @@ let string_builder_append b s = BatBuffer.add_string b s
 let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
 
-module StringOps =
-  struct
-    type t = string
-    let equal (x:t) (y:t) = x=y
-    let compare (x:t) (y:t) = BatString.compare x y
-    let hash (x:t) = BatHashtbl.hash x
-  end
-
-module StringHashtbl = BatHashtbl.Make(StringOps)
-module StringMap = BatMap.Make(StringOps)
-
-type 'value smap = 'value StringHashtbl.t
-let smap_create (i:Z.t) : 'value smap = StringHashtbl.create (Z.to_int i)
-let smap_clear (s:('value smap)) = StringHashtbl.clear s
-let smap_add (m:'value smap) k (v:'value) = StringHashtbl.replace m k v
-let smap_of_list (l: (string * 'value) list) =
-  let s = StringHashtbl.create (BatList.length l) in
-  FStar_List.iter (fun (x,y) -> smap_add s x y) l;
-  s
-let smap_try_find (m:'value smap) k = StringHashtbl.find_option m k
-let smap_fold (m:'value smap) f a = StringHashtbl.fold f m a
-let smap_remove (m:'value smap) k = StringHashtbl.remove m k
-let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
-let smap_copy (m:'value smap) = StringHashtbl.copy m
-let smap_size (m:'value smap) = StringHashtbl.length m
-let smap_iter (m:'value smap) f = StringHashtbl.iter f m
-
-exception PSMap_Found
-type 'value psmap = 'value StringMap.t
-let psmap_empty (_: unit) : 'value psmap = StringMap.empty
-let psmap_add (map: 'value psmap) (key: string) (value: 'value) = StringMap.add key value map
-let psmap_find_default (map: 'value psmap) (key: string) (dflt: 'value) =
-  StringMap.find_default dflt key map
-let psmap_try_find (map: 'value psmap) (key: string) =
-  StringMap.Exceptionless.find key map
-let psmap_fold (m:'value psmap) f a = StringMap.fold f m a
-let psmap_find_map (m:'value psmap) f =
-  let res = ref None in
-  let upd k v =
-    let r = f k v in
-    if r <> None then (res := r; raise PSMap_Found) in
-  (try StringMap.iter upd m with PSMap_Found -> ());
-  !res
-let psmap_modify (m: 'value psmap) (k: string) (upd: 'value option -> 'value) =
-  StringMap.modify_opt k (fun vopt -> Some (upd vopt)) m
-
-let psmap_merge (m1: 'value psmap) (m2: 'value psmap) : 'value psmap =
-  psmap_fold m1 (fun k v m -> psmap_add m k v) m2
-
-let psmap_remove (m: 'value psmap)  (key:string)
-  : 'value psmap = StringMap.remove key m
-  
-module ZHashtbl = BatHashtbl.Make(Z)
-module ZMap = BatMap.Make(Z)
-
-type 'value imap = 'value ZHashtbl.t
-let imap_create (i:Z.t) : 'value imap = ZHashtbl.create (Z.to_int i)
-let imap_clear (s:('value imap)) = ZHashtbl.clear s
-let imap_add (m:'value imap) k (v:'value) = ZHashtbl.replace m k v
-let imap_of_list (l: (Z.t * 'value) list) =
-  let s = ZHashtbl.create (BatList.length l) in
-  FStar_List.iter (fun (x,y) -> imap_add s x y) l;
-  s
-let imap_try_find (m:'value imap) k = ZHashtbl.find_option m k
-let imap_fold (m:'value imap) f a = ZHashtbl.fold f m a
-let imap_remove (m:'value imap) k = ZHashtbl.remove m k
-let imap_keys (m:'value imap) = imap_fold m (fun k _ acc -> k::acc) []
-let imap_copy (m:'value imap) = ZHashtbl.copy m
-
-type 'value pimap = 'value ZMap.t
-let pimap_empty (_: unit) : 'value pimap = ZMap.empty
-let pimap_add (map: 'value pimap) (key: Z.t) (value: 'value) = ZMap.add key value map
-let pimap_find_default (map: 'value pimap) (key: Z.t) (dflt: 'value) =
-  ZMap.find_default dflt key map
-let pimap_try_find (map: 'value pimap) (key: Z.t) =
-  ZMap.Exceptionless.find key map
-let pimap_fold (m:'value pimap) f a = ZMap.fold f m a
-let pimap_remove (m:'value pimap) k = ZMap.remove k m
-
 (* restore pre-2.11 BatString.nsplit behavior,
    see https://github.com/ocaml-batteries-team/batteries-included/issues/845 *)
 let batstring_nsplit s t =
@@ -644,7 +565,7 @@ let replace_char (s:string) c1 c2 =
   BatUTF8.map (fun x -> if x = c1 then c2 else x) s
 let replace_chars (s:string) c (by:string) =
   BatString.replace_chars (fun x -> if x = Char.chr c then by else BatString.of_char x) s
-let hashcode s = Z.of_int (StringOps.hash s)
+let hashcode s = Z.of_int (BatHashtbl.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
 let split s sep = BatString.split_on_string sep s
 let splitlines s = split s "\n"
@@ -1107,6 +1028,7 @@ let print_exn e =
   Printexc.to_string e
 
 let digest_of_file =
+  let open FStarC_SMap in
   let cache = smap_create (Z.of_int 101) in
   fun (fname:string) ->
     match smap_try_find cache fname with

@@ -356,6 +356,7 @@ let ld_deps st =
   | exn -> U.print1_error "[E] Failed to load deps. Message: %s" (message_of_exn exn); Inr st
 
 let add_module_completions this_fname deps table =
+  let open FStarC.PSMap in
   let capitalize str = if str = "" then str
                        else let first = String.substring str 0 1 in
                        String.uppercase first ^ String.substring str 1 (String.length str - 1) in

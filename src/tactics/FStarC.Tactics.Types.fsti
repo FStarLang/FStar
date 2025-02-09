@@ -74,7 +74,7 @@ type proofstate = {
     freshness    : int;          //a simple freshness counter for the fresh tactic
     tac_verb_dbg : bool;         //whether to print verbose debugging messages
 
-    local_state  : BU.psmap term; // local metaprogram state
+    local_state  : PSMap.t term; // local metaprogram state
 
     urgency      : int;          // When printing a proofstate due to an error, this
                                  // is used by emacs to decide whether it should pop

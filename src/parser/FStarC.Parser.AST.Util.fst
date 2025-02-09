@@ -742,12 +742,12 @@ and lidents_of_effect_decl (ed:effect_decl) =
     lidents_of_term t
 
 module BU = FStarC.Util
-let extension_parser_table : BU.smap extension_parser = FStarC.Util.smap_create 20
+let extension_parser_table : SMap.t extension_parser = SMap.create 20
 let register_extension_parser (ext:string) (parser:extension_parser) =
-  FStarC.Util.smap_add extension_parser_table ext parser
+  SMap.add extension_parser_table ext parser
 
 let lookup_extension_parser (ext:string) =
-  let do () = FStarC.Util.smap_try_find extension_parser_table ext in
+  let do () = SMap.try_find extension_parser_table ext in
   match do () with
   | None ->
     if Plugins.autoload_plugin ext
@@ -766,15 +766,15 @@ let as_open_namespaces_and_abbrevs (ls:list decl)
     ls
     {open_namespaces = []; module_abbreviations = []}
 
-let extension_lang_parser_table : BU.smap extension_lang_parser = FStarC.Util.smap_create 20
+let extension_lang_parser_table : SMap.t extension_lang_parser = SMap.create 20
 let register_extension_lang_parser (ext:string) (parser:extension_lang_parser) =
-  FStarC.Util.smap_add extension_lang_parser_table ext parser
+  SMap.add extension_lang_parser_table ext parser
 let lookup_extension_lang_parser (ext:string) =
-  let r = FStarC.Util.smap_try_find extension_lang_parser_table ext in
+  let r = SMap.try_find extension_lang_parser_table ext in
   match r with
   | None ->
     if Plugins.autoload_plugin ext
-    then FStarC.Util.smap_try_find extension_lang_parser_table ext
+    then SMap.try_find extension_lang_parser_table ext
     else None
   | _ -> r
 

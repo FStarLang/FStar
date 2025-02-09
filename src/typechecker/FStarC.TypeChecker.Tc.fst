@@ -78,7 +78,7 @@ let set_hint_correlator env se =
     //this is useful when we verify the extracted interface alongside
     let tbl = env.qtbl_name_and_index |> snd in
     let get_n lid =
-      let n_opt = BU.smap_try_find tbl (show lid) in
+      let n_opt = SMap.try_find tbl (show lid) in
       if is_some n_opt then n_opt |> must else 0
     in
 
@@ -1206,7 +1206,7 @@ let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
   );
 
   //we can clear the lid to query index table
-  env.qtbl_name_and_index |> snd |> BU.smap_clear;
+  env.qtbl_name_and_index |> snd |> SMap.clear;
 
   //pop BUT ignore the old env
 

@@ -115,15 +115,15 @@ let err_cannot_extract_effect (l:lident) (r:Range.range) (reason:string) (ctxt:s
 (* Translating an effect lid to an e_tag = {E_PURE, E_ERASABLE, E_IMPURE} *)
 (***********************************************************************)
 let effect_as_etag =
-    let cache = BU.smap_create 20 in
+    let cache = SMap.create 20 in
     let rec delta_norm_eff g (l:lident) =
-        match BU.smap_try_find cache (string_of_lid l) with
+        match SMap.try_find cache (string_of_lid l) with
             | Some l -> l
             | None ->
                 let res = match TypeChecker.Env.lookup_effect_abbrev (tcenv_of_uenv g) [S.U_zero] l with
                 | None -> l
                 | Some (_, c) -> delta_norm_eff g (U.comp_effect_name c) in
-                BU.smap_add cache (string_of_lid l) res;
+                SMap.add cache (string_of_lid l) res;
                 res in
     fun g l ->
     let l = delta_norm_eff g l in

@@ -27,10 +27,10 @@ module Pruning = FStarC.SMTEncoding.Pruning
 module U = FStarC.SMTEncoding.UnsatCore
 module TcEnv = FStarC.TypeChecker.Env
 
-let decl_name_set = BU.psmap bool
-let empty_decl_names = BU.psmap_empty #bool ()
-let decl_names_contains (x:string) (s:decl_name_set) = Some? (BU.psmap_try_find s x)
-let add_name (x:string) (s:decl_name_set) = BU.psmap_add s x true
+let decl_name_set = PSMap.t bool
+let empty_decl_names = PSMap.empty #bool ()
+let decl_names_contains (x:string) (s:decl_name_set) = Some? (PSMap.try_find s x)
+let add_name (x:string) (s:decl_name_set) = PSMap.add s x true
 
 type decls_at_level = {
   pruning_state: Pruning.pruning_state; (* the context pruning state representing all declarations visible at this level and prior levels *)
@@ -38,7 +38,7 @@ type decls_at_level = {
   all_decls_at_level_rev: list (list decl); (* all decls at this level; in reverse order of pushes *)
   given_some_decls: bool; (* Have some declarations been flushed at this level? If not, we can pop this level without needing to flush pop to the solver *)
   to_flush_rev: list (list decl); (* declarations to be given to the solver at the next flush, in reverse order, though each nested list is in order *)
-  named_assumptions: BU.psmap assumption; (* A map from assumption names to assumptions, accumulating all assumptions up to this level *)
+  named_assumptions: PSMap.t assumption; (* A map from assumption names to assumptions, accumulating all assumptions up to this level *)
   pruning_roots:option (list decl); (* When starting a query context, we register the declarations to be used as roots for context pruning *)
 }
 
@@ -48,7 +48,7 @@ let init_given_decls_at_level = {
   pruning_state=Pruning.init;
   given_some_decls=false;
   to_flush_rev=[];
-  named_assumptions = BU.psmap_empty ();
+  named_assumptions = PSMap.empty ();
   pruning_roots=None
 }
 
@@ -134,7 +134,7 @@ let pop (s:solver_state)
 *)
 let filter_using_facts_from
       (using_facts_from:option using_facts_from_setting)
-      (named_assumptions:BU.psmap assumption)
+      (named_assumptions:PSMap.t assumption)
       (retain_assumptions:decl_name_set)
       (already_given_decl: string -> bool)
       (ds:list decl) //flattened decls
@@ -154,11 +154,11 @@ let filter_using_facts_from
         a.assumption_fact_ids 
         |> BU.for_some (function Name lid -> TcEnv.should_enc_lid using_facts_from lid | _ -> false)
     in
-    let already_given_map : BU.smap bool = BU.smap_create 1000 in
-    let add_assumption a = BU.smap_add already_given_map a.assumption_name true in
+    let already_given_map : SMap.t bool = SMap.create 1000 in
+    let add_assumption a = SMap.add already_given_map a.assumption_name true in
     let already_given (a:assumption)
     : bool
-    = Some? (BU.smap_try_find already_given_map a.assumption_name) ||
+    = Some? (SMap.try_find already_given_map a.assumption_name) ||
       already_given_decl a.assumption_name
     in
     let map_decl (d:decl)
@@ -174,7 +174,7 @@ let filter_using_facts_from
         let assumptions = 
           names |>
           List.collect (fun name ->
-            match BU.psmap_try_find named_assumptions name with
+            match PSMap.try_find named_assumptions name with
             | None -> []
             | Some a ->
               if already_given a then [] else (add_assumption a; [Assume a]))
@@ -196,12 +196,12 @@ let rec flatten (d:decl) : list decl =
   | _ -> [d]
 
 (* Record assumptions with their names *)
-let add_named_assumptions (named_assumptions:BU.psmap assumption) (ds:list decl)
-: BU.psmap assumption
+let add_named_assumptions (named_assumptions:PSMap.t assumption) (ds:list decl)
+: PSMap.t assumption
 = List.fold_left
     (fun named_assumptions d ->
       match d with
-      | Assume a -> BU.psmap_add named_assumptions a.assumption_name a
+      | Assume a -> PSMap.add named_assumptions a.assumption_name a
       | _ -> named_assumptions)
     named_assumptions
     ds

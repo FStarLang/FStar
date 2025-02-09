@@ -241,16 +241,16 @@ let no_debug_switches = {
 }
 
 (* Primitive step sets. They are represented as a persistent string map *)
-type prim_step_set = BU.psmap primitive_step
+type prim_step_set = PSMap.t primitive_step
 
 let empty_prim_steps () : prim_step_set =
-    BU.psmap_empty ()
+    PSMap.empty ()
 
 let add_step (s : primitive_step) (ss : prim_step_set) =
-    BU.psmap_add ss (I.string_of_lid s.name) s
+    PSMap.add ss (I.string_of_lid s.name) s
 
 let merge_steps (s1 : prim_step_set) (s2 : prim_step_set) : prim_step_set =
-    BU.psmap_merge s1 s2
+    PSMap.merge s1 s2
 
 let add_steps (m : prim_step_set) (l : list primitive_step) : prim_step_set =
     List.fold_right add_step l m
@@ -276,10 +276,10 @@ instance showable_cfg : showable cfg = {
 let cfg_env cfg = cfg.tcenv
 
 let find_prim_step cfg fv =
-    BU.psmap_try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v)
+    PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v)
 
 let is_prim_step cfg fv =
-    BU.is_some (BU.psmap_try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v))
+    BU.is_some (PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v))
 
 let log cfg f =
     if cfg.debug.gen then f () else ()
@@ -301,15 +301,15 @@ let log_nbe cfg f =
     if cfg.debug.debug_nbe then f ()
 
 (* Profiling the time each different primitive step consumes *)
-let primop_time_map : BU.smap int = BU.smap_create 50
+let primop_time_map : SMap.t int = SMap.create 50
 
 let primop_time_reset () =
-    BU.smap_clear primop_time_map
+    SMap.clear primop_time_map
 
 let primop_time_count (nm : string) (ns : int) : unit =
-    match BU.smap_try_find primop_time_map nm with
-    | None     -> BU.smap_add primop_time_map nm ns
-    | Some ns0 -> BU.smap_add primop_time_map nm (ns0 + ns)
+    match SMap.try_find primop_time_map nm with
+    | None     -> SMap.add primop_time_map nm ns
+    | Some ns0 -> SMap.add primop_time_map nm (ns0 + ns)
 
 let fixto n s =
     if String.length s < n
@@ -317,7 +317,7 @@ let fixto n s =
     else s
 
 let primop_time_report () : string =
-    let pairs = BU.smap_fold primop_time_map (fun nm ns rest -> (nm, ns)::rest) [] in
+    let pairs = SMap.fold primop_time_map (fun nm ns rest -> (nm, ns)::rest) [] in
     let pairs = BU.sort_with (fun (_, t1) (_, t2) -> t1 - t2) pairs in
     List.fold_right (fun (nm, ns) rest -> (BU.format2 "%sms --- %s\n" (fixto 10 (BU.string_of_int (ns / 1000000))) nm) ^ rest) pairs ""
 

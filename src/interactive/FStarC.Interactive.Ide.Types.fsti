@@ -141,7 +141,7 @@ and repl_stack_t = list repl_stack_entry_t
 and repl_stack_entry_t  = repl_depth_t & (repl_task & repl_state)
 
 // Global repl_state, keeping state of different buffers
-type grepl_state = { grepl_repls: psmap repl_state; grepl_stdin: stream_reader }
+type grepl_state = { grepl_repls: PSMap.t repl_state; grepl_stdin: stream_reader }
 
 val query_to_string : query -> string
 
