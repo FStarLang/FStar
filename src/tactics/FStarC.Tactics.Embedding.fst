@@ -30,7 +30,6 @@ open FStarC.Tactics.Result
 
 module BU      = FStarC.Util
 module Err     = FStarC.Errors
-module NBE     = FStarC.TypeChecker.NBE
 module NBETerm = FStarC.TypeChecker.NBETerm
 module NBET    = FStarC.TypeChecker.NBETerm
 module PC      = FStarC.Parser.Const

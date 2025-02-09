@@ -33,10 +33,9 @@ module SS = FStarC.Syntax.Subst
 module S = FStarC.Syntax.Syntax
 module BU = FStarC.Util
 module U = FStarC.Syntax.Util
-module P = FStarC.Syntax.Print
-module C = FStarC.Parser.Const
 
 open FStarC.Class.Show
+open FStarC.Syntax.Print {}
 
 let dbg_Patterns = Debug.get_toggle "Patterns"
 

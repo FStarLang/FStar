@@ -25,7 +25,6 @@ open FStarC.Class.Show
 (* Module abbreviations for the universal type-checker  *)
 module Syntax  = FStarC.Syntax.Syntax
 module TcEnv   = FStarC.TypeChecker.Env
-module SMT     = FStarC.SMTEncoding.Solver
 module BU      = FStarC.Util
 module Dep     = FStarC.Parser.Dep
 

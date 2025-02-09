@@ -26,9 +26,6 @@ open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Const
 open FStarC.Dyn
-module U = FStarC.Util
-module List = FStarC.List
-module PC = FStarC.Parser.Const
 open FStarC.Syntax.Subst
 
 open FStarC.Class.Show

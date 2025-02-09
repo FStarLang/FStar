@@ -39,7 +39,6 @@ module TcUtil = FStarC.TypeChecker.Util
 module Gen = FStarC.TypeChecker.Generalize
 module BU = FStarC.Util //basic util
 module U  = FStarC.Syntax.Util
-module PP = FStarC.Syntax.Print
 module C  = FStarC.Parser.Const
 
 open FStarC.Class.Show

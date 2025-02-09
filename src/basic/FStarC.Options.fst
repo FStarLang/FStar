@@ -29,8 +29,6 @@ open FStarC.Class.Deq
 open FStarC.PSMap
 open FStarC.SMap
 
-module Option = FStarC.Option
-module FC = FStarC.Common
 module Util = FStarC.Util
 module List = FStarC.List
 

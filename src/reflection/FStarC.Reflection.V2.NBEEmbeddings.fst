@@ -30,11 +30,9 @@ module Env     = FStarC.TypeChecker.Env
 module Err     = FStarC.Errors
 module I       = FStarC.Ident
 module NBETerm = FStarC.TypeChecker.NBETerm
-module O       = FStarC.Options
 module PC      = FStarC.Parser.Const
 module Range   = FStarC.Range
 module S       = FStarC.Syntax.Syntax // TODO: remove, it's open
-module SS      = FStarC.Syntax.Subst
 module U       = FStarC.Syntax.Util
 module Z       = FStarC.BigInt
 

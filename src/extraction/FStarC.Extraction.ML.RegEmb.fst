@@ -27,19 +27,15 @@ open FStarC.Extraction.ML.UEnv
 open FStarC.Syntax.Syntax
 
 module BU    = FStarC.Util
-module Code  = FStarC.Extraction.ML.Code
 module EMB   = FStarC.Syntax.Embeddings
 module Env   = FStarC.TypeChecker.Env
 module N     = FStarC.TypeChecker.Normalize
-module NBET  = FStarC.TypeChecker.NBETerm
 module PC    = FStarC.Parser.Const
 module Print = FStarC.Syntax.Print
 module RC    = FStarC.Reflection.V2.Constants
 module S     = FStarC.Syntax.Syntax
 module SS    = FStarC.Syntax.Subst
-module Term  = FStarC.Extraction.ML.Term
 module U     = FStarC.Syntax.Util
-module Util  = FStarC.Extraction.ML.Util
 
 open FStarC.Class.Show
 open FStarC.Class.Tagged

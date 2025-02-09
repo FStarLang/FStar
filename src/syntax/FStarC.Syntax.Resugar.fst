@@ -37,7 +37,6 @@ module U = FStarC.Syntax.Util
 module BU = FStarC.Util
 module D = FStarC.Parser.ToDocument
 module UF = FStarC.Syntax.Unionfind
-module E = FStarC.Errors
 module DsEnv = FStarC.Syntax.DsEnv
 
 (* Helpers to print/debug the resugaring phase *)

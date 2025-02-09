@@ -23,7 +23,6 @@ open FStarC.Ident
 open FStarC.Class.Show
 open FStarC.Class.HasRange
 
-module S = FStarC.Syntax.Syntax
 (* AST produced by the parser, before desugaring
    It is not stratified: a single type called "term" containing
    expressions, formulas, types, and so on

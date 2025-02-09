@@ -23,8 +23,8 @@ open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Ident
 module S = FStarC.Syntax.Syntax
-module Print = FStarC.Syntax.Print
 module U = FStarC.Syntax.Util
+open FStarC.Syntax.Print {}
 
 module BU = FStarC.Util
 module PC = FStarC.Parser.Const

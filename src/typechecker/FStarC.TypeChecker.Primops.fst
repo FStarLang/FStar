@@ -11,7 +11,6 @@ open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Class.Monad
 
-module S  = FStarC.Syntax.Syntax
 module BU = FStarC.Util
 module PC = FStarC.Parser.Const
 module EMB = FStarC.Syntax.Embeddings

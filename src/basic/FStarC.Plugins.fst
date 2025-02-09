@@ -23,7 +23,6 @@ open FStarC.Plugins.Base
 
 module BU = FStarC.Util
 module E   = FStarC.Errors
-module O   = FStarC.Options
 open FStarC.Class.Show
 
 let loaded : ref (list string) = mk_ref []

@@ -25,7 +25,6 @@ open FStarC.Ident
 open FStarC.Errors
 open FStarC.TypeChecker.Normalize
 open FStarC.TypeChecker.NBETerm
-module Cfg = FStarC.TypeChecker.Cfg
 module PO = FStarC.TypeChecker.Primops
 
 val normalize_for_unit_test : steps:list Env.step

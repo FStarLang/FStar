@@ -13,7 +13,6 @@ module U = FStarC.Syntax.Util
 module N = FStarC.TypeChecker.Normalize
 module PC = FStarC.Parser.Const
 module I = FStarC.Ident
-module P = FStarC.Syntax.Print
 module BU = FStarC.Util
 module TcUtil = FStarC.TypeChecker.Util
 module Hash = FStarC.Syntax.Hash
@@ -23,6 +22,7 @@ module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 open FStarC.Class.Show
 open FStarC.Class.Setlike
 open FStarC.Class.Tagged
+open FStarC.Syntax.Print {}
 
 let dbg       = Debug.get_toggle "Core"
 let dbg_Eq    = Debug.get_toggle "CoreEq"

@@ -45,7 +45,6 @@ module PC = FStarC.Parser.Const
 module U  = FStarC.Syntax.Util
 module I  = FStarC.Ident
 module EMB = FStarC.Syntax.Embeddings
-module Z = FStarC.BigInt
 module TcComm = FStarC.TypeChecker.Common
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 module PO = FStarC.TypeChecker.Primops

@@ -36,7 +36,6 @@ module EMB    = FStarC.Syntax.Embeddings
 module Env    = FStarC.TypeChecker.Env
 module N      = FStarC.TypeChecker.Normalize
 module RC     = FStarC.Reflection.V2.Constants
-module RE     = FStarC.Reflection.V2.Embeddings
 module R      = FStarC.Reflection.V2.Builtins
 module SE     = FStarC.Syntax.Embeddings
 module S      = FStarC.Syntax.Syntax
@@ -47,6 +46,8 @@ module U      = FStarC.Syntax.Util
 open FStarC.Class.Show
 open FStarC.Class.Tagged
 open FStarC.Class.Setlike
+open FStarC.Syntax.Print {}
+open FStarC.Reflection.V2.Embeddings {}
 
 let dbg_PartialApp       = Debug.get_toggle "PartialApp"
 let dbg_SMTEncoding      = Debug.get_toggle "SMTEncoding"

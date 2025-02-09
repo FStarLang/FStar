@@ -31,11 +31,6 @@ open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
 open FStarC.Interactive
 open FStarC.Parser.ParseIt
-module SS = FStarC.Syntax.Syntax
-module DsEnv = FStarC.Syntax.DsEnv
-module TcErr = FStarC.TypeChecker.Err
-module TcEnv = FStarC.TypeChecker.Env
-module CTable = FStarC.Interactive.CompletionTable
 open FStarC.Interactive.Ide.Types
 module P = FStarC.Parser.ParseIt
 module BU = FStarC.Util

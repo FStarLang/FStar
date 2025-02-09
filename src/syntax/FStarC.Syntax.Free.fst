@@ -21,7 +21,6 @@ open FStarC
 open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
-module Util = FStarC.Util
 module UF = FStarC.Syntax.Unionfind
 
 open FStarC.Class.Ord

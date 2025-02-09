@@ -12,7 +12,6 @@ open FStarC.Syntax.Embeddings
 
 module PC = FStarC.Parser.Const
 module Z = FStarC.BigInt
-module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
 
 (* Range ops *)

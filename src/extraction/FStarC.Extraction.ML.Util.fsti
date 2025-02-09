@@ -18,7 +18,6 @@ open FStarC
 open FStarC
 open FStarC.Ident
 open FStarC.Extraction.ML.Syntax
-module S = FStarC.Syntax.Syntax
 
 val codegen_fsharp : unit -> bool
 val pruneNones : list (option 'a) -> list 'a

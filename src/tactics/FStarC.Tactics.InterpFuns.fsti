@@ -23,7 +23,6 @@ open FStarC.Effect
 open FStarC.Syntax.Embeddings
 open FStarC.Tactics.Monad
 
-module Cfg   = FStarC.TypeChecker.Cfg
 module NBET  = FStarC.TypeChecker.NBETerm
 module PO    = FStarC.TypeChecker.Primops
 

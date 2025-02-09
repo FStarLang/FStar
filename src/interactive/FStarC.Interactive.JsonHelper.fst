@@ -28,9 +28,6 @@ open FStarC.Json
 open FStarC.TypeChecker.Env
 
 module U = FStarC.Util
-module PI = FStarC.Parser.ParseIt
-module TcEnv = FStarC.TypeChecker.Env
-module CTable = FStarC.Interactive.CompletionTable
 
 let try_assoc (key: string) (d: assoct) =
   U.map_option snd (U.try_find (fun (k, _) -> k = key) d)

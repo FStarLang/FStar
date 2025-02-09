@@ -30,10 +30,8 @@ open FStarC.Reflection.V2.Data
 open FStarC.Tactics.Types
 open FStarC.Tactics.Monad
 
-module O      = FStarC.Options
 module Range  = FStarC.Range
 module Z      = FStarC.BigInt
-module TcComm = FStarC.TypeChecker.Common
 module Core   = FStarC.TypeChecker.Core
 module RD     = FStarC.Reflection.V2.Data
 

@@ -47,12 +47,10 @@ module S  = FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
 module N  = FStarC.TypeChecker.Normalize
 module TcComm = FStarC.TypeChecker.Common
-module TcUtil = FStarC.TypeChecker.Util
 module TcTerm = FStarC.TypeChecker.TcTerm
 module BU = FStarC.Util //basic util
 module U  = FStarC.Syntax.Util
 module PC = FStarC.Parser.Const
-module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 
 open FStarC.Class.Setlike
 

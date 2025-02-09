@@ -20,7 +20,6 @@ open FStarC.Range
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStarC.Tactics.Types
-module Env = FStarC.TypeChecker.Env
 
 (* Run a `tac` *)
 val run_unembedded_tactic_on_ps :

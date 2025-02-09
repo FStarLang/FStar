@@ -23,7 +23,6 @@ module Range = FStarC.Range
 module S     = FStarC.Syntax.Syntax
 module PU    = FStarC.Unionfind
 module BU    = FStarC.Util
-module L     = FStarC.List
 module O     = FStarC.Options
 
 type vops_t = {

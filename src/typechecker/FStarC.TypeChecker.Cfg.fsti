@@ -34,14 +34,8 @@ open FStarC.Class.Show
 open FStarC.Class.Deq
 
 module S  = FStarC.Syntax.Syntax
-module SS = FStarC.Syntax.Subst
-module FC = FStarC.Const
-module PC = FStarC.Parser.Const
-module U  = FStarC.Syntax.Util
 module I  = FStarC.Ident
 module EMB = FStarC.Syntax.Embeddings
-module Z = FStarC.BigInt
-module NBE = FStarC.TypeChecker.NBETerm
 
 type fsteps = {
      beta : bool;

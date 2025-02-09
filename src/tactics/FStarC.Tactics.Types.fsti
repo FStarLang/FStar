@@ -21,8 +21,6 @@ open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.Tactics.Common
 
-module Cfg     = FStarC.TypeChecker.Cfg
-module Core    = FStarC.TypeChecker.Core
 module PO      = FStarC.TypeChecker.Primops
 module Range   = FStarC.Range
 

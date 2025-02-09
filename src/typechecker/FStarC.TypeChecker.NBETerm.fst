@@ -26,15 +26,15 @@ friend FStar.Pervasives (* To expose norm_step *)
 
 module PC = FStarC.Parser.Const
 module S = FStarC.Syntax.Syntax
-module P = FStarC.Syntax.Print
+module U = FStarC.Syntax.Util
 module BU = FStarC.Util
-module C = FStarC.Const
 module SE = FStarC.Syntax.Embeddings
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 
 open FStarC.VConfig
 
 open FStarC.Class.Show
+open FStarC.Syntax.Print {}
 
 // NBE term manipulation
 

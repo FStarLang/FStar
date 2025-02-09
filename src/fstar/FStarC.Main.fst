@@ -28,7 +28,6 @@ open FStarC.Class.Show
 
 module E = FStarC.Errors
 module UF = FStarC.Syntax.Unionfind
-module RE = FStarC.Reflection.V2.Embeddings
 
 (* These modules only mentioned to put them in the dep graph
 and hence compile and link them in. They do not export anything,

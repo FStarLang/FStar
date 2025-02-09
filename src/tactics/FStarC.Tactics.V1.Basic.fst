@@ -38,7 +38,6 @@ friend FStar.Pervasives (* to use Delta below *)
 
 module BU     = FStarC.Util
 module Cfg    = FStarC.TypeChecker.Cfg
-module EMB    = FStarC.Syntax.Embeddings
 module Env    = FStarC.TypeChecker.Env
 module Err    = FStarC.Errors
 module N      = FStarC.TypeChecker.Normalize
@@ -49,10 +48,8 @@ module Rel    = FStarC.TypeChecker.Rel
 module SF     = FStarC.Syntax.Free
 module S      = FStarC.Syntax.Syntax
 module SS     = FStarC.Syntax.Subst
-module SC     = FStarC.Syntax.Compress
 module TcComm = FStarC.TypeChecker.Common
 module TcTerm = FStarC.TypeChecker.TcTerm
-module TcUtil = FStarC.TypeChecker.Util
 module UF     = FStarC.Syntax.Unionfind
 module U      = FStarC.Syntax.Util
 module Z      = FStarC.BigInt

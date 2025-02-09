@@ -26,7 +26,6 @@ open FStarC.TypeChecker.Env
 open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.Ide.Types
 
-module DsEnv = FStarC.Syntax.DsEnv
 module CTable = FStarC.Interactive.CompletionTable
 module TcEnv = FStarC.TypeChecker.Env
 

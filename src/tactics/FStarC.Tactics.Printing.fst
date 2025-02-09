@@ -33,8 +33,6 @@ module Print   = FStarC.Syntax.Print
 module SS      = FStarC.Syntax.Subst
 module S       = FStarC.Syntax.Syntax
 module Env     = FStarC.TypeChecker.Env
-module U       = FStarC.Syntax.Util
-module Cfg     = FStarC.TypeChecker.Cfg
 module PO      = FStarC.TypeChecker.Primops
 
 let dbg_Imp = Debug.get_toggle "Imp"

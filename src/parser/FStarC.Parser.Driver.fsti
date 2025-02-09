@@ -17,7 +17,6 @@ module FStarC.Parser.Driver
 
 module Range      = FStarC.Range
 module AST        = FStarC.Parser.AST
-module AU         = FStarC.Parser.AST.Util
 module ParseIt    = FStarC.Parser.ParseIt
 
 val is_cache_file : string -> bool

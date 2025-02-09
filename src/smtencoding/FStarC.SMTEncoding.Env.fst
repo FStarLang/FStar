@@ -28,7 +28,6 @@ open FStarC.SMTEncoding.Util
 
 module SS = FStarC.Syntax.Subst
 module BU = FStarC.Util
-module U = FStarC.Syntax.Util
 
 open FStarC.Class.Show
 
@@ -302,7 +301,6 @@ let force_thunk fvb =
     if not (fvb.fvb_thunked) || fvb.smt_arity <> 0
     then failwith "Forcing a non-thunk in the SMT encoding";
     mkFreeV <| FV (fvb.smt_id, Term_sort, true)
-module TcEnv = FStarC.TypeChecker.Env
 let try_lookup_free_var env l =
     match lookup_fvar_binding env l with
     | None -> None

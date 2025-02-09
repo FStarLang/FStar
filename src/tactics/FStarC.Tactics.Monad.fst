@@ -31,17 +31,15 @@ open FStarC.Errors.Msg
 open FStarC.Class.Show
 open FStarC.Class.Setlike
 open FStarC.Class.Listlike
+open FStarC.Syntax.Print {}
 module Setlike = FStarC.Class.Setlike
 module Listlike = FStarC.Class.Listlike
 
-module O       = FStarC.Options
 module BU      = FStarC.Util
 module Err     = FStarC.Errors
 module Range   = FStarC.Range
-module S       = FStarC.Syntax.Syntax
 module U       = FStarC.Syntax.Util
 module UF      = FStarC.Syntax.Unionfind
-module Print   = FStarC.Syntax.Print
 module Env     = FStarC.TypeChecker.Env
 module Rel     = FStarC.TypeChecker.Rel
 module Core    = FStarC.TypeChecker.Core

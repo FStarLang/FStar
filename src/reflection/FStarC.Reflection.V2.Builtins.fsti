@@ -24,9 +24,7 @@ open FStarC.Syntax.Syntax
 open FStarC.VConfig
 open FStarC.Ident
 
-module EMB = FStarC.Syntax.Embeddings
 module Env = FStarC.TypeChecker.Env
-module O   = FStarC.Options
 module RD  = FStarC.Reflection.V2.Data
 module S   = FStarC.Syntax.Syntax
 module Z   = FStarC.BigInt

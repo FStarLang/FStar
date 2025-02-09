@@ -23,7 +23,6 @@ open FStarC.TypeChecker.NBETerm
 open FStarC.Order
 open FStarC.Errors
 
-module O = FStarC.Options
 module S = FStarC.Syntax.Syntax // TODO: remove, it's open
 
 module BU      = FStarC.Util
@@ -34,7 +33,6 @@ module NBETerm = FStarC.TypeChecker.NBETerm
 module PC      = FStarC.Parser.Const
 module Range   = FStarC.Range
 module RD      = FStarC.Reflection.V1.Data
-module SS      = FStarC.Syntax.Subst
 module Thunk   = FStarC.Thunk
 module U       = FStarC.Syntax.Util
 

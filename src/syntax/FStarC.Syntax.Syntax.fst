@@ -31,11 +31,8 @@ open FStarC.Class.HasRange
 open FStarC.Class.Setlike
 open FStarC.Order
 
-module O    = FStarC.Options
 module PC   = FStarC.Parser.Const
-module Err  = FStarC.Errors
 module GS   = FStarC.GenSym
-module FlatSet  = FStarC.FlatSet
 
 let pragma_to_string (p:pragma) : string =
   match p with

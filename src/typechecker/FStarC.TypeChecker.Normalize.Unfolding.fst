@@ -11,10 +11,8 @@ module Common = FStarC.TypeChecker.Common
 module BU = FStarC.Util
 module Path = FStarC.Path
 module PC = FStarC.Parser.Const
-module Print = FStarC.Syntax.Print
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
-module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 
 open FStarC.Class.Show
 

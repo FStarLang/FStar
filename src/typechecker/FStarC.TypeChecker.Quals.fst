@@ -26,7 +26,6 @@ open FStarC.Syntax
 open FStarC.Class.Show
 open FStarC.Class.PP
 
-module SS = FStarC.Syntax.Subst
 module S  = FStarC.Syntax.Syntax
 module BU = FStarC.Util
 module U  = FStarC.Syntax.Util

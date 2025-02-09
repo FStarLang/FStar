@@ -25,6 +25,7 @@ open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 
 open FStarC.Class.Show
+open FStarC.Syntax.Print {}
 open FStarC.Class.Setlike
 
 module BU    = FStarC.Util
@@ -32,7 +33,6 @@ module S     = FStarC.Syntax.Syntax
 module SS    = FStarC.Syntax.Subst
 module Free  = FStarC.Syntax.Free
 module U     = FStarC.Syntax.Util
-module Print = FStarC.Syntax.Print
 module UF    = FStarC.Syntax.Unionfind
 module Env   = FStarC.TypeChecker.Env
 module N     = FStarC.TypeChecker.Normalize

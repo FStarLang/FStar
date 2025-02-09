@@ -19,7 +19,6 @@ open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
-module EMB = FStarC.Syntax.Embeddings
 
 val run_postprocess
   (for_extraction : bool)

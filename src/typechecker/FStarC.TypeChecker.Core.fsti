@@ -4,9 +4,6 @@ open FStarC.Util
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Common
 module Env = FStarC.TypeChecker.Env
-module S = FStarC.Syntax.Syntax
-module R = FStarC.Range
-module U = FStarC.Syntax.Util
 
 type tot_or_ghost = 
   | E_Total

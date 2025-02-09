@@ -19,9 +19,7 @@ open FStarC
 open FStarC.Effect
 open FStarC.Pprint
 
-module S   = FStarC.Syntax.Syntax
 module BU  = FStarC.Util
-module U   = FStarC.Syntax.Util
 
 let escape (s:string) = BU.replace_char s '\'' '_'
 

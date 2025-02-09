@@ -44,7 +44,6 @@ module BU = FStarC.Util
 module U = FStarC.Syntax.Util
 module N = FStarC.TypeChecker.Normalize
 module TcComm = FStarC.TypeChecker.Common
-module P = FStarC.Syntax.Print
 module C = FStarC.Parser.Const
 module UF = FStarC.Syntax.Unionfind
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify

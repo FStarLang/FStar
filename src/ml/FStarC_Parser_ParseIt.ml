@@ -31,8 +31,6 @@ let setLexbufPos filename lexbuf line col =
     pos_bol  = 0;
     pos_lnum = line }
 
-module Path = BatPathGen.OfString
-
 let find_file filename =
   match FStarC_Find.find_file filename with
     | Some s ->
@@ -118,7 +116,6 @@ type parse_result =
     | ParseError of parse_error
 
 module Range = FStarC_Range
-module MHL = MenhirLib.Convert
 
 let range_of_positions filename start fin = 
   let start_pos = FStarC_Parser_Util.pos_of_lexpos start in

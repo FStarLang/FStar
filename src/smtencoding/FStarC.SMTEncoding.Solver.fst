@@ -38,10 +38,7 @@ open FStarC.RBSet
 module BU       = FStarC.Util
 module Env      = FStarC.TypeChecker.Env
 module Err      = FStarC.Errors
-module Print    = FStarC.Syntax.Print
 module Syntax   = FStarC.Syntax.Syntax
-module TcUtil   = FStarC.TypeChecker.Util
-module U        = FStarC.Syntax.Util
 module UC       = FStarC.SMTEncoding.UnsatCore
 exception SplitQueryAndRetry
 

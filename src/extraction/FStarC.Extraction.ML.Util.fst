@@ -29,13 +29,8 @@ open FStarC.Const
 open FStarC.Ident
 open FStarC.Errors
 module BU = FStarC.Util
-module U = FStarC.Syntax.Util
 module UEnv = FStarC.Extraction.ML.UEnv
-module PC = FStarC.Parser.Const
 module Range = FStarC.Range
-module S = FStarC.Syntax.Syntax
-module N = FStarC.TypeChecker.Normalize
-module Env = FStarC.TypeChecker.Env
 
 open FStarC.Class.Show
 

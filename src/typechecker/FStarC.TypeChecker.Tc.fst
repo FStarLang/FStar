@@ -38,11 +38,9 @@ open FStarC.Class.Setlike
 open FStarC.Class.Ord
 
 module S  = FStarC.Syntax.Syntax
-module SP  = FStarC.Syntax.Print
 module SS = FStarC.Syntax.Subst
 module UF = FStarC.Syntax.Unionfind
 module N  = FStarC.TypeChecker.Normalize
-module TcComm = FStarC.TypeChecker.Common
 module TcUtil = FStarC.TypeChecker.Util
 module BU = FStarC.Util //basic util
 module U  = FStarC.Syntax.Util
@@ -52,7 +50,6 @@ module TcEff = FStarC.TypeChecker.TcEffect
 module PC = FStarC.Parser.Const
 module EMB = FStarC.Syntax.Embeddings
 module ToSyntax = FStarC.ToSyntax.ToSyntax
-module O = FStarC.Options
 
 let dbg_TwoPhases = Debug.get_toggle "TwoPhases"
 let dbg_IdInfoOn  = Debug.get_toggle "IdInfoOn"

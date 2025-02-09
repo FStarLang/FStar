@@ -33,7 +33,6 @@ open FStarC.Interactive.Ide.Types
 module U = FStarC.Util
 module SS = FStarC.Syntax.Syntax
 module DsEnv = FStarC.Syntax.DsEnv
-module TcErr = FStarC.TypeChecker.Err
 module TcEnv = FStarC.TypeChecker.Env
 module CTable = FStarC.Interactive.CompletionTable
 

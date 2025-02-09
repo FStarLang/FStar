@@ -34,11 +34,6 @@ open FStarC.Class.Show
 open FStarC.Json
 
 module SS = FStarC.Syntax.Syntax
-module DsEnv = FStarC.Syntax.DsEnv
-module TcErr = FStarC.TypeChecker.Err
-module CTable = FStarC.Interactive.CompletionTable
-module PI = FStarC.Parser.ParseIt
-module U = FStarC.Util
 
 let initial_range =
   Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)

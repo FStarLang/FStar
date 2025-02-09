@@ -52,7 +52,6 @@ module SS     = FStarC.Syntax.Subst
 module SC     = FStarC.Syntax.Compress
 module TcComm = FStarC.TypeChecker.Common
 module TcTerm = FStarC.TypeChecker.TcTerm
-module TcUtil = FStarC.TypeChecker.Util
 module UF     = FStarC.Syntax.Unionfind
 module U      = FStarC.Syntax.Util
 module Z      = FStarC.BigInt

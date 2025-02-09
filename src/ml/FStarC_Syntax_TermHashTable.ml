@@ -35,7 +35,6 @@ module HT = BatHashtbl.Make(HashKey)
 type 'a hashtable = 'a HT.t
 
 let create (n:Z.t) = HT.create (Z.to_int n)
-module Print = FStarC_Syntax_Print
 
 let insert (key: S.term) (v:'a) (ht:'a hashtable) = HT.add ht key v
 

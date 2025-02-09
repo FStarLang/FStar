@@ -30,13 +30,13 @@ open FStarC.Errors
 open FStarC.Syntax
 open FStarC.Class.Setlike
 open FStarC.Class.Show
+open FStarC.Syntax.Print {}
 
 module C = FStarC.Parser.Const
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
 module BU = FStarC.Util
 module Env = FStarC.Syntax.DsEnv
-module P = FStarC.Syntax.Print
 module EMB = FStarC.Syntax.Embeddings
 module SS = FStarC.Syntax.Subst
 

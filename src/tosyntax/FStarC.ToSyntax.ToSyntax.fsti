@@ -27,7 +27,6 @@ open FStarC.Parser.AST
 open FStarC.Ident
 
 module S = FStarC.Syntax.Syntax
-module U = FStarC.Syntax.Util
 
 type extension_tosyntax_decl_t = env -> FStarC.Dyn.dyn -> lids:list lident -> Range.range -> list sigelt'
 val register_extension_tosyntax (lang_name:string) (cb:extension_tosyntax_decl_t) : unit

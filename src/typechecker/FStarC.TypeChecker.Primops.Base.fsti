@@ -5,7 +5,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Syntax.Syntax
-module Env = FStarC.TypeChecker.Env
 module EMB = FStarC.Syntax.Embeddings
 module NBE = FStarC.TypeChecker.NBETerm
 

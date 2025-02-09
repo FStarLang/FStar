@@ -26,9 +26,6 @@ open FStarC.Syntax.Syntax
 open FStarC.Tests.Pars
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
-module SS = FStarC.Syntax.Subst
-module I = FStarC.Ident
-module P  = FStarC.Syntax.Print
 module N = FStarC.TypeChecker.Normalize
 module Rel = FStarC.TypeChecker.Rel
 module Env = FStarC.TypeChecker.Env

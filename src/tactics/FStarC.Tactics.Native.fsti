@@ -20,8 +20,6 @@ open FStarC.Range
 open FStarC.Syntax.Syntax
 open FStarC.Tactics.Types
 
-module Cfg   = FStarC.TypeChecker.Cfg
-module N     = FStarC.TypeChecker.Normalize
 module PO    = FStarC.TypeChecker.Primops
 
 type itac = PO.psc -> FStarC.Syntax.Embeddings.norm_cb -> universes -> args -> option term

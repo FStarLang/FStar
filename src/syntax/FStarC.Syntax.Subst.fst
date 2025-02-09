@@ -24,7 +24,6 @@ open FStarC.Syntax.Syntax
 open FStarC.Util
 open FStarC.Ident
 
-module Err = FStarC.Errors
 module U = FStarC.Util
 module S = FStarC.Syntax.Syntax
 

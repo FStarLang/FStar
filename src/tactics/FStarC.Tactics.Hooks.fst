@@ -28,7 +28,6 @@ open FStarC.TypeChecker.Common
 open FStarC.Tactics.Types
 open FStarC.Tactics.Interpreter
 open FStarC.Class.Show
-module Listlike = FStarC.Class.Listlike
 
 module BU      = FStarC.Util
 module Range   = FStarC.Range

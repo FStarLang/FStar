@@ -33,13 +33,11 @@ open FStarC.Extraction.ML.Syntax (* Intentionally shadows part of Syntax.Syntax 
 open FStarC.Class.Show
 
 module Term   = FStarC.Extraction.ML.Term
-module MLS    = FStarC.Extraction.ML.Syntax
 module BU     = FStarC.Util
 module S      = FStarC.Syntax.Syntax
 module SS     = FStarC.Syntax.Subst
 module UF     = FStarC.Syntax.Unionfind
 module U      = FStarC.Syntax.Util
-module TC     = FStarC.TypeChecker.Tc
 module N      = FStarC.TypeChecker.Normalize
 module PC     = FStarC.Parser.Const
 module Util   = FStarC.Extraction.ML.Util

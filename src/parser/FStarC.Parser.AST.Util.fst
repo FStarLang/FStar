@@ -19,7 +19,6 @@ module FStarC.Parser.AST.Util
 open FStarC.Effect
 open FStarC.List
 open FStarC.Errors
-module C = FStarC.Parser.Const
 open FStarC.Range
 open FStarC.Ident
 open FStarC
