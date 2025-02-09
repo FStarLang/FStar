@@ -19,7 +19,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.Class.Show
 open FStarC.PSMap
-module BU = FStarC.Util
 
 type ext_state =
   | E : map : psmap string -> ext_state

@@ -41,7 +41,6 @@ open FStarC.Tactics.InterpFuns
 open FStarC.Class.Show
 open FStarC.Class.Monad
 
-module BU      = FStarC.Util
 module Cfg     = FStarC.TypeChecker.Cfg
 module E       = FStarC.Tactics.Embedding
 module Env     = FStarC.TypeChecker.Env

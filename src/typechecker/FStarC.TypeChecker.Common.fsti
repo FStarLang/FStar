@@ -26,7 +26,6 @@ open FStarC.Range.Type
 
 module S = FStarC.Syntax.Syntax
 
-module BU = FStarC.Util
 
 (* relations on types, kinds, etc. *)
 type rel =

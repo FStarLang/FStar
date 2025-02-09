@@ -22,7 +22,6 @@ open FStarC.Class.Show
 open FStarC.Class.Monad
 open FStarC.Class.HasRange
 
-module BU      = FStarC.Util
 module Cfg     = FStarC.TypeChecker.Cfg
 module E       = FStarC.Tactics.Embedding
 module Env     = FStarC.TypeChecker.Env

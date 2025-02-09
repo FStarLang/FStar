@@ -27,7 +27,6 @@ open FStarC.Const
 open FStarC.SMTEncoding
 open FStarC.SMTEncoding.Util
 open FStarC.SMTEncoding.Env
-module BU = FStarC.Util
 val isTotFun_axioms: Range.range -> head:term -> vars:fvs -> guards:list term -> bool -> term
 val mk_Apply : e:term -> vars:fvs -> term
 val maybe_curry_app : rng:Range.range -> head:either op term -> arity:int -> args:list term -> term

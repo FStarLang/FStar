@@ -15,7 +15,6 @@
 *)
 module FStarC.Reflection.V1.Interpreter
 
-module BU    = FStarC.Util
 module Cfg   = FStarC.TypeChecker.Cfg
 module EMB   = FStarC.Syntax.Embeddings
 module Env   = FStarC.TypeChecker.Env

@@ -117,7 +117,6 @@ type parse_result =
     | Term of FStarC_Parser_AST.term
     | ParseError of parse_error
 
-module BU = FStarC_Util
 module Range = FStarC_Range
 module MHL = MenhirLib.Convert
 

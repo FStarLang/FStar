@@ -29,7 +29,6 @@ open FStarC.Reflection.V1.Data
 open FStarC.Tactics.Types
 open FStarC.Tactics.Monad
 
-module BU     = FStarC.Util
 module O      = FStarC.Options
 module Range  = FStarC.Range
 module Z      = FStarC.BigInt

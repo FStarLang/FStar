@@ -35,7 +35,6 @@ open FStarC.Class.Deq
 
 module S  = FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
-module BU = FStarC.Util
 module FC = FStarC.Const
 module PC = FStarC.Parser.Const
 module U  = FStarC.Syntax.Util

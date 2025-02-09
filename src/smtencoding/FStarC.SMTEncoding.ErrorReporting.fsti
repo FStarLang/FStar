@@ -23,7 +23,6 @@ open FStarC.SMTEncoding.Term
 open FStarC.SMTEncoding.Util
 open FStarC.SMTEncoding
 open FStarC.Range
-module BU = FStarC.Util
 
 type label = error_label
 type labels = list label

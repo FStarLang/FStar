@@ -23,7 +23,6 @@ open FStarC.Class.Monad
 open FStarC.Errors.Msg
 
 module Range = FStarC.Range
-module BU    = FStarC.Util
 module O     = FStarC.Options
 
 (* Type of tactics *)

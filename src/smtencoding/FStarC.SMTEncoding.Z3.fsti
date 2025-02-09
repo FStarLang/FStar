@@ -19,7 +19,6 @@ open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
 open FStarC.Util
-module BU = FStarC.Util
 module U = FStarC.SMTEncoding.UnsatCore
 module SolverState = FStarC.SMTEncoding.SolverState
 
