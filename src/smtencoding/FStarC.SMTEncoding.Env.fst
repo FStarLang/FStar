@@ -77,9 +77,9 @@ type varops_t = {
 }
 let varops =
     let initial_ctr = 100 in
-    let ctr = BU.mk_ref initial_ctr in
+    let ctr = mk_ref initial_ctr in
     let new_scope () : SMap.t bool = SMap.create 100 in (* a scope records all the names used in that scope *)
-    let scopes = BU.mk_ref [new_scope ()] in
+    let scopes = mk_ref [new_scope ()] in
     let mk_unique y =
         let y = escape y in
         let y = match BU.find_map (!scopes) (fun names -> SMap.try_find names y) with

@@ -581,7 +581,7 @@ let enter_namespace
   (working_map: files_for_module_name)
   (sprefix: string)
   (implicit_open:bool) : bool =
-  let found = BU.mk_ref false in
+  let found = mk_ref false in
   let sprefix = sprefix ^ "." in
   let suffix_exists mopt =
     match mopt with
@@ -648,8 +648,8 @@ let collect_one
     : list dependence &
       bool &
       list dependence
-    =  let deps     : ref (list dependence) = BU.mk_ref [] in
-       let has_inline_for_extraction = BU.mk_ref false in
+    =  let deps     : ref (list dependence) = mk_ref [] in
+       let has_inline_for_extraction = mk_ref false in
 
 
        let mo_roots =
@@ -808,8 +808,8 @@ let collect_one
   end
   else
       //parse the file and traverse the AST to collect parsing data
-      let num_of_toplevelmods = BU.mk_ref 0 in
-      let pd : ref (list parsing_data_elt) = BU.mk_ref [] in
+      let num_of_toplevelmods = mk_ref 0 in
+      let pd : ref (list parsing_data_elt) = mk_ref [] in
 
       let add_to_parsing_data elt =
         if not (List.existsML (fun e -> parsing_data_elt_eq e elt) !pd)
@@ -1242,7 +1242,7 @@ let collect_one
 
 // Used by F*.js
 let collect_one_cache : ref (SMap.t (list dependence & list dependence & bool)) =
-  BU.mk_ref (SMap.create 0)
+  mk_ref (SMap.create 0)
 
 let set_collect_one_cache (cache: SMap.t (list dependence & list dependence & bool)) : unit =
   collect_one_cache := cache
@@ -1252,7 +1252,7 @@ let dep_graph_copy dep_graph =
     Deps (SMap.copy g)
 
 let widen_deps friends dep_graph file_system_map widened =
-    let widened = BU.mk_ref widened in
+    let widened = mk_ref widened in
     let (Deps dg) = dep_graph in
     let (Deps dg') = deps_empty() in
     let widen_one deps =
@@ -1483,7 +1483,7 @@ let collect (all_cmd_line_files: list file_name)
    * immutable from there on. *)
   let file_system_map = build_map all_cmd_line_files in
 
-  let interfaces_needing_inlining = BU.mk_ref [] in
+  let interfaces_needing_inlining = mk_ref [] in
   let add_interface_for_inlining l =
     let l = lowercase_module_name l in
     interfaces_needing_inlining := l :: !interfaces_needing_inlining
@@ -1565,7 +1565,7 @@ let collect (all_cmd_line_files: list file_name)
      *   we can consider using mo_files only in the case of
      *   --dep invocations.
      *)
-    let mo_files : ref (list string)  = BU.mk_ref [] in
+    let mo_files : ref (list string)  = mk_ref [] in
 
 
     let rec aux (cycle:list file_name) filename =
@@ -1712,7 +1712,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
     let pre_tag = Options.Ext.get "dep_pretag" in
     //let (Mk (deps, file_system_map, all_cmd_line_files, all_files)) = deps in
     let sort_output_files (orig_output_file_map:SMap.t string) =
-        let order : ref (list string) = BU.mk_ref [] in
+        let order : ref (list string) = mk_ref [] in
         let remaining_output_files = SMap.copy orig_output_file_map in
         let visited_other_modules = SMap.create 41 in
         let should_visit lc_module_name =

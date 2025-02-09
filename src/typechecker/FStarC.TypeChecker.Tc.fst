@@ -257,7 +257,7 @@ let store_sigopts (se:sigelt) : sigelt =
 
 (* Alternative to making a huge let rec... knot is set below in this file *)
 let tc_decls_knot : ref (option (Env.env -> list sigelt -> list sigelt & Env.env)) =
-  BU.mk_ref None
+  mk_ref None
 
 let do_two_phases env : bool = not (Options.lax ())
 let run_phase1 (f:unit -> 'a) =

@@ -106,7 +106,7 @@ let load_native_tactics () =
 (* Need to keep names of input files for a second pass when prettyprinting *)
 (* This reference is set once in `go` and read in `main` if the print or *)
 (* print_in_place options are passed *)
-let fstar_files: ref (option (list string)) = Util.mk_ref None
+let fstar_files: ref (option (list string)) = mk_ref None
 
 (* This is used to print a backtrace when F* is interrupted by SIGINT *)
 let set_error_trap () =

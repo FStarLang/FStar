@@ -32,7 +32,7 @@ open FStarC.Class.Setlike
 
 module BU = FStarC.Util
 
-let ugly_sigelt_to_string_hook : ref (sigelt -> string) = BU.mk_ref (fun _ -> "")
+let ugly_sigelt_to_string_hook : ref (sigelt -> string) = mk_ref (fun _ -> "")
 let ugly_sigelt_to_string (se:sigelt) : string = !ugly_sigelt_to_string_hook se
 
 module S = FStarC.Syntax.Syntax
@@ -810,7 +810,7 @@ let find_all_datacons env (lid:lident) =
 
 let record_cache_aux_with_filter =
     // push, pop, etc. already signal-atomic: no need for BU.atomically
-    let record_cache : ref (list (list record_or_dc)) = BU.mk_ref [[]] in
+    let record_cache : ref (list (list record_or_dc)) = mk_ref [[]] in
     let push () =
         record_cache := List.hd !record_cache::!record_cache in
     let pop () =
@@ -966,7 +966,7 @@ let try_lookup_dc_by_field_name env (fieldname:lident) =
         | Some r -> Some (set_lid_range (lid_of_ids (ns_of_lid r.typename @ [r.constrname])) (range_of_lid fieldname), r.is_record)
         | _ -> None
 
-let string_set_ref_new () : ref string_set = BU.mk_ref (empty ())
+let string_set_ref_new () : ref string_set = mk_ref (empty ())
 let exported_id_set_new () =
     let term_type_set = string_set_ref_new () in
     let field_set = string_set_ref_new () in
@@ -992,7 +992,7 @@ let push_scope_mod env scope_mod =
 let push_bv' env (x:ident) =
   let r = range_of_id x in
   let bv = S.gen_bv (string_of_id x) (Some r) ({ tun with pos = r }) in
-  let used_marker = BU.mk_ref false in
+  let used_marker = mk_ref false in
   let scope_mods =
     match env.scope_mods with
     | Local_bindings lbs :: rest ->
@@ -1010,7 +1010,7 @@ let push_top_level_rec_binding env0 (x:ident) : env & ref bool =
   let l = qualify env0 x in
   if unique false true env0 l || Options.interactive ()
   then
-    let used_marker = BU.mk_ref false in
+    let used_marker = mk_ref false in
     (push_scope_mod env0 (Rec_binding (x,l,used_marker)), used_marker)
   else raise_error l Errors.Fatal_DuplicateTopLevelNames
          ("Duplicate top-level names " ^ (string_of_lid l))
@@ -1030,7 +1030,7 @@ let push_sigelt' fail_on_dup env s =
       Errors.text (BU.format1 "Previously declared at %s" r)
     ]
   in
-  let globals = BU.mk_ref env.scope_mods in
+  let globals = mk_ref env.scope_mods in
   let env =
       let any_val, exclude_interface = match s.sigel with
         | Sig_let _
@@ -1362,7 +1362,7 @@ let finish env modul =
     sigaccum=[];
   }
 
-let stack: ref (list env) = BU.mk_ref []
+let stack: ref (list env) = mk_ref []
 let push env = BU.atomically (fun () ->
   push_record_cache();
   stack := env::!stack;
@@ -1424,9 +1424,9 @@ let as_exported_id_set (e:option exported_ids) =
     | None -> exported_id_set_new ()
     | Some e ->
       let terms =
-          BU.mk_ref (e.exported_id_terms) in
+          mk_ref (e.exported_id_terms) in
       let fields =
-          BU.mk_ref (e.exported_id_fields) in
+          mk_ref (e.exported_id_fields) in
       function
         | Exported_id_term_type -> terms
         | Exported_id_field -> fields
@@ -1445,8 +1445,8 @@ let default_mii = {
 }
 
 let as_includes = function
-    | None -> BU.mk_ref []
-    | Some l -> BU.mk_ref l
+    | None -> mk_ref []
+    | Some l -> mk_ref l
 
 let inclusion_info env (l:lident) =
    let mname = FStarC.Ident.string_of_lid l in

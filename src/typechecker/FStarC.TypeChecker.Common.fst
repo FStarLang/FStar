@@ -282,7 +282,7 @@ let mk_lcomp eff_name res_typ cflags comp_thunk =
     { eff_name = eff_name;
       res_typ = res_typ;
       cflags = cflags;
-      comp_thunk = FStarC.Util.mk_ref (Inl comp_thunk) }
+      comp_thunk = mk_ref (Inl comp_thunk) }
 
 let lcomp_comp lc =
     match !(lc.comp_thunk) with

@@ -26,8 +26,8 @@ module E   = FStarC.Errors
 module O   = FStarC.Options
 open FStarC.Class.Show
 
-let loaded : ref (list string) = BU.mk_ref []
-let loaded_plugin_lib : ref bool = BU.mk_ref false
+let loaded : ref (list string) = mk_ref []
+let loaded_plugin_lib : ref bool = mk_ref false
 
 let pout  s   = if Debug.any () then BU.print_string s
 let pout1 s x = if Debug.any () then BU.print1 s x

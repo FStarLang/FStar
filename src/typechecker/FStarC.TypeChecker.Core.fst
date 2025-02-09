@@ -29,7 +29,7 @@ let dbg_Eq    = Debug.get_toggle "CoreEq"
 let dbg_Top   = Debug.get_toggle "CoreTop"
 let dbg_Exit  = Debug.get_toggle "CoreExit"
 
-let goal_ctr = BU.mk_ref 0
+let goal_ctr = mk_ref 0
 let get_goal_ctr () = !goal_ctr
 let incr_goal_ctr () = let v = !goal_ctr in goal_ctr := v + 1; v + 1
 
@@ -238,7 +238,7 @@ let equal_term t1 t2 =
   FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term"
 let table : tc_table = THT.create 1048576 //2^20
 type cache_stats_t = { hits : int; misses : int }
-let cache_stats = BU.mk_ref { hits = 0; misses = 0 }
+let cache_stats = mk_ref { hits = 0; misses = 0 }
 let record_cache_hit () =
    let cs = !cache_stats in
     cache_stats := { cs with hits = cs.hits + 1 }

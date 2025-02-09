@@ -48,7 +48,7 @@ let guard_to_string g = match g with
     | NonTrivial f ->
       N.term_to_string (tcenv()) f
 
-let success = BU.mk_ref true
+let success = mk_ref true
 
 let fail msg =
     BU.print_string msg;

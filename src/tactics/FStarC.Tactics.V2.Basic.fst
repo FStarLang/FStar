@@ -2231,7 +2231,7 @@ let ext_getns (ns:string) : tac (list (string & string))
 
 let alloc (x:'a) : tac (tref 'a) =
   return ();!
-  return (BU.mk_ref x)
+  return (mk_ref x)
 
 let read (r:tref 'a) : tac 'a =
   return ();!
@@ -2435,7 +2435,7 @@ let refl_core_compute_term_type (g:env) (e:term) : tac (option (Core.tot_or_ghos
          let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
            BU.format1 "refl_core_compute_term_type: %s\n" (show e));
-         let guards : ref (list (env & typ)) = BU.mk_ref [] in
+         let guards : ref (list (env & typ)) = mk_ref [] in
          let gh = fun g guard ->
            (* FIXME: this is kinda ugly, we store all the guards
            in a local ref and fetch them at the end. *)
@@ -2555,7 +2555,7 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
       dbg_refl g (fun _ ->
         BU.format1 "} finished tc with e = %s\n"
           (show e));
-      let guards : ref (list (env & typ)) = BU.mk_ref [] in
+      let guards : ref (list (env & typ)) = mk_ref [] in
       let gh = fun g guard ->
         (* collect guards and return them *)
         dbg_refl g (fun _ -> 

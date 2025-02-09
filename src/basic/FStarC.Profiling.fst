@@ -48,9 +48,9 @@ let json_of_counter (c: counter) =
 (* Creating a new counter *)
 let new_counter cid = {
   cid = cid;
-  total_time = BU.mk_ref 0;
-  running = BU.mk_ref false;
-  undercount = BU.mk_ref false;
+  total_time = mk_ref 0;
+  running = mk_ref false;
+  undercount = mk_ref false;
 }
 
 (* A table of all profiling counters, indexed by their cids *)

@@ -39,13 +39,13 @@ open FStarC.Class.Setlike
 
 (* A hook into FStarC.Syntax.Print, only for debugging and error messages.
  * The reference is set in FStarC.Main *)
-let tts_f : ref (option (term -> string)) = U.mk_ref None
+let tts_f : ref (option (term -> string)) = mk_ref None
 let tts t : string =
     match !tts_f with
     | None -> "<<hook unset>>"
     | Some f -> f t
 
-let ttd_f : ref (option (term -> Pprint.document)) = U.mk_ref None
+let ttd_f : ref (option (term -> Pprint.document)) = mk_ref None
 let ttd t : Pprint.document =
     match !ttd_f with
     | None -> Pprint.doc_of_string "<<hook unset>>"
@@ -1333,7 +1333,7 @@ let eqopt (e : 'a -> 'a -> bool) (x : option 'a) (y : option 'a) : bool =
 //
 // Use at your own peril, and please keep it if there's no good
 // reason against it, so I don't have to go crazy again.
-let debug_term_eq = U.mk_ref false
+let debug_term_eq = mk_ref false
 
 let check dbg msg cond =
   if cond

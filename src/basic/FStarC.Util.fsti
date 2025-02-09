@@ -266,7 +266,8 @@ val decr: ref int -> unit
 val geq: int -> int -> Tot bool
 val for_range: int -> int -> (int -> unit) -> unit
 
-val mk_ref: 'a -> ref 'a
+// Use FStarC.Effect.mk_ref instead
+// val mk_ref: 'a -> ref 'a
 
 val exec_name : string
 val get_exec_dir: unit -> string

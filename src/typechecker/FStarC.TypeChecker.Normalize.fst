@@ -93,7 +93,7 @@ let cases f d = function
  * exact same object in memory. See read_memo and set_memo below. *)
 type cfg_memo 'a = memo (Cfg.cfg & 'a)
 
-let fresh_memo (#a:Type) () : memo a = BU.mk_ref None
+let fresh_memo (#a:Type) () : memo a = mk_ref None
 
 type closure =
   | Clos of env & term & cfg_memo (env & term) & bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint
@@ -341,7 +341,7 @@ let closure_as_term cfg (env:env) (t:term) : term =
   t
 
 (* A hacky knot, set by FStarC.Main *)
-let unembed_binder_knot : ref (option (EMB.embedding binder)) = BU.mk_ref None
+let unembed_binder_knot : ref (option (EMB.embedding binder)) = mk_ref None
 let unembed_binder (t : term) : option S.binder =
     match !unembed_binder_knot with
     | Some e -> EMB.try_unembed #_ #e t EMB.id_norm_cb
@@ -689,7 +689,7 @@ let is_fext_on_domain (t:term) :option term =
 
 (* Set below. Used by the simplifier. *)
 let __get_n_binders : ref ((env:Env.env) -> list step -> (n:int) -> (t:term) -> list binder & comp) =
-  BU.mk_ref (fun e s n t -> failwith "Impossible: __get_n_binders unset")
+  mk_ref (fun e s n t -> failwith "Impossible: __get_n_binders unset")
 
 (* Returns `true` iff the head of `t` is a primop, and
 it not applied or only partially applied. *)
@@ -781,7 +781,7 @@ let is_quantified_const cfg (bv:bv) (phi : term) : option term =
       | _ -> false
     in
     let replace_full_applications_with (bv:S.bv) (arity:int) (s:term) (t:term) : term & bool =
-      let chgd = BU.mk_ref false in
+      let chgd = mk_ref false in
       let t' = t |> Syntax.Visit.visit_term false (fun t ->
                       let hd, args = U.head_and_args t in
                       if List.length args = arity && is_bv bv hd then (
@@ -1223,7 +1223,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    let stack =
                      stack |>
                      List.fold_right (fun (a, aq) stack ->
-                       Arg (Clos(env, a, BU.mk_ref (Some (cfg, ([], a))), false),aq,t.pos)::stack)
+                       Arg (Clos(env, a, mk_ref (Some (cfg, ([], a))), false),aq,t.pos)::stack)
                      norm_args
                    in
                    log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
@@ -2728,7 +2728,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 //In that case, do not set the memo reference
                 let env = List.fold_left
                       (fun env (bv, t) -> (Some (S.mk_binder bv),
-                                           Clos([], t, BU.mk_ref (if cfg.steps.hnf then None else Some (cfg, ([], t))), false),
+                                           Clos([], t, mk_ref (if cfg.steps.hnf then None else Some (cfg, ([], t))), false),
                                            fresh_memo ()) :: env)
                       env s in
                 norm cfg env stack (guard_when_clause wopt b rest)
@@ -2757,7 +2757,7 @@ and norm_ascription cfg env (tc, tacopt, use_eq) =
 and norm_residual_comp cfg env (rc:residual_comp) : residual_comp =
   {rc with residual_typ = BU.map_option (closure_as_term cfg env) rc.residual_typ}
 
-let reflection_env_hook = BU.mk_ref None
+let reflection_env_hook = mk_ref None
 
 let normalize_with_primitive_steps ps s e (t:term) =
   let is_nbe = is_nbe_request s in

@@ -20,7 +20,7 @@ open FStarC.Class.Show
 
 (* Max number of warnings to print in a single run.
 Initialized in Normalize.normalize *)
-let plugin_unfold_warn_ctr : ref int = BU.mk_ref 0
+let plugin_unfold_warn_ctr : ref int = mk_ref 0
 
 let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     let attrs =

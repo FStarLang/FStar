@@ -32,9 +32,9 @@ open FStarC.Errors.Codes
 open FStarC.Errors.Msg
 open FStarC.Json
 
-let fallback_range : ref (option range) = BU.mk_ref None
+let fallback_range : ref (option range) = mk_ref None
 
-let error_range_bound : ref (option range) = BU.mk_ref None
+let error_range_bound : ref (option range) = mk_ref None
 
 let with_error_bound (r:range) (f : unit -> 'a) : 'a =
   let old = !error_range_bound in
@@ -321,11 +321,11 @@ let fixup_issue_range (rng:option Range.range) : option Range.range =
   map_opt rng maybe_bound_range
 
 let mk_default_handler print =
-    let issues : ref (list issue) = BU.mk_ref [] in
+    let issues : ref (list issue) = mk_ref [] in
     (* This number may be greater than the amount of 'EErrors'
      * in the list above due to errors that were immediately
      * printed (if debug_any()) *)
-    let err_count : ref int = BU.mk_ref 0 in
+    let err_count : ref int = mk_ref 0 in
 
     let add_one (e: issue) =
         let e = { e with issue_range = fixup_issue_range e.issue_range } in
@@ -357,7 +357,7 @@ let mk_default_handler print =
 let default_handler = mk_default_handler true
 
 let current_handler =
-    BU.mk_ref default_handler
+    mk_ref default_handler
 
 let mk_issue level range msg n ctx = {
   issue_level = level;
@@ -405,7 +405,7 @@ type error_context_t = {
 }
 
 let error_context : error_context_t =
-    let ctxs = BU.mk_ref [] in
+    let ctxs = mk_ref [] in
     let push s = ctxs := s :: !ctxs in
     let pop s =
         match !ctxs with

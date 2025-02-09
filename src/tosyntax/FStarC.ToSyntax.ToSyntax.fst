@@ -1623,7 +1623,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
             let env, lbname, rec_bindings, used_markers = match f with
               | Inl x ->
                 let env, xx, used_marker = push_bv' env x in
-                let dummy_ref = BU.mk_ref true in
+                let dummy_ref = mk_ref true in
                 env, Inl xx, S.mk_binder xx::rec_bindings, used_marker::used_markers
               | Inr l ->
                 let env, used_marker = push_top_level_rec_binding env (ident_of_lid l) in

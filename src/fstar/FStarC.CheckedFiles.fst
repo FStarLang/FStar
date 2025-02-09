@@ -395,7 +395,7 @@ let load_parsing_data_from_cache file_name =
 
 let load_module_from_cache =
   //this is only used for supressing more than one cache invalid warnings
-  let already_failed = BU.mk_ref false in
+  let already_failed = mk_ref false in
   fun env fn -> Errors.with_ctx ("While loading module from file " ^ fn) (fun () ->
     let load_it fn () =
       let cache_file = Dep.cache_file_name fn in

@@ -37,7 +37,7 @@ module TcErr = FStarC.TypeChecker.Err
 module TcEnv = FStarC.TypeChecker.Env
 module CTable = FStarC.Interactive.CompletionTable
 
-let repl_stack: ref repl_stack_t = U.mk_ref []
+let repl_stack: ref repl_stack_t = mk_ref []
 
 let set_check_kind env check_kind =
   { env with admit = (check_kind = LaxCheck || Options.lax());
@@ -240,7 +240,7 @@ let commit_name_tracking st name_events =
   { st with repl_names = names }
 
 let fresh_name_tracking_hooks () =
-  let events = Util.mk_ref [] in
+  let events = mk_ref [] in
   let push_event evt = events := evt :: !events in
   events,
   DsEnv.mk_dsenv_hooks

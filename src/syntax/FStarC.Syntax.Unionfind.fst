@@ -32,8 +32,8 @@ type vops_t = {
 }
 
 let vops =
-    let major = BU.mk_ref 0 in
-    let minor = BU.mk_ref 0 in
+    let major = mk_ref 0 in
+    let minor = mk_ref 0 in
     let next_major () =
         minor := 0;
         {major=(BU.incr major; !major);
@@ -71,7 +71,7 @@ let version_to_string v = BU.format2 "%s.%s" (BU.string_of_int v.major) (BU.stri
 
 (* private *)
 let state : ref uf =
-  BU.mk_ref (empty (vops.next_major()))
+  mk_ref (empty (vops.next_major()))
 
 type tx =
     | TX of uf

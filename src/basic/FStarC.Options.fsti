@@ -33,7 +33,7 @@ type codegen_t =
   | PluginNoLib
   | Extension
 
-//let __test_norm_all = Util.mk_ref false
+//let __test_norm_all = mk_ref false
 
 type split_queries_t = | No | OnFailure | Always
 

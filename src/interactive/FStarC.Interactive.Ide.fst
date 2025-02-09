@@ -79,7 +79,7 @@ let with_captured_errors env sigint_handler f =
 
 type env_t = TcEnv.env
 
-let repl_current_qid : ref (option string) = Util.mk_ref None // For messages
+let repl_current_qid : ref (option string) = mk_ref None // For messages
 
 (** Check whether users can issue further ``pop`` commands. **)
 let nothing_left_to_pop st =
@@ -970,8 +970,8 @@ type search_candidate = { sc_lid: lid; sc_typ:
                           sc_fvars: ref (option (RBSet.t lid)) }
 
 let sc_of_lid lid = { sc_lid = lid;
-                      sc_typ = Util.mk_ref None;
-                      sc_fvars = Util.mk_ref None }
+                      sc_typ = mk_ref None;
+                      sc_fvars = mk_ref None }
 
 let sc_typ tcenv sc = // Memoized version of sc_typ
    match !sc.sc_typ with
@@ -1212,7 +1212,7 @@ let rec go st : int =
   | Inr exitcode -> exitcode
 
 let interactive_error_handler = // No printing here — collect everything for future use
-  let issues : ref (list issue) = Util.mk_ref [] in
+  let issues : ref (list issue) = mk_ref [] in
   let add_one (e: issue) =
     let e = { e with issue_range = FStarC.Errors.fixup_issue_range e.issue_range } in
     issues := e :: !issues

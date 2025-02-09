@@ -1829,7 +1829,7 @@ let encode_labels (labs:list error_label) =
     prefix, suffix
 
 (* caching encodings of the environment and the top-level API to the encoding *)
-let last_env : ref (list env_t) = BU.mk_ref []
+let last_env : ref (list env_t) = mk_ref []
 let init_env tcenv = last_env := [{bvar_bindings=PSMap.empty ();
                                    fvar_bindings=(PSMap.empty (), []);
                                    tcenv=tcenv; warn=true; depth=0;

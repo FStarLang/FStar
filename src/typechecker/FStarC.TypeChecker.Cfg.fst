@@ -321,14 +321,14 @@ let primop_time_report () : string =
     let pairs = BU.sort_with (fun (_, t1) (_, t2) -> t1 - t2) pairs in
     List.fold_right (fun (nm, ns) rest -> (BU.format2 "%sms --- %s\n" (fixto 10 (BU.string_of_int (ns / 1000000))) nm) ^ rest) pairs ""
 
-let extendable_primops_dirty : ref bool = BU.mk_ref true
+let extendable_primops_dirty : ref bool = mk_ref true
 
 type register_prim_step_t = primitive_step -> unit
 type retrieve_prim_step_t = unit -> prim_step_set
 let mk_extendable_primop_set ()
   : register_prim_step_t
   & retrieve_prim_step_t =
-  let steps = BU.mk_ref (empty_prim_steps ()) in
+  let steps = mk_ref (empty_prim_steps ()) in
   let register (p:primitive_step) =
       extendable_primops_dirty := true;
       steps := add_step p !steps
@@ -356,7 +356,7 @@ let list_extra_steps () : list primitive_step =
     FStarC.Common.psmap_values (retrieve_extra_steps ())
 
 let cached_steps : unit -> prim_step_set =
-    let memo : ref prim_step_set = BU.mk_ref (empty_prim_steps ()) in
+    let memo : ref prim_step_set = mk_ref (empty_prim_steps ()) in
     fun () ->
       if !extendable_primops_dirty
       then

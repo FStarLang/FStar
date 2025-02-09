@@ -251,7 +251,7 @@ let initial_env deps
     splice = (fun e is_typed lids tau range -> failwith "no splicer available");
     mpreprocess = (fun e tau tm -> failwith "no preprocessor available");
     postprocess = (fun e tau typ tm -> failwith "no postprocessor available");
-    identifier_info=BU.mk_ref FStarC.TypeChecker.Common.id_info_table_empty;
+    identifier_info=mk_ref FStarC.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
     dsenv = FStarC.Syntax.DsEnv.empty_env deps;
     nbe = nbe;
@@ -273,7 +273,7 @@ let gamma_cache env = env.gamma_cache
 
 (* Marking and resetting the environment, for the interactive mode *)
 
-let query_indices: ref (list (list (lident & int))) = BU.mk_ref [[]]
+let query_indices: ref (list (list (lident & int))) = mk_ref [[]]
 let push_query_indices () = match !query_indices with // already signal-atmoic
   | [] -> failwith "Empty query indices!"
   | _ -> query_indices := (List.hd !query_indices)::!query_indices
@@ -291,13 +291,13 @@ let add_query_index (l, n) = match !query_indices with
 
 let peek_query_indices () = List.hd !query_indices
 
-let stack: ref (list env) = BU.mk_ref []
+let stack: ref (list env) = mk_ref []
 let push_stack env =
     stack := env::!stack;
     {env with sigtab=SMap.copy (sigtab env);
               attrtab=SMap.copy (attrtab env);
               gamma_cache=SMap.copy (gamma_cache env);
-              identifier_info=BU.mk_ref !env.identifier_info;
+              identifier_info=mk_ref !env.identifier_info;
               qtbl_name_and_index=env.qtbl_name_and_index |> fst, SMap.copy (env.qtbl_name_and_index |> snd);
               normalized_eff_names=SMap.copy env.normalized_eff_names;
               fv_delta_depths=SMap.copy env.fv_delta_depths;

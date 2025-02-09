@@ -692,7 +692,7 @@ let translate_typ_t = g:uenv -> t:term -> mlty
 
 (* See below for register_pre_translate_typ *)
 let ref_translate_term_to_mlty : ref translate_typ_t =
-  BU.mk_ref (fun _ _ -> raise NotSupportedByExtension)
+  mk_ref (fun _ _ -> raise NotSupportedByExtension)
 
 let translate_term_to_mlty (g:uenv) (t0:term) : mlty =
   !ref_translate_term_to_mlty g t0
@@ -1191,7 +1191,7 @@ let maybe_promote_effect ml_e tag t =
 
 let translate_t = g:uenv -> t:term -> mlexpr & e_tag & mlty
 let ref_term_as_mlexpr : ref translate_t =
-  BU.mk_ref (fun _ _ -> raise NotSupportedByExtension)
+  mk_ref (fun _ _ -> raise NotSupportedByExtension)
 
 // An "after" pass does not make much sense... since term_as_mlexpr' here
 // (the default one) catches everything.

@@ -378,7 +378,7 @@ let desugar_of_variant_record_lid = psconst "desugar_of_variant_record"
 let well_founded_relation_lid = p2l ["FStar"; "WellFounded"; "well_founded_relation"]
 
 let gen_reset =
-    let x = U.mk_ref 0 in
+    let x = mk_ref 0 in
     let gen () = U.incr x; U.read x in
     let reset () = U.write x 0 in
     gen, reset

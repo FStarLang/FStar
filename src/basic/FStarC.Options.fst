@@ -42,7 +42,7 @@ let debug_embedding = mk_ref false
 let eager_embedding = mk_ref false
 
 (* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
-let __unit_tests__ = Util.mk_ref false
+let __unit_tests__ = mk_ref false
 let __unit_tests() = !__unit_tests__
 let __set_unit_tests () = __unit_tests__ := true
 let __clear_unit_tests () = __unit_tests__ := false
@@ -101,10 +101,10 @@ let copy_optionstate m = SMap.copy m
  *)
 let history1 = Debug.saved_state & Ext.ext_state & optionstate
 
-let fstar_options : ref optionstate = Util.mk_ref (PSMap.empty ())
+let fstar_options : ref optionstate = mk_ref (PSMap.empty ())
 
 let history : ref (list (list history1)) =
-  Util.mk_ref [] // IRRELEVANT: see clear() below
+  mk_ref [] // IRRELEVANT: see clear() below
 
 let peek () = !fstar_options
 
@@ -594,11 +594,11 @@ let get_profile_group_by_decl   ()      = lookup_opt "profile_group_by_decl"    
 let get_profile_component       ()      = lookup_opt "profile_component"        (as_option (as_list as_string))
 
 // See comment in the interface file
-let _version = Util.mk_ref ""
-let _platform = Util.mk_ref ""
-let _compiler = Util.mk_ref ""
-let _date = Util.mk_ref " not set"
-let _commit = Util.mk_ref ""
+let _version = mk_ref ""
+let _platform = mk_ref ""
+let _compiler = mk_ref ""
+let _date = mk_ref " not set"
+let _commit = mk_ref ""
 
 let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
@@ -1827,7 +1827,7 @@ let display_usage () = display_usage_aux all_specs
 
 let fstar_bin_directory = Util.get_exec_dir ()
 
-let file_list_ : ref (list string) = Util.mk_ref []
+let file_list_ : ref (list string) = mk_ref []
 
 (* In `parse_filename_arg specs arg`:
 
@@ -2047,7 +2047,7 @@ let hint_file_for_src src_filename =
 let ide                          () = get_ide                         ()
 let ide_id_info_off              () = get_ide_id_info_off             ()
 let ide_file_name_st =
-  let v = Util.mk_ref (None #string) in
+  let v = mk_ref (None #string) in
   let set f =
     match !v with
     | None -> v := Some f
@@ -2239,7 +2239,7 @@ let find_setting_for_target tgt (s:list (codegen_t & string))
 
 let extract_settings
   : unit -> option parsed_extract_setting
-  = let memo:ref (option parsed_extract_setting & bool) = Util.mk_ref (None, false) in
+  = let memo:ref (option parsed_extract_setting & bool) = mk_ref (None, false) in
     let merge_parsed_extract_settings p0 p1 : parsed_extract_setting =
       let merge_setting s0 s1 =
         match s0, s1 with

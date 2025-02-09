@@ -88,18 +88,18 @@ let disentangle_abbrevs_from_bundle
         (* List of type abbreviations that have been unfolded, in
         reverse order (from most recent to most ancient: the head
         depends on the tail.) *)
-        let rev_unfolded_type_abbrevs : ref (list sigelt) = U.mk_ref [] in
+        let rev_unfolded_type_abbrevs : ref (list sigelt) = mk_ref [] in
 
         (* List of names of type abbreviations whose unfolding has
         started. If they occur during renaming of the current type
         abbreviation, then there is a cycle. Follows a stack
         discipline. *)
-        let in_progress : ref (list lident) = U.mk_ref [] in
+        let in_progress : ref (list lident) = mk_ref [] in
 
         (* List of type abbreviations that have not been unfolded
         yet. Their order can change, since anyway they will be
         reordered after being unfolded. *)
-        let not_unfolded_yet = U.mk_ref type_abbrev_sigelts in
+        let not_unfolded_yet = mk_ref type_abbrev_sigelts in
 
         let remove_not_unfolded lid =
             not_unfolded_yet := !not_unfolded_yet |> List.filter begin fun x -> match x.sigel with

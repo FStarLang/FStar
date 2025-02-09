@@ -325,7 +325,7 @@ let isInjective s =
         not (List.existsML (fun c -> c = '.') (FStar.String.list_of_string s))
     else false
 
-let mk t r = {tm=t; freevars=BU.mk_ref None; rng=r}
+let mk t r = {tm=t; freevars=mk_ref None; rng=r}
 let mkTrue  r       = mk (App(TrueOp, [])) r
 let mkFalse r       = mk (App(FalseOp, [])) r
 let mkUnreachable   = mk (App(Var "Unreachable", [])) Range.dummyRange
@@ -762,12 +762,12 @@ let termToSmt
   : print_ranges:bool -> enclosing_name:string -> t:term -> document
   =
   //a counter and a hash table for string constants to integer ids mapping
-  let string_id_counter = BU.mk_ref 0 in
+  let string_id_counter = mk_ref 0 in
   let string_cache= SMap.create 20 in
 
   fun print_ranges enclosing_name t ->
       let next_qid =
-          let ctr = BU.mk_ref 0 in
+          let ctr = mk_ref 0 in
           fun depth ->
             let n = !ctr in
             BU.incr ctr;
@@ -1072,7 +1072,7 @@ let mkBvConstructor (sz : int) =
   constr.constr_name, 
   discriminator_name constr
 
-let __range_c = BU.mk_ref 0
+let __range_c = mk_ref 0
 let mk_Range_const () =
     let i = !__range_c in
     __range_c := !__range_c + 1;

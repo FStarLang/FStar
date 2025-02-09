@@ -305,7 +305,7 @@ let lookup_record_field_name g (type_name, fn) =
     with those keywords
   *)
 let initial_mlident_map =
-    let map = BU.mk_ref None in
+    let map = mk_ref None in
     fun () ->
       match !map with
       | Some m -> m

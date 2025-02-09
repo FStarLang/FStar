@@ -761,8 +761,6 @@ let string_to_ascii_bytes (s:string) : char array =
 let ascii_bytes_to_string (b:char array) : string =
   BatString.implode (BatArray.to_list b)
 
-let mk_ref a = ref a
-
 let write_file (fn:string) s =
   let fh = open_file_for_writing fn in
   append_to_file fh s;

@@ -51,7 +51,7 @@ let dbg_CoreEq       = Debug.get_toggle "CoreEq"
 let dbg_RegisterGoal = Debug.get_toggle "RegisterGoal"
 let dbg_TacFail      = Debug.get_toggle "TacFail"
 
-let goal_ctr = BU.mk_ref 0
+let goal_ctr = mk_ref 0
 let get_goal_ctr () = !goal_ctr
 let incr_goal_ctr () = let v = !goal_ctr in goal_ctr := v + 1; v
 
@@ -210,7 +210,7 @@ let rec iter_tac f l =
 exception Bad of string
 
 (* private *)
-let nwarn = BU.mk_ref 0
+let nwarn = mk_ref 0
 let check_valid_goal g =
   if Options.defensive () then begin
     try

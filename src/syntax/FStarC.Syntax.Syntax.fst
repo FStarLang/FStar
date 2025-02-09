@@ -289,19 +289,19 @@ instance ord_fv : ord lident =
   ord_instance_from_cmp (fun x y -> Order.order_from_int (order_fv x y))
 
 let syn p k f = f k p
-let mk_fvs () = Util.mk_ref None
-let mk_uvs () = Util.mk_ref None
+let mk_fvs () = mk_ref None
+let mk_uvs () = mk_ref None
 
-//let memo_no_uvs = Util.mk_ref (Some no_uvs)
-//let memo_no_names = Util.mk_ref (Some no_names)
+//let memo_no_uvs = mk_ref (Some no_uvs)
+//let memo_no_names = mk_ref (Some no_names)
 let list_of_freenames (fvs:freenames) = elems fvs
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 let mk (t:'a) r = {
     n=t;
     pos=r;
-    vars=Util.mk_ref None;
-    hash_code=Util.mk_ref None;
+    vars=mk_ref None;
+    hash_code=mk_ref None;
 }
 
 let bv_to_tm   bv :term = mk (Tm_bvar bv) (range_of_bv bv)

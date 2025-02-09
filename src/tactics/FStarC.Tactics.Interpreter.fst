@@ -85,7 +85,7 @@ let native_tactics_steps () =
 
 (* This reference keeps all of the tactic primitives. *)
 let __primitive_steps_ref : ref (list PO.primitive_step) =
-  BU.mk_ref []
+  mk_ref []
 
 let primitive_steps () : list PO.primitive_step =
     (native_tactics_steps ())
