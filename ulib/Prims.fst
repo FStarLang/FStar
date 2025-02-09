@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-
+[@@"no_prelude"]
 module Prims
 
 /// This module is implicitly opened in the scope of all other modules.

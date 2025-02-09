@@ -13,12 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-
+[@@"no_prelude"]
 module FStar.Pervasives
 
 (* This is a file from the core library, dependencies must be explicit *)
 open Prims
-include FStar.Pervasives.Native
+open FStar.Pervasives.Native
 
 /// This module is implicitly opened in the scope of all other
 /// modules.
