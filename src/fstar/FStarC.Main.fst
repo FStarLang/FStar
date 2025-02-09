@@ -30,8 +30,6 @@ module E = FStarC.Errors
 module UF = FStarC.Syntax.Unionfind
 module RE = FStarC.Reflection.V2.Embeddings
 
-let _ = Version.dummy ()
-
 (* These modules only mentioned to put them in the dep graph
 and hence compile and link them in. They do not export anything,
 instead they register primitive steps in the normalizer during
