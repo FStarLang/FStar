@@ -16,11 +16,11 @@
    Author: N. Swamy
 *)
 module FStarC.Syntax.Hash
+
 open FStarC
 open FStarC.Effect
-open FStarC.Util
 open FStarC.Syntax.Syntax
-open FStarC.Const
+
 module H = FStarC.Hash
 open FStarC.Class.Hashable
 

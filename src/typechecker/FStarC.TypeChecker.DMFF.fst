@@ -14,11 +14,10 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.DMFF
-open FStar.Pervasives
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
-open FStarC
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
@@ -27,6 +26,7 @@ open FStarC.Ident
 open FStarC.Errors
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
+open FStarC.Syntax.Print {}
 open FStarC.Syntax.Subst
 open FStarC.Syntax.Util
 open FStarC.Const

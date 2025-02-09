@@ -36,16 +36,16 @@ module FStarC.Extraction.ML.UEnv
     kinds of concerns this addresses.
  *)
 
-open FStar.Pervasives
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
-open FStarC
 open FStarC.Util
 open FStarC.Ident
 open FStarC.Extraction.ML.Syntax
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
+open FStarC.Syntax.Print {}
 open FStarC.TypeChecker
 module U  = FStarC.Syntax.Util
 module BU = FStarC.Util

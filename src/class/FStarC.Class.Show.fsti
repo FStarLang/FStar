@@ -1,10 +1,9 @@
 module FStarC.Class.Show
 
 open FStarC.Effect
-module BU = FStarC.Util
 
 class showable (a:Type) = {
-  show : a -> ML string;
+  show : a -> string;
 }
 
 instance val showable_unit : showable unit

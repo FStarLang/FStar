@@ -15,19 +15,14 @@
 *)
 
 module FStarC.Syntax.DsEnv
-open FStarC.Effect
 
 open FStarC
-open FStarC.Util
 open FStarC.Effect
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
-open FStarC.Syntax.Util
-open FStarC.Parser
 open FStarC.Ident
-module BU = FStarC.Util
+
 module S = FStarC.Syntax.Syntax
-module U = FStarC.Syntax.Util
 
 val ugly_sigelt_to_string_hook : ref (sigelt -> string)
 

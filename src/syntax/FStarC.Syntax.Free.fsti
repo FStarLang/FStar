@@ -14,11 +14,9 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Free
-open FStarC.Effect
+
 open FStarC
-open FStarC.Util
-open FStarC.FlatSet
-open FStarC.Syntax
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 
 val names            : term -> FlatSet.t bv

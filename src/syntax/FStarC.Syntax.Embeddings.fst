@@ -1225,7 +1225,7 @@ let e___range =
         em
         un
         (fun () -> S.t___range)
-        Range.string_of_range
+        show
         (fun () -> ET_app (PC.range_lid |> Ident.string_of_lid, []))
 
 (* This is an odd one. We embed ranges as sealed, but we don't want to use the Sealed.sealed

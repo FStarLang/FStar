@@ -14,8 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Util
-open Prims
-open FStar.Pervasives
+
 open FStarC.Effect
 open FStarC.Json
 open FStarC.BaseTypes

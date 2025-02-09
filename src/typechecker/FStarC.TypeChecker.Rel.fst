@@ -19,11 +19,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 module FStarC.TypeChecker.Rel
-open FStar.Pervasives
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
-open FStarC
 open FStarC.Util
 open FStarC.Errors
 open FStarC.Defensive
@@ -31,6 +30,7 @@ open FStarC.TypeChecker
 open FStarC.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.Syntax.Syntax
+open FStarC.Syntax.Print {}
 open FStarC.Syntax.Subst
 open FStarC.Ident
 open FStarC.TypeChecker.Common

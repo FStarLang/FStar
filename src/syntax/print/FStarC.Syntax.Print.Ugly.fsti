@@ -15,8 +15,8 @@ See the License for the specific language governing permissions and
 *)
 module FStarC.Syntax.Print.Ugly
 
-open FStarC.Effect
 open FStarC
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 
 val term_to_string        : term -> string
@@ -28,7 +28,7 @@ val binder_to_string      : binder -> string
 val tscheme_to_string     : tscheme -> string
 
 val lb_to_string          : letbinding -> string
-val branch_to_string      : FStarC.Syntax.Syntax.branch -> string
+val branch_to_string      : branch -> string
 val pat_to_string         : pat -> string
 
 val eff_decl_to_string    : eff_decl -> string

@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Syntax.MutRecTy
+
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
@@ -22,12 +23,9 @@ open FStarC.Ident
 open FStarC.Util
 open FStarC.Errors
 open FStarC.Syntax.InstFV
+
 module S = FStarC.Syntax.Syntax
-module SS = FStarC.Syntax.Subst
 module U = FStarC.Util
-
-
-
 
 (* Given a list of bundled type declarations potentially with type
    abbreviations, construct the new bundle without type abbreviations

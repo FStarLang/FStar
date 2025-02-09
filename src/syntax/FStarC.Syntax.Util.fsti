@@ -21,7 +21,7 @@ open FStarC.List
 open FStarC
 open FStarC.Util
 open FStarC.Ident
-open FStarC.Range
+open FStarC.Range.Type
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Const
@@ -115,7 +115,7 @@ val comp_eff_name_res_and_args (c:comp) : lident & typ & args
  * Layered effects typechecking code already makes sure that those types
  *   have this exact shape
  *)
-val effect_indices_from_repr (repr:term) (is_layered:bool) (r:Range.range) (err:string)
+val effect_indices_from_repr (repr:term) (is_layered:bool) (r:range) (err:string)
 : list term
 
 val destruct_comp (c:comp_typ) : (universe & typ & typ)

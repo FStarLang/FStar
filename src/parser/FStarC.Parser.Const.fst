@@ -15,18 +15,14 @@
 *)
 module FStarC.Parser.Const
 
-open FStar.String
 open FStarC
 open FStarC.Effect
 open FStarC.Util
 open FStarC.Ident
-open FStarC.Range
+open FStarC.Range.Type
 open FStarC.Const
 open FStarC.List
 module U = FStarC.Util
-module Options = FStarC.Options
-module List = FStarC.List
-
 include FStarC.Parser.Const.Tuples
 
 let p2l l = lid_of_path l dummyRange

@@ -14,12 +14,12 @@
    limitations under the License.
 *)
 module FStarC.Options
-open FStar.All
+
+open FStarC
 open FStarC.Effect
 open FStarC.Getopt
 open FStarC.BaseTypes
 open FStarC.VConfig
-open FStarC
 
 (* Raised when a processing a pragma an a non-settable option
 appears there. *)

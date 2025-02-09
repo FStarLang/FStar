@@ -30,6 +30,8 @@ open FStarC.Class.Show
 open FStarC.Class.Monad
 open FStarC.Class.Setlike
 
+module BU = FStarC.Util
+
 let ugly_sigelt_to_string_hook : ref (sigelt -> string) = BU.mk_ref (fun _ -> "")
 let ugly_sigelt_to_string (se:sigelt) : string = !ugly_sigelt_to_string_hook se
 

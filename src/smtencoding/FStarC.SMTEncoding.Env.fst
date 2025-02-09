@@ -14,14 +14,13 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Env
-open Prims
-open FStar.Pervasives
-open FStarC.Effect
-open FStar open FStarC
+
 open FStarC
+open FStarC.Effect
 open FStarC.TypeChecker.Env
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
+open FStarC.Syntax.Print {}
 open FStarC.TypeChecker
 open FStarC.SMTEncoding.Term
 open FStarC.Ident

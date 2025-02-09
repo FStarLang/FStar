@@ -18,7 +18,6 @@
 
 module FStarC.Common
 open FStarC.Effect
-module List = FStarC.List
 module BU = FStarC.Util
 
 val snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b)

@@ -1,7 +1,7 @@
 module FStarC.Syntax.TermHashTable
+
 open FStarC.Effect
 open FStarC.Syntax.Syntax
-module H = FStarC.Hash
 
 type hashtable 'a
 

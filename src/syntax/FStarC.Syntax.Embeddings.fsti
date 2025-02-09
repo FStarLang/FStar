@@ -20,13 +20,11 @@ open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStar.Char
-open FStarC.VConfig
 
 include FStarC.Syntax.Embeddings.Base
 
-module Range = FStarC.Range
+module Range = FStarC.Range.Type
 module Z = FStarC.BigInt
-module BU = FStarC.Util
 
 (* Embeddings, both ways and containing type information *)
 val e_any         : embedding term

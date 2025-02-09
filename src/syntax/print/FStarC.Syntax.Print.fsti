@@ -21,9 +21,6 @@ open FStarC.Syntax.Syntax
 open FStarC.Class.Show
 open FStarC.Class.PP
 
-module DsEnv = FStarC.Syntax.DsEnv
-module Json = FStarC.Json
-
 (* Use the instances if possible! *)
 
 instance val showable_term      : showable term

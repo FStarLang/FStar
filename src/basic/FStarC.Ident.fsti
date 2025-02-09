@@ -15,7 +15,7 @@
 *)
 module FStarC.Ident
 
-open FStarC.Range
+open FStarC.Range.Type
 open FStarC.Class.Show
 open FStarC.Class.HasRange
 open FStarC.Class.Deq

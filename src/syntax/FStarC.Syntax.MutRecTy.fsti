@@ -15,9 +15,10 @@
 *)
 // (c) Microsoft Corporation. All rights reserved
 module FStarC.Syntax.MutRecTy
+
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
 
 val disentangle_abbrevs_from_bundle: list sigelt -> list qualifier -> list lident ->
-                                     FStarC.Range.range -> sigelt & list sigelt
+                                     FStarC.Range.Type.range -> sigelt & list sigelt
