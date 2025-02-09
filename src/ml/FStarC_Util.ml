@@ -1113,6 +1113,7 @@ let digest_of_file =
     | Some dig -> dig
     | None ->
       let dig = BatDigest.file fname in
+      let dig = BatDigest.to_hex dig in
       smap_add cache fname dig;
       dig
 
