@@ -660,3 +660,24 @@ let tcc (e:env) (t:term) : Tac comp =
   R.inspect_comp c
 
 let comp_to_string (c:comp) : Tac string = Stubs.Tactics.V2.Builtins.comp_to_string (R.pack_comp c)
+
+[@@plugin]
+let tag_of (t:term) : Tac string =
+  match inspect t with
+  | Tv_Var bv -> "Tv_Var"
+  | Tv_BVar fv -> "Tv_BVar"
+  | Tv_FVar fv -> "Tv_FVar"
+  | Tv_UInst _ _ -> "Tv_UInst"
+  | Tv_App f x -> "Tv_App"
+  | Tv_Abs x t -> "Tv_Abs"
+  | Tv_Arrow x t -> "Tv_Arrow"
+  | Tv_Type _ -> "Tv_Type"
+  | Tv_Refine x t -> "Tv_Refine"
+  | Tv_Const cst -> "Tv_Const"
+  | Tv_Uvar i t -> "Tv_Uvar"
+  | Tv_Let r attrs b t1 t2 -> "Tv_Let"
+  | Tv_Match t _ branches -> "Tv_Match"
+  | Tv_AscribedT _ _ _ _ -> "Tv_AscribedT"
+  | Tv_AscribedC _ _ _ _ -> "Tv_AscribedC"
+  | Tv_Unknown -> "Tv_Unknown"
+  | Tv_Unsupp -> "Tv_Unsupp"
