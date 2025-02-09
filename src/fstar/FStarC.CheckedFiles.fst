@@ -36,7 +36,7 @@ let dbg = Debug.get_toggle "CheckedFiles"
  * detect when loading the cache that the version number is same
  * It needs to be kept in sync with Prims.fst
  *)
-let cache_version_number = 72
+let cache_version_number = 73
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
@@ -326,10 +326,10 @@ let load_checked_file_with_tc_result
       else begin
         if !dbg
         then begin
-          BU.print4 "FAILING to load.\nExpected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
-            (BU.string_of_int (List.length deps_dig'))
+          BU.print4 "FAILING to load.\nHashes computed (%s):\n%s\n\nHashes read (%s):\n%s\n"
+            (show (List.length deps_dig'))
             (FStarC.Parser.Dep.print_digest deps_dig')
-            (BU.string_of_int (List.length deps_dig))
+            (show (List.length deps_dig))
             (FStarC.Parser.Dep.print_digest deps_dig);
           if List.length deps_dig = List.length deps_dig'
           then List.iter2 (fun (x,y) (x', y') ->

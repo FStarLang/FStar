@@ -103,4 +103,5 @@ let disable_all () : unit =
   List.iter (fun (_, r) -> r := false) !toggle_list
 
 let set_debug_all () : unit =
-  _debug_all := true
+  _debug_all := true;
+  List.iter (fun (_, r) -> r := true) !toggle_list

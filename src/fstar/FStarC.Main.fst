@@ -180,7 +180,8 @@ let go_normal () =
           Errors.Msg.text "Could not read checked file:" ^/^ doc_of_string path
         ]
 
-      | Some (_, tcr) ->
+      | Some (deps, tcr) ->
+        print1 "Deps: %s\n" (show deps);
         print1 "%s\n" (show tcr.checked_module)
     )
 
