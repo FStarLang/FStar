@@ -23,6 +23,7 @@ module FStarC.Tactics.V1.Basic
  * between compiler and userspace (and a few other
  * annoyances too). *)
 
+open FStarC
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.Reflection.V1.Data
@@ -48,9 +49,9 @@ val tc                     : env -> term -> tac typ
 val tcc                    : env -> term -> tac comp
 val unshelve               : term -> tac unit
 val unquote                : typ -> term -> tac term
-val norm                   : list Pervasives.norm_step -> tac unit
-val norm_term_env          : env -> list Pervasives.norm_step -> term -> tac term
-val norm_binder_type       : list Pervasives.norm_step -> binder -> tac unit
+val norm                   : list NormSteps.norm_step -> tac unit
+val norm_term_env          : env -> list NormSteps.norm_step -> term -> tac term
+val norm_binder_type       : list NormSteps.norm_step -> binder -> tac unit
 val intro                  : unit -> tac binder
 val intro_rec              : unit -> tac (binder & binder)
 val rename_to              : binder -> string -> tac binder

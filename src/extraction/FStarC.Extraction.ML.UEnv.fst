@@ -254,6 +254,9 @@ let is_fv_type g fv =
 
 let no_fstar_stubs_ns (ns : list mlsymbol) : list mlsymbol =
   match ns with
+  | "FStar"::"NormSteps"::rest when plug () ->
+    "Fstarcompiler.FStarC"::"NormSteps"::rest
+
   | "FStar"::"Stubs"::rest when plug_no_lib () && Options.Ext.enabled "__guts" -> "FStarC"::rest
 
   (* These 3 modules are special, and are not in the guts. They live in src/ml/full and
@@ -439,29 +442,8 @@ let new_mlpath_of_lident (g:uenv) (x : lident) : mlpath & uenv =
     | "FStar.Pervasives.either"
     | "FStar.Pervasives.Inl"
     | "FStar.Pervasives.Inr"
+      when plug () -> guts mlp
 
-    | "FStar.Pervasives.norm_step"
-    | "FStar.Pervasives.norm_debug"
-    | "FStar.Pervasives.simplify"
-    | "FStar.Pervasives.weak"
-    | "FStar.Pervasives.hnf"
-    | "FStar.Pervasives.primops"
-    | "FStar.Pervasives.delta"
-    | "FStar.Pervasives.norm_debug"
-    | "FStar.Pervasives.zeta"
-    | "FStar.Pervasives.zeta_full"
-    | "FStar.Pervasives.iota"
-    | "FStar.Pervasives.nbe"
-    | "FStar.Pervasives.reify_"
-    | "FStar.Pervasives.delta_only"
-    | "FStar.Pervasives.delta_fully"
-    | "FStar.Pervasives.delta_attr"
-    | "FStar.Pervasives.delta_qualifier"
-    | "FStar.Pervasives.delta_namespace"
-    | "FStar.Pervasives.unmeta"
-    | "FStar.Pervasives.unascribe"
-      when plug ()
-      -> guts mlp
     (* special case to not expose FStarC.Errors *)
     | "FStar.Stubs.Tactics.Common.Stop" ->
       "Fstarcompiler.FStarC"::"Errors"::[], "Stop"

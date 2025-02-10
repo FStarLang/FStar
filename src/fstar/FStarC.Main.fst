@@ -37,6 +37,7 @@ open FStarC.Reflection.V1.Interpreter {}
 open FStarC.Reflection.V2.Interpreter {}
 (* Same, except that it only defines some types for userspace to refer to. *)
 open FStarC.Tactics.Types.Reflection {}
+open FStarC.NormSteps {}
 
 (* process_args:  parses command line arguments, setting FStarC.Options *)
 (*                returns an error status and list of filenames        *)

@@ -788,7 +788,7 @@ let intro_rec () : tac (binder & binder) =
     | None ->
         fail1 "intro_rec: goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
 
-let norm (s : list Pervasives.norm_step) : tac unit =
+let norm (s : list NormSteps.norm_step) : tac unit =
     let! goal = cur_goal in
     if_verbose (fun () -> BU.print1 "norm: witness = %s\n" (show (goal_witness goal))) ;!
     // Translate to actual normalizer steps
@@ -798,7 +798,7 @@ let norm (s : list Pervasives.norm_step) : tac unit =
     replace_cur (goal_with_type goal t)
 
 
-let norm_term_env (e : env) (s : list Pervasives.norm_step) (t : term) : tac term = wrap_err "norm_term" <| (
+let norm_term_env (e : env) (s : list NormSteps.norm_step) (t : term) : tac term = wrap_err "norm_term" <| (
     let! ps = get in
     if_verbose (fun () -> BU.print1 "norm_term_env: t = %s\n" (show t)) ;!
     // only for elaborating lifts and all that, we don't care if it's actually well-typed
@@ -866,7 +866,7 @@ let t_exact try_refine set_expected_typ tm : tac unit = wrap_err "exact" <| (
     | Inl e when not (try_refine) -> traise e
     | Inl e ->
       if_verbose (fun () -> BU.print_string "__exact_now failed, trying refine...\n") ;!
-      match! catch (norm [Pervasives.Delta] ;! refine_intro () ;! __exact_now set_expected_typ tm) with
+      match! catch (norm [NormSteps.Delta] ;! refine_intro () ;! __exact_now set_expected_typ tm) with
       | Inr r ->
         if_verbose (fun () -> BU.print_string "__exact_now: failed after refining too\n") ;!
         ret r
@@ -1265,7 +1265,7 @@ let binder_retype (b : binder) : tac unit = wrap_err "binder_retype" <| (
     )
 
 (* TODO: move to bv *)
-let norm_binder_type (s : list Pervasives.norm_step) (b : binder) : tac unit = wrap_err "norm_binder_type" <| (
+let norm_binder_type (s : list NormSteps.norm_step) (b : binder) : tac unit = wrap_err "norm_binder_type" <| (
     let! goal = cur_goal in
     let bv = b.binder_bv in
     match split_env bv (goal_env goal) with
