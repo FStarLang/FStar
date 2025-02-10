@@ -15,7 +15,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Note, for now we just ignore some modules and or comment out some code in them. -->
-    <Compile Include="base/prims.fs" Link="prims.fs" />
+    <Compile Include="base/Prims.fs" Link="Prims.fs" />
     <Compile Include="base/FStar_Pervasives_Native.fs" Link="FStar_Pervasives_Native.fs" />
     <Compile Include="base/FStar_All.fs" Link="FStar_All.fs" />
     <Compile Include="base/FStar_Char.fs" Link="FStar_Char.fs" />
