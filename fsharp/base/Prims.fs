@@ -32,6 +32,7 @@ let ( >= ) (x:int) (y:int)  = x >= y
 let ( < )  (x:int) (y:int) = x < y
 let ( > )  (x:int) (y:int) = x > y
 let (mod) (x:int) (y:int)  = snd (ediv_rem x y)
+let mod_f x y = x mod y
 let ( ~- ) (x:int) = -x
 let abs (x:int) = BigInteger.Abs x
 let of_int (x:FSharp.Core.int) = BigInteger x

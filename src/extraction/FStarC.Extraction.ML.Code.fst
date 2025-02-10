@@ -121,6 +121,7 @@ let mlpath_of_mlpath (currentModule : mlsymbol) (x : mlpath) : mlpath =
     match string_of_mlpath x with
     | "Prims.Some" -> ([], "Some")
     | "Prims.None" -> ([], "None")
+    | "Prims.op_Modulus" -> (["Prims"], "mod_f")
     | _ ->
      let ns, x = x in
      (path_of_ns currentModule ns, x)
@@ -158,7 +159,6 @@ let infix_prim_ops = [
     ("op_GreaterThanOrEqual", e_bin_prio_order , ">=");
     ("op_LessThan"          , e_bin_prio_order , "<" );
     ("op_GreaterThan"       , e_bin_prio_order , ">" );
-    ("op_Modulus"           , e_bin_prio_order , "mod" );
 ]
 
 (* -------------------------------------------------------------------- *)
