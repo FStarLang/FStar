@@ -25,7 +25,7 @@ open Pulse.PP
 open Pulse.Show
 
 module L = FStar.List.Tot
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 
 module Env = Pulse.Typing.Env
