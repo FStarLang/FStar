@@ -15,9 +15,10 @@
 *)
 
 module FStarC.TypeChecker.Util
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC
 open FStarC.Util
 open FStarC.Errors
 open FStarC.Errors.Msg
@@ -2486,7 +2487,7 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
     let? exp_head_lid = head_lid_of exp_t in
     let? computed_head_lid = head_lid_of computed_t in
 
-    let candidates = Env.lookup_attr env "FStar.Pervasives.coercion" in
+    let candidates = Env.lookup_attr env (string_of_lid C.coercion_lid) in
     candidates |> first_opt (fun se ->
       (* `f` is the candidate coercion, `e` the term to coerce *)
       let? f_name, f_us, f_typ =

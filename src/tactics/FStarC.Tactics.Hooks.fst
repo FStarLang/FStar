@@ -762,7 +762,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
 
 (* Retrieves a tactic associated to a given attribute, if any *)
 let find_user_tac_for_attr env (a:term) : option sigelt =
-  let hooks = Env.lookup_attr env PC.handle_smt_goals_attr_string in
+  let hooks = Env.lookup_attr env (Ident.string_of_lid PC.handle_smt_goals_attr) in
   hooks |> BU.try_find (fun _ -> true)
 
 (* This function takes an environment [env] and a goal [goal], and tries to run

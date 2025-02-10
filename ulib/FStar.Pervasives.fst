@@ -143,69 +143,7 @@ let invertOption _ = ()
 
 let rec false_elim #_ _ = false_elim ()
 
-let inline_let = ()
-
-let rename_let _ = ()
-
-let plugin _ = ()
-
-let tcnorm = ()
-
-let must_erase_for_extraction = ()
-
-let dm4f_bind_range = ()
-
-let expect_failure _ = ()
-
-let expect_lax_failure _ = ()
-
-let tcdecltime = ()
-
-let unifier_hint_injective = ()
-
-let strict_on_arguments _ = ()
-
-let resolve_implicits = ()
-
-let override_resolve_implicits_handler #a x l = ()
-
-let handle_smt_goals = ()
-
-let erasable = ()
-
-let commute_nested_matches = ()
-
-let noextract_to _ = ()
+let singleton #_ x = x
 
 let normalize_for_extraction _ = ()
 let normalize_for_extraction_type = ()
-
-let ite_soundness_by _ = ()
-
-let default_effect _ = ()
-let top_level_effect _ = ()
-let effect_param = ()
-let bind_has_range_args = ()
-let primitive_extraction = ()
-
-let extract_as_impure_effect = ()
-
-let strictly_positive = ()
-
-let unused = ()
-
-let no_auto_projectors = ()
-
-let no_auto_projectors_decls = ()
-
-let no_subtyping = ()
-
-let admit_termination = ()
-
-let singleton #_ x = x
-
-let coercion = ()
-
-let desugar_of_variant_record _ = ()
-
-let defer_to #a (_:a) = ()
