@@ -22,7 +22,7 @@ open Pulse.Lib.Swap.Common
 #set-options "--fuel 2 --ifuel 1"
 #restart-solver
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 6"
 
 #restart-solver
 
