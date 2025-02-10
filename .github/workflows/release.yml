@@ -67,7 +67,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           V=$(cat version.txt)
-          # --target with a specific ShA makes sure that if master
+          # --target with a specific SHA makes sure that if master
           # advanced while we were running, the release is still created
           # at the commit where this workflow started. Note however
           # that it seems this workflow seems to fail when trying
@@ -75,8 +75,13 @@ jobs:
           # (probably some Github config should be changed).. but that's
           # preferable to silently tagging something untested.
 
+          TAG="v$V"
+          # Create and push annotated tag to repo.
+          git tag -a -m "F* version $V" "$TAG" "${{github.sha}}"
+          git push "$TAG"
+
+          # Create github release.
           gh release create --prerelease \
             --generate-notes \
-            --target ${{ github.sha }} \
             -t "F* v$V" \
-            "v$V" ../artifacts/*
+            "$TAG" ../artifacts/*
