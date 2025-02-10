@@ -804,14 +804,6 @@ let doc_of_mllib_r (MLLib mllib) =
         ]
     and for1_mod istop (mod_name, sigmod, MLLib sub) =
         let target_mod_name = Util.flatten_mlpath mod_name in
-        let maybe_open_pervasives =
-            match mod_name with
-            | ["FStar"], "Pervasives" -> []
-            | _ ->
-              let pervasives = Util.flatten_mlpath (["FStar"], "Pervasives") in
-              [hardline;
-               text ("open " ^ pervasives)]
-        in
         let head = reduce1 (if Util.codegen_fsharp()
                             then [text "module";  text target_mod_name]
                             else if not istop
@@ -827,9 +819,6 @@ let doc_of_mllib_r (MLLib mllib) =
         reduce <| (prefix @ [
             head;
             hardline;
-            text "open Prims"] @
-            maybe_open_pervasives @
-            [hardline;
             (match doc with
              | None   -> empty
              | Some s -> cat s hardline);
