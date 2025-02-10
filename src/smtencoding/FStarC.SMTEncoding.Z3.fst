@@ -611,7 +611,7 @@ let mk_input (fresh : bool) (theory : list decl) : string & option string & opti
                       F* version: %s -- commit hash: %s\n\
                       Z3 version (according to F*): %s"
                         (!Options._version) (!Options._commit) ver
-      ) :: theory
+      ) :: EmptyLine :: theory
     in
     let options = z3_options ver in
     let options = options ^ (Options.z3_smtopt() |> String.concat "\n") ^ "\n\n" in
@@ -754,7 +754,7 @@ let ask
       then failwith "Unexpected: unsat core must only be used with fresh solvers";
       reading_solver_state (SolverState.filter_with_unsat_core queryid core)
   in
-  let theory = theory @ (Push 0:: qry@[Pop 0]) in
+  let theory = theory @ (Push 0:: qry @ [Pop 0; EmptyLine]) in
   let input, qhash, log_file_name = mk_input fresh theory in
   let just_ask () = z3_job log_file_name r fresh label_messages input qhash queryid in
   let result =
