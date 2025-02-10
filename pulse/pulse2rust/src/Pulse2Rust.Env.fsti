@@ -42,7 +42,7 @@ type reachable_defs = RBSet.t string
 
 val reachable_defs_to_string (d:reachable_defs) : string
 
-type dict = smap (list string & list UEnv.binding & S.mlmodule)
+type dict = SMap.t (list string & list UEnv.binding & S.mlmodule)
 
 type env = {
   external_libs : list string;
