@@ -16,7 +16,6 @@
 module FStarC.Syntax.Subst
 open FStarC.Effect
 
-open FStar open FStarC
 open FStarC
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -75,7 +74,7 @@ val close_univ_vars_tscheme: univ_names -> tscheme -> tscheme
 val univ_var_opening: univ_names -> list subst_elt & list univ_name
 val univ_var_closing: univ_names -> list subst_elt
 
-val set_use_range: Range.range -> term -> term
+val set_use_range: Range.Type.range -> term -> term
 
 (* Helpers *)
 val open_term_1   : binder   -> term -> binder & term

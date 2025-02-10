@@ -17,9 +17,11 @@
 *)
 
 module FStarC.Common
+
 open FStarC.Effect
 module List = FStarC.List
 module BU = FStarC.Util
+open FStarC.PSMap
 
 let snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b) = BU.atomically (fun () ->
   let len : int = List.length !stackref in
@@ -117,11 +119,11 @@ let rec eq_list (f: 'a -> 'a -> bool) (l1 l2 : list 'a)
     | x1::t1, x2::t2 -> f x1 x2 && eq_list f t1 t2
 
 let psmap_to_list m =
-  BU.psmap_fold m (fun k v a -> (k,v)::a) []
+  psmap_fold m (fun k v a -> (k,v)::a) []
 let psmap_keys m =
-  BU.psmap_fold m (fun k v a -> k::a) []
+  psmap_fold m (fun k v a -> k::a) []
 let psmap_values m =
-  BU.psmap_fold m (fun k v a -> v::a) []
+  psmap_fold m (fun k v a -> v::a) []
 
 let option_to_list = function
   | None -> []

@@ -18,9 +18,7 @@
  * text fragments and update state; this file collects helpers for them *)
 
 module FStarC.Interactive.PushHelper
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 open FStarC.Util
@@ -35,11 +33,10 @@ open FStarC.Interactive.Ide.Types
 module U = FStarC.Util
 module SS = FStarC.Syntax.Syntax
 module DsEnv = FStarC.Syntax.DsEnv
-module TcErr = FStarC.TypeChecker.Err
 module TcEnv = FStarC.TypeChecker.Env
 module CTable = FStarC.Interactive.CompletionTable
 
-let repl_stack: ref repl_stack_t = U.mk_ref []
+let repl_stack: ref repl_stack_t = mk_ref []
 
 let set_check_kind env check_kind =
   { env with admit = (check_kind = LaxCheck || Options.lax());
@@ -242,7 +239,7 @@ let commit_name_tracking st name_events =
   { st with repl_names = names }
 
 let fresh_name_tracking_hooks () =
-  let events = Util.mk_ref [] in
+  let events = mk_ref [] in
   let push_event evt = events := evt :: !events in
   events,
   DsEnv.mk_dsenv_hooks
@@ -358,6 +355,7 @@ let ld_deps st =
   | exn -> U.print1_error "[E] Failed to load deps. Message: %s" (message_of_exn exn); Inr st
 
 let add_module_completions this_fname deps table =
+  let open FStarC.PSMap in
   let capitalize str = if str = "" then str
                        else let first = String.substring str 0 1 in
                        String.uppercase first ^ String.substring str 1 (String.length str - 1) in

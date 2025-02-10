@@ -16,10 +16,8 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.NBE
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.TypeChecker.Cfg
 open FStarC.TypeChecker
@@ -148,8 +146,8 @@ let let_rec_arity (b:letbinding) : int & list bool =
 let debug_term (t : term) =
   BU.print1 "%s\n" (show t)
 
-let debug_sigmap (m : BU.smap sigelt) =
-  BU.smap_fold m (fun k v u -> BU.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
+let debug_sigmap (m : SMap.t sigelt) =
+  SMap.fold m (fun k v u -> BU.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,11 +155,11 @@ let debug_sigmap (m : BU.smap sigelt) =
 ////////////////////////////////////////////////////////////////////////////////
 type config = {
   core_cfg:Cfg.cfg;
-  fv_cache:BU.smap t
+  fv_cache:SMap.t t
 }
 let new_config (cfg:Cfg.cfg) = {
   core_cfg = cfg;
-  fv_cache = BU.smap_create 51
+  fv_cache = SMap.create 51
 }
 let reifying_false (cfg:config) =
   if cfg.core_cfg.reifying
@@ -180,10 +178,10 @@ let zeta_false (cfg:config) =
     else cfg
 let cache_add (cfg:config) (fv:fv) (v:t) =
   let lid = fv.fv_name.v in
-  BU.smap_add cfg.fv_cache (string_of_lid lid) v
+  SMap.add cfg.fv_cache (string_of_lid lid) v
 let try_in_cache (cfg:config) (fv:fv) : option t =
   let lid = fv.fv_name.v in
-  BU.smap_try_find cfg.fv_cache (string_of_lid lid)
+  SMap.try_find cfg.fv_cache (string_of_lid lid)
 let debug cfg f = log_nbe cfg.core_cfg f
 
 

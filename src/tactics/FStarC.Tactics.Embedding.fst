@@ -16,9 +16,7 @@
 
 module FStarC.Tactics.Embedding
 
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
@@ -32,7 +30,6 @@ open FStarC.Tactics.Result
 
 module BU      = FStarC.Util
 module Err     = FStarC.Errors
-module NBE     = FStarC.TypeChecker.NBE
 module NBETerm = FStarC.TypeChecker.NBETerm
 module NBET    = FStarC.TypeChecker.NBETerm
 module PC      = FStarC.Parser.Const

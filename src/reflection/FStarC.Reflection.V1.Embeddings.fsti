@@ -15,13 +15,11 @@
 *)
 module FStarC.Reflection.V1.Embeddings
 
-open FStar open FStarC
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStar.Order
 open FStarC.TypeChecker.Env
 open FStarC.Reflection.V1.Data
-module O = FStarC.Options
 module RD = FStarC.Reflection.V1.Data
 
 (* Embeddings. We mark the ones proper to this module as instances *)

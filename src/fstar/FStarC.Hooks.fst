@@ -21,6 +21,7 @@ open FStarC.List
 open FStarC.Util
 open FStarC.Ident
 open FStarC.Class.Show
+open FStarC.Syntax.Print {}
 
 module RE = FStarC.Reflection.V2.Embeddings
 

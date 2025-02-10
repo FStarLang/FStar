@@ -15,7 +15,6 @@
 *)
 module FStarC.Find
 
-open FStar
 open FStarC
 open FStarC
 open FStarC.Effect
@@ -115,26 +114,26 @@ let do_find (paths : list string) (filename : string) : option string =
     // ^ to deal with issues like passing bogus strings as paths like " input"
 
 let find_file =
-  let cache = BU.smap_create 100 in
+  let cache = SMap.create 100 in
   fun filename ->
-     match BU.smap_try_find cache filename with
+     match SMap.try_find cache filename with
      | Some f -> f
      | None ->
        let result = do_find (include_path ()) filename in
        if Some? result
-       then BU.smap_add cache filename result;
+       then SMap.add cache filename result;
        result
 
 let find_file_odir =
-  let cache = BU.smap_create 100 in
+  let cache = SMap.create 100 in
   fun filename ->
-     match BU.smap_try_find cache filename with
+     match SMap.try_find cache filename with
      | Some f -> f
      | None ->
        let odir = match Options.output_dir () with Some d -> [d] | None -> [] in
        let result = do_find (include_path () @ odir) filename in
        if Some? result
-       then BU.smap_add cache filename result;
+       then SMap.add cache filename result;
        result
 
 
@@ -237,13 +236,13 @@ let do_locate_z3 (v:string) : option string =
   path
 
 let locate_z3 (v : string) : option string =
-  let cache : BU.smap (option string) = BU.smap_create 5 in
+  let cache : SMap.t (option string) = SMap.create 5 in
   let find_or (k:string) (f : string -> option string) : option string =
-    match BU.smap_try_find cache k with
+    match SMap.try_find cache k with
     | Some v -> v
     | None ->
       let v = f k in
-      BU.smap_add cache k v;
+      SMap.add cache k v;
       v
   in
   find_or v do_locate_z3

@@ -14,15 +14,17 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.Err
-open FStarC.Effect
 
 open FStarC
+open FStarC.Effect
 open FStarC.Syntax.Syntax
+open FStarC.Syntax.Print {}
 open FStarC.Util
 open FStarC.TypeChecker.Env
 open FStarC.Range
 open FStarC.Ident
 open FStarC.Pprint
+
 module N = FStarC.TypeChecker.Normalize
 
 open FStarC.Errors.Msg

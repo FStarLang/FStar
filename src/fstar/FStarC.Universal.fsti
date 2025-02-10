@@ -17,7 +17,6 @@
 //Top-level invocations into the universal type-checker FStarC.TypeChecker
 module FStarC.Universal
 
-open FStar open FStarC
 open FStarC.Ident
 open FStarC.CheckedFiles
 module DsEnv   = FStarC.Syntax.DsEnv

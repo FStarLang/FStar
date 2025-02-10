@@ -16,17 +16,12 @@
 module FStarC.Tests.Norm
 //Normalization tests
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
-open FStar.Pervasives
 open FStarC.Syntax.Syntax
 open FStarC.Tests.Pars
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
-module SS = FStarC.Syntax.Subst
-module I = FStarC.Ident
-module P  = FStarC.Syntax.Print
 module Const = FStarC.Parser.Const
 module BU = FStarC.Util
 module N = FStarC.TypeChecker.Normalize
@@ -70,7 +65,6 @@ let snat s      = mk (Tm_app {hd=tm_fv snat_l; args=[as_arg s]}) dummyRange
 let pat p = withinfo p dummyRange
 let snat_type = tm_fv (S.lid_as_fv (lid "snat") None)
 open FStarC.Syntax.Subst
-module SS=FStarC.Syntax.Subst
 let mk_match h branches =
     let branches = branches |> List.map U.branch in
     mk (Tm_match {scrutinee=h; ret_opt=None; brs=branches; rc_opt=None}) dummyRange

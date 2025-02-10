@@ -15,18 +15,13 @@
 *)
 module FStarC.Reflection.V1.Interpreter
 
-module BU    = FStarC.Util
 module Cfg   = FStarC.TypeChecker.Cfg
 module EMB   = FStarC.Syntax.Embeddings
-module Env   = FStarC.TypeChecker.Env
 module NBET  = FStarC.TypeChecker.NBETerm
 module NRE   = FStarC.Reflection.V1.NBEEmbeddings
 module PO    = FStarC.TypeChecker.Primops
 module RB    = FStarC.Reflection.V1.Builtins
-module RD    = FStarC.Reflection.V1.Data
 module RE    = FStarC.Reflection.V1.Embeddings
-module Z     = FStarC.BigInt
-module Range = FStarC.Range
 open FStarC
 open FStarC.List
 open FStarC.Ident

@@ -20,7 +20,7 @@ module FStarC.Syntax.Unionfind
  * universes on top of the existing union-find implementation. *)
 
 open FStarC.Effect
-module Range = FStarC.Range
+module Range = FStarC.Range.Type
 module S = FStarC.Syntax.Syntax
 
 val uf : Type0

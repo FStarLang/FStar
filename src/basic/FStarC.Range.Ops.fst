@@ -26,7 +26,6 @@ open FStarC.Effect
 open FStarC.Util
 open FStarC.Class.Ord
 
-module Options = FStarC.Options
 
 let union_rng r1 r2 =
   if r1.file_name <> r2.file_name

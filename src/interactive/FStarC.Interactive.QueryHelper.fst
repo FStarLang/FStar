@@ -20,9 +20,7 @@
 module FStarC.Interactive.QueryHelper
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Range
 open FStarC.Util
 open FStarC.TypeChecker.Env

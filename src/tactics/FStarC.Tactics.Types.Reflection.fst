@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2014 Microsoft Research
+   Copyright 2008-2016 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,7 +13,16 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStarC.Version
-open FStarC.Effect
+module FStarC.Tactics.Types.Reflection
 
-val dummy: unit -> unit
+open FStarC
+open FStarC.Effect
+open FStarC.Syntax.Syntax
+open FStarC.TypeChecker
+open FStarC.TypeChecker.Env
+
+let non_informative_token (g:env) (t:typ) = unit
+let subtyping_token (g:env) (t0 t1:typ) = unit
+let equiv_token (g:env) (t0 t1:typ) = unit
+let typing_token (g:env) (e:term) (c:Core.tot_or_ghost & typ) = unit
+let match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) = unit

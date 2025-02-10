@@ -1,9 +1,9 @@
 ﻿module FStarC.GenSym
 
-module Util = FStarC.Util
+open FStarC.Effect
 
 (* private *)
-let gensym_st = Util.mk_ref 0
+let gensym_st = mk_ref 0
 
 let next_id () =
   let r = !gensym_st in

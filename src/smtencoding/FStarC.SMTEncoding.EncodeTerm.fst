@@ -15,11 +15,8 @@
 *)
 
 module FStarC.SMTEncoding.EncodeTerm
-open Prims
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Defensive
 open FStarC.TypeChecker.Env
@@ -39,7 +36,6 @@ module EMB    = FStarC.Syntax.Embeddings
 module Env    = FStarC.TypeChecker.Env
 module N      = FStarC.TypeChecker.Normalize
 module RC     = FStarC.Reflection.V2.Constants
-module RE     = FStarC.Reflection.V2.Embeddings
 module R      = FStarC.Reflection.V2.Builtins
 module SE     = FStarC.Syntax.Embeddings
 module S      = FStarC.Syntax.Syntax
@@ -50,6 +46,8 @@ module U      = FStarC.Syntax.Util
 open FStarC.Class.Show
 open FStarC.Class.Tagged
 open FStarC.Class.Setlike
+open FStarC.Syntax.Print {}
+open FStarC.Reflection.V2.Embeddings {}
 
 let dbg_PartialApp       = Debug.get_toggle "PartialApp"
 let dbg_SMTEncoding      = Debug.get_toggle "SMTEncoding"
@@ -981,7 +979,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         t, decls@decls'@mk_decls tsym tkey_hash t_decls (decls@decls')
 
       | Tm_uvar (uv, _) ->
-        let ttm = mk_Term_uvar (Unionfind.uvar_id uv.ctx_uvar_head) in
+        let ttm = mk_Term_uvar (Unionfind.uvar_id uv.ctx_uvar_head) Range.dummyRange in
         let t_has_k, decls = encode_term_pred None (U.ctx_uvar_typ uv) env ttm in //TODO: skip encoding this if it has already been encoded before
         let d =
             Util.mkAssume(t_has_k,

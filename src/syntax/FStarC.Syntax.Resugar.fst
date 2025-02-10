@@ -16,9 +16,7 @@
   limitations under the License.
 *)
 module FStarC.Syntax.Resugar //we should rename FStarC.ToSyntax to something else
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
@@ -39,7 +37,6 @@ module U = FStarC.Syntax.Util
 module BU = FStarC.Util
 module D = FStarC.Parser.ToDocument
 module UF = FStarC.Syntax.Unionfind
-module E = FStarC.Errors
 module DsEnv = FStarC.Syntax.DsEnv
 
 (* Helpers to print/debug the resugaring phase *)

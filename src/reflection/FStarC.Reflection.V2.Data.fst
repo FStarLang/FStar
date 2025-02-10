@@ -23,9 +23,6 @@ any .ml file from an interface. Hence we keep both, exactly equal to
 each other. *)
 open FStarC.List
 open FStarC.Syntax.Syntax
-module Ident = FStarC.Ident
-module Range = FStarC.Range
-module Z     = FStarC.BigInt
 open FStarC.Ident
 
 (* These two functions are in ulib/FStarC.Reflection.V2.Data.fsti

@@ -14,10 +14,8 @@
   limitations under the License.
 *)
 module FStarC.ToSyntax.ToSyntax
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Util
 open FStarC.Syntax
@@ -32,28 +30,28 @@ open FStarC.Errors
 open FStarC.Syntax
 open FStarC.Class.Setlike
 open FStarC.Class.Show
+open FStarC.Syntax.Print {}
 
 module C = FStarC.Parser.Const
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
 module BU = FStarC.Util
 module Env = FStarC.Syntax.DsEnv
-module P = FStarC.Syntax.Print
 module EMB = FStarC.Syntax.Embeddings
 module SS = FStarC.Syntax.Subst
 
 let extension_tosyntax_table 
-: BU.smap extension_tosyntax_decl_t
-= FStarC.Util.smap_create 20
+: SMap.t extension_tosyntax_decl_t
+= SMap.create 20
 
 let register_extension_tosyntax
     (lang_name:string)
     (cb:extension_tosyntax_decl_t)
-= FStarC.Util.smap_add extension_tosyntax_table lang_name cb
+= SMap.add extension_tosyntax_table lang_name cb
 
 let lookup_extension_tosyntax
     (lang_name:string)
-= FStarC.Util.smap_try_find extension_tosyntax_table lang_name
+= SMap.try_find extension_tosyntax_table lang_name
 
 let dbg_attrs    = Debug.get_toggle "attrs"
 let dbg_ToSyntax = Debug.get_toggle "ToSyntax"
@@ -1625,7 +1623,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
             let env, lbname, rec_bindings, used_markers = match f with
               | Inl x ->
                 let env, xx, used_marker = push_bv' env x in
-                let dummy_ref = BU.mk_ref true in
+                let dummy_ref = mk_ref true in
                 env, Inl xx, S.mk_binder xx::rec_bindings, used_marker::used_markers
               | Inr l ->
                 let env, used_marker = push_top_level_rec_binding env (ident_of_lid l) in

@@ -14,10 +14,8 @@
    limitations under the License.
 *)
 module FStarC.Parser.Driver
-open FStar.Pervasives
 open FStarC.Effect
 
-open FStar open FStarC
 open FStarC
 open FStarC.Parser
 open FStarC.Parser.AST

@@ -15,7 +15,6 @@
  *)
 module FStarC.List
 open FStarC.Effect
-open Prims
 
 val isEmpty : (list 'a) -> Tot bool
 val singleton : 'a -> list 'a

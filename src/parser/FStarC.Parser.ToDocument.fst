@@ -16,13 +16,10 @@
 
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStarC.Parser.ToDocument
+
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-
-open FStar open FStarC
-open FStarC
 open FStarC.Util
 open FStarC.Parser.AST
 open FStarC.Ident
@@ -290,7 +287,7 @@ type associativity =
 
 (* A token is either a character c representing any string beginning with c, a complete string or a unicode operator *)
 type token =
-    | StartsWith: Char.char -> token
+    | StartsWith: FStar.Char.char -> token
     | Exact     : string    -> token
     | UnicodeOperator
 
@@ -301,7 +298,7 @@ let token_to_string = function
     | Exact           s -> s
     | UnicodeOperator -> "<unicode-op>"
 
-let is_non_latin_char (s:Char.char): bool
+let is_non_latin_char (s:FStar.Char.char): bool
     = int_of_char s > 0x024f
 
 let matches_token (s:string) = function
@@ -490,7 +487,7 @@ let cat_with_colon x y = x ^^ colon ^/^ y
 (* that all printed AST nodes that could eventually contain a comment are printed in the *)
 (* sequential order of the document. *)
 
-let comment_stack : ref (list (string&range))= BU.mk_ref []
+let comment_stack : ref (list (string&range))= mk_ref []
 
 (* some meta-information that informs spacing and the placement of comments around a declaration *)
 type decl_meta =

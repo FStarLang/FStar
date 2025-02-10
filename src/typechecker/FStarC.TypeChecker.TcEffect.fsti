@@ -17,7 +17,6 @@ module FStarC.TypeChecker.TcEffect
 
 open FStarC.Effect
 
-open FStar open FStarC
 open FStarC
 open FStarC.Ident
 

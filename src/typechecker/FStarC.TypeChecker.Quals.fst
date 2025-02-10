@@ -15,7 +15,6 @@
 *)
 
 module FStarC.TypeChecker.Quals
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Errors
@@ -27,7 +26,6 @@ open FStarC.Syntax
 open FStarC.Class.Show
 open FStarC.Class.PP
 
-module SS = FStarC.Syntax.Subst
 module S  = FStarC.Syntax.Syntax
 module BU = FStarC.Util
 module U  = FStarC.Syntax.Util

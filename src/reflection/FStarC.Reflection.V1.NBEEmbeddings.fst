@@ -17,14 +17,12 @@ module FStarC.Reflection.V1.NBEEmbeddings
 open FStarC
 open FStarC
 open FStarC.Effect
-open FStar.Pervasives
 open FStarC.Reflection.V1.Data
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.NBETerm
 open FStarC.Order
 open FStarC.Errors
 
-module O = FStarC.Options
 module S = FStarC.Syntax.Syntax // TODO: remove, it's open
 
 module BU      = FStarC.Util
@@ -35,7 +33,6 @@ module NBETerm = FStarC.TypeChecker.NBETerm
 module PC      = FStarC.Parser.Const
 module Range   = FStarC.Range
 module RD      = FStarC.Reflection.V1.Data
-module SS      = FStarC.Syntax.Subst
 module Thunk   = FStarC.Thunk
 module U       = FStarC.Syntax.Util
 

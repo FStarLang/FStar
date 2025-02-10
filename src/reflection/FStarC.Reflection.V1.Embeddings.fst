@@ -25,13 +25,7 @@ open FStarC.Errors
 module BU      = FStarC.Util
 module EMB     = FStarC.Syntax.Embeddings
 module Env     = FStarC.TypeChecker.Env
-module Err     = FStarC.Errors
 module I       = FStarC.Ident
-module List    = FStarC.List
-module NBETerm = FStarC.TypeChecker.NBETerm
-module O       = FStarC.Options
-module PC      = FStarC.Parser.Const
-module Print   = FStarC.Syntax.Print
 module Range   = FStarC.Range
 module RD      = FStarC.Reflection.V1.Data
 module S       = FStarC.Syntax.Syntax

@@ -14,14 +14,13 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Env
-open Prims
-open FStar.Pervasives
-open FStarC.Effect
-open FStar open FStarC
+
 open FStarC
+open FStarC.Effect
 open FStarC.TypeChecker.Env
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
+open FStarC.Syntax.Print {}
 open FStarC.TypeChecker
 open FStarC.SMTEncoding.Term
 open FStarC.Ident
@@ -29,7 +28,6 @@ open FStarC.SMTEncoding.Util
 
 module SS = FStarC.Syntax.Subst
 module BU = FStarC.Util
-module U = FStarC.Syntax.Util
 
 open FStarC.Class.Show
 
@@ -78,16 +76,16 @@ type varops_t = {
 }
 let varops =
     let initial_ctr = 100 in
-    let ctr = BU.mk_ref initial_ctr in
-    let new_scope () : BU.smap bool = BU.smap_create 100 in (* a scope records all the names used in that scope *)
-    let scopes = BU.mk_ref [new_scope ()] in
+    let ctr = mk_ref initial_ctr in
+    let new_scope () : SMap.t bool = SMap.create 100 in (* a scope records all the names used in that scope *)
+    let scopes = mk_ref [new_scope ()] in
     let mk_unique y =
         let y = escape y in
-        let y = match BU.find_map (!scopes) (fun names -> BU.smap_try_find names y) with
+        let y = match BU.find_map (!scopes) (fun names -> SMap.try_find names y) with
                   | None -> y
                   | Some _ -> BU.incr ctr; y ^ "__" ^ (string_of_int !ctr) in
         let top_scope = List.hd !scopes in
-        BU.smap_add top_scope y true; y in
+        SMap.add top_scope y true; y in
     let new_var pp rn = mk_unique <| (string_of_id pp) ^ "__" ^ (string_of_int rn) in
     let new_fvar lid = mk_unique (string_of_lid lid) in
     let next_id () = BU.incr ctr; !ctr in
@@ -160,8 +158,8 @@ let check_valid_fvb fvb =
 let binder_of_eithervar v = (v, None)
 
 type env_t = {
-    bvar_bindings: BU.psmap (BU.pimap (bv & term));
-    fvar_bindings: (BU.psmap fvar_binding & list fvar_binding);  //list of fvar bindings for the current module
+    bvar_bindings: PSMap.t (PIMap.t (bv & term));
+    fvar_bindings: (PSMap.t fvar_binding & list fvar_binding);  //list of fvar bindings for the current module
                                                                    //remember them so that we can store them in the checked file
     depth:int; //length of local var/tvar bindings
     tcenv:Env.env;
@@ -171,14 +169,14 @@ type env_t = {
     encode_non_total_function_typ:bool;
     current_module_name:string;
     encoding_quantifier:bool;
-    global_cache:BU.smap decls_elt;  //cache for hashconsing -- see Encode.fs where it is used and updated
+    global_cache:SMap.t decls_elt;  //cache for hashconsing -- see Encode.fs where it is used and updated
 }
 
 let print_env (e:env_t) : string =
-    let bvars = BU.psmap_fold e.bvar_bindings (fun _k pi acc ->
-        BU.pimap_fold pi (fun _i (x, _term) acc ->
+    let bvars = PSMap.fold e.bvar_bindings (fun _k pi acc ->
+        PIMap.fold pi (fun _i (x, _term) acc ->
             show x :: acc) acc) [] in
-    let allvars = BU.psmap_fold (e.fvar_bindings |> fst) (fun _k fvb acc ->
+    let allvars = PSMap.fold (e.fvar_bindings |> fst) (fun _k fvb acc ->
         fvb.fvar_lid :: acc) [] in
     let last_fvar =
       match List.rev allvars with
@@ -188,20 +186,20 @@ let print_env (e:env_t) : string =
     String.concat ", " (last_fvar :: bvars)
 
 let lookup_bvar_binding env bv =
-    match BU.psmap_try_find env.bvar_bindings (string_of_id bv.ppname) with
-    | Some bvs -> BU.pimap_try_find bvs bv.index
+    match PSMap.try_find env.bvar_bindings (string_of_id bv.ppname) with
+    | Some bvs -> PIMap.try_find bvs bv.index
     | None -> None
 
 let lookup_fvar_binding env lid =
-    BU.psmap_try_find (env.fvar_bindings |> fst) (string_of_lid lid)
+    PSMap.try_find (env.fvar_bindings |> fst) (string_of_lid lid)
 
 let add_bvar_binding bvb bvbs =
-  BU.psmap_modify bvbs (string_of_id (fst bvb).ppname)
+  PSMap.modify bvbs (string_of_id (fst bvb).ppname)
     (fun pimap_opt ->
-     BU.pimap_add (BU.dflt (BU.pimap_empty ()) pimap_opt) (fst bvb).index bvb)
+     PIMap.add (BU.dflt (PIMap.empty ()) pimap_opt) (fst bvb).index bvb)
 
 let add_fvar_binding fvb (fvb_map, fvb_list) =
-  (BU.psmap_add fvb_map (string_of_lid fvb.fvar_lid) fvb, fvb::fvb_list)
+  (PSMap.add fvb_map (string_of_lid fvb.fvar_lid) fvb, fvb::fvb_list)
 
 let fresh_fvar mname x s = let xsym = varops.fresh mname x in xsym, mkFreeV <| mk_fv (xsym, s)
 (* generate terms corresponding to a variable and record the mapping in the environment *)
@@ -303,7 +301,6 @@ let force_thunk fvb =
     if not (fvb.fvb_thunked) || fvb.smt_arity <> 0
     then failwith "Forcing a non-thunk in the SMT encoding";
     mkFreeV <| FV (fvb.smt_id, Term_sort, true)
-module TcEnv = FStarC.TypeChecker.Env
 let try_lookup_free_var env l =
     match lookup_fvar_binding env l with
     | None -> None
@@ -363,14 +360,14 @@ let lookup_free_var_sym env a =
 
 let tok_of_name env nm =
   match
-    BU.psmap_find_map (env.fvar_bindings |> fst) (fun _ fvb ->
+    PSMap.find_map (env.fvar_bindings |> fst) (fun _ fvb ->
       check_valid_fvb fvb;
       if fvb.smt_id = nm then fvb.smt_token else None)
   with
   | Some b -> Some b
   | None -> //this must be a bvar
-    BU.psmap_find_map env.bvar_bindings (fun _ pi ->
-    BU.pimap_fold pi (fun _ y res ->
+    PSMap.find_map env.bvar_bindings (fun _ pi ->
+    PIMap.fold pi (fun _ y res ->
       match res, y with
       | Some _, _ -> res
       | None, (_, {tm=App(Var sym, [])}) when sym=nm ->

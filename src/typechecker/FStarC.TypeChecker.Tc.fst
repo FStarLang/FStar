@@ -15,10 +15,8 @@
 *)
 
 module FStarC.TypeChecker.Tc
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Errors
 open FStarC.TypeChecker
@@ -40,11 +38,9 @@ open FStarC.Class.Setlike
 open FStarC.Class.Ord
 
 module S  = FStarC.Syntax.Syntax
-module SP  = FStarC.Syntax.Print
 module SS = FStarC.Syntax.Subst
 module UF = FStarC.Syntax.Unionfind
 module N  = FStarC.TypeChecker.Normalize
-module TcComm = FStarC.TypeChecker.Common
 module TcUtil = FStarC.TypeChecker.Util
 module BU = FStarC.Util //basic util
 module U  = FStarC.Syntax.Util
@@ -54,7 +50,6 @@ module TcEff = FStarC.TypeChecker.TcEffect
 module PC = FStarC.Parser.Const
 module EMB = FStarC.Syntax.Embeddings
 module ToSyntax = FStarC.ToSyntax.ToSyntax
-module O = FStarC.Options
 
 let dbg_TwoPhases = Debug.get_toggle "TwoPhases"
 let dbg_IdInfoOn  = Debug.get_toggle "IdInfoOn"
@@ -80,7 +75,7 @@ let set_hint_correlator env se =
     //this is useful when we verify the extracted interface alongside
     let tbl = env.qtbl_name_and_index |> snd in
     let get_n lid =
-      let n_opt = BU.smap_try_find tbl (show lid) in
+      let n_opt = SMap.try_find tbl (show lid) in
       if is_some n_opt then n_opt |> must else 0
     in
 
@@ -259,7 +254,7 @@ let store_sigopts (se:sigelt) : sigelt =
 
 (* Alternative to making a huge let rec... knot is set below in this file *)
 let tc_decls_knot : ref (option (Env.env -> list sigelt -> list sigelt & Env.env)) =
-  BU.mk_ref None
+  mk_ref None
 
 let do_two_phases env : bool = not (Options.lax ())
 let run_phase1 (f:unit -> 'a) =
@@ -1208,7 +1203,7 @@ let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
   );
 
   //we can clear the lid to query index table
-  env.qtbl_name_and_index |> snd |> BU.smap_clear;
+  env.qtbl_name_and_index |> snd |> SMap.clear;
 
   //pop BUT ignore the old env
 

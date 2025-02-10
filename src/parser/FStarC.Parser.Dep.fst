@@ -67,7 +67,7 @@ type verify_mode =
 
 type intf_and_impl = option string & option string
 
-type files_for_module_name = smap intf_and_impl
+type files_for_module_name = SMap.t intf_and_impl
 
 let intf_and_impl_to_string ii =
   match ii with
@@ -83,7 +83,7 @@ let files_for_module_name_to_string (m:files_for_module_name) =
     match sopt with
     | None -> "<None>"
     | Some s -> s in
-  smap_iter m (fun k v -> BU.print2 "%s:%s\n" k (intf_and_impl_to_string v));
+  SMap.iter m (fun k v -> BU.print2 "%s:%s\n" k (intf_and_impl_to_string v));
   BU.print_string "}\n"
 
 type color = | White | Gray | Black
@@ -169,7 +169,7 @@ type dep_node = {
     color:color
 }
 type dependence_graph = //maps file names to the modules it depends on
-     | Deps of smap dep_node //(dependences * color)>
+     | Deps of SMap.t dep_node //(dependences * color)>
 
 (*
  * AR: Parsing data for a file (also cached in the checked files)
@@ -240,14 +240,14 @@ type deps = {
     cmd_line_files:list file_name;              //all command-line files
     all_files:list file_name;                   //all files
     interfaces_with_inlining:list module_name;  //interfaces that use `inline_for_extraction` require inlining
-    parse_results:smap parsing_data             //map from filenames to parsing_data
+    parse_results:SMap.t parsing_data             //map from filenames to parsing_data
                                                 //callers (Universal.fs) use this to get the parsing data for caching purposes
 }
-let deps_try_find (Deps m) k = BU.smap_try_find m k
+let deps_try_find (Deps m) k = SMap.try_find m k
 let deps_add_dep (Deps m) k v =
-  BU.smap_add m k v
-let deps_keys (Deps m) = BU.smap_keys m
-let deps_empty () = Deps (BU.smap_create 41)
+  SMap.add m k v
+let deps_keys (Deps m) = SMap.keys m
+let deps_empty () = Deps (SMap.create 41)
 let mk_deps dg fs c a i pr = {
     dep_graph=dg;
     file_system_map=fs;
@@ -257,7 +257,7 @@ let mk_deps dg fs c a i pr = {
     parse_results=pr;
 }
 (* In public interface *)
-let empty_deps = mk_deps (deps_empty ()) (BU.smap_create 0) [] [] [] (BU.smap_create 0)
+let empty_deps = mk_deps (deps_empty ()) (SMap.create 0) [] [] [] (SMap.create 0)
 let module_name_of_dep = function
     | UseInterface m
     | PreferInterface m
@@ -266,20 +266,20 @@ let module_name_of_dep = function
 
 let resolve_module_name (file_system_map:files_for_module_name) (key:module_name)
     : option module_name
-    = match BU.smap_try_find file_system_map key with
+    = match SMap.try_find file_system_map key with
       | Some (Some fn, _)
       | Some (_, Some fn) -> Some (lowercase_module_name fn)
       | _ -> None
 
 let interface_of_internal (file_system_map:files_for_module_name) (key:module_name)
     : option file_name =
-    match BU.smap_try_find file_system_map key with
+    match SMap.try_find file_system_map key with
     | Some (Some iface, _) -> Some iface
     | _ -> None
 
 let implementation_of_internal (file_system_map:files_for_module_name) (key:module_name)
     : option file_name =
-    match BU.smap_try_find file_system_map key with
+    match SMap.try_find file_system_map key with
     | Some (_, Some impl) -> Some impl
     | _ -> None
 
@@ -342,18 +342,18 @@ let cache_file_name =
            ];
         Find.prepend_cache_dir cache_fn
     in
-    let memo = Util.smap_create 100 in
+    let memo = SMap.create 100 in
     let memo f x =
-      match Util.smap_try_find memo x with
+      match SMap.try_find memo x with
       | Some res -> res
       | None ->
         let res = f x in
-        Util.smap_add memo x res;
+        SMap.add memo x res;
         res
     in
     memo checked_file_and_exists_flag
 
-let parsing_data_of deps fn = BU.smap_try_find deps.parse_results fn |> must
+let parsing_data_of deps fn = SMap.try_find deps.parse_results fn |> must
 
 let file_of_dep_aux
                 (use_checked_file:bool)
@@ -489,19 +489,19 @@ let build_inclusion_candidates_list (): list (string & string) =
     interface (if any). The second component of the pair is the implementation
     (if any). *)
 let build_map (filenames: list string): files_for_module_name =
-  let map = smap_create 41 in
+  let map = SMap.create 41 in
   let add_entry key full_path =
-    match smap_try_find map key with
+    match SMap.try_find map key with
     | Some (intf, impl) ->
         if is_interface full_path then
-          smap_add map key (Some full_path, impl)
+          SMap.add map key (Some full_path, impl)
         else
-          smap_add map key (intf, Some full_path)
+          SMap.add map key (intf, Some full_path)
     | None ->
         if is_interface full_path then
-          smap_add map key (Some full_path, None)
+          SMap.add map key (Some full_path, None)
         else
-          smap_add map key (None, Some full_path)
+          SMap.add map key (None, Some full_path)
   in
 
   (* Add files from all include directories *)
@@ -581,20 +581,20 @@ let enter_namespace
   (working_map: files_for_module_name)
   (sprefix: string)
   (implicit_open:bool) : bool =
-  let found = BU.mk_ref false in
+  let found = mk_ref false in
   let sprefix = sprefix ^ "." in
   let suffix_exists mopt =
     match mopt with
     | None -> false
     | Some (intf, impl) -> is_some intf || is_some impl in
-  smap_iter original_map (fun k _ ->
+  SMap.iter original_map (fun k _ ->
     if Util.starts_with k sprefix then
       let suffix =
         String.substring k (String.length sprefix) (String.length k - String.length sprefix)
       in
 
       begin
-        let suffix_filename = smap_try_find original_map suffix in
+        let suffix_filename = SMap.try_find original_map suffix in
         if implicit_open &&
            suffix_exists suffix_filename
         then let str = suffix_filename |> must |> intf_and_impl_to_string in
@@ -612,8 +612,8 @@ let enter_namespace
              ]
       end;
 
-      let filename = must (smap_try_find original_map k) in
-      smap_add working_map suffix filename;
+      let filename = must (SMap.try_find original_map k) in
+      SMap.add working_map suffix filename;
       found := true
   );
   !found
@@ -648,8 +648,8 @@ let collect_one
     : list dependence &
       bool &
       list dependence
-    =  let deps     : ref (list dependence) = BU.mk_ref [] in
-       let has_inline_for_extraction = BU.mk_ref false in
+    =  let deps     : ref (list dependence) = mk_ref [] in
+       let has_inline_for_extraction = mk_ref false in
 
 
        let mo_roots =
@@ -664,7 +664,7 @@ let collect_one
          P_implicit_open_module_or_namespace (k, lid))
        in
 
-       let working_map = smap_copy original_map in
+       let working_map = SMap.copy original_map in
 
        let set_interface_inlining () =
          if is_interface filename
@@ -738,9 +738,9 @@ let collect_one
          let key = String.lowercase (string_of_id ident) in
          let alias = lowercase_join_longident lid true in
          // Only fully qualified module aliases are allowed.
-         match smap_try_find original_map alias with
+         match SMap.try_find original_map alias with
          | Some deps_of_aliased_module ->
-           smap_add working_map key deps_of_aliased_module;
+           SMap.add working_map key deps_of_aliased_module;
            add_dep deps (dep_edge (lowercase_join_longident lid true) false);
            true
          | None ->
@@ -808,8 +808,8 @@ let collect_one
   end
   else
       //parse the file and traverse the AST to collect parsing data
-      let num_of_toplevelmods = BU.mk_ref 0 in
-      let pd : ref (list parsing_data_elt) = BU.mk_ref [] in
+      let num_of_toplevelmods = mk_ref 0 in
+      let pd : ref (list parsing_data_elt) = mk_ref [] in
 
       let add_to_parsing_data elt =
         if not (List.existsML (fun e -> parsing_data_elt_eq e elt) !pd)
@@ -1241,18 +1241,18 @@ let collect_one
  * map lowercase module names to filenames. *)
 
 // Used by F*.js
-let collect_one_cache : ref (smap (list dependence & list dependence & bool)) =
-  BU.mk_ref (BU.smap_create 0)
+let collect_one_cache : ref (SMap.t (list dependence & list dependence & bool)) =
+  mk_ref (SMap.create 0)
 
-let set_collect_one_cache (cache: smap (list dependence & list dependence & bool)) : unit =
+let set_collect_one_cache (cache: SMap.t (list dependence & list dependence & bool)) : unit =
   collect_one_cache := cache
 
 let dep_graph_copy dep_graph =
     let (Deps g) = dep_graph in
-    Deps (BU.smap_copy g)
+    Deps (SMap.copy g)
 
 let widen_deps friends dep_graph file_system_map widened =
-    let widened = BU.mk_ref widened in
+    let widened = mk_ref widened in
     let (Deps dg) = dep_graph in
     let (Deps dg') = deps_empty() in
     let widen_one deps =
@@ -1265,10 +1265,10 @@ let widen_deps friends dep_graph file_system_map widened =
           FriendImplementation m
         | _ -> d)
     in
-    BU.smap_fold
+    SMap.fold
        dg
        (fun filename dep_node () ->
-          BU.smap_add
+          SMap.add
             dg'
             filename
             ({dep_node with edges=widen_one dep_node.edges; color=White}))
@@ -1483,13 +1483,13 @@ let collect (all_cmd_line_files: list file_name)
    * immutable from there on. *)
   let file_system_map = build_map all_cmd_line_files in
 
-  let interfaces_needing_inlining = BU.mk_ref [] in
+  let interfaces_needing_inlining = mk_ref [] in
   let add_interface_for_inlining l =
     let l = lowercase_module_name l in
     interfaces_needing_inlining := l :: !interfaces_needing_inlining
   in
 
-  let parse_results = BU.smap_create 40 in
+  let parse_results = SMap.create 40 in
 
   (* discover: Do a graph traversal starting from file_name
    *           filling in dep_graph with the dependences *)
@@ -1497,14 +1497,14 @@ let collect (all_cmd_line_files: list file_name)
     if deps_try_find dep_graph file_name = None then
     begin
       let parsing_data, (deps, mo_roots, needs_interface_inlining) =
-        match BU.smap_try_find !collect_one_cache file_name with
+        match SMap.try_find !collect_one_cache file_name with
         | Some cached -> Mk_pd [], cached
         | None ->
           let parsing_data, deps, needs_interface_inlining, additional_roots = collect_one file_system_map file_name get_parsing_data_from_cache in
           parsing_data, (deps, additional_roots, needs_interface_inlining) in
       if needs_interface_inlining
       then add_interface_for_inlining file_name;
-      BU.smap_add parse_results file_name parsing_data;
+      SMap.add parse_results file_name parsing_data;
       let deps =
           let module_name = lowercase_module_name file_name in
           if is_implementation file_name
@@ -1565,7 +1565,7 @@ let collect (all_cmd_line_files: list file_name)
      *   we can consider using mo_files only in the case of
      *   --dep invocations.
      *)
-    let mo_files : ref (list string)  = BU.mk_ref [] in
+    let mo_files : ref (list string)  = mk_ref [] in
 
 
     let rec aux (cycle:list file_name) filename =
@@ -1662,7 +1662,7 @@ let deps_of_modul deps (m:module_name) : list module_name =
          |> BU.dflt []
   in
   m |> String.lowercase
-    |> BU.smap_try_find deps.file_system_map
+    |> SMap.try_find deps.file_system_map
     |> BU.map_option (fun (intf_opt, impl_opt) ->
                       BU.remove_dups (fun x y -> x = y) (aux intf_opt @ aux impl_opt))
     |> BU.dflt []
@@ -1695,7 +1695,7 @@ let print_make (outc : out_channel) deps : unit =
 (* In public interface *)
 let print_raw (outc : out_channel) (deps:deps) =
     let (Deps deps) = deps.dep_graph in
-      smap_fold deps (fun k dep_node out ->
+      SMap.fold deps (fun k dep_node out ->
         BU.format2 "%s -> [\n\t%s\n] " k (List.map dep_to_string dep_node.edges |> String.concat ";\n\t") :: out) []
       |> String.concat ";;\n"
       |> (fun s -> BU.fprint outc "%s\n" [s])
@@ -1711,18 +1711,18 @@ let print_raw (outc : out_channel) (deps:deps) =
 let print_full (outc : out_channel) (deps:deps) : unit =
     let pre_tag = Options.Ext.get "dep_pretag" in
     //let (Mk (deps, file_system_map, all_cmd_line_files, all_files)) = deps in
-    let sort_output_files (orig_output_file_map:BU.smap string) =
-        let order : ref (list string) = BU.mk_ref [] in
-        let remaining_output_files = BU.smap_copy orig_output_file_map in
-        let visited_other_modules = BU.smap_create 41 in
+    let sort_output_files (orig_output_file_map:SMap.t string) =
+        let order : ref (list string) = mk_ref [] in
+        let remaining_output_files = SMap.copy orig_output_file_map in
+        let visited_other_modules = SMap.create 41 in
         let should_visit lc_module_name =
-            Option.isSome (BU.smap_try_find remaining_output_files lc_module_name)
-            || Option.isNone (BU.smap_try_find visited_other_modules lc_module_name)
+            Option.isSome (SMap.try_find remaining_output_files lc_module_name)
+            || Option.isNone (SMap.try_find visited_other_modules lc_module_name)
         in
         let mark_visiting lc_module_name =
-            let ml_file_opt = BU.smap_try_find remaining_output_files lc_module_name in
-            BU.smap_remove remaining_output_files lc_module_name;
-            BU.smap_add visited_other_modules lc_module_name true;
+            let ml_file_opt = SMap.try_find remaining_output_files lc_module_name in
+            SMap.remove remaining_output_files lc_module_name;
+            SMap.add visited_other_modules lc_module_name true;
             ml_file_opt
         in
         let emit_output_file_opt ml_file_opt =
@@ -1755,7 +1755,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
               end;
               aux modules_to_extract
         in
-        let all_extracted_modules = BU.smap_keys orig_output_file_map in
+        let all_extracted_modules = SMap.keys orig_output_file_map in
         aux all_extracted_modules;
         List.rev !order
     in
@@ -1976,30 +1976,30 @@ let print_full (outc : out_channel) (deps:deps) : unit =
            |> Util.sort_with String.compare
     in
     let all_ml_files =
-        let ml_file_map = BU.smap_create 41 in
+        let ml_file_map = SMap.create 41 in
         all_fst_files
         |> List.iter (fun fst_file ->
                        let mname = lowercase_module_name fst_file in
                        if Options.should_extract mname Options.OCaml
-                       then BU.smap_add ml_file_map mname (output_ml_file fst_file));
+                       then SMap.add ml_file_map mname (output_ml_file fst_file));
         sort_output_files ml_file_map
     in
     let all_fs_files =
-        let fs_file_map = BU.smap_create 41 in
+        let fs_file_map = SMap.create 41 in
         all_fst_files
         |> List.iter (fun fst_file ->
                        let mname = lowercase_module_name fst_file in
                        if Options.should_extract mname Options.FSharp
-                       then BU.smap_add fs_file_map mname (output_fs_file fst_file));
+                       then SMap.add fs_file_map mname (output_fs_file fst_file));
         sort_output_files fs_file_map
     in
     let all_krml_files =
-        let krml_file_map = BU.smap_create 41 in
+        let krml_file_map = SMap.create 41 in
         keys
         |> List.iter (fun fst_file ->
                        let mname = lowercase_module_name fst_file in
                        if Options.should_extract mname Options.Krml
-                       then BU.smap_add krml_file_map mname (output_krml_file fst_file));
+                       then SMap.add krml_file_map mname (output_krml_file fst_file));
         sort_output_files krml_file_map
     in
     all_fsti_files

@@ -17,10 +17,10 @@
 *)
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.Syntax
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
-open FStarC
 open FStarC.Ident
 open FStarC.Util
 open FStarC.Const

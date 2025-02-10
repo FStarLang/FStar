@@ -15,14 +15,14 @@
 *)
 
 module FStarC.SMTEncoding.Solver
-open FStar.Pervasives
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
-open FStarC
 open FStarC.SMTEncoding.Z3
 open FStarC.SMTEncoding.Term
 open FStarC.Util
+open FStarC.SMap
 open FStarC.Hints
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Env
@@ -38,10 +38,7 @@ open FStarC.RBSet
 module BU       = FStarC.Util
 module Env      = FStarC.TypeChecker.Env
 module Err      = FStarC.Errors
-module Print    = FStarC.Syntax.Print
 module Syntax   = FStarC.Syntax.Syntax
-module TcUtil   = FStarC.TypeChecker.Util
-module U        = FStarC.Syntax.Util
 module UC       = FStarC.SMTEncoding.UnsatCore
 exception SplitQueryAndRetry
 
@@ -62,10 +59,10 @@ let z3_result_as_replay_result = function
 
 // Hints are stored in this reference as we progress through the file,
 // and written out by calling finalize_hints_db below.
-let src_filename : ref string = BU.mk_ref ""
-let recorded_hints : ref hints = BU.mk_ref []
-let replaying_hints: ref (option hints) = BU.mk_ref None
-let refreshing_hints : ref bool = BU.mk_ref false
+let src_filename : ref string = mk_ref ""
+let recorded_hints : ref hints = mk_ref []
+let replaying_hints: ref (option hints) = mk_ref None
+let refreshing_hints : ref bool = mk_ref false
 
 (****************************************************************************)
 (* Hint databases (public)                                                  *)
@@ -517,7 +514,7 @@ type unique_string_accumulator = {
    extracted in sorted order *)
 let mk_unique_string_accumulator ()
 : unique_string_accumulator
-= let strings = BU.mk_ref [] in
+= let strings = mk_ref [] in
   let add m =
     let ms = !strings in
     if List.contains m ms then ()
@@ -972,8 +969,8 @@ let ask_solver_quake
         then acc
         else fold_nat' f (f acc lo) (lo + 1) hi
     in
-    let best_fuel = BU.mk_ref None in
-    let best_ifuel = BU.mk_ref None in
+    let best_fuel = mk_ref None in
+    let best_ifuel = mk_ref None in
     let maybe_improve (r:ref (option int)) (n:int) : unit =
         match !r with
         | None -> r := Some n
@@ -1074,7 +1071,7 @@ let ask_solver_recover
   if Options.proof_recovery () then (
     let r = ask_solver_quake configs in
     if r.ok then r else (
-      let restarted = BU.mk_ref false in
+      let restarted = mk_ref false in
       let cfg = List.last configs in
 
       Errors.diag cfg.query_range [
@@ -1122,7 +1119,7 @@ let ask_solver_recover
   ) else
     ask_solver_quake configs
 
-let failing_query_ctr : ref int = BU.mk_ref 0
+let failing_query_ctr : ref int = mk_ref 0
 
 let maybe_save_failing_query (env:env_t) (qs:query_settings) : unit =
   (* Save failing query to a clean file if --log_failing_queries. *)
@@ -1276,7 +1273,7 @@ type solver_cfg = {
   record_hints     : bool;
 }
 
-let _last_cfg : ref (option solver_cfg) = BU.mk_ref None
+let _last_cfg : ref (option solver_cfg) = mk_ref None
 
 let get_cfg env : solver_cfg =
     { seed             = Options.z3_seed ()

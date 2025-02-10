@@ -1,7 +1,6 @@
 module FStarC.Hints
 
 open FStarC
-open FStarC
 open FStarC.Effect
 
 (** Hints. *)

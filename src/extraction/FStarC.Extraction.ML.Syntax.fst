@@ -19,7 +19,6 @@
 module FStarC.Extraction.ML.Syntax
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Ident
 open FStarC.Util
@@ -110,7 +109,6 @@ let pop_unit (ts : mltyscheme) : e_tag & mltyscheme =
         else failwith "unexpected: pop_unit: domain was not unit"
     | _ ->
         failwith "unexpected: pop_unit: not a function type"
-module BU = FStarC.Util
 
 let ctor' (n: string) (args: list document) =
   nest 2 (group (parens (flow (break_ 1) (doc_of_string n :: args))))

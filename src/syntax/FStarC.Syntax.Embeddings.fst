@@ -16,9 +16,7 @@
 
 module FStarC.Syntax.Embeddings
 
-open FStar
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Range
@@ -31,15 +29,13 @@ module C     = FStarC.Const
 module Err   = FStarC.Errors
 module Ident = FStarC.Ident
 module PC    = FStarC.Parser.Const
-module Print = FStarC.Syntax.Print
 module S     = FStarC.Syntax.Syntax
 module SS    = FStarC.Syntax.Subst
 module U     = FStarC.Syntax.Util
-module UF    = FStarC.Syntax.Unionfind
 module Z     = FStarC.BigInt
 
+open FStarC.Syntax.Print {}
 open FStarC.Syntax.Embeddings.Base
-module AE = FStarC.Syntax.Embeddings.AppEmb
 
 friend FStar.Pervasives (* To expose norm_step *)
 
@@ -1227,7 +1223,7 @@ let e___range =
         em
         un
         (fun () -> S.t___range)
-        Range.string_of_range
+        show
         (fun () -> ET_app (PC.range_lid |> Ident.string_of_lid, []))
 
 (* This is an odd one. We embed ranges as sealed, but we don't want to use the Sealed.sealed

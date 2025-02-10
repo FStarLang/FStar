@@ -14,9 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Tests.Pars
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Range
 open FStarC.Parser
@@ -33,7 +31,6 @@ module Tc = FStarC.TypeChecker.Tc
 module TcTerm = FStarC.TypeChecker.TcTerm
 module ToSyntax = FStarC.ToSyntax.ToSyntax
 module BU = FStarC.Util
-module D = FStarC.Parser.Driver
 module Rel = FStarC.TypeChecker.Rel
 module NBE = FStarC.TypeChecker.NBE
 

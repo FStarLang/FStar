@@ -15,10 +15,8 @@
 *)
 module FStarC.Tests.Util
 
-open FStar
 open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Errors
 open FStarC.Util

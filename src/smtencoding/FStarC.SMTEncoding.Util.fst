@@ -1,5 +1,5 @@
 ﻿(*
-   Copyright 2008-2014 Microsoft Research
+   Copyright 2008-2025 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,13 +15,13 @@
 *)
 
 module FStarC.SMTEncoding.Util
-open FStarC.Effect
 
 open FStarC
-open FStarC.TypeChecker.Env
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.SMTEncoding.Term
 open FStarC.Ident
+
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst
@@ -62,6 +62,7 @@ let mkDiv = norng mkDiv
 let mkRealDiv = norng mkRealDiv
 let mkMul = norng mkMul
 let mkMod = norng mkMod
+
 let mkNatToBv sz = norng (mkNatToBv sz)
 let mkBvAnd = norng mkBvAnd
 let mkBvXor = norng mkBvXor
@@ -88,7 +89,6 @@ let norng2 f = fun x y -> f x y Range.dummyRange
 let norng3 f = fun x y z -> f x y z Range.dummyRange
 let norng4 f = fun x y z w -> f x y z w Range.dummyRange
 let mk_Term_app  = norng2 mk_Term_app
-let mk_Term_uvar = norng mk_Term_uvar
 let mk_and_l = norng mk_and_l
 let mk_or_l = norng mk_or_l
 let mk_ApplyTT = norng2 mk_ApplyTT

@@ -11,7 +11,6 @@ open FStarC.Syntax.Visit
 
 open FStarC.Class.Show
 
-module List = FStarC.List
 module Err = FStarC.Errors
 
 (* This function really just checks for bad(tm) things happening, the

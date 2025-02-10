@@ -15,7 +15,6 @@
 *)
 module FStarC.Extraction.ML.Modul
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -26,7 +25,6 @@ open FStarC.Extraction.ML.RegEmb
 open FStarC.Extraction.ML.UEnv
 open FStarC.Extraction.ML.Util
 open FStarC.Ident
-open FStar.Pervasives
 open FStarC.Syntax
 
 open FStarC.Syntax.Syntax
@@ -35,13 +33,11 @@ open FStarC.Extraction.ML.Syntax (* Intentionally shadows part of Syntax.Syntax 
 open FStarC.Class.Show
 
 module Term   = FStarC.Extraction.ML.Term
-module MLS    = FStarC.Extraction.ML.Syntax
 module BU     = FStarC.Util
 module S      = FStarC.Syntax.Syntax
 module SS     = FStarC.Syntax.Subst
 module UF     = FStarC.Syntax.Unionfind
 module U      = FStarC.Syntax.Util
-module TC     = FStarC.TypeChecker.Tc
 module N      = FStarC.TypeChecker.Normalize
 module PC     = FStarC.Parser.Const
 module Util   = FStarC.Extraction.ML.Util
@@ -63,15 +59,15 @@ type iface = {
 }
 
 let extension_extractor_table
-  : BU.smap extension_extractor
-  = FStarC.Util.smap_create 20
+  : SMap.t extension_extractor
+  = SMap.create 20
 
 let register_extension_extractor (ext:string) (callback:extension_extractor) =
-  FStarC.Util.smap_add extension_extractor_table ext callback
+  SMap.add extension_extractor_table ext callback
 
 let lookup_extension_extractor (ext:string) =
   (* Try to find a plugin if lookup fails *)
-  let do () = FStarC.Util.smap_try_find extension_extractor_table ext in
+  let do () = SMap.try_find extension_extractor_table ext in
   match do () with
   | None ->
     if Plugins.autoload_plugin ext

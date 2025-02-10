@@ -18,7 +18,6 @@
 
 module FStarC.TypeChecker.NBETerm
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
@@ -27,7 +26,6 @@ open FStarC.VConfig
 open FStar.Char
 
 module S = FStarC.Syntax.Syntax
-module U = FStarC.Syntax.Util
 module Z = FStarC.BigInt
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 open FStarC.Class.Show

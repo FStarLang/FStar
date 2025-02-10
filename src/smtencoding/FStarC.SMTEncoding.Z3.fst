@@ -16,7 +16,6 @@
 module FStarC.SMTEncoding.Z3
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
@@ -30,8 +29,8 @@ module BU = FStarC.Util
 (****************************************************************************)
 
 (* We only warn once about these things *)
-let _already_warned_solver_mismatch : ref bool = BU.mk_ref false
-let _already_warned_version_mismatch : ref bool = BU.mk_ref false
+let _already_warned_solver_mismatch : ref bool = mk_ref false
+let _already_warned_version_mismatch : ref bool = mk_ref false
 
 type label = string
 
@@ -53,11 +52,11 @@ let status_string_and_errors s =
 
 
 let query_logging =
-    let query_number = BU.mk_ref 0 in
-    let log_file_opt : ref (option (out_channel & string)) = BU.mk_ref None in
-    let used_file_names : ref (list (string & int)) = BU.mk_ref [] in
-    let current_module_name : ref (option string) = BU.mk_ref None in
-    let current_file_name : ref (option string) = BU.mk_ref None in
+    let query_number = mk_ref 0 in
+    let log_file_opt : ref (option (out_channel & string)) = mk_ref None in
+    let used_file_names : ref (list (string & int)) = mk_ref [] in
+    let current_module_name : ref (option string) = mk_ref None in
+    let current_file_name : ref (option string) = mk_ref None in
     let set_module_name n = current_module_name := Some n in
     let get_module_name () =
         match !current_module_name with
@@ -217,7 +216,7 @@ let new_z3proc (id:string) (cmd_and_args : string & list string) : BU.proc =
     proc
 
 let new_z3proc_with_id =
-    let ctr = BU.mk_ref (-1) in
+    let ctr = mk_ref (-1) in
     (fun cmd_and_args ->
       let p = new_z3proc (BU.format1 "z3-bg-%s" (incr ctr; !ctr |> string_of_int)) cmd_and_args in
       p)
@@ -236,10 +235,10 @@ type bgproc = {
    we have asked the z3 process something
  *)
 let bg_z3_proc =
-    let the_z3proc = BU.mk_ref None in
-    let the_z3proc_params = BU.mk_ref (Some ("", [""])) in
-    let the_z3proc_ask_count = BU.mk_ref 0 in
-    let the_z3proc_version = BU.mk_ref "" in
+    let the_z3proc = mk_ref None in
+    let the_z3proc_params = mk_ref (Some ("", [""])) in
+    let the_z3proc_ask_count = mk_ref 0 in
+    let the_z3proc_version = mk_ref "" in
     // NOTE: We keep track of the version and restart on changes
     // just to be safe: the executable name in the_z3proc_params should
     // be enough to distinguish between the different executables.
@@ -287,7 +286,7 @@ let bg_z3_proc =
         make_new_z3_proc next_params
     in
     let x : list unit = [] in
-    BU.mk_ref ({ask = BU.with_monitor x ask;
+    mk_ref ({ask = BU.with_monitor x ask;
                 refresh = BU.with_monitor x refresh;
                 restart = BU.with_monitor x restart;
                 version = (fun () -> !the_z3proc_version);
@@ -442,7 +441,7 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
                    | Some (lbl, msg, r) -> [(lbl, msg, r)])
     in
     let statistics =
-        let statistics : z3statistics = BU.smap_create 0 in
+        let statistics : z3statistics = SMap.create 0 in
         match smt_output.smt_statistics with
         | None -> statistics
         | Some lines ->
@@ -455,7 +454,7 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
                let key = List.hd tokens in
                let ltok = List.nth tokens ((List.length tokens) - 1) in
                let value = if BU.ends_with ltok ")" then (BU.substring ltok 0 ((String.length ltok) - 1)) else ltok in
-               BU.smap_add statistics key value
+               SMap.add statistics key value
             | _ -> ()
           in
           List.iter parse_line lines;
@@ -665,8 +664,8 @@ let cache_hit
     if Options.use_hints() && Options.use_hint_hashes() then
         match qhash with
         | Some (x) when qhash = cache ->
-            let stats : z3statistics = BU.smap_create 0 in
-            smap_add stats "fstar_cache_hit" "1";
+            let stats : z3statistics = SMap.create 0 in
+            SMap.add stats "fstar_cache_hit" "1";
             let result = {
               z3result_status = UNSAT None;
               z3result_time = 0;

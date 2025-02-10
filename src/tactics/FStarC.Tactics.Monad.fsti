@@ -15,7 +15,6 @@
 *)
 module FStarC.Tactics.Monad
 open FStarC
-open FStar.Pervasives
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.Tactics.Result
@@ -24,7 +23,6 @@ open FStarC.Class.Monad
 open FStarC.Errors.Msg
 
 module Range = FStarC.Range
-module BU    = FStarC.Util
 module O     = FStarC.Options
 
 (* Type of tactics *)

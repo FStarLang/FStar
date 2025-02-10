@@ -16,7 +16,6 @@
 
 module FStarC.TypeChecker.Generalize
 
-open FStar open FStarC
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 

@@ -16,7 +16,6 @@
 module FStarC.StringBuffer
 
 open FStarC.Effect
-open FStarC.BigInt
 
 type t
 

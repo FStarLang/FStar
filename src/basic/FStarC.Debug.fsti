@@ -16,7 +16,6 @@
 
 module FStarC.Debug
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 

@@ -15,10 +15,8 @@
 *)
 
 module FStarC.Syntax.Print
-open FStar.Pervasives
 open FStarC.Effect
 
-open FStar open FStarC
 open FStarC
 open FStarC.Range
 open FStarC.Syntax
@@ -31,7 +29,6 @@ open FStarC.Json
 
 module Errors     = FStarC.Errors
 module U          = FStarC.Util
-module A          = FStarC.Parser.AST
 module Unionfind  = FStarC.Syntax.Unionfind
 module C          = FStarC.Parser.Const
 module SU         = FStarC.Syntax.Util

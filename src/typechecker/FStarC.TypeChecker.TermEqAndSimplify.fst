@@ -1,8 +1,7 @@
 module FStarC.TypeChecker.TermEqAndSimplify
+
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
-open FStarC
 open FStarC.Util
 open FStarC.Syntax
 open FStarC.Const
@@ -10,6 +9,8 @@ open FStarC.Ident
 open FStarC.TypeChecker.Env
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Util
+open FStarC.Syntax.Print {}
+
 module SS = FStarC.Syntax.Subst
 module U = FStarC.Syntax.Util
 module PC = FStarC.Parser.Const

@@ -14,15 +14,14 @@
    limitations under the License.
 *)
 module FStarC.Extraction.ML.Util
-open Prims
-open FStar.Pervasives
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
-open FStarC
 open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
+open FStarC.Syntax.Print {}
 open FStarC.Syntax.Embeddings
 open FStarC.Extraction.ML
 open FStarC.Extraction.ML.Syntax
@@ -30,13 +29,8 @@ open FStarC.Const
 open FStarC.Ident
 open FStarC.Errors
 module BU = FStarC.Util
-module U = FStarC.Syntax.Util
 module UEnv = FStarC.Extraction.ML.UEnv
-module PC = FStarC.Parser.Const
 module Range = FStarC.Range
-module S = FStarC.Syntax.Syntax
-module N = FStarC.TypeChecker.Normalize
-module Env = FStarC.TypeChecker.Env
 
 open FStarC.Class.Show
 

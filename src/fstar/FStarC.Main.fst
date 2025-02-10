@@ -28,9 +28,6 @@ open FStarC.Class.Show
 
 module E = FStarC.Errors
 module UF = FStarC.Syntax.Unionfind
-module RE = FStarC.Reflection.V2.Embeddings
-
-let _ = Version.dummy ()
 
 (* These modules only mentioned to put them in the dep graph
 and hence compile and link them in. They do not export anything,
@@ -38,6 +35,8 @@ instead they register primitive steps in the normalizer during
 initialization. *)
 open FStarC.Reflection.V1.Interpreter {}
 open FStarC.Reflection.V2.Interpreter {}
+(* Same, except that it only defines some types for userspace to refer to. *)
+open FStarC.Tactics.Types.Reflection {}
 
 (* process_args:  parses command line arguments, setting FStarC.Options *)
 (*                returns an error status and list of filenames        *)
@@ -106,7 +105,7 @@ let load_native_tactics () =
 (* Need to keep names of input files for a second pass when prettyprinting *)
 (* This reference is set once in `go` and read in `main` if the print or *)
 (* print_in_place options are passed *)
-let fstar_files: ref (option (list string)) = Util.mk_ref None
+let fstar_files: ref (option (list string)) = mk_ref None
 
 (* This is used to print a backtrace when F* is interrupted by SIGINT *)
 let set_error_trap () =

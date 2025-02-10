@@ -14,9 +14,6 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Encode
-open Prims
-open FStar open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 open FStarC
@@ -607,7 +604,7 @@ let encode_top_level_vals env bindings quals =
 
 exception Let_rec_unencodeable
 
-let copy_env (en:env_t) = { en with global_cache = BU.smap_copy en.global_cache}  //Make a copy of all the mutable state of env_t, central place for keeping track of mutable fields in env_t
+let copy_env (en:env_t) = { en with global_cache = SMap.copy en.global_cache}  //Make a copy of all the mutable state of env_t, central place for keeping track of mutable fields in env_t
 
 let encode_top_level_let :
     env_t -> (bool & list letbinding) -> list qualifier -> decls_t & env_t =
@@ -1832,14 +1829,14 @@ let encode_labels (labs:list error_label) =
     prefix, suffix
 
 (* caching encodings of the environment and the top-level API to the encoding *)
-let last_env : ref (list env_t) = BU.mk_ref []
-let init_env tcenv = last_env := [{bvar_bindings=BU.psmap_empty ();
-                                   fvar_bindings=(BU.psmap_empty (), []);
+let last_env : ref (list env_t) = mk_ref []
+let init_env tcenv = last_env := [{bvar_bindings=PSMap.empty ();
+                                   fvar_bindings=(PSMap.empty (), []);
                                    tcenv=tcenv; warn=true; depth=0;
                                    nolabels=false; use_zfuel_name=false;
                                    encode_non_total_function_typ=true; encoding_quantifier=false;
                                    current_module_name=Env.current_module tcenv |> Ident.string_of_lid;
-                                   global_cache = BU.smap_create 100}]
+                                   global_cache = SMap.create 100}]
 let get_env cmn tcenv = match !last_env with
     | [] -> failwith "No env; call init first!"
     | e::_ -> {e with tcenv=tcenv; current_module_name=Ident.string_of_lid cmn}
@@ -1914,11 +1911,11 @@ let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
   decls |> List.collect (fun elt ->
     if elt.key = None then [elt]  //not meant to be hashconsed, keep it
     else (
-      match BU.smap_try_find env.global_cache (elt.key |> BU.must) with
+      match SMap.try_find env.global_cache (elt.key |> BU.must) with
       | Some cache_elt -> [Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial  //hit, retain a_names from the hit entry
                                                                                              //AND drop elt
       | None ->  //no hit, update cache and retain elt
-        BU.smap_add env.global_cache (elt.key |> BU.must) elt;
+        SMap.add env.global_cache (elt.key |> BU.must) elt;
         [elt]
     )
   )

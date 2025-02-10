@@ -27,6 +27,7 @@ open FStar.Stubs.Reflection.V2.Builtins
 open FStar.Tactics.Effect
 open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.Types
+open FStar.Stubs.Tactics.Types.Reflection
 include FStar.Stubs.Tactics.Unseal
 
 val fixup_range : Range.range -> TacRO Range.range

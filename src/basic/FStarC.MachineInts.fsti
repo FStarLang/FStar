@@ -1,6 +1,5 @@
 module FStarC.MachineInts
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 

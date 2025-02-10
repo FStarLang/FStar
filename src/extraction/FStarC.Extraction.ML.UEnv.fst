@@ -36,16 +36,16 @@ module FStarC.Extraction.ML.UEnv
     kinds of concerns this addresses.
  *)
 
-open FStar.Pervasives
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
-open FStarC
 open FStarC.Util
 open FStarC.Ident
 open FStarC.Extraction.ML.Syntax
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
+open FStarC.Syntax.Print {}
 open FStarC.TypeChecker
 module U  = FStarC.Syntax.Util
 module BU = FStarC.Util
@@ -98,14 +98,14 @@ let tydef_mlpath (td : tydef) : mlpath = td.tydef_mlmodule_name, td.tydef_name
 type uenv = {
   env_tcenv:TypeChecker.Env.env;
   env_bindings:list binding;
-  env_mlident_map:psmap mlident;
+  env_mlident_map:PSMap.t mlident;
   env_remove_typars:RemoveUnusedParameters.env_t;
-  mlpath_of_lid:psmap mlpath;
-  env_fieldname_map:psmap mlident;
-  mlpath_of_fieldname:psmap mlpath;
+  mlpath_of_lid:PSMap.t mlpath;
+  env_fieldname_map:PSMap.t mlident;
+  mlpath_of_fieldname:PSMap.t mlpath;
   tydefs:list tydef;
   type_names:list (fv&mlpath);
-  tydef_declarations:psmap bool;
+  tydef_declarations:PSMap.t bool;
   currentModule: mlpath // needed to properly translate the definitions in the current file
 }
 
@@ -135,7 +135,7 @@ let print_mlpath_map (g:uenv) =
       String.concat "." (fst mlp) ^ "." ^ (snd mlp)
     in
     let entries =
-      BU.psmap_fold g.mlpath_of_lid (fun key value entries ->
+      PSMap.fold g.mlpath_of_lid (fun key value entries ->
         BU.format2 "%s -> %s" key (string_of_mlpath value) :: entries) []
     in
     String.concat "\n" entries
@@ -228,13 +228,13 @@ let lookup_tydef (env:uenv) ((module_name, ty_name):mlpath)
         else None)
 
 let has_tydef_declaration (u:uenv) (l:lid) =
-  match BU.psmap_try_find u.tydef_declarations (Ident.string_of_lid l) with
+  match PSMap.try_find u.tydef_declarations (Ident.string_of_lid l) with
   | None -> false
   | Some b -> b
 
 (** Given an F* qualified name, find its ML counterpart *)
 let mlpath_of_lident (g:uenv) (x:lident) : mlpath =
-    match BU.psmap_try_find g.mlpath_of_lid (string_of_lid x) with
+    match PSMap.try_find g.mlpath_of_lid (string_of_lid x) with
     | None ->
       debug g (fun _ ->
         BU.print1 "Identifier not found: %s" (string_of_lid x);
@@ -289,7 +289,7 @@ let no_fstar_stubs (p : mlpath) : mlpath =
  *)
 let lookup_record_field_name g (type_name, fn) =
     let key = Ident.lid_of_ids (ids_of_lid type_name @ [fn]) in
-    match BU.psmap_try_find g.mlpath_of_fieldname (string_of_lid key) with
+    match PSMap.try_find g.mlpath_of_fieldname (string_of_lid key) with
     | None -> failwith ("Field name not found: " ^ string_of_lid key)
     | Some mlp -> 
       let ns, id = mlp in
@@ -305,14 +305,14 @@ let lookup_record_field_name g (type_name, fn) =
     with those keywords
   *)
 let initial_mlident_map =
-    let map = BU.mk_ref None in
+    let map = mk_ref None in
     fun () ->
       match !map with
       | Some m -> m
       | None ->
         let m =
           List.fold_right
-            (fun x m -> BU.psmap_add m x "")
+            (fun x m -> PSMap.add m x "")
             (match Options.codegen() with
               | Some Options.FSharp -> fsharpkeywords
               | Some Options.OCaml
@@ -322,7 +322,7 @@ let initial_mlident_map =
               | Some Options.Krml -> krml_keywords
               | Some Options.Extension -> []  // TODO
               | None -> [])
-          (BU.psmap_empty())
+          (PSMap.empty())
         in
         map := Some m;
         m
@@ -384,10 +384,10 @@ let root_name_of_bv (x:bv): mlident =
 let find_uniq ml_ident_map root_name is_local_type_variable =
   let rec aux i root_name =
     let target_mlident = if i = 0 then root_name else root_name ^ (string_of_int i) in
-    match BU.psmap_try_find ml_ident_map target_mlident with
+    match PSMap.try_find ml_ident_map target_mlident with
       | Some x -> aux (i+1) root_name
       | None ->
-        let map = BU.psmap_add ml_ident_map target_mlident "" in
+        let map = PSMap.add ml_ident_map target_mlident "" in
         target_mlident, map
   in
   let mlident = rename_conventional root_name is_local_type_variable in
@@ -469,7 +469,7 @@ let new_mlpath_of_lident (g:uenv) (x : lident) : mlpath & uenv =
     | _ -> mlp
   in
   let g = { g with
-    mlpath_of_lid = BU.psmap_add g.mlpath_of_lid (string_of_lid x) mlp
+    mlpath_of_lid = PSMap.add g.mlpath_of_lid (string_of_lid x) mlp
   } in
   mlp, g
 
@@ -517,7 +517,7 @@ let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool)
     {g with env_bindings=gamma; env_mlident_map = mlident_map; env_tcenv=tcenv}, mlident, exp_binding
 
 let burn_name (g:uenv) (i:mlident) : uenv =
-  { g with env_mlident_map = BU.psmap_add g.env_mlident_map i "" }
+  { g with env_mlident_map = PSMap.add g.env_mlident_map i "" }
 
 (** Generating a fresh local term variable *)
 let new_mlident (g:uenv)
@@ -561,7 +561,7 @@ let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool)
         let eff, t_x = if add_unit then pop_unit t_x else E_PURE, t_x in
         let exp_binding = {exp_b_name=mlsymbol; exp_b_expr=mly; exp_b_tscheme=t_x; exp_b_eff=eff } in
         let gamma = Fv(x, exp_binding)::g.env_bindings in
-        let mlident_map = BU.psmap_add g.env_mlident_map mlsymbol "" in
+        let mlident_map = PSMap.add g.env_mlident_map mlsymbol "" in
         {g with env_bindings=gamma; env_mlident_map=mlident_map}, mlsymbol, exp_binding
     else failwith (BU.format1 "freevars found (%s)" (mltyscheme_to_string t_x))
 
@@ -596,7 +596,7 @@ let extend_tydef (g:uenv) (fv:fv) (ts:mltyscheme) (meta:FStarC.Extraction.ML.Syn
     {g with tydefs=tydef::g.tydefs; type_names=(fv, name)::g.type_names}
 
 let extend_with_tydef_declaration u l =
-  { u with tydef_declarations = BU.psmap_add u.tydef_declarations (Ident.string_of_lid l) true }
+  { u with tydef_declarations = PSMap.add u.tydef_declarations (Ident.string_of_lid l) true }
 
 (** Extend with [fv], the identifer for an F* inductive type *)
 let extend_type_name (g:uenv) (fv:fv) : mlpath & uenv =
@@ -649,7 +649,7 @@ let extend_record_field_name g (type_name, fn) =
     let mlp = ns, name in
     let mlp = no_fstar_stubs mlp in
     let g = { g with env_fieldname_map = fieldname_map;
-                     mlpath_of_fieldname = BU.psmap_add g.mlpath_of_fieldname (string_of_lid key) mlp }
+                     mlpath_of_fieldname = PSMap.add g.mlpath_of_fieldname (string_of_lid key) mlp }
     in
     name, g
 
@@ -683,12 +683,12 @@ let new_uenv (e:TypeChecker.Env.env)
       env_bindings =[];
       env_mlident_map=initial_mlident_map ();
       env_remove_typars=RemoveUnusedParameters.initial_env;
-      mlpath_of_lid = BU.psmap_empty();
+      mlpath_of_lid = PSMap.empty();
       env_fieldname_map=initial_mlident_map ();
-      mlpath_of_fieldname = BU.psmap_empty();
+      mlpath_of_fieldname = PSMap.empty();
       tydefs =[];
       type_names=[];
-      tydef_declarations = BU.psmap_empty();
+      tydef_declarations = PSMap.empty();
       currentModule = ([], "");
     } in
     (* We handle [failwith] specially, extracting it to OCaml's 'failwith'

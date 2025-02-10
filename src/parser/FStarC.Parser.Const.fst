@@ -15,18 +15,14 @@
 *)
 module FStarC.Parser.Const
 
-open FStar.String
 open FStarC
 open FStarC.Effect
 open FStarC.Util
 open FStarC.Ident
-open FStarC.Range
+open FStarC.Range.Type
 open FStarC.Const
 open FStarC.List
 module U = FStarC.Util
-module Options = FStarC.Options
-module List = FStarC.List
-
 include FStarC.Parser.Const.Tuples
 
 let p2l l = lid_of_path l dummyRange
@@ -382,7 +378,7 @@ let desugar_of_variant_record_lid = psconst "desugar_of_variant_record"
 let well_founded_relation_lid = p2l ["FStar"; "WellFounded"; "well_founded_relation"]
 
 let gen_reset =
-    let x = U.mk_ref 0 in
+    let x = mk_ref 0 in
     let gen () = U.incr x; U.read x in
     let reset () = U.write x 0 in
     gen, reset

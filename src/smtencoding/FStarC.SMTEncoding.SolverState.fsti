@@ -33,12 +33,10 @@ module FStarC.SMTEncoding.SolverState
   sent to the solver and a call to flush returns all the decls to be sent.
 *)
 open FStarC.Effect
-open FStar open FStarC
 open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
 open FStarC.Util
-module BU = FStarC.Util
 module U = FStarC.SMTEncoding.UnsatCore
 type using_facts_from_setting = list (list string & bool)
 

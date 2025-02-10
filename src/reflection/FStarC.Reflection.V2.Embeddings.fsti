@@ -15,14 +15,12 @@
 *)
 module FStarC.Reflection.V2.Embeddings
 
-open FStar open FStarC
 open FStarC
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStar.Order
 open FStarC.TypeChecker.Env
 open FStarC.Reflection.V2.Data
-module O = FStarC.Options
 module RD = FStarC.Reflection.V2.Data
 
 (* FIXME: create a Reflection.Types module internally? *)

@@ -14,11 +14,9 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Subst
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 
-open FStar open FStarC
 open FStarC
 open FStarC.Range
 open FStarC.Syntax
@@ -26,7 +24,6 @@ open FStarC.Syntax.Syntax
 open FStarC.Util
 open FStarC.Ident
 
-module Err = FStarC.Errors
 module U = FStarC.Util
 module S = FStarC.Syntax.Syntax
 

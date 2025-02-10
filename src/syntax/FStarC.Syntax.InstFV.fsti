@@ -14,9 +14,11 @@
    limitations under the License.
 *)
 module FStarC.Syntax.InstFV
+
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
+
 type inst_t = list (lident & universes)
 val inst: (term -> fv -> term) -> term -> term
 val inst_binders: (term -> fv -> term) -> binders -> binders

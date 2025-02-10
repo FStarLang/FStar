@@ -79,7 +79,7 @@ let with_captured_errors env sigint_handler f =
 
 type env_t = TcEnv.env
 
-let repl_current_qid : ref (option string) = Util.mk_ref None // For messages
+let repl_current_qid : ref (option string) = mk_ref None // For messages
 
 (** Check whether users can issue further ``pop`` commands. **)
 let nothing_left_to_pop st =
@@ -453,10 +453,10 @@ let sig_of_fstar_option name typ =
   | Some arg_sig -> flag ^ " " ^ arg_sig
 
 let fstar_options_list_cache =
-  let defaults = Util.smap_of_list Options.defaults in
+  let defaults = SMap.of_list Options.defaults in
   Options.all_specs_with_types
   |> List.filter_map (fun (_shortname, name, typ, doc) ->
-       Util.smap_try_find defaults name // Keep only options with a default value
+       SMap.try_find defaults name // Keep only options with a default value
        |> Util.map_option (fun default_value ->
              { opt_name = name;
                opt_sig = sig_of_fstar_option name typ;
@@ -472,8 +472,8 @@ let fstar_options_list_cache =
                        (String.lowercase (o2.opt_name)))
 
 let fstar_options_map_cache =
-  let cache = Util.smap_create 50 in
-  List.iter (fun opt -> Util.smap_add cache opt.opt_name opt) fstar_options_list_cache;
+  let cache = SMap.create 50 in
+  List.iter (fun opt -> SMap.add cache opt.opt_name opt) fstar_options_list_cache;
   cache
 
 let update_option opt =
@@ -770,7 +770,7 @@ let run_symbol_lookup st symbol pos_opt requested_info (symbol_range_opt:option 
 
 let run_option_lookup opt_name =
   let _, trimmed_name = trim_option_name opt_name in
-  match Util.smap_try_find fstar_options_map_cache trimmed_name with
+  match SMap.try_find fstar_options_map_cache trimmed_name with
   | None -> Inl ("Unknown option:" ^ opt_name)
   | Some opt -> Inr ("option", alist_of_fstar_option (update_option opt))
 
@@ -970,8 +970,8 @@ type search_candidate = { sc_lid: lid; sc_typ:
                           sc_fvars: ref (option (RBSet.t lid)) }
 
 let sc_of_lid lid = { sc_lid = lid;
-                      sc_typ = Util.mk_ref None;
-                      sc_fvars = Util.mk_ref None }
+                      sc_typ = mk_ref None;
+                      sc_fvars = mk_ref None }
 
 let sc_typ tcenv sc = // Memoized version of sc_typ
    match !sc.sc_typ with
@@ -1212,7 +1212,7 @@ let rec go st : int =
   | Inr exitcode -> exitcode
 
 let interactive_error_handler = // No printing here — collect everything for future use
-  let issues : ref (list issue) = Util.mk_ref [] in
+  let issues : ref (list issue) = mk_ref [] in
   let add_one (e: issue) =
     let e = { e with issue_range = FStarC.Errors.fixup_issue_range e.issue_range } in
     issues := e :: !issues

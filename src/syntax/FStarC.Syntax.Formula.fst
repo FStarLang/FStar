@@ -15,12 +15,9 @@
 *)
 module FStarC.Syntax.Formula
 
-open Prims
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 
-open FStar open FStarC
 open FStarC
 open FStarC.Ident
 open FStarC.Syntax

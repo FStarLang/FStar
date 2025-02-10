@@ -17,7 +17,6 @@
 module FStarC.SMTEncoding.ErrorReporting
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.BaseTypes
 open FStarC.Util
@@ -36,7 +35,7 @@ type msg = string & Range.range
 type ranges = list (option string & Range.range)
 
 //decorate a term with an error label
-let __ctr = BU.mk_ref 0
+let __ctr = mk_ref 0
 
 let fresh_label : Errors.error_message -> Range.range -> term -> label & term =
     fun message range t ->

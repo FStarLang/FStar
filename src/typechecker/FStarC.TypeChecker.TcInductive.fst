@@ -16,10 +16,8 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.TcInductive
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Errors
 open FStarC.TypeChecker
@@ -41,7 +39,6 @@ module TcUtil = FStarC.TypeChecker.Util
 module Gen = FStarC.TypeChecker.Generalize
 module BU = FStarC.Util //basic util
 module U  = FStarC.Syntax.Util
-module PP = FStarC.Syntax.Print
 module C  = FStarC.Parser.Const
 
 open FStarC.Class.Show

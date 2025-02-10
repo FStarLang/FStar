@@ -18,7 +18,6 @@ module FStarC.Extraction.ML.RegEmb
 (* This module handles registering plugins and generating
 embeddings for their types. *)
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -28,19 +27,15 @@ open FStarC.Extraction.ML.UEnv
 open FStarC.Syntax.Syntax
 
 module BU    = FStarC.Util
-module Code  = FStarC.Extraction.ML.Code
 module EMB   = FStarC.Syntax.Embeddings
 module Env   = FStarC.TypeChecker.Env
 module N     = FStarC.TypeChecker.Normalize
-module NBET  = FStarC.TypeChecker.NBETerm
 module PC    = FStarC.Parser.Const
 module Print = FStarC.Syntax.Print
 module RC    = FStarC.Reflection.V2.Constants
 module S     = FStarC.Syntax.Syntax
 module SS    = FStarC.Syntax.Subst
-module Term  = FStarC.Extraction.ML.Term
 module U     = FStarC.Syntax.Util
-module Util  = FStarC.Extraction.ML.Util
 
 open FStarC.Class.Show
 open FStarC.Class.Tagged
@@ -127,7 +122,7 @@ let rec pats_to_list_pat (vs : list mlpattern) : mlpattern =
 (*** / ML syntax helpers ***)
 
 let fresh : string -> string =
-  let r = BU.mk_ref 0 in
+  let r = mk_ref 0 in
   fun s ->
     let v = !r in
     r := v+1;
@@ -208,7 +203,7 @@ let builtin_embeddings : list (Ident.lident & embedding_data) =
 
 let dbg_plugin = Debug.get_toggle "Plugins"
 
-let local_fv_embeddings : ref (list (Ident.lident & embedding_data)) = BU.mk_ref []
+let local_fv_embeddings : ref (list (Ident.lident & embedding_data)) = mk_ref []
 let register_embedding (l: Ident.lident) (d: embedding_data) : unit =
   if !dbg_plugin then
     BU.print1 "Registering local embedding for %s\n" (Ident.string_of_lid l);
@@ -589,7 +584,7 @@ let mk_unembed
     (record_fields : option (list mlpath))    // if this type is a record, these are the (extracted) field names
     (ctors: list sigelt)                      // constructors of the inductive
 : mlexpr
-= let e_branches : ref (list mlbranch) = BU.mk_ref [] in
+= let e_branches : ref (list mlbranch) = mk_ref [] in
   let arg_v = fresh "tm" in
   ctors |> List.iter (fun ctor ->
     match ctor.sigel with
@@ -640,7 +635,7 @@ let mk_embed
     (record_fields : option (list mlpath))    // if this type is a record, these are the (extracted) field names
     (ctors: list sigelt)                      // constructors of the inductive
 : mlexpr
-= let e_branches : ref (list mlbranch) = BU.mk_ref [] in
+= let e_branches : ref (list mlbranch) = mk_ref [] in
   let arg_v = fresh "tm" in
   ctors |> List.iter (fun ctor ->
     match ctor.sigel with

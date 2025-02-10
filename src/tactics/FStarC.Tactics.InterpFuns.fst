@@ -30,14 +30,9 @@ open FStarC.Syntax.Embeddings
 open FStarC.Tactics.Native
 open FStarC.Tactics.Monad
 
-module S     = FStarC.Syntax.Syntax
-module SS    = FStarC.Syntax.Subst
 module PC    = FStarC.Parser.Const
 module BU    = FStarC.Util
-module Print = FStarC.Syntax.Print
-module Cfg   = FStarC.TypeChecker.Cfg
 module E     = FStarC.Tactics.Embedding
-module NBETerm = FStarC.TypeChecker.NBETerm
 module NBET    = FStarC.TypeChecker.NBETerm
 module PO    = FStarC.TypeChecker.Primops
 

@@ -29,7 +29,6 @@ if [[ -z "$FSTAR_COMMITDATE" ]] ; then
    # NB: ^ has to be in-sync with src-install.sh
 fi
 
-echo "let dummy () = ();;"
 echo "FStarC_Options._version := \"$FSTAR_VERSION\";;"
 echo "FStarC_Options._platform := \"$PLATFORM\";;"
 echo "FStarC_Options._compiler := \"$COMPILER\";;"

@@ -1,4 +1,5 @@
 module U = FStarC_Util
+open FStarC_SMap
 open FStarC_Errors
 open FStarC_Syntax_Syntax
 open Lexing
@@ -30,8 +31,6 @@ let setLexbufPos filename lexbuf line col =
     pos_bol  = 0;
     pos_lnum = line }
 
-module Path = BatPathGen.OfString
-
 let find_file filename =
   match FStarC_Find.find_file filename with
     | Some s ->
@@ -39,13 +38,13 @@ let find_file filename =
     | None ->
       raise_error_text FStarC_Range.dummyRange Fatal_ModuleOrFileNotFound (U.format1 "Unable to find file: %s\n" filename)
 
-let vfs_entries : (U.time_of_day * string) U.smap = U.smap_create (Z.of_int 1)
+let vfs_entries : (U.time_of_day * string) smap = smap_create (Z.of_int 1)
 
 let read_vfs_entry fname =
-  U.smap_try_find vfs_entries (U.normalize_file_path fname)
+  smap_try_find vfs_entries (U.normalize_file_path fname)
 
 let add_vfs_entry fname contents =
-  U.smap_add vfs_entries (U.normalize_file_path fname) (U.get_time_of_day (), contents)
+  smap_add vfs_entries (U.normalize_file_path fname) (U.get_time_of_day (), contents)
 
 let get_file_last_modification_time filename =
   match read_vfs_entry filename with
@@ -116,9 +115,7 @@ type parse_result =
     | Term of FStarC_Parser_AST.term
     | ParseError of parse_error
 
-module BU = FStarC_Util
 module Range = FStarC_Range
-module MHL = MenhirLib.Convert
 
 let range_of_positions filename start fin = 
   let start_pos = FStarC_Parser_Util.pos_of_lexpos start in

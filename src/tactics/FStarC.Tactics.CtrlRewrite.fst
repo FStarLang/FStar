@@ -32,13 +32,12 @@ open FStarC.Tactics.Common
 open FStarC.Syntax.Syntax
 open FStarC.Class.Show
 open FStarC.Class.Monad
+open FStarC.Syntax.Print {}
 
-module Print  = FStarC.Syntax.Print
 module BU     = FStarC.Util
 module S      = FStarC.Syntax.Syntax
 module U      = FStarC.Syntax.Util
 module SS     = FStarC.Syntax.Subst
-module Z      = FStarC.BigInt
 module Env    = FStarC.TypeChecker.Env
 module TcComm = FStarC.TypeChecker.Common
 module N      = FStarC.TypeChecker.Normalize

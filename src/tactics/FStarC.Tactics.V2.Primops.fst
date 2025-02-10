@@ -41,26 +41,13 @@ open FStarC.Tactics.InterpFuns
 open FStarC.Class.Show
 open FStarC.Class.Monad
 
-module BU      = FStarC.Util
-module Cfg     = FStarC.TypeChecker.Cfg
 module E       = FStarC.Tactics.Embedding
-module Env     = FStarC.TypeChecker.Env
-module Err     = FStarC.Errors
-module NBE     = FStarC.TypeChecker.NBE
 module NBET    = FStarC.TypeChecker.NBETerm
-module N       = FStarC.TypeChecker.Normalize
 module NRE     = FStarC.Reflection.V2.NBEEmbeddings
 module PC      = FStarC.Parser.Const
-module PO      = FStarC.TypeChecker.Primops
-module Print   = FStarC.Syntax.Print
 module RE      = FStarC.Reflection.V2.Embeddings
 module S       = FStarC.Syntax.Syntax
-module SS      = FStarC.Syntax.Subst
-module TcComm  = FStarC.TypeChecker.Common
-module TcRel   = FStarC.TypeChecker.Rel
-module TcTerm  = FStarC.TypeChecker.TcTerm
 module TI      = FStarC.Tactics.Interpreter
-module U       = FStarC.Syntax.Util
 
 let solve (#a:Type) {| ev : a |} : Tot a = ev
 

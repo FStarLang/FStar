@@ -15,12 +15,10 @@
    limitations under the License.
 *)
 module FStarC.Extraction.ML.Modul
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Extraction.ML.Syntax
 open FStarC.Extraction.ML.UEnv
-module S = FStarC.Syntax.Syntax
 
 val iface : Type0
 

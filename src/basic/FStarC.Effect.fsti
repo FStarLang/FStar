@@ -46,8 +46,8 @@ val (!) (#a:Type) (r:ref a)
 val (:=) (#a:Type) (r:ref a) (x:a)
   : ML unit
 
-val alloc (#a:Type) (x:a)
-  : ML (ref a)
+val alloc (#a:Type) (x:a) : ML (ref a)
+let mk_ref #a x = alloc #a x
 
 val raise (e: exn) : ML 'a
 

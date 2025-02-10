@@ -58,7 +58,7 @@ let mem (#k #v : _)
   = Some? (lookup key m)
 
 let cached_fun (#a #b : Type) {| hashable a |} {| deq a |} (f : a -> b) =
-  let cache = BU.mk_ref (empty #a #b) in
+  let cache = mk_ref (empty #a #b) in
   let f_cached =
     fun x ->
       match lookup x (!cache) with

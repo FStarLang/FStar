@@ -21,6 +21,7 @@ module FStarC.RBSet
 open FStarC.Class.Ord
 open FStarC.Class.Show
 open FStarC.Class.Setlike
+open FStarC.List
 
 include FStarC.Class.Setlike
 

@@ -1,6 +1,5 @@
 module FStarC.TypeChecker.Primops.Real
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -13,7 +12,6 @@ open FStarC.Syntax.Embeddings
 
 module PC = FStarC.Parser.Const
 module Z = FStarC.BigInt
-module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
 
 (* Range ops *)

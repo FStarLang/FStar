@@ -19,7 +19,6 @@ open FStarC.List
 //Reorders the top-level definitions/declarations in a file
 //in a proper order for consistent type-checking
 
-open FStar open FStarC
 open FStarC
 open FStarC.Ident
 open FStarC.Errors

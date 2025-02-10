@@ -15,12 +15,10 @@
 *)
 module FStarC.SMTEncoding.Z3
 open FStarC.Effect
-open FStar open FStarC
 open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
 open FStarC.Util
-module BU = FStarC.Util
 module U = FStarC.SMTEncoding.UnsatCore
 module SolverState = FStarC.SMTEncoding.SolverState
 
@@ -30,7 +28,7 @@ type z3status =
     | UNKNOWN of error_labels & option string         //error labels & z3 reason
     | TIMEOUT of error_labels & option string         //error labels & z3 reason
     | KILLED
-type z3statistics = BU.smap string
+type z3statistics = SMap.t string
 
 type z3result = {
       z3result_status      : z3status;

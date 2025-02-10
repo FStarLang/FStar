@@ -17,8 +17,9 @@ module FStarC.Reflection.V1.Constants
 
 open FStarC.Effect
 open FStarC.Syntax.Syntax
+open FStar.List.Tot.Base
 module Ident = FStarC.Ident
-module Range = FStarC.Range
+module Range = FStarC.Range.Type
 
 (* Contains all lids and terms needed for embedding/unembedding *)
 

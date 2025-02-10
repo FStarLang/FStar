@@ -1,12 +1,10 @@
 module FStarC.TypeChecker.Primops.Base
 (* This module defines the type of primitive steps and some helpers. *)
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Syntax.Syntax
-module Env = FStarC.TypeChecker.Env
 module EMB = FStarC.Syntax.Embeddings
 module NBE = FStarC.TypeChecker.NBETerm
 

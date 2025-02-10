@@ -20,7 +20,6 @@ open FStarC.Tactics.Types
 open FStarC.Tactics.Monad
 open FStarC.Syntax.Syntax
 
-module Z = FStarC.BigInt
 
 (* TODO: allow to pass information from ctrl_tac to rewriter? *)
 type controller_ty = term -> tac (bool & ctrl_flag)

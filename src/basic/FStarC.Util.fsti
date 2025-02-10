@@ -14,8 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Util
-open Prims
-open FStar.Pervasives
+
 open FStarC.Effect
 open FStarC.Json
 open FStarC.BaseTypes
@@ -40,52 +39,8 @@ val get_file_last_modification_time: string -> time_of_day
 val string_of_time_of_day: time_of_day -> string
 
 (* generic utils *)
-(* smap: map from string keys *)
-type smap 'value
-val smap_create: int -> smap 'value
-val smap_clear:smap 'value -> unit
-val smap_add: smap 'value -> string -> 'value -> unit
-val smap_of_list: list (string&'value) -> smap 'value
-val smap_try_find: smap 'value -> string -> option 'value
-val smap_fold: smap 'value -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
-val smap_remove: smap 'value -> string -> unit
-(* The list may contain duplicates. *)
-val smap_keys: smap 'value -> list string
-val smap_copy: smap 'value -> smap 'value
-val smap_size: smap 'value -> int
-val smap_iter: smap 'value -> (string -> 'value -> unit) -> unit
 
 (* pure version *)
-type psmap 'value
-val psmap_empty: unit -> psmap 'value // GH-1161
-val psmap_add: psmap 'value -> string -> 'value -> psmap 'value
-val psmap_find_default: psmap 'value -> string -> 'value -> 'value
-val psmap_try_find: psmap 'value -> string -> option 'value
-val psmap_fold: psmap 'value -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
-val psmap_find_map: psmap 'value -> (string -> 'value -> option 'a) -> option 'a
-val psmap_modify: psmap 'value -> string -> (option 'value -> 'value) -> psmap 'value
-val psmap_merge: psmap 'value -> psmap 'value -> psmap 'value
-val psmap_remove: psmap 'value -> string -> psmap 'value
-type imap 'value
-val imap_create: int -> imap 'value
-val imap_clear:imap 'value -> unit
-val imap_add: imap 'value -> int -> 'value -> unit
-val imap_of_list: list (int&'value) -> imap 'value
-val imap_try_find: imap 'value -> int -> option 'value
-val imap_fold: imap 'value -> (int -> 'value -> 'a -> 'a) -> 'a -> 'a
-val imap_remove: imap 'value -> int -> unit
-(* The list may contain duplicates. *)
-val imap_keys: imap 'value -> list int
-val imap_copy: imap 'value -> imap 'value
-
-(* pure version *)
-type pimap 'value
-val pimap_empty: unit -> pimap 'value // GH-1161
-val pimap_add: pimap 'value -> int -> 'value -> pimap 'value
-val pimap_find_default: pimap 'value -> int -> 'value -> 'value
-val pimap_try_find: pimap 'value -> int -> option 'value
-val pimap_fold: pimap 'value -> (int -> 'value -> 'a -> 'a) -> 'a -> 'a
-val pimap_remove: pimap 'value -> int -> pimap 'value
 
 val format: string -> list string -> string
 val format1: string -> string -> string
@@ -311,7 +266,8 @@ val decr: ref int -> unit
 val geq: int -> int -> Tot bool
 val for_range: int -> int -> (int -> unit) -> unit
 
-val mk_ref: 'a -> ref 'a
+// Use FStarC.Effect.mk_ref instead
+// val mk_ref: 'a -> ref 'a
 
 val exec_name : string
 val get_exec_dir: unit -> string

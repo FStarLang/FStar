@@ -1,6 +1,5 @@
 module FStarC.TypeChecker.Normalize.Unfolding
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -12,16 +11,14 @@ module Common = FStarC.TypeChecker.Common
 module BU = FStarC.Util
 module Path = FStarC.Path
 module PC = FStarC.Parser.Const
-module Print = FStarC.Syntax.Print
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
-module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 
 open FStarC.Class.Show
 
 (* Max number of warnings to print in a single run.
 Initialized in Normalize.normalize *)
-let plugin_unfold_warn_ctr : ref int = BU.mk_ref 0
+let plugin_unfold_warn_ctr : ref int = mk_ref 0
 
 let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     let attrs =

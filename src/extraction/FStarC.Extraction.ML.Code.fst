@@ -17,7 +17,6 @@
 module FStarC.Extraction.ML.Code
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Util
 open FStarC.Extraction.ML

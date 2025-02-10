@@ -21,9 +21,6 @@ open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.Tactics.Common
 
-module BU      = FStarC.Util
-module Cfg     = FStarC.TypeChecker.Cfg
-module Core    = FStarC.TypeChecker.Core
 module PO      = FStarC.TypeChecker.Primops
 module Range   = FStarC.Range
 
@@ -74,7 +71,7 @@ type proofstate = {
     freshness    : int;          //a simple freshness counter for the fresh tactic
     tac_verb_dbg : bool;         //whether to print verbose debugging messages
 
-    local_state  : BU.psmap term; // local metaprogram state
+    local_state  : PSMap.t term; // local metaprogram state
 
     urgency      : int;          // When printing a proofstate due to an error, this
                                  // is used by emacs to decide whether it should pop
@@ -123,11 +120,3 @@ val check_goal_solved' : goal -> option term
 val check_goal_solved  : goal -> bool
 
 type tref (a:Type) = ref a
-
-(*** These are here for userspace, the library has an interface into this module. *)
-(* Typing reflection *)
-val non_informative_token (g:env) (t:typ) : Type0
-val subtyping_token (g:env) (t0 t1:typ) : Type0
-val equiv_token (g:env) (t0 t1:typ) : Type0
-val typing_token (g:env) (e:term) (c:Core.tot_or_ghost & typ) : Type0
-val match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) : Type0

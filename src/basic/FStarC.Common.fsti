@@ -18,8 +18,6 @@
 
 module FStarC.Common
 open FStarC.Effect
-module List = FStarC.List
-module BU = FStarC.Util
 
 val snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b)
 
@@ -56,8 +54,8 @@ val max_suffix (f : 'a -> bool) (xs : list 'a) : list 'a & list 'a
 
 val eq_list (f: 'a -> 'a -> bool) (l1 l2 : list 'a) : bool
 
-val psmap_to_list (m : BU.psmap 'a) : list (string & 'a)
-val psmap_keys (m : BU.psmap 'a) : list string
-val psmap_values (m : BU.psmap 'a) : list 'a
+val psmap_to_list (m : PSMap.t 'a) : list (string & 'a)
+val psmap_keys (m : PSMap.t 'a) : list string
+val psmap_values (m : PSMap.t 'a) : list 'a
 
 val option_to_list (o : option 'a) : list 'a

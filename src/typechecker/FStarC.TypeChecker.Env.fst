@@ -14,16 +14,16 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.Env
-open FStar.Pervasives
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
-open FStarC
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Subst
 open FStarC.Syntax.Util
 open FStarC.Util
+open FStarC.SMap
 open FStarC.Ident
 open FStarC.Range
 open FStarC.Errors
@@ -175,7 +175,7 @@ let record_definition_for (e:env) (l:lident) : env =
 let missing_definition_list (e:env) : list lident =
   elems e.missing_decl
 
-type sigtable = BU.smap sigelt
+type sigtable = SMap.t sigelt
 
 let should_verify env =
     not (Options.lax ())
@@ -191,8 +191,8 @@ let visible_at d q = match d, q with
   | _ -> false
 
 let default_table_size = 200
-let new_sigtab () = BU.smap_create default_table_size
-let new_gamma_cache () = BU.smap_create 100
+let new_sigtab () = SMap.create default_table_size
+let new_gamma_cache () = SMap.create 100
 
 let initial_env deps
   tc_term
@@ -242,21 +242,21 @@ let initial_env deps
     universe_of=universe_of;
     teq_nosmt_force=teq_nosmt_force;
     subtype_nosmt_force=subtype_nosmt_force;
-    qtbl_name_and_index=None, BU.smap_create 10;
-    normalized_eff_names=BU.smap_create 20;  //20?
-    fv_delta_depths = BU.smap_create 50;
+    qtbl_name_and_index=None, SMap.create 10;
+    normalized_eff_names=SMap.create 20;  //20?
+    fv_delta_depths = SMap.create 50;
     proof_ns = Options.using_facts_from ();
     synth_hook = (fun e g tau -> failwith "no synthesizer available");
     try_solve_implicits_hook = (fun e tau imps -> failwith "no implicit hook available");
     splice = (fun e is_typed lids tau range -> failwith "no splicer available");
     mpreprocess = (fun e tau tm -> failwith "no preprocessor available");
     postprocess = (fun e tau typ tm -> failwith "no postprocessor available");
-    identifier_info=BU.mk_ref FStarC.TypeChecker.Common.id_info_table_empty;
+    identifier_info=mk_ref FStarC.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
     dsenv = FStarC.Syntax.DsEnv.empty_env deps;
     nbe = nbe;
-    strict_args_tab = BU.smap_create 20;
-    erasable_types_tab = BU.smap_create 20;
+    strict_args_tab = SMap.create 20;
+    erasable_types_tab = SMap.create 20;
     enable_defer_to_tac=true;
     unif_allow_ref_guards=false;
     erase_erasable_args=false;
@@ -273,7 +273,7 @@ let gamma_cache env = env.gamma_cache
 
 (* Marking and resetting the environment, for the interactive mode *)
 
-let query_indices: ref (list (list (lident & int))) = BU.mk_ref [[]]
+let query_indices: ref (list (list (lident & int))) = mk_ref [[]]
 let push_query_indices () = match !query_indices with // already signal-atmoic
   | [] -> failwith "Empty query indices!"
   | _ -> query_indices := (List.hd !query_indices)::!query_indices
@@ -291,18 +291,18 @@ let add_query_index (l, n) = match !query_indices with
 
 let peek_query_indices () = List.hd !query_indices
 
-let stack: ref (list env) = BU.mk_ref []
+let stack: ref (list env) = mk_ref []
 let push_stack env =
     stack := env::!stack;
-    {env with sigtab=BU.smap_copy (sigtab env);
-              attrtab=BU.smap_copy (attrtab env);
-              gamma_cache=BU.smap_copy (gamma_cache env);
-              identifier_info=BU.mk_ref !env.identifier_info;
-              qtbl_name_and_index=env.qtbl_name_and_index |> fst, BU.smap_copy (env.qtbl_name_and_index |> snd);
-              normalized_eff_names=BU.smap_copy env.normalized_eff_names;
-              fv_delta_depths=BU.smap_copy env.fv_delta_depths;
-              strict_args_tab=BU.smap_copy env.strict_args_tab;
-              erasable_types_tab=BU.smap_copy env.erasable_types_tab }
+    {env with sigtab=SMap.copy (sigtab env);
+              attrtab=SMap.copy (attrtab env);
+              gamma_cache=SMap.copy (gamma_cache env);
+              identifier_info=mk_ref !env.identifier_info;
+              qtbl_name_and_index=env.qtbl_name_and_index |> fst, SMap.copy (env.qtbl_name_and_index |> snd);
+              normalized_eff_names=SMap.copy env.normalized_eff_names;
+              fv_delta_depths=SMap.copy env.fv_delta_depths;
+              strict_args_tab=SMap.copy env.strict_args_tab;
+              erasable_types_tab=SMap.copy env.erasable_types_tab }
 
 let pop_stack () =
     match !stack with
@@ -348,12 +348,12 @@ let incr_query_index env =
     | None ->
       let next = n + 1 in
       add_query_index (l, next);
-      BU.smap_add tbl (string_of_lid l) next;
+      SMap.add tbl (string_of_lid l) next;
       {env with qtbl_name_and_index=Some (l, typ, next), tbl}
     | Some (_, m) ->
       let next = m + 1 in
       add_query_index (l, next);
-      BU.smap_add tbl (string_of_lid l) next;
+      SMap.add tbl (string_of_lid l) next;
       {env with qtbl_name_and_index=Some (l, typ, next), tbl}
 
 ////////////////////////////////////////////////////////////
@@ -388,7 +388,7 @@ let modules env = env.modules
 let current_module env = env.curmodule
 let set_current_module env lid = {env with curmodule=lid}
 let has_interface env l = env.modules |> BU.for_some (fun m -> m.is_interface && lid_equals m.name l)
-let find_in_sigtab env lid = BU.smap_try_find (sigtab env) (string_of_lid lid)
+let find_in_sigtab env lid = SMap.try_find (sigtab env) (string_of_lid lid)
 
 //Construct a new universe unification variable
 let new_u_univ () = U_unif (UF.univ_fresh Range.dummyRange)
@@ -455,10 +455,10 @@ let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace c
 
 let lookup_qname env (lid:lident) : qninfo =
   let cur_mod = in_cur_mod env lid in
-  let cache t = BU.smap_add (gamma_cache env) (string_of_lid lid) t; Some t in
+  let cache t = SMap.add (gamma_cache env) (string_of_lid lid) t; Some t in
   let found =
     if cur_mod <> No
-    then match BU.smap_try_find (gamma_cache env) (string_of_lid lid) with
+    then match SMap.try_find (gamma_cache env) (string_of_lid lid) with
       | None ->
         (BU.find_map env.gamma (function
           | Binding_lid(l, (us_names, t)) when lid_equals lid l->
@@ -485,12 +485,12 @@ let lookup_sigelt (env:env) (lid:lid) : option sigelt =
     | Some (Inr (se, us), rng) -> Some se
 
 let lookup_attr (env:env) (attr:string) : list sigelt =
-    match BU.smap_try_find (attrtab env) attr with
+    match SMap.try_find (attrtab env) attr with
     | Some ses -> ses
     | None -> []
 
 let add_se_to_attrtab env se =
-    let add_one env se attr = BU.smap_add (attrtab env) attr (se :: lookup_attr env attr) in
+    let add_one env se attr = SMap.add (attrtab env) attr (se :: lookup_attr env attr) in
     List.iter (fun attr ->
                 let hd, _ = U.head_and_args attr in
                 match (Subst.compress hd).n with
@@ -503,8 +503,8 @@ The force flag overrides the check, it's convenient in the checking for
 haseq in inductives. *)
 let try_add_sigelt force env se l =
   let s = string_of_lid l in
-  if not force && Some? (BU.smap_try_find (sigtab env) s) then (
-    let old_se = Some?.v (BU.smap_try_find (sigtab env) s) in
+  if not force && Some? (SMap.try_find (sigtab env) s) then (
+    let old_se = Some?.v (SMap.try_find (sigtab env) s) in
     if Sig_declare_typ? old_se.sigel &&
         (Sig_let? se.sigel || Sig_inductive_typ? se.sigel || Sig_datacon? se.sigel)
     then
@@ -523,7 +523,7 @@ let try_add_sigelt force env se l =
       ]
     )
   );
-  BU.smap_add (sigtab env) s se
+  SMap.add (sigtab env) s se
 
 let rec add_sigelt force env se = match se.sigel with
     | Sig_bundle {ses} -> add_sigelts force env ses
@@ -834,17 +834,17 @@ if we memoize the delta_depth of a `val` before seeing the corresponding
 cannot refer to the name. *)
 and delta_depth_of_fv (env:env) (fv:S.fv) : delta_depth =
   let lid = fv.fv_name.v in
-  (string_of_lid lid) |> BU.smap_try_find env.fv_delta_depths |> (function
+  (string_of_lid lid) |> SMap.try_find env.fv_delta_depths |> (function
   | Some dd -> dd
   | None ->
-    BU.smap_add env.fv_delta_depths (string_of_lid lid) delta_equational;
+    SMap.add env.fv_delta_depths (string_of_lid lid) delta_equational;
     // ^ To prevent an infinite loop on recursive functions, we pre-seed the cache with
     // a delta_equational. If we run into the same function while computing its delta_depth,
     // we will return delta_equational. If not, we override the cache with the correct delta_depth.
     let d = delta_depth_of_qninfo env fv (lookup_qname env fv.fv_name.v) in
     // if Debug.any () then
     //  BU.print2_error "Memoizing delta_depth_of_fv %s ->\t%s\n" (show lid) (show d);
-    BU.smap_add env.fv_delta_depths (string_of_lid lid) d;
+    SMap.add env.fv_delta_depths (string_of_lid lid) d;
     d)
 
 (* Computes the delta_depth of an fv, but taking into account the visibility
@@ -918,12 +918,12 @@ let fv_with_lid_has_attr env fv_lid attr_lid : bool =
 let fv_has_attr env fv attr_lid =
   fv_with_lid_has_attr env fv.fv_name.v attr_lid
 
-let cache_in_fv_tab (tab:BU.smap 'a) (fv:fv) (f:unit -> (bool & 'a)) : 'a =
+let cache_in_fv_tab (tab:SMap.t 'a) (fv:fv) (f:unit -> (bool & 'a)) : 'a =
   let s = string_of_lid (S.lid_of_fv fv) in
-  match BU.smap_try_find tab s with
+  match SMap.try_find tab s with
   | None ->
     let should_cache, res = f () in
-    if should_cache then BU.smap_add tab s res;
+    if should_cache then SMap.add tab s res;
     res
 
   | Some r ->
@@ -1008,12 +1008,12 @@ let norm_eff_name =
                 match find l with
                     | None -> Some l
                     | Some l' -> Some l' in
-       let res = match BU.smap_try_find env.normalized_eff_names (string_of_lid l) with
+       let res = match SMap.try_find env.normalized_eff_names (string_of_lid l) with
             | Some l -> l
             | None ->
               begin match find l with
                         | None -> l
-                        | Some m -> BU.smap_add env.normalized_eff_names (string_of_lid l) m;
+                        | Some m -> SMap.add env.normalized_eff_names (string_of_lid l) m;
                                     m
               end in
        Ident.set_lid_range res (range_of_lid l)
@@ -1667,7 +1667,7 @@ let update_effect_lattice env src tgt st_mlift =
     //A map where we populate all upper bounds for each pair of effects
     //
     let ubs : smap (list (lident & lident & lident & mlift & mlift)) =
-      BU.smap_create 10 in
+      SMap.create 10 in
     let add_ub i j k ik jk =
       let key = string_of_lid i ^ ":" ^ string_of_lid j in
       let v =
@@ -1816,7 +1816,7 @@ let univnames env =
 
 let lidents env : list lident =
   let keys = List.collect fst env.gamma_sig in
-  BU.smap_fold (sigtab env) (fun _ v keys -> U.lids_of_sigelt v@keys) keys
+  SMap.fold (sigtab env) (fun _ v keys -> U.lids_of_sigelt v@keys) keys
 
 let should_enc_path proof_ns path =
     let rec str_i_prefix xs ys =

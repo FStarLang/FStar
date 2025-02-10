@@ -15,9 +15,7 @@
 *)
 module FStarC.Tactics.V1.Basic
 
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 open FStarC.Util
@@ -40,7 +38,6 @@ friend FStar.Pervasives (* to use Delta below *)
 
 module BU     = FStarC.Util
 module Cfg    = FStarC.TypeChecker.Cfg
-module EMB    = FStarC.Syntax.Embeddings
 module Env    = FStarC.TypeChecker.Env
 module Err    = FStarC.Errors
 module N      = FStarC.TypeChecker.Normalize
@@ -51,10 +48,8 @@ module Rel    = FStarC.TypeChecker.Rel
 module SF     = FStarC.Syntax.Free
 module S      = FStarC.Syntax.Syntax
 module SS     = FStarC.Syntax.Subst
-module SC     = FStarC.Syntax.Compress
 module TcComm = FStarC.TypeChecker.Common
 module TcTerm = FStarC.TypeChecker.TcTerm
-module TcUtil = FStarC.TypeChecker.Util
 module UF     = FStarC.Syntax.Unionfind
 module U      = FStarC.Syntax.Util
 module Z      = FStarC.BigInt
@@ -2142,14 +2137,14 @@ let pack_curried (tv:term_view) : tac term = pack' tv true
 
 let lget (ty:term) (k:string) : tac term = wrap_err "lget" <| (
     let! ps = get in
-    match BU.psmap_try_find ps.local_state k with
+    match PSMap.try_find ps.local_state k with
     | None -> fail "not found"
     | Some t -> unquote ty t
     )
 
 let lset (_ty:term) (k:string) (t:term) : tac unit = wrap_err "lset" <| (
     let! ps = get in
-    let ps = { ps with local_state = BU.psmap_add ps.local_state k t } in
+    let ps = { ps with local_state = PSMap.add ps.local_state k t } in
     set ps
     )
 

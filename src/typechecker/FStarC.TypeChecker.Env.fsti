@@ -14,10 +14,9 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.Env
-open FStar.Pervasives
-open FStarC.Effect
-open FStar open FStarC
+
 open FStarC
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
 open FStarC.TypeChecker.Common
@@ -26,7 +25,6 @@ open FStarC.Class.Deq
 open FStarC.Class.Show
 open FStarC.Class.Setlike
 
-module BU = FStarC.Util
 module S = FStarC.Syntax.Syntax
 module TcComm = FStarC.TypeChecker.Common
 
@@ -170,12 +168,12 @@ and env = {
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list binding;                (* Local typing environment *)
   gamma_sig      :list sig_binding;            (* and signature elements *)
-  gamma_cache    :FStarC.Util.smap cached_elt;  (* Memo table for the global gamma_sig environment *)
+  gamma_cache    :SMap.t cached_elt;           (* Memo table for the global gamma_sig environment *)
   modules        :list modul;                  (* already fully type checked modules *)
   expected_typ   :option (typ & bool);         (* type expected by the context *)
                                                 (* a true bool will check for type equality (else subtyping) *)
-  sigtab         :BU.smap sigelt;              (* a dictionary of long-names to sigelts *)
-  attrtab        :BU.smap (list sigelt);        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
+  sigtab         :SMap.t sigelt;              (* a dictionary of long-names to sigelts *)
+  attrtab        :SMap.t (list sigelt);        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
   generalize     :bool;                         (* should we generalize let bindings? *)
@@ -200,11 +198,11 @@ and env = {
   typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> typ & guard_t; (* typechecker callback, uses fast path, with a fallback on the slow path *)
   teq_nosmt_force: env -> term -> term -> bool;        (* callback to the unifier *)
   subtype_nosmt_force: env -> term -> term -> bool;    (* callback to the unifier *)
-  qtbl_name_and_index: option (lident & typ & int) & BU.smap int;
+  qtbl_name_and_index: option (lident & typ & int) & SMap.t int;
      (* ^ the top-level term we're currently processing, its type, and the query counter for it,
        in addition we maintain a counter for query index per lid *)
-  normalized_eff_names:BU.smap lident;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
-  fv_delta_depths:BU.smap delta_depth;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
+  normalized_eff_names:SMap.t lident;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
+  fv_delta_depths:SMap.t delta_depth;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth_hook          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
   try_solve_implicits_hook :env -> term -> implicits -> unit;     (* *)
@@ -217,8 +215,8 @@ and env = {
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
   dsenv          : FStarC.Syntax.DsEnv.env;        (* The desugaring environment from the front-end *)
   nbe            : list step -> env -> term -> term;  (* Callback to the NBE function *)
-  strict_args_tab:BU.smap (option (list int));  (* a dictionary of fv names to strict arguments *)
-  erasable_types_tab:BU.smap bool;              (* a dictionary of type names to erasable types *)
+  strict_args_tab:SMap.t (option (list int));  (* a dictionary of fv names to strict arguments *)
+  erasable_types_tab:SMap.t bool;              (* a dictionary of type names to erasable types *)
   enable_defer_to_tac: bool;                     (* Set by default; unset when running within a tactic itself, since we do not allow
                                                     a tactic to defer problems to another tactic via the attribute mechanism *)
   unif_allow_ref_guards:bool;                     (* Allow guards when unifying refinements, even when SMT is disabled *)

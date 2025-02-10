@@ -15,7 +15,6 @@
 *)
 module FStarC.Tactics.Types
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
@@ -100,9 +99,3 @@ let check_goal_solved' goal =
 
 let check_goal_solved goal =
   Option.isSome (check_goal_solved' goal)
-
-let non_informative_token (g:env) (t:typ) = unit
-let subtyping_token (g:env) (t0 t1:typ) = unit
-let equiv_token (g:env) (t0 t1:typ) = unit
-let typing_token (g:env) (e:term) (c:Core.tot_or_ghost & typ) = unit
-let match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) = unit

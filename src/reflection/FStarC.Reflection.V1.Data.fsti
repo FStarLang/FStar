@@ -24,7 +24,6 @@ each other. *)
 open FStarC.List
 open FStarC.Syntax.Syntax
 open FStarC.Sealed
-module Ident = FStarC.Ident
 module Range = FStarC.Range
 module Z     = FStarC.BigInt
 open FStarC.Ident

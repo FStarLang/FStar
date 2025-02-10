@@ -19,11 +19,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 module FStarC.TypeChecker.Rel
-open FStar.Pervasives
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
-open FStarC
 open FStarC.Util
 open FStarC.Errors
 open FStarC.Defensive
@@ -31,6 +30,7 @@ open FStarC.TypeChecker
 open FStarC.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.Syntax.Syntax
+open FStarC.Syntax.Print {}
 open FStarC.Syntax.Subst
 open FStarC.Ident
 open FStarC.TypeChecker.Common
@@ -474,7 +474,7 @@ let set_logical (b:bool) = function
 
 let is_top_level_prob p = p_reason p |> List.length = 1
 let next_pid =
-    let ctr = BU.mk_ref 0 in
+    let ctr = mk_ref 0 in
     fun () -> incr ctr; !ctr
 
 (* Creates a subproblem of [orig], in a context extended with [scope]. *)
@@ -5560,7 +5560,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
   in
   (* tcresolve is also the only tactic we ever run for an open problem. *)
   let meta_tac_allowed_for_open_problem tac = cacheable tac in
-  let __meta_arg_cache : ref (list (term & env_t & typ & term)) = BU.mk_ref [] in
+  let __meta_arg_cache : ref (list (term & env_t & typ & term)) = mk_ref [] in
   let meta_arg_cache_result (tac : term) (e : env_t) (ty : term) (res : term) : unit =
     __meta_arg_cache := (tac, e, ty, res) :: !__meta_arg_cache
   in

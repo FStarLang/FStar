@@ -18,9 +18,7 @@
  * text fragments and update state; this file collects helpers for them *)
 
 module FStarC.Interactive.PushHelper
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Util
 open FStarC.Ident
@@ -28,7 +26,6 @@ open FStarC.TypeChecker.Env
 open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.Ide.Types
 
-module DsEnv = FStarC.Syntax.DsEnv
 module CTable = FStarC.Interactive.CompletionTable
 module TcEnv = FStarC.TypeChecker.Env
 

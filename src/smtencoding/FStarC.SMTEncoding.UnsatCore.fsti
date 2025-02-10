@@ -15,7 +15,6 @@
 *)
 module FStarC.SMTEncoding.UnsatCore
 open FStarC.Effect
-open FStar open FStarC
 open FStarC
 open FStarC.SMTEncoding.Term
 

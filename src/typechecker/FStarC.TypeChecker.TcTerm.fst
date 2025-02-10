@@ -15,10 +15,8 @@
 *)
 
 module FStarC.TypeChecker.TcTerm
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Errors
 open FStarC.Defensive
@@ -49,7 +47,6 @@ module TcUtil = FStarC.TypeChecker.Util
 module Gen = FStarC.TypeChecker.Generalize
 module BU = FStarC.Util
 module U  = FStarC.Syntax.Util
-module PP = FStarC.Syntax.Print
 module UF = FStarC.Syntax.Unionfind
 module Const = FStarC.Parser.Const
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify

@@ -16,17 +16,13 @@
 
 module FStarC.Char
 
-(* This is a trimmed-down version of ulib/FStar.Char, realized by the
-same ML implementation. It is here to prevent dependencies from the
-compiler into the UInt32 module. *)
+(* This module is only here to be able to mention a 'char' type without
+depending on FStar.Char, which brings in a lot of dependencies (see #3408).
+There is no ML implementation for it. Ideally this would just be removed
+after #3408.
+
+Note that character literals will still have type 'FStar.Char.char',
+and not the type defined here. *)
 
 new
 val char:eqtype
-
-type char_code
-
-val int_of_char : char -> Tot int
-val char_of_int : int -> Tot char
-
-val lowercase: char -> Tot char
-val uppercase: char -> Tot char

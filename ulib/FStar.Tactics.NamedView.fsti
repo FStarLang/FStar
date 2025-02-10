@@ -16,15 +16,17 @@
 module FStar.Tactics.NamedView
 
 open FStar.Tactics.Effect
-open FStar.Reflection.V2
-module R = FStar.Reflection.V2
+open FStar.Stubs.Reflection.Types
+open FStar.Stubs.Reflection.V2.Data
+module R = FStar.Stubs.Reflection.Types
+module RD = FStar.Stubs.Reflection.V2.Data
 
 (* Re export the syntax types. Expose variables as their views, users do
 not need to pack/inspect these if they are using the named view. *)
-type namedv   = R.namedv_view
-type bv       = R.bv_view
-type comp     = R.comp_view
-type binding  = R.binding (* already good *)
+type namedv   = RD.namedv_view
+type bv       = RD.bv_view
+type comp     = RD.comp_view
+type binding  = RD.binding (* already good *)
 (* Terms and universes are still *deep*, so we do not change their
 representation, and the user needs to pack/inspect. *)
 type term     = R.term
@@ -216,22 +218,5 @@ let pack_bv          = id #bv
 let inspect_comp     = id #comp
 let pack_comp        = id #comp
 
-let tag_of (t:term) : Tac string =
-  match inspect t with
-  | Tv_Var bv -> "Tv_Var"
-  | Tv_BVar fv -> "Tv_BVar"
-  | Tv_FVar fv -> "Tv_FVar"
-  | Tv_UInst _ _ -> "Tv_UInst"
-  | Tv_App f x -> "Tv_App"
-  | Tv_Abs x t -> "Tv_Abs"
-  | Tv_Arrow x t -> "Tv_Arrow"
-  | Tv_Type _ -> "Tv_Type"
-  | Tv_Refine x t -> "Tv_Refine"
-  | Tv_Const cst -> "Tv_Const"
-  | Tv_Uvar i t -> "Tv_Uvar"
-  | Tv_Let r attrs b t1 t2 -> "Tv_Let"
-  | Tv_Match t _ branches -> "Tv_Match"
-  | Tv_AscribedT _ _ _ _ -> "Tv_AscribedT"
-  | Tv_AscribedC _ _ _ _ -> "Tv_AscribedC"
-  | Tv_Unknown -> "Tv_Unknown"
-  | Tv_Unsupp -> "Tv_Unsupp"
+[@@plugin]
+val tag_of (t:term) : Tac string

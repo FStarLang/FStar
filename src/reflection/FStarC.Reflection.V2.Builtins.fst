@@ -15,9 +15,7 @@
 *)
 module FStarC.Reflection.V2.Builtins
 
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Reflection.V2.Data
 open FStarC.Syntax.Syntax
@@ -28,6 +26,7 @@ module S = FStarC.Syntax.Syntax // TODO: remove, it's open
 
 open FStarC.Class.Show
 open FStarC.Class.Tagged
+open FStarC.Syntax.Print {}
 
 module C     = FStarC.Const
 module PC    = FStarC.Parser.Const
@@ -36,13 +35,11 @@ module BU    = FStarC.Util
 module Range = FStarC.Range
 module U     = FStarC.Syntax.Util
 module UF    = FStarC.Syntax.Unionfind
-module Print = FStarC.Syntax.Print
 module Ident = FStarC.Ident
 module Env   = FStarC.TypeChecker.Env
 module Err   = FStarC.Errors
 module Z     = FStarC.BigInt
 module DsEnv = FStarC.Syntax.DsEnv
-module O     = FStarC.Options
 module RD    = FStarC.Reflection.V2.Data
 module EMB   = FStarC.Syntax.Embeddings
 module N     = FStarC.TypeChecker.Normalize

@@ -14,12 +14,12 @@
    limitations under the License.
 *)
 module FStarC.Options
-open FStar.All
+
+open FStarC
 open FStarC.Effect
 open FStarC.Getopt
 open FStarC.BaseTypes
 open FStarC.VConfig
-open FStarC
 
 (* Raised when a processing a pragma an a non-settable option
 appears there. *)
@@ -33,7 +33,7 @@ type codegen_t =
   | PluginNoLib
   | Extension
 
-//let __test_norm_all = Util.mk_ref false
+//let __test_norm_all = mk_ref false
 
 type split_queries_t = | No | OnFailure | Always
 
@@ -47,7 +47,7 @@ type option_val =
   | List of list option_val
   | Unset
 
-type optionstate = FStarC.Util.psmap option_val
+type optionstate = PSMap.t option_val
 
 type opt_type =
 | Const of option_val
