@@ -138,3 +138,13 @@ instance showable_range = {
 instance pretty_range = {
   pp = (fun r -> Pprint.doc_of_string (string_of_range r));
 }
+
+(* See FStarC.Find.refind_file, this just applies it to both filename
+components. *)
+let refind_rng (r:rng) : rng =
+  { r with file_name = FStarC.Find.refind_file r.file_name }
+
+let refind_range (r:range) : range =
+  { r with
+    def_range = refind_rng r.def_range;
+    use_range = refind_rng r.use_range }

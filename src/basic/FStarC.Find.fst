@@ -246,3 +246,19 @@ let locate_z3 (v : string) : option string =
       v
   in
   find_or v do_locate_z3
+
+(* When reading checked files, we could obtain ranges where the
+filepath does not make sense any more. For instance if we check
+`a/A.fst`, and then go into `a/` and check `B.fst`, the ranges
+in `A.fst.checked` will still refer to `a/A.fst`, which is not
+a valid path. To palliate this, we
+  1) just take the basename (ignore the path completely); and
+  2) try to find this file in our include path.
+
+This function is called by error reporting (both batch and IDE). *)
+let refind_file (f:string) : string =
+  try
+    match find_file (BU.basename f) with
+    | None -> f // Couldn't find file; just return the original path
+    | Some abs -> abs
+  with _ -> f

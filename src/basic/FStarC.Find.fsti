@@ -53,3 +53,7 @@ val z3_install_suggestion (v : string) : list Pprint.document
 
 (* Locate executable for Z3 version [v]. *)
 val locate_z3 (v : string) : option string
+
+(* Try to find a file from a path we might have read in a checked file.
+Essentially find_file(basename f). *)
+val refind_file (f:string) : string
