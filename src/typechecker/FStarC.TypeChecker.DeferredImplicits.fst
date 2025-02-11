@@ -116,7 +116,7 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
     match u.ctx_uvar_meta with
     | Some (Ctx_uvar_meta_attr a) ->
       (* hooks: all definitions with the resolve_implicits attr *)
-      let hooks = Env.lookup_attr env FStarC.Parser.Const.resolve_implicits_attr_string in
+      let hooks = Env.lookup_attr env (string_of_lid Parser.Const.resolve_implicits_attr_string) in
       (* candidates: hooks that also have the attribute [a] *)
       let candidates = 
         hooks |> List.filter

@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-
+[@@"no_prelude"]
 module FStar.Pervasives.Native
 
 (* This is a file from the core library, dependencies must be explicit *)

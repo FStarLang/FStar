@@ -537,8 +537,8 @@ let run_segment (st: repl_state) (code: string) =
     match Parser.Driver.parse_fragment None frag with
     | Parser.Driver.Empty -> []
     | Parser.Driver.Decls decls
-    | Parser.Driver.Modul (Parser.AST.Module (_, decls))
-    | Parser.Driver.Modul (Parser.AST.Interface (_, decls, _)) -> decls in
+    | Parser.Driver.Modul (Parser.AST.Module {decls})
+    | Parser.Driver.Modul (Parser.AST.Interface {decls}) -> decls in
 
   match with_captured_errors st.repl_env Util.sigint_ignore
             (fun _ -> Some <| collect_decls ()) with

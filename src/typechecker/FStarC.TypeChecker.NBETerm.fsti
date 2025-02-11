@@ -286,7 +286,7 @@ instance val e_range  : embedding Range.range (* sealed *)
 instance val e_issue  : embedding FStarC.Errors.issue
 instance val e_document : embedding FStarC.Pprint.document
 instance val e_vconfig  : embedding vconfig
-instance val e_norm_step : embedding Pervasives.norm_step
+instance val e_norm_step : embedding NormSteps.norm_step
 instance val e_list   : #a:Type -> embedding a -> Prims.Tot (embedding (list a))
 instance val e_option : embedding 'a -> Prims.Tot (embedding (option 'a))
 instance val e_tuple2 : embedding 'a -> embedding 'b -> Prims.Tot (embedding ('a & 'b))

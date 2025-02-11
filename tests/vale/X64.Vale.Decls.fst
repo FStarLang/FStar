@@ -213,12 +213,14 @@ irreducible val va_irreducible_lemma_Add64 : va_b0:va_codes -> va_s0:va_state ->
     ((va_eval_dst_operand_uint64 va_s0 dst) + (va_eval_operand_uint64 va_s0 src))) /\ (va_state_eq
     va_sM (va_update_flags va_sM (va_update_ok va_sM (va_update_dst_operand dst va_sM va_s0)))))))
 
+#push-options "--z3rlimit_factor 20"
 irreducible let va_irreducible_lemma_Add64 va_b0 va_s0 va_sN dst src =
   (va_reveal_opaque (va_transparent_code_Add64 dst src));
   let (va_old_s:va_state) = va_s0 in
   let (va_sM, (va_cM:va_code), va_bM) = (va_lemma_block va_b0 va_s0 va_sN) in
   regs_eval_code_one(va_transparent_code_Add64 dst src) dst va_s0 va_sM;
   (va_bM, va_sM)
+#pop-options
 let va_lemma_Add64 = va_irreducible_lemma_Add64
 
 val va_transparent_code_Add64Wrap : dst:va_dst_operand -> src:va_operand -> Tot va_code
@@ -309,6 +311,7 @@ irreducible val va_irreducible_lemma_Adc64Wrap : va_b0:va_codes -> va_s0:va_stat
     (va_get_flags va_s0)) then 1 else 0) >= nat64_max) /\ (va_state_eq va_sM (va_update_flags va_sM
     (va_update_ok va_sM (va_update_dst_operand dst va_sM va_s0)))))))
 
+#push-options "--z3rlimit_factor 20"
 irreducible let va_irreducible_lemma_Adc64Wrap va_b0 va_s0 va_sN dst src =
   (va_reveal_opaque (va_transparent_code_Adc64Wrap dst src));
   let (va_old_s:va_state) = va_s0 in
@@ -326,6 +329,7 @@ irreducible let va_irreducible_lemma_Adc64Wrap va_b0 va_s0 va_sN dst src =
     (va_update_ok va_sM (va_update_dst_operand dst va_sM va_s0))))
   );
   (va_bM, va_sM)
+#pop-options
 let va_lemma_Adc64Wrap = va_irreducible_lemma_Adc64Wrap
 
 val va_transparent_code_Sub64 : dst:va_dst_operand -> src:va_operand -> Tot va_code
@@ -444,6 +448,7 @@ irreducible val va_irreducible_lemma_IMul64 : va_b0:va_codes -> va_s0:va_state -
     (va_state_eq va_sM (va_update_flags va_sM (va_update_ok va_sM (va_update_dst_operand dst va_sM
     va_s0)))))))
 #restart-solver
+#push-options "--z3rlimit_factor 20"
 irreducible let va_irreducible_lemma_IMul64 va_b0 va_s0 va_sN dst src =
   (va_reveal_opaque (va_transparent_code_IMul64 dst src));
   let (va_old_s:va_state) = va_s0 in
@@ -451,6 +456,7 @@ irreducible let va_irreducible_lemma_IMul64 va_b0 va_s0 va_sN dst src =
   regs_eval_code_one (va_transparent_code_IMul64 dst src) dst va_s0 va_sM;
   (lemma_mul_nat (va_eval_dst_operand_uint64 va_old_s dst) (va_eval_operand_uint64 va_old_s src));
   (va_bM, va_sM)
+#pop-options
 let va_lemma_IMul64 = va_irreducible_lemma_IMul64
 
 val va_transparent_code_Xor64 : dst:va_dst_operand -> src:va_operand -> Tot va_code

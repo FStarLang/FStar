@@ -2285,9 +2285,9 @@ let binder_to_document b = p_binder true b
 
 let modul_to_document (m:modul) =
   match m with
-  | Module (_, decls)
-  | Interface (_, decls, _) ->
-    decls |> List.map decl_to_document |> separate hardline
+  | Module {decls}
+  | Interface {decls} ->
+    separate_map hardline p_decl decls
 
 let comments_to_document (comments : list (string & FStarC.Range.range)) =
     separate_map hardline (fun (comment, range) -> str comment) comments
@@ -2323,8 +2323,8 @@ let decls_with_comments_to_document (decls:list decl) comments =
 (* are described in the ``Taking care of comments`` section *)
 let modul_with_comments_to_document (m:modul) comments =
   let decls = match m with
-    | Module (_, decls)
-    | Interface (_, decls, _) -> decls
+    | Module {decls}
+    | Interface {decls} -> decls
   in
   decls_with_comments_to_document decls comments
 

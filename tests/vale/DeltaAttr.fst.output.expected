@@ -20,29 +20,27 @@ let sub_1 x = x - 1 <: Prims.int
 let add x = x + x <: Prims.int
 let test_1 x =
   FStar.Tactics.Effect.synth_by_tactic (fun _ ->
-        DeltaAttr.normalize [FStar.Pervasives.delta_attr ["DeltaAttr.myattr"]]
+        DeltaAttr.normalize [FStar.NormSteps.delta_attr ["DeltaAttr.myattr"]]
           (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
   <:
   Prims.int
 let test_2 x =
   FStar.Tactics.Effect.synth_by_tactic (fun _ ->
-        DeltaAttr.normalize [FStar.Pervasives.delta_attr ["DeltaAttr.otherattr"]]
+        DeltaAttr.normalize [FStar.NormSteps.delta_attr ["DeltaAttr.otherattr"]]
           (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
   <:
   Prims.int
 let test_3 x =
   FStar.Tactics.Effect.synth_by_tactic (fun _ ->
-        DeltaAttr.normalize [
-            FStar.Pervasives.delta_attr ["DeltaAttr.myattr"; "DeltaAttr.otherattr"]
-          ]
+        DeltaAttr.normalize [FStar.NormSteps.delta_attr ["DeltaAttr.myattr"; "DeltaAttr.otherattr"]]
           (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
   <:
   Prims.int
 let test_3' x =
   FStar.Tactics.Effect.synth_by_tactic (fun _ ->
         DeltaAttr.normalize [
-            FStar.Pervasives.delta_attr ["DeltaAttr.myattr"];
-            FStar.Pervasives.delta_attr ["DeltaAttr.otherattr"]
+            FStar.NormSteps.delta_attr ["DeltaAttr.myattr"];
+            FStar.NormSteps.delta_attr ["DeltaAttr.otherattr"]
           ]
           (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
   <:
@@ -50,8 +48,8 @@ let test_3' x =
 let test_4 x =
   FStar.Tactics.Effect.synth_by_tactic (fun _ ->
         DeltaAttr.normalize [
-            FStar.Pervasives.delta_attr ["DeltaAttr.myattr"];
-            FStar.Pervasives.delta_only ["DeltaAttr.add"]
+            FStar.NormSteps.delta_attr ["DeltaAttr.myattr"];
+            FStar.NormSteps.delta_only ["DeltaAttr.add"]
           ]
           (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
   <:
@@ -59,9 +57,9 @@ let test_4 x =
 let test_5 x =
   FStar.Tactics.Effect.synth_by_tactic (fun _ ->
         DeltaAttr.normalize [
-            FStar.Pervasives.delta_only ["DeltaAttr.add"];
-            FStar.Pervasives.delta_only ["DeltaAttr.add_1"];
-            FStar.Pervasives.delta_only ["DeltaAttr.sub_1"]
+            FStar.NormSteps.delta_only ["DeltaAttr.add"];
+            FStar.NormSteps.delta_only ["DeltaAttr.add_1"];
+            FStar.NormSteps.delta_only ["DeltaAttr.sub_1"]
           ]
           (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
   <:
@@ -90,29 +88,27 @@ let sub_1 x = x - 1 <: Prims.int
 let add x = x + x <: Prims.int
 let test_1 x =
   FStar.Tactics.Effect.synth_by_tactic (fun _ ->
-        DeltaAttr.normalize [FStar.Pervasives.delta_attr ["DeltaAttr.myattr"]]
+        DeltaAttr.normalize [FStar.NormSteps.delta_attr ["DeltaAttr.myattr"]]
           (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
   <:
   Prims.int
 let test_2 x =
   FStar.Tactics.Effect.synth_by_tactic (fun _ ->
-        DeltaAttr.normalize [FStar.Pervasives.delta_attr ["DeltaAttr.otherattr"]]
+        DeltaAttr.normalize [FStar.NormSteps.delta_attr ["DeltaAttr.otherattr"]]
           (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
   <:
   Prims.int
 let test_3 x =
   FStar.Tactics.Effect.synth_by_tactic (fun _ ->
-        DeltaAttr.normalize [
-            FStar.Pervasives.delta_attr ["DeltaAttr.myattr"; "DeltaAttr.otherattr"]
-          ]
+        DeltaAttr.normalize [FStar.NormSteps.delta_attr ["DeltaAttr.myattr"; "DeltaAttr.otherattr"]]
           (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
   <:
   Prims.int
 let test_3' x =
   FStar.Tactics.Effect.synth_by_tactic (fun _ ->
         DeltaAttr.normalize [
-            FStar.Pervasives.delta_attr ["DeltaAttr.myattr"];
-            FStar.Pervasives.delta_attr ["DeltaAttr.otherattr"]
+            FStar.NormSteps.delta_attr ["DeltaAttr.myattr"];
+            FStar.NormSteps.delta_attr ["DeltaAttr.otherattr"]
           ]
           (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
   <:
@@ -120,8 +116,8 @@ let test_3' x =
 let test_4 x =
   FStar.Tactics.Effect.synth_by_tactic (fun _ ->
         DeltaAttr.normalize [
-            FStar.Pervasives.delta_attr ["DeltaAttr.myattr"];
-            FStar.Pervasives.delta_only ["DeltaAttr.add"]
+            FStar.NormSteps.delta_attr ["DeltaAttr.myattr"];
+            FStar.NormSteps.delta_only ["DeltaAttr.add"]
           ]
           (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
   <:
@@ -129,9 +125,9 @@ let test_4 x =
 let test_5 x =
   FStar.Tactics.Effect.synth_by_tactic (fun _ ->
         DeltaAttr.normalize [
-            FStar.Pervasives.delta_only ["DeltaAttr.add"];
-            FStar.Pervasives.delta_only ["DeltaAttr.add_1"];
-            FStar.Pervasives.delta_only ["DeltaAttr.sub_1"]
+            FStar.NormSteps.delta_only ["DeltaAttr.add"];
+            FStar.NormSteps.delta_only ["DeltaAttr.add_1"];
+            FStar.NormSteps.delta_only ["DeltaAttr.sub_1"]
           ]
           (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
   <:

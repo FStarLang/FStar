@@ -15,9 +15,8 @@
 *)
 
 module FStarC.TypeChecker.Cfg
-open FStarC.Effect
+
 open FStarC
-open FStarC.Util
 open FStar.String
 open FStarC.Const
 open FStar.Char
@@ -145,4 +144,4 @@ val config: list step -> Env.env -> cfg
 
 val should_reduce_local_let : cfg -> letbinding -> bool
 
-val translate_norm_steps: list Pervasives.norm_step -> list Env.step
+val translate_norm_steps: list NormSteps.norm_step -> list Env.step

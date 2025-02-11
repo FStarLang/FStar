@@ -15,7 +15,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Note, for now we just ignore some modules and or comment out some code in them. -->
-    <Compile Include="base/prims.fs" Link="prims.fs" />
+    <Compile Include="base/Prims.fs" Link="Prims.fs" />
     <Compile Include="base/FStar_Pervasives_Native.fs" Link="FStar_Pervasives_Native.fs" />
     <Compile Include="base/FStar_All.fs" Link="FStar_All.fs" />
     <Compile Include="base/FStar_Char.fs" Link="FStar_Char.fs" />
@@ -51,6 +51,7 @@
     <Compile Include="base/FStar_UInt64.fs" Link="FStar_UInt64.fs" />
     <Compile Include="base/FStar_UInt8.fs" Link="FStar_UInt8.fs" />
 
+    <Compile Link="FStar_NormSteps.fs" Include="extracted\FStar_NormSteps.fs" />
     <Compile Link="FStar_Pervasives.fs" Include="extracted\FStar_Pervasives.fs" />
     <Compile Include="extracted/FStar_Mul.fs" Link="FStar_Mul.fs" />
 

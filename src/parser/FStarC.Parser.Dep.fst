@@ -190,8 +190,10 @@ type parsing_data_elt =
   | P_lid of lident  //record_lid
   | P_inline_for_extraction
 
-type parsing_data =
-  | Mk_pd of list parsing_data_elt
+type parsing_data = {
+    elts : list parsing_data_elt;
+    no_prelude : bool;
+}
 
 let str_of_parsing_data_elt elt =
   let str_of_open_kind = function
@@ -207,18 +209,25 @@ let str_of_parsing_data_elt elt =
   | P_lid lid -> "P_lid (" ^ (string_of_lid lid) ^ ")"
   | P_inline_for_extraction -> "P_inline_for_extraction"
 
-let str_of_parsing_data = function
-  | Mk_pd l ->
-    l |> List.fold_left (fun s elt -> s ^ "; " ^ (elt |> str_of_parsing_data_elt)) ""
+instance showable_parsing_data_elt : showable parsing_data_elt = {
+  show = str_of_parsing_data_elt;
+}
+
+let str_of_parsing_data pd =
+  "{ elts = " ^ show pd.elts ^
+  "; no_prelude = " ^ show pd.no_prelude ^
+  "}"
+
+instance showable_parsing_data : showable parsing_data = {
+  show = str_of_parsing_data;
+}
 
 let friends (p:parsing_data) : list lident =
-  let Mk_pd p = p in
   List.collect
     (function
       | P_dep (true, l) -> [l]
       | _ -> [])
-    p
-
+    p.elts
 
 let parsing_data_elt_eq (e1:parsing_data_elt) (e2:parsing_data_elt) =
   match e1, e2 with
@@ -232,7 +241,7 @@ let parsing_data_elt_eq (e1:parsing_data_elt) (e2:parsing_data_elt) =
   | P_inline_for_extraction, P_inline_for_extraction -> true
   | _, _ -> false
 
-let empty_parsing_data = Mk_pd []
+let empty_parsing_data = { elts = []; no_prelude = false }
 
 type deps = {
     dep_graph:dependence_graph;                 //dependences of the entire project, not just those reachable from the command line
@@ -538,33 +547,6 @@ let check_module_declaration_against_filename (lid: lident) (filename: string): 
 
 exception Exit
 
-(* In public interface *)
-
-let core_modules () = [ "Prims"; "FStar.Pervasives"; "FStar.Pervasives.Native" ]
-
-let implicit_ns_deps =
-  [ Const.fstar_ns_lid ]
-
-let implicit_module_deps =
-  [ Const.prims_lid; Const.pervasives_lid ]
-
-let hard_coded_dependencies full_filename =
-  let filename : string = basename full_filename in
-
-  let implicit_module_deps = List.map (fun l -> l, Open_module) implicit_module_deps in
-  let implicit_ns_deps = List.map (fun l -> l, Open_namespace) implicit_ns_deps in
-
-  (* The core libraries do not have any implicit dependencies *)
-  if List.mem (module_name_of_file filename) (core_modules ()) then []
-  else match namespace_of_module (module_name_of_file full_filename) with
-       | None -> implicit_ns_deps @ implicit_module_deps
-         (*
-          * AR: we open FStar, and then ns
-          *       which means that enter_namespace will be called first for F*, and then for ns
-          *       giving precedence to My.M over FStar.M
-          *)
-       | Some ns -> implicit_ns_deps @ implicit_module_deps @ [(ns, Open_namespace)]
-
 let dep_subsumed_by d d' =
       match d, d' with
       | PreferInterface l', FriendImplementation l -> l=l'
@@ -618,6 +600,11 @@ let enter_namespace
   );
   !found
 
+let prelude : list (open_kind & lid) = [
+   (Open_namespace, Const.fstar_ns_lid);
+   (Open_module,    Ident.lid_of_str "FStar.Prelude");
+]
+
 (*
  * Get parsing data for a file
  * First see if the data in the checked file is good (using the provided callback)
@@ -651,17 +638,23 @@ let collect_one
     =  let deps     : ref (list dependence) = mk_ref [] in
        let has_inline_for_extraction = mk_ref false in
 
-
+       let mname = lowercase_module_name filename in
        let mo_roots =
-         let mname = lowercase_module_name filename in
          if is_interface filename
          && has_implementation original_map mname
          then [ UseImplementation mname ]
          else []
        in
 
-       let auto_open = hard_coded_dependencies filename |> List.map (fun (lid, k) ->
-         P_implicit_open_module_or_namespace (k, lid))
+       let auto_open =
+         if pd.no_prelude
+         then []
+         else
+           (prelude |> List.map (fun (k, l) -> P_open (false, l)))
+           @
+           (match namespace_of_module mname with
+             | None -> []
+             | Some ns -> [ P_implicit_open_module_or_namespace (Open_namespace, ns) ])
        in
 
        let working_map = SMap.copy original_map in
@@ -777,17 +770,15 @@ let collect_one
         * Iterate over the parsing data elements
         *)
        begin
-         match pd with
-         | Mk_pd l ->
-           (auto_open @ l) |> List.iter (fun elt ->
-             match elt with
-             | P_begin_module lid -> begin_module lid
-             | P_open (b, lid) -> record_open b lid
-             | P_implicit_open_module_or_namespace (k, lid) -> record_implicit_open_module_or_namespace (lid, k)
-             | P_dep (b, lid) -> add_dep_on_module lid b
-             | P_alias (id, lid) -> ignore (record_module_alias id lid)
-             | P_lid lid -> record_lid lid
-             | P_inline_for_extraction -> set_interface_inlining ())
+         (auto_open @ pd.elts) |> List.iter (fun elt ->
+           match elt with
+           | P_begin_module lid -> begin_module lid
+           | P_open (b, lid) -> record_open b lid
+           | P_implicit_open_module_or_namespace (k, lid) -> record_implicit_open_module_or_namespace (lid, k)
+           | P_dep (b, lid) -> add_dep_on_module lid b
+           | P_alias (id, lid) -> ignore (record_module_alias id lid)
+           | P_lid lid -> record_lid lid
+           | P_inline_for_extraction -> set_interface_inlining ())
        end;
        (*
         * And then return the dependences
@@ -809,18 +800,23 @@ let collect_one
   else
       //parse the file and traverse the AST to collect parsing data
       let num_of_toplevelmods = mk_ref 0 in
-      let pd : ref (list parsing_data_elt) = mk_ref [] in
+      let pd : ref parsing_data = mk_ref empty_parsing_data in
 
       let add_to_parsing_data elt =
-        if not (List.existsML (fun e -> parsing_data_elt_eq e elt) !pd)
-        then pd := elt::!pd
+        if not (List.existsML (fun e -> parsing_data_elt_eq e elt) (!pd).elts)
+        then pd := { !pd with elts = elt::(!pd).elts }
+      in
+
+      let set_no_prelude b =
+        pd := { !pd with no_prelude = b }
       in
 
       let rec collect_module = function
-        | Module (lid, decls)
-        | Interface (lid, decls, _) ->
-            check_module_declaration_against_filename lid filename;
-            add_to_parsing_data (P_begin_module lid);
+        | Module {no_prelude; mname; decls}
+        | Interface {no_prelude; mname; decls} ->
+            set_no_prelude no_prelude;
+            check_module_declaration_against_filename mname filename;
+            add_to_parsing_data (P_begin_module mname);
             collect_decls decls
 
       and collect_decls decls =
@@ -1230,7 +1226,8 @@ let collect_one
       in
       let ast, _ = Driver.parse_file filename in
       collect_module ast;
-      let pd = Mk_pd (List.rev !pd) in
+      let pd = !pd in
+      let pd = { pd with elts = List.rev pd.elts } in
       let deps, has_inline_for_extraction, mo_roots = from_parsing_data pd original_map filename in
       (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
       pd, deps, has_inline_for_extraction, mo_roots
@@ -1498,7 +1495,7 @@ let collect (all_cmd_line_files: list file_name)
     begin
       let parsing_data, (deps, mo_roots, needs_interface_inlining) =
         match SMap.try_find !collect_one_cache file_name with
-        | Some cached -> Mk_pd [], cached
+        | Some cached -> empty_parsing_data, cached
         | None ->
           let parsing_data, deps, needs_interface_inlining, additional_roots = collect_one file_system_map file_name get_parsing_data_from_cache in
           parsing_data, (deps, additional_roots, needs_interface_inlining) in

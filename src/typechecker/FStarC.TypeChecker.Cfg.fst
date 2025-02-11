@@ -445,31 +445,31 @@ let should_reduce_local_let cfg lb =
          not (cfg.steps.pure_subterms_within_computations)
 
 let translate_norm_step = function
-    | Pervasives.Zeta ->    [Zeta]
-    | Pervasives.ZetaFull -> [ZetaFull]
-    | Pervasives.Iota ->    [Iota]
-    | Pervasives.Delta ->   [UnfoldUntil delta_constant]
-    | Pervasives.Simpl ->   [Simplify]
-    | Pervasives.Weak ->    [Weak]
-    | Pervasives.HNF  ->    [HNF]
-    | Pervasives.Primops -> [Primops]
-    | Pervasives.Reify ->   [Reify]
-    | Pervasives.NormDebug -> [NormDebug]
-    | Pervasives.UnfoldOnly names ->
+    | NormSteps.Zeta ->    [Zeta]
+    | NormSteps.ZetaFull -> [ZetaFull]
+    | NormSteps.Iota ->    [Iota]
+    | NormSteps.Delta ->   [UnfoldUntil delta_constant]
+    | NormSteps.Simpl ->   [Simplify]
+    | NormSteps.Weak ->    [Weak]
+    | NormSteps.HNF  ->    [HNF]
+    | NormSteps.Primops -> [Primops]
+    | NormSteps.Reify ->   [Reify]
+    | NormSteps.NormDebug -> [NormDebug]
+    | NormSteps.UnfoldOnly names ->
         [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
-    | Pervasives.UnfoldOnce names ->
+    | NormSteps.UnfoldOnce names ->
         [UnfoldUntil delta_constant; UnfoldOnce (List.map I.lid_of_str names)]
-    | Pervasives.UnfoldFully names ->
+    | NormSteps.UnfoldFully names ->
         [UnfoldUntil delta_constant; UnfoldFully (List.map I.lid_of_str names)]
-    | Pervasives.UnfoldAttr names ->
+    | NormSteps.UnfoldAttr names ->
         [UnfoldUntil delta_constant; UnfoldAttr (List.map I.lid_of_str names)]
-    | Pervasives.UnfoldQual names ->
+    | NormSteps.UnfoldQual names ->
         [UnfoldUntil delta_constant; UnfoldQual names]
-    | Pervasives.UnfoldNamespace names ->
+    | NormSteps.UnfoldNamespace names ->
         [UnfoldUntil delta_constant; UnfoldNamespace names]
-    | Pervasives.Unascribe -> [Unascribe]
-    | Pervasives.NBE -> [NBE]
-    | Pervasives.Unmeta -> [Unmeta]
+    | NormSteps.Unascribe -> [Unascribe]
+    | NormSteps.NBE -> [NBE]
+    | NormSteps.Unmeta -> [Unmeta]
 
 let translate_norm_steps s =
     let s = List.concatMap translate_norm_step s in

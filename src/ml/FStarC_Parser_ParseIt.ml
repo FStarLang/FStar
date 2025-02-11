@@ -393,10 +393,7 @@ let parse (lang_opt:lang_opts) fn =
         let frags = match fileOrFragment with
             | FStar_Pervasives.Inl modul ->
               if has_extension filename interface_extensions
-              then match modul with
-                    | FStarC_Parser_AST.Module(l,d) ->
-                      FStar_Pervasives.Inl (FStarC_Parser_AST.Interface(l, d, true))
-                    | _ -> failwith "Impossible"
+              then FStar_Pervasives.Inl (FStarC_Parser_AST.as_interface modul)
               else FStar_Pervasives.Inl modul
             | _ -> fileOrFragment
         in ASTFragment (frags, FStarC_Parser_Util.flush_comments ())

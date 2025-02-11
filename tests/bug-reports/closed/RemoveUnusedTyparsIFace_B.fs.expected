@@ -1,7 +1,5 @@
 #light "off"
 module RemoveUnusedTyparsIFace_B
-open Prims
-open FStar_Pervasives
 
 let f = (fun ( x  :  'a RemoveUnusedTyparsIFace_A.t ) -> x)
 

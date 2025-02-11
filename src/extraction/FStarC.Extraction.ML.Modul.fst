@@ -129,26 +129,26 @@ let rec extract_meta x : option meta =
   match SS.compress x with
   | { n = Tm_fvar fv } ->
       begin match string_of_lid (lid_of_fv fv) with
-      | "FStar.Pervasives.PpxDerivingShow" -> Some PpxDerivingShow
-      | "FStar.Pervasives.PpxDerivingYoJson" -> Some PpxDerivingYoJson
-      | "FStar.Pervasives.CInline" -> Some CInline
-      | "FStar.Pervasives.CNoInline" -> Some CNoInline
-      | "FStar.Pervasives.Substitute" -> Some Substitute
-      | "FStar.Pervasives.Gc" -> Some GCType
-      | "FStar.Pervasives.CAbstractStruct" -> Some CAbstract
-      | "FStar.Pervasives.CIfDef" -> Some CIfDef
-      | "FStar.Pervasives.CMacro" -> Some CMacro
+      | "FStar.Attributes.PpxDerivingShow" -> Some PpxDerivingShow
+      | "FStar.Attributes.PpxDerivingYoJson" -> Some PpxDerivingYoJson
+      | "FStar.Attributes.CInline" -> Some CInline
+      | "FStar.Attributes.CNoInline" -> Some CNoInline
+      | "FStar.Attributes.Substitute" -> Some Substitute
+      | "FStar.Attributes.Gc" -> Some GCType
+      | "FStar.Attributes.CAbstractStruct" -> Some CAbstract
+      | "FStar.Attributes.CIfDef" -> Some CIfDef
+      | "FStar.Attributes.CMacro" -> Some CMacro
       | "Prims.deprecated" -> Some (Deprecated "")
       | _ -> None
       end
   | { n = Tm_app {hd={ n = Tm_fvar fv }; args=[{ n = Tm_constant (Const_string (s, _)) }, _]} } ->
       begin match string_of_lid (lid_of_fv fv) with
-      | "FStar.Pervasives.PpxDerivingShowConstant" -> Some (PpxDerivingShowConstant s)
-      | "FStar.Pervasives.Comment" -> Some (Comment s)
-      | "FStar.Pervasives.CPrologue" -> Some (CPrologue s)
-      | "FStar.Pervasives.CEpilogue" -> Some (CEpilogue s)
-      | "FStar.Pervasives.CConst" -> Some (CConst s)
-      | "FStar.Pervasives.CCConv" -> Some (CCConv s)
+      | "FStar.Attributes.PpxDerivingShowConstant" -> Some (PpxDerivingShowConstant s)
+      | "FStar.Attributes.Comment" -> Some (Comment s)
+      | "FStar.Attributes.CPrologue" -> Some (CPrologue s)
+      | "FStar.Attributes.CEpilogue" -> Some (CEpilogue s)
+      | "FStar.Attributes.CConst" -> Some (CConst s)
+      | "FStar.Attributes.CCConv" -> Some (CCConv s)
       | "Prims.deprecated" -> Some (Deprecated s)
       | _ -> None
       end

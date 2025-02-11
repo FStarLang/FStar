@@ -101,7 +101,8 @@ type env = {
   remaining_iface_decls:list (lident&list Parser.AST.decl);  (* A map from interface names to their stil-to-be-processed top-level decls *)
   syntax_only:          bool;                             (* Whether next push should skip type-checking *)
   ds_hooks:             dsenv_hooks;                       (* hooks that the interactive more relies onto for symbol tracking *)
-  dep_graph:            FStarC.Parser.Dep.deps
+  dep_graph:            FStarC.Parser.Dep.deps;
+  no_prelude:         bool;                             (* whether the module was marked no_prelude *)
 }
 and dsenv_hooks =
   { ds_push_open_hook : env -> open_module_or_namespace -> unit;
@@ -189,7 +190,9 @@ let empty_env deps = {curmodule=None;
                     remaining_iface_decls=[];
                     syntax_only=false;
                     ds_hooks=default_ds_hooks;
-                    dep_graph=deps}
+                    dep_graph=deps;
+                    no_prelude=false;
+                    }
 let dep_graph env = env.dep_graph
 let set_dep_graph env ds = {env with dep_graph=ds}
 let sigmap env = env.sigmap
@@ -1435,13 +1438,15 @@ let as_exported_id_set (e:option exported_ids) =
 type module_inclusion_info = {
     mii_exported_ids:option exported_ids;
     mii_trans_exported_ids:option exported_ids;
-    mii_includes:option (list (lident & restriction))
+    mii_includes:option (list (lident & restriction));
+    mii_no_prelude:bool;
 }
 
 let default_mii = {
     mii_exported_ids=None;
     mii_trans_exported_ids=None;
-    mii_includes=None
+    mii_includes=None;
+    mii_no_prelude=false;
 }
 
 let as_includes = function
@@ -1456,21 +1461,26 @@ let inclusion_info env (l:lident) =
    {
       mii_exported_ids = as_ids_opt env.exported_ids;
       mii_trans_exported_ids = as_ids_opt env.trans_exported_ids;
-      mii_includes = BU.map_opt (SMap.try_find env.includes mname) (fun r -> !r)
+      mii_includes = BU.map_opt (SMap.try_find env.includes mname) (fun r -> !r);
+      mii_no_prelude = env.no_prelude;
    }
 
 let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_info) = (* AR: open the pervasives namespace *)
   let prep env =
     let filename = BU.strcat (string_of_lid mname) ".fst" in
-    let auto_open = FStarC.Parser.Dep.hard_coded_dependencies filename in
+    let auto_open = if mii.mii_no_prelude then [] else FStarC.Parser.Dep.prelude in
     let auto_open =
       let convert_kind = function
       | FStarC.Parser.Dep.Open_namespace -> Open_namespace
       | FStarC.Parser.Dep.Open_module -> Open_module
       in
-      List.map (fun (lid, kind) -> (lid, convert_kind kind, Unrestricted)) auto_open
+      auto_open |> List.map (fun (kind, lid) -> (lid, convert_kind kind, Unrestricted))
     in
-    let namespace_of_module = if List.length (ns_of_lid mname) > 0 then [ (lid_of_ids (ns_of_lid mname), Open_namespace, Unrestricted) ] else [] in
+    let namespace_of_module =
+      if List.length (ns_of_lid mname) > 0
+      then [ (lid_of_ids (ns_of_lid mname), Open_namespace, Unrestricted) ]
+      else []
+    in
     (* [scope_mods] is a stack, so reverse the order *)
     let auto_open = namespace_of_module @ List.rev auto_open in
 
@@ -1586,3 +1596,6 @@ let resolve_name (e:env) (name:lident)
     )
     | Some (Eff_name(se, l)) ->
       Some (Inr (S.lid_and_dd_as_fv l None))
+
+let set_no_prelude (e:env) (b:bool) =
+  { e with no_prelude = b }
