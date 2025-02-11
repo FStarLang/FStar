@@ -36,6 +36,8 @@ val initial_range : range
 
 type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 
+instance val showable_push_kind : Class.Show.showable push_kind
+
 type completion_context =
 | CKCode
 | CKOption of bool (* #set-options (false) or #reset-options (true) *)

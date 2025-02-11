@@ -29,6 +29,8 @@ open FStarC.Interactive.PushHelper
 open FStarC.Interactive.Ide.Types
 module BU = FStarC.Util
 
+open FStarC.Class.Show
+
 let dbg = Debug.get_toggle "IDE"
 
 open FStarC.Universal
