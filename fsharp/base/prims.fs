@@ -47,7 +47,6 @@ type 'a array  = 'a Microsoft.FSharp.Core.array
 type exn       = Microsoft.FSharp.Core.exn
 type 'a list'  = 'a list
 type 'a list   = 'a Microsoft.FSharp.Collections.list
-type 'a option = 'a Microsoft.FSharp.Core.option
 
 type nat       = int
 type pos       = int

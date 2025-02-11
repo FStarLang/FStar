@@ -16,6 +16,7 @@
   <ItemGroup>
     <!-- Note, for now we just ignore some modules and or comment out some code in them. -->
     <Compile Include="base/prims.fs" Link="prims.fs" />
+    <Compile Include="base/FStar_Pervasives_Native.fs" Link="FStar_Pervasives_Native.fs" />
     <Compile Include="base/FStar_All.fs" Link="FStar_All.fs" />
     <Compile Include="base/FStar_Char.fs" Link="FStar_Char.fs" />
     <Compile Include="base/FStar_Dyn.fs" Link="FStar_Dyn.fs" />
@@ -32,7 +33,6 @@
     <Compile Include="base/FStar_List.fs" Link="FStar_List.fs" />
     <Compile Include="base/FStar_List_Tot_Base.fs" Link="FStar_List_Tot_Base.fs" />
     <Compile Include="base/FStar_Option.fs" Link="FStar_Option.fs" />
-    <Compile Include="base/FStar_Pervasives_Native.fs" Link="FStar_Pervasives_Native.fs" />
     <!-- TODO: Set is implemented with extra 'comparison' constraint on key. 
                Extracted modules that depend on Set (e.g. Map) don't respect this (i.e. constraint is not emitted). 
                Moreover, both Set and Map modules restrict key with 'eqtype' which only gives decidable equality, 
