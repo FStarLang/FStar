@@ -335,7 +335,7 @@ let match_fastunif_inst_11
     match T.with_policy T.ForceSMT (fun () -> T.tc_term (elab_env g) q_subst) with
     | Some (q_subst', _), [] ->
       T.norm_well_typed_term (elab_env g)
-        [Pervasives.unascribe; primops; iota]
+        [NormSteps.unascribe; primops; iota]
         q_subst'
     | _ ->
       // bad uvars, just ignore
@@ -386,7 +386,7 @@ let match_full_11
     match T.with_policy T.ForceSMT (fun () -> T.tc_term (elab_env g) q_subst) with
     | Some (q_subst', _), [] ->
       T.norm_well_typed_term (elab_env g)
-        [Pervasives.unascribe; primops; iota]
+        [NormSteps.unascribe; primops; iota]
         q_subst'
     | _ ->
       // bad uvars, just ignore

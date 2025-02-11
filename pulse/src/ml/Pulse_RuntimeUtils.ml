@@ -193,7 +193,7 @@ let hnf_lax (g:TcEnv.env) (t:S.term) : S.term =
 let norm_well_typed_term_aux
       (g:TcEnv.env)
       (t:S.term)
-      (steps:FStar_Pervasives.norm_step list)
+      (steps:FStarC_NormSteps.norm_step list)
   = let steps = FStarC_TypeChecker_Cfg.translate_norm_steps steps in
     let t' = FStarC_TypeChecker_Normalize.normalize (TcEnv.Unascribe::steps) g t in
     FStar_Pervasives.Mkdtuple3 (t', (), ())
@@ -204,7 +204,7 @@ let norm_well_typed_term
       (eff:_)
       (k:_)
       (typing:_)
-      (steps:FStar_Pervasives.norm_step list)
+      (steps:FStarC_NormSteps.norm_step list)
       (ps:_)
   = let t' = norm_well_typed_term_aux g t steps in
     FStarC_Tactics_Result.Success (t', ps)
