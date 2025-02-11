@@ -651,7 +651,7 @@ let src_refinements_are_closed (e:src_exp {ln e && closed e})
     src_refinements_are_closed_core 0 e elt
  
 
-#push-options "--fuel 8 --ifuel 2 --z3rlimit_factor 2"
+#push-options "--fuel 8 --ifuel 2 --z3rlimit_factor 3"
 let rec elab_open_commute' (n:nat) (e:src_exp { ln' e n }) (x:var) 
   : Lemma (ensures
               RT.subst_term (elab_exp e) (RT.open_with_var x n) ==
