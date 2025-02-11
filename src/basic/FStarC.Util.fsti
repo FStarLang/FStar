@@ -18,6 +18,7 @@ module FStarC.Util
 open FStarC.Effect
 open FStarC.Json
 open FStarC.BaseTypes
+open FStarC.Array
 
 exception Impos
 

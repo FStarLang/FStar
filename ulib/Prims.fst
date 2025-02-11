@@ -597,12 +597,6 @@ val op_disEquality: #[@@@unrefine]a: eqtype -> a -> a -> Tot bool
 assume new
 type exn : Type0 
 
-(** [array]: TODO: should be removed.
-    See FStar.Seq, LowStar.Buffer, etc. *)
-assume new
-type array : Type -> Type0 
-
-
 (** String concatenation and its abbreviation as [^].  TODO, both
     should be removed in favor of what is present in FStar.String *)
 assume

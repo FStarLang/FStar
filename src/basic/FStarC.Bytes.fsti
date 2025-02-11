@@ -17,7 +17,7 @@ module FStarC.Bytes
 open FStarC.Effect
 open FStarC.BaseTypes
 
-type bytes = array byte
+type bytes = FStarC.Array.array byte
 val length : bytes -> int
 val get: bytes -> int -> int
 val zero_create : int -> bytes

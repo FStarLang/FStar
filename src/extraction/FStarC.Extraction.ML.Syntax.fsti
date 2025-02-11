@@ -69,7 +69,7 @@ type mlconstant =
 | MLC_Float  of float
 | MLC_Char   of char
 | MLC_String of string
-| MLC_Bytes  of array byte
+| MLC_Bytes  of FStarC.Array.array byte
 
 type mlpattern =
 | MLP_Wild
