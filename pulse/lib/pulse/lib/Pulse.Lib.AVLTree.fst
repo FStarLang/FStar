@@ -97,7 +97,7 @@ ensures
 }
 
 
-let is_tree_cases #t (x : option (ref (node t))) ft
+let is_tree_cases #t (x : option (ref (node t))) (ft : T.tree t)
 = match x with
   | None -> pure (ft == T.Leaf)
   | Some v -> 
@@ -107,8 +107,6 @@ let is_tree_cases #t (x : option (ref (node t))) ft
       is_tree n.left ltree **
       is_tree n.right rtree
 
-
- 
 ghost
 fn cases_of_is_tree #t (x:tree_t t) (ft:T.tree t)
 requires is_tree x ft
@@ -440,132 +438,116 @@ ensures
 {
   match x {
     None -> {
-      is_tree_case_none x;
+      is_tree_case_none None;
       unreachable ()
     }
     Some v -> {
-      is_tree_case_some x v;
+      is_tree_case_some (Some v) v;
       v
     }
   }
 }
 
+[@@pulse_unfold] let _left  (t:T.tree 'a{T.Node? t}) = T.Node?.left  t
+[@@pulse_unfold] let _right (t:T.tree 'a{T.Node? t}) = T.Node?.right t
+[@@pulse_unfold] let _data  (t:T.tree 'a{T.Node? t}) = T.Node?.data  t
 
+fn read_node
+  (#a:Type0)
+  (tree : tree_t a)
+  (#t : erased (T.tree a){T.Node? t})
+  requires is_tree tree t
+  (* ^ Some? p should be trivial, but just kick the ball to the caller *)
+  returns  res : tree_t a & a & tree_t a & squash (Some? tree)
+    (* ^ squash to help with spec well-formedness *)
+  ensures (
+    let (l, x, r, _) = res in
+    pts_to (Some?.v tree) ({left = l; data = x; right = r})
+    ** is_tree l (_left t)
+    ** is_tree r (_right t)
+    ** pure (x == _data t)
+  )
+{
+  let p = get_some_ref tree;
+  rewrite each tree as (Some p);
+  with node. assert (pts_to p node);
+  let n = !p;
+  rewrite each node as n;
+  rewrite pts_to p n as pts_to (Some?.v tree) n;
+  (n.left, n.data, n.right, ())
+}
+
+fn write_node
+  (#a:Type0)
+  (tree : tree_t a{Some? tree})
+  (lp : tree_t a)
+  (data : a)
+  (rp : tree_t a)
+  (#lt #rt : erased (T.tree a))
+  requires
+    pts_to (Some?.v tree) 'n0 **
+    is_tree lp lt **
+    is_tree rp rt
+  ensures
+    is_tree tree (T.Node data lt rt)
+{
+  let n = { data = data; left = lp; right = rp };
+  let Some p = tree;
+  rewrite each (Some?.v tree) as p;
+  p := n;
+  fold (is_tree tree (T.Node data lt rt))
+}
 
 fn rotate_left (#t:Type0) (tree:tree_t t) (#l: G.erased (T.tree t){ Some? (T.rotate_left l) })
-requires is_tree tree l
-returns y:tree_t t 
-ensures (is_tree y (Some?.v (T.rotate_left l)))
+  requires is_tree tree l
+  returns  y : tree_t t
+  ensures  is_tree y (Some?.v (T.rotate_left l))
 {
-  let vl = get_some_ref tree;
-  let n = !vl;
-  let vlr = get_some_ref n.right;
-  let nr = !vlr;
-  
-  vlr := { data = n.data; left = n.left; right = nr.left };
-  
-  intro_is_tree_node (Some vlr) vlr #{data = n.data; left = n.left; right = nr.left};
-  
-  vl := { data = nr.data; left = Some vlr; right = nr.right };
-  
-  intro_is_tree_node (Some vl) vl #{data = nr.data; left = Some vlr; right = nr.right};
-  
-  Some vl
+  let Mktuple4 a b p' _  = read_node tree;
+  let Mktuple4 c d e  _  = read_node p';
+  write_node p' a b c;
+  write_node tree p' d e;
+  tree (* Note: in-place mutation, we could make this return unit instead. *)
 }
-
-
-
 
 fn rotate_right (#t:Type0) (tree:tree_t t) (#l:G.erased (T.tree t){ Some? (T.rotate_right l) })
-requires is_tree tree l
-returns y:tree_t t 
-ensures (is_tree y (Some?.v (T.rotate_right l)))
+  requires is_tree tree l
+  returns y:tree_t t
+  ensures (is_tree y (Some?.v (T.rotate_right l)))
 {
-  let vl = get_some_ref tree;
-  let n = !vl;
-  let vll = get_some_ref n.left;
-  let nl = !vll;
-
-  vll := {data = n.data; left = nl.right; right = n.right};
-
-  intro_is_tree_node (Some vll) vll #{data = n.data; left = nl.right; right = n.right};
-
-  vl := {data = nl.data; left = nl.left; right = Some vll};
-
-  intro_is_tree_node (Some vl) vl #{data = nl.data; left = nl.left; right = Some vll};
-  Some vl
+  let Mktuple4 p' d e _  = read_node tree;
+  let Mktuple4 a  b c _  = read_node p';
+  write_node p' c d e;
+  write_node tree a b p';
+  tree
 }
-
-
-
 
 fn rotate_right_left (#t:Type0) (tree:tree_t t) (#l:G.erased (T.tree t){ Some? (T.rotate_right_left l) })
-requires is_tree tree l
-returns y:tree_t t 
-ensures (is_tree y (Some?.v (T.rotate_right_left l)))
+  requires is_tree tree l
+  returns  y : tree_t t
+  ensures  is_tree y (Some?.v (T.rotate_right_left l))
 {
-  let vl = get_some_ref tree;
-  let n = !vl;
-
-  let vlr = get_some_ref n.right;
-
-  let nr = !vlr;
-  
-  let vlrl = get_some_ref nr.left;
-
-  let nrl = !vlrl;
-
-  vlr := {data = nr.data; left = nrl.right; right = nr.right};
-  
-  intro_is_tree_node (Some vlr) vlr #{data = nr.data; left = nrl.right; right = nr.right};
-  
-  vlrl := {data = n.data; left = n.left; right = nrl.left};
-
-  intro_is_tree_node (Some vlrl) vlrl #{data = n.data; left = n.left; right = nrl.left};
-
-  vl := {data = nrl.data; left = Some vlrl; right = Some vlr};
-
-  intro_is_tree_node (Some vl) vl #{data = nrl.data; left = Some vlrl; right = Some vlr};
-
-  Some vl
+  let Mktuple4 a  x zp _ = read_node tree;
+  let Mktuple4 yp z d  _ = read_node zp;
+  let Mktuple4 b  y c  _ = read_node yp;
+  write_node zp c z d;
+  write_node yp a x b;
+  write_node tree yp y zp;
+  tree
 }
 
-
-
 fn rotate_left_right (#t:Type0) (tree:tree_t t) (#l:G.erased (T.tree t){ Some? (T.rotate_left_right l) })
-requires is_tree tree l
-returns y:tree_t t 
-ensures (is_tree y (Some?.v (T.rotate_left_right l)))
+  requires is_tree tree l
+  returns  y  :tree_t t
+  ensures  is_tree y (Some?.v (T.rotate_left_right l))
 {
-  (*Node x (Node z t1 (Node y t2 t3)) t4 -> Some (Node y (Node z t1 t2) (Node x t3 t4))
-                      |----vllr---|
-           |----------vll-----------|
-   |---------vl------------------------|            *)
-  let vl = get_some_ref tree;
-
-  let n = !vl;
-
-  let vll = get_some_ref n.left;
-
-  let nl = !vll;
-
-  let vllr = get_some_ref nl.right;
-
-  let nlr = !vllr;
-
-  vllr := {data = n.data; left = nlr.right; right = n.right};
-
-  vll := {data = nl.data; left = nl.left; right = nlr.left};
-
-  intro_is_tree_node (Some vllr) vllr #{data = n.data; left = nlr.right; right = n.right};
-
-  intro_is_tree_node (Some vll) vll #{data = nl.data; left = nl.left; right = nlr.left};
-
-  vl := {data = nlr.data; left = Some (vll); right = Some vllr};
-
-  intro_is_tree_node (Some vl) vl #{data = nlr.data; left = Some (vll); right = Some vllr};
-  
-  Some vl
+  let Mktuple4 zp x d  _ = read_node tree;
+  let Mktuple4 a  z yp _ = read_node zp;
+  let Mktuple4 b  y c  _ = read_node yp;
+  write_node zp a z b;
+  write_node yp c x d;
+  write_node tree zp y yp;
+  tree
 }
 
 
