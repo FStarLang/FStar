@@ -5,7 +5,7 @@
     got type FStar.Seq.Base.seq Prims.nat
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(680,18-680,24)
+  - See also Prims.fst(674,18-674,24)
 
 >>]
 >> Got issues: [
@@ -15,7 +15,7 @@
     got type FStar.Seq.Base.seq Prims.nat
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(680,18-680,24)
+  - See also Prims.fst(674,18-674,24)
 
 >>]
 >> Got issues: [

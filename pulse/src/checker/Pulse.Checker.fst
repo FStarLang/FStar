@@ -144,7 +144,7 @@ let trace (t:st_term) (g:env) (pre:term) (rng:range) : T.Tac unit =
   and environment. *)
   let open FStar.Pprint in
   let open Pulse.PP in
-  let pre = T.norm_well_typed_term (elab_env g) [Pervasives.unascribe; primops; iota] pre in
+  let pre = T.norm_well_typed_term (elab_env g) [unascribe; primops; iota] pre in
   let msg = [
     text "TRACE. Current context:" ^^
       indent (pp <| canon_slprop_print pre);

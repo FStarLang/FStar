@@ -128,7 +128,7 @@ let normalize_slprop
   : T.Tac (v':slprop & slprop_equiv g v v')
 =
   (* Keep things reduced *)
-  let steps = [Pervasives.unascribe; primops; iota] in
+  let steps = [unascribe; primops; iota] in
 
   (* Unfold anything marked with the "pulse_unfold" attribute. *)
   let steps = steps @ [delta_attr ["Pulse.Lib.Core.pulse_unfold"]] in

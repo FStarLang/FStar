@@ -521,6 +521,7 @@ let avalue_anchored_update (#v:Type)
 
 /// A frame-preserving update for anchored values.
 ///   Notice the additional precondition, refining the preorder
+#push-options "--z3rlimit_factor 2"
 let update_anchored_hist (#v:Type)
                          (#p:preorder v)
                          (#s:anchor_rel p)
@@ -535,6 +536,7 @@ let update_anchored_hist (#v:Type)
       let Owns full_m = full_v in
       let m_res = avalue_anchored_update full_m v1 in
       Owns m_res
+#pop-options
 
 /// A derived form without a history on the new value
 let avalue_update_anchored_value (#v:Type)

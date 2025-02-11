@@ -894,7 +894,7 @@ let select_refine_pre (#meta:erased bool) (#a:_) (#p:_)
                         assert (op p (f v) (op p frame_l v_r) == v);
                         p.assoc (f v) frame_l v_r;
                         p.comm (f v) frame_l;
-                        assert (op p (op p frame_l (f v)) v_r == v);
+                        assert_spinoff (op p (op p frame_l (f v)) v_r == v);
                         let hl' = update_addr hl ad (Ref meta a p (op p frame_l (f v))) in
                         assert (disjoint hl' hr);
                         assert (h0 == join hl hr);
