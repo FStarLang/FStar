@@ -1,5 +1,6 @@
 module FStar_List_Tot_Base
 open Prims
+open FStar_Pervasives_Native
 
 let isEmpty l = List.isEmpty l
 let hd = List.head
