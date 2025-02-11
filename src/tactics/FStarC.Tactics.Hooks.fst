@@ -877,7 +877,7 @@ let splice
             : list goal & dsl_tac_result_t =
             run_tactic_on_ps tau.pos tau.pos false
               FStar.Tactics.Typeclasses.solve
-              ({env with admit=false; gamma=[]}, val_t)
+              ({env with gamma=[]}, val_t)
               FStar.Tactics.Typeclasses.solve
               tau
               tactic_already_typed
