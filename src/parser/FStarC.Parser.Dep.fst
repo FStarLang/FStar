@@ -1194,8 +1194,8 @@ let collect_one
         | PatApp (p, ps) ->
             collect_pattern p;
             collect_patterns ps
-        | PatName _ ->
-            ()
+        | PatName lid ->
+            add_to_parsing_data (P_lid lid)
         | PatList ps
         | PatOr ps
         | PatTuple (ps, _) ->
