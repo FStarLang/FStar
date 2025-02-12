@@ -69,6 +69,7 @@ let report_errors fmods =
   end
 
 let load_native_tactics () =
+    let open FStarC.Errors.Msg in
     let modules_to_load = Options.load() |> List.map Ident.lid_of_str in
     let cmxs_to_load = Options.load_cmxs () |> List.map Ident.lid_of_str in
     let ml_module_name m = FStarC.Extraction.ML.Util.ml_module_name_of_lid m in
@@ -83,15 +84,19 @@ let load_native_tactics () =
           else  //else try to find and compile the ml file
             match Find.find_file_odir (ml_file m) with
             | None ->
-              E.raise_error0 E.Fatal_FailToCompileNativeTactic
-                (Util.format1 "Failed to compile native tactic; extracted module %s not found" (ml_file m))
+              E.raise_error0 E.Fatal_FailToCompileNativeTactic [
+                text "Failed to compile native tactic.";
+                text (format1 "Extracted module %s not found." (ml_file m))
+              ]
             | Some ml ->
               let dir = Util.dirname ml in
               Plugins.compile_modules dir [ml_module_name m];
               begin match Find.find_file_odir cmxs with
                 | None ->
-                  E.raise_error0 E.Fatal_FailToCompileNativeTactic
-                    (Util.format1 "Failed to compile native tactic; compiled object %s not found" cmxs)
+                  E.raise_error0 E.Fatal_FailToCompileNativeTactic [
+                    text "Failed to compile native tactic.";
+                    text (format1 "Compilation seemingly succeeded, but compiled object %s not found." cmxs);
+                  ]
                 | Some f -> f
               end
     in
