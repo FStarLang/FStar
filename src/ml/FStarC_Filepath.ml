@@ -23,16 +23,28 @@ let join_paths path_str0 path_str1 =
   let open BatPathGen.OfString.Operators in
   to_string ((of_string path_str0) //@ (of_string path_str1))
 
+let canonicalize path_str =
+  let open Batteries.Incubator in
+  let open BatPathGen.OfString in
+  let open BatPathGen.OfString.Operators in
+  let path = of_string path_str in
+  to_string (normalize_in_tree path)
+
 let normalize_file_path (path_str:string) =
-  if is_path_absolute path_str then
-    path_str
-  else
-    let open Batteries.Incubator in
-    let open BatPathGen.OfString in
-    let open BatPathGen.OfString.Operators in
-    let path = of_string path_str in
-    let cwd = of_string (BatSys.getcwd ()) in
-    to_string (normalize_in_tree (cwd //@ path))
+  let open Batteries.Incubator in
+  let open BatPathGen.OfString in
+  let open BatPathGen.OfString.Operators in
+  let path = of_string path_str in
+  let path =
+    (* If not absolute, prepend the cwd *)
+    if is_path_absolute path_str
+    then path
+    else
+      let cwd = of_string (BatSys.getcwd ()) in
+      cwd //@ path
+  in
+  (* Normalize *)
+  to_string (normalize_in_tree path)
 
 let basename = Filename.basename
 let dirname = Filename.dirname
