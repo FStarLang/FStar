@@ -324,7 +324,7 @@ let json_of_opt json_of_a opt_a =
 
 let alist_of_symbol_lookup_result lr symbol symrange_opt=
   [("name", JsonStr lr.slr_name);
-   ("defined-at", json_of_opt json_of_def_range lr.slr_def_range);
+   ("defined-at", json_of_opt (fun r -> json_of_def_range (Range.refind_range r)) lr.slr_def_range);
    ("type", json_of_opt JsonStr lr.slr_typ);
    ("documentation", json_of_opt JsonStr lr.slr_doc);
    ("definition", json_of_opt JsonStr lr.slr_def)] @ (

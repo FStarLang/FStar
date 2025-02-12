@@ -161,7 +161,7 @@ let ps_to_json (msg, ps) =
                 ("goals", JsonList (List.map goal_to_json ps.goals));
                 ("smt-goals", JsonList (List.map goal_to_json ps.smt_goals))] @
                 (if ps.entry_range <> Range.dummyRange
-                 then [("location", Range.json_of_def_range ps.entry_range)]
+                 then [("location", Range.json_of_def_range (Range.refind_range ps.entry_range))]
                  else []))
 
 let do_dump_proofstate ps msg =
