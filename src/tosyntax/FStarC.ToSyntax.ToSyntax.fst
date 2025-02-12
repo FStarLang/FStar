@@ -4333,7 +4333,7 @@ let desugar_modul_common (curmod: option S.modul) env (m:AST.modul) : env_t & Sy
 let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t & Syntax.modul =
   let m =
     if Options.interactive () &&
-      List.mem (get_file_extension (List.hd (Options.file_list ()))) ["fsti"; "fsi"]
+      List.mem (Filepath.get_file_extension (List.hd (Options.file_list ()))) ["fsti"; "fsi"]
     then as_interface m
     else m
   in

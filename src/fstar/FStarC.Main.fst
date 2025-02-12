@@ -89,7 +89,7 @@ let load_native_tactics () =
                 text (format1 "Extracted module %s not found." (ml_file m))
               ]
             | Some ml ->
-              let dir = Util.dirname ml in
+              let dir = Filepath.dirname ml in
               Plugins.compile_modules dir [ml_module_name m];
               begin match Find.find_file_odir cmxs with
                 | None ->
@@ -137,6 +137,14 @@ let print_help_for (o : string) : unit =
 (* Normal mode with some flags, files, etc *)
 let go_normal () =
   let res, filenames = process_args () in
+
+  (* Compat: create the --odir and --cache_dir if they don't exist.
+  F* has done this for a long time, only sinc it simplified
+  the handling of options. I think this should probably be removed,
+  but a few makefiles here and there rely on it. *)
+  iter_opt (Find.get_odir ()) (mkdir false true);
+  iter_opt (Find.get_cache_dir ()) (mkdir false true);
+
   let check_no_filenames opt =
     if Cons? filenames then (
       Util.print1_error "error: No filenames should be passed with option %s\n" opt;
@@ -246,19 +254,19 @@ let go_normal () =
         Util.print1_error "File %s was not found in include path.\n" f;
         exit 1
       | Some fn ->
-        Util.print1 "%s\n" (Util.normalize_file_path fn);
+        Util.print1 "%s\n" (Filepath.normalize_file_path fn);
         exit 0
     )
 
     | Success when Some? (Options.locate_z3 ()) -> (
       check_no_filenames "--locate_z3";
       let v = Some?.v (Options.locate_z3 ()) in
-      match Find.locate_z3 v with
+      match Find.Z3.locate_z3 v with
       | None ->
         // Use an actual error to reuse the pretty printing.
         Errors.log_issue0 Errors.Error_Z3InvocationError ([
           Errors.Msg.text <| Util.format1 "Z3 version '%s' was not found." v;
-          ] @ Find.z3_install_suggestion v);
+          ] @ Find.Z3.z3_install_suggestion v);
         report_errors []; // but make sure to report.
         exit 1
       | Some fn ->
@@ -274,7 +282,7 @@ let go_normal () =
         Util.print3 "- F* version %s -- %s (on %s)\n"  !Options._version !Options._commit (Platform.kernel ());
         Util.print1 "- Executable: %s\n" (Util.exec_name);
         Util.print1 "- Library root: %s\n" (Util.dflt "<none>" (Find.lib_root ()));
-        Util.print1 "- Full include path: %s\n" (show (Find.include_path ()));
+        Util.print1 "- Full include path: %s\n" (show (Find.full_include_path ()));
         Util.print_string "\n";
         ()
       );

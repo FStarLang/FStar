@@ -3,6 +3,8 @@ NOVERIFY=1
 FSTAR_ROOT ?= ../../..
 include $(FSTAR_ROOT)/mk/test.mk
 
+_ != mkdir -p $(OUTPUT_DIR)
+
 JSON_CLEANUP=python ../cleanup.py
 
 # Feed .in to F* and record output as .ideout.  Output is passed through cleanup.py

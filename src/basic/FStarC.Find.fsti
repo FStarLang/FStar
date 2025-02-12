@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2024 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,25 @@ operations. *)
 
 open FStarC.Effect
 
+(* --include *)
+val get_include_path () : list string
+val set_include_path (path : list string) : unit
+
+(* --cache_dir *)
+val get_cache_dir () : option string
+val set_cache_dir (path : string) : unit
+
+(* --odir *)
+val get_odir () : option string
+val set_odir (path : string) : unit
+
+(* --no_default_includes *)
+val get_no_default_includes () : bool
+val set_no_default_includes (b : bool) : unit
+
+val get_with_fstarc () : bool
+val set_with_fstarc (b : bool) : unit
+
 (* A bit silly to have this, but this is the directory where the fstar.exe executable is in. *)
 val fstar_bin_directory : string
 
@@ -26,7 +45,7 @@ val fstar_bin_directory : string
 val lib_root () : option string
 
 (* The full include path. We search files in all of these directories. *)
-val include_path () : list string
+val full_include_path () : list string
 
 (* Try to find a file in the include path with a given basename. *)
 val find_file (basename : string) : option string
@@ -48,8 +67,6 @@ val locate_lib () : option string
 (* Return absolute path of OCaml-installed components of F*. *)
 val locate_ocaml () : string
 
-(* A message for the user suggesting how to install the proper Z3 version. *)
-val z3_install_suggestion (v : string) : list Pprint.document
-
-(* Locate executable for Z3 version [v]. *)
-val locate_z3 (v : string) : option string
+(* Try to find a file from a path we might have read in a checked file.
+Essentially find_file(basename f). *)
+val refind_file (f:string) : string

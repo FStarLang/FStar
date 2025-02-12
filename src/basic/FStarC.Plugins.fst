@@ -60,7 +60,7 @@ let dynlink (fname:string) : unit =
 let load_plugin tac =
   if not (!loaded_plugin_lib) then (
     pout "Loading fstar.pluginlib before first plugin\n";
-    do_dynlink (BU.normalize_file_path <| BU.get_exec_dir () ^ "/../lib/fstar/pluginlib/fstar_pluginlib.cmxs");
+    do_dynlink (Filepath.normalize_file_path <| BU.get_exec_dir () ^ "/../lib/fstar/pluginlib/fstar_pluginlib.cmxs");
     pout "Loaded fstar.pluginlib OK\n";
     loaded_plugin_lib := true
   );
@@ -72,7 +72,7 @@ let load_plugins tacs =
 let load_plugins_dir dir =
   (* Dynlink all .cmxs files in the given directory *)
   (* fixme: confusion between FStarC.String and FStar.String *)
-  BU.readdir dir
+  Filepath.readdir dir
   |> List.filter (fun s -> String.length s >= 5 && FStar.String.sub s (String.length s - 5) 5 = ".cmxs")
   |> List.map (fun s -> dir ^ "/" ^ s)
   |> load_plugins

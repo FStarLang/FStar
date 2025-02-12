@@ -125,7 +125,7 @@ let query_logging =
 let z3_cmd_and_args () =
   let ver = Options.z3_version () in
   let cmd =
-    match Find.locate_z3 ver with
+    match Find.Z3.locate_z3 ver with
     | Some fn -> fn
     | None ->
       let open FStarC.Pprint in
@@ -133,7 +133,7 @@ let z3_cmd_and_args () =
       FStarC.Errors.raise_error0 Errors.Error_Z3InvocationError (
         [ text "Z3 solver not found.";
           prefix 2 1 (text "Required version: ") (doc_of_string ver)]
-        @ Find.z3_install_suggestion ver)
+        @ Find.Z3.z3_install_suggestion ver)
   in
   let cmd_args =
     List.append ["-smt2";
@@ -171,7 +171,7 @@ let check_z3version (p:proc) : unit =
     let open FStarC.Errors.Msg in
     Errors.log_issue0 Errors.Warning_SolverMismatch ([
       text <| BU.format1 "Unexpected SMT solver: expected to be talking to Z3, got %s." name;
-    ] @ Find.z3_install_suggestion (Options.z3_version ())
+    ] @ Find.Z3.z3_install_suggestion (Options.z3_version ())
     );
     _already_warned_solver_mismatch := true
   );
@@ -189,7 +189,7 @@ let check_z3version (p:proc) : unit =
     Errors.log_issue0 Errors.Warning_SolverMismatch ([
       text (BU.format3 "Unexpected Z3 version for '%s': expected '%s', got '%s'."
                   (proc_prog p) ver_conf ver_found);
-      ] @ Find.z3_install_suggestion ver_conf
+      ] @ Find.Z3.z3_install_suggestion ver_conf
     );
     Errors.stop_if_err(); (* stop now if this was a hard error *)
     _already_warned_version_mismatch := true

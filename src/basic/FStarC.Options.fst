@@ -185,7 +185,6 @@ let defaults =
       ("disallow_unification_guards"  , Bool false);
       ("already_cached"               , Unset);
       ("cache_checked_modules"        , Bool false);
-      ("cache_dir"                    , Unset);
       ("cache_off"                    , Bool false);
       ("compat_pre_core"              , Unset);
       ("compat_pre_typed_indexed_effects"
@@ -221,7 +220,6 @@ let defaults =
       ("ide"                          , Bool false);
       ("ide_id_info_off"              , Bool false);
       ("lsp"                          , Bool false);
-      ("include"                      , List []);
       ("print"                        , Bool false);
       ("print_in_place"               , Bool false);
       ("force"                        , Bool false);
@@ -240,7 +238,6 @@ let defaults =
       ("max_ifuel"                    , Int 2);
       ("MLish"                        , Bool false);
       ("MLish_effect"                 , String "FStar.Effect");
-      ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
       ("no_smt"                       , Bool false);
@@ -249,7 +246,6 @@ let defaults =
       ("normalize_pure_terms_for_extraction"
                                       , Bool false);
       ("krmloutput"                   , Unset);
-      ("odir"                         , Unset);
       ("output_deps_to"               , Unset);
       ("prims"                        , Unset);
       ("pretype"                      , Bool true);
@@ -323,7 +319,6 @@ let defaults =
       ("use_nbe_for_extraction"       , Bool false);
       ("trivial_pre_for_unannotated_effectful_fns"
                                       , Bool true);
-      ("with_fstarc"                  , Bool false);
       ("profile_group_by_decl"        , Bool false);
       ("profile_component"            , Unset);
       ("profile"                      , Unset);
@@ -463,7 +458,6 @@ let get_disallow_unification_guards  ()      = lookup_opt "disallow_unification_
 
 let get_already_cached          ()      = lookup_opt "already_cached"           (as_option (as_list as_string))
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
-let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
 let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
 let get_print_cache_version     ()      = lookup_opt "print_cache_version"      as_bool
 let get_cmi                     ()      = lookup_opt "cmi"                      as_bool
@@ -490,7 +484,6 @@ let get_in                      ()      = lookup_opt "in"                       
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
 let get_ide_id_info_off         ()      = lookup_opt "ide_id_info_off"          as_bool
 let get_lsp                     ()      = lookup_opt "lsp"                      as_bool
-let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_print                   ()      = lookup_opt "print"                    as_bool
 let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
@@ -506,7 +499,6 @@ let get_max_fuel                ()      = lookup_opt "max_fuel"                 
 let get_max_ifuel               ()      = lookup_opt "max_ifuel"                as_int
 let get_MLish                   ()      = lookup_opt "MLish"                    as_bool
 let get_MLish_effect            ()      = lookup_opt "MLish_effect"             as_string
-let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
 let get_no_plugins              ()      = lookup_opt "no_plugins"               as_bool
@@ -514,7 +506,6 @@ let get_no_smt                  ()      = lookup_opt "no_smt"                   
 let get_normalize_pure_terms_for_extraction
                                 ()      = lookup_opt "normalize_pure_terms_for_extraction" as_bool
 let get_krmloutput              ()      = lookup_opt "krmloutput"               (as_option as_string)
-let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
 let get_output_deps_to          ()      = lookup_opt "output_deps_to"           (as_option as_string)
 let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
@@ -586,7 +577,6 @@ let get_use_nbe                 ()      = lookup_opt "use_nbe"                  
 let get_use_nbe_for_extraction  ()      = lookup_opt "use_nbe_for_extraction"                  as_bool
 let get_trivial_pre_for_unannotated_effectful_fns
                                 ()      = lookup_opt "trivial_pre_for_unannotated_effectful_fns"    as_bool
-let get_with_fstarc             ()      = lookup_opt "with_fstarc"                                  as_bool
 let get_profile                 ()      = lookup_opt "profile"                  (as_option (as_list as_string))
 let get_profile_group_by_decl   ()      = lookup_opt "profile_group_by_decl"    as_bool
 let get_profile_component       ()      = lookup_opt "profile_component"        (as_option (as_list as_string))
@@ -832,7 +822,10 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "cache_dir",
-    PostProcessed (pp_validate_dir, PathStr "dir"),
+    PostProcessed ((fun (Path s) ->
+      (* Stateful, does not go to optionstate. *)
+      Find.set_cache_dir s;
+      Unset), PathStr "dir"),
     text "Read and write .checked and .checked.lax in directory dir");
 
   ( noshort,
@@ -1039,7 +1032,9 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "include",
-    ReverseAccumulated (PathStr "path"),
+    PostProcessed ((fun (Path s) ->
+      Find.set_include_path (Find.get_include_path () @ [s]);
+      Unset), PathStr "dir"),
     text "A directory in which to search for files included on the command line");
 
   ( noshort,
@@ -1162,7 +1157,8 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "no_default_includes",
-    Const (Bool true),
+    WithSideEffect ((fun _ -> Find.set_no_default_includes true),
+                    Const (Bool true)),
     text "Ignore the default module search paths");
 
   ( noshort,
@@ -1193,7 +1189,10 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "odir",
-    PostProcessed (pp_validate_dir, PathStr "dir"),
+    PostProcessed ((fun (Path s) ->
+      (* Stateful, does not go to optionstate. *)
+      Find.set_odir s;
+      Unset), PathStr "dir"),
     text "Place output in directory  dir");
 
   ( noshort,
@@ -1584,7 +1583,8 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
 
   ( noshort,
    "with_fstarc",
-    Const (Bool true),
+    WithSideEffect ((fun _ -> Find.set_with_fstarc true),
+                    Const (Bool true)),
     text "Expose compiler internal modules (FStarC namespace). Only for advanced plugins \
           you should probably not use it.");
 
@@ -1879,8 +1879,8 @@ let restore_cmd_line_options should_clear =
     r
 
 let module_name_of_file_name f =
-    let f = basename f in
-    let f = String.substring f 0 (String.length f - String.length (get_file_extension f) - 1) in
+    let f = Filepath.basename f in
+    let f = String.substring f 0 (String.length f - String.length (Filepath.get_file_extension f) - 1) in
     String.lowercase f
 
 let should_check m =
@@ -1905,10 +1905,6 @@ let should_print_message m =
 
 
 let custom_prims () = get_prims()
-
-let cache_dir () = get_cache_dir ()
-
-let include_ () = get_include ()
 
 //Used to parse the options of
 //   --using_facts_from
@@ -2038,7 +2034,7 @@ let hint_file_for_src src_filename =
         let file_name =
           match hint_dir () with
           | Some dir ->
-            Util.concat_dir_filename dir (Util.basename src_filename)
+            Util.concat_dir_filename dir (Filepath.basename src_filename)
           | _ -> src_filename
         in
         Util.format1 "%s.hints" file_name
@@ -2075,7 +2071,6 @@ let max_ifuel                    () = get_max_ifuel                   ()
 let ml_ish                       () = get_MLish                       ()
 let ml_ish_effect                () = get_MLish_effect                ()
 let set_ml_ish                   () = set_option "MLish" (Bool true)
-let no_default_includes          () = get_no_default_includes         ()
 let no_extract                   s  = get_no_extract() |> List.existsb (module_name_eq s)
 let normalize_pure_terms_for_extraction
                                  () = get_normalize_pure_terms_for_extraction ()
@@ -2083,7 +2078,6 @@ let no_location_info             () = get_no_location_info            ()
 let no_plugins                   () = get_no_plugins                  ()
 let no_smt                       () = get_no_smt                      ()
 let krmloutput                   () = get_krmloutput                  ()
-let output_dir                   () = get_odir                        ()
 let output_deps_to               () = get_output_deps_to              ()
 let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
@@ -2165,7 +2159,6 @@ let use_nbe                      () = get_use_nbe                     ()
 let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
 let trivial_pre_for_unannotated_effectful_fns
                                  () = get_trivial_pre_for_unannotated_effectful_fns ()
-let with_fstarc                  () = get_with_fstarc ()
 
 let debug_keys                   () = lookup_opt "debug" as_comma_string_list
 let debug_all                    () = lookup_opt "debug_all" as_bool

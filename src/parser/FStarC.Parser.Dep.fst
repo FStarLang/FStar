@@ -41,6 +41,7 @@ let profile f c = Profiling.profile f None c
 (* Meant to write to a file as an out_channel. If an exception is raised,
 the file is deleted. *)
 let with_file_outchannel (fn : string) (k : out_channel -> 'a) : 'a =
+  BU.maybe_create_parent fn;
   let outc = BU.open_file_for_writing fn in
   let r =
     try k outc
@@ -115,7 +116,7 @@ let list_of_pair (intf, impl) =
   list_of_option intf @ list_of_option impl
 
 (* In public interface *)
-let maybe_module_name_of_file f = check_and_strip_suffix (basename f)
+let maybe_module_name_of_file f = check_and_strip_suffix (Filepath.basename f)
 let module_name_of_file f =
     match maybe_module_name_of_file f with
     | Some longname ->
@@ -311,13 +312,13 @@ let cache_file_name =
         else fn ^".checked"
       in
       let mname = fn |> module_name_of_file in
-      match Find.find_file (cache_fn |> Util.basename) with
+      match Find.find_file (cache_fn |> Filepath.basename) with
       | Some path ->
         let expected_cache_file = Find.prepend_cache_dir cache_fn in
         if Option.isSome (Options.dep()) //if we're in the dependence analysis
         && not (Options.should_be_already_cached mname) //and checked file is in the
-        && (not (BU.file_exists expected_cache_file) //wrong spot ... complain
-            || not (BU.paths_to_same_file path expected_cache_file))
+        && (not (Filepath.file_exists expected_cache_file) //wrong spot ... complain
+            || not (Filepath.paths_to_same_file path expected_cache_file))
         then (
           let open FStarC.Pprint in
           let open FStarC.Errors.Msg in
@@ -335,12 +336,12 @@ let cache_file_name =
          * preference to relative filenames. This is mostly since
          * GNU make doesn't resolve paths in targets, so we try
          * to keep target paths relative. See issue #1978. *)
-        if BU.file_exists expected_cache_file && BU.paths_to_same_file path expected_cache_file
+        if Filepath.file_exists expected_cache_file && Filepath.paths_to_same_file path expected_cache_file
         then expected_cache_file
         else path
       | None ->
         if !dbg_CheckedFiles then
-          BU.print1 "find_file(%s) returned None\n" (cache_fn |> Util.basename);
+          BU.print1 "find_file(%s) returned None\n" (cache_fn |> Filepath.basename);
         if mname |> Options.should_be_already_cached then
           raise_error0 FStarC.Errors.Error_AlreadyCachedAssertionFailure [
              text (BU.format1 "Expected %s to be already checked but could not find it." mname)
@@ -444,8 +445,8 @@ let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph)
   List.unique (deps_keys graph) |> List.iter (fun k ->
     let deps = (must (deps_try_find graph k)).edges in
     List.iter (fun dep ->
-      let l = basename k in
-      let r = basename <| file_of_dep file_system_map cmd_lined_files dep in
+      let l = Filepath.basename k in
+      let r = Filepath.basename <| file_of_dep file_system_map cmd_lined_files dep in
       if not <| Options.should_be_already_cached (module_name_of_dep dep) then
         pr (Util.format2 "  \"%s\" -> \"%s\"\n" l r)
     ) deps
@@ -454,7 +455,7 @@ let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph)
   fprint outc "%s" [FStarC.StringBuffer.contents sb]
 
 let safe_readdir_for_include (d:string) : list string =
-  try readdir d
+  try Filepath.readdir d
   with
   | _ ->
     let open FStarC.Pprint in
@@ -471,19 +472,19 @@ let safe_readdir_for_include (d:string) : list string =
     Return a list of pairs of long names and full paths. *)
 (* In public interface *)
 let build_inclusion_candidates_list (): list (string & string) =
-  let include_directories = Find.include_path () in
-  let include_directories = List.map normalize_file_path include_directories in
+  let include_directories = Find.full_include_path () in
+  let include_directories = List.map Filepath.normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
   let include_directories = List.unique include_directories in
-  let cwd = normalize_file_path (getcwd ()) in
+  let cwd = Filepath.normalize_file_path (getcwd ()) in
   include_directories |> List.concatMap (fun d ->
     let files = safe_readdir_for_include d in
     files |> List.filter_map (fun f ->
-      let f = basename f in
+      let f = Filepath.basename f in
       check_and_strip_suffix f
       |> Util.map_option (fun longname ->
-            let full_path = if d = cwd then f else join_paths d f in
+            let full_path = if d = cwd then f else Filepath.join_paths d f in
             (longname, full_path))
     )
   )
@@ -534,7 +535,7 @@ let namespace_of_lid l =
 
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = string_of_lid lid true in
-  if must (check_and_strip_suffix (basename filename)) <> k' then
+  if must (check_and_strip_suffix (Filepath.basename filename)) <> k' then
     log_issue lid Errors.Error_ModuleFileNameMismatch [
         Errors.Msg.text (Util.format2 "The module declaration \"module %s\" \
           found in file %s does not match its filename." (string_of_lid lid true) filename);
@@ -1435,12 +1436,12 @@ let topological_dependences_of
     topological_dependences_of' file_system_map dep_graph interfaces_needing_inlining root_files widened
 
 let all_files_in_include_paths () =
-  let paths = Find.include_path () in
+  let paths = Find.full_include_path () in
   List.collect
     (fun path -> 
       let files = safe_readdir_for_include path in
       let files = List.filter (fun f -> Util.ends_with f ".fst" || Util.ends_with f ".fsti") files in
-      List.map (fun file -> Util.join_paths path file) files)
+      List.map (fun file -> Filepath.join_paths path file) files)
     paths
 
 (** Collect the dependencies for a list of given files.
@@ -1785,7 +1786,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
         s
     in
     let output_file ext fst_file =
-        let basename = Option.get (check_and_strip_suffix (BU.basename fst_file)) in
+        let basename = Option.get (check_and_strip_suffix (Filepath.basename fst_file)) in
         let basename = no_fstar_stubs_file basename in
         let ml_base_name = replace_chars basename '.' "_" in
         Find.prepend_output_dir (ml_base_name ^ ext)
@@ -2020,7 +2021,7 @@ let do_print (outc : out_channel) (fn : string) deps : unit =
     BU.fprint outc "# This .depend was generated by F* %s\n" [!Options._version];
     BU.fprint outc "# Executable: %s\n" [show BU.exec_name];
     BU.fprint outc "# Hash: %s\n" [!Options._commit];
-    BU.fprint outc "# Running in directory %s\n" [show (normalize_file_path (BU.getcwd ()))];
+    BU.fprint outc "# Running in directory %s\n" [show (Filepath.normalize_file_path (BU.getcwd ()))];
     BU.fprint outc "# Command line arguments: \"%s\"\n" [show (BU.get_cmd_args ())];
     BU.fprint outc "\n" [];
     ()

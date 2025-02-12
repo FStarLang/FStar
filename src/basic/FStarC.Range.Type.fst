@@ -94,15 +94,9 @@ let mk_range f b e = let r = mk_rng f b e in range_of_rng r r
 
 let string_of_file_name f =
   if Options.Ext.enabled "fstar:no_absolute_paths" then
-    BU.basename f
-  else if Options.ide () then
-    try
-        match Find.find_file (BU.basename f) with
-        | None -> f //couldn't find file; just return the relative path
-        | Some absolute_path ->
-            absolute_path
-    with _ -> f
-  else f
+    Filepath.basename f
+  else
+    f
 
 open FStarC.Json
 let json_of_pos (r: pos): json

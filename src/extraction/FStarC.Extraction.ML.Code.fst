@@ -656,7 +656,7 @@ and doc_of_loc (lineno, file) =
     if (Options.no_location_info()) || Util.codegen_fsharp () || file=" dummy" then
         empty
     else
-        let file = BU.basename file in
+        let file = Filepath.basename file in
         reduce1 [ text "#"; num lineno; text ("\"" ^ file ^ "\"") ]
 
 (* -------------------------------------------------------------------- *)

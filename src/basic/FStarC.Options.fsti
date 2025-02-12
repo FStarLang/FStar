@@ -173,7 +173,6 @@ val max_ifuel                   : unit    -> int
 val ml_ish                      : unit    -> bool
 val ml_ish_effect               : unit    -> string
 val set_ml_ish                  : unit    -> unit
-val no_default_includes         : unit    -> bool
 val no_location_info            : unit    -> bool
 val no_plugins                  : unit    -> bool
 val no_smt                      : unit    -> bool
@@ -187,10 +186,7 @@ val locate_ocaml                : unit    -> bool
 val locate_file                 : unit    -> option string
 val locate_z3                   : unit    -> option string
 val output_deps_to              : unit    -> option string
-val output_dir                  : unit    -> option string
 val custom_prims                : unit    -> option string
-val cache_dir                   : unit    -> option string
-val include_                    : unit    -> list string
 val print_bound_var_types       : unit    -> bool
 val print_effect_args           : unit    -> bool
 val print_expected_failures     : unit    -> bool
@@ -266,7 +262,6 @@ val use_nbe                     : unit    -> bool
 val use_nbe_for_extraction      : unit    -> bool
 val trivial_pre_for_unannotated_effectful_fns
                                 : unit    -> bool
-val with_fstarc                 : unit    -> bool
 
 (* List of enabled debug toggles. *)
 val debug_keys                  : unit    -> list string

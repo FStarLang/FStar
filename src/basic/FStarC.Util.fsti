@@ -165,18 +165,7 @@ val kill_all: unit -> unit
 val proc_prog : proc -> string
 val system_run : string -> int (* a less refined launching, implemented by Sys.command *)
 
-val get_file_extension: string -> string
-val is_path_absolute: string -> bool
-val join_paths: string -> string -> string
-val normalize_file_path: string -> string
-val basename: string -> string (* name of file without directory *)
-val dirname : string -> string
 val getcwd: unit -> string
-val readdir: string -> list string
-val paths_to_same_file: string -> string -> bool
-
-val file_exists: string -> Tot bool
-val is_directory: string -> Tot bool
 
 val int_of_string: string -> int
 val safe_int_of_string: string -> option int
@@ -329,6 +318,8 @@ val print_endline: string -> unit
 
 val map_option: ('a -> 'b) -> option 'a -> option 'b
 
+(* for a filepath, create the parent directory if it doesn't exist (and leading directories too) *)
+val maybe_create_parent : string -> unit
 val save_value_to_file: string -> 'a -> unit
 val load_value_from_file: string -> option 'a
 val save_2values_to_file: string -> 'a -> 'b -> unit

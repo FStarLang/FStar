@@ -321,7 +321,7 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
          FStarC.Extraction.ML.Code for both OCaml and F# extraction.
          When bootstarpped in OCaml, this will use the old printer
          for F# extraction and the new printer for OCaml extraction. *)
-      let outdir = Options.output_dir() in
+      let outdir = Find.get_odir () in
       List.iter (FStarC.Extraction.ML.PrintML.print outdir ext) (List.map snd mllibs)
 
     | Some Options.Extension ->
@@ -561,8 +561,8 @@ let needs_interleaving intf impl =
   let m1 = Parser.Dep.lowercase_module_name intf in
   let m2 = Parser.Dep.lowercase_module_name impl in
   m1 = m2 &&
-  List.mem (FStarC.Util.get_file_extension intf) ["fsti"; "fsi"] &&
-  List.mem (FStarC.Util.get_file_extension impl) ["fst"; "fs"]
+  List.mem (Filepath.get_file_extension intf) ["fsti"; "fsi"] &&
+  List.mem (Filepath.get_file_extension impl) ["fst"; "fs"]
 
 let tc_one_file_from_remaining (remaining:list string) (env:uenv)
                                (deps:FStarC.Parser.Dep.deps)  //used to query parsing data

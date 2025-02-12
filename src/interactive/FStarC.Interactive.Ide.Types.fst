@@ -173,6 +173,7 @@ let json_of_issue_level i =
            | EError -> "error")
 
 let json_of_issue issue =
+  let r = map_opt issue.issue_range Range.refind_range in
   JsonAssoc <|
      [("level", json_of_issue_level issue.issue_level)]
     @(match issue.issue_number with
@@ -180,10 +181,10 @@ let json_of_issue issue =
       | Some n -> [("number", JsonInt n)])
     @[("message", JsonStr (format_issue' false issue));
       ("ranges", JsonList
-                   ((match issue.issue_range with
+                   ((match r with
                      | None -> []
                      | Some r -> [json_of_use_range r]) @
-                    (match issue.issue_range with
+                    (match r with
                      | Some r when def_range r <> use_range r ->
                        [json_of_def_range r]
                      | _ -> [])))]

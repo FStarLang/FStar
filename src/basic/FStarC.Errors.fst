@@ -139,7 +139,7 @@ let json_of_issue issue =
     JsonAssoc [
         "msg",    json_of_error_message issue.issue_msg;
         "level",  json_of_issue_level issue.issue_level;
-        "range",  dflt JsonNull (json_of_range <$> issue.issue_range);
+        "range",  dflt JsonNull (json_of_range <$> map_opt issue.issue_range Range.refind_range);
         "number", dflt JsonNull (JsonInt <$> issue.issue_number);
         "ctx",    JsonList (JsonStr <$> issue.issue_ctx);
     ]
@@ -180,7 +180,7 @@ let optional_def (f : 'a -> PP.document) (def : PP.document) (o : option 'a) : P
 
 let issue_to_doc' (print_hdr:bool) (issue:issue) : PP.document =
   let open FStarC.Pprint in
-  let r = issue.issue_range in
+  let r = BU.map_opt issue.issue_range Range.refind_range in
   let hdr : document =
     if print_hdr then (
       let level_header = doc_of_string (string_of_issue_level issue.issue_level) in

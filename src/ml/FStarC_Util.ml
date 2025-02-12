@@ -345,41 +345,6 @@ let ask_process
   with e -> (* Ensure that reader_fn gets an EOF and exits *)
     kill_process p; raise e
 
-let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
-
-(* NOTE: Working around https://github.com/ocaml-batteries-team/batteries-included/issues/1136 *)
-let is_absolute_windows (path_str : string) : bool =
-  if FStarC_Platform.windows then
-    match BatString.to_list path_str with
-    | '\\' :: _ -> true
-    | letter :: ':' :: '\\' :: _ -> BatChar.is_letter letter
-    | _ -> false
-  else
-    false
-
-let is_path_absolute path_str =
-  let open Batteries.Incubator in
-  let open BatPathGen.OfString in
-  let path = of_string path_str in
-  is_absolute path || is_absolute_windows path_str
-
-let join_paths path_str0 path_str1 =
-  let open Batteries.Incubator in
-  let open BatPathGen.OfString in
-  let open BatPathGen.OfString.Operators in
-  to_string ((of_string path_str0) //@ (of_string path_str1))
-
-let normalize_file_path (path_str:string) =
-  if is_path_absolute path_str then
-    path_str
-  else
-    let open Batteries.Incubator in
-    let open BatPathGen.OfString in
-    let open BatPathGen.OfString.Operators in
-    let path = of_string path_str in
-    let cwd = of_string (BatSys.getcwd ()) in
-    to_string (normalize_in_tree (cwd //@ path))
-
 type stream_reader = BatIO.input
 let open_stdin () = BatIO.stdin
 let read_line s =
@@ -761,11 +726,6 @@ let string_to_ascii_bytes (s:string) : char array =
 let ascii_bytes_to_string (b:char array) : string =
   BatString.implode (BatArray.to_list b)
 
-let write_file (fn:string) s =
-  let fh = open_file_for_writing fn in
-  append_to_file fh s;
-  close_out_channel fh
-
 let copy_file input_name output_name =
   (* see https://ocaml.github.io/ocamlunix/ocamlunix.html#sec33 *)
   let open Unix in
@@ -958,28 +918,26 @@ let get_oreader (filename:string) : oReader = {
 
 let getcwd = Sys.getcwd
 
-let readdir dir = "." :: ".." :: Array.to_list (Sys.readdir dir)
-
-let paths_to_same_file f g =
-  let open Unix in
-  let { st_dev = i; st_ino = j } = stat f in
-  let { st_dev = i'; st_ino = j' } = stat g in
-  (i,j) = (i',j')
-
-let file_exists = Sys.file_exists
-(* Sys.is_directory raises Sys_error if the path does not exist *)
-let is_directory f = Sys.file_exists f && Sys.is_directory f
-
-
-let basename = Filename.basename
-let dirname = Filename.dirname
 let print_endline = print_endline
 
 let map_option f opt = BatOption.map f opt
 
+let maybe_create_parent (fname:string) : unit =
+  let d = Filename.dirname fname in
+  if Sys.file_exists d && Sys.is_directory d then ()
+  else
+    mkdir false true d
+
+let write_file (fn:string) s =
+  maybe_create_parent fn;
+  let fh = open_file_for_writing fn in
+  append_to_file fh s;
+  close_out_channel fh
+
 let save_value_to_file (fname:string) value =
   (* BatFile.with_file_out uses Unix.openfile (which isn't available in
      js_of_ocaml) instead of Pervasives.open_out, so we don't use it here. *)
+  maybe_create_parent fname;
   let channel = open_out_bin fname in
   BatPervasives.finally
     (fun () -> close_out channel)
@@ -999,6 +957,7 @@ let load_value_from_file (fname:string) =
 
 let save_2values_to_file (fname:string) value1 value2 =
   try
+    maybe_create_parent fname;
     let channel = open_out_bin fname in
     BatPervasives.finally
       (fun () -> close_out channel)
@@ -1012,6 +971,7 @@ let save_2values_to_file (fname:string) value1 value2 =
 
 let load_2values_from_file (fname:string) =
   try
+    maybe_create_parent fname;
     let channel = open_in_bin fname in
     BatPervasives.finally
       (fun () -> close_in channel)

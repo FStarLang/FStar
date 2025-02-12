@@ -24,7 +24,7 @@ open FStarC.Util
 open FStarC.Errors
 open FStarC.Class.Show
 
-let is_cache_file (fn: string) = Util.get_file_extension fn = ".cache"
+let is_cache_file (fn: string) = Filepath.get_file_extension fn = ".cache"
 
 let parse_fragment lang_opt (frag: ParseIt.input_frag) : fragment =
     match ParseIt.parse lang_opt (Toplevel frag) with
