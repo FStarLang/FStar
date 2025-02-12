@@ -137,6 +137,14 @@ let print_help_for (o : string) : unit =
 (* Normal mode with some flags, files, etc *)
 let go_normal () =
   let res, filenames = process_args () in
+
+  (* Compat: create the --odir and --cache_dir if they don't exist.
+  F* has done this for a long time, only sinc it simplified
+  the handling of options. I think this should probably be removed,
+  but a few makefiles here and there rely on it. *)
+  iter_opt (Find.get_odir ()) (mkdir false true);
+  iter_opt (Find.get_cache_dir ()) (mkdir false true);
+
   let check_no_filenames opt =
     if Cons? filenames then (
       Util.print1_error "error: No filenames should be passed with option %s\n" opt;
