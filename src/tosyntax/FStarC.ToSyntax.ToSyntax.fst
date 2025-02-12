@@ -1041,8 +1041,6 @@ and desugar_binding_pat_maybe_top top env p
 
   if top then
     let mklet x ty (tacopt : option S.term) : (env_t & bnd & list annotated_pat) =
-    // GM: ^ I seem to need the type annotation here,
-    //     or F* gets confused between tuple2 and tuple3 apparently?
         env, LetBinder(qualify env x, (ty, tacopt)), []
     in
     let op_to_ident x = mk_ident (compile_op 0 (string_of_id x) (range_of_id x), (range_of_id x)) in
@@ -1193,8 +1191,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       let rec flatten t = match t.tm with
         // * is left-associative
         | Op(id, [t1;t2]) when
-           string_of_id id = "*" &&
-           op_as_term env 2 op_star |> Option.isNone ->
+           string_of_id id = "*" && None? (op_as_term env 2 op_star) ->
           flatten t1 @ [ t2 ]
         | _ -> [t]
       in
@@ -1467,7 +1464,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
                 | [] -> None
                 | [p, _] -> Some p // NB: We ignore the type annotation here, the typechecker catches that anyway in tc_abs
                 | _ ->
-                  raise_error p Errors.Fatal_UnsupportedDisjuctivePatterns "Disjunctive patterns are not supported in abstractions"
+                  raise_error p Errors.Fatal_UnsupportedDisjuctivePatterns [
+                    text "Disjunctive patterns are not supported in abstractions";
+                  ]
             in
             let b, sc_pat_opt =
                 match b with
