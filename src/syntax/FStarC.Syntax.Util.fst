@@ -1985,7 +1985,7 @@ let get_bind_vc_combinator (ed:eff_decl) : tscheme & option indexed_effect_combi
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.bind_wp, None
-  | Layered_eff combs -> Mktuple3?._2 combs.l_bind, Mktuple3?._3 combs.l_bind
+  | Layered_eff combs -> combs.l_bind._2, combs.l_bind._3
 
 let get_return_vc_combinator (ed:eff_decl) : tscheme =
   match ed.combinators with
@@ -1997,7 +1997,7 @@ let get_bind_repr (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.bind_repr
-  | Layered_eff combs -> Mktuple3?._1 combs.l_bind |> Some
+  | Layered_eff combs -> combs.l_bind._1 |> Some
 
 let get_return_repr (ed:eff_decl) : option tscheme =
   match ed.combinators with
@@ -2013,7 +2013,7 @@ let get_wp_trivial_combinator (ed:eff_decl) : option tscheme =
 
 let get_layered_if_then_else_combinator (ed:eff_decl) : option (tscheme & option indexed_effect_combinator_kind) =
   match ed.combinators with
-  | Layered_eff combs -> Some (Mktuple3?._1 combs.l_if_then_else, Mktuple3?._3 combs.l_if_then_else)
+  | Layered_eff combs -> Some (combs.l_if_then_else._1, combs.l_if_then_else._3)
   | _ -> None
 
 let get_wp_if_then_else_combinator (ed:eff_decl) : option tscheme =
@@ -2032,13 +2032,13 @@ let get_stronger_vc_combinator (ed:eff_decl) : tscheme & option indexed_effect_c
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.stronger, None
-  | Layered_eff combs -> Mktuple3?._2 combs.l_subcomp, Mktuple3?._3 combs.l_subcomp
+  | Layered_eff combs -> combs.l_subcomp._2, combs.l_subcomp._3
 
 let get_stronger_repr (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff _
   | DM4F_eff _ -> None
-  | Layered_eff combs -> Mktuple3?._1 combs.l_subcomp |> Some
+  | Layered_eff combs -> combs.l_subcomp._1 |> Some
 
 let aqual_is_erasable (aq:aqual) =
   match aq with

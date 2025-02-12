@@ -817,13 +817,14 @@ let collect_one
             collect_decls decls
 
       and collect_decls decls =
-        List.iter (fun x -> collect_decl x.d;
-                            List.iter collect_term x.attrs;
-                            match x.d with
-                            | _ when List.contains Inline_for_extraction x.quals ->
-                                add_to_parsing_data P_inline_for_extraction
-                            | _ -> ()
-                            ) decls
+        decls |> List.iter (fun x ->
+          collect_decl x.d;
+          List.iter collect_term x.attrs;
+          match x.d with
+          | _ when List.contains Inline_for_extraction x.quals ->
+              add_to_parsing_data P_inline_for_extraction
+          | _ -> ()
+        )
 
       and collect_decl d =
         match d with
@@ -834,8 +835,15 @@ let collect_one
             add_to_parsing_data (P_dep (true, (lowercase_join_longident lid true |> Ident.lid_of_str)))
         | ModuleAbbrev (ident, lid) ->
             add_to_parsing_data (P_alias (ident, lid))
-        | TopLevelLet (_, patterms) ->
-            List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
+        | TopLevelLet (_, patterns) ->
+          patterns |> List.iter (fun (pat, t) ->
+            collect_pattern pat;
+            begin match pat.pat with
+            | PatApp (_, ps) -> collect_pats_tuple ps
+            | _ -> ()
+            end;
+            collect_term t
+          )
         | Splice (_, _, t)
         | Assume (_, t)
         | SubEffect { lift_op = NonReifiableLift t }
@@ -899,7 +907,7 @@ let collect_one
                       | VpOfNotation t | VpArbitrary t -> collect_term t
                       | VpRecord (record, t) -> collect_tycon_record record;
                                                iter_opt t collect_term
-                      ) (List.filter_map Mktuple3?._2 identterms)
+                      ) (List.filter_map (fun (t : _ & _ & _) -> t._2) identterms)
 
       and collect_tycon_record r = 
         List.iter (fun (_, aq, attrs, t) ->
@@ -934,6 +942,17 @@ let collect_one
         | _ -> ()
 
       and collect_term t =
+        (* Tries to detect tuples formed by the * operator (instead of &, which
+        parses to a Sum directly. *)
+        let rec tdepth (t:term) : int =
+          match t.tm with
+          | Op (id, [l; _]) when string_of_id id = "*" || string_of_id id = "&" ->
+            1 + tdepth l
+          | _ -> 1
+        in
+        let d = tdepth t in
+        if d > 1 then
+          add_tuple_dep false d;
         collect_term' t.tm
 
       and collect_constant = function
@@ -955,6 +974,29 @@ let collect_one
               add_to_parsing_data (P_dep (false, ("fstar.real" |> Ident.lid_of_str)))
         | _ ->
             ()
+
+      and add_tuple_dep dependent arity =
+        let modul =
+          if dependent
+          then Const.mk_dtuple_lid arity Range.dummyRange
+          else Const.mk_tuple_lid  arity Range.dummyRange
+        in
+        let modul = modul |> Ident.ns_of_lid |> Ident.lid_of_ids in
+        add_to_parsing_data (P_dep (false, modul))
+
+      and collect_pats_tuple pats =
+        (* A defintion like
+            let f (Some x) (Some y) = x+y
+          will be desugared to something like
+            let f xx yy =
+              match x, y with
+              | Some x, Some y -> x+y
+            so make sure to add the relevant tuple types. This should be called
+            on the arg patterns of letbindings and abstractions, which trigger this
+            rewriting. *)
+        let arity = pats |> List.filter (fun p -> PatApp? p.pat) |> List.length in
+        if arity > 1 then
+          add_tuple_dep false arity
 
       and collect_term' = function
         | Wild ->
@@ -978,6 +1020,7 @@ let collect_one
           collect_branches branches
         | Abs (pats, t) ->
             collect_patterns pats;
+            collect_pats_tuple pats;
             collect_term t
         | App (t1, t2, _) ->
             collect_term t1;
@@ -1049,6 +1092,8 @@ let collect_one
               | Inl b -> collect_binder b
               | Inr t -> collect_term t)
               binders;
+            let isdep = binders |> List.existsb (function Inl _ -> true | _ -> false) in
+            add_tuple_dep isdep (List.length binders + 1);
             collect_term t
         | QForall (binders, (_, ts), t)
         | QExists (binders, (_, ts), t)
@@ -1194,8 +1239,10 @@ let collect_one
         | PatName lid ->
             add_to_parsing_data (P_lid lid)
         | PatList ps
-        | PatOr ps
-        | PatTuple (ps, _) ->
+        | PatOr ps ->
+            collect_patterns ps
+        | PatTuple (ps, dep) ->
+            add_tuple_dep dep (List.length ps);
             collect_patterns ps
         | PatRecord lidpats ->
             List.iter (fun (_, p) -> collect_pattern p) lidpats
@@ -1206,7 +1253,6 @@ let collect_one
             collect_pattern p;
             collect_term t;
             collect_term tac
-
 
       and collect_branches bs =
         List.iter collect_branch bs

@@ -11,8 +11,8 @@ let unitv_                 : term = `()
 let unitt_                 : term = `(unit)
 let empty_                 : term = `(empty)
 let either_ (a b : term)   : term = `(either (`#a) (`#b))
-let tuple2_ (a b : term)   : term = `(tuple2 (`#a) (`#b))
-let mktuple2_ (a b : term) : term = `(Mktuple2 (`#a) (`#b))
+let tuple2_ (a b : term)   : term = `(Tuple2.t (`#a) (`#b))
+let mktuple2_ (a b : term) : term = `(Tuple2.Mk (`#a) (`#b))
 
 let get_inductive_typ (nm:string) : Tac (se:sigelt_view{Sg_Inductive? se}) =
   let e = top_env () in
@@ -56,9 +56,9 @@ let rec get_apply_tuple (b:binding) : Tac (list binding) =
   match inspect hd, args with
   | Tv_UInst fv _, [b1; b2]
   | Tv_FVar fv, [b1; b2] ->
-    if inspect_fv fv = explode_qn (`%tuple2) then
+    if inspect_fv fv = explode_qn (`%Tuple2.t) then
       let cases = t_destruct b in
-      guard (List.Tot.length cases = 1 && inspect_fv (fst (List.Tot.hd cases)) = explode_qn (`%Mktuple2) && snd (List.Tot.hd cases) = 2);
+      guard (List.Tot.length cases = 1 && inspect_fv (fst (List.Tot.hd cases)) = explode_qn (`%Tuple2.Mk) && snd (List.Tot.hd cases) = 2);
       let b1 = intro () in
       let b2 = intro () in
       let _eq = intro () in

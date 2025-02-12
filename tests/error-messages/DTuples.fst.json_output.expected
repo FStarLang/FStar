@@ -30,11 +30,11 @@ let _ = Prims.int & (Prims.int & (Prims.int & Prims.int))
 private
 let _ = Prims.int & (Prims.int & (Prims.int & (Prims.int & Prims.int)))
 private
-let _ = FStar.Pervasives.Native.tuple4 Prims.int Prims.bool
+let _ = FStar.Tuple4.t Prims.int Prims.bool
 private
 let _ = Prims.int & Prims.bool & Prims.string & Prims.unit
 private
-let _ = FStar.Pervasives.dtuple4 Prims.int (fun _ -> Prims.bool)
+let _ = FStar.DTuple4.t Prims.int (fun _ -> Prims.bool)
 let t1 = 1, 2, 3
 let t2 = (1, 2), 3
 let t3 = 1, (2, 3)
@@ -77,11 +77,11 @@ let _ = Prims.int & (Prims.int & (Prims.int & Prims.int))
 private
 let _ = Prims.int & (Prims.int & (Prims.int & (Prims.int & Prims.int)))
 private
-let _ = FStar.Pervasives.Native.tuple4 Prims.int Prims.bool
+let _ = FStar.Tuple4.t Prims.int Prims.bool
 private
 let _ = Prims.int & Prims.bool & Prims.string & Prims.unit
 private
-let _ = FStar.Pervasives.dtuple4 Prims.int (fun _ -> Prims.bool)
+let _ = FStar.DTuple4.t Prims.int (fun _ -> Prims.bool)
 let t1 = 1, 2, 3
 let t2 = (1, 2), 3
 let t3 = 1, (2, 3)
@@ -124,11 +124,11 @@ let _ = Prims.int & (Prims.int & (Prims.int & Prims.int))
 private
 let _ = Prims.int & (Prims.int & (Prims.int & (Prims.int & Prims.int)))
 private
-let _ = FStar.Pervasives.Native.tuple4 Prims.int Prims.bool
+let _ = FStar.Tuple4.t Prims.int Prims.bool
 private
 let _ = Prims.int & Prims.bool & Prims.string & Prims.unit
 private
-let _ = FStar.Pervasives.dtuple4 Prims.int (fun _ -> Prims.bool)
+let _ = FStar.DTuple4.t Prims.int (fun _ -> Prims.bool)
 let t1 = 1, 2, 3
 let t2 = (1, 2), 3
 let t3 = 1, (2, 3)

@@ -383,13 +383,13 @@ let rec quote_list (#a:Type) (ta:term) (quotea:a -> Tac term) (xs:list a) :
 (** Quotes a variable map *)
 let quote_vm (#a:Type) (ta: term) (quotea:a -> Tac term) (vm:vmap a) : Tac term =
   let quote_map_entry (p:(nat & a)) : Tac term =
-    mk_app (`Mktuple2) [(`nat, Q_Implicit); (ta, Q_Implicit);
+    mk_app (`Tuple2.Mk) [(`nat, Q_Implicit); (ta, Q_Implicit);
       (pack (Tv_Const (C_Int (fst p))), Q_Explicit);
       (quotea (snd p), Q_Explicit)] in
-  let tyentry = mk_e_app (`tuple2) [(`nat); ta] in
+  let tyentry = mk_e_app (`Tuple2.t) [(`nat); ta] in
   let tlist = quote_list tyentry quote_map_entry (fst vm) in
   let tylist = mk_e_app (`list) [tyentry] in
-  mk_app (`Mktuple2) [(tylist, Q_Implicit); (ta, Q_Implicit);
+  mk_app (`Tuple2.Mk) [(tylist, Q_Implicit); (ta, Q_Implicit);
                       (tlist, Q_Explicit); (quotea (snd vm), Q_Explicit)]
 
 (**
@@ -1563,8 +1563,8 @@ let steps =
       `%FStar.List.Tot.Base.assoc;
       `%FStar.Pervasives.Native.fst;
       `%FStar.Pervasives.Native.snd;
-      `%FStar.Pervasives.Native.__proj__Mktuple2__item___1;
-      `%FStar.Pervasives.Native.__proj__Mktuple2__item___2;
+      `%Tuple2.Mk?._1;
+      `%Tuple2.Mk?._2;
       `%FStar.List.Tot.Base.op_At;
       `%FStar.List.Tot.Base.append;
     ]

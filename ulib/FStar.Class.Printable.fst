@@ -164,7 +164,7 @@ instance printable_tuple2 #a #b {| printable a |} {| printable b |} : printable 
 instance printable_tuple3
   #t0 #t1 #t2
   {| printable t0 |} {| printable t1 |} {| printable t2 |}
-: printable (tuple3 t0 t1 t2) =
+: printable (t0 & t1 & t2) =
 {
   to_string =
   (fun (v0,v1,v2) ->
@@ -177,7 +177,7 @@ instance printable_tuple3
 instance printable_tuple4
   #t0 #t1 #t2 #t3
   {| printable t0 |} {| printable t1 |} {| printable t2 |} {| printable t3 |}
-: printable (tuple4 t0 t1 t2 t3) =
+: printable (t0 & t1 & t2 & t3) =
 {
   to_string =
   (fun (v0,v1,v2,v3) ->
@@ -192,7 +192,7 @@ instance printable_tuple5
   #t0 #t1 #t2 #t3 #t4
   {| printable t0 |} {| printable t1 |} {| printable t2 |} {| printable t3 |}
   {| printable t4 |}
-: printable (tuple5 t0 t1 t2 t3 t4) =
+: printable (t0 & t1 & t2 & t3 & t4) =
 {
   to_string =
   (fun (v0,v1,v2,v3,v4) ->
@@ -208,7 +208,7 @@ instance printable_tuple6
   #t0 #t1 #t2 #t3 #t4 #t5
   {| printable t0 |} {| printable t1 |} {| printable t2 |} {| printable t3 |}
   {| printable t4 |} {| printable t5 |}
-: printable (tuple6 t0 t1 t2 t3 t4 t5) =
+: printable (t0 & t1 & t2 & t3 & t4 & t5) =
 {
   to_string =
   (fun (v0,v1,v2,v3,v4,v5) ->
@@ -226,7 +226,7 @@ instance printable_tuple7
   #t0 #t1 #t2 #t3 #t4 #t5 #t6
   {| printable t0 |} {| printable t1 |} {| printable t2 |} {| printable t3 |}
   {| printable t4 |} {| printable t5 |} {| printable t6 |}
-: printable (tuple7 t0 t1 t2 t3 t4 t5 t6) =
+: printable (t0 & t1 & t2 & t3 & t4 & t5 & t6) =
 {
   to_string =
   (fun (v0,v1,v2,v3,v4,v5,v6) ->

@@ -57,11 +57,11 @@ let base0 =
     x
 
 let base1 =
-    let Mktuple3 x y z = (1,2,3) in
+    let Tuple3.Mk x y z = (1,2,3) in
     x
 
 let base2 =
-    let Mktuple3 #_ #_ #_ x y z = (1,2,3) in
+    let Tuple3.Mk #_ #_ #_ x y z = (1,2,3) in
     x
 
 val base3 : #a:Type -> #b:Type -> a & b -> a

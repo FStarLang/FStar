@@ -9,6 +9,9 @@ open FStarC.Class.Monad
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 
+let mktuple2 x y = (x, y)
+let mktuple3 x y z = (x, y, z)
+
 type endo (m:Type -> Type) a = a -> m a
 
 (* local visitor monad, this class is not exposed, it's just
@@ -168,7 +171,7 @@ let on_sub_term #m {|d : lvm m |} (tm : term) : m term =
 
   | Tm_match {scrutinee=sc; ret_opt=asc_opt; brs; rc_opt} ->
     let! sc      = f_term sc in
-    let! asc_opt = asc_opt |> map_optM (fun (b, asc) -> Mktuple2 <$> f_binder b <*> on_sub_ascription asc <: m _) in
+    let! asc_opt = asc_opt |> map_optM (fun (b, asc) -> mktuple2 <$> f_binder b <*> on_sub_ascription asc <: m _) in
     let! brs     = mapM f_br brs in
     let! rc_opt  = rc_opt |> map_optM f_residual_comp in
     return <| mk (Tm_match {scrutinee=sc; ret_opt=asc_opt; brs; rc_opt})
@@ -222,7 +225,7 @@ let rec on_sub_pat #m {|d : lvm m |} (p0 : pat) : m pat =
 
   | Pat_cons (fv, us, subpats) ->
     let! us = us |> map_optM (mapM #m f_univ) in
-    let! subpats = subpats |> mapM (fun (p, b) -> Mktuple2 <$> on_sub_pat p <*> return b <: m _) in
+    let! subpats = subpats |> mapM (fun (p, b) -> mktuple2 <$> on_sub_pat p <*> return b <: m _) in
     return <| mk (Pat_cons (fv, us, subpats))
 
   | Pat_var bv ->
@@ -265,7 +268,7 @@ let on_sub_comp #m {|d : lvm m |} c : m comp =
 
 let __on_decreases #m {|d : lvm m |} f : cflag -> m cflag = function
   | DECREASES (Decreases_lex l)      -> DECREASES <$> (Decreases_lex <$> mapM f l)
-  | DECREASES (Decreases_wf (r, t))  -> DECREASES <$> (Decreases_wf <$> (Mktuple2 <$> f r <*>  f t))
+  | DECREASES (Decreases_wf (r, t))  -> DECREASES <$> (Decreases_wf <$> (mktuple2 <$> f r <*>  f t))
   | f -> return f
 
 let on_sub_residual_comp #m {|d : lvm m |} (rc : residual_comp) : m residual_comp =
@@ -321,10 +324,10 @@ let on_sub_wp_eff_combinators #m {|d : lvm m |} (wpcs : wp_eff_combinators) : m 
   }
 
 let mapTuple2 #m {| monad m |} (f : 'a -> m 'b) (g : 'c -> m 'd) (t : 'a & 'c) : m ('b & 'd) =
-  Mktuple2 <$> f t._1 <*> g t._2
+  mktuple2 <$> f t._1 <*> g t._2
 
 let mapTuple3 #m {| monad m |} (f : 'a -> m 'b) (g : 'c -> m 'd) (h : 'e -> m 'f) (t : 'a & 'c & 'e) : m ('b & 'd & 'f) =
-  Mktuple3 <$> f t._1 <*> g t._2 <*> h t._3
+  mktuple3 <$> f t._1 <*> g t._2 <*> h t._3
 
 let on_sub_layered_eff_combinators #m {|d : lvm m |} (lecs : layered_eff_combinators) : m layered_eff_combinators =
   let! l_repr         = lecs.l_repr         |> mapTuple2 (f_tscheme #m #d) (f_tscheme #m #d) in

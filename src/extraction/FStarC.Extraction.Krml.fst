@@ -766,7 +766,8 @@ let rec translate_type_without_decay' env t: typ =
       // Generate an unbound reference... to be filled in later by glue code.
       TQualified (path, type_name)
   
-  | MLTY_Named (args, (ns, t)) when (ns = ["Prims"] || ns = ["FStar"; "Pervasives"; "Native"]) && BU.starts_with t "tuple" ->
+  | MLTY_Named (args, p)
+    when Parser.Const.Tuples.get_tuple_tycon_arity (string_of_mlpath p) = Some (List.length args) ->
       TTuple (List.map (translate_type_without_decay env) args)
   
   | MLTY_Named (args, lid) ->

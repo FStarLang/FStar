@@ -7,4 +7,4 @@ let f #_ = unit
 
 let elim (d : (y:f & z:unit{y == z} & w:unit{w == z})) : unit =
   match d with
-  | Mkdtuple3 #_ #_ #_ x y z -> ()
+  | DTuple3.Mk #_ #_ #_ x y z -> ()

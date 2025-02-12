@@ -21,6 +21,24 @@ EXTRACT += --extract +FStar.Class.Printable
 EXTRACT += --extract +FStar.Seq.Base
 EXTRACT += --extract +FStar.Seq.Properties
 
+# Extract tuple files, mostly for when we use the projectors directly.
+EXTRACT += --extract +FStar.Tuple2
+EXTRACT += --extract +FStar.Tuple3
+EXTRACT += --extract +FStar.Tuple4
+EXTRACT += --extract +FStar.Tuple5
+EXTRACT += --extract +FStar.Tuple6
+EXTRACT += --extract +FStar.Tuple7
+EXTRACT += --extract +FStar.Tuple8
+EXTRACT += --extract +FStar.Tuple9
+EXTRACT += --extract +FStar.Tuple10
+EXTRACT += --extract +FStar.Tuple11
+EXTRACT += --extract +FStar.Tuple12
+EXTRACT += --extract +FStar.Tuple13
+EXTRACT += --extract +FStar.Tuple14
+EXTRACT += --extract +FStar.DTuple3
+EXTRACT += --extract +FStar.DTuple4
+EXTRACT += --extract +FStar.DTuple5
+
 ROOTS :=
 ROOTS += $(SRC)/fstar/FStarC.Main.fst
 

@@ -56,13 +56,13 @@ Module after type checking:
 module Bug3292
 Declarations: [
 #set-options "--print_implicits"
-let op_Plus #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
-let op_Minus #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
-let op_Slash #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
-let op_Greater #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
-let op_Less #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
-let op_GreaterEquals #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
-let op_LessEquals #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
+let op_Plus #a x y = FStar.Tuple2.Mk #a #a x y
+let op_Minus #a x y = FStar.Tuple2.Mk #a #a x y
+let op_Slash #a x y = FStar.Tuple2.Mk #a #a x y
+let op_Greater #a x y = FStar.Tuple2.Mk #a #a x y
+let op_Less #a x y = FStar.Tuple2.Mk #a #a x y
+let op_GreaterEquals #a x y = FStar.Tuple2.Mk #a #a x y
+let op_LessEquals #a x y = FStar.Tuple2.Mk #a #a x y
 private
 let _ = Bug3292.op_Plus #Prims.int 1 1
 private
