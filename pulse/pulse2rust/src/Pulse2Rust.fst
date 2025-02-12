@@ -101,7 +101,7 @@ let extract_one
 
 let file_to_module_name (f:string) : string =
   let suffix = ".ast" in
-  let s = basename f in
+  let s = Filepath.basename f in
   let s = String.substring s 0 (String.length s - String.length suffix) in
   replace_chars s '_' "."
 
