@@ -253,12 +253,12 @@ let go_normal () =
     | Success when Some? (Options.locate_z3 ()) -> (
       check_no_filenames "--locate_z3";
       let v = Some?.v (Options.locate_z3 ()) in
-      match Find.locate_z3 v with
+      match Find.Z3.locate_z3 v with
       | None ->
         // Use an actual error to reuse the pretty printing.
         Errors.log_issue0 Errors.Error_Z3InvocationError ([
           Errors.Msg.text <| Util.format1 "Z3 version '%s' was not found." v;
-          ] @ Find.z3_install_suggestion v);
+          ] @ Find.Z3.z3_install_suggestion v);
         report_errors []; // but make sure to report.
         exit 1
       | Some fn ->
@@ -274,7 +274,7 @@ let go_normal () =
         Util.print3 "- F* version %s -- %s (on %s)\n"  !Options._version !Options._commit (Platform.kernel ());
         Util.print1 "- Executable: %s\n" (Util.exec_name);
         Util.print1 "- Library root: %s\n" (Util.dflt "<none>" (Find.lib_root ()));
-        Util.print1 "- Full include path: %s\n" (show (Find.include_path ()));
+        Util.print1 "- Full include path: %s\n" (show (Find.full_include_path ()));
         Util.print_string "\n";
         ()
       );

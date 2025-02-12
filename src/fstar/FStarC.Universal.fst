@@ -321,7 +321,7 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
          FStarC.Extraction.ML.Code for both OCaml and F# extraction.
          When bootstarpped in OCaml, this will use the old printer
          for F# extraction and the new printer for OCaml extraction. *)
-      let outdir = Options.output_dir() in
+      let outdir = Find.get_odir () in
       List.iter (FStarC.Extraction.ML.PrintML.print outdir ext) (List.map snd mllibs)
 
     | Some Options.Extension ->

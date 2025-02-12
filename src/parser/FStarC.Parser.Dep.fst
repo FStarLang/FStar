@@ -472,7 +472,7 @@ let safe_readdir_for_include (d:string) : list string =
     Return a list of pairs of long names and full paths. *)
 (* In public interface *)
 let build_inclusion_candidates_list (): list (string & string) =
-  let include_directories = Find.include_path () in
+  let include_directories = Find.full_include_path () in
   let include_directories = List.map Filepath.normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
@@ -1436,7 +1436,7 @@ let topological_dependences_of
     topological_dependences_of' file_system_map dep_graph interfaces_needing_inlining root_files widened
 
 let all_files_in_include_paths () =
-  let paths = Find.include_path () in
+  let paths = Find.full_include_path () in
   List.collect
     (fun path -> 
       let files = safe_readdir_for_include path in
