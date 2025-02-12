@@ -778,11 +778,20 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
             let expect_n = D.handleable_args_length op in
             if List.length resugared_args >= expect_n
             then let op_args, rest = BU.first_N expect_n resugared_args in
-                 let head = mk (A.Op(op, List.map fst op_args)) in
-                 List.fold_left
-                        (fun head (arg, qual) -> mk (A.App (head, arg, qual)))
-                        head
-                        rest
+                 if not <| List.for_all (fun (_, q) -> q = A.Nothing) op_args
+                 then
+                   (* If any of the first n arguments that we found are implicit,
+                      and we have in fact resugared them, resugar as an application.
+                      Otherwise for ( ++ ) : #t:_ -> t -> t -> t we would see stuff like
+                        (int ++ [1]) [2]
+                   *)
+                   resugar_as_app e args
+                 else
+                  let head = mk (A.Op(op, List.map fst op_args)) in
+                  List.fold_left
+                          (fun head (arg, qual) -> mk (A.App (head, arg, qual)))
+                          head
+                          rest
             else resugar_as_app e args
           | Some n when List.length args = n -> mk (A.Op(op, List.map fst (resugar args)))
           | _ -> resugar_as_app e args
