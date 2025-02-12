@@ -81,24 +81,21 @@ let lemma_eq_cong (h:heap) (r:addr) (n:t) (u:t) (p1:squash (sel h r == u)) (p2:s
 
 
 let unfold_fns :list string = [
-  "wp_command";
-  "wpsep_command";
-  "lift_wpsep";
-  "uu___is_Return";
-  "uu___is_Bind";
-  "uu___is_Read";
-  "uu___is_Write";
-  "uu___is_Alloc";
-  "__proj__Return__item__v";
-  "__proj__Bind__item__c1";
-  "__proj__Bind__item__c2";
-  "__proj__Read__item__id";
-  "__proj__Write__item__id";
-  "__proj__Write__item__v"
+  `%Lang.wp_command;
+  `%Lang.wpsep_command;
+  `%Lang.lift_wpsep;
+  `%Lang.uu___is_Return;
+  `%Lang.uu___is_Bind;
+  `%Lang.uu___is_Read;
+  `%Lang.uu___is_Write;
+  `%Lang.uu___is_Alloc;
+  `%Lang.Return?.v;
+  `%Lang.Bind?.c1;
+  `%Lang.Bind?.c2;
+  `%Lang.Read?.id;
+  `%Lang.Write?.id;
+  `%Lang.Write?.v
 ]
-
-unfold let unfold_steps :list string =
-  List.Tot.map (fun s -> "Lang." ^ s) unfold_fns
 
 (*
  * If we have (p /\ q) ==> r, this tactic will push p and q, separately, into the context
@@ -276,7 +273,7 @@ private let simplify () : Tac unit =
  * step tactic steps through the wp and tries each command specific tactic
  *)
 let solve () : Tac unit =
- norm [zeta; iota; delta; delta_only unfold_steps; primops];
+ norm [zeta; iota; delta; delta_only unfold_fns; primops];
  let _ = trytac implies_intros' in
  let _ = repeat step in
  simplify ()
