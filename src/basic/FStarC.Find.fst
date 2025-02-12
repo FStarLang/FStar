@@ -16,10 +16,10 @@
 module FStarC.Find
 
 open FStarC
-open FStarC
 open FStarC.Effect
 open FStarC.List
 module BU = FStarC.Util
+
 open FStarC.Class.Show
 
 let fstar_bin_directory : string =
@@ -56,9 +56,6 @@ let rec expand_include_d (dirname : string) : list string =
 let expand_include_ds (dirnames : list string) : list string =
   List.collect expand_include_d dirnames
 
-(* TODO: normalize these paths. This will probably affect makefiles since
-make does not normalize the paths itself. Also, move this whole logic away
-from this module. *)
 let lib_root () : option string =
   (* No default includes means we don't try to find a library on our own. *)
   if Options.no_default_includes() then
@@ -69,11 +66,11 @@ let lib_root () : option string =
     | Some s -> Some s
     | None ->
       (* Otherwise, just at the default location *)
-      Some (fstar_bin_directory ^ "/../lib/fstar")
+      Some (Filepath.canonicalize <| fstar_bin_directory ^ "/../lib/fstar")
 
 let fstarc_paths () =
   if Options.with_fstarc ()
-  then expand_include_d (fstar_bin_directory ^ "/../lib/fstar/fstarc")
+  then expand_include_d (Filepath.canonicalize <| fstar_bin_directory ^ "/../lib/fstar/fstarc")
   else []
 
 let lib_paths () =
