@@ -123,7 +123,7 @@ let maybe_report_error first_error decls =
         match FStarC.Options.ide_filename() with
         | None -> true //we're not in IDE mode, parsing failures are fatal
         | Some fn ->
-          BU.basename fn <> BU.basename file  //we're in IDE mode, failures are not fatal in the current file
+          Filepath.basename fn <> Filepath.basename file  //we're in IDE mode, failures are not fatal in the current file
     in
     if should_fail_on_error
     then (
@@ -260,4 +260,3 @@ let parse_pulse (env:TcEnv.env)
     match Parser.parse_decl content range with
     | Inl d -> desugar_pulse env namespaces module_abbrevs d
     | Inr e -> Inr e
-    
