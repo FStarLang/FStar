@@ -38,6 +38,13 @@ module SS = FStarC.Syntax.Syntax
 let initial_range =
   Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
 
+instance showable_push_kind : showable push_kind = {
+  show = (function
+          | SyntaxCheck -> "SyntaxCheck"
+          | LaxCheck -> "LaxCheck"
+          | FullCheck -> "FullCheck");
+}
+
 (*************************)
 (* REPL tasks and states *)
 (*************************)
@@ -98,14 +105,7 @@ let repl_state_to_string (r:repl_state)
        | Some m -> Ident.string_of_lid m.name);
       string_of_repl_stack r.repl_deps_stack]
 
-
 let push_query_to_string pq =
-  let pk =
-    match pq.push_kind with
-    | SyntaxCheck -> "SyntaxCheck"
-    | LaxCheck -> "LaxCheck"
-    | FullCheck -> "FullCheck"
-  in
   let code_or_decl =
     match pq.push_code_or_decl with
     | Inl code -> code
@@ -113,7 +113,7 @@ let push_query_to_string pq =
   in
   FStarC.Util.format "{ push_kind = %s; push_line = %s; \
                push_column = %s; push_peek_only = %s; push_code_or_decl = %s }"
-    [pk; string_of_int pq.push_line;
+    [show pq.push_kind; string_of_int pq.push_line;
      string_of_int pq.push_column;
      string_of_bool pq.push_peek_only;
      code_or_decl]

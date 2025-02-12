@@ -17,7 +17,6 @@ module FStarC.Parser.Dep
 
 open FStarC
 open FStarC.Effect
-open FStarC.Parser.AST
 open FStarC.Util
 open FStarC.Ident
 

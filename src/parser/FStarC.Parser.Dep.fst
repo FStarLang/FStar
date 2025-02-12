@@ -25,12 +25,8 @@ module FStarC.Parser.Dep
 open FStarC
 open FStarC.Effect   //for ref, failwith etc
 open FStarC.List
-open FStarC.Parser
 open FStarC.Parser.AST
-open FStarC.Util
 open FStarC.Const
-open FStar.String
-open FStarC.Ident
 open FStarC.Errors
 open FStarC.Class.Show
 
@@ -142,10 +138,10 @@ let module_name_of_file f =
 let lowercase_module_name f = String.lowercase (module_name_of_file f)
 
 let namespace_of_module f =
-    let lid = FStarC.Ident.lid_of_path (FStarC.Ident.path_of_text f) Range.dummyRange in
+    let lid = Ident.lid_of_path (Ident.path_of_text f) Range.dummyRange in
     match ns_of_lid lid with
     | [] -> None
-    | ns -> Some (FStarC.Ident.lid_of_ids ns)
+    | ns -> Some (Ident.lid_of_ids ns)
 
 type file_name = string
 type dependence =
