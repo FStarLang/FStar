@@ -47,7 +47,7 @@ let read_fstar_include (fn : string) : option (list string) =
 
 let rec expand_include_d (dirname : string) : list string =
   let dot_inc_path = dirname ^ "/fstar.include" in
-  if Util.file_exists dot_inc_path then (
+  if Filepath.file_exists dot_inc_path then (
     let subdirs = Some?.v <| read_fstar_include dot_inc_path in
     dirname :: List.collect (fun subd -> expand_include_d (dirname ^ "/" ^ subd)) subdirs
   ) else
@@ -92,8 +92,8 @@ let include_path () =
   cache_dir @ lib_paths () @ include_paths @ expand_include_d "."
 
 let do_find (paths : list string) (filename : string) : option string =
-  if BU.is_path_absolute filename then
-    if BU.file_exists filename then
+  if Filepath.is_path_absolute filename then
+    if Filepath.file_exists filename then
       Some filename
     else
       None
@@ -104,8 +104,8 @@ let do_find (paths : list string) (filename : string) : option string =
       BU.find_map (List.rev paths) (fun p ->
         let path =
           if p = "." then filename
-          else BU.join_paths p filename in
-        if BU.file_exists path then
+          else Filepath.join_paths p filename in
+        if Filepath.file_exists path then
           Some path
         else
           None)
@@ -140,22 +140,22 @@ let find_file_odir =
 let prepend_output_dir fname =
   match Options.output_dir () with
   | None -> fname
-  | Some x -> Util.join_paths x fname
+  | Some x -> Filepath.join_paths x fname
 
 let prepend_cache_dir fpath =
   match Options.cache_dir () with
   | None -> fpath
-  | Some x -> Util.join_paths x (Util.basename fpath)
+  | Some x -> Filepath.join_paths x (Filepath.basename fpath)
 
 let locate () =
-  Util.get_exec_dir () |> Util.normalize_file_path
+  Util.get_exec_dir () |> Filepath.normalize_file_path
 
 let locate_lib () =
-  BU.map_opt (lib_root ()) Util.normalize_file_path
+  BU.map_opt (lib_root ()) Filepath.normalize_file_path
 
 let locate_ocaml () =
   // This is correct right now, but probably should change.
-  Util.get_exec_dir () ^ "/../lib" |> Util.normalize_file_path
+  Util.get_exec_dir () ^ "/../lib" |> Filepath.normalize_file_path
 
 let z3url = "https://github.com/Z3Prover/z3/releases"
 
@@ -217,8 +217,8 @@ let do_locate_z3 (v:string) : option string =
     let in_lib () : option string =
       let! root = lib_root () in
       let path = Platform.exe (root ^ "/z3-" ^ v ^ "/bin/z3") in
-      let path = BU.normalize_file_path path in
-      guard (BU.file_exists path);!
+      let path = Filepath.normalize_file_path path in
+      guard (Filepath.file_exists path);!
       Some path
     in
     let from_path (cmd : string) () =
@@ -258,7 +258,7 @@ a valid path. To palliate this, we
 This function is called by error reporting (both batch and IDE). *)
 let refind_file (f:string) : string =
   try
-    match find_file (BU.basename f) with
+    match find_file (Filepath.basename f) with
     | None -> f // Couldn't find file; just return the original path
     | Some abs -> abs
   with _ -> f

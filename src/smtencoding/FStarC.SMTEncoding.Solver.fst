@@ -75,7 +75,7 @@ let initialize_hints_db filename (refresh:bool) : unit =
     recorded_hints := [];
     refreshing_hints := refresh;
 
-    let norm_src_filename = BU.normalize_file_path filename in
+    let norm_src_filename = Filepath.normalize_file_path filename in
     src_filename := norm_src_filename;
     (*
      * Read the hints file into replaying_hints

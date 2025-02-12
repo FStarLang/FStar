@@ -1879,8 +1879,8 @@ let restore_cmd_line_options should_clear =
     r
 
 let module_name_of_file_name f =
-    let f = basename f in
-    let f = String.substring f 0 (String.length f - String.length (get_file_extension f) - 1) in
+    let f = Filepath.basename f in
+    let f = String.substring f 0 (String.length f - String.length (Filepath.get_file_extension f) - 1) in
     String.lowercase f
 
 let should_check m =
@@ -2038,7 +2038,7 @@ let hint_file_for_src src_filename =
         let file_name =
           match hint_dir () with
           | Some dir ->
-            Util.concat_dir_filename dir (Util.basename src_filename)
+            Util.concat_dir_filename dir (Filepath.basename src_filename)
           | _ -> src_filename
         in
         Util.format1 "%s.hints" file_name

@@ -165,18 +165,7 @@ val kill_all: unit -> unit
 val proc_prog : proc -> string
 val system_run : string -> int (* a less refined launching, implemented by Sys.command *)
 
-val get_file_extension: string -> string
-val is_path_absolute: string -> bool
-val join_paths: string -> string -> string
-val normalize_file_path: string -> string
-val basename: string -> string (* name of file without directory *)
-val dirname : string -> string
 val getcwd: unit -> string
-val readdir: string -> list string
-val paths_to_same_file: string -> string -> bool
-
-val file_exists: string -> Tot bool
-val is_directory: string -> Tot bool
 
 val int_of_string: string -> int
 val safe_int_of_string: string -> option int

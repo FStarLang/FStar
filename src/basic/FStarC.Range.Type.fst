@@ -94,7 +94,7 @@ let mk_range f b e = let r = mk_rng f b e in range_of_rng r r
 
 let string_of_file_name f =
   if Options.Ext.enabled "fstar:no_absolute_paths" then
-    BU.basename f
+    Filepath.basename f
   else
     f
 

@@ -89,7 +89,7 @@ let load_native_tactics () =
                 text (format1 "Extracted module %s not found." (ml_file m))
               ]
             | Some ml ->
-              let dir = Util.dirname ml in
+              let dir = Filepath.dirname ml in
               Plugins.compile_modules dir [ml_module_name m];
               begin match Find.find_file_odir cmxs with
                 | None ->
@@ -246,7 +246,7 @@ let go_normal () =
         Util.print1_error "File %s was not found in include path.\n" f;
         exit 1
       | Some fn ->
-        Util.print1 "%s\n" (Util.normalize_file_path fn);
+        Util.print1 "%s\n" (Filepath.normalize_file_path fn);
         exit 0
     )
 

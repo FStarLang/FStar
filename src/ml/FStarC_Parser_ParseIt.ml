@@ -7,6 +7,7 @@ open FStarC_Sedlexing
 open FStarC_Errors_Codes
 module Codes = FStarC_Errors_Codes
 module Msg = FStarC_Errors_Msg
+module Filepath = FStarC_Filepath
 
 type filename = string
 
@@ -41,10 +42,10 @@ let find_file filename =
 let vfs_entries : (U.time_of_day * string) smap = smap_create (Z.of_int 1)
 
 let read_vfs_entry fname =
-  smap_try_find vfs_entries (U.normalize_file_path fname)
+  smap_try_find vfs_entries (Filepath.normalize_file_path fname)
 
 let add_vfs_entry fname contents =
-  smap_add vfs_entries (U.normalize_file_path fname) (U.get_time_of_day (), contents)
+  smap_add vfs_entries (Filepath.normalize_file_path fname) (U.get_time_of_day (), contents)
 
 let get_file_last_modification_time filename =
   match read_vfs_entry filename with

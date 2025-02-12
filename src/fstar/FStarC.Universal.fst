@@ -561,8 +561,8 @@ let needs_interleaving intf impl =
   let m1 = Parser.Dep.lowercase_module_name intf in
   let m2 = Parser.Dep.lowercase_module_name impl in
   m1 = m2 &&
-  List.mem (FStarC.Util.get_file_extension intf) ["fsti"; "fsi"] &&
-  List.mem (FStarC.Util.get_file_extension impl) ["fst"; "fs"]
+  List.mem (Filepath.get_file_extension intf) ["fsti"; "fsi"] &&
+  List.mem (Filepath.get_file_extension impl) ["fst"; "fs"]
 
 let tc_one_file_from_remaining (remaining:list string) (env:uenv)
                                (deps:FStarC.Parser.Dep.deps)  //used to query parsing data
