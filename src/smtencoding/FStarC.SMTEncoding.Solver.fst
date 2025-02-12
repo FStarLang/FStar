@@ -643,7 +643,7 @@ let query_info settings z3result =
         in
         let range = "(" ^ show settings.query_range ^ at_log_file ^ ")" in
         let used_hint_tag = if used_hint settings then " (with hint)" else "" in
-        let stats =
+        let stats () =
             if Options.query_stats() then
                 let f k v a = a ^ k ^ "=" ^ v ^ " " in
                 let str = smap_fold z3result.z3result_statistics f "statistics={" in
@@ -659,7 +659,7 @@ let query_info settings z3result =
                 show settings.query_fuel;
                 show settings.query_ifuel;
                 show (settings.query_rlimit);
-                // stats
+                // stats ()
              ];
         if Options.print_z3_statistics () then process_unsat_core core;
         errs |> List.iter (fun (_, msg, range) ->
