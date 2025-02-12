@@ -17,4 +17,8 @@ module FStarC.Extraction.ML.PrintML
 
 open FStarC.Extraction.ML.Syntax
 
-val print: option string -> string -> mllib -> unit
+val print
+  (odir : option string)
+  (extension : string)
+  (defs : mllib)
+  : unit
