@@ -39,7 +39,7 @@ let dirname = Filename.dirname
 
 let getcwd = Sys.getcwd
 
-let readdir dir = "." :: ".." :: Array.to_list (Sys.readdir dir)
+let readdir dir = Array.to_list (Sys.readdir dir)
 
 let paths_to_same_file f g =
   let open Unix in
