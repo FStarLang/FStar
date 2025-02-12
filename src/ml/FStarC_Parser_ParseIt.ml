@@ -75,23 +75,16 @@ let read_file (filename:string) =
     if debug then U.print1 "Opening file %s\n" filename;
     filename, read_physical_file filename
 
-let fs_extensions = [".fs"; ".fsi"]
 let fst_extensions = [".fst"; ".fsti"]
-let interface_extensions = [".fsti"; ".fsi"]
-
-let valid_extensions () =
-  fst_extensions @ if FStarC_Options.ml_ish () then fs_extensions else []
+let interface_extensions = [".fsti"]
 
 let has_extension file extensions =
   FStar_List.existsb (U.ends_with file) extensions
 
 let check_extension fn =
-  if (not (has_extension fn (valid_extensions ()))) then
+  if (not (has_extension fn fst_extensions)) then
     let message = U.format1 "Unrecognized extension '%s'" fn in
-    raise_error_text FStarC_Range.dummyRange Fatal_UnrecognizedExtension
-      (if has_extension fn fs_extensions
-       then message ^ " (pass --MLish to process .fs and .fsi files)"
-       else message)
+    raise_error_text FStarC_Range.dummyRange Fatal_UnrecognizedExtension message
 
 type parse_frag =
     | Filename of filename
