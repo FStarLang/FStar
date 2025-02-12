@@ -31,10 +31,13 @@ let cached_fun #a (cache : SMap.t a) (f : string -> a) : string -> a =
       SMap.add cache s v;
       v
 
+(* caches *)
+let _full_include : ref (option (list string)) = mk_ref None
 let find_file_cache : SMap.t (option string) = SMap.create 100
 
 let clear () =
   SMap.clear find_file_cache;
+  _full_include := None;
   ()
 
 (* Internal state, settable with the functions exposed in the interface. *)
@@ -125,13 +128,20 @@ let lib_paths () =
   @ fstarc_paths ()
 
 let full_include_path () =
-  let cache_dir =
-    match !_cache_dir with
-    | None -> []
-    | Some c -> [c]
-  in
-  let include_paths = !_include |> expand_include_ds in
-  cache_dir @ lib_paths () @ include_paths @ expand_include_d "."
+  match !_full_include with
+  | Some paths -> paths
+  | None ->
+    let res =
+      let cache_dir =
+        match !_cache_dir with
+        | None -> []
+        | Some c -> [c]
+      in
+      let include_paths = !_include |> expand_include_ds in
+      cache_dir @ lib_paths () @ include_paths @ expand_include_d "."
+    in
+    _full_include := Some res;
+    res
 
 let do_find (paths : list string) (filename : string) : option string =
   if Filepath.is_path_absolute filename then
