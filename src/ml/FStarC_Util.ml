@@ -726,11 +726,6 @@ let string_to_ascii_bytes (s:string) : char array =
 let ascii_bytes_to_string (b:char array) : string =
   BatString.implode (BatArray.to_list b)
 
-let write_file (fn:string) s =
-  let fh = open_file_for_writing fn in
-  append_to_file fh s;
-  close_out_channel fh
-
 let copy_file input_name output_name =
   (* see https://ocaml.github.io/ocamlunix/ocamlunix.html#sec33 *)
   let open Unix in
@@ -927,9 +922,22 @@ let print_endline = print_endline
 
 let map_option f opt = BatOption.map f opt
 
+let maybe_create_parent (fname:string) : unit =
+  let d = Filename.dirname fname in
+  if Sys.file_exists d && Sys.is_directory d then ()
+  else
+    mkdir false true d
+
+let write_file (fn:string) s =
+  maybe_create_parent fn;
+  let fh = open_file_for_writing fn in
+  append_to_file fh s;
+  close_out_channel fh
+
 let save_value_to_file (fname:string) value =
   (* BatFile.with_file_out uses Unix.openfile (which isn't available in
      js_of_ocaml) instead of Pervasives.open_out, so we don't use it here. *)
+  maybe_create_parent fname;
   let channel = open_out_bin fname in
   BatPervasives.finally
     (fun () -> close_out channel)
@@ -949,6 +957,7 @@ let load_value_from_file (fname:string) =
 
 let save_2values_to_file (fname:string) value1 value2 =
   try
+    maybe_create_parent fname;
     let channel = open_out_bin fname in
     BatPervasives.finally
       (fun () -> close_out channel)
@@ -962,6 +971,7 @@ let save_2values_to_file (fname:string) value1 value2 =
 
 let load_2values_from_file (fname:string) =
   try
+    maybe_create_parent fname;
     let channel = open_in_bin fname in
     BatPervasives.finally
       (fun () -> close_in channel)

@@ -318,6 +318,8 @@ val print_endline: string -> unit
 
 val map_option: ('a -> 'b) -> option 'a -> option 'b
 
+(* for a filepath, create the parent directory if it doesn't exist (and leading directories too) *)
+val maybe_create_parent : string -> unit
 val save_value_to_file: string -> 'a -> unit
 val load_value_from_file: string -> option 'a
 val save_2values_to_file: string -> 'a -> 'b -> unit

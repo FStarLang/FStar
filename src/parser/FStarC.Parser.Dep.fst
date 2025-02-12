@@ -41,6 +41,7 @@ let profile f c = Profiling.profile f None c
 (* Meant to write to a file as an out_channel. If an exception is raised,
 the file is deleted. *)
 let with_file_outchannel (fn : string) (k : out_channel -> 'a) : 'a =
+  BU.maybe_create_parent fn;
   let outc = BU.open_file_for_writing fn in
   let r =
     try k outc
