@@ -11,7 +11,7 @@ all: $(OUTPUT_DIR)/CanonCommSemiring.interpreted $(OUTPUT_DIR)/CanonCommSemiring
 # If you add explicit dependencies here, it will fall back to the default rule.
 $(OUTPUT_DIR)/%.ml:
 	$(call msg, "EXTRACT", $<)
-	$(FSTAR) --codegen Plugin --extract $* $*.fst
+	$(FSTAR) --codegen Plugin $<
 	cat $*.ml.fixup >> $@
 
 $(OUTPUT_DIR)/%.cmxs: $(OUTPUT_DIR)/%.ml

@@ -100,13 +100,13 @@ $(OUTPUT_DIR)/%.fsti.json_output: %.fsti
 	@mkdir -p $(dir $@)
 	$(FSTAR) --message_format json --silent -f --print_expected_failures $< >$@ 2>&1
 
-$(OUTPUT_DIR)/$(subst .,_,%).ml:
+$(OUTPUT_DIR)/%.ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen OCaml --extract_module $(subst .fst.checked,,$(notdir $<))
+	$(FSTAR) $< --codegen OCaml
 
-$(OUTPUT_DIR)/$(subst .,_,%).fs:
+$(OUTPUT_DIR)/%.fs:
 	$(call msg, "EXTRACT FS", $(basename $(notdir $@)))
-	$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen FSharp --extract_module $(subst .fst.checked,,$(notdir $<))
+	$(FSTAR) $< --codegen FSharp
 
 # No FSharp compilation in these makefiles, sorry.
 $(OUTPUT_DIR)/%.exe: $(OUTPUT_DIR)/%.ml
