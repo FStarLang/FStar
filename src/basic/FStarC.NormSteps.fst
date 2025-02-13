@@ -74,7 +74,7 @@ irreducible
 let delta_attr s = UnfoldAttr s
 
 irreducible
-let delta_qualifier s = UnfoldAttr s
+let delta_qualifier s = UnfoldQual s
 
 irreducible
 let delta_namespace s = UnfoldNamespace s
