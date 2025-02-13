@@ -78,4 +78,4 @@ EXTRACT := --extract '* $(EXTRACT_NS)'
 # Update: generic.mk will now complain too.
 ROOTS := $(shell find $(SRC) -name '*.fst' -o -name '*.fsti')
 
-include mk/generic.mk
+include mk/generic-1.mk
