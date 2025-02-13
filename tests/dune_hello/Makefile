@@ -8,8 +8,11 @@ ifneq ($(OS),Windows_NT) # See comment in ../simple_hello/Makefile
 all: run.bc
 endif
 
-Hello.ml: Hello.fst
-	$(FSTAR_EXE) --codegen OCaml Hello.fst --extract Hello --z3version 4.13.3
+%.checked: %
+	$(FSTAR_EXE) $< --cache_checked_modules --z3version 4.13.3
+
+%.ml: %.fst.checked
+	$(FSTAR_EXE) --codegen OCaml $< --extract $*
 
 bin/hello.exe: Hello.ml
 	$(FSTAR_EXE) --ocamlenv dune build @install --profile=release

@@ -24,4 +24,4 @@ EXTRACT += --extract +FStar.Seq.Properties
 ROOTS :=
 ROOTS += $(SRC)/fstar/FStarC.Main.fst
 
-include mk/generic.mk
+include mk/generic-1.mk
