@@ -378,6 +378,9 @@ let do_not_unrefine_attr = pconst "do_not_unrefine"
 let desugar_of_variant_record_lid = attr "desugar_of_variant_record"
 let coercion_lid = attr "coercion"
 
+let projector_attr     = pconst "projector"
+let discriminator_attr = pconst "discriminator"
+
 let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 
 

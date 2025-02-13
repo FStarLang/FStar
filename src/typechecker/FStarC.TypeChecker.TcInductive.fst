@@ -1064,6 +1064,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 //(if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
                 List.filter (function S.Inline_for_extraction | S.NoExtract | S.Private -> true | _ -> false ) iquals
             in
+            let attrs = S.fvar C.discriminator_attr None :: attrs in
 
             (* Type of the discriminator *)
             let binders = imp_binders@[unrefined_arg_binder] in
@@ -1170,6 +1171,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
               then S.Assumption::q
               else q
           in
+          let attrs = S.fvar C.projector_attr None :: attrs in
           let quals =
               let iquals = iquals |> List.filter (function
                   | S.Inline_for_extraction

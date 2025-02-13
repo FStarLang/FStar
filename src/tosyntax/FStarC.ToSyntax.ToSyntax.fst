@@ -2792,6 +2792,7 @@ let mk_data_discriminators quals env datas attrs =
                   then S.Assumption::q@quals
                   else q@quals
     in
+    let attrs = S.fvar C.discriminator_attr None :: attrs in
     datas |> List.map (fun d ->
         let disc_name = U.mk_discriminator d in
         { sigel = Sig_declare_typ {lid=disc_name; us=[]; t=Syntax.tun};
@@ -2828,6 +2829,7 @@ let mk_indexed_projector_names iquals fvq attrs env lid (fields:list S.binder) =
             in
             quals (OnlyName :: S.Projector(lid, x.ppname) :: iquals)
         in
+        let attrs = S.fvar C.projector_attr None :: attrs in
         let decl = { sigel = Sig_declare_typ {lid=field_name; us=[]; t=Syntax.tun};
                      sigquals = quals;
                      sigrng = range_of_lid field_name;

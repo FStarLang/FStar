@@ -47,6 +47,14 @@ val cps:attribute
 assume
 val tac_opaque : attribute
 
+(** This attribute is added to all projectors. *)
+assume
+val projector : attribute
+
+(** This attribute is added to all discriminators. *)
+assume
+val discriminator : attribute
+
 (** This attribute can be used on type binders to make unifier attempt
     to unrefine them before instantiating them. This is useful in polymorphic
     definitions where the type does not change the result type, for example
