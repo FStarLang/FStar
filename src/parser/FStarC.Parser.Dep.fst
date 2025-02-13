@@ -86,7 +86,7 @@ let files_for_module_name_to_string (m:files_for_module_name) =
 type color = | White | Gray | Black
 
 let check_and_strip_suffix (f: string): option string =
-  let suffixes = [ ".fsti"; ".fst"; ".fsi"; ".fs" ] in
+  let suffixes = [ ".fsti"; ".fst" ] in
   let matches = List.map (fun ext ->
     let lext = String.length ext in
     let l = String.length f in
