@@ -40,3 +40,5 @@ $(OUTPUT_DIR)/TuplePat.fst.json_output : OTHERFLAGS+=--dump_module TuplePat
 $(OUTPUT_DIR)/TuplePat.fst.output      : OTHERFLAGS+=--dump_module TuplePat
 $(OUTPUT_DIR)/Monoid.fst.json_output   : OTHERFLAGS+=--dump_module Monoid
 $(OUTPUT_DIR)/Monoid.fst.output        : OTHERFLAGS+=--dump_module Monoid
+$(OUTPUT_DIR)/InfixImps.fst.json_output: OTHERFLAGS+=--dump_module InfixImps --print_implicits
+$(OUTPUT_DIR)/InfixImps.fst.output     : OTHERFLAGS+=--dump_module InfixImps --print_implicits
