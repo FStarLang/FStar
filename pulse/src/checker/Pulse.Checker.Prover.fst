@@ -34,7 +34,7 @@ module Metatheory = Pulse.Typing.Metatheory
 module PS = Pulse.Checker.Prover.Substs
 
 module ElimExists  = Pulse.Checker.Prover.ElimExists
-module ElimPure    =  Pulse.Checker.Prover.ElimPure
+module ElimPure    = Pulse.Checker.Prover.ElimPure
 module Match       = Pulse.Checker.Prover.Match
 module IntroExists = Pulse.Checker.Prover.IntroExists
 module IntroPure   = Pulse.Checker.Prover.IntroPure
@@ -153,11 +153,15 @@ let normalize_slprop_context
   (pst:prover_state preamble)
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst }) =
 
+  let norm1 (v : slprop) : T.Tac slprop =
+    dfst (normalize_slprop pst.pg pst.ss.(v))
+  in
+
   let ctxt = pst.remaining_ctxt in
-  let ctxt' = ctxt |> Tactics.Util.map (fun v -> (normalize_slprop pst.pg v)._1) in
+  let ctxt' = ctxt |> Tactics.Util.map norm1 in
 
   let unsolved = pst.unsolved in
-  let unsolved' = unsolved |> Tactics.Util.map (fun v -> (normalize_slprop pst.pg v)._1) in
+  let unsolved' = unsolved |> Tactics.Util.map norm1 in
 
   if RU.debug_at_level (fstar_env pst.pg) "ggg" then
   info_doc pst.pg None [
@@ -534,10 +538,11 @@ let try_frame_pre_uvs
     let r = PS.st_typing_nt_substs_derived g1 uvs d nts effect_labels in
     match r with
     | Inr (x, x_t) ->
-      fail g1 (Some t.range)
-        (Printf.sprintf "prover error: for term %s, implicit solution %s has ghost effect"
-           (P.st_term_to_string t)
-           (P.term_to_string x_t))
+      let open Pulse.PP in
+      fail_doc g1 (Some t.range) [
+        text "Prover error";
+        text "For term" ^/^ pp t ^/^  text "implicit solution" ^/^ pp x_t ^/^ text "has ghost effect.";
+      ]
     | Inl d -> d in
 
   (* shouldn't need this once term becomes a view; currently we sometimes end up with a computation

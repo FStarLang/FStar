@@ -2,7 +2,7 @@
 module Test.GenOrder
 
 #lang-pulse
-open Pulse
+open Pulse.Nolib
 
 assume val foo : int -> int -> slprop
 

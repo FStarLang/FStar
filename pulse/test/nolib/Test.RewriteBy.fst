@@ -1,7 +1,7 @@
 module Test.RewriteBy
 #lang-pulse
 
-open Pulse.Lib.Pervasives
+open Pulse.Nolib
 open FStar.Tactics.V2
 
 assume val p : slprop
