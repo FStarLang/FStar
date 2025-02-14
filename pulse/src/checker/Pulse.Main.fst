@@ -284,10 +284,6 @@ let parse_guard_policy (s:string) : Tac guard_policy =
   | _ -> Tactics.fail ("Unknown guard policy: " ^ s)
 
 let main t pre : RT.dsl_tac_t = fun (g, expected_t) ->
-  let g = RU.env_disable_admit g in
-  RU.disable_admit_smt_queries fun _ ->
-  (* ^ Never admit queries, we currently need to backtrack
-  on their result. *)
   (* We use the ForceSMT policy by default, to discharge guards
   immediately when they show, allowing SMT. This
   proofstate and discharge them all at the end, potentially joining

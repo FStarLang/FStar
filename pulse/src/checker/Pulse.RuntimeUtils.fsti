@@ -22,8 +22,6 @@ val extend_context (tag:string) (r:option range) (ctx:context) : context
 val with_context (c:context) (f:unit -> T.Tac 'a) : T.Tac 'a
 val with_error_bound (r:Range.range) (f:unit -> T.Tac 'a) : T.Tac 'a
 val with_extv (k v : string) (f:unit -> T.Tac 'a) : T.Tac 'a
-val env_disable_admit (e:env) : Tot (e':env{e == e'}) // admit is not observable
-val disable_admit_smt_queries (f:unit -> T.Tac 'a) : T.Tac 'a
 val print_context (c:context) : T.Tac string
 val debug_at_level_no_module (s:string) : bool
 val debug_at_level (g:env) (s:string) : bool
