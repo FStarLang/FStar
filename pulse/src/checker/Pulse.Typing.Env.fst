@@ -366,7 +366,7 @@ let env_to_doc' (simplify:bool) (e:env) : T.Tac document =
   in
   T.zip e.bs e.names |> maybe_filter |> separate_map comma pp1
 
-let env_to_doc = env_to_doc' false
+let env_to_doc = env_to_doc' true
 
 let get_range (g:env) (r:option range) : T.Tac range =
     match r with
