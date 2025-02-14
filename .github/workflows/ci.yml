@@ -30,9 +30,13 @@ jobs:
   # Branch protection points here
   ciok:
     runs-on: ubuntu-latest
+    if: ${{ cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}
+    # ^ Workaround for insane github behavior: https://github.com/actions/runner/issues/2566
     needs:
       - build
       - tests
       # - nix-build
     steps:
-      - run: exit 0
+      # Note: we only run on failure. Otherwise this is skipped, which counts
+      # as a success.
+      - run: exit 1
