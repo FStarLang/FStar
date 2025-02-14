@@ -228,3 +228,8 @@ val fail_doc_with_subissues #a (g:env) (ro : option range)
   (sub : list Issue.issue)
   (msg : list Pprint.document)
   : T.TacH a (requires fun _ -> True) (ensures fun _ r -> FStar.Tactics.Result.Failed? r)
+
+val info_doc_with_subissues (g:env) (r:option range)
+  (sub : list Issue.issue)
+  (msg : list Pprint.document)
+  : T.Tac unit

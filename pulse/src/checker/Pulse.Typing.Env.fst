@@ -433,3 +433,14 @@ let fail_doc_with_subissues #a (g:env) (ro : option range)
   in
   T.log_issues issues;
   T.raise T.Stop
+
+let info_doc_with_subissues (g:env) (r:option range)
+  (sub : list Issue.issue)
+  (msg : list Pprint.document)
+=
+  let msg = msg @ [
+    doc_of_string "Issues:" ^^ hardline ^^
+        (List.Tot.map Issue.issue_to_doc sub |>
+         concat) ]
+  in
+  info_doc g r msg
