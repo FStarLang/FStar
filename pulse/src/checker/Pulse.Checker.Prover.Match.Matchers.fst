@@ -27,6 +27,7 @@ open Pulse.Checker.Base
 open Pulse.Checker.Prover.Match.Base
 open Pulse.PP
 open Pulse.Show
+open Pulse.Checker.Prover.Base
 
 module T       = FStar.Tactics.V2
 module R       = FStar.Reflection.V2
