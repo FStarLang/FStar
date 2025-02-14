@@ -1,7 +1,7 @@
 module Test.GenOrder2.B
 
 #lang-pulse
-open Pulse
+open Pulse.Nolib
 open Test.GenOrder2.A
 
 fn test ()

@@ -30,7 +30,13 @@ OTHERFLAGS += --warn_error -321
 OTHERFLAGS += --warn_error @247 # couldn't write a checked file? FAIL RIGHT NOW
 OTHERFLAGS += --ext context_pruning
 OTHERFLAGS += --z3version 4.13.3
+ifdef TESTNOLIB
+OTHERFLAGS += --include $(PULSE_ROOT)/lib/common
+OTHERFLAGS += --include $(PULSE_ROOT)/lib/pulse/_cache
+OTHERFLAGS += --include $(PULSE_ROOT)/build/ocaml/installed/lib/pulse
+else
 OTHERFLAGS += --include $(PULSE_ROOT)/out/lib/pulse
+endif
 
 # Set ADMIT=1 to admit queries
 ADMIT ?=

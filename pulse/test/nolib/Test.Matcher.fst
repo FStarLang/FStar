@@ -1,7 +1,7 @@
 module Test.Matcher
 #lang-pulse
 
-open Pulse.Lib.Pervasives
+open Pulse.Nolib
 open FStar.Tactics.V2
 
 #set-options "--print_implicits"
