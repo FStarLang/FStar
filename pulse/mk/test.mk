@@ -184,8 +184,12 @@ endif
 
 __diff: $(patsubst %.expected,$(OUTPUT_DIR)/%.diff,$(wildcard *.expected))
 diff: __diff
+ifneq ($(ACCEPT),)
+all: __accept
+else
 ifeq ($(NODIFF),)
 all: __diff
+endif
 endif
 
 accept: $(addsuffix .__accept,$(SUBDIRS))
