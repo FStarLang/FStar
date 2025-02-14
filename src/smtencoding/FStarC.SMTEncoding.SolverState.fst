@@ -169,22 +169,27 @@ let filter_using_facts_from
         then (add_assumption a; [d])
         else []
       )
-      | RetainAssumptions names ->
-        // Add all assumptions that are mentioned here, making sure to not add duplicates
-        let assumptions = 
-          names |>
-          List.collect (fun name ->
-            match PSMap.try_find named_assumptions name with
-            | None -> []
-            | Some a ->
-              if already_given a then [] else (add_assumption a; [Assume a]))
-        in
-        assumptions
       | _ ->
         [d]
     in
-    let ds = List.collect map_decl ds in
-    ds
+    let ds' = List.collect map_decl ds in
+    if Options.Ext.get "debug_using_facts_from" <> ""
+    then (
+      let orig_n = List.length ds in
+      let new_n = List.length ds' in
+      if orig_n <> new_n
+      then (
+        BU.print4
+          "Pruned using facts from:\n\t\
+            Original (%s): [%s];\n\t\
+            Pruned (%s): [%s]\n"
+          (show orig_n)
+          (show (List.map decl_to_string_short ds))
+          (show new_n)
+          (show (List.map decl_to_string_short ds'))
+      )
+    );
+    ds'
 
 let already_given_decl (s:solver_state) (aname:string)
 : bool

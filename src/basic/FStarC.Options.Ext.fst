@@ -23,9 +23,15 @@ open FStarC.PSMap
 type ext_state =
   | E : map : psmap string -> ext_state
 
-(* If we ever want to set any defaults, this is the place to do it.  *)
+(* Default extension options *)
+let defaults = [
+  ("context_pruning", "true");
+]
+
 let init : ext_state =
-  E (psmap_empty ())
+  E <| List.fold_right (fun (k,v) m -> psmap_add m k v)
+         defaults
+         (psmap_empty ())
 
 let cur_state = alloc init
 
