@@ -14,20 +14,6 @@ let is_punctuation c = List.mem c [33; 34; 35; 37; 38; 39; 40; 41; 42; 44; 45; 4
 
 let return_all x = x
 
-type time_ns = int64
-let now_ns () = Mtime_clock.now_ns()
-let time_diff_ns t1 t2 =
-  Z.of_int (Int64.to_int (Int64.sub t2 t1))
-let time_diff_ms t1 t2 = Z.div (time_diff_ns t1 t2) (Z.of_int 1000000)
-let record_time_ns f =
-    let start = now_ns () in
-    let res = f () in
-    let elapsed = time_diff_ns start (now_ns()) in
-    res, elapsed
-let record_time_ms f =
-    let res, ns = record_time_ns f in
-    res, Z.div ns (Z.of_int 1000000)
-
 type time_of_day = float
 let get_time_of_day () = BatUnix.gettimeofday()
 let get_time_of_day_ms () = Z.of_int (int_of_float (get_time_of_day () *. 1000.0))

@@ -578,7 +578,7 @@ let is_false t =
 
 let meas (s:string) (f : tac 'a) : tac 'a =
   mk_tac (fun ps ->
-    let (r, ms) = BU.record_time_ms (fun () -> Tactics.Monad.run f ps) in
+    let (r, ms) = Timing.record_ms (fun () -> Tactics.Monad.run f ps) in
     BU.print2 "++ Tactic %s ran in \t\t%sms\n" s (show ms);
     r)
 

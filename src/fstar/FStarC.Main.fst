@@ -408,7 +408,7 @@ let handle_error e =
 let main () =
   try
     Hooks.setup_hooks ();
-    let _, time = Util.record_time_ms go in
+    let _, time = Timing.record_ms go in
     if FStarC.Options.query_stats()
     then Util.print2_error "TOTAL TIME %s ms: %s\n"
               (FStarC.Util.string_of_int time)
