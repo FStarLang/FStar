@@ -64,6 +64,7 @@ FSTAR = $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 %.ml:
 	$(call msg, "EXTRACT", $(LBL))
 	$(FSTAR) $(FF) --already_cached '*,' --codegen $(CODEGEN) --extract_module $(MM)
+	touch -c $@
 
 %.krml: FF=$(notdir $(subst $(EXTENSION),,$<))
 %.krml: MM=$(basename $(FF))
@@ -71,6 +72,7 @@ FSTAR = $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 %.krml:
 	$(call msg, "EXTRACT", $(LBL))
 	$(FSTAR) $(FF) --already_cached ',*' --codegen krml --extract_module $(MM)
+	touch -c $@
 
 $(CACHE_DIR)/.depend$(TAG):
 	$(call msg, "DEPEND", $(SRC))
