@@ -81,11 +81,9 @@ let check
   let ide = T.ide () in
   let no_admit_diag = T.ext_getv "pulse:no_admit_diag" = "1" in
   (if ide && not no_admit_diag then begin
-    (* If we're running interactively, print out the context
-    and environment. *)
-    let open FStar.Pprint in
+    (* If we're running interactively, print out the context and environment. *)
     let open Pulse.PP in
-    let pre = T.norm_well_typed_term (elab_env g) [unascribe; primops; iota] pre in
+    let (| pre, _ |) = Prover.normalize_slprop g pre in
     let msg = [
       text "Admitting continuation.";
       text "Current context:" ^^
