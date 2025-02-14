@@ -235,9 +235,7 @@ jobs:
 
       - name: Build
         run: |
-          NPROC=$(nproc)
-          if [ $NPROC -gt 16 ]; then NPROC=16; fi
-          make -C hacl-star -skj${NPROC}
+          make -C hacl-star -skj$(nproc)
 
       - uses: mtzguido/gci-upload@master
         with:
@@ -308,9 +306,7 @@ jobs:
 
       - name: Build
         run: |
-          NPROC=$(nproc)
-          if [ $NPROC -gt 16 ]; then NPROC=16; fi
-          make -C everparse -skj${NPROC}
+          make -C everparse -skj$(nproc)
 
       - uses: mtzguido/gci-upload@master
         with:
@@ -381,9 +377,7 @@ jobs:
 
       - name: Build
         run: |
-          NPROC=$(nproc)
-          if [ $NPROC -gt 16 ]; then NPROC=16; fi
-          make -C merkle-tree -skj${NPROC} dist/libmerkletree.a
+          make -C merkle-tree -skj$(nproc) dist/libmerkletree.a
 
       - uses: mtzguido/gci-upload@master
         with:
