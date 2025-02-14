@@ -6,7 +6,7 @@
     "--z3version", "4.13.3"
   ],
   "include_dirs": [
-    "lib",
+    "out/lib/pulse",
     "share/pulse/examples",
     "share/pulse/examples/bug-reports",
     "share/pulse/examples/by-example",
