@@ -93,15 +93,15 @@ $(OUTPUT_DIR)/%.json_output: %
 
 $(OUTPUT_DIR)/$(subst .,_,%).ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen OCaml --extract_module $(subst .fst.checked,,$(notdir $<))
+	$(FSTAR) $< --codegen OCaml
 
 $(OUTPUT_DIR)/$(subst .,_,%).fs:
 	$(call msg, "EXTRACT FS", $(basename $(notdir $@)))
-	$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen FSharp --extract_module $(subst .fst.checked,,$(notdir $<))
+	$(FSTAR) $< --codegen FSharp
 
 $(OUTPUT_DIR)/$(subst .,_,%).krml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen krml --extract_module $(subst .fst.checked,,$(notdir $<))
+	$(FSTAR) $< --codegen krml --extract_module $(subst .fst.checked,,$(notdir $<))
 
 $(OUTPUT_DIR)/%.c: $(OUTPUT_DIR)/%.krml
 	$(call msg, "KRML", $(basename $(notdir $@)))
