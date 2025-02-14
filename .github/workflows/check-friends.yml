@@ -246,7 +246,6 @@ jobs:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
     needs:
-      - build-krml
       - build-hacl
     steps:
       - name: Cleanup
@@ -317,7 +316,6 @@ jobs:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
     needs:
-      - build-krml
       - build-everparse
     steps:
       - name: Cleanup
@@ -387,8 +385,6 @@ jobs:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
     needs:
-      - build-krml
-      - build-hacl
       - build-merkle-tree
     steps:
       - name: Cleanup
@@ -466,9 +462,6 @@ jobs:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
     needs:
-      - build-krml
-      - build-hacl
-      - build-everparse
       - build-mitls-fstar
     steps:
       - name: Cleanup
