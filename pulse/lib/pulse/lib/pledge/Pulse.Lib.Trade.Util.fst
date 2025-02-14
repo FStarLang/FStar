@@ -14,9 +14,8 @@ let elim
 = elim_trade #is
 
 ghost
-fn refl_explicit
-//  (#[T.exact (`emp_inames)] is:inames) // FIXME: Pulse shouldn't remove this implicit marker
-  (is: inames)
+fn refl
+  (#[T.exact (`emp_inames)] is:inames)
   (p: slprop)
 requires emp
 ensures (trade #is p p)
@@ -31,14 +30,9 @@ ensures (trade #is p p)
   intro_trade p p emp aux
 }
 
-let refl 
-  (#[T.exact (`emp_inames)] is:inames)
-= refl_explicit is
-
 ghost
-fn refl'_explicit
-//  (#[T.exact (`emp_inames)] is:inames) // FIXME: Pulse shouldn't remove this implicit marker
-  (is:inames)
+fn refl'
+  (#[T.exact (`emp_inames)] is:inames)
   (p q: slprop)
 requires pure (p == q)
 ensures (trade #is p q)
@@ -46,10 +40,6 @@ ensures (trade #is p q)
   refl #is p;
   rewrite (trade #is p p) as (trade #is p q)
 }
-
-let refl'
-  (#[T.exact (`emp_inames)] is:inames)
-= refl'_explicit is
 
 ghost
 fn curry
@@ -211,7 +201,7 @@ fn weak_concl_r
 {
   weak_concl_l p1 p2 p;
   slprop_equivs ();
-  refl' #is (p ** p2) (p2 ** p); // FIXME: why is the `is`  argument explicit?
+  refl' #is (p ** p2) (p2 ** p);
   trade_compose p1 _ _
 }
 
@@ -236,9 +226,8 @@ fn prod
 }
 
 ghost
-fn rewrite_with_trade_explicit
-//  (#[T.exact (`emp_inames)] is:inames) // FIXME: Pulse shouldn't remove this implicit marker
-  (is:inames)
+fn rewrite_with_trade
+  (#[T.exact (`emp_inames)] is:inames)
   (p1 p2: slprop)
   requires p1 ** pure (p1 == p2)
   ensures p2 ** (trade #is p2 p1)
@@ -255,10 +244,6 @@ fn rewrite_with_trade_explicit
   };
   intro_trade _ _ _ aux
 }
-
-let rewrite_with_trade
-  (#[T.exact (`emp_inames)] is:inames)
-= rewrite_with_trade_explicit is
 
 ghost
 fn trans_hyp_l
