@@ -326,7 +326,7 @@ let rec ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
     (match ss.l with
      | [] -> Inl (| [], [] |)
      | x::_ ->
-       Inr (Printf.sprintf "extra uvars in the substitutions collected by the prover, e.g._#%d" x))
+       Inr (Printf.sprintf "Extra uvars in the substitutions collected by the prover, e.g._#%d" x))
   | _ ->
     let x, ty, rest_uvs = remove_binding uvs in
     if Map.contains ss.m x
@@ -345,7 +345,7 @@ let rec ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
                       is_permutation nts ss
                     }) = (| (RT.NT x t)::nts, eff::effect_labels |) in
            Inl r
-    else Inr (Printf.sprintf "prover could not prove uvar _#%d" x)
+    else Inr (Printf.sprintf "Prover could not prove uvar _#%d of type %s" x (show ty))
 #pop-options
 
 let rec well_typed_nt_substs_prefix

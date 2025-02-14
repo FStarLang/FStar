@@ -538,10 +538,11 @@ let try_frame_pre_uvs
     let r = PS.st_typing_nt_substs_derived g1 uvs d nts effect_labels in
     match r with
     | Inr (x, x_t) ->
-      fail g1 (Some t.range)
-        (Printf.sprintf "prover error: for term %s, implicit solution %s has ghost effect"
-           (P.st_term_to_string t)
-           (P.term_to_string x_t))
+      let open Pulse.PP in
+      fail_doc g1 (Some t.range) [
+        text "Prover error";
+        text "For term" ^/^ pp t ^/^  text "implicit solution" ^/^ pp x_t ^/^ text "has ghost effect.";
+      ]
     | Inl d -> d in
 
   (* shouldn't need this once term becomes a view; currently we sometimes end up with a computation

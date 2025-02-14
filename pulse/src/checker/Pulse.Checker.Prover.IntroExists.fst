@@ -150,10 +150,10 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
       let r = PS.ss_to_nt_substs pst_sub.pg pst_sub.uvs pst_sub.ss in
       match r with
       | Inr msg ->
-        fail pst_sub.pg None
-          (Printf.sprintf
-             "resulted substitution after intro exists protocol is not well-typed: %s"
-             msg)
+        fail_doc pst_sub.pg None [
+          Pulse.PP.text "Resulted substitution after intro exists protocol is not well-typed.";
+          Pulse.PP.text msg;
+        ]
       | Inl nt -> nt in
   assert (PS.well_typed_nt_substs pst_sub.pg pst_sub.uvs nt effect_labels);
   let pst_sub_goals_inv

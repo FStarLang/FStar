@@ -28,6 +28,7 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Reflection.Util
 open Pulse.Typing
+open Pulse.Show
 module P = Pulse.Syntax.Printer
 module RTB = FStar.Stubs.Tactics.V2.Builtins
 module RU = Pulse.RuntimeUtils
@@ -98,7 +99,7 @@ let rtb_instantiate_implicits g f t expected =
   | None ->
     debug g (fun _ -> "Returned from instantiate_implicits: None")
   | Some (_, t, _) ->
-    debug g (fun _ -> Printf.sprintf "Returned from instantiate_implicits: %s" (Pulse.Show.show t))
+    debug g (fun _ -> Printf.sprintf "Returned from instantiate_implicits: %s" (show t))
   end;
   res, iss
 

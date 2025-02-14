@@ -329,22 +329,6 @@ let print_context (g:env) : T.Tac string =
   | _ -> 
     Printf.sprintf "\n\tContext:\n\t%s" (String.concat "\n\t" (ctxt_to_list g))
 
-let print_issue (g:env) (i:FStar.Issue.issue) : T.Tac string = 
-    let open FStar.Issue in
-    let range_opt_to_string = function
-      | None -> "Unknown range"
-      | Some r -> T.range_to_string r
-    in
-    Printf.sprintf "%s (%s): %s%s"
-       (range_opt_to_string (range_of_issue i))
-       (level_of_issue i)
-       (render_issue i)
-       (ctx_to_string (T.unseal (get_context g) @ (T.map (fun i -> (i, None)) (context_of_issue i))))
-
-let print_issues (g:env)
-                 (i:list FStar.Issue.issue)
-   = String.concat "\n" (T.map (print_issue g) i)
-
 let env_to_string (e:env) : T.Tac string =
   let bs = T.map #((var & typ) & ppname) #_
     (fun ((n, t), x) -> Printf.sprintf "%s#%d : %s" (T.unseal x.name) n (Pulse.Syntax.Printer.term_to_string t))

@@ -193,8 +193,6 @@ val reset_context (g:env) (use_context_from:env) : g':env{ g' == g}
 val get_context (g:env) : Pulse.RuntimeUtils.context
 val range_of_env (g:env) : T.Tac range
 val print_context (g:env) : T.Tac string
-val print_issue (g:env) (i:FStar.Issue.issue) : T.Tac string 
-val print_issues (g:env) (i:list FStar.Issue.issue) : T.Tac string
 val env_to_string (g:env) : T.Tac string
 val env_to_doc' (simplify:bool) (g:env) : T.Tac FStar.Pprint.document
 val env_to_doc (g:env) : T.Tac FStar.Pprint.document
