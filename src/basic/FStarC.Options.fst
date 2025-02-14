@@ -1883,6 +1883,7 @@ let module_name_of_file_name f =
     let f = String.substring f 0 (String.length f - String.length (Filepath.get_file_extension f) - 1) in
     String.lowercase f
 
+(* Basically returns true when the module is in the command line *)
 let should_check m =
   let l = get_verify_module () in
   List.contains (String.lowercase m) l
@@ -2356,7 +2357,13 @@ let should_extract (m:string) (tgt:codegen_t) : bool =
         in
         not (no_extract m) &&
         (match get_extract_namespace (), get_extract_module() with
-        | [], [] -> true //neither is set; extract everything
+        | [], [] ->
+          // Neither is set; extract only files given in the command line.
+          // Except for krml: there we retain the behavior of extracting everything
+          // into a single krml output file.
+          if tgt = Krml
+          then true
+          else should_check m
         | _ -> should_extract_namespace m || should_extract_module m)
 
 let should_be_already_cached m =

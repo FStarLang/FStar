@@ -136,7 +136,39 @@ let print_help_for (o : string) : unit =
 
 (* Normal mode with some flags, files, etc *)
 let go_normal () =
-  let res, filenames = process_args () in
+  let res, filenames0 = process_args () in
+
+  let chopsuf (suf s : string) : option string =
+    if ends_with s suf
+    then Some (String.substring s 0 (String.length s - String.length suf))
+    else None
+  in
+  let ( ||| ) x y =
+    match x with
+    | None -> y
+    | _ -> x
+  in
+  let checked_of (f:string) =
+    chopsuf ".checked" f ||| chopsuf ".checked.lax" f
+  in
+
+  let filenames =
+    filenames0 |>
+    List.map (fun f ->
+      if not (Filepath.file_exists f) then f else
+      (* ^ only rewrite if file exists *)
+      match checked_of f with
+      | Some f' ->
+        if Debug.any () then
+          print1 "Rewriting argument file %s to its source file\n" f;
+        (match Find.find_file (Filepath.basename f') with
+         | Some r -> r
+         | None -> failwith "Couldn't find source for file" ^ f' ^ "!\n")
+      | None -> f
+    )
+  in
+  if Debug.any () then
+    print2 "Rewrote\n%s\ninto\n%s\n\n" (show filenames0) (show filenames);
 
   (* Compat: create the --odir and --cache_dir if they don't exist.
   F* has done this for a long time, only sinc it simplified

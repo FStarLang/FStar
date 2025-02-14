@@ -69,24 +69,17 @@ FSTAR := $(WINWRAP) $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 	$(maybe_touch)
 
 %.$(EEXT): FF=$(notdir $(subst $(EXTENSION),,$<))
-%.$(EEXT): MM=$(basename $(FF))
-%.$(EEXT): LBL=$(notdir $@)
-# ^ HACK we use notdir to get the module name since we need to pass in
-# the fst (not the checked file), but we don't know where it is, so this
-# is relying on F* looking in its include path.
 %.$(EEXT):
-	$(call msg, "EXTRACT", $(LBL))
-	$(FSTAR) $(if $(findstring FStarC.,$<),--MLish,) $(FF) --already_cached '*,' --codegen $(CODEGEN) --extract_module $(MM)
+	$(call msg, "EXTRACT", $(FF))
+	$(FSTAR) $< $(if $(findstring FStarC.,$<),--MLish,) $(FF) --already_cached '*,' --codegen $(CODEGEN)
 	@# HACK: finding FStarC modules and passing --MLish
 	@# for them and only them.
 	$(maybe_touch)
 
 %.krml: FF=$(notdir $(subst $(EXTENSION),,$<))
-%.krml: MM=$(basename $(FF))
-%.krml: LBL=$(notdir $@)
 %.krml:
-	$(call msg, "EXTRACT", $(LBL))
-	$(FSTAR) $(FF) --already_cached ',*' --codegen krml --extract_module $(MM)
+	$(call msg, "EXTRACT", $(FF))
+	$(FSTAR) $< --already_cached ',*' --codegen krml
 
 DEPSTEM := $(CACHE_DIR)/.depend$(TAG)
 
