@@ -155,3 +155,9 @@ let _ =
         let bs = binders_from_arrow (quote t) in
         validate [{ name = "y"; qual = "Explicit"; desc = Some foo; }] bs
     end
+
+let fff ([@@@1] x : int) : int = x
+
+(* This used to trigger an instantiation for the argument
+of fff, and fail. *)
+let ggg = fff
