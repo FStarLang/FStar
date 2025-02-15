@@ -23,29 +23,31 @@ module T = FStar.Tactics.V2
 open Pulse.Lib.Dv {}
 open FStar.ExtractAs
 
-(* This attribute can be used on the indexes of a slprop
-   to instruct the checker to call the SMT solver to relate
-   occurrences of that index.
+val equate_by_smt    : unit (* remove *)
+val equate_strict    : unit (* remove *)
+val equate_syntactic : unit (* remove *)
 
-   For example, if you have
+(* Arguments of slprops can be marked as a matching key to
+   1- Make sure we do no try to use the SMT to match resources with
+      different matching keys (in other words, we only use the unifier to
+      match the matching keys).
+   2- Indicate that we only expect a single instance of the resource for
+      a given set of matching keys, so we allow the use of SMT for the rest
+      of the arguments.
 
-     val pts_to (x:ref a) ([@@@equate_by_smt] v:a) : slprop
+     val pts_to ([@@@mkey] x : ref a) (v : a) : slprop
 
-   Then `pts_to x (a + b)` and `pts_to x (b + a)` will be
-   matched by the prover by emitting an SMT query (a + b) == (b + a). Of course,
-   `pts_to x a` and `pts_to x a` will be matched purely by unification without
-   emitted a trivial SMT query (a == a).
+   Then `pts_to x (a + b)` and `pts_to x (b + a)` will be matched by the
+   prover by emitting an SMT query `pts_to x (a + b) == pts_to x (b +
+   a)`. (Note we ask for this possibly weaker fact instead of `(a + b)
+   == (b + a)`; this can be useful when the definition of the resource
+   is not injective.)
 
-   By default, if none of the indexes of a slprop are marked with "equate_by_smt",
-   the _last_ argument of a slprop is considered to be equated by SMT. This makes
-   it convenient to write slprops like the one below, without paying special
-   heed to this attribute.
-
-     val pts_to (x:ref a) (v:a) : slprop
+   Of course, `pts_to x a` and `pts_to x a` will be matched purely by
+   unification without even emitting a trivial SMT query (a == a).
 *)
-val equate_by_smt    : unit (* now meaningless. *)
-val equate_strict    : unit (* only use fastunif *)
-val equate_syntactic : unit (* only use term_eq *)
+val mkey : unit
+val no_mkeys : unit
 
 (** This attribute allows to do ambiguous proving when calling a function. *)
 val allow_ambiguous : unit

@@ -83,10 +83,11 @@ let rec explode_aux
 
 let explode
   (#preamble:_) (pst:prover_state preamble)
-: T.Tac (pst':prover_state preamble {pst' `pst_extends` pst})
+: T.Tac (list (list Pprint.document) & pst':prover_state preamble {pst' `pst_extends` pst})
 =
   let remaining_ctxt, p1 = explode_aux pst false [] pst.remaining_ctxt in
   let unsolved', p2 = explode_aux pst false [] pst.unsolved in
+  [],
   { pst with
     unsolved = unsolved';
     goals_inv = magic();

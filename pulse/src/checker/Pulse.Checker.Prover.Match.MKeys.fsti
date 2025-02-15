@@ -14,24 +14,13 @@
    limitations under the License.
 *)
 
-module Pulse.Checker.Prover.Match.Comb
+module Pulse.Checker.Prover.Match.MKeys
 
-module T = FStar.Tactics
-
-open FStar.Pprint
-
+open FStar.Tactics.V2
 open Pulse.Syntax
 open Pulse.Typing
 
-open Pulse.Checker.Base
-open Pulse.Checker.Prover.Base
-open Pulse.Checker.Prover.Match.Base
+(* remove!*)
+val same_head (t0 t1 : term): Tac bool
 
-(* Combinators for matching passes (currently a single one) *)
-
-(* Do a pass over all unsolved goals to see if any can be matched with the given matcher. *)
-val match_with
-  (label : string)
-  (matcher : matcher_t)
-  (#preamble:_) (pst:prover_state preamble)
-  : T.Tac (list (list document) & pst':prover_state preamble { pst' `pst_extends` pst })
+val eligible_for_smt_equality (g:env) (t0 t1 : term) : Tac bool

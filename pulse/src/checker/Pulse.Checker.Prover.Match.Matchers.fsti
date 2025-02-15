@@ -20,7 +20,7 @@ open Pulse.Checker.Prover.Match.Base
 
 (* The actual matchers, in 1-to-1 form. Usually called with Match.Comb.match_with *)
 
-val match_syntactic_11 : matcher_t
-val match_fastunif_11  : matcher_t
+val match_syntactic_11     : matcher_t
+val match_fastunif_11      : matcher_t
 val match_fastunif_inst_11 : matcher_t
-val match_full_11      : matcher_t
+val match_full_11          : matcher_t
