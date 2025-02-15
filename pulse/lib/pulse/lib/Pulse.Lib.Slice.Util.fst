@@ -56,7 +56,7 @@ fn append_split_trade (#t: Type) (input: S.slice t) (#p: perm) (i: SZ.t)
 {
   let s = append_split input i;
   match s {
-    Mktuple2 s1 s2 -> {
+    s1, s2 -> {
       ghost fn aux ()
         requires S.is_split input s1 s2 ** (pts_to s1 #p v1 ** pts_to s2 #p v2)
         ensures pts_to input #p (v1 `Seq.append` v2)
@@ -85,7 +85,7 @@ fn split_trade (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t) (#v: Ghost.erased 
   Seq.lemma_split v (SZ.v i);
   let s' = S.split s i;
   match s' {
-    Mktuple2 s1 s2 -> {
+    s1, s2 -> {
       with v1 v2. assert pts_to s1 #p v1 ** pts_to s2 #p v2;
       ghost fn aux ()
         requires S.is_split s s1 s2 ** (pts_to s1 #p v1 ** pts_to s2 #p v2)

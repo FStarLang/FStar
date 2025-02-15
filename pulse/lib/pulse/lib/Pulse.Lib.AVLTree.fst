@@ -503,8 +503,8 @@ fn rotate_left (#t:Type0) (tree:tree_t t) (#l: G.erased (T.tree t){ Some? (T.rot
   returns  y : tree_t t
   ensures  is_tree y (Some?.v (T.rotate_left l))
 {
-  let Mktuple4 a b p' _  = read_node tree;
-  let Mktuple4 c d e  _  = read_node p';
+  let a, b, p', _  = read_node tree;
+  let c, d, e,  _  = read_node p';
   write_node p' a b c;
   write_node tree p' d e;
   tree (* Note: in-place mutation, we could make this return unit instead. *)
@@ -515,8 +515,8 @@ fn rotate_right (#t:Type0) (tree:tree_t t) (#l:G.erased (T.tree t){ Some? (T.rot
   returns y:tree_t t
   ensures (is_tree y (Some?.v (T.rotate_right l)))
 {
-  let Mktuple4 p' d e _  = read_node tree;
-  let Mktuple4 a  b c _  = read_node p';
+  let p', d, e, _  = read_node tree;
+  let a, b, c, _  = read_node p';
   write_node p' c d e;
   write_node tree a b p';
   tree
@@ -527,9 +527,9 @@ fn rotate_right_left (#t:Type0) (tree:tree_t t) (#l:G.erased (T.tree t){ Some? (
   returns  y : tree_t t
   ensures  is_tree y (Some?.v (T.rotate_right_left l))
 {
-  let Mktuple4 a  x zp _ = read_node tree;
-  let Mktuple4 yp z d  _ = read_node zp;
-  let Mktuple4 b  y c  _ = read_node yp;
+  let a, x, zp, _ = read_node tree;
+  let yp, z, d,  _ = read_node zp;
+  let b, y, c,  _ = read_node yp;
   write_node zp c z d;
   write_node yp a x b;
   write_node tree yp y zp;
@@ -541,9 +541,9 @@ fn rotate_left_right (#t:Type0) (tree:tree_t t) (#l:G.erased (T.tree t){ Some? (
   returns  y  :tree_t t
   ensures  is_tree y (Some?.v (T.rotate_left_right l))
 {
-  let Mktuple4 zp x d  _ = read_node tree;
-  let Mktuple4 a  z yp _ = read_node zp;
-  let Mktuple4 b  y c  _ = read_node yp;
+  let zp, x, d,  _ = read_node tree;
+  let a, z, yp, _ = read_node zp;
+  let b, y, c,  _ = read_node yp;
   write_node zp a z b;
   write_node yp c x d;
   write_node tree zp y yp;

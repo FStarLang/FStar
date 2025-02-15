@@ -141,13 +141,13 @@ fn is_deque_null_head_ptr
 {
   let xss = reveal xs;
   match xss {
-    Nil -> {
+    [] -> {
       (* Need to unfold + fold to bring pure into scope. *)
       unfold (is_deque l []);
       fold (is_deque l []);
       ()
     }
-    Cons hd tl -> {
+    hd :: tl -> {
       unfold (is_deque l (hd :: tl));
       unreachable();
     }
@@ -170,12 +170,12 @@ fn is_deque_some_head_ptr
 {
   let xss = reveal xs;
   match xss {
-    Nil -> {
+    [] -> {
       (* Need to unfold + fold to bring pure into scope. *)
       unfold (is_deque l []);
       unreachable();
     }
-    Cons hd tl -> {
+    hd :: tl -> {
       unfold (is_deque l (hd :: tl));
       fold (is_deque l (hd :: tl));
     }
@@ -194,12 +194,12 @@ fn some_head_then_some_tail
 {
   let xss = reveal xs;
   match xss {
-    Nil -> {
+    [] -> {
       unfold (is_deque l []);
       fold (is_deque l []);
       ();
     }
-    Cons hd tl -> {
+    hd :: tl -> {
       unfold (is_deque l (hd :: tl));
       fold (is_deque l (hd :: tl));
       ();
@@ -240,10 +240,10 @@ fn unfold_is_deque_cons (#t:Type) (l : deque t) (#xs : (list t){Cons? xs})
            pure (l.head == Some (fst hptp) /\ l.tail == Some (snd hptp))
 {
   match xs {
-    Nil -> {
+    [] -> {
       unreachable();
     }
-    Cons hd tl -> {
+    hd :: tl -> {
       rewrite each xs as Cons hd tl;
       unfold is_deque;
       with hp tp. assert (is_deque_suffix hp (hd::tl) None tp None);
@@ -302,14 +302,14 @@ fn factor_is_deque_suffix
   let hd : t = List.Tot.hd l;
   let tl : list t = List.Tot.tl l;
   match tl {
-    Nil -> {
+    [] -> {
       assert (pure (l == [hd]));
       unfold (is_deque_suffix p [hd] prev tail);
       with v. assert (pts_to p v);
       fold (is_deque_suffix_factored_next p [hd] tail last v.dnext);
       fold (is_deque_suffix_factored p [hd] prev tail last);
     }
-    Cons y ys -> {
+    y :: ys -> {
       assert (pure (l == hd::y::ys));
       unfold (is_deque_suffix p (hd::y::ys) prev tail);
       with v. assert (pts_to p v);
@@ -338,12 +338,12 @@ fn unfactor_is_deque_suffix
   let hd : t = List.Tot.hd l;
   let tl : list t = List.Tot.tl l;
   match tl {
-    Nil -> {
+    [] -> {
       rewrite each l as [hd];
       rewrite each tl as [];
       fold (is_deque_suffix p [hd] prev tail last);
     }
-    Cons y ys -> {
+    y :: ys -> {
       rewrite each l as (hd::y::ys);
       rewrite each tl as (y::ys);
       fold (is_deque_suffix p (hd::y::ys) prev tail last);
@@ -537,10 +537,10 @@ fn suffix_factored_none_helper
 {
   unfold (is_deque_suffix_factored_next p (x::l) tail last None);
   match l {
-    Nil -> {
+    [] -> {
       fold (is_deque_suffix_factored_next p (x::l) tail last None);
     }
-    Cons y ys -> {
+    y :: ys -> {
       fold (is_deque_suffix_factored_next p (x::l) tail last None);
     }
   }
@@ -562,11 +562,11 @@ fn suffix_factored_some_helper
 {
   unfold (is_deque_suffix_factored_next p (x::l) tail None (Some np));
   match l {
-    Nil -> {
+    [] -> {
       assert (pure False); // somehow I need this!!
       unreachable();
     }
-    Cons y ys -> {
+    y :: ys -> {
       assert (pure (Cons? l));
       fold (is_deque_suffix_factored_next p (x::y::ys) tail None (Some np));
     }
@@ -672,13 +672,13 @@ fn rec join_last
   let ys1 : list t = Cons?.tl ys;
   rewrite each ys as (y1 :: ys1);
   match ys1 {
-    Nil -> {
+    [] -> {
       unfold is_deque_suffix headp [y1] prev         tailp (Some tailp');
       assert (pure (headp == tailp));
       fold   is_deque_suffix tailp' [reveal y]            (Some tailp) tailp' last;
       fold   is_deque_suffix headp  [reveal y1; reveal y] prev         tailp' last;
     }
-    Cons y2 ys' -> {
+    y2 :: ys' -> {
       unfold (is_deque_suffix headp (y1 :: y2 :: ys') prev tailp (Some tailp'));
       with headp'.
         assert (is_deque_suffix headp' (y2 :: ys') (Some headp) tailp (Some tailp'));
@@ -719,13 +719,13 @@ fn rec unsnoc_list (#t:Type0) (l : list t)
   let hd = Cons?.hd l;
   let tl = Cons?.tl l;
   match tl {
-    Nil -> {
+    [] -> {
       let ys = Nil #t;
       let y = hd;
       fold (tag_pure (l == ys @ [y]));
       (ys, y)
     }
-    Cons _ _ -> {
+    _ :: _ -> {
       let ysy = unsnoc_list tl;
       let ys = fst ysy;
       let y = snd ysy;
@@ -750,10 +750,10 @@ fn fold_is_deque_cons
   ensures  is_deque l xs
 {
   match xs {
-    Nil -> {
+    [] -> {
       unreachable();
     }
-    Cons hd tl -> {
+    hd :: tl -> {
       rewrite each xs as Cons hd tl;
       fold (is_deque l (hd :: tl));
     }
@@ -780,7 +780,7 @@ fn rec sep_last
   let ys1 = Cons?.tl ys;
   rewrite each ys as (y1 :: ys1);
   match ys1 {
-    Nil -> {
+    [] -> {
       rewrite
         is_deque_suffix headp (snoc [y1] y) prev tailp last
       as
@@ -800,7 +800,7 @@ fn rec sep_last
 
       headp
     }
-    Cons y2 ys' -> {
+    y2 :: ys' -> {
       assert (is_deque_suffix headp (snoc (y1 :: y2 :: ys') y) prev tailp last);
       rewrite (is_deque_suffix headp (snoc (y1 :: y2 :: ys') y) prev tailp last)
            as (is_deque_suffix headp (y1 :: y2 :: snoc ys' y) prev tailp last);
@@ -859,7 +859,7 @@ fn rec is_deque_suffix_nolast_helper
   rewrite each l as (hd :: tl);
   
   match tl {
-    Nil -> {
+    [] -> {
       unfold is_deque_suffix p [hd] prev tail last;
       rewrite each p as tail;
       with v. assert (pts_to tail v);
@@ -880,7 +880,7 @@ fn rec is_deque_suffix_nolast_helper
         pf;
       v;
     }
-    Cons h2 tl2 -> {
+    h2 :: tl2 -> {
       rewrite each l as (hd :: h2 :: tl2);
       unfold is_deque_suffix p (hd :: h2 :: tl2) prev tail last;
       

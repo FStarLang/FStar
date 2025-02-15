@@ -121,12 +121,12 @@ requires is_list x l
 ensures is_list_cases x l
 {
   match l {
-    Nil -> { 
+    [] -> {
       unfold (is_list x []);
       fold (is_list_cases None l);
       rewrite each (None #(ref (node t))) as x;
     }
-    Cons head tl -> { 
+    head :: tl -> {
       unfold (is_list x (head::tl));
       with w tail. _;
       let v = Some?.v x;

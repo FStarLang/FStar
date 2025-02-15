@@ -168,12 +168,12 @@ ensures emp
   unfold (lock_inv t.task_list);
   let thunks = !t.task_list;
   match thunks {
-    Nil -> {
+    [] -> {
       L.free t.lock;
       B.free t.task_list;
       elim_inv_nil thunks;
     }
-    Cons hd tl -> {
+    hd :: tl -> {
       elim_inv_cons thunks hd tl;
       t.task_list := tl;
       fold (lock_inv t.task_list);

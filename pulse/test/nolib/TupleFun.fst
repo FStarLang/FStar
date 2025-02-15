@@ -36,7 +36,7 @@ fn call ()
   requires emp
   ensures emp
 {
-  let Mktuple2 x y = ret2 ();
+  let x, y = ret2 ();
   usefoo x;
   usebar y;
 }
@@ -47,7 +47,7 @@ fn call_no_mut ()
   requires emp
   ensures emp
 {
-  let mut Mktuple2 x y = ret2 ();
+  let mut x, y = ret2 ();
   usefoo x;
   usebar y;
 }

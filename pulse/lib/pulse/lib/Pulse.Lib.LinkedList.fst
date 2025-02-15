@@ -71,11 +71,11 @@ fn cases_of_is_list (#t:Type) (x:llist t) (l:list t)
     ensures is_list_cases x l
 {
     match l {
-        Nil -> { 
+        [] -> {
             unfold (is_list x []);
             fold (is_list_cases None l);
         }
-        Cons head tl -> { 
+        head :: tl -> {
             unfold (is_list x (head::tl));
             with w tail. _;
             let v = Some?.v x;
