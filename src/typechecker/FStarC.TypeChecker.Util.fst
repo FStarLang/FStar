@@ -2924,8 +2924,7 @@ let maybe_instantiate (env:Env.env) (e:term) (t:typ) : term & typ & guard_t =
                   match inst_n, bs with
                   | Some 0, _ -> [], bs, subst, Env.trivial_guard //no more instantiations to do
                   | _, {binder_qual = Some (Implicit _)} ::rest
-                  | _, {binder_qual = Some (Meta _)} ::rest
-                  | _, {binder_attrs = _::_} :: rest ->
+                  | _, {binder_qual = Some (Meta _)} ::rest ->
                       let b = List.hd bs in
                       let b = SS.subst_binder subst b in
                       let tm, ty, aq, g = instantiate_one_binder env e.pos b in
