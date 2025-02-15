@@ -311,10 +311,12 @@ setlink-%:
 	ln -sf $(CURDIR)/.scripts/get_fstar_z3.sh bin/get_fstar_z3.sh
 
 stage1: .install-stage1.touch
+.PHONY: 1
 1: stage1
 	$(MAKE) setlink-1
 
 stage2: .install-stage2.touch
+.PHONY: 2
 2: stage2
 	$(MAKE) setlink-2
 
