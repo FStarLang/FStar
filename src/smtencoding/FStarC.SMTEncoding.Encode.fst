@@ -2013,7 +2013,7 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     let env_decls, env = encode_env_bindings env bindings in
     if Debug.medium () || !dbg_SMTEncoding || !dbg_SMTQuery
     then BU.print1 "Encoding query formula {: %s\n" (show q);
-    let (phi, qdecls), ms = BU.record_time_ms (fun () -> encode_formula q env) in
+    let (phi, qdecls), ms = Timing.record_ms (fun () -> encode_formula q env) in
     let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
     let label_prefix, label_suffix = encode_labels labels in
     let caption =

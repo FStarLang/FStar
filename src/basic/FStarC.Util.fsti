@@ -25,13 +25,6 @@ exception Impos
 val max_int: int
 val return_all: 'a -> ML 'a
 
-type time_ns
-val now_ns : unit -> time_ns
-val time_diff_ms: time_ns -> time_ns -> int
-val time_diff_ns: time_ns -> time_ns -> int
-val record_time_ns: (unit -> 'a) -> ('a & int)
-val record_time_ms: (unit -> 'a) -> ('a & int)
-
 type time_of_day
 val get_time_of_day : unit -> time_of_day
 val get_time_of_day_ms : unit -> int

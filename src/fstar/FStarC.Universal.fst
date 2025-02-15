@@ -387,7 +387,7 @@ let tc_one_file
     | Some tgt ->
       if not (Options.should_extract (string_of_lid tcmod.name) tgt)
       then None, 0
-      else FStarC.Util.record_time_ms (fun () ->
+      else Timing.record_ms (fun () ->
             with_env env (fun env ->
               let _, defs = FStarC.Extraction.ML.Modul.extract env tcmod in
               defs)
@@ -397,7 +397,7 @@ let tc_one_file
       if Options.codegen() = None
       then env, 0
       else
-        FStarC.Util.record_time_ms (fun () ->
+        Timing.record_ms (fun () ->
             let env, _ = with_env env (fun env ->
                   FStarC.Extraction.ML.Modul.extract_iface env tcmod) in
             env

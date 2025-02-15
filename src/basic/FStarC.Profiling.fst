@@ -74,7 +74,7 @@ let profile  (f: unit -> 'a) (module_name:option string) (cid:string) : 'a =
        else begin
          try
            c.running := true; //mark the counter as running
-           let res, elapsed = BU.record_time_ns f in
+           let res, elapsed = Timing.record_ns f in
            c.total_time := !c.total_time + elapsed; //accumulate the time
            c.running := false; //finally mark the counter as not running
            res
