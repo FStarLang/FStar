@@ -63,6 +63,10 @@ let normalize_slprop
 
   (* Unfold anything marked with the "pulse_unfold" attribute. *)
   let steps = steps @ [delta_attr ["Pulse.Lib.Core.pulse_unfold"]] in
+  (* Unfold anything marked with F*'s "unfold" qualifier . *)
+  let steps = steps @ [delta_qualifier ["unfold"]] in
+  (* Unfold recursive definitions too, but only the ones that match the filters above. *)
+  let steps = steps @ [zeta] in
 
   let v' = T.norm_well_typed_term (elab_env g) steps v in
   let v' = Simplify.simplify v' in (* NOTE: the simplify stage is unverified *)
