@@ -68,6 +68,13 @@ let normalize_slprop
   (* Unfold recursive definitions too, but only the ones that match the filters above. *)
   let steps = steps @ [zeta] in
 
+  (* These things only annoy. Note, these are not the projectors, they
+     are aliases for the projectors and unfold into them. We will not
+     unfold those into a match. The simplify stage will take care of
+     projecting literal tuples appropriately. *)
+  let steps = steps @ [delta_only [`%Prelude.dfst; `%Prelude.dsnd]] in
+  let steps = steps @ [delta_only [`%Prelude.fst; `%Prelude.snd]] in
+
   let v' = T.norm_well_typed_term (elab_env g) steps v in
   let v' = Simplify.simplify v' in (* NOTE: the simplify stage is unverified *)
   let v_equiv_v' = VE_Ext _ _ _ (RU.magic ()) in
