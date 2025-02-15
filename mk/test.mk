@@ -121,6 +121,7 @@ $(OUTPUT_DIR)/%.diff: $(OUTPUT_DIR)/% %.expected
 $(OUTPUT_DIR)/%.accept: $(OUTPUT_DIR)/%
 	$(call msg, "ACCEPT", $<)
 	cp $< ./$*.expected
+	touch $(OUTPUT_DIR)/$*.diff # touch so subsequent test skips
 
 # Subrules for descending into subdirectories (coallesce with a define?)
 
