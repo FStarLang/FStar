@@ -138,6 +138,15 @@ let print_help_for (o : string) : unit =
 let go_normal () =
   let res, filenames0 = process_args () in
 
+  if Some? (Options.output_to()) &&
+     not (Some? (Options.dep ())) &&
+     List.length filenames0 > 1
+  then
+    Errors.raise_error0 Errors.Fatal_ModuleOrFileNotFound [
+      Errors.Msg.text "When using -o, you can only provide a single file in the
+        command line (except for dependency analysis).";
+    ];
+
   let chopsuf (suf s : string) : option string =
     if ends_with s suf
     then Some (String.substring s 0 (String.length s - String.length suf))
