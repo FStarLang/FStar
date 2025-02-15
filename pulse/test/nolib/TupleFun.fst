@@ -3,8 +3,8 @@ module TupleFun
 #lang-pulse
 open Pulse.Nolib
 
-assume val foo : int -> slprop
-assume val bar : int -> slprop
+assume val foo : [@@@equate_strict]_:int -> slprop
+assume val bar : [@@@equate_strict] int -> slprop
 
 fn usefoo (x:int)
   requires foo x
@@ -28,7 +28,10 @@ fn ret2 ()
   admit();
 }
 
-
+(* This works without SMT given that the pulse prover will
+simplify tuple projections, and also that we rewrite the result
+of the call into (x,y) after the match (desugared from the let). *)
+#push-options "--no_smt"
 fn call ()
   requires emp
   ensures emp
@@ -37,6 +40,7 @@ fn call ()
   usefoo x;
   usebar y;
 }
+#pop-options
 
 [@@expect_failure]
 fn call_no_mut ()
