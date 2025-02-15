@@ -33,12 +33,14 @@ assume val foo9 : slprop
 assume val foo10 : slprop
 
 
+#push-options "--no_smt"
 fn test_synt ()
   requires foo1 ** foo2 ** foo3 ** foo4 ** foo5 ** foo6 ** foo7 ** foo8 ** foo9 ** foo10
   ensures foo10 ** foo9 ** foo8 ** foo7 ** foo6 ** foo5 ** foo4 ** foo3 ** foo2 ** foo1
 {
   ();
 }
+#pop-options
 
 
 (* Similar example, but all the heads match so we would attempt to use SMT if we didn't

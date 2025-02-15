@@ -3,8 +3,8 @@ module TupleFun
 #lang-pulse
 open Pulse.Nolib
 
-assume val foo : [@@@equate_strict]_:int -> slprop
-assume val bar : [@@@equate_strict] int -> slprop
+assume val foo : int -> slprop
+assume val bar : int -> slprop
 
 fn usefoo (x:int)
   requires foo x

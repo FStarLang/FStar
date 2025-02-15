@@ -13,7 +13,6 @@ class reflike (vt:Type) (rt:Type) = {
   (:=) : r:rt -> v:vt -> #v0:erased vt -> stt unit (r |-> v0) (fun _ -> r |-> v);
 }
 
-// [@@pulse_unfold]
 instance reflike_ref (a:Type) : reflike a (ref a) = {
   ( |-> ) = (fun r v -> Pulse.Lib.Reference.pts_to r v);
   alloc   = Pulse.Lib.Reference.alloc;
