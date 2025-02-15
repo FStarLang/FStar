@@ -506,6 +506,7 @@ let rec keys_append (l1 l2:forest) (ms1 ms2:ms)
   | [] -> ()
   | _::tl -> keys_append tl l2 (keys tl) ms2
 
+#push-options "--z3rlimit_factor 10"
 let rec unzip_repr (d:nat) (upper_bound:key_t) (t:tree) (lt:ms)
   : Lemma
       (requires
@@ -522,6 +523,7 @@ let rec unzip_repr (d:nat) (upper_bound:key_t) (t:tree) (lt:ms)
       (keys_of_tree right) (ms_append (keys_of_tree left)
                                       (ms_append (ms_singleton k)
                                                  ms_empty))
+#pop-options
 
 let heap_delete_max_repr (d:pos) (t:tree) (lt:ms)
   : Lemma
