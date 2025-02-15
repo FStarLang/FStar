@@ -1,7 +1,7 @@
 module Ambig.Attr
 #lang-pulse
 
-open Pulse.Lib.Pervasives
+open Pulse.Nolib
 
 assume val p : int -> slprop
 

@@ -1,10 +1,15 @@
 module Val
 #lang-pulse
 
-open Pulse.Lib.Pervasives
+open Pulse.Nolib
 
 
 fn foo ()
   requires emp
   ensures emp
+{
+  ()
+}
 
+
+let x = foo()
