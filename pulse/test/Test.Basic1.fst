@@ -57,13 +57,15 @@ fn test_synt2 ()
 assume val fooparam : erased int -> slprop
 
 
+(* Works without SMT due to pulse simplifier *)
+#push-options "--no_smt"
 fn test_fastunif (x:erased int)
   requires fooparam (hide (reveal x))
   ensures  fooparam x
 {
   ();
 }
-
+#pop-options
 
 module SZ = FStar.SizeT
 
