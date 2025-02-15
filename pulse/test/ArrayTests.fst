@@ -16,7 +16,7 @@
 
 module ArrayTests
 #lang-pulse
-open Pulse.Lib.Pervasives
+open Pulse
 module U32 = FStar.UInt32
 module A = Pulse.Lib.Array
 module V = Pulse.Lib.Vec

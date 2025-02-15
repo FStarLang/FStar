@@ -54,7 +54,6 @@ fn intro_trade
   ensures trade #is hyp concl
 {
   fold (trade_elim_exists is hyp extra concl);
-  assert (extra ** trade_elim_exists is hyp extra concl); // FIXME: why is this needed? somehow guiding the prover?
   fold (__trade #is hyp concl);
   fold (trade #is hyp concl)
 }

@@ -1,7 +1,7 @@
 module TupleFun
 
 #lang-pulse
-open Pulse
+open Pulse.Nolib
 
 assume val foo : int -> slprop
 assume val bar : int -> slprop

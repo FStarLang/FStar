@@ -16,9 +16,6 @@
 
 module Pulse.Checker.Prover.Match.Matchers
 
-module T = FStar.Tactics
-
-open Pulse.Checker.Prover.Base
 open Pulse.Checker.Prover.Match.Base
 
 (* The actual matchers, in 1-to-1 form. Usually called with Match.Comb.match_with *)

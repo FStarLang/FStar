@@ -16,15 +16,9 @@
 
 module Pulse.Checker.Prover.Match.Base
 
-open FStar.Tactics.V2
-open FStar.List.Tot
-open FStar.Ghost
-
 open Pulse.Syntax
 open Pulse.Typing
-open Pulse.Typing.Combinators
 open Pulse.Checker.Prover.Base
-open Pulse.PP
 
 module RU = Pulse.RuntimeUtils
 module T  = FStar.Tactics.V2
