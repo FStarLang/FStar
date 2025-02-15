@@ -45,6 +45,8 @@ instance ord_pos : ord pos = {
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type rng = {
   file_name:file_name;
+  (* ^ Note: this must be a basename, without any directory components. The
+  interface should protect this fact. *)
   start_pos:pos;
   end_pos:pos;
 }
@@ -85,18 +87,12 @@ let mk_pos l c = {
     col=max 0 c
 }
 let mk_rng file_name start_pos end_pos = {
-    file_name = file_name;
+    file_name = Filepath.basename file_name;
     start_pos = start_pos;
     end_pos   = end_pos
 }
 
 let mk_range f b e = let r = mk_rng f b e in range_of_rng r r
-
-let string_of_file_name f =
-  if Options.Ext.enabled "fstar:no_absolute_paths" then
-    Filepath.basename f
-  else
-    f
 
 open FStarC.Json
 let json_of_pos (r: pos): json
@@ -106,7 +102,7 @@ let json_of_pos (r: pos): json
     ]
 let json_of_rng (r: rng): json
   = JsonAssoc [
-      "file_name", JsonStr (string_of_file_name r.file_name);
+      "file_name", JsonStr r.file_name;
       "start_pos", json_of_pos r.start_pos;
       "end_pos", json_of_pos r.end_pos;
     ]
