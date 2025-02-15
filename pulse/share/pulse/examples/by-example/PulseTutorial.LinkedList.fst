@@ -314,8 +314,8 @@ ensures is_list x ('l1 @ 'l2)
   rewrite each _node as node;
   match node.tail {
     None -> {
-      is_list_case_none node.tail;
-      elim_is_list_nil node.tail;
+      is_list_case_none None;
+      elim_is_list_nil None;
       np := { node with tail = y };
       rewrite each y as ({ node with tail = y }).tail in (is_list y 'l2);
       intro_is_list_cons x np; 

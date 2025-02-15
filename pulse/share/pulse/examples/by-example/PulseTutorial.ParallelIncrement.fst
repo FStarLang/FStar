@@ -603,7 +603,7 @@ fn incr_pcm_t (r:ref int) (ghost_r:ghost_pcm_ref pcm) (l:L.lock) (t1:bool) (#n:i
     fold lock_inv_ghost;
     fold lock_inv_pcm;
     L.release l;
-    fold (t1_perm ghost_r (add_one n) t1)
+    fold (t1_perm ghost_r (add_one n) true);
   } else {
     rewrite (t1_perm ghost_r n t1) as
             (ghost_pcm_pts_to ghost_r (None, half n));
@@ -621,7 +621,7 @@ fn incr_pcm_t (r:ref int) (ghost_r:ghost_pcm_ref pcm) (l:L.lock) (t1:bool) (#n:i
     fold lock_inv_ghost;
     fold lock_inv_pcm;
     L.release l;
-    fold (t1_perm ghost_r (add_one n) t1)
+    fold (t1_perm ghost_r (add_one n) false)
   }
 }
 
@@ -776,4 +776,3 @@ fn incr_pcm_abstract (r:ref int)
   L.free l;
   drop_ (ghost_pcm_pts_to ghost_r _)
 }
-

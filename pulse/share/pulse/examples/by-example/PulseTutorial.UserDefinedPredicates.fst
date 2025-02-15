@@ -144,11 +144,11 @@ ensures emp
 }
 
 
+// FIXME, need to explain
 
-let is_point_curry (p:point) ([@@@equate_by_smt] x:int) ([@@@equate_by_smt] y:int) =
+let is_point_curry ([@@@mkey] p:point) (x y : int) =
     pts_to p.x x **
     pts_to p.y y
-
 
 fn move_curry (p:point) (dx:int) (dy:int)
 requires is_point_curry p 'x 'y
@@ -161,5 +161,4 @@ ensures is_point_curry p ('x + dx) ('y + dy)
   p.y := y + dy;
   fold is_point_curry; 
 }
-
 

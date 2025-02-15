@@ -38,6 +38,7 @@ fn qs (n:nat)
   spawn_ p (fun () -> qsc 3);
   spawn_ p (fun () -> qsc 4);
   teardown_pool p;
+  rewrite each iname_list [] as emp_inames; // fixme should be automatic
   redeem_pledge emp_inames (pool_done p) (qsv 1);
   redeem_pledge emp_inames (pool_done p) (qsv 2);
   redeem_pledge emp_inames (pool_done p) (qsv 3);
@@ -57,6 +58,7 @@ fn qs_joinpromises (n:nat)
   spawn_ p (fun () -> qsc 2);
   spawn_ p (fun () -> qsc 3);
   spawn_ p (fun () -> qsc 4);
+  rewrite each iname_list [] as emp_inames; // fixme should be automatic
   join_pledge #emp_inames #(pool_done p) (qsv 1) (qsv 2);
   join_pledge #emp_inames #(pool_done p) (qsv 3) (qsv 4);
   teardown_pool p;
@@ -89,6 +91,7 @@ fn qsh (n:nat)
   // also qs12 could spawn and join its tasks, it would clearly work
   spawn_ p (fun () -> qsc 3);
   spawn_ p (fun () -> qsc 4);
+  rewrite each iname_list [] as emp_inames; // fixme should be automatic
   teardown_pool p;
   redeem_pledge emp_inames (pool_done p) (qsv 1 ** qsv 2);
   redeem_pledge emp_inames (pool_done p) (qsv 3);
@@ -106,6 +109,7 @@ fn qs12_par (#e:perm) (p:pool)
   {
     spawn_ p (fun () -> qsc 1);
     spawn_ p (fun () -> qsc 2);
+    rewrite each iname_list [] as emp_inames; // fixme should be automatic
     ()
   }
 

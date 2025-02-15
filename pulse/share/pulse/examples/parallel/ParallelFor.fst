@@ -484,6 +484,9 @@ fn rec h_for_task
             #(pledge emp_inames (pool_done p) (on_range post mid hi))
             (h_for_task p ((e /. 2.0R) /. 2.0R) pre post f mid hi);
 
+    rewrite each iname_list [] as emp_inames;
+    // ^FIXME should be automatic
+
     (* We get this complicated pledge emp_inames from the spawns above. We can
     massage it before even waiting. *)
     assert (pledge emp_inames (pool_done p) (pledge emp_inames (pool_done p) (on_range post lo mid)));

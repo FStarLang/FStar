@@ -230,11 +230,13 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
     let c = cbor_read_deterministically_encoded_with_typ impl_session_message input len;
     if (not c.cbor_read_is_success) {
         unfold (cbor_read_deterministically_encoded_with_typ_post Spec.session_message input p s c); 
+        rewrite each c.cbor_read_is_success as false;
         unfold (cbor_read_deterministically_encoded_with_typ_error_post Spec.session_message input p s); 
         fold (parse_dpe_cmd_post len input s p None);
         None #dpe_cmd
     } else {
         unfold (cbor_read_deterministically_encoded_with_typ_post Spec.session_message input p s c);
+        rewrite each c.cbor_read_is_success as true;
         unfold (cbor_read_deterministically_encoded_with_typ_success_post Spec.session_message input p s c);
         with vc . assert (raw_data_item_match 1.0R c.cbor_read_payload vc);
         with vrem1 . assert (pts_to c.cbor_read_remainder #p vrem1);
@@ -255,6 +257,7 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
         let msg = cbor_read_deterministically_encoded_with_typ impl_command_message cbor_str.cbor_string_payload (SZ.of_u64 cbor_str.cbor_string_length);
         if (not msg.cbor_read_is_success) {
             unfold (cbor_read_deterministically_encoded_with_typ_post Spec.command_message cbor_str.cbor_string_payload ps cs msg);
+            rewrite each msg.cbor_read_is_success as false;
             unfold (cbor_read_deterministically_encoded_with_typ_error_post Spec.command_message cbor_str.cbor_string_payload ps cs);
             elim_implies ();
             serialize_cbor_inj' vc vrem1;
@@ -262,6 +265,7 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
             None #dpe_cmd
         } else {
             unfold (cbor_read_deterministically_encoded_with_typ_post Spec.command_message cbor_str.cbor_string_payload ps cs msg);
+            rewrite each msg.cbor_read_is_success as true;
             unfold (cbor_read_deterministically_encoded_with_typ_success_post Spec.command_message cbor_str.cbor_string_payload ps cs msg);
             with vmsg . assert (raw_data_item_match 1.0R msg.cbor_read_payload vmsg);
             with vrem2 . assert (pts_to msg.cbor_read_remainder #ps vrem2);
