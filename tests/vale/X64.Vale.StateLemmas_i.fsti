@@ -19,7 +19,6 @@ open X64.Vale.State_i
 open FStar.UInt
 open FStar.FunctionalExtensionality
 module S = X64.Semantics_s
-module M = TransparentMap
 
 unfold let ok' = S.Mkstate?.ok
 unfold let regs' = S.Mkstate?.regs
