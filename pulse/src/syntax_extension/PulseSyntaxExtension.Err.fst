@@ -32,7 +32,7 @@ instance hasRange_lident : hasRange lident = {
 }
 // An error can be "None", which means all relevant
 // errors were already logged via the error API.
-type error = option (string & R.range)
+type error = option (list Pprint.document & R.range)
 
 let err a = nat -> either a error & nat
 
@@ -50,7 +50,7 @@ instance err_monad : monad err = {
 }
 
 let fail #a (message:string) (range:R.range) : err a =
-  fun ctr -> Inr (Some (message, range)), ctr
+  fun ctr -> Inr (Some (FStarC.Errors.mkmsg message, range)), ctr
 
 let fail_if (b:bool) (message:string) (range:R.range) : err unit =
   if b then fail message range else return ()
