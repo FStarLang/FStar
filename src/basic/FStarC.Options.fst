@@ -820,7 +820,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
   ( 'c',
     "cache_checked_modules",
     Const (Bool true),
-    text "Write a '.checked' file for each module after verification and read from it if present, instead of re-verifying");
+    text "Write a '.checked' file for each module after verification.");
 
   ( noshort,
     "cache_dir",
