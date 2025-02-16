@@ -207,7 +207,7 @@ type mlmodule1 = {
 val mk_mlmodule1 : mlmodule1' -> mlmodule1
 val mk_mlmodule1_with_attrs : mlmodule1' -> list mlattribute -> mlmodule1
 
-type mlmodule = list mlmodule1
+type mlmodulebody = list mlmodule1
 
 type mlsig1 =
 | MLS_Mod of mlsymbol & mlsig
@@ -223,9 +223,7 @@ val with_ty_loc : mlty -> mlexpr' -> mlloc -> mlexpr
 val with_ty     : mlty -> mlexpr' -> mlexpr
 
 (* -------------------------------------------------------------------- *)
-type mllib =
-  | MLLib of list (mlpath & option (mlsig & mlmodule) & mllib) //Last field never seems to be used. Refactor?
-
+type mlmodule = mlpath & option (mlsig & mlmodulebody)
 
 (* -------------------------------------------------------------------- *)
 val ml_unit_ty   : mlty
@@ -259,4 +257,4 @@ instance val showable_mlty      : showable mlty
 instance val showable_mlconstant : showable mlconstant
 instance val showable_mlexpr     : showable mlexpr
 instance val showable_mlmodule1 : showable mlmodule1
-instance val showable_mlmodule : showable mlmodule
+instance val showable_mlmodulebody : showable mlmodulebody

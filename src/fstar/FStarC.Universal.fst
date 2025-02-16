@@ -302,7 +302,7 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
 (***********************************************************************)
 
 (* Extraction to OCaml, F# or Krml *)
-let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
+let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) =
   let opt = Options.codegen () in
   let fail #a () : a = failwith ("Unrecognized extraction backend: " ^ show opt) in
   if opt <> None then
@@ -322,7 +322,7 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
          When bootstarpped in OCaml, this will use the old printer
          for F# extraction and the new printer for OCaml extraction. *)
       let outdir = Find.get_odir () in
-      List.iter (FStarC.Extraction.ML.PrintML.print outdir ext) (List.map snd mllibs)
+      List.iter (FStarC.Extraction.ML.PrintML.print outdir ext) (List.map snd mllib)
 
     | Some Options.Extension ->
       //
@@ -330,25 +330,22 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
       //   in the binary format to a file
       // The first component is the list of dependencies
       //
+      mllib |>
       List.iter (fun (env, m) ->
-        let MLSyntax.MLLib ms = m in
-        List.iter (fun m ->
-          let mname, modul, _ = m in
-          let filename = String.concat "_" (fst mname @ [snd mname]) in
-          match modul with
-          | Some (_, decls) ->
-            let bindings = FStarC.Extraction.ML.UEnv.bindings_of_uenv env in
-            let deps : list string = Dep.deps_of_modul dep_graph (MLSyntax.string_of_mlpath mname) in
-            save_value_to_file (Find.prepend_output_dir (filename^ext)) (deps, bindings, decls)
-          | None ->
-            failwith "Unexpected ml modul in Extension extraction mode"
-        ) ms
-      ) mllibs
+        let mname, modul = m in
+        let filename = String.concat "_" (fst mname @ [snd mname]) in
+        match modul with
+        | Some (_, decls) ->
+          let bindings = FStarC.Extraction.ML.UEnv.bindings_of_uenv env in
+          let deps : list string = Dep.deps_of_modul dep_graph (MLSyntax.string_of_mlpath mname) in
+          save_value_to_file (Find.prepend_output_dir (filename^ext)) (deps, bindings, decls)
+        | None ->
+          failwith "Unexpected ml modul in Extension extraction mode"
+      )
 
     | Some Options.Krml ->
       let programs =
-        mllibs |> List.collect (fun (ue, mllibs) ->
-                                  Extraction.Krml.translate ue mllibs)
+        mllib |> List.collect (fun (ue, m) -> Extraction.Krml.translate ue [m])
       in
       let bin: Extraction.Krml.binary_format = Extraction.Krml.current_version, programs in
       let oname : string =
@@ -369,7 +366,7 @@ let tc_one_file
         (fn:string) //file name
         (parsing_data:FStarC.Parser.Dep.parsing_data)  //passed by the caller, ONLY for caching purposes at this point
     : tc_result
-    & option MLSyntax.mllib
+    & option MLSyntax.mlmodule
     & uenv =
   GenSym.reset_gensym();
 
@@ -576,7 +573,7 @@ let needs_interleaving intf impl =
 
 let tc_one_file_from_remaining (remaining:list string) (env:uenv)
                                (deps:FStarC.Parser.Dep.deps)  //used to query parsing data
-  : list string & tc_result & option MLSyntax.mllib & uenv
+  : list string & tc_result & option MLSyntax.mlmodule & uenv
   =
   let remaining, (nmods, mllib, env) =
     match remaining with
@@ -594,7 +591,7 @@ let tc_one_file_from_remaining (remaining:list string) (env:uenv)
 
 let rec tc_fold_interleave (deps:FStarC.Parser.Dep.deps)  //used to query parsing data
                            (acc:list tc_result &
-                                list (uenv & MLSyntax.mllib) &  // initial env in which this module is extracted
+                                list (uenv & MLSyntax.mlmodule) &  // initial env in which this module is extracted
                                 uenv)
                            (remaining:list string) =
   let as_list env mllib =

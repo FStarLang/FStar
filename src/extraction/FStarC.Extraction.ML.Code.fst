@@ -15,9 +15,10 @@
 *)
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.Code
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC
 open FStarC.Util
 open FStarC.Extraction.ML
 open FStarC.Extraction.ML.Syntax
@@ -778,33 +779,32 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
         doc_of_loc loc
 
 (* -------------------------------------------------------------------- *)
-let doc_of_mod (currentModule : mlsymbol) (m : mlmodule) =
+let doc_of_modbody (currentModule : mlsymbol) (m : mlmodulebody) =
     let docs = List.map (fun x ->
         let doc = doc_of_mod1 currentModule x in
         [doc; (match x.mlmodule1_m with | MLM_Loc _ -> empty | _ -> hardline); hardline]) m in
     reduce (List.flatten docs)
-
 (* -------------------------------------------------------------------- *)
-let doc_of_mllib_r (MLLib mllib) =
-    let rec for1_sig (x, sigmod, MLLib sub) =
+let doc_of_mlmodule_r (fsharp : bool) (mod : mlmodule) : doc =
+    let rec p_sig (mod : mlmodule) =
+        let x, sigmod = mod in
         let x = Util.flatten_mlpath x in
         let head = reduce1 [text "module"; text x; text ":"; text "sig"] in
         let tail = reduce1 [text "end"] in
         let doc  = Option.map (fun (s, _) -> doc_of_sig x s) sigmod in
-        let sub  = List.map for1_sig sub in
-        let sub  = List.map (fun x -> reduce [x; hardline; hardline]) sub in
 
         reduce [
             cat head hardline;
             (match doc with
              | None   -> empty
              | Some s -> cat s hardline);
-            reduce sub;
             cat tail hardline;
         ]
-    and for1_mod istop (mod_name, sigmod, MLLib sub) =
+
+    and p_mod istop mod =
+        let mod_name, sigmod = mod in
         let target_mod_name = Util.flatten_mlpath mod_name in
-        let head = reduce1 (if Util.codegen_fsharp()
+        let head = reduce1 (if fsharp
                             then [text "module";  text target_mod_name]
                             else if not istop
                             then [text "module";  text target_mod_name; text "="; text "struct"]
@@ -812,31 +812,24 @@ let doc_of_mllib_r (MLLib mllib) =
         let tail = if not istop
                    then reduce1 [text "end"]
                    else reduce1 [] in
-        let doc  = Option.map (fun (_, m) -> doc_of_mod target_mod_name m) sigmod in
-        let sub  = List.map (for1_mod false)  sub in
-        let sub  = List.map (fun x -> reduce [x; hardline; hardline]) sub in
-        let prefix = if Util.codegen_fsharp() then [cat (text "#light \"off\"") hardline] else [] in
+        let doc  = Option.map (fun (_, m) -> doc_of_modbody target_mod_name m) sigmod in
+        let prefix = if fsharp then [cat (text "#light \"off\"") hardline] else [] in
         reduce <| (prefix @ [
             head;
             hardline;
             (match doc with
              | None   -> empty
              | Some s -> cat s hardline);
-            reduce sub;
             cat tail hardline;
         ])
-
     in
-
-    let docs = List.map (fun (x,s,m) ->
-      (Util.flatten_mlpath x,for1_mod true (x,s,m))) mllib in
-    docs
+    p_mod true mod
 
 (* -------------------------------------------------------------------- *)
 let pretty (sz : int) (Doc doc) = doc
 
-let doc_of_mllib mllib =
-    doc_of_mllib_r mllib
+let doc_of_mlmodule fsharp mlmodule =
+    doc_of_mlmodule_r fsharp mlmodule
 
 let string_of_mlexpr cmod (e:mlexpr) =
     let doc = doc_of_expr (Util.flatten_mlpath cmod) (min_op_prec, NonAssoc) e in

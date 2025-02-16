@@ -508,7 +508,7 @@ let build_module1 path (m1: mlmodule1): structure_item option =
       Some (Str.value Nonrecursive [binding])
   | MLM_Loc (p, f) -> None
 
-let build_m path (md: (mlsig * mlmodule) option) : structure =
+let build_m path (md: (mlsig * mlmodulebody) option) : structure =
   match md with
   | Some(s, m) ->
     let open_plugin_lib =
@@ -527,17 +527,15 @@ let build_m path (md: (mlsig * mlmodule) option) : structure =
     open_plugin_lib @ open_guts @ open_prims @ (map (build_module1 path) m |> flatmap opt_to_list)
   | None -> []
 
-let build_ast (out_dir: string option) (ext: string) (ml: mllib) =
-  match ml with
-  | MLLib l ->
-     map (fun (p, md, _) ->
-         let m = path_to_string p in
-         current_module := m;
-         let name = BatString.concat "" [m; ext] in
-         let path = (match out_dir with
-           | Some out -> BatString.concat "/" [out; name]
-           | None -> name) in
-         (path, build_m path md)) l
+let build_ast (out_dir: string option) (ext: string) (modul: mlmodule) =
+  let p, md = modul in
+  let m = path_to_string p in
+  current_module := m;
+  let name = BatString.concat "" [m; ext] in
+  let path = (match out_dir with
+    | Some out -> BatString.concat "/" [out; name]
+    | None -> name) in
+  (path, build_m path md)
 
 
 (* printing the AST to the correct path *)
@@ -547,18 +545,18 @@ let print_module ((path, m): string * structure) =
   structure Format.std_formatter m;
   Format.pp_print_flush Format.std_formatter ()
 
-let print (out_dir: string option) (ext: string) (ml: mllib) =
+let print (out_dir: string option) (ext: string) (modul: mlmodule) =
   match ext with
   | ".ml" ->
      (* Use this printer for OCaml extraction *)
-     let ast = build_ast out_dir ext ml in
-     iter print_module ast
+     let ast = build_ast out_dir ext modul in
+     print_module ast
   | ".fs" ->
      (* Use the old printer for F# extraction *)
-     let new_doc = FStarC_Extraction_ML_Code.doc_of_mllib ml in
-     iter (fun (n, d) ->
-         FStarC_Util.write_file
-           (FStarC_Find.prepend_output_dir (BatString.concat "" [n;ext]))
-           (FStarC_Extraction_ML_Code.pretty (Prims.parse_int "120") d)
-           ) new_doc
+     let p, _ = modul in
+     let n = FStarC_Extraction_ML_Util.flatten_mlpath p in
+     let doc = FStarC_Extraction_ML_Code.doc_of_mlmodule true modul in
+     FStarC_Util.write_file
+       (FStarC_Find.prepend_output_dir (BatString.concat "" [n;ext]))
+       (FStarC_Extraction_ML_Code.pretty (Prims.parse_int "120") doc)
   | _ -> failwith "Unrecognized extension"

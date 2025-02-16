@@ -20,5 +20,5 @@ open FStarC.Extraction.ML.Syntax
 val print
   (odir : option string)
   (extension : string)
-  (defs : mllib)
+  (modul : mlmodule)
   : unit
