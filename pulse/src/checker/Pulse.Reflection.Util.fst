@@ -755,3 +755,16 @@ let inv_disjointness_goal (is iname:R.term) : R.term =
   let u0 = R.pack_universe R.Uv_Zero in
   let p = mk_reveal u0 bool_tm p in
   mk_eq2 u0 bool_tm (`false) p
+
+let fv_has_attr_string (attr_name:string) (f : R.fv) : T.Tac bool =
+  match T.lookup_typ (T.top_env ()) (T.inspect_fv f) with
+  | None -> false
+  | Some se ->
+    let attrs = T.sigelt_attrs se in
+    attrs |> T.tryFind (fun a -> T.is_fvar a attr_name)
+
+let head_has_attr_string (attr_name:string) (t : R.term) : T.Tac bool =
+  match T.hua t with
+  | None -> false
+  | Some (hfv, _, _) ->
+    fv_has_attr_string attr_name hfv

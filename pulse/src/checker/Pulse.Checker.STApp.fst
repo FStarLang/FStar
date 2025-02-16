@@ -115,15 +115,7 @@ let instantiate_implicits (g:env) (t:st_term { Tm_STApp? t.term })
 (* Should we allow ambiguous proving when calling [t]? (NB: [t]
 can be partially applied, hence we look at the head. *)
 let should_allow_ambiguous (t:term) : T.Tac bool =
-  let attr_name = "Pulse.Lib.Core.allow_ambiguous" in
-  match T.hua t with
-  | None -> false
-  | Some (hfv, _, _) ->
-    match T.lookup_typ (T.top_env ()) (T.inspect_fv hfv) with
-    | None -> false
-    | Some se ->
-      let attrs = T.sigelt_attrs se in
-      attrs |> T.tryFind (fun a -> T.is_fvar a attr_name)
+  Pulse.Reflection.Util.head_has_attr_string "Pulse.Lib.Core.allow_ambiguous" t
 
 let compatible_qual (actual expected : option qualifier) : bool =
   match actual, expected with

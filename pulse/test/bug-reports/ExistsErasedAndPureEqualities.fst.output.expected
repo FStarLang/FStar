@@ -1,15 +1,18 @@
 >> Got issues: [
-* Error 228 at ExistsErasedAndPureEqualities.fst(33,16-33,18):
+* Error 228 at ExistsErasedAndPureEqualities.fst(32,4-33,21):
   - Could not resolve all free variables in the proposition: v == v_
+  - See also ExistsErasedAndPureEqualities.fst(32,4-34,12)
 
 >>]
 >> Got issues: [
-* Error 228 at ExistsErasedAndPureEqualities.fst(51,16-51,18):
+* Error 228 at ExistsErasedAndPureEqualities.fst(50,4-51,21):
   - Could not resolve all free variables in the proposition: v == v_
+  - See also ExistsErasedAndPureEqualities.fst(50,4-52,12)
 
 >>]
 >> Got issues: [
-* Error 228 at ExistsErasedAndPureEqualities.fst(80,16-80,18):
+* Error 228 at ExistsErasedAndPureEqualities.fst(79,4-80,21):
   - Could not resolve all free variables in the proposition: v == v_
+  - See also ExistsErasedAndPureEqualities.fst(79,4-81,12)
 
 >>]

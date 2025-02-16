@@ -18,6 +18,7 @@ module Pulse.Checker.Prover
 
 open FStar.List.Tot
 
+open Pulse
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
@@ -134,6 +135,7 @@ let normalize_slprop
   let steps = steps @ [delta_attr ["Pulse.Lib.Core.pulse_unfold"]] in
 
   let v' = T.norm_well_typed_term (elab_env g) steps v in
+  let v' = Simplify.simplify v' in (* NOTE: the simplify stage is unverified *)
   let v_equiv_v' = VE_Ext _ _ _ (RU.magic ()) in
   (| v', v_equiv_v' |)
 
