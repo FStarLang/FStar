@@ -468,7 +468,13 @@ let store_module_to_cache env fn parsing_data tc_result =
   if Options.cache_checked_modules()
   && not (Options.cache_off())
   then begin
-    let cache_file = FStarC.Parser.Dep.cache_file_name fn in
+    let cache_file =
+      match Options.output_to () with
+      | Some fn -> fn
+      (* Note: ^ in this case, main guarantees we were called on a single file, or
+         we would clobber previously-written checked files. *)
+      | None -> FStarC.Parser.Dep.cache_file_name fn
+    in
     let digest = hash_dependences (TcEnv.dep_graph env) fn in
     match digest with
     | Inr hashes ->

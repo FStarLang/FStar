@@ -66,7 +66,7 @@ clean:
 	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KRML_EXE) .depend
 
 .depend:
-	$(FSTAR) --dep full $(FSTAR_FILES) --extract '* -FStar -Prims' --output_deps_to .depend
+	$(FSTAR) --dep full $(FSTAR_FILES) --extract '* -FStar -Prims' -o $@
 
 depend: .depend
 

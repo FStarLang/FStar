@@ -178,6 +178,7 @@ val no_plugins                  : unit    -> bool
 val no_smt                      : unit    -> bool
 val normalize_pure_terms_for_extraction
                                 : unit    -> bool
+val output_to                   : unit    -> option string
 val krmloutput                  : unit    -> option string
 val list_plugins                : unit    -> bool
 val locate                      : unit    -> bool

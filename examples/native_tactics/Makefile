@@ -48,7 +48,7 @@ ALL=Apply\
 all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 
 # .depend:
-# 	$(FSTAR) --dep full $(addsuffix .Test.fst, $(ALL)) --output_deps_to .depend
+# 	$(FSTAR) --dep full $(addsuffix .Test.fst, $(ALL)) -o $@
 
 # include .depend
 

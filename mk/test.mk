@@ -46,7 +46,6 @@ OUTPUT_DIR ?= _output
 CACHE_DIR ?= _cache
 
 FSTAR = $(FSTAR_EXE) $(SIL) 						\
-	$(if $(NO_WRITE_CHECKED),,--cache_checked_modules)		\
 	$(FSTAR_ARGS)
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -57,7 +56,7 @@ FSTAR_FILES := $(strip $(FSTAR_FILES))
 ifneq ($(FSTAR_FILES),) # It anyway only runs if fst/fsti files are found in the cwd
 .depend: $(FSTAR_FILES)
 	$(call msg, "DEPEND", $(CURDIR))
-	$(FSTAR) --dep full $(FSTAR_FILES) --output_deps_to $@
+	$(FSTAR) --dep full $(FSTAR_FILES) -o $@
 depend: .depend
 include .depend
 endif
@@ -68,33 +67,29 @@ endif
 # These will be in the cache directory due to the .depend
 %.fst.checked:
 	$(call msg, "CHECK", $(basename $(notdir $@)))
-	$(FSTAR) $<
+	$(FSTAR) -c $< -o $@
 	touch -c $@
 
 %.fsti.checked:
 	$(call msg, "CHECK", $(basename $(notdir $@)))
-	$(FSTAR) $<
+	$(FSTAR) -c $< -o $@
 	touch -c $@
 
-$(OUTPUT_DIR)/%.fst.output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fst.output: %.fst
 	$(call msg, "OUTPUT", $(basename $(notdir $@)))
 	@mkdir -p $(dir $@)
 	$(FSTAR) --message_format human --silent -f --print_expected_failures $< >$@ 2>&1
 
-$(OUTPUT_DIR)/%.fsti.output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fsti.output: %.fsti
 	$(call msg, "OUTPUT", $(basename $(notdir $@)))
 	@mkdir -p $(dir $@)
 	$(FSTAR) --message_format human --silent -f --print_expected_failures $< >$@ 2>&1
 
-$(OUTPUT_DIR)/%.fst.json_output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fst.json_output: %.fst
 	$(call msg, "JSONOUT", $(basename $(notdir $@)))
 	@mkdir -p $(dir $@)
 	$(FSTAR) --message_format json --silent -f --print_expected_failures $< >$@ 2>&1
 
-$(OUTPUT_DIR)/%.fsti.json_output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fsti.json_output: %.fsti
 	$(call msg, "JSONOUT", $(basename $(notdir $@)))
 	@mkdir -p $(dir $@)
@@ -102,11 +97,11 @@ $(OUTPUT_DIR)/%.fsti.json_output: %.fsti
 
 $(OUTPUT_DIR)/%.ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(FSTAR) $< --codegen OCaml
+	$(FSTAR) --codegen OCaml $< -o $@
 
 $(OUTPUT_DIR)/%.fs:
 	$(call msg, "EXTRACT FS", $(basename $(notdir $@)))
-	$(FSTAR) $< --codegen FSharp
+	$(FSTAR) --codegen FSharp $< -o $@
 
 # No FSharp compilation in these makefiles, sorry.
 $(OUTPUT_DIR)/%.exe: $(OUTPUT_DIR)/%.ml

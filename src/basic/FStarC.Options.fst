@@ -245,6 +245,7 @@ let defaults =
       ("no_tactics"                   , Bool false);
       ("normalize_pure_terms_for_extraction"
                                       , Bool false);
+      ("output_to"                    , Unset);
       ("krmloutput"                   , Unset);
       ("output_deps_to"               , Unset);
       ("prims"                        , Unset);
@@ -505,6 +506,7 @@ let get_no_plugins              ()      = lookup_opt "no_plugins"               
 let get_no_smt                  ()      = lookup_opt "no_smt"                   as_bool
 let get_normalize_pure_terms_for_extraction
                                 ()      = lookup_opt "normalize_pure_terms_for_extraction" as_bool
+let get_output_to               ()      = lookup_opt "output_to"                (as_option as_string)
 let get_krmloutput              ()      = lookup_opt "krmloutput"               (as_option as_string)
 let get_output_deps_to          ()      = lookup_opt "output_deps_to"           (as_option as_string)
 let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
@@ -815,7 +817,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     text "Expects all modules whose names or namespaces match the provided options \
           to already have valid .checked files in the include path");
 
-  ( noshort,
+  ( 'c',
     "cache_checked_modules",
     Const (Bool true),
     text "Write a '.checked' file for each module after verification and read from it if present, instead of re-verifying");
@@ -1181,10 +1183,15 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     Const (Bool true),
     text "Extract top-level pure terms after normalizing them. This can lead to very large code, but can result in more partial evaluation and compile-time specialization.");
 
+  ( 'o',
+    "output_to",
+    PathStr "filename",
+    text "Write output (checked file, depend file, extracted output, etc) to this file.");
+
   ( noshort,
     "krmloutput",
     PathStr "filename",
-    text "Place KaRaMeL extraction output in file <filename>. The path can be relative or absolute and does not depend\
+    text "[Deprecated: use -o instead.] Place KaRaMeL extraction output in file <filename>. The path can be relative or absolute and does not depend\
     on the --odir option.");
 
   ( noshort,
@@ -1198,7 +1205,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
   ( noshort,
     "output_deps_to",
     PathStr "file",
-    text "Output the result of --dep into this file instead of to standard output.");
+    text "[Deprecated: use -o instead.] Output the result of --dep into this file instead of to standard output.");
 
   ( noshort,
     "prims",
@@ -2021,7 +2028,10 @@ let message_format               () =
   | "json" -> Json
   | "github" -> Github
   | illegal -> failwith ("print_issue: option `message_format` was expected to be `human` or `json`, not `" ^ illegal ^ "`. This should be impossible: `message_format` was supposed to be validated.")
-let force                        () = get_force                       ()
+
+(* If the user passed -o, then they definitely want an output file, and we should
+not just exist early because we found a checked file or whatever. *)
+let force                        () = get_force () || Some? (get_output_to ())
 let full_context_dependency      () = true
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
@@ -2078,8 +2088,16 @@ let normalize_pure_terms_for_extraction
 let no_location_info             () = get_no_location_info            ()
 let no_plugins                   () = get_no_plugins                  ()
 let no_smt                       () = get_no_smt                      ()
-let krmloutput                   () = get_krmloutput                  ()
-let output_deps_to               () = get_output_deps_to              ()
+
+let ( ||| ) o x =
+  match o with
+  | None -> x
+  | Some _ -> o
+
+let output_to                    () = get_output_to                   ()
+let krmloutput                   () = get_krmloutput                  () ||| output_to ()
+let output_deps_to               () = get_output_deps_to              () ||| output_to ()
+
 let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()
