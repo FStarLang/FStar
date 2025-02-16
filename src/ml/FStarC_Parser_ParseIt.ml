@@ -323,13 +323,12 @@ let parse_fstar_incrementally
           Inr (decls @ [err_decl])
       with
       | FStarC_Errors.Error(e, msg, r, _ctx) ->
-        let msg = FStarC_Errors_Msg.rendermsg msg in
         let err : FStarC_Parser_AST_Util.error_message = { message = msg; range = r } in
         Inl err
       | e ->
         let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
         let r = FStarC_Range.mk_range filename pos pos in
-        let err : FStarC_Parser_AST_Util.error_message = { message = "Syntax error parsing #lang-fstar block: "; range = r } in
+        let err : FStarC_Parser_AST_Util.error_message = { message = FStarC_Errors_Msg.mkmsg "Syntax error parsing #lang-fstar block: "; range = r } in
         Inl err
   in
   { parse_decls = f }
