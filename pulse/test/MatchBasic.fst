@@ -113,8 +113,8 @@ fn listid (xs : list int)
   ensures emp
 {
   match xs {
-    Nil -> { Nil #int }
-    Cons hd tl -> { Cons #int hd tl }
+    [] -> { Nil #int }
+    hd :: tl -> { Cons #int hd tl }
   }
 }
 
@@ -126,8 +126,8 @@ fn hd (xs : list int)
   ensures emp
 {
   match xs {
-    Nil -> { 0 }
-    Cons hd tl -> { let t = tl; hd }
+    [] -> { 0 }
+    hd :: tl -> { let t = tl; hd }
   }
 }
 
@@ -139,8 +139,8 @@ fn tl (xs : list int)
   ensures emp
 {
   match xs {
-    Nil -> { Nil #int }
-    Cons hd tl -> { tl }
+    [] -> { Nil #int }
+    hd :: tl -> { tl }
   }
 }
 
@@ -152,7 +152,7 @@ fn incomplete (xs : list int)
   ensures emp
 {
   match xs {
-    Nil -> { 1 }
+    [] -> { 1 }
   }
 }
 
@@ -164,7 +164,7 @@ fn partial_complete (xs : (xs:list int{List.Tot.length xs == 0}))
   ensures emp
 {
   match xs {
-    Nil -> { 1 }
+    [] -> { 1 }
   }
 }
 
@@ -176,8 +176,8 @@ fn breq_1 (xs : list int)
   ensures emp
 {
   match xs {
-    Nil -> { assert (pure (List.Tot.length xs == 0)); 0 } // works because of branch eq
-    Cons _ _ -> { 1 } // assert (pure (isCons xs)); cons_hd xs }
+    [] -> { assert (pure (List.Tot.length xs == 0)); 0 } // works because of branch eq
+    _ :: _ -> { 1 } // assert (pure (isCons xs)); cons_hd xs }
   }
 }
 
@@ -189,8 +189,8 @@ fn breq_2 (xs : list int)
   ensures emp
 {
   match xs {
-    Nil -> { assert (pure (List.Tot.length xs == 0)); 0 }
-    Cons _ _ -> { Cons?.hd xs }
+    [] -> { assert (pure (List.Tot.length xs == 0)); 0 }
+    _ :: _ -> { Cons?.hd xs }
   }
 }
 

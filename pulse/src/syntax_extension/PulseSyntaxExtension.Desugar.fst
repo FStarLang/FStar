@@ -605,6 +605,21 @@ and desugar_pat (env:env_t) (p:A.pattern)
       let pats = L.map (fun s -> SW.pat_var s r) strs in
       return (SW.pat_cons fv pats r, idents)
 
+    | A.PatList ps ->
+      let! ps = ps |> mapM (fun p -> desugar_pat env p) in
+      let pats, idents = L.unzip ps in
+      let cons = SW.mk_fv Parser.Const.cons_lid r in
+      let nil  = SW.mk_fv Parser.Const.nil_lid r in
+      let pat = FStarC.List.fold_right (fun p acc -> SW.pat_cons cons [p;acc] r) pats (SW.pat_cons nil [] r) in
+      return (pat, L.flatten idents)
+
+    | A.PatTuple (ps, dep) ->
+      let! ps = ps |> mapM (fun p -> desugar_pat env p) in
+      let pats, idents = L.unzip ps in
+      let ctor = SW.mk_fv (Parser.Const.Tuples.mk_tuple_data_lid (L.length pats) r) r in
+      let pat = SW.pat_cons ctor pats r in
+      return (pat, L.flatten idents)
+
     | _ ->
       fail "invalid pattern" r
 

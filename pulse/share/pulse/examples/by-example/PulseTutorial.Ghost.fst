@@ -170,11 +170,11 @@ ensures all_at_most l m
 decreases l
 {
   match l {
-    Nil -> {
+    [] -> {
       unfold (all_at_most [] n);
       fold (all_at_most [] n);
     }
-    Cons hd tl -> {
+    hd :: tl -> {
       unfold (all_at_most (hd::tl) n);
       weaken_at_most tl n m;
       fold (all_at_most (hd::tl) m);

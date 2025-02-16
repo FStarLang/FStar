@@ -27,7 +27,7 @@ fn test (arr: A.array UInt8.t)
   let slice = from_array arr 6sz;
   let s' = split slice 2sz;
   match s' {
-    Mktuple2 s1 s2 -> {
+    s1, s2 -> {
       pts_to_len s1;
       share s2;
       let s2' = subslice_trade s2 1sz 4sz;
@@ -37,7 +37,7 @@ fn test (arr: A.array UInt8.t)
       gather s2;
       let s' = split s2 2sz;
       match s' {
-        Mktuple2 s3 s4 -> {
+        s3, s4 -> {
           pts_to_len s3;
           pts_to_len s4;
           copy s3 s4;

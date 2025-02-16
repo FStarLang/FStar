@@ -75,10 +75,10 @@ ensures
     ))
 {
   match v {
-    Nil -> {
+    [] -> {
       unfold (seq_list_match c [] item_match);
     }
-    Cons a q -> {
+    a :: q -> {
       unfold (seq_list_match c (a :: q) item_match);
       unreachable()
     }
@@ -705,13 +705,13 @@ ensures
 decreases l
 {
   match l {
-    Nil -> {
+    [] -> {
       on_range_eq_emp (seq_seq_match_item p c (Seq.seq_of_list l)) 0 (List.Tot.length l);
       rewrite (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l))
         as emp;
       seq_list_match_nil_intro c l p
     }
-    Cons a q -> {
+    a :: q -> {
       unfold (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l));
       Seq.lemma_seq_of_list_induction (a :: q);
       on_range_uncons ();
@@ -747,14 +747,14 @@ ensures
 decreases l
 {
   match l {
-    Nil -> {
+    [] -> {
       seq_list_match_nil_elim c l p;
     on_range_empty
       (seq_seq_match_item p c (Seq.seq_of_list l))
       0;
     fold (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l))
     }
-    Cons a q -> {
+    a :: q -> {
       Seq.lemma_seq_of_list_induction (a :: q);
       seq_list_match_cons_elim c l p;
       Seq.cons_head_tail c;

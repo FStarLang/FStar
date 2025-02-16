@@ -364,10 +364,10 @@ fn rec extract_state_pred
   decreases ts
 {
   match ts {
-    Nil -> {
+    [] -> {
       unreachable ()
     }
-    Cons t' ts' -> {
+    t' :: ts' -> {
       let b = SEM.strong_excluded_middle (t == t');
       if not b {
         take_one_h11 t' ts';
@@ -771,10 +771,10 @@ fn rec all_tasks_done_inst (t : task_t) (ts : list task_t)
   decreases ts
 {
   match ts {
-    Nil -> {
+    [] -> {
       unreachable();
     }
-    Cons t' ts' -> {
+    t' :: ts' -> {
       let b = SEM.strong_excluded_middle (t == t');
       if b {
         rewrite each t' as t;
@@ -922,10 +922,10 @@ fn rec pool_done_task_done_aux
   decreases ts
 {
   match ts {
-    Nil -> {
+    [] -> {
       unreachable();
     }
-    Cons t' ts' -> {
+    t' :: ts' -> {
       let b = SEM.strong_excluded_middle (t == t');
       if b {
         rewrite each t' as t;
@@ -1048,7 +1048,7 @@ fn rec grab_work'' (p:pool) (v_runnable : list task_t)
              up t.pre ** pts_to t.h.state #0.5R Running ** pure (List.memP t v_runnable) ** task_thunk_typing t)
 {
   match v_runnable {
-    Nil -> {
+    [] -> {
       // intro_vopt_none;
       // fails with variable not found...
 
@@ -1057,7 +1057,7 @@ fn rec grab_work'' (p:pool) (v_runnable : list task_t)
           as vopt topt (fun t -> up t.pre ** pts_to t.h.state #0.5R Running ** pure (List.memP t v_runnable) ** task_thunk_typing t);
       topt
     }
-    Cons t ts -> {
+    t :: ts -> {
       take_one_h11 t ts;
       unfold (state_pred t.pre t.post t.h);
       
@@ -1273,12 +1273,12 @@ fn rec check_if_all_done
   ensures  all_state_pred ts ** ite b (all_tasks_done ts) emp
 {
   match ts {
-    Nil -> {
+    [] -> {
       rewrite emp as (all_tasks_done ts);
       fold (ite true (all_tasks_done ts) emp);
       true;
     }
-    Cons t ts' -> {
+    t :: ts' -> {
       take_one_h11 t ts';
       unfold (state_pred t.pre t.post t.h);
       let st = !t.h.state;

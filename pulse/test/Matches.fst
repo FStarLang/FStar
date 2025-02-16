@@ -42,7 +42,7 @@ fn test1 (#t:_) (x:t) (l:list t)
 {
   unfold (is_deque_suffix_factored_next (x::l));
   match l {
-    Cons y ys -> {
+    y :: ys -> {
       fold (is_deque_suffix_factored_next (x::l));
     }
   }
@@ -57,10 +57,10 @@ fn test2 (#t:_) (x:t) (l:list t)
 {
   unfold (is_deque_suffix_factored_next (x::l));
   match l {
-    Cons y ys -> {
+    y :: ys -> {
       fold (is_deque_suffix_factored_next (x::l));
     }
-    Nil -> {
+    [] -> {
       fold (is_deque_suffix_factored_next (x::l));
     }
   }
