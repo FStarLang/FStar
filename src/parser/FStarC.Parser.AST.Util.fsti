@@ -35,7 +35,7 @@ type open_namespaces_and_abbreviations = {
 }
 
 type error_message = {
-   message: string;
+   message: list FStarC.Pprint.document;
    range: FStarC.Range.range;
 }
 
