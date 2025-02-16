@@ -44,14 +44,28 @@ type st_comp_tag =
   | STAtomic
   | STGhost
 
+type computation_annot' =
+  | Requires of slprop
+  | Ensures of slprop
+  | Returns of option ident & A.term
+  | Opens of A.term
+
+type computation_annot = computation_annot' & rng
+
 type computation_type = {
      tag: st_comp_tag;
-     precondition:slprop;
-     return_name:ident;
-     return_type:A.term;
-     postcondition:slprop;
-     opens:option A.term;
+     annots : list computation_annot;
      range:rng
+}
+
+(* Not used in this module, but the list in annots above
+is translated to this type before doing anything meaningful with it. *)
+type parsed_annots = {
+  precondition: Sugar.slprop;
+  postcondition: Sugar.slprop;
+  return_name: ident;
+  return_type: A.term;
+  opens: option A.term
 }
 
 type mut_or_ref =
@@ -386,11 +400,14 @@ and eq_ascription (a1 a2:either computation_type (option A.term)) =
   | _, _ -> false
 and eq_computation_type (c1 c2:computation_type) =
   c1.tag = c2.tag &&
-  eq_slprop c1.precondition c2.precondition &&
-  eq_ident c1.return_name c2.return_name &&
-  AU.eq_term c1.return_type c2.return_type &&
-  eq_slprop c1.postcondition c2.postcondition &&
-  eq_opt AU.eq_term c1.opens c2.opens
+  forall2 eq_annot c1.annots c2.annots
+and eq_annot (a1 a2:computation_annot) =
+  match fst a1, fst a2 with
+  | Requires s1, Requires s2 -> eq_slprop s1 s2
+  | Ensures s1, Ensures s2 -> eq_slprop s1 s2
+  | Returns (i1, t1), Returns (i2, t2) -> eq_opt eq_ident i1 i2 && AU.eq_term t1 t2
+  | Opens t1, Opens t2 -> AU.eq_term t1 t2
+  | _, _ -> false
 and eq_slprop (s1 s2:slprop) =
   eq_slprop' s1.v s2.v
 and eq_slprop' (s1 s2:slprop') =
@@ -526,10 +543,13 @@ and scan_binder (cbs:A.dep_scan_callbacks) (b:binder) =
 and scan_ascription (cbs:A.dep_scan_callbacks) (a:either computation_type (option A.term)) =
   ieither (scan_computation_type cbs) (iopt cbs.scan_term) a
 and scan_computation_type (cbs:A.dep_scan_callbacks) (c:computation_type) =
-  scan_slprop cbs c.precondition;
-  cbs.scan_term c.return_type;
-  scan_slprop cbs c.postcondition;
-  iopt cbs.scan_term c.opens
+  iter (scan_annot cbs) c.annots
+and scan_annot cbs (a : computation_annot) =
+  match fst a with
+  | Requires s -> scan_slprop cbs s
+  | Ensures s -> scan_slprop cbs s
+  | Returns (i, t) -> cbs.scan_term t
+  | Opens t -> cbs.scan_term t
 and scan_slprop (cbs:A.dep_scan_callbacks) (s:slprop) =
   let SLPropTerm s = s.v in
   cbs.scan_term s
@@ -606,14 +626,10 @@ let range_of_decl (d:decl) =
   | FnDefn f -> f.range
   | FnDecl d -> d.range
 (* Convenience builders for use from OCaml/Menhir, since field names get mangled in OCaml *)
-let mk_comp tag precondition return_name return_type postcondition opens range = 
+let mk_comp tag annots range =
   {
      tag;
-     precondition;
-     return_name;
-     return_type;
-     postcondition;
-     opens;
+     annots;
      range
   }
 let add_decorations d ds =

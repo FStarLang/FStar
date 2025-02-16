@@ -45,10 +45,91 @@ let close_st_term_bvs (e:SW.st_term) (xs:list SW.bv) : SW.st_term =
 let close_comp_bvs  (e:SW.comp) (xs:list SW.bv) : SW.comp = 
   SW.close_comp_n e (L.map SW.index_of_bv xs)
 
+
 let rec fold_right1 (f : 'a -> 'a -> 'a) (l : list 'a) : 'a =
   match l with
   | [h] -> h
   | h::t -> f h (fold_right1 f t)
+
+let sugar_app (r:Range.range) (f:A.term) (aa : list A.term) : A.term =
+  List.fold_left  (fun f a ->
+    A.mk_term (A.App (f, a, A.Nothing)) r A.Expr)
+  f aa
+
+let sugar_unit (r:Range.range) : A.term =
+  A.mk_term (A.Var FStarC.Parser.Const.unit_lid) r A.Expr
+let sugar_emp (r:Range.range) : A.term =
+  A.mk_term (A.Var emp_lid) r A.Expr
+let sugar_star (r:Range.range) : A.term =
+  A.mk_term (A.Var star_lid) r A.Expr
+
+let sugar_star_of_list (r:Range.range) (ts : list A.term) : A.term =
+  match ts with
+  | [] -> sugar_emp r
+  | ts -> fold_right1 (fun a b -> sugar_app r (sugar_star r) [a; b]) ts
+
+let slprop_to_ast_term (v:Sugar.slprop) : A.term
+  = match v.v with
+    | Sugar.SLPropTerm t -> t
+
+let parse_annots (r:Range.range) (cs : list Sugar.computation_annot) : err Sugar.parsed_annots =
+  let open PulseSyntaxExtension.Sugar in
+  let reqs  = filter (fun (a, _) -> Requires? a) cs in
+  let enss  = filter (fun (a, _) -> Ensures?  a) cs in
+  let rets  = filter (fun (a, _) -> Returns?  a) cs in
+  let opens = filter (fun (a, _) -> Opens?    a) cs in
+
+  // let reqs  = choose (function (Sugar.Requires t, _) -> Some t | _ -> None) cs in
+  // let enss  = choose (function (Sugar.Ensures  t, _) -> Some t | _ -> None) cs in
+  // let rets  = choose (function (Sugar.Returns  t, _) -> Some t | _ -> None) cs in
+  // let opens = choose (function (Sugar.Opens    t, _) -> Some t | _ -> None) cs in
+  let req = reqs |> List.map (function (Requires t, _) -> slprop_to_ast_term t) |> sugar_star_of_list r in
+  let ens = enss |> List.map (function (Ensures  t, _) -> slprop_to_ast_term t) |> sugar_star_of_list r in
+  let! return_name, return_type =
+    match rets with
+    | [] -> return (None, sugar_unit r)
+    | (Returns (name, t), _)::[] -> return (name, t)
+    | _::(_,r)::_ ->
+      fail "Multiple returns are not allowed." r
+  in
+  let return_name =
+    match return_name with
+    | None -> Ident.mk_ident ("_", r)
+    | Some id -> id
+  in
+  let! opens : option A.term =
+    match opens with
+    | [] -> return None
+    | (Opens t, _)::[] -> return (Some t)
+    | _::(_,r)::_ ->
+      fail "Multiple opens are not allowed." r
+  in
+  let rec check_order cs ((*have we seen a: *)req ret ens : bool) =
+    match cs with
+    | [] -> return ()
+    | (a, r)::cs ->
+      let req = req || Requires? a in
+      let ret = ret || Returns? a in
+      let ens = ens || Ensures? a in
+      if ens && Requires? a then
+        fail "requires must come before any ensures" r
+      else if ret && Requires? a then
+        fail "requires must come before the return" r
+      else if ret && Opens? a then
+        fail "opens must come before the return (the name returned is *not* in scope for the opens clause)" r
+      else if ens && Returns? a then
+        fail "returns must come before ensures (the name returned is in scope for the ensures clause)" r
+      else
+        check_order cs req ret ens
+  in
+  check_order cs false false false;!
+  return {
+    precondition = Sugar.as_slprop (Sugar.SLPropTerm req) r;
+    postcondition = Sugar.as_slprop (Sugar.SLPropTerm ens) r;
+    return_name = return_name;
+    return_type = return_type;
+    opens = opens;
+  }
 
 let as_term (t:S.term)
   : SW.term
@@ -61,15 +142,11 @@ let as_term (t:S.term)
 let desugar_const (c:FStarC.Const.sconst) : SW.constant =
   SW.inspect_const c
 
-let slprop_to_ast_term (v:Sugar.slprop)
-  : err A.term
-  = let open FStarC.Parser.AST in
-    match v.v with
-    | Sugar.SLPropTerm t -> return t
-
 let comp_to_ast_term (c:Sugar.computation_type) : err A.term =
+  let open Sugar in
   let open FStarC.Parser.AST in
-  let return_ty = c.return_type in
+  let! annots = parse_annots c.range c.annots in
+  let return_ty = annots.return_type in
   let r = c.range in
   let head =
     match c.tag with
@@ -89,10 +166,10 @@ let comp_to_ast_term (c:Sugar.computation_type) : err A.term =
       let h = mk_term (App (h, return_ty, Nothing)) r Expr in
       h
   in
-  let! pre = slprop_to_ast_term c.precondition in
-  let! post = slprop_to_ast_term c.postcondition in
+  let pre  = slprop_to_ast_term annots.precondition in
+  let post = slprop_to_ast_term annots.postcondition in
   let post =
-    let pat = mk_pattern (PatVar (c.return_name, None, [])) r in
+    let pat = mk_pattern (PatVar (annots.return_name, None, [])) r in
     let pat = mk_pattern (PatAscribed (pat, (return_ty, None))) r in
     mk_term (Abs ([pat], post)) r Expr
   in
@@ -283,41 +360,38 @@ let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
   : err SW.comp
   = //let! pres = map_err (desugar_slprop env) c.preconditions in
     //let pre = fold_right1 (fun a b -> SW.tm_star a b c.range) pres in
-    let! pre = desugar_slprop env c.precondition in
+    let! annots = parse_annots c.range c.annots in
+    let! pre = desugar_slprop env annots.Sugar.precondition in
 
-    let! ret = desugar_term env c.return_type in
+    let! ret = desugar_term env annots.Sugar.return_type in
 
-    // let! opens = match c.opens with
-    //             | [] -> return SW.tm_emp_inames
-    //             | [i] -> desugar_term env i
-    //             | _ -> fail "only one opens supported" c.range
-    // in
-    let! opens = match c.opens with
-                 | Some t -> desugar_term env t
-                 | None -> return SW.tm_emp_inames
+    let! opens =
+      match annots.Sugar.opens with
+      | Some t -> desugar_term env t
+      | None -> return SW.tm_emp_inames
     in
 
     (* Should have return_name in scope I think *)
     // let! openss = map_err (desugar_term env) c.opens in
     // let opens = L.fold_right (fun i is -> SW.tm_add_inv i is c.range) openss SW.tm_emp_inames in
 
-    let env1, bv = push_bv env c.return_name in
+    let env1, bv = push_bv env annots.Sugar.return_name in
     // let! posts = map_err (desugar_slprop env1) c.postconditions in
     // let post = fold_right1 (fun a b -> SW.tm_star a b c.range) posts in
-    let! post = desugar_slprop env1 c.postcondition in
+    let! post = desugar_slprop env1 annots.Sugar.postcondition in
     let post = SW.close_term post bv.index in
 
     match c.tag with
     | Sugar.ST ->
-      if Some? c.opens then
+      if Some? annots.Sugar.opens then
         fail "STT computations are not indexed by invariants. Either remove the `opens` or make this function ghost/atomic."
-             (Some?.v c.opens).range
+             (Some?.v annots.Sugar.opens).range
       else return ();!
-      return SW.(mk_comp pre (mk_binder c.return_name ret) post)
+      return SW.(mk_comp pre (mk_binder annots.Sugar.return_name ret) post)
     | Sugar.STAtomic ->
-      return SW.(atomic_comp opens pre (mk_binder c.return_name ret) post)
+      return SW.(atomic_comp opens pre (mk_binder annots.Sugar.return_name ret) post)
     | Sugar.STGhost ->
-      return SW.(ghost_comp opens pre (mk_binder c.return_name ret) post)
+      return SW.(ghost_comp opens pre (mk_binder annots.Sugar.return_name ret) post)
 
 let mk_totbind b s1 s2 r : SW.st_term =
   SW.tm_totbind b s1 s2 r
@@ -771,7 +845,8 @@ and desugar_lambda (env:env_t) (l:Sugar.lambda)
       | None ->
         return (env, bs, bvs, None)
       | Some c -> 
-        let fvs = free_vars_comp env c in
+        let! pannots = parse_annots c.range c.annots in
+        let fvs = free_vars_comp env pannots in
         let! env, bs', bvs' = idents_as_binders env fvs in
         let bs = bs@bs' in
         let bvs = bvs@bvs' in
@@ -808,7 +883,8 @@ and desugar_decl (env:env_t)
         (res:Sugar.computation_type)
   : err A.term
   = // can we just use a unknown type here?
-    let r = range_of_id res.return_name in
+    let! annots = parse_annots res.range res.annots in
+    let r = range_of_id annots.Sugar.return_name in
     let! env, bs', _ = desugar_binders env bs in
     let! res_t = comp_to_ast_term res in
     let bs'' = bs |> L.map (fun b ->
@@ -827,7 +903,8 @@ and desugar_decl (env:env_t)
   match d with
   | Sugar.FnDefn { id; is_rec; binders; ascription=Inl ascription; measure; body=Inl body; range } ->
     let! env, bs, bvs = desugar_binders env binders in
-    let fvs = free_vars_comp env ascription in
+    let! pannots = parse_annots ascription.range ascription.annots in
+    let fvs = free_vars_comp env pannots in
     let! env, bs', bvs' = idents_as_binders env fvs in
     let bs = bs@bs' in
     let bvs = bvs@bvs' in
@@ -871,7 +948,8 @@ and desugar_decl (env:env_t)
     let! env, bs, bvs = desugar_binders env binders in
 
     (* Process ticks *)
-    let fvs = free_vars_comp env ascription in
+    let! pannots = parse_annots ascription.range ascription.annots in
+    let fvs = free_vars_comp env pannots in
     let! env, bs', bvs' = idents_as_binders env fvs in
     let bs = bs@bs' in
     let bvs = bvs@bvs' in
