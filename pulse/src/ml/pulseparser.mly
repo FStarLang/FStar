@@ -44,10 +44,6 @@ let as_aqual (q:unit option) =
 
 let pos_of_lexpos (p:Lexing.position) = FStarC_Parser_Util.pos_of_lexpos p
 
-let default_return =
-    gen dummyRange,
-    mk_term (Var (lid_of_ids [(mk_ident("unit", dummyRange))])) dummyRange Un
-
 let with_computation_tag (c:PulseSyntaxExtension_Sugar.computation_type) t =
   match t with
   | None -> c
@@ -91,8 +87,6 @@ maybeRec:
 /* This is to just peek at the name of the top-level definition */
 peekFnId:
   | q=option(qual) FN maybeRec id=lident
-      { FStarC_Ident.string_of_id id }
-  | q=option(qual) VAL FN id=lident
       { FStarC_Ident.string_of_id id }
 
 qual:
@@ -169,15 +163,6 @@ pulseDeclEOF:
     {
       p
     }
-  | q=option(qual)
-    VAL FN lid=lident bs=pulseBinderList
-    ascription=pulseComputationType
-    EOF
-    {
-      let open PulseSyntaxExtension_Sugar in
-      let ascription = with_computation_tag ascription q in
-      FnDecl (mk_fn_decl lid (List.flatten bs) (Inl ascription) [] (rr $loc))
-    }
 
 pulseBinderList:
   /* |  { [] } We don't yet support nullary functions */
@@ -203,20 +188,28 @@ fnBody:
   | COLON typ=option(appTerm) EQUALS lambda=pulseLambda
     { Inr (lambda, typ) }
 
-pulseComputationType:
-  | REQUIRES t=pulseSLProp
-    ret=option(RETURNS i=lidentOrUnderscore COLON r=term { (i, r) })
-    ENSURES t2=pulseSLProp
-    maybe_opens=option(OPENS inv=appTermNoRecordExp { inv })
-    {
-        let i, r =
-          match ret with
-          | Some (i, r) -> i, r
-          | None -> default_return
-        in
-        PulseSyntaxExtension_Sugar.mk_comp ST t i r t2 maybe_opens (rr $loc)
-    }
 
+ret_ty:
+  | r=tmNoEqNoRecordWith(appTermNoRecordExp) {r}
+
+returns:
+  | RETURNS i=lidentOrUnderscore COLON r=ret_ty { PulseSyntaxExtension_Sugar.Returns (Some i, r) }
+  | RETURNS r=ret_ty { PulseSyntaxExtension_Sugar.Returns (None, r) }
+
+pulseComputationAnnot1_:
+  | REQUIRES t=pulseSLProp { PulseSyntaxExtension_Sugar.Requires t }
+  | ENSURES t=pulseSLProp { PulseSyntaxExtension_Sugar.Ensures t }
+  | r=returns {r}
+  | OPENS inv=appTermNoRecordExp { PulseSyntaxExtension_Sugar.Opens inv }
+
+pulseComputationAnnot1:
+  | a=pulseComputationAnnot1_ { (a, rr $loc) }
+
+pulseComputationType:
+  | annots=list(pulseComputationAnnot1)
+    {
+        PulseSyntaxExtension_Sugar.mk_comp ST annots (rr $loc)
+    }
 
 pulseStmtNoSeq:
   | OPEN i=quident

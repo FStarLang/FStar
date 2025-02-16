@@ -148,12 +148,24 @@ let free_vars_slprop (env:env_t) (t:Sugar.slprop) =
   match t.v with
   | SLPropTerm t -> free_vars_term env t
 
-let free_vars_comp (env:env_t) (c:Sugar.computation_type)
+let free_vars_annot (env:env_t) (a:Sugar.computation_annot) =
+  let open PulseSyntaxExtension.Sugar in
+  match fst a with
+  | Requires t -> free_vars_slprop env t
+  | Ensures t -> free_vars_slprop env t
+  | Returns (None, t) -> free_vars_term env t
+  | Returns (_, t) -> free_vars_term env t
+  | Opens t -> free_vars_term env t
+
+let free_vars_comp (env:env_t) (c:Sugar.parsed_annots)
   : list ident
   = let ids =
         free_vars_slprop env c.precondition @
         free_vars_term env c.return_type @
-        free_vars_slprop (fst (push_bv env c.return_name)) c.postcondition
+        free_vars_slprop (fst (push_bv env c.return_name)) c.postcondition @
+        (match c.opens with
+         | Some o -> free_vars_term (fst (push_bv env c.return_name)) o
+         | None -> [])
     in
     (* NOTE: We use this particular dedup function since it favors
     occurrences on the left, so `dedup [1;2;1]` is `[1;2]`  instaed of `[2;1]`.

@@ -1317,7 +1317,8 @@ tmEqWith(X):
 %inline recordTerm:
   | LBRACE e=recordExp RBRACE { e }
 
-tmNoEqWith(X):
+%public
+tmNoEqNoRecordWith(X):
   | e1=tmNoEqWith(X) COLON_COLON e2=tmNoEqWith(X)
       { consTerm (rr $loc) e1 e2 }
   | e1=tmNoEqWith(X) AMP e2=tmNoEqWith(X)
@@ -1344,12 +1345,15 @@ tmNoEqWith(X):
       { mkApp op [ e1, Infix; e2, Nothing ] (rr $loc) }
  | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rr $loc(op)), [e1; e2])) (rr $loc) Un}
-  | e=recordTerm { e }
   | BACKTICK_PERC e=atomicTerm
       { mk_term (VQuote e) (rr $loc) Un }
   | op=TILDE e=atomicTerm
       { mk_term (Op(mk_ident (op, rr $loc(op)), [e])) (rr $loc) Formula }
   | e=X { e }
+
+tmNoEqWith(X):
+  | e=tmNoEqNoRecordWith(X) { e }
+  | e=recordTerm { e }
 
 binop_name:
   | o=OPINFIX0a              { mk_ident (o, rr $loc) }
