@@ -325,9 +325,9 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
   atomic
   fn read ()
   requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p ** later_credit 1
+  opens [C.iname_of c]
   returns v:int
   ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
-  opens [C.iname_of c]
   {
     with_invariants (C.iname_of c)
     {

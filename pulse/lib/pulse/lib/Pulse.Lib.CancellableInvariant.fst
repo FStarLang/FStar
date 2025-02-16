@@ -46,9 +46,9 @@ let iname_of c = c.i
 ghost
 fn new_cancellable_invariant (v:slprop)
   requires v
+  opens []
   returns c:cinv
   ensures inv (iname_of c) (cinv_vp c v) ** active c 1.0R
-  opens []
 {
   let r = GR.alloc true;
   rewrite v as (if true then v else emp);
