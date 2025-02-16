@@ -227,10 +227,10 @@ let parse_decl (s:string) (r:range) =
   | e ->
     let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
     let r = FStarC_Range.mk_range fn pos pos in
-    Inr (Some ("Syntax error", r))
+    Inr (Some (FStarC_Errors_Msg.mkmsg "Syntax error", r))
 
  
-let parse_peek_id (s:string) (r:range) : (string, string * range) either =
+let parse_peek_id (s:string) (r:range) : (string, FStarC_Pprint.document list * range) either =
   (* print_string ("About to parse <" ^ s ^ ">"); *)
   let fn = file_of_range r in
   let lexbuf, lexer = lexbuf_and_lexer s r in
@@ -241,7 +241,7 @@ let parse_peek_id (s:string) (r:range) : (string, string * range) either =
   | e ->
     let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
     let r = FStarC_Range.mk_range fn pos pos in
-    Inr ("Syntax error", r)
+    Inr (FStarC_Errors_Msg.mkmsg "Syntax error", r)
 
 
 let parse_lang (s:string) (r:range) =
@@ -259,4 +259,4 @@ let parse_lang (s:string) (r:range) =
   | e ->
     let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
     let r = FStarC_Range.mk_range fn pos pos in
-    Inr (Some ("#lang-pulse: Syntax error", r))
+    Inr (Some (FStarC_Errors_Msg.mkmsg "#lang-pulse: Syntax error", r))

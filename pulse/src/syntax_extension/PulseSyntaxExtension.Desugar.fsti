@@ -25,7 +25,7 @@ module R = FStarC.Range
 
 // An error can be "None", which means all relevant
 // errors were already logged via the error API.
-type error = option (string & R.range)
+type error = option (list Pprint.document & R.range)
 
 let err a = nat -> either a error & nat
 
