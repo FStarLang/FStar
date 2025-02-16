@@ -140,35 +140,32 @@ let check_no_escape (head_opt : option term)
    the user is expected to write f #a to apply f, matching the
    implicit qualifier at the binding site.
 
-   However, they do not (and cannot, there's no syntax for it) provide
-   the attributes of the binding site at the application site.
+   However, users do not provide the attributes of the
+   binding site at the application site. NEVERTHELESS, we do
+   internally add the attributes in the application node, and
+   as we sometimes re-check terms, aq could contain attributes.
+   These should just be ignored and replaced by those of b.
 
    So, this function checks that the implicit flags match and takes
    the attributes from the binding site, i.e., expected_aq.
 *)
 let check_expected_aqual_for_binder (aq:aqual) (b:binder) (pos:Range.range) : aqual =
-  match
-    let expected_aq = U.aqual_of_binder b in
-    match aq, expected_aq with
-    | None, None -> Inr aq
-    | None, Some eaq ->
-      if eaq.aqual_implicit //programmer should have written #
-      then Inl "expected implicit annotation on the argument"
-      else Inr expected_aq //keep the attributes
-    | Some aq, None ->
-      Inl "expected an explicit argument (without annotation)"
-    | Some aq, Some eaq ->
-      if aq.aqual_implicit <> eaq.aqual_implicit
-      then Inl "mismatch"
-      else Inr expected_aq //keep the attributes
-  with
-  | Inl err ->
+  let expected_aq = U.aqual_of_binder b in
+  // All we check is that the "plicity" matches, and
+  // keep attributes of the binder.
+  let is_imp (a:aqual) : bool = match a with | Some a -> a.aqual_implicit | _ -> false in
+  if is_imp aq <> is_imp expected_aq then begin
     let open FStarC.Pprint in
+    let open FStarC.Errors.Msg in
     let msg = [
-      Errors.Msg.text ("Inconsistent argument qualifiers: " ^ err ^ ".");
+      text "Inconsistent argument qualifiers.";
+      text (BU.format2 "Expected an %splicit argument, got an %splicit one."
+              (if is_imp aq then "im" else "ex")
+              (if is_imp expected_aq then "im" else "ex"));
     ] in
     raise_error pos Errors.Fatal_InconsistentImplicitQualifier msg
-  | Inr r -> r
+  end;
+  expected_aq
 
 let check_erasable_binder_attributes env attrs (binder_ty:typ) =
     attrs |>
