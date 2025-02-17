@@ -315,6 +315,16 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) =
       | Some Options.Extension -> ".ast"
       | _ -> fail ()
     in
+
+    (* The output filename can be overriden with -o, but see the length checks below
+    so we only allow this if a single file is going to be extracted, otherwise we would
+    clobber them. *)
+    let ofile (basename : string) =
+      match Options.output_to () with
+      | Some fn -> fn
+      | None -> Find.prepend_output_dir basename
+    in
+
     match opt with
     | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin | Some Options.PluginNoLib ->
       let printer =
@@ -323,11 +333,17 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) =
         else FStarC.Extraction.ML.PrintML.print_ml
       in
 
+      if Some? (Options.output_to ()) && List.length mllib > 1 then
+        raise_error0 Errors.Fatal_OptionsNotCompatible [
+          text "Cannot provide -o and extract multiple modules";
+          text "Please use -o with a single module, or specify an output directory with --odir";
+        ];
+
       mllib |> List.iter (fun (_, mlmodule) ->
         let p, _ = mlmodule in
         let filename =
-          let basename = FStarC.Extraction.ML.Util.flatten_mlpath p in
-          Find.prepend_output_dir (basename ^ ext)
+          let basename = FStarC.Extraction.ML.Util.flatten_mlpath p ^ ext in
+          ofile basename
         in
         let ml = printer mlmodule in
         write_file filename ml)
@@ -338,12 +354,18 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) =
       //   in the binary format to a file
       // The first component is the list of dependencies
       //
+      if Some? (Options.output_to ()) && List.length mllib > 1 then
+        raise_error0 Errors.Fatal_OptionsNotCompatible [
+          text "Cannot provide -o and extract multiple modules";
+          text "Please use -o with a single module, or specify an output directory with --odir";
+        ];
+
       mllib |>
       List.iter (fun (env, m) ->
         let mname, modul = m in
         let filename =
-          let basename = FStarC.Extraction.ML.Util.flatten_mlpath mname in
-          Find.prepend_output_dir (basename ^ ext)
+          let basename = FStarC.Extraction.ML.Util.flatten_mlpath mname ^ ext in
+          ofile basename
         in
         match modul with
         | Some (_, decls) ->
@@ -360,6 +382,7 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) =
       in
       let bin: Extraction.Krml.binary_format = Extraction.Krml.current_version, programs in
       let oname : string =
+        (* note: -o implies --krmloutput *)
         match Options.krmloutput () with
         | Some fname -> fname (* NB: no prepending odir nor adding extension, user chose a explicit path *)
         | _ ->
