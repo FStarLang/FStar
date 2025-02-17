@@ -2034,9 +2034,7 @@ let message_format               () =
   | "github" -> Github
   | illegal -> failwith ("print_issue: option `message_format` was expected to be `human` or `json`, not `" ^ illegal ^ "`. This should be impossible: `message_format` was supposed to be validated.")
 
-(* If the user passed -o, then they definitely want an output file, and we should
-not just exist early because we found a checked file or whatever. *)
-let force                        () = get_force () || Some? (get_output_to ())
+let force                        () = get_force ()
 let full_context_dependency      () = true
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()

@@ -142,7 +142,7 @@ let go_normal () =
      not (Some? (Options.dep ())) &&
      List.length filenames0 > 1
   then
-    Errors.raise_error0 Errors.Fatal_ModuleOrFileNotFound [
+    Errors.raise_error0 Errors.Fatal_OptionsNotCompatible [
       Errors.Msg.text "When using -o, you can only provide a single file in the
         command line (except for dependency analysis).";
     ];

@@ -457,8 +457,18 @@ let tc_one_file
         (* If --force and this file was given in the command line,
          * forget about the cache we just loaded and recheck the file.
          * Note: we do the call above anyway since load_module_from_cache
-         * sets some internal state about dependencies. *)
-        if Options.force () && Options.should_check_file fn
+         * sets some internal state about dependencies.
+         *
+         * We do the same if we were called with --output and --cache_checked_modules
+         * (-o, -c) and without codegen. This means the user is asking to generate a checked
+         * file into the file provided by -o, so we should not be loading anything.
+         * If codegen was given, the the user wants an ml/krml file, and it is fine
+         * to load the cache.
+         *)
+        if Options.should_check_file fn && (
+             Options.force () ||
+             (Some? (Options.output_to ()) && None? (Options.codegen ()))
+           )
         then None
         else r
       in
