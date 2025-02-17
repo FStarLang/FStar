@@ -32,6 +32,10 @@ open FStarC.SMap
 module Util = FStarC.Util
 module List = FStarC.List
 
+(* Set externally, checks if the directory exists and otherwise
+logs an issue. Cannot do it here due to circular deps. *)
+let check_include_dir = mk_ref (fun (s:string) -> ())
+
 exception NotSettable of string
 
 module Ext = FStarC.Options.Ext
@@ -1035,6 +1039,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
   ( noshort,
     "include",
     PostProcessed ((fun (Path s) ->
+      !check_include_dir s;
       Find.set_include_path (Find.get_include_path () @ [s]);
       Unset), PathStr "dir"),
     text "A directory in which to search for files included on the command line");

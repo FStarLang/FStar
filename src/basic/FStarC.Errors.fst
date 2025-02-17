@@ -730,3 +730,11 @@ let raise_error_doc rng code msg = raise_error rng code msg
 let log_issue_doc rng code msg = log_issue rng code msg
 let raise_error_text rng code msg = raise_error rng code msg
 let log_issue_text rng code msg = log_issue rng code msg
+
+let _ = Options.check_include_dir := (fun s ->
+          if not (Filepath.is_directory s) then
+            log_issue dummyRange Fatal_NotValidIncludeDirectory [
+              Pprint.prefix 2 1 (text "Not a valid include directory:")
+                (Pprint.doc_of_string s)
+            ]
+)
