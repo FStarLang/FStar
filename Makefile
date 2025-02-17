@@ -19,7 +19,7 @@ all-packages: package-1 package-2 package-src-1 package-src-2
 ifneq ($(FSTAR_EXTERNAL_STAGE0),)
 FSTAR0_EXE := $(abspath $(FSTAR_EXTERNAL_STAGE0))
 _ != mkdir -p stage0/out/bin
-_ != ln -Trsf $(FSTAR0_EXE) stage0/out/bin/fstar.exe
+_ != ln -Tsf $(FSTAR0_EXE) stage0/out/bin/fstar.exe
 # ^ Setting this link allows VS code to work seamlessly.
 endif
 
