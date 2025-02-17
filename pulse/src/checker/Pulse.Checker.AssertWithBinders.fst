@@ -205,7 +205,8 @@ let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
 let visit_and_rewrite_conjuncts (p: (R.term & R.term)) (tms:list term) : T.Tac (list term) =
   T.map (visit_and_rewrite p) tms
 
-let visit_and_rewrite_conjuncts_all (p: list (R.term & R.term)) (goal:term) : T.Tac (term & term) =
+(* is_source: was this rewrite written in the source by the user? *)
+let visit_and_rewrite_conjuncts_all (is_source:bool) (g:env) (p: list (R.term & R.term)) (goal:term) : T.Tac (term & term) =
   let tms = slprop_as_list goal in
   let tms' = T.fold_left (fun tms p -> visit_and_rewrite_conjuncts p tms) tms p in
   assume (L.length tms' == L.length tms);
@@ -217,8 +218,11 @@ let visit_and_rewrite_conjuncts_all (p: list (R.term & R.term)) (goal:term) : T.
       ([], [])
       tms tms'
   in
+  if is_source && Nil? lhs then
+    warn_doc g None [
+      Pulse.PP.text "No rewrites performed."
+    ];
   list_as_slprop lhs, list_as_slprop rhs
-  
 
 let disjoint (dom:list var) (cod:Set.set var) =
   L.for_all (fun d -> not (Set.mem d cod)) dom
@@ -247,7 +251,7 @@ let rec as_subst (p : list (term & term))
 
 
 
-let rewrite_all (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
+let rewrite_all (is_source:bool) (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
   match as_subst p [] [] Set.empty with
   | Some s ->
     t, subst_term t s
@@ -259,7 +263,7 @@ let rewrite_all (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
           (fst (Pulse.Checker.Pure.instantiate_term_implicits g e2 None)))
         p
     in
-    let lhs, rhs = visit_and_rewrite_conjuncts_all p t in
+    let lhs, rhs = visit_and_rewrite_conjuncts_all is_source g p t in
     debug_log g (fun _ -> Printf.sprintf "Rewrote %s to %s" (P.term_to_string lhs) (P.term_to_string rhs));
     lhs, rhs
 
@@ -293,7 +297,7 @@ let check_renaming
 
   | [], None ->
     // if there is no goal, take the goal to be the full current pre
-    let lhs, rhs = rewrite_all g pairs pre in
+    let lhs, rhs = rewrite_all (T.unseal st.source) g pairs pre in
     let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt};
                       source = Sealed.seal false; } in
     { st with
@@ -303,7 +307,7 @@ let check_renaming
 
   | [], Some goal -> (
       let goal, _ = PC.instantiate_term_implicits g goal None in
-      let lhs, rhs = rewrite_all g pairs goal in
+      let lhs, rhs = rewrite_all (T.unseal st.source) g pairs goal in
       let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt };
                         source = Sealed.seal false; } in
       { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body };
