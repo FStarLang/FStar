@@ -16,7 +16,6 @@
 module Test
 
 module TU = FStar.TaggedUnion
-module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module P = FStar.Pointer
 

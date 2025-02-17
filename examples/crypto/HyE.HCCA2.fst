@@ -21,8 +21,6 @@ open HyE.PlainPKE
 open Platform.Bytes
 open FStar.HyperStack
 
-module B = Platform.Bytes
-module P = HyE.Plain
 module C = HyE.CCA2
 module A = HyE.AE
 module RSA = HyE.RSA

@@ -16,9 +16,7 @@
 module PureEncoder
 
 open FStar.Seq
-module U16 = FStar.UInt16
 module U32 = FStar.UInt32
-module Cast = FStar.Int.Cast
 module List = FStar.List.Tot
 
 open KeyValue

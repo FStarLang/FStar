@@ -23,8 +23,6 @@ open FStar.HyperStack.ST
 open FStar.Buffer
 open Buffer.Utils
 
-module HH = FStar.HyperHeap
-module HS = FStar.HyperStack
 module ST = FStar.HyperStack.ST
 
 open FStar.UInt32

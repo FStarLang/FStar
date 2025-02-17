@@ -21,10 +21,7 @@ open IntegerParsing
 
 open FStar.Seq
 open FStar.Krml.Endianness
-module U8 = FStar.UInt8
-module U16 = FStar.UInt16
 module U32 = FStar.UInt32
-module Cast = FStar.Int.Cast
 
 (*** Spec-level pure parsing to values *)
 

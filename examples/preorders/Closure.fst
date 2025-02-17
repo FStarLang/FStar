@@ -17,7 +17,6 @@ module Closure
 
 open FStar.ReflexiveTransitiveClosure
 
-module B = LowStar.Buffer
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 

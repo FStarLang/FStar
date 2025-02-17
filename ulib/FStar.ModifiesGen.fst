@@ -18,7 +18,6 @@ module FStar.ModifiesGen
 #set-options "--split_queries no"
 
 module HS = FStar.HyperStack
-module HST = FStar.HyperStack.ST
 
 noeq
 type aloc (#al: aloc_t) (c: cls al) = | ALoc:

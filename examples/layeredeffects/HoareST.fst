@@ -20,7 +20,6 @@ open FStar.Heap
 open FStar.ST
 
 module P = FStar.Preorder
-module ST = FStar.ST
 
 /// ST effect implemented as a layered effect over STATE
 

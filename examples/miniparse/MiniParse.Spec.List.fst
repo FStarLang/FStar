@@ -18,8 +18,6 @@ include MiniParse.Spec.Combinators // for seq_slice_append_l
 
 module Seq = FStar.Seq
 module L = FStar.List.Tot
-module U32 = FStar.UInt32
-module Classical = FStar.Classical
 
 let nlist_nil_unique (t: Type) (l: nlist 0 t) : Lemma (l == nlist_nil) = ()
 

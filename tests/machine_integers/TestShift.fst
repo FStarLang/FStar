@@ -7,15 +7,9 @@ open FStar.Int.Cast.Full
 open FStar.Tactics.V2
 
 module I8   = FStar.Int8
-module I16  = FStar.Int16
 module I32  = FStar.Int32
-module I64  = FStar.Int64
-module I128 = FStar.Int128
 module U8   = FStar.UInt8
-module U16  = FStar.UInt16
 module U32  = FStar.UInt32
-module U64  = FStar.UInt64
-module U128 = FStar.UInt128
 
 let check s (b:bool) : ML unit =
     if not b then failwith s

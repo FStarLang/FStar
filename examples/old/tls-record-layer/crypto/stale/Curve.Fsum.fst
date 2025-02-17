@@ -27,9 +27,7 @@ open Curve.Bigint
 
 #set-options "--admit_smt_queries true"
 
-module U8  = FStar.UInt8
 module U32 = FStar.UInt32
-module U64 = FStar.UInt64
 
 abstract type willNotOverflow (h:heap) 
 		     (a:bigint{live h a /\ length a >= norm_length}) 

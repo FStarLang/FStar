@@ -19,7 +19,6 @@ open FStar.List.Tot
  * much better now. *)
 
 open FStar.Tactics.V2
-module TD = FStar.Tactics.V2.Derived
 module TU = FStar.Tactics.Util
 
 let print_Prims_string : string -> Tot string = fun s -> "\"" ^ s ^ "\""

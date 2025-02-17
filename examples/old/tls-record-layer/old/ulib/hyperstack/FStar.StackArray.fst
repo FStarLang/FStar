@@ -22,7 +22,6 @@ open FStar.HyperStack
 open FStar.HST
 open FStar.UInt32
 
-module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
 let u32 = UInt32.t

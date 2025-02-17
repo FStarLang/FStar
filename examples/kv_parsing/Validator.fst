@@ -29,11 +29,8 @@ module C = C
 // special karamel support for looping
 open C.Loops
 
-module B = FStar.Buffer
 
-module U16 = FStar.UInt16
 module U32 = FStar.UInt32
-module Cast = FStar.Int.Cast
 
 (*** Stateful validation of input buffer *)
 

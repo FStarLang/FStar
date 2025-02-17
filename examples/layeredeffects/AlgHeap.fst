@@ -5,10 +5,7 @@ module AlgHeap
 open FStar.Tactics.V2
 open FStar.List.Tot
 open FStar.Universe
-module L = Lattice
-module Ghost = FStar.Ghost
 module Map = FStar.Map
-module T = FStar.Tactics.V2
 
 type loc = int
 type state = Map.t loc int

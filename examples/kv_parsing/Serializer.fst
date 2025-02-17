@@ -20,9 +20,7 @@ open FStar.HyperStack
 open FStar.HyperStack.ST
 open FStar.Ghost
 module B = FStar.Buffer
-module U16 = FStar.UInt16
 module U32 = FStar.UInt32
-module Cast = FStar.Int.Cast
 
 open KeyValue
 open Slice

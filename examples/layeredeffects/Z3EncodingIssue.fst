@@ -38,7 +38,6 @@ open FStar.Integers
 
 open FStar.HyperStack.ST
 
-module HS = FStar.HyperStack
 
 module B = LowStar.Buffer
 

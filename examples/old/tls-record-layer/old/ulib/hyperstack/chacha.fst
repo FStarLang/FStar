@@ -25,7 +25,6 @@ open FStar.UInt32
 open FStar.Buffer
 
 module HH = FStar.HyperHeap
-module HS = FStar.HyperStack
 
 let u32 = UInt32.t
 let u8 = UInt8.t

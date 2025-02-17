@@ -34,7 +34,6 @@ open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4
 
-module U64 = FStar.UInt64
 
 #reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 

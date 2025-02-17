@@ -17,7 +17,6 @@ module MiniParse.Spec.Base
 
 module Seq = FStar.Seq
 module U8 = FStar.UInt8
-module U32 = FStar.UInt32
 
 inline_for_extraction
 type byte = U8.t

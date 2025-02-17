@@ -26,9 +26,7 @@ open Math.Field
 open Curve.Parameters
 open Curve.Bigint
 
-module U8  = FStar.UInt8
 module U32 = FStar.UInt32
-module U64 = FStar.UInt64
 module U128 = FStar.UInt128
 module HS = FStar.HyperStack
 

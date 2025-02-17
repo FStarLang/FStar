@@ -17,7 +17,6 @@ module LowStar.Lens
 open FStar.HyperStack.ST
 module B = LowStar.Buffer
 module HS = FStar.HyperStack
-module HST = FStar.HyperStack.ST
 
 (* This module provides a more abstract way of verifying Low*
    programs.

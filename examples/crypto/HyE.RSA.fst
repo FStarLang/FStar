@@ -32,7 +32,6 @@ open FStar.List.Tot
 open Platform.Bytes
 open CoreCrypto
 
-module B = Platform.Bytes
 
 assume type pkey
 assume type skey
