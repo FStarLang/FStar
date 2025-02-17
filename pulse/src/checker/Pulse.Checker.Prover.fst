@@ -222,7 +222,7 @@ let intro_any_exists
 
 noeq
 type prover_iteration_res_t (#preamble:_) (pst0:prover_state preamble) =
-  | Stepped of pst':prover_state preamble { pst' `pst_extends` pst0 }
+  | Stepped : lbl:string -> pst':prover_state preamble { pst' `pst_extends` pst0 } -> prover_iteration_res_t pst0
   | NoProgress
 
 (* a "subtyping" in the pst for the type above. *)
@@ -232,7 +232,7 @@ let res_advance (#preamble:_)
    (ir : prover_iteration_res_t pst1)
     : prover_iteration_res_t pst0 =
   match ir with
-  | Stepped pst1' -> Stepped pst1'
+  | Stepped lbl pst1' -> Stepped lbl pst1'
   | NoProgress -> NoProgress
 
 let prover_pass_t : Type =
@@ -260,7 +260,7 @@ let rec prover_iteration_loop
       debug_prover pst.pg (fun _ ->
         Printf.sprintf "prover: %s: made progress, remaining_ctxt after pass = %s\n"
           name (show pst.remaining_ctxt));
-      Stepped pst
+      Stepped name pst
     ) else (
       debug_prover pst.pg (fun _ ->
         Printf.sprintf "prover: %s: no progress\n" name);
@@ -326,7 +326,13 @@ let rec prover
     let pst = { pst with progress = false } in
 
     match prover_iteration pst with
-    | Stepped pst' -> prover pst'
+    | Stepped name pst' ->
+      (* We made progress, so we start over. *)
+      debug_prover pst.pg (fun _ ->
+        Printf.sprintf "prover: made progress with pass '%s', remaining_ctxt after iteration = %s\n"
+          name
+          (show (list_as_slprop pst.remaining_ctxt)));
+      prover pst'
     | NoProgress ->
       let pst = intro_any_exists pst prover in
       if pst.progress then prover pst else let () = () in
