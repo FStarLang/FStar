@@ -22,7 +22,7 @@ open FStar.PCM
 open Pulse.Lib.PCM.Fraction
 
 let ref (a:Type u#2) = pcm_ref (pcm_frac #a)
-let pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a)
+let pts_to (#a:Type) ([@@@mkey] r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a)
 = big_pcm_pts_to r (Some (n, p)) ** pure (perm_ok p)
 
 let pts_to_is_timeless #a r p x = ()

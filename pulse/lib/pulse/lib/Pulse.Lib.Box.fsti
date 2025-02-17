@@ -29,8 +29,8 @@ module R = Pulse.Lib.Reference
 new
 val box ([@@@strictly_positive] a:Type0) : Type0
 
-val pts_to (#a:Type0) 
-           ([@@@equate_strict] b:box a)
+val pts_to (#a:Type0)
+           ([@@@mkey] b:box a)
            (#[T.exact (`1.0R)] p:perm)
            (v:a) : slprop
 
@@ -39,7 +39,7 @@ instance has_pts_to_box (a:Type u#0) : has_pts_to (box a) a = {
   pts_to = pts_to;
 }
 
-val pts_to_timeless (#a:Type) (r:box a) (p:perm) (x:a)
+val pts_to_timeless (#a:Type) ([@@@mkey]r:box a) (p:perm) (x:a)
   : Lemma (timeless (pts_to r #p x))
           [SMTPat (timeless (pts_to r #p x))]
 

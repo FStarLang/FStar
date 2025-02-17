@@ -32,14 +32,14 @@ instance val ref_non_informative (a:Type0) (p : preorder a) (anc : anchor_rel p)
 
 val pts_to_full
   (#a:Type) (#p:_) (#anc:_)
-  (r:ref a p anc)
+  ([@@@mkey]r:ref a p anc)
   (#[T.exact (`1.0R)] p:perm)
   (n:a)
 : p:slprop { timeless p }
 
 val pts_to
   (#a:Type) (#p:_) (#anc:_)
-  (r:ref a p anc)
+  ([@@@mkey]r:ref a p anc)
   (#[T.exact (`1.0R)] p:perm)
   (n:a)
 : p:slprop { timeless p }

@@ -6,9 +6,9 @@ open Pulse.Lib.Pervasives
 val table (a:Type0) : Type0
 
 instance val non_informative_table (a:Type): NonInformative.non_informative (table a)
-val is_table #a (t:table a) (max:nat) : slprop
+val is_table #a ([@@@mkey] t:table a) (max:nat) : slprop
 
-val pts_to #a (t:table a) (i:nat) (#f:perm) (p:a) : slprop
+val pts_to #a ([@@@mkey] t:table a) (i:nat) (#f:perm) (p:a) : slprop
 
 ghost
 fn create (#a:Type)

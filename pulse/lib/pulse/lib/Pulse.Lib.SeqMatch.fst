@@ -29,7 +29,7 @@ high-level values.  *)
 
 let rec seq_list_match
   (#t #t': Type)
-  (c: Seq.seq t)
+  ([@@@mkey]c: Seq.seq t)
   (v: list t')
   (item_match: (t -> (v': t' { v' << v }) -> slprop))
 : Tot slprop
@@ -53,7 +53,9 @@ requires
 ensures
     seq_list_match c v item_match
 {
-  fold (seq_list_match c [] item_match)
+  fold (seq_list_match c [] item_match);
+  rewrite seq_list_match c [] item_match
+       as seq_list_match c v item_match;
 }
 
 ghost
@@ -119,11 +121,13 @@ ensures
     unreachable()
   } else {
     let res : squash (Cons? v /\ Seq.length c > 0) = ();
+    rewrite each v as (List.Tot.hd v :: List.Tot.tl v);
     unfold (seq_list_match c (List.Tot.hd v :: List.Tot.tl v) item_match);
     with c1 . assert (item_match c1 (List.Tot.hd v));
     with c2 . assert (seq_list_match c2 (List.Tot.tl v) item_match);
     assert (pure (c2 `Seq.equal` Seq.tail c));
     rewrite (item_match c1 (List.Tot.hd v)) as (item_match (Seq.head c) (List.Tot.hd v));
+    rewrite each c2 as Seq.tail c;
     res
   }
 }
@@ -169,6 +173,8 @@ decreases v
     seq_list_match_weaken (Seq.tail c) (List.Tot.tl v) item_match1 item_match2 prf';
     Seq.cons_head_tail c;
     seq_list_match_cons_intro (Seq.head c) (List.Tot.hd v) (Seq.tail c) (List.Tot.tl v) item_match2;
+    rewrite each Seq.cons (Seq.head c) (Seq.tail c) as c;
+    ()
   }
 }
 
@@ -329,12 +335,17 @@ requires
 ensures
     (seq_seq_match p s1 s2 i (i + 1))
 {
-  fold (seq_seq_match_item p s1 s2 i);
+  rewrite p x1 x2 as seq_seq_match_item p s1 s2 i;
   on_range_singleton_intro (seq_seq_match_item p s1 s2) i;
   fold (seq_seq_match p s1 s2 i (i + 1))
 }
 
-ghost fn seq_seq_match_singleton_elim
+
+assume val foo : slprop
+assume val bar : slprop
+
+ghost
+fn seq_seq_match_singleton_elim
 (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
   (s1: Seq.seq t1)
@@ -351,8 +362,17 @@ ensures
   seq_seq_match_length p s1 s2 i (i + 1);
   unfold (seq_seq_match p s1 s2 i (i + 1));
   on_range_singleton_elim ();
-  unfold (seq_seq_match_item p s1 s2 i);
-  ()
+  // unfold (seq_seq_match_item p s1 s2 i);
+  let b = StrongExcludedMiddle.strong_excluded_middle (i < Seq.length s1 && i < Seq.length s2);
+  if b {
+    assert (pure (i < Seq.length s1 && i < Seq.length s2));
+    rewrite each x1 as Seq.index s1 i;
+    rewrite each x2 as Seq.index s2 i;
+    rewrite seq_seq_match_item p s1 s2 i as p (Seq.index s1 i) (Seq.index s2 i);
+    ()
+  } else {
+    unreachable()
+  }
 }
 
 ghost fn seq_seq_match_enqueue_left
@@ -370,7 +390,7 @@ ensures
     (seq_seq_match p s1 s2 (i - 1) j)
 {
   unfold (seq_seq_match p s1 s2 i j);
-  fold (seq_seq_match_item p s1 s2 (i - 1));
+  rewrite p x1 x2 as seq_seq_match_item p s1 s2 (i - 1);
   on_range_cons (i - 1);
   fold (seq_seq_match p s1 s2 (i - 1) j)
 }
@@ -390,7 +410,7 @@ ensures
     (seq_seq_match p s1 s2 i (j + 1))
 {
   unfold (seq_seq_match p s1 s2 i j);
-  fold (seq_seq_match_item p s1 s2 j);
+  rewrite p x1 x2 as seq_seq_match_item p s1 s2 j;
   on_range_snoc ();
   fold (seq_seq_match p s1 s2 i (j + 1))
 }
@@ -412,7 +432,7 @@ ensures
   unfold (seq_seq_match p s1 s2 i j);
   on_range_uncons ();
   fold (seq_seq_match p s1 s2 (i + 1) j);
-  unfold (seq_seq_match_item p s1 s2 i)
+  rewrite (seq_seq_match_item p s1 s2 i) as (p (Seq.index s1 i) (Seq.index s2 i));
 }
 
 ghost fn seq_seq_match_dequeue_right
@@ -432,7 +452,7 @@ ensures
   unfold (seq_seq_match p s1 s2 i j);
   on_range_unsnoc ();
   fold (seq_seq_match p s1 s2 i (j - 1));
-  unfold (seq_seq_match_item p s1 s2 (j - 1))
+  rewrite (seq_seq_match_item p s1 s2 (j-1)) as (p (Seq.index s1 (j - 1)) (Seq.index s2 (j - 1)))
 }
 
 
@@ -727,7 +747,8 @@ decreases l
         (seq_seq_match p (Seq.tail c) (Seq.seq_of_list (List.Tot.tl l)) 0 (List.Tot.length (List.Tot.tl l)));
       seq_seq_match_seq_list_match p _ (List.Tot.tl l);
       Seq.cons_head_tail c;
-      seq_list_match_cons_intro (Seq.head c) (List.Tot.hd l) (Seq.tail c) (List.Tot.tl l) p
+      seq_list_match_cons_intro (Seq.head c) (List.Tot.hd l) (Seq.tail c) (List.Tot.tl l) p;
+      rewrite each (Seq.cons (Seq.head c) (Seq.tail c)) as c;
     }
   }
 }
@@ -1144,4 +1165,30 @@ ensures
     i j k;
   fold (seq_seq_match (item_match_option p) s1 (Seq.upd s2 j None) i k);
   res
+}
+
+ghost
+fn seq_seq_match_item_match_option_upd_some
+  (#t1 #t2: Type0)
+  (p: t1 -> t2 -> slprop)
+  (s1: Seq.seq t1)
+  (s2: Seq.seq (option t2))
+  (i j: nat)
+  (k: nat {
+    i <= j /\ j < k /\ 
+    (j < Seq.length s2 ==> Some? (Seq.index s2 j))
+  })
+  (x1: t1)
+  (x2: t2)
+  requires
+    seq_seq_match (item_match_option p) s1 s2 i k ** p x1 x2
+  returns res: squash (j < Seq.length s1 /\ j < Seq.length s2 /\ Some? (Seq.index s2 j))
+  ensures
+    seq_seq_match (item_match_option p) (Seq.upd s1 j x1) (Seq.upd s2 j (Some x2)) i k **
+    p (Seq.index s1 j) (Some?.v (Seq.index s2 j))
+{
+  seq_seq_match_item_match_option_index p s1 s2 i j k;
+  seq_seq_match_item_match_option_upd_none p s1 (Seq.upd s2 j None) i j k x1 x2;
+  assert (pure (Seq.upd (Seq.upd s2 j None) j (Some x2) `Seq.equal` Seq.upd s2 j (Some x2)));
+  ()
 }

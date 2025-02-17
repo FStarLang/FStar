@@ -23,6 +23,14 @@ module GR = Pulse.Lib.GhostReference
 let finv_p (p:slprop) (r : GR.ref bool) : slprop =
   exists* (b:bool). pts_to r #0.5R b ** (if b then p else emp)
 
+ghost
+fn fold_finv_p (p:slprop) (r : GR.ref bool) (#b:bool)
+  requires pts_to r #0.5R b ** (if b then p else emp)
+  ensures  finv_p p r
+{
+  fold finv_p;
+}
+
 noeq
 type finv (p:slprop) = {
   r : GR.ref bool;
@@ -76,18 +84,17 @@ fn flip_on (#p:slprop) (fi:finv p)
   {
     later_elim _;
     unfold finv_p;
+    with b.
+      assert (pts_to fi.r #0.5R b ** pts_to fi.r #0.5R false);
     GR.gather2 fi.r;
-    rewrite (if false then p else emp) as emp;
+    rewrite each b as false;
     fi.r := true;
     GR.share2 fi.r;
-    rewrite p as (if true then p else emp);
-    fold (finv_p p fi.r);
+    fold_finv_p p fi.r;
     later_intro (finv_p p fi.r);
   };
-  fold (on fi)
+  fold on fi;
 }
-
-
 
 atomic
 fn flip_off (#p:slprop) (fi : finv p)
@@ -105,14 +112,14 @@ fn flip_off (#p:slprop) (fi : finv p)
   {
     later_elim _;
     unfold finv_p;
+    with b.
+      assert (pts_to fi.r #0.5R b ** pts_to fi.r #0.5R true);
     GR.gather2 fi.r;
-    rewrite (if true then p else emp) as p;
+    rewrite each b as true;
     fi.r := false;
     GR.share2 fi.r;
-    rewrite emp as (if false then p else emp);
-    fold (finv_p p fi.r);
+    fold_finv_p p fi.r;
     later_intro (finv_p p fi.r);
   };
-  fold (off fi)
+  fold off fi;
 }
-

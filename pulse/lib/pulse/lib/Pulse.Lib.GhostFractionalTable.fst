@@ -31,7 +31,7 @@ let singleton #a (i:nat) (f:perm) (r:option a)
     then Some (r, f)
     else None)
 
-let is_table #a (t:table a) (max:nat)
+let is_table #a ([@@@mkey]t:table a) (max:nat)
 : slprop
 = GPR.pts_to t (full_table_above max)
 

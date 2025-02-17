@@ -22,9 +22,18 @@ type deque (t:Type0) = {
   tail: option (node_ptr t);
 }
 
+(* Note: since within this module there is usually a *single* linked list
+around, we mark the list predicated with no_mkeys so the matcher can be
+more liberal. Crucially, this attribute is only set behind the interface,
+and clients will just use the mkey in is_deque.
+
+This is a bit of a hack, the fact that F* allows the attributes to differ
+between fst/fsti is probably wrong. Maybe we should have a typeclass? *)
+
+[@@no_mkeys]
 let rec is_deque_suffix
   (#t:Type0)
-  (p:node_ptr t)
+  ([@@@mkey] p:node_ptr t)
   (l:list t {Cons? l})
   (prev:option (node_ptr t))
   (tail:node_ptr t)
@@ -45,7 +54,7 @@ let rec is_deque_suffix
         pure (v.value == n /\
           v.dprev == prev /\
           v.dnext == (Some np))
-          
+
 
 ghost
 fn fold_is_deque_suffix_cons
@@ -74,7 +83,8 @@ fn fold_is_deque_suffix_cons
 
 
 
-let is_deque #t (x:deque t) (l:list t)
+[@@no_mkeys]
+let is_deque #t ([@@@mkey] x:deque t) (l:list t)
   : Tot slprop (decreases l)
   = match l with
     | [] ->
@@ -241,9 +251,9 @@ fn unfold_is_deque_cons (#t:Type) (l : deque t) (#xs : (list t){Cons? xs})
       unreachable();
     }
     hd :: tl -> {
-      rewrite each xs as Cons hd tl;
       unfold is_deque;
       with hp tp. assert (is_deque_suffix hp (hd::tl) None tp None);
+      rewrite each hp as fst (hp, tp);
       hide (hp, tp)
     }
   }
@@ -254,7 +264,7 @@ fn unfold_is_deque_cons (#t:Type) (l : deque t) (#xs : (list t){Cons? xs})
 (triggers #112) without this. *)
 let is_deque_suffix_factored_next
   (#t:Type0)
-  (p:node_ptr t) (l:list t{Cons? l})
+  ([@@@mkey]p:node_ptr t) (l:list t{Cons? l})
   (tail : node_ptr t)
   (last : option (node_ptr t))
   (v_dnext : option (node_ptr t))
@@ -272,7 +282,7 @@ ghostly, we can turn it into this, which gives us unconditional permission
 on the head. *)
 let is_deque_suffix_factored
    (#t:Type0)
-   (x:node_ptr t) (l:list t{Cons? l})
+   ([@@@mkey]x:node_ptr t) (l:list t{Cons? l})
    (prev : option (node_ptr t))
    (tail : node_ptr t)
    (last : option (node_ptr t))
@@ -305,6 +315,7 @@ fn factor_is_deque_suffix
       with v. assert (pts_to p v);
       fold (is_deque_suffix_factored_next p [hd] tail last v.dnext);
       fold (is_deque_suffix_factored p [hd] prev tail last);
+      ()
     }
     y :: ys -> {
       assert (pure (l == hd::y::ys));
@@ -391,6 +402,8 @@ fn push_front_cons (#t:Type) (l : deque t) (x : t) (#xs : erased (list t))
   rewrite (is_deque l xs)
        as (is_deque l (reveal h :: reveal t));
   unfold is_deque;
+  with 'hh0 'tt0.
+    assert is_deque_suffix 'hh0 (reveal h :: reveal t) None 'tt0 None;
 
   let vnode = {
     value = x;
@@ -400,6 +413,7 @@ fn push_front_cons (#t:Type) (l : deque t) (x : t) (#xs : erased (list t))
   let node = Box.alloc vnode;
 
   let hh = Some?.v l.head;
+  rewrite each 'hh0 as hh;
   let tt = Some?.v l.tail;
 
   assert (is_deque_suffix hh (reveal h :: reveal t) None tt None);
@@ -415,8 +429,6 @@ fn push_front_cons (#t:Type) (l : deque t) (x : t) (#xs : erased (list t))
   fold (is_deque l' (x::xs));
   l'
 }
-
-
 
 fn push_front (#t:Type) (l : deque t) (x : t)
   (#xs:erased (list t))
@@ -473,10 +485,10 @@ fn pop_front_nil (#t:Type) (l : deque t)
     tail = None;
   };
   fold (is_deque l' []);
+  rewrite each l' as fst (l', x);
 
-  (l', x)
+  (l', x);
 }
-
 
 
 fn pop_front_cons (#t:Type) (l : deque t)
@@ -500,6 +512,9 @@ fn pop_front_cons (#t:Type) (l : deque t)
   let headp = Some?.v l.head;
   rewrite each hp as headp;
   unfold is_deque_suffix;
+  (* see AssertWildcard.fst *)
+  with np _1 _2 _3 _4.
+    assert is_deque_suffix #t np _1 _2 _3 _4;
 
   (* Get the value, free the cell *)
   let n1 = Box.( !headp );
@@ -509,6 +524,7 @@ fn pop_front_cons (#t:Type) (l : deque t)
   assert (pure (Some? n1.dnext));
 
   let headp' = Some?.v n1.dnext;
+  rewrite each np as headp';
 
   (* Unset the back pointer of the now-first cell. *)
   set_back_pointer headp' None;
@@ -516,6 +532,7 @@ fn pop_front_cons (#t:Type) (l : deque t)
   let l' = { head = Some headp'; tail = l.tail };
   fold (is_deque l' (reveal y :: reveal ys));
 
+  rewrite each l' as fst (l', retv);
   (l', retv)
 }
 
@@ -535,10 +552,11 @@ fn suffix_factored_none_helper
   unfold (is_deque_suffix_factored_next p (x::l) tail last None);
   match l {
     [] -> {
-      fold (is_deque_suffix_factored_next p (x::l) tail last None);
+      rewrite (pure (None == last /\ p == tail))
+           as (is_deque_suffix_factored_next p (x::l) tail last None);
     }
     y :: ys -> {
-      fold (is_deque_suffix_factored_next p (x::l) tail last None);
+      fold (is_deque_suffix_factored_next p (x::y::ys) tail last None);
     }
   }
 }
@@ -560,8 +578,9 @@ fn suffix_factored_some_helper
   unfold (is_deque_suffix_factored_next p (x::l) tail None (Some np));
   match l {
     [] -> {
-      assert (pure False); // somehow I need this!!
-      unreachable();
+      assert (pure (forall (t:Type0) (x:t). Some x == None #t ==> False));
+      // ^ somehow I need this!! wth?
+      unreachable ();
     }
     y :: ys -> {
       assert (pure (Cons? l));
@@ -582,7 +601,11 @@ fn is_singleton
 {
   is_deque_cons_not_none p;
   unfold is_deque;
+  (* see AssertWildcard.fst *)
+  with hp _1 _2 _3 _4.
+    assert is_deque_suffix #t hp _1 _2 _3 _4;
   let headp = Some?.v p.head;
+  rewrite each hp as headp;
   factor_is_deque_suffix headp _ _ _;
   unfold is_deque_suffix_factored;
 
@@ -593,11 +616,11 @@ fn is_singleton
   let nextp = vv.dnext;
   rewrite each vv.dnext as nextp;
 
-  if (None? nextp) {
-    rewrite each nextp as None;
+  match nextp {
+  None -> {
     suffix_factored_none_helper headp x xs _ _;
     assert (pure (Nil? xs));
-    fold is_deque_suffix_factored_next;
+
     with tp.
       rewrite
         is_deque_suffix_factored_next headp (reveal x :: reveal xs) tp None None
@@ -608,13 +631,11 @@ fn is_singleton
     unfactor_is_deque_suffix headp _ _ _;
     fold (is_deque p (reveal x::xs));
     true;
-  } else {
-    let np = Some?.v nextp;
-    rewrite each nextp as (Some np);
+  }
+  Some np -> {
     suffix_factored_some_helper headp x xs _ _;
     assert (pure (Cons? xs));
 
-    fold is_deque_suffix_factored_next;
     with tp.
       rewrite
         is_deque_suffix_factored_next headp (reveal x :: reveal xs) tp None (Some np)
@@ -626,6 +647,7 @@ fn is_singleton
     fold (is_deque p (reveal x::xs));
 
     false;
+  }
   }
 }
 
@@ -652,7 +674,7 @@ let snoc xs x = xs @ [x]
 
 
 ghost
-fn rec join_last 
+fn rec join_last
   (#t:Type) (headp : node_ptr t) (tailp : node_ptr t) (tailp' : node_ptr t)
   (#y : erased t)
   (#ys : erased (list t){Cons? ys})
@@ -680,8 +702,8 @@ fn rec join_last
       with headp'.
         assert (is_deque_suffix headp' (y2 :: ys') (Some headp) tailp (Some tailp'));
       join_last headp' tailp tailp' #y #(y2 :: ys') #(Some headp) #last #v;
-      
-      rewrite 
+
+      rewrite
         is_deque_suffix
           headp'
           (snoc (y2::ys') (reveal y))
@@ -695,22 +717,20 @@ fn rec join_last
           (Some headp)
           tailp'
           last;
-      
+
       fold_is_deque_suffix_cons headp y1 (y2 :: snoc ys' y) prev tailp' last _ headp';
     }
   }
 }
 
 
-let tag_pure p = pure p
-
 (* This should really be just a consequence of proving a pure lemma. *)
 
 ghost
 fn rec unsnoc_list (#t:Type0) (l : list t)
   requires pure (Cons? l)
-  returns  ysy  :  erased (list t & t)
-  ensures  tag_pure (eq2 #(list t) l (fst ysy @ [snd ysy]))
+  returns  ysy  : erased (list t & t)
+  ensures  pure (eq2 #(list t) l (fst ysy @ [snd ysy])) // FIXME: using == gives weird error mentioning decreases clause
   decreases length l
 {
   let hd = Cons?.hd l;
@@ -719,17 +739,12 @@ fn rec unsnoc_list (#t:Type0) (l : list t)
     [] -> {
       let ys = Nil #t;
       let y = hd;
-      fold (tag_pure (l == ys @ [y]));
       (ys, y)
     }
     _ :: _ -> {
       let ysy = unsnoc_list tl;
-      let ys = fst ysy;
-      let y = snd ysy;
-      assert (tag_pure (eq2 #(list t) tl (ys @ [y])));
-      unfold tag_pure;
+      let Mktuple2 ys y = reveal ysy;
       let ys' = hd :: ys;
-      fold (tag_pure (l == ys' @ [y]));
       (ys', y)
     }
   }
@@ -760,7 +775,7 @@ fn fold_is_deque_cons
 
 
 ghost
-fn rec sep_last 
+fn rec sep_last
   (#t:Type) (headp : node_ptr t) (tailp : node_ptr t)
   (#y : erased t)
   (#ys : erased (list t){Cons? ys})
@@ -789,10 +804,10 @@ fn rec sep_last
       unfold is_deque_suffix np [reveal y] (Some headp) tailp last;
 
       fold (is_deque_suffix headp [y1] prev headp (Some tailp));
-      
+
       let tailp' = Some?.v v_headp.dnext;
       assert (pure (np == tailp));
-      
+
       rewrite each np as tailp;
 
       headp
@@ -803,12 +818,12 @@ fn rec sep_last
            as (is_deque_suffix headp (y1 :: y2 :: snoc ys' y) prev tailp last);
 
       unfold (is_deque_suffix headp (y1 :: y2 :: snoc ys' y) prev tailp last);
-      
+
       with v np. assert (pts_to headp v ** is_deque_suffix np (y2 :: snoc ys' y) (Some headp) tailp last);
       rewrite is_deque_suffix np (y2 :: snoc ys' y) (Some headp) tailp last
            as is_deque_suffix np (snoc (y2 :: ys') y) (Some headp) tailp last;
       let tailp' = sep_last np tailp;
-      
+
       fold (is_deque_suffix headp (y1 :: y2 :: ys') prev tailp' (Some tailp));
 
       tailp';
@@ -817,7 +832,7 @@ fn rec sep_last
 }
 
 
-let rec is_deque_suffix_nolast 
+let rec is_deque_suffix_nolast
   (#t:Type0)
   (p:node_ptr t)
   (l:list t {Cons? l})
@@ -854,7 +869,7 @@ fn rec is_deque_suffix_nolast_helper
   let hd = List.Tot.hd l;
   let tl = List.Tot.tl l;
   rewrite each l as (hd :: tl);
-  
+
   match tl {
     [] -> {
       unfold is_deque_suffix p [hd] prev tail last;
@@ -875,15 +890,19 @@ fn rec is_deque_suffix_nolast_helper
         (is_deque_suffix p [hd] prev tail last')
         emp
         pf;
+      rewrite each [hd] as l;
       v;
     }
     h2 :: tl2 -> {
       rewrite each l as (hd :: h2 :: tl2);
       unfold is_deque_suffix p (hd :: h2 :: tl2) prev tail last;
-      
+
       with vp. assert (pts_to p vp);
+      (* see AssertWildcard.fst *)
+      with vp'. assert (is_deque_suffix vp' (h2 :: tl2) (Some p) tail last);
       let p' = Some?.v vp.dnext;
-      
+      rewrite each vp' as p';
+
       let v = is_deque_suffix_nolast_helper p' (h2 :: tl2) (Some p) tail last last';
 
       ghost fn pf ()
@@ -908,6 +927,7 @@ fn rec is_deque_suffix_nolast_helper
         )
         pf;
 
+      rewrite each (hd :: h2 :: tl2) as l;
       v;
     }
   }
@@ -930,11 +950,9 @@ fn set_forward_pointer
   let v = Box.( !tail );
   let v' = { v with dnext = last' };
   Box.( tail := v' );
-  
+
   elim_trade _ _;
 }
-
-
 
 fn push_back_cons (#t:Type0) (l : deque t)
   (x : t)
@@ -943,39 +961,38 @@ fn push_back_cons (#t:Type0) (l : deque t)
   returns  l' : deque t
   ensures  is_deque l' (snoc xs x)
 {
-  unsnoc_list xs;
-  with ys y. assert (tag_pure (reveal xs == ys @ [y]));
-  unfold tag_pure;
-  assert (pure (xs == ys @ [y]));
-  
-  rewrite each xs as (ys @ [y]);
-  
+  let ysy = unsnoc_list xs;
+  let ys = Ghost.elift1 fst ysy;
+  let y  = Ghost.elift1 snd ysy;
+
+  rewrite each xs as (reveal ys @ [reveal y]);
+
   is_deque_cons_not_none l;
-  unfold_is_deque_cons l;
+  let hptp = unfold_is_deque_cons l;
   let headp = Some?.v l.head;
   let tailp = Some?.v l.tail;
-  
+
   let newnodev = {
     value = x;
     dprev = l.tail;
     dnext = None;
   };
   let newnode = Box.alloc newnodev;
-  
+
+  rewrite each hptp as (headp, tailp);
+
   set_forward_pointer headp (Some newnode) tailp;
-  
-  join_last headp tailp newnode #x #(snoc ys y) #None #None;
-  
+
+  join_last headp tailp newnode #x #_ #None #None;
+
   let l' = {
     head = l.head;
     tail = Some newnode;
   };
-  
+
   fold_is_deque_cons l';
   l'
 }
-
-
 
 fn push_back_nil (#t:Type0) (l : deque t)
   (x : t)
@@ -1017,20 +1034,22 @@ fn pop_back_cons (#t:Type0) (l : deque t)
   ensures  is_deque (fst l'x) xs ** pure (snd l'x == x)
 {
   is_deque_cons_not_none l;
-  unfold_is_deque_cons l;
+  let hptp = unfold_is_deque_cons l;
   let headp = Some?.v l.head;
   let tailp = Some?.v l.tail;
 
+  rewrite each hptp as (headp, tailp);
+
   let g_tailp' = sep_last headp tailp #x #xs #None #None;
-  
+
   let v_last = Box.( !tailp );
-  
+
   let tailp' = Some?.v v_last.dprev;
   let v = v_last.value;
   Box.free tailp;
-  
+
   set_forward_pointer headp None tailp';
-  
+
   let l' = { head = l.head; tail = Some tailp' };
 
   fold_is_deque_cons l';
@@ -1064,7 +1083,7 @@ fn is_singleton_snoc
   let t = hide (Cons?.tl (snoc xs (reveal x)));
   rewrite (is_deque p (snoc xs (reveal x)))
        as (is_deque p (reveal h :: reveal t));
-       
+
   (* This works quite nicely. The SMT is giving us that the LHS of the
   snoc is Nil iff `t` above is nil. *)
   is_singleton p;

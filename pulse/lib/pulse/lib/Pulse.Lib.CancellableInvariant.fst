@@ -64,7 +64,7 @@ fn new_cancellable_invariant (v:slprop)
 
 let unpacked c _v = pts_to c.r #0.5R true
 
-
+#set-options "--print_implicits"
 
 ghost
 fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
@@ -74,9 +74,10 @@ fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
 {
   unfold cinv_vp;
   unfold cinv_vp_aux;
+  with b. assert (pts_to c.r #0.5R b ** (if b then v else emp));
   unfold active;
   GR.pts_to_injective_eq c.r;
-  rewrite (if true then v else emp) as v;
+  rewrite (if b then v else emp) as v;
   fold (active c p);
   fold (unpacked c v)
 }
@@ -137,9 +138,10 @@ opens []
 {
   unfold cinv_vp;
   unfold cinv_vp_aux;
+  with b. assert (pts_to c.r #0.5R b ** (if b then v else emp));
   unfold active;
   GR.pts_to_injective_eq c.r;
-  rewrite (if true then v else emp) as v;
+  rewrite (if b then v else emp) as v;
   GR.gather c.r;
   GR.(c.r := false);
   rewrite emp as (if false then v else emp);

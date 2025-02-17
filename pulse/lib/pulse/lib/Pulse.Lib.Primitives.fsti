@@ -19,7 +19,6 @@ module Pulse.Lib.Primitives
 open PulseCore.Observability
 open Pulse.Lib.Core
 open PulseCore.FractionalPermission
-open Pulse.Main
 open Pulse.Lib.Reference
 open FStar.Ghost
 open Pulse.Class.PtsTo

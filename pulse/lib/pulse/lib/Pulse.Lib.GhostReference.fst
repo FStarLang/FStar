@@ -28,7 +28,7 @@ instance non_informative_gref (a:Type0) : NonInformative.non_informative (ref a)
 
 let pts_to
     (#a:Type u#0)
-    ([@@@equate_strict] r:ref a)
+    ([@@@mkey] r:ref a)
     (#[exact (`1.0R)] p:perm)
     (v:a)
   = H.pts_to r #p (U.raise_val v)

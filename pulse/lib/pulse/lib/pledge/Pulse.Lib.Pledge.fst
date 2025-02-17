@@ -285,18 +285,21 @@ fn squash_pledge'
 
 (* A big chunk follows for split_pledge *)
 
+[@@no_mkeys]
+let split_switch (is : inames) (b1 b2 : bool) (f v1 v2 : slprop) : slprop =
+  match b1, b2 with
+  | false, false -> pledge is f (v1 ** v2)
+  | false, true -> v1
+  | true, false -> v2
+  | true, true -> emp
+
 let inv_p' (is:inames) (f v1 v2 : slprop) (r1 r2 : GR.ref bool) (b1 b2 : bool) =
      GR.pts_to r1 #0.5R b1
   ** GR.pts_to r2 #0.5R b2
-  ** (match b1, b2 with
-      | false, false -> pledge is f (v1 ** v2)
-      | false, true -> v1
-      | true, false -> v2
-      | true, true -> emp)
+  ** split_switch is b1 b2 f v1 v2
 
 let inv_p (is:inames) (f v1 v2 : slprop) (r1 r2 : GR.ref bool) : slprop =
   exists* b1 b2. inv_p' is f v1 v2 r1 r2 b1 b2
-
 
 ghost
 fn do_elim_body_l
@@ -323,16 +326,8 @@ fn do_elim_body_l
     by the other subpledge, so we just extract our resource. *)
     assert (pts_to r1 false);
     r1 := true;
-    rewrite emp ** (match false, true with
-              | false, false -> pledge is f (v1 ** v2)
-              | false, true -> v1
-              | true, false -> v2
-              | true, true -> emp)
-        as (match true, true with
-              | false, false -> pledge is f (v1 ** v2)
-              | false, true -> v1
-              | true, false -> v2
-              | true, true -> emp) ** v1;
+    rewrite emp ** split_switch is false true f v1 v2
+        as  split_switch is true true f v1 v2 ** v1;
 
     (* This should just disappear when we start normalizing
     the context. *)
@@ -353,16 +348,13 @@ fn do_elim_body_l
     Claim it, split it, and store the leftover in the invariant. *)
     assert (pts_to r1 false);
 
-    rewrite (match false, false with
-              | false, false -> pledge is f (v1 ** v2)
-              | false, true -> v1
-              | true, false -> v2
-              | true, true -> emp)
-        as pledge is f (v1 ** v2);
+    rewrite split_switch is false false f v1 v2
+        as  pledge is f (v1 ** v2);
 
     redeem_pledge is f (v1 ** v2);
 
     r1 := true;
+    fold (split_switch is true false f v1 v2);
 
     share2 r1;
 
@@ -424,18 +416,8 @@ fn flip_invp
   let _ = elim_slprop_equiv (slprop_equiv_comm v1 v2);
   assert (pure (v1 ** v2 == v2 ** v1));
 
-  rewrite
-     (match b1, b2 with
-      | false, false -> pledge is f (v1 ** v2)
-      | false, true -> v1
-      | true, false -> v2
-      | true, true -> emp)
-  as
-     (match b2, b1 with
-      | false, false -> pledge is f (v2 ** v1)
-      | false, true -> v2
-      | true, false -> v1
-      | true, true -> emp)
+  rewrite split_switch is b1 b2 f v1 v2
+       as split_switch is b2 b1 f v2 v1
     by __tac ();
 
   fold (inv_p' is f v2 v1 r2 r1 b2 b1);
@@ -503,7 +485,7 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   let r2 = GR.alloc false;
   GR.share2 r1;
   GR.share2 r2;
-  
+  fold split_switch is false false f v1 v2;
   fold (inv_p' is f v1 v2 r1 r2 false false);
   fold inv_p;
   let i = fresh_invariant is (inv_p is f v1 v2 r1 r2);

@@ -205,6 +205,8 @@ ensures
   OR.on_range_put i j k #g
 }
 
+#set-options "--print_full_names --print_implicits"
+
 ghost
 fn get_predicate_at_i 
     (t:SLT.table)
@@ -286,7 +288,8 @@ ensures
             (predicate_at b.core.tab 0.5R preds')
             0 i (Seq.length preds');
         fold (istar preds');
-        fold (maybe_holds v q preds'); 
+        rewrite (istar preds') as (maybe_holds v q preds');
+        // fold (maybe_holds v q preds');
         fold (cvar_inv b.core q);
         later_intro (cvar_inv b.core q);
         drop_ (SLT.pts_to b.core.tab i #0.5R _);
@@ -368,11 +371,17 @@ ensures
 {
   later_elim _;
   istar_preds_preds'_eq preds i p1 p2;
-  assert (equiv (OR.on_range (index_preds preds') 0 (Seq.length preds) ** Seq.index preds i) q);
+  rewrite
+    equiv (istar preds) q
+  as
+    equiv (OR.on_range (index_preds preds') 0 (Seq.length preds) ** Seq.index preds i) q
+  ;
   equiv_star_cong_r _ _ _ _;
   istar_preds'_tail preds i p1 p2;
   OR.on_range_join_eq 0 (Seq.length preds) (Seq.length preds') (index_preds preds');
-  ()
+
+  rewrite equiv (OR.on_range (index_preds preds') 0 (Seq.length preds) ** (p1 ** p2)) q
+       as equiv (istar preds') q;
 }
 
 ghost
@@ -453,7 +462,7 @@ opens
         rewrite_istar_equiv preds preds' i p1 p2 q;
         // show_proof_state;
         // step ();
-        fold (maybe_holds v q preds');
+        rewrite equiv (istar preds') q as maybe_holds v q preds';
         fold (cvar_inv b.core q);
         later_intro (cvar_inv b.core q);
         drop_ (SLT.pts_to b.core.tab i #0.5R emp);
@@ -462,7 +471,7 @@ opens
       { 
         rewrite (maybe_holds v q preds) as (istar preds);
         rewrite_istar preds preds' i p1 p2 q;
-        fold (maybe_holds v q preds');
+        rewrite istar preds' as maybe_holds v q preds';
         fold (cvar_inv b.core q);
         later_intro (cvar_inv b.core q);
         drop_ (SLT.pts_to b.core.tab i #0.5R emp);

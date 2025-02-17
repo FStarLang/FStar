@@ -37,7 +37,7 @@ val offset #t (p: ptr t) : GTot nat
 
 val pts_to
   (#t:Type)
-  (s:ptr t)
+  ([@@@mkey]s:ptr t)
   (#[exact (`1.0R)] p:perm)
   (v : Seq.seq t)
   : slprop
@@ -51,7 +51,7 @@ val pts_to_timeless (#a:Type) (x:ptr a) (p:perm) (s:Seq.seq a)
   : Lemma (timeless (pts_to x #p s))
           [SMTPat (timeless (pts_to x #p s))]
 
-val is_from_array (#t: Type) (s: ptr t) (sz: nat) (a: A.array t) : slprop
+val is_from_array (#t: Type) ([@@@mkey]s: ptr t) (sz: nat) (a: A.array t) : slprop
 
 val from_array (#t: Type) (a: A.array t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) : stt (ptr t)
     (A.pts_to a #p v)

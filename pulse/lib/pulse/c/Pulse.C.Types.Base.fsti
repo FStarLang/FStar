@@ -115,10 +115,10 @@ let null (#t: Type) (td: typedef t) : Tot (ptr td) = null_gen t
 inline_for_extraction [@@noextract_to "krml"]
 let ref (#t: Type) (td: typedef t) : Tot Type0 = (p: ptr td { ~ (p == null td) })
 
-val pts_to (#t: Type) (#[@@@equate_by_smt]td: typedef t) (r: ref td) ([@@@equate_by_smt] v: Ghost.erased t) : slprop
+val pts_to (#t: Type) (#td: typedef t) ([@@@mkey]r: ref td) (v: Ghost.erased t) : slprop
 
 let pts_to_or_null
-  (#t: Type) (#[@@@equate_by_smt]td: typedef t) (p: ptr td) ([@@@equate_by_smt] v: Ghost.erased t) : slprop
+  (#t: Type) (#td: typedef t) ([@@@mkey]p: ptr td) (v: Ghost.erased t) : slprop
 = if FStar.StrongExcludedMiddle.strong_excluded_middle (p == null _)
   then emp
   else pts_to p v

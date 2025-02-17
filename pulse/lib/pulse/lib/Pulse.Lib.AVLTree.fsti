@@ -26,7 +26,7 @@ module G = FStar.Ghost
 
 val tree_t  (a:Type u#0): Type u#0
 
-val is_tree #t (ct:tree_t t) (ft:T.tree t)
+val is_tree #t ([@@@mkey] ct:tree_t t) (ft:T.tree t)
 : Tot slprop (decreases ft)
 
 val height (#t:Type0) (x:tree_t t) (#ft:G.erased (T.tree t))

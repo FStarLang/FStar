@@ -22,9 +22,9 @@ open PulseCore.FractionalPermission
 open PulseCore.Observability
 friend PulseCore.InstantiatedSemantics
 module Sep = PulseCore.IndirectionTheorySep
-let equate_by_smt = ()
-let equate_strict = ()
-let equate_syntactic = ()
+
+let mkey = ()
+let no_mkeys = ()
 
 let allow_ambiguous = ()
 

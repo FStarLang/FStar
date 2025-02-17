@@ -23,10 +23,6 @@ module T = FStar.Tactics.V2
 open Pulse.Lib.Dv {}
 open FStar.ExtractAs
 
-val equate_by_smt    : unit (* remove *)
-val equate_strict    : unit (* remove *)
-val equate_syntactic : unit (* remove *)
-
 (* Arguments of slprops can be marked as a matching key to
    1- Make sure we do no try to use the SMT to match resources with
       different matching keys (in other words, we only use the unifier to
@@ -179,7 +175,10 @@ let (/!) (is1 is2 : inames) : Type0 =
   GhostSet.disjoint is1 is2
 
 val inv (i:iname) (p:slprop) : slprop
+
+[@@no_mkeys]
 val inames_live (inames:inames) : slprop
+
 let mem_iname (e:inames) (i:iname) : erased bool = elift2 (fun e i -> GhostSet.mem i e) e i
 let mem_inv (e:inames) (i:iname) : GTot bool = mem_iname e i
 
@@ -527,7 +526,7 @@ val later_equiv (p q: slprop) : squash (later (equiv p q) == equiv (later p) (la
 [@@erasable]
 val slprop_ref : Type0
 
-val slprop_ref_pts_to (x: slprop_ref) (y: slprop) : slprop
+val slprop_ref_pts_to ([@@@mkey]x: slprop_ref) (y: slprop) : slprop
 
 val slprop_ref_alloc (y: slprop)
 : stt_ghost slprop_ref emp_inames emp fun x -> slprop_ref_pts_to x y
@@ -690,7 +689,7 @@ let pcm_ref
 val pcm_pts_to
     (#a:Type u#1)
     (#p:pcm a)
-    ([@@@equate_strict] r:pcm_ref p)
+    ([@@@mkey] r:pcm_ref p)
     (v:a)
 : slprop
 
@@ -795,7 +794,7 @@ instance val non_informative_ghost_pcm_ref
 val ghost_pcm_pts_to
     (#a:Type u#1)
     (#p:pcm a)
-    ([@@@equate_strict] r:ghost_pcm_ref p)
+    ([@@@mkey] r:ghost_pcm_ref p)
     (v:a)
 : slprop
 
@@ -869,7 +868,7 @@ val ghost_gather
 val big_pcm_pts_to
     (#a:Type u#2)
     (#p:pcm a)
-    ([@@@equate_strict] r:pcm_ref p)
+    ([@@@mkey] r:pcm_ref p)
     (v:a)
 : slprop
 
@@ -948,7 +947,7 @@ val big_gather
 val big_ghost_pcm_pts_to
     (#a:Type u#2)
     (#p:pcm a)
-    ([@@@equate_strict] r:ghost_pcm_ref p)
+    ([@@@mkey] r:ghost_pcm_ref p)
     (v:a)
 : slprop
 

@@ -496,28 +496,28 @@ ensures pure (i <= j /\ j <= length s)
 }
 
 
-let token (x:'a) = emp
+let token ([@@@mkey] k:'k) (x:'a) = emp
 
 let pts_to_range
   (#a:Type)
-  ([@@@equate_strict] x:array a)
+  ([@@@mkey] x:array a)
   (i j : nat)
   (#[exact (`1.0R)] p:perm)
   (s : Seq.seq a)
 : slprop
-= exists* (q:in_bounds i j x). pts_to (array_slice x i j) #p s ** token q
+= exists* (q:in_bounds i j x). pts_to (array_slice x i j) #p s ** token x q
 
 let pts_to_range_timeless (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
   : Lemma (timeless (pts_to_range x i j #p s))
           [SMTPat (timeless (pts_to_range x i j #p s))]
   =
     let aux (q:in_bounds i j x)
-      : Lemma (timeless (pts_to (array_slice x i j) #p s ** token q))
+      : Lemma (timeless (pts_to (array_slice x i j) #p s ** token x q))
     = ()
     in
     Classical.forall_intro aux;
-    assert_norm (pts_to_range x i j #p s == (exists* (q:in_bounds i j x). pts_to (array_slice x i j) #p s ** token q));
-    timeless_exists (fun (q: in_bounds i j x) -> pts_to (array_slice x i j) #p s ** token q)
+    assert_norm (pts_to_range x i j #p s == (exists* (q:in_bounds i j x). pts_to (array_slice x i j) #p s ** token x q));
+    timeless_exists (fun (q: in_bounds i j x) -> pts_to (array_slice x i j) #p s ** token x q)
 
 
 ghost
@@ -533,7 +533,7 @@ ensures pts_to_range a i j #p s ** pure (
     )
 {
   unfold pts_to_range a i j #p s;
-  with q. assert (token #(in_bounds i j a) q);
+  with q. assert (token #(in_bounds i j a) a q);
   elim_in_bounds a q;
   pts_to_len (array_slice a i j);
   fold pts_to_range a i j #p s;
@@ -553,7 +553,7 @@ ensures pts_to_range a 0 (length a) #p s
 {
   rewrite each a as (array_slice a 0 (length a));
   let q : in_bounds 0 (length a) a = ();
-  fold (token #(in_bounds 0 (length a) a) q);
+  fold (token a q);
   fold (pts_to_range a 0 (length a) #p s);
 }
 
@@ -571,7 +571,7 @@ requires pts_to_range a 0 (length a) #p s
 ensures pts_to a #p s
 {
   unfold (pts_to_range a 0 (length a) #p s);
-  unfold (token #(in_bounds 0 (length a) a) _);
+  unfold (token #(in_bounds 0 (length a) a) a _);
   rewrite each (array_slice a 0 (length a)) as a;
 }
 
@@ -701,14 +701,14 @@ ensures
 {
   pts_to_range_prop a;
   unfold pts_to_range a i j #p s;
-  unfold (token #(in_bounds i j a) _);
+  unfold (token #(in_bounds i j a) a _);
   ghost_split (array_slice a i j) (m - i);
   split_r_slice a i m j #(Seq.slice s (m - i) (Seq.length s)) ();
   split_l_slice a i m j ();
   let q1 : in_bounds i m a = ();
   let q2 : in_bounds m j a = ();
-  fold (token #(in_bounds i m a) q1);
-  fold (token #(in_bounds m j a) q2);
+  fold (token #(in_bounds i m a) a q1);
+  fold (token #(in_bounds m j a) a q2);
   fold (pts_to_range a i m #p (Seq.slice s 0 (m - i)));
   fold (pts_to_range a m j #p (Seq.slice s (m - i) (Seq.length s)));
   assert pure (s `Seq.equal` Seq.append (Seq.slice s 0 (m - i)) (Seq.slice s (m - i) (Seq.length s)));
@@ -789,7 +789,7 @@ requires pts_to (array_slice a i j) #p s
 ensures pts_to_range a i j #p s
 {
   let q : in_bounds i j a = ();
-  fold (token #(in_bounds i j a) q);
+  fold (token #(in_bounds i j a) a q);
   fold (pts_to_range a i j #p s);
 }
 
@@ -814,8 +814,9 @@ ensures pts_to_range a i j #p (s1 `Seq.append` s2)
   rewrite each (merge (array_slice a i m) (array_slice a m j))
             as (array_slice a i j);
   pts_to_range_intro_ij a _ _ i j ();
-  unfold (token #(in_bounds i m a) _);
-  unfold (token #(in_bounds m j a) _);
+  admit(); // fixme: ambig
+  unfold (token #(in_bounds i m a) a _);
+  unfold (token #(in_bounds m j a) a _);
 }
 
 let pts_to_range_join = pts_to_range_join'
@@ -849,7 +850,7 @@ ensures
   pts_to_range_split a l (SZ.v i) r;
   with s1 s2. _;
   unfold pts_to_range a (SZ.v i) r #p s2;
-  unfold (token #(in_bounds (SZ.v i) r a) _);
+  unfold (token #(in_bounds (SZ.v i) r a) a _);
   let a' = array_slice_impl a i r ();
   rewrite each (array_slice a (SZ.v i) r) as a';
   let res = read a' 0sz;
@@ -882,7 +883,7 @@ ensures
   pts_to_range_split a l (SZ.v i) r;
   with s1 s2. _;
   unfold pts_to_range a (SZ.v i) r #1.0R s2;
-  unfold (token #(in_bounds (SZ.v i) r a) _);
+  unfold (token #(in_bounds (SZ.v i) r a) a _);
   let a' = array_slice_impl a i r ();
   rewrite each (array_slice a (SZ.v i) r) as a';
   write a' 0sz v;
@@ -907,7 +908,7 @@ fn pts_to_range_share
 {
   pts_to_range_prop arr;
   unfold (pts_to_range arr l r #p s);
-  unfold (token #(in_bounds l r arr) _);
+  unfold (token #(in_bounds l r arr) arr _);
   share (array_slice arr l r);
   pts_to_range_intro_ij arr (p /. 2.0R) s l r ();
   pts_to_range_intro_ij arr (p /. 2.0R) s l r ();
@@ -925,7 +926,7 @@ fn pts_to_range_gather
 {
   pts_to_range_prop arr #l #r #p0;
   unfold (pts_to_range arr l r #p0 s0);
-  unfold (token #(in_bounds l r arr) _);
+  unfold (token #(in_bounds l r arr) arr _);
   unfold (pts_to_range arr l r #p1 s1);
   gather (array_slice arr l r);
   fold (pts_to_range arr l r #(p0 +. p1) s0)

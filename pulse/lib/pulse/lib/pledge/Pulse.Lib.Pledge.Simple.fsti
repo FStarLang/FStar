@@ -23,7 +23,7 @@ are not indexed by invariants. The actual invariants are existentially
 quantified inside the Simple.pledge slprop, and we provide
 effectful operations to manipulate them. *)
 
-val pledge (f:slprop) (v:slprop) : slprop
+val pledge ([@@@mkey] f:slprop) ([@@@mkey] v:slprop) : slprop
 
 (* An unobservable step to rewrite the context. *)
 // let ustep (is:invlist) (p q : slprop)
