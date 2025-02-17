@@ -34,15 +34,15 @@ open FStar.ExtractAs
      val pts_to (x:ref a) ([@@@equate_by_smt] v:a) : slprop
 
    Then `pts_to x (a + b)` and `pts_to x (b + a)` will be
-   matched by the prover by emitting an SMT query (a + b) == (b + a). Of course, 
+   matched by the prover by emitting an SMT query (a + b) == (b + a). Of course,
    `pts_to x a` and `pts_to x a` will be matched purely by unification without
    emitted a trivial SMT query (a == a).
 
-   By default, if none of the indexes of a slprop are marked with "equate_by_smt", 
-   the _last_ argument of a slprop is considered to be equated by SMT. This makes 
+   By default, if none of the indexes of a slprop are marked with "equate_by_smt",
+   the _last_ argument of a slprop is considered to be equated by SMT. This makes
    it convenient to write slprops like the one below, without paying special
    heed to this attribute.
-  
+
      val pts_to (x:ref a) (v:a) : slprop
 *)
 val equate_by_smt    : unit (* now meaningless. *)
@@ -93,15 +93,15 @@ val elim_slprop_equiv (#p #q:_) (_:slprop_equiv p q) : squash (p == q)
 val slprop_post_equiv (#t:Type u#a) (p q: t -> slprop) : prop
 
 val intro_slprop_post_equiv
-       (#t:Type u#a) 
+       (#t:Type u#a)
        (p q: t -> slprop)
        (pf: (x:t -> slprop_equiv (p x) (q x)))
   : slprop_post_equiv p q
 
 val elim_slprop_post_equiv (#t:Type u#a)
-                          (p q: t -> slprop) 
+                          (p q: t -> slprop)
                           (pf:slprop_post_equiv p q)
-                          (x:t) 
+                          (x:t)
     : slprop_equiv (p x) (q x)
 
 val slprop_equiv_refl (v0:slprop) : slprop_equiv v0 v0
@@ -142,7 +142,7 @@ let star_comm (p q:slprop)
 let emp_unit (p:slprop)
 : Lemma (emp ** p == p)
 = elim_slprop_equiv (slprop_equiv_unit p)
-let slprop_equivs () 
+let slprop_equivs ()
 : Lemma (
       (forall p q r. p ** (q ** r) == (p ** q) ** r) /\
       (forall p q. p ** q == q ** p) /\
@@ -266,7 +266,7 @@ val hide_div #a #pre #post (f:unit -> Dv (stt a pre post))
    potentially opening invariants in `opens`
    and returns `x:a`
    such that the final state satisfies `post x`.
-   
+
    The #obs index is used to indicate whether or not this computation has
    observable effects:
 
@@ -521,7 +521,7 @@ val equiv_elim_timeless (a:slprop { timeless a }) (b: slprop { timeless b }) : s
 val equiv_star_congr (p q r: slprop) : squash (equiv q r == (equiv q r ** equiv (p ** q) (p ** r)))
 
 val later_equiv (p q: slprop) : squash (later (equiv p q) == equiv (later p) (later q))
- 
+
 //////////////////////////////////////////////////////////////////////////
 // Higher-order ghost state: references that can store predicates
 //////////////////////////////////////////////////////////////////////////
@@ -631,7 +631,7 @@ let match_rewrite_tac (_:unit) : T.Tac unit =
     T.trefl ()
 
 [@@deprecated "Use (rewrite .. as .. by ..) syntax instead!"]
-val rewrite_by (p:slprop) (q:slprop) 
+val rewrite_by (p:slprop) (q:slprop)
                (t:unit -> T.Tac unit)
                (_:unit { T.with_tactic t (slprop_equiv p q) })
 : stt_ghost unit emp_inames p (fun _ -> q)
@@ -1033,14 +1033,14 @@ during checking `opens` annotations. We use to try
 to make iname_list and @@ reduce away. *)
 val unfold_check_opens : unit
 
-[@@coercion; strict_on_arguments [0]; unfold_check_opens]
-let rec iname_list (xs : list iname) : inames =
-  match xs with
-  | [] -> emp_inames
-  | i::is -> add_inv (iname_list is) i
-
 [@@unfold_check_opens]
 let (@@) : inames -> inames -> inames = join_inames
 
 (* Attribute to eagerly unfold slprops in the context and goal. *)
 val pulse_unfold : unit
+
+[@@coercion; pulse_unfold; strict_on_arguments [0]; unfold_check_opens]
+let rec iname_list (xs : list iname) : inames =
+  match xs with
+  | [] -> emp_inames
+  | i::is -> add_inv (iname_list is) i
