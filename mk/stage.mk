@@ -7,7 +7,7 @@ FSTAR_DUNE_OPTIONS += --display=quiet
 endif
 
 FSTAR_DUNE_BUILD_OPTIONS := $(FSTAR_DUNE_OPTIONS)
-ifeq ($(FSTAR_DUNE_RELEASE),1)
+ifeq ($(FSTAR_RELEASE),1)
 FSTAR_DUNE_BUILD_OPTIONS += --release
 endif
 
