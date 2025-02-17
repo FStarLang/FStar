@@ -20,7 +20,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(674,18-674,24)
+  - See also Prims.fst(682,18-682,24)
 
 >>]
 >> Got issues: [
@@ -29,7 +29,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(674,18-674,24)
+  - See also Prims.fst(682,18-682,24)
 
 >>]
 >> Got issues: [
@@ -38,7 +38,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(674,18-674,24)
+  - See also Prims.fst(682,18-682,24)
 
 >>]
 >> Got issues: [
@@ -47,7 +47,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(674,18-674,24)
+  - See also Prims.fst(682,18-682,24)
 
 >>]
 >> Got issues: [
@@ -56,6 +56,6 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(674,18-674,24)
+  - See also Prims.fst(682,18-682,24)
 
 >>]

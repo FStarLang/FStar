@@ -18,11 +18,14 @@ module FStar.Tactics.Typeclasses
 open FStar.Tactics.Effect
 open FStar.Stubs.Reflection.Types (* for `decls` *)
 
-(* The attribute that marks classes *)
-val tcclass : unit
-
-(* The attribute that marks instances *)
+(* The attribute that marks instances. This is the main attribute
+needed as it is used to find instances for typeclass resolution. *)
 val tcinstance : unit
+
+(* These attribute that mark classes and methods, which can be useful
+to control their normalization or to generate code. *)
+val tcclass  : unit
+val tcmethod : unit
 
 (* Functional dependencies of a class. It takes an int list
 representing the arguments of the class (starting from 0, both explicit

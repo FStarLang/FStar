@@ -33,13 +33,9 @@ let debug (f : unit -> Tac string) : Tac unit =
 module L = FStar.List.Tot.Base
 let (@) = L.op_At
 
-(* The attribute that marks classes *)
-irreducible
-let tcclass : unit = ()
-
-(* The attribute that marks instances *)
-irreducible
-let tcinstance : unit = ()
+irreducible let tcinstance : unit = ()
+irreducible let tcclass : unit = ()
+irreducible let tcmethod : unit = ()
 
 (* Functional dependencies of a class. *)
 irreducible
@@ -382,13 +378,17 @@ let mk_class (nm:string) : Tac decls =
       let proj_name = cur_module () @ [base ^ s] in
       let proj = pack (Tv_FVar (pack_fv proj_name)) in
 
-      let proj_lb =
+      let proj_se =
         match lookup_typ (top_env ()) proj_name with
         | None -> fail "mk_class: proj not found?"
-        | Some se ->
-          match inspect_sigelt se with
-          | Sg_Let {lbs} -> lookup_lb lbs proj_name
-          | _ -> fail "mk_class: proj not Sg_Let?"
+        | Some se -> se
+      in
+      let proj_attrs = sigelt_attrs proj_se in
+      let proj_lb =
+        match inspect_sigelt proj_se with
+        | Sg_Let {lbs} ->
+          lookup_lb lbs proj_name
+        | _ -> fail "mk_class: proj not Sg_Let?"
       in
       debug (fun () -> "proj_ty = " ^ term_to_string proj_lb.lb_typ);
 
@@ -420,7 +420,7 @@ let mk_class (nm:string) : Tac decls =
       let lb = { lb_fv=sfv; lb_us=proj_lb.lb_us; lb_typ=ty; lb_def=def } in
       let se = pack_sigelt (Sg_Let {isrec=false; lbs=[lb]}) in
       let se = set_sigelt_quals to_propagate se in
-      let se = set_sigelt_attrs b.attrs se in
+      let se = set_sigelt_attrs ((`tcmethod) :: proj_attrs @ b.attrs) se in
       //debug (fun () -> "trying to return : " ^ term_to_string (quote se));
       se
     )

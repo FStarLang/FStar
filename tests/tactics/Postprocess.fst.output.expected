@@ -38,19 +38,19 @@ datacon Postprocess.A1 : t1
 datacon Postprocess.B1 : (_0:int -> Tot t1)
 [@ ]
 datacon Postprocess.C1 : (_0:(_:int -> Tot t1) -> Tot t1)
-[@ ]
+[@ (discriminator)]
 assume OnlyName (Discriminator A1) val Postprocess.uu___is_A1  : _
-[@ ]
+[@ (discriminator)]
 assume OnlyName (Discriminator B1) val Postprocess.uu___is_B1  : _
-[@ ]
+[@ (discriminator)]
 assume OnlyName (Discriminator C1) val Postprocess.uu___is_C1  : _
-[@ ]
+[@ (projector)]
 OnlyName (Projector B1 _0) val Postprocess.__proj__B1__item___0  : _
-[@ ]
+[@ (projector)]
 OnlyName (Projector B1 _0) let  __proj__B1__item___0  : _ = _
-[@ ]
+[@ (projector)]
 OnlyName (Projector C1 _0) val Postprocess.__proj__C1__item___0  : _
-[@ ]
+[@ (projector)]
 OnlyName (Projector C1 _0) let  __proj__C1__item___0  : _ = _
 [@ ]
 (* Sig_bundle *)[@ ]
@@ -61,19 +61,19 @@ datacon Postprocess.A2 : t2
 datacon Postprocess.B2 : (_0:int -> Tot t2)
 [@ ]
 datacon Postprocess.C2 : (_0:(_:int -> Tot t2) -> Tot t2)
-[@ ]
+[@ (discriminator)]
 assume OnlyName (Discriminator A2) val Postprocess.uu___is_A2  : _
-[@ ]
+[@ (discriminator)]
 assume OnlyName (Discriminator B2) val Postprocess.uu___is_B2  : _
-[@ ]
+[@ (discriminator)]
 assume OnlyName (Discriminator C2) val Postprocess.uu___is_C2  : _
-[@ ]
+[@ (projector)]
 OnlyName (Projector B2 _0) val Postprocess.__proj__B2__item___0  : _
-[@ ]
+[@ (projector)]
 OnlyName (Projector B2 _0) let  __proj__B2__item___0  : _ = _
-[@ ]
+[@ (projector)]
 OnlyName (Projector C2 _0) val Postprocess.__proj__C2__item___0  : _
-[@ ]
+[@ (projector)]
 OnlyName (Projector C2 _0) let  __proj__C2__item___0  : _ = _
 [@ ]
 let rec lift  : _ = (fun uu___1 -> (match uu___1@0:(Tm_unknown) with
@@ -210,19 +210,19 @@ datacon Postprocess.A1 : t1
 datacon Postprocess.B1 : (_0:int -> Tot t1)
 [@ ]
 datacon Postprocess.C1 : (_0:(_:int -> Tot t1) -> Tot t1)
-[@ ]
+[@ (discriminator)]
 assume OnlyName (Discriminator A1) val Postprocess.uu___is_A1  : _
-[@ ]
+[@ (discriminator)]
 assume OnlyName (Discriminator B1) val Postprocess.uu___is_B1  : _
-[@ ]
+[@ (discriminator)]
 assume OnlyName (Discriminator C1) val Postprocess.uu___is_C1  : _
-[@ ]
+[@ (projector)]
 OnlyName (Projector B1 _0) val Postprocess.__proj__B1__item___0  : _
-[@ ]
+[@ (projector)]
 OnlyName (Projector B1 _0) let  __proj__B1__item___0  : _ = _
-[@ ]
+[@ (projector)]
 OnlyName (Projector C1 _0) val Postprocess.__proj__C1__item___0  : _
-[@ ]
+[@ (projector)]
 OnlyName (Projector C1 _0) let  __proj__C1__item___0  : _ = _
 [@ ]
 (* Sig_bundle *)[@ ]
@@ -233,19 +233,19 @@ datacon Postprocess.A2 : t2
 datacon Postprocess.B2 : (_0:int -> Tot t2)
 [@ ]
 datacon Postprocess.C2 : (_0:(_:int -> Tot t2) -> Tot t2)
-[@ ]
+[@ (discriminator)]
 assume OnlyName (Discriminator A2) val Postprocess.uu___is_A2  : _
-[@ ]
+[@ (discriminator)]
 assume OnlyName (Discriminator B2) val Postprocess.uu___is_B2  : _
-[@ ]
+[@ (discriminator)]
 assume OnlyName (Discriminator C2) val Postprocess.uu___is_C2  : _
-[@ ]
+[@ (projector)]
 OnlyName (Projector B2 _0) val Postprocess.__proj__B2__item___0  : _
-[@ ]
+[@ (projector)]
 OnlyName (Projector B2 _0) let  __proj__B2__item___0  : _ = _
-[@ ]
+[@ (projector)]
 OnlyName (Projector C2 _0) val Postprocess.__proj__C2__item___0  : _
-[@ ]
+[@ (projector)]
 OnlyName (Projector C2 _0) let  __proj__C2__item___0  : _ = _
 [@ ]
 let rec lift  : _ = (fun uu___1 -> (match uu___1@0:(Tm_unknown) with
@@ -382,32 +382,32 @@ datacon Postprocess.A1 : t1
 datacon Postprocess.B1 : (_0:int -> Tot t1)
 [@ ]
 datacon Postprocess.C1 : (_0:(uu___:int -> Tot t1) -> Tot t1)
-[@ ]
+[@ (discriminator)]
 (Discriminator A1) val Postprocess.uu___is_A1  : (projectee:t1 -> Tot bool)
-[@ ]
+[@ (discriminator)]
 visible (Discriminator A1) let  uu___is_A1  : (projectee:t1 -> Tot bool) = (fun projectee -> (match projectee@0:(Tm_unknown) with
 	| (A1 )  -> true
 	|uu___#168  -> false))
-[@ ]
+[@ (discriminator)]
 (Discriminator B1) val Postprocess.uu___is_B1  : (projectee:t1 -> Tot bool)
-[@ ]
+[@ (discriminator)]
 visible (Discriminator B1) let  uu___is_B1  : (projectee:t1 -> Tot bool) = (fun projectee -> (match projectee@0:(Tm_unknown) with
 	| (B1 _0#206)  -> true
 	|uu___#207  -> false))
-[@ (Substitute)]
+[@ (Substitute); (projector)]
 (Projector B1 _0) val Postprocess.__proj__B1__item___0  : (projectee:(uu___#44:t1{(b2t (uu___is_B1 uu___@0:(Tm_unknown)))}) -> Tot int)
-[@ (Substitute)]
+[@ (Substitute); (projector)]
 visible (Projector B1 _0) let  __proj__B1__item___0  : (projectee:(uu___#44:t1{(b2t (uu___is_B1 uu___@0:(Tm_unknown)))}) -> Tot int) = (fun projectee -> (match projectee@0:(Tm_unknown) as proj_ret returns$ int with
 	| (B1 _0#208)  -> _0@0:(Tm_unknown)))
-[@ ]
+[@ (discriminator)]
 (Discriminator C1) val Postprocess.uu___is_C1  : (projectee:t1 -> Tot bool)
-[@ ]
+[@ (discriminator)]
 visible (Discriminator C1) let  uu___is_C1  : (projectee:t1 -> Tot bool) = (fun projectee -> (match projectee@0:(Tm_unknown) with
 	| (C1 _0#226)  -> true
 	|uu___#228  -> false))
-[@ (Substitute)]
+[@ (Substitute); (projector)]
 (Projector C1 _0) val Postprocess.__proj__C1__item___0  : (projectee:(uu___#49:t1{(b2t (uu___is_C1 uu___@0:(Tm_unknown)))}) -> Tot (uu___:int -> Tot t1))
-[@ (Substitute)]
+[@ (Substitute); (projector)]
 visible (Projector C1 _0) let  __proj__C1__item___0  : (projectee:(uu___#49:t1{(b2t (uu___is_C1 uu___@0:(Tm_unknown)))}) -> Tot (uu___:int -> Tot t1)) = (fun projectee -> (match projectee@0:(Tm_unknown) as proj_ret returns$ (uu___:int -> Tot t1) with
 	| (C1 _0#279)  -> _0@0:(Tm_unknown)))
 [@ ]
@@ -419,32 +419,32 @@ datacon Postprocess.A2 : t2
 datacon Postprocess.B2 : (_0:int -> Tot t2)
 [@ ]
 datacon Postprocess.C2 : (_0:(uu___:int -> Tot t2) -> Tot t2)
-[@ ]
+[@ (discriminator)]
 (Discriminator A2) val Postprocess.uu___is_A2  : (projectee:t2 -> Tot bool)
-[@ ]
+[@ (discriminator)]
 visible (Discriminator A2) let  uu___is_A2  : (projectee:t2 -> Tot bool) = (fun projectee -> (match projectee@0:(Tm_unknown) with
 	| (A2 )  -> true
 	|uu___#168  -> false))
-[@ ]
+[@ (discriminator)]
 (Discriminator B2) val Postprocess.uu___is_B2  : (projectee:t2 -> Tot bool)
-[@ ]
+[@ (discriminator)]
 visible (Discriminator B2) let  uu___is_B2  : (projectee:t2 -> Tot bool) = (fun projectee -> (match projectee@0:(Tm_unknown) with
 	| (B2 _0#206)  -> true
 	|uu___#207  -> false))
-[@ (Substitute)]
+[@ (Substitute); (projector)]
 (Projector B2 _0) val Postprocess.__proj__B2__item___0  : (projectee:(uu___#44:t2{(b2t (uu___is_B2 uu___@0:(Tm_unknown)))}) -> Tot int)
-[@ (Substitute)]
+[@ (Substitute); (projector)]
 visible (Projector B2 _0) let  __proj__B2__item___0  : (projectee:(uu___#44:t2{(b2t (uu___is_B2 uu___@0:(Tm_unknown)))}) -> Tot int) = (fun projectee -> (match projectee@0:(Tm_unknown) as proj_ret returns$ int with
 	| (B2 _0#208)  -> _0@0:(Tm_unknown)))
-[@ ]
+[@ (discriminator)]
 (Discriminator C2) val Postprocess.uu___is_C2  : (projectee:t2 -> Tot bool)
-[@ ]
+[@ (discriminator)]
 visible (Discriminator C2) let  uu___is_C2  : (projectee:t2 -> Tot bool) = (fun projectee -> (match projectee@0:(Tm_unknown) with
 	| (C2 _0#226)  -> true
 	|uu___#228  -> false))
-[@ (Substitute)]
+[@ (Substitute); (projector)]
 (Projector C2 _0) val Postprocess.__proj__C2__item___0  : (projectee:(uu___#49:t2{(b2t (uu___is_C2 uu___@0:(Tm_unknown)))}) -> Tot (uu___:int -> Tot t2))
-[@ (Substitute)]
+[@ (Substitute); (projector)]
 visible (Projector C2 _0) let  __proj__C2__item___0  : (projectee:(uu___#49:t2{(b2t (uu___is_C2 uu___@0:(Tm_unknown)))}) -> Tot (uu___:int -> Tot t2)) = (fun projectee -> (match projectee@0:(Tm_unknown) as proj_ret returns$ (uu___:int -> Tot t2) with
 	| (C2 _0#279)  -> _0@0:(Tm_unknown)))
 [@ ]
