@@ -21,6 +21,10 @@ open FStarC.Getopt
 open FStarC.BaseTypes
 open FStarC.VConfig
 
+(* Set externally, checks if the directory exists and otherwise
+logs an issue. Cannot do it here due to circular deps. *)
+val check_include_dir : ref (string -> unit)
+
 (* Raised when a processing a pragma an a non-settable option
 appears there. *)
 exception NotSettable of string

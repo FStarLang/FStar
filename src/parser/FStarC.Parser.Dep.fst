@@ -457,16 +457,7 @@ let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph)
 let safe_readdir_for_include (d:string) : list string =
   try Filepath.readdir d
   with
-  | _ ->
-    let open FStarC.Pprint in
-    if false then
-    // fixme: only warn if given in --include, not for transitive fstar.include
-    // I'd say it's legit to fstar.include a .cache dir that may not exist yet.
-      log_issue0 Errors.Fatal_NotValidIncludeDirectory [
-        prefix 2 1 (text "Not a valid include directory:")
-          (doc_of_string d);
-      ];
-    []
+  | _ -> []
 
 (** Enumerate all F* files in include directories.
     Return a list of pairs of long names and full paths. *)
