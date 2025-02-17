@@ -7,12 +7,16 @@ SRC=.
 CACHE_DIR=_cache
 OTHERFLAGS += --include $(PULSE_ROOT)/out/lib/pulse
 OTHERFLAGS += --include extern
+OTHERFLAGS += --include ../_cache
+# Note: ^ a bit of a hack. This directory can work independently of the
+# DPE directory above, but in a test we first run verify on DPE which
+# involves verifying everything here already, so this saves some time.
 OTHERFLAGS += --warn_error -342 --cmi
 OUTPUT_DIR=_output
 CODEGEN=krml
 TAG=cbor
 ROOTS=$(shell find $(SRC) -type f -name '*.fst' -o -name '*.fsti')
-DEPFLAGS=--extract '* -FStar.Tactics -FStar.Reflection -Steel -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
+DEPFLAGS=--extract '* -FStar.Tactics -FStar.Reflection -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
 OTHERFLAGS += --cmi --already_cached '*,-CBOR.Pulse.Type,-CDDLExtractionTest'
 include $(PULSE_ROOT)/mk/boot.mk
 
