@@ -955,8 +955,8 @@ fn push_back_cons (#t:Type0) (l : deque t)
   
   is_deque_cons_not_none l;
   unfold_is_deque_cons l;
-  let headp = Some?.v l.head;    rewrite each l.head as (Some headp);
-  let tailp = Some?.v l.tail;    rewrite each l.tail as (Some tailp);
+  let headp = Some?.v l.head;
+  let tailp = Some?.v l.tail;
   
   let newnodev = {
     value = x;
@@ -1021,8 +1021,8 @@ fn pop_back_cons (#t:Type0) (l : deque t)
 {
   is_deque_cons_not_none l;
   unfold_is_deque_cons l;
-  let headp = Some?.v l.head;    rewrite each l.head as (Some headp);
-  let tailp = Some?.v l.tail;    rewrite each l.tail as (Some tailp);
+  let headp = Some?.v l.head;
+  let tailp = Some?.v l.tail;
 
   let g_tailp' = sep_last headp tailp #x #xs #None #None;
   

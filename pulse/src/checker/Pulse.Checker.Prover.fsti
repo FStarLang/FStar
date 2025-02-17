@@ -27,13 +27,6 @@ module PS = Pulse.Checker.Prover.Substs
 include Pulse.Checker.Prover.Base
 include Pulse.Checker.Prover.Util
 
-val elim_exists_and_pure (#g:env) (#ctxt:slprop)
-  (ctxt_typing:tot_typing g ctxt tm_slprop)
-  : T.Tac (g':env { env_extends g' g } &
-           ctxt':term &
-           tot_typing g' ctxt' tm_slprop &
-           continuation_elaborator g ctxt g' ctxt')
-
 val normalize_slprop
   (g:env)
   (v:slprop)
@@ -44,6 +37,13 @@ val normalize_slprop_welltyped
   (v:slprop)
   (v_typing:tot_typing g v tm_slprop)
   : T.Tac (v':slprop & slprop_equiv g v v' & tot_typing g v' tm_slprop)
+
+val elim_exists_and_pure (#g:env) (#ctxt:slprop)
+  (ctxt_typing:tot_typing g ctxt tm_slprop)
+  : T.Tac (g':env { env_extends g' g } &
+           ctxt':term &
+           tot_typing g' ctxt' tm_slprop &
+           continuation_elaborator g ctxt g' ctxt')
 
 val prove
   (allow_ambiguous : bool)
