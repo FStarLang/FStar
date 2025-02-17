@@ -317,12 +317,20 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) =
     in
     match opt with
     | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin | Some Options.PluginNoLib ->
-      (* When bootstrapped in F#, this will use the old printer in
-         FStarC.Extraction.ML.Code for both OCaml and F# extraction.
-         When bootstarpped in OCaml, this will use the old printer
-         for F# extraction and the new printer for OCaml extraction. *)
-      let outdir = Find.get_odir () in
-      List.iter (FStarC.Extraction.ML.PrintML.print outdir ext) (List.map snd mllib)
+      let printer =
+        if opt = Some Options.FSharp
+        then FStarC.Extraction.ML.PrintFS.print_fs
+        else FStarC.Extraction.ML.PrintML.print_ml
+      in
+
+      mllib |> List.iter (fun (_, mlmodule) ->
+        let p, _ = mlmodule in
+        let filename =
+          let basename = FStarC.Extraction.ML.Util.flatten_mlpath p in
+          Find.prepend_output_dir (basename ^ ext)
+        in
+        let ml = printer mlmodule in
+        write_file filename ml)
 
     | Some Options.Extension ->
       //
@@ -333,12 +341,15 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) =
       mllib |>
       List.iter (fun (env, m) ->
         let mname, modul = m in
-        let filename = String.concat "_" (fst mname @ [snd mname]) in
+        let filename =
+          let basename = FStarC.Extraction.ML.Util.flatten_mlpath mname in
+          Find.prepend_output_dir (basename ^ ext)
+        in
         match modul with
         | Some (_, decls) ->
           let bindings = FStarC.Extraction.ML.UEnv.bindings_of_uenv env in
           let deps : list string = Dep.deps_of_modul dep_graph (MLSyntax.string_of_mlpath mname) in
-          save_value_to_file (Find.prepend_output_dir (filename^ext)) (deps, bindings, decls)
+          save_value_to_file filename (deps, bindings, decls)
         | None ->
           failwith "Unexpected ml modul in Extension extraction mode"
       )

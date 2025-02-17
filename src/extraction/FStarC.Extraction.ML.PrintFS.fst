@@ -13,11 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStarC.Extraction.ML.PrintML
+module FStarC.Extraction.ML.PrintFS
 
 open FStarC.Extraction.ML.Syntax
+open FStarC.Extraction.ML.Code
 
-(* This is implemented natively in OCaml, see src/ml/FStarC_Extraction_ML_PrintML.ml.
-If we need a printer implemented in F*, the same code as the one in PrintFS should do,
-but setting the fsharp flag to false. *)
-val print_ml (modul : mlmodule) : string
+let print_fs (modul : mlmodule) : string =
+  (* Use the old printer for F# extraction *)
+  let d = Code.doc_of_mlmodule true modul in
+  Code.pretty 120 d
