@@ -565,8 +565,6 @@ fn spawn (p:pool)
   release p.lk;
   fold (pool_alive #pf p);
   
-  rewrite each task.post as post_ref;
-
   task.h;
 }
 

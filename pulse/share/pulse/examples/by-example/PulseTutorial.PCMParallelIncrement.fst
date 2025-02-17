@@ -403,8 +403,6 @@ ensures  R.pts_to r ('i + 2)
   later_credit_buy 1;
   CI.gather2 ci; CI.cancel ci; // Collect back permission to the invariant and then cancel it
   drop_ (inv _ _); //drop the other copy of the invariant; it is now useless
-  // ugly! reveal/hide rewrite
-  rewrite each (reveal #nat (hide #nat 2)) as 2;
   // collect up the has_given predicates from each thread
   gather_has_given gs;
   // recover the postcondition by the main ghost state eliminator lemma
