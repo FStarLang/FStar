@@ -24,7 +24,7 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
-module FV = Pulse.Typing.FV
+open Pulse.Typing.FV {} (* for smtpats, which some clients seem to need *)
 module RU = Pulse.RuntimeUtils
 module Metatheory = Pulse.Typing.Metatheory
 
