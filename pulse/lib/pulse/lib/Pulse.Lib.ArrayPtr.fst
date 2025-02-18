@@ -29,23 +29,6 @@ let offset a = SZ.v a.offset
 let pts_to s #p v =
   A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v
 
-ghost fn unfold_pts_to #t (s: ptr t) #p v
-  requires pts_to s #p v
-  ensures A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v
-{
-  rewrite pts_to s #p v as
-    A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v
-}
-
-ghost fn fold_pts_to #t (s: ptr t) #p v
-  requires A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v
-  ensures pts_to s #p v
-{
-  rewrite
-    A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v
-    as pts_to s #p v
-}
-
 let pts_to_timeless x p s = ()
 
 let is_from_array s sz a =
@@ -169,7 +152,7 @@ fn split (#t: Type) (s: ptr t) (#p: perm) (i: SZ.t)
     pts_to s' #p (Seq.slice v (SZ.v i) (Seq.length v)) **
     pure (adjacent s (SZ.v i) s')
 {
-    unfold_pts_to s #p v;
+    unfold pts_to s #p v;
     A.pts_to_range_prop s.base;
     let s' = {
         base = s.base;
@@ -185,7 +168,7 @@ fn split (#t: Type) (s: ptr t) (#p: perm) (i: SZ.t)
     rewrite
         (A.pts_to_range s.base (SZ.v s'.offset) (SZ.v s.offset + Seq.length v) #p s2)
         as (A.pts_to_range s'.base (SZ.v s'.offset) (SZ.v s'.offset + Seq.length s2) #p s2);
-    fold_pts_to s' #p s2;
+    fold pts_to s' #p s2;
     s'
 }
 
@@ -198,7 +181,7 @@ ghost fn ghost_split (#t: Type) (s: ptr t) (#p: perm) (i: SZ.t)
     pts_to (reveal s') #p (Seq.slice v (SZ.v i) (Seq.length v)) **
     pure (adjacent s (SZ.v i) s')
 {
-    unfold_pts_to s #p v;
+    unfold pts_to s #p v;
     A.pts_to_range_prop s.base;
     let s' = {
         base = s.base;
@@ -209,12 +192,12 @@ ghost fn ghost_split (#t: Type) (s: ptr t) (#p: perm) (i: SZ.t)
     rewrite
         (A.pts_to_range s.base (SZ.v s.offset) (SZ.v s'.offset) #p s1)
         as (A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + SZ.v i) #p s1);
-    fold_pts_to s #p s1;
+    fold pts_to s #p s1;
     with s2. assert A.pts_to_range s.base (SZ.v s'.offset) (SZ.v s.offset + Seq.length v) #p s2;
     rewrite
         (A.pts_to_range s.base (SZ.v s'.offset) (SZ.v s.offset + Seq.length v) #p s2)
         as (A.pts_to_range s'.base (SZ.v s'.offset) (SZ.v s'.offset + Seq.length s2) #p s2);
-    fold_pts_to s' #p s2;
+    fold pts_to s' #p s2;
     s'
 }
 
@@ -224,12 +207,12 @@ fn join (#t: Type) (s1: ptr t) (#p: perm) (#v1: Seq.seq t) (s2: ptr t) (#v2: Seq
     requires pts_to s1 #p v1 ** pts_to s2 #p v2 ** pure (adjacent s1 (Seq.length v1) s2)
     ensures pts_to s1 #p (Seq.append v1 v2)
 {
-    unfold_pts_to s1 #p v1;
-    unfold_pts_to s2 #p v2;
+    unfold pts_to s1 #p v1;
+    unfold pts_to s2 #p v2;
     rewrite (A.pts_to_range s2.base (SZ.v s2.offset) (SZ.v s2.offset + Seq.length v2) #p v2)
         as (A.pts_to_range s1.base (SZ.v s1.offset + Seq.length v1) (SZ.v s1.offset + Seq.length v1 + Seq.length v2) #p v2);
     A.pts_to_range_join s1.base (SZ.v s1.offset) (SZ.v s1.offset + Seq.length v1) (SZ.v s1.offset + Seq.length v1 + Seq.length v2);
-    fold_pts_to s1 #p (Seq.append v1 v2)
+    fold pts_to s1 #p (Seq.append v1 v2)
 }
 
 module R = Pulse.Lib.Reference
