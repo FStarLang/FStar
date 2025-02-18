@@ -59,7 +59,6 @@ fn rec t_quicksort
     T.share_alive p f;
 
     T.spawn_ p #(f /. 2.0R) (fun () -> t_quicksort p #(f /. 2.0R) a lo p31 #lb #pivot);
-    rewrite each iname_list [] as emp_inames; // FIXME
     t_quicksort p #(f /. 2.0R) a p32 hi #pivot #rb;
 
     return_pledge (T.pool_done p) (A.pts_to_range a p31 p32 s2);
