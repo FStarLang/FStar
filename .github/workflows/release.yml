@@ -78,7 +78,7 @@ jobs:
           TAG="v$V"
           # Create and push annotated tag to repo.
           git tag -a -m "F* version $V" "$TAG" "${{github.sha}}"
-          git push "$TAG"
+          git push origin "$TAG"
 
           # Create github release.
           gh release create --prerelease \
