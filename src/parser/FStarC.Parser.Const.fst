@@ -524,5 +524,4 @@ let tref_lid        = p2l ["FStar"; "Stubs"; "Tactics"; "Types"; "tref"]
 let document_lid = p2l ["FStar"; "Pprint"; "document"]
 let issue_lid = p2l ["FStar"; "Issue"; "issue"]
 
-let extract_as_lid = p2l ["FStar"; "ExtractAs"; "extract_as"]
 let extract_as_impure_effect_lid = attr "extract_as_impure_effect"
