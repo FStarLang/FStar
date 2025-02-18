@@ -64,8 +64,6 @@ fn new_cancellable_invariant (v:slprop)
 
 let unpacked c _v = pts_to c.r #0.5R true
 
-#set-options "--print_implicits"
-
 ghost
 fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
   requires cinv_vp c v ** active c p

@@ -332,7 +332,6 @@ fn impl_array_group3_item
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 
-#set-options "--print_full_names"
 fn impl_t_array
     (#b: Ghost.erased (option raw_data_item))
     (#g: (array_group3 b))

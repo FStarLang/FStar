@@ -17,8 +17,6 @@ let resolve #a #vc (w : with_vc vc a) : T.Tac (either (list issue) a) =
   | Inl iss -> Inl iss
   | Inr d -> Inr (w d)
 
-#set-options "--print_implicits --print_universes"
-
 let map_guarded
   (#a : Type u#aa)
   (#b : Type u#bb)

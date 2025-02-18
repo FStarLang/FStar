@@ -104,8 +104,6 @@ fn op_Array_Access
     res
 }
 
-#set-options "--print_implicits"
-
 fn op_Array_Assignment
         (#t: Type)
         (a: ptr t)

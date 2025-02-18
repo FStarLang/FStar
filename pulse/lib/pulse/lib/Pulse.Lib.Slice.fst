@@ -16,7 +16,6 @@
 
 module Pulse.Lib.Slice
 #lang-pulse
-#set-options "--ext pulse:new"
 module AP = Pulse.Lib.ArrayPtr
 
 noeq

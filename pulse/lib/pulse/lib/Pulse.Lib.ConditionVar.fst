@@ -205,8 +205,6 @@ ensures
   OR.on_range_put i j k #g
 }
 
-#set-options "--print_full_names --print_implicits"
-
 ghost
 fn get_predicate_at_i 
     (t:SLT.table)

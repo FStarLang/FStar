@@ -22,7 +22,6 @@ open Pulse.Lib.Swap.Common
 #restart-solver
 
 #push-options "--z3rlimit_factor 6"
-#set-options "--print_full_names"
 #restart-solver
 
 inline_for_extraction noextract [@@noextract_to "krml"]
