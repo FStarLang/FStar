@@ -97,19 +97,25 @@ let as_comma_string_list = function
  * No stack should ever be empty! Any of these failwiths should never be
  * triggered externally. IOW, the API should protect this invariant.
  *
- * We also keep a snapshot of the Debug module's state.
+ * We also keep a snapshot of the stateful modules that are modified by
+ * changing options. Currently: Debug, Ext (extension options) and Stats.
  *)
-let history1 = Debug.saved_state & Ext.ext_state & optionstate
+let history1 =
+  Debug.saved_state &
+  Ext.ext_state &
+  bool & (* value of Stats.enabled *)
+  optionstate
 
 let fstar_options : ref optionstate = mk_ref (PSMap.empty ())
 
 let snapshot_all () : history1 =
-  (Debug.snapshot (), Ext.save (), !fstar_options)
+  (Debug.snapshot (), Ext.save (), !Stats.enabled, !fstar_options)
 
 let restore_all (h : history1) : unit =
-  let dbg, ext, opts = h in
+  let dbg, ext, stats, opts = h in
   Debug.restore dbg;
   Ext.restore ext;
+  Stats.enabled := stats;
   fstar_options := opts
 
 
@@ -120,17 +126,15 @@ let peek () = !fstar_options
 
 let internal_push () =
   let lev1::rest = !history in
-  let newhd = (Debug.snapshot (), Ext.save (), !fstar_options) in
+  let newhd = snapshot_all () in
   history := (newhd :: lev1) :: rest
 
 let internal_pop () =
   let lev1::rest = !history in
   match lev1 with
   | [] -> false
-  | (dbg, ext, opts)::lev1' ->
-    Debug.restore dbg;
-    Ext.restore ext;
-    fstar_options := opts;
+  | snap :: lev1' ->
+    restore_all snap;
     history := lev1' :: rest;
     true
 
@@ -299,6 +303,7 @@ let defaults =
       ("smtencoding.valid_intro"      , Bool true);
       ("smtencoding.valid_elim"       , Bool false);
       ("split_queries"                , String "on_failure");
+      ("stats"                        , Bool false);
       ("tactics_failhard"             , Bool false);
       ("tactics_info"                 , Bool false);
       ("tactic_raw_binders"           , Bool false);
@@ -558,6 +563,7 @@ let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" 
 let get_smtencoding_valid_intro ()      = lookup_opt "smtencoding.valid_intro"  as_bool
 let get_smtencoding_valid_elim  ()      = lookup_opt "smtencoding.valid_elim"   as_bool
 let get_split_queries           ()      = lookup_opt "split_queries"            as_string
+let get_stats                   ()      = lookup_opt "stats"                    as_bool
 let get_tactic_raw_binders      ()      = lookup_opt "tactic_raw_binders"       as_bool
 let get_tactics_failhard        ()      = lookup_opt "tactics_failhard"         as_bool
 let get_tactics_info            ()      = lookup_opt "tactics_info"             as_bool
@@ -1415,6 +1421,20 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     ]);
 
   ( noshort,
+    "stats",
+    PostProcessed ((fun b ->
+                      (match b with
+                       | Bool true ->
+                         Stats.enabled := true;
+                         Stats.ever_enabled := true
+                       | Bool false ->
+                         Stats.enabled := false
+                       | _ -> ());
+                       b),
+                  BoolStr),
+    text "Print some statistics on the time spent in each phase of the compiler");
+
+  ( noshort,
     "tactic_raw_binders",
     Const (Bool true),
     text "Do not use the lexical scope of tactics to improve binder names");
@@ -1777,6 +1797,7 @@ let settable = function
     | "smtencoding.valid_intro"
     | "smtencoding.valid_elim"
     | "split_queries"
+    | "stats"
     | "tactic_raw_binders"
     | "tactics_failhard"
     | "tactics_info"
@@ -2164,6 +2185,7 @@ let parse_split_queries (s:string) : option split_queries_t =
   | _ -> None
 
 let split_queries                () = get_split_queries () |> parse_split_queries |> Util.must
+let stats                        () = get_stats ()
 let tactic_raw_binders           () = get_tactic_raw_binders          ()
 let tactics_failhard             () = get_tactics_failhard            ()
 let tactics_info                 () = get_tactics_info                ()
