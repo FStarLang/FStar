@@ -85,11 +85,11 @@ endif
 
 $(OUTPUT_DIR)/%.output: %
 	$(call msg, "OUTPUT", $(basename $(notdir $@)))
-	$(FSTAR) --silent --message_format human -f --print_expected_failures $< >$@ 2>&1
+	$(FSTAR) --silent --message_format human -f --print_expected_failures --ext pulse:admit_diag $< >$@ 2>&1
 
 $(OUTPUT_DIR)/%.json_output: %
 	$(call msg, "JSONOUT", $(basename $(notdir $@)))
-	$(FSTAR) --silent --message_format json -f --print_expected_failures $< >$@ 2>&1
+	$(FSTAR) --silent --message_format json -f --print_expected_failures --ext pulse:admit_diag $< >$@ 2>&1
 
 $(OUTPUT_DIR)/$(subst .,_,%).ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
