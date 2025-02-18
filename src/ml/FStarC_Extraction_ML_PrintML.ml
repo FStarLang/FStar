@@ -491,7 +491,7 @@ let build_exn (sym, tys): type_exception =
   let ctor = Te.decl ?args:args name in
   Te.mk_exception ctor
 
-let build_module1 path (m1: mlmodule1): structure_item option =
+let build_module1 (m1: mlmodule1): structure_item option =
   match m1.mlmodule1_m with
   | MLM_Ty tydecl ->
      (match build_tydecl tydecl with
@@ -508,9 +508,9 @@ let build_module1 path (m1: mlmodule1): structure_item option =
       Some (Str.value Nonrecursive [binding])
   | MLM_Loc (p, f) -> None
 
-let build_m path (md: (mlsig * mlmodule) option) : structure =
+let build_m (md: (mlsig * mlmodulebody) option) : structure =
   match md with
-  | Some(s, m) ->
+  | Some(_sig, m) ->
     let open_plugin_lib =
       if FStarC_Options.codegen () = Some FStarC_Options.Plugin (* NB: PluginNoLib does not open the library *)
       then [Str.open_ (Opn.mk ?override:(Some Fresh) (Mod.ident (mk_lident "Fstar_pluginlib")))]
@@ -524,41 +524,21 @@ let build_m path (md: (mlsig * mlmodule) option) : structure =
     let open_prims =
       [Str.open_ (Opn.mk ?override:(Some Fresh) (Mod.ident (mk_lident "Prims")))]
     in
-    open_plugin_lib @ open_guts @ open_prims @ (map (build_module1 path) m |> flatmap opt_to_list)
+    open_plugin_lib @ open_guts @ open_prims @ (map build_module1 m |> flatmap opt_to_list)
   | None -> []
 
-let build_ast (out_dir: string option) (ext: string) (ml: mllib) =
-  match ml with
-  | MLLib l ->
-     map (fun (p, md, _) ->
-         let m = path_to_string p in
-         current_module := m;
-         let name = BatString.concat "" [m; ext] in
-         let path = (match out_dir with
-           | Some out -> BatString.concat "/" [out; name]
-           | None -> name) in
-         (path, build_m path md)) l
+let build_ast (modul : mlmodule) =
+  let (p, md) = modul in
+  let m = path_to_string p in
+  current_module := m;
+  build_m md
 
+let print_module (s: structure) : string =
+  let fmt = Format.str_formatter in
+  structure fmt s;
+  let res = Format.flush_str_formatter () in
+  res
 
-(* printing the AST to the correct path *)
-let print_module ((path, m): string * structure) =
-  FStarC_Util.maybe_create_parent path;
-  Format.set_formatter_out_channel (open_out_bin path);
-  structure Format.std_formatter m;
-  Format.pp_print_flush Format.std_formatter ()
-
-let print (out_dir: string option) (ext: string) (ml: mllib) =
-  match ext with
-  | ".ml" ->
-     (* Use this printer for OCaml extraction *)
-     let ast = build_ast out_dir ext ml in
-     iter print_module ast
-  | ".fs" ->
-     (* Use the old printer for F# extraction *)
-     let new_doc = FStarC_Extraction_ML_Code.doc_of_mllib ml in
-     iter (fun (n, d) ->
-         FStarC_Util.write_file
-           (FStarC_Find.prepend_output_dir (BatString.concat "" [n;ext]))
-           (FStarC_Extraction_ML_Code.pretty (Prims.parse_int "120") d)
-           ) new_doc
-  | _ -> failwith "Unrecognized extension"
+let print_ml (modul : mlmodule) : string =
+  let ast = build_ast modul in
+  print_module ast

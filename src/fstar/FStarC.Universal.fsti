@@ -61,7 +61,7 @@ val tc_one_file :
     option string ->
     string ->
     FStarC.Parser.Dep.parsing_data ->
-    tc_result & option FStarC.Extraction.ML.Syntax.mllib & uenv
+    tc_result & option FStarC.Extraction.ML.Syntax.mlmodule & uenv
 
 (* A thin wrapper for tc_one_file, called by the interactive mode.
 Basically discards any information about extraction. *)

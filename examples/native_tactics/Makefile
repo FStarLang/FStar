@@ -57,15 +57,15 @@ all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 
 %.test: %.fst %.ml
 	$(FSTAR) $*.fst --load $*
-	touch $@
+	touch -c $@
 
 %.sep.test: %.fst %.ml
 	$(FSTAR) $*.Test.fst --load $*
-	touch $@
+	touch -c $@
 
 %.ml: %.fst
 	$(FSTAR) $*.fst --cache_checked_modules --codegen Plugin --extract $*
-	touch $@
+	touch -c $@
 
 %.clean:
 	rm -f Registers_List.ml Registers.List.ml Registers_List.cmxs

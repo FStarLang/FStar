@@ -17,8 +17,7 @@ module FStarC.Extraction.ML.PrintML
 
 open FStarC.Extraction.ML.Syntax
 
-val print
-  (odir : option string)
-  (extension : string)
-  (defs : mllib)
-  : unit
+(* This is implemented natively in OCaml, see src/ml/FStarC_Extraction_ML_PrintML.ml.
+If we need a printer implemented in F*, the same code as the one in PrintFS should do,
+but setting the fsharp flag to false. *)
+val print_ml (modul : mlmodule) : string

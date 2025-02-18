@@ -1512,8 +1512,8 @@ let translate_decl env d: list decl =
       BU.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
       []
 
-let translate_module uenv (m : mlpath & option (mlsig & mlmodule) & mllib) : file =
-  let (module_name, modul, _) = m in
+let translate_module uenv (m : mlpath & option (mlsig & mlmodulebody)) : file =
+  let (module_name, modul) = m in
   let module_name = fst module_name @ [ snd module_name ] in
   let program = match modul with
     | Some (_signature, decls) ->
@@ -1523,10 +1523,10 @@ let translate_module uenv (m : mlpath & option (mlsig & mlmodule) & mllib) : fil
   in
   (String.concat "_" module_name), program
 
-let translate (ue:uenv) (MLLib modules): list file =
+let translate (ue:uenv) (modules : list mlmodule): list file =
   List.filter_map (fun m ->
     let m_name =
-      let path, _, _ = m in
+      let path, _ = m in
       Syntax.string_of_mlpath path
     in
     try

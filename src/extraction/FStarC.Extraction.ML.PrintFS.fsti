@@ -1,5 +1,5 @@
 (*
-   Copyright 2020 Microsoft Research
+   Copyright 2008-2015 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,16 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-(* -------------------------------------------------------------------- *)
-module FStarC.Extraction.ML.RemoveUnusedParameters
-open FStarC.Ident
+module FStarC.Extraction.ML.PrintFS
+
 open FStarC.Extraction.ML.Syntax
 
-val env_t : Type0
-val initial_env : env_t
-type tydef = mlsymbol & metadata & either mltyscheme int
-val set_current_module (e:env_t) (n:mlpath) : env_t
-
-val elim_tydefs (env:env_t) (tds:list tydef) : env_t & list tydef
-
-val elim_mllib (env:env_t) (m:mlmodule) : env_t & mlmodule
+val print_fs (modul : mlmodule) : string

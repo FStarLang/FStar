@@ -273,12 +273,12 @@ let mlmodule1_to_doc (m:mlmodule1) : document =
   | MLM_Loc _mlloc -> doc_of_string "MLM_Loc")
 let mlmodule1_to_string (m:mlmodule1) : string = render (mlmodule1_to_doc m)
 
-let mlmodule_to_doc (m:mlmodule) : document =
+let mlmodulebody_to_doc (m:mlmodulebody) : document =
   group <| brackets <| spaced <| separate_map (semi ^^ break_ 1) mlmodule1_to_doc m
-let mlmodule_to_string (m:mlmodule) : string = render (mlmodule_to_doc m)
+let mlmodulebody_to_string (m:mlmodulebody) : string = render (mlmodulebody_to_doc m)
 
 instance showable_mlty : showable mlty = { show = mlty_to_string }
-instance showable_mlconstant : showable mlconstant = { show = mlconstant_to_string }  
+instance showable_mlconstant : showable mlconstant = { show = mlconstant_to_string }
 instance showable_mlexpr : showable mlexpr = { show = mlexpr_to_string }
 instance showable_mlmodule1 : showable mlmodule1 = { show = mlmodule1_to_string }
-instance showable_mlmodule : showable mlmodule = { show = mlmodule_to_string }
+instance showable_mlmodulebody : showable mlmodulebody = { show = mlmodulebody_to_string }

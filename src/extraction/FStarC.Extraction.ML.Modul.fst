@@ -1291,7 +1291,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
     end
   end
 
-let extract' (g:uenv) (m:modul) : uenv & option mllib =
+let extract' (g:uenv) (m:modul) : uenv & option mlmodule =
   let _ = Options.restore_cmd_line_options true in
   let name, g = UEnv.extend_with_module_name g m.name in
   let g = set_tcenv g (FStarC.TypeChecker.Env.set_current_module (tcenv_of_uenv g) m.name) in
@@ -1310,13 +1310,13 @@ let extract' (g:uenv) (m:modul) : uenv & option mllib =
                  r
             else extract_sig g se)
         g m.declarations in
-  let mlm : mlmodule = List.flatten sigs in
+  let mlm : mlmodulebody = List.flatten sigs in
   let is_karamel = Options.codegen () = Some Options.Krml in
   if string_of_lid m.name <> "Prims"
   && (is_karamel || not m.is_interface)
   then begin
     if not (Options.silent()) then (BU.print1 "Extracted module %s\n" (string_of_lid m.name));
-    g, Some (MLLib ([name, Some ([], mlm), (MLLib [])]))
+    g, Some (name, Some ([], mlm))
   end
   else g, None
 

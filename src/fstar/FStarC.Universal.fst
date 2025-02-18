@@ -302,7 +302,7 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
 (***********************************************************************)
 
 (* Extraction to OCaml, F# or Krml *)
-let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
+let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) =
   let opt = Options.codegen () in
   let fail #a () : a = failwith ("Unrecognized extraction backend: " ^ show opt) in
   if opt <> None then
@@ -315,14 +315,38 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
       | Some Options.Extension -> ".ast"
       | _ -> fail ()
     in
+
+    (* The output filename can be overriden with -o, but see the length checks below
+    so we only allow this if a single file is going to be extracted, otherwise we would
+    clobber them. *)
+    let ofile (basename : string) =
+      match Options.output_to () with
+      | Some fn -> fn
+      | None -> Find.prepend_output_dir basename
+    in
+
     match opt with
     | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin | Some Options.PluginNoLib ->
-      (* When bootstrapped in F#, this will use the old printer in
-         FStarC.Extraction.ML.Code for both OCaml and F# extraction.
-         When bootstarpped in OCaml, this will use the old printer
-         for F# extraction and the new printer for OCaml extraction. *)
-      let outdir = Find.get_odir () in
-      List.iter (FStarC.Extraction.ML.PrintML.print outdir ext) (List.map snd mllibs)
+      let printer =
+        if opt = Some Options.FSharp
+        then FStarC.Extraction.ML.PrintFS.print_fs
+        else FStarC.Extraction.ML.PrintML.print_ml
+      in
+
+      if Some? (Options.output_to ()) && List.length mllib > 1 then
+        raise_error0 Errors.Fatal_OptionsNotCompatible [
+          text "Cannot provide -o and extract multiple modules";
+          text "Please use -o with a single module, or specify an output directory with --odir";
+        ];
+
+      mllib |> List.iter (fun (_, mlmodule) ->
+        let p, _ = mlmodule in
+        let filename =
+          let basename = FStarC.Extraction.ML.Util.flatten_mlpath p ^ ext in
+          ofile basename
+        in
+        let ml = printer mlmodule in
+        write_file filename ml)
 
     | Some Options.Extension ->
       //
@@ -330,28 +354,35 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
       //   in the binary format to a file
       // The first component is the list of dependencies
       //
+      if Some? (Options.output_to ()) && List.length mllib > 1 then
+        raise_error0 Errors.Fatal_OptionsNotCompatible [
+          text "Cannot provide -o and extract multiple modules";
+          text "Please use -o with a single module, or specify an output directory with --odir";
+        ];
+
+      mllib |>
       List.iter (fun (env, m) ->
-        let MLSyntax.MLLib ms = m in
-        List.iter (fun m ->
-          let mname, modul, _ = m in
-          let filename = String.concat "_" (fst mname @ [snd mname]) in
-          match modul with
-          | Some (_, decls) ->
-            let bindings = FStarC.Extraction.ML.UEnv.bindings_of_uenv env in
-            let deps : list string = Dep.deps_of_modul dep_graph (MLSyntax.string_of_mlpath mname) in
-            save_value_to_file (Find.prepend_output_dir (filename^ext)) (deps, bindings, decls)
-          | None ->
-            failwith "Unexpected ml modul in Extension extraction mode"
-        ) ms
-      ) mllibs
+        let mname, modul = m in
+        let filename =
+          let basename = FStarC.Extraction.ML.Util.flatten_mlpath mname ^ ext in
+          ofile basename
+        in
+        match modul with
+        | Some (_, decls) ->
+          let bindings = FStarC.Extraction.ML.UEnv.bindings_of_uenv env in
+          let deps : list string = Dep.deps_of_modul dep_graph (MLSyntax.string_of_mlpath mname) in
+          save_value_to_file filename (deps, bindings, decls)
+        | None ->
+          failwith "Unexpected ml modul in Extension extraction mode"
+      )
 
     | Some Options.Krml ->
       let programs =
-        mllibs |> List.collect (fun (ue, mllibs) ->
-                                  Extraction.Krml.translate ue mllibs)
+        mllib |> List.collect (fun (ue, m) -> Extraction.Krml.translate ue [m])
       in
       let bin: Extraction.Krml.binary_format = Extraction.Krml.current_version, programs in
       let oname : string =
+        (* note: -o implies --krmloutput *)
         match Options.krmloutput () with
         | Some fname -> fname (* NB: no prepending odir nor adding extension, user chose a explicit path *)
         | _ ->
@@ -369,7 +400,7 @@ let tc_one_file
         (fn:string) //file name
         (parsing_data:FStarC.Parser.Dep.parsing_data)  //passed by the caller, ONLY for caching purposes at this point
     : tc_result
-    & option MLSyntax.mllib
+    & option MLSyntax.mlmodule
     & uenv =
   GenSym.reset_gensym();
 
@@ -457,8 +488,18 @@ let tc_one_file
         (* If --force and this file was given in the command line,
          * forget about the cache we just loaded and recheck the file.
          * Note: we do the call above anyway since load_module_from_cache
-         * sets some internal state about dependencies. *)
-        if Options.force () && Options.should_check_file fn
+         * sets some internal state about dependencies.
+         *
+         * We do the same if we were called with --output and --cache_checked_modules
+         * (-o, -c) and without codegen. This means the user is asking to generate a checked
+         * file into the file provided by -o, so we should not be loading anything.
+         * If codegen was given, the the user wants an ml/krml file, and it is fine
+         * to load the cache.
+         *)
+        if Options.should_check_file fn && (
+             Options.force () ||
+             (Some? (Options.output_to ()) && None? (Options.codegen ()))
+           )
         then None
         else r
       in
@@ -566,7 +607,7 @@ let needs_interleaving intf impl =
 
 let tc_one_file_from_remaining (remaining:list string) (env:uenv)
                                (deps:FStarC.Parser.Dep.deps)  //used to query parsing data
-  : list string & tc_result & option MLSyntax.mllib & uenv
+  : list string & tc_result & option MLSyntax.mlmodule & uenv
   =
   let remaining, (nmods, mllib, env) =
     match remaining with
@@ -584,7 +625,7 @@ let tc_one_file_from_remaining (remaining:list string) (env:uenv)
 
 let rec tc_fold_interleave (deps:FStarC.Parser.Dep.deps)  //used to query parsing data
                            (acc:list tc_result &
-                                list (uenv & MLSyntax.mllib) &  // initial env in which this module is extracted
+                                list (uenv & MLSyntax.mlmodule) &  // initial env in which this module is extracted
                                 uenv)
                            (remaining:list string) =
   let as_list env mllib =

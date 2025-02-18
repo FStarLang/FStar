@@ -33,4 +33,4 @@ type file = string & program
     Serialization/parsing is with output_value/input_value. *)
 type binary_format = version & list file
 
-val translate : Extraction.ML.UEnv.uenv -> FStarC.Extraction.ML.Syntax.mllib -> list file
+val translate : Extraction.ML.UEnv.uenv -> list Extraction.ML.Syntax.mlmodule -> list file

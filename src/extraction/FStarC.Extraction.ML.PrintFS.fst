@@ -13,20 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+module FStarC.Extraction.ML.PrintFS
 
-module FStarC.Extraction.ML.PrintML
-open FStarC.Effect
-open FStarC
 open FStarC.Extraction.ML.Syntax
 open FStarC.Extraction.ML.Code
 
-(* NOTE!!!! This file is not used by the OCaml build of F* (i.e. the main one).
-Instead, it uses an OCaml version ocaml/fstar-lib/FStar_Extraction_ML_PrintML,
-so it can use OCaml's native pretty printers.
-
-This file is here for the F# build. *)
-
-let print (_: option string) (ext: string) (l: mllib) =
-    let newDoc = FStarC.Extraction.ML.Code.doc_of_mllib l in
-    List.iter (fun (n,d) ->
-        FStarC.Util.write_file (FStarC.Find.prepend_output_dir (n^ext)) (FStarC.Extraction.ML.Code.pretty 120 d)) newDoc
+let print_fs (modul : mlmodule) : string =
+  (* Use the old printer for F# extraction *)
+  let d = Code.doc_of_mlmodule true modul in
+  Code.pretty 120 d
