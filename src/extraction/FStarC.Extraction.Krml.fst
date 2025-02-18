@@ -168,6 +168,7 @@ and width =
   | Bool
   | CInt
   | SizeT | PtrdiffT
+  | Float | Double
 
 and constant = width & string
 
