@@ -1,7 +1,6 @@
 module LowParseWriters.LowParse
 
 module LP = LowParse.Low.Combinators
-module LPI = LowParse.Low.Int
 module U8 = FStar.UInt8
 module Seq = FStar.Seq
 

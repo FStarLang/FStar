@@ -5,7 +5,6 @@ include Negotiation.Writers.Aux
 
 module LWP = LowParseWriters.Parsers
 module LWPS = LowParseWriters.NoHoare.Parsers
-module LPI = LowParse.Low.Int
 
 let valid_pskBinderEntry_intro' =
   LWPS.tvalid_rewrite_of_evalid_rewrite valid_pskBinderEntry_intro

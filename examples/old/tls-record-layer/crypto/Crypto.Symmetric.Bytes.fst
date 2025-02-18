@@ -349,7 +349,6 @@ let rec uint32_be len n =
 
 // ----- lower-level stuff 
 
-module U8 = FStar.UInt8
 
 let u8  = UInt8.t
 let u32 = UInt32.t

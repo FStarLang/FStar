@@ -20,7 +20,6 @@ open FStarC.Effect
 open FStarC.Class.Deq
 open FStarC.Class.Ord
 open FStarC.Order
-module BU = FStarC.Util
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type file_name = string

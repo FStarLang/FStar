@@ -7,9 +7,6 @@ WP from intensional information about the operations in the tree. *)
 
 open FStar.List.Tot
 open FStar.Calc
-module FE = FStar.FunctionalExtensionality
-module F = FStar.FunctionalExtensionality
-module W = FStar.WellFounded
 module T = FStar.Tactics.V2
 // #show-options
 module ID5 = ID5

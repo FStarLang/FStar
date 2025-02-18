@@ -42,19 +42,12 @@ open Buffer
 open Flag
 
 module HH = FStar.HyperHeap
-module HS = FStar.HyperStack
-module ST = FStar.HyperStack.ST
 
 module Plain = Crypto.Plain
-module MAC = Crypto.Symmetric.MAC
 module Cipher = Crypto.Symmetric.Cipher
-module PRF = Crypto.Symmetric.PRF
 module AE = Crypto.AEAD
 module AETypes = Crypto.AEAD.Invariant
-module D = Crypto.AEAD.Decrypt
-module E = Crypto.AEAD.Encrypt
 
-module L = FStar.List.Tot
 
 #set-options "--admit_smt_queries true"
 

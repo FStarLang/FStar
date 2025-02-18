@@ -1,5 +1,4 @@
 module BoxBitVec
-module U = FStar.UInt
 module BV = FStar.BV
 open FStar.BV
 let test (x:BV.bv_t 3) = BV.bvdiv x 1

@@ -1,5 +1,4 @@
 module Setoids.Crypto
-module L = Setoids
 open FStar.Integers
 open FStar.Map
 open Setoids

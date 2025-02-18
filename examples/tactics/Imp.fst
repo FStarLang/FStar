@@ -36,7 +36,6 @@ type inst =
     //| Seq : prog -> inst
 and prog = list inst
 
-module L = FStar.List.Tot
 
 let rec size : inst -> pos = function
   | Add _ _ _

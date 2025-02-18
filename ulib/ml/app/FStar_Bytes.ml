@@ -1,7 +1,6 @@
 module U8 = FStar_UInt8
 module U16 = FStar_UInt16
 module U32 = FStar_UInt32
-module U64 = FStar_UInt64
 
 type u8 = U8.t
 type u16 = U16.t

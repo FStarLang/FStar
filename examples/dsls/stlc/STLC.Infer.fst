@@ -17,7 +17,6 @@
 module STLC.Infer
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
-module L = FStar.List.Tot
 module RT = FStar.Reflection.Typing
 open STLC.Core
 

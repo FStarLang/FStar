@@ -15,7 +15,6 @@
 *)
 module FStar.Pointer.Derived3
 
-module HH = FStar.HyperStack
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 

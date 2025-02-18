@@ -114,7 +114,6 @@ let rec map_test2 (#a #b:Type) (t:test2 a) (f: a -> b) : test2 b =
     Test2 (Test1 (fun (x:nat) -> wf_test1 (Test1 g) x; map_test2 #a #b (g x) f))
 
 //////////////////////////////////////////////////////////////////////////////////////////
-module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
 noeq
 type tf =

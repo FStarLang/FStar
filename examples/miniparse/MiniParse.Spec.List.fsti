@@ -18,7 +18,6 @@ include MiniParse.Spec.Combinators // for seq_slice_append_l
 
 module Seq = FStar.Seq
 module L = FStar.List.Tot
-module U32 = FStar.UInt32
 module Classical = FStar.Classical
 
 // inline_for_extraction

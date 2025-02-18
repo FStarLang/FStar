@@ -32,7 +32,6 @@ open C.Loops
 
 module B = FStar.Buffer
 
-module U8 = FStar.UInt8
 module U16 = FStar.UInt16
 module U32 = FStar.UInt32
 module Cast = FStar.Int.Cast

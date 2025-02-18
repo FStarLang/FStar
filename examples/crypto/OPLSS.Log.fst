@@ -6,7 +6,6 @@ open FStar.HyperStack
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module B = LowStar.Monotonic.Buffer
-module L = FStar.List.Tot
 
 let grows (#a:Type)
   : Preorder.preorder (seq a)

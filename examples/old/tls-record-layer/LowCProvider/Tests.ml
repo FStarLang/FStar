@@ -1,5 +1,4 @@
 (* The original "Bytes" module from OCaml. *)
-module B = Bytes
 
 (* This brings [Platform.Bytes] into scope. *)
 open CoreCrypto

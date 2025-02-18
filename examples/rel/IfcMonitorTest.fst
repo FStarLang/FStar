@@ -18,7 +18,6 @@ module IfcMonitorTest
 open Label
 open IfcMonitor
 open FStar.DM4F.Heap.IntStoreFixed
-module T = FStar.Tactics
 
 assume val from_id (x:id) : GTot int
 assume

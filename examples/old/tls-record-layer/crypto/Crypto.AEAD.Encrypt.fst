@@ -33,7 +33,6 @@ open Crypto.AEAD.Enxor.Invariant
 open Crypto.AEAD.MAC_Wrapper.Invariant
 open Crypto.AEAD.Encrypt.Ideal.Invariant
 
-module HH       = FStar.HyperHeap
 module HS       = FStar.HyperStack
 module ST       = FStar.HyperStack.ST
 module MAC      = Crypto.Symmetric.MAC
@@ -43,7 +42,6 @@ module Cipher   = Crypto.Symmetric.Cipher
 module PRF      = Crypto.Symmetric.PRF
 module Enxor    = Crypto.AEAD.EnxorDexor
 module PRF_MAC     = Crypto.AEAD.Wrappers.PRF
-module Encoding    = Crypto.AEAD.Encoding   
 module EncodingWrapper = Crypto.AEAD.Wrappers.Encoding
 module CMAWrapper = Crypto.AEAD.Wrappers.CMA
 

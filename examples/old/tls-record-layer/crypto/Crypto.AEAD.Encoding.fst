@@ -38,8 +38,6 @@ module ST = FStar.HyperStack.ST
 module MAC = Crypto.Symmetric.MAC
 module CMA = Crypto.Symmetric.UF1CMA
 
-module Cipher = Crypto.Symmetric.Cipher
-module PRF = Crypto.Symmetric.PRF
 
 type region = rgn:HH.rid {HS.is_eternal_region rgn}
 

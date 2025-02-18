@@ -7,7 +7,6 @@ open LowStar.Regional
 open LowStar.RVector
 open LowStar.Regional.Instances
 
-module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module HH = FStar.Monotonic.HyperHeap
 

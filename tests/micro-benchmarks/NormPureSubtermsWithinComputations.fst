@@ -1,7 +1,6 @@
 module NormPureSubtermsWithinComputations
 open FStar.HyperStack.All
 open FStar.HyperStack
-module ST = FStar.HyperStack.ST
 open FStar.List.Tot
 open FStar.Tactics.V2
 

@@ -34,8 +34,6 @@ open FStar.Math.Lemmas
 open Crypto.Symmetric.Bytes 
 
 module U8  = FStar.UInt8
-module U32 = FStar.UInt32
-module U64 = FStar.UInt64
 
 (** Poly1305 prime *)
 let p_1305: p:nat{pow2 128 < p} =

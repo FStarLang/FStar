@@ -32,7 +32,6 @@ open Crypto.Symmetric.Poly1305.Bigint
 
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
-module HS = FStar.HyperStack
 
 val prime: p:erased pos{reveal p = Crypto.Symmetric.Poly1305.Spec.p_1305}
 let prime = hide (Crypto.Symmetric.Poly1305.Spec.p_1305)

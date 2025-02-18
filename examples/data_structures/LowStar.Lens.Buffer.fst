@@ -18,7 +18,6 @@ open LowStar.Lens
 open FStar.HyperStack.ST
 module B = LowStar.Buffer
 module HS = FStar.HyperStack
-module HST = FStar.HyperStack.ST
 open FStar.Integers
 
 let mk #a #p #q (b:B.mbuffer a p q) (f:flavor b) (snap:HS.mem{B.live snap b})

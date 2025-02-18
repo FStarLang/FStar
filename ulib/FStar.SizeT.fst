@@ -1,6 +1,5 @@
 module FStar.SizeT
 open FStar.Ghost
-module I64 = FStar.Int64
 
 (* This is only intended as a model, but will be extracted natively by Krml
    with the correct C semantics *)

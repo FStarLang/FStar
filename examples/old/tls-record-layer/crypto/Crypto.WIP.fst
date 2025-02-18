@@ -38,15 +38,8 @@ open Crypto.AEAD.Lemmas.Part2
 open Crypto.AEAD.BufferUtils
 open Crypto.AEAD
 
-module HH = FStar.HyperHeap
-module HS = FStar.HyperStack
 
-module CMA = Crypto.Symmetric.UF1CMA
-module MAC = Crypto.Symmetric.MAC
 
-module Cipher = Crypto.Symmetric.Cipher
-module PRF = Crypto.Symmetric.PRF
-module Plain = Crypto.Plain
 
    
 

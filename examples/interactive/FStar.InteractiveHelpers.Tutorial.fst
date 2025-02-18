@@ -16,7 +16,6 @@ open FStar.InteractiveHelpers.Tutorial.Definitions
 /// will need to restart the F* mode), which means that if you intend to use the
 /// extended mode while working on a file, you have to make sure F* will load
 /// FStar.InteractiveHelpers:
-module FI = FStar.InteractiveHelpers
 /// alternatively if you're not afraid of shadowing:
 /// open FStar.InteractiveHelpers
 

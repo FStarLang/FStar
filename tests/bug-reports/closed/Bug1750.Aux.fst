@@ -1,9 +1,6 @@
 module Bug1750.Aux
 
-module HS = FStar.HyperStack
-module HST = FStar.HyperStack.ST
 module MDM = FStar.Monotonic.DependentMap
-module DM = FStar.DependentMap
 
 assume
 val pre_dhi :eqtype

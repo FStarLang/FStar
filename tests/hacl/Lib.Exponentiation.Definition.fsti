@@ -2,7 +2,6 @@ module Lib.Exponentiation.Definition
 
 open FStar.Mul
 
-module Loops = Lib.LoopCombinators
 
 #set-options "--z3rlimit 50 --fuel 0 --ifuel 0"
 

@@ -18,8 +18,6 @@ include StringPrinter.Base
 
 module T = FStar.Tactics.V2
 
-module Ca = FStar.Int.Cast
-module U32 = FStar.UInt32
 
 let tin_decr
   (a:Type)
