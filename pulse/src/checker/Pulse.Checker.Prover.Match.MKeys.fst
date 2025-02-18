@@ -143,7 +143,7 @@ let rec eligible_for_smt_equality (g:env) (t0 t1 : term)
             eligible_for_smt_equality g a0 a1
           else
             try
-              Some? (fst (PTU.check_equiv_now_nosmt (elab_env g) a0 a1))
+              Some? (fst (PTU.check_equiv_now_nosmt_unfold (elab_env g) a0 a1))
             with | _ -> false
         in
          (true, eq && eq')
