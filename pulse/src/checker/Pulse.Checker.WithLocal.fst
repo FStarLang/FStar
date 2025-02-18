@@ -128,6 +128,8 @@ let check
               post_typing_rec.ty_typing
               x post_typing_rec.post_typing
           in
+          assert (None? (lookup g x));
+          assert (~(Set.mem x (freevars_st body)));
           let d = T_WithLocal g binder.binder_ppname init body init_t c x
             init_typing
             init_t_typing

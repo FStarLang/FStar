@@ -20,7 +20,6 @@ open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 #push-options "--fuel 2 --ifuel 2"
 
-module R = Pulse.Lib.Reference
 
 
 let rec fib (n:nat) : nat =

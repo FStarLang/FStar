@@ -95,7 +95,6 @@ ensures pts_to x #p 'vx ** pts_to y #q 'vy
 
 
 
-module T = FStar.Tactics
 
 //SNIPPET_START: nullable_ref$
 let nullable_ref a = option (ref a)

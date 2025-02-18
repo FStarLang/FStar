@@ -22,7 +22,6 @@ open FStar.Preorder
 open Pulse.Lib.FractionalAnchoredPreorder
 #lang-pulse
 
-module U32 = FStar.UInt32
 module T = FStar.Tactics
 
 [@@erasable]

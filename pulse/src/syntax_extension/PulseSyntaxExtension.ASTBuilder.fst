@@ -22,7 +22,6 @@ open FStarC.Parser.AST.Util
 open FStarC.Ident
 module BU = FStarC.Util
 module List = FStarC.List
-module A = FStarC.Parser.AST
 module AU = FStarC.Parser.AST.Util
 module S = FStarC.Syntax.Syntax
 open FStar.List.Tot

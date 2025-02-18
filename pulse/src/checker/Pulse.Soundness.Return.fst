@@ -27,7 +27,6 @@ module R = FStar.Reflection.V2
 
 module PReflUtil = Pulse.Reflection.Util
 module WT = Pulse.Lib.Core.Typing
-module LN = Pulse.Typing.LN
 
 #push-options "--z3rlimit_factor 8 --split_queries no --fuel 4 --ifuel 2"
 let return_soundness

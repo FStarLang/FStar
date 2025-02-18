@@ -16,7 +16,6 @@
 
 module Pulse.Typing.Util
 
-module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 module RU = Pulse.RuntimeUtils
 (* Call check_equiv under a ForceSMT guard policy *)

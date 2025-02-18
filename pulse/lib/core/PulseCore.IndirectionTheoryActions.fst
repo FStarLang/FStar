@@ -14,10 +14,7 @@
    limitations under the License.
 *)
 module PulseCore.IndirectionTheoryActions
-module F = FStar.FunctionalExtensionality
-module T = FStar.Tactics
 module PM = PulseCore.MemoryAlt
-module HST = PulseCore.HoareStateMonad
 open FStar.Ghost
 
 let pm_sep_laws () : squash (

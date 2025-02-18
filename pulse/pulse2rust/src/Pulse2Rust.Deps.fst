@@ -30,9 +30,7 @@ open RustBindings
 open FStarC.Class.Setlike
 
 module S = FStarC.Extraction.ML.Syntax
-module EUtil = FStarC.Extraction.ML.Util
 
-module UEnv = FStarC.Extraction.ML.UEnv
 
 let empty_defs : reachable_defs = RBSet.empty ()
 let singleton (p:S.mlpath) : reachable_defs = singleton (S.string_of_mlpath p)

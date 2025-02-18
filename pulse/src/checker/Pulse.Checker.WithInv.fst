@@ -27,9 +27,7 @@ open FStar.Pprint
 open Pulse.PP
 
 module T = FStar.Tactics.V2
-module P = Pulse.Syntax.Printer
 module RT = FStar.Reflection.Typing
-module MT = Pulse.Typing.Metatheory
 
 let rt_recheck (gg:env) (#g:T.env) (#e:T.term) (#ty: T.typ) () : T.Tac (RT.tot_typing g e ty) =
   match T.core_check_term g e ty T.E_Total with

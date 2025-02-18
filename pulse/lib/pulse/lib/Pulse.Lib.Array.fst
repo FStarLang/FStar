@@ -16,7 +16,6 @@
 
 module Pulse.Lib.Array
 #lang-pulse
-module PM = Pulse.Main
 open Pulse.Lib.Core
 open Pulse.Lib.Reference
 open Pulse.Lib.Array.Core
@@ -26,7 +25,6 @@ module US = FStar.SizeT
 module U8 = FStar.UInt8
 open Pulse.Lib.BoundedIntegers
 module A = Pulse.Lib.Array.Core
-module R = Pulse.Lib.Reference
 
 #set-options "--print_implicits"
 

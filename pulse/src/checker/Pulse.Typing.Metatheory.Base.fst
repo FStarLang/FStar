@@ -19,7 +19,6 @@ open Pulse.Syntax
 open Pulse.Syntax.Naming
 open Pulse.Typing
 module RU = Pulse.RuntimeUtils
-module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 
 let admit_st_comp_typing (g:env) (st:st_comp) 

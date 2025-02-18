@@ -15,10 +15,8 @@
 *)
 
 module Pulse.Syntax.Base
-module RTB = FStar.Reflection.Typing.Builtins
-module RT = FStar.Reflection.Typing
+module RU = Pulse.RuntimeUtils
 module R = FStar.Reflection.V2
-module T = FStar.Tactics.V2
 
 let range_of_st_comp (st:st_comp) =
   RU.union_ranges (RU.range_of_term st.pre) (RU.range_of_term st.post)

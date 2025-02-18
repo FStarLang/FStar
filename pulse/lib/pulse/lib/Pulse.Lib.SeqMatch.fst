@@ -20,7 +20,6 @@ open Pulse.Lib.OnRange
 open Pulse.Lib.Stick.Util
 
 module Seq = FStar.Seq
-module SZ = FStar.SizeT
 
 (* `seq_list_match` describes how to match a sequence of low-level
 values (the low-level contents of an array) with a list of high-level

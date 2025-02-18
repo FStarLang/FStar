@@ -17,10 +17,8 @@
 module PulseTutorial.ParallelIncrement
 #lang-pulse
 open Pulse.Lib.Pervasives
-module U32 = FStar.UInt32
 module L = Pulse.Lib.SpinLock
 module GR = Pulse.Lib.GhostReference
-module R = Pulse.Lib.Reference
 
  //par$
 fn par (#pf #pg #qf #qg:_)

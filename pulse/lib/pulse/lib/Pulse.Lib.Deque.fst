@@ -5,9 +5,6 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick.Util
 open FStar.List.Tot
 open Pulse.Lib.Trade
-module T = FStar.Tactics
-module I = Pulse.Lib.Stick.Util
-module FA = Pulse.Lib.Forall.Util
 module Box = Pulse.Lib.Box
 
 noeq

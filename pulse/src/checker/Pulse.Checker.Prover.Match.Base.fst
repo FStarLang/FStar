@@ -29,7 +29,6 @@ open Pulse.PP
 
 module RU = Pulse.RuntimeUtils
 module T  = FStar.Tactics.V2
-module P = Pulse.Syntax.Printer
 module PS = Pulse.Checker.Prover.Substs
 
 let slprop_list_equiv_refl (g:env) (vs:list slprop) : slprop_list_equiv g vs vs = admit()

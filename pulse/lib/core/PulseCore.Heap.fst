@@ -17,7 +17,6 @@ module PulseCore.Heap
 module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
 open FStar.PCM
-module Frac = PulseCore.FractionalPermission
 module PP = PulseCore.Preorder
 
 #set-options "--fuel 1 --ifuel 1"
@@ -270,7 +269,6 @@ let join_empty_inverse (m0 m1:heap)
 ////////////////////////////////////////////////////////////////////////////////
 let slprop = p:(heap ^-> prop) { heap_prop_is_affine p }
 
-module W = FStar.WellFounded
 
 
 let interp (p:slprop u#a) (m:heap u#a)

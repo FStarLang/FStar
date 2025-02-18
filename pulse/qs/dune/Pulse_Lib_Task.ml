@@ -3,7 +3,6 @@
    instead of being unspecified in that case. *)
 
 module T = Domainslib.Task
-module A = Atomic
 module CV = Condition
 open Either
 

@@ -17,7 +17,6 @@
 module PulseTutorial.HigherOrder
 #lang-pulse
 open Pulse.Lib.Pervasives
-module B = Pulse.Lib.Box
  //apply$
 fn apply (#a:Type0)
          (#b:a -> Type0)

@@ -15,15 +15,11 @@
 *)
 
 module Pulse.Syntax.Naming
-module RTB = FStar.Reflection.Typing.Builtins
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection
 open FStar.List.Tot
-module E = Pulse.Elaborate.Pure
 open Pulse.Syntax.Base
 module U = Pulse.Syntax.Pure
 module R2 = FStar.Reflection.V2
-module RU = Pulse.RuntimeUtils
 let r_subst_of_rt_subst_elt (x:subst_elt)
   : FStar.Reflection.V2.subst_elt
   = match x with

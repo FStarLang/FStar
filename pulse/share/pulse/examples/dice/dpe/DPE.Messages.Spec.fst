@@ -17,8 +17,6 @@
 module DPE.Messages.Spec
 module Cddl = CDDL.Spec
 module Cbor = CBOR.Spec
-module U64 = FStar.UInt64
-module U8 = FStar.UInt8
 
 (* TCG DICE Protection Engine, Version 1.0, Revision 0.6 *)
 

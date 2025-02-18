@@ -16,9 +16,7 @@
 
 module PulseCore.Action
 
-module S = FStar.Set
 module I = PulseCore.InstantiatedSemantics
-module PP = PulseCore.Preorder
 module Sep = PulseCore.IndirectionTheorySep
 open FStar.PCM
 open FStar.Ghost

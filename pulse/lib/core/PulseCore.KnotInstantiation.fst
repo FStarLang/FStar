@@ -18,8 +18,6 @@ module PulseCore.KnotInstantiation
 open PulseCore.IndirectionTheory
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
-module PM = PulseCore.MemoryAlt
-module HS = PulseCore.HeapSig
 module IT = PulseCore.IndirectionTheory
 open FStar.Ghost {erased, hide, reveal}
 

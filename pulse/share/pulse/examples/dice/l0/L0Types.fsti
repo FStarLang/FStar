@@ -19,10 +19,8 @@ module L0Types
 open Pulse.Lib.Pervasives
 
 module V = Pulse.Lib.Vec
-module A = Pulse.Lib.Array
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
-module I32 = FStar.Int32
 
 open L0Core
 

@@ -19,7 +19,6 @@ module Pulse.Lib.Trade
 
 open Pulse.Lib.Pervasives
 
-module T = FStar.Tactics
 
 let trade_elim_t is hyp extra concl : Type u#4 =
   unit -> stt_ghost unit is (extra ** hyp) (fun _ -> concl)

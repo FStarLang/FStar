@@ -21,7 +21,6 @@ open FStar.Preorder
 open PulseCore.Preorder
 open PulseCore.FractionalPermission
 
-module L = FStar.List.Tot
 
 type pcm_carrier (#a:Type u#a) (p:preorder a) : Type u#a = option perm & hist p
 

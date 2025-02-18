@@ -1,9 +1,7 @@
 module PulseTutorial.PCMParallelIncrement
 #lang-pulse
 open Pulse.Lib.Pervasives
-module M = FStar.Algebra.CommMonoid
 module MS = Pulse.Lib.PCM.MonoidShares
-module U = FStar.Universe
 module GPR = Pulse.Lib.GhostPCMReference
 module CI = Pulse.Lib.CancellableInvariant
 module R = Pulse.Lib.Reference

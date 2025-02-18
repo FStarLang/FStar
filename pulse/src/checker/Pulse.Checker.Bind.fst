@@ -26,9 +26,7 @@ open Pulse.Checker.Prover
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
-module PS = Pulse.Checker.Prover.Substs
 module Abs = Pulse.Checker.Abs
-module RU = Pulse.RuntimeUtils
 
 #push-options "--z3rlimit_factor 4 --split_queries no"
 let check_bind_fn

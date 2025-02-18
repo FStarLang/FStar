@@ -1,6 +1,4 @@
 module PulseCore.IndirectionTheoryActions
-module F = FStar.FunctionalExtensionality
-module T = FStar.Tactics
 module PM = PulseCore.MemoryAlt
 module HST = PulseCore.HoareStateMonad
 open PulseCore.IndirectionTheorySep

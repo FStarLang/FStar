@@ -17,7 +17,6 @@
 module UnfoldPure
 #lang-pulse
 open Pulse.Lib.Pervasives
-module US = FStar.SizeT
 
 //Some examples illustrating how Pulse eliminates pure predicates
 //automatically, but requires slprops to be explicitly unfolded

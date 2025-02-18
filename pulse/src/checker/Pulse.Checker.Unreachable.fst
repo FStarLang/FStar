@@ -24,7 +24,6 @@ open Pulse.Checker.Pure
 open Pulse.Checker.Base
 open Pulse.Checker.Prover
 
-module P = Pulse.Syntax.Printer
 
 let check
   (g:env)

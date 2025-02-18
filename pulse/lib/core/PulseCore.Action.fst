@@ -367,7 +367,6 @@ let exists_equiv (#a:_) (#p:a -> slprop)
     let pf = FStar.Squash.return_squash pf in
     I.slprop_equiv_elim (op_exists_Star p) (exists* x. p x)
  
-module T = FStar.Tactics
 let fresh_invariant ctx p = fun #ictx -> ITA.fresh_invariant ictx p ctx
 
 let inames_live_inv (i:iref) (p:slprop) = fun #ictx -> ITA.inames_live_inv ictx i p

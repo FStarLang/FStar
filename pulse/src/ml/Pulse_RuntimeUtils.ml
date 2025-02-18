@@ -143,7 +143,6 @@ let map_seal (t:'a) (f:'a -> 'b) : 'b = f t
 let float_one = FStarC_Util.float_of_string "1.0"
 module TcEnv = FStarC_TypeChecker_Env
 module Free = FStarC_Syntax_Free
-module BU = FStarC_Util
 module FlatSet = FStarC_FlatSet
 
 let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)

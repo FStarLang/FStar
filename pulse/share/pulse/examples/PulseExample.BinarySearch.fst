@@ -2,7 +2,6 @@ module PulseExample.BinarySearch
 #lang-pulse
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
-module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
 open FStar.Order

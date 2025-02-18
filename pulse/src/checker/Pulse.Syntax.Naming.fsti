@@ -22,12 +22,9 @@ open Pulse.Common
 
 module L = FStar.List.Tot
 
-module R = FStar.Reflection
-module RTB = FStar.Reflection.Typing.Builtins
 module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 module U = Pulse.Syntax.Pure
-module E = Pulse.Elaborate.Pure
 
 let freevars (t:term) : Set.set var = RT.freevars t
 

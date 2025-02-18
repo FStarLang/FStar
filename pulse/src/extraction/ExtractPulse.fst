@@ -12,7 +12,6 @@ open FStarC.Const
 open FStarC.BaseTypes
 
 module BU = FStarC.Util
-module FC = FStarC.Const
 
 open FStarC.Class.Show
 

@@ -19,9 +19,6 @@ module Quicksort.Task
 
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
-module R = Pulse.Lib.Reference
-module SZ = FStar.SizeT
-module GSet = FStar.GhostSet
 
 module T = Pulse.Lib.Task
 open Quicksort.Base

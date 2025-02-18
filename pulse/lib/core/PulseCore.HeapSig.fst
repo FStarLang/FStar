@@ -1,8 +1,6 @@
 module PulseCore.HeapSig
 open FStar.Ghost
 open FStar.PCM
-module H2 = PulseCore.Heap2
-module ST = PulseCore.HoareStateMonad
 module CM = FStar.Algebra.CommMonoid
 
 let star_commutative #h p q =

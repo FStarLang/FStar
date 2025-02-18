@@ -19,7 +19,6 @@ module Pulse.Lib.LinkedList
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick.Util
 open FStar.List.Tot
-module T = FStar.Tactics
 module I = Pulse.Lib.Stick.Util
 module FA = Pulse.Lib.Forall.Util
 

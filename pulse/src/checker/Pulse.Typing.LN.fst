@@ -26,7 +26,6 @@ open Pulse.Typing
 // TODO: this is needed only for the E_Total flag,
 //       may be the flag should move to reflection
 //
-module T = FStar.Tactics.V2
 
 let well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (#eff:_) (d:RT.typing g e (eff, t))
   : Lemma (ensures RT.ln e /\ RT.ln t) =

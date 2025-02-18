@@ -16,13 +16,13 @@
 
 module Pulse.Checker.Base
 
+module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 module Metatheory = Pulse.Typing.Metatheory
 module CP = Pulse.Checker.Pure
 module RU = Pulse.RuntimeUtils
 module FV = Pulse.Typing.FV
-module P = Pulse.Syntax.Printer
 
 open Pulse.Typing.Combinators
 open Pulse.Typing.Metatheory
@@ -466,7 +466,6 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   k
 #pop-options
 
-module LN = Pulse.Typing.LN
 #push-options "--z3rlimit_factor 8 --fuel 1 --ifuel 1"
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
@@ -710,8 +709,6 @@ let checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_o
   let tt : universe_of _ _ _ = RU.magic () in
   (| x, g', (| comp_u c, comp_res c, tt |), (| ctxt', f x |), k |)
 #pop-options
-
-module R = FStar.Reflection.V2
 
 let readback_comp_res_as_comp (c:T.comp) : option comp =
   match c with

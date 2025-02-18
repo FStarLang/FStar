@@ -4,7 +4,6 @@
 module PulseTutorialExercises.SpinLock2
 #lang-pulse
 open Pulse.Lib.Pervasives
-module Box = Pulse.Lib.Box
 module U32 = FStar.UInt32
 module GR = Pulse.Lib.GhostReference
 

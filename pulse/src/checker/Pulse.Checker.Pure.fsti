@@ -15,17 +15,12 @@
 *)
 
 module Pulse.Checker.Pure
-module RT = FStar.Reflection.Typing
-module R = FStar.Reflection.V2
-module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Elaborate.Pure
 open Pulse.Typing
 open Pulse.Readback
-module RTB = FStar.Tactics.Builtins
-module RU = Pulse.RuntimeUtils
 
 let push_context (ctx:string) (r:range) (g:env) : (g':env { g == g' })
   = push_context g ctx r

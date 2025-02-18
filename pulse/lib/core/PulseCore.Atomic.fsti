@@ -334,7 +334,6 @@ val buy1 ()
 // References
 ////////////////////////////////////////////////////////////////////////
 open FStar.PCM
-module PP = PulseCore.Preorder
 
 val pts_to_not_null
     (#a:Type u#1)

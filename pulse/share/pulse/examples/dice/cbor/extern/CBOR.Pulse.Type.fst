@@ -16,6 +16,9 @@
 
 module CBOR.Pulse.Type
 
+module SZ = FStar.SizeT
+module R = Pulse.Lib.Reference
+
 inline_for_extraction noextract
 let cbor_serialized_payload_t = A.array U8.t
 

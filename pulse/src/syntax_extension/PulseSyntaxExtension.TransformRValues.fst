@@ -18,16 +18,9 @@ module PulseSyntaxExtension.TransformRValues
 open FStarC
 open FStarC.Effect
 module Sugar = PulseSyntaxExtension.Sugar
-module SW = PulseSyntaxExtension.SyntaxWrapper
 module A = FStarC.Parser.AST
-module D = FStarC.Syntax.DsEnv
 module S = FStarC.Syntax.Syntax
 module L = FStarC.List
-module U = FStarC.Syntax.Util
-module SS = FStarC.Syntax.Subst
-module R = FStarC.Range
-module BU = FStarC.Util
-module P =  FStarC.Syntax.Print
 open FStarC.Class.Show
 open FStarC.Class.HasRange
 open FStarC.Class.Monad

@@ -18,16 +18,12 @@ module PulseSyntaxExtension.Env
 open FStarC
 open FStarC.Effect
 // module Sugar = PulseSugar
-module SW = PulseSyntaxExtension.SyntaxWrapper
 module A = FStarC.Parser.AST
 module D = FStarC.Syntax.DsEnv
 module S = FStarC.Syntax.Syntax
 module L = FStarC.List
-module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst
-module R = FStarC.Range
 module BU = FStarC.Util
-module P =  FStarC.Syntax.Print
 module ToSyntax = FStarC.ToSyntax.ToSyntax
 open FStarC.Class.Show
 open FStarC.Class.HasRange
@@ -35,6 +31,7 @@ open FStarC.Class.Monad
 open FStarC.Ident
 open FStar.List.Tot
 open PulseSyntaxExtension.Err
+open FStarC.Syntax.Print {} // instances
 
 let r_ = FStarC.Range.dummyRange
 #push-options "--warn_error -272" //intentional top-level effects
