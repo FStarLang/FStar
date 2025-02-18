@@ -809,14 +809,13 @@ ensures pts_to_range a i j #p (s1 `Seq.append` s2)
   pts_to_range_prop a #i #m;
   pts_to_range_prop a #m #j;
   unfold pts_to_range a i m #p s1;
+  unfold token #(in_bounds i m a) a _;
   unfold pts_to_range a m j #p s2;
+  unfold token #(in_bounds m j a) a _;
   ghost_join (array_slice a i m) (array_slice a m j) ();
   rewrite each (merge (array_slice a i m) (array_slice a m j))
             as (array_slice a i j);
   pts_to_range_intro_ij a _ _ i j ();
-  admit(); // fixme: ambig
-  unfold (token #(in_bounds i m a) a _);
-  unfold (token #(in_bounds m j a) a _);
 }
 
 let pts_to_range_join = pts_to_range_join'

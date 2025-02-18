@@ -56,7 +56,6 @@ fn trans (#a:Type0) (p q r: a -> slprop)
     requires (forall* x. p x @==> q x) ** (forall* x. q x @==> r x)
     ensures forall* x. p x @==> r x
 {
-    admit(); /// GGG FIXME: rewrite under lambda
     trans_compose p q r id id;
 }
 
