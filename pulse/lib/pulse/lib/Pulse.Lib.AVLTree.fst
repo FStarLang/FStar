@@ -783,9 +783,7 @@ ensures  is_tree x ft ** pure (T.Node? ft)
   cases_of_is_tree (Some v) ft;
   unfold is_tree_cases;
   intro_is_tree_node (Some v) v;
-  rewrite each Some v as x;
   with 't. rewrite is_tree (Some v) 't as is_tree x 't;
-  ()
 }
 
 fn rec tree_max_c (#t:Type0) (tree:tree_t t) (#l:G.erased(T.tree t){T.Node? l})
