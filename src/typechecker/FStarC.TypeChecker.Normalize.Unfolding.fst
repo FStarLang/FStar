@@ -87,6 +87,10 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         log_unfolding cfg (fun () -> BU.print_string " >> UnfoldOnce\n");
         once
 
+    | Some (Inr ({sigattrs=attrs}, _), _), _ when cfg.steps.for_extraction && Some? (BU.find_map attrs Parser.Const.ExtractAs.is_extract_as_attr) ->
+        log_unfolding cfg (fun () -> BU.print_string " >> Has extract_as attribute and we're extracting, unfold!");
+        yes
+
     // Recursive lets may only be unfolded when Zeta is on
     | Some (Inr ({sigquals=qs; sigel=Sig_let {lbs=(is_rec, _)}}, _), _), _ when
             is_rec && not cfg.steps.zeta && not cfg.steps.zeta_full ->
