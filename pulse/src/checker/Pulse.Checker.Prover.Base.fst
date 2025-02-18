@@ -22,7 +22,6 @@ open Pulse.Checker.Base
 open Pulse.Typing.Combinators
 module RU = Pulse.RuntimeUtils
 module T = FStar.Tactics.V2
-module PS = Pulse.Checker.Prover.Substs
 
 let rec list_as_slprop' (vp:slprop) (fvps:list slprop)
   : Tot slprop (decreases fvps) =

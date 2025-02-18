@@ -28,7 +28,6 @@ module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst
 module R = FStarC.Range
 module BU = FStarC.Util
-module P =  FStarC.Syntax.Print
 module LR = PulseSyntaxExtension.TransformRValues
 
 open FStarC.Class.Show

@@ -19,8 +19,6 @@ open PulseCore.KnotInstantiation
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 module PM = PulseCore.MemoryAlt
-module HS = PulseCore.HeapSig
-module IT = PulseCore.IndirectionTheory
 open FStar.Ghost {erased, hide, reveal}
 
 let timeless_heap_le (a b: timeless_heap_sig.mem) : prop =

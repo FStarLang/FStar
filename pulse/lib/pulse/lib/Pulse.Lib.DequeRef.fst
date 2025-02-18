@@ -3,7 +3,6 @@ module Pulse.Lib.DequeRef
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Deque
 module B = Pulse.Lib.Box
-module DQ = Pulse.Lib.Deque
 open FStar.List.Tot
 
 let dq (t:Type0) = B.box (deque t)

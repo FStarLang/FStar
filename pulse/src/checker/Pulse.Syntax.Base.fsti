@@ -15,10 +15,8 @@
 *)
 
 module Pulse.Syntax.Base
-module RTB = FStar.Reflection.Typing.Builtins
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
-module RU = Pulse.RuntimeUtils
 module T = FStar.Tactics.V2
 open FStar.List.Tot
 

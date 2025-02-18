@@ -19,8 +19,6 @@ module Quicksort.Parallel
 
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
-module R = Pulse.Lib.Reference
-module SZ = FStar.SizeT
 
 open Quicksort.Base
 

@@ -30,8 +30,6 @@ open Pulse.Lib.SpinLock
 module RTC   = FStar.ReflexiveTransitiveClosure
 module FRAP  = Pulse.Lib.FractionalAnchoredPreorder
 module AR    = Pulse.Lib.AnchoredReference
-module Big   = Pulse.Lib.BigReference
-module Ghost = Pulse.Lib.GhostReference
 
 noeq
 type task_state : Type0 =

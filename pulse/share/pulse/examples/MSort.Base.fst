@@ -19,7 +19,6 @@ module MSort.Base
 
 open FStar.Ghost
 open Pulse.Lib.Pervasives
-module A = Pulse.Lib.Array
 module V = Pulse.Lib.Vec
 module S = FStar.Seq
 module SZ = FStar.SizeT

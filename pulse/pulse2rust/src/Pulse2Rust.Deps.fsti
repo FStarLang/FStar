@@ -27,9 +27,7 @@ open Pulse2Rust.Extract
 open RustBindings
 
 module S = FStarC.Extraction.ML.Syntax
-module EUtil = FStarC.Extraction.ML.Util
 
-module UEnv = FStarC.Extraction.ML.UEnv
 
 val empty_defs : reachable_defs
 

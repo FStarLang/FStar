@@ -24,7 +24,6 @@ open DPE
 
 module U8 = FStar.UInt8
 module US = FStar.SizeT
-module A = Pulse.Lib.Array
 
 assume val get_uds ()  // used only for testing a client
   : stt (larray U8.t (US.v uds_len))

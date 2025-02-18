@@ -24,7 +24,6 @@ open PulseCore.Preorder
 open Pulse.Lib.FractionalAnchoredPreorder
 module FRAP = Pulse.Lib.FractionalAnchoredPreorder
 module GPR = Pulse.Lib.GhostPCMReference
-module U32 = FStar.UInt32
 module T = FStar.Tactics
 
 let carrier (#a:Type0) (#p:preorder a) (#anc:anchor_rel p)

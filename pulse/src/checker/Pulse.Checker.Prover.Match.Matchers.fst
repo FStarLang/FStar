@@ -36,7 +36,6 @@ module TermEq  = FStar.Reflection.TermEq
 module RT      = FStar.Reflection.Typing
 
 module RU  = Pulse.RuntimeUtils
-module P   = Pulse.Syntax.Printer
 module PS  = Pulse.Checker.Prover.Substs
 module PTU = Pulse.Typing.Util
 

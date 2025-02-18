@@ -31,7 +31,6 @@ open RustBindings
 open FStarC.Class.Setlike
 
 module S = FStarC.Extraction.ML.Syntax
-module EUtil = FStarC.Extraction.ML.Util
 
 module UEnv = FStarC.Extraction.ML.UEnv
 

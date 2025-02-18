@@ -21,7 +21,6 @@ open FStar.Ghost
 open Pulse.Lib.Core
 open Pulse.Lib.Pervasives
 
-module T = FStar.Tactics
 
 type small_slprop = v:slprop { timeless v }
 

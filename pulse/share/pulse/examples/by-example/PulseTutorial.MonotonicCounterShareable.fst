@@ -3,7 +3,6 @@ module PulseTutorial.MonotonicCounterShareable
 open Pulse.Lib.Pervasives
 open FStar.Preorder
 module MR = Pulse.Lib.MonotonicGhostRef
-module PP = PulseCore.Preorder
 module B = Pulse.Lib.Box
 
 assume

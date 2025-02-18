@@ -19,7 +19,6 @@ module Pulse.Typing.Metatheory
 open Pulse.Syntax
 open Pulse.Typing
 
-module T = FStar.Tactics.V2
 
 let tot_typing_weakening_single #g #t #ty d x x_t =
   let g1 = singleton_env (fstar_env g) x x_t in

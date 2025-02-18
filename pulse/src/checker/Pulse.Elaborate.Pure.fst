@@ -18,7 +18,6 @@ module Pulse.Elaborate.Pure
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module L = FStar.List.Tot
-module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 open Pulse.Syntax.Base
 

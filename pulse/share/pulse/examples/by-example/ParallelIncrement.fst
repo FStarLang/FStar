@@ -18,7 +18,6 @@ module ParallelIncrement
 #lang-pulse
 open Pulse.Lib.Pervasives
 
-module U32 = FStar.UInt32
 module L = Pulse.Lib.SpinLock
 module GR = Pulse.Lib.GhostReference
 module R = Pulse.Lib.Reference
@@ -183,7 +182,6 @@ val atomic_increment (r:ref int) (#i:erased int)
     (pts_to r i)
     (fun _ -> pts_to r (i + 1))
      
-module F = Pulse.Lib.FlippableInv
 
 let test (l:iname) = assert (not (mem_inv emp_inames l))
 let pts_to_refine #a (x:ref a) (p:a -> slprop) = exists* v. pts_to x v ** p v 

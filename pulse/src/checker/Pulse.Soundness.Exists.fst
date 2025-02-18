@@ -27,7 +27,6 @@ open Pulse.Elaborate
 open Pulse.Soundness.Common
 
 module WT = Pulse.Lib.Core.Typing
-module LN = Pulse.Typing.LN
 module FV = Pulse.Typing.FV
 
 let intro_exists_soundness

@@ -21,7 +21,6 @@ open Pulse.Syntax
 module G = FStar.Ghost
 module L = FStar.List.Tot
 
-module R = FStar.Reflection
 module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 open FStar.List.Tot

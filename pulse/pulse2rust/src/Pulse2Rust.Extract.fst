@@ -29,7 +29,6 @@ open RustBindings
 module S = FStarC.Extraction.ML.Syntax
 module EUtil = FStarC.Extraction.ML.Util
 
-module UEnv = FStarC.Extraction.ML.UEnv
 
 //
 // 'a to A

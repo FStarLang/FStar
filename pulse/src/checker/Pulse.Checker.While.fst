@@ -25,7 +25,6 @@ open Pulse.Checker.Prover
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
-module RU = Pulse.RuntimeUtils
 
 let while_cond_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:term)
                            (inv_typing:tot_typing g (tm_exists_sl u (as_binder ty) inv_body) tm_slprop)

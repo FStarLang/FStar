@@ -17,7 +17,6 @@ module Pulse.Lib.Core
 module I = PulseCore.InstantiatedSemantics
 module A = PulseCore.Atomic
 module T = FStar.Tactics.V2
-module F = FStar.FunctionalExtensionality
 open PulseCore.InstantiatedSemantics
 open PulseCore.FractionalPermission
 open PulseCore.Observability

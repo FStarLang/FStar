@@ -15,9 +15,9 @@
 *)
 
 module Pulse.Checker.Pure
+module RTB = FStar.Tactics.Builtins
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
-module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 open FStar.Tactics.V2
 open FStar.Reflection.V2 (* shadow named view *)
@@ -376,7 +376,6 @@ let check_slprop_with_core (g:env)
     (push_context_no_range g "check_slprop_with_core") t T.E_Total tm_slprop
 
   
-module WT = Pulse.Lib.Core.Typing
 module Metatheory = Pulse.Typing.Metatheory.Base
 
 let non_informative_class_typing

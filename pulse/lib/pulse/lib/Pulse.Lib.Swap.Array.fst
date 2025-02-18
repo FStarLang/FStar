@@ -16,7 +16,6 @@
 
 module Pulse.Lib.Swap.Array
 #lang-pulse
-module R = Pulse.Lib.Reference
 module Prf = Pulse.Lib.Swap.Spec
 open Pulse.Lib.Swap.Common
 #set-options "--fuel 2 --ifuel 1"

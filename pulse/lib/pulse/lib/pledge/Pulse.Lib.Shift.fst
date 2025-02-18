@@ -20,7 +20,6 @@ open FStar.Ghost
 open Pulse.Class.Duplicable
 open Pulse.Lib.Pervasives
 
-module T = FStar.Tactics
 
 let shift_elim_t is hyp extra concl : Type u#4 =
   unit -> stt_ghost unit is (extra ** hyp) (fun _ -> concl)

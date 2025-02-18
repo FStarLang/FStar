@@ -22,9 +22,6 @@ open EngineTypes
 open EngineCore
 open L0Types
 open L0Core
-module L = Pulse.Lib.SpinLock
-module A = Pulse.Lib.Array
-module R = Pulse.Lib.Reference
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 module SZ = FStar.SizeT

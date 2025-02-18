@@ -18,7 +18,6 @@
 module PulseTutorial.LinkedList
 #lang-pulse
 open Pulse.Lib.Pervasives
-module S = Pulse.Lib.Stick.Util
 module FA = Pulse.Lib.Forall.Util
 open FStar.List.Tot
 

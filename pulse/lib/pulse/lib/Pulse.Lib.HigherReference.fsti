@@ -19,7 +19,6 @@ open Pulse.Lib.Core
 open PulseCore.FractionalPermission
 open FStar.Ghost
 open Pulse.Class.PtsTo
-module U32 = FStar.UInt32
 module T = FStar.Tactics
 val ref ([@@@unused]a:Type u#1) : Type u#0
 

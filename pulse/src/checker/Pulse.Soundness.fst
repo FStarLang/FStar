@@ -17,7 +17,6 @@
 module Pulse.Soundness
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
-module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
@@ -40,12 +39,9 @@ module Rewrite = Pulse.Soundness.Rewrite
 module Comp = Pulse.Soundness.Comp
 module LN = Pulse.Typing.LN
 module FV = Pulse.Typing.FV
-module STT = Pulse.Soundness.STT
 module Sub = Pulse.Soundness.Sub
 module RU = Pulse.RuntimeUtils
 module Typing = Pulse.Typing
-module EPure = Pulse.Elaborate.Pure
-module WT= Pulse.Lib.Core.Typing
 
 let tabs_t (d:'a) = 
     #g:stt_env ->

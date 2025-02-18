@@ -23,7 +23,6 @@ open Pulse.Checker.Base
 open Pulse.Checker.Prover
 open Pulse.PP
 module T = FStar.Tactics.V2
-module P = Pulse.Syntax.Printer
 module R = FStar.Reflection.V2
 
 let check_slprop_equiv_ext r (g:env) (p q:slprop)

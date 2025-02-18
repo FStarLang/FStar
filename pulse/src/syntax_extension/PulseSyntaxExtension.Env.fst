@@ -18,14 +18,11 @@ module PulseSyntaxExtension.Env
 open FStarC
 open FStarC.Effect
 // module Sugar = PulseSugar
-module SW = PulseSyntaxExtension.SyntaxWrapper
 module A = FStarC.Parser.AST
 module D = FStarC.Syntax.DsEnv
 module S = FStarC.Syntax.Syntax
 module L = FStarC.List
-module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst
-module R = FStarC.Range
 module BU = FStarC.Util
 module ToSyntax = FStarC.ToSyntax.ToSyntax
 open FStarC.Class.Show

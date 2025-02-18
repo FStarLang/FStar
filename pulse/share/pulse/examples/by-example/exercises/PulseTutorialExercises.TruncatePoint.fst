@@ -2,7 +2,6 @@ module PulseTutorialExercises.TruncatePoint
 #lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Box
-module Box = Pulse.Lib.Box
 noeq
 type point = {
     x:box int;

@@ -17,16 +17,12 @@
 module Pulse.Checker.Base
 
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection.V2
-module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Typing.FV {} (* for smtpats, which some clients seem to need *)
-module RU = Pulse.RuntimeUtils
-module Metatheory = Pulse.Typing.Metatheory
 
 val debug (g:env) (f:unit -> T.Tac string) : T.Tac unit
 

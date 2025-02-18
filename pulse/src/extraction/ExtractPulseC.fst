@@ -11,7 +11,6 @@ open FStarC.Extraction.ML.Syntax
 open FStarC.Const
 open FStarC.BaseTypes
 open FStarC.Extraction.Krml
-module K = FStarC.Extraction.Krml
 module BU = FStarC.Util
 
 (* JL: TODO: in stdlib somewhere? *)

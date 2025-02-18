@@ -16,7 +16,6 @@
 
 module Pulse.Typing.Combinators
 
-module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax

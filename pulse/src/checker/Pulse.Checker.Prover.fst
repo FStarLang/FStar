@@ -30,7 +30,6 @@ module RU = Pulse.RuntimeUtils
 module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
-module Pprint = FStar.Pprint
 module Metatheory = Pulse.Typing.Metatheory
 module PS = Pulse.Checker.Prover.Substs
 

@@ -17,7 +17,6 @@
 module RecordOfArrays
 #lang-pulse
 open Pulse.Lib.Pervasives
-module R = Pulse.Lib.Reference
 module A = Pulse.Lib.Array
 module U8 = FStar.UInt8
 module US = FStar.SizeT

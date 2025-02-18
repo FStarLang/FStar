@@ -21,7 +21,6 @@ open Pulse.Lib.HashTable.Spec
 open Pulse.Lib.HashTable.Type
 
 module V = Pulse.Lib.Vec
-module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
 module PHT = Pulse.Lib.HashTable.Spec
 

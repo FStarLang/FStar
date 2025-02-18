@@ -3,9 +3,6 @@ module Pulse.Lib.MonotonicGhostRef
 open Pulse.Lib.Pervasives
 open Pulse.Lib.GhostPCMReference
 open FStar.Preorder
-module GR = Pulse.Lib.GhostPCMReference
-module FP = Pulse.Lib.PCM.FractionalPreorder
-module PP = PulseCore.Preorder
 
 let as_prop (t:Type0) = t <==> True
 

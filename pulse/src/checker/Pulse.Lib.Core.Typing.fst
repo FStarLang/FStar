@@ -19,7 +19,6 @@ module Pulse.Lib.Core.Typing
 open FStar.Reflection.V2
 open Pulse.Reflection.Util
 
-module RT = FStar.Reflection.Typing
 
 let return_stt_typing _ _ _ = admit ()
 let return_stt_noeq_typing _ _ _ = admit ()

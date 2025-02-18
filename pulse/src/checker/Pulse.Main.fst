@@ -26,7 +26,6 @@ open Pulse.Typing
 open Pulse.Checker
 open Pulse.Elaborate
 open Pulse.Soundness
-module Cfg = Pulse.Config
 module RU = Pulse.RuntimeUtils
 module P = Pulse.Syntax.Printer
 module Rec = Pulse.Recursion

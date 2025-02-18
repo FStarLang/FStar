@@ -17,7 +17,6 @@
 module Pulse.Lib.Primitives
 #lang-pulse
 
-module B = Pulse.Lib.Box
 
 friend Pulse.Lib.Box
 

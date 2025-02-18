@@ -16,11 +16,9 @@
 
 module HACL
 open Pulse.Lib.Pervasives
-module R = Pulse.Lib.Reference
 module A = Pulse.Lib.Array
 module US = FStar.SizeT
 module U8 = FStar.UInt8
-module U32 = FStar.UInt32
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let v32us : US.t = 32sz

@@ -18,10 +18,8 @@ module Pulse.Syntax.Printer
 open FStar.Printf
 open Pulse.Syntax
 
-module L = FStar.List.Tot
 
 module T = FStar.Tactics.V2
-module Un = FStar.Sealed
 module R = FStar.Reflection.V2
 
 let tot_or_ghost_to_string = function

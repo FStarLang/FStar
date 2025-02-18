@@ -23,7 +23,6 @@ open Pulse.Checker.Base
 
 module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
-module FV = Pulse.Typing.FV
 module RU = Pulse.RuntimeUtils
 module P = Pulse.Syntax.Printer
 module Prover = Pulse.Checker.Prover

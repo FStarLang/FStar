@@ -5,7 +5,6 @@ open Pulse.Lib.GhostPCMReference
 open FStar.Preorder
 module GR = Pulse.Lib.GhostPCMReference
 module FP = Pulse.Lib.PCM.FractionalPreorder
-module PP = PulseCore.Preorder
 
 
 let mref (#t:Type) (p:preorder t) = GR.gref (FP.fp_pcm p)

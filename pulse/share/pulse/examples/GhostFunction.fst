@@ -17,8 +17,6 @@
 module GhostFunction
 #lang-pulse
 open Pulse.Lib.Pervasives
-module U8 = FStar.UInt8
-module R = Pulse.Lib.Reference
 module GR = Pulse.Lib.GhostReference
 
 assume val f (x:int) : GTot int

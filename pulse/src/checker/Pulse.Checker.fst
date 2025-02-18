@@ -16,7 +16,6 @@
 
 module Pulse.Checker
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection.V2
 module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 open FStar.List.Tot
@@ -30,10 +29,7 @@ open Pulse.Checker.SLPropEquiv
 open Pulse.Checker.Base
 
 module P = Pulse.Syntax.Printer
-module RTB = FStar.Tactics.Builtins
-module FV = Pulse.Typing.FV
 module RU = Pulse.RuntimeUtils
-module Metatheory = Pulse.Typing.Metatheory
 
 module Abs = Pulse.Checker.Abs
 module If = Pulse.Checker.If

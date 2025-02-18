@@ -22,7 +22,6 @@ open PulseCore.FractionalPermission
 open Pulse.Lib.Core
 open Pulse.Class.PtsTo
 
-module U32 = FStar.UInt32
 module T = FStar.Tactics.V2
 
 module R = Pulse.Lib.Reference

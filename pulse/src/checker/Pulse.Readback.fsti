@@ -16,7 +16,6 @@
 
 module Pulse.Readback
 module R = FStar.Reflection.V2
-module L = FStar.List.Tot
 open Pulse.Syntax.Base
 open Pulse.Elaborate.Pure
 

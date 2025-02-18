@@ -20,9 +20,7 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Prover.Base
 
-module RU = Pulse.RuntimeUtils
 module T  = FStar.Tactics.V2
-module P = Pulse.Syntax.Printer
 module PS = Pulse.Checker.Prover.Substs
 
 (* Move? *)
