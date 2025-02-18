@@ -180,7 +180,8 @@ ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
 let pts_to_range
   (#a:Type)
   ([@@@mkey] x:array a)
-  ([@@@mkey] i [@@@mkey] j : nat)
+  ([@@@mkey] i : nat)
+  (j : nat)
   (#[exact (`1.0R)] p:perm)
   (s : Seq.seq a)
 : slprop
