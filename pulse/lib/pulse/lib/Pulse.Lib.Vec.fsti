@@ -30,7 +30,7 @@ module A = Pulse.Lib.Array.Core
 
 val vec ([@@@strictly_positive] a:Type0) : Type u#0
 
-val length (#a:Type0) (v:vec a) : GTot nat
+val length (#a:Type u#0) (x:vec a) : Ghost nat (requires True) (ensures SZ.fits)
 
 inline_for_extraction
 type lvec (a:Type0) (n:nat) = v:vec a { length v == n }
