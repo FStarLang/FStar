@@ -10,6 +10,17 @@
   - See also ExistsErasedAndPureEqualities.fst(50,4-52,12)
 
 >>]
+* Info at ExistsErasedAndPureEqualities.fst(68,4-68,11):
+  - Admitting continuation.
+  - Current context:
+      ExistsErasedAndPureEqualities.some_pred x v
+  - In typing environment:
+      _#449 : Prims.squash (v_ == v),
+      v_#446 : FStar.Ghost.erased Prims.int,
+      _#312 : Prims.squash (v == v),
+      v#116 : FStar.Ghost.erased Prims.int,
+      x#111 : Pulse.Lib.Reference.ref Prims.int
+
 >> Got issues: [
 * Error 228 at ExistsErasedAndPureEqualities.fst(79,4-80,21):
   - Could not resolve all free variables in the proposition: v == v_

@@ -7,3 +7,15 @@
   - See also Bug266.fst(12,31-12,36)
 
 >>]
+* Info at Bug266.fst(28,2-28,9):
+  - Admitting continuation.
+  - Current context:
+      emp
+  - In typing environment:
+      _#119 :
+        Pulse.Lib.Core.stt_ghost Prims.unit
+          Pulse.Lib.Core.emp_inames
+          (Pulse.Lib.Core.pure Prims.l_False)
+          Bug266.post,
+      uu___0#57 : Prims.unit
+

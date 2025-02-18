@@ -79,11 +79,11 @@ let check
   // ^ This makes a big difference! Would be good to distill into
   // a smaller F*-only example and file an issue.
   let ide = T.ide () in
+  let admit_diag = T.ext_getv "pulse:admit_diag" = "1" in
   let no_admit_diag = T.ext_getv "pulse:no_admit_diag" = "1" in
-  (if ide && not no_admit_diag then begin
+  (if admit_diag || (ide && not no_admit_diag) then begin
     (* If we're running interactively, print out the context and environment. *)
     let open Pulse.PP in
-    let (| pre, _ |) = Prover.normalize_slprop g pre in
     let msg = [
       text "Admitting continuation.";
       text "Current context:" ^^
