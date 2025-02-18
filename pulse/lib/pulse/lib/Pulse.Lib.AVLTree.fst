@@ -750,18 +750,22 @@ ensures (is_tree y (T.insert_avl cmp 'l key))
       if (delta >= 0)
       {
         let new_left = insert_avl cmp n.left key;
-        vl := {data = n.data; left = new_left; right = n.right};
-        admit();
-        intro_is_tree_node (Some vl) vl #({data = n.data; left = new_left; right = n.right});
+        let vl' = {data = n.data; left = new_left; right = n.right};
+        vl := vl';
+        rewrite each new_left as vl'.left;
+        rewrite each n.right as vl'.right;
+        intro_is_tree_node (Some vl) vl #vl';
         let new_tree = rebalance_avl (Some vl);
         new_tree
       }
       else
       {
         let new_right = insert_avl cmp n.right key;
-        vl := {data = n.data; left = n.left; right = new_right};
-        admit();
-        intro_is_tree_node (Some vl) vl #({data = n.data; left = n.left; right = new_right});
+        let vl' = {data = n.data; left = n.left; right = new_right };
+        vl := vl';
+        rewrite each new_right as vl'.right;
+        rewrite each n.left as vl'.left;
+        intro_is_tree_node (Some vl) vl #vl';
         let new_tree = rebalance_avl (Some vl);
         new_tree
       }
