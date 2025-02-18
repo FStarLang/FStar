@@ -437,27 +437,28 @@ void Example_Hashtable_insert_lookup_and_replace(void)
   ht_t__size_t_Example_Hashtable_data
   h = alloc__size_t_Example_Hashtable_data(Example_Hashtable_hash, (size_t)100U);
   __Pulse_Lib_HashTable_Type_ht_t_size_t_Example_Hashtable_data_bool
-  r =
+  _letpattern =
     insert__size_t_Example_Hashtable_data(h,
       (size_t)1U,
       ((Example_Hashtable_data){ .left = true, .right = false }));
-  ht_t__size_t_Example_Hashtable_data h1 = r.fst;
+  ht_t__size_t_Example_Hashtable_data h1 = _letpattern.fst;
   __Pulse_Lib_HashTable_Type_ht_t_size_t_Example_Hashtable_data_FStar_Pervasives_Native_option_size_t
-  r1 = lookup__size_t_Example_Hashtable_data(h1, (size_t)1U);
-  ht_t__size_t_Example_Hashtable_data h2 = r1.fst;
-  if (r1.snd.tag == Some)
+  _letpattern1 = lookup__size_t_Example_Hashtable_data(h1, (size_t)1U);
+  ht_t__size_t_Example_Hashtable_data h2 = _letpattern1.fst;
+  option__size_t found = _letpattern1.snd;
+  if (found.tag == Some)
   {
-    size_t i = r1.snd.v;
+    size_t i = found.v;
     __Pulse_Lib_HashTable_Type_ht_t_size_t_Example_Hashtable_data_Example_Hashtable_data
-    r2 =
+    _letpattern2 =
       replace__size_t_Example_Hashtable_data(h2,
         i,
         (size_t)1U,
         ((Example_Hashtable_data){ .left = false, .right = true }));
-    ht_t__size_t_Example_Hashtable_data h3 = r2.fst;
+    ht_t__size_t_Example_Hashtable_data h3 = _letpattern2.fst;
     dealloc__size_t_Example_Hashtable_data(h3);
   }
-  else if (r1.snd.tag == None)
+  else if (found.tag == None)
     dealloc__size_t_Example_Hashtable_data(h2);
   else
   {

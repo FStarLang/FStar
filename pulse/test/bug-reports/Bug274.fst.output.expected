@@ -1,24 +1,69 @@
 >> Got issues: [
 * Error 228 at Bug274.fst(31,4-31,15):
-  - Cannot prove:
-      _ @==> _ ** _ @==> _
+  - Cannot prove any of:
+      Pulse.Lib.Stick.stick _ _ ** Pulse.Lib.Stick.stick _ _
   - In the context:
-      p @==> q ** q @==> r
+      Pulse.Lib.Stick.stick p q ** Pulse.Lib.Stick.stick q r
+  - Some hints:
+  - Ambiguous match for resource:
+      Pulse.Lib.Stick.stick _ _
+  - It can be matched by both:
+      Pulse.Lib.Stick.stick p q
+    and:
+      Pulse.Lib.Stick.stick q r
+    in the context.
+  - Ambiguous match for resource:
+      Pulse.Lib.Stick.stick _ _
+  - It can be matched by both:
+      Pulse.Lib.Stick.stick p q
+    and:
+      Pulse.Lib.Stick.stick q r
+    in the context.
 
 >>]
 >> Got issues: [
 * Error 228 at Bug274.fst(43,4-43,15):
-  - Cannot prove:
-      _ @==> _ ** _ @==> _
+  - Cannot prove any of:
+      Pulse.Lib.Stick.stick _ _ ** Pulse.Lib.Stick.stick _ _
   - In the context:
-      p @==> q ** q @==> r
+      Pulse.Lib.Stick.stick p q ** Pulse.Lib.Stick.stick q r
+  - Some hints:
+  - Ambiguous match for resource:
+      Pulse.Lib.Stick.stick _ _
+  - It can be matched by both:
+      Pulse.Lib.Stick.stick q r
+    and:
+      Pulse.Lib.Stick.stick p q
+    in the context.
+  - Ambiguous match for resource:
+      Pulse.Lib.Stick.stick _ _
+  - It can be matched by both:
+      Pulse.Lib.Stick.stick q r
+    and:
+      Pulse.Lib.Stick.stick p q
+    in the context.
 
 >>]
 >> Got issues: [
 * Error 228 at Bug274.fst(77,4-77,12):
-  - Cannot prove:
-      _ ** _ @==> _
+  - Cannot prove any of:
+      _ ** Pulse.Lib.Stick.stick _ _
   - In the context:
-      p ** p @==> q ** r @==> r
+      p ** Pulse.Lib.Stick.stick p q ** Pulse.Lib.Stick.stick r r
+  - Some hints:
+  - Ambiguous match for resource:
+      Pulse.Lib.Stick.stick _ _
+  - It can be matched by both:
+      Pulse.Lib.Stick.stick r r
+    and:
+      Pulse.Lib.Stick.stick p q
+    in the context.
+  - Ambiguous match for resource:
+      _
+  - It can be matched by both:
+      Pulse.Lib.Stick.stick r r
+    and:
+      p
+    in the context.
 
 >>]
