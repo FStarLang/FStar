@@ -16,6 +16,7 @@
 
 module Pulse.Checker.Base
 
+module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 module Metatheory = Pulse.Typing.Metatheory
@@ -710,8 +711,6 @@ let checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_o
   let tt : universe_of _ _ _ = RU.magic () in
   (| x, g', (| comp_u c, comp_res c, tt |), (| ctxt', f x |), k |)
 #pop-options
-
-module R = FStar.Reflection.V2
 
 let readback_comp_res_as_comp (c:T.comp) : option comp =
   match c with
