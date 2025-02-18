@@ -41,8 +41,6 @@ ensures  (L.lock_alive l #p (exists* v. pts_to x #0.5R v)) ** R.pts_to x #0.5R (
 }
 
 
-#push-options "--print_implicits --ext 'pulse:env_on_err' --print_full_names"
-
 fn increment_f (x: ref nat)
                (#p:perm)
                (#pred #qpred: nat -> slprop)

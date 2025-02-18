@@ -101,7 +101,6 @@ fn qsh (n:nat)
 
 
 
-#set-options "--print_implicits"
 fn qs12_par (#e:perm) (p:pool)
   requires pool_alive #e p
   returns _:unit

@@ -15,17 +15,9 @@
 *)
 
 module Invariant
+
 #lang-pulse
-
-// #set-options "--error_contexts true"
-// #set-options "--print_implicits --print_universes"
-// #set-options "--ext pulse:guard_policy=SMTSync"
-// #set-options "--debug Invariant --debug_level SMTQuery"
-
-// #set-options "--trace_error"
-open Pulse.Lib.Pervasives
-open Pulse.Lib.Reference
-open Pulse.Lib
+open Pulse
 
 assume val p : slprop
 assume val q : slprop

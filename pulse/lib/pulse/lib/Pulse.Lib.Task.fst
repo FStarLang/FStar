@@ -1328,7 +1328,6 @@ fn rec check_if_all_done
   }
 }
 
-#push-options "--print_implicits"
 fn try_await_pool
   (p:pool)
   #is (#f:perm)

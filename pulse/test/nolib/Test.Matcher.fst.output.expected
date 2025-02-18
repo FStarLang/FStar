@@ -1,5 +1,5 @@
 >> Got issues: [
-* Error 228 at Test.Matcher.fst(68,2-68,4):
+* Error 228 at Test.Matcher.fst(69,2-69,4):
   - Cannot prove:
       Test.Matcher.fpts_to #Prims.int
         r

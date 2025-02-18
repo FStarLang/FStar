@@ -4,6 +4,7 @@ module Test.Matcher
 open Pulse.Nolib
 open FStar.Tactics.V2
 
+(* So the permissions show up in the output. *)
 #set-options "--print_implicits"
 
 (* Testing different matching modes. *)
