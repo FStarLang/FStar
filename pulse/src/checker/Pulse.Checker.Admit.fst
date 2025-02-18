@@ -84,7 +84,6 @@ let check
   (if admit_diag || (ide && not no_admit_diag) then begin
     (* If we're running interactively, print out the context and environment. *)
     let open Pulse.PP in
-    let (| pre, _ |) = Prover.normalize_slprop g pre in
     let msg = [
       text "Admitting continuation.";
       text "Current context:" ^^

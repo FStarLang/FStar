@@ -1,0 +1,30 @@
+* Info at AdmitDoesNotSimpl.fst(12,2-12,9):
+  - Admitting continuation.
+  - Current context:
+      AdmitDoesNotSimpl.foo (FStar.Pervasives.Native.fst (x, y))
+  - In typing environment:
+      y#130 : Prims.int,
+      x#129 : Prims.int
+
+* Info at AdmitDoesNotSimpl.fst(20,2-20,9):
+  - Admitting continuation.
+  - Current context:
+      AdmitDoesNotSimpl.foo x
+  - In typing environment:
+      y#130 : Prims.int,
+      x#129 : Prims.int
+
+* Info at AdmitDoesNotSimpl.fst(27,2-27,9):
+  - Admitting continuation.
+  - Current context:
+      AdmitDoesNotSimpl.foo (1 + 1)
+  - In typing environment:
+      uu___0#116 : Prims.unit
+
+* Info at AdmitDoesNotSimpl.fst(35,2-35,9):
+  - Admitting continuation.
+  - Current context:
+      AdmitDoesNotSimpl.foo (1 + 1)
+  - In typing environment:
+      uu___0#116 : Prims.unit
+
