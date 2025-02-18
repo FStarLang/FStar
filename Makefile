@@ -170,7 +170,7 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .stage1.ml.touch $(MAYBEFO
 
 $(FSTAR2_BARE_EXE): .bare2.src.touch .stage2.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 FSTARC-BARE")
-	$(MAKE) -C stage2 fstarc-bare
+	$(MAKE) -C stage2 fstarc-bare FSTAR_DUNE_RELEASE=1
 	touch -c $@
 	# ^ Note, even if we don't release fstar-bare itself,
 	# it is still part of the build of the full fstar, so
@@ -191,7 +191,7 @@ $(FSTAR2_BARE_EXE): .bare2.src.touch .stage2.ml.touch $(MAYBEFORCE)
 
 $(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .stage2.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 FSTARC")
-	$(MAKE) -C stage2 fstarc-full
+	$(MAKE) -C stage2 fstarc-full FSTAR_DUNE_RELEASE=1
 	touch -c $@
 
 .alib2.src.touch: $(FSTAR2_FULL_EXE) .force
@@ -209,7 +209,7 @@ $(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .stage2.ml.touch $(MAYBEFO
 
 .alib2.touch: .alib2.src.touch .stage2.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 LIB")
-	$(MAKE) -C stage2/ libapp
+	$(MAKE) -C stage2/ libapp FSTAR_DUNE_RELEASE=1
 	touch $@
 
 .plib2.src.touch: $(FSTAR2_FULL_EXE) .alib2.src.touch .force
@@ -229,7 +229,7 @@ $(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .stage2.ml.touch $(MAYBEFO
 
 .plib2.touch: .plib2.src.touch .stage2.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 PLUGLIB")
-	$(MAKE) -C stage2/ libplugin
+	$(MAKE) -C stage2/ libplugin FSTAR_DUNE_RELEASE=1
 	touch $@
 
 # F# library, from stage 2.
@@ -298,7 +298,7 @@ endif
 .install-stage2.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
 .install-stage2.touch: .stage2.src.touch
 	$(call bold_msg, "INSTALL", "STAGE 2")
-	$(MAKE) -C stage2 install PREFIX=$(CURDIR)/stage2/out
+	$(MAKE) -C stage2 install PREFIX=$(CURDIR)/stage2/out FSTAR_DUNE_RELEASE=1
 	@# ^ pass PREFIX to make sure we don't get it from env
 	touch $@
 
@@ -326,14 +326,14 @@ install: export PREFIX?=/usr/local
 install: export FSTAR_LINK_LIBDIRS=0 # default is false, but set anyway
 install:
 	$(call bold_msg, "INSTALL", "STAGE 2")
-	$(MAKE) -C stage2 install
+	$(MAKE) -C stage2 install FSTAR_DUNE_RELEASE=1
 
 __do-install-stage1:
 	$(call bold_msg, "INSTALL", "STAGE 1")
 	$(MAKE) -C stage1 install
 __do-install-stage2:
 	$(call bold_msg, "INSTALL", "STAGE 2")
-	$(MAKE) -C stage2 install
+	$(MAKE) -C stage2 install FSTAR_DUNE_RELEASE=1
 
 __do-archive: .force
 	rm -rf $(PKGTMP)
