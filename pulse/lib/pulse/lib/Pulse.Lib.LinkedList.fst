@@ -116,7 +116,6 @@ fn is_list_cases_none (#t:Type) (x:llist t) (#l:list t)
     }
     Cons _ _ -> {
       unfold is_list;
-      admit();
       assert (pure False); // NEEDED, bug? couldn't minimize easily
       unreachable ();
     }
