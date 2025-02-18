@@ -21,8 +21,6 @@ open Pulse.Lib.Pervasives
 module Cbor = CBOR.Spec
 module U64 = FStar.UInt64
 module U8 = FStar.UInt8
-module SZ = FStar.SizeT
-module R = Pulse.Lib.Reference
 module A = Pulse.Lib.Array
 
 (* The C datatype for CBOR objects *)
