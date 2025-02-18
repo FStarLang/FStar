@@ -46,12 +46,7 @@ fn rec t_quicksort
 {
   if (lo < hi - 1)
   {
-    let r = partition_wrapper a lo hi lb rb;
-    let Mktuple3 p31 p32 pivot = r;
-    rewrite each r._1 as p31;
-    rewrite each r._2 as p32;
-    rewrite each r._3 as pivot;
-    // ^FIXME: would be nicer to rewrite r as (p31, p32, pivot) but projectors don't unfold
+    let p31, p32, pivot = partition_wrapper a lo hi lb rb;
     with s1. assert (A.pts_to_range a lo p31 s1);
     with s2. assert (A.pts_to_range a p31 p32 s2);
     with s3. assert (A.pts_to_range a p32 hi s3);
