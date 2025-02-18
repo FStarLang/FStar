@@ -47,7 +47,7 @@ val reachable_defs_mltydecl (t:S.mltydecl) : reachable_defs
 
 val reachable_defs_mlmodule1 (m:S.mlmodule1) : reachable_defs
 
-val reachable_defs_decls (decls:S.mlmodule) : reachable_defs
+val reachable_defs_decls (decls:S.mlmodulebody) : reachable_defs
 
 val topsort_all (d:dict) (black:list string)
   : list string

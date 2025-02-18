@@ -156,7 +156,7 @@ let reachable_defs_mlmodule1 (m:S.mlmodule1) : reachable_defs =
     // (reachable_defs_to_string defs);
   defs
 
-let reachable_defs_decls (decls:S.mlmodule) : reachable_defs =
+let reachable_defs_decls (decls:S.mlmodulebody) : reachable_defs =
   reachable_defs_list reachable_defs_mlmodule1 decls
 
 let decl_reachable (reachable_defs:reachable_defs) (mname:string) (d:S.mlmodule1) : bool =
