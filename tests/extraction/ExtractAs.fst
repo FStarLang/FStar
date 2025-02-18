@@ -16,3 +16,11 @@ let bar_2 y = 2 + y
 let bar z = bar_2 z
 
 let _ = fail_unless (bar 1 = 11)
+
+
+// It also works if the definition is recursive
+
+[@@extract_as (`(fun (x: nat) -> x))]
+let rec loopid (x:nat) : Dv nat = loopid x
+
+let two = loopid 2
