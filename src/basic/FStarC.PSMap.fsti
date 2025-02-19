@@ -14,6 +14,7 @@ val find_map: t 'value -> (string -> 'value -> option 'a) -> option 'a
 val modify: t 'value -> string -> (option 'value -> 'value) -> t 'value
 val merge: t 'value -> t 'value -> t 'value
 val remove: t 'value -> string -> t 'value
+val keys : t 'value -> list string
 
 (* aliases *)
 type psmap = t
