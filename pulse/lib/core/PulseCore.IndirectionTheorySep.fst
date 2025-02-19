@@ -530,13 +530,15 @@ let lift_star_eq p q =
       let (w1, w2) = star_elim (lift p) (lift q) w in
       ()
 
+let later_pred (p: slprop) (w: premem) : prop =
+  level_ w > 0 ==> p (age1_ w)
 let later (p: slprop) : slprop =
   reveal_slprop_ok ();
-  introduce forall a b. mem_le a b /\ p (age1_ a) ==> p (age1_ b) with (
+  introduce forall a b. mem_le a b /\ later_pred p a ==> later_pred p b with (
     mem_le_iff a b;
     mem_le_iff (age1_ a) (age1_ b)
   );
-  mk_slprop fun w -> p (age1_ w)
+  mk_slprop (later_pred p)
 
 let later_credit (n: nat) : slprop =
   reveal_mem_le ();
@@ -557,17 +559,26 @@ let later_credit_add (m n: nat) : squash (later_credit (m + n) == later_credit m
     introduce (later_credit m `star` later_credit n) w ==> later_credit (m+n) w with _.
       let (w1, w2) = star_elim (later_credit m) (later_credit n) w in ()
 
-let timeless_lift (p: PM.slprop) : squash (timeless (lift p)) =
-  mem_pred_ext (later (lift p)) (lift p) fun w -> ()
+let except0 (p: slprop) : slprop =
+  reveal_slprop_ok (); reveal_mem_le ();
+  mk_slprop fun m -> level_ m > 0 ==> p m
 
-let timeless_pure (p: prop) : squash (timeless (pure p)) =
-  mem_pred_ext (later (pure p)) (pure p) fun w -> ()
+let timeless (p: slprop) : prop =
+  forall (m: premem). level_ m > 0 ==> (later p m <==> p m)
+  // later p == except0 p
 
-let timeless_emp () : squash (timeless emp) =
-  mem_pred_ext (later emp) emp fun w -> ()
+let timeless_intro (p: slprop) (h: (m:premem { level_ m > 0 } -> squash (p m <==> later p m))) : squash (timeless p) =
+  introduce forall (m: premem). level_ m > 0 ==> (p m <==> later p m) with
+  introduce _ ==> _ with _. h m
+  // mem_pred_ext (later p) (except0 p) fun m -> if level_ m > 0 then h m else ()
 
-let timeless_later_credit n : squash (timeless (later_credit n)) =
-  mem_pred_ext (later (later_credit n)) (later_credit n) fun w -> ()
+let timeless_intro' (#p: slprop { forall (m:premem). level_ m > 0 ==> (p m <==> later p m) }) : squash (timeless p) =
+  timeless_intro p fun m -> ()
+
+let timeless_lift (p: PM.slprop) : squash (timeless (lift p)) = timeless_intro'
+let timeless_pure (p: prop) : squash (timeless (pure p)) = timeless_intro'
+let timeless_emp () : squash (timeless emp) = timeless_intro'
+let timeless_later_credit n : squash (timeless (later_credit n)) = timeless_intro'
 
 irreducible
 let rejuvenate1 (m: premem) (m': premem { mem_le m' (age1_ m) }) :
@@ -581,7 +592,7 @@ let rejuvenate1 (m: premem) (m': premem { mem_le m' (age1_ m) }) :
   mem_ext (age1_ m'') m' (fun _ -> ());
   m''
 
-#push-options "--z3rlimit 60 --query_stats"
+#push-options "--z3rlimit 100 --query_stats"
 #restart-solver
 irreducible
 let rejuvenate1_sep (m m1': premem) (m2': premem { disjoint_mem m1' m2' /\ age1_ m == join_premem m1' m2' }) :
@@ -598,18 +609,40 @@ let rejuvenate1_sep (m m1': premem) (m2': premem { disjoint_mem m1' m2' /\ age1_
 
 let later_star (p q: slprop) : squash (later (star p q) == star (later p) (later q)) =
   mem_pred_ext (later (star p q)) (star (later p) (later q)) fun w ->
-    introduce star p q (age1_ w) ==> star (later p) (later q) w with _. (
-      let (w1', w2') = star_elim p q (age1_ w) in
-      let (w1, w2) = rejuvenate1_sep w w1' w2' in
-      star_intro (later p) (later q) w w1 w2
-    );
-    introduce star (later p) (later q) w ==> star p q (age1_ w) with _. (
-      let (w1, w2) = star_elim (later p) (later q) w in
-      star_intro p q (age1_ w) (age1_ w1) (age1_ w2)
+    if level_ w > 0 then (
+      introduce star p q (age1_ w) ==> star (later p) (later q) w with _. (
+        let (w1', w2') = star_elim p q (age1_ w) in
+        let (w1, w2) = rejuvenate1_sep w w1' w2' in
+        star_intro (later p) (later q) w w1 w2
+      );
+      introduce star (later p) (later q) w ==> star p q (age1_ w) with _. (
+        let (w1, w2) = star_elim (later p) (later q) w in
+        star_intro p q (age1_ w) (age1_ w1) (age1_ w2)
+      )
+    ) else (
+      assert later (star p q) w;
+      join_empty w;
+      star_intro (later p) (later q) w (empty (level_ w)) w
     )
 
-let later_exists #t (f:t->slprop) : squash (later (exists* x. f x) == (exists* x. later (f x))) =
-  mem_pred_ext (later (exists* x. f x)) (exists* x. later (f x)) fun w -> ()
+let timeless_star p q =
+  later_star p q;
+  timeless_intro (star p q) fun m ->
+    introduce star (later p) (later q) m ==> star p q m with _. (
+      let (m1, m2) = star__elim (later p) (later q) m in
+      star__intro p q m m1 m2
+    );
+    introduce star p q m ==> star (later p) (later q) m with _. (
+      let (m1, m2) = star__elim p q m in
+      star__intro (later p) (later q) m m1 m2
+    )
+
+let later_exists #t (f:t->slprop) = ()
+
+let timeless_exists (#t: Type) (f: t->slprop) :
+    Lemma (requires forall x. timeless (f x)) (ensures timeless (exists* x. f x)) =
+  timeless_intro (exists* x. f x) fun m ->
+    assert (exists x. except0 (f x) m) <==> (exists x. later (f x) m)
 
 let equiv p q : slprop =
   reveal_mem_le ();
@@ -618,6 +651,12 @@ let equiv p q : slprop =
 let eq_at_elim n (p q: mem_pred) (w: premem) :
     Lemma (requires eq_at n p q /\ level_ w < n) (ensures p w <==> q w) =
   assert approx n p w == approx n q w
+
+let eq_at_intro (n: nat) (p q: mem_pred)
+    (h: (m: premem { level_ m < n } -> squash (p m <==> q m))) :
+    Lemma (eq_at n p q) =
+  mem_pred_ext (approx n p) (approx n q) fun m ->
+    if level_ m < n then h m else ()
 
 let intro_equiv p m = ()
 
@@ -652,15 +691,13 @@ let later_equiv (p q: slprop) =
       mem_pred_ext (approx (level_ m + 1) (later p)) (approx (level_ m + 1) (later q)) fun m' ->
         if level_ m' >= level_ m + 1 then () else
           if level_ m = 0 then
-            eq_at_elim 1 p q m'
+            ()
           else
             eq_at_elim (level_ m) p q (age1_ m')
     );
     introduce equiv (later p) (later q) m ==> later (equiv p q) m with _. (
       if level_ m = 0 then
-        mem_pred_ext (approx 1 p) (approx 1 q) fun m' ->
-          if level_ m' >= 1 then () else
-            eq_at_elim 1 (later p) (later q) m'
+        ()
       else
         mem_pred_ext (approx (level_ m) p) (approx (level_ m) q) fun m' ->
           if level_ m' >= level_ m then () else (
@@ -672,7 +709,7 @@ let later_equiv (p q: slprop) =
 
 let rec timeless_interp (a: slprop { timeless a }) (w: premem) :
     Lemma (ensures a w <==> a (age_to_ w 0)) (decreases level_ w) =
-  if level_ w = 0 then () else timeless_interp a (age1_ w)
+  if level_ w = 0 then (mem_ext w (age_to_ w 0) fun a -> ()) else timeless_interp a (age1_ w)
 
 let timeless_ext (a b: (p:slprop {timeless p})) (h: (w: premem { level_ w == 0 } -> squash (a w <==> b w))) :
     squash (a == b) =
@@ -686,6 +723,10 @@ let equiv_timeless (a b: slprop) :
       (ensures timeless (equiv a b) /\ equiv a b == pure (a == b)) =
   later_equiv a b;
   timeless_pure (a == b);
+  timeless_intro (equiv a b) (fun m ->
+    introduce later (equiv a b) m ==> equiv a b m with _.
+      eq_at_intro (level_ m + 1) a b fun m' ->
+        eq_at_elim (level_ m) a b (age1_ m'));
   timeless_ext (equiv a b) (pure (a == b)) fun w ->
     introduce equiv a b w ==> a == b with _.
       timeless_ext a b fun w' ->
@@ -709,6 +750,8 @@ let age_to_zero (w: premem { level_ w == 0 }) : Lemma (age_to_ w 0 == w) [SMTPat
   mem_ext (age_to_ w 0) w fun i -> ()
 
 let intro_later p m = reveal_slprop_ok ()
+
+let elim_later_timeless p m = ()
 
 let iref = address
 

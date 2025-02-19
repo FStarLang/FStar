@@ -306,6 +306,15 @@ let later_elim (e:inames) (p:slprop)
     assert (is_full s2);
     (), s2
 
+let later_elim_timeless e p
+= fun frame s0 ->
+    sep_laws();
+    let m0, rest = split_mem (later p) (frame `star` mem_invariant e s0) s0 in
+    elim_later_timeless p m0;
+    intro_star p (frame `star` mem_invariant e s0) m0 rest;
+    is_ghost_action_refl s0;
+    (), s0
+
 let buy (e:inames)
 : act unit e emp (fun _ -> later_credit 1)
 = fun frame m0 -> (

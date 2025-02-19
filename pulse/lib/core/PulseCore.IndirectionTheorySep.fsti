@@ -186,13 +186,15 @@ val later_credit (n:nat) : slprop
 val later_credit_zero () : squash (later_credit 0 == emp)
 val later_credit_add m n : squash (later_credit (m + n) == later_credit m `star` later_credit n)
 
-let timeless (p: slprop) = later p == p
+val timeless (p: slprop) : prop
 val timeless_lift p : squash (timeless (lift p))
 val timeless_pure p : squash (timeless (pure p))
 val timeless_emp () : squash (timeless emp)
 val timeless_later_credit n : squash (timeless (later_credit n))
 val later_star p q : squash (later (star p q) == star (later p) (later q))
-val later_exists #t (f:t->slprop) : squash (later (exists* x. f x) == (exists* x. later (f x)))
+val timeless_star p q : Lemma (requires timeless p /\ timeless q) (ensures timeless (star p q))
+// val later_exists (#t: Type) (f:t->slprop) : squash (later (exists* x. f x) `equiv_pos` (exists* x. later (f x)))
+val timeless_exists (#t: Type) (f: t->slprop) : Lemma (requires forall x. timeless (f x)) (ensures timeless (exists* x. f x))
 
 val equiv (p q:slprop) : slprop
 val intro_equiv (p: slprop) m : squash (interp (equiv p p) m)
@@ -205,6 +207,7 @@ val equiv_star_congr (p q r: slprop) : squash (equiv q r == equiv q r `star` equ
 
 val intro_later (p:slprop) (m:mem)
 : Lemma (interp p m ==> interp (later p) m)
+val elim_later_timeless (p: slprop {timeless p}) (m: mem { level m > 0 }) : squash (interp (later p) m ==> interp p m)
 
 (**** Memory invariants *)
 [@@erasable]
@@ -267,8 +270,8 @@ val age_disjoint (m0 m1:mem)
 val age_hereditary (p:slprop) (m:mem)
 : Lemma (interp p m ==> interp p (age1 m))
 val age_later (p:slprop) (m:mem)
-: Lemma 
-  (interp (later p) m <==> interp p (age1 m))
+: Lemma
+  (interp (later p) m <==> (level m > 0 ==> interp p (age1 m)))
 
 val spend_mem (m:mem) : m':mem { 
   is_ghost_action m m' /\

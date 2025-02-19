@@ -316,6 +316,7 @@ let invariant_name_identifies_invariant p q i j =
     (lift_neutral_ghost (A.invariant_name_identifies_invariant p q i))
 let later_intro p = lift_neutral_ghost (A.later_intro p)
 let later_elim p = lift_neutral_ghost (A.later_elim p)
+let later_elim_timeless p = lift_neutral_ghost (A.later_elim_timeless p)
 let buy1 = A.buy1
 
 let pts_to_not_null #a #p r v = lift_neutral_ghost (A.pts_to_not_null #a #p r v)

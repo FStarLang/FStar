@@ -327,6 +327,9 @@ val later_intro (p:slprop)
 val later_elim (p:slprop)
 : stt_ghost unit emp_inames (later p ** later_credit 1) (fun _ -> p)
 
+val later_elim_timeless (p: slprop { timeless p })
+: stt_ghost unit emp_inames (later p) (fun _ -> p)
+
 val buy1 ()
 : stt unit emp (fun _ -> later_credit 1)
 
