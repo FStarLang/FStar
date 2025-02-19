@@ -34,8 +34,6 @@ open FStarC.Class.Show
 open FStarC.Class.Tagged
 module Listlike = FStarC.Class.Listlike
 
-friend FStar.Pervasives (* to use Delta below *)
-
 module BU     = FStarC.Util
 module Cfg    = FStarC.TypeChecker.Cfg
 module Env    = FStarC.TypeChecker.Env

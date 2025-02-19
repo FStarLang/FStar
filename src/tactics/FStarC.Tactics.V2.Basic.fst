@@ -34,8 +34,6 @@ open FStarC.VConfig
 open FStarC.Errors.Msg
 module Listlike = FStarC.Class.Listlike
 
-friend FStar.Pervasives (* to expose norm_step *)
-
 module BU     = FStarC.Util
 module Cfg    = FStarC.TypeChecker.Cfg
 module Env    = FStarC.TypeChecker.Env

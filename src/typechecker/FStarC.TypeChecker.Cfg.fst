@@ -18,8 +18,6 @@ module PC  = FStarC.Parser.Const
 module U   = FStarC.Syntax.Util
 module I   = FStarC.Ident
 
-friend FStar.Pervasives (* to expose norm_step *)
-
 let steps_to_string f =
   let format_opt (f:'a -> string) (o:option 'a) =
     match o with
