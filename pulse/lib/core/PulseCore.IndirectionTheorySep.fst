@@ -1236,3 +1236,11 @@ let slprop_ref_pts_to_gather x y1 y2 =
       (slprop_ref_pts_to x y1 `star` later (equiv y1 y2)) fun m ->
     let (m1, m2) = star_elim (slprop_ref_pts_to x y1) (slprop_ref_pts_to x y2) m in
     star_intro (slprop_ref_pts_to x y1) (later (equiv y1 y2)) m m1 m2
+
+let implies' (p q: slprop) : prop =
+  forall (m: premem). p m ==> q m
+
+let loeb (p: slprop { implies' (later p) p }) : squash (implies' emp p) =
+  let rec aux (m: premem) : Lemma (ensures p m) (decreases level_ m) =
+    if level_ m > 0 then aux (age1_ m) else () in
+  introduce forall m. p m with aux m
