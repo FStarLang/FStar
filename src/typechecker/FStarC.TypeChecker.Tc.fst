@@ -1251,15 +1251,11 @@ let load_checked_module_sigelts (en:env) (m:modul) : env =
   env
 
 let load_checked_module (en:env) (m:modul) :env =
-  (* Another compression pass to make sure we are not loading a corrupt
-  module. *)
-
   (* Reset debug flags *)
   let dsnap = Debug.snapshot () in
   if not (Options.should_check (string_of_lid m.name)) && not (Options.debug_all_modules ())
   then Debug.disable_all ();
 
-  let m = deep_compress_modul m in
   let env = load_checked_module_sigelts en m in
   //And then call finish_partial_modul, which is the normal workflow of tc_modul below
   //except with the flag `must_check_exports` set to false, since this is already a checked module
@@ -1269,7 +1265,6 @@ let load_checked_module (en:env) (m:modul) :env =
   env
 
 let load_partial_checked_module (en:env) (m:modul) : env =
-  let m = deep_compress_modul m in
   load_checked_module_sigelts en m
 
 let check_module env0 m b =
