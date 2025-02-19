@@ -60,19 +60,18 @@ let normalize_slprop
   (* Keep things reduced *)
   let steps = [unascribe; primops; iota] in
 
+  (* NOTE: whatever we unfold or reduce here will also apply for pure
+  slprops and under lambdas, so be conservative. Adding fst/snd here
+  to reduce into the projectors caused some breakages in pure slprops
+  mentioning them (L.map fst l == ...) as it introduced hash-consed
+  lambdas. *)
+
   (* Unfold anything marked with the "pulse_unfold" attribute. *)
   let steps = steps @ [delta_attr ["Pulse.Lib.Core.pulse_unfold"]] in
   (* Unfold anything marked with F*'s "unfold" qualifier . *)
   let steps = steps @ [delta_qualifier ["unfold"]] in
   (* Unfold recursive definitions too, but only the ones that match the filters above. *)
   let steps = steps @ [zeta] in
-
-  (* These things only annoy. Note, these are not the projectors, they
-     are aliases for the projectors and unfold into them. We will not
-     unfold those into a match. The simplify stage will take care of
-     projecting literal tuples appropriately. *)
-  let steps = steps @ [delta_only [`%Prelude.dfst; `%Prelude.dsnd]] in
-  let steps = steps @ [delta_only [`%Prelude.fst; `%Prelude.snd]] in
 
   let v' = T.norm_well_typed_term (elab_env g) steps v in
   let v' = Simplify.simplify v' in (* NOTE: the simplify stage is unverified *)
