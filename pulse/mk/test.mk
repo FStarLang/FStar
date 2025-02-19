@@ -106,7 +106,7 @@ $(OUTPUT_DIR)/$(subst .,_,%).krml:
 $(OUTPUT_DIR)/%.c: $(OUTPUT_DIR)/%.krml
 	$(call msg, "KRML", $(basename $(notdir $@)))
 	if ! which $(KRML_EXE); then echo "krml ($(KRML_EXE)) not found" >&2; false; fi
-	$(KRML_EXE) -header=$(PULSE_ROOT)/mk/krmlheader -bundle $*=* -skip-linking $+ -tmpdir $(OUTPUT_DIR)
+	$(KRML_EXE) -skip-makefiles -header=$(PULSE_ROOT)/mk/krmlheader -bundle $*=* -skip-linking $+ -tmpdir $(OUTPUT_DIR)
 
 # No FSharp compilation in these makefiles, sorry.
 $(OUTPUT_DIR)/%.exe: $(OUTPUT_DIR)/%.ml
