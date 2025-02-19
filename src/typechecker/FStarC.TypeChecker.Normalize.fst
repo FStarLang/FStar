@@ -870,20 +870,6 @@ let is_forall_const cfg (phi : term) : option term =
 
     | _ -> None
 
-let is_extract_as_attr (attr: attribute) : option term =
-  let head, args = head_and_args attr in
-  match (Subst.compress head).n, args with
-  | Tm_fvar fv, [t, _] when Syntax.fv_eq_lid fv PC.extract_as_lid ->
-    (match (Subst.compress t).n with
-    | Tm_quoted(impl, _) -> Some impl
-    | _ -> None)
-  | _ -> None
-
-let has_extract_as_attr (g: Env.env) (lid: I.lid) : option term =
-  match Env.lookup_attrs_of_lid g lid with
-  | Some attrs -> find_map attrs is_extract_as_attr
-  | None -> None
-
 (* GM: Please consider this function private outside of this recursive
  * group, and call `normalize` instead. `normalize` will print timing
  * information when --debug NormTop is given, which makes it a
@@ -1524,7 +1510,7 @@ and do_unfold_fv (cfg:Cfg.cfg) stack (t0:term) (qninfo : qninfo) (f:fv) : term =
       if cfg.steps.for_extraction then
         match qninfo with
         | Some (Inr (se, None), _) when Env.visible_with cfg.delta_level se.sigquals ->
-          (match find_map se.sigattrs is_extract_as_attr with
+          (match find_map se.sigattrs Parser.Const.ExtractAs.is_extract_as_attr with
           | Some impl -> Some ([], impl)
           | None -> defn ())
         | _ -> defn ()

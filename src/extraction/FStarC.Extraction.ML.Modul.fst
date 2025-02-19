@@ -757,7 +757,7 @@ let mark_sigelt_erased (se:sigelt) (g:uenv) : uenv =
 // If the definition has an [@@extract_as impl] attribute,
 // replace the lbdef with the specified impl:
 let fixup_sigelt_extract_as se =
-  match se.sigel, find_map se.sigattrs N.is_extract_as_attr with
+  match se.sigel, find_map se.sigattrs Parser.Const.ExtractAs.is_extract_as_attr with
   | Sig_let {lids; lbs=(_, [lb])}, Some impl ->
     // The specified implementation can be recursive,
     // to be on the safe side we always mark the replaced sigelt as recursive.
