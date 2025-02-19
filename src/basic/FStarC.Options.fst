@@ -71,8 +71,6 @@ let as_comma_string_list = function
   | List ls -> List.flatten <| List.map (fun l -> split (as_string l) ",") ls
   | _ -> failwith "Impos: expected String (comma list)"
 
-let copy_optionstate m = SMap.copy m
-
 (* The option state is a stack of stacks. Why? First, we need to
  * support #push-options and #pop-options, which provide the user with
  * a stack-like option control, useful for rlimits and whatnot. Second,
