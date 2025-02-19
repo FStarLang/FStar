@@ -186,14 +186,21 @@ val later_credit (n:nat) : slprop
 val later_credit_zero () : squash (later_credit 0 == emp)
 val later_credit_add m n : squash (later_credit (m + n) == later_credit m `star` later_credit n)
 
-val timeless (p: slprop) : prop
+val implies (p q: slprop) : prop
+val elim_implies p q (m: mem { level m > 0 }) :
+  squash (implies p q /\ interp p m ==> interp q m)
+let elim_implies' #p #q (h: squash (implies p q)) (m: mem { level m > 0 }) :
+    squash (interp p m ==> interp q m) =
+  elim_implies p q m
+
+let timeless (p: slprop) : prop = later p `implies` p
 val timeless_lift p : squash (timeless (lift p))
 val timeless_pure p : squash (timeless (pure p))
 val timeless_emp () : squash (timeless emp)
 val timeless_later_credit n : squash (timeless (later_credit n))
 val later_star p q : squash (later (star p q) == star (later p) (later q))
 val timeless_star p q : Lemma (requires timeless p /\ timeless q) (ensures timeless (star p q))
-// val later_exists (#t: Type) (f:t->slprop) : squash (later (exists* x. f x) `equiv_pos` (exists* x. later (f x)))
+val later_exists #t (f:t->slprop) : squash (later (exists* x. f x) `implies` exists* x. later (f x))
 val timeless_exists (#t: Type) (f: t->slprop) : Lemma (requires forall x. timeless (f x)) (ensures timeless (exists* x. f x))
 
 val equiv (p q:slprop) : slprop
@@ -207,7 +214,6 @@ val equiv_star_congr (p q r: slprop) : squash (equiv q r == equiv q r `star` equ
 
 val intro_later (p:slprop) (m:mem)
 : Lemma (interp p m ==> interp (later p) m)
-val elim_later_timeless (p: slprop {timeless p}) (m: mem { level m > 0 }) : squash (interp (later p) m ==> interp p m)
 
 (**** Memory invariants *)
 [@@erasable]
@@ -423,8 +429,8 @@ val dup_inv_equiv :
     p:slprop ->
     Lemma (inv i p == (inv i p `star` inv i p))
 
-val invariant_name_identifies_invariant (i: iref) (p q: slprop) (m: mem { level m > 0 }) :
-  Lemma (interp (star (inv i p) (inv i q)) m ==> interp (later (equiv p q)) m)
+val invariant_name_identifies_invariant (i: iref) (p q: slprop) :
+  squash (star (inv i p) (inv i q) `implies` later (equiv p q))
 
 (**** References to predicates *)
 [@@erasable]
@@ -449,6 +455,6 @@ val fresh_slprop_ref
 val slprop_ref_pts_to_share (x: slprop_ref) (y: slprop)
 : Lemma (slprop_ref_pts_to x y == slprop_ref_pts_to x y `star` slprop_ref_pts_to x y)
 
-val slprop_ref_pts_to_gather (x: slprop_ref) (y1 y2: slprop) (m:mem { level m > 0 })
-: Lemma (interp (slprop_ref_pts_to x y1 `star` slprop_ref_pts_to x y2) m ==>
-         interp (slprop_ref_pts_to x y1 `star` later (equiv y1 y2)) m)
+val slprop_ref_pts_to_gather (x: slprop_ref) (y1 y2: slprop) 
+: squash ((slprop_ref_pts_to x y1 `star` slprop_ref_pts_to x y2) `implies`
+          (slprop_ref_pts_to x y1 `star` later (equiv y1 y2)))

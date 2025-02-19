@@ -559,20 +559,16 @@ let later_credit_add (m n: nat) : squash (later_credit (m + n) == later_credit m
     introduce (later_credit m `star` later_credit n) w ==> later_credit (m+n) w with _.
       let (w1, w2) = star_elim (later_credit m) (later_credit n) w in ()
 
-let except0 (p: slprop) : slprop =
-  reveal_slprop_ok (); reveal_mem_le ();
-  mk_slprop fun m -> level_ m > 0 ==> p m
+let implies (p q: slprop) : prop =
+  forall (m: premem). level_ m > 0 ==> (p m ==> q m)
 
-let timeless (p: slprop) : prop =
-  forall (m: premem). level_ m > 0 ==> (later p m <==> p m)
-  // later p == except0 p
+let elim_implies p q m = ()
 
-let timeless_intro (p: slprop) (h: (m:premem { level_ m > 0 } -> squash (p m <==> later p m))) : squash (timeless p) =
-  introduce forall (m: premem). level_ m > 0 ==> (p m <==> later p m) with
-  introduce _ ==> _ with _. h m
-  // mem_pred_ext (later p) (except0 p) fun m -> if level_ m > 0 then h m else ()
+let timeless_intro (p: slprop) (h: (m:premem { level_ m > 0 /\ later p m } -> squash (p m))) : squash (timeless p) =
+  introduce forall (m: premem). level_ m > 0 /\ later p m ==> p m with
+  introduce level_ m > 0 /\ later p m ==> p m with _. h m
 
-let timeless_intro' (#p: slprop { forall (m:premem). level_ m > 0 ==> (p m <==> later p m) }) : squash (timeless p) =
+let timeless_intro' (#p: slprop { forall (m:premem). level_ m > 0 ==> (later p m ==> p m) }) : squash (timeless p) =
   timeless_intro p fun m -> ()
 
 let timeless_lift (p: PM.slprop) : squash (timeless (lift p)) = timeless_intro'
@@ -631,18 +627,14 @@ let timeless_star p q =
     introduce star (later p) (later q) m ==> star p q m with _. (
       let (m1, m2) = star__elim (later p) (later q) m in
       star__intro p q m m1 m2
-    );
-    introduce star p q m ==> star (later p) (later q) m with _. (
-      let (m1, m2) = star__elim p q m in
-      star__intro (later p) (later q) m m1 m2
     )
 
-let later_exists #t (f:t->slprop) = ()
+let later_exists #t (f:t->slprop) : squash (later (exists* x. f x) `implies` exists* x. later (f x)) = ()
 
 let timeless_exists (#t: Type) (f: t->slprop) :
     Lemma (requires forall x. timeless (f x)) (ensures timeless (exists* x. f x)) =
   timeless_intro (exists* x. f x) fun m ->
-    assert (exists x. except0 (f x) m) <==> (exists x. later (f x) m)
+    assert (exists x. (f x) m) <==> (exists x. later (f x) m)
 
 let equiv p q : slprop =
   reveal_mem_le ();
@@ -709,7 +701,10 @@ let later_equiv (p q: slprop) =
 
 let rec timeless_interp (a: slprop { timeless a }) (w: premem) :
     Lemma (ensures a w <==> a (age_to_ w 0)) (decreases level_ w) =
-  if level_ w = 0 then (mem_ext w (age_to_ w 0) fun a -> ()) else timeless_interp a (age1_ w)
+  if level_ w = 0 then (mem_ext w (age_to_ w 0) fun a -> ()) else (
+    timeless_interp a (age1_ w);
+    reveal_slprop_ok ()
+  )
 
 let timeless_ext (a b: (p:slprop {timeless p})) (h: (w: premem { level_ w == 0 } -> squash (a w <==> b w))) :
     squash (a == b) =
@@ -726,6 +721,7 @@ let equiv_timeless (a b: slprop) :
   timeless_intro (equiv a b) (fun m ->
     introduce later (equiv a b) m ==> equiv a b m with _.
       eq_at_intro (level_ m + 1) a b fun m' ->
+        reveal_slprop_ok ();
         eq_at_elim (level_ m) a b (age1_ m'));
   timeless_ext (equiv a b) (pure (a == b)) fun w ->
     introduce equiv a b w ==> a == b with _.
@@ -1174,8 +1170,11 @@ let dup_inv_equiv i p =
     introduce star (inv i p) (inv i p) w ==> inv i p w with _.
       let (w1, w2) = star_elim (inv i p) (inv i p) w in ()
 
-let invariant_name_identifies_invariant i p q m =
-  introduce interp (star (inv i p) (inv i q)) m ==> interp (later (equiv p q)) m with _.
+let implies_intro (p q: slprop) (h: (m:premem { level_ m > 0 /\ p m } -> squash (q m))) : squash (implies p q) =
+  introduce forall m. level_ m > 0 /\ p m ==> q m with introduce _ ==> _ with _. h m
+
+let invariant_name_identifies_invariant i p q =
+  implies_intro _ _ fun m ->
     let (w1, w2) = star_elim (inv i p) (inv i q) m in
     assert later (equiv p q) m
 
@@ -1231,8 +1230,9 @@ let slprop_ref_pts_to_share x y =
     introduce (slprop_ref_pts_to x y `star` slprop_ref_pts_to x y) m ==> slprop_ref_pts_to x y m with _.
       let (m1, m2) = star_elim (slprop_ref_pts_to x y) (slprop_ref_pts_to x y) m in ()
 
-let slprop_ref_pts_to_gather x y1 y2 m =
-  introduce interp (slprop_ref_pts_to x y1 `star` slprop_ref_pts_to x y2) m ==>
-      interp (slprop_ref_pts_to x y1 `star` later (equiv y1 y2)) m with _.
+let slprop_ref_pts_to_gather x y1 y2 =
+  implies_intro
+      (slprop_ref_pts_to x y1 `star` slprop_ref_pts_to x y2) 
+      (slprop_ref_pts_to x y1 `star` later (equiv y1 y2)) fun m ->
     let (m1, m2) = star_elim (slprop_ref_pts_to x y1) (slprop_ref_pts_to x y2) m in
     star_intro (slprop_ref_pts_to x y1) (later (equiv y1 y2)) m m1 m2

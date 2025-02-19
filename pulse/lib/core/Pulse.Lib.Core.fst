@@ -207,10 +207,13 @@ let later = later
 let later_intro p = A.later_intro p
 let later_elim p = A.later_elim p
 
-let later_elim_timeless p = A.later_elim_timeless p
+let later_elim_timeless p = A.implies_elim (later p) p
 
 let later_star = Sep.later_star
-// let later_exists = Sep.later_exists
+let later_exists #t f =
+  let h: squash Sep.(later (exists* x. f x) `implies` exists* x. later (f x)) = Sep.later_exists #t f in
+  let h: squash (later (exists* x. f x) `implies` exists* x. later (f x)) = h in
+  A.implies_elim _ _
 
 //////////////////////////////////////////////////////////////////////////
 // Equivalence

@@ -22,6 +22,7 @@ val emp : slprop
 val pure (p:prop) : slprop
 val ( ** ) (p q : slprop) : slprop
 val ( exists* ) (#a:Type u#a) (p: a -> slprop) : slprop
+val implies (p q : slprop) : prop
 val later_credit (n:nat) : slprop
 val later (p:slprop) : slprop
 val equiv (p q:slprop) : slprop

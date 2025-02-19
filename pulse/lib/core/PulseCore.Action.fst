@@ -393,9 +393,9 @@ let later_elim (p:slprop)
 : act unit Ghost emp_inames (later p ** later_credit 1) (fun _ -> p)
 = fun #ictx -> ITA.later_elim ictx p
 
-let later_elim_timeless (p:slprop { timeless p })
-: act unit Ghost emp_inames (later p) (fun _ -> p)
-= fun #ictx -> ITA.later_elim_timeless ictx p
+let implies_elim (p:slprop) (q:slprop { implies p q })
+: act unit Ghost emp_inames p (fun _ -> q)
+= fun #ictx -> ITA.implies_elim ictx p q
 
 let buy1 ()
 : stt unit emp (fun _ -> later_credit 1)
