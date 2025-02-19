@@ -37,8 +37,6 @@ module Z     = FStarC.BigInt
 open FStarC.Syntax.Print {}
 open FStarC.Syntax.Embeddings.Base
 
-friend FStar.Pervasives (* To expose norm_step *)
-
 (*********************************************************************
 
              A NOTE ON FUNCTIONS AND SHADOW TERMS

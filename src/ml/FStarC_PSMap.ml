@@ -33,6 +33,8 @@ let merge (m1: 'value t) (m2: 'value t) : 'value t =
 let remove (m: 'value t)  (key:string)
   : 'value t = StringMap.remove key m
 
+let keys m = fold m (fun k _ acc -> k::acc) []
+
 type 'v psmap = 'v t
 let psmap_empty = empty
 let psmap_add = add

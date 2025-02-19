@@ -71,8 +71,6 @@ let as_comma_string_list = function
   | List ls -> List.flatten <| List.map (fun l -> split (as_string l) ",") ls
   | _ -> failwith "Impos: expected String (comma list)"
 
-let copy_optionstate m = SMap.copy m
-
 (* The option state is a stack of stacks. Why? First, we need to
  * support #push-options and #pop-options, which provide the user with
  * a stack-like option control, useful for rlimits and whatnot. Second,
@@ -104,6 +102,16 @@ let copy_optionstate m = SMap.copy m
 let history1 = Debug.saved_state & Ext.ext_state & optionstate
 
 let fstar_options : ref optionstate = mk_ref (PSMap.empty ())
+
+let snapshot_all () : history1 =
+  (Debug.snapshot (), Ext.save (), !fstar_options)
+
+let restore_all (h : history1) : unit =
+  let dbg, ext, opts = h in
+  Debug.restore dbg;
+  Ext.restore ext;
+  fstar_options := opts
+
 
 let history : ref (list (list history1)) =
   mk_ref [] // IRRELEVANT: see clear() below
@@ -1868,6 +1876,10 @@ let rec parse_filename_arg specs enable_filenames arg =
     Success
   end
 
+(* A copy of the optionstate right after parsing the command line,
+so we can reset back to it. *)
+let parsed_args_state : ref (option history1) = mk_ref None
+
 let parse_cmd_line () =
   let res = Getopt.parse_cmdline all_specs_getopt (parse_filename_arg all_specs_getopt true) in
   let res =
@@ -1875,6 +1887,7 @@ let parse_cmd_line () =
     then set_error_flags()
     else res
   in
+  parsed_args_state := Some (snapshot_all ());
   res, !file_list_
 
 let file_list () =
@@ -1884,11 +1897,14 @@ let restore_cmd_line_options should_clear =
     (* Some options must be preserved because they can't be reset via #pragrams.
      * Add them here as needed. *)
     let old_verify_module = get_verify_module() in
-    if should_clear then clear() else init();
-    let specs = List.map fst <| specs false in
-    let r = Getopt.parse_cmdline specs (parse_filename_arg specs false) in
+
+    if should_clear then clear () else init ();
+    match !parsed_args_state with
+    | None -> failwith "impossible: restore_cmd_line_options before initial parsing"
+    | Some h -> restore_all h;
+
     set_option' ("verify_module", List (List.map String old_verify_module));
-    r
+    Success
 
 let module_name_of_file_name f =
     let f = Filepath.basename f in

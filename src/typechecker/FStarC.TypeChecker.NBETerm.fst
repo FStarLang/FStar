@@ -22,8 +22,6 @@ open FStarC.Errors
 open FStar.Char
 open FStar.String
 
-friend FStar.Pervasives (* To expose norm_step *)
-
 module PC = FStarC.Parser.Const
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
