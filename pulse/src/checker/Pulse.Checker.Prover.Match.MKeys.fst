@@ -69,7 +69,7 @@ let binder_is_mkey (b:R.binder) : bool =
 
 let binder_is_slprop (b:R.binder) : T.Tac bool =
   let r = TermEq.term_eq tm_slprop (R.inspect_binder b).sort in
-  T.print <| "is_slprop " ^ show (R.inspect_binder b).sort ^ " = " ^ show r;
+  (* T.print <| "is_slprop " ^ show (R.inspect_binder b).sort ^ " = " ^ show r; *)
   r
 
 let rec zip3 (l1:list 'a) (l2:list 'b) (l3:list 'c) : T.Tac (list ('a & 'b & 'c)) =
