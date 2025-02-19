@@ -28,6 +28,6 @@ let mk_if (b:term) (then_:term) (else_:term) : term =
   U.if_then_else b then_ else_
 
 let mk_extracted_as_attr (impl: term) : term =
-  S.mk_Tm_app (S.tconst FStarC_Parser_Const.extract_as_lid)
+  S.mk_Tm_app (S.tconst FStarC_Parser_Const_ExtractAs.extract_as_lid)
     [S.mk (S.Tm_quoted (impl, {qkind=S.Quote_static; antiquotations=(Prims.int_zero,[])})) FStarC_Range.dummyRange, None]
     FStarC_Range.dummyRange
