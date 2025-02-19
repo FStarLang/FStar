@@ -33,9 +33,9 @@ let is_tuple2__2 (t:term) : T.Tac (option term) =
 let is_tuple2 (t:term) : T.Tac (option (term & term)) =
   match T.hua t with
   | Some (h, us, args) ->
-    T.print <| "h = " ^ show (T.inspect_fv h);
+    (* T.print <| "h = " ^ show (T.inspect_fv h); *)
     if implode_qn (T.inspect_fv h) = `%Mktuple2 then (
-      T.print <| "found Mktuple2";
+      (* T.print <| "found Mktuple2"; *)
       match args with
       | [(_, Q_Implicit); (_, Q_Implicit); (x, Q_Explicit); (y, Q_Explicit)] ->
         Some (x, y)
