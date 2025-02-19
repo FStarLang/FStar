@@ -1451,6 +1451,7 @@ let collect (all_cmd_line_files: list file_name)
     : list file_name
     & deps //topologically sorted transitive dependences of all_cmd_line_files
     =
+  Stats.record "Parser.Dep.collect" fun () ->
   let all_cmd_line_files =
     match all_cmd_line_files with
     | [] -> all_files_in_include_paths ()
