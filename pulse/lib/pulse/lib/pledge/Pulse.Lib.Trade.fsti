@@ -22,10 +22,11 @@ module T = FStar.Tactics
 
 val trade :
   (#[T.exact (`emp_inames)] is:inames) ->
-  (hyp:slprop) ->
-  (concl:slprop) ->
+  ([@@@mkey] hyp:slprop) ->
+  ([@@@mkey] concl:slprop) ->
   slprop
 
+unfold
 let ( ==>* ) :
   (#[T.exact (`emp_inames)] is:inames) ->
   (hyp:slprop) ->
