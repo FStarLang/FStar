@@ -27,28 +27,26 @@ type slice t = {
 
 let len s = s.len
 
-let has_pts_to_slice t = {
-  pts_to = (fun s #p v ->
-    pts_to s.elt #p v **
-    pure (Seq.length v == SZ.v s.len))
-}
+let pts_to (#t:Type) (s:slice t) (#p:perm) (v : Seq.seq t) =
+  pts_to s.elt #p v **
+  pure (Seq.length v == SZ.v s.len)
 
 ghost fn unfold_pts_to #t (s: slice t) #p v
   requires pts_to s #p v
-  ensures pts_to s.elt #p v **
+  ensures AP.pts_to s.elt #p v **
     pure (Seq.length v == SZ.v s.len)
 {
   rewrite pts_to s #p v as
-    pts_to s.elt #p v **
+    AP.pts_to s.elt #p v **
     pure (Seq.length v == SZ.v s.len)
 }
 
 ghost fn fold_pts_to #t (s: slice t) #p v
-  requires pts_to s.elt #p v **
+  requires AP.pts_to s.elt #p v **
     pure (Seq.length v == SZ.v s.len)
   ensures pts_to s #p v
 {
-  rewrite pts_to s.elt #p v **
+  rewrite AP.pts_to s.elt #p v **
       pure (Seq.length v == SZ.v s.len)
     as pts_to s #p v;
 }
@@ -104,7 +102,7 @@ let arrayptr_to_slice
 fn arrayptr_to_slice_intro
   (#t: Type) (a: AP.ptr t) (#p: perm) (alen: SZ.t) (#v: Ghost.erased (Seq.seq t))
   requires
-    (pts_to a #p v ** pure (SZ.v alen == Seq.length v))
+    (AP.pts_to a #p v ** pure (SZ.v alen == Seq.length v))
   returns s: slice t
   ensures
     (pts_to s #p v ** arrayptr_to_slice a s)
@@ -124,7 +122,7 @@ fn arrayptr_to_slice_elim
 requires
   (pts_to s #p v ** arrayptr_to_slice a s)
 ensures
-  (pts_to a #p v)
+  (AP.pts_to a #p v)
 {
   unfold (arrayptr_to_slice a s);
   unfold_pts_to s #p v;
@@ -140,7 +138,7 @@ requires
   (pts_to s #p v)
 returns a: AP.ptr t
 ensures
-  (pts_to a #p v ** slice_to_arrayptr s a)
+  (AP.pts_to a #p v ** slice_to_arrayptr s a)
 {
   unfold_pts_to s #p v;
   fold (slice_to_arrayptr s s.elt);
@@ -151,7 +149,7 @@ ghost
 fn slice_to_arrayptr_elim
   (#t: Type) (a: AP.ptr t) (#p: perm) (#v: Seq.seq t) (#s: slice t)
 requires
-  (pts_to a #p v ** slice_to_arrayptr s a ** pure (Seq.length v == SZ.v (len s)))
+  (AP.pts_to a #p v ** slice_to_arrayptr s a ** pure (Seq.length v == SZ.v (len s)))
 ensures
   (pts_to s #p v)
 {

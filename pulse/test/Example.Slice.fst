@@ -19,6 +19,7 @@ open Pulse
 open Pulse.Lib.Trade
 open Pulse.Lib.Slice.Util
 module A = Pulse.Lib.Array
+open Pulse { pts_to } (* restore pts_to, shadowed by Pulse.Lib.Slice.Util *)
 
 fn test (arr: A.array UInt8.t)
     requires pts_to arr seq![0uy; 1uy; 2uy; 3uy; 4uy; 5uy]
