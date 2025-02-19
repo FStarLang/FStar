@@ -26,10 +26,8 @@ type ptr t = {
 let base a = a.base
 let offset a = SZ.v a.offset
 
-instance has_pts_to_array_ptr t = {
-  pts_to = (fun s #p v ->
-    A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v)
-}
+let pts_to s #p v =
+  A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v
 
 ghost fn unfold_pts_to #t (s: ptr t) #p v
   requires pts_to s #p v

@@ -35,7 +35,17 @@ val ptr ([@@@strictly_positive] elt: Type0) : Type0
 val base #t (p: ptr t) : GTot (A.array t)
 val offset #t (p: ptr t) : GTot nat
 
-instance val has_pts_to_array_ptr (t: Type) : has_pts_to (ptr t) (Seq.seq t)
+val pts_to
+  (#t:Type)
+  (s:ptr t)
+  (#[exact (`1.0R)] p:perm)
+  (v : Seq.seq t)
+  : slprop
+
+[@@pulse_unfold]
+instance has_pts_to_array_ptr (t: Type) : has_pts_to (ptr t) (Seq.seq t) = {
+  pts_to = (fun s #p v -> pts_to s #p v);
+}
 
 val pts_to_timeless (#a:Type) (x:ptr a) (p:perm) (s:Seq.seq a)
   : Lemma (timeless (pts_to x #p s))

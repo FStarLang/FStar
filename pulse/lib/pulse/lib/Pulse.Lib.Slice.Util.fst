@@ -220,19 +220,19 @@ inline_for_extraction
 fn arrayptr_to_slice_intro_trade
   (#t: Type) (a: AP.ptr t) (#p: perm) (alen: SZ.t) (#v: Ghost.erased (Seq.seq t))
   requires
-    (pts_to a #p v ** pure (SZ.v alen == Seq.length v))
+    (AP.pts_to a #p v ** pure (SZ.v alen == Seq.length v))
   returns s: slice t
   ensures
     (pts_to s #p v **
       trade
         (pts_to s #p v)
-        (pts_to a #p v)
+        (AP.pts_to a #p v)
     )
 {
   let s = arrayptr_to_slice_intro a alen;
   ghost fn aux (_: unit)
     requires arrayptr_to_slice a s ** pts_to s #p v
-    ensures pts_to a #p v
+    ensures AP.pts_to a #p v
   {
     arrayptr_to_slice_elim s
   };
@@ -247,16 +247,16 @@ requires
   (pts_to s #p v)
 returns a: AP.ptr t
 ensures
-  (pts_to a #p v **
+  (AP.pts_to a #p v **
     trade
-      (pts_to a #p v)
+      (AP.pts_to a #p v)
       (pts_to s #p v)
   )
 {
   pts_to_len s;
   let a = slice_to_arrayptr_intro s;
   ghost fn aux (_: unit)
-    requires slice_to_arrayptr s a ** pts_to a #p v
+    requires slice_to_arrayptr s a ** AP.pts_to a #p v
     ensures pts_to s #p v
   {
     slice_to_arrayptr_elim a;
