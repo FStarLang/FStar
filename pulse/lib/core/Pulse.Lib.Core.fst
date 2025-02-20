@@ -214,6 +214,10 @@ let later_exists #t f =
   let h: squash Sep.(later (exists* x. f x) `implies` exists* x. later (f x)) = Sep.later_exists #t f in
   let h: squash (later (exists* x. f x) `implies` exists* x. later (f x)) = h in
   A.implies_elim _ _
+let exists_later #t f =
+  let h: squash Sep.((exists* x. later (f x)) `implies` later (exists* x. f x)) = Sep.later_exists #t f in
+  let h: squash ((exists* x. later (f x)) `implies` later (exists* x. f x)) = h in
+  A.implies_elim _ _
 
 //////////////////////////////////////////////////////////////////////////
 // Equivalence
