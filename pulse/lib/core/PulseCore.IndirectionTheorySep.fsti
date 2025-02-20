@@ -200,7 +200,9 @@ val timeless_emp () : squash (timeless emp)
 val timeless_later_credit n : squash (timeless (later_credit n))
 val later_star p q : squash (later (star p q) == star (later p) (later q))
 val timeless_star p q : Lemma (requires timeless p /\ timeless q) (ensures timeless (star p q))
-val later_exists #t (f:t->slprop) : squash (later (exists* x. f x) `implies` exists* x. later (f x))
+val later_exists #t (f:t->slprop) :
+  squash (later (exists* x. f x) `implies` (exists* x. later (f x))
+      /\ (exists* x. later (f x)) `implies` later (exists* x. f x))
 val timeless_exists (#t: Type) (f: t->slprop) : Lemma (requires forall x. timeless (f x)) (ensures timeless (exists* x. f x))
 
 val equiv (p q:slprop) : slprop
