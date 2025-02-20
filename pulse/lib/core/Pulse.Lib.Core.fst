@@ -36,7 +36,7 @@ let timeless_emp = Sep.timeless_emp ()
 let pure = pure
 let timeless_pure p = Sep.timeless_pure p
 let op_Star_Star = op_Star_Star
-let timeless_star p q = Sep.later_star p q
+let timeless_star p q = Sep.timeless_star p q
 let op_exists_Star = op_exists_Star
 let exists_extensional (#a:Type u#a) (p q: a -> slprop)
   (_:squash (forall x. p x == q x))
@@ -46,22 +46,12 @@ let exists_extensional (#a:Type u#a) (p q: a -> slprop)
         slprop_equiv_refl (p x)
     );
     I.slprop_equiv_exists p q ()
-let timeless_exists (#a:Type u#a) (p: a -> slprop)
-: Lemma
-    (requires forall x. timeless (p x))
-    (ensures timeless (op_exists_Star p))
-    [SMTPat (timeless (op_exists_Star p))]
-= calc (==) {
-    later (op_exists_Star p);
-  (==) { exists_extensional p (fun x -> p x) () }
-    later (exists* x. p x);
-  (==) { Sep.later_exists p }
-    (exists* x. later (p x));
-  (==) { exists_extensional (fun x -> later (p x)) (fun x -> p x) () }
-    (exists* x. p x);
-  (==) { exists_extensional (fun x -> p x) p () }
-    op_exists_Star p;
-  }
+let timeless_exists #a p =
+  exists_extensional p (fun x -> p x) ();
+  Sep.timeless_exists p;
+  let h: squash (Sep.timeless Sep.(exists* x. p x)) = () in
+  let h: squash (Sep.timeless (exists* x. p x)) = h in
+  ()
 let slprop_equiv = slprop_equiv
 let elim_slprop_equiv #p #q pf = slprop_equiv_elim p q
 let slprop_post_equiv = slprop_post_equiv
@@ -216,9 +206,14 @@ let rec later_credit_buy n =
 let later = later
 let later_intro p = A.later_intro p
 let later_elim p = A.later_elim p
-let timeless_iff p = ()
+
+let later_elim_timeless p = A.implies_elim (later p) p
+
 let later_star = Sep.later_star
-let later_exists = Sep.later_exists
+let later_exists #t f =
+  let h: squash Sep.(later (exists* x. f x) `implies` exists* x. later (f x)) = Sep.later_exists #t f in
+  let h: squash (later (exists* x. f x) `implies` exists* x. later (f x)) = h in
+  A.implies_elim _ _
 
 //////////////////////////////////////////////////////////////////////////
 // Equivalence

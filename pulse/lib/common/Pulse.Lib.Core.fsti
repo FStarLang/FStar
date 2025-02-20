@@ -492,13 +492,10 @@ val later (p: slprop) : slprop
 val later_intro (p: slprop) : stt_ghost unit emp_inames p fun _ -> later p
 val later_elim (p: slprop) : stt_ghost unit emp_inames (later p ** later_credit 1) fun _ -> p
 
-val timeless_iff p : squash (timeless p <==> p == later p)
-let later_elim_timeless (p: slprop { timeless p }) : stt_ghost unit emp_inames (later p) (fun _ -> p) =
-  timeless_iff p;
-  lift_neutral_ghost (return_neutral_noeq _ _)
+val later_elim_timeless (p: slprop { timeless p }) : stt_ghost unit emp_inames (later p) (fun _ -> p)
 
 val later_star p q : squash (later (p ** q) == later p ** later q)
-val later_exists #t (f:t->slprop) : squash (later (exists* x. f x) == (exists* x. later (f x)))
+val later_exists (#t: Type) (f:t->slprop) : stt_ghost unit emp_inames (later (exists* x. f x)) (fun _ -> exists* x. later (f x))
 
 //////////////////////////////////////////////////////////////////////////
 // Equivalence

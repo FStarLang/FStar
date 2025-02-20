@@ -306,6 +306,15 @@ let later_elim (e:inames) (p:slprop)
     assert (is_full s2);
     (), s2
 
+let implies_elim e p q
+= fun frame s0 ->
+    sep_laws();
+    let m0, rest = split_mem p (frame `star` mem_invariant e s0) s0 in
+    elim_implies p q m0;
+    intro_star q (frame `star` mem_invariant e s0) m0 rest;
+    is_ghost_action_refl s0;
+    (), s0
+
 let buy (e:inames)
 : act unit e emp (fun _ -> later_credit 1)
 = fun frame m0 -> (
@@ -504,7 +513,7 @@ let invariant_name_identifies_invariant e i p q
                   s0
     in
     disjoint_join_levels m0 m1;
-    invariant_name_identifies_invariant i p q m0;
+    elim_implies' (invariant_name_identifies_invariant i p q) m0;
     intro_star (later (equiv p q))
                (inv i p `star` inv i q `star` frame `star` mem_invariant e s0)
                m0 m1;
@@ -670,7 +679,7 @@ let slprop_ref_gather #o x p1 p2
         (frame `star` mem_invariant o s0)
         (hide s0)
     in
-    slprop_ref_pts_to_gather x p1 p2 m1;
+    elim_implies' (slprop_ref_pts_to_gather x p1 p2) m1;
     intro_star (slprop_ref_pts_to x p1 `star` later (equiv p1 p2)) (frame `star` mem_invariant o s0) m1 m2;
     is_ghost_action_refl s0;
     (), s0

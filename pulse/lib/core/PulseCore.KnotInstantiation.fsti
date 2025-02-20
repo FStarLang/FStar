@@ -91,8 +91,8 @@ val approx_read (m: premem) a :
     Lemma (map_hogs_val (approx (level_ m)) (read m a) == read m a)
     [SMTPat (read m a)]
 
-val age_to_ (m: premem) (n: erased nat) :
-    n:premem { credits_ n == credits_ m /\ timeless_heap_of n == timeless_heap_of m }
+val age_to_ (m: premem) (i: erased nat) :
+    n:premem { credits_ n == credits_ m /\ timeless_heap_of n == timeless_heap_of m /\ level_ n == reveal i }
 
 val read_age_to_ (m: premem) (n: erased nat) a :
     Lemma (read (age_to_ m n) a == (map_hogs_val (approx n) (read m a)))

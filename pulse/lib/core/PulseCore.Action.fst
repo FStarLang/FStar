@@ -393,6 +393,10 @@ let later_elim (p:slprop)
 : act unit Ghost emp_inames (later p ** later_credit 1) (fun _ -> p)
 = fun #ictx -> ITA.later_elim ictx p
 
+let implies_elim (p:slprop) (q:slprop { implies p q })
+: act unit Ghost emp_inames p (fun _ -> q)
+= fun #ictx -> ITA.implies_elim ictx p q
+
 let buy1 ()
 : stt unit emp (fun _ -> later_credit 1)
 = stt_of_action0 (ITA.buy emp_inames)
