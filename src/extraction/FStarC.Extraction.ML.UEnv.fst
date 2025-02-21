@@ -150,44 +150,56 @@ let print_mlpath_map (g:uenv) =
   Takes a range for error reporting.
   *)
 
+type lookup_res =
+  | Found of exp_binding
+  | WasErased of Range.range (* position of the definition that was erased *)
+  | NotFound
+
+instance showable_lookup_res : showable lookup_res = {
+  show = (function Found t -> "Found .."
+                 | WasErased r -> "WasErased " ^ show r
+                 | NotFound -> "NotFound");
+}
+
 // Inr b: success
 // Inl true: was erased
 // Inl false: not found
-let lookup_fv_generic (g:uenv) (fv:fv) : either bool exp_binding =
+let lookup_fv_generic (g:uenv) (fv:fv) : lookup_res =
   let v =
     BU.find_map g.env_bindings
       (function
-       | Fv (fv', t) when fv_eq fv fv' -> Some (Inr t)
-       | ErasedFv fv' when fv_eq fv fv' -> Some (Inl true)
+       | Fv (fv', t) when fv_eq fv fv' -> Some (Found t)
+       | ErasedFv fv' when fv_eq fv fv' -> Some (WasErased (pos fv'))
        | _ -> None)
   in
   match v with
   | Some r -> r
-  | None -> Inl false
+  | None -> NotFound
 
 let try_lookup_fv (r:Range.range) (g:uenv) (fv:fv) : option exp_binding =
   match lookup_fv_generic g fv with
-  | Inr r -> Some r
-  | Inl true ->
+  | Found r -> Some r
+  | WasErased pos ->
     (* Log an error/warning and return None *)
     let open FStarC.Errors.Msg in
     Errors.log_issue r Errors.Error_CallToErased [
-       text <| BU.format1 "Will not extract reference to variable `%s` since it has the `noextract` qualifier." (show fv);
-       text <| "Either remove its qualifier or add it to this definition.";
+       text <| BU.format1 "Will not extract reference to variable `%s` since it has the `noextract` qualifier." (string_of_lid fv.fv_name.v);
+       text <| BU.format2 "Either remove the noextract qualifier from %s (defined in %s) or add it to this definition."
+                 (string_of_lid fv.fv_name.v) (show pos);
        text <| BU.format1 "This error can be ignored with `--warn_error -%s`." (string_of_int Errors.call_to_erased_errno)];
     None
-  | Inl false ->
+  | NotFound ->
     None
 
 (** Fatal failure version of try_lookup_fv *)
 let lookup_fv (r:Range.range) (g:uenv) (fv:fv) : exp_binding =
   match lookup_fv_generic g fv with
-  | Inr t -> t
-  | Inl b ->
-    failwith (BU.format3 "Internal error: (%s) free variable %s not found during extraction (erased=%s)\n"
+  | Found t -> t
+  | res ->
+    failwith (BU.format3 "Internal error: (%s) free variable %s not found during extraction (res=%s)\n"
               (Range.string_of_range fv.fv_name.p)
               (show fv.fv_name.v)
-              (string_of_bool b))
+              (show res))
 
 (** An F* local variable (bv) can be mapped either to
     a ML type variable or a term variable *)
