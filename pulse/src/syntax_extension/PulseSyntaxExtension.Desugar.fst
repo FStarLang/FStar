@@ -517,6 +517,12 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
         if Some? lb.qualifier then
           fail "Qualifiers are not allowed for pattern bindings" lb.pat.prange
         else return ();!
+        let! init_expr =
+          match lb.init with
+          | None -> fail "Pattern bindings must have an initializer" lb.pat.prange
+          | Some (Default_initializer e) -> return e
+          | Some _ -> fail "Pattern bindings cannot have complext initializers" lb.pat.prange
+        in
         let lb' =
           { norw = lb.norw;
             qualifier = lb.qualifier;
@@ -527,13 +533,33 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
         let t_let =
           mk_stmt (LetBinding lb') s.range
         in
+        let seq s1 s2 =
+          mk_stmt (Sequence { s1; s2 }) s.range
+        in
         let t_match =
           mk_stmt (Match { head = A.(mk_term (Tvar id) lb.pat.prange Expr);
                           returns_annot = None;
                           branches = [(lb.norw, pat, s2)] }) s.range
         in
+        let t_match =
+          (* We only inject a variable when the rhs is a variable *)
+          if not lb.norw &&
+              (match init_expr.A.tm with
+                | A.Tvar _ -> true
+                | A.Var _ -> true
+                | A.Name _ -> true
+                | _ -> false)
+          then
+            let s_rw =
+              mk_stmt (ProofHintWithBinders {
+                    hint_type = RENAME ([(init_expr, A.mk_term (A.Tvar id) lb.pat.prange A.Expr)], None, None);
+                    binders = []}) s.range
+            in
+            seq s_rw t_match
+          else t_match
+        in
         let s'' =
-          mk_stmt (Sequence { s1 = t_let ; s2=t_match }) s.range
+          seq t_let t_match
         in
         // BU.print2 "GG Rewrote \n(%s)\n to \n(%s)\n\n" (show s) (show s'');
         desugar_stmt env s''
