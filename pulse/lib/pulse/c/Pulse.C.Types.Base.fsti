@@ -33,7 +33,7 @@ val typedef (t: Type0) : Type0
 inline_for_extraction [@@noextract_to "krml"]
 let typeof (#t: Type0) (td: typedef t) : Tot Type0 = t
 
-val fractionable (#t: Type0) (td: typedef t) (x: t) : GTot prop
+val fractionable (#t: Type0) (td: typedef t) (x: t) : prop
 
 val mk_fraction (#t: Type0) (td: typedef t) (x: t) (p: perm) : Ghost t
   (requires (fractionable td x))
@@ -48,7 +48,7 @@ val mk_fraction_compose (#t: Type0) (td: typedef t) (x: t) (p1 p2: perm) : Lemma
   (requires (fractionable td x /\ p1 <=. 1.0R /\ p2 <=. 1.0R))
   (ensures (mk_fraction td (mk_fraction td x p1) p2 == mk_fraction td x (p1 `prod_perm` p2)))
 
-val full (#t: Type0) (td: typedef t) (v: t) : GTot prop
+val full (#t: Type0) (td: typedef t) (v: t) : prop
 
 val uninitialized (#t: Type0) (td: typedef t) : Ghost t
   (requires True)
