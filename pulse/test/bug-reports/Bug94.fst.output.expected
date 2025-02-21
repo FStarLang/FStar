@@ -10,7 +10,7 @@
 >> Got issues: [
 * Error 189 at Bug94.fst(20,16-20,17):
   - Expected expression of type Prims.nat got expression y of type Prims.string
-  - See also Bug94.fst(20,2-21,4)
+  - See also Bug94.fst(19,1-21,4)
 
 >>]
 >> Got issues: [
