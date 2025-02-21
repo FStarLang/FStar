@@ -91,6 +91,14 @@ let same_head (t0 t1:term)
 exception GFalse
 exception GTrue
 
+(* quick unification *)
+let qunif (g:env) (t0 t1 : term) : T.Tac bool =
+  let res =
+    Some? (fst (PTU.check_equiv_now_nosmt_unfold (elab_env g) t0 t1))
+  in
+  // T.print <| "qunif " ^ show t0 ^ " " ^ show t1 ^ " = " ^ show res;
+  res
+
 let rec eligible_for_smt_equality (g:env) (t0 t1 : term)
   : T.Tac bool
 = try
@@ -140,11 +148,15 @@ let rec eligible_for_smt_equality (g:env) (t0 t1 : term)
       if binder_is_mkey b then
         let eq' =
           if binder_is_slprop b then
-            eligible_for_smt_equality g a0 a1
+            (* For slprops, we recurse on the arguments
+            following the same mkey logic, but also we attempt
+            unification if that fails. (will this be too slow?) *)
+            if eligible_for_smt_equality g a0 a1 then
+              true
+            else
+              qunif g a0 a1
           else
-            try
-              Some? (fst (PTU.check_equiv_now_nosmt_unfold (elab_env g) a0 a1))
-            with | _ -> false
+            qunif g a0 a1
         in
          (true, eq && eq')
       else
