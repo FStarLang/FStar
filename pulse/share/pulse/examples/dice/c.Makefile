@@ -21,9 +21,12 @@ KRML ?= $(KRML_HOME)/krml
 
 myall: verify test
 
-extract: $(ALL_KRML_FILES)
+extract: .extract.touch
+
+.extract.touch: $(ALL_KRML_FILES)
 	$(call msg, "KRML")
 	$(KRML) -skip-compilation -ccopt -Wno-unused-variable -bundle 'HACL=EverCrypt.\*,Spec.Hash.Definitions' -bundle 'DPE=*' -library Pulse.Lib.Primitives,Pulse.Lib.SpinLock,L0Core -add-include '"Pulse_Lib_SpinLock.h"' -add-include '"EverCrypt_Base.h"' -warn-error @4+9 -tmpdir $(OUTPUT_DIR) $^
+	touch $@
 
 # Note: the Karamel-generated makefiles require running with
 # default rules enabled, but they are disabled here (from common.mk).
@@ -32,7 +35,8 @@ extract: $(ALL_KRML_FILES)
 # flag from the relevant component in MAKEFLAGS.
 test: MAKEFLAGS=
 test: extract
-	cp $(CURDIR)/external/c/hacl/* $(OUTPUT_DIR)
+	# Preserve timestamps for incrementality
+	cp -p $(CURDIR)/external/c/hacl/* $(OUTPUT_DIR)
 	+$(MAKE) -C $(OUTPUT_DIR) -f Makefile.basic Pulse_Lib_SpinLock.o DPE.o HACL.o
 ifneq (,$(HACL_HOME))
 ifneq (,$(wildcard $(HACL_HOME)/dist/gcc-compatible/Makefile.basic))

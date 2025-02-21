@@ -26,3 +26,6 @@ _cache
 FStar
 _pak
 pulse.tar.gz
+
+# make touchfiles
+.*.touch

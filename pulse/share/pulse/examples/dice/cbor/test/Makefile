@@ -4,8 +4,11 @@ all: CBORTest
 
 .PHONY: CBORTest
 
-CBORTest: CBORTest.exe
+CBORTest: .CBORTest.touch
+
+.CBORTest.touch: CBORTest.exe
 	./CBORTest.exe
+	touch $@
 
 CBORTest.o: CBORTest.c
 	$(CC) -Werror -I $(KRML_HOME)/include -I $(KRML_HOME)/krmllib/dist/generic -I ../_output/ -c -o $@ $<
