@@ -66,7 +66,7 @@ let add_decorations decors ds =
 %}
 
 /* pulse specific tokens; rest are inherited from F* */
-%token MUT FN INVARIANT WHILE REF PARALLEL REWRITE FOLD EACH
+%token MUT FN INVARIANT WHILE REF PARALLEL REWRITE FOLD EACH NOREWRITE
 %token GHOST ATOMIC
 %token WITH_INVS OPENS  SHOW_PROOF_STATE
 
@@ -211,6 +211,10 @@ pulseComputationType:
         PulseSyntaxExtension_Sugar.mk_comp ST annots (rr $loc)
     }
 
+optional_norewrite:
+  | NOREWRITE { true }
+  | { false }
+
 pulseStmtNoSeq:
   | OPEN i=quident
     { PulseSyntaxExtension_Sugar.mk_open i }
@@ -228,10 +232,10 @@ pulseStmtNoSeq:
     }
   | lhs=appTermNoRecordExp COLON_EQUALS a=noSeqTerm
     { PulseSyntaxExtension_Sugar.mk_assignment lhs a }
-  | LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) EQUALS LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK
-    { PulseSyntaxExtension_Sugar.mk_let_binding q p typOpt (Some (Array_initializer { init=v; len=n })) }
-  | LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) EQUALS init=bindableTerm
-    { PulseSyntaxExtension_Sugar.mk_let_binding q p typOpt (Some init) }
+  | norw=optional_norewrite LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) EQUALS LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK
+    { PulseSyntaxExtension_Sugar.mk_let_binding norw q p typOpt (Some (Array_initializer { init=v; len=n })) }
+  | norw=optional_norewrite LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) EQUALS init=bindableTerm
+    { PulseSyntaxExtension_Sugar.mk_let_binding norw q p typOpt (Some init) }
   | s=pulseBindableTerm
     { s }
   | WHILE LPAREN tm=pulseStmt RPAREN INVARIANT i=lident DOT v=pulseSLProp LBRACE body=pulseStmt RBRACE
@@ -263,7 +267,7 @@ pulseStmtNoSeq:
     {
       let id, fndefn = f in
       let pat = mk_pattern (PatVar (id, None, [])) (rr $loc) in
-      PulseSyntaxExtension_Sugar.mk_let_binding None pat None (Some (Lambda_initializer fndefn))
+      PulseSyntaxExtension_Sugar.mk_let_binding false None pat None (Some (Lambda_initializer fndefn))
     }
   | p=ifStmt { p }
   | p=matchStmt { p }
@@ -315,8 +319,8 @@ ensuresSLProp:
     { ret, s, maybe_opens }
 
 pulseMatchBranch:
-  | pat=pulsePattern RARROW LBRACE e=pulseStmt RBRACE
-    { (pat, e) }
+  | norw=optional_norewrite pat=pulsePattern RARROW LBRACE e=pulseStmt RBRACE
+    { (norw, pat, e) }
 
 pulsePattern:
   | p=tuplePattern { p }

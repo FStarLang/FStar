@@ -86,7 +86,8 @@ val pat_constant (c:constant) (_:range) : pattern
 val pat_cons (head:fv) (ps:list pattern) (_:range) : pattern
 
 new val st_term : Type0
-type branch = pattern & st_term
+type branch
+val mk_branch : pattern -> st_term -> norw:bool -> branch
 val tm_return (t:term) (_:range) : st_term
 val tm_ghost_return (t:term) (_:range) : st_term
 val tm_abs (b:binder) (q:option qualifier) (_:option comp) (body:st_term) (_:range) : st_term

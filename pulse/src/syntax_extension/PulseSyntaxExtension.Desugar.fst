@@ -518,7 +518,8 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
           fail "Qualifiers are not allowed for pattern bindings" lb.pat.prange
         else return ();!
         let lb' =
-          { qualifier = lb.qualifier;
+          { norw = lb.norw;
+            qualifier = lb.qualifier;
             pat = A.mk_pattern (A.PatVar (id, None, [])) lb.pat.prange;
             typ = lb.typ;
             init = lb.init }
@@ -529,7 +530,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
         let t_match =
           mk_stmt (Match { head = A.(mk_term (Tvar id) lb.pat.prange Expr);
                           returns_annot = None;
-                          branches = [(pat, s2)] }) s.range
+                          branches = [(lb.norw, pat, s2)] }) s.range
         in
         let s'' =
           mk_stmt (Sequence { s1 = t_let ; s2=t_match }) s.range
@@ -640,14 +641,14 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let n1 : term = tm_expr n1 s.range in
       return (SW.tm_with_inv n1 tt returns_ s.range)
 
-and desugar_branch (env:env_t) (br:A.pattern & Sugar.stmt)
+and desugar_branch (env:env_t) (br: bool & A.pattern & Sugar.stmt)
   : err SW.branch
-  = let (p, e) = br in
+  = let (norw, p, e) = br in
     let! (p, vs) = desugar_pat env p in
     let env, bvs = push_bvs env vs in
     let! e = desugar_stmt env e in
     let e = SW.close_st_term_n e (L.map (fun (v:S.bv) -> v.index <: nat) bvs) in
-    return (p,e)
+    return (SW.mk_branch p e norw)
 
 and desugar_pat (env:env_t) (p:A.pattern)
   : err (SW.pattern & list ident)

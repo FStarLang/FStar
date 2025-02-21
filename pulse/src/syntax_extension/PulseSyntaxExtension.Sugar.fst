@@ -136,6 +136,7 @@ type stmt' =
     }
 
   | LetBinding {
+      norw:bool; (* add norewrite to the branch if this desugars to a match. *)
       qualifier: option mut_or_ref;
       pat:A.pattern;
       typ:option A.term;
@@ -156,7 +157,8 @@ type stmt' =
   | Match {
       head:A.term;
       returns_annot:option ensures_slprop;
-      branches:list (A.pattern & stmt);
+      branches:list (bool & A.pattern & stmt);
+      (* ^ boolean true for 'norewrite' *)
     }
 
   | While {
@@ -353,9 +355,9 @@ let rec stmt_to_string (s:stmt) : string =
       "returns_", FStarC.Common.string_of_option show returns_;
     ]
 
-and branch_to_string (b:A.pattern & stmt) : string =
-  let (p, s) = b in
-  show p ^ " -> " ^ stmt_to_string s
+and branch_to_string (b:bool & A.pattern & stmt) : string =
+  let (norw, p, s) = b in
+  show p ^ (if norw then "(norw)" else "") ^ " -> " ^ stmt_to_string s
 
 instance showable_stmt : showable stmt = {
   show = stmt_to_string
@@ -428,7 +430,8 @@ and eq_stmt' (s1 s2:stmt') =
     AU.eq_term l1 l2 && AU.eq_term v1 v2
   | ArrayAssignment { arr=a1; index=i1; value=v1 }, ArrayAssignment { arr=a2; index=i2; value=v2 } ->
     AU.eq_term a1 a2 && AU.eq_term i1 i2 && AU.eq_term v1 v2
-  | LetBinding { qualifier=q1; pat=pat1; typ=t1; init=init1 }, LetBinding { qualifier=q2; pat=pat2; typ=t2; init=init2 } ->
+  | LetBinding { norw=norw1; qualifier=q1; pat=pat1; typ=t1; init=init1 }, LetBinding { norw=norw2; qualifier=q2; pat=pat2; typ=t2; init=init2 } ->
+    norw1 = norw2 &&
     eq_opt eq_mut_or_ref q1 q2 &&
     AU.eq_pattern pat1 pat2 &&
     eq_opt AU.eq_term t1 t2 &&
@@ -442,7 +445,7 @@ and eq_stmt' (s1 s2:stmt') =
   | Match { head=h1; returns_annot=r1; branches=b1 }, Match { head=h2; returns_annot=r2; branches=b2 } ->
     AU.eq_term h1 h2 &&
     eq_opt eq_ensures_slprop r1 r2 &&
-    forall2 (fun (p1, s1) (p2, s2) -> AU.eq_pattern p1 p2 && eq_stmt s1 s2) b1 b2
+    forall2 (fun (norw1, p1, s1) (norw2, p2, s2) -> norw1 = norw2 && AU.eq_pattern p1 p2 && eq_stmt s1 s2) b1 b2
   | While { guard=g1; id=id1; invariant=i1; body=b1 }, While { guard=g2; id=id2; invariant=i2; body=b2 } ->
     eq_stmt g1 g2 &&
     eq_ident id1 id2 &&
@@ -576,7 +579,7 @@ and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) =
   | Match { head=h; returns_annot=r; branches=b } ->
     cbs.scan_term h;
     iopt (scan_ensures_slprop cbs) r;
-    iter (fun (p, s) -> cbs.scan_pattern p; scan_stmt cbs s) b
+    iter (fun (_, p, s) -> cbs.scan_pattern p; scan_stmt cbs s) b
   | While { guard=g; id=id; invariant=i; body=b } ->
     scan_stmt cbs g;
     scan_slprop cbs i;
@@ -641,7 +644,7 @@ let add_decorations d ds =
 let mk_expr e = Expr { e }
 let mk_assignment id value = Assignment { lhs=id; value }
 let mk_array_assignment arr index value = ArrayAssignment { arr; index; value }
-let mk_let_binding qualifier pat typ init = LetBinding { qualifier; pat; typ; init }
+let mk_let_binding norw qualifier pat typ init = LetBinding { norw; qualifier; pat; typ; init }
 let mk_block stmt = Block { stmt }
 let mk_if head join_slprop then_ else_opt = If { head; join_slprop; then_; else_opt }
 let mk_match head returns_annot branches = Match { head; returns_annot; branches }
