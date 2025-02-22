@@ -557,7 +557,7 @@ val match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) (bnds:lis
   : Type0
 
 // Returns elaborated patterns, the bindings for each one, and a token. Possibly some issues
-// too.
+// too. The bindings are open.
 val check_match_complete (g:env) (sc:term) (t:typ) (pats:list pattern)
   : Tac (ret_t (pats_bnds:(list pattern & list (list binding))
                            {match_complete_token g sc t (fst pats_bnds) (snd pats_bnds)
