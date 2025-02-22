@@ -768,14 +768,16 @@ or   G |- t0 <: t1 | p
  *)
 let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
   : result unit
-  = let err () =
+  = let err (lbl:string) =
         match rel with
         | EQUALITY ->
-          fail (BU.format2 "not equal terms: %s <> %s"
+          fail (BU.format3 "(%s) not equal terms: %s <> %s"
+                           lbl
                            (show t0)
                            (show t1))
         | _ ->
-          fail (BU.format2 "%s is not a subtype of %s"
+          fail (BU.format3 "(%s) %s is not a subtype of %s"
+                           lbl
                            (show t0)
                            (show t1))
     in
@@ -851,8 +853,8 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       then if equatable g t0
             || equatable g t1
            then emit_guard t0 t1
-           else err ()
-      else err ()
+           else err "not equatable"
+      else err "guards not allowed"
     in
     let maybe_unfold_side_and_retry side t0 t1 =
       if! unfolding_ok then
@@ -893,7 +895,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         // See above remark regarding universe instantiations
         if Rel.teq_nosmt_force g.tcenv t0 t1
         then return ()
-        else err ()
+        else err "teq_nosmt_force over Types failed"
 
       | Tm_meta {tm=t0; meta=Meta_pattern _}, _
       | Tm_meta {tm=t0; meta=Meta_named _}, _
@@ -914,7 +916,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         then ( //heads are equal, equate universes
              if Rel.teq_nosmt_force g.tcenv t0 t1
              then return ()
-             else err ()
+             else err "teq_nosmt_force over Tm_uinst failed"
         )
         else maybe_unfold_and_retry t0 t1
 

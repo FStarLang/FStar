@@ -2645,7 +2645,9 @@ let refl_check_match_complete (g:env) (sc:term) (scty:typ) (pats : list RD.patte
   Rel.force_trivial_guard env guard;
   let get_pats t =
     match (U.unmeta t).n with
-    | Tm_match {brs} -> List.map (fun (p,_,_) -> p) brs
+    | Tm_match {brs} ->
+      List.map (fun br -> let (p,_,_) = SS.open_branch br in p) brs
+      (* ^We must open the patterns to return proper binders. See Pulse isse #357. *)
     | _ -> failwith "refl_check_match_complete: not a match?"
   in
   let mm = SC.deep_compress false true mm in // important! we must return fully-compressed patterns
