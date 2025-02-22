@@ -290,11 +290,10 @@ let rec eq_st_term (t1 t2:st_term)
 
     | _ -> false
 
-and eq_branch (b1 b2 : pattern & st_term)
+and eq_branch (b1 b2 : branch)
   : b:bool{b <==> (b1 == b2)}
-  = let (p1, e1) = b1 in
-    let (p2, e2) = b2 in
-    eq_pattern p1 p2 && eq_st_term e1 e2
+  = eq_pattern b1.pat b2.pat &&
+    eq_st_term b1.e   b2.e
 
 and eq_aqual (q1 q2 : qualifier) : b:bool{b <==> (q1 == q2)} =
   match q1, q2 with

@@ -162,10 +162,10 @@ let rec freevars_st (t:st_term)
                                           (freevars is))))
                   returns_inv)
 
-and freevars_branches (t:list (pattern & st_term)) : Set.set var =
+and freevars_branches (t:list branch) : Set.set var =
   match t with
   | [] -> Set.empty
-  | (_, b)::tl -> freevars_st b `Set.union` freevars_branches tl
+  | b::tl -> freevars_st b.e `Set.union` freevars_branches tl
 
 
 let ln' (t:term) (i:int) : bool = RT.ln' t i
@@ -353,11 +353,10 @@ let rec ln_st' (t:st_term) (i:int)
           ln' is i)
         returns_inv i
 
-and ln_branch' (b : pattern & st_term) (i:int) : Tot bool (decreases b) =
-  let (p, e) = b in
-  ln_pattern' p i &&
-  ln_st' e (i + pattern_shift_n p)
-  
+and ln_branch' (b : branch) (i:int) : Tot bool (decreases b) =
+  ln_pattern' b.pat i &&
+  ln_st' b.e (i + pattern_shift_n b.pat)
+
 and ln_branches' (t:st_term) (brs : list branch{brs << t}) (i:int) : Tot bool (decreases brs) =
   for_all_dec t brs (fun b -> ln_branch' b i)
 
@@ -622,11 +621,11 @@ and subst_branches (t:st_term) (ss:subst) (brs : list branch{brs << t})
 : Tot (list branch) (decreases brs)
 = map_dec t brs (fun br -> subst_branch ss br)
 
-and subst_branch (ss:subst) (b : pattern & st_term) : Tot (pattern & st_term) (decreases b) =
-  let (p, e) = b in
-  let p = subst_pat p ss in
-  let ss = shift_subst_n (pattern_shift_n p) ss in
-  p, subst_st_term e ss
+and subst_branch (ss:subst) (b : branch) : Tot branch (decreases b) =
+  let {pat; e; norw} = b in
+  let pat = subst_pat pat ss in
+  let ss = shift_subst_n (pattern_shift_n pat) ss in
+  { pat; e=subst_st_term e ss; norw }
 
 
 let open_st_term' (t:st_term) (v:term) (i:index) : st_term =

@@ -223,11 +223,12 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   | Tm_Unreachable _ -> e
 
 and simplify_branch (g:env) (b:branch) : T.Tac branch =
-  let pat, body = b in
+  let {pat; e=body; norw} = b in
   let g, bs = extend_env'_pattern g pat in
   let body = Pulse.Checker.Match.open_st_term_bs body bs in
   let body = simplify_st_term g body in
-  pat, Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs)
+  let body = Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs) in
+  {pat; e=body; norw}
 
 let erase_type_for_extraction (g:env) (t:term) : T.Tac bool =
   RU.must_erase_for_extraction (E.fstar_env g) t
@@ -320,11 +321,12 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
   end
 
 and erase_ghost_subterms_branch (g:env) (b:branch) : T.Tac branch =
-  let pat, body = b in
+  let {pat; e=body; norw} = b in
   let g, bs = extend_env'_pattern g pat in
   let body = Pulse.Checker.Match.open_st_term_bs body bs in
   let body = erase_ghost_subterms g body in
-  pat, Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs)
+  let body = Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs) in
+  { pat; e=body; norw }
 
 let extract_dv_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.qualifier)
   : T.Tac R.binder =
@@ -491,7 +493,7 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
   end
 
 and extract_dv_branch g (b:Pulse.Syntax.Base.branch) : T.Tac R.branch =
-  let pat, body = b in
+  let {pat; e=body; norw} = b in
   let g, pat, bs = extract_dv_pattern g pat in
   pat, LN.close_term_n
     (extract_dv g (Pulse.Checker.Match.open_st_term_bs body bs))

@@ -318,9 +318,9 @@ and open_branch_ln' (br : branch) (x:term) (i:index)
   : Lemma
     (requires ln_branch' (subst_branch [RT.DT i x] br) (i - 1))
     (ensures ln_branch' br i)
-  = let (p, e) = br in
-    open_pattern_ln p x i;
-    open_st_term_ln' e x (i + pattern_shift_n p)
+  = let {pat; e} = br in
+    open_pattern_ln pat x i;
+    open_st_term_ln' e x (i + pattern_shift_n pat)
 
 let open_term_ln (e:term) (v:var)
   : Lemma 

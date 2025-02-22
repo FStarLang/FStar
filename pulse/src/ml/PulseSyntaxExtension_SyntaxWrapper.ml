@@ -109,6 +109,9 @@ let pat_cons fv vs _r = PSB.(pat_cons fv (List.map (fun v -> (v,false)) vs))
 type st_term = Pulse_Syntax_Base.st_term
 type branch = Pulse_Syntax_Base.branch
 
+let mk_branch (p:pattern) (t:st_term) (norw:bool) : branch =
+  PSB.mk_branch p t norw
+
 let tm_return (t:term) r : st_term = PSB.(with_range (tm_return (tm_unknown r) false t) r)
 
 let tm_ghost_return (t:term) r : st_term = PSB.(with_range (tm_return (tm_unknown r) false t) r)

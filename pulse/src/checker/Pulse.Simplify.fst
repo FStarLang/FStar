@@ -4,6 +4,30 @@ open Pulse.Show
 open FStar.Reflection.V2
 module T       = FStar.Tactics.V2
 
+let is_Some (t:term) : T.Tac (option term) =
+  match T.hua t with
+  | Some (h, us, args) ->
+    if implode_qn (T.inspect_fv h) = `%Some
+    then
+      match args with
+      | [(_, Q_Implicit); (t, Q_Explicit)] -> Some t
+      | _ -> None
+    else
+    None
+  | _ -> None
+
+let is_Some_v (t:term) : T.Tac (option term) =
+  match T.hua t with
+  | Some (h, us, args) ->
+    if implode_qn (T.inspect_fv h) = `%Some?.v
+    then
+      match args with
+      | [(_, Q_Implicit); (t, Q_Explicit)] -> Some t
+      | _ -> None
+    else
+    None
+  | _ -> None
+
 let is_tuple2__1 (t:term) : T.Tac (option term) =
   match T.hua t with
   | Some (h, us, args) ->
@@ -111,9 +135,18 @@ let simpl_hide_reveal (t:term) : T.Tac term =
     end
   | None -> t
 
+let simpl_option (t:term) : T.Tac term =
+  match is_Some_v t with
+  | Some o ->
+    (match is_Some o with
+    | Some x -> x
+    | None -> t)
+  | None -> t
+
 let rec simplify (t0:term) : T.Tac term =
   let t = t0 in
   let t = simpl_proj t in
+  let t = simpl_option t in
   let t = simpl_hide_reveal t in
   let t = simpl_reveal_hide t in
   let t =

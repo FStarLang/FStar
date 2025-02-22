@@ -305,7 +305,11 @@ and st_term = {
     seq_lhs : Sealed.Inhabited.sealed #bool false; (* was this s1; ..? if so check that it types to unit *)
 } 
 
-and branch = pattern & st_term
+and branch = {
+  pat : pattern;
+  e : st_term;
+  norw: Sealed.Inhabited.sealed false; (* do not automatically rewrite strutinee to the pattern. *)
+}
 
 (* Create a term with default fields *)
 let mk_term (s : st_term') (r : range) : st_term =

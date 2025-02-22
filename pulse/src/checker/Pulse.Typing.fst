@@ -887,9 +887,9 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g sc sc_ty ->
       c:comp_st ->
       my_erased (comp_typing_u g c) ->
-      brs:list (pattern & st_term) ->
+      brs:list branch ->
       brs_typing g sc_u sc_ty sc brs c ->
-      pats_complete g sc sc_ty (L.map (fun (p, _) -> elab_pat p) brs) ->
+      pats_complete g sc sc_ty (L.map (fun b -> elab_pat b.pat) brs) ->
       st_typing g (wrst c (Tm_Match {sc; returns_=None; brs})) c
 
   | T_Frame:
@@ -1079,12 +1079,12 @@ and brs_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) : list branch -> co
 
   | TBRS_1 :
       c:comp_st ->
-      p:pattern ->
+      pat:pattern ->
       e:st_term ->
-      br_typing g sc_u sc_ty sc p e c ->
+      br_typing g sc_u sc_ty sc pat e c ->
       rest:list branch ->
       brs_typing g sc_u sc_ty sc rest c ->
-      brs_typing g sc_u sc_ty sc ((p,e)::rest) c
+      brs_typing g sc_u sc_ty sc ({pat;e;norw=Sealed.seal false}::rest) c
 
 and br_typing : env -> universe -> typ -> term -> pattern -> st_term -> comp_st -> Type =
   | TBR :

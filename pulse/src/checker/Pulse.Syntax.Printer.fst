@@ -440,9 +440,10 @@ and branches_to_string brs : T.Tac _ =
   | b::bs -> branch_to_string b ^ branches_to_string bs
 
 and branch_to_string br : T.Tac _ =
-  let (pat, e) = br in
-  Printf.sprintf "{ %s -> %s }"
+  let {pat; e; norw} = br in
+  Printf.sprintf "{ %s%s -> %s }"
     (pattern_to_string pat)
+    (if T.unseal norw then "(norw)" else "")
     (st_term_to_string' "" e)
 
 and pattern_to_string (p:pattern) : T.Tac string = 

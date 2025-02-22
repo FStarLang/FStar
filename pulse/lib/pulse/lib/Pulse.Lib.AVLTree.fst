@@ -493,7 +493,6 @@ fn write_node
 {
   let n = { data = data; left = lp; right = rp };
   let Some p = tree;
-  rewrite each (Some?.v tree) as p;
   p := n;
   fold (is_tree tree (T.Node data lt rt))
 }

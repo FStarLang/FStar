@@ -24,6 +24,7 @@ let rewrite_token (tok:FP.token)
     | IDENT "with_invariants" -> PP.WITH_INVS
     | IDENT "opens" -> PP.OPENS
     | IDENT "show_proof_state" -> PP.SHOW_PROOF_STATE
+    | IDENT "norewrite" -> PP.NOREWRITE
     (* the rest are just copied from FStarC_Parser_Parse *)
     | IDENT s -> PP.IDENT s
     | AMP -> PP.AMP
