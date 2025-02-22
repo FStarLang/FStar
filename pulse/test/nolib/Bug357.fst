@@ -14,6 +14,8 @@ fn test1 (x : t2)
 {
   match x {
     norewrite C y z -> {
+      let foo = z;
+      rewrite each x as C y z;
       ();
     }
   }
@@ -24,15 +26,12 @@ fn test11 (x : t2)
   ensures  foo x
 {
   match x {
-    norewrite y -> {
-      admit();
+    y -> {
       ();
     }
   }
 }
 
-(* should work, or at least not crash *)
-[@@expect_failure]
 fn test2 (x : t2)
   requires foo x
   ensures  foo x
@@ -52,8 +51,6 @@ fn test3 (x : t2)
   ();
 }
 
-(* should work, or at least not crash *)
-[@@expect_failure]
 fn test4 (x : t2)
   requires foo x
   ensures  foo x
