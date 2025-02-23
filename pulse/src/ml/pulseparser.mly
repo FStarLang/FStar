@@ -323,7 +323,6 @@ pulseMatchBranch:
 
 pulsePattern:
   | p=tuplePattern { p }
-  // TODO: extend with sugar for tuples, lists, etc
 
 pulseStmt:
   | s=pulseStmtNoSeq
