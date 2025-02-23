@@ -234,6 +234,9 @@ let proc_guard_formula
   (rng:Range.range)
 : tac unit
 = let! ps = get in
+  if !dbg_Tac then
+    BU.print2 "Guard policy is %s, trying to discharge %s\n"
+      (show ps.guard_policy) (show f);
   match ps.guard_policy with
   | Drop ->
     // should somehow taint the state instead of just printing a warning
