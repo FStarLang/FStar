@@ -750,7 +750,7 @@ let karamel_fixup_qual (se:sigelt) : sigelt =
 
 let mark_sigelt_erased (se:sigelt) (g:uenv) : uenv =
   debug g (fun u -> BU.print1 ">>>> NOT extracting %s \n" (Print.sigelt_to_string_short se));
-  // Cheating with delta levels and qualifiers below, but we don't ever use them.
+  // Cheating with fv qualifiers below, but we don't ever use them.
   List.fold_right (fun lid g -> extend_erased_fv g (S.lid_as_fv lid None))
                   (U.lids_of_sigelt se) g
 

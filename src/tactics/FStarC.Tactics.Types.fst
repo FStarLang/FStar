@@ -26,6 +26,15 @@ module O       = FStarC.Options
 module Range   = FStarC.Range
 module U       = FStarC.Syntax.Util
 
+instance showable_guard_policy : showable guard_policy = {
+  show = (function | Goal -> "Goal"
+                   | SMT -> "SMT"
+                   | SMTSync -> "SMTSync"
+                   | Force -> "Force"
+                   | ForceSMT -> "ForceSMT"
+                   | Drop -> "Drop");
+}
+
 let goal_env g = g.goal_main_env
 let goal_range g = g.goal_main_env.range
 let goal_witness g =

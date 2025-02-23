@@ -205,6 +205,13 @@ let rec iter_tac f l =
   | [] -> ret ()
   | hd::tl -> f hd ;! iter_tac f tl
 
+let rec fold_right f l x =
+  match l with
+  | [] -> return x
+  | hd::tl ->
+    let! r = fold_right f tl x in
+    f hd r
+
 exception Bad of string
 
 (* private *)
