@@ -66,6 +66,8 @@ val trytac_exn : tac 'a -> tac (option 'a)
 (* iter combinator *)
 val iter_tac (f: 'a -> tac unit) (l:list 'a) : tac unit
 
+val fold_right (f: 'a -> 'b -> tac 'b) (l:list 'a) (x:'b) : tac 'b
+
 (* Defensive checks. Will only do anything if --defensive is on. If so,
 and some goal is ill-scoped, they will log a warning. *)
 val check_valid_goal (g:goal) : unit

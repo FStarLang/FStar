@@ -2244,6 +2244,10 @@ let write (r:tref 'a) (x:'a) : tac unit =
 
 (***** Builtins used in the meta DSL framework *****)
 
+(* reflection typing calls generate guards in this format, and are mostly discharged
+   internally. *)
+type refl_guard_t = env & typ
+
 let dbg_refl (g:env) (msg:unit -> string) =
   if !dbg_ReflTc
   then BU.print_string (msg ())
@@ -2256,7 +2260,16 @@ let refl_typing_guard (e:env) (g:typ) : tac unit =
 
 let uncurry f (x, y) = f x y
 
-let __refl_typing_builtin_wrapper (f:unit -> 'a & list (env & typ)) : tac (option 'a & issues) =
+let exn_to_issue (e:exn) : Errors.issue =
+  FStarC.Errors.({
+    issue_msg = Errors.mkmsg (BU.print_exn e);
+    issue_level = EError;
+    issue_range = None;
+    issue_number = (Some 17);
+    issue_ctx = get_ctx ()
+  })
+
+let __refl_typing_builtin_wrapper (f:unit -> 'a & list refl_guard_t) : tac (option 'a & issues) =
   (* We ALWAYS rollback the state. This wrapper is meant to ensure that
   the UF graph is not affected by whatever we are wrapping. This means
   any returned term must be deeply-compressed. The guards are compressed by
@@ -2266,13 +2279,7 @@ let __refl_typing_builtin_wrapper (f:unit -> 'a & list (env & typ)) : tac (optio
   let errs, r =
     try Errors.catch_errors_and_ignore_rest f
     with exn -> //catch everything
-      let issue = FStarC.Errors.({
-        issue_msg = Errors.mkmsg (BU.print_exn exn);
-        issue_level = EError;
-        issue_range = None;
-        issue_number = (Some 17);
-        issue_ctx = get_ctx ()
-      }) in
+      let issue = exn_to_issue exn in
       [issue], None
   in
 
@@ -2300,8 +2307,32 @@ let __refl_typing_builtin_wrapper (f:unit -> 'a & list (env & typ)) : tac (optio
   if List.length errs > 0
   then return (None, errs)
   else (
-    iter_tac (uncurry refl_typing_guard) gs;!
-    return (r, errs)
+    (* Try to discharge the guards, but if any of them fails, return a decent error. *)
+    let! ok, guard_errs =
+      fold_right (fun (e,g) (ok, errs) ->
+        match! catch (refl_typing_guard e g) with
+        | Inr () -> return (ok, errs)
+        | Inl e ->
+          (* the exception is not really useful. *)
+          let iss =
+            FStarC.Errors.({
+              issue_msg = [
+                Pprint.doc_of_string "Discharging guard failed.";
+                Pprint.doc_of_string "g = " ^^ pp g;
+              ];
+              issue_level = EError;
+              issue_range = None;
+              issue_number = (Some 17);
+              issue_ctx = get_ctx ()
+            })
+          in
+          return (false, iss :: errs)
+      ) gs (true, [])
+    in
+    if ok then
+      return (r, errs @ guard_errs)
+    else
+      return (None, errs @ guard_errs)
   )
 
 (* This runs the tactic `f` in the current proofstate, and returns an
@@ -2320,7 +2351,7 @@ errors in the tactic execution, e.g. those related to discharging the
 guards if a synchronous mode (SMTSync/Force) was used.
 
 This also adds the label to the messages (when debugging) to identify the primitive. *)
-let refl_typing_builtin_wrapper (label:string) (f:unit -> 'a & list (env & typ)) : tac (option 'a & issues) =
+let refl_typing_builtin_wrapper (label:string) (f:unit -> 'a & list refl_guard_t) : tac (option 'a & issues) =
   let open FStarC.Errors in
   let! o, errs =
     match! catch_all (__refl_typing_builtin_wrapper f) with
@@ -2435,7 +2466,7 @@ let refl_core_compute_term_type (g:env) (e:term) : tac (option (Core.tot_or_ghos
          let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
            BU.format1 "refl_core_compute_term_type: %s\n" (show e));
-         let guards : ref (list (env & typ)) = mk_ref [] in
+         let guards : ref (list refl_guard_t) = mk_ref [] in
          let gh = fun g guard ->
            (* FIXME: this is kinda ugly, we store all the guards
            in a local ref and fetch them at the end. *)
@@ -2555,7 +2586,7 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
       dbg_refl g (fun _ ->
         BU.format1 "} finished tc with e = %s\n"
           (show e));
-      let guards : ref (list (env & typ)) = mk_ref [] in
+      let guards : ref (list refl_guard_t) = mk_ref [] in
       let gh = fun g guard ->
         (* collect guards and return them *)
         dbg_refl g (fun _ -> 
