@@ -232,8 +232,6 @@ pulseStmtNoSeq:
     }
   | lhs=appTermNoRecordExp COLON_EQUALS a=noSeqTerm
     { PulseSyntaxExtension_Sugar.mk_assignment lhs a }
-  | norw=optional_norewrite LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) EQUALS LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK
-    { PulseSyntaxExtension_Sugar.mk_let_binding norw q p typOpt (Some (Array_initializer { init=v; len=n })) }
   | norw=optional_norewrite LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) EQUALS init=bindableTerm
     { PulseSyntaxExtension_Sugar.mk_let_binding norw q p typOpt (Some init) }
   | s=pulseBindableTerm
@@ -281,6 +279,7 @@ matchStmt:
 bindableTerm:
   | p=pulseBindableTerm { let p = PulseSyntaxExtension_Sugar.mk_stmt p (rr $loc) in Stmt_initializer p }
   | s=noSeqTerm { Default_initializer s }
+  | LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK { Array_initializer { init=v; len=n } }
   
 pulseBindableTerm:
   | WITH_INVS names=nonempty_list(atomicTerm) r=option(ensuresSLProp) LBRACE body=pulseStmt RBRACE
@@ -324,7 +323,6 @@ pulseMatchBranch:
 
 pulsePattern:
   | p=tuplePattern { p }
-  // TODO: extend with sugar for tuples, lists, etc
 
 pulseStmt:
   | s=pulseStmtNoSeq

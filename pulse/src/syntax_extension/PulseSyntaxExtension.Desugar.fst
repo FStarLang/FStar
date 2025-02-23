@@ -506,13 +506,16 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       in
       desugar_stmt env s2
 
-    | Sequence { s1={s=LetBinding lb}; s2 } ->
+    | Sequence { s1={s=LetBinding lb; range=s1range}; s2 } ->
       begin match lb.pat.pat with
       | A.PatVar _
       | A.PatWild _ ->
+        (* simple bind *)
         desugar_bind env lb s2 s.range
       | _ ->
+        (* a single-branch pattern match *)
         let id = Ident.id_of_text "_letpattern" in
+        let id = Ident.set_id_range lb.pat.prange id in
         let pat = lb.pat in
         if Some? lb.qualifier then
           fail "Qualifiers are not allowed for pattern bindings" lb.pat.prange
@@ -531,15 +534,15 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
             init = lb.init }
         in
         let t_let =
-          mk_stmt (LetBinding lb') s.range
+          mk_stmt (LetBinding lb') s1range
         in
         let seq s1 s2 =
-          mk_stmt (Sequence { s1; s2 }) s.range
+          mk_stmt (Sequence { s1; s2 }) s1range
         in
         let t_match =
           mk_stmt (Match { head = A.(mk_term (Tvar id) lb.pat.prange Expr);
                           returns_annot = None;
-                          branches = [(lb.norw, pat, s2)] }) s.range
+                          branches = [(lb.norw, pat, s2)] }) s1range
         in
         let t_match =
           (* We only inject a variable when the rhs is a variable *)
@@ -553,7 +556,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
             let s_rw =
               mk_stmt (ProofHintWithBinders {
                     hint_type = RENAME ([(init_expr, A.mk_term (A.Tvar id) lb.pat.prange A.Expr)], None, None);
-                    binders = []}) s.range
+                    binders = []}) s1range
             in
             seq s_rw t_match
           else t_match

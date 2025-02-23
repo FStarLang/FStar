@@ -1,0 +1,20 @@
+>> Got issues: [
+* Error 19 at MatchRange.fst(12,5-13,16):
+  - Could not verify that this match is exhaustive.
+  - Patterns are incomplete
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: MatchRange.fst(13,6-13,12)
+  - Other related locations: dummy(0,0-0,0)
+
+>>]
+>> Got issues: [
+* Error 19 at MatchRange.fst(28,2-32,3):
+  - Could not verify that this match is exhaustive.
+  - Patterns are incomplete
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: MatchRange.fst(28,8-28,9)
+  - Other related locations: dummy(0,0-0,0)
+
+>>]
