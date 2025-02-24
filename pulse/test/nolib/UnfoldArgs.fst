@@ -11,41 +11,36 @@ val trade
 
 assume val rel : int -> slprop
 assume val f : int -> int
-assume val g : int -> int
+assume val g : x:int -> y:int{f y == x}
 
-type box a =
-  | Box of a
-
-[@@pulse_unfold]
-let unbox (Box x) = x
-
-let rel2 (Box x) = rel x
+let rel2 x = rel (g (f x))
 
 fn test1 (x : _)
-  requires trade (rel x) emp
-  ensures  trade (rel2 (Box x)) emp
+  requires trade emp (rel2 x)
+  ensures  trade emp (rel (g (f x)))
 {
   ();
 }
 
 fn test2 (x : _)
-  requires trade (rel2 (Box x)) emp
-  ensures  trade (rel x) emp
+  requires trade emp (rel (g (f x)))
+  ensures  trade emp (rel2 x)
 {
   ();
 }
 
-(*
-fn test3 (x : _)
-  requires (rel (unbox x))
-  ensures  (rel2 x)
+fn test3 (y : _)
+  requires trade emp (rel (g y))
+  ensures  trade emp (rel2 (g y))
 {
+  rewrite each y as f (g y); // ideally automated
   ();
 }
 
-fn test4 (x : _)
-  requires trade (rel (unbox x)) emp
-  ensures  trade (rel2 x) emp
+fn test4 (y : _)
+  requires trade emp (rel2 (g y))
+  ensures  trade emp (rel (g y))
 {
+  rewrite each rel2 (g y) as rel (g (f (g y))); // ideally automated?
   ();
 }
