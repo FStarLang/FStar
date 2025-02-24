@@ -405,12 +405,10 @@ let tc_one_file
   GenSym.reset_gensym();
 
   (*
-   * AR: smt encode_modul functions are now here instead of in Tc.fs
-   *     this is common smt postprocessing for fresh module and module read from cache
+   * AR: this is common smt postprocessing for fresh module and module read from cache
    *)
-  let maybe_restore_opts () : unit =
-    if not (Options.interactive ()) then
-      Options.restore_cmd_line_options true |> ignore
+  let restore_opts () : unit =
+    Options.restore_cmd_line_options true |> ignore
   in
   let maybe_extract_mldefs tcmod env =
     match Options.codegen() with
@@ -451,7 +449,7 @@ let tc_one_file
                  in
                  let modul, env = Tc.check_module tcenv fmod (is_some pre_fn) in
                  //AR: encode the module to to smt
-                 maybe_restore_opts ();
+                 restore_opts ();
                  let smt_decls =
                    if not (Options.lax())
                    then FStarC.SMTEncoding.Encode.encode_modul env modul
@@ -546,7 +544,7 @@ let tc_one_file
                         (FStarC.TypeChecker.Normalize.erase_universes tcenv)
             in
             let env = FStarC.TypeChecker.Tc.load_checked_module tcenv tcmod in
-            maybe_restore_opts ();
+            restore_opts ();
             //AR: encode smt module and do post processing
             if (not (Options.lax())) then begin
               FStarC.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls
