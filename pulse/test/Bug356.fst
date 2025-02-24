@@ -22,3 +22,10 @@ fn test_final_admit (b : bool)
     admit();
   }
 }
+
+fn test_unit_admit (x: bool)
+{
+  admit ();
+  let _ = test x;
+  ()
+}

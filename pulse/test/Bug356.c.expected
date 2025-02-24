@@ -25,3 +25,8 @@ uint32_t Bug356_test_final_admit(bool b)
   }
 }
 
+void Bug356_test_unit_admit(bool x)
+{
+  KRML_MAYBE_UNUSED_VAR(x);
+}
+
