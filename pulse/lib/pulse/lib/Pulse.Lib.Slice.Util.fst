@@ -38,9 +38,7 @@ fn append_split (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t)
 {
   assert pure (v1 `Seq.equal` Seq.slice (Seq.append v1 v2) 0 (SZ.v i));
   assert pure (v2 `Seq.equal` Seq.slice (Seq.append v1 v2) (SZ.v i) (Seq.length v1 + Seq.length v2));
-  let r = S.split s i;
-  rewrite each r as (fst r, snd r);
-  (fst r, snd r)
+  S.split s i;
 }
 
 inline_for_extraction
