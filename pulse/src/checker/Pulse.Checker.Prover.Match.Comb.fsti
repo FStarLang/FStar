@@ -18,6 +18,8 @@ module Pulse.Checker.Prover.Match.Comb
 
 module T = FStar.Tactics
 
+open FStar.Pprint
+
 open Pulse.Syntax
 open Pulse.Typing
 
@@ -32,4 +34,4 @@ val match_with
   (label : string)
   (matcher : matcher_t)
   (#preamble:_) (pst:prover_state preamble)
-  : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst })
+  : T.Tac (list (list document) & pst':prover_state preamble { pst' `pst_extends` pst })

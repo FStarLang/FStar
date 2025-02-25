@@ -22,7 +22,7 @@ open Pulse.Class.PtsTo
 module T = FStar.Tactics
 val ref ([@@@unused]a:Type u#1) : Type u#0
 
-val pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a) : slprop
+val pts_to (#a:Type) ([@@@mkey]r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a) : slprop
 
 [@@pulse_unfold]
 instance has_pts_to_ref (a:Type) : has_pts_to (ref a) a = {

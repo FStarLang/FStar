@@ -72,8 +72,7 @@ let elim_exists (#g:env) (#ctxt:term)
   (| g', ctxt', star_typing_inversion_l ctxt'_emp_typing, k |)
 
 let elim_exists_pst (#preamble:_) (pst:prover_state preamble)
-  : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
-                                        pst'.unsolved == pst.unsolved }) =
+  : T.Tac (list (list Pprint.document) & pst':prover_state preamble { pst' `pst_extends` pst} ) =
 
   (* Hacking progress checking: we eliminate all exists, so if
   there's any in the ctxt then we will make progress. *)
@@ -108,6 +107,7 @@ let elim_exists_pst (#preamble:_) (pst:prover_state preamble)
   
   assume (list_as_slprop (slprop_as_list remaining_ctxt') == remaining_ctxt');
 
+  [],
   { pst with
     progress = prog;
     pg = g';

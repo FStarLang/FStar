@@ -37,8 +37,6 @@ ensures
 }
 
 
-#set-options "--print_implicits"
-
 inline_for_extraction noextract
 let _x = norm Pulse.C.Typestring.norm_typestring (Pulse.C.Typestring.mk_string_t "x")
 

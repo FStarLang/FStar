@@ -7,7 +7,7 @@ open FStar.List.Tot
 
 let dq (t:Type0) = B.box (deque t)
 
-let is_dq (#t:Type0) (x:dq t) (l:list t) 
+let is_dq (#t:Type0) ([@@@mkey]x:dq t) (l:list t) 
 : slprop
 = exists* xx. B.pts_to x xx ** is_deque xx l
 
@@ -29,7 +29,9 @@ ensures  is_dq l (x::xs)
 {
   open Pulse.Lib.Box;
   unfold is_dq;
+  with xx0. assert (B.pts_to l xx0);
   let xx = !l;
+  rewrite each xx0 as xx;
   let yy = push_front xx x;
   l := yy;
   fold is_dq;
@@ -43,7 +45,9 @@ ensures  is_dq l xs ** pure (y == x)
 {
   open Pulse.Lib.Box;
   unfold is_dq;
+  with xx0. assert (B.pts_to l xx0);
   let xx = !l;
+  rewrite each xx0 as xx;
   let yy = pop_front xx;
   l := fst yy;
   fold is_dq;
@@ -66,7 +70,9 @@ ensures  is_dq l (xs @ [x])
 {
   open Pulse.Lib.Box;
   unfold is_dq;
+  with xx0. assert (B.pts_to l xx0);
   let xx = !l;
+  rewrite each xx0 as xx;
   let yy = push_back xx x;
   l := yy;
   fold is_dq;
@@ -80,7 +86,9 @@ ensures  is_dq l xs ** pure (y == x)
 {
   open Pulse.Lib.Box;
   unfold is_dq;
+  with xx0. assert (B.pts_to l xx0);
   let xx = !l;
+  rewrite each xx0 as xx;
   let yy = pop_back xx;
   l := fst yy;
   fold is_dq;

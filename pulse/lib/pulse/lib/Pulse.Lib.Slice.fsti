@@ -24,7 +24,12 @@ val slice ([@@@strictly_positive] elt: Type0) : Type0
 
 val len (#t: Type) : slice t -> SZ.t
 
-val pts_to (#t:Type) (s:slice t) (#[exact (`1.0R)] p:perm) (v : Seq.seq t) : slprop
+val pts_to
+  (#t:Type)
+  ([@@@mkey]s:slice t)
+  (#[exact (`1.0R)] p:perm)
+  (v : Seq.seq t)
+  : slprop
 
 [@@pulse_unfold]
 instance has_pts_to_slice (t: Type u#0) : has_pts_to (slice t) (Seq.seq t) = {

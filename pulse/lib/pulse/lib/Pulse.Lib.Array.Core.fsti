@@ -34,7 +34,7 @@ type larray t (n:nat) = a:array t { length a == n }
 
 val is_full_array (#a:Type u#0) (x:array a) : prop
 
-val pts_to (#a:Type u#0) (x:array a) (#[exact (`1.0R)] p:perm) (s: Seq.seq a) : slprop
+val pts_to (#a:Type u#0) ([@@@mkey]x:array a) (#[exact (`1.0R)] p:perm) (s: Seq.seq a) : slprop
 
 [@@pulse_unfold]
 instance has_pts_to_array (a:Type u#0) : has_pts_to (array a) (Seq.seq a) = {
@@ -127,8 +127,10 @@ val gather
 
 val pts_to_range
   (#a:Type u#0)
-  ([@@@equate_strict] x:array a)
-  (i j : nat)
+  ([@@@mkey] x:array a)
+  ([@@@mkey] i : nat)
+  (j : nat)
+  (* ^NOTE: only using the start as matching key. *)
   (#[exact (`1.0R)] p:perm)
   (s: Seq.seq a) : slprop
 

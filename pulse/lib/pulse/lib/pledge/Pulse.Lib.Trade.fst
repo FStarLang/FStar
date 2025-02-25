@@ -102,6 +102,7 @@ fn elim_trade_aux
 {
   let res = deconstruct_trade is hyp concl;
   let f = dsnd res;
+  rewrite dfst res as res._1;
   f ()
 }
 
@@ -126,6 +127,7 @@ fn trade_sub_inv_aux
     opens is2
   {
     let f = dsnd res;
+    rewrite dfst res as res._1;
     f ()
   };
   

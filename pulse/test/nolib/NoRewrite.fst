@@ -3,7 +3,7 @@ module NoRewrite
 #lang-pulse
 open Pulse.Nolib
 
-assume val foo : [@@@equate_strict]_:int -> slprop
+assume val foo : [@@@mkey]_:int -> slprop
 
 fn test1 (x : int)
   requires foo x
@@ -29,7 +29,7 @@ fn test2 (x : int)
   }
 }
 
-assume val bar : [@@@equate_strict]_:option int -> slprop
+assume val bar : [@@@mkey]_:option int -> slprop
 
 fn test3 (x : option int{Some? x})
   requires bar x

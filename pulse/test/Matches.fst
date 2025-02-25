@@ -43,7 +43,9 @@ fn test1 (#t:_) (x:t) (l:list t)
   unfold (is_deque_suffix_factored_next (x::l));
   match l {
     y :: ys -> {
-      fold (is_deque_suffix_factored_next (x::l));
+      // fold (is_deque_suffix_factored_next (x::l));
+      rewrite emp
+           as (is_deque_suffix_factored_next (x::l));
     }
   }
 }
@@ -58,10 +60,13 @@ fn test2 (#t:_) (x:t) (l:list t)
   unfold (is_deque_suffix_factored_next (x::l));
   match l {
     y :: ys -> {
-      fold (is_deque_suffix_factored_next (x::l));
+      // fold (is_deque_suffix_factored_next (x::l));
+      rewrite emp
+           as (is_deque_suffix_factored_next (x::l));
     }
     [] -> {
-      fold (is_deque_suffix_factored_next (x::l));
+      rewrite emp
+           as is_deque_suffix_factored_next (x::l);
     }
   }
 }

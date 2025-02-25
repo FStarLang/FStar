@@ -23,29 +23,27 @@ module T = FStar.Tactics.V2
 open Pulse.Lib.Dv {}
 open FStar.ExtractAs
 
-(* This attribute can be used on the indexes of a slprop
-   to instruct the checker to call the SMT solver to relate
-   occurrences of that index.
+(* Arguments of slprops can be marked as a matching key to
+   1- Make sure we do no try to use the SMT to match resources with
+      different matching keys (in other words, we only use the unifier to
+      match the matching keys).
+   2- Indicate that we only expect a single instance of the resource for
+      a given set of matching keys, so we allow the use of SMT for the rest
+      of the arguments.
 
-   For example, if you have
+     val pts_to ([@@@mkey] x : ref a) (v : a) : slprop
 
-     val pts_to (x:ref a) ([@@@equate_by_smt] v:a) : slprop
+   Then `pts_to x (a + b)` and `pts_to x (b + a)` will be matched by the
+   prover by emitting an SMT query `pts_to x (a + b) == pts_to x (b +
+   a)`. (Note we ask for this possibly weaker fact instead of `(a + b)
+   == (b + a)`; this can be useful when the definition of the resource
+   is not injective.)
 
-   Then `pts_to x (a + b)` and `pts_to x (b + a)` will be
-   matched by the prover by emitting an SMT query (a + b) == (b + a). Of course,
-   `pts_to x a` and `pts_to x a` will be matched purely by unification without
-   emitted a trivial SMT query (a == a).
-
-   By default, if none of the indexes of a slprop are marked with "equate_by_smt",
-   the _last_ argument of a slprop is considered to be equated by SMT. This makes
-   it convenient to write slprops like the one below, without paying special
-   heed to this attribute.
-
-     val pts_to (x:ref a) (v:a) : slprop
+   Of course, `pts_to x a` and `pts_to x a` will be matched purely by
+   unification without even emitting a trivial SMT query (a == a).
 *)
-val equate_by_smt    : unit (* now meaningless. *)
-val equate_strict    : unit (* only use fastunif *)
-val equate_syntactic : unit (* only use term_eq *)
+val mkey : unit
+val no_mkeys : unit
 
 (** This attribute allows to do ambiguous proving when calling a function. *)
 val allow_ambiguous : unit
@@ -177,7 +175,10 @@ let (/!) (is1 is2 : inames) : Type0 =
   GhostSet.disjoint is1 is2
 
 val inv (i:iname) (p:slprop) : slprop
+
+[@@no_mkeys]
 val inames_live (inames:inames) : slprop
+
 let mem_iname (e:inames) (i:iname) : erased bool = elift2 (fun e i -> GhostSet.mem i e) e i
 let mem_inv (e:inames) (i:iname) : GTot bool = mem_iname e i
 
@@ -525,7 +526,7 @@ val later_equiv (p q: slprop) : squash (later (equiv p q) == equiv (later p) (la
 [@@erasable]
 val slprop_ref : Type0
 
-val slprop_ref_pts_to (x: slprop_ref) (y: slprop) : slprop
+val slprop_ref_pts_to ([@@@mkey]x: slprop_ref) (y: slprop) : slprop
 
 val slprop_ref_alloc (y: slprop)
 : stt_ghost slprop_ref emp_inames emp fun x -> slprop_ref_pts_to x y
@@ -688,7 +689,7 @@ let pcm_ref
 val pcm_pts_to
     (#a:Type u#1)
     (#p:pcm a)
-    ([@@@equate_strict] r:pcm_ref p)
+    ([@@@mkey] r:pcm_ref p)
     (v:a)
 : slprop
 
@@ -793,7 +794,7 @@ instance val non_informative_ghost_pcm_ref
 val ghost_pcm_pts_to
     (#a:Type u#1)
     (#p:pcm a)
-    ([@@@equate_strict] r:ghost_pcm_ref p)
+    ([@@@mkey] r:ghost_pcm_ref p)
     (v:a)
 : slprop
 
@@ -867,7 +868,7 @@ val ghost_gather
 val big_pcm_pts_to
     (#a:Type u#2)
     (#p:pcm a)
-    ([@@@equate_strict] r:pcm_ref p)
+    ([@@@mkey] r:pcm_ref p)
     (v:a)
 : slprop
 
@@ -946,7 +947,7 @@ val big_gather
 val big_ghost_pcm_pts_to
     (#a:Type u#2)
     (#p:pcm a)
-    ([@@@equate_strict] r:ghost_pcm_ref p)
+    ([@@@mkey] r:ghost_pcm_ref p)
     (v:a)
 : slprop
 

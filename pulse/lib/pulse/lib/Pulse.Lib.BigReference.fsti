@@ -23,7 +23,7 @@ val ref ([@@@unused]a:Type u#2) : Type u#0
 
 val pts_to
   (#a:Type)
-  ([@@@equate_strict] r:ref a)
+  ([@@@mkey] r:ref a)
   (#[T.exact (`1.0R)] p:perm)
   (n:a) : slprop
 

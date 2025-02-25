@@ -350,10 +350,12 @@ fn impl_t_array
         let mut pi = i;
         let b_success = ig pi;
         with gi' l' . assert (cbor_array_iterator_match p gi' l');
+        with i'0. assert (pi |-> i'0);
         let i' = ! pi;
         rewrite (cbor_array_iterator_match p gi' l') as (cbor_array_iterator_match p i' l');
         let b_end = cbor_array_iterator_is_done i';
         rewrite (cbor_array_iterator_match p i' l') as (cbor_array_iterator_match p gi' l');
+        rewrite each i'0 as i'; // FIXME, should not be needed
         elim_stick0 () #(cbor_array_iterator_match p i' l');
         rewrite (cbor_array_iterator_match p (Ghost.reveal (Ghost.hide i)) l) as (cbor_array_iterator_match p i l);
         elim_stick0 ();
@@ -588,7 +590,10 @@ ensures cbor_read_deterministically_encoded_with_typ_post t a p va res
         let test = ft res.cbor_read_payload;
         if (test) {
             fold (cbor_read_deterministically_encoded_with_typ_success_post t a p va res);
-            fold (cbor_read_deterministically_encoded_with_typ_post t a p va res);
+            rewrite (cbor_read_deterministically_encoded_with_typ_success_post t a p va res)
+                 as (cbor_read_deterministically_encoded_with_typ_post t a p va res);
+            // fold (cbor_read_deterministically_encoded_with_typ_post t a p va res);
+            // FIXME: This fold won't work without SMT, it needs to equate a match with a named slprop.
             res
         } else {
             with v . assert (raw_data_item_match 1.0R res.cbor_read_payload v);
@@ -598,14 +603,20 @@ ensures cbor_read_deterministically_encoded_with_typ_post t a p va res
                 #(raw_data_item_match 1.0R res.cbor_read_payload v ** pts_to res.cbor_read_remainder #p vrem);
             let res = mk_cbor_read_error res;
             fold (cbor_read_deterministically_encoded_with_typ_error_post t a p va);
-            fold (cbor_read_deterministically_encoded_with_typ_post t a p va res);
+            rewrite (cbor_read_deterministically_encoded_with_typ_error_post t a p va)
+                 as (cbor_read_deterministically_encoded_with_typ_post t a p va res);
+            // fold (cbor_read_deterministically_encoded_with_typ_post t a p va res);
+            // idem
             res
         }
     } else {
         rewrite (cbor_read_deterministically_encoded_post a p va res) as (cbor_read_deterministically_encoded_error_post a p va);
         unfold (cbor_read_deterministically_encoded_error_post a p va);
         fold (cbor_read_deterministically_encoded_with_typ_error_post t a p va);
-        fold (cbor_read_deterministically_encoded_with_typ_post t a p va res);
+        rewrite (cbor_read_deterministically_encoded_with_typ_error_post t a p va)
+             as (cbor_read_deterministically_encoded_with_typ_post t a p va res);
+        // fold (cbor_read_deterministically_encoded_with_typ_post t a p va res);
+        // idem
         res
     }
 }

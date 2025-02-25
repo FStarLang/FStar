@@ -12,12 +12,11 @@ fn insert_lookup_and_replace ()
   ensures emp
 {
   let h = alloc #SizeT.t #data hash 100sz;
-  let r = insert h 1sz { left = true; right = false }; let h = r._1;
-  let r = lookup h 1sz; let h = r._1;
-  match r._2 {
+  let h, _ = insert h 1sz { left = true; right = false };
+  let h, found = lookup h 1sz;
+  match found {
     Some i -> {
-      let r = replace h i 1sz { left = false; right = true } (magic ());
-      let h = r._1;
+      let h, _ = replace h i 1sz { left = false; right = true } (magic ());
       dealloc h
     }
     None -> {

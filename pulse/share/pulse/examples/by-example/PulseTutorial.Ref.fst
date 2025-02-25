@@ -168,7 +168,6 @@ ensures pts_to r #p 'v ** pure (v == 'v)
 
 
 //assign_perm FAIL$
-#push-options "--print_implicits"
 [@@expect_failure]
 
 fn assign_perm #a #p (r:ref a) (v:a) (#w:erased a)
@@ -178,7 +177,6 @@ ensures pts_to r #p w
     r := v;
 }
 
-#pop-options
 //end assign_perm FAIL$
 
 

@@ -4,7 +4,7 @@ module MatchRW
 open Pulse.Lib.Pervasives
 
 assume
-val p ([@@@equate_strict] b : bool) : slprop
+val p ([@@@mkey] b : bool) : slprop
 
 assume
 val q : slprop

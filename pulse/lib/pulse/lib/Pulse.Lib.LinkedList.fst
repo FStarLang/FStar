@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.LinkedList
+
 #lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick.Util
@@ -34,7 +35,7 @@ and node_ptr (t:Type0) = ref (node t)
 and llist (t:Type0) = option (node_ptr t)
 
 
-let rec is_list #t (x:llist t) (l:list t)
+let rec is_list #t ([@@@mkey]x:llist t) (l:list t)
   : Tot slprop (decreases l)
   = match l with
     | [] -> pure (x == None)
@@ -43,11 +44,9 @@ let rec is_list #t (x:llist t) (l:list t)
         pure (x == Some v) **
         pts_to v { head; tail } **
         is_list tail tl
-    
 
-
-let is_list_cases #t (x:llist t) (l:list t)
-  : Tot slprop 
+let is_list_cases #t ([@@@mkey]x:llist t) (l:list t)
+  : Tot slprop
   = match x with
     | None -> pure (l == [])
     | Some v -> 
@@ -61,7 +60,7 @@ fn intro_is_list_cons (#t:Type0) (x:llist t) (v:node_ptr t) (#node:node t) (#tl:
     requires pts_to v node ** is_list node.tail tl ** pure (x == Some v)
     ensures is_list x (node.head::tl)
 {
-    fold (is_list x (node.head::tl));
+  fold (is_list x (node.head::tl));
 }
 
 ghost
@@ -73,6 +72,7 @@ fn cases_of_is_list (#t:Type) (x:llist t) (l:list t)
         [] -> {
             unfold (is_list x []);
             fold (is_list_cases None l);
+            rewrite (is_list_cases None l) as (is_list_cases x l);
         }
         head :: tl -> {
             unfold (is_list x (head::tl));
@@ -98,7 +98,6 @@ fn is_list_of_cases (#t:Type) (x:llist t) (l:list t)
             fold (is_list x []);
         }
         Some vl -> {
-            rewrite (is_list_cases x l) as (is_list_cases (Some vl) l);
             unfold (is_list_cases (Some vl) l);
             intro_is_list_cons x vl;
         }
@@ -109,13 +108,19 @@ fn is_list_of_cases (#t:Type) (x:llist t) (l:list t)
 ghost
 fn is_list_cases_none (#t:Type) (x:llist t) (#l:list t)
     requires is_list x l ** pure (x == None)
-    ensures is_list x l ** pure (l == [])
+    ensures  is_list x l ** pure (l == [])
 {
-    cases_of_is_list x l;
-    rewrite (is_list_cases x l) as pure (l == []);
-    fold (is_list x []);
+  match l {
+    Nil -> {
+      ();
+    }
+    Cons _ _ -> {
+      unfold is_list;
+      assert (pure False); // NEEDED, bug? couldn't minimize easily
+      unreachable ();
+    }
+  }
 }
-
 
 ghost
 fn is_list_cases_some (#t:Type) (x:llist t) (v:node_ptr t) (#l:list t) 
@@ -133,26 +138,25 @@ fn is_list_cases_some (#t:Type) (x:llist t) (v:node_ptr t) (#l:list t)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-
-fn is_empty (#t:Type) (x:llist t) 
+fn is_empty (#t:Type) (x:llist t)
     requires is_list x 'l
     returns b:bool
     ensures is_list x 'l ** pure (b <==> ('l == []))
 {
-    match x {
-        None -> {
-            is_list_cases_none x;
-            true
-        }
-        Some vl -> {
-            is_list_cases_some x vl;
-            intro_is_list_cons x vl;
-            false
-        }
+  match x {
+    None -> {
+      is_list_cases_none None;
+      assert (pure ('l == []));
+      rewrite (is_list None 'l) as (is_list x 'l);
+      true
     }
+    Some vl -> {
+      is_list_cases_some (Some vl) vl;
+      intro_is_list_cons x vl;
+      false
+    }
+  }
 }
-
-
 
 fn rec length (#t:Type0) (x:llist t)
               (#l:erased (list t))
@@ -162,11 +166,12 @@ fn rec length (#t:Type0) (x:llist t)
 {
    match x {
     None -> {
-        is_list_cases_none x;
+        is_list_cases_none None;
+        rewrite (is_list None l) as (is_list x l);
         0
     }
     Some vl -> {
-        is_list_cases_some x vl;
+        is_list_cases_some (Some vl) vl;
         with _node _tl. _;
         let node = !vl;
         rewrite each _node as node;
@@ -177,9 +182,7 @@ fn rec length (#t:Type0) (x:llist t)
    }
 }
 
-
 let null_llist #t : llist t = None #(node_ptr t)
-
 
 fn create (t:Type)
     requires emp
@@ -206,8 +209,8 @@ fn cons (#t:Type) (v:t) (x:llist t)
 
 
 fn rec append (#t:Type0) (x y:llist t)
-requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
-ensures is_list x ('l1 @ 'l2)
+  requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
+  ensures is_list x ('l1 @ 'l2)
 {
   let np = Some?.v x;
   is_list_cases_some x np;
@@ -216,19 +219,19 @@ ensures is_list x ('l1 @ 'l2)
   rewrite each _node as node;
   match node.tail {
     None -> {
-      is_list_cases_none node.tail;
-      unfold (is_list node.tail []);
+      is_list_cases_none None;
+      unfold (is_list #t None []);
       np := { node with tail = y };
       rewrite each y as ({ node with tail = y }).tail in (is_list y 'l2);
       intro_is_list_cons x np; 
     }
-    Some _ -> {
-      append node.tail y;
+    Some p -> {
+      append (Some p) y;
+      rewrite each (Some p) as node.tail;
       intro_is_list_cons x np;
     }
   }
 }
-
 
 
 ghost
@@ -259,7 +262,6 @@ ensures
 }
 
 
-
 fn move_next (#t:Type) (x:llist t)
     requires is_list x 'l ** pure (Some? x)
     returns y:llist t
@@ -274,6 +276,7 @@ fn move_next (#t:Type) (x:llist t)
     let node = !np;
     rewrite each _node as node;
     intro_yields_cons np;
+    rewrite each (Some np) as x;
     node.tail
 }
 
@@ -330,12 +333,14 @@ fn is_last_cell (#t:Type) (x:llist t)
   let node = !np;
   rewrite each _node as node;
   match node.tail {
-    None -> { 
-      is_list_cases_none node.tail;
+    None -> {
+      is_list_cases_none None;
+      rewrite is_list #t None _tl as is_list node.tail _tl;
       intro_is_list_cons x np;
       true
     }
-    Some vtl -> { 
+    Some vtl -> {
+      rewrite each Some vtl as node.tail;
       is_list_cases_some node.tail vtl;
       intro_is_list_cons node.tail vtl;
       intro_is_list_cons x np;
@@ -343,10 +348,6 @@ fn is_last_cell (#t:Type) (x:llist t)
     }
   }
 }
-
-
-
-
 
 fn append_at_last_cell (#t:Type) (x y:llist t)
 requires
@@ -363,20 +364,18 @@ ensures
   rewrite each _node as node;
   match node.tail {
     None -> {
-      is_list_cases_none node.tail;
-      unfold (is_list node.tail []);
+      is_list_cases_none None;
+      unfold (is_list #t None []);
       np := { node with tail = y };
       rewrite each y as ({node with tail = y}).tail in (is_list y 'l2);
       intro_is_list_cons x np; 
     }
     Some vtl -> {
-      is_list_cases_some node.tail vtl;
+      is_list_cases_some (Some vtl) vtl;
       unreachable ();
     }
   }
 }
-
-
 
 ghost
 fn non_empty_list (#t:Type0) (x:llist t)
@@ -523,8 +522,8 @@ ensures exists* hd tl.
 module U32 = FStar.UInt32
 open Pulse.Lib.BoundedIntegers
 #push-options "--fuel 1 --ifuel 1"
-  
- fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
+
+fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
  requires is_list x xl ** pure (Some? x /\ 0 < v n /\ v n <= List.Tot.length xl)
  returns  y:llist t
  ensures exists* l1 l2. 
@@ -589,7 +588,6 @@ open Pulse.Lib.BoundedIntegers
   List.Tot.append_length pfx [hd];
   y
  }
- 
 
 
 fn insert (#kk:Type0) (x:llist kk) (item:kk) (pos:U32.t) (#xl:erased (list kk))

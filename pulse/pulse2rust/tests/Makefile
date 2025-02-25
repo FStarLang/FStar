@@ -119,16 +119,25 @@ dpe.rs: $(DPE_FILES)
 all-rs: $(addprefix $(RUST_SRC_DIR)/, pulsetutorial_loops.rlib pulsetutorial_algorithms.rs pulsetutorial_array.rs example_slice.rlib)
 
 .PHONY: test
-test: all-rs
+test: .test.touch
+
+.test.touch: all-rs
 	cargo test
+	touch $@
 
 .PHONY: external
 external:
+
+.external.touch:
 	../dpe/gen-rust-bindings.sh
+	touch $@
 
 .PHONY: dpe
-dpe: dpe.rs external
+dpe: .dpe.touch
+
+.dpe.touch: dpe.rs external
 	cd ../dpe && cargo build && cd -
 	$(MAKE) -C ../dpe -f c.Makefile
+	touch $@
 
 .PHONY: test dpe

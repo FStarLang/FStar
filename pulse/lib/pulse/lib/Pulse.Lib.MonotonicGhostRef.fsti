@@ -15,7 +15,7 @@ instance val non_informative_mref
 
 val pts_to (#t:Type) 
            (#p:preorder t) 
-           (r:mref p)
+           ([@@@mkey] r:mref p)
            (#f:perm)
            (v:t)
 : slprop

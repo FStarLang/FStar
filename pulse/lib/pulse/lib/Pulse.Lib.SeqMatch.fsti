@@ -29,7 +29,7 @@ high-level values.  *)
 
 val seq_list_match
   (#t #t': Type)
-  (c: Seq.seq t)
+  ([@@@mkey] c: Seq.seq t)
   (v: list t')
   (item_match: (t -> (v': t' { v' << v }) -> slprop))
 : Tot slprop
@@ -117,8 +117,8 @@ high-level values, because no lemma ensures that `Seq.index s i << s`  *)
 val seq_seq_match
   (#t1 #t2: Type)
   (p: t1 -> t2 -> slprop)
-  (c: Seq.seq t1)
-  (l: Seq.seq t2)
+  ([@@@mkey] c : Seq.seq t1)
+  (l : Seq.seq t2)
   (i j: nat)
 : Tot slprop
 
@@ -584,7 +584,8 @@ val seq_seq_match_item_match_option_index
       p (Seq.index s1 j) (Some?.v (Seq.index s2 j))
     )
 
-ghost fn seq_seq_match_item_match_option_upd_some
+ghost
+fn seq_seq_match_item_match_option_upd_some
   (#t1 #t2: Type0)
   (p: t1 -> t2 -> slprop)
   (s1: Seq.seq t1)
@@ -596,17 +597,9 @@ ghost fn seq_seq_match_item_match_option_upd_some
   })
   (x1: t1)
   (x2: t2)
-requires
-    (seq_seq_match (item_match_option p) s1 s2 i k ** p x1 x2)
-returns res: squash (j < Seq.length s1 /\ j < Seq.length s2 /\ Some? (Seq.index s2 j))
-ensures
-    (
-      seq_seq_match (item_match_option p) (Seq.upd s1 j x1) (Seq.upd s2 j (Some x2)) i k **
-      p (Seq.index s1 j) (Some?.v (Seq.index s2 j))      
-    )
-{
-  seq_seq_match_item_match_option_index p s1 s2 i j k;
-  seq_seq_match_item_match_option_upd_none p s1 (Seq.upd s2 j None) i j k x1 x2;
-  assert (pure (Seq.upd (Seq.upd s2 j None) j (Some x2) `Seq.equal` Seq.upd s2 j (Some x2)));
-  ()
-}
+  requires
+    seq_seq_match (item_match_option p) s1 s2 i k ** p x1 x2
+  returns res: squash (j < Seq.length s1 /\ j < Seq.length s2 /\ Some? (Seq.index s2 j))
+  ensures
+    seq_seq_match (item_match_option p) (Seq.upd s1 j x1) (Seq.upd s2 j (Some x2)) i k **
+    p (Seq.index s1 j) (Some?.v (Seq.index s2 j))

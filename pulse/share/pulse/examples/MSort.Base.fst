@@ -74,7 +74,6 @@ copy_array
 }
 
 
-
 fn
 merge_impl
   (a : array int) (lo mid hi : SZ.t)
@@ -97,9 +96,11 @@ merge_impl
   let sw1_v = V.alloc 0 (mid `SZ.sub` lo);
   let sw1 = V.vec_to_array sw1_v;
   V.to_array_pts_to sw1_v;
+  rewrite each V.vec_to_array sw1_v as sw1;
   let sw2_v = V.alloc 0 (hi `SZ.sub` mid);
   let sw2 = V.vec_to_array sw2_v;
   V.to_array_pts_to sw2_v;
+  rewrite each V.vec_to_array sw2_v as sw2;
 
   pts_to_range_intro sw1 1.0R (S.create (SZ.v l1) 0);
   copy_array a sw1 lo 0sz (mid `SZ.sub` lo);
@@ -194,8 +195,10 @@ merge_impl
     }
   };
 
+  rewrite each sw1 as V.vec_to_array sw1_v;
   V.to_vec_pts_to sw1_v;
   V.free sw1_v;
+  rewrite each sw2 as V.vec_to_array sw2_v;
   V.to_vec_pts_to sw2_v;
   V.free sw2_v;
 }

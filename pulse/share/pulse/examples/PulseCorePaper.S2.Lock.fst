@@ -82,8 +82,13 @@ ensures protects l p ** p
     ensures later (lock_inv l.r p) ** (if retry then emp else p)
   {
     later_elim _;
+    with v. assert (pts_to l.r v);
     let b = cas_box_alt l.r 0ul 1ul;
     if b {
+      assert (pure True);
+      // ^ Should not be needed! Looks like we're not eliminating
+      // pure slprops into the ctx before a rewrite.
+      rewrite each v as 0ul;
       assert p;
       later_intro (lock_inv l.r p);
       false

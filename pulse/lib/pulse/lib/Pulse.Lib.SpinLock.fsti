@@ -23,7 +23,7 @@ module T = FStar.Tactics.V2
 val lock : Type0
 
 val lock_alive
-      ([@@@equate_strict] l:lock)
+      ([@@@mkey] l:lock)
       (#[T.exact (`1.0R)] p:perm)
       (v:slprop)
   : slprop

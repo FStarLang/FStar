@@ -17,13 +17,8 @@
 module Test.Basic2
 #lang-pulse
 
-open Pulse.Lib.Pervasives
-
-// #set-options "--debug ggg"
-// #set-options "--debug pulse,prover,ggg --print_full_names --print_implicits"
-
+open Pulse
 open Pulse.Lib.Stick.Util
-
 
 ghost
 fn test_trans (p q r:slprop)

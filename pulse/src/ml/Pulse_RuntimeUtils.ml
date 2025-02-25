@@ -27,12 +27,6 @@ let rec with_context (c:context) (f: unit -> 'a utac) : 'a utac =
 let with_error_bound (r:FStarC_Range.range) (f: unit -> 'a utac) : 'a utac =
   fun ps ->
     FStarC_Errors.with_error_bound r (fun _ -> f () ps)
-let env_disable_admit (e : FStarC_TypeChecker_Env.env) =
-  { e with admit = false }
-let disable_admit_smt_queries (f: unit -> 'a utac) : 'a utac =
-  fun ps ->
-    let ps = { ps with main_context = env_disable_admit ps.main_context } in
-    f () ps
 let with_extv (k:string) (v:string) (f: unit -> 'a utac) : 'a utac =
   fun ps ->
     let open FStarC_Options_Ext in

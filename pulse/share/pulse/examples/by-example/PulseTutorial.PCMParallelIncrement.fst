@@ -81,7 +81,7 @@ let pcm_of (n:nat) = MS.pcm_of MS.nat_plus_cm n
 let tank (n:nat) = GPR.gref (pcm_of n)
 
 // A predicate asserting ownership of `i` units of the tank
-let owns_tank_units #n (g:tank n) (i:nat)
+let owns_tank_units #n ([@@@mkey] g : tank n) (i:nat)
 : timeless_slprop
 = GPR.pts_to #_ #(pcm_of n) g i
 

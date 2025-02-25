@@ -28,7 +28,7 @@ val ref ([@@@unused] a:Type u#0) : Type u#0
 
 val pts_to
     (#a:Type)
-    ([@@@equate_strict] r:ref a)
+    ([@@@mkey] r:ref a)
     (#[exact (`1.0R)] p:perm)
     (n:a)
   : slprop
@@ -38,7 +38,7 @@ instance has_pts_to_ref (a:Type) : has_pts_to (ref a) a = {
   pts_to = (fun r #f v -> pts_to r #f v);
 }
 
-val pts_to_timeless (#a:Type) (r:ref a) (p:perm) (x:a)
+val pts_to_timeless (#a:Type) ([@@@mkey] r:ref a) (p:perm) (x:a)
   : Lemma (timeless (pts_to r #p x))
           [SMTPat (timeless (pts_to r #p x))]
 

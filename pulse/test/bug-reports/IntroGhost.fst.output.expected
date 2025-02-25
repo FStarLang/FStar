@@ -15,10 +15,14 @@
 
 >>]
 >> Got issues: [
-* Error 228 at IntroGhost.fst(89,46-92,24):
-  - Cannot prove:
+* Error 19 at IntroGhost.fst(89,46-92,24):
+  - Failed to discharge match guard for goal:
       IntroGhost.my_inv true r
-  - In the context:
+    with resource from context:
       IntroGhost.my_inv b r
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: IntroGhost.fst(92,17-92,21)
 
 >>]

@@ -48,6 +48,10 @@ fn intro_inv_p (v_done:bool) (v_res:option int) (v_claimed:bool)
     ** pure (v_done ==> Some? v_res)
   ensures inv_p
 {
+  (* Unfortunate... does not happen automatically since we don't unfold
+  under a match. *)
+  rewrite (if not v_claimed then pts_to res #0.5R v_res else emp)
+       as (if not v_claimed then R.pts_to res #0.5R v_res else emp);
   fold inv_p;
 }
 
@@ -72,7 +76,7 @@ fn proof
               ** pts_to done #0.5R true
               ** pts_to res #0.5R v_res
               ** pts_to claimed #0.5R v_claimed
-              ** (if not v_claimed then pts_to res #0.5R v_res else emp)
+              ** (if not v_claimed then R.pts_to res #0.5R v_res else emp)
               ** pure (v_claimed ==> v_done)
               ** pure (v_done ==> Some? v_res));
 
@@ -85,8 +89,8 @@ fn proof
     assert (pure (v_claimed == false));
 
     // NB: this step is very sensitive to ordering
-    rewrite ((if not v_claimed then pts_to res #0.5R v_res else emp) ** emp)
-         as (pts_to res #0.5R v_res ** (if not true then pts_to res #0.5R v_res else emp));
+    rewrite ((if not v_claimed then R.pts_to res #0.5R v_res else emp) ** emp)
+         as (R.pts_to res #0.5R v_res ** (if not true then pts_to res #0.5R v_res else emp));
 
     GR.op_Colon_Equals claimed true;
     

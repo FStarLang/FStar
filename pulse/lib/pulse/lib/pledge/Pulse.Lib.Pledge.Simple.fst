@@ -21,7 +21,7 @@ open Pulse.Lib.Pervasives
 
 module P = Pulse.Lib.Pledge
 
-let pledge (f:slprop) (v:slprop) : slprop =
+let pledge ([@@@mkey] f:slprop) ([@@@mkey] v:slprop) : slprop =
   exists* is. P.pledge is f v
 
 (* Anything that holds now holds in the future too. *)

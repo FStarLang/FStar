@@ -5,8 +5,8 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick
 
 let rec on_range
-  (p: (nat -> slprop))
-  (i j: nat)
+  ([@@@mkey]p: (nat -> slprop))
+  ([@@@mkey]i j: nat)
 : Tot slprop
   (decreases (if j <= i then 0 else j - i))
 = if j < i
@@ -469,6 +469,7 @@ fn rec on_range_zip (p q:nat -> slprop) (i j:nat)
     rewrite (on_range p i j) as pure False;
     unreachable ();
   } else if (j = i) {
+    rewrite each j as i;
     on_range_empty_elim p i;
     on_range_empty_elim q i;
     on_range_empty (fun k -> p k ** q k) i;
@@ -496,6 +497,7 @@ fn rec on_range_unzip (p q:nat -> slprop) (i j:nat)
     on_range_empty_elim (fun k -> p k ** q k) i;
     on_range_empty p i;
     on_range_empty q i;
+    ();
   } else {
     on_range_uncons () #(fun k -> p k ** q k);
     on_range_unzip p q (i + 1) j;

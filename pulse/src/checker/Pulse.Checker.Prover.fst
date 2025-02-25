@@ -232,7 +232,7 @@ let intro_any_exists
 noeq
 type prover_iteration_res_t (#preamble:_) (pst0:prover_state preamble) =
   | Stepped : lbl:string -> pst':prover_state preamble { pst' `pst_extends` pst0 } -> prover_iteration_res_t pst0
-  | NoProgress
+  | NoProgress of list (list document) (* possible hints *)
 
 (* a "subtyping" in the pst for the type above. *)
 let res_advance (#preamble:_)
@@ -242,17 +242,27 @@ let res_advance (#preamble:_)
     : prover_iteration_res_t pst0 =
   match ir with
   | Stepped lbl pst1' -> Stepped lbl pst1'
-  | NoProgress -> NoProgress
+  | NoProgress ms -> NoProgress ms
 
+(* Move this type to a common module to make sure all passes adhere. *)
 let prover_pass_t : Type =
   (#preamble:_) ->
   (pst0:prover_state preamble) ->
-  T.Tac (pst:prover_state preamble{ pst `pst_extends` pst0 })
+  T.Tac (list (list document) & pst:prover_state preamble{ pst `pst_extends` pst0 })
 
 (* A helper to avoid F* issue #3339. *)
 noeq
 type prover_pass =
   | P : string -> prover_pass_t -> prover_pass
+
+let adddocs docs
+ (#preamble:_) (#pst : prover_state preamble)
+ (r : prover_iteration_res_t pst)
+: prover_iteration_res_t pst
+=
+  match r with
+  | NoProgress ms -> NoProgress (ms@docs)
+  | Stepped lbl pst -> Stepped lbl pst
 
 (* Going over the passes, stopping as soon as one makes progress. *)
 let rec prover_iteration_loop
@@ -262,9 +272,9 @@ let rec prover_iteration_loop
   : T.Tac (prover_iteration_res_t pst0)
 =
   match passes with
-  | [] -> NoProgress
+  | [] -> NoProgress []
   | (P name pass)::passes' ->
-    let pst = pass pst0 in
+    let (docs, pst) = pass pst0 in
     if pst.progress then (
       debug_prover pst.pg (fun _ ->
         Printf.sprintf "prover: %s: made progress, remaining_ctxt after pass = %s\n"
@@ -275,15 +285,14 @@ let rec prover_iteration_loop
         Printf.sprintf "prover: %s: no progress\n" name);
       (* TODO: start from pst0? *)
       // res_advance <| prover_iteration_loop pst passes'
-      prover_iteration_loop pst0 passes'
+      adddocs docs (prover_iteration_loop pst0 passes')
     )
 
-
 let prover_pass_collect_exists (#preamble:_) (pst0:prover_state preamble)
-  : T.Tac (pst:prover_state preamble{ pst `pst_extends` pst0 })
+  : T.Tac (list (list document) & pst:prover_state preamble{ pst `pst_extends` pst0 })
 =
   let (| exs, rest, d |) = collect_exists (push_env pst0.pg pst0.uvs) pst0.unsolved in
-  unsolved_equiv_pst pst0 (exs@rest) d
+  [], unsolved_equiv_pst pst0 (exs@rest) d
 
 (* One prover iteration is applying these passes until one succeeds.
 If so, we return a "Stepped" with the new pst (and the prover starts
@@ -297,6 +306,8 @@ let prover_iteration
 
   res_advance <| prover_iteration_loop pst [
     // P "elim_pure_pst"     ElimPure.elim_pure_pst;
+    // ^ This is done explicitly below, but check again since some proofs
+    // seem to lack this step.
     P "elim_exists"       ElimExists.elim_exists_pst;
     P "collect_exists"    prover_pass_collect_exists;
     P "explode"           Explode.explode;
@@ -342,7 +353,7 @@ let rec prover
           name
           (show (list_as_slprop pst.remaining_ctxt)));
       prover pst'
-    | NoProgress ->
+    | NoProgress msgs ->
       let pst = intro_any_exists pst prover in
       if pst.progress then prover pst else let () = () in
 
@@ -374,7 +385,11 @@ let rec prover
                 prover pst'
               | None ->
                 let msg = [
-                  text "Cannot prove:" ^^
+                  text (
+                    if List.length non_pures > 1
+                    then "Cannot prove any of:"
+                    else "Cannot prove:"
+                  ) ^^
                       indent (pp <| canon_slprop_list_print non_pures);
                   text "In the context:" ^^
                       indent (pp <| canon_slprop_list_print pst.remaining_ctxt)
@@ -385,9 +400,14 @@ let rec prover
                           indent (pp preamble.ctxt);
                     ] else [])
                 in
+                let pass_hints =
+                  if Cons? (List.flatten msgs)
+                  then [ text "Some hints:" ] @ List.flatten msgs
+                  else []
+                in
                 // GM: I feel I should use (Some q.range) instead of None, but that makes
                 // several error locations worse.
-                fail_doc pst.pg None msg
+                fail_doc pst.pg None (msg @ pass_hints)
 #pop-options
 #pop-options
 let rec get_q_at_hd (g:env) (l:list slprop) (q:slprop { L.existsb (fun v -> eq_tm v q) l })
@@ -419,95 +439,83 @@ let prove
 
   let ctxt_l = slprop_as_list ctxt in
 
-  if false && Nil? (bindings uvs) && L.existsb (fun v -> eq_tm v goals) ctxt_l
-  then begin
-    let (| l', d_eq |) = get_q_at_hd g ctxt_l goals in
-    let g1 = g in
-    let nts : PS.nt_substs = [] in
-    let remaining_ctxt = list_as_slprop l' in
-    let k : continuation_elaborator g ctxt g1 ctxt = k_elab_unit g ctxt in
-    assume (list_as_slprop (slprop_as_list ctxt) == ctxt);
-    let d_eq
-      : slprop_equiv g ctxt ((PS.nt_subst_term goals nts) * remaining_ctxt) = coerce_eq d_eq () in
-    (| g1, nts, [], remaining_ctxt, k_elab_equiv k (VE_Refl _ _) d_eq |)
-  end
-  else
-    let ctxt_frame_typing : slprop_typing g (ctxt * tm_emp) = RU.magic () in
-    let preamble = {
-      g0 = g;
-      ctxt;
-      frame = tm_emp;
-      ctxt_frame_typing;
-      goals;
-    } in
-    assume (list_as_slprop (slprop_as_list ctxt) == ctxt);
-    assume ((PS.empty).(tm_emp) == tm_emp);
-    let pst0 : prover_state preamble = {
-      pg = g;
-      remaining_ctxt = slprop_as_list ctxt;
-      remaining_ctxt_frame_typing = ctxt_frame_typing;
-      uvs = uvs;
-      ss = PS.empty;
-      nts = None;
-      solved = tm_emp;
-      unsolved = slprop_as_list goals;
-      k = k_elab_equiv (k_elab_unit g ctxt) (RU.magic ()) (RU.magic ());
-      goals_inv = RU.magic ();
-      solved_inv = ();
-      progress = false;
-      allow_ambiguous = allow_ambiguous;
-    } in
+  let ctxt_frame_typing : slprop_typing g (ctxt * tm_emp) = RU.magic () in
+  let preamble = {
+    g0 = g;
+    ctxt;
+    frame = tm_emp;
+    ctxt_frame_typing;
+    goals;
+  } in
+  assume (list_as_slprop (slprop_as_list ctxt) == ctxt);
+  assume ((PS.empty).(tm_emp) == tm_emp);
+  let pst0 : prover_state preamble = {
+    pg = g;
+    remaining_ctxt = slprop_as_list ctxt;
+    remaining_ctxt_frame_typing = ctxt_frame_typing;
+    uvs = uvs;
+    ss = PS.empty;
+    nts = None;
+    solved = tm_emp;
+    unsolved = slprop_as_list goals;
+    k = k_elab_equiv (k_elab_unit g ctxt) (RU.magic ()) (RU.magic ());
+    goals_inv = RU.magic ();
+    solved_inv = ();
+    progress = false;
+    allow_ambiguous = allow_ambiguous;
+  } in
 
-    let pst = prover pst0 in
+  let pst = prover pst0 in
 
-    let (| nts, effect_labels |)
-      : nts:PS.nt_substs &
-        effect_labels:list T.tot_or_ghost {
-          PS.well_typed_nt_substs pst.pg pst.uvs nts effect_labels /\
-          PS.is_permutation nts pst.ss
-    } =
-      match pst.nts with
-      | Some nts -> nts
-      | None ->
-        // warn_doc pst.pg None [
-        //   text <| Printf.sprintf "About to translate prover state to nts (nts is None)";
-        //   prefix 2 1 (text "pst.pg =") (pp pst.pg);
-        //   prefix 2 1 (text "pst.uvs =") (pp pst.uvs);
-        //   prefix 2 1 (text "pst.ss =") (pp pst.ss);
-        //   prefix 2 1 (text "pst.remaining_ctxt =") (pp pst.remaining_ctxt);
-        //   prefix 2 1 (text "pst.unsolved =") (pp pst.unsolved);
-        // ];
-        let r = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
-        match r with
-        | Inr msg ->
-          fail_doc pst.pg None [
-            text <| Printf.sprintf "Prover error: ill-typed substitutions (%s)" msg;
-            prefix 2 1 (text "pst.pg =") (pp pst.pg);
-            prefix 2 1 (text "pst.uvs =") (pp pst.uvs);
-            prefix 2 1 (text "pst.ss =") (pp pst.ss);
-            prefix 2 1 (text "pst.remaining_ctxt =") (pp pst.remaining_ctxt);
-            prefix 2 1 (text "pst.unsolved =") (pp pst.unsolved);
-          ]
-        | Inl nts -> nts in
-    let nts_uvs, nts_uvs_effect_labels =
-      PS.well_typed_nt_substs_prefix pst.pg pst.uvs nts effect_labels uvs in
-    let k
-      : continuation_elaborator
-          g (ctxt * tm_emp)
-          pst.pg ((list_as_slprop pst.remaining_ctxt * tm_emp) * (PS.nt_subst_term pst.solved nts)) = pst.k in
-    // admit ()
-    let goals_inv
-      : slprop_equiv (push_env pst.pg pst.uvs) goals (list_as_slprop [] * pst.solved) = pst.goals_inv in
-    let goals_inv
-      : slprop_equiv pst.pg (PS.nt_subst_term goals nts) (PS.nt_subst_term (list_as_slprop [] * pst.solved) nts) =
-      PS.slprop_equiv_nt_substs_derived pst.pg pst.uvs goals_inv nts effect_labels in
-  
-    // goals is well-typed in initial g + uvs
-    // so any of the remaining uvs in pst.uvs should not be in goals
-    // so we can drop their substitutions from the tail of nts
-    assume (PS.nt_subst_term goals nts == PS.nt_subst_term goals nts_uvs);
+  let (| nts, effect_labels |)
+    : nts:PS.nt_substs &
+      effect_labels:list T.tot_or_ghost {
+        PS.well_typed_nt_substs pst.pg pst.uvs nts effect_labels /\
+        PS.is_permutation nts pst.ss
+  } =
+    match pst.nts with
+    | Some nts -> nts
+    | None ->
+      // warn_doc pst.pg None [
+      //   text <| Printf.sprintf "About to translate prover state to nts (nts is None)";
+      //   prefix 2 1 (text "pst.pg =") (pp pst.pg);
+      //   prefix 2 1 (text "pst.uvs =") (pp pst.uvs);
+      //   prefix 2 1 (text "pst.ss =") (pp pst.ss);
+      //   prefix 2 1 (text "pst.remaining_ctxt =") (pp pst.remaining_ctxt);
+      //   prefix 2 1 (text "pst.unsolved =") (pp pst.unsolved);
+      // ];
+      let r = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
+      match r with
+      | Inr msg ->
+        fail_doc pst.pg None [
+          text <| Printf.sprintf "Prover error: ill-typed substitutions (%s)" msg;
+          prefix 2 1 (text "pst.pg =") (pp pst.pg);
+          prefix 2 1 (text "pst.uvs =") (pp pst.uvs);
+          prefix 2 1 (text "pst.ss =") (pp pst.ss);
+          prefix 2 1 (text "pst.remaining_ctxt =") (pp pst.remaining_ctxt);
+          prefix 2 1 (text "pst.unsolved =") (pp pst.unsolved);
+        ]
+      | Inl nts -> nts
+  in
+  let nts_uvs, nts_uvs_effect_labels =
+    PS.well_typed_nt_substs_prefix pst.pg pst.uvs nts effect_labels uvs in
+  let k ()
+    : continuation_elaborator
+        g (ctxt * tm_emp)
+        pst.pg ((list_as_slprop pst.remaining_ctxt * tm_emp) * (PS.nt_subst_term pst.solved nts)) = pst.k in
+  // admit ()
+  let goals_inv
+    : slprop_equiv (push_env pst.pg pst.uvs) goals (list_as_slprop [] * pst.solved) = pst.goals_inv in
+  let goals_inv
+    : slprop_equiv pst.pg (PS.nt_subst_term goals nts) (PS.nt_subst_term (list_as_slprop [] * pst.solved) nts) =
+    PS.slprop_equiv_nt_substs_derived pst.pg pst.uvs goals_inv nts effect_labels in
 
-    (| pst.pg, nts_uvs, nts_uvs_effect_labels, list_as_slprop pst.remaining_ctxt, k_elab_equiv k (RU.magic ()) (RU.magic ()) |)
+  // goals is well-typed in initial g + uvs
+  // so any of the remaining uvs in pst.uvs should not be in goals
+  // so we can drop their substitutions from the tail of nts
+  assume (PS.nt_subst_term goals nts == PS.nt_subst_term goals nts_uvs);
+
+  (| pst.pg, nts_uvs, nts_uvs_effect_labels, list_as_slprop pst.remaining_ctxt, k_elab_equiv (k ()) (RU.magic ()) (RU.magic ()) |)
 #pop-options
 
 let canon_post (c:comp_st) : comp_st =

@@ -370,7 +370,7 @@ val cbor_dummy_array_iterator: cbor_array_iterator_t
 
 val cbor_array_iterator_match
   (p: perm)
-  (i: cbor_array_iterator_t)
+  ([@@@mkey]i: cbor_array_iterator_t)
   (l: list Cbor.raw_data_item)
 : Tot slprop
 

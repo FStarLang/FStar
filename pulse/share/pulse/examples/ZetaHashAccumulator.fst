@@ -169,7 +169,7 @@ type ha_core = {
 // and the code has to take care of potential overflow. So, at the spec
 // level we connect the nat and the concrete counter, indicating that 
 // the counter hasn't overflowed yet.
-let ha_val_core (core:ha_core) (h:hash_value_t) 
+let ha_val_core ([@@@mkey] core:ha_core) (h:hash_value_t) 
   : slprop
   = A.pts_to core.acc (fst h) **
     (exists* (n:U32.t).
@@ -225,7 +225,7 @@ type ha = {
 // Again, we play the same game as with ha_core
 
 // A representation predicate for ha, encapsulating an ha_val_core
-let ha_val (h:ha) (s:hash_value_t) =
+let ha_val ([@@@mkey] h : ha) (s:hash_value_t) =
   ha_val_core h.core s **
   (exists* (s:Seq.seq U8.t). A.pts_to h.tmp s ** pure (Seq.length s == 32)) **
   A.pts_to h.dummy (Seq.create 1 0uy)

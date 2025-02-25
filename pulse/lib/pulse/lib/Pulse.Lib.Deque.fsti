@@ -7,7 +7,7 @@ open FStar.List.Tot
 new
 val deque (t:Type0) : Type0
 
-val is_deque #t (x:deque t) (l:list t)
+val is_deque #t ([@@@mkey]x:deque t) (l:list t)
   : Tot slprop
 
 

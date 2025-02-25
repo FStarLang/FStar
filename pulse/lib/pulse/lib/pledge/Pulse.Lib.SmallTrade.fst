@@ -33,7 +33,11 @@ let trade_elim_exists (is:inames) (hyp:slprop) (extra:small_slprop) (concl:slpro
 let __trade (#is:inames) (hyp concl:slprop) : small_slprop =
   exists* (extra:small_slprop). extra ** trade_elim_exists is hyp extra concl
 
-let trade #is hyp concl : slprop = __trade #is hyp concl
+let trade (#is : inames)
+  ([@@@mkey] hyp : slprop)
+  ([@@@mkey] concl : slprop)
+  : slprop
+  = __trade #is hyp concl
 
 let trade_is_timeless (#is:inames) (hyp concl:slprop)
   : Lemma (timeless (trade #is hyp concl)) = ()

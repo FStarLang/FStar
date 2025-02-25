@@ -149,7 +149,8 @@ fn release (#v:slprop) (#p:perm) (l:lock)
     unfold (lock_inv_aux l.r l.gr v);
     GR.pts_to_injective_eq l.gr;
     GR.gather2 l.gr;
-    rewrite (if (1ul = 0ul) then v else emp) as emp;
+    with i. assert (pts_to l.gr i);
+    rewrite (if (i = 0ul) then v else emp) as emp;
     write_atomic_box l.r 0ul;
     GR.(l.gr := 0ul);
     fold (lock_inv_aux l.r l.gr v);
@@ -194,7 +195,6 @@ fn gather (#v:slprop) (#p1 #p2 :perm) (l:lock)
 
 let gather2 #v l = gather #v #0.5R #0.5R l
 
-
 fn free (#v:slprop) (l:lock)
   requires lock_alive l #1.0R v ** lock_acquired l
   ensures emp
@@ -208,7 +208,9 @@ fn free (#v:slprop) (l:lock)
   B.free l.r;
   GR.gather l.gr;
   GR.free l.gr;
-  rewrite (if (1ul = 0ul) then v else emp) as emp
+  with i. assert (if (i = 0ul) then v else emp); // awkward
+  rewrite (if (i = 0ul) then v else emp) as emp;
+  ()
 }
 
 

@@ -19,10 +19,8 @@ module Bug274
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick.Util
 
-//works, lucky, because it appears in the right order in the precondition
-// Not anymore: rejected due to ambiguity (there is no backtracking)
+// Ambiguous (we don't do backtracking)
 [@@expect_failure]
-
 ghost
 fn test_trans (p q r:slprop)
 requires (p @==> q) ** (q @==> r)
@@ -65,10 +63,8 @@ ensures q
 }
 
 
-// fails since unification doesn't backtrack, and unifies the first
-// precondition of elim with r @==> r and then gets stuck
+// Fails since this is ambiguous
 [@@expect_failure]
-
 ghost
 fn test_elim_fails (p q r:slprop)
 requires (r @==> r) ** p ** (p @==> q)

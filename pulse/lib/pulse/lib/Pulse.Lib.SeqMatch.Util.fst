@@ -86,7 +86,9 @@ ensures
       (seq_list_match c v item_match)
   {
     Seq.cons_head_tail c;
-    seq_list_match_cons_intro (Seq.head c) (List.Tot.hd v) (Seq.tail c) (List.Tot.tl v) item_match
+    seq_list_match_cons_intro (Seq.head c) (List.Tot.hd v) (Seq.tail c) (List.Tot.tl v) item_match;
+    rewrite each (Seq.cons (Seq.head c) (Seq.tail c)) as c;
+    ()
   };
   Trade.intro _ _ _ aux;
   ()

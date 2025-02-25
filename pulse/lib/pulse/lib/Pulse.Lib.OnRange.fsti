@@ -18,7 +18,7 @@ module Pulse.Lib.OnRange
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick
 
-val on_range ([@@@equate_strict] p: (nat -> slprop))
+val on_range ([@@@mkey] p: (nat -> slprop))
              (i:nat)
              (j:nat)
   : slprop

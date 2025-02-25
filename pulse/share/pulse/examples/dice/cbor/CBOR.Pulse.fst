@@ -527,14 +527,19 @@ ensures
             unfold (cbor_map_get_invariant pmap vkey vmap map NotFound i l);
             elim_stick0 ();
             fold (cbor_map_get_post_not_found pmap vkey vmap map);
-            fold (cbor_map_get_post pmap vkey vmap map NotFound)
+            fold (cbor_map_get_post pmap vkey vmap map NotFound);
+            rewrite cbor_map_get_post pmap vkey vmap map NotFound
+                 as cbor_map_get_post pmap vkey vmap map res;
+            ()
         }
         Found value ->
         {
             rewrite (cbor_map_get_invariant pmap vkey vmap map gres i l) // FIXME: WHY WHY WHY?
                 as (cbor_map_get_invariant pmap vkey vmap map (Found value) i l);
             unfold (cbor_map_get_invariant pmap vkey vmap map (Found value) i l);
-            fold (cbor_map_get_post pmap vkey vmap map (Found value))
+            fold (cbor_map_get_post pmap vkey vmap map (Found value));
+            rewrite cbor_map_get_post pmap vkey vmap map (Found value)
+                 as cbor_map_get_post pmap vkey vmap map res;
         }
     }
 }

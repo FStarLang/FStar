@@ -22,7 +22,6 @@ open Pulse.Lib.Swap.Common
 #restart-solver
 
 #push-options "--z3rlimit_factor 6"
-
 #restart-solver
 
 inline_for_extraction noextract [@@noextract_to "krml"]
@@ -87,7 +86,6 @@ fn slice_swap_aux(#t: Type0) (a: S.slice t) (mb: (mb: SZ.t {0 < SZ.v mb /\ SZ.v 
       pi := i';
       ()
     };
-    ()
 }
 
 #pop-options

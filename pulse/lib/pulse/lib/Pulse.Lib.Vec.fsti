@@ -39,7 +39,7 @@ val is_full_vec (#a:Type0) (v:vec a) : prop
 
 val pts_to
   (#a:Type0)
-  ([@@@equate_strict] v:vec a)
+  ([@@@mkey] v:vec a)
   (#[T.exact (`1.0R)] p:perm)
   (s:Seq.seq a)
 : slprop

@@ -12,17 +12,3 @@
         (FStar.Ghost.hide #Prims.int 1)
 
 >>]
->> Got issues: [
-* Error 228 at Test.Matcher.fst(103,2-103,4):
-  - Cannot prove:
-      Test.Matcher.spts_to #Prims.int
-        r
-        #(p +. 0.10R)
-        (FStar.Ghost.hide #Prims.int 1)
-  - In the context:
-      Test.Matcher.spts_to #Prims.int
-        r
-        #(p +. 0.1R)
-        (FStar.Ghost.hide #Prims.int 1)
-
->>]

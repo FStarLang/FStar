@@ -16,33 +16,31 @@
 
 module Pulse.Lib.Stick
 
-open Pulse.Lib.Core
+#lang-pulse
+open Pulse
 
-val stick  :
-  (hyp : slprop) ->
-  (concl : slprop) ->
-  slprop
+val stick
+  ([@@@mkey] hyp : slprop)
+  ([@@@mkey] concl : slprop)
+  : slprop
 
-let ( @==> ) :
-  (hyp : slprop) ->
-  (concl : slprop) ->
-  slprop
-  = stick
+unfold
+let ( @==> ) = stick
 
-val elim_stick
-  (hyp concl: slprop)
-: stt_ghost unit emp_inames
-    ((hyp @==> concl) ** hyp)
-    (fun _ -> concl)
+ghost
+fn elim_stick
+  (hyp concl : slprop)
+  requires (hyp @==> concl) ** hyp
+  ensures concl
 
-val intro_stick
-  (hyp concl: slprop)
+ghost
+fn intro_stick
+  (hyp concl : slprop)
   (v: slprop)
   (f_elim: unit -> (
     stt_ghost unit emp_inames
     (v ** hyp)
     (fun _ -> concl)
   ))
-: stt_ghost unit emp_inames
-    v
-    (fun _ -> hyp @==> concl)
+  requires v
+  ensures  hyp @==> concl

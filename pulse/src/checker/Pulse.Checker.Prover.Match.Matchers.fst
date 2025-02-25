@@ -34,6 +34,7 @@ module R       = FStar.Reflection.V2
 module L       = FStar.List.Tot
 module TermEq  = FStar.Reflection.TermEq
 module RT      = FStar.Reflection.Typing
+module MKeys   = Pulse.Checker.Prover.Match.MKeys
 
 module RU  = Pulse.RuntimeUtils
 module PS  = Pulse.Checker.Prover.Substs
@@ -47,141 +48,6 @@ let cong_r #g #t0 #t1 #t2 (d : slprop_equiv g t1 t2) : slprop_equiv g (t0 * t1) 
 let cong_l #g #t0 #t1 #t2 (d : slprop_equiv g t1 t2) : slprop_equiv g (t1 * t0) (t2 * t0) =
   VE_Ctxt _ _ _ _ _ d (VE_Refl _ _)
 let ve_refl_pf (#g:env) (p q : slprop) (s : squash (p == q)) : slprop_equiv g p q = VE_Refl g p
-
-let rec equational (t:term) : bool =
-  match R.inspect_ln t with
-  // | R.Tv_Var _ -> true
-  | R.Tv_App h _ -> equational h
-  | R.Tv_Match _ _ _ -> true
-  | R.Tv_AscribedT t _ _ _
-  | R.Tv_AscribedC t _ _ _ -> equational t
-  | _ -> false
-
-let type_of_fv (g:env) (fv:R.fv)
-  : T.Tac (option R.term)
-  = let n = R.inspect_fv fv in
-    match R.lookup_typ (fstar_env g) n with
-    | None -> None
-    | Some se ->
-      match R.inspect_sigelt se with
-      | R.Unk -> None
-      | R.Sg_Let _ lbs -> (
-        L.tryPick
-          (fun lb -> 
-            let lbv = R.inspect_lb lb in
-            if R.inspect_fv lbv.lb_fv = n
-            then Some lbv.lb_typ
-            else None)
-          lbs
-      )
-      | R.Sg_Val _ _ t -> Some t
-      | R.Sg_Inductive _nm _univs params typ _ -> None
-
-type matching_kind =
-  | Syntactic
-  | Strict
-  | Full
-
-let is_equate_by_smt (t:R.term) : bool =
-  match R.inspect_ln t with
-  | R.Tv_FVar fv ->
-    let name = R.inspect_fv fv in
-    name = ["Pulse"; "Lib"; "Core"; "equate_by_smt"]
-  | _ -> false
-
-let is_equate_strict (t:R.term) : bool =
-  match R.inspect_ln t with
-  | R.Tv_FVar fv ->
-    let name = R.inspect_fv fv in
-    name = ["Pulse"; "Lib"; "Core"; "equate_strict"]
-  | _ -> false
-
-let is_equate_syntactic (t:R.term) : bool =
-  match R.inspect_ln t with
-  | R.Tv_FVar fv ->
-    let name = R.inspect_fv fv in
-    name = ["Pulse"; "Lib"; "Core"; "equate_syntactic"]
-  | _ -> false
-
-(* Gets the strictest matching kind from a list of attributes. *)
-let matching_kind_from_attr (ats : list term) : matching_kind =
-  if L.existsb is_equate_syntactic ats then Syntactic
-  else if L.existsb is_equate_strict ats then Strict
-  else Full
-
-let rec zip3 (l1:list 'a) (l2:list 'b) (l3:list 'c) : T.Tac (list ('a & 'b & 'c)) =
-  match l1, l2, l3 with
-  | [], [], [] -> []
-  | x::xs, y::ys, z::zs -> (x, y, z) :: zip3 xs ys zs
-  | _, _, _ ->
-    T.fail "zip3: length mismatch"
-
-let same_head (g:env) (t0 t1:term)
-  : T.Tac bool
-  = match T.hua t0, T.hua t1 with
-    | Some (h0, us0, args0), Some (h1, us1, args1) ->
-      T.inspect_fv h0 = T.inspect_fv h1 &&
-      L.length args0 = L.length args1
-    | _ ->
-      true // conservative
-
-let eligible_for_smt_equality (g:env) (t0 t1:term) 
-  : T.Tac bool
-  = let either_equational () = equational t0 || equational t1 in
-    let term_eq t0 t1 = TermEq.term_eq t0 t1 in
-    if term_eq t0 t1 || either_equational () then true
-    else
-    match inspect_term t0, inspect_term t1 with
-    | Tm_ForallSL _ _ _, Tm_ForallSL _ _ _ -> true
-    | _ -> (
-      let h0, args0 = R.collect_app_ln t0 in
-      let h1, args1 = R.collect_app_ln t1 in
-      if term_eq h0 h1 && L.length args0 = L.length args1
-      then (
-        match R.inspect_ln h0 with
-        | R.Tv_FVar fv
-        | R.Tv_UInst fv _ -> (
-          match type_of_fv g fv with
-          | None -> false
-          | Some t ->
-            let bs, _ = R.collect_arr_ln_bs t in
-            if L.length bs <> L.length args0
-            then false
-            else (
-              let bs_args0_args1 = zip3 bs args0 args1 in
-              T.fold_right (fun (b, (a0, _), (a1, _)) acc ->
-                if not acc then false else
-                let ats = (R.inspect_binder b).attrs in
-                match matching_kind_from_attr ats with
-                | Syntactic -> term_eq a0 a1
-                | Strict -> begin
-                  try
-                    Some? (fst (PTU.check_equiv_now_nosmt (elab_env g) a0 a1))
-                  with | _ -> false
-                  end
-
-                | Full -> true
-              ) bs_args0_args1 true
-            )
-          )
-        | _ -> false
-      )
-      else false
-    )
-    | _ -> false
-
-let refl_uvar (t:R.term) (uvs:env) : option var =
-  let open R in
-  match inspect_ln t with
-  | Tv_Var v ->
-    let {uniq=n} = inspect_namedv v in
-    if contains uvs n then Some n else None
-  | _ -> None
-
-let is_uvar (t:term) (uvs:env) : option var = refl_uvar t uvs
-
-let contains_uvar (t:term) (uvs:env) (g:env) : T.Tac bool =
-  not (check_disjoint uvs (freevars t))
 
 //
 // Call into the F* unifier to solve for uvs by unifying p and q
@@ -260,69 +126,46 @@ let eq_tm_unascribe (g:env) (p q:term) : option (erased (RT.equiv (elab_env g) p
   )
   else None
 
-let try_unif_nosmt (g:env) (p q:term) : T.Tac (option (T.equiv_token (elab_env g) p q) & T.issues) =
-  let hp, args_p = R.collect_app_ln p in
-  let hq, args_q = R.collect_app_ln q in
-  if RU.debug_at_level (fstar_env g) "ggg" then
-    info_doc g (Some <| range_of_env g) [
-      text "try_unify_nosmt";
-      text "p: " ^^ pp p;
-      text "q: " ^^ pp q;
-    ];
-  let r =
-    (* We only try to unify if the heads syntactically match. *)
-    if TermEq.term_eq hp hq then
-      PTU.check_equiv_now_nosmt (elab_env g) p q
-    else
-      None, []
-  in
-  // if RU.debug_at_level (fstar_env g) "ggg" then
-  // info_doc g (Some <| range_of_env g) [
-  //   text "Unification result:";
-  //   text "p: " ^^ pp p;
-  //   text "q: " ^^ pp q;
-  //   text "result: " ^^ (arbitrary_string <| Pulse.Show.show (Some? (fst r), List.length (snd r) <: bool & int));
-  // ];
-  r
-
-let head_is_uvar (uvs:env) (t:term) : T.Tac bool =
-  let hd, _ = T.collect_app t in
-  match T.inspect hd with
-  | T.Tv_Var v ->
-    List.existsb (fun (x, _) -> x = v.uniq) (bindings uvs)
-  | _ -> false
-
 (**************** The actual matchers *)
+
+open Pulse.VC
 
 (* The syntactic matcher *)
 let match_syntactic_11
   (#preamble:_) (pst : prover_state preamble)
   (p q : slprop)
-  : T.Tac (match_success_t pst p q)
+  : T.Tac (match_res_t pst p q)
 = (* term_eq gives us provable equality between p and q, so we can use VE_Refl. *)
   if TermEq.term_eq p q
-  then (| PS.empty, VE_Refl _ _ |)
-  else raise (NoMatch "not term_eq")
+  then Matched PS.empty Trivial (fun () -> VE_Refl _ _)
+  else NoMatch "not term_eq"
 
 (* Fast unification / strict matcher *)
 let match_fastunif_11
   (#preamble:_) (pst : prover_state preamble)
   (p q : slprop)
-  : T.Tac (match_success_t pst p q)
+  : T.Tac (match_res_t pst p q)
 = match PTU.check_equiv_now_nosmt (elab_env pst.pg) p q with
-  | Some tok, _ -> (| PS.empty, VE_Ext _ _ _ tok |)
-  | None, _ -> raise (NoMatch "no unif")
+  | Some tok, _ ->
+    Matched PS.empty Trivial (fun () -> VE_Ext _ _ _ tok)
+  | None, _ ->
+    NoMatch "no unif"
 
 let match_fastunif_inst_11
   (#preamble:_) (pst : prover_state preamble)
   (p q : slprop)
-  : T.Tac (match_success_t pst p q)
+  : T.Tac (match_res_t pst p q)
 = let g = pst.pg in
   let q0 = q in
 
   (* If the heads of p and q differ, skip. *)
-  if not <| same_head pst.pg p q then
-    raise (NoMatch "head mismatch");
+  if not <| MKeys.same_head p q then (
+    if RU.debug_at_level (fstar_env g) "ggg" then
+      info_doc g (Some <| range_of_env g) [
+        text "head mismatch";
+      ];
+    raise (ENoMatch "head mismatch")
+  );
 
   (* Try to instantiate q's uvars by matching it to p. We do not trust
   this call so we then typecheck the result (and normalize it too). *)
@@ -333,48 +176,55 @@ let match_fastunif_inst_11
     fails to typecheck, say due to a bad solution of uvars by try_solve_uvars,
     then we must also fail here. Hence we use ForceSMT to not batch these queries. *)
     match T.with_policy T.ForceSMT (fun () -> T.tc_term (elab_env g) q_subst) with
-    | Some (q_subst', _), [] ->
+    | Some (q_subst', _), _ ->
       T.norm_well_typed_term (elab_env g)
         [NormSteps.unascribe; primops; iota]
         q_subst'
-    | _ ->
+    | None, issues ->
+      if RU.debug_at_level (fstar_env g) "ggg" then
+        info_doc_with_subissues g (Some <| range_of_env g) issues [
+          text "bad uvars?";
+        ];
       // bad uvars, just ignore
-      raise (NoMatch "uvar solution did not check")
+      raise (ENoMatch "uvar solution did not check")
   in
   let q_subst_eq_q_norm : erased (equiv_token (elab_env g) q_subst q_norm) = magic () in
 
   if RU.debug_at_level (fstar_env g) "ggg" then
     info_doc g (Some <| range_of_env g) [
       text "match_fastunif_inst_11";
-      text "p: " ^^ pp p;
-      text "q: " ^^ pp q;
-      text "q_subst: " ^^ pp q_subst;
-      text "q_norm: " ^^ pp q_norm;
+      doc_of_string "p: " ^/^ pp p;
+      doc_of_string "q: " ^/^ pp q;
+      doc_of_string "q_subst: " ^/^ pp q_subst;
+      doc_of_string "q_norm: " ^/^ pp q_norm;
     ];
 
   match PTU.check_equiv_now_nosmt (elab_env pst.pg) p q_norm with
-  | None, _ -> raise (NoMatch "no unif")
+  | None, issues ->
+    if RU.debug_at_level (fstar_env g) "ggg" then
+      info_doc_with_subissues g (Some <| range_of_env g) issues [
+        text "match_fastunif_inst_11: check_equiv failed, no unif";
+      ];
+    raise (ENoMatch "no unif")
   | Some token, _ ->
     // (| ss', VE_Ext _ _ _ (RU.magic ()) |)
     let p_eq_q_norm : slprop_equiv g p q_norm  = VE_Ext _ _ _ token in
     let p_eq_q      : slprop_equiv g p q_subst =
       p_eq_q_norm >>> VE_Sym _ _ _ (VE_Ext _ _ _ q_subst_eq_q_norm)
     in
-    (| ss', p_eq_q |)
+    Matched ss' Trivial (fun () -> p_eq_q)
 
-(* Full unification with SMT. Also can instantiate uvars (strict should maybe
-also do this?). *)
 let match_full_11
   (#preamble:_) (pst : prover_state preamble)
   (p q : slprop)
-  : T.Tac (match_success_t pst p q)
+  : T.Tac (match_res_t pst p q)
 = let g = pst.pg in
   let q0 = q in
 
   (* If the heads of p and q differ, skip. *)
-  if not <| same_head pst.pg p q then
-    raise (NoMatch "head mismatch");
-  
+  if not <| MKeys.same_head p q then
+    raise (ENoMatch "head mismatch");
+
   (* Try to instantiate q's uvars by matching it to p. We do not trust
   this call so we then typecheck the result (and normalize it too). *)
   let ss' = try_solve_uvars pst.pg pst.uvs p q in
@@ -383,6 +233,7 @@ let match_full_11
     (* First typecheck q_subst and then normalize it. If it
     fails to typecheck, say due to a bad solution of uvars by try_solve_uvars,
     then we must also fail here. Hence we use ForceSMT to not batch these queries. *)
+    // FIXME: Do not call SMT here.
     match T.with_policy T.ForceSMT (fun () -> T.tc_term (elab_env g) q_subst) with
     | Some (q_subst', _), [] ->
       T.norm_well_typed_term (elab_env g)
@@ -390,7 +241,7 @@ let match_full_11
         q_subst'
     | _ ->
       // bad uvars, just ignore
-      raise (NoMatch "uvar solution did not check")
+      raise (ENoMatch "uvar solution did not check")
   in
 
   (* FIXME: extend reflection typing to provide the token. The norm_well_typed_term
@@ -400,15 +251,14 @@ let match_full_11
   (* Check now, after normalizing etc, that we are allowed to try an SMT query
   to match them. This is the part that looks at the binder attributes for strictness.
   If this check doesn't pass, skip. *)
-  if not (eligible_for_smt_equality g p q_norm) then
-    raise (NoMatch "not eligible for SMT");
+  if not (MKeys.eligible_for_smt_equality g p q_norm) then
+    raise (ENoMatch "not eligible for SMT");
 
-  (* Finally, try to match and construct proof. *)
-  match PTU.check_equiv_now (elab_env g) p q_norm with
-  | None, _ -> raise (NoMatch "no unif")
-  | Some token, _ ->
+  (* Return a guarded result *)
+  Matched ss' (EquivToken g p q_norm) (fun token ->
     let p_eq_q_norm : slprop_equiv g p q_norm  = VE_Ext _ _ _ token in
     let p_eq_q      : slprop_equiv g p q_subst =
       p_eq_q_norm >>> VE_Sym _ _ _ (VE_Ext _ _ _ q_subst_eq_q_norm)
     in
-    (| ss', p_eq_q |) 
+    p_eq_q
+  )

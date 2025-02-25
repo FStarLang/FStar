@@ -9,7 +9,7 @@ let gref (#a:Type0) (p:pcm a)
 val pts_to
     (#a:Type u#0)
     (#p:pcm a)
-    (r:gref p)
+    ([@@@mkey]r:gref p)
     (v:a)
 : slprop
 

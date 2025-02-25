@@ -36,9 +36,6 @@ val global_tup : tup_t
 
 assume val get_v #v (l:t v) : stt unit emp (fun _ -> v)
 
-#set-options "--print_implicits"
-
-
 fn tuple ()
   requires emp
   ensures emp

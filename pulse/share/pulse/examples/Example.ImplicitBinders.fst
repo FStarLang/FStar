@@ -16,9 +16,8 @@
 
 module Example.ImplicitBinders
 #lang-pulse
-open Pulse.Lib.Pervasives
+open Pulse
 module U32 = FStar.UInt32
-#push-options "--print_implicits"
 
 
 //

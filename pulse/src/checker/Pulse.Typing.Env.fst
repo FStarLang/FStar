@@ -421,6 +421,19 @@ let fail_doc_with_subissues #a (g:env) (ro : option range)
 =
   (* If for whatever reason `sub` is empty, F* will handle it well
   and a generic error message will be displayed *)
+  if Nil? sub then (
+    let issue =
+      FStar.Issue.mk_issue_doc
+        "Error"
+        (msg @ [doc_of_string "F* did not provide any extra information on why this failed."])
+        None
+        None
+        []
+    in
+    T.log_issues [issue];
+    T.raise T.Stop
+  )
+  ;
   let issues = sub |> T.map (fun is ->
     FStar.Issue.mk_issue_doc
       (Issue.level_of_issue is)

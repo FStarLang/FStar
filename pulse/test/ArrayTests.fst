@@ -409,7 +409,9 @@ fn test_local_array0 ()
   let v2 = V.alloc 0 2sz;
   let a2 = V.vec_to_array v2;
   V.to_array_pts_to v2;
+  rewrite each V.vec_to_array v2 as a2; // BAD
   let b = compare 2sz a1 a2;
+  rewrite each a2 as V.vec_to_array v2; // BAD
   V.to_vec_pts_to v2;
   V.free v2;
   b
