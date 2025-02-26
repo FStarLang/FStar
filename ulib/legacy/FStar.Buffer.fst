@@ -1151,7 +1151,6 @@ let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:mem) (h1:mem) (h2:mem)
   [SMTPat (modifies_one (frameOf b) h0 h1); SMTPat (modifies_one (frameOf b) h1 h2)]
   = ()
 
-
 (** Corresponds to memcpy *)
 val blit: #t:Type
   -> a:buffer t
@@ -1170,7 +1169,6 @@ val blit: #t:Type
         Seq.slice (as_seq h0 b) (v idx_b+v len) (length b) ))
 
 #push-options "--z3rlimit 150 --max_fuel 0 --max_ifuel 0 --initial_fuel 0 --initial_ifuel 0"
-#restart-solver
 let rec blit #t a idx_a b idx_b len =
   let h0 = HST.get () in
   if len =^ 0ul then ()
