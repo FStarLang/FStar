@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.GlobalVar
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open Pulse.Class.Duplicable

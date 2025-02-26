@@ -15,3 +15,4 @@
 *)
 
 module Pulse.Lib.HashTable.Type
+#lang-pulse

@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.HigherArray
+#lang-pulse
 open FStar.Tactics.V2
 open Pulse.Lib.Core
 open Pulse.Class.PtsTo

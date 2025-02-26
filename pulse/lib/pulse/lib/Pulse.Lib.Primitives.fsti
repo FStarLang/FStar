@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Primitives
+#lang-pulse
 
 open PulseCore.Observability
 open Pulse.Lib.Core

@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Fixpoints
+#lang-pulse
 
 open Pulse.Lib.Core
 

@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.BoundedIntegers
+#lang-pulse
 
 module TC = FStar.Tactics.Typeclasses
 

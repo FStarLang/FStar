@@ -1,4 +1,5 @@
 module Pulse.Lib.WhileLoop
+#lang-pulse
 open Pulse.Lib.Core
 
 val while_loop

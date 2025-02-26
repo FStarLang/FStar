@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.OnRange
+#lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Trade
 

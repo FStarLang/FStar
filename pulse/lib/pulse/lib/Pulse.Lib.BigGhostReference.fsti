@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.BigGhostReference
+#lang-pulse
 open FStar.Tactics
 open Pulse.Lib.Core
 open PulseCore.FractionalPermission

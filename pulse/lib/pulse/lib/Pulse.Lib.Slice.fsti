@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Slice
+#lang-pulse
 open FStar.Tactics.V2
 open Pulse.Lib.Pervasives
 module SZ = FStar.SizeT

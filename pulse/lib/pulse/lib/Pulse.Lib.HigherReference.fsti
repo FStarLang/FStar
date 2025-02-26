@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.HigherReference
+#lang-pulse
 open Pulse.Lib.Core
 open PulseCore.FractionalPermission
 open FStar.Ghost

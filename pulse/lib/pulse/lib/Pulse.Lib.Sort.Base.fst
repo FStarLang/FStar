@@ -1,4 +1,5 @@
 module Pulse.Lib.Sort.Base
+#lang-pulse
 open Pulse.Lib.Pervasives
 
 module I16 = FStar.Int16

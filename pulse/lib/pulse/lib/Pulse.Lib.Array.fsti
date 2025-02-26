@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Array
+#lang-pulse
 open Pulse.Lib.Core
 include Pulse.Lib.Array.Core
 open PulseCore.FractionalPermission

@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.GhostWitness
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 

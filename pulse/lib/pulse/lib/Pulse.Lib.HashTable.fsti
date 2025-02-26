@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.HashTable
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.HashTable.Spec

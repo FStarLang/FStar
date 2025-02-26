@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Forall
+#lang-pulse
 open Pulse.Lib.Core
 
 val ( forall* )

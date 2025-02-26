@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.CancellableInvariant
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 

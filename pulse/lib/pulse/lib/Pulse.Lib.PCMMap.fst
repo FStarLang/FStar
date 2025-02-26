@@ -16,6 +16,7 @@
    Author: N. Swamy
 *)
 module Pulse.Lib.PCMMap
+#lang-pulse
 (** Given a PCM on [p:pcm a] and a key type [k:eqtype], this module
     builds a [pcm (map k a)] by lifting [p] pointwise. It also lifts
     frame-preserving updates on [p] to frame-preserving updates on

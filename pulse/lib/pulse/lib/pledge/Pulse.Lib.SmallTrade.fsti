@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.SmallTrade
+#lang-pulse
 
 open Pulse.Lib.Core
 

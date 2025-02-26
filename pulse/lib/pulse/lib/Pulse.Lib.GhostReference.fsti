@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.GhostReference
+#lang-pulse
 open FStar.Tactics
 open Pulse.Lib.Core
 open Pulse.Class.PtsTo
