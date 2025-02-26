@@ -97,11 +97,11 @@ fn slice_swap0
   (a: S.slice t)
   (mb: SZ.t)
   (#s: Ghost.erased (Seq.seq t))
-requires (
+  requires (
     pts_to a s **
     pure (SZ.v mb <= Seq.length s)
   )
-ensures (
+  ensures (
     exists* s' .
     pts_to a s' **
     pure (
@@ -131,11 +131,11 @@ fn slice_swap
   (a: S.slice t)
   (mb: SZ.t)
   (#s: Ghost.erased (Seq.seq t))
-requires (
+  requires (
     pts_to a s **
     pure (SZ.v mb <= Seq.length s)
   )
-ensures (
+  ensures (
     exists* s' .
     pts_to a s' **
     pure (

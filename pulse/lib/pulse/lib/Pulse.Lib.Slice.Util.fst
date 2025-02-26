@@ -245,7 +245,7 @@ fn slice_to_arrayptr_intro_trade
   (#t: Type) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t))
 requires
   (pts_to s #p v)
-returns a: AP.ptr t
+  returns a: AP.ptr t
 ensures
   (AP.pts_to a #p v **
     trade

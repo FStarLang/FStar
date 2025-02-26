@@ -69,7 +69,7 @@ ensures
 ghost
 fn trade_comm_hyp_intro_r
   (p q r: slprop)
-requires emp
+  requires emp
 ensures
   Trade.trade (p ** (q ** r)) (p ** (r ** q))
 {

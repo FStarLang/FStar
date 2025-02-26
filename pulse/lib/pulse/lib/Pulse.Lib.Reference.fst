@@ -77,8 +77,8 @@ fn op_Colon_Equals
 
 
 fn free #a (r:ref a) (#n:erased a)
-requires pts_to r #1.0R n
-ensures emp
+  requires pts_to r #1.0R n
+  ensures emp
 {
   unfold (pts_to r #1.0R n);
   H.free r;
@@ -88,8 +88,8 @@ ensures emp
 
 ghost
 fn share (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
-requires pts_to r #p v
-ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
+  requires pts_to r #p v
+  ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
 {
   unfold pts_to r #p v;
   H.share r;
@@ -101,8 +101,8 @@ ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
 
 ghost
 fn raise_inj (a:Type u#0) (x0 x1:a)
-requires pure (U.raise_val u#0 u#1 x0 == U.raise_val u#0 u#1 x1)
-ensures pure (x0 == x1)
+  requires pure (U.raise_val u#0 u#1 x0 == U.raise_val u#0 u#1 x1)
+  ensures pure (x0 == x1)
 {
   assert pure (U.downgrade_val (U.raise_val u#0 u#1 x0) == x0);
   assert pure (U.downgrade_val (U.raise_val u#0 u#1 x1) == x1);
@@ -112,8 +112,8 @@ ensures pure (x0 == x1)
 
 ghost
 fn gather (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
-requires pts_to r #p0 x0 ** pts_to r #p1 x1
-ensures pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
+  requires pts_to r #p0 x0 ** pts_to r #p1 x1
+  ensures pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
 {
   unfold pts_to r #p0 x0;
   unfold pts_to r #p1 x1;
@@ -138,8 +138,8 @@ let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
 
 fn
 raise_exists (#a:Type u#0) (frame:slprop) (p: U.raise_t u#0 u#1 a -> slprop)
-requires frame ** (exists* (x:a). p (U.raise_val x))
-ensures frame ** (exists* (x:U.raise_t a). p x)
+  requires frame ** (exists* (x:a). p (U.raise_val x))
+  ensures frame ** (exists* (x:U.raise_t a). p x)
 {
   ()
 }
@@ -197,8 +197,8 @@ ensures
 
 ghost
 fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
-requires pts_to r #p v
-ensures pts_to r #p v ** pure (p <=. 1.0R)
+  requires pts_to r #p v
+  ensures pts_to r #p v ** pure (p <=. 1.0R)
 {
   unfold pts_to r #p v;
   H.pts_to_perm_bound r;

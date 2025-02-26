@@ -45,8 +45,8 @@ fn elim_forall'
     (#a:Type u#0)
     (#p:a->slprop)
     (x:a)
-requires forall* (x:a). p x
-ensures p x
+  requires forall* (x:a). p x
+  ensures p x
 {
     unfold (forall* x. p x);
     unfold (uquant #a (F.on_dom a (fun x -> p x)));

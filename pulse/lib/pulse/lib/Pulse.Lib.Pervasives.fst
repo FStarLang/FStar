@@ -96,9 +96,9 @@ fn call_ghost
       (#post: (x:a -> b x -> slprop))
       (f:(x:a -> stt_ghost (b x) emp_inames (pre x) (fun y -> post x y)))
       (x:a)
-requires pre x
-returns y:erased (b x)
-ensures post x y
+  requires pre x
+  returns y:erased (b x)
+  ensures post x y
 {
   let y = f x;
   rewrite (post x y) as (post x (reveal (hide y)));
@@ -109,8 +109,8 @@ ensures post x y
 
 ghost
 fn elim_cond_true (b:bool) (p q:slprop)
-requires (cond b p q ** pure (b == true))
-ensures p
+  requires (cond b p q ** pure (b == true))
+  ensures p
 {
   rewrite (cond b p q) as p;
 }  
@@ -119,8 +119,8 @@ ensures p
 
 ghost
 fn elim_cond_false b p q
-requires (cond b p q ** pure (b == false))
-ensures q
+  requires (cond b p q ** pure (b == false))
+  ensures q
 {
   rewrite (cond b p q) as q;
 }  
@@ -129,8 +129,8 @@ ensures q
 
 ghost
 fn intro_cond_true (p q:slprop)
-requires p
-ensures cond true p q
+  requires p
+  ensures cond true p q
 {
   fold (cond true p q);
 }
@@ -139,8 +139,8 @@ ensures cond true p q
 
 ghost
 fn intro_cond_false (p q:slprop)
-requires q
-ensures cond false p q
+  requires q
+  ensures cond false p q
 {
   fold (cond false p q);
 }
@@ -150,8 +150,8 @@ ensures cond false p q
 fn par (#pf #pg #qf #qg:_)
        (f: unit -> stt unit pf (fun _ -> qf))
        (g: unit -> stt unit pg (fun _ -> qg))
-requires pf ** pg
-ensures qf ** qg
+  requires pf ** pg
+  ensures qf ** qg
 {
   parallel 
   requires pf and pg
@@ -166,8 +166,8 @@ ensures qf ** qg
 fn par_atomic (#is #js #pf #pg #qf #qg:_)
        (f: unit -> stt_atomic unit is pf (fun _ -> qf))
        (g: unit -> stt_atomic unit js pg (fun _ -> qg))
-requires pf ** pg
-ensures qf ** qg
+  requires pf ** pg
+  ensures qf ** qg
 {
   parallel 
   requires pf and pg
@@ -182,8 +182,8 @@ ensures qf ** qg
 fn par_atomic_l (#is #pf #pg #qf #qg:_)
        (f: unit -> stt_atomic unit is pf (fun _ -> qf))
        (g: unit -> stt unit pg (fun _ -> qg))
-requires pf ** pg
-ensures qf ** qg
+  requires pf ** pg
+  ensures qf ** qg
 {
   parallel 
   requires pf and pg

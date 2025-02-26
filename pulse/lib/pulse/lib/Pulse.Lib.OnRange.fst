@@ -106,8 +106,8 @@ fn on_range_le
     (p: (nat -> slprop))
     (#i:nat)
     (#j:nat)
-requires on_range p i j
-ensures on_range p i j ** pure (i <= j)
+  requires on_range p i j
+  ensures on_range p i j ** pure (i <= j)
 {
   if (j < i)
   {
@@ -123,8 +123,8 @@ ghost
 fn on_range_empty
   (p: (nat -> slprop))
   (i: nat)
-requires emp
-ensures on_range p i i
+  requires emp
+  ensures on_range p i i
 {
   rewrite emp as on_range p i i;
 }
@@ -135,8 +135,8 @@ ghost
 fn on_range_empty_elim
   (p: (nat -> slprop))
   (i: nat)
-requires on_range p i i
-ensures emp
+  requires on_range p i i
+  ensures emp
 {
   rewrite (on_range p i i) as emp;
 }
@@ -147,8 +147,8 @@ ghost
 fn on_range_singleton_intro
   (p: (nat -> slprop))
   (i: nat)
-requires p i
-ensures on_range p i (i + 1)
+  requires p i
+  ensures on_range p i (i + 1)
 {
   on_range_empty p (i + 1);
   rewrite (p i ** on_range p (i + 1) (i + 1))
@@ -163,8 +163,8 @@ fn on_range_singleton_elim
   (#p: (nat -> slprop))
   (#i:nat)
   (#j:nat { j == i + 1 })
-requires on_range p i j
-ensures p i
+  requires on_range p i j
+  ensures p i
 {
   rewrite (on_range p i j) as (p i ** on_range p (i + 1) j);
   rewrite (on_range p (i + 1) j) as emp;
@@ -178,9 +178,9 @@ fn rec on_range_split
   (#p: (nat -> slprop))
   (#i:nat{ i <= j })
   (#k:nat{ j <= k })
-requires on_range p i k
-ensures on_range p i j ** on_range p j k
-decreases (j - i)
+  requires on_range p i k
+  ensures on_range p i j ** on_range p j k
+  decreases (j - i)
 {
   if (i = j)
   {
@@ -200,9 +200,9 @@ ghost
 fn on_range_join
   (i j k: nat)
   (#p: (nat -> slprop))
-requires on_range p i j ** on_range p j k
-ensures on_range p i k
-decreases (j - i)
+  requires on_range p i j ** on_range p j k
+  ensures on_range p i k
+  decreases (j - i)
 {
   on_range_le p #i #j;
   on_range_le p #j #k;
@@ -218,8 +218,8 @@ fn on_range_cons
   (#p: (nat -> slprop))
   (#j:nat{j == i + 1})
   (#k: nat)
-requires p i ** on_range p j k
-ensures on_range p i k
+  requires p i ** on_range p j k
+  ensures on_range p i k
 {
   on_range_le p #j #k;
   rewrite (p i ** on_range p j k) as (on_range p i k);
@@ -233,8 +233,8 @@ fn on_range_uncons
   (#p: (nat -> slprop))
   (#i:nat)
   (#k:nat { i < k })
-requires on_range p i k
-ensures p i ** on_range p (i + 1) k
+  requires on_range p i k
+  ensures p i ** on_range p (i + 1) k
 {
   rewrite (on_range p i k) as (p i ** on_range p (i + 1) k);
 }
@@ -246,8 +246,8 @@ fn on_range_cons_with_implies
   (i:nat)
   (#p: (nat -> slprop))
   (#k: nat)
-requires p i ** on_range p (i + 1) k
-ensures on_range p i k ** (on_range p i k @==> (p i ** on_range p (i + 1) k))
+  requires p i ** on_range p (i + 1) k
+  ensures on_range p i k ** (on_range p i k @==> (p i ** on_range p (i + 1) k))
 {
   on_range_le p #(i + 1) #k;
   ghost
@@ -269,9 +269,9 @@ fn rec on_range_snoc
   ()
   (#p: (nat -> slprop))
   (#i #j:nat)
-requires on_range p i j ** p j
-ensures on_range p i (j + 1)
-decreases (if j <= i then 0 else j - i)
+  requires on_range p i j ** p j
+  ensures on_range p i (j + 1)
+  decreases (if j <= i then 0 else j - i)
 {
   on_range_le p #i #j;
   if (i = j) 
@@ -296,9 +296,9 @@ fn rec on_range_unsnoc
   (#p: (nat -> slprop))
   (#i:nat)
   (#k:nat{ i < k })
-requires on_range p i k
-ensures on_range p i (k - 1) ** p (k - 1)
-decreases (k - i)
+  requires on_range p i k
+  ensures on_range p i (k - 1) ** p (k - 1)
+  decreases (k - i)
 {
   if (i = k - 1)
   {
@@ -320,8 +320,8 @@ fn on_range_snoc_with_implies
   (#p: (nat -> slprop))
   (#i:nat)
   (#j:nat)
-requires on_range p i j ** p j
-ensures on_range p i (j + 1) **  (on_range p i (j + 1) @==> (on_range p i j ** p j))
+  requires on_range p i j ** p j
+  ensures on_range p i (j + 1) **  (on_range p i (j + 1) @==> (on_range p i j ** p j))
 {
   on_range_le p #i #j;
   ghost
@@ -344,9 +344,9 @@ fn rec on_range_get
   (#p: (nat -> slprop))
   (#i:nat{i <= j})
   (#k:nat{j < k})
-requires on_range p i k
-ensures on_range p i j ** p j ** on_range p (j + 1) k
-decreases (j - i)
+  requires on_range p i k
+  ensures on_range p i j ** p j ** on_range p (j + 1) k
+  decreases (j - i)
 {
   if (j = i)
   {
@@ -369,9 +369,9 @@ fn rec on_range_put
   (j:nat{ i <= j })
   (k:nat{ j < k })
   (#p: (nat -> slprop))
-requires on_range p i j ** p j ** on_range p (j + 1) k
-ensures on_range p i k
-decreases (j - i)
+  requires on_range p i j ** p j ** on_range p (j + 1) k
+  ensures on_range p i k
+  decreases (j - i)
 {
   if (j = i)
   {
@@ -396,8 +396,8 @@ fn on_range_focus
   (#p: (nat -> slprop))
   (#i:nat{ i <= j })
   (#k:nat{ j < k })
-requires on_range p i k
-ensures p j ** (p j @==> on_range p i k)
+  requires on_range p i k
+  ensures p j ** (p j @==> on_range p i k)
 {
   on_range_get j;
   ghost
@@ -420,9 +420,9 @@ fn rec on_range_weaken_and_shift
   (i: nat { i + delta >= 0 })
   (j: nat { j + delta >= 0 })
   (phi: (k: nat { i <= k /\ k < j }) -> stt_ghost unit emp_inames(p k) (fun _ -> p' (k + delta)))
-requires on_range p i j
-ensures on_range p' (i + delta) (j + delta)
-decreases (if j <= i then 0 else j - i)
+  requires on_range p i j
+  ensures on_range p' (i + delta) (j + delta)
+  decreases (if j <= i then 0 else j - i)
 {
   on_range_le p;
   if (i = j)

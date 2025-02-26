@@ -78,8 +78,8 @@ fn intro_forall_imp (#a:Type0) (p q: a -> slprop) (r:slprop)
                         emp_inames
                         (r ** p u)
                         (fun _ -> q u)))
-requires r
-ensures forall* x. p x @==> q x
+  requires r
+  ensures forall* x. p x @==> q x
 {
     ghost fn aux (x:a)
     requires r

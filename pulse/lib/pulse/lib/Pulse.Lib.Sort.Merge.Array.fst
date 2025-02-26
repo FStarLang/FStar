@@ -82,8 +82,8 @@ requires
     pts_to_range a (SZ.v mi) (SZ.v hi) c2 **
     SM.seq_list_match c1 l1_0 vmatch **
     SM.seq_list_match c2 l2_0 vmatch
-returns res: bool
-ensures exists* c l .
+  returns res: bool
+  ensures exists* c l .
     pts_to_range a (SZ.v lo) (SZ.v hi) c **
     SM.seq_list_match c l vmatch **
     Trade.trade

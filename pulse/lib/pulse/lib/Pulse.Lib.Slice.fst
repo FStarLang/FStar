@@ -67,8 +67,8 @@ fn from_array (#t: Type) (a: array t) (#p: perm) (alen: SZ.t)
 ghost
 fn to_array
     (#t: Type) (s: slice t) (#p: perm) (#v: Seq.seq t) (#a: array t)
-requires    (pts_to s #p v ** is_from_array a s)
-ensures    (A.pts_to a #p v)
+  requires    (pts_to s #p v ** is_from_array a s)
+  ensures    (A.pts_to a #p v)
 {
     unfold pts_to s #p v;
     unfold is_from_array a s;
@@ -119,7 +119,7 @@ fn slice_to_arrayptr_intro
   (#t: Type) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t))
 requires
   (pts_to s #p v)
-returns a: AP.ptr t
+  returns a: AP.ptr t
 ensures
   (AP.pts_to a #p v ** slice_to_arrayptr s a)
 {
@@ -149,7 +149,7 @@ fn op_Array_Access
         (#s: Ghost.erased (Seq.seq t){SZ.v i < Seq.length s})
         requires
             pts_to a #p s
-returns res : t
+  returns res : t
 ensures
             pts_to a #p s **
             pure (res == Seq.index s (SZ.v i))
@@ -185,7 +185,7 @@ fn share
   (#p:perm)
 requires
     pts_to arr #p s
-ensures pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s
+  ensures pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s
 {
     unfold pts_to arr #p s;
     AP.share arr.elt;
@@ -199,8 +199,8 @@ fn gather
   (arr:slice a)
   (#s0 #s1:Ghost.erased (Seq.seq a))
   (#p0 #p1:perm)
-requires pts_to arr #p0 s0 ** pts_to arr #p1 s1
-ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
+  requires pts_to arr #p0 s0 ** pts_to arr #p1 s1
+  ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
 {
     unfold pts_to arr #p0 s0;
     unfold pts_to arr #p1 s1;

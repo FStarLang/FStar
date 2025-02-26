@@ -129,10 +129,10 @@ let gather2 c = gather #0.5R #0.5R c
 
 ghost
 fn cancel_ (#v:slprop) (c:cinv)
-requires cinv_vp c v **
+  requires cinv_vp c v **
          active c 1.0R
-ensures cinv_vp c v ** v
-opens []
+  ensures cinv_vp c v ** v
+  opens []
 {
   unfold cinv_vp;
   unfold cinv_vp_aux;

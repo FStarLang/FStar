@@ -115,8 +115,8 @@ requires
     SM.seq_list_match c1 l1_0 vmatch **
     SM.seq_list_match c2 l2_0 vmatch **
     pure (SZ.v mi == Seq.length c1)
-returns res: bool
-ensures exists* c l .
+  returns res: bool
+  ensures exists* c l .
     pts_to a c **
     SM.seq_list_match c l vmatch **
     Trade.trade

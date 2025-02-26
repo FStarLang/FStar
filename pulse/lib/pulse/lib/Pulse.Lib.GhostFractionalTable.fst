@@ -42,9 +42,9 @@ let pts_to #a (t:table a) (i:nat) (#f:perm) (p:a)
 
 ghost
 fn create (#a:Type)
-requires emp
-returns t:table a
-ensures is_table t 0
+  requires emp
+  returns t:table a
+  ensures is_table t 0
 {
   let gref = GPR.alloc #_ #(a_map a) (full_table_above 0);
   fold (is_table gref 0);

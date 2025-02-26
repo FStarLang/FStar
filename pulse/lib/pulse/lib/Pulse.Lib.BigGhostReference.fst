@@ -33,8 +33,8 @@ let pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a)
 
 ghost
 fn full_values_compatible (#a:Type u#2) (x:a)
-requires emp
-ensures pure (compatible pcm_frac (Some (x, 1.0R)) (Some (x, 1.0R)))
+  requires emp
+  ensures pure (compatible pcm_frac (Some (x, 1.0R)) (Some (x, 1.0R)))
 {
    assert pure (FStar.PCM.composable pcm_frac (Some(x, 1.0R)) None);
 }
@@ -43,9 +43,9 @@ ensures pure (compatible pcm_frac (Some (x, 1.0R)) (Some (x, 1.0R)))
 
 ghost
 fn alloc (#a:Type u#2) (x:a)
-requires emp
-returns r:ref a
-ensures pts_to r x
+  requires emp
+  returns r:ref a
+  ensures pts_to r x
 {
   full_values_compatible x;
   let r = Pulse.Lib.Core.big_ghost_alloc #_ #(pcm_frac #a) (Some (x, 1.0R));
@@ -63,9 +63,9 @@ let read_compat (#a:Type u#2) (x:fractional a)
 
 ghost
 fn read (#a:Type u#2) (r:ref a) (#n:erased a) (#p:perm)
-requires pts_to r #p n
-returns x:erased a
-ensures pts_to r #p n ** pure (n == x)
+  requires pts_to r #p n
+  returns x:erased a
+  ensures pts_to r #p n ** pure (n == x)
 {
   unfold pts_to r #p n;
   with w. assert (big_ghost_pcm_pts_to r w);
@@ -81,8 +81,8 @@ let ( ! ) #a = read #a
 
 ghost
 fn op_Colon_Equals (#a:Type u#2) (r:ref a) (x:erased a) (#n:erased a)
-requires pts_to r #1.0R n
-ensures pts_to r #1.0R x
+  requires pts_to r #1.0R n
+  ensures pts_to r #1.0R x
 {
   unfold pts_to r #1.0R n;
   with w. assert (big_ghost_pcm_pts_to r w);
@@ -94,8 +94,8 @@ ensures pts_to r #1.0R x
 
 ghost
 fn free (#a:Type u#2) (r:ref a) (#n:erased a)
-requires pts_to r #1.0R n
-ensures emp
+  requires pts_to r #1.0R n
+  ensures emp
 {
   unfold pts_to r #1.0R n;
   Pulse.Lib.Core.big_ghost_write r _ _ (mk_frame_preserving_upd_none n);
@@ -106,8 +106,8 @@ ensures emp
 
 ghost
 fn share #a (r:ref a) (#v:erased a) (#p:perm)
-requires pts_to r #p v
-ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
+  requires pts_to r #p v
+  ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
 {
   unfold pts_to r #p v;
   rewrite big_ghost_pcm_pts_to r (Some (reveal v, p))
@@ -121,8 +121,8 @@ ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
 
 ghost
 fn gather #a (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
-requires pts_to r #p0 x0 ** pts_to r #p1 x1
-ensures pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
+  requires pts_to r #p0 x0 ** pts_to r #p1 x1
+  ensures pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
 { 
   unfold pts_to r #p0 x0;
   unfold pts_to r #p1 x1;
@@ -141,8 +141,8 @@ fn pts_to_injective_eq
     (#p0 #p1:perm)
     (#v0 #v1:a)
     (r:ref a)
-requires pts_to r #p0 v0 ** pts_to r #p1 v1
-ensures pts_to r #p0 v0 ** pts_to r #p1 v1 ** pure (v0 == v1)
+  requires pts_to r #p0 v0 ** pts_to r #p1 v1
+  ensures pts_to r #p0 v0 ** pts_to r #p1 v1 ** pure (v0 == v1)
 {
   unfold pts_to r #p0 v0;
   unfold pts_to r #p1 v1;
@@ -156,8 +156,8 @@ ensures pts_to r #p0 v0 ** pts_to r #p1 v1 ** pure (v0 == v1)
 
 ghost
 fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
-requires pts_to r #p v
-ensures pts_to r #p v ** pure (p <=. 1.0R)
+  requires pts_to r #p v
+  ensures pts_to r #p v ** pure (p <=. 1.0R)
 {
   unfold pts_to r #p v;
   fold pts_to r #p v;

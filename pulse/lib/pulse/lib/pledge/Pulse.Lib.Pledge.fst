@@ -35,8 +35,8 @@ let pledge is f v = inames_live is ** trade #is f (f ** v)
 
 ghost
 fn pledge_inames_live (is:inames) (f p:slprop)
-requires pledge is f p
-ensures inames_live is ** pledge is f p
+  requires pledge is f p
+  ensures inames_live is ** pledge is f p
 {
   unfold pledge;
   dup_inames_live is;
@@ -45,8 +45,8 @@ ensures inames_live is ** pledge is f p
 
 ghost
 fn pledge_sub_inv (is1:inames) (is2:inames { inames_subset is1 is2 })(f:slprop) (v:slprop)
-requires pledge is1 f v ** inames_live is2
-ensures pledge is2 f v
+  requires pledge is1 f v ** inames_live is2
+  ensures pledge is2 f v
 {
   unfold pledge;
   trade_sub_inv #is1 #is2 _ _;

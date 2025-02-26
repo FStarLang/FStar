@@ -64,7 +64,7 @@ fn seq_list_match_cons_elim_trade
   (item_match: (t -> (v': t' { v' << v }) -> slprop))
 requires
     (seq_list_match c v item_match)
-returns res: (squash (Cons? v /\ Seq.length c > 0))
+  returns res: (squash (Cons? v /\ Seq.length c > 0))
 ensures
     (item_match (Seq.head c) (List.Tot.hd v) **
       seq_list_match (Seq.tail c) (List.Tot.tl v) item_match **
@@ -234,7 +234,7 @@ requires
     (seq_list_match s1 s2 p ** pure (
       (i < Seq.length s1 \/ i < List.Tot.length s2)
     ))
-returns res: (squash (i < Seq.length s1 /\ List.Tot.length s2 == Seq.length s1))
+  returns res: (squash (i < Seq.length s1 /\ List.Tot.length s2 == Seq.length s1))
 ensures
     (
       p (Seq.index s1 i) (List.Tot.index s2 i) **
@@ -434,7 +434,7 @@ requires
     (seq_seq_match p s1 s2 i k ** pure (
       i <= j /\ j < k
     ))
-returns res: (squash (i <= j /\ j < k /\ k <= Seq.length s1 /\ k <= Seq.length s2))
+  returns res: (squash (i <= j /\ j < k /\ k <= Seq.length s1 /\ k <= Seq.length s2))
 ensures
       p (Seq.index s1 j) (Seq.index s2 j) **
       Trade.trade

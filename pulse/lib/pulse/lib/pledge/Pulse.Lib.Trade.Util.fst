@@ -17,8 +17,8 @@ ghost
 fn refl
   (#[T.exact (`emp_inames)] is:inames)
   (p: slprop)
-requires emp
-ensures (trade #is p p)
+  requires emp
+  ensures (trade #is p p)
 {
   ghost fn aux (_: unit)
     requires emp ** p
@@ -34,8 +34,8 @@ ghost
 fn refl'
   (#[T.exact (`emp_inames)] is:inames)
   (p q: slprop)
-requires pure (p == q)
-ensures (trade #is p q)
+  requires pure (p == q)
+  ensures (trade #is p q)
 {
   refl #is p;
   rewrite (trade #is p p) as (trade #is p q)
@@ -248,10 +248,10 @@ fn rewrite_with_trade
 ghost
 fn trans_hyp_l
   (p1 p2 q r: slprop)
-requires
+  requires
   trade p1 p2 **
   trade (p2 ** q) r
-ensures
+  ensures
   trade (p1 ** q) r
 {
   refl q;
@@ -262,10 +262,10 @@ ensures
 ghost
 fn trans_hyp_r
   (p q1 q2 r: slprop)
-requires
+  requires
   trade q1 q2 **
   trade (p ** q2) r
-ensures
+  ensures
   trade (p ** q1) r
 {
   refl p;
@@ -276,10 +276,10 @@ ensures
 ghost
 fn trans_concl_l
   (p q1 q2 r: slprop)
-requires
+  requires
   trade p (q1 ** r) **
   trade q1 q2
-ensures
+  ensures
   trade p (q2 ** r)
 {
   refl r;
@@ -290,10 +290,10 @@ ensures
 ghost
 fn trans_concl_r
   (p q r1 r2: slprop)
-requires
+  requires
   trade p (q ** r1) **
   trade r1 r2
-ensures
+  ensures
   trade p (q ** r2)
 {
   refl q;

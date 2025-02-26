@@ -13,9 +13,9 @@ val pts_to ([@@@mkey]t:table) ([@@@mkey]i:nat) (#f:perm) (p:slprop) : slprop
 
 ghost
 fn create ()
-requires emp
-returns t:table
-ensures is_table t 0
+  requires emp
+  returns t:table
+  ensures is_table t 0
 
 ghost
 fn update (t:table) 
