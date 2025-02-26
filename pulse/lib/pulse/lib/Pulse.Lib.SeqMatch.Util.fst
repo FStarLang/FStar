@@ -221,7 +221,7 @@ ensures
   Trade.intro _ _ _ aux
 }
 
-open Pulse.Lib.Stick
+open Pulse.Lib.Trade
 
 ghost
 fn seq_list_match_index_trade
@@ -251,7 +251,7 @@ ensures
   ensures
     seq_list_match s1 s2 p
   {
-    Pulse.Lib.Stick.elim_stick (p (Seq.index s1 i) (List.Tot.index s2 i)) (seq_list_match s1 s2 p);
+    Pulse.Lib.Trade.elim_trade (p (Seq.index s1 i) (List.Tot.index s2 i)) (seq_list_match s1 s2 p);
   };
   Trade.intro _ _ _ aux;
   ()

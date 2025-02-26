@@ -2,7 +2,7 @@ module Bug95
 #lang-pulse
 
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Stick.Util
+open Pulse.Lib.Trade.Util
 open FStar.List.Tot
 
 noeq

@@ -17,7 +17,7 @@
 module CBOR.Pulse.Extern
 include CBOR.Pulse.Type
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Stick
+open Pulse.Lib.Trade
 
 module Cbor = CBOR.Spec
 module U64 = FStar.UInt64

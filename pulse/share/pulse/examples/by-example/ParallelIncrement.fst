@@ -207,9 +207,9 @@ ensures inv l (pts_to_refine x pred) ** qpred ('i + 1)
 }
 
 
-open Pulse.Lib.Stick.Util
+open Pulse.Lib.Trade.Util
 module FA = Pulse.Lib.Forall.Util
-module I = Pulse.Lib.Stick.Util
+module I = Pulse.Lib.Trade.Util
 
 fn atomic_increment_f3
         (x: ref int)

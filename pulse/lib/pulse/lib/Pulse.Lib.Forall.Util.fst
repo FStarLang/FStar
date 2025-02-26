@@ -17,9 +17,10 @@
 module Pulse.Lib.Forall.Util
 #lang-pulse
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Stick.Util
 include Pulse.Lib.Forall
-module I = Pulse.Lib.Stick.Util
+
+module T = Pulse.Lib.Trade
+open Pulse.Lib.Trade { ( @==> ) }
 
 let intro #a #p = Pulse.Lib.Forall.intro_forall #a #p
 let elim #a #p = Pulse.Lib.Forall.elim_forall #a #p
@@ -40,11 +41,11 @@ fn trans_compose (#a #b #c:Type0) (p:a -> slprop) (q:b -> slprop) (r:c -> slprop
         ensures r (g (f x))
         {
             elim #_ #(fun x -> p x @==> q (f x)) x;
-            I.elim _ _;
+            T.elim_trade _ _;
             elim #_ #(fun x -> q x @==> r (g x)) (f x);
-            I.elim _ _;
+            T.elim_trade _ _;
         };
-        I.intro _ _ _ aux;
+        T.intro_trade _ _ _ aux;
     };
     intro_forall _ aux
 }
@@ -66,7 +67,7 @@ ghost fn elim_forall_imp (#a:Type0) (p q: a -> slprop) (x:a)
     ensures q x
 {
     elim #_ #(fun x -> p x @==> q x) x;
-    I.elim _ _
+    T.elim_trade _ _
 }
 
 
@@ -91,7 +92,7 @@ ensures forall* x. p x @==> q x
         {
             elim x;
         };
-        I.intro _ _ _ aux;
+        T.intro_trade _ _ _ aux;
     };
     intro _ aux
 }

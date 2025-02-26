@@ -18,9 +18,9 @@ module Pulse.Lib.LinkedList
 
 #lang-pulse
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Stick.Util
+open Pulse.Lib.Trade.Util
 open FStar.List.Tot
-module I = Pulse.Lib.Stick.Util
+module T = Pulse.Lib.Trade.Util
 module FA = Pulse.Lib.Forall.Util
 
 noeq
@@ -258,7 +258,7 @@ ensures
   {
     intro_is_list_cons (Some v) v
   };
-  I.intro _ _ _ (fun _ -> yields_elim v n tl);
+  T.intro _ _ _ (fun _ -> yields_elim v n tl);
 }
 
 
@@ -289,7 +289,7 @@ fn length_iter (#t:Type) (x: llist t)
 {
   let mut cur = x;
   let mut ctr = 0; 
-  I.refl (is_list x 'l);
+  T.refl (is_list x 'l);
   while (
     let v = !cur; 
     Some? v
@@ -309,13 +309,13 @@ fn length_iter (#t:Type) (x: llist t)
     rewrite each _ll as ll;
     let next = move_next ll;
     with tl. assert (is_list next tl);
-    I.trans (is_list next tl) (is_list ll suffix) (is_list x 'l);
+    T.trans (is_list next tl) (is_list ll suffix) (is_list x 'l);
     cur := next;
     ctr := n + 1;
   };
   with _n ll _sfx. _;
   is_list_cases_none ll;
-  I.elim _ _;
+  T.elim _ _;
   let n = !ctr;
   n
 }
@@ -389,18 +389,14 @@ fn non_empty_list (#t:Type0) (x:llist t)
     intro_is_list_cons x v #n #tl;
 }
 
-
-
 ghost
 fn forall_intro_is_list_idem (#t:Type) (x:llist t)
     requires emp
     ensures forall* l. is_list x l @==> is_list x l
 {
-    intro_forall emp (fun l -> I.refl (is_list x l))
+    intro_forall emp (fun l -> T.refl #emp_inames (is_list x l))
+    (* ^ Need to provide emp_inames due to bad meta implicit, fix (in F* ). *)
 }
-
-
-
 
 fn move_next_forall (#t:Type) (x:llist t)
     requires is_list x 'l ** pure (Some? x)
@@ -425,7 +421,7 @@ fn move_next_forall (#t:Type) (x:llist t)
         {
             intro_is_list_cons x np;
         };
-        I.intro _ _ _ aux;
+        T.intro _ _ _ aux;
     };
     FA.intro _ aux;
     node.tail
