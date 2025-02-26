@@ -2184,6 +2184,29 @@ type reveal_hide_t =
   | Hide of (universe & typ & term)
   | Reveal of (universe & typ & term)
 
+let payload_of_hide_reveal h args : option (universe & typ & term) =
+  match h.n, args with
+  | Tm_uinst(_, [u]), [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
+    Some (u, ty, t)
+  | _ -> None
+
+let is_reveal_or_hide t =
+  let h, args = U.head_and_args t in
+  if U.is_fvar PC.reveal h
+  then match payload_of_hide_reveal h args with
+        | None -> None
+        | Some t -> Some (Reveal t)
+  else if U.is_fvar PC.hide h
+  then match payload_of_hide_reveal h args with
+        | None -> None
+        | Some t -> Some (Hide t)
+  else None
+                
+let mk_fv_app g lid u args r =
+  let fv = Env.fvar_of_nonqual_lid g lid in
+  let head = S.mk_Tm_uinst fv [u]  in
+  S.mk_Tm_app head args r
+
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
 (******************************************************************************************************)
@@ -3604,12 +3627,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                       let wl = solve_prob orig (Some formula) [] wl in
                       solve (attempt subprobs wl))
               in
-              let unfold_and_retry d wl (prob, reason) =
-                   if !dbg_Rel
-                   then BU.print2 "Failed to solve %s because a sub-problem is not solvable without SMT because %s"
-                                (prob_to_string env orig)
-                                (Thunk.force reason);
-                   let env = p_env wl prob in
+              let unfold_and_retry d wl env =
                    match N.unfold_head_once env t1,
                          N.unfold_head_once env t2
                    with
@@ -3635,7 +3653,31 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                        solve_t torig' wl
                      end
                    | _ ->
-                     solve_sub_probs env wl //fallback to trying to solve with SMT on
+                      solve_sub_probs env wl //fallback to trying to solve with SMT on
+              in
+              let try_reveal_reveal_or_retry d wl (prob, reason) =
+                if !dbg_Rel
+                then BU.print2 "Failed to solve %s because a sub-problem is not solvable without SMT because %s"
+                            (prob_to_string env orig)
+                            (Thunk.force reason);
+                let env = p_env wl prob in
+                match is_reveal_or_hide t1, is_reveal_or_hide t2 with
+                // reveal ?u =?= reveal t   ~~>   ?u =?= hide (reveal t)
+                | Some (Reveal (u, ty, lhs)), Some (Reveal _) when is_flex lhs ->
+                  let rhs = mk_fv_app env PC.hide u [(ty, S.as_aqual_implicit true); (t2, None)] t2.pos in
+                  let torig' = { torig with lhs; rhs } in
+                  (if !dbg_Rel then BU.print1 "reveal-reveal heuristic: %s\n" (prob_to_string env (TProb torig')));
+                  solve_t torig' wl
+                // reveal t =?= reveal ?u   ~~>   hide (reveal t) =?= ?u
+                | Some (Reveal _), Some (Reveal (u, ty, rhs)) when is_flex rhs ->
+                  let lhs = mk_fv_app env PC.hide u [(ty, S.as_aqual_implicit true); (t1, None)] t1.pos in
+                  let torig' = { torig with lhs; rhs } in
+                  (if !dbg_Rel then BU.print1 "reveal-reveal heuristic: %s\n" (prob_to_string env (TProb torig')));
+                  solve_t torig' wl
+                | _ ->
+                  match d with
+                  | Some d -> unfold_and_retry d wl env
+                  | None -> solve_sub_probs env wl //fallback to trying to solve with SMT on
               in
               let d = decr_delta_depth <| delta_depth_of_term env head1 in
               let treat_as_injective =
@@ -3644,17 +3686,13 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                   Env.fv_has_attr env fv PC.unifier_hint_injective_lid
                 | _ -> false
               in
-              begin
-              match d with
-              | Some d when wl.smt_ok && not treat_as_injective ->
+              let is_reveal = U.is_fvar PC.reveal head1 || U.is_fvar PC.reveal head2 in
+              if Some? d && wl.smt_ok && not treat_as_injective || is_reveal then
                 try_solve_without_smt_or_else wl
                     solve_sub_probs_no_smt
-                    (unfold_and_retry d)
-
-              | _ -> //cannot be unfolded or no smt anyway; so just try to solve extensionally
+                    (try_reveal_reveal_or_retry d)
+              else //cannot be unfolded or no smt anyway; so just try to solve extensionally
                 solve_sub_probs env wl
-
-              end
 
             | _ ->
               let lhs = force_refinement (base1, refinement1) in
@@ -3876,29 +3914,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                 //  by generating reveal (hide ?u) == reveal y
                 //  and simplifying it to       ?u == reveal y
                 //
-                let payload_of_hide_reveal h args : option (universe & typ & term) =
-                    match h.n, args with
-                    | Tm_uinst(_, [u]), [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
-                      Some (u, ty, t)
-                    | _ -> None
-                in
-                let is_reveal_or_hide t =
-                  let h, args = U.head_and_args t in
-                  if U.is_fvar PC.reveal h
-                  then match payload_of_hide_reveal h args with
-                       | None -> None
-                       | Some t -> Some (Reveal t)
-                  else if U.is_fvar PC.hide h
-                  then match payload_of_hide_reveal h args with
-                       | None -> None
-                       | Some t -> Some (Hide t)
-                  else None
-                in
-                let mk_fv_app lid u args r =
-                  let fv = Env.fvar_of_nonqual_lid wl.tcenv lid in
-                  let head = S.mk_Tm_uinst fv [u]  in
-                  S.mk_Tm_app head args r
-                in
+                let mk_fv_app = mk_fv_app wl.tcenv in
                 match is_reveal_or_hide t1, is_reveal_or_hide t2 with
                 (* We only apply these first two rules when the arg to reveal
                 is a flex, to avoid loops such as:
