@@ -388,7 +388,7 @@ typeclassDecl:
       }
 
 restriction:
-  | LBRACE ids=separated_list(COMMA, id=ident renamed=option(AS id=ident {id} ) {(id, renamed)}) RBRACE
+  | LBRACE ids=separated_list(COMMA, id=identOrOperator renamed=option(AS id=identOrOperator {id} ) {(id, renamed)}) RBRACE
       { FStarC_Syntax_Syntax.AllowList ids }
   |   { FStarC_Syntax_Syntax.Unrestricted  }
 
@@ -865,6 +865,11 @@ qlidentOrOperator:
 
 %inline lidentOrOperator:
   | id=lident { id }
+  | LPAREN id=operator RPAREN
+    { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
+
+%inline identOrOperator:
+  | id=ident { id }
   | LPAREN id=operator RPAREN
     { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
 
