@@ -17,7 +17,7 @@
 module CDDL.Pulse
 #lang-pulse
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Stick
+open Pulse.Lib.Trade
 open CBOR.Spec
 open CBOR.Pulse
 open CDDL.Spec

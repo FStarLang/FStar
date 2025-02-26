@@ -16,7 +16,7 @@
 module Pulse.Lib.SpinLock
 
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Stick
+open Pulse.Lib.Trade
 
 module T = FStar.Tactics.V2
 

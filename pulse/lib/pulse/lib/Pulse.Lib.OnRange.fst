@@ -2,7 +2,7 @@ module Pulse.Lib.OnRange
 #lang-pulse
 
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Stick
+open Pulse.Lib.Trade
 
 let rec on_range
   ([@@@mkey]p: (nat -> slprop))
@@ -257,7 +257,7 @@ ensures on_range p i k ** (on_range p i k @==> (p i ** on_range p (i + 1) k))
   {
     rewrite (on_range p i k) as (p i ** on_range p (i + 1) k);
   };
-  Pulse.Lib.Stick.intro_stick _ _ _ aux;
+  Pulse.Lib.Trade.intro_trade _ _ _ aux;
   rewrite (p i ** on_range p (i + 1) k) as (on_range p i k);
 }
 
@@ -332,7 +332,7 @@ ensures on_range p i (j + 1) **  (on_range p i (j + 1) @==> (on_range p i j ** p
     on_range_unsnoc ();
     rewrite (p (j + 1 - 1)) as (p j)
   };
-  Pulse.Lib.Stick.intro_stick _ _ _ aux;
+  Pulse.Lib.Trade.intro_trade _ _ _ aux;
   on_range_snoc()
 }
 
@@ -407,7 +407,7 @@ ensures p j ** (p j @==> on_range p i k)
   {
     on_range_put i j k;
   };
-  Pulse.Lib.Stick.intro_stick _ _ _ aux;
+  Pulse.Lib.Trade.intro_trade _ _ _ aux;
 }
 
 

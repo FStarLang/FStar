@@ -19,7 +19,7 @@ module CBOR.Pulse
 include CBOR.Spec.Constants
 include CBOR.Pulse.Extern
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Stick
+open Pulse.Lib.Trade
 
 module Cbor = CBOR.Spec
 module A = Pulse.Lib.Array

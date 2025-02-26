@@ -15,8 +15,9 @@
 *)
 
 module Pulse.Lib.Trade
+#lang-pulse
 
-open Pulse.Lib.Core
+open Pulse.Lib.Pervasives
 
 module T = FStar.Tactics
 
@@ -33,6 +34,13 @@ let ( ==>* ) :
   (concl:slprop) ->
   slprop
   = fun #is -> trade #is
+
+unfold
+let ( @==> ) :
+  (hyp:slprop) ->
+  (concl:slprop) ->
+  slprop
+  = trade #emp_inames
 
 val intro_trade
   (#[T.exact (`emp_inames)] is:inames)
@@ -80,3 +88,9 @@ val trade_compose
     emp_inames
     (trade #is p q ** trade #is q r)
     (fun _ -> trade #is p r)
+
+ghost
+fn rewrite_with_trade
+  (p1 p2 : slprop)
+  requires p1 ** pure (p1 == p2)
+  ensures  p2 ** (p2 @==> p1)

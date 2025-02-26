@@ -5,7 +5,7 @@ open Pulse
 open Pulse.Lib.Trade
 module Trade = Pulse.Lib.Trade.Util
 include Pulse.Lib.SeqMatch
-open Pulse.Lib.Stick
+open Pulse.Lib.Trade
 
 ghost
 fn seq_list_match_nil_elim_trade

@@ -280,7 +280,7 @@ fn elim_inv_and_active_into_alive (l:lock) (v:slprop) (#p:perm)
     fold (lock_alive l #p v)
   };
 
-  intro_stick _ _ _ aux
+  intro_trade _ _ _ aux
 }
 
 
@@ -301,6 +301,6 @@ fn elim_alive_into_inv_and_active (l:lock) (v:slprop) (#p:perm)
       CInv.iname_of l.i as iname_of l,
       cinv_vp l.i (lock_inv l.r l.gr v) as iname_v_of l v
   };
-  intro_stick _ _ _ aux
+  intro_trade _ _ _ aux
 }
 

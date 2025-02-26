@@ -217,7 +217,7 @@ ensures is_list x 'l ** pure (n == k + List.Tot.length 'l)
 }
 
 
-module I = Pulse.Lib.Stick.Util
+module I = Pulse.Lib.Trade.Util
 open I
 
  //tail_for_cons$
@@ -425,7 +425,7 @@ ensures is_list x ('l1 @ 'l2)
 {
   let mut cur = x;
   //the base case, set up the initial invariant
-  FA.intro emp (fun l -> I.refl (is_list x l));
+  FA.intro emp (fun l -> I.refl #[] (is_list x l));
   rewrite (forall* l. is_list x l @==> is_list x l)
       as  (forall* l. is_list x l @==> is_list x ([]@l));
   while (

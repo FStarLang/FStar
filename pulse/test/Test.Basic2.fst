@@ -18,7 +18,7 @@ module Test.Basic2
 #lang-pulse
 
 open Pulse
-open Pulse.Lib.Stick.Util
+open Pulse.Lib.Trade.Util
 
 ghost
 fn test_trans (p q r:slprop)

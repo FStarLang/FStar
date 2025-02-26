@@ -16,7 +16,7 @@
 
 module Pulse.Lib.OnRange
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Stick
+open Pulse.Lib.Trade
 
 val on_range ([@@@mkey] p: (nat -> slprop))
              (i:nat)

@@ -17,7 +17,7 @@
 module Pulse.Lib.SeqMatch
 #lang-pulse
 include Pulse.Lib.Pervasives
-open Pulse.Lib.Stick
+open Pulse.Lib.Trade
 
 module Seq = FStar.Seq
 

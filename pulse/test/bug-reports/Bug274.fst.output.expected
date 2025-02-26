@@ -1,109 +1,109 @@
 >> Got issues: [
 * Error 228 at Bug274.fst(29,4-29,15):
   - Cannot prove any of:
-      Pulse.Lib.Stick.stick _ _ ** Pulse.Lib.Stick.stick _ _
+      Pulse.Lib.Trade.trade _ _ ** Pulse.Lib.Trade.trade _ _
   - In the context:
-      Pulse.Lib.Stick.stick p q ** Pulse.Lib.Stick.stick q r
+      Pulse.Lib.Trade.trade p q ** Pulse.Lib.Trade.trade q r
   - Some hints:
   - Ambiguous match for resource:
-      Pulse.Lib.Stick.stick _ _
+      Pulse.Lib.Trade.trade _ _
   - It can be matched by both:
-      Pulse.Lib.Stick.stick p q
+      Pulse.Lib.Trade.trade p q
     and:
-      Pulse.Lib.Stick.stick q r
+      Pulse.Lib.Trade.trade q r
     in the context.
   - Ambiguous match for resource:
-      Pulse.Lib.Stick.stick _ _
+      Pulse.Lib.Trade.trade _ _
   - It can be matched by both:
-      Pulse.Lib.Stick.stick p q
+      Pulse.Lib.Trade.trade p q
     and:
-      Pulse.Lib.Stick.stick q r
+      Pulse.Lib.Trade.trade q r
     in the context.
   - Ambiguous match for resource:
-      Pulse.Lib.Stick.stick _ _
+      Pulse.Lib.Trade.trade _ _
   - It can be matched by both:
-      Pulse.Lib.Stick.stick p q
+      Pulse.Lib.Trade.trade p q
     and:
-      Pulse.Lib.Stick.stick q r
+      Pulse.Lib.Trade.trade q r
     in the context.
   - Ambiguous match for resource:
-      Pulse.Lib.Stick.stick _ _
+      Pulse.Lib.Trade.trade _ _
   - It can be matched by both:
-      Pulse.Lib.Stick.stick p q
+      Pulse.Lib.Trade.trade p q
     and:
-      Pulse.Lib.Stick.stick q r
+      Pulse.Lib.Trade.trade q r
     in the context.
 
 >>]
 >> Got issues: [
 * Error 228 at Bug274.fst(41,4-41,15):
   - Cannot prove any of:
-      Pulse.Lib.Stick.stick _ _ ** Pulse.Lib.Stick.stick _ _
+      Pulse.Lib.Trade.trade _ _ ** Pulse.Lib.Trade.trade _ _
   - In the context:
-      Pulse.Lib.Stick.stick p q ** Pulse.Lib.Stick.stick q r
+      Pulse.Lib.Trade.trade p q ** Pulse.Lib.Trade.trade q r
   - Some hints:
   - Ambiguous match for resource:
-      Pulse.Lib.Stick.stick _ _
+      Pulse.Lib.Trade.trade _ _
   - It can be matched by both:
-      Pulse.Lib.Stick.stick q r
+      Pulse.Lib.Trade.trade q r
     and:
-      Pulse.Lib.Stick.stick p q
+      Pulse.Lib.Trade.trade p q
     in the context.
   - Ambiguous match for resource:
-      Pulse.Lib.Stick.stick _ _
+      Pulse.Lib.Trade.trade _ _
   - It can be matched by both:
-      Pulse.Lib.Stick.stick q r
+      Pulse.Lib.Trade.trade q r
     and:
-      Pulse.Lib.Stick.stick p q
+      Pulse.Lib.Trade.trade p q
     in the context.
   - Ambiguous match for resource:
-      Pulse.Lib.Stick.stick _ _
+      Pulse.Lib.Trade.trade _ _
   - It can be matched by both:
-      Pulse.Lib.Stick.stick q r
+      Pulse.Lib.Trade.trade q r
     and:
-      Pulse.Lib.Stick.stick p q
+      Pulse.Lib.Trade.trade p q
     in the context.
   - Ambiguous match for resource:
-      Pulse.Lib.Stick.stick _ _
+      Pulse.Lib.Trade.trade _ _
   - It can be matched by both:
-      Pulse.Lib.Stick.stick q r
+      Pulse.Lib.Trade.trade q r
     and:
-      Pulse.Lib.Stick.stick p q
+      Pulse.Lib.Trade.trade p q
     in the context.
 
 >>]
 >> Got issues: [
 * Error 228 at Bug274.fst(73,4-73,12):
   - Cannot prove any of:
-      _ ** Pulse.Lib.Stick.stick _ _
+      _ ** Pulse.Lib.Trade.trade _ _
   - In the context:
-      p ** Pulse.Lib.Stick.stick p q ** Pulse.Lib.Stick.stick r r
+      p ** Pulse.Lib.Trade.trade p q ** Pulse.Lib.Trade.trade r r
   - Some hints:
   - Ambiguous match for resource:
-      Pulse.Lib.Stick.stick _ _
+      Pulse.Lib.Trade.trade _ _
   - It can be matched by both:
-      Pulse.Lib.Stick.stick r r
+      Pulse.Lib.Trade.trade r r
     and:
-      Pulse.Lib.Stick.stick p q
+      Pulse.Lib.Trade.trade p q
     in the context.
   - Ambiguous match for resource:
       _
   - It can be matched by both:
-      Pulse.Lib.Stick.stick r r
+      Pulse.Lib.Trade.trade r r
     and:
-      Pulse.Lib.Stick.stick p q
+      Pulse.Lib.Trade.trade p q
     in the context.
   - Ambiguous match for resource:
-      Pulse.Lib.Stick.stick _ _
+      Pulse.Lib.Trade.trade _ _
   - It can be matched by both:
-      Pulse.Lib.Stick.stick r r
+      Pulse.Lib.Trade.trade r r
     and:
-      Pulse.Lib.Stick.stick p q
+      Pulse.Lib.Trade.trade p q
     in the context.
   - Ambiguous match for resource:
       _
   - It can be matched by both:
-      Pulse.Lib.Stick.stick r r
+      Pulse.Lib.Trade.trade r r
     and:
       p
     in the context.

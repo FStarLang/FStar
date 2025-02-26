@@ -17,7 +17,7 @@
 module Pulse.Lib.SeqMatch
 #lang-pulse
 open Pulse.Lib.OnRange
-open Pulse.Lib.Stick.Util
+open Pulse.Lib.Trade.Util
 
 module Seq = FStar.Seq
 
@@ -568,7 +568,7 @@ ensures
         c2' c2
         i j
   };
-  intro_stick
+  intro_trade
     (seq_seq_match p c1' c2' i j)
     (seq_seq_match p c1 c2 i j)
     emp
@@ -818,7 +818,7 @@ ensures
   {
     seq_list_match_seq_seq_match p c l
   };
-  intro_stick
+  intro_trade
     (seq_list_match c l p)
     (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l))
     emp
@@ -846,7 +846,7 @@ ensures
   {
     seq_seq_match_seq_list_match p c l
   }; 
-  intro_stick
+  intro_trade
     (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l))
     (seq_list_match c l p)
     emp
@@ -867,7 +867,7 @@ ensures
 {
   seq_list_match_seq_seq_match_with_implies p c l;
   seq_seq_match_length p _ _ _ _;
-  elim_stick
+  elim_trade
     (seq_seq_match p _ _ _ _)
     (seq_list_match c l p)
 }
@@ -892,13 +892,13 @@ ensures
 {
   seq_list_match_seq_seq_match_with_implies p s1 s2;
   let res : squash (i < Seq.length s1 /\ List.Tot.length s2 == Seq.length s1) = ();
-  rewrite_with_stick
+  rewrite_with_trade
     (seq_seq_match p s1 (Seq.seq_of_list s2) 0 (List.Tot.length s2))
     (on_range (seq_seq_match_item p s1 (Seq.seq_of_list s2)) 0 (List.Tot.length s2));
   trans _ _ (seq_list_match s1 s2 p);
   on_range_focus i;
   trans _ _ (seq_list_match s1 s2 p);
-  rewrite_with_stick
+  rewrite_with_trade
     (seq_seq_match_item p _ _ _)
     (p (Seq.index s1 i) (List.Tot.index s2 i));
   trans _ _ (seq_list_match s1 s2 p);

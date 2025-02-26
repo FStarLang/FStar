@@ -17,7 +17,7 @@
 module Bug274
 #lang-pulse
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Stick.Util
+open Pulse.Lib.Trade.Util
 
 // Ambiguous (we don't do backtracking)
 [@@expect_failure]

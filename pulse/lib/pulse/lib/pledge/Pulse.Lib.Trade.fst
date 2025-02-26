@@ -180,3 +180,31 @@ fn __trade_compose
 }
 
 let trade_compose = __trade_compose
+
+ghost
+fn eq_as_trade
+  (p1 p2 : slprop)
+  requires pure (p1 == p2)
+  ensures  p2 @==> p1
+{
+  ghost
+  fn aux ()
+    requires emp ** p2
+    ensures p1
+  {
+    rewrite p2 as p1;
+  };
+  intro_trade p2 p1 emp aux;
+  ();
+}
+
+ghost
+fn rewrite_with_trade
+  (p1 p2 : slprop)
+  requires p1 ** pure (p1 == p2)
+  ensures  p2 ** (p2 @==> p1)
+{
+  eq_as_trade p1 p2;
+  rewrite p1 as p2;
+  ();
+}

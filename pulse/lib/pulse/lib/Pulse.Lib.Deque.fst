@@ -2,7 +2,6 @@ module Pulse.Lib.Deque
 #lang-pulse
 
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Stick.Util
 open FStar.List.Tot
 open Pulse.Lib.Trade
 module Box = Pulse.Lib.Box

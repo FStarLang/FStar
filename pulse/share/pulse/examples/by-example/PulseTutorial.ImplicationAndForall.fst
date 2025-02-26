@@ -17,9 +17,9 @@
 module PulseTutorial.ImplicationAndForall
 #lang-pulse
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Stick.Util
+open Pulse.Lib.Trade.Util
 open Pulse.Lib.Forall.Util
-module I = Pulse.Lib.Stick.Util
+module I = Pulse.Lib.Trade.Util
 module GR = Pulse.Lib.GhostReference
 open GR
 
