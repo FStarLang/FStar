@@ -903,15 +903,25 @@ let splice
              (e_list RE.e_sigelt) tau tactic_already_typed ps
     in
 
-    // set delta depths in the sigelts fvs
+    // Set proper ranges in the sigelts. This is very important
+    // for the interactive mode, so that jump to definition works.
     let sigelts =
-      let set_lb_dd lb =
+      let proc_lb lb =
         let {lbname=Inr fv; lbdef} = lb in
-        {lb with lbname=Inr fv} in
+        let r =
+          (* If this name was provided in the definition list of the splice,
+          prefer that range. Otherwise set range to the full splice. *)
+          match tryFind (fun i -> Ident.lid_equals i fv.fv_name.v) lids with
+          | Some i -> pos i
+          | _ -> rng
+        in
+        let fv = setPos r fv in
+        {lb with lbname=Inr fv}
+      in
       List.map (fun se ->
         match se.sigel with
         | Sig_let {lbs=(is_rec, lbs); lids} ->
-          {se with sigel=Sig_let {lbs=(is_rec, List.map set_lb_dd lbs); lids}}
+          {se with sigel=Sig_let {lbs=(is_rec, List.map proc_lb lbs); lids}}
         | _ -> se
       ) sigelts
     in
