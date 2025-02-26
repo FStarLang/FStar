@@ -270,7 +270,7 @@ jobs:
       - name: Get Vale (again)
         run: ./hacl-star/tools/get_vale.sh
 
-      - run: sudo apt-get install -y libssl-dev
+      - run: sudo apt-get update && sudo apt-get install -y libssl-dev
 
       - name: Test
         run: make -C hacl-star -skj$(nproc) test
