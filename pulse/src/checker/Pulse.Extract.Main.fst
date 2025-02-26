@@ -481,8 +481,10 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
       let body = extract_dv g (open_st_term_nv body x) in
       ECL.mk_let b' allocator (close_term body x._2)
 
-    | Tm_Admit _ ->
-      ECL.mk_return ECL.unit_tm
+    | Tm_Admit { typ } ->
+      ECL.mk_meta_monadic
+        (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Prims"; "admit"])))
+          [typ, R.Q_Implicit; ECL.unit_tm, R.Q_Explicit])
 
     | Tm_Unreachable { c } ->
       ECL.mk_meta_monadic (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Dv"; "unreachable"])))
