@@ -467,6 +467,24 @@ let desugar_datacon (env:env_t) (l:lid) : err SW.fv =
   in
   return (SW.mk_fv (S.lid_of_fv sfv) rng)
 
+let close_st_term_binders qbs body =
+  let bvs = List.Tot.map (fun (_, _, b) -> b) qbs in
+  close_st_term_bvs body bvs
+
+let mk_abs_with_comp qbs comp body range =
+  let _, abs =
+    L.fold_right
+      (fun (q,b,bv) (c, body) ->
+        let body' = SW.close_st_term body (SW.index_of_bv bv) in
+        let asc =
+          match c with
+          | None -> None
+          | Some c -> Some  (SW.close_comp c (SW.index_of_bv bv)) in
+        None, SW.tm_abs b q asc body' range)
+      qbs (comp, body)
+  in
+  abs
+
 (* s has already been transformed with explicit dereferences for r-values *)
 let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
   : err SW.st_term
@@ -769,6 +787,25 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
           let! lam = desugar_lambda env lam in
           return <| mk_bind b lam s2 r
 
+        | Sugar.Lambda_initializer {
+            id; is_rec=false;
+            binders;
+            ascription=Inr ascription;
+            measure=None;
+            body=Inr body;
+            range
+          } ->
+          let! env, bs, bvs = desugar_binders env binders in
+          let! comp =
+            match ascription with
+            | None -> return (SW.mk_tot (SW.tm_unknown range))
+            | Some t -> let! t = desugar_term env t in return (SW.mk_tot t)
+          in
+          let! body = desugar_lambda env body in
+          let! qbs = map2 faux bs bvs in
+          let abs = mk_abs_with_comp qbs (Some comp) body range in
+          return <| mk_bind b abs s2 r
+
         | Sugar.Lambda_initializer _ ->
           fail "Nested functions are not yet fully supported" r
 
@@ -889,17 +926,7 @@ and desugar_lambda (env:env_t) (l:Sugar.lambda)
     in
     let! body = desugar_stmt env body in
     let! qbs = map2 faux bs bvs in
-    let _, abs =
-      L.fold_right 
-        (fun (q,b,bv) (c, body) ->
-          let body' = SW.close_st_term body (SW.index_of_bv bv) in
-          let asc =
-            match c with
-            | None -> None
-            | Some c -> Some  (SW.close_comp c (SW.index_of_bv bv)) in
-          None, SW.tm_abs b q asc body' range)
-        qbs (comp, body)
-    in
+    let abs = mk_abs_with_comp qbs comp body range in
     return abs
 
 and desugar_decl (env:env_t)
@@ -924,10 +951,6 @@ and desugar_decl (env:env_t)
     let init = L.init bs'' in
     let bs'' = init @ [last] in
     return (A.mk_term (A.Product (bs'', res_t)) r A.Expr)
-  in
-  let close_st_term_binders qbs body =
-    let bvs = List.Tot.map (fun (_, _, b) -> b) qbs in
-    close_st_term_bvs body bvs
   in
   match d with
   | Sugar.FnDefn { id; is_rec; binders; ascription=Inl ascription; measure; body=Inl body; range } ->
