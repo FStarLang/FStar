@@ -112,9 +112,9 @@ let recv (b: cvar_t) (p:slprop)
     SLT.pts_to b.core.tab i #0.5R p
 
 fn create (p:slprop)
-requires emp
-returns c:cvar_t
-ensures send c p ** recv c p
+  requires emp
+  returns c:cvar_t
+  ensures send c p ** recv c p
 {
   let r = Box.alloc 0ul;
   let tab = SLT.create ();
@@ -150,7 +150,7 @@ requires
   send b p ** p ** later_credit 1
 ensures 
   emp
-opens [inv_name b]
+  opens [inv_name b]
 {
   unfold send;
   unfold cvar;
@@ -178,8 +178,8 @@ opens [inv_name b]
 }
 
 fn signal (c:cvar_t) (#p:slprop)
-requires send c p ** p
-ensures emp
+  requires send c p ** p
+  ensures emp
 {
   later_credit_buy 1;
   signal_atomic c #p
@@ -215,7 +215,7 @@ requires
   SLT.is_table t (Seq.length preds) **
   SLT.pts_to t i #0.5R p **
   stored_predicates t (Seq.length preds) 0.5R preds
-returns _:squash (i < Seq.length preds)
+  returns _:squash (i < Seq.length preds)
 ensures
   SLT.is_table t (Seq.length preds) **
   SLT.pts_to t i #1.0R (Seq.index preds i) **

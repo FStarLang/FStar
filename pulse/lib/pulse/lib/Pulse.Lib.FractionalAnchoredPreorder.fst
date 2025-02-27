@@ -16,6 +16,7 @@
    Author: N. Swamy
 *)
 module Pulse.Lib.FractionalAnchoredPreorder
+#lang-pulse
 
 (** This module provides a partial commutative monoid (PCM) for use in
     the ghost state of a concurrent Pulse program.

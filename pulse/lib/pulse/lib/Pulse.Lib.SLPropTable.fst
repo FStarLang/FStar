@@ -21,9 +21,9 @@ let pts_to ([@@@mkey]t:table) ([@@@mkey]i:nat) (#f:perm) (p:slprop)
 
 ghost
 fn create ()
-requires emp
-returns t:table
-ensures is_table t 0
+  requires emp
+  returns t:table
+  ensures is_table t 0
 {
   let t = GT.create #slprop_ref;
   t

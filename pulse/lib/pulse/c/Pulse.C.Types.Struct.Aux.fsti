@@ -1,4 +1,5 @@
 module Pulse.C.Types.Struct.Aux
+#lang-pulse
 include Pulse.C.Types.Base
 
 // This module is `friend`ed by Pulse.C.Types.Struct and Pulse.C.Types.Array

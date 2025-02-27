@@ -36,7 +36,7 @@ fn cas_impl
     (#i:erased U32.t)
 requires
   pts_to r i
-returns b:bool
+  returns b:bool
 ensures
   cond b (pts_to r v ** pure (reveal i == u)) 
          (pts_to r i)

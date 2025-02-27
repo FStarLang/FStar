@@ -15,6 +15,8 @@
 *)
 
 module Pulse.Lib.Swap.Slice
+#lang-pulse
+
 open Pulse.Lib.Pervasives
 module SZ = FStar.SizeT
 module S = Pulse.Lib.Slice
@@ -42,7 +44,6 @@ val slice_swap
   )
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
 fn slice_swap'
   (#t: Type0)
   (a: S.slice t)
@@ -61,4 +62,3 @@ ensures
   Seq.lemma_split s' (SZ.v (S.len a) - SZ.v mb);
   assert (pure (Seq.equal s' (Seq.append s2 s1)));
 }
-```

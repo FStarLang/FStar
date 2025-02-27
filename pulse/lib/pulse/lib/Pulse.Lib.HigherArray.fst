@@ -180,8 +180,8 @@ fn pts_to_len'
   (a:array elt)
   (#p:perm)
   (#x:Seq.seq elt)
-requires pts_to a #p x
-ensures pts_to a #p x ** pure (length a == Seq.length x)
+  requires pts_to a #p x
+  ensures pts_to a #p x ** pure (length a == Seq.length x)
 {
   unfold pts_to a #p x;
   fold pts_to a #p x;
@@ -195,8 +195,8 @@ fn alloc'
     (#elt: Type u#1)
     (x: elt)
     (n: SZ.t)
-requires emp
-returns a:array elt
+  requires emp
+  returns a:array elt
 ensures 
   pts_to a (Seq.create (SZ.v n) x) **
   pure (length a == SZ.v n /\ is_full_array a)
@@ -218,8 +218,8 @@ fn read
     (i: SZ.t)
     (#p: perm)
     (#s: Ghost.erased (Seq.seq t){SZ.v i < Seq.length s})
-requires pts_to a #p s
-returns res:t
+  requires pts_to a #p s
+  returns res:t
 ensures 
     pts_to a #p s **
     pure (res == Seq.index s (SZ.v i))
@@ -259,8 +259,8 @@ fn write
     (i: SZ.t)
     (v: t)
     (#s: Ghost.erased (Seq.seq t) {SZ.v i < Seq.length s})
-requires pts_to a s
-ensures pts_to a (Seq.upd s (SZ.v i) v)
+  requires pts_to a s
+  ensures pts_to a (Seq.upd s (SZ.v i) v)
 {
   unfold pts_to a #1.0R s;
   with w. assert (pcm_pts_to (lptr_of a) w);
@@ -314,7 +314,7 @@ fn mk_carrier_share
   (s: Seq.seq elt)
   (p1 p2: perm)
   (_:squash (valid_sum_perm len offset (Seq.length s) p1 p2))
-requires emp
+  requires emp
 ensures 
 (
   // let c1 = (mk_carrier len offset s p1) in
@@ -339,8 +339,8 @@ fn share'
   (arr:array elt)
   (#s:Ghost.erased (Seq.seq elt))
   (#p:perm)
-requires pts_to arr #p s
-ensures pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s
+  requires pts_to arr #p s
+  ensures pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s
 {
   unfold pts_to arr #p s;
   with w. assert (pcm_pts_to (lptr_of arr) w);
@@ -409,8 +409,8 @@ let mk_carrier_valid_sum_perm
 
 ghost
 fn of_squash (#p:prop) (s:squash p)
-requires emp
-ensures pure p
+  requires emp
+  ensures pure p
 {
   ()
 }
@@ -423,8 +423,8 @@ fn gather'
   (arr:array a)
   (#s0 #s1:Ghost.erased (Seq.seq a))
   (#p0 #p1:perm)
-requires pts_to arr #p0 s0 ** pts_to arr #p1 s1
-ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
+  requires pts_to arr #p0 s0 ** pts_to arr #p1 s1
+  ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
 {
   unfold pts_to arr #p0 s0;
   with w0. assert (pcm_pts_to (lptr_of arr) w0);
@@ -489,8 +489,8 @@ let in_bounds (i j:nat) (s:array 'a) = squash (i <= j /\ j <= length s)
 
 ghost
 fn elim_in_bounds (#elt:Type) (#i #j:nat) (s:array elt) (p:in_bounds i j s)
-requires emp
-ensures pure (i <= j /\ j <= length s)
+  requires emp
+  ensures pure (i <= j /\ j <= length s)
 {
   ()
 }
@@ -527,8 +527,8 @@ fn pts_to_range_prop'
   (#i #j: nat)
   (#p: perm)
   (#s: Seq.seq elt)
-requires pts_to_range a i j #p s
-ensures pts_to_range a i j #p s ** pure (
+  requires pts_to_range a i j #p s
+  ensures pts_to_range a i j #p s ** pure (
       (i <= j /\ j <= length a /\ Seq.length s == j - i)
     )
 {
@@ -548,8 +548,8 @@ fn pts_to_range_intro'
   (a: array elt)
   (p: perm)
   (s: Seq.seq elt)
-requires pts_to a #p s
-ensures pts_to_range a 0 (length a) #p s
+  requires pts_to a #p s
+  ensures pts_to_range a 0 (length a) #p s
 {
   rewrite each a as (array_slice a 0 (length a));
   let q : in_bounds 0 (length a) a = ();
@@ -567,8 +567,8 @@ fn pts_to_range_elim'
   (a: array elt)
   (p: perm)
   (s: Seq.seq elt)
-requires pts_to_range a 0 (length a) #p s
-ensures pts_to a #p s
+  requires pts_to_range a 0 (length a) #p s
+  ensures pts_to a #p s
 {
   unfold (pts_to_range a 0 (length a) #p s);
   unfold (token #(in_bounds 0 (length a) a) a _);
@@ -599,8 +599,8 @@ let mk_carrier_split
 
 ghost
 fn use_squash (#p:prop) (s:squash p)
-requires emp
-ensures pure p
+  requires emp
+  ensures pure p
 {
   ()
 }
@@ -614,8 +614,8 @@ fn ghost_split
   (#p: perm)
   (a: array elt)
   (i: nat {i <= length a})
-requires pts_to a #p x
-returns _: squash (i <= length a /\ i <= Seq.length x)
+  requires pts_to a #p x
+  returns _: squash (i <= length a /\ i <= Seq.length x)
 ensures
     pts_to (split_r a i) #p (Seq.slice x i (Seq.length x)) **
     pts_to (split_l a i) #p (Seq.slice x 0 i) **
@@ -653,8 +653,8 @@ fn split_l_slice #elt
      (#s:Seq.seq elt)
      (#p:perm)
      (_:squash (i <= m /\ m <= j /\ j <= length a))
-requires pts_to (split_l (array_slice a i j) (m - i)) #p s
-ensures  pts_to (array_slice a i m) #p s
+  requires pts_to (split_l (array_slice a i j) (m - i)) #p s
+  ensures  pts_to (array_slice a i m) #p s
 {
   rewrite each (split_l (array_slice a i j) (m - i))
              as (array_slice a i m);
@@ -669,8 +669,8 @@ fn split_r_slice #elt
      (#s:Seq.seq elt)
      (#p:perm)
      (_:squash (i <= m /\ m <= j /\ j <= length a))
-requires pts_to (split_r (array_slice a i j) (m - i)) #p s
-ensures pts_to (array_slice a m j) #p s
+  requires pts_to (split_r (array_slice a i j) (m - i)) #p s
+  ensures pts_to (array_slice a m j) #p s
 {
   rewrite each (split_r (array_slice a i j) (m - i)) as (array_slice a m j);
 }
@@ -754,8 +754,8 @@ fn ghost_join
   (#p: perm)
   (a1 a2: array elt)
   (h: squash (adjacent a1 a2))
-requires pts_to a1 #p x1 ** pts_to a2 #p x2
-ensures pts_to (merge a1 a2) #p (x1 `Seq.append` x2)
+  requires pts_to a1 #p x1 ** pts_to a2 #p x2
+  ensures pts_to (merge a1 a2) #p (x1 `Seq.append` x2)
 {
   unfold pts_to a1 #p x1;
   unfold pts_to a2 #p x2;
@@ -785,8 +785,8 @@ fn pts_to_range_intro_ij
   (s: Seq.seq elt)
   (i j: nat)
   (_:squash (i <= j /\ j <= length a))
-requires pts_to (array_slice a i j) #p s
-ensures pts_to_range a i j #p s
+  requires pts_to (array_slice a i j) #p s
+  ensures pts_to_range a i j #p s
 {
   let q : in_bounds i j a = ();
   fold (token #(in_bounds i j a) a q);
@@ -804,7 +804,7 @@ fn pts_to_range_join'
   (#s1 #s2: Seq.seq elt)
 requires
   pts_to_range a i m #p s1 ** pts_to_range a m j #p s2
-ensures pts_to_range a i j #p (s1 `Seq.append` s2)
+  ensures pts_to_range a i j #p (s1 `Seq.append` s2)
 {
   pts_to_range_prop a #i #m;
   pts_to_range_prop a #m #j;
@@ -839,8 +839,8 @@ fn pts_to_range_index'
   (#r: Ghost.erased nat{SZ.v i < r})
   (#s: Ghost.erased (Seq.seq t))
   (#p: perm)
-requires pts_to_range a l r #p s
-returns res:t
+  requires pts_to_range a l r #p s
+  returns res:t
 ensures
   pts_to_range a l r #p s **
   pure (eq2 #int (Seq.length s) (r - l) /\
@@ -870,7 +870,7 @@ fn pts_to_range_upd'
   (#l: Ghost.erased nat{l <= SZ.v i})
   (#r: Ghost.erased nat{SZ.v i < r})
   (#s0: Ghost.erased (Seq.seq t))
-requires pts_to_range a l r #1.0R s0
+  requires pts_to_range a l r #1.0R s0
 ensures
   exists* s.
     pts_to_range a l r s **

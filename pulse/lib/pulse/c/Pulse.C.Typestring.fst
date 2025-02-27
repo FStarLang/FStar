@@ -1,4 +1,5 @@
 module Pulse.C.Typestring
+#lang-pulse
 
 let ca: Type0 = unit
 let cb: Type0 = unit

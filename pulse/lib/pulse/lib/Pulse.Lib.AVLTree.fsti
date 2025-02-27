@@ -19,6 +19,7 @@
 //Pulse AVL tree interface. Inspired from Steel. The FStar spec file is adopted from Steel
 //----------------------------------------------------------------------------------------------------------
 module Pulse.Lib.AVLTree
+#lang-pulse
 open Pulse.Lib.Pervasives
 
 module T = Pulse.Lib.Spec.AVLTree

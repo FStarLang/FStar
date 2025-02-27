@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.PCM.FractionalPreorder
+#lang-pulse
 
 open FStar.PCM
 open FStar.Preorder

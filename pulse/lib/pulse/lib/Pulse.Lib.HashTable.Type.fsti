@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.HashTable.Type
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 module V = Pulse.Lib.Vec

@@ -40,8 +40,8 @@ let vec_to_array v = v
 
 ghost
 fn to_array_pts_to (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
-requires pts_to v #p s
-ensures A.pts_to (vec_to_array v) #p s
+  requires pts_to v #p s
+  ensures A.pts_to (vec_to_array v) #p s
 {
   rewrite (pts_to v #p s) as
           (A.pts_to (vec_to_array v) #p s);
@@ -49,8 +49,8 @@ ensures A.pts_to (vec_to_array v) #p s
 
 ghost
 fn to_vec_pts_to (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
-requires A.pts_to (vec_to_array v) #p s
-ensures pts_to v #p s
+  requires A.pts_to (vec_to_array v) #p s
+  ensures pts_to v #p s
 {
    rewrite (A.pts_to (vec_to_array v) #p s)
         as (pts_to v #p s)

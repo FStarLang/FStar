@@ -47,8 +47,8 @@ let rec is_tree #t ct ft = match ft with
 
 ghost
 fn elim_is_tree_leaf (#t:Type0) (x:tree_t t)
-requires is_tree x T.Leaf 
-ensures pure (x == None)                 
+  requires is_tree x T.Leaf
+  ensures pure (x == None)
 {
    unfold (is_tree x T.Leaf) 
 }
@@ -57,8 +57,8 @@ ensures pure (x == None)
 
 ghost
 fn intro_is_tree_leaf (#t:Type0) (x:tree_t t) 
-requires pure (x == None) 
-ensures is_tree x T.Leaf 
+  requires pure (x == None)
+  ensures is_tree x T.Leaf
 {
   fold (is_tree x T.Leaf); 
 }
@@ -67,8 +67,8 @@ ensures is_tree x T.Leaf
 
 ghost
 fn elim_is_tree_node (#t:Type0) (ct:tree_t t) (data:t) (ltree:T.tree t) (rtree:T.tree t)
-requires is_tree ct (T.Node data ltree rtree)
-ensures (
+  requires is_tree ct (T.Node data ltree rtree)
+  ensures (
   exists* (p:node_ptr t) (lct:tree_t t) (rct:tree_t t).
     pure (ct == Some p) **
     pts_to p { data; left = lct;right = rct } **
@@ -110,8 +110,8 @@ let is_tree_cases #t (x : option (ref (node t))) (ft : T.tree t)
 
 ghost
 fn cases_of_is_tree #t (x:tree_t t) (ft:T.tree t)
-requires is_tree x ft
-ensures  is_tree_cases x ft
+  requires is_tree x ft
+  ensures  is_tree_cases x ft
 {
   match ft {
     T.Leaf -> {
@@ -134,8 +134,8 @@ ensures  is_tree_cases x ft
  
 ghost
 fn is_tree_case_none (#t:Type) (x:tree_t t) (#l:T.tree t)
-requires is_tree x l ** pure (x == None)
-ensures  is_tree x l ** pure (l == T.Leaf)
+  requires is_tree x l ** pure (x == None)
+  ensures  is_tree x l ** pure (l == T.Leaf)
 {
   rewrite each x as None;
   cases_of_is_tree None l;
@@ -149,7 +149,7 @@ ensures  is_tree x l ** pure (l == T.Leaf)
  
 ghost
 fn is_tree_case_some (#t:Type) (x:tree_t t) (v:node_ptr t) (#ft:T.tree t) 
-requires is_tree x ft ** pure (x == Some v)
+  requires is_tree x ft ** pure (x == Some v)
 ensures
    exists* (node:node t) (ltree:T.tree t) (rtree:T.tree t).
     pts_to v node **
@@ -168,9 +168,9 @@ ensures
 
  
 fn rec height (#t:Type0) (x:tree_t t)
-requires is_tree x 'l
-returns n:nat
-ensures is_tree x 'l ** pure (n == T.height 'l)
+  requires is_tree x 'l
+  returns n:nat
+  ensures is_tree x 'l ** pure (n == T.height 'l)
 {
    match x {
     None -> {
@@ -250,9 +250,9 @@ fn node_cons (#t:Type0) (v:t) (ltree:tree_t t) (rtree:tree_t t) (#l:(T.tree t)) 
 /// Appends value [v] at the leftmost leaf of the tree that [ptr] points to.
 
 fn rec append_left_none (#t:Type0) (x:tree_t t) (v:t) (#ft:G.erased (T.tree t))
-requires is_tree x ft ** pure (None? x)
-returns y:tree_t t
-ensures is_tree x ft  ** is_tree y (T.Node v T.Leaf T.Leaf)
+  requires is_tree x ft ** pure (None? x)
+  returns y:tree_t t
+  ensures is_tree x ft  ** is_tree y (T.Node v T.Leaf T.Leaf)
 {
   let left = create t;
   let right = create t;
@@ -263,9 +263,9 @@ ensures is_tree x ft  ** is_tree y (T.Node v T.Leaf T.Leaf)
 
 
 fn rec append_left (#t:Type0) (x:tree_t t) (v:t) (#ft:G.erased (T.tree t))
-requires is_tree x ft
-returns y:tree_t t
-ensures is_tree y  (T.append_left ft v)
+  requires is_tree x ft
+  returns y:tree_t t
+  ensures is_tree y  (T.append_left ft v)
 {
    match x {
     None -> {
@@ -317,9 +317,9 @@ ensures is_tree y  (T.append_left ft v)
 
 
 fn rec append_right (#t:Type0) (x:tree_t t) (v:t) (#ft:G.erased (T.tree t))
-requires is_tree x ft
-returns y:tree_t t
-ensures is_tree y  (T.append_right ft v)
+  requires is_tree x ft
+  returns y:tree_t t
+  ensures is_tree y  (T.append_right ft v)
 {
    match x {
     None -> {
@@ -433,8 +433,8 @@ fn rec mem (#t:eqtype) (x:tree_t t) (v: t) (#ft:G.erased (T.tree t))
 
 
 fn get_some_ref (#t:Type) (x:tree_t t)
-requires is_tree x 'l ** pure (T.Node? 'l)
-returns v:node_ptr t
+  requires is_tree x 'l ** pure (T.Node? 'l)
+  returns v:node_ptr t
 ensures  
   exists* (node:node t) (ltree:T.tree t) (rtree:T.tree t).
     pure (x == Some v) **
@@ -562,9 +562,9 @@ module M = FStar.Math.Lib
 
 
 fn rec is_balanced (#t:Type0) (tree:tree_t t)
-requires is_tree tree 'l
-returns b:bool
-ensures is_tree tree 'l ** pure (b <==> (T.is_balanced 'l))
+  requires is_tree tree 'l
+  returns b:bool
+  ensures is_tree tree 'l ** pure (b <==> (T.is_balanced 'l))
 {
   match tree {
     None -> {
@@ -600,9 +600,9 @@ ensures is_tree tree 'l ** pure (b <==> (T.is_balanced 'l))
 
 
 fn rec  rebalance_avl (#t:Type0) (tree:tree_t t) (#l:G.erased(T.tree t))
-requires is_tree tree l
-returns y:tree_t t 
-ensures (is_tree y (T.rebalance_avl l))
+  requires is_tree tree l
+  returns y:tree_t t
+  ensures (is_tree y (T.rebalance_avl l))
 {
   let b = is_balanced tree;
   match tree {
@@ -717,9 +717,9 @@ ensures (is_tree y (T.rebalance_avl l))
 
 
 fn rec insert_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
-requires is_tree tree 'l
-returns y:tree_t t 
-ensures (is_tree y (T.insert_avl cmp 'l key))
+  requires is_tree tree 'l
+  returns y:tree_t t
+  ensures (is_tree y (T.insert_avl cmp 'l key))
 {
   match tree {
     None -> {
@@ -776,8 +776,8 @@ ensures (is_tree y (T.insert_avl cmp 'l key))
  
 ghost
 fn is_tree_case_some1 (#t:Type) (x:tree_t t) (v:node_ptr t) (#ft:T.tree t) 
-requires is_tree x ft ** pure (x == Some v)
-ensures  is_tree x ft ** pure (T.Node? ft)
+  requires is_tree x ft ** pure (x == Some v)
+  ensures  is_tree x ft ** pure (T.Node? ft)
 {
   rewrite each x as Some v;
   cases_of_is_tree (Some v) ft;

@@ -1,4 +1,5 @@
 module Pulse.C.Typestring
+#lang-pulse
 
 (** Suppose [struct (t : string) (fields : struct_fields)] represents the type of struct values.
     Then, when extracting values of type [ref (struct t fields)], the tag t is lost.

@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Class.Duplicable
+#lang-pulse
 
 open Pulse.Lib.Core
 

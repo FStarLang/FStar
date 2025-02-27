@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Box
+#lang-pulse
 
 open FStar.Ghost
 open PulseCore.FractionalPermission

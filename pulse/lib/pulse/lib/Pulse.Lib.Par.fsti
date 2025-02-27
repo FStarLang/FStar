@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module Pulse.Lib.Par
+#lang-pulse
 open Pulse.Lib.Core
 
 val par_stt

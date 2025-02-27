@@ -1,4 +1,5 @@
 module Pulse.Lib.Sort.Merge.Spec
+#lang-pulse
 open Pulse.Lib.Pervasives
 
 [@@noextract_to "krml"] noextract

@@ -1,4 +1,5 @@
 module Pulse.Lib.PCM.Array
+#lang-pulse
 module P = Pulse.Lib.PCM.Fraction
 module M = FStar.Map
 module PM = Pulse.Lib.PCM.Map

@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.PCM.Product
+#lang-pulse
 
 //
 // A PCM for product of two PCMs

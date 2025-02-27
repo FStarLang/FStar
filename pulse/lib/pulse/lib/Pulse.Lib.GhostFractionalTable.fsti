@@ -12,9 +12,9 @@ val pts_to #a ([@@@mkey] t:table a) (i:nat) (#f:perm) (p:a) : slprop
 
 ghost
 fn create (#a:Type)
-requires emp
-returns t:table a
-ensures is_table t 0
+  requires emp
+  returns t:table a
+  ensures is_table t 0
 
 ghost
 fn update #a (t:table a) (#i:nat) (#old:a) (p: a)

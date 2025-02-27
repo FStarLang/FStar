@@ -438,8 +438,8 @@ let trigger (x:'a) : slprop = emp
 
 
 fn append_iter (#t:Type) (x y:llist t)
-requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
-ensures is_list x ('l1 @ 'l2)
+  requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
+  ensures is_list x ('l1 @ 'l2)
 {
   let mut cur = x;
   (* the base case, set up the initial invariant *)
@@ -495,9 +495,9 @@ ensures is_list x ('l1 @ 'l2)
 
 
 fn detach_next (#t:Type) (x:llist t)
-requires is_list x 'l ** pure (Some? x)
-returns y:llist t
-ensures exists* hd tl.
+  requires is_list x 'l ** pure (Some? x)
+  returns y:llist t
+  ensures exists* hd tl.
     is_list x [hd] **
     is_list y tl **
     pure ('l == hd::tl)
@@ -587,8 +587,8 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
 
 
 fn insert (#kk:Type0) (x:llist kk) (item:kk) (pos:U32.t) (#xl:erased (list kk))
-requires is_list x xl ** pure (Some? x /\ 0 < v pos /\ v pos < List.Tot.length xl)
-ensures exists* l0 l1.
+  requires is_list x xl ** pure (Some? x /\ 0 < v pos /\ v pos < List.Tot.length xl)
+  ensures exists* l0 l1.
   is_list x (l0 @ item :: l1) **
   pure (
       xl == l0 @ l1 /\
@@ -605,8 +605,8 @@ ensures exists* l0 l1.
 
 
 fn delete (#kk:Type0) (x:llist kk) (item:kk) (pos:U32.t) (#xl:erased (list kk))
-requires is_list x xl ** pure (Some? x /\ 0 < v pos /\ v pos < List.Tot.length xl)
-ensures exists* l0 l1.
+  requires is_list x xl ** pure (Some? x /\ 0 < v pos /\ v pos < List.Tot.length xl)
+  ensures exists* l0 l1.
   is_list x (l0 @ item :: l1) **
   pure (
       xl == l0 @ l1 /\

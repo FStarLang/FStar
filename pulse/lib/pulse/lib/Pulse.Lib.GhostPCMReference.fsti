@@ -1,4 +1,5 @@
 module Pulse.Lib.GhostPCMReference
+#lang-pulse
 open Pulse.Lib.Pervasives
 open FStar.PCM
 

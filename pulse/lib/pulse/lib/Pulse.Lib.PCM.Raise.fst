@@ -1,4 +1,5 @@
 module Pulse.Lib.PCM.Raise
+#lang-pulse
 open FStar.PCM
 module U = FStar.Universe
 

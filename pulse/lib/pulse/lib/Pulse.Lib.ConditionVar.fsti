@@ -26,26 +26,26 @@ val send (c:cvar_t) (p:slprop) : slprop
 val recv (c:cvar_t) (p:slprop) : slprop
 
 fn create (p:slprop)
-requires emp
-returns c:cvar_t
-ensures send c p ** recv c p
+  requires emp
+  returns c:cvar_t
+  ensures send c p ** recv c p
 
 atomic
 fn signal_atomic (c:cvar_t) (#p:slprop)
-requires send c p ** p ** later_credit 1
-ensures emp
-opens [ inv_name c ]
+  requires send c p ** p ** later_credit 1
+  ensures emp
+  opens [ inv_name c ]
 
 fn signal (c:cvar_t) (#p:slprop)
-requires send c p ** p
-ensures emp
+  requires send c p ** p
+  ensures emp
 
 fn wait (b:cvar_t) (#p:slprop)
-requires recv b p
-ensures p
+  requires recv b p
+  ensures p
 
 ghost
 fn split (b:cvar_t) (#p #q:slprop)
-requires recv b (p ** q) ** later_credit 2
-ensures recv b p ** recv b q
-opens [ inv_name b ]
+  requires recv b (p ** q) ** later_credit 2
+  ensures recv b p ** recv b q
+  opens [ inv_name b ]

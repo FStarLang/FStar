@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Array.Core
+#lang-pulse
 open FStar.Tactics.V2
 open Pulse.Lib.Core
 open Pulse.Class.PtsTo
