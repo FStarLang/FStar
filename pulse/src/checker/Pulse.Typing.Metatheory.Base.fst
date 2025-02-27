@@ -186,28 +186,32 @@ let comp_typing_weakening (g:env) (g':env { disjoint g g' })
   | CT_STGhost _ inames _ _ d ->
     CT_STGhost _ inames _ (RU.magic ()) (st_comp_typing_weakening g g' d g1)
 
-#push-options "--split_queries no --z3rlimit_factor 8 --fuel 1 --ifuel 1"
+#push-options "--split_queries no --z3rlimit_factor 4 --fuel 1 --ifuel 1"
 let rec st_typing_weakening g g' t c d g1
   : Dv (st_typing (push_env (push_env g g1) g') t c)
         (decreases d) =
   
   match d with
   | T_Abs g x q b u body c b_typing body_typing ->
+    FStar.Pure.BreakVC.break_vc();
     // T_Abs is used only at the top, should not come up
     assume false;
     let x = fresh (push_env (push_env g g1) g') in
     T_Abs g x q b u body c (RU.magic #(tot_typing _ _ _) ()) 
                           (st_typing_weakening g g' body c body_typing g1)
   | T_STApp _ head ty q res arg _ _ ->
+    FStar.Pure.BreakVC.break_vc();
     T_STApp _ head ty q res arg (RU.magic #(tot_typing _ _ _) ()) (RU.magic #(tot_typing _ _ _) ())
 
   | T_STGhostApp _ head ty q res arg _ _ _ _ ->
+    FStar.Pure.BreakVC.break_vc();
     // candidate for renaming
     let x = fresh (push_env (push_env g g1) g') in
     assume (~ (x `Set.mem` freevars_comp res));
     T_STGhostApp _ head ty q res arg x (RU.magic ()) (RU.magic ()) (RU.magic ())
 
   | T_Return _ c use_eq u t e post x_old _ _ _ ->
+    FStar.Pure.BreakVC.break_vc();
     let x = fresh (push_env (push_env g g1) g') in
     assume (~ (x `Set.mem` freevars post));
     // x is only used to open and then close
@@ -216,10 +220,12 @@ let rec st_typing_weakening g g' t c d g1
     T_Return _ c use_eq u t e post x (RU.magic ()) (RU.magic ()) (RU.magic ())
 
   | T_Lift _ e c1 c2 d_c1 d_lift ->
+    FStar.Pure.BreakVC.break_vc();
     T_Lift _ e c1 c2 (st_typing_weakening g g' e c1 d_c1 g1)
                      (lift_comp_weakening g g' d_lift g1)
 
   | T_Bind _ e1 e2 c1 c2 b x c d_e1 _ d_e2 d_bc ->
+    FStar.Pure.BreakVC.break_vc();
     let d_e1 : st_typing (push_env (push_env g g1) g') e1 c1 =
       st_typing_weakening g g' e1 c1 d_e1 g1 in
     //
@@ -254,6 +260,7 @@ let rec st_typing_weakening g g' t c d g1
     T_Bind _ e1 e2 c1 c2 b x c d_e1 (RU.magic ()) d_e2 d_bc
 
   | T_BindFn _ e1 e2 c1 c2 b x d_e1 u _ d_e2 c2_typing  ->
+    FStar.Pure.BreakVC.break_vc();
     let d_e1 : st_typing (push_env (push_env g g1) g') e1 c1 =
       st_typing_weakening g g' e1 c1 d_e1 g1 in
     //
@@ -288,6 +295,7 @@ let rec st_typing_weakening g g' t c d g1
     T_BindFn _ e1 e2 c1 c2 b x d_e1 u (RU.magic #(tot_typing _ _ _) ()) d_e2 c2_typing
 
   | T_If _ b e1 e2 c hyp _ d_e1 d_e2 _ ->
+    FStar.Pure.BreakVC.break_vc();
     assume (~ (hyp `Set.mem` dom g'));
     assume (~ (hyp `Set.mem` dom g1));
     let d_e1
@@ -326,6 +334,7 @@ let rec st_typing_weakening g g' t c d g1
     T_If _ b e1 e2 c hyp (RU.magic ()) d_e1 d_e2 (RU.magic ())
   
   | T_Match _ sc_u sc_ty sc d_sc_ty d_sc c c_typing brs d_brs d_pats_complete ->
+    FStar.Pure.BreakVC.break_vc();
     admit();
     T_Match (push_env (push_env g g1) g')
             sc_u sc_ty sc
@@ -336,30 +345,39 @@ let rec st_typing_weakening g g' t c d g1
             d_pats_complete
 
   | T_Frame _ e c frame _ d_e ->
+    FStar.Pure.BreakVC.break_vc();
     T_Frame _ e c frame (RU.magic ()) (st_typing_weakening g g' e c d_e g1)
 
   | T_Equiv _ e c c' d_e d_eq ->
+    FStar.Pure.BreakVC.break_vc();
     T_Equiv _ e c c' (st_typing_weakening g g' e c d_e g1) (st_equiv_weakening g g' d_eq g1)
 
   | T_Sub _ e c c' d_e d_sub ->
+    FStar.Pure.BreakVC.break_vc();
     T_Sub _ e c c' (st_typing_weakening g g' e c d_e g1) (st_sub_weakening g g' d_sub g1)
 
-  | T_IntroPure _ p _ token -> T_IntroPure _ p (RU.magic ()) (prop_validity_token_weakening token _)
+  | T_IntroPure _ p _ token ->
+    FStar.Pure.BreakVC.break_vc();
+    T_IntroPure _ p (RU.magic ()) (prop_validity_token_weakening token _)
 
   | T_ElimExists _ u t p x _ _ ->
+    FStar.Pure.BreakVC.break_vc();
     assume (~ (x `Set.mem` dom g'));
     assume (~ (x `Set.mem` dom g1));
     T_ElimExists _ u t p x (RU.magic ()) (RU.magic ())
 
   | T_IntroExists _ u b p e _ _ _ ->
+    FStar.Pure.BreakVC.break_vc();
     T_IntroExists _ u b p e (RU.magic ()) (RU.magic ()) (RU.magic ())
 
   | T_While _ inv cond body _ cond_typing body_typing ->
+    FStar.Pure.BreakVC.break_vc();
     T_While _ inv cond body (RU.magic ())
       (st_typing_weakening g g' cond (comp_while_cond ppname_default inv) cond_typing g1)
       (st_typing_weakening g g' body (comp_while_body ppname_default inv) body_typing g1)
 
   | T_Par _ eL cL eR cR x cL_typing cR_typing eL_typing eR_typing ->
+    FStar.Pure.BreakVC.break_vc();
     assume (~ (x `Set.mem` dom g'));
     assume (~ (x `Set.mem` dom g1));
     T_Par _ eL cL eR cR x
@@ -369,6 +387,7 @@ let rec st_typing_weakening g g' t c d g1
       (st_typing_weakening g g' eR cR eR_typing g1)
 
   | T_WithLocal _ ppname init body init_t c x _ _ d_c d_body ->
+    FStar.Pure.BreakVC.break_vc();
     assume (~ (x `Set.mem` dom g'));
     assume (~ (x `Set.mem` dom g1));
     let d_body
@@ -397,6 +416,7 @@ let rec st_typing_weakening g g' t c d g1
       d_body
 
   | T_WithLocalArray _ ppname init len body init_t c x _ _ _ d_c d_body ->
+    FStar.Pure.BreakVC.break_vc();
     assume (~ (x `Set.mem` dom g'));
     assume (~ (x `Set.mem` dom g1));
     let d_body
@@ -424,14 +444,20 @@ let rec st_typing_weakening g g' t c d g1
       (comp_typing_weakening g g' d_c g1)
       d_body
 
-  | T_Rewrite _ p q _ _ -> T_Rewrite _ p q (RU.magic ()) (RU.magic ())
+  | T_Rewrite _ p q _ _ ->
+    FStar.Pure.BreakVC.break_vc();
+    T_Rewrite _ p q (RU.magic ()) (RU.magic ())
 
-  | T_Admit _ c d_c -> T_Admit _ c (comp_typing_weakening g g' d_c g1)
+  | T_Admit _ c d_c ->
+    FStar.Pure.BreakVC.break_vc();
+    T_Admit _ c (comp_typing_weakening g g' d_c g1)
 
   | T_Unreachable _ c d_c tok ->
+    FStar.Pure.BreakVC.break_vc();
     T_Unreachable _ c (comp_typing_weakening g g' d_c g1) (RU.magic ())  // weaken tok
 
   | T_WithInv  _ _ _ _ _ i_typing p_typing body_typing tok ->
+    FStar.Pure.BreakVC.break_vc();
     T_WithInv _ _ _ _ _ (tot_typing_weakening g g' _ _ i_typing g1)
                         (tot_typing_weakening g g' _ _ p_typing g1)
                         (st_typing_weakening g g' _ _ body_typing g1)

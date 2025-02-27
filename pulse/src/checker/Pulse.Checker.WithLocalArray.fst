@@ -70,7 +70,7 @@ let is_annotated_type_array (t:term) : option term =
 
   | _ -> None
 
-#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 1 --split_queries no"
+#push-options "--z3rlimit_factor 40 --fuel 0 --ifuel 1 --split_queries no"
 let head_range (t:st_term {Tm_WithLocalArray? t.term}) : range =
   let Tm_WithLocalArray { initializer } = t.term in
   Pulse.RuntimeUtils.range_of_term initializer

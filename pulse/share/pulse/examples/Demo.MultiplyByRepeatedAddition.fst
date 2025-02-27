@@ -18,8 +18,7 @@ module Demo.MultiplyByRepeatedAddition
 #lang-pulse
 open Pulse.Lib.Pervasives
 open FStar.UInt32
-#set-options "--ext 'pulse:rvalues' --split_queries always"
-#set-options "--z3rlimit 40"
+#set-options "--ext 'pulse:rvalues'"
 
 module U32 = FStar.UInt32
 open FStar.Mul
@@ -52,9 +51,6 @@ fn mult (x y:nat)
 
 
 open Pulse.Lib.BoundedIntegers
-
-#push-options "--z3rlimit 75 --split_queries always --retry 5"  // batch mode fails without these options, IDE works
-
 fn mult32 (x y:U32.t)
     requires pure (fits #U32.t (v x * v y))
     returns z:U32.t
@@ -76,8 +72,6 @@ fn mult32 (x y:U32.t)
     };
     acc
 }
-
-#pop-options
 
 open FStar.UInt32
 let i (x:U32.t) : GTot int = U32.v x 

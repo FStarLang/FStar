@@ -63,7 +63,6 @@ module R = Pulse.Lib.Reference
   - default full permission
   - heap reference, read and write
 *)
-
 fn ref_swap (r1 r2:ref int)
   requires
     R.pts_to r1 'n1 **
@@ -76,7 +75,7 @@ fn ref_swap (r1 r2:ref int)
   let v1 = !r1;
   let v2 = !r2;
   r1 := v2;
-  r2 := v1
+  r2 := v1;
 }
 
 

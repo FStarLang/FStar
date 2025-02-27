@@ -3,7 +3,7 @@
   "options": [
     "--query_cache",
     "--cache_dir",
-    "_output/cache",
+    "dice/_cache",
     "--warn_error", 
     "-249",
     "--ext",
@@ -12,7 +12,7 @@
     "4.13.3"
   ],
   "include_dirs": [
-    "../../../lib/pulse",
+    "../../../out/lib/pulse",
     "bug-reports",
     "by-example",
     "parallel",

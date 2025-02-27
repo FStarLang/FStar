@@ -530,7 +530,8 @@ let open_term_ln_inv' (e:term)
     (ensures ln' (open_term' e x i) (i - 1))
     (decreases e)
   =  r_open_term_ln_inv' e x i
-
+#restart-solver
+#push-options "--z3rlimit_factor 2 --split_queries no"
 let open_comp_ln_inv' (c:comp)
                       (x:term { ln x })
                       (i:index)
@@ -550,6 +551,7 @@ let open_comp_ln_inv' (c:comp)
       open_term_ln_inv' s.res x i;
       open_term_ln_inv' s.pre x i;      
       open_term_ln_inv' s.post x (i + 1)
+#pop-options
 
 let open_term_ln_inv_opt' (t:option term)
                           (x:term { ln x })
@@ -607,7 +609,7 @@ let open_proof_hint_ln_inv (ht:proof_hint_type) (x:term { ln x }) (i:index)
     | WILD
     | SHOW_PROOF_STATE _ -> ()
 
-#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 2"
+#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 2 --query_stats --split_queries no"
 let rec open_term_ln_inv_st' (t:st_term)
                              (x:term { ln x })
                              (i:index)
@@ -617,23 +619,28 @@ let rec open_term_ln_inv_st' (t:st_term)
     (decreases t)
   = match t.term with
     | Tm_Return { expected_type; term } ->
+      FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' expected_type x i;
       open_term_ln_inv' term x i
 
     | Tm_IntroPure { p }
     | Tm_ElimExists { p } ->
+      FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' p x i
 
     | Tm_IntroExists { p; witnesses } ->
+      FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' p x i;
       open_term_ln_inv_list' witnesses x i
 
     | Tm_While { invariant; condition; body } ->
+      FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' invariant x (i + 1);
       open_term_ln_inv_st' condition x i;
       open_term_ln_inv_st' body x i
 
     | Tm_If { b; then_; else_; post } ->
+      FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' b x i;    
       open_term_ln_inv_st' then_ x i;    
       open_term_ln_inv_st' else_ x i;          
@@ -643,26 +650,31 @@ let rec open_term_ln_inv_st' (t:st_term)
       admit ()
 
     | Tm_Bind { binder; head; body } ->
+      FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' binder.binder_ty x i;
       open_term_ln_inv_st' head x i;
       open_term_ln_inv_st' body x (i + 1)
 
     | Tm_TotBind { binder; head; body } ->
+      FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' binder.binder_ty x i;
       open_term_ln_inv' head x i;
       open_term_ln_inv_st' body x (i + 1)
 
     | Tm_STApp { head; arg} ->
+      FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' head x i;
       open_term_ln_inv' arg x i
 
     | Tm_Abs { b; ascription=c; body } ->
+      FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' b.binder_ty x i;
       map_opt_lemma_2 open_comp_ln_inv' c.annotated x (i + 1);
       map_opt_lemma_2 open_comp_ln_inv' c.elaborated x (i + 1);
       open_term_ln_inv_st' body x (i + 1)
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
+      FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' pre1 x i;
       open_term_ln_inv_st' body1 x i;
       open_term_ln_inv' post1 x (i + 1);
@@ -671,33 +683,40 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv' post2 x (i + 1)
 
     | Tm_Rewrite { t1; t2 } ->
+      FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' t1 x i;
       open_term_ln_inv' t2 x i
 
     | Tm_WithLocal { binder; initializer; body } ->
+      FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' binder.binder_ty x i;
       open_term_ln_inv' initializer x i;
       open_term_ln_inv_st' body x (i + 1)
 
     | Tm_WithLocalArray { binder; initializer; length; body } ->
+      FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' binder.binder_ty x i;
       open_term_ln_inv' initializer x i;
       open_term_ln_inv' length x i;
       open_term_ln_inv_st' body x (i + 1)
 
     | Tm_Admit { typ; post } ->
+      FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' typ x i;
       open_term_ln_inv_opt' post x (i + 1)
 
     | Tm_Unreachable { c } ->
+      FStar.Pure.BreakVC.break_vc();
       open_comp_ln_inv' c x i
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
+      FStar.Pure.BreakVC.break_vc();
       let n = L.length binders in
       open_proof_hint_ln_inv hint_type x (i + n);
       open_term_ln_inv_st' t x (i + n)
 
     | Tm_WithInv { name; body; returns_inv } ->
+      FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' name x i;
       open_term_ln_inv_st' body x i;
       match returns_inv with
@@ -806,23 +825,28 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
     (decreases t)
   = match t.term with
     | Tm_Return { expected_type; term } ->
+      FStar.Pure.BreakVC.break_vc();
       close_term_ln' expected_type x i;
       close_term_ln' term x i
 
     | Tm_IntroPure { p }
     | Tm_ElimExists { p } ->
+      FStar.Pure.BreakVC.break_vc();
       close_term_ln' p x i
       
     | Tm_IntroExists { p; witnesses } ->
+      FStar.Pure.BreakVC.break_vc();
       close_term_ln' p x i;
       close_term_ln_list' witnesses x i
 
     | Tm_While { invariant; condition; body } ->
+      FStar.Pure.BreakVC.break_vc();
       close_term_ln' invariant x (i + 1);
       close_st_term_ln' condition x i;
       close_st_term_ln' body x i
 
     | Tm_If { b; then_; else_; post } ->
+      FStar.Pure.BreakVC.break_vc();
       close_term_ln' b x i;    
       close_st_term_ln' then_ x i;    
       close_st_term_ln' else_ x i;          
@@ -832,26 +856,31 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       admit ()
 
     | Tm_Bind { binder; head; body } ->
+      FStar.Pure.BreakVC.break_vc();
       close_term_ln' binder.binder_ty x i;
       close_st_term_ln' head x i;
       close_st_term_ln' body x (i + 1)
 
     | Tm_TotBind { binder; head; body } ->
+      FStar.Pure.BreakVC.break_vc();
       close_term_ln' binder.binder_ty x i;
       close_term_ln' head x i;
       close_st_term_ln' body x (i + 1)
 
     | Tm_STApp { head; arg } ->
+      FStar.Pure.BreakVC.break_vc();
       close_term_ln' head x i;
       close_term_ln' arg x i
 
     | Tm_Abs { b; ascription=c; body } ->
+      FStar.Pure.BreakVC.break_vc();
       close_term_ln' b.binder_ty x i;
       map_opt_lemma_2 close_comp_ln' c.annotated x (i + 1);
       map_opt_lemma_2 close_comp_ln' c.elaborated x (i + 1);
       close_st_term_ln' body x (i + 1)
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
+      FStar.Pure.BreakVC.break_vc();
       close_term_ln' pre1 x i;
       close_st_term_ln' body1 x i;
       close_term_ln' post1 x (i + 1);
@@ -860,33 +889,40 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln' post2 x (i + 1)
 
     | Tm_Rewrite { t1; t2 } ->
+      FStar.Pure.BreakVC.break_vc();
       close_term_ln' t1 x i;
       close_term_ln' t2 x i
       
     | Tm_WithLocal { binder; initializer; body } ->
+      FStar.Pure.BreakVC.break_vc();
       close_term_ln' binder.binder_ty x i;
       close_term_ln' initializer x i;
       close_st_term_ln' body x (i + 1)
 
     | Tm_WithLocalArray { binder; initializer; length; body } ->
+      FStar.Pure.BreakVC.break_vc();
       close_term_ln' binder.binder_ty x i;
       close_term_ln' initializer x i;
       close_term_ln' length x i;
       close_st_term_ln' body x (i + 1)
 
     | Tm_Admit { typ; post } ->
+      FStar.Pure.BreakVC.break_vc();
       close_term_ln' typ x i;
       close_term_ln_opt' post x (i + 1)
 
     | Tm_Unreachable { c } ->
+      FStar.Pure.BreakVC.break_vc();
       close_comp_ln' c x i
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
+      FStar.Pure.BreakVC.break_vc();
       let n = L.length binders in
       close_proof_hint_ln hint_type x (i + n);
       close_st_term_ln' t x (i + n)
       
     | Tm_WithInv { name; body; returns_inv } ->
+      FStar.Pure.BreakVC.break_vc();
       close_term_ln' name x i;
       close_st_term_ln' body x i;
       match returns_inv with
@@ -1056,7 +1092,7 @@ let ln_mk_array (t:term) (n:int)
       (ensures ln' (mk_array t) n) =
   admit ()
 
-#push-options "--z3rlimit_factor 15 --fuel 4 --ifuel 1 --split_queries no"
+#push-options "--z3rlimit_factor 15 --fuel 4 --ifuel 1 --split_queries no --query_stats --z3cliopt 'smt.qi.eager_threshold=100'"
 let rec st_typing_ln (#g:_) (#t:_) (#c:_)
                      (d:st_typing g t c)
   : Lemma 
@@ -1064,6 +1100,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
     (decreases d)
   = match d with
     | T_Frame _ _ c frame df dc ->
+      FStar.Pure.BreakVC.break_vc();
       tot_or_ghost_typing_ln df;
       st_typing_ln dc;
       assert (ln' (comp_post c) 0);
@@ -1071,12 +1108,14 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       assert (ln' (tm_star (comp_post c) frame) 0)
 
     | T_IntroPure _ p t _ ->
+      FStar.Pure.BreakVC.break_vc();
       tot_or_ghost_typing_ln t;
       assert (ln p);
       assert (ln' p 0);
       assert (ln' (tm_pure p) 0)
 
     | T_Abs _g x _q ty _u body c dt db ->
+      FStar.Pure.BreakVC.break_vc();
       tot_or_ghost_typing_ln dt;
       st_typing_ln db;
       open_st_term_ln body x;
@@ -1085,6 +1124,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
 
     | T_STApp _ _ _ _ res arg st at
     | T_STGhostApp _ _ _ _ res arg _ st _ at ->
+      FStar.Pure.BreakVC.break_vc();
       tot_or_ghost_typing_ln st;
       tot_or_ghost_typing_ln at;
       // We have RT.ln' (elab_comp res),
@@ -1094,10 +1134,12 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       Pulse.Elaborate.elab_ln_comp (open_comp_with res arg) (-1)
 
     | T_Lift _ _ _ _ d1 l ->
+      FStar.Pure.BreakVC.break_vc();
       st_typing_ln d1;
       lift_comp_ln l
 
     | T_Return _ c use_eq u t e post x t_typing e_typing post_typing ->
+      FStar.Pure.BreakVC.break_vc();
       tot_or_ghost_typing_ln t_typing;
       tot_or_ghost_typing_ln e_typing;
       tot_or_ghost_typing_ln post_typing;
@@ -1115,6 +1157,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       end
 
     | T_Bind _ _ e2 _ _ _ x _ d1 dc1 d2 bc ->
+      FStar.Pure.BreakVC.break_vc();
       st_typing_ln d1;
       tot_or_ghost_typing_ln dc1;
       st_typing_ln d2;
@@ -1122,6 +1165,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       bind_comp_ln bc
 
     | T_BindFn _g _e1 e2 _c1 _c2 _b x d1 _u dc1 d2 c ->
+      FStar.Pure.BreakVC.break_vc();
       st_typing_ln d1;
       tot_or_ghost_typing_ln dc1;
       st_typing_ln d2;
@@ -1129,15 +1173,18 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       comp_typing_ln c
 
     | T_If _ _ _ _ _ _ tb d1 d2 _ ->
+      FStar.Pure.BreakVC.break_vc();
       tot_or_ghost_typing_ln tb;
       st_typing_ln d1;
       st_typing_ln d2
 
     | T_Match _ _ _ sc _ scd c _ _ _ _ ->
+      FStar.Pure.BreakVC.break_vc();
       tot_or_ghost_typing_ln scd;
       admit ()
 
     | T_ElimExists _ u t p x dt dv ->
+      FStar.Pure.BreakVC.break_vc();
       tot_or_ghost_typing_ln dt;
       tot_or_ghost_typing_ln dv;
       let x_tm = tm_var {nm_index=x;nm_ppname=ppname_default} in
@@ -1147,22 +1194,26 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
 
 
     | T_IntroExists _ u t p e dt dv dw ->
+      FStar.Pure.BreakVC.break_vc();
       tot_or_ghost_typing_ln dt;
       tot_or_ghost_typing_ln dv;
       tot_or_ghost_typing_ln dw;
       open_term_ln_inv' p e 0
 
     | T_Equiv _ _ _ _ d2 deq ->
+      FStar.Pure.BreakVC.break_vc();
       st_typing_ln d2;
       st_equiv_ln deq
 
     | T_While _ inv _ _ inv_typing cond_typing body_typing ->
+      FStar.Pure.BreakVC.break_vc();
       tot_or_ghost_typing_ln inv_typing;
       st_typing_ln cond_typing;
       st_typing_ln body_typing;
       open_term_ln_inv' inv tm_false 0
 
     | T_Par _ _ cL _ cR x _ _ eL_typing eR_typing ->
+      FStar.Pure.BreakVC.break_vc();
       let x_tm = term_of_no_name_var x in
       let u = comp_u cL in
       let aL = comp_res cL in
@@ -1177,10 +1228,12 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       close_term_ln' (open_term' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0) x 0
 
     | T_Rewrite _ _ _ p_typing equiv_p_q ->
+      FStar.Pure.BreakVC.break_vc();
       tot_or_ghost_typing_ln p_typing;
       slprop_equiv_ln equiv_p_q
 
     | T_WithLocal g _ init body init_t c x init_typing init_t_typing c_typing body_typing ->
+      FStar.Pure.BreakVC.break_vc();
       tot_or_ghost_typing_ln init_typing;
       st_typing_ln body_typing;
       open_st_term_ln' body (null_var x) 0;
@@ -1189,6 +1242,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       ln_mk_ref init_t (-1)
 
     | T_WithLocalArray g _ init len body init_t c x init_typing len_typing init_t_typing c_typing body_typing ->
+      FStar.Pure.BreakVC.break_vc();
       tot_or_ghost_typing_ln init_typing;
       tot_or_ghost_typing_ln len_typing;
       st_typing_ln body_typing;
@@ -1199,6 +1253,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
 
     | T_Admit _ c c_typing
     | T_Unreachable _ c c_typing _ ->
+      FStar.Pure.BreakVC.break_vc();
       comp_typing_ln c_typing;
       let st_typing, _ = Pulse.Typing.Metatheory.Base.comp_typing_inversion c_typing in
       let STC _ _ x t_typing pre_typing post_typing = st_typing in
@@ -1208,9 +1263,11 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       open_term_ln' (comp_post c) (term_of_no_name_var x) 0
 
     | T_Sub _ e c c' d d_sub ->
+      FStar.Pure.BreakVC.break_vc();
       st_typing_ln d;
       st_sub_ln d_sub
 
     | T_WithInv _ _ _ _ _ _ _ _ _ ->
+      FStar.Pure.BreakVC.break_vc();
       admit() // IOU
 #pop-options

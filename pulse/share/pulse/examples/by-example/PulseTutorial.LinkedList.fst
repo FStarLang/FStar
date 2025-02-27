@@ -183,9 +183,7 @@ ensures is_list x 'l ** pure (n == List.Tot.length 'l)
     }
     Some vl -> {
       is_list_case_some x vl;
-      with _node _tl. _;
       let node = !vl;
-      rewrite each _node as node;
       let n = length node.tail;
       intro_is_list_cons x vl;
       (1 + n)
@@ -207,10 +205,8 @@ ensures is_list x 'l ** pure (n == k + List.Tot.length 'l)
     }
     Some vl -> {
       is_list_case_some x vl;
-      with _node _tl. _;
-      let n = !vl;
-      rewrite each _node as n;
-      let n = length_tail n.tail (1 + k);
+      let nd = !vl;
+      let n = length_tail nd.tail (1 + k);
       intro_is_list_cons x vl;
       n
     }
@@ -310,19 +306,16 @@ ensures is_list x ('l1 @ 'l2)
 {
   let np = Some?.v x;
   is_list_case_some x np;
-  with _node _tl. _;
-  let node = !np;
-  rewrite each _node as node;
-  match node.tail {
+  let nd = !np;
+  match nd.tail {
     None -> {
-      is_list_case_none node.tail;
-      elim_is_list_nil node.tail;
-      np := { node with tail = y };
-      rewrite each y as ({ node with tail = y }).tail in (is_list y 'l2);
-      intro_is_list_cons x np; 
+      is_list_case_none nd.tail;
+      elim_is_list_nil nd.tail;
+      np := { nd with tail = y };
+      intro_is_list_cons x np;
     }
     Some _ -> {
-      append node.tail y;
+      append nd.tail y;
       intro_is_list_cons x np;
     }
   }
