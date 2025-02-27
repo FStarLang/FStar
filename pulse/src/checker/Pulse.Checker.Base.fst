@@ -466,9 +466,9 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   k
 #pop-options
 
-#push-options "--z3rlimit_factor 8 --fuel 1 --ifuel 1"
-
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
+
+#push-options "--z3rlimit_factor 8 --fuel 1 --ifuel 1"
 
 let st_comp_typing_with_post_hint 
       (#g:env) (#ctxt:_)
@@ -518,6 +518,7 @@ let st_comp_typing_with_post_hint
   assert (st.res == ph.ret_ty);
   assert (st.post == ph.post);
   STC g st x ty_typing ctxt_typing post_typing_src
+#pop-options
 
 let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
   (ctxt_typing:tot_typing g ctxt tm_slprop)

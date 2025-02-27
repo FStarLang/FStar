@@ -329,3 +329,5 @@ let rec check
     let (| x, g1, t, pre', k |) = r in
     (| x, g1, t, pre', k_elab_trans k_elim_pure k |)
   )
+
+#pop-options

@@ -121,6 +121,7 @@ let mk_t_abs_tot (g:env)
     in
     RT.close_open_inverse body x;
     d
+#pop-options
 
 let mk_t_abs (g:env)
              (#u:universe)

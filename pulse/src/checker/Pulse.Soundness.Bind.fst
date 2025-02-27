@@ -24,7 +24,7 @@ open Pulse.Typing
 open Pulse.Elaborate
 open Pulse.Soundness.Common
 
-#push-options "--z3rlimit_factor 5"
+#set-options "--z3rlimit_factor 5"
 (*** Soundness of bind elaboration *)
 
 
@@ -112,7 +112,6 @@ let inst_bind_g #u1 #u2 #g #head #t1 #t2 #pre #post1 #post2
     in
     admit();
     d
-#pop-options
 
 #push-options "--z3rlimit_factor 8"
 let elab_bind_typing (g:stt_env)
@@ -187,11 +186,11 @@ let elab_bind_typing (g:stt_env)
     d
 #pop-options
 
-#push-options "--z3rlimit_factor 4 --split_queries no"
 assume
 val open_close_inverse_t (e:R.term { RT.ln e }) (x:var) (t:R.term)
   : Lemma (RT.open_with (RT.close_term e x) t == e)
 
+#push-options "--z3rlimit_factor 4 --split_queries no"
 let bind_fn_typing #g #t #c d soundness =
   let T_BindFn _ e1 e2 c1 c2 b x e1_typing u t1_typing e2_typing c2_typing = d in
   let t1 = comp_res c1 in
@@ -227,4 +226,4 @@ let bind_fn_typing #g #t #c d soundness =
   assert (RT.open_with (RT.close_term (elab_comp c2) x) re1 == elab_comp c2); 
   res
   
-
+#pop-options

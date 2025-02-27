@@ -279,6 +279,7 @@ let check_branch
   let br_d : br_typing g sc_u sc_ty sc p (close_st_term_n e (L.map fst pulse_bs)) c = TBR g sc_u sc_ty sc c p e bs () () () hyp_var e_d in
   (| p, close_st_term_n e (L.map fst pulse_bs), c, br_d |)
 
+#pop-options
 
 let check_branches_aux_t 
         (#g:env)
@@ -456,6 +457,7 @@ let maybe_weaken_branch_tags
       let checked_brs = T.map #_ #(cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc {ctag_of_br cbr == ct}) (fun x -> x) checked_brs in
       (| ct, checked_brs |)
 
+#push-options "--z3rlimit 20"
 let check_branches
         (g:env)
         (pre:term)
@@ -486,6 +488,7 @@ let check_branches
     aux checked_brs
   in
   (| brs, c0, d |)
+#pop-options
 
 let check
         (g:env)

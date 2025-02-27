@@ -309,6 +309,7 @@ let maybe_rewrite_body_typing
     | Some c -> 
       let st = st_comp_of_comp c in
       Env.fail g (Some (RU.range_of_term st.pre)) "Unexpected annotation on a function body"
+#pop-options
 
 let open_ascription (c:comp_ascription) (nv:nvar) : comp_ascription =
   let t = term_of_nvar nv in
@@ -465,6 +466,7 @@ let rec check_abs_core
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x) in
 
       (| _, C_Tot tres, tt |)
+#pop-options
 
 let check_abs (g:env) (t:st_term{Tm_Abs? t.term}) (check:check_t)
   : T.Tac (t:st_term & c:comp & st_typing g t c) =

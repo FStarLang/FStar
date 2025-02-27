@@ -184,6 +184,7 @@ let check_fndefn
     let main_decl = chk, se, Some blob in
     [], maybe_add_impl _ main_decl, []
   end
+#pop-options
 
 let check_fndecl
     (d : decl{FnDecl? d.d})
