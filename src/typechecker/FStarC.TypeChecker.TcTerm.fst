@@ -1756,7 +1756,7 @@ and tc_value env (e:term) : term
     let fv = S.set_range_of_fv fv range in
     maybe_warn_on_use env fv;
     if List.length us <> List.length us' then
-      raise_error env Errors.Fatal_UnexpectedNumberOfUniverse
+      raise_error fv Errors.Fatal_UnexpectedNumberOfUniverse
                   (BU.format3 "Unexpected number of universe instantiations for \"%s\" (%s vs %s)"
                                   (show fv)
                                   (show (List.length us))
