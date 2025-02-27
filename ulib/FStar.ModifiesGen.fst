@@ -1181,7 +1181,6 @@ let loc_includes_loc_regions_restrict_to_regions
   (loc_includes (loc_regions false rs) (restrict_to_regions l rs))
 = Classical.forall_intro (loc_aux_includes_refl #al #c)
 
-#push-options "--z3rlimit_factor 2"
 let modifies_only_live_regions #al #c rs l h h' =
   let s = l in
   let c_rs = Set.complement rs in
@@ -1203,7 +1202,6 @@ let modifies_only_live_regions #al #c rs l h h' =
   modifies_only_live_regions_weak rs s_c_rs h h';
   loc_includes_restrict_to_regions s c_rs;
   modifies_loc_includes s h h' s_c_rs
-#pop-options
 
 let no_upd_fresh_region #al #c r l h0 h1 =
   modifies_only_live_regions (HS.mod_set (Set.singleton r)) l h0 h1

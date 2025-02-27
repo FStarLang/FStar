@@ -83,7 +83,7 @@ type mutator_inv gc_state =
   inv gc_state (fun i -> gc_state.color i = Unalloc \/ gc_state.color i = White)
 
 new_effect GC_STATE = STATE_h gc_state
-let gc_post (a:Type) = a -> gc_state -> Type0
+let gc_post (a:Type) = a -> gc_state -> GTot Type0
 sub_effect
   DIV   ~> GC_STATE = fun (a:Type) (wp:pure_wp a) (p:gc_post a) (gc:gc_state) -> wp (fun a -> p a gc)
 

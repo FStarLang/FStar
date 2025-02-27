@@ -2150,6 +2150,44 @@ let has_typeclass_constraint (u:ctx_uvar) (wl:worklist)
   : bool
   = wl.typeclass_variables |> for_any (fun v -> UF.equiv v.ctx_uvar_head u.ctx_uvar_head)
 
+let maybe_eta_expand_fun (env: env) (e t_e t_expected: term) : option term =
+  let norm = N.normalize [Env.Primops; Env.UnfoldUntil delta_constant; Env.HNF; Env.Beta; Env.Unascribe; Env.Unrefine] env in
+  let t_e = norm t_e in
+  let t_expected = norm t_expected in
+  if !dbg_Rel then BU.print2 "t_e=%s   t_exp=%s\n" (show t_e) (show t_expected);
+  let rec aux e t_e t_expected =
+    match (SS.compress t_e).n, (SS.compress t_expected).n with
+    | Tm_arrow {bs=bs_e; comp=c_e}, Tm_arrow {bs=bs_exp; comp=c_exp} ->
+      let mk_c c = function
+        | [] -> c
+        | bs -> mk_Total(mk (Tm_arrow {bs; comp=c}) c.pos) in
+      let (bs_e, c_e), (bs_exp, c_exp) =
+        match_num_binders (bs_e, mk_c c_e) (bs_exp, mk_c c_exp) in
+      let bs_e, c_e = SS.open_comp bs_e c_e in
+      let bs_exp, c_exp = SS.open_comp bs_exp c_exp in
+      let bs_exp, as_exp = U.args_of_binders bs_exp in
+      let e' = U.mk_app e as_exp in
+      let return e' = Some (U.abs bs_exp e' (Some (U.residual_comp_of_comp c_exp))) in
+      begin match aux e' (U.comp_result c_e) (U.comp_result c_exp) with
+      | Some e' -> return e'
+      | None ->
+        let eff_e, eff_exp =
+          c_e |> U.comp_effect_name |> Env.norm_eff_name env,
+          c_exp |> U.comp_effect_name |> Env.norm_eff_name env in
+        if lid_equals eff_e eff_exp then
+          None
+        else
+          return e'
+      end
+    | _, _ -> None
+  in
+  aux e t_e t_expected
+
+let eta_expand_fun env (e t_e t_expected: term) : term =
+  match maybe_eta_expand_fun env e t_e t_expected with
+  | None -> e
+  | Some e -> e
+
 (* This function returns true for those lazykinds that
 are "complete" in the sense that unfolding them does not
 lose any information. For instance, embedded universes
@@ -2940,7 +2978,6 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
     *)
     let mk_solution env (lhs:flex_t) (bs:binders) (rhs:term) =
         let bs_orig = bs in
-        let rhs_orig = rhs in
         let (Flex (_, ctx_u, args)) = lhs in
         let bs, rhs =
           let bv_not_free_in_arg x arg =
@@ -2984,6 +3021,18 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
           bs,
           S.mk_Tm_app rhs_hd rhs_args rhs.pos
         in
+        let rhs =
+          // eta-expand functions for effect promotion, unless we're in --MLish
+          if Options.ml_ish () then rhs else
+          let env = { env with admit=true; expected_typ=None } in
+          let t_u, _ =
+            let Flex (lhs, _, _) = lhs in
+            let lhs_hd, _ = U.head_and_args lhs in
+            env.typeof_well_typed_tot_or_gtot_term env (U.mk_app lhs_hd (U.args_of_non_null_binders bs)) false in
+          let t_rhs, _ = env.typeof_well_typed_tot_or_gtot_term env rhs false in
+          if !dbg_Rel then BU.print2 "t_rhs=%s   t_u=%s\n" (show t_rhs) (show t_u);
+          eta_expand_fun env rhs t_rhs t_u in
+        if !dbg_Rel then BU.print1 "rhs_eta=%s\n" (show rhs);
         let sol =
           match bs with
           | [] -> rhs
@@ -4051,8 +4100,16 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
         let (bs1, c1), (bs2, c2) =
             match_num_binders (bs1, mk_c c1) (bs2, mk_c c2) in
 
-        solve_binders bs1 bs2 orig wl
-        (fun wl scope subst  ->
+        let eff1, eff2 =
+          let env = p_env wl orig in
+          c1 |> U.comp_effect_name |> Env.norm_eff_name env,
+          c2 |> U.comp_effect_name |> Env.norm_eff_name env in
+
+        if not (Options.ml_ish () || Ident.lid_equals eff1 eff2) then
+          giveup wl (Thunk.mk fun _ -> "computation type mismatch in arrow: " ^ string_of_lid eff1 ^ " vs " ^ string_of_lid eff2) orig
+        else
+          solve_binders bs1 bs2 orig wl
+          (fun wl scope subst  ->
             let c1 = Subst.subst_comp subst c1 in
             let c2 = Subst.subst_comp subst c2 in //open both comps
             let rel = if (Options.use_eq_at_higher_order()) then EQ else problem.relation in

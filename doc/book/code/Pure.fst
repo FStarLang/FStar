@@ -15,7 +15,7 @@ let fact (x:nat) : pos = factorial x
 
 //SNIPPET_START: wp$
 let pre = Type0
-let post (a:Type) = a -> Type0
+let post (a:Type) = a -> GTot Type0
 let wp (a:Type) = post a -> pre
 //SNIPPET_END: wp$
 

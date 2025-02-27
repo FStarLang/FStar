@@ -47,7 +47,7 @@ let gst_post' (a:Type) (pre:Type) = st_post_h' mem a pre
 let gst_post (a:Type) = st_post_h mem a
 let gst_wp (a:Type)   = st_wp_h mem a
 
-unfold let lift_div_gst (a:Type) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fun a -> p a h)
+unfold let lift_div_gst (a:Type) (wp:pure_wp a) : st_wp_h mem a = fun p h -> wp (fun a -> p a h)
 sub_effect DIV ~> GST = lift_div_gst
 
 (*
@@ -324,6 +324,7 @@ val pop_frame (_:unit)
 #push-options "--z3rlimit 40"
 let salloc_post (#a:Type) (#rel:preorder a) (init:a) (m0:mem)
                 (s:mreference a rel{is_stack_region (frameOf s)}) (m1:mem)
+  : GTot prop
   = is_stack_region (get_tip m0)                          /\
     Map.domain (get_hmap m0) == Map.domain (get_hmap m1)  /\
     get_tip m0 == get_tip m1                              /\
@@ -378,7 +379,7 @@ val new_colored_region (r0:rid) (c:int)
                 (r1, m1) == HS.new_eternal_region m0 r0 (Some c)))
 
 let ralloc_post (#a:Type) (#rel:preorder a) (i:rid) (init:a) (m0:mem)
-                       (x:mreference a rel) (m1:mem) =
+                       (x:mreference a rel) (m1:mem) : GTot prop =
   let region_i = get_hmap m0 `Map.sel` i in
   as_ref x `Heap.unused_in` region_i /\
   i `is_in` get_hmap m0              /\
