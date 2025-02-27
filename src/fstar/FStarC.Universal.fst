@@ -535,7 +535,6 @@ let tc_one_file
         then BU.print1 "Module after type checking:\n%s\n" (show tcmod);
 
         let extend_tcenv tcmod tcenv =
-            FStarC.SMTEncoding.Z3.refresh None;
             let _, tcenv =
                 with_dsenv_of_tcenv tcenv <|
                     FStarC.ToSyntax.ToSyntax.add_modul_to_env
