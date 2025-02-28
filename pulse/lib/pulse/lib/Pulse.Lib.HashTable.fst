@@ -411,6 +411,7 @@ fn insert
     res
   }
 }
+#pop-options
 
 
 let is_used
@@ -519,8 +520,7 @@ fn insert_if_not_full
   }
 }
 
-
-
+#push-options "--z3rlimit_factor 4"
 fn delete
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
@@ -632,7 +632,7 @@ fn delete
     res
   }
 }
-
+#pop-options
 
 // 
 // fn test_mono ()

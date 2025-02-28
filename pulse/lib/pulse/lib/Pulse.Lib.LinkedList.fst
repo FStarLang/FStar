@@ -22,6 +22,8 @@ open Pulse.Lib.Trade.Util
 open FStar.List.Tot
 module T = Pulse.Lib.Trade.Util
 module FA = Pulse.Lib.Forall.Util
+module U32 = FStar.UInt32
+open Pulse.Lib.BoundedIntegers
 
 noeq
 type node (t:Type0) = {
@@ -295,12 +297,17 @@ fn length_iter (#t:Type) (x: llist t)
     Some? v
   )
   invariant b.  
-  exists* n ll suffix.
+  exists* (n:int) ll suffix.
     pts_to ctr n **
     pts_to cur ll **
     is_list ll suffix **
     (is_list ll suffix @==> is_list x 'l) **
-    pure (n == List.Tot.length 'l - List.Tot.length suffix) **
+    pure (
+        List.Tot.length 'l >= List.Tot.length suffix /\
+        n == List.Tot.length 'l - List.Tot.length suffix) **
+    (* ^ Having the bounded_int nat instance in BoundedIntegers means we try to
+    to check the subtraction as a nat, which fails without the extra condition.
+    We can also just write `n + len suff = len 'l`. *)
     pure (b == (Some? ll))
   {
     with _n _ll suffix. _;
@@ -515,10 +522,6 @@ fn detach_next (#t:Type) (x:llist t)
 }
 
 
-module U32 = FStar.UInt32
-open Pulse.Lib.BoundedIntegers
-#push-options "--fuel 1 --ifuel 1"
-
 fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
  requires is_list x xl ** pure (Some? x /\ 0 < v n /\ v n <= List.Tot.length xl)
  returns  y:llist t
@@ -584,7 +587,6 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
   List.Tot.append_length pfx [hd];
   y
  }
-
 
 fn insert (#kk:Type0) (x:llist kk) (item:kk) (pos:U32.t) (#xl:erased (list kk))
   requires is_list x xl ** pure (Some? x /\ 0 < v pos /\ v pos < List.Tot.length xl)
