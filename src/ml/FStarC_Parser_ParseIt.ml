@@ -287,6 +287,190 @@ let parse_incremental_fragment
   let decls = List.map (fun d -> d, contents_at (range_of d)) decls in
   decls, comments, err_opt
 
+let dbg_Tokens = FStarC_Debug.get_toggle "Tokens"
+
+let string_of_token =
+  let open FStarC_Parser_Parse in
+  function
+  | STRING s -> "STRING " ^ s
+  | IDENT s -> "IDENT " ^ s
+  | NAME s -> "NAME " ^ s
+  | TVAR s -> "TVAR " ^ s
+  | TILDE s -> "TILDE " ^ s
+  | INT8 (s, b) -> "INT8 (" ^ s ^ ", " ^ string_of_bool b ^ ")"
+  | INT16 (s, b) -> "INT16 (" ^ s ^ ", " ^ string_of_bool b ^ ")"
+  | INT32 (s, b) -> "INT32 (" ^ s ^ ", " ^ string_of_bool b ^ ")"
+  | INT64 (s, b) -> "INT64 (" ^ s ^ ", " ^ string_of_bool b ^ ")"
+  | INT (s, b) -> "INT (" ^ s ^ ", " ^ string_of_bool b ^ ")"
+  | RANGE s -> " RANGE " ^ s
+  | UINT8 s -> "UINT8 " ^ s
+  | UINT16 s -> "UINT16 " ^ s
+  | UINT32 s -> "UINT32 " ^ s
+  | UINT64 s -> "UINT64 " ^ s
+  | SIZET s -> "SIZET " ^ s
+  | REAL s -> "REAL " ^ s
+  | CHAR c -> "CHAR c"
+  | LET b -> "LET b"
+  | LET_OP s -> "LET_OP " ^ s
+  | AND_OP s -> "AND_OP " ^ s
+  | MATCH_OP s -> "MATCH_OP " ^ s
+  | IF_OP s -> "IF_OP " ^ s
+  | EXISTS b -> "EXISTS b"
+  | EXISTS_OP s -> "EXISTS_OP " ^ s
+  | FORALL b -> "FORALL b"
+  | FORALL_OP s -> "FORALL_OP " ^ s
+  | SEMICOLON_OP op -> "SEMICOLON_OP " ^ (match op with None -> "None" | Some s -> "(Some " ^ s ^ ")")
+  | ASSUME -> "ASSUME"
+  | NEW -> "NEW"
+  | LOGIC -> "LOGIC"
+  | ATTRIBUTES -> "ATTRIBUTES"
+  | IRREDUCIBLE -> "IRREDUCIBLE"
+  | UNFOLDABLE -> "UNFOLDABLE"
+  | INLINE -> "INLINE"
+  | OPAQUE -> "OPAQUE"
+  | UNFOLD -> "UNFOLD"
+  | INLINE_FOR_EXTRACTION -> "INLINE_FOR_EXTRACTION"
+  | NOEXTRACT -> "NOEXTRACT"
+  | NOEQUALITY -> "NOEQUALITY"
+  | UNOPTEQUALITY -> "UNOPTEQUALITY"
+  | PRAGMA_SHOW_OPTIONS -> "PRAGMA_SHOW_OPTIONS"
+  | PRAGMA_SET_OPTIONS -> "PRAGMA_SET_OPTIONS"
+  | PRAGMA_RESET_OPTIONS -> "PRAGMA_RESET_OPTIONS"
+  | PRAGMA_PUSH_OPTIONS -> "PRAGMA_PUSH_OPTIONS"
+  | PRAGMA_POP_OPTIONS -> "PRAGMA_POP_OPTIONS"
+  | PRAGMA_RESTART_SOLVER -> "PRAGMA_RESTART_SOLVER"
+  | PRAGMA_PRINT_EFFECTS_GRAPH -> "PRAGMA_PRINT_EFFECTS_GRAPH"
+  | TYP_APP_LESS -> "TYP_APP_LESS"
+  | TYP_APP_GREATER -> "TYP_APP_GREATER"
+  | SUBTYPE -> "SUBTYPE"
+  | EQUALTYPE -> "EQUALTYPE"
+  | SUBKIND -> "SUBKIND"
+  | BY -> "BY"
+  | AND -> "AND"
+  | ASSERT -> "ASSERT"
+  | SYNTH -> "SYNTH"
+  | BEGIN -> "BEGIN"
+  | ELSE -> "ELSE"
+  | END -> "END"
+  | EXCEPTION -> "EXCEPTION"
+  | FALSE -> "FALSE"
+  | FUN -> "FUN"
+  | FUNCTION -> "FUNCTION"
+  | IF -> "IF"
+  | IN -> "IN"
+  | MODULE -> "MODULE"
+  | DEFAULT -> "DEFAULT"
+  | MATCH -> "MATCH"
+  | OF -> "OF"
+  | FRIEND -> "FRIEND"
+  | OPEN -> "OPEN"
+  | REC -> "REC"
+  | THEN -> "THEN"
+  | TRUE -> "TRUE"
+  | TRY -> "TRY"
+  | TYPE -> "TYPE"
+  | CALC -> "CALC"
+  | CLASS -> "CLASS"
+  | INSTANCE -> "INSTANCE"
+  | EFFECT -> "EFFECT"
+  | VAL -> "VAL"
+  | INTRO -> "INTRO"
+  | ELIM -> "ELIM"
+  | INCLUDE -> "INCLUDE"
+  | WHEN -> "WHEN"
+  | AS -> "AS"
+  | RETURNS -> "RETURNS"
+  | RETURNS_EQ -> "RETURNS_EQ"
+  | WITH -> "WITH"
+  | HASH -> "HASH"
+  | AMP -> "AMP"
+  | LPAREN -> "LPAREN"
+  | RPAREN -> "RPAREN"
+  | LPAREN_RPAREN -> "LPAREN_RPAREN"
+  | COMMA -> "COMMA"
+  | LONG_LEFT_ARROW -> "LONG_LEFT_ARROW"
+  | LARROW -> "LARROW"
+  | RARROW -> "RARROW"
+  | IFF -> "IFF"
+  | IMPLIES -> "IMPLIES"
+  | CONJUNCTION -> "CONJUNCTION"
+  | DISJUNCTION -> "DISJUNCTION"
+  | DOT -> "DOT"
+  | COLON -> "COLON"
+  | COLON_COLON -> "COLON_COLON"
+  | SEMICOLON -> "SEMICOLON"
+  | QMARK_DOT -> "QMARK_DOT"
+  | QMARK -> "QMARK"
+  | EQUALS -> "EQUALS"
+  | PERCENT_LBRACK -> "PERCENT_LBRACK"
+  | LBRACK_AT -> "LBRACK_AT"
+  | LBRACK_AT_AT -> "LBRACK_AT_AT"
+  | LBRACK_AT_AT_AT -> "LBRACK_AT_AT_AT"
+  | DOT_LBRACK -> "DOT_LBRACK"
+  | DOT_LENS_PAREN_LEFT -> "DOT_LENS_PAREN_LEFT"
+  | DOT_LPAREN -> "DOT_LPAREN"
+  | DOT_LBRACK_BAR -> "DOT_LBRACK_BAR"
+  | LBRACK -> "LBRACK"
+  | LBRACK_BAR -> "LBRACK_BAR"
+  | LBRACE_BAR -> "LBRACE_BAR"
+  | LBRACE -> "LBRACE"
+  | BANG_LBRACE -> "BANG_LBRACE"
+  | BAR_RBRACK -> "BAR_RBRACK"
+  | BAR_RBRACE -> "BAR_RBRACE"
+  | UNDERSCORE -> "UNDERSCORE"
+  | LENS_PAREN_LEFT -> "LENS_PAREN_LEFT"
+  | LENS_PAREN_RIGHT -> "LENS_PAREN_RIGHT"
+  | SEQ_BANG_LBRACK -> "SEQ_BANG_LBRACK"
+  | BAR -> "BAR"
+  | RBRACK -> "RBRACK"
+  | RBRACE -> "RBRACE"
+  | DOLLAR -> "DOLLAR"
+  | PRIVATE -> "PRIVATE"
+  | REIFIABLE -> "REIFIABLE"
+  | REFLECTABLE -> "REFLECTABLE"
+  | REIFY -> "REIFY"
+  | RANGE_OF -> "RANGE_OF"
+  | SET_RANGE_OF -> "SET_RANGE_OF"
+  | LBRACE_COLON_PATTERN -> "LBRACE_COLON_PATTERN"
+  | PIPE_LEFT -> "PIPE_LEFT"
+  | PIPE_RIGHT -> "PIPE_RIGHT"
+  | NEW_EFFECT -> "NEW_EFFECT"
+  | SUB_EFFECT -> "SUB_EFFECT"
+  | LAYERED_EFFECT -> "LAYERED_EFFECT"
+  | POLYMONADIC_BIND -> "POLYMONADIC_BIND"
+  | POLYMONADIC_SUBCOMP -> "POLYMONADIC_SUBCOMP"
+  | SPLICE -> "SPLICE"
+  | SPLICET -> "SPLICET"
+  | SQUIGGLY_RARROW -> "SQUIGGLY_RARROW"
+  | TOTAL -> "TOTAL"
+  | REQUIRES -> "REQUIRES"
+  | ENSURES -> "ENSURES"
+  | DECREASES -> "DECREASES"
+  | LBRACE_COLON_WELL_FOUNDED -> "LBRACE_COLON_WELL_FOUNDED"
+  | MINUS -> "MINUS"
+  | COLON_EQUALS -> "COLON_EQUALS"
+  | QUOTE -> "QUOTE"
+  | BACKTICK_AT -> "BACKTICK_AT"
+  | BACKTICK_HASH -> "BACKTICK_HASH"
+  | BACKTICK -> "BACKTICK"
+  | UNIV_HASH -> "UNIV_HASH"
+  | BACKTICK_PERC -> "BACKTICK_PERC"
+  | OPPREFIX s -> "OPPREFIX " ^ s
+  | OPINFIX0a s -> "OPINFIX0a " ^ s
+  | OPINFIX0b s -> "OPINFIX0b " ^ s
+  | OPINFIX0c s -> "OPINFIX0c " ^ s
+  | OPINFIX0d s -> "OPINFIX0d " ^ s
+  | OPINFIX1 s -> "OPINFIX1 " ^ s
+  | OPINFIX2 s -> "OPINFIX2 " ^ s
+  | OPINFIX3 s -> "OPINFIX3 " ^ s
+  | OPINFIX4 s -> "OPINFIX4 " ^ s
+  | OP_MIXFIX_ASSIGNMENT s -> "OP_MIXFIX_ASSIGNMENT " ^ s
+  | OP_MIXFIX_ACCESS s -> "OP_MIXFIX_ACCESS " ^ s
+  | BLOB _ -> "BLOB _"
+  | USE_LANG_BLOB _ -> "USE_LANG_BLOB _"
+  | EOF -> "EOF"
+  | _ -> "(unknown token)"
+
 let parse_fstar_incrementally
 : FStarC_Parser_AST_Util.extension_lang_parser 
 = let f =
@@ -303,6 +487,8 @@ let parse_fstar_incrementally
       let contents = s in
       let lexer () =
         let tok = FStarC_Parser_LexFStar.token lexbuf in
+        if !dbg_Tokens then
+          print_string ("TOKEN: " ^ (string_of_token tok) ^ "\n");
         (tok, lexbuf.start_p, lexbuf.cur_p)
       in
       try 
@@ -374,6 +560,8 @@ let parse (lang_opt:lang_opts) fn =
 
     let lexer () =
       let tok = FStarC_Parser_LexFStar.token lexbuf in
+        if !dbg_Tokens then
+          print_string ("TOKEN: " ^ (string_of_token tok) ^ "\n");
       (tok, lexbuf.start_p, lexbuf.cur_p)
     in
     try
@@ -429,6 +617,8 @@ let parse_warn_error s =
     else
       let lexbuf = FStarC_Sedlexing.create s "" 0 (String.length s) in
       let lexer() = let tok = FStarC_Parser_LexFStar.token lexbuf in
+        if !dbg_Tokens then
+          print_string ("TOKEN: " ^ (string_of_token tok) ^ "\n");
         (tok, lexbuf.start_p, lexbuf.cur_p)
       in
       try
