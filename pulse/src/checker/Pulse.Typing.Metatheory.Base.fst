@@ -123,18 +123,26 @@ let lift_comp_weakening (g:env) (g':env { disjoint g g'})
   | Lift_Neutral_Ghost _ c -> Lift_Neutral_Ghost _ c
   | Lift_Observability _ obs c -> Lift_Observability _ obs c
 
-#push-options "--admit_smt_queries true"
+// TODO: the proof for RT.Equiv is not correct here
+let equiv_weakening (g:env) (g':env { disjoint g g' })
+  #t1 #t2 (d:RT.equiv (elab_env (push_env g g')) t1 t2)
+  (g1:env { pairwise_disjoint g g1 g' })
+  : RT.equiv (elab_env (push_env (push_env g g1) g')) t1 t2 =
+  admit ();
+  d
+
 let st_equiv_weakening (g:env) (g':env { disjoint g g' })
   (#c1 #c2:comp) (d:st_equiv (push_env g g') c1 c2)
   (g1:env { pairwise_disjoint g g1 g' })
   : st_equiv (push_env (push_env g g1) g') c1 c2 =
   match d with
-  | ST_SLPropEquiv _ c1 c2 x _ _ _ _ _ _ ->
+  | ST_SLPropEquiv _ c1 c2 x _ _ _ hequiv _ _ ->
     assume (~ (x `Set.mem` dom g'));
     assume (~ (x `Set.mem` dom g1));
-    // TODO: the proof for RT.Equiv is not correct here
-    ST_SLPropEquiv _ c1 c2 x (RU.magic ()) (RU.magic ()) (RU.magic ()) (FStar.Reflection.Typing.Rel_refl _ _ _) (RU.magic ()) (RU.magic ())
-#pop-options
+    ST_SLPropEquiv _ c1 c2 x (RU.magic ()) (RU.magic ()) (RU.magic ())
+      (equiv_weakening _ _ hequiv _) (RU.magic ()) (RU.magic ())
+  | ST_TotEquiv _ t1 t2 u _ _ ->
+    ST_TotEquiv _ t1 t2 u (RU.magic ()) (RU.magic ())
 
 // TODO: add precondition that g1 extends g'
 let prop_validity_token_weakening (#g:env) (#t:term)
