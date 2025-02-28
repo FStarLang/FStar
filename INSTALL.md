@@ -44,7 +44,7 @@ Z3 version 4.13.3 - 64 bit
 
 On Linux you can install these two versions with the following command:
 ```bash
-sudo ./bin/get_fstar_z3.sh /usr/local/bin
+sudo .scripts/get_fstar_z3.sh /usr/local/bin
 ```
 
 ## OPAM package ##
