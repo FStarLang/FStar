@@ -105,6 +105,9 @@ let parse_use_lang_blob (extension_name:string)
 */
 %token <string option> SEMICOLON_OP
 
+(* IMPORTANT: Please extend the string_of_token function in FStarC_Parser_ParseIt.ml
+   to make sure they are printed properly, and that --debug Tokens works. *)
+
 %token ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
