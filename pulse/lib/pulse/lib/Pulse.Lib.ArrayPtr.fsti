@@ -63,91 +63,89 @@ val to_array (#t: Type) (s: ptr t) (a: array t) (#p: perm) (#v: Seq.seq t) : stt
     (fun _ -> A.pts_to a #p v)
 
 (* Written x.(i) *)
-val op_Array_Access
+fn op_Array_Access
         (#t: Type)
         (a: ptr t)
         (i: SZ.t)
         (#p: perm)
         (#s: Ghost.erased (Seq.seq t))
-  : stt t
-        (requires
-            pts_to a #p s ** pure (SZ.v i < Seq.length s))
-        (ensures fun res ->
-            pts_to a #p s **
-            pure (
-              SZ.v i < Seq.length s /\
-              res == Seq.index s (SZ.v i)))
+  requires
+     pts_to a #p s **
+     pure (SZ.v i < Seq.length s)
+  returns res : t
+  ensures
+     pts_to a #p s **
+     pure (SZ.v i < Seq.length s /\
+           res == Seq.index s (SZ.v i))
 
 (* Written a.(i) <- v *)
-val op_Array_Assignment
+fn op_Array_Assignment
         (#t: Type)
         (a: ptr t)
         (i: SZ.t)
         (v: t)
         (#s: Ghost.erased (Seq.seq t))
-  : stt unit
-        (requires
-            pts_to a s ** pure (SZ.v i < Seq.length s))
-        (ensures fun res -> exists* s' .
-            pts_to a s' **
-            pure (SZ.v i < Seq.length s /\
-              s' == Seq.upd s (SZ.v i) v
-            ))
+  requires pts_to a s ** pure (SZ.v i < Seq.length s)
+  ensures
+    exists* s' .
+      pts_to a s' **
+      pure (SZ.v i < Seq.length s /\
+        s' == Seq.upd s (SZ.v i) v
+      )
 
-val share
+ghost
+fn share
   (#a:Type)
   (arr:ptr a)
   (#s:Ghost.erased (Seq.seq a))
   (#p:perm)
-: stt_ghost unit emp_inames
-      (requires pts_to arr #p s)
-      (ensures fun _ -> pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s)
+  requires pts_to arr #p s
+  ensures  pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s
 
 [@@allow_ambiguous]
-val gather
+ghost
+fn gather
   (#a:Type)
   (arr:ptr a)
   (#s0 #s1:Ghost.erased (Seq.seq a))
   (#p0 #p1:perm)
-: stt_ghost unit emp_inames
-      (requires pts_to arr #p0 s0 ** pts_to arr #p1 s1 ** pure (Seq.length s0 == Seq.length s1))
-      (ensures fun _ -> pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1))
+  requires pts_to arr #p0 s0 ** pts_to arr #p1 s1 ** pure (Seq.length s0 == Seq.length s1)
+  ensures  pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
 
 
 let adjacent #t (a: ptr t) (sz: nat) (b: ptr t) : prop =
   base a == base b /\ offset a + sz == offset b
 
-val split (#t: Type) (s: ptr t) (#p: perm) (i: SZ.t)
+fn split (#t: Type) (s: ptr t) (#p: perm) (i: SZ.t)
   (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v })
-  : stt (ptr t)
-    (requires pts_to s #p v)
-    (ensures fun s' ->
-        pts_to s #p (Seq.slice v 0 (SZ.v i)) **
-        pts_to s' #p (Seq.slice v (SZ.v i) (Seq.length v)) **
-        pure (adjacent s (SZ.v i) s')
-    )
+  requires pts_to s #p v
+  returns  s' : ptr t
+  ensures
+      pts_to s #p (Seq.slice v 0 (SZ.v i)) **
+      pts_to s' #p (Seq.slice v (SZ.v i) (Seq.length v)) **
+      pure (adjacent s (SZ.v i) s')
 
-val ghost_split (#t: Type) (s: ptr t) (#p: perm) (i: SZ.t)
+ghost
+fn ghost_split (#t: Type) (s: ptr t) (#p: perm) (i: SZ.t)
   (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v })
-  : stt_ghost (erased (ptr t)) []
-    (requires pts_to s #p v)
-    (ensures fun s' ->
-        pts_to s #p (Seq.slice v 0 (SZ.v i)) **
-        pts_to (reveal s') #p (Seq.slice v (SZ.v i) (Seq.length v)) **
-        pure (adjacent s (SZ.v i) s')
-    )
+  requires pts_to s #p v
+  returns s' : erased (ptr t)
+  ensures
+      pts_to s #p (Seq.slice v 0 (SZ.v i)) **
+      pts_to (reveal s') #p (Seq.slice v (SZ.v i) (Seq.length v)) **
+      pure (adjacent s (SZ.v i) s')
 
-val join (#t: Type) (s1: ptr t) (#p: perm) (#v1: Seq.seq t) (s2: ptr t) (#v2: Seq.seq t) : stt_ghost unit emp_inames
-    (pts_to s1 #p v1 ** pts_to s2 #p v2 ** pure (adjacent s1 (Seq.length v1) s2))
-    (fun _ -> pts_to s1 #p (Seq.append v1 v2))
+ghost
+fn join (#t: Type) (s1: ptr t) (#p: perm) (#v1: Seq.seq t) (s2: ptr t) (#v2: Seq.seq t)
+  requires pts_to s1 #p v1 ** pts_to s2 #p v2 ** pure (adjacent s1 (Seq.length v1) s2)
+  ensures  pts_to s1 #p (Seq.append v1 v2)
 
-val memcpy
+fn memcpy
     (#t:Type0) (#p0:perm)
     (src:ptr t) (idx_src: SZ.t)
     (dst:ptr t) (idx_dst: SZ.t)
     (len: SZ.t)
     (#s0:Ghost.erased (Seq.seq t) { SZ.v idx_src + SZ.v len <= Seq.length s0 })
     (#s1:Ghost.erased (Seq.seq t) { SZ.v idx_dst + SZ.v len <= Seq.length s1 })
-  : stt unit
-    (pts_to src #p0 s0 ** pts_to dst s1)
-    (fun _ -> pts_to src #p0 s0 ** pts_to dst (Seq.slice s0 0 (SZ.v len) `Seq.append` Seq.slice s1 (SZ.v len) (Seq.length s1)))
+  requires pts_to src #p0 s0 ** pts_to dst s1
+  ensures  pts_to src #p0 s0 ** pts_to dst (Seq.slice s0 0 (SZ.v len) `Seq.append` Seq.slice s1 (SZ.v len) (Seq.length s1))

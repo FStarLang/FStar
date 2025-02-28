@@ -202,7 +202,7 @@ requires
 ensures
   pts_to_range a i j #p s **
   pure (
-      (i <= j /\ j <= length a /\ eq2 #int (Seq.length s) (j - i))
+      (i <= j /\ j <= length a /\ Seq.length s == (j - i))
   )
 {
   unfold (pts_to_range a i j #p s);
@@ -221,19 +221,20 @@ fn pts_to_range_split
   (i m j: nat)
   (#p: perm)
   (#s: Seq.seq elt)
-requires
-  pts_to_range a i j #p s **
-  pure (i <= m /\ m <= j)
-  ensures exists* s1 s2.
-  pts_to_range a i m #p s1 **
-  pts_to_range a m j #p s2 **
-  pure (
-    i <= m /\ m <= j /\ j <= length a /\
-    eq2 #int (Seq.length s) (j - i) /\
-    s1 == Seq.slice s 0 (m - i) /\
-    s2 == Seq.slice s (m - i) (Seq.length s) /\
-    s == Seq.append s1 s2
-  )
+  requires
+    pts_to_range a i j #p s **
+    pure (i <= m /\ m <= j)
+  ensures
+    exists* s1 s2.
+      pts_to_range a i m #p s1 **
+      pts_to_range a m j #p s2 **
+      pure (
+        i <= m /\ m <= j /\ j <= length a /\
+        eq2 #int (Seq.length s) (j - i) /\
+        s1 == Seq.slice s 0 (m - i) /\
+        s2 == Seq.slice s (m - i) (Seq.length s) /\
+        s == Seq.append s1 s2
+      )
 {
   unfold (pts_to_range a i j #p s);
   H.pts_to_range_split a i m j #p #(raise_seq s);
@@ -309,13 +310,13 @@ fn pts_to_range_upd
   (#r: Ghost.erased nat{SZ.v i < r})
   (#s0: Ghost.erased (Seq.seq t))
   requires pts_to_range a l r s0
-ensures
-  exists* s.
-    pts_to_range a l r s **
-    pure(
-      eq2 #int (Seq.length s0) (r - l) /\
-      s == Seq.upd s0 (SZ.v i - l) v
-    )
+  ensures
+    exists* s.
+      pts_to_range a l r s **
+      pure(
+        eq2 #int (Seq.length s0) (r - l) /\
+        s == Seq.upd s0 (SZ.v i - l) v
+      )
 {
   unfold (pts_to_range a l r s0);
   H.pts_to_range_upd a i (U.raise_val v);
@@ -397,7 +398,7 @@ fn pts_to_range_gather
 
 
 (* this is universe-polymorphic in ret_t; so can't define it in Pulse yet *)
-let with_local'
+let with_local
     (#a:Type u#0)
     (init:a)
     (len:SZ.t)
@@ -428,5 +429,3 @@ let with_local'
             (fun _ -> return_stt_noeq r post))
   in
   bind_stt m1 body
-
-let with_local = with_local'

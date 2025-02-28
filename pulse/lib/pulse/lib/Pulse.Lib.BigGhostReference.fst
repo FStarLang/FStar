@@ -78,9 +78,8 @@ fn read (#a:Type u#2) (r:ref a) (#n:erased a) (#p:perm)
 
 let ( ! ) #a = read #a
 
-
 ghost
-fn op_Colon_Equals (#a:Type u#2) (r:ref a) (x:erased a) (#n:erased a)
+fn write (#a:Type u#2) (r:ref a) (x:erased a) (#n:erased a)
   requires pts_to r #1.0R n
   ensures pts_to r #1.0R x
 {
@@ -90,6 +89,7 @@ fn op_Colon_Equals (#a:Type u#2) (r:ref a) (x:erased a) (#n:erased a)
   fold pts_to r #1.0R x;
 }
 
+let ( := ) #a = write #a
 
 
 ghost
