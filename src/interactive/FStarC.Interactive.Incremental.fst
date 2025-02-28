@@ -151,6 +151,13 @@ let pop_entries (e:list repl_stack_entry_t)
   
 let repl_task (_, (p, _)) = p
 
+let push_kind_geq pk1 pk2 =
+  pk1=pk2 || (
+  match pk1, pk2 with
+  | FullCheck, LaxCheck -> true
+  | LaxCheck, SyntaxCheck -> true
+  | _ -> false
+  )
 (* Find a prefix of the repl stack that matche a prefix of the decls ds, 
    pop the rest of the stack
    and push the remaining suffix of decls
@@ -189,7 +196,7 @@ let inspect_repl_stack (s:repl_stack_t)
               let! pushes = push_decls (d::ds) in
               return (lookups @ pops @ pushes, accum)
             | PushFragment (Inr d', pk, issues) ->
-              if eq_decl (fst d) d'
+              if eq_decl (fst d) d' && pk `push_kind_geq` push_kind
               then (
                 let d, s = d in
                 write_full_buffer_fragment_progress (FragmentSuccess (d, s, pk));
