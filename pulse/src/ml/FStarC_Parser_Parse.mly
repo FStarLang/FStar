@@ -866,6 +866,7 @@ qlidentOrOperator:
   | LPAREN id=operator RPAREN
     { lid_of_ns_and_id [] (id_of_text (compile_op' (string_of_id id) (range_of_id id))) }
 
+%public
 %inline lidentOrOperator:
   | id=lident { id }
   | LPAREN id=operator RPAREN
