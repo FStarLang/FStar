@@ -1678,6 +1678,7 @@ string:
   | op=OPPREFIX     { mk_ident (op, rr $loc) }
   | op=binop_name   { op }
   | op=TILDE        { mk_ident (op, rr $loc) }
+  | op=MINUS        { mk_ident ("-", rr $loc) }
   | op=and_op       {op}
   | op=let_op       {op}
   | op=quantifier_op {op}
