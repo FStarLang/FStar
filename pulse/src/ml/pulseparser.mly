@@ -86,7 +86,7 @@ maybeRec:
 
 /* This is to just peek at the name of the top-level definition */
 peekFnId:
-  | q=option(qual) FN maybeRec id=lident
+  | q=option(qual) FN maybeRec id=lidentOrOperator
       { FStarC_Ident.string_of_id id }
 
 qual:
@@ -112,7 +112,7 @@ declBody:
 
 pulseDecl:
   | q=qualOptFn (* workaround what seems to be a menhir bug *)
-    isRec=maybeRec lid=lident bs=pulseBinderList
+    isRec=maybeRec lid=lidentOrOperator bs=pulseBinderList
     rest=pulseAscriptionMaybeBody
     {
       let decors = [] in
@@ -170,7 +170,7 @@ pulseBinderList:
     {  bs }
 
 localFnDefn:
-  | q=option(qual) FN lid=lident
+  | q=option(qual) FN lid=lidentOrOperator
     bs=pulseBinderList
     body=fnBody
     {

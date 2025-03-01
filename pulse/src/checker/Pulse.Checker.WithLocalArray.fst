@@ -74,8 +74,8 @@ let is_annotated_type_array (t:term) : option term =
 let head_range (t:st_term {Tm_WithLocalArray? t.term}) : range =
   let Tm_WithLocalArray { initializer } = t.term in
   Pulse.RuntimeUtils.range_of_term initializer
+
 #restart-solver
-#push-options "--query_stats"
 let check
   (g:env)
   (pre:term)

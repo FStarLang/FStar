@@ -120,6 +120,9 @@ let parse_use_lang_blob (extension_name:string)
 */
 %token <string option> SEMICOLON_OP
 
+(* IMPORTANT: Please extend the string_of_token function in FStarC_Parser_ParseIt.ml
+   to make sure they are printed properly, and that --debug Tokens works. *)
+
 %token ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
@@ -863,6 +866,7 @@ qlidentOrOperator:
   | LPAREN id=operator RPAREN
     { lid_of_ns_and_id [] (id_of_text (compile_op' (string_of_id id) (range_of_id id))) }
 
+%public
 %inline lidentOrOperator:
   | id=lident { id }
   | LPAREN id=operator RPAREN
@@ -1690,6 +1694,7 @@ string:
   | op=OPPREFIX     { mk_ident (op, rr $loc) }
   | op=binop_name   { op }
   | op=TILDE        { mk_ident (op, rr $loc) }
+  | op=MINUS        { mk_ident ("-", rr $loc) }
   | op=and_op       {op}
   | op=let_op       {op}
   | op=quantifier_op {op}

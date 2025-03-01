@@ -19,8 +19,6 @@ module T = FStar.Tactics
 open Pulse.Syntax.Printer
 open Pulse.Typing
 
-
-#push-options "--ifuel 1 --z3rlimit_factor 4 --split_queries no"
 let rec print_st_typing #g #t #c (d:st_typing g t c)
   : T.Tac string 
   = match d with

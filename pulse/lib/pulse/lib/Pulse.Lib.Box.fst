@@ -65,8 +65,6 @@ let free b #v = R.free b.r #v
 
 let share b = R.share b.r
 let gather b = R.gather b.r
-let share2 b = R.share2 b.r
-let gather2 b = R.gather2 b.r
 let pts_to_injective_eq b = R.pts_to_injective_eq b.r
 let box_to_ref b = b.r
 let to_ref_pts_to #a b #p #v =

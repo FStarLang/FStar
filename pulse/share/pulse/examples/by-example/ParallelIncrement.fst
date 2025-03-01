@@ -149,7 +149,7 @@ ensures pts_to x ('i + 2)
     };
 
     with pred. assert (L.lock_alive lock #1.0R (exists* v. pts_to x v ** pred v));
-    L.share2 lock;
+    L.share lock;
     parallel
     requires pts_to left #0.5R 0 **
              L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v)
@@ -162,7 +162,7 @@ ensures pts_to x ('i + 2)
     { increment_f2 x lock (step left true) }
     { increment_f2 x lock (step right false) };
 
-    L.gather2 lock;
+    L.gather lock;
     L.acquire lock;
     GR.gather left;
     GR.gather right;
@@ -463,7 +463,7 @@ ensures pts_to x ('i + 2)
       }
     };
 
-    C.share2 c;
+    C.share c;
     with pred. assert (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
     dup_inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
 
@@ -483,7 +483,7 @@ ensures pts_to x ('i + 2)
     { atomic_increment_f6 x c (step left true) }
     { atomic_increment_f6 x c (step right false) };
 
-    C.gather2 c;
+    C.gather c;
     drop_ (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
     later_credit_buy 1;
     C.cancel c;

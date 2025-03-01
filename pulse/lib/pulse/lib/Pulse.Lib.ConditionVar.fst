@@ -123,7 +123,7 @@ fn create (p:slprop)
   rewrite (SLT.pts_to tab 0 #0.5R p)
       as (predicate_at tab 0.5R (singleton p) 0);
   OR.on_range_singleton_intro (predicate_at tab 0.5R (singleton p)) 0;
-  Box.share2 r;
+  Box.share r;
   istar_singleton p;
   equiv_refl (istar (singleton p));
   rewrite (equiv (istar (singleton p)) (istar (singleton p)))

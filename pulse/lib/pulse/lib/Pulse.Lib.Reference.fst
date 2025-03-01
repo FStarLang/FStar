@@ -123,18 +123,6 @@ fn gather (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
 }
 
 
-let share2 (#a:Type) (r:ref a) (#v:erased a)
-: stt_ghost unit emp_inames
-  (pts_to r v)
-  (fun _ -> pts_to r #0.5R v ** pts_to r #0.5R v)
-= share #a r #v
-
-let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
-: stt_ghost unit emp_inames
-      (pts_to r #0.5R x0 ** pts_to r #0.5R x1)
-      (fun () -> pts_to r #1.0R x0  ** pure (x0 == x1))
-= gather r
-
 
 fn
 raise_exists (#a:Type u#0) (frame:slprop) (p: U.raise_t u#0 u#1 a -> slprop)

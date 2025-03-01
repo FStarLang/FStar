@@ -52,7 +52,7 @@ fn new_cancellable_invariant (v:slprop)
 {
   let r = GR.alloc true;
   rewrite v as (if true then v else emp);
-  GR.share2 r;
+  GR.share r;
   fold (cinv_vp_aux r v);
   let i = new_invariant (cinv_vp_aux r v);
   let c = {i;r};
@@ -109,8 +109,6 @@ fn share (#p:perm) (c:cinv)
 }
 
 
-let share2 c = share #1.0R c
-
 
 ghost
 fn gather (#p1 #p2:perm) (c:cinv)
@@ -123,8 +121,6 @@ fn gather (#p1 #p2:perm) (c:cinv)
   fold active c (p1 +. p2);
 }
 
-
-let gather2 c = gather #0.5R #0.5R c
 
 
 ghost
@@ -143,7 +139,7 @@ fn cancel_ (#v:slprop) (c:cinv)
   GR.gather c.r;
   GR.(c.r := false);
   rewrite emp as (if false then v else emp);
-  GR.share2 c.r;
+  GR.share c.r;
   fold (cinv_vp_aux c.r v);
   fold (cinv_vp c v);
   drop_ (pts_to c.r #0.5R _)

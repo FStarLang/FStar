@@ -107,27 +107,6 @@ fn gather
   ensures  pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
 
 
-(* Share/gather specialized to half permission *)
-
-ghost
-fn share2
-  (#a:Type)
-  (r:ref a)
-  (#v:erased a)
-  requires pts_to r v
-  ensures  pts_to r #0.5R v ** pts_to r #0.5R v
-
-
-[@@allow_ambiguous]
-
-ghost
-fn gather2
-  (#a:Type)
-  (r:ref a)
-  (#x0 #x1:erased a)
-  requires pts_to r #0.5R x0 ** pts_to r #0.5R x1
-  ensures  pts_to r x0 ** pure (x0 == x1)
-
 
 let cond b (p q:slprop) = if b then p else q
 

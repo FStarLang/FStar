@@ -386,7 +386,7 @@ ensures  R.pts_to r ('i + 2)
   rewrite (can_give #2 gs (2 - 1)) as (can_give #(reveal (hide 2)) gs 1);
   rewrite (can_give #2 gs 1) as (can_give #(reveal (hide 2)) gs 1);
   // share permission to the invariant for use in two threads
-  CI.share2 ci;
+  CI.share ci;
   // and duplicate the invariant itself
   dup_inv _ _;
   // Now, spawn two threads in which to run increment
@@ -399,7 +399,7 @@ ensures  R.pts_to r ('i + 2)
     (fun _ -> increment #2 r ci)
     (fun _ -> increment #2 r ci);
   later_credit_buy 1;
-  CI.gather2 ci; CI.cancel ci; // Collect back permission to the invariant and then cancel it
+  CI.gather ci; CI.cancel ci; // Collect back permission to the invariant and then cancel it
   drop_ (inv _ _); //drop the other copy of the invariant; it is now useless
   // collect up the has_given predicates from each thread
   gather_has_given gs;

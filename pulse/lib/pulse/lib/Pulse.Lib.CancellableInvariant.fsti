@@ -57,22 +57,11 @@ val share (#p:perm) (c:cinv)
       (active c p)
       (fun _ -> active c (p /. 2.0R) ** active c (p /. 2.0R))
 
-val share2 (c:cinv)
-  : stt_ghost unit emp_inames
-      (active c 1.0R)
-      (fun _ -> active c 0.5R ** active c 0.5R)
-
 [@@allow_ambiguous]
 val gather (#p1 #p2 :perm) (c:cinv)
   : stt_ghost unit emp_inames
       (active c p1 ** active c p2)
       (fun _ -> active c (p1 +. p2))
-
-[@@allow_ambiguous]
-val gather2 (c:cinv)
-  : stt_ghost unit emp_inames
-      (active c 0.5R ** active c 0.5R)
-      (fun _ -> active c 1.0R)
 
 val cancel (#v:slprop) (c:cinv)
   : stt_ghost unit (add_inv emp_inames (iname_of c))

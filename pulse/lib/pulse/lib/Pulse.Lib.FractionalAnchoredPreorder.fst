@@ -64,7 +64,7 @@ open FStar.Preorder
 open PulseCore.Preorder
 open PulseCore.FractionalPermission
 
-#push-options "--fuel 0 --ifuel 2"
+#set-options "--fuel 0 --ifuel 2"
 
 /// A permission: is a pair of
 ///

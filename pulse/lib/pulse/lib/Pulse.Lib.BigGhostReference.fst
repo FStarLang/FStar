@@ -78,9 +78,8 @@ fn read (#a:Type u#2) (r:ref a) (#n:erased a) (#p:perm)
 
 let ( ! ) #a = read #a
 
-
 ghost
-fn op_Colon_Equals (#a:Type u#2) (r:ref a) (x:erased a) (#n:erased a)
+fn write (#a:Type u#2) (r:ref a) (x:erased a) (#n:erased a)
   requires pts_to r #1.0R n
   ensures pts_to r #1.0R x
 {
@@ -90,6 +89,7 @@ fn op_Colon_Equals (#a:Type u#2) (r:ref a) (x:erased a) (#n:erased a)
   fold pts_to r #1.0R x;
 }
 
+let ( := ) #a = write #a
 
 
 ghost
@@ -130,10 +130,6 @@ fn gather #a (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
   fold (pts_to r #(p0 +. p1) x0)
 }
 
-
-let share2 (#a:Type) (r:ref a) (#v:erased a) = share r #v #1.0R
-let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a) = gather r #x0 #x1 #0.5R #0.5R
-         
 
 ghost
 fn pts_to_injective_eq
