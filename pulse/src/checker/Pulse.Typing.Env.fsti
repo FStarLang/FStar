@@ -148,6 +148,7 @@ val remove_latest_binding (g:env { Cons? (bindings g) })
             let (x, t, g') = r in
             fstar_env g' == fstar_env g /\
             (~ (x `Set.mem` dom g')) /\
+            bindings g == (x, t) :: bindings g' /\
             g == push_binding g' x ppname_default t)
 
 // g1 extends g2 with g3, i.e. g1.bs == g3.bs @ g2.bs (recall most recent binding at the head)
