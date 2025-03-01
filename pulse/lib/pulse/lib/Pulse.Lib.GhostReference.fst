@@ -124,10 +124,6 @@ fn gather (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
 }
 
 
-let share2 (#a:Type) (r:ref a) (#v:erased a) = share #a r #v
-
-let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a) = gather r
-
 
 
 ghost

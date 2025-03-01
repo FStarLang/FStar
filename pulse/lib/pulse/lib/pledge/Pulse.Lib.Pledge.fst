@@ -313,7 +313,7 @@ fn do_elim_body_l
   unfold inv_p;
   unfold inv_p';
 
-  gather2 r1;
+  gather r1;
 
   let b1 = !r1;
   let b2 = !r2;
@@ -338,7 +338,7 @@ fn do_elim_body_l
               | true, true -> emp)
         as emp;
 
-    share2 #_ r1;
+    share #_ r1;
     fold (inv_p' is f v1 v2 r1 r2 true true);
     fold inv_p;
     assert (f ** v1 ** inv_p is f v1 v2 r1 r2);
@@ -356,7 +356,7 @@ fn do_elim_body_l
     r1 := true;
     fold (split_switch is true false f v1 v2);
 
-    share2 r1;
+    share r1;
 
     fold (inv_p' is f v1 v2 r1 r2 true false);
     fold inv_p;
@@ -483,8 +483,8 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   pledge_inames_live is f (v1 ** v2);
   let r1 = GR.alloc false;
   let r2 = GR.alloc false;
-  GR.share2 r1;
-  GR.share2 r2;
+  GR.share r1;
+  GR.share r2;
   fold split_switch is false false f v1 v2;
   fold (inv_p' is f v1 v2 r1 r2 false false);
   fold inv_p;

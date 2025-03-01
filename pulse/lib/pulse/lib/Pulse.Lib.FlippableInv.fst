@@ -49,7 +49,7 @@ fn mk_finv (p:slprop)
    ensures off f
 {
    let r = GR.alloc false;
-   GR.share2 r;
+   GR.share r;
    rewrite emp
         as (if false then p else emp);
    fold finv_p p r;
@@ -86,10 +86,10 @@ fn flip_on (#p:slprop) (fi:finv p)
     unfold finv_p;
     with b.
       assert (pts_to fi.r #0.5R b ** pts_to fi.r #0.5R false);
-    GR.gather2 fi.r;
+    GR.gather fi.r;
     rewrite each b as false;
     fi.r := true;
-    GR.share2 fi.r;
+    GR.share fi.r;
     fold_finv_p p fi.r;
     later_intro (finv_p p fi.r);
   };
@@ -114,10 +114,10 @@ fn flip_off (#p:slprop) (fi : finv p)
     unfold finv_p;
     with b.
       assert (pts_to fi.r #0.5R b ** pts_to fi.r #0.5R true);
-    GR.gather2 fi.r;
+    GR.gather fi.r;
     rewrite each b as true;
     fi.r := false;
-    GR.share2 fi.r;
+    GR.share fi.r;
     fold_finv_p p fi.r;
     later_intro (finv_p p fi.r);
   };

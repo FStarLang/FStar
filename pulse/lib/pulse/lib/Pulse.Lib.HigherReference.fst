@@ -121,9 +121,6 @@ fn gather' #a (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
 
 let gather = gather'
 
-let share2 (#a:Type) (r:ref a) (#v:erased a) = share r #v #1.0R
-let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a) = gather r #x0 #x1 #0.5R #0.5R
-
 
 fn free_with_frame #a (r:ref a) (frame:slprop)
   requires frame ** (exists* (x:a). pts_to r x)

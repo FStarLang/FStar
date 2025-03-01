@@ -67,12 +67,6 @@ val share2 (#a:Type) (r:ref a) (#v:erased a)
       (pts_to r v)
       (fun _ -> pts_to r #0.5R v ** pts_to r #0.5R v)
 
-[@@allow_ambiguous]
-val gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
-  : stt_ghost unit emp_inames
-      (pts_to r #0.5R x0 ** pts_to r #0.5R x1)
-      (fun _ -> pts_to r x0 ** pure (x0 == x1))
-
 val with_local
   (#a:Type u#2)
   (init:a)

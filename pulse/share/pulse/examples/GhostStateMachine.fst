@@ -103,7 +103,7 @@ fn init ()
   let ph = alloc Init;
   let h = alloc CInit;
 
-  R.share2 #pure_st_t ph #Init;
+  R.share #pure_st_t ph #Init;
   fold pure_handle_has_state ph Init;
   fold pure_handle_has_state ph Init;
   fold handle_has_state h CInit;
@@ -146,13 +146,13 @@ fn next ()
   pts_to_injective_eq #pure_st_t #0.5R #0.5R #Init #ps global_locked_state.ph;
   rewrite (pts_to global_locked_state.ph #0.5R ps)
        as (pts_to global_locked_state.ph #0.5R Init);
-  Pulse.Lib.Reference.gather2 #pure_st_t global_locked_state.ph #Init;
+  Pulse.Lib.Reference.gather #pure_st_t global_locked_state.ph #Init;
 
   let st = CNext some_payload;
   global_locked_state.h := st;
   global_locked_state.ph := Next;
 
-  R.share2 #pure_st_t global_locked_state.ph #Next;
+  R.share #pure_st_t global_locked_state.ph #Next;
   fold pure_handle_has_state global_locked_state.ph Next;
   fold pure_handle_has_state global_locked_state.ph Next;
   fold handle_has_state global_locked_state.h st;
@@ -184,13 +184,13 @@ fn close ()
   pts_to_injective_eq #pure_st_t #0.5R #0.5R #Next #ps global_locked_state.ph;
   rewrite (pts_to global_locked_state.ph #0.5R ps)
        as (pts_to global_locked_state.ph #0.5R Next);
-  Pulse.Lib.Reference.gather2 #pure_st_t global_locked_state.ph #Next;
+  Pulse.Lib.Reference.gather #pure_st_t global_locked_state.ph #Next;
 
   let st = CFinal some_payload;
   global_locked_state.h := st;
   global_locked_state.ph := Final;
 
-  R.share2 #pure_st_t global_locked_state.ph #Final;
+  R.share #pure_st_t global_locked_state.ph #Final;
   fold pure_handle_has_state global_locked_state.ph Final;
   fold pure_handle_has_state global_locked_state.ph Final;
   fold handle_has_state global_locked_state.h st;

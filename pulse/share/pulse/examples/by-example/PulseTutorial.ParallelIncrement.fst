@@ -85,9 +85,9 @@ ensures exists* v. pts_to x v
     x := v + 1;
     L.release l
   };
-  L.share2 l;
+  L.share l;
   par incr incr;
-  L.gather2 l;
+  L.gather l;
   L.acquire l;
   L.free l
 }
@@ -166,10 +166,10 @@ ensures  pts_to x ('i + 2)
   fold (contributions left right 'i 'i);
   fold (lock_inv x 'i left right);
   let lock = L.new_lock (lock_inv x 'i left right);
-  L.share2 lock;
+  L.share lock;
   par (fun _ -> incr_left x lock)
       (fun _ -> incr_right x lock);
-  L.gather2 lock;
+  L.gather lock;
   L.acquire lock;
   L.free lock;
   unfold lock_inv;
@@ -261,10 +261,10 @@ ensures pts_to x ('i + 2)
         fold (contributions left right 'i (v + 1));
       }
     };
-    L.share2 lock;
+    L.share lock;
     par (fun _ -> incr x lock (step left true))
         (fun _ -> incr x lock (step right false));
-    L.gather2 lock;
+    L.gather lock;
     L.acquire lock;
     L.free lock;
     unfold (contributions left right 'i);
@@ -444,13 +444,13 @@ ensures pts_to x ('i + 2)
         fold (contributions left right 'i (v + 1));
       }
     };
-    C.share2 c;
+    C.share c;
     with pred. assert (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
     dup_inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
     par (fun _ -> incr_atomic x c (step left true))
         (fun _ -> incr_atomic x c (step right false));
     
-    C.gather2 c;
+    C.gather c;
     later_credit_buy 1;
     C.cancel c;
     unfold contributions;
@@ -647,7 +647,7 @@ fn incr_pcm (r:ref int) (#n:erased int)
 
   let l = L.new_lock (lock_inv_pcm r ghost_r);
   
-  L.share2 l;
+  L.share l;
 
   parallel
     requires L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
@@ -661,7 +661,7 @@ fn incr_pcm (r:ref int) (#n:erased int)
     { incr_pcm_t r ghost_r l true }
     { incr_pcm_t r ghost_r l false };
 
-  L.gather2 l;
+  L.gather l;
   L.acquire l;
   unfold lock_inv_pcm;
   unfold lock_inv_ghost;
@@ -753,7 +753,7 @@ fn incr_pcm_abstract (r:ref int)
   share ghost_r;
   fold lock_inv_ghost;
   let l = L.new_lock (exists* v. pts_to r v ** lock_inv_ghost ghost_r v);
-  L.share2 l;
+  L.share l;
 
   parallel
     requires L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
@@ -769,7 +769,7 @@ fn incr_pcm_abstract (r:ref int)
     { incr_pcm_t_abstract r l t1 }
     { incr_pcm_t_abstract r l t2 };
 
-  L.gather2 l;
+  L.gather l;
   L.acquire l;
   unfold lock_inv_ghost;
   gather ghost_r;

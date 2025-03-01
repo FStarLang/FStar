@@ -131,10 +131,6 @@ fn gather #a (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
 }
 
 
-let share2 (#a:Type) (r:ref a) (#v:erased a) = share r #v #1.0R
-let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a) = gather r #x0 #x1 #0.5R #0.5R
-         
-
 ghost
 fn pts_to_injective_eq
     (#a:Type)

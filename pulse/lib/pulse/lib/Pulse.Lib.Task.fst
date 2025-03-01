@@ -1069,7 +1069,7 @@ fn rec grab_work'' (p:pool) (v_runnable : list task_t)
           t.h.state := Running;
           AR.write t.h.g_state Running;
           
-          Pulse.Lib.Reference.share2 t.h.state;
+          Pulse.Lib.Reference.share t.h.state;
           dup (task_thunk_typing t) ();
 
           intro_state_pred_Running t.pre t.post t.h;
@@ -1190,7 +1190,7 @@ fn put_back_result (p:pool) #f (t : task_t)
     assert (pure (v_st == Running));
     rewrite (pts_to t.h.state #(if Running? v_st then 0.5R else 1.0R) (unclaimed v_st))
          as (pts_to t.h.state #0.5R v_st);
-    Pulse.Lib.Reference.gather2 t.h.state;
+    Pulse.Lib.Reference.gather t.h.state;
     t.h.state := Done; // Only concrete step (except for mutex taking)
     AR.write t.h.g_state Done;
 
@@ -1517,7 +1517,7 @@ fn setup_pool
   rewrite each g_runnable as p.g_runnable;
   rewrite each runnable as p.runnable;
 
-  Pulse.Lib.SpinLock.share2 p.lk;
+  Pulse.Lib.SpinLock.share p.lk;
   fold (pool_alive p);
   fold (pool_alive p);
 
