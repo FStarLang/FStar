@@ -23,6 +23,8 @@ val ( forall* )
     (p:a -> slprop)
 : slprop
 
+(* Cannot use pulse vals yet: universe polymorphic definition. *)
+
 val elim_forall
     (#a:Type)
     (#p:a->slprop)

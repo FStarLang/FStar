@@ -24,7 +24,6 @@ open Pulse.Lib.Core
 open Pulse.Class.PtsTo
 
 module T = FStar.Tactics.V2
-
 module R = Pulse.Lib.Reference
 
 new
@@ -44,48 +43,51 @@ val pts_to_timeless (#a:Type) ([@@@mkey]r:box a) (p:perm) (x:a)
   : Lemma (timeless (pts_to r #p x))
           [SMTPat (timeless (pts_to r #p x))]
 
-val alloc (#a:Type0) (x:a)
-  : stt (box a) emp (fun b -> pts_to b x)
+fn alloc (#a:Type0) (x:a)
+  returns  b : box a
+  ensures  pts_to b x
   
-val ( ! ) (#a:Type0) (b:box a) (#v:erased a) (#p:perm)
-  : stt a
-      (pts_to b #p v)
-      (fun x -> pts_to b #p v ** pure (eq2 #a (reveal v) x))
+fn ( ! ) (#a:Type0) (b:box a) (#v:erased a) (#p:perm)
+  requires pts_to b #p v
+  returns  x : a
+  ensures  pts_to b #p v ** pure (eq2 #a (reveal v) x)
 
-val ( := ) (#a:Type0) (b:box a) (x:a) (#v:erased a)
-  : stt unit
-      (pts_to b v) 
-      (fun _ -> pts_to b (hide x))
+fn ( := ) (#a:Type0) (b:box a) (x:a) (#v:erased a)
+  requires pts_to b v
+  ensures  pts_to b (hide x)
 
-val free (#a:Type0) (b:box a) (#v:erased a)
-  : stt unit (pts_to b v) (fun _ -> emp)
+fn free (#a:Type0) (b:box a) (#v:erased a)
+  requires pts_to b v
+  ensures  emp
 
-val share (#a:Type) (r:box a) (#v:erased a) (#p:perm)
-  : stt_ghost unit emp_inames
-      (pts_to r #p v)
-      (fun _ ->
-       pts_to r #(p /. 2.0R) v **
-       pts_to r #(p /. 2.0R) v)
+ghost
+fn share (#a:Type) (r:box a) (#v:erased a) (#p:perm)
+  requires pts_to r #p v
+  ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
 
 [@@allow_ambiguous]
-val gather (#a:Type) (r:box a) (#x0 #x1:erased a) (#p0 #p1:perm)
-  : stt_ghost unit emp_inames
-      (pts_to r #p0 x0 ** pts_to r #p1 x1)
-      (fun _ -> pts_to r #(p0 +. p1) x0 ** pure (x0 == x1))
+ghost
+fn gather (#a:Type) (r:box a) (#x0 #x1:erased a) (#p0 #p1:perm)
+  requires pts_to r #p0 x0 ** pts_to r #p1 x1
+  ensures  pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
 
 [@@allow_ambiguous]
-val pts_to_injective_eq (#a:_)
+ghost
+fn pts_to_injective_eq (#a:_)
                         (#p #q:_)
                         (#v0 #v1:a)
                         (r:box a)
-  : stt_ghost unit emp_inames
-      (pts_to r #p v0 ** pts_to r #q v1)
-      (fun _ -> pts_to r #p v0 ** pts_to r #q v1 ** pure (v0 == v1))
+  requires pts_to r #p v0 ** pts_to r #q v1
+  ensures  pts_to r #p v0 ** pts_to r #q v1 ** pure (v0 == v1)
 
 val box_to_ref  (#a:Type0) (b:box a) : R.ref a
 
-val to_ref_pts_to (#a:Type0) (b:box a) (#p:perm) (#v:a)
-  : stt_ghost unit emp_inames (pts_to b #p v) (fun _ -> R.pts_to (box_to_ref b) #p v)
+ghost
+fn to_ref_pts_to (#a:Type0) (b:box a) (#p:perm) (#v:a)
+  requires pts_to b #p v
+  ensures  R.pts_to (box_to_ref b) #p v
 
-val to_box_pts_to (#a:Type0) (b:box a) (#p:perm) (#v:a)
-  : stt_ghost unit emp_inames (R.pts_to (box_to_ref b) #p v) (fun _ -> pts_to b #p v)
+ghost
+fn to_box_pts_to (#a:Type0) (b:box a) (#p:perm) (#v:a)
+  requires R.pts_to (box_to_ref b) #p v
+  ensures pts_to b #p v

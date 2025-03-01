@@ -18,36 +18,36 @@ fn create (#a:Type)
 
 ghost
 fn update #a (t:table a) (#i:nat) (#old:a) (p: a)
-requires 
-  pts_to t i #1.0R old
-ensures
-  pts_to t i #1.0R p
+  requires 
+    pts_to t i #1.0R old
+  ensures
+    pts_to t i #1.0R p
 
 ghost
 fn alloc #a (t:table a) (p:a) (#i:nat)
-requires
-  is_table t i
-ensures
-  is_table t (i + 1) **
-  pts_to t i #1.0R p
+  requires
+    is_table t i
+  ensures
+    is_table t (i + 1) **
+    pts_to t i #1.0R p
 
 ghost
 fn in_bounds #a (t:table a) (#i:nat) (#f:perm) (#p:a) (#n:nat)
-requires
-  is_table t n ** pts_to t i #f p
-ensures
-  is_table t n ** pts_to t i #f p ** pure (i < n)
+  requires
+    is_table t n ** pts_to t i #f p
+  ensures
+    is_table t n ** pts_to t i #f p ** pure (i < n)
 
 ghost
 fn share #a (t:table a) i (f0 f1:perm) (#f:perm) (#p:a)
-requires 
-  pts_to t i #f p ** pure (f == f0 +. f1)
-ensures
-  pts_to t i #f0 p ** pts_to t i #f1 p
+  requires 
+    pts_to t i #f p ** pure (f == f0 +. f1)
+  ensures
+    pts_to t i #f0 p ** pts_to t i #f1 p
 
 ghost
 fn gather #a (t:table a) (i:nat) (#f0 #f1:perm ) (#p #q:a)
-requires 
-   pts_to t i #f0 p ** pts_to t i #f1 q
-ensures
-   pts_to t i #(f0 +. f1) p ** pure (p == q)
+  requires 
+    pts_to t i #f0 p ** pts_to t i #f1 q
+  ensures
+    pts_to t i #(f0 +. f1) p ** pure (p == q)

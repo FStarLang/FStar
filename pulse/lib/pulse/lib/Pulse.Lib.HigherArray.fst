@@ -417,8 +417,9 @@ fn of_squash (#p:prop) (s:squash p)
 
 
 
+[@@allow_ambiguous]
 ghost
-fn gather'
+fn gather
   (#a:Type)
   (arr:array a)
   (#s0 #s1:Ghost.erased (Seq.seq a))
@@ -435,8 +436,6 @@ fn gather'
   of_squash (mk_carrier_valid_sum_perm (SZ.v (ptr_of arr).base_len) ((ptr_of arr).offset) s0 p0 p1);
   fold pts_to arr #(p0 +. p1) s0;
 }
-
-let gather = gather'
 
 let ptr_shift
   (p: ptr)
@@ -678,7 +677,7 @@ fn split_r_slice #elt
 
 
 ghost
-fn pts_to_range_split'
+fn pts_to_range_split
   (#elt: Type)
   (a: array elt)
   (i m j: nat)
@@ -713,8 +712,6 @@ ensures
   fold (pts_to_range a m j #p (Seq.slice s (m - i) (Seq.length s)));
   assert pure (s `Seq.equal` Seq.append (Seq.slice s 0 (m - i)) (Seq.slice s (m - i) (Seq.length s)));
 }
-
-let pts_to_range_split = pts_to_range_split'
 
 
 let mk_carrier_merge
@@ -831,7 +828,7 @@ let array_slice_impl
 = split_l (split_r a (SZ.v i)) (Ghost.hide (j - SZ.v i))
 
 
-fn pts_to_range_index'
+fn pts_to_range_index
   (#t: Type)
   (a: array t)
   (i: SZ.t)
@@ -841,10 +838,10 @@ fn pts_to_range_index'
   (#p: perm)
   requires pts_to_range a l r #p s
   returns res:t
-ensures
-  pts_to_range a l r #p s **
-  pure (eq2 #int (Seq.length s) (r - l) /\
-        res == Seq.index s (SZ.v i - l))
+  ensures
+    pts_to_range a l r #p s **
+    pure (eq2 #int (Seq.length s) (r - l) /\
+          res == Seq.index s (SZ.v i - l))
 {
   pts_to_range_split a l (SZ.v i) r;
   with s1 s2. _;
@@ -859,10 +856,8 @@ ensures
   res
 }
 
-let pts_to_range_index = pts_to_range_index'
 
-
-fn pts_to_range_upd'
+fn pts_to_range_upd
   (#t: Type)
   (a: array t)
   (i: SZ.t)
@@ -871,13 +866,13 @@ fn pts_to_range_upd'
   (#r: Ghost.erased nat{SZ.v i < r})
   (#s0: Ghost.erased (Seq.seq t))
   requires pts_to_range a l r #1.0R s0
-ensures
-  exists* s.
-    pts_to_range a l r s **
-    pure (
-        eq2 #int (Seq.length s0) (r - l) /\
-        s == Seq.upd s0 (SZ.v i - l) v
-    )
+  ensures
+    exists* s.
+      pts_to_range a l r s **
+      pure (
+          eq2 #int (Seq.length s0) (r - l) /\
+          s == Seq.upd s0 (SZ.v i - l) v
+      )
 {
   pts_to_range_split a l (SZ.v i) r;
   with s1 s2. _;
@@ -892,8 +887,6 @@ ensures
   with w. assert (pts_to_range a l r w);
   assert pure (w `Seq.equal` Seq.upd s0 (SZ.v i - l) v);
 }
-
-let pts_to_range_upd = pts_to_range_upd'
 
 ghost
 fn pts_to_range_share
