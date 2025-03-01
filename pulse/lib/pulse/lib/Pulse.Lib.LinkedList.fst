@@ -28,14 +28,12 @@ open Pulse.Lib.BoundedIntegers
 noeq
 type node (t:Type0) = {
     head : t;
-    tail : llist t;
+    tail : option (node_ptr t);
 }
 
 and node_ptr (t:Type0) = ref (node t)
 
-//A nullable pointer to a node
 and llist (t:Type0) = option (node_ptr t)
-
 
 let rec is_list #t ([@@@mkey]x:llist t) (l:list t)
   : Tot slprop (decreases l)
@@ -56,6 +54,26 @@ let is_list_cases #t ([@@@mkey]x:llist t) (l:list t)
         pts_to v n **
         pure (l == n.head::tl) **
         is_list n.tail tl
+
+ghost 
+fn some_iff_cons #t (x:llist t) (#l:list t)
+  requires is_list x l
+  ensures  is_list x l ** pure (Some? x <==> Cons? l)
+{
+  match l {
+    [] -> {
+      unfold is_list;
+      assert (pure (l == [])); (* Why is this needed? *)
+      fold (is_list x []);
+      ()
+    }
+    h::t -> {
+      unfold is_list;
+      fold (is_list x (h::t));
+      ();
+    }
+  }
+}
 
 ghost
 fn intro_is_list_cons (#t:Type0) (x:llist t) (v:node_ptr t) (#node:node t) (#tl:list t)
@@ -211,9 +229,10 @@ fn cons (#t:Type) (v:t) (x:llist t)
 
 
 fn rec append (#t:Type0) (x y:llist t)
-  requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
+  requires is_list x 'l1 ** is_list y 'l2 ** pure (Cons? 'l1)
   ensures is_list x ('l1 @ 'l2)
 {
+  some_iff_cons x;
   let np = Some?.v x;
   is_list_cases_some x np;
   with _node _tl. _;
@@ -228,6 +247,7 @@ fn rec append (#t:Type0) (x y:llist t)
       intro_is_list_cons x np; 
     }
     Some p -> {
+      some_iff_cons (Some p);
       append (Some p) y;
       rewrite each (Some p) as node.tail;
       intro_is_list_cons x np;
@@ -265,13 +285,14 @@ ensures
 
 
 fn move_next (#t:Type) (x:llist t)
-    requires is_list x 'l ** pure (Some? x)
+    requires is_list x 'l ** pure (Cons? 'l)
     returns y:llist t
     ensures exists* tl.
         is_list y tl **
         (is_list y tl @==> is_list x 'l) **
         pure (Cons? 'l /\ tl == Cons?.tl 'l)
 { 
+    some_iff_cons x;
     let np = Some?.v x;
     is_list_cases_some x np;
     with _node _tl. _;
@@ -314,6 +335,7 @@ fn length_iter (#t:Type) (x: llist t)
     let n = !ctr;
     let ll = !cur;
     rewrite each _ll as ll;
+    some_iff_cons ll;
     let next = move_next ll;
     with tl. assert (is_list next tl);
     T.trans (is_list next tl) (is_list ll suffix) (is_list x 'l);
@@ -330,10 +352,11 @@ fn length_iter (#t:Type) (x: llist t)
 
 
 fn is_last_cell (#t:Type) (x:llist t)
-    requires is_list x 'l ** pure (Some? x)
+    requires is_list x 'l ** pure (Cons? 'l)
     returns b:bool
     ensures is_list x 'l ** pure (b == (List.Tot.length 'l = 1))
 {
+  some_iff_cons x;
   let np = Some?.v x;
   is_list_cases_some x np;
   with _node _tl. _;
@@ -360,10 +383,11 @@ fn append_at_last_cell (#t:Type) (x y:llist t)
 requires
   is_list x 'l1 **
   is_list y 'l2 **
-  pure (Some? x /\ List.Tot.length 'l1 == 1)
+  pure (List.Tot.length 'l1 == 1)
 ensures
   is_list x (List.Tot.append 'l1 'l2)
 {
+  some_iff_cons x;
   let np = Some?.v x;
   is_list_cases_some x np;
   with _node _tl. _;
@@ -445,9 +469,10 @@ let trigger (x:'a) : slprop = emp
 
 
 fn append_iter (#t:Type) (x y:llist t)
-  requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
+  requires is_list x 'l1 ** is_list y 'l2 ** pure (Cons? 'l1)
   ensures is_list x ('l1 @ 'l2)
 {
+  some_iff_cons x;
   let mut cur = x;
   (* the base case, set up the initial invariant *)
   forall_intro_is_list_idem x;
@@ -457,6 +482,7 @@ fn append_iter (#t:Type) (x y:llist t)
     with _b ll pfx sfx. _;
     let l = !cur;
     rewrite each ll as l; (* this is a little annoying; rename every occurrence of ll to l *)
+    some_iff_cons l;
     let b = is_last_cell l;
     if b 
     { 
@@ -502,13 +528,14 @@ fn append_iter (#t:Type) (x y:llist t)
 
 
 fn detach_next (#t:Type) (x:llist t)
-  requires is_list x 'l ** pure (Some? x)
+  requires is_list x 'l ** pure (Cons? 'l)
   returns y:llist t
   ensures exists* hd tl.
     is_list x [hd] **
     is_list y tl **
     pure ('l == hd::tl)
 {
+  some_iff_cons x;
   let v = Some?.v x;
   is_list_cases_some x v;
   with node tl. _;
@@ -523,7 +550,7 @@ fn detach_next (#t:Type) (x:llist t)
 
 
 fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
- requires is_list x xl ** pure (Some? x /\ 0 < v n /\ v n <= List.Tot.length xl)
+ requires is_list x xl ** pure (Cons? xl /\ 0 < v n /\ v n <= List.Tot.length xl)
  returns  y:llist t
  ensures exists* l1 l2. 
     is_list x l1 **
@@ -531,6 +558,7 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
     pure (xl == l1 @ l2 /\
           List.Tot.length l1 == v n)
  {
+  some_iff_cons x;
   let mut cur = x;
   let mut ctr = 0ul;
   (* the base case, set up the initial invariant *)
@@ -589,7 +617,7 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
  }
 
 fn insert (#kk:Type0) (x:llist kk) (item:kk) (pos:U32.t) (#xl:erased (list kk))
-  requires is_list x xl ** pure (Some? x /\ 0 < v pos /\ v pos < List.Tot.length xl)
+  requires is_list x xl ** pure (Cons? xl /\ 0 < v pos /\ v pos < List.Tot.length xl)
   ensures exists* l0 l1.
   is_list x (l0 @ item :: l1) **
   pure (
@@ -607,7 +635,7 @@ fn insert (#kk:Type0) (x:llist kk) (item:kk) (pos:U32.t) (#xl:erased (list kk))
 
 
 fn delete (#kk:Type0) (x:llist kk) (item:kk) (pos:U32.t) (#xl:erased (list kk))
-  requires is_list x xl ** pure (Some? x /\ 0 < v pos /\ v pos < List.Tot.length xl)
+  requires is_list x xl ** pure (Cons? xl /\ 0 < v pos /\ v pos < List.Tot.length xl)
   ensures exists* l0 l1.
   is_list x (l0 @ item :: l1) **
   pure (
