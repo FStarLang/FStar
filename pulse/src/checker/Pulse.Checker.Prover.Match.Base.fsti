@@ -20,6 +20,7 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Prover.Base
 open Pulse.VC
+open FStar.List.Tot
 
 module T  = FStar.Tactics.V2
 module PS = Pulse.Checker.Prover.Substs

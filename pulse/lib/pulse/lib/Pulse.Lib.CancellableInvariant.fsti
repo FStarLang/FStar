@@ -35,35 +35,37 @@ val active_timeless (c:cinv) (p:perm)
 
 val iname_of (c:cinv) : GTot iname
 
-val new_cancellable_invariant (v:slprop)
-  : stt_ghost cinv emp_inames
-      v
-      (fun c -> inv (iname_of c) (cinv_vp c v) ** active c 1.0R)
+ghost
+fn new_cancellable_invariant (v:slprop)
+  requires v
+  returns  c : cinv
+  ensures  inv (iname_of c) (cinv_vp c v) ** active c 1.0R
 
 val unpacked (c:cinv) (v:slprop) : slprop
 
-val unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
-  : stt_ghost unit emp_inames
-      (cinv_vp c v ** active c p)
-      (fun _ -> v ** unpacked c v ** active c p)
+ghost
+fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
+  requires cinv_vp c v ** active c p
+  ensures  v ** unpacked c v ** active c p
 
-val pack_cinv_vp (#v:slprop) (c:cinv)
-  : stt_ghost unit emp_inames
-      (v ** unpacked c v)
-      (fun _ -> cinv_vp c v)
+ghost
+fn pack_cinv_vp (#v:slprop) (c:cinv)
+  requires v ** unpacked c v
+  ensures  cinv_vp c v
 
-val share (#p:perm) (c:cinv)
-  : stt_ghost unit emp_inames
-      (active c p)
-      (fun _ -> active c (p /. 2.0R) ** active c (p /. 2.0R))
+ghost
+fn share (#p:perm) (c:cinv)
+  requires active c p
+  ensures  active c (p /. 2.0R) ** active c (p /. 2.0R)
 
 [@@allow_ambiguous]
-val gather (#p1 #p2 :perm) (c:cinv)
-  : stt_ghost unit emp_inames
-      (active c p1 ** active c p2)
-      (fun _ -> active c (p1 +. p2))
+ghost
+fn gather (#p1 #p2 :perm) (c:cinv)
+  requires active c p1 ** active c p2
+  ensures  active c (p1 +. p2)
 
-val cancel (#v:slprop) (c:cinv)
-  : stt_ghost unit (add_inv emp_inames (iname_of c))
-      (inv (iname_of c) (cinv_vp c v) ** active c 1.0R ** later_credit 1)
-      (fun _ -> v)
+ghost
+fn cancel (#v:slprop) (c:cinv)
+  requires inv (iname_of c) (cinv_vp c v) ** active c 1.0R ** later_credit 1
+  opens add_inv emp_inames (iname_of c)
+  ensures v

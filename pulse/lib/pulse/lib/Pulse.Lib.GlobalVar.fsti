@@ -33,5 +33,7 @@ val mk_gvar
 
 val read_gvar_ghost (#a:Type0) (#p:a -> slprop) (x:gvar p) : GTot a
 
-val read_gvar (#a:Type0) (#p:a -> slprop) (x:gvar p)
-  : stt a emp (fun r -> p r ** pure (r == read_gvar_ghost x))
+fn read_gvar (#a:Type0) (#p:a -> slprop) (x:gvar p)
+  requires emp
+  returns  r : a
+  ensures  p r ** pure (r == read_gvar_ghost x)

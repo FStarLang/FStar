@@ -66,15 +66,15 @@ val with_local
   : stt ret_t pre post
 
 [@@allow_ambiguous]
-val pts_to_injective_eq (#a:_)
+ghost
+fn pts_to_injective_eq (#a:_)
                         (#p #q:_)
                         (#v0 #v1:a)
                         (r:ref a)
-  : stt_ghost unit emp_inames
-      (pts_to r #p v0 ** pts_to r #q v1)
-      (fun _ -> pts_to r #p v0 ** pts_to r #q v1 ** pure (v0 == v1))
+  requires pts_to r #p v0 ** pts_to r #q v1
+  ensures  pts_to r #p v0 ** pts_to r #q v1 ** pure (v0 == v1)
 
-val pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
-  : stt_ghost unit emp_inames
-      (pts_to r #p v)
-      (fun _ -> pts_to r #p v ** pure (p <=. 1.0R))
+ghost
+fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
+  requires pts_to r #p v
+  ensures  pts_to r #p v ** pure (p <=. 1.0R)
