@@ -94,7 +94,6 @@ let tm_pureabs (ppname:R.ppname_t) (ty : term) (q : option qualifier) (body:term
   }
   in
   let r = pack (Tv_Abs b body) in
-  assume (~(R.Tv_Unknown? (R.inspect_ln r))); // NamedView API doesn't ensure this, it should
   set_range r rng
 
 let tm_arrow (b:binder) (q:option qualifier) (c:comp) : term =
