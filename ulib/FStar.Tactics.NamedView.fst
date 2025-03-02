@@ -408,7 +408,7 @@ let close_match_returns_ascription (mra : match_returns_ascription) : R.match_re
   (b, (ct, topt, use_eq))
 
 private
-let open_view (tv:term_view) : Tac named_term_view =
+let open_view (tv:term_view) : Tac (tv':named_term_view{ctor_matches tv' tv}) =
   match tv with
   (* Nothing interesting *)
   | RD.Tv_Var v -> Tv_Var (R.inspect_namedv v)
@@ -454,7 +454,7 @@ let open_view (tv:term_view) : Tac named_term_view =
     Tv_Match scrutinee ret brs
 
 private
-let close_view (tv : named_term_view) : Tot term_view =
+let close_view (tv : named_term_view) : Tot (tv':term_view{ctor_matches tv tv'}) =
   match tv with
   (* Nothing interesting *)
   | Tv_Var v -> RD.Tv_Var (R.pack_namedv v)
@@ -516,6 +516,11 @@ let inspect (t:term) : Tac named_term_view =
 let pack (tv:named_term_view) : Tot term =
   let tv = close_view tv in
   R.pack_ln tv
+
+let pack_ctor_matches (tv:named_term_view)
+  : Lemma (ctor_matches tv (RB.inspect_ln (pack tv)))
+          [SMTPat (pack tv)]
+  = R.inspect_pack_inv (close_view tv)
 
 private
 let open_univ_s (us : list R.univ_name) : Tac (list univ_name & subst_t) =
