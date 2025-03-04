@@ -1509,6 +1509,84 @@ let translate_decl env d: ML (list decl) =
         Format.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
       []
 
+let mkEApp (hd, args) =
+  match hd with
+  | EApp (hd', args') -> EApp (hd', args @ args')
+  | _ -> EApp (hd, args)
+
+let rec kflatten (km : program) : ML program =
+  List.map kflatten_decl km
+and kflatten_decl (d : decl) : ML decl =
+  match d with
+  | DGlobal (_, name, n, t, e) ->
+      DGlobal ([], name, n, kflatten_typ t, kflatten_expr e)
+  | _ -> d
+and kflatten_expr (e : expr) : ML expr =
+  match e with
+  | EBound _
+  | EQualified _
+  | EConstant _
+  | EUnit -> e
+  | EApp (f, args) -> mkEApp (kflatten_expr f, List.map kflatten_expr args)
+  | ETypApp (f, args) -> ETypApp (kflatten_expr f, List.map kflatten_typ args)
+  | ELet (b, e1, e2) -> ELet (b, kflatten_expr e1, kflatten_expr e2)
+  | EIfThenElse (e1, e2, e3) ->
+      EIfThenElse (kflatten_expr e1, kflatten_expr e2, kflatten_expr e3)
+  | ESequence es -> ESequence (List.map kflatten_expr es)
+  | EAssign (e1, e2) -> EAssign (kflatten_expr e1, kflatten_expr e2)
+  | EBufCreate (l, e1, e2) -> EBufCreate (l, kflatten_expr e1, kflatten_expr e2)
+  | EBufRead (e1, e2) -> EBufRead (kflatten_expr e1, kflatten_expr e2)
+  | EBufWrite (e1, e2, e3) -> EBufWrite (kflatten_expr e1, kflatten_expr e2, kflatten_expr e3)
+  | EBufSub (e1, e2) -> EBufSub (kflatten_expr e1, kflatten_expr e2)
+  | EBufBlit (e1, e2, e3, e4, e5) ->
+      EBufBlit (kflatten_expr e1, kflatten_expr e2, kflatten_expr e3,
+                kflatten_expr e4, kflatten_expr e5)
+  | EMatch (e1, branches) -> EMatch (kflatten_expr e1, List.map kflatten_branch branches)
+  | EOp (op, w) -> e
+  | ECast (e1, t) -> ECast (kflatten_expr e1, kflatten_typ t)
+  | EPushFrame
+  | EPopFrame
+  | EBool _
+  | EAny
+  | EAbort -> e
+  | EReturn e -> EReturn (kflatten_expr e)
+  | EFlat (name, fields) ->
+      EFlat (name, List.map (fun (f, e) -> f, kflatten_expr e) fields)
+  | EField (name, e, field) ->
+      EField (name, kflatten_expr e, field)
+  | EWhile (c, b) -> EWhile (kflatten_expr c, kflatten_expr b)
+  | EBufCreateL (l, es) -> EBufCreateL (l, List.map kflatten_expr es)
+  | ETuple es -> ETuple (List.map kflatten_expr es)
+  | ECons (name, cons, es) -> ECons (kflatten_typ name, cons, List.map kflatten_expr es)
+  | EBufFill (e1, e2, e3) -> EBufFill (kflatten_expr e1, kflatten_expr e2, kflatten_expr e3)
+  | EString _ -> e
+  | EFun (bs, body, typ) ->
+      let bs = List.map (fun b -> { b with typ = kflatten_typ b.typ }) bs in
+      EFun (bs, kflatten_expr body, kflatten_typ typ)
+  | EAbortS _ -> e
+  | EBufFree e -> EBufFree (kflatten_expr e)
+  | EBufCreateNoInit (l, e) -> EBufCreateNoInit (l, kflatten_expr e)
+  | EAbortT (s, ty) -> EAbortT (s, kflatten_typ ty)
+  | EComment (s, e, s') -> EComment (s, kflatten_expr e, s')
+  | EStandaloneComment s -> EStandaloneComment s
+  | EAddrOf e -> EAddrOf (kflatten_expr e)
+  | EBufNull ty -> EBufNull (kflatten_typ ty)
+  | EBufDiff (e1, e2) -> EBufDiff (kflatten_expr e1, kflatten_expr e2)
+
+and kflatten_typ (t : typ) : ML typ =
+  match t with
+  | TApp (name, args) ->
+      TApp (name, List.map kflatten_typ args)
+  | TBuf t ->
+      TBuf (kflatten_typ t)
+  | TConstBuf t ->
+      TConstBuf (kflatten_typ t)
+  | _ -> t
+
+and kflatten_branch (b : branch) : ML branch =
+  let pat, expr = b in
+  pat, kflatten_expr expr
+
 let translate_module uenv (m : mlpath & option (mlsig & mlmodulebody)) : ML file =
   let (module_name, modul) = m in
   let module_name = fst module_name @ [ snd module_name ] in
@@ -1528,7 +1606,9 @@ let translate (ue:uenv) (modules : list mlmodule): ML (list file) =
     in
     try
       if not (Options.silent()) then (Format.print1 "Attempting to translate module %s\n" m_name);
-      Some (translate_module ue m)
+      let s, km = translate_module ue m in
+      let km = kflatten km in
+      Some (s, km)
     with
     | e ->
         Format.print2 "Unable to translate module: %s because:\n  %s\n"
