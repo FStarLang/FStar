@@ -120,8 +120,8 @@ let compatible_qual (actual expected : option qualifier) : bool =
   match actual, expected with
   | None, None -> true
   | Some Implicit, Some Implicit
-  | Some TcArg, Some Implicit
-  | Some (Meta _), Some Implicit -> true
+  | Some Implicit, Some TcArg
+  | Some Implicit, Some (Meta _) -> true
   | _ -> false
 
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
