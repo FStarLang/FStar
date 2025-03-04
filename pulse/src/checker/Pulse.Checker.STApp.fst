@@ -216,8 +216,12 @@ let apply_impure_function
           let c = (canon_comp (open_comp_with comp_typ arg)) in
           (| t, c, d |)
         | _ ->
-          fail g (Some range)
-            "Expected an effectful application; got a pure term (could it be partially applied by mistake?)"
+          let open Pulse.PP in
+          fail_doc g (Some range) [
+            text "Expected an effectful application, got a pure term.";
+            pp comp_typ;
+            text "Could it be partially applied by mistake?"
+          ]
       in
       let (| st', c', st_typing' |) = match_comp_res_with_post_hint d post_hint in
       debug_log g (fun _ -> T.print (Printf.sprintf "st_app: c' = %s\n\tallow_ambiguous = %s\n"
