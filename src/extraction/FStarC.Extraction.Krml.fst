@@ -215,6 +215,8 @@ instance pretty_width = { pp = function
   | CInt -> doc_of_string "CInt"
   | SizeT -> doc_of_string "SizeT"
   | PtrdiffT -> doc_of_string "PtrdiffT"
+  | Float -> doc_of_string "Float"
+  | Double -> doc_of_string "Double"
 }
 
 let ctor (n: string) (args: list document) =
