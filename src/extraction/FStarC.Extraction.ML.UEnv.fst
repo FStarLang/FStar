@@ -97,7 +97,7 @@ let tydef_mlpath (td : tydef) : mlpath = td.tydef_mlmodule_name, td.tydef_name
  *)
 type uenv = {
   env_tcenv:TypeChecker.Env.env;
-  env_bindings:list binding;
+  env_bindings:list mlbinding;
   env_mlident_map:PSMap.t mlident;
   env_remove_typars:RemoveUnusedParameters.env_t;
   mlpath_of_lid:PSMap.t mlpath;
