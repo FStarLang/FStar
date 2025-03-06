@@ -47,9 +47,9 @@ let mlmodule1_name (m:S.mlmodule1) : list S.mlsymbol =
 let extract_one
   (g:env)
   (mname:string)
-  (gamma:list UEnv.binding)
+  (gamma:list UEnv.mlbinding)
   (decls:S.mlmodulebody) : string & env =
-  // let (deps, gamma, decls)  : (list string & list UEnv.binding & S.mlmodule) =
+  // let (deps, gamma, decls)  : (list string & list UEnv.mlbinding & S.mlmodule) =
   //   match load_value_from_file file with
   //   | Some r -> r
   //   | None -> failwith "Could not load file" in
@@ -107,7 +107,7 @@ let file_to_module_name (f:string) : string =
 let read_all_ast_files (files:list string) : dict =
   let d = SMap.create 100 in
   files |> List.iter (fun f ->
-    let contents  : (list string & list UEnv.binding & S.mlmodulebody) =
+    let contents  : (list string & list UEnv.mlbinding & S.mlmodulebody) =
       match load_value_from_file f with
       | Some r -> r
       | None -> failwith (format1 "Could not load file %s" f) in
