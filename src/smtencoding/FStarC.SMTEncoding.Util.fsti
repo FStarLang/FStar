@@ -59,8 +59,12 @@ val mkDiv : term & term -> term
 val mkRealDiv : term & term -> term
 val mkMul : term & term -> term
 val mkMod : term & term -> term
+
 val mkStrLen : term -> term
 val mkStrCat : term & term -> term
+val mkStrSubStr : term & term & term -> term
+val mkStrAt : term & term -> term
+val mkStrIndexOf : term & term -> term
 
 (* bitvector ops, some indexed by bitvector size *)
 val mkNatToBv : int -> term -> term

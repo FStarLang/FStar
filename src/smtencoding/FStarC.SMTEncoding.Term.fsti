@@ -73,8 +73,12 @@ type op =
   | BvToNat
   | ITE
   | Var of string
+  (* String operations *)
   | StrLen
   | StrCat
+  | StrSubStr
+  | StrIndexOf
+  | StrAt
 
 type qop =
   | Forall
@@ -264,8 +268,12 @@ val mkBvShr'  : (int -> (term & term) -> Range.range -> term)
 val mkBvUdivUnsafe : (int -> (term & term) -> Range.range -> term)
 val mkBvModUnsafe  : (int -> (term & term) -> Range.range -> term)
 val mkBvMul'  : (int -> (term & term) -> Range.range -> term)
+
 val mkStrLen  : (term -> Range.range -> term)
 val mkStrCat  : ((term & term) -> Range.range -> term)
+val mkStrSubStr : ((term & term & term) -> Range.range -> term)
+val mkStrIndexOf : ((term & term) -> Range.range -> term)
+val mkStrAt : ((term & term) -> Range.range -> term)
 
 val mkITE: (term & term & term) -> Range.range -> term
 val mkCases : list term -> Range.range -> term

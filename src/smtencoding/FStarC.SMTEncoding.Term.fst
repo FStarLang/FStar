@@ -269,6 +269,9 @@ let op_to_string = function
   | NatToBv n -> format1 "(_ int2bv %s)" (string_of_int n)
   | StrLen -> "str.len"
   | StrCat -> "str.++"
+  | StrSubStr -> "str.substr"
+  | StrIndexOf -> "str.indexof"
+  | StrAt -> "str.at"
   | Var s -> s
 
 let weightToSmtStr = function
@@ -416,6 +419,13 @@ let mkITE (t1, t2, t3) r =
   end
 let mkStrLen t r = mkApp'(StrLen, [t]) r
 let mkStrCat = mk_bin_op StrCat
+let mkStrSubStr (t1, t2, t3) r = mkApp' (StrSubStr, [t1; t2; t3]) r
+(* In the ulib, the second argument of indexof is a char, whereas SMTLIB expects
+ * a string. So we need to insert a conversion from char to string. *)
+let mkStrIndexOf (t1, t2) r = mkApp' (StrIndexOf, [t1; mkApp ("str.from_code", [t2]) r]) r
+(* In the ulib, the return type of at is a char, whereas SMTLIB returns a
+ * string. So we need to insert a conversion from string to char. *)
+let mkStrAt (t1, t2) r = mkApp ("str.to_code", [mkApp' (StrAt, [t1; t2]) r]) r
 let mkCases t r = match t with
   | [] -> failwith "Impos"
   | hd::tl -> List.fold_left (fun out t -> mkAnd (out, t) r) hd tl
@@ -470,7 +480,10 @@ let check_pattern_ok (t:term) : option term =
                 | BvToNat
                 | ITE
                 | StrLen
-                | StrCat -> false
+                | StrCat
+                | StrSubStr
+                | StrIndexOf
+                | StrAt -> false
             in
             if not head_ok then Some t
             else aux_l terms
