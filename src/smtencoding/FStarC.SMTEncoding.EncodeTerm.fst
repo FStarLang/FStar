@@ -356,11 +356,21 @@ let is_String_primitive head args =
     match head.n, args with
     | _ when not (Options.smtencoding_encode_string ()) -> false
     | Tm_fvar fv, [_;_] ->
+      (* concat *)
       S.fv_eq_lid fv Const.prims_strcat_lid
       || S.fv_eq_lid fv Const.prims_op_Hat_lid
+      || S.fv_eq_lid fv Const.string_concat_lid
+      (* index *)
+      || S.fv_eq_lid fv Const.string_index_lid
+      (* indexof *)
+      || S.fv_eq_lid fv Const.string_index_of_lid
     | Tm_fvar fv, [_] ->
-      (S.fv_eq_lid fv Const.string_strlen_lid
-      || S.fv_eq_lid fv Const.string_length_lid)
+      (* length *)
+      S.fv_eq_lid fv Const.string_strlen_lid
+      || S.fv_eq_lid fv Const.string_length_lid
+    | Tm_fvar fv, [_;_;_] ->
+      (* substring *)
+      S.fv_eq_lid fv Const.string_sub_lid
     | _ -> false
 
 let rec encode_const c env =
@@ -613,19 +623,32 @@ and encode_String_term env head args_e =
         Term.unboxString (List.hd arg_tms),
         Term.unboxInt    (List.hd (List.tl arg_tms))
     in
+    let ternary_string_int_int arg_tms = match arg_tms with
+      | [t1; t2; t3] ->
+        Term.unboxString t1, Term.unboxInt t2, Term.unboxInt t3
+      | _ -> failwith "Impossible"
+    in
     let mk_int : ('a -> term) -> (list term -> 'a) -> list term -> term =
       fun op mk_args ts -> op (mk_args ts) |> Term.boxInt
     in
     let mk_string : ('a -> term) -> (list term -> 'a) -> list term -> term =
       fun op mk_args ts -> op (mk_args ts) |> Term.boxString
     in
-    let strlen = mk_int    Util.mkStrLen unary_string in
-    let strcat = mk_string Util.mkStrCat binary_string_string in
+    let strlen     = mk_int    Util.mkStrLen     unary_string in
+    let strcat     = mk_string Util.mkStrCat     binary_string_string in
+    let strsubstr  = mk_string Util.mkStrSubStr  ternary_string_int_int in
+    let strat      = mk_int    Util.mkStrAt      binary_string_int in
+    let strindexof = mk_int    Util.mkStrIndexOf binary_string_int in
     let ops =
         [(Const.string_length_lid, strlen);
          (Const.string_strlen_lid, strlen);
          (Const.prims_strcat_lid, strcat);
-         (Const.prims_op_Hat_lid, strcat)]
+         (Const.prims_op_Hat_lid, strcat);
+         (Const.string_concat_lid, strcat);
+         (Const.string_sub_lid, strsubstr);
+         (Const.string_index_lid, strat);
+         (Const.string_index_of_lid, strindexof);
+        ]
     in
     let _, op =
         List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>
