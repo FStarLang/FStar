@@ -168,7 +168,7 @@ and width =
   | Bool
   | CInt
   | SizeT | PtrdiffT
-  | Float | Double
+  | Half | Float | Double
 
 and constant = width & string
 
@@ -215,6 +215,7 @@ instance pretty_width = { pp = function
   | CInt -> doc_of_string "CInt"
   | SizeT -> doc_of_string "SizeT"
   | PtrdiffT -> doc_of_string "PtrdiffT"
+  | Half  -> doc_of_string "Half"
   | Float -> doc_of_string "Float"
   | Double -> doc_of_string "Double"
 }
