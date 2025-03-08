@@ -208,8 +208,11 @@ let instantiate_term_implicits
   : Tac _
 = let rng, f = elab_env_with_term_range g t0 in
   let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f t0 expected inst_extra) in
-  let fail issues : Tac _ = 
-    fail_doc_with_subissues g (Some rng) issues []
+  let fail issues : Tac _ =
+    fail_doc_with_subissues g (Some rng) issues [
+      text "Could not instantiate implicits in term:"
+        ^/^ pp t0;
+    ]
   in
   match topt with
   | None -> fail issues
