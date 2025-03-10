@@ -625,3 +625,39 @@ jobs:
 
       - name: Test
         run: make -C everquic-crypto -skj$(nproc) test
+
+  build-starmalloc:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+      - build-steel
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - name: Checkout steel
+        uses: actions/checkout@master
+        with:
+          path: starmalloc/
+          repository: Inria-Prosecco/starmalloc
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+      - uses: mtzguido/gci-download@master
+        with:
+          name: steel
+
+      # AFAICT there are no starmalloc tests. Just `make all`
+      # to verify, extract, and build.
+      - name: Build
+        run: make -C starmalloc all -skj$(nproc)
