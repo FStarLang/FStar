@@ -57,18 +57,11 @@ let bool_of_or #p #q t =
   | Prims.Right _ -> false
 
 val excluded_middle : p:Type -> GTot (squash (b:bool{b <==> p}))
-let excluded_middle (p:Type) = map_squash (join_squash (get_proof (p \/ (~p)))) bool_of_or
+let excluded_middle (p:Type) =
+  map_squash (join_squash (get_proof (p \/ (~p)))) (fun x -> (bool_of_or x <: b:bool { b <==> p }))
 
 
-val excluded_middle_squash : p:Type0 -> GTot (p \/ ~p)
-let excluded_middle_squash p =
-  bind_squash (excluded_middle p) (fun x ->
-  if x then
-    map_squash (get_proof p) (Prims.Left #p)
-  else
-    return_squash (Prims.Right #_ #(~p) (return_squash (fun (h:p) ->
-                                   give_proof (return_squash h);
-                                   false_elim #False ()))))
+let excluded_middle_squash (p: Type0) : GTot (p \/ ~p) = join_squash ()
 
 (* we thought we might prove proof irrelevance by Berardi ... but didn't manage *)
 
@@ -112,10 +105,10 @@ let l1 (a:Type) (b:Type) =
 		 | Prims.Left (MkR f0 g0 e) -> 
 		   return_squash (MkC f0 g0 (fun _ -> e))
 		 | Prims.Right nr ->
-		   let f0 (x:pow a) (y:b) = false in
-		   let g0 (x:pow b) (y:a) = false in
+		   let f0 (x:pow a) (y:b) : GTot bool = false in
+		   let g0 (x:pow b) (y:a) : GTot bool = false in
 		   map_squash nr (fun (f:(retract (pow a) (pow b) -> GTot False)) -> 
-				  MkC f0 g0 (fun r x -> false_elim (f r))))
+				  MkC (fun x y -> f0 x y) (fun x y -> g0 x y) (fun r x -> false_elim (f r))))
 
 (* The paradoxical set *)
 type u = p:Type -> Tot (squash (pow p))

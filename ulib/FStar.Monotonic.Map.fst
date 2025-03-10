@@ -63,13 +63,13 @@ let alloc (#r:rid) #a #b #inv
     ralloc_post r (empty_map a b) h0 x h1))
   = ralloc r (empty_map a b)
 
-let defined #r #a #b #inv (m:t r a b inv) (x:a) (h:HS.mem)
-  : GTot Type0
-  = Some? (sel (HS.sel h m) x)
+let defined #r #a #b #inv (m:t r a b inv) (x:a)
+  : HST.mem_predicate = fun (h:HS.mem) ->
+    Some? (sel (HS.sel h m) x)
 
-let contains #r #a #b #inv (m:t r a b inv) (x:a) (y:b x) (h:HS.mem)
-  : GTot Type0
-  = Some? (sel (HS.sel h m) x) /\ Some?.v (sel (HS.sel h m) x) == y
+let contains #r #a #b #inv (m:t r a b inv) (x:a) (y:b x)
+  : HST.mem_predicate = fun (h:HS.mem) ->
+    Some? (sel (HS.sel h m) x) /\ Some?.v (sel (HS.sel h m) x) == y
 
 let value #r #a #b #inv (m:t r a b inv) (x:a) (h:HS.mem{defined m x h})
   : GTot (r:b x{contains m x r h})

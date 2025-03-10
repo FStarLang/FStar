@@ -359,7 +359,7 @@ type guard_free : Type0 -> Type0
     Clients should not use it directly,
     instead use FStar.Pervasives.pure_return *)
 unfold
-let pure_return0 (a: Type) (x: a) : pure_wp a =
+let pure_return0 (a: Type) : a -> GTot (pure_wp a) = fun x ->
   fun (p: pure_post a) ->
   forall (return_val: a). return_val == x ==> p return_val
 
@@ -371,7 +371,7 @@ unfold
 let pure_bind_wp0
       (a b: Type)
       (wp1: pure_wp a)
-      (wp2: (a -> GTot (pure_wp b)))
+      (wp2: (a -> pure_wp b))
       : pure_wp b
      = fun (p: pure_post b) ->
        wp1 (fun (bind_result_1: a) -> wp2 bind_result_1 p)
@@ -418,11 +418,11 @@ let pure_stronger (a: Type) (wp1 wp2: pure_wp a) = forall (p: pure_post a). wp1 
     Clients should not use it directly,
     instead use FStar.Pervasives.pure_close_wp *)
 unfold
-let pure_close_wp0 (a b: Type) (wp: (b -> GTot (pure_wp a))) : pure_wp a = fun (p: pure_post a) -> forall (b: b). wp b p
+let pure_close_wp0 (a b: Type) (wp: (b -> (pure_wp a))) : pure_wp a = fun (p: pure_post a) -> forall (b: b). wp b p
 
 (** Trivial WP for PURE: Prove the WP with the trivial postcondition *)
 unfold
-let pure_trivial (a: Type) (wp: pure_wp a) = wp (fun (trivial_result: a) -> True)
+let pure_trivial (a: Type) : pure_wp a -> GTot Type = fun wp -> wp (fun (trivial_result: a) -> True)
 
 (** Introduces the PURE effect.
     The definition of the PURE effect is fixed.

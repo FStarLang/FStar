@@ -157,7 +157,7 @@ let squash_implies_to_arrow (p:Type u#p) (q:Type)
 let squash_double_arrow (#a:Type u#a) (#p:Type0)
                         (f:(squash (a -> Tot (squash p))))
                      : Tot (squash (a -> GTot p)) =
-                     FStar.Squash.squash_double_arrow f
+                     FStar.Squash.squash_double_arrow (Squash.map_squash f (fun f x -> f x) <: squash (a -> GTot (squash p)))
 
 let stable_on_closure #a r p hr =
   assert (forall x y. p x ==> closure r x y ==> p y) by
