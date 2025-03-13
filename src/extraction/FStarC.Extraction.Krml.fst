@@ -202,6 +202,8 @@ and typ =
   | TConstBuf of typ
   | TArray of typ & constant
 
+let translate_decl_accum : ref (list decl) = mk_ref []
+
 instance pretty_width = { pp = function
   | UInt8 -> doc_of_string "UInt8"
   | UInt16 -> doc_of_string "UInt16"
@@ -1487,28 +1489,32 @@ let translate_let env flavor lb: ML (option decl) =
   !ref_translate_let env flavor lb
 
 let translate_decl env d: ML (list decl) =
-  match d.mlmodule1_m with
-  | MLM_Let (flavor, lbs) ->
-      // We don't care about mutual recursion, since every C file will include
-      // its own header with the forward declarations.
-      List.choose (translate_let env flavor) lbs
+  translate_decl_accum := [];
+  let base =
+    match d.mlmodule1_m with
+    | MLM_Let (flavor, lbs) ->
+        // We don't care about mutual recursion, since every C file will include
+        // its own header with the forward declarations.
+        List.choose (translate_let env flavor) lbs
 
-  | MLM_Loc _ ->
-      // JP: TODO: use this to reconstruct location information
-      []
+    | MLM_Loc _ ->
+        // JP: TODO: use this to reconstruct location information
+        []
 
-  | MLM_Ty tys ->
-      // We don't care about mutual recursion, since KaRaMeL will insert forward
-      // declarations exactly as needed, as part of its monomorphization phase
-      List.choose (translate_type_decl env) tys
+    | MLM_Ty tys ->
+        // We don't care about mutual recursion, since KaRaMeL will insert forward
+        // declarations exactly as needed, as part of its monomorphization phase
+        List.choose (translate_type_decl env) tys
 
-  | MLM_Top _ ->
-      failwith "todo: translate_decl [MLM_Top]"
+    | MLM_Top _ ->
+        failwith "todo: translate_decl [MLM_Top]"
 
-  | MLM_Exn (m, _) ->
-      if not (Options.silent ()) then
-        Format.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
-      []
+    | MLM_Exn (m, _) ->
+        if not (Options.silent ()) then
+          Format.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
+        []
+  in
+  !translate_decl_accum @ base
 
 let mkEApp (hd, args) =
   match hd with
