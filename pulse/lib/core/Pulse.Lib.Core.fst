@@ -166,10 +166,7 @@ let bind_atomic = A.bind_atomic
 let frame_atomic = A.frame_atomic
 let sub_atomic = A.sub_atomic
 let sub_invs_atomic = A.sub_invs_stt_atomic
-let lift_atomic0 = A.lift_atomic0
-let lift_atomic1 = A.lift_atomic1
-let lift_atomic2 = A.lift_atomic2
-let lift_atomic3 = A.lift_atomic3
+let lift_atomic = A.lift_atomic
 
 ////////////////////////////////////////////////////////////////////
 // Ghost computations
@@ -327,7 +324,7 @@ let alloc
 : stt (pcm_ref pcm)
     emp
     (fun r -> pcm_pts_to r x)
-= A.lift_atomic0 (A.alloc #a #pcm x)
+= A.lift_atomic (A.alloc #a #pcm x)
 
 let read
     (#a:Type)
@@ -340,7 +337,7 @@ let read
 : stt (v:a{compatible p x v /\ p.refine v})
     (pcm_pts_to r x)
     (fun v -> pcm_pts_to r (f v))
-= A.lift_atomic1 (A.read r x f)
+= A.lift_atomic (A.read r x f)
 
 let write
     (#a:Type)
@@ -351,7 +348,7 @@ let write
 : stt unit
     (pcm_pts_to r x)
     (fun _ -> pcm_pts_to r y)
-= A.lift_atomic0 (A.write r x y f)
+= A.lift_atomic (A.write r x y f)
 
 let share = A.share
 let gather = A.gather
@@ -381,7 +378,7 @@ let refl_stt (#a:Type u#a) (x:a)
 : stt unit emp (fun _ -> pure (x == x))
 = let m : stt_ghost unit emp_inames emp (fun _ -> pure (x == x)) = intro_pure (x == x) () in
   let m : stt_atomic unit #Neutral emp_inames emp (fun _ -> pure (x == x)) = lift_ghost_neutral m FStar.Tactics.Typeclasses.solve in
-  lift_atomic0 m
+  lift_atomic m
 
 let frame_flip (#pre #a #post:_) (frame:slprop) (e:stt a pre post)
 : stt a (pre ** frame) (fun x -> frame ** post x)
@@ -415,7 +412,7 @@ let big_alloc
 : stt (pcm_ref pcm)
     emp
     (fun r -> big_pcm_pts_to r x)
-= A.lift_atomic0 (A.big_alloc #a #pcm x)
+= A.lift_atomic (A.big_alloc #a #pcm x)
 
 let big_read
     (#a:Type)
@@ -428,7 +425,7 @@ let big_read
 : stt (v:a{compatible p x v /\ p.refine v})
     (big_pcm_pts_to r x)
     (fun v -> big_pcm_pts_to r (f v))
-= A.lift_atomic2 (A.big_read r x f)
+= A.lift_atomic (A.big_read r x f)
 
 let big_write
     (#a:Type)
@@ -439,7 +436,7 @@ let big_write
 : stt unit
     (big_pcm_pts_to r x)
     (fun _ -> big_pcm_pts_to r y)
-= A.lift_atomic0 (A.big_write r x y f)
+= A.lift_atomic (A.big_write r x y f)
 
 let big_share = A.big_share
 let big_gather = A.big_gather

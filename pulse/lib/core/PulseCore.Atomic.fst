@@ -110,45 +110,15 @@ let lift_observability
   | Ghost, Atomic -> A.lift_ghost_atomic e
   | _ -> e
 
-let lift_atomic0
-    (#a:Type u#0)
+let lift_atomic
+    (#a:Type u#a)
     (#obs:_)
     (#opens:inames)
     (#pre:slprop)
     (#post:a -> slprop)
     (e:stt_atomic a #obs opens pre post)
 : stt a pre post
-= A.lift0 e
-
-let lift_atomic1
-    (#a:Type u#1)
-    (#obs:_)
-    (#opens:inames)
-    (#pre:slprop)
-    (#post:a -> slprop)
-    (e:stt_atomic a #obs opens pre post)
-: stt a pre post
-= A.lift1 e
-
-let lift_atomic2
-    (#a:Type u#2)
-    (#obs:_)
-    (#opens:inames)
-    (#pre:slprop)
-    (#post:a -> slprop)
-    (e:stt_atomic a #obs opens pre post)
-: stt a pre post
-= A.lift2 e
-
-let lift_atomic3
-    (#a:Type u#3)
-    (#obs:_)
-    (#opens:inames)
-    (#pre:slprop)
-    (#post:a -> slprop)
-    (e:stt_atomic a #obs opens pre post)
-: stt a pre post
-= A.lift3 e
+= A.lift e
 
 let frame_atomic
     (#a:Type u#a)

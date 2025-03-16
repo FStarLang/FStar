@@ -241,7 +241,7 @@ let task_spotted
     AR.snapshot p.g_runnable v_runnable **
     pure (List.memP t v_runnable)
 
-let gtrade_ty a b extra : Type u#4 =
+let gtrade_ty a b extra : Type u#5 =
   unit -> stt_ghost unit [] (extra ** a) (fun _ -> b)
 let gtrade_fun a b extra {| duplicable extra |} (f: gtrade_ty a b extra) =
   emp

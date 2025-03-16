@@ -291,7 +291,7 @@ val stt_atomic
     (opens:inames)
     (pre:slprop)
     (post:a -> slprop)
-: Type u#(max 4 a)
+: Type u#(max 5 a)
 
 val lift_observability
     (#a:Type u#a)
@@ -359,8 +359,8 @@ val sub_invs_atomic
     (_ : squash (inames_subset opens1 opens2))
 : stt_atomic a #obs opens2 pre post
 
-val lift_atomic0
-  (#a:Type u#0)
+val lift_atomic
+  (#a:Type u#a)
   (#obs:_)
   (#opens:inames)
   (#pre:slprop)
@@ -368,32 +368,6 @@ val lift_atomic0
   (e:stt_atomic a #obs opens pre post)
 : stt a pre post
 
-val lift_atomic1
-  (#a:Type u#1)
-  (#obs:_)
-  (#opens:inames)
-  (#pre:slprop)
-  (#post:a -> slprop)
-  (e:stt_atomic a #obs opens pre post)
-: stt a pre post
-
-val lift_atomic2
-  (#a:Type u#2)
-  (#obs:_)
-  (#opens:inames)
-  (#pre:slprop)
-  (#post:a -> slprop)
-  (e:stt_atomic a #obs opens pre post)
-: stt a pre post
-
-val lift_atomic3
-  (#a:Type u#3)
-  (#obs:_)
-  (#opens:inames)
-  (#pre:slprop)
-  (#post:a -> slprop)
-  (e:stt_atomic a #obs opens pre post)
-: stt a pre post
 //////////////////////////////////////////////////////////////////////////
 // Ghost computations
 //////////////////////////////////////////////////////////////////////////
@@ -410,7 +384,7 @@ val stt_ghost
     (opens:inames)
     (pre:slprop)
     (post:a -> slprop)
-: Type u#(max 4 a)
+: Type u#(max 5 a)
 
 val bind_ghost
     (#a:Type u#a)

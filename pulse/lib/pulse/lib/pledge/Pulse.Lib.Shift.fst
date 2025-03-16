@@ -21,7 +21,7 @@ open Pulse.Class.Duplicable
 open Pulse.Lib.Pervasives
 
 
-let shift_elim_t is hyp extra concl : Type u#4 =
+let shift_elim_t is hyp extra concl : Type u#5 =
   unit -> stt_ghost unit is (extra ** hyp) (fun _ -> concl)
 
 let psquash (a:Type u#a) : prop = squash a
@@ -72,7 +72,7 @@ let sqeq (p : Type) (_ : squash p) : erased p =
 
 
 ghost
-fn pextract (a:Type u#4) (pf:squash a)
+fn pextract (a:Type u#5) (pf:squash a)
 requires emp
 returns i:a
 ensures emp
