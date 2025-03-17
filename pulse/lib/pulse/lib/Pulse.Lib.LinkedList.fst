@@ -24,6 +24,8 @@ module T = Pulse.Lib.Trade.Util
 module FA = Pulse.Lib.Forall.Util
 module U32 = FStar.UInt32
 open Pulse.Lib.BoundedIntegers
+module Box = Pulse.Lib.Box
+open Pulse.Lib.Box { box, (:=), (!) }
 
 noeq
 type node (t:Type0) = {
@@ -31,7 +33,7 @@ type node (t:Type0) = {
     tail : option (node_ptr t);
 }
 
-and node_ptr (t:Type0) = ref (node t)
+and node_ptr (t:Type0) = box (node t)
 
 and llist (t:Type0) = option (node_ptr t)
 
@@ -220,7 +222,7 @@ fn cons (#t:Type) (v:t) (x:llist t)
     returns y:llist t
     ensures is_list y (v::'l)
 {
-    let y = alloc { head=v; tail=x };
+    let y = Box.alloc { head=v; tail=x };
     rewrite each x as ({head=v; tail=x}).tail in (is_list x 'l);
     fold (is_list (Some y) (v::'l));
     Some y
@@ -314,7 +316,7 @@ fn length_iter (#t:Type) (x: llist t)
   let mut ctr = 0; 
   T.refl (is_list x 'l);
   while (
-    let v = !cur; 
+    let v = Pulse.Lib.Reference.(!cur); 
     Some? v
   )
   invariant b.  
@@ -332,20 +334,20 @@ fn length_iter (#t:Type) (x: llist t)
     pure (b == (Some? ll))
   {
     with _n _ll suffix. _;
-    let n = !ctr;
-    let ll = !cur;
+    let n = Pulse.Lib.Reference.(!ctr);
+    let ll = Pulse.Lib.Reference.(!cur);
     rewrite each _ll as ll;
     some_iff_cons ll;
     let next = move_next ll;
     with tl. assert (is_list next tl);
     T.trans (is_list next tl) (is_list ll suffix) (is_list x 'l);
-    cur := next;
-    ctr := n + 1;
+    Pulse.Lib.Reference.(cur := next);
+    Pulse.Lib.Reference.(ctr := n + 1);
   };
   with _n ll _sfx. _;
   is_list_cases_none ll;
   T.elim _ _;
-  let n = !ctr;
+  let n = Pulse.Lib.Reference.(!ctr);
   n
 }
 
@@ -480,7 +482,7 @@ fn append_iter (#t:Type) (x y:llist t)
       as  (forall* l. is_list x l @==> is_list x ([]@l));
   while (
     with _b ll pfx sfx. _;
-    let l = !cur;
+    let l = Pulse.Lib.Reference.(!cur);
     rewrite each ll as l; (* this is a little annoying; rename every occurrence of ll to l *)
     some_iff_cons l;
     let b = is_last_cell l;
@@ -499,7 +501,7 @@ fn append_iter (#t:Type) (x y:llist t)
           (fun tl -> pfx @ tl);
       rewrite (forall* tl. is_list next tl @==> is_list x (pfx@(hd::tl)))
            as (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl));
-      cur := next;
+      Pulse.Lib.Reference.(cur := next);
       non_empty_list next; (* need to prove Some? next *)
       true
     }
@@ -515,7 +517,7 @@ fn append_iter (#t:Type) (x y:llist t)
         Some? ll)
   { () };
   with ll pfx sfx. _;
-  let last = !cur;
+  let last = Pulse.Lib.Reference.(!cur);
   rewrite each ll as last; (* same as above *)
   append_at_last_cell last y;
   (* finally, use the quqnatified postcondition of the invariant *)
@@ -567,14 +569,14 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
       as  (forall* l. is_list x l @==> is_list x ([]@l));
   while (
     with _b _i ll pfx sfx. _;
-    let i = !ctr;
+    let i = Pulse.Lib.Reference.(!ctr);
     if (i = n - 1ul)
     {
       false
     }
     else 
     {
-      let l = !cur;
+      let l = Pulse.Lib.Reference.(!cur);
       rewrite each ll as l; (* this is a little annoying; rename every occurrence of ll to l *)
       let next = move_next_forall l;
       with hd tl. _;
@@ -585,8 +587,8 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
           (fun tl -> pfx @ tl);
       rewrite (forall* tl. is_list next tl @==> is_list x (pfx@(hd::tl)))
            as (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl));
-      cur := next;
-      ctr := i + 1ul;
+      Pulse.Lib.Reference.(cur := next);
+      Pulse.Lib.Reference.(ctr := i + 1ul);
       List.Tot.append_length pfx [hd];
       non_empty_list next; (* need to prove Some? next *)
       true
@@ -607,7 +609,7 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
       )
   { () };
   with i ll pfx sfx. _;
-  let last = !cur;
+  let last = Pulse.Lib.Reference.(!cur);
   rewrite each ll as last; (* same as above *)
   let y = detach_next last;
   with hd tl. _;

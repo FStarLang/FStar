@@ -29,10 +29,19 @@ let is_full_vec v = A.is_full_array v
 let pts_to v #p s = A.pts_to v #p s
 let pts_to_timeless _ _ _ = ()
 let pts_to_len v = A.pts_to_len v
+
+(* This function is extracted primitively. The implementation
+below is only a model, and uses the internal Ref.alloc. Hence
+we disable the warning about using Array.alloc. *)
+#push-options "--warn_error -288"
 let alloc x n = A.alloc x n
+#pop-options
 let op_Array_Access v i #p #s = A.op_Array_Access v i #p #s
 let op_Array_Assignment v i x #s = A.op_Array_Assignment v i x #s
+(* Same comment as above *)
+#push-options "--warn_error -288"
 let free v #s = A.free v #s
+#pop-options
 let share v = A.share v
 let gather v = A.gather v
 

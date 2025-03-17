@@ -13,12 +13,15 @@ class reflike (vt:Type) (rt:Type) = {
   (:=) : r:rt -> v:vt -> #v0:erased vt -> stt unit (r |-> v0) (fun _ -> r |-> v);
 }
 
+(* Prevent warning about using alloc... this is just a test. *)
+#push-options "--warn_error -288"
 instance reflike_ref (a:Type) : reflike a (ref a) = {
   ( |-> ) = (fun r v -> Pulse.Lib.Reference.pts_to r v);
   alloc   = Pulse.Lib.Reference.alloc;
   ( ! )   = (fun r #v0 -> Pulse.Lib.Reference.op_Bang r #v0 #1.0R);
   ( := )  = (fun r v #v0 -> Pulse.Lib.Reference.op_Colon_Equals r v #v0);
 }
+#pop-options
 
 instance reflike_box (a:Type) : reflike a (Box.box a) = {
   ( |-> ) = (fun r v -> Pulse.Lib.Box.pts_to r v);
