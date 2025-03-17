@@ -154,3 +154,18 @@ fn replace_i_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   requires R.pts_to r v ** pts_to v s
   returns  res : a
   ensures R.pts_to r v ** pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i))
+
+fn compare
+        (#t:eqtype)
+        (l:SZ.t)
+        (a1 a2:lvec t (SZ.v l))
+        (#p1 #p2:perm)
+        (#s1 #s2:Ghost.erased (Seq.seq t))
+  requires
+     pts_to a1 #p1 s1 **
+     pts_to a2 #p2 s2
+  returns res : bool
+  ensures
+     pts_to a1 #p1 s1 **
+     pts_to a2 #p2 s2 **
+     pure (res <==> Seq.equal s1 s2)

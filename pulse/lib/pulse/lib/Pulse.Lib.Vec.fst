@@ -21,7 +21,7 @@ open Pulse.Lib.Core
 open Pulse.Lib.Pervasives
 
 module R = Pulse.Lib.Reference
-module A = Pulse.Lib.Array.Core
+module A = Pulse.Lib.Array
 
 type vec a = A.array a
 let length v = A.length v
@@ -123,3 +123,26 @@ fn replace_i_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   y
 }
 
+
+fn compare
+        (#t:eqtype)
+        (l:SZ.t)
+        (a1 a2:lvec t (SZ.v l))
+        (#p1 #p2:perm)
+        (#s1 #s2:Ghost.erased (Seq.seq t))
+  requires
+     pts_to a1 #p1 s1 **
+     pts_to a2 #p2 s2
+  returns res : bool
+  ensures
+     pts_to a1 #p1 s1 **
+     pts_to a2 #p2 s2 **
+     pure (res <==> Seq.equal s1 s2)
+{
+  unfold (pts_to a1 #p1 s1);
+  unfold (pts_to a2 #p2 s2);
+  let r = A.compare l a1 a2;
+  fold (pts_to a1 #p1 s1);
+  fold (pts_to a2 #p2 s2);
+  r
+}
