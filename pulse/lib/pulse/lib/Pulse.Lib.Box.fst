@@ -29,6 +29,10 @@ let pts_to b #p v = R.pts_to b.r #p v
 
 let pts_to_timeless _ _ _ = ()
 
+(* This function is extracted primitively. The implementation
+below is only a model, and uses the internal Ref.alloc. Hence
+we disable the warning about using Ref.alloc. *)
+#push-options "--warn_error -288"
 fn alloc (#a:Type0) (x:a)
   requires emp
   returns  b : box a
@@ -38,6 +42,7 @@ fn alloc (#a:Type0) (x:a)
   rewrite R.pts_to r x as pts_to (B r) x;
   (B r);
 }
+#pop-options
 
 fn op_Bang (#a:Type0) (b:box a) (#v:erased a) (#p:perm)
   requires pts_to b #p v
@@ -61,7 +66,10 @@ fn op_Colon_Equals (#a:Type0) (b:box a) (x:a) (#v:erased a)
 
 #lang-fstar // 'rewrite' below is not the keyword!
 
+(* Same comment as for alloc. *)
+#push-options "--warn_error -288"
 let free b #v = R.free b.r #v
+#pop-options
 
 let share b = R.share b.r
 let gather b = R.gather b.r

@@ -26,7 +26,9 @@ open Pulse.Lib.Trade
 open Pulse.Class.Duplicable
 
 open Pulse.Lib.SpinLock
+open Pulse.Lib.Box { box, (!), (:=) }
 
+module B = Pulse.Lib.Box
 module RTC   = FStar.ReflexiveTransitiveClosure
 module FRAP  = Pulse.Lib.FractionalAnchoredPreorder
 module AR    = Pulse.Lib.AnchoredReference
@@ -80,7 +82,7 @@ let state_res
 
 noeq
 type handle : Type0 = {
-  state   : ref task_state;
+  state   : box task_state;
   g_state : AR.ref task_state p_st anchor_rel; (* these two refs are kept in sync *)
 }
 
@@ -203,7 +205,7 @@ let list_preorder_mono_memP (#a:Type) (x:a) (l1 l2:list a)
     l1 l2 ()
 
 let lock_inv
-  (runnable   : ref (list task_t))
+  (runnable   : box (list task_t))
   (g_runnable : AR.ref (list task_t) list_preorder list_anchor)
 : slprop
 = 
@@ -216,7 +218,7 @@ let lock_inv
 
 noeq
 type pool_st : Type u#0 = {
-  runnable   : ref (list task_t);
+  runnable   : box (list task_t);
   g_runnable : AR.ref (list task_t) list_preorder list_anchor;
   
   lk : lock; // (lock_inv runnable g_runnable);
@@ -496,7 +498,7 @@ fn spawn (p:pool)
 {
   let task_st : task_state = Ready;
   assert (pure (anchor_rel Ready Ready));
-  let r_task_st : ref task_state = alloc task_st;
+  let r_task_st : box task_state = B.alloc task_st;
   let gr_task_st : AR.ref task_state p_st anchor_rel = AR.alloc #task_state task_st #p_st #anchor_rel;
 
   AR.drop_anchor gr_task_st;
@@ -894,7 +896,7 @@ fn await (#p:pool)
   ensures  pool_alive #f p ** post
 {
   let mut done = false;
-  while (let v = !done; (not v))
+  while (let v = Pulse.Lib.Reference.(!done); (not v))
     invariant b.
       exists* v_done.
         pool_alive #f p **
@@ -905,7 +907,7 @@ fn await (#p:pool)
     with v_done. assert (pts_to done v_done);
     rewrite each v_done as false;
     let b = try_await #p #post h #f;
-    done := b;
+    Pulse.Lib.Reference.(done := b);
   };
   with v_done. assert (pts_to done v_done);
   rewrite each v_done as true;
@@ -1068,8 +1070,8 @@ fn rec grab_work'' (p:pool) (v_runnable : list task_t)
 
           t.h.state := Running;
           AR.write t.h.g_state Running;
-          
-          Pulse.Lib.Reference.share t.h.state;
+
+          B.share t.h.state;
           dup (task_thunk_typing t) ();
 
           intro_state_pred_Running t.pre t.post t.h;
@@ -1186,11 +1188,11 @@ fn put_back_result (p:pool) #f (t : task_t)
   assert (state_pred t.pre t.post t.h ** pts_to t.h.state #0.5R Running);
     unfold (state_pred t.pre t.post t.h);
     with v_st. assert (AR.pts_to t.h.g_state v_st);
-    pts_to_injective_eq t.h.state;
+    B.pts_to_injective_eq t.h.state;
     assert (pure (v_st == Running));
     rewrite (pts_to t.h.state #(if Running? v_st then 0.5R else 1.0R) (unclaimed v_st))
          as (pts_to t.h.state #0.5R v_st);
-    Pulse.Lib.Reference.gather t.h.state;
+    B.gather t.h.state;
     t.h.state := Done; // Only concrete step (except for mutex taking)
     AR.write t.h.g_state Done;
 
@@ -1245,7 +1247,7 @@ fn await_help
   ensures  pool_alive #f p ** post
 {
   let mut done = false;
-  while (let v = !done; (not v))
+  while (let v = Pulse.Lib.Reference.(!done); (not v))
     invariant b.
       exists* v_done.
         pool_alive #f p **
@@ -1256,7 +1258,7 @@ fn await_help
     with v_done. assert (pts_to done v_done);
     rewrite each v_done as false;
     let b = try_await #p #post h #f;
-    done := b;
+    Pulse.Lib.Reference.(done := b);
     if (not b) {
       do_work_once #f p;
     }
@@ -1388,7 +1390,7 @@ fn await_pool
 {
   let mut done = false;
   fold (ite false q (pledge is (pool_done p) q));
-  while (let v = !done; not v)
+  while (let v = Pulse.Lib.Reference.(!done); not v)
     invariant b.
       exists* v_done.
         pool_alive #f p **
@@ -1400,7 +1402,7 @@ fn await_pool
     rewrite each v_done as false;
     unfold (ite false q (pledge is (pool_done p) q));
     let b = try_await_pool p #is #f q;
-    done := b;
+    Pulse.Lib.Reference.(done := b);
   };
   with v_done. assert (pts_to done v_done);
   rewrite each v_done as true;
@@ -1505,7 +1507,7 @@ fn setup_pool
   returns p : pool
   ensures pool_alive p
 {
-  let runnable = Pulse.Lib.Reference.alloc ([] <: list task_t);
+  let runnable = Box.alloc ([] <: list task_t);
   assert (pure (list_preorder #task_t [] [] /\ True));
   let g_runnable = AR.alloc #(list task_t) [] #list_preorder #list_anchor;
   rewrite emp as (all_state_pred []);
