@@ -74,7 +74,9 @@ module SZ = FStar.SizeT
 // #set-options "--debug pulse,prover,ggg --ugly --print_full_names"
 
 
-#push-options "--no_smt"
+// Actually, there are queries involved in re-typechecking the uvar solutions
+// during matching...
+// #push-options "--no_smt"
 fn test1 (n:SZ.t)
   requires emp
   ensures emp
@@ -85,7 +87,7 @@ fn test1 (n:SZ.t)
   let vmax = !max;
   ();
 }
-#pop-options
+// #pop-options
 
 
 fn test2 (n:SZ.t)
